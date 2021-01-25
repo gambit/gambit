@@ -87,8 +87,16 @@
 (test-bits "0"     bitwise-and #b1 #b1 #b0 #b1)
 
 (test-exception bitwise-and
-                (type: (+ 0 0) (0 + 0) (0 0 +))
-                (args: 0 -1))
+                (type: (+ 0 0) (0 + 0) (0 0 +)))
+
+(test-bits "10000" logand #b10100 #b10010)
+(test-bits "0"     logand #b0011 #b1100)
+(test-bits "1"     logand #b1 #b1 #b1 #b1)
+(test-bits "0"     logand #b1 #b1 #b0 #b1)
+
+(test-exception logand
+                (type: (+ 0 0) (0 + 0) (0 0 +)))
+
 
 ;;============================================================================
 ;; bitwise-ior
@@ -100,8 +108,17 @@
 (test-bits "1"    bitwise-ior #b0 #b0 #b0 #b1)
 
 (test-exception bitwise-ior
-                (type: (+ 0 0) (0 + 0) (0 0 +))
-                (args: 0 -1))
+                (type: (+ 0 0) (0 + 0) (0 0 +)))
+
+(test-bits "1010" logior #b1000 #b0010)
+(test-bits "1111" logior #b0011 #b1100)
+(test-bits "0"    logior #b0 #b0 #b0 #b0)
+(test-bits "1"    logior #b0 #b0 #b0 #b1)
+
+(test-exception logior
+                (type: (+ 0 0) (0 + 0) (0 0 +)))
+
+
 
 ;;============================================================================
 ;; bitwise-xor
@@ -113,8 +130,17 @@
 (test-bits "1"    bitwise-xor #b1 #b1 #b0 #b1)
 
 (test-exception bitwise-xor
-                (type: (+ 0 0) (0 + 0) (0 0 +))
-                (args: 0 -1))
+                (type: (+ 0 0) (0 + 0) (0 0 +)))
+
+(test-bits "1010" logxor #b1000 #b0010)
+(test-bits "1001" logxor #b0111 #b1110)
+(test-bits "0"    logxor #b0 #b0 #b0 #b0)
+(test-bits "1"    logxor #b1 #b1 #b0 #b1)
+
+(test-exception logxor
+                (type: (+ 0 0) (0 + 0) (0 0 +)))
+
+
 
 ;;============================================================================
 ;; bitwise-not (1-complement)
@@ -127,14 +153,31 @@
                 (type: +)
                 (args: 0 2))
 
+(test-assert (= -1  (lognot #b0000)))
+(test-assert (= -2  (lognot #b0001)))
+(test-assert (= -14 (lognot #b1101)))
+
+(test-exception lognot
+                (type: +)
+                (args: 0 2))
+
+
+
 ;;============================================================================
 ;; bitwise-merge
-
 (test-bits "1010" bitwise-merge #b0000 #b0101 #b1010)
 (test-bits  "101" bitwise-merge #b1111 #b0101 #b1010)
 (test-bits "1010" bitwise-merge #b0101 #b0000 #b1111)
 
 (test-exception bitwise-merge
+                (type: (+ 0 0) (0 + 0) (0 0 +))
+                (args: 2 4))
+
+(test-bits "1010" bitwise-if #b0000 #b0101 #b1010)
+(test-bits  "101" bitwise-if #b1111 #b0101 #b1010)
+(test-bits "1010" bitwise-if #b0101 #b0000 #b1111)
+
+(test-exception bitwise-if
                 (type: (+ 0 0) (0 + 0) (0 0 +))
                 (args: 2 4))
 
@@ -149,6 +192,15 @@
                 (type: (+ 0) (0 +))
                 (args: 1 3))
 
+(test-assert (logtest #b1000 #b1111))
+(test-assert (not (logtest #b0000 #b0000)))
+(test-assert (not (logtest #b0010 #b1101)))
+
+(test-exception logtest
+                (type: (+ 0) (0 +))
+                (args: 1 3))
+
+
 ;;============================================================================
 ;; bit-count
 
@@ -160,6 +212,16 @@
 (test-exception bit-count
                 (type: +)
                 (args: 0 -1))
+
+(test-assert (= (logcount #b1000) 1))
+(test-assert (= (logcount #b1011) 3))
+(test-assert (= (logcount (- #b1000)) 3))
+(test-assert (= (logcount 0) 0))
+
+(test-exception logcount
+                (type: +)
+                (args: 0 -1))
+
 
 ;;============================================================================
 ;; integer-length
@@ -217,6 +279,47 @@
                 (type: +)
                 (args: 0 -1))
 
+(test-assert (= (log2-binary-factors  0)  -1))
+(test-assert (= (log2-binary-factors  -1) 0))
+(test-assert (= (log2-binary-factors  1) 0))
+(test-assert (= (log2-binary-factors  -2) 1))
+(test-assert (= (log2-binary-factors  2) 1))
+(test-assert (= (log2-binary-factors  -3) 0))
+(test-assert (= (log2-binary-factors  3) 0))
+(test-assert (= (log2-binary-factors  -4) 2))
+(test-assert (= (log2-binary-factors  4) 2))
+(test-assert (= (log2-binary-factors  -5) 0))
+(test-assert (= (log2-binary-factors  5) 0))
+(test-assert (= (log2-binary-factors  -6) 1))
+(test-assert (= (log2-binary-factors  6) 1))
+(test-assert (= (log2-binary-factors  -7) 0))
+(test-assert (= (log2-binary-factors  7) 0))
+(test-assert (= (log2-binary-factors  -8) 3))
+(test-assert (= (log2-binary-factors  8) 3))
+(test-assert (= (log2-binary-factors  -9) 0))
+(test-assert (= (log2-binary-factors  9) 0))
+(test-assert (= (log2-binary-factors -10) 1))
+(test-assert (= (log2-binary-factors 10) 1))
+(test-assert (= (log2-binary-factors -11) 0))
+(test-assert (= (log2-binary-factors 11) 0))
+(test-assert (= (log2-binary-factors -12) 2))
+(test-assert (= (log2-binary-factors 12) 2))
+(test-assert (= (log2-binary-factors -13) 0))
+(test-assert (= (log2-binary-factors 13) 0))
+(test-assert (= (log2-binary-factors -14) 1))
+(test-assert (= (log2-binary-factors 14) 1))
+(test-assert (= (log2-binary-factors -15) 0))
+(test-assert (= (log2-binary-factors 15) 0))
+(test-assert (= (log2-binary-factors -16) 4))
+(test-assert (= (log2-binary-factors 16) 4))
+
+
+(test-exception log2-binary-factors
+                (type: +)
+                (args: 0 -1))
+
+
+
 ;;============================================================================
 ;; bit-set? 
 
@@ -229,6 +332,18 @@
 (test-assert (not (bit-set? 35 3)))
 
 (test-exception bit-set?
+                (type: (+ 0) (0 +))
+                (range: (-1 35))
+                (args: 1 3))
+
+(test-assert      (logbit? 0 #b0101))
+(test-assert (not (logbit? 1 #b0101)))
+(test-assert      (logbit? 2 #b0101))
+(test-assert (not (logbit? 3 #b0101)))
+(test-assert      (logbit? 35 (- 3)))
+(test-assert (not (logbit? 35 3)))
+
+(test-exception logbit?
                 (type: (+ 0) (0 +))
                 (range: (-1 35))
                 (args: 1 3))
@@ -263,7 +378,6 @@
 ;;============================================================================
 ;; copy-bit-field
 
-
 (test-bits "1101100000"     copy-bit-field #b1101101010      0 0 4)
 (test-bits "1101101111"     copy-bit-field #b1101101010     -1 0 4)
 (test-bits "10100111110000" copy-bit-field #b10100100010000 -1 5 9)
@@ -284,6 +398,13 @@
                 (type: (+ 0) (0 +))
                 (args: 1 3))
 
+(test-bits "1000" ash #b1    3)
+(test-bits "101"  ash #b1010 -1)
+
+(test-exception ash
+                (type: (+ 0) (0 +))
+                (args: 1 3))
+
 
 ;;============================================================================
 ;; rotate-bit-field
@@ -300,6 +421,9 @@
 
 ;;============================================================================
 ;; reverse-bit-field
+
+
+
 
 (test-bits "101" reverse-bit-field #b1010 0 4)
 (test-assert (string=? (number->string (reverse-bit-field #xA7 0 8) 16)
@@ -319,7 +443,7 @@
 
 (test-exception integer->list
                 (type: +)
-                (range: -1)
+                (range: (0 -1))
                 (args: 0 2))
 
 ;;============================================================================

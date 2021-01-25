@@ -33,32 +33,6 @@
 
 (include "~~lib/_gambit#.scm")
 
-;;;===========================================================================
-;; Type checking
-
-(define-macro (checked-bitwise-op call)
-  (let ((op     (car call))
-        (n-init (cadr call))
-        (ns     (cddr call)))
-    `(macro-check-fixnum 
-       ,n-init
-       1
-       ,call
-       (let loop ((i 2)
-                  (ns ,ns)
-                  (n-acc ,n-init))
-         (if (null? ns)
-             n-acc
-             (let ((n (car ns)))
-               (macro-check-fixnum
-                 n
-                 i
-                 ,call
-                 (loop (+ i 1)
-                       (cdr ns)
-                       (,op n n-acc)))))))))
-
-
 ;;---------------------------------------------------------------------------
 ;;===========================================================================
 ;;
@@ -68,49 +42,80 @@
 ;;
 ;;---------------------------------------------------------------------------
 ;; bitwise-and
-
-(define (bitwise-and n . ns)
-  (checked-bitwise-op (##bitwise-and n . ns)))
-
-;;---------------------------------------------------------------------------
+;; logand
+;;
 ;; bitwise-ior
-
-(define (bitwise-ior n . ns)
-  (checked-bitwise-op (##bitwise-ior n . ns)))
-
-;;---------------------------------------------------------------------------
+;; logior
+;;
 ;; bitwise-xor
+;; logxor
 
-(define (bitwise-xor n . ns)
-  (checked-bitwise-op (##bitwise-xor n . ns)))
+(define-macro (define-prim-nary-bitwise-op op prim)
+  `(define-prim-nary (,op x y)
+     -1
+     (if (macro-exact-int? x)
+         x
+         '(1))
+     (,prim x y)
+     macro-force-vars
+     macro-no-check
+     (##pair? ##fail-check-exact-integer)))
+
+(define-prim-nary-bitwise-op logand ##bitwise-and2)
+(define-prim-nary-bitwise-op logior ##bitwise-ior2)
+(define-prim-nary-bitwise-op logxor ##bitwise-xor2)
 
 ;;---------------------------------------------------------------------------
 ;; bitwise-not
+;; lognot
 ;;
 ;; built-in
+
+(define-prim (lognot x)
+  (macro-force-vars (x)
+    (let ((type-error
+            (lambda ()
+              (##fail-check-exact-integer 1 lognot x))))
+      (macro-exact-int-dispatch x (type-error)
+        (##fxnot x)
+        ;; don't copy, bitwise invert
+        (##bignum.make (##bignum.adigit-length x) x #t)))))
+
   
 ;;----------------------------------------------------------------------------
 ;; bitwise-merge
+;; bitwise-if
 
-(define (bitwise-merge x y z)
-  (macro-force-vars (x y z)
-    (cond ((##not (macro-exact-int? x))
-           (##fail-check-exact-integer 1 bitwise-merge x y z))
-          ((##not (macro-exact-int? y))
-           (##fail-check-exact-integer 2 bitwise-merge x y z))
-          ((##not (macro-exact-int? z))
-           (##fail-check-exact-integer 3 bitwise-merge x y z))
-          (else
-           (##bitwise-merge (##bitwise-not x) y z)))))  
+(define-macro (bitwise-merge/if merge/if)
+  `(lambda (x y z)
+     (macro-force-vars (x y z)
+       (cond ((##not (macro-exact-int? x))
+              (##fail-check-exact-integer 1 ,merge/if x y z))
+             ((##not (macro-exact-int? y))
+              (##fail-check-exact-integer 2 ,merge/if x y z))
+             ((##not (macro-exact-int? z))
+              (##fail-check-exact-integer 3 ,merge/if x y z))
+             (else
+              (##bitwise-merge (##bitwise-not x) y z))))))
+
+(define-prim bitwise-merge (bitwise-merge/if bitwise-merge))
+(define-prim bitwise-if (bitwise-merge/if bitwise-if))
 
 ;;---------------------------------------------------------------------------
 ;; any-bits-set?
-;;
-;; built-in
+;; logtest
+
+(define-prim (logtest x y)
+  (macro-force-vars (x y)
+    (cond ((##not (macro-exact-int? x))
+           (##fail-check-exact-integer 1 logtest x y))
+          ((##not (macro-exact-int? y))
+           (##fail-check-exact-integer 2 logtest x y))
+          (else
+           (##any-bits-set? x y)))))
 
 
-
-;;===========================================================================
+;===========================================================================
 ;;===========================================================================
 ;;
 ;; Integer Property
@@ -119,8 +124,28 @@
 
 ;;---------------------------------------------------------------------------
 ;; bit-count
-;;
-;; built-in
+;; logcount
+
+(define-prim (logcount x)
+  (macro-force-vars (x)
+    (let ((type-error 
+            (lambda ()
+              (##fail-check-exact-integer 
+                1 
+                logcount 
+                x))))
+      (macro-exact-int-dispatch x (type-error)
+        (##fxbit-count x)
+        (let ((x-length (##bignum.mdigit-length x)))
+          (let loop ((i (##fx- x-length 1))
+                     (n 0))
+            (if (##fx< i 0)
+                (if (##bignum.negative? x)
+                    (##fx- (##fx* x-length ##bignum.mdigit-width) n)
+                    n)
+                (loop (##fx- i 1)
+                      (##fx+ n (##fxbit-count (##bignum.mdigit-ref x i)))))))))))
+
 
 ;;---------------------------------------------------------------------------
 ;; integer-length
@@ -129,9 +154,10 @@
 
 ;;---------------------------------------------------------------------------
 ;; first-set-bit
+;; log2-binary-factors
 
 (define first-set-bit first-bit-set)
-
+(define log2-binary-factors first-bit-set)
 
 
 ;;===========================================================================
@@ -143,20 +169,71 @@
 ;;
 ;;---------------------------------------------------------------------------
 ;; bit-set?
-;;
-;; built-in
+;; logbit?
+
+(define-prim (logbit? x y)
+  (macro-force-vars (x y)
+    (let ((type-error-on-x 
+            (lambda ()
+              (##fail-check-exact-integer 1 logbit? x y)))
+          (type-error-on-y
+            (lambda () 
+              (##fail-check-exact-integer 2 logbit? x y)))
+          (range-error
+            (lambda ()
+              (##raise-range-exception 1 logbit? x y))))
+
+      (macro-exact-int-dispatch x (type-error-on-x)
+
+        (macro-exact-int-dispatch y (type-error-on-y) ;; x = fixnum
+          (if (##fxnegative? x)
+              (range-error)
+              (if (##fx< x ##fixnum-width)
+                  (##fxodd? (##fxarithmetic-shift-right y x))
+                  (##fxnegative? y)))
+          (if (##fxnegative? x)
+              (range-error)
+              (let ((i (##fxquotient x ##bignum.mdigit-width)))
+                (if (##fx< i (##bignum.mdigit-length y))
+                    (##fxodd?
+                     (##fxarithmetic-shift-right
+                      (##bignum.mdigit-ref y i)
+                      (##fxmodulo x ##bignum.mdigit-width)))
+                    (##bignum.negative? y)))))
+
+        (macro-exact-int-dispatch y (type-error-on-y) ;; x = bignum
+          (if (##bignum.negative? x)
+              (range-error)
+              (##fxnegative? y))
+          (if (##bignum.negative? x)
+              (range-error)
+              (##bignum.negative? y)))))))
+
+
 
 ;;---------------------------------------------------------------------------
 ;; copy-bit
 
-(define-procedure (copy-bit (index (index-range-incl
-                                    0 (macro-max-fixnum32)))
-                            (to    fixnum)
-                            (bool  boolean))
+(define-prim (##copy-bit index to bool)
   (if bool
-      (##bitwise-ior to (##arithmetic-shift 1 index))
-      (##bitwise-and to (##bitwise-not (##arithmetic-shift 1 index)))))
+     (##bitwise-ior to (##arithmetic-shift 1 index))
+     (##bitwise-and to (##bitwise-not (##arithmetic-shift 1 index)))))
 
+
+(define-prim (copy-bit index to bool)
+  (macro-force-vars (index to bool)
+    (macro-check-index
+      index
+      1
+      (copy-bit index to bool)
+      (macro-check-boolean
+        bool
+        3
+        (copy-bit index to bool)
+        (begin
+        (if (##not (macro-exact-int? to))
+            (##fail-check-exact-integer 2 copy-bit index to bool)
+            (##copy-bit index to bool)))))))
 
 
 ;;===========================================================================
@@ -170,86 +247,210 @@
 ;; bit-field
 
 
-(define-procedure (bit-field (n     fixnum)
-                             (start (index-range-incl
-                                      0 (macro-max-fixnum32)))
-                             (end   (index-range-incl
-                                      start (macro-max-fixnum32))))
-  (##extract-bit-field (- end start) start n))
+(define-prim (bit-field n start end)
+  (macro-force-vars (n start end)
+    (macro-check-index
+      start
+      2
+      (bit-field n start end)
+      (macro-check-fixnum-range-incl
+        end
+        3
+        start ##max-fixnum
+        (bit-field n start end)
+        (if (##not (macro-exact-int? n))
+            (##fail-check-exact-integer 
+              1 
+              bit-field
+              n 
+              start 
+              end)
+            (##extract-bit-field 
+              (##fx- end start) 
+              start 
+              n))))))
 
 ;;---------------------------------------------------------------------------
 ;; copy-bit-field
 
-(define-procedure (copy-bit-field 
-                   (to    fixnum) 
-                   (from  fixnum)
-                   (start (index-range-incl
-                            0 (macro-max-fixnum32)))
-                   (end   (index-range-incl
-                            start (macro-max-fixnum32))))
-  (##copy-bit-field (- end start) start from to)) 
+(define-prim (copy-bit-field to from start end)
+  (macro-force-vars (to from start end)
+    (macro-check-index
+      start
+      3
+      (copy-bit-field size position from to)
+      (macro-check-fixnum-range-incl
+        end
+        4
+        start ##max-fixnum
+        (copy-bit-field to from start end)
+        (cond ((##not (macro-exact-int? from))
+               (##fail-check-exact-integer 2 copy-bit-field to from start end))
+              ((##not (macro-exact-int? to))
+               (##fail-check-exact-integer 1 copy-bit-field to from start end))
+              (else
+               (##copy-bit-field (##fx- end start) start from to)))))))
+
   
 ;;---------------------------------------------------------------------------
 ;; arithmetic-shift
-;; 
-;; built-in
+;; ash
+
+(define-prim (ash x y)
+  (macro-force-vars (x y)
+    (let ((type-error-on-x 
+            (lambda ()
+              (##fail-check-exact-integer 1 ash x y)))
+
+          (type-error-on-y 
+            (lambda () 
+              (##fail-check-exact-integer 2 ash x y)))
+
+          (fixnum-overflow 
+            (lambda () 
+              (##raise-fixnum-overflow-exception ash x y)))
+
+          (overflow 
+            (lambda () 
+              (##raise-heap-overflow-exception)
+              (##arithmetic-shift x y)))
+
+          (general-fixnum-fixnum-case 
+            (lambda () 
+              (macro-if-bignum
+               (##bignum.arithmetic-shift (##fixnum->bignum x) y)
+               (fixnum-overflow)))))
+
+      (macro-exact-int-dispatch x (type-error-on-x)
+
+        (macro-exact-int-dispatch y (type-error-on-y) ;; x = fixnum
+          (cond ((##fxzero? y)
+                 x)
+                ((##fxnegative? y) ;; right shift
+                 (if (##fx< (##fx- ##fixnum-width) y)
+                     (##fxarithmetic-shift-right x (##fx- y))
+                     (if (##fxnegative? x)
+                         -1
+                         0)))
+                (else ;; left shift
+                 (or (and (##fx< y ##fixnum-width)
+                          (##fxarithmetic-shift-left? x y))
+                     (general-fixnum-fixnum-case))))
+          (cond ((##fxzero? x)
+                 0)
+                ((##bignum.negative? y)
+                 (if (##fxnegative? x)
+                     -1
+                     0))
+                (else
+                 (overflow))))
+
+        (macro-exact-int-dispatch y (type-error-on-y) ;; x = bignum
+          (cond ((##fxzero? y)
+                 x)
+                (else
+                 (##bignum.arithmetic-shift x y)))
+          (cond ((##bignum.negative? y)
+                 (if (##bignum.negative? x)
+                     -1
+                     0))
+                (else
+                 (overflow))))))))
 
 ;;---------------------------------------------------------------------------
 ;; rotate-bit-field
 
-(define-procedure (rotate-bit-field 
-                   (n     fixnum) 
-                   (count fixnum)
-                   (start (index-range-incl
-                     0 (macro-max-fixnum32)))
-                   (end   (index-range-incl
-                            start (macro-max-fixnum32))))
-  (let* ((width (- end start))
-         (count (modulo count width))
+(define-prim (##rotate-bit-field n count start end)
+  (let* ((width (##fx- end start))
+         (count (##fxmodulo count width))
          (mask  (##bitwise-not (##arithmetic-shift -1 width)))
-         (zn    (##bitwise-and mask (##arithmetic-shift n (- start)))))
+         (zn    (##bitwise-and mask (##arithmetic-shift n (##fx- start)))))
     (##bitwise-ior 
       (##arithmetic-shift
         (##bitwise-ior 
           (##bitwise-and 
             mask 
             (##arithmetic-shift zn count))
-          (##arithmetic-shift zn (- count width)))
+          (##arithmetic-shift zn (##fx- count width)))
         start)
       (##bitwise-and 
         (##bitwise-not (##arithmetic-shift mask start))
         n))))
 
+(define-prim (rotate-bit-field n count start end)
+  (macro-force-vars (n count start end)
+    (macro-check-fixnum
+      count
+      2
+      (rotate-bit-field n count start end)
+      (macro-check-index
+        start
+        3
+        (rotate-bit-field n count start end)
+        (macro-check-fixnum-range-incl
+          end
+          4
+          start ##max-fixnum
+          (rotate-bit-field n count start end)
+          (if (##not (macro-exact-int? n))
+              (##fail-check-exact-integer 
+                1 
+                bit-field 
+                n
+                start
+                end)
+              (##rotate-bit-field n count start end)))))))
+ 
+
 ;;---------------------------------------------------------------------------
 ;; reverse-bit-field
 
-(define-procedure (reverse-bit-field (n fixnum)
-                                     (start (index-range-incl 
-                                             0 (macro-max-fixnum32)))
-                                     (end (index-range-incl
-                                            start (macro-max-fixnum32))))
+(define-prim (##reverse-bit-field n start end)
+
   (define (bit-reverse k n)
-    (let rev-loop ((m (if (negative? n)
-                          (##bitwise-not n)
-                          n))
-                   (k (+ -1 k))
-                   (rvs 0))
-      (if (negative? k)
-          (if (negative? n)
-              (##bitwise-not rvs)
-              rvs)
-          (rev-loop (##arithmetic-shift m -1)
-                    (+ -1 k)
-                    (##bitwise-ior (##arithmetic-shift rvs 1)
-                            (##bitwise-and 1 m))))))
+    (let reverse-loop ((m (if (##fxnegative? n)
+                              (##bitwise-not n)
+                              n))
+                       (k (##fx- k 1))
+                       (rvs-acc 0))
+      (if (##fxnegative? k)
+          (if (##fxnegative? n)
+              (##bitwise-not rvs-acc)
+              rvs-acc)
+          (reverse-loop (##arithmetic-shift m -1)
+                        (##fx- k 1)
+                        (##bitwise-ior 
+                          (##arithmetic-shift rvs-acc 1)
+                          (##bitwise-and 1 m))))))
 
-  (let* ((width (- end start))
+  (let* ((width (##fx- end start))
          (mask  (##bitwise-not (##arithmetic-shift -1 width)))
-         (zn    (##bitwise-and mask (##arithmetic-shift n (- start)))))
-    (##bitwise-ior (##arithmetic-shift (bit-reverse width zn) start)
-            (##bitwise-and (##bitwise-not (##arithmetic-shift mask start)) n))))
+         (zn    (##bitwise-and mask (##arithmetic-shift n (##fx- start)))))
+    (##bitwise-ior 
+      (##arithmetic-shift (bit-reverse width zn) start)
+      (##bitwise-and 
+        (##bitwise-not (##arithmetic-shift mask start)) n))))
  
-
+(define-prim (reverse-bit-field n start end)
+  (macro-force-vars (n start end)
+    (macro-check-index
+      start
+      2
+      (reverse-bit-field n start end)
+      (macro-check-fixnum-range-incl
+        end
+        3
+        start ##max-fixnum
+        (reverse-bit-field n start end)
+        (if (##not (macro-exact-int? n))
+            (##fail-check-exact-integer 
+              1
+              reverse-bit-field 
+              n 
+              start 
+              end)
+            (##reverse-bit-field n start end))))))
+            
 
 ;;===========================================================================
 ;;===========================================================================
@@ -261,62 +462,248 @@
 ;;---------------------------------------------------------------------------
 ;; integer->list
 
-(define (integer->list k #!optional (len (macro-absent-obj)))
-  (macro-force-vars (k)
-    (macro-check-index-range-incl
-      k 0 0 (macro-max-fixnum32)
-      (integer->list k len)
-    (if (equal? len (macro-absent-obj))
-        (let int->list-loop ((k k)
-                             (lst '()))
-          (if (<= k 0)
-              lst
-              (int->list-loop (arithmetic-shift k -1)
-                              (cons (odd? k) lst))))
-        (let int->list-loop ((idx (+ -1 len))
-                             (k k)
-                             (lst '()))
-          (if (negative? idx)
-              lst
-              (int->list-loop (+ -1 idx)
-                              (arithmetic-shift k -1)
-                              (cons (odd? k) lst))))))))
+(define-prim (##integer->list k #!optional (len (macro-absent-obj)))
+  (let ((type-error 
+          (lambda () (##fail-check-exact-integer k 1 ##integer->list k len))))
+  (macro-exact-int-dispatch k (type-error)
+    (letrec ((fixnum->list-no-len
+               (lambda (k lst)
+                 (if (##fx<= k 0)
+                     lst
+                     (fixnum->list-no-len
+                       (##arithmetic-shift k -1)
+                       (cons (##fxodd? k) lst)))))
+
+             (fixnum->list
+               (lambda (idx k lst)
+                 (if (##fxnegative? idx)
+                     lst
+                     (fixnum->list 
+                       (##fx- idx 1)
+                       (##arithmetic-shift k -1)
+                       (cons (##fxodd? k) lst))))))
+
+      (if (equal? len (macro-absent-obj))
+          (fixnum->list-no-len k '())
+          (fixnum->list (##fx- len 1) k '())))
+
+    (letrec ((bignum->list-no-len
+               (lambda (k lst)
+                 (if (<= k 0)
+                     lst
+                     (bignum->list-no-len
+                       (##arithmetic-shift k -1)
+                       (cons (odd? k) lst)))))
+
+             (bignum->list
+               (lambda (idx k lst)
+                 (if (##fxnegative? idx)
+                     lst
+                     (bignum->list 
+                       (##fx- idx 1)
+                       (##arithmetic-shift k -1)
+                       (cons (odd? k) lst))))))
+      (if (equal? len (macro-absent-obj))
+          (bignum->list-no-len k '())
+          (bignum->list (##fx- len 1) k '()))))))
+
+
+(define-prim (integer->list k #!optional (len (macro-absent-obj)))
+  (let ((type-error 
+        (lambda () (##fail-check-exact-integer k 1 ##integer->list k len))))
+    (macro-exact-int-dispatch k (type-error)
+      (letrec ((fixnum->list-no-len
+                 (lambda (k lst)
+                   (if (##fx<= k 0)
+                       lst
+                       (fixnum->list-no-len
+                         (##arithmetic-shift k -1)
+                         (cons (##fxodd? k) lst)))))
+
+               (fixnum->list
+                 (lambda (idx k lst)
+                   (if (##fxnegative? idx)
+                       lst
+                       (fixnum->list 
+                         (##fx- idx 1)
+                         (##arithmetic-shift k -1)
+                         (cons (##fxodd? k) lst))))))
+
+        (if (equal? len (macro-absent-obj))
+            (fixnum->list-no-len k '())
+            (macro-check-index
+              len
+              2
+              (integer->list k len)
+              (fixnum->list (##fx- len 1) k '()))))
+
+      (letrec ((bignum->list-no-len
+                 (lambda (k lst)
+                   (if (<= k 0)
+                       lst
+                       (bignum->list-no-len
+                         (##arithmetic-shift k -1)
+                         (cons (odd? k) lst)))))
+
+               (bignum->list
+                 (lambda (idx k lst)
+                   (if (##fxnegative? idx)
+                       lst
+                       (bignum->list 
+                         (##fx- idx 1)
+                         (##arithmetic-shift k -1)
+                         (cons (odd? k) lst))))))
+        (if (equal? len (macro-absent-obj))
+            (bignum->list-no-len k '())
+            (macro-check-index
+              len
+              2
+              (integer->list k len)
+              (bignum->list (##fx- len 1) k '())))))))
+
 
 
 ;;---------------------------------------------------------------------------
 ;; list->integer
-
-(define (list->integer bools)
-  (macro-force-vars (,@bools)
-    (let list->int-loop ((bs  bools)
-                         (acc 0))
-      (if (null? bs)
-          acc
-          (let ((b (car bs)))
-            (let ((n-acc (macro-check-boolean
-                           b
-                           0
-                           (list->integer bools)
-                           (+ acc acc (if b 1 0))))) 
-              (list->int-loop (cdr bs) n-acc)))))))
-
-
-;;---------------------------------------------------------------------------
+;;
 ;; booleans->integer
 
-(define (booleans->integer . bools)
-  (macro-force-vars (,@bools)
-    (let list->int-loop ((bs  bools)
-                         (acc 0))
-      (if (null? bs)
-          acc
-          (let ((b (car bs)))
-            (let ((n-acc (macro-check-boolean
-                           b
-                           0
-                           (booleans->integer . bools)
-                           (+ acc acc (if b 1 0))))) 
-              (list->int-loop (cdr bs) n-acc)))))))
+(define-macro (list/booleans->integer fixnum-overflow bools)
+  `(let fixnum-loop ((bools ,bools)
+                     (int   0))
+     (if (##null? bools)
+         int
+         (let ((bool (if (##car bools) 1 0)))
+           (cond
+             ((##fx*? 2 int) => 
+              (lambda (int2) 
+                (fixnum-loop 
+                  (##cdr bools)
+                  (##fx+ int2 bool))))
+             (else
+               (macro-if-bignum
+                 ; we skip one fixnum/bignum check by tail-calling to this loop
+                 ; (no need to dispatch on the `int` accumulator)
+                 (let bignum-loop ((bools (##cdr bools))
+                                   (int   (+ (* (##fixnum->bignum int)
+                                                2)
+                                             bool)))
+                   (if (##null? bools)
+                       int
+                       (bignum-loop 
+                         (##cdr bools) 
+                         (+ int int (if (##car bools) 1 0)))))
+                 ,fixnum-overflow)))))))
+ 
+;; ---------------------------------------------------------------------------
+
+(define-prim (##list->integer bools)
+  (list/booleans->integer (##raise-fixnum-overflow-exception ##list->integer bools) bools))
+
+
+(define-prim (list->integer bools)
+  (macro-force-vars (bools)
+    (macro-check-pair
+      bools
+      1
+      (list->integer bools)
+      (let fixnum-loop ((bools bools)
+                        (int   0))
+        (if (##not (##pair? bools))
+            (macro-check-list
+              bools
+              1
+              (list->integer bools)
+              int)
+            (let ((bool (##car bools)))
+              (macro-check-boolean
+                bool
+                0
+                (list->integer bools)
+                (let ((bool-val (if bool 1 0)))
+                  (cond
+                    ((##fx*? 2 int) => 
+                       (lambda (int2) 
+                         (fixnum-loop 
+                           (##cdr bools)
+                           (##fx+ int2 bool-val))))
+                    (else
+                      (macro-if-bignum
+                        ; we skip one fixnum/bignum check by tail-calling to this loop
+                        ; (no need to dispatch on the `int` accumulator)
+                        (let ((int (##fixnum->bignum int)))
+                          (let bignum-loop ((bools (##cdr bools))
+                                            (int   (##bignum.+
+                                                     int
+                                                     int 
+                                                     (##fixnum->bignum bool-val))))
+                            (if (##not ##pair? bools)
+                                (macro-check-list
+                                  bools
+                                  1
+                                  (list->integer bools)
+                                  int)
+                                (let ((bool (##car bools)))
+                                  (macro-check-boolean
+                                    bool
+                                    0
+                                    (list->integer bools)
+                                    (bignum-loop 
+                                      (##cdr bools) 
+                                      (##bignum.+ int int (##fixnum->bignum (if bool 1 0)))))))))
+                        (##raise-fixnum-overflow-exception list->integer bools))))))))))))
+
+;; ---------------------------------------------------------------------------
+
+(define-prim (##booleans->integer bools)
+  (list/booleans->integer (apply ##raise-fixnum-overflow-exception (cons ##booleans->integer bools)) bools))
+
+(define-prim (booleans->integer . bools)
+  (macro-force-vars (bools)
+    (let fixnum-loop ((bools bools)
+                      (index 0)
+                      (int   0))
+      (if (null? bools)
+          int
+          (let ((bool (car bools)))
+            (macro-check-boolean
+              bool
+              index
+              (list->integer bools)
+              (let ((bool-val (if bool 1 0)))
+                (cond
+                  ((##fx*? 2 int) => 
+                     (lambda (int2) 
+                       (fixnum-loop 
+                         (cdr bools)
+                         (##fx+ index 1)
+                         (##fx+ int2 bool-val))))
+                  (else
+                    (macro-if-bignum
+                      ; we skip one fixnum/bignum check by tail-calling to this loop
+                      ; (no need to dispatch on the `int` accumulator)
+                      (let ((int (##fixnum->bignum int)))
+                        (let bignum-loop ((bools (##cdr bools))
+                                          (index (##fx+ index 1))
+                                          (int   (##bignum.+
+                                                   int
+                                                   int
+                                                   (##fixnum->bignum bool-val))))
+                          (if (##null? bools)
+                              int
+                              (let ((bool (##car bools)))
+                                (macro-check-boolean
+                                  bool
+                                  index
+                                  (list->integer bools)
+                                  (bignum-loop 
+                                    (##cdr bools) 
+                                    (##fx+ index 1) 
+                                    (##bignum.+ 
+                                      int
+                                      int)
+                                      (##fixnum->bignum (if bool 1 0))))))))
+                      (apply ##raise-fixnum-overflow-exception (##cons booleans->integer bools))))))))))))
 
 
 ;;;===========================================================================

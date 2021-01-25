@@ -14,25 +14,36 @@
   (export
    ;;; bitwise ops
     bitwise-and
+    logand
     bitwise-ior 
+    logior
     bitwise-xor
+    logxor
     bitwise-not 
+    lognot
     bitwise-merge
+    bitwise-if
     any-bits-set?
+    logtest
+      
 
    ;;; integer properties
     bit-count
+    logcount
     integer-length
     first-set-bit
+    log2-binary-factors
 
    ;;; bit within word
     bit-set? 
+    logbit?
     copy-bit
 
    ;;; field of bits
     bit-field
     copy-bit-field
     ; arithmetic-shift (built-in)
+    ash
     rotate-bit-field
     reverse-bit-field
 

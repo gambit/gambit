@@ -10,24 +10,57 @@
 ;;; SRFI 60, Integers as Bits
 
 (##namespace ("srfi/60#"
-    bitwise-and       ; built-in
-    bitwise-ior       ; built-in
-    bitwise-xor       ; built-in
-    bitwise-not       ; built-in
+   ;bitwise-and       ; built-in
+    logand
+
+   ;bitwise-ior       ; built-in
+    logior
+
+   ;bitwise-xor       ; built-in
+    logxor
+
+   ;bitwise-not       ; built-in
+    lognot
+
     bitwise-merge
-    any-bits-set?     ; built-in
-    bit-count         ; built-in
+    bitwise-if
+
+   ;any-bits-set?     ; built-in
+    logtest
+
+   ;bit-count         ; built-in
+    logcount
+
     integer-length    ; built-in
+
     first-set-bit     ; built-in (first-bit-set)
+    log2-binary-factors
+
     bit-set?          ; built-in
+    logbit?
+
+   ;##copy-bit
     copy-bit
+
     bit-field
+
     copy-bit-field    
-    arithmetic-shift  ; built-in
+
+   ;arithmetic-shift  ; built-in
+    ash
+
+   ;##rotate-bit-field
     rotate-bit-field
+
+   ;##reverse-bit-field
     reverse-bit-field
+
     integer->list
+
+   ;##list->integer
     list->integer
+
+   ;##booleans->integer
     booleans->integer
 ))
 
