@@ -463,7 +463,7 @@
                         'define-type
                         #f
                         #f
-                        (map ##source-strip (cdr expr)))
+                        (map ##desourcify (cdr expr)))
                       expr-src)
                      (cdr expr-srcs))))
                   (else
