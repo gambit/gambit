@@ -6223,14 +6223,15 @@ for a discussion of branch cuts.
 ;;;
 ;;; Finally, the bits of a bignum can be accessed as a vector of "fdigit"s,
 ;;; which are unsigned integers containing ##bignum.fdigit-width bits, which
-;;; is currently 8 on all architectures.  Fdigits are so called because a
+;;; is currently 8 on all architectures in the C backend, and 7 in the universal backend.
+;;; Fdigits are so called because a
 ;;; bignum is represented as fdigits before the Fast Fourier Transforms used
 ;;; in large bignum multiplications are performed.  Some comments indicate that for
-;;; bignums of larger than half a billion bits, four-bit fdigits may be useful, but that
-;;; isn't implemented.
+;;; bignums of larger than half a billion bits, four-bit fdigits may be useful in the C
+;;; backend, but that isn't implemented.
 ;;;
 ;;; The global variables ##bignum.adigit-width, ##bignum.mdigit-width, and
-;;; ##bignum.fdigit-width are defined in _kernel.scm.
+;;; ##bignum.fdigit-width are defined in _kernel.scm for the C backend.
 ;;;
 ;;; All issues of big-endian or little-endian accesses are taken care of in the
 ;;; C macros implementing the low-level operations, so we can program as if we're
@@ -6247,14 +6248,14 @@ for a discussion of branch cuts.
 
 (macro-case-target
  ((C)
-  (define ##bignum.fdigit-base
-    (##fxarithmetic-shift-left 1 ##bignum.fdigit-width)))
+  (begin)) ;; ##bignum.fdigit-width defined in _kernel.scm
 
- ((js)
-  (define ##bignum.fdigit-width 7)
-  (define ##bignum.fdigit-base
-    (##fxarithmetic-shift-left 1 ##bignum.fdigit-width)))
+ (else 
+  (define ##bignum.fdigit-width 7))
  )
+
+(define ##bignum.fdigit-base
+    (##fxarithmetic-shift-left 1 ##bignum.fdigit-width))
 
 (define ##bignum.mdigit-base
   (##fxarithmetic-shift-left 1 ##bignum.mdigit-width))
@@ -6476,7 +6477,7 @@ for a discussion of branch cuts.
   ;; Sets x[i] to fdigit (accessing x as fdigits)
   (define-prim (##bignum.fdigit-set! x i fdigit)))
 
- ((js)
+ (else
 
   ;; assumes that mdigits are 14 bits wide and fdigits are
   ;; halves of mdigits
