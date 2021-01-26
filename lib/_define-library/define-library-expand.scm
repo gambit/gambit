@@ -217,6 +217,7 @@
     exports-tbl
     imports-tbl
     macros-tbl
+    type-definers-tbl
     meta-info-tbl
     rev-pending-exports
     rev-imports
@@ -444,6 +445,12 @@
                   (parse-include ctx rest-srcs lib-decl-src kind)))
         '()))
 
+  (define (resolve-id ctx sym)
+    (if (##full-name? sym)
+        sym
+        (##make-full-name (ctx-namespace ctx)
+                          sym)))
+
   (define (parse-macros ctx body)
     (let loop ((expr-srcs body))
       (if (pair? expr-srcs)
@@ -455,17 +462,17 @@
             (cond ((memq head '(begin ##begin))
                    (loop
                     (append (cdr expr) (cdr expr-srcs))))
-                  ((memq head '(define-type ##define-type))
-                   (loop
-                    (cons
-                     (##sourcify-deep
-                      (##define-type-expand
-                        'define-type
-                        #f
-                        #f
-                        (map ##desourcify (cdr expr)))
-                      expr-src)
-                     (cdr expr-srcs))))
+                  ((table-ref (ctx-type-definers-tbl ctx) head #f) =>
+                   (lambda (define-type-expand-params)
+                     (loop
+                      (cons
+                       (##sourcify-deep
+                        (apply
+                         ##define-type-expand
+                         (append define-type-expand-params
+                                 (list (map ##desourcify (cdr expr)))))
+                        expr-src)
+                       (cdr expr-srcs)))))
                   (else
                    (let* ((def-syntax?
                             (memq head '(define-syntax ##define-syntax)))
@@ -488,10 +495,7 @@
                      (if (not (symbol? sym))
                          (loop (cdr expr-srcs)) ;; keep looking for syntax defs
                          (let* ((id
-                                 (if (##full-name? sym)
-                                     sym
-                                     (##make-full-name (ctx-namespace ctx)
-                                                       sym)))
+                                 (resolve-id ctx sym))
                                 (val-src
                                  (caddr expr))
                                 (val
@@ -522,6 +526,26 @@
 
                            ;; replace original define-syntax by def with resolved id
                            (set-car! expr-srcs def)
+
+                           (let* ((def-body
+                                    (caddr (##desourcify def)))
+                                  (define-type-expand-params
+                                   (and (= (##proper-length def-body) 3)
+                                        (eq? (list-ref def-body 0) '##lambda)
+                                        (eq? (list-ref def-body 1) 'args)
+                                        (let ((x (list-ref def-body 2)))
+                                          (and (= (##proper-length x) 5)
+                                               (eq? (list-ref x 0)
+                                                    '##define-type-expand)
+                                               (eq? (list-ref x 4)
+                                                    'args)
+                                               (list (cadr (list-ref x 1))
+                                                     (cadr (list-ref x 2))
+                                                     (cadr (list-ref x 3))))))))
+                             (if define-type-expand-params
+                                 (table-set! (ctx-type-definers-tbl ctx)
+                                             sym
+                                             define-type-expand-params)))
 
                            (loop (cdr expr-srcs)))))))))))
 
@@ -607,12 +631,19 @@
                              (make-table test: eq?) ;; exports-tbl
                              (make-table test: eq?) ;; imports-tbl
                              (make-table test: eq?) ;; macros-tbl
+                             (make-table test: eq?) ;; type-definers-tbl
                              (make-table test: eq?) ;; meta-info-tbl
                              '()
                              '()
                              '()
                              (##extend-aliases-from-rpath modref-path
                                                           module-root))))
+
+             (let ((tbl (ctx-type-definers-tbl ctx)))
+               (table-set! tbl 'define-type        '(define-type #f #f))
+               (table-set! tbl '##define-type      '(define-type #f #f))
+               (table-set! tbl 'define-structure   '(define-structure #f #f))
+               (table-set! tbl '##define-structure '(define-structure #f #f)))
 
              (parse-body ctx body-srcs)
 
