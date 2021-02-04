@@ -174,6 +174,12 @@
   0
   18446744073709551615)
 
+(define-check-type exact-integer 'exact-integer
+  macro-exact-int?)
+
+(define-check-type nonnegative-exact-integer 'nonnegative-exact-integer
+  macro-nonnegative-exact-int?)
+
 (define-check-type inexact-real 'inexact-real
   ##flonum?)
 
