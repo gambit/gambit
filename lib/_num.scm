@@ -5574,7 +5574,7 @@ for a discussion of branch cuts.
      position 2 (clear-bit-field size position n)
      (macro-check-exact-integer
       n 3 (clear-bit-field size position n)
-           (##clear-bit-field size position n))))))
+      (##clear-bit-field size position n))))))
 
 (define-prim (##replace-bit-field size position newfield n)
   (let ((m (##bit-mask size)))
@@ -8915,7 +8915,7 @@ end-of-code
             (do ((i 0 (##fx+ i 1))
                  (x x (##fxarithmetic-shift-right x 1))
                  (result 0 (##fx+ (##fx* result 2)
-                                       (##fxand x 1))))
+                                  (##fxand x 1))))
                 ((##fx= i n) result)))
 
           (let loop ((i start)
