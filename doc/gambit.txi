@@ -705,10 +705,10 @@ numbers from 1 to that integer:
 @smallexample
 @b{}#!/usr/local/Gambit/bin/six-script
 
-void main (obj n_str)
+function main(n_str)
 @{
-  int n = \string->number(n_str);
-  for (int i=1; i<=n; i++)
+  scmobj n = \string->number(n_str);
+  for (scmobj i=1; i<=n; i++)
     \pretty-print(i);
 @}
 @end smallexample
@@ -4786,7 +4786,9 @@ For example:
 @deffnx procedure nan? @var{x}
 @end deffn
 
-@deffn undefined six.!
+@deffn {special form} six.infix @var{datum}
+@deffnx {special form} six.prefix @var{datum}
+@deffnx undefined six.!
 @deffnx {special form} six.!x @var{x}
 @deffnx {special form} six.&x @var{x}
 @deffnx {special form} six.*x @var{x}
@@ -4808,6 +4810,9 @@ For example:
 @deffnx {special form} six.dot @var{expr} @var{ident}
 @deffnx {special form} six.for @var{stat1} @var{expr2} @var{expr3} @var{stat2}
 @deffnx undefined six.goto
+@deffnx undefined six.import @var{expr}
+@deffnx undefined six.from-import @var{expr1} @var{expr2}
+@deffnx undefined six.from-import-* @var{expr}
 @deffnx {special form} six.identifier @var{ident}
 @deffnx {special form} six.if @var{expr} @var{stat1} @r{[}@var{stat2}@r{]}
 @deffnx {special form} six.index @var{expr1} @var{expr2}
@@ -4817,7 +4822,6 @@ For example:
 @deffnx procedure six.make-array @var{init} @var{dim}@dots{}
 @deffnx {special form} six.new @var{ident} @var{arg}@dots{}
 @deffnx {special form} six.null
-@deffnx {special form} six.prefix @var{datum}
 @deffnx {special form} six.procedure @var{type} @var{params} @var{stat}
 @deffnx {special form} six.procedure-body @var{stat}@dots{}
 @deffnx undefined six.return
@@ -4829,8 +4833,12 @@ For example:
 @deffnx {special form} six.x&&y @var{x} @var{y}
 @deffnx {special form} six.x&=y @var{x} @var{y}
 @deffnx {special form} six.x&y @var{x} @var{y}
+@deffnx {special form} six.x**=y @var{x} @var{y}
+@deffnx {special form} six.x**y @var{x} @var{y}
 @deffnx {special form} six.x*=y @var{x} @var{y}
 @deffnx {special form} six.x*y @var{x} @var{y}
+@deffnx undefined six.x@@=y @var{x} @var{y}
+@deffnx undefined six.x@@y @var{x} @var{y}
 @deffnx {special form} six.x++ @var{x}
 @deffnx {special form} six.x+=y @var{x} @var{y}
 @deffnx {special form} six.x+y @var{x} @var{y}
@@ -4838,6 +4846,8 @@ For example:
 @deffnx {special form} six.x-- @var{x}
 @deffnx {special form} six.x-=y @var{x} @var{y}
 @deffnx {special form} six.x-y @var{x} @var{y}
+@deffnx {special form} six.x//=y @var{x} @var{y}
+@deffnx {special form} six.x//y @var{x} @var{y}
 @deffnx {special form} six.x/=y @var{x} @var{y}
 @deffnx {special form} six.x/y @var{x} @var{y}
 @deffnx undefined six.x:-y @var{x} @var{y}
@@ -5025,7 +5035,10 @@ This modularization approach has a number of issues:
 @item
 It hinders code sharing among different programs and users because a
 shared module's location in the filesystem must be known to all
-modules loading or including it.
+modules loading or including it.  In the above example the path
+@code{"angle0/angle0.scm"} is relative so the @code{load} procedure
+will resolve the path incorrectly if the program executes
+@code{(current-directory "...")}  before calling @code{load}.
 
 @item
 When a module is needed by more than one other module there will be
@@ -15489,13 +15502,13 @@ These comments can be nested.
 
 The reader supports an infix syntax extension which is called SIX
 (Scheme Infix eXtension).  This extension is both supported by the
-@samp{read} procedure and in program source code.
+@code{read} procedure and in program source code.
 
 The backslash character is a delimiter that marks the beginning of a
 single datum expressed in the infix syntax (the details are given
 below).  One way to think about it is that the backslash character
 escapes the prefix syntax temporarily to use the infix syntax.  For
-example a three element list could be written as @samp{(@var{X}
+example a three element list could be written as @code{(@var{X}
 \@var{Y} @var{Z})}, the elements @var{X} and @var{Z} are expressed
 using the normal prefix syntax and @var{Y} is expressed using the
 infix syntax.
@@ -15503,18 +15516,13 @@ infix syntax.
 When the reader encounters an infix datum, it constructs a syntax tree
 for that particular datum.  Each node of this tree is represented with
 a list whose first element is a symbol indicating the type of node.
-For example, @samp{(six.identifier abc)} is the representation of the
-infix identifier @samp{abc} and @samp{(six.index (six.identifier abc)
+For example, @code{(six.identifier abc)} is the representation of the
+infix identifier @code{abc} and @code{(six.index (six.identifier abc)
 (six.identifier i))} is the representation of the infix datum
-@samp{abc[i];}.
+@code{abc[i];}.  The reader will return this representation wrapped
+with a @code{(six.infix ...)} form.
 
 @subsection SIX grammar
-
-The SIX grammar is given below.  On the left hand side are the
-production rules.  On the right hand side is the datum that is
-constructed by the reader.  The notation @var{$i} denotes the datum
-that is constructed by the reader for the @var{i}th part of the
-production rule.
 
 @macro meta{name}
 @math{<}\name\@math{>}
@@ -15531,6 +15539,20 @@ production rule.
 @macro syntaxbar{}
 @asis{@ @ |@ }
 @end macro
+
+The SIX grammar is given below.  On the left hand side are the
+production rules.  On the right hand side is the datum that is
+constructed by the reader.  The notation @var{$i} denotes the datum
+that is constructed by the reader for the @var{i}th part of the
+production rule.
+
+In this grammar most statements end with a semicolon.  When the
+@meta{infix datum} is immediately following the backslash character
+that indicates the start of an infix datum, the ending semicolon is
+optional (a semicolon is automatically inserted when the datum could
+be complete and a whitespace or inappropriate character is encountered
+such as a closing parenthesis).  For example @code{(f \2*n (list)
+\5)} is equivalent to @code{(f \2*n; (list) \5;)}.
 
 @multitable @columnfractions .60 .40
 
@@ -15564,6 +15586,10 @@ production rule.
 @item
 @syntaxbar{}@meta{return stat} @tab @var{$1}
 @item
+@syntaxbar{}@meta{import stat} @tab @var{$1}
+@item
+@syntaxbar{}@meta{from stat} @tab @var{$1}
+@item
 @syntaxbar{}@meta{expression stat} @tab @var{$1}
 @item
 @syntaxbar{}@meta{procedure definition} @tab @var{$1}
@@ -15586,7 +15612,7 @@ production rule.
 @item
 @meta{for stat} @syntaxdef{}
 @item
-@syntaxspc{}@code{for} @code{(} @meta{stat} @code{;} @meta{oexpr} @code{;} @meta{oexpr} @code{)} @meta{stat} @tab @code{(six.for @var{$3} @var{$5} @var{$7} @var{$9})}
+@syntaxspc{}@code{for} @code{(} @meta{stat} @meta{oexpr} @code{;} @meta{oexpr} @code{)} @meta{stat} @tab @code{(six.for @var{$3} @var{$4} @var{$6} @var{$8})}
 
 @item
 @meta{while stat} @syntaxdef{}
@@ -15636,6 +15662,18 @@ production rule.
 @syntaxbar{}@code{return} @meta{expr} @code{;} @tab @code{(six.return @var{$2})}
 
 @item
+@meta{import stat} @syntaxdef{}
+@item
+@syntaxspc{}@code{import} @meta{expr} @code{;} @tab @code{(six.import @var{$2})}
+
+@item
+@meta{from stat} @syntaxdef{}
+@item
+@syntaxspc{}@code{from} @meta{expr} @code{import} @meta{expr} @code{;} @tab @code{(six.from-import @var{$2} @var{$4})}
+@item
+@syntaxspc{}@code{from} @meta{expr} @code{import} @code{*} @code{;} @tab @code{(six.from-import-* @var{$2})}
+
+@item
 @meta{expression stat} @syntaxdef{}
 @item
 @syntaxspc{}@meta{expr} @code{;} @tab @var{$1}
@@ -15658,6 +15696,8 @@ production rule.
 @meta{procedure definition} @syntaxdef{}
 @item
 @syntaxspc{}@meta{type} @meta{id-or-prefix} @code{(} @meta{parameters} @code{)} @meta{body} @tab @code{(six.define-procedure @var{$2} (six.procedure @var{$1} @var{$4} @var{$6}))}
+@item
+@syntaxbar{}@code{function} @meta{id-or-prefix} @code{(} @meta{parameters} @code{)} @meta{body} @tab @code{(six.define-procedure @var{$2} (six.procedure #f @var{$4} @var{$6}))}
 
 @item
 @meta{variable definition} @syntaxdef{}
@@ -15718,11 +15758,17 @@ production rule.
 @item
 @syntaxbar{}@meta{expr14} @code{&=} @meta{expr15} @tab @code{(six.x&=y @var{$1} @var{$3})}
 @item
+@syntaxbar{}@meta{expr14} @code{**=} @meta{expr15} @tab @code{(six.x**=y @var{$1} @var{$3})}
+@item
 @syntaxbar{}@meta{expr14} @code{*=} @meta{expr15} @tab @code{(six.x*=y @var{$1} @var{$3})}
+@item
+@syntaxbar{}@meta{expr14} @code{@@=} @meta{expr15} @tab @code{(six.x@@=y @var{$1} @var{$3})}
 @item
 @syntaxbar{}@meta{expr14} @code{+=} @meta{expr15} @tab @code{(six.x+=y @var{$1} @var{$3})}
 @item
 @syntaxbar{}@meta{expr14} @code{-=} @meta{expr15} @tab @code{(six.x-=y @var{$1} @var{$3})}
+@item
+@syntaxbar{}@meta{expr14} @code{//=} @meta{expr15} @tab @code{(six.x//=y @var{$1} @var{$3})}
 @item
 @syntaxbar{}@meta{expr14} @code{/=} @meta{expr15} @tab @code{(six.x/=y @var{$1} @var{$3})}
 @item
@@ -15834,7 +15880,11 @@ production rule.
 @item
 @syntaxbar{}@meta{expr3} @code{*} @meta{expr2} @tab @code{(six.x*y @var{$1} @var{$3})}
 @item
+@syntaxbar{}@meta{expr3} @code{@@} @meta{expr2} @tab @code{(six.x@@y @var{$1} @var{$3})}
+@item
 @syntaxbar{}@meta{expr3} @code{/} @meta{expr2} @tab @code{(six.x/y @var{$1} @var{$3})}
+@item
+@syntaxbar{}@meta{expr3} @code{//} @meta{expr2} @tab @code{(six.x//y @var{$1} @var{$3})}
 @item
 @syntaxbar{}@meta{expr2} @tab @var{$1}
 
@@ -15860,6 +15910,8 @@ production rule.
 @syntaxbar{}@code{~} @meta{expr2} @tab @code{(six.~x @var{$2})}
 @item
 @syntaxbar{}@code{new} @meta{id-or-prefix} @code{(} @meta{arguments} @code{)} @tab @code{(six.new @var{$2} . @var{$4})}
+@item
+@syntaxbar{}@meta{expr2} @code{**} @meta{expr1} @tab @code{(six.x**y @var{$1} @var{$3})}
 @item
 @syntaxbar{}@meta{expr1} @tab @var{$1}
 
@@ -15900,6 +15952,8 @@ production rule.
 @syntaxbar{}@code{[} @meta{elements} @code{]} @tab @var{$2}
 @item
 @syntaxbar{}@meta{type} @code{(} @meta{parameters} @code{)} @meta{body} @tab @code{(six.procedure @var{$1} @var{$3} @var{$5})}
+@item
+@syntaxbar{}@code{function} @code{(} @meta{parameters} @code{)} @meta{body} @tab @code{(six.procedure #f @var{$3} @var{$5})}
 
 @item
 @meta{block stat} @syntaxdef{}
@@ -15977,75 +16031,72 @@ production rule.
 @item
 @meta{type} @syntaxdef{}
 @item
-@syntaxspc{}@code{int} @tab @code{int}
-@item
-@syntaxbar{}@code{char} @tab @code{char}
-@item
-@syntaxbar{}@code{bool} @tab @code{bool}
-@item
-@syntaxbar{}@code{void} @tab @code{void}
-@item
-@syntaxbar{}@code{float} @tab @code{float}
-@item
-@syntaxbar{}@code{double} @tab @code{double}
-@item
-@syntaxbar{}@code{obj} @tab @code{obj}
+@syntaxbar{}@code{scmobj} @tab @code{scmobj}
 
 @end multitable
 
 @subsection SIX semantics
 
 The semantics of SIX depends on the definition of the
-@code{six.@var{XXX}} identifiers (as functions and macros).  Many of
+@code{six.@var{XXX}} identifiers (as procedures and macros).  Many of
 these identifiers are predefined macros which give SIX a semantics
-that is close to C's.  The user may override these definitions to
+that is close to C's while also borrowing some semantics from
+JavaScript and Python (such as @code{**}, @code{//}, @code{@@}, and
+@code{import}).  The programmer may override these definitions to
 change the semantics either globally or locally.  For example,
 @code{six.x^y} is a predefined macro that expands @code{(six.x^y x y)}
-into @code{(bitwise-xor x y)}.  If the user prefers the @samp{^}
-operator to express exponentiation in a specific function, then in
-that function @code{six.x^y} can be redefined as a macro that expands
+into @code{(bitwise-xor x y)}.  If the programmer prefers the @code{^}
+operator to express exponentiation in a specific procedure, then in
+that procedure @code{six.x^y} can be redefined as a macro that expands
 @code{(six.x^y x y)} into @code{(expt x y)}.  Note that the
 associativity and precedence of operators cannot be changed as that is
-a syntactic issue.
+a syntactic issue, so this will give a left associative exponentiation
+operator with an unusual precedence.
 
-Note that the following identifiers are not predefined, and
-consequently they do not have a predefined semantics:
+The following identifiers do not have a predefined semantics (they
+are undefined identifiers):
 @code{six.label}, @code{six.goto}, @code{six.switch}, @code{six.case},
 @code{six.break}, @code{six.continue}, @code{six.return},
-@code{six.clause}, @code{six.x:-y}, and @code{six.!}.
+@code{six.clause}, @code{six.x:-y}, @code{six.@@}, @code{six.@@=},
+@code{six.import}, @code{six.from-import}, @code{six.from-import-*},
+and @code{six.!}.
 
-The following is an example showing some of the predefined semantics
-of SIX:
+Here is an example showing some of the predefined syntax and
+semantics of SIX:
 
 @smallexample
-> @b{(list (+ 1 2) \3+4; (+ 5 6))}
+> @b{(list (+ 1 2) \3+4 (+ 5 6))}
 (3 7 11)
-> @b{\[ 1+2, \(+ 3 4), 5+6 ];}
+> @b{\[ 1+2, \(+ 3 4), 5+6 ]}
 (3 7 11)
-> @b{(map (lambda (x) \(x*x-1)/log(x+1);) '(1 2 3 4))}
+> @b{(map (lambda (x) \(x*x-1)/log(x+1)) '(1 2 3 4))}
 (0 2.730717679880512 5.7707801635558535 9.320024018394177)
-> @b{\obj n = expt(10,5);}
+> @b{(map \function (x) @{ return (x*x-1)/log(x+1); @} '(1 2 3 4))}
+(0. 2.730717679880512 5.7707801635558535 9.320024018394177)
+> @b{\map(function (x) @{ return (x*x-1)/log(x+1); @}, [1, 2, 3, 4])}
+(0. 2.730717679880512 5.7707801635558535 9.320024018394177)
+> @b{\scmobj n=expt(10,5)}
 > @b{n}
 100000
-> @b{\obj t[3][10] = 88;}
-> @b{\t[0][9] = t[2][1] = 11;}
+> @b{\scmobj t[3][10]=88}
+> @b{\t[0][9]=t[2][1]=11}
 11
 > @b{t}
 #(#(88 88 88 88 88 88 88 88 88 11)
   #(88 88 88 88 88 88 88 88 88 88)
   #(88 11 88 88 88 88 88 88 88 88))
-> @b{\obj radix = new parameter (10);}
-> @b{\radix(2);}
-> @b{\radix();}
+> @b{\scmobj radix=new parameter(10)}
+> @b{\radix(2)}
+> @b{\radix()}
 2
-> @b{\for (int i=0; i<5; i++) pp(1<<i*8);}
+> @b{\for (scmobj i=0; i<5; i++) pp(1<<i*8)}
 1
 256
 65536
 16777216
 4294967296
-> @b{\obj \make-adder (obj x) @{ obj (obj y) @{ x+y; @}; @}}
-> @b{\map (new adder (100), [1,2,3,4]);}
+> @b{\scmobj \make-adder(scmobj x) @{ scmobj (scmobj y) @{ x+y; @}; @}}
+> @b{\map(new adder(100), [1,2,3,4])}
 (101 102 103 104)
 > @b{(map (make-adder 100) (list 1 2 3 4))}
 (101 102 103 104)

@@ -3592,6 +3592,12 @@
 
 ;;;----------------------------------------------------------------------------
 
+(define-runtime-syntax six.infix
+  (lambda (src) (##deconstruct-call src 2 (lambda (expr) expr))))
+
+(define-runtime-syntax six.prefix
+  (lambda (src) (##deconstruct-call src 2 (lambda (expr) expr))))
+
 (define-runtime-macro (six.!x x)
   `(not ,x))
 
@@ -3613,11 +3619,17 @@
 (define-runtime-macro (six.x%y x y)
   `(modulo ,x ,y))
 
+(define-runtime-macro (six.x**y x y)
+  `(expt ,x ,y))
+
 (define-runtime-macro (six.x*y x y)
   `(* ,x ,y))
 
 (define-runtime-macro (six.*x x)
   (##infix-lvalue-fetch (##list 'six.*x x)))
+
+(define-runtime-macro (six.x//y x y)
+  `(quotient ,x ,y))
 
 (define-runtime-macro (six.x/y x y)
   `(/ ,x ,y))
@@ -3832,6 +3844,9 @@
 (define-runtime-macro (six.x&=y x y)
   (##infix-update-in-place 'six.x&=y x 'six.x&y y #t))
 
+(define-runtime-macro (six.x**=y x y)
+  (##infix-update-in-place 'six.x**=y x 'six.x**y y #t))
+
 (define-runtime-macro (six.x*=y x y)
   (##infix-update-in-place 'six.x*=y x 'six.x*y y #t))
 
@@ -3840,6 +3855,9 @@
 
 (define-runtime-macro (six.x-=y x y)
   (##infix-update-in-place 'six.x-=y x 'six.x-y y #t))
+
+(define-runtime-macro (six.x//=y x y)
+  (##infix-update-in-place 'six.x//=y x 'six.x//y y #t))
 
 (define-runtime-macro (six.x/=y x y)
   (##infix-update-in-place 'six.x/=y x 'six.x/y y #t))
@@ -3920,9 +3938,6 @@
 
 (define-runtime-macro (six.identifier identifier)
   (##infix-lvalue-fetch (##list 'six.identifier identifier)))
-
-(define-runtime-macro (six.prefix datum)
-  datum)
 
 (define-runtime-macro (six.if expr stat1 . stat2)
   `(if ,expr ,stat1 ,@stat2))
