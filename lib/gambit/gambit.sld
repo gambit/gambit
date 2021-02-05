@@ -2,7 +2,7 @@
 
 ;;; File: "gambit.sld"
 
-;;; Copyright (c) 2005-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2005-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1003,6 +1003,7 @@ six.goto
 six.identifier
 six.if
 six.index
+six.infix
 six.label
 six.list
 six.literal
@@ -1021,6 +1022,8 @@ six.x%y
 six.x&&y
 six.x&=y
 six.x&y
+six.x**=y
+six.x**y
 six.x*=y
 six.x*y
 six.x++
@@ -1030,6 +1033,8 @@ six.x+y
 six.x--
 six.x-=y
 six.x-y
+six.x//=y
+six.x//y
 six.x/=y
 six.x/y
 six.x:-y
