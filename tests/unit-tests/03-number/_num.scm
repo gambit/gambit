@@ -1148,6 +1148,10 @@
 (check-eqv? (extract-bit-field (expt 2 100) 0 15) 15)
 (check-eqv? (extract-bit-field (expt 2 100) (expt 3 100) 15) 0)
 
+;;; Have size be bigger than (integer-length x)
+
+(check-eqv? (extract-bit-field 200 0 (expt 3 110)) (expt 3 110))
+
 ;;; Some error tests.
 
 (check-exn heap-overflow-exception? (lambda () (extract-bit-field (expt 2 100) (expt 2 100) -1)))

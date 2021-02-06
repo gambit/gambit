@@ -34,7 +34,5 @@
            (g (car gpq)) (p (cadr gpq)) (q (caddr gpq)))
       (quotient (* p ch-C sqrt-C) (* ch-D (+ q (* p ch-A)))))))
 
-(pi (expt 10 4))
-
 (check-eqv? (modulo (pi (expt 10 4)) 100000)
             75678)
