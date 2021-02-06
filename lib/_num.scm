@@ -5495,11 +5495,12 @@ for a discussion of branch cuts.
             (begin
               (##bignum.mdigit-set! result i 0)
               (loop (##fx- i 1)))
-            (##bignum.mdigit-set!
-             result i
-             (##fxand
-              (##bignum.mdigit-ref result i)
-              (##fxnot (##fxarithmetic-shift-left -1 size-bits)))))
+            (if (##fx= size-words i)
+                (##bignum.mdigit-set!
+                 result i
+                 (##fxand
+                  (##bignum.mdigit-ref result i)
+                  (##fxnot (##fxarithmetic-shift-left -1 size-bits))))))
         (##bignum.normalize! result)))))
 
 (define-prim (##extract-bit-field size position n)
