@@ -13901,38 +13901,47 @@
   (define-six-op op.-      4  lr six.x-y        six.-x           )
   (define-six-op op.<<     5  lr six.x<<y                        )
   (define-six-op op.>>     5  lr six.x>>y                        )
+  (define-six-op op.>>>    5  lr six.x>>>y                       )
   (define-six-op op.<      6  lr six.x<y                         )
   (define-six-op op.<=     6  lr six.x<=y                        )
   (define-six-op op.>      6  lr six.x>y                         )
   (define-six-op op.>=     6  lr six.x>=y                        )
+  (define-six-op op.in     6  lr six.xiny                        )
+  (define-six-op op.is     6  lr six.xisy                        )
   (define-six-op op.!=     7  lr six.x!=y                        )
   (define-six-op op.==     7  lr six.x==y                        )
+  (define-six-op op.!==    7  lr six.x!==y                       )
+  (define-six-op op.===    7  lr six.x===y                       )
   (define-six-op op.&      8  lr six.x&y        six.&x           )
   (define-six-op op.^      9  lr six.x^y                         )
   (define-six-op |op.\||   10 lr |six.x\|y|                      )
   (define-six-op op.&&     11 lr six.x&&y                        )
   (define-six-op |op.\|\|| 12 lr |six.x\|\|y|                    )
-  (define-six-op op.?      13 rl six.x?y:z                       )
-  (define-six-op |op.:|    14 rl six.x:y                         )
-  (define-six-op op.%=     15 rl six.x%=y                        )
-  (define-six-op op.&=     15 rl six.x&=y                        )
-  (define-six-op op.**=    15 rl six.x**=y                       )
-  (define-six-op op.*=     15 rl six.x*=y                        )
-  (define-six-op op.@=     15 rl six.x@=y                        )
-  (define-six-op op.+=     15 rl six.x+=y                        )
-  (define-six-op op.-=     15 rl six.x-=y                        )
-  (define-six-op op.//=    15 rl six.x//=y                       )
-  (define-six-op op./=     15 rl six.x/=y                        )
-  (define-six-op op.<<=    15 rl six.x<<=y                       )
-  (define-six-op op.=      15 rl six.x=y                         )
-  (define-six-op op.>>=    15 rl six.x>>=y                       )
-  (define-six-op op.^=     15 rl six.x^=y                        )
-  (define-six-op |op.\|=|  15 rl |six.x\|=y|                     )
-  (define-six-op op.:=     16 rl six.x:=y                        )
-  (define-six-op |op.,|    17 lr |six.x,y|  );;;;;;;;;;;;;;;;  |six.,x|         )
-  (define-six-op op.:-     18 rl six.x:-y                        )
+  (define-six-op op.not    13 rl #f             six.notx         )
+  (define-six-op op.and    14 lr six.xandy                       )
+  (define-six-op op.or     15 lr six.xory                        )
+  (define-six-op op.?      16 rl six.x?y:z                       )
+  (define-six-op |op.:|    17 rl six.x:y                         )
+  (define-six-op op.%=     18 rl six.x%=y                        )
+  (define-six-op op.&=     18 rl six.x&=y                        )
+  (define-six-op op.**=    18 rl six.x**=y                       )
+  (define-six-op op.*=     18 rl six.x*=y                        )
+  (define-six-op op.@=     18 rl six.x@=y                        )
+  (define-six-op op.+=     18 rl six.x+=y                        )
+  (define-six-op op.-=     18 rl six.x-=y                        )
+  (define-six-op op.//=    18 rl six.x//=y                       )
+  (define-six-op op./=     18 rl six.x/=y                        )
+  (define-six-op op.<<=    18 rl six.x<<=y                       )
+  (define-six-op op.=      18 rl six.x=y                         )
+  (define-six-op op.>>>=   18 rl six.x>>>=y                      )
+  (define-six-op op.>>=    18 rl six.x>>=y                       )
+  (define-six-op op.^=     18 rl six.x^=y                        )
+  (define-six-op |op.\|=|  18 rl |six.x\|=y|                     )
+  (define-six-op op.:=     19 rl six.x:=y                        )
+  (define-six-op |op.,|    20 lr |six.x,y|  );;;;;;;;;;;;;;;;  |six.,x|         )
+  (define-six-op op.:-     21 rl six.x:-y                        )
 
-  (define max-precedence 18)
+  (define max-precedence 21)
 
   (define (decimal-digit? c)
     (and (not (char<? c #\0)) (not (char<? #\9 c))))
@@ -14148,7 +14157,16 @@
                                       (token op.@))))
                               ((char=? c #\!)
                                (cond ((char=? x #\=)
-                                      (token-skip-char op.!=))
+                                      (macro-read-next-char-or-eof re);;skip #\=
+                                      (let ((next2
+                                             (macro-peek-next-char-or-eof re)))
+                                        (let ((x2 (if (char? next2)
+                                                      next2
+                                                      #\space)))
+                                          (cond ((char=? x2 #\=)
+                                                 (token-skip-char op.!==))
+                                                (else
+                                                 (token op.!=))))))
                                      (else
                                       (token op.!))))
                               ((char=? c #\~)
@@ -14196,7 +14214,18 @@
                                         (let ((x2 (if (char? next2)
                                                       next2
                                                       #\space)))
-                                          (cond ((char=? x2 #\=)
+                                          (cond ((char=? x2 #\>)
+                                                 (macro-read-next-char-or-eof re);;skip #\>
+                                                 (let ((next3
+                                                        (macro-peek-next-char-or-eof re)))
+                                                   (let ((x3 (if (char? next3)
+                                                                 next3
+                                                                 #\space)))
+                                                     (cond ((char=? x3 #\=)
+                                                            (token-skip-char op.>>>=))
+                                                           (else
+                                                            (token op.>>>))))))
+                                                ((char=? x2 #\=)
                                                  (token-skip-char op.>>=))
                                                 (else
                                                  (token op.>>))))))
@@ -14206,7 +14235,16 @@
                                       (token op.>))))
                               ((char=? c #\=)
                                (cond ((char=? x #\=)
-                                      (token-skip-char op.==))
+                                      (macro-read-next-char-or-eof re);;skip #\=
+                                      (let ((next2
+                                             (macro-peek-next-char-or-eof re)))
+                                        (let ((x2 (if (char? next2)
+                                                      next2
+                                                      #\space)))
+                                          (cond ((char=? x2 #\=)
+                                                 (token-skip-char op.===))
+                                                (else
+                                                 (token op.==))))))
                                      (else
                                       (token op.=))))
                               ((char=? c #\{)
@@ -14429,9 +14467,11 @@
             (get-token-no-autosemi re maybe-tok))
            (start-pos
             (macro-readenv-filepos re)))
+
       (cond ((and (= level 2)
-                  (op? tok)
-                  (unary-prefix? tok))
+                  (case tok
+                    ((not) (unary-prefix? op.not))
+                    (else  (and (op? tok) (unary-prefix? tok)))))
              =>
              (lambda (scheme-name)
                (let ((tok2 (get-token-no-autosemi re #f)))
@@ -14455,6 +14495,7 @@
                                           start-pos
                                           scheme-name
                                           expr))))))))
+
             ((and (= level 2)
                   (eq? tok 'new))
              (read-identifier-or-prefix
@@ -14474,6 +14515,7 @@
                                     'six.new
                                     (cons identifier
                                           args))))))))
+
             ((< 0 level)
              (read-expression
               re
@@ -14483,180 +14525,191 @@
               restriction
               (lambda (re maybe-tok expr1)
                 (let ((tok (get-token re autosemi? maybe-tok)))
-                  (cond ((= level 1)
-                         (let loop ((re re)
-                                    (last-tok tok)
-                                    (last-expr1 expr1))
-                           (cond ((and (op? last-tok)
-                                       (unary-postfix? last-tok))
-                                  =>
-                                  (lambda (scheme-name)
-                                    (loop re
-                                          (get-token re autosemi? #f)
-                                          (##wrap-op1 re
-                                                      start-pos
-                                                      scheme-name
-                                                      last-expr1))))
-                                 ((eq? last-tok |token.(|)
-                                  (read-arguments-tail
-                                   re
-                                   autosemi?
-                                   #f
-                                   (lambda (re maybe-tok args)
-                                     (loop re
-                                           (get-token re autosemi? maybe-tok)
-                                           (##wrap-op re
-                                                      start-pos
-                                                      'six.call
-                                                      (cons last-expr1
-                                                            args))))))
-                                 ((eq? last-tok |token.[|)
-                                  (read-expression
-                                   re
-                                   (let ((autosemi? #f)) ;; semicolons required
-                                     autosemi?)
-                                   #f
-                                   max-precedence
-                                   #f
-                                   (lambda (re maybe-tok expr2)
-                                     (loop re
-                                           (expect-and-get-token
-                                            re
-                                            autosemi?
-                                            maybe-tok
-                                            |token.]|)
-                                           (##wrap-op2 re
-                                                       start-pos
-                                                       'six.index
-                                                       last-expr1
-                                                       expr2)))))
-                                 ((or (eq? last-tok |token.->|)
-                                      (eq? last-tok |token..|))
-                                  (let ((next
-                                         (macro-peek-next-char-or-eof re)))
-                                    (if (or (not (eq? last-tok |token..|))
-                                            (and (char? next)
-                                                 (or (identifier-starter? next)
-                                                     (char=? next #\\))))
+                  (if (= level 1)
+                      (let loop ((re re)
+                                 (last-tok tok)
+                                 (last-expr1 expr1))
+                        (cond ((and (op? last-tok)
+                                    (unary-postfix? last-tok))
+                               =>
+                               (lambda (scheme-name)
+                                 (loop re
+                                       (get-token re autosemi? #f)
+                                       (##wrap-op1 re
+                                                   start-pos
+                                                   scheme-name
+                                                   last-expr1))))
+                              ((eq? last-tok |token.(|)
+                               (read-arguments-tail
+                                re
+                                autosemi?
+                                #f
+                                (lambda (re maybe-tok args)
+                                  (loop re
+                                        (get-token re autosemi? maybe-tok)
+                                        (##wrap-op re
+                                                   start-pos
+                                                   'six.call
+                                                   (cons last-expr1
+                                                         args))))))
+                              ((eq? last-tok |token.[|)
+                               (read-expression
+                                re
+                                (let ((autosemi? #f)) ;; semicolons required
+                                  autosemi?)
+                                #f
+                                max-precedence
+                                #f
+                                (lambda (re maybe-tok expr2)
+                                  (loop re
+                                        (expect-and-get-token
+                                         re
+                                         autosemi?
+                                         maybe-tok
+                                         |token.]|)
+                                        (##wrap-op2 re
+                                                    start-pos
+                                                    'six.index
+                                                    last-expr1
+                                                    expr2)))))
+                              ((or (eq? last-tok |token.->|)
+                                   (eq? last-tok |token..|))
+                               (let ((next
+                                      (macro-peek-next-char-or-eof re)))
+                                 (if (or (not (eq? last-tok |token..|))
+                                         (and (char? next)
+                                              (or (identifier-starter? next)
+                                                  (char=? next #\\))))
+                                     (read-expression
+                                      re
+                                      autosemi?
+                                      (parse-token-starting-with
+                                       re
+                                       (let ((autosemi? #f))
+                                         autosemi?)
+                                       next)
+                                      (- level 1)
+                                      restriction
+                                      (lambda (re maybe-tok expr2)
+                                        (loop re
+                                              (get-token re autosemi? maybe-tok)
+                                              (##wrap-op2 re
+                                                          start-pos
+                                                          (if (eq? last-tok
+                                                                   |token.->|)
+                                                              'six.arrow ;;;;;;;;;;;;;;;
+                                                              'six.dot)
+                                                          last-expr1
+                                                          expr2))))
+                                     (cont re
+                                           last-tok
+                                           last-expr1))))
+                              (else
+                               (cont re
+                                     last-tok
+                                     last-expr1))))
+                      (let ((tok2
+                             (case tok
+                               ((in)  op.in)
+                               ((is)  op.is)
+                               ((not) op.not)
+                               ((and) op.and)
+                               ((or)  op.or)
+                               (else  tok))))
+                        (cond ((and (op? tok2)
+                                    (= level (precedence tok2))
+                                    (not
+                                     (cond ((eq? restriction 'no-comma)
+                                            (eq? tok2 |op.,|))
+                                           ((eq? restriction
+                                                 'no-comma-and-no-bar)
+                                            (or (eq? tok2 |op.,|)
+                                                (eq? tok2 |op.\||)))
+                                           ((eq? restriction 'no-colon)
+                                            (eq? tok2 |op.:|))
+                                           (else
+                                            #f)))
+                                    (binary-or-ternary? tok2))
+                               =>
+                               (lambda (scheme-name)
+                                 (cond ((ternary? tok2)
+                                        =>
+                                        (lambda (end-tok)
+                                          (read-expression
+                                           re
+                                           (let ((autosemi? #f)) ;; allow whitespace
+                                             autosemi?)
+                                           #f
+                                           max-precedence
+                                           'no-colon ;; assumes that end-tok = |op.:|
+                                           (lambda (re maybe-tok expr2)
+                                             (read-expression
+                                              re
+                                              autosemi?
+                                              (expect-no-autosemi re maybe-tok end-tok)
+                                              level
+                                              restriction
+                                              (lambda (re maybe-tok expr3)
+                                                (cont re
+                                                      maybe-tok
+                                                      (##wrap-op3 re
+                                                                  start-pos
+                                                                  scheme-name
+                                                                  expr1
+                                                                  expr2
+                                                                  expr3))))))))
+                                       ((left-to-right? tok2)
+                                        (let loop ((re re)
+                                                   (last-scheme-name scheme-name)
+                                                   (last-expr1 expr1))
+                                          (read-expression
+                                           re
+                                           autosemi?
+                                           #f
+                                           (- level 1)
+                                           restriction
+                                           (lambda (re maybe-tok expr2)
+                                             (let ((expr1
+                                                    (##wrap-op2 re
+                                                                start-pos
+                                                                last-scheme-name
+                                                                last-expr1
+                                                                expr2)))
+                                               (let ((tok (get-token re autosemi? maybe-tok)))
+                                                 (cond ((and (op? tok)
+                                                             (= level
+                                                                (precedence tok))
+                                                             (binary-or-ternary?
+                                                              tok))
+                                                        =>
+                                                        (lambda (scheme-name)
+                                                          (loop re
+                                                                scheme-name
+                                                                expr1)))
+                                                       (else
+                                                        (cont re
+                                                              tok
+                                                              expr1)))))))))
+                                       (else
                                         (read-expression
                                          re
                                          autosemi?
-                                         (parse-token-starting-with
-                                          re
-                                          (let ((autosemi? #f))
-                                            autosemi?)
-                                          next)
-                                         (- level 1)
+                                         #f
+                                         level
                                          restriction
                                          (lambda (re maybe-tok expr2)
-                                           (loop re
-                                                 (get-token re autosemi? maybe-tok)
+                                           (cont re
+                                                 maybe-tok
                                                  (##wrap-op2 re
                                                              start-pos
-                                                             (if (eq? last-tok
-                                                                      |token.->|)
-                                                                 'six.arrow;;;;;;;;;;;;;;;
-                                                                 'six.dot)
-                                                             last-expr1
-                                                             expr2))))
-                                        (cont re
-                                              last-tok
-                                              last-expr1))))
-                                 (else
-                                  (cont re
-                                        last-tok
-                                        last-expr1)))))
-                        ((and (op? tok)
-                              (= level (precedence tok))
-                              (not
-                               (cond ((eq? restriction 'no-comma)
-                                      (eq? tok |op.,|))
-                                     ((eq? restriction 'no-comma-and-no-bar)
-                                      (or (eq? tok |op.,|) (eq? tok |op.\||)))
-                                     ((eq? restriction 'no-colon)
-                                      (eq? tok |op.:|))
-                                     (else
-                                      #f)))
-                              (binary-or-ternary? tok))
-                         =>
-                         (lambda (scheme-name)
-                           (cond ((ternary? tok)
-                                  =>
-                                  (lambda (end-tok)
-                                    (read-expression
-                                     re
-                                     (let ((autosemi? #f)) ;; allow whitespace
-                                       autosemi?)
-                                     #f
-                                     max-precedence
-                                     'no-colon ;; assumes that end-tok = |op.:|
-                                     (lambda (re maybe-tok expr2)
-                                       (read-expression
-                                        re
-                                        autosemi?
-                                        (expect-no-autosemi re maybe-tok end-tok)
-                                        level
-                                        restriction
-                                        (lambda (re maybe-tok expr3)
-                                          (cont re
-                                                maybe-tok
-                                                (##wrap-op3 re
-                                                            start-pos
-                                                            scheme-name
-                                                            expr1
-                                                            expr2
-                                                            expr3))))))))
-                                 ((left-to-right? tok)
-                                  (let loop ((re re)
-                                             (last-scheme-name scheme-name)
-                                             (last-expr1 expr1))
-                                    (read-expression
-                                     re
-                                     autosemi?
-                                     #f
-                                     (- level 1)
-                                     restriction
-                                     (lambda (re maybe-tok expr2)
-                                       (let ((expr1
-                                              (##wrap-op2 re
-                                                          start-pos
-                                                          last-scheme-name
-                                                          last-expr1
-                                                          expr2)))
-                                         (let ((tok (get-token re autosemi? maybe-tok)))
-                                           (cond ((and (op? tok)
-                                                       (= level
-                                                          (precedence tok))
-                                                       (binary-or-ternary?
-                                                        tok))
-                                                  =>
-                                                  (lambda (scheme-name)
-                                                    (loop re
-                                                          scheme-name
-                                                          expr1)))
-                                                 (else
-                                                  (cont re
-                                                        tok
-                                                        expr1)))))))))
-                                 (else
-                                  (read-expression
-                                   re
-                                   autosemi?
-                                   #f
-                                   level
-                                   restriction
-                                   (lambda (re maybe-tok expr2)
-                                     (cont re
-                                           maybe-tok
-                                           (##wrap-op2 re
-                                                       start-pos
-                                                       scheme-name
-                                                       expr1
-                                                       expr2))))))))
-                        (else
-                         (cont re
-                               tok
-                               expr1)))))))
+                                                             scheme-name
+                                                             expr1
+                                                             expr2))))))))
+                              (else
+                               (cont re
+                                     tok
+                                     expr1)))))))))
+
             ((or (eq? tok 'function) (six-type? re tok))
              (read-procedure
               re
@@ -14666,6 +14719,7 @@
                   #f
                   tok)
               cont))
+
             ((pair? tok)
              ;; This special token represents two
              ;; consecutive tokens.  This trick is used
@@ -14687,6 +14741,7 @@
                         #f
                         type)
                     cont))))
+
             ((or (string? tok)
                  (char? tok)
                  (complex? tok))
@@ -14697,6 +14752,7 @@
                                  start-pos
                                  'six.literal
                                  literal))))
+
             ((eq? tok |token.(|)
              (let* ((autosemi? #f) ;; in (...) explicit semicolons are required
                     (tok (get-token-no-autosemi re #f)))
@@ -14722,6 +14778,7 @@
                     max-precedence
                     #f
                     check-closing))))
+
             ((eq? tok |token.[|)
              (read-list
               re
@@ -14730,16 +14787,19 @@
               #f
               start-pos
               cont))
+
             ((eq? tok |token.`|)
              (read-quasiquotation
               re
               start-pos
               cont))
+
             ((eq? tok |token.#|);;;;;;;;;;;;;;;;;;;;;
              (read-sharp
               re
               start-pos
               cont))
+
             (else
              (read-identifier-or-prefix
               re

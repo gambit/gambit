@@ -4827,6 +4827,7 @@ For example:
 @deffnx undefined six.return
 @deffnx undefined six.switch
 @deffnx {special form} six.while @var{expr} @var{stat}@dots{}
+@deffnx {special form} six.x!==y @var{x} @var{y}
 @deffnx {special form} six.x!=y @var{x} @var{y}
 @deffnx {special form} six.x%=y @var{x} @var{y}
 @deffnx {special form} six.x%y @var{x} @var{y}
@@ -4857,9 +4858,12 @@ For example:
 @deffnx {special form} six.x<<y @var{x} @var{y}
 @deffnx {special form} six.x<=y @var{x} @var{y}
 @deffnx {special form} six.x<y @var{x} @var{y}
+@deffnx {special form} six.x===y @var{x} @var{y}
 @deffnx {special form} six.x==y @var{x} @var{y}
 @deffnx {special form} six.x=y @var{x} @var{y}
 @deffnx {special form} six.x>=y @var{x} @var{y}
+@deffnx undefined six.x>>>=y @var{x} @var{y}
+@deffnx undefined six.x>>>y @var{x} @var{y}
 @deffnx {special form} six.x>>=y @var{x} @var{y}
 @deffnx {special form} six.x>>y @var{x} @var{y}
 @deffnx {special form} six.x>y @var{x} @var{y}
@@ -4869,6 +4873,11 @@ For example:
 @deffnx {special form} |six.x\|=y| @var{x} @var{y}
 @deffnx {special form} |six.x\|y| @var{x} @var{y}
 @deffnx {special form} |six.x\|\|y| @var{x} @var{y}
+@deffnx {special form} six.xandy @var{x} @var{y}
+@deffnx {special form} six.xiny @var{x} @var{y}
+@deffnx {special form} six.xisy @var{x} @var{y}
+@deffnx {special form} six.notx @var{x} @var{y}
+@deffnx {special form} six.xory @var{x} @var{y}
 @deffnx {special form} six.~x @var{x}
 @end deffn
 
@@ -15728,73 +15737,96 @@ such as a closing parenthesis).  For example @code{(f \2*n (list)
 @item
 @meta{expr} @syntaxdef{}
 @item
-@syntaxspc{}@meta{expr18} @tab @var{$1}
+@syntaxspc{}@meta{expr21} @tab @var{$1}
+
+@item
+@meta{expr21} @syntaxdef{}
+@item
+@syntaxspc{}@meta{expr20} @code{:-} @meta{expr21} @tab @code{(six.x:-y @var{$1} @var{$3})}
+@item
+@syntaxbar{}@meta{expr20} @tab @var{$1}
+
+@item
+@meta{expr20} @syntaxdef{}
+@item
+@syntaxspc{}@meta{expr20} @code{,} @meta{expr19} @tab @code{(|six.x,y| @var{$1} @var{$3})}
+@item
+@syntaxbar{}@meta{expr19} @tab @var{$1}
+
+@item
+@meta{expr19} @syntaxdef{}
+@item
+@syntaxspc{}@meta{expr18} @code{:=} @meta{expr19} @tab @code{(six.x:=y @var{$1} @var{$3})}
+@item
+@syntaxbar{}@meta{expr18} @tab @var{$1}
 
 @item
 @meta{expr18} @syntaxdef{}
 @item
-@syntaxspc{}@meta{expr17} @code{:-} @meta{expr18} @tab @code{(six.x:-y @var{$1} @var{$3})}
+@syntaxspc{}@meta{expr17} @code{%=} @meta{expr18} @tab @code{(six.x%=y @var{$1} @var{$3})}
+@item
+@syntaxbar{}@meta{expr17} @code{&=} @meta{expr18} @tab @code{(six.x&=y @var{$1} @var{$3})}
+@item
+@syntaxbar{}@meta{expr17} @code{**=} @meta{expr18} @tab @code{(six.x**=y @var{$1} @var{$3})}
+@item
+@syntaxbar{}@meta{expr17} @code{*=} @meta{expr18} @tab @code{(six.x*=y @var{$1} @var{$3})}
+@item
+@syntaxbar{}@meta{expr17} @code{@@=} @meta{expr18} @tab @code{(six.x@@=y @var{$1} @var{$3})}
+@item
+@syntaxbar{}@meta{expr17} @code{+=} @meta{expr18} @tab @code{(six.x+=y @var{$1} @var{$3})}
+@item
+@syntaxbar{}@meta{expr17} @code{-=} @meta{expr18} @tab @code{(six.x-=y @var{$1} @var{$3})}
+@item
+@syntaxbar{}@meta{expr17} @code{//=} @meta{expr18} @tab @code{(six.x//=y @var{$1} @var{$3})}
+@item
+@syntaxbar{}@meta{expr17} @code{/=} @meta{expr18} @tab @code{(six.x/=y @var{$1} @var{$3})}
+@item
+@syntaxbar{}@meta{expr17} @code{<<=} @meta{expr18} @tab @code{(six.x<<=y @var{$1} @var{$3})}
+@item
+@syntaxbar{}@meta{expr17} @code{=} @meta{expr18} @tab @code{(six.x=y @var{$1} @var{$3})}
+@item
+@syntaxbar{}@meta{expr17} @code{>>>=} @meta{expr18} @tab @code{(six.x>>>=y @var{$1} @var{$3})}
+@item
+@syntaxbar{}@meta{expr17} @code{>>=} @meta{expr18} @tab @code{(six.x>>=y @var{$1} @var{$3})}
+@item
+@syntaxbar{}@meta{expr17} @code{^=} @meta{expr18} @tab @code{(six.x^=y @var{$1} @var{$3})}
+@item
+@syntaxbar{}@meta{expr17} @code{|=} @meta{expr18} @tab @code{(|six.x\|=y| @var{$1} @var{$3})}
 @item
 @syntaxbar{}@meta{expr17} @tab @var{$1}
 
 @item
 @meta{expr17} @syntaxdef{}
 @item
-@syntaxspc{}@meta{expr17} @code{,} @meta{expr16} @tab @code{(|six.x,y| @var{$1} @var{$3})}
+@syntaxspc{}@meta{expr16} @code{:} @meta{expr17} @tab @code{(six.x:y @var{$1} @var{$3})}
 @item
 @syntaxbar{}@meta{expr16} @tab @var{$1}
 
 @item
 @meta{expr16} @syntaxdef{}
 @item
-@syntaxspc{}@meta{expr15} @code{:=} @meta{expr16} @tab @code{(six.x:=y @var{$1} @var{$3})}
+@syntaxspc{}@meta{expr15} @code{?} @meta{expr} @code{:} @meta{expr16} @tab @code{(six.x?y:z @var{$1} @var{$3} @var{$5})}
 @item
 @syntaxbar{}@meta{expr15} @tab @var{$1}
 
 @item
 @meta{expr15} @syntaxdef{}
 @item
-@syntaxspc{}@meta{expr14} @code{%=} @meta{expr15} @tab @code{(six.x%=y @var{$1} @var{$3})}
-@item
-@syntaxbar{}@meta{expr14} @code{&=} @meta{expr15} @tab @code{(six.x&=y @var{$1} @var{$3})}
-@item
-@syntaxbar{}@meta{expr14} @code{**=} @meta{expr15} @tab @code{(six.x**=y @var{$1} @var{$3})}
-@item
-@syntaxbar{}@meta{expr14} @code{*=} @meta{expr15} @tab @code{(six.x*=y @var{$1} @var{$3})}
-@item
-@syntaxbar{}@meta{expr14} @code{@@=} @meta{expr15} @tab @code{(six.x@@=y @var{$1} @var{$3})}
-@item
-@syntaxbar{}@meta{expr14} @code{+=} @meta{expr15} @tab @code{(six.x+=y @var{$1} @var{$3})}
-@item
-@syntaxbar{}@meta{expr14} @code{-=} @meta{expr15} @tab @code{(six.x-=y @var{$1} @var{$3})}
-@item
-@syntaxbar{}@meta{expr14} @code{//=} @meta{expr15} @tab @code{(six.x//=y @var{$1} @var{$3})}
-@item
-@syntaxbar{}@meta{expr14} @code{/=} @meta{expr15} @tab @code{(six.x/=y @var{$1} @var{$3})}
-@item
-@syntaxbar{}@meta{expr14} @code{<<=} @meta{expr15} @tab @code{(six.x<<=y @var{$1} @var{$3})}
-@item
-@syntaxbar{}@meta{expr14} @code{=} @meta{expr15} @tab @code{(six.x=y @var{$1} @var{$3})}
-@item
-@syntaxbar{}@meta{expr14} @code{>>=} @meta{expr15} @tab @code{(six.x>>=y @var{$1} @var{$3})}
-@item
-@syntaxbar{}@meta{expr14} @code{^=} @meta{expr15} @tab @code{(six.x^=y @var{$1} @var{$3})}
-@item
-@syntaxbar{}@meta{expr14} @code{|=} @meta{expr15} @tab @code{(|six.x\|=y| @var{$1} @var{$3})}
+@syntaxspc{}@meta{expr15} @code{or} @meta{expr14} @tab @code{(six.xory @var{$1} @var{$3})}
 @item
 @syntaxbar{}@meta{expr14} @tab @var{$1}
 
 @item
 @meta{expr14} @syntaxdef{}
 @item
-@syntaxspc{}@meta{expr13} @code{:} @meta{expr14} @tab @code{(six.x:y @var{$1} @var{$3})}
+@syntaxspc{}@meta{expr14} @code{and} @meta{expr13} @tab @code{(six.xandy @var{$1} @var{$3})}
 @item
 @syntaxbar{}@meta{expr13} @tab @var{$1}
 
 @item
 @meta{expr13} @syntaxdef{}
 @item
-@syntaxspc{}@meta{expr12} @code{?} @meta{expr} @code{:} @meta{expr13} @tab @code{(six.x?y:z @var{$1} @var{$3} @var{$5})}
+@syntaxspc{}@code{not} @meta{expr13} @tab @code{(six.notx @var{$1})}
 @item
 @syntaxbar{}@meta{expr12} @tab @var{$1}
 
@@ -15840,6 +15872,10 @@ such as a closing parenthesis).  For example @code{(f \2*n (list)
 @item
 @syntaxbar{}@meta{expr7} @code{==} @meta{expr6} @tab @code{(six.x==y @var{$1} @var{$3})}
 @item
+@syntaxspc{}@meta{expr7} @code{!==} @meta{expr6} @tab @code{(six.x!==y @var{$1} @var{$3})}
+@item
+@syntaxbar{}@meta{expr7} @code{===} @meta{expr6} @tab @code{(six.x===y @var{$1} @var{$3})}
+@item
 @syntaxbar{}@meta{expr6} @tab @var{$1}
 
 @item
@@ -15853,6 +15889,10 @@ such as a closing parenthesis).  For example @code{(f \2*n (list)
 @item
 @syntaxbar{}@meta{expr6} @code{>=} @meta{expr5} @tab @code{(six.x>=y @var{$1} @var{$3})}
 @item
+@syntaxbar{}@meta{expr6} @code{in} @meta{expr5} @tab @code{(six.xiny @var{$1} @var{$3})}
+@item
+@syntaxbar{}@meta{expr6} @code{is} @meta{expr5} @tab @code{(six.xisy @var{$1} @var{$3})}
+@item
 @syntaxbar{}@meta{expr5} @tab @var{$1}
 
 @item
@@ -15861,6 +15901,8 @@ such as a closing parenthesis).  For example @code{(f \2*n (list)
 @syntaxspc{}@meta{expr5} @code{<<} @meta{expr4} @tab @code{(six.x<<y @var{$1} @var{$3})}
 @item
 @syntaxbar{}@meta{expr5} @code{>>} @meta{expr4} @tab @code{(six.x>>y @var{$1} @var{$3})}
+@item
+@syntaxbar{}@meta{expr5} @code{>>>} @meta{expr4} @tab @code{(six.x>>>y @var{$1} @var{$3})}
 @item
 @syntaxbar{}@meta{expr4} @tab @var{$1}
 
@@ -16041,8 +16083,8 @@ The semantics of SIX depends on the definition of the
 @code{six.@var{XXX}} identifiers (as procedures and macros).  Many of
 these identifiers are predefined macros which give SIX a semantics
 that is close to C's while also borrowing some semantics from
-JavaScript and Python (such as @code{**}, @code{//}, @code{@@}, and
-@code{import}).  The programmer may override these definitions to
+JavaScript and Python (such as @code{===} @code{in}, @code{**}, @code{//}).
+The programmer may override these definitions to
 change the semantics either globally or locally.  For example,
 @code{six.x^y} is a predefined macro that expands @code{(six.x^y x y)}
 into @code{(bitwise-xor x y)}.  If the programmer prefers the @code{^}

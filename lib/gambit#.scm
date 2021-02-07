@@ -777,6 +777,7 @@ six.list
 six.literal
 six.make-array
 six.new
+six.notx
 six.null
 six.prefix
 six.procedure
@@ -784,6 +785,7 @@ six.procedure-body
 six.return
 six.switch
 six.while
+six.x!==y
 six.x!=y
 six.x%=y
 six.x%y
@@ -811,6 +813,7 @@ six.x<<=y
 six.x<<y
 six.x<=y
 six.x<y
+six.x===y
 six.x==y
 six.x=y
 six.x>=y
@@ -824,6 +827,10 @@ six.x^y
 |six.x\|=y|
 |six.x\|y|
 |six.x\|\|y|
+six.xandy
+six.xiny
+six.xisy
+six.xory
 six.~x
 socket-info-address
 socket-info-family

@@ -3601,6 +3601,9 @@
 (define-runtime-macro (six.!x x)
   `(not ,x))
 
+(define-runtime-macro (six.notx x)
+  `(not ,x))
+
 (define-runtime-macro (six.++x x)
   (##infix-update-in-place 'six.++x x 'six.x+y 1 #t))
 
@@ -3669,6 +3672,18 @@
 
 (define-runtime-macro (six.x==y x y)
   `(equal? ,x ,y))
+
+(define-runtime-macro (six.x!==y x y)
+  `(not (eq? ,x ,y)))
+
+(define-runtime-macro (six.x===y x y)
+  `(eq? ,x ,y))
+
+(define-runtime-macro (six.xisy x y)
+  `(eq? ,x ,y))
+
+(define-runtime-macro (six.xiny x y)
+  `(member ,x ,y))
 
 (define-runtime-macro (six.x&y x y)
   `(bitwise-and ,x ,y))
@@ -3829,7 +3844,13 @@
 (define-runtime-macro (six.x&&y x y)
   `(and ,x ,y))
 
+(define-runtime-macro (six.xandy x y)
+  `(and ,x ,y))
+
 (define-runtime-macro (|six.x\|\|y| x y)
+  `(or ,x ,y))
+
+(define-runtime-macro (six.xory x y)
   `(or ,x ,y))
 
 (define-runtime-macro (six.x?y:z x y z)

@@ -46,6 +46,7 @@
 
 (chk "\\a<< b" (six.x<<y (six.identifier a) (six.identifier b)))
 (chk "\\a>> b" (six.x>>y (six.identifier a) (six.identifier b)))
+(chk "\\a>>> b" (six.x>>>y (six.identifier a) (six.identifier b)))
 
 (chk "\\a? b : c" (six.x?y:z (six.identifier a) (six.identifier b) (six.identifier c)))
 
@@ -53,9 +54,13 @@
 (chk "\\a<= b" (six.x<=y (six.identifier a) (six.identifier b)))
 (chk "\\a> b" (six.x>y (six.identifier a) (six.identifier b)))
 (chk "\\a>= b" (six.x>=y (six.identifier a) (six.identifier b)))
+(chk "\\( a in b )" (six.xiny (six.identifier a) (six.identifier b)))
+(chk "\\( a is b )" (six.xisy (six.identifier a) (six.identifier b)))
 
 (chk "\\a!= b" (six.x!=y (six.identifier a) (six.identifier b)))
 (chk "\\a== b" (six.x==y (six.identifier a) (six.identifier b)))
+(chk "\\a!== b" (six.x!==y (six.identifier a) (six.identifier b)))
+(chk "\\a=== b" (six.x===y (six.identifier a) (six.identifier b)))
 
 (chk "\\a& b" (six.x&y (six.identifier a) (six.identifier b)))
 
@@ -66,6 +71,12 @@
 (chk "\\a&& b" (six.x&&y (six.identifier a) (six.identifier b)))
 
 (chk "\\a|| b" (|six.x\|\|y| (six.identifier a) (six.identifier b)))
+
+(chk "\\( not a )" (six.notx (six.identifier a)))
+
+(chk "\\( a and b )" (six.xandy (six.identifier a) (six.identifier b)))
+
+(chk "\\( a or b )" (six.xory (six.identifier a) (six.identifier b)))
 
 (chk "\\( a : b )" (six.x:y (six.identifier a) (six.identifier b)))
 
@@ -80,6 +91,7 @@
 (chk "\\a/= b" (six.x/=y (six.identifier a) (six.identifier b)))
 (chk "\\a<<= b" (six.x<<=y (six.identifier a) (six.identifier b)))
 (chk "\\a= b" (six.x=y (six.identifier a) (six.identifier b)))
+(chk "\\a>>>= b" (six.x>>>=y (six.identifier a) (six.identifier b)))
 (chk "\\a>>= b" (six.x>>=y (six.identifier a) (six.identifier b)))
 (chk "\\a^= b" (six.x^=y (six.identifier a) (six.identifier b)))
 (chk "\\a|= b" (|six.x\|=y| (six.identifier a) (six.identifier b)))
