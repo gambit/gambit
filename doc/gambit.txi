@@ -4791,6 +4791,7 @@ For example:
 @deffnx undefined six.!
 @deffnx {special form} six.!x @var{x}
 @deffnx {special form} six.&x @var{x}
+@deffnx {special form} six.**x @var{x}
 @deffnx {special form} six.*x @var{x}
 @deffnx {special form} six.++x @var{x}
 @deffnx {special form} six.+x @var{x}
@@ -15940,6 +15941,8 @@ such as a closing parenthesis).  For example @code{(f \2*n (list)
 @syntaxbar{}@code{-} @meta{expr2} @tab @code{(six.-x @var{$2})}
 @item
 @syntaxbar{}@code{*} @meta{expr2} @tab @code{(six.*x @var{$2})}
+@item
+@syntaxbar{}@code{**} @meta{expr2} @tab @code{(six.**x @var{$2})}
 @item
 @syntaxbar{}@code{!} @meta{expr2} @tab @code{(six.!x @var{$2})}
 @item

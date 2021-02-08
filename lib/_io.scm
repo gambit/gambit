@@ -13888,7 +13888,7 @@
   (define-six-token |token.#|    -13)
 
   (define-six-op op.!      2  rl six.x!y        six.!x           )
-  (define-six-op op.**     2  rl six.x**y                        )
+  (define-six-op op.**     2  rl six.x**y       six.**x          )
   (define-six-op op.++     2  rl #f             six.++x six.x++  )
   (define-six-op op.--     2  rl #f             six.--x six.x--  )
   (define-six-op op.~      2  rl #f             six.~x           )
@@ -14436,14 +14436,12 @@
 
   (define (expression-starter? re tok)
     ;; this function must be kept in sync with "read-expression"
-    (or (eq? tok op.*)
+    (or (eq? tok op.**)
+        (eq? tok op.*)
         (eq? tok op.+)
         (eq? tok op.-)
         (eq? tok op.&)
-        (level2-starter? re tok)))
-
-  (define (level2-starter? re tok)
-    (or (eq? tok op.!)
+        (eq? tok op.!)
         (eq? tok op.++)
         (eq? tok op.--)
         (eq? tok op.~)
@@ -14455,7 +14453,7 @@
         (eq? tok |token.\\|)
         (eq? tok |token.`|)
         (eq? tok |token.#|)
-        (symbol? tok)
+        (symbol? tok) ;; catches "function" token
         (string? tok)
         (char? tok)
         (complex? tok)
@@ -14475,13 +14473,16 @@
              =>
              (lambda (scheme-name)
                (let ((tok2 (get-token-no-autosemi re #f)))
-                 (if (and (eq? tok |op.!|)
-                          (not (level2-starter? re tok2)))
+                 (if (and (or (eq? tok 'not)
+                              (eq? tok |op.!|))
+                          (not (expression-starter? re tok2)))
                      (cont re
                            tok2
-                           (##wrap-op0 re
-                                       start-pos
-                                       'six.!))
+                           (if (eq? tok 'not)
+                               (wrap-identifier re start-pos tok)
+                               (##wrap-op0 re
+                                           start-pos
+                                           'six.!)))
                      (read-expression
                       re
                       autosemi?
@@ -14923,13 +14924,16 @@
                                 'six.prefix
                                 'error)))
             (else
-             (let ((identifier (macro-readenv-wrap re tok)))
-               (cont re
-                     #f
-                     (##wrap-op1 re
-                                 start-pos
-                                 'six.identifier
-                                 identifier)))))))
+             (cont re
+                   #f
+                   (wrap-identifier re start-pos tok))))))
+
+  (define (wrap-identifier re start-pos tok)
+    (let ((identifier (macro-readenv-wrap re tok)))
+      (##wrap-op1 re
+                  start-pos
+                  'six.identifier
+                  identifier)))
 
   (define (read-prefix re start-pos cont)
     (let ((expr (##read-datum-or-label re)))
