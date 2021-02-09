@@ -3055,10 +3055,10 @@
    (lambda (ctx return arg1 . rest)
      (return arg1))))
 
-(univ-define-prim "##check-heap-limit" #t
-  (make-translated-operand-generator
-   (lambda (ctx return)
-     (return (^void-obj)))))
+;;(univ-define-prim "##check-heap-limit" #t
+;;  (make-translated-operand-generator
+;;   (lambda (ctx return)
+;;     (return (^void-obj)))))
 
 ;;TODO: ("##quasi-append"                  0     #f 0     0    list    extended)
 ;;TODO: ("##quasi-list"                    0     #f ()    0    list    extended)
@@ -3686,5 +3686,21 @@
                       safe?
                       fs
                       "thread_restore")))
+
+(univ-define-prim "##check-heap-limit" #f
+
+  #f
+  #f
+
+  (lambda (ctx ret nb-args poll? safe? fs)
+    (univ-jump-inline ctx
+                      ret
+                      nb-args
+                      0
+                      0
+                      poll?
+                      safe?
+                      fs
+                      "check_heap_limit")))
 
 ;;;============================================================================

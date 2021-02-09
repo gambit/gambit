@@ -2,7 +2,7 @@
 
 ;;; File: "_univlib.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -11,65 +11,557 @@
  ((js)
   (##inline-host-declaration "
 
-if ((function () { return this !== this.window; })()) { // nodejs?
+// Autodetect when running in a web browser (as opposed to nodejs).
+g_os_web = (function () { return this === this.window; })();
 
+// Autodetect availability of nodejs features.
+if (typeof g_os_nodejs === 'undefined') {
+  g_os_nodejs = !g_os_web;
+}
+
+if (g_os_nodejs) {
   os = require('os');
-  fs = require('fs');
   vm = require('vm');
   process = require('process');
   child_process = require('child_process')
-
-  g_os_encode_error = function (exn) {
-    switch (exn.code) {
-      case 'EPERM':  return -1;
-      case 'ENOENT': return -2;
-      case 'EINTR':  return -4;
-      case 'EIO':    return -5;
-      case 'EBADF':  return -9;
-      case 'EACCES': return -13;
-      case 'EEXIST': return -17;
-      case 'EAGAIN': return -35;
-    }
-    return -8888;
-  };
-
-  g_os_decode_error = function (code) {
-    switch (code) {
-      case -1:  return 'EPERM (Operation not permitted)';
-      case -2:  return 'ENOENT (No such file or directory)';
-      case -4:  return 'EINTR (Interrupted system call)';
-      case -5:  return 'EIO (Input/output error)';
-      case -9:  return 'EBADF (Bad file descriptor)';
-      case -13: return 'EACCES (Permission denied)';
-      case -17: return 'EEXIST (File exists)';
-      case -35: return 'EAGAIN (Resource temporarily unavailable)';
-    }
-    return 'E??? (unknown error)';
-  };
+  if (typeof g_os_fs === 'undefined') {
+    g_os_fs = require('fs');
+    g_os_buffer = require('buffer');
+  }
 }
 
-g_current_time = function () {
+if (typeof g_os_fs === 'undefined') {
+
+  g_os_fs = null;
+
+  // Autodetect BrowserFS and use it if available for local filesystem.
+  if (typeof BrowserFS !== 'undefined') {
+    BrowserFS.configure({
+      fs: 'LocalStorage'
+    }, function (err) {
+      if (!err) {
+        g_os_fs = BrowserFS.BFSRequire('fs');
+        g_os_buffer = BrowserFS.BFSRequire('buffer');
+      }
+    });
+  }
+}
+
+g_os_uri_scheme_prefixed = function (string) {
+  return string.match(/^[a-zA-Z][-+.a-zA-Z0-9]*:\\/\\//);
+};
+
+g_os_encode_error = function (exn) {
+  switch (exn.code) {
+    case 'EPERM':  return -1;
+    case 'ENOENT': return -2;
+    case 'EINTR':  return -4;
+    case 'EIO':    return -5;
+    case 'EBADF':  return -9;
+    case 'EACCES': return -13;
+    case 'EEXIST': return -17;
+    case 'EAGAIN': return -35;
+  }
+  return -8888;
+};
+
+g_os_decode_error = function (code) {
+  switch (code) {
+    case -1:  return 'EPERM (Operation not permitted)';
+    case -2:  return 'ENOENT (No such file or directory)';
+    case -4:  return 'EINTR (Interrupted system call)';
+    case -5:  return 'EIO (Input/output error)';
+    case -9:  return 'EBADF (Bad file descriptor)';
+    case -13: return 'EACCES (Permission denied)';
+    case -17: return 'EEXIST (File exists)';
+    case -35: return 'EAGAIN (Resource temporarily unavailable)';
+  }
+  return 'E??? (unknown error)';
+};
+
+g_os_current_time = function () {
   return new Date().getTime() / 1000;
 };
 
-g_start_time = g_current_time();
+g_os_start_time = g_os_current_time();
 
-g_set_process_times = function (vect) {
-  var elapsed = g_current_time() - g_start_time;
+g_os_set_process_times = function (vect) {
+  var elapsed = g_os_current_time() - g_os_start_time;
   vect.elems[0] = elapsed;
   vect.elems[1] = 0.0;
   vect.elems[2] = elapsed;
   return vect;
 };
 
-G_Device = function (fd) {
-  this.fd = fd;
-  this.rbuf = new Uint8Array(1024);
-  this.rlo = 1;
-  this.rhi = 1; // 0 would mean EOF
+g_os_debug = false;
+
+g_os_condvar_ready_set = function (condvar_scm, ready) {
+  // redefined when g_os_condvar_select is required
 };
 
-g_os_debug = false;
+G_Device_jsconsole = function () {
+  var dev = this;
+  dev.wbuf = []; // buffer to accumulate chars up to end of line
+};
+
+G_Device_jsconsole.prototype.read = function (dev_condvar_scm, buffer, lo, hi) {
+
+  var dev = this;
+
+  if (g_os_debug)
+    console.log('G_Device_jsconsole().read(...,['+buffer.slice(0,10)+'...],'+lo+','+hi+')');
+
+  return -1; // EPERM (operation not permitted)
+};
+
+G_Device_jsconsole.prototype.write = function (dev_condvar_scm, buffer, lo, hi) {
+
+  var dev = this;
+
+  if (g_os_debug)
+    console.log('G_Device_jsconsole().write(...,['+buffer.slice(0,10)+'...],'+lo+','+hi+')');
+
+  for (var i=lo; i<hi; i++) {
+    var c = buffer[i];
+    if (c === 10) { // end of line?
+      console.log(String.fromCharCode.apply(null, dev.wbuf));
+      dev.wbuf = [];
+    } else {
+      dev.wbuf.push(c);
+    }
+  }
+
+  return hi-lo; // number of bytes transferred
+};
+
+G_Device_jsconsole.prototype.force_output = function (dev_condvar_scm, level) {
+
+  var dev = this;
+
+  if (g_os_debug)
+    console.log('G_Device_jsconsole().force_output(...,'+level+')');
+
+  return 0; // no error
+};
+
+G_Device_jsconsole.prototype.seek = function (dev_condvar_scm, pos, whence) {
+
+  var dev = this;
+
+  if (g_os_debug)
+    console.log('G_Device_jsconsole().seek(...,'+pos+','+whence+')');
+
+  return -1; // EPERM (operation not permitted)
+};
+
+G_Device_jsconsole.prototype.width = function (dev_condvar_scm) {
+
+  var dev = this;
+
+  if (g_os_debug)
+    console.log('G_Device_jsconsole().width()');
+
+  return 80;
+};
+
+G_Device_jsconsole.prototype.close = function (direction) {
+
+  var dev = this;
+
+  if (g_os_debug)
+    console.log('G_Device_jsconsole().close('+direction+')');
+
+  return -1; // EPERM (operation not permitted)
+};
+
+if (g_os_fs) {
+
+  g_async_op_done = -99;
+  g_async_op_in_progress = -98;
+
+  G_Device_fd = function (fd) {
+    var dev = this;
+    dev.fd = fd;
+    dev.async_read_progress = g_async_op_done; // no previous result
+    dev.async_write_progress = g_async_op_done; // no previous result
+  };
+
+  G_Device_fd.prototype.read = function (dev_condvar_scm, buffer, lo, hi) {
+
+    var dev = this;
+
+    if (g_os_debug)
+      console.log('G_Device_fd('+dev.fd+').read(...,['+buffer.slice(0,10)+'...],'+lo+','+hi+')');
+
+    var async_read_progress = dev.async_read_progress;
+
+    if (async_read_progress === g_async_op_in_progress) {
+
+        return -35; // return EAGAIN because other async read is in progress
+
+    } else if (async_read_progress !== g_async_op_done) {
+
+        dev.async_read_progress = g_async_op_done;
+        return async_read_progress; // return result of async read
+
+    } else {
+
+      // Start an async read of the file descriptor
+
+      function callback(err, bytesRead) {
+        var progress = dev.async_read_progress;
+        if (err) {
+          dev.async_read_progress = g_os_encode_error(err);
+        } else {
+          dev.async_read_progress = bytesRead; // possibly 0 to signal EOF
+        }
+        if (progress === g_async_op_in_progress) {
+          g_os_condvar_ready_set(dev_condvar_scm, true);
+        }
+      }
+
+      g_os_fs.read(dev.fd, g_os_buffer.Buffer.from(buffer.buffer), lo, hi-lo, null, callback);
+
+      if (dev.async_read_progress !== g_async_op_done) {
+        // handle synchronous execution of callback
+        var progress = dev.async_read_progress;
+        dev.async_read_progress = g_async_op_done;
+        return progress;
+      } else {
+        g_os_condvar_ready_set(dev_condvar_scm, false);
+        dev.async_read_progress = g_async_op_in_progress;
+        return -35; // return EAGAIN to suspend Scheme thread on condvar
+      }
+    }
+  };
+
+  G_Device_fd.prototype.write = function (dev_condvar_scm, buffer, lo, hi) {
+
+    var dev = this;
+
+    if (g_os_debug)
+      console.log('G_Device_fd('+dev.fd+').write(...,['+buffer.slice(0,10)+'...],'+lo+','+hi+')');
+
+    var async_write_progress = dev.async_write_progress;
+
+    if (async_write_progress === g_async_op_in_progress) {
+
+        return -35; // return EAGAIN because other async write is in progress
+
+    } else if (async_write_progress !== g_async_op_done) {
+
+        dev.async_write_progress = g_async_op_done;
+        return async_write_progress; // return result of async write
+
+    } else {
+
+      // Start an async write of the file descriptor
+
+      function callback(err, bytesWritten) {
+        var progress = dev.async_write_progress;
+        if (err) {
+          dev.async_write_progress = g_os_encode_error(err);
+        } else {
+          dev.async_write_progress = bytesWritten;
+        }
+        if (progress === g_async_op_in_progress) {
+          g_os_condvar_ready_set(dev_condvar_scm, true);
+        }
+      }
+
+      g_os_fs.write(dev.fd, g_os_buffer.Buffer.from(buffer.buffer), lo, hi-lo, null, callback);
+
+      if (dev.async_write_progress !== g_async_op_done) {
+        // handle synchronous execution of callback
+        var progress = dev.async_write_progress;
+        dev.async_write_progress = g_async_op_done;
+        return progress;
+      } else {
+        g_os_condvar_ready_set(dev_condvar_scm, false);
+        dev.async_write_progress = g_async_op_in_progress;
+        return -35; // return EAGAIN to suspend Scheme thread on condvar
+      }
+    }
+  };
+
+  G_Device_fd.prototype.force_output = function (dev_condvar_scm, level) {
+
+    var dev = this;
+
+    if (g_os_debug)
+      console.log('G_Device_fd('+dev.fd+').force_output(...,'+level+')');
+
+    return 0; // no error
+  };
+
+  G_Device_fd.prototype.seek = function (dev_condvar_scm, pos, whence) {
+
+    var dev = this;
+
+    if (g_os_debug)
+      console.log('G_Device_fd('+dev.fd+').seek(...,'+pos+','+whence+')');
+
+    return -1; // EPERM (operation not permitted)
+  };
+
+  G_Device_fd.prototype.width = function (dev_condvar_scm) {
+
+    var dev = this;
+
+    if (g_os_debug)
+      console.log('G_Device_fd('+dev.fd+').width()');
+
+    return 80;
+  };
+
+  G_Device_fd.prototype.close = function (direction) {
+
+    var dev = this;
+
+    if (g_os_debug)
+      console.log('G_Device_fd('+dev.fd+').close('+direction+')');
+
+    if ((direction & 1) != 0 ||  // DIRECTION_RD
+        (direction & 2) != 0) {  // DIRECTION_WR
+
+      // Start an async close of the file descriptor
+
+      var async_progress = g_async_op_done; // close not yet started
+      var ra = g_r0;
+
+      function callback(err) {
+        var progress = async_progress;
+        if (err) {
+          async_progress = g_os_encode_error(err);
+        } else {
+          async_progress = 0; // no error
+        }
+        if (progress === g_async_op_in_progress) {
+          g_r1 = g_host2scm(async_progress);
+          g_r0 = ra;
+          g_trampoline(g_r0);
+        }
+      }
+
+      g_os_fs.close(dev.fd, callback);
+
+      if (async_progress !== g_async_op_done) {
+        // handle synchronous execution of callback
+        return async_progress;
+      } else {
+        async_progress = g_async_op_in_progress;
+        g_r0 = null; // exit trampoline
+        return 0; // ignored
+      }
+    }
+
+    return 0; // no error
+  };
+
+  g_os_device_from_fd = function (fd) {
+    return new G_Device_fd(fd);
+  };
+
+  g_os_device_from_stdin = function () {
+    return g_os_device_from_fd(0);
+  };
+
+  g_os_device_from_stdout = function () {
+    return g_os_device_from_fd(1);
+  };
+
+  g_os_device_from_stderr = function () {
+    return g_os_device_from_fd(2);
+  };
+
+  g_os_console = null;
+
+  g_os_device_from_console = function () {
+    if (g_os_console === null) g_os_console = g_os_device_from_stdout();
+    return g_os_console;
+  };
+
+}
+
+if (g_os_web) {
+
+  G_Device_console = function () {
+    var dev = this;
+    dev.wbuf = new Uint8Array(0);
+    dev.rbuf = new Uint8Array(1);
+    dev.rlo = 1;
+    dev.encoder = new TextEncoder();
+    dev.decoder = new TextDecoder();
+    dev.echo = true;
+    dev.read_condvar_scm = null;
+  };
+
+  G_Device_console.prototype.input_add = function (input) {
+
+    var dev = this;
+    var len = dev.rbuf.length-dev.rlo;
+    var inp = dev.encoder.encode(input);
+    if (dev.echo) dev.output_add_buffer(inp); // echo the input
+    var newbuf = new Uint8Array(len + inp.length);
+    newbuf.set(newbuf.subarray(dev.rlo, dev.rlo+len));
+    newbuf.set(inp, len);
+    dev.rbuf = newbuf;
+    dev.rlo = 0;
+  };
+
+  G_Device_console.prototype.output_add = function (output) {
+
+    var dev = this;
+    dev.output_add_buffer(dev.encoder.encode(output));
+  };
+
+  G_Device_console.prototype.output_add_buffer = function (buffer) {
+
+    var dev = this;
+    var len = dev.wbuf.length;
+    var newbuf = new Uint8Array(len + buffer.length);
+    newbuf.set(dev.wbuf);
+    newbuf.set(buffer, len);
+    dev.wbuf = newbuf;
+
+    if (!dev.use_async_output()) {
+      // heuristic trimming of output so that it fits in the 'prompt' dialog
+      var end = newbuf.length;
+      var nl = end-1;
+      var trim = 7; // trim to last 7 lines
+      for (var n=0; n<trim; n++) {
+        var prev = nl-1;
+        while (prev >= 0 && newbuf[prev] !== 10) prev--; // find prev newline
+        if (n > 1 && end-prev > 35*trim) break;
+        nl = prev;
+        if (prev < 0) break;
+      }
+      if (nl >= 0) dev.wbuf = newbuf.subarray(nl+1);
+    }
+  };
+
+  G_Device_console.prototype.use_async_input = function () {
+    return false; // use a synchronous call to 'prompt' to get console input
+  };
+
+  G_Device_console.prototype.use_async_output = function () {
+    return false; // use a synchronous call to 'prompt' to show console output
+  };
+
+  G_Device_console.prototype.read = function (dev_condvar_scm, buffer, lo, hi) {
+
+    var dev = this;
+    var n = hi-lo;
+    var have = dev.rbuf.length-dev.rlo;
+
+    if (g_os_debug)
+      console.log('G_Device_console().read(...,['+buffer.slice(0,10)+'...],'+lo+','+hi+')');
+
+    g_os_condvar_ready_set(dev_condvar_scm, false);
+
+    if (have === 0) {
+
+      if (dev.rlo === 0) {
+        dev.rbuf = new Uint8Array(1); // prevent repeated EOF
+        dev.rlo = 1;
+        return 0; // signal EOF
+
+      } else if (dev.use_async_input()) {
+
+        // Input will be received asynchronously
+
+        if (dev.read_condvar_scm === null) {
+          dev.read_condvar_scm = dev_condvar_scm;
+        }
+
+        return -35; // return EAGAIN to suspend Scheme thread on condvar
+
+      } else {
+
+        var input = prompt(dev.decoder.decode(dev.wbuf) + '\\u258b                                                                                ');
+        dev.wbuf = new Uint8Array(0);
+        if (input === null) return 0; // cancel button gives EOF
+
+        dev.input_add(input + '\\n');
+
+        have = dev.rbuf.length-dev.rlo;
+      }
+    }
+
+    if (n > have) n = have;
+
+    buffer.set(dev.rbuf.subarray(dev.rlo, dev.rlo+n), lo);
+
+    dev.rlo += n;
+
+    return n; // number of bytes transferred
+  };
+
+  G_Device_console.prototype.write = function (dev_condvar_scm, buffer, lo, hi) {
+
+    var dev = this;
+
+    dev.output_add_buffer(buffer.subarray(lo, hi));
+
+    return hi-lo;
+  };
+
+  G_Device_console.prototype.force_output = function (dev_condvar_scm, level) {
+
+    var dev = this;
+
+    if (g_os_debug)
+      console.log('G_Device_console().force_output(...,'+level+')');
+
+    return 0; // no error
+  };
+
+  G_Device_console.prototype.seek = function (dev_condvar_scm, pos, whence) {
+
+    var dev = this;
+
+    if (g_os_debug)
+      console.log('G_Device_console().seek(...,'+pos+','+whence+')');
+
+    return -1; // EPERM (operation not permitted)
+  };
+
+  G_Device_console.prototype.width = function (dev_condvar_scm) {
+
+    if (g_os_debug)
+      console.log('G_Device_console().width()');
+
+    return 80;
+  };
+
+  G_Device_console.prototype.close = function (direction) {
+
+    if (g_os_debug)
+      console.log('G_Device_console().close('+direction+')');
+
+    return 0; // no error
+  };
+
+  g_os_console = null;
+
+  g_os_device_from_console = function () {
+    if (g_os_console === null) g_os_console = new G_Device_console();
+    return g_os_console;
+  };
+
+  g_os_device_from_stdin = function () {
+    return g_os_device_from_console();
+  };
+
+  g_os_device_from_stdout = function () {
+    return new G_Device_jsconsole();
+  };
+
+  g_os_device_from_stderr = function () {
+    return new G_Device_jsconsole();
+  };
+
+};
 
 "))
 
@@ -124,25 +616,116 @@ def g_os_decode_error(code):
     else:
         return 'E??? (unknown error)'
 
-def g_current_time():
+def g_os_current_time():
     return time.time()
 
-g_start_time = g_current_time()
+g_os_start_time = g_os_current_time()
 
-def g_set_process_times(vect):
-    elapsed = g_current_time() - g_start_time
+def g_os_set_process_times(vect):
+    elapsed = g_os_current_time() - g_os_start_time
     vect.elems[0] = elapsed
     vect.elems[1] = 0.0
     vect.elems[2] = elapsed
     return vect
 
-class G_Device:
-
-    def __init__(self, fd):
-        self.fd = fd
-
-
 g_os_debug = False
+
+class G_Device_fd:
+
+    def __init__(dev, fd):
+        dev.fd = fd
+
+    def read(dev, dev_condvar_scm, buffer, lo, hi):
+
+        if g_os_debug:
+            print('G_Device_fd('+repr(dev.fd)+').read(...,'+repr(buffer[0:20])+','+repr(lo)+','+repr(hi)+')')
+
+        try:
+            b = os.read(dev.fd, hi-lo)
+            n = len(b)
+            buffer[lo:lo+n] = b
+        except OSError as exn:
+            return g_os_encode_error(exn)
+
+        return n  # number of bytes transferred
+
+    def write(dev, dev_condvar_scm, buffer, lo, hi):
+
+        if g_os_debug:
+            print('G_Device_fd('+repr(dev.fd)+').write(...,'+repr(buffer[0:20])+','+repr(lo)+','+repr(hi)+')')
+
+        try:
+            n = os.write(dev.fd, buffer[lo:hi])
+        except OSError as exn:
+            return g_os_encode_error(exn)
+
+        return n  # number of bytes transferred
+
+    def force_output(dev, dev_condvar_scm, level):
+
+        if g_os_debug:
+            print('G_Device_fd('+repr(dev.fd)+').force_output(...,'+repr(level)+')')
+
+        return 0  # no error
+
+    def seek(dev, dev_condvar_scm, pos, whence):
+
+        if g_os_debug:
+            print('G_Device_fd('+repr(dev.fd)+').seek(...,'+repr(pos)+','+repr(whence)+')')
+
+        if whence == 0:
+            how = os.SEEK_SET
+        elif whence == 1:
+            how = os.SEEK_CUR
+        else:
+            how = os.SEEK_END
+
+        try:
+            os.lseek(dev.fd, pos, how)
+        except OSError as exn:
+            return g_os_encode_error(exn)
+
+        return 0  # no error
+
+    def width(dev, dev_condvar_scm):
+
+        if g_os_debug:
+            print('G_Device_fd('+repr(dev.fd)+').width(...)')
+
+        return 80
+
+    def close(dev, direction):
+
+        if g_os_debug:
+            print('G_Device_fd('+repr(dev.fd)+').close('+repr(direction)+')')
+
+        if not ((direction & 3) == 0):  # DIRECTION_RD or DIRECTION_WR
+            try:
+                os.close(dev.fd)
+            except OSError as exn:
+                return g_os_encode_error(exn)
+
+        return 0  # no error
+
+def g_os_device_from_fd(fd):
+    return G_Device_fd(fd)
+
+def g_os_device_from_stdin():
+    return g_os_device_from_fd(0)
+
+def g_os_device_from_stdout():
+    return g_os_device_from_fd(1)
+
+def g_os_device_from_stderr():
+    return g_os_device_from_fd(2)
+
+g_os_console = None
+
+def g_os_device_from_console():
+    global g_os_console
+    if g_os_console is None:
+        g_os_console = g_os_device_from_stdout()
+    return g_os_console
 
 "))
 
@@ -233,8 +816,8 @@ g_os_debug = False
 (define-prim (##os-device-tty-mode-set! dev input-allow-special input-echo input-raw output-raw speed)
   (error "##os-device-tty-mode-set! not implemented yet"))
 
-(define-prim (##os-device-tty-mode-reset dev)
-  (error "##os-device-tty-mode-reset not implemented yet"))
+(define-prim (##os-device-tty-mode-reset)
+  (##void))
 
 (define-prim (##os-device-tty-paren-balance-duration-set! dev duration)
   (error "##os-device-tty-paren-balance-duration-set! not implemented yet"))
@@ -686,7 +1269,7 @@ def g_host_exec(stmts):
 
    ((js)
     (##inline-host-expression
-     "g_host2scm((function () { return this !== this.window; })() ? g_os_decode_error(g_scm2host(@1@)) : 'Unknown error')"
+     "g_host2scm(g_os_decode_error(g_scm2host(@1@)))"
      code))
 
    ((python)
@@ -709,7 +1292,7 @@ def g_host_exec(stmts):
 
    ((js)
     (##inline-host-expression
-     "g_host2scm((function () { return this !== this.window; })() ? process.pid : 0)"))
+     "g_host2scm(g_os_nodejs ? process.pid : 0)"))
 
    ((python)
     (##inline-host-expression
@@ -729,7 +1312,7 @@ def g_host_exec(stmts):
 
    ((js)
     (##inline-host-expression
-     "g_host2scm((function () { return this !== this.window; })() ? os.hostname() : 'host-name')"))
+     "g_host2scm(g_os_nodejs ? os.hostname() : 'host-name')"))
 
    ((python)
     (##inline-host-expression
@@ -749,7 +1332,7 @@ def g_host_exec(stmts):
 
    ((js)
     (##inline-host-expression
-     "g_host2scm((function () { return this !== this.window; })() ? os.userInfo().username : 'user')"))
+     "g_host2scm(g_os_nodejs ? os.userInfo().username : 'user')"))
 
    ((python)
     (##inline-host-expression
@@ -771,7 +1354,8 @@ def g_host_exec(stmts):
     (##inline-host-declaration "
 
 g_os_user_info = function (ui, user) {
-  if ((function () { return this !== this.window; })()) { // nodejs?
+  if (g_os_nodejs) {
+
     try {
       var posix = require('posix');
       var pw = posix.getpwnam(user);
@@ -788,13 +1372,18 @@ g_os_user_info = function (ui, user) {
     ui.slots[4] = g_host2scm(pw.dir);
     ui.slots[5] = g_host2scm(pw.shell);
     return ui;
-  } else {
+
+  } else if (g_os_web) {
+
     ui.slots[1] = g_host2scm('user');
     ui.slots[2] = g_host2scm(111);
     ui.slots[3] = g_host2scm(222);
     ui.slots[4] = g_host2scm('/home/user');
     ui.slots[5] = g_host2scm('/bin/sh');
     return ui;
+
+  } else {
+    return g_host2scm(-1); // EPERM (operation not permitted)
   }
 };
 
@@ -837,7 +1426,8 @@ def g_os_user_info(ui, user):
     (##inline-host-declaration "
 
 g_os_group_info = function (gi, group) {
-  if ((function () { return this !== this.window; })()) { // nodejs?
+  if (g_os_nodejs) {
+
     try {
       var posix = require('posix');
       var gr = posix.getgrnam(group);
@@ -852,11 +1442,16 @@ g_os_group_info = function (gi, group) {
     gi.slots[2] = g_host2scm(gr.gid);
     gi.slots[3] = g_host2scm(gr.members);
     return gi;
-  } else {
+
+  } else if (g_os_web) {
+
     gi.slots[1] = g_host2scm('group');
     gi.slots[2] = g_host2scm(222);
     gi.slots[3] = g_host2scm([]);
     return gi;
+
+  } else {
+    return g_host2scm(-1); // EPERM (operation not permitted)
   }
 };
 
@@ -986,7 +1581,7 @@ def g_os_shell_command(cmd):
 
    ((js)
     (##inline-host-expression
-     "g_host2scm((function () { return this !== this.window; })() ? os.homedir() : '/')"))
+     "g_host2scm(g_os_nodejs ? os.homedir() : '/')"))
 
    ((python)
     (##inline-host-expression
@@ -1007,7 +1602,7 @@ def g_os_shell_command(cmd):
    ((js)
     (##inline-host-declaration "
 
-g_executable_path = ((function () { return this !== this.window; })()) ? __filename : '/program';
+g_executable_path = (g_os_nodejs) ? __filename : '/program';
 
 ")
     (##inline-host-expression "g_host2scm(g_executable_path)"))
@@ -1036,12 +1631,12 @@ g_executable_path = os.path.abspath(__file__)
     (##inline-host-declaration "
 
 g_os_path_gambitdir = function () {
-  if ((function () { return this !== this.window; })()) { // nodejs?
-    return g_host2scm('/usr/local/Gambit/')
+  if (g_os_nodejs) {
+    return g_host2scm('/usr/local/Gambit/');
+  } else if (g_os_web) {
+    return g_host2scm(g_os_web_origin);
   } else {
-    var loc = window.location.href;
-    var root = '/' + loc.slice(0, 1+loc.lastIndexOf('/'));
-    return g_host2scm(root);
+    return g_host2scm(-1); // EPERM (operation not permitted)
   }
 };
 
@@ -1066,7 +1661,7 @@ g_os_path_gambitdir = function () {
     (##inline-host-declaration "
 
 g_os_path_normalize_directory = function (path) {
-  if ((function () { return this !== this.window; })()) { // nodejs?
+  if (g_os_nodejs) {
     var old = process.cwd();
     var dir;
     if (path === false) {
@@ -1087,18 +1682,20 @@ g_os_path_normalize_directory = function (path) {
     if (dir[dir.length-1] === '/' || dir[dir.length-1] === '\\\\') {
       return g_host2scm(dir);
     } else if (dir[0] === '/') {
-      return g_host2scm(dir + '/')
+      return g_host2scm(dir + '/');
     } else {
-      return g_host2scm(dir + '\\\\')
+      return g_host2scm(dir + '\\\\');
+    }
+  } else if (g_os_web) {
+    if (path === false) {
+      return g_host2scm(g_os_web_origin);
+    } else if (path.slice(0,1) === '/' || g_os_uri_scheme_prefixed(path)) {
+      return g_host2scm(path + (path.slice(-1) === '/' ? '' : '/'));
+    } else {
+      return g_host2scm(g_os_web_origin + path);
     }
   } else {
-    var loc = window.location.href;
-    var root = '/' + loc.slice(0, 1+loc.lastIndexOf('/'));
-    if (path === false) {
-      return g_host2scm(root);
-    } else {
-      return g_host2scm(root + path.slice((path[0] === '/') ? 1 : 0));
-    }
+    return g_host2scm(-1); // EPERM (operation not permitted)
   }
 };
 
@@ -1146,7 +1743,7 @@ def g_os_path_normalize_directory(path):
     (##inline-host-statement
      "
       var code = g_scm2host(@1@);
-      if ((function () { return this !== this.window; })()) { // nodejs?
+      if (g_os_nodejs) {
         process.exit(code);
       } else {
         throw Error('process exiting with code=' + code);
@@ -1190,7 +1787,7 @@ def g_os_path_normalize_directory(path):
    (macro-case-target
 
     ((js python)
-     (##inline-host-expression "g_host2scm(g_current_time())"))
+     (##inline-host-expression "g_host2scm(g_os_current_time())"))
 
     (else
      (println "unimplemented ##get-current-time! called")
@@ -1202,7 +1799,7 @@ def g_os_path_normalize_directory(path):
     (macro-case-target
 
      ((js python)
-      (##inline-host-expression "g_set_process_times(@1@)" v))
+      (##inline-host-expression "g_os_set_process_times(@1@)" v))
 
      (else
       (println "unimplemented ##process-statistics called")
@@ -1214,7 +1811,7 @@ def g_os_path_normalize_directory(path):
     (macro-case-target
 
      ((js python)
-      (##inline-host-expression "g_set_process_times(@1@)" v))
+      (##inline-host-expression "g_os_set_process_times(@1@)" v))
 
      (else
       (println "unimplemented ##process-times called")
@@ -1240,13 +1837,13 @@ def g_os_path_normalize_directory(path):
    ((js)
     (##inline-host-declaration "
 
-g_argv = [];
-if ((function () { return this !== this.window; })()) { // nodejs?
-  g_argv = process.argv.slice(1);
+g_os_argv = [];
+if (g_os_nodejs) {
+  g_os_argv = process.argv.slice(1);
 }
 
 ")
-    (##vector->list (##inline-host-expression "g_host2scm(g_argv)")))
+    (##vector->list (##inline-host-expression "g_host2scm(g_os_argv)")))
 
    ((python)
     (##vector->list (##inline-host-expression "g_host2scm(sys.argv)")))
@@ -1274,15 +1871,46 @@ if ((function () { return this !== this.window; })()) { // nodejs?
    ((js)
     (##inline-host-declaration "
 
-if ((function () { return this === this.window; })()) {
+if (g_os_web) {
 
-  g_os_get_url_async = function (method, url, done) {
+  g_os_whitelist = [];
+
+  g_os_whitelist_add = function (url) {
+    if (g_os_uri_scheme_prefixed(url) &&
+        g_os_whitelist.indexOf(url) === -1) {
+      g_os_whitelist.push(url);
+    }
+  };
+
+  g_os_remove_after_last_slash = function (string) {
+    return string.slice(0, 1+string.lastIndexOf('/'));
+  };
+
+  g_os_trusted_url = function (url) {
+    for (var i=0; i<g_os_whitelist.length; i++) {
+      var w = g_os_whitelist[i];
+      if (w.slice(-1) === '/' // if ends with slash
+          ? url.indexOf(w) === 0 // then it must be a prefix
+          : url === w) { // otherwise it must be an exact match
+        return true;
+      }
+    }
+    return false;
+  };
+
+  g_os_web_origin = g_os_remove_after_last_slash(window.location.href);
+
+  if (g_os_web_origin.indexOf('https://') === 0) {
+    g_os_whitelist_add(g_os_web_origin); // only trust https origin
+  }
+
+  g_os_get_url_async = function (method, url, callback) {
 
     var req = new XMLHttpRequest();
 
     var onreadystatechange = function () {
       if (req.readyState == 4) { // DONE?
-        done(req);
+        callback(req);
       }
     };
 
@@ -1292,6 +1920,17 @@ if ((function () { return this === this.window; })()) {
     req.send();
   };
 
+  g_os_uri_encode = function (uri) {
+
+    function encode(c) {
+      switch (c) {
+        case '#': return '%23';
+        default: return c;
+      }
+    }
+
+    return uri.split('').map(encode).join('');
+  };
 }
 
 "))
@@ -1309,96 +1948,107 @@ if ((function () { return this === this.window; })()) {
 
 g_os_file_info = function (fi, path, chase) {
 
-  if ((function () { return this !== this.window; })()) { // nodejs?
+  if (g_os_uri_scheme_prefixed(path)) { // accessing a URL?
 
-    var st;
+    if (!(g_os_web && g_os_trusted_url(path))) { // accessing an untrusted URL?
+      return g_host2scm(-1); // EPERM (operation not permitted)
+    } else {
 
-    try {
-      if (chase) {
-        st = fs.statSync(path);
-      } else {
-        st = fs.lstatSync(path);
+      var ra = g_r0;
+      g_r0 = null; // exit trampoline
+
+      function callback(req) {
+
+        if (req.status === 404) {
+          g_r1 = g_host2scm(-2); // ENOENT (file does not exist)
+        } else if (req.status !== 200) {
+          g_r1 = g_host2scm(-1); // EPERM (operation not permitted)
+        } else {
+
+          var size = +req.getResponseHeader('Content-Length');
+
+          fi.slots[ 1] = g_host2scm(1); // regular file
+          fi.slots[ 2] = g_host2scm(0);
+          fi.slots[ 3] = g_host2scm(0);
+          fi.slots[ 4] = g_host2scm(0);
+          fi.slots[ 5] = g_host2scm(0);
+          fi.slots[ 6] = g_host2scm(0);
+          fi.slots[ 7] = g_host2scm(0);
+          fi.slots[ 8] = g_host2scm(size);
+          fi.slots[ 9] = new G_Flonum(-Infinity);
+          fi.slots[10] = new G_Flonum(-Infinity);
+          fi.slots[11] = new G_Flonum(-Infinity);
+          fi.slots[12] = g_host2scm(0);
+          fi.slots[13] = new G_Flonum(-Infinity);
+
+          g_r1 = fi;
+        }
+
+        g_r0 = ra;
+        g_trampoline(g_r0);
       }
-    } catch (exn) {
-      if (exn instanceof Error && exn.hasOwnProperty('code')) {
-        return g_host2scm(g_os_encode_error(exn));
-      } else {
-        throw exn;
-      }
+
+      g_os_get_url_async('HEAD', g_os_uri_encode(path), callback);
+
+      return 0; // ignored
     }
-
-    if (st.isFile())
-      typ = 1;
-    else if (st.isDirectory())
-      typ = 2;
-    else if (st.isCharacterDevice())
-      typ = 3;
-    else if (st.isBlockDevice())
-      typ = 4;
-    else if (st.isFIFO())
-      typ = 5;
-    else if (st.isSymbolicLink())
-      typ = 6;
-    else if (st.isSocket())
-      typ = 7;
-    else
-      typ = 0;
-
-    fi.slots[ 1] = g_host2scm(typ);
-    fi.slots[ 2] = g_host2scm(st.dev);
-    fi.slots[ 3] = g_host2scm(st.ino);
-    fi.slots[ 4] = g_host2scm(st.mode);
-    fi.slots[ 5] = g_host2scm(st.nlink);
-    fi.slots[ 6] = g_host2scm(st.uid);
-    fi.slots[ 7] = g_host2scm(st.gid);
-    fi.slots[ 8] = g_host2scm(st.size);
-    fi.slots[ 9] = new G_Flonum(-Infinity);
-    fi.slots[10] = new G_Flonum(-Infinity);
-    fi.slots[11] = new G_Flonum(-Infinity);
-    fi.slots[12] = g_host2scm(0);
-    fi.slots[13] = new G_Flonum(-Infinity);
-
-    return fi;
 
   } else {
 
-    var ra = g_r0;
-    g_r0 = null; // exit trampoline
+    if (!g_os_fs) {
+      return g_host2scm(-1); // EPERM (operation not permitted)
+    } else {
 
-    var done = function (req) {
+      var st;
 
-      if (req.status !== 200) { // error?
-
-        g_r1 = g_host2scm(-2); // ENOENT (file does not exist)
-
-      } else {
-
-        var size = +req.getResponseHeader('Content-Length');
-
-        fi.slots[ 1] = g_host2scm(1); // regular file
-        fi.slots[ 2] = g_host2scm(0);
-        fi.slots[ 3] = g_host2scm(0);
-        fi.slots[ 4] = g_host2scm(0);
-        fi.slots[ 5] = g_host2scm(0);
-        fi.slots[ 6] = g_host2scm(0);
-        fi.slots[ 7] = g_host2scm(0);
-        fi.slots[ 8] = g_host2scm(size);
-        fi.slots[ 9] = new G_Flonum(-Infinity);
-        fi.slots[10] = new G_Flonum(-Infinity);
-        fi.slots[11] = new G_Flonum(-Infinity);
-        fi.slots[12] = g_host2scm(0);
-        fi.slots[13] = new G_Flonum(-Infinity);
-
-        g_r1 = fi;
-
+      try {
+        if (chase) {
+          st = g_os_fs.statSync(path);
+        } else {
+          st = g_os_fs.lstatSync(path);
+        }
+      } catch (exn) {
+        if (exn instanceof Error && exn.hasOwnProperty('code')) {
+          return g_host2scm(g_os_encode_error(exn));
+        } else {
+          throw exn;
+        }
       }
 
-      g_trampoline(ra);
-    };
+      if (st.isFile())
+        typ = 1;
+      else if (st.isDirectory())
+        typ = 2;
+      else if (st.isCharacterDevice())
+        typ = 3;
+      else if (st.isBlockDevice())
+        typ = 4;
+      else if (st.isFIFO())
+        typ = 5;
+      else if (st.isSymbolicLink())
+        typ = 6;
+      else if (st.isSocket())
+        typ = 7;
+      else
+        typ = 0;
 
-    g_os_get_url_async('HEAD', path.slice(1), done);
+      fi.slots[ 1] = g_host2scm(typ);
+      fi.slots[ 2] = g_host2scm(st.dev);
+      fi.slots[ 3] = g_host2scm(st.ino);
+      fi.slots[ 4] = g_host2scm(st.mode);
+      fi.slots[ 5] = g_host2scm(st.nlink);
+      fi.slots[ 6] = g_host2scm(st.uid);
+      fi.slots[ 7] = g_host2scm(st.gid);
+      fi.slots[ 8] = g_host2scm(st.size);
+      fi.slots[ 9] = new G_Flonum(-Infinity);
+      fi.slots[10] = new G_Flonum(-Infinity);
+      fi.slots[11] = new G_Flonum(-Infinity);
+      fi.slots[12] = g_host2scm(0);
+      fi.slots[13] = new G_Flonum(-Infinity);
 
-    return false; // ignored
+      return fi;
+
+    }
   }
 };
 
@@ -1482,9 +2132,7 @@ def g_os_file_info(fi, path, chase):
 
 g_os_load_object_file = function (path, linker_name) {
 
-  console.log('g_os_load_object_file path='+path);
-
-  if ((function () { return this !== this.window; })()) { // nodejs?
+  if (g_os_nodejs) {
 
     try {
       require(path);
@@ -1498,29 +2146,31 @@ g_os_load_object_file = function (path, linker_name) {
 
     return [[g_module_latest_registered], null, false];
 
-  } else {
+  } else if (g_os_web) {
 
     var ra = g_r0;
     g_r0 = null; // exit trampoline
 
-    var onload = function () {
+    function onload() {
       g_r1 = [[g_module_latest_registered], null, false];
-      g_trampoline(ra);
-    };
+      g_r0 = ra;
+      g_trampoline(g_r0);
+    }
 
-    var onerror = function () {
+    function onerror() {
       g_r1 = g_host2scm(-2); // ENOENT (file does not exist)
-      g_trampoline(ra);
-    };
+      g_r0 = ra;
+      g_trampoline(g_r0);
+    }
 
     var script = document.createElement('script');
     script.type = 'text/javascript';
-    script.src = path.slice(1);
+    script.src = path;
     script.onload = onload;
     script.onerror = onerror;
     document.head.append(script);
 
-    return false; // ignored
+    return 0; // ignored
   }
 };
 
@@ -1754,27 +2404,7 @@ g_os_device_close = function (dev_scm, direction_scm) {
   var dev = g_foreign2host(dev_scm);
   var direction = g_scm2host(direction_scm);
 
-  if (g_os_debug)
-    console.log('g_os_device_close('+dev.fd+','+direction+')  ***not fully implemented***');
-
-  if ((function () { return this === this.window; })()) {
-  } else {
-
-    if ((direction & 1) != 0 ||  // DIRECTION_RD
-        (direction & 2) != 0) {  // DIRECTION_WR
-      try {
-        fs.closeSync(dev.fd);
-      } catch (exn) {
-        if (exn instanceof Error && exn.hasOwnProperty('code')) {
-          return g_host2scm(g_os_encode_error(exn));
-        } else {
-          throw exn;
-        }
-      }
-    }
-  }
-
-  return g_host2scm(0) // no error
+  return g_host2scm(dev.close(direction));
 };
 
 ")
@@ -1791,16 +2421,7 @@ def g_os_device_close(dev_scm, direction_scm):
     dev = g_foreign2host(dev_scm)
     direction = g_scm2host(direction_scm)
 
-    if g_os_debug:
-        print('g_os_device_close('+repr(dev.fd)+','+repr(direction)+')  ***not fully implemented***')
-
-    if not ((direction & 3) == 0):  # DIRECTION_RD or DIRECTION_WR
-        try:
-            os.close(dev.fd)
-        except OSError as exn:
-            return g_host2scm(g_os_encode_error(exn))
-
-    return g_host2scm(0)  # no error
+    return g_host2scm(dev.close(direction))
 
 ")
     (##inline-host-expression
@@ -1826,7 +2447,7 @@ g_os_device_directory_open_path = function (path_scm, ignore_hidden_scm) {
   if (g_os_debug)
     console.log('g_os_device_directory_open_path(\\''+path+'\\','+ignore_hidden+')  ***not implemented***');
 
-  return g_host2scm(-1); // error
+  return g_host2scm(-1); // EPERM (operation not permitted)
 };
 
 ")
@@ -1846,7 +2467,7 @@ def g_os_device_directory_open_path(path_scm, ignore_hidden_scm):
     if g_os_debug:
         print('g_os_device_directory_open_path('+repr(path)+','+repr(ignore_hidden)+')  ***not implemented***')
 
-    return g_host2scm(-1)  # error
+    return g_host2scm(-1)  # EPERM (operation not permitted)
 
 ")
     (##inline-host-expression
@@ -1869,9 +2490,9 @@ g_os_device_directory_read = function (dev_condvar_scm) {
   var dev = g_foreign2host(dev_condvar_scm.slots[g_CONDVAR_NAME]);
 
   if (g_os_debug)
-    console.log('g_os_device_directory_read('+dev.fd+')  ***not implemented***');
+    console.log('g_os_device_directory_read(...)  ***not implemented***');
 
-  return g_host2scm(-1); // error
+  return g_host2scm(-1); // EPERM (operation not permitted)
 };
 
 ")
@@ -1887,9 +2508,9 @@ def g_os_device_directory_read(dev_condvar_scm):
     dev = g_foreign2host(dev_condvar_scm.slots[g_CONDVAR_NAME])
 
     if g_os_debug:
-        print('g_os_device_directory_read('+repr(dev.fd)+')  ***not implemented***')
+        print('g_os_device_directory_read(...)  ***not implemented***')
 
-    return g_host2scm(-1)  # error
+    return g_host2scm(-1)  # EPERM (operation not permitted)
 
 ")
     (##inline-host-expression
@@ -1913,7 +2534,7 @@ g_os_device_event_queue_open = function (selector_scm) {
   if (g_os_debug)
     console.log('g_os_device_event_queue_open('+selector+')  ***not implemented***');
 
-  return g_host2scm(-1); // error
+  return g_host2scm(-1); // EPERM (operation not permitted)
 };
 
 ")
@@ -1931,7 +2552,7 @@ def g_os_device_event_queue_open(selector_scm):
     if g_os_debug:
         print('g_os_device_event_queue_open('+repr(selector)+')  ***not implemented***')
 
-    return g_host2scm(-1)  # error
+    return g_host2scm(-1)  # EPERM (operation not permitted)
 
 ")
     (##inline-host-expression
@@ -1953,9 +2574,9 @@ g_os_device_event_queue_read = function (dev_condvar_scm) {
   var dev = g_foreign2host(dev_condvar_scm.slots[g_CONDVAR_NAME]);
 
   if (g_os_debug)
-    console.log('g_os_device_event_queue_read('+dev.fd+')  ***not implemented***');
+    console.log('g_os_device_event_queue_read(...)  ***not implemented***');
 
-  return g_host2scm(-1); // error
+  return g_host2scm(-1); // EPERM (operation not permitted)
 };
 
 ")
@@ -1971,9 +2592,9 @@ def g_os_device_event_queue_read(dev_condvar_scm):
     dev = g_foreign2host(dev_condvar_scm.slots[g_CONDVAR_NAME])
 
     if g_os_debug:
-        print('g_os_device_event_queue_read('+repr(dev.fd)+')  ***not implemented***')
+        print('g_os_device_event_queue_read(...)  ***not implemented***')
 
-    return g_host2scm(-1)  # error
+    return g_host2scm(-1)  # EPERM (operation not permitted)
 
 ")
     (##inline-host-expression
@@ -1995,10 +2616,7 @@ g_os_device_force_output = function (dev_condvar_scm, level_scm) {
   var dev = g_foreign2host(dev_condvar_scm.slots[g_CONDVAR_NAME]);
   var level = g_scm2host(level_scm);
 
-  if (g_os_debug)
-    console.log('g_os_device_force_output('+dev.fd+','+level+')  ***not fully implemented***');
-
-  return g_host2scm(0) // no error
+  return g_host2scm(dev.force_output(dev_condvar_scm, level));
 };
 
 ")
@@ -2015,10 +2633,7 @@ def g_os_device_force_output(dev_condvar_scm, level_scm):
     dev = g_foreign2host(dev_condvar_scm.slots[g_CONDVAR_NAME])
     level = g_scm2host(level_scm)
 
-    if g_os_debug:
-        print('g_os_device_force_output('+repr(dev.fd)+','+repr(level)+')  ***not fully implemented***')
-
-    return g_host2scm(0)  # no error
+    return g_host2scm(dev.force_output(dev_condvar_scm, level))
 
 ")
     (##inline-host-expression
@@ -2041,9 +2656,9 @@ g_os_device_kind = function (dev_scm) {
   var dev = g_foreign2host(dev_scm);
 
   if (g_os_debug)
-    console.log('g_os_device_kind('+dev.fd+')  ***not fully implemented***');
+    console.log('g_os_device_kind(...)  ***not fully implemented***');
 
-  return g_host2scm(31); // file device
+  return g_host2scm(31+32); // file device
 };
 
 ")
@@ -2059,9 +2674,9 @@ def g_os_device_kind(dev_scm):
     dev = g_foreign2host(dev_scm)
 
     if g_os_debug:
-        print('g_os_device_kind('+repr(dev.fd)+')  ***not fully implemented***')
+        print('g_os_device_kind(...)  ***not fully implemented***')
 
-    return g_host2scm(31)  # file device
+    return g_host2scm(31+32)  # file device
 
 ")
     (##inline-host-expression
@@ -2083,7 +2698,7 @@ g_os_device_stream_open_process = function (path_and_args_scm, environment_scm, 
   if (g_os_debug)
     console.log('g_os_device_stream_open_process(...)  ***not implemented***');
 
-  return g_host2scm(-1); // error
+  return g_host2scm(-1); // EPERM (operation not permitted)
 };
 
 ")
@@ -2102,7 +2717,7 @@ def g_os_device_stream_open_process(path_and_args_scm, environment_scm, director
     if g_os_debug:
         print('g_os_device_stream_open_process(...)  ***not implemented***')
 
-    return g_host2scm(-1)  # error
+    return g_host2scm(-1)  # EPERM (operation not permitted)
 
 ")
     (##inline-host-expression
@@ -2127,9 +2742,9 @@ g_os_device_process_pid = function (dev_scm) {
   var dev = g_foreign2host(dev_scm);
 
   if (g_os_debug)
-    console.log('g_os_device_process_pid('+dev.fd+')  ***not implemented***');
+    console.log('g_os_device_process_pid(...)  ***not implemented***');
 
-  return g_host2scm(-1); // error
+  return g_host2scm(-1); // EPERM (operation not permitted)
 };
 
 ")
@@ -2145,9 +2760,9 @@ def g_os_device_process_pid(dev_scm):
     dev = g_foreign2host(dev_scm)
 
     if g_os_debug:
-        print('g_os_device_process_pid('+repr(dev.fd)+')  ***not implemented***')
+        print('g_os_device_process_pid(...)  ***not implemented***')
 
-    return g_host2scm(-1)  # error
+    return g_host2scm(-1)  # EPERM (operation not permitted)
 
 ")
     (##inline-host-expression
@@ -2169,9 +2784,9 @@ g_os_device_process_status = function (dev_scm) {
   var dev = g_foreign2host(dev_scm);
 
   if (g_os_debug)
-    console.log('g_os_device_process_status('+dev.fd+')  ***not implemented***');
+    console.log('g_os_device_process_status(...)  ***not implemented***');
 
-  return g_host2scm(-1); // error
+  return g_host2scm(-1); // EPERM (operation not permitted)
 };
 
 ")
@@ -2187,9 +2802,9 @@ def g_os_device_process_status(dev_scm):
     dev = g_foreign2host(dev_scm)
 
     if g_os_debug:
-        print('g_os_device_process_status('+repr(dev.fd)+')  ***not implemented***')
+        print('g_os_device_process_status(...)  ***not implemented***')
 
-    return g_host2scm(-1)  # error
+    return g_host2scm(-1)  # EPERM (operation not permitted)
 
 ")
     (##inline-host-expression
@@ -2211,9 +2826,9 @@ g_os_device_stream_default_options = function (dev_scm) {
   var dev = g_foreign2host(dev_scm);
 
   if (g_os_debug)
-    console.log('g_os_device_stream_default_options('+dev.fd+')  ***not fully implemented***');
+    console.log('g_os_device_stream_default_options(...)  ***not fully implemented***');
 
-  return g_host2scm(2<<9); // line buffering
+  return g_host2scm(((2<<9)<<15)+(2<<9)); // line buffering
 };
 
 ")
@@ -2229,9 +2844,9 @@ def g_os_device_stream_default_options(dev_scm):
     dev = g_foreign2host(dev_scm)
 
     if g_os_debug:
-        print('g_os_device_stream_default_options('+repr(dev.fd)+')  ***not fully implemented***')
+        print('g_os_device_stream_default_options(...)  ***not fully implemented***')
 
-    return g_host2scm(2<<9)  # line buffering
+    return g_host2scm(((2<<9)<<15)+(2<<9))  # line buffering
 
 ")
     (##inline-host-expression
@@ -2254,9 +2869,9 @@ g_os_device_stream_options_set = function (dev_scm, options_scm) {
   var options = g_scm2host(options_scm);
 
   if (g_os_debug)
-    console.log('g_os_device_stream_options_set('+dev.fd+','+options+')  ***not implemented***');
+    console.log('g_os_device_stream_options_set(...,'+options+')  ***not implemented***');
 
-  return g_host2scm(-1); // error
+  return g_host2scm(-1); // EPERM (operation not permitted)
 };
 
 ")
@@ -2274,9 +2889,9 @@ def g_os_device_stream_options_set(dev_scm, options_scm):
     options = g_scm2host(options_scm)
 
     if g_os_debug:
-        print('g_os_device_stream_options_set('+repr(dev.fd)+','+repr(options)+')  ***not implemented***')
+        print('g_os_device_stream_options_set(...,'+repr(options)+')  ***not implemented***')
 
-    return g_host2scm(-1)  # error
+    return g_host2scm(-1)  # EPERM (operation not permitted)
 
 ")
     (##inline-host-expression
@@ -2294,72 +2909,21 @@ def g_os_device_stream_options_set(dev_scm, options_scm):
    ((js)
     (##inline-host-declaration "
 
-g_stdout_buf = [];
-
-if ((function () { return this === this.window; })()) {
-
-  g_console_output_buf = new Uint8Array(0);
-  g_console_input_buf = new Uint8Array(0);
-  g_console_input_should_sleep = true;
-  g_console_encoder = new TextEncoder();
-  g_console_decoder = new TextDecoder();
-
-  g_console_input_add = function (input) {
-
-    var len = g_console_input_buf.length;
-    var inp = g_console_encoder.encode(input);
-    g_console_output_add(inp);
-    var newbuf = new Uint8Array(len + inp.length);
-    newbuf.set(g_console_input_buf);
-    newbuf.set(inp, len);
-    g_console_input_buf = newbuf;
-
-  };
-
-  g_console_output_add = function (buffer) {
-
-    var len = g_console_output_buf.length;
-    var newbuf = new Uint8Array(len + buffer.length);
-    newbuf.set(g_console_output_buf);
-    newbuf.set(buffer, len);
-    g_console_output_buf = newbuf;
-
-    var trim = 7; // trim to last 7 lines
-    var end = newbuf.length;
-    var nl = end;
-    for (var n=0; n<trim; n++) {
-      var prev = nl-1;
-      while (prev >= 0 && newbuf[prev] !== 10) prev--; // search for newline
-      if (n > 0 && end-nl > 35*trim) break;
-      if (prev < 0) return;
-      nl = prev;
-    }
-    g_console_output_buf = newbuf.subarray(nl+1);
-
-  };
-
-}
-
 g_os_device_stream_open_predefined = function (index_scm, flags_scm) {
 
   var index = g_scm2host(index_scm);
   var flags = g_scm2host(flags_scm);
 
   if (g_os_debug)
-    console.log('g_os_device_stream_open_predefined('+index+','+flags+')  ***not fully implemented***');
-
-  var fd = index;
+    console.log('g_os_device_stream_open_predefined('+index+','+flags+')');
 
   switch (index) {
-    case -1: fd = 0; break; // stdin
-    case -2: fd = 1; break; // stdout
-    case -3: fd = 2; break; // stderr
-    case -4: if ((function () { return this !== this.window; })()) // console
-               fd = 1;
-             break;
+    case -1: dev = g_os_device_from_stdin();   break;
+    case -2: dev = g_os_device_from_stdout();  break;
+    case -3: dev = g_os_device_from_stderr();  break;
+    case -4: dev = g_os_device_from_console(); break;
+    default: dev = g_os_device_from_fd(index); break;
   }
-
-  var dev = new G_Device(fd);
 
   return g_host2foreign(dev);
 };
@@ -2379,20 +2943,18 @@ def g_os_device_stream_open_predefined(index_scm, flags_scm):
     flags = g_scm2host(flags_scm)
 
     if g_os_debug:
-      print('g_os_device_stream_open_predefined('+repr(index)+','+repr(flags)+')  ***not fully implemented***')
+      print('g_os_device_stream_open_predefined('+repr(index)+','+repr(flags)+')')
 
     if index == -1:
-        fd = 0  # stdin
+        dev = g_os_device_from_stdin()
     elif index == -2:
-        fd = 1  # stdout
+        dev = g_os_device_from_stdout()
     elif index == -3:
-        fd = 2  # stderr
+        dev = g_os_device_from_stderr()
     elif index == -4:
-        fd = 1  # console
+        dev = g_os_device_from_console()
     else:
-        fd = index
-
-    dev = G_Device(fd)
+        dev = g_os_device_from_fd(index)
 
     return g_host2foreign(dev)
 
@@ -2413,43 +2975,145 @@ def g_os_device_stream_open_predefined(index_scm, flags_scm):
     (##first-argument #f ##feature-file-input)
     (##inline-host-declaration "
 
-if ((function () { return this !== this.window; })()) { // nodejs?
+if (g_os_fs) {
 
   g_os_translate_flags = function (flags) {
 
-    var result;
+    var direction = (flags >> 4) & 3;
+    var append = ((flags >> 3) & 1) !== 0;
+    var creat = ((flags >> 1) & 3) !== 0;
+    var excl = ((flags >> 1) & 3) === 2;
+    var trunc = (flags & 1) !== 0;
 
-    switch ((flags >> 4) & 3)
-      {
-      default:
-      case 1:
-        result = fs.constants.O_RDONLY;
-        break;
-      case 2:
-        result = fs.constants.O_WRONLY;
-        break;
-      case 3:
-        result = fs.constants.O_RDWR;
-        break;
+    if (direction === 1) {
+      // O_RDONLY
+      return 'r';
+    } else if (direction === 2) {
+      // O_WRONLY
+      if (creat) {
+        if (trunc) {
+          return excl ? 'wx' : 'w';
+        } else if (append) {
+          return excl ? 'ax' : 'a';
+        } else {
+          return null; // unknown mode
+        }
+      } else {
+        return null; // unknown mode
       }
-
-    if ((flags & (1 << 3)) != 0)
-      result |= fs.constants.O_APPEND;
-
-    switch ((flags >> 1) & 3)
-      {
-      default:
-      case 0: break;
-      case 1: result |= fs.constants.O_CREAT; break;
-      case 2: result |= fs.constants.O_CREAT|fs.constants.O_EXCL; break;
+    } else {
+      // O_RDWR
+      if (creat) {
+        if (trunc) {
+          return excl ? 'wx+' : 'w+';
+        } else if (append) {
+          return excl ? 'ax+' : 'a+';
+        } else {
+          return null; // unknown mode
+        }
+      } else {
+        return 'r+';
       }
+    }
+  };
+}
 
-    if ((flags & 1) != 0)
-      result |= fs.constants.O_TRUNC;
+if (g_os_web) {
 
-    return result;
+  G_Device_blob = function (blob) {
+    var dev = this;
+    dev.rbuf = blob;
+    dev.rlo = 0;
+    dev.rhi = blob.length;
   };
 
+  G_Device_blob.prototype.read = function (dev_condvar_scm, buffer, lo, hi) {
+
+    var dev = this;
+
+    if (g_os_debug)
+      console.log('G_Device_blob(...).read(...,['+buffer.slice(0,10)+'...],'+lo+','+hi+')');
+
+    var n = hi-lo;
+    var have = dev.rhi-dev.rlo;
+
+    if (have <= 0) {
+      return g_host2scm(0); // signal EOF
+    } else {
+
+      if (n > have) n = have;
+
+      buffer.set(dev.rbuf.subarray(dev.rlo, dev.rlo+n), lo);
+
+      dev.rlo += n;
+
+      return g_host2scm(n); // number of bytes transferred
+    };
+  };
+
+  G_Device_blob.prototype.write = function (dev_condvar_scm, buffer, lo, hi) {
+
+    var dev = this;
+
+    if (g_os_debug)
+      console.log('G_Device_blob(...).write(...,['+buffer.slice(0,10)+'...],'+lo+','+hi+')');
+
+    return -1; // EPERM (operation not permitted)
+  };
+
+  G_Device_blob.prototype.force_output = function (dev_condvar_scm, level) {
+
+    var dev = this;
+
+    if (g_os_debug)
+      console.log('G_Device_blob(...).force_output(...,'+level+')');
+
+    return -1; // EPERM (operation not permitted)
+  };
+
+  G_Device_blob.prototype.seek = function (dev_condvar_scm, pos, whence) {
+
+    var dev = this;
+
+    if (g_os_debug)
+      console.log('G_Device_blob(...).seek(...,'+pos+','+whence+')');
+
+    return -1; // EPERM (operation not permitted)
+  };
+
+  G_Device_blob.prototype.width = function (dev_condvar_scm) {
+
+    var dev = this;
+
+    if (g_os_debug)
+      console.log('G_Device_blob(...).width()');
+
+    return -1; // EPERM (operation not permitted)
+  };
+
+  G_Device_blob.prototype.close = function (direction) {
+
+    var dev = this;
+
+    if (g_os_debug)
+      console.log('G_Device_blob(...).close('+direction+')');
+
+    if ((direction & 1) != 0 ||  // DIRECTION_RD
+        (direction & 2) != 0) {  // DIRECTION_WR
+
+      dev.rbuf = new Uint8Array(0);
+      dev.rlo = 0;
+      dev.rhi = 0;
+
+      return 0; // ignored
+    }
+
+    return 0; // no error
+  };
+
+  g_os_device_from_blob = function (blob) {
+    return new G_Device_blob(blob);
+  };
 }
 
 g_os_device_stream_open_path = function (path_scm, flags_scm, mode_scm) {
@@ -2459,61 +3123,78 @@ g_os_device_stream_open_path = function (path_scm, flags_scm, mode_scm) {
   var mode = g_scm2host(mode_scm);
 
   if (g_os_debug)
-    console.log('g_os_device_stream_open_path(\\''+path+'\\','+flags+','+mode+')  ***not fully implemented***');
+    console.log('g_os_device_stream_open_path(\\''+path+'\\','+flags+','+mode+')');
 
-  if ((function () { return this === this.window; })()) {
+  if (g_os_uri_scheme_prefixed(path)) { // accessing a URL?
 
-    if (((flags >> 4) & 3) == 1) { // for reading?
+    if (!(g_os_web && g_os_trusted_url(path))) { // accessing an untrusted URL?
+      return g_host2scm(-1); // EPERM (operation not permitted)
+    } else {
 
-      var ra = g_r0;
-      g_r0 = null; // exit trampoline
+      if (((flags >> 4) & 3) === 1) { // for reading?
 
-      var done = function (req) {
+        var ra = g_r0;
+        g_r0 = null; // exit trampoline
 
-        if (req.status !== 200) { // error?
+        function callback(req) {
 
-          g_r1 = g_host2scm(-2); // ENOENT (file does not exist)
+          if (req.status === 404) {
+            g_r1 = g_host2scm(-2); // ENOENT (file does not exist)
+          } else if (req.status !== 200) {
+            g_r1 = g_host2scm(-1); // EPERM (operation not permitted)
+          } else {
+            var dev = g_os_device_from_blob(new TextEncoder().encode(req.responseText));
+            g_r1 = g_host2foreign(dev);
+          }
 
-        } else {
-
-          var dev = new G_Device(-5);
-
-          dev.rbuf = new TextEncoder().encode(req.responseText);
-          dev.rlo = 0;
-          dev.rhi = dev.rbuf.length;
-
-          g_r1 = g_host2foreign(dev);
-
+          g_r0 = ra;
+          g_trampoline(g_r0);
         }
 
-        g_trampoline(ra);
-      };
+        g_os_get_url_async('GET', g_os_uri_encode(path), callback);
 
-      g_os_get_url_async('GET', path.slice(1), done);
-
-      return false; // ignored
-
-    } else {
-      throw Error('g_os_device_stream_open_path(\\''+path+'\\','+flags+','+mode+')  ***not implemented***');
+        return 0; // ignored
+      } else {
+        return g_host2scm(-1); // EPERM (operation not permitted)
+      }
     }
 
   } else {
 
-    var fd;
+    if (!g_os_fs) {
+      return g_host2scm(-1); // EPERM (operation not permitted)
+    } else {
 
-    try {
-      fd = fs.openSync(path, g_os_translate_flags(flags), mode);
-    } catch (exn) {
-      if (exn instanceof Error && exn.hasOwnProperty('code')) {
-        return g_host2scm(g_os_encode_error(exn));
+      // Start an async open of the file
+
+      var async_progress = g_async_op_done; // open not yet started
+      var ra = g_r0;
+
+      function callback(err, fd) {
+        var progress = async_progress;
+        if (err) {
+          async_progress = g_host2scm(g_os_encode_error(err));
+        } else {
+          async_progress = g_host2foreign(g_os_device_from_fd(fd));
+        }
+        if (progress === g_async_op_in_progress) {
+          g_r1 = async_progress;
+          g_r0 = ra;
+          g_trampoline(g_r0);
+        }
+      }
+
+      g_os_fs.open(path, g_os_translate_flags(flags), mode, callback);
+
+      if (async_progress !== g_async_op_done) {
+        // handle synchronous execution of callback
+        return async_progress;
       } else {
-        throw exn;
+        async_progress = g_async_op_in_progress;
+        g_r0 = null; // exit trampoline
+        return 0; // ignored
       }
     }
-
-    var dev = new G_Device(fd);
-
-    return g_host2foreign(dev);
   }
 };
 
@@ -2560,14 +3241,14 @@ def g_os_device_stream_open_path(path_scm, flags_scm, mode_scm):
     mode = g_scm2host(mode_scm)
 
     if g_os_debug:
-        print('g_os_device_stream_open_path('+repr(path)+','+repr(flags)+','+repr(mode)+')  ***not fully implemented***')
+        print('g_os_device_stream_open_path('+repr(path)+','+repr(flags)+','+repr(mode)+')')
 
     try:
         fd = os.open(path, g_os_translate_flags(flags), mode)
     except OSError as exn:
         return g_host2scm(g_os_encode_error(exn))
 
-    dev = G_Device(fd)
+    dev = g_os_device_from_fd(fd)
 
     return g_host2foreign(dev)
 
@@ -2595,62 +3276,7 @@ g_os_device_stream_read = function (dev_condvar_scm, buffer_scm, lo_scm, hi_scm)
   var lo = g_scm2host(lo_scm);
   var hi = g_scm2host(hi_scm);
 
-  if (g_os_debug)
-    console.log('g_os_device_stream_read('+dev.fd+',['+buffer+'],'+lo+','+hi+')  ***not fully implemented***');
-
-  var n = hi-lo;
-  var have = dev.rhi-dev.rlo;
-
-  if (have === 0) {
-
-    if ((function () { return this === this.window; })()) {
-
-      if (dev.fd === -4) { // console?
-        if (g_console_input_buf.length === 0) {
-          if (g_console_input_should_sleep) {
-            g_console_input_should_sleep = false;
-            return g_host2scm(-35); // EAGAIN
-          }
-          g_console_input_should_sleep = true;
-          var input = prompt(g_console_decoder.decode(g_console_output_buf) + '\\u258b                                                                                ');
-          if (input !== null) { // cancel button gives EOF
-            g_console_input_add(input + '\\n');
-          }
-        }
-        have = g_console_input_buf.length;
-        if (have > dev.rbuf.length) have = dev.rbuf.length;
-        dev.rbuf.set(g_console_input_buf.subarray(0, have));
-        dev.rlo = 0;
-        dev.rhi = have;
-        g_console_input_buf = g_console_input_buf.subarray(have);
-
-      } else if (dev.fd !== -5) { // fetched URL?
-        throw Error('g_os_device_stream_read('+dev.fd+',['+buffer+'],'+lo+','+hi+')  ***not implemented***');
-      }
-
-    } else {
-
-      have = fs.readSync(dev.fd, dev.rbuf, 0, dev.rbuf.length, null);
-      dev.rlo = 0;
-      dev.rhi = have;
-
-    }
-  }
-
-  if (have === 0) {
-
-    return g_host2scm(0); // 0 means EOF
-
-  } else {
-
-    if (n > have) n = have;
-
-    buffer.set(dev.rbuf.subarray(dev.rlo, dev.rlo+n), lo);
-
-    dev.rlo += n;
-
-    return g_host2scm(n); // number of bytes transferred
-  }
+  return g_host2scm(dev.read(dev_condvar_scm, buffer, lo, hi));
 };
 
 ")
@@ -2671,17 +3297,7 @@ def g_os_device_stream_read(dev_condvar_scm, buffer_scm, lo_scm, hi_scm):
     lo = g_scm2host(lo_scm)
     hi = g_scm2host(hi_scm)
 
-    if g_os_debug:
-        print('g_os_device_stream_read('+repr(dev.fd)+','+repr(buffer)+','+repr(lo)+','+repr(hi)+')  ***not fully implemented***')
-
-    try:
-        b = os.read(dev.fd, hi-lo)
-        n = len(b)
-        buffer[lo:lo+n] = b
-    except OSError as exn:
-        return g_host2scm(g_os_encode_error(exn))
-
-    return g_host2scm(n)
+    return g_host2scm(dev.read(dev_condvar_scm, buffer, lo, hi))
 
 ")
     (##inline-host-expression
@@ -2708,45 +3324,7 @@ g_os_device_stream_write = function (dev_condvar_scm, buffer_scm, lo_scm, hi_scm
   var lo = g_scm2host(lo_scm);
   var hi = g_scm2host(hi_scm);
 
-  if (g_os_debug)
-    console.log('g_os_device_stream_write('+dev.fd+',['+buffer+'],'+lo+','+hi+')  ***not fully implemented***');
-
-  var n;
-
-  if ((function () { return this === this.window; })()) {
-
-    if (dev.fd === 1) { // stdout?
-      for (var i=lo; i<hi; i++) {
-        var c = buffer[i];
-        if (c === 10) {
-          console.log(String.fromCharCode.apply(null, g_stdout_buf));
-          g_stdout_buf = [];
-        } else {
-          g_stdout_buf.push(c);
-        }
-      }
-    } else if (dev.fd === -4) { // console?
-      g_console_output_add(buffer.subarray(lo, hi));
-    } else {
-      throw Error('g_os_device_stream_write('+dev.fd+',['+buffer+'],'+lo+','+hi+')  ***not implemented***');
-    }
-
-    n = hi-lo;
-
-  } else {
-
-    try {
-      n = fs.writeSync(dev.fd, buffer, lo, hi-lo, null);
-    } catch (exn) {
-      if (exn instanceof Error && exn.hasOwnProperty('code')) {
-        return g_host2scm(g_os_encode_error(exn));
-      } else {
-        throw exn;
-      }
-    }
-  }
-
-  return g_host2scm(n);
+  return g_host2scm(dev.write(dev_condvar_scm, buffer, lo, hi));
 };
 
 ")
@@ -2767,15 +3345,7 @@ def g_os_device_stream_write(dev_condvar_scm, buffer_scm, lo_scm, hi_scm):
     lo = g_scm2host(lo_scm)
     hi = g_scm2host(hi_scm)
 
-    if g_os_debug:
-        print('g_os_device_stream_write('+repr(dev.fd)+','+repr(buffer)+','+repr(lo)+','+repr(hi)+')  ***not fully implemented***')
-
-    try:
-        n = os.write(dev.fd, buffer[lo:hi])
-    except OSError as exn:
-        return g_host2scm(g_os_encode_error(exn))
-
-    return g_host2scm(n)
+    return g_host2scm(dev.write(dev_condvar_scm, buffer, lo, hi))
 
 ")
     (##inline-host-expression
@@ -2801,10 +3371,7 @@ g_os_device_stream_seek = function (dev_condvar_scm, pos_scm, whence_scm) {
   var pos = g_scm2host(pos_scm);
   var whence = g_scm2host(whence_scm);
 
-  if (g_os_debug)
-    console.log('g_os_device_stream_seek('+dev.fd+','+pos+','+whence+')  ***not implemented***');
-
-  return g_host2scm(-1); // error
+  return g_host2scm(dev.seek(dev_condvar_scm, pos, whence));
 };
 
 ")
@@ -2823,22 +3390,7 @@ def g_os_device_stream_seek(dev_condvar_scm, pos_scm, whence_scm):
     pos = g_scm2host(pos_scm)
     whence = g_scm2host(whence_scm)
 
-    if g_os_debug:
-        print('g_os_device_stream_seek('+repr(dev.fd)+','+repr(pos)+','+repr(whence)+')  ***not fully implemented***')
-
-    if whence == 0:
-        how = os.SEEK_SET
-    elif whence == 1:
-        how = os.SEEK_CUR
-    else:
-        how = os.SEEK_END
-
-    try:
-        os.lseek(dev.fd, pos, how)
-    except OSError as exn:
-        return g_host2scm(g_os_encode_error(exn))
-
-    return g_host2scm(0)  # no error
+    return g_host2scm(dev.seek(dev_condvar_scm, pos, whence))
 
 ")
     (##inline-host-expression
@@ -2861,10 +3413,7 @@ g_os_device_stream_width = function (dev_condvar_scm) {
 
   var dev = g_foreign2host(dev_condvar_scm.slots[g_CONDVAR_NAME]);
 
-  if (g_os_debug)
-    console.log('g_os_device_stream_width('+dev.fd+')  ***not fully implemented***');
-
-  return g_host2scm(80);
+  return g_host2scm(dev.width(dev_condvar_scm));
 };
 
 ")
@@ -2879,10 +3428,7 @@ def g_os_device_stream_width(dev_condvar_scm):
 
     dev = g_foreign2host(dev_condvar_scm.slots[g_CONDVAR_NAME])
 
-    if g_os_debug:
-        print('g_os_device_stream_width('+repr(dev.fd)+')  ***not fully implemented***')
-
-    return g_host2scm(80)
+    return g_host2scm(dev.width(dev_condvar_scm))
 
 ")
     (##inline-host-expression
@@ -3080,60 +3626,78 @@ def g_os_port_encode_chars(port_scm):
    ((js)
     (##inline-host-declaration "
 
-g_os_condvar_select_should_sleep = true;
+g_os_condvar_ready_set = function (condvar_scm, ready) {
+
+  var owner = condvar_scm.slots[g_BTQ_OWNER];
+
+  if (ready) {
+    condvar_scm.slots[g_BTQ_OWNER] = owner | 1; // mark as 'ready'
+    g_os_condvar_select_resume();
+  } else {
+    condvar_scm.slots[g_BTQ_OWNER] = owner & ~1; // mark as 'not ready'
+  }
+
+};
+
+g_os_condvar_select_resume = function () {
+
+  g_os_condvar_select_resume_cancel();
+
+  // execute continuation if there is one
+  var cont = g_os_condvar_select_resume_ra;
+  g_os_condvar_select_resume_ra = null;
+  if (cont !== null) {
+    g_r0 = cont;
+    g_trampoline(g_r0);
+  }
+};
+
+g_os_condvar_select_resume_cancel = function () {
+
+  // cancel time-delayed resume if there is one
+
+  if (g_os_condvar_select_resume_timeoutId !== null) {
+    clearTimeout(g_os_condvar_select_resume_timeoutId);
+    g_os_condvar_select_resume_timeoutId = null;
+  }
+
+};
+
+g_os_condvar_select_resume_timeoutId = null;
+g_os_condvar_select_resume_ra = null;
 
 g_os_condvar_select = function (devices_scm, timeout_scm) {
-
-  if (g_os_debug)
-    console.log('g_os_condvar_select(devices, timeout)  ***not fully implemented***');
-
-  var at_least_1_device = (devices_scm !== false &&
-                           devices_scm !== devices_scm.slots[g_BTQ_DEQ_NEXT]);
 
   var timeout_ms;
 
   if (timeout_scm === false)
     timeout_ms = 0;
   else if (timeout_scm === true)
-    timeout_ms = 999999;
+    timeout_ms = 999999; // almost forever...
   else
-    timeout_ms = (timeout_scm.elems[0]-g_current_time()) * 1000;
+    timeout_ms = (timeout_scm.elems[0]-g_os_current_time()) * 1000;
 
-  if (!at_least_1_device || g_os_condvar_select_should_sleep) {
-
-    if (at_least_1_device)
-      timeout_ms = 10; // give browser time to refresh
-
-    g_os_condvar_select_should_sleep = false;
-
-    var ra = g_r0;
-    g_r0 = null; // exit trampoline
-
-    setTimeout(function () { g_trampoline(ra); }, // resume execution
-               Math.max(0, timeout_ms))
-
-    return g_host2scm(0);
+  if (g_os_debug) {
+    var no_devices = (devices_scm === false ||
+                      devices_scm === devices_scm.slots[g_BTQ_DEQ_NEXT]);
+    console.log('g_os_condvar_select('+(no_devices?'no devices':'some devices')+', '+timeout_ms+' ms)');
   }
 
-  g_os_condvar_select_should_sleep = true;
+  // The Scheme code execution needs to be suspended to allow the
+  // JavaScript VM (browser) to handle events.  These events (or
+  // expiration of the timeout) will in turn cause the execution
+  // of the Scheme code to resume.  Note that browsers implement
+  // 'clamping' of the timeout after a certain number of nested calls
+  // (typically 5 ms), and this may impact performance.
 
-  if (devices_scm !== false) {
+  // resume execution at g_r0 after the timeout
 
-    var condvar_scm = devices_scm.slots[g_BTQ_DEQ_NEXT];
+  g_os_condvar_select_resume_ra = g_r0;
+  g_r0 = null; // exit trampoline
+  g_os_condvar_select_resume_timeoutId =
+    setTimeout(g_os_condvar_select_resume, Math.max(0, timeout_ms));
 
-    while (condvar_scm !== devices_scm) {
-      var owner = condvar_scm.slots[g_BTQ_OWNER];
-      var dev = g_foreign2host(condvar_scm.slots[g_CONDVAR_NAME]);
-      if (dev.fd === -4) // console?
-        condvar_scm.slots[g_BTQ_OWNER] = owner | 1; // mark as 'ready'
-      else
-        condvar_scm.slots[g_BTQ_OWNER] = owner & ~1; // mark as 'not ready'
-      condvar_scm = condvar_scm.slots[g_BTQ_DEQ_NEXT];
-    }
-
-  }
-
-  return g_host2scm(0);
+  return 0; // ignored
 };
 
 ")
@@ -3148,7 +3712,7 @@ g_os_condvar_select = function (devices_scm, timeout_scm) {
 def g_os_condvar_select(devices_scm, timeout_scm):
 
     if g_os_debug:
-        print('g_os_condvar_select(devices, timeout)  ***not fully implemented***')
+        print('g_os_condvar_select(devices, timeout)')
 
     return g_host2scm(0)  # no error
 

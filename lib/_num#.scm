@@ -174,6 +174,12 @@
   0
   18446744073709551615)
 
+(define-check-type exact-integer 'exact-integer
+  macro-exact-int?)
+
+(define-check-type nonnegative-exact-integer 'nonnegative-exact-integer
+  macro-nonnegative-exact-int?)
+
 (define-check-type inexact-real 'inexact-real
   ##flonum?)
 
@@ -245,6 +251,13 @@
 
 (##define-macro (macro-exact-int? obj) ;; obj can be any object
   `(macro-exact-int-dispatch ,obj #f #t #t))
+
+(##define-macro (macro-nonnegative-exact-int? obj)
+  `(let ((obj ,obj))
+     (macro-exact-int-dispatch
+       obj #f
+       (##not (##fxnegative? obj))
+       (##not (##negative? obj)))))
 
 (##define-macro (macro-exact-real? obj) ;; obj can be any object
   `(macro-exact-real-dispatch ,obj #f #t #t #t))

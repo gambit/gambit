@@ -666,9 +666,23 @@
         (lambda (ctx feature)
           (apply-procedure ctx num)))))
    '(2 3 4 5))
+
+  (univ-define-rtlib-feature 'check_heap_limit0
+    (univ-rtlib-feature-method
+     '(public)
+     'jumpable
+     '()
+     "\n"
+     '()
+     (lambda (ctx)
+       (^ (^setreg 1 (^void-obj))
+          (^return
+           (^downupcast* 'returnpt 'jumpable (^getreg 0)))))))
    )
 
 (define (old-univ-rtlib-feature ctx feature)
+
+  (define poll-interval 100)
 
   (define (rts-method
            name
@@ -1038,7 +1052,7 @@
      (rts-field 'nargs 'int (^int 0) '(public)))
 
     ((pollcount)
-     (rts-field 'pollcount 'int (^int 100) '(public)))
+     (rts-field 'pollcount 'int (^int poll-interval) '(public)))
 
     ((temp1)
      (rts-field 'temp1 'scmobj (^null) '(public)))
@@ -1751,9 +1765,9 @@
       (lambda (ctx)
         (let ((dest (^local-var 'dest)))
           (^ (^assign (gvm-state-pollcount-use ctx 'wr)
-                      100)
+                      poll-interval)
              (if (and (univ-stack-resizable? ctx)
-                      (not (eq? (target-name (ctx-target ctx)) 'go)) ;; TODO : find an efficient way to shrink the stack in python
+                      (not (eq? (target-name (ctx-target ctx)) 'go)) ;; TODO : find an efficient way to shrink the stack in go
                       (not (eq? (target-name (ctx-target ctx)) 'python))) ;; TODO : find an efficient way to shrink the stack in python
                  (^array-shrink! (^rts-field-use 'stack) (^+ (^rts-field-use 'sp) (^int 1)))
                  (^))
