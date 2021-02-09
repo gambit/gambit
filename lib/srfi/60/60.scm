@@ -69,7 +69,7 @@
 ;; bitwise-not
 ;; lognot
 ;;
-;; built-in
+;; bitwise-not -> built-in
 
 (define-prim (lognot x)
   (macro-force-vars (x)
@@ -86,34 +86,26 @@
 ;; bitwise-merge
 ;; bitwise-if
 
-(define-macro (bitwise-merge/if merge/if)
-  `(lambda (x y z)
-     (macro-force-vars (x y z)
-       (cond ((##not (macro-exact-int? x))
-              (##fail-check-exact-integer 1 ,merge/if x y z))
-             ((##not (macro-exact-int? y))
-              (##fail-check-exact-integer 2 ,merge/if x y z))
-             ((##not (macro-exact-int? z))
-              (##fail-check-exact-integer 3 ,merge/if x y z))
-             (else
-              (##bitwise-merge (##bitwise-not x) y z))))))
+(define-primitive (bitwise-merge (x exact-integer)
+                                 (y exact-integer)
+                                 (z exact-integer))
+  (##bitwise-merge (##bitwise-not x) y z))
 
-(define-prim bitwise-merge (bitwise-merge/if bitwise-merge))
-(define-prim bitwise-if (bitwise-merge/if bitwise-if))
+(define-primitive (bitwise-if (x exact-integer)
+                              (y exact-integer)
+                              (z exact-integer))
+  (##bitwise-merge (##bitwise-not x) y z))
+
 
 ;;---------------------------------------------------------------------------
 ;; any-bits-set?
 ;; logtest
+;;
+;; any-bits-set? -> built-in
 
-(define-prim (logtest x y)
-  (macro-force-vars (x y)
-    (cond ((##not (macro-exact-int? x))
-           (##fail-check-exact-integer 1 logtest x y))
-          ((##not (macro-exact-int? y))
-           (##fail-check-exact-integer 2 logtest x y))
-          (else
-           (##any-bits-set? x y)))))
-
+(define-primitive (logtest (x exact-integer)
+                           (y exact-integer))
+  (##any-bits-set? x y))
 
 ;===========================================================================
 ;;===========================================================================
@@ -125,27 +117,24 @@
 ;;---------------------------------------------------------------------------
 ;; bit-count
 ;; logcount
+;;
+;; bit-count -> built-in
 
 (define-prim (logcount x)
   (macro-force-vars (x)
-    (let ((type-error 
-            (lambda ()
-              (##fail-check-exact-integer 
-                1 
-                logcount 
-                x))))
+    (let ((type-error
+            (##fail-check-exact-integer 1 logcount x)))
       (macro-exact-int-dispatch x (type-error)
-        (##fxbit-count x)
-        (let ((x-length (##bignum.mdigit-length x)))
-          (let loop ((i (##fx- x-length 1))
-                     (n 0))
-            (if (##fx< i 0)
-                (if (##bignum.negative? x)
-                    (##fx- (##fx* x-length ##bignum.mdigit-width) n)
-                    n)
-                (loop (##fx- i 1)
-                      (##fx+ n (##fxbit-count (##bignum.mdigit-ref x i)))))))))))
-
+          (##fxbit-count x)
+          (let ((x-length (##bignum.mdigit-length x)))
+            (let loop ((i (##fx- x-length 1))
+                       (n 0))
+              (if (##fx< i 0)
+                  (if (##bignum.negative? x)
+                      (##fx- (##fx* x-length ##bignum.mdigit-width) n)
+                      n)
+                  (loop (##fx- i 1)
+                        (##fx+ n (##fxbit-count (##bignum.mdigit-ref x i)))))))))))
 
 ;;---------------------------------------------------------------------------
 ;; integer-length
@@ -156,8 +145,35 @@
 ;; first-set-bit
 ;; log2-binary-factors
 
-(define first-set-bit first-bit-set)
-(define log2-binary-factors first-bit-set)
+(define-prim (first-set-bit x)
+  (macro-force-vars (x)
+    (let ((type-error
+            (##fail-check-exact-integer 1 first-set-bit x)))
+      (macro-exact-int-dispatch x (type-error)
+        (##fxfirst-bit-set x)
+        (let ((x-length (##bignum.mdigit-length x)))
+          (let loop ((i 0))
+            (let ((mdigit (##bignum.mdigit-ref x i)))
+              (if (##fx= mdigit 0)
+                  (loop (##fx+ i 1))
+                  (##fx+
+                   (##fxfirst-bit-set mdigit)
+                   (##fx* i ##bignum.mdigit-width))))))))))
+
+(define-prim (log2-binary-factors x)
+  (macro-force-vars (x)
+    (let ((type-error
+            (##fail-check-exact-integer 1 log2-binary-factors x)))
+      (macro-exact-int-dispatch x (type-error)
+        (##fxfirst-bit-set x)
+        (let ((x-length (##bignum.mdigit-length x)))
+          (let loop ((i 0))
+            (let ((mdigit (##bignum.mdigit-ref x i)))
+              (if (##fx= mdigit 0)
+                  (loop (##fx+ i 1))
+                  (##fx+
+                   (##fxfirst-bit-set mdigit)
+                   (##fx* i ##bignum.mdigit-width))))))))))
 
 
 ;;===========================================================================
@@ -170,6 +186,8 @@
 ;;---------------------------------------------------------------------------
 ;; bit-set?
 ;; logbit?
+;;
+;; bit-set? -> built-in
 
 (define-prim (logbit? x y)
   (macro-force-vars (x y)
@@ -220,20 +238,10 @@
      (##bitwise-and to (##bitwise-not (##arithmetic-shift 1 index)))))
 
 
-(define-prim (copy-bit index to bool)
-  (macro-force-vars (index to bool)
-    (macro-check-index
-      index
-      1
-      (copy-bit index to bool)
-      (macro-check-boolean
-        bool
-        3
-        (copy-bit index to bool)
-        (begin
-        (if (##not (macro-exact-int? to))
-            (##fail-check-exact-integer 2 copy-bit index to bool)
-            (##copy-bit index to bool)))))))
+(define-primitive (copy-bit (index nonnegative-exact-integer)
+                            (to    exact-integer)
+                            (bool  boolean))
+  (##copy-bit index to bool))
 
 
 ;;===========================================================================
@@ -247,51 +255,29 @@
 ;; bit-field
 
 
-(define-prim (bit-field n start end)
-  (macro-force-vars (n start end)
-    (macro-check-index
-      start
-      2
-      (bit-field n start end)
-      (macro-check-fixnum-range-incl
-        end
-        3
-        start ##max-fixnum
-        (bit-field n start end)
-        (if (##not (macro-exact-int? n))
-            (##fail-check-exact-integer 
-              1 
-              bit-field
-              n 
-              start 
-              end)
-            (##extract-bit-field 
-              (##fx- end start) 
-              start 
-              n))))))
+(define-primitive (bit-field (n     exact-integer)
+                             (start nonnegative-exact-integer)
+                             (end   exact-integer))
+  (cond
+    ((##> start end)
+     (##raise-range-exception end bit-field n start end))
+    (else
+     (##extract-bit-field (##- end start) start))))
+
 
 ;;---------------------------------------------------------------------------
 ;; copy-bit-field
 
-(define-prim (copy-bit-field to from start end)
-  (macro-force-vars (to from start end)
-    (macro-check-index
-      start
-      3
-      (copy-bit-field size position from to)
-      (macro-check-fixnum-range-incl
-        end
-        4
-        start ##max-fixnum
-        (copy-bit-field to from start end)
-        (cond ((##not (macro-exact-int? from))
-               (##fail-check-exact-integer 2 copy-bit-field to from start end))
-              ((##not (macro-exact-int? to))
-               (##fail-check-exact-integer 1 copy-bit-field to from start end))
-              (else
-               (##copy-bit-field (##fx- end start) start from to)))))))
+(define-primitive (copy-bit-field (to    exact-integer)
+                                  (from  exact-integer)
+                                  (start nonnegative-exact-integer)
+                                  (end   exact-integer))
+  (cond ((##< end start)
+         (##raise-range-exception end copy-bit-field to from start end))
+        (else
+         (##copy-bit-field (##- end start) start from to))))
 
-  
+ 
 ;;---------------------------------------------------------------------------
 ;; arithmetic-shift
 ;; ash
@@ -361,47 +347,31 @@
 ;; rotate-bit-field
 
 (define-prim (##rotate-bit-field n count start end)
-  (let* ((width (##fx- end start))
-         (count (##fxmodulo count width))
+  (let* ((width (##- end start))
+         (count (##modulo count width))
          (mask  (##bitwise-not (##arithmetic-shift -1 width)))
-         (zn    (##bitwise-and mask (##arithmetic-shift n (##fx- start)))))
+         (zn    (##bitwise-and mask (##arithmetic-shift n (##- start)))))
     (##bitwise-ior 
       (##arithmetic-shift
         (##bitwise-ior 
           (##bitwise-and 
             mask 
             (##arithmetic-shift zn count))
-          (##arithmetic-shift zn (##fx- count width)))
+          (##arithmetic-shift zn (##- count width)))
         start)
       (##bitwise-and 
         (##bitwise-not (##arithmetic-shift mask start))
         n))))
 
-(define-prim (rotate-bit-field n count start end)
-  (macro-force-vars (n count start end)
-    (macro-check-fixnum
-      count
-      2
-      (rotate-bit-field n count start end)
-      (macro-check-index
-        start
-        3
-        (rotate-bit-field n count start end)
-        (macro-check-fixnum-range-incl
-          end
-          4
-          start ##max-fixnum
-          (rotate-bit-field n count start end)
-          (if (##not (macro-exact-int? n))
-              (##fail-check-exact-integer 
-                1 
-                bit-field 
-                n
-                start
-                end)
-              (##rotate-bit-field n count start end)))))))
- 
-
+(define-primitive (rotate-bit-field (n     exact-integer)
+                                    (count nonnegative-exact-integer)
+                                    (start nonnegative-exact-integer)
+                                    (end   exact-integer)) 
+  (cond 
+    ((##< end start)
+     (##raise-range-exception end rotate-bit-field n count start end))
+    (else
+     (##rotate-bit-field n count start end))))
 ;;---------------------------------------------------------------------------
 ;; reverse-bit-field
 
@@ -440,28 +410,31 @@
                           (##bitwise-and 1 m))))))
 
   (macro-force-vars (n start end)
-    (macro-check-index
+    (macro-check-nonnegative-exact-integer
       start
       2
       (reverse-bit-field n start end)
-      (macro-check-fixnum-range-incl
+      (macro-check-exact-integer
         end
         3
-        start ##max-fixnum
         (reverse-bit-field n start end)
-        (let* ((width (##fx- end start))
-               (mask  (##bitwise-not (##arithmetic-shift -1 width)))
-               (zn    (##bitwise-and mask (##arithmetic-shift n (##fx- start)))))
-          
-          (##bitwise-ior 
-            (let ((reversed-bit 
-                    (macro-exact-int-dispatch n (type-error)
-                      (fixmum-bit-reverse width zn)
-                      (bignum-bit-reverse width zn))))
-              (##arithmetic-shift reversed-bit start))
-            (##bitwise-and 
-              (##bitwise-not (##arithmetic-shift mask start)) n)))))))
-       
+        (cond
+          ((##< end start) 
+           (##raise-range-exception end reverse-bit-field n start end))
+          (else
+           (let* ((width (##fx- end start))
+                  (mask  (##bitwise-not (##arithmetic-shift -1 width)))
+                  (zn    (##bitwise-and mask (##arithmetic-shift n (##fx- start)))))
+             
+             (##bitwise-ior 
+               (let ((reversed-bit 
+                       (macro-exact-int-dispatch n (type-error)
+                         (fixmum-bit-reverse width zn)
+                         (bignum-bit-reverse width zn))))
+                 (##arithmetic-shift reversed-bit start))
+               (##bitwise-and 
+                 (##bitwise-not (##arithmetic-shift mask start)) n)))))))))
+           
 ;;===========================================================================
 ;;===========================================================================
 ;; 
