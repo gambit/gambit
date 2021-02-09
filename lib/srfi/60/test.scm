@@ -424,7 +424,6 @@
 
 
 
-
 (test-bits "101" reverse-bit-field #b1010 0 4)
 (test-assert (string=? (number->string (reverse-bit-field #xA7 0 8) 16)
                       "e5"))
