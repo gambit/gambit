@@ -5527,16 +5527,10 @@ for a discussion of branch cuts.
                (##arithmetic-shift n (##- position))))
         (##bignum.extract-bit-field size position n))))
 
-(define-prim (extract-bit-field size position n)
-  (macro-force-vars
-   (size position n)
-   (macro-check-nonnegative-exact-integer
-    size 1 (extract-bit-field size position n)
-    (macro-check-nonnegative-exact-integer
-     position 2 (extract-bit-field size position n)
-     (macro-check-exact-integer
-      n 3 (extract-bit-field size position n)
-      (##extract-bit-field size position n))))))
+(define-procedure (extract-bit-field (size     nonnegative-exact-integer)
+                                     (position nonnegative-exact-integer)
+                                     (n        exact-integer))
+  (##extract-bit-field size position n))
 
 (define-prim (##test-bit-field? size position n)
   
@@ -5552,30 +5546,18 @@ for a discussion of branch cuts.
            (and (##< position (##integer-length n))
                 (general-case)))))
 
-(define-prim (test-bit-field? size position n)
-  (macro-force-vars
-   (size position n)
-   (macro-check-nonnegative-exact-integer
-    size 1 (test-bit-field? size position n)
-    (macro-check-nonnegative-exact-integer
-     position 2 (test-bit-field? size position n)
-     (macro-check-exact-integer
-      n 3 (test-bit-field? size position n)
-      (##test-bit-field? size position n))))))
+(define-procedure (test-bit-field? (size     nonnegative-exact-integer)
+                                   (position nonnegative-exact-integer)
+                                   (n        exact-integer))
+  (##test-bit-field? size position n))
 
 (define-prim (##clear-bit-field size position n)
   (##replace-bit-field size position 0 n))
 
-(define-prim (clear-bit-field size position n)
-  (macro-force-vars
-   (size position n)
-   (macro-check-nonnegative-exact-integer
-    size 1 (clear-bit-field size position n)
-    (macro-check-nonnegative-exact-integer
-     position 2 (clear-bit-field size position n)
-     (macro-check-exact-integer
-      n 3 (clear-bit-field size position n)
-      (##clear-bit-field size position n))))))
+(define-procedure (clear-bit-field (size     nonnegative-exact-integer)
+                                   (position nonnegative-exact-integer)
+                                   (n        exact-integer))
+  (##clear-bit-field size position n))
 
 (define-prim (##replace-bit-field size position newfield n)
   (let ((m (##bit-mask size)))
@@ -5583,18 +5565,11 @@ for a discussion of branch cuts.
      (##bitwise-and2 n (##bitwise-not (##arithmetic-shift m position)))
      (##arithmetic-shift (##bitwise-and2 newfield m) position))))
 
-(define-prim (replace-bit-field size position newfield n)
-  (macro-force-vars
-   (size position newfield n)
-   (macro-check-nonnegative-exact-integer
-    size 1 (replace-bit-field size position newfield n)
-    (macro-check-nonnegative-exact-integer
-     position 2 (replace-bit-field size position newfield n)
-     (macro-check-exact-integer
-      newfield 3 (replace-bit-field size position newfield n)
-      (macro-check-exact-integer
-       n 4 (replace-bit-field size position newfield n)
-       (##replace-bit-field size position newfield n)))))))
+(define-procedure (replace-bit-field (size     nonnegative-exact-integer)
+                                     (position nonnegative-exact-integer)
+                                     (newfield exact-integer)
+                                     (n        exact-integer))
+  (##replace-bit-field size position newfield n))
 
 (define-prim (##copy-bit-field size position from to)
   (##bitwise-merge
@@ -5602,18 +5577,11 @@ for a discussion of branch cuts.
    to
    from))
 
-(define-prim (copy-bit-field size position from to)
-  (macro-force-vars
-   (size position from to)
-   (macro-check-nonnegative-exact-integer
-    size 1 (copy-bit-field size position from to)
-    (macro-check-nonnegative-exact-integer
-     position 2 (copy-bit-field size position from to)
-     (macro-check-exact-integer
-      from 3 (copy-bit-field size position from to)
-      (macro-check-exact-integer
-       to 4 (copy-bit-field size position from to)
-       (##copy-bit-field size position from to)))))))
+(define-procedure (copy-bit-field (size     nonnegative-exact-integer)
+                                  (position nonnegative-exact-integer)
+                                  (from     exact-integer)
+                                  (to       exact-integer))
+  (##copy-bit-field size position from to))
 
 (define-prim (##bit-mask size)
   (##bitwise-not (##arithmetic-shift -1 size)))
