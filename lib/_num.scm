@@ -5469,42 +5469,44 @@ for a discussion of branch cuts.
   (macro-force-vars (x)
     (##first-bit-set x)))
 
-(define-prim (##bignum.extract-bit-field size position n)
-  
-  ;; n is a (possibly unnormalized) nonzero bignum, size and position are nonnegative exact integers
-  
-  (let* ((result-bit-length
-          (cond ((##positive? n)
-                 (##fx+ 1 (##min size (##max 0 (##- (##integer-length n) position)))))
-                ((##not (and (##fixnum? size)
-                             (##fx< size ##max-fixnum)))
-                 (##raise-heap-overflow-exception))
-                (else
-                 (##fx+ 1 size))))
-         (result-word-length
-          (##fxceiling-ratio result-bit-length ##bignum.adigit-width))
-         (result
-          (##bignum.arithmetic-shift-into!
-           n (##max ##min-fixnum (##- position)) (##bignum.make result-word-length #f #f))))
-    ;; zero top bits of result and normalize
-    (let ((size-words (##fxquotient  size ##bignum.mdigit-width))
-          (size-bits  (##fxremainder size ##bignum.mdigit-width)))
-      (##declare (not interrupts-enabled))
-      (let loop ((i (##fx- (##bignum.mdigit-length result) 1)))
-        (if (##fx< size-words i)
-            (begin
-              (##bignum.mdigit-set! result i 0)
-              (loop (##fx- i 1)))
-            (if (##fx= size-words i)
-                (##bignum.mdigit-set!
-                 result i
-                 (##fxand
-                  (##bignum.mdigit-ref result i)
-                  (##fxnot (##fxarithmetic-shift-left -1 size-bits))))))
-        (##bignum.normalize! result)))))
+(define-prim&proc (extract-bit-field (size     nonnegative-exact-integer)
+                                     (position nonnegative-exact-integer)
+                                     (n        exact-integer))
 
-(define-prim (##extract-bit-field size position n)
-  
+  (define (##bignum.extract-bit-field size position n)
+    
+    ;; n is a (possibly unnormalized) nonzero bignum, size and position are nonnegative exact integers
+    
+    (let* ((result-bit-length
+            (cond ((##positive? n)
+                   (##fx+ 1 (##min size (##max 0 (##- (##integer-length n) position)))))
+                  ((##not (and (##fixnum? size)
+                               (##fx< size ##max-fixnum)))
+                   (##raise-heap-overflow-exception))
+                  (else
+                   (##fx+ 1 size))))
+           (result-word-length
+            (##fxceiling-ratio result-bit-length ##bignum.adigit-width))
+           (result
+            (##bignum.arithmetic-shift-into!
+             n (##max ##min-fixnum (##- position)) (##bignum.make result-word-length #f #f))))
+      ;; zero top bits of result and normalize
+      (let ((size-words (##fxquotient  size ##bignum.mdigit-width))
+            (size-bits  (##fxremainder size ##bignum.mdigit-width)))
+        (##declare (not interrupts-enabled))
+        (let loop ((i (##fx- (##bignum.mdigit-length result) 1)))
+          (if (##fx< size-words i)
+              (begin
+                (##bignum.mdigit-set! result i 0)
+                (loop (##fx- i 1)))
+              (if (##fx= size-words i)
+                  (##bignum.mdigit-set!
+                   result i
+                   (##fxand
+                    (##bignum.mdigit-ref result i)
+                    (##fxnot (##fxarithmetic-shift-left -1 size-bits))))))
+          (##bignum.normalize! result)))))
+
   (define (fixnum-overflow)
     (##raise-fixnum-overflow-exception extract-bit-field size position n))
   
@@ -5513,30 +5515,34 @@ for a discussion of branch cuts.
      (##bignum.extract-bit-field size position (##fixnum->bignum n))
      (fixnum-overflow)))
 
-  (if (##eqv? size 0)
-      0
-      (macro-exact-int-dispatch-no-error
-        n
-        ;; The next bit is a bit tricky, since it still has to work
-        ;; if size and/or position are bignums.
-        (cond ((##< size ##fixnum-width)
-               (##fxand (##bit-mask size) (##arithmetic-shift n (##- position))))
-              ((##fxnegative? n)
-               (general-fixnum-case))
-              (else
-               (##arithmetic-shift n (##- position))))
-        (##bignum.extract-bit-field size position n))))
+  (cond ((##eqv? size 0)
+         0)
+        ;; The next case can come up in Karatsuba multiplication,
+        ;; (##eq? (##arithmetic-shift n 0) n) => #t
+        ((and (##not (##negative? n))
+              (##< (##- (##integer-length n) size) ;; a fixnum, if size is a fixnum
+                   position))
+         (##arithmetic-shift n (##- position)))
+        (else
+         (macro-exact-int-dispatch-no-error
+          n
+          ;; The next bit is a bit tricky, since it still has to work
+          ;; if size and/or position are bignums.
+          (cond ((##< size ##fixnum-width)
+                 (##fxand (##bit-mask size) (##arithmetic-shift n (##- position))))
+                ((##fxnegative? n)
+                 (general-fixnum-case))
+                (else
+                 (##arithmetic-shift n (##- position))))
+          (##bignum.extract-bit-field size position n)))))
 
-(define-procedure (extract-bit-field (size     nonnegative-exact-integer)
-                                     (position nonnegative-exact-integer)
-                                     (n        exact-integer))
-  (##extract-bit-field size position n))
+(define-prim&proc (test-bit-field? (size     nonnegative-exact-integer)
+                                   (position nonnegative-exact-integer)
+                                   (n        exact-integer))
 
-(define-prim (##test-bit-field? size position n)
-  
   (define (general-case)
     (##not (##eqv? 0 (##extract-bit-field size position n))))
-  
+
   (and (##not (##eqv? 0 size))
        (##not (##eqv? 0 n))
        (if (##negative? n)
@@ -5546,32 +5552,24 @@ for a discussion of branch cuts.
            (and (##< position (##integer-length n))
                 (general-case)))))
 
-(define-procedure (test-bit-field? (size     nonnegative-exact-integer)
+(define-prim&proc (clear-bit-field (size     nonnegative-exact-integer)
                                    (position nonnegative-exact-integer)
                                    (n        exact-integer))
-  (##test-bit-field? size position n))
-
-(define-prim (##clear-bit-field size position n)
   (##replace-bit-field size position 0 n))
 
-(define-procedure (clear-bit-field (size     nonnegative-exact-integer)
-                                   (position nonnegative-exact-integer)
-                                   (n        exact-integer))
-  (##clear-bit-field size position n))
-
-(define-prim (##replace-bit-field size position newfield n)
+(define-prim&proc (replace-bit-field (size     nonnegative-exact-integer)
+                                     (position nonnegative-exact-integer)
+                                     (newfield exact-integer)
+                                     (n        exact-integer))
   (let ((m (##bit-mask size)))
     (##bitwise-ior2
      (##bitwise-and2 n (##bitwise-not (##arithmetic-shift m position)))
      (##arithmetic-shift (##bitwise-and2 newfield m) position))))
 
-(define-procedure (replace-bit-field (size     nonnegative-exact-integer)
-                                     (position nonnegative-exact-integer)
-                                     (newfield exact-integer)
-                                     (n        exact-integer))
-  (##replace-bit-field size position newfield n))
-
-(define-prim (##copy-bit-field size position from to)
+(define-prim&proc (copy-bit-field (size     nonnegative-exact-integer)
+                                  (position nonnegative-exact-integer)
+                                  (from     exact-integer)
+                                  (to       exact-integer))
   (##bitwise-merge
    (##arithmetic-shift (##bit-mask size) position)
    to
