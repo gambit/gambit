@@ -5575,12 +5575,6 @@ for a discussion of branch cuts.
    to
    from))
 
-(define-procedure (copy-bit-field (size     nonnegative-exact-integer)
-                                  (position nonnegative-exact-integer)
-                                  (from     exact-integer)
-                                  (to       exact-integer))
-  (##copy-bit-field size position from to))
-
 (define-prim (##bit-mask size)
   (##bitwise-not (##arithmetic-shift -1 size)))
 
