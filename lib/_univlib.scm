@@ -376,7 +376,7 @@ if (g_os_fs) {
 
   g_os_console = null;
 
-  g_os_device_from_console = function () {
+  g_os_device_from_basic_console = function () {
     if (g_os_console === null) g_os_console = g_os_device_from_stdout();
     return g_os_console;
   };
@@ -385,7 +385,8 @@ if (g_os_fs) {
 
 if (g_os_web) {
 
-  G_Device_console = function () {
+  G_Device_basic_console = function () {
+
     var dev = this;
     dev.wbuf = new Uint8Array(0);
     dev.rbuf = new Uint8Array(1);
@@ -396,7 +397,7 @@ if (g_os_web) {
     dev.read_condvar_scm = null;
   };
 
-  G_Device_console.prototype.input_add = function (input) {
+  G_Device_basic_console.prototype.input_add = function (input) {
 
     var dev = this;
     var len = dev.rbuf.length-dev.rlo;
@@ -409,13 +410,13 @@ if (g_os_web) {
     dev.rlo = 0;
   };
 
-  G_Device_console.prototype.output_add = function (output) {
+  G_Device_basic_console.prototype.output_add = function (output) {
 
     var dev = this;
     dev.output_add_buffer(dev.encoder.encode(output));
   };
 
-  G_Device_console.prototype.output_add_buffer = function (buffer) {
+  G_Device_basic_console.prototype.output_add_buffer = function (buffer) {
 
     var dev = this;
     var len = dev.wbuf.length;
@@ -440,22 +441,22 @@ if (g_os_web) {
     }
   };
 
-  G_Device_console.prototype.use_async_input = function () {
+  G_Device_basic_console.prototype.use_async_input = function () {
     return false; // use a synchronous call to 'prompt' to get console input
   };
 
-  G_Device_console.prototype.use_async_output = function () {
+  G_Device_basic_console.prototype.use_async_output = function () {
     return false; // use a synchronous call to 'prompt' to show console output
   };
 
-  G_Device_console.prototype.read = function (dev_condvar_scm, buffer, lo, hi) {
+  G_Device_basic_console.prototype.read = function (dev_condvar_scm, buffer, lo, hi) {
 
     var dev = this;
     var n = hi-lo;
     var have = dev.rbuf.length-dev.rlo;
 
     if (g_os_debug)
-      console.log('G_Device_console().read(...,['+buffer.slice(0,10)+'...],'+lo+','+hi+')');
+      console.log('G_Device_basic_console().read(...,['+buffer.slice(0,10)+'...],'+lo+','+hi+')');
 
     g_os_condvar_ready_set(dev_condvar_scm, false);
 
@@ -497,60 +498,67 @@ if (g_os_web) {
     return n; // number of bytes transferred
   };
 
-  G_Device_console.prototype.write = function (dev_condvar_scm, buffer, lo, hi) {
+  G_Device_basic_console.prototype.write = function (dev_condvar_scm, buffer, lo, hi) {
 
     var dev = this;
+
+    if (g_os_debug)
+      console.log('G_Device_basic_console().write(...,['+buffer.slice(0,10)+'...],'+lo+','+hi+')');
 
     dev.output_add_buffer(buffer.subarray(lo, hi));
 
     return hi-lo;
   };
 
-  G_Device_console.prototype.force_output = function (dev_condvar_scm, level) {
+  G_Device_basic_console.prototype.force_output = function (dev_condvar_scm, level) {
 
     var dev = this;
 
     if (g_os_debug)
-      console.log('G_Device_console().force_output(...,'+level+')');
+      console.log('G_Device_basic_console().force_output(...,'+level+')');
 
     return 0; // no error
   };
 
-  G_Device_console.prototype.seek = function (dev_condvar_scm, pos, whence) {
+  G_Device_basic_console.prototype.seek = function (dev_condvar_scm, pos, whence) {
 
     var dev = this;
 
     if (g_os_debug)
-      console.log('G_Device_console().seek(...,'+pos+','+whence+')');
+      console.log('G_Device_basic_console().seek(...,'+pos+','+whence+')');
 
     return -1; // EPERM (operation not permitted)
   };
 
-  G_Device_console.prototype.width = function (dev_condvar_scm) {
+  G_Device_basic_console.prototype.width = function (dev_condvar_scm) {
+
+    var dev = this;
 
     if (g_os_debug)
-      console.log('G_Device_console().width()');
+      console.log('G_Device_basic_console().width()');
 
     return 80;
   };
 
-  G_Device_console.prototype.close = function (direction) {
+  G_Device_basic_console.prototype.close = function (direction) {
+
+    var dev = this;
 
     if (g_os_debug)
-      console.log('G_Device_console().close('+direction+')');
+      console.log('G_Device_basic_console().close('+direction+')');
 
     return 0; // no error
   };
 
   g_os_console = null;
 
-  g_os_device_from_console = function () {
-    if (g_os_console === null) g_os_console = new G_Device_console();
+  g_os_device_from_basic_console = function () {
+    if (g_os_console === null) g_os_console = new G_Device_basic_console();
     return g_os_console;
   };
 
   g_os_device_from_stdin = function () {
-    return g_os_device_from_console();
+    return g_os_device_from_basic_console();
   };
 
   g_os_device_from_stdout = function () {
@@ -721,7 +729,7 @@ def g_os_device_from_stderr():
 
 g_os_console = None
 
-def g_os_device_from_console():
+def g_os_device_from_basic_console():
     global g_os_console
     if g_os_console is None:
         g_os_console = g_os_device_from_stdout()
@@ -2917,11 +2925,13 @@ g_os_device_stream_open_predefined = function (index_scm, flags_scm) {
   if (g_os_debug)
     console.log('g_os_device_stream_open_predefined('+index+','+flags+')');
 
+  var dev;
+
   switch (index) {
     case -1: dev = g_os_device_from_stdin();   break;
     case -2: dev = g_os_device_from_stdout();  break;
     case -3: dev = g_os_device_from_stderr();  break;
-    case -4: dev = g_os_device_from_console(); break;
+    case -4: dev = g_os_device_from_basic_console(); break;
     default: dev = g_os_device_from_fd(index); break;
   }
 
@@ -2952,7 +2962,7 @@ def g_os_device_stream_open_predefined(index_scm, flags_scm):
     elif index == -3:
         dev = g_os_device_from_stderr()
     elif index == -4:
-        dev = g_os_device_from_console()
+        dev = g_os_device_from_basic_console()
     else:
         dev = g_os_device_from_fd(index)
 
