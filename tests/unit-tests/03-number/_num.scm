@@ -1152,6 +1152,11 @@
 
 (check-eqv? (extract-bit-field 200 0 (expt 3 110)) (expt 3 110))
 
+;;; This is a quality of implementation test:
+
+(let ((x (expt 3 110)))
+  (check-eq? (extract-bit-field 200 0 x) x))
+
 ;;; Some error tests.
 
 (check-exn heap-overflow-exception? (lambda () (extract-bit-field (expt 2 100) (expt 2 100) -1)))
