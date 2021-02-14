@@ -771,7 +771,15 @@ def g_os_device_from_basic_console():
 (define (##current-vm-resize vm n) #f)
 
 (define (##get-standard-level) 0)
-(define (##set-debug-settings! mask new-settings) 0)
+
+(define ##debug-settings 16) ;; exceptions start a REPL
+
+(define (##set-debug-settings! mask new-settings)
+  (let ((old-settings ##debug-settings))
+    (set! ##debug-settings
+          (##fxior (##fxand old-settings (##fxnot mask))
+                   (##fxand new-settings mask)))
+    old-settings))
 
 (define (##disable-interrupts!) #f)
 (define (##enable-interrupts!) #f)
