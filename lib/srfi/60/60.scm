@@ -32,6 +32,8 @@
 (##supply-module srfi/60)
 
 (include "~~lib/_gambit#.scm")
+(include "~~lib/_define-syntax.scm")
+
 
 ;;---------------------------------------------------------------------------
 ;;===========================================================================
@@ -86,12 +88,12 @@
 ;; bitwise-merge
 ;; bitwise-if
 
-(define-primitive (bitwise-merge (x exact-integer)
+(define-procedure (bitwise-merge (x exact-integer)
                                  (y exact-integer)
                                  (z exact-integer))
   (##bitwise-merge (##bitwise-not x) y z))
 
-(define-primitive (bitwise-if (x exact-integer)
+(define-procedure (bitwise-if (x exact-integer)
                               (y exact-integer)
                               (z exact-integer))
   (##bitwise-merge (##bitwise-not x) y z))
@@ -103,7 +105,7 @@
 ;;
 ;; any-bits-set? -> built-in
 
-(define-primitive (logtest (x exact-integer)
+(define-prim&proc (logtest (x exact-integer)
                            (y exact-integer))
   (##any-bits-set? x y))
 
@@ -123,7 +125,7 @@
 (define-prim (logcount x)
   (macro-force-vars (x)
     (let ((type-error
-            (##fail-check-exact-integer 1 logcount x)))
+            (lambda () (##fail-check-exact-integer 1 logcount x))))
       (macro-exact-int-dispatch x (type-error)
           (##fxbit-count x)
           (let ((x-length (##bignum.mdigit-length x)))
@@ -148,7 +150,8 @@
 (define-prim (first-set-bit x)
   (macro-force-vars (x)
     (let ((type-error
-            (##fail-check-exact-integer 1 first-set-bit x)))
+            (lambda () 
+              (##fail-check-exact-integer 1 first-set-bit x))))
       (macro-exact-int-dispatch x (type-error)
         (##fxfirst-bit-set x)
         (let ((x-length (##bignum.mdigit-length x)))
@@ -163,7 +166,8 @@
 (define-prim (log2-binary-factors x)
   (macro-force-vars (x)
     (let ((type-error
-            (##fail-check-exact-integer 1 log2-binary-factors x)))
+            (lambda () 
+              (##fail-check-exact-integer 1 log2-binary-factors x))))
       (macro-exact-int-dispatch x (type-error)
         (##fxfirst-bit-set x)
         (let ((x-length (##bignum.mdigit-length x)))
@@ -232,16 +236,12 @@
 ;;---------------------------------------------------------------------------
 ;; copy-bit
 
-(define-prim (##copy-bit index to bool)
+(define-prim&proc (copy-bit (index nonnegative-exact-integer)
+                            (to    exact-integer)
+                            (bool  boolean))
   (if bool
      (##bitwise-ior to (##arithmetic-shift 1 index))
      (##bitwise-and to (##bitwise-not (##arithmetic-shift 1 index)))))
-
-
-(define-primitive (copy-bit (index nonnegative-exact-integer)
-                            (to    exact-integer)
-                            (bool  boolean))
-  (##copy-bit index to bool))
 
 
 ;;===========================================================================
@@ -255,20 +255,20 @@
 ;; bit-field
 
 
-(define-primitive (bit-field (n     exact-integer)
+(define-prim&proc (bit-field (n     exact-integer)
                              (start nonnegative-exact-integer)
                              (end   exact-integer))
   (cond
     ((##> start end)
      (##raise-range-exception end bit-field n start end))
     (else
-     (##extract-bit-field (##- end start) start))))
+     (##extract-bit-field (##- end start) start n))))
 
 
 ;;---------------------------------------------------------------------------
 ;; copy-bit-field
 
-(define-primitive (copy-bit-field (to    exact-integer)
+(define-procedure (copy-bit-field (to    exact-integer)
                                   (from  exact-integer)
                                   (start nonnegative-exact-integer)
                                   (end   exact-integer))
@@ -363,8 +363,8 @@
         (##bitwise-not (##arithmetic-shift mask start))
         n))))
 
-(define-primitive (rotate-bit-field (n     exact-integer)
-                                    (count nonnegative-exact-integer)
+(define-procedure (rotate-bit-field (n     exact-integer)
+                                    (count exact-integer); can be neg
                                     (start nonnegative-exact-integer)
                                     (end   exact-integer)) 
   (cond 
@@ -372,11 +372,15 @@
      (##raise-range-exception end rotate-bit-field n count start end))
     (else
      (##rotate-bit-field n count start end))))
+
 ;;---------------------------------------------------------------------------
 ;; reverse-bit-field
 
 (define-prim (reverse-bit-field n start end)
 
+  (define (type-error)
+    (##fail-check-exact-integer 1 reverse-bit-field n start end))
+            
   (define (fixnum-bit-reverse k n)
     (let reverse-loop ((m (if (##fxnegative? n)
                               (##bitwise-not n)
@@ -425,11 +429,11 @@
            (let* ((width (##fx- end start))
                   (mask  (##bitwise-not (##arithmetic-shift -1 width)))
                   (zn    (##bitwise-and mask (##arithmetic-shift n (##fx- start)))))
-             
+            
              (##bitwise-ior 
                (let ((reversed-bit 
                        (macro-exact-int-dispatch n (type-error)
-                         (fixmum-bit-reverse width zn)
+                         (fixnum-bit-reverse width zn)
                          (bignum-bit-reverse width zn))))
                  (##arithmetic-shift reversed-bit start))
                (##bitwise-and 
