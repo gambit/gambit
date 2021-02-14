@@ -1110,7 +1110,7 @@
 
 ;; Uninitialized threads can be created when using the special form
 ;; define-type-of-thread, which defines subtypes of the basic thread
-;; type.  When the constuctor of a thread subtype is called, it
+;; type.  When the constructor of a thread subtype is called, it
 ;; creates an uninitialized thread (i.e. it doesn't yet have a thunk
 ;; to run, a name, and a thread group).
 ;;

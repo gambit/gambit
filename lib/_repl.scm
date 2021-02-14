@@ -891,6 +891,7 @@
             (##eq? parent ##nontail-call-for-step)
             (##eq? parent ##trace-generate)
             (##eq? parent ##thread-interrupt!)
+            (##eq? parent ##thread-execute-and-end!)
             (##eq? parent ##thread-call)))))
 
 (define-prim (##interp-subproblem-continuation? cont)
