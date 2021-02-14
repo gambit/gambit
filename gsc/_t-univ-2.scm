@@ -216,34 +216,41 @@
                        (^cast* 'returnpt
                                (^getreg 0))))
 
-             (let* ((cont
-                     (^new-continuation
-                      (^cast* 'frame
-                              (^array-index
-                               (gvm-state-stack-use ctx 'rd)
-                               (^int 0)))
-                      (^structure-ref (gvm-state-current-thread ctx)
-                                      univ-thread-denv-slot)))
-                    (result
-                     (if thread-save?
-                         (gvm-state-current-thread ctx)
-                         cont)))
+             (let ((frame
+                    (^cast* 'frame
+                            (^array-index
+                             (gvm-state-stack-use ctx 'rd)
+                             (^int 0)))))
 
                (^ (if thread-save?
-                      (^structure-set! (gvm-state-current-thread ctx)
-                                       univ-thread-cont-slot
-                                       cont)
+
+                      (^assign
+                       (^member (^cast* 'continuation
+                                        (^structure-ref
+                                         (gvm-state-current-thread ctx)
+                                         univ-thread-cont-slot))
+                                (^public 'frame))
+                       frame)
+
                       (^))
 
-                  (if (= nb-stacked 0)
-                      (^setreg 1 result)
-                      (univ-foldr-range
-                       1
-                       nb-stacked
-                       (^)
-                       (lambda (i rest)
-                         (^ (^push (if (= i 1) result (^local-var (^ 'arg i))))
-                            rest))))))
+                  (let ((result
+                         (if thread-save?
+                             (gvm-state-current-thread ctx)
+                             (^new-continuation
+                              frame
+                              (^structure-ref (gvm-state-current-thread ctx)
+                                              univ-thread-denv-slot)))))
+
+                    (if (= nb-stacked 0)
+                        (^setreg 1 result)
+                        (univ-foldr-range
+                         1
+                         nb-stacked
+                         (^)
+                         (lambda (i rest)
+                           (^ (^push (if (= i 1) result (^local-var (^ 'arg i))))
+                              rest)))))))
 
              (^setnargs nb-args)
 
@@ -305,11 +312,13 @@
                                (^local-var (^ 'arg 1)))
                        (^public 'frame)))
 
-             (^structure-set! (gvm-state-current-thread ctx)
-                              univ-thread-denv-slot
-                              (^member (^cast* 'continuation
-                                               (^local-var (^ 'arg 1)))
-                                       (^public 'denv)))
+             (if thread-restore?
+                 (^)
+                 (^structure-set! (gvm-state-current-thread ctx)
+                                  univ-thread-denv-slot
+                                  (^member (^cast* 'continuation
+                                                   (^local-var (^ 'arg 1)))
+                                           (^public 'denv))))
 
              (^assign
               (gvm-state-sp-use ctx 'wr)
@@ -591,6 +600,14 @@
 
   (for-each
    (lambda (num)
+     (let ((name (string->symbol (string-append "thread_save" (number->string num)))))
+       (univ-define-rtlib-feature name
+        (lambda (ctx feature)
+          (continuation-capture-procedure ctx num #t)))))
+   '(1 2 3 4))
+
+  (for-each
+   (lambda (num)
      (let ((name (string->symbol (string-append "continuation_graft_no_winding" (number->string num)))))
        (univ-define-rtlib-feature name
         (lambda (ctx feature)
@@ -751,225 +768,6 @@
      (univ-make-empty-defs)
      init))
 
-  (define (continuation-capture-procedure nb-args thread-save?)
-    (let ((nb-stacked (max 0 (- nb-args (univ-nb-arg-regs ctx)))))
-      (univ-jumpable-declaration-defs
-       ctx
-       #t
-       (string->symbol
-        (string-append
-         (if thread-save?
-             "thread_save"
-             "continuation_capture")
-         (number->string nb-args)))
-       'entrypt
-       '()
-       '()
-       (univ-emit-fn-body
-        ctx
-        "\n"
-        (lambda (ctx)
-          (^ (if (= nb-stacked 0)
-                 (^var-declaration
-                  'scmobj
-                  (^local-var (^ 'arg 1))
-                  (^getreg 1))
-                 (univ-foldr-range
-                  1
-                  nb-stacked
-                  (^)
-                  (lambda (i rest)
-                    (^ rest
-                       (^pop (lambda (expr)
-                               (^var-declaration
-                                'scmobj
-                                (^local-var (^ 'arg i))
-                                expr)))))))
-
-             (^setreg 0
-                      (^call-prim
-                       (^rts-method-use 'heapify_cont)
-                       (^cast* 'returnpt
-                               (^getreg 0))))
-
-             (let* ((cont
-                     (^new-continuation
-                      (^cast* 'frame
-                              (^array-index
-                               (gvm-state-stack-use ctx 'rd)
-                               (^int 0)))
-                      (^structure-ref (gvm-state-current-thread ctx)
-                                      univ-thread-denv-slot)))
-                    (result
-                     (if thread-save?
-                         (gvm-state-current-thread ctx)
-                         cont)))
-
-               (^ (if thread-save?
-                      (^structure-set! (gvm-state-current-thread ctx)
-                                       univ-thread-cont-slot
-                                       cont)
-                      (^))
-
-                  (if (= nb-stacked 0)
-                      (^setreg 1 result)
-                      (univ-foldr-range
-                       1
-                       nb-stacked
-                       (^)
-                       (lambda (i rest)
-                         (^ (^push (if (= i 1) result (^local-var (^ 'arg i))))
-                            rest))))))
-
-             (^setnargs nb-args)
-
-             (^return-jump
-              (^cast*-jumpable (^local-var (^ 'arg 1))))))))))
-
-  (define (continuation-graft-no-winding-procedure nb-args thread-restore?)
-    (univ-jumpable-declaration-defs
-     ctx
-     #t
-     (string->symbol
-      (string-append
-       (if thread-restore?
-           "thread_restore"
-           "continuation_graft_no_winding")
-       (number->string nb-args)))
-     'entrypt
-     '()
-     '()
-     (univ-emit-fn-body
-      ctx
-      "\n"
-      (lambda (ctx)
-        (let* ((nb-stacked
-                (max 0 (- nb-args (univ-nb-arg-regs ctx))))
-               (new-nb-args
-                (- nb-args 2))
-               (new-nb-stacked
-                (max 0 (- new-nb-args (univ-nb-arg-regs ctx))))
-               (underflow
-                (^rts-jumpable-use 'underflow)))
-          (^ (univ-foldr-range
-              1
-              (max 2 (- nb-args (univ-nb-arg-regs ctx)))
-              (^)
-              (lambda (i rest)
-                (^ rest
-                   (^var-declaration
-                    'scmobj
-                    (^local-var (^ 'arg i))
-                    (let ((x (- i nb-stacked)))
-                      (if (>= x 1)
-                          (^getreg x)
-                          (^getstk x)))))))
-
-             (if thread-restore?
-                 (^ (^assign (gvm-state-current-thread ctx)
-                             (^local-var (^ 'arg 1)))
-                    (^assign (^local-var (^ 'arg 1))
-                             (^structure-ref (^local-var (^ 'arg 1))
-                                             univ-thread-cont-slot)))
-                 (^))
-
-             (^assign
-              (^array-index
-               (gvm-state-stack-use ctx 'rd)
-               (^int 0))
-              (^member (^cast* 'continuation
-                               (^local-var (^ 'arg 1)))
-                       (^public 'frame)))
-
-             (^structure-set! (gvm-state-current-thread ctx)
-                              univ-thread-denv-slot
-                              (^member (^cast* 'continuation
-                                               (^local-var (^ 'arg 1)))
-                                       (^public 'denv)))
-
-             (^assign
-              (gvm-state-sp-use ctx 'wr)
-              0)
-
-             (^setreg 0 underflow)
-
-             (univ-foldr-range
-              1
-              new-nb-stacked
-              (^)
-              (lambda (i rest)
-                (^ (^push (^local-var (^ 'arg (+ i 2))))
-                   rest)))
-
-             (if (= new-nb-stacked (- nb-stacked 2))
-                 (^)
-                 (univ-foldr-range
-                  (+ new-nb-stacked 1)
-                  new-nb-args
-                  (^)
-                  (lambda (i rest)
-                    (^ (^setreg (- i new-nb-stacked)
-                                (^getreg (- i (- nb-stacked 2))))
-                       rest))))
-
-             (^setnargs new-nb-args)
-
-             (^return
-              (^cast*-jumpable (^local-var (^ 'arg 2))))))))))
-
-  (define (continuation-return-no-winding-procedure nb-args)
-    (univ-jumpable-declaration-defs
-     ctx
-     #t
-     (string->symbol
-      (string-append
-       "continuation_return_no_winding"
-       (number->string nb-args)))
-     'entrypt
-     '()
-     '()
-     (univ-emit-fn-body
-      ctx
-      "\n"
-      (lambda (ctx)
-        (let* ((nb-stacked
-                (max 0 (- nb-args (univ-nb-arg-regs ctx))))
-               (underflow
-                (^rts-jumpable-use 'underflow))
-               (arg1
-                (^local-var 'arg1)))
-          (^ (^var-declaration
-              'continuation
-              arg1
-              (^cast* 'continuation
-                      (let ((x (- 1 nb-stacked)))
-                        (if (>= x 1)
-                            (^getreg x)
-                            (^getstk x)))))
-
-             (^assign
-              (^array-index
-               (gvm-state-stack-use ctx 'rd)
-               (^int 0))
-              (^member arg1 (^public 'frame)))
-
-             (^structure-set! (gvm-state-current-thread ctx)
-                              univ-thread-denv-slot
-                              (^member arg1 (^public 'denv)))
-
-             (^assign
-              (gvm-state-sp-use ctx 'wr)
-              0)
-
-             (^setreg 0 underflow)
-
-             (let ((x (- 2 nb-stacked)))
-               (if (= x 1)
-                   (^)
-                   (^setreg 1 (^getreg x))))
-
-             (^return underflow)))))))
-
   (define (apply-procedure nb-args)
     (univ-jumpable-declaration-defs
      ctx
@@ -1072,26 +870,26 @@
                 (^structure-box
                  (^array-literal
                   'scmobj
-                  (list (^null)   ;; type descriptor (filled in later)
-                        (^null)   ;; lock1
-                        (^null)   ;; unused-field2
-                        (^null)   ;; unused-field3
-                        (^null)   ;; unused-field4
-                        (^null)   ;; unused-field5
-                        (^null)   ;; unused-field6
-                        (^null)   ;; unused-field7
-                        (^null)   ;; unused-field8
-                        (^null)   ;; lock2
-                        (^null)   ;; unused-field10
-                        (^null)   ;; unused-field11
-                        (^null)   ;; unused-field12
-                        (^null)   ;; unused-field13
-                        (^null)   ;; unused-field14
-                        (^null)   ;; unused-field15
-                        (^null)   ;; unused-field16
-                        (^null)   ;; processor-deq-next
-                        (^null)   ;; processor-deq-prev
-                        (^null)   ;; idle-processor-count
+                  (list (^obj #f) ;; type descriptor (filled in later)
+                        (^obj 1)  ;; lock1
+                        (^obj #f) ;; unused-field2
+                        (^obj #f) ;; unused-field3
+                        (^obj #f) ;; unused-field4
+                        (^obj #f) ;; unused-field5
+                        (^obj #f) ;; unused-field6
+                        (^obj #f) ;; unused-field7
+                        (^obj #f) ;; unused-field8
+                        (^obj 0)  ;; lock2
+                        (^obj #f) ;; unused-field10
+                        (^obj #f) ;; unused-field11
+                        (^obj #f) ;; unused-field12
+                        (^obj #f) ;; unused-field13
+                        (^obj #f) ;; unused-field14
+                        (^obj #f) ;; unused-field15
+                        (^obj #f) ;; unused-field16
+                        (^obj #f) ;; processor-deq-next
+                        (^obj #f) ;; processor-deq-prev
+                        (^obj #f) ;; idle-processor-count
                         )))
                 '(public)))
 
@@ -1101,67 +899,67 @@
                 (^structure-box
                  (^array-literal
                   'scmobj
-                  (list (^null)   ;; type descriptor (filled in later)
-                        (^null)   ;; lock1
-                        (^null)   ;; condvar-deq-next
-                        (^null)   ;; condvar-deq-prev
-                        (^null)   ;; btq-color
-                        (^null)   ;; btq-parent
-                        (^null)   ;; btq-left
-                        (^null)   ;; btq-leftmost
-                        (^null)   ;; false
-                        (^null)   ;; lock2
-                        (^null)   ;; toq-color
-                        (^null)   ;; toq-parent
-                        (^null)   ;; toq-left
-                        (^null)   ;; toq-leftmost
+                  (list (^obj #f) ;; type descriptor (filled in later)
+                        (^obj 1)  ;; lock1
+                        (^obj #f) ;; condvar-deq-next
+                        (^obj #f) ;; condvar-deq-prev
+                        (^obj #f) ;; btq-color
+                        (^obj #f) ;; btq-parent
+                        (^obj #f) ;; btq-left
+                        (^obj #f) ;; btq-leftmost
+                        (^obj #f) ;; false
+                        (^obj 0)  ;; lock2
+                        (^obj #f) ;; toq-color
+                        (^obj #f) ;; toq-parent
+                        (^obj #f) ;; toq-left
+                        (^obj #f) ;; toq-leftmost
                         (^obj #f) ;; current-thread
                         #;
                         (^structure-box ;; current-thread
                          (^array-literal
                           'scmobj
-                          (list (^null)   ;; type descriptor (filled in later)
-                                (^null)   ;; lock1
-                                (^null)   ;; btq-deq-next
-                                (^null)   ;; btq-deq-prev
-                                (^null)   ;; btq-color
-                                (^null)   ;; btq-parent
-                                (^null)   ;; btq-left
-                                (^null)   ;; btq-leftmost
-                                (^null)   ;; tgroup
-                                (^null)   ;; lock2
-                                (^null)   ;; toq-color
-                                (^null)   ;; toq-parent
-                                (^null)   ;; toq-left
-                                (^null)   ;; toq-leftmost
-                                (^null)   ;; threads-deq-next
-                                (^null)   ;; threads-deq-prev
-                                (^null)   ;; floats
-                                (^null)   ;; btq-container
-                                (^null)   ;; toq-container
-                                (^null)   ;; name
-                                (^null)   ;; end-condvar
-                                (^null)   ;; exception?
-                                (^null)   ;; result
-                                (^null)   ;; cont
+                          (list (^obj #f) ;; type descriptor (filled in later)
+                                (^obj #f) ;; lock1
+                                (^obj #f) ;; btq-deq-next
+                                (^obj #f) ;; btq-deq-prev
+                                (^obj #f) ;; btq-color
+                                (^obj #f) ;; btq-parent
+                                (^obj #f) ;; btq-left
+                                (^obj #f) ;; btq-leftmost
+                                (^obj #f) ;; tgroup
+                                (^obj #f) ;; lock2
+                                (^obj #f) ;; toq-color
+                                (^obj #f) ;; toq-parent
+                                (^obj #f) ;; toq-left
+                                (^obj #f) ;; toq-leftmost
+                                (^obj #f) ;; threads-deq-next
+                                (^obj #f) ;; threads-deq-prev
+                                (^obj #f) ;; floats
+                                (^obj #f) ;; btq-container
+                                (^obj #f) ;; toq-container
+                                (^obj #f) ;; name
+                                (^obj #f) ;; end-condvar
+                                (^obj #f) ;; exception?
+                                (^obj #f) ;; result
+                                (^obj #f) ;; cont
                                 (^obj '()) ;; denv
-                                (^null)   ;; denv-cache1
-                                (^null)   ;; denv-cache2
-                                (^null)   ;; denv-cache3
-                                (^null)   ;; repl-channel
-                                (^null)   ;; mailbox
-                                (^null)   ;; specific
-                                (^null)   ;; resume-thunk
-                                (^null)   ;; interrupts
-                                (^null)   ;; last-processor
-                                ;;(^null)   ;; pinned
+                                (^obj #f) ;; denv-cache1
+                                (^obj #f) ;; denv-cache2
+                                (^obj #f) ;; denv-cache3
+                                (^obj #f) ;; repl-channel
+                                (^obj #f) ;; mailbox
+                                (^obj #f) ;; specific
+                                (^obj #f) ;; resume-thunk
+                                (^obj #f) ;; interrupts
+                                (^obj #f) ;; last-processor
+                                ;;(^obj #f) ;; pinned
                                 )))
-                        (^null)   ;; unused-field15
-                        (^null)   ;; floats
-                        (^null)   ;; processor-deq-next
-                        (^null)   ;; processor-deq-prev
-                        (^null)   ;; id
-                        (^null)   ;; interrupts
+                        (^obj #f) ;; unused-field15
+                        (^obj #f) ;; floats
+                        (^obj #f) ;; processor-deq-next
+                        (^obj #f) ;; processor-deq-prev
+                        (^obj #f) ;; id
+                        (^obj #f) ;; interrupts
                         )))
                 '(public)))
 
@@ -1702,57 +1500,6 @@
                              (^rts-jumpable-use 'underflow)))))
 
               (^return (^upcast* 'returnpt 'jumpable ra))))))))
-
-    ;; ((continuation_capture1)
-    ;;  (continuation-capture-procedure 1 #f))
-
-    ;; ((continuation_capture2)
-    ;;  (continuation-capture-procedure 2 #f))
-
-    ;; ((continuation_capture3)
-    ;;  (continuation-capture-procedure 3 #f))
-
-    ;; ((continuation_capture4)
-    ;;  (continuation-capture-procedure 4 #f))
-
-    ((thread_save1)
-     (continuation-capture-procedure 1 #t))
-
-    ((thread_save2)
-     (continuation-capture-procedure 2 #t))
-
-    ((thread_save3)
-     (continuation-capture-procedure 3 #t))
-
-    ((thread_save4)
-     (continuation-capture-procedure 4 #t))
-
-    ;; ((continuation_graft_no_winding2)
-    ;;  (continuation-graft-no-winding-procedure 2 #f))
-
-    ;; ((continuation_graft_no_winding3)
-    ;;  (continuation-graft-no-winding-procedure 3 #f))
-
-    ;; ((continuation_graft_no_winding4)
-    ;;  (continuation-graft-no-winding-procedure 4 #f))
-
-    ;; ((continuation_graft_no_winding5)
-    ;;  (continuation-graft-no-winding-procedure 5 #f))
-
-    ;; ((thread_restore2)
-    ;;  (continuation-graft-no-winding-procedure 2 #t))
-
-    ;; ((thread_restore3)
-    ;;  (continuation-graft-no-winding-procedure 3 #t))
-
-    ;; ((thread_restore4)
-    ;;  (continuation-graft-no-winding-procedure 4 #t))
-
-    ;; ((thread_restore5)
-    ;;  (continuation-graft-no-winding-procedure 5 #t))
-
-    ;; ((continuation_return_no_winding2)
-    ;;  (continuation-return-no-winding-procedure 2))
 
     ((poll)
      (rts-method
