@@ -1898,11 +1898,13 @@ if (g_os_web) {
     }
   };
 
+  g_os_confirm_if_not_in_whitelist = false;
+
   g_os_remove_after_last_slash = function (string) {
     return string.slice(0, 1+string.lastIndexOf('/'));
   };
 
-  g_os_trusted_url = function (url) {
+  g_os_trusted_url = function (url, reason) {
     for (var i=0; i<g_os_whitelist.length; i++) {
       var w = g_os_whitelist[i];
       if (w.slice(-1) === '/' // if ends with slash
@@ -1910,6 +1912,11 @@ if (g_os_web) {
           : url === w) { // otherwise it must be an exact match
         return true;
       }
+    }
+    if (g_os_confirm_if_not_in_whitelist &&
+        reason !== undefined &&
+        confirm(url + '\\nis being accessed ' + reason + '.\\nClick OK if you trust this URL for that operation.')) {
+      return true;
     }
     return false;
   };
@@ -1966,7 +1973,7 @@ g_os_file_info = function (fi, path, chase) {
 
   if (g_os_uri_scheme_prefixed(path)) { // accessing a URL?
 
-    if (!(g_os_web && g_os_trusted_url(path))) { // accessing an untrusted URL?
+    if (!(g_os_web && g_os_trusted_url(path, 'to check that document\\'s information'))) { // accessing an untrusted URL?
       return g_host2scm(-1); // EPERM (operation not permitted)
     } else {
 
@@ -2162,7 +2169,8 @@ g_os_load_object_file = function (path, linker_name) {
 
     return [[g_module_latest_registered], null, false];
 
-  } else if (g_os_web) {
+  } else if (g_os_web &&
+             g_os_trusted_url(path, 'to execute that code')) { // accessing an untrusted URL?
 
     var ra = g_r0;
     g_r0 = null; // exit trampoline
@@ -2187,6 +2195,9 @@ g_os_load_object_file = function (path, linker_name) {
     document.head.append(script);
 
     return 0; // ignored
+
+  } else {
+    return g_host2scm(-1); // EPERM (operation not permitted)
   }
 };
 
@@ -3145,7 +3156,7 @@ g_os_device_stream_open_path = function (path_scm, flags_scm, mode_scm) {
 
   if (g_os_uri_scheme_prefixed(path)) { // accessing a URL?
 
-    if (!(g_os_web && g_os_trusted_url(path))) { // accessing an untrusted URL?
+    if (!(g_os_web && g_os_trusted_url(path, 'to read that document'))) { // accessing an untrusted URL?
       return g_host2scm(-1); // EPERM (operation not permitted)
     } else {
 
