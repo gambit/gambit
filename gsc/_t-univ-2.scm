@@ -1036,46 +1036,6 @@
               (index (^local-var 'index))
               (old (^local-var 'old)))
 
-          (define (run-mod mod-descr)
-            (^ (^assign (gvm-state-sp-use ctx 'wr)
-                        (^int -1))
-
-               (^push (univ-end-of-cont-marker ctx))
-
-               (^assign (^rts-field-use 'r0)
-                        (^rts-jumpable-use 'underflow))
-
-               (^assign (^rts-field-use 'nargs)
-                        (^int 0))
-
-               (^expr-statement
-                (^call-prim
-                 (^rts-method-use 'trampoline)
-                 (^downupcast*
-                  'entrypt
-                  'jumpable
-                  (^vector-ref mod-descr (^int 4)))))))
-
-          (define (load-mod mod-descr)
-            (^ (^assign (gvm-state-sp-use ctx 'wr)
-                        (^int -1))
-
-               (^push (univ-end-of-cont-marker ctx))
-
-               (^assign (^rts-field-use 'r0)
-                        (^rts-jumpable-use 'underflow))
-
-               (^assign (^rts-field-use 'nargs)
-                        (^int 0))
-
-               (^expr-statement
-                (^call-prim
-                 (^rts-method-use 'trampoline)
-                 (^downupcast*
-                  'entrypt
-                  'jumpable
-                  (^vector-ref mod-descr (^int 4)))))))
-
           (^ (^var-declaration
               'scmobj
               temp
@@ -1126,33 +1086,60 @@
 
                              (^if (^= (^rts-field-use-priv 'module_count)
                                       (^array-length (^rts-field-use-priv 'module_table)))
-                                  (^ (^setglo '##program-descr
-                                              (^vector-box
-                                               (^array-literal
-                                                'scmobj
-                                                (list (^vector-box
-                                                       (^rts-field-use-priv 'module_table))
-                                                      (^obj '())
-                                                      (^obj #f)))))
+                                  (^expr-statement
+                                   (^call-prim (^rts-method-use 'program_start)))))))))))))
 
-                                     (^assign temp
-                                              (^vector-ref
-                                               (^array-index
-                                                (^rts-field-use-priv 'module_table)
-                                                (^- (^array-length (^rts-field-use-priv 'module_table))
-                                                    (^int 1)))
-                                               (^int 0)))
+    ((program_start)
+     (rts-method
+      'program_start
+      '(public)
+      'noresult
+      '()
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((temp (^local-var 'temp)))
+          (^ (^var-declaration
+              'scmobj
+              temp
+              (^vector-ref
+               (^array-index
+                (^rts-field-use-priv 'module_table)
+                (^- (^array-length (^rts-field-use-priv 'module_table))
+                    (^int 1)))
+               (^int 0)))
 
-                                     (^setglo '##vm-main-module-ref
-                                              (^vector-ref
-                                               temp
-                                               (^- (^vector-length temp)
-                                                   (^int 1))))
+             (^setglo '##vm-main-module-ref
+                      (^vector-ref
+                       temp
+                       (^- (^vector-length temp)
+                           (^int 1))))
 
-                                     (run-mod
-                                      (^array-index
-                                       (^rts-field-use-priv 'module_table)
-                                       (^int 0))))))))))))))
+             (^setglo '##program-descr
+                      (^vector-box
+                       (^array-literal
+                        'scmobj
+                        (list (^vector-box
+                               (^rts-field-use-priv 'module_table))
+                              (^obj '())
+                              (^obj #f)))))
+
+             ;; execute first module
+
+             (^assign (gvm-state-sp-use ctx 'wr)
+                      (^int -1))
+
+             (^push (univ-end-of-cont-marker ctx))
+
+             (^expr-statement
+              (^call-prim (^rts-method-use 'call_start)
+                          (^vector-ref
+                           (^array-index
+                            (^rts-field-use-priv 'module_table)
+                            (^int 0))
+                           (^int 4))
+                          (^array-literal 'scmobj '())
+                          (^rts-jumpable-use 'underflow))))))))
 
     ;; ((modlinkinfo)
     ;;  (rts-class
@@ -4887,28 +4874,64 @@ EOF
       '(public)
       'object
       (list (univ-field 'proc 'scmobj)
-            (univ-field 'args 'scmobj))
+            (univ-field 'args '(array scmobj)))
       "\n"
       '()
       (lambda (ctx)
-       (let ((args (^local-var 'args))
-             (i (^local-var 'i))
-             (proc (^local-var 'proc)))
-          (^
-            (^assign (gvm-state-sp-use ctx 'wr) -1)
-            (^push (univ-end-of-cont-marker ctx))
-            (^assign (^getnargs) (^array-length args))
-            (^assign i 0)
-            (^while (^< i (^getnargs))
-              (^ (^push
-                  (^array-index args i))
-                 (^inc-by i 1)))
-            (univ-pop-args-to-regs ctx 0)
-            (^assign (^getreg 0) (^rts-method-use 'underflow))
-            (^expr-statement
+        (let ((args (^local-var 'args))
+              (proc (^local-var 'proc)))
+          (^ (^assign (gvm-state-sp-use ctx 'wr) -1)
+             (^push (univ-end-of-cont-marker ctx))
+             (^expr-statement
+              (^call-prim (^rts-method-use 'call_start)
+                          proc
+                          args
+                          (^rts-jumpable-use 'underflow)))
+             ;; TODO: fix issue that there is no guarantee that the Scheme
+             ;; call to "proc" has terminated when call_start returns.
+             (^return (^getreg 1)))))))
+
+    ((call_start)
+     (rts-method
+      'call_start
+      '(public)
+      'noresult
+      (list (univ-field 'proc 'scmobj)
+            (univ-field 'args '(array scmobj))
+            (univ-field 'ra 'scmobj))
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((proc (^local-var 'proc))
+              (args (^local-var 'args))
+              (ra (^local-var 'ra)))
+          (^ (^assign (^getreg 0) ra)
+             (^expr-statement
+              (^call-prim (^rts-method-use 'push_args)
+                          args))
+             (^expr-statement
               (^call-prim (^rts-method-use 'trampoline)
-                          proc))
-            (^return (^getreg 1)))))))
+                          (^downupcast* 'entrypt 'jumpable proc))))))))
+
+    ((push_args)
+     (rts-method
+      'push_args
+      '(public)
+      'noresult
+      (list (univ-field 'args '(array scmobj)))
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((args (^local-var 'args))
+              (i (^local-var 'i)))
+          (^
+           (^var-declaration 'int i (^int 0))
+           (^assign (^getnargs) (^array-length args))
+           (^while (^< i (^getnargs))
+                   (^ (^push
+                       (^array-index args i))
+                      (^inc-by i 1)))
+           (univ-pop-args-to-regs ctx 0))))))
 
     ((host2scm_call)
      (rts-method
@@ -4916,7 +4939,7 @@ EOF
       '(public)
       'object
       (list (univ-field 'proc 'scmobj)
-            (univ-field 'args 'scmobj))
+            (univ-field 'args '(array scmobj)))
       "\n"
       '()
       (lambda (ctx)

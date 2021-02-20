@@ -3648,7 +3648,8 @@ def g_os_port_encode_chars(port_scm):
     (println "unimplemented ##os-port-encode-chars! called")
     -5555)))
 
-(define-prim (##os-condvar-select! devices timeout)
+(define-prim (##os-condvar-select!* devices timeout)
+  (##declare (not interrupts-enabled))
   (##first-argument #f ##feature-port-fields)
   (macro-case-target
 
@@ -3676,6 +3677,11 @@ g_os_condvar_select_resume = function () {
   var cont = g_os_condvar_select_resume_ra;
   g_os_condvar_select_resume_ra = null;
   if (cont !== null) {
+    if (g_os_condvar_select_resume_events.length > 0) {
+      g_r1 = g_os_condvar_select_resume_events.shift();
+    } else {
+      g_r1 = g_host2scm(false);
+    }
     g_r0 = cont;
     g_trampoline(g_r0);
   }
@@ -3692,8 +3698,14 @@ g_os_condvar_select_resume_cancel = function () {
 
 };
 
+g_os_condvar_select_resume_add_event = function (event) {
+  g_os_condvar_select_resume_events.push(event);
+  g_os_condvar_select_resume();
+};
+
 g_os_condvar_select_resume_timeoutId = null;
 g_os_condvar_select_resume_ra = null;
+g_os_condvar_select_resume_events = [];
 
 g_os_condvar_select = function (devices_scm, timeout_scm) {
 
@@ -3712,21 +3724,28 @@ g_os_condvar_select = function (devices_scm, timeout_scm) {
     console.log('g_os_condvar_select('+(no_devices?'no devices':'some devices')+', '+timeout_ms+' ms)');
   }
 
-  // The Scheme code execution needs to be suspended to allow the
-  // JavaScript VM (browser) to handle events.  These events (or
-  // expiration of the timeout) will in turn cause the execution
-  // of the Scheme code to resume.  Note that browsers implement
-  // 'clamping' of the timeout after a certain number of nested calls
-  // (typically 5 ms), and this may impact performance.
+  if (g_os_condvar_select_resume_events.length > 0) {
 
-  // resume execution at g_r0 after the timeout
+    return g_os_condvar_select_resume_events.shift();
 
-  g_os_condvar_select_resume_ra = g_r0;
-  g_r0 = null; // exit trampoline
-  g_os_condvar_select_resume_timeoutId =
-    setTimeout(g_os_condvar_select_resume, Math.max(0, timeout_ms));
+  } else {
 
-  return 0; // ignored
+    // The Scheme code execution needs to be suspended to allow the
+    // JavaScript VM (browser) to handle events.  These events (or
+    // expiration of the timeout) will in turn cause the execution
+    // of the Scheme code to resume.  Note that browsers implement
+    // 'clamping' of the timeout after a certain number of nested calls
+    // (typically 5 ms), and this may impact performance.
+
+    // resume execution at g_r0 after the timeout
+
+    g_os_condvar_select_resume_ra = g_r0;
+    g_r0 = null; // exit trampoline
+    g_os_condvar_select_resume_timeoutId =
+      setTimeout(g_os_condvar_select_resume, Math.max(0, timeout_ms));
+
+    return 0; // ignored
+  }
 };
 
 ")
@@ -3743,7 +3762,7 @@ def g_os_condvar_select(devices_scm, timeout_scm):
     if g_os_debug:
         print('g_os_condvar_select(devices, timeout)')
 
-    return g_host2scm(0)  # no error
+    return g_host2scm(False)  # no error
 
 ")
     (##inline-host-expression
@@ -3754,6 +3773,13 @@ def g_os_condvar_select(devices_scm, timeout_scm):
    (else
     (println "unimplemented ##os-condvar-select! called")
     -5555)))
+
+(define-prim (##os-condvar-select! devices timeout)
+  (##declare (not interrupts-enabled))
+  (let ((event (##os-condvar-select!* devices timeout)))
+    (if event
+        ((##vector-ref event 0) event)
+        0)))
 
 ;;;----------------------------------------------------------------------------
 
