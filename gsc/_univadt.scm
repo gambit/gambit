@@ -23,6 +23,9 @@
 (define-macro (^while test body)
   `(univ-emit-while ctx ,test ,body))
 
+(define-macro (^try-catch body var catch-body)
+  `(univ-emit-try-catch ctx ,body ,var ,catch-body))
+
 (define-macro (^eq? expr1 expr2)
   `(univ-emit-eq? ctx ,expr1 ,expr2))
 

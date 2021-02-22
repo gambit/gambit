@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-1.scm"
 
-;;; Copyright (c) 2011-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2021 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -808,6 +808,27 @@
     (else
      (compiler-internal-error
       "univ-emit-while, unknown target"))))
+
+(define (univ-emit-try-catch ctx body var catch-body)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (^ "try {\n"
+        (univ-indent body)
+        "} catch (" var ") {\n"
+        (univ-indent catch-body)
+        "}\n"))
+
+    ((python)
+     (^ "try:\n"
+        (univ-indent body)
+        "except Exception as " var ":\n"
+        (univ-indent catch-body)))
+
+    ;; TODO: implement for other languages... for now just assume no
+    ;; exception is raised so just execute the body
+    (else
+     body)))
 
 (define (univ-emit-eq? ctx expr1 expr2)
   (case (target-name (ctx-target ctx))

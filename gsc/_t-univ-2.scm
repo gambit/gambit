@@ -4709,6 +4709,15 @@ EOF
             (^return-call-prim
               (^rts-method-ref 'scm2host_call)
               obj))
+
+           ;; mark it so it is not confused as a closure
+           (case (target-name (ctx-target ctx))
+             ((js python)
+              (^assign (^member h2s_procedure 'id)
+                       (^int 0)))
+             (else
+              "")) ;; TODO
+
            (^return h2s_procedure))))))
 
     ((host2scm)
@@ -4795,7 +4804,8 @@ EOF
            (try-convert-array ctx obj 'f32)
            (try-convert-array ctx obj 'f64)
 
-           ; TODO: generalise for python, java, ruby and php
+           #; ;; don't map host objects to alists... it is just wrong
+           ;; TODO: generalise for python, java, ruby and php
            (case (target-name (ctx-target ctx))
             ((js)
              (^if (^typeof "object" obj)
@@ -4812,7 +4822,6 @@ EOF
                      (^return alist))))
             (else
              (^)))
-
 
            ;; Scheme object "passthrough".
            ;; Handle scheme objects represented as classes and return
@@ -4866,7 +4875,14 @@ EOF
              (^if (^procedure? obj)
                (^return obj))))
 
-           (univ-throw ctx "\"host2scm error\""))))))
+           ;; foreign objects are preserved
+           (^if (^foreign? obj)
+                (^return obj))
+
+           ;; all other host objects are boxed into a foreign object
+           (^return-call-prim
+            (^rts-method-ref 'host2foreign)
+            obj))))))
 
     ((scm_call)
      (rts-method
@@ -5075,8 +5091,9 @@ EOF
           (try-convert-array ctx obj 'f32)
           (try-convert-array ctx obj 'f64)
 
-          ; TODO: generalise for python, ruby, php and java
-          ; Note: pair conversions are not bijective.
+          #; ;; don't map alists to host objects... it is just wrong
+          ;; TODO: generalise for python, ruby, php and java
+          ;; Note: pair conversions are not bijective.
           (case (target-name (ctx-target ctx))
            ((js)
             (^if (^pair? obj)
@@ -5107,6 +5124,7 @@ EOF
                      (^return jsobj)))))
            (else (^)))
 
+          #; ;; don't special-case structures
           (^if (^structure? obj)
                (univ-throw ctx "\"scm2host error (cannot convert Structure)\""))
 
@@ -5118,7 +5136,14 @@ EOF
                    (^rts-method-ref 'procedure2host)
                    obj))))
 
-          (univ-throw ctx "\"scm2host error\""))))))
+          ;; foreign objects are unboxed
+          (^if (^foreign? obj)
+               (^return-call-prim
+                (^rts-method-ref 'foreign2host)
+                obj))
+
+          ;; other Scheme objects just pass through unchanged
+          (^return obj))))))
 
     ((scm2host_call)
      (rts-method
@@ -5133,7 +5158,9 @@ EOF
              (ra (^local-var 'ra))
              (frame (^local-var 'frame))
              (tmp (^local-var 'tmp))
-             (fn (^local-var 'fn)))
+             (fn (^local-var 'fn))
+             (caught_exc (^local-var 'caught_exc))
+             (exc (^local-var 'exc)))
          (^
           (univ-push-args ctx)
           (^var-declaration '(array scmobj)
@@ -5157,8 +5184,13 @@ EOF
                             tmp
                             (^map (^rts-method-ref 'scm2host)
                                   args))
-          (^assign tmp (^call-with-arg-array fn tmp))
-          (^assign (^getreg 1)
+          (^var-declaration 'bool caught_exc (^bool #f))
+          (^try-catch
+           (^assign tmp (^call-with-arg-array fn tmp))
+           exc
+           (^ (^assign caught_exc (^bool #t))
+              (^assign tmp (^tostr exc))))
+          (^setreg 1
                    (^call-prim (^rts-method-ref 'host2scm) tmp))
           (^assign (gvm-state-sp-use ctx 'wr) -1)
           (^inc-by (gvm-state-sp-use ctx 'rdwr)
@@ -5166,7 +5198,11 @@ EOF
                    (lambda (x)
                      (^assign (^array-index (gvm-state-stack-use ctx 'wr) x)
                               frame)))
-          (^return ra))))))
+          (^if caught_exc
+               (^ (^setreg 0 ra)
+                  (^setnargs 1)
+                  (^return (^getglo '##error)))
+               (^return ra)))))))
 
     ;;deprecated:
     #;
