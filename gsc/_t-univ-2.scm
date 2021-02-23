@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-2.scm"
 
-;;; Copyright (c) 2011-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2021 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -4688,9 +4688,9 @@ EOF
        (let ((val (^local-var 'val)))
          (^return (^new-foreign val (^obj #f)))))))
 
-    ((host_function2scm)
+    ((function2scm)
      (rts-method
-      'host_function2scm
+      'function2scm
       '(public)
       'object
       (list (univ-field 'obj 'object))
@@ -4698,27 +4698,19 @@ EOF
       '()
       (lambda (ctx)
        (let ((obj (^local-var 'obj))
-             (h2s_procedure (^prefix 'h2s_procedure)))
+             (proc 'proc))
         (^ (^procedure-declaration
-            #t
-            'entrypt ;; TODO: ensure it is the correct type
-            'h2s_procedure
+            #f
+            'entrypt
+            proc
             '()
             "\n"
-            '()
-            (^return-call-prim
-              (^rts-method-ref 'scm2host_call)
-              obj))
+            (list (univ-field 'id 'int (^int 0) '())) ;; attributes
+            (^return-call-prim ;; body
+             (^rts-method-ref 'scm2host_call)
+             obj))
 
-           ;; mark it so it is not confused as a closure
-           (case (target-name (ctx-target ctx))
-             ((js python)
-              (^assign (^member h2s_procedure 'id)
-                       (^int 0)))
-             (else
-              "")) ;; TODO
-
-           (^return h2s_procedure))))))
+           (^return (^prefix proc)))))))
 
     ((host2scm)
      (rts-method
@@ -4786,7 +4778,7 @@ EOF
             (else
              (^if (^function? obj)
                   (^return-call-prim
-                   (^rts-method-ref 'host_function2scm)
+                   (^rts-method-ref 'function2scm)
                    obj))))
 
            (^if (^str? obj)
@@ -4978,39 +4970,45 @@ EOF
       '()
       (lambda (ctx)
        (let ((obj (^local-var 'obj))
-             (args  (^local-var 'args))
-             (procedure (^local-var 'procedure)))
+             (args (^local-var 'args))
+             (fn (^local-var 'fn)))
          (^
-          ;; TODO: since prim-function-declaration is supposed to be removed
-          ;; an alternative way to create a host closure should be found.
-          (^prim-function-declaration
-           'procedure                               ;name
-           'object
-           (case (target-name (ctx-target ctx))         ;argument
+          (univ-emit-function-declaration
+           ctx
+           #f ;; not global
+           fn ;; name
+           'object ;; result type
+           (case (target-name (ctx-target ctx)) ;; parameter list
             ((js php) '())
             ((python ruby) (list (univ-field '*args '()))))
-           "\n"                                         ;header
-           (^)                                          ;attribs
-           (^ (case (target-name (ctx-target ctx))      ;body
-               ((js)
-                (^var-declaration
-                 '()
-                 args
-                 (^call-prim (^member (^member (^member "Array" 'prototype)
-                                               'slice) 'call)
-                             (^local-var 'arguments))))
-               ((php)
-                (^var-declaration
-                 '()
-                 args
-                 (^call-prim 'func_get_args)))
-               (else
-                (^)))
-              (^return
-               (^call-prim (^rts-method-ref 'host2scm_call)
-                           obj
-                           args))))
-            (^return procedure))))))
+           (^) ;; attributes
+           (univ-emit-fn-body
+            ctx
+            "\n"
+            (lambda (ctx)
+              (^ (case (target-name (ctx-target ctx)) ;; body
+                   ((js)
+                    (^var-declaration
+                     '()
+                     args
+                     (^call-prim (^member (^member (^member "Array" 'prototype)
+                                                   'slice) 'call)
+                                 (^local-var 'arguments))))
+                   ((php)
+                    (^var-declaration
+                     '()
+                     args
+                     (^call-prim 'func_get_args)))
+                   (else
+                    (^)))
+                 (^return
+                  (^call-prim (^rts-method-ref 'host2scm_call)
+                              obj
+                              args)))))
+           #f ;; modifier
+           #t) ;; primitive
+
+          (^return fn))))))
 
     ((scm2host)
      (rts-method
@@ -5184,25 +5182,28 @@ EOF
                             tmp
                             (^map (^rts-method-ref 'scm2host)
                                   args))
-          (^var-declaration 'bool caught_exc (^bool #f))
+          (^var-declaration 'object caught_exc (^null))
           (^try-catch
-           (^assign tmp (^call-with-arg-array fn tmp))
+           (^ (^assign tmp (^call-with-arg-array fn tmp))
+              (^setreg 1
+                       (^call-prim (^rts-method-ref 'host2scm)
+                                   tmp)))
            exc
-           (^ (^assign caught_exc (^bool #t))
-              (^assign tmp (^tostr exc))))
-          (^setreg 1
-                   (^call-prim (^rts-method-ref 'host2scm) tmp))
+           (^ (^assign caught_exc exc)
+              (^setreg 1
+                       (^call-prim (^rts-method-ref 'host2scm)
+                                   (^tostr caught_exc)))))
           (^assign (gvm-state-sp-use ctx 'wr) -1)
           (^inc-by (gvm-state-sp-use ctx 'rdwr)
                    1
                    (lambda (x)
                      (^assign (^array-index (gvm-state-stack-use ctx 'wr) x)
                               frame)))
-          (^if caught_exc
+          (^if (^eq? caught_exc (^null))
+               (^return ra)
                (^ (^setreg 0 ra)
                   (^setnargs 1)
-                  (^return (^getglo '##error)))
-               (^return ra)))))))
+                  (^return (^getglo '##error)))))))))
 
     ;;deprecated:
     #;
@@ -5399,7 +5400,7 @@ EOF
      ((ffi)
       (case (target-name (ctx-target ctx))
        ((js)
-        (univ-use-rtlib ctx 'host_function2scm)
+        (univ-use-rtlib ctx 'function2scm)
         (univ-use-rtlib ctx 'host2scm)
         (univ-use-rtlib ctx 'host2scm_call)
         (univ-use-rtlib ctx 'scm2host)
@@ -5412,7 +5413,7 @@ EOF
         ;;(univ-use-rtlib ctx 'scm2js_call)
         )
        ((python ruby php)
-        (univ-use-rtlib ctx 'host_function2scm)
+        (univ-use-rtlib ctx 'function2scm)
         (univ-use-rtlib ctx 'host2scm)
         (univ-use-rtlib ctx 'host2scm_call)
         (univ-use-rtlib ctx 'scm2host)
