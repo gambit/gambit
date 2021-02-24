@@ -2,7 +2,7 @@
 
 ;;; File: "_eval#.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -219,12 +219,14 @@
 
 ;;; Macros to manipulate the compilation context.
 
-(##define-macro (macro-make-compilation-ctx)
+(##define-macro (macro-make-compilation-ctx target)
   `(##vector '() ;; supply-modules
              '() ;; demand-modules
              (##make-meta-info) ;; meta-info
              #f ;; module-ref
-             '())) ;; module-aliases
+             '() ;; module-aliases
+             target
+             (##make-extra-info))) ;; extra-info
 
 (##define-macro (macro-compilation-ctx-supply-modules ctx)
   `(##vector-ref ,ctx 0))
@@ -255,6 +257,18 @@
 
 (##define-macro (macro-compilation-ctx-module-aliases-set! ctx module-aliases)
    `(##vector-set! ,ctx 4 ,module-aliases))
+
+(##define-macro (macro-compilation-ctx-target ctx)
+   `(##vector-ref ,ctx 5))
+
+(##define-macro (macro-compilation-ctx-target-set! ctx target)
+   `(##vector-set! ,ctx 5 ,target))
+
+(##define-macro (macro-compilation-ctx-extra-info ctx)
+   `(##vector-ref ,ctx 6))
+
+(##define-macro (macro-compilation-ctx-extra-info-set! ctx extra-info)
+   `(##vector-set! ,ctx 6 ,extra-info))
 
 ;;;----------------------------------------------------------------------------
 

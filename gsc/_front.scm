@@ -2,7 +2,7 @@
 
 ;;; File: "_front.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -227,6 +227,7 @@
     (call-with-values
      (lambda ()
        (**in-new-compilation-ctx
+        (cadr (assq 'target opts))
         (lambda ()
           (if script-line
               (**compilation-ctx-meta-info-add! 'script-line script-line))

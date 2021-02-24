@@ -2,7 +2,7 @@
 
 ;;; File: "_eval.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1146,6 +1146,7 @@
   (##call-with-values
    (lambda ()
      (##in-new-compilation-ctx
+      #f ;; target = #f means "interpreter"
       (lambda ()
         (proc cte (##expand-source src) tail?))))
    (lambda (code comp-ctx)
@@ -1177,11 +1178,11 @@
   (convert! #f code)
   code)
 
-(define (##in-new-compilation-ctx thunk)
+(define (##in-new-compilation-ctx target thunk)
   (let* ((comp-scope;;TODO: deprecated interface
           (##make-table-aux 0 (macro-absent-obj) #f #f ##eq?))
          (comp-ctx
-          (macro-make-compilation-ctx))
+          (macro-make-compilation-ctx target))
          (result
           (##parameterize1
            ##compilation-scope;;TODO: deprecated interface
@@ -1217,10 +1218,21 @@
 
 (define (##compilation-ctx-module-aliases-add! alias)
   (let* ((ctx (##compilation-ctx))
-         (module-aliases (macro-compilation-ctx-module-aliases (##compilation-ctx))))
+         (module-aliases (macro-compilation-ctx-module-aliases ctx)))
     (macro-compilation-ctx-module-aliases-set!
      ctx
      (##extend-module-aliases alias module-aliases))))
+
+(define (##compilation-ctx-target)
+  (let ((ctx (##compilation-ctx)))
+    (macro-compilation-ctx-target ctx)))
+
+(define (##compilation-ctx-extra-info)
+  (let ((ctx (##compilation-ctx)))
+    (macro-compilation-ctx-extra-info ctx)))
+
+(define (##make-extra-info)
+  (##make-table-aux 0 (macro-absent-obj) #f #f ##eq?))
 
 (define (##extend-module-aliases alias module-aliases)
   (##cons alias module-aliases))
