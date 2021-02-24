@@ -2329,7 +2329,7 @@
                (ctrlpts-init (list #f))
                (debug-info-state (make-debug-info-state))
                (debug-info-init (list #f))
-               (debug-info-labels-rev '()))
+               (debug-info-ctrlpt-ids-rev '()))
 
           (define (todo-lbl-num! n)
             (queue-put! bb-todo (lbl-num->bb n bbs)))
@@ -2474,9 +2474,9 @@
                           (frame
                            (gvm-instr-frame gvm-instr)))
 
-                      (set! debug-info-labels-rev
+                      (set! debug-info-ctrlpt-ids-rev
                         (cons ctrlpt-id
-                              debug-info-labels-rev))
+                              debug-info-ctrlpt-ids-rev))
 
                       (debug-info-add!
                        debug-info-state
@@ -2925,17 +2925,13 @@
                              (^setglo name (^obj-proc-as 'scmobj p))
                              (^)))))))
 
-            (let ((debug-info
-                   (debug-info-generate debug-info-state
-                                        sharing-table)))
-              (if debug-info
-                  (let loop ((i 0) (lst (reverse debug-info-labels-rev)))
-                    (if (pair? lst)
-                        (begin
-                          (vector-set! (vector-ref (vector-ref debug-info 0) i)
-                                       0
-                                       (car lst))
-                          (loop (+ i 1) (cdr lst))))))
+            (let* ((ctrlpt-ids
+                    (list->vector (reverse debug-info-ctrlpt-ids-rev)))
+                   (debug-info
+                    (debug-info-generate
+                     debug-info-state
+                     (lambda (i) (vector-ref ctrlpt-ids i))
+                     sharing-table)))
               (set-car! debug-info-init (^obj debug-info)))
 
             (univ-add-init (univ-add-init bbs-defs init1) init2))))

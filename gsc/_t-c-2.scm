@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-2.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -72,6 +72,7 @@
                 (loop2 (cdr l) (+ i 1) (cons x val-lbls)))
               (loop2 (cdr l) i val-lbls)))
           (let ((info (debug-info-generate targ-debug-info-state
+                                           (lambda (i) i)
                                            targ-sharing-table)))
             (targ-use-obj info)
             (set! targ-lbl-alloc (+ targ-lbl-alloc (+ i 1)))

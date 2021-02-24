@@ -2,7 +2,7 @@
 
 ;;; File: "_gvm.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -2747,19 +2747,19 @@
           (queue-empty)   ;; first-class-label-queue
           (queue-empty))) ;; var-descr-queue
 
-(define (debug-info-generate debug-info-state sharing-table)
+(define (debug-info-generate debug-info-state get-id sharing-table)
 
-  (define (number i lst)
+  (define (assign-ids i lst)
     (if (null? lst)
       '()
-      (cons (list->vect (cons i (car lst)))
-            (number (+ i 1) (cdr lst)))))
+      (cons (list->vect (cons (get-id i) (car lst)))
+            (assign-ids (+ i 1) (cdr lst)))))
 
   (debug-info-compact-using-sharing
    sharing-table
    (if (vector-ref debug-info-state 0) ;; debug-info?
        (vector (list->vect
-                (number
+                (assign-ids
                  0
                  (queue->list
                   (vector-ref debug-info-state 1)))) ;; first-class-label-queue
