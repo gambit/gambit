@@ -2,7 +2,7 @@
 
 ;;; File: "_ptree1.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -1553,6 +1553,22 @@
                                            (cdr exprs)
                                            (env-macros-set env save)
                                            cont)))))
+          ((**c-declare-expr? (car exprs) env)
+           (let ((body (source-code (c-declaration-body (car exprs)))))
+             (add-c-decl body)
+             (extract-defs defs
+                           non-defs
+                           (cdr exprs)
+                           env
+                           cont)))
+          ((**c-initialize-expr? (car exprs) env)
+           (let ((body (source-code (c-initialization-body (car exprs)))))
+             (add-c-init body)
+             (extract-defs defs
+                           non-defs
+                           (cdr exprs)
+                           env
+                           cont)))
           (else
            (extract-defs defs
                          (cons (vector (car exprs) env)

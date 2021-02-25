@@ -16710,7 +16710,7 @@ must either be declared explicitly or by including a header file which
 contains the appropriate C declarations.
 
 The @code{c-declare} special form does not return a value.
-It can only appear at top level.
+This form can only appear where a @code{define} form is acceptable.
 
 For example:
 
@@ -16752,7 +16752,7 @@ string is copied to the C file on a new line so it can start with
 preprocessor directives.
 
 The @code{c-initialize} special form does not return a value.
-It can only appear at top level.
+This form can only appear where a @code{define} form is acceptable.
 
 For example:
 
