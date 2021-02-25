@@ -287,7 +287,7 @@
         (##raise-os-exception #f normalized-dir ##current-directory path)
         normalized-dir)))
 
-(define-prim (##current-directory-filter val)
+(define-prim (##current-directory-set-filter val)
   (if (##eq? val (macro-absent-obj))
       ##initial-current-directory
       (macro-check-string val 1 (##current-directory val)
@@ -296,7 +296,7 @@
 (define ##current-directory
   (##make-parameter
    (macro-absent-obj)
-   ##current-directory-filter))
+   ##current-directory-set-filter))
 
 (define current-directory
   ##current-directory)
@@ -318,7 +318,8 @@
       (if (##parameter? param)
         (##dynamic-let
          param
-         ((macro-parameter-descr-filter (macro-parameter-descr param)) val)
+         (let ((descr (macro-parameter-descr param)))
+           ((macro-parameter-descr-set-filter descr) val))
          thunk)
         (let ((save (param)))
           (##dynamic-wind
@@ -372,8 +373,8 @@
                             current-thread
                             x)
                            (##cdr x))
-                         (macro-parameter-descr-value
-                          (macro-parameter-descr param)))))))))))))
+                         (let ((descr (macro-parameter-descr param)))
+                           (macro-parameter-descr-value descr)))))))))))))
 
 (define-prim (##dynamic-set! param val)
   (##declare (not interrupts-enabled))
@@ -427,10 +428,8 @@
                             x)
                            (##set-cdr! x val)
                            (##void))
-                         (begin
-                           (macro-parameter-descr-value-set!
-                            (macro-parameter-descr param)
-                            val)
+                         (let ((descr (macro-parameter-descr param)))
+                           (macro-parameter-descr-value-set! descr val)
                            (##void)))))))))))))
 
 (define-prim (##dynamic-let param val thunk)
@@ -5557,7 +5556,7 @@
         (##raise-os-exception #f normalized-dir ##current-directory path)
         normalized-dir)))
 
-(define-prim (##current-directory-filter val)
+(define-prim (##current-directory-set-filter val)
   (if (##eq? val (macro-absent-obj))
       ##initial-current-directory
       (macro-check-string val 1 (##current-directory val)
@@ -5566,7 +5565,7 @@
 (define ##current-directory
   (##make-parameter
    (macro-absent-obj)
-   ##current-directory-filter))
+   ##current-directory-set-filter))
 
 (define current-directory
   ##current-directory)
@@ -5588,7 +5587,8 @@
       (if (##parameter? param)
         (##dynamic-let
          param
-         ((macro-parameter-descr-filter (macro-parameter-descr param)) val)
+         (let ((descr (macro-parameter-descr param)))
+           ((macro-parameter-descr-set-filter descr) val))
          thunk)
         (let ((save (param)))
           (##dynamic-wind
@@ -5642,8 +5642,8 @@
                             current-thread
                             x)
                            (##cdr x))
-                         (macro-parameter-descr-value
-                          (macro-parameter-descr param)))))))))))))
+                         (let ((descr (macro-parameter-descr param)))
+                           (macro-parameter-descr-value descr)))))))))))))
 
 (define-prim (##dynamic-set! param val)
   (##declare (not interrupts-enabled))
@@ -5697,10 +5697,8 @@
                             x)
                            (##set-cdr! x val)
                            (##void))
-                         (begin
-                           (macro-parameter-descr-value-set!
-                            (macro-parameter-descr param)
-                            val)
+                         (let ((descr (macro-parameter-descr param)))
+                           (macro-parameter-descr-value-set! descr val)
                            (##void)))))))))))))
 
 (define-prim (##dynamic-let param val thunk)

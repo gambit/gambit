@@ -8933,7 +8933,7 @@ The following actions will occur when this code is executed:
 written to ``foo'', and finally @code{(b1)(t1)(a1)} is written to
 ``bar''.
 
-@deffn procedure make-parameter @var{obj} @r{[}@var{filter}@r{]}
+@deffn procedure make-parameter @var{obj} @r{[}@var{set-filter} @r{[}@var{get-filter}@r{]}@r{]}
 
 The dynamic environment is composed of two parts: the @dfn{local
 dynamic environment} and the @dfn{global dynamic environment}.  There
@@ -8942,21 +8942,23 @@ parameter objects that can't be found in the local dynamic
 environment.
 
 The @code{make-parameter} procedure returns a new @dfn{parameter
-object}.  The @var{filter} argument is a one argument conversion
-procedure.  If it is not specified, @var{filter} defaults to the
-identity function.
+object}.  The @var{set-filter} argument is a one argument ``set'' conversion
+procedure.  The @var{get-filter} argument is a one argument ``get'' conversion
+procedure.  If they are not specified the conversion procedures
+default to the identity function.
 
 The global dynamic environment is updated to associate the parameter
 object to a new cell.  The initial content of the cell is the result
-of applying the conversion procedure to @var{obj}.
+of applying the ``set'' conversion procedure to @var{obj}.
 
 A parameter object is a procedure which accepts zero or one argument.
 The cell bound to a particular parameter object in the dynamic
 environment is accessed by calling the parameter object.  When no
-argument is passed, the content of the cell is returned.  When one
-argument is passed the content of the cell is updated with the result
-of applying the parameter object's conversion procedure to the
-argument.  Note that the conversion procedure can be used for
+argument is passed, the value returned is the result
+of applying the ``get'' conversion procedure to the content of the cell.
+When one argument is passed the content of the cell is updated with the result
+of applying the parameter object's ``set'' conversion procedure to the
+argument.  Note that the conversion procedures can be used for
 guaranteeing the type of the parameter object's binding and/or to
 perform some conversion of the value.
 
@@ -8981,6 +8983,34 @@ For example:
 > @b{(prompt "$")}
 > @b{(prompt)}
 "$"
+> @b{(define p
+    (make-parameter
+      100
+      (lambda (val) ;; set filter
+        (pp (list val: val))
+        (list 0 val))
+      (lambda (state) ;; get filter
+        (pp (list state: state))
+        (set-car! state (+ 1 (car state)))
+        (+ (car state) (cadr state)))))}
+(val: 100)
+> @b{(p)}
+(state: (0 100))
+101
+> @b{(p)}
+(state: (1 100))
+102
+> @b{(p)}
+(state: (2 100))
+103
+> @b{(p 555)}
+(val: 555)
+> @b{(p)}
+(state: (0 555))
+556
+> @b{(p)}
+(state: (1 555))
+557
 > @b{(define write-shared
     (make-parameter
       #f
@@ -9008,7 +9038,7 @@ for each procedure @i{p} and in an unspecified order:
 If @i{p} is a parameter object a new cell is created, initialized, and
 bound to the parameter object in the local dynamic environment.  The
 value contained in the cell is the result of applying the parameter
-object's conversion procedure to @i{value}.  The resulting dynamic
+object's ``set'' conversion procedure to @i{value}.  The resulting dynamic
 environment is then used for processing the remaining bindings (or the
 evaluation of @i{body} if there are no other bindings).
 
