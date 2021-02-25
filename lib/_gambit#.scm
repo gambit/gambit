@@ -417,15 +417,17 @@
                                          expr))))))
 
         (define (gen-body)
-          (if (and (null? body)
-                   (null? opt-params)
-                   (null? rest-param))
-              (if prim?
-                  `(##let ()
-                          (##declare (not safe))
-                          (,proc-name ,@(map var-name req-params)))
-                  `(primitive (,proc-name ,@(map var-name req-params))))
-              `(##let () ,@body)))
+          (let ((req (map var-name req-params))
+                (opt (map var-name opt-params)))
+            (if (null? body)
+                (if (not (null? rest-param))
+                    (error "define-procedure with empty body does not support rest parameter")
+                    (if prim?
+                        `(##let ()
+                                (##declare (not safe))
+                                (,proc-name ,@req ,@opt))
+                        `(primitive (,proc-name ,@req ,@opt))))
+                `(##let () ,@body))))
 
         (define (gen-block expr)
           #;
