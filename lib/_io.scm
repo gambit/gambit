@@ -14958,15 +14958,12 @@
   (define (read-quasiquotation re start-pos cont)
     (cont re
           #f
-          (##wrap-op1 re
-                      start-pos
-                      'six.prefix
-                      (##build-read-macro
-                       re
-                       start-pos
-                       start-pos
-                       (macro-readtable-quasiquote-keyword
-                        (macro-readenv-readtable re))))))
+          (##build-read-macro
+           re
+           start-pos
+           start-pos
+           (macro-readtable-quasiquote-keyword
+            (macro-readenv-readtable re)))))
 
   (define (read-sharp re start-pos cont)
     (let ((x (##read-sharp-aux re start-pos)))
