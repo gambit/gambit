@@ -3582,6 +3582,15 @@
                                           (##cons #\_ lst)))))))))
               (##list->string lst))))))
 
+(define (##c-id? str #!optional (allow-upper? #t))
+  (let ((len (##string-length str)))
+    (and (##fx> len 0)
+         (##c-id-initial? (##string-ref str 0) allow-upper?)
+         (let loop ((i (##fx- len 1)))
+           (or (##fx= i 0)
+               (and (##c-id-subsequent? (##string-ref str i) allow-upper?)
+                    (loop (##fx- i 1))))))))
+
 (define (##c-id-initial? c allow-upper?) ;; c is an ASCII letter or _
   (let ((n (##char->integer c)))
     (or (and (##fx>= n 97) (##fx<= n 122))
