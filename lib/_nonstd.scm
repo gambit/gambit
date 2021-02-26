@@ -123,12 +123,15 @@
     (##deconstruct-call
      src
      -2
-     (lambda (message . args)
-       (let ((m (##desourcify message)))
-         (if (##string? m)
-             (##apply ##raise-expression-parsing-exception
-                      (##cons m (##cons src (##map ##desourcify args))))
-             (##raise-ill-formed-special-form src)))))))
+     (lambda args
+       (##apply ##raise-syntax-error
+                (##cons src (##map ##desourcify args)))))))
+
+(define-prim (##raise-syntax-error src message . args)
+  (if (##string? message)
+      (##apply ##raise-expression-parsing-exception
+               (##cons message (##cons src args)))
+      (##raise-ill-formed-special-form src)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
