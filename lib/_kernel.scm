@@ -2,7 +2,7 @@
 
 ;;; File: "_kernel.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -5095,6 +5095,13 @@ end-of-code
 (define-prim (##with-no-result-expected-toplevel thunk)
   (##declare (not interrupts-enabled))
   (##first-argument (thunk))) ;; force nontail-call to thunk
+
+(define-prim (##dead-end)
+  (##declare (interrupts-enabled))
+  (##dead-end)) ;; endless loop
+
+(define-prim (dead-end)
+  (##dead-end)) ;; endless loop
 
 ;;;----------------------------------------------------------------------------
 

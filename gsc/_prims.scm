@@ -2,7 +2,7 @@
 
 ;;; File: "_prims.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -1529,6 +1529,9 @@
 ("void"                               (0)   #f 0     0    #f      gambit)
 ("##void"                             (0)   #f ()    0    #f      extended)
 
+("dead-end"                           (0)   #t 0     0    #f      extended)
+("##dead-end"                         (0)   #t ()    0    #f      extended)
+
 ;; for system interface
 
 ("##type"                             (1)   #f ()    0    fixnum  extended)
@@ -1656,6 +1659,14 @@
             '(boolean null absent unused deleted void eof optional
               key rest
               fixnum char))))
+
+(define (def-dead-end name)
+  (let ((proc (get-prim-info name)))
+    (proc-obj-dead-end?-set! proc #t)))
+
+(def-dead-end "##dead-end")
+
+(def-spec "dead-end"           (spec-s "##dead-end"))
 
 ;; boolean
 

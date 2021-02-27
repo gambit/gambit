@@ -166,21 +166,22 @@
             primitive?
             code
             call-pat
-            (lambda (env) #f) ; testable?
-            #f ; test
-            (lambda (env) #f) ; expandable?
-            #f ; expand
-            (lambda (env) #f) ; inlinable?
-            #f ; inline
-            (lambda (env) #f) ; jump-inlinable?
-            #f ; jump-inline
-            #f ; specialize
-            #f ; simplify
+            (lambda (env) #f) ;; testable?
+            #f ;; test
+            (lambda (env) #f) ;; expandable?
+            #f ;; expand
+            (lambda (env) #f) ;; inlinable?
+            #f ;; inline
+            (lambda (env) #f) ;; jump-inlinable?
+            #f ;; jump-inline
+            #f ;; specialize
+            #f ;; simplify
             side-effects?
             strict-pat
             lift-pat
             type
-            standard)))
+            standard
+            #f))) ;; dead-end?
     (proc-obj-specialize-set! proc-obj (lambda (env args) proc-obj))
     proc-obj))
 
@@ -211,6 +212,7 @@
 (define (proc-obj-lift-pat obj)               (vector-ref obj 18))
 (define (proc-obj-type obj)                   (vector-ref obj 19))
 (define (proc-obj-standard obj)               (vector-ref obj 20))
+(define (proc-obj-dead-end? obj)              (vector-ref obj 21))
 
 (define (proc-obj-code-set! obj x)            (vector-set! obj 4 x))
 (define (proc-obj-testable?-set! obj x)       (vector-set! obj 6 x))
@@ -223,6 +225,7 @@
 (define (proc-obj-jump-inline-set! obj x)     (vector-set! obj 13 x))
 (define (proc-obj-specialize-set! obj x)      (vector-set! obj 14 x))
 (define (proc-obj-simplify-set! obj x)        (vector-set! obj 15 x))
+(define (proc-obj-dead-end?-set! obj x)       (vector-set! obj 21 x))
 
 (define (make-pattern nb-parms nb-opts nb-keys rest?)
   (let* ((max-pos-args (- nb-parms nb-keys (if rest? 1 0)))
@@ -972,17 +975,25 @@
                                            ret))
                                       (new-poll?
                                        (or (jump-poll? last-branch)
-                                           poll?)))
-                                 (replace-branch-by
-                                  #f
-                                  (make-jump
-                                   (adjust-opnd (jump-opnd last-branch))
-                                   new-ret
-                                   (jump-nb-args last-branch)
-                                   new-poll?
-                                   (jump-safe? last-branch)
-                                   new-frame
-                                   (gvm-instr-comment last-branch)))))
+                                           poll?))
+                                      (opnd
+                                       (jump-opnd last-branch))
+                                      (dead-end?
+                                       (and (obj? opnd)
+                                            (let ((val (obj-val opnd)))
+                                              (and (proc-obj? val)
+                                                   (proc-obj-dead-end? val))))))
+                                 (if (not dead-end?)
+                                     (replace-branch-by
+                                      #f
+                                      (make-jump
+                                       (adjust-opnd (jump-opnd last-branch))
+                                       new-ret
+                                       (jump-nb-args last-branch)
+                                       new-poll?
+                                       (jump-safe? last-branch)
+                                       new-frame
+                                       (gvm-instr-comment last-branch))))))
 
                               (else
                                (compiler-internal-error

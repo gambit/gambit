@@ -4711,6 +4711,9 @@ For example:
 @deffn procedure main @dots{}
 @end deffn
 
+@deffn procedure dead-end
+@end deffn
+
 @deffn {special form} define-record-type @dots{}
 @deffnx {special form} define-type @dots{}
 @end deffn

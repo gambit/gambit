@@ -3280,7 +3280,16 @@
                  (where
                   (if (reason-tail? reason2)
                       'tail-call
-                      (if proc 'internal 'call))))
+                      (if proc 'internal 'call)))
+                 (dead-end?
+                  (or (dead-end-calls?
+                       (node-env node))
+                      (and proc
+                           (proc-obj-dead-end? proc))))
+                 (dead-end-lbl
+                  (and return-lbl
+                       dead-end?
+                       (bbs-new-lbl! *bbs*))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 #;
@@ -3555,24 +3564,33 @@
                                  "Nontail call with interrupts disabled"))
 
                               (emit-instr!
-                               (make-jump
-                                opnd
-                                return-lbl
-                                (if local-proc-info #f nb-args)
-                                #f
-                                (and (safe? (node-env node))
-                                     (not local-proc-info)
-                                     (not (and (obj? opnd)
-                                               (let ((val (obj-val opnd)))
-                                                 (and (proc-obj? val)
-                                                      (proc-obj-primitive? val))))))
-                                (current-frame
-                                 (if return-lbl
-                                     (let ((ret-v (make-temp-var 0)))
-                                       (put-var (make-reg 0) ret-v)
-                                       (varset-adjoin liv ret-v))
-                                     liv))
-                                (node->comment node)))
+                               (if (and dead-end-lbl
+                                        (eq? proc **dead-end-proc-obj))
+                                   (make-jump (make-lbl dead-end-lbl)
+                                              #f
+                                              #f
+                                              #f
+                                              #f
+                                              (current-frame liv)
+                                              (node->comment node))
+                                   (make-jump
+                                    opnd
+                                    return-lbl
+                                    (if local-proc-info #f nb-args)
+                                    #f
+                                    (and (safe? (node-env node))
+                                         (not local-proc-info)
+                                         (not (and (obj? opnd)
+                                                   (let ((val (obj-val opnd)))
+                                                     (and (proc-obj? val)
+                                                          (proc-obj-primitive? val))))))
+                                    (current-frame
+                                     (if return-lbl
+                                         (let ((ret-v (make-temp-var 0)))
+                                           (put-var (make-reg 0) ret-v)
+                                           (varset-adjoin liv ret-v))
+                                         liv))
+                                    (node->comment node))))
 
                               ; ==== FIFTH: put return label if there is one
 
@@ -3582,59 +3600,19 @@
                                 (flush-regs)
                                 (put-var target.proc-result result-var)
 
-                                (if (reason-tail? reason2)
+                                (if (not return-lbl)
                                   target.proc-result
-                                  (let ((frame
-                                         (current-frame
-                                          (varset-adjoin live result-var))))
+                                  (begin
 
-                                    (set! poll (return-poll poll where))
+                                    (if (not dead-end?)
+                                        (set! poll (return-poll poll where)))
 
-                                    (set! *bb* (make-bb
-                                                (emit-label!
-                                                 (make-label-return
-                                                  return-lbl
-                                                  frame
-                                                  (node->comment node)))
-                                                *bbs*))
-
-                                    (if (dead-end-calls? (node-env node))
-                                        (let* ((lbl1 (bbs-new-lbl! *bbs*))
-                                               (lbl2 (bbs-new-lbl! *bbs*)))
-
-                                          (emit-instr!
-                                           (make-jump (make-lbl lbl1)
-                                                      #f
-                                                      #f
-                                                      #f
-                                                      #f
-                                                      frame
-                                                      (node->comment node)))
-
-                                          (set! *bb* (make-bb
-                                                      (emit-label!
-                                                       (make-label-simple
-                                                        lbl1
-                                                        frame
-                                                        (node->comment node)))
-                                                      *bbs*))
-
-                                          (emit-instr!
-                                           (make-jump (make-lbl lbl1)
-                                                      #f
-                                                      #f
-                                                      #f
-                                                      #f
-                                                      frame
-                                                      (node->comment node)))
-
-                                          (set! *bb* (make-bb
-                                                      (emit-label!
-                                                       (make-label-simple
-                                                        lbl2
-                                                        frame
-                                                        (node->comment node)))
-                                                      *bbs*))))
+                                    (gen-return-label
+                                     node
+                                     return-lbl
+                                     dead-end-lbl
+                                     live
+                                     result-var)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 #;
@@ -3651,6 +3629,57 @@
 
 
                                     (gen-return node live reason target.proc-result)))))))))))))))))))
+
+(define (gen-return-label node return-lbl dead-end-lbl live result-var)
+  (let ((frame
+         (current-frame
+          (varset-adjoin live result-var))))
+
+    (set! *bb* (make-bb
+                (emit-label!
+                 (make-label-return
+                  return-lbl
+                  frame
+                  (node->comment node)))
+                *bbs*))
+
+    (if dead-end-lbl
+        (let ((after-lbl (bbs-new-lbl! *bbs*)))
+
+          (emit-instr!
+           (make-jump (make-lbl dead-end-lbl)
+                      #f
+                      #f
+                      #f
+                      #f
+                      (current-frame live)
+                      (node->comment node)))
+
+          (set! *bb* (make-bb
+                      (emit-label!
+                       (make-label-simple
+                        dead-end-lbl
+                        frame
+                        (node->comment node)))
+                      *bbs*))
+
+          (emit-instr!
+           (make-jump (make-obj
+                       **dead-end-proc-obj)
+                      return-lbl
+                      0 ;; nb-args
+                      #f
+                      #f
+                      frame
+                      (node->comment node)))
+
+          (set! *bb* (make-bb
+                      (emit-label!
+                       (make-label-simple
+                        after-lbl
+                        frame
+                        (node->comment node)))
+                      *bbs*))))))
 
 (define (contained-reg/slot opnd)
   (cond ((reg? opnd)

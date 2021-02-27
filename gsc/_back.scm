@@ -2,7 +2,7 @@
 
 ;;; File: "_back.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -399,6 +399,9 @@
   (set! target.object-type       (target-object-type target))
   (set! target.file-extensions   (target-file-extensions target))
 
+  (set! **dead-end-proc-obj
+        (target.prim-info **dead-end-sym))
+
   (set! **identity-proc-obj
         (target.prim-info **identity-sym))
 
@@ -430,6 +433,7 @@
 
 (define (target-unselect!)
 
+  (set! **dead-end-proc-obj           #f)
   (set! **identity-proc-obj           #f)
   (set! **not-proc-obj                #f)
   (set! **eq?-proc-obj                #f)
@@ -460,6 +464,7 @@
 
 ;; procedures defined in back-end:
 
+(define **dead-end-proc-obj           #f)  ;; ##dead-end
 (define **identity-proc-obj           #f)  ;; ##identity
 (define **not-proc-obj                #f)  ;; ##not
 (define **eq?-proc-obj                #f)  ;; ##eq?

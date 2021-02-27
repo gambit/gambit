@@ -2,7 +2,7 @@
 
 ;;; File: "_parms.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -79,6 +79,7 @@
 (define unquote-sym            (string->canonical-symbol "unquote"))
 (define unquote-splicing-sym   (string->canonical-symbol "unquote-splicing"))
 
+(define **dead-end-sym         (string->canonical-symbol "##dead-end"))
 (define **identity-sym         (string->canonical-symbol "##identity"))
 (define **not-sym              (string->canonical-symbol "##not"))
 (define **eq?-sym              (string->canonical-symbol "##eq?"))

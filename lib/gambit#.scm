@@ -174,6 +174,7 @@ datum-parsing-exception-kind
 datum-parsing-exception-parameters
 datum-parsing-exception-readenv
 datum-parsing-exception?
+dead-end
 deadlock-exception?
 defer-user-interrupts
 delete-directory
