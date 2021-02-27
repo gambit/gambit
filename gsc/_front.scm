@@ -3262,9 +3262,10 @@
                    (if (or local-proc-info proc) #f oper)
                    in-reg))
                  (live-after
-                  (if (reason-tail? reason2)
-                    (varset-empty)
-                    live))
+                  (if (and (reason-tail? reason2)
+                           (optimize-dead-local-variables? (node-env node)))
+                      (varset-empty)
+                      live))
                  (live-vars-at-each-reg
                   (compute-live-vars-at-each-expr
                    live-after
