@@ -2,8 +2,8 @@
 
 ;;; File: "_num.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
-;;; Copyright (c) 2004-2020 by Brad Lucier, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2004-2021 by Brad Lucier, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1011,7 +1011,7 @@
   (macro-number-dispatch x (type-error)
     (or (##fx-? x)
         (macro-if-bignum
-         (##bignum.- (##fixnum->bignum 0) (##fixnum->bignum ##min-fixnum))
+         ##bignum.-min-fixnum
          (fixnum-overflow)))
     (##bignum.- (##fixnum->bignum 0) x)
     (macro-ratnum-make (##negate (macro-ratnum-numerator x))
@@ -6235,6 +6235,11 @@ for a discussion of branch cuts.
   (if (##fixnum? -1073741824)
       -4611686018427387904 ;; (- (expt 2 62))
       -1073741824))        ;; (- (expt 2 30))
+
+(define ##bignum.-min-fixnum
+  (if (##fixnum? 536870912)
+      2305843009213693952 ;; (expt 2 61)
+      536870912))         ;; (expt 2 29)
 
 ;;; The following global variables control when each of the three
 ;;; multiplication algorithms are used.
