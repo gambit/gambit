@@ -1,6 +1,6 @@
 /* File: "c_intf.c" */
 
-/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the conversion functions for the C
@@ -1978,7 +1978,7 @@ ___SCMOBJ obj;
 ___S8 *x;
 int arg_num;)
 {
-  ___S64 val;
+  ___S64 val = 0;
 
   if (___SCMOBJ_to_S64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR) ||
       !___S64_fits_in_width (val, 8))
@@ -2005,7 +2005,7 @@ ___SCMOBJ obj;
 ___U8 *x;
 int arg_num;)
 {
-  ___U64 val;
+  ___U64 val = 0;
 
   if (___SCMOBJ_to_U64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR) ||
       !___U64_fits_in_width (val, 8))
@@ -2032,7 +2032,7 @@ ___SCMOBJ obj;
 ___S16 *x;
 int arg_num;)
 {
-  ___S64 val;
+  ___S64 val = 0;
 
   if (___SCMOBJ_to_S64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR) ||
       !___S64_fits_in_width (val, 16))
@@ -2059,7 +2059,7 @@ ___SCMOBJ obj;
 ___U16 *x;
 int arg_num;)
 {
-  ___U64 val;
+  ___U64 val = 0;
 
   if (___SCMOBJ_to_U64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR) ||
       !___U64_fits_in_width (val, 16))
@@ -2086,7 +2086,7 @@ ___SCMOBJ obj;
 ___S32 *x;
 int arg_num;)
 {
-  ___S64 val;
+  ___S64 val = 0;
 
   if (___SCMOBJ_to_S64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR) ||
       !___S64_fits_in_width (val, 32))
@@ -2113,7 +2113,7 @@ ___SCMOBJ obj;
 ___U32 *x;
 int arg_num;)
 {
-  ___U64 val;
+  ___U64 val = 0;
 
   if (___SCMOBJ_to_U64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR) ||
       !___U64_fits_in_width (val, 32))
@@ -2408,7 +2408,7 @@ ___SCMOBJ obj;
 ___SIZE_T *x;
 int arg_num;)
 {
-  ___U64 val;
+  ___U64 val = 0;
 
   if (___SCMOBJ_to_U64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR))
     return ___FIX(___STOC_SIZE_T_ERR+arg_num);
@@ -2439,7 +2439,7 @@ ___SCMOBJ obj;
 ___SSIZE_T *x;
 int arg_num;)
 {
-  ___S64 val;
+  ___S64 val = 0;
 
   if (___SCMOBJ_to_S64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR))
     return ___FIX(___STOC_SSIZE_T_ERR+arg_num);
@@ -2470,7 +2470,7 @@ ___SCMOBJ obj;
 ___PTRDIFF_T *x;
 int arg_num;)
 {
-  ___S64 val;
+  ___S64 val = 0;
 
   if (___SCMOBJ_to_S64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR))
     return ___FIX(___STOC_PTRDIFF_T_ERR+arg_num);
@@ -2501,7 +2501,7 @@ ___SCMOBJ obj;
 short *x;
 int arg_num;)
 {
-  ___S64 val;
+  ___S64 val = 0;
 
   if (___SCMOBJ_to_S64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR))
     return ___FIX(___STOC_SHORT_ERR+arg_num);
@@ -2532,7 +2532,7 @@ ___SCMOBJ obj;
 unsigned short *x;
 int arg_num;)
 {
-  ___U64 val;
+  ___U64 val = 0;
 
   if (___SCMOBJ_to_U64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR))
     return ___FIX(___STOC_USHORT_ERR+arg_num);
@@ -2563,7 +2563,7 @@ ___SCMOBJ obj;
 int *x;
 int arg_num;)
 {
-  ___S64 val;
+  ___S64 val = 0;
 
   if (___SCMOBJ_to_S64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR))
     return ___FIX(___STOC_INT_ERR+arg_num);
@@ -2594,7 +2594,7 @@ ___SCMOBJ obj;
 unsigned int *x;
 int arg_num;)
 {
-  ___U64 val;
+  ___U64 val = 0;
 
   if (___SCMOBJ_to_U64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR))
     return ___FIX(___STOC_UINT_ERR+arg_num);
@@ -2625,7 +2625,7 @@ ___SCMOBJ obj;
 long *x;
 int arg_num;)
 {
-  ___S64 val;
+  ___S64 val = 0;
 
   if (___SCMOBJ_to_S64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR))
     return ___FIX(___STOC_LONG_ERR+arg_num);
@@ -2656,7 +2656,7 @@ ___SCMOBJ obj;
 unsigned long *x;
 int arg_num;)
 {
-  ___U64 val;
+  ___U64 val = 0;
 
   if (___SCMOBJ_to_U64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR))
     return ___FIX(___STOC_ULONG_ERR+arg_num);
@@ -2687,7 +2687,7 @@ ___SCMOBJ obj;
 ___LONGLONG *x;
 int arg_num;)
 {
-  ___S64 val;
+  ___S64 val = 0;
 
   if (___SCMOBJ_to_S64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR))
     return ___FIX(___STOC_LONGLONG_ERR+arg_num);
@@ -2718,7 +2718,7 @@ ___SCMOBJ obj;
 ___ULONGLONG *x;
 int arg_num;)
 {
-  ___U64 val;
+  ___U64 val = 0;
 
   if (___SCMOBJ_to_U64 (___PSP obj, &val, arg_num) != ___FIX(___NO_ERR))
     return ___FIX(___STOC_ULONGLONG_ERR+arg_num);
@@ -3631,7 +3631,7 @@ ___SCMOBJ obj;
 char **x;
 int arg_num;)
 {
-  void *result;
+  void *result = 0;
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_STRING
@@ -3664,7 +3664,7 @@ ___SCMOBJ obj;
 char **x;
 int arg_num;)
 {
-  void *result;
+  void *result = 0;
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
@@ -3697,7 +3697,7 @@ ___SCMOBJ obj;
 char ***x;
 int arg_num;)
 {
-  void *result;
+  void *result = 0;
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRINGLIST
@@ -3729,7 +3729,7 @@ ___SCMOBJ obj;
 ___ISO_8859_1STRING *x;
 int arg_num;)
 {
-  void *result;
+  void *result = 0;
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_STRING
@@ -3762,7 +3762,7 @@ ___SCMOBJ obj;
 ___ISO_8859_1STRING *x;
 int arg_num;)
 {
-  void *result;
+  void *result = 0;
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
@@ -3795,7 +3795,7 @@ ___SCMOBJ obj;
 ___ISO_8859_1STRING **x;
 int arg_num;)
 {
-  void *result;
+  void *result = 0;
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRINGLIST
@@ -3827,7 +3827,7 @@ ___SCMOBJ obj;
 ___UTF_8STRING *x;
 int arg_num;)
 {
-  void *result;
+  void *result = 0;
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_STRING
@@ -3860,7 +3860,7 @@ ___SCMOBJ obj;
 ___UTF_8STRING *x;
 int arg_num;)
 {
-  void *result;
+  void *result = 0;
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
@@ -3893,7 +3893,7 @@ ___SCMOBJ obj;
 ___UTF_8STRING **x;
 int arg_num;)
 {
-  void *result;
+  void *result = 0;
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRINGLIST
@@ -3925,7 +3925,7 @@ ___SCMOBJ obj;
 ___UTF_16STRING *x;
 int arg_num;)
 {
-  void *result;
+  void *result = 0;
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_STRING
@@ -3958,7 +3958,7 @@ ___SCMOBJ obj;
 ___UTF_16STRING *x;
 int arg_num;)
 {
-  void *result;
+  void *result = 0;
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
@@ -3991,7 +3991,7 @@ ___SCMOBJ obj;
 ___UTF_16STRING **x;
 int arg_num;)
 {
-  void *result;
+  void *result = 0;
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRINGLIST
@@ -4023,7 +4023,7 @@ ___SCMOBJ obj;
 ___UCS_2STRING *x;
 int arg_num;)
 {
-  void *result;
+  void *result = 0;
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_STRING
@@ -4056,7 +4056,7 @@ ___SCMOBJ obj;
 ___UCS_2STRING *x;
 int arg_num;)
 {
-  void *result;
+  void *result = 0;
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
@@ -4089,7 +4089,7 @@ ___SCMOBJ obj;
 ___UCS_2STRING **x;
 int arg_num;)
 {
-  void *result;
+  void *result = 0;
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRINGLIST
@@ -4121,7 +4121,7 @@ ___SCMOBJ obj;
 ___UCS_4STRING *x;
 int arg_num;)
 {
-  void *result;
+  void *result = 0;
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_STRING
@@ -4154,7 +4154,7 @@ ___SCMOBJ obj;
 ___UCS_4STRING *x;
 int arg_num;)
 {
-  void *result;
+  void *result = 0;
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING
@@ -4187,7 +4187,7 @@ ___SCMOBJ obj;
 ___UCS_4STRING **x;
 int arg_num;)
 {
-  void *result;
+  void *result = 0;
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRINGLIST
@@ -4219,7 +4219,7 @@ ___SCMOBJ obj;
 ___WCHARSTRING *x;
 int arg_num;)
 {
-  void *result;
+  void *result = 0;
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_STRING
@@ -4252,7 +4252,7 @@ ___SCMOBJ obj;
 ___WCHARSTRING *x;
 int arg_num;)
 {
-  void *result;
+  void *result = 0;
   ___SCMOBJ e;
 
   if ((e = ___SCMOBJ_to_NONNULLSTRING

@@ -1,6 +1,6 @@
 /* File: "setup.c" */
 
-/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module contains the routines that setup the Scheme program for
@@ -1329,7 +1329,7 @@ ___module_struct *module;)
   ___UTF_8STRING *key_names;
   ___SCMOBJ *lp;
   ___label_struct *lbltbl;
-  ___label_struct *new_lbltbl;
+  ___label_struct *new_lbltbl = 0;
   int lblcount;
   ___SCMOBJ *ofdtbl;
   int ofd_length;

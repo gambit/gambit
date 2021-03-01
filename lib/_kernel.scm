@@ -4858,7 +4858,7 @@ end-of-code
 (define-prim (##device-select-abort! processor)
   (##declare (not interrupts-enabled))
   (##c-code
-   "___device_select_abort (___PSTATE_FROM_PROCESSOR_ID(___INT(___ARG1),___VMSTATE_FROM_PSTATE(___ps)));"
+   "___device_select_abort (___PSTATE_FROM_PROCESSOR_ID(___INT(___ARG1),___VMSTATE_FROM_PSTATE(___ps))); ___RESULT = ___VOID;"
    processor))
 
 (define-prim ##os-port-decode-chars!

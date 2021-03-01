@@ -1,6 +1,6 @@
 /* File: "os_files.c" */
 
-/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -1423,7 +1423,7 @@ ___SCMOBJ path;)
     {
       ___STRING_TYPE(___PATH_CE_SELECT) p =
         ___CAST(___STRING_TYPE(___PATH_CE_SELECT),cpath);
-      ___STRING_TYPE(___PATH_CE_SELECT) dir;
+      ___STRING_TYPE(___PATH_CE_SELECT) dir = 0;
 
 #ifndef USE_chdir
 #ifndef USE_WIN32

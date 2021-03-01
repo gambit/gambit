@@ -1,6 +1,6 @@
 /* File: "os_io.c" */
 
-/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -5753,7 +5753,7 @@ ___tls_context *tls_context;
 char *server_name)
 {
   ___SCMOBJ e;
-  SOCKET_TYPE s;
+  SOCKET_TYPE s = 0;
   ___device_tcp_client *d;
 
 #ifndef USE_OPENSSL
@@ -6488,7 +6488,7 @@ int options;
 int direction;)
 {
   ___SCMOBJ e;
-  SOCKET_TYPE s;
+  SOCKET_TYPE s = 0;
   ___device_udp *d;
 
   if ((e = create_socket (&s, local_addr, local_addrlen, ___SOCK_UDP))
@@ -10794,7 +10794,7 @@ ___SCMOBJ tls_context;)
 #else
 
   ___SCMOBJ e;
-  ___device_tcp_server *dev;
+  ___device_tcp_server *dev = 0;
   ___SCMOBJ result;
   struct sockaddr local_sa;
   SOCKET_LEN_TYPE local_salen;
@@ -10882,7 +10882,7 @@ ___SCMOBJ dev_condvar;)
   ___device_tcp_server *d =
     ___CAST(___device_tcp_server*,___FIELD(dev,___FOREIGN_PTR));
   ___SCMOBJ e;
-  ___device_tcp_client *client;
+  ___device_tcp_client *client = 0;
   ___SCMOBJ result;
 
   if ((e = ___device_tcp_server_read (d, ___global_device_group (), &client))
@@ -11028,7 +11028,7 @@ ___SCMOBJ hi;)
   ___device_udp *d =
     ___CAST(___device_udp*,___FIELD(dev,___FOREIGN_PTR));
   ___SCMOBJ e;
-  ___SSIZE_T n;
+  ___SSIZE_T n = 0;
   ___SCMOBJ result;
 
   if (buffer == ___FAL)
@@ -11097,7 +11097,7 @@ ___SCMOBJ hi;)
   ___device_udp *d =
     ___CAST(___device_udp*,___FIELD(dev,___FOREIGN_PTR));
   ___SCMOBJ e;
-  ___SSIZE_T n;
+  ___SSIZE_T n = 0;
   ___U8 *buf = ___CAST(___U8*,___BODY_AS(buffer,___tSUBTYPED));
   ___SSIZE_T len;
 

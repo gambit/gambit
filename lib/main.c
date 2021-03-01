@@ -1,6 +1,6 @@
 /* File: "main.c" */
 
-/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved. */
 
 /* This is the driver of the Gambit system */
 
@@ -366,8 +366,8 @@ ___mod_or_lnk (*linker)();)
   ___UCS_2STRING *argv;
   ___UCS_2STRING *current_argv;
   ___UCS_2STRING cmd_line_runtime_options;
-  ___UCS_2STRING script_line;
-  int extra_arg_pos;
+  ___UCS_2STRING script_line = 0;
+  int extra_arg_pos = 1;
   int contract_argv;
   int options_source;
   int options_source_min;
@@ -514,7 +514,6 @@ ___mod_or_lnk (*linker)();)
     }
 
   current_argv = argv;
-  extra_arg_pos = 1;
 
   for (options_source = options_source_min;
        options_source <= options_source_max;

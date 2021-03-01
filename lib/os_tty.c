@@ -1,6 +1,6 @@
 /* File: "os_tty.c" */
 
-/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -2392,7 +2392,7 @@ ___device_tty *self;)
 
       while (len > 0)
         {
-          ___stream_index len_done;
+          ___stream_index len_done = 0;
           ___U8 *byte_buf = d->output_byte + d->output_byte_lo;
 
           if ((e = ___device_tty_write
@@ -4853,7 +4853,7 @@ ___stream_index *len_done;)
 
       ___SCMOBJ e;
       ___stream_index len;
-      ___stream_index done;
+      ___stream_index done = 0;
       ___U8 *byte_buf;
       int byte_buf_avail;
       int char_buf_avail;

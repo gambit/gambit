@@ -1,6 +1,6 @@
 /* File: "mem.c" */
 
-/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.  */
+/* Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.  */
 
 #define ___INCLUDED_FROM_MEM
 #define ___VERSION 409003
@@ -5717,10 +5717,10 @@ ___BOOL find;)
   ___SCMOBJ allocated;
   ___SCMOBJ obj1;
   ___SCMOBJ obj2;
-  ___SCMOBJ k1;
-  ___SCMOBJ k1_probe2;
-  ___SCMOBJ k2;
-  ___SCMOBJ k2_probe2;
+  ___SCMOBJ k1 = ___FIX(0);
+  ___SCMOBJ k1_probe2 = ___FIX(0);
+  ___SCMOBJ k2 = ___FIX(0);
+  ___SCMOBJ k2_probe2 = ___FIX(0);
 
   if (!___FIXZEROP(___FIXAND(___FIELD(ht, ___GCHASHTABLE_FLAGS),
                              ___FIX(___GCHASHTABLE_FLAG_KEY_MOVED))))
