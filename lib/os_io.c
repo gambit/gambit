@@ -8690,7 +8690,7 @@ int *slave_fd_ptr;)
 #else
 
   *slave_fd_ptr = -1;
-  return *master_fd_ptr = open_long_path ("/dev/ptmx", O_RDWR | O_NOCTTY);
+  return *master_fd_ptr = open_long_path ("/dev/ptmx", O_RDWR | O_NOCTTY, 0);
 
 #endif
 #endif
@@ -8765,7 +8765,7 @@ int *slave_fd;)
   if (grantpt (master_fd) >= 0 &&
       unlockpt (master_fd) >= 0 &&
       (name = ptsname (master_fd)) != NULL &&
-      (fd = open_long_path (name, O_RDWR)) >= 0)
+      (fd = open_long_path (name, O_RDWR, 0)) >= 0)
     {
       int tmp;
 
