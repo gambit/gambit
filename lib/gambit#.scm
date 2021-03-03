@@ -597,6 +597,7 @@ path-volume
 permission-denied-exception-arguments
 permission-denied-exception-procedure
 permission-denied-exception?
+poll-point
 port-io-exception-handler-set!
 port-settings-set!
 port?

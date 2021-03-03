@@ -4714,6 +4714,9 @@ For example:
 @deffn procedure dead-end
 @end deffn
 
+@deffn procedure poll-point
+@end deffn
+
 @deffn {special form} define-record-type @dots{}
 @deffnx {special form} define-type @dots{}
 @end deffn

@@ -5103,6 +5103,16 @@ end-of-code
 (define-prim (dead-end)
   (##dead-end)) ;; endless loop
 
+(define-prim (##poll-point) ;; TODO: add a corresponding inlined primitive
+  (##declare (interrupts-enabled) (not inline)) ;; make sure the poll point is generated
+  (define (dummy) (##void))
+  (dummy))
+
+(define-prim (poll-point) ;; TODO: add a corresponding inlined primitive
+  (##declare (interrupts-enabled) (not inline)) ;; make sure the poll point is generated
+  (define (dummy) (##void))
+  (dummy))
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Version information.

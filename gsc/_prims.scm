@@ -1560,6 +1560,8 @@
 ("##first-argument"                   1     #f ()    0    (#f)    extended)
 ("##check-heap-limit"                 (0)   #t ()    0    (#f)    extended)
 
+("##poll-point"                       (0)   #t ()    0    (#f)    extended)
+
 ;; for front end
 
 ("##quasi-append"                     0     #f 0     0    list    extended)
