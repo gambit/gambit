@@ -2,7 +2,7 @@
 
 ;;; File: "_gsclib.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 (include "generic.scm")
 
@@ -376,58 +376,60 @@
                   (##list filename))))))))
 
 (define (##build-module path target options)
+  (let ((options
+         (##compile-options-normalize options)))
 
-  (define (get-option key default)
-    (cond ((##assq key options) => ##cdr)
-          (else default)))
+    (define (get-option key default)
+      (cond ((##assq key options) => ##cdr)
+            (else default)))
 
-  (let* ((module-dir
-          (##path-normalize (##path-directory path)))
-         (module-filename
-          (##path-strip-directory path))
-         (module-filename-noext
-          (##path-strip-extension module-filename))
-         (module-object-filename
-          (##string-append module-filename-noext ".o1"))
-         (build-subdir
-          (##module-build-subdir-path module-dir module-filename-noext target))
-         (cc
-          (get-option 'cc #f))
-         (cc-options
-          (get-option 'cc-options '()))
-         (ld-options-prelude
-          (get-option 'ld-options-prelude '()))
-         (ld-options
-          (get-option 'ld-options '()))
-         (pkg-config
-          (get-option 'pkg-config '()))
-         (pkg-config-path
-          (get-option 'pkg-config-path '())))
+    (let* ((module-dir
+            (##path-normalize (##path-directory path)))
+           (module-filename
+            (##path-strip-directory path))
+           (module-filename-noext
+            (##path-strip-extension module-filename))
+           (module-object-filename
+            (##string-append module-filename-noext ".o1"))
+           (build-subdir
+            (##module-build-subdir-path module-dir module-filename-noext target))
+           (cc
+            (get-option 'cc #f))
+           (cc-options
+            (get-option 'cc-options '()))
+           (ld-options-prelude
+            (get-option 'ld-options-prelude '()))
+           (ld-options
+            (get-option 'ld-options '()))
+           (pkg-config
+            (get-option 'pkg-config '()))
+           (pkg-config-path
+            (get-option 'pkg-config-path '())))
 
-    ;; create build subdirectory (removing it first to make sure it is empty)
-    (##delete-file-or-directory build-subdir #t #f)
-    (##create-directory build-subdir)
+      ;; create build subdirectory (removing it first to make sure it is empty)
+      (##delete-file-or-directory build-subdir #t #f)
+      (##create-directory build-subdir)
 
-    (let* ((opts
-            (##cons (##list 'target target)
-                    (##cons
-                     (##list 'linker-name module-object-filename)
-                     options)))
-           (target-file
-            (##compile-file-to-target path opts build-subdir)))
-      (and target-file
-           (##compile-file
-            target-file
-            opts
-            (##path-expand module-object-filename build-subdir)
-            #f ;; base
-            cc
-            cc-options
-            ld-options-prelude
-            ld-options
-            pkg-config
-            pkg-config-path)
-           build-subdir))))
+      (let* ((opts
+              (##cons (##list 'target target)
+                      (##cons
+                       (##list 'linker-name module-object-filename)
+                       options)))
+             (target-file
+              (##compile-file-to-target path opts build-subdir)))
+        (and target-file
+             (##compile-file
+              target-file
+              opts
+              (##path-expand module-object-filename build-subdir)
+              #f ;; base
+              cc
+              cc-options
+              ld-options-prelude
+              ld-options
+              pkg-config
+              pkg-config-path)
+             build-subdir)))))
 
 (define (##build-executable
          base

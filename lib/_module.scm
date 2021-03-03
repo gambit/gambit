@@ -2,7 +2,7 @@
 
 ;;; File: "_module.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -652,7 +652,9 @@
                      (##build-module
                       ',path
                       ',target
-                      ',options))))))
+                      ',(##append
+                         options
+                         ##build-module-subprocess-default-options)))))))
 
     (##tty-mode-reset) ;; reset tty (in case subprocess needs to read tty)
 
@@ -664,6 +666,11 @@
             #f  ;; don't redirect stdin
             #f))) ;; run in current directory
       (##eqv? status 0))))
+
+(define ##build-module-subprocess-default-options '())
+
+(define-prim (##build-module-subprocess-default-options-set! default-options)
+  (set! ##build-module-subprocess-default-options default-options))
 
 (define-prim (##install-module modref)
 
