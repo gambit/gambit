@@ -2,7 +2,7 @@
 
 ;;; File: "_repl.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1611,16 +1611,18 @@
 
   (let ((port-width (##output-port-width port)))
 
-    (define thread-width 14)
+    (define min-thread-width 13) ;; minimal thread column width
+                                 ;; actual width adds 1/8 the remaining
+                                 ;; width of the output port
 
     (let ((extra
            (##fxmax
             0
             (##fxquotient
-             (##fx- port-width thread-width)
-             5))))
+             (##fx- port-width min-thread-width)
+             8))))
       (##write thread port)
-      (tab (##fx+ thread-width extra))
+      (tab (##fx+ min-thread-width extra))
       (let ((ts (##thread-state thread)))
         (cond ((macro-thread-state-uninitialized? ts)
                (##write-string "UNINITIALIZED" port))
