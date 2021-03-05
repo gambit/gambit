@@ -1204,6 +1204,12 @@
 (define-macro (^foreign? val)
   `(univ-emit-foreign? ctx ,val))
 
+(define-macro (^new-scheme expr1)
+  `(univ-emit-new-scheme ctx ,expr1))
+
+(define-macro (^scheme? val)
+  `(univ-emit-scheme? ctx ,val))
+
 (define-macro (^popcount! arg)
   `(univ-emit-popcount! ctx ,arg))
 

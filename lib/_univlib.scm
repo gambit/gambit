@@ -1078,12 +1078,12 @@ g_exec = function (stmts) {
   (1,eval)(stmts);
 };
 
-g_host_define_function = function (name, params, expr) {
-  g_exec(name + '= function (' + params + ') { return ' + expr + '; };');
+g_host_define_function = function (name, params, header, expr) {
+  g_exec(name + ' = function (' + params + ') {' + header + '\\n return ' + expr + ';\\n};');
 };
 
-g_host_define_procedure = function (name, params, stmts) {
-  g_exec(name + '= function (' + params + ') {' + stmts + '\\n};');
+g_host_define_procedure = function (name, params, header, stmts) {
+  g_exec(name + ' = function (' + params + ') {' + header + '\\n' + stmts + '\\n};');
 };
 
 g_host_function_call = function (fn, args) {
@@ -1113,11 +1113,11 @@ def g_eval(expr):
 def g_exec(stmts):
     exec(stmts, globals())
 
-def g_host_define_function(name, params, expr):
-    g_exec('def ' + name + '(' + params + '):\\n return ' + expr)
+def g_host_define_function(name, params, header, expr):
+    g_exec('def ' + name + '(' + params + '):' + header + '\\n return ' + expr)
 
-def g_host_define_procedure(name, params, stmts):
-    g_exec('def ' + name + '(' + params + '):' + stmts + '\\n')
+def g_host_define_procedure(name, params, header, stmts):
+    g_exec('def ' + name + '(' + params + '):' + header + stmts + '\\n')
 
 def g_host_function_call(fn, args):
     return globals()[fn](*args)
@@ -1135,16 +1135,29 @@ def g_host_exec(stmts):
 
  (else))
 
+(define (##host-convert-param param)
+  (##declare (not interrupts-enabled))
+  (##string-append " " param " = g_scm2host(" param ")"
+                   (macro-case-target
+                    ((js)
+                     ";\n")
+                    (else
+                     "\n"))))
+
+(define (##host-create-header params)
+  (##append-strings (##map ##host-convert-param params)))
+
 (define (##host-define-function-dynamic name params expr)
   (##declare (not interrupts-enabled))
   (macro-case-target
 
    ((js python)
     (##inline-host-statement
-     "g_host_define_function(g_scm2host(@1@),g_scm2host(@2@),g_scm2host(@3@))"
+     "g_host_define_function(g_scm2host(@1@),g_scm2host(@2@),g_scm2host(@3@),g_scm2host(@4@))"
      name
      (##append-strings params ",")
-     expr))
+     (##host-create-header params)
+     (##string-append "g_host2scm(" expr ")")))
 
    (else
     (println "unimplemented ##host-define-function-dynamic called with name=")
@@ -1160,9 +1173,10 @@ def g_host_exec(stmts):
 
    ((js python)
     (##inline-host-statement
-     "g_host_define_procedure(g_scm2host(@1@),g_scm2host(@2@),g_scm2host(@3@))"
+     "g_host_define_procedure(g_scm2host(@1@),g_scm2host(@2@),g_scm2host(@3@),g_scm2host(@4@))"
      name
      (##append-strings params ",")
+     (##host-create-header params)
      stmts))
 
    (else
@@ -1274,6 +1288,11 @@ def g_host_exec(stmts):
     `(##host-function-call
       ,name
       (##vector ,@args-src))))
+
+(define (##scmobj obj)
+  (##inline-host-expression
+   "g_scm2scheme(@1@)"
+   obj))
 
 ;;;----------------------------------------------------------------------------
 
@@ -3847,6 +3866,9 @@ def g_os_condvar_select(devices_scm, timeout_scm):
 
 (define-runtime-syntax host-eval
   (##make-alias-syntax '##host-eval))
+
+(define (scmobj obj)
+  (##scmobj obj))
 
 (define-prim (##foreign-address f)
   0)

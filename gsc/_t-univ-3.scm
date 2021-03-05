@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-3.scm"
 
-;;; Copyright (c) 2011-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2021 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -102,6 +102,7 @@
     ((fixnum)        'Fixnum)
     ((flonum)        'Flonum)
     ((foreign)       'Foreign)
+    ((scheme)        'Scheme)
     ((frame)         'Frame)
     ((hashtable)     'HashTable)
     ((hashtable_base) 'HashTableBase)
@@ -4631,6 +4632,18 @@ tanh
 
     (else
      (^instanceof (^type 'foreign) (^cast*-scmobj expr)))))
+
+(define (univ-emit-new-scheme ctx expr1)
+  (^new 'scheme expr1))
+
+(define (univ-emit-scheme? ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((go)
+     (^call-prim (^rts-method-use 'is_scheme) expr))
+
+    (else
+     (^instanceof (^type 'scheme) (^cast*-scmobj expr)))))
 
 (define (univ-emit-call-prim ctx expr . params)
   (univ-emit-call-prim-aux ctx expr params))

@@ -2903,6 +2903,14 @@ EOF
       (list (univ-field 'val 'object #f '(public)) ;; instance-fields
             (univ-field 'tags 'scmobj #f '(public)))))
 
+    ((scheme)
+     (rts-class
+      'scheme
+      '() ;; properties
+      'scmobj ;; extends
+      '() ;; class-fields
+      (list (univ-field 'scmobj 'scmobj #f '(public))))) ;; instance-fields
+
     ((fixnum)
      (rts-class
       'fixnum
@@ -4688,6 +4696,30 @@ EOF
        (let ((val (^local-var 'val)))
          (^return (^new-foreign val (^obj #f)))))))
 
+    ((scheme2scm)
+     (rts-method
+      'scheme2scm
+      '(public)
+      'scmobj
+      (list (univ-field 'obj 'scmobj))
+      "\n"
+      '()
+      (lambda (ctx)
+       (let ((obj (^local-var 'obj)))
+         (^return (^member obj (^public 'scmobj)))))))
+
+    ((scm2scheme)
+     (rts-method
+      'scm2scheme
+      '(public)
+      'scmobj
+      (list (univ-field 'scmobj 'scmobj))
+      "\n"
+      '()
+      (lambda (ctx)
+       (let ((scmobj (^local-var 'scmobj)))
+         (^return (^new-scheme scmobj))))))
+
     ((function2scm)
      (rts-method
       'function2scm
@@ -4721,6 +4753,7 @@ EOF
       "\n"
       '()
       (lambda (ctx)
+        (univ-use-rtlib ctx 'scheme2scm)
         (univ-use-rtlib ctx 'host2foreign)
         (let ((obj (^local-var 'obj))
               (alist (^local-var 'alist))
@@ -4867,7 +4900,13 @@ EOF
              (^if (^procedure? obj)
                (^return obj))))
 
-           ;; foreign objects are preserved
+           ;; "scheme" objects need to be unboxed
+           (^if (^scheme? obj)
+                (^return-call-prim
+                 (^rts-method-ref 'scheme2scm)
+                 obj))
+
+           ;; foreign objects just pass through
            (^if (^foreign? obj)
                 (^return obj))
 
@@ -5019,129 +5058,136 @@ EOF
       "\n"
       '()
       (lambda (ctx)
-       (univ-use-rtlib ctx 'foreign2host)
-       (let ((obj (^local-var 'obj)))
+        (univ-use-rtlib ctx 'foreign2host)
+        (univ-use-rtlib ctx 'scm2scheme)
+        (let ((obj (^local-var 'obj)))
 
-         (define (try-convert-array ctx obj type)
-           (let ((constructor (univ-array-constructor ctx type)))
-             (if (and constructor
-                      (and (not (eq? type 'scmobj))
-                           (equal? constructor
-                                   (univ-array-constructor ctx 'scmobj))))
-                 (^)
-                 (^if (^vect? type obj)
-                      (^return
-                       (if (eq? type 'scmobj)
-                           (^map (^rts-method-ref 'scm2host)
-                                 (^vect-unbox type obj))
-                           (^vect-unbox type obj)))))))
+          (define (try-convert-array ctx obj type)
+            (let ((constructor (univ-array-constructor ctx type)))
+              (if (and constructor
+                       (and (not (eq? type 'scmobj))
+                            (equal? constructor
+                                    (univ-array-constructor ctx 'scmobj))))
+                  (^)
+                  (^if (^vect? type obj)
+                       (^return
+                        (if (eq? type 'scmobj)
+                            (^map (^rts-method-ref 'scm2host)
+                                  (^vect-unbox type obj))
+                            (^vect-unbox type obj)))))))
 
-         (^
-          (^if (^void-obj? obj)
-            (case (univ-void-representation ctx)
-             ((host) (^return obj))
-             ((class)
-              (^return (case (target-name (ctx-target ctx))
-                        ((js) (^void))
-                        (else (^null)))))))
+          (^
+           (^if (^void-obj? obj)
+                (case (univ-void-representation ctx)
+                  ((host) (^return obj))
+                  ((class)
+                   (^return (case (target-name (ctx-target ctx))
+                              ((js) (^void))
+                              (else (^null)))))))
 
-          (^if (^null-obj? obj)
-               (case (univ-null-representation ctx)
-                ((host) (^return obj))
-                ((class)
-                 (^return (case (target-name (ctx-target ctx))
-                           ((js) (^null))
-                           (else obj))))))
+           (^if (^null-obj? obj)
+                (case (univ-null-representation ctx)
+                  ((host) (^return obj))
+                  ((class)
+                   (^return (case (target-name (ctx-target ctx))
+                              ((js) (^null))
+                              (else obj))))))
 
-          (^if (^boolean? obj)
-               (^return (^boolean-unbox obj)))
+           (^if (^boolean? obj)
+                (^return (^boolean-unbox obj)))
 
-          (if (and (eq? (target-name (ctx-target ctx)) 'js)
-                   (eq? (univ-flonum-representation ctx) 'host)
-                   (eq? (univ-fixnum-representation ctx) 'host))
-              (^if  (^int? obj)
-                    (^if (^and (^>= obj -536870912)
-                               (^<= obj 536870911))
-                         (^return (^fixnum-unbox obj))
-                         (^return (^flonum-unbox obj))))
-              (^
+           (if (and (eq? (target-name (ctx-target ctx)) 'js)
+                    (eq? (univ-flonum-representation ctx) 'host)
+                    (eq? (univ-fixnum-representation ctx) 'host))
+               (^if  (^int? obj)
+                     (^if (^and (^>= obj -536870912)
+                                (^<= obj 536870911))
+                          (^return (^fixnum-unbox obj))
+                          (^return (^flonum-unbox obj))))
+               (^
                 (^if (^fixnum? obj)
                      (^return (^fixnum-unbox obj)))
                 (^if (^flonum? obj)
                      (^return (^flonum-unbox obj)))))
 
-          (^if (^string? obj)
-               (case (univ-string-representation ctx)
-                ((class)
-                 (^return (^string->str obj)))
-                ((host)
-                 (^return obj))))
+           (^if (^string? obj)
+                (case (univ-string-representation ctx)
+                  ((class)
+                   (^return (^string->str obj)))
+                  ((host)
+                   (^return obj))))
 
-          (try-convert-array ctx obj 'scmobj)
-          (try-convert-array ctx obj 'u8)
-          (try-convert-array ctx obj 'u16)
-          (try-convert-array ctx obj 'u32)
-          (try-convert-array ctx obj 'u64)
-          (try-convert-array ctx obj 's8)
-          (try-convert-array ctx obj 's16)
-          (try-convert-array ctx obj 's32)
-          (try-convert-array ctx obj 's64)
-          (try-convert-array ctx obj 'f32)
-          (try-convert-array ctx obj 'f64)
+           (try-convert-array ctx obj 'scmobj)
+           (try-convert-array ctx obj 'u8)
+           (try-convert-array ctx obj 'u16)
+           (try-convert-array ctx obj 'u32)
+           (try-convert-array ctx obj 'u64)
+           (try-convert-array ctx obj 's8)
+           (try-convert-array ctx obj 's16)
+           (try-convert-array ctx obj 's32)
+           (try-convert-array ctx obj 's64)
+           (try-convert-array ctx obj 'f32)
+           (try-convert-array ctx obj 'f64)
 
-          #; ;; don't map alists to host objects... it is just wrong
-          ;; TODO: generalise for python, ruby, php and java
-          ;; Note: pair conversions are not bijective.
-          (case (target-name (ctx-target ctx))
-           ((js)
-            (^if (^pair? obj)
-                 (let ((jsobj (^local-var 'jsobj))
-                       (i (^local-var 'i))
-                       (elem (^local-var 'elem)))
-
-                   (^
-                     (^var-declaration '() jsobj "{}")
-                     (^var-declaration 'int i (^int 0))
-                     (^while (^pair? obj)
-                       (^ (^var-declaration '() elem (^getcar obj))
-                          (^if (^pair? elem)
-                               (^assign
-                                 (^array-index
-                                  jsobj
-                                  (^call-prim (^rts-method-ref 'scm2host)
-                                              (^getcar elem)))
-                                 (^call-prim (^rts-method-ref 'scm2host)
-                                             (^getcdr elem)))
-                               (^assign
-                                 (^array-index jsobj i)
-                                 (^call-prim
-                                  (^rts-method-ref 'scm2host)
-                                  elem)))
-                          (^inc-by i 1)
-                          (^assign obj (^getcdr obj))))
-                     (^return jsobj)))))
+           #; ;; don't map alists to host objects... it is just wrong
+          ;; TODO: generalise for python, ruby, php and java ;
+          ;; Note: pair conversions are not bijective. ;
+           (case (target-name (ctx-target ctx)) ;
+           ((js)                        ;
+           (^if (^pair? obj)            ;
+           (let ((jsobj (^local-var 'jsobj)) ;
+           (i (^local-var 'i))          ;
+           (elem (^local-var 'elem)))   ;
+                                        ;
+           (^                           ;
+           (^var-declaration '() jsobj "{}") ;
+           (^var-declaration 'int i (^int 0)) ;
+           (^while (^pair? obj)         ;
+           (^ (^var-declaration '() elem (^getcar obj)) ;
+           (^if (^pair? elem)           ;
+           (^assign                     ;
+           (^array-index                ;
+           jsobj                        ;
+           (^call-prim (^rts-method-ref 'scm2host) ;
+           (^getcar elem)))             ;
+           (^call-prim (^rts-method-ref 'scm2host) ;
+           (^getcdr elem)))             ;
+           (^assign                     ;
+           (^array-index jsobj i)       ;
+           (^call-prim                  ;
+           (^rts-method-ref 'scm2host)  ;
+           elem)))                      ;
+           (^inc-by i 1)                ;
+           (^assign obj (^getcdr obj)))) ;
+           (^return jsobj)))))          ;
            (else (^)))
 
-          #; ;; don't special-case structures
-          (^if (^structure? obj)
-               (univ-throw ctx "\"scm2host error (cannot convert Structure)\""))
+           #; ;; don't special-case structures
+           (^if (^structure? obj)       ;
+           (univ-throw ctx "\"scm2host error (cannot convert Structure)\""))
 
-          (case (target-name (ctx-target ctx))
-           ((php) (^))
-           (else
-            (^if (^procedure? obj)
-                 (^return-call-prim
-                   (^rts-method-ref 'procedure2host)
-                   obj))))
+           (case (target-name (ctx-target ctx))
+             ((php) (^))
+             (else
+              (^if (^procedure? obj)
+                   (^return-call-prim
+                    (^rts-method-ref 'procedure2host)
+                    obj))))
 
-          ;; foreign objects are unboxed
-          (^if (^foreign? obj)
-               (^return-call-prim
-                (^rts-method-ref 'foreign2host)
-                obj))
+           ;; foreign objects need to be unboxed
+           (^if (^foreign? obj)
+                (^return-call-prim
+                 (^rts-method-ref 'foreign2host)
+                 obj))
 
-          ;; other Scheme objects just pass through unchanged
-          (^return obj))))))
+           ;; "scheme" objects just pass through
+           (^if (^scheme? obj)
+                (^return obj))
+
+           ;; all other Scheme objects are boxed into a "scheme" object
+           (^return-call-prim
+            (^rts-method-ref 'scm2scheme)
+            obj))))))
 
     ((scm2host_call)
      (rts-method
