@@ -1137,12 +1137,12 @@ def g_host_exec(stmts):
 
 (define (##host-convert-param param)
   (##declare (not interrupts-enabled))
-  (##string-append " " param " = g_scm2host(" param ")"
+  (##string-append "\n " param " = g_scm2host(" param ")"
                    (macro-case-target
                     ((js)
-                     ";\n")
+                     ";")
                     (else
-                     "\n"))))
+                     ""))))
 
 (define (##host-create-header params)
   (##append-strings (##map ##host-convert-param params)))
