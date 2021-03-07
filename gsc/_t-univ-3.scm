@@ -194,7 +194,10 @@
            (decl* (cadr type) #f)
            (if name
                name
-               (map-type type))))
+               (case type
+                 ((bigint) (base 'BigInt))
+                 ((number) (base 'Number))
+                 (else     (base (map-type type)))))))
 
       ((java)
        (cond ((and (pair? type) (eq? (car type) 'array))

@@ -695,7 +695,240 @@
        (^ (^setreg 1 (^void-obj))
           (^return
            (^downupcast* 'returnpt 'jumpable (^getreg 0)))))))
-   )
+
+  (let ()
+
+    (define (to-type ctx type expr)
+      (if (and (eq? type 'bigint) (eq? (target-name (ctx-target ctx)) 'js))
+          (^ (^type 'bigint) (^parens expr))
+          expr))
+
+    (define (from-type ctx type expr)
+      (if (and (eq? type 'bigint) (eq? (target-name (ctx-target ctx)) 'js))
+          (^ (^type 'number) (^parens expr))
+          expr))
+
+    (define (bignum_from type)
+      (univ-rtlib-feature-method
+       '(public)
+       'scmobj
+       (list (univ-field 'n type))
+       "\n"
+       '()
+       (lambda (ctx)
+         (let ((n (^local-var 'n))
+               (m (^local-var 'm))
+               (nbdig (^local-var 'nbdig))
+               (digits (^local-var 'digits))
+               (i (^local-var 'i)))
+
+           (define (logical-shift-u32 expr shift)
+             (case (target-name (ctx-target ctx))
+               ((js java)
+                (^>>> expr (^int shift)))
+               (else
+                (^bitand (^>> expr (^int shift))
+                         (^int (- (expt 2 (- 32 shift)) 1))))))
+
+           (^ (^var-declaration
+               type
+               m
+               n)
+              (^var-declaration
+               'int
+               nbdig
+               (^int 0))
+              (if (eq? type 'u32)
+                  (^ (^while (^!= m (^int 0))
+                             (^ (^assign m
+                                         (logical-shift-u32 m univ-mdigit-width))
+                                (^inc-by nbdig 1)))
+                     (^if (^= nbdig (^int 0))
+                          (^assign nbdig (^int 1))))
+                  (^ (^while (^or (^< m (^int (- (quotient univ-mdigit-base 4))))
+                                  (^> m (^int (quotient univ-mdigit-base-minus-1 4))))
+                             (^ (^assign m
+                                         (^>> m (to-type
+                                                 ctx
+                                                 type
+                                                 (^int univ-mdigit-width))))
+                                (^inc-by nbdig 1)))
+                     (^inc-by nbdig 1)))
+              (^var-declaration
+               '(array bigdigit)
+               digits
+               (^new-array 'bigdigit nbdig))
+              (^var-declaration
+               'int
+               i
+               (^int 0))
+              (^while (^< i nbdig)
+                      (^ (^assign (^array-index digits i)
+                                  (^cast* 'bigdigit
+                                          (from-type
+                                           ctx
+                                           type
+                                           (^bitand
+                                            n
+                                            (to-type
+                                             ctx
+                                             type
+                                             (^int univ-mdigit-base-minus-1))))))
+                         (^assign n
+                                  (if (eq? type 'u32)
+                                      (logical-shift-u32 n univ-mdigit-width)
+                                      (^>> n
+                                           (to-type
+                                            ctx
+                                            type
+                                            (^int univ-mdigit-width)))))
+                         (^inc-by i 1)))
+              (^return
+               (^new 'bignum
+                     digits)))))))
+
+    (define (bignum_to type)
+      (univ-rtlib-feature-method
+       '(public)
+       type
+       (list (univ-field 'n 'scmobj))
+       "\n"
+       '()
+       (lambda (ctx)
+         (let ((n (^local-var 'n))
+               (nbdig (^local-var 'nbdig))
+               (digits (^local-var 'digits))
+               (i (^local-var 'i))
+               (result (^local-var 'result)))
+           (^ (^var-declaration
+               '(array bigdigit)
+               digits
+               (^bignum-digits n))
+              (^var-declaration
+               'int
+               nbdig
+               (^array-length digits))
+              (^var-declaration
+               'int
+               i
+               (^- nbdig (^int 1)))
+              (^var-declaration
+               type
+               result
+               (to-type
+                ctx
+                type
+                (if (eq? type 'u32)
+                    (^int 0)
+                    (^array-index digits i))))
+              (if (eq? type 'u32)
+                  (^)
+                  (^if (^> result (quotient univ-mdigit-base-minus-1 2))
+                       (^inc-by result
+                                (to-type
+                                 ctx
+                                 type
+                                 (- univ-mdigit-base)))))
+              (^while (if (eq? type 'u32)
+                          (^>= i 0)
+                          (^> i 0))
+                      (^ (if (eq? type 'u32)
+                             (^)
+                             (^inc-by i -1))
+                         (^assign result
+                                  (^+ (^* result
+                                          (to-type
+                                           ctx
+                                           type
+                                           (^int univ-mdigit-base)))
+                                      (to-type
+                                       ctx
+                                       type
+                                       (^array-index digits i))))
+                         (if (eq? type 'u32)
+                             (^inc-by i -1)
+                             (^))))
+              (^return
+               result))))))
+
+    (univ-define-rtlib-feature 'bignum_from_u32    (bignum_from 'u32))
+    (univ-define-rtlib-feature 'bignum_from_s32    (bignum_from 's32))
+    (univ-define-rtlib-feature 'bignum_from_bigint (bignum_from 'bigint))
+
+    (univ-define-rtlib-feature 'bignum_to_u32    (bignum_to 'u32))
+    (univ-define-rtlib-feature 'bignum_to_s32    (bignum_to 's32))
+    (univ-define-rtlib-feature 'bignum_to_bigint (bignum_to 'bigint))
+
+    (univ-define-rtlib-feature 'u32_box
+      (univ-rtlib-feature-method
+       '(public)
+       'scmobj
+       (list (univ-field 'n 'u32))
+       "\n"
+       '()
+       (lambda (ctx)
+         (let ((n (^local-var 'n)))
+           (^if (^and (^<= (^int 0) n)
+                      (^<= n (^int univ-fixnum-max)))
+                (^return
+                 (^fixnum-box n))
+                (^return
+                 (^call-prim
+                  (^rts-method-use 'bignum_from_u32)
+                  n)))))))
+
+    (univ-define-rtlib-feature 'u32_unbox
+      (univ-rtlib-feature-method
+       '(public)
+       'u32
+       (list (univ-field 'n 'scmobj))
+       "\n"
+       '()
+       (lambda (ctx)
+         (let ((n (^local-var 'n)))
+           (^if (^fixnum? n)
+                (^return
+                 (^fixnum-unbox n))
+                (^return
+                 (^call-prim
+                  (^rts-method-use 'bignum_to_u32)
+                  n)))))))
+
+    (univ-define-rtlib-feature 's32_box
+      (univ-rtlib-feature-method
+       '(public)
+       'scmobj
+       (list (univ-field 'n 's32))
+       "\n"
+       '()
+       (lambda (ctx)
+         (let ((n (^local-var 'n)))
+           (^if (^and (^<= (^int univ-fixnum-min) n)
+                      (^<= n (^int univ-fixnum-max)))
+                (^return
+                 (^fixnum-box n))
+                (^return
+                 (^call-prim
+                  (^rts-method-use 'bignum_from_s32)
+                  n)))))))
+
+    (univ-define-rtlib-feature 's32_unbox
+      (univ-rtlib-feature-method
+       '(public)
+       's32
+       (list (univ-field 'n 'scmobj))
+       "\n"
+       '()
+       (lambda (ctx)
+         (let ((n (^local-var 'n)))
+           (^if (^fixnum? n)
+                (^return
+                 (^fixnum-unbox n))
+                (^return
+                 (^call-prim
+                  (^rts-method-use 'bignum_to_s32)
+                  n))))))))
+)
 
 (define (old-univ-rtlib-feature ctx feature)
 
@@ -767,45 +1000,6 @@
     (univ-add-init
      (univ-make-empty-defs)
      init))
-
-  (define (apply-procedure nb-args)
-    (univ-jumpable-declaration-defs
-     ctx
-     #t
-     (string->symbol
-      (string-append
-       "apply"
-       (number->string nb-args)))
-     'entrypt
-     '()
-     '()
-     (univ-emit-fn-body
-      ctx
-      "\n"
-      (lambda (ctx)
-        (^ (univ-pop-args-to-vars ctx nb-args)
-
-           (univ-foldr-range
-            2
-            (- nb-args 1)
-            (^)
-            (lambda (i rest)
-              (^ (^push (^local-var (^ 'arg i)))
-                 rest)))
-
-           (^setnargs (- nb-args 2))
-
-           (let ((args (^local-var (^ 'arg nb-args))))
-             (^while (^pair? args)
-                     (^ (^push (^getcar args))
-                        (^assign args (^getcdr args))
-                        (^inc-by (gvm-state-nargs-use ctx 'rdwr)
-                                 1))))
-
-           (univ-pop-args-to-regs ctx 0)
-
-           (^return
-            (^cast*-jumpable (^local-var (^ 'arg 1)))))))))
 
   (case feature
 
@@ -3152,262 +3346,6 @@ EOF
               (^new 'bignum
                     digits)))))))
 
-    ((bignum_from_s32)
-     (rts-method
-      'bignum_from_s32
-      '(public)
-      'scmobj
-      (list (univ-field 'n 's32))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((n (^local-var 'n))
-              (m (^local-var 'm))
-              (nbdig (^local-var 'nbdig))
-              (digits (^local-var 'digits))
-              (i (^local-var 'i)))
-          (^ (^var-declaration
-              's32
-              m
-              n)
-             (^var-declaration
-              'int
-              nbdig
-              (^int 0))
-             (^while (^or (^< m (^int (- (quotient univ-mdigit-base 4))))
-                          (^> m (^int (quotient univ-mdigit-base-minus-1 4))))
-                     (^ (^assign m (^>> m (^int univ-mdigit-width)))
-                        (^inc-by nbdig 1)))
-             (^inc-by nbdig 1)
-             (^var-declaration
-              '(array bigdigit)
-              digits
-              (^new-array 'bigdigit nbdig))
-             (^var-declaration
-              'int
-              i
-              (^int 0))
-             (^while (^< i nbdig)
-                     (^ (^assign (^array-index digits i)
-                                 (^cast* 'bigdigit
-                                         (^bitand
-                                          n
-                                          (^int univ-mdigit-base-minus-1))))
-                        (^assign n
-                                 (^>> n (^int univ-mdigit-width)))
-                        (^inc-by i 1)))
-             (^return
-              (^new 'bignum
-                    digits)))))))
-
-    ((bignum_from_u32)
-     (rts-method
-      'bignum_from_u32
-      '(public)
-      'scmobj
-      (list (univ-field 'n 'u32))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((n (^local-var 'n))
-              (m (^local-var 'm))
-              (nbdig (^local-var 'nbdig))
-              (digits (^local-var 'digits))
-              (i (^local-var 'i)))
-
-          (define (logical-shift-u32 expr shift)
-            (case (target-name (ctx-target ctx))
-              ((js java)
-               (^>>> expr (^int shift)))
-              (else
-               (^bitand (^>> expr (^int shift))
-                        (^int (- (expt 2 (- 32 shift)) 1))))))
-
-          (^ (^var-declaration
-              'u32
-              m
-              n)
-             (^var-declaration
-              'int
-              nbdig
-              (^int 0))
-             (^while (^!= m (^int 0))
-                     (^ (^assign m (logical-shift-u32 m univ-mdigit-width))
-                        (^inc-by nbdig 1)))
-             (^if (^= nbdig (^int 0))
-                  (^assign nbdig (^int 1)))
-             (^var-declaration
-              '(array bigdigit)
-              digits
-              (^new-array 'bigdigit nbdig))
-             (^var-declaration
-              'int
-              i
-              (^int 0))
-             (^while (^< i nbdig)
-                     (^ (^assign (^array-index digits i)
-                                 (^cast* 'bigdigit
-                                         (^bitand
-                                          n
-                                          (^int univ-mdigit-base-minus-1))))
-                        (^assign n (logical-shift-u32 n univ-mdigit-width))
-                        (^inc-by i 1)))
-             (^return
-              (^new 'bignum
-                    digits)))))))
-
-    ((bignum_to_s32)
-     (rts-method
-      'bignum_to_s32
-      '(public)
-      's32
-      (list (univ-field 'n 'scmobj))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((n (^local-var 'n))
-              (nbdig (^local-var 'nbdig))
-              (digits (^local-var 'digits))
-              (i (^local-var 'i))
-              (result (^local-var 'result)))
-          (^ (^var-declaration
-              '(array bigdigit)
-              digits
-              (^bignum-digits n))
-             (^var-declaration
-              'int
-              nbdig
-              (^array-length digits))
-             (^var-declaration
-              'int
-              i
-              (^- nbdig (^int 1)))
-             (^var-declaration
-              's32
-              result
-              (^array-index digits i))
-             (^if (^> result (quotient univ-mdigit-base-minus-1 2))
-                  (^inc-by result (- univ-mdigit-base)))
-             (^while (^> i 0)
-                     (^ (^inc-by i -1)
-                        (^assign result
-                                 (^+ (^* result (^int univ-mdigit-base))
-                                     (^array-index digits i)))))
-             (^return
-              result))))))
-
-    ((bignum_to_u32)
-     (rts-method
-      'bignum_to_u32
-      '(public)
-      'u32
-      (list (univ-field 'n 'scmobj))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((n (^local-var 'n))
-              (nbdig (^local-var 'nbdig))
-              (digits (^local-var 'digits))
-              (i (^local-var 'i))
-              (result (^local-var 'result)))
-          (^ (^var-declaration
-              '(array bigdigit)
-              digits
-              (^bignum-digits n))
-             (^var-declaration
-              'int
-              nbdig
-              (^array-length digits))
-             (^var-declaration
-              'int
-              i
-              (^- nbdig (^int 1)))
-             (^var-declaration
-              'u32
-              result
-              (^int 0))
-             (^while (^>= i 0)
-                     (^ (^assign result
-                                 (^+ (^* result (^int univ-mdigit-base))
-                                     (^array-index digits i)))
-                        (^inc-by i -1)))
-             (^return
-              result))))))
-
-    ((u32_box)
-     (rts-method
-      'u32_box
-      '(public)
-      'scmobj
-      (list (univ-field 'n 'u32))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((n (^local-var 'n)))
-          (^if (^and (^<= (^int 0) n)
-                     (^<= n (^int univ-fixnum-max)))
-               (^return
-                (^fixnum-box n))
-               (^return
-                (^call-prim
-                 (^rts-method-use 'bignum_from_u32)
-                 n)))))))
-
-    ((u32_unbox)
-     (rts-method
-      'u32_unbox
-      '(public)
-      'u32
-      (list (univ-field 'n 'scmobj))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((n (^local-var 'n)))
-          (^if (^fixnum? n)
-               (^return
-                (^fixnum-unbox n))
-               (^return
-                (^call-prim
-                 (^rts-method-use 'bignum_to_u32)
-                 n)))))))
-
-    ((s32_box)
-     (rts-method
-      's32_box
-      '(public)
-      'scmobj
-      (list (univ-field 'n 's32))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((n (^local-var 'n)))
-          (^if (^and (^<= (^int univ-fixnum-min) n)
-                     (^<= n (^int univ-fixnum-max)))
-               (^return
-                (^fixnum-box n))
-               (^return
-                (^call-prim
-                 (^rts-method-use 'bignum_from_s32)
-                 n)))))))
-
-    ((s32_unbox)
-     (rts-method
-      's32_unbox
-      '(public)
-      's32
-      (list (univ-field 'n 'scmobj))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((n (^local-var 'n)))
-          (^if (^fixnum? n)
-               (^return
-                (^fixnum-unbox n))
-               (^return
-                (^call-prim
-                 (^rts-method-use 'bignum_to_s32)
-                 n)))))))
-
     ((ratnum)
      (rts-class
       'ratnum
@@ -4660,18 +4598,6 @@ EOF
                      (^glo-var-primitive-set! sym (^null))))
              (^return sym))))))
 
-    ;; ((apply2)
-    ;;  (apply-procedure 2))
-
-    ;; ((apply3)
-    ;;  (apply-procedure 3))
-
-    ;; ((apply4)
-    ;;  (apply-procedure 4))
-
-    ;; ((apply5)
-    ;;  (apply-procedure 5))
-
     ((foreign2host)
      (rts-method
       'foreign2host
@@ -4753,8 +4679,6 @@ EOF
       "\n"
       '()
       (lambda (ctx)
-        (univ-use-rtlib ctx 'scheme2scm)
-        (univ-use-rtlib ctx 'host2foreign)
         (let ((obj (^local-var 'obj))
               (alist (^local-var 'alist))
               (key (^local-var 'key)))
@@ -4770,49 +4694,55 @@ EOF
                        (^return
                         (^vect-box type
                                    (if (eq? type 'scmobj)
-                                       (^map (^rts-method-ref 'host2scm) obj)
+                                       (^map (^rts-method-use 'host2scm) obj)
                                        obj)))))))
 
           (^
-           (if (eq? (target-name (ctx-target ctx)) 'js)
-               (^if (^void? obj)
-                    (^return (^void-obj)))
-               (^))
+           (^if (^void? obj)
+                (^return (^void-obj)))
 
-           (^if (^null? obj)
-                (if (and (eq? (univ-void-representation ctx) 'host)
-                         ; Javascript has a native "void" in "undefined".
-                         (not (eq? (target-name (ctx-target ctx)) 'js)))
-                    (^return (^void-obj))
-                    (^return (^null-obj))))
+           (case (target-name (ctx-target ctx))
+             ((js)
+              (^if (^null? obj)
+                   (^return (^null-obj))))
+             (else
+              (^))) ;; targets other than js handle None/etc as void above
+
+           (case (target-name (ctx-target ctx))
+             ((php)
+              (^))
+             (else
+              (^if (^function? obj)
+                   (^return-call-prim
+                    (^rts-method-use 'function2scm)
+                    obj))))
 
            (^if (^bool? obj)
                 (^return (^boolean-box obj)))
 
            (case (target-name (ctx-target ctx))
-            ((js)
-             (^if (^typeof "number" obj)
-                  (^if (^and (^= (^parens (^bitior obj 0)) obj)
-                             (^and (^>= obj -536870912)
-                                   (^<= obj 536870911)))
-                       (^return (^fixnum-box obj))
-                       (^return (^flonum-box obj)))))
-            (else
-             (^ (^if (^and (^int? obj)
-                           (^and (^>= obj -536870912)
-                                 (^<= obj 536870911)))
-                     (^return (^fixnum-box obj)))
-                (^if (^float? obj)
-                     (^return (^flonum-box obj))))))
-
-           (case (target-name (ctx-target ctx))
-            ((php)
-             (^ ))
-            (else
-             (^if (^function? obj)
-                  (^return-call-prim
-                   (^rts-method-ref 'function2scm)
-                   obj))))
+             ((js)
+              (^ (^if (^typeof "number" obj)
+                      (^if (^and (^= (^parens (^bitior obj 0)) obj)
+                                 (^and (^>= obj -536870912)
+                                       (^<= obj 536870911)))
+                           (^return (^fixnum-box obj))
+                           (^return (^flonum-box obj))))
+                 (^if (^typeof "bigint" obj)
+                      (^if (^and (^>= obj -536870912)
+                                 (^<= obj 536870911))
+                           (^return (^fixnum-box
+                                     (^ (^type 'number) (^parens obj))))
+                           (^return-call-prim
+                            (^rts-method-use 'bignum_from_bigint)
+                            obj)))))
+             (else
+              (^ (^if (^and (^int? obj)
+                            (^and (^>= obj -536870912)
+                                  (^<= obj 536870911)))
+                      (^return (^fixnum-box obj)))
+                 (^if (^float? obj)
+                      (^return (^flonum-box obj))))))
 
            (^if (^str? obj)
                 (^return (^str->string obj)))
@@ -4829,81 +4759,10 @@ EOF
            (try-convert-array ctx obj 'f32)
            (try-convert-array ctx obj 'f64)
 
-           #; ;; don't map host objects to alists... it is just wrong
-           ;; TODO: generalise for python, java, ruby and php
-           (case (target-name (ctx-target ctx))
-            ((js)
-             (^if (^typeof "object" obj)
-                  (^ (^var-declaration '() alist (^null-obj))
-                     "for (var " key " in " obj ") {\n"
-                     (^assign alist (^cons (^cons (^call-prim
-                                                   (^rts-method-ref 'host2scm)
-                                                   key)
-                                                  (^call-prim
-                                                   (^rts-method-ref 'host2scm)
-                                                   (^array-index obj key)))
-                                           alist))
-                     "}\n"
-                     (^return alist))))
-            (else
-             (^)))
-
-           ;; Scheme object "passthrough".
-           ;; Handle scheme objects represented as classes and return
-           ;; them without modification.
-           ;; ??? TODO: implement passthrough as a compiler option. ???
-#;
-           (case (univ-void-representation ctx)
-            ((host) (^))
-            ((class)
-             (^if (^void-obj? obj)
-                  (^return obj))))
-
-           ;; Needed for languages without void, otherwise conversion on
-           ;; null values wouldn't be bijective.
-           (case (target-name (ctx-target ctx))
-            ((php python ruby java)
-             (case (univ-null-representation ctx)
-              ((host) (^))
-              ((class)
-               (^if (^null-obj? obj)
-                 (^return obj)))))
-            (else (^)))
-#;
-           (case (univ-boolean-representation ctx)
-            ((host) (^))
-            ((class)
-             (^if (^boolean? obj)
-                  (^return obj))))
-#;
-           (case (univ-string-representation ctx)
-            ((host) (^))
-            ((class)
-             (^if (^string? obj)
-                  (^return obj))))
-#;
-           (case (univ-fixnum-representation ctx)
-            ((host) (^))
-            ((class)
-             (^if (^fixnum? obj)
-                  (^return obj))))
-#;
-           (case (univ-flonum-representation ctx)
-            ((host) (^))
-            ((class)
-             (^if (^flonum? obj)
-                  (^return obj))))
-#;
-           (case (univ-procedure-representation ctx)
-            ((host) (^))
-            ((class)
-             (^if (^procedure? obj)
-               (^return obj))))
-
            ;; "scheme" objects need to be unboxed
            (^if (^scheme? obj)
                 (^return-call-prim
-                 (^rts-method-ref 'scheme2scm)
+                 (^rts-method-use 'scheme2scm)
                  obj))
 
            ;; foreign objects just pass through
@@ -4912,7 +4771,7 @@ EOF
 
            ;; all other host objects are boxed into a foreign object
            (^return-call-prim
-            (^rts-method-ref 'host2foreign)
+            (^rts-method-use 'host2foreign)
             obj))))))
 
     ((scm_call)
@@ -5058,8 +4917,6 @@ EOF
       "\n"
       '()
       (lambda (ctx)
-        (univ-use-rtlib ctx 'foreign2host)
-        (univ-use-rtlib ctx 'scm2scheme)
         (let ((obj (^local-var 'obj)))
 
           (define (try-convert-array ctx obj type)
@@ -5072,26 +4929,28 @@ EOF
                   (^if (^vect? type obj)
                        (^return
                         (if (eq? type 'scmobj)
-                            (^map (^rts-method-ref 'scm2host)
+                            (^map (^rts-method-use 'scm2host)
                                   (^vect-unbox type obj))
                             (^vect-unbox type obj)))))))
 
           (^
            (^if (^void-obj? obj)
-                (case (univ-void-representation ctx)
-                  ((host) (^return obj))
-                  ((class)
-                   (^return (case (target-name (ctx-target ctx))
-                              ((js) (^void))
-                              (else (^null)))))))
+                (^return (^void)))
 
-           (^if (^null-obj? obj)
-                (case (univ-null-representation ctx)
-                  ((host) (^return obj))
-                  ((class)
-                   (^return (case (target-name (ctx-target ctx))
-                              ((js) (^null))
-                              (else obj))))))
+           (case (target-name (ctx-target ctx))
+             ((js)
+              (^if (^null-obj? obj)
+                   (^return (^null))))
+             (else
+              (^))) ;; targets other than js handle None/etc as void above
+
+           (case (target-name (ctx-target ctx))
+             ((php) (^))
+             (else
+              (^if (^procedure? obj)
+                   (^return-call-prim
+                    (^rts-method-use 'procedure2host)
+                    obj))))
 
            (^if (^boolean? obj)
                 (^return (^boolean-unbox obj)))
@@ -5110,12 +4969,43 @@ EOF
                 (^if (^flonum? obj)
                      (^return (^flonum-unbox obj)))))
 
+           (^if (^bignum? obj)
+                (case (target-name (ctx-target ctx))
+                  ((js)
+                   (^return
+                    (^ (^type 'number)
+                       (^parens (^call-prim
+                                 (^rts-method-use 'bignum_to_bigint)
+                                 obj)))))
+                  (else
+                   (^return-call-prim
+                    (^rts-method-use 'bignum_to_bigint)
+                    obj))))
+
+           (^if (^ratnum? obj)
+                (^return
+                 (^/ (^call-prim
+                      (^rts-method-use 'scm2host)
+                      (^member (^cast* 'ratnum obj) (^public 'num)))
+                     (^call-prim
+                      (^rts-method-use 'scm2host)
+                      (^member (^cast* 'ratnum obj) (^public 'den))))))
+
            (^if (^string? obj)
                 (case (univ-string-representation ctx)
                   ((class)
                    (^return (^string->str obj)))
                   ((host)
                    (^return obj))))
+
+           (^if (^symbol? obj)
+                (^return (^symbol-unbox obj)))
+
+           (^if (^keyword? obj)
+                (^return (^keyword-unbox obj)))
+
+           (^if (^char? obj)
+                (^return (^char-unbox obj)))
 
            (try-convert-array ctx obj 'scmobj)
            (try-convert-array ctx obj 'u8)
@@ -5129,55 +5019,59 @@ EOF
            (try-convert-array ctx obj 'f32)
            (try-convert-array ctx obj 'f64)
 
-           #; ;; don't map alists to host objects... it is just wrong
-          ;; TODO: generalise for python, ruby, php and java ;
-          ;; Note: pair conversions are not bijective. ;
-           (case (target-name (ctx-target ctx)) ;
-           ((js)                        ;
-           (^if (^pair? obj)            ;
-           (let ((jsobj (^local-var 'jsobj)) ;
-           (i (^local-var 'i))          ;
-           (elem (^local-var 'elem)))   ;
-                                        ;
-           (^                           ;
-           (^var-declaration '() jsobj "{}") ;
-           (^var-declaration 'int i (^int 0)) ;
-           (^while (^pair? obj)         ;
-           (^ (^var-declaration '() elem (^getcar obj)) ;
-           (^if (^pair? elem)           ;
-           (^assign                     ;
-           (^array-index                ;
-           jsobj                        ;
-           (^call-prim (^rts-method-ref 'scm2host) ;
-           (^getcar elem)))             ;
-           (^call-prim (^rts-method-ref 'scm2host) ;
-           (^getcdr elem)))             ;
-           (^assign                     ;
-           (^array-index jsobj i)       ;
-           (^call-prim                  ;
-           (^rts-method-ref 'scm2host)  ;
-           elem)))                      ;
-           (^inc-by i 1)                ;
-           (^assign obj (^getcdr obj)))) ;
-           (^return jsobj)))))          ;
-           (else (^)))
-
-           #; ;; don't special-case structures
-           (^if (^structure? obj)       ;
-           (univ-throw ctx "\"scm2host error (cannot convert Structure)\""))
+           ;; convert list to array
+           (^if (^pair? obj)
+                (let ((n (^local-var 'n))
+                      (probe (^local-var 'probe))
+                      (result (^local-var 'result)))
+                  (^
+                   (^var-declaration 'int n (^int 0))
+                   (^var-declaration 'scmobj probe obj)
+                   (^while (^pair? probe)
+                           (^ (^assign probe (^getcdr probe))
+                              (^inc-by n 1)))
+                   (^if (^not (^parens (^null? probe)))
+                        (^inc-by n 1))
+                   (^make-array
+                    'scmobj
+                    (lambda (result)
+                      (^
+                       (^assign n (^int 0))
+                       (^assign probe obj)
+                       (^while (^pair? probe)
+                               (^ (^assign (^array-index result n)
+                                           (^call-prim
+                                            (^rts-method-use 'scm2host)
+                                            (^getcar probe)))
+                                  (^assign probe (^getcdr probe))
+                                  (^inc-by n 1)))
+                       (^if (^not (^parens (^null? probe)))
+                            (^assign (^array-index result n)
+                                     (^call-prim
+                                      (^rts-method-use 'scm2host)
+                                      probe)))
+                       (^return result)))
+                    n
+                    (^null)))))
 
            (case (target-name (ctx-target ctx))
-             ((php) (^))
+             ((js) ;; TODO: cleanup
+              ;; convert table to Object
+"  if (obj instanceof G_Structure && obj.slots[0].slots[1].name === '##type-4-A7AB629D-EAB0-422F-8005-08B2282E04FC') {
+    var result = Object();
+    obj.slots[3].forEach(function (val, key) {
+      result[key] = val;
+    });
+  return result;
+  }
+")
              (else
-              (^if (^procedure? obj)
-                   (^return-call-prim
-                    (^rts-method-ref 'procedure2host)
-                    obj))))
+              (^)))
 
            ;; foreign objects need to be unboxed
            (^if (^foreign? obj)
                 (^return-call-prim
-                 (^rts-method-ref 'foreign2host)
+                 (^rts-method-use 'foreign2host)
                  obj))
 
            ;; "scheme" objects just pass through
@@ -5186,7 +5080,7 @@ EOF
 
            ;; all other Scheme objects are boxed into a "scheme" object
            (^return-call-prim
-            (^rts-method-ref 'scm2scheme)
+            (^rts-method-use 'scm2scheme)
             obj))))))
 
     ((scm2host_call)
