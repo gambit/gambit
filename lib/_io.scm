@@ -4397,7 +4397,7 @@
 
 (macro-case-target
 
- ((C)
+ ((C js python)
 
 (define-prim (##print
               #!key (port (macro-current-output-port))
