@@ -14497,26 +14497,6 @@
                                           scheme-name
                                           expr))))))))
 
-            ((and (= level 2)
-                  (eq? tok 'new))
-             (read-identifier-or-prefix
-              re
-              #f
-              #t
-              (lambda (re maybe-tok identifier)
-                (read-arguments-tail
-                 re
-                 autosemi?
-                 (expect-no-autosemi re #f |token.(|)
-                 (lambda (re maybe-tok args)
-                   (cont re
-                         maybe-tok
-                         (##wrap-op re
-                                    start-pos
-                                    'six.new
-                                    (cons identifier
-                                          args))))))))
-
             ((< 0 level)
              (read-expression
               re
@@ -14581,27 +14561,21 @@
                                          (and (char? next)
                                               (or (identifier-starter? next)
                                                   (char=? next #\\))))
-                                     (read-expression
+                                     (read-identifier-or-prefix
                                       re
-                                      autosemi?
-                                      (parse-token-starting-with
-                                       re
-                                       (let ((autosemi? #f))
-                                         autosemi?)
-                                       next)
-                                      (- level 1)
-                                      restriction
-                                      (lambda (re maybe-tok expr2)
+                                      #f
+                                      #t
+                                      (lambda (re maybe-tok identifier)
                                         (loop re
                                               (get-token re autosemi? maybe-tok)
                                               (##wrap-op2 re
                                                           start-pos
                                                           (if (eq? last-tok
                                                                    |token.->|)
-                                                              'six.arrow ;;;;;;;;;;;;;;;
+                                                              'six.arrow
                                                               'six.dot)
                                                           last-expr1
-                                                          expr2))))
+                                                          identifier))))
                                      (cont re
                                            last-tok
                                            last-expr1))))
@@ -14710,6 +14684,25 @@
                                (cont re
                                      tok
                                      expr1)))))))))
+
+            ((eq? tok 'new)
+             (read-identifier-or-prefix
+              re
+              #f
+              #t
+              (lambda (re maybe-tok identifier)
+                (read-arguments-tail
+                 re
+                 autosemi?
+                 (expect-no-autosemi re #f |token.(|)
+                 (lambda (re maybe-tok args)
+                   (cont re
+                         maybe-tok
+                         (##wrap-op re
+                                    start-pos
+                                    'six.new
+                                    (cons identifier
+                                          args))))))))
 
             ((or (eq? tok 'function) (six-type? re tok))
              (read-procedure

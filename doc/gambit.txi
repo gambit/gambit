@@ -15990,8 +15990,6 @@ such as a closing parenthesis).  For example @code{(f \2*n (list)
 @item
 @syntaxbar{}@code{~} @meta{expr2} @tab @code{(six.~x @var{$2})}
 @item
-@syntaxbar{}@code{new} @meta{id-or-prefix} @code{(} @meta{arguments} @code{)} @tab @code{(six.new @var{$2} . @var{$4})}
-@item
 @syntaxbar{}@meta{expr2} @code{**} @meta{expr1} @tab @code{(six.x**y @var{$1} @var{$3})}
 @item
 @syntaxbar{}@meta{expr1} @tab @var{$1}
@@ -16035,6 +16033,8 @@ such as a closing parenthesis).  For example @code{(f \2*n (list)
 @syntaxbar{}@meta{type} @code{(} @meta{parameters} @code{)} @meta{body} @tab @code{(six.procedure @var{$1} @var{$3} @var{$5})}
 @item
 @syntaxbar{}@code{function} @code{(} @meta{parameters} @code{)} @meta{body} @tab @code{(six.procedure #f @var{$3} @var{$5})}
+@item
+@syntaxbar{}@code{new} @meta{id-or-prefix} @code{(} @meta{arguments} @code{)} @tab @code{(six.new @var{$2} . @var{$4})}
 
 @item
 @meta{block stat} @syntaxdef{}
