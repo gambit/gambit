@@ -875,24 +875,34 @@
   (if ##show-all-continuations?
       #f
       (let ((parent (##continuation-parent cont)))
-        (or (##eq? parent ##interp-procedure-wrapper);;;;;;;;;;;;;;;;;;
-            (##eq? parent ##dynamic-wind)
-            (##eq? parent ##dynamic-env-bind)
-            (##eq? parent ##kernel-handlers)
-            (##eq? parent ##load-vm)
-            (##eq? parent ##repl-debug)
-            (##eq? parent ##repl-debug-main)
-            (##eq? parent ##repl-within)
-            (##eq? parent ##eval-within)
-            (##eq? parent ##with-no-result-expected)
-            (##eq? parent ##with-no-result-expected-toplevel)
-            (##eq? parent ##check-heap)
-            (##eq? parent ##nontail-call-for-leap)
-            (##eq? parent ##nontail-call-for-step)
-            (##eq? parent ##trace-generate)
-            (##eq? parent ##thread-interrupt!)
-            (##eq? parent ##thread-execute-and-end!)
-            (##eq? parent ##thread-call)))))
+        (##hidden-continuation-parent? parent))))
+
+(define ##default-hidden-continuation-parent?
+  (lambda (parent)
+    (or (##eq? parent ##interp-procedure-wrapper) ;;;;;;;;;;;;;;;;;;
+        (##eq? parent ##dynamic-wind)
+        (##eq? parent ##dynamic-env-bind)
+        (##eq? parent ##kernel-handlers)
+        (##eq? parent ##load-vm)
+        (##eq? parent ##repl-debug)
+        (##eq? parent ##repl-debug-main)
+        (##eq? parent ##repl-within)
+        (##eq? parent ##eval-within)
+        (##eq? parent ##with-no-result-expected)
+        (##eq? parent ##with-no-result-expected-toplevel)
+        (##eq? parent ##check-heap)
+        (##eq? parent ##nontail-call-for-leap)
+        (##eq? parent ##nontail-call-for-step)
+        (##eq? parent ##trace-generate)
+        (##eq? parent ##thread-interrupt!)
+        (##eq? parent ##thread-execute-and-end!)
+        (##eq? parent ##thread-call))))
+
+(define ##hidden-continuation-parent?
+  ##default-hidden-continuation-parent?)
+
+(define (##hidden-continuation-parent?-set! proc)
+  (set! ##hidden-continuation-parent? proc))
 
 (define-prim (##interp-subproblem-continuation? cont)
   (let ((parent (##continuation-parent cont)))
