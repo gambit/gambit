@@ -4702,13 +4702,6 @@ EOF
                 (^return (^void-obj)))
 
            (case (target-name (ctx-target ctx))
-             ((js)
-              (^if (^null? obj)
-                   (^return (^null-obj))))
-             (else
-              (^))) ;; targets other than js handle None/etc as void above
-
-           (case (target-name (ctx-target ctx))
              ((php)
               (^))
              (else
@@ -4938,13 +4931,6 @@ EOF
                 (^return (^void)))
 
            (case (target-name (ctx-target ctx))
-             ((js)
-              (^if (^null-obj? obj)
-                   (^return (^null))))
-             (else
-              (^))) ;; targets other than js handle None/etc as void above
-
-           (case (target-name (ctx-target ctx))
              ((php) (^))
              (else
               (^if (^procedure? obj)
@@ -5020,6 +5006,10 @@ EOF
            (try-convert-array ctx obj 'f64)
 
            ;; convert list to array
+
+           (^if (^null-obj? obj)
+                (^return (^array-literal 'scmobj '())))
+
            (^if (^pair? obj)
                 (let ((n (^local-var 'n))
                       (probe (^local-var 'probe))
@@ -5030,12 +5020,13 @@ EOF
                    (^while (^pair? probe)
                            (^ (^assign probe (^getcdr probe))
                               (^inc-by n 1)))
-                   (^if (^not (^parens (^null? probe)))
+                   (^if (^not (^parens (^null-obj? probe)))
                         (^inc-by n 1))
                    (^make-array
                     'scmobj
-                    (lambda (result)
+                    (lambda (arr)
                       (^
+                       (^var-declaration '(array scmobj) result arr)
                        (^assign n (^int 0))
                        (^assign probe obj)
                        (^while (^pair? probe)
@@ -5045,7 +5036,7 @@ EOF
                                             (^getcar probe)))
                                   (^assign probe (^getcdr probe))
                                   (^inc-by n 1)))
-                       (^if (^not (^parens (^null? probe)))
+                       (^if (^not (^parens (^null-obj? probe)))
                             (^assign (^array-index result n)
                                      (^call-prim
                                       (^rts-method-use 'scm2host)
