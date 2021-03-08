@@ -4702,6 +4702,13 @@ EOF
                 (^return (^void-obj)))
 
            (case (target-name (ctx-target ctx))
+             ((js)
+              (^if (^null? obj)
+                   (^return (^absent))))
+             (else
+              (^)))
+
+           (case (target-name (ctx-target ctx))
              ((php)
               (^))
              (else
@@ -4929,6 +4936,13 @@ EOF
           (^
            (^if (^void-obj? obj)
                 (^return (^void)))
+
+           (case (target-name (ctx-target ctx))
+             ((js)
+              (^if (^eq? obj (^absent))
+                   (^return (^null))))
+             (else
+              (^)))
 
            (case (target-name (ctx-target ctx))
              ((php) (^))
