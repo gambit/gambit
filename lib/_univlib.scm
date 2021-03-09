@@ -2525,10 +2525,69 @@ def g_os_device_directory_open_path(path_scm, ignore_hidden_scm):
     (println "unimplemented ##os-device-directory-open-path called")
     -5555)))
 
+(define ##feature-main-event-queue
+  (macro-case-target
+
+   ((js)
+    (##inline-host-declaration "
+
+G_Device_event_queue = function (selector) {
+  var dev = this;
+  dev.selector = selector;
+  dev.queue = [];
+  dev.read_condvar_scm = null;
+};
+
+G_Device_event_queue.prototype.read = function (dev_condvar_scm) {
+
+  var dev = this;
+
+  if (g_os_debug)
+    console.log('G_Device_event_queue('+dev.selector+').read(...)');
+
+  if (dev.queue.length === 0) {
+
+    g_os_condvar_ready_set(dev_condvar_scm, false);
+
+    if (dev.read_condvar_scm === null) {
+      dev.read_condvar_scm = dev_condvar_scm;
+    }
+
+    return -35; // return EAGAIN to suspend Scheme thread on condvar
+  }
+
+  return dev.queue.shift(); // return first available event
+};
+
+G_Device_event_queue.prototype.write = function (event_scm) {
+
+  var dev = this;
+
+  if (g_os_debug)
+    console.log('G_Device_event_queue('+dev.selector+').write(...)');
+
+  dev.queue.push(event_scm);
+
+  var condvar_scm = dev.read_condvar_scm;
+
+  if (condvar_scm !== null) {
+    dev.read_condvar_scm = null;
+    g_os_condvar_ready_set(condvar_scm, true);
+  }
+};
+
+g_main_event_queue = new G_Device_event_queue(g_host2scm(false));
+
+"))
+
+   (else
+    #f)))
+
 (define-prim (##os-device-directory-read dev-condvar)
   (macro-case-target
 
    ((js)
+    (##first-argument #f ##feature-main-event-queue)
     (##inline-host-declaration "
 
 g_os_device_directory_read = function (dev_condvar_scm) {
@@ -2578,9 +2637,17 @@ g_os_device_event_queue_open = function (selector_scm) {
   var selector = g_scm2host(selector_scm);
 
   if (g_os_debug)
-    console.log('g_os_device_event_queue_open('+selector+')  ***not implemented***');
+    console.log('g_os_device_event_queue_open('+selector+')');
 
-  return g_host2scm(-1); // EPERM (operation not permitted)
+  var dev;
+
+  if (selector === false) {
+    dev = g_main_event_queue;
+  } else {
+    dev = new G_Device_event_queue(selector);
+  }
+
+  return g_host2foreign(dev);
 };
 
 ")
@@ -2613,6 +2680,7 @@ def g_os_device_event_queue_open(selector_scm):
   (macro-case-target
 
    ((js)
+    (##first-argument #f ##feature-main-event-queue)
     (##inline-host-declaration "
 
 g_os_device_event_queue_read = function (dev_condvar_scm) {
@@ -2620,9 +2688,9 @@ g_os_device_event_queue_read = function (dev_condvar_scm) {
   var dev = g_foreign2host(dev_condvar_scm.slots[g_CONDVAR_NAME]);
 
   if (g_os_debug)
-    console.log('g_os_device_event_queue_read(...)  ***not implemented***');
+    console.log('g_os_device_event_queue_read(...)');
 
-  return g_host2scm(-1); // EPERM (operation not permitted)
+  return dev.read(dev_condvar_scm);
 };
 
 ")
@@ -3667,12 +3735,13 @@ def g_os_port_encode_chars(port_scm):
     (println "unimplemented ##os-port-encode-chars! called")
     -5555)))
 
-(define-prim (##os-condvar-select!* devices timeout)
+(define-prim (##os-condvar-select! devices timeout)
   (##declare (not interrupts-enabled))
   (##first-argument #f ##feature-port-fields)
   (macro-case-target
 
    ((js)
+    (##first-argument #f ##feature-main-event-queue)
     (##inline-host-declaration "
 
 g_os_condvar_ready_set = function (condvar_scm, ready) {
@@ -3693,14 +3762,12 @@ g_os_condvar_select_resume = function () {
   g_os_condvar_select_resume_cancel();
 
   // execute continuation if there is one
+
   var cont = g_os_condvar_select_resume_ra;
-  g_os_condvar_select_resume_ra = null;
+
   if (cont !== null) {
-    if (g_os_condvar_select_resume_events.length > 0) {
-      g_r1 = g_os_condvar_select_resume_events.shift();
-    } else {
-      g_r1 = g_host2scm(false);
-    }
+    g_os_condvar_select_resume_ra = null;
+    g_r1 = g_host2scm(0);
     g_r0 = cont;
     g_trampoline(g_r0);
   }
@@ -3717,14 +3784,8 @@ g_os_condvar_select_resume_cancel = function () {
 
 };
 
-g_os_condvar_select_resume_add_event = function (event) {
-  g_os_condvar_select_resume_events.push(event);
-  g_os_condvar_select_resume();
-};
-
 g_os_condvar_select_resume_timeoutId = null;
 g_os_condvar_select_resume_ra = null;
-g_os_condvar_select_resume_events = [];
 
 g_os_condvar_select = function (devices_scm, timeout_scm) {
 
@@ -3743,28 +3804,27 @@ g_os_condvar_select = function (devices_scm, timeout_scm) {
     console.log('g_os_condvar_select('+(no_devices?'no devices':'some devices')+', '+timeout_ms+' ms)');
   }
 
-  if (g_os_condvar_select_resume_events.length > 0) {
-
-    return g_os_condvar_select_resume_events.shift();
-
-  } else {
-
-    // The Scheme code execution needs to be suspended to allow the
-    // JavaScript VM (browser) to handle events.  These events (or
-    // expiration of the timeout) will in turn cause the execution
-    // of the Scheme code to resume.  Note that browsers implement
-    // 'clamping' of the timeout after a certain number of nested calls
-    // (typically 5 ms), and this may impact performance.
-
-    // resume execution at g_r0 after the timeout
-
-    g_os_condvar_select_resume_ra = g_r0;
-    g_r0 = null; // exit trampoline
-    g_os_condvar_select_resume_timeoutId =
-      setTimeout(g_os_condvar_select_resume, Math.max(0, timeout_ms));
-
-    return 0; // ignored
+  if (g_main_event_queue.queue.length > 0) {
+    // There are events in the main event queue, so there
+    // is no need to wait for other events.
+    timeout_ms = 0;
   }
+
+  // The Scheme code execution needs to be suspended to allow the
+  // JavaScript VM (browser) to handle events.  These events (or
+  // expiration of the timeout) will in turn cause the execution
+  // of the Scheme code to resume.  Note that browsers implement
+  // 'clamping' of the timeout after a certain number of nested calls
+  // (typically 5 ms), and this may impact performance.
+
+  // resume execution at g_r0 after the timeout
+
+  g_os_condvar_select_resume_ra = g_r0;
+  g_r0 = null; // exit trampoline
+  g_os_condvar_select_resume_timeoutId =
+    setTimeout(g_os_condvar_select_resume, Math.max(0, timeout_ms));
+
+  return 0; // ignored
 };
 
 ")
@@ -3792,13 +3852,6 @@ def g_os_condvar_select(devices_scm, timeout_scm):
    (else
     (println "unimplemented ##os-condvar-select! called")
     -5555)))
-
-(define-prim (##os-condvar-select! devices timeout)
-  (##declare (not interrupts-enabled))
-  (let ((event (##os-condvar-select!* devices timeout)))
-    (if event
-        ((##vector-ref event 0) event)
-        0)))
 
 ;;;----------------------------------------------------------------------------
 

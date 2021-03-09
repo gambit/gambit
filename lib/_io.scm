@@ -9464,7 +9464,7 @@
                     (macro-psettings-ignore-hidden psettings))))
              (if (##fixnum? rdevice)
                  (if raise-os-exception?
-                     (##raise-os-exception #f rdevice open-directory path)
+                     (##raise-os-exception #f rdevice prim path)
                      (cont rdevice))
                  (cont (##make-directory-port rdevice path)))))))))
 
@@ -9489,7 +9489,7 @@
 
 (implement-check-type-event-queue-port)
 
-(define-prim (##make-event-queue-port rdevice index)
+(define-prim (##make-event-queue-port rdevice selector)
   (let ((mutex
          (macro-make-port-mutex))
         (rkind
@@ -9518,7 +9518,7 @@
 
       (##declare (not interrupts-enabled))
 
-      (##list 'event-queue (macro-event-queue-port-index port)))
+      (##list 'event-queue (macro-event-queue-port-selector port)))
 
     (define (wait port direction)
 
@@ -9539,18 +9539,18 @@
       (macro-port-mutex-lock! port) ;; get exclusive access to port
 
       (let loop ()
-        (let ((datum
+        (let ((result
                (##os-device-event-queue-read
                 (macro-event-queue-port-rdevice-condvar port))))
-          (if (##fixnum? datum)
+          (if (and (##fixnum? result) (##fx< result 0))
 
-              (cond ((##fx= datum ##err-code-EINTR)
+              (cond ((##fx= result ##err-code-EINTR)
 
                      ;; the read was interrupted, so try again
 
                      (loop))
 
-                    ((##fx= datum ##err-code-EAGAIN)
+                    ((##fx= result ##err-code-EAGAIN)
 
                      ;; the read would block, so wait and then try again
 
@@ -9571,11 +9571,11 @@
                      ;; signal an error
 
                      (macro-port-mutex-unlock! port)
-                     (##raise-os-io-exception port #f datum read port)))
+                     (##raise-os-io-exception port #f result read port)))
 
               (begin
                 (macro-port-mutex-unlock! port)
-                datum)))))
+                result)))))
 
     (define write-datum #f)
 
@@ -9644,7 +9644,7 @@
             newline
             force-output
             rdevice-condvar
-            index)))
+            selector)))
       (##io-condvar-port-set! rdevice-condvar port)
       port)))
 
@@ -9652,28 +9652,28 @@
               raise-os-exception?
               cont
               prim
-              index)
+              selector)
+  (let ((rdevice
+         (##os-device-event-queue-open selector)))
+    (if (##fixnum? rdevice)
+        (if raise-os-exception?
+            (##raise-os-exception #f rdevice prim selector)
+            (cont rdevice))
+        (cont (##make-event-queue-port rdevice selector)))))
+
+(define-prim (open-event-queue selector)
 
   (define (fail)
-    (##fail-check-fixnum 1 prim index))
+    (##fail-check-fixnum 1 open-event-queue selector))
 
-  (if (##not (##fixnum? index))
-      (fail)
-      (let ((rdevice
-             (##os-device-event-queue-open index)))
-        (if (##fixnum? rdevice)
-            (if raise-os-exception?
-                (##raise-os-exception #f rdevice open-event-queue index)
-                (cont rdevice))
-            (cont (##make-event-queue-port rdevice index))))))
-
-(define-prim (open-event-queue index)
-  (macro-force-vars (index)
-    (##open-event-queue
-     #t
-     (lambda (port) port)
-     open-event-queue
-     index)))
+  (macro-force-vars (selector)
+    (if (##not (##fixnum? selector))
+        (fail)
+        (##open-event-queue
+         #t
+         (lambda (port) port)
+         open-event-queue
+         selector))))
 
 ;;;----------------------------------------------------------------------------
 

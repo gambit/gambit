@@ -4705,7 +4705,7 @@ For example:
 @deffnx procedure output-port-char-position @var{port}
 @end deffn
 
-@deffn procedure open-event-queue @var{n}
+@deffn procedure open-event-queue @var{selector}
 @end deffn
 
 @deffn procedure main @dots{}

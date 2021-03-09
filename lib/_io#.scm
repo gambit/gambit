@@ -2,7 +2,7 @@
 
 ;;; File: "_io#.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -717,7 +717,7 @@
   extender: define-type-of-event-queue-port
 
   rdevice-condvar
-  index
+  selector
 )
 
 (define-check-type event-queue-port 'event-queue-port
