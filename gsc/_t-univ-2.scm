@@ -257,6 +257,55 @@
              (^return-jump
               (^cast*-jumpable (^local-var (^ 'arg 1))))))))))
 
+  (define (continuation-restore ctx cont thread-restore?)
+    (^
+     (^assign
+      (^array-index
+       (gvm-state-stack-use ctx 'rd)
+       (^int 0))
+      (^member cont (^public 'frame)))
+
+     (if thread-restore?
+         (^assign ;; avoid space leak
+          (^member cont (^public 'frame))
+          (^null))
+         (let ((temp (^local-var 'temp))
+               (thread (^local-var 'thread)))
+           (^
+            ;; change the thread's denv
+            (^var-declaration
+             'scmobj
+             temp
+             (^member cont (^public 'denv)))
+            (^var-declaration
+             'scmobj
+             thread
+             (gvm-state-current-thread ctx))
+            (^structure-set! thread
+                             univ-thread-denv-slot
+                             temp)
+            ;; flush the denv cache
+            (^assign
+             temp
+             (^vector-ref
+              (^vector-ref temp (^int univ-denv-local))
+              (^int univ-env-name-val)))
+            (^structure-set! thread
+                             univ-thread-denv-cache1-slot
+                             temp)
+            (^structure-set! thread
+                             univ-thread-denv-cache2-slot
+                             temp)
+            (^structure-set! thread
+                             univ-thread-denv-cache3-slot
+                             temp))))
+
+     (^assign
+      (gvm-state-sp-use ctx 'wr)
+      0)
+
+     (^setreg 0 (^rts-jumpable-use 'underflow))))
+
   (define (continuation-graft-no-winding-procedure ctx nb-args thread-restore?)
     (univ-jumpable-declaration-defs
      ctx
@@ -280,8 +329,10 @@
                 (- nb-args 2))
                (new-nb-stacked
                 (max 0 (- new-nb-args (univ-nb-arg-regs ctx))))
-               (underflow
-                (^rts-jumpable-use 'underflow)))
+               (arg1
+                (^local-var (^ 'arg 1)))
+               (cont
+                (^cast* 'continuation arg1)))
           (^ (univ-foldr-range
               1
               (max 2 (- nb-args (univ-nb-arg-regs ctx)))
@@ -298,33 +349,12 @@
 
              (if thread-restore?
                  (^ (^assign (gvm-state-current-thread ctx)
-                             (^local-var (^ 'arg 1)))
-                    (^assign (^local-var (^ 'arg 1))
-                             (^structure-ref (^local-var (^ 'arg 1))
-                                             univ-thread-cont-slot)))
+                             arg1)
+                    (^assign arg1
+                             (^structure-ref arg1 univ-thread-cont-slot)))
                  (^))
 
-             (^assign
-              (^array-index
-               (gvm-state-stack-use ctx 'rd)
-               (^int 0))
-              (^member (^cast* 'continuation
-                               (^local-var (^ 'arg 1)))
-                       (^public 'frame)))
-
-             (if thread-restore?
-                 (^)
-                 (^structure-set! (gvm-state-current-thread ctx)
-                                  univ-thread-denv-slot
-                                  (^member (^cast* 'continuation
-                                                   (^local-var (^ 'arg 1)))
-                                           (^public 'denv))))
-
-             (^assign
-              (gvm-state-sp-use ctx 'wr)
-              0)
-
-             (^setreg 0 underflow)
+             (continuation-restore ctx cont thread-restore?)
 
              (univ-foldr-range
               1
@@ -369,32 +399,18 @@
                 (max 0 (- nb-args (univ-nb-arg-regs ctx))))
                (underflow
                 (^rts-jumpable-use 'underflow))
-               (arg1
-                (^local-var 'arg1)))
+               (cont
+                (^local-var 'cont)))
           (^ (^var-declaration
               'continuation
-              arg1
+              cont
               (^cast* 'continuation
                       (let ((x (- 1 nb-stacked)))
                         (if (>= x 1)
                             (^getreg x)
                             (^getstk x)))))
 
-             (^assign
-              (^array-index
-               (gvm-state-stack-use ctx 'rd)
-               (^int 0))
-              (^member arg1 (^public 'frame)))
-
-             (^structure-set! (gvm-state-current-thread ctx)
-                              univ-thread-denv-slot
-                              (^member arg1 (^public 'denv)))
-
-             (^assign
-              (gvm-state-sp-use ctx 'wr)
-              0)
-
-             (^setreg 0 underflow)
+             (continuation-restore ctx cont #f)
 
              (let ((x (- 2 nb-stacked)))
                (if (= x 1)
