@@ -894,8 +894,11 @@
         (##eq? parent ##nontail-call-for-leap)
         (##eq? parent ##nontail-call-for-step)
         (##eq? parent ##trace-generate)
+        (##eq? parent ##thread-check-interrupts!)
         (##eq? parent ##thread-interrupt!)
         (##eq? parent ##thread-execute-and-end!)
+        (##eq? parent ##thread-resume-execution!)
+        (##eq? parent ##thread-sleep!)
         (##eq? parent ##thread-call))))
 
 (define ##hidden-continuation-parent?
