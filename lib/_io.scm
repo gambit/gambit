@@ -13886,12 +13886,16 @@
   (define-six-token |token.}|    -11)
   (define-six-token |token.`|    -12)
   (define-six-token |token.#|    -13)
+  (define-six-token |token.;-auto| -14)
 
+  (define-six-op op.async  0  rl #f             six.asyncx       )
   (define-six-op op.!      2  rl six.x!y        six.!x           )
   (define-six-op op.**     2  rl six.x**y       six.**x          )
   (define-six-op op.++     2  rl #f             six.++x six.x++  )
   (define-six-op op.--     2  rl #f             six.--x six.x--  )
   (define-six-op op.~      2  rl #f             six.~x           )
+  (define-six-op op.await  2  rl #f             six.awaitx       )
+  (define-six-op op.typeof 2  rl #f             six.typeofx      )
   (define-six-op op.%      3  lr six.x%y                         )
   (define-six-op op.*      3  lr six.x*y        six.*x           )
   (define-six-op op.@      3  lr six.x@y                         )
@@ -13908,6 +13912,7 @@
   (define-six-op op.>=     6  lr six.x>=y                        )
   (define-six-op op.in     6  lr six.xiny                        )
   (define-six-op op.is     6  lr six.xisy                        )
+  (define-six-op op.instanceof 6 lr six.xinstanceofy             )
   (define-six-op op.!=     7  lr six.x!=y                        )
   (define-six-op op.==     7  lr six.x==y                        )
   (define-six-op op.!==    7  lr six.x!==y                       )
@@ -13938,10 +13943,31 @@
   (define-six-op op.^=     18 rl six.x^=y                        )
   (define-six-op |op.\|=|  18 rl |six.x\|=y|                     )
   (define-six-op op.:=     19 rl six.x:=y                        )
-  (define-six-op |op.,|    20 lr |six.x,y|  );;;;;;;;;;;;;;;;  |six.,x|         )
-  (define-six-op op.:-     21 rl six.x:-y                        )
+  (define-six-op op.yield  20 rl #f             six.yieldx       )
+  (define-six-op |op.,|    21 lr |six.x,y|  );;;;;;;;;;;;;;;;  |six.,x|         )
+  (define-six-op op.:-     22 rl six.x:-y                        )
 
-  (define max-precedence 21)
+  (define max-precedence 22)
+
+  (define (identifier-op? ident)
+    (or (identifier-unary-op? ident)
+        (identifier-binary-op? ident)))
+
+  (define (identifier-unary-op? ident)
+    (cond ((eq? ident 'not)    op.not)
+          ((eq? ident 'async)  op.async)
+          ((eq? ident 'await)  op.await)
+          ((eq? ident 'yield)  op.yield)
+          ((eq? ident 'typeof) op.typeof)
+          (else                #f)))
+
+  (define (identifier-binary-op? ident)
+    (cond ((eq? ident 'in)         op.in)
+          ((eq? ident 'is)         op.is)
+          ((eq? ident 'or)         op.or)
+          ((eq? ident 'and)        op.and)
+          ((eq? ident 'instanceof) op.instanceof)
+          (else                    #f)))
 
   (define (decimal-digit? c)
     (and (not (char<? c #\0)) (not (char<? #\9 c))))
@@ -14040,12 +14066,12 @@
   (define (parse-token-starting-with re autosemi? c)
     (cond ((not (char? c))
            (if autosemi?
-               |token.;|
+               |token.;-auto|
                (##none-marker)))
           ((eq? (##readtable-char-handler (macro-readenv-readtable re) c)
                 ##read-whitespace)
            (if autosemi?
-               |token.;|
+               |token.;-auto|
                (begin
                  (macro-read-next-char-or-eof re) ;; skip whitespace character
                  (parse-token re autosemi?))))
@@ -14053,7 +14079,7 @@
                 (or (char=? c #\})
                     (char=? c #\))
                     (char=? c #\])))
-           |token.;|)
+           |token.;-auto|)
           (else
            (let ((start-pos (##readenv-current-filepos re)))
 
@@ -14332,7 +14358,9 @@
 
   (define (expect re autosemi? maybe-tok expected)
     (let ((tok (get-token re autosemi? maybe-tok)))
-      (if (eq? tok expected)
+      (if (or (eq? tok expected)
+              (and (eq? tok |token.;-auto|)
+                   (eq? expected |token.;|)))
           #f
           (begin
             (invalid-infix-syntax re)
@@ -14453,7 +14481,7 @@
         (eq? tok |token.\\|)
         (eq? tok |token.`|)
         (eq? tok |token.#|)
-        (symbol? tok) ;; catches "function" token
+        (symbol? tok) ;; catches "not", "function", "await", etc tokens
         (string? tok)
         (char? tok)
         (complex? tok)
@@ -14466,28 +14494,29 @@
            (start-pos
             (macro-readenv-filepos re)))
 
-      (cond ((and (= level 2)
-                  (case tok
-                    ((not) (unary-prefix? op.not))
-                    (else  (and (op? tok) (unary-prefix? tok)))))
+      (cond ((let ((op (or (and (op? tok) tok)
+                           (identifier-unary-op? tok))))
+               (and op
+                    (= (precedence op) level)
+                    (unary-prefix? op)))
              =>
              (lambda (scheme-name)
                (let ((tok2 (get-token-no-autosemi re #f)))
-                 (if (and (or (eq? tok 'not)
-                              (eq? tok |op.!|))
+                 (if (and (or (eq? tok |op.!|)
+                              (identifier-unary-op? tok))
                           (not (expression-starter? re tok2)))
                      (cont re
                            tok2
-                           (if (eq? tok 'not)
-                               (wrap-identifier re start-pos tok)
+                           (if (eq? tok |op.!|)
                                (##wrap-op0 re
                                            start-pos
-                                           'six.!)))
+                                           'six.!)
+                               (wrap-identifier re start-pos tok)))
                      (read-expression
                       re
                       autosemi?
                       tok2
-                      2
+                      level
                       restriction
                       (lambda (re maybe-tok expr)
                         (cont re
@@ -14584,13 +14613,8 @@
                                      last-tok
                                      last-expr1))))
                       (let ((tok2
-                             (case tok
-                               ((in)  op.in)
-                               ((is)  op.is)
-                               ((not) op.not)
-                               ((and) op.and)
-                               ((or)  op.or)
-                               (else  tok))))
+                             (or (identifier-op? tok)
+                                 tok)))
                         (cond ((and (op? tok2)
                                     (= level (precedence tok2))
                                     (not
@@ -14971,6 +14995,7 @@
     ;; this function must be kept in sync with "read-statement"
     (or (eq? tok |token.{|)
         (eq? tok |token.;|)
+        (eq? tok |token.;-auto|)
         (six-type? re tok)
         (expression-starter? re tok)))
 
@@ -15280,7 +15305,7 @@
                                            'six.from-import
                                            expr1
                                            expr2)))))))))
-            ((eq? tok |token.;|)
+            ((or (eq? tok |token.;|) (eq? tok |token.;-auto|))
              (cont re
                    #f
                    (##wrap-op0 re
@@ -15431,14 +15456,6 @@
                              type
                              (##wrap re params-start-pos (reverse rev-params))
                              stat)))))
-
-      (define (err re tok rev-params)
-        (invalid-infix-syntax re)
-        (get-body re
-                  (if (eq? tok |token.)|)
-                      #f
-                      tok)
-                  rev-params))
 
       (define (end re tok rev-params)
         (get-body re

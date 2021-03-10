@@ -15774,19 +15774,26 @@ such as a closing parenthesis).  For example @code{(f \2*n (list)
 @item
 @meta{expr} @syntaxdef{}
 @item
-@syntaxspc{}@meta{expr21} @tab @var{$1}
+@syntaxspc{}@meta{expr22} @tab @var{$1}
+
+@item
+@meta{expr22} @syntaxdef{}
+@item
+@syntaxspc{}@meta{expr21} @code{:-} @meta{expr22} @tab @code{(six.x:-y @var{$1} @var{$3})}
+@item
+@syntaxbar{}@meta{expr21} @tab @var{$1}
 
 @item
 @meta{expr21} @syntaxdef{}
 @item
-@syntaxspc{}@meta{expr20} @code{:-} @meta{expr21} @tab @code{(six.x:-y @var{$1} @var{$3})}
+@syntaxspc{}@meta{expr21} @code{,} @meta{expr20} @tab @code{(|six.x,y| @var{$1} @var{$3})}
 @item
 @syntaxbar{}@meta{expr20} @tab @var{$1}
 
 @item
 @meta{expr20} @syntaxdef{}
 @item
-@syntaxspc{}@meta{expr20} @code{,} @meta{expr19} @tab @code{(|six.x,y| @var{$1} @var{$3})}
+@syntaxspc{}@code{yield} @meta{expr20} @tab @code{(six.yieldx @var{$2})}
 @item
 @syntaxbar{}@meta{expr19} @tab @var{$1}
 
@@ -15909,7 +15916,7 @@ such as a closing parenthesis).  For example @code{(f \2*n (list)
 @item
 @syntaxbar{}@meta{expr7} @code{==} @meta{expr6} @tab @code{(six.x==y @var{$1} @var{$3})}
 @item
-@syntaxspc{}@meta{expr7} @code{!==} @meta{expr6} @tab @code{(six.x!==y @var{$1} @var{$3})}
+@syntaxbar{}@meta{expr7} @code{!==} @meta{expr6} @tab @code{(six.x!==y @var{$1} @var{$3})}
 @item
 @syntaxbar{}@meta{expr7} @code{===} @meta{expr6} @tab @code{(six.x===y @var{$1} @var{$3})}
 @item
@@ -15929,6 +15936,8 @@ such as a closing parenthesis).  For example @code{(f \2*n (list)
 @syntaxbar{}@meta{expr6} @code{in} @meta{expr5} @tab @code{(six.xiny @var{$1} @var{$3})}
 @item
 @syntaxbar{}@meta{expr6} @code{is} @meta{expr5} @tab @code{(six.xisy @var{$1} @var{$3})}
+@item
+@syntaxbar{}@meta{expr6} @code{instanceof} @meta{expr5} @tab @code{(six.xinstanceofy @var{$1} @var{$3})}
 @item
 @syntaxbar{}@meta{expr5} @tab @var{$1}
 
@@ -15992,6 +16001,10 @@ such as a closing parenthesis).  For example @code{(f \2*n (list)
 @item
 @syntaxbar{}@meta{expr2} @code{**} @meta{expr1} @tab @code{(six.x**y @var{$1} @var{$3})}
 @item
+@syntaxbar{}@code{await} @meta{expr2} @tab @code{(six.awaitx @var{$2})}
+@item
+@syntaxbar{}@code{typeof} @meta{expr2} @tab @code{(six.typeofx @var{$2})}
+@item
 @syntaxbar{}@meta{expr1} @tab @var{$1}
 
 @item
@@ -16035,6 +16048,8 @@ such as a closing parenthesis).  For example @code{(f \2*n (list)
 @syntaxbar{}@code{function} @code{(} @meta{parameters} @code{)} @meta{body} @tab @code{(six.procedure #f @var{$3} @var{$5})}
 @item
 @syntaxbar{}@code{new} @meta{id-or-prefix} @code{(} @meta{arguments} @code{)} @tab @code{(six.new @var{$2} . @var{$4})}
+@item
+@syntaxbar{}@code{async} @meta{expr0} @tab @code{(six.asyncx @var{$2})}
 
 @item
 @meta{block stat} @syntaxdef{}
@@ -16112,7 +16127,7 @@ such as a closing parenthesis).  For example @code{(f \2*n (list)
 @item
 @meta{type} @syntaxdef{}
 @item
-@syntaxbar{}@code{scmobj} @tab @code{scmobj}
+@syntaxspc{}@code{scmobj} @tab @code{scmobj}
 
 @end multitable
 
@@ -16176,7 +16191,7 @@ semantics of SIX:
 65536
 16777216
 4294967296
-> @b{\scmobj \make-adder(scmobj x) @{ scmobj (scmobj y) @{ x+y; @}; @}}
+> @b{\function \make-adder(x) @{ return function (y) @{ x+y; @}; @}}
 > @b{\map(new adder(100), [1,2,3,4])}
 (101 102 103 104)
 > @b{(map (make-adder 100) (list 1 2 3 4))}

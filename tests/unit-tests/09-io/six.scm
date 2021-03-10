@@ -31,8 +31,6 @@
 (chk "\\+ a" (six.+x (six.identifier a)))
 (chk "\\- a" (six.-x (six.identifier a)))
 (chk "\\* a" (six.*x (six.identifier a)))
-(chk "\\! a" (six.!x (six.identifier a)))
-(chk "\\!;" (six.!))
 (chk "\\++ a" (six.++x (six.identifier a)))
 (chk "\\-- a" (six.--x (six.identifier a)))
 (chk "\\~ a" (six.~x (six.identifier a)))
@@ -72,10 +70,33 @@
 
 (chk "\\a|| b" (|six.x\|\|y| (six.identifier a) (six.identifier b)))
 
-(chk "\\( not a )" (six.notx (six.identifier a)))
+(chk "\\!;" (six.!))
+(chk "\\(!)" (six.!))
+(chk "\\! a==b" (six.x==y (six.!x (six.identifier a)) (six.identifier b)))
+(chk "\\( ! a == b )"  (six.x==y (six.!x (six.identifier a)) (six.identifier b)))
 
+(chk "\\async" (six.identifier async))
+(chk "\\( async a == b )" (six.x==y (six.asyncx (six.identifier a)) (six.identifier b)))
+
+(chk "\\await" (six.identifier await))
+(chk "\\( await a == b )" (six.x==y (six.awaitx (six.identifier a)) (six.identifier b)))
+
+(chk "\\typeof" (six.identifier typeof))
+(chk "\\( typeof a == b )" (six.x==y (six.typeofx (six.identifier a)) (six.identifier b)))
+
+(chk "\\not" (six.identifier not))
+(chk "\\( not a == b )" (six.notx (six.x==y (six.identifier a) (six.identifier b))))
+
+(chk "\\yield" (six.identifier yield))
+(chk "\\( yield a == b )" (six.yieldx (six.x==y (six.identifier a) (six.identifier b))))
+
+(chk "\\instanceof" (six.identifier instanceof))
+(chk "\\( a instanceof b )" (six.xinstanceofy (six.identifier a) (six.identifier b)))
+
+(chk "\\and" (six.identifier and))
 (chk "\\( a and b )" (six.xandy (six.identifier a) (six.identifier b)))
 
+(chk "\\or" (six.identifier or))
 (chk "\\( a or b )" (six.xory (six.identifier a) (six.identifier b)))
 
 (chk "\\( a : b )" (six.x:y (six.identifier a) (six.identifier b)))
