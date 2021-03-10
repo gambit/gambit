@@ -1,10 +1,10 @@
 # makefile for Gambit library.
 
-# Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 herefromroot = lib
 rootfromhere = ..
-SUBDIRS = @RTLIBSUBSYS@ _define-library _digest _geiser _git _hamt _http _match _pkg _tar _test _uri _zlib gambit scheme termite srfi
+SUBDIRS = @RTLIBSUBSYS@ _define-library _digest _geiser _git _hamt _http _match _pkg _six _tar _test _uri _zlib gambit scheme termite srfi
 
 PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
 PACKAGE_NAME = @PACKAGE_NAME@
