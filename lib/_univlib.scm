@@ -1908,6 +1908,10 @@ if (g_os_nodejs) {
 
 if (g_os_web) {
 
+  g_os_trust_all = false;
+
+  g_os_confirm_if_not_in_whitelist = true;
+
   g_os_whitelist = [];
 
   g_os_whitelist_add = function (url) {
@@ -1917,13 +1921,14 @@ if (g_os_web) {
     }
   };
 
-  g_os_confirm_if_not_in_whitelist = false;
-
   g_os_remove_after_last_slash = function (string) {
     return string.slice(0, 1+string.lastIndexOf('/'));
   };
 
   g_os_trusted_url = function (url, reason) {
+    if (g_os_trust_all) {
+      return true;
+    }
     for (var i=0; i<g_os_whitelist.length; i++) {
       var w = g_os_whitelist[i];
       if (w.slice(-1) === '/' // if ends with slash
@@ -2188,33 +2193,40 @@ g_os_load_object_file = function (path, linker_name) {
 
     return [[g_module_latest_registered], null, false];
 
-  } else if (g_os_web &&
-             g_os_trusted_url(path, 'to execute that code')) { // accessing an untrusted URL?
+  } else if (g_os_web) {
 
-    var ra = g_r0;
-    g_r0 = null; // exit trampoline
+    path += '.js'; // add a .js extension to force application/javascript
+                   // MIME type (this requires the .o1 file to be copied to
+                   // a .o1.js file)
 
-    function onload() {
-      g_r1 = [[g_module_latest_registered], null, false];
-      g_r0 = ra;
-      g_trampoline(g_r0);
+    if (!g_os_trusted_url(path, 'to execute that code')) { // accessing an untrusted URL?
+      return g_host2scm(-1); // EPERM (operation not permitted)
+    } else {
+
+      var ra = g_r0;
+      g_r0 = null; // exit trampoline
+
+      function onload() {
+        g_r1 = [[g_module_latest_registered], null, false];
+        g_r0 = ra;
+        g_trampoline(g_r0);
+      }
+
+      function onerror() {
+        g_r1 = g_host2scm(-2); // ENOENT (file does not exist)
+        g_r0 = ra;
+        g_trampoline(g_r0);
+      }
+
+      var script = document.createElement('script');
+      script.type = 'text/javascript';
+      script.src = path;
+      script.onload = onload;
+      script.onerror = onerror;
+      document.head.append(script);
+
+      return 0; // ignored
     }
-
-    function onerror() {
-      g_r1 = g_host2scm(-2); // ENOENT (file does not exist)
-      g_r0 = ra;
-      g_trampoline(g_r0);
-    }
-
-    var script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.src = path;
-    script.onload = onload;
-    script.onerror = onerror;
-    document.head.append(script);
-
-    return 0; // ignored
-
   } else {
     return g_host2scm(-1); // EPERM (operation not permitted)
   }
