@@ -95,29 +95,45 @@ runtime == 1 && /ERROR/ && $0 !~ /^FATAL-ERROR$/ && $0 !~ /^SCHEME-ERROR$/ && $0
 }
 
 runtime == 1 && /^[ ]*[0-9.]+ secs cpu time \([0-9.]+ user, [0-9.]+ system\)$/ {
-  cpu = $1;
+  if (cpu == "#f") {
+    cpu = $1;
+  }
 }
 
 runtime == 1 && /^[ ]*[0-9]+ ms cpu time \([0-9]+ user, [0-9]+ system\)$/ {
-  cpu = $1/1000;
+  if (cpu == "#f") {
+    cpu = $1/1000;
+  }
 }
 
 runtime == 1 && /^[ ]*[0-9.]+ secs real time$/ {
-  real = $1;
-}
-
-runtime == 1 && /^[ ]*[0-9]+ ms real time$/ {
-  real = $1/1000;
-}
-
-runtime == 1 && /^cpu time: ([0-9]+) real time: ([0-9]+)/ {
-  cpu = $3;
-  real = $6;
+  if (real == "#f") {
+    real = $1;
+  }
 }
 
 runtime == 1 && /^[ ]*([0-9.]+) real [ ]*([0-9.]+) user [ ]*([0-9.]+) sys$/ {
-  cpu = ($3 + $5) * 1000;
-  real = $1 * 1000;
+  if (cpu == "#f") {
+    cpu = ($3 + $5);
+  }
+  if (real == "#f") {
+    real = $1;
+  }
+}
+
+runtime == 1 && /^[ ]*[0-9]+ ms real time$/ {
+  if (real == "#f") {
+    real = $1/1000;
+  }
+}
+
+runtime == 1 && /^cpu time: ([0-9]+) real time: ([0-9]+)/ {
+  if (cpu == "#f") {
+    cpu = $3;
+  }
+  if (real == "#f") {
+    real = $6;
+  }
 }
 
 runtime == 1 && /^code size = [0-9]+$/ {
