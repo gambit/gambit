@@ -1,3 +1,6 @@
 This directory contains the following contributed softwares:
 
   GambitREPL    Gambit REPL app for iOS
+  try           Online Gambit REPL
+  xactlog       An activity log viewer for X11 (useful for debugging
+                timing sensitive and parallel programs)

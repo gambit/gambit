@@ -1,6 +1,6 @@
 # Configure template for Gambit system.
 
-# Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 # Process this file with autoconf to produce a configure script.
 
@@ -3374,6 +3374,7 @@ examples/misc/makefile \
 bench/makefile \
 contrib/makefile \
 contrib/GambitREPL/makefile \
+contrib/try/makefile \
 contrib/xactlog/makefile \
 prebuilt/makefile \
 prebuilt/macosx/makefile \

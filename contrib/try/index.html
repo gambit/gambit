@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link rel="stylesheet" href="codemirror/lib/codemirror.css">
+    <script src="browserfs.min.js"></script>
+    <script src="codemirror/lib/codemirror.js"></script>
+    <script src="codemirror/mode/scheme/scheme.js"></script>
+    <script src="codemirror/addon/edit/matchbrackets.js"></script>
+    <link rel="stylesheet" href="UI.css">
+    <script src="UI.js"></script>
+    <script src="VM.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  </head>
+
+  <body onload="g_vm.init('#ui');">
+
+    <div id="ui"></div>
+
+    <pre>
+    Keybindings:
+      Enter  send the current line to the interpreter
+      ^D     end-of-file when line is empty
+      ^C     interrupt execution
+      ^L     clear transcript
+      ^P/^N  move back/forward in history
+    </pre>
+
+  </body>
+</html>

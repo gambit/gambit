@@ -1,10 +1,45 @@
-# makefile for Gambit contributed softwares.
+# makefile for online Gambit Scheme REPL.
 
-# Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 2020-2021 by Marc Feeley, All Rights Reserved.
 
-herefromroot = contrib
-rootfromhere = ..
-SUBDIRS = GambitREPL try xactlog
+herefromroot = contrib/try
+rootfromhere = ../..
+SUBDIRS =
+
+CODEMIRROR=codemirror-5.59.1
+BROWSERFS=2.0.0
+
+GSC=@SETDLPATH@ $(rootfromhere)/gsc/gsc@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include
+
+#GSC=gsc
+
+# The online Gambit Scheme REPL is composed of the following files:
+#
+# - VM.scm      the Gambit VM including the interpreter and REPL
+# - VM.js       this file is generated from VM.scm by gsc
+# - UI.js       a simple UI with tabbed consoles built on top of CodeMirror
+# - UI.css      style sheet of UI
+# - index.html  the main HTML file
+#
+# To build VM.js from VM.scm you need a recent Gambit with the JavaScript
+# backend.  It can be compiled like this (from an existing bootstrapped
+# recent installation):
+#
+#   cd gambit
+#   git pull
+#   make clean
+#   ./configure --enable-single-host --enable-targets=js --prefix=/usr/local/Gambit
+#   make
+#   make modules
+#   sudo make install
+#
+# After that, in this directory create the "try" subdirectory using:
+#
+#   make try
+#
+# and then to view the online Gambit Scheme REPL locally:
+#
+#   make serve
 
 PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -68,24 +103,93 @@ psdir = @psdir@
 localedir = @localedir@
 mandir = @mandir@
 
-.SUFFIXES:
+.SUFFIXES: .scm .js
 
-RCFILES = makefile.in README
+MODULES_JS = VM.js extra.js
+
+RCFILES = makefile.in README UI.css UI.js VM.scm extra.scm index.html \
+https-server.py https-server-certificate.pem
 
 GENDISTFILES =
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
-
-MDEFINES = prefix=$(prefix) exec_prefix=$(exec_prefix) \
-includedir=$(includedir) libdir=$(libdir) \
-bindir=$(bindir) docdir=$(docdir) \
-infodir=$(infodir) emacsdir=$(emacsdir)
 
 all:
 
 all-pre:
 
 all-post:
+
+try: browserfs.min.js codemirror UI.css UI.js index.html VM.min.js
+	@echo "===== Copying library files"; \
+	INSTALL="`pwd`/$(INSTALL_DATA)"; \
+	DESTDIR="`pwd`/try"; \
+	LIBDIR="`$(GSC) -e '(display (path-expand "~~lib"))'`"; \
+	(cd "$$LIBDIR/.." && find lib \( -path "*js/*" -or -path "*.sld" -or -path "*.scm" \) -exec echo "{}" ";" -exec $$INSTALL "{}" "$$DESTDIR/{}" ";"); \
+	(cd "$$DESTDIR" && find lib -path "*@js/*.o1" -exec echo "{}.js" ";" -exec mv "{}" "$$DESTDIR/{}.js" ";" -exec touch "$$DESTDIR/{}" ";" -exec gzip -k9 "$$DESTDIR/{}.js" ";")
+	mkdir try/doc
+	cp `$(GSC) -e '(display (path-expand "~~doc"))'`/gambit.html try/doc/.
+	cp -r browserfs.min.js try/.
+	cp -r codemirror try/.
+	cp UI.css try/.
+	cp UI.js try/.
+	cp index.html try/.
+	cp VM.min.js try/.
+	cp VM.min.js.gz try/.
+
+try.tgz: try
+	rm -f try.tar try.tar.gz
+	tar cf try.tar try
+	gzip -9 try.tar
+	mv try.tar.gz try.tgz
+
+VM.js: extra.scm VM.scm
+	cp `$(GSC) -e '(display (path-expand "~~lib/_six/js.scm"))'` .
+	cp `$(GSC) -e '(display (path-expand "~~lib/_six/js#.scm"))'` .
+	cp `$(GSC) -e '(display (path-expand "~~lib/_six/six-expand.scm"))'` .
+	cp `$(GSC) -e '(display (path-expand "~~lib/_six/six-expand#.scm"))'` .
+	$(GSC) -target js -exe -o VM.js js.scm six-expand.scm extra.scm VM.scm
+
+VM.min.js: VM.js
+	npx google-closure-compiler --js VM.js --js_output_file VM.min.js
+	gzip -k -9 VM.min.js
+
+browserfs.min.js:
+	wget https://cdnjs.cloudflare.com/ajax/libs/BrowserFS/$(BROWSERFS)/browserfs.min.js
+
+$(CODEMIRROR).zip:
+	wget https://codemirror.net/$(CODEMIRROR).zip
+
+codemirror: $(CODEMIRROR).zip
+	rm -rf -- $(CODEMIRROR)
+	unzip -q $(CODEMIRROR).zip
+	mv $(CODEMIRROR) codemirror
+
+serve: try
+	@echo "===== A local https server with a self signed certificate is"
+	@echo "===== being started on port 4443 and https://localhost:4443/try/"
+	@echo "===== will be opened in the web browser"
+	(sleep 2; $(MAKE) view) &
+	./https-server.py
+
+view: try
+	@URL=https://localhost:4443/try/; \
+	for browser in /Applications/Firefox.app/Contents/MacOS/firefox firefox mozilla netscape chrome chromium chromium-browser osascript; do \
+	  if which $$browser > /dev/null; then \
+	    if [ "$$browser" = "osascript" ]; then \
+	      echo "===== Viewing $$URL with Safari"; \
+	      $(MAKE) view-safari; \
+	    else \
+	      echo "===== Viewing $$URL with $$browser"; \
+	      $$browser $$URL; \
+	    fi; \
+	    break; \
+	  fi; \
+	done
+
+view-safari: all
+	@URL=https://localhost:4443/try/; \
+	osascript -e "tell application \"Safari\"" -e "open location \"$$URL\"" -e "end tell"
 
 bootstrap-pre:
 
@@ -110,10 +214,12 @@ deselect-gen-for-commit-post deselect-gen-for-commit-post-nonrec:
 mostlyclean-pre:
 
 mostlyclean-post mostlyclean-post-nonrec:
+	rm -f $(MODULES_JS)
 
 clean-pre: mostlyclean-pre
 
 clean-post clean-post-nonrec: mostlyclean-post-nonrec
+	rm -rf js.scm js\#.scm six.js six-expand.scm six-expand\#.scm six-expand.js VM.min.js* try try.tgz codemirror $(CODEMIRROR)
 
 distclean-pre: clean-pre
 
@@ -126,7 +232,7 @@ bootclean-post bootclean-post-nonrec: distclean-post-nonrec
 realclean-pre: bootclean-pre
 
 realclean-post realclean-post-nonrec: bootclean-post-nonrec
-	rm -f makefile
+	rm -rf makefile $(CODEMIRROR).zip browserfs.min.js
 
 rc-setup-pre:
 	$(RC) add $(RCFILES)
