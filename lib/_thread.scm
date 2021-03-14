@@ -5936,8 +5936,9 @@
 ;;;----------------------------------------------------------------------------
 
 ;;;for debugging
-(define ##thread-trace 0)
+;;(define ##thread-trace 0)
 (define-macro (thread-trace n expr)
+  expr #;
   `(begin (set! ##thread-trace (##fx+ ,n (##fx* (##fxmodulo ##thread-trace 10000000) 10))) ,expr))
 
 (define-prim (##btq-abandon! btq)
