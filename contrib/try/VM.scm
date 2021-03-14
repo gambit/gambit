@@ -17,7 +17,7 @@ function G_VM() {
   var vm = this;
 
   vm.ui = null;
-  vm.heartbeat_interval = 10000;
+  vm.heartbeat_interval = 5000;
   vm.heartbeat_count = vm.heartbeat_interval;
 
   // Redefine ##check-heap-limit so that it checks interrupts (to allow
