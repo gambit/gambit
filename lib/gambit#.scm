@@ -928,6 +928,7 @@ terminated-thread-exception-procedure
 terminated-thread-exception?
 test-bit-field?
 textual-port?
+thread
 thread-base-priority
 thread-base-priority-set!
 thread-group->thread-group-list

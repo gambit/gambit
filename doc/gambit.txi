@@ -7958,6 +7958,23 @@ For example:
 
 @end deffn
 
+@deffn procedure thread @var{thunk}
+
+The @code{thread} procedure creates, starts and returns a new thread.
+The call @code{(thread @var{thunk})} is equivalent to
+@code{(thread-start! (make-thread @var{thunk}))}.
+
+For example:
+
+@smallexample
+> @b{(define a (thread (lambda () (expt 2 1005))))}
+> @b{(define b (thread (lambda () (expt 2 1000))))}
+> @b{(/ (thread-join! a) (thread-join! b))}
+32
+@end smallexample
+
+@end deffn
+
 @deffn procedure thread-name @var{thread}
 
 This procedure returns the name of the @var{thread}.  For example:

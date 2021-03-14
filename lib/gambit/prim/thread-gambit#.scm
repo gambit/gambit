@@ -2,7 +2,7 @@
 
 ;;; File: "thread-gambit#.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -52,6 +52,7 @@ started-thread-exception?
 terminated-thread-exception-arguments
 terminated-thread-exception-procedure
 terminated-thread-exception?
+thread
 thread-base-priority
 thread-base-priority-set!
 thread-group->thread-group-list
