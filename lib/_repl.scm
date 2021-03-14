@@ -4682,8 +4682,8 @@
                        #!optional
                        (port (macro-absent-obj)))
   (if (eq? port (macro-absent-obj))
-      `(##time (lambda () ,expr) ',expr)
-      `(##time (lambda () ,expr) ',expr ,port)))
+      `(##time-thunk (lambda () ,expr) ',expr)
+      `(##time-thunk (lambda () ,expr) ',expr ,port)))
 
 (define-prim (##exec-stats thunk)
   (let* ((at-start (##process-statistics))
@@ -4740,7 +4740,7 @@
             (##cons 'majflt          majflt)
             (##cons 'bytes-allocated bytes-allocated))))
 
-(define-prim (##time
+(define-prim (##time-thunk
               thunk
               expr
               #!optional (port (macro-absent-obj)))
@@ -4749,7 +4749,7 @@
            (if (##eq? port (macro-absent-obj))
                (##repl-output-port)
                port)))
-      (macro-check-output-port p 3 (##time thunk expr p)
+      (macro-check-output-port p 3 (##time-thunk thunk expr p)
         (let* ((stats (##exec-stats thunk))
                (result (##cdar stats))
                (stats (##cdr stats))
