@@ -1685,9 +1685,11 @@
   (define interval 1.0)
 
   (define (up n)
-    (##write-string "\033[" port)
-    (##write n port)
-    (##write-string "A\033[J" port))
+    (if (##tty? port)
+        (begin
+          (##write-string "\033[" port)
+          (##write n port)
+          (##write-string "A\033[J" port))))
 
   (let* ((start-time-point (##current-time-point))
          (end-time-point (macro-time-point (##timeout->time timeout))))
