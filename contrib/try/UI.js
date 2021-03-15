@@ -1140,6 +1140,7 @@ function Console(elem) {
     value: '',
     matchBrackets: true,
     mode: 'scheme',
+    keyMap: 'emacs',
     autofocus: true,
     lineWrapping: true,
     extraKeys: {
@@ -1150,7 +1151,8 @@ function Console(elem) {
       'Ctrl-P': function (cm) { cons.move_history(true); },
       'Down':   function (cm) { cons.move_history(false); },
       'Ctrl-N': function (cm) { cons.move_history(false); },
-      'Enter':  function (cm) { cons.enter(); }
+      'Enter':  function (cm) { cons.enter(); },
+      'Tab':    function (cm) { cons.tab(); }
     }
   };
 
@@ -1308,6 +1310,11 @@ Console.prototype.enter = function () {
   }
   cons.restore_history();
   cons.add_input(input + '\n');
+};
+
+Console.prototype.tab = function () {
+  var cons = this;
+  cons.cm.execCommand('indentAuto');
 };
 
 Console.prototype.add_input = function (text) {
