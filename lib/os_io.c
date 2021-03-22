@@ -5603,7 +5603,11 @@ ___BOOL blocking;)
 
 #ifdef FIONBIO
 
+#ifdef USE_WIN32
   unsigned long param = !blocking;
+#else
+  int param = !blocking;
+#endif
 
   return SOCKET_CALL_ERROR(IOCTL_SOCKET(s, FIONBIO, &param));
 
