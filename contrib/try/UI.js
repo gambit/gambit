@@ -6,7 +6,7 @@
 
 //=============================================================================
 
-function G_UI(vm, elem) {
+function UI(vm, elem) {
 
   var ui = this;
 
@@ -19,13 +19,13 @@ function G_UI(vm, elem) {
 
   // Create console multiplexer
 
-  var cons_mux = new G_Multiplexer(elem);
+  var cons_mux = new Multiplexer(elem);
 
   cons_mux.get_more_menu_items = function () {
 
     var items = [];
 
-    items.push(g_menu_item('New REPL', ['data-g-bold'], function (event) {
+    items.push(menu_item('New REPL', ['data-g-bold'], function (event) {
       cons_mux.focus();
       ui.new_repl();
     }));
@@ -35,7 +35,7 @@ function G_UI(vm, elem) {
     cons_mux.channels.forEach(function (channel) {
       var attrs = [];
       if (channel.needs_attention()) attrs.push('data-g-attention');
-      items.push(g_menu_item(channel.get_title(), attrs, function (event) {
+      items.push(menu_item(channel.get_title(), attrs, function (event) {
         ui.activate_console(channel);
       }));
     });
@@ -48,100 +48,25 @@ function G_UI(vm, elem) {
   ui.demo_commands = [];
   ui.demo_index = 0;
   ui.demo_timeoutId = null;
-
-  // Redefine g_procedure2host to implement a bridge for JavaScript to
-  // Scheme calls.  When a Scheme procedure is converted to a
-  // JavaScript function using g_procedure2host, the JavaScript
-  // function will return a promise which eventually resolves to the
-  // result of the Scheme procedure (converted to JavaScript) or is
-  // rejected with an Error when the Scheme procedure raises an
-  // exception.
-
-  g_procedure2host = function (proc_scm) {
-
-    function fn() {
-      var args = Array.prototype.slice.call(arguments);
-      args.forEach(function (arg, i) { args[i] = g_host2scm(arg); });
-      return g_async_call(true, // need result back
-                          g_current_processor.slots[14], // in current thread
-                          proc_scm,
-                          args);
-    }
-
-    return fn;
-  };
-
-  g_async_call = function (need_result, thread_scm, proc_scm, args) {
-
-    var promise = new Promise(function (resolve, reject) {
-
-      function done(err, result) {
-        if (err !== null) {
-          //console.log('===== rejecting with');
-          //console.log(err);
-          reject(new Error(err));
-        } else {
-          //console.log('===== resolving with');
-          //console.log(result);
-          resolve(g_scm2host(result));
-        }
-      };
-
-      args.unshift(proc_scm);               // procedure to call
-
-      if (need_result) {
-        args.unshift(g_function2scm(done)); // Scheme callback for result
-      } else {
-        args.unshift(g_host2scm(false));    // no result needed
-        done(null, g_host2scm(void 0));     // pretend #!void returned
-      }
-
-      args.unshift(thread_scm);             // run in specific thread
-
-      g_main_event_queue.write(args);
-    });
-
-    return promise;
-  };
-
-  // Patch continuation-next to properly undo dynamic binding environment.
-
-  g_continuation_next = function (cont) {
-    var frame = cont.frame;
-    var denv = cont.denv;
-    var ra = frame[0];
-    var link = ra.link;
-    var next_frame = frame[link];
-    if (next_frame === void 0) {
-      return false;
-    } else {
-      if (ra === g_bb2__23__23_dynamic_2d_env_2d_bind) {
-        denv = frame[2];
-      }
-      return new G_Continuation(next_frame,denv);
-    }
-  };
+  ui.debug = false;
 }
 
-G_UI.prototype.new_repl = function () {
+UI.prototype.new_repl = function () {
 
   var ui = this;
 
-  if (g_os_debug)
-    console.log('G_UI().new_repl()');
+  if (ui.debug)
+    console.log('UI().new_repl()');
 
-  g_async_call(false,
-               g_host2scm(false),
-               g_glo['##new-repl'],
-               []);
+  ui.vm.new_repl();
 };
 
-G_UI.prototype.add_console = function (dev) {
+UI.prototype.add_console = function (dev) {
 
   var ui = this;
 
-  if (g_os_debug)
-    console.log('G_UI().add_console(...)');
+  if (ui.debug)
+    console.log('UI().add_console(...)');
 
   ui.cons_mux.add_channel(dev);
 
@@ -152,14 +77,14 @@ G_UI.prototype.add_console = function (dev) {
       2, '(display "hello world!\\n")   ;; automatic demo... click console to cancel\n',
       5, null,
       0, '(import (srfi 28))   ;; use your favourite libraries and SRFIs\n',
-      5, '(format "sqrt(2)=~a" (sqrt 2))\n',
+      8, '(format "sqrt(2)=~a" (sqrt 2))\n',
       5, '(integer-sqrt (* 2 (expt 100 100)))   ;; fast bignum support\n',
       5, '(define (fact n) (if (= n 0) 1 (* n (fact (- n 1)))))\n',
       5, '(time (fact 500))\n',
       8, null,
       0, '(define (tail n) (if (> n 0) (tail (- n 1)) \'done))   ;; proper tail calls\n',
-      2, '(tail 1000000)   ;; no stack overflows when tail calling!\n',
-      9, '(define k #f)\n',
+      2, '(tail 100000)   ;; no stack overflows when tail calling!\n',
+      5, '(define k #f)\n',
       2, '(* 1000 (call/cc (lambda (c) (set! k c) 42)))   ;; first class continuations',
       5, '(* 1000 (call/cc (lambda (c) (set! k c) 42)))   ;; first class continuations\n',
       2, '(k 123)   ;; multiple returns to continuations are possible',
@@ -180,11 +105,11 @@ G_UI.prototype.add_console = function (dev) {
       2, '(display (format "hello ~a!\\n" (prompt "your name please?")))\n',
       2, '(define (insert elem pos html) \\(`elem).insertAdjacentHTML(`pos, `html))\n',
       2, '(define (get id) \\document.getElementById(`id))\n',
-      2, '(define (before id html) (insert (get id) "beforebegin" html))\n',
-      2, '(before "ui" "<h1 id=\\"msg\\">Hello</h1>")\n',
+      2, '(define (after id html) (insert (get id) "afterend" html))\n',
       2, '(define (end id html) (insert (get id) "beforeend" html))\n',
-      1,
-      (g_os_web_origin.indexOf('://gambitscheme.org/') > 0
+      2, '(after "ui" "<h1 id=\\"msg\\">Hello</h1>")\n',
+      2,
+      (ui.vm.os_web_origin.indexOf('://gambitscheme.org/') > 0
        ? '(end "msg" " Gambit Schemers!")\n'
        : '(end "msg" " Schemers!")\n'),
       8, '\\document.getElementById("msg").innerHTML=""\n',
@@ -193,7 +118,7 @@ G_UI.prototype.add_console = function (dev) {
       '    (thread-start!\n',
       '     (make-thread\n',
       '      (lambda ()\n',
-      '        (before "ui" (string-append "<h3 id=\\"" id "\\">" id ":</h3>"))\n',
+      '        (after "ui" (string-append "<h3 id=\\"" id "\\">" id ":</h3>"))\n',
       '        (let loop ((i 1))\n',
       '          (end id (string-append " " (number->string i)))\n',
       '          (thread-sleep! (* 2 (square (random-real))))\n',
@@ -210,32 +135,32 @@ G_UI.prototype.add_console = function (dev) {
   }
 };
 
-G_UI.prototype.remove_console = function (dev, tab_only) {
+UI.prototype.remove_console = function (dev, tab_only) {
 
   var ui = this;
 
-  if (g_os_debug)
-    console.log('G_UI().remove_console(..., '+tab_only+')');
+  if (ui.debug)
+    console.log('UI().remove_console(..., '+tab_only+')');
 
   ui.cons_mux.remove_channel(dev, tab_only);
 };
 
-G_UI.prototype.activate_console = function (dev) {
+UI.prototype.activate_console = function (dev) {
 
   var ui = this;
 
-  if (g_os_debug)
-    console.log('G_UI().activate_console(...)');
+  if (ui.debug)
+    console.log('UI().activate_console(...)');
 
   ui.cons_mux.activate_channel(dev);
 };
 
-G_UI.prototype.send_to_active_console = function (text) {
+UI.prototype.send_to_active_console = function (text) {
 
   var ui = this;
 
-  if (g_os_debug)
-    console.log('G_UI().send_to_active_console(\''+text+'\')');
+  if (ui.debug)
+    console.log('UI().send_to_active_console(\''+text+'\')');
 
   var cons_mux = ui.cons_mux;
   var tab_index = cons_mux.tg.active_tab_index();
@@ -247,7 +172,7 @@ G_UI.prototype.send_to_active_console = function (text) {
   }
 };
 
-G_UI.prototype.demo = function (commands) {
+UI.prototype.demo = function (commands) {
 
   var ui = this;
 
@@ -283,7 +208,7 @@ G_UI.prototype.demo = function (commands) {
   next();
 };
 
-G_UI.prototype.demo_cancel = function () {
+UI.prototype.demo_cancel = function () {
 
   var ui = this;
 
@@ -296,7 +221,7 @@ G_UI.prototype.demo_cancel = function () {
 
 //-----------------------------------------------------------------------------
 
-function G_Multiplexer(elem) {
+function Multiplexer(elem) {
 
   var mux = this;
 
@@ -305,7 +230,7 @@ function G_Multiplexer(elem) {
   mux.init();
 }
 
-G_Multiplexer.prototype.init = function () {
+Multiplexer.prototype.init = function () {
 
   var mux = this;
 
@@ -313,10 +238,11 @@ G_Multiplexer.prototype.init = function () {
   mux.tabs = [];
   mux.mra = []; // most recently active tabs
   mux.max_nb_tabs = 999999;
+  mux.debug = false;
 
   mux.get_more_menu_items = function () { return []; };
 
-  var tg = new G_Tab_group(mux.elem);
+  var tg = new Tab_group(mux.elem);
 
   mux.tg = tg;
 
@@ -325,19 +251,19 @@ G_Multiplexer.prototype.init = function () {
   tg.add_pane('+');
 };
 
-G_Multiplexer.prototype.max_nb_tabs_set = function (max_nb_tabs) {
+Multiplexer.prototype.max_nb_tabs_set = function (max_nb_tabs) {
 
   var mux = this;
 
   mux.max_nb_tabs = max_nb_tabs;
 };
 
-G_Multiplexer.prototype.focus = function () {
+Multiplexer.prototype.focus = function () {
 
   var mux = this;
 
-  if (g_os_debug)
-    console.log('G_Multiplexer().focus()');
+  if (mux.debug)
+    console.log('Multiplexer().focus()');
 
   var tab_index = mux.tg.active_tab_index();
 
@@ -346,7 +272,7 @@ G_Multiplexer.prototype.focus = function () {
   }
 };
 
-G_Multiplexer.prototype.clicked_tab = function (tab_index, event) {
+Multiplexer.prototype.clicked_tab = function (tab_index, event) {
 
   var mux = this;
 
@@ -430,7 +356,7 @@ G_Multiplexer.prototype.clicked_tab = function (tab_index, event) {
   }
 };
 
-G_Multiplexer.prototype.shrink_nb_tabs = function (n) {
+Multiplexer.prototype.shrink_nb_tabs = function (n) {
 
   var mux = this;
 
@@ -439,12 +365,12 @@ G_Multiplexer.prototype.shrink_nb_tabs = function (n) {
   }
 };
 
-G_Multiplexer.prototype.add_channel = function (channel, become_active) {
+Multiplexer.prototype.add_channel = function (channel, become_active) {
 
   var mux = this;
 
-  if (g_os_debug)
-    console.log('G_Multiplexer().add_channel('+channel.get_title()+', '+become_active+')');
+  if (mux.debug)
+    console.log('Multiplexer().add_channel('+channel.get_title()+', '+become_active+')');
 
   var title = channel.get_title();
   var i = mux.index_of_channel_by_title(title);
@@ -476,7 +402,7 @@ G_Multiplexer.prototype.add_channel = function (channel, become_active) {
     channel.focus();
   }
 
-  if (g_os_debug) {
+  if (mux.debug) {
     console.log('mux.mra and mux.tabs:');
     console.log(mux.mra);
     console.log(mux.tabs);
@@ -484,12 +410,12 @@ G_Multiplexer.prototype.add_channel = function (channel, become_active) {
   }
 };
 
-G_Multiplexer.prototype.remove_channel = function (channel, tab_only) {
+Multiplexer.prototype.remove_channel = function (channel, tab_only) {
 
   var mux = this;
 
-  if (g_os_debug)
-    console.log('G_Multiplexer().remove_channel('+channel.get_title()+', '+tab_only+')');
+  if (mux.debug)
+    console.log('Multiplexer().remove_channel('+channel.get_title()+', '+tab_only+')');
 
   if (!tab_only) {
     var i = mux.index_of_channel(channel);
@@ -514,7 +440,7 @@ G_Multiplexer.prototype.remove_channel = function (channel, tab_only) {
     }
   }
 
-  if (g_os_debug) {
+  if (mux.debug) {
     console.log('mux.mra and mux.tabs:');
     console.log(mux.mra);
     console.log(mux.tabs);
@@ -522,14 +448,14 @@ G_Multiplexer.prototype.remove_channel = function (channel, tab_only) {
   }
 };
 
-G_Multiplexer.prototype.activate_channel = function (channel) {
+Multiplexer.prototype.activate_channel = function (channel) {
 
   var mux = this;
   var tab_index = mux.index_of_channel_tab(channel);
   var tg = mux.tg;
 
-  if (g_os_debug)
-    console.log('G_Multiplexer().activate_channel('+channel.get_title()+')');
+  if (mux.debug)
+    console.log('Multiplexer().activate_channel('+channel.get_title()+')');
 
   if (tab_index !== tg.active_tab_index()) {
 
@@ -547,7 +473,7 @@ G_Multiplexer.prototype.activate_channel = function (channel) {
     channel.focus();
   }
 
-  if (g_os_debug) {
+  if (mux.debug) {
     console.log('mux.mra and mux.tabs:');
     console.log(mux.mra);
     console.log(mux.tabs);
@@ -555,7 +481,7 @@ G_Multiplexer.prototype.activate_channel = function (channel) {
   }
 };
 
-G_Multiplexer.prototype.index_of_channel = function (channel) {
+Multiplexer.prototype.index_of_channel = function (channel) {
 
   var mux = this;
   var channels = mux.channels;
@@ -569,7 +495,7 @@ G_Multiplexer.prototype.index_of_channel = function (channel) {
   return -1;
 };
 
-G_Multiplexer.prototype.index_of_channel_tab = function (channel) {
+Multiplexer.prototype.index_of_channel_tab = function (channel) {
 
   var mux = this;
   var tabs = mux.tabs;
@@ -583,7 +509,7 @@ G_Multiplexer.prototype.index_of_channel_tab = function (channel) {
   return -1;
 };
 
-G_Multiplexer.prototype.index_of_channel_by_title = function (title) {
+Multiplexer.prototype.index_of_channel_by_title = function (title) {
 
   var mux = this;
   var channels = mux.channels;
@@ -599,7 +525,7 @@ G_Multiplexer.prototype.index_of_channel_by_title = function (title) {
 
 //-----------------------------------------------------------------------------
 
-function G_Tab_group(elem) {
+function Tab_group(elem) {
 
   var tg = this;
 
@@ -608,7 +534,7 @@ function G_Tab_group(elem) {
   tg.init();
 }
 
-G_Tab_group.prototype.init = function () {
+Tab_group.prototype.init = function () {
 
   var tg = this;
 
@@ -629,18 +555,18 @@ G_Tab_group.prototype.init = function () {
   tabs_elem.appendChild(extra_elem);
 };
 
-G_Tab_group.prototype.clear = function () {
+Tab_group.prototype.clear = function () {
   var tg = this;
   tg.elem.innerHTML = ''; // remove all children
   tg.tab_names = [];
 };
 
-G_Tab_group.prototype.index_of_tab = function (name) {
+Tab_group.prototype.index_of_tab = function (name) {
   var tg = this;
   return tg.tab_names.indexOf(name);
 };
 
-G_Tab_group.prototype.index_of_tab_elem = function (elem) {
+Tab_group.prototype.index_of_tab_elem = function (elem) {
   var tg = this;
   for (var i=tg.nb_tabs()-1; i>=0; i--) {
     if (elem === tg.tab_elem(i))
@@ -649,29 +575,29 @@ G_Tab_group.prototype.index_of_tab_elem = function (elem) {
   return -1;
 };
 
-G_Tab_group.prototype.tab_elem = function (index) {
+Tab_group.prototype.tab_elem = function (index) {
   var tg = this;
   return tg.elem.firstChild.children[index];
 };
 
-G_Tab_group.prototype.pane_elem = function (index) {
+Tab_group.prototype.pane_elem = function (index) {
   var tg = this;
   return tg.elem.lastChild.children[index];
 };
 
-G_Tab_group.prototype.extra_elem = function () {
+Tab_group.prototype.extra_elem = function () {
   var tg = this;
   return tg.elem.firstChild.lastChild;
 };
 
-G_Tab_group.prototype.set_tab_name = function (index, name) {
+Tab_group.prototype.set_tab_name = function (index, name) {
   var tg = this;
   var tabs_elem = tg.elem.firstChild;
   tabs_elem.children[index].firstChild.firstChild.innerText = name;
   tg.tab_names[index] = name;
 };
 
-G_Tab_group.prototype.remove_tab = function (tab_index) {
+Tab_group.prototype.remove_tab = function (tab_index) {
 
   var tg = this;
 
@@ -687,7 +613,7 @@ G_Tab_group.prototype.remove_tab = function (tab_index) {
   tg.tab_names.splice(tab_index, 1);
 };
 
-G_Tab_group.prototype.add_pane = function (tab_name, pane_elem, tab_index) {
+Tab_group.prototype.add_pane = function (tab_name, pane_elem, tab_index) {
 
   var tg = this;
 
@@ -744,17 +670,17 @@ G_Tab_group.prototype.add_pane = function (tab_name, pane_elem, tab_index) {
   return tab_index;
 };
 
-G_Tab_group.prototype.nb_tabs = function () {
+Tab_group.prototype.nb_tabs = function () {
   var tg = this;
   return tg.tab_names.length;
 };
 
-G_Tab_group.prototype.active_tab_index = function () {
+Tab_group.prototype.active_tab_index = function () {
   var tg = this;
   return tg.act_tab_index;
 };
 
-G_Tab_group.prototype.active_tab_set = function (index) {
+Tab_group.prototype.active_tab_set = function (index) {
 
   var tg = this;
 
@@ -775,7 +701,7 @@ G_Tab_group.prototype.active_tab_set = function (index) {
 
 //-----------------------------------------------------------------------------
 
-function G_Device_console(vm, title, flags, thread_scm) {
+function Device_console(vm, title, flags, thread_scm) {
 
   var dev = this;
   dev.vm = vm;
@@ -798,29 +724,31 @@ function G_Device_console(vm, title, flags, thread_scm) {
   dev.elem = document.createElement('div');
   dev.cons = new Console(dev.elem);
 
+  dev.debug = false;
+
   dev.cons.connect(dev);
 
   vm.ui.add_console(dev);
 }
 
-G_Device_console.prototype.console_writable = function (cons) {
+Device_console.prototype.console_writable = function (cons) {
 
   var dev = this;
 
-  if (g_os_debug)
-    console.log('G_Device_console(\''+dev.title+'\').console_writable(...)');
+  if (dev.debug)
+    console.log('Device_console(\''+dev.title+'\').console_writable(...)');
 
   dev.cons = cons;
   cons.write(dev.delayed_output);
   dev.delayed_output = '';
 };
 
-G_Device_console.prototype.console_readable = function (cons) {
+Device_console.prototype.console_readable = function (cons) {
 
   var dev = this;
 
-  if (g_os_debug)
-    console.log('G_Device_console(\''+dev.title+'\').console_readable(...)');
+  if (dev.debug)
+    console.log('Device_console(\''+dev.title+'\').console_readable(...)');
 
   dev.cons = cons;
   var input = cons.read();
@@ -833,48 +761,40 @@ G_Device_console.prototype.console_readable = function (cons) {
     }
     dev.rlo = 0;
     dev.read_condvar_scm = null;
-    g_os_condvar_ready_set(condvar_scm, true);
+    dev.vm.os_condvar_ready_set(condvar_scm, true);
   }
 };
 
-G_Device_console.prototype.console_user_interrupt = function (cons) {
+Device_console.prototype.console_user_interrupt_thread = function (cons) {
 
   var dev = this;
 
-  if (g_os_debug)
-    console.log('G_Device_console(\''+dev.title+'\').console_user_interrupt(...)');
+  if (dev.debug)
+    console.log('Device_console(\''+dev.title+'\').console_user_interrupt_thread(...)');
 
   dev.cons = cons;
 
-  dev.vm.heartbeat_count = 1; // force interrupt at next poll point
-
-  g_async_call(false,
-               dev.thread_scm,
-               g_glo['##user-interrupt!'],
-               []);
+  dev.vm.user_interrupt_thread(dev.thread_scm);
 };
 
-G_Device_console.prototype.console_terminate_thread = function (cons) {
+Device_console.prototype.console_terminate_thread = function (cons) {
 
   var dev = this;
 
-  if (g_os_debug)
-    console.log('G_Device_console(\''+dev.title+'\').console_terminate_thread(...)');
+  if (dev.debug)
+    console.log('Device_console(\''+dev.title+'\').console_terminate_thread(...)');
 
   dev.cons = cons;
 
-  g_async_call(false,
-               g_host2scm(false),
-               g_glo['##thread-terminate!'],
-               [dev.thread_scm]);
+  dev.vm.terminate_thread(dev.thread_scm);
 };
 
-G_Device_console.prototype.input_add = function (input) {
+Device_console.prototype.input_add = function (input) {
 
   var dev = this;
 
-  if (g_os_debug)
-    console.log('G_Device_console(\''+dev.title+'\').input_add(\''+input+'\')');
+  if (dev.debug)
+    console.log('Device_console(\''+dev.title+'\').input_add(\''+input+'\')');
 
   var len = dev.rbuf.length-dev.rlo;
   var inp = dev.encoder.encode(input);
@@ -886,22 +806,22 @@ G_Device_console.prototype.input_add = function (input) {
   dev.rlo = 0;
 };
 
-G_Device_console.prototype.output_add = function (output) {
+Device_console.prototype.output_add = function (output) {
 
   var dev = this;
 
-  if (g_os_debug)
-    console.log('G_Device_console(\''+dev.title+'\').output_add(\''+output+'\')');
+  if (dev.debug)
+    console.log('Device_console(\''+dev.title+'\').output_add(\''+output+'\')');
 
   dev.output_add_buffer(dev.encoder.encode(output));
 };
 
-G_Device_console.prototype.output_add_buffer = function (buffer) {
+Device_console.prototype.output_add_buffer = function (buffer) {
 
   var dev = this;
 
-  if (g_os_debug)
-    console.log('G_Device_console(\''+dev.title+'\').output_add_buffer(...)');
+  if (dev.debug)
+    console.log('Device_console(\''+dev.title+'\').output_add_buffer(...)');
 
   var len = dev.wbuf.length;
   var newbuf = new Uint8Array(len + buffer.length);
@@ -919,16 +839,16 @@ G_Device_console.prototype.output_add_buffer = function (buffer) {
   dev.wbuf = new Uint8Array(0);
 };
 
-G_Device_console.prototype.read = function (dev_condvar_scm, buffer, lo, hi) {
+Device_console.prototype.read = function (dev_condvar_scm, buffer, lo, hi) {
 
   var dev = this;
   var n = hi-lo;
   var have = dev.rbuf.length-dev.rlo;
 
-  if (g_os_debug)
-    console.log('G_Device_console(\''+dev.title+'\').read(...,['+buffer.slice(0,10)+'...],'+lo+','+hi+')');
+  if (dev.debug)
+    console.log('Device_console(\''+dev.title+'\').read(...,['+buffer.slice(0,10)+'...],'+lo+','+hi+')');
 
-  g_os_condvar_ready_set(dev_condvar_scm, false);
+  dev.vm.os_condvar_ready_set(dev_condvar_scm, false);
 
   if (have === 0) {
 
@@ -958,44 +878,44 @@ G_Device_console.prototype.read = function (dev_condvar_scm, buffer, lo, hi) {
   return n; // number of bytes transferred
 };
 
-G_Device_console.prototype.write = function (dev_condvar_scm, buffer, lo, hi) {
+Device_console.prototype.write = function (dev_condvar_scm, buffer, lo, hi) {
 
   var dev = this;
 
-  if (g_os_debug)
-    console.log('G_Device_console(\''+dev.title+'\').write(...,['+buffer.slice(0,10)+'...],'+lo+','+hi+')');
+  if (dev.debug)
+    console.log('Device_console(\''+dev.title+'\').write(...,['+buffer.slice(0,10)+'...],'+lo+','+hi+')');
 
   dev.output_add_buffer(buffer.subarray(lo, hi));
 
   return hi-lo;
 };
 
-G_Device_console.prototype.force_output = function (dev_condvar_scm, level) {
+Device_console.prototype.force_output = function (dev_condvar_scm, level) {
 
   var dev = this;
 
-  if (g_os_debug)
-    console.log('G_Device_console(\''+dev.title+'\').force_output(...,'+level+')');
+  if (dev.debug)
+    console.log('Device_console(\''+dev.title+'\').force_output(...,'+level+')');
 
   return 0; // no error
 };
 
-G_Device_console.prototype.seek = function (dev_condvar_scm, pos, whence) {
+Device_console.prototype.seek = function (dev_condvar_scm, pos, whence) {
 
   var dev = this;
 
-  if (g_os_debug)
-    console.log('G_Device_console(\''+dev.title+'\').seek(...,'+pos+','+whence+')');
+  if (dev.debug)
+    console.log('Device_console(\''+dev.title+'\').seek(...,'+pos+','+whence+')');
 
   return -1; // EPERM (operation not permitted)
 };
 
-G_Device_console.prototype.width = function (dev_condvar_scm) {
+Device_console.prototype.width = function (dev_condvar_scm) {
 
   var dev = this;
 
-  if (g_os_debug)
-    console.log('G_Device_console(\''+dev.title+'\').width()');
+  if (dev.debug)
+    console.log('Device_console(\''+dev.title+'\').width()');
 
   var cm = dev.cons.cm;
   var charWidth = cm.defaultCharWidth();
@@ -1007,99 +927,99 @@ G_Device_console.prototype.width = function (dev_condvar_scm) {
   return width;
 };
 
-G_Device_console.prototype.close = function (direction) {
+Device_console.prototype.close = function (direction) {
 
   var dev = this;
 
-  if (g_os_debug)
-    console.log('G_Device_console(\''+dev.title+'\').close('+direction+')');
+  if (dev.debug)
+    console.log('Device_console(\''+dev.title+'\').close('+direction+')');
 
   return 0; // no error
 };
 
-G_Device_console.prototype.get_title = function () {
+Device_console.prototype.get_title = function () {
 
   var dev = this;
 
-  if (g_os_debug)
-    console.log('G_Device_console(\''+dev.title+'\').get_title()');
+  if (dev.debug)
+    console.log('Device_console(\''+dev.title+'\').get_title()');
 
   return dev.title;
 };
 
-G_Device_console.prototype.needs_attention = function () {
+Device_console.prototype.needs_attention = function () {
 
   var dev = this;
 
-  if (g_os_debug)
-    console.log('G_Device_console(\''+dev.title+'\').needs_attention()');
+  if (dev.debug)
+    console.log('Device_console(\''+dev.title+'\').needs_attention()');
 
   return !dev.focused && dev.dirty;
 };
 
-G_Device_console.prototype.focus = function () {
+Device_console.prototype.focus = function () {
 
   var dev = this;
 
-  if (g_os_debug)
-    console.log('G_Device_console(\''+dev.title+'\').focus()');
+  if (dev.debug)
+    console.log('Device_console(\''+dev.title+'\').focus()');
 
   dev.focused = true;
   dev.cons.focus();
 };
 
-G_Device_console.prototype.blur = function () {
+Device_console.prototype.blur = function () {
 
   var dev = this;
 
-  if (g_os_debug)
-    console.log('G_Device_console(\''+dev.title+'\').blur()');
+  if (dev.debug)
+    console.log('Device_console(\''+dev.title+'\').blur()');
 
   dev.focused = false;
   dev.dirty = false;
   dev.cons.blur();
 };
 
-G_Device_console.prototype.connect_multiplexer = function (mux) {
+Device_console.prototype.connect_multiplexer = function (mux) {
 
   var dev = this;
 
-  if (g_os_debug)
-    console.log('G_Device_console(\''+dev.title+'\').connect_multiplexer(...)');
+  if (dev.debug)
+    console.log('Device_console(\''+dev.title+'\').connect_multiplexer(...)');
 
   dev.mux = mux;
 };
 
-G_Device_console.prototype.disconnect_multiplexer = function () {
+Device_console.prototype.disconnect_multiplexer = function () {
 
   var dev = this;
 
-  if (g_os_debug)
-    console.log('G_Device_console(\''+dev.title+'\').disconnect_multiplexer()');
+  if (dev.debug)
+    console.log('Device_console(\''+dev.title+'\').disconnect_multiplexer()');
 
   dev.mux = null;
 };
 
-G_Device_console.prototype.get_menu_items = function () {
+Device_console.prototype.get_menu_items = function () {
 
   var dev = this;
 
-  if (g_os_debug)
-    console.log('G_Device_console(\''+dev.title+'\').get_menu_items()');
+  if (dev.debug)
+    console.log('Device_console(\''+dev.title+'\').get_menu_items()');
 
   var items = [];
 
-//  items.push(g_menu_item('Close tab', [], function (event) {
+//  items.push(menu_item('Close tab', [], function (event) {
 //    console.log('close tab ' + dev.title);
 //    dev.vm.ui.remove_console(dev, true);
 //  }));
 
-  items.push(g_menu_item('Interrupt thread', [], function (event) {
+  items.push(menu_item('Interrupt thread', [], function (event) {
     dev.cons.user_interrupt();
   }));
 
   if (dev.title !== '#<thread #1 primordial>') {
-    items.push(g_menu_item('Terminate thread', [], function (event) {
+    items.push(menu_item('Terminate thread', [], function (event) {
       dev.cons.terminate_thread();
     }));
   }
@@ -1107,17 +1027,17 @@ G_Device_console.prototype.get_menu_items = function () {
   return items;
 };
 
-G_Device_console.prototype.get_elem = function () {
+Device_console.prototype.get_elem = function () {
 
   var dev = this;
 
-  if (g_os_debug)
-    console.log('G_Device_console(\''+dev.title+'\').get_elem()');
+  if (dev.debug)
+    console.log('Device_console(\''+dev.title+'\').get_elem()');
 
   return dev.elem;
 };
 
-function g_menu_item(title, attrs, handler) {
+function menu_item(title, attrs, handler) {
   var item = document.createElement('div');
   item.innerText = title;
   attrs.forEach(function (attr) {
@@ -1342,7 +1262,7 @@ Console.prototype.readable = function () {
 
 Console.prototype.user_interrupt = function () {
   var cons = this;
-  if (cons.peer) cons.peer.console_user_interrupt(cons);
+  if (cons.peer) cons.peer.console_user_interrupt_thread(cons);
 };
 
 Console.prototype.terminate_thread = function () {

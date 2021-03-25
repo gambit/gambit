@@ -978,6 +978,7 @@ usage-end
                  (let* ((common-compiler-options
                          '((target symbol)
                            (c) (dynamic) (exe) (obj) (link) (flat)
+                           (compactness fixnum)
                            (warnings) (verbose) (report)
                            (expansion) (gvm) (cfg) (dg) (asm) (keep-temp)
 ;;TODO: enable and document when compiler supports these options

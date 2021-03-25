@@ -1,7 +1,7 @@
 /* File: "config.h.in" */
 
 /*
- * Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+ * Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
  */
 
 #ifndef CONFIG_H
@@ -309,6 +309,12 @@
  * runtime options, e.g. #define ___DEFAULT_RUNTIME_OPTIONS {'d','2','\0'}
  */
 #undef ___DEFAULT_RUNTIME_OPTIONS
+
+/*
+ * Define as a UCS_2 array initialization containing the default
+ * compile options
+ */
+#undef ___DEFAULT_COMPILE_OPTIONS
 
 /*---------------------------------------------------------------------------*/
 

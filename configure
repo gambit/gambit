@@ -978,6 +978,7 @@ enable_path_encoding
 enable_module_search_order
 enable_module_whitelist
 enable_default_runtime_options
+enable_default_compile_options
 enable_targets
 enable_shared
 enable_ansi_c
@@ -1699,6 +1700,8 @@ Optional Features:
                           Module whitelist (default is github.com/gambit)
   --enable-default-runtime-options=...
                           Default runtime options (default is none)
+  --enable-default-compile-options=...
+                          Default compile options (default is none)
   --enable-targets=...    Targets to build in addition to C (default is none)
   --enable-shared         build the Scheme runtime system as a shared library
                           (default is NO)
@@ -5187,6 +5190,34 @@ if test "$DEFAULT_RUNTIME_OPTIONS" != ""; then
 
 cat >>confdefs.h <<_ACEOF
 #define ___DEFAULT_RUNTIME_OPTIONS $DEFAULT_RUNTIME_OPTIONS
+_ACEOF
+
+fi
+
+###############################################################################
+#
+# Determine default compile options.
+
+# Check whether --enable-default-compile-options was given.
+if test "${enable_default_compile_options+set}" = set; then :
+  enableval=$enable_default_compile_options; ENABLE_DEFAULT_COMPILE_OPTIONS=$enableval
+else
+  ENABLE_DEFAULT_COMPILE_OPTIONS=
+fi
+
+
+
+if test "$ENABLE_DEFAULT_COMPILE_OPTIONS" != ""; then
+  DEFAULT_COMPILE_OPTIONS="$ENABLE_DEFAULT_COMPILE_OPTIONS"
+else
+  DEFAULT_COMPILE_OPTIONS=""
+fi
+
+if test "$DEFAULT_COMPILE_OPTIONS" != ""; then
+  DEFAULT_COMPILE_OPTIONS=`echo "$DEFAULT_COMPILE_OPTIONS" | sed -e "s/\(.\)/'\1', /g" -e "s/''', /'\\\\\\\\'', /g" -e "s/'\\\\\\\\', /'\\\\\\\\\\\\\\\\', /g" -e "s/^/{/" -e "s/$/'\\\\\\\\0'}/"`
+
+cat >>confdefs.h <<_ACEOF
+#define ___DEFAULT_COMPILE_OPTIONS $DEFAULT_COMPILE_OPTIONS
 _ACEOF
 
 fi

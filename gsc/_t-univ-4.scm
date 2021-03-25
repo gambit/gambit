@@ -3551,7 +3551,28 @@
                             (cons (number->string (+ i 1))
                                   (^getopnd arg)))
                           args)))
-    (^ (string-substitute str #\@ alist))))
+
+    (define (substitute str)
+      (let ((x (assoc str alist)))
+        (if x
+            (cdr x)
+            (let* ((name (string->symbol str))
+                   (f (table-ref univ-rtlib-feature-table name #f)))
+              (if f
+                  (case (vector-ref f 0)
+                    ((method)
+                     (univ-emit-rts-method-use ctx name #t))
+                    ((class)
+                     (univ-emit-rts-class-use ctx name #t))
+                    (else ;; (field)
+                     (univ-emit-rts-field-use ctx name #t)))
+                  (string-append
+                   (if (char-upper-case? (string-ref str 0))
+                       (ctx-ns-prefix-class ctx)
+                       (ctx-ns-prefix ctx))
+                   str))))))
+
+    (^ (string-substitute str #\@ substitute))))
 
 (univ-define-prim "##inline-host-statement" #t
 
@@ -3583,7 +3604,7 @@
     (if (and (= (length opnds) 1)
              (obj? (car opnds))
              (string? (obj-val (car opnds))))
-        (let ((decl (obj-val (car opnds))))
+        (let ((decl (univ-expand-inline-host-code ctx (obj-val (car opnds)) '())))
           (queue-put! (ctx-decls ctx) (^ decl "\n"))
           (return #f))
         (compiler-internal-error "##inline-host-declaration requires a constant string argument"))))

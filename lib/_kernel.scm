@@ -4256,6 +4256,29 @@ end-of-code
              nonnull-char-string
     "___os_bat_extension_string")))
 
+(define ##default-compile-options-string
+  (macro-case-target
+
+   ((C)
+    ((c-lambda () nonnull-UCS-2-string #<<end-of-code
+
+#ifndef ___DEFAULT_COMPILE_OPTIONS
+#define ___DEFAULT_COMPILE_OPTIONS {'\0'}
+#endif
+
+static ___UCS_2 default_compile_options[] = ___DEFAULT_COMPILE_OPTIONS;
+
+___return(default_compile_options);
+
+end-of-code
+)))
+
+   (else
+    "")))
+
+(define-prim (##default-compile-options-string-set! x)
+  (set! ##default-compile-options-string x))
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Miscellaneous definitions.

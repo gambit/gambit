@@ -16,6 +16,7 @@
 
 (define cpu-default-nb-gvm-regs 5) ;; total of available registers
 (define cpu-default-nb-arg-regs 3) ;; max args passed in registers
+(define cpu-default-compactness 5) ;; compactness level of generated code
 
 ;;-----------------------------------------------------------------------------
 
@@ -37,7 +38,10 @@
                                  cpu-default-nb-gvm-regs))
         (nb-arg-regs (get-option sem-changing-opts
                                  'nb-arg-regs
-                                 cpu-default-nb-arg-regs)))
+                                 cpu-default-nb-arg-regs))
+        (compactness (get-option sem-changing-opts
+                                 'compactness
+                                 cpu-default-compactness)))
 
     (if (or (< nb-gvm-regs 3) (> nb-gvm-regs 25))
         (compiler-error "nb-gvm-regs option must be between 3 and 25"))
@@ -48,7 +52,8 @@
                          (number->string (- nb-gvm-regs 2)))))
 
     (target-nb-regs-set! targ nb-gvm-regs)
-    (target-nb-arg-regs-set! targ nb-arg-regs)))
+    (target-nb-arg-regs-set! targ nb-arg-regs)
+    (target-compactness-set! targ compactness)))
 
 ;;-----------------------------------------------------------------------------
 
@@ -57,7 +62,7 @@
 (define (cpu-make-target target-arch file-extensions backend-info)
 
   (let ((targ (make-target
-                12
+                13
                 target-arch
                 file-extensions
                 '() ; XXX

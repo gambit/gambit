@@ -99,11 +99,11 @@
 (define (univ-rtlib-feature ctx feature)
   (let ((f (table-ref univ-rtlib-feature-table feature #f)))
     (if f
-        (f ctx feature)
+        ((vector-ref f 1) ctx feature)
         (old-univ-rtlib-feature ctx feature))))
 
 (define (univ-define-rtlib-feature name feature)
-  (table-set! univ-rtlib-feature-table name feature))
+  (table-set! univ-rtlib-feature-table name (vector 'field feature)))
 
 (let () ;; univ-rtlib-features definitions
 
@@ -157,7 +157,9 @@
     (univ-add-method
      (univ-make-empty-defs)
      (univ-method
-      (univ-emit-rts-method ctx name (memq 'public properties))
+      (univ-emit-rts-method ctx
+                            (univ-rts-method-low-level-name ctx name)
+                            (memq 'public properties))
       properties
       result-type
       params
@@ -168,7 +170,10 @@
     (^type type)
     (univ-add-field
      (univ-make-empty-defs)
-     (univ-field name type init properties)))
+     (univ-field (univ-rts-field-low-level-name ctx name)
+                 type
+                 init
+                 properties)))
 
   (define (rts-init init)
     (univ-add-init
@@ -484,7 +489,7 @@
            (class-fields '())
            (instance-fields '())
            (class-methods '())
-           (instance-methods '())
+           (instance-methods (lambda (ctx) '()))
            (class-classes '())
            (constructor #f)
            (inits '()))
@@ -496,36 +501,992 @@
                  class-fields
                  instance-fields
                  class-methods
-                 instance-methods
+                 (instance-methods ctx)
                  class-classes
                  constructor
                  inits)))
 
-  ;; -- helpers
-  (define (univ-rtlib-feature-reg ctx feature)
-    (rts-field ctx feature 'scmobj (^void) '(public)))
+  (define (univ-rtlib-feature-field type init)
+    (lambda (ctx feature)
+      (rts-field ctx feature type (init ctx) '(public))))
+
+  (define poll-interval 100)
+
+  ;;---------------------------------------------------------------------------
+
+  ;; GVM registers
 
   (for-each
    (lambda (reg)
-     (univ-define-rtlib-feature reg univ-rtlib-feature-reg))
+     (univ-define-rtlib-feature
+      reg
+      (univ-rtlib-feature-field 'scmobj
+                                (lambda (ctx)
+                                  (^void)))))
    '(r0 r1 r2 r3 r4))
 
-  (univ-define-rtlib-feature 'trampoline
+  ;;---------------------------------------------------------------------------
+
+  ;; Control point initialization
+
+  ;;deprecated
+  (univ-define-rtlib-feature 'ctrlpts_init
    (univ-rtlib-feature-method
     '(public)
     'noresult
-    (list (univ-field 'pc 'jumpable))
+    (list (univ-field 'ctrlpts '(array ctrlpt)))
     "\n"
     '()
     (lambda (ctx)
-      (let ((pc (^local-var 'pc)))
-        (^while (^!= pc (^null)) ;; exit trampoline?
-                (^assign pc
-                         (^jump pc)))))))
+      (let ((ctrlpts (^local-var 'ctrlpts)))
+        (^assign (^member (^array-index ctrlpts (^int 0))
+                          (^public 'ctrlpts))
+                 ctrlpts)))))
+
+  (univ-define-rtlib-feature 'current_parententrypt
+   (univ-rtlib-feature-field 'parententrypt
+                             (lambda (ctx)
+                               (^null))))
+
+  (univ-define-rtlib-feature 'ctrlpt_init
+   (univ-rtlib-feature-method
+    '(public)
+    'noresult
+    (list (univ-field 'cp 'ctrlpt)
+          (univ-field 'id 'int))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((cp (^local-var 'cp))
+            (id (^local-var 'id)))
+        (^ (^assign (^member cp (^public 'id)) id)
+           (^assign (^member cp (^public 'parent))
+                    (^rts-field-use 'current_parententrypt))
+           (^if (^not (^parens (^null? (^rts-field-use 'current_parententrypt))))
+                (^call-prim
+                 (^member (^member (^rts-field-use 'current_parententrypt)
+                                   'ctrlpts)
+                          'push)
+                 cp)))))))
+
+  (univ-define-rtlib-feature 'returnpt_init
+   (univ-rtlib-feature-method
+    '(public)
+    'noresult
+    (list (univ-field 'cp 'ctrlpt)
+          (univ-field 'id 'int)
+          (univ-field 'fs 'int)
+          (univ-field 'link 'int))
+    "\n"
+    '()
+    (lambda (ctx)
+      (if (eq? 'js (target-name (ctx-target ctx)))
+          (univ-use-rtlib ctx 'current_parententrypt))
+      (let ((cp (^local-var 'cp))
+            (id (^local-var 'id))
+            (fs (^local-var 'fs))
+            (link (^local-var 'link)))
+        (^ (^assign (^member cp (^public 'id)) id)
+           (^assign (^member cp (^public 'parent))
+                    (^rts-field-use 'current_parententrypt))
+           (^if (^not (^parens (^null? (^rts-field-use 'current_parententrypt))))
+                (^call-prim
+                 (^member (^member (^rts-field-use 'current_parententrypt)
+                                   'ctrlpts)
+                          'push)
+                 cp))
+           (^assign (^member cp (^public 'fs)) fs)
+           (^assign (^member cp (^public 'link)) link))))))
+
+  (univ-define-rtlib-feature 'entrypt_init
+   (univ-rtlib-feature-method
+    '(public)
+    'noresult
+    (list (univ-field 'cp 'ctrlpt)
+          (univ-field 'id 'int)
+          (univ-field 'nfree 'int))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((cp (^local-var 'cp))
+            (id (^local-var 'id))
+            (nfree (^local-var 'nfree)))
+        (^ (^assign (^member cp (^public 'id)) id)
+           (^assign (^member cp (^public 'parent))
+                    (^rts-field-use 'current_parententrypt))
+           (^if (^not (^parens (^null? (^rts-field-use 'current_parententrypt))))
+                (^call-prim
+                 (^member (^member (^rts-field-use 'current_parententrypt)
+                                   'ctrlpts)
+                          'push)
+                 cp))
+           (^assign (^member cp (^public 'nfree)) nfree))))))
+
+  (univ-define-rtlib-feature 'parententrypt_init
+   (univ-rtlib-feature-method
+    '(public)
+    'noresult
+    (list (univ-field 'cp 'ctrlpt)
+          (univ-field 'id 'int)
+          (univ-field 'nfree 'int)
+          (univ-field 'name 'symbol)
+          (univ-field 'info 'scmobj))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((cp (^local-var 'cp))
+            (id (^local-var 'id))
+            (nfree (^local-var 'nfree))
+            (name (^local-var 'name))
+            (info (^local-var 'info)))
+        (^ (^assign (^member cp (^public 'id)) id)
+           (^assign (^member cp (^public 'parent)) cp)
+           (^assign (^member cp (^public 'nfree)) nfree)
+           (^assign (^member cp (^public (univ-proc-name-attrib ctx))) name)
+           (^assign (^member cp (^public 'ctrlpts))
+                    (^array-literal '(array ctrlpt) (list cp)))
+           (^assign (^member cp (^public 'info)) info)
+           (^assign (^rts-field-use 'current_parententrypt)
+                    cp))))))
+
+  (univ-define-rtlib-feature 'peps
+   (univ-rtlib-feature-field '(dict str parententrypt)
+                             (lambda (ctx)
+                               (^empty-dict '(dict str parententrypt)))))
+
+  ;;---------------------------------------------------------------------------
+
+  ;; Global variables dictionary
+
+  (univ-define-rtlib-feature 'glo
+   (univ-rtlib-feature-field '(dict str scmobj)
+                             (lambda (ctx)
+                               (^empty-dict '(dict str scmobj)))))
+
+  ;;---------------------------------------------------------------------------
+
+  ;; GVM stack
+
+  (univ-define-rtlib-feature 'sp
+   (univ-rtlib-feature-field 'int
+                             (lambda (ctx)
+                               (^int -1))))
+
+  (univ-define-rtlib-feature 'stack
+   (univ-rtlib-feature-field
+    '(array scmobj)
+    (lambda (ctx)
+      (case (target-name (ctx-target ctx))
+        ((js php python ruby)
+         (^extensible-array-literal 'scmobj '()))
+        ((java go)
+         (^new-array 'scmobj 10000))
+        (else
+         (compiler-internal-error
+          "stack, unknown target"))))))
+
+  (univ-define-rtlib-feature 'heapify_cont
+   (univ-rtlib-feature-method
+    '(public)
+    'returnpt
+    (list (univ-field 'ra 'returnpt))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((ra (^local-var 'ra))
+            (fs (^local-var 'fs))
+            (link (^local-var 'link))
+            (base (^local-var 'base))
+            (frame (^local-var 'frame))
+            (prev_link (^local-var 'prev_link))
+            (prev_frame (^local-var 'prev_frame))
+            (chain (^local-var 'chain)))
+        (^ (^if (^> (gvm-state-sp-use ctx 'rd) 0)
+                (univ-with-ctrlpt-attribs
+                 ctx
+                 #f
+                 ra
+                 (lambda ()
+
+                   (^ (^var-declaration
+                       'int
+                       fs
+                       (univ-get-ctrlpt-attrib ctx ra 'fs))
+
+                      (^var-declaration
+                       'int
+                       link
+                       (univ-get-ctrlpt-attrib ctx ra 'link))
+
+                      (^var-declaration
+                       'int
+                       base
+                       (^- (gvm-state-sp-use ctx 'rd) fs))
+
+                      (^extensible-array-to-array!
+                       (gvm-state-stack-use ctx 'rdwr)
+                       (^+ (gvm-state-sp-use ctx 'rd) 1))
+
+                      (^var-declaration
+                       'frame
+                       chain)
+
+                      (^if (^> base 0)
+
+                           (^ (^assign chain
+                                       (^frame-box
+                                        (^subarray
+                                         (gvm-state-stack-use ctx 'rd)
+                                         base
+                                         (^+ fs 1))))
+
+                              (^assign (^array-index
+                                        (^frame-slots chain)
+                                        (^int 0))
+                                       ra)
+
+                              (^assign (gvm-state-sp-use ctx 'wr)
+                                       base)
+
+                              (^var-declaration
+                               'frame
+                               prev_frame
+                               (^alias chain))
+
+                              (^var-declaration
+                               'int
+                               prev_link
+                               link)
+
+                              (^assign ra
+                                       (^cast* 'returnpt
+                                               (^array-index
+                                                (^frame-slots prev_frame)
+                                                prev_link)))
+
+                              (univ-with-ctrlpt-attribs
+                               ctx
+                               #t
+                               ra
+                               (lambda ()
+
+                                 (^ (^assign
+                                     fs
+                                     (univ-get-ctrlpt-attrib ctx ra 'fs))
+
+                                    (^assign
+                                     link
+                                     (univ-get-ctrlpt-attrib ctx ra 'link))
+
+                                    (^assign
+                                     base
+                                     (^- (gvm-state-sp-use ctx 'rd)
+                                         fs))
+
+                                    (^while (^> base 0)
+                                            (^ (^var-declaration
+                                                'frame
+                                                frame
+                                                (^frame-box
+                                                 (^subarray
+                                                  (gvm-state-stack-use ctx 'rd)
+                                                  base
+                                                  (^+ fs 1))))
+
+                                               (^assign
+                                                (^array-index
+                                                 (^frame-unbox frame)
+                                                 (^int 0))
+                                                ra)
+
+                                               (^assign
+                                                (gvm-state-sp-use ctx 'wr)
+                                                base)
+
+                                               (^assign
+                                                (^array-index
+                                                 (^frame-slots prev_frame)
+                                                 prev_link)
+                                                (^alias frame))
+
+                                               (^assign
+                                                prev_frame
+                                                (^alias frame))
+
+                                               (^unalias frame)
+
+                                               (^assign
+                                                prev_link
+                                                link)
+
+                                               (^assign
+                                                ra
+                                                (^cast* 'returnpt
+                                                        (^array-index
+                                                         (^frame-slots prev_frame)
+                                                         prev_link)))
+
+                                               (univ-with-ctrlpt-attribs
+                                                ctx
+                                                #t
+                                                ra
+                                                (lambda ()
+
+                                                  (^ (^assign
+                                                      fs
+                                                      (univ-get-ctrlpt-attrib ctx ra 'fs))
+
+                                                     (^assign
+                                                      link
+                                                      (univ-get-ctrlpt-attrib ctx ra 'link))
+
+                                                     (^assign
+                                                      base
+                                                      (^- (gvm-state-sp-use ctx 'rd)
+                                                          fs)))))))
+
+                                    (^assign
+                                     (^array-index
+                                      (gvm-state-stack-use ctx 'rd)
+                                      link)
+                                     (^array-index
+                                      (gvm-state-stack-use ctx 'rd)
+                                      (^int 0)))
+
+                                    (^assign
+                                     (^array-index
+                                      (gvm-state-stack-use ctx 'rd)
+                                      (^int 0))
+                                     ra)
+
+                                    (^assign
+                                     (^array-index
+                                      (^frame-slots prev_frame)
+                                      prev_link)
+                                     (^frame-box
+                                      (^array-shrink-possibly-copy!
+                                       (gvm-state-stack-use ctx 'rd)
+                                       (^+ fs 1))))))))
+
+                           (^ (^assign
+                               (^array-index
+                                (gvm-state-stack-use ctx 'rd)
+                                link)
+                               (^array-index
+                                (gvm-state-stack-use ctx 'rd)
+                                (^int 0)))
+
+                              (^assign
+                               (^array-index
+                                (gvm-state-stack-use ctx 'rd)
+                                (^int 0))
+                               ra)
+
+                              (^assign
+                               chain
+                               (^frame-box
+                                (^array-shrink-possibly-copy!
+                                 (gvm-state-stack-use ctx 'rd)
+                                 (^+ fs 1))))))
+
+                      (if (univ-stack-resizable? ctx)
+
+                          (^assign
+                           (gvm-state-stack-use ctx 'rd)
+                           (^extensible-array-literal
+                            'scmobj
+                            (list chain)))
+
+                          (^assign
+                           (^array-index
+                            (gvm-state-stack-use ctx 'rd)
+                            (^int 0))
+                           chain))
+
+                      (^assign
+                       (gvm-state-sp-use ctx 'wr)
+                       0)))))
+
+           (^return
+            (^rts-jumpable-use 'underflow)))))))
+
+   (univ-define-rtlib-feature 'underflow
+    (lambda (ctx feature)
+      (if (eq? 'js (target-name (ctx-target ctx)))
+          (univ-use-rtlib ctx 'returnpt_init))
+      (univ-jumpable-declaration-defs
+       ctx
+       #t
+       'underflow
+       'returnpt
+       '()
+       (list (univ-field 'id 'int (^int 0) '(inherited))
+             (univ-field 'parent 'parententrypt (^null) '(inherited))
+             (univ-field 'fs 'int (^int 0) '(inherited))
+             (univ-field 'link 'int (^int 0) '(inherited)))
+       (univ-emit-fn-body
+        ctx
+        "\n"
+        (lambda (ctx)
+          (let ((nextf (^local-var 'nextf))
+                (frame (^local-var 'frame))
+                (ra (^local-var 'ra))
+                (fs (^local-var 'fs))
+                (link (^local-var 'link)))
+
+            (^ (^var-declaration
+                'scmobj
+                nextf
+                (^array-index
+                 (gvm-state-stack-use ctx 'rd)
+                 (^int 0)))
+
+               (^if (^eq? nextf (univ-end-of-cont-marker ctx))
+                    (^return (^null))) ;; exit trampoline
+
+               (^var-declaration
+                'frm
+                frame
+                (^frame-unbox nextf))
+
+               (^var-declaration
+                'returnpt
+                ra
+                (^cast* 'returnpt
+                        (^array-index frame (^int 0))))
+
+               (univ-with-ctrlpt-attribs
+                ctx
+                #f
+                ra
+                (lambda ()
+
+                  (^ (^var-declaration
+                      'int
+                      fs
+                      (univ-get-ctrlpt-attrib ctx ra 'fs))
+
+                     (^var-declaration
+                      'int
+                      link
+                      (univ-get-ctrlpt-attrib ctx ra 'link))
+
+                     (if (univ-stack-resizable? ctx)
+
+                         (^assign (gvm-state-stack-use ctx 'wr)
+                                  (^copy-array-to-extensible-array
+                                   frame
+                                   (^+ fs 1)))
+
+                         (^move-array-to-array
+                          frame
+                          (^int 0)
+                          (gvm-state-stack-use ctx 'rd)
+                          (^int 0)
+                          (^+ fs 1)))
+
+                     (^assign (gvm-state-sp-use ctx 'wr)
+                              fs)
+
+                     (^assign (^array-index
+                               (gvm-state-stack-use ctx 'rd)
+                               (^int 0))
+                              (^alias
+                               (^array-index frame link)))
+
+                     (^assign (^array-index
+                               (gvm-state-stack-use ctx 'rd)
+                               link)
+                              (^rts-jumpable-use 'underflow)))))
+
+               (^return (^upcast* 'returnpt 'jumpable ra)))))))))
+
+  ;;---------------------------------------------------------------------------
+
+  ;; Parameter processing and argument count checking
+
+  (univ-define-rtlib-feature 'nargs
+   (univ-rtlib-feature-field 'int
+                             (lambda (ctx)
+                               (^int 0))))
+
+  (univ-define-rtlib-feature 'build_rest_from_stack
+   (univ-rtlib-feature-method
+    '(public)
+    'bool
+    (list (univ-field 'nrp 'int))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((rest (^local-var 'rest))
+            (nrp (^local-var 'nrp)))
+        (^ (^var-declaration 'scmobj rest (^null-obj))
+           (^if (^< (^getnargs)
+                    nrp)
+                (^return (^bool #f)))
+           (^while (^> (^getnargs)
+                       nrp)
+                   (^ (^pop (lambda (expr)
+                              (^assign rest
+                                       (^cons expr
+                                              rest))))
+                      (^inc-by (gvm-state-nargs-use ctx 'rdwr)
+                               -1)))
+           (^push rest)
+           (^return (^bool #t)))))))
+
+  (univ-define-rtlib-feature 'build_rest
+   (univ-rtlib-feature-method
+    '(public)
+    'bool
+    (list (univ-field 'nrp 'int))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((nrp (^local-var 'nrp))
+            (ok (^local-var 'ok)))
+        (^
+         (^var-declaration 'bool ok (^bool #f))
+         (univ-push-args ctx)
+         (^assign ok (^call-prim (^rts-method-use 'build_rest_from_stack)
+                                 nrp))
+
+         (^if ok
+              (^inc-by (^getnargs) (^int 1)))
+
+         (univ-pop-args-to-regs ctx 0)
+         (^return ok))))))
+
+  (univ-define-rtlib-feature 'build_key_from_stack
+   (univ-rtlib-feature-method
+    '(public)
+    'jumpable
+    (list (univ-field 'nb_req_opt 'int)
+          (univ-field 'nb_parms 'int)
+          (univ-field 'key_descr '(array scmobj)))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((nb_req_opt (^local-var 'nb_req_opt))
+            (nb_parms (^local-var 'nb_parms))
+            (key_descr (^local-var 'key_descr))
+            (key_vals (^local-var 'key_vals))
+            (nb_key_args (^local-var 'nb_key_args))
+            (nb_key_parms (^local-var 'nb_key_parms))
+            (i (^local-var 'i))
+            (k (^local-var 'k))
+            (key (^local-var 'key))
+            (val (^local-var 'val)))
+        (^
+         (^var-declaration 'int nb_key_args (^- (^getnargs) nb_req_opt))
+         (^var-declaration 'int nb_key_parms (^- nb_parms nb_req_opt))
+         (^var-declaration 'int k (^int 0))
+         (^var-declaration 'int i (^int 0))
+         (^var-declaration 'scmobj key (^null))
+         (^var-declaration 'scmobj val (^null))
+         (^var-declaration '(array scmobj) key_vals (^null-obj))
+
+         (^if (^or (^< nb_key_args (^int 0)) ;; not all required and optional arguments supplied?
+                   (^!= (^parens (^bitand nb_key_args (^int 1))) (^int 0))) ;; keyword arguments must come in pairs
+              (^return (^cast*-jumpable
+                        (^getpeps '##raise-wrong-number-of-arguments-exception-nary))))
+
+         (^assign key_vals (^new-array 'scmobj nb_key_parms))
+
+         (^while (^< k nb_key_parms)
+                 (^ (^assign (^array-index key_vals k)
+                             (^array-index key_descr
+                                           (^+ (^* k 2) (^int 1))))
+                    (^inc-by k 1)))
+
+         (^assign k (^int 0))
+
+         (^while (^< k nb_key_args)
+                 (^
+                  (^assign val (univ-stk-slot-from-tos ctx k))
+                  (^inc-by k 1)
+                  (^assign key (univ-stk-slot-from-tos ctx k))
+                  (^inc-by k 1)
+
+                  (^if (^not (^parens (^keyword? key)))
+                       (^return (^cast*-jumpable
+                                 (^getpeps '##raise-keyword-expected-exception-nary))))
+
+                  (^assign i (^int 0))
+                  (^while (^< i nb_key_parms)
+                          (^
+                           (^if (^eq? key (^array-index key_descr (^* i 2)))
+                                (^ (^assign (^array-index key_vals i) val)
+                                   (^assign i (^+ nb_key_parms (^int 1)))))
+                           (^inc-by i 1)))
+
+                  (^if (^= i nb_key_parms)
+                       (^return (^cast*-jumpable
+                                 (^getpeps '##raise-unknown-keyword-argument-exception-nary))))))
+
+         (^assign k (^int 0))
+
+         ;; Pop old key args
+         (^inc-by (gvm-state-sp-use ctx 'rdwr) (^- nb_key_args))
+
+         (^while (^< k nb_key_parms)
+                 (^
+                  (^push (^array-index key_vals k))
+                  (^inc-by k 1)))
+
+         (^assign (^getnargs) nb_parms)
+
+         (^return (^null)))))))
+
+  (univ-define-rtlib-feature 'build_key
+   (univ-rtlib-feature-method
+    '(public)
+    'jumpable
+    (list (univ-field 'nb_req_opt 'int)
+          (univ-field 'nb_parms 'int)
+          (univ-field 'key_descr '(array scmobj)))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((nb_req_opt (^local-var 'nb_req_opt))
+            (nb_parms (^local-var 'nb_parms))
+            (key_descr (^local-var 'key_descr))
+            (error (^local-var 'error)))
+        (^
+         (^var-declaration 'jumpable error (^null))
+
+         (univ-push-args ctx)
+
+         (^assign error (^call-prim (^rts-method-use 'build_key_from_stack)
+                                    nb_req_opt
+                                    nb_parms
+                                    key_descr))
+
+         (univ-pop-args-to-regs ctx 0)
+
+         (^return error))))))
+
+  (univ-define-rtlib-feature 'build_key_rest
+   (univ-rtlib-feature-method
+    '(public)
+    'jumpable
+    (list (univ-field 'nb_req_opt 'int)
+          (univ-field 'nb_parms 'int)
+          (univ-field 'key_descr '(array scmobj)))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((nb_req_opt (^local-var 'nb_req_opt))
+            (nb_parms (^local-var 'nb_parms))
+            (key_descr (^local-var 'key_descr))
+            (k (^local-var 'k))
+            (fnk (^local-var 'fnk))
+            (rest (^local-var 'rest))
+            (empty_rest (^local-var 'empty_rest))
+            (error (^local-var 'error)))
+        (^
+         (^var-declaration 'int k (^- (^getnargs) nb_req_opt))
+         (^var-declaration 'int fnk (^- k 1))
+         (^var-declaration 'scmobj rest (^null))
+         (^var-declaration 'bool empty_rest (^bool #t))
+         (^var-declaration 'jumpable error (^null))
+
+         (^if (^< k (^int 0)) ;; not all required and optional arguments supplied?
+              (^return
+               (^cast*-jumpable
+                (^getpeps '##raise-wrong-number-of-arguments-exception-nary))))
+
+         (univ-push-args ctx)
+
+         ;; find first non-keyword pair in remaining arguments
+         (^while (^and (^>= fnk 0) empty_rest)
+                 (^
+                  (^if (^not (^parens (^keyword? (univ-stk-slot-from-tos ctx fnk))))
+                       (^assign empty_rest (^bool #f))
+                       (^inc-by fnk -2))))
+
+         (^if (^and (^not empty_rest)
+                    (^not (^call-prim (^rts-method-use 'build_rest_from_stack)
+                                      (^- (^getnargs) (^- fnk (^int 1))))))
+              (^ (univ-pop-args-to-regs ctx 0)
+                 (^return
+                  (^cast*-jumpable
+                   (^getpeps '##raise-wrong-number-of-arguments-exception-nary)))))
+
+         (^if (^not empty_rest)
+              (^pop (lambda (expr) (^assign rest expr))))
+
+         (^assign error (^call-prim (^rts-method-use 'build_key_from_stack)
+                                    nb_req_opt
+                                    (^- nb_parms (^int 1))
+                                    key_descr))
+
+         (^if (^not (^parens (^eq? error (^null))))
+              (^ ;; unbundle the rest argument
+               (^while (^not (^parens (^eq? rest (^null))))
+                       (^ (^push (^getcar rest))
+                          (^assign rest (^getcdr rest))
+                          (^inc-by (^getnargs) 1)
+                          (^inc-by (gvm-state-nargs-use ctx 'rdwr) 1)))
+               (univ-pop-args-to-regs ctx 0)
+               (^return error)))
+
+         (^push rest)
+
+         (^assign (^getnargs) nb_parms)
+
+         (univ-pop-args-to-regs ctx 0)
+
+         (^return (^null)))))))
+
+  (univ-define-rtlib-feature 'wrong_key_args
+   (univ-rtlib-feature-method
+    '(public)
+    'jumpable
+    (list (univ-field 'proc 'entrypt)
+          (univ-field 'exception 'jumpable))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((proc (^local-var 'proc))
+            (i (^local-var 'i))
+            (exception (^local-var 'exception)))
+        (^ (^expr-statement
+            (^call-prim (^rts-method-use-priv 'prepend_arg1) proc))
+           (^return exception))))))
+
+  (univ-define-rtlib-feature 'wrong_nargs
+   (univ-rtlib-feature-method
+    '(public)
+    'jumpable
+    (list (univ-field 'proc 'entrypt))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((proc (^local-var 'proc))
+            (i (^local-var 'i)))
+        (^ (^expr-statement
+            (^call-prim (^rts-method-use-priv 'prepend_arg1) proc))
+           (^return
+            (^upcast*
+             'parententrypt
+             'jumpable
+             (^getpeps '##raise-wrong-number-of-arguments-exception-nary))))))))
+
+  (univ-define-rtlib-feature 'prepend_arg1
+   (univ-rtlib-feature-method
+    '(public)
+    'noresult
+    (list (univ-field 'arg1 'entrypt))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((arg1 (^local-var 'arg1))
+            (i (^local-var 'i)))
+        (^ (^var-declaration 'int i (^int 0))
+           (univ-push-args ctx)
+           (^push (^null))
+           (^while (^< i (^getnargs))
+                   (^ (^assign (univ-stk-slot-from-tos ctx i)
+                               (univ-stk-slot-from-tos ctx (^parens (^+ i (^int 1)))))
+                      (^inc-by i
+                               1)))
+           (^assign (univ-stk-slot-from-tos ctx i)
+                    arg1)
+           (^inc-by (gvm-state-nargs-use ctx 'rdwr)
+                    1)
+           (univ-pop-args-to-regs ctx 0))))))
+
+  ;;---------------------------------------------------------------------------
+
+  ;; Temporary variables
+
+  (for-each
+   (lambda (feature)
+     (univ-define-rtlib-feature feature
+      (univ-rtlib-feature-field 'scmobj
+                                (lambda (ctx)
+                                  (^null)))))
+   '(temp1 temp2))
+
+  (for-each
+   (lambda (feature)
+     (univ-define-rtlib-feature feature
+      (univ-rtlib-feature-field 'int
+                                (lambda (ctx)
+                                  (^int 0)))))
+   '(inttemp1 inttemp2))
+
+  ;;---------------------------------------------------------------------------
+
+  ;; Polling
+
+  (univ-define-rtlib-feature 'pollcount
+   (univ-rtlib-feature-field 'int
+                             (lambda (ctx)
+                               (^int poll-interval))))
+
+  (univ-define-rtlib-feature 'poll
+   (univ-rtlib-feature-method
+    '(public)
+    'jumpable
+    (list (univ-field 'dest 'ctrlpt))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((dest (^local-var 'dest)))
+        (^inc-by
+         (gvm-state-pollcount-use ctx 'rdwr)
+         -1
+         (lambda (inc)
+           (^ (^if (^<= inc (^int 0))
+                   (^ (^assign (gvm-state-pollcount-use ctx 'wr)
+                               poll-interval)
+                      (if (and (univ-stack-resizable? ctx)
+                               (not (eq? (target-name (ctx-target ctx)) 'go)) ;; TODO : find an efficient way to shrink the stack in go
+                               (not (eq? (target-name (ctx-target ctx)) 'python))) ;; TODO : find an efficient way to shrink the stack in python
+                          (^array-shrink! (^rts-field-use 'stack) (^+ (^rts-field-use 'sp) (^int 1)))
+                          (^))))
+              (^return (^upcast* 'ctrlpt 'jumpable dest)))))))))
+
+  ;;---------------------------------------------------------------------------
+
+  ;; Main VM and processor structures
+
+  (univ-define-rtlib-feature 'current_vm
+   (univ-rtlib-feature-field
+    'scmobj
+    (lambda (ctx)
+      (^structure-box
+       (^array-literal
+        'scmobj
+        (list (^obj #f) ;; type descriptor (filled in later)
+              (^obj 1)  ;; lock1
+              (^obj #f) ;; unused-field2
+              (^obj #f) ;; unused-field3
+              (^obj #f) ;; unused-field4
+              (^obj #f) ;; unused-field5
+              (^obj #f) ;; unused-field6
+              (^obj #f) ;; unused-field7
+              (^obj #f) ;; unused-field8
+              (^obj 0)  ;; lock2
+              (^obj #f) ;; unused-field10
+              (^obj #f) ;; unused-field11
+              (^obj #f) ;; unused-field12
+              (^obj #f) ;; unused-field13
+              (^obj #f) ;; unused-field14
+              (^obj #f) ;; unused-field15
+              (^obj #f) ;; unused-field16
+              (^obj #f) ;; processor-deq-next
+              (^obj #f) ;; processor-deq-prev
+              (^obj #f) ;; idle-processor-count
+              ))))))
+
+  (univ-define-rtlib-feature 'current_processor
+   (univ-rtlib-feature-field
+    'scmobj
+    (lambda (ctx)
+      (^structure-box
+       (^array-literal
+        'scmobj
+        (list (^obj #f) ;; type descriptor (filled in later)
+              (^obj 1)  ;; lock1
+              (^obj #f) ;; condvar-deq-next
+              (^obj #f) ;; condvar-deq-prev
+              (^obj #f) ;; btq-color
+              (^obj #f) ;; btq-parent
+              (^obj #f) ;; btq-left
+              (^obj #f) ;; btq-leftmost
+              (^obj #f) ;; false
+              (^obj 0)  ;; lock2
+              (^obj #f) ;; toq-color
+              (^obj #f) ;; toq-parent
+              (^obj #f) ;; toq-left
+              (^obj #f) ;; toq-leftmost
+              (^obj #f) ;; current-thread
+              #;
+              (^structure-box  ;; current-thread
+               (^array-literal
+                'scmobj
+                (list (^obj #f)  ;; type descriptor (filled in later)
+                      (^obj #f)  ;; lock1
+                      (^obj #f)  ;; btq-deq-next
+                      (^obj #f)  ;; btq-deq-prev
+                      (^obj #f)  ;; btq-color
+                      (^obj #f)  ;; btq-parent
+                      (^obj #f)  ;; btq-left
+                      (^obj #f)  ;; btq-leftmost
+                      (^obj #f)  ;; tgroup
+                      (^obj #f)  ;; lock2
+                      (^obj #f)  ;; toq-color
+                      (^obj #f)  ;; toq-parent
+                      (^obj #f)  ;; toq-left
+                      (^obj #f)  ;; toq-leftmost
+                      (^obj #f)  ;; threads-deq-next
+                      (^obj #f)  ;; threads-deq-prev
+                      (^obj #f)  ;; floats
+                      (^obj #f)  ;; btq-container
+                      (^obj #f)  ;; toq-container
+                      (^obj #f)  ;; name
+                      (^obj #f)  ;; end-condvar
+                      (^obj #f)  ;; exception?
+                      (^obj #f)  ;; result
+                      (^obj #f)  ;; cont
+                      (^obj '()) ;; denv
+                      (^obj #f)  ;; denv-cache1
+                      (^obj #f)  ;; denv-cache2
+                      (^obj #f)  ;; denv-cache3
+                      (^obj #f)  ;; repl-channel
+                      (^obj #f)  ;; mailbox
+                      (^obj #f)  ;; specific
+                      (^obj #f)  ;; resume-thunk
+                      (^obj #f)  ;; interrupts
+                      (^obj #f)  ;; last-processor
+                      ;;(^obj #f) ;; pinned
+                      )))
+              (^obj #f) ;; unused-field15
+              (^obj #f) ;; floats
+              (^obj #f) ;; processor-deq-next
+              (^obj #f) ;; processor-deq-prev
+              (^obj #f) ;; id
+              (^obj #f) ;; interrupts
+              ))))))
+
+  ;;---------------------------------------------------------------------------
+
+  ;; Module registry
+
+  (univ-define-rtlib-feature 'modlinkinfo
+   (univ-rtlib-feature-class
+    '() ;; properties
+    #f ;; extends
+    '() ;; class-fields
+    (list (univ-field 'name 'str #f '(public)) ;; instance-fields
+          (univ-field 'index 'int #f '(public)))))
+
+  (univ-define-rtlib-feature 'module_map
+   (univ-rtlib-feature-field '(dict str modlinkinfo)
+                             (lambda (ctx)
+                               (^empty-dict '(dict str modlinkinfo)))))
+
+  (univ-define-rtlib-feature 'module_count
+   (univ-rtlib-feature-field 'int
+                             (lambda (ctx)
+                               (^int 0))))
+
+  (univ-define-rtlib-feature 'module_table
+   (univ-rtlib-feature-field '(array scmobj)
+                             (lambda (ctx)
+                               (^null))))
+
+  (univ-define-rtlib-feature 'module_latest_registered
+   (univ-rtlib-feature-field 'scmobj
+                             (lambda (ctx)
+                               (^null))))
 
   (univ-define-rtlib-feature 'module_registry_init
    (univ-rtlib-feature-method
-    '()
+    '(public)
     'noresult
     (list (univ-field 'link_info '(array modlinkinfo)))
     "\n"
@@ -566,45 +1527,920 @@
 
                       (^inc-by i 1))))))))
 
-  (univ-define-rtlib-feature 'modlinkinfo
+  (univ-define-rtlib-feature 'module_register
+   (univ-rtlib-feature-method
+    '(public)
+    'noresult
+    (list (univ-field 'module_descr 'scmobj))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((module_descr (^local-var 'module_descr))
+            (temp (^local-var 'temp))
+            (name (^local-var 'name))
+            (info (^local-var 'info))
+            (index (^local-var 'index))
+            (old (^local-var 'old)))
+
+        (^ (^var-declaration
+            'scmobj
+            temp
+            (^vector-ref module_descr (^int 0)))
+
+           (^var-declaration
+            'str
+            name
+            (^symbol-unbox
+             (^vector-ref
+              temp
+              (^- (^vector-length temp) (^int 1)))))
+
+           (^var-declaration
+            'modlinkinfo
+            info
+            (^dict-get-or-null 'modlinkinfo
+                               (^rts-field-use-priv 'module_map)
+                               name))
+
+           (^assign (^rts-field-use-priv 'module_latest_registered)
+                    module_descr)
+
+           (^if (^not
+                 (^parens
+                  (^or (^null? info)
+                       (^= (^rts-field-use-priv 'module_count)
+                           (^array-length (^rts-field-use-priv 'module_table))))))
+
+                (^ (^var-declaration
+                    'int
+                    index
+                    (^member info (^public 'index)))
+
+                   (^var-declaration
+                    'scmobj
+                    old
+                    (^array-index (^rts-field-use-priv 'module_table) index))
+
+                   (^assign (^array-index (^rts-field-use-priv 'module_table)
+                                          index)
+                            module_descr)
+
+                   (^if (^null? old)
+
+                        (^ (^inc-by (^rts-field-use-priv 'module_count)
+                                    1)
+
+                           (^if (^= (^rts-field-use-priv 'module_count)
+                                    (^array-length (^rts-field-use-priv 'module_table)))
+                                (^expr-statement
+                                 (^call-prim (^rts-method-use 'program_start)))))))))))))
+
+  (univ-define-rtlib-feature 'program_start
+   (univ-rtlib-feature-method
+    '(public)
+    'noresult
+    '()
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((temp (^local-var 'temp)))
+        (^ (^var-declaration
+            'scmobj
+            temp
+            (^vector-ref
+             (^array-index
+              (^rts-field-use-priv 'module_table)
+              (^- (^array-length (^rts-field-use-priv 'module_table))
+                  (^int 1)))
+             (^int 0)))
+
+           (^setglo '##vm-main-module-ref
+                    (^vector-ref
+                     temp
+                     (^- (^vector-length temp)
+                         (^int 1))))
+
+           (^setglo '##program-descr
+                    (^vector-box
+                     (^array-literal
+                      'scmobj
+                      (list (^vector-box
+                             (^rts-field-use-priv 'module_table))
+                            (^obj '())
+                            (^obj #f)))))
+
+           ;; execute first module
+
+           (^assign (gvm-state-sp-use ctx 'wr)
+                    (^int -1))
+
+           (^push (univ-end-of-cont-marker ctx))
+
+           (^expr-statement
+            (^call-prim (^rts-method-use 'call_start)
+                        (^vector-ref
+                         (^array-index
+                          (^rts-field-use-priv 'module_table)
+                          (^int 0))
+                         (^int 4))
+                        (^array-literal 'scmobj '())
+                        (^rts-jumpable-use 'underflow))))))))
+
+  (univ-define-rtlib-feature 'call_start
+   (univ-rtlib-feature-method
+    '(public)
+    'noresult
+    (list (univ-field 'proc 'scmobj)
+          (univ-field 'args '(array scmobj))
+          (univ-field 'ra 'scmobj))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((proc (^local-var 'proc))
+            (args (^local-var 'args))
+            (ra (^local-var 'ra)))
+        (^ (^assign (^getreg 0) ra)
+           (^expr-statement
+            (^call-prim (^rts-method-use 'push_args)
+                        args))
+           (^expr-statement
+            (^call-prim (^rts-method-use 'trampoline)
+                        (^downupcast* 'entrypt 'jumpable proc))))))))
+
+  (univ-define-rtlib-feature 'push_args
+   (univ-rtlib-feature-method
+    '(public)
+    'noresult
+    (list (univ-field 'args '(array scmobj)))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((args (^local-var 'args))
+            (i (^local-var 'i)))
+        (^
+         (^var-declaration 'int i (^int 0))
+         (^assign (^getnargs) (^array-length args))
+         (^while (^< i (^getnargs))
+                 (^ (^push
+                     (^array-index args i))
+                    (^inc-by i 1)))
+         (univ-pop-args-to-regs ctx 0))))))
+
+  ;;---------------------------------------------------------------------------
+
+  ;; Trampoline
+
+  (univ-define-rtlib-feature 'trampoline
+   (univ-rtlib-feature-method
+    '(public)
+    'noresult
+    (list (univ-field 'pc 'jumpable))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((pc (^local-var 'pc)))
+        (^while (^!= pc (^null)) ;; exit trampoline?
+                (^assign pc
+                         (^jump pc)))))))
+
+  ;;---------------------------------------------------------------------------
+
+  ;; Conversions between Scheme and host
+
+  (univ-define-rtlib-feature 'foreign2host
+   (univ-rtlib-feature-method
+    '(public)
+    'object
+    (list (univ-field 'obj 'scmobj))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((obj (^local-var 'obj)))
+        (^return (^member obj (^public 'val)))))))
+
+  (univ-define-rtlib-feature 'host2foreign
+   (univ-rtlib-feature-method
+    '(public)
+    'object
+    (list (univ-field 'val 'object))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((val (^local-var 'val)))
+        (^return (^new-foreign val (^obj #f)))))))
+
+  (univ-define-rtlib-feature 'scheme2scm
+   (univ-rtlib-feature-method
+    '(public)
+    'scmobj
+    (list (univ-field 'obj 'scmobj))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((obj (^local-var 'obj)))
+        (^return (^member obj (^public 'scmobj)))))))
+
+  (univ-define-rtlib-feature 'scm2scheme
+   (univ-rtlib-feature-method
+    '(public)
+    'scmobj
+    (list (univ-field 'scmobj 'scmobj))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((scmobj (^local-var 'scmobj)))
+        (^return (^new-scheme scmobj))))))
+
+  (univ-define-rtlib-feature 'function2scm
+   (univ-rtlib-feature-method
+    '(public)
+    'object
+    (list (univ-field 'obj 'object))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((obj (^local-var 'obj))
+            (proc 'proc))
+        (^ (^procedure-declaration
+            #f
+            'entrypt
+            proc
+            '()
+            "\n"
+            (list (univ-field 'id 'int (^int 0) '())) ;; attributes
+            (^return-call-prim                        ;; body
+             (^rts-method-ref 'scm2host_call)
+             obj))
+
+           (^return (^prefix proc)))))))
+
+  (univ-define-rtlib-feature 'host2scm
+   (univ-rtlib-feature-method
+    '(public)
+    'scmobj
+    (list (univ-field 'obj 'object))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((obj (^local-var 'obj))
+            (alist (^local-var 'alist))
+            (key (^local-var 'key)))
+
+        (define (try-convert-array ctx obj type)
+          (let ((constructor (univ-array-constructor ctx type)))
+            (if (or (not constructor)
+                    (and (not (eq? type 'scmobj)) ;; avoid useless tests
+                         (equal? constructor
+                                 (univ-array-constructor ctx 'scmobj))))
+                (^)
+                (^if (^instanceof constructor obj)
+                     (^return
+                      (^vect-box type
+                                 (if (eq? type 'scmobj)
+                                     (^map (^rts-method-use 'host2scm) obj)
+                                     obj)))))))
+
+        (^
+         (^if (^void? obj)
+              (^return (^void-obj)))
+
+         (case (target-name (ctx-target ctx))
+           ((js)
+            (^if (^null? obj)
+                 (^return (^absent))))
+           (else
+            (^)))
+
+         (case (target-name (ctx-target ctx))
+           ((php)
+            (^))
+           (else
+            (^if (^function? obj)
+                 (^return-call-prim
+                  (^rts-method-use 'function2scm)
+                  obj))))
+
+         (^if (^bool? obj)
+              (^return (^boolean-box obj)))
+
+         (case (target-name (ctx-target ctx))
+           ((js)
+            (^ (^if (univ-emit-js-number? ctx obj)
+                    (^if (^and (^= (^parens (^bitior obj 0)) obj)
+                               (^and (^>= obj -536870912)
+                                     (^<= obj 536870911)))
+                         (^return (^fixnum-box obj))
+                         (^return (^flonum-box obj))))
+               (^if (univ-emit-js-bigint? ctx obj)
+                    (^if (^and (^>= obj -536870912)
+                               (^<= obj 536870911))
+                         (^return (^fixnum-box
+                                   (^ (^type 'number) (^parens obj))))
+                         (^return-call-prim
+                          (^rts-method-use 'bignum_from_bigint)
+                          obj)))))
+           (else
+            (^ (^if (^and (^int? obj)
+                          (^and (^>= obj -536870912)
+                                (^<= obj 536870911)))
+                    (^return (^fixnum-box obj)))
+               (^if (^float? obj)
+                    (^return (^flonum-box obj))))))
+
+         (^if (^str? obj)
+              (^return (^str->string obj)))
+
+         (try-convert-array ctx obj 'scmobj)
+         (try-convert-array ctx obj 'u8)
+         (try-convert-array ctx obj 'u16)
+         (try-convert-array ctx obj 'u32)
+         (try-convert-array ctx obj 'u64)
+         (try-convert-array ctx obj 's8)
+         (try-convert-array ctx obj 's16)
+         (try-convert-array ctx obj 's32)
+         (try-convert-array ctx obj 's64)
+         (try-convert-array ctx obj 'f32)
+         (try-convert-array ctx obj 'f64)
+
+         ;; "scheme" objects need to be unboxed
+         (^if (^scheme? obj)
+              (^return-call-prim
+               (^rts-method-use 'scheme2scm)
+               obj))
+
+         ;; foreign objects just pass through
+         (^if (^foreign? obj)
+              (^return obj))
+
+         ;; all other host objects are boxed into a foreign object
+         (^return-call-prim
+          (^rts-method-use 'host2foreign)
+          obj))))))
+
+  (univ-define-rtlib-feature 'scm_call
+   (univ-rtlib-feature-method
+    '(public)
+    'object
+    (list (univ-field 'proc 'scmobj)
+          (univ-field 'args '(array scmobj)))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((args (^local-var 'args))
+            (proc (^local-var 'proc)))
+        (^ (^assign (gvm-state-sp-use ctx 'wr) -1)
+           (^push (univ-end-of-cont-marker ctx))
+           (^expr-statement
+            (^call-prim (^rts-method-use 'call_start)
+                        proc
+                        args
+                        (^rts-jumpable-use 'underflow)))
+           ;; TODO: fix issue that there is no guarantee that the Scheme
+           ;; call to "proc" has terminated when call_start returns.
+           (^return (^getreg 1)))))))
+
+  (univ-define-rtlib-feature 'host2scm_call
+   (univ-rtlib-feature-method
+    '(public)
+    'object
+    (list (univ-field 'proc 'scmobj)
+          (univ-field 'args '(array scmobj)))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((args (^local-var 'args))
+            (proc (^local-var 'proc)))
+        (^return
+         (^call-prim (^rts-method-use 'scm2host)
+                     (^call-prim (^rts-method-use 'scm_call)
+                                 proc
+                                 (^map (^rts-method-use 'host2scm)
+                                       args))))))))
+
+  (univ-define-rtlib-feature 'procedure2host
+   (univ-rtlib-feature-method
+    '(public)
+    'object
+    (list (univ-field 'obj 'scmobj))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((obj (^local-var 'obj))
+            (args (^local-var 'args))
+            (fn (^local-var 'fn)))
+        (^
+         (univ-emit-function-declaration
+          ctx
+          #f  ;; not global
+          fn  ;; name
+          'object  ;; result type
+          (case (target-name (ctx-target ctx))  ;; parameter list
+            ((js php) '())
+            ((python ruby) (list (univ-field '*args '()))))
+          (^) ;; attributes
+          (univ-emit-fn-body
+           ctx
+           "\n"
+           (lambda (ctx)
+             (^ (case (target-name (ctx-target ctx)) ;; body
+                  ((js)
+                   (^var-declaration
+                    '()
+                    args
+                    (^call-prim (^member (^member (^member "Array" 'prototype)
+                                                  'slice) 'call)
+                                (^local-var 'arguments))))
+                  ((php)
+                   (^var-declaration
+                    '()
+                    args
+                    (^call-prim 'func_get_args)))
+                  (else
+                   (^)))
+                (^return
+                 (^call-prim (^rts-method-ref 'host2scm_call)
+                             obj
+                             args)))))
+          #f   ;; modifier
+          #t)  ;; primitive
+
+         (^return fn))))))
+
+  (univ-define-rtlib-feature 'scm2host
+   (univ-rtlib-feature-method
+    '(public)
+    'object
+    (list (univ-field 'obj 'scmobj))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((obj (^local-var 'obj)))
+
+        (define (try-convert-array ctx obj type)
+          (let ((constructor (univ-array-constructor ctx type)))
+            (if (and constructor
+                     (and (not (eq? type 'scmobj))
+                          (equal? constructor
+                                  (univ-array-constructor ctx 'scmobj))))
+                (^)
+                (^if (^vect? type obj)
+                     (^return
+                      (if (eq? type 'scmobj)
+                          (^map (^rts-method-use 'scm2host)
+                                (^vect-unbox type obj))
+                          (^vect-unbox type obj)))))))
+
+        (^
+         (^if (^void-obj? obj)
+              (^return (^void)))
+
+         (case (target-name (ctx-target ctx))
+           ((js)
+            (^if (^eq? obj (^absent))
+                 (^return (^null))))
+           (else
+            (^)))
+
+         (case (target-name (ctx-target ctx))
+           ((php) (^))
+           (else
+            (^if (^procedure? obj)
+                 (^return-call-prim
+                  (^rts-method-use 'procedure2host)
+                  obj))))
+
+         (^if (^boolean? obj)
+              (^return (^boolean-unbox obj)))
+
+         (if (and (eq? (target-name (ctx-target ctx)) 'js)
+                  (eq? (univ-flonum-representation ctx) 'host)
+                  (eq? (univ-fixnum-representation ctx) 'host))
+             (^if  (^int? obj)
+                   (^if (^and (^>= obj -536870912)
+                              (^<= obj 536870911))
+                        (^return (^fixnum-unbox obj))
+                        (^return (^flonum-unbox obj))))
+             (^
+              (^if (^fixnum? obj)
+                   (^return (^fixnum-unbox obj)))
+              (^if (^flonum? obj)
+                   (^return (^flonum-unbox obj)))))
+
+         (^if (^bignum? obj)
+              (case (target-name (ctx-target ctx))
+                ((js)
+                 (^return
+                  (^ (^type 'number)
+                     (^parens (^call-prim
+                               (^rts-method-use 'bignum_to_bigint)
+                               obj)))))
+                (else
+                 (^return-call-prim
+                  (^rts-method-use 'bignum_to_bigint)
+                  obj))))
+
+         (^if (^ratnum? obj)
+              (^return
+               (^/ (^call-prim
+                    (^rts-method-use 'scm2host)
+                    (^member (^cast* 'ratnum obj) (^public 'num)))
+                   (^call-prim
+                    (^rts-method-use 'scm2host)
+                    (^member (^cast* 'ratnum obj) (^public 'den))))))
+
+         (^if (^string? obj)
+              (case (univ-string-representation ctx)
+                ((class)
+                 (^return (^string->str obj)))
+                ((host)
+                 (^return obj))))
+
+         (^if (^symbol? obj)
+              (^return (^symbol-unbox obj)))
+
+         (^if (^keyword? obj)
+              (^return (^keyword-unbox obj)))
+
+         (^if (^char? obj)
+              (^return (^char-unbox obj)))
+
+         (try-convert-array ctx obj 'scmobj)
+         (try-convert-array ctx obj 'u8)
+         (try-convert-array ctx obj 'u16)
+         (try-convert-array ctx obj 'u32)
+         (try-convert-array ctx obj 'u64)
+         (try-convert-array ctx obj 's8)
+         (try-convert-array ctx obj 's16)
+         (try-convert-array ctx obj 's32)
+         (try-convert-array ctx obj 's64)
+         (try-convert-array ctx obj 'f32)
+         (try-convert-array ctx obj 'f64)
+
+         ;; convert list to array
+
+         (^if (^null-obj? obj)
+              (^return (^array-literal 'scmobj '())))
+
+         (^if (^pair? obj)
+              (let ((n (^local-var 'n))
+                    (probe (^local-var 'probe))
+                    (result (^local-var 'result)))
+                (^
+                 (^var-declaration 'int n (^int 0))
+                 (^var-declaration 'scmobj probe obj)
+                 (^while (^pair? probe)
+                         (^ (^assign probe (^getcdr probe))
+                            (^inc-by n 1)))
+                 (^if (^not (^parens (^null-obj? probe)))
+                      (^inc-by n 1))
+                 (^make-array
+                  'scmobj
+                  (lambda (arr)
+                    (^
+                     (^var-declaration '(array scmobj) result arr)
+                     (^assign n (^int 0))
+                     (^assign probe obj)
+                     (^while (^pair? probe)
+                             (^ (^assign (^array-index result n)
+                                         (^call-prim
+                                          (^rts-method-use 'scm2host)
+                                          (^getcar probe)))
+                                (^assign probe (^getcdr probe))
+                                (^inc-by n 1)))
+                     (^if (^not (^parens (^null-obj? probe)))
+                          (^assign (^array-index result n)
+                                   (^call-prim
+                                    (^rts-method-use 'scm2host)
+                                    probe)))
+                     (^return result)))
+                  n
+                  (^null)))))
+
+         (case (target-name (ctx-target ctx))
+           ((js) ;; TODO: cleanup
+            ;; convert table to Object
+            (^if (^and (^structure? obj)
+                       "obj.slots[0].slots[1].name === '##type-4-A7AB629D-EAB0-422F-8005-08B2282E04FC'")
+                 "var result = Object();
+                  obj.slots[3].forEach(function (val, key) {
+                    result[key] = val;
+                  });
+                  return result;
+"))
+           (else
+            (^)))
+
+         ;; foreign objects need to be unboxed
+         (^if (^foreign? obj)
+              (^return-call-prim
+               (^rts-method-use 'foreign2host)
+               obj))
+
+         ;; "scheme" objects just pass through
+         (^if (^scheme? obj)
+              (^return obj))
+
+         ;; all other Scheme objects are boxed into a "scheme" object
+         (^return-call-prim
+          (^rts-method-use 'scm2scheme)
+          obj))))))
+
+  (univ-define-rtlib-feature 'scm2host_call
+   (univ-rtlib-feature-method
+    '(public)
+    'jumpable
+    (list (univ-field 'fn 'object))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((args (^local-var 'args))
+            (ra (^local-var 'ra))
+            (frame (^local-var 'frame))
+            (tmp (^local-var 'tmp))
+            (fn (^local-var 'fn))
+            (caught_exc (^local-var 'caught_exc))
+            (exc (^local-var 'exc)))
+        (^
+         (univ-push-args ctx)
+         (^var-declaration '(array scmobj)
+                           args
+                           (^extensible-subarray
+                            (gvm-state-stack-use ctx 'rd)
+                            (^- (^+ (gvm-state-sp-use ctx 'rd) 1)
+                                (^getnargs))
+                            (^getnargs)))
+         (^inc-by (gvm-state-sp-use ctx 'rdwr) (^- (^getnargs)))
+         (^var-declaration 'returnpt
+                           ra
+                           (^call-prim
+                            (^rts-method-use 'heapify_cont)
+                            (^getreg 0)))
+         (^var-declaration 'frame
+                           frame
+                           (^array-index (gvm-state-stack-use ctx 'rd) 0))
+         ;; TODO choose appropriate type for Java
+         (^var-declaration '() ;??? '(array ???) <- This one is problematic.
+                           tmp
+                           (^map (^rts-method-use 'scm2host)
+                                 args))
+         (^var-declaration 'object caught_exc (^null))
+         (^try-catch
+          (^ (^assign tmp (^call-with-arg-array fn tmp))
+             (^setreg 1
+                      (^call-prim (^rts-method-use 'host2scm)
+                                  tmp)))
+          exc
+          (^ (^assign caught_exc exc)
+             (^setreg 1
+                      (^call-prim (^rts-method-use 'host2scm)
+                                  (^tostr caught_exc)))))
+         (^assign (gvm-state-sp-use ctx 'wr) -1)
+         (^inc-by (gvm-state-sp-use ctx 'rdwr)
+                  1
+                  (lambda (x)
+                    (^assign (^array-index (gvm-state-stack-use ctx 'wr) x)
+                             frame)))
+         (^setreg 0 ra)
+         (^setnargs 1)
+         (^if (^eq? caught_exc (^null))
+              (^return (^getglo '##scm2host-call-return))
+              (^return (^getglo '##scm2host-call-error))))))))
+
+  ;;---------------------------------------------------------------------------
+
+  ;; Type constructors and predicates
+
+  (let ()
+
+    (define (test-instanceof ctx class)
+      (^if-instanceof (^type class)
+                      (^local-var 'obj)
+                      (^return (^bool #t))
+                      (^return (^bool #f))))
+
+    (univ-define-rtlib-feature 'jsnumberp
+      (univ-rtlib-feature-method
+       '(public)
+       'bool
+       (list (univ-field 'obj 'object))
+       "\n"
+       '()
+       (lambda (ctx)
+         (^return
+          (univ-emit-js-number?-inline ctx (^local-var 'obj))))))
+
+    (univ-define-rtlib-feature 'flonumbox
+      (univ-rtlib-feature-method
+       '(public)
+       'scmobj
+       (list (univ-field 'val 'f64))
+       "\n"
+       '()
+       (lambda (ctx)
+         (^return
+          (univ-emit-flonum-box-inline ctx (^local-var 'val))))))
+
+    (univ-define-rtlib-feature 'flonump
+      (univ-rtlib-feature-method
+       '(public)
+       'bool
+       (list (univ-field 'obj 'scmobj))
+       "\n"
+       '()
+       (lambda (ctx)
+         (if (eq? 'go (target-name (ctx-target ctx)))
+             (test-instanceof
+              ctx
+              'flonum)
+             (^return
+              (univ-emit-flonum?-inline ctx (^local-var 'obj)))))))
+
+    (univ-define-rtlib-feature 'cons
+      (univ-rtlib-feature-method
+       '(public)
+       'scmobj
+       (list (univ-field 'car 'scmobj)
+             (univ-field 'cdr 'scmobj))
+       "\n"
+       '()
+       (lambda (ctx)
+         (^return
+          (univ-emit-cons-inline ctx (^local-var 'car) (^local-var 'cdr))))))
+
+    (univ-define-rtlib-feature 'pairp
+      (univ-rtlib-feature-method
+       '(public)
+       'bool
+       (list (univ-field 'obj 'scmobj))
+       "\n"
+       '()
+       (lambda (ctx)
+         (if (eq? 'go (target-name (ctx-target ctx)))
+             (test-instanceof
+              ctx
+              'pair)
+             (^return
+              (univ-emit-pair?-inline ctx (^local-var 'obj)))))))
+
+    (univ-define-rtlib-feature 'vectorp
+      (univ-rtlib-feature-method
+       '(public)
+       'bool
+       (list (univ-field 'obj 'scmobj))
+       "\n"
+       '()
+       (lambda (ctx)
+         (if (eq? 'go (target-name (ctx-target ctx)))
+             (test-instanceof
+              ctx
+              (if (eq? (univ-vector-representation ctx 'scmobj) 'class)
+                  'vector
+                  '(array scmobj)))
+             (^return
+              (univ-emit-vector?-inline ctx (^local-var 'obj)))))))
+
+    (univ-define-rtlib-feature 'stringp
+      (univ-rtlib-feature-method
+       '(public)
+       'bool
+       (list (univ-field 'obj 'scmobj))
+       "\n"
+       '()
+       (lambda (ctx)
+         (if (eq? 'go (target-name (ctx-target ctx)))
+             (test-instanceof
+              ctx
+              (if (eq? (univ-string-representation ctx) 'class)
+                  'string
+                  '(array unicode)))
+             (^return
+              (univ-emit-string?-inline ctx (^local-var 'obj))))))))
+
+  ;;---------------------------------------------------------------------------
+
+  (univ-define-rtlib-feature 'symbol
    (univ-rtlib-feature-class
     '() ;; properties
-    #f ;; extends
+    'scmobj ;; extends
     '() ;; class-fields
     (list (univ-field 'name 'str #f '(public)) ;; instance-fields
-          (univ-field 'index 'int #f '(public)))))
-
-  ;; only needed for go which can't test types in expressions
-  (for-each
-   (lambda (kind)
-     (let ((name (car kind))
-           (class (cadr kind)))
-       (univ-define-rtlib-feature name
-        (univ-rtlib-feature-method
-         '(public)
-         'bool
-         (list (univ-field 'obj 'scmobj))
+          (univ-field 'hash 'scmobj #f '(public))
+          (univ-field 'interned 'scmobj #f '(public)))
+    '() ;; class-methods
+    (lambda (ctx) ;; instance-methods
+      (list
+       (univ-method
+        (univ-tostr-method-name ctx)
+        '(public)
+        'str
+        '()
+        '()
+        (univ-emit-fn-body
+         ctx
          "\n"
-         '()
          (lambda (ctx)
-           (let ((obj (^local-var 'obj)))
-             (^if-instanceof (^type (class ctx))
-                             obj
-                             (^return (^bool #t))
-                             (^return (^bool #f)))))))))
-   (list (list 'is_pair
-               (lambda (ctx)
-                 'pair))
-         (list 'is_vector
-               (lambda (ctx)
-                 (if (eq? (univ-vector-representation ctx 'scmobj) 'class)
-                     'vector
-                     '(array scmobj))))
-         (list 'is_string
-               (lambda (ctx)
-                 (if (eq? (univ-string-representation ctx) 'class)
-                     'string
-                     '(array unicode))))))
+           (^return (^member (^this) (^public 'name)))))
+        (^type 'symbol))))))
+
+  (univ-define-rtlib-feature 'make_interned_symbol
+   (univ-rtlib-feature-method
+    '(public)
+    'symbol
+    (list (univ-field 'name 'str))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((name (^local-var 'name))
+            (obj (^local-var 'obj)))
+        (^ (^var-declaration
+            'symbol
+            obj
+            (^dict-get-or-null 'symbol
+                               (^rts-field-use-priv 'symbol_table)
+                               name))
+           (^if (^null? obj)
+                (^ (^assign obj
+                            (^symbol-box-uninterned
+                             name
+                             (^fixnum-box
+                              (^call-prim
+                               (^rts-method-use 'str_hash)
+                               name))))
+                   (^assign (^member obj (^public 'interned))
+                            (^obj #t))
+                   (^dict-set 'symbol
+                              (^rts-field-use-priv 'symbol_table)
+                              name
+                              obj)))
+           (^return obj))))))
+
+  (univ-define-rtlib-feature 'symbol_table
+   (univ-rtlib-feature-field '(dict str symbol)
+                             (lambda (ctx)
+                               (^empty-dict '(dict str symbol)))))
+
+  (univ-define-rtlib-feature 'keyword
+   (univ-rtlib-feature-class
+    '() ;; properties
+    'scmobj ;; extends
+    '() ;; class-fields
+    (list (univ-field 'name 'str #f '(public)) ;; instance-fields
+          (univ-field 'hash 'scmobj #f '(public))
+          (univ-field 'interned 'scmobj #f '(public)))
+    '() ;; class-methods
+    (lambda (ctx) ;; instance-methods
+      (list
+       (univ-method
+        (univ-tostr-method-name ctx)
+        '(public)
+        'str
+        '()
+        '()
+        (univ-emit-fn-body
+         ctx
+         "\n"
+         (lambda (ctx)
+           (^return (^member (^this) (^public 'name)))))
+        (^type 'keyword))))))
+
+  (univ-define-rtlib-feature 'make_interned_keyword
+   (univ-rtlib-feature-method
+    '(public)
+    'keyword
+    (list (univ-field 'name 'str))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((name (^local-var 'name))
+            (obj (^local-var 'obj)))
+        (^ (^var-declaration
+            'keyword
+            obj
+            (^dict-get-or-null 'keyword
+                               (^rts-field-use-priv 'keyword_table)
+                               name))
+           (^if (^null? obj)
+                (^ (^assign obj
+                            (^keyword-box-uninterned
+                             name
+                             (^fixnum-box
+                              (^call-prim
+                               (^rts-method-use 'str_hash)
+                               name))))
+                   (^assign (^member obj (^public 'interned))
+                            (^obj #t))
+                   (^dict-set 'keyword
+                              (^rts-field-use-priv 'keyword_table)
+                              name
+                              obj)))
+           (^return obj))))))
+
+  (univ-define-rtlib-feature 'keyword_table
+   (univ-rtlib-feature-field '(dict str keyword)
+                             (lambda (ctx)
+                               (^empty-dict '(dict str keyword)))))
+
+  ;;---------------------------------------------------------------------------
 
   (for-each
    (lambda (num)
@@ -944,11 +2780,10 @@
                  (^call-prim
                   (^rts-method-use 'bignum_to_s32)
                   n))))))))
+
 )
 
 (define (old-univ-rtlib-feature ctx feature)
-
-  (define poll-interval 100)
 
   (define (rts-method
            name
@@ -963,7 +2798,9 @@
     (univ-add-method
      (univ-make-empty-defs)
      (univ-method
-      (univ-emit-rts-method ctx name (memq 'public properties))
+      (univ-emit-rts-method ctx
+                            (univ-rts-method-low-level-name ctx name)
+                            (memq 'public properties))
       properties
       result-type
       params
@@ -1010,7 +2847,10 @@
     (^type type)
     (univ-add-field
      (univ-make-empty-defs)
-     (univ-field name type init properties)))
+     (univ-field (univ-rts-field-low-level-name ctx name)
+                 type
+                 init
+                 properties)))
 
   (define (rts-init init)
     (univ-add-init
@@ -1018,974 +2858,6 @@
      init))
 
   (case feature
-
-    ;; ((r0 r1 r2 r3 r4)
-    ;;  (rts-field feature 'scmobj (^null) '(public)))
-
-    ((peps)
-     (rts-field
-      'peps
-      '(dict str parententrypt)
-      (^empty-dict '(dict str parententrypt))
-      '(public)))
-
-    ((glo)
-     (rts-field
-      'glo
-      '(dict str scmobj)
-      (^empty-dict '(dict str scmobj))
-      '(public)))
-
-    ((stack)
-     (case (target-name (ctx-target ctx))
-       ((js php python ruby)
-        (rts-field 'stack
-                   '(array scmobj)
-                   (^extensible-array-literal 'scmobj '())
-                   '(public)))
-       ((java go)
-        (rts-field 'stack
-                   '(array scmobj)
-                   (^new-array 'scmobj 10000)
-                   '(public)))
-       (else
-        (compiler-internal-error
-         "stack, unknown target"))))
-
-    ((sp)
-     (univ-use-rtlib ctx 'stack) ;; order after stack
-     (rts-field 'sp 'int (^int -1) '(public)))
-
-    ((nargs)
-     (rts-field 'nargs 'int (^int 0) '(public)))
-
-    ((pollcount)
-     (rts-field 'pollcount 'int (^int poll-interval) '(public)))
-
-    ((temp1)
-     (rts-field 'temp1 'scmobj (^null) '(public)))
-
-    ((temp2)
-     (rts-field 'temp2 'scmobj (^null) '(public)))
-
-    ((inttemp1)
-     (rts-field 'inttemp1 'int (^int 0) '(public)))
-
-    ((inttemp2)
-     (rts-field 'inttemp2 'int (^int 0) '(public)))
-
-    ((current_vm)
-     (rts-field 'current_vm
-                'scmobj
-                (^structure-box
-                 (^array-literal
-                  'scmobj
-                  (list (^obj #f) ;; type descriptor (filled in later)
-                        (^obj 1)  ;; lock1
-                        (^obj #f) ;; unused-field2
-                        (^obj #f) ;; unused-field3
-                        (^obj #f) ;; unused-field4
-                        (^obj #f) ;; unused-field5
-                        (^obj #f) ;; unused-field6
-                        (^obj #f) ;; unused-field7
-                        (^obj #f) ;; unused-field8
-                        (^obj 0)  ;; lock2
-                        (^obj #f) ;; unused-field10
-                        (^obj #f) ;; unused-field11
-                        (^obj #f) ;; unused-field12
-                        (^obj #f) ;; unused-field13
-                        (^obj #f) ;; unused-field14
-                        (^obj #f) ;; unused-field15
-                        (^obj #f) ;; unused-field16
-                        (^obj #f) ;; processor-deq-next
-                        (^obj #f) ;; processor-deq-prev
-                        (^obj #f) ;; idle-processor-count
-                        )))
-                '(public)))
-
-    ((current_processor)
-     (rts-field 'current_processor
-                'scmobj
-                (^structure-box
-                 (^array-literal
-                  'scmobj
-                  (list (^obj #f) ;; type descriptor (filled in later)
-                        (^obj 1)  ;; lock1
-                        (^obj #f) ;; condvar-deq-next
-                        (^obj #f) ;; condvar-deq-prev
-                        (^obj #f) ;; btq-color
-                        (^obj #f) ;; btq-parent
-                        (^obj #f) ;; btq-left
-                        (^obj #f) ;; btq-leftmost
-                        (^obj #f) ;; false
-                        (^obj 0)  ;; lock2
-                        (^obj #f) ;; toq-color
-                        (^obj #f) ;; toq-parent
-                        (^obj #f) ;; toq-left
-                        (^obj #f) ;; toq-leftmost
-                        (^obj #f) ;; current-thread
-                        #;
-                        (^structure-box ;; current-thread
-                         (^array-literal
-                          'scmobj
-                          (list (^obj #f) ;; type descriptor (filled in later)
-                                (^obj #f) ;; lock1
-                                (^obj #f) ;; btq-deq-next
-                                (^obj #f) ;; btq-deq-prev
-                                (^obj #f) ;; btq-color
-                                (^obj #f) ;; btq-parent
-                                (^obj #f) ;; btq-left
-                                (^obj #f) ;; btq-leftmost
-                                (^obj #f) ;; tgroup
-                                (^obj #f) ;; lock2
-                                (^obj #f) ;; toq-color
-                                (^obj #f) ;; toq-parent
-                                (^obj #f) ;; toq-left
-                                (^obj #f) ;; toq-leftmost
-                                (^obj #f) ;; threads-deq-next
-                                (^obj #f) ;; threads-deq-prev
-                                (^obj #f) ;; floats
-                                (^obj #f) ;; btq-container
-                                (^obj #f) ;; toq-container
-                                (^obj #f) ;; name
-                                (^obj #f) ;; end-condvar
-                                (^obj #f) ;; exception?
-                                (^obj #f) ;; result
-                                (^obj #f) ;; cont
-                                (^obj '()) ;; denv
-                                (^obj #f) ;; denv-cache1
-                                (^obj #f) ;; denv-cache2
-                                (^obj #f) ;; denv-cache3
-                                (^obj #f) ;; repl-channel
-                                (^obj #f) ;; mailbox
-                                (^obj #f) ;; specific
-                                (^obj #f) ;; resume-thunk
-                                (^obj #f) ;; interrupts
-                                (^obj #f) ;; last-processor
-                                ;;(^obj #f) ;; pinned
-                                )))
-                        (^obj #f) ;; unused-field15
-                        (^obj #f) ;; floats
-                        (^obj #f) ;; processor-deq-next
-                        (^obj #f) ;; processor-deq-prev
-                        (^obj #f) ;; id
-                        (^obj #f) ;; interrupts
-                        )))
-                '(public)))
-
-    ;; ((trampoline)
-    ;;  (rts-method
-    ;;   'trampoline
-    ;;   '(public)
-    ;;   'noresult
-    ;;   (list (univ-field 'pc 'jumpable))
-    ;;   "\n"
-    ;;   '()
-    ;;   (lambda (ctx)
-    ;;     (let ((pc (^local-var 'pc)))
-    ;;       (^while (^!= pc (^null)) ;; exit trampoline?
-    ;;               (^assign pc
-    ;;                        (^jump pc)))))))
-
-    ;; ((module_registry_init)
-    ;;  (rts-method
-    ;;   'module_registry_init
-    ;;   '(public)
-    ;;   'noresult
-    ;;   (list (univ-field 'link_info '(array modlinkinfo)))
-    ;;   "\n"
-    ;;   '()
-    ;;   (lambda (ctx)
-    ;;     (let ((link_info (^local-var 'link_info))
-    ;;           (n (^local-var 'n))
-    ;;           (i (^local-var 'i))
-    ;;           (info (^local-var 'info)))
-
-    ;;       (^ (^var-declaration
-    ;;           'int
-    ;;           n
-    ;;           (^array-length link_info))
-
-    ;;          (^var-declaration
-    ;;           'int
-    ;;           i
-    ;;           (^int 0))
-
-    ;;          (^assign (^rts-field-use-priv 'module_table)
-    ;;                   (^new-array 'scmobj n))
-
-    ;;          (^while (^< i n)
-
-    ;;                  (^ (^var-declaration
-    ;;                      'modlinkinfo
-    ;;                      info
-    ;;                      (^array-index link_info i))
-
-    ;;                     (^dict-set (^rts-field-use-priv 'module_map)
-    ;;                                (^member info (^public 'name))
-    ;;                                info)
-
-    ;;                     (^assign (^array-index (^rts-field-use-priv 'module_table) i)
-    ;;                              (^null))
-
-    ;;                     (^inc-by i 1))))))))
-
-    ((module_register)
-     (rts-method
-      'module_register
-      '(public)
-      'noresult
-      (list (univ-field 'module_descr 'scmobj))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((module_descr (^local-var 'module_descr))
-              (temp (^local-var 'temp))
-              (name (^local-var 'name))
-              (info (^local-var 'info))
-              (index (^local-var 'index))
-              (old (^local-var 'old)))
-
-          (^ (^var-declaration
-              'scmobj
-              temp
-              (^vector-ref module_descr (^int 0)))
-
-             (^var-declaration
-              'str
-              name
-              (^symbol-unbox
-               (^vector-ref
-                temp
-                (^- (^vector-length temp) (^int 1)))))
-
-             (^var-declaration
-              'modlinkinfo
-              info
-              (^dict-get-or-null 'modlinkinfo
-                                 (^rts-field-use-priv 'module_map)
-                                 name))
-
-             (^assign (^rts-field-use-priv 'module_latest_registered)
-                      module_descr)
-
-             (^if (^not
-                   (^parens
-                    (^or (^null? info)
-                         (^= (^rts-field-use-priv 'module_count)
-                             (^array-length (^rts-field-use-priv 'module_table))))))
-
-                  (^ (^var-declaration
-                      'int
-                      index
-                      (^member info (^public 'index)))
-
-                     (^var-declaration
-                      'scmobj
-                      old
-                      (^array-index (^rts-field-use-priv 'module_table) index))
-
-                     (^assign (^array-index (^rts-field-use-priv 'module_table)
-                                            index)
-                              module_descr)
-
-                     (^if (^null? old)
-
-                          (^ (^inc-by (^rts-field-use-priv 'module_count)
-                                      1)
-
-                             (^if (^= (^rts-field-use-priv 'module_count)
-                                      (^array-length (^rts-field-use-priv 'module_table)))
-                                  (^expr-statement
-                                   (^call-prim (^rts-method-use 'program_start)))))))))))))
-
-    ((program_start)
-     (rts-method
-      'program_start
-      '(public)
-      'noresult
-      '()
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((temp (^local-var 'temp)))
-          (^ (^var-declaration
-              'scmobj
-              temp
-              (^vector-ref
-               (^array-index
-                (^rts-field-use-priv 'module_table)
-                (^- (^array-length (^rts-field-use-priv 'module_table))
-                    (^int 1)))
-               (^int 0)))
-
-             (^setglo '##vm-main-module-ref
-                      (^vector-ref
-                       temp
-                       (^- (^vector-length temp)
-                           (^int 1))))
-
-             (^setglo '##program-descr
-                      (^vector-box
-                       (^array-literal
-                        'scmobj
-                        (list (^vector-box
-                               (^rts-field-use-priv 'module_table))
-                              (^obj '())
-                              (^obj #f)))))
-
-             ;; execute first module
-
-             (^assign (gvm-state-sp-use ctx 'wr)
-                      (^int -1))
-
-             (^push (univ-end-of-cont-marker ctx))
-
-             (^expr-statement
-              (^call-prim (^rts-method-use 'call_start)
-                          (^vector-ref
-                           (^array-index
-                            (^rts-field-use-priv 'module_table)
-                            (^int 0))
-                           (^int 4))
-                          (^array-literal 'scmobj '())
-                          (^rts-jumpable-use 'underflow))))))))
-
-    ;; ((modlinkinfo)
-    ;;  (rts-class
-    ;;   'modlinkinfo
-    ;;   '() ;; properties
-    ;;   #f ;; extends
-    ;;   '() ;; class-fields
-    ;;   (list (univ-field 'name 'str #f '(public)) ;; instance-fields
-    ;;         (univ-field 'index 'int #f '(public)))))
-
-    ((module_map)
-     (rts-field
-      'module_map
-      '(dict str modlinkinfo)
-      (^empty-dict '(dict str modlinkinfo))))
-
-    ((module_count)
-     (rts-field
-      'module_count
-      'int
-      (^int 0)))
-
-    ((module_table)
-     (rts-field
-      'module_table
-      '(array scmobj)
-      (^null)))
-
-    ((module_latest_registered)
-     (rts-field
-      'module_latest_registered
-      'scmobj
-      (^null)))
-
-    ((heapify_cont)
-     (rts-method
-      'heapify_cont
-      '(public)
-      'returnpt
-      (list (univ-field 'ra 'returnpt))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((ra (^local-var 'ra))
-              (fs (^local-var 'fs))
-              (link (^local-var 'link))
-              (base (^local-var 'base))
-              (frame (^local-var 'frame))
-              (prev_link (^local-var 'prev_link))
-              (prev_frame (^local-var 'prev_frame))
-              (chain (^local-var 'chain)))
-          (^ (^if (^> (gvm-state-sp-use ctx 'rd) 0)
-                  (univ-with-ctrlpt-attribs
-                   ctx
-                   #f
-                   ra
-                   (lambda ()
-
-                     (^ (^var-declaration
-                         'int
-                         fs
-                         (univ-get-ctrlpt-attrib ctx ra 'fs))
-
-                        (^var-declaration
-                         'int
-                         link
-                         (univ-get-ctrlpt-attrib ctx ra 'link))
-
-                        (^var-declaration
-                         'int
-                         base
-                         (^- (gvm-state-sp-use ctx 'rd) fs))
-
-                        (^extensible-array-to-array!
-                         (gvm-state-stack-use ctx 'rdwr)
-                         (^+ (gvm-state-sp-use ctx 'rd) 1))
-
-                        (^var-declaration
-                         'frame
-                         chain)
-
-                        (^if (^> base 0)
-
-                             (^ (^assign chain
-                                         (^frame-box
-                                          (^subarray
-                                           (gvm-state-stack-use ctx 'rd)
-                                           base
-                                           (^+ fs 1))))
-
-                                (^assign (^array-index
-                                          (^frame-slots chain)
-                                          (^int 0))
-                                         ra)
-
-                                (^assign (gvm-state-sp-use ctx 'wr)
-                                         base)
-
-                                (^var-declaration
-                                 'frame
-                                 prev_frame
-                                 (^alias chain))
-
-                                (^var-declaration
-                                 'int
-                                 prev_link
-                                 link)
-
-                                (^assign ra
-                                         (^cast* 'returnpt
-                                                 (^array-index
-                                                  (^frame-slots prev_frame)
-                                                  prev_link)))
-
-                                (univ-with-ctrlpt-attribs
-                                 ctx
-                                 #t
-                                 ra
-                                 (lambda ()
-
-                                   (^ (^assign
-                                       fs
-                                       (univ-get-ctrlpt-attrib ctx ra 'fs))
-
-                                      (^assign
-                                       link
-                                       (univ-get-ctrlpt-attrib ctx ra 'link))
-
-                                      (^assign
-                                       base
-                                       (^- (gvm-state-sp-use ctx 'rd)
-                                           fs))
-
-                                      (^while (^> base 0)
-                                              (^ (^var-declaration
-                                                  'frame
-                                                  frame
-                                                  (^frame-box
-                                                   (^subarray
-                                                    (gvm-state-stack-use ctx 'rd)
-                                                    base
-                                                    (^+ fs 1))))
-
-                                                 (^assign
-                                                  (^array-index
-                                                   (^frame-unbox frame)
-                                                   (^int 0))
-                                                  ra)
-
-                                                 (^assign
-                                                  (gvm-state-sp-use ctx 'wr)
-                                                  base)
-
-                                                 (^assign
-                                                  (^array-index
-                                                   (^frame-slots prev_frame)
-                                                   prev_link)
-                                                  (^alias frame))
-
-                                                 (^assign
-                                                  prev_frame
-                                                  (^alias frame))
-
-                                                 (^unalias frame)
-
-                                                 (^assign
-                                                  prev_link
-                                                  link)
-
-                                                 (^assign
-                                                  ra
-                                                  (^cast* 'returnpt
-                                                          (^array-index
-                                                           (^frame-slots prev_frame)
-                                                           prev_link)))
-
-                                                 (univ-with-ctrlpt-attribs
-                                                  ctx
-                                                  #t
-                                                  ra
-                                                  (lambda ()
-
-                                                    (^ (^assign
-                                                        fs
-                                                        (univ-get-ctrlpt-attrib ctx ra 'fs))
-
-                                                       (^assign
-                                                        link
-                                                        (univ-get-ctrlpt-attrib ctx ra 'link))
-
-                                                       (^assign
-                                                        base
-                                                        (^- (gvm-state-sp-use ctx 'rd)
-                                                            fs)))))))
-
-                                      (^assign
-                                       (^array-index
-                                        (gvm-state-stack-use ctx 'rd)
-                                        link)
-                                       (^array-index
-                                        (gvm-state-stack-use ctx 'rd)
-                                        (^int 0)))
-
-                                      (^assign
-                                       (^array-index
-                                        (gvm-state-stack-use ctx 'rd)
-                                        (^int 0))
-                                       ra)
-
-                                      (^assign
-                                       (^array-index
-                                        (^frame-slots prev_frame)
-                                        prev_link)
-                                       (^frame-box
-                                        (^array-shrink-possibly-copy!
-                                         (gvm-state-stack-use ctx 'rd)
-                                         (^+ fs 1))))))))
-
-                             (^ (^assign
-                                 (^array-index
-                                  (gvm-state-stack-use ctx 'rd)
-                                  link)
-                                 (^array-index
-                                  (gvm-state-stack-use ctx 'rd)
-                                  (^int 0)))
-
-                                (^assign
-                                 (^array-index
-                                  (gvm-state-stack-use ctx 'rd)
-                                  (^int 0))
-                                 ra)
-
-                                (^assign
-                                 chain
-                                 (^frame-box
-                                  (^array-shrink-possibly-copy!
-                                   (gvm-state-stack-use ctx 'rd)
-                                   (^+ fs 1))))))
-
-                        (if (univ-stack-resizable? ctx)
-
-                            (^assign
-                             (gvm-state-stack-use ctx 'rd)
-                             (^extensible-array-literal
-                              'scmobj
-                              (list chain)))
-
-                            (^assign
-                             (^array-index
-                              (gvm-state-stack-use ctx 'rd)
-                              (^int 0))
-                             chain))
-
-                        (^assign
-                         (gvm-state-sp-use ctx 'wr)
-                         0)))))
-
-             (^return
-              (^rts-jumpable-use 'underflow)))))))
-
-    ((underflow)
-     (univ-jumpable-declaration-defs
-      ctx
-      #t
-      'underflow
-      'returnpt
-      '()
-      (list (univ-field 'id 'int (^int 0) '(inherited))
-            (univ-field 'parent 'parententrypt (^null) '(inherited))
-            (univ-field 'fs 'int (^int 0) '(inherited))
-            (univ-field 'link 'int (^int 0) '(inherited)))
-      (univ-emit-fn-body
-       ctx
-       "\n"
-       (lambda (ctx)
-         (let ((nextf (^local-var 'nextf))
-               (frame (^local-var 'frame))
-               (ra (^local-var 'ra))
-               (fs (^local-var 'fs))
-               (link (^local-var 'link)))
-
-           (^ (^var-declaration
-               'scmobj
-               nextf
-               (^array-index
-                (gvm-state-stack-use ctx 'rd)
-                (^int 0)))
-
-              (^if (^eq? nextf (univ-end-of-cont-marker ctx))
-                   (^return (^null))) ;; exit trampoline
-
-              (^var-declaration
-               'frm
-               frame
-               (^frame-unbox nextf))
-
-              (^var-declaration
-               'returnpt
-               ra
-               (^cast* 'returnpt
-                       (^array-index frame (^int 0))))
-
-              (univ-with-ctrlpt-attribs
-               ctx
-               #f
-               ra
-               (lambda ()
-
-                 (^ (^var-declaration
-                     'int
-                     fs
-                     (univ-get-ctrlpt-attrib ctx ra 'fs))
-
-                    (^var-declaration
-                     'int
-                     link
-                     (univ-get-ctrlpt-attrib ctx ra 'link))
-
-                    (if (univ-stack-resizable? ctx)
-
-                        (^assign (gvm-state-stack-use ctx 'wr)
-                                 (^copy-array-to-extensible-array
-                                  frame
-                                  (^+ fs 1)))
-
-                        (^move-array-to-array
-                         frame
-                         (^int 0)
-                         (gvm-state-stack-use ctx 'rd)
-                         (^int 0)
-                         (^+ fs 1)))
-
-                    (^assign (gvm-state-sp-use ctx 'wr)
-                             fs)
-
-                    (^assign (^array-index
-                              (gvm-state-stack-use ctx 'rd)
-                              (^int 0))
-                             (^alias
-                              (^array-index frame link)))
-
-                    (^assign (^array-index
-                              (gvm-state-stack-use ctx 'rd)
-                              link)
-                             (^rts-jumpable-use 'underflow)))))
-
-              (^return (^upcast* 'returnpt 'jumpable ra))))))))
-
-    ((poll)
-     (rts-method
-      'poll
-      '(public)
-      'jumpable
-      (list (univ-field 'dest 'ctrlpt))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((dest (^local-var 'dest)))
-          (^ (^assign (gvm-state-pollcount-use ctx 'wr)
-                      poll-interval)
-             (if (and (univ-stack-resizable? ctx)
-                      (not (eq? (target-name (ctx-target ctx)) 'go)) ;; TODO : find an efficient way to shrink the stack in go
-                      (not (eq? (target-name (ctx-target ctx)) 'python))) ;; TODO : find an efficient way to shrink the stack in python
-                 (^array-shrink! (^rts-field-use 'stack) (^+ (^rts-field-use 'sp) (^int 1)))
-                 (^))
-             (^return (^upcast* 'ctrlpt 'jumpable dest)))))))
-
-    ((build_rest_from_stack)
-     (rts-method
-      'build_rest_from_stack
-      '(public)
-      'bool
-      (list (univ-field 'nrp 'int))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((rest (^local-var 'rest))
-              (nrp (^local-var 'nrp)))
-          (^ (^var-declaration 'scmobj rest (^null-obj))
-             (^if (^< (^getnargs)
-                      nrp)
-                  (^return (^bool #f)))
-             (^while (^> (^getnargs)
-                         nrp)
-                     (^ (^pop (lambda (expr)
-                                (^assign rest
-                                         (^cons expr
-                                                rest))))
-                        (^inc-by (gvm-state-nargs-use ctx 'rdwr)
-                                 -1)))
-             (^push rest)
-             (^return (^bool #t)))))))
-
-    ((build_rest)
-     (rts-method
-      'build_rest
-      '(public)
-      'bool
-      (list (univ-field 'nrp 'int))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((nrp (^local-var 'nrp))
-              (ok (^local-var 'ok)))
-          (^
-           (^var-declaration 'bool ok (^bool #f))
-           (univ-push-args ctx)
-           (^assign ok (^call-prim (^rts-method-use 'build_rest_from_stack)
-                                   nrp))
-
-           (^if ok
-                (^inc-by (^getnargs) (^int 1)))
-
-           (univ-pop-args-to-regs ctx 0)
-           (^return ok))))))
-
-    ((build_key_from_stack)
-     (rts-method
-      'build_key_from_stack
-      '(public)
-      'jumpable
-      (list (univ-field 'nb_req_opt 'int)
-            (univ-field 'nb_parms 'int)
-            (univ-field 'key_descr '(array scmobj)))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((nb_req_opt (^local-var 'nb_req_opt))
-              (nb_parms (^local-var 'nb_parms))
-              (key_descr (^local-var 'key_descr))
-              (key_vals (^local-var 'key_vals))
-              (nb_key_args (^local-var 'nb_key_args))
-              (nb_key_parms (^local-var 'nb_key_parms))
-              (i (^local-var 'i))
-              (k (^local-var 'k))
-              (key (^local-var 'key))
-              (val (^local-var 'val)))
-          (^
-           (^var-declaration 'int nb_key_args (^- (^getnargs) nb_req_opt))
-           (^var-declaration 'int nb_key_parms (^- nb_parms nb_req_opt))
-           (^var-declaration 'int k (^int 0))
-           (^var-declaration 'int i (^int 0))
-           (^var-declaration 'scmobj key (^null))
-           (^var-declaration 'scmobj val (^null))
-           (^var-declaration '(array scmobj) key_vals (^null-obj))
-
-           (^if (^or (^< nb_key_args (^int 0)) ;; not all required and optional arguments supplied?
-                     (^!= (^parens (^bitand nb_key_args (^int 1))) (^int 0))) ;; keyword arguments must come in pairs
-                (^return (^cast*-jumpable
-                          (^getpeps '##raise-wrong-number-of-arguments-exception-nary))))
-
-           (^assign key_vals (^new-array 'scmobj nb_key_parms))
-
-           (^while (^< k nb_key_parms)
-                   (^ (^assign (^array-index key_vals k)
-                               (^array-index key_descr
-                                             (^+ (^* k 2) (^int 1))))
-                      (^inc-by k 1)))
-
-           (^assign k (^int 0))
-
-           (^while (^< k nb_key_args)
-                   (^
-                    (^assign val (univ-stk-slot-from-tos ctx k))
-                    (^inc-by k 1)
-                    (^assign key (univ-stk-slot-from-tos ctx k))
-                    (^inc-by k 1)
-
-                    (^if (^not (^parens (^keyword? key)))
-                         (^return (^cast*-jumpable
-                                   (^getpeps '##raise-keyword-expected-exception-nary))))
-
-                    (^assign i (^int 0))
-                    (^while (^< i nb_key_parms)
-                            (^
-                             (^if (^eq? key (^array-index key_descr (^* i 2)))
-                                  (^ (^assign (^array-index key_vals i) val)
-                                     (^assign i (^+ nb_key_parms (^int 1)))))
-                             (^inc-by i 1)))
-
-                    (^if (^= i nb_key_parms)
-                         (^return (^cast*-jumpable
-                                   (^getpeps '##raise-unknown-keyword-argument-exception-nary))))))
-
-           (^assign k (^int 0))
-
-           ;; Pop old key args
-           (^inc-by (gvm-state-sp-use ctx 'rdwr) (^- nb_key_args))
-
-           (^while (^< k nb_key_parms)
-                   (^
-                    (^push (^array-index key_vals k))
-                    (^inc-by k 1)))
-
-           (^assign (^getnargs) nb_parms)
-
-           (^return (^null)))))))
-
-    ((build_key)
-     (rts-method
-      'build_key
-      '(public)
-      'jumpable
-      (list (univ-field 'nb_req_opt 'int)
-            (univ-field 'nb_parms 'int)
-            (univ-field 'key_descr '(array scmobj)))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((nb_req_opt (^local-var 'nb_req_opt))
-              (nb_parms (^local-var 'nb_parms))
-              (key_descr (^local-var 'key_descr))
-              (error (^local-var 'error)))
-          (^
-           (^var-declaration 'jumpable error (^null))
-
-           (univ-push-args ctx)
-
-           (^assign error (^call-prim (^rts-method-use 'build_key_from_stack)
-                                      nb_req_opt
-                                      nb_parms
-                                      key_descr))
-
-           (univ-pop-args-to-regs ctx 0)
-
-           (^return error))))))
-
-    ((build_key_rest)
-     (rts-method
-      'build_key_rest
-      '(public)
-      'jumpable
-      (list (univ-field 'nb_req_opt 'int)
-            (univ-field 'nb_parms 'int)
-            (univ-field 'key_descr '(array scmobj)))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((nb_req_opt (^local-var 'nb_req_opt))
-              (nb_parms (^local-var 'nb_parms))
-              (key_descr (^local-var 'key_descr))
-              (k (^local-var 'k))
-              (fnk (^local-var 'fnk))
-              (rest (^local-var 'rest))
-              (empty_rest (^local-var 'empty_rest))
-              (error (^local-var 'error)))
-          (^
-           (^var-declaration 'int k (^- (^getnargs) nb_req_opt))
-           (^var-declaration 'int fnk (^- k 1))
-           (^var-declaration 'scmobj rest (^null))
-           (^var-declaration 'bool empty_rest (^bool #t))
-           (^var-declaration 'jumpable error (^null))
-
-           (^if (^< k (^int 0)) ;; not all required and optional arguments supplied?
-                (^return
-                 (^cast*-jumpable
-                  (^getpeps '##raise-wrong-number-of-arguments-exception-nary))))
-
-           (univ-push-args ctx)
-
-           ;; find first non-keyword pair in remaining arguments
-           (^while (^and (^>= fnk 0) empty_rest)
-                   (^
-                    (^if (^not (^parens (^keyword? (univ-stk-slot-from-tos ctx fnk))))
-                         (^assign empty_rest (^bool #f))
-                         (^inc-by fnk -2))))
-
-           (^if (^and (^not empty_rest)
-                      (^not (^call-prim (^rts-method-use 'build_rest_from_stack)
-                                        (^- (^getnargs) (^- fnk (^int 1))))))
-                (^ (univ-pop-args-to-regs ctx 0)
-                   (^return
-                    (^cast*-jumpable
-                     (^getpeps '##raise-wrong-number-of-arguments-exception-nary)))))
-
-           (^if (^not empty_rest)
-                (^pop (lambda (expr) (^assign rest expr))))
-
-           (^assign error (^call-prim (^rts-method-use 'build_key_from_stack)
-                                      nb_req_opt
-                                      (^- nb_parms (^int 1))
-                                      key_descr))
-
-           (^if (^not (^parens (^eq? error (^null))))
-                (^ ;; unbundle the rest argument
-                 (^while (^not (^parens (^eq? rest (^null))))
-                         (^ (^push (^getcar rest))
-                            (^assign rest (^getcdr rest))
-                            (^inc-by (^getnargs) 1)
-                            (^inc-by (gvm-state-nargs-use ctx 'rdwr) 1)))
-                 (univ-pop-args-to-regs ctx 0)
-                 (^return error)))
-
-           (^push rest)
-
-           (^assign (^getnargs) nb_parms)
-
-           (univ-pop-args-to-regs ctx 0)
-
-           (^return (^null)))))))
-
-    ((wrong_key_args)
-     (rts-method
-      'wrong_key_args
-      '(public)
-      'jumpable
-      (list (univ-field 'proc 'entrypt)
-            (univ-field 'exception 'jumpable))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((proc (^local-var 'proc))
-              (i (^local-var 'i))
-              (exception (^local-var 'exception)))
-          (^ (^expr-statement
-              (^call-prim (^rts-method-use-priv 'prepend_arg1) proc))
-             (^return exception))))))
-
-    ((wrong_nargs)
-     (rts-method
-      'wrong_nargs
-      '(public)
-      'jumpable
-      (list (univ-field 'proc 'entrypt))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((proc (^local-var 'proc))
-              (i (^local-var 'i)))
-          (^ (^expr-statement
-              (^call-prim (^rts-method-use-priv 'prepend_arg1) proc))
-             (^return
-              (^upcast*
-               'parententrypt
-               'jumpable
-               (^getpeps '##raise-wrong-number-of-arguments-exception-nary))))))))
 
     ;; Hashtables
     ((next_sn)
@@ -2819,31 +3691,6 @@ function gambit_set(&$obj,$name,$val) {
 EOF
 )
 
-    ((prepend_arg1)
-     (rts-method
-      'prepend_arg1
-      '()
-      'noresult
-      (list (univ-field 'arg1 'entrypt))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((arg1 (^local-var 'arg1))
-              (i (^local-var 'i)))
-          (^ (^var-declaration 'int i (^int 0))
-             (univ-push-args ctx)
-             (^push (^null))
-             (^while (^< i (^getnargs))
-                     (^ (^assign (univ-stk-slot-from-tos ctx i)
-                                 (univ-stk-slot-from-tos ctx (^parens (^+ i (^int 1)))))
-                        (^inc-by i
-                                 1)))
-             (^assign (univ-stk-slot-from-tos ctx i)
-                      arg1)
-             (^inc-by (gvm-state-nargs-use ctx 'rdwr)
-                      1)
-             (univ-pop-args-to-regs ctx 0))))))
-
     ((check_procedure_glo)
      (rts-method
       'check_procedure_glo
@@ -3623,132 +4470,6 @@ EOF
                         (^inc-by i 1)))
              (^return h))))))
 
-    ((symbol)
-     (rts-class
-      'symbol
-      '() ;; properties
-      'scmobj ;; extends
-      '() ;; class-fields
-      (list (univ-field 'name 'str #f '(public)) ;; instance-fields
-            (univ-field 'hash 'scmobj #f '(public))
-            (univ-field 'interned 'scmobj #f '(public)))
-      '() ;; class-methods
-      (list ;; instance-methods
-       (univ-method
-        (univ-tostr-method-name ctx)
-        '(public)
-        'str
-        '()
-        '()
-        (univ-emit-fn-body
-         ctx
-         "\n"
-         (lambda (ctx)
-           (^return (^member (^this) (^public 'name)))))
-        (^type 'symbol)))))
-
-    ((make_interned_symbol)
-     (rts-method
-      'make_interned_symbol
-      '(public)
-      'symbol
-      (list (univ-field 'name 'str))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((name (^local-var 'name))
-              (obj (^local-var 'obj)))
-          (^ (^var-declaration
-              'symbol
-              obj
-              (^dict-get-or-null 'symbol
-                                 (^rts-field-use-priv 'symbol_table)
-                                 name))
-             (^if (^null? obj)
-                  (^ (^assign obj
-                              (^symbol-box-uninterned
-                               name
-                               (^fixnum-box
-                                (^call-prim
-                                 (^rts-method-use 'str_hash)
-                                 name))))
-                     (^assign (^member obj (^public 'interned))
-                              (^obj #t))
-                     (^dict-set 'symbol
-                                (^rts-field-use-priv 'symbol_table)
-                                name
-                                obj)))
-             (^return obj))))))
-
-    ((symbol_table)
-     (rts-field
-      'symbol_table
-      '(dict str symbol)
-      (^empty-dict '(dict str symbol))))
-
-    ((keyword)
-     (rts-class
-      'keyword
-      '() ;; properties
-      'scmobj ;; extends
-      '() ;; class-fields
-      (list (univ-field 'name 'str #f '(public)) ;; instance-fields
-            (univ-field 'hash 'scmobj #f '(public))
-            (univ-field 'interned 'scmobj #f '(public)))
-      '() ;; class-methods
-      (list ;; instance-methods
-       (univ-method
-        (univ-tostr-method-name ctx)
-        '(public)
-        'str
-        '()
-        '()
-        (univ-emit-fn-body
-         ctx
-         "\n"
-         (lambda (ctx)
-           (^return (^member (^this) (^public 'name)))))
-        (^type 'keyword)))))
-
-    ((make_interned_keyword)
-     (rts-method
-      'make_interned_keyword
-      '(public)
-      'keyword
-      (list (univ-field 'name 'str))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((name (^local-var 'name))
-              (obj (^local-var 'obj)))
-          (^ (^var-declaration
-              'keyword
-              obj
-              (^dict-get-or-null 'keyword
-                                 (^rts-field-use-priv 'keyword_table)
-                                 name))
-             (^if (^null? obj)
-                  (^ (^assign obj
-                              (^keyword-box-uninterned
-                               name
-                               (^fixnum-box
-                                (^call-prim
-                                 (^rts-method-use 'str_hash)
-                                 name))))
-                     (^assign (^member obj (^public 'interned))
-                              (^obj #t))
-                     (^dict-set 'keyword
-                                (^rts-field-use-priv 'keyword_table)
-                                name
-                                obj)))
-             (^return obj))))))
-
-    ((keyword_table)
-     (rts-field
-      'keyword_table
-      '(dict str keyword)
-      (^empty-dict '(dict str keyword))))
-
     ((box)
      (rts-class
       'box
@@ -4193,6 +4914,8 @@ EOF
         ctx
         "\n"
         (lambda (ctx)
+          (if (eq? 'js (target-name (ctx-target ctx)))
+              (univ-use-rtlib ctx 'parententrypt_init))
           (^ (^expr-statement
               (^call-prim
                (^rts-method-use 'println)
@@ -4255,6 +4978,8 @@ EOF
         ctx
         "\n"
         (lambda (ctx)
+          (if (eq? 'js (target-name (ctx-target ctx)))
+              (univ-use-rtlib ctx 'parententrypt_init))
           (^ (^expr-statement
               (^call-prim
                (^rts-method-use 'exit_process)
@@ -4613,558 +5338,6 @@ EOF
                   (^ (^glo-var-set! sym (^unbound1))
                      (^glo-var-primitive-set! sym (^null))))
              (^return sym))))))
-
-    ((foreign2host)
-     (rts-method
-      'foreign2host
-      '(public)
-      'object
-      (list (univ-field 'obj 'scmobj))
-      "\n"
-      '()
-      (lambda (ctx)
-       (let ((obj (^local-var 'obj)))
-         (^return (^member obj (^public 'val)))))))
-
-    ((host2foreign)
-     (rts-method
-      'host2foreign
-      '(public)
-      'object
-      (list (univ-field 'val 'object))
-      "\n"
-      '()
-      (lambda (ctx)
-       (let ((val (^local-var 'val)))
-         (^return (^new-foreign val (^obj #f)))))))
-
-    ((scheme2scm)
-     (rts-method
-      'scheme2scm
-      '(public)
-      'scmobj
-      (list (univ-field 'obj 'scmobj))
-      "\n"
-      '()
-      (lambda (ctx)
-       (let ((obj (^local-var 'obj)))
-         (^return (^member obj (^public 'scmobj)))))))
-
-    ((scm2scheme)
-     (rts-method
-      'scm2scheme
-      '(public)
-      'scmobj
-      (list (univ-field 'scmobj 'scmobj))
-      "\n"
-      '()
-      (lambda (ctx)
-       (let ((scmobj (^local-var 'scmobj)))
-         (^return (^new-scheme scmobj))))))
-
-    ((function2scm)
-     (rts-method
-      'function2scm
-      '(public)
-      'object
-      (list (univ-field 'obj 'object))
-      "\n"
-      '()
-      (lambda (ctx)
-       (let ((obj (^local-var 'obj))
-             (proc 'proc))
-        (^ (^procedure-declaration
-            #f
-            'entrypt
-            proc
-            '()
-            "\n"
-            (list (univ-field 'id 'int (^int 0) '())) ;; attributes
-            (^return-call-prim ;; body
-             (^rts-method-ref 'scm2host_call)
-             obj))
-
-           (^return (^prefix proc)))))))
-
-    ((host2scm)
-     (rts-method
-      'host2scm
-      '(public)
-      'scmobj
-      (list (univ-field 'obj 'object))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((obj (^local-var 'obj))
-              (alist (^local-var 'alist))
-              (key (^local-var 'key)))
-
-          (define (try-convert-array ctx obj type)
-            (let ((constructor (univ-array-constructor ctx type)))
-              (if (or (not constructor)
-                      (and (not (eq? type 'scmobj)) ;; avoid useless tests
-                           (equal? constructor
-                                   (univ-array-constructor ctx 'scmobj))))
-                  (^)
-                  (^if (^instanceof constructor obj)
-                       (^return
-                        (^vect-box type
-                                   (if (eq? type 'scmobj)
-                                       (^map (^rts-method-use 'host2scm) obj)
-                                       obj)))))))
-
-          (^
-           (^if (^void? obj)
-                (^return (^void-obj)))
-
-           (case (target-name (ctx-target ctx))
-             ((js)
-              (^if (^null? obj)
-                   (^return (^absent))))
-             (else
-              (^)))
-
-           (case (target-name (ctx-target ctx))
-             ((php)
-              (^))
-             (else
-              (^if (^function? obj)
-                   (^return-call-prim
-                    (^rts-method-use 'function2scm)
-                    obj))))
-
-           (^if (^bool? obj)
-                (^return (^boolean-box obj)))
-
-           (case (target-name (ctx-target ctx))
-             ((js)
-              (^ (^if (^typeof "number" obj)
-                      (^if (^and (^= (^parens (^bitior obj 0)) obj)
-                                 (^and (^>= obj -536870912)
-                                       (^<= obj 536870911)))
-                           (^return (^fixnum-box obj))
-                           (^return (^flonum-box obj))))
-                 (^if (^typeof "bigint" obj)
-                      (^if (^and (^>= obj -536870912)
-                                 (^<= obj 536870911))
-                           (^return (^fixnum-box
-                                     (^ (^type 'number) (^parens obj))))
-                           (^return-call-prim
-                            (^rts-method-use 'bignum_from_bigint)
-                            obj)))))
-             (else
-              (^ (^if (^and (^int? obj)
-                            (^and (^>= obj -536870912)
-                                  (^<= obj 536870911)))
-                      (^return (^fixnum-box obj)))
-                 (^if (^float? obj)
-                      (^return (^flonum-box obj))))))
-
-           (^if (^str? obj)
-                (^return (^str->string obj)))
-
-           (try-convert-array ctx obj 'scmobj)
-           (try-convert-array ctx obj 'u8)
-           (try-convert-array ctx obj 'u16)
-           (try-convert-array ctx obj 'u32)
-           (try-convert-array ctx obj 'u64)
-           (try-convert-array ctx obj 's8)
-           (try-convert-array ctx obj 's16)
-           (try-convert-array ctx obj 's32)
-           (try-convert-array ctx obj 's64)
-           (try-convert-array ctx obj 'f32)
-           (try-convert-array ctx obj 'f64)
-
-           ;; "scheme" objects need to be unboxed
-           (^if (^scheme? obj)
-                (^return-call-prim
-                 (^rts-method-use 'scheme2scm)
-                 obj))
-
-           ;; foreign objects just pass through
-           (^if (^foreign? obj)
-                (^return obj))
-
-           ;; all other host objects are boxed into a foreign object
-           (^return-call-prim
-            (^rts-method-use 'host2foreign)
-            obj))))))
-
-    ((scm_call)
-     (rts-method
-      'scm_call
-      '(public)
-      'object
-      (list (univ-field 'proc 'scmobj)
-            (univ-field 'args '(array scmobj)))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((args (^local-var 'args))
-              (proc (^local-var 'proc)))
-          (^ (^assign (gvm-state-sp-use ctx 'wr) -1)
-             (^push (univ-end-of-cont-marker ctx))
-             (^expr-statement
-              (^call-prim (^rts-method-use 'call_start)
-                          proc
-                          args
-                          (^rts-jumpable-use 'underflow)))
-             ;; TODO: fix issue that there is no guarantee that the Scheme
-             ;; call to "proc" has terminated when call_start returns.
-             (^return (^getreg 1)))))))
-
-    ((call_start)
-     (rts-method
-      'call_start
-      '(public)
-      'noresult
-      (list (univ-field 'proc 'scmobj)
-            (univ-field 'args '(array scmobj))
-            (univ-field 'ra 'scmobj))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((proc (^local-var 'proc))
-              (args (^local-var 'args))
-              (ra (^local-var 'ra)))
-          (^ (^assign (^getreg 0) ra)
-             (^expr-statement
-              (^call-prim (^rts-method-use 'push_args)
-                          args))
-             (^expr-statement
-              (^call-prim (^rts-method-use 'trampoline)
-                          (^downupcast* 'entrypt 'jumpable proc))))))))
-
-    ((push_args)
-     (rts-method
-      'push_args
-      '(public)
-      'noresult
-      (list (univ-field 'args '(array scmobj)))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((args (^local-var 'args))
-              (i (^local-var 'i)))
-          (^
-           (^var-declaration 'int i (^int 0))
-           (^assign (^getnargs) (^array-length args))
-           (^while (^< i (^getnargs))
-                   (^ (^push
-                       (^array-index args i))
-                      (^inc-by i 1)))
-           (univ-pop-args-to-regs ctx 0))))))
-
-    ((host2scm_call)
-     (rts-method
-      'host2scm_call
-      '(public)
-      'object
-      (list (univ-field 'proc 'scmobj)
-            (univ-field 'args '(array scmobj)))
-      "\n"
-      '()
-      (lambda (ctx)
-       (let ((args (^local-var 'args))
-             (proc (^local-var 'proc)))
-         (^return
-          (^call-prim (^rts-method-use 'scm2host)
-                      (^call-prim (^rts-method-use 'scm_call)
-                                  proc
-                                  (^map (^rts-method-ref 'host2scm)
-                                        args))))))))
-
-    ((procedure2host)
-     (rts-method
-      'procedure2host
-      '(public)
-      'object
-      (list (univ-field 'obj 'scmobj))
-      "\n"
-      '()
-      (lambda (ctx)
-       (let ((obj (^local-var 'obj))
-             (args (^local-var 'args))
-             (fn (^local-var 'fn)))
-         (^
-          (univ-emit-function-declaration
-           ctx
-           #f ;; not global
-           fn ;; name
-           'object ;; result type
-           (case (target-name (ctx-target ctx)) ;; parameter list
-            ((js php) '())
-            ((python ruby) (list (univ-field '*args '()))))
-           (^) ;; attributes
-           (univ-emit-fn-body
-            ctx
-            "\n"
-            (lambda (ctx)
-              (^ (case (target-name (ctx-target ctx)) ;; body
-                   ((js)
-                    (^var-declaration
-                     '()
-                     args
-                     (^call-prim (^member (^member (^member "Array" 'prototype)
-                                                   'slice) 'call)
-                                 (^local-var 'arguments))))
-                   ((php)
-                    (^var-declaration
-                     '()
-                     args
-                     (^call-prim 'func_get_args)))
-                   (else
-                    (^)))
-                 (^return
-                  (^call-prim (^rts-method-ref 'host2scm_call)
-                              obj
-                              args)))))
-           #f ;; modifier
-           #t) ;; primitive
-
-          (^return fn))))))
-
-    ((scm2host)
-     (rts-method
-      'scm2host
-      '(public)
-      'object
-      (list (univ-field 'obj 'scmobj))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((obj (^local-var 'obj)))
-
-          (define (try-convert-array ctx obj type)
-            (let ((constructor (univ-array-constructor ctx type)))
-              (if (and constructor
-                       (and (not (eq? type 'scmobj))
-                            (equal? constructor
-                                    (univ-array-constructor ctx 'scmobj))))
-                  (^)
-                  (^if (^vect? type obj)
-                       (^return
-                        (if (eq? type 'scmobj)
-                            (^map (^rts-method-use 'scm2host)
-                                  (^vect-unbox type obj))
-                            (^vect-unbox type obj)))))))
-
-          (^
-           (^if (^void-obj? obj)
-                (^return (^void)))
-
-           (case (target-name (ctx-target ctx))
-             ((js)
-              (^if (^eq? obj (^absent))
-                   (^return (^null))))
-             (else
-              (^)))
-
-           (case (target-name (ctx-target ctx))
-             ((php) (^))
-             (else
-              (^if (^procedure? obj)
-                   (^return-call-prim
-                    (^rts-method-use 'procedure2host)
-                    obj))))
-
-           (^if (^boolean? obj)
-                (^return (^boolean-unbox obj)))
-
-           (if (and (eq? (target-name (ctx-target ctx)) 'js)
-                    (eq? (univ-flonum-representation ctx) 'host)
-                    (eq? (univ-fixnum-representation ctx) 'host))
-               (^if  (^int? obj)
-                     (^if (^and (^>= obj -536870912)
-                                (^<= obj 536870911))
-                          (^return (^fixnum-unbox obj))
-                          (^return (^flonum-unbox obj))))
-               (^
-                (^if (^fixnum? obj)
-                     (^return (^fixnum-unbox obj)))
-                (^if (^flonum? obj)
-                     (^return (^flonum-unbox obj)))))
-
-           (^if (^bignum? obj)
-                (case (target-name (ctx-target ctx))
-                  ((js)
-                   (^return
-                    (^ (^type 'number)
-                       (^parens (^call-prim
-                                 (^rts-method-use 'bignum_to_bigint)
-                                 obj)))))
-                  (else
-                   (^return-call-prim
-                    (^rts-method-use 'bignum_to_bigint)
-                    obj))))
-
-           (^if (^ratnum? obj)
-                (^return
-                 (^/ (^call-prim
-                      (^rts-method-use 'scm2host)
-                      (^member (^cast* 'ratnum obj) (^public 'num)))
-                     (^call-prim
-                      (^rts-method-use 'scm2host)
-                      (^member (^cast* 'ratnum obj) (^public 'den))))))
-
-           (^if (^string? obj)
-                (case (univ-string-representation ctx)
-                  ((class)
-                   (^return (^string->str obj)))
-                  ((host)
-                   (^return obj))))
-
-           (^if (^symbol? obj)
-                (^return (^symbol-unbox obj)))
-
-           (^if (^keyword? obj)
-                (^return (^keyword-unbox obj)))
-
-           (^if (^char? obj)
-                (^return (^char-unbox obj)))
-
-           (try-convert-array ctx obj 'scmobj)
-           (try-convert-array ctx obj 'u8)
-           (try-convert-array ctx obj 'u16)
-           (try-convert-array ctx obj 'u32)
-           (try-convert-array ctx obj 'u64)
-           (try-convert-array ctx obj 's8)
-           (try-convert-array ctx obj 's16)
-           (try-convert-array ctx obj 's32)
-           (try-convert-array ctx obj 's64)
-           (try-convert-array ctx obj 'f32)
-           (try-convert-array ctx obj 'f64)
-
-           ;; convert list to array
-
-           (^if (^null-obj? obj)
-                (^return (^array-literal 'scmobj '())))
-
-           (^if (^pair? obj)
-                (let ((n (^local-var 'n))
-                      (probe (^local-var 'probe))
-                      (result (^local-var 'result)))
-                  (^
-                   (^var-declaration 'int n (^int 0))
-                   (^var-declaration 'scmobj probe obj)
-                   (^while (^pair? probe)
-                           (^ (^assign probe (^getcdr probe))
-                              (^inc-by n 1)))
-                   (^if (^not (^parens (^null-obj? probe)))
-                        (^inc-by n 1))
-                   (^make-array
-                    'scmobj
-                    (lambda (arr)
-                      (^
-                       (^var-declaration '(array scmobj) result arr)
-                       (^assign n (^int 0))
-                       (^assign probe obj)
-                       (^while (^pair? probe)
-                               (^ (^assign (^array-index result n)
-                                           (^call-prim
-                                            (^rts-method-use 'scm2host)
-                                            (^getcar probe)))
-                                  (^assign probe (^getcdr probe))
-                                  (^inc-by n 1)))
-                       (^if (^not (^parens (^null-obj? probe)))
-                            (^assign (^array-index result n)
-                                     (^call-prim
-                                      (^rts-method-use 'scm2host)
-                                      probe)))
-                       (^return result)))
-                    n
-                    (^null)))))
-
-           (case (target-name (ctx-target ctx))
-             ((js) ;; TODO: cleanup
-              ;; convert table to Object
-"  if (obj instanceof G_Structure && obj.slots[0].slots[1].name === '##type-4-A7AB629D-EAB0-422F-8005-08B2282E04FC') {
-    var result = Object();
-    obj.slots[3].forEach(function (val, key) {
-      result[key] = val;
-    });
-  return result;
-  }
-")
-             (else
-              (^)))
-
-           ;; foreign objects need to be unboxed
-           (^if (^foreign? obj)
-                (^return-call-prim
-                 (^rts-method-use 'foreign2host)
-                 obj))
-
-           ;; "scheme" objects just pass through
-           (^if (^scheme? obj)
-                (^return obj))
-
-           ;; all other Scheme objects are boxed into a "scheme" object
-           (^return-call-prim
-            (^rts-method-use 'scm2scheme)
-            obj))))))
-
-    ((scm2host_call)
-     (rts-method
-      'scm2host_call
-      '(public)
-      'jumpable
-      (list (univ-field 'fn 'object))
-      "\n"
-      '()
-      (lambda (ctx)
-       (let ((args (^local-var 'args))
-             (ra (^local-var 'ra))
-             (frame (^local-var 'frame))
-             (tmp (^local-var 'tmp))
-             (fn (^local-var 'fn))
-             (caught_exc (^local-var 'caught_exc))
-             (exc (^local-var 'exc)))
-         (^
-          (univ-push-args ctx)
-          (^var-declaration '(array scmobj)
-                            args
-                            (^extensible-subarray
-                               (gvm-state-stack-use ctx 'rd)
-                               (^- (^+ (gvm-state-sp-use ctx 'rd) 1)
-                                       (^getnargs))
-                               (^getnargs)))
-          (^inc-by (gvm-state-sp-use ctx 'rdwr) (^- (^getnargs)))
-          (^var-declaration 'returnpt
-                            ra
-                            (^call-prim
-                             (^rts-method-use 'heapify_cont)
-                             (^getreg 0)))
-          (^var-declaration 'frame
-                            frame
-                            (^array-index (gvm-state-stack-use ctx 'rd) 0))
-          ;; TODO choose appropriate type for Java
-          (^var-declaration '() ;??? '(array ???) <- This one is problematic.
-                            tmp
-                            (^map (^rts-method-ref 'scm2host)
-                                  args))
-          (^var-declaration 'object caught_exc (^null))
-          (^try-catch
-           (^ (^assign tmp (^call-with-arg-array fn tmp))
-              (^setreg 1
-                       (^call-prim (^rts-method-ref 'host2scm)
-                                   tmp)))
-           exc
-           (^ (^assign caught_exc exc)
-              (^setreg 1
-                       (^call-prim (^rts-method-ref 'host2scm)
-                                   (^tostr caught_exc)))))
-          (^assign (gvm-state-sp-use ctx 'wr) -1)
-          (^inc-by (gvm-state-sp-use ctx 'rdwr)
-                   1
-                   (lambda (x)
-                     (^assign (^array-index (gvm-state-stack-use ctx 'wr) x)
-                              frame)))
-          (^if (^eq? caught_exc (^null))
-               (^return ra)
-               (^ (^setreg 0 ra)
-                  (^setnargs 1)
-                  (^return (^getglo '##error)))))))))
 
     ;;deprecated:
     #;

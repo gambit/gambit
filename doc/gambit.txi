@@ -801,6 +801,7 @@ Synopsis:
 @b{}gsc @r{[}-:@r{@var{runtimeoption}},@dots{}@r{]} @r{[}-i@r{]} @r{[}-f@r{]} @r{[}-h@r{]} @r{[}-help@r{]} @r{[}-v@r{]}
     @r{[}-prelude @r{@var{expressions}}@r{]} @r{[}-postlude @r{@var{expressions}}@r{]}
     @r{[}-dynamic@r{]} @r{[}-exe@r{]} @r{[}-obj@r{]}
+    @r{[}-nb-gvm-regs @r{@var{n}}@r{]} @r{[}-nb-arg-regs @r{@var{n}}@r{]} @r{[}-compactness @r{@var{level}}@r{]}
     @r{[}-cc @r{@var{compiler}}@r{]} @r{[}-cc-options @r{@var{options}}@r{]}
     @r{[}-ld-options-prelude @r{@var{options}}@r{]} @r{[}-ld-options @r{@var{options}}@r{]}
     @r{[}-pkg-config @r{@var{pkg-config-args}}@r{]} @r{[}-pkg-config-path @r{@var{pkg-config-path}}@r{]}
@@ -961,6 +962,13 @@ by the module.
 Start REPL interaction.
 @item -e @var{expressions}
 Evaluate expressions in the interaction environment.
+@item -nb-gvm-regs @r{@var{n}}
+Specify the number of available Gambit virtual machine registers.
+@item -nb-arg-regs @r{@var{n}}
+Specify the number of procedure call parameters passed in Gambit virtual
+machine registers.
+@item -compactness @r{@var{level}}
+Specify the compactness of the generated code.
 @end table
 
 @opindex -i
@@ -1184,6 +1192,46 @@ The @samp{-} option starts a REPL interaction.
 @opindex -e
 The @samp{-e} option evaluates the specified expressions in the
 interaction environment.
+
+@opindex -nb-gvm-regs @var{n}
+The @samp{-nb-gvm-regs} option specifies the number of Gambit virtual
+machine registers that are available for the generated code.  The
+default number depends on configuration options and the target but it
+is typically 5.  All modules and the runtime library must be compiled
+with the same setting.  This option exists mainly for experimentation
+by the developers.  For example:
+
+@smallexample
+$ @b{gsc -nb-gvm-regs 10 -c bench.scm}
+@end smallexample
+
+@opindex -nb-arg-regs @var{n}
+The @samp{-nb-arg-regs} option specifies the number of procedure call
+parameters passed in Gambit virtual machine registers.  The default
+number depends on configuration options and the target but it is
+typically 3.  All modules and the runtime library must be compiled
+with the same setting.  This option exists mainly for experimentation
+by the developers.  For example:
+
+@smallexample
+$ @b{gsc -nb-arg-regs 2 -c bench.scm}
+@end smallexample
+
+@opindex -compactness @var{level}
+The @samp{-compactness} option selects the level of compactness of the
+generated code.  The default level depends on configuration options
+and the target but it is typically 5.  Levels from 0 to 5 cause the
+generation of increasingly compact code with little or no impact on
+execution speed.  Lower values tend to make the generated code more
+humanly readable.  Above a level of 5 the compiler will trade
+execution speed for saving code space.  The detailed meaning of this
+option depends on the target, some targets may ignore it and some
+targets may require all modules and the runtime library to be compiled
+with the same compactness level.  For example:
+
+@smallexample
+$ @b{gsc -target js -compactness 0 -c bench.scm}
+@end smallexample
 
 @node Link files, Procedures specific to compiler, GSC batch mode, GSC
 @section Link files

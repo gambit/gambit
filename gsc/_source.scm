@@ -2,7 +2,7 @@
 
 ;;; File: "_source.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -189,9 +189,7 @@
               (display "EXPRESSION ")
               (write expr)
               (if source
-                  (locat-show " " (source-locat source))))))
-
-    (display "UNKNOWN LOCATION")))
+                  (locat-show " " (source-locat source))))))))
 
 (define (locat-filename-and-line loc)
   (if loc

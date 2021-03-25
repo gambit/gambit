@@ -665,6 +665,28 @@ fi
 
 ###############################################################################
 #
+# Determine default compile options.
+
+AC_ARG_ENABLE(default-compile-options,
+              AC_HELP_STRING([--enable-default-compile-options=...],
+                             [Default compile options (default is none)]),
+              ENABLE_DEFAULT_COMPILE_OPTIONS=$enableval,
+              ENABLE_DEFAULT_COMPILE_OPTIONS=)
+
+
+if test "$ENABLE_DEFAULT_COMPILE_OPTIONS" != ""; then
+  DEFAULT_COMPILE_OPTIONS="$ENABLE_DEFAULT_COMPILE_OPTIONS"
+else
+  DEFAULT_COMPILE_OPTIONS=""
+fi
+
+if test "$DEFAULT_COMPILE_OPTIONS" != ""; then
+  DEFAULT_COMPILE_OPTIONS=`echo "$DEFAULT_COMPILE_OPTIONS" | sed -e "s/\(.\)/'\1', /g" -e "s/''', /'\\\\\\\\'', /g" -e "s/'\\\\\\\\', /'\\\\\\\\\\\\\\\\', /g" -e "s/^/{/" -e "s/$/'\\\\\\\\0'}/"`
+  AC_DEFINE_UNQUOTED([___DEFAULT_COMPILE_OPTIONS],[$DEFAULT_COMPILE_OPTIONS],[Select default compile options])
+fi
+
+###############################################################################
+#
 # Determine targets to build.
 
 AC_ARG_ENABLE(targets,

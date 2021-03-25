@@ -384,14 +384,13 @@
                   (body (car x))
                   (params (cdr x))
                   (def
-                   (string-append "g_function2scm(async function ("
+                   (string-append "(async function ("
                                   (flatten-string
                                    (comma-separated (map car params)))
                                   ") {"
                                   "\n return " 
                                   body ";\n})")))
-             `(##host-define-function-and-call-dynamic
-               ',(box def) ;; literal box
+             `((##host-function-memoized ',(box def)) ;; literal box
                ,@(map cdr params))))))))
 
 (define (six->python ast-src)

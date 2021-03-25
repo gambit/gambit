@@ -28,10 +28,11 @@ GSC=@SETDLPATH@ $(rootfromhere)/gsc/gsc@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)
 #   cd gambit
 #   git pull
 #   make clean
-#   ./configure --enable-single-host --enable-targets=js --prefix=/usr/local/Gambit
+#   ./configure --enable-single-host --enable-targets=js --enable-default-compile-options="(compactness 9)" --prefix=/usr/local/Gambit
 #   make
+#   make doc
 #   make modules
-#   sudo make install
+#   sudo make install   (optional)
 #
 # After that, in this directory create the "try" subdirectory using:
 #
@@ -148,7 +149,7 @@ VM.js: extra.scm VM.scm
 	cp `$(GSC) -e '(display (path-expand "~~lib/_six/js#.scm"))'` .
 	cp `$(GSC) -e '(display (path-expand "~~lib/_six/six-expand.scm"))'` .
 	cp `$(GSC) -e '(display (path-expand "~~lib/_six/six-expand#.scm"))'` .
-	$(GSC) -target js -exe -o VM.js js.scm six-expand.scm extra.scm VM.scm
+	$(GSC) -target js -label-namespace "a" -exe -o VM.js VM.scm
 
 VM.min.js: VM.js
 	npx google-closure-compiler --js VM.js --js_output_file VM.min.js

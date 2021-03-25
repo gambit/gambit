@@ -777,7 +777,7 @@
           (list->str (reverse lst))
           (loop (cons c lst))))))
 
-(define (string-substitute str delim alist)
+(define (string-substitute str delim proc-or-alist)
 
   (define (index-of c start)
     (let loop ((i start))
@@ -797,12 +797,17 @@
                           (+ end 1)
                           (cons (substring str i end)
                                 out))
-                    (let* ((var (substring str (+ start 1) end))
-                           (x (assoc var alist)))
-                      (if x
+                    (let* ((var
+                            (substring str (+ start 1) end))
+                           (subst
+                            (if (procedure? proc-or-alist)
+                                (proc-or-alist var)
+                                (let ((x (assoc var proc-or-alist)))
+                                  (and x (cdr x))))))
+                      (if subst
                           (loop (+ end 1)
                                 (+ end 1)
-                                (cons (cdr x)
+                                (cons subst
                                       (cons (substring str i start)
                                             out)))
                           (compiler-error "Unbound substitution variable in" str))))

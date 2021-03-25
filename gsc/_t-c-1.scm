@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-1.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -39,12 +39,15 @@
 ;;               3 <= nb-gvm-regs <= 25
 ;; nb-arg-regs = maximum number of arguments passed in registers
 ;;               1 <= nb-arg-regs <= min( 12, nb-gvm-regs-2 )
+;; compactness = compactness of the generated code (0..9)
 
 (define targ-default-nb-gvm-regs 5) ;; default value of nb-gvm-regs
 (define targ-default-nb-arg-regs 3) ;; default value of nb-arg-regs
+(define targ-default-compactness 5) ;; default value of compactness
 
 (define (targ-nb-gvm-regs) (target-nb-regs targ-target))
 (define (targ-nb-arg-regs) (target-nb-arg-regs targ-target))
+(define (targ-compactness) (target-compactness targ-target))
 
 (define (targ-set-nb-regs targ sem-changing-opts)
   (let ((nb-gvm-regs
@@ -54,7 +57,11 @@
         (nb-arg-regs
          (get-option sem-changing-opts
                      'nb-arg-regs
-                     targ-default-nb-arg-regs)))
+                     targ-default-nb-arg-regs))
+        (compactness
+         (get-option sem-changing-opts
+                     'compactness
+                     targ-default-compactness)))
 
     (if (not (and (<= 3 nb-gvm-regs)
                   (<= nb-gvm-regs 25)))
@@ -67,7 +74,8 @@
                         (number->string (min 12 (- nb-gvm-regs 2))))))
 
     (target-nb-regs-set! targ nb-gvm-regs)
-    (target-nb-arg-regs-set! targ nb-arg-regs)))
+    (target-nb-arg-regs-set! targ nb-arg-regs)
+    (target-compactness-set! targ compactness)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -164,7 +172,7 @@
 
 (define (targ-make-target)
   (let ((targ
-         (make-target 12
+         (make-target 13
                       'C
                       '((".c"    . C)
                         (".C"    . C++)

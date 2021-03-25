@@ -82,6 +82,19 @@
 ;;              that should be used when generating GVM code for this
 ;;              target machine.
 ;;
+;; nb-arg-regs  Integer denoting the maximum number of procedure call
+;;              arguments that are passed in GVM registers.
+;;
+;; compactness  Integer denoting the level of compactness of the
+;;              generated code.  Levels from 0 to 5 cause the
+;;              generation of increasingly compact code with little or
+;;              no impact on execution speed.  Lower values tend to
+;;              make the generated code more humanly readable.  Above
+;;              a level of 5 the compiler will trade execution speed
+;;              for saving code space.  The detailed meaning of this
+;;              option depends on the target and some targets may
+;;              ignore it.
+;;
 ;; prim-info    Procedure (lambda (name) ...)
 ;;              This procedure is used to get information about the
 ;;              Scheme primitive procedures built into the system (not
@@ -138,11 +151,12 @@
                      semantics-preserving-options
                      extra)
 
-  (define current-target-version 12) ;; number for this version of the module
+  (define current-target-version 13) ;; number for this version of the module
 
   (define common-semantics-changing-options
     '((nb-gvm-regs fixnum)
-      (nb-arg-regs fixnum)))
+      (nb-arg-regs fixnum)
+      (compactness fixnum)))
 
   (define common-semantics-preserving-options
     '())
@@ -151,7 +165,7 @@
       (compiler-internal-error
        "make-target, version of target module is not current" name))
 
-  (let ((targ (make-vector (+ 21 extra))))
+  (let ((targ (make-vector (+ 22 extra))))
 
     (vector-set! targ 0 'target)
     (vector-set! targ 1 name)
@@ -193,27 +207,29 @@
 (define (target-nb-regs-set! x y)           (vector-set! x 10 y))
 (define (target-nb-arg-regs x)              (vector-ref x 11))
 (define (target-nb-arg-regs-set! x y)       (vector-set! x 11 y))
-(define (target-prim-info x)                (vector-ref x 12))
-(define (target-prim-info-set! x y)         (vector-set! x 12 y))
-(define (target-label-info x)               (vector-ref x 13))
-(define (target-label-info-set! x y)        (vector-set! x 13 y))
-(define (target-jump-info x)                (vector-ref x 14))
-(define (target-jump-info-set! x y)         (vector-set! x 14 y))
-(define (target-frame-constraints x)        (vector-ref x 15))
-(define (target-frame-constraints-set! x y) (vector-set! x 15 y))
-(define (target-proc-result x)              (vector-ref x 16))
-(define (target-proc-result-set! x y)       (vector-set! x 16 y))
-(define (target-task-return x)              (vector-ref x 17))
-(define (target-task-return-set! x y)       (vector-set! x 17 y))
-(define (target-switch-testable? x)         (vector-ref x 18))
-(define (target-switch-testable?-set! x y)  (vector-set! x 18 y))
-(define (target-eq-testable? x)             (vector-ref x 19))
-(define (target-eq-testable?-set! x y)      (vector-set! x 19 y))
-(define (target-object-type x)              (vector-ref x 20))
-(define (target-object-type-set! x y)       (vector-set! x 20 y))
+(define (target-compactness x)              (vector-ref x 12))
+(define (target-compactness-set! x y)       (vector-set! x 12 y))
+(define (target-prim-info x)                (vector-ref x 13))
+(define (target-prim-info-set! x y)         (vector-set! x 13 y))
+(define (target-label-info x)               (vector-ref x 14))
+(define (target-label-info-set! x y)        (vector-set! x 14 y))
+(define (target-jump-info x)                (vector-ref x 15))
+(define (target-jump-info-set! x y)         (vector-set! x 15 y))
+(define (target-frame-constraints x)        (vector-ref x 16))
+(define (target-frame-constraints-set! x y) (vector-set! x 16 y))
+(define (target-proc-result x)              (vector-ref x 17))
+(define (target-proc-result-set! x y)       (vector-set! x 17 y))
+(define (target-task-return x)              (vector-ref x 18))
+(define (target-task-return-set! x y)       (vector-set! x 18 y))
+(define (target-switch-testable? x)         (vector-ref x 19))
+(define (target-switch-testable?-set! x y)  (vector-set! x 19 y))
+(define (target-eq-testable? x)             (vector-ref x 20))
+(define (target-eq-testable?-set! x y)      (vector-set! x 20 y))
+(define (target-object-type x)              (vector-ref x 21))
+(define (target-object-type-set! x y)       (vector-set! x 21 y))
 
-(define (target-extra x i)                  (vector-ref x (+ 21 i)))
-(define (target-extra-set! x i y)           (vector-set! x (+ 21 i) y))
+(define (target-extra x i)                  (vector-ref x (+ 22 i)))
+(define (target-extra-set! x i y)           (vector-set! x (+ 22 i) y))
 
 ;;;; Frame constraints structure
 

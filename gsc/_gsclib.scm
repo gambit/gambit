@@ -24,11 +24,31 @@
     (extract-macros (##cte-top-cte ##interaction-cte))))
 
 (define (##compile-options-normalize options)
-  (##map (lambda (opt)
-           (if (##pair? opt)
-               opt
-               (##list opt)))
-         options))
+  (##add-default-compile-options
+   (##map (lambda (opt)
+            (if (##pair? opt)
+                opt
+                (##list opt)))
+          options)))
+
+(define (##add-default-compile-options opts)
+  (let loop ((lst (##default-compile-options)) (new-opts opts))
+    (if (##pair? lst)
+        (let ((opt (##car lst)))
+          (if (and (##pair? opt)
+                   (##pair? (##cdr opt))
+                   (##null? (##cddr opt))
+                   (##symbol? (##car opt))
+                   (##not (##assq (##car opt) new-opts)))
+              (loop (##cdr lst) (##cons opt new-opts))
+              (loop (##cdr lst) new-opts)))
+        new-opts)))
+
+(define (##default-compile-options)
+  (if (##unbound? ;; TODO: remove dynamic check after bootstrap
+       (##global-var-ref (##make-global-var '##default-compile-options-string)))
+      '()
+      (##call-with-input-string ##default-compile-options-string ##read-all)))
 
 (define (compile-file-to-target
          filename

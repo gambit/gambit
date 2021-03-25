@@ -1215,3 +1215,6 @@
 
 (define-macro (^host-primitive? arg)
   `(univ-emit-host-primitive? ctx ,arg))
+
+(define-macro (^indent . code)
+  `(univ-emit-indent ctx ,@code))

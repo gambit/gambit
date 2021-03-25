@@ -209,7 +209,7 @@
 (define (univ-ns-prefix sem-changing-options)
   (let ((x (assq 'namespace sem-changing-options)))
     (or (and x (pair? (cdr x)) (cadr x))
-        "g_")))
+        "_")))
 
 (define (univ-ns-prefix-class sem-changing-options)
   (let ((ns (univ-ns-prefix sem-changing-options)))
@@ -217,6 +217,10 @@
         ns
         (let ((lst (string->list ns)))
           (list->string (cons (char-upcase (car lst)) (cdr lst)))))))
+
+(define (univ-label-ns sem-preserving-opts)
+  (let ((x (assq 'label-namespace sem-preserving-opts)))
+    (and x (pair? (cdr x)) (string->c-id (cadr x)))))
 
 (define univ-processor-current-thread-slot 14)
 (define univ-thread-cont-slot 23)
@@ -302,10 +306,11 @@
 
   (define common-semantics-preserving-options
     '((always-return-jump)
-      (never-return-jump)))
+      (never-return-jump)
+      (label-namespace string)))
 
   (let ((targ
-         (make-target 12
+         (make-target 13
                       target-language
                       file-extensions
                       (append semantics-changing-options
@@ -404,12 +409,15 @@
 ;;
 ;; nb-gvm-regs = total number of registers available
 ;; nb-arg-regs = maximum number of arguments passed in registers
+;; compactness = compactness of the generated code (0..9)
 
 (define univ-default-nb-gvm-regs 5)
 (define univ-default-nb-arg-regs 3)
+(define univ-default-compactness 5)
 
 (define (univ-nb-gvm-regs ctx) (target-nb-regs (ctx-target ctx)))
 (define (univ-nb-arg-regs ctx) (target-nb-arg-regs (ctx-target ctx)))
+(define (univ-compactness ctx) (target-compactness (ctx-target ctx)))
 
 (define (univ-set-nb-regs targ sem-changing-opts)
   (let ((nb-gvm-regs
@@ -419,7 +427,11 @@
         (nb-arg-regs
          (get-option sem-changing-opts
                      'nb-arg-regs
-                     univ-default-nb-arg-regs)))
+                     univ-default-nb-arg-regs))
+        (compactness
+         (get-option sem-changing-opts
+                     'compactness
+                     univ-default-compactness)))
 
     (if (not (and (<= 3 nb-gvm-regs)
                   (<= nb-gvm-regs 25)))
@@ -432,14 +444,41 @@
                         (number->string (- nb-gvm-regs 2)))))
 
     (target-nb-regs-set! targ nb-gvm-regs)
-    (target-nb-arg-regs-set! targ nb-arg-regs)))
+    (target-nb-arg-regs-set! targ nb-arg-regs)
+    (target-compactness-set! targ compactness)))
 
 ;;;----------------------------------------------------------------------------
 
 ;; Generation of textual target code.
 
-(define (univ-indent . rest)
-  (cons '$$indent$$ rest))
+(define (univ-emit-comment ctx comment)
+  (if (univ-compactness>=? ctx 5)
+      (^)
+      (^ (univ-single-line-comment-prefix (target-name (ctx-target ctx)))
+         " "
+         comment)))
+
+(define (univ-single-line-comment-prefix targ-name)
+  (case targ-name
+
+    ((js php java go)
+     "//")
+
+    ((python ruby)
+     "#")
+
+    (else
+     (compiler-internal-error
+      "univ-single-line-comment-prefix, unknown target"))))
+
+(define (univ-emit-indent ctx . rest)
+  (if (case (target-name (ctx-target ctx))
+        ((js)
+         (univ-compactness>=? ctx 5))
+        (else
+         #f))
+      rest
+      (cons '$$indent$$ rest)))
 
 (define (univ-constant val)
   (univ-box val val))
@@ -714,36 +753,36 @@
 
     ((js php java)
      (^ "if (" test ") {\n"
-        (univ-indent true)
+        (^indent true)
         (if false
             (^ "} else {\n"
-               (univ-indent false))
+               (^indent false))
             (^))
         "}\n"))
 
     ((python)
      (^ "if " test ":\n"
-        (univ-indent true)
+        (^indent true)
         (if false
             (^ "else:\n"
-                  (univ-indent false))
+                  (^indent false))
             (^))))
 
     ((ruby)
      (^ "if " test "\n"
-        (univ-indent true)
+        (^indent true)
         (if false
             (^ "else\n"
-               (univ-indent false))
+               (^indent false))
             (^))
         "end\n"))
 
     ((go)
      (^ "if " test " {\n"
-        (univ-indent true)
+        (^indent true)
         (if false
             (^ "} else {\n"
-               (univ-indent false))
+               (^indent false))
             (^))
         "}\n"))
 
@@ -784,10 +823,10 @@
     ((go)
      (^ "switch " expr ".(type) {\n"
         "case " class ":\n"
-        (univ-indent true)
+        (^indent true)
         (if false
             (^ "default:\n"
-               (univ-indent false)
+               (^indent false)
                "}\n")
             "}\n")))
 
@@ -799,21 +838,21 @@
 
     ((js php java)
      (^ "while (" test ") {\n"
-        (univ-indent body)
+        (^indent body)
         "}\n"))
 
     ((python)
      (^ "while " test ":\n"
-        (univ-indent body)))
+        (^indent body)))
 
     ((ruby)
      (^ "while " test "\n"
-        (univ-indent body)
+        (^indent body)
         "end\n"))
 
     ((go)
      (^ "for " test " {\n"
-        (univ-indent body)
+        (^indent body)
         "}\n"))
 
     (else
@@ -825,16 +864,16 @@
 
     ((js)
      (^ "try {\n"
-        (univ-indent body)
+        (^indent body)
         "} catch (" var ") {\n"
-        (univ-indent catch-body)
+        (^indent catch-body)
         "}\n"))
 
     ((python)
      (^ "try:\n"
-        (univ-indent body)
+        (^indent body)
         "except Exception as " var ":\n"
-        (univ-indent catch-body)))
+        (^indent catch-body)))
 
     ;; TODO: implement for other languages... for now just assume no
     ;; exception is raised so just execute the body
@@ -1433,7 +1472,10 @@
 
 (define (univ-emit-rts-method-use ctx name public?)
   (univ-use-rtlib ctx name)
-  (univ-emit-rts-method-ref ctx name public?))
+  (univ-emit-rts-method-ref
+   ctx
+   (univ-rts-method-low-level-name ctx name)
+   public?))
 
 (define (univ-emit-rts-field ctx name public?)
   (case (univ-module-representation ctx)
@@ -1461,7 +1503,10 @@
 
 (define (univ-emit-rts-field-use ctx name public?)
   (univ-use-rtlib ctx name)
-  (let ((x (univ-emit-rts-field-ref ctx name public?)))
+  (let ((x (univ-emit-rts-field-ref
+            ctx
+            (univ-rts-field-low-level-name ctx name)
+            public?)))
     (use-global ctx x)
     x))
 
@@ -1924,7 +1969,9 @@
            (make-table)
            (queue-empty)
            (queue-empty)
-           (queue-empty)))
+           (queue-empty)
+           (make-table)
+           (univ-label-ns sem-preserving-options)))
 
          (module-name
           (univ-display-to-string
@@ -2060,16 +2107,18 @@
       (cadr (list-ref info 1))))
 
   (let* ((rev-inputs (reverse inputs))
-         (first (car rev-inputs)))
-    (if warnings?
-        (let loop ((lst (cdr rev-inputs)))
-          (if (pair? lst)
-              (let ((input (car inputs)))
-                (if (not (equal? (sem-changing-opts first)
-                                 (sem-changing-opts input)))
-                    (compiler-user-warning #f "inconsistent semantics changing options for files" (car first) (car input)))
-                (loop (cdr lst))))))
-    (sem-changing-opts first)))
+         (first (car rev-inputs))
+         (opts-first (sem-changing-opts first)))
+
+    (let loop ((lst (cdr rev-inputs)))
+      (if (pair? lst)
+          (let* ((input (car inputs))
+                 (opts-input (sem-changing-opts input)))
+            (if (not (equal? opts-first opts-input))
+                (compiler-user-error #f "inconsistent semantics changing options for files" (car first) opts-first (car input) opts-input))
+            (loop (cdr lst)))))
+
+    opts-first))
 
 (define (univ-link-mods-and-flags inputs)
 
@@ -2189,7 +2238,9 @@
            (make-table)
            (queue-empty)
            (queue-empty)
-           (queue-empty)))
+           (queue-empty)
+           (make-table)
+           #f))
 
          (_
           (begin
@@ -2291,13 +2342,12 @@
         (let* ((code
                 (list #f))
                (cst
-                (string->symbol
-                 (string-append
-                  "cst"
-                  (number->string (table-length table))
-                  (if (not (eq? (univ-module-representation ctx) 'global))
-                      ""
-                      (string-append "_" (ctx-module-name ctx))))))
+                (label->id ctx
+                           univ-cst-prefix
+                           (table-length table)
+                           (if (not (eq? (univ-module-representation ctx) 'global))
+                               ""
+                               (ctx-module-name ctx))))
                (state
                 (vector (if force-var? 2 1) code cst)))
           (use-cst cst)
@@ -2397,30 +2447,30 @@
 
                          ((entry)
                           (if (label-entry-rest? gvm-instr)
-                              (^ " "
-                                 (univ-emit-comment
+                              (^ (univ-emit-comment
                                   ctx
                                   (if (label-entry-closed? gvm-instr)
-                                      "closure-entry-point (+rest)\n"
-                                      "entry-point (+rest)\n")))
-                              (^ " "
-                                 (univ-emit-comment
+                                      "closure-entry-point (+rest)"
+                                      "entry-point (+rest)"))
+                                 "\n")
+                              (^ (univ-emit-comment
                                   ctx
                                   (if (label-entry-closed? gvm-instr)
-                                      "closure-entry-point\n"
-                                      "entry-point\n")))))
+                                      "closure-entry-point"
+                                      "entry-point"))
+                                 "\n")))
 
                          ((return)
-                          (^ " "
-                             (univ-emit-comment ctx "return-point\n")))
+                          (^ (univ-emit-comment ctx "return-point")
+                             "\n"))
 
                          ((task-entry)
-                          (^ " "
-                             (univ-emit-comment ctx "task-entry-point\n")))
+                          (^ (univ-emit-comment ctx "task-entry-point")
+                             "\n"))
 
                          ((task-return)
-                          (^ " "
-                             (univ-emit-comment ctx "task-return-point\n")))
+                          (^ (univ-emit-comment ctx "task-return-point")
+                             "\n"))
 
                          (else
                           (compiler-internal-error
@@ -2824,6 +2874,7 @@
                                  ;; optimization (which slows
                                  ;; down fib by an order of magnitude!)
                                  (not (reg? opnd))
+                                 (univ-compactness>=? ctx 9)
 
                                  (case (target-name (ctx-target ctx))
                                    ((php)
@@ -2915,17 +2966,22 @@
                         (begin
                           (set-car! ctrlpts-init (^null))
                           (lambda (ctx)
-                            (^ "\n"
-                               (univ-with-ctrlpt-attribs
-                                ctx
-                                #f
-                                entry-id
-                                (lambda ()
-                                  (univ-set-ctrlpt-attrib
-                                   ctx
-                                   entry-id
-                                   'ctrlpts
-                                   ctrlpts-array)))))))))
+                            (if (univ-use-ctrlpt-init? ctx)
+                                (^) #;
+                                (^expr-statement
+                                 (^call-prim (^rts-method-use 'ctrlpts_init)
+                                             ctrlpts-array))
+                                (^ "\n"
+                                   (univ-with-ctrlpt-attribs
+                                    ctx
+                                    #f
+                                    entry-id
+                                    (lambda ()
+                                      (univ-set-ctrlpt-attrib
+                                       ctx
+                                       entry-id
+                                       'ctrlpts
+                                       ctrlpts-array))))))))))
                  (init2
                   (lambda (ctx)
                     (let ((name (string->symbol (proc-obj-name p))))
@@ -2961,7 +3017,9 @@
                   (ctx-glo-used global-ctx)
                   (ctx-decls global-ctx)
                   (ctx-inits global-ctx)
-                  (ctx-imports global-ctx))))
+                  (ctx-imports global-ctx)
+                  (ctx-label-table global-ctx)
+                  (ctx-label-ns global-ctx))))
         (let ((x (proc-obj-code p)))
           (if (bbs? x)
               (scan-bbs ctx x)
@@ -3134,7 +3192,9 @@
          glo-used
          decls
          inits
-         imports)
+         imports
+         label-table
+         label-ns)
   (vector target
           semantics-changing-options
           semantics-preserving-options
@@ -3154,7 +3214,9 @@
           glo-used
           decls
           inits
-          imports))
+          imports
+          label-table
+          label-ns))
 
 (define (ctx-target ctx)                   (vector-ref ctx 0))
 (define (ctx-target-set! ctx x)            (vector-set! ctx 0 x))
@@ -3215,6 +3277,12 @@
 
 (define (ctx-imports ctx)                  (vector-ref ctx 19))
 (define (ctx-imports-set! ctx x)           (vector-set! ctx 19 x))
+
+(define (ctx-label-table ctx)              (vector-ref ctx 20))
+(define (ctx-label-table-set! ctx x)       (vector-set! ctx 20 x))
+
+(define (ctx-label-ns ctx)                 (vector-ref ctx 21))
+(define (ctx-label-ns-set! ctx x)          (vector-set! ctx 21 x))
 
 (define (univ-add-module-init ctx init)
   (queue-put! (ctx-inits ctx) init))
@@ -4152,6 +4220,59 @@
      (compiler-internal-error
       "univ-emit-make-array, unknown target"))))
 
+(define (univ-rts-field-low-level-name ctx name)
+  (if (univ-compactness>=? ctx 5)
+      (case name
+        ((r0)        'r)
+        ((r1)        'a)
+        ((r2)        'b)
+        ((r3)        'c)
+        ((r4)        'd)
+        ((glo)       'g)
+        ((stack)     's)
+        ((sp)        't)
+        ((nargs)     'n)
+        ((peps)      'e)
+        ((pollcount) 'q)
+        ((inttemp1)  'o)
+        ((inttemp2)  'h)
+        (else        name))
+      name))
+
+(define (univ-rts-method-low-level-name ctx name)
+  (if (univ-compactness>=? ctx 5)
+      (case name
+        ((poll)                 'p)
+        ((wrong_nargs)          'w)
+        ((make_interned_symbol) 'i)
+        ((check_procedure_glo)  'u)
+        ((ctrlpt_init)          'j)
+        ((returnpt_init)        'k)
+        ((entrypt_init)         'l)
+        ((parententrypt_init)   'm)
+        ((flonumbox)            'F)
+        ((flonump)              'f)
+        ((vectorbox)            'V)
+        ((vectorp)              'v)
+        ((stringbox)            'Z)
+        ((stringp)              'z)
+        ((cons)                 'X)
+        ((pairp)                'x)
+        ((jsnumberp)            'y)
+        (else                   name))
+      name))
+
+(define univ-c-id-reserved 260)
+
+(define univ-cst-prefix "cst")
+(define univ-bb-prefix "bb")
+(define univ-capitalized-bb-prefix "Bb")
+
+(define (univ-compactness>=? ctx level)
+  (>= (or (univ-get-semantics-changing-option ctx 'compactness)
+          (target-compactness (ctx-target ctx)))
+      level))
+
 ;; =============================================================================
 
 (define (gvm-lbl-use ctx lbl)
@@ -4170,10 +4291,23 @@
     id))
 
 (define (lbl->id ctx num ns)
-  (^ univ-bb-prefix num "_" ns))
+  (label->id ctx univ-bb-prefix num ns))
 
-(define univ-bb-prefix "bb")
-(define univ-capitalized-bb-prefix "Bb")
+(define (label->id ctx prefix num ns)
+  (let* ((key (vector prefix num ns))
+         (label-table (ctx-label-table ctx)))
+    (or (table-ref label-table key #f)
+        (let* ((label-ns
+                (ctx-label-ns ctx))
+               (id
+                (if label-ns
+                    (string-append
+                     (nonneg-integer->c-id
+                      (+ univ-c-id-reserved (table-length label-table)))
+                     label-ns)
+                    (^ prefix num "_" ns))))
+          (table-set! label-table key id)
+          id))))
 
 (define (univ-foldr-range lo hi rest fn)
   (if (<= lo hi)

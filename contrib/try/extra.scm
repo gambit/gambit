@@ -8,6 +8,8 @@
 
 ;; Define fib here for testing speed of compiled code.
 
+(declare (standard-bindings) (block))
+
 (define (fib x)
   (if (< x 2)
       x
