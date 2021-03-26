@@ -211,7 +211,17 @@ if (@os_fs@) {
       function callback(err, bytesRead) {
         var progress = dev.async_read_progress;
         if (err) {
-          dev.async_read_progress = @os_encode_error@(err);
+          err = @os_encode_error@(err);
+          if (err === -35) { // fd is in non-blocking mode... poll it at 10Hz
+            setTimeout(function () {
+              if (dev.async_read_progress === @async_op_in_progress@) {
+                dev.async_read_progress = @async_op_done@;
+                @os_condvar_ready_set@(dev_condvar_scm, true);
+              }
+            }, 100);
+            return;
+          }
+          dev.async_read_progress = err; // can't be EAGAIN
         } else {
           dev.async_read_progress = bytesRead; // possibly 0 to signal EOF
         }
@@ -220,7 +230,9 @@ if (@os_fs@) {
         }
       }
 
-      @os_fs@.read(dev.fd, @os_buffer@.Buffer.from(buffer.buffer), lo, hi-lo, null, callback);
+      var fd = (dev.fd < 0) ? 0 : dev.fd; // basic console reads from stdin
+
+      @os_fs@.read(fd, @os_buffer@.Buffer.from(buffer.buffer), lo, hi-lo, null, callback);
 
       if (dev.async_read_progress !== @async_op_done@) {
         // handle synchronous execution of callback
@@ -260,7 +272,17 @@ if (@os_fs@) {
       function callback(err, bytesWritten) {
         var progress = dev.async_write_progress;
         if (err) {
-          dev.async_write_progress = @os_encode_error@(err);
+          err = @os_encode_error@(err);
+          if (err === -35) { // fd is in non-blocking mode... poll it at 10Hz
+            setTimeout(function () {
+              if (dev.async_write_progress === @async_op_in_progress@) {
+                dev.async_write_progress = @async_op_done@;
+                @os_condvar_ready_set@(dev_condvar_scm, true);
+              }
+            }, 100);
+            return;
+          }
+          dev.async_write_progress = err; // can't be EAGAIN
         } else {
           dev.async_write_progress = bytesWritten;
         }
@@ -269,7 +291,9 @@ if (@os_fs@) {
         }
       }
 
-      @os_fs@.write(dev.fd, @os_buffer@.Buffer.from(buffer.buffer), lo, hi-lo, null, callback);
+      var fd = (dev.fd < 0) ? 1 : dev.fd; // basic console writes to stdout
+
+      @os_fs@.write(fd, @os_buffer@.Buffer.from(buffer.buffer), lo, hi-lo, null, callback);
 
       if (dev.async_write_progress !== @async_op_done@) {
         // handle synchronous execution of callback
@@ -343,7 +367,9 @@ if (@os_fs@) {
         }
       }
 
-      @os_fs@.close(dev.fd, callback);
+      if (dev.fd >= 0) { // don't close basic console
+        @os_fs@.close(dev.fd, callback);
+      }
 
       if (async_progress !== @async_op_done@) {
         // handle synchronous execution of callback
@@ -377,7 +403,7 @@ if (@os_fs@) {
   @os_console@ = null;
 
   @os_device_from_basic_console@ = function () {
-    if (@os_console@ === null) @os_console@ = @os_device_from_stdout@();
+    if (@os_console@ === null) @os_console@ = @os_device_from_fd@(-1);
     return @os_console@;
   };
 
@@ -569,7 +595,7 @@ if (@os_web@) {
     return new @Device_jsconsole@();
   };
 
-};
+}
 
 "))
 

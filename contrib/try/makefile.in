@@ -38,9 +38,13 @@ GSC=@SETDLPATH@ $(rootfromhere)/gsc/gsc@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)
 #
 #   make try
 #
-# and then to view the online Gambit Scheme REPL locally:
+# To view the online Gambit Scheme REPL locally:
 #
 #   make serve
+#
+# To run the REPL on the desktop using node (without the normal browser UI):
+#
+#   node VM.js
 
 PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
 PACKAGE_NAME = @PACKAGE_NAME@

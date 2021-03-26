@@ -29,22 +29,25 @@ function VM() {
 
   var vm = this;
 
-  vm.ui = null;
+  vm.os_web = (function () { return this === this.window; })();
   vm.os_web_origin = '';
+  vm.ui = null;
 
-  // Set things up to defer execution of Scheme code until
-  // vm.init is called.
+  if (vm.os_web) {
 
-  @module_table@.push(null); // pretend an extra module is needed
+    // Set things up to defer execution of Scheme code until
+    // vm.init is called.
+
+    @module_table@.push(null); // pretend an extra module is needed
+  }
 };
 
 VM.prototype.init = function (ui_elem) {
 
   var vm = this;
 
-  vm.ui = new UI(vm, ui_elem);
-
   vm.os_web_origin = @os_web_origin@;
+  vm.ui = new UI(vm, ui_elem);
 
   // Start execution of Scheme code.
 
@@ -101,7 +104,7 @@ VM.prototype.terminate_thread = function (thread_scm) {
                [thread_scm]);
 };
 
-vm = new VM();
+main_vm = new VM();
 
 EOF
 )
@@ -125,7 +128,7 @@ EOF
 
 ")
   (##inline-host-expression
-   "@os_device_stream_open_console@(vm,@1@,@2@,@3@)"
+   "@os_device_stream_open_console@(main_vm,@1@,@2@,@3@)"
    title
    flags
    thread))
@@ -162,7 +165,7 @@ EOF
 
 (define (##activate-console dev)
   (##inline-host-statement
-   "vm.ui.activate_console(@foreign2host@(@1@));"
+   "if (main_vm.ui !== null) main_vm.ui.activate_console(@foreign2host@(@1@));"
    dev))
 
 (define (##activate-repl)
@@ -181,7 +184,17 @@ EOF
          (port (##open-console title name thread)))
     (##make-repl-channel-ports port port port)))
 
-(##thread-make-repl-channel-set! ##thread-make-repl-channel-as-console)
+;; Enable web console.
+
+(if (##inline-host-expression "@host2scm@(main_vm.ui !== null)")
+    (begin
+
+      (##thread-make-repl-channel-set! ##thread-make-repl-channel-as-console)
+
+      ;; Prevent exiting the REPL with EOF.
+      (macro-repl-channel-really-exit?-set!
+       (##thread-repl-channel-get! (macro-current-thread))
+       (lambda (channel) #f))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -190,12 +203,6 @@ EOF
 
 (##current-input-port (##repl-input-port))
 (##current-output-port (##repl-output-port))
-
-;; Prevent exiting the REPL with EOF.
-
-(macro-repl-channel-really-exit?-set!
- (##thread-repl-channel-get! (macro-current-thread))
- (lambda (channel) #f))
 
 (define (##repl-no-banner)
   (##repl-debug
@@ -245,7 +252,7 @@ EOF
 ;; Start the REPL of the primordial thread.
 
 (if (##inline-host-expression
-     "@host2scm@(@os_web_origin@.indexOf('://gambitscheme.org/') > 0)")
+     "@host2scm@(main_vm.os_web_origin.indexOf('://gambitscheme.org/') > 0)")
     (##repl-debug-main)
     (##repl-no-banner))
 
