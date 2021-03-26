@@ -2,7 +2,7 @@
 
 ;;; File: "_ptree2.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -3077,6 +3077,76 @@
                                    result-typ
                                    make-body)))
     scheme-name))
+
+(define (nonneg-integer->c-id n)
+
+  (declare (generic))
+
+  ;; With the parameters below, n must be in 0..3002032123531 (~41 bit int).
+
+  ;; For n in 0..51 (a lowercase or uppercase ASCII letter) the result is a
+  ;; one character string.
+  ;;
+  ;; For n in 52..259 (which covers the rest of the latin-1 characters) the
+  ;; result is a two character string.
+  ;;
+  ;; For n in 260..3483 the result is a three character string. Etc.
+
+  (define nb-initial 52) ;; upper and lowercase letters
+  (define nb-subseq  10) ;; digits 0..9
+  (define nb-bicodes  3) ;; integer in 0..9
+  (define nb-digits  62) ;; (+ nb-initial nb-subseq)
+  (define digits
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+
+  (define (digit d)
+    (string-ref digits d))
+
+  (if (< n nb-initial)
+      (string (digit n))
+      (let* ((n (- n nb-initial))
+             (q (quotient n nb-initial)))
+        (if (< q nb-bicodes)
+            (string (digit (modulo n nb-initial))
+                    (digit (+ q nb-initial)))
+            (let ((n (- n (* nb-bicodes nb-initial))))
+              (let loop1 ((m n)
+                          (len 1))
+                (let ((range (* nb-initial (expt nb-digits (- len 1)))))
+                  (if (>= m range)
+                      (and (< len (- nb-subseq nb-bicodes))
+                           (loop1 (- m range)
+                                  (+ len 1)))
+                      (let loop2 ((i 1)
+                                  (n (quotient m nb-initial))
+                                  (lst (list (digit (modulo m nb-initial)))))
+                        (if (< i len)
+                            (loop2 (+ i 1)
+                                   (quotient n nb-digits)
+                                   (cons (digit (modulo n nb-digits)) lst))
+                            (list->string
+                             (let ((x (+ len nb-initial nb-bicodes -1)))
+                               (reverse (cons (digit x) lst))))))))))))))
+
+(define (char->c-id c)
+  (nonneg-integer->c-id
+   (let ((n (char->integer c)))
+     (if (<= n 90)            ;; #\Z
+         (if (>= n 65)        ;; #\A
+             (+ n (+ 26 -65)) ;; #\A
+             (+ n 52))
+         (if (<= n 122)    ;; #\z
+             (if (>= n 97) ;; #\a
+                 (+ n -97) ;; #\a
+                 (+ n 26))
+             n)))))
+
+(define (string->c-id str)
+  (let loop ((i (- (string-length str) 1)) (lst '()))
+    (if (>= i 0)
+        (loop (- i 1)
+              (cons (char->c-id (string-ref str i)) lst))
+        (append-strings lst))))
 
 (define (scheme-id->c-id s)
   (let loop1 ((i (- (string-length s) 1)) (lst '()))
