@@ -4346,7 +4346,9 @@ end-of-code
 
     if (!___FIXNUMP(result))
     {
-      n = ___bytes_allocated (___PSPNC) - n;
+      ___F64 ba = ___bytes_allocated (___PSPNC);
+
+      n = ba - n;
 
       ___process_times (&user, &sys, &real);
       ___vm_stats (&minflt, &majflt);
@@ -4358,7 +4360,7 @@ end-of-code
       ___F64VECTORSET(result,___FIX(4),___vms->mem.gc_sys_time_)
       ___F64VECTORSET(result,___FIX(5),___vms->mem.gc_real_time_)
       ___F64VECTORSET(result,___FIX(6),___vms->mem.nb_gcs_)
-      ___F64VECTORSET(result,___FIX(7),___bytes_allocated (___PSPNC))
+      ___F64VECTORSET(result,___FIX(7),ba)
       ___F64VECTORSET(result,___FIX(8),(2*(1+2)<<___LWS))
       ___F64VECTORSET(result,___FIX(9),n)
       ___F64VECTORSET(result,___FIX(10),minflt)

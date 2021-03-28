@@ -7080,7 +7080,8 @@ ___PSDKR)
   alloc_stack_ptr = ___ps->fp;
   alloc_heap_ptr  = ___ps->hp;
 
-  return bytes_allocated_minus_occupied + bytes_occupied(___ps);
+  return bytes_allocated_minus_occupied + bytes_occupied(___ps) +
+         ___CAST(___F64,occupied_words_still) * ___WS;
 }
 
 
