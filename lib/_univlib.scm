@@ -852,16 +852,6 @@ def @os_device_from_basic_console@():
 
 (define (##kernel-handlers) #f)
 
-(define (##os-copy-file src-path dest-path) -5555)
-(define (##os-create-directory path permissions) -5555)
-(define (##os-create-fifo path permissions) -5555)
-(define (##os-create-link old-path new-path) -5555)
-(define (##os-create-symbolic-link old-path new-path) -5555)
-(define (##os-delete-directory path) -5555)
-(define (##os-delete-file path) -5555)
-(define (##os-rename-file old-path new-path replace?) -5555)
-(define (##os-file-times-set! path a-time m-time) -5555)
-
 (define (##os-host-info hi host) -5555)
 (define (##os-network-info ni network) -5555)
 (define (##os-protocol-info pi protocol) -5555)
@@ -903,6 +893,8 @@ def @os_device_from_basic_console@():
   (error "##os-device-tty-type-set! not implemented yet"))
 
 ;;;----------------------------------------------------------------------------
+
+;;; Subprocedure information.
 
 (define-prim (##subprocedure-id proc))
 (define-prim (##subprocedure-parent proc))
@@ -1912,21 +1904,21 @@ def @os_file_info@(fi, path, chase):
         return @host2scm@(@os_encode_error@(exn))
 
     if stat.S_ISREG(st.st_mode):
-      typ = 1
+        typ = 1
     elif stat.S_ISDIR(st.st_mode):
-      typ = 2
+        typ = 2
     elif stat.S_ISCHR(st.st_mode):
-      typ = 3
+        typ = 3
     elif stat.S_ISBLK(st.st_mode):
-      typ = 4
+        typ = 4
     elif stat.S_ISFIFO(st.st_mode):
-      typ = 5
+        typ = 5
     elif stat.S_ISLNK(st.st_mode):
-      typ = 6
+        typ = 6
     elif stat.S_ISSOCK(st.st_mode):
-      typ = 7
+        typ = 7
     else:
-      typ = 0
+        typ = 0
 
     fi.slots[ 1] = @host2scm@(typ)
     fi.slots[ 2] = @host2scm@(st.st_dev)
@@ -1958,98 +1950,327 @@ def @os_file_info@(fi, path, chase):
     (println chase?)
     -5555)))
 
+(define (##os-file-times-set! path a-time m-time)
+  (println "unimplemented ##os-file-times-set! called with path=")
+  (println path)
+  (println "and a-time=")
+  (println a-time)
+  (println "and m-time=")
+  (println m-time)
+  -5555)
+
 ;;;----------------------------------------------------------------------------
 
-;;; Loading of compiled files.
+;;; Filesystem operations.
 
-(define (##os-load-object-file path linker-name)
+(define (##os-delete-directory path)
   (##declare (not interrupts-enabled))
   (macro-case-target
 
    ((js)
     (##inline-host-declaration "
 
-@os_load_object_file@ = function (path, linker_name) {
+@os_delete_directory@ = function (path) {
 
-  if (@os_nodejs@) {
+  if (@os_uri_scheme_prefixed@(path)) { // accessing a URL?
 
-    try {
-      require(path);
-    } catch (exn) {
-      if (exn instanceof Error && exn.hasOwnProperty('code')) {
-        return @host2scm@(@os_encode_error@(exn));
-      } else {
-        throw exn;
-      }
-    }
+    return @host2scm@(-1); // EPERM (operation not permitted)
 
-    return [[@module_latest_registered@], null, false];
+  } else {
 
-  } else if (@os_web@) {
-
-    path += '.js'; // add a .js extension to force application/javascript
-                   // MIME type (this requires the .o1 file to be copied to
-                   // a .o1.js file)
-
-    if (!@os_trusted_url@(path, 'to execute that code')) { // accessing an untrusted URL?
+    if (!@os_fs@) {
       return @host2scm@(-1); // EPERM (operation not permitted)
     } else {
 
-      var ra = @r0@;
-      @r0@ = null; // exit trampoline
-
-      function onload() {
-        @r1@ = [[@module_latest_registered@], null, false];
-        @r0@ = ra;
-        @trampoline@(@r0@);
+      try {
+        @os_fs@.rmdirSync(path);
+      } catch (exn) {
+        if (exn instanceof Error && exn.hasOwnProperty('code')) {
+          return @host2scm@(@os_encode_error@(exn));
+        } else {
+          throw exn;
+        }
       }
 
-      function onerror() {
-        @r1@ = @host2scm@(-2); // ENOENT (file does not exist)
-        @r0@ = ra;
-        @trampoline@(@r0@);
-      }
-
-      var script = document.createElement('script');
-      script.type = 'text/javascript';
-      script.src = path;
-      script.onload = onload;
-      script.onerror = onerror;
-      document.head.append(script);
-
-      return 0; // ignored
+      return @host2scm@(0); // no error
     }
-  } else {
-    return @host2scm@(-1); // EPERM (operation not permitted)
   }
 };
 
 ")
     (##inline-host-expression
-     "@os_load_object_file@(@scm2host@(@1@), @scm2host@(@2@))"
-     path
-     linker-name))
+     "@os_delete_directory@(@scm2host@(@1@))"
+     path))
 
    ((python)
     (##inline-host-declaration "
 
-def @os_load_object_file@(path, linker_name):
+def @os_delete_directory@(path):
 
     try:
-        @exec@(open(path).read())
+        os.rmdir(path);
     except OSError as exn:
         return @host2scm@(@os_encode_error@(exn))
 
-    return [[@module_latest_registered@], @null_obj@, False]
+    return @host2scm@(0)  # no error
 
 ")
     (##inline-host-expression
-     "@os_load_object_file@(@scm2host@(@1@), @scm2host@(@2@))"
-     path
-     linker-name))
+     "@os_delete_directory@(@scm2host@(@1@))"
+     path))
 
    (else
-    (##vector "load-object-file not implemented" linker-name))))
+    (println "unimplemented ##os-delete-directory called with path=")
+    (println path)
+    -5555)))
+
+(define (##os-delete-file path)
+  (##declare (not interrupts-enabled))
+  (macro-case-target
+
+   ((js)
+    (##inline-host-declaration "
+
+@os_delete_file@ = function (path) {
+
+  if (@os_uri_scheme_prefixed@(path)) { // accessing a URL?
+
+    return @host2scm@(-1); // EPERM (operation not permitted)
+
+  } else {
+
+    if (!@os_fs@) {
+      return @host2scm@(-1); // EPERM (operation not permitted)
+    } else {
+
+      try {
+        @os_fs@.unlinkSync(path);
+      } catch (exn) {
+        if (exn instanceof Error && exn.hasOwnProperty('code')) {
+          return @host2scm@(@os_encode_error@(exn));
+        } else {
+          throw exn;
+        }
+      }
+
+      return @host2scm@(0); // no error
+    }
+  }
+};
+
+")
+    (##inline-host-expression
+     "@os_delete_file@(@scm2host@(@1@))"
+     path))
+
+   ((python)
+    (##inline-host-declaration "
+
+def @os_delete_file@(path):
+
+    try:
+        os.unlink(path);
+    except OSError as exn:
+        return @host2scm@(@os_encode_error@(exn))
+
+    return @host2scm@(0)  # no error
+
+")
+    (##inline-host-expression
+     "@os_delete_file@(@scm2host@(@1@))"
+     path))
+
+   (else
+    (println "unimplemented ##os-delete-file called with path=")
+    (println path)
+    -5555)))
+
+(define (##os-rename-file old-path new-path replace?)
+  (##declare (not interrupts-enabled))
+  (macro-case-target
+
+   ((js)
+    (##inline-host-declaration "
+
+@os_rename_file@ = function (old_path, new_path, replace) {
+
+  if (@os_uri_scheme_prefixed@(old_path) ||
+      @os_uri_scheme_prefixed@(new_path)) { // accessing a URL?
+
+    return @host2scm@(-1); // EPERM (operation not permitted)
+
+  } else {
+
+    if (!@os_fs@) {
+      return @host2scm@(-1); // EPERM (operation not permitted)
+    } else {
+
+      if (!replace) {
+        // new_path should not be an existing file so this is checked
+        // before renaming old_path (TODO: find a way to do this atomically)
+        var st = null;
+        try {
+          st = @os_fs@.statSync(new_path);
+        } catch (exn) {
+        }
+        if (st !== null) {
+          return @host2scm@(-17); // return EEXIST
+        }
+      }
+
+      try {
+        @os_fs@.renameSync(old_path, new_path);
+      } catch (exn) {
+        if (exn instanceof Error && exn.hasOwnProperty('code')) {
+          return @host2scm@(@os_encode_error@(exn));
+        } else {
+          throw exn;
+        }
+      }
+
+      return @host2scm@(0); // no error
+    }
+  }
+};
+
+")
+    (##inline-host-expression
+     "@os_rename_file@(@scm2host@(@1@),@scm2host@(@2@),@scm2host@(@3@))"
+     old-path
+     new-path
+     replace?))
+
+   ((python)
+    (##inline-host-declaration "
+
+def @os_rename_file@(old_path, new_path, replace):
+
+    if not replace:
+        # new_path should not be an existing file so this is checked
+        # before renaming old_path (TODO: find a way to do this atomically)
+        st = None
+        try:
+            st = os.stat(new_path)
+        except OSError as exn:
+            pass
+        if st is not None:
+            return @host2scm@(-17)  # return EEXIST
+
+    try:
+        os.rename(old_path, new_path);
+    except OSError as exn:
+        return @host2scm@(@os_encode_error@(exn))
+
+    return @host2scm@(0)  # no error
+
+")
+    (##inline-host-expression
+     "@os_rename_file@(@scm2host@(@1@),@scm2host@(@2@),@scm2host@(@3@))"
+     old-path
+     new-path
+     replace?))
+
+   (else
+    (println "unimplemented ##os-rename-file called with old-path=")
+    (println old-path)
+    (println "and new-path=")
+    (println new-path)
+    (println "and replace?=")
+    (println replace?)
+    -5555)))
+
+(define (##os-create-directory path permissions)
+  (##declare (not interrupts-enabled))
+  (macro-case-target
+
+   ((js)
+    (##inline-host-declaration "
+
+@os_create_directory@ = function (path, permissions) {
+
+  if (@os_uri_scheme_prefixed@(path)) { // accessing a URL?
+
+    return @host2scm@(-1); // EPERM (operation not permitted)
+
+  } else {
+
+    if (!@os_fs@) {
+      return @host2scm@(-1); // EPERM (operation not permitted)
+    } else {
+
+      try {
+        @os_fs@.mkdirSync(path, permissions);
+      } catch (exn) {
+        if (exn instanceof Error && exn.hasOwnProperty('code')) {
+          return @host2scm@(@os_encode_error@(exn));
+        } else {
+          throw exn;
+        }
+      }
+
+      return @host2scm@(0); // no error
+    }
+  }
+};
+
+")
+    (##inline-host-expression
+     "@os_create_directory@(@scm2host@(@1@),@scm2host@(@2@))"
+     path
+     permissions))
+
+   ((python)
+    (##inline-host-declaration "
+
+def @os_create_directory@(path, permissions):
+
+    try:
+        os.mkdir(path, permissions);
+    except OSError as exn:
+        return @host2scm@(@os_encode_error@(exn))
+
+    return @host2scm@(0)  # no error
+
+")
+    (##inline-host-expression
+     "@os_create_directory@(@scm2host@(@1@),@scm2host@(@2@))"
+     path
+     permissions))
+
+   (else
+    (println "unimplemented ##os-create-directory called with path=")
+    (println path)
+    (println "and permissions=")
+    (println permissions)
+    -5555)))
+
+(define (##os-create-fifo path permissions)
+  (println "unimplemented ##os-create-fifo called with path=")
+  (println path)
+  (println "and permissions=")
+  (println permissions)
+  -5555)
+
+(define (##os-create-link old-path new-path)
+  (println "unimplemented ##os-create-link called with old-path=")
+  (println old-path)
+  (println "and new-path=")
+  (println new-path)
+  -5555)
+
+(define (##os-create-symbolic-link old-path new-path)
+  (println "unimplemented ##os-create-symbolic-link called with old-path=")
+  (println old-path)
+  (println "and new-path=")
+  (println new-path)
+  -5555)
+
+(define (##os-copy-file src-path dest-path)
+  (println "unimplemented ##os-copy-file called with src-path=")
+  (println src-path)
+  (println "and dest-path=")
+  (println dest-path)
+  -5555)
 
 ;;;----------------------------------------------------------------------------
 
@@ -2283,7 +2504,160 @@ def @os_device_close@(dev_scm, direction_scm):
     (println "unimplemented ##os-device-close called")
     -5555)))
 
+(define-prim (##os-device-force-output dev-condvar level)
+  (macro-case-target
+
+   ((js)
+    (##inline-host-declaration "
+
+@os_device_force_output@ = function (dev_condvar_scm, level_scm) {
+
+  var dev = @foreign2host@(dev_condvar_scm.slots[@CONDVAR_NAME@]);
+  var level = @scm2host@(level_scm);
+
+  return @host2scm@(dev.force_output(dev_condvar_scm, level));
+};
+
+")
+    (##inline-host-expression
+     "@os_device_force_output@(@1@,@2@)"
+     dev-condvar
+     level))
+
+   ((python)
+    (##inline-host-declaration "
+
+def @os_device_force_output@(dev_condvar_scm, level_scm):
+
+    dev = @foreign2host@(dev_condvar_scm.slots[@CONDVAR_NAME@])
+    level = @scm2host@(level_scm)
+
+    return @host2scm@(dev.force_output(dev_condvar_scm, level))
+
+")
+    (##inline-host-expression
+     "@os_device_force_output@(@1@,@2@)"
+     dev-condvar
+     level))
+
+   (else
+    (println "unimplemented ##os-device-force-output called")
+    -5555)))
+
+(define-prim (##os-device-kind dev)
+  (macro-case-target
+
+   ((js)
+    (##inline-host-declaration "
+
+@os_device_kind@ = function (dev_scm) {
+
+  var dev = @foreign2host@(dev_scm);
+
+  if (@os_debug@)
+    console.log('@os_device_kind@(...)  ***not fully implemented***');
+
+  return @host2scm@(31+32); // file device
+};
+
+")
+    (##inline-host-expression
+     "@os_device_kind@(@1@)"
+     dev))
+
+   ((python)
+    (##inline-host-declaration "
+
+def @os_device_kind@(dev_scm):
+
+    dev = @foreign2host@(dev_scm)
+
+    if @os_debug@:
+        print('@os_device_kind@(...)  ***not fully implemented***')
+
+    return @host2scm@(31+32)  # file device
+
+")
+    (##inline-host-expression
+     "@os_device_kind@(@1@)"
+     dev))
+
+   (else
+    (println "unimplemented ##os-device-kind called")
+    -5555)))
+
+(define ##feature-device-directory
+  (macro-case-target
+
+   ((js)
+    (##inline-host-declaration "
+
+@Device_directory@ = function (filenames) {
+  var dev = this;
+  dev.filenames = filenames;
+  dev.index = 0;
+};
+
+@Device_directory@.prototype.read = function (dev_condvar_scm) {
+
+  var dev = this;
+
+  if (@os_debug@)
+    console.log('@Device_directory@([...]).read(...)');
+
+  if (dev.index >= dev.filenames.length) {
+    return @eof_obj@; // end of list of filenames
+  } else {
+    dev.index++;
+    return @host2scm@(dev.filenames[dev.index-1]);
+  }
+};
+
+@Device_directory@.prototype.close = function (direction) {
+
+  var dev = this;
+
+  if (@os_debug@)
+    console.log('@Device_directory@([...]).close('+direction+')');
+
+  return 0; // no error
+};
+
+"))
+
+   ((python)
+    (##inline-host-declaration "
+
+class @Device_directory@:
+
+    def __init__(dev, filenames):
+        dev.filenames = filenames
+        dev.index = 0
+
+    def read(dev, dev_condvar_scm):
+
+        if @os_debug@:
+            print('@Device_directory@([...]).read(...)')
+
+        if dev.index >= len(dev.filenames):
+            return @eof_obj@  # end of list of filenames
+        else:
+            dev.index += 1
+            return @host2scm@(dev.filenames[dev.index-1])
+
+    def close(dev, direction):
+
+        if @os_debug@:
+            print('@Device_directory@([...]).close('+repr(direction)+')')
+
+        return 0  # no error
+"))
+
+   (else
+    #f)))
+
 (define-prim (##os-device-directory-open-path path ignore-hidden)
+  (##first-argument #f ##feature-device-directory)
   (macro-case-target
 
    ((js)
@@ -2295,9 +2669,41 @@ def @os_device_close@(dev_scm, direction_scm):
   var ignore_hidden = @scm2host@(ignore_hidden_scm);
 
   if (@os_debug@)
-    console.log('@os_device_directory_open_path@(\\''+path+'\\','+ignore_hidden+')  ***not implemented***');
+    console.log('@os_device_directory_open_path@(\\''+path+'\\','+ignore_hidden+')');
 
-  return @host2scm@(-1); // EPERM (operation not permitted)
+  var filenames;
+
+  try {
+    filenames = @os_fs@.readdirSync(path);
+  } catch (exn) {
+    if (exn instanceof Error && exn.hasOwnProperty('code')) {
+      return @host2scm@(@os_encode_error@(exn));
+    } else {
+      throw exn;
+    }
+  }
+
+  switch (ignore_hidden) {
+    case 0:
+      // list all files
+      // need to add '.' and '..' which are not returned by readdirSync
+      filenames = ['.', '..'].concat(filenames);
+      break;
+    case 1:
+      // list all files except '.' and '..'
+      // this is already the case when using readdirSync
+      break;
+    default: // ignore_hidden == 2
+      // list all files except hidden files ('.', '..', etc)
+      filenames = filenames.filter(function (name) {
+                    return !name.startsWith('.');
+                  });
+      break;
+  }
+
+  var dev = new @Device_directory@(filenames);
+
+  return @host2foreign@(dev);
 };
 
 ")
@@ -2315,9 +2721,28 @@ def @os_device_directory_open_path@(path_scm, ignore_hidden_scm):
     ignore_hidden = @scm2host@(ignore_hidden_scm)
 
     if @os_debug@:
-        print('@os_device_directory_open_path@('+repr(path)+','+repr(ignore_hidden)+')  ***not implemented***')
+        print('@os_device_directory_open_path@('+repr(path)+','+repr(ignore_hidden)+')')
 
-    return @host2scm@(-1)  # EPERM (operation not permitted)
+    try:
+        filenames = os.listdir(path)
+    except OSError as exn:
+        return @host2scm@(@os_encode_error@(exn))
+
+    if ignore_hidden == 0:
+        # list all files
+        # need to add '.' and '..' which are not returned by os.listdir
+        filenames = ['.', '..'] + filenames
+    elif ignore_hidden == 1:
+        # list all files except '.' and '..'
+        # this is already the case when using readdirSync
+        pass
+    else: # ignore_hidden == 2
+        # list all files except hidden files ('.', '..', etc)
+        filenames = filter(lambda name: name[:1] != '.', filenames)
+
+    dev = @Device_directory@(filenames)
+
+    return @host2foreign@(dev)
 
 ")
     (##inline-host-expression
@@ -2327,6 +2752,49 @@ def @os_device_directory_open_path@(path_scm, ignore_hidden_scm):
 
    (else
     (println "unimplemented ##os-device-directory-open-path called")
+    -5555)))
+
+(define-prim (##os-device-directory-read dev-condvar)
+  (macro-case-target
+
+   ((js)
+    (##first-argument #f ##feature-device-directory)
+    (##inline-host-declaration "
+
+@os_device_directory_read@ = function (dev_condvar_scm) {
+
+  var dev = @foreign2host@(dev_condvar_scm.slots[@CONDVAR_NAME@]);
+
+  if (@os_debug@)
+    console.log('@os_device_directory_read@(...)');
+
+  return dev.read(dev_condvar_scm);
+};
+
+")
+    (##inline-host-expression
+     "@os_device_directory_read@(@1@)"
+     dev-condvar))
+
+   ((python)
+    (##inline-host-declaration "
+
+def @os_device_directory_read@(dev_condvar_scm):
+
+    dev = @foreign2host@(dev_condvar_scm.slots[@CONDVAR_NAME@])
+
+    if @os_debug@:
+        print('@os_device_directory_read@(...)')
+
+    return dev.read(dev_condvar_scm)
+
+")
+    (##inline-host-expression
+     "@os_device_directory_read@(@1@)"
+     dev-condvar))
+
+   (else
+    (println "unimplemented ##os-device-directory-read called")
     -5555)))
 
 (define ##feature-callback-queue
@@ -2386,49 +2854,6 @@ def @os_device_directory_open_path@(path_scm, ignore_hidden_scm):
 
    (else
     #f)))
-
-(define-prim (##os-device-directory-read dev-condvar)
-  (macro-case-target
-
-   ((js)
-    (##first-argument #f ##feature-callback-queue)
-    (##inline-host-declaration "
-
-@os_device_directory_read@ = function (dev_condvar_scm) {
-
-  var dev = @foreign2host@(dev_condvar_scm.slots[@CONDVAR_NAME@]);
-
-  if (@os_debug@)
-    console.log('@os_device_directory_read@(...)  ***not implemented***');
-
-  return @host2scm@(-1); // EPERM (operation not permitted)
-};
-
-")
-    (##inline-host-expression
-     "@os_device_directory_read@(@1@)"
-     dev-condvar))
-
-   ((python)
-    (##inline-host-declaration "
-
-def @os_device_directory_read@(dev_condvar_scm):
-
-    dev = @foreign2host@(dev_condvar_scm.slots[@CONDVAR_NAME@])
-
-    if @os_debug@:
-        print('@os_device_directory_read@(...)  ***not implemented***')
-
-    return @host2scm@(-1)  # EPERM (operation not permitted)
-
-")
-    (##inline-host-expression
-     "@os_device_directory_read@(@1@)"
-     dev-condvar))
-
-   (else
-    (println "unimplemented ##os-device-directory-read called")
-    -5555)))
 
 (define-prim (##os-device-event-queue-open selector)
   (macro-case-target
@@ -2521,88 +2946,6 @@ def @os_device_event_queue_read@(dev_condvar_scm):
 
    (else
     (println "unimplemented ##os-device-event-queue-read called")
-    -5555)))
-
-(define-prim (##os-device-force-output dev-condvar level)
-  (macro-case-target
-
-   ((js)
-    (##inline-host-declaration "
-
-@os_device_force_output@ = function (dev_condvar_scm, level_scm) {
-
-  var dev = @foreign2host@(dev_condvar_scm.slots[@CONDVAR_NAME@]);
-  var level = @scm2host@(level_scm);
-
-  return @host2scm@(dev.force_output(dev_condvar_scm, level));
-};
-
-")
-    (##inline-host-expression
-     "@os_device_force_output@(@1@,@2@)"
-     dev-condvar
-     level))
-
-   ((python)
-    (##inline-host-declaration "
-
-def @os_device_force_output@(dev_condvar_scm, level_scm):
-
-    dev = @foreign2host@(dev_condvar_scm.slots[@CONDVAR_NAME@])
-    level = @scm2host@(level_scm)
-
-    return @host2scm@(dev.force_output(dev_condvar_scm, level))
-
-")
-    (##inline-host-expression
-     "@os_device_force_output@(@1@,@2@)"
-     dev-condvar
-     level))
-
-   (else
-    (println "unimplemented ##os-device-force-output called")
-    -5555)))
-
-(define-prim (##os-device-kind dev)
-  (macro-case-target
-
-   ((js)
-    (##inline-host-declaration "
-
-@os_device_kind@ = function (dev_scm) {
-
-  var dev = @foreign2host@(dev_scm);
-
-  if (@os_debug@)
-    console.log('@os_device_kind@(...)  ***not fully implemented***');
-
-  return @host2scm@(31+32); // file device
-};
-
-")
-    (##inline-host-expression
-     "@os_device_kind@(@1@)"
-     dev))
-
-   ((python)
-    (##inline-host-declaration "
-
-def @os_device_kind@(dev_scm):
-
-    dev = @foreign2host@(dev_scm)
-
-    if @os_debug@:
-        print('@os_device_kind@(...)  ***not fully implemented***')
-
-    return @host2scm@(31+32)  # file device
-
-")
-    (##inline-host-expression
-     "@os_device_kind@(@1@)"
-     dev))
-
-   (else
-    (println "unimplemented ##os-device-kind called")
     -5555)))
 
 (define-prim (##os-device-stream-open-process path-and-args environment directory options)
@@ -3656,6 +3999,99 @@ def @os_condvar_select@(devices_scm, timeout_scm):
    (else
     (println "unimplemented ##os-condvar-select! called")
     -5555)))
+
+;;;----------------------------------------------------------------------------
+
+;;; Loading of compiled files.
+
+(define (##os-load-object-file path linker-name)
+  (##declare (not interrupts-enabled))
+  (macro-case-target
+
+   ((js)
+    (##inline-host-declaration "
+
+@os_load_object_file@ = function (path, linker_name) {
+
+  if (@os_nodejs@) {
+
+    try {
+      require(path);
+    } catch (exn) {
+      if (exn instanceof Error && exn.hasOwnProperty('code')) {
+        return @host2scm@(@os_encode_error@(exn));
+      } else {
+        throw exn;
+      }
+    }
+
+    return [[@module_latest_registered@], null, false];
+
+  } else if (@os_web@) {
+
+    path += '.js'; // add a .js extension to force application/javascript
+                   // MIME type (this requires the .o1 file to be copied to
+                   // a .o1.js file)
+
+    if (!@os_trusted_url@(path, 'to execute that code')) { // accessing an untrusted URL?
+      return @host2scm@(-1); // EPERM (operation not permitted)
+    } else {
+
+      var ra = @r0@;
+      @r0@ = null; // exit trampoline
+
+      function onload() {
+        @r1@ = [[@module_latest_registered@], null, false];
+        @r0@ = ra;
+        @trampoline@(@r0@);
+      }
+
+      function onerror() {
+        @r1@ = @host2scm@(-2); // ENOENT (file does not exist)
+        @r0@ = ra;
+        @trampoline@(@r0@);
+      }
+
+      var script = document.createElement('script');
+      script.type = 'text/javascript';
+      script.src = path;
+      script.onload = onload;
+      script.onerror = onerror;
+      document.head.append(script);
+
+      return 0; // ignored
+    }
+  } else {
+    return @host2scm@(-1); // EPERM (operation not permitted)
+  }
+};
+
+")
+    (##inline-host-expression
+     "@os_load_object_file@(@scm2host@(@1@), @scm2host@(@2@))"
+     path
+     linker-name))
+
+   ((python)
+    (##inline-host-declaration "
+
+def @os_load_object_file@(path, linker_name):
+
+    try:
+        @exec@(open(path).read())
+    except OSError as exn:
+        return @host2scm@(@os_encode_error@(exn))
+
+    return [[@module_latest_registered@], @null_obj@, False]
+
+")
+    (##inline-host-expression
+     "@os_load_object_file@(@scm2host@(@1@), @scm2host@(@2@))"
+     path
+     linker-name))
+
+   (else
+    (##vector "load-object-file not implemented" linker-name))))
 
 ;;;----------------------------------------------------------------------------
 
