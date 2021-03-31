@@ -53,14 +53,19 @@ if (typeof @os_fs@ === 'undefined') {
 
 @os_encode_error@ = function (exn) {
   switch (exn.code) {
-    case 'EPERM':  return -1;
-    case 'ENOENT': return -2;
-    case 'EINTR':  return -4;
-    case 'EIO':    return -5;
-    case 'EBADF':  return -9;
-    case 'EACCES': return -13;
-    case 'EEXIST': return -17;
-    case 'EAGAIN': return -35;
+    case 'EPERM':     return -1;
+    case 'ENOENT':    return -2;
+    case 'EINTR':     return -4;
+    case 'EIO':       return -5;
+    case 'EBADF':     return -9;
+    case 'EACCES':    return -13;
+    case 'EEXIST':    return -17;
+    case 'ENOTDIR':   return -20;
+    case 'EISDIR':    return -21;
+    case 'EINVAL':    return -22;
+    case 'ENOSPC':    return -28;
+    case 'EAGAIN':    return -35;
+    case 'ENOTEMPTY': return -66;
   }
   return -8888;
 };
@@ -74,7 +79,12 @@ if (typeof @os_fs@ === 'undefined') {
     case -9:  return 'EBADF (Bad file descriptor)';
     case -13: return 'EACCES (Permission denied)';
     case -17: return 'EEXIST (File exists)';
+    case -20: return 'ENOTDIR (Not a directory)';
+    case -21: return 'EISDIR (Is a directory)';
+    case -22: return 'EINVAL (Invalid argument)';
+    case -28: return 'ENOSPC (No space left on device)';
     case -35: return 'EAGAIN (Resource temporarily unavailable)';
+    case -66: return 'ENOTEMPTY (Directory not empty)';
   }
   return 'E??? (unknown error)';
 };
@@ -618,15 +628,27 @@ def @os_encode_error@(exn):
     elif e == errno.ENOENT:
         return -2
     elif e == errno.EINTR:
-        return -5
+        return -4
     elif e == errno.EIO:
-        return -9
+        return -5
     elif e == errno.EBADF:
-        return -13
+        return -9
     elif e == errno.EACCES:
-        return -17
+        return -13
     elif e == errno.EEXIST:
+        return -17
+    elif e == errno.ENOTDIR:
+        return -20
+    elif e == errno.EISDIR:
+        return -21
+    elif e == errno.EINVAL:
+        return -22
+    elif e == errno.ENOSPC:
+        return -28
+    elif e == errno.EAGAIN:
         return -35
+    elif e == errno.ENOTEMPTY:
+        return -66
     else:
         return -8888
 
@@ -645,8 +667,18 @@ def @os_decode_error@(code):
         return 'EACCES (Permission denied)'
     elif code == -17:
         return 'EEXIST (File exists)'
+    elif code == -20:
+        return 'ENOTDIR (Not a directory)'
+    elif code == -21:
+        return 'EISDIR (Is a directory)'
+    elif code == -22:
+        return 'EINVAL (Invalid argument)'
+    elif code == -28:
+        return 'ENOSPC (No space left on device)'
     elif code == -35:
         return 'EAGAIN (Resource temporarily unavailable)'
+    elif code == -66:
+        return 'ENOTEMPTY (Directory not empty)'
     else:
         return 'E??? (unknown error)'
 
