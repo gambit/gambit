@@ -4690,43 +4690,43 @@
          (result (thunk))
          (at-end (##process-statistics))
          (user-time
-          (##- (##f64vector-ref at-end 0)
-               (##f64vector-ref at-start 0)))
+          (##fl- (##f64vector-ref at-end 0)
+                 (##f64vector-ref at-start 0)))
          (sys-time
-          (##- (##f64vector-ref at-end 1)
-               (##f64vector-ref at-start 1)))
+          (##fl- (##f64vector-ref at-end 1)
+                 (##f64vector-ref at-start 1)))
          (real-time
-          (##- (##f64vector-ref at-end 2)
-               (##f64vector-ref at-start 2)))
+          (##fl- (##f64vector-ref at-end 2)
+                 (##f64vector-ref at-start 2)))
          (gc-user-time
-          (##- (##f64vector-ref at-end 3)
-               (##f64vector-ref at-start 3)))
+          (##fl- (##f64vector-ref at-end 3)
+                 (##f64vector-ref at-start 3)))
          (gc-sys-time
-          (##- (##f64vector-ref at-end 4)
-               (##f64vector-ref at-start 4)))
+          (##fl- (##f64vector-ref at-end 4)
+                 (##f64vector-ref at-start 4)))
          (gc-real-time
-          (##- (##f64vector-ref at-end 5)
-               (##f64vector-ref at-start 5)))
+          (##fl- (##f64vector-ref at-end 5)
+                 (##f64vector-ref at-start 5)))
          (nb-gcs
           (##flonum->exact-int
-           (##- (##f64vector-ref at-end 6)
-                (##f64vector-ref at-start 6))))
+           (##fl- (##f64vector-ref at-end 6)
+                  (##f64vector-ref at-start 6))))
          (minflt
           (##flonum->exact-int
-           (##- (##f64vector-ref at-end 10)
-                (##f64vector-ref at-start 10))))
+           (##fl- (##f64vector-ref at-end 10)
+                  (##f64vector-ref at-start 10))))
          (majflt
           (##flonum->exact-int
-           (##- (##f64vector-ref at-end 11)
-                (##f64vector-ref at-start 11))))
+           (##fl- (##f64vector-ref at-end 11)
+                  (##f64vector-ref at-start 11))))
          (bytes-allocated
           (##flonum->exact-int
-           (##- (##- (##f64vector-ref at-end 7)
-                     (##f64vector-ref at-start 7))
-                (##+ (if (##interp-procedure? thunk)
-                         (##f64vector-ref at-end 8) ;; thunk call frame space
-                         (macro-inexact-+0))
-                     (##f64vector-ref at-end 9)))))) ;; at-end structure space
+           (##fl- (##fl- (##f64vector-ref at-end 7)
+                         (##f64vector-ref at-start 7))
+                  (##fl+ (if (##interp-procedure? thunk)
+                             (##f64vector-ref at-end 8) ;; thunk call frame space
+                             (macro-inexact-+0))
+                         (##f64vector-ref at-end 9)))))) ;; at-end structure space
 
     (##list (##cons 'result          result)
             (##cons 'user-time       user-time)
