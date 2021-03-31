@@ -3479,12 +3479,21 @@
                      (begin
                        (##close-port dir-port)
                        #f)
-                     (let ((result (del (##path-expand filename dir-path))))
-                       (if result
-                           (begin
-                             (##close-port dir-port)
-                             result)
-                           (loop))))))))
+                     (if (or (##string=? filename ".")
+                             (##string=? filename ".."))
+                         ;; it should never be the case that filename is
+                         ;; "." or ".." because of the use of the option
+                         ;; ignore-hidden: 'dot-and-dot-dot
+                         ;; but we double check anyway because it would
+                         ;; be very bad to recurse on "." and ".." if
+                         ;; there was a bug in ##open-directory-aux
+                         (loop)
+                         (let ((result (del (##path-expand filename dir-path))))
+                           (if result
+                               (begin
+                                 (##close-port dir-port)
+                                 result)
+                               (loop)))))))))
        open-directory
        (##list path: dir-path
                ignore-hidden: 'dot-and-dot-dot)))
