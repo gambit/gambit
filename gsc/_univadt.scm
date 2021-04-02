@@ -193,6 +193,9 @@
 (define-macro (^array-length expr)
   `(univ-emit-array-length ctx ,expr))
 
+(define-macro (^array-push! expr1 expr2)
+  `(univ-emit-array-push! ctx ,expr1 ,expr2))
+
 (define-macro (^array-shrink! expr1 expr2)
   `(univ-emit-array-shrink! ctx ,expr1 ,expr2))
 

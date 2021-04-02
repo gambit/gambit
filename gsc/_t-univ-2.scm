@@ -563,10 +563,9 @@
            (^assign (^member cp (^public 'parent))
                     (^rts-field-use 'current_parententrypt))
            (^if (^not (^parens (^null? (^rts-field-use 'current_parententrypt))))
-                (^call-prim
-                 (^member (^member (^rts-field-use 'current_parententrypt)
-                                   'ctrlpts)
-                          'push)
+                (^array-push!
+                 (^member (^rts-field-use 'current_parententrypt)
+                          'ctrlpts)
                  cp)))))))
 
   (univ-define-rtlib-feature 'returnpt_init
@@ -590,10 +589,9 @@
            (^assign (^member cp (^public 'parent))
                     (^rts-field-use 'current_parententrypt))
            (^if (^not (^parens (^null? (^rts-field-use 'current_parententrypt))))
-                (^call-prim
-                 (^member (^member (^rts-field-use 'current_parententrypt)
-                                   'ctrlpts)
-                          'push)
+                (^array-push!
+                 (^member (^rts-field-use 'current_parententrypt)
+                          'ctrlpts)
                  cp))
            (^assign (^member cp (^public 'fs)) fs)
            (^assign (^member cp (^public 'link)) link))))))
@@ -615,10 +613,9 @@
            (^assign (^member cp (^public 'parent))
                     (^rts-field-use 'current_parententrypt))
            (^if (^not (^parens (^null? (^rts-field-use 'current_parententrypt))))
-                (^call-prim
-                 (^member (^member (^rts-field-use 'current_parententrypt)
-                                   'ctrlpts)
-                          'push)
+                (^array-push!
+                 (^member (^rts-field-use 'current_parententrypt)
+                          'ctrlpts)
                  cp))
            (^assign (^member cp (^public 'nfree)) nfree))))))
 
@@ -2315,6 +2312,139 @@
                   '(array unicode)))
              (^return
               (univ-emit-string?-inline ctx (^local-var 'obj))))))))
+
+  ;;---------------------------------------------------------------------------
+
+  ;; Base 92 decoding of 32 bit unsigned integer arrays.
+
+  (univ-define-rtlib-feature 'base92_decode
+   (univ-rtlib-feature-method
+    '(public)
+    'bool
+    (list (univ-field 's 'str))
+    "\n"
+    '()
+    (lambda (ctx)
+      (let ((s (^local-var 's))
+            (leng (^local-var 'leng))
+            (i (^local-var 'i))
+            (j (^local-var 'j))
+            (result (^local-var 'result))
+            (x (^local-var 'x))
+            (r (^local-var 'r))
+            (b2 (^local-var 'b2))
+            (b3 (^local-var 'b3))
+            (b4 (^local-var 'b4))
+            (b5 (^local-var 'b5))
+            (b6 (^local-var 'b6)))
+
+        ;; For an explanation of the encoding see the procedure
+        ;; base92-encode in _utils.scm.
+
+        (define lo1   0) ;; 0..63 takes 1 byte
+        (define hi1  63)
+        (define lo2  64) ;; 64..82 takes 2 bytes
+        (define hi2  82)
+        (define lo3  83) ;; 83..90 takes 3 bytes
+        (define hi3  90)
+        (define lo6  91) ;; 91 takes 6 bytes
+        (define base 92)
+
+        (define (get-next-code var)
+          (define backslash 92) ;; (char->integer #\\)
+          (define encoding0 35) ;; (char->integer #\#) encoding of 0
+          (^ (^var-declaration 'int var (^str-index-code s i))
+             (^inc-by var (- encoding0))
+             (^if (^< var (^int 0))
+                  (^assign var (^int (- backslash encoding0))))
+             (^inc-by i 1)))
+
+        (define (add-to-result-array expr)
+          (^array-push! result expr))
+
+        (^
+         (^var-declaration 'int leng (^str-length s))
+         (^var-declaration 'int i (^int 0))
+         (^var-declaration 'object result (^array-literal 'object '()))
+         (^while
+          (^< i leng)
+          (^ (get-next-code x)
+             (^if (^< x (^int lo2))
+                  (add-to-result-array x)
+                  (^ (get-next-code b2)
+                     (^if (^< x (^int lo6))
+
+                          (^ (^var-declaration 'int j (^int 0))
+                             (^var-declaration 'int r (^int 0))
+                             (^if (^< x (^int lo3))
+                                  (^ (^assign x
+                                              (^+
+                                               (^* (^int base) x)
+                                               (^- b2
+                                                   (^int
+                                                    (- (* base lo2)
+                                                       lo2)))))
+                                     (^if (^< x (^int 256))
+                                          (add-to-result-array x)
+                                          (^ (^assign
+                                              j
+                                              (^- (^array-length result)
+                                                  (^int 1)))
+                                             (^assign
+                                              r
+                                              (^- x (^int 255))))))
+                                  (^ (get-next-code b3)
+                                     (^assign x
+                                              (^+
+                                               (^*
+                                                (^int base)
+                                                (^parens
+                                                 (^+
+                                                  (^* (^int base) x)
+                                                  b2)))
+                                               (^- b3
+                                                   (^int
+                                                    (- (* base base lo3)
+                                                       256)))))
+                                     (^if (^< x (^int 65536))
+                                          (add-to-result-array x)
+                                          (^ (^assign
+                                              j
+                                              (^- (^array-length result)
+                                                  (^int 2)))
+                                             (^assign
+                                              r
+                                              (^* (^int 2)
+                                                  (^parens
+                                                   (^- x (^int 65535)))))))))
+                             (^while
+                              (^> r (^int 0))
+                              (^ (add-to-result-array (^array-index result j))
+                                 (^inc-by j 1)
+                                 (^inc-by r -1))))
+
+                          (^ (get-next-code b3)
+                             (get-next-code b4)
+                             (get-next-code b5)
+                             (get-next-code b6)
+                             (add-to-result-array
+                              (^+
+                               (^*
+                                (^int base)
+                                (^parens
+                                 (^+
+                                  (^*
+                                   (^int base)
+                                   (^parens
+                                    (^+
+                                     (^*
+                                      (^int base)
+                                      (^parens
+                                       (^+ (^* (^int base) b2) b3)))
+                                     b4)))
+                                  b5)))
+                               (^+ b6 65536)))))))))
+         (^return result))))))
 
   ;;---------------------------------------------------------------------------
 
@@ -4775,8 +4905,8 @@ EOF
                            (^var-declaration 'int i (^int 0))
                            (^while (^< i (^array-length codes))
                                    (^ (^expr-statement
-                                       (^call-prim
-                                        (^member chunks 'push)
+                                       (^array-push!
+                                        chunks
                                         (^call-prim
                                          (^member (^member "String" 'fromCharCode) 'apply)
                                          "null"

@@ -1684,6 +1684,21 @@
      (compiler-internal-error
       "univ-emit-array-length, unknown target"))))
 
+(define (univ-emit-array-push! ctx expr1 expr2)
+  (case (target-name (ctx-target ctx))
+
+    ((js)
+     (^expr-statement
+      (^call-prim (^member expr1 'push) expr2)))
+
+    ((python)
+     (^expr-statement
+      (^call-prim (^member expr1 'append) expr2)))
+
+    (else
+     (compiler-internal-error
+      "univ-emit-array-push!, unknown target"))))
+
 (define (univ-emit-array-shrink! ctx expr1 expr2)
   (case (target-name (ctx-target ctx))
 
@@ -3062,11 +3077,12 @@
                                  (^call-prim (^rts-method-use 'build_key_rest)
                                              (^int nb-req-and-opt)
                                              (^int nb-parms)
-                                             (^array-literal 'scmobj
-                                                             (apply append
-                                                                    (map (lambda (x)
-                                                                           (list (^obj (car x)) (^obj (obj-val (cdr x)))))
-                                                                         keys)))))
+                                             (^array-literal
+                                              'scmobj
+                                              (apply append
+                                                     (map (lambda (x)
+                                                            (list (^obj (car x)) (^obj (obj-val (cdr x)))))
+                                                          keys)))))
                (^if (^not (^parens (^eq? error (^null))))
                     (^return-call-prim
                      (^rts-method-use 'wrong_key_args)
@@ -3081,11 +3097,12 @@
                                  (^call-prim (^rts-method-use 'build_key)
                                              (^int nb-req-and-opt)
                                              (^int nb-parms)
-                                             (^array-literal 'scmobj
-                                                             (apply append
-                                                                    (map (lambda (x)
-                                                                           (list (^obj (car x)) (^obj (obj-val (cdr x)))))
-                                                                         keys)))))
+                                             (^array-literal
+                                              'scmobj
+                                              (apply append
+                                                     (map (lambda (x)
+                                                            (list (^obj (car x)) (^obj (obj-val (cdr x)))))
+                                                          keys)))))
                (^if (^not (^parens (^eq? error (^null))))
                     (^return-call-prim
                      (^rts-method-use 'wrong_key_args)
@@ -3677,7 +3694,8 @@
                      force-var?
                      (lambda ()
                        (^new 'bignum
-                             (^array-literal
+                             (univ-num-array-constant
+                              ctx
                               'bigdigit
                               (univ-bignum->digits obj)))))))))
 
@@ -3757,10 +3775,7 @@
           force-var?
           (lambda ()
             (^u8vector-box
-             (^array-literal
-              'u8
-              (map (lambda (x) (^num-of-type 'u8 x))
-                   (u8vect->list obj)))))))
+             (univ-num-array-constant ctx 'u8 (u8vect->list obj))))))
 
         ((u16vect? obj)
          (univ-obj-use
@@ -3769,10 +3784,7 @@
           force-var?
           (lambda ()
             (^u16vector-box
-             (^array-literal
-              'u16
-              (map (lambda (x) (^num-of-type 'u16 x))
-                   (u16vect->list obj)))))))
+             (univ-num-array-constant ctx 'u16 (u16vect->list obj))))))
 
         ((u32vect? obj)
          (univ-obj-use
@@ -3781,10 +3793,7 @@
           force-var?
           (lambda ()
             (^u32vector-box
-             (^array-literal
-              'u32
-              (map (lambda (x) (^num-of-type 'u32 x))
-                   (u32vect->list obj)))))))
+             (univ-num-array-constant ctx 'u32 (u32vect->list obj))))))
 
         ((u64vect? obj)
          (univ-obj-use
@@ -3793,10 +3802,7 @@
           force-var?
           (lambda ()
             (^u64vector-box
-             (^array-literal
-              'u64
-              (map (lambda (x) (^num-of-type 'u64 x))
-                   (u64vect->list obj)))))))
+             (univ-num-array-constant ctx 'u64 (u64vect->list obj))))))
 
         ((s8vect? obj)
          (univ-obj-use
@@ -3805,10 +3811,7 @@
           force-var?
           (lambda ()
             (^s8vector-box
-             (^array-literal
-              's8
-              (map (lambda (x) (^num-of-type 's8 x))
-                   (s8vect->list obj)))))))
+             (univ-num-array-constant ctx 's8 (s8vect->list obj))))))
 
         ((s16vect? obj)
          (univ-obj-use
@@ -3817,10 +3820,7 @@
           force-var?
           (lambda ()
             (^s16vector-box
-             (^array-literal
-              's16
-              (map (lambda (x) (^num-of-type 's16 x))
-                   (s16vect->list obj)))))))
+             (univ-num-array-constant ctx 's16 (s16vect->list obj))))))
 
         ((s32vect? obj)
          (univ-obj-use
@@ -3829,10 +3829,7 @@
           force-var?
           (lambda ()
             (^s32vector-box
-             (^array-literal
-              's32
-              (map (lambda (x) (^num-of-type 's32 x))
-                   (s32vect->list obj)))))))
+             (univ-num-array-constant ctx 's32 (s32vect->list obj))))))
 
         ((s64vect? obj)
          (univ-obj-use
@@ -3841,10 +3838,7 @@
           force-var?
           (lambda ()
             (^s64vector-box
-             (^array-literal
-              's64
-              (map (lambda (x) (^num-of-type 's64 x))
-                   (s64vect->list obj)))))))
+             (univ-num-array-constant ctx 's64 (s64vect->list obj))))))
 
         ((f32vect? obj)
          (univ-obj-use
@@ -3853,10 +3847,7 @@
           force-var?
           (lambda ()
             (^f32vector-box
-             (^array-literal
-              'f32
-              (map (lambda (x) (^num-of-type 'f32 x))
-                   (f32vect->list obj)))))))
+             (univ-num-array-constant ctx 'f32 (f32vect->list obj))))))
 
         ((f64vect? obj)
          (univ-obj-use
@@ -3865,10 +3856,7 @@
           force-var?
           (lambda ()
             (^f64vector-box
-             (^array-literal
-              'f64
-              (map (lambda (x) (^num-of-type 'f64 x))
-                   (f64vect->list obj)))))))
+             (univ-num-array-constant ctx 'f64 (f64vect->list obj))))))
 
         ((structure-object? obj)
          (univ-obj-use
@@ -4220,6 +4208,18 @@
      (compiler-internal-error
       "univ-emit-make-array, unknown target"))))
 
+(define (univ-num-array-constant ctx type elems)
+  (if (and (memq (target-name (ctx-target ctx)) '(js python))
+           (memq type '(u8 u16 u32 bigdigit unicode))
+           (univ-compactness>=? ctx 5))
+
+      (let ((s (base92-encode (list->vector elems))))
+        (^call-prim
+         (^rts-method-use 'base92_decode)
+         (^str s)))
+
+      (^array-literal type (map (lambda (n) (^num-of-type type n)) elems))))
+
 (define (univ-rts-field-low-level-name ctx name)
   (if (univ-compactness>=? ctx 5)
       (case name
@@ -4255,10 +4255,11 @@
         ((vectorbox)            'V)
         ((vectorp)              'v)
         ((stringbox)            'Z)
-        ((stringp)              'z)
+;;        ((stringp)              'z)
         ((cons)                 'X)
         ((pairp)                'x)
         ((jsnumberp)            'y)
+        ((base92_decode)        'z)
         (else                   name))
       name))
 

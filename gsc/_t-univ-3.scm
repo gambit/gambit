@@ -4095,11 +4095,11 @@ tanh
     (else
      str)))
 
-(define (univ-str-to-array-literal ctx str)
-  (^array-literal
+(define (univ-str-to-num-array-constant ctx str)
+  (univ-num-array-constant
+   ctx
    'unicode
-   (map (lambda (c) (^int (char->integer c)))
-        (string->list str))))
+   (map char->integer (string->list str))))
 
 (define (univ-emit-str-length ctx str)
   (case (target-name (ctx-target ctx))
@@ -4149,7 +4149,7 @@ tanh
   (case (univ-string-representation ctx)
 
     ((class)
-     (let ((x (univ-str-to-array-literal ctx obj)))
+     (let ((x (univ-str-to-num-array-constant ctx obj)))
        (univ-obj-use
         ctx
         obj
@@ -4161,7 +4161,7 @@ tanh
      (case (target-name (ctx-target ctx))
 
        ((go)
-        (univ-str-to-array-literal ctx obj))
+        (univ-str-to-num-array-constant ctx obj))
 
        (else
         (^str obj))))))

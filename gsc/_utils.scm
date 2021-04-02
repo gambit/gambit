@@ -1435,5 +1435,186 @@
     (set-cdr! queue entry)
     x))
 
+;;;----------------------------------------------------------------------------
+
+;; Base 92 encoding of 32 bit unsigned integer arrays.
+
+(define (base92-encode uint32vect)
+
+  ;; Arrays of non-negative 32 bit integer elements can be encoded
+  ;; as a string using the following "base 92" encoding.
+  ;;
+  ;; The encoding is a sequence of packets of 1, 2, 3, or 6 bytes.
+  ;; Each of these bytes holds a value from 0 to 91.  These bytes are
+  ;; decoded from a string of characters.  Each character encodes one
+  ;; byte using the characters that don't need escaping in a string
+  ;; and excludes the space character and the ASCII control characters
+  ;; ('#' for the value 0, '$' for the value 1, '%' for the value 3, etc).
+  ;;
+  ;; Because elements with a small value are typically more frequent
+  ;; than larger values the encoding uses small packets for these
+  ;; elements.  An element x in the range 0..63 is encoded with a
+  ;; packet of length 1.  If x is in the range 64..255 it is encoded
+  ;; with a packet of length 2.  If x is in the range 256..65535 it
+  ;; is encoded with a packet of length 3.  If x >= 65536 it is encoded
+  ;; with a packet of length 6.  The details are as follows:
+  ;; 
+  ;;     a        b        c        d        e        f
+  ;;
+  ;; +--------+
+  ;; | 0..63  |                   x = a
+  ;; +--------+
+  ;;
+  ;; +--------+--------+
+  ;; | 64..82 | 0..91  |          x = (a-64)*92 + b + 64
+  ;; +--------+--------+
+  ;;
+  ;; +--------+--------+--------+
+  ;; | 83..90 | 0..91  | 0..91  | x = ((a-83)*92 + b)*92 + c + 256
+  ;; +--------+--------+--------+
+  ;;
+  ;; +--------+--------+--------+--------+--------+--------+
+  ;; | 91     | 0..91  | 0..91  | 0..91  | 0..91  | 0..91  |
+  ;; +--------+--------+--------+--------+--------+--------+
+  ;;                              x = (((b*92 + c)*92 + d)*92 + e)*92 + f
+  ;;                                  + 65536
+  ;;
+  ;; Note that a packet of 2 bytes yields a value for x that is in
+  ;; the range 64..1811 .  When x >= 256 it encodes a repetition of
+  ;; the last element added to the decoded array.  The last element
+  ;; is repeated (x-255) times.  The highest repetition is thus 1556.
+  ;;
+  ;; Similarly a packet of 3 bytes yields a value for x that is in
+  ;; the range 256..67967 .  When x >= 65536 it encodes a repetition of
+  ;; the last 2 elements added to the decoded array.  The last 2 elements
+  ;; are repeated (x-65535) times.  The highest repetition is thus 2432.
+  ;;
+  ;; A packet of 6 bytes yields a value of x that is in the range
+  ;; 65536..6590880767 .  This range exceeds 2**32-1 .  The 2295913472
+  ;; highest values are unused in the encoding.
+
+  (define lo1   0) ;; 0..63 takes 1 byte
+  (define hi1  63)
+  (define lo2  64) ;; 64..82 takes 2 bytes
+  (define hi2  82)
+  (define lo3  83) ;; 83..90 takes 3 bytes
+  (define hi3  90)
+  (define lo6  91) ;; 91 takes 6 bytes
+  (define base 92)
+
+  (define max-repeat1 1556) ;; (- (* base (- lo3 lo2)) (- 256 lo2))
+  (define max-repeat2 2432) ;; (- (* base base (- lo6 lo3)) (- 65536 256))
+
+  (define (uint32vect->bytes uint32vect)
+    (let loop1 ((i 0) (bytes '()))
+      (if (< i (vector-length uint32vect))
+          (let ((repeat1 ;; number of repetitions of previous element
+                 (if (= i 0)
+                     0
+                     (let ((prev (vector-ref uint32vect (- i 1))))
+                       (let loop2 ((j i))
+                         (if (and (< j (vector-length uint32vect))
+                                  (= (vector-ref uint32vect j) prev))
+                             (loop2 (+ j 1))
+                             (let ((r (- j i)))
+                               (cond ((= r 0) 0)
+                                     ((= r 1) (if (<= prev 255) 0 1))
+                                     ((= r 2) (if (<= prev hi1) 0 2))
+                                     (else    r)))))))))
+            (if (> repeat1 0)
+                (let repeat1-loop ((i i) (bytes bytes) (r repeat1))
+                  (let* ((n (min r max-repeat1))
+                         (new-r (- r n))
+                         (new-i (+ i n))
+                         (new-bytes (let* ((x (+ n (- 255 lo2)))
+                                           (r1 (remainder x base))
+                                           (q1 (quotient x base)))
+                                      (cons r1
+                                            (cons (+ q1 lo2)
+                                                  bytes)))))
+                    (if (> new-r 0)
+                        (repeat1-loop new-i new-bytes new-r)
+                        (loop1 new-i new-bytes))))
+                (let ((repeat2 ;; number of repetitions of 2 previous elements
+                       (if (<= i 1)
+                           0
+                           (let loop3 ((j i))
+                             (if (and (< j (vector-length uint32vect))
+                                      (= (vector-ref uint32vect j)
+                                         (vector-ref uint32vect (- j 2))))
+                                 (loop3 (+ j 1))
+                                 (let ((r (quotient (- j i) 2)))
+                                   (if (and (= r 1)
+                                            (<= (vector-ref uint32vect i) hi1)
+                                            (<= (vector-ref uint32vect (+ i 1)) hi1))
+                                       0
+                                       r)))))))
+                  (if (> repeat2 0)
+                      (let repeat2-loop ((i i) (bytes bytes) (r repeat2))
+                        (let* ((n (min r max-repeat2))
+                               (new-r (- r n))
+                               (new-i (+ i (* 2 n)))
+                               (new-bytes (let* ((x (+ n (- 65535 256)))
+                                                 (r1 (remainder x base))
+                                                 (q1 (quotient x base))
+                                                 (r2 (remainder q1 base))
+                                                 (q2 (quotient q1 base)))
+                                            (cons r1
+                                                  (cons r2
+                                                        (cons (+ q2 lo3)
+                                                              bytes))))))
+                          (if (> new-r 0)
+                              (repeat2-loop new-i new-bytes new-r)
+                              (loop1 new-i new-bytes))))
+                      (let ((elem (vector-ref uint32vect i)))
+                        (cond ((<= elem hi1)
+                               (loop1 (+ i 1)
+                                      (cons (+ elem lo1)
+                                            bytes)))
+                              ((<= elem 255)
+                               (let* ((x (- elem lo2))
+                                      (r1 (remainder x base))
+                                      (q1 (quotient x base)))
+                                 (loop1 (+ i 1)
+                                        (cons r1
+                                              (cons (+ q1 lo2)
+                                                    bytes)))))
+                              ((<= elem 65535)
+                               (let* ((x (- elem 256))
+                                      (r1 (remainder x base))
+                                      (q1 (quotient x base))
+                                      (r2 (remainder q1 base))
+                                      (q2 (quotient q1 base)))
+                                 (loop1 (+ i 1)
+                                        (cons r1
+                                              (cons r2
+                                                    (cons (+ q2 lo3)
+                                                          bytes))))))
+                              (else ;; (<= elem (- (expt 2 32) 1))
+                               (let* ((x (- elem 65536))
+                                      (r1 (remainder x base))
+                                      (q1 (quotient x base))
+                                      (r2 (remainder q1 base))
+                                      (q2 (quotient q1 base))
+                                      (r3 (remainder q2 base))
+                                      (q3 (quotient q2 base))
+                                      (r4 (remainder q3 base))
+                                      (q4 (quotient q3 base)))
+                                 (loop1 (+ i 1)
+                                        (cons r1
+                                              (cons r2
+                                                    (cons r3
+                                                          (cons r4
+                                                                (cons q4
+                                                                      (cons lo6
+                                                                            bytes)))))))))))))))
+          (reverse bytes))))
+
+  (define (byte->char byte)
+    (let ((c (integer->char (+ byte 35))))
+      (if (char=? c #\\) #\! c)))
+
+  (list->string (map byte->char (uint32vect->bytes uint32vect))))
+
 ;;;============================================================================
 )
