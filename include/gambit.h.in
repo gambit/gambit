@@ -7027,11 +7027,11 @@ ___PSDKR) { ___PSGET
 
 #define ___BEGIN_MOD_SYM_KEY ___LOCAL ___module_struct ___module_descr = { \
   ___VERSION, \
+  ___MODULE_KIND, \
   sizeof(___module_struct), \
   sizeof(___global_state_struct), \
   sizeof(___virtual_machine_state_struct), \
   sizeof(___processor_state_struct), \
-  ___MODULE_KIND, \
   ___MODULE_NAME, \
   ___MODULE_FLAGS, \
   ___GLOTBL, \
@@ -9413,11 +9413,11 @@ ___PADDING_LBL};
 typedef struct ___module_struct
   {
     int version;
+    int kind;
     int sizeof_module_struct;
     int sizeof_global_state_struct;
     int sizeof_virtual_machine_state_struct;
     int sizeof_processor_state_struct;
-    int kind;
     ___UTF_8STRING name;
     int flags;
     ___FAKEWORD *glotbl; int glocount; int supcount;
