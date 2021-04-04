@@ -1,7 +1,7 @@
 /* File: "gambit.h" */
 
 /*
- * Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+ * Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
  */
 
 #ifndef ___GAMBIT_H
@@ -1554,7 +1554,11 @@
 
 #include <setjmp.h>
 
-#if defined(__GNUC__) && ___GNUC_VERSION > 500000
+#ifndef __has_builtin
+#define __has_builtin(x) 0
+#endif
+
+#if __has_builtin(builtin_setjmp) || (defined(__GNUC__) && ___GNUC_VERSION > 500000)
 #ifndef ___DONT_USE_BUILTIN_SETJMP
 #undef ___USE_builtin_setjmp
 #define ___USE_builtin_setjmp
@@ -7023,6 +7027,10 @@ ___PSDKR) { ___PSGET
 
 #define ___BEGIN_MOD_SYM_KEY ___LOCAL ___module_struct ___module_descr = { \
   ___VERSION, \
+  sizeof(___module_struct), \
+  sizeof(___global_state_struct), \
+  sizeof(___virtual_machine_state_struct), \
+  sizeof(___processor_state_struct), \
   ___MODULE_KIND, \
   ___MODULE_NAME, \
   ___MODULE_FLAGS, \
@@ -7271,11 +7279,12 @@ HRESULT_CODE(___HRESULT_FROM_ERR_CODE(err))
 #define ___INVALID_OP_ERR                       (___ERR_BASE+7)
 #define ___MODULE_VERSION_TOO_OLD_ERR           (___ERR_BASE+8)
 #define ___MODULE_VERSION_TOO_NEW_ERR           (___ERR_BASE+9)
-#define ___MODULE_ALREADY_LOADED_ERR            (___ERR_BASE+10)
-#define ___DYNAMIC_LOADING_NOT_AVAILABLE_ERR    (___ERR_BASE+11)
-#define ___DYNAMIC_LOADING_LOOKUP_ERR           (___ERR_BASE+12)
-#define ___KILL_PUMP                            (___ERR_BASE+13)
-#define ___SELECT_SETUP_DONE                    (___ERR_BASE+14)
+#define ___MODULE_INCOMPATIBILITY_ERR           (___ERR_BASE+10)
+#define ___MODULE_ALREADY_LOADED_ERR            (___ERR_BASE+11)
+#define ___DYNAMIC_LOADING_NOT_AVAILABLE_ERR    (___ERR_BASE+12)
+#define ___DYNAMIC_LOADING_LOOKUP_ERR           (___ERR_BASE+13)
+#define ___KILL_PUMP                            (___ERR_BASE+14)
+#define ___SELECT_SETUP_DONE                    (___ERR_BASE+15)
 #define ___STOC_BASE ___STOC_S8_ERR
 #define ___STOC_S8_ERR                          (___ERR_BASE+(1<<7))
 #define ___STOC_U8_ERR                          (___ERR_BASE+(2<<7))
@@ -9149,7 +9158,7 @@ typedef struct ___sync_op_struct
 
 typedef struct ___processor_state_struct
   {
-    ___WORD * ___VOLATILE stack_trip;
+    ___WORD * ___VOLATILE stack_trip; /* place first for fast access */
     ___WORD *stack_limit;
     ___WORD *fp;
     ___WORD *stack_start;
@@ -9404,6 +9413,10 @@ ___PADDING_LBL};
 typedef struct ___module_struct
   {
     int version;
+    int sizeof_module_struct;
+    int sizeof_global_state_struct;
+    int sizeof_virtual_machine_state_struct;
+    int sizeof_processor_state_struct;
     int kind;
     ___UTF_8STRING name;
     int flags;

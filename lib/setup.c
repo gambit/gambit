@@ -1382,6 +1382,19 @@ ___module_struct *module;)
   if (module->version > ___VERSION)
     return ___FIX(___MODULE_VERSION_TOO_NEW_ERR);
 
+  /*
+   * Check that the module was compiled with a C compiler and options that
+   * give the same size structures for ___GSTATE, ___VMSTATE and ___PSTATE.
+   * This is a simple check that catches most mismatches that would cause
+   * problems later.
+   */
+
+  if (module->sizeof_module_struct != sizeof(___module_struct) ||
+      module->sizeof_global_state_struct != sizeof(___global_state_struct) ||
+      module->sizeof_virtual_machine_state_struct != sizeof(___virtual_machine_state_struct) ||
+      module->sizeof_processor_state_struct != sizeof(___processor_state_struct))
+    return ___FIX(___MODULE_INCOMPATIBILITY_ERR);
+
   /* Align label table */
 
   if (lblcount > 0)

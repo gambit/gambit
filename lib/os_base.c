@@ -1,6 +1,6 @@
 /* File: "os_base.c" */
 
-/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the most basic operating system services.
@@ -1550,6 +1550,8 @@ ___SCMOBJ err;)
         append_charstring (buf, &pos, "Module was compiled with an older version of the compiler");
       else if (err_code == ___MODULE_VERSION_TOO_NEW_ERR)
         append_charstring (buf, &pos, "Module was compiled with a newer version of the compiler");
+      else if (err_code == ___MODULE_INCOMPATIBILITY_ERR)
+        append_charstring (buf, &pos, "Module is incompatible (it was compiled with a different C compiler and/or options)");
       else if (err_code == ___MODULE_ALREADY_LOADED_ERR)
         append_charstring (buf, &pos, "Can't load a given object file more than once");
       else if (err_code == ___DYNAMIC_LOADING_NOT_AVAILABLE_ERR)
