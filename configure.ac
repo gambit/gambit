@@ -27,7 +27,10 @@ else
   echo "/usr/local/$PACKAGE_NAME" ;
 fi`)
 
-AC_CANONICAL_SYSTEM
+# This replace AC_CANONICAL_SYSTEM
+AC_CANONICAL_BUILD
+AC_CANONICAL_HOST
+AC_CANONICAL_TARGET
 
 # detect WSL
 
@@ -92,7 +95,7 @@ AC_SUBST(BOOTSTRAP_CONFIGURE_FLAGS)
 # Check if the system must be compiled using the C compiler or C++ compiler.
 
 AC_ARG_ENABLE(cplusplus,
-              AC_HELP_STRING([--enable-cplusplus],
+              AS_HELP_STRING([--enable-cplusplus],
                              [compile using C++ compiler (default is NO)]),
               ENABLE_CPLUSPLUS=$enableval,
               ENABLE_CPLUSPLUS=no)
@@ -145,8 +148,8 @@ C_COMPILER=$CC
 C_PREPROC=$CPP
 
 if test "$ENABLE_CPLUSPLUS" = yes; then
-
-  AC_LANG(C++)
+  # AC_LANG affect the rest of the file even if not executed in autoconf 2.71
+  #AC_LANG(C++)
   AC_PROG_CXX
   AC_PROG_CXXCPP
   C_COMPILER=$CXX
@@ -179,7 +182,7 @@ AC_SUBST(PKG_CONFIG_BAT)
 # Check if the system must include GUIDE (Gambit Universal IDE).
 
 AC_ARG_ENABLE(guide,
-              AC_HELP_STRING([--enable-guide],
+              AS_HELP_STRING([--enable-guide],
                              [include the Gambit Universal IDE (default is NO)]),
               ENABLE_GUIDE=$enableval,
               ENABLE_GUIDE=no)
@@ -274,7 +277,7 @@ AC_SUBST(ENABLE_GUIDE)
 # optimization level of -O1 will be used by default.
 
 AC_ARG_ENABLE(c-opt,
-              AC_HELP_STRING([--enable-c-opt@<:@=level@:>@],
+              AS_HELP_STRING([--enable-c-opt@<:@=level@:>@],
                              [use higher C optimization level (default is NO)]),
               ENABLE_C_OPT=$enableval,
               ENABLE_C_OPT=no)
@@ -286,7 +289,7 @@ AC_ARG_ENABLE(c-opt,
 # as a way to disable it).
 
 AC_ARG_ENABLE(pic,
-              AC_HELP_STRING([--enable-pic],
+              AS_HELP_STRING([--enable-pic],
                              [build system with position independent code (default is YES)]),
               ENABLE_PIC=$enableval,
               ENABLE_PIC=yes)
@@ -296,7 +299,7 @@ AC_ARG_ENABLE(pic,
 # Check if the system is to be debugged.
 
 AC_ARG_ENABLE(debug,
-              AC_HELP_STRING([--enable-debug],
+              AS_HELP_STRING([--enable-debug],
                              [build system so that it can be debugged (default is NO)]),
               ENABLE_DEBUG=$enableval,
               ENABLE_DEBUG=no)
@@ -308,7 +311,7 @@ fi
 # Check if a debugging log file (gambit.log) should be generated.
 
 AC_ARG_ENABLE(debug-log,
-              AC_HELP_STRING([--enable-debug-log],
+              AS_HELP_STRING([--enable-debug-log],
                              [build system so that it generates a debugging log file (default is NO)]),
               ENABLE_DEBUG_LOG=$enableval,
               ENABLE_DEBUG_LOG=no)
@@ -320,7 +323,7 @@ fi
 # Check if a C backtrace should be produced when a program crashes.
 
 AC_ARG_ENABLE(debug-c-backtrace,
-              AC_HELP_STRING([--enable-debug-c-backtrace],
+              AS_HELP_STRING([--enable-debug-c-backtrace],
                              [build system so that it generates a C backtrace when a program crashes (default is NO)]),
               ENABLE_DEBUG_C_BACKTRACE=$enableval,
               ENABLE_DEBUG_C_BACKTRACE=no)
@@ -334,7 +337,7 @@ fi
 # Check if debugging of the control flow history is needed.
 
 AC_ARG_ENABLE(debug-ctrl-flow-history,
-              AC_HELP_STRING([--enable-debug-ctrl-flow-history],
+              AS_HELP_STRING([--enable-debug-ctrl-flow-history],
                              [build system so that it tracks the control flow history (default is NO)]),
               ENABLE_DEBUG_CTRL_FLOW_HISTORY=$enableval,
               ENABLE_DEBUG_CTRL_FLOW_HISTORY=no)
@@ -349,7 +352,7 @@ fi
 # Check if debugging of the host changes is needed.
 
 AC_ARG_ENABLE(debug-host-changes,
-              AC_HELP_STRING([--enable-debug-host-changes],
+              AS_HELP_STRING([--enable-debug-host-changes],
                              [build system so that it tracks the host changes (default is NO)]),
               ENABLE_DEBUG_HOST_CHANGES=$enableval,
               ENABLE_DEBUG_HOST_CHANGES=no)
@@ -364,7 +367,7 @@ fi
 # Check if debugging the memory allocations is needed.
 
 AC_ARG_ENABLE(debug-alloc-mem,
-              AC_HELP_STRING([--enable-debug-alloc-mem],
+              AS_HELP_STRING([--enable-debug-alloc-mem],
                              [build system so that it tracks the memory allocations (default is NO)]),
               ENABLE_DEBUG_ALLOC_MEM=$enableval,
               ENABLE_DEBUG_ALLOC_MEM=no)
@@ -379,7 +382,7 @@ fi
 # Check if debugging the garbage collector is needed.
 
 AC_ARG_ENABLE(debug-garbage-collect,
-              AC_HELP_STRING([--enable-debug-garbage-collect],
+              AS_HELP_STRING([--enable-debug-garbage-collect],
                              [build system so that it detects issues in the garbage collect (default is NO)]),
               ENABLE_DEBUG_GARBAGE_COLLECT=$enableval,
               ENABLE_DEBUG_GARBAGE_COLLECT=no)
@@ -407,7 +410,7 @@ fi
 # Check if the system should keep an activity log.
 
 AC_ARG_ENABLE(activity-log,
-              AC_HELP_STRING([--enable-activity-log],
+              AS_HELP_STRING([--enable-activity-log],
                              [build system so it keeps an activity log (default is NO)]),
               ENABLE_ACTIVITY_LOG=$enableval,
               ENABLE_ACTIVITY_LOG=no)
@@ -425,7 +428,7 @@ AC_SUBST(CONF_ACTIVITY_LOG)
 # Check if the system is to be profiled.
 
 AC_ARG_ENABLE(profile,
-              AC_HELP_STRING([--enable-profile],
+              AS_HELP_STRING([--enable-profile],
                              [build system so that it can be profiled (default is NO)]),
               ENABLE_PROFILE=$enableval,
               ENABLE_PROFILE=no)
@@ -440,7 +443,7 @@ fi
 # Check if the system is to be compiled to accumulate coverage statistics.
 
 AC_ARG_ENABLE(coverage,
-              AC_HELP_STRING([--enable-coverage],
+              AS_HELP_STRING([--enable-coverage],
                              [build system to accumulate coverage statistics (default is NO)]),
               ENABLE_COVERAGE=$enableval,
               ENABLE_COVERAGE=no)
@@ -450,13 +453,13 @@ AC_ARG_ENABLE(coverage,
 # Check if the system is to be compiled with trial run feedback.
 
 AC_ARG_ENABLE(feedback1,
-              AC_HELP_STRING([--enable-feedback1],
+              AS_HELP_STRING([--enable-feedback1],
                              [build system to accumulate trial run data (default is NO)]),
               ENABLE_FEEDBACK1=$enableval,
               ENABLE_FEEDBACK1=no)
 
 AC_ARG_ENABLE(feedback2,
-              AC_HELP_STRING([--enable-feedback2],
+              AS_HELP_STRING([--enable-feedback2],
                              [build system using trial run feedback (default is NO)]),
               ENABLE_FEEDBACK2=$enableval,
               ENABLE_FEEDBACK2=no)
@@ -468,7 +471,7 @@ AC_ARG_ENABLE(feedback2,
 # compilation will be much longer and take much more memory.
 
 AC_ARG_ENABLE(single-host,
-              AC_HELP_STRING([--enable-single-host],
+              AS_HELP_STRING([--enable-single-host],
                              [compile each Scheme module as a single C function (default is NO)]),
               ENABLE_SINGLE_HOST=$enableval,
               ENABLE_SINGLE_HOST=no)
@@ -484,7 +487,7 @@ fi
 # by the C backend and machine code generated by one of the native backends.
 
 AC_ARG_ENABLE(lowlevel-exec,
-              AC_HELP_STRING([--enable-lowlevel-exec],
+              AS_HELP_STRING([--enable-lowlevel-exec],
                              [build system so C and machine code can be mixed (default is NO)]),
               ENABLE_LOWLEVEL_EXEC=$enableval,
               ENABLE_LOWLEVEL_EXEC=no)
@@ -501,7 +504,7 @@ fi
 # executable program.
 
 AC_ARG_ENABLE(inline-jumps,
-              AC_HELP_STRING([--enable-inline-jumps],
+              AS_HELP_STRING([--enable-inline-jumps],
                              [generate inline code for jumps (default is NO)]),
               ENABLE_INLINE_JUMPS=$enableval,
               ENABLE_INLINE_JUMPS=no)
@@ -518,7 +521,7 @@ fi
 # much more memory.
 
 AC_ARG_ENABLE(gcc-opts,
-              AC_HELP_STRING([--enable-gcc-opts],
+              AS_HELP_STRING([--enable-gcc-opts],
                              [use expensive GCC optimizations (default is NO)]),
               ENABLE_GCC_OPTS=$enableval,
               ENABLE_GCC_OPTS=no)
@@ -534,13 +537,13 @@ AC_ARG_ENABLE(gcc-opts,
 # manually).
 
 AC_ARG_ENABLE(gnu-gcc-specific-options,
-              AC_HELP_STRING([--enable-gnu-gcc-specific-options],
+              AS_HELP_STRING([--enable-gnu-gcc-specific-options],
                              [use GNU GCC specific options (default is YES)]),
               ENABLE_GNU_GCC_SPECIFIC_OPTIONS=$enableval,
               ENABLE_GNU_GCC_SPECIFIC_OPTIONS=yes)
 
 AC_ARG_ENABLE(gnu-gcc-no-strict-aliasing,
-              AC_HELP_STRING([--enable-gnu-gcc-no-strict-aliasing],
+              AS_HELP_STRING([--enable-gnu-gcc-no-strict-aliasing],
                              [use GNU GCC -fno-strict-aliasing option (default is YES)]),
               ENABLE_GNU_GCC_NO_STRICT_ALIASING=$enableval,
               ENABLE_GNU_GCC_NO_STRICT_ALIASING=yes)
@@ -550,7 +553,7 @@ AC_ARG_ENABLE(gnu-gcc-no-strict-aliasing,
 # Check the width of Scheme characters.
 
 AC_ARG_ENABLE(char-size,
-              AC_HELP_STRING([--enable-char-size=N],
+              AS_HELP_STRING([--enable-char-size=N],
                              [Scheme character size in bytes (default is 4)]),
               CHAR_SIZE=$enableval,
               CHAR_SIZE=4)
@@ -572,7 +575,7 @@ AC_SUBST(CONF_MAX_CHR)
 # Check the encoding of filesystem paths.
 
 AC_ARG_ENABLE(path-encoding,
-              AC_HELP_STRING([--enable-path-encoding=utf8|latin1|ucs2|ucs4|wchar|native],
+              AS_HELP_STRING([--enable-path-encoding=utf8|latin1|ucs2|ucs4|wchar|native],
                              [Filesystem path encoding (default is ucs2 on Windows and utf8 on other OSes)]),
               ENABLE_PATH_ENCODING=$enableval,
               ENABLE_PATH_ENCODING=no)
@@ -606,7 +609,7 @@ fi
 # Determine module search order.
 
 AC_ARG_ENABLE(module-search-order,
-              AC_HELP_STRING([--enable-module-search-order=...],
+              AS_HELP_STRING([--enable-module-search-order=...],
                              [Module search order (default is ~~lib,~~userlib)]),
               ENABLE_MODULE_SEARCH_ORDER=$enableval,
               ENABLE_MODULE_SEARCH_ORDER=[\~\~lib,\~\~userlib])
@@ -628,7 +631,7 @@ fi
 # Determine module whitelist.
 
 AC_ARG_ENABLE(module-whitelist,
-              AC_HELP_STRING([--enable-module-whitelist=...],
+              AS_HELP_STRING([--enable-module-whitelist=...],
                              [Module whitelist (default is github.com/gambit)]),
               ENABLE_MODULE_WHITELIST=$enableval,
               ENABLE_MODULE_WHITELIST=[github.com/gambit])
@@ -646,7 +649,7 @@ fi
 # Determine default runtime options.
 
 AC_ARG_ENABLE(default-runtime-options,
-              AC_HELP_STRING([--enable-default-runtime-options=...],
+              AS_HELP_STRING([--enable-default-runtime-options=...],
                              [Default runtime options (default is none)]),
               ENABLE_DEFAULT_RUNTIME_OPTIONS=$enableval,
               ENABLE_DEFAULT_RUNTIME_OPTIONS=)
@@ -668,7 +671,7 @@ fi
 # Determine default compile options.
 
 AC_ARG_ENABLE(default-compile-options,
-              AC_HELP_STRING([--enable-default-compile-options=...],
+              AS_HELP_STRING([--enable-default-compile-options=...],
                              [Default compile options (default is none)]),
               ENABLE_DEFAULT_COMPILE_OPTIONS=$enableval,
               ENABLE_DEFAULT_COMPILE_OPTIONS=)
@@ -690,7 +693,7 @@ fi
 # Determine targets to build.
 
 AC_ARG_ENABLE(targets,
-              AC_HELP_STRING([--enable-targets=...],
+              AS_HELP_STRING([--enable-targets=...],
                              [Targets to build in addition to C (default is none)]),
               ENABLE_TARGETS=$enableval,
               ENABLE_TARGETS=)
@@ -744,7 +747,7 @@ AC_SUBST(CONF_BOOL)
 # Check if a shared library must be built.
 
 AC_ARG_ENABLE(shared,
-              AC_HELP_STRING([--enable-shared],
+              AS_HELP_STRING([--enable-shared],
                              [build the Scheme runtime system as a shared library (default is NO)]),
               ENABLE_SHARED=$enableval,
               ENABLE_SHARED=no)
@@ -759,7 +762,7 @@ fi
 # Check if only ANSI C headers and libraries should be used.
 
 AC_ARG_ENABLE(ansi-c,
-              AC_HELP_STRING([--enable-ansi-c],
+              AS_HELP_STRING([--enable-ansi-c],
                              [link only with ANSI C libraries (default is NO)]),
               ANSI_C=$enableval,
               ANSI_C=no)
@@ -770,7 +773,7 @@ AC_ARG_ENABLE(ansi-c,
 # central installation directory.
 
 AC_ARG_ENABLE(symlinks,
-              AC_HELP_STRING([--enable-symlinks],
+              AS_HELP_STRING([--enable-symlinks],
                              [use symbolic links for installed files not in the central installation directory (default is YES)]),
               ENABLE_SYMLINKS=$enableval,
               ENABLE_SYMLINKS=no)
@@ -780,7 +783,7 @@ AC_ARG_ENABLE(symlinks,
 # Determine the path of the Gambit central installation directory.
 
 AC_ARG_ENABLE(gambitdir,
-              AC_HELP_STRING([--enable-gambitdir=DIR],
+              AS_HELP_STRING([--enable-gambitdir=DIR],
                              [Path to use for the Gambit central installation directory (default is to use --prefix)]),
               ENABLE_GAMBITDIR=$enableval,
               ENABLE_GAMBITDIR=)
@@ -790,13 +793,13 @@ AC_ARG_ENABLE(gambitdir,
 # Determine the name to use for the Gambit interpreter and compiler.
 
 AC_ARG_ENABLE(interpreter-name,
-              AC_HELP_STRING([--enable-interpreter-name=INTERP],
+              AS_HELP_STRING([--enable-interpreter-name=INTERP],
                              [Name to use for Gambit interpreter (default is gsi)]),
               ENABLE_INTERPRETER_NAME=$enableval,
               ENABLE_INTERPRETER_NAME="gsi")
 
 AC_ARG_ENABLE(compiler-name,
-              AC_HELP_STRING([--enable-compiler-name=COMP],
+              AS_HELP_STRING([--enable-compiler-name=COMP],
                              [Name to use for Gambit compiler (default is gsc)]),
               ENABLE_COMPILER_NAME=$enableval,
               ENABLE_COMPILER_NAME="gsc")
@@ -806,7 +809,7 @@ AC_ARG_ENABLE(compiler-name,
 # Check if multiple installed versions are supported.
 
 AC_ARG_ENABLE(multiple-versions,
-              AC_HELP_STRING([--enable-multiple-versions],
+              AS_HELP_STRING([--enable-multiple-versions],
                              [multiple installed versions are supported (default is NO)]),
               ENABLE_MULTIPLE_VERSIONS=$enableval,
               ENABLE_MULTIPLE_VERSIONS=no)
@@ -816,7 +819,7 @@ AC_ARG_ENABLE(multiple-versions,
 # Check if shared libraries should be linked to using an absolute path.
 
 AC_ARG_ENABLE(absolute-shared-libs,
-              AC_HELP_STRING([--enable-absolute-shared-libs],
+              AS_HELP_STRING([--enable-absolute-shared-libs],
                              [shared libraries should be linked to using an absolute path (default is YES)]),
               ENABLE_ABSOLUTE_SHARED_LIBS=$enableval,
               ENABLE_ABSOLUTE_SHARED_LIBS=yes)
@@ -830,7 +833,7 @@ fi
 # Check if library names should contain a version number suffix.
 
 AC_ARG_ENABLE(versioned-shared-libs,
-              AC_HELP_STRING([--enable-versioned-shared-libs],
+              AS_HELP_STRING([--enable-versioned-shared-libs],
                              [library names should contain a version number suffix (default is NO)]),
               ENABLE_VERSIONED_SHARED_LIBS=$enableval,
               ENABLE_VERSIONED_SHARED_LIBS=no)
@@ -840,7 +843,7 @@ AC_ARG_ENABLE(versioned-shared-libs,
 # Check if library names should contain a special suffix.
 
 AC_ARG_ENABLE(lib-suffix,
-              AC_HELP_STRING([--enable-lib-suffix],
+              AS_HELP_STRING([--enable-lib-suffix],
                              [library names should contain a suffix before the extension (default is NO)]),
               LIB_SUFFIX=$enableval,
               LIB_SUFFIX=no)
@@ -858,7 +861,7 @@ fi
 # Determine which browser to use for help.
 
 AC_ARG_ENABLE(help-browser,
-              AC_HELP_STRING([--enable-help-browser=BROWSER],
+              AS_HELP_STRING([--enable-help-browser=BROWSER],
                              [Browser to use for help (default is to search)]),
               HELP_BROWSER=$enableval,
               HELP_BROWSER="")
@@ -868,7 +871,7 @@ AC_ARG_ENABLE(help-browser,
 # Check if the system must perform type checking.
 
 AC_ARG_ENABLE(type-checking,
-              AC_HELP_STRING([--enable-type-checking],
+              AS_HELP_STRING([--enable-type-checking],
                              [perform type checking (default is YES)]),
               ENABLE_TYPE_CHECKING=$enableval,
               ENABLE_TYPE_CHECKING=yes)
@@ -884,7 +887,7 @@ fi
 # Check if the system must automatically force promises.
 
 AC_ARG_ENABLE(auto-forcing,
-              AC_HELP_STRING([--enable-auto-forcing],
+              AS_HELP_STRING([--enable-auto-forcing],
                              [automatically force promises (default is NO)]),
               ENABLE_AUTO_FORCING=$enableval,
               ENABLE_AUTO_FORCING=no)
@@ -900,7 +903,7 @@ fi
 # Check if the system must support the #.<expression> syntax.
 
 AC_ARG_ENABLE(sharp-dot,
-              AC_HELP_STRING([--enable-sharp-dot],
+              AS_HELP_STRING([--enable-sharp-dot],
                              [support #.<expression> syntax (default is YES)]),
               ENABLE_SHARP_DOT=$enableval,
               ENABLE_SHARP_DOT=yes)
@@ -916,7 +919,7 @@ fi
 # Check which numerical types need to be supported.
 
 AC_ARG_ENABLE(bignum,
-              AC_HELP_STRING([--enable-bignum],
+              AS_HELP_STRING([--enable-bignum],
                              [support infinite precision integers (default is YES)]),
               ENABLE_BIGNUM=$enableval,
               ENABLE_BIGNUM=yes)
@@ -928,7 +931,7 @@ else
 fi
 
 AC_ARG_ENABLE(ratnum,
-              AC_HELP_STRING([--enable-ratnum],
+              AS_HELP_STRING([--enable-ratnum],
                              [support exact rational numbers (default is YES)]),
               ENABLE_RATNUM=$enableval,
               ENABLE_RATNUM=yes)
@@ -940,7 +943,7 @@ else
 fi
 
 AC_ARG_ENABLE(cpxnum,
-              AC_HELP_STRING([--enable-cpxnum],
+              AS_HELP_STRING([--enable-cpxnum],
                              [support complex numbers (default is YES)]),
               ENABLE_CPXNUM=$enableval,
               ENABLE_CPXNUM=yes)
@@ -958,7 +961,7 @@ fi
 # "make bootstrap; make bootclean; make").
 
 AC_ARG_ENABLE(rtlib-debug,
-              AC_HELP_STRING([--enable-rtlib-debug],
+              AS_HELP_STRING([--enable-rtlib-debug],
                              [Include all debugging information in the code generated for the Scheme runtime library (default is NO)]),
               ENABLE_RTLIB_DEBUG=$enableval,
               ENABLE_RTLIB_DEBUG=no)
@@ -970,7 +973,7 @@ if test "$ENABLE_RTLIB_DEBUG" = yes; then
 fi
 
 AC_ARG_ENABLE(rtlib-debug-location,
-              AC_HELP_STRING([--enable-rtlib-debug-location],
+              AS_HELP_STRING([--enable-rtlib-debug-location],
                              [Include source code location debugging information in the code generated for the Scheme runtime library (default is NO)]),
               ENABLE_RTLIB_DEBUG_LOCATION=$enableval,
               ENABLE_RTLIB_DEBUG_LOCATION=no)
@@ -982,7 +985,7 @@ if test "$ENABLE_RTLIB_DEBUG_LOCATION" = yes; then
 fi
 
 AC_ARG_ENABLE(rtlib-debug-source,
-              AC_HELP_STRING([--enable-rtlib-debug-source],
+              AS_HELP_STRING([--enable-rtlib-debug-source],
                              [Include the source code debugging information in the code generated for the Scheme runtime library (default is NO)]),
               ENABLE_RTLIB_DEBUG_SOURCE=$enableval,
               ENABLE_RTLIB_DEBUG_SOURCE=no)
@@ -994,7 +997,7 @@ if test "$ENABLE_RTLIB_DEBUG_SOURCE" = yes; then
 fi
 
 AC_ARG_ENABLE(rtlib-debug-environments,
-              AC_HELP_STRING([--enable-rtlib-debug-environments],
+              AS_HELP_STRING([--enable-rtlib-debug-environments],
                              [Include environment debugging information in the code generated for the Scheme runtime library (default is NO)]),
               ENABLE_RTLIB_DEBUG_ENVIRONMENTS=$enableval,
               ENABLE_RTLIB_DEBUG_ENVIRONMENTS=no)
@@ -1006,7 +1009,7 @@ if test "$ENABLE_RTLIB_DEBUG_ENVIRONMENTS" = yes; then
 fi
 
 AC_ARG_ENABLE(track-scheme,
-              AC_HELP_STRING([--enable-track-scheme],
+              AS_HELP_STRING([--enable-track-scheme],
                              [Include Scheme code location in C code generated (default is NO)]),
               ENABLE_TRACK_SCHEME=$enableval,
               ENABLE_TRACK_SCHEME=no)
@@ -1022,7 +1025,7 @@ fi
 # Check whether to enable poll as the select method
 
 AC_ARG_ENABLE(poll,
-              AC_HELP_STRING([--enable-poll],
+              AS_HELP_STRING([--enable-poll],
                              [Enable poll as the select method (default is NO)]),
               ENABLE_POLL=$enableval,
               ENABLE_POLL=no)
@@ -1036,7 +1039,7 @@ fi
 # Check whether to enable high-resolution timing
 
 AC_ARG_ENABLE(high-res-timing,
-              AC_HELP_STRING([--enable-high-res-timing],
+              AS_HELP_STRING([--enable-high-res-timing],
                              [Enable high-resolution timing (default is NO)]),
               ENABLE_HIGH_RES_TIMING=$enableval,
               ENABLE_HIGH_RES_TIMING=no)
@@ -1052,7 +1055,7 @@ fi
 # environment and heap, separate from other Gambit VM instances.
 
 AC_ARG_ENABLE(multiple-vms,
-              AC_HELP_STRING([--enable-multiple-vms],
+              AS_HELP_STRING([--enable-multiple-vms],
                              [support multiple Gambit VM instances (default is NO)]),
               ENABLE_MULTIPLE_VMS=$enableval,
               ENABLE_MULTIPLE_VMS=no)
@@ -1072,7 +1075,7 @@ AC_SUBST(CONF_SINGLE_MULTIPLE_VMS)
 # multiple OS threads to be running in a given VM instance?
 
 AC_ARG_ENABLE(multiple-threaded-vms,
-              AC_HELP_STRING([--enable-multiple-threaded-vms],
+              AS_HELP_STRING([--enable-multiple-threaded-vms],
                              [support multiple OS threads per Gambit VM instance (default is NO)]),
               ENABLE_MULTIPLE_THREADED_VMS=$enableval,
               ENABLE_MULTIPLE_THREADED_VMS=no)
@@ -1090,7 +1093,7 @@ AC_SUBST(CONF_SINGLE_MULTIPLE_THREADED_VMS)
 # Check if the SMP Scheme thread scheduler should be enabled.
 
 AC_ARG_ENABLE(smp,
-              AC_HELP_STRING([--enable-smp],
+              AS_HELP_STRING([--enable-smp],
                              [support SMP Scheme thread scheduler (default is NO)]),
               ENABLE_SMP=$enableval,
               ENABLE_SMP=no)
@@ -1107,7 +1110,7 @@ fi
 # Gambit VM instance.
 
 AC_ARG_ENABLE(max-processors,
-              AC_HELP_STRING([--enable-max-processors=N],
+              AS_HELP_STRING([--enable-max-processors=N],
                              [Max number of processors per Gambit VM instance (default is 64)]),
               MAX_PROCESSORS=$enableval,
               MAX_PROCESSORS=64)
@@ -1126,7 +1129,7 @@ AC_SUBST(CONF_MAX_PROCESSORS)
 # which thread system is to be used.
 
 AC_ARG_ENABLE(thread-system,
-              AC_HELP_STRING([--enable-thread-system@<:@=thread-system@:>@],
+              AS_HELP_STRING([--enable-thread-system@<:@=thread-system@:>@],
                              [use OS threads (default is NO)]),
               ENABLE_THREAD_SYSTEM=$enableval,
               ENABLE_THREAD_SYSTEM=no)
@@ -1144,7 +1147,7 @@ fi
 # dynamically loaded code.
 
 AC_ARG_ENABLE(dynamic-tls,
-              AC_HELP_STRING([--enable-dynamic-tls],
+              AS_HELP_STRING([--enable-dynamic-tls],
                              [allow thread local storage variables to be referenced from dynamically loaded code (default is NO)]),
               ENABLE_DYNAMIC_TLS=$enableval,
               ENABLE_DYNAMIC_TLS=no)
@@ -1159,7 +1162,7 @@ fi
 # Check if SSL support should be added using OpenSSL.
 
 AC_ARG_ENABLE(openssl,
-              AC_HELP_STRING([--enable-openssl],
+              AS_HELP_STRING([--enable-openssl],
                              [compile with SSL support using OpenSSL (default is NO)]),
               ENABLE_OPENSSL=$enableval,
               ENABLE_OPENSSL=no)
@@ -1324,15 +1327,16 @@ PATH_SEP="/"
 AC_DEFUN([AC_CHECK_ENVIRON],
 [AC_CACHE_CHECK([for environ], ac_cv_environ,
 [
-  AC_TRY_COMPILE([
-    #ifdef __cplusplus
-    extern "C" {
-    #endif
-    extern char **environ;
-    #ifdef __cplusplus
-    }
-    #endif
-    ],[char *arg0 = *environ;],
+  AC_COMPILE_IFELSE(
+    [AC_LANG_PROGRAM([
+      #ifdef __cplusplus
+      extern "C" {
+      #endif
+      extern char **environ;
+      #ifdef __cplusplus
+      }
+      #endif
+    ],[char   *arg0 = *environ;])],
   ac_cv_environ=yes,
   ac_cv_environ=no)
 ])
@@ -1345,11 +1349,11 @@ AC_DEFUN([AC_CHECK__NSGETENVIRON],
 [AC_CHECK_HEADERS(crt_externs.h)
  AC_CACHE_CHECK([for _NSGetEnviron], ac_cv__NSGetEnviron,
 [
-  AC_TRY_COMPILE([
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
     #ifdef HAVE_CRT_EXTERNS_H
     #include <crt_externs.h>
     #endif
-    ],[char *arg0 = *(*_NSGetEnviron());],
+    ],[char *arg0 = *(*_NSGetEnviron());])],
   ac_cv__NSGetEnviron=yes,
   ac_cv__NSGetEnviron=no)
 ])
@@ -1410,11 +1414,11 @@ AC_DEFUN([AC_CHECK_SIGSET_T],
   CONF_USE_SIGSET_T="___USE_NO_SIGSET_T"
   AC_CACHE_CHECK([for sigset_t], ac_cv_type_sigset_t,
   [
-    AC_TRY_COMPILE([
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
       #ifdef HAVE_SIGNAL_H
       #include <signal.h>
       #endif
-      ],[sigset_t ss;],
+      ],[sigset_t ss;])],
     ac_cv_type_sigset_t=yes,
     ac_cv_type_sigset_t=no)
   ])
@@ -1534,15 +1538,15 @@ else
     AC_DEFUN([AC_TYPE_SOCKLEN_T],
     [AC_CACHE_CHECK([for socklen_t], ac_cv_type_socklen_t,
     [
-      AC_TRY_COMPILE(
-      [#include <sys/types.h>
+      AC_COMPILE_IFELSE(
+      [AC_LANG_PROGRAM([#include <sys/types.h>
        #ifdef HAVE_SYS_SOCKET_H
        #include <sys/socket.h>
        #endif
        #ifdef HAVE_WS2TCPIP_H
        #include <ws2tcpip.h>
        #endif],
-      [socklen_t len = 42; return 0;],
+      [socklen_t len = 42; return 0;])],
       ac_cv_type_socklen_t=yes,
       ac_cv_type_socklen_t=no)
     ])
@@ -1689,11 +1693,11 @@ else
   AC_DEFUN([AC_CHECK_FUNC_TCGETSETATTR],
   [AC_CACHE_CHECK([for tcgetsetattr], ac_cv_func_tcgetsetattr,
   [
-    AC_TRY_COMPILE([
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
       #ifdef HAVE_TERMIOS_H
       #include <termios.h>
       #endif
-      ],[int fd = 1; struct termios tios; tcgetattr (fd, &tios); tcsetattr (fd, TCSANOW, &tios);],
+      ],[int fd = 1; struct termios tios; tcgetattr (fd, &tios); tcsetattr (fd, TCSANOW, &tios);])],
     ac_cv_func_tcgetsetattr=yes,
     ac_cv_func_tcgetsetattr=no)
   ])
@@ -1709,11 +1713,11 @@ else
   AC_DEFUN([AC_CHECK_FUNC_SIGACTION],
   [AC_CACHE_CHECK([for sigaction], ac_cv_func_sigaction,
   [
-    AC_TRY_COMPILE([
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
       #ifdef HAVE_SIGNAL_H
       #include <signal.h>
       #endif
-      ],[struct sigaction sa1, sa2; sigaction (1, &sa1, &sa2);],
+      ],[struct sigaction sa1, sa2; sigaction (1, &sa1, &sa2);])],
     ac_cv_func_sigaction=yes,
     ac_cv_func_sigaction=no)
   ])
@@ -1730,11 +1734,11 @@ else
   AC_DEFUN([AC_CHECK_FUNC_SIGSET],
   [AC_CACHE_CHECK([for sigemptyset/sigaddset], ac_cv_func_sigset,
   [
-    AC_TRY_COMPILE([
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
       #ifdef HAVE_SIGNAL_H
       #include <signal.h>
       #endif
-      ],[sigset_t ss; sigemptyset (&ss); sigaddset (&ss, 1);],
+      ],[sigset_t ss; sigemptyset (&ss); sigaddset (&ss, 1);])],
     ac_cv_func_sigset=yes,
     ac_cv_func_sigset=no)
   ])
@@ -1751,11 +1755,11 @@ else
   AC_DEFUN([AC_CHECK_FUNC_SIGPROCMASK],
   [AC_CACHE_CHECK([for sigprocmask], ac_cv_func_sigprocmask,
   [
-    AC_TRY_COMPILE([
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
       #ifdef HAVE_SIGNAL_H
       #include <signal.h>
       #endif
-      ],[sigset_t ss1, ss2; sigemptyset (&ss1); sigaddset (&ss1, 1); sigprocmask (SIG_BLOCK, &ss1, &ss2);],
+      ],[sigset_t ss1, ss2; sigemptyset (&ss1); sigaddset (&ss1, 1); sigprocmask (SIG_BLOCK, &ss1, &ss2);])],
     ac_cv_func_sigprocmask=yes,
     ac_cv_func_sigprocmask=no)
   ])
@@ -1771,11 +1775,11 @@ else
   AC_DEFUN([AC_CHECK_FUNC_SIGNAL],
   [AC_CACHE_CHECK([for signal], ac_cv_func_signal,
   [
-    AC_TRY_COMPILE([
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
       #ifdef HAVE_SIGNAL_H
       #include <signal.h>
       #endif
-      ],[signal (1, SIG_DFL);],
+      ],[signal (1, SIG_DFL);])],
     ac_cv_func_signal=yes,
     ac_cv_func_signal=no)
   ])
@@ -1960,12 +1964,12 @@ if test "$ENABLE_THREAD_SYSTEM" != no; then
     TLS_CLASS="none"
 
     for tls_class in "_Thread_local" "__thread" "__declspec(thread)"; do
-      AC_TRY_COMPILE([
+      AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
         #include <stdlib.h>
         ] $tls_class [ int foo;
        ],[
         foo = 42;
-       ],[TLS_CLASS="$tls_class"; break])
+       ])],[TLS_CLASS="$tls_class"; break])
     done
 
     AC_MSG_RESULT($TLS_CLASS)
@@ -3344,7 +3348,7 @@ AC_SUBST(BUILD_TARGETS)
 
 AC_PROG_MAKE_SET
 
-AC_OUTPUT( \
+AC_CONFIG_FILES( \
 makefile \
 include/makefile \
 include/gambit.h \
@@ -3405,6 +3409,7 @@ prebuilt/windows/makefile \
 prebuilt/windows/build-phase2 \
 githooks/makefile \
 )
+AC_OUTPUT
 
 if test "$ENABLE_SINGLE_HOST" != yes -a "$C_COMP_LLVM" != yes; then
   AC_MSG_NOTICE([
