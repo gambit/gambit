@@ -2,7 +2,7 @@
 
 ;;; File: "misc-gambit#.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -12,6 +12,13 @@
 
 (break break#unimplemented)
 (call/cc call/cc#unimplemented)
+
+compilation-target
+
+(not-in-compilation-context-exception-arguments not-in-compilation-context-exception-arguments#unimplemented)
+(not-in-compilation-context-exception-procedure not-in-compilation-context-exception-procedure#unimplemented)
+(not-in-compilation-context-exception? not-in-compilation-context-exception?#unimplemented)
+
 (compile-file compile-file#unimplemented)
 (compile-file-to-target compile-file-to-target#unimplemented)
 
@@ -43,6 +50,8 @@ identity
 (link-flat link-flat#unimplemented)
 (link-incremental link-incremental#unimplemented)
 (main main#unimplemented)
+
+
 (object->serial-number object->serial-number#unimplemented)
 (repl-display-environment? repl-display-environment?#unimplemented)
 (repl-input-port repl-input-port#unimplemented)

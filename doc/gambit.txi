@@ -4111,6 +4111,79 @@ Gambit @value{VERSION}
 
 @end deffn
 
+@deffn procedure compilation-target
+
+This procedure can only be executed during the phase of the Scheme
+code's processing (@i{compilation}) that corresponds to macro
+expansion.  Calls to this procedure are typically contained in macro
+definitions but they can also be contained in procedures that are
+called from a macro definition's body directly or indirectly.
+
+The result returned by the @code{compilation-target} procedure
+gives an indication of the target language of the @i{compilation}.
+This can be used to write macros that depend on the type of @i{compilation}
+and the target language.
+
+When the result is the symbol @code{@var{T}} the macro expansion is in the
+context of compiling to the target language @code{@var{T}}, e.g. @code{C},
+@code{js}, etc.  When the result is a single element list @code{(@var{T})}
+the macro expansion is for the interpreter which itself was compiled
+for the target language @code{@var{T}}, e.g. @code{(C)}, @code{(js)}, etc.
+
+For example:
+
+@smallexample
+$ @b{cat ct.scm}
+(define (level-0)
+  (string-append "0: " (object->string (compilation-target))))
+
+(define-macro (test)
+
+  (define (level-1)
+    (string-append "1: " (object->string (compilation-target))))
+
+  (define-macro (level-2)
+    (string-append "2: " (object->string (compilation-target))))
+
+  `(list ,(level-1) ,(level-2)))
+
+(pp (test))
+
+(pp (level-0)) ;; run time exception
+$ @b{gsi ct.scm}
+("1: (C)" "2: (C)")
+*** ERROR IN level-0, "ct.scm"@@2.40 -- Not in compilation context
+(compilation-target)
+$ @b{gsc -target js -exe ct.scm}
+$ @b{./ct}
+("1: js" "2: (C)")
+*** ERROR IN level-0 -- Not in compilation context
+(compilation-target)
+@end smallexample
+
+Regardless of whether @samp{ct.scm} is being processed by the
+interpreter or the compiler, the body of the @code{level-0} procedure
+is not in a compilation context and in the body of the @code{level-2}
+macro the compilation target is @code{(C)} indicating that the macro
+expansion is being done for interpretation.
+
+During the execution of the @code{level-1} procedure, the
+compilation target will correspond to what is processing
+@samp{ct.scm} (interpreter or compiler).
+
+Note that the compilation target can also be tested by the
+@code{cond-expand} special form using a @i{feature requirement} of the
+form @code{(compilation-target @var{target})} with the special case
+@code{(compilation-target (_))} meaning the interpreter.
+
+@end deffn
+
+@deffn {special form} cond-expand @dots{}
+@end deffn
+
+@deffn {special form} define-cond-expand-feature @var{ident} @dots{}
+@end deffn
+
 @deffn {special form} declare @r{@i{declaration}}@dots{}
 
 This form introduces declarations to be used by the compiler
@@ -4776,12 +4849,6 @@ For example:
 @end deffn
 
 @deffn {special form} receive @dots{}
-@end deffn
-
-@deffn {special form} cond-expand @dots{}
-@end deffn
-
-@deffn {special form} define-cond-expand-feature @var{ident} @dots{}
 @end deffn
 
 @deffn {special form} case-lambda @dots{}
@@ -10253,6 +10320,41 @@ For example:
     handler
     (lambda () foo))}
 (variable= foo)
+@end smallexample
+
+@end deffn
+
+@deffn procedure not-in-compilation-context-exception? @var{obj}
+@deffnx procedure not-in-compilation-context-exception-procedure @var{exc}
+@deffnx procedure not-in-compilation-context-exception-arguments @var{exc}
+
+Not-in-compilation-context-exception objects are raised by the
+procedure @code{compilation-target} when it is executed outside of a
+compilation context.  The parameter @var{exc} must be a
+not-in-compilation-context-exception object.
+
+The procedure @code{not-in-compilation-context-exception?} returns
+@code{#t} when @var{obj} is a not-in-compilation-context-exception
+object and @code{#f} otherwise.
+
+The procedure @code{not-in-compilation-context-exception-procedure}
+returns the procedure that raised @var{exc}.
+
+The procedure @code{not-in-compilation-context-exception-arguments}
+returns the list of arguments of the procedure that raised @var{exc}.
+
+For example:
+
+@smallexample
+> @b{(define (handler exc)
+    (if (not-in-compilation-context-exception? exc)
+        (list (not-in-compilation-context-exception-procedure exc)
+              (not-in-compilation-context-exception-arguments exc))
+        'not-not-in-compilation-context-exception))}
+> @b{(with-exception-catcher
+    handler
+    (lambda () (compilation-target)))}
+(#<procedure #2 compilation-target> ())
 @end smallexample
 
 @end deffn

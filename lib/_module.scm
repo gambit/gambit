@@ -435,8 +435,8 @@
    #f
    (lambda (cte src tail?)
      (if script-line
-         (##compilation-ctx-meta-info-add! 'script-line script-line))
-     (##compilation-ctx-module-ref-set! module-ref)
+         (##compilation-meta-info-add! 'script-line script-line))
+     (##compilation-module-ref-set! module-ref)
      (let ((comp-scope (##compilation-scope)));;TODO: deprecated interface
        (##table-set! comp-scope '##module-root module-root)
        (##table-set! comp-scope '##modref-path modref-path))
@@ -974,7 +974,7 @@
 
 (define-prim ##parse-define-module-alias
   (lambda (src)
-    (##compilation-ctx-module-aliases-add!
+    (##compilation-module-aliases-add!
      (##validate-define-module-alias src))
 
     (##expand-source-template

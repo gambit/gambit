@@ -929,7 +929,11 @@
 (define (**macro-descr-expander-src descr)
   (##macro-descr-expander-src descr))
 
-(define **compilation-ctx (make-parameter #f))
+(define **compilation-ctx
+  (if (##unbound? ;; TODO: remove dynamic check after bootstrap
+       (##global-var-ref (##make-global-var '##compilation-ctx)))
+      (make-parameter #f)
+      ##compilation-ctx))
 
 (define (**in-new-compilation-ctx target thunk)
   (if (##unbound? ;; TODO: remove dynamic check after bootstrap
@@ -952,48 +956,48 @@
       ;; bootstrap done
       (##in-new-compilation-ctx target thunk)))
 
-(define (**compilation-ctx-meta-info-add! key val)
+(define (**compilation-meta-info-add! key val)
   (if (##unbound? ;; TODO: remove dynamic check after bootstrap
-       (##global-var-ref (##make-global-var '##compilation-ctx-meta-info-add!)))
+       (##global-var-ref (##make-global-var '##compilation-meta-info-add!)))
 
       ;; bootstrap not yet done
       #f ;; ignore meta info
 
       ;; bootstrap done
-      (##compilation-ctx-meta-info-add! key val)))
+      (##compilation-meta-info-add! key val)))
 
-(define (**compilation-ctx-module-ref-set! module-ref)
+(define (**compilation-module-ref-set! module-ref)
   (if (##unbound? ;; TODO: remove dynamic check after bootstrap
-       (##global-var-ref (##make-global-var '##compilation-ctx-module-ref-set!)))
+       (##global-var-ref (##make-global-var '##compilation-module-ref-set!)))
 
       ;; bootstrap not yet done
       (let ((ctx (**compilation-ctx)))
         (**macro-compilation-ctx-module-ref-set! ctx module-ref))
 
       ;; bootstrap done
-      (##compilation-ctx-module-ref-set! module-ref)))
+      (##compilation-module-ref-set! module-ref)))
 
-(define (**compilation-ctx-target)
+(define (**compilation-target)
   (if (##unbound? ;; TODO: remove dynamic check after bootstrap
-       (##global-var-ref (##make-global-var '##compilation-ctx-target)))
+       (##global-var-ref (##make-global-var '##compilation-target)))
 
       ;; bootstrap not yet done
       (let ((ctx (**compilation-ctx)))
         (**macro-compilation-ctx-target ctx))
 
       ;; bootstrap done
-      (##compilation-ctx-target)))
+      (##compilation-target)))
 
-(define (**compilation-ctx-extra-info)
+(define (**compilation-extra-info)
   (if (##unbound? ;; TODO: remove dynamic check after bootstrap
-       (##global-var-ref (##make-global-var '##compilation-ctx-extra-info)))
+       (##global-var-ref (##make-global-var '##compilation-extra-info)))
 
       ;; bootstrap not yet done
       (let ((ctx (**compilation-ctx)))
         (**macro-compilation-ctx-extra-info ctx))
 
       ;; bootstrap done
-      (##compilation-ctx-extra-info)))
+      (##compilation-extra-info)))
 
 (define (**macro-compilation-ctx-supply-modules ctx)
   (##vector-ref ctx 0) ;; TODO: remove after bootstrap

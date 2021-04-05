@@ -146,8 +146,8 @@
            (##raise-ill-formed-special-form src))
 
        (if supply?
-           (##compilation-ctx-supply-modules-add! sym)
-           (##compilation-ctx-demand-modules-add! sym)))
+           (##compilation-supply-modules-add! sym)
+           (##compilation-demand-modules-add! sym)))
 
      (##expand-source-template
       src
@@ -174,7 +174,7 @@
            (let ((attribs (##map ##desourcify rest)))
              (##for-each
               (lambda (attrib)
-                (##compilation-ctx-meta-info-add! key attrib))
+                (##compilation-meta-info-add! key attrib))
               attribs)
              (##expand-source-template
               src
@@ -350,6 +350,17 @@
                                    (if port
                                        (##close-port port))
                                    #t)))))))
+                   ((##eq? first 'compilation-target)
+                    (let ((fr (##sourcify feature-requirement src)))
+                      (##shape src fr -1)
+                      (let ((ct (##compilation-target)))
+                        (let loop ((lst (##cdr (##source-strip fr))))
+                          (and (##pair? lst)
+                               (let ((t (##desourcify (##car lst))))
+                                 (or (if (##equal? t '(_))
+                                         (##pair? ct)
+                                         (##equal? t ct))
+                                     (loop (##cdr lst)))))))))
                    (else
                     (macro-raise
                      (macro-make-expression-parsing-exception

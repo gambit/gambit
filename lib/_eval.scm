@@ -24,6 +24,21 @@
   (macro-raise
    (macro-make-unbound-global-exception code rte variable)))
 
+(implement-library-type-not-in-compilation-context-exception)
+
+(define-prim (##raise-not-in-compilation-context-exception proc . args)
+  (##extract-procedure-and-arguments
+   proc
+   args
+   #f
+   #f
+   #f
+   (lambda (procedure arguments dummy1 dummy2 dummy3)
+     (macro-raise
+      (macro-make-not-in-compilation-context-exception
+       procedure
+       arguments)))))
+
 ;;;----------------------------------------------------------------------------
 
 (define (##make-code* code-prc cte src stepper lst n)
@@ -1142,11 +1157,21 @@
 (define ##compilation-ctx
   (##make-parameter #f))
 
+(##define-macro (macro-interpreter-target)
+  (let* ((cct ;; TODO: rewrite after bootstrap
+          (##global-var-ref
+           (##make-global-var '##compilation-target)))
+         (target
+          (if (##unbound? cct)
+              'C
+              (cct))))
+    `'(,target)))
+
 (define (##compile-in-new-compilation-ctx cte src tail? proc)
   (##call-with-values
    (lambda ()
      (##in-new-compilation-ctx
-      #f ;; target = #f means "interpreter"
+      (macro-interpreter-target)
       (lambda ()
         (proc cte (##expand-source src) tail?))))
    (lambda (code comp-ctx)
@@ -1195,41 +1220,67 @@
     (##values result
               comp-ctx)))
 
-(define (##compilation-ctx-supply-modules-add! module-ref)
+(define (##compilation-supply-modules-add! module-ref)
   (let ((ctx (##compilation-ctx)))
-    (macro-compilation-ctx-supply-modules-set!
-     ctx
-     (##add-to-set-ordered!
-      (macro-compilation-ctx-supply-modules ctx)
-      module-ref))))
+    (if (##not ctx)
+        (##raise-not-in-compilation-context-exception
+         ##compilation-supply-modules-add!
+         module-ref)
+        (macro-compilation-ctx-supply-modules-set!
+         ctx
+         (##add-to-set-ordered!
+          (macro-compilation-ctx-supply-modules ctx)
+          module-ref)))))
 
-(define (##compilation-ctx-demand-modules-add! module-ref)
+(define (##compilation-demand-modules-add! module-ref)
   (let ((ctx (##compilation-ctx)))
-    (macro-compilation-ctx-demand-modules-set!
-     ctx
-     (##add-to-set-ordered!
-      (macro-compilation-ctx-demand-modules ctx)
-      module-ref))))
+    (if (##not ctx)
+        (##raise-not-in-compilation-context-exception
+         ##compilation-demand-modules-add!
+         module-ref)
+        (macro-compilation-ctx-demand-modules-set!
+         ctx
+         (##add-to-set-ordered!
+          (macro-compilation-ctx-demand-modules ctx)
+          module-ref)))))
 
-(define (##compilation-ctx-meta-info-add! key val)
-  (let* ((ctx (##compilation-ctx))
-         (meta-info (macro-compilation-ctx-meta-info ctx)))
-    (##meta-info-add! meta-info key val)))
-
-(define (##compilation-ctx-module-aliases-add! alias)
-  (let* ((ctx (##compilation-ctx))
-         (module-aliases (macro-compilation-ctx-module-aliases ctx)))
-    (macro-compilation-ctx-module-aliases-set!
-     ctx
-     (##extend-module-aliases alias module-aliases))))
-
-(define (##compilation-ctx-target)
+(define (##compilation-meta-info-add! key val)
   (let ((ctx (##compilation-ctx)))
-    (macro-compilation-ctx-target ctx)))
+    (if (##not ctx)
+        (##raise-not-in-compilation-context-exception
+         ##compilation-meta-info-add!
+         key
+         val)
+        (let ((meta-info (macro-compilation-ctx-meta-info ctx)))
+          (##meta-info-add! meta-info key val)))))
 
-(define (##compilation-ctx-extra-info)
+(define (##compilation-module-aliases-add! alias)
   (let ((ctx (##compilation-ctx)))
-    (macro-compilation-ctx-extra-info ctx)))
+    (if (##not ctx)
+        (##raise-not-in-compilation-context-exception
+         ##compilation-module-aliases-add!
+         alias)
+        (let ((module-aliases (macro-compilation-ctx-module-aliases ctx)))
+          (macro-compilation-ctx-module-aliases-set!
+           ctx
+           (##extend-module-aliases alias module-aliases))))))
+
+(define (##compilation-target)
+  (let ((ctx (##compilation-ctx)))
+    (if (##not ctx)
+        (##raise-not-in-compilation-context-exception
+         compilation-target)
+        (macro-compilation-ctx-target ctx))))
+
+(define (compilation-target)
+  (##compilation-target))
+
+(define (##compilation-extra-info)
+  (let ((ctx (##compilation-ctx)))
+    (if (##not ctx)
+        (##raise-not-in-compilation-context-exception
+         ##compilation-extra-info)
+        (macro-compilation-ctx-extra-info ctx))))
 
 (define (##make-extra-info)
   (##make-table-aux 0 (macro-absent-obj) #f #f ##eq?))
@@ -1279,9 +1330,13 @@
             ordered-set)) ;; obj already in the ordered set
       (##list obj))) ;; ordered set was empty, so create singleton set
 
-(define (##compilation-ctx-module-ref-set! module-ref)
+(define (##compilation-module-ref-set! module-ref)
   (let ((ctx (##compilation-ctx)))
-    (macro-compilation-ctx-module-ref-set! ctx module-ref)))
+    (if (##not ctx)
+        (##raise-not-in-compilation-context-exception
+         ##compilation-module-ref-set!
+         module-ref)
+        (macro-compilation-ctx-module-ref-set! ctx module-ref))))
 
 ;;;----------------------------------------------------------------------------
 

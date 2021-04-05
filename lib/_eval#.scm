@@ -28,6 +28,15 @@
   (variable unprintable: read-only: no-functional-setter:)
 )
 
+(define-library-type-of-exception not-in-compilation-context-exception
+  id: a8fb370d-4e13-447f-b5cf-091e5296a5a1
+  constructor: #f
+  opaque:
+
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
+)
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Miscellaneous macros.

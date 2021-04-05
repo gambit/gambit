@@ -3978,6 +3978,13 @@
            (##newline port)
            (display-call))
 
+          ((macro-not-in-compilation-context-exception? exc)
+           (##write-string
+            "Not in compilation context"
+            port)
+           (##newline port)
+           (display-call))
+
           (else
            (##write-string "This object was raised: " port)
            (##write exc port)
@@ -4172,6 +4179,11 @@
            (##cons
             (macro-wrong-number-of-arguments-exception-procedure exc)
             (macro-wrong-number-of-arguments-exception-arguments exc)))
+
+          ((macro-not-in-compilation-context-exception? exc)
+           (##cons
+            (macro-not-in-compilation-context-exception-procedure exc)
+            (macro-not-in-compilation-context-exception-arguments exc)))
 
           (else
            #f)))

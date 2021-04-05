@@ -230,8 +230,8 @@
         (cadr (assq 'target opts))
         (lambda ()
           (if script-line
-              (**compilation-ctx-meta-info-add! 'script-line script-line))
-          (**compilation-ctx-module-ref-set! module-ref)
+              (**compilation-meta-info-add! 'script-line script-line))
+          (**compilation-module-ref-set! module-ref)
           (parse-program
            program
            (make-global-environment)

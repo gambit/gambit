@@ -134,6 +134,7 @@ circular-list
 clear-bit-field
 close-port
 command-line
+compilation-target
 compile-file
 compile-file-to-target
 condition-variable-broadcast!
@@ -539,6 +540,9 @@ nonprocedure-operator-exception-code
 nonprocedure-operator-exception-operator
 nonprocedure-operator-exception-rte
 nonprocedure-operator-exception?
+not-in-compilation-context-exception-arguments
+not-in-compilation-context-exception-procedure
+not-in-compilation-context-exception?
 number-of-arguments-limit-exception-arguments
 number-of-arguments-limit-exception-procedure
 number-of-arguments-limit-exception?
