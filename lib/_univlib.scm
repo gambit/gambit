@@ -6,9 +6,9 @@
 
 ;;;============================================================================
 
-(macro-case-target
+(cond-expand
 
- ((js)
+ ((compilation-target js)
   (##inline-host-declaration "
 
 // Autodetect when running in a web browser (as opposed to nodejs).
@@ -609,7 +609,7 @@ if (@os_web@) {
 
 "))
 
- ((python)
+ ((compilation-target python)
   (##inline-host-declaration "
 
 import os
@@ -1024,15 +1024,15 @@ def @os_device_from_basic_console@():
 
 (define (##global-vars)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##map ##string->symbol
            (##vector->list
             (##inline-host-expression
              "@host2scm@(Object.keys(@glo@))"))))
 
-   ((python)
+   ((compilation-target python)
     (##map ##string->symbol
            (##vector->list
             (##inline-host-expression
@@ -1044,15 +1044,15 @@ def @os_device_from_basic_console@():
 
 (define (##interned-symbols)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##map ##string->symbol
            (##vector->list
             (##inline-host-expression
              "@host2scm@(Object.keys(@symbol_table@))"))))
 
-   ((python)
+   ((compilation-target python)
     (##map ##string->symbol
            (##vector->list
             (##inline-host-expression
@@ -1084,14 +1084,14 @@ def @os_device_from_basic_console@():
 
 (define (##os-err-code->string code)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-expression
      "@host2scm@(@os_decode_error@(@scm2host@(@1@)))"
      code))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-expression
      "@host2scm@(@os_decode_error@(@scm2host@(@1@)))"
      code))
@@ -1107,13 +1107,13 @@ def @os_device_from_basic_console@():
 
 (define (##os-getpid)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-expression
      "@host2scm@(@os_nodejs@ ? process.pid : 0)"))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-expression
      "@host2scm@(os.getpid())"))
 
@@ -1127,13 +1127,13 @@ def @os_device_from_basic_console@():
 
 (define (##os-host-name)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-expression
      "@host2scm@(@os_nodejs@ ? os.hostname() : 'host-name')"))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-expression
      "@host2scm@(os.uname()[1])"))
 
@@ -1147,13 +1147,13 @@ def @os_device_from_basic_console@():
 
 (define (##os-user-name)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-expression
      "@host2scm@(@os_nodejs@ ? os.userInfo().username : 'user')"))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-expression
      "@host2scm@(getpass.getuser())"))
 
@@ -1167,9 +1167,9 @@ def @os_device_from_basic_console@():
 
 (define (##os-user-info ui user)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @os_user_info@ = function (ui, user) {
@@ -1209,7 +1209,7 @@ def @os_device_from_basic_console@():
 ")
     (##inline-host-expression "@os_user_info@(@1@, @scm2host@(@2@))" ui user))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_user_info@(ui, user):
@@ -1239,9 +1239,9 @@ def @os_user_info@(ui, user):
 
 (define (##os-group-info gi group)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @os_group_info@ = function (gi, group) {
@@ -1277,7 +1277,7 @@ def @os_user_info@(ui, user):
 ")
     (##inline-host-expression "@os_group_info@(@1@, @scm2host@(@2@))" gi group))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_group_info@(gi, group):
@@ -1311,14 +1311,14 @@ def @os_group_info@(gi, group):
 
 (define (##os-getenv var)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-expression
      "@host2scm@((function (v) { return this !== this.window && Object.hasOwnProperty.call(process.env,v) ? process.env[v] : false; })(@scm2host@(@1@)))"
      var))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-expression
      "@host2scm@((lambda v: os.environ[v] if v in os.environ else False)(@scm2host@(@1@)))"
      var))
@@ -1330,16 +1330,16 @@ def @os_group_info@(gi, group):
 
 (define (##os-setenv var val)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-statement
      "if ((function (v) { return this !== this.window; })()) process.env[@scm2host@(@1@)] = @scm2host@(@2@);"
      var
      val)
     0)
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-statement
      "os.environ[@scm2host@(@1@)] = @scm2host@(@2@)"
      var
@@ -1355,9 +1355,9 @@ def @os_group_info@(gi, group):
 
 (define (##os-shell-command cmd)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @os_shell_command@ = function (cmd) {
@@ -1374,7 +1374,7 @@ def @os_group_info@(gi, group):
      "@host2scm@(@os_shell_command@(@scm2host@(@1@)))"
      cmd))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_shell_command@(cmd):
@@ -1396,13 +1396,13 @@ def @os_shell_command@(cmd):
 
 (define (##os-path-homedir)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-expression
      "@host2scm@(@os_nodejs@ ? os.homedir() : '/')"))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-expression
      "@host2scm@(os.path.expanduser('~'))"))
 
@@ -1416,9 +1416,9 @@ def @os_shell_command@(cmd):
 
 (define (##os-executable-path)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @executable_path@ = (@os_nodejs@) ? __filename : '/program';
@@ -1426,7 +1426,7 @@ def @os_shell_command@(cmd):
 ")
     (##inline-host-expression "@host2scm@(@executable_path@)"))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 @executable_path@ = os.path.abspath(__file__)
@@ -1444,9 +1444,9 @@ def @os_shell_command@(cmd):
 
 (define (##os-path-gambitdir)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @os_path_gambitdir@ = function () {
@@ -1474,9 +1474,9 @@ def @os_shell_command@(cmd):
 
 (define (##os-path-normalize-directory path)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @os_path_normalize_directory@ = function (path) {
@@ -1521,7 +1521,7 @@ def @os_shell_command@(cmd):
 ")
     (##inline-host-expression "@os_path_normalize_directory@(@scm2host@(@1@))" path))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_path_normalize_directory@(path):
@@ -1556,9 +1556,9 @@ def @os_path_normalize_directory@(path):
 
 (define-prim (##exit-with-err-code-no-cleanup err-code)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-statement
      "
       var code = @scm2host@(@1@);
@@ -1570,7 +1570,7 @@ def @os_path_normalize_directory@(path):
      "
      (##fx- err-code 1)))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-statement "exit(@1@)" (##fx- err-code 1)))
 
    (else
@@ -1583,12 +1583,12 @@ def @os_path_normalize_directory@(path):
 
 (define (##exit-trampoline)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-statement "@r0@ = null;"))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-statement "@r0@ = None"))
 
    (else
@@ -1603,9 +1603,9 @@ def @os_path_normalize_directory@(path):
   (##f64vector-set!
    floats
    i
-   (macro-case-target
+   (cond-expand
 
-    ((js python)
+    ((compilation-target js python)
      (##inline-host-expression "@host2scm@(@os_current_time@())"))
 
     (else
@@ -1615,9 +1615,9 @@ def @os_path_normalize_directory@(path):
 (define (##process-statistics)
   (##declare (not interrupts-enabled))
   (let ((v (##make-f64vector 20 0.0)))
-    (macro-case-target
+    (cond-expand
 
-     ((js python)
+     ((compilation-target js python)
       (##inline-host-expression "@os_set_process_times@(@1@)" v))
 
      (else
@@ -1627,9 +1627,9 @@ def @os_path_normalize_directory@(path):
 (define (##process-times)
   (##declare (not interrupts-enabled))
   (let ((v (##make-f64vector 3 0.0)))
-    (macro-case-target
+    (cond-expand
 
-     ((js python)
+     ((compilation-target js python)
       (##inline-host-expression "@os_set_process_times@(@1@)" v))
 
      (else
@@ -1651,9 +1651,9 @@ def @os_path_normalize_directory@(path):
 
 (define (##get-command-line)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @os_argv@ = [];
@@ -1664,7 +1664,7 @@ if (@os_nodejs@) {
 ")
     (##vector->list (##inline-host-expression "@host2scm@(@os_argv@)")))
 
-   ((python)
+   ((compilation-target python)
     (##vector->list (##inline-host-expression "@host2scm@(sys.argv)")))
 
    (else
@@ -1685,9 +1685,9 @@ if (@os_nodejs@) {
 ;;; File information.
 
 (define ##feature-file-input
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 if (@os_web@) {
@@ -1771,9 +1771,9 @@ if (@os_web@) {
 
 (define (##os-file-info fi path chase?)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##first-argument #f ##feature-file-input)
     (##inline-host-declaration "
 
@@ -1890,7 +1890,7 @@ if (@os_web@) {
      path
      chase?))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_file_info@(fi, path, chase):
@@ -1965,9 +1965,9 @@ def @os_file_info@(fi, path, chase):
 
 (define (##os-delete-directory path)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @os_delete_directory@ = function (path) {
@@ -2002,7 +2002,7 @@ def @os_file_info@(fi, path, chase):
      "@os_delete_directory@(@scm2host@(@1@))"
      path))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_delete_directory@(path):
@@ -2026,9 +2026,9 @@ def @os_delete_directory@(path):
 
 (define (##os-delete-file path)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @os_delete_file@ = function (path) {
@@ -2063,7 +2063,7 @@ def @os_delete_directory@(path):
      "@os_delete_file@(@scm2host@(@1@))"
      path))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_delete_file@(path):
@@ -2087,9 +2087,9 @@ def @os_delete_file@(path):
 
 (define (##os-rename-file old-path new-path replace?)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @os_rename_file@ = function (old_path, new_path, replace) {
@@ -2140,7 +2140,7 @@ def @os_delete_file@(path):
      new-path
      replace?))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_rename_file@(old_path, new_path, replace):
@@ -2181,9 +2181,9 @@ def @os_rename_file@(old_path, new_path, replace):
 
 (define (##os-create-directory path permissions)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @os_create_directory@ = function (path, permissions) {
@@ -2219,7 +2219,7 @@ def @os_rename_file@(old_path, new_path, replace):
      path
      permissions))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_create_directory@(path, permissions):
@@ -2279,9 +2279,9 @@ def @os_create_directory@(path, permissions):
 (##declare (inline))
 
 (define ##feature-port-fields
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @BTQ_DEQ_NEXT@              = 2;
@@ -2371,7 +2371,7 @@ def @os_create_directory@(path, permissions):
 
 "))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 @BTQ_DEQ_NEXT@              = 2
@@ -2465,9 +2465,9 @@ def @os_create_directory@(path, permissions):
     #f)))
 
 (define-prim (##os-device-close dev direction)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @os_device_close@ = function (dev_scm, direction_scm) {
@@ -2484,7 +2484,7 @@ def @os_create_directory@(path, permissions):
      dev
      direction))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_device_close@(dev_scm, direction_scm):
@@ -2505,9 +2505,9 @@ def @os_device_close@(dev_scm, direction_scm):
     -5555)))
 
 (define-prim (##os-device-force-output dev-condvar level)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @os_device_force_output@ = function (dev_condvar_scm, level_scm) {
@@ -2524,7 +2524,7 @@ def @os_device_close@(dev_scm, direction_scm):
      dev-condvar
      level))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_device_force_output@(dev_condvar_scm, level_scm):
@@ -2545,9 +2545,9 @@ def @os_device_force_output@(dev_condvar_scm, level_scm):
     -5555)))
 
 (define-prim (##os-device-kind dev)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @os_device_kind@ = function (dev_scm) {
@@ -2565,7 +2565,7 @@ def @os_device_force_output@(dev_condvar_scm, level_scm):
      "@os_device_kind@(@1@)"
      dev))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_device_kind@(dev_scm):
@@ -2587,9 +2587,9 @@ def @os_device_kind@(dev_scm):
     -5555)))
 
 (define ##feature-device-directory
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @Device_directory@ = function (filenames) {
@@ -2625,7 +2625,7 @@ def @os_device_kind@(dev_scm):
 
 "))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 class @Device_directory@:
@@ -2658,9 +2658,9 @@ class @Device_directory@:
 
 (define-prim (##os-device-directory-open-path path ignore-hidden)
   (##first-argument #f ##feature-device-directory)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @os_device_directory_open_path@ = function (path_scm, ignore_hidden_scm) {
@@ -2712,7 +2712,7 @@ class @Device_directory@:
      path
      ignore-hidden))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_device_directory_open_path@(path_scm, ignore_hidden_scm):
@@ -2755,9 +2755,9 @@ def @os_device_directory_open_path@(path_scm, ignore_hidden_scm):
     -5555)))
 
 (define-prim (##os-device-directory-read dev-condvar)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##first-argument #f ##feature-device-directory)
     (##inline-host-declaration "
 
@@ -2776,7 +2776,7 @@ def @os_device_directory_open_path@(path_scm, ignore_hidden_scm):
      "@os_device_directory_read@(@1@)"
      dev-condvar))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_device_directory_read@(dev_condvar_scm):
@@ -2798,9 +2798,9 @@ def @os_device_directory_read@(dev_condvar_scm):
     -5555)))
 
 (define ##feature-callback-queue
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @Device_event_queue@ = function (selector) {
@@ -2856,9 +2856,9 @@ def @os_device_directory_read@(dev_condvar_scm):
     #f)))
 
 (define-prim (##os-device-event-queue-open selector)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @os_device_event_queue_open@ = function (selector_scm) {
@@ -2884,7 +2884,7 @@ def @os_device_directory_read@(dev_condvar_scm):
      "@os_device_event_queue_open@(@1@)"
      selector))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_device_event_queue_open@(selector_scm):
@@ -2906,9 +2906,9 @@ def @os_device_event_queue_open@(selector_scm):
     -5555)))
 
 (define-prim (##os-device-event-queue-read dev-condvar)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##first-argument #f ##feature-callback-queue)
     (##inline-host-declaration "
 
@@ -2927,7 +2927,7 @@ def @os_device_event_queue_open@(selector_scm):
      "@os_device_event_queue_read@(@1@)"
      dev-condvar))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_device_event_queue_read@(dev_condvar_scm):
@@ -2949,9 +2949,9 @@ def @os_device_event_queue_read@(dev_condvar_scm):
     -5555)))
 
 (define-prim (##os-device-stream-open-process path-and-args environment directory options)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @os_device_stream_open_process@ = function (path_and_args_scm, environment_scm, directory_scm, options_scm) {
@@ -2970,7 +2970,7 @@ def @os_device_event_queue_read@(dev_condvar_scm):
      directory
      options))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_device_stream_open_process@(path_and_args_scm, environment_scm, directory_scm, options_scm):
@@ -2993,9 +2993,9 @@ def @os_device_stream_open_process@(path_and_args_scm, environment_scm, director
     -5555)))
 
 (define-prim (##os-device-process-pid dev)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @os_device_process_pid@ = function (dev_scm) {
@@ -3013,7 +3013,7 @@ def @os_device_stream_open_process@(path_and_args_scm, environment_scm, director
      "@os_device_process_pid@(@1@)"
      dev))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_device_process_pid@(dev_scm):
@@ -3035,9 +3035,9 @@ def @os_device_process_pid@(dev_scm):
     -5555)))
 
 (define-prim (##os-device-process-status dev)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @os_device_process_status@ = function (dev_scm) {
@@ -3055,7 +3055,7 @@ def @os_device_process_pid@(dev_scm):
      "@os_device_process_status@(@1@)"
      dev))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_device_process_status@(dev_scm):
@@ -3077,9 +3077,9 @@ def @os_device_process_status@(dev_scm):
     -5555)))
 
 (define-prim (##os-device-stream-default-options dev)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @os_device_stream_default_options@ = function (dev_scm) {
@@ -3097,7 +3097,7 @@ def @os_device_process_status@(dev_scm):
      "@os_device_stream_default_options@(@1@)"
      dev))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_device_stream_default_options@(dev_scm):
@@ -3119,9 +3119,9 @@ def @os_device_stream_default_options@(dev_scm):
     -5555)))
 
 (define-prim (##os-device-stream-options-set! dev options)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @os_device_stream_options_set@ = function (dev_scm, options_scm) {
@@ -3141,7 +3141,7 @@ def @os_device_stream_default_options@(dev_scm):
      dev
      options))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_device_stream_options_set@(dev_scm, options_scm):
@@ -3165,9 +3165,9 @@ def @os_device_stream_options_set@(dev_scm, options_scm):
     -5555)))
 
 (define-prim (##os-device-stream-open-predefined index flags)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @os_device_stream_open_predefined@ = function (index_scm, flags_scm) {
@@ -3197,7 +3197,7 @@ def @os_device_stream_options_set@(dev_scm, options_scm):
      index
      flags))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_device_stream_open_predefined@(index_scm, flags_scm):
@@ -3232,9 +3232,9 @@ def @os_device_stream_open_predefined@(index_scm, flags_scm):
     -5555)))
 
 (define-prim (##os-device-stream-open-path path flags mode)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##first-argument #f ##feature-file-input)
     (##inline-host-declaration "
 
@@ -3468,7 +3468,7 @@ if (@os_web@) {
      flags
      mode))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_translate_flags@(flags):
@@ -3527,9 +3527,9 @@ def @os_device_stream_open_path@(path_scm, flags_scm, mode_scm):
     -5555)))
 
 (define-prim (##os-device-stream-read dev-condvar buffer lo hi)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @os_device_stream_read@ = function (dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
@@ -3550,7 +3550,7 @@ def @os_device_stream_open_path@(path_scm, flags_scm, mode_scm):
      lo
      hi))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_device_stream_read@(dev_condvar_scm, buffer_scm, lo_scm, hi_scm):
@@ -3575,9 +3575,9 @@ def @os_device_stream_read@(dev_condvar_scm, buffer_scm, lo_scm, hi_scm):
     -5555)))
 
 (define-prim (##os-device-stream-write dev-condvar buffer lo hi)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @os_device_stream_write@ = function (dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
@@ -3598,7 +3598,7 @@ def @os_device_stream_read@(dev_condvar_scm, buffer_scm, lo_scm, hi_scm):
      lo
      hi))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_device_stream_write@(dev_condvar_scm, buffer_scm, lo_scm, hi_scm):
@@ -3623,9 +3623,9 @@ def @os_device_stream_write@(dev_condvar_scm, buffer_scm, lo_scm, hi_scm):
     -5555)))
 
 (define-prim (##os-device-stream-seek dev-condvar pos whence)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @os_device_stream_seek@ = function (dev_condvar_scm, pos_scm, whence_scm) {
@@ -3644,7 +3644,7 @@ def @os_device_stream_write@(dev_condvar_scm, buffer_scm, lo_scm, hi_scm):
      pos
      whence))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_device_stream_seek@(dev_condvar_scm, pos_scm, whence_scm):
@@ -3667,9 +3667,9 @@ def @os_device_stream_seek@(dev_condvar_scm, pos_scm, whence_scm):
     -5555)))
 
 (define-prim (##os-device-stream-width dev-condvar)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @os_device_stream_width@ = function (dev_condvar_scm) {
@@ -3684,7 +3684,7 @@ def @os_device_stream_seek@(dev_condvar_scm, pos_scm, whence_scm):
      "@os_device_stream_width@(@1@)"
      dev-condvar))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_device_stream_width@(dev_condvar_scm):
@@ -3704,9 +3704,9 @@ def @os_device_stream_width@(dev_condvar_scm):
 
 (define-prim (##os-port-decode-chars! port want eof)
   (##first-argument #f ##feature-port-fields)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @os_port_decode_chars@ = function (port_scm, want_scm, eof_scm) {
@@ -3755,7 +3755,7 @@ def @os_device_stream_width@(dev_condvar_scm):
      want
      eof))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_port_decode_chars@(port_scm, want_scm, eof_scm):
@@ -3806,9 +3806,9 @@ def @os_port_decode_chars@(port_scm, want_scm, eof_scm):
 
 (define-prim (##os-port-encode-chars! port)
   (##first-argument #f ##feature-port-fields)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @os_port_encode_chars@ = function (port_scm) {
@@ -3844,7 +3844,7 @@ def @os_port_decode_chars@(port_scm, want_scm, eof_scm):
      "@os_port_encode_chars@(@1@)"
      port))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_port_encode_chars@(port_scm):
@@ -3885,9 +3885,9 @@ def @os_port_encode_chars@(port_scm):
 (define-prim (##os-condvar-select! devices timeout)
   (##declare (not interrupts-enabled))
   (##first-argument #f ##feature-port-fields)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##first-argument #f ##feature-callback-queue)
     (##inline-host-declaration "
 
@@ -3980,7 +3980,7 @@ def @os_port_encode_chars@(port_scm):
      devices
      timeout))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_condvar_select@(devices_scm, timeout_scm):
@@ -4006,9 +4006,9 @@ def @os_condvar_select@(devices_scm, timeout_scm):
 
 (define (##os-load-object-file path linker-name)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
 @os_load_object_file@ = function (path, linker_name) {
@@ -4072,7 +4072,7 @@ def @os_condvar_select@(devices_scm, timeout_scm):
      path
      linker-name))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
 def @os_load_object_file@(path, linker_name):
@@ -4170,9 +4170,9 @@ def @os_load_object_file@(path, linker_name):
 
   (##string-substitute code-str #\@ substitute))
 
-(macro-case-target
+(cond-expand
 
- ((js)
+ ((compilation-target js)
   (##inline-host-declaration "
 
 @eval@ = function (expr) {
@@ -4209,7 +4209,7 @@ def @os_load_object_file@(path, linker_name):
 
 "))
 
- ((python)
+ ((compilation-target python)
   (##inline-host-declaration "
 
 def @eval@(expr):
@@ -4246,8 +4246,8 @@ def @host_exec@(stmts):
                    (##inline-host-expression "@host2scm@(' = @scm2host@(')")
                    param
                    ")"
-                   (macro-case-target
-                    ((js)
+                   (cond-expand
+                    ((compilation-target js)
                      ";")
                     (else
                      ""))))
@@ -4257,9 +4257,9 @@ def @host_exec@(stmts):
 
 (define (##host-define-function-dynamic name params expr)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js python)
+   ((compilation-target js python)
     (##inline-host-statement
      "@host_define_function@(@scm2host@(@1@),@scm2host@(@2@),@scm2host@(@3@),@scm2host@(@4@))"
      name
@@ -4279,9 +4279,9 @@ def @host_exec@(stmts):
 
 (define (##host-define-procedure-dynamic name params stmts)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js python)
+   ((compilation-target js python)
     (##inline-host-statement
      "@host_define_procedure@(@scm2host@(@1@),@scm2host@(@2@),@scm2host@(@3@),@scm2host@(@4@))"
      name
@@ -4299,9 +4299,9 @@ def @host_exec@(stmts):
 
 (define (##host-function-call fn args)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js python)
+   ((compilation-target js python)
     (##inline-host-expression
      "@host_function_call@(@scm2host@(@1@), @2@)"
      fn
@@ -4316,9 +4316,9 @@ def @host_exec@(stmts):
 
 (define (##host-procedure-call proc args)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js python)
+   ((compilation-target js python)
     (##inline-host-statement
      "@host_procedure_call@(@scm2host@(@1@), @2@)"
      proc
@@ -4332,9 +4332,9 @@ def @host_exec@(stmts):
 
 (define (##host-eval-dynamic expr)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js python)
+   ((compilation-target js python)
     (##inline-host-expression
      "@host2scm@(@host_eval@(@scm2host@(@1@)))"
      expr))
@@ -4346,9 +4346,9 @@ def @host_exec@(stmts):
 
 (define (##host-exec-dynamic stmts)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js python)
+   ((compilation-target js python)
     (##inline-host-statement
      "@host_exec@(@scm2host@(@1@))"
      stmts))
@@ -4423,9 +4423,9 @@ def @host_exec@(stmts):
 
 ;;;----------------------------------------------------------------------------
 
-(macro-case-target
+(cond-expand
 
- ((js)
+ ((compilation-target js)
   (##inline-host-declaration "
 
 // Redefine ##check-heap-limit so that it checks interrupts (to allow
@@ -4583,7 +4583,7 @@ promise.then(onFulfilled, onRejected);
           (else
            (##inline-host-expression "@host2scm@(@scm2host@(@1@))" promise-or-value)))))
 
- ((python)
+ ((compilation-target python)
 
   (define (##scm2host-call-return value)
     value))
