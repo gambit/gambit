@@ -13826,10 +13826,10 @@
            (let ((autosemi? #t)
                  (allow-eof? #f))
              (##read-six-datum-or-eof re autosemi? allow-eof?))))
-      (##wrap-op1* re
-                   start-pos
-                   'six.infix
-                   datum))))
+      (##wrap-op1 re
+                  start-pos
+                  'six.infix
+                  datum))))
 
 (define (##read-six-datum-or-eof re autosemi? allow-eof?)
 

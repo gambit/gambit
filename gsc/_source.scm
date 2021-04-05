@@ -421,11 +421,13 @@
        path
        (##current-readtable);;;;;;;;;;;;;;;;;;;;
        (lambda (re x)
-         (let ((locat
-                (##make-locat container
-                              (##filepos->position
-                               (macro-readenv-filepos re)))))
-           (make-source x locat)))
+         (if (source? x)
+             x
+             (let ((locat
+                    (##make-locat container
+                                  (##filepos->position
+                                   (macro-readenv-filepos re)))))
+               (make-source x locat))))
        (lambda (re x)
          (source-code x)))))
 
