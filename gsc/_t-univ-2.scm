@@ -92,6 +92,14 @@
 
 (define (univ-def-kind x) (if (vector? x) (vector-ref x 0) 'init))
 
+(define (univ-rename-fields ctx fields)
+  (map (lambda (f)
+         (univ-field (univ-field-rename ctx (univ-field-name f))
+                     (univ-field-type f)
+                     (univ-field-init f)
+                     (univ-field-properties f)))
+       fields))
+
 ;;----------------------------------------------------------------------------
 
 (define univ-rtlib-feature-table (make-table))
@@ -230,11 +238,11 @@
                (^ (if thread-save?
 
                       (^assign
-                       (^member (^cast* 'continuation
-                                        (^structure-ref
-                                         (gvm-state-current-thread ctx)
-                                         univ-thread-cont-slot))
-                                (^public 'frame))
+                       (^field 'frame
+                               (^cast* 'continuation
+                                       (^structure-ref
+                                        (gvm-state-current-thread ctx)
+                                        univ-thread-cont-slot)))
                        frame)
 
                       (^))
@@ -268,11 +276,11 @@
       (^array-index
        (gvm-state-stack-use ctx 'rd)
        (^int 0))
-      (^member cont (^public 'frame)))
+      (^field 'frame cont))
 
      (if thread-restore?
          (^assign ;; avoid space leak
-          (^member cont (^public 'frame))
+          (^field 'frame cont)
           (^null))
          (let ((temp (^local-var 'temp))
                (thread (^local-var 'thread)))
@@ -281,7 +289,7 @@
             (^var-declaration
              'scmobj
              temp
-             (^member cont (^public 'denv)))
+             (^field 'denv cont))
             (^var-declaration
              'scmobj
              thread
@@ -498,8 +506,8 @@
                  feature
                  properties
                  extends
-                 class-fields
-                 instance-fields
+                 (univ-rename-fields ctx class-fields)
+                 (univ-rename-fields ctx instance-fields)
                  class-methods
                  (instance-methods ctx)
                  class-classes
@@ -529,20 +537,6 @@
 
   ;; Control point initialization
 
-  ;;deprecated
-  (univ-define-rtlib-feature 'ctrlpts_init
-   (univ-rtlib-feature-method
-    '(public)
-    'noresult
-    (list (univ-field 'ctrlpts '(array ctrlpt)))
-    "\n"
-    '()
-    (lambda (ctx)
-      (let ((ctrlpts (^local-var 'ctrlpts)))
-        (^assign (^member (^array-index ctrlpts (^int 0))
-                          (^public 'ctrlpts))
-                 ctrlpts)))))
-
   (univ-define-rtlib-feature 'current_parententrypt
    (univ-rtlib-feature-field 'parententrypt
                              (lambda (ctx)
@@ -552,28 +546,33 @@
    (univ-rtlib-feature-method
     '(public)
     'noresult
-    (list (univ-field 'cp 'ctrlpt)
-          (univ-field 'id 'int))
+    (list (univ-field 'cp 'ctrlpt))
     "\n"
     '()
     (lambda (ctx)
       (let ((cp (^local-var 'cp))
-            (id (^local-var 'id)))
-        (^ (^assign (^member cp (^public 'id)) id)
-           (^assign (^member cp (^public 'parent))
-                    (^rts-field-use 'current_parententrypt))
-           (^if (^not (^parens (^null? (^rts-field-use 'current_parententrypt))))
-                (^array-push!
-                 (^member (^rts-field-use 'current_parententrypt)
-                          'ctrlpts)
-                 cp)))))))
+            (parent (^local-var 'parent))
+            (ctrlpts (^local-var 'ctrlpts)))
+        (^ (^var-declaration 'parententrypt
+                             parent
+                             (^rts-field-use 'current_parententrypt))
+           (^assign (^field 'parent cp)
+                    parent)
+           (^if (^null? parent)
+                (^assign (^field 'id cp)
+                         (^int 0))
+                (^ (^var-declaration '(array ctrlpt)
+                                     ctrlpts
+                                     (^field 'ctrlpts parent))
+                   (^assign (^field 'id cp)
+                            (^array-length ctrlpts))
+                   (^array-push! ctrlpts cp))))))))
 
   (univ-define-rtlib-feature 'returnpt_init
    (univ-rtlib-feature-method
     '(public)
     'noresult
-    (list (univ-field 'cp 'ctrlpt)
-          (univ-field 'id 'int)
+    (list (univ-field 'cp 'returnpt)
           (univ-field 'fs 'int)
           (univ-field 'link 'int))
     "\n"
@@ -582,67 +581,84 @@
       (if (eq? 'js (target-name (ctx-target ctx)))
           (univ-use-rtlib ctx 'current_parententrypt))
       (let ((cp (^local-var 'cp))
-            (id (^local-var 'id))
+            (parent (^local-var 'parent))
+            (ctrlpts (^local-var 'ctrlpts))
             (fs (^local-var 'fs))
             (link (^local-var 'link)))
-        (^ (^assign (^member cp (^public 'id)) id)
-           (^assign (^member cp (^public 'parent))
-                    (^rts-field-use 'current_parententrypt))
-           (^if (^not (^parens (^null? (^rts-field-use 'current_parententrypt))))
-                (^array-push!
-                 (^member (^rts-field-use 'current_parententrypt)
-                          'ctrlpts)
-                 cp))
-           (^assign (^member cp (^public 'fs)) fs)
-           (^assign (^member cp (^public 'link)) link))))))
+        (^ (^var-declaration 'parententrypt
+                             parent
+                             (^rts-field-use 'current_parententrypt))
+           (^assign (^field 'parent cp)
+                    parent)
+           (^if (^null? parent)
+                (^assign (^field 'id cp)
+                         (^int 0))
+                (^ (^var-declaration '(array ctrlpt)
+                                     ctrlpts
+                                     (^field 'ctrlpts parent))
+                   (^assign (^field 'id cp)
+                            (^array-length ctrlpts))
+                   (^array-push! ctrlpts cp)))
+           (^assign (^field 'fs cp) fs)
+           (^assign (^field 'link cp) link))))))
 
   (univ-define-rtlib-feature 'entrypt_init
    (univ-rtlib-feature-method
     '(public)
     'noresult
-    (list (univ-field 'cp 'ctrlpt)
-          (univ-field 'id 'int)
+    (list (univ-field 'cp 'entrypt)
           (univ-field 'nfree 'int))
     "\n"
     '()
     (lambda (ctx)
       (let ((cp (^local-var 'cp))
-            (id (^local-var 'id))
+            (parent (^local-var 'parent))
+            (ctrlpts (^local-var 'ctrlpts))
             (nfree (^local-var 'nfree)))
-        (^ (^assign (^member cp (^public 'id)) id)
-           (^assign (^member cp (^public 'parent))
-                    (^rts-field-use 'current_parententrypt))
-           (^if (^not (^parens (^null? (^rts-field-use 'current_parententrypt))))
-                (^array-push!
-                 (^member (^rts-field-use 'current_parententrypt)
-                          'ctrlpts)
-                 cp))
-           (^assign (^member cp (^public 'nfree)) nfree))))))
+        (^ (^var-declaration 'parententrypt
+                             parent
+                             (^rts-field-use 'current_parententrypt))
+           (^assign (^field 'parent cp)
+                    parent)
+           (^if (^null? parent)
+                (^assign (^field 'id cp)
+                         (^int 0))
+                (^ (^var-declaration '(array ctrlpt)
+                                     ctrlpts
+                                     (^field 'ctrlpts parent))
+                   (^assign (^field 'id cp)
+                            (^array-length ctrlpts))
+                   (^array-push! ctrlpts cp)))
+           (^assign (^field 'nfree cp) nfree))))))
 
   (univ-define-rtlib-feature 'parententrypt_init
    (univ-rtlib-feature-method
     '(public)
     'noresult
-    (list (univ-field 'cp 'ctrlpt)
-          (univ-field 'id 'int)
+    (list (univ-field 'cp 'parententrypt)
           (univ-field 'nfree 'int)
           (univ-field 'name 'symbol)
-          (univ-field 'info 'scmobj))
+          (univ-field 'info 'scmobj)
+          (univ-field 'prim 'bool))
     "\n"
     '()
     (lambda (ctx)
       (let ((cp (^local-var 'cp))
-            (id (^local-var 'id))
             (nfree (^local-var 'nfree))
             (name (^local-var 'name))
-            (info (^local-var 'info)))
-        (^ (^assign (^member cp (^public 'id)) id)
-           (^assign (^member cp (^public 'parent)) cp)
-           (^assign (^member cp (^public 'nfree)) nfree)
-           (^assign (^member cp (^public (univ-proc-name-attrib ctx))) name)
-           (^assign (^member cp (^public 'ctrlpts))
+            (info (^local-var 'info))
+            (prim (^local-var 'prim)))
+        (^ (^assign (^field 'id cp) (^int 0))
+           (^assign (^field 'parent cp) cp)
+           (^assign (^field 'nfree cp) nfree)
+           (^assign (^field 'name cp) name)
+           (^assign (^field 'ctrlpts cp)
                     (^array-literal '(array ctrlpt) (list cp)))
-           (^assign (^member cp (^public 'info)) info)
+           (^assign (^field 'info cp) info)
+           (^assign (^field 'prim cp) prim)
+           (^glo-var-primitive-set! name cp)
+           (^if prim
+                (^glo-var-set! name cp))
            (^assign (^rts-field-use 'current_parententrypt)
                     cp))))))
 
@@ -1516,7 +1532,7 @@
 
                       (^dict-set 'modlinkinfo
                                  (^rts-field-use-priv 'module_map)
-                                 (^member info (^public 'name))
+                                 (^field 'name info)
                                  info)
 
                       (^assign (^array-index (^rts-field-use-priv 'module_table) i)
@@ -1571,7 +1587,7 @@
                 (^ (^var-declaration
                     'int
                     index
-                    (^member info (^public 'index)))
+                    (^field 'index info))
 
                    (^var-declaration
                     'scmobj
@@ -1713,7 +1729,7 @@
     '()
     (lambda (ctx)
       (let ((obj (^local-var 'obj)))
-        (^return (^member obj (^public 'val)))))))
+        (^return (^field 'val obj))))))
 
   (univ-define-rtlib-feature 'host2foreign
    (univ-rtlib-feature-method
@@ -1735,7 +1751,7 @@
     '()
     (lambda (ctx)
       (let ((obj (^local-var 'obj)))
-        (^return (^member obj (^public 'scmobj)))))))
+        (^return (^field 'scmobj obj))))))
 
   (univ-define-rtlib-feature 'scm2scheme
    (univ-rtlib-feature-method
@@ -1764,7 +1780,9 @@
             proc
             '()
             "\n"
-            (list (univ-field 'id 'int (^int 0) '())) ;; attributes
+            (univ-rename-fields
+             ctx
+             (list (univ-field 'id 'int (^int 0) '()))) ;; attributes
             (^return-call-prim                        ;; body
              (^rts-method-ref 'scm2host_call)
              obj))
@@ -2040,10 +2058,10 @@
               (^return
                (^/ (^call-prim
                     (^rts-method-use 'scm2host)
-                    (^member (^cast* 'ratnum obj) (^public 'num)))
+                    (^field 'num (^cast* 'ratnum obj)))
                    (^call-prim
                     (^rts-method-use 'scm2host)
-                    (^member (^cast* 'ratnum obj) (^public 'den))))))
+                    (^field 'den (^cast* 'ratnum obj))))))
 
          (^if (^string? obj)
               (case (univ-string-representation ctx)
@@ -2117,13 +2135,25 @@
            ((js) ;; TODO: cleanup
             ;; convert table to Object
             (^if (^and (^structure? obj)
-                       "obj.slots[0].slots[1].name === '##type-4-A7AB629D-EAB0-422F-8005-08B2282E04FC'")
-                 "var result = Object();
-                  obj.slots[3].forEach(function (val, key) {
-                    result[key] = val;
-                  });
-                  return result;
-"))
+                       (^eq?
+                        (^field
+                         'name
+                         (^array-index
+                          (^field
+                           'slots
+                           (^array-index
+                            (^field 'slots obj)
+                            (^int 0)))
+                          (^int 1)))
+                        (^str "##type-4-A7AB629D-EAB0-422F-8005-08B2282E04FC")))
+                 (^ "var result = Object();"
+                    (^array-index
+                     (^field 'slots obj)
+                     (^int 3))
+                    ".forEach(function (val, key) {
+                        result[key] = val;
+                      });"
+                    "return result;")))
            (else
             (^)))
 
@@ -2469,7 +2499,7 @@
          ctx
          "\n"
          (lambda (ctx)
-           (^return (^member (^this) (^public 'name)))))
+           (^return (^field 'name (^this)))))
         (^type 'symbol))))))
 
   (univ-define-rtlib-feature 'make_interned_symbol
@@ -2496,7 +2526,7 @@
                               (^call-prim
                                (^rts-method-use 'str_hash)
                                name))))
-                   (^assign (^member obj (^public 'interned))
+                   (^assign (^field 'interned obj)
                             (^obj #t))
                    (^dict-set 'symbol
                               (^rts-field-use-priv 'symbol_table)
@@ -2530,7 +2560,7 @@
          ctx
          "\n"
          (lambda (ctx)
-           (^return (^member (^this) (^public 'name)))))
+           (^return (^field 'name (^this)))))
         (^type 'keyword))))))
 
   (univ-define-rtlib-feature 'make_interned_keyword
@@ -2557,7 +2587,7 @@
                               (^call-prim
                                (^rts-method-use 'str_hash)
                                name))))
-                   (^assign (^member obj (^public 'interned))
+                   (^assign (^field 'interned obj)
                             (^obj #t))
                    (^dict-set 'keyword
                               (^rts-field-use-priv 'keyword_table)
@@ -3032,21 +3062,23 @@
         (else
          'scmobj))
       '() ;; class-fields
-      (case (target-name (ctx-target ctx)) ;; instance-fields
-        ((php)
-         (list
-          (univ-field 'dict
-                      '(dict scmobj scmobj)
-                      (^empty-dict '(dict scmobj scmobj))
-                      '(public))))
-        ((java)
-         (list
-          (univ-field 'dict
-                      '(generic Map scmobj scmobj)
-                      (^null)
-                      '(public))))
-        (else
-         '()))
+      (univ-rename-fields
+       ctx
+       (case (target-name (ctx-target ctx)) ;; instance-fields
+         ((php)
+          (list
+           (univ-field 'dict
+                       '(dict scmobj scmobj)
+                       (^empty-dict '(dict scmobj scmobj))
+                       '(public))))
+         ((java)
+          (list
+           (univ-field 'dict
+                       '(generic Map scmobj scmobj)
+                       (^null)
+                       '(public))))
+         (else
+          '())))
       '() ;; class-methods
       (append ;; instance-methods
        (case (target-name (ctx-target ctx))
@@ -3633,14 +3665,16 @@
         (else
          'hashtable_weak_keys))
       '() ;; class-fields
-      (case (target-name (ctx-target ctx)) ;; instance-fields
-        ((java)
-         (list (univ-field 'doCleanupWhenComputingSize
-                           'bool
-                           (^bool #f)
-                           '(protected))))
-        (else
-         '()))
+      (univ-rename-fields
+       ctx
+       (case (target-name (ctx-target ctx)) ;; instance-fields
+         ((java)
+          (list (univ-field 'doCleanupWhenComputingSize
+                            'bool
+                            (^bool #f)
+                            '(protected))))
+         (else
+          '())))
       '() ;; class-methods
       (case (target-name (ctx-target ctx))  ;; instance-methods
         ((python)
@@ -3897,8 +3931,10 @@ EOF
          '() ;; properties
          'scmobj ;; extends
          '() ;; class-fields
-         (list
-          (univ-field 'jump '(fn () jumpable) #f '(public))) ;; instance-fields
+         (univ-rename-fields
+          ctx
+          (list
+           (univ-field 'jump '(fn () jumpable) #f '(public)))) ;; instance-fields
          '() ;; instance-fields
          '() ;; class-methods
          '())) ;; instance-methods
@@ -3923,8 +3959,10 @@ EOF
       '(abstract) ;; properties
       'jumpable ;; extends
       '() ;; class-fields
-      (list (univ-field 'id 'int #f '(public)) ;; instance-fields
-            (univ-field 'parent 'parententrypt #f '(public)))))
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'id 'int #f '(public)) ;; instance-fields
+             (univ-field 'parent 'parententrypt #f '(public))))))
 
     ((returnpt)
      (rts-class
@@ -3932,10 +3970,12 @@ EOF
       '(abstract) ;; properties
       'ctrlpt ;; extends
       '() ;; class-fields
-      (list (univ-field 'id 'int #f '(public inherited)) ;; instance-fields
-            (univ-field 'parent 'parententrypt #f '(public inherited))
-            (univ-field 'fs 'int #f '(public))
-            (univ-field 'link 'int #f '(public)))))
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'id 'int #f '(public inherited)) ;; instance-fields
+             (univ-field 'parent 'parententrypt #f '(public inherited))
+             (univ-field 'fs 'int #f '(public))
+             (univ-field 'link 'int #f '(public))))))
 
     ((entrypt)
      (rts-class
@@ -3943,9 +3983,11 @@ EOF
       '(abstract) ;; properties
       'ctrlpt ;; extends
       '() ;; class-fields
-      (list (univ-field 'id 'int #f '(public inherited)) ;; instance-fields
-            (univ-field 'parent 'parententrypt #f '(public inherited))
-            (univ-field 'nfree 'int #f '(public)))))
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'id 'int #f '(public inherited)) ;; instance-fields
+             (univ-field 'parent 'parententrypt #f '(public inherited))
+             (univ-field 'nfree 'int #f '(public))))))
 
     ((parententrypt)
      (rts-class
@@ -3953,12 +3995,15 @@ EOF
       '(abstract) ;; properties
       'entrypt ;; extends
       '() ;; class-fields
-      (list (univ-field 'id 'int #f '(public inherited)) ;; instance-fields
-            (univ-field 'parent 'parententrypt #f '(public inherited))
-            (univ-field 'nfree 'int #f '(public inherited))
-            (univ-field (univ-proc-name-attrib ctx) 'symbol #f '(public))
-            (univ-field 'ctrlpts '(array ctrlpt) #f '(public))
-            (univ-field 'info 'scmobj #f '(public)))))
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'id 'int #f '(public inherited)) ;; instance-fields
+             (univ-field 'parent 'parententrypt #f '(public inherited))
+             (univ-field 'nfree 'int #f '(public inherited))
+             (univ-field 'name 'symbol #f '(public))
+             (univ-field 'ctrlpts '(array ctrlpt) #f '(public))
+             (univ-field 'info 'scmobj #f '(public))
+             (univ-field 'prim 'bool #f '(public))))))
 
     ((closure)
      (rts-class
@@ -3968,7 +4013,9 @@ EOF
           'scmobj ;; for PHP when using repr-procedure = host
           'jumpable)
       '() ;; class-fields
-      (list (univ-field 'slots '(array scmobj) #f '(public))) ;; instance-fields
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'slots '(array scmobj) #f '(public)))) ;; instance-fields
       '() ;; class-methods
       (list ;; instance-methods
        (univ-method
@@ -3984,7 +4031,7 @@ EOF
            (^ (^setreg (+ (univ-nb-arg-regs ctx) 1) (^this))
               (^return
                (^cast*-jumpable
-                (^array-index (^member (^this) (^public 'slots))
+                (^array-index (^field 'slots (^this))
                               (^int 0)))))))))))
 
     ((closure_alloc)
@@ -4070,7 +4117,9 @@ EOF
       '() ;; properties
       'scmobj ;; extends
       '() ;; class-fields
-      (list (univ-field 'state 'scmobj #f '(public))))) ;; instance-fields
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'state 'scmobj #f '(public)))))) ;; instance-fields
 
     ((will)
      (rts-class
@@ -4078,8 +4127,10 @@ EOF
       '() ;; properties
       'scmobj ;; extends
       '() ;; class-fields
-      (list (univ-field 'testator 'scmobj #f '(public)) ;; instance-fields
-            (univ-field 'action 'scmobj #f '(public)))))
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'testator 'scmobj #f '(public)) ;; instance-fields
+             (univ-field 'action 'scmobj #f '(public))))))
 
     ((foreign)
      (rts-class
@@ -4087,8 +4138,10 @@ EOF
       '() ;; properties
       'scmobj ;; extends
       '() ;; class-fields
-      (list (univ-field 'val 'object #f '(public)) ;; instance-fields
-            (univ-field 'tags 'scmobj #f '(public)))))
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'val 'object #f '(public)) ;; instance-fields
+             (univ-field 'tags 'scmobj #f '(public))))))
 
     ((scheme)
      (rts-class
@@ -4096,7 +4149,9 @@ EOF
       '() ;; properties
       'scmobj ;; extends
       '() ;; class-fields
-      (list (univ-field 'scmobj 'scmobj #f '(public))))) ;; instance-fields
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'scmobj 'scmobj #f '(public)))))) ;; instance-fields
 
     ((fixnum)
      (rts-class
@@ -4104,7 +4159,9 @@ EOF
       '() ;; properties
       'scmobj ;; extends
       '() ;; class-fields
-      (list (univ-field 'val 'int #f '(public))) ;; instance-fields
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'val 'int #f '(public)))) ;; instance-fields
       '() ;; class-methods
       (list ;; instance-methods
        (univ-method
@@ -4116,7 +4173,7 @@ EOF
         (univ-emit-fn-body
          ctx
          "\n"
-         (let ((val (^member (^this) (^public 'val))))
+         (let ((val (^field 'val (^this))))
            (case (target-name (ctx-target ctx))
 
              ((js php python ruby)
@@ -4191,7 +4248,9 @@ EOF
       '() ;; properties
       'scmobj ;; extends
       '() ;; class-fields
-      (list (univ-field 'val 'f64 #f '(public))) ;; instance-fields
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'val 'f64 #f '(public)))) ;; instance-fields
       '() ;; class-methods
       (list ;; instance-methods
        (univ-method
@@ -4203,7 +4262,7 @@ EOF
         (univ-emit-fn-body
          ctx
          "\n"
-         (let ((val (^member (^this) (^public 'val))))
+         (let ((val (^field 'val (^this))))
            (case (target-name (ctx-target ctx))
 
              ((js php python ruby)
@@ -4228,7 +4287,9 @@ EOF
       '() ;; properties
       'scmobj ;; extends
       '() ;; class-fields
-      (list (univ-field 'digits '(array bigdigit) #f '(public))))) ;; instance-fields
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'digits '(array bigdigit) #f '(public)))))) ;; instance-fields
 
     ((bitcount)
      (rts-method
@@ -4345,8 +4406,10 @@ EOF
       '() ;; properties
       'scmobj ;; extends
       '() ;; class-fields
-      (list (univ-field 'num 'scmobj #f '(public)) ;; instance-fields
-            (univ-field 'den 'scmobj #f '(public)))))
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'num 'scmobj #f '(public)) ;; instance-fields
+             (univ-field 'den 'scmobj #f '(public))))))
 
     ((cpxnum)
      (rts-class
@@ -4354,8 +4417,10 @@ EOF
       '() ;; properties
       'scmobj ;; extends
       '() ;; class-fields
-      (list (univ-field 'real 'scmobj #f '(public)) ;; instance-fields
-            (univ-field 'imag 'scmobj #f '(public)))))
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'real 'scmobj #f '(public)) ;; instance-fields
+             (univ-field 'imag 'scmobj #f '(public))))))
 
     ((pair)
      (rts-class
@@ -4363,8 +4428,10 @@ EOF
       '() ;; properties
       'scmobj ;; extends
       '() ;; class-fields
-      (list (univ-field 'car 'scmobj #f '(public)) ;; instance-fields
-            (univ-field 'cdr 'scmobj #f '(public)))))
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'car 'scmobj #f '(public)) ;; instance-fields
+             (univ-field 'cdr 'scmobj #f '(public))))))
 
     ((vector)
      (rts-class
@@ -4372,7 +4439,9 @@ EOF
       '() ;; properties
       'scmobj ;; extends
       '() ;; class-fields
-      (list (univ-field 'elems '(array scmobj) #f '(public))))) ;; instance-fields
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'elems '(array scmobj) #f '(public)))))) ;; instance-fields
 
     ((u8vector)
      (rts-class
@@ -4380,7 +4449,9 @@ EOF
       '() ;; properties
       'scmobj ;; extends
       '() ;; class-fields
-      (list (univ-field 'elems '(array u8) #f '(public))))) ;; instance-fields
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'elems '(array u8) #f '(public)))))) ;; instance-fields
 
     ((u16vector)
      (rts-class
@@ -4388,7 +4459,9 @@ EOF
       '() ;; properties
       'scmobj ;; extends
       '() ;; class-fields
-      (list (univ-field 'elems '(array u16) #f '(public))))) ;; instance-fields
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'elems '(array u16) #f '(public)))))) ;; instance-fields
 
     ((u32vector)
      (rts-class
@@ -4396,7 +4469,9 @@ EOF
       '() ;; properties
       'scmobj ;; extends
       '() ;; class-fields
-      (list (univ-field 'elems '(array u32) #f '(public))))) ;; instance-fields
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'elems '(array u32) #f '(public)))))) ;; instance-fields
 
     ((u64vector)
      (rts-class
@@ -4404,7 +4479,9 @@ EOF
       '() ;; properties
       'scmobj ;; extends
       '() ;; class-fields
-      (list (univ-field 'elems '(array u64) #f '(public))))) ;; instance-fields
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'elems '(array u64) #f '(public)))))) ;; instance-fields
 
     ((s8vector)
      (rts-class
@@ -4412,7 +4489,9 @@ EOF
       '() ;; properties
       'scmobj ;; extends
       '() ;; class-fields
-      (list (univ-field 'elems '(array s8) #f '(public))))) ;; instance-fields
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'elems '(array s8) #f '(public)))))) ;; instance-fields
 
     ((s16vector)
      (rts-class
@@ -4420,7 +4499,9 @@ EOF
       '() ;; properties
       'scmobj ;; extends
       '() ;; class-fields
-      (list (univ-field 'elems '(array s16) #f '(public))))) ;; instance-fields
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'elems '(array s16) #f '(public)))))) ;; instance-fields
 
     ((s32vector)
      (rts-class
@@ -4428,7 +4509,9 @@ EOF
       '() ;; properties
       'scmobj ;; extends
       '() ;; class-fields
-      (list (univ-field 'elems '(array s32) #f '(public))))) ;; instance-fields
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'elems '(array s32) #f '(public)))))) ;; instance-fields
 
     ((s64vector)
      (rts-class
@@ -4436,7 +4519,9 @@ EOF
       '() ;; properties
       'scmobj ;; extends
       '() ;; class-fields
-      (list (univ-field 'elems '(array s64) #f '(public))))) ;; instance-fields
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'elems '(array s64) #f '(public)))))) ;; instance-fields
 
     ((f32vector)
      (rts-class
@@ -4444,7 +4529,9 @@ EOF
       '() ;; properties
       'scmobj ;; extends
       '() ;; class-fields
-      (list (univ-field 'elems '(array f32) #f '(public))))) ;; instance-fields
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'elems '(array f32) #f '(public)))))) ;; instance-fields
 
     ((f64vector)
      (rts-class
@@ -4452,7 +4539,9 @@ EOF
       '() ;; properties
       'scmobj ;; extends
       '() ;; class-fields
-      (list (univ-field 'elems '(array f64) #f '(public))))) ;; instance-fields
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'elems '(array f64) #f '(public)))))) ;; instance-fields
 
     ((structure)
      (rts-class
@@ -4460,15 +4549,17 @@ EOF
       '() ;; properties
       'scmobj ;; extends
       '() ;; class-fields
-      (list (univ-field 'slots '(array scmobj) #f '(public))) ;; instance-fields
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'slots '(array scmobj) #f '(public)))) ;; instance-fields
       '() ;; class-methods
       '() ;; instance-methods
       '() ;; class-classes
       (lambda (ctx) ;; constructor
         ;; correctly construct type descriptor of type descriptors
-        (let ((slots (^local-var (univ-field-param ctx 'slots))))
+        (let ((slots (^local-var (univ-field-param ctx (univ-field-rename ctx 'slots)))))
           (^if (^null? (^array-index slots (^int 0)))
-               (^assign (^array-index (^member (^this) (^public 'slots))
+               (^assign (^array-index (^field 'slots (^this))
                                       (^int 0))
                         (^this)))))))
 
@@ -4478,7 +4569,9 @@ EOF
       '() ;; properties
       'scmobj ;; extends
       '() ;; class-fields
-      (list (univ-field 'slots '(array scmobj) #f '(public))))) ;; instance-fields
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'slots '(array scmobj) #f '(public)))))) ;; instance-fields
 
     ((make_frame)
      (rts-method
@@ -4515,8 +4608,10 @@ EOF
       '() ;; properties
       'scmobj ;; extends
       '() ;; class-fields
-      (list (univ-field 'frame 'frame #f '(public)) ;; instance-fields
-            (univ-field 'denv 'scmobj #f '(public)))))
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'frame 'frame #f '(public)) ;; instance-fields
+             (univ-field 'denv 'scmobj #f '(public))))))
 
     ((continuation_next)
      (rts-method
@@ -4536,11 +4631,11 @@ EOF
           (^ (^var-declaration
               'frame
               frame
-              (^member cont (^public 'frame)))
+              (^field 'frame cont))
              (^var-declaration
               'scmobj
               denv
-              (^member cont (^public 'denv)))
+              (^field 'denv cont))
              (^var-declaration
               'returnpt
               ra
@@ -4606,7 +4701,9 @@ EOF
       '() ;; properties
       'scmobj ;; extends
       '() ;; class-fields
-      (list (univ-field 'val 'scmobj #f '(public))))) ;; instance-fields
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'val 'scmobj #f '(public)))))) ;; instance-fields
 
     ((values)
      (rts-class
@@ -4614,7 +4711,9 @@ EOF
       '() ;; properties
       'scmobj ;; extends
       '() ;; class-fields
-      (list (univ-field 'vals '(array scmobj) #f '(public))))) ;; instance-fields
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'vals '(array scmobj) #f '(public)))))) ;; instance-fields
 
     ((null)
      (rts-class
@@ -4759,7 +4858,9 @@ EOF
       '() ;; properties
       'scmobj ;; extends
       '() ;; class-fields
-      (list (univ-field 'val 'bool #f '(public))))) ;; instance-fields
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'val 'bool #f '(public)))))) ;; instance-fields
 
     ((false_obj)
      (rts-field
@@ -4781,7 +4882,9 @@ EOF
       '() ;; properties
       'scmobj ;; extends
       '() ;; class-fields
-      (list (univ-field 'code 'unicode #f '(public))) ;; instance-fields
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'code 'unicode #f '(public)))) ;; instance-fields
       '() ;; class-methods
       (list ;; instance-methods
        (univ-method
@@ -4800,21 +4903,21 @@ EOF
               (^return
                (^call-prim
                 (^member 'String 'fromCharCode)
-                (^member (^this) 'code)))))
+                (^field 'code (^this))))))
 
            ((php python)
             (lambda (ctx)
               (^return
                (^call-prim
                 "chr"
-                (^member (^this) (^public 'code))))))
+                (^field 'code (^this))))))
 
            ((ruby)
             (lambda (ctx)
               (^return
                (^call-prim
                 (^member
-                 (^member (^this) (^public 'code))
+                 (^field 'code (^this))
                  'chr)))))
 
            ((java)
@@ -4823,13 +4926,13 @@ EOF
                (^call-prim
                 (^member 'String 'valueOf)
                 (^cast* 'chr
-                        (^member (^this) (^public 'code)))))))
+                        (^field 'code (^this)))))))
 
            ((go)
             (lambda (ctx)
               (^return
                (^conv* 'str
-                       (^member (^this) (^public 'code))))))
+                       (^field 'code (^this))))))
 
            (else
             (compiler-internal-error
@@ -4874,7 +4977,9 @@ EOF
       '() ;; properties
       'scmobj ;; extends
       '() ;; class-fields
-      (list (univ-field 'codes '(array unicode) #f '(public))) ;; instance-fields
+      (univ-rename-fields
+       ctx
+       (list (univ-field 'codes '(array unicode) #f '(public)))) ;; instance-fields
       '() ;; class-methods
       (list ;; instance-methods
        (univ-method
@@ -4890,7 +4995,7 @@ EOF
 
            ((js)
             (lambda (ctx)
-              (let ((codes (^member (^this) (^public 'codes)))
+              (let ((codes (^field 'codes (^this)))
                     (limit (^local-var 'limit))
                     (chunks (^local-var 'chunks))
                     (i (^local-var 'i)))
@@ -4928,7 +5033,7 @@ EOF
                 (^call-prim
                  "array_map"
                  (^str "chr")
-                 (^member (^this) (^public 'codes)))))))
+                 (^field 'codes (^this)))))))
 
            ((python)
             (lambda (ctx)
@@ -4938,7 +5043,7 @@ EOF
                 (^call-prim
                  "map"
                  "chr"
-                 (^member (^this) (^public 'codes)))))))
+                 (^field 'codes (^this)))))))
 
            ((ruby)
             ;;TODO: add anonymous function
@@ -4946,7 +5051,7 @@ EOF
               (^return
                (^call-prim
                 (^member
-                 (^ (^member (^member (^this) (^public 'codes)) 'map)
+                 (^ (^member (^field 'codes (^this)) 'map)
                     " {|x| x.chr}")
                  'join)))))
 
@@ -4963,7 +5068,7 @@ EOF
             (lambda (ctx)
               (^return
                (^conv* 'str
-                       (^member (^this) (^public 'codes))))))
+                       (^field 'codes (^this))))))
 
            (else
             (compiler-internal-error

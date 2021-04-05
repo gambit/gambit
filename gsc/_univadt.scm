@@ -592,6 +592,9 @@
 (define-macro (^member expr name)
   `(univ-emit-member ctx ,expr ,name))
 
+(define-macro (^field name expr)
+  `(univ-emit-field ctx ,name ,expr))
+
 (define-macro (^public name)
   `(univ-emit-public ctx ,name))
 

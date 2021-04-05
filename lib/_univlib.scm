@@ -97,9 +97,9 @@ if (typeof @os_fs@ === 'undefined') {
 
 @os_set_process_times@ = function (vect) {
   var elapsed = @os_current_time@() - @os_start_time@;
-  vect.elems[0] = elapsed;
-  vect.elems[1] = 0.0;
-  vect.elems[2] = elapsed;
+  vect.@elems@[0] = elapsed;
+  vect.@elems@[1] = 0.0;
+  vect.@elems@[2] = elapsed;
   return vect;
 };
 
@@ -689,9 +689,9 @@ def @os_current_time@():
 
 def @os_set_process_times@(vect):
     elapsed = @os_current_time@() - @os_start_time@
-    vect.elems[0] = elapsed
-    vect.elems[1] = 0.0
-    vect.elems[2] = elapsed
+    vect.@elems@[0] = elapsed
+    vect.@elems@[1] = 0.0
+    vect.@elems@[2] = elapsed
     return vect
 
 @os_debug@ = False
@@ -1185,20 +1185,20 @@ def @os_device_from_basic_console@():
         throw exn;
       }
     }
-    ui.slots[1] = @host2scm@(pw.name);
-    ui.slots[2] = @host2scm@(pw.uid);
-    ui.slots[3] = @host2scm@(pw.gid);
-    ui.slots[4] = @host2scm@(pw.dir);
-    ui.slots[5] = @host2scm@(pw.shell);
+    ui.@slots@[1] = @host2scm@(pw.name);
+    ui.@slots@[2] = @host2scm@(pw.uid);
+    ui.@slots@[3] = @host2scm@(pw.gid);
+    ui.@slots@[4] = @host2scm@(pw.dir);
+    ui.@slots@[5] = @host2scm@(pw.shell);
     return ui;
 
   } else if (@os_web@) {
 
-    ui.slots[1] = @host2scm@('user');
-    ui.slots[2] = @host2scm@(111);
-    ui.slots[3] = @host2scm@(222);
-    ui.slots[4] = @host2scm@('/home/user');
-    ui.slots[5] = @host2scm@('/bin/sh');
+    ui.@slots@[1] = @host2scm@('user');
+    ui.@slots@[2] = @host2scm@(111);
+    ui.@slots@[3] = @host2scm@(222);
+    ui.@slots@[4] = @host2scm@('/home/user');
+    ui.@slots@[5] = @host2scm@('/bin/sh');
     return ui;
 
   } else {
@@ -1217,11 +1217,11 @@ def @os_user_info@(ui, user):
         pw = pwd.getpwuid(user) if isinstance(user,int) else pwd.getpwnam(user)
     except OSError as exn:
         return @host2scm@(@os_encode_error@(exn))
-    ui.slots[1] = @host2scm@(pw[0])
-    ui.slots[2] = @host2scm@(pw[2])
-    ui.slots[3] = @host2scm@(pw[3])
-    ui.slots[4] = @host2scm@(pw[5])
-    ui.slots[5] = @host2scm@(pw[6])
+    ui.@slots@[1] = @host2scm@(pw[0])
+    ui.@slots@[2] = @host2scm@(pw[2])
+    ui.@slots@[3] = @host2scm@(pw[3])
+    ui.@slots@[4] = @host2scm@(pw[5])
+    ui.@slots@[5] = @host2scm@(pw[6])
     return ui
 
 ")
@@ -1257,16 +1257,16 @@ def @os_user_info@(ui, user):
         throw exn;
       }
     }
-    gi.slots[1] = @host2scm@(gr.name);
-    gi.slots[2] = @host2scm@(gr.gid);
-    gi.slots[3] = @host2scm@(gr.members);
+    gi.@slots@[1] = @host2scm@(gr.name);
+    gi.@slots@[2] = @host2scm@(gr.gid);
+    gi.@slots@[3] = @host2scm@(gr.members);
     return gi;
 
   } else if (@os_web@) {
 
-    gi.slots[1] = @host2scm@('group');
-    gi.slots[2] = @host2scm@(222);
-    gi.slots[3] = @host2scm@([]);
+    gi.@slots@[1] = @host2scm@('group');
+    gi.@slots@[2] = @host2scm@(222);
+    gi.@slots@[3] = @host2scm@([]);
     return gi;
 
   } else {
@@ -1285,9 +1285,9 @@ def @os_group_info@(gi, group):
         gr = grp.getgrgid(group) if isinstance(group,int) else pwd.getgrnam(group)
     except OSError as exn:
         return @host2scm@(@os_encode_error@(exn))
-    gi.slots[1] = @host2scm@(gr[0])
-    gi.slots[2] = @host2scm@(gr[2])
-    gi.slots[3] = @host2scm@(gr[3])
+    gi.@slots@[1] = @host2scm@(gr[0])
+    gi.@slots@[2] = @host2scm@(gr[2])
+    gi.@slots@[3] = @host2scm@(gr[3])
     return gi
 
 ")
@@ -1798,19 +1798,19 @@ if (@os_web@) {
 
           var size = +req.getResponseHeader('Content-Length');
 
-          fi.slots[ 1] = @host2scm@(1); // regular file
-          fi.slots[ 2] = @host2scm@(0);
-          fi.slots[ 3] = @host2scm@(0);
-          fi.slots[ 4] = @host2scm@(0);
-          fi.slots[ 5] = @host2scm@(0);
-          fi.slots[ 6] = @host2scm@(0);
-          fi.slots[ 7] = @host2scm@(0);
-          fi.slots[ 8] = @host2scm@(size);
-          fi.slots[ 9] = new @Flonum@(-Infinity);
-          fi.slots[10] = new @Flonum@(-Infinity);
-          fi.slots[11] = new @Flonum@(-Infinity);
-          fi.slots[12] = @host2scm@(0);
-          fi.slots[13] = new @Flonum@(-Infinity);
+          fi.@slots@[ 1] = @host2scm@(1); // regular file
+          fi.@slots@[ 2] = @host2scm@(0);
+          fi.@slots@[ 3] = @host2scm@(0);
+          fi.@slots@[ 4] = @host2scm@(0);
+          fi.@slots@[ 5] = @host2scm@(0);
+          fi.@slots@[ 6] = @host2scm@(0);
+          fi.@slots@[ 7] = @host2scm@(0);
+          fi.@slots@[ 8] = @host2scm@(size);
+          fi.@slots@[ 9] = new @Flonum@(-Infinity);
+          fi.@slots@[10] = new @Flonum@(-Infinity);
+          fi.@slots@[11] = new @Flonum@(-Infinity);
+          fi.@slots@[12] = @host2scm@(0);
+          fi.@slots@[13] = new @Flonum@(-Infinity);
 
           @r1@ = fi;
         }
@@ -1863,19 +1863,19 @@ if (@os_web@) {
       else
         typ = 0;
 
-      fi.slots[ 1] = @host2scm@(typ);
-      fi.slots[ 2] = @host2scm@(st.dev);
-      fi.slots[ 3] = @host2scm@(st.ino);
-      fi.slots[ 4] = @host2scm@(st.mode);
-      fi.slots[ 5] = @host2scm@(st.nlink);
-      fi.slots[ 6] = @host2scm@(st.uid);
-      fi.slots[ 7] = @host2scm@(st.gid);
-      fi.slots[ 8] = @host2scm@(st.size);
-      fi.slots[ 9] = new @Flonum@(-Infinity);
-      fi.slots[10] = new @Flonum@(-Infinity);
-      fi.slots[11] = new @Flonum@(-Infinity);
-      fi.slots[12] = @host2scm@(0);
-      fi.slots[13] = new @Flonum@(-Infinity);
+      fi.@slots@[ 1] = @host2scm@(typ);
+      fi.@slots@[ 2] = @host2scm@(st.dev);
+      fi.@slots@[ 3] = @host2scm@(st.ino);
+      fi.@slots@[ 4] = @host2scm@(st.mode);
+      fi.@slots@[ 5] = @host2scm@(st.nlink);
+      fi.@slots@[ 6] = @host2scm@(st.uid);
+      fi.@slots@[ 7] = @host2scm@(st.gid);
+      fi.@slots@[ 8] = @host2scm@(st.size);
+      fi.@slots@[ 9] = new @Flonum@(-Infinity);
+      fi.@slots@[10] = new @Flonum@(-Infinity);
+      fi.@slots@[11] = new @Flonum@(-Infinity);
+      fi.@slots@[12] = @host2scm@(0);
+      fi.@slots@[13] = new @Flonum@(-Infinity);
 
       return fi;
 
@@ -1920,19 +1920,19 @@ def @os_file_info@(fi, path, chase):
     else:
         typ = 0
 
-    fi.slots[ 1] = @host2scm@(typ)
-    fi.slots[ 2] = @host2scm@(st.st_dev)
-    fi.slots[ 3] = @host2scm@(st.st_ino)
-    fi.slots[ 4] = @host2scm@(st.st_mode)
-    fi.slots[ 5] = @host2scm@(st.st_nlink)
-    fi.slots[ 6] = @host2scm@(st.st_uid)
-    fi.slots[ 7] = @host2scm@(st.st_gid)
-    fi.slots[ 8] = @host2scm@(st.st_size)
-    fi.slots[ 9] = @Flonum@(float('-inf'))
-    fi.slots[10] = @Flonum@(float('-inf'))
-    fi.slots[11] = @Flonum@(float('-inf'))
-    fi.slots[12] = @host2scm@(0)
-    fi.slots[13] = @Flonum@(float('-inf'))
+    fi.@slots@[ 1] = @host2scm@(typ)
+    fi.@slots@[ 2] = @host2scm@(st.st_dev)
+    fi.@slots@[ 3] = @host2scm@(st.st_ino)
+    fi.@slots@[ 4] = @host2scm@(st.st_mode)
+    fi.@slots@[ 5] = @host2scm@(st.st_nlink)
+    fi.@slots@[ 6] = @host2scm@(st.st_uid)
+    fi.@slots@[ 7] = @host2scm@(st.st_gid)
+    fi.@slots@[ 8] = @host2scm@(st.st_size)
+    fi.@slots@[ 9] = @Flonum@(float('-inf'))
+    fi.@slots@[10] = @Flonum@(float('-inf'))
+    fi.@slots@[11] = @Flonum@(float('-inf'))
+    fi.@slots@[12] = @host2scm@(0)
+    fi.@slots@[13] = @Flonum@(float('-inf'))
 
     return fi
 
@@ -2512,7 +2512,7 @@ def @os_device_close@(dev_scm, direction_scm):
 
 @os_device_force_output@ = function (dev_condvar_scm, level_scm) {
 
-  var dev = @foreign2host@(dev_condvar_scm.slots[@CONDVAR_NAME@]);
+  var dev = @foreign2host@(dev_condvar_scm.@slots@[@CONDVAR_NAME@]);
   var level = @scm2host@(level_scm);
 
   return @host2scm@(dev.force_output(dev_condvar_scm, level));
@@ -2529,7 +2529,7 @@ def @os_device_close@(dev_scm, direction_scm):
 
 def @os_device_force_output@(dev_condvar_scm, level_scm):
 
-    dev = @foreign2host@(dev_condvar_scm.slots[@CONDVAR_NAME@])
+    dev = @foreign2host@(dev_condvar_scm.@slots@[@CONDVAR_NAME@])
     level = @scm2host@(level_scm)
 
     return @host2scm@(dev.force_output(dev_condvar_scm, level))
@@ -2763,7 +2763,7 @@ def @os_device_directory_open_path@(path_scm, ignore_hidden_scm):
 
 @os_device_directory_read@ = function (dev_condvar_scm) {
 
-  var dev = @foreign2host@(dev_condvar_scm.slots[@CONDVAR_NAME@]);
+  var dev = @foreign2host@(dev_condvar_scm.@slots@[@CONDVAR_NAME@]);
 
   if (@os_debug@)
     console.log('@os_device_directory_read@(...)');
@@ -2781,7 +2781,7 @@ def @os_device_directory_open_path@(path_scm, ignore_hidden_scm):
 
 def @os_device_directory_read@(dev_condvar_scm):
 
-    dev = @foreign2host@(dev_condvar_scm.slots[@CONDVAR_NAME@])
+    dev = @foreign2host@(dev_condvar_scm.@slots@[@CONDVAR_NAME@])
 
     if @os_debug@:
         print('@os_device_directory_read@(...)')
@@ -2914,7 +2914,7 @@ def @os_device_event_queue_open@(selector_scm):
 
 @os_device_event_queue_read@ = function (dev_condvar_scm) {
 
-  var dev = @foreign2host@(dev_condvar_scm.slots[@CONDVAR_NAME@]);
+  var dev = @foreign2host@(dev_condvar_scm.@slots@[@CONDVAR_NAME@]);
 
   if (@os_debug@)
     console.log('@os_device_event_queue_read@(...)');
@@ -2932,7 +2932,7 @@ def @os_device_event_queue_open@(selector_scm):
 
 def @os_device_event_queue_read@(dev_condvar_scm):
 
-    dev = @foreign2host@(dev_condvar_scm.slots[@CONDVAR_NAME@])
+    dev = @foreign2host@(dev_condvar_scm.@slots@[@CONDVAR_NAME@])
 
     if @os_debug@:
         print('@os_device_event_queue_read@(...)  ***not implemented***')
@@ -3534,8 +3534,8 @@ def @os_device_stream_open_path@(path_scm, flags_scm, mode_scm):
 
 @os_device_stream_read@ = function (dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
 
-  var dev = @foreign2host@(dev_condvar_scm.slots[@CONDVAR_NAME@]);
-  var buffer = buffer_scm.elems;
+  var dev = @foreign2host@(dev_condvar_scm.@slots@[@CONDVAR_NAME@]);
+  var buffer = buffer_scm.@elems@;
   var lo = @scm2host@(lo_scm);
   var hi = @scm2host@(hi_scm);
 
@@ -3555,8 +3555,8 @@ def @os_device_stream_open_path@(path_scm, flags_scm, mode_scm):
 
 def @os_device_stream_read@(dev_condvar_scm, buffer_scm, lo_scm, hi_scm):
 
-    dev = @foreign2host@(dev_condvar_scm.slots[@CONDVAR_NAME@])
-    buffer = buffer_scm.elems
+    dev = @foreign2host@(dev_condvar_scm.@slots@[@CONDVAR_NAME@])
+    buffer = buffer_scm.@elems@
     lo = @scm2host@(lo_scm)
     hi = @scm2host@(hi_scm)
 
@@ -3582,8 +3582,8 @@ def @os_device_stream_read@(dev_condvar_scm, buffer_scm, lo_scm, hi_scm):
 
 @os_device_stream_write@ = function (dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
 
-  var dev = @foreign2host@(dev_condvar_scm.slots[@CONDVAR_NAME@]);
-  var buffer = buffer_scm.elems;
+  var dev = @foreign2host@(dev_condvar_scm.@slots@[@CONDVAR_NAME@]);
+  var buffer = buffer_scm.@elems@;
   var lo = @scm2host@(lo_scm);
   var hi = @scm2host@(hi_scm);
 
@@ -3603,8 +3603,8 @@ def @os_device_stream_read@(dev_condvar_scm, buffer_scm, lo_scm, hi_scm):
 
 def @os_device_stream_write@(dev_condvar_scm, buffer_scm, lo_scm, hi_scm):
 
-    dev = @foreign2host@(dev_condvar_scm.slots[@CONDVAR_NAME@])
-    buffer = buffer_scm.elems
+    dev = @foreign2host@(dev_condvar_scm.@slots@[@CONDVAR_NAME@])
+    buffer = buffer_scm.@elems@
     lo = @scm2host@(lo_scm)
     hi = @scm2host@(hi_scm)
 
@@ -3630,7 +3630,7 @@ def @os_device_stream_write@(dev_condvar_scm, buffer_scm, lo_scm, hi_scm):
 
 @os_device_stream_seek@ = function (dev_condvar_scm, pos_scm, whence_scm) {
 
-  var dev = @foreign2host@(dev_condvar_scm.slots[@CONDVAR_NAME@]);
+  var dev = @foreign2host@(dev_condvar_scm.@slots@[@CONDVAR_NAME@]);
   var pos = @scm2host@(pos_scm);
   var whence = @scm2host@(whence_scm);
 
@@ -3649,7 +3649,7 @@ def @os_device_stream_write@(dev_condvar_scm, buffer_scm, lo_scm, hi_scm):
 
 def @os_device_stream_seek@(dev_condvar_scm, pos_scm, whence_scm):
 
-    dev = @foreign2host@(dev_condvar_scm.slots[@CONDVAR_NAME@])
+    dev = @foreign2host@(dev_condvar_scm.@slots@[@CONDVAR_NAME@])
     pos = @scm2host@(pos_scm)
     whence = @scm2host@(whence_scm)
 
@@ -3674,7 +3674,7 @@ def @os_device_stream_seek@(dev_condvar_scm, pos_scm, whence_scm):
 
 @os_device_stream_width@ = function (dev_condvar_scm) {
 
-  var dev = @foreign2host@(dev_condvar_scm.slots[@CONDVAR_NAME@]);
+  var dev = @foreign2host@(dev_condvar_scm.@slots@[@CONDVAR_NAME@]);
 
   return @host2scm@(dev.width(dev_condvar_scm));
 };
@@ -3689,7 +3689,7 @@ def @os_device_stream_seek@(dev_condvar_scm, pos_scm, whence_scm):
 
 def @os_device_stream_width@(dev_condvar_scm):
 
-    dev = @foreign2host@(dev_condvar_scm.slots[@CONDVAR_NAME@])
+    dev = @foreign2host@(dev_condvar_scm.@slots@[@CONDVAR_NAME@])
 
     return @host2scm@(dev.width(dev_condvar_scm))
 
@@ -3717,13 +3717,13 @@ def @os_device_stream_width@(dev_condvar_scm):
   if (@os_debug@)
     console.log('@os_port_decode_chars@(port,'+want+','+eof+')  ***not fully implemented***');
 
-  var cbuf_scm = port_scm.slots[@PORT_CHAR_RBUF@];
-  var chi = @scm2host@(port_scm.slots[@PORT_CHAR_RHI@]);
-  var cend = cbuf_scm.codes.length;
-  var bbuf = port_scm.slots[@PORT_BYTE_RBUF@].elems
-  var blo = @scm2host@(port_scm.slots[@PORT_BYTE_RLO@]);
-  var bhi = @scm2host@(port_scm.slots[@PORT_BYTE_RHI@]);
-  var options = @scm2host@(port_scm.slots[@PORT_ROPTIONS@]);
+  var cbuf_scm = port_scm.@slots@[@PORT_CHAR_RBUF@];
+  var chi = @scm2host@(port_scm.@slots@[@PORT_CHAR_RHI@]);
+  var cend = cbuf_scm.@codes@.length;
+  var bbuf = port_scm.@slots@[@PORT_BYTE_RBUF@].@elems@
+  var blo = @scm2host@(port_scm.@slots@[@PORT_BYTE_RLO@]);
+  var bhi = @scm2host@(port_scm.@slots@[@PORT_BYTE_RHI@]);
+  var options = @scm2host@(port_scm.@slots@[@PORT_ROPTIONS@]);
 
   if (want != false)
     {
@@ -3736,14 +3736,14 @@ def @os_device_stream_width@(dev_condvar_scm):
   var bbuf_avail = bhi - blo;
 
   while (cbuf_avail > 0 && bbuf_avail > 0) {
-    cbuf_scm.codes[cend - cbuf_avail] = bbuf[bhi - bbuf_avail];
+    cbuf_scm.@codes@[cend - cbuf_avail] = bbuf[bhi - bbuf_avail];
     bbuf_avail--;
     cbuf_avail--;
   }
 
-  port_scm.slots[@PORT_CHAR_RHI@] = @host2scm@(cend - cbuf_avail);
-  port_scm.slots[@PORT_BYTE_RLO@] = @host2scm@(bhi - bbuf_avail);
-  port_scm.slots[@PORT_ROPTIONS@] = @host2scm@(options);
+  port_scm.@slots@[@PORT_CHAR_RHI@] = @host2scm@(cend - cbuf_avail);
+  port_scm.@slots@[@PORT_BYTE_RLO@] = @host2scm@(bhi - bbuf_avail);
+  port_scm.@slots@[@PORT_ROPTIONS@] = @host2scm@(options);
 
   return @host2scm@(0) // no error
 };
@@ -3766,13 +3766,13 @@ def @os_port_decode_chars@(port_scm, want_scm, eof_scm):
     if @os_debug@:
         print('@os_port_decode_chars@(port,'+repr(want)+','+repr(eof)+')  ***not fully implemented***')
 
-    cbuf_scm = port_scm.slots[@PORT_CHAR_RBUF@]
-    chi = @scm2host@(port_scm.slots[@PORT_CHAR_RHI@])
-    cend = len(cbuf_scm.codes)
-    bbuf = port_scm.slots[@PORT_BYTE_RBUF@].elems
-    blo = @scm2host@(port_scm.slots[@PORT_BYTE_RLO@])
-    bhi = @scm2host@(port_scm.slots[@PORT_BYTE_RHI@])
-    options = @scm2host@(port_scm.slots[@PORT_ROPTIONS@])
+    cbuf_scm = port_scm.@slots@[@PORT_CHAR_RBUF@]
+    chi = @scm2host@(port_scm.@slots@[@PORT_CHAR_RHI@])
+    cend = len(cbuf_scm.@codes@)
+    bbuf = port_scm.@slots@[@PORT_BYTE_RBUF@].@elems@
+    blo = @scm2host@(port_scm.@slots@[@PORT_BYTE_RLO@])
+    bhi = @scm2host@(port_scm.@slots@[@PORT_BYTE_RHI@])
+    options = @scm2host@(port_scm.@slots@[@PORT_ROPTIONS@])
 
     if not want == False:
         cend2 = chi + want
@@ -3783,13 +3783,13 @@ def @os_port_decode_chars@(port_scm, want_scm, eof_scm):
     bbuf_avail = bhi - blo
 
     while cbuf_avail > 0 and bbuf_avail > 0:
-        cbuf_scm.codes[cend - cbuf_avail] = bbuf[bhi - bbuf_avail]
+        cbuf_scm.@codes@[cend - cbuf_avail] = bbuf[bhi - bbuf_avail]
         bbuf_avail = bbuf_avail-1
         cbuf_avail = cbuf_avail-1
 
-    port_scm.slots[@PORT_CHAR_RHI@] = @host2scm@(cend - cbuf_avail)
-    port_scm.slots[@PORT_BYTE_RLO@] = @host2scm@(bhi - bbuf_avail)
-    port_scm.slots[@PORT_ROPTIONS@] = @host2scm@(options)
+    port_scm.@slots@[@PORT_CHAR_RHI@] = @host2scm@(cend - cbuf_avail)
+    port_scm.@slots@[@PORT_BYTE_RLO@] = @host2scm@(bhi - bbuf_avail)
+    port_scm.@slots@[@PORT_ROPTIONS@] = @host2scm@(options)
 
     return @host2scm@(0)  # no error
 
@@ -3816,25 +3816,25 @@ def @os_port_decode_chars@(port_scm, want_scm, eof_scm):
   if (@os_debug@)
     console.log('@os_port_encode_chars@(port)  ***not fully implemented***');
 
-  var cbuf_scm = port_scm.slots[@PORT_CHAR_WBUF@];
-  var clo = @scm2host@(port_scm.slots[@PORT_CHAR_WLO@]);
-  var chi = @scm2host@(port_scm.slots[@PORT_CHAR_WHI@]);
-  var bbuf = port_scm.slots[@PORT_BYTE_WBUF@].elems
-  var bhi = @scm2host@(port_scm.slots[@PORT_BYTE_WHI@]);
+  var cbuf_scm = port_scm.@slots@[@PORT_CHAR_WBUF@];
+  var clo = @scm2host@(port_scm.@slots@[@PORT_CHAR_WLO@]);
+  var chi = @scm2host@(port_scm.@slots@[@PORT_CHAR_WHI@]);
+  var bbuf = port_scm.@slots@[@PORT_BYTE_WBUF@].@elems@
+  var bhi = @scm2host@(port_scm.@slots@[@PORT_BYTE_WHI@]);
   var bend = bbuf.length;
-  var options = @scm2host@(port_scm.slots[@PORT_WOPTIONS@]);
+  var options = @scm2host@(port_scm.@slots@[@PORT_WOPTIONS@]);
   var cbuf_avail = chi - clo;
   var bbuf_avail = bend - bhi;
 
   while (cbuf_avail > 0 && bbuf_avail > 0) {
-    bbuf[bend - bbuf_avail] = cbuf_scm.codes[chi - cbuf_avail];
+    bbuf[bend - bbuf_avail] = cbuf_scm.@codes@[chi - cbuf_avail];
     bbuf_avail--;
     cbuf_avail--;
   }
 
-  port_scm.slots[@PORT_CHAR_WLO@] = @host2scm@(chi - cbuf_avail);
-  port_scm.slots[@PORT_BYTE_WHI@] = @host2scm@(bend - bbuf_avail);
-  port_scm.slots[@PORT_WOPTIONS@] = @host2scm@(options);
+  port_scm.@slots@[@PORT_CHAR_WLO@] = @host2scm@(chi - cbuf_avail);
+  port_scm.@slots@[@PORT_BYTE_WHI@] = @host2scm@(bend - bbuf_avail);
+  port_scm.@slots@[@PORT_WOPTIONS@] = @host2scm@(options);
 
   return @host2scm@(0) // no error
 };
@@ -3852,24 +3852,24 @@ def @os_port_encode_chars@(port_scm):
     if @os_debug@:
         print('@os_port_encode_chars@(port)  ***not fully implemented***')
 
-    cbuf_scm = port_scm.slots[@PORT_CHAR_WBUF@]
-    clo = @scm2host@(port_scm.slots[@PORT_CHAR_WLO@])
-    chi = @scm2host@(port_scm.slots[@PORT_CHAR_WHI@])
-    bbuf = port_scm.slots[@PORT_BYTE_WBUF@].elems
-    bhi = @scm2host@(port_scm.slots[@PORT_BYTE_WHI@])
+    cbuf_scm = port_scm.@slots@[@PORT_CHAR_WBUF@]
+    clo = @scm2host@(port_scm.@slots@[@PORT_CHAR_WLO@])
+    chi = @scm2host@(port_scm.@slots@[@PORT_CHAR_WHI@])
+    bbuf = port_scm.@slots@[@PORT_BYTE_WBUF@].@elems@
+    bhi = @scm2host@(port_scm.@slots@[@PORT_BYTE_WHI@])
     bend = len(bbuf)
-    options = @scm2host@(port_scm.slots[@PORT_WOPTIONS@])
+    options = @scm2host@(port_scm.@slots@[@PORT_WOPTIONS@])
     cbuf_avail = chi - clo
     bbuf_avail = bend - bhi
 
     while cbuf_avail > 0 and bbuf_avail > 0:
-        bbuf[bend - bbuf_avail] = cbuf_scm.codes[chi - cbuf_avail]
+        bbuf[bend - bbuf_avail] = cbuf_scm.@codes@[chi - cbuf_avail]
         bbuf_avail = bbuf_avail-1
         cbuf_avail = cbuf_avail-1
 
-    port_scm.slots[@PORT_CHAR_WLO@] = @host2scm@(chi - cbuf_avail)
-    port_scm.slots[@PORT_BYTE_WHI@] = @host2scm@(bend - bbuf_avail)
-    port_scm.slots[@PORT_WOPTIONS@] = @host2scm@(options)
+    port_scm.@slots@[@PORT_CHAR_WLO@] = @host2scm@(chi - cbuf_avail)
+    port_scm.@slots@[@PORT_BYTE_WHI@] = @host2scm@(bend - bbuf_avail)
+    port_scm.@slots@[@PORT_WOPTIONS@] = @host2scm@(options)
 
     return @host2scm@(0)  # no error
 
@@ -3893,13 +3893,13 @@ def @os_port_encode_chars@(port_scm):
 
 @os_condvar_ready_set@ = function (condvar_scm, ready) {
 
-  var owner = condvar_scm.slots[@BTQ_OWNER@];
+  var owner = condvar_scm.@slots@[@BTQ_OWNER@];
 
   if (ready) {
-    condvar_scm.slots[@BTQ_OWNER@] = owner | 1; // mark as 'ready'
+    condvar_scm.@slots@[@BTQ_OWNER@] = owner | 1; // mark as 'ready'
     @os_condvar_select_resume@();
   } else {
-    condvar_scm.slots[@BTQ_OWNER@] = owner & ~1; // mark as 'not ready'
+    condvar_scm.@slots@[@BTQ_OWNER@] = owner & ~1; // mark as 'not ready'
   }
 
 };
@@ -3943,11 +3943,11 @@ def @os_port_encode_chars@(port_scm):
   else if (timeout_scm === true)
     timeout_ms = 999999; // almost forever...
   else
-    timeout_ms = (timeout_scm.elems[0]-@os_current_time@()) * 1000;
+    timeout_ms = (timeout_scm.@elems@[0]-@os_current_time@()) * 1000;
 
   if (@os_debug@) {
     var no_devices = (devices_scm === false ||
-                      devices_scm === devices_scm.slots[@BTQ_DEQ_NEXT@]);
+                      devices_scm === devices_scm.@slots@[@BTQ_DEQ_NEXT@]);
     console.log('@os_condvar_select@('+(no_devices?'no devices':'some devices')+', '+timeout_ms+' ms)');
   }
 
@@ -4461,7 +4461,7 @@ def @host_exec@(stmts):
     var args = Array.prototype.slice.call(arguments);
     args.forEach(function (arg, i) { args[i] = @host2scm@(arg); });
     return @async_call@(true, // need result back
-                        @current_processor@.slots[14], // in current thread
+                        @current_processor@.@slots@[14], // in current thread
                         proc_scm,
                         args);
   }
@@ -4501,15 +4501,15 @@ def @host_exec@(stmts):
 // Patch continuation-next to properly undo dynamic binding environment.
 
 @continuation_next@ = function (cont) {
-  var frame = cont.frame;
-  var denv = cont.denv;
+  var frame = cont.@frame@;
+  var denv = cont.@denv@;
   var ra = frame[0];
-  var link = ra.link;
+  var link = ra.@link@;
   var next_frame = frame[link];
   if (next_frame === void 0) {
-    return false;
+    return @host2scm@(false);
   } else {
-    if (ra === @peps@['##dynamic-env-bind'].ctrlpts[1]) {
+    if (ra === @peps@['##dynamic-env-bind'].@ctrlpts@[1]) {
       denv = frame[2];
     }
     return new @Continuation@(next_frame,denv);

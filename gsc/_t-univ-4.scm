@@ -118,12 +118,12 @@
 (univ-define-prim "##cpxnum-real" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^member (^cast* 'cpxnum arg1) (^public 'real))))))
+     (return (^field 'real (^cast* 'cpxnum arg1))))))
 
 (univ-define-prim "##cpxnum-imag" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^member (^cast* 'cpxnum arg1) (^public 'imag))))))
+     (return (^field 'imag (^cast* 'cpxnum arg1))))))
 
 (univ-define-prim-bool "##cpxnum?" #t
   (make-translated-operand-generator
@@ -138,12 +138,12 @@
 (univ-define-prim "##ratnum-numerator" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^member (^cast* 'ratnum arg1) (^public 'num))))))
+     (return (^field 'num (^cast* 'ratnum arg1))))))
 
 (univ-define-prim "##ratnum-denominator" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^member (^cast* 'ratnum arg1) (^public 'den))))))
+     (return (^field 'den (^cast* 'ratnum arg1))))))
 
 (univ-define-prim-bool "##ratnum?" #t
   (make-translated-operand-generator
@@ -2424,12 +2424,12 @@
    (lambda (ctx return sym)
      ;;;;FIXME for host representation
      (return
-       (^str->string (^member (^cast* 'symbol sym) (^public 'name)))))))
+       (^str->string (^field 'name (^cast* 'symbol sym)))))))
 
 (univ-define-prim "##symbol-name-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return sym name)
-     (^ (^assign (^member (^cast* 'symbol sym) (^public 'name))
+     (^ (^assign (^field 'name (^cast* 'symbol sym))
                  (^string->str name))
         (return sym)))))
 
@@ -2437,18 +2437,18 @@
   (make-translated-operand-generator
    (lambda (ctx return sym)
      ;;;;FIXME for host representation
-     (return (^member (^cast* 'symbol sym) (^public 'hash))))))
+     (return (^field 'hash (^cast* 'symbol sym))))))
 
 (univ-define-prim "##symbol-hash-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return sym hash)
-     (^ (^assign (^member (^cast* 'symbol sym) (^public 'hash)) hash)
+     (^ (^assign (^field 'hash (^cast* 'symbol sym)) hash)
         (return sym)))))
 
 (univ-define-prim "##symbol-interned?" #f
   (make-translated-operand-generator
    (lambda (ctx return sym)
-     (return (^member (^cast* 'symbol sym) (^public 'interned))))));;;;FIXME for host representation
+     (return (^field 'interned (^cast* 'symbol sym))))));;;;FIXME for host representation
 
 (univ-define-prim-bool "##keyword?" #t
   (make-translated-operand-generator
@@ -2475,12 +2475,12 @@
    (lambda (ctx return key)
      ;;;;FIXME for host representation
      (return
-       (^str->string (^member (^cast* 'keyword key) (^public 'name)))))))
+       (^str->string (^field 'name (^cast* 'keyword key)))))))
 
 (univ-define-prim "##keyword-name-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return key name)
-     (^ (^assign (^member (^cast* 'keyword key) (^public 'name))
+     (^ (^assign (^field 'name (^cast* 'keyword key))
                  (^string->str name))
         (return key)))))
 
@@ -2488,18 +2488,18 @@
   (make-translated-operand-generator
    (lambda (ctx return key)
      ;;;;FIXME for host representation
-     (return (^member (^cast* 'keyword key) (^public 'hash))))))
+     (return (^field 'hash (^cast* 'keyword key))))))
 
 (univ-define-prim "##keyword-hash-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return key hash)
-     (^ (^assign (^member (^cast* 'keyword key) (^public 'hash)) hash)
+     (^ (^assign (^field 'hash (^cast* 'keyword key)) hash)
         (return key)))))
 
 (univ-define-prim "##keyword-interned?" #f
   (make-translated-operand-generator
    (lambda (ctx return key)
-     (return (^member (^cast* 'keyword key) (^public 'interned))))));;;;FIXME for host representation
+     (return (^field 'interned (^cast* 'keyword key))))));;;;FIXME for host representation
 
 (univ-define-prim-bool "##closure?" #t
   (make-translated-operand-generator
@@ -2660,7 +2660,7 @@
          ctx
          result
          'parententrypt
-         (univ-proc-name-attrib ctx)
+         'name
          (lambda (result)
            (return
             (if (eq? (univ-ctrlpt-reference-type ctx) 'str)
@@ -2695,12 +2695,12 @@
 (univ-define-prim "##promise-state" #f
   (make-translated-operand-generator
    (lambda (ctx return prom)
-     (return (^member (^cast* 'promise prom) (^public 'state))))))
+     (return (^field 'state (^cast* 'promise prom))))))
 
 (univ-define-prim "##promise-state-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return prom state)
-     (^ (^assign (^member (^cast* 'promise prom) (^public 'state)) state)
+     (^ (^assign (^field 'state (^cast* 'promise prom)) state)
         (return prom)))))
 
 
@@ -2774,24 +2774,24 @@
 (univ-define-prim "##continuation-frame" #t
   (make-translated-operand-generator
    (lambda (ctx return cont)
-     (return (^member (^cast* 'continuation cont) (^public 'frame))))))
+     (return (^field 'frame (^cast* 'continuation cont))))))
 
 (univ-define-prim "##continuation-frame-set!" #t
   (make-translated-operand-generator
    (lambda (ctx return cont frame)
-     (^ (^assign (^member (^cast* 'continuation cont) (^public 'frame))
+     (^ (^assign (^field 'frame (^cast* 'continuation cont))
                  (^cast* 'frame frame))
         (return cont)))))
 
 (univ-define-prim "##continuation-denv" #t
   (make-translated-operand-generator
    (lambda (ctx return cont)
-     (return (^member (^cast* 'continuation cont) (^public 'denv))))))
+     (return (^field 'denv (^cast* 'continuation cont))))))
 
 (univ-define-prim "##continuation-denv-set!" #t
   (make-translated-operand-generator
    (lambda (ctx return cont denv)
-     (^ (^assign (^member (^cast* 'continuation cont) (^public 'denv)) denv)
+     (^ (^assign (^field 'denv (^cast* 'continuation cont)) denv)
         (return cont)))))
 
 (univ-define-prim "##continuation-next" #t
@@ -2805,7 +2805,7 @@
 (univ-define-prim "##continuation-ret" #t
   (make-translated-operand-generator
    (lambda (ctx return cont)
-     (return (univ-frame-ra ctx (^member (^cast* 'continuation cont) (^public 'frame)))))))
+     (return (univ-frame-ra ctx (^field 'frame (^cast* 'continuation cont)))))))
 
 (define (univ-get-cont-ra-field attrib)
   (make-translated-operand-generator
@@ -2813,7 +2813,7 @@
      (univ-get-ra-field
       ctx
       return
-      (univ-frame-ra ctx (^member (^cast* 'continuation cont) (^public 'frame)))
+      (univ-frame-ra ctx (^field 'frame (^cast* 'continuation cont)))
       attrib))))
 
 (univ-define-prim "##continuation-fs"   #f (univ-get-cont-ra-field 'fs))
@@ -2825,7 +2825,7 @@
      (return
       (univ-frame-ref
        ctx
-       (^frame-unbox (^member (^cast* 'continuation cont) (^public 'frame)))
+       (^frame-unbox (^field 'frame (^cast* 'continuation cont)))
        (^fixnum-unbox index))))))
 
 (univ-define-prim "##continuation-set!" #t
@@ -2833,7 +2833,7 @@
    (lambda (ctx return cont index val)
      (^ (univ-frame-set!
          ctx
-         (^frame-unbox (^member (^cast* 'continuation cont) (^public 'frame)))
+         (^frame-unbox (^field 'frame (^cast* 'continuation cont)))
          (^fixnum-unbox index)
          val)
         (return cont)))))
@@ -2843,7 +2843,7 @@
    (lambda (ctx return cont index)
      (return
       (^boolean-box
-       (univ-frame-slot-live? ctx (^member (^cast* 'continuation cont) (^public 'frame)) index))))))
+       (univ-frame-slot-live? ctx (^field 'frame (^cast* 'continuation cont)) index))))))
 
 (univ-define-prim-bool "##frame?" #t
   (make-translated-operand-generator
@@ -2958,23 +2958,23 @@
 (univ-define-prim "##will-testator" #t
   (make-translated-operand-generator
    (lambda (ctx return will)
-     (return (^member (^cast* 'will will) (^public 'testator))))))
+     (return (^field 'testator (^cast* 'will will))))))
 
 (univ-define-prim "##will-testator-set!" #t
   (make-translated-operand-generator
    (lambda (ctx return will testator)
-     (^ (^assign (^member (^cast* 'will will) (^public 'testator)) testator)
+     (^ (^assign (^field 'testator (^cast* 'will will)) testator)
         (return will)))))
 
 (univ-define-prim "##will-action" #t
   (make-translated-operand-generator
    (lambda (ctx return will)
-     (return (^member (^cast* 'will will) (^public 'action))))))
+     (return (^field 'action (^cast* 'will will))))))
 
 (univ-define-prim "##will-action-set!" #t
   (make-translated-operand-generator
    (lambda (ctx return will action)
-     (^ (^assign (^member (^cast* 'will will) (^public 'action)) action)
+     (^ (^assign (^field 'action (^cast* 'will will)) action)
         (return will)))))
 
 (univ-define-prim-bool "##foreign?" #t
@@ -2985,7 +2985,7 @@
 (univ-define-prim "##foreign-tags" #t
   (make-translated-operand-generator
    (lambda (ctx return foreign)
-     (return (^member (^cast* 'foreign foreign) (^public 'tags))))))
+     (return (^field 'tags (^cast* 'foreign foreign))))))
 
 (univ-define-prim "##apply" #f
 
@@ -3557,20 +3557,23 @@
         (if x
             (cdr x)
             (let* ((name (string->symbol str))
-                   (f (table-ref univ-rtlib-feature-table name #f)))
-              (if f
-                  (case (vector-ref f 0)
-                    ((method)
-                     (univ-emit-rts-method-use ctx name #t))
-                    ((class)
-                     (univ-emit-rts-class-use ctx name #t))
-                    (else ;; (field)
-                     (univ-emit-rts-field-use ctx name #t)))
-                  (string-append
-                   (if (char-upper-case? (string-ref str 0))
-                       (ctx-ns-prefix-class ctx)
-                       (ctx-ns-prefix ctx))
-                   str))))))
+                   (x (assq name univ-renamed-fields)))
+              (if x
+                  (symbol->string (univ-field-rename ctx name))
+                  (let ((f (table-ref univ-rtlib-feature-table name #f)))
+                    (if f
+                        (case (vector-ref f 0)
+                          ((method)
+                           (univ-emit-rts-method-use ctx name #t))
+                          ((class)
+                           (univ-emit-rts-class-use ctx name #t))
+                          (else ;; (field)
+                           (univ-emit-rts-field-use ctx name #t)))
+                        (string-append
+                         (if (char-upper-case? (string-ref str 0))
+                             (ctx-ns-prefix-class ctx)
+                             (ctx-ns-prefix ctx))
+                         str))))))))
 
     (^ (string-substitute str #\@ substitute))))
 

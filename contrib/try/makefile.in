@@ -153,10 +153,11 @@ VM.js: extra.scm VM.scm
 	cp `$(GSC) -e '(display (path-expand "~~lib/_six/js#.scm"))'` .
 	cp `$(GSC) -e '(display (path-expand "~~lib/_six/six-expand.scm"))'` .
 	cp `$(GSC) -e '(display (path-expand "~~lib/_six/six-expand#.scm"))'` .
-	$(GSC) -target js -label-namespace "a" -exe -o VM.js VM.scm
+	$(GSC) -target js -label-namespace "z" -exe -o VM.js VM.scm
 
 VM.min.js: VM.js
-	npx google-closure-compiler --js VM.js --js_output_file VM.min.js
+	npx google-closure-compiler --language_in=ECMASCRIPT_2015 --language_out=ECMASCRIPT_2015 --js VM.js --js_output_file VM.min.js
+	sed -I .tmp -e "s/^'use strict';//" VM.min.js
 	gzip -k -9 VM.min.js
 
 browserfs.min.js:

@@ -197,15 +197,6 @@
      (compiler-internal-error
       "univ-tostr-method-name, unknown target"))))
 
-(define (univ-proc-name-attrib ctx)
-  (case (target-name (ctx-target ctx))
-
-    ((js)
-     '_name) ;; avoid clash with builtin "name" attribute of functions
-
-    (else
-     'name)))
-
 (define (univ-ns-prefix sem-changing-options)
   (let ((x (assq 'namespace sem-changing-options)))
     (or (and x (pair? (cdr x)) (cadr x))
@@ -2626,7 +2617,7 @@
                               '(inherited)))
                             (if parent?
                                 (list
-                                 (univ-field (univ-proc-name-attrib ctx)
+                                 (univ-field 'name
                                              'symbol
                                              (lambda (ctx)
                                                (univ-prm-name
@@ -2640,6 +2631,11 @@
                                  (univ-field 'info
                                              'scmobj
                                              debug-info-init
+                                             '(inherited))
+                                 (univ-field 'prim
+                                             'bool
+                                             (lambda (ctx)
+                                               (^bool (proc-obj-primitive? p)))
                                              '(inherited)))
                                 '())))))
 
@@ -2918,7 +2914,8 @@
              (lambda (ctx)
 
                (define (cont)
-                 (cond ((and (ctx-allow-jump-destination-inlining? ctx)
+                 (cond ((and (not (univ-compactness>=? ctx 9))
+                             (ctx-allow-jump-destination-inlining? ctx)
                              (let* ((bb (lbl-num->bb n bbs))
                                     (label-instr (bb-label-instr bb)))
                                (and (eq? (label-type label-instr) 'simple)
@@ -2982,10 +2979,7 @@
                           (set-car! ctrlpts-init (^null))
                           (lambda (ctx)
                             (if (univ-use-ctrlpt-init? ctx)
-                                (^) #;
-                                (^expr-statement
-                                 (^call-prim (^rts-method-use 'ctrlpts_init)
-                                             ctrlpts-array))
+                                (^)
                                 (^ "\n"
                                    (univ-with-ctrlpt-attribs
                                     ctx
@@ -2999,13 +2993,15 @@
                                        ctrlpts-array))))))))))
                  (init2
                   (lambda (ctx)
-                    (let ((name (string->symbol (proc-obj-name p))))
-                      (^ "\n"
-                         ;; p is a parententrypt
-                         (^setpeps name (^obj-proc-as 'parententrypt p))
-                         (if (proc-obj-primitive? p)
-                             (^setglo name (^obj-proc-as 'scmobj p))
-                             (^)))))))
+                    (if (univ-use-ctrlpt-init? ctx)
+                        (^)
+                        (let ((name (string->symbol (proc-obj-name p))))
+                          (^ "\n"
+                             ;; p is a parententrypt
+                             (^setpeps name (^obj-proc-as 'parententrypt p))
+                             (if (proc-obj-primitive? p)
+                                 (^setglo name (^obj-proc-as 'scmobj p))
+                                 (^))))))))
 
             (let* ((ctrlpt-ids
                     (list->vector (reverse debug-info-ctrlpt-ids-rev)))
@@ -3513,7 +3509,7 @@
   (case (univ-procedure-representation ctx)
 
     ((class)
-     (^member (^cast* 'closure closure) (^public 'slots)))
+     (^field 'slots (^cast* 'closure closure)))
 
     ((struct)
      (^ "~~~TODO1:univ-clo-slots~~~"))
@@ -3521,8 +3517,8 @@
     (else
      (case (target-name (ctx-target ctx))
        ((php)
-        ;;(^member (^cast* 'closure closure) (^public 'slots))
-        (^member closure (^public 'slots)))
+        ;;(^field 'slots (^cast* 'closure closure))
+        (^field 'slots closure))
        (else
         (^jump closure (^bool #t)))))))
 
@@ -3550,28 +3546,34 @@
          (x (table-ref t name #f)))
     (table-set! t name (if (or (not x) (eq? dir x)) dir 'rdwr))))
 
+(define (univ-get-symbol-name ctx sym)
+  (if (and (univ-compactness>=? ctx 9)
+           (>= (string-length (symbol->string sym)) 6))
+      (^field 'name (^obj sym))
+      (^str (symbol->string sym))))
+
 (define (univ-emit-getpeps ctx name)
   (^dict-get 'entrypt
              (gvm-state-peps-use ctx 'rd)
-             (^str (symbol->string name))))
+             (univ-get-symbol-name ctx name)))
 
 (define (univ-emit-setpeps ctx name val)
   (^dict-set 'entrypt
              (gvm-state-peps-use ctx 'rd)
-             (^str (symbol->string name))
+             (univ-get-symbol-name ctx name)
              val))
 
 (define (univ-emit-getglo ctx name)
   (univ-glo-dependency ctx name 'rd)
   (^dict-get 'scmobj
              (gvm-state-glo-use ctx 'rd)
-             (^str (symbol->string name))))
+             (univ-get-symbol-name ctx name)))
 
 (define (univ-emit-setglo ctx name val)
   (univ-glo-dependency ctx name 'wr)
   (^dict-set 'scmobj
              (gvm-state-glo-use ctx 'rd)
-             (^str (symbol->string name))
+             (univ-get-symbol-name ctx name)
              val))
 
 (define (univ-emit-glo-var? ctx sym)
@@ -3876,6 +3878,14 @@
                           (univ-emit-obj* ctx (vector-ref slots 0) #f))
                       (map (lambda (x) (univ-emit-obj* ctx x #f))
                            (cdr (vector->list slots))))))))))
+
+        ((box-object? obj)
+         (univ-obj-use
+          ctx
+          obj
+          force-var?
+          (lambda ()
+            (^box (^obj (unbox-object obj))))))
 
         (else
          (compiler-user-warning #f "UNIMPLEMENTED OBJECT:" obj)
@@ -4211,7 +4221,7 @@
 (define (univ-num-array-constant ctx type elems)
   (if (and (memq (target-name (ctx-target ctx)) '(js python))
            (memq type '(u8 u16 u32 bigdigit unicode))
-           (univ-compactness>=? ctx 5))
+           (univ-compactness>=? ctx 6))
 
       (let ((s (base92-encode (list->vector elems))))
         (^call-prim
@@ -4219,6 +4229,43 @@
          (^str s)))
 
       (^array-literal type (map (lambda (n) (^num-of-type type n)) elems))))
+
+(define univ-renamed-fields
+  '((car      . a)
+    (cdr      . b)
+    (code     . c)
+    (codes    . d)
+    (ctrlpts  . e)
+    (den      . f)
+    (denv     . g)
+    (digits   . h)
+    (elems    . i)
+    (frame    . j)
+    (fs       . k)
+    (hash     . l)
+    (id       . m)
+    (imag     . n)
+    (info     . o)
+    (interned . p)
+    (link     . q)
+    (name     . r)
+    (nfree    . s)
+    (num      . t)
+    (parent   . u)
+    (real     . v)
+    (scmobj   . w)
+    (slots    . x)
+    (val      . y)
+    (vals     . z)))
+
+(define (univ-field-rename ctx name)
+  (if (univ-compactness>=? ctx 5)
+      (let ((x (assq name univ-renamed-fields)))
+        (or (and x (cdr x)) name))
+      (if (and (eq? name 'name)
+               (eq? 'js (target-name (ctx-target ctx))))
+          '_name ;; avoid clash with builtin "name" attribute of functions
+          name)))
 
 (define (univ-rts-field-low-level-name ctx name)
   (if (univ-compactness>=? ctx 5)
