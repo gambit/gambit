@@ -2804,9 +2804,14 @@
                        (proc
                         ctx
                         (lambda (result)
-                          (^if result
-                               (jump-to-label ctx true fs poll?)
-                               (jump-to-label ctx false fs poll?)))
+                          (cond ((eq? result #f)
+                                 (jump-to-label ctx false fs poll?))
+                                ((eq? result #t)
+                                 (jump-to-label ctx true fs poll?))
+                                (else
+                                 (^if result
+                                      (jump-to-label ctx true fs poll?)
+                                      (jump-to-label ctx false fs poll?)))))
                         opnds)))))
 
               ((switch)
@@ -2879,13 +2884,14 @@
                                 poll?
                                 (and
 
+                                 (univ-compactness>=? ctx 7)
+
                                  ;; avoid call optimization on globals
                                  ;; because some VMs, such as V8 and PyPy,
                                  ;; use a counterproductive speculative
                                  ;; optimization (which slows
                                  ;; down fib by an order of magnitude!)
                                  (not (reg? opnd))
-                                 (univ-compactness>=? ctx 9)
 
                                  (case (target-name (ctx-target ctx))
                                    ((php)
@@ -2914,7 +2920,7 @@
              (lambda (ctx)
 
                (define (cont)
-                 (cond ((and (not (univ-compactness>=? ctx 9))
+                 (cond ((and (not (univ-compactness>=? ctx 6))
                              (ctx-allow-jump-destination-inlining? ctx)
                              (let* ((bb (lbl-num->bb n bbs))
                                     (label-instr (bb-label-instr bb)))

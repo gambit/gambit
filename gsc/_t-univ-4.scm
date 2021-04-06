@@ -77,7 +77,7 @@
 (univ-define-prim-bool "##mutable?" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1)
-     (return (^bool #t))))) ;; there are no immutable data (currently)
+     (return #t)))) ;; there are no immutable data (currently)
 
 ;;TODO: ("##subtyped.vector?"         (1)   #f ()    0    boolean extended)
 ;;TODO: ("##subtyped.symbol?"         (1)   #f ()    0    boolean extended)
@@ -883,36 +883,36 @@
 
 (univ-define-prim-bool "##fx=" #f
   (univ-fold-left-compare
-   (lambda (ctx)           (^bool #t))
-   (lambda (ctx arg1)      (^bool #t))
+   (lambda (ctx)           #t)
+   (lambda (ctx arg1)      #t)
    (lambda (ctx arg1 arg2) (^= arg1 arg2))
    univ-emit-fixnum-unbox))
 
 (univ-define-prim-bool "##fx<" #f
   (univ-fold-left-compare
-   (lambda (ctx)           (^bool #t))
-   (lambda (ctx arg1)      (^bool #t))
+   (lambda (ctx)           #t)
+   (lambda (ctx arg1)      #t)
    (lambda (ctx arg1 arg2) (^< arg1 arg2))
    univ-emit-fixnum-unbox))
 
 (univ-define-prim-bool "##fx>" #f
   (univ-fold-left-compare
-   (lambda (ctx)           (^bool #t))
-   (lambda (ctx arg1)      (^bool #t))
+   (lambda (ctx)           #t)
+   (lambda (ctx arg1)      #t)
    (lambda (ctx arg1 arg2) (^> arg1 arg2))
    univ-emit-fixnum-unbox))
 
 (univ-define-prim-bool "##fx<=" #f
   (univ-fold-left-compare
-   (lambda (ctx)           (^bool #t))
-   (lambda (ctx arg1)      (^bool #t))
+   (lambda (ctx)           #t)
+   (lambda (ctx arg1)      #t)
    (lambda (ctx arg1 arg2) (^<= arg1 arg2))
    univ-emit-fixnum-unbox))
 
 (univ-define-prim-bool "##fx>=" #f
   (univ-fold-left-compare
-   (lambda (ctx)           (^bool #t))
-   (lambda (ctx arg1)      (^bool #t))
+   (lambda (ctx)           #t)
+   (lambda (ctx arg1)      #t)
    (lambda (ctx arg1 arg2) (^>= arg1 arg2))
    univ-emit-fixnum-unbox))
 
@@ -944,7 +944,7 @@
 (univ-define-prim-bool "##fixnum->flonum-exact?" #t
   (make-translated-operand-generator
    (lambda (ctx return arg)
-     (return (^bool #t)))))
+     (return #t))))
 
 ;;TODO: make variadic, complete, clean up and test
 (univ-define-prim "##flmax" #t
@@ -1278,36 +1278,36 @@
 
 (univ-define-prim-bool "##fl=" #f
   (univ-fold-left-compare
-   (lambda (ctx)           (^bool #t))
-   (lambda (ctx arg1)      (^bool #t))
+   (lambda (ctx)           #t)
+   (lambda (ctx arg1)      #t)
    (lambda (ctx arg1 arg2) (^= arg1 arg2))
    univ-emit-flonum-unbox))
 
 (univ-define-prim-bool "##fl<" #f
   (univ-fold-left-compare
-   (lambda (ctx)           (^bool #t))
-   (lambda (ctx arg1)      (^bool #t))
+   (lambda (ctx)           #t)
+   (lambda (ctx arg1)      #t)
    (lambda (ctx arg1 arg2) (^< arg1 arg2))
    univ-emit-flonum-unbox))
 
 (univ-define-prim-bool "##fl>" #f
   (univ-fold-left-compare
-   (lambda (ctx)           (^bool #t))
-   (lambda (ctx arg1)      (^bool #t))
+   (lambda (ctx)           #t)
+   (lambda (ctx arg1)      #t)
    (lambda (ctx arg1 arg2) (^> arg1 arg2))
    univ-emit-flonum-unbox))
 
 (univ-define-prim-bool "##fl<=" #f
   (univ-fold-left-compare
-   (lambda (ctx)           (^bool #t))
-   (lambda (ctx arg1)      (^bool #t))
+   (lambda (ctx)           #t)
+   (lambda (ctx arg1)      #t)
    (lambda (ctx arg1 arg2) (^<= arg1 arg2))
    univ-emit-flonum-unbox))
 
 (univ-define-prim-bool "##fl>=" #f
   (univ-fold-left-compare
-   (lambda (ctx)           (^bool #t))
-   (lambda (ctx arg1)      (^bool #t))
+   (lambda (ctx)           #t)
+   (lambda (ctx arg1)      #t)
    (lambda (ctx arg1 arg2) (^>= arg1 arg2))
    univ-emit-flonum-unbox))
 
@@ -1319,36 +1319,36 @@
 (univ-define-prim-bool "##char=?" #f
   ;;TODO: implement as eq? if chars are interned
   (univ-fold-left-compare
-   (lambda (ctx)           (^bool #t))
-   (lambda (ctx arg1)      (^bool #t))
+   (lambda (ctx)           #t)
+   (lambda (ctx arg1)      #t)
    (lambda (ctx arg1 arg2) (^= arg1 arg2))
    univ-emit-char-unbox))
 
 (univ-define-prim-bool "##char<?" #f
   (univ-fold-left-compare
-   (lambda (ctx)           (^bool #t))
-   (lambda (ctx arg1)      (^bool #t))
+   (lambda (ctx)           #t)
+   (lambda (ctx arg1)      #t)
    (lambda (ctx arg1 arg2) (^< arg1 arg2))
    univ-emit-char-unbox))
 
 (univ-define-prim-bool "##char>?" #f
   (univ-fold-left-compare
-   (lambda (ctx)           (^bool #t))
-   (lambda (ctx arg1)      (^bool #t))
+   (lambda (ctx)           #t)
+   (lambda (ctx arg1)      #t)
    (lambda (ctx arg1 arg2) (^> arg1 arg2))
    univ-emit-char-unbox))
 
 (univ-define-prim-bool "##char<=?" #f
   (univ-fold-left-compare
-   (lambda (ctx)           (^bool #t))
-   (lambda (ctx arg1)      (^bool #t))
+   (lambda (ctx)           #t)
+   (lambda (ctx arg1)      #t)
    (lambda (ctx arg1 arg2) (^<= arg1 arg2))
    univ-emit-char-unbox))
 
 (univ-define-prim-bool "##char>=?" #f
   (univ-fold-left-compare
-   (lambda (ctx)           (^bool #t))
-   (lambda (ctx arg1)      (^bool #t))
+   (lambda (ctx)           #t)
+   (lambda (ctx arg1)      #t)
    (lambda (ctx arg1 arg2) (^>= arg1 arg2))
    univ-emit-char-unbox))
 
@@ -2739,22 +2739,22 @@
 (univ-define-prim "##primitive-lock!" #t
   (make-translated-operand-generator
    (lambda (ctx return obj index1 index2)
-     (return (^obj #f))))) ;;TODO
+     (return #f)))) ;;TODO
 
 (univ-define-prim "##primitive-trylock!" #t
   (make-translated-operand-generator
    (lambda (ctx return obj index1 index2)
-     (return (^obj #f))))) ;;TODO
+     (return #f)))) ;;TODO
 
 (univ-define-prim "##primitive-unlock!" #t
   (make-translated-operand-generator
    (lambda (ctx return obj index1 index2)
-     (return (^obj #f))))) ;;TODO
+     (return #f)))) ;;TODO
 
 (univ-define-prim "##object-before?" #t
   (make-translated-operand-generator
    (lambda (ctx return obj1 obj2)
-     (return (^obj #f))))) ;;TODO
+     (return #f)))) ;;TODO
 
 (define (univ-end-of-cont-marker ctx)
   (^void-obj))

@@ -778,7 +778,9 @@
                       (not univ-js-define-globals-using-assignment))
                   name))
             (fn
-             (^ (if (or fn-name constructor-or-method?)
+             (^ (if (or fn-name
+                        constructor-or-method?
+                        (not (univ-compactness>=? ctx 1)))
                     (^ "function " (or fn-name "") "(" formals ") ")
                     (^ "(" formals ") => "))
                 "{"
@@ -4614,7 +4616,23 @@ tanh
         (^instanceof (^type 'jumpable) (^cast*-scmobj expr)))
 
        (else
-        (^function? expr))))))
+        (^and (^function? expr)
+              (case (target-name (ctx-target ctx))
+
+                ((js)
+                 (^not (^prop-index-exists?
+                        expr
+                        (^str (symbol->string (univ-field-rename ctx 'fs))))))
+
+                ((python)
+                 (^not
+                  (^call-prim
+                   "hasattr"
+                   expr
+                   (^str (symbol->string (univ-field-rename ctx 'fs))))))
+
+                (else
+                 (^bool #f))))))))) ;;TODO: implement
 
 (define (univ-emit-return? ctx expr)
   (case (target-name (ctx-target ctx))
@@ -4629,7 +4647,22 @@ tanh
         (^instanceof (^type 'returnpt) (^cast*-scmobj expr)))
 
        (else
-        (^bool #f)))))) ;;TODO: implement
+        (^and (^function? expr)
+              (case (target-name (ctx-target ctx))
+
+                ((js)
+                 (^prop-index-exists?
+                  expr
+                  (^str (symbol->string (univ-field-rename ctx 'fs)))))
+
+                ((python)
+                 (^call-prim
+                  "hasattr"
+                  expr
+                  (^str (symbol->string (univ-field-rename ctx 'fs)))))
+
+                (else
+                 (^bool #f))))))))) ;;TODO: implement
 
 (define (univ-emit-closure? ctx expr)
   (case (target-name (ctx-target ctx))
@@ -5000,7 +5033,12 @@ tanh
    (lambda (ctx return . opnds)
      (apply ifjump-gen
             (cons ctx
-                  (cons (lambda (result) (return (^boolean-box result)))
+                  (cons (lambda (result)
+                          (return
+                           (^boolean-box
+                            (if (or (eq? result #f) (eq? result #t))
+                                (^bool result)
+                                result))))
                         opnds))))
    ifjump-gen))
 
