@@ -32,16 +32,6 @@ AC_CANONICAL_BUILD
 AC_CANONICAL_HOST
 AC_CANONICAL_TARGET
 
-# detect WSL
-
-ON_WSL=no
-
-if test -r /proc/version; then
-  if grep -q Microsoft /proc/version; then
-    ON_WSL=yes
-  fi
-fi
-
 ###############################################################################
 #
 # Accumulate subsystems to include in runtime library.
@@ -148,8 +138,8 @@ C_COMPILER=$CC
 C_PREPROC=$CPP
 
 if test "$ENABLE_CPLUSPLUS" = yes; then
-  # AC_LANG affect the rest of the file even if not executed in autoconf 2.71
-  #AC_LANG(C++)
+
+  AC_LANG(C++)
   AC_PROG_CXX
   AC_PROG_CXXCPP
   C_COMPILER=$CXX
@@ -1639,6 +1629,16 @@ else
                ;;
     esac
 
+  fi
+
+  # detect WSL
+
+  ON_WSL="no"
+
+  if test -r /proc/version; then
+    if grep -q Microsoft /proc/version; then
+      ON_WSL="yes"
+    fi
   fi
 
   AC_CHECK_FUNCS(backtrace_symbols_fd)

@@ -2020,11 +2020,11 @@ fi
 
 } # ac_fn_cxx_try_cpp
 
-# ac_fn_c_try_run LINENO
-# ----------------------
+# ac_fn_cxx_try_run LINENO
+# ------------------------
 # Try to link conftest.$ac_ext, and return whether this succeeded. Assumes
 # that executables *can* be run.
-ac_fn_c_try_run ()
+ac_fn_cxx_try_run ()
 {
   as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
   if { { ac_try="$ac_link"
@@ -2060,14 +2060,14 @@ fi
   eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
   as_fn_set_status $ac_retval
 
-} # ac_fn_c_try_run
+} # ac_fn_cxx_try_run
 
-# ac_fn_c_compute_int LINENO EXPR VAR INCLUDES
-# --------------------------------------------
+# ac_fn_cxx_compute_int LINENO EXPR VAR INCLUDES
+# ----------------------------------------------
 # Tries to find the compile-time value of EXPR in a program that includes
 # INCLUDES, setting VAR accordingly. Returns whether the value could be
 # computed
-ac_fn_c_compute_int ()
+ac_fn_cxx_compute_int ()
 {
   as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
   if test "$cross_compiling" = yes; then
@@ -2086,7 +2086,7 @@ return test_array [0];
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_cxx_try_compile "$LINENO"; then :
   ac_lo=0 ac_mid=0
   while :; do
     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
@@ -2103,7 +2103,7 @@ return test_array [0];
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_cxx_try_compile "$LINENO"; then :
   ac_hi=$ac_mid; break
 else
   as_fn_arith $ac_mid + 1 && ac_lo=$as_val
@@ -2130,7 +2130,7 @@ return test_array [0];
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_cxx_try_compile "$LINENO"; then :
   ac_hi=-1 ac_mid=-1
   while :; do
     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
@@ -2147,7 +2147,7 @@ return test_array [0];
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_cxx_try_compile "$LINENO"; then :
   ac_lo=$ac_mid; break
 else
   as_fn_arith '(' $ac_mid ')' - 1 && ac_hi=$as_val
@@ -2182,7 +2182,7 @@ return test_array [0];
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_cxx_try_compile "$LINENO"; then :
   ac_hi=$ac_mid
 else
   as_fn_arith '(' $ac_mid ')' + 1 && ac_lo=$as_val
@@ -2230,7 +2230,7 @@ main ()
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_run "$LINENO"; then :
+if ac_fn_cxx_try_run "$LINENO"; then :
   echo >>conftest.val; read $3 <conftest.val; ac_retval=0
 else
   ac_retval=1
@@ -2243,13 +2243,13 @@ rm -f conftest.val
   eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
   as_fn_set_status $ac_retval
 
-} # ac_fn_c_compute_int
+} # ac_fn_cxx_compute_int
 
-# ac_fn_c_check_header_compile LINENO HEADER VAR INCLUDES
-# -------------------------------------------------------
+# ac_fn_cxx_check_header_compile LINENO HEADER VAR INCLUDES
+# ---------------------------------------------------------
 # Tests whether HEADER exists and can be compiled using the include files in
 # INCLUDES, setting the cache variable VAR accordingly.
-ac_fn_c_check_header_compile ()
+ac_fn_cxx_check_header_compile ()
 {
   as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $2" >&5
@@ -2262,7 +2262,7 @@ else
 $4
 #include <$2>
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_cxx_try_compile "$LINENO"; then :
   eval "$3=yes"
 else
   eval "$3=no"
@@ -2274,13 +2274,13 @@ eval ac_res=\$$3
 $as_echo "$ac_res" >&6; }
   eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
 
-} # ac_fn_c_check_header_compile
+} # ac_fn_cxx_check_header_compile
 
-# ac_fn_c_check_type LINENO TYPE VAR INCLUDES
-# -------------------------------------------
+# ac_fn_cxx_check_type LINENO TYPE VAR INCLUDES
+# ---------------------------------------------
 # Tests whether TYPE exists after having included INCLUDES, setting cache
 # variable VAR accordingly.
-ac_fn_c_check_type ()
+ac_fn_cxx_check_type ()
 {
   as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $2" >&5
@@ -2301,7 +2301,7 @@ if (sizeof ($2))
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_cxx_try_compile "$LINENO"; then :
   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 $4
@@ -2314,7 +2314,7 @@ if (sizeof (($2)))
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_cxx_try_compile "$LINENO"; then :
 
 else
   eval "$3=yes"
@@ -2328,12 +2328,12 @@ eval ac_res=\$$3
 $as_echo "$ac_res" >&6; }
   eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
 
-} # ac_fn_c_check_type
+} # ac_fn_cxx_check_type
 
-# ac_fn_c_try_link LINENO
-# -----------------------
+# ac_fn_cxx_try_link LINENO
+# -------------------------
 # Try to link conftest.$ac_ext, and return whether this succeeded.
-ac_fn_c_try_link ()
+ac_fn_cxx_try_link ()
 {
   as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
   rm -f conftest.$ac_objext conftest$ac_exeext
@@ -2353,7 +2353,7 @@ $as_echo "$ac_try_echo"; } >&5
   fi
   $as_echo "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
   test $ac_status = 0; } && {
-	 test -z "$ac_c_werror_flag" ||
+	 test -z "$ac_cxx_werror_flag" ||
 	 test ! -s conftest.err
        } && test -s conftest$ac_exeext && {
 	 test "$cross_compiling" = yes ||
@@ -2374,14 +2374,14 @@ fi
   eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
   as_fn_set_status $ac_retval
 
-} # ac_fn_c_try_link
+} # ac_fn_cxx_try_link
 
-# ac_fn_c_check_header_mongrel LINENO HEADER VAR INCLUDES
-# -------------------------------------------------------
+# ac_fn_cxx_check_header_mongrel LINENO HEADER VAR INCLUDES
+# ---------------------------------------------------------
 # Tests whether HEADER exists, giving a warning if it cannot be compiled using
 # the include files in INCLUDES and setting the cache variable VAR
 # accordingly.
-ac_fn_c_check_header_mongrel ()
+ac_fn_cxx_check_header_mongrel ()
 {
   as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
   if eval \${$3+:} false; then :
@@ -2402,7 +2402,7 @@ cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 $4
 #include <$2>
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_cxx_try_compile "$LINENO"; then :
   ac_header_compiler=yes
 else
   ac_header_compiler=no
@@ -2418,7 +2418,7 @@ cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <$2>
 _ACEOF
-if ac_fn_c_try_cpp "$LINENO"; then :
+if ac_fn_cxx_try_cpp "$LINENO"; then :
   ac_header_preproc=yes
 else
   ac_header_preproc=no
@@ -2428,7 +2428,7 @@ rm -f conftest.err conftest.i conftest.$ac_ext
 $as_echo "$ac_header_preproc" >&6; }
 
 # So?  What about this header?
-case $ac_header_compiler:$ac_header_preproc:$ac_c_preproc_warn_flag in #((
+case $ac_header_compiler:$ac_header_preproc:$ac_cxx_preproc_warn_flag in #((
   yes:no: )
     { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $2: accepted by the compiler, rejected by the preprocessor!" >&5
 $as_echo "$as_me: WARNING: $2: accepted by the compiler, rejected by the preprocessor!" >&2;}
@@ -2465,12 +2465,12 @@ $as_echo "$ac_res" >&6; }
 fi
   eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
 
-} # ac_fn_c_check_header_mongrel
+} # ac_fn_cxx_check_header_mongrel
 
-# ac_fn_c_check_func LINENO FUNC VAR
-# ----------------------------------
+# ac_fn_cxx_check_func LINENO FUNC VAR
+# ------------------------------------
 # Tests whether FUNC exists, setting the cache variable VAR accordingly
-ac_fn_c_check_func ()
+ac_fn_cxx_check_func ()
 {
   as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $2" >&5
@@ -2519,7 +2519,7 @@ return $2 ();
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
+if ac_fn_cxx_try_link "$LINENO"; then :
   eval "$3=yes"
 else
   eval "$3=no"
@@ -2532,7 +2532,7 @@ eval ac_res=\$$3
 $as_echo "$ac_res" >&6; }
   eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
 
-} # ac_fn_c_check_func
+} # ac_fn_cxx_check_func
 cat >config.log <<_ACEOF
 This file contains any messages produced by compilers while
 running configure, to aid debugging if configure makes a mistake.
@@ -3044,16 +3044,6 @@ test -n "$target_alias" &&
   test "$program_prefix$program_suffix$program_transform_name" = \
     NONENONEs,x,x, &&
   program_prefix=${target_alias}-
-
-# detect WSL
-
-ON_WSL=no
-
-if test -r /proc/version; then
-  if grep -q Microsoft /proc/version; then
-    ON_WSL=yes
-  fi
-fi
 
 ###############################################################################
 #
@@ -4164,8 +4154,13 @@ C_COMPILER=$CC
 C_PREPROC=$CPP
 
 if test "$ENABLE_CPLUSPLUS" = yes; then
-  # AC_LANG affect the rest of the file even if not executed in autoconf 2.71
-  #AC_LANG(C++)
+
+  ac_ext=cpp
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
+
   ac_ext=cpp
 ac_cpp='$CXXCPP $CPPFLAGS'
 ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -4417,11 +4412,11 @@ else
     CXXFLAGS=
   fi
 fi
-ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
+ac_ext=cpp
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
   ac_ext=cpp
 ac_cpp='$CXXCPP $CPPFLAGS'
@@ -4550,11 +4545,11 @@ as_fn_error $? "C++ preprocessor \"$CXXCPP\" fails sanity check
 See \`config.log' for more details" "$LINENO" 5; }
 fi
 
-ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
+ac_ext=cpp
+ac_cpp='$CXXCPP $CPPFLAGS'
+ac_compile='$CXX -c $CXXFLAGS $CPPFLAGS conftest.$ac_ext >&5'
+ac_link='$CXX -o conftest$ac_exeext $CXXFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
+ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
   C_COMPILER=$CXX
   C_PREPROC=$CXXCPP
@@ -5399,7 +5394,7 @@ main ()
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_cxx_try_compile "$LINENO"; then :
   ac_cv_header_stdc=yes
 else
   ac_cv_header_stdc=no
@@ -5472,7 +5467,7 @@ main ()
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_run "$LINENO"; then :
+if ac_fn_cxx_try_run "$LINENO"; then :
 
 else
   ac_cv_header_stdc=no
@@ -5496,7 +5491,7 @@ for ac_header in sys/types.h sys/stat.h stdlib.h string.h memory.h strings.h \
 		  inttypes.h stdint.h unistd.h
 do :
   as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
-ac_fn_c_check_header_compile "$LINENO" "$ac_header" "$as_ac_Header" "$ac_includes_default
+ac_fn_cxx_check_header_compile "$LINENO" "$ac_header" "$as_ac_Header" "$ac_includes_default
 "
 if eval test \"x\$"$as_ac_Header"\" = x"yes"; then :
   cat >>confdefs.h <<_ACEOF
@@ -5517,7 +5512,7 @@ $as_echo_n "checking size of void*... " >&6; }
 if ${ac_cv_sizeof_voidp+:} false; then :
   $as_echo_n "(cached) " >&6
 else
-  if ac_fn_c_compute_int "$LINENO" "(long int) (sizeof (void*))" "ac_cv_sizeof_voidp"        "$ac_includes_default"; then :
+  if ac_fn_cxx_compute_int "$LINENO" "(long int) (sizeof (void*))" "ac_cv_sizeof_voidp"        "$ac_includes_default"; then :
 
 else
   if test "$ac_cv_type_voidp" = yes; then
@@ -5550,7 +5545,7 @@ $as_echo_n "checking size of long... " >&6; }
 if ${ac_cv_sizeof_long+:} false; then :
   $as_echo_n "(cached) " >&6
 else
-  if ac_fn_c_compute_int "$LINENO" "(long int) (sizeof (long))" "ac_cv_sizeof_long"        "$ac_includes_default"; then :
+  if ac_fn_cxx_compute_int "$LINENO" "(long int) (sizeof (long))" "ac_cv_sizeof_long"        "$ac_includes_default"; then :
 
 else
   if test "$ac_cv_type_long" = yes; then
@@ -5588,7 +5583,7 @@ fi
 # Check for existence of the type "bool".  If the compiler does not
 # support it, the ___BOOL type will be mapped to "int".
 
-ac_fn_c_check_type "$LINENO" "bool" "ac_cv_type_bool" "$ac_includes_default"
+ac_fn_cxx_check_type "$LINENO" "bool" "ac_cv_type_bool" "$ac_includes_default"
 if test "x$ac_cv_type_bool" = xyes; then :
 
 fi
@@ -6126,7 +6121,7 @@ for ac_lib in '' ssl crypto; do
     ac_res=-l$ac_lib
     LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
   fi
-  if ac_fn_c_try_link "$LINENO"; then :
+  if ac_fn_cxx_try_link "$LINENO"; then :
   ac_cv_search_main=$ac_res
 fi
 rm -f core conftest.err conftest.$ac_objext \
@@ -6376,7 +6371,7 @@ fi
 
 for ac_header in errno.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "errno.h" "ac_cv_header_errno_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "errno.h" "ac_cv_header_errno_h" "$ac_includes_default"
 if test "x$ac_cv_header_errno_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_ERRNO_H 1
@@ -6388,7 +6383,7 @@ done
 
 for ac_header in float.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "float.h" "ac_cv_header_float_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "float.h" "ac_cv_header_float_h" "$ac_includes_default"
 if test "x$ac_cv_header_float_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_FLOAT_H 1
@@ -6400,7 +6395,7 @@ done
 
 for ac_header in signal.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "signal.h" "ac_cv_header_signal_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "signal.h" "ac_cv_header_signal_h" "$ac_includes_default"
 if test "x$ac_cv_header_signal_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SIGNAL_H 1
@@ -6412,7 +6407,7 @@ done
 
 for ac_header in stdio.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "stdio.h" "ac_cv_header_stdio_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "stdio.h" "ac_cv_header_stdio_h" "$ac_includes_default"
 if test "x$ac_cv_header_stdio_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_STDIO_H 1
@@ -6424,7 +6419,7 @@ done
 
 for ac_header in stdlib.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "stdlib.h" "ac_cv_header_stdlib_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "stdlib.h" "ac_cv_header_stdlib_h" "$ac_includes_default"
 if test "x$ac_cv_header_stdlib_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_STDLIB_H 1
@@ -6436,7 +6431,7 @@ done
 
 for ac_header in string.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "string.h" "ac_cv_header_string_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "string.h" "ac_cv_header_string_h" "$ac_includes_default"
 if test "x$ac_cv_header_string_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_STRING_H 1
@@ -6448,7 +6443,7 @@ done
 
 for ac_header in time.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "time.h" "ac_cv_header_time_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "time.h" "ac_cv_header_time_h" "$ac_includes_default"
 if test "x$ac_cv_header_time_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_TIME_H 1
@@ -6524,7 +6519,7 @@ for ac_lib in '' m; do
     ac_res=-l$ac_lib
     LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
   fi
-  if ac_fn_c_try_link "$LINENO"; then :
+  if ac_fn_cxx_try_link "$LINENO"; then :
   ac_cv_search_asin=$ac_res
 fi
 rm -f core conftest.err conftest.$ac_objext \
@@ -6557,7 +6552,7 @@ fi
 
   for ac_func in getenv
 do :
-  ac_fn_c_check_func "$LINENO" "getenv" "ac_cv_func_getenv"
+  ac_fn_cxx_check_func "$LINENO" "getenv" "ac_cv_func_getenv"
 if test "x$ac_cv_func_getenv" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_GETENV 1
@@ -6568,7 +6563,7 @@ done
 
   for ac_func in time
 do :
-  ac_fn_c_check_func "$LINENO" "time" "ac_cv_func_time"
+  ac_fn_cxx_check_func "$LINENO" "time" "ac_cv_func_time"
 if test "x$ac_cv_func_time" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_TIME 1
@@ -6579,7 +6574,7 @@ done
 
   for ac_func in clock
 do :
-  ac_fn_c_check_func "$LINENO" "clock" "ac_cv_func_clock"
+  ac_fn_cxx_check_func "$LINENO" "clock" "ac_cv_func_clock"
 if test "x$ac_cv_func_clock" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_CLOCK 1
@@ -6618,7 +6613,7 @@ char   *arg0 = *environ;
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_cxx_try_compile "$LINENO"; then :
   ac_cv_environ=yes
 else
   ac_cv_environ=no
@@ -6636,7 +6631,7 @@ $as_echo "#define HAVE_ENVIRON /**/" >>confdefs.h
 
   for ac_header in crt_externs.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "crt_externs.h" "ac_cv_header_crt_externs_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "crt_externs.h" "ac_cv_header_crt_externs_h" "$ac_includes_default"
 if test "x$ac_cv_header_crt_externs_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_CRT_EXTERNS_H 1
@@ -6667,7 +6662,7 @@ char *arg0 = *(*_NSGetEnviron());
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_cxx_try_compile "$LINENO"; then :
   ac_cv__NSGetEnviron=yes
 else
   ac_cv__NSGetEnviron=no
@@ -6685,7 +6680,7 @@ $as_echo "#define HAVE__NSGETENVIRON /**/" >>confdefs.h
 
   for ac_header in mach-o/dyld.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "mach-o/dyld.h" "ac_cv_header_mach_o_dyld_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "mach-o/dyld.h" "ac_cv_header_mach_o_dyld_h" "$ac_includes_default"
 if test "x$ac_cv_header_mach_o_dyld_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_MACH_O_DYLD_H 1
@@ -6697,7 +6692,7 @@ done
 
  for ac_func in _NSGetExecutablePath
 do :
-  ac_fn_c_check_func "$LINENO" "_NSGetExecutablePath" "ac_cv_func__NSGetExecutablePath"
+  ac_fn_cxx_check_func "$LINENO" "_NSGetExecutablePath" "ac_cv_func__NSGetExecutablePath"
 if test "x$ac_cv_func__NSGetExecutablePath" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE__NSGETEXECUTABLEPATH 1
@@ -6710,7 +6705,7 @@ done
 
   for ac_func in remove
 do :
-  ac_fn_c_check_func "$LINENO" "remove" "ac_cv_func_remove"
+  ac_fn_cxx_check_func "$LINENO" "remove" "ac_cv_func_remove"
 if test "x$ac_cv_func_remove" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_REMOVE 1
@@ -6723,7 +6718,7 @@ done
 
   for ac_func in rename
 do :
-  ac_fn_c_check_func "$LINENO" "rename" "ac_cv_func_rename"
+  ac_fn_cxx_check_func "$LINENO" "rename" "ac_cv_func_rename"
 if test "x$ac_cv_func_rename" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_RENAME 1
@@ -6736,7 +6731,7 @@ done
 
   for ac_header in sys/stat.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "sys/stat.h" "ac_cv_header_sys_stat_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "sys/stat.h" "ac_cv_header_sys_stat_h" "$ac_includes_default"
 if test "x$ac_cv_header_sys_stat_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYS_STAT_H 1
@@ -6748,7 +6743,7 @@ done
 
   for ac_header in sys/types.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "sys/types.h" "ac_cv_header_sys_types_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "sys/types.h" "ac_cv_header_sys_types_h" "$ac_includes_default"
 if test "x$ac_cv_header_sys_types_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYS_TYPES_H 1
@@ -6760,7 +6755,7 @@ done
 
   for ac_header in fcntl.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "fcntl.h" "ac_cv_header_fcntl_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "fcntl.h" "ac_cv_header_fcntl_h" "$ac_includes_default"
 if test "x$ac_cv_header_fcntl_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_FCNTL_H 1
@@ -6772,7 +6767,7 @@ done
 
   for ac_func in mkdir
 do :
-  ac_fn_c_check_func "$LINENO" "mkdir" "ac_cv_func_mkdir"
+  ac_fn_cxx_check_func "$LINENO" "mkdir" "ac_cv_func_mkdir"
 if test "x$ac_cv_func_mkdir" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_MKDIR 1
@@ -6785,7 +6780,7 @@ done
 
   for ac_header in dirent.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "dirent.h" "ac_cv_header_dirent_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "dirent.h" "ac_cv_header_dirent_h" "$ac_includes_default"
 if test "x$ac_cv_header_dirent_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_DIRENT_H 1
@@ -6797,7 +6792,7 @@ done
 
   for ac_func in opendir
 do :
-  ac_fn_c_check_func "$LINENO" "opendir" "ac_cv_func_opendir"
+  ac_fn_cxx_check_func "$LINENO" "opendir" "ac_cv_func_opendir"
 if test "x$ac_cv_func_opendir" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_OPENDIR 1
@@ -6808,7 +6803,7 @@ done
 
   for ac_func in fdopendir
 do :
-  ac_fn_c_check_func "$LINENO" "fdopendir" "ac_cv_func_fdopendir"
+  ac_fn_cxx_check_func "$LINENO" "fdopendir" "ac_cv_func_fdopendir"
 if test "x$ac_cv_func_fdopendir" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_FDOPENDIR 1
@@ -6821,7 +6816,7 @@ done
 
   for ac_header in stat.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "stat.h" "ac_cv_header_stat_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "stat.h" "ac_cv_header_stat_h" "$ac_includes_default"
 if test "x$ac_cv_header_stat_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_STAT_H 1
@@ -6833,7 +6828,7 @@ done
 
   for ac_header in sys/stat.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "sys/stat.h" "ac_cv_header_sys_stat_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "sys/stat.h" "ac_cv_header_sys_stat_h" "$ac_includes_default"
 if test "x$ac_cv_header_sys_stat_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYS_STAT_H 1
@@ -6845,7 +6840,7 @@ done
 
   for ac_func in stat
 do :
-  ac_fn_c_check_func "$LINENO" "stat" "ac_cv_func_stat"
+  ac_fn_cxx_check_func "$LINENO" "stat" "ac_cv_func_stat"
 if test "x$ac_cv_func_stat" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_STAT 1
@@ -6856,7 +6851,7 @@ done
 
   for ac_func in stat64
 do :
-  ac_fn_c_check_func "$LINENO" "stat64" "ac_cv_func_stat64"
+  ac_fn_cxx_check_func "$LINENO" "stat64" "ac_cv_func_stat64"
 if test "x$ac_cv_func_stat64" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_STAT64 1
@@ -6865,7 +6860,7 @@ _ACEOF
 fi
 done
 
-  ac_fn_c_check_type "$LINENO" "struct stat64" "ac_cv_type_struct_stat64" "#include <sys/stat.h>
+  ac_fn_cxx_check_type "$LINENO" "struct stat64" "ac_cv_type_struct_stat64" "#include <sys/stat.h>
 "
 if test "x$ac_cv_type_struct_stat64" = xyes; then :
 
@@ -6877,7 +6872,7 @@ fi
 
   for ac_func in getcwd
 do :
-  ac_fn_c_check_func "$LINENO" "getcwd" "ac_cv_func_getcwd"
+  ac_fn_cxx_check_func "$LINENO" "getcwd" "ac_cv_func_getcwd"
 if test "x$ac_cv_func_getcwd" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_GETCWD 1
@@ -6910,7 +6905,7 @@ sigset_t ss;
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_cxx_try_compile "$LINENO"; then :
   ac_cv_type_sigset_t=yes
 else
   ac_cv_type_sigset_t=no
@@ -6931,7 +6926,7 @@ else
 
   for ac_header in unistd.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "unistd.h" "ac_cv_header_unistd_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "unistd.h" "ac_cv_header_unistd_h" "$ac_includes_default"
 if test "x$ac_cv_header_unistd_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_UNISTD_H 1
@@ -6943,7 +6938,7 @@ done
 
   for ac_header in pwd.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "pwd.h" "ac_cv_header_pwd_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "pwd.h" "ac_cv_header_pwd_h" "$ac_includes_default"
 if test "x$ac_cv_header_pwd_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_PWD_H 1
@@ -6955,7 +6950,7 @@ done
 
   for ac_header in dlfcn.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "dlfcn.h" "ac_cv_header_dlfcn_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "dlfcn.h" "ac_cv_header_dlfcn_h" "$ac_includes_default"
 if test "x$ac_cv_header_dlfcn_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_DLFCN_H 1
@@ -6967,7 +6962,7 @@ done
 
   for ac_header in dl.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "dl.h" "ac_cv_header_dl_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "dl.h" "ac_cv_header_dl_h" "$ac_includes_default"
 if test "x$ac_cv_header_dl_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_DL_H 1
@@ -6979,7 +6974,7 @@ done
 
   for ac_header in sys/dxe.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "sys/dxe.h" "ac_cv_header_sys_dxe_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "sys/dxe.h" "ac_cv_header_sys_dxe_h" "$ac_includes_default"
 if test "x$ac_cv_header_sys_dxe_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYS_DXE_H 1
@@ -6991,7 +6986,7 @@ done
 
   for ac_header in mach-o/dyld.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "mach-o/dyld.h" "ac_cv_header_mach_o_dyld_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "mach-o/dyld.h" "ac_cv_header_mach_o_dyld_h" "$ac_includes_default"
 if test "x$ac_cv_header_mach_o_dyld_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_MACH_O_DYLD_H 1
@@ -7003,7 +6998,7 @@ done
 
   for ac_header in mach/mach_time.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "mach/mach_time.h" "ac_cv_header_mach_mach_time_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "mach/mach_time.h" "ac_cv_header_mach_mach_time_h" "$ac_includes_default"
 if test "x$ac_cv_header_mach_mach_time_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_MACH_MACH_TIME_H 1
@@ -7015,7 +7010,7 @@ done
 
   for ac_header in sys/types.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "sys/types.h" "ac_cv_header_sys_types_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "sys/types.h" "ac_cv_header_sys_types_h" "$ac_includes_default"
 if test "x$ac_cv_header_sys_types_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYS_TYPES_H 1
@@ -7027,7 +7022,7 @@ done
 
   for ac_header in sys/time.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "sys/time.h" "ac_cv_header_sys_time_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "sys/time.h" "ac_cv_header_sys_time_h" "$ac_includes_default"
 if test "x$ac_cv_header_sys_time_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYS_TIME_H 1
@@ -7039,7 +7034,7 @@ done
 
   for ac_header in sys/times.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "sys/times.h" "ac_cv_header_sys_times_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "sys/times.h" "ac_cv_header_sys_times_h" "$ac_includes_default"
 if test "x$ac_cv_header_sys_times_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYS_TIMES_H 1
@@ -7051,7 +7046,7 @@ done
 
   for ac_header in sys/timeb.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "sys/timeb.h" "ac_cv_header_sys_timeb_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "sys/timeb.h" "ac_cv_header_sys_timeb_h" "$ac_includes_default"
 if test "x$ac_cv_header_sys_timeb_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYS_TIMEB_H 1
@@ -7063,7 +7058,7 @@ done
 
   for ac_header in sys/timers.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "sys/timers.h" "ac_cv_header_sys_timers_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "sys/timers.h" "ac_cv_header_sys_timers_h" "$ac_includes_default"
 if test "x$ac_cv_header_sys_timers_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYS_TIMERS_H 1
@@ -7075,7 +7070,7 @@ done
 
   for ac_header in sys/resource.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "sys/resource.h" "ac_cv_header_sys_resource_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "sys/resource.h" "ac_cv_header_sys_resource_h" "$ac_includes_default"
 if test "x$ac_cv_header_sys_resource_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYS_RESOURCE_H 1
@@ -7087,7 +7082,7 @@ done
 
   for ac_header in sys/wait.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "sys/wait.h" "ac_cv_header_sys_wait_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "sys/wait.h" "ac_cv_header_sys_wait_h" "$ac_includes_default"
 if test "x$ac_cv_header_sys_wait_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYS_WAIT_H 1
@@ -7099,7 +7094,7 @@ done
 
   for ac_header in sys/mman.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "sys/mman.h" "ac_cv_header_sys_mman_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "sys/mman.h" "ac_cv_header_sys_mman_h" "$ac_includes_default"
 if test "x$ac_cv_header_sys_mman_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYS_MMAN_H 1
@@ -7111,7 +7106,7 @@ done
 
   for ac_header in syslog.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "syslog.h" "ac_cv_header_syslog_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "syslog.h" "ac_cv_header_syslog_h" "$ac_includes_default"
 if test "x$ac_cv_header_syslog_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYSLOG_H 1
@@ -7123,7 +7118,7 @@ done
 
   for ac_header in execinfo.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "execinfo.h" "ac_cv_header_execinfo_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "execinfo.h" "ac_cv_header_execinfo_h" "$ac_includes_default"
 if test "x$ac_cv_header_execinfo_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_EXECINFO_H 1
@@ -7135,7 +7130,7 @@ done
 
   for ac_header in netdb.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "netdb.h" "ac_cv_header_netdb_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "netdb.h" "ac_cv_header_netdb_h" "$ac_includes_default"
 if test "x$ac_cv_header_netdb_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_NETDB_H 1
@@ -7147,7 +7142,7 @@ done
 
   for ac_header in grp.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "grp.h" "ac_cv_header_grp_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "grp.h" "ac_cv_header_grp_h" "$ac_includes_default"
 if test "x$ac_cv_header_grp_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_GRP_H 1
@@ -7162,7 +7157,7 @@ done
   #AC_CHECK_HEADERS(tchar.h)
   for ac_header in fpu_control.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "fpu_control.h" "ac_cv_header_fpu_control_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "fpu_control.h" "ac_cv_header_fpu_control_h" "$ac_includes_default"
 if test "x$ac_cv_header_fpu_control_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_FPU_CONTROL_H 1
@@ -7174,7 +7169,7 @@ done
 
   for ac_header in os2.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "os2.h" "ac_cv_header_os2_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "os2.h" "ac_cv_header_os2_h" "$ac_includes_default"
 if test "x$ac_cv_header_os2_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_OS2_H 1
@@ -7186,7 +7181,7 @@ done
 
   for ac_header in dos.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "dos.h" "ac_cv_header_dos_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "dos.h" "ac_cv_header_dos_h" "$ac_includes_default"
 if test "x$ac_cv_header_dos_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_DOS_H 1
@@ -7198,7 +7193,7 @@ done
 
   for ac_header in direct.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "direct.h" "ac_cv_header_direct_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "direct.h" "ac_cv_header_direct_h" "$ac_includes_default"
 if test "x$ac_cv_header_direct_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_DIRECT_H 1
@@ -7221,7 +7216,7 @@ done
   #AC_CHECK_HEADERS(unix.h)
   for ac_header in wdefwin.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "wdefwin.h" "ac_cv_header_wdefwin_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "wdefwin.h" "ac_cv_header_wdefwin_h" "$ac_includes_default"
 if test "x$ac_cv_header_wdefwin_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_WDEFWIN_H 1
@@ -7233,7 +7228,7 @@ done
 
   for ac_header in tfork.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "tfork.h" "ac_cv_header_tfork_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "tfork.h" "ac_cv_header_tfork_h" "$ac_includes_default"
 if test "x$ac_cv_header_tfork_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_TFORK_H 1
@@ -7245,7 +7240,7 @@ done
 
   for ac_header in curses.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "curses.h" "ac_cv_header_curses_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "curses.h" "ac_cv_header_curses_h" "$ac_includes_default"
 if test "x$ac_cv_header_curses_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_CURSES_H 1
@@ -7257,7 +7252,7 @@ done
 
   for ac_header in ncurses.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "ncurses.h" "ac_cv_header_ncurses_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "ncurses.h" "ac_cv_header_ncurses_h" "$ac_includes_default"
 if test "x$ac_cv_header_ncurses_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_NCURSES_H 1
@@ -7269,7 +7264,7 @@ done
 
   for ac_header in netinet/in.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "netinet/in.h" "ac_cv_header_netinet_in_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "netinet/in.h" "ac_cv_header_netinet_in_h" "$ac_includes_default"
 if test "x$ac_cv_header_netinet_in_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_NETINET_IN_H 1
@@ -7281,7 +7276,7 @@ done
 
   for ac_header in arpa/inet.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "arpa/inet.h" "ac_cv_header_arpa_inet_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "arpa/inet.h" "ac_cv_header_arpa_inet_h" "$ac_includes_default"
 if test "x$ac_cv_header_arpa_inet_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_ARPA_INET_H 1
@@ -7293,7 +7288,7 @@ done
 
   for ac_header in termios.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "termios.h" "ac_cv_header_termios_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "termios.h" "ac_cv_header_termios_h" "$ac_includes_default"
 if test "x$ac_cv_header_termios_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_TERMIOS_H 1
@@ -7306,7 +7301,7 @@ done
   #AC_CHECK_HEADERS(term.h)
   for ac_header in pty.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "pty.h" "ac_cv_header_pty_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "pty.h" "ac_cv_header_pty_h" "$ac_includes_default"
 if test "x$ac_cv_header_pty_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_PTY_H 1
@@ -7318,7 +7313,7 @@ done
 
   for ac_header in stropts.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "stropts.h" "ac_cv_header_stropts_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "stropts.h" "ac_cv_header_stropts_h" "$ac_includes_default"
 if test "x$ac_cv_header_stropts_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_STROPTS_H 1
@@ -7330,7 +7325,7 @@ done
 
   for ac_header in libutil.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "libutil.h" "ac_cv_header_libutil_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "libutil.h" "ac_cv_header_libutil_h" "$ac_includes_default"
 if test "x$ac_cv_header_libutil_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_LIBUTIL_H 1
@@ -7342,7 +7337,7 @@ done
 
   for ac_header in util.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "util.h" "ac_cv_header_util_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "util.h" "ac_cv_header_util_h" "$ac_includes_default"
 if test "x$ac_cv_header_util_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_UTIL_H 1
@@ -7354,7 +7349,7 @@ done
 
   for ac_header in sys/fpu.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "sys/fpu.h" "ac_cv_header_sys_fpu_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "sys/fpu.h" "ac_cv_header_sys_fpu_h" "$ac_includes_default"
 if test "x$ac_cv_header_sys_fpu_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYS_FPU_H 1
@@ -7366,7 +7361,7 @@ done
 
   for ac_header in fenv.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "fenv.h" "ac_cv_header_fenv_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "fenv.h" "ac_cv_header_fenv_h" "$ac_includes_default"
 if test "x$ac_cv_header_fenv_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_FENV_H 1
@@ -7378,7 +7373,7 @@ done
 
   for ac_header in fcntl.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "fcntl.h" "ac_cv_header_fcntl_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "fcntl.h" "ac_cv_header_fcntl_h" "$ac_includes_default"
 if test "x$ac_cv_header_fcntl_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_FCNTL_H 1
@@ -7390,7 +7385,7 @@ done
 
   for ac_header in sys/ioctl.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "sys/ioctl.h" "ac_cv_header_sys_ioctl_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "sys/ioctl.h" "ac_cv_header_sys_ioctl_h" "$ac_includes_default"
 if test "x$ac_cv_header_sys_ioctl_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYS_IOCTL_H 1
@@ -7402,7 +7397,7 @@ done
 
   for ac_header in sys/socket.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "sys/socket.h" "ac_cv_header_sys_socket_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "sys/socket.h" "ac_cv_header_sys_socket_h" "$ac_includes_default"
 if test "x$ac_cv_header_sys_socket_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYS_SOCKET_H 1
@@ -7414,7 +7409,7 @@ done
 
   for ac_header in strings.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "strings.h" "ac_cv_header_strings_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "strings.h" "ac_cv_header_strings_h" "$ac_includes_default"
 if test "x$ac_cv_header_strings_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_STRINGS_H 1
@@ -7426,7 +7421,7 @@ done
 
   for ac_header in memory.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "memory.h" "ac_cv_header_memory_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "memory.h" "ac_cv_header_memory_h" "$ac_includes_default"
 if test "x$ac_cv_header_memory_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_MEMORY_H 1
@@ -7438,7 +7433,7 @@ done
 
   for ac_header in sys/sysctl.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "sys/sysctl.h" "ac_cv_header_sys_sysctl_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "sys/sysctl.h" "ac_cv_header_sys_sysctl_h" "$ac_includes_default"
 if test "x$ac_cv_header_sys_sysctl_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYS_SYSCTL_H 1
@@ -7450,7 +7445,7 @@ done
 
   for ac_header in sys/syscall.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "sys/syscall.h" "ac_cv_header_sys_syscall_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "sys/syscall.h" "ac_cv_header_sys_syscall_h" "$ac_includes_default"
 if test "x$ac_cv_header_sys_syscall_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYS_SYSCALL_H 1
@@ -7462,7 +7457,7 @@ done
 
   for ac_header in linux/fs.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "linux/fs.h" "ac_cv_header_linux_fs_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "linux/fs.h" "ac_cv_header_linux_fs_h" "$ac_includes_default"
 if test "x$ac_cv_header_linux_fs_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_LINUX_FS_H 1
@@ -7474,7 +7469,7 @@ done
 
   for ac_header in ws2tcpip.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "ws2tcpip.h" "ac_cv_header_ws2tcpip_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "ws2tcpip.h" "ac_cv_header_ws2tcpip_h" "$ac_includes_default"
 if test "x$ac_cv_header_ws2tcpip_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_WS2TCPIP_H 1
@@ -7486,7 +7481,7 @@ done
 
   for ac_header in TargetConditionals.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "TargetConditionals.h" "ac_cv_header_TargetConditionals_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "TargetConditionals.h" "ac_cv_header_TargetConditionals_h" "$ac_includes_default"
 if test "x$ac_cv_header_TargetConditionals_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_TARGETCONDITIONALS_H 1
@@ -7498,7 +7493,7 @@ done
 
   for ac_header in AvailabilityMacros.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "AvailabilityMacros.h" "ac_cv_header_AvailabilityMacros_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "AvailabilityMacros.h" "ac_cv_header_AvailabilityMacros_h" "$ac_includes_default"
 if test "x$ac_cv_header_AvailabilityMacros_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_AVAILABILITYMACROS_H 1
@@ -7510,7 +7505,7 @@ done
 
   for ac_header in poll.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "poll.h" "ac_cv_header_poll_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "poll.h" "ac_cv_header_poll_h" "$ac_includes_default"
 if test "x$ac_cv_header_poll_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_POLL_H 1
@@ -7547,7 +7542,7 @@ char   *arg0 = *environ;
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_cxx_try_compile "$LINENO"; then :
   ac_cv_environ=yes
 else
   ac_cv_environ=no
@@ -7565,7 +7560,7 @@ $as_echo "#define HAVE_ENVIRON /**/" >>confdefs.h
 
   for ac_header in crt_externs.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "crt_externs.h" "ac_cv_header_crt_externs_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "crt_externs.h" "ac_cv_header_crt_externs_h" "$ac_includes_default"
 if test "x$ac_cv_header_crt_externs_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_CRT_EXTERNS_H 1
@@ -7596,7 +7591,7 @@ char *arg0 = *(*_NSGetEnviron());
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_cxx_try_compile "$LINENO"; then :
   ac_cv__NSGetEnviron=yes
 else
   ac_cv__NSGetEnviron=no
@@ -7614,7 +7609,7 @@ $as_echo "#define HAVE__NSGETENVIRON /**/" >>confdefs.h
 
   for ac_header in mach-o/dyld.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "mach-o/dyld.h" "ac_cv_header_mach_o_dyld_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "mach-o/dyld.h" "ac_cv_header_mach_o_dyld_h" "$ac_includes_default"
 if test "x$ac_cv_header_mach_o_dyld_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_MACH_O_DYLD_H 1
@@ -7626,7 +7621,7 @@ done
 
  for ac_func in _NSGetExecutablePath
 do :
-  ac_fn_c_check_func "$LINENO" "_NSGetExecutablePath" "ac_cv_func__NSGetExecutablePath"
+  ac_fn_cxx_check_func "$LINENO" "_NSGetExecutablePath" "ac_cv_func__NSGetExecutablePath"
 if test "x$ac_cv_func__NSGetExecutablePath" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE__NSGETEXECUTABLEPATH 1
@@ -7639,7 +7634,7 @@ done
 
   for ac_func in remove
 do :
-  ac_fn_c_check_func "$LINENO" "remove" "ac_cv_func_remove"
+  ac_fn_cxx_check_func "$LINENO" "remove" "ac_cv_func_remove"
 if test "x$ac_cv_func_remove" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_REMOVE 1
@@ -7652,7 +7647,7 @@ done
 
   for ac_func in rename
 do :
-  ac_fn_c_check_func "$LINENO" "rename" "ac_cv_func_rename"
+  ac_fn_cxx_check_func "$LINENO" "rename" "ac_cv_func_rename"
 if test "x$ac_cv_func_rename" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_RENAME 1
@@ -7665,7 +7660,7 @@ done
 
   for ac_header in sys/stat.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "sys/stat.h" "ac_cv_header_sys_stat_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "sys/stat.h" "ac_cv_header_sys_stat_h" "$ac_includes_default"
 if test "x$ac_cv_header_sys_stat_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYS_STAT_H 1
@@ -7677,7 +7672,7 @@ done
 
   for ac_header in sys/types.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "sys/types.h" "ac_cv_header_sys_types_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "sys/types.h" "ac_cv_header_sys_types_h" "$ac_includes_default"
 if test "x$ac_cv_header_sys_types_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYS_TYPES_H 1
@@ -7689,7 +7684,7 @@ done
 
   for ac_header in fcntl.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "fcntl.h" "ac_cv_header_fcntl_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "fcntl.h" "ac_cv_header_fcntl_h" "$ac_includes_default"
 if test "x$ac_cv_header_fcntl_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_FCNTL_H 1
@@ -7701,7 +7696,7 @@ done
 
   for ac_func in mkdir
 do :
-  ac_fn_c_check_func "$LINENO" "mkdir" "ac_cv_func_mkdir"
+  ac_fn_cxx_check_func "$LINENO" "mkdir" "ac_cv_func_mkdir"
 if test "x$ac_cv_func_mkdir" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_MKDIR 1
@@ -7714,7 +7709,7 @@ done
 
   for ac_header in dirent.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "dirent.h" "ac_cv_header_dirent_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "dirent.h" "ac_cv_header_dirent_h" "$ac_includes_default"
 if test "x$ac_cv_header_dirent_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_DIRENT_H 1
@@ -7726,7 +7721,7 @@ done
 
   for ac_func in opendir
 do :
-  ac_fn_c_check_func "$LINENO" "opendir" "ac_cv_func_opendir"
+  ac_fn_cxx_check_func "$LINENO" "opendir" "ac_cv_func_opendir"
 if test "x$ac_cv_func_opendir" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_OPENDIR 1
@@ -7737,7 +7732,7 @@ done
 
   for ac_func in fdopendir
 do :
-  ac_fn_c_check_func "$LINENO" "fdopendir" "ac_cv_func_fdopendir"
+  ac_fn_cxx_check_func "$LINENO" "fdopendir" "ac_cv_func_fdopendir"
 if test "x$ac_cv_func_fdopendir" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_FDOPENDIR 1
@@ -7750,7 +7745,7 @@ done
 
   for ac_header in stat.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "stat.h" "ac_cv_header_stat_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "stat.h" "ac_cv_header_stat_h" "$ac_includes_default"
 if test "x$ac_cv_header_stat_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_STAT_H 1
@@ -7762,7 +7757,7 @@ done
 
   for ac_header in sys/stat.h
 do :
-  ac_fn_c_check_header_mongrel "$LINENO" "sys/stat.h" "ac_cv_header_sys_stat_h" "$ac_includes_default"
+  ac_fn_cxx_check_header_mongrel "$LINENO" "sys/stat.h" "ac_cv_header_sys_stat_h" "$ac_includes_default"
 if test "x$ac_cv_header_sys_stat_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYS_STAT_H 1
@@ -7774,7 +7769,7 @@ done
 
   for ac_func in stat
 do :
-  ac_fn_c_check_func "$LINENO" "stat" "ac_cv_func_stat"
+  ac_fn_cxx_check_func "$LINENO" "stat" "ac_cv_func_stat"
 if test "x$ac_cv_func_stat" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_STAT 1
@@ -7785,7 +7780,7 @@ done
 
   for ac_func in stat64
 do :
-  ac_fn_c_check_func "$LINENO" "stat64" "ac_cv_func_stat64"
+  ac_fn_cxx_check_func "$LINENO" "stat64" "ac_cv_func_stat64"
 if test "x$ac_cv_func_stat64" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_STAT64 1
@@ -7794,7 +7789,7 @@ _ACEOF
 fi
 done
 
-  ac_fn_c_check_type "$LINENO" "struct stat64" "ac_cv_type_struct_stat64" "#include <sys/stat.h>
+  ac_fn_cxx_check_type "$LINENO" "struct stat64" "ac_cv_type_struct_stat64" "#include <sys/stat.h>
 "
 if test "x$ac_cv_type_struct_stat64" = xyes; then :
 
@@ -7806,7 +7801,7 @@ fi
 
   for ac_func in getcwd
 do :
-  ac_fn_c_check_func "$LINENO" "getcwd" "ac_cv_func_getcwd"
+  ac_fn_cxx_check_func "$LINENO" "getcwd" "ac_cv_func_getcwd"
 if test "x$ac_cv_func_getcwd" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_GETCWD 1
@@ -7839,7 +7834,7 @@ sigset_t ss;
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_cxx_try_compile "$LINENO"; then :
   ac_cv_type_sigset_t=yes
 else
   ac_cv_type_sigset_t=no
@@ -7883,7 +7878,7 @@ socklen_t len = 42; return 0;
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_cxx_try_compile "$LINENO"; then :
   ac_cv_type_socklen_t=yes
 else
   ac_cv_type_socklen_t=no
@@ -7991,7 +7986,7 @@ for ac_lib in '' m; do
     ac_res=-l$ac_lib
     LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
   fi
-  if ac_fn_c_try_link "$LINENO"; then :
+  if ac_fn_cxx_try_link "$LINENO"; then :
   ac_cv_search_asin=$ac_res
 fi
 rm -f core conftest.err conftest.$ac_objext \
@@ -8048,7 +8043,7 @@ for ac_lib in '' dl; do
     ac_res=-l$ac_lib
     LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
   fi
-  if ac_fn_c_try_link "$LINENO"; then :
+  if ac_fn_cxx_try_link "$LINENO"; then :
   ac_cv_search_dlopen=$ac_res
 fi
 rm -f core conftest.err conftest.$ac_objext \
@@ -8104,7 +8099,7 @@ for ac_lib in '' dld; do
     ac_res=-l$ac_lib
     LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
   fi
-  if ac_fn_c_try_link "$LINENO"; then :
+  if ac_fn_cxx_try_link "$LINENO"; then :
   ac_cv_search_shl_load=$ac_res
 fi
 rm -f core conftest.err conftest.$ac_objext \
@@ -8164,7 +8159,7 @@ for ac_lib in '' socket; do
     ac_res=-l$ac_lib
     LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
   fi
-  if ac_fn_c_try_link "$LINENO"; then :
+  if ac_fn_cxx_try_link "$LINENO"; then :
   ac_cv_search_socket=$ac_res
 fi
 rm -f core conftest.err conftest.$ac_objext \
@@ -8221,7 +8216,7 @@ for ac_lib in '' nsl resolv xnet; do
     ac_res=-l$ac_lib
     LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
   fi
-  if ac_fn_c_try_link "$LINENO"; then :
+  if ac_fn_cxx_try_link "$LINENO"; then :
   ac_cv_search_gethostbyname=$ac_res
 fi
 rm -f core conftest.err conftest.$ac_objext \
@@ -8278,7 +8273,7 @@ for ac_lib in '' resolv; do
     ac_res=-l$ac_lib
     LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
   fi
-  if ac_fn_c_try_link "$LINENO"; then :
+  if ac_fn_cxx_try_link "$LINENO"; then :
   ac_cv_search_hstrerror=$ac_res
 fi
 rm -f core conftest.err conftest.$ac_objext \
@@ -8335,7 +8330,7 @@ for ac_lib in '' util; do
     ac_res=-l$ac_lib
     LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
   fi
-  if ac_fn_c_try_link "$LINENO"; then :
+  if ac_fn_cxx_try_link "$LINENO"; then :
   ac_cv_search_openpty=$ac_res
 fi
 rm -f core conftest.err conftest.$ac_objext \
@@ -8392,7 +8387,7 @@ for ac_lib in '' rt; do
     ac_res=-l$ac_lib
     LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
   fi
-  if ac_fn_c_try_link "$LINENO"; then :
+  if ac_fn_cxx_try_link "$LINENO"; then :
   ac_cv_search_clock_gettime=$ac_res
 fi
 rm -f core conftest.err conftest.$ac_objext \
@@ -8449,7 +8444,7 @@ for ac_lib in '' winmm; do
     ac_res=-l$ac_lib
     LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
   fi
-  if ac_fn_c_try_link "$LINENO"; then :
+  if ac_fn_cxx_try_link "$LINENO"; then :
   ac_cv_search_timeBeginPeriod=$ac_res
 fi
 rm -f core conftest.err conftest.$ac_objext \
@@ -8479,9 +8474,19 @@ fi
 
   fi
 
+  # detect WSL
+
+  ON_WSL="no"
+
+  if test -r /proc/version; then
+    if grep -q Microsoft /proc/version; then
+      ON_WSL="yes"
+    fi
+  fi
+
   for ac_func in backtrace_symbols_fd
 do :
-  ac_fn_c_check_func "$LINENO" "backtrace_symbols_fd" "ac_cv_func_backtrace_symbols_fd"
+  ac_fn_cxx_check_func "$LINENO" "backtrace_symbols_fd" "ac_cv_func_backtrace_symbols_fd"
 if test "x$ac_cv_func_backtrace_symbols_fd" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_BACKTRACE_SYMBOLS_FD 1
@@ -8492,7 +8497,7 @@ done
 
   for ac_func in chdir
 do :
-  ac_fn_c_check_func "$LINENO" "chdir" "ac_cv_func_chdir"
+  ac_fn_cxx_check_func "$LINENO" "chdir" "ac_cv_func_chdir"
 if test "x$ac_cv_func_chdir" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_CHDIR 1
@@ -8503,7 +8508,7 @@ done
 
   for ac_func in execvp
 do :
-  ac_fn_c_check_func "$LINENO" "execvp" "ac_cv_func_execvp"
+  ac_fn_cxx_check_func "$LINENO" "execvp" "ac_cv_func_execvp"
 if test "x$ac_cv_func_execvp" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_EXECVP 1
@@ -8514,7 +8519,7 @@ done
 
   for ac_func in fcntl
 do :
-  ac_fn_c_check_func "$LINENO" "fcntl" "ac_cv_func_fcntl"
+  ac_fn_cxx_check_func "$LINENO" "fcntl" "ac_cv_func_fcntl"
 if test "x$ac_cv_func_fcntl" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_FCNTL 1
@@ -8525,7 +8530,7 @@ done
 
   for ac_func in getgrnam
 do :
-  ac_fn_c_check_func "$LINENO" "getgrnam" "ac_cv_func_getgrnam"
+  ac_fn_cxx_check_func "$LINENO" "getgrnam" "ac_cv_func_getgrnam"
 if test "x$ac_cv_func_getgrnam" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_GETGRNAM 1
@@ -8536,7 +8541,7 @@ done
 
   for ac_func in getpid
 do :
-  ac_fn_c_check_func "$LINENO" "getpid" "ac_cv_func_getpid"
+  ac_fn_cxx_check_func "$LINENO" "getpid" "ac_cv_func_getpid"
 if test "x$ac_cv_func_getpid" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_GETPID 1
@@ -8547,7 +8552,7 @@ done
 
   for ac_func in getppid
 do :
-  ac_fn_c_check_func "$LINENO" "getppid" "ac_cv_func_getppid"
+  ac_fn_cxx_check_func "$LINENO" "getppid" "ac_cv_func_getppid"
 if test "x$ac_cv_func_getppid" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_GETPPID 1
@@ -8558,7 +8563,7 @@ done
 
   for ac_func in getpwnam
 do :
-  ac_fn_c_check_func "$LINENO" "getpwnam" "ac_cv_func_getpwnam"
+  ac_fn_cxx_check_func "$LINENO" "getpwnam" "ac_cv_func_getpwnam"
 if test "x$ac_cv_func_getpwnam" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_GETPWNAM 1
@@ -8569,7 +8574,7 @@ done
 
   for ac_func in ioctl
 do :
-  ac_fn_c_check_func "$LINENO" "ioctl" "ac_cv_func_ioctl"
+  ac_fn_cxx_check_func "$LINENO" "ioctl" "ac_cv_func_ioctl"
 if test "x$ac_cv_func_ioctl" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_IOCTL 1
@@ -8580,7 +8585,7 @@ done
 
   for ac_func in link
 do :
-  ac_fn_c_check_func "$LINENO" "link" "ac_cv_func_link"
+  ac_fn_cxx_check_func "$LINENO" "link" "ac_cv_func_link"
 if test "x$ac_cv_func_link" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_LINK 1
@@ -8591,7 +8596,7 @@ done
 
   for ac_func in mkfifo
 do :
-  ac_fn_c_check_func "$LINENO" "mkfifo" "ac_cv_func_mkfifo"
+  ac_fn_cxx_check_func "$LINENO" "mkfifo" "ac_cv_func_mkfifo"
 if test "x$ac_cv_func_mkfifo" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_MKFIFO 1
@@ -8602,7 +8607,7 @@ done
 
   for ac_func in mmap
 do :
-  ac_fn_c_check_func "$LINENO" "mmap" "ac_cv_func_mmap"
+  ac_fn_cxx_check_func "$LINENO" "mmap" "ac_cv_func_mmap"
 if test "x$ac_cv_func_mmap" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_MMAP 1
@@ -8613,7 +8618,7 @@ done
 
   for ac_func in open
 do :
-  ac_fn_c_check_func "$LINENO" "open" "ac_cv_func_open"
+  ac_fn_cxx_check_func "$LINENO" "open" "ac_cv_func_open"
 if test "x$ac_cv_func_open" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_OPEN 1
@@ -8624,7 +8629,7 @@ done
 
   for ac_func in pipe
 do :
-  ac_fn_c_check_func "$LINENO" "pipe" "ac_cv_func_pipe"
+  ac_fn_cxx_check_func "$LINENO" "pipe" "ac_cv_func_pipe"
 if test "x$ac_cv_func_pipe" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_PIPE 1
@@ -8635,7 +8640,7 @@ done
 
   for ac_func in readlink
 do :
-  ac_fn_c_check_func "$LINENO" "readlink" "ac_cv_func_readlink"
+  ac_fn_cxx_check_func "$LINENO" "readlink" "ac_cv_func_readlink"
 if test "x$ac_cv_func_readlink" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_READLINK 1
@@ -8646,7 +8651,7 @@ done
 
   for ac_func in rmdir
 do :
-  ac_fn_c_check_func "$LINENO" "rmdir" "ac_cv_func_rmdir"
+  ac_fn_cxx_check_func "$LINENO" "rmdir" "ac_cv_func_rmdir"
 if test "x$ac_cv_func_rmdir" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_RMDIR 1
@@ -8657,7 +8662,7 @@ done
 
   for ac_func in socket
 do :
-  ac_fn_c_check_func "$LINENO" "socket" "ac_cv_func_socket"
+  ac_fn_cxx_check_func "$LINENO" "socket" "ac_cv_func_socket"
 if test "x$ac_cv_func_socket" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SOCKET 1
@@ -8668,7 +8673,7 @@ done
 
   for ac_func in socketpair
 do :
-  ac_fn_c_check_func "$LINENO" "socketpair" "ac_cv_func_socketpair"
+  ac_fn_cxx_check_func "$LINENO" "socketpair" "ac_cv_func_socketpair"
 if test "x$ac_cv_func_socketpair" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SOCKETPAIR 1
@@ -8679,7 +8684,7 @@ done
 
   for ac_func in strerror
 do :
-  ac_fn_c_check_func "$LINENO" "strerror" "ac_cv_func_strerror"
+  ac_fn_cxx_check_func "$LINENO" "strerror" "ac_cv_func_strerror"
 if test "x$ac_cv_func_strerror" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_STRERROR 1
@@ -8690,7 +8695,7 @@ done
 
   for ac_func in symlink
 do :
-  ac_fn_c_check_func "$LINENO" "symlink" "ac_cv_func_symlink"
+  ac_fn_cxx_check_func "$LINENO" "symlink" "ac_cv_func_symlink"
 if test "x$ac_cv_func_symlink" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYMLINK 1
@@ -8701,7 +8706,7 @@ done
 
   for ac_func in sysconf
 do :
-  ac_fn_c_check_func "$LINENO" "sysconf" "ac_cv_func_sysconf"
+  ac_fn_cxx_check_func "$LINENO" "sysconf" "ac_cv_func_sysconf"
 if test "x$ac_cv_func_sysconf" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYSCONF 1
@@ -8712,7 +8717,7 @@ done
 
   for ac_func in sysctl
 do :
-  ac_fn_c_check_func "$LINENO" "sysctl" "ac_cv_func_sysctl"
+  ac_fn_cxx_check_func "$LINENO" "sysctl" "ac_cv_func_sysctl"
 if test "x$ac_cv_func_sysctl" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYSCTL 1
@@ -8723,7 +8728,7 @@ done
 
   for ac_func in sysctlbyname
 do :
-  ac_fn_c_check_func "$LINENO" "sysctlbyname" "ac_cv_func_sysctlbyname"
+  ac_fn_cxx_check_func "$LINENO" "sysctlbyname" "ac_cv_func_sysctlbyname"
 if test "x$ac_cv_func_sysctlbyname" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYSCTLBYNAME 1
@@ -8734,7 +8739,7 @@ done
 
   for ac_func in syslog
 do :
-  ac_fn_c_check_func "$LINENO" "syslog" "ac_cv_func_syslog"
+  ac_fn_cxx_check_func "$LINENO" "syslog" "ac_cv_func_syslog"
 if test "x$ac_cv_func_syslog" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYSLOG 1
@@ -8745,7 +8750,7 @@ done
 
   for ac_func in unlink
 do :
-  ac_fn_c_check_func "$LINENO" "unlink" "ac_cv_func_unlink"
+  ac_fn_cxx_check_func "$LINENO" "unlink" "ac_cv_func_unlink"
 if test "x$ac_cv_func_unlink" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_UNLINK 1
@@ -8756,7 +8761,7 @@ done
 
   for ac_func in utimes
 do :
-  ac_fn_c_check_func "$LINENO" "utimes" "ac_cv_func_utimes"
+  ac_fn_cxx_check_func "$LINENO" "utimes" "ac_cv_func_utimes"
 if test "x$ac_cv_func_utimes" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_UTIMES 1
@@ -8767,7 +8772,7 @@ done
 
   for ac_func in waitpid
 do :
-  ac_fn_c_check_func "$LINENO" "waitpid" "ac_cv_func_waitpid"
+  ac_fn_cxx_check_func "$LINENO" "waitpid" "ac_cv_func_waitpid"
 if test "x$ac_cv_func_waitpid" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_WAITPID 1
@@ -8779,7 +8784,7 @@ done
 
   for ac_func in fstatat
 do :
-  ac_fn_c_check_func "$LINENO" "fstatat" "ac_cv_func_fstatat"
+  ac_fn_cxx_check_func "$LINENO" "fstatat" "ac_cv_func_fstatat"
 if test "x$ac_cv_func_fstatat" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_FSTATAT 1
@@ -8790,7 +8795,7 @@ done
 
   for ac_func in linkat
 do :
-  ac_fn_c_check_func "$LINENO" "linkat" "ac_cv_func_linkat"
+  ac_fn_cxx_check_func "$LINENO" "linkat" "ac_cv_func_linkat"
 if test "x$ac_cv_func_linkat" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_LINKAT 1
@@ -8801,7 +8806,7 @@ done
 
   for ac_func in mkdirat
 do :
-  ac_fn_c_check_func "$LINENO" "mkdirat" "ac_cv_func_mkdirat"
+  ac_fn_cxx_check_func "$LINENO" "mkdirat" "ac_cv_func_mkdirat"
 if test "x$ac_cv_func_mkdirat" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_MKDIRAT 1
@@ -8812,7 +8817,7 @@ done
 
   for ac_func in mkfifoat
 do :
-  ac_fn_c_check_func "$LINENO" "mkfifoat" "ac_cv_func_mkfifoat"
+  ac_fn_cxx_check_func "$LINENO" "mkfifoat" "ac_cv_func_mkfifoat"
 if test "x$ac_cv_func_mkfifoat" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_MKFIFOAT 1
@@ -8823,7 +8828,7 @@ done
 
   for ac_func in openat
 do :
-  ac_fn_c_check_func "$LINENO" "openat" "ac_cv_func_openat"
+  ac_fn_cxx_check_func "$LINENO" "openat" "ac_cv_func_openat"
 if test "x$ac_cv_func_openat" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_OPENAT 1
@@ -8834,7 +8839,7 @@ done
 
   for ac_func in readlinkat
 do :
-  ac_fn_c_check_func "$LINENO" "readlinkat" "ac_cv_func_readlinkat"
+  ac_fn_cxx_check_func "$LINENO" "readlinkat" "ac_cv_func_readlinkat"
 if test "x$ac_cv_func_readlinkat" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_READLINKAT 1
@@ -8845,7 +8850,7 @@ done
 
   for ac_func in renameat
 do :
-  ac_fn_c_check_func "$LINENO" "renameat" "ac_cv_func_renameat"
+  ac_fn_cxx_check_func "$LINENO" "renameat" "ac_cv_func_renameat"
 if test "x$ac_cv_func_renameat" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_RENAMEAT 1
@@ -8857,7 +8862,7 @@ done
   if test "$ON_WSL" != yes; then
     for ac_func in renameat2
 do :
-  ac_fn_c_check_func "$LINENO" "renameat2" "ac_cv_func_renameat2"
+  ac_fn_cxx_check_func "$LINENO" "renameat2" "ac_cv_func_renameat2"
 if test "x$ac_cv_func_renameat2" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_RENAMEAT2 1
@@ -8868,7 +8873,7 @@ done
 
     for ac_func in renameatx_np
 do :
-  ac_fn_c_check_func "$LINENO" "renameatx_np" "ac_cv_func_renameatx_np"
+  ac_fn_cxx_check_func "$LINENO" "renameatx_np" "ac_cv_func_renameatx_np"
 if test "x$ac_cv_func_renameatx_np" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_RENAMEATX_NP 1
@@ -8880,7 +8885,7 @@ done
   fi
   for ac_func in symlinkat
 do :
-  ac_fn_c_check_func "$LINENO" "symlinkat" "ac_cv_func_symlinkat"
+  ac_fn_cxx_check_func "$LINENO" "symlinkat" "ac_cv_func_symlinkat"
 if test "x$ac_cv_func_symlinkat" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SYMLINKAT 1
@@ -8891,7 +8896,7 @@ done
 
   for ac_func in unlinkat
 do :
-  ac_fn_c_check_func "$LINENO" "unlinkat" "ac_cv_func_unlinkat"
+  ac_fn_cxx_check_func "$LINENO" "unlinkat" "ac_cv_func_unlinkat"
 if test "x$ac_cv_func_unlinkat" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_UNLINKAT 1
@@ -8931,7 +8936,7 @@ int fd = 1; struct termios tios; tcgetattr (fd, &tios); tcsetattr (fd, TCSANOW, 
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_cxx_try_compile "$LINENO"; then :
   ac_cv_func_tcgetsetattr=yes
 else
   ac_cv_func_tcgetsetattr=no
@@ -8973,7 +8978,7 @@ struct sigaction sa1, sa2; sigaction (1, &sa1, &sa2);
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_cxx_try_compile "$LINENO"; then :
   ac_cv_func_sigaction=yes
 else
   ac_cv_func_sigaction=no
@@ -9016,7 +9021,7 @@ sigset_t ss; sigemptyset (&ss); sigaddset (&ss, 1);
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_cxx_try_compile "$LINENO"; then :
   ac_cv_func_sigset=yes
 else
   ac_cv_func_sigset=no
@@ -9061,7 +9066,7 @@ sigset_t ss1, ss2; sigemptyset (&ss1); sigaddset (&ss1, 1); sigprocmask (SIG_BLO
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_cxx_try_compile "$LINENO"; then :
   ac_cv_func_sigprocmask=yes
 else
   ac_cv_func_sigprocmask=no
@@ -9103,7 +9108,7 @@ signal (1, SIG_DFL);
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_cxx_try_compile "$LINENO"; then :
   ac_cv_func_signal=yes
 else
   ac_cv_func_signal=no
@@ -9122,7 +9127,7 @@ $as_echo "#define HAVE_SIGNAL /**/" >>confdefs.h
 
   for ac_func in clock_gettime
 do :
-  ac_fn_c_check_func "$LINENO" "clock_gettime" "ac_cv_func_clock_gettime"
+  ac_fn_cxx_check_func "$LINENO" "clock_gettime" "ac_cv_func_clock_gettime"
 if test "x$ac_cv_func_clock_gettime" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_CLOCK_GETTIME 1
@@ -9133,7 +9138,7 @@ done
 
   for ac_func in mach_absolute_time
 do :
-  ac_fn_c_check_func "$LINENO" "mach_absolute_time" "ac_cv_func_mach_absolute_time"
+  ac_fn_cxx_check_func "$LINENO" "mach_absolute_time" "ac_cv_func_mach_absolute_time"
 if test "x$ac_cv_func_mach_absolute_time" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_MACH_ABSOLUTE_TIME 1
@@ -9144,7 +9149,7 @@ done
 
   for ac_func in getclock
 do :
-  ac_fn_c_check_func "$LINENO" "getclock" "ac_cv_func_getclock"
+  ac_fn_cxx_check_func "$LINENO" "getclock" "ac_cv_func_getclock"
 if test "x$ac_cv_func_getclock" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_GETCLOCK 1
@@ -9156,7 +9161,7 @@ done
   #AC_CHECK_FUNCS(GetSystemTime)
   for ac_func in gettimeofday
 do :
-  ac_fn_c_check_func "$LINENO" "gettimeofday" "ac_cv_func_gettimeofday"
+  ac_fn_cxx_check_func "$LINENO" "gettimeofday" "ac_cv_func_gettimeofday"
 if test "x$ac_cv_func_gettimeofday" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_GETTIMEOFDAY 1
@@ -9167,7 +9172,7 @@ done
 
   for ac_func in ftime
 do :
-  ac_fn_c_check_func "$LINENO" "ftime" "ac_cv_func_ftime"
+  ac_fn_cxx_check_func "$LINENO" "ftime" "ac_cv_func_ftime"
 if test "x$ac_cv_func_ftime" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_FTIME 1
@@ -9178,7 +9183,7 @@ done
 
   for ac_func in time
 do :
-  ac_fn_c_check_func "$LINENO" "time" "ac_cv_func_time"
+  ac_fn_cxx_check_func "$LINENO" "time" "ac_cv_func_time"
 if test "x$ac_cv_func_time" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_TIME 1
@@ -9191,7 +9196,7 @@ done
   #AC_CHECK_FUNCS(Sleep)
   for ac_func in sleep
 do :
-  ac_fn_c_check_func "$LINENO" "sleep" "ac_cv_func_sleep"
+  ac_fn_cxx_check_func "$LINENO" "sleep" "ac_cv_func_sleep"
 if test "x$ac_cv_func_sleep" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SLEEP 1
@@ -9207,7 +9212,7 @@ $as_echo "#define USE_ITIMER_REAL /**/" >>confdefs.h
   else
     for ac_func in nanosleep
 do :
-  ac_fn_c_check_func "$LINENO" "nanosleep" "ac_cv_func_nanosleep"
+  ac_fn_cxx_check_func "$LINENO" "nanosleep" "ac_cv_func_nanosleep"
 if test "x$ac_cv_func_nanosleep" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_NANOSLEEP 1
@@ -9220,7 +9225,7 @@ done
 
   for ac_func in setitimer
 do :
-  ac_fn_c_check_func "$LINENO" "setitimer" "ac_cv_func_setitimer"
+  ac_fn_cxx_check_func "$LINENO" "setitimer" "ac_cv_func_setitimer"
 if test "x$ac_cv_func_setitimer" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SETITIMER 1
@@ -9231,7 +9236,7 @@ done
 
   for ac_func in dos_setvect
 do :
-  ac_fn_c_check_func "$LINENO" "dos_setvect" "ac_cv_func_dos_setvect"
+  ac_fn_cxx_check_func "$LINENO" "dos_setvect" "ac_cv_func_dos_setvect"
 if test "x$ac_cv_func_dos_setvect" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_DOS_SETVECT 1
@@ -9242,7 +9247,7 @@ done
 
   for ac_func in DosStartTimer
 do :
-  ac_fn_c_check_func "$LINENO" "DosStartTimer" "ac_cv_func_DosStartTimer"
+  ac_fn_cxx_check_func "$LINENO" "DosStartTimer" "ac_cv_func_DosStartTimer"
 if test "x$ac_cv_func_DosStartTimer" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_DOSSTARTTIMER 1
@@ -9253,7 +9258,7 @@ done
 
   for ac_func in VInstall
 do :
-  ac_fn_c_check_func "$LINENO" "VInstall" "ac_cv_func_VInstall"
+  ac_fn_cxx_check_func "$LINENO" "VInstall" "ac_cv_func_VInstall"
 if test "x$ac_cv_func_VInstall" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_VINSTALL 1
@@ -9267,7 +9272,7 @@ done
   #AC_CHECK_FUNCS(GetProcessTimes)
   for ac_func in getrusage
 do :
-  ac_fn_c_check_func "$LINENO" "getrusage" "ac_cv_func_getrusage"
+  ac_fn_cxx_check_func "$LINENO" "getrusage" "ac_cv_func_getrusage"
 if test "x$ac_cv_func_getrusage" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_GETRUSAGE 1
@@ -9278,7 +9283,7 @@ done
 
   for ac_func in times
 do :
-  ac_fn_c_check_func "$LINENO" "times" "ac_cv_func_times"
+  ac_fn_cxx_check_func "$LINENO" "times" "ac_cv_func_times"
 if test "x$ac_cv_func_times" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_TIMES 1
@@ -9289,7 +9294,7 @@ done
 
   for ac_func in clock
 do :
-  ac_fn_c_check_func "$LINENO" "clock" "ac_cv_func_clock"
+  ac_fn_cxx_check_func "$LINENO" "clock" "ac_cv_func_clock"
 if test "x$ac_cv_func_clock" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_CLOCK 1
@@ -9300,7 +9305,7 @@ done
 
   for ac_func in DosQuerySysInfo
 do :
-  ac_fn_c_check_func "$LINENO" "DosQuerySysInfo" "ac_cv_func_DosQuerySysInfo"
+  ac_fn_cxx_check_func "$LINENO" "DosQuerySysInfo" "ac_cv_func_DosQuerySysInfo"
 if test "x$ac_cv_func_DosQuerySysInfo" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_DOSQUERYSYSINFO 1
@@ -9312,7 +9317,7 @@ done
 
   for ac_func in shl_load
 do :
-  ac_fn_c_check_func "$LINENO" "shl_load" "ac_cv_func_shl_load"
+  ac_fn_cxx_check_func "$LINENO" "shl_load" "ac_cv_func_shl_load"
 if test "x$ac_cv_func_shl_load" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SHL_LOAD 1
@@ -9324,7 +9329,7 @@ done
   #AC_CHECK_FUNCS(LoadLibrary)
   for ac_func in DosLoadModule
 do :
-  ac_fn_c_check_func "$LINENO" "DosLoadModule" "ac_cv_func_DosLoadModule"
+  ac_fn_cxx_check_func "$LINENO" "DosLoadModule" "ac_cv_func_DosLoadModule"
 if test "x$ac_cv_func_DosLoadModule" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_DOSLOADMODULE 1
@@ -9335,7 +9340,7 @@ done
 
   for ac_func in dxe_load
 do :
-  ac_fn_c_check_func "$LINENO" "dxe_load" "ac_cv_func_dxe_load"
+  ac_fn_cxx_check_func "$LINENO" "dxe_load" "ac_cv_func_dxe_load"
 if test "x$ac_cv_func_dxe_load" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_DXE_LOAD 1
@@ -9346,7 +9351,7 @@ done
 
   for ac_func in GetDiskFragment
 do :
-  ac_fn_c_check_func "$LINENO" "GetDiskFragment" "ac_cv_func_GetDiskFragment"
+  ac_fn_cxx_check_func "$LINENO" "GetDiskFragment" "ac_cv_func_GetDiskFragment"
 if test "x$ac_cv_func_GetDiskFragment" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_GETDISKFRAGMENT 1
@@ -9357,7 +9362,7 @@ done
 
   for ac_func in dlopen
 do :
-  ac_fn_c_check_func "$LINENO" "dlopen" "ac_cv_func_dlopen"
+  ac_fn_cxx_check_func "$LINENO" "dlopen" "ac_cv_func_dlopen"
 if test "x$ac_cv_func_dlopen" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_DLOPEN 1
@@ -9368,7 +9373,7 @@ done
 
   for ac_func in NSLinkModule
 do :
-  ac_fn_c_check_func "$LINENO" "NSLinkModule" "ac_cv_func_NSLinkModule"
+  ac_fn_cxx_check_func "$LINENO" "NSLinkModule" "ac_cv_func_NSLinkModule"
 if test "x$ac_cv_func_NSLinkModule" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_NSLINKMODULE 1
@@ -9380,7 +9385,7 @@ done
 
   for ac_func in gethostname
 do :
-  ac_fn_c_check_func "$LINENO" "gethostname" "ac_cv_func_gethostname"
+  ac_fn_cxx_check_func "$LINENO" "gethostname" "ac_cv_func_gethostname"
 if test "x$ac_cv_func_gethostname" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_GETHOSTNAME 1
@@ -9391,7 +9396,7 @@ done
 
   for ac_func in inet_pton
 do :
-  ac_fn_c_check_func "$LINENO" "inet_pton" "ac_cv_func_inet_pton"
+  ac_fn_cxx_check_func "$LINENO" "inet_pton" "ac_cv_func_inet_pton"
 if test "x$ac_cv_func_inet_pton" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_INET_PTON 1
@@ -9402,7 +9407,7 @@ done
 
   for ac_func in getaddrinfo
 do :
-  ac_fn_c_check_func "$LINENO" "getaddrinfo" "ac_cv_func_getaddrinfo"
+  ac_fn_cxx_check_func "$LINENO" "getaddrinfo" "ac_cv_func_getaddrinfo"
 if test "x$ac_cv_func_getaddrinfo" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_GETADDRINFO 1
@@ -9413,7 +9418,7 @@ done
 
   for ac_func in gethostbyname
 do :
-  ac_fn_c_check_func "$LINENO" "gethostbyname" "ac_cv_func_gethostbyname"
+  ac_fn_cxx_check_func "$LINENO" "gethostbyname" "ac_cv_func_gethostbyname"
 if test "x$ac_cv_func_gethostbyname" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_GETHOSTBYNAME 1
@@ -9424,7 +9429,7 @@ done
 
   for ac_func in gethostbyaddr
 do :
-  ac_fn_c_check_func "$LINENO" "gethostbyaddr" "ac_cv_func_gethostbyaddr"
+  ac_fn_cxx_check_func "$LINENO" "gethostbyaddr" "ac_cv_func_gethostbyaddr"
 if test "x$ac_cv_func_gethostbyaddr" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_GETHOSTBYADDR 1
@@ -9435,7 +9440,7 @@ done
 
   for ac_func in getservbyname
 do :
-  ac_fn_c_check_func "$LINENO" "getservbyname" "ac_cv_func_getservbyname"
+  ac_fn_cxx_check_func "$LINENO" "getservbyname" "ac_cv_func_getservbyname"
 if test "x$ac_cv_func_getservbyname" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_GETSERVBYNAME 1
@@ -9446,7 +9451,7 @@ done
 
   for ac_func in getservbyport
 do :
-  ac_fn_c_check_func "$LINENO" "getservbyport" "ac_cv_func_getservbyport"
+  ac_fn_cxx_check_func "$LINENO" "getservbyport" "ac_cv_func_getservbyport"
 if test "x$ac_cv_func_getservbyport" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_GETSERVBYPORT 1
@@ -9457,7 +9462,7 @@ done
 
   for ac_func in getprotobyname
 do :
-  ac_fn_c_check_func "$LINENO" "getprotobyname" "ac_cv_func_getprotobyname"
+  ac_fn_cxx_check_func "$LINENO" "getprotobyname" "ac_cv_func_getprotobyname"
 if test "x$ac_cv_func_getprotobyname" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_GETPROTOBYNAME 1
@@ -9468,7 +9473,7 @@ done
 
   for ac_func in getprotobynumber
 do :
-  ac_fn_c_check_func "$LINENO" "getprotobynumber" "ac_cv_func_getprotobynumber"
+  ac_fn_cxx_check_func "$LINENO" "getprotobynumber" "ac_cv_func_getprotobynumber"
 if test "x$ac_cv_func_getprotobynumber" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_GETPROTOBYNUMBER 1
@@ -9479,7 +9484,7 @@ done
 
   for ac_func in getnetbyname
 do :
-  ac_fn_c_check_func "$LINENO" "getnetbyname" "ac_cv_func_getnetbyname"
+  ac_fn_cxx_check_func "$LINENO" "getnetbyname" "ac_cv_func_getnetbyname"
 if test "x$ac_cv_func_getnetbyname" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_GETNETBYNAME 1
@@ -9491,7 +9496,7 @@ done
 
   for ac_func in select
 do :
-  ac_fn_c_check_func "$LINENO" "select" "ac_cv_func_select"
+  ac_fn_cxx_check_func "$LINENO" "select" "ac_cv_func_select"
 if test "x$ac_cv_func_select" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SELECT 1
@@ -9502,7 +9507,7 @@ done
 
   for ac_func in poll
 do :
-  ac_fn_c_check_func "$LINENO" "poll" "ac_cv_func_poll"
+  ac_fn_cxx_check_func "$LINENO" "poll" "ac_cv_func_poll"
 if test "x$ac_cv_func_poll" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_POLL 1
@@ -9513,7 +9518,7 @@ done
 
   for ac_func in ppoll
 do :
-  ac_fn_c_check_func "$LINENO" "ppoll" "ac_cv_func_ppoll"
+  ac_fn_cxx_check_func "$LINENO" "ppoll" "ac_cv_func_ppoll"
 if test "x$ac_cv_func_ppoll" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_PPOLL 1
@@ -9529,7 +9534,7 @@ done
 
   for ac_func in openpty
 do :
-  ac_fn_c_check_func "$LINENO" "openpty" "ac_cv_func_openpty"
+  ac_fn_cxx_check_func "$LINENO" "openpty" "ac_cv_func_openpty"
 if test "x$ac_cv_func_openpty" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_OPENPTY 1
@@ -9540,7 +9545,7 @@ done
 
   for ac_func in getpt
 do :
-  ac_fn_c_check_func "$LINENO" "getpt" "ac_cv_func_getpt"
+  ac_fn_cxx_check_func "$LINENO" "getpt" "ac_cv_func_getpt"
 if test "x$ac_cv_func_getpt" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_GETPT 1
@@ -9551,7 +9556,7 @@ done
 
   for ac_func in ptsname
 do :
-  ac_fn_c_check_func "$LINENO" "ptsname" "ac_cv_func_ptsname"
+  ac_fn_cxx_check_func "$LINENO" "ptsname" "ac_cv_func_ptsname"
 if test "x$ac_cv_func_ptsname" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_PTSNAME 1
@@ -9562,7 +9567,7 @@ done
 
   for ac_func in ctermid
 do :
-  ac_fn_c_check_func "$LINENO" "ctermid" "ac_cv_func_ctermid"
+  ac_fn_cxx_check_func "$LINENO" "ctermid" "ac_cv_func_ctermid"
 if test "x$ac_cv_func_ctermid" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_CTERMID 1
@@ -9573,7 +9578,7 @@ done
 
   for ac_func in isastream
 do :
-  ac_fn_c_check_func "$LINENO" "isastream" "ac_cv_func_isastream"
+  ac_fn_cxx_check_func "$LINENO" "isastream" "ac_cv_func_isastream"
 if test "x$ac_cv_func_isastream" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_ISASTREAM 1
@@ -9585,7 +9590,7 @@ done
 
   for ac_func in hstrerror
 do :
-  ac_fn_c_check_func "$LINENO" "hstrerror" "ac_cv_func_hstrerror"
+  ac_fn_cxx_check_func "$LINENO" "hstrerror" "ac_cv_func_hstrerror"
 if test "x$ac_cv_func_hstrerror" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_HSTRERROR 1
@@ -9597,7 +9602,7 @@ done
 
   for ac_func in snprintf
 do :
-  ac_fn_c_check_func "$LINENO" "snprintf" "ac_cv_func_snprintf"
+  ac_fn_cxx_check_func "$LINENO" "snprintf" "ac_cv_func_snprintf"
 if test "x$ac_cv_func_snprintf" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SNPRINTF 1
@@ -9615,7 +9620,7 @@ done
     *)
       for ac_func in get_fpc_csr
 do :
-  ac_fn_c_check_func "$LINENO" "get_fpc_csr" "ac_cv_func_get_fpc_csr"
+  ac_fn_cxx_check_func "$LINENO" "get_fpc_csr" "ac_cv_func_get_fpc_csr"
 if test "x$ac_cv_func_get_fpc_csr" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_GET_FPC_CSR 1
@@ -9687,7 +9692,7 @@ main ()
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
+if ac_fn_cxx_try_link "$LINENO"; then :
 
          { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
@@ -9765,7 +9770,7 @@ main ()
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_cxx_try_compile "$LINENO"; then :
   TLS_CLASS="$tls_class"; break
 fi
 rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
@@ -9851,7 +9856,7 @@ CONF_HAVE_CONDITION_VARIABLE="___DONT_HAVE_CONDITION_VARIABLE"
 
 if test "$OS_WIN32" = yes; then
 
-  ac_fn_c_check_type "$LINENO" "CONDITION_VARIABLE" "ac_cv_type_CONDITION_VARIABLE" "#include <windows.h>
+  ac_fn_cxx_check_type "$LINENO" "CONDITION_VARIABLE" "ac_cv_type_CONDITION_VARIABLE" "#include <windows.h>
 "
 if test "x$ac_cv_type_CONDITION_VARIABLE" = xyes; then :
   CONF_HAVE_CONDITION_VARIABLE="___HAVE_CONDITION_VARIABLE"
@@ -9883,7 +9888,7 @@ cpu_set_t cpuset;
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
+if ac_fn_cxx_try_link "$LINENO"; then :
 
 $as_echo "#define HAVE_PTHREAD_SETAFFINITY_NP 1" >>confdefs.h
 
@@ -9931,7 +9936,7 @@ fi
 
 if test "$C_COMP_GNUC" = yes; then
 
-  if ac_fn_c_compute_int "$LINENO" "__GNUC__*100000+__GNUC_MINOR__*1000+__GNUC_PATCHLEVEL__" "C_COMP_GNUC_VERSION"        ""; then :
+  if ac_fn_cxx_compute_int "$LINENO" "__GNUC__*100000+__GNUC_MINOR__*1000+__GNUC_PATCHLEVEL__" "C_COMP_GNUC_VERSION"        ""; then :
 
 fi
 
@@ -9940,7 +9945,7 @@ fi
 
 if test "$C_COMP_CLANG" = yes; then
 
-  if ac_fn_c_compute_int "$LINENO" "__clang_major__*100000+__clang_minor__*1000+__clang_patchlevel__" "C_COMP_CLANG_VERSION"        ""; then :
+  if ac_fn_cxx_compute_int "$LINENO" "__clang_major__*100000+__clang_minor__*1000+__clang_patchlevel__" "C_COMP_CLANG_VERSION"        ""; then :
 
 fi
 
@@ -13759,7 +13764,7 @@ if test "$ac_x_includes" = no; then
 /* end confdefs.h.  */
 #include <X11/Xlib.h>
 _ACEOF
-if ac_fn_c_try_cpp "$LINENO"; then :
+if ac_fn_cxx_try_cpp "$LINENO"; then :
   # We can compile using X headers with no special include directory.
 ac_x_includes=
 else
@@ -13790,7 +13795,7 @@ XrmInitialize ()
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
+if ac_fn_cxx_try_link "$LINENO"; then :
   LIBS=$ac_save_LIBS
 # We can link X programs with no special library path.
 ac_x_libraries=
@@ -13863,8 +13868,8 @@ else
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether -R must be followed by a space" >&5
 $as_echo_n "checking whether -R must be followed by a space... " >&6; }
     ac_xsave_LIBS=$LIBS; LIBS="$LIBS -R$x_libraries"
-    ac_xsave_c_werror_flag=$ac_c_werror_flag
-    ac_c_werror_flag=yes
+    ac_xsave_cxx_werror_flag=$ac_cxx_werror_flag
+    ac_cxx_werror_flag=yes
     cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -13876,7 +13881,7 @@ main ()
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
+if ac_fn_cxx_try_link "$LINENO"; then :
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5
 $as_echo "no" >&6; }
        X_LIBS="$X_LIBS -R$x_libraries"
@@ -13893,7 +13898,7 @@ main ()
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
+if ac_fn_cxx_try_link "$LINENO"; then :
   { $as_echo "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 $as_echo "yes" >&6; }
 	  X_LIBS="$X_LIBS -R $x_libraries"
@@ -13906,7 +13911,7 @@ rm -f core conftest.err conftest.$ac_objext \
 fi
 rm -f core conftest.err conftest.$ac_objext \
     conftest$ac_exeext conftest.$ac_ext
-    ac_c_werror_flag=$ac_xsave_c_werror_flag
+    ac_cxx_werror_flag=$ac_xsave_cxx_werror_flag
     LIBS=$ac_xsave_LIBS
   fi
 
@@ -13939,7 +13944,7 @@ return XOpenDisplay ();
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
+if ac_fn_cxx_try_link "$LINENO"; then :
 
 else
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for dnet_ntoa in -ldnet" >&5
@@ -13967,7 +13972,7 @@ return dnet_ntoa ();
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
+if ac_fn_cxx_try_link "$LINENO"; then :
   ac_cv_lib_dnet_dnet_ntoa=yes
 else
   ac_cv_lib_dnet_dnet_ntoa=no
@@ -14008,7 +14013,7 @@ return dnet_ntoa ();
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
+if ac_fn_cxx_try_link "$LINENO"; then :
   ac_cv_lib_dnet_stub_dnet_ntoa=yes
 else
   ac_cv_lib_dnet_stub_dnet_ntoa=no
@@ -14037,7 +14042,7 @@ rm -f core conftest.err conftest.$ac_objext \
     # on Irix 5.2, according to T.E. Dickey.
     # The functions gethostbyname, getservbyname, and inet_addr are
     # in -lbsd on LynxOS 3.0.1/i386, according to Lars Hecking.
-    ac_fn_c_check_func "$LINENO" "gethostbyname" "ac_cv_func_gethostbyname"
+    ac_fn_cxx_check_func "$LINENO" "gethostbyname" "ac_cv_func_gethostbyname"
 if test "x$ac_cv_func_gethostbyname" = xyes; then :
 
 fi
@@ -14068,7 +14073,7 @@ return gethostbyname ();
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
+if ac_fn_cxx_try_link "$LINENO"; then :
   ac_cv_lib_nsl_gethostbyname=yes
 else
   ac_cv_lib_nsl_gethostbyname=no
@@ -14109,7 +14114,7 @@ return gethostbyname ();
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
+if ac_fn_cxx_try_link "$LINENO"; then :
   ac_cv_lib_bsd_gethostbyname=yes
 else
   ac_cv_lib_bsd_gethostbyname=no
@@ -14134,7 +14139,7 @@ fi
     # variants that don't use the name server (or something).  -lsocket
     # must be given before -lnsl if both are needed.  We assume that
     # if connect needs -lnsl, so does gethostbyname.
-    ac_fn_c_check_func "$LINENO" "connect" "ac_cv_func_connect"
+    ac_fn_cxx_check_func "$LINENO" "connect" "ac_cv_func_connect"
 if test "x$ac_cv_func_connect" = xyes; then :
 
 fi
@@ -14165,7 +14170,7 @@ return connect ();
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
+if ac_fn_cxx_try_link "$LINENO"; then :
   ac_cv_lib_socket_connect=yes
 else
   ac_cv_lib_socket_connect=no
@@ -14183,7 +14188,7 @@ fi
     fi
 
     # Guillermo Gomez says -lposix is necessary on A/UX.
-    ac_fn_c_check_func "$LINENO" "remove" "ac_cv_func_remove"
+    ac_fn_cxx_check_func "$LINENO" "remove" "ac_cv_func_remove"
 if test "x$ac_cv_func_remove" = xyes; then :
 
 fi
@@ -14214,7 +14219,7 @@ return remove ();
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
+if ac_fn_cxx_try_link "$LINENO"; then :
   ac_cv_lib_posix_remove=yes
 else
   ac_cv_lib_posix_remove=no
@@ -14232,7 +14237,7 @@ fi
     fi
 
     # BSDI BSD/OS 2.1 needs -lipc for XOpenDisplay.
-    ac_fn_c_check_func "$LINENO" "shmat" "ac_cv_func_shmat"
+    ac_fn_cxx_check_func "$LINENO" "shmat" "ac_cv_func_shmat"
 if test "x$ac_cv_func_shmat" = xyes; then :
 
 fi
@@ -14263,7 +14268,7 @@ return shmat ();
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
+if ac_fn_cxx_try_link "$LINENO"; then :
   ac_cv_lib_ipc_shmat=yes
 else
   ac_cv_lib_ipc_shmat=no
@@ -14315,7 +14320,7 @@ return IceConnectionNumber ();
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_link "$LINENO"; then :
+if ac_fn_cxx_try_link "$LINENO"; then :
   ac_cv_lib_ICE_IceConnectionNumber=yes
 else
   ac_cv_lib_ICE_IceConnectionNumber=no
