@@ -56,14 +56,11 @@
             (loop (##fx+ i 1) (##cdr l)))
           code))))
 
-(define (##no-stepper) (macro-make-no-stepper))
+(define (##no-stepper)
+  (macro-make-no-stepper))
 
-(define ##main-stepper (##no-stepper))
-
-(define-prim (##main-stepper-set! x)
-  (set! ##main-stepper x))
-
-(define (##current-stepper) ##main-stepper)
+(define ##current-stepper
+  (##make-parameter (##no-stepper)))
 
 ;;;----------------------------------------------------------------------------
 
@@ -491,6 +488,12 @@
 
 (##define-macro (glo-access? x)
   `(##not (##vector? ,x)))
+
+(##define-macro (glo-access-ref var)
+  `(##global-var-ref ,var))
+
+(##define-macro (glo-access-set! var val)
+  `(##global-var-set! ,var ,val))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3162,7 +3165,7 @@
 (define ##cprc-glo-ref
   (macro-make-cprc
    (macro-reference-step! ()
-     (let ((val (##global-var-ref (^ 0))))
+     (let ((val (glo-access-ref (^ 0))))
        (if (macro-unbound? val)
            (##first-argument ;; keep $code and rte in environment-map
             (##raise-unbound-global-exception $code rte (^ 0))
@@ -3217,13 +3220,13 @@
   (macro-make-cprc
    (let ((val (macro-code-run (^ 0))))
      (macro-set!-step! (val)
-       (if (macro-unbound? (##global-var-ref (^ 1)))
+       (if (macro-unbound? (glo-access-ref (^ 1)))
            (##first-argument ;; keep $code and rte in environment-map
             (##raise-unbound-global-exception $code rte (^ 1))
             $code
             rte)
            (begin
-             (##global-var-set! (^ 1) val)
+             (glo-access-set! (^ 1) val)
              (##void)))))))
 
 (define ##gen-glo-set
@@ -3239,7 +3242,7 @@
    (let ((val (macro-code-run (^ 0))))
      (macro-define-step! (val)
        (begin
-         (##global-var-set! (^ 1) val)
+         (glo-access-set! (^ 1) val)
          (##void))))))
 
 (define ##gen-glo-def
@@ -3262,7 +3265,7 @@
                    (let loop ((i (##fx- len 1)))
                      (if (##fx>= i 0)
                          (begin
-                           (##global-var-set!
+                           (glo-access-set!
                             (##vector-ref inds i)
                             (##values-ref vals i))
                            (loop (##fx- i 1)))
@@ -3271,7 +3274,7 @@
 
              (if (##fx= 1 (##vector-length inds))
                  (begin
-                   (##global-var-set!
+                   (glo-access-set!
                     (##vector-ref inds 0)
                     vals)
                    (##void))
@@ -3298,13 +3301,13 @@
                          (loop1 (##fx- i 1)
                                 (##cons (##values-ref vals i) rest))
                          (begin
-                           (##global-var-set!
+                           (glo-access-set!
                             (##vector-ref inds n-1)
                             rest)
                            (let loop2 ((i i))
                              (if (##fx>= i 0)
                                  (begin
-                                   (##global-var-set!
+                                   (glo-access-set!
                                     (##vector-ref inds i)
                                     (##values-ref vals i))
                                    (loop2 (##fx- i 1)))
@@ -3313,16 +3316,16 @@
 
              (if (##fx= 1 (##vector-length inds))
                  (begin
-                   (##global-var-set!
+                   (glo-access-set!
                     (##vector-ref inds 0)
                     (##list vals))
                    (##void))
                  (if (##fx= 2 (##vector-length inds))
                      (begin
-                       (##global-var-set!
+                       (glo-access-set!
                         (##vector-ref inds 0)
                         vals)
-                       (##global-var-set!
+                       (glo-access-set!
                         (##vector-ref inds 1)
                         '())
                        (##void))

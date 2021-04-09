@@ -163,26 +163,28 @@
   `(macro-step! #f 7 ,vars ,@body))
 
 (##define-macro (macro-make-no-stepper)
-  ''#(#(#f #f #f #f #f #f #f) #f #f #f #f #f #f #f))
+  ''#(#(#f #f #f #f #f #f #f) #f #f #f #f #f #f #f #(#f #f #f #f #f #f #f)))
 
-(##define-macro (macro-make-step-handlers)
-  '(##vector ##step-handler
-             ##step-handler
-             ##step-handler
-             ##step-handler
-             ##step-handler
-             ##step-handler
-             ##step-handler))
+(##define-macro (macro-make-step-handlers handler)
+  `(##vector ,handler
+             ,handler
+             ,handler
+             ,handler
+             ,handler
+             ,handler
+             ,handler))
 
-(##define-macro (macro-make-main-stepper)
-  '(##vector (##vector-copy ##step-handlers)
-             #f
-             #f
-             #f
-             #f
-             #f
-             #f
-             #f))
+(##define-macro (macro-make-stepper step-handlers)
+  `(let ((step-handlers ,step-handlers))
+     (##vector (##vector-copy step-handlers)
+               #f
+               #f
+               #f
+               #f
+               #f
+               #f
+               #f
+               step-handlers)))
 
 (##define-macro (macro-step! leapable? handler-index vars . body)
   `(let* (($$execute-body

@@ -1424,6 +1424,13 @@
   (##newline port))
 
 (define (##display-rte cte rte indent port)
+  (##for-each-rte-binding
+   cte
+   rte
+   (lambda (var val-or-box cte)
+     (##display-var-val var val-or-box cte indent port))))
+
+(define (##for-each-rte-binding cte rte proc)
   (let loop1 ((c cte)
               (r rte))
     (cond ((##cte-top? c))
@@ -1434,7 +1441,7 @@
                  (let ((var (##car vars)))
                    (if (##not (##hidden-local-var? var))
                        (let ((val-or-box (##car vals)))
-                         (##display-var-val var val-or-box c indent port)))
+                         (proc var val-or-box c)))
                    (loop2 (##cdr vars)
                           (##cdr vals)))
                  (loop1 (##cte-parent-cte c)
@@ -1759,7 +1766,8 @@
   (let ((settings (##vector #f #f)))
     (lambda (proc args execute)
       (let ((stepping? (##vector-ref settings 0))
-            (trace? (##vector-ref settings 1)))
+            (trace? (##vector-ref settings 1))
+            (stepper (macro-code-stepper (##interp-procedure-code proc))))
         (if trace?
             (##trace-generate
              (##make-friendly-call-form
@@ -1769,10 +1777,11 @@
               ##inverse-eval
               #f)
              execute
-             (and stepping? 's))
+             (and stepping? 's)
+             stepper)
             (begin
               (if stepping?
-                  (##step-on)) ;; turn on stepping
+                  (##step-on stepper)) ;; turn on stepping
               (execute)))))))
 
 (define-prim (##make-friendly-call-form proc args max-args transform-arg annotate?)
@@ -1803,7 +1812,7 @@
 
 (define ##trace-depth (##make-parameter 0))
 
-(define-prim (##trace-generate form execute s-or-l)
+(define-prim (##trace-generate form execute s-or-l stepper)
 
   (define max-depth 10)
 
@@ -1858,7 +1867,7 @@
          (##newline port)
          #t))))
 
-  (##step-off)
+  (##step-off stepper)
 
   (##continuation-capture
    (lambda (cont)
@@ -1879,7 +1888,7 @@
        (cond ((##eq? ##nontail-call-for-leap parent)
               (if (##eq? s-or-l 's)
                   ;; turn on stepping before tail call (execute)
-                  (##step-on))
+                  (##step-on stepper))
               (execute))
              ((##eq? ##nontail-call-for-step parent)
               (if (##eq? s-or-l 'l)
@@ -1887,7 +1896,7 @@
                   (begin
                     (if (##eq? s-or-l 's)
                         ;; turn on stepping before tail call (execute)
-                        (##step-on))
+                        (##step-on stepper))
                     (execute))))
              (else
               (let ((result
@@ -1900,21 +1909,19 @@
                           (lambda ()
                             (if (##eq? s-or-l 's)
                                 ;; turn on stepping before nontail call (execute)
-                                (##step-on))
+                                (##step-on stepper))
                             (##nontail-call-for-step execute))))))
 
                 (let ((saved-stepper
                        (##vector-copy (##current-stepper))))
-                  (##step-off)
+                  (##step-off stepper)
                   (output-to-repl-with-indent depth " " result) ;; show result
                   (##step-restore saved-stepper)
                   result))))))))
 
-(define-prim (##nontail-call-for-leap execute)
+(define-prim (##nontail-call-for-leap execute stepper)
   (##declare (not interrupts-enabled))
-  (let ((result (execute)))
-    (##step-on) ;; turn on stepping at end of a leap
-    result))
+  (##step-on stepper (execute))) ;; turn on stepping at end of a leap
 
 (define-prim (##nontail-call-for-step execute)
   (##declare (not interrupts-enabled))
@@ -2004,33 +2011,40 @@
    ##unbreak
    (if (##pair? args) args ##break-list)))
 
-(define-prim (##step-on)
+(define-prim (##step-on
+              #!optional
+              (stepper (##current-stepper))
+              (result (##void)))
   (##declare (not interrupts-enabled))
-  (let* ((stepper (##current-stepper))
-         (handlers (##vector-ref stepper 0)))
+  (let ((handlers (##vector-ref stepper 0)))
     (let loop ((i (##vector-length handlers)))
       (if (##not (##fx< i 1))
           (let ((i-1 (##fx- i 1)))
             (##vector-set! stepper i (##vector-ref handlers i-1))
             (loop i-1))))
-    (##void)))
+    result))
 
-(define-prim (##step-off)
+(define-prim (##step-off
+              #!optional
+              (stepper (##current-stepper)))
   (##declare (not interrupts-enabled))
-  (let* ((stepper (##current-stepper))
-         (handlers (##vector-ref stepper 0)))
-    (let loop ((i (##vector-length handlers)))
+  (let* ((handlers (##vector-ref stepper 0))
+         (len (##vector-length handlers)))
+    (let loop ((i len))
       (if (##not (##fx< i 1))
           (let ((i-1 (##fx- i 1)))
             (##vector-set! stepper i #f)
             (loop i-1))))
     (##void)))
 
-(define-prim (##step-restore saved-stepper)
+(define-prim (##step-restore
+              saved-stepper
+              #!optional
+              (stepper (##current-stepper)))
   (##declare (not interrupts-enabled))
-  (let* ((stepper (##current-stepper))
-         (handlers (##vector-ref stepper 0)))
-    (let loop ((i (##vector-length handlers)))
+  (let* ((handlers (##vector-ref stepper 0))
+         (len (##vector-length handlers)))
+    (let loop ((i len))
       (if (##not (##fx< i 1))
           (let ((i-1 (##fx- i 1)))
             (##vector-set! stepper
@@ -2041,18 +2055,23 @@
     (##void)))
 
 (define-prim (step)
-  (##step-on))
+  (##step-on)) ;; turn on stepping on current stepper
 
-(define-prim (##step-level-set! n)
+(define-prim (##step-level-set!
+              n
+              #!optional
+              (stepper (##current-stepper)))
   (##declare (not interrupts-enabled))
-  (let* ((stepper (##current-stepper))
-         (handlers (##vector-ref stepper 0)))
-    (let loop ((i (##vector-length handlers)))
+  (let* ((handlers (##vector-ref stepper 0))
+         (len (##vector-length handlers))
+         (step-handlers (##vector-ref stepper (##fx+ len 1))))
+    (let loop ((i len))
       (if (##not (##fx< i 1))
           (let ((i-1 (##fx- i 1)))
-            (##vector-set! handlers i-1
+            (##vector-set! handlers
+                           i-1
                            (if (##fx< i-1 n)
-                               (##vector-ref ##step-handlers i-1)
+                               (##vector-ref step-handlers i-1)
                                #f))
             (loop i-1))))
     (##void)))
@@ -2062,9 +2081,10 @@
     (macro-check-fixnum-range-incl n 1 0 7 (step-level-set! n)
       (##step-level-set! n))))
 
-(define ##step-handlers (macro-make-step-handlers))
+(define ##default-step-handlers
+  (macro-make-step-handlers ##step-handler))
 
-(##main-stepper-set! (macro-make-main-stepper))
+(##current-stepper (macro-make-stepper ##default-step-handlers))
 
 (define ##repl-display-environment?
   (##make-parameter #f))
@@ -2079,7 +2099,7 @@
 
 (define-prim (##step-handler leapable? $code rte execute-body . other)
   (##declare (not interrupts-enabled) (environment-map))
-  (##step-off) ;; turn off stepping
+  (##step-off (macro-code-stepper $code)) ;; turn off stepping
   (##step-handler-continue
    (##step-handler-get-command $code rte)
    leapable?
@@ -2108,7 +2128,13 @@
      (##newline port)
      #f)))
 
-(define-prim (##step-handler-continue cmd leapable? $code rte execute-body other)
+(define-prim (##step-handler-continue
+              cmd
+              leapable?
+              $code
+              rte
+              execute-body
+              other)
 
   ;; cmd is one of the symbols "c", "s" or "l" or a one element vector
 
@@ -2120,7 +2146,8 @@
         ((or (##eq? cmd 'l) (##eq? cmd 's))
          (##trace-generate (##decomp $code)
                            execute
-                           (if (and (##eq? cmd 'l) leapable?) 'l 's)))
+                           (if (and (##eq? cmd 'l) leapable?) 'l 's)
+                           (macro-code-stepper $code)))
         (else
          (##vector-ref cmd 0))))
 
@@ -2843,7 +2870,7 @@
                          src))
                    src))))))
 
-  (##step-off) ;; turn off stepping
+  (##step-off) ;; turn off stepping on current stepper
 
   (##repl-context-command repl-context (read-command)))
 
@@ -3474,7 +3501,7 @@
 
 (if (##fx= (macro-debug-settings-error (##set-debug-settings! 0 0))
            (macro-debug-settings-error-single-step))
-    (##step-on))
+    (##step-on)) ;; turn on stepping on current stepper
 
 (##current-user-interrupt-handler ##default-user-interrupt-handler)
 
