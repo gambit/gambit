@@ -2550,6 +2550,10 @@ for a discussion of branch cuts.
                    temp
                    (##exact->inexact temp))))
             ;; abs-r is not zero
+            ((##zero? abs-i)
+             ;; abs-i is an inexact zero
+             (##exact->inexact (##log abs-r)))
+            ;; neither absi nor abs-r are zero
             (else
              (if (##< abs-r abs-i)
                  (log-mag abs-r abs-i)
