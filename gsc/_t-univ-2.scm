@@ -1606,7 +1606,18 @@
                            (^if (^= (^rts-field-use-priv 'module_count)
                                     (^array-length (^rts-field-use-priv 'module_table)))
                                 (^expr-statement
-                                 (^call-prim (^rts-method-use 'program_start)))))))))))))
+                                 (^call-prim (^rts-method-use 'all_modules_registered)))))))))))))
+
+  (univ-define-rtlib-feature 'all_modules_registered
+   (univ-rtlib-feature-method
+    '(public)
+    'noresult
+    '()
+    "\n"
+    '()
+    (lambda (ctx)
+      (^expr-statement
+       (^call-prim (^rts-method-use 'program_start))))))
 
   (univ-define-rtlib-feature 'program_start
    (univ-rtlib-feature-method
@@ -2151,7 +2162,11 @@
                      (^field 'slots obj)
                      (^int 3))
                     ".forEach(function (val, key) {
-                        result[key] = val;
+                        result[key] = "
+                    (^call-prim
+                     (^rts-method-use 'scm2host)
+                     (^local-var 'val))
+                    ";
                       });"
                     "return result;")))
            (else

@@ -34,11 +34,8 @@ function VM() {
   vm.ui = null;
 
   if (vm.os_web) {
-
-    // Set things up to defer execution of Scheme code until
-    // vm.init is called.
-
-    @module_table@.push(null); // pretend an extra module is needed
+    // Defer program execution until vm.init is called.
+    @all_modules_registered@ = function () { };
   }
 };
 
@@ -49,10 +46,7 @@ VM.prototype.init = function (ui_elem) {
   vm.os_web_origin = @os_web_origin@;
   vm.ui = new UI(vm, ui_elem);
 
-  // Start execution of Scheme code.
-
-  @module_table@.pop(); // remove extra module
-  @program_start@();
+  @program_start@(); // Start execution of Scheme code.
 };
 
 VM.prototype.os_condvar_ready_set = function (condvar_scm, ready) {
@@ -60,16 +54,6 @@ VM.prototype.os_condvar_ready_set = function (condvar_scm, ready) {
   var vm = this;
 
   @os_condvar_ready_set@(condvar_scm, ready);
-};
-
-VM.prototype.new_repl = function () {
-
-  var vm = this;
-
-  @async_call@(false, // no result needed
-               @host2scm@(false),
-               @glo@['##new-repl'],
-               []);
 };
 
 VM.prototype.new_repl = function () {
