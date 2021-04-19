@@ -4132,6 +4132,10 @@
   (##declare (not interrupts-enabled))
   ((macro-port-name port) port))
 
+(define-prim (##port-name-set! port name)
+  (##declare (not interrupts-enabled))
+  (macro-port-name-set! port (lambda (port) name)))
+
 (define-prim (##read
               #!optional
               (port (macro-current-input-port)))
@@ -5556,116 +5560,6 @@
       (macro-check-object-input-port p 1 (read-all port reader)
         (macro-check-procedure r 2 (read-all port r)
           (##read-all p r))))))
-
-(define-prim (##read-all-as-a-begin-expr-from-path
-              path
-              readtable
-              wrap
-              unwrap
-              #!optional
-              (case-conversion? '()))
-
-  (define (fail)
-    (##fail-check-string 1 open-input-file path))
-
-  (##make-input-path-psettings
-   (##list 'path: path
-           'eol-encoding: 'cr-lf)
-   fail
-   (lambda (psettings)
-     (let ((path (macro-psettings-path psettings)))
-       (if (##not path)
-           (fail)
-           (##read-all-as-a-begin-expr-from-psettings
-            psettings
-            path
-            readtable
-            wrap
-            unwrap
-            case-conversion?))))))
-
-(define-prim (##read-all-as-a-begin-expr-from-psettings
-              psettings
-              path-or-settings
-              readtable
-              wrap
-              unwrap
-              #!optional
-              (case-conversion? '()))
-
-  (define (fail)
-    (##fail-check-string-or-settings 1 open-input-file path-or-settings))
-
-  (let ((path (macro-psettings-path psettings)))
-    (if (##not path)
-        (fail)
-        (##open-file-generic-from-psettings
-         psettings
-         #f
-         (lambda (port)
-           (if (##fixnum? port)
-               port
-               (let* ((extension
-                       (##path-extension path))
-                      (start-syntax
-                       (let ((x (##assoc extension ##scheme-file-extensions)))
-                         (if x
-                             (##cdr x)
-                             (macro-readtable-start-syntax readtable)))))
-                 (##read-all-as-a-begin-expr-from-port
-                  port
-                  readtable
-                  wrap
-                  unwrap
-                  start-syntax
-                  #t
-                  case-conversion?))))
-         open-input-file
-         path-or-settings))))
-
-(define-prim (##read-all-as-a-begin-expr-from-port
-              port
-              readtable
-              wrap
-              unwrap
-              start-syntax
-              close-port?
-              #!optional
-              (case-conversion? '()))
-  (##with-exception-catcher
-   (lambda (exc)
-     (if close-port?
-         (##close-input-port port))
-     (macro-raise exc))
-   (lambda ()
-     (let ((rt
-            (##readtable-copy-shallow readtable)))
-       (macro-readtable-start-syntax-set! rt start-syntax)
-       (let* ((re
-               (##make-readenv port rt wrap unwrap #t case-conversion? #f))
-              (head
-               (##cons (wrap re '##begin)
-                       '())) ;; tail will be replaced with expressions read
-              (expr
-               (wrap re head))
-              (first
-               (##read-datum-or-eof re))
-              (rest
-               (if (##eof-object? first)
-                   '()
-                   (##read-all re ##read-datum-or-eof))))
-         (if close-port?
-             (##close-input-port port))
-         (if (##not (##eof-object? first))
-             (##set-cdr! head
-                         (if (##eq? first (##script-marker))
-                             rest
-                             (##cons first rest))))
-         (let* ((sl (macro-readenv-script-line re))
-                (script-line (and (##string? sl) sl)))
-           (##vector script-line
-                     expr
-                     (##port-name port))))))))
 
 (define-prim (##write-char2 c port)
 

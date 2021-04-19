@@ -1105,6 +1105,145 @@
          (##cons '##begin lst)
          src))))
 
+(define (##read-all-as-a-begin-expr-from-path
+         path
+         #!optional
+         (readtable (##current-readtable))
+         (wrap ##wrap-datum)
+         (unwrap ##unwrap-datum)
+         (case-conversion? '()))
+
+  (define (fail)
+    (##fail-check-string 1 open-input-file path))
+
+  (##make-input-path-psettings
+   (##list 'path: path
+           'eol-encoding: 'cr-lf)
+   fail
+   (lambda (psettings)
+     (let ((path (macro-psettings-path psettings)))
+       (if (##not path)
+           (fail)
+           (##read-all-as-a-begin-expr-from-psettings
+            psettings
+            path
+            readtable
+            wrap
+            unwrap
+            case-conversion?))))))
+
+(define (##read-all-as-a-begin-expr-from-psettings
+         psettings
+         path-or-settings
+         #!optional
+         (readtable (##current-readtable))
+         (wrap ##wrap-datum)
+         (unwrap ##unwrap-datum)
+         (case-conversion? '()))
+
+  (define (fail)
+    (##fail-check-string-or-settings 1 open-input-file path-or-settings))
+
+  (let ((path (macro-psettings-path psettings)))
+    (if (##not path)
+        (fail)
+        (##open-file-generic-from-psettings
+         psettings
+         #f
+         (lambda (port)
+           (if (##fixnum? port)
+               port
+               (let* ((extension
+                       (##path-extension path))
+                      (start-syntax
+                       (let ((x (##assoc extension ##scheme-file-extensions)))
+                         (if x
+                             (##cdr x)
+                             (macro-readtable-start-syntax readtable)))))
+                 (##read-all-as-a-begin-expr-from-port
+                  port
+                  readtable
+                  wrap
+                  unwrap
+                  start-syntax
+                  #t
+                  case-conversion?))))
+         open-input-file
+         path-or-settings))))
+
+(define (##read-all-as-a-begin-expr-from-port
+         port
+         #!optional
+         (readtable (##current-readtable))
+         (wrap ##wrap-datum)
+         (unwrap ##unwrap-datum)
+         (start-syntax '()) ;; default to readtable start syntax
+         (close-port? #t)
+         (case-conversion? '())) ;; default to readtable case conversion
+  (##with-exception-catcher
+   (lambda (exc)
+     (if close-port?
+         (##close-input-port port))
+     (macro-raise exc))
+   (lambda ()
+     (let ((rt
+            (##readtable-copy-shallow readtable)))
+       (if (##not (##eq? start-syntax '())) ;; do not default to readtable?
+           (macro-readtable-start-syntax-set! rt start-syntax))
+       (let* ((re
+               (##make-readenv port rt wrap unwrap #t case-conversion? #f))
+              (head
+               (##cons (wrap re '##begin)
+                       '())) ;; tail will be replaced with expressions read
+              (expr
+               (wrap re head))
+              (first
+               (##read-datum-or-eof re))
+              (rest
+               (if (##eof-object? first)
+                   '()
+                   (##read-all re ##read-datum-or-eof))))
+         (if close-port?
+             (##close-input-port port))
+         (if (##not (##eof-object? first))
+             (##set-cdr! head
+                         (if (##eq? first (##script-marker))
+                             rest
+                             (##cons first rest))))
+         (let* ((sl (macro-readenv-script-line re))
+                (script-line (and (##string? sl) sl)))
+           (##vector script-line
+                     expr
+                     (##port-name port))))))))
+
+(define (##read-all-as-a-begin-expr-from-string
+         content
+         #!optional
+         (name #f)
+         (line #f)
+         (col #f)
+         (readtable (##current-readtable))
+         (wrap ##wrap-datum)
+         (unwrap ##unwrap-datum)
+         (start-syntax '()) ;; default to readtable start syntax
+         (case-conversion? '())) ;; default to readtable case conversion
+  (##call-with-input-string
+   content
+   (lambda (port)
+     (if name
+         (##port-name-set! port name))
+     (if line
+         (##input-port-line-set! port line))
+     (if col
+         (##input-port-column-set! port col))
+     (##read-all-as-a-begin-expr-from-port
+      port
+      readtable
+      wrap
+      unwrap
+      start-syntax
+      case-conversion?))))
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Compiler's main entry
