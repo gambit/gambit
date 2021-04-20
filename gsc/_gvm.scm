@@ -2492,7 +2492,7 @@
                   port))
           ((eq? var ret-var)
            (display "#ret" port))
-          ((temp-var? var)
+          ((var-temp? var)
            (display "#" port))
           (else
            (write (var-name var) port))))
@@ -2893,7 +2893,7 @@
                           i)
                    (compiler-internal-error
                     "debug-info-add!, multiple closure environments")))
-                ((or (not x) (temp-var? x)) ; not live or temporary var
+                ((or (not x) (var-temp? x)) ; not live or temporary var
                  (loop1 (+ i 1)
                         (cdr lst1)
                         lst2

@@ -2,7 +2,7 @@
 
 ;;; File: "_env.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -33,10 +33,7 @@
 ;; temporary variables are used to name intermediate values
 
 (define (make-temp-var name)
-  (make-var name #t (ptset-empty) (ptset-empty) #f))
-
-(define (temp-var? var)
-  (eq? (var-bound var) #t))
+  (make-var name #t (ptset-empty) (ptset-empty) #f #t))
 
 ;; special variable used to denote the return address of a procedure
 
@@ -72,7 +69,7 @@
 
 (define (env-new-var! env name source)
   (let* ((glob (not (env-parent-ref env)))
-         (var (make-var name (not glob) (ptset-empty) (ptset-empty) source)))
+         (var (make-var name (not glob) (ptset-empty) (ptset-empty) source #f)))
     (env-vars-set! env (cons var (env-vars-ref env)))
     var))
 

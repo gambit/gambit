@@ -637,7 +637,8 @@
                           #t
                           (ptset-empty)
                           (ptset-empty)
-                          (var-source var))))
+                          (var-source var)
+                          (var-temp? var))))
            (var-boxed?-set! cloned-var (var-boxed? var))
            cloned-var))
        vars))

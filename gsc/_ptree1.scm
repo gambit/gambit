@@ -231,13 +231,19 @@
             #t
             (ptset-empty)
             (ptset-empty)
-            source))
+            source
+            #t))
 
 (define (new-variables sources)
   (map new-variable sources))
 
 (define (new-variable source)
-  (make-var (source-code source) #t (ptset-empty) (ptset-empty) source))
+  (make-var (source-code source)
+            #t
+            (ptset-empty)
+            (ptset-empty)
+            source
+            #f))
 
 (define (set-prc-names! vars vals)
   (let loop ((vars vars) (vals vals))

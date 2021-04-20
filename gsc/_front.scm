@@ -3262,8 +3262,7 @@
                    (if (or local-proc-info proc) #f oper)
                    in-reg))
                  (live-after
-                  (if (and (reason-tail? reason2)
-                           (optimize-dead-local-variables? (node-env node)))
+                  (if (reason-tail? reason2)
                       (varset-empty)
                       live))
                  (live-vars-at-each-reg
@@ -3919,7 +3918,7 @@
     (let* ((live-vars-at-next-exprs
              (compute-live-vars-at-each-expr live (cdr exprs) reason))
            (live-after
-             (car live-vars-at-next-exprs)))
+            (car live-vars-at-next-exprs)))
       (cond ((not (car exprs))
              (cons live-after
                    live-vars-at-next-exprs))
@@ -4019,7 +4018,9 @@
             (let* ((var (car vars*))
                    (val (var->val var))
                    (needed (vals-live-vars liv (map var->val (cdr vars*)))))
-              (if (var-useless? var)
+              (if (and (var-useless? var)
+                       (or (var-temp? var)
+                           (optimize-dead-local-variables? (node-env node))))
                 (gen-node val needed (make-reason-side))
                 (save-val (gen-node val
                                     needed
