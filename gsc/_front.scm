@@ -3265,9 +3265,15 @@
                   (if (reason-tail? reason2)
                       (varset-empty)
                       live))
+                 (force-live
+                  (if (and (reason-tail? reason2)
+                           (optimize-dead-local-variables? (node-env node)))
+                      (varset-empty)
+                      live))
                  (live-vars-at-each-reg
                   (compute-live-vars-at-each-expr
                    live-after
+                   force-live
                    (map car eval-order)
                    (make-reason-tail)))
                  (return-lbl
@@ -3275,6 +3281,7 @@
                  (live-vars-at-each-slot
                   (compute-live-vars-at-each-expr
                    (car live-vars-at-each-reg)
+                   force-live
                    in-stk
                    reason2))
                  (where
@@ -3912,13 +3919,13 @@
               (remove-free-vars! (free-v (car best-arg)))
               (loop (remq best-arg args) (cons best-arg ordered-args)))))))))
 
-(define (compute-live-vars-at-each-expr live exprs reason)
+(define (compute-live-vars-at-each-expr live force-live exprs reason)
   (if (null? exprs)
     (list live)
     (let* ((live-vars-at-next-exprs
-             (compute-live-vars-at-each-expr live (cdr exprs) reason))
+             (compute-live-vars-at-each-expr live force-live (cdr exprs) reason))
            (live-after
-            (car live-vars-at-next-exprs)))
+            (varset-union force-live (car live-vars-at-next-exprs))))
       (cond ((not (car exprs))
              (cons live-after
                    live-vars-at-next-exprs))
