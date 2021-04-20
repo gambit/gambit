@@ -546,7 +546,7 @@
   (set! targ-proc-entry-frame
     (and prev-gvm-instr (gvm-instr-frame prev-gvm-instr)))
 
-;;  (write-gvm-instr gvm-instr ##stdout)(newline);*************
+;;  (write-gvm-instr gvm-instr (current-output-port))(newline);*************
 
   (if targ-track-scheme-option?
     (let* ((src (node-source targ-proc-instr-node))

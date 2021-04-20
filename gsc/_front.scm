@@ -3269,7 +3269,9 @@
                   (if (and (reason-tail? reason2)
                            (optimize-dead-local-variables? (node-env node)))
                       (varset-empty)
-                      live))
+                      (list->varset
+                       (keep (lambda (var) (not (var-temp? var)))
+                             (varset->list live)))))
                  (live-vars-at-each-reg
                   (compute-live-vars-at-each-expr
                    live-after
