@@ -301,7 +301,7 @@
       (label-namespace string)))
 
   (let ((targ
-         (make-target 13
+         (make-target 14
                       target-language
                       file-extensions
                       (append semantics-changing-options
@@ -348,10 +348,6 @@
       (target-proc-result-set!
        targ
        (make-reg 1))
-
-      (target-task-return-set!
-       targ
-       (make-reg 0))
 
       (target-switch-testable?-set!
        targ
@@ -2843,69 +2839,82 @@
                             (and jump-inliner
                                  (jump-inliner ctx ret nb-args poll? safe? fs))))
 
-                     (^ (if ret
-                            (^setloc (make-reg 0) (^getopnd (make-lbl ret)))
-                            (^))
+                     (let ((setup-return-addr
+                            (if ret
+                                (^ (if (eqv? opnd return-addr-reg) ;; destination in location of ret addr?
+                                       (let* ((spare-reg
+                                               (make-reg (+ (targ-nb-arg-regs) 1)))
+                                              (move-to-spare-reg
+                                               (^setloc spare-reg
+                                                        (^getopnd opnd))))
+                                         (set! opnd spare-reg)
+                                         move-to-spare-reg)
+                                       (^))
+                                   (^setloc return-addr-reg
+                                            (^getopnd (make-lbl ret))))
+                                (^))))
 
-                        (if nb-args
-                            (^setnargs nb-args)
-                            (^))
+                       (^ setup-return-addr
 
-                        (or (and (lbl? opnd)
-                                 (jump-to-label ctx (lbl-num opnd) fs poll?))
+                          (if nb-args
+                              (^setnargs nb-args)
+                              (^))
 
-                            (with-stack-pointer-adjust
-                             ctx
-                             (+ fs
-                                (ctx-stack-base-offset ctx))
-                             (lambda (ctx)
-                               (^return-poll
-                                (if (jump-safe? gvm-instr)
-                                    (if (glo? opnd)
-                                        (^call-prim
-                                         (^rts-method-use 'check_procedure_glo)
-                                         (scan-gvm-opnd ctx opnd)
-                                         (^obj (glo-name opnd)))
-                                        (^call-prim
-                                         (^rts-method-use 'check_procedure)
-                                         (scan-gvm-opnd ctx opnd)))
-                                    (cond ((lbl? opnd)
-                                           (todo-lbl-num! (lbl-num opnd))
-                                           (gvm-lbl-use ctx opnd))
-                                          ((and (obj? opnd)
-                                                (proc-obj? (obj-val opnd)))
-                                           (^obj-proc-as 'jumpable
-                                                         (obj-val opnd)))
-                                          (else
-                                           (^downupcast*
-                                            (if nb-args 'entrypt 'returnpt)
-                                            'jumpable
-                                            (^getopnd opnd)))))
-                                poll?
-                                (and
+                          (or (and (lbl? opnd)
+                                   (jump-to-label ctx (lbl-num opnd) fs poll?))
 
-                                 (univ-compactness>=? ctx 7)
+                              (with-stack-pointer-adjust
+                               ctx
+                               (+ fs
+                                  (ctx-stack-base-offset ctx))
+                               (lambda (ctx)
+                                 (^return-poll
+                                  (if (jump-safe? gvm-instr)
+                                      (if (glo? opnd)
+                                          (^call-prim
+                                           (^rts-method-use 'check_procedure_glo)
+                                           (scan-gvm-opnd ctx opnd)
+                                           (^obj (glo-name opnd)))
+                                          (^call-prim
+                                           (^rts-method-use 'check_procedure)
+                                           (scan-gvm-opnd ctx opnd)))
+                                      (cond ((lbl? opnd)
+                                             (todo-lbl-num! (lbl-num opnd))
+                                             (gvm-lbl-use ctx opnd))
+                                            ((and (obj? opnd)
+                                                  (proc-obj? (obj-val opnd)))
+                                             (^obj-proc-as 'jumpable
+                                                           (obj-val opnd)))
+                                            (else
+                                             (^downupcast*
+                                              (if nb-args 'entrypt 'returnpt)
+                                              'jumpable
+                                              (^getopnd opnd)))))
+                                  poll?
+                                  (and
 
-                                 ;; avoid call optimization on globals
-                                 ;; because some VMs, such as V8 and PyPy,
-                                 ;; use a counterproductive speculative
-                                 ;; optimization (which slows
-                                 ;; down fib by an order of magnitude!)
-                                 (not (reg? opnd))
+                                   (univ-compactness>=? ctx 7)
 
-                                 (case (target-name (ctx-target ctx))
-                                   ((php)
-                                    ;; avoid call optimization on PHP
-                                    ;; because it generates syntactically
-                                    ;; incorrect code (PHP grammar issue)
-                                    #f)
-                                   ((go)
-                                    ;; avoid call optimization on go
-                                    ;; because there is no speed advantage
-                                    ;; to do it
-                                    #f)
-                                   (else
-                                    #t)))))))))))
+                                   ;; avoid call optimization on globals
+                                   ;; because some VMs, such as V8 and PyPy,
+                                   ;; use a counterproductive speculative
+                                   ;; optimization (which slows
+                                   ;; down fib by an order of magnitude!)
+                                   (not (reg? opnd))
+
+                                   (case (target-name (ctx-target ctx))
+                                     ((php)
+                                      ;; avoid call optimization on PHP
+                                      ;; because it generates syntactically
+                                      ;; incorrect code (PHP grammar issue)
+                                      #f)
+                                     ((go)
+                                      ;; avoid call optimization on go
+                                      ;; because there is no speed advantage
+                                      ;; to do it
+                                      #f)
+                                     (else
+                                      #t))))))))))))
 
               (else
                (compiler-internal-error

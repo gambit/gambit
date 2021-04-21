@@ -172,7 +172,7 @@
 
 (define (targ-make-target)
   (let ((targ
-         (make-target 13
+         (make-target 14
                       'C
                       '((".c"    . C)
                         (".C"    . C++)
@@ -203,7 +203,6 @@
                                            targ-frame-reserve
                                            targ-frame-alignment))
       (target-proc-result-set!       targ (make-reg 1))
-      (target-task-return-set!       targ (make-reg 0))
       (target-switch-testable?-set!  targ targ-switch-testable?)
       (target-eq-testable?-set!      targ targ-eq-testable?)
       (target-object-type-set!       targ targ-object-type)

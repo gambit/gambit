@@ -6,7 +6,7 @@
 
 ;;; File: "_t-x86.scm"
 
-;;; Copyright (c) 2011-2012 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2021 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 ;;; Copyright (c) 2012 by Vincent Foley, All Rights Reserved.
 
@@ -160,7 +160,7 @@
 ;; Initialization/finalization of back-end.
 (define (x86-setup arch)
   (let ((targ
-         (make-target 11
+         (make-target 14
                       arch
                       '((".asm" . nasm))
                       '()
@@ -197,10 +197,6 @@
       (target-proc-result-set!
        targ
        (make-reg 1))
-
-      (target-task-return-set!
-       targ
-       (make-reg 0))
 
       (target-switch-testable?-set!
        targ
@@ -296,7 +292,8 @@
                           (make-stk i)))
                 (location-of-parms (+ i 1)))))
 
-    (let ((x (cons (cons 'return 0) (location-of-parms 1))))
+    (let ((x (cons (cons 'return return-addr-reg)
+                   (location-of-parms 1))))
       (make-pcontext nb-stacked
                      (if closed?
                          (cons (cons 'closure-env
@@ -337,7 +334,7 @@
                 (location-of-args (+ i 1)))))
 
     (make-pcontext nb-stacked
-                   (cons (cons 'return (make-reg 0))
+                   (cons (cons 'return return-addr-reg)
                          (location-of-args 1)))))
 
 ;; The frame constraints are defined by the parameters

@@ -122,10 +122,6 @@
 ;;              This value is the GVM register where the result of a
 ;;              procedure and task is returned.
 ;;
-;; task-return  GVM location.
-;;              This value is the GVM register where the task's return address
-;;              is passed.
-;;
 ;; switch-testable?  Function.
 ;;              This function tests whether an object can be tested
 ;;              in a GVM "switch" instruction.
@@ -151,7 +147,7 @@
                      semantics-preserving-options
                      extra)
 
-  (define current-target-version 13) ;; number for this version of the module
+  (define current-target-version 14) ;; number for this version of the module
 
   (define common-semantics-changing-options
     '((nb-gvm-regs fixnum)
@@ -165,7 +161,7 @@
       (compiler-internal-error
        "make-target, version of target module is not current" name))
 
-  (let ((targ (make-vector (+ 22 extra))))
+  (let ((targ (make-vector (+ 21 extra))))
 
     (vector-set! targ 0 'target)
     (vector-set! targ 1 name)
@@ -219,17 +215,15 @@
 (define (target-frame-constraints-set! x y) (vector-set! x 16 y))
 (define (target-proc-result x)              (vector-ref x 17))
 (define (target-proc-result-set! x y)       (vector-set! x 17 y))
-(define (target-task-return x)              (vector-ref x 18))
-(define (target-task-return-set! x y)       (vector-set! x 18 y))
-(define (target-switch-testable? x)         (vector-ref x 19))
-(define (target-switch-testable?-set! x y)  (vector-set! x 19 y))
-(define (target-eq-testable? x)             (vector-ref x 20))
-(define (target-eq-testable?-set! x y)      (vector-set! x 20 y))
-(define (target-object-type x)              (vector-ref x 21))
-(define (target-object-type-set! x y)       (vector-set! x 21 y))
+(define (target-switch-testable? x)         (vector-ref x 18))
+(define (target-switch-testable?-set! x y)  (vector-set! x 18 y))
+(define (target-eq-testable? x)             (vector-ref x 19))
+(define (target-eq-testable?-set! x y)      (vector-set! x 19 y))
+(define (target-object-type x)              (vector-ref x 20))
+(define (target-object-type-set! x y)       (vector-set! x 20 y))
 
-(define (target-extra x i)                  (vector-ref x (+ 22 i)))
-(define (target-extra-set! x i y)           (vector-set! x (+ 22 i) y))
+(define (target-extra x i)                  (vector-ref x (+ 21 i)))
+(define (target-extra-set! x i y)           (vector-set! x (+ 21 i) y))
 
 ;;;; Frame constraints structure
 
@@ -328,7 +322,8 @@
                           (make-stk i)))
                 (location-of-parms (+ i 1)))))
 
-    (let ((x (cons (cons 'return 0) (location-of-parms 1))))
+    (let ((x (cons (cons 'return return-addr-reg)
+                   (location-of-parms 1))))
       (make-pcontext nb-stacked
                      (if closed?
                          (cons (cons 'closure-env
@@ -370,7 +365,7 @@
                 (location-of-args (+ i 1)))))
 
     (make-pcontext nb-stacked
-                   (cons (cons 'return (make-reg 0))
+                   (cons (cons 'return return-addr-reg)
                          (location-of-args 1)))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -409,7 +404,6 @@
   (set! target.jump-info         (target-jump-info target))
   (set! target.frame-constraints (target-frame-constraints target))
   (set! target.proc-result       (target-proc-result target))
-  (set! target.task-return       (target-task-return target))
   (set! target.switch-testable?  (target-switch-testable? target))
   (set! target.eq-testable?      (target-eq-testable? target))
   (set! target.object-type       (target-object-type target))
@@ -472,7 +466,6 @@
 (define target.jump-info         #f)
 (define target.frame-constraints #f)
 (define target.proc-result       #f)
-(define target.task-return       #f)
 (define target.switch-testable?  #f)
 (define target.eq-testable?      #f)
 (define target.object-type       #f)

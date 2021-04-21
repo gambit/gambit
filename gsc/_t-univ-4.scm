@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-4.scm"
 
-;;; Copyright (c) 2011-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2021 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -3672,7 +3672,8 @@
                  (string->symbol
                   (string-append name (number->string nb-args)))))
             (^ (if ret
-                   (^setloc (make-reg 0) (^getopnd (make-lbl ret)))
+                   (^setloc return-addr-reg
+                            (^getopnd (make-lbl ret)))
                    (^))
                (^return-poll
                 (^rts-jumpable-use rtlib-name)

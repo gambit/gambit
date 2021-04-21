@@ -18,6 +18,8 @@
 
 ;; (See file 'doc/gvm' for details on the virtual machine)
 
+(define return-addr-reg (make-reg 0)) ;; register used to pass return address
+
 ;; Utilities:
 ;; ---------
 
@@ -987,7 +989,9 @@
                                      (replace-branch-by
                                       #f
                                       (make-jump
-                                       (adjust-opnd (jump-opnd last-branch))
+                                       (if (and ret (eqv? opnd return-addr-reg))
+                                           (make-lbl ret)
+                                           (adjust-opnd opnd))
                                        new-ret
                                        (jump-nb-args last-branch)
                                        new-poll?
@@ -2691,7 +2695,9 @@
        "" ;; tag as a direct jump
        ,(format-gvm-opnd (jump-opnd gvm-instr))
        ,@(if (jump-ret gvm-instr)
-             `(" r0="
+             `(" "
+               ,(format-gvm-opnd return-addr-reg)
+               "="
                ,(format-gvm-opnd (make-lbl (jump-ret gvm-instr))))
              '())
        ,@(if (jump-nb-args gvm-instr)

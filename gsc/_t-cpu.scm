@@ -62,7 +62,7 @@
 (define (cpu-make-target target-arch file-extensions backend-info)
 
   (let ((targ (make-target
-                13
+                14
                 target-arch
                 file-extensions
                 '() ; XXX
@@ -99,8 +99,6 @@
         (make-frame-constraints cpu-frame-reserve cpu-frame-alignment))
 
       (target-proc-result-set! targ (make-reg 1)) ; XXX
-
-      (target-task-return-set! targ (make-reg 0)) ; XXX
 
       (target-switch-testable?-set! targ (lambda (obj) #f)) ; XXX
 

@@ -1464,7 +1464,7 @@
               (make-reg i)
               (if (live-reg-var? reg0 live-v)
                 #f
-                (make-reg 0)))
+                return-addr-reg))
             (if (live-reg-var? (car rest) live-v)
               (loop (cdr rest) (+ i 1))
               (make-reg i))))))))
@@ -1472,7 +1472,7 @@
 (define (highest-dead-reg live)
   (let ((live-v (live-vars live)))
     (cond ((or (null? regs) (not (live-reg-var? (car regs) live-v)))
-           (make-reg 0))
+           return-addr-reg)
           ((< (length regs) target.nb-regs)
            (make-reg (- target.nb-regs 1)))
           (else
@@ -3596,7 +3596,7 @@
                                     (current-frame
                                      (if return-lbl
                                          (let ((ret-v (make-temp-var 0)))
-                                           (put-var (make-reg 0) ret-v)
+                                           (put-var return-addr-reg ret-v)
                                            (varset-adjoin liv ret-v))
                                          liv))
                                     (node->comment node))))
@@ -4165,7 +4165,7 @@
 
       ; move return address to where task expects it
       (save-opnd-to-reg (make-lbl return-lbl)
-                        target.task-return
+                        return-addr-reg
                         ret-var*
                         (varset-remove live-starting-task ret-var*)
                         (node->comment node))
