@@ -102,7 +102,6 @@
     ((fixnum)        'Fixnum)
     ((flonum)        'Flonum)
     ((foreign)       'Foreign)
-    ((scheme)        'Scheme)
     ((frame)         'Frame)
     ((hashtable)     'HashTable)
     ((hashtable_base) 'HashTableBase)
@@ -111,20 +110,21 @@
     ((hashtable_weak_keys_values) 'HashTableWeakKeysValues)
     ((jumpable)      'Jumpable)
     ((key)           'Key)
-    ((keyword)       'Keyword)
+    ((keyword)       'ScmKeyword) ;; add "Scm" to avoid possible clashes
     ((modlinkinfo)   'ModLinkInfo)
     ((null)          'Null)
     ((optional)      'Optional)
     ((pair)          'Pair)
     ((parententrypt) 'ParentEntryPoint)
-    ((promise)       'Promise)
+    ((promise)       'ScmPromise) ;; add "Scm" to avoid possible clashes
     ((ratnum)        'Ratnum)
     ((rest)          'Rest)
     ((returnpt)      'ReturnPoint)
+    ((scheme)        'Scheme)
     ((scmobj)        'ScmObj)
-    ((string)        'ScmString) ;; to avoid clashes with host's String class
+    ((string)        'ScmString) ;; add "Scm" to avoid possible clashes
     ((structure)     'Structure)
-    ((symbol)        'Symbol)
+    ((symbol)        'ScmSymbol) ;; add "Scm" to avoid possible clashes
     ((u8vector)      'U8Vector)
     ((u16vector)     'U16Vector)
     ((u32vector)     'U32Vector)
