@@ -954,6 +954,7 @@ enable_option_checking
 enable_cplusplus
 enable_guide
 enable_c_opt
+enable_c_opt_rts
 enable_pic
 enable_debug
 enable_debug_log
@@ -1648,6 +1649,9 @@ Optional Features:
   --enable-cplusplus      compile using C++ compiler (default is NO)
   --enable-guide          include the Gambit Universal IDE (default is NO)
   --enable-c-opt[=level]  use higher C optimization level (default is NO)
+  --enable-c-opt-rts[=level]
+                          use specified C optimization level for the RTS
+                          (default is the highest supported by the compiler)
   --enable-pic            build system with position independent code (default
                           is YES)
   --enable-debug          build system so that it can be debugged (default is
@@ -4711,6 +4715,20 @@ if test "${enable_c_opt+set}" = set; then :
   enableval=$enable_c_opt; ENABLE_C_OPT=$enableval
 else
   ENABLE_C_OPT=no
+fi
+
+
+###############################################################################
+#
+# Check if a specific C optimization level should be used for the RTS.  An
+# optimization level of -O3 (if that is available from the compiler) will be
+# used by default. If the option is omitted, we treat that as "yes".
+
+# Check whether --enable-c-opt-rts was given.
+if test "${enable_c_opt_rts+set}" = set; then :
+  enableval=$enable_c_opt_rts; ENABLE_C_OPT_RTS=$enableval
+else
+  ENABLE_C_OPT_RTS=yes
 fi
 
 
@@ -11285,6 +11303,17 @@ DASH_fno_ipa_ra="$ac_cv_DASH_fno_ipa_ra"
       no) ;;
 
        *) FLAGS_OPT=" $ENABLE_C_OPT"
+          ;;
+
+  esac
+  case "$ENABLE_C_OPT_RTS" in
+
+     yes) ;;
+
+      no) FLAGS_OPT_RTS="$FLAGS_OPT_LO"
+          ;;
+
+       *) FLAGS_OPT_RTS=" $ENABLE_C_OPT_RTS"
           ;;
 
   esac
