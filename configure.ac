@@ -274,6 +274,18 @@ AC_ARG_ENABLE(c-opt,
 
 ###############################################################################
 #
+# Check if a specific C optimization level should be used for the RTS.  An
+# optimization level of -O3 (if that is available from the compiler) will be
+# used by default. If the option is omitted, we treat that as "yes".
+
+AC_ARG_ENABLE(c-opt-rts,
+              AS_HELP_STRING([--enable-c-opt-rts@<:@=level@:>@],
+                             [use specified C optimization level for the RTS (default is the highest supported by the compiler)]),
+              ENABLE_C_OPT_RTS=$enableval,
+              ENABLE_C_OPT_RTS=yes)
+
+###############################################################################
+#
 # Check if position independent code should be generated (this is usually
 # enabled but can cause problems in some situations so this is mostly intended
 # as a way to disable it).
@@ -2218,6 +2230,17 @@ if test "$C_COMP_GNUC" = yes; then
       no) ;;
 
        *) FLAGS_OPT=" $ENABLE_C_OPT"
+          ;;
+
+  esac
+  case "$ENABLE_C_OPT_RTS" in
+
+     yes) ;;
+
+      no) FLAGS_OPT_RTS="$FLAGS_OPT_LO"
+          ;;
+
+       *) FLAGS_OPT_RTS=" $ENABLE_C_OPT_RTS"
           ;;
 
   esac
