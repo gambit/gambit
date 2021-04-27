@@ -812,7 +812,6 @@ DASH_G
 DASH_KPIC
 DASH_xO2
 DASH_rdynamic
-DASH_flat_namespace_undefined_suppress
 DASH_bundle
 DASH_dynamiclib
 DASH_shared
@@ -11706,49 +11705,10 @@ $as_echo "$ac_cv_DASH_bundle" >&6; }
 DASH_bundle="$ac_cv_DASH_bundle"
 
 
-             { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -flat_namespace -undefined suppress" >&5
-$as_echo_n "checking whether $C_COMPILER accepts -flat_namespace -undefined suppress... " >&6; }
-if ${ac_cv_DASH_flat_namespace_undefined_suppress+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
 
-rm -f conftest.$ac_ext
-cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-int
-main ()
-{
-  return 0;
-}
-_ACEOF
-ac_test_CFLAGS=${CFLAGS+set}
-ac_test_CXXFLAGS=${CXXFLAGS+set}
-ac_save_CFLAGS=$CFLAGS
-ac_save_CXXFLAGS=$CXXFLAGS
-CFLAGS="-flat_namespace -undefined suppress"
-CXXFLAGS="-flat_namespace -undefined suppress"
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; then
-  ac_cv_DASH_flat_namespace_undefined_suppress=" -flat_namespace -undefined suppress"
-else
-  ac_cv_DASH_flat_namespace_undefined_suppress=""
-fi
-if test "$ac_test_CFLAGS" = set; then
-  CFLAGS=$ac_save_CFLAGS
-fi
-if test "$ac_test_CXXFLAGS" = set; then
-  CXXFLAGS=$ac_save_CXXFLAGS
-fi
-
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_flat_namespace_undefined_suppress" >&5
-$as_echo "$ac_cv_DASH_flat_namespace_undefined_suppress" >&6; }
-DASH_flat_namespace_undefined_suppress="$ac_cv_DASH_flat_namespace_undefined_suppress"
-
-
+             # The following linking option appears to be no longer needed.
+             # See https://github.com/gambit/gambit/issues/685 .
+             #AC_CHECK_C_COMPILER_OPT(-flat_namespace -undefined suppress,DASH_flat_namespace_undefined_suppress)
              ;;
 
           *) # for other systems
@@ -11949,7 +11909,9 @@ $as_echo "#define ___DONT_UNLOAD_DYN_CODE /**/" >>confdefs.h
     darwin*) # check for special options added by Apple
              FLAGS_DYN="$FLAGS_DYN$DASH_bundle"
              FLAGS_LIB="$FLAGS_LIB$DASH_dynamiclib -install_name \$(libdir)/\$(LIBRARY)\$(LIB_VERSION_SUFFIX)"
-             FLAGS_DYN_LIB="$FLAGS_DYN_LIB$DASH_flat_namespace_undefined_suppress"
+
+             # See comment above about these linking options.
+             #FLAGS_DYN_LIB="$FLAGS_DYN_LIB$DASH_flat_namespace_undefined_suppress"
              ;;
 
           *) # for other systems

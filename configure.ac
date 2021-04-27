@@ -2297,7 +2297,10 @@ if test "$C_COMP_GNUC" = yes; then
     darwin*) # check for special options added by Apple
              AC_CHECK_C_COMPILER_OPT(-dynamiclib,DASH_dynamiclib)
              AC_CHECK_C_COMPILER_OPT(-bundle,DASH_bundle)
-             AC_CHECK_C_COMPILER_OPT(-flat_namespace -undefined suppress,DASH_flat_namespace_undefined_suppress)
+
+             # The following linking option appears to be no longer needed.
+             # See https://github.com/gambit/gambit/issues/685 .
+             #AC_CHECK_C_COMPILER_OPT(-flat_namespace -undefined suppress,DASH_flat_namespace_undefined_suppress)
              ;;
 
           *) # for other systems
@@ -2410,7 +2413,9 @@ if test "$C_COMP_GNUC" = yes; then
     darwin*) # check for special options added by Apple
              FLAGS_DYN="$FLAGS_DYN$DASH_bundle"
              FLAGS_LIB="$FLAGS_LIB$DASH_dynamiclib -install_name \$(libdir)/\$(LIBRARY)\$(LIB_VERSION_SUFFIX)"
-             FLAGS_DYN_LIB="$FLAGS_DYN_LIB$DASH_flat_namespace_undefined_suppress"
+
+             # See comment above about these linking options.
+             #FLAGS_DYN_LIB="$FLAGS_DYN_LIB$DASH_flat_namespace_undefined_suppress"
              ;;
 
           *) # for other systems
