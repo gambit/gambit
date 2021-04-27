@@ -4545,40 +4545,47 @@ foreign = @host2foreign@;
             "@scm2host@(@1@) instanceof Promise" promise-or-value)
 
            (let ((result-mutex (macro-make-mutex 'scm2host-call-return)))
+
+             ;; Setup mutex in locked state
              (macro-mutex-lock! result-mutex #f (macro-current-thread))
+
+             ;; Add callback for when promise is settled
              (##inline-host-statement
               "
 var promise = @scm2host@(@1@);
-var return_result = @2@;
+var callback = @2@;
 
 function onFulfilled(value) {
   @async_call@(false, // no result needed
-               @host2scm@(false),
-               return_result,
+               false, // any thread
+               callback,
                [@host2scm@([value])]);
 }
 
 function onRejected(reason) {
   @async_call@(false, // no result needed
-               @host2scm@(false),
-               return_result,
+               false, // any thread
+               callback,
                [@host2scm@(reason.toString())]);
 }
 
 promise.then(onFulfilled, onRejected);
 "
               promise-or-value
-              (lambda (result)
+              (lambda (result) ;; callback
                 (macro-mutex-specific-set! result-mutex result)
+                ;; wake up waiting Scheme thread
                 (macro-mutex-unlock! result-mutex)
                 (##void)))
 
-             ;; wait for result
+             ;; Wait for promise to be settled
              (macro-mutex-lock! result-mutex #f (macro-current-thread))
+
+             ;; Determine what happened
              (let ((msg (macro-mutex-specific result-mutex)))
-               (if (##string? msg)
-                   (##scm2host-call-error msg)
-                   (##vector-ref msg 0)))))
+               (if (##vector? msg)
+                   (##vector-ref msg 0)
+                   (##scm2host-call-error msg)))))
 
           (else
            (##inline-host-expression "@host2scm@(@scm2host@(@1@))" promise-or-value)))))
@@ -4590,8 +4597,8 @@ promise.then(onFulfilled, onRejected);
 
  (else))
 
-(define (##scm2host-call-error msg)
-  (##error msg))
+(define (##scm2host-call-error message)
+  (##error message))
 
 ;;;----------------------------------------------------------------------------
 
