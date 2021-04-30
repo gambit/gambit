@@ -4580,6 +4580,7 @@ promise.then(onFulfilled, onRejected);
 
              ;; Wait for promise to be settled
              (macro-mutex-lock! result-mutex #f (macro-current-thread))
+             (macro-mutex-unlock! result-mutex) ;; avoid space leak
 
              ;; Determine what happened
              (let ((msg (macro-mutex-specific result-mutex)))
