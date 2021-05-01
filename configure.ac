@@ -1606,7 +1606,7 @@ else
 
                # add Windows libraries needed by MinGW
 
-               PATH_SEP="\\\\\\\\\\\\\\\\"
+               PATH_SEP="\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"
 
                LIBS="$LIBS -lws2_32"
 
