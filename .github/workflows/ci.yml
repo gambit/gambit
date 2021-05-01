@@ -38,7 +38,7 @@ jobs:
 
     - name: Build
       run: |
-        ./configure --enable-debug --enable-multiple-threaded-vms --enable-thread-system=win32
+        ./configure --enable-debug
         echo "#undef HAVE_CLOCK_GETTIME" >> include/config.h
         make -j`nproc`
 
@@ -50,7 +50,7 @@ jobs:
     - name: Build Gambit for Use
       run: |
         mkdir dist
-        ./configure --enable-single-host --enable-thread-system=win32 --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist
+        ./configure --prefix=$(pwd)/dist
         echo "#undef HAVE_CLOCK_GETTIME" >> include/config.h
         make -j`nproc`
         make modules
