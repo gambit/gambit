@@ -58,7 +58,7 @@ UI.prototype.new_repl = function () {
   if (ui.debug)
     console.log('UI().new_repl()');
 
-  ui.vm.new_repl();
+  ui.vm.new_repl(ui);
 };
 
 UI.prototype.add_console = function (dev) {
@@ -701,10 +701,14 @@ Tab_group.prototype.active_tab_set = function (index) {
 
 //-----------------------------------------------------------------------------
 
-function Device_console(vm, title, flags, thread_scm) {
+function Device_console(vm, title, flags, ui, thread_scm) {
 
   var dev = this;
+
+  if (!ui) ui = vm.ui;
+
   dev.vm = vm;
+  dev.ui = ui;
   dev.title = title;
   dev.flags = flags;
   dev.wbuf = new Uint8Array(0);
@@ -728,7 +732,7 @@ function Device_console(vm, title, flags, thread_scm) {
 
   dev.cons.connect(dev);
 
-  vm.ui.add_console(dev);
+  ui.add_console(dev);
 }
 
 Device_console.prototype.console_writable = function (cons) {
@@ -787,6 +791,16 @@ Device_console.prototype.console_terminate_thread = function (cons) {
   dev.cons = cons;
 
   dev.vm.terminate_thread(dev.thread_scm);
+};
+
+Device_console.prototype.activate = function () {
+
+  var dev = this;
+
+  if (dev.debug)
+    console.log('Device_console(\''+dev.title+'\').activate()');
+
+  if (dev.ui !== null) dev.ui.activate_console(dev);
 };
 
 Device_console.prototype.input_add = function (input) {

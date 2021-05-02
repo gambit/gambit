@@ -56,14 +56,14 @@ VM.prototype.os_condvar_ready_set = function (condvar_scm, ready) {
   @os_condvar_ready_set@(condvar_scm, ready);
 };
 
-VM.prototype.new_repl = function () {
+VM.prototype.new_repl = function (ui) {
 
   var vm = this;
 
   @async_call@(false, // no result needed
-               @host2scm@(false),
+               false,
                @glo@['##new-repl'],
-               []);
+               ui ? [@host2foreign@(ui)] : []);
 };
 
 VM.prototype.user_interrupt_thread = function (thread_scm) {
@@ -83,7 +83,7 @@ VM.prototype.terminate_thread = function (thread_scm) {
   var vm = this;
 
   @async_call@(false, // no result needed
-               @host2scm@(false),
+               false,
                @glo@['##thread-terminate!'],
                [thread_scm]);
 };
@@ -97,15 +97,16 @@ EOF
 
 ;; Define "console" ports that support multiple independent REPLs.
 
-(define (##os-device-stream-open-console title flags thread)
+(define (##os-device-stream-open-console title flags ui thread)
   (##inline-host-declaration "
 
-@os_device_stream_open_console@ = function (vm, title_scm, flags_scm, thread_scm) {
+@os_device_stream_open_console@ = function (vm, title_scm, flags_scm, ui_scm, thread_scm) {
 
   var title = @scm2host@(title_scm);
   var flags = @scm2host@(flags_scm);
+  var ui = @scm2host@(ui_scm);
 
-  var dev = new Device_console(vm, title, flags, thread_scm);
+  var dev = new Device_console(vm, title, flags, ui, thread_scm);
 
   return @host2foreign@(dev);
 };
@@ -115,11 +116,13 @@ EOF
    "@os_device_stream_open_console@(main_vm,@1@,@2@,@3@)"
    title
    flags
+   ui
    thread))
 
 (define (##open-console title
                         name
                         #!optional
+                        (ui #f)
                         (thread #f)
                         (settings (macro-absent-obj)))
   (let ((direction
@@ -138,6 +141,7 @@ EOF
               (##os-device-stream-open-console
                title
                (##psettings->device-flags psettings)
+               ui
                thread)))
          (if (##fixnum? device)
              (##exit-with-err-code device)
@@ -149,7 +153,7 @@ EOF
 
 (define (##activate-console dev)
   (##inline-host-statement
-   "if (main_vm.ui !== null) main_vm.ui.activate_console(@foreign2host@(@1@));"
+   "@foreign2host@(@1@).activate();"
    dev))
 
 (define (##activate-repl)
@@ -158,14 +162,14 @@ EOF
          (dev (macro-condvar-name condvar)))
     (##activate-console dev)))
 
-(define (##thread-make-repl-channel-as-console thread)
+(define (##thread-make-repl-channel-as-console thread #!optional (ui #f))
   (let* ((sn (##object->serial-number thread))
          (title (##object->string thread))
          (name (if (##eqv? sn 1)
                    'console
                    (##string->symbol
                     (##string-append "console" (##number->string sn 10)))))
-         (port (##open-console title name thread)))
+         (port (##open-console title name ui thread)))
     (##make-repl-channel-ports port port port)))
 
 ;; Enable web console.
@@ -193,7 +197,7 @@ EOF
    (lambda (first port) #f)
    #t))
 
-(define (##new-repl)
+(define (##new-repl #!optional (ui #f))
   (declare (not interrupts-enabled))
   (##thread-start!
    (let* ((primordial-tgroup
@@ -205,8 +209,13 @@ EOF
           (thread
            (##make-root-thread
             (lambda ()
-              ;; thread will start a REPL
+              ;; force the REPL to appear in specific UI
+              (let* ((thread (macro-current-thread))
+                     (repl-channel (##thread-make-repl-channel thread ui)))
+                (macro-thread-repl-channel-set! thread repl-channel))
+              ;; bring REPL tab to frontmost
               (##activate-repl)
+              ;; start REPL
               (##repl-no-banner))
             (##void) ;; no name
             primordial-tgroup
