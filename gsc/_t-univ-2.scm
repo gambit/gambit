@@ -1793,11 +1793,20 @@
             "\n"
             (univ-rename-fields
              ctx
-             (list (univ-field 'id 'int (^int 0) '()))) ;; attributes
+             (list (univ-field 'id 'int (^int 0) '()) ;; attributes
+                   (univ-field 'parent 'parententrypt (^null) '())
+                   (univ-field 'nfree 'int (^int -1) '())
+                   (univ-field 'name 'symbol (^obj #f) '())
+                   (univ-field 'ctrlpts '(array ctrlpt) (^null) '())
+                   (univ-field 'info 'scmobj (^obj #f) '())
+                   (univ-field 'prim 'bool (^obj #f) '())))
             (^return-call-prim                        ;; body
              (^rts-method-ref 'scm2host_call)
              obj))
 
+           (^assign (^field 'parent (^prefix proc)) (^prefix proc))
+           (^assign (^field 'ctrlpts (^prefix proc))
+                    (^array-literal '(array ctrlpt) (list (^prefix proc))))
            (^return (^prefix proc)))))))
 
   (univ-define-rtlib-feature 'host2scm
