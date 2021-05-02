@@ -162,6 +162,8 @@ EOF
          (dev (macro-condvar-name condvar)))
     (##activate-console dev)))
 
+(define ##current-ui (##make-parameter #f))
+
 (define (##thread-make-repl-channel-as-console thread #!optional (ui #f))
   (let* ((sn (##object->serial-number thread))
          (title (##object->string thread))
@@ -169,7 +171,7 @@ EOF
                    'console
                    (##string->symbol
                     (##string-append "console" (##number->string sn 10)))))
-         (port (##open-console title name ui thread)))
+         (port (##open-console title name (or ui (##current-ui)) thread)))
     (##make-repl-channel-ports port port port)))
 
 ;; Enable web console.
@@ -206,17 +208,20 @@ EOF
            ##stdin-port)
           (output-port
            ##stdout-port)
+          (ui
+           (or ui (##current-ui)))
           (thread
            (##make-root-thread
             (lambda ()
-              ;; force the REPL to appear in specific UI
-              (let* ((thread (macro-current-thread))
-                     (repl-channel (##thread-make-repl-channel thread ui)))
-                (macro-thread-repl-channel-set! thread repl-channel))
-              ;; bring REPL tab to frontmost
-              (##activate-repl)
-              ;; start REPL
-              (##repl-no-banner))
+              (##parameterize ((##current-ui ui))
+                (let ((input-port (##repl-input-port))
+                      (output-port (##repl-output-port)))
+                  (##parameterize ((##current-input-port input-port)
+                                   (##current-output-port output-port))
+                    ;; bring REPL tab to frontmost
+                    (##activate-repl)
+                    ;; start REPL
+                    (##repl-no-banner)))))
             (##void) ;; no name
             primordial-tgroup
             input-port
