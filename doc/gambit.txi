@@ -4908,7 +4908,6 @@ For example:
 @end deffn
 
 @deffn {special form} six.infix @var{datum}
-@deffnx {special form} six.prefix @var{datum}
 @deffnx undefined six.!
 @deffnx {special form} six.!x @var{x}
 @deffnx {special form} six.&x @var{x}
@@ -16206,7 +16205,7 @@ such as a closing parenthesis).  For example @code{(f \2*n (list)
 @item
 @syntaxbar{}@code{(} @meta{block stat} @code{)} @tab @var{$2}
 @item
-@syntaxbar{}@meta{datum-starting-with-#-or-backquote}  @tab @code{(six.prefix @var{$1})}
+@syntaxbar{}@meta{datum-starting-with-#-or-backquote}  @tab @var{$1}
 @item
 @syntaxbar{}@code{[} @meta{elements} @code{]} @tab @var{$2}
 @item
@@ -16289,7 +16288,7 @@ such as a closing parenthesis).  For example @code{(f \2*n (list)
 @item
 @syntaxspc{}@meta{identifier} @tab @code{(six.identifier @var{$1})}
 @item
-@syntaxbar{}@code{\} @meta{datum} @tab @code{(six.prefix @var{$2})}
+@syntaxbar{}@code{\} @meta{datum} @tab @var{$2}
 
 @item
 @meta{type} @syntaxdef{}

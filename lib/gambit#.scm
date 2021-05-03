@@ -785,7 +785,6 @@ six.make-array
 six.new
 six.notx
 six.null
-six.prefix
 six.procedure
 six.procedure-body
 six.return

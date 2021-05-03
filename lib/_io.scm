@@ -13422,6 +13422,16 @@
       x)))
 
 (define (##wrap-op re pos op args)
+  (let loop ((lst args))
+    (if (pair? lst)
+        (let ((arg (car lst)))
+          (if (##label-marker? arg)
+              (##label-marker-fixup-handler-add!
+               re
+               arg
+               (lambda (resolved-obj)
+                 (set-car! lst resolved-obj))))
+          (loop (cdr lst)))))
   (##wrap re pos (cons (##wrap re pos op) args)))
 
 (define (##wrap-op0 re pos op)
@@ -14484,7 +14494,7 @@
                                          (and (char? next)
                                               (or (identifier-starter? next)
                                                   (char=? next #\\))))
-                                     (read-identifier-or-prefix
+                                     (read-identifier-or-backslash
                                       re
                                       #f
                                       #t
@@ -14604,7 +14614,7 @@
                                      expr1)))))))))
 
             ((eq? tok 'new)
-             (read-identifier-or-prefix
+             (read-identifier-or-backslash
               re
               #f
               #t
@@ -14701,7 +14711,7 @@
               cont))
 
             ((eq? tok |token.`|)
-             (read-quasiquotation
+             (read-backquote
               re
               start-pos
               cont))
@@ -14713,7 +14723,7 @@
               cont))
 
             (else
-             (read-identifier-or-prefix
+             (read-identifier-or-backslash
               re
               tok
               #f
@@ -14799,7 +14809,7 @@
            restriction
            terminated?
            cont)
-          (read-identifier-or-prefix
+          (read-identifier-or-backslash
            re
            tok
            #f
@@ -14814,13 +14824,13 @@
               identifier
               cont))))))
 
-  (define (read-identifier-or-prefix re maybe-tok accept-type? cont)
+  (define (read-identifier-or-backslash re maybe-tok accept-type? cont)
     (let* ((tok
             (get-token-no-autosemi re maybe-tok))
            (start-pos
             (macro-readenv-filepos re)))
       (cond ((eq? tok |token.\\|)
-             (read-prefix
+             (read-backslash
               re
               start-pos
               cont))
@@ -14830,10 +14840,9 @@
              (invalid-infix-syntax re)
              (cont re
                    tok
-                   (##wrap-op1* re
-                                start-pos
-                                'six.prefix
-                                'error)))
+                   (##wrap-op0 re
+                               start-pos
+                               'error)))
             (else
              (cont re
                    #f
@@ -14846,27 +14855,12 @@
                   'six.identifier
                   identifier)))
 
-  (define (read-prefix re start-pos cont)
-    (let ((expr (##read-datum-or-label re)))
-      (let* ((obj2
-              (cons expr
-                    '()))
-             (obj1
-              (##wrap-op re
-                         start-pos
-                         'six.prefix
-                         obj2)))
-        (if (##label-marker? expr)
-            (##label-marker-fixup-handler-add!
-             re
-             expr
-             (lambda (resolved-obj)
-               (set-car! obj2 resolved-obj))))
-        (cont re
-              #f
-              obj1))))
+  (define (read-backslash re start-pos cont)
+    (cont re
+          #f
+          (##read-datum-or-label re)))
 
-  (define (read-quasiquotation re start-pos cont)
+  (define (read-backquote re start-pos cont)
     (cont re
           #f
           (##build-read-macro
@@ -14877,13 +14871,9 @@
             (macro-readenv-readtable re)))))
 
   (define (read-sharp re start-pos cont)
-    (let ((x (##read-sharp-aux re start-pos)))
-      (cont re
-            #f
-            (##wrap-op1 re
-                        start-pos
-                        'six.prefix
-                        x))));;;;;;;;;;;;;;;;;;;;
+    (cont re
+          #f
+          (##read-sharp-aux re start-pos)))
 
   (define (statement-starter? re tok)
     ;; this function must be kept in sync with "read-statement"
@@ -15359,7 +15349,7 @@
       (define (possibly-typed-argument tok rev-params)
         (let* ((type (and (six-type? re tok) tok))
                (tok (if type (get-token-no-autosemi re #f) tok)))
-          (read-identifier-or-prefix
+          (read-identifier-or-backslash
            re
            tok
            #f
