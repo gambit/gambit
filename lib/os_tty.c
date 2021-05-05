@@ -825,11 +825,19 @@ ___UCS_2 *name;)
 
 ___HIDDEN ___BOOL lineeditor_under_emacs ___PVOID
 {
-  static ___UCS_2 emacs_env_name_old[] = { 'E', 'M', 'A', 'C', 'S', '\0' };
-  static ___UCS_2 emacs_env_name_new[] = { 'I', 'N', 'S', 'I', 'D', 'E', '_', 'E', 'M', 'A', 'C', 'S', '\0' };
+#ifdef USE_OLD_INSIDE_EMACS_DETECTION
+  {
+    static ___UCS_2 emacs_env_name_old[] = { 'E', 'M', 'A', 'C', 'S', '\0' };
+    if (env_var_defined_UCS_2 (emacs_env_name_old)) return 1;
+  }
+#endif
 
-  return env_var_defined_UCS_2 (emacs_env_name_old) ||
-         env_var_defined_UCS_2 (emacs_env_name_new);
+  {
+    static ___UCS_2 emacs_env_name_new[] = { 'I', 'N', 'S', 'I', 'D', 'E', '_', 'E', 'M', 'A', 'C', 'S', '\0' };
+    if (env_var_defined_UCS_2 (emacs_env_name_new)) return 1;
+  }
+
+  return 0;
 }
 
 
