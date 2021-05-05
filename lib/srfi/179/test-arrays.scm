@@ -41,8 +41,8 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 (declare (standard-bindings)(extended-bindings)(block)(not safe) (mostly-fixnum))
 (declare (inlining-limit 0))
-(define tests 100)
-(set! tests tests)
+(define random-tests 100)
+(set! random-tests random-tests)
 
 (define total-tests 0)
 (set! total-tests total-tests)
@@ -67,10 +67,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                                "piffle")))
 
                       (lambda ()
-                        ,expr))))
-                  
-                  ))
-
+                        ,expr))))))
      (set! total-tests (+ total-tests 1))
      (if (not (equal? result ,value))
          (begin
@@ -90,10 +87,49 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 ;;; requires make-list function
 
+;;; Pseudo-random infrastructure
+
+;;; The idea is to have more reproducibility in the random tests.
+;;; Our goal is that if this file is run with random-tests=N and then
+;;; run with random-tests=M>N, then the parameters of the first N of M tests in each block
+;;; will be the same as the parameters of the tests in the run with random-tests=N.
+
+;;; Call next-test-random-source-state! immediately *after* each loop that is
+;;; executed random-tests number of times.
+
+
+(define test-random-source
+  (make-random-source))
+
+(define initial-test-random-source-state
+  (random-source-state-ref test-random-source))
+
+(define next-test-random-source-state!
+  (let ((j 0))
+    (lambda ()
+      (set! j (fx+ j 1))
+      (random-source-state-set!
+       test-random-source
+       initial-test-random-source-state)
+      (random-source-pseudo-randomize!
+       test-random-source
+       0 j))))
+  
+
+(define test-random-integer
+  (random-source-make-integers
+   test-random-source))
+
+(define test-random-real
+  (random-source-make-reals
+   test-random-source))
+
+
+
 (define (random a #!optional b)
   (if b
-      (+ a (random-integer (- b a)))
-      (random-integer a)))
+      (+ a (test-random-integer (- b a)))
+      (test-random-integer a)))
 
 (define (random-sample n #!optional (l 4))
   (list->vector (map (lambda (i)
@@ -262,7 +298,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 
 (do ((i 0 (+ i 1)))
-    ((= i tests))
+    ((= i random-tests))
   (let* ((lower (map (lambda (x) (random 10)) (vector->list (make-vector (random 1 11)))))
          (upper (map (lambda (x) (+ (random 1 11) x)) lower)))
     (let ((interval (make-interval (list->vector lower)
@@ -277,6 +313,8 @@ OTHER DEALINGS IN THE SOFTWARE.
       (test (interval-upper-bounds->list interval)
             upper))))
 
+(next-test-random-source-state!)
+
 (pp "interval-lower-bounds->vector error tests")
 
 (test (interval-lower-bounds->vector 1)
@@ -290,7 +328,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 (pp "interval-lower-bound, interval-upper-bound, interval-lower-bounds->vector, and interval-upper-bounds->vector result tests")
 
 (do ((i 0 (+ i 1)))
-    ((= i tests))
+    ((= i random-tests))
   (let* ((lower (map (lambda (x) (random 10)) (vector->list (make-vector (random 1 11)))))
          (upper (map (lambda (x) (+ (random 1 11) x)) lower)))
     (let ((interval (make-interval (list->vector lower)
@@ -304,6 +342,8 @@ OTHER DEALINGS IN THE SOFTWARE.
             (list->vector lower))
       (test (interval-upper-bounds->vector interval)
             (list->vector upper)))))
+
+(next-test-random-source-state!)
 
 (pp "interval-projections error tests")
 
@@ -329,7 +369,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 (pp "interval-projections result tests")
 
 (do ((i 0 (+ i 1)))
-    ((= i tests))
+    ((= i random-tests))
   (let* ((lower (map (lambda (x) (random 10)) (vector->list (make-vector (random 3 11)))))
          (upper (map (lambda (x) (+ (random 1 11) x)) lower))
          (left-dimension (random 1 (- (length lower) 1)))
@@ -342,6 +382,8 @@ OTHER DEALINGS IN THE SOFTWARE.
                           (list->vector (take upper left-dimension)))
            (make-interval (list->vector (drop lower left-dimension))
                           (list->vector (drop upper left-dimension)))))))
+
+(next-test-random-source-state!)
 
 
 (pp "interval-contains-multi-index? error tests")
@@ -356,12 +398,14 @@ OTHER DEALINGS IN THE SOFTWARE.
 (pp "interval-volume result tests")
 
 (do ((i 0 (+ i 1)))
-    ((= i tests))
+    ((= i random-tests))
   (let* ((lower (map (lambda (x) (random 10)) (vector->list (make-vector (random 1 11)))))
          (upper (map (lambda (x) (+ (random 1 11) x)) lower)))
     (test (interval-volume (make-interval (list->vector lower)
                                           (list->vector upper)))
           (apply * (map - upper lower)))))
+
+(next-test-random-source-state!)
 
 (pp "interval= error tests")
 
@@ -374,7 +418,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 (pp "interval= result tests")
 
 (do ((i 0 (+ i 1)))
-    ((= i tests))
+    ((= i random-tests))
   (let* ((lower1 (map (lambda (x) (random 2)) (vector->list (make-vector (random 1 6)))))
          (upper1 (map (lambda (x) (+ (random 1 3) x)) lower1))
          (lower2 (map (lambda (x) (random 2)) lower1))
@@ -385,6 +429,8 @@ OTHER DEALINGS IN THE SOFTWARE.
                                     (list->vector upper2)))
           (and (equal? lower1 lower2)                              ;; the probability of this happening is about 1/16
                (equal? upper1 upper2)))))
+
+(next-test-random-source-state!)
 
 (pp "interval-subset? error tests")
 
@@ -401,7 +447,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 (pp "interval-subset? result tests")
 
 (do ((i 0 (+ i 1)))
-    ((= i tests))
+    ((= i random-tests))
   (let* ((lower1 (map (lambda (x) (random 2)) (vector->list (make-vector (random 1 6)))))
          (upper1 (map (lambda (x) (+ (random 1 3) x)) lower1))
          (lower2 (map (lambda (x) (random 2)) lower1))
@@ -412,6 +458,8 @@ OTHER DEALINGS IN THE SOFTWARE.
                                            (list->vector upper2)))
           (and (%%every (lambda (x) (>= (car x) (cdr x))) (map cons lower1 lower2))
                (%%every (lambda (x) (<= (car x) (cdr x))) (map cons upper1 upper2))))))
+
+(next-test-random-source-state!)
 
 (pp "interval-contains-multi-index?  error tests")
 
@@ -464,7 +512,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 (pp "interval-for-each result tests")
 
 (do ((i 0 (+ i 1)))
-    ((= i tests))
+    ((= i random-tests))
   (let* ((lower (map (lambda (x) (random 10))
                      (vector->list (make-vector (random 1 7)))))
          (upper (map (lambda (x) (+ (random 1 4) x))
@@ -480,6 +528,8 @@ OTHER DEALINGS IN THE SOFTWARE.
                                                 (list->vector upper)))
               result)
             (reverse (all-elements lower upper))))))
+
+(next-test-random-source-state!)
 
 
 (pp "interval-dilate error tests")
@@ -511,7 +561,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                      (list interval-lower-bounds->list
                            interval-upper-bounds->list)))))
 
-(define use-bignum-intervals #t)
+(define use-bignum-intervals #f)
 
 
 (define (random-interval #!optional (min 1) (max 6))
@@ -681,7 +731,7 @@ OTHER DEALINGS IN THE SOFTWARE.
   (- 1 (* 2 (random 2))))
 
 (do ((i 0 (+ i 1)))
-    ((= i tests))
+    ((= i random-tests))
   (let* ((lower-bounds
           (map (lambda (x) (random 2))
                (vector->list (make-vector (random 1 7)))))
@@ -725,6 +775,8 @@ OTHER DEALINGS IN THE SOFTWARE.
                   base
                   coefficients
                   new-domain->old-domain-coefficients)))))
+
+(next-test-random-source-state!)
 
 (define (myarray= array1 array2)
   (and (interval= (array-domain array1)
@@ -789,14 +841,14 @@ OTHER DEALINGS IN THE SOFTWARE.
                  (lambda args (random (expt 2 64))))
            ;; float
            (list f32-storage-class
-                 (lambda args (random-real)))
+                 (lambda args (test-random-real)))
            (list f64-storage-class
-                 (lambda args (random-real)))
+                 (lambda args (test-random-real)))
            ;; complex-float
            (list c64-storage-class
-                 (lambda args (make-rectangular (random-real) (random-real))))
+                 (lambda args (make-rectangular (test-random-real) (test-random-real))))
            (list c128-storage-class
-                 (lambda args (make-rectangular (random-real) (random-real))))))
+                 (lambda args (make-rectangular (test-random-real) (test-random-real))))))
          (n
           (vector-length storage-classes)))
     (lambda ()
@@ -819,17 +871,19 @@ OTHER DEALINGS IN THE SOFTWARE.
 ;; all these are true, we'll have to see how to screw it up later.
 
 (do ((i 0 (+ i 1)))
-    ((= i tests))
+    ((= i random-tests))
   (let ((array
          (make-specialized-array (random-interval)
                                  u1-storage-class)))
     (test (array-elements-in-order? array)
           #t)))
 
+(next-test-random-source-state!)
+
 ;; the elements of curried arrays are in order
 
 (do ((i 0 (+ i 1)))
-    ((= i tests))
+    ((= i random-tests))
   (let* ((base
           (make-specialized-array (random-interval 2 5)
                                   u1-storage-class))
@@ -837,6 +891,8 @@ OTHER DEALINGS IN THE SOFTWARE.
           (array-curry base (random 1 (array-dimension base)))))
     (test (array-every array-elements-in-order? curried)
           #t)))
+
+(next-test-random-source-state!)
 
 ;; Elements of extracted arrays of newly created specialized
 ;; arrays are not in order unless 
@@ -865,7 +921,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                          (loop-2 (+ i 1))))))))))
 
 (do ((i 0 (+ i 1)))
-    ((= i tests))
+    ((= i random-tests))
   (let* ((base
           (make-specialized-array (random-interval 2 6)
                                   u1-storage-class))
@@ -874,10 +930,12 @@ OTHER DEALINGS IN THE SOFTWARE.
     (test (array-elements-in-order? extracted)
           (extracted-array-elements-in-order? base extracted))))
 
+(next-test-random-source-state!)
+
 ;; Should we do reversed now?
 
 (do ((i 0 (+ i 1)))
-    ((= i tests))
+    ((= i random-tests))
   (let* ((base
           (make-specialized-array (random-interval)
                                   u1-storage-class))
@@ -896,6 +954,8 @@ OTHER DEALINGS IN THE SOFTWARE.
            (interval-lower-bounds->vector domain)
            (interval-upper-bounds->vector domain)
            reversed-dimensions))))
+
+(next-test-random-source-state!)
 
 ;; permutations
 
@@ -922,7 +982,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                       permuted-axes-and-limits))))
 
 (do ((i 0 (+ i 1)))
-    ((= i tests))
+    ((= i random-tests))
   (let* ((base
           (make-specialized-array (random-interval)
                                   u1-storage-class))
@@ -934,6 +994,8 @@ OTHER DEALINGS IN THE SOFTWARE.
           (array-permute base permutation)))
     (test (array-elements-in-order? permuted)
           (permuted-array-elements-in-order? base permutation))))
+
+(next-test-random-source-state!)
 
 ;; a sampled array has elements in order iff after a string of
 ;; dimensions with side-length 1 at the beginning, all the rest
@@ -970,7 +1032,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                                  (cdr scaled-lengths))))))))))
 
 (do ((i 0 (+ i 1)))
-    ((= i tests))
+    ((= i random-tests))
   (let* ((base
           (make-specialized-array (random-nonnegative-interval 1 6)
                                    u1-storage-class))
@@ -980,6 +1042,8 @@ OTHER DEALINGS IN THE SOFTWARE.
           (array-sample base scales)))
     (test (array-elements-in-order? sampled)
           (sampled-array-elements-in-order? base scales))))
+
+(next-test-random-source-state!)
 
 ;;; Now we need to test the precomputation and caching of array-elements-in-order?
 ;;; The only places we precompute are
@@ -995,7 +1059,7 @@ OTHER DEALINGS IN THE SOFTWARE.
         #t))
 
 (do ((i 0 (+ i 1)))
-    ((= i tests))
+    ((= i random-tests))
   (let* ((array
           (make-specialized-array (random-nonnegative-interval) u8-storage-class))
          (ignore  ;; compute and cache the results
@@ -1014,8 +1078,10 @@ OTHER DEALINGS IN THE SOFTWARE.
     (test (%%array-elements-in-order? translated-sampled-array)
           (%%compute-array-elements-in-order? (%%array-domain translated-sampled-array) (%%array-indexer translated-sampled-array)))))
 
+(next-test-random-source-state!)
+
 (do ((i 0 (+ i 1)))
-    ((= i tests))
+    ((= i random-tests))
   (let* ((array
           (make-specialized-array (random-nonnegative-interval 2 4) u8-storage-class))
          (d-1
@@ -1047,6 +1113,8 @@ OTHER DEALINGS IN THE SOFTWARE.
     (test (array-elements-in-order? curried-sampled-array)
           (%%compute-array-elements-in-order? (%%array-domain curried-sampled-array) (%%array-indexer curried-sampled-array)))))
          
+(next-test-random-source-state!)
+
 ;;; FIXME: array-reshape tests.
 
 
@@ -1079,7 +1147,7 @@ OTHER DEALINGS IN THE SOFTWARE.
           (make-interval (list->vector (reverse uppers-list)))))
     (do ((i 0 (fx+ i 1)))
         ;; distribute "tests" results over five dimensions
-        ((= i (quotient tests 5)))
+        ((= i (quotient random-tests 5)))
       (let* ((storage-class-and-initializer
               (random-storage-class-and-initializer))
              (storage-class
@@ -1180,6 +1248,8 @@ OTHER DEALINGS IN THE SOFTWARE.
               #t)
         ))))
 
+(next-test-random-source-state!)
+
 (pp "array-copy error tests")
 
 (test (array-copy #f generic-storage-class)
@@ -1270,7 +1340,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 (pp "Safe tests")
 
 (do ((i 0 (+ i 1)))
-    ((= i tests))
+    ((= i random-tests))
   (let* ((domain
           (random-interval))
          (lower-bounds
@@ -1309,12 +1379,14 @@ OTHER DEALINGS IN THE SOFTWARE.
     (or (myarray= (array-copy array1 generic-storage-class ) array2) (pp "test3"))
     ))
 
+(next-test-random-source-state!)
+
 (specialized-array-default-safe? #f)
 
 (pp "Unsafe tests")
 
 (do ((i 0 (+ i 1)))
-    ((= i tests))
+    ((= i random-tests))
   (let* ((domain
           (random-interval))
          (lower-bounds
@@ -1352,6 +1424,8 @@ OTHER DEALINGS IN THE SOFTWARE.
     (or (myarray= array1 array2) (pp "test1"))
     (or (myarray= (array-copy array1 generic-storage-class ) array2) (pp "test3"))
     ))
+
+(next-test-random-source-state!)
 
 (pp "array-map error tests")
 
@@ -1433,7 +1507,7 @@ OTHER DEALINGS IN THE SOFTWARE.
            (indices-in-proper-order (cdr l)))))
 
 (do ((i 0 (+ i 1)))
-    ((= i tests))
+    ((= i random-tests))
   (let* ((interval
           (random-nonnegative-interval 1 6))
          (n
@@ -1490,6 +1564,8 @@ OTHER DEALINGS IN THE SOFTWARE.
         (error "arrghh arguments-2" arguments-2))
     ))
 
+(next-test-random-source-state!)
+
 
 
 
@@ -1541,13 +1617,13 @@ OTHER DEALINGS IN THE SOFTWARE.
                               (list s16-storage-class     (lambda indices (random (- (expt 2 15)) (expt 2 15))))
                               (list s32-storage-class     (lambda indices (random (- (expt 2 31)) (expt 2 31))))
                               (list s64-storage-class     (lambda indices (random (- (expt 2 63)) (expt 2 63))))
-                              (list f32-storage-class     (lambda indices (random-real)))
-                              (list f64-storage-class     (lambda indices (random-real)))
-                              (list c64-storage-class     (lambda indices (make-rectangular (random-real) (random-real))))
-                              (list c128-storage-class    (lambda indices (make-rectangular (random-real) (random-real))))
+                              (list f32-storage-class     (lambda indices (test-random-real)))
+                              (list f64-storage-class     (lambda indices (test-random-real)))
+                              (list c64-storage-class     (lambda indices (make-rectangular (test-random-real) (test-random-real))))
+                              (list c128-storage-class    (lambda indices (make-rectangular (test-random-real) (test-random-real))))
                               (list generic-storage-class (lambda indices indices)))))
   (do ((i 0 (+ i 1)))
-      ((= i tests))
+      ((= i random-tests))
     (let* ((domain
             (random-interval))
            (lower-bounds
@@ -1600,6 +1676,8 @@ OTHER DEALINGS IN THE SOFTWARE.
           (pp "Arghh"))
       )))
 
+(next-test-random-source-state!)
+
 (specialized-array-default-safe? #f)
 
 (let ((array-builders (vector (list u1-storage-class      (lambda indices (random (expt 2 1))))
@@ -1611,13 +1689,13 @@ OTHER DEALINGS IN THE SOFTWARE.
                               (list s16-storage-class     (lambda indices (random (- (expt 2 15)) (expt 2 15))))
                               (list s32-storage-class     (lambda indices (random (- (expt 2 31)) (expt 2 31))))
                               (list s64-storage-class     (lambda indices (random (- (expt 2 63)) (expt 2 63))))
-                              (list f32-storage-class     (lambda indices (random-real)))
-                              (list f64-storage-class     (lambda indices (random-real)))
-                              (list c64-storage-class     (lambda indices (make-rectangular (random-real) (random-real))))
-                              (list c128-storage-class    (lambda indices (make-rectangular (random-real) (random-real))))
+                              (list f32-storage-class     (lambda indices (test-random-real)))
+                              (list f64-storage-class     (lambda indices (test-random-real)))
+                              (list c64-storage-class     (lambda indices (make-rectangular (test-random-real) (test-random-real))))
+                              (list c128-storage-class    (lambda indices (make-rectangular (test-random-real) (test-random-real))))
                               (list generic-storage-class (lambda indices indices)))))
   (do ((i 0 (+ i 1)))
-      ((= i tests))
+      ((= i random-tests))
     (let* ((domain
             (random-interval))
            (lower-bounds
@@ -1659,6 +1737,8 @@ OTHER DEALINGS IN THE SOFTWARE.
                                                        result-array-2)
                                        result)))))
           (pp "Arghh")))))
+
+(next-test-random-source-state!)
 
 (pp "array-reduce tests")
 
@@ -1806,13 +1886,13 @@ OTHER DEALINGS IN THE SOFTWARE.
                               (list s16-storage-class     (lambda indices (random (- (expt 2 15)) (expt 2 15))))
                               (list s32-storage-class     (lambda indices (random (- (expt 2 31)) (expt 2 31))))
                               (list s64-storage-class     (lambda indices (random (- (expt 2 63)) (expt 2 63))))
-                              (list f32-storage-class     (lambda indices (random-real)))
-                              (list f64-storage-class     (lambda indices (random-real)))
-                              (list c64-storage-class     (lambda indices (make-rectangular (random-real) (random-real))))
-                              (list c128-storage-class    (lambda indices (make-rectangular (random-real) (random-real))))
+                              (list f32-storage-class     (lambda indices (test-random-real)))
+                              (list f64-storage-class     (lambda indices (test-random-real)))
+                              (list c64-storage-class     (lambda indices (make-rectangular (test-random-real) (test-random-real))))
+                              (list c128-storage-class    (lambda indices (make-rectangular (test-random-real) (test-random-real))))
                               (list generic-storage-class (lambda indices indices)))))
   (do ((i 0 (+ i 1)))
-      ((= i tests))
+      ((= i random-tests))
     (let* ((domain
             (random-interval 2 7))
            (lower-bounds
@@ -1925,6 +2005,8 @@ OTHER DEALINGS IN THE SOFTWARE.
                (error "Arggh"))))))
 
 
+(next-test-random-source-state!)
+
 
 (pp "specialized-array-share error tests")
 
@@ -1954,7 +2036,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 (pp "specialized-array-share result tests")
 
 (do ((i 0 (+ i 1)))
-    ((= i tests))
+    ((= i random-tests))
   (let* ((n (random 1 11))
          (permutation (random-permutation n))
          (input-vec (list->vector (f64vector->list (random-f64vector n)))))
@@ -1964,11 +2046,13 @@ OTHER DEALINGS IN THE SOFTWARE.
           (vector-permute input-vec permutation))))
 
 
+(next-test-random-source-state!)
+
 
 (specialized-array-default-safe? #t)
 
 (do ((i 0 (+ i 1)))
-    ((= i tests))
+    ((= i random-tests))
   (let* ((interval (random-interval))
          (axes (local-iota 0 (interval-dimension interval)))
          (lower-bounds (interval-lower-bounds->vector interval))
@@ -2012,11 +2096,13 @@ OTHER DEALINGS IN THE SOFTWARE.
       (if (not (myarray= b c))
           (pp (list "piffle"
                     a b c))))))
+
+(next-test-random-source-state!)
 
 (specialized-array-default-safe? #f)
 
 (do ((i 0 (+ i 1)))
-    ((= i tests))
+    ((= i random-tests))
   (let* ((interval (random-interval))
          (axes (local-iota 0 (interval-dimension interval)))
          (lower-bounds (interval-lower-bounds->vector interval))
@@ -2060,6 +2146,8 @@ OTHER DEALINGS IN THE SOFTWARE.
       (if (not (myarray= b c))
           (pp (list "piffle"
                     a b c))))))
+
+(next-test-random-source-state!)
 
 
 (pp "interval and array translation tests")
@@ -2077,7 +2165,7 @@ OTHER DEALINGS IN THE SOFTWARE.
   (test (interval-translate int '#(1))
         "interval-translate: The dimension of the first argument (an interval) does not equal the length of the second (a vector): ")
   (do ((i 0 (+ i 1)))
-      ((= i tests))
+      ((= i random-tests))
     (let* ((int (random-interval))
            (lower-bounds (interval-lower-bounds->vector int))
            (upper-bounds (interval-upper-bounds->vector int))
@@ -2087,6 +2175,8 @@ OTHER DEALINGS IN THE SOFTWARE.
       (interval= (interval-translate int translation)
                  (make-interval (vector-map + lower-bounds translation)
                                 (vector-map + upper-bounds translation))))))
+
+(next-test-random-source-state!)
 
 (let* ((specialized-array (array-copy (make-array (make-interval '#(0 0) '#(10 12))
                                                   list)))
@@ -2135,10 +2225,10 @@ OTHER DEALINGS IN THE SOFTWARE.
           #t))
 
   (do ((i 0 (+ i 1)))
-      ((= i tests))
+      ((= i random-tests))
     (let* ((domain (random-interval))
            (Array (let ((temp (make-array domain list)))
-                    (case (random-integer 3)
+                    (case (test-random-integer 3)
                       ((0) temp)
                       ((1) (array-copy temp))
                       ((2) (let ((temp (array-copy temp)))
@@ -2157,12 +2247,14 @@ OTHER DEALINGS IN THE SOFTWARE.
                     (lambda ()
                       (random-multi-index translated-domain))
                   (lambda multi-index
-                    (let ((value (random-integer 10000)))
+                    (let ((value (test-random-integer 10000)))
                       (apply (array-setter translated-array) value multi-index)
                       (apply (array-setter my-translated-array) value multi-index)))))))
         (test (myarray= (array-translate Array translation)
                         (my-array-translate Array translation))
               #t)))))
+
+(next-test-random-source-state!)
 
 (let* ((specialized (make-specialized-array (make-interval '#(0 0 0 0 0) '#(1 1 1 1 1))))
        (mutable (make-array (array-domain specialized)
@@ -2175,6 +2267,8 @@ OTHER DEALINGS IN THE SOFTWARE.
 
   (test ((array-setter A) 'a 0 0)
         "The number of indices does not equal the array dimension: "))
+
+(next-test-random-source-state!)
 
 
 (pp "interval and array permutation tests")
@@ -2194,7 +2288,7 @@ OTHER DEALINGS IN THE SOFTWARE.
   (test (interval-permute int '#(0))
         "interval-permute: The dimension of the first argument (an interval) does not equal the length of the second (a permutation): ")
   (do ((i 0 (+ i 1)))
-      ((= i tests))
+      ((= i random-tests))
     (let* ((int (random-interval))
            (lower-bounds (interval-lower-bounds->vector int))
            (upper-bounds (interval-upper-bounds->vector int))
@@ -2202,6 +2296,8 @@ OTHER DEALINGS IN THE SOFTWARE.
       (interval= (interval-permute int permutation)
                  (make-interval (vector-permute lower-bounds permutation)
                                 (vector-permute upper-bounds permutation))))))
+
+(next-test-random-source-state!)
 
 (let* ((specialized-array (array-copy (make-array (make-interval '#(0 0) '#(10 12))
                                                                 list)))
@@ -2240,10 +2336,10 @@ OTHER DEALINGS IN THE SOFTWARE.
   (specialized-array-default-safe? #t)
 
   (do ((i 0 (+ i 1)))
-      ((= i tests))
+      ((= i random-tests))
     (let* ((domain (random-interval))
            (Array (let ((temp (make-array domain list)))
-                    (case (random-integer 3)
+                    (case (test-random-integer 3)
                       ((0) temp)
                       ((1) (array-copy temp))
                       ((2) (let ((temp (array-copy temp)))
@@ -2287,20 +2383,22 @@ OTHER DEALINGS IN THE SOFTWARE.
                     (lambda ()
                       (random-multi-index permuted-domain))
                   (lambda multi-index
-                    (let ((value (random-integer 10000)))
+                    (let ((value (test-random-integer 10000)))
                       (apply (array-setter permuted-array) value multi-index)
                       (apply (array-setter my-permuted-array) value multi-index)))))))
         (test (myarray= permuted-array
                         my-permuted-array)
               #t))))
 
+(next-test-random-source-state!)
+
   (specialized-array-default-safe? #f)
 
   (do ((i 0 (+ i 1)))
-      ((= i tests))
+      ((= i random-tests))
     (let* ((domain (random-interval))
            (Array (let ((temp (make-array domain list)))
-                    (case (random-integer 3)
+                    (case (test-random-integer 3)
                       ((0) temp)
                       ((1) (array-copy temp))
                       ((2) (let ((temp (array-copy temp)))
@@ -2344,13 +2442,15 @@ OTHER DEALINGS IN THE SOFTWARE.
                     (lambda ()
                       (random-multi-index permuted-domain))
                   (lambda multi-index
-                    (let ((value (random-integer 10000)))
+                    (let ((value (test-random-integer 10000)))
                       (apply (array-setter permuted-array) value multi-index)
                       (apply (array-setter my-permuted-array) value multi-index)))))))
         (test (myarray= permuted-array
                         my-permuted-array)
               #t))))
   )
+
+(next-test-random-source-state!)
 
 (pp "array-rotate  and interval-rotate tests")
 
@@ -2483,7 +2583,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 
 (do ((i 0 (+ i 1)))
-    ((= i tests))
+    ((= i random-tests))
   (let* ((dimension (random 1 6))
          (number-of-intervals (random 1 4))
          (intervals (map (lambda (x)
@@ -2492,6 +2592,8 @@ OTHER DEALINGS IN THE SOFTWARE.
     ;; (pp (list intervals (apply my-interval-intersect intervals)))
     (test (apply my-interval-intersect intervals)
           (apply interval-intersect intervals))))
+
+(next-test-random-source-state!)
 
 (pp "test interval-scale and array-sample")
 
@@ -2529,11 +2631,13 @@ OTHER DEALINGS IN THE SOFTWARE.
                              scales)))
 
 (do ((i 0 (fx+ i 1)))
-    ((fx= i tests))
+    ((fx= i random-tests))
   (let* ((interval (random-nonnegative-interval))
          (scales   (random-positive-vector (interval-dimension interval))))
     (test (  interval-scale interval scales)
           (myinterval-scale interval scales))))
+
+(next-test-random-source-state!)
 
 (test (array-sample 'a 'a)
       "array-sample: The first argument is not an array whose domain has zero lower bounds: ")
@@ -2577,10 +2681,10 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 
 (do ((i 0 (+ i 1)))
-    ((= i tests))
+    ((= i random-tests))
   (let* ((domain (random-nonnegative-interval 1 6))
          (Array (let ((temp (make-array domain list)))
-                  (case (random-integer 3)
+                  (case (test-random-integer 3)
                     ((0) temp)
                     ((1) (array-copy temp))
                     ((2) (let ((temp (array-copy temp)))
@@ -2599,12 +2703,14 @@ OTHER DEALINGS IN THE SOFTWARE.
                   (lambda ()
                     (random-multi-index scaled-domain))
                 (lambda multi-index
-                  (let ((value (random-integer 10000)))
+                  (let ((value (test-random-integer 10000)))
                     (apply (array-setter sampled-array) value multi-index)
                     (apply (array-setter my-sampled-array) value multi-index)))))))
       (test (myarray= sampled-array
                       my-sampled-array)
             #t)))
+
+(next-test-random-source-state!)
 
 (pp "test array-extract and array-tile")
 
@@ -2623,7 +2729,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                      (make-interval '#(0 0) '#(1 3)))
       "array-extract: The second argument (an interval) is not a subset of the domain of the first argument (an array): ")
 (do ((i 0 (fx+ i 1)))
-    ((fx= i tests))
+    ((fx= i random-tests))
   (let* ((domain (random-interval))
          (subdomain (random-subinterval domain))
          (spec-A (array-copy (make-array domain list)))
@@ -2675,13 +2781,15 @@ OTHER DEALINGS IN THE SOFTWARE.
                         (lambda ()
                           (random-multi-index subdomain))
                       (lambda multi-index
-                        (let ((val (random-real)))
+                        (let ((val (test-random-real)))
                           (apply A-setter val multi-index)
                           (apply B-extract-setter val multi-index)))))))
               (list spec-A mut-A)
               (list spec-B mut-B)
               (list spec-A-extract mut-A-extract)
               (list spec-B-extract mut-B-extract))))
+
+(next-test-random-source-state!)
 
 
 (test (array-tile 'a '#(10))
@@ -2739,12 +2847,12 @@ OTHER DEALINGS IN THE SOFTWARE.
                                    (make-interval result-lowers result-uppers)))))))
 
 (do ((i 0 (fx+ i 1)))
-    ((fx= i tests))
+    ((fx= i random-tests))
   (let* ((domain
           (random-interval))
          (array
           (let ((res (make-array domain list)))
-            (case (random-integer 3)
+            (case (test-random-integer 3)
               ;; immutable
               ((0) res)
               ;; specialized
@@ -2787,6 +2895,8 @@ OTHER DEALINGS IN THE SOFTWARE.
     (test (myarray= (apply (array-getter result) (make-list (vector-length lowers) 0))
                     (apply (array-getter test-result) (make-list (vector-length lowers) 0)))
           #t)))
+
+(next-test-random-source-state!)
 
 (pp "array-reverse tests")
 
@@ -2839,10 +2949,10 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 
 (do ((i 0 (+ i 1)))
-    ((= i tests))
+    ((= i random-tests))
   (let* ((domain (random-interval))
          (Array (let ((temp (make-array domain list)))
-                  (case (random-integer 3)
+                  (case (test-random-integer 3)
                     ((0) temp)
                     ((1) (array-copy temp))
                     ((2) (let ((temp (array-copy temp)))
@@ -2860,12 +2970,14 @@ OTHER DEALINGS IN THE SOFTWARE.
               (lambda ()
                 (random-multi-index domain))
             (lambda multi-index
-              (let ((value (random-integer 10000)))
+              (let ((value (test-random-integer 10000)))
                 (apply (array-setter reversed-array) value multi-index)
                 (apply (array-setter my-reversed-array) value multi-index))))))
     (test (myarray= reversed-array
                     my-reversed-array)
           #t)))
+
+(next-test-random-source-state!)
 
 ;; next test that the optional flip? argument is computed correctly.
 
@@ -2972,7 +3084,7 @@ OTHER DEALINGS IN THE SOFTWARE.
           "array-setter: value cannot be stored in body: ")))
                       
 (do ((i 0 (fx+ i 1)))
-    ((fx= i tests))
+    ((fx= i random-tests))
   (let* ((interval
           (random-interval))
          (subinterval
@@ -3021,6 +3133,8 @@ OTHER DEALINGS IN THE SOFTWARE.
                                       (apply (array-getter mutable-array) multi-index)))))
           #t)))
 
+(next-test-random-source-state!)
+
 (pp "Miscellaneous error tests")
 
 (test (make-array (make-interval '#(0 0) '#(10 10))
@@ -3057,15 +3171,15 @@ OTHER DEALINGS IN THE SOFTWARE.
                               (list s16-storage-class     (lambda indices (random (- (expt 2 15)) (expt 2 15))) `(a ,(expt 2 16)))
                               (list s32-storage-class     (lambda indices (random (- (expt 2 31)) (expt 2 31))) `(a ,(expt 2 32)))
                               (list s64-storage-class     (lambda indices (random (- (expt 2 63)) (expt 2 63))) `(a ,(expt 2 64)))
-                              (list f32-storage-class     (lambda indices (random-real)) `(a 1))
-                              (list f64-storage-class     (lambda indices (random-real)) `(a 1))
-                              (list c64-storage-class     (lambda indices (make-rectangular (random-real) (random-real))) `(a 1))
-                              (list c128-storage-class    (lambda indices (make-rectangular (random-real) (random-real))) `(a 1))
+                              (list f32-storage-class     (lambda indices (test-random-real)) `(a 1))
+                              (list f64-storage-class     (lambda indices (test-random-real)) `(a 1))
+                              (list c64-storage-class     (lambda indices (make-rectangular (test-random-real) (test-random-real))) `(a 1))
+                              (list c128-storage-class    (lambda indices (make-rectangular (test-random-real) (test-random-real))) `(a 1))
                               )))
   (do ((i 0 (+ i 1)))
-      ((= i tests))
+      ((= i random-tests))
     (let* ((domain (random-interval))
-           (builders (vector-ref array-builders (random-integer (vector-length array-builders))))
+           (builders (vector-ref array-builders (test-random-integer (vector-length array-builders))))
            (storage-class (car builders))
            (random-entry (cadr builders))
            (invalid-entry (list-ref (caddr builders) (random 2)))
@@ -3100,6 +3214,8 @@ OTHER DEALINGS IN THE SOFTWARE.
                   "array-getter: multi-index is not the correct dimension: ")
             (test (apply setter 10 valid-args)
                   "array-setter: multi-index is not the correct dimension: "))))))
+
+(next-test-random-source-state!)
 
 (pp "array->list and list->array")
 
@@ -3142,15 +3258,15 @@ OTHER DEALINGS IN THE SOFTWARE.
                               (list s16-storage-class     (lambda indices (random (- (expt 2 15)) (expt 2 15))))
                               (list s32-storage-class     (lambda indices (random (- (expt 2 31)) (expt 2 31))))
                               (list s64-storage-class     (lambda indices (random (- (expt 2 63)) (expt 2 63))))
-                              (list f32-storage-class     (lambda indices (random-real)))
-                              (list f64-storage-class     (lambda indices (random-real)))
-                              (list c64-storage-class     (lambda indices (make-rectangular (random-real) (random-real))))
-                              (list c128-storage-class    (lambda indices (make-rectangular (random-real) (random-real))))
+                              (list f32-storage-class     (lambda indices (test-random-real)))
+                              (list f64-storage-class     (lambda indices (test-random-real)))
+                              (list c64-storage-class     (lambda indices (make-rectangular (test-random-real) (test-random-real))))
+                              (list c128-storage-class    (lambda indices (make-rectangular (test-random-real) (test-random-real))))
                               (list generic-storage-class (lambda indices indices)))))
   (do ((i 0 (+ i 1)))
-      ((= i tests))
+      ((= i random-tests))
     (let* ((domain (random-interval))
-           (builders (vector-ref array-builders (random-integer (vector-length array-builders))))
+           (builders (vector-ref array-builders (test-random-integer (vector-length array-builders))))
            (storage-class (car builders))
            (random-entry (cadr builders))
            (Array (array-copy (make-array domain random-entry)
@@ -3158,9 +3274,11 @@ OTHER DEALINGS IN THE SOFTWARE.
                               #f
                               #t)) ; safe
            (l (array->list Array))
-           (new-array (list->array l domain storage-class (zero? (random-integer 2)))))
+           (new-array (list->array l domain storage-class (zero? (test-random-integer 2)))))
       (test (myarray= Array new-array)
             #t))))
+
+(next-test-random-source-state!)
 
 (pp "interval-cartesian-product and array-outer-product")
 
@@ -3175,13 +3293,15 @@ OTHER DEALINGS IN THE SOFTWARE.
       "interval-cartesian-product: Not all arguments are intervals: ")
 
 (do ((i 0 (+ i 1)))
-    ((= i tests))
+    ((= i random-tests))
   (let* ((intervals
           (map (lambda (ignore)
                  (random-interval 1 4))
                (make-list (random 1 3)))))
     (test (apply interval-cartesian-product intervals)
           (apply my-interval-cartesian-product intervals))))
+
+(next-test-random-source-state!)
 
 (let ((test-array (make-array  (make-interval '#(0) '#(1)) list)))
 
@@ -3195,7 +3315,7 @@ OTHER DEALINGS IN THE SOFTWARE.
         "array-outer-product: The third argument is not an array: "))
 
 (do ((i 0 (+ i 1)))
-    ((= i tests))
+    ((= i random-tests))
   (let* ((arrays
           (map (lambda (ignore)
                  (make-array (random-interval 1 5) list))
@@ -3204,6 +3324,8 @@ OTHER DEALINGS IN THE SOFTWARE.
                     (make-array (apply my-interval-cartesian-product (map array-domain arrays))
                                 list))
           #t)))
+
+(next-test-random-source-state!)
 
 
 (pp "array-ref and array-set! tests")
@@ -4069,9 +4191,9 @@ that computes the componentwise products when we need them, the times are
 
 (define interval-2x2  (make-interval '#(100 100 2 2)))
 
-(define A (array-copy (make-array interval-flat (lambda args (random-integer 5)))))
+(define A (array-copy (make-array interval-flat (lambda args (test-random-integer 5)))))
 
-(define B (array-copy (make-array interval-flat (lambda args (random-integer 5)))))
+(define B (array-copy (make-array interval-flat (lambda args (test-random-integer 5)))))
 
 (define C (array-copy (make-array interval-flat (lambda args 0))))
 

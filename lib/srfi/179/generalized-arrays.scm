@@ -466,7 +466,9 @@ OTHER DEALINGS IN THE SOFTWARE.
       (let ((intervals (cons interval intervals)))
         (cond ((not (%%every interval? intervals))
                (apply error "interval-intersect: Not all arguments are intervals: " intervals))
-              ((not (apply fx= (map %%interval-dimension intervals)))
+              ((let* ((dims (map %%interval-dimension intervals))
+                      (dim1 (car dims)))
+                 (not (%%every (lambda (dim) (fx= dim dim1)) (cdr dims))))
                (apply error "interval-intersect: Not all arguments have the same dimension: " intervals))
               (else
                (%%interval-intersect intervals))))))
@@ -2846,9 +2848,6 @@ OTHER DEALINGS IN THE SOFTWARE.
                      sublists)))
           (append plains
                   scales))))
-
-  (define (transformer args) args)
-  (define name 'getter)
 
   (define (code-for-one-n name transformer n)
     (let* ((zero-to-n-1
