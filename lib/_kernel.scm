@@ -5540,7 +5540,7 @@ end-of-code
 
 (define-prim (##collect-modules module-refs
                                 #!optional
-                                (level ##max-fixnum))
+                                (level 999999)) ;; init up to highest level
 
   (define visited '()) ;; modules visited to correctly handle circular deps
 
