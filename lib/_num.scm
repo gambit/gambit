@@ -3645,7 +3645,47 @@ for a discussion of branch cuts.
 
 ;;; number->string, string->number
 
-(define-prim (##exact-int->string x rad force-sign?)
+(define ##digit-to-char-table "0123456789abcdefghijklmnopqrstuvwxyz")
+
+(define-prim (##fixnum->string x #!optional (rad 10) (force-sign? #f))
+  (cond ((##fxnegative? x)
+         (let ((s (##fixnum->string-neg x rad 1 0)))
+           (##string-set! s 0 #\-)
+           s))
+        ((##fxzero? x)
+         (if force-sign?
+             (##string #\+ #\0)
+             (##string #\0)))
+        (else
+         (if force-sign?
+             (let ((s (##fixnum->string-neg (##fx- x) rad 1 0)))
+               (##string-set! s 0 #\+)
+               s)
+             (##fixnum->string-neg (##fx- x) rad 0 0)))))
+
+(define (##fixnum->string-neg neg-x #!optional (rad 10) (len 0) (pos 0))
+
+  ;; This procedure avoids the special case of the most negative fixnum
+  ;; by working with negative fixnums.
+
+  (let loop ((neg-x neg-x) (rad rad) (len len) (pos pos))
+    (if (##fx= neg-x 0)
+        (##make-string len)
+        (let* ((new-pos
+                (##fx+ pos 1))
+               (s
+                (loop (##fxquotient neg-x rad)
+                      rad
+                      (##fx+ len 1)
+                      new-pos)))
+          (##string-set!
+           s
+           (##fx- (##string-length s) new-pos)
+           (##string-ref ##digit-to-char-table
+                         (##fx- (##fxremainder neg-x rad))))
+          s))))
+
+(define-prim (##exact-int->string x #!optional (rad 10) (force-sign? #f))
 
   (##define-macro (macro-make-block-size)
     (let* ((max-rad 16)
@@ -3693,23 +3733,6 @@ for a discussion of branch cuts.
 
   (define rad^block-size (macro-make-rad^block-size))
 
-  (define (make-string-from-last-fixnum rad x len pos)
-    (let loop ((x x) (len len) (pos pos))
-      (if (##fx= x 0)
-          (##make-string len)
-          (let* ((new-pos
-                  (##fx+ pos 1))
-                 (s
-                  (loop (##fxquotient x rad)
-                        (##fx+ len 1)
-                        new-pos)))
-            (##string-set!
-             s
-             (##fx- (##string-length s) new-pos)
-             (##string-ref ##digit-to-char-table
-                           (##fx- (##fxremainder x rad))))
-            s))))
-
   (define (convert-non-last-fixnum s rad x pos)
     (let loop ((x x)
                (size (##vector-ref block-size rad))
@@ -3729,9 +3752,9 @@ for a discussion of branch cuts.
     (let loop ((lst lst) (pos pos))
       (let ((new-lst (##cdr lst)))
         (if (##null? new-lst)
-            (make-string-from-last-fixnum
-             rad
+            (##fixnum->string-neg
              (##fx- (##car lst))
+             rad
              (##fx+ len pos)
              pos)
             (let* ((size
@@ -3791,20 +3814,7 @@ for a discussion of branch cuts.
 
   (macro-exact-int-dispatch-no-error x
 
-    (cond ((##fxnegative? x)
-           (let ((s (make-string-from-last-fixnum rad x 1 0)))
-             (##string-set! s 0 #\-)
-             s))
-          ((##fxzero? x)
-           (if force-sign?
-               (##string #\+ #\0)
-               (##string #\0)))
-          (else
-           (if force-sign?
-               (let ((s (make-string-from-last-fixnum rad (##fx- x) 1 0)))
-                 (##string-set! s 0 #\+)
-                 s)
-               (make-string-from-last-fixnum rad (##fx- x) 0 0))))
+    (##fixnum->string x rad force-sign?)
 
     (cond ((##bignum.negative? x)
            (let ((s (uinteger->string (##negate x) rad 1)))
@@ -3817,9 +3827,7 @@ for a discussion of branch cuts.
                  s)
                (uinteger->string x rad 0))))))
 
-(define ##digit-to-char-table "0123456789abcdefghijklmnopqrstuvwxyz")
-
-(define-prim (##ratnum->string x rad force-sign?)
+(define-prim (##ratnum->string x #!optional (rad 10) (force-sign? #f))
   (##string-append
    (##exact-int->string (macro-ratnum-numerator x) rad force-sign?)
    "/"
@@ -4154,7 +4162,7 @@ for a discussion of branch cuts.
                             "e"
                             (##exact-int->string (##fx- e 1) 10 #f))))))
 
-(define-prim (##flonum->string x rad force-sign?)
+(define-prim (##flonum->string x #!optional (rad 10) (force-sign? #f))
 
   (define (non-neg-num->str x rad sign-prefix)
     (if (##flzero? x)
@@ -4195,7 +4203,7 @@ for a discussion of branch cuts.
 (define-prim (##flonum->string-host x)
   (##flonum->string x 10 #f)) ;; TODO: remove after bootstrap
 
-(define-prim (##cpxnum->string x rad force-sign?)
+(define-prim (##cpxnum->string x #!optional (rad 10) (force-sign? #f))
   (let* ((real
           (macro-cpxnum-real x))
          (real-str
