@@ -4964,7 +4964,7 @@ For example:
 @deffnx {special form} six.x++ @var{x}
 @deffnx {special form} six.x+=y @var{x} @var{y}
 @deffnx {special form} six.x+y @var{x} @var{y}
-@deffnx {special form} |six.x,y| @var{x} @var{y}
+@deffnx {special form} {|six.x,y|} @var{x} @var{y}
 @deffnx {special form} six.x-- @var{x}
 @deffnx {special form} six.x-=y @var{x} @var{y}
 @deffnx {special form} six.x-y @var{x} @var{y}
