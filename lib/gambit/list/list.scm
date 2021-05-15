@@ -128,7 +128,7 @@
                     (else
                      fast))))))))
 
-(##define (##possibly-cyclic-length lst)
+(##define (##length+ lst)
   (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
   (let loop ((len 0) (fast lst) (slow lst))
     (macro-force-vars (fast)
@@ -155,21 +155,18 @@
                        (else
                         (loop (fx+ len 1) (cdr fast) (cdr slow)))))))))))
 
-(define-procedure (proper-list? (lst object))
+(define-prim&proc (proper-list? (lst object))
   (null? (##possibly-cyclic-tail lst)))
 
-(define-procedure (circular-list? (lst object))
+(define-prim&proc (circular-list? (lst object))
   (pair? (##possibly-cyclic-tail lst)))
 
-(define-procedure (dotted-list? (lst object))
+(define-prim&proc (dotted-list? (lst object))
   (let ((tail (##possibly-cyclic-tail lst)))
     (not (or (null? tail) (pair? tail)))))
 
-(define-prim (##list? lst)
-  (proper-list? lst))
-
-(define-prim (list? lst)
-  (##list? lst))
+(define-prim&proc (list? (lst object))
+  (null? (##possibly-cyclic-tail lst)))
 
 (define-prim (##list . lst)
   lst)
@@ -199,7 +196,7 @@
             n)))))
 
 (define-procedure (length+ (lst object))
-  (##possibly-cyclic-length lst))
+  (##length+ lst))
 
 (define-prim (##append2 lst1 lst2)
 
