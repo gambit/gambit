@@ -101,12 +101,14 @@
   (macro-force-vars (obj)
     (##null? obj)))
 
-;; Floyd's tortoise and hare algorithm for cycle detection.
+;; Floyd's tortoise and hare algorithm for cycle detection
+
+;; https://en.wikipedia.org/wiki/Cycle_detection
 
 ;; These procedures may get into an infinite loop if another thread
 ;; mutates "lst" (if lst1 and lst2 each point to disconnected cycles).
 
-(define-procedure (floyd-tail lst)
+(##define (##possibly-cyclic-tail lst)
   (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
   (let loop ((fast lst) (slow lst))
     (macro-force-vars (fast)
@@ -126,12 +128,12 @@
                     (else
                      fast))))))))
 
-(define-procedure (floyd-length lst)
+(##define (##possibly-cyclic-length lst)
   (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
   (let loop ((len 0) (fast lst) (slow lst))
     (macro-force-vars (fast)
       (cond ((null? fast)
-             (* 2 len))
+             (fx* 2 len))
             ((not (pair? fast))
              #f)
             (else
@@ -147,20 +149,20 @@
                         ;; the list.
                         #f)
                        ((null? fast)
-                        (+ 1 (* 2 len)))
+                        (fx+ 1 (fx* 2 len)))
                        ((not (pair? fast))
                         #f)
                        (else
-                        (loop (+ len 1) (cdr fast) (cdr slow)))))))))))
+                        (loop (fx+ len 1) (cdr fast) (cdr slow)))))))))))
 
 (define-procedure (proper-list? (lst object))
-  (null? (floyd-tail lst)))
+  (null? (##possibly-cyclic-tail lst)))
 
 (define-procedure (circular-list? (lst object))
-  (pair? (floyd-tail lst)))
+  (pair? (##possibly-cyclic-tail lst)))
 
 (define-procedure (dotted-list? (lst object))
-  (let ((tail (floyd-tail lst)))
+  (let ((tail (##possibly-cyclic-tail lst)))
     (not (or (null? tail) (pair? tail)))))
 
 (define-prim (##list? lst)
@@ -197,7 +199,7 @@
             n)))))
 
 (define-procedure (length+ (lst object))
-  (floyd-length lst))
+  (##possibly-cyclic-length lst))
 
 (define-prim (##append2 lst1 lst2)
 
