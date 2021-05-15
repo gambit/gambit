@@ -51,8 +51,10 @@ cdddr
 cddr
 cdr
 circular-list
+circular-list?
 cons
 cons*
+dotted-list?
 drop
 fold
 fold-right
@@ -61,6 +63,7 @@ iota
 last
 last-pair
 length
+length+
 list
 list-copy
 list-ref
@@ -78,6 +81,7 @@ memq
 memv
 null?
 pair?
+proper-list?
 reverse
 reverse!
 set-car!

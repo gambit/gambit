@@ -101,28 +101,72 @@
   (macro-force-vars (obj)
     (##null? obj)))
 
-(define-prim (##list? lst)
+;; Floyd's tortoise and hare algorithm for cycle detection
 
+;; https://en.wikipedia.org/wiki/Cycle_detection
+
+;; These procedures may get into an infinite loop if another thread
+;; mutates "lst" (if lst1 and lst2 each point to disconnected cycles).
+
+(##define (##possibly-cyclic-tail lst)
   (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
-  ;; This procedure may get into an infinite loop if another thread
-  ;; mutates "lst" (if lst1 and lst2 each point to disconnected cycles).
-
-  (let loop ((lst1 lst) (lst2 lst))
-    (macro-force-vars (lst1)
-      (if (not (pair? lst1))
-          (null? lst1)
-          (let ((lst1 (cdr lst1)))
-            (macro-force-vars (lst1 lst2)
-              (cond ((eq? lst1 lst2)
-                     #f)
-                    ((not (pair? lst2))
-                     ;; this case is possible if other threads mutate the list
-                     (null? lst2))
-                    ((pair? lst1)
-                     (loop (cdr lst1) (cdr lst2)))
+  (let loop ((fast lst) (slow lst))
+    (macro-force-vars (fast)
+      (if (not (pair? fast))
+          fast
+          (let ((fast (cdr fast)))
+            (macro-force-vars (fast slow)
+              (cond ((eq? fast slow)
+                     ;; Cycle detected. Return some pair in the cycle.
+                     fast)
+                    ((not (pair? slow))
+                     ;; This case is possible if other threads mutate
+                     ;; the list.
+                     slow)
+                    ((pair? fast)
+                     (loop (cdr fast) (cdr slow)))
                     (else
-                     (null? lst1)))))))))
+                     fast))))))))
+
+(##define (##possibly-cyclic-length lst)
+  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
+  (let loop ((len 0) (fast lst) (slow lst))
+    (macro-force-vars (fast)
+      (cond ((null? fast)
+             (fx* 2 len))
+            ((not (pair? fast))
+             #f)
+            (else
+             (let ((fast (cdr fast)))
+               (macro-force-vars (fast slow)
+                 (cond ((eq? fast slow)
+                        ;; Cycle detected.
+                        #f)
+                       ((null? slow)
+                        len)
+                       ((not (pair? slow))
+                        ;; This case is possible if other threads mutate
+                        ;; the list.
+                        #f)
+                       ((null? fast)
+                        (fx+ 1 (fx* 2 len)))
+                       ((not (pair? fast))
+                        #f)
+                       (else
+                        (loop (fx+ len 1) (cdr fast) (cdr slow)))))))))))
+
+(define-procedure (proper-list? (lst object))
+  (null? (##possibly-cyclic-tail lst)))
+
+(define-procedure (circular-list? (lst object))
+  (pair? (##possibly-cyclic-tail lst)))
+
+(define-procedure (dotted-list? (lst object))
+  (let ((tail (##possibly-cyclic-tail lst)))
+    (not (or (null? tail) (pair? tail)))))
+
+(define-prim (##list? lst)
+  (proper-list? lst))
 
 (define-prim (list? lst)
   (##list? lst))
@@ -153,6 +197,9 @@
           (loop (cdr x) (fx+ n 1))
           (macro-check-list x 1 (length lst)
             n)))))
+
+(define-procedure (length+ (lst object))
+  (##possibly-cyclic-length lst))
 
 (define-prim (##append2 lst1 lst2)
 

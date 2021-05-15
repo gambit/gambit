@@ -131,6 +131,7 @@ cfun-conversion-exception-procedure
 cfun-conversion-exception?
 char-foldcase
 circular-list
+circular-list?
 clear-bit-field
 close-port
 command-line
@@ -194,6 +195,7 @@ display-procedure-environment
 divide-by-zero-exception-arguments
 divide-by-zero-exception-procedure
 divide-by-zero-exception?
+dotted-list?
 drop
 emergency-exit
 eof-object
@@ -460,6 +462,7 @@ keyword-hash
 keyword?
 last
 last-pair
+length+
 length-mismatch-exception-arg-id
 length-mismatch-exception-arguments
 length-mismatch-exception-procedure
@@ -616,6 +619,7 @@ process-times
 processor-id
 processor?
 promise?
+proper-list?
 protocol-info
 protocol-info-aliases
 protocol-info-name
