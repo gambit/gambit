@@ -209,3 +209,16 @@ gambit-v*.tgz
 *.o
 *.gvm
 gambit.log
+boot.tgz
+
+# Universal backend targets:
+lib/_gambit.go
+lib/_gambit.java
+lib/_gambit.js
+lib/_gambit.php
+lib/_gambit.py
+lib/_gambit.rb
+
+# Library build products, for example:
+# lib/_define-library/_define-library@gambit409003@C/
+*@gambit*@*
