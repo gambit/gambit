@@ -140,6 +140,7 @@ include/gambit.h
 include/gambit-not*.h
 include/makefile
 lib/_eval.o
+lib/_gambit.js
 lib/_gambit.o
 lib/_io.o
 lib/_kernel.o
@@ -209,3 +210,8 @@ gambit-v*.tgz
 *.o
 *.gvm
 gambit.log
+boot.tgz
+
+# Library build products, for example:
+# lib/_define-library/_define-library@gambit409003@C/
+*@gambit*@*
