@@ -304,9 +304,18 @@ stamp:
 	    hms="$$(expr 0 + "$$(date -u '+%H%M%S')")" && \
 	    { \
 	        echo "/* Generated from scratch for each build */" && \
+	        echo "" && \
+	        echo "#ifndef ___STAMP_VERSION" && \
 	        echo "#define ___STAMP_VERSION \"$$version\"" && \
+	        echo "#endif" && \
+	        echo "" && \
+	        echo "#ifndef ___STAMP_YMD" && \
 	        echo "#define ___STAMP_YMD $$ymd" && \
-	        echo "#define ___STAMP_HMS $$hms"; \
+	        echo "#endif" && \
+	        echo "" && \
+	        echo "#ifndef ___STAMP_HMS" && \
+	        echo "#define ___STAMP_HMS $$hms" && \
+	        echo "#endif"; \
 	    } > stamp.h.new && \
 	    mv -f stamp.h.new stamp.h; \
 	fi
