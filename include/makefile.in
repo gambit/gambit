@@ -297,7 +297,19 @@ dist-devel-post: dist-devel-recursive
 dist-devel-recursive: dist-devel-pre
 
 stamp:
-	$(rootfromhere)/misc/stamp.sh
+	echo > stamp.h && \
+	if [ -e "$(rootfromhere)/.git" ]; then \
+	    version="$$($(GIT) describe --tag --always | sed 's/-bootstrap$$//')" && \
+	    ymd="$$(expr 0 + "$$(date -u '+%Y%m%d')")" && \
+	    hms="$$(expr 0 + "$$(date -u '+%H%M%S')")" && \
+	    { \
+	        echo "/* Generated from scratch for each build */" && \
+	        echo "#define ___STAMP_VERSION \"$$version\"" && \
+	        echo "#define ___STAMP_YMD $$ymd" && \
+	        echo "#define ___STAMP_HMS $$hms"; \
+	    } > stamp.h.new && \
+	    mv -f stamp.h.new stamp.h; \
+	fi
 
 makefile: makefile.in $(rootfromhere)/config.status
 	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status

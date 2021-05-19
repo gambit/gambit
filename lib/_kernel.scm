@@ -32,6 +32,14 @@
 #define ___STAMP_VERSION ___STAMP_RELEASE_VERSION
 #endif
 
+#ifndef ___STAMP_YMD
+#define ___STAMP_YMD ___STAMP_RELEASE_YMD
+#endif
+
+#ifndef ___STAMP_HMS
+#define ___STAMP_HMS ___STAMP_RELEASE_HMS
+#endif
+
 c-declare-end
 )
 
@@ -5217,8 +5225,8 @@ end-of-code
   ((c-lambda ()
              unsigned-int64
     "___return(___U64_add_U64_U64
-                 (___U64_mul_UM32_UM32 (___STAMP_RELEASE_YMD, 1000000),
-                  ___U64_from_UM32 (___STAMP_RELEASE_HMS)));")))
+                 (___U64_mul_UM32_UM32 (___STAMP_YMD, 1000000),
+                  ___U64_from_UM32 (___STAMP_HMS)));")))
 
 (define-prim (##system-stamp)
   ##system-stamp-saved)
