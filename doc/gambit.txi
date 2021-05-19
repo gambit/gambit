@@ -2739,7 +2739,7 @@ For example:
 > @b{(help 'time)}
 > @b{(help time)} @r{@i{; not OK because time is a special form}}
 *** ERROR IN (console)@@5.7 -- Macro name can't be used as a variable: time
-> 
+>
 @end smallexample
 
 @end deffn
@@ -2845,7 +2845,7 @@ For example:
 > @b{####}
 *** ERROR IN (console)@@9.1 -- (Argument 1) Out of range
 (repl-result-history-ref 3)
-1> 
+1>
 @end smallexample
 
 @end deffn
@@ -4612,10 +4612,10 @@ For example:
 8  fib             (console)@@7:12     (fib (- n 2))
 9  fib             (console)@@6:9      (+ (fib (- n 1)) (fib (- ...
 ...
-13 ##with-no-result-expected-toplevel 
-14 ##repl-debug            
-15 ##repl-debug-main       
-16 ##kernel-handlers       
+13 ##with-no-result-expected-toplevel
+14 ##repl-debug
+15 ##repl-debug-main
+16 ##kernel-handlers
 #f
 > @b{(display-continuation-backtrace x (current-output-port) #t #f)}
 0  fib             (console)@@7:12     (fib (- n 2))
@@ -5094,7 +5094,7 @@ my-mod has finished loading!!!
 > @b{(load "my-mod")}
 *** ERROR IN (console)@@3.1 -- Can't load a given object file more than once
 (load "my-mod")
-1> 
+1>
 @end smallexample
 
 Note that any macro definition in the loaded file is local to the file
@@ -12768,7 +12768,7 @@ For example:
 
 @smallexample
 > @b{(write (list 'compare (list 'quote '@@x) 'and (list 'unquote '@@x))) }
-(compare '@@x and , @@x)> 
+(compare '@@x and , @@x)>
 @end smallexample
 
 @end deffn
@@ -12921,7 +12921,7 @@ when the user does not enter an expression within the next 60 seconds.
 
 @smallexample
 > @b{(input-port-timeout-set! (repl-input-port) 60)}
-> 
+>
 *** EOF again to exit
 @end smallexample
 
@@ -13070,7 +13070,7 @@ For example:
 
 @smallexample
 > @b{(write-char #\=)}
-=> 
+=>
 @end smallexample
 
 @end deffn
@@ -17093,7 +17093,7 @@ c-lambda-end
 @findex c-define
 
 @deffn {special form} c-define (@r{@i{variable}} @r{@i{define-formals}}) (@r{@i{type1}}@dots{}) @r{@i{result-type}} @r{@i{c-name}} @r{@i{scope}} @r{@i{body}}
-  
+
 The @code{c-define} special form makes it possible to create a C
 function that will act as a representative of some Scheme procedure.  A
 C function named @i{c-name} as well as a Scheme procedure bound to the
@@ -18086,7 +18086,7 @@ such a program is covered only if its contents constitute a work based
 on the Library (independent of the use of the Library in a tool for
 writing it).  Whether that is true depends on what the Library does
 and what the program that uses the Library does.
-  
+
   1. You may copy and distribute verbatim copies of the Library's
 complete source code as you receive it, in any medium, provided that
 you conspicuously and appropriately publish on each copy an
