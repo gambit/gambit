@@ -297,27 +297,31 @@ dist-devel-post: dist-devel-recursive
 dist-devel-recursive: dist-devel-pre
 
 stamp:
-	echo > stamp.h && \
-	if [ -e "$(rootfromhere)/.git" ]; then \
+	@if [ -e "$(rootfromhere)/.git" ]; then \
 	    version="$$($(GIT) describe --tag --always | sed 's/-bootstrap$$//')" && \
-	    ymd="$$(expr 0 + "$$(date -u '+%Y%m%d')")" && \
-	    hms="$$(expr 0 + "$$(date -u '+%H%M%S')")" && \
-	    { \
-	        echo "/* Generated from scratch for each build */" && \
-	        echo "" && \
-	        echo "#ifndef ___STAMP_VERSION" && \
-	        echo "#define ___STAMP_VERSION \"$$version\"" && \
-	        echo "#endif" && \
-	        echo "" && \
-	        echo "#ifndef ___STAMP_YMD" && \
-	        echo "#define ___STAMP_YMD $$ymd" && \
-	        echo "#endif" && \
-	        echo "" && \
-	        echo "#ifndef ___STAMP_HMS" && \
-	        echo "#define ___STAMP_HMS $$hms" && \
-	        echo "#endif"; \
-	    } > stamp.h.new && \
-	    mv -f stamp.h.new stamp.h; \
+	    if grep -F "\"$$version\"" < stamp.h 2> /dev/null; then \
+	        echo "___STAMP_VERSION unchanged from previous build"; \
+	    else \
+	        echo "___STAMP_VERSION changed to $$version"; \
+	        ymd="$$(expr 0 + "$$(date -u '+%Y%m%d')")" && \
+	        hms="$$(expr 0 + "$$(date -u '+%H%M%S')")" && \
+	        { \
+	            echo "/* Automatically generated */" && \
+	            echo "" && \
+	            echo "#ifndef ___STAMP_VERSION" && \
+	            echo "#define ___STAMP_VERSION \"$$version\"" && \
+	            echo "#endif" && \
+	            echo "" && \
+	            echo "#ifndef ___STAMP_YMD" && \
+	            echo "#define ___STAMP_YMD $$ymd" && \
+	            echo "#endif" && \
+	            echo "" && \
+	            echo "#ifndef ___STAMP_HMS" && \
+	            echo "#define ___STAMP_HMS $$hms" && \
+	            echo "#endif"; \
+	        } > stamp.h.new && \
+	        mv -f stamp.h.new stamp.h; \
+	    fi \
 	fi
 
 makefile: makefile.in $(rootfromhere)/config.status
