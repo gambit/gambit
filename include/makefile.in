@@ -297,18 +297,34 @@ dist-devel-post: dist-devel-recursive
 dist-devel-recursive: dist-devel-pre
 
 stamp:
-	@cp stamp.h stamp2.h; \
-	stamp_version=\"$(PACKAGE_VERSION)\"; \
-	if [ -e $(rootfromhere)/.git ]; then \
-	  stamp_version=\"`$(GIT) describe --tag --always 2> /dev/null | sed -e s/-bootstrap$$//`\"; \
-	fi; \
-	if fgrep "#define ___STAMP_VERSION $$stamp_version" stamp.h > /dev/null; then \
-	  echo "*** include/stamp.h untouched (___STAMP_VERSION did not change)"; \
+	@if [ -e "$(rootfromhere)/.git" ]; then \
+	    version="$$($(GIT) describe --tag --always | sed 's/-bootstrap$$//')" && \
+	    if grep -F "#define ___STAMP_VERSION \"$$version\"" < stamp.h 2> /dev/null; then \
+	        echo "___STAMP_VERSION unchanged from previous build"; \
+	    else \
+	        echo "___STAMP_VERSION changed to $$version"; \
+	        ymd="$$(expr 0 + "$$(TZ=UTC git show --quiet --date='format-local:%Y%m%d' --format=%cd)")" && \
+	        hms="$$(expr 0 + "$$(TZ=UTC git show --quiet --date='format-local:%H%M%S' --format=%cd)")" && \
+	        { \
+	            echo "/* Automatically generated */" && \
+	            echo "" && \
+	            echo "#ifndef ___STAMP_VERSION" && \
+	            echo "#define ___STAMP_VERSION \"$$version\"" && \
+	            echo "#endif" && \
+	            echo "" && \
+	            echo "#ifndef ___STAMP_YMD" && \
+	            echo "#define ___STAMP_YMD $$ymd" && \
+	            echo "#endif" && \
+	            echo "" && \
+	            echo "#ifndef ___STAMP_HMS" && \
+	            echo "#define ___STAMP_HMS $$hms" && \
+	            echo "#endif"; \
+	        } > stamp.h.new && \
+	        mv -f stamp.h.new stamp.h; \
+	    fi; \
 	else \
-	  echo "*** include/stamp.h updated to have ___STAMP_VERSION=$$stamp_version"; \
-	  eval `date -u '+stamp_ymd=%Y%m%d stamp_hms=%H%M%S'`; \
-	  sed -e "s/#define ___STAMP_YMD [0-9][0-9]*/#define ___STAMP_YMD `expr 0 + $$stamp_ymd`/" -e "s/#define ___STAMP_HMS [0-9][0-9]*/#define ___STAMP_HMS `expr 0 + $$stamp_hms`/" -e "s/#define ___STAMP_VERSION .*/#define ___STAMP_VERSION $$stamp_version/" $(srcdirpfx)stamp.h > stamp2.h; \
-	  mv stamp2.h stamp.h; \
+	    echo "Gambit is not being built from a Git clone. Creating empty stamp.h." && \
+	    echo > stamp.h; \
 	fi
 
 makefile: makefile.in $(rootfromhere)/config.status

@@ -139,6 +139,7 @@ include/config.h
 include/gambit.h
 include/gambit-not*.h
 include/makefile
+include/stamp.h
 lib/_eval.o
 lib/_gambit.o
 lib/_io.o

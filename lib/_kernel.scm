@@ -25,7 +25,20 @@
 #include "mem.h"
 #include "c_intf.h"
 
+#include "stamp-release.h"
 #include "stamp.h"
+
+#ifndef ___STAMP_VERSION
+#define ___STAMP_VERSION ___STAMP_RELEASE_VERSION
+#endif
+
+#ifndef ___STAMP_YMD
+#define ___STAMP_YMD ___STAMP_RELEASE_YMD
+#endif
+
+#ifndef ___STAMP_HMS
+#define ___STAMP_HMS ___STAMP_RELEASE_HMS
+#endif
 
 c-declare-end
 )
