@@ -106,10 +106,7 @@ This manual documents Gambit.  It covers release @value{VERSION}.
 * Debugging::                       Debugging
 * Scheme extensions::               Scheme extensions
 * Modules::                         Modules
-* Characters and strings::          Characters and strings
-* Numbers::                         Numbers
-* Homogeneous vectors::             Homogeneous vectors
-* Hashing and weak references::     Hashing and weak references
+* Built-in data types::             Built-in data types
 * Records::                         Records
 * Threads::                         Threads
 * Dynamic environment::             Dynamic environment
@@ -257,10 +254,7 @@ automatically.
 * Debugging::                       Debugging
 * Scheme extensions::               Scheme extensions
 * Modules::                         Modules
-* Characters and strings::          Characters and strings
-* Numbers::                         Numbers
-* Homogeneous vectors::             Homogeneous vectors
-* Hashing and weak references::     Hashing and weak references
+* Built-in data types::             Built-in data types
 * Records::                         Records
 * Threads::                         Threads
 * Dynamic environment::             Dynamic environment
@@ -5002,7 +4996,7 @@ For example:
 @deffnx {special form} six.~x @var{x}
 @end deffn
 
-@node Modules, Characters and strings, Scheme extensions, Top
+@node Modules, Built-in data types, Scheme extensions, Top
 @chapter Modules
 
 @menu
@@ -5434,95 +5428,23 @@ TODO!
 
 TODO!
 
-@node Characters and strings, Numbers, Modules, Top
-@chapter Characters and strings
-
-Gambit supports the Unicode character encoding standard.  Scheme
-characters can be any of the characters whose Unicode encoding is in
-the range 0 to #x10ffff (inclusive) but not in the range #xd800 to
-#xdfff.  Source code can also contain any Unicode character, however
-to read such source code properly @code{gsi} and @code{gsc} must be
-told which character encoding to use for reading the source code
-(i.e. ISO-8859-1, UTF-8, UTF-16, etc).  This can be done by specifying
-the runtime option @samp{-:file-settings=...} or @samp{-:io-settings=...}
-when @code{gsi} and @code{gsc} are started.
+@node Built-in data types, Characters and strings, Modules, Top
+@chapter Built-in data types
 
 @menu
-* Extensions to character procedures:: Extensions to character procedures
-* Extensions to string procedures::    Extensions to string procedures
+* Numbers::                         Numbers
+* Booleans::                        Booleans
+* Pairs and lists::                 Pairs and lists
+* Symbols and keywords::            Symbols and keywords
+* Characters and strings::          Characters and strings
+* Vectors::                         Vectors
+* Homogeneous numeric vectors::     Homogeneous numeric vectors
+* Hashing and weak references::     Hashing and weak references
+* Tables::                          Tables
 @end menu
 
-@node Extensions to character procedures, Extensions to string procedures, Characters and strings, Characters and strings
-@section Extensions to character procedures
-
-@deffn procedure char->integer @var{char}
-@deffnx procedure integer->char @var{n}
-
-The procedure @code{char->integer} returns the Unicode encoding of
-the character @var{char}.
-
-The procedure @code{integer->char} returns the character whose
-Unicode encoding is the exact integer @var{n}.
-
-For example:
-
-@smallexample
-> @b{(char->integer #\!)}
-33
-> @b{(integer->char 65)}
-#\A
-> @b{(integer->char (char->integer #\u1234))}
-#\u1234
-> @b{(integer->char #xd800)}
-*** ERROR IN (console)@@4.1 -- (Argument 1) Out of range
-(integer->char 55296)
-@end smallexample
-
-@end deffn
-
-@deffn procedure char=? @var{char1}@dots{}
-@deffnx procedure char<? @var{char1}@dots{}
-@deffnx procedure char>? @var{char1}@dots{}
-@deffnx procedure char<=? @var{char1}@dots{}
-@deffnx procedure char>=? @var{char1}@dots{}
-@deffnx procedure char-ci=? @var{char1}@dots{}
-@deffnx procedure char-ci<? @var{char1}@dots{}
-@deffnx procedure char-ci>? @var{char1}@dots{}
-@deffnx procedure char-ci<=? @var{char1}@dots{}
-@deffnx procedure char-ci>=? @var{char1}@dots{}
-
-These procedures take any number of arguments including no argument.
-This is useful to test if the elements of a list are sorted in a
-particular order.  For example, testing that the list of characters
-@code{lst} is sorted in nondecreasing order can be done with the call
-@code{(apply char<? lst)}.
-
-@end deffn
-
-@node Extensions to string procedures, , Extensions to character procedures, Characters and strings
-@section Extensions to string procedures
-
-@deffn procedure string=? @var{string1}@dots{}
-@deffnx procedure string<? @var{string1}@dots{}
-@deffnx procedure string>? @var{string1}@dots{}
-@deffnx procedure string<=? @var{string1}@dots{}
-@deffnx procedure string>=? @var{string1}@dots{}
-@deffnx procedure string-ci=? @var{string1}@dots{}
-@deffnx procedure string-ci<? @var{string1}@dots{}
-@deffnx procedure string-ci>? @var{string1}@dots{}
-@deffnx procedure string-ci<=? @var{string1}@dots{}
-@deffnx procedure string-ci>=? @var{string1}@dots{}
-
-These procedures take any number of arguments including no argument.
-This is useful to test if the elements of a list are sorted in a
-particular order.  For example, testing that the list of strings
-@code{lst} is sorted in nondecreasing order can be done with the call
-@code{(apply string<? lst)}.
-
-@end deffn
-
-@node Numbers, Homogeneous vectors, Characters and strings, Top
-@chapter Numbers
+@node Numbers, Homogeneous numeric vectors, Characters and strings, Built-in data types
+@section Numbers
 
 @menu
 * Extensions to numeric procedures::     Extensions to numeric procedures
@@ -5535,7 +5457,7 @@ particular order.  For example, testing that the list of strings
 @end menu
 
 @node Extensions to numeric procedures, IEEE floating point arithmetic, Numbers, Numbers
-@section Extensions to numeric procedures
+@subsection Extensions to numeric procedures
 
 @deffn procedure = @var{z1}@dots{}
 @deffnx procedure < @var{x1}@dots{}
@@ -5552,7 +5474,7 @@ particular order.  For example, testing that the list of numbers
 @end deffn
 
 @node IEEE floating point arithmetic, Integer square root and nth root, Extensions to numeric procedures, Numbers
-@section IEEE floating point arithmetic
+@subsection IEEE floating point arithmetic
 
 To better conform to IEEE floating point arithmetic the standard
 numeric tower is extended with these special inexact reals:
@@ -5578,7 +5500,7 @@ but are not equivalent (i.e. @code{(eqv? -0. 0.)} and @code{(equal?
 number'', including @code{(= +nan.0 +nan.0)}, are @code{#f}.
 
 @node Integer square root and nth root, Bitwise-operations on exact integers, IEEE floating point arithmetic, Numbers
-@section Integer square root and nth root
+@subsection Integer square root and nth root
 
 @deffn procedure integer-sqrt @var{n}
 
@@ -5610,7 +5532,7 @@ For example:
 @end deffn
 
 @node Bitwise-operations on exact integers, Fixnum specific operations, Integer square root and nth root, Numbers
-@section Bitwise-operations on exact integers
+@subsection Bitwise-operations on exact integers
 
 The procedures defined in this section are compatible with the
 withdrawn ``Integer Bitwise-operation Library SRFI'' (SRFI 33).  Note
@@ -6040,7 +5962,7 @@ For example:
 @end deffn
 
 @node Fixnum specific operations, Flonum specific operations, Bitwise-operations on exact integers, Numbers
-@section Fixnum specific operations
+@subsection Fixnum specific operations
 
 @deffn procedure fixnum? @var{obj}
 @end deffn
@@ -6219,7 +6141,7 @@ For example:
 @end deffn
 
 @node Flonum specific operations, Pseudo random numbers, Fixnum specific operations, Numbers
-@section Flonum specific operations
+@subsection Flonum specific operations
 
 @deffn procedure flonum? @var{obj}
 @end deffn
@@ -6343,7 +6265,7 @@ For example:
 @end deffn
 
 @node Pseudo random numbers, , Flonum specific operations, Numbers
-@section Pseudo random numbers
+@subsection Pseudo random numbers
 
 The procedures and variables defined in this section are compatible
 with the ``Sources of Random Bits SRFI'' (SRFI 27).  The
@@ -6615,9 +6537,108 @@ For example:
 
 @end deffn
 
-@node Homogeneous vectors, Hashing and weak references, Numbers, Top
-@chapter Homogeneous vectors
-@cindex homogeneous vectors
+@node Booleans, Pairs and lists, Numbers, Built-in data types
+@section Booleans
+
+@node Pairs and lists, Symbols and keywords, Booleans, Built-in data types
+@section Pairs and lists
+
+@node Symbols and keywords, Characters and strings, Pairs and lists, Built-in data types
+@section Symbols and keywords
+
+@node Characters and strings, Vectors, Symbols and keywords, Built-in data types
+@section Characters and strings
+
+Gambit supports the Unicode character encoding standard.  Scheme
+characters can be any of the characters whose Unicode encoding is in
+the range 0 to #x10ffff (inclusive) but not in the range #xd800 to
+#xdfff.  Source code can also contain any Unicode character, however
+to read such source code properly @code{gsi} and @code{gsc} must be
+told which character encoding to use for reading the source code
+(i.e. ISO-8859-1, UTF-8, UTF-16, etc).  This can be done by specifying
+the runtime option @samp{-:file-settings=...} or @samp{-:io-settings=...}
+when @code{gsi} and @code{gsc} are started.
+
+@menu
+* Extensions to character procedures:: Extensions to character procedures
+* Extensions to string procedures::    Extensions to string procedures
+@end menu
+
+@node Extensions to character procedures, Extensions to string procedures, Characters and strings, Characters and strings
+@section Extensions to character procedures
+
+@deffn procedure char->integer @var{char}
+@deffnx procedure integer->char @var{n}
+
+The procedure @code{char->integer} returns the Unicode encoding of
+the character @var{char}.
+
+The procedure @code{integer->char} returns the character whose
+Unicode encoding is the exact integer @var{n}.
+
+For example:
+
+@smallexample
+> @b{(char->integer #\!)}
+33
+> @b{(integer->char 65)}
+#\A
+> @b{(integer->char (char->integer #\u1234))}
+#\u1234
+> @b{(integer->char #xd800)}
+*** ERROR IN (console)@@4.1 -- (Argument 1) Out of range
+(integer->char 55296)
+@end smallexample
+
+@end deffn
+
+@deffn procedure char=? @var{char1}@dots{}
+@deffnx procedure char<? @var{char1}@dots{}
+@deffnx procedure char>? @var{char1}@dots{}
+@deffnx procedure char<=? @var{char1}@dots{}
+@deffnx procedure char>=? @var{char1}@dots{}
+@deffnx procedure char-ci=? @var{char1}@dots{}
+@deffnx procedure char-ci<? @var{char1}@dots{}
+@deffnx procedure char-ci>? @var{char1}@dots{}
+@deffnx procedure char-ci<=? @var{char1}@dots{}
+@deffnx procedure char-ci>=? @var{char1}@dots{}
+
+These procedures take any number of arguments including no argument.
+This is useful to test if the elements of a list are sorted in a
+particular order.  For example, testing that the list of characters
+@code{lst} is sorted in nondecreasing order can be done with the call
+@code{(apply char<? lst)}.
+
+@end deffn
+
+@node Extensions to string procedures, , Extensions to character procedures, Characters and strings
+@section Extensions to string procedures
+
+@deffn procedure string=? @var{string1}@dots{}
+@deffnx procedure string<? @var{string1}@dots{}
+@deffnx procedure string>? @var{string1}@dots{}
+@deffnx procedure string<=? @var{string1}@dots{}
+@deffnx procedure string>=? @var{string1}@dots{}
+@deffnx procedure string-ci=? @var{string1}@dots{}
+@deffnx procedure string-ci<? @var{string1}@dots{}
+@deffnx procedure string-ci>? @var{string1}@dots{}
+@deffnx procedure string-ci<=? @var{string1}@dots{}
+@deffnx procedure string-ci>=? @var{string1}@dots{}
+
+These procedures take any number of arguments including no argument.
+This is useful to test if the elements of a list are sorted in a
+particular order.  For example, testing that the list of strings
+@code{lst} is sorted in nondecreasing order can be done with the call
+@code{(apply string<? lst)}.
+
+@end deffn
+
+@node Vectors, Homogeneous numeric vectors, Characters and strings, Built-in data types
+@section Vectors
+
+@node Homogeneous numeric vectors, Hashing and weak references, Vectors, Built-in data types
+@section Homogeneous numeric vectors
+@cindex Homogeneous numeric vectors
 
 Homogeneous vectors are vectors containing raw numbers of the same
 type (signed or unsigned exact integers or inexact reals).  There are
@@ -6902,8 +6923,8 @@ For example:
 
 @end deffn
 
-@node Hashing and weak references, Records, Homogeneous vectors, Top
-@chapter Hashing and weak references
+@node Hashing and weak references, Records, Homogeneous numeric vectors, Built-in data types
+@section Hashing and weak references
 @cindex hashing
 @cindex weak references
 @cindex tables
@@ -6914,7 +6935,7 @@ For example:
 @end menu
 
 @node Hashing, Weak references, Hashing and weak references, Hashing and weak references
-@section Hashing
+@subsection Hashing
 
 @deffn procedure object->serial-number @var{obj}
 @deffnx procedure serial-number->object @var{n} @r{[}@var{default}@r{]}
@@ -7110,7 +7131,7 @@ For example:
 @end deffn
 
 @node Weak references, , Hashing, Hashing and weak references
-@section Weak references
+@subsection Weak references
 
 The garbage collector is responsible for reclaiming objects that are
 no longer needed by the program.  This is done by analyzing the
@@ -7139,7 +7160,7 @@ section.
 @end menu
 
 @node Wills, Tables, Weak references, Weak references
-@subsection Wills
+@subsubsection Wills
 
 The following procedures implement the @dfn{will} data type.  Will
 objects provide support for finalization.  A will is an object that
