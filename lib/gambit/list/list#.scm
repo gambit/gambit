@@ -47,8 +47,10 @@ cdddr
 cddr
 cdr
 circular-list
+circular-list?
 cons
 cons*
+dotted-list?
 drop
 fold
 fold-right
@@ -74,6 +76,7 @@ memq
 memv
 null?
 pair?
+proper-list?
 reverse
 reverse!
 set-car!
