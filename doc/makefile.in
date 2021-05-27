@@ -87,7 +87,7 @@ gambit.info gambit.info-1 gambit.info-2 gambit.info-3
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
-INSTFILES_DOC = gambit.pdf gambit*.html gambit.txt
+INSTFILES_DOC = gambit.pdf gambit*.html gambit.tsv gambit.txt
 INSTFILES_INFO = gambit.info*
 INSTFILES_MAN = gsi.1
 
@@ -271,7 +271,7 @@ clean-pre: mostlyclean-pre
 
 clean-post clean-post-nonrec: mostlyclean-post-nonrec
 	rm -f *.aux *.cp *.cps *.dvi *.fn *.fns *.ky *.log *.pg \
-	  *.toc *.tp *.vr *.cm *.fl *.op *.tmp
+	  *.toc *.tp *.tsv *.vr *.cm *.fl *.op *.tmp
 
 distclean-pre: clean-pre
 
