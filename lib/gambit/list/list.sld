@@ -56,6 +56,7 @@ cons
 cons*
 dotted-list?
 drop
+filter
 fold
 fold-right
 for-each
@@ -82,6 +83,8 @@ memv
 null?
 pair?
 proper-list?
+remove
+remq
 reverse
 reverse!
 set-car!
