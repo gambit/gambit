@@ -10,5 +10,5 @@
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (remq)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (remq 1)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (remq 1 2 3)))
-(check-tail-exn type-exception? (lambda () (remq odd? '(1 . 2))))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (remq 1 '() 3)))
+(check-tail-exn type-exception? (lambda () (remq 1 '(1 . 2))))
