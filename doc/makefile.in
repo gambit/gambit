@@ -87,7 +87,7 @@ gambit.info gambit.info-1 gambit.info-2 gambit.info-3
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
-INSTFILES_DOC = gambit.pdf gambit*.html gambit.txt
+INSTFILES_DOC = gambit.pdf gambit*.html gambit.tsv gambit.txt
 INSTFILES_INFO = gambit.info*
 INSTFILES_MAN = gsi.1
 
@@ -105,7 +105,7 @@ pdf: gambit.pdf
 
 ps: gambit.ps
 
-html: gambit.html
+html: gambit.html gambit.tsv
 
 txt: gambit.txt
 
@@ -118,8 +118,8 @@ gambit.ps: gambit.pdf
 gambit.pdf: gambit.txi version.txi
 	(cd $(srcdir) && cd $(srcdir) && $(TEXI2DVI) -p gambit.txi) || (echo "*** $@ could not be built (perhaps $(TEXI2DVI) is not installed?)" > $@)
 
-gambit.html: gambit.txi
-	(cd $(srcdir) && $(TEXI2HTML) -def-table gambit.txi) || (echo "*** $@ could not be built (perhaps $(TEXI2HTML) is not installed?)" > $@)
+gambit.html gambit.tsv: gambit.txi
+	(cd $(srcdir) && $(TEXI2HTML) --idx-sum --def-table gambit.txi) || (echo "*** $@ could not be built (perhaps $(TEXI2HTML) is not installed?)" > $@)
 
 gambit.txt: gambit.txi
 	(cd $(srcdir) && $(MAKEINFO) --no-split --no-headers --output gambit.txt gambit.txi) || (echo "*** $@ could not be built (perhaps $(MAKEINFO) is not installed?)" > $@)
@@ -271,7 +271,7 @@ clean-pre: mostlyclean-pre
 
 clean-post clean-post-nonrec: mostlyclean-post-nonrec
 	rm -f *.aux *.cp *.cps *.dvi *.fn *.fns *.ky *.log *.pg \
-	  *.toc *.tp *.vr *.cm *.fl *.op *.tmp
+	  *.toc *.tp *.tsv *.vr *.cm *.fl *.op *.tmp
 
 distclean-pre: clean-pre
 
