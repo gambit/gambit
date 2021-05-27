@@ -105,7 +105,7 @@ pdf: gambit.pdf
 
 ps: gambit.ps
 
-html: gambit.html
+html: gambit.html gambit.tsv
 
 txt: gambit.txt
 
@@ -118,8 +118,8 @@ gambit.ps: gambit.pdf
 gambit.pdf: gambit.txi version.txi
 	(cd $(srcdir) && cd $(srcdir) && $(TEXI2DVI) -p gambit.txi) || (echo "*** $@ could not be built (perhaps $(TEXI2DVI) is not installed?)" > $@)
 
-gambit.html: gambit.txi
-	(cd $(srcdir) && $(TEXI2HTML) -def-table gambit.txi) || (echo "*** $@ could not be built (perhaps $(TEXI2HTML) is not installed?)" > $@)
+gambit.html gambit.tsv: gambit.txi
+	(cd $(srcdir) && $(TEXI2HTML) --idx-sum --def-table gambit.txi) || (echo "*** $@ could not be built (perhaps $(TEXI2HTML) is not installed?)" > $@)
 
 gambit.txt: gambit.txi
 	(cd $(srcdir) && $(MAKEINFO) --no-split --no-headers --output gambit.txt gambit.txi) || (echo "*** $@ could not be built (perhaps $(MAKEINFO) is not installed?)" > $@)
