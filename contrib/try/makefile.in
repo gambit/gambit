@@ -157,7 +157,7 @@ VM.js: extra.scm VM.scm
 
 VM.min.js: VM.js
 	npx google-closure-compiler --language_in=ECMASCRIPT_2015 --language_out=ECMASCRIPT_2015 --js VM.js --js_output_file VM.min.js
-	sed -I .tmp -e "s/^'use strict';//" VM.min.js
+	sed -i.tmp -e "s/^'use strict';//" VM.min.js
 	gzip -k -9 VM.min.js
 
 browserfs.min.js:
