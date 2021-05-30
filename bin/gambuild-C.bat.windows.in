@@ -231,6 +231,7 @@ exit /b 0
 
 
 :for_each_line_of_var
+if not defined %for_each_line_of_var_var% goto :for_each_line_of_var_done
 for /f "tokens=1* delims==" %%i in ('set %for_each_line_of_var_var%') do (
   if not "%%j" == "" (
     set "_arg=%%j"
