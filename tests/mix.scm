@@ -1758,7 +1758,7 @@
 (define c4 -1.)
 (define c5 0.)
 (define c6 -0.)
-(define c7 +nan.0)
+(define c7 (let () (declare (not constant-fold)) (fl+ +inf.0 -inf.0))) ;; NaN is not represented the same on ARM and x86
 (define c8 +inf.0)
 (define c9 -inf.0)
 (define c10 1e40)
@@ -1772,7 +1772,7 @@
   (write (fl/ c3 c6)) (newline)
   (write (fl/ c4 c6)) (newline)
   (write c7) (newline)
-  (write (fl+ c9 c8)) (newline)
+  (write (let () (declare (not constant-fold)) (fl+ c9 c8))) (newline)
   (write (fl< (fllog c5) -1.797693e308)) (newline)
   (write (fl< 1.797693e308 (flexp c10))) (newline)
   (write (fl/ c11 c10)) (newline)
