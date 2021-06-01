@@ -607,15 +607,16 @@
                 (macro-check-list x 2 (assoc obj lst c)
                   #f))))))))
 
-(define-macro (##macro-filter prim-call list var test-expr)
+(define-macro (macro-filter prim-call list var test-expr)
   `(let ()
      (define (filter-tail list)
        (if (pair? list)
            (let* ((,var (car list))
+                  (matches? ,test-expr)
                   (old-tail (cdr list))
                   (new-tail (filter-tail old-tail)))
              (if (and (or (pair? new-tail) (null? new-tail))
-                      ,test-expr)
+                      matches?)
                  (if (eq? old-tail new-tail)
                      list
                      (cons x new-tail))
@@ -628,13 +629,13 @@
                         new-list))))
 
 (define-prim&proc (filter (pred procedure) (list object))
-  (##macro-filter (filter pred list) list x (pred x)))
+  (macro-filter (filter pred list) list x (pred x)))
 
 (define-prim&proc (remove (pred procedure) (list object))
-  (##macro-filter (remove pred list) list x (not (pred x))))
+  (macro-filter (remove pred list) list x (not (pred x))))
 
 (define-prim&proc (remq (elem object) (list object))
-  (##macro-filter (remq elem list) list x (not (eq? x elem))))
+  (macro-filter (remq elem list) list x (not (eq? x elem))))
 
 ;;;----------------------------------------------------------------------------
 
