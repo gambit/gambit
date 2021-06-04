@@ -607,22 +607,35 @@
                 (macro-check-list x 2 (assoc obj lst c)
                   #f))))))))
 
-(define-prim (##remq elem lst)
+(define-macro (macro-filter prim-call list var test-expr)
+  `(let ()
+     (define (filter-tail list)
+       (if (pair? list)
+           (let* ((,var (car list))
+                  (matches? ,test-expr)
+                  (old-tail (cdr list))
+                  (new-tail (filter-tail old-tail)))
+             (if (and (or (pair? new-tail) (null? new-tail))
+                      matches?)
+                 (if (eq? old-tail new-tail)
+                     list
+                     (cons x new-tail))
+                 new-tail))
+           list))
+     (let ((new-list (filter-tail ,list)))
+       (macro-if-checks (if (or (pair? new-list) (null? new-list))
+                            new-list
+                            (macro-fail-check-list 2 ,prim-call))
+                        new-list))))
 
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
+(define-prim&proc (filter (pred procedure) (list object))
+  (macro-filter (filter pred list) list x (pred x)))
 
-  (define (rem elem lst)
-    (if (pair? lst)
-        (let* ((lst2 (rem elem (cdr lst)))
-               (x (car lst)))
-          (if (eq? x elem)
-              lst2
-              (if (eq? lst2 (cdr lst))
-                  lst
-                  (cons x lst2))))
-        '()))
+(define-prim&proc (remove (pred procedure) (list object))
+  (macro-filter (remove pred list) list x (not (pred x))))
 
-  (rem elem lst))
+(define-prim&proc (remq (elem object) (list object))
+  (macro-filter (remq elem list) list x (not (eq? x elem))))
 
 ;;;----------------------------------------------------------------------------
 

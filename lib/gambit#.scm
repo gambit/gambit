@@ -279,6 +279,7 @@ file-number-of-links
 file-owner
 file-size
 file-type
+filter
 finite?
 first-bit-set
 fixnum->flonum
@@ -676,6 +677,8 @@ readtable-write-extended-read-macros?
 readtable-write-extended-read-macros?-set
 readtable?
 real-time
+remove
+remq
 rename-file
 repl-display-environment?
 repl-error-port
