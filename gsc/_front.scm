@@ -735,18 +735,19 @@
              (let* ((var (def-var ptree))
                     (val (global-single-def var)))
                (if (and val (prc? val))
-                   (let ((proc
-                          (make-proc-obj
-                           (symbol->string (var-name var)) ;; name
-                           (prc-c-name val)   ;; c-name
-                           #t                 ;; primitive?
-                           #f                 ;; code
-                           (call-pattern val) ;; call-pat
-                           #t                 ;; side-effects?
-                           '()                ;; strict-pat
-                           0                  ;; lift-pat
-                           '(#f)              ;; type
-                           #f)))              ;; standard
+                   (let ((proc (prc-proc-obj-get val)))
+                     (proc-obj-name-set!
+                      proc
+                      (symbol->string (var-name var)))
+                     (proc-obj-c-name-set!
+                      proc
+                      (prc-c-name val))
+                     (proc-obj-primitive?-set!
+                      proc
+                      #t)
+                     (proc-obj-call-pat-set!
+                      proc
+                      (call-pattern val))
                      (add-constant-var var (make-obj proc))
                      (set! const-procs (cons proc const-procs))))))))
      program)
@@ -1031,17 +1032,20 @@
                  (proc
                   (if var-is-const
                       (obj-val var-is-const)
-                      (make-proc-obj
-                       (symbol->string (var-name var)) ;; name
-                       (prc-c-name val)                ;; c-name
-                       #f                              ;; primitive?
-                       #f                              ;; code
-                       (call-pattern val)              ;; call-pat
-                       #t                              ;; side-effects?
-                       '()                             ;; strict-pat
-                       0                               ;; lift-pat
-                       '(#f)                           ;; type
-                       #f)))                           ;; standard
+                      (let ((proc (prc-proc-obj-get val)))
+                        (proc-obj-name-set!
+                         proc
+                         (symbol->string (var-name var)))
+                        (proc-obj-c-name-set!
+                         proc
+                         (prc-c-name val))
+                        (proc-obj-primitive?-set!
+                         proc
+                         #f)
+                        (proc-obj-call-pat-set!
+                         proc
+                         (call-pattern val))
+                        proc)))
                  (bbs
                   (make-bbs)))
 
@@ -1734,7 +1738,8 @@
            reason
            (if (reason-side? reason)
              (make-obj void-object)
-             (let ((proc (global-proc-obj node)))
+             (let ((proc (and (global? (ref-var node))
+                              (global-proc-obj node))))
                (if proc
                  (make-obj proc)
                  (var->opnd (ref-var node)))))))

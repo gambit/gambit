@@ -134,9 +134,11 @@
     (compiler-internal-error "disj-alt, 'disj' node expected" x)))
 
 (define (new-prc source env name c-name parms opts keys rest? body)
-  (let* ((children (list body))
-         (node (make-prc #f children #t #t env source
-                         name c-name parms opts keys rest?)))
+  (let* ((children
+          (list body))
+         (node
+          (make-prc #f children #t #t env source
+                    name c-name parms opts keys rest? #f)))
     (for-each (lambda (x) (var-bound-set! x node)) parms)
     (node-parent-set! body node)
     node))
@@ -149,6 +151,23 @@
 (define (prc-req-and-opt-parms-only? x)
   (and (not (prc-keys x))
        (not (prc-rest? x))))
+
+(define (prc-proc-obj-get x)
+  (or (prc-proc-obj x)
+      (let ((proc-obj
+             (make-proc-obj ;; create proc-obj that will be modified later
+              "*anonymous*" ;; name
+              #f            ;; c-name
+              #f            ;; primitive?
+              #f            ;; code
+              0             ;; call-pat
+              #t            ;; side-effects?
+              '()           ;; strict-pat
+              0             ;; lift-pat
+              '(#f)         ;; type
+              #f)))         ;; standard
+        (prc-proc-obj-set! x proc-obj)
+        proc-obj)))
 
 (define (new-call source env oper args)
   (let ((node (make-app #f (cons oper args) #t #t env source)))
@@ -301,26 +320,29 @@
 (define (global? var)
   (not (bound? var)))
 
-(define (global-single-def var) ; get definition of a global if it is only
-  (and (global? var)            ; defined once and it will never change
-       (let ((sets (ptset->list (var-sets var))))
-         (and (pair? sets)
-              (null? (cdr sets))
-              (def? (car sets))
-              (block-compilation? (node-env (car sets)))
-              (def-val (car sets))))))
+(define (global-single-def var)
+  ;; get definition of a global if it is only defined once and it will
+  ;; never change
+  (let ((sets (ptset->list (var-sets var))))
+    (and (pair? sets)
+         (null? (cdr sets))
+         (def? (car sets))
+         (block-compilation? (node-env (car sets)))
+         (def-val (car sets)))))
 
 (define (global-proc-obj node)
-  (let ((var (ref-var node)))
-    (and (global? var)
-         (let ((name (var-name var)))
-           (standard-proc-obj (target.prim-info name)
-                              name
-                              (node-env node))))))
+  (global-standard-proc-obj node))
+
+(define (global-standard-proc-obj node)
+  (let* ((var (ref-var node))
+         (name (var-name var)))
+    (standard-proc-obj (target.prim-info name)
+                       name
+                       (node-env node))))
 
 (define (global-singly-bound? node)
   (or (global-single-def (ref-var node))
-      (global-proc-obj node)))
+      (global-standard-proc-obj node)))
 
 (define (app->specialized-proc node)
   (let ((oper (app-oper node))
@@ -335,7 +357,8 @@
             (and (proc-obj? val)
                  val)))
          ((ref? oper)
-          (global-proc-obj oper))
+          (and (global? (ref-var oper))
+               (global-proc-obj oper)))
          (else
           #f))
    args
