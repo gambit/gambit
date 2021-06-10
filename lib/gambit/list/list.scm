@@ -939,6 +939,14 @@
     (set-cdr! (last-pair result) result)
     result))
 
+(define-primitive (iota-fixnum (count index)
+                               (start fixnum 0))
+  (let loop ((i count) (result '()))
+    (if (fx> i 0)
+        (let ((i (fx- i 1)))
+          (loop i (cons (fx+ start i) result)))
+        result)))
+
 (define-prim&proc (iota (count index)
                         (start number 0)
                         (step  number 1))
@@ -946,11 +954,7 @@
            (fixnum? start)
            (primitive (fx+? (fx- count 1) start)))
 
-      (let loop ((i count) (result '()))
-        (if (fx> i 0)
-            (let ((i (fx- i 1)))
-              (loop i (cons (fx+ start i) result)))
-            result))
+      (primitive (iota-fixnum count start))
 
       (let loop ((i count) (result '()))
         (if (fx> i 0)
