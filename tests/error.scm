@@ -1,6 +1,6 @@
 ; File: "error.scm"
 
-; Copyright (c) 1998-2020 by Marc Feeley, All Rights Reserved.
+; Copyright (c) 1998-2021 by Marc Feeley, All Rights Reserved.
 
 ; Test program for error processing.
 
@@ -648,13 +648,19 @@
 (try 'append append)
 (try 'append append #f)
 (try 'append append '() #f)
+(try 'append append "foo" #f)
 (try 'append append '(1 2) #f)
 (try 'append append '(1 2 . "foo") #f)
+(try 'append append '(1 2) "foo" #f)
 (try 'append append '() '() #f)
+(try 'append append '() "foo" #f)
 (try 'append append '() '(1 2) #f)
 (try 'append append '() '(1 2 . "foo") #f)
+(try 'append append '() '(1 2) "foo" #f)
 (try 'append append '(1 2) '() #f)
 (try 'append append '(1 2 . "foo") '() #f)
+(try 'append append '(1 2) "foo" #f)
+(try 'append append "foo" '() #f)
 (try 'append append '(1 2) '(3 4) #f)
 (try 'append append '() '() '() #f)
 (try 'append append '(1 2) '(3 4) '(5 6) #f)

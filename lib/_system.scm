@@ -2057,7 +2057,7 @@
         (if (##pair? x)
             (let ((couple (##car x)))
               (macro-force-vars (couple)
-                (macro-check-pair-list
+                (macro-check-pair-list-pair
                   couple
                   1
                   (list->table lst
@@ -2459,7 +2459,7 @@
     (let loop ((x lst))
       (if (##pair? x)
           (let ((couple (##car x)))
-            (macro-check-pair-list
+            (macro-check-pair-list-pair
              couple
              1
              (list->table lst

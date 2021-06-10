@@ -4299,6 +4299,8 @@
     (string                       . "STRING")
     (string-list                  . "STRING LIST")
     (list                         . "LIST")
+    (proper-list                  . "PROPER LIST")
+    (proper-or-circular-list      . "PROPER or CIRCULAR LIST")
     (symbol                       . "SYMBOL")
     (keyword                      . "KEYWORD")
     (boolean                      . "BOOLEAN")

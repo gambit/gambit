@@ -1299,7 +1299,7 @@
         (if (##pair? x)
           (let ((couple (##car x)))
             (macro-force-vars (couple)
-              (macro-check-pair-list
+              (macro-check-pair-list-pair
                couple
                1
                (list->table lst
@@ -1315,7 +1315,7 @@
                  (if (##eq? table (##table-ref table key table))
                    (##table-set! table key (##cdr couple)))
                  (loop (##cdr x))))))
-          (macro-check-list
+          (macro-check-proper-list-null
            x
            1
            (list->table lst

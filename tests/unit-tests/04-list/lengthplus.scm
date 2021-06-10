@@ -26,12 +26,15 @@
 (check-eqv? (length+ lst1) 3)
 (check-eqv? (length+ lst2) 4)
 
-(check-eqv? (length+ lst3) #f)
-
 (check-eqv? (length+ lst4) #f)
 (check-eqv? (length+ lst5) #f)
 (check-eqv? (length+ lst6) #f)
 (check-eqv? (length+ lst7) #f)
+
+(check-tail-exn type-exception? (lambda () (length+ str)))
+(check-tail-exn type-exception? (lambda () (length+ int)))
+(check-tail-exn type-exception? (lambda () (length+ bool)))
+(check-tail-exn type-exception? (lambda () (length+ lst3)))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (length+)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (length+ bool bool)))

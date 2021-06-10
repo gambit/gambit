@@ -52,7 +52,7 @@
                       (equal-fn (macro-absent-obj))
                       (hash-fn  (macro-absent-obj)))
     (macro-force-vars (alist equal-fn hash-fn)
-      (macro-check-pair-list
+      (macro-check-pair-list-pair
           alist
           0
           (alist->hash-table alist equal-fn hash-fn)
