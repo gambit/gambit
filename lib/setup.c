@@ -2990,7 +2990,36 @@ ___processor_state ___ps;)
 
   for (;;)
     {
-#define CALL_STEP ___pc = ___LABEL_HOST_GET(___pc)(___ps)
+#ifdef ___DEBUG_TRAMPOLINE
+
+#define CALL_STEP_DEBUG \
+do { \
+  ___SCMOBJ sym = ___subprocedure_parent_name (___pc); \
+  printf ("___pc = "); \
+  if (sym == ___FAL) { \
+    printf ("???\n"); \
+  } else { \
+    ___SCMOBJ name = ___FIELD(sym,___SYMKEY_NAME); \
+    int i; \
+    for (i=0; i<___INT(___STRINGLENGTH(name)); i++) \
+      printf ("%c", ___INT(___STRINGREF(name,___FIX(i)))); \
+    printf ("\n"); \
+  } \
+  fflush (stdout); \
+} while (0)
+
+#else
+
+#define CALL_STEP_DEBUG
+
+#endif
+
+#define CALL_STEP \
+do { \
+  CALL_STEP_DEBUG; \
+  ___pc = ___LABEL_HOST_GET(___pc)(___ps); \
+} while (0)
+
       CALL_STEP;
       CALL_STEP;
       CALL_STEP;
