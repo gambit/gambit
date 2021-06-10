@@ -490,6 +490,7 @@
                          ,@body)))))
 
           (define (gen-block expr)
+            expr #; ;; remove after next release
             `(cond-expand ((compilation-target (_))
                            ;; avoid ##declare-scope which is not
                            ;; implemented by interpreter
