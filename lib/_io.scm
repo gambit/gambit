@@ -15626,13 +15626,13 @@
 
   (cond ((macro-language-srfi-22? language)
          (lambda ()
-           (let ((status (call-main (##list (##cdr ##processed-command-line)))))
+           (let ((status (call-main (##list (##command-args)))))
              (if (##fixnum? status)
                  (##exit status)
                  (##exit-abruptly)))))
         (else
          (lambda ()
-           (call-main (##cdr ##processed-command-line))
+           (call-main (##command-args))
            (##exit)))))
 
 ;;;============================================================================

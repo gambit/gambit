@@ -2,7 +2,7 @@
 
 ;;; File: "main.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
@@ -241,8 +241,8 @@ usage-end
                                          language)
                                         (##start-main language))
                                       ##exit))
-                                (set! ##processed-command-line
-                                  (##cons script-path rest)))))))
+                                (##script-command-line-set!
+                                 (##cons script-path rest)))))))
                   (##load-module-or-file arg script-callback)
                   (if starter
                       (starter)
@@ -913,15 +913,21 @@ usage-end
 
   (##load-support-libraries)
 
-  (let ((language-and-tail
-         (##extract-language-and-tail (##car ##processed-command-line))))
+  (let* ((cmd-name
+          (##command-name))
+         (cmd-args
+          (##command-args))
+         (language-and-tail
+          (##extract-language-and-tail cmd-name)))
+
+    (##script-command-line-set! '("")) ;; per SRFI-193
 
     (if language-and-tail
       (let ((language (##car language-and-tail)))
         (##readtable-setup-for-language! (##current-readtable) language)))
 
     (split-command-line
-      (##cdr ##processed-command-line)
+      cmd-args
       '((f) (h) (help) (-help) (i) (v))
       #t
       (lambda (main-options arguments)
@@ -957,9 +963,7 @@ usage-end
                      (##assq '-help main-options))
                  (write-usage-to-port
                   (if (interpreter-or #f) gsi-usage gsc-usage)
-                  (##path-strip-extension
-                   (##path-strip-directory
-                    (##car (##command-line))))
+                  cmd-name
                   ##stdout-port)
                  (##exit))
 

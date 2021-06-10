@@ -4604,7 +4604,7 @@ ___setup_params_struct *setup_params;)
   setup_params->repl_client_addr    = 0;
   setup_params->repl_server_addr    = 0;
   setup_params->linker              = 0;
-  setup_params->reset_argv0[0]      = 0;
+  setup_params->reset_argv0[0]      = '\0'; /* empty string */
   setup_params->reset_argv[0]       = setup_params->reset_argv0;
   setup_params->reset_argv[1]       = 0;
 }

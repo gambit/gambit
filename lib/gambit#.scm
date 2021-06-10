@@ -134,7 +134,9 @@ circular-list
 circular-list?
 clear-bit-field
 close-port
+command-args
 command-line
+command-name
 compilation-target
 compile-file
 compile-file-to-target
@@ -742,6 +744,8 @@ s8vector-shrink!
 s8vector?
 scheduler-exception-reason
 scheduler-exception?
+script-directory
+script-file
 seconds->time
 serial-number->object
 service-info

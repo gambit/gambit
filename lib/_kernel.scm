@@ -16,7 +16,6 @@
 #include "os_setup.h"
 #include "os_base.h"
 #include "os_time.h"
-#include "os_shell.h"
 #include "os_files.h"
 #include "os_dyn.h"
 #include "os_tty.h"
@@ -1991,6 +1990,10 @@ end-of-code
         (##raise-heap-overflow-exception)
         (##gc))
       (##void))))
+
+(define (##execute-final-wills!)
+  ;; do nothing because wills are only implemented in C backend
+  #f)
 
 (define ##gc-interrupt-jobs (##make-jobs))
 
@@ -4587,41 +4590,6 @@ end-of-code
   (c-lambda ()
             UCS-2-string
    "___return(___GSTATE->setup_params.repl_client_addr);"))
-
-;;;----------------------------------------------------------------------------
-
-;;; Command line, environment variables, and shell command execution.
-
-(define-prim (##command-line)
-  (##declare (not interrupts-enabled))
-  (##c-code "___RESULT = ___GSTATE->command_line;"))
-
-(define ##processed-command-line
-  (##command-line))
-
-(define-prim (##processed-command-line-set! x)
-  (set! ##processed-command-line x))
-
-(define-prim ##os-getenv
-  (c-lambda (scheme-object)
-            scheme-object
-   "___os_getenv"))
-
-(define-prim ##os-setenv
-  (c-lambda (scheme-object
-             scheme-object)
-            scheme-object
-   "___os_setenv"))
-
-(define-prim ##os-environ
-  (c-lambda ()
-            scheme-object
-   "___os_environ"))
-
-(define-prim ##os-shell-command
-  (c-lambda (scheme-object)
-            scheme-object
-   "___os_shell_command"))
 
 ;;;----------------------------------------------------------------------------
 

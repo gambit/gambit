@@ -1191,7 +1191,7 @@ A(write-char #\A '#<output-port #7 (stdout)>) => #!void
 (getenv "UNKNOWNVAR2") => "NOW-DEFINED"
 (getenv "UNKNOWNVAR1" 999) => 999
 (getenv "UNKNOWNVAR2" 999) => "NOW-DEFINED"
-(cdr-command-line) => ("-f" "error.scm")
+(cdr-command-line) => ()
 (shell-command "echo hello > newfile1") => 0
 (create-directory "newdir1") => #!void
 ;;; File exists: (create-directory "newdir1")

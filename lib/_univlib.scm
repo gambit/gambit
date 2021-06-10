@@ -1577,10 +1577,6 @@ def @os_path_normalize_directory@(path):
     (println "unimplemented ##exit-with-err-code-no-cleanup called with err-code=")
     (println err-code))))
 
-(define (##execute-final-wills!)
-  ;; do nothing because wills are only implemented in C backend
-  #f)
-
 (define (##exit-trampoline)
   (##declare (not interrupts-enabled))
   (cond-expand
@@ -1656,7 +1652,7 @@ def @os_path_normalize_directory@(path):
    ((compilation-target js)
     (##inline-host-declaration "
 
-@os_argv@ = [];
+@os_argv@ = [''];
 if (@os_nodejs@) {
   @os_argv@ = process.argv.slice(1);
 }
@@ -1668,17 +1664,8 @@ if (@os_nodejs@) {
     (##vector->list (##inline-host-expression "@host2scm@(sys.argv)")))
 
    (else
-     (println "unimplemented ##command-line called")
+     (println "unimplemented ##get-command-line called")
     '())))
-
-(define ##processed-command-line
-  (let ((cmd-line (##get-command-line)))
-    (if (##pair? cmd-line)
-        cmd-line
-        '("program"))))
-
-(define (##processed-command-line-set! x)
-  (set! ##processed-command-line x))
 
 ;;;----------------------------------------------------------------------------
 

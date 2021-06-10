@@ -18,6 +18,10 @@
 
 ;; Gambit
 
+(command-name)
+(script-file)
+(script-directory)
+
 ;;unimplemented;;address-info-family
 ;;unimplemented;;address-info-protocol
 ;;unimplemented;;address-info-socket-info
