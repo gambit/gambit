@@ -58,6 +58,12 @@
 
   (mergesort lst))
 
+(define utf-8
+  (equal? ".utf-8"
+          (string-downcase
+           (path-extension
+            (string-append "." (getenv "LANG" ""))))))
+
 (define (show-bar nb-good nb-fail nb-other nb-total elapsed)
 
   (define (ratio n)
@@ -65,10 +71,25 @@
 
   (let* ((istty (tty? (current-output-port)))
          (bar-width 16)
-         (bar-length (ratio bar-width)))
+         (unicode? (and istty utf-8)))
 
     (define (esc x)
       (if istty x ""))
+
+    (define (bar)
+      (if unicode?
+          (let* ((len (ratio (- (* bar-width 8) 1)))
+                 (full (quotient len 8))
+                 (mod (modulo len 8))
+                 (rest (- bar-width full 1)))
+            (string-append
+             (make-string full #\x2588) ;; full block
+             (string (integer->char (- #x258F mod)))
+             (make-string rest #\space)))
+          (let ((len (ratio bar-width)))
+            (string-append
+             (make-string len #\#)
+             (make-string (- bar-width len) #\.)))))
 
     (print (if istty "\r" "\n")
            "["
@@ -80,8 +101,7 @@
            "] "
            (num->string (ratio 100) 3 0)
            "% "
-           (make-string bar-length #\#)
-           (make-string (- bar-width bar-length) #\.)
+           (bar)
            " "
            (num->string elapsed 3 1)
            "s"
