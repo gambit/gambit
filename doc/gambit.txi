@@ -364,6 +364,164 @@ In conclusion, the intent is for the @code{primitive} special form to be
 used sparingly. Searching the source code for uses of @code{(primitive}
 is a good way to find potentially unsafe code.
 
+@subsection Type specifiers
+
+Here is a list of the available type specifiers for a
+@code{define-procedure} parameter @var{x} and the associated constraint
+on the value of @var{x}.
+
+Note that there is no direct way for specifying the type "list" or "list
+of elements of type T". For lists, the procedure body must iterate on
+the pairs, going from cdr to cdr until a non-pair is found and then do a
+check for the empty list with @code{(macro-check-list lst <arg-id>
+(<procedure-name> <args>...) <body>)} to check that the parameter is a
+proper list (i.e. that it ends with the empty list).
+
+@subsubsection Basic types (other than numbers)
+
+@example
+boolean                    x is a boolean
+char                       x is a character
+pair                       x is a pair
+procedure                  x is a procedure
+string                     x is a string
+symbol                     x is a symbol
+vector                     x is a vector
+@end example
+
+@subsubsection Numbers
+
+@example
+number                     x is a number (possibly complex, rational, etc)
+
+real                       x is a real number (any number except complex)
+
+fixnum                     x is a fixnum and -2^(64-3) <= x <= 2^(64-3) - 1
+(fixnum-range lo hi)       x is a fixnum and lo <= x < hi
+(fixnum-range-incl lo hi)  x is a fixnum and lo <= x <= hi
+
+index                      x is a fixnum and 0 <= x <= 2^(64-3) - 1
+(index-range lo hi)        x is a fixnum and lo <= x < hi
+(index-range-incl lo hi)   x is a fixnum and lo <= x <= hi
+
+exact-signed-int8          x is an exact integer, -128 <= x <= 127
+exact-signed-int16         x is an exact integer n, -32768 <= x <= 32767
+exact-signed-int32         x is an exact integer n, -2^31 <= x <= 2^31 - 1
+exact-signed-int64         x is an exact integer n, -2^63 <= x <= 2^63 - 1
+exact-unsigned-int8        x is an exact integer n, 0 <= x <= 255
+exact-unsigned-int16       x is an exact integer n, 0 <= x <= 65535
+exact-unsigned-int32       x is an exact integer n, 0 <= x <= 2^32 - 1
+exact-unsigned-int64       x is an exact integer n, 0 <= x <= 2^64 - 1
+
+flonum                     x is a flonum (floating point number)
+inexact-real               x is a flonum
+inexact-real-list          x is a flonum, exception mentions LIST
+@end example
+
+@subsubsection Time types
+
+@example
+time                       x is a time object
+absrel-time                x is a real or a time object
+absrel-time-or-false       x is #f or a real or a time object
+@end example
+
+@subsubsection Ports
+
+@example
+port                       x is a port (input, output, or input-output)
+input-port                 x is an input port
+output-port                x is an output port
+
+object-input-port          x is an object input port
+object-output-port         x is an object output port
+vector-input-port          x is a vector input port
+vector-output-port         x is a vector output port
+
+character-input-port       x is a character input port
+character-output-port      x is a character output port
+string-input-port          x is a string input port
+string-output-port         x is a string output port
+
+byte-port                  x is a byte port (input, output, or input-output)
+byte-input-port            x is a byte input port
+byte-output-port           x is a byte output port
+u8vector-input-port        x is a u8vector input port
+u8vector-output-port       x is a u8vector output port
+
+device-input-port          x is a device intput port
+device-output-port         x is a device output port
+process-port               x is a process port
+
+tcp-client-port            x is a tcp-client port
+tcp-server-port            x is a tcp-server port
+
+udp-port                   x is a udp port
+udp-input-port             x is a udp input port
+udp-output-port            x is a udp output port
+
+tty-port                   x is a tty port
+@end example
+
+@subsubsection List and vector variants of above
+
+@example
+list                       x is '(), exception mentions LIST
+char-list                  x is a character, exception mentions LIST
+char-vector                x is a character, exception mentions VECTOR
+pair-list                  x is a pair, exception mentions LIST
+exact-signed-int8-list     x is an exact-signed-int8, exception mentions LIST
+exact-signed-int16-list    x is an exact-signed-int16, exception mentions LIST
+exact-signed-int32-list    x is an exact-signed-int32, exception mentions LIST
+exact-signed-int64-list    x is an exact-signed-int64, exception mentions LIST
+exact-unsigned-int8-list   x is an exact-unsigned-int8, exception mentions LIST
+exact-unsigned-int16-list  x is an exact-unsigned-int16, exception mentions LIST
+exact-unsigned-int32-list  x is an exact-unsigned-int32, exception mentions LIST
+exact-unsigned-int64-list  x is an exact-unsigned-int64, exception mentions LIST
+@end example
+
+@subsubsection Gambit types
+
+@example
+error-exception            x is an error-exception object
+box                        x is a box
+condvar                    x is a condition variable
+f32vector                  x is a f32vector
+f64vector                  x is a f64vector
+foreign                    x is a foreign object
+keyword                    x is a keyword
+mutex                      x is a mutex
+processor                  x is a processor object
+s16vector                  x is a s16vector
+s32vector                  x is a s32vector
+s64vector                  x is a s64vector
+s8vector                   x is a s8vector
+table                      x is a table
+tgroup                     x is a thread group
+thread                     x is a thread
+u16vector                  x is a u16vector
+u32vector                  x is a u32vector
+u64vector                  x is a u64vector
+u8vector                   x is a u8vector
+will                       x is a will
+continuation               x is a continuation object
+random-source              x is a random-source object
+readtable                  x is a readtable
+type                       x is a structure type descriptor
+mutable                    x is a mutable object
+@end example
+
+@subsubsection Others
+
+@example
+initialized-thread
+not-initialized-thread
+not-started-thread
+not-started-thread-given-initialized
+string-or-ip-address
+string-or-nonnegative-fixnum
+@end example
+
 @ifinfo
 
 @menu
