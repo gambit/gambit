@@ -174,8 +174,9 @@
          ptree)))
 
 (define (epc-ref ptree)
-  (let ((proc (global-proc-obj ptree)))
-    (if proc
+  (let ((proc (and (global? (ref-var ptree))
+                   (global-proc-obj ptree))))
+    (if (and proc (proc-obj-standard proc))
         (let ((proc-node
                (new-cst (node-source ptree) (node-env ptree)
                  proc)))
@@ -1336,7 +1337,8 @@
 
   (let* ((oper (app-oper ptree))
          (proc (cond ((cst? oper) (cst-val oper))
-                     ((ref? oper) (global-proc-obj oper))
+                     ((ref? oper) (and (global? (ref-var oper))
+                                       (global-proc-obj oper)))
                      (else        #f))))
     (if (proc-obj? proc)
         (let* ((lift-pat

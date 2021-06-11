@@ -16,6 +16,8 @@
 (check-eqv? (length lst1) 3)
 (check-eqv? (length lst2) 4)
 
+(check-tail-exn type-exception? (lambda () (length str)))
+(check-tail-exn type-exception? (lambda () (length int)))
 (check-tail-exn type-exception? (lambda () (length bool)))
 (check-tail-exn type-exception? (lambda () (length lst3)))
 

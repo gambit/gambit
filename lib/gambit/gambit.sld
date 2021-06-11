@@ -367,6 +367,7 @@ circular-list
 clear-bit-field
 close-port
 command-line
+command-name
 compile-file
 compile-file-to-target
 condition-variable-broadcast!
@@ -961,6 +962,8 @@ s8vector-shrink!
 s8vector?
 scheduler-exception-reason
 scheduler-exception?
+script-directory
+script-file
 seconds->time
 serial-number->object
 service-info

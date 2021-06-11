@@ -1293,27 +1293,30 @@
                (let* ((proc (obj-val opnd))
                       (x (targ-use-prc proc #f)))
 ;;                 (targ-repr-exit-block! #f)
-                 (if (and (not (proc-obj-code proc))
-                          (proc-obj-primitive? proc))
-                   (targ-emit
-                     (list "JUMPPRM"
-                           set-nargs
-                           x))
-                   (let ((name (proc-obj-name proc))
-                         (unique-name (targ-unique-name proc)))
-                     (if (targ-arg-check-avoidable? proc nb-args)
-                       (targ-emit
-                         (list "JUMPINT"
-                               set-nargs
-                               x
-                               (targ-make-glbl "" unique-name)))
-                       (targ-emit
-                         (list 'seq
-                               set-nargs
-                               (list "JUMPINT"
-                                     '("NOTHING")
-                                     x
-                                     (targ-make-glbl 0 unique-name)))))))))
+                 (if (not x)
+                     (compiler-internal-error
+                      "targ-gen-jump, unknown procedure" (proc-obj-name proc))
+                     (if (and (not (proc-obj-code proc))
+                              (proc-obj-primitive? proc))
+                         (targ-emit
+                          (list "JUMPPRM"
+                                set-nargs
+                                x))
+                         (let ((name (proc-obj-name proc))
+                               (unique-name (targ-unique-name proc)))
+                           (if (targ-arg-check-avoidable? proc nb-args)
+                               (targ-emit
+                                (list "JUMPINT"
+                                      set-nargs
+                                      x
+                                      (targ-make-glbl "" unique-name)))
+                               (targ-emit
+                                (list 'seq
+                                      set-nargs
+                                      (list "JUMPINT"
+                                            '("NOTHING")
+                                            x
+                                            (targ-make-glbl 0 unique-name))))))))))
               ((glo? opnd)
 ;;               (targ-repr-exit-block! #f)
                (let ((name (glo-name opnd)))

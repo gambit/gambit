@@ -302,6 +302,7 @@ _module@obj@: _module.c
 _io@obj@: _io.c
 	@BUILD_OBJ@ -D___LIBRARY
 
+_nonstd.c: gambit/env-vars/env-vars.scm gambit/env-vars/env-vars\#.scm gambit/process/process.scm gambit/process/process\#.scm
 _nonstd@obj@: _nonstd.c
 	@BUILD_OBJ@ -D___LIBRARY
 

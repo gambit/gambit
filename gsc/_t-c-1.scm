@@ -713,8 +713,7 @@
     (if (proc-obj-primitive? proc)
       (begin
         (targ-use-glo (string->symbol name) supply?)
-        (if p
-            p
+        (or p
             (targ-c-id-prm2 name)))
       p)))
 

@@ -2,7 +2,7 @@
 
 ;;; File: "list.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -12,22 +12,20 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-fail-check-type pair 'pair)
-(define-fail-check-type pair-list 'pair-list)
-(define-fail-check-type list 'list)
+(implement-check-type-pair)
+(implement-check-type-pair-list)
+(implement-check-type-list)
+(implement-check-type-proper-list)
+(implement-check-type-proper-or-circular-list)
 
-(define-prim (##pair? obj))
+;;;----------------------------------------------------------------------------
 
-(define-prim (pair? obj)
-  (macro-force-vars (obj)
-    (##pair? obj)))
+(define-prim&proc (pair? (obj object)))
 
-(define-prim (##cons obj1 obj2))
+(define-prim&proc (cons (obj1 object)
+                        (obj2 object)))
 
-(define-prim (cons obj1 obj2)
-  (##cons obj1 obj2))
-
-(##define-macro (define-prim-c...r-procedures from-length to-length)
+(##define-macro (define-prim&proc-c...r from-length to-length)
 
   (define (gen-name pattern)
 
@@ -42,29 +40,30 @@
   (define (gen3 i j)
     (if (> i j)
         `()
-        (let* ((name
-                (gen-name i))
-               (##name
-                (string->symbol (string-append "##" (symbol->string name)))))
+        (let ((name (gen-name i)))
 
           (define (gen1 var pattern)
             (if (<= pattern 3)
-                (if (= pattern 3) `(##cdr ,var) `(##car ,var))
-                `(let ((x ,(if (odd? pattern) `(##cdr ,var) `(##car ,var))))
+                `(primitive (,(if (= pattern 3) `cdr `car) ,var))
+                `(let ((x (primitive (,(if (odd? pattern) `cdr `car) ,var))))
                    ,(gen1 'x (quotient pattern 2)))))
 
           (define (gen2 var pattern)
-            `(macro-check-pair ,var 1 (,name pair);;TODO: error message confusing?
-               ,(if (<= pattern 3)
-                    (if (= pattern 3) `(##cdr ,var) `(##car ,var))
-                    `(let ((x ,(if (odd? pattern) `(##cdr ,var) `(##car ,var))))
-                       (macro-force-vars (x)
-                         ,(gen2 'x (quotient pattern 2)))))))
+            (let ((body
+                   (if (<= pattern 3)
+                       `(primitive (,(if (= pattern 3) `cdr `car) ,var))
+                       `(let ((x (primitive (,(if (odd? pattern) `cdr `car) ,var))))
+                          (macro-force-vars (x)
+                            ,(gen2 'x (quotient pattern 2)))))))
+              (if (eq? var 'pair) ;; avoid repeating initial pair check
+                  body
+                  `(macro-check-pair ,var '(1 . pair) (,name pair);;TODO: error message confusing?
+                     ,body))))
 
-          `((define-prim (,##name pair)
+          `((define-primitive (,name (pair pair))
               ,(gen1 'pair i))
 
-            (define-prim (,name pair)
+            (define-procedure (,name (pair pair))
               (macro-force-vars (pair)
                 ,(gen2 'pair i)))
 
@@ -72,44 +71,29 @@
 
   `(begin ,@(gen3 (expt 2 from-length) (- (expt 2 (+ to-length 1)) 1))))
 
-(define-prim-c...r-procedures 1 4) ;; define car to cddddr
+(define-prim&proc-c...r 1 4) ;; define car to cddddr
 
-(define-prim (##set-car! pair val))
+(define-prim&proc (set-car! (pair pair)
+                            (obj  object))
+  (set-car! pair obj)
+  (void))
 
-(define-prim (set-car! pair val)
-  (macro-force-vars (pair)
-    (macro-check-pair pair 1 (set-car! pair val)
-      (macro-check-mutable pair 1 (set-car! pair val)
-        (begin
-          (##set-car! pair val)
-          (##void))))))
+(define-prim&proc (set-cdr! (pair pair)
+                            (obj  object))
+  (set-cdr! pair obj)
+  (void))
 
-(define-prim (##set-cdr! pair val))
-
-(define-prim (set-cdr! pair val)
-  (macro-force-vars (pair)
-    (macro-check-pair pair 1 (set-cdr! pair val)
-      (macro-check-mutable pair 1 (set-cdr! pair val)
-        (begin
-          (##set-cdr! pair val)
-          (##void))))))
-
-(define-prim (##null? obj)
-  (##eq? obj '()))
-
-(define-prim (null? obj)
-  (macro-force-vars (obj)
-    (##null? obj)))
+(define-prim&proc (null? (obj object))
+  (null? obj))
 
 ;; Floyd's tortoise and hare algorithm for cycle detection
 
 ;; https://en.wikipedia.org/wiki/Cycle_detection
 
 ;; These procedures may get into an infinite loop if another thread
-;; mutates "lst" (if lst1 and lst2 each point to disconnected cycles).
+;; mutates "lst" (if fast and slow each point to disconnected cycles).
 
-(##define (##possibly-cyclic-tail lst)
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
+(define-primitive (possibly-cyclic-tail lst)
   (let loop ((fast lst) (slow lst))
     (macro-force-vars (fast)
       (if (not (pair? fast))
@@ -128,14 +112,53 @@
                     (else
                      fast))))))))
 
-(##define (##length+ lst)
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (let loop ((len 0) (fast lst) (slow lst))
+(define-prim&proc (proper-list? (x object))
+  (null? (primitive (possibly-cyclic-tail x))))
+
+(define-prim&proc (circular-list? (x object))
+  (pair? (primitive (possibly-cyclic-tail x))))
+
+(define-prim&proc (dotted-list? (x object))
+  (let ((tail (primitive (possibly-cyclic-tail x))))
+    (not (or (null? tail) (pair? tail)))))
+
+(define-prim&proc (list? (x object))
+  (null? (primitive (possibly-cyclic-tail x))))
+
+(define-prim&proc (list (objs object) ...)
+  objs)
+
+(define-primitive (length (list proper-list))
+
+  ;; Note: this code enters an infinite loop when given a circular list
+
+  (let loop ((x list) (n 0))
+    (if (pair? x)
+        (loop (cdr x) (fx+ n 1))
+        n)))
+
+(define-procedure (length (list proper-list))
+
+  ;; Note: this code enters an infinite loop when given a circular list
+
+  (let loop ((x list) (n 0))
+    (macro-force-vars (x)
+      (if (pair? x)
+          (loop (cdr x) (fx+ n 1))
+          (macro-check-proper-list-null x '(1 . list) (length list)
+            n)))))
+
+(define-prim&proc (length+ (clist proper-or-circular-list))
+
+  (define (err)
+    (macro-fail-check-proper-or-circular-list '(1 . clist) (length+ clist)))
+
+  (let loop ((len 0) (fast clist) (slow clist))
     (macro-force-vars (fast)
       (cond ((null? fast)
              (fx* 2 len))
             ((not (pair? fast))
-             #f)
+             (err))
             (else
              (let ((fast (cdr fast)))
                (macro-force-vars (fast slow)
@@ -147,438 +170,353 @@
                        ((not (pair? slow))
                         ;; This case is possible if other threads mutate
                         ;; the list.
-                        #f)
+                        (err))
                        ((null? fast)
                         (fx+ 1 (fx* 2 len)))
                        ((not (pair? fast))
-                        #f)
+                        (err))
                        (else
                         (loop (fx+ len 1) (cdr fast) (cdr slow)))))))))))
 
-(define-prim&proc (proper-list? (lst object))
-  (null? (##possibly-cyclic-tail lst)))
+(define-primitive (append2 list1 list2)
+  (if (pair? list1)
+      (cons (car list1) (primitive (append2 (cdr list1) list2)))
+      list2))
 
-(define-prim&proc (circular-list? (lst object))
-  (pair? (##possibly-cyclic-tail lst)))
-
-(define-prim&proc (dotted-list? (lst object))
-  (let ((tail (##possibly-cyclic-tail lst)))
-    (not (or (null? tail) (pair? tail)))))
-
-(define-prim&proc (list? (lst object))
-  (null? (##possibly-cyclic-tail lst)))
-
-(define-prim (##list . lst)
-  lst)
-
-(define-prim (list . lst)
-  lst)
-
-(define-prim (##length lst)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
-  (let loop ((x lst) (n 0))
-    (if (pair? x)
-        (loop (cdr x) (fx+ n 1))
-        n)))
-
-(define-prim (length lst)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" length)) ;; but not length to ##length
-
-  (let loop ((x lst) (n 0))
-    (macro-force-vars (x)
-      (if (pair? x)
-          (loop (cdr x) (fx+ n 1))
-          (macro-check-list x 1 (length lst)
-            n)))))
-
-(define-procedure (length+ (lst object))
-  (##length+ lst))
-
-(define-prim (##append2 lst1 lst2)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
-  (if (pair? lst1)
-      (cons (car lst1) (##append2 (cdr lst1) lst2))
-      lst2))
-
-(define-prim (##append-lists lst)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
-  (if (pair? lst)
-      (let ((rev-lst (reverse lst)))
-        (let loop ((rev-lst (cdr rev-lst)) (result (car rev-lst)))
-          (if (pair? rev-lst)
-              (loop (cdr rev-lst)
-                    (##append2 (car rev-lst) result))
+(define-primitive (append-lists (list-of-lists proper-list))
+  (if (pair? list-of-lists)
+      (let ((rlst (reverse list-of-lists)))
+        (let loop ((rlst (cdr rlst)) (result (car rlst)))
+          (if (pair? rlst)
+              (loop (cdr rlst)
+                    (primitive (append2 (car rlst) result)))
               result)))
       '()))
 
-(define-prim (##append
-              #!optional
-              (lst1 (macro-absent-obj))
-              (lst2 (macro-absent-obj))
-              #!rest
-              others)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
-  (if (eq? lst2 (macro-absent-obj))
-      (if (eq? lst1 (macro-absent-obj))
+(define-primitive (append (list1 object (macro-absent-obj))
+                          (list2 object (macro-absent-obj))
+                          (lists object) ...)
+  (if (eq? list2 (macro-absent-obj))
+      (if (eq? list1 (macro-absent-obj))
           '()
-          lst1)
-      (##append-lists (cons lst1 (cons lst2 others)))))
+          list1)
+      (if (null? lists)
+          (primitive (append2 list1 list2))
+          (primitive (append-lists (cons list1 (cons list2 lists)))))))
 
-(define-prim (append
-              #!optional
-              (lst1 (macro-absent-obj))
-              (lst2 (macro-absent-obj))
-              #!rest
-              others)
+(define-procedure (append (list1 object (macro-absent-obj))
+                          (list2 object (macro-absent-obj))
+                          (lists object) ...)
 
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" append)) ;; but not append to ##append
-
-  (define (append-multiple head tail arg-num)
-    (if (null? tail)
-        head
-        (macro-force-vars (head)
-          (if (null? head)
-              (append-multiple (car tail) (cdr tail) (fx+ arg-num 1))
+  (define (append-multiple list1 other-lists arg-num1)
+    (if (null? other-lists)
+        list1
+        (macro-force-vars (list1)
+          (if (null? list1)
+              (append-multiple (car other-lists)
+                               (cdr other-lists)
+                               (fx+ arg-num1 1))
               (list-expected-check
-               (append-multiple-non-null head
-                                         tail
-                                         arg-num
-                                         (fx+ arg-num 1)))))))
+               (if (pair? list1)
+                   (append-multiple-pair list1
+                                         other-lists
+                                         arg-num1
+                                         (fx+ arg-num1 1))
+                   (fx- arg-num1))))))) ;; error: list expected
 
-  (define (append-multiple-non-null x lsts arg-num1 arg-num2)
-    ;; x!=(), returns fixnum on error
-    (let ((head (car lsts))
-          (tail (cdr lsts)))
+  (define (append-multiple-pair list1 other-lists arg-num1 arg-num2)
+    ;; list1 is a pair, returns fixnum on error
+    (let ((list2 (car other-lists))
+          (tail (cdr other-lists)))
       (if (null? tail)
-          (append-2-non-null x head arg-num1)
-          (macro-force-vars (head)
-            (if (null? head)
-                (append-multiple-non-null x
-                                          tail
-                                          arg-num1
-                                          (fx+ arg-num2 1))
-                (let ((result
-                       (append-multiple-non-null head
+          (append-2-pair list1 list2 arg-num1)
+          (macro-force-vars (list2)
+            (if (null? list2)
+                (append-multiple-pair list1
+                                      tail
+                                      arg-num1
+                                      (fx+ arg-num2 1))
+                (if (pair? list2)
+                    (let ((result
+                           (append-multiple-pair list2
                                                  tail
                                                  arg-num2
                                                  (fx+ arg-num2 1))))
-                  (macro-if-checks
-                   (if (fixnum? result)
-                       result
-                       (append-2-non-null x result arg-num1))
-                   (append-2-non-null x result arg-num1))))))))
+                      (macro-if-checks
+                       (if (fixnum? result)
+                           result
+                           (append-2-pair list1 result arg-num1))
+                       (append-2-pair list1 result arg-num1)))
+                    (fx- arg-num2))))))) ;; error: list expected
 
-  (define (append-2-non-null x y arg-num)
-    ;; x!=(), returns fixnum on error
-    (if (pair? x)
-        (let ((result (cons (car x) '())))
-          (let loop ((last result) (tail (cdr x)))
-            (macro-force-vars (tail)
-              (if (pair? tail)
-                  (let ((next (cons (car tail) '())))
-                    (set-cdr! last next)
-                    (loop next (cdr tail)))
-                  (begin
-                    (set-cdr! last y)
-                    (macro-if-checks
-                     (if (null? tail)
-                         result
-                         arg-num) ;; error: list expected
-                     result))))))
-        (macro-if-checks
-         arg-num ;; error: list expected
-         y)))
+  (define (append-2-pair list1 list2 arg-num1)
+    ;; list1 is a pair, returns fixnum on error
+    (let ((result (cons (car list1) '())))
+      (let loop ((last result) (tail (cdr list1)))
+        (macro-force-vars (tail)
+          (if (pair? tail)
+              (let ((next (cons (car tail) '())))
+                (set-cdr! last next)
+                (loop next (cdr tail)))
+              (begin
+                (set-cdr! last list2)
+                (macro-if-checks
+                 (if (null? tail)
+                     result
+                     arg-num1) ;; error: proper list expected
+                 result)))))))
 
   (define (list-expected-check result)
     (macro-if-checks
      (if (fixnum? result)
-         (macro-fail-check-list result (append lst1 lst2 . others))
+         (if (fx< result 0)
+             (macro-fail-check-list (fx- result) (append list1 list2 . lists))
+             (macro-fail-check-proper-list result (append list1 list2 . lists)))
          result)
      result))
 
-  (cond ((eq? lst2 (macro-absent-obj))
-         (if (eq? lst1 (macro-absent-obj))
+  (cond ((eq? list2 (macro-absent-obj))
+         (if (eq? list1 (macro-absent-obj))
              '()
-             lst1))
-        ((null? others)
-         (macro-force-vars (lst1)
-           (if (null? lst1)
-               lst2
-               (list-expected-check (append-2-non-null lst1 lst2 1)))))
+             list1))
+        ((null? lists)
+         (macro-force-vars (list1)
+           (if (null? list1)
+               list2
+               (list-expected-check
+                (if (pair? list1)
+                    (append-2-pair list1 list2 1)
+                    -1))))) ;; error: list expected
         (else
-         (append-multiple lst1 (cons lst2 others) 1))))
+         (append-multiple list1 (cons list2 lists) 1))))
 
-(define-prim (##reverse lst)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
-  (let loop ((x lst) (result '()))
+(define-primitive (reverse (list proper-list))
+  (let loop ((x list) (result '()))
     (if (pair? x)
         (loop (cdr x) (cons (car x) result))
         result)))
 
-(define-prim (reverse lst)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" reverse)) ;; but not reverse to ##reverse
-
-  (let loop ((x lst) (result '()))
+(define-procedure (reverse (list proper-list))
+  (let loop ((x list) (result '()))
     (macro-force-vars (x)
       (if (pair? x)
           (loop (cdr x) (cons (car x) result))
-          (macro-check-list x 1 (reverse lst)
+          (macro-check-proper-list-null x '(1 . list) (reverse list)
             result)))))
 
-(define-prim (##list-ref lst k)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" list-ref)) ;; but not list-ref to ##list-ref
-
-  (let loop ((x lst) (i k))
+(define-primitive (list-ref (list proper-list)
+                            (k    index))
+  (let loop ((x list) (i k))
     (if (fx< 0 i)
         (loop (cdr x) (fx- i 1))
         (car x))))
 
-(define-prim (list-ref lst k)
+(define-procedure (list-ref (list proper-list)
+                            (k    index))
+  (let loop ((x list) (i k))
+    (macro-force-vars (x)
+      (macro-if-checks
+       (if (not (pair? x))
+           (primitive (raise-range-exception '(2 . k) list-ref list k))
+           (if (fx< 0 i)
+               (loop (cdr x) (fx- i 1))
+               (car x)))
+       (if (fx< 0 i)
+           (loop (cdr x) (fx- i 1))
+           (car x))))))
 
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" list-ref)) ;; but not list-ref to ##list-ref
-
-  (macro-force-vars (k)
-    (macro-check-index k 2 (list-ref lst k)
-      (let loop ((x lst) (i k))
-        (macro-force-vars (x)
-          (macro-check-pair x 1 (list-ref lst k);;;;;;;error message confusing?
-            (if (fx< 0 i)
-                (loop (cdr x) (fx- i 1))
-                (car x))))))))
-
-(define-prim (##list-set! lst k val)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
-  (let loop ((x lst) (i k))
+(define-primitive (list-set! (list proper-list)
+                             (k    index)
+                             (obj  object))
+  (let loop ((x list) (i k))
     (if (fx< 0 i)
         (loop (cdr x) (fx- i 1))
         (begin
-          (set-car! x val)
+          (set-car! x obj)
           (void)))))
 
-(define-prim (list-set! lst k val)
+(define-procedure (list-set! (list proper-list)
+                             (k    index)
+                             (obj  object))
+  (let loop ((x list) (i k))
+    (macro-force-vars (x)
+      (macro-if-checks
+       (if (not (pair? x))
+           (if (null? x)
+               (primitive
+                (raise-range-exception '(2 . k) list-set! list k obj))
+               (primitive
+                (fail-check-proper-list '(1 . list) list-set! list k obj)))
+           (if (fx< 0 i)
+               (loop (cdr x) (fx- i 1))
+               (macro-check-mutable x '(1 . list) (list-set! list k obj)
+                 (begin
+                   (set-car! x obj)
+                   (void)))))
+       (if (fx< 0 i)
+           (loop (cdr x) (fx- i 1))
+           (begin
+             (set-car! x obj)
+             (void)))))))
 
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" list-set!)) ;; but not list-set! to ##list-set!
-
-  (macro-force-vars (k)
-    (macro-check-index k 2 (list-set! lst k val)
-      (let loop ((x lst) (i k))
-        (macro-force-vars (x)
-          (macro-check-pair x 1 (list-set! lst k val)
-            (if (fx< 0 i)
-                (loop (cdr x) (fx- i 1))
-                (macro-check-mutable x 1 (list-set! lst k val)
-                  (begin
-                    (set-car! x val)
-                    (void))))))))))
-
-(define-prim (##list-set lst k val)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
+(define-primitive (list-set (list proper-list)
+                            (k    index)
+                            (obj  object))
 
   (define (set x i)
     (if (fx< 0 i)
         (cons (car x) (set (cdr x) (fx- i 1)))
-        (cons val (cdr x))))
+        (cons obj (cdr x))))
 
-  (set lst k))
+  (set list k))
 
-(define-prim (list-set lst k val)
+(define-procedure (list-set (list proper-list)
+                            (k    index)
+                            (obj  object))
 
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" list-set)) ;; but not list-set to ##list-set
+  (define (set x i)
+    (macro-force-vars (x)
+      (if (pair? x)
+          (if (fx< 0 i)
+              (let ((r (set (cdr x) (fx- i 1))))
+                (if (pair? r)
+                    (cons (car x) r)
+                    r))
+              (cons obj (cdr x)))
+          (null? x) )))
 
-  (macro-force-vars (k)
-    (macro-check-index k 2 (list-set lst k val)
+  (let ((r (set list k)))
+    (if (pair? r)
+        r
+        (if r
+            (primitive
+             (raise-range-exception '(2 . k) list-set list k obj))
+            (primitive
+             (fail-check-proper-list '(1 . list) list-set list k obj))))))
 
-      (let ()
-
-        (define (set x i)
-          (macro-force-vars (x)
-            (if (pair? x)
-                (if (fx< 0 i)
-                    (let ((r (set (cdr x) (fx- i 1))))
-                      (if (pair? r)
-                          (cons (car x) r)
-                          r))
-                    (cons val (cdr x)))
-                #f)))
-
-        (or (set lst k)
-            (##fail-check-pair 1 list-set lst k val))))))
-
-(define-prim (##memq obj lst)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
-  (let loop ((x lst))
+(define-primitive (memq (obj  object)
+                        (list proper-list))
+  (let loop ((x list))
     (if (pair? x)
         (if (eq? obj (car x))
             x
             (loop (cdr x)))
         #f)))
 
-(define-prim (memq obj lst)
+(define-procedure (memq (obj  object)
+                        (list proper-list))
+  (let loop ((x list))
+    (macro-force-vars (x)
+      (if (pair? x)
+          (let ((y (car x)))
+            (macro-force-vars (y)
+              (if (eq? obj y)
+                  x
+                  (loop (cdr x)))))
+          (macro-check-proper-list-null x '(2 . list) (memq obj list)
+            #f)))))
 
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" memq)) ;; but not memq to ##memq
-
-  (macro-force-vars (obj)
-    (let loop ((x lst))
-      (macro-force-vars (x)
-        (if (pair? x)
-            (let ((y (car x)))
-              (macro-force-vars (y)
-                (if (eq? obj y)
-                    x
-                    (loop (cdr x)))))
-            (macro-check-list x 2 (memq obj lst)
-              #f))))))
-
-(define-prim (##memv obj lst)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
-  (let loop ((x lst))
+(define-primitive (memv (obj  object)
+                        (list proper-list))
+  (let loop ((x list))
     (if (pair? x)
         (if (let ()
-              (##declare (generic)) ;; avoid fixnum specific eqv?
+              (declare (generic)) ;; avoid fixnum specific eqv?
               (eqv? obj (car x)))
             x
             (loop (cdr x)))
         #f)))
 
-(define-prim (memv obj lst)
+(define-procedure (memv (obj  object)
+                        (list proper-list))
+  (let loop ((x list))
+    (macro-force-vars (x)
+      (if (pair? x)
+          (let ((y (car x)))
+            (macro-force-vars (y)
+              (if (let ()
+                    (declare (generic)) ;; avoid fixnum specific eqv?
+                    (eqv? obj y))
+                  x
+                  (loop (cdr x)))))
+          (macro-check-proper-list-null x '(2 . list) (memv obj list)
+            #f)))))
 
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" memv)) ;; but not memv to ##memv
-
-  (macro-force-vars (obj)
-    (let loop ((x lst))
-      (macro-force-vars (x)
-        (if (pair? x)
-            (let ((y (car x)))
-              (macro-force-vars (y)
-                (if (let ()
-                      (##declare (generic)) ;; avoid fixnum specific eqv?
-                      (eqv? obj y))
-                    x
-                    (loop (cdr x)))))
-            (macro-check-list x 2 (memv obj lst)
-              #f))))))
-
-(define-prim (##member obj lst #!optional (compare ##equal?))
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
-  (let loop ((x lst))
+(define-primitive (member (obj     object)
+                          (list    proper-list)
+                          (compare procedure (primitive equal?)))
+  (let loop ((x list))
     (if (pair? x)
         (if (compare obj (car x))
             x
             (loop (cdr x)))
         #f)))
 
-(define-prim (member obj lst #!optional (c (macro-absent-obj)))
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" member)) ;; but not member to ##member
-
-  (macro-force-vars (c)
-    (let ((compare (if (eq? c (macro-absent-obj)) ##equal? c)))
-      (macro-check-procedure compare 3 (member obj lst c)
-        (let loop ((x lst))
-          (macro-force-vars (x)
-            (if (pair? x)
-                (let ((y (car x)))
-                  (if (compare obj y)
-                      x
-                      (loop (cdr x))))
-                (macro-check-list x 2 (member obj lst c)
-                  #f))))))))
+(define-procedure (member (obj     object)
+                          (list    proper-list)
+                          (compare procedure (primitive equal?)))
+  (let loop ((x list))
+    (macro-force-vars (x)
+      (if (pair? x)
+          (let ((y (car x)))
+            (if (compare obj y)
+                x
+                (loop (cdr x))))
+          (macro-check-proper-list-null x '(2 . list) (member obj list %compare) ;; need to use %compare to avoid showing a third argument when none was given
+            #f)))))
 
 ;; ##assq defined in _kernel.scm
 
-(define-prim (assq obj lst)
+(define-procedure (assq (obj   object)
+                        (alist pair-list))
+  (let loop ((x alist))
+    (macro-force-vars (x)
+      (if (pair? x)
+          (let ((couple (car x)))
+            (macro-force-vars (couple)
+              (macro-check-pair-list-pair couple '(2 . alist) (assq obj alist)
+                (let ((y (car couple)))
+                  (macro-force-vars (y)
+                    (if (eq? obj y)
+                        couple
+                        (loop (cdr x))))))))
+          (macro-check-proper-list-null x '(2 . alist) (assq obj alist)
+            #f)))))
 
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" assq)) ;; but not assq to ##assq
-
-  (macro-force-vars (obj)
-    (let loop ((x lst))
-      (macro-force-vars (x)
-        (if (pair? x)
-            (let ((couple (car x)))
-              (macro-force-vars (couple)
-                (macro-check-pair-list couple 2 (assq obj lst)
-                  (let ((y (car couple)))
-                    (macro-force-vars (y)
-                      (if (eq? obj y)
-                          couple
-                          (loop (cdr x))))))))
-            (macro-check-list x 2 (assq obj lst)
-              #f))))))
-
-(define-prim (##assv obj lst)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
-  (let loop ((x lst))
+(define-primitive (assv (obj object)
+                        (alist pair-list))
+  (let loop ((x alist))
     (if (pair? x)
         (let ((couple (car x)))
           (if (let ()
-                (##declare (generic)) ;; avoid fixnum specific eqv?
+                (declare (generic)) ;; avoid fixnum specific eqv?
                 (eqv? obj (car couple)))
               couple
               (loop (cdr x))))
         #f)))
 
-(define-prim (assv obj lst)
+(define-procedure (assv (obj object)
+                        (alist pair-list))
+  (let loop ((x alist))
+    (macro-force-vars (x)
+      (if (pair? x)
+          (let ((couple (car x)))
+            (macro-force-vars (couple)
+              (macro-check-pair-list-pair couple '(2 . alist) (assv obj alist)
+                (let ((y (car couple)))
+                  (macro-force-vars (y)
+                    (if (let ()
+                          (declare (generic)) ;; avoid fixnum specific eqv?
+                          (eqv? obj y))
+                        couple
+                        (loop (cdr x))))))))
+          (macro-check-proper-list-null x '(2 . alist) (assv obj alist)
+            #f)))))
 
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" assv)) ;; but not assv to ##assv
-
-  (macro-force-vars (obj)
-    (let loop ((x lst))
-      (macro-force-vars (x)
-        (if (pair? x)
-            (let ((couple (car x)))
-              (macro-force-vars (couple)
-                (macro-check-pair-list couple 2 (assv obj lst)
-                  (let ((y (car couple)))
-                    (macro-force-vars (y)
-                      (if (let ()
-                            (##declare (generic)) ;; avoid fixnum specific eqv?
-                            (eqv? obj y))
-                          couple
-                          (loop (cdr x))))))))
-            (macro-check-list x 2 (assv obj lst)
-              #f))))))
-
-(define-prim (##assoc obj lst #!optional (compare ##equal?))
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
-  (let loop ((x lst))
+(define-primitive (assoc (obj object)
+                         (alist pair-list)
+                         (compare procedure ##equal?))
+  (let loop ((x alist))
     (if (pair? x)
         (let ((couple (car x)))
           (if (compare obj (car couple))
@@ -586,26 +524,21 @@
               (loop (cdr x))))
         #f)))
 
-(define-prim (assoc obj lst #!optional (c (macro-absent-obj)))
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" assoc)) ;; but not assoc to ##assoc
-
-  (macro-force-vars (c)
-    (let ((compare (if (eq? c (macro-absent-obj)) ##equal? c)))
-      (macro-check-procedure compare 3 (assoc obj lst c)
-        (let loop ((x lst))
-          (macro-force-vars (x)
-            (if (pair? x)
-                (let ((couple (car x)))
-                  (macro-force-vars (couple)
-                    (macro-check-pair-list couple 2 (assoc obj lst c)
-                      (let ((y (car couple)))
-                        (if (compare obj y)
-                            couple
-                            (loop (cdr x)))))))
-                (macro-check-list x 2 (assoc obj lst c)
-                  #f))))))))
+(define-procedure (assoc (obj object)
+                         (alist pair-list)
+                         (compare procedure ##equal?))
+  (let loop ((x alist))
+    (macro-force-vars (x)
+      (if (pair? x)
+          (let ((couple (car x)))
+            (macro-force-vars (couple)
+              (macro-check-pair-list-pair couple '(2 . alist) (assoc obj alist %compare) ;; need to use %compare to avoid showing a third argument when none was given
+                (let ((y (car couple)))
+                  (if (compare obj y)
+                      couple
+                      (loop (cdr x)))))))
+          (macro-check-proper-list-null x '(2 . alist) (assoc obj alist %compare) ;; need to use %compare to avoid showing a third argument when none was given
+            #f)))))
 
 (define-macro (macro-filter prim-call list var test-expr)
   `(let ()
@@ -641,87 +574,92 @@
 
 (define ##allow-length-mismatch? #t)
 
-(define-prim (##allow-length-mismatch?-set! x)
+(define (##allow-length-mismatch?-set! x)
   (set! ##allow-length-mismatch? x))
 
-(define (##proper-list-length lst)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
-  (let loop ((lst lst) (n 0))
-    (macro-force-vars (lst)
-      (cond ((pair? lst)
-             (loop (cdr lst) (fx+ n 1)))
-            ((null? lst)
+(define-primitive (proper-list-length (list object))
+  (let loop ((list list) (n 0))
+    (macro-force-vars (list)
+      (cond ((pair? list)
+             (loop (cdr list) (fx+ n 1)))
+            ((null? list)
              n)
             (else
              #f)))))
 
-(define (##cars lsts end)
+(define-primitive (cars (lists proper-list)
+                        (end   object))
 
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
-  (define (cars lsts end) ;; assumes lsts is a list of pairs
-    (if (pair? lsts)
-        (let ((lst1 (car lsts)))
-          (macro-force-vars (lst1)
-            (cons (car lst1)
-                  (cars (cdr lsts) end))))
+  (define (cars lists end) ;; assumes lists is a list of pairs
+    (if (pair? lists)
+        (let ((list1 (car lists)))
+          (macro-force-vars (list1)
+            (cons (car list1)
+                  (cars (cdr lists) end))))
         end))
 
-  (cars lsts end))
+  (cars lists end))
 
-(define (##cdrs lsts)
+(define-primitive (cdrs (lists proper-list))
 
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
+  ;; This procedure computes (map cdr lists) and also checks for
+  ;; special cases, such as one of the elements not being a pair.
+  ;; The return value r depends on the case.  Here are the cases when
+  ;; ##allow-length-mismatch? is #f:
+  ;;
+  ;; 1) r = () : lists is ()
+  ;;
+  ;; 2) r is a pair : all the elements of lists are pairs
+  ;;
+  ;; 3) r = #f : lists is not () and all the elements of lists are ()
+  ;;
+  ;; 4) r is a fixnum > 0 : at least one of the elements of lists is neither
+  ;;                        () or a pair and the element at index r-1 is
+  ;;                        the first such element
+  ;;
+  ;; 5) r is a fixnum < 0 : the elements of lists are a mix of () and pairs
+  ;;                        and the element at index -r-1 is the first ()
+  ;;                        (this case only happens when
+  ;;                        ##allow-length-mismatch? is #f)
 
-  (define (cdrs lsts)
-    (if (pair? lsts)
-        (let ((tail (cdrs (cdr lsts))))
-
-          ;; tail is either
-          ;; 1) () : (cdr lsts) is ()
-          ;; 2) #f : all the elements of (cdr lsts) are not pairs
-          ;; 3) a pair : all the elements of (cdr lsts) are pairs
-          ;; 4) a fixnum >= 0 : at least one of (cdr lsts) is ()
-          ;;                    and at index tail of (cdr lsts) is a pair
-          ;; 5) a fixnum < 0 : at least one of (cdr lsts) is not a pair and
-          ;;                   at index tail - ##min-fixnum of (cdr lsts) is
-          ;;                   the first element that is neither a pair or ()
-
-          (let ((lst1 (car lsts)))
-            (macro-force-vars (lst1)
-              (cond ((pair? lst1)
-                     (cond ((fixnum? tail)
-                            (if (fx< tail 0)
-                                (fx+ tail 1)
-                                0))
-                           ((not tail)
-                            (if ##allow-length-mismatch?
-                                #f
-                                0))
-                           (else
-                            (cons (cdr lst1) tail))))
-                    ((null? lst1)
-                     (cond ((fixnum? tail)
-                            (fx+ tail 1))
-                           ((pair? tail)
-                            (if ##allow-length-mismatch?
-                                #f
-                                1))
-                           (else
-                            #f)))
-                    (else
-                     ##min-fixnum)))))
+  (define (cdrs lists)
+    (if (pair? lists)
+        (let* ((tail (cdrs (cdr lists)))
+               (list1 (car lists)))
+          (macro-force-vars (list1)
+            (cond ((pair? list1)
+                   (cond ((fixnum? tail)
+                          (if (fx< tail 0)
+                              (fx- tail 1)
+                              (fx+ tail 1)))
+                         ((not tail)
+                          (if ##allow-length-mismatch?
+                              #f
+                              -2)) ;; element at index 1 is ()
+                         (else ;; () or pair
+                          (cons (cdr list1) tail))))
+                  ((null? list1)
+                   (cond ((fixnum? tail)
+                          (if (fx< tail 0)
+                              -1 ;; element at index 0 is ()
+                              (fx+ tail 1)))
+                         ((pair? tail)
+                          (if ##allow-length-mismatch?
+                              #f
+                              -1)) ;; element at index 0 is ()
+                         (else ;; () or #f
+                          #f)))
+                  (else
+                   1)))) ;; element at index 0 is not () or a pair
         '()))
 
-  (cdrs lsts))
+  (cdrs lists))
 
-(define-prim (##map proc x . y)
+(define-primitive (map (proc  procedure)
+                       (list1 proper-list)
+                       (lists proper-list) ...)
 
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
-  (define (map-1 x)
+  (define (map-1 list1)
 
     (define (map-1 lst1)
       (if (pair? lst1)
@@ -730,105 +668,109 @@
             (cons result tail))
           '()))
 
-    (map-1 x))
+    (map-1 list1))
 
-  (define (map-n x-y)
+  (define (map-n list1-lists)
 
     (define (map-n lsts)
-      (let ((rests (##cdrs lsts)))
-        (if (not rests)
-            '()
-            (if (pair? rests)
-                (let* ((args (##cars lsts '()))
-                       (result (apply proc args))
-                       (tail (map-n rests)))
-                  (cons result tail))
-                '()))))
+      (let ((rests (primitive (cdrs lsts))))
+        (if (pair? rests)
+            (let* ((args (primitive (cars lsts '())))
+                   (result (apply proc args))
+                   (tail (map-n rests)))
+              (cons result tail))
+            '())))
 
-    (map-n x-y))
+    (map-n list1-lists))
 
-  (if (null? y)
-      (map-1 x)
-      (map-n (cons x y))))
+  (if (null? lists)
+      (map-1 list1)
+      (map-n (cons list1 lists))))
 
-(define-prim (map proc x . y)
+(define-procedure (map (proc  procedure)
+                       (list1 proper-list)
+                       (lists proper-list) ...)
 
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" map)) ;; but not map to ##map
+  (define (map-1 list1)
 
-  (macro-force-vars (proc)
-    (macro-check-procedure proc 1 (map proc x . y)
-      (let ()
+    (define (map-1 lst1)
+      (macro-force-vars (lst1)
+        (if (pair? lst1)
+            (let* ((result (proc (car lst1)))
+                   (tail (map-1 (cdr lst1))))
+              (macro-if-checks
+               (and tail
+                    (cons result tail))
+               (cons result tail)))
+            (macro-if-checks
+             (if (null? lst1)
+                 '()
+                 #f)
+             '()))))
 
-        (define (map-1 x)
+    (macro-if-checks
+     (if (or (null? list1) (pair? list1))
+         (let ((result (map-1 list1)))
+           (or result
+               (macro-fail-check-proper-list
+                '(2 . list1)
+                (map proc list1))))
+         (macro-fail-check-list
+          '(2 . list1)
+          (map proc list1)))
+     (map-1 list1)))
 
-          (define (map-1 lst1)
-            (macro-force-vars (lst1)
-              (if (pair? lst1)
-                  (let* ((result (proc (car lst1)))
-                         (tail (map-1 (cdr lst1))))
-                    (macro-if-checks
-                     (and tail
-                          (cons result tail))
-                     (cons result tail)))
-                  (macro-if-checks
-                   (if (null? lst1)
-                       '()
-                       #f)
-                   '()))))
+  (define (map-n list1-lists)
 
-          (macro-if-checks
-           (let ((result (map-1 x)))
-             (or result
-                 (macro-fail-check-list
-                  2
-                  (map proc x))))
-           (map-1 x)))
+    (define (map-n* lsts rests)
+      (if (not rests)
+          '()
+          (if (pair? rests)
+              (let* ((args (primitive (cars lsts '())))
+                     (result (apply proc args))
+                     (tail (map-n* rests (primitive (cdrs rests)))))
+                (macro-if-checks
+                 (if (fixnum? tail)
+                     tail
+                     (cons result tail))
+                 (cons result tail)))
+              (macro-if-checks
+               rests
+               '()))))
 
-        (define (map-n x-y)
-
-          (define (map-n lsts)
-            (let ((rests (##cdrs lsts)))
-              (if (not rests)
-                  '()
-                  (if (pair? rests)
-                      (let* ((args (##cars lsts '()))
-                             (result (apply proc args))
-                             (tail (map-n rests)))
-                        (macro-if-checks
-                         (if (fixnum? tail)
-                             tail
-                             (cons result tail))
-                         (cons result tail)))
-                      (macro-if-checks
-                       rests
-                       '())))))
-
-          (macro-if-checks
-           (let ((result (map-n x-y)))
+    (let ((rests (primitive (cdrs list1-lists))))
+      (macro-if-checks
+       (if (and (fixnum? rests) (fx> rests 0))
+           (macro-fail-check-list
+            (argument-id (fx+ 1 rests))
+            (map proc . list1-lists))
+           (let ((result (map-n* list1-lists rests)))
              (if (fixnum? result)
                  (if (fx< result 0)
-                     (macro-fail-check-list
-                      (fx- (fx+ 2 result) ##min-fixnum)
-                      (map proc . x-y))
-                     (##raise-length-mismatch-exception
-                      (fx+ 2 result)
-                      '()
-                      map
-                      proc
-                      x-y))
-                 result))
-           (map-n x-y)))
+                     (primitive (raise-length-mismatch-exception
+                                 (argument-id (fx- 1 result))
+                                 '()
+                                 map
+                                 proc
+                                 list1-lists))
+                     (macro-fail-check-proper-list
+                      (argument-id (fx+ 1 result))
+                      (map proc . list1-lists)))
+                 result)))
+       (map-n* list1-lists rests))))
 
-        (if (null? y)
-            (map-1 x)
-            (map-n (cons x y)))))))
+  (define (argument-id i)
+    (if (fx= i 2) '(2 . list1) i))
 
-(define-prim (##for-each proc x . y)
+  (if (null? lists)
+      (map-1 list1)
+      (map-n (cons list1 lists))))
 
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
+(define-primitive (for-each (proc  procedure)
+                            (list1 proper-list)
+                            (lists proper-list) ...)
 
-  (define (for-each-1 x)
+  (define (for-each-1 list1)
 
     (define (for-each-1 lst1)
       (if (pair? lst1)
@@ -837,126 +779,120 @@
             (for-each-1 (cdr lst1)))
           (void)))
 
-    (for-each-1 x))
+    (for-each-1 list1))
 
-  (define (for-each-n x-y)
+  (define (for-each-n list1-lists)
 
     (define (for-each-n lsts)
-      (let ((rests (##cdrs lsts)))
-        (if (not rests)
-            (void)
-            (if (pair? rests)
-                (begin
-                  (apply proc (##cars lsts '()))
-                  (for-each-n rests))
-                (void)))))
+      (let ((rests (primitive (cdrs lsts))))
+        (if (pair? rests)
+            (begin
+              (apply proc (primitive (cars lsts '())))
+              (for-each-n rests))
+            (void))))
 
-    (for-each-n x-y))
+    (for-each-n list1-lists))
 
-  (if (null? y)
-      (for-each-1 x)
-      (for-each-n (cons x y))))
+  (if (null? lists)
+      (for-each-1 list1)
+      (for-each-n (cons list1 lists))))
 
-(define-prim (for-each proc x . y)
+(define-procedure (for-each (proc  procedure)
+                            (list1 proper-list)
+                            (lists proper-list) ...)
 
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" for-each)) ;; but not for-each to ##for-each
+  (define (for-each-1 list1)
 
-  (macro-force-vars (proc)
-    (macro-check-procedure proc 1 (for-each proc x . y)
-      (let ()
+    (define (for-each-1 lst1)
+      (macro-force-vars (lst1)
+        (if (pair? lst1)
+            (begin
+              (proc (car lst1))
+              (for-each-1 (cdr lst1)))
+            (macro-check-proper-list-null lst1 '(2 . list1) (for-each proc list1)
+              (void)))))
 
-        (define (for-each-1 x)
+    (macro-if-checks
+     (if (or (null? list1) (pair? list1))
+         (for-each-1 list1)
+         (macro-fail-check-list
+          '(2 . list1)
+          (for-each proc list1)))
+     (for-each-1 list1)))
 
-          (define (for-each-1 lst1)
-            (macro-force-vars (lst1)
-              (if (pair? lst1)
-                  (begin
-                    (proc (car lst1))
-                    (for-each-1 (cdr lst1)))
-                  (macro-check-list lst1 2 (for-each proc x)
-                    (void)))))
+  (define (for-each-n list1-lists)
 
-          (for-each-1 x))
+    (define (for-each-n* lsts rests)
+      (if (not rests)
+          (void)
+          (if (pair? rests)
+              (begin
+                (apply proc (primitive (cars lsts '())))
+                (for-each-n* rests (primitive (cdrs rests))))
+              (macro-if-checks
+               (if (fx< rests 0)
+                   (primitive (raise-length-mismatch-exception
+                               (argument-id (fx- 1 rests))
+                               '()
+                               for-each
+                               proc
+                               list1-lists))
+                   (macro-fail-check-proper-list
+                    (argument-id (fx+ 1 rests))
+                    (for-each proc . list1-lists)))
+               (void)))))
 
-        (define (for-each-n x-y)
+    (let ((rests (primitive (cdrs list1-lists))))
+      (macro-if-checks
+       (if (and (fixnum? rests) (fx> rests 0))
+           (macro-fail-check-list
+            (argument-id (fx+ 1 rests))
+            (for-each proc . list1-lists))
+           (for-each-n* list1-lists rests))
+       (for-each-n* list1-lists rests))))
 
-          (define (for-each-n lsts)
-            (let ((rests (##cdrs lsts)))
-              (if (not rests)
-                  (void)
-                  (if (pair? rests)
-                      (begin
-                        (apply proc (##cars lsts '()))
-                        (for-each-n rests))
-                      (macro-if-checks
-                       (if (fx< rests 0)
-                           (macro-fail-check-list
-                            (fx- (fx+ 2 rests) ##min-fixnum)
-                            (for-each proc . x-y))
-                           (##raise-length-mismatch-exception
-                            (fx+ 2 rests)
-                            '()
-                            for-each
-                            proc
-                            x-y))
-                       (void))))))
+  (define (argument-id i)
+    (if (fx= i 2) '(2 . list1) i))
 
-          (for-each-n x-y))
-
-        (if (null? y)
-            (for-each-1 x)
-            (for-each-n (cons x y)))))))
+  (if (null? lists)
+      (for-each-1 list1)
+      (for-each-n (cons list1 lists))))
 
 ;;;----------------------------------------------------------------------------
 
 ;; R4RS Scheme procedures:
 
-(define-prim (##list-tail lst k)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
-  (let loop ((x lst) (i k))
+(define-primitive (list-tail (list proper-list)
+                             (k    index))
+  (let loop ((x list) (i k))
     (if (fx< 0 i)
         (loop (cdr x) (fx- i 1))
         x)))
 
-(define-prim (list-tail lst k)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" list-tail)) ;; but not list-tail to ##list-tail
-
-  (macro-force-vars (k)
-    (macro-check-index k 2 (list-tail lst k)
-      (let loop ((x lst) (i k))
-        (if (fx< 0 i)
-            (macro-force-vars (x)
-              (macro-check-pair x 1 (list-tail lst k);;TODO: error message confusing?
-                (loop (cdr x) (fx- i 1))))
-            x)))))
+(define-procedure (list-tail (list proper-list)
+                             (k    index))
+  (let loop ((x list) (i k))
+    (if (fx< 0 i)
+        (macro-force-vars (x)
+          (macro-if-checks
+           (if (pair? x)
+               (loop (cdr x) (fx- i 1))
+               (primitive (raise-range-exception '(2 . k) list-tail list k)))
+           (loop (cdr x) (fx- i 1))))
+        x)))
 
 ;;;----------------------------------------------------------------------------
 
 ;; SRFI-1 procedures:
 
-(define-prim (##xcons d a)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
+(define-prim&proc (xcons (d object)
+                         (a object))
   (cons a d))
 
-(define-prim (xcons d a)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
-  (cons a d))
-
-(define-prim (##cons*-aux x rest)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
-  (if (pair? rest)
-      (let loop ((x x) (probe rest))
+(define-prim&proc (cons* (elt1 object)
+                         (elts object) ...)
+  (if (pair? elts)
+      (let loop ((x elt1) (probe elts))
         (let ((y (car probe))
               (tail (cdr probe)))
           (set-car! probe x)
@@ -964,105 +900,61 @@
               (loop y tail)
               (begin
                 (set-cdr! probe y)
-                rest))))
-      x))
+                elts))))
+      elt1))
 
-(define-prim (##cons* x . rest)
-  (##cons*-aux x rest))
-
-(define-prim (cons* x . rest)
-  (##cons*-aux x rest))
-
-(define-prim (##make-list n #!optional (fill 0))
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
+(define-prim&proc (make-list (n    index)
+                             (fill object 0))
   (let loop ((i n) (result '()))
     (if (fx> i 0)
         (loop (fx- i 1) (cons fill result))
         result)))
 
-(define-prim (make-list n #!optional (fill (macro-absent-obj)))
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" make-list)) ;; but not make-list to ##make-list
-
-  (macro-force-vars (n fill)
-    (macro-check-index n 1 (make-list n fill)
-      (if (eq? fill (macro-absent-obj))
-          (##make-list n)
-          (##make-list n fill)))))
-
-(define-prim (##list-tabulate n init-proc)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
+(define-prim&proc (list-tabulate (n         index)
+                                 (init-proc procedure))
   (let loop ((i n) (result '()))
     (if (fx> i 0)
         (let ((i (fx- i 1)))
           (loop i (cons (init-proc i) result)))
         result)))
 
-(define-prim (list-tabulate n init-proc)
-  (macro-force-vars (n init-proc)
-    (macro-check-index n 1 (list-tabulate n init-proc)
-      (macro-check-procedure init-proc 2 (list-tabulate n init-proc)
-        (##list-tabulate n init-proc)))))
-
-(define-prim (##proper-list-copy lst)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
-  (let loop ((lst lst) (rev-result '()))
-    (macro-force-vars (lst)
-      (if (pair? lst)
-          (loop (cdr lst) (cons (car lst) rev-result))
-          (and (null? lst)
+(define-primitive (proper-list-copy (list object))
+  (let loop ((probe list) (rev-result '()))
+    (macro-force-vars (probe)
+      (if (pair? probe)
+          (loop (cdr probe) (cons (car probe) rev-result))
+          (and (null? probe)
                (reverse! rev-result))))))
 
-(define-prim (##list-copy lst)
+(define-prim&proc (list-copy (list object))
+  (let loop ((probe list) (rev-result '()))
+    (macro-force-vars (probe)
+      (if (pair? probe)
+          (loop (cdr probe) (cons (car probe) rev-result))
+          (append-reverse! rev-result probe)))))
 
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
-  (let loop ((lst lst) (rev-result '()))
-    (macro-force-vars (lst)
-      (if (pair? lst)
-          (loop (cdr lst) (cons (car lst) rev-result))
-          (append-reverse! rev-result lst)))))
-
-(define-prim (list-copy lst)
-  (##list-copy lst))
-
-(define-prim (##circular-list x . rest)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
-  (let ((result (cons x rest)))
+(define-prim&proc (circular-list (elt1 object)
+                                 (elts object) ...)
+  (let ((result (cons elt1 elts)))
     (set-cdr! (last-pair result) result)
     result))
 
-(define-prim (circular-list x . rest)
+(define-primitive (iota-fixnum (count index)
+                               (start fixnum 0))
+  (let loop ((i count) (result '()))
+    (if (fx> i 0)
+        (let ((i (fx- i 1)))
+          (loop i (cons (fx+ start i) result)))
+        result)))
 
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
-  (let ((result (cons x rest)))
-    (set-cdr! (last-pair result) result)
-    result))
-
-(define-prim (##iota count #!optional (start 0) (step 1))
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" step)) ;; but not step to ##step
-
+(define-prim&proc (iota (count index)
+                        (start number 0)
+                        (step  number 1))
   (if (and (eqv? step 1)
            (fixnum? start)
-           (##fx+? (fx- count 1) start))
+           (primitive (fx+? (fx- count 1) start)))
 
-      (let loop ((i count) (result '()))
-        (if (fx> i 0)
-            (let ((i (fx- i 1)))
-              (loop i (cons (fx+ start i) result)))
-            result))
+      (primitive (iota-fixnum count start))
 
       (let loop ((i count) (result '()))
         (if (fx> i 0)
@@ -1070,30 +962,8 @@
               (loop i (cons (+ start (* step i)) result)))
             result))))
 
-(define-prim (iota count
-                   #!optional
-                   (start (macro-absent-obj))
-                   (step (macro-absent-obj)))
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" iota step)) ;; but not iota to ##iota, and step to ##step
-
-  (macro-force-vars (count start step)
-    (macro-check-index count 1 (iota count start step)
-      (if (eq? start (macro-absent-obj))
-          (##iota count 0 1)
-          (if (not (number? start))
-              (##fail-check-number 2 iota count start step)
-              (if (eq? step (macro-absent-obj))
-                  (##iota count start 1)
-                  (if (not (number? step))
-                      (##fail-check-number 3 iota count start step)
-                      (##iota count start step))))))))
-
-(define-prim (##take x i)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
+(define-primitive (take (x object)
+                        (i index))
   (let loop ((probe x)
              (j i)
              (rev-result '()))
@@ -1103,28 +973,26 @@
               (cons (car probe) rev-result))
         (reverse! rev-result))))
 
-(define-prim (take x i)
+(define-procedure (take (x object)
+                        (i index))
+  (let loop ((probe x)
+             (j i)
+             (rev-result '()))
+    (if (fx> j 0)
+        (macro-force-vars (probe)
+          (macro-if-checks
+           (if (pair? probe)
+               (loop (cdr probe)
+                     (fx- j 1)
+                     (cons (car probe) rev-result))
+               (primitive (raise-range-exception '(2 . i) take x i)))
+           (loop (cdr probe)
+                 (fx- j 1)
+                 (cons (car probe) rev-result))))
+        (reverse! rev-result))))
 
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" take)) ;; but not take to ##take
-
-  (macro-force-vars (i)
-    (macro-check-index i 2 (take x i)
-      (let loop ((probe x)
-                 (j i)
-                 (rev-result '()))
-        (if (fx> j 0)
-            (macro-force-vars (probe)
-              (macro-check-pair probe 1 (take x i)
-                (loop (cdr probe)
-                      (fx- j 1)
-                      (cons (car probe) rev-result))))
-            (reverse! rev-result))))))
-
-(define-prim (##drop x i)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
+(define-primitive (drop (x object)
+                        (i index))
   (let loop ((probe x)
              (j i))
     (if (fx> j 0)
@@ -1132,273 +1000,263 @@
               (fx- j 1))
         probe)))
 
-(define-prim (drop x i)
+(define-procedure (drop (x object)
+                        (i index))
+  (let loop ((probe x)
+             (j i))
+    (if (fx> j 0)
+        (macro-force-vars (probe)
+          (macro-if-checks
+           (if (pair? probe)
+               (loop (cdr probe)
+                     (fx- j 1))
+               (primitive (raise-range-exception '(2 . i) drop x i)))
+           (loop (cdr probe)
+                 (fx- j 1))))
+        probe)))
 
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" drop)) ;; but not drop to ##drop
-
-  (macro-force-vars (i)
-    (macro-check-index i 2 (drop x i)
-      (let loop ((probe x)
-                 (j i))
-        (if (fx> j 0)
-            (macro-force-vars (probe)
-              (macro-check-pair probe 1 (drop x i)
-                (loop (cdr probe)
-                      (fx- j 1))))
+(define-prim&proc (last-pair (pair pair))
+  (let loop ((probe pair))
+    (let ((tail (cdr probe)))
+      (macro-force-vars (tail)
+        (if (pair? tail)
+            (loop tail)
             probe)))))
 
-(define-prim (##last-pair lst)
+(define-prim&proc (last (pair pair))
+  (let loop ((probe pair))
+    (let ((tail (cdr probe)))
+      (macro-force-vars (tail)
+        (if (pair? tail)
+            (loop tail)
+            (car probe))))))
 
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
+(define-primitive (butlast (pair pair))
 
-  (let loop ((lst lst))
-    (let ((tail (cdr lst)))
-      (if (pair? tail)
-          (loop tail)
-          lst))))
-
-(define-prim (last-pair lst)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" last-pair)) ;; but not last-pair to ##last-pair
-
-  (macro-force-vars (lst)
-    (macro-check-pair lst 1 (last-pair lst)
-      (let loop ((lst lst))
-        (let ((tail (cdr lst)))
-          (macro-force-vars (tail)
-            (if (pair? tail)
-                (loop tail)
-                lst)))))))
-
-(define-prim (##last lst)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
-  (car (##last-pair lst)))
-
-(define-prim (last lst)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" last)) ;; but not last to ##last
-
-  (macro-force-vars (lst)
-    (macro-check-pair lst 1 (last lst)
-      (let loop ((lst lst))
-        (let ((tail (cdr lst)))
-          (macro-force-vars (tail)
-            (if (pair? tail)
-                (loop tail)
-                (car lst))))))))
-
-(define-prim (##butlast lst)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
-  (define (butlast lst)
-    (if (pair? (cdr lst))
-        (cons (car lst) (butlast (cdr lst)))
+  (define (butlast probe)
+    (if (pair? (cdr probe))
+        (cons (car probe) (butlast (cdr probe)))
         '()))
 
-  (butlast lst))
+  (butlast pair))
 
-;; ##reverse! and ##append-reverse! defined in _kernel.scm
+;; ##reverse! defined in _kernel.scm
 
-(define-prim (reverse! lst)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" reverse!)) ;; but not reverse! to ##reverse!
-
-  (let loop ((prev '()) (curr lst))
+(define-procedure (reverse! (list proper-list))
+  (let loop ((prev '()) (curr list))
     (macro-force-vars (curr)
       (if (pair? curr)
           (let ((next (cdr curr)))
             (set-cdr! curr prev)
             (loop curr next))
-          (macro-check-list curr 1 (reverse! lst)
+          (macro-check-proper-list-null curr '(1 . list) (reverse! list)
             prev)))))
 
-(define-prim (##append-reverse lst tail)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
-  (let loop ((x lst) (result tail))
+(define-primitive (append-reverse (rev-head proper-list)
+                                  (tail     object))
+  (let loop ((x rev-head) (result tail))
     (if (pair? x)
         (loop (cdr x) (cons (car x) result))
         result)))
 
-(define-prim (append-reverse lst tail)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" append-reverse)) ;; but not append-reverse to ##append-reverse
-
-  (let loop ((x lst) (result tail))
+(define-procedure (append-reverse (rev-head proper-list)
+                                  (tail     object))
+  (let loop ((x rev-head) (result tail))
     (macro-force-vars (x)
       (if (pair? x)
           (loop (cdr x) (cons (car x) result))
-          (macro-check-list x 1 (append-reverse lst tail)
+          (macro-check-proper-list-null x '(1 . rev-head) (append-reverse rev-head tail)
             result)))))
 
-(define-prim (append-reverse! lst tail)
+;; ##append-reverse! defined in _kernel.scm
 
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" append-reverse!)) ;; but not append-reverse! to ##append-reverse!
-
-  (let loop ((prev tail) (curr lst))
+(define-procedure (append-reverse! (rev-head proper-list)
+                                   (tail     object))
+  (let loop ((prev tail) (curr rev-head))
     (macro-force-vars (curr)
       (if (pair? curr)
           (let ((next (cdr curr)))
             (set-cdr! curr prev)
             (loop curr next))
-          (macro-check-list curr 1 (append-reverse! lst tail)
+          (macro-check-proper-list-null curr '(1 . rev-head) (append-reverse! rev-head tail)
             prev)))))
 
-(define-prim (##fold proc base lst)
+(define-primitive (fold (kons   procedure)
+                        (knil   object)
+                        (clist1 proper-or-circular-list)
+                        (clists proper-or-circular-list) ...)
 
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
+  (define (fold-1 clist1)
+    (let loop ((r knil) (x clist1))
+      (if (pair? x)
+          (loop (kons (car x) r)
+                (cdr x))
+          r)))
 
-  (let loop ((r base) (x lst))
-    (if (pair? x)
-        (loop (proc (car x) r)
-              (cdr x))
-        r)))
+  (define (fold-n lsts)
+    (let loop ((r knil) (x lsts))
+      (let ((rests (primitive (cdrs x))))
+        (if (pair? rests)
+            (loop (apply kons (primitive (cars x (list r))))
+                  rests)
+            r))))
 
-(define-prim (fold proc base x . y)
+  (if (null? clists)
+      (fold-1 clist1)
+      (fold-n (cons clist1 clists))))
 
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" fold)) ;; but not fold to ##fold
+(define-procedure (fold (kons   procedure)
+                        (knil   object)
+                        (clist1 proper-or-circular-list)
+                        (clists proper-or-circular-list) ...)
 
-  (macro-force-vars (proc)
-    (macro-check-procedure proc 1 (fold proc base x . y)
-      (let ()
+  (define (fold-1 clist1)
 
-        (define (fold-1 x)
+    (define (fold-1 clist1)
+      (let loop ((r knil) (x clist1))
+        (macro-force-vars (x)
+          (if (pair? x)
+              (loop (kons (car x) r)
+                    (cdr x))
+              (macro-check-proper-list-null x '(3 . clist1) (fold kons knil clist1)
+                r)))))
 
-          (define (fold-1 r lst1)
-            (macro-force-vars (lst1)
-              (if (pair? lst1)
-                  (fold-1 (proc (car lst1) r)
-                          (cdr lst1))
-                  (macro-check-list lst1 3 (fold proc base x)
-                    r))))
+    (macro-if-checks
+     (if (or (null? clist1) (pair? clist1))
+         (fold-1 clist1)
+         (macro-fail-check-list '(3 . clist1) (fold kons knil clist1)))
+     (fold-1 clist1)))
 
-          (fold-1 base x))
+  (define (fold-n clist1-clists)
 
-        (define (fold-n x-y)
-
-          (define (fold-n r lsts)
-            (let ((rests (##cdrs lsts)))
-              (if (not rests)
-                  r
-                  (if (pair? rests)
-                      (fold-n (apply proc (##cars lsts (list r)))
-                              rests)
-                      (macro-if-checks
-                       (if (fx< rests 0)
-                           (macro-fail-check-list
-                            (fx- (fx+ 3 rests) ##min-fixnum)
-                            (fold proc base . x-y))
-                           (##raise-length-mismatch-exception
-                            (fx+ 3 rests)
-                            '()
-                            fold
-                            proc
-                            base
-                            x-y))
-                       r)))))
-
-          (fold-n base x-y))
-
-        (if (null? y)
-            (fold-1 x)
-            (fold-n (cons x y)))))))
-
-(define-prim (##fold-right proc base lst)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-
-  (define (fold-right x)
-    (if (pair? x)
-        (proc (car x)
-              (fold-right (cdr x)))
-        base))
-
-  (fold-right lst))
-
-(define-prim (fold-right proc base x . y)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" fold-right)) ;; but not fold-right to ##fold-right
-
-  (macro-force-vars (proc)
-    (macro-check-procedure proc 1 (fold-right proc base x . y)
-      (let ()
-
-        (define (fold-right-1 x)
-
-          (define (fold-right-1 lst1)
-            (macro-force-vars (lst1)
-              (if (pair? lst1)
-                  (let ((tail (fold-right-1 (cdr lst1))))
-                    (macro-if-checks
-                     (and tail
-                          (list (proc (car lst1) (car tail))))
-                     (proc (car lst1) tail)))
-                  (macro-if-checks
-                   (if (null? lst1)
-                       (list base)
-                       #f)
-                   (list base)))))
-
-          (macro-if-checks
-           (let ((result (fold-right-1 x)))
-             (if result
-                 (car result)
-                 (macro-fail-check-list
-                  3
-                  (fold-right proc base x))))
-           (fold-right-1 x)))
-
-        (define (fold-right-n x-y)
-
-          (define (fold-right-n lsts)
-            (let ((rests (##cdrs lsts)))
-              (if (not rests)
-                  (macro-if-checks
-                   (list base)
-                   base)
-                  (if (pair? rests)
-                      (let ((tail (fold-right-n rests)))
-                        (macro-if-checks
-                         (if (fixnum? tail)
-                             tail
-                             (list (apply proc (##cars lsts tail))))
-                         (apply proc (##cars lsts (list tail)))))
-                      (macro-if-checks
+    (define (fold-n* r x rests)
+      (if (not rests)
+          r
+          (if (pair? rests)
+              (fold-n* (apply kons (primitive (cars x (list r))))
                        rests
-                       base)))))
+                       (primitive (cdrs rests)))
+              (macro-if-checks
+               (if (fx< rests 0)
+                   (primitive (raise-length-mismatch-exception
+                               (argument-id (fx- 2 rests))
+                               '()
+                               fold
+                               kons
+                               knil
+                               clist1-clists))
+                   (macro-fail-check-proper-list
+                    (argument-id (fx+ 2 rests))
+                    (fold kons knil . clist1-clists)))
+               r))))
 
-          (macro-if-checks
-           (let ((result (fold-right-n x-y)))
-             (if (fixnum? result)
-                 (if (fx< result 0)
-                     (macro-fail-check-list
-                      (fx- (fx+ 3 result) ##min-fixnum)
-                      (fold-right proc base . x-y))
-                     (##raise-length-mismatch-exception
-                      (fx+ 3 result)
-                      '()
-                      fold-right
-                      proc
-                      base
-                      x-y))
-                 (car result)))
-           (fold-right-n x-y)))
+    (let ((rests (primitive (cdrs clist1-clists))))
+      (macro-if-checks
+       (if (and (fixnum? rests) (fx> rests 0))
+           (macro-fail-check-list
+            (argument-id (fx+ 2 rests))
+            (fold kons knil . clist1-clists))
+           (fold-n* knil clist1-clists rests))
+       (fold-n* knil clist1-clists rests))))
 
-        (if (null? y)
-            (fold-right-1 x)
-            (fold-right-n (cons x y)))))))
+  (define (argument-id i)
+    (if (fx= i 3) '(3 . clist1) i))
+
+  (if (null? clists)
+      (fold-1 clist1)
+      (fold-n (cons clist1 clists))))
+
+(define-primitive (fold-right (kons   procedure)
+                              (knil   object)
+                              (clist1 proper-or-circular-list)
+                              (clists proper-or-circular-list) ...)
+
+  (define (fold-right-1 x)
+    (if (pair? x)
+        (kons (car x)
+              (fold-right-1 (cdr x)))
+        knil))
+
+  (define (fold-right-n x)
+    (let ((rests (primitive (cdrs x))))
+      (if (pair? rests)
+          (apply kons (primitive (cars x (list (fold-right-n rests)))))
+          knil)))
+
+  (if (null? clists)
+      (fold-right-1 clist1)
+      (fold-right-n (cons clist1 clists))))
+
+(define-procedure (fold-right (kons   procedure)
+                              (knil   object)
+                              (clist1 proper-or-circular-list)
+                              (clists proper-or-circular-list) ...)
+
+  (define (fold-right-1 clist1)
+
+    (define (fold-right-1 x)
+      (macro-force-vars (x)
+        (if (pair? x)
+            (let ((r (fold-right-1 (cdr x))))
+              (and r
+                   (list (kons (car x) (car r)))))
+            (macro-if-checks
+             (if (null? x)
+                 (list knil)
+                 #f)
+             (list knil)))))
+
+    (macro-if-checks
+     (if (or (null? clist1) (pair? clist1))
+         (let ((r (fold-right-1 clist1)))
+           (if r
+               (car r)
+               (macro-fail-check-proper-list '(3 . clist1) (fold-right kons knil clist1))))
+         (macro-fail-check-list '(3 . clist1) (fold-right kons knil clist1)))
+     (fold-right-1 clist1)))
+
+  (define (fold-right-n clist1-clists)
+
+    (define (fold-right-n* x rests)
+      (if (not rests)
+          (list knil)
+          (if (pair? rests)
+              (let ((r (fold-right-n* rests (primitive (cdrs rests)))))
+                (macro-if-checks
+                 (if (fixnum? r)
+                     r
+                     (list (apply kons (primitive (cars x r)))))
+                 (list (apply kons (primitive (cars x r))))))
+              rests)))
+
+    (let ((rests (primitive (cdrs clist1-clists))))
+      (macro-if-checks
+       (if (and (fixnum? rests) (fx> rests 0))
+           (macro-fail-check-list
+            (argument-id (fx+ 2 rests))
+            (fold-right kons knil . clist1-clists))
+           (let ((r (fold-right-n* clist1-clists rests)))
+             (if (fixnum? r)
+                 (if (fx< r 0)
+                     (primitive (raise-length-mismatch-exception
+                                 (argument-id (fx- 2 r))
+                                 '()
+                                 fold-right
+                                 kons
+                                 knil
+                                 clist1-clists))
+                     (macro-fail-check-proper-list
+                      (argument-id (fx+ 2 r))
+                      (fold-right kons knil . clist1-clists)))
+                 (car r))))
+       (car (fold-right-n* clist1-clists rests)))))
+
+  (define (argument-id i)
+    (if (fx= i 3) '(3 . clist1) i))
+
+  (if (null? clists)
+      (fold-right-1 clist1)
+      (fold-right-n (cons clist1 clists))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1407,79 +1265,79 @@
 ;;(declare-safe-define-procedure #t)
 
 (define-primitive (list-sort! (proc procedure)
-                              (lst  object))
+                              (list proper-list))
 
   ;; Stable mergesort algorithm
 
-  (define (sort lst len)
+  (define (sort list len)
     (if (fx= len 1)
         (begin
-          (set-cdr! lst '())
-          lst)
+          (set-cdr! list '())
+          list)
         (let ((len1 (fxarithmetic-shift-right len 1)))
-          (let loop ((n len1) (tail lst))
+          (let loop ((n len1) (tail list))
             (if (fx> n 0)
                 (loop (fx- n 1) (cdr tail))
                 (let ((x (sort tail (fx- len len1))))
-                  (merge (sort lst len1) x)))))))
+                  (merge (sort list len1) x)))))))
 
-  (define (merge lst1 lst2)
-    (if (pair? lst1)
-        (if (pair? lst2)
-            (let ((x1 (car lst1))
-                  (x2 (car lst2)))
+  (define (merge list1 list2)
+    (if (pair? list1)
+        (if (pair? list2)
+            (let ((x1 (car list1))
+                  (x2 (car list2)))
               (if (proc x2 x1)
-                  (merge-loop lst2 lst2 lst1 (cdr lst2))
-                  (merge-loop lst1 lst1 (cdr lst1) lst2)))
-            lst1)
-        lst2))
+                  (merge-loop list2 list2 list1 (cdr list2))
+                  (merge-loop list1 list1 (cdr list1) list2)))
+            list1)
+        list2))
 
-  (define (merge-loop result prev lst1 lst2)
-    (if (pair? lst1)
-        (if (pair? lst2)
-            (let ((x1 (car lst1))
-                  (x2 (car lst2)))
+  (define (merge-loop result prev list1 list2)
+    (if (pair? list1)
+        (if (pair? list2)
+            (let ((x1 (car list1))
+                  (x2 (car list2)))
               (if (proc x2 x1)
                   (begin
-                    (set-cdr! prev lst2)
-                    (merge-loop result lst2 lst1 (cdr lst2)))
+                    (set-cdr! prev list2)
+                    (merge-loop result list2 list1 (cdr list2)))
                   (begin
-                    (set-cdr! prev lst1)
-                    (merge-loop result lst1 (cdr lst1) lst2))))
+                    (set-cdr! prev list1)
+                    (merge-loop result list1 (cdr list1) list2))))
             (begin
-              (set-cdr! prev lst1)
+              (set-cdr! prev list1)
               result))
         (begin
-          (set-cdr! prev lst2)
+          (set-cdr! prev list2)
           result)))
 
-  (let ((len (primitive (proper-list-length lst))))
+  (let ((len (primitive (proper-list-length list))))
     (and len
          (if (fx= len 0)
              '()
-             (sort lst len)))))
-
-(define-primitive (list-sort (proc procedure)
-                             (lst  object))
-  (list-sort! proc (list-copy lst)))
-
-(define-procedure (list-sort (proc procedure)
-                             (lst  object))
-  (macro-if-checks
-   (let ((lst-copy (primitive (proper-list-copy lst))))
-     (if lst-copy
-         (list-sort! proc lst-copy)
-         (macro-fail-check-list
-          '(2 . lst)
-          (list-sort proc lst))))
-   (list-sort! proc (list-copy lst))))
+             (sort list len)))))
 
 (define-procedure (list-sort! (proc procedure)
-                              (lst  object))
-  (let ((result (primitive (list-sort! proc lst))))
+                              (list proper-list))
+  (let ((result (primitive (list-sort! proc list))))
     (or result
         (macro-fail-check-list
-         '(2 . lst)
-         (list-sort! proc lst)))))
+         '(2 . list)
+         (list-sort! proc list)))))
+
+(define-primitive (list-sort (proc procedure)
+                             (list proper-list))
+  (list-sort! proc (list-copy list)))
+
+(define-procedure (list-sort (proc procedure)
+                             (list proper-list))
+  (macro-if-checks
+   (let ((copy (primitive (proper-list-copy list))))
+     (if copy
+         (list-sort! proc copy)
+         (macro-fail-check-list
+          '(2 . list)
+          (list-sort proc list))))
+   (list-sort! proc (list-copy list))))
 
 ;;;============================================================================

@@ -4677,8 +4677,8 @@
                                      (##cons lift3
                                              others))))))))))
 
-(define call/cc
-  call-with-current-continuation)
+(define call/cc call-with-current-continuation)
+(##global-var-primitive-set! (##make-global-var 'call/cc) call/cc)
 
 (define ##initial-dynwind
   '#(0)) ;; only the "level" field is needed
@@ -8127,8 +8127,8 @@
                                      (##cons lift3
                                              others))))))))))
 
-(define call/cc
-  call-with-current-continuation)
+(define call/cc call-with-current-continuation)
+(##global-var-primitive-set! (##make-global-var 'call/cc) call/cc)
 
 (define ##initial-dynwind
   '#(0)) ;; only the "level" field is needed

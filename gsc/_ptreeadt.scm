@@ -6,13 +6,13 @@
 
 ;; information common to all nodes
 
-;;  parent   ; the node of which this node is a child
-;;  children ; list of parse-trees of the sub-expressions
-;;  fv       ; set of free variables contained in this expr
-;;  bfv      ; set of bound free variables contained in this expr
-;;  env      ; environment at this node
-;;  source   ; source corresponding to this node
-;;  stamp    ; integer to identify node
+;;  parent    the node of which this node is a child
+;;  children  list of parse-trees of the sub-expressions
+;;  fv        set of free variables contained in this expr
+;;  bfv       set of bound free variables contained in this expr
+;;  env       environment at this node
+;;  source    source corresponding to this node
+;;  stamp     integer to identify node
 
 (define (node-parent x)          (vector-ref x 1))
 (define (node-children x)        (vector-ref x 2))
@@ -28,10 +28,10 @@
 (define (node-source-set! x y)   (vector-set! x 6 y))
 (define (node-stamp-set! x y)    (vector-set! x 7 y))
 
-(define (make-cst ; node that represents constants
-         parent children fv bfv env source ; common to all nodes
+(define (make-cst ;; node that represents constants
+         parent children fv bfv env source ;; common to all nodes
 
-    val) ; value of the constant
+    val) ;; value of the constant
 
   (vector cst-tag parent children fv bfv env source (next-node-stamp) val))
 
@@ -41,10 +41,10 @@
 (define (cst-val x)        (vector-ref x 8))
 (define (cst-val-set! x y) (vector-set! x 8 y))
 
-(define (make-ref ; node that represents variable references
-         parent children fv bfv env source ; common to all nodes
+(define (make-ref ;; node that represents variable references
+         parent children fv bfv env source ;; common to all nodes
 
-    var) ; the variable which is referenced
+    var) ;; the variable which is referenced
 
   (vector ref-tag parent children fv bfv env source (next-node-stamp) var))
 
@@ -54,10 +54,10 @@
 (define (ref-var x)        (vector-ref x 8))
 (define (ref-var-set! x y) (vector-set! x 8 y))
 
-(define (make-set ; node that represents assignments (i.e. set! special forms)
-         parent children fv bfv env source ; common to all nodes
+(define (make-set ;; node that represents assignments (i.e. set! special forms)
+         parent children fv bfv env source ;; common to all nodes
 
-    var) ; the variable which is assigned a value
+    var) ;; the variable which is assigned a value
 
   (vector set-tag parent children fv bfv env source (next-node-stamp) var))
 
@@ -67,10 +67,10 @@
 (define (set-var x)        (vector-ref x 8))
 (define (set-var-set! x y) (vector-set! x 8 y))
 
-(define (make-def ; node that represents toplevel definitions
-         parent children fv bfv env source ; common to all nodes
+(define (make-def ;; node that represents toplevel definitions
+         parent children fv bfv env source ;; common to all nodes
 
-    var) ; the global variable which is assigned a value
+    var) ;; the global variable which is assigned a value
 
   (vector def-tag parent children fv bfv env source (next-node-stamp) var))
 
@@ -80,8 +80,8 @@
 
 (define def-tag (list 'def-tag))
 
-(define (make-tst ; node that represents conditionals (i.e. if special forms)
-         parent children fv bfv env source ; common to all nodes
+(define (make-tst ;; node that represents conditionals (i.e. if special forms)
+         parent children fv bfv env source ;; common to all nodes
 
     )
 
@@ -91,8 +91,8 @@
 
 (define (tst? x) (eq? (vector-ref x 0) tst-tag))
 
-(define (make-conj ; node that represents conjunctions (i.e. and special forms)
-         parent children fv bfv env source ; common to all nodes
+(define (make-conj ;; node that represents conjunctions (i.e. and special forms)
+         parent children fv bfv env source ;; common to all nodes
 
     )
 
@@ -102,8 +102,8 @@
 
 (define (conj? x) (eq? (vector-ref x 0) conj-tag))
 
-(define (make-disj ; node that represents disjunctions (i.e. or special forms)
-         parent children fv bfv env source ; common to all nodes
+(define (make-disj ;; node that represents disjunctions (i.e. or special forms)
+         parent children fv bfv env source ;; common to all nodes
 
     )
 
@@ -113,16 +113,17 @@
 
 (define (disj? x) (eq? (vector-ref x 0) disj-tag))
 
-(define (make-prc ; node that represents procedures (i.e. lambda-expressions)
-         parent children fv bfv env source ; common to all nodes
+(define (make-prc ;; node that represents procedures (i.e. lambda-expressions)
+         parent children fv bfv env source ;; common to all nodes
 
-    name     ; name of this procedure (string) or #f if none
-    c-name   ; name of associated C function (string) or #f if none
-    parms    ; the list of parameter variables in order
-    opts     ; the list of objects that the optional parameters default to
-    keys     ; the list of keyword/default pairs
-    rest?)   ; #t if the last parameter is a rest parameter and
-             ; the symbol "body" if the last parameter is a body parameter
+    name      ;; name of this procedure (string) or #f if none
+    c-name    ;; name of associated C function (string) or #f if none
+    parms     ;; the list of parameter variables in order
+    opts      ;; the list of objects that the optional parameters default to
+    keys      ;; the list of keyword/default pairs
+    rest?     ;; #t if the last parameter is a rest parameter and
+              ;; the symbol "body" if the last parameter is a body parameter
+    proc-obj) ;; procedure object associated with this lambda-expression
 
   (vector prc-tag parent children fv bfv env source (next-node-stamp)
           name
@@ -130,26 +131,29 @@
           parms
           opts
           keys
-          rest?))
+          rest?
+          proc-obj))
 
 (define prc-tag (list 'prc-tag))
 
-(define (prc? x)              (eq? (vector-ref x 0) prc-tag))
-(define (prc-name x)          (vector-ref x 8))
-(define (prc-c-name x)        (vector-ref x 9))
-(define (prc-parms x)         (vector-ref x 10))
-(define (prc-opts x)          (vector-ref x 11))
-(define (prc-keys x)          (vector-ref x 12))
-(define (prc-rest? x)         (vector-ref x 13))
-(define (prc-name-set! x y)   (vector-set! x 8 y))
-(define (prc-c-name-set! x y) (vector-set! x 9 y))
-(define (prc-parms-set! x y)  (vector-set! x 10 y))
-(define (prc-opts-set! x y)   (vector-set! x 11 y))
-(define (prc-keys-set! x y)   (vector-set! x 12 y))
-(define (prc-rest?-set! x y)  (vector-set! x 13 y))
+(define (prc? x)                (eq? (vector-ref x 0) prc-tag))
+(define (prc-name x)            (vector-ref x 8))
+(define (prc-c-name x)          (vector-ref x 9))
+(define (prc-parms x)           (vector-ref x 10))
+(define (prc-opts x)            (vector-ref x 11))
+(define (prc-keys x)            (vector-ref x 12))
+(define (prc-rest? x)           (vector-ref x 13))
+(define (prc-proc-obj x)        (vector-ref x 14))
+(define (prc-name-set! x y)     (vector-set! x 8 y))
+(define (prc-c-name-set! x y)   (vector-set! x 9 y))
+(define (prc-parms-set! x y)    (vector-set! x 10 y))
+(define (prc-opts-set! x y)     (vector-set! x 11 y))
+(define (prc-keys-set! x y)     (vector-set! x 12 y))
+(define (prc-rest?-set! x y)    (vector-set! x 13 y))
+(define (prc-proc-obj-set! x y) (vector-set! x 14 y))
 
-(define (make-app ; node that represents procedure calls
-         parent children fv bfv env source ; common to all nodes
+(define (make-app ;; node that represents procedure calls
+         parent children fv bfv env source ;; common to all nodes
 
     )
 
@@ -159,8 +163,8 @@
 
 (define (app? x) (eq? (vector-ref x 0) app-tag))
 
-(define (make-fut ; node that represents future constructs
-         parent children fv bfv env source ; common to all nodes
+(define (make-fut ;; node that represents future constructs
+         parent children fv bfv env source ;; common to all nodes
 
     )
 

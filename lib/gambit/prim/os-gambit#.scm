@@ -2,7 +2,7 @@
 
 ;;; File: "os-gambit#.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -61,8 +61,8 @@ seconds->time
 (service-info? service-info?#unimplemented)
 
 setenv
+shell-command
 
-(shell-command shell-command#unimplemented)
 (socket-info-address socket-info-address#unimplemented)
 (socket-info-family socket-info-family#unimplemented)
 (socket-info-port-number socket-info-port-number#unimplemented)

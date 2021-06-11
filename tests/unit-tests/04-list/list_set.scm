@@ -24,13 +24,13 @@
 (check-tail-exn type-exception? (lambda () (list-set lst1 bool 11)))
 
 (check-tail-exn range-exception? (lambda () (list-set lst1 -1 0)))
-(check-tail-exn type-exception? (lambda () (list-set lst1 3 0)))
+(check-tail-exn range-exception? (lambda () (list-set lst1 3 0)))
 
 (check-tail-exn type-exception? (lambda () (list-set! bool 0 11)))
 (check-tail-exn type-exception? (lambda () (list-set! lst1 bool 11)))
 
 (check-tail-exn range-exception? (lambda () (list-set! lst1 -1 0)))
-(check-tail-exn type-exception? (lambda () (list-set! lst1 3 0)))
+(check-tail-exn range-exception? (lambda () (list-set! lst1 3 0)))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (list-set!)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (list-set! lst2)))

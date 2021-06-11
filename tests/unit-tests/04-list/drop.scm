@@ -19,8 +19,7 @@
 (check-equal? (drop bool 0) bool)
 (check-equal? (drop '(1 2 . 3) 2) 3)
 
-(check-tail-exn type-exception? (lambda () (drop lst1 4)))
-
+(check-tail-exn range-exception? (lambda () (drop lst1 4)))
 (check-tail-exn range-exception? (lambda () (drop lst1 -1)))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (drop)))

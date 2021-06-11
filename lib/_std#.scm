@@ -2,7 +2,7 @@
 
 ;;; File: "_std#.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -109,10 +109,25 @@
 (define-check-type pair 'pair
   ##pair?)
 
-(define-check-type pair-list 'pair-list
+(define-check-type (pair-list pair-list-pair) 'pair-list
   ##pair?)
 
 (define-check-type list 'list
+  ##null?)
+
+(define-check-type (list proper-list) #f
+  (lambda (obj) (or (##null? obj) (##pair? obj))))
+
+(define-check-type (list proper-or-circular-list) #f
+  (lambda (obj) (or (##null? obj) (##pair? obj))))
+
+(define-check-type (list pair-list) #f
+  (lambda (obj) (or (##null? obj) (##pair? obj))))
+
+(define-check-type (proper-list proper-list-null) 'proper-list
+  ##null?)
+
+(define-check-type (proper-or-circular-list proper-or-circular-list-null) 'proper-or-circular-list
   ##null?)
 
 (define-check-type symbol 'symbol
@@ -135,47 +150,6 @@
 
 (define-check-type boolean 'boolean
   ##boolean?)
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(##define-macro (macro-fail-check-list arg-id form)
-
-  (define (rest-param x)
-    (if (pair? x)
-        (rest-param (cdr x))
-        x))
-
-  (define (nonrest-params x)
-    (if (pair? x)
-      (cons (car x) (nonrest-params (cdr x)))
-      '()))
-
-  (define (key-params x)
-    (if (pair? x)
-      (if (keyword? (car x))
-        (cons (car x) (cons (cadr x) (key-params (cddr x))))
-        (key-params (cdr x)))
-      '()))
-
-  (define (prekey-params x)
-    (if (or (not (pair? x)) (keyword? (car x)))
-      '()
-      (cons (car x) (prekey-params (cdr x)))))
-
-  (define (failure name)
-    (let* ((k (key-params (cdr form)))
-           (r (rest-param (cdr form)))
-           (nr (nonrest-params (cdr form)))
-           (pk (prekey-params nr)))
-      (if (and (null? k) (not (null? r)))
-        `(,name ,arg-id '() ,(car form) ,@pk ,r)
-        `(,name
-          ,arg-id
-          ,(if (and (null? k) (null? r))
-             (car form)
-             `(##list ,(car form) ,@k ,@(if (null? r) '() (list r))))
-          ,@pk))))
-
-  (failure '##fail-check-list))
 
 (##define-macro (define-prim-vector-procedures
                   name
