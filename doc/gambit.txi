@@ -273,13 +273,13 @@ implement an arbitrary mapping to implementation dependent identifiers.
 
 The @code{primitive} special form works in tandem with the
 @code{define-procedure} and @code{define-primitive} forms and the
-@code{~~lib/gambit/prim/prim#.scm} file and @code{gambit/prim} library.
-The file @code{~~lib/gambit/prim/prim#.scm} contains namespace
+@code{~~lib/gambit/prim/prim#.scm} file and @code{(gambit prim)}
+library. The file @code{~~lib/gambit/prim/prim#.scm} contains namespace
 declarations that map operations exported by the runtime library without
 a @code{##} prefix to their @code{##} prefixed names if this preserves
 the meaning of the operation but possibly (and usually) with no type
-checking. The @code{gambit/prim} library is similar but in the form of a
-R7RS library. For example the following code:
+checking. The @code{(gambit prim)} library is similar but in the form of
+a R7RS library. For example the following code:
 
 @example
 (include "~~lib/gambit/prim/prim#.scm")
@@ -297,21 +297,22 @@ is equivalent to this code:
 @end example
 
 The namespace declarations in @code{~~lib/gambit/prim/prim#.scm} have
-caused a mapping of square to @code{##square}, car to @code{##car} and
-println to @code{##println} because those primitives perform the same
-operations (assuming the code has no errors). Note that foo and bar have
-remained the same (because they are not procedures exported by the
-runtime library) but pp has been mapped to @code{##pp#unimplemented}
-because pp is a procedure exported by the runtime library but
-@code{##pp} is not defined. Having unimplemented in the name will help
-catch situations where the programmer expected a primitive operation to
-exist but this isn't the case.
+caused a mapping of @code{square} to @code{##square}, @code{car} to
+@code{##car} and println to @code{##println} because those primitives
+perform the same operations (assuming the code has no errors). Note that
+@code{foo} and @code{bar} have remained the same (because they are not
+procedures exported by the runtime library) but @code{pp} has been
+mapped to @code{##pp#unimplemented} because @code{pp} is a procedure
+exported by the runtime library but @code{##pp} is not defined. Having
+@code{unimplemented} in the name will help catch situations where the
+programmer expected a primitive operation to exist but this isn't the
+case.
 
 The @code{define-procedure} form does two things. It supports type
 annotations in the parameter list and it inserts a @code{(include
 "~~lib/gambit/prim/prim#.scm")} in the body so that primitive operations
 can be used without the @code{##} prefix. Type checking and automatic
-forcing of promise arguments is also added implicitly. The form
+forcing of promise arguments are also added implicitly. The form
 @code{define-primitive} is similar, but the procedure defined is
 implicitly prefixed with @code{##}.
 
@@ -320,8 +321,8 @@ of "primitive" operations. "Primitives" are implemented using procedures
 with a @code{##} prefix, but other Scheme implementations could do it
 differently.
 
-Finally, there's the @code{(declare-safe-define-procedure <bool>)} that
-can be used to enable/disable the mapping of names exported by the
+Finally, there's the @code{(declare-safe-define-procedure <bool>)} form
+that can be used to enable/disable the mapping of names exported by the
 runtime library to the corresponding primitives. This is useful to
 enable type checks in the code. For example the following definition:
 
@@ -348,10 +349,11 @@ which is equivalent to
 @end example
 
 If the code is in the scope of a @code{(declare-safe-define-procedure
-#t)} then it is vector-ref that is called instead of @code{##vector-ref}
-which will both check that x is a vector (redundantly) and that the
-index is in range. However, the use of @code{##vector-ref} can be forced
-by writing the code with an explicit use of the primitive special form:
+#t)} then it is @code{vector-ref} that is called instead of
+@code{##vector-ref} which will both check that @var{x} is a vector
+(redundantly) and that the index is in range. However, the use of
+@code{##vector-ref} can be forced by writing the code with an explicit
+use of the primitive special form:
 
 @example
 (define-procedure (foo (x vector))
