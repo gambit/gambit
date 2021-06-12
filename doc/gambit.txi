@@ -5574,8 +5574,8 @@ fixnum                     x is a fixnum and -2^(64-3) <= x <= 2^(64-3) - 1
 (fixnum-range-incl lo hi)  x is a fixnum and lo <= x <= hi
 
 index                      x is a fixnum and 0 <= x <= 2^(64-3) - 1
-(index-range lo hi)        x is a fixnum and lo <= x < hi
-(index-range-incl lo hi)   x is a fixnum and lo <= x <= hi
+(index-range lo hi)        x is a fixnum and 0 <= lo <= x < hi
+(index-range-incl lo hi)   x is a fixnum and 0 <= lo <= x <= hi
 
 exact-signed-int8          x is an exact integer, -128 <= x <= 127
 exact-signed-int16         x is an exact integer n, -32768 <= x <= 32767
