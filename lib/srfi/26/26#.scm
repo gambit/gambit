@@ -2,10 +2,10 @@
 
 (##define-syntax cut
   (lambda (src)
-    (include "expand-cut.scm")
-    (expand-cut #f src)))
+    (##import srfi/26/expand)
+    (cut-expand src #f)))
 
 (##define-syntax cute
   (lambda (src)
-    (include "expand-cut.scm")
-    (expand-cut #t src)))
+    (##import srfi/26/expand)
+    (cut-expand src #t)))

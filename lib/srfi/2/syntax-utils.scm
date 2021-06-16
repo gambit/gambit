@@ -1,3 +1,8 @@
+(##supply-module srfi/2/syntax-utils)
+(##namespace ("srfi/2/syntax-utils#"))
+(##import gambit)
+(##include "syntax-utils#.scm")
+
 (define (syntax-lift f)
   (lambda (src)
     (let ((r (f (##source-code src))))
