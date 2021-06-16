@@ -10354,15 +10354,22 @@
 
 (define-prim (##readtable-setup-for-standard-level! rt)
   (let ((standard-level (##get-standard-level)))
-    (cond ((##fx= 1 standard-level) ;; Gambit language
-           (macro-readtable-case-conversion?-set! rt #f)
-           (macro-readtable-keywords-allowed?-set! rt #t))
-          ((##fx= 5 standard-level) ;; R5RS language
+
+    (cond ((or (##fx= standard-level 4)  ;; R4RS language
+               (##fx= standard-level 5)) ;; R5RS language
            (macro-readtable-case-conversion?-set! rt #t)
            (macro-readtable-keywords-allowed?-set! rt #f))
-          ((##fx< 1 standard-level) ;; R7RS language
+
+          ((or (##fx= standard-level 6)  ;; R6RS language
+               (##fx= standard-level 7)) ;; R7RS language
            (macro-readtable-case-conversion?-set! rt #f)
-           (macro-readtable-keywords-allowed?-set! rt #f)))))
+           (macro-readtable-keywords-allowed?-set! rt #f))
+
+          (else ;; Gambit language
+           (macro-readtable-case-conversion?-set! rt #f)
+           (macro-readtable-keywords-allowed?-set! rt #t)
+           (macro-readtable-bracket-handler-set! rt '|[...]|)
+           (macro-readtable-brace-handler-set! rt '|{...}|)))))
 
 (define-prim (##make-readtable-parameter readtable)
   (##make-parameter
@@ -10877,7 +10884,8 @@
                        (or (##null? tail)
                            (##pair? tail))))
              (parenthesized-normal))
-            ((##head->open-close we head #f)
+            ((and (##not (##procedure? head))
+                  (##head->open-close we head #f))
              =>
              (lambda (open-close)
                (parenthesized-read-macro open-close)))
@@ -11256,10 +11264,10 @@
 
 (define-prim (##head->open-close we head default)
   (let ((rt (macro-writeenv-readtable we)))
-    (cond ((##eq? head (macro-readtable-paren-keyword rt))   '("(" . ")"))
-          ((##eq? head (macro-readtable-bracket-keyword rt)) '("[" . "]"))
-          ((##eq? head (macro-readtable-brace-keyword rt))   '("{" . "}"))
-          ((##eq? head (macro-readtable-angle-keyword rt))   '("<" . ">"))
+    (cond ((##eq? head (macro-readtable-paren-handler rt))   '("(" . ")"))
+          ((##eq? head (macro-readtable-bracket-handler rt)) '("[" . "]"))
+          ((##eq? head (macro-readtable-brace-handler rt))   '("{" . "}"))
+          ((##eq? head (macro-readtable-angle-handler rt))   '("<" . ">"))
           (else                                              default))))
 
 (define-prim (##wr-vector we obj)
@@ -13626,24 +13634,26 @@
       (define (prefix keyword)
         (macro-readenv-wrap
          re
-         (cons (macro-readenv-wrap re keyword) lst)))
+         (if (##procedure? keyword)
+             (keyword re lst)
+             (cons (macro-readenv-wrap re keyword) lst))))
 
       (cond ((and (char=? c #\[)
-                  (macro-readtable-bracket-keyword
+                  (macro-readtable-bracket-handler
                    (macro-readenv-readtable re)))
              =>
              prefix)
             ((and (char=? c #\{)
-                  (macro-readtable-brace-keyword
+                  (macro-readtable-brace-handler
                    (macro-readenv-readtable re)))
              =>
              prefix)
             ((and (char=? c #\<)
-                  (macro-readtable-angle-keyword
+                  (macro-readtable-angle-handler
                    (macro-readenv-readtable re)))
              =>
              prefix)
-            ((macro-readtable-paren-keyword
+            ((macro-readtable-paren-handler
               (macro-readenv-readtable re))
              =>
              prefix)
@@ -15492,10 +15502,10 @@
           'unsyntax-splicing ;; sharp-unquote-splicing-keyword
           'serial-number->object ;; sharp-num-keyword
           'repl-result-history-ref ;; sharp-seq-keyword
-          #f                 ;; paren-keyword
-          #f                 ;; bracket-keyword
-          #f                 ;; brace-keyword
-          #f                 ;; angle-keyword
+          #f                 ;; paren-handler
+          #f                 ;; bracket-handler
+          #f                 ;; brace-handler
+          #f                 ;; angle-handler
           #f                 ;; start-syntax
           ##six-type?        ;; six-type?
           #t                 ;; r6rs-compatible-read?

@@ -125,7 +125,7 @@ test2:
 
 test3:
 	@echo "------------ TEST 3 (interpreter and library functions)"
-	@SETDLPATH@ $(rootfromhere)/gsi/gsi@exe@ -:s,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -e '(begin (load "r4rstest.scm") (test-cont) (test-sc4) (test-delay) (exit))' > test3.out
+	@SETDLPATH@ $(rootfromhere)/gsi/gsi@exe@ -:r4rs,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -e '(begin (load "r4rstest.scm") (test-cont) (test-sc4) (test-delay) (exit))' > test3.out
 	diff $(srcdirpfx)test3.ok test3.out && rm -f test3.out tmp*
 
 test4:

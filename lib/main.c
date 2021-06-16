@@ -48,8 +48,7 @@ int debug_settings;)
         "                     processors), or end with % (ratio of available processors)\n"
 #endif
         "  gambit             set Gambit mode, shorthand: S (default mode)\n"
-        "  r5rs               set R5RS mode, shorthand: s\n"
-        "  r7rs               set R7RS mode\n"
+        "  r4rs | ... | r7rs  set RnRS mode (R7RS mode shorthand: s)\n"
         "  debug[=[OPT...]]   set debugging options, shorthand: d[OPT...], OPT is one of\n"
         "                      p|a       treat uncaught exceptions as errors\n"
         "                                (primordial-thread only|all threads)\n"
@@ -422,7 +421,7 @@ ___mod_or_lnk (*linker)();)
     parallelism_level = ___CEILING_DIV(count*50,100); /* default = 50% */
   }
 #endif
-  standard_level = 0;
+  standard_level = -1;
   debug_settings = ___DEBUG_SETTINGS_INITIAL;
 
   for (settings_index=0; settings_index<=___IO_SETTINGS_LAST; settings_index++)
@@ -674,8 +673,12 @@ ___mod_or_lnk (*linker)();)
                 }
               else if (option_equal (s, "debug"))
                 goto debug_option;
+              else if (option_equal (s, "r4rs"))
+                goto r4rs_option;
               else if (option_equal (s, "r5rs"))
                 goto r5rs_option;
+              else if (option_equal (s, "r6rs"))
+                goto r6rs_option;
               else if (option_equal (s, "r7rs"))
                 goto r7rs_option;
               else if (option_equal (s, "gambit"))
@@ -777,14 +780,22 @@ ___mod_or_lnk (*linker)();)
 
             case 'S':
             gambit_option:
-              standard_level = 1;
+              standard_level = 0;
               break;
 
-            case 's':
+            r4rs_option:
+              standard_level = 4;
+              break;
+
             r5rs_option:
               standard_level = 5;
               break;
 
+            r6rs_option:
+              standard_level = 6;
+              break;
+
+            case 's':
             r7rs_option:
               standard_level = 7;
               break;
