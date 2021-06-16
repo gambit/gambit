@@ -1,4 +1,9 @@
-(define (expand-cut close? src)
+(##supply-module srfi/26/expand)
+(##namespace ("srfi/2/expand#"))
+(##import gambit)
+(##include "expand#.scm")
+
+(define (cut-expand src close?)
 
   (let cons-closure ((argument-sources (cdr (syntax->list src)))
                      (let-over-lambda-bindings '())
