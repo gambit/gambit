@@ -322,4 +322,58 @@ c-declare-end
           (##shell-command cmd)
           (##shell-command cmd capture?)))))
 
+(define-prim&proc (version-alist)
+
+  (let ()
+
+    (define (format-stamp stamp)
+      (define (padded-number i)
+        (if (< i 10)
+            (string-append "0" (number->string i))
+            (number->string i)))
+      (let ((nums
+             (let loop ((num stamp) (nums '()) (count 5))
+               (if (< count 1) (cons num nums)
+                   (let ((num (truncate-quotient  num 100))
+                         (rem (truncate-remainder num 100)))
+                     (loop num (cons rem nums) (- count 1)))))))
+        (let ((year   (list-ref nums 0))
+              (month  (list-ref nums 1))
+              (day    (list-ref nums 2))
+              (hour   (list-ref nums 3))
+              (minute (list-ref nums 4))
+              (second (list-ref nums 5)))
+          (string-append
+           (padded-number year) "-"
+           (padded-number month) "-"
+           (padded-number day) "T"
+           (padded-number hour) ":"
+           (padded-number minute) ":"
+           (padded-number second) "Z"))))
+
+    (define (split-command-line string)
+      (let loop ((i 0) (args '()) (arg #f))
+        (if (= i (string-length string))
+            (reverse args)
+            (let ((c (string-ref string i)))
+              (cond ((not (char=? #\' c))
+                     (loop (+ i 1) args (and arg
+                                             (cons c arg))))
+                    ((not arg)
+                     (loop (+ i 1) args '()))
+                    (else
+                     (let ((arg (list->string (reverse arg))))
+                       (loop (+ i 1) (cons arg args) #f))))))))
+
+    `((command "gsi")  ; TODO: Should vary between "gsi" and "gsc".
+      (version ,(##system-version-string))
+      (website "https://gambitscheme.org")
+      (scheme.id gambit)
+      (encodings utf-8)
+      (languages scheme r5rs r7rs)
+      (build.date ,(format-stamp (##system-stamp)))
+      (build.platform ,##os-system-type-string-saved)
+      (build.configure
+       ,@(split-command-line ##os-configure-command-string-saved)))))
+
 ;;;============================================================================

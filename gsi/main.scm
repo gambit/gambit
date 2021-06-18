@@ -82,7 +82,7 @@ Interpreter options
 Global options
     -:opt1,opt2,...  Runtime system options (try '-:help' for details)
     -f               Do not process '.gambini' initialization files
-    -v               Show version information
+    -V, -v           Show version information
     -h, -help        Show this help
 
 usage-end
@@ -118,7 +118,7 @@ Module management
 
 Global options^R
     -f         Do not process '.gambini' initialization files
-    -v         Show version information
+    -V, -v     Show version information
     -h, -help  Show this help
 
 usage-end
@@ -928,7 +928,7 @@ usage-end
 
     (split-command-line
       cmd-args
-      '((f) (h) (help) (-help) (i) (v))
+      '((f) (h) (help) (-help) (i) (V) (v) (version) (-version))
       #t
       (lambda (main-options arguments)
         (let ((skip-initialization-file?
@@ -936,6 +936,22 @@ usage-end
               (force-interpreter?
                (or language-and-tail
                    (##assq 'i main-options))))
+
+          (define (write-backward-compatible-version)
+            (##write-string (##system-version-string) ##stdout-port)
+            (##write-string " " ##stdout-port)
+            (##write (##system-stamp) ##stdout-port)
+            (##write-string " " ##stdout-port)
+            (##write-string ##os-system-type-string-saved ##stdout-port)
+            (##write-string " " ##stdout-port)
+            (##write ##os-configure-command-string-saved ##stdout-port)
+            (##newline ##stdout-port))
+
+          (define (write-srfi-176-version)
+            (##for-each (lambda (entry)
+                          (##write entry ##stdout-port)
+                          (##newline ##stdout-port))
+                        (##version-alist)))
 
           (define (run-interpreter-or-compiler known-options arguments target)
 
@@ -948,14 +964,14 @@ usage-end
                 (compiler-batch-mode known-options arguments target)))
 
           (cond ((##assq 'v main-options)
-                 (##write-string (##system-version-string) ##stdout-port)
-                 (##write-string " " ##stdout-port)
-                 (##write (##system-stamp) ##stdout-port)
-                 (##write-string " " ##stdout-port)
-                 (##write-string ##os-system-type-string-saved ##stdout-port)
-                 (##write-string " " ##stdout-port)
-                 (##write ##os-configure-command-string-saved ##stdout-port)
-                 (##newline ##stdout-port)
+                 (write-backward-compatible-version)
+                 (write-srfi-176-version)
+                 (##exit))
+
+                ((or (##assq 'V main-options)
+                     (##assq 'version main-options)
+                     (##assq '-version main-options))
+                 (write-srfi-176-version)
                  (##exit))
 
                 ((or (##assq 'h main-options)

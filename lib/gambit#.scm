@@ -1121,6 +1121,7 @@ vector-inc!
 vector-map
 vector-set
 vector-shrink!
+version-alist
 void
 will-execute!
 will-testator
