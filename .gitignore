@@ -32,6 +32,7 @@ bin/scheme-r5rs.bat
 bin/scheme-srfi-0
 bin/scheme-srfi-0.bat
 bin/six
+bin/six.bat
 bin/six.exe
 bin/six-script
 bin/six-script.bat
@@ -175,6 +176,7 @@ prebuilt/windows/build-phase2
 bench/makefile
 contrib/GambitREPL/makefile
 contrib/makefile
+contrib/try/makefile
 contrib/xactlog/makefile
 githooks/makefile
 misc/makefile
