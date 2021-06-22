@@ -1142,7 +1142,11 @@ ___HIDDEN const char *gai_code_to_string
         (code)
 int code;)
 {
+#ifdef ___OS_WIN32
+  return gai_strerrorA (code);
+#else
   return gai_strerror (code);
+#endif
 }
 
 
