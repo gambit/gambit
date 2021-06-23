@@ -1,30 +1,23 @@
 ;;;============================================================================
 
-;;; File: "process.sld"
+;;; File: "176.sld"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2020-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
-;;; Process related operations.
+;;; SRFI 176, Version flag
 
-(define-library (process)
+(define-library (srfi 176)
 
   (namespace "")
 
   (export
 
-emergency-exit
-exit
-command-line
-command-name
-script-directory
-script-file
-shell-command
 version-alist
 
 )
 
-  (include "process#.scm"))
+  (include "176.scm"))
 
 ;;;============================================================================
