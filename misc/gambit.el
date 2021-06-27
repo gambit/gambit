@@ -7,6 +7,10 @@
 ;;          Mike Sperber <sperber@informatik.uni-tuebingen.de>
 ;; Keywords: processes, lisp
 
+;; Updated in 2021 by Pierre Rouleau <prouleau001@gmail.com>
+;;         - Fixed all byte-compiler warnings
+;;         - User overridable parameters are now customizable.
+
 ;; To use this package, make sure this file is accessible from your
 ;; load-path and that the following lines are in your ".emacs" file:
 ;;
@@ -43,13 +47,35 @@
 
 ;; User overridable parameters.
 
-(defvar scheme-program-name "gsi -:d-")
+(defgroup gambit nil
+  "Gambit user overridable parameters."
+  :group 'scheme)
 
-(defvar gambit-repl-command-prefix "\C-c"
-  "Emacs keybinding prefix for Gambit REPL's commands.")
+(defcustom gambit-scheme-program-name "gsi -:d-"
+  "Gambit REPL command line string."
+  :group 'gambit
+  :type 'string)
 
-(defvar gambit-highlight-color "gold"
-  "Color of the overlay for highlighting Scheme expressions.")
+(defvar scheme-program-name gambit-scheme-program-name)
+
+(defcustom gambit-repl-command-prefix "\C-c"
+  "Emacs keybinding prefix for Gambit REPL's commands."
+  :group 'gambit
+  :type 'string)
+
+
+;; TODO: Update the code to support a customizable face similar
+;;       to something like this:
+;; (defface gambit-highlight-face
+;;   '((((background light)) :background "gold")
+;;     (((background dark)) :background "gold"))
+;;   "Face of the overlay for highlighting Scheme Expressions."
+;;   :group 'gambit)
+
+(defcustom gambit-highlight-color "gold"
+  "Color of the overlay for highlighting Scheme expressions."
+  :group 'gambit
+  :type 'string)
 
 (defvar gambit-highlight-face
   (let ((face 'gambit-highlight-face))
@@ -58,15 +84,17 @@
           (make-face face)
           (if (x-display-color-p)
               (set-face-background face gambit-highlight-color)
-              (progn
-                ;(make-face-bold face)
-                (set-face-underline face t))))
-        (error (setq face nil)))
+            (progn
+              ;; (make-face-bold face)
+              (set-face-underline face t))))
+      (error (setq face nil)))
     face)
   "Face of overlay for highlighting Scheme expressions.")
 
-(defvar gambit-new-window-height 6
-  "Height of a window opened to highlight a Scheme expression.")
+(defcustom gambit-new-window-height 6
+  "Height of a window opened to highlight a Scheme expression."
+  :group 'gambit
+  :type 'integer)
 
 (defvar gambit-move-to-highlighted (not gambit-highlight-face)
   "Flag to move to window opened to highlight a Scheme expression.")
