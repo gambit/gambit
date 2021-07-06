@@ -94,6 +94,169 @@
     (expand template)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+(##define-syntax match
+  (lambda (src)
+    (##import _match/match-expand)
+    (match-expand src
+                  #f    ;; use-question-mark-prefix-pattern-variables?
+                  #t    ;; use-exhaustive-cases?
+                  #f))) ;; use-else?
+
+(define (match-expand
+         src
+         use-question-mark-prefix-pattern-variables?
+         use-exhaustive-cases?
+         use-else?)
+
+  (define expansion-debug? #f)
+
+  (define (pattern-variable? x)
+    (if use-question-mark-prefix-pattern-variables?
+
+        ;; ?var syntax for pattern variables
+        (and (symbol? x)
+             (let* ((str (symbol->string x))
+                    (len (string-length str)))
+               (and (>= len 0)
+                    (char=? #\? (string-ref str 0))
+                    (string->symbol (substring str 1 len)))))
+
+        ;; ,var syntax for pattern variables
+        (and (pair? x)
+             (pair? (cdr x))
+             (null? (cddr x))
+             (eq? (source-code (car x)) 'unquote)
+             (symbol? (source-code (cadr x)))
+             (cadr x))))
+
+  (define (source-code src)
+    (if (##source? src)
+        (##source-code src)
+        src))
+
+  (define gensym ;; a version of gensym useful for debugging
+    (let ((count 0))
+      (lambda ()
+        (set! count (+ count 1))
+        (string->symbol (string-append "$g" (number->string count))))))
+
+  (define (expand subject . clauses)
+
+    (define (if-equal? var pattern-src yes no)
+      (let ((pattern (source-code pattern-src)))
+        (cond ((pattern-variable? pattern)
+               =>
+               (lambda (pattern-var)
+                 `(##let ((,pattern-var ,var))
+                    ,yes)))
+              ((null? pattern)
+               `(##if (##null? ,var) ,yes ,(no)))
+              ((symbol? pattern)
+               `(##if (##eq? ,var ',pattern) ,yes ,(no)))
+              ((keyword? pattern)
+               `(##if (##eq? ,var ',pattern) ,yes ,(no)))
+              ((boolean? pattern)
+               `(##if (##eq? ,var ,pattern) ,yes ,(no)))
+              ((or (number? pattern)
+                   (char? pattern))
+               `(##if (##eqv? ,var ,pattern) ,yes ,(no)))
+              ((string? pattern)
+               `(##if (and (string? ,var) (##string=? ,var ,pattern)) ,yes ,(no)))
+              ((pair? pattern)
+               (let ((carvar (gensym))
+                     (cdrvar (gensym)))
+                 `(##if (##pair? ,var)
+                        (##let ((,carvar (##car ,var)))
+                          ,(if-equal?
+                            carvar
+                            (car pattern)
+                            `(##let ((,cdrvar (##cdr ,var)))
+                               ,(if-equal?
+                                 cdrvar
+                                 (cdr pattern)
+                                 yes
+                                 no))
+                            no))
+                        ,(no))))
+              (else
+               (error "unknown match pattern")))))
+
+    (define (else-clause? sc)
+      (and use-else?
+           (eq? (source-code (car sc)) 'else)))
+
+    (let* ((var
+            (gensym))
+           (default
+             (gensym))
+           (clauses*
+            (let loop ((lst (reverse clauses))
+                       (last default)
+                       (clauses* (list (cons default (cons #f #t)))))
+              (if (pair? lst)
+                  (let* ((name (gensym))
+                         (clause (car lst))
+                         (sc (source-code clause)))
+                    (cond ((not (pair? sc))
+                           (error "clause must be a list"))
+                          ((and (else-clause? sc)
+                                (not (eq? last default)))
+                           (error "else clause must be last")))
+                    (loop (cdr lst)
+                          name
+                          (cons (cons name (cons last clause)) clauses*)))
+                  clauses*)))
+           (defs
+            '()))
+
+      (define (call-clause-fn name)
+        (let* ((x (assq name clauses*))
+               (next (cadr x))
+               (clause (cddr x)))
+
+          (define (no)
+            (call-clause-fn next))
+
+          (if clause
+              (begin
+                (set-cdr! (cdr x) #f) ;; generate once
+                (set! defs
+                  (cons `(##define (,name)
+                           ,(if next
+                                (let ((sc (source-code clause)))
+                                  (if (else-clause? sc)
+                                      `(##let () ,@(cdr sc))
+                                      (if-equal?
+                                       var
+                                       (car sc)
+                                       (if (and (pair? (cdr sc))
+                                                (eq? (source-code (cadr sc))
+                                                     'when)
+                                                (pair? (cddr sc)))
+                                           `(##if ,(caddr sc)
+                                                  (##let () ,@(cdddr sc))
+                                                  ,(no))
+                                           `(##let () ,@(cdr sc)))
+                                       no)))
+                                (if use-exhaustive-cases?
+                                    `(##error "match failed" ,var)
+                                    `#f)))
+                        defs))))
+
+          `(,name)))
+
+      (let* ((body
+              (call-clause-fn (car (car clauses*))))
+             (expansion
+              `(##let ((,var ,subject))
+                 ,@defs
+                 ,body)))
+        (if expansion-debug? (pretty-print expansion))
+        expansion)))
+
+  (##deconstruct-call src -2 expand))
+
+
 
 (define-prim (##error message . parameters)
   (##raise-error-exception message parameters))
@@ -300,6 +463,17 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+(define (##list-symbol= x y)
+  (##or (##and (##pair? x) (##pair? y) (##eq? (##car x) (##car y)) (##list-symbol= (##cdr x) (##cdr y)) )
+        (##eq? x y)))
+
+(define (##list-symbol-member x lst)
+  (if (##pair? lst)
+      (if (##eq? (##car lst) x)
+          #t
+          (##list-symbol-member x (cdr lst)))
+      #f))
+
 (define-runtime-syntax ##cond-expand
   (lambda (src)
     (##deconstruct-call
@@ -316,7 +490,7 @@
 
   (define (satisfied? feature-requirement)
     (cond ((##symbol? feature-requirement)
-           (if (##member feature-requirement (##cond-expand-features))
+           (if (##list-symbol-member feature-requirement (##cond-expand-features))
                #t
                #f))
           ((##pair? feature-requirement)
@@ -357,9 +531,10 @@
                         (let loop ((lst (##cdr (##source-strip fr))))
                           (and (##pair? lst)
                                (let ((t (##desourcify (##car lst))))
-                                 (or (if (##equal? t '(_))
-                                         (##pair? ct)
-                                         (##equal? t ct))
+                                 (or (match
+                                      t
+                                      ((_) (##pair? ct))
+                                      (,_ (##list-symbol= t ct)))
                                      (loop (##cdr lst)))))))))
                    (else
                     (macro-raise
@@ -537,7 +712,7 @@
                    (trigger
                     (##bitwise-and params-covered
                                    (##bitwise-not covered))))
-              (if (##equal? trigger 0)
+              (if (##eqv? trigger 0)
                   (begin
                     ;; this case already covered by previous clauses
                     (loop (##cdr clauses)
@@ -1374,7 +1549,7 @@
                                  options
                                  rest))
                             (err))))
-                     ((##member next
+                     ((##list-symbol-member next
                                 '(id:
                                   constructor:
                                   constant-constructor:
@@ -1396,7 +1571,7 @@
                                                    (if (##pair? lst1)
                                                        (let ((x (##car lst1)))
                                                          (if (and (##symbol? x)
-                                                                  (##not (##member
+                                                                  (##not (##list-symbol-member
                                                                           x
                                                                           lst2)))
                                                              (loop (##cdr lst1)
@@ -1421,7 +1596,7 @@
                                          rev-fields)
                                   (err)))
                             (err))))
-                     ((##member next
+                     ((##list-symbol-member next
                                 '(opaque:
                                   macros:))
                       (if (##not (##assq next flags))
@@ -3696,16 +3871,19 @@
     `(let ,loop () (begin ,stat (if ,expr (,loop))))))
 
 (define-runtime-macro (six.for stat1 expr2 expr3 stat2)
-  (if (##equal? stat1 '(six.compound))
-      (let* ((loop (gensym))
-             (body `(begin ,stat2 ,@(if expr3 `(,expr3) '()) (,loop))))
-        `(let ,loop ()
-              ,(if expr2
-                   `(if ,expr2 ,body)
-                   body)))
-      `(six.compound
-        ,stat1
-        (six.for (six.compound) ,expr2 ,expr3 ,stat2))))
+  (match stat1
+         ((six.compound)
+          (let* ((loop (gensym))
+                 (body `(begin ,stat2 ,@(if expr3 `(,expr3) '()) (,loop))))
+            `(let ,loop ()
+                  ,(if expr2
+                       `(if ,expr2 ,body)
+                       body))))
+         (,_
+          `(six.compound
+            ,stat1
+            (six.for (six.compound) ,expr2 ,expr3 ,stat2)))))
+
 
 (define-runtime-macro (six.compound . stats)
   (##infix-compound-expand 'six.compound stats))
