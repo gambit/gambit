@@ -2,7 +2,7 @@
 
 ;;; File: "_num#.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -301,10 +301,10 @@
   (lambda (stx)
     (syntax-case stx ()
       ((_ yes)
-       #'(macro-if-bignum yes (begin)))
+       #'(macro-if-bignum yes (##begin)))
       ((_ yes no)
-       #'(cond-expand
-          (enable-bignum
+       #'(##cond-expand
+          ((or enable-bignum (not disable-bignum))
            yes)
           (else
            no))))))
@@ -313,10 +313,10 @@
   (lambda (stx)
     (syntax-case stx ()
       ((_ yes)
-       #'(macro-if-ratnum yes (begin)))
+       #'(macro-if-ratnum yes (##begin)))
       ((_ yes no)
-       #'(cond-expand
-          (enable-ratnum
+       #'(##cond-expand
+          ((or enable-ratnum (not disable-ratnum))
            yes)
           (else
            no))))))
@@ -325,10 +325,10 @@
   (lambda (stx)
     (syntax-case stx ()
       ((_ yes)
-       #'(macro-if-cpxnum yes (begin)))
+       #'(macro-if-cpxnum yes (##begin)))
       ((_ yes no)
-       #'(cond-expand
-          (enable-cpxnum
+       #'(##cond-expand
+          ((or enable-cpxnum (not disable-cpxnum))
            yes)
           (else
            no))))))

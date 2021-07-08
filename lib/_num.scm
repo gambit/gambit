@@ -543,6 +543,13 @@
   (macro-force-vars (x)
     (##odd? x)))
 
+(define-prim (##exact-int.odd? x)
+  (macro-if-bignum
+   (if (##fixnum? x)
+       (##fxodd? x)
+       (macro-bignum-odd? x))
+   (##fxodd? x)))
+
 (define-prim (##even? x)
 
   (define (type-error)
@@ -974,6 +981,19 @@
   (##pair? ##fail-check-number)
   (##not ##raise-fixnum-overflow-exception))
 
+(define-prim (##exact-int.* x y)
+  (macro-if-bignum
+   (if (##fixnum? x)
+       (if (##fixnum? y)
+           (or (##fx*? x y)
+               (##bignum.* (##fixnum->bignum x) (##fixnum->bignum y)))
+           (##bignum.* (##fixnum->bignum x) y))
+       (if (##fixnum? y)
+           (##bignum.* x (##fixnum->bignum y))
+           (##bignum.* x y)))
+   (or (##fx*? x y)
+       (##raise-fixnum-overflow-exception ##exact-int.* x y))))
+
 (define-prim (##square x)
 
   (define (type-error)
@@ -1002,6 +1022,16 @@
 (define-prim (square x)
   (macro-force-vars (x)
     (##square x)))
+
+(define-prim (##exact-int.square x)
+  (macro-if-bignum
+   (if (##fixnum? x)
+       (or (##fxsquare? x)
+           (let ((x (##fixnum->bignum x)))
+             (##bignum.* x x)))
+       (##bignum.* x x))
+   (or (##fxsquare? x)
+       (##raise-fixnum-overflow-exception ##exact-int.square x))))
 
 (define-prim (##negate x)
 
@@ -1888,7 +1918,7 @@
                     (##inexact->exact (##flabs x)))
                    ((##negative? x)
                     (##negate x))
-                   ((##bignum? x)
+                   ((macro-if-bignum (##bignum? x) #f)
                     (##bignum.copy x))
                    (else ;; nonnegative fixnum
                     x)))
@@ -1896,7 +1926,7 @@
                     (##inexact->exact (##flabs y)))
                    ((##negative? y)
                     (##negate y))
-                   ((##bignum? y)
+                   ((macro-if-bignum (##bignum? y) #f)
                     (##bignum.copy y))
                    (else ;; nonnegative fixnum
                     y))))
@@ -1906,11 +1936,11 @@
              y)
             ((##eqv? y 0)
              x)
-            ((##fixnum? x)
-             (if (##fixnum? y)
+            ((macro-if-bignum (##fixnum? x) #t)
+             (if (macro-if-bignum (##fixnum? y) #t)
                  (fixnum-base x y)
                  (fixnum-base x (##remainder y x))))
-            ((##fixnum? y)
+            ((macro-if-bignum (##fixnum? y) #t)
              (fixnum-base y (##remainder x y)))
             (else
              (let* ((first-x-bit
@@ -2588,23 +2618,23 @@ for a discussion of branch cuts.
 
   (define (positive-exact-real? x)
     (and (or (##fixnum? x)
-             (##bignum? x)
-             (##ratnum? x))
+             (macro-if-bignum (##bignum? x) #f)
+             (macro-if-ratnum (##ratnum? x) #f))
          (##positive? x)))
 
   (define (num x)
     ;; assumes x is exact real
-    (if (##ratnum? x)
+    (if (macro-if-ratnum (##ratnum? x) #f)
         (##ratnum-numerator x)
         x))
 
   (define (den x)
     ;; assumes x is exact real
-    (if (##ratnum? x)
+    (if (macro-if-ratnum (##ratnum? x) #f)
         (##ratnum-denominator x)
         1))
 
-  (define (log_2 n)
+  (define (log-2 n)
     ;; assumes n is positive exact integer power of 2
     (##fx- (##integer-length n) 1))
 
@@ -2614,10 +2644,10 @@ for a discussion of branch cuts.
            (##power-of-two? (den x))
            (##power-of-two? (num y))
            (##power-of-two? (den y)))
-      (##/ (##- (log_2 (num x))
-                (log_2 (den x)))
-           (##- (log_2 (num y))
-                (log_2 (den y))))
+      (##/ (##- (log-2 (num x))
+                (log-2 (den x)))
+           (##- (log-2 (num y))
+                (log-2 (den y))))
       (##/ (##log x) (##log y))))
 
 (define-prim (log x #!optional (y (macro-absent-obj)))
@@ -3142,7 +3172,7 @@ for a discussion of branch cuts.
 
 (define-prim (##power-of-two? n)
   ;; assumes n is a positive fixnum or bignum
-  (if (##fixnum? n)
+  (if (macro-if-bignum (##fixnum? n) #t)
       (##fxzero? (##fxand n (##fx- n 1)))
       (##fx= (##fx+ (##first-bit-set n) 1)
              (##integer-length n))))
@@ -3171,18 +3201,18 @@ for a discussion of branch cuts.
         (if (##eqv? y 1)
             x
             (let ((temp (##square (expt-aux x (##arithmetic-shift y -1)))))
-              (if (##even? y)
-                  temp
-                  (##* x temp)))))
+              (if (##exact-int.odd? y)
+                  (##* x temp)
+                  temp))))
 
       (cond ((or (##eqv? x 0)
                  (##eqv? x 1))
              x)
             ((eqv? x -1)
-             (if (##odd? y)
+             (if (##exact-int.odd? y)
                  -1
                  1))
-            ((##ratnum? x)
+            ((macro-if-ratnum (##ratnum? x) #f)
              (macro-ratnum-make
               (exact-int-expt (macro-ratnum-numerator   x) y)
               (exact-int-expt (macro-ratnum-denominator x) y)))
@@ -3337,7 +3367,7 @@ for a discussion of branch cuts.
              ;; even for large enough y
              (let ((abs-result
                     (##flexpt (##fl- x) (##exact-int->flonum y))))
-               (if (##odd? y)
+               (if (macro-bignum-odd? y)
                    (##fl- abs-result)
                    abs-result)))
             (else
@@ -3827,17 +3857,17 @@ for a discussion of branch cuts.
                  s)
                (uinteger->string x rad 0))))))
 
-(define-prim (##ratnum->string x #!optional (rad 10) (force-sign? #f))
-  (##string-append
-   (##exact-int->string (macro-ratnum-numerator x) rad force-sign?)
-   "/"
-   (##exact-int->string (macro-ratnum-denominator x) rad #f)))
+(macro-if-ratnum
+ (define-prim (##ratnum->string x #!optional (rad 10) (force-sign? #f))
+   (##string-append
+    (##exact-int->string (macro-ratnum-numerator x) rad force-sign?)
+    "/"
+    (##exact-int->string (macro-ratnum-denominator x) rad #f))))
 
 (##define-macro (macro-r6rs-fp-syntax) #t)
 (##define-macro (macro-chez-fp-syntax) #f)
 
-(##define-macro (macro-make-10^constants)
-  (define n 326)
+(##define-macro (macro-make-10^-constants n)
   (let ((v (make-vector n)))
     (let loop ((i 0) (x 1))
       (if (< i n)
@@ -3848,8 +3878,52 @@ for a discussion of branch cuts.
 
 (define ##10^-constants
   (if (use-fast-bignum-algorithms)
-      (macro-make-10^constants)
-      #f))
+      (macro-make-10^-constants 326)
+      (macro-make-10^-constants 9))) ;; powers of 10 that are in fixnum32 range
+
+(define (##exact-int.expt x y) ;; x and y are exact integers
+  (let* ((x-negative? (##exact-int.< x 0))
+         (abs-x (if x-negative? (##negate x) x))
+         (y-negative? (##exact-int.< y 0))
+         (abs-y (if y-negative? (##negate y) y))
+         (abs-x^abs-y (##nonneg-exact-int.expt abs-x abs-y))
+         (abs-result
+          (if y-negative? (##inverse abs-x^abs-y) abs-x^abs-y)))
+    (if (and x-negative? (##exact-int.odd? abs-y))
+        (##negate abs-result)
+        abs-result)))
+
+(define (##nonneg-exact-int.expt x y) ;; x and y are nonnegative exact integers
+
+  (define (nonneg-expt10 y)
+    (if (and (macro-if-bignum (##fixnum? y) #t)
+             (##fx< y (##vector-length ##10^-constants)))
+        (##vector-ref ##10^-constants y)
+        (let ((temp
+               (##exact-int.square (nonneg-expt10 (##arithmetic-shift y -1)))))
+          (if (##exact-int.odd? y)
+              (##exact-int.* 10 temp)
+              temp))))
+
+  (define (nonneg-expt x y)
+    (if (##eqv? y 1)
+        x
+        (let ((temp
+               (##exact-int.square (nonneg-expt x (##arithmetic-shift y -1)))))
+          (if (##exact-int.odd? y)
+              (##exact-int.* x temp)
+              temp))))
+
+  (cond ((##eqv? y 0)
+         1)
+        ((or (##eqv? x 0) (##eqv? x 1) (##eqv? y 1))
+         x)
+        ((##eqv? x 2)
+         (##arithmetic-shift 1 y))
+        ((##eqv? x 10)
+         (nonneg-expt10 y))
+        (else
+         (nonneg-expt x y))))
 
 (define-prim (##flonum-printout v sign-prefix)
 
@@ -3864,7 +3938,7 @@ for a discussion of branch cuts.
   (define (10^ n) ;; 0 <= n < 326
     (if (use-fast-bignum-algorithms)
         (##vector-ref ##10^-constants n)
-        (##expt 10 n)))
+        (##nonneg-exact-int.expt 10 n)))
 
   (define (base-10-log x)
     (##define-macro (1/log10) `',(/ (log 10)))
@@ -3974,7 +4048,7 @@ for a discussion of branch cuts.
     (let* ((x (##flonum->exact-exponential-format v))
            (f (##vector-ref x 0))
            (e (##vector-ref x 1))
-           (round? (##not (##odd? f))))
+           (round? (##not (##exact-int.odd? f))))
       (if (##fxnegative? e)
           (if (and (##not (##fx= e (macro-flonum-e-min)))
                    (##= f (macro-flonum-+m-min)))
@@ -4203,20 +4277,21 @@ for a discussion of branch cuts.
 (define-prim (##flonum->string-host x)
   (##flonum->string x 10 #f)) ;; TODO: remove after bootstrap
 
-(define-prim (##cpxnum->string x #!optional (rad 10) (force-sign? #f))
-  (let* ((real
-          (macro-cpxnum-real x))
-         (real-str
-          (if (##eqv? real 0) "" (##number->string real rad force-sign?))))
-    (let ((imag (macro-cpxnum-imag x)))
-      (cond ((##eqv? imag 1)
-             (##string-append real-str "+i"))
-            ((##eqv? imag -1)
-             (##string-append real-str "-i"))
-            (else
-             (##string-append real-str
-                              (##number->string imag rad #t)
-                              "i"))))))
+(macro-if-cpxnum
+ (define-prim (##cpxnum->string x #!optional (rad 10) (force-sign? #f))
+   (let* ((real
+           (macro-cpxnum-real x))
+          (real-str
+           (if (##eqv? real 0) "" (##number->string real rad force-sign?))))
+     (let ((imag (macro-cpxnum-imag x)))
+       (cond ((##eqv? imag 1)
+              (##string-append real-str "+i"))
+             ((##eqv? imag -1)
+              (##string-append real-str "-i"))
+             (else
+              (##string-append real-str
+                               (##number->string imag rad #t)
+                               "i")))))))
 
 (define-prim (##number->string x #!optional (rad 10) (force-sign? #f))
   (macro-number-dispatch x '()
@@ -4609,13 +4684,23 @@ for a discussion of branch cuts.
              #f)))
 
   (define (make-rec x y)
-    (##make-rectangular x y))
+    (if (##eqv? y 0)
+        x
+        (macro-if-cpxnum
+         (##make-rectangular x y)
+         #f)))
 
   (define (make-pol x y e)
-    (let ((n (##make-polar x y)))
-      (if (##eq? e 'e)
-          (##inexact->exact n)
-          n)))
+    (macro-if-cpxnum
+     (let ((n (##make-polar x y)))
+       (if (##eq? e 'e)
+           (##inexact->exact n)
+           n))
+     (if (##eqv? y 0)
+         (if (##eq? e 'e)
+             (##inexact->exact x)
+             x)
+         #f)))
 
   (define (make-inexact-real sign uinteger exponent)
     (let ((n
@@ -4634,7 +4719,8 @@ for a discussion of branch cuts.
                           (##f64vector-ref exact-10^n-table
                                            exponent)))
                (##exact->inexact
-                (##* uinteger (##expt 10 exponent))))))
+                (##* uinteger
+                     (##exact-int.expt 10 exponent))))))
       (if (##char=? sign #\-)
           (##flcopysign n (macro-inexact--1))
           n)))
@@ -4709,7 +4795,7 @@ for a discussion of branch cuts.
                         (if (##char=? sign #\-)
                             (##negate uinteger)
                             uinteger)
-                        (##expt 10 exponent))
+                        (##exact-int.expt 10 exponent))
                        (make-inexact-real sign uinteger exponent))))
                 ((##fx= len 2) ;; xxx/yyy
                  (let* ((after-num
@@ -10442,6 +10528,7 @@ end-of-code
                      ((##bignum.adigit-< y x i) 1)
                      (else
                       (loop (##fx- i 1)))))))))
+
   (macro-exact-int-dispatch-no-error x
 
     (macro-exact-int-dispatch-no-error y ;; x = fixnum
@@ -10539,7 +10626,7 @@ end-of-code
                    ;; result is >= 2
                    ((##fx<= length (##fx* 2 y))
                     ;; result is < 4
-                    (if (##< x (##expt 3 y))
+                    (if (##< x (##exact-int.expt 3 y))
                         2
                         3))
                    ((##fxeven? y)
@@ -10564,7 +10651,7 @@ end-of-code
                                 (##+ nth-root-top-bits 1)
                                 length/y/2))))
                         (let loop ((g init-g))
-                          (let* ((a (##expt g (##fx- y 1)))
+                          (let* ((a (##exact-int.expt g (##fx- y 1)))
                                  (b (##* a y))
                                  (c (##* a (##fx- y 1)))
                                  (d (##quotient (##+ x (##* g c)) b)))
@@ -10577,7 +10664,7 @@ end-of-code
                                      ;; once the difference is one, it's more
                                      ;; efficient to just decrement until g^y <= x
                                      (let loop ((g d))
-                                       (if (##not (##< x (##expt g y)))
+                                       (if (##not (##< x (##exact-int.expt g y)))
                                            g
                                            (loop (##- g 1))))))))))))))
            1))))
@@ -10721,9 +10808,6 @@ end-of-code
 (define-prim (exact-integer-sqrt x)
   (macro-force-vars (x)
     (##exact-integer-sqrt x)))
-
-(define-prim (##exact-int.square n)
-  (##* n n))
 
 ;;;----------------------------------------------------------------------------
 
@@ -11422,7 +11506,7 @@ end-of-code
              (##flonum-expt2 p)
              (f2 (if (and (##bit-set? next-bit-index x)
                           (or nonzero-fractional-part?
-                              (##odd? q)
+                              (##exact-int.odd? q)
                               (##fx< (##first-bit-set x)
                                      next-bit-index)))
                      (##+ q 1)
