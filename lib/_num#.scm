@@ -303,7 +303,7 @@
       ((_ yes)
        #'(macro-if-bignum yes (##begin)))
       ((_ yes no)
-       #'(##cond-expand
+       #'(cond-expand
           ((or enable-bignum (not disable-bignum))
            yes)
           (else
@@ -315,7 +315,7 @@
       ((_ yes)
        #'(macro-if-ratnum yes (##begin)))
       ((_ yes no)
-       #'(##cond-expand
+       #'(cond-expand
           ((or enable-ratnum (not disable-ratnum))
            yes)
           (else
@@ -327,7 +327,7 @@
       ((_ yes)
        #'(macro-if-cpxnum yes (##begin)))
       ((_ yes no)
-       #'(##cond-expand
+       #'(cond-expand
           ((or enable-cpxnum (not disable-cpxnum))
            yes)
           (else
