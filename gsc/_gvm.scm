@@ -2217,7 +2217,27 @@
   (for-each
    (lambda (referrer-dependencies)
      (let ((referrer (car referrer-dependencies))
-           (dependencies (cdr referrer-dependencies)))
+           (deps (cdr referrer-dependencies)))
+
+       (define (add dependencies jump?)
+         (for-each
+          (lambda (var)
+            (if (and (not (eq? var referrer)) ;; avoid self cycle
+                     (interesting? var))
+                (begin
+                  (if (not (table-ref dependency-graph var #f))
+                      (table-set! not-defined var #t))
+                  (dot-digraph-add-edge!
+                   dd
+                   (dot-digraph-gen-edge
+                    (gen-label referrer)
+                    (gen-label var)
+                    (not jump?))))))
+          (sort-list (map var-name (varset->list dependencies))
+                     (lambda (x y)
+                       (string<? (symbol->string x)
+                                 (symbol->string y))))))
+
        (if (interesting? referrer)
            (begin
 
@@ -2228,23 +2248,9 @@
                (gen-label referrer)
                (list (gen-label referrer))))
 
-             (for-each
-              (lambda (var)
-                (if (and (not (eq? var referrer)) ;; avoid self cycle
-                         (interesting? var))
-                    (begin
-                      (if (not (table-ref dependency-graph var #f))
-                          (table-set! not-defined var #t))
-                      (dot-digraph-add-edge!
-                       dd
-                       (dot-digraph-gen-edge
-                        (gen-label referrer)
-                        (gen-label var)
-                        #f)))))
-              (sort-list (map var-name (varset->list dependencies))
-                         (lambda (x y)
-                           (string<? (symbol->string x)
-                                     (symbol->string y)))))))))
+             (add (vector-ref deps 0) #t)
+             (add (vector-ref deps 1) #f)))))
+
    (sort-syms dependency-graph))
 
   (for-each
