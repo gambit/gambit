@@ -357,9 +357,13 @@
                         (let loop ((lst (##cdr (##source-strip fr))))
                           (and (##pair? lst)
                                (let ((t (##desourcify (##car lst))))
-                                 (or (if (##equal? t '(_))
-                                         (##pair? ct)
-                                         (##equal? t ct))
+                                 (or (if (##pair? t)
+                                         (and (##null? (##cdr t))
+                                              (or (##eq? (##car t) '_)
+                                                  (and (##pair? ct)
+                                                       (##null? (##cdr ct))
+                                                       (##eq? (##car t) (##car ct)))))
+                                         (##eq? t ct))
                                      (loop (##cdr lst)))))))))
                    (else
                     (macro-raise
@@ -537,7 +541,7 @@
                    (trigger
                     (##bitwise-and params-covered
                                    (##bitwise-not covered))))
-              (if (##equal? trigger 0)
+              (if (##eqv? trigger 0)
                   (begin
                     ;; this case already covered by previous clauses
                     (loop (##cdr clauses)
@@ -3696,7 +3700,9 @@
     `(let ,loop () (begin ,stat (if ,expr (,loop))))))
 
 (define-runtime-macro (six.for stat1 expr2 expr3 stat2)
-  (if (##equal? stat1 '(six.compound))
+  (if (and (##pair? stat1)
+           (##null? (##cdr stat1))
+           (##eq? (##car stat1) 'six.compound))
       (let* ((loop (gensym))
              (body `(begin ,stat2 ,@(if expr3 `(,expr3) '()) (,loop))))
         `(let ,loop ()
