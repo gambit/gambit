@@ -11645,15 +11645,15 @@ end-of-code
 
 (define (##flonum->ieee754-32 x)
   (##declare (not interrupts-enabled))
-  (cond-expand
+  (macro-case-target
 
-   ((compilation-target C)
+   ((C)
     ((c-lambda (float32)
                unsigned-int32
       "___return(*___CAST(___U32*,&___arg1));")
      x))
 
-   ((compilation-target js)
+   ((js)
     (##inline-host-declaration "
 
 @float_to_ieee754_32@ = function (x) {
@@ -11665,7 +11665,7 @@ end-of-code
 ")
     (##inline-host-expression "@host2scm@(@float_to_ieee754_32(@1@))" n))
 
-   ((compilation-target python)
+   ((python)
     (##inline-host-declaration "
 
 def @float_to_ieee754_32@(x):
@@ -11680,15 +11680,15 @@ def @float_to_ieee754_32@(x):
 
 (define (##ieee754-32->flonum n)
   (##declare (not interrupts-enabled))
-  (cond-expand
+  (macro-case-target
 
-   ((compilation-target C)
+   ((C)
     ((c-lambda (unsigned-int32)
                float32
       "___return(*___CAST(___F32*,&___arg1));")
      n))
 
-   ((compilation-target js)
+   ((js)
     (##inline-host-declaration "
 
 @float_from_ieee754_32@ = function (n) {
@@ -11700,7 +11700,7 @@ def @float_to_ieee754_32@(x):
 ")
     (##inline-host-expression "@host2scm@(@float_from_ieee754_32(@1@))" n))
 
-   ((compilation-target python)
+   ((python)
     (##inline-host-declaration "
 
 def @float_from_ieee754_32@(n):
@@ -11715,15 +11715,15 @@ def @float_from_ieee754_32@(n):
 
 (define (##flonum->ieee754-64 x)
   (##declare (not interrupts-enabled))
-  (cond-expand
+  (macro-case-target
 
-   ((compilation-target C)
+   ((C)
     ((c-lambda (float64)
                unsigned-int64
       "___return(*___CAST(___U64*,&___arg1));")
      x))
 
-   ((compilation-target js)
+   ((js)
     (##inline-host-declaration "
 
 @float_to_ieee754_64@ = function (x) {
@@ -11735,7 +11735,7 @@ def @float_from_ieee754_32@(n):
 ")
     (##inline-host-expression "@host2scm@(@float_to_ieee754_64(@1@))" n))
 
-   ((compilation-target python)
+   ((python)
     (##inline-host-declaration "
 
 def @float_to_ieee754_64@(x):
@@ -11750,15 +11750,15 @@ def @float_to_ieee754_64@(x):
 
 (define (##ieee754-64->flonum n)
   (##declare (not interrupts-enabled))
-  (cond-expand
+  (macro-case-target
 
-   ((compilation-target C)
+   ((C)
     ((c-lambda (unsigned-int64)
                float64
       "___return(*___CAST(___F64*,&___arg1));")
      n))
 
-   ((compilation-target js)
+   ((js)
     (##inline-host-declaration "
 
 @float_from_ieee754_64@ = function (n) {
@@ -11770,7 +11770,7 @@ def @float_to_ieee754_64@(x):
 ")
     (##inline-host-expression "@host2scm@(@float_from_ieee754_64(@1@))" n))
 
-   ((compilation-target python)
+   ((python)
     (##inline-host-declaration "
 
 def @float_from_ieee754_64@(n):
