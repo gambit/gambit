@@ -868,12 +868,7 @@
            (##keyword-hash obj))
           (else
            (##fxand
-            (let ((sn (##object->serial-number obj)))
-              (if (##fixnum? sn)
-                  sn
-                  (##fxarithmetic-shift-left
-                   (##bignum.mdigit-ref sn 0)
-                   10)))
+            (##object->serial-number obj) ;; always a nonnegative fixnum
             (macro-max-fixnum32)))))
 
   (macro-case-target
