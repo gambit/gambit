@@ -11639,20 +11639,149 @@ end-of-code
 
 )
 
-(define-prim (##flonum->ieee754-32 x)
-  (##u32vector-ref (##f32vector x) 0))
+;;;----------------------------------------------------------------------------
 
-(define-prim (##ieee754-32->flonum n)
-  (let ((x (##u32vector n)))
-    (##f32vector-ref x 0)))
+;;; IEEE-754 representation of floating point numbers.
 
-(define-prim (##flonum->ieee754-64 x)
-  (##u64vector-ref x 0))
+(define (##flonum->ieee754-32 x)
+  (##declare (not interrupts-enabled))
+  (cond-expand
 
-(define-prim (##ieee754-64->flonum n)
-  (let ((x (##u64vector n)))
-    (##subtype-set! x (macro-subtype-flonum))
-    x))
+   ((compilation-target C)
+    ((c-lambda (float32)
+               unsigned-int32
+      "___return(*___CAST(___U32*,&___arg1));")
+     x))
+
+   ((compilation-target js)
+    (##inline-host-declaration "
+
+@float_to_ieee754_32@ = function (x) {
+  var buf = new ArrayBuffer(4);
+  (new Float32Array(buf))[0] = x;
+  return (new Uint32Array(buf))[0];
+};
+
+")
+    (##inline-host-expression "@host2scm@(@float_to_ieee754_32(@1@))" n))
+
+   ((compilation-target python)
+    (##inline-host-declaration "
+
+def @float_to_ieee754_32@(x):
+    return ctypes.c_uint32.from_buffer(ctypes.c_float(x)).value
+
+")
+    (##inline-host-expression "@host2scm@(@float_to_ieee754_32(@1@))" n))
+
+   (else
+    (println "unimplemented ##flonum->ieee754-32 called")
+    0)))
+
+(define (##ieee754-32->flonum n)
+  (##declare (not interrupts-enabled))
+  (cond-expand
+
+   ((compilation-target C)
+    ((c-lambda (unsigned-int32)
+               float32
+      "___return(*___CAST(___F32*,&___arg1));")
+     n))
+
+   ((compilation-target js)
+    (##inline-host-declaration "
+
+@float_from_ieee754_32@ = function (n) {
+  var buf = new ArrayBuffer(4);
+  (new Uint32Array(buf))[0] = n;
+  return (new Float32Array(buf))[0];
+};
+
+")
+    (##inline-host-expression "@host2scm@(@float_from_ieee754_32(@1@))" n))
+
+   ((compilation-target python)
+    (##inline-host-declaration "
+
+def @float_from_ieee754_32@(n):
+    return ctypes.c_float.from_buffer(ctypes.c_uint32(n)).value
+
+")
+    (##inline-host-expression "@host2scm@(@float_from_ieee754_32(@1@))" n))
+
+   (else
+    (println "unimplemented ##ieee754-32->flonum called")
+    0.0)))
+
+(define (##flonum->ieee754-64 x)
+  (##declare (not interrupts-enabled))
+  (cond-expand
+
+   ((compilation-target C)
+    ((c-lambda (float64)
+               unsigned-int64
+      "___return(*___CAST(___U64*,&___arg1));")
+     x))
+
+   ((compilation-target js)
+    (##inline-host-declaration "
+
+@float_to_ieee754_64@ = function (x) {
+  var buf = new ArrayBuffer(8);
+  (new Float64Array(buf))[0] = x;
+  return 18446744073709551615n & (new BigInt64Array(buf))[0];
+};
+
+")
+    (##inline-host-expression "@host2scm@(@float_to_ieee754_64(@1@))" n))
+
+   ((compilation-target python)
+    (##inline-host-declaration "
+
+def @float_to_ieee754_64@(x):
+    return ctypes.c_uint64.from_buffer(ctypes.c_double(x)).value
+
+")
+    (##inline-host-expression "@host2scm@(@float_to_ieee754_64(@1@))" n))
+
+   (else
+    (println "unimplemented ##flonum->ieee754-64 called")
+    0)))
+
+(define (##ieee754-64->flonum n)
+  (##declare (not interrupts-enabled))
+  (cond-expand
+
+   ((compilation-target C)
+    ((c-lambda (unsigned-int64)
+               float64
+      "___return(*___CAST(___F64*,&___arg1));")
+     n))
+
+   ((compilation-target js)
+    (##inline-host-declaration "
+
+@float_from_ieee754_64@ = function (n) {
+  var buf = new ArrayBuffer(8);
+  (new BigInt64Array(buf))[0] = n;
+  return (new Float64Array(buf))[0];
+};
+
+")
+    (##inline-host-expression "@host2scm@(@float_from_ieee754_64(@1@))" n))
+
+   ((compilation-target python)
+    (##inline-host-declaration "
+
+def @float_from_ieee754_64@(n):
+    return ctypes.c_double.from_buffer(ctypes.c_uint64(n)).value
+
+")
+    (##inline-host-expression "@host2scm@(@float_from_ieee754_64(@1@))" n))
+
+   (else
+    (println "unimplemented ##ieee754-64->flonum called")
+    0.0)))
 
 ;;;----------------------------------------------------------------------------
 
