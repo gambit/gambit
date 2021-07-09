@@ -956,6 +956,102 @@ else
   RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|disable-cpxnum|)"
 fi
 
+AC_ARG_ENABLE(s8vector,
+              AS_HELP_STRING([--enable-s8vector],
+                             [support s8vector type (default is YES)]),
+              ENABLE_S8VECTOR=$enableval,
+              ENABLE_S8VECTOR=yes)
+
+if test "$ENABLE_S8VECTOR" = yes; then
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|enable-s8vector|)"
+else
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|disable-s8vector|)"
+fi
+
+AC_ARG_ENABLE(u16vector,
+              AS_HELP_STRING([--enable-u16vector],
+                             [support u16vector type (default is YES)]),
+              ENABLE_U16VECTOR=$enableval,
+              ENABLE_U16VECTOR=yes)
+
+if test "$ENABLE_U16VECTOR" = yes; then
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|enable-u16vector|)"
+else
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|disable-u16vector|)"
+fi
+
+AC_ARG_ENABLE(s16vector,
+              AS_HELP_STRING([--enable-s16vector],
+                             [support s16vector type (default is YES)]),
+              ENABLE_S16VECTOR=$enableval,
+              ENABLE_S16VECTOR=yes)
+
+if test "$ENABLE_S16VECTOR" = yes; then
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|enable-s16vector|)"
+else
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|disable-s16vector|)"
+fi
+
+AC_ARG_ENABLE(u32vector,
+              AS_HELP_STRING([--enable-u32vector],
+                             [support u32vector type (default is YES)]),
+              ENABLE_U32VECTOR=$enableval,
+              ENABLE_U32VECTOR=yes)
+
+if test "$ENABLE_U32VECTOR" = yes; then
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|enable-u32vector|)"
+else
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|disable-u32vector|)"
+fi
+
+AC_ARG_ENABLE(s32vector,
+              AS_HELP_STRING([--enable-s32vector],
+                             [support s32vector type (default is YES)]),
+              ENABLE_S32VECTOR=$enableval,
+              ENABLE_S32VECTOR=yes)
+
+if test "$ENABLE_S32VECTOR" = yes; then
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|enable-s32vector|)"
+else
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|disable-s32vector|)"
+fi
+
+AC_ARG_ENABLE(u64vector,
+              AS_HELP_STRING([--enable-u64vector],
+                             [support u64vector type (default is YES)]),
+              ENABLE_U64VECTOR=$enableval,
+              ENABLE_U64VECTOR=yes)
+
+if test "$ENABLE_U64VECTOR" = yes; then
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|enable-u64vector|)"
+else
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|disable-u64vector|)"
+fi
+
+AC_ARG_ENABLE(s64vector,
+              AS_HELP_STRING([--enable-s64vector],
+                             [support s64vector type (default is YES)]),
+              ENABLE_S64VECTOR=$enableval,
+              ENABLE_S64VECTOR=yes)
+
+if test "$ENABLE_S64VECTOR" = yes; then
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|enable-s64vector|)"
+else
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|disable-s64vector|)"
+fi
+
+AC_ARG_ENABLE(f32vector,
+              AS_HELP_STRING([--enable-f32vector],
+                             [support f32vector type (default is YES)]),
+              ENABLE_F32VECTOR=$enableval,
+              ENABLE_F32VECTOR=yes)
+
+if test "$ENABLE_F32VECTOR" = yes; then
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|enable-f32vector|)"
+else
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|disable-f32vector|)"
+fi
+
 ###############################################################################
 #
 # Check if debugging information for the Scheme runtime library is to

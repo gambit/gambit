@@ -265,6 +265,22 @@ The configure options which are specific to the Gambit system are:
                           (requires: make bootstrap; make bootclean; make)
   --enable-cpxnum         support complex numbers
                           (requires: make bootstrap; make bootclean; make)
+  --enable-s8vector       support s8vector type
+                          (requires: make bootstrap; make bootclean; make)
+  --enable-u16vector      support u16vector type
+                          (requires: make bootstrap; make bootclean; make)
+  --enable-s16vector      support s16vector type
+                          (requires: make bootstrap; make bootclean; make)
+  --enable-u32vector      support u32vector type
+                          (requires: make bootstrap; make bootclean; make)
+  --enable-s32vector      support s32vector type
+                          (requires: make bootstrap; make bootclean; make)
+  --enable-u64vector      support u64vector type
+                          (requires: make bootstrap; make bootclean; make)
+  --enable-s64vector      support s64vector type
+                          (requires: make bootstrap; make bootclean; make)
+  --enable-f32vector      support f32vector type
+                          (requires: make bootstrap; make bootclean; make)
   --enable-rtlib-debug
                           cause the inclusion of all debugging information
                           in the code generated for the Scheme runtime library

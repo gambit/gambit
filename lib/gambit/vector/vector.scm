@@ -24,17 +24,6 @@
   ##equal?)
 
 (define-prim-vector-procedures
-  s8vector
-  0
-  macro-force-vars
-  macro-check-exact-signed-int8
-  macro-check-exact-signed-int8-list
-  macro-test-exact-signed-int8
-  ##fail-check-exact-signed-int8
-  #f
-  ##fx=)
-
-(define-prim-vector-procedures
   u8vector
   0
   macro-force-vars
@@ -45,82 +34,101 @@
   #f
   ##fx=)
 
-(define-prim-vector-procedures
-  s16vector
-  0
-  macro-force-vars
-  macro-check-exact-signed-int16
-  macro-check-exact-signed-int16-list
-  macro-test-exact-signed-int16
-  ##fail-check-exact-signed-int16
-  #f
-  ##fx=)
+(macro-if-s8vector
+ (define-prim-vector-procedures
+   s8vector
+   0
+   macro-force-vars
+   macro-check-exact-signed-int8
+   macro-check-exact-signed-int8-list
+   macro-test-exact-signed-int8
+   ##fail-check-exact-signed-int8
+   #f
+   ##fx=))
 
-(define-prim-vector-procedures
-  u16vector
-  0
-  macro-force-vars
-  macro-check-exact-unsigned-int16
-  macro-check-exact-unsigned-int16-list
-  macro-test-exact-unsigned-int16
-  ##fail-check-exact-unsigned-int16
-  #f
-  ##fx=)
+(macro-if-u16vector
+ (define-prim-vector-procedures
+   u16vector
+   0
+   macro-force-vars
+   macro-check-exact-unsigned-int16
+   macro-check-exact-unsigned-int16-list
+   macro-test-exact-unsigned-int16
+   ##fail-check-exact-unsigned-int16
+   #f
+   ##fx=))
 
-(define-prim-vector-procedures
-  s32vector
-  0
-  macro-force-vars
-  macro-check-exact-signed-int32
-  macro-check-exact-signed-int32-list
-  macro-test-exact-signed-int32
-  ##fail-check-exact-signed-int32
-  #f
-  ##eqv?)
+(macro-if-s16vector
+ (define-prim-vector-procedures
+   s16vector
+   0
+   macro-force-vars
+   macro-check-exact-signed-int16
+   macro-check-exact-signed-int16-list
+   macro-test-exact-signed-int16
+   ##fail-check-exact-signed-int16
+   #f
+   ##fx=))
 
-(define-prim-vector-procedures
-  u32vector
-  0
-  macro-force-vars
-  macro-check-exact-unsigned-int32
-  macro-check-exact-unsigned-int32-list
-  macro-test-exact-unsigned-int32
-  ##fail-check-exact-unsigned-int32
-  #f
-  ##eqv?)
+(macro-if-u32vector
+ (define-prim-vector-procedures
+   u32vector
+   0
+   macro-force-vars
+   macro-check-exact-unsigned-int32
+   macro-check-exact-unsigned-int32-list
+   macro-test-exact-unsigned-int32
+   ##fail-check-exact-unsigned-int32
+   #f
+   ##eqv?))
 
-(define-prim-vector-procedures
-  s64vector
-  0
-  macro-force-vars
-  macro-check-exact-signed-int64
-  macro-check-exact-signed-int64-list
-  macro-test-exact-signed-int64
-  ##fail-check-exact-signed-int64
-  #f
-  ##eqv?)
+(macro-if-s32vector
+ (define-prim-vector-procedures
+   s32vector
+   0
+   macro-force-vars
+   macro-check-exact-signed-int32
+   macro-check-exact-signed-int32-list
+   macro-test-exact-signed-int32
+   ##fail-check-exact-signed-int32
+   #f
+   ##eqv?))
 
-(define-prim-vector-procedures
-  u64vector
-  0
-  macro-force-vars
-  macro-check-exact-unsigned-int64
-  macro-check-exact-unsigned-int64-list
-  macro-test-exact-unsigned-int64
-  ##fail-check-exact-unsigned-int64
-  #f
-  ##eqv?)
+(macro-if-u64vector
+ (define-prim-vector-procedures
+   u64vector
+   0
+   macro-force-vars
+   macro-check-exact-unsigned-int64
+   macro-check-exact-unsigned-int64-list
+   macro-test-exact-unsigned-int64
+   ##fail-check-exact-unsigned-int64
+   #f
+   ##eqv?))
 
-(define-prim-vector-procedures
-  f32vector
-  0.
-  macro-force-vars
-  macro-check-inexact-real
-  macro-check-inexact-real-list
-  macro-test-inexact-real
-  ##fail-check-inexact-real
-  #f
-  ##fleqv?)
+(macro-if-s64vector
+ (define-prim-vector-procedures
+   s64vector
+   0
+   macro-force-vars
+   macro-check-exact-signed-int64
+   macro-check-exact-signed-int64-list
+   macro-test-exact-signed-int64
+   ##fail-check-exact-signed-int64
+   #f
+   ##eqv?))
+
+(macro-if-f32vector
+ (define-prim-vector-procedures
+   f32vector
+   0.
+   macro-force-vars
+   macro-check-inexact-real
+   macro-check-inexact-real-list
+   macro-test-inexact-real
+   ##fail-check-inexact-real
+   #f
+   ##fleqv?))
 
 (define-prim-vector-procedures
   f64vector

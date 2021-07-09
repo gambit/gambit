@@ -2,7 +2,7 @@
 
 ;;; File: "char#.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -199,14 +199,33 @@ integer->char
     (define (u32? x) (int-in-range? x           0 4294967296))
     (define (s32? x) (int-in-range? x -2147483648 2147483647))
 
+    (define (have-feature x) (memq x (##cond-expand-features)))
+
     (define (specialize-vector vect)
-      (cond ((vector-all? u8? vect)  (list->u8vector  (vector->list vect)))
-            ((vector-all? s8? vect)  (list->s8vector  (vector->list vect)))
-            ((vector-all? u16? vect) (list->u16vector (vector->list vect)))
-            ((vector-all? s16? vect) (list->s16vector (vector->list vect)))
-            ((vector-all? u32? vect) (list->u32vector (vector->list vect)))
-            ((vector-all? s32? vect) (list->s32vector (vector->list vect)))
-            (else                    vect)))
+      (cond ((vector-all? u8? vect)
+             (list->u8vector (vector->list vect)))
+            ((and (or (have-feature 'enable-s8vector)
+                      (not (have-feature 'disable-s8vector)))
+                  (vector-all? s8? vect))
+             (list->s8vector (vector->list vect)))
+            ((and (or (have-feature 'enable-u16vector)
+                      (not (have-feature 'disable-u16vector)))
+                  (vector-all? u16? vect))
+             (list->u16vector (vector->list vect)))
+            ((and (or (have-feature 'enable-s16vector)
+                      (not (have-feature 'disable-s16vector)))
+                  (vector-all? s16? vect))
+             (list->s16vector (vector->list vect)))
+            ((and (or (have-feature 'enable-u32vector)
+                      (not (have-feature 'disable-u32vector)))
+                  (vector-all? u32? vect))
+             (list->u32vector (vector->list vect)))
+            ((and (or (have-feature 'enable-s32vector)
+                      (not (have-feature 'disable-s32vector)))
+                  (vector-all? s32? vect))
+             (list->s32vector (vector->list vect)))
+            (else
+             vect)))
 
     (define (specialized-vector-length-op vect)
       (cond ((u8vector? vect)  '##u8vector-length)

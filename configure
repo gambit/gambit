@@ -997,6 +997,14 @@ enable_sharp_dot
 enable_bignum
 enable_ratnum
 enable_cpxnum
+enable_s8vector
+enable_u16vector
+enable_s16vector
+enable_u32vector
+enable_s32vector
+enable_u64vector
+enable_s64vector
+enable_f32vector
 enable_rtlib_debug
 enable_rtlib_debug_location
 enable_rtlib_debug_source
@@ -1736,6 +1744,14 @@ Optional Features:
   --enable-bignum         support infinite precision integers (default is YES)
   --enable-ratnum         support exact rational numbers (default is YES)
   --enable-cpxnum         support complex numbers (default is YES)
+  --enable-s8vector       support s8vector type (default is YES)
+  --enable-u16vector      support u16vector type (default is YES)
+  --enable-s16vector      support s16vector type (default is YES)
+  --enable-u32vector      support u32vector type (default is YES)
+  --enable-s32vector      support s32vector type (default is YES)
+  --enable-u64vector      support u64vector type (default is YES)
+  --enable-s64vector      support s64vector type (default is YES)
+  --enable-f32vector      support f32vector type (default is YES)
   --enable-rtlib-debug    Include all debugging information in the code
                           generated for the Scheme runtime library (default is
                           NO)
@@ -5860,6 +5876,118 @@ if test "$ENABLE_CPXNUM" = yes; then
   RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|enable-cpxnum|)"
 else
   RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|disable-cpxnum|)"
+fi
+
+# Check whether --enable-s8vector was given.
+if test "${enable_s8vector+set}" = set; then :
+  enableval=$enable_s8vector; ENABLE_S8VECTOR=$enableval
+else
+  ENABLE_S8VECTOR=yes
+fi
+
+
+if test "$ENABLE_S8VECTOR" = yes; then
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|enable-s8vector|)"
+else
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|disable-s8vector|)"
+fi
+
+# Check whether --enable-u16vector was given.
+if test "${enable_u16vector+set}" = set; then :
+  enableval=$enable_u16vector; ENABLE_U16VECTOR=$enableval
+else
+  ENABLE_U16VECTOR=yes
+fi
+
+
+if test "$ENABLE_U16VECTOR" = yes; then
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|enable-u16vector|)"
+else
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|disable-u16vector|)"
+fi
+
+# Check whether --enable-s16vector was given.
+if test "${enable_s16vector+set}" = set; then :
+  enableval=$enable_s16vector; ENABLE_S16VECTOR=$enableval
+else
+  ENABLE_S16VECTOR=yes
+fi
+
+
+if test "$ENABLE_S16VECTOR" = yes; then
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|enable-s16vector|)"
+else
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|disable-s16vector|)"
+fi
+
+# Check whether --enable-u32vector was given.
+if test "${enable_u32vector+set}" = set; then :
+  enableval=$enable_u32vector; ENABLE_U32VECTOR=$enableval
+else
+  ENABLE_U32VECTOR=yes
+fi
+
+
+if test "$ENABLE_U32VECTOR" = yes; then
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|enable-u32vector|)"
+else
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|disable-u32vector|)"
+fi
+
+# Check whether --enable-s32vector was given.
+if test "${enable_s32vector+set}" = set; then :
+  enableval=$enable_s32vector; ENABLE_S32VECTOR=$enableval
+else
+  ENABLE_S32VECTOR=yes
+fi
+
+
+if test "$ENABLE_S32VECTOR" = yes; then
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|enable-s32vector|)"
+else
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|disable-s32vector|)"
+fi
+
+# Check whether --enable-u64vector was given.
+if test "${enable_u64vector+set}" = set; then :
+  enableval=$enable_u64vector; ENABLE_U64VECTOR=$enableval
+else
+  ENABLE_U64VECTOR=yes
+fi
+
+
+if test "$ENABLE_U64VECTOR" = yes; then
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|enable-u64vector|)"
+else
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|disable-u64vector|)"
+fi
+
+# Check whether --enable-s64vector was given.
+if test "${enable_s64vector+set}" = set; then :
+  enableval=$enable_s64vector; ENABLE_S64VECTOR=$enableval
+else
+  ENABLE_S64VECTOR=yes
+fi
+
+
+if test "$ENABLE_S64VECTOR" = yes; then
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|enable-s64vector|)"
+else
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|disable-s64vector|)"
+fi
+
+# Check whether --enable-f32vector was given.
+if test "${enable_f32vector+set}" = set; then :
+  enableval=$enable_f32vector; ENABLE_F32VECTOR=$enableval
+else
+  ENABLE_F32VECTOR=yes
+fi
+
+
+if test "$ENABLE_F32VECTOR" = yes; then
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|enable-f32vector|)"
+else
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|disable-f32vector|)"
 fi
 
 ###############################################################################

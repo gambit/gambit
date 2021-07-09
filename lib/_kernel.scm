@@ -2471,78 +2471,6 @@ end-of-code
         (##make-string k fill))
       s)))
 
-(define-prim (##make-s8vector k #!optional (fill (macro-absent-obj)))
-  (##declare (not interrupts-enabled))
-  (let ((v (##c-code #<<end-of-code
-
-___SCMOBJ k;
-___SCMOBJ fill;
-___SIZE_TS i;
-___SIZE_TS n;
-___SCMOBJ result;
-___POP_ARGS2(k,fill);
-___ps->saved[0] = k;
-___ps->saved[1] = fill;
-n = ___INT(k);
-if (n > ___CAST(___WORD, ___LMASK>>___LF))
-  result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
-else
-  {
-    ___SIZE_TS words = ___WORDS(n) + 1;
-    if (words > ___MSECTION_BIGGEST)
-      {
-        ___FRAME_STORE_RA(___R0)
-        ___W_ALL
-        result = ___EXT(___alloc_scmobj) (___ps, ___sS8VECTOR, n);
-        ___R_ALL
-        ___SET_R0(___FRAME_FETCH_RA)
-        if (!___FIXNUMP(result))
-          ___still_obj_refcount_dec (result);
-      }
-    else
-      {
-        ___BOOL overflow = 0;
-        ___hp += words;
-        if (___hp > ___ps->heap_limit)
-          {
-            ___FRAME_STORE_RA(___R0)
-            ___W_ALL
-            overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
-            ___R_ALL
-            ___SET_R0(___FRAME_FETCH_RA)
-          }
-        else
-          ___hp -= words;
-        if (overflow)
-          result = ___FIX(___HEAP_OVERFLOW_ERR);
-        else
-          {
-            result = ___SUBTYPED_FROM_START(___hp);
-            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES(n, ___sS8VECTOR));
-            ___hp += words;
-          }
-      }
-  }
-k = ___ps->saved[0];
-fill = ___ps->saved[1];
-___ps->saved[0] = ___VOID;
-___ps->saved[1] = ___VOID;
-if (!___FIXNUMP(result) && fill != ___ABSENT)
-  {
-    for (i=0; i<n; i++)
-      ___S8VECTORSET(result,___FIX(i),fill);
-  }
-___RESULT = result;
-___PUSH_ARGS2(k,fill);
-
-end-of-code
-)))
-    (if (##fixnum? v)
-      (begin
-        (##raise-heap-overflow-exception)
-        (##make-s8vector k fill))
-      v)))
-
 (define-prim (##make-u8vector k #!optional (fill (macro-absent-obj)))
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
@@ -2615,7 +2543,8 @@ end-of-code
         (##make-u8vector k fill))
       v)))
 
-(define-prim (##make-s16vector k #!optional (fill (macro-absent-obj)))
+(macro-if-s8vector
+(define-prim (##make-s8vector k #!optional (fill (macro-absent-obj)))
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
 
@@ -2628,16 +2557,16 @@ ___POP_ARGS2(k,fill);
 ___ps->saved[0] = k;
 ___ps->saved[1] = fill;
 n = ___INT(k);
-if (n > ___CAST(___WORD, ___LMASK>>(___LF+1)))
+if (n > ___CAST(___WORD, ___LMASK>>___LF))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else
   {
-    ___SIZE_TS words = ___WORDS((n<<1)) + 1;
+    ___SIZE_TS words = ___WORDS(n) + 1;
     if (words > ___MSECTION_BIGGEST)
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        result = ___EXT(___alloc_scmobj) (___ps, ___sS16VECTOR, n<<1);
+        result = ___EXT(___alloc_scmobj) (___ps, ___sS8VECTOR, n);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
         if (!___FIXNUMP(result))
@@ -2662,7 +2591,7 @@ else
         else
           {
             result = ___SUBTYPED_FROM_START(___hp);
-            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<1), ___sS16VECTOR));
+            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES(n, ___sS8VECTOR));
             ___hp += words;
           }
       }
@@ -2674,7 +2603,7 @@ ___ps->saved[1] = ___VOID;
 if (!___FIXNUMP(result) && fill != ___ABSENT)
   {
     for (i=0; i<n; i++)
-      ___S16VECTORSET(result,___FIX(i),fill);
+      ___S8VECTORSET(result,___FIX(i),fill);
   }
 ___RESULT = result;
 ___PUSH_ARGS2(k,fill);
@@ -2684,9 +2613,10 @@ end-of-code
     (if (##fixnum? v)
       (begin
         (##raise-heap-overflow-exception)
-        (##make-s16vector k fill))
-      v)))
+        (##make-s8vector k fill))
+      v))))
 
+(macro-if-u16vector
 (define-prim (##make-u16vector k #!optional (fill (macro-absent-obj)))
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
@@ -2757,9 +2687,10 @@ end-of-code
       (begin
         (##raise-heap-overflow-exception)
         (##make-u16vector k fill))
-      v)))
+      v))))
 
-(define-prim (##make-s32vector k #!optional (fill (macro-absent-obj)))
+(macro-if-s16vector
+(define-prim (##make-s16vector k #!optional (fill (macro-absent-obj)))
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
 
@@ -2772,16 +2703,16 @@ ___POP_ARGS2(k,fill);
 ___ps->saved[0] = k;
 ___ps->saved[1] = fill;
 n = ___INT(k);
-if (n > ___CAST(___WORD, ___LMASK>>(___LF+2)))
+if (n > ___CAST(___WORD, ___LMASK>>(___LF+1)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else
   {
-    ___SIZE_TS words = ___WORDS((n<<2)) + 1;
+    ___SIZE_TS words = ___WORDS((n<<1)) + 1;
     if (words > ___MSECTION_BIGGEST)
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        result = ___EXT(___alloc_scmobj) (___ps, ___sS32VECTOR, n<<2);
+        result = ___EXT(___alloc_scmobj) (___ps, ___sS16VECTOR, n<<1);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
         if (!___FIXNUMP(result))
@@ -2806,7 +2737,7 @@ else
         else
           {
             result = ___SUBTYPED_FROM_START(___hp);
-            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<2), ___sS32VECTOR));
+            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<1), ___sS16VECTOR));
             ___hp += words;
           }
       }
@@ -2818,7 +2749,7 @@ ___ps->saved[1] = ___VOID;
 if (!___FIXNUMP(result) && fill != ___ABSENT)
   {
     for (i=0; i<n; i++)
-      ___S32VECTORSET(result,___FIX(i),fill);
+      ___S16VECTORSET(result,___FIX(i),fill);
   }
 ___RESULT = result;
 ___PUSH_ARGS2(k,fill);
@@ -2828,9 +2759,10 @@ end-of-code
     (if (##fixnum? v)
       (begin
         (##raise-heap-overflow-exception)
-        (##make-s32vector k fill))
-      v)))
+        (##make-s16vector k fill))
+      v))))
 
+(macro-if-u32vector
 (define-prim (##make-u32vector k #!optional (fill (macro-absent-obj)))
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
@@ -2901,9 +2833,10 @@ end-of-code
       (begin
         (##raise-heap-overflow-exception)
         (##make-u32vector k fill))
-      v)))
+      v))))
 
-(define-prim (##make-s64vector k #!optional (fill (macro-absent-obj)))
+(macro-if-s32vector
+(define-prim (##make-s32vector k #!optional (fill (macro-absent-obj)))
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
 
@@ -2916,21 +2849,16 @@ ___POP_ARGS2(k,fill);
 ___ps->saved[0] = k;
 ___ps->saved[1] = fill;
 n = ___INT(k);
-if (n > ___CAST(___WORD, ___LMASK>>(___LF+3)))
+if (n > ___CAST(___WORD, ___LMASK>>(___LF+2)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else
   {
-    ___SIZE_TS words = ___WORDS((n<<3)) + ___SUBTYPED_BODY;
-
-#if ___WS == 4
-    words++;
-#endif
-
+    ___SIZE_TS words = ___WORDS((n<<2)) + 1;
     if (words > ___MSECTION_BIGGEST)
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        result = ___EXT(___alloc_scmobj) (___ps, ___sS64VECTOR, n<<3);
+        result = ___EXT(___alloc_scmobj) (___ps, ___sS32VECTOR, n<<2);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
         if (!___FIXNUMP(result))
@@ -2954,12 +2882,8 @@ else
           result = ___FIX(___HEAP_OVERFLOW_ERR);
         else
           {
-#if ___WS == 4
-            result = ___SUBTYPED_FROM_BODY(___CAST(___WORD,___hp+___SUBTYPED_BODY+1)&~7);
-#else
             result = ___SUBTYPED_FROM_START(___hp);
-#endif
-            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<3), ___sS64VECTOR));
+            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<2), ___sS32VECTOR));
             ___hp += words;
           }
       }
@@ -2971,7 +2895,7 @@ ___ps->saved[1] = ___VOID;
 if (!___FIXNUMP(result) && fill != ___ABSENT)
   {
     for (i=0; i<n; i++)
-      ___S64VECTORSET(result,___FIX(i),fill);
+      ___S32VECTORSET(result,___FIX(i),fill);
   }
 ___RESULT = result;
 ___PUSH_ARGS2(k,fill);
@@ -2981,9 +2905,10 @@ end-of-code
     (if (##fixnum? v)
       (begin
         (##raise-heap-overflow-exception)
-        (##make-s64vector k fill))
-      v)))
+        (##make-s32vector k fill))
+      v))))
 
+(macro-if-u64vector
 (define-prim (##make-u64vector k #!optional (fill (macro-absent-obj)))
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
@@ -3063,8 +2988,91 @@ end-of-code
       (begin
         (##raise-heap-overflow-exception)
         (##make-u64vector k fill))
-      v)))
+      v))))
 
+(macro-if-s64vector
+(define-prim (##make-s64vector k #!optional (fill (macro-absent-obj)))
+  (##declare (not interrupts-enabled))
+  (let ((v (##c-code #<<end-of-code
+
+___SCMOBJ k;
+___SCMOBJ fill;
+___SIZE_TS i;
+___SIZE_TS n;
+___SCMOBJ result;
+___POP_ARGS2(k,fill);
+___ps->saved[0] = k;
+___ps->saved[1] = fill;
+n = ___INT(k);
+if (n > ___CAST(___WORD, ___LMASK>>(___LF+3)))
+  result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
+else
+  {
+    ___SIZE_TS words = ___WORDS((n<<3)) + ___SUBTYPED_BODY;
+
+#if ___WS == 4
+    words++;
+#endif
+
+    if (words > ___MSECTION_BIGGEST)
+      {
+        ___FRAME_STORE_RA(___R0)
+        ___W_ALL
+        result = ___EXT(___alloc_scmobj) (___ps, ___sS64VECTOR, n<<3);
+        ___R_ALL
+        ___SET_R0(___FRAME_FETCH_RA)
+        if (!___FIXNUMP(result))
+          ___still_obj_refcount_dec (result);
+      }
+    else
+      {
+        ___BOOL overflow = 0;
+        ___hp += words;
+        if (___hp > ___ps->heap_limit)
+          {
+            ___FRAME_STORE_RA(___R0)
+            ___W_ALL
+            overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
+            ___R_ALL
+            ___SET_R0(___FRAME_FETCH_RA)
+          }
+        else
+          ___hp -= words;
+        if (overflow)
+          result = ___FIX(___HEAP_OVERFLOW_ERR);
+        else
+          {
+#if ___WS == 4
+            result = ___SUBTYPED_FROM_BODY(___CAST(___WORD,___hp+___SUBTYPED_BODY+1)&~7);
+#else
+            result = ___SUBTYPED_FROM_START(___hp);
+#endif
+            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<3), ___sS64VECTOR));
+            ___hp += words;
+          }
+      }
+  }
+k = ___ps->saved[0];
+fill = ___ps->saved[1];
+___ps->saved[0] = ___VOID;
+___ps->saved[1] = ___VOID;
+if (!___FIXNUMP(result) && fill != ___ABSENT)
+  {
+    for (i=0; i<n; i++)
+      ___S64VECTORSET(result,___FIX(i),fill);
+  }
+___RESULT = result;
+___PUSH_ARGS2(k,fill);
+
+end-of-code
+)))
+    (if (##fixnum? v)
+      (begin
+        (##raise-heap-overflow-exception)
+        (##make-s64vector k fill))
+      v))))
+
+(macro-if-f32vector
 (define-prim (##make-f32vector k #!optional (fill (macro-absent-obj)))
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
@@ -3136,7 +3144,7 @@ end-of-code
       (begin
         (##raise-heap-overflow-exception)
         (##make-f32vector k fill))
-      v)))
+      v))))
 
 (define-prim (##make-f64vector k #!optional (fill (macro-absent-obj)))
   (##declare (not interrupts-enabled))
@@ -3229,32 +3237,40 @@ end-of-code
    (define-prim (##make-string k #!optional (fill #\nul))
      (##make-string k fill))
 
-   (define-prim (##make-s8vector k #!optional (fill 0))
-     (##make-s8vector k fill))
-
    (define-prim (##make-u8vector k #!optional (fill 0))
      (##make-u8vector k fill))
 
-   (define-prim (##make-s16vector k #!optional (fill 0))
-     (##make-s16vector k fill))
+   (macro-if-s8vector
+   (define-prim (##make-s8vector k #!optional (fill 0))
+     (##make-s8vector k fill)))
 
+   (macro-if-u16vector
    (define-prim (##make-u16vector k #!optional (fill 0))
-     (##make-u16vector k fill))
+     (##make-u16vector k fill)))
 
-   (define-prim (##make-s32vector k #!optional (fill 0))
-     (##make-s32vector k fill))
+   (macro-if-s16vector
+   (define-prim (##make-s16vector k #!optional (fill 0))
+     (##make-s16vector k fill)))
 
+   (macro-if-u32vector
    (define-prim (##make-u32vector k #!optional (fill 0))
-     (##make-u32vector k fill))
+     (##make-u32vector k fill)))
 
-   (define-prim (##make-s64vector k #!optional (fill 0))
-     (##make-s64vector k fill))
+   (macro-if-s32vector
+   (define-prim (##make-s32vector k #!optional (fill 0))
+     (##make-s32vector k fill)))
 
+   (macro-if-u64vector
    (define-prim (##make-u64vector k #!optional (fill 0))
-     (##make-u64vector k fill))
+     (##make-u64vector k fill)))
 
+   (macro-if-s64vector
+   (define-prim (##make-s64vector k #!optional (fill 0))
+     (##make-s64vector k fill)))
+
+   (macro-if-f32vector
    (define-prim (##make-f32vector k #!optional (fill 0.0))
-     (##make-f32vector k fill))
+     (##make-f32vector k fill)))
 
    (define-prim (##make-f64vector k #!optional (fill 0.0))
      (##make-f64vector k fill))

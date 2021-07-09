@@ -29,6 +29,106 @@
 
 ;;;----------------------------------------------------------------------------
 
+;; u8vector and f64vector are always enabled
+
+(macro-define-syntax macro-if-s8vector
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ yes)
+       #'(macro-if-s8vector yes (##begin)))
+      ((_ yes no)
+       #'(cond-expand
+          ((or enable-s8vector (not disable-s8vector))
+           yes)
+          (else
+           no))))))
+
+(macro-define-syntax macro-if-u16vector
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ yes)
+       #'(macro-if-u16vector yes (##begin)))
+      ((_ yes no)
+       #'(cond-expand
+          ((or enable-u16vector (not disable-u16vector))
+           yes)
+          (else
+           no))))))
+
+(macro-define-syntax macro-if-s16vector
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ yes)
+       #'(macro-if-s16vector yes (##begin)))
+      ((_ yes no)
+       #'(cond-expand
+          ((or enable-s16vector (not disable-s16vector))
+           yes)
+          (else
+           no))))))
+
+(macro-define-syntax macro-if-u32vector
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ yes)
+       #'(macro-if-u32vector yes (##begin)))
+      ((_ yes no)
+       #'(cond-expand
+          ((or enable-u32vector (not disable-u32vector))
+           yes)
+          (else
+           no))))))
+
+(macro-define-syntax macro-if-s32vector
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ yes)
+       #'(macro-if-s32vector yes (##begin)))
+      ((_ yes no)
+       #'(cond-expand
+          ((or enable-s32vector (not disable-s32vector))
+           yes)
+          (else
+           no))))))
+
+(macro-define-syntax macro-if-u64vector
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ yes)
+       #'(macro-if-u64vector yes (##begin)))
+      ((_ yes no)
+       #'(cond-expand
+          ((or enable-u64vector (not disable-u64vector))
+           yes)
+          (else
+           no))))))
+
+(macro-define-syntax macro-if-s64vector
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ yes)
+       #'(macro-if-s64vector yes (##begin)))
+      ((_ yes no)
+       #'(cond-expand
+          ((or enable-s64vector (not disable-s64vector))
+           yes)
+          (else
+           no))))))
+
+(macro-define-syntax macro-if-f32vector
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ yes)
+       #'(macro-if-f32vector yes (##begin)))
+      ((_ yes no)
+       #'(cond-expand
+          ((or enable-f32vector (not disable-f32vector))
+           yes)
+          (else
+           no))))))
+
+;;;----------------------------------------------------------------------------
+
 ;;; Define type checking macros.
 
 (define-check-type string 'string
@@ -43,59 +143,75 @@
 (define-check-type vector-list 'vector-list
   ##vector?)
 
-(define-check-type s8vector 's8vector
-  ##s8vector?)
-
-(define-check-type s8vector-list 's8vector-list
-  ##s8vector?)
-
 (define-check-type u8vector 'u8vector
   ##u8vector?)
 
 (define-check-type u8vector-list 'u8vector-list
   ##u8vector?)
 
-(define-check-type s16vector 's16vector
-  ##s16vector?)
+(macro-if-s8vector
+ (define-check-type s8vector 's8vector
+   ##s8vector?))
 
-(define-check-type s16vector-list 's16vector-list
-  ##s16vector?)
+(macro-if-s8vector
+ (define-check-type s8vector-list 's8vector-list
+   ##s8vector?))
 
-(define-check-type u16vector 'u16vector
-  ##u16vector?)
+(macro-if-u16vector
+ (define-check-type u16vector 'u16vector
+   ##u16vector?))
 
-(define-check-type u16vector-list 'u16vector-list
-  ##u16vector?)
+(macro-if-u16vector
+ (define-check-type u16vector-list 'u16vector-list
+   ##u16vector?))
 
-(define-check-type s32vector 's32vector
-  ##s32vector?)
+(macro-if-s16vector
+ (define-check-type s16vector 's16vector
+   ##s16vector?))
 
-(define-check-type s32vector-list 's32vector-list
-  ##s32vector?)
+(macro-if-s16vector
+ (define-check-type s16vector-list 's16vector-list
+   ##s16vector?))
 
-(define-check-type u32vector 'u32vector
-  ##u32vector?)
+(macro-if-u32vector
+ (define-check-type u32vector 'u32vector
+   ##u32vector?))
 
-(define-check-type u32vector-list 'u32vector-list
-  ##u32vector?)
+(macro-if-u32vector
+ (define-check-type u32vector-list 'u32vector-list
+   ##u32vector?))
 
-(define-check-type s64vector 's64vector
-  ##s64vector?)
+(macro-if-s32vector
+ (define-check-type s32vector 's32vector
+   ##s32vector?))
 
-(define-check-type s64vector-list 's64vector-list
-  ##s64vector?)
+(macro-if-s32vector
+ (define-check-type s32vector-list 's32vector-list
+   ##s32vector?))
 
-(define-check-type u64vector 'u64vector
-  ##u64vector?)
+(macro-if-u64vector
+ (define-check-type u64vector 'u64vector
+   ##u64vector?))
 
-(define-check-type u64vector-list 'u64vector-list
-  ##u64vector?)
+(macro-if-u64vector
+ (define-check-type u64vector-list 'u64vector-list
+   ##u64vector?))
 
-(define-check-type f32vector 'f32vector
-  ##f32vector?)
+(macro-if-s64vector
+ (define-check-type s64vector 's64vector
+   ##s64vector?))
 
-(define-check-type f32vector-list 'f32vector-list
-  ##f32vector?)
+(macro-if-s64vector
+ (define-check-type s64vector-list 's64vector-list
+   ##s64vector?))
+
+(macro-if-f32vector
+ (define-check-type f32vector 'f32vector
+   ##f32vector?))
+
+(macro-if-f32vector
+ (define-check-type f32vector-list 'f32vector-list
+   ##f32vector?))
 
 (define-check-type f64vector 'f64vector
   ##f64vector?)
