@@ -17553,7 +17553,7 @@ The @var{conversion_operation} is typically a function call that returns
 an error code value of type @code{___SCMOBJ} (the error codes are defined in
 @samp{gambit.h}, and the error code @code{___FIX(___UNKNOWN_ERR)} is available
 for generic errors).  @var{conversion_operation} can also set the
-variable @code{___errmsg} of type @code{___SCMOBJ} to a specific Scheme
+variable @code{___errdata} of type @code{___SCMOBJ} to a specific Scheme
 string error message.
 
 Below is a simple example showing how to interface to an @samp{EBCDIC}
