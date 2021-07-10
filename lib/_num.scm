@@ -11656,23 +11656,23 @@ end-of-code
    ((js)
     (##inline-host-declaration "
 
-@float_to_ieee754_32@ = function (x) {
+@flonum_to_ieee754_32@ = function (x) {
   var buf = new ArrayBuffer(4);
-  (new Float32Array(buf))[0] = x;
-  return (new Uint32Array(buf))[0];
+  (new Float32Array(buf))[0] = @scm2host@(x);
+  return @u32_box@((new Uint32Array(buf))[0]);
 };
 
 ")
-    (##inline-host-expression "@host2scm@(@float_to_ieee754_32(@1@))" n))
+    (##inline-host-expression "@flonum_to_ieee754_32@(@1@)" x))
 
    ((python)
     (##inline-host-declaration "
 
-def @float_to_ieee754_32@(x):
-    return ctypes.c_uint32.from_buffer(ctypes.c_float(x)).value
+def @flonum_to_ieee754_32@(x):
+    return @host2scm@(ctypes.c_uint32.from_buffer(ctypes.c_float(@scm2host@(x))).value)
 
 ")
-    (##inline-host-expression "@host2scm@(@float_to_ieee754_32(@1@))" n))
+    (##inline-host-expression "@flonum_to_ieee754_32@(@1@)" x))
 
    (else
     (println "unimplemented ##flonum->ieee754-32 called")
@@ -11691,23 +11691,23 @@ def @float_to_ieee754_32@(x):
    ((js)
     (##inline-host-declaration "
 
-@float_from_ieee754_32@ = function (n) {
+@flonum_from_ieee754_32@ = function (n) {
   var buf = new ArrayBuffer(4);
-  (new Uint32Array(buf))[0] = n;
-  return (new Float32Array(buf))[0];
+  (new Uint32Array(buf))[0] = n instanceof @Bignum@ ? Number(@bignum_to_bigint@(n)) : n;
+  return new @Flonum@((new Float32Array(buf))[0]);
 };
 
 ")
-    (##inline-host-expression "@host2scm@(@float_from_ieee754_32(@1@))" n))
+    (##inline-host-expression "@flonum_from_ieee754_32@(@1@)" n))
 
    ((python)
     (##inline-host-declaration "
 
-def @float_from_ieee754_32@(n):
-    return ctypes.c_float.from_buffer(ctypes.c_uint32(n)).value
+def @flonum_from_ieee754_32@(n):
+    return @Flonum@(ctypes.c_float.from_buffer(ctypes.c_uint32(@bignum_to_bigint@(n) if isinstance(n,@Bignum@) else n)).value)
 
 ")
-    (##inline-host-expression "@host2scm@(@float_from_ieee754_32(@1@))" n))
+    (##inline-host-expression "@flonum_from_ieee754_32@(@1@)" n))
 
    (else
     (println "unimplemented ##ieee754-32->flonum called")
@@ -11726,23 +11726,23 @@ def @float_from_ieee754_32@(n):
    ((js)
     (##inline-host-declaration "
 
-@float_to_ieee754_64@ = function (x) {
+@flonum_to_ieee754_64@ = function (x) {
   var buf = new ArrayBuffer(8);
-  (new Float64Array(buf))[0] = x;
-  return 18446744073709551615n & (new BigInt64Array(buf))[0];
+  (new Float64Array(buf))[0] = @scm2host@(x);
+  return @host2scm@(18446744073709551615n & (new BigInt64Array(buf))[0]);
 };
 
 ")
-    (##inline-host-expression "@host2scm@(@float_to_ieee754_64(@1@))" n))
+    (##inline-host-expression "@flonum_to_ieee754_64@(@1@)" x))
 
    ((python)
     (##inline-host-declaration "
 
-def @float_to_ieee754_64@(x):
-    return ctypes.c_uint64.from_buffer(ctypes.c_double(x)).value
+def @flonum_to_ieee754_64@(x):
+    return @host2scm@(ctypes.c_uint64.from_buffer(ctypes.c_double(@scm2host@(x))).value)
 
 ")
-    (##inline-host-expression "@host2scm@(@float_to_ieee754_64(@1@))" n))
+    (##inline-host-expression "@flonum_to_ieee754_64@(@1@)" x))
 
    (else
     (println "unimplemented ##flonum->ieee754-64 called")
@@ -11761,23 +11761,23 @@ def @float_to_ieee754_64@(x):
    ((js)
     (##inline-host-declaration "
 
-@float_from_ieee754_64@ = function (n) {
+@flonum_from_ieee754_64@ = function (n) {
   var buf = new ArrayBuffer(8);
-  (new BigInt64Array(buf))[0] = n;
-  return (new Float64Array(buf))[0];
+  (new BigInt64Array(buf))[0] = n instanceof @Bignum@ ? @bignum_to_bigint@(n) : BigInt(n);
+  return new @Flonum@((new Float64Array(buf))[0]);
 };
 
 ")
-    (##inline-host-expression "@host2scm@(@float_from_ieee754_64(@1@))" n))
+    (##inline-host-expression "@flonum_from_ieee754_64@(@1@)" n))
 
    ((python)
     (##inline-host-declaration "
 
-def @float_from_ieee754_64@(n):
-    return ctypes.c_double.from_buffer(ctypes.c_uint64(n)).value
+def @flonum_from_ieee754_64@(n):
+    return @Flonum@(ctypes.c_double.from_buffer(ctypes.c_uint64(@bignum_to_bigint@(n) if isinstance(n,@Bignum@) else n)).value)
 
 ")
-    (##inline-host-expression "@host2scm@(@float_from_ieee754_64(@1@))" n))
+    (##inline-host-expression "@flonum_from_ieee754_64@(@1@)" n))
 
    (else
     (println "unimplemented ##ieee754-64->flonum called")
