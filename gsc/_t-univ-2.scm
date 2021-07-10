@@ -1874,6 +1874,16 @@
                          (^return-call-prim
                           (^rts-method-use 'bignum_from_bigint)
                           obj)))))
+           ((python)
+            (^ (^if (^ "isinstance(" obj ", numbers.Integral)")
+                    (^if (^and (^>= obj -536870912)
+                               (^<= obj 536870911))
+                         (^return (^fixnum-box (^ (^type 'int) (^parens obj))))
+                         (^return-call-prim
+                          (^rts-method-use 'bignum_from_bigint)
+                          obj)))
+               (^if (^float? obj)
+                    (^return (^flonum-box obj)))))
            (else
             (^ (^if (^and (^int? obj)
                           (^and (^>= obj -536870912)
@@ -2735,13 +2745,25 @@
   (let ()
 
     (define (to-type ctx type expr)
-      (if (and (eq? type 'bigint) (eq? (target-name (ctx-target ctx)) 'js))
-          (^ (^type 'bigint) (^parens expr))
+      (if (eq? type 'bigint)
+          (case (target-name (ctx-target ctx))
+            ((js)
+             (^ (^type 'bigint) (^parens expr)))
+            ((python)
+             (^ "getattr(__builtins__,\"long\",int)" (^parens expr)))
+            (else
+             expr))
           expr))
 
     (define (from-type ctx type expr)
-      (if (and (eq? type 'bigint) (eq? (target-name (ctx-target ctx)) 'js))
-          (^ (^type 'number) (^parens expr))
+      (if (eq? type 'bigint)
+          (case (target-name (ctx-target ctx))
+            ((js)
+             (^ (^type 'number) (^parens expr)))
+            ((python)
+             (^ (^type 'int) (^parens expr)))
+            (else
+             expr))
           expr))
 
     (define (bignum_from type)
@@ -6288,6 +6310,7 @@ EOF
         "import math\n"
         "import sys\n"
         "import weakref\n"
+        "import numbers\n"
         "\n"))
 
     ((java)
