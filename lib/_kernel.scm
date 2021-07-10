@@ -1991,10 +1991,6 @@ end-of-code
         (##gc))
       (##void))))
 
-(define (##execute-final-wills!)
-  ;; do nothing because wills are only implemented in C backend
-  #f)
-
 (define ##gc-interrupt-jobs (##make-jobs))
 
 ;; (##add-gc-interrupt-job! thunk) can be called to add another job to

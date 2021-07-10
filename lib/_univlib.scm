@@ -892,6 +892,10 @@ def @os_device_from_basic_console@():
 (define-prim (##os-device-tty-type-set! dev term-type emacs-bindings)
   (error "##os-device-tty-type-set! not implemented yet"))
 
+(define (##execute-final-wills!)
+  ;; do nothing because wills are only implemented in C backend
+  #f)
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Subprocedure information.
