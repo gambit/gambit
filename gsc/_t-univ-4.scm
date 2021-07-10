@@ -1009,10 +1009,11 @@
      ;;TODO: cleanup the Python code
      (^if-expr 'f64
                (^= arg2 (^float targ-inexact-+0))
-               (^if-expr 'f64
-                         (^= arg1 (^float targ-inexact-+0))
-                         "float('nan')"
-                         (^float-copysign "float('inf')" (^* arg1 arg2)))
+               (^parens
+                (^if-expr 'f64
+                          (^= arg1 (^float targ-inexact-+0))
+                          "float('nan')"
+                          (^float-copysign "float('inf')" (^* arg1 arg2))))
                (^/ arg1 arg2)))
 
     ((php)
