@@ -33,7 +33,7 @@
                                      (exponent exact-integer 0)
                                      (precision object #f))
   (let ((n (if (and (fixnum? mantissa)
-                    (##fixnum->flonum-exact? mantissa)
+                    (primitive (fixnum->flonum-exact? mantissa))
                     (fixnum? exponent)
                     (fx< (fx- exponent)
                          (f64vector-length exact-10^n-table))
@@ -46,7 +46,10 @@
                    (fl* (fixnum->flonum mantissa)
                         (f64vector-ref exact-10^n-table
                                        exponent)))
-               (exact->inexact (* mantissa (expt 10 exponent))))))
+               (exact->inexact
+                (primitive
+                 (exact-int.* mantissa
+                              (primitive (exact-int.expt 10 exponent))))))))
     (if negative?
         (##flcopysign n -1.0)
         n)))
