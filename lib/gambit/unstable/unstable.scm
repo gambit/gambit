@@ -14,8 +14,6 @@
 
 ;; TODO: The following are copied from lib/_num#.scm
 
-(##define-macro (macro-inexact--1) -1.0)
-
 (##define-macro (macro-make-exact-10^n-table)
 
   (define max-exact-power-of-10 22)
@@ -34,27 +32,22 @@
 
 (define exact-10^n-table (macro-make-exact-10^n-table))
 
-(define-prim&proc (make-inexact-real (negative? boolean)
-                                     (mantissa nonnegative-exact-integer)
-                                     (exponent nonnegative-exact-integer))
-  (let ((n (if (and (fixnum? mantissa)
-                    (fixnum->flonum-exact? mantissa)
-                    (fixnum? exponent)
-                    (fx< (fx- exponent)
-                         (f64vector-length exact-10^n-table))
-                    (fx< exponent
-                         (f64vector-length exact-10^n-table)))
-               (if (fx< exponent 0)
-                   (fl/ (fixnum->flonum mantissa)
-                        (f64vector-ref exact-10^n-table
-                                       (fx- exponent)))
-                   (fl* (fixnum->flonum mantissa)
-                        (f64vector-ref exact-10^n-table
-                                       exponent)))
-               (exact->inexact
-                (* mantissa (expt 10 exponent))))))
-    (if negative?
-        (flcopysign n (macro-inexact--1))
-        n)))
+(define-prim&proc (make-inexact-real (mantissa exact-integer)
+                                     (exponent exact-integer))
+  (if (and (fixnum? mantissa)
+           (fixnum->flonum-exact? mantissa)
+           (fixnum? exponent)
+           (fx< (fx- exponent)
+                (f64vector-length exact-10^n-table))
+           (fx< exponent
+                (f64vector-length exact-10^n-table)))
+      (if (fx< exponent 0)
+          (fl/ (fixnum->flonum mantissa)
+               (f64vector-ref exact-10^n-table
+                              (fx- exponent)))
+          (fl* (fixnum->flonum mantissa)
+               (f64vector-ref exact-10^n-table
+                              exponent)))
+      (exact->inexact (* mantissa (expt 10 exponent)))))
 
 ;;;============================================================================
