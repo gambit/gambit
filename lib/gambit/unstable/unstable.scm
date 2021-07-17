@@ -35,28 +35,26 @@
 (define exact-10^n-table (macro-make-exact-10^n-table))
 
 (define-prim&proc (make-inexact-real (negative? boolean)
-                                     (mantissa uinteger)
-                                     (exponent uinteger))
-
-
-  (let ((n (if (and (##fixnum? mantissa)
-                    (##fixnum->flonum-exact? mantissa)
-                    (##fixnum? exponent)
-                    (##fx< (##fx- exponent)
-                           (##f64vector-length exact-10^n-table))
-                    (##fx< exponent
-                           (##f64vector-length exact-10^n-table)))
-               (if (##fx< exponent 0)
-                   (##fl/ (##fixnum->flonum mantissa)
-                          (##f64vector-ref exact-10^n-table
-                                           (##fx- exponent)))
-                   (##fl* (##fixnum->flonum mantissa)
-                          (##f64vector-ref exact-10^n-table
-                                           exponent)))
-               (##exact->inexact
-                (##* mantissa (##expt 10 exponent))))))
+                                     (mantissa nonnegative-exact-integer)
+                                     (exponent nonnegative-exact-integer))
+  (let ((n (if (and (fixnum? mantissa)
+                    (fixnum->flonum-exact? mantissa)
+                    (fixnum? exponent)
+                    (fx< (fx- exponent)
+                         (f64vector-length exact-10^n-table))
+                    (fx< exponent
+                         (f64vector-length exact-10^n-table)))
+               (if (fx< exponent 0)
+                   (fl/ (fixnum->flonum mantissa)
+                        (f64vector-ref exact-10^n-table
+                                       (fx- exponent)))
+                   (fl* (fixnum->flonum mantissa)
+                        (f64vector-ref exact-10^n-table
+                                       exponent)))
+               (exact->inexact
+                (* mantissa (expt 10 exponent))))))
     (if negative?
-        (##flcopysign n (macro-inexact--1))
+        (flcopysign n (macro-inexact--1))
         n)))
 
 ;;;============================================================================
