@@ -8,6 +8,7 @@
 
 ;;; Experimental procedures. May be changed or removed at any time.
 
+(##include "~~lib/_gambit#.scm")
 (##include "unstable#.scm")
 
 ;;;----------------------------------------------------------------------------
@@ -35,7 +36,7 @@
 (define-prim&proc (make-inexact-real (mantissa exact-integer)
                                      (exponent exact-integer))
   (if (and (fixnum? mantissa)
-           (fixnum->flonum-exact? mantissa)
+           (##fixnum->flonum-exact? mantissa)
            (fixnum? exponent)
            (fx< (fx- exponent)
                 (f64vector-length exact-10^n-table))

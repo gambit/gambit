@@ -18,6 +18,6 @@ make-inexact-real
 
 )
 
-  (include "unstable#.scm"))
+  (include "unstable.scm"))
 
 ;;;============================================================================
