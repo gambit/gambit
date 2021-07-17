@@ -21,15 +21,10 @@
   ;; (floor (inexact->exact (/ (log (expt 2 (macro-flonum-m-bits-plus-1)))
   ;;                           (log 5))))
 
-  (let ((t (make-vector (+ max-exact-power-of-10 1))))
-
-    (let loop ((i max-exact-power-of-10))
-      (if (not (< i 0))
-          (begin
-            (vector-set! t i (exact->inexact (expt 10 i)))
-            (loop (- i 1)))))
-
-    `',(list->f64vector (vector->list t))))
+  (let loop ((i max-exact-power-of-10) (t '()))
+    (if (>= i 0)
+        (loop (- i 1) (cons (exact->inexact (expt 10 i)) t))
+        `',(list->f64vector t))))
 
 (define exact-10^n-table (macro-make-exact-10^n-table))
 
