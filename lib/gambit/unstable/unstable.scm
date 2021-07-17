@@ -29,7 +29,8 @@
 (define exact-10^n-table (macro-make-exact-10^n-table))
 
 (define-prim&proc (make-inexact-real (mantissa exact-integer)
-                                     (exponent exact-integer))
+                                     (exponent exact-integer 0)
+                                     (precision object #f))
   (if (and (fixnum? mantissa)
            (##fixnum->flonum-exact? mantissa)
            (fixnum? exponent)
