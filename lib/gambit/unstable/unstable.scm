@@ -15,8 +15,6 @@
 
 ;; TODO: The following are copied from lib/_num#.scm
 
-(##define-macro (macro-inexact--1) -1.0)
-
 (##define-macro (macro-make-exact-10^n-table)
 
   (define max-exact-power-of-10 22)
@@ -50,7 +48,7 @@
                                        exponent)))
                (exact->inexact (* mantissa (expt 10 exponent))))))
     (if negative?
-        (##flcopysign n (macro-inexact--1))
+        (##flcopysign n -1.0)
         n)))
 
 ;;;============================================================================
