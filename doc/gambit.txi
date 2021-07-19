@@ -17985,7 +17985,269 @@ This situation can be avoided by having only one Scheme thread that
 does Scheme to C to Scheme calls.  Other Scheme threads are limited to
 simple Scheme to C calls that don't call back to Scheme.
 
-@node System limitations, Copyright and license, C-interface, Top
+
+@node Internal APIs, System limitations, C-interface, Top
+@chapter Internal APIs
+@cindex Internal
+
+Gambit has many internal functions that you might want to use
+while writing the lower-level parts of your programs, or debugging them.
+Be mindful though that these functions are subject to change without warning,
+so keep in touch with the authors when you use them.
+
+This chapter only covers those few internals that a member of the community
+felt the need to document.
+We encourage you to document those internals you use, or
+to pay a developer to document those you'd like to use.
+
+@menu
+* Writer internals::       Extending the writer
+@end menu
+
+@node Writer internals, , , Internal APIs
+@section Writer internals
+
+By using the following internals, you can extend the Gambit writer,
+as invoked by @code{write}, to specially recognize and print your data structures.
+
+@deffn ##wr-set! @var{write-function}
+The @code{##wr} function used to print objects will be bound to @var{write-function},
+replacing the @code{##default-wr} or any previous replacement function.
+
+Like @code{##default-wr}, the @var{write-function} must take two arguments,
+a @var{writeenv} context, and an @var{object} to print.
+
+For example, you can restore the default writer behavior with:
+@smallexample
+> @b{(##wr-set! ##default-wr)}
+@end smallexample
+@end deffn
+
+@deffn ##wr @var{writeenv} @var{obj}
+This is the main entry point of the internal writer API, that will
+be called by @code{write}, then recursively by other writer functions.
+
+The entire point of this variable is that you can @code{set!} it
+directly or indirectly via @code{##wr-set!},
+as a hook by which to extend or modify the behavior of the builtin writer.
+You can define a completely different function from scratch, or you can
+keep following the conventions of Gambit described below, and fallback
+to calling @code{##default-wr} and/or the previous value of @code{##wr}
+when faced with an object you doesn't know how to handle.
+
+The first argument, @var{writeenv}, is setup by @code{write} to a
+``write environment'' that specifies not just the port on which to write,
+but also additional context that allows for
+pretty printing, writing circular objects, serialization, etc.
+Here are the fields of ``write environment''
+
+@itemize
+
+@item style:
+Its value is one of write-simple/write-shared/write/display/print/pretty-print/mark
+
+@item port:
+the character output port to write to
+
+@item readtable:
+the readtable to use to achieve write/read invariance
+
+@item marktable:
+the marktable to use to detect shared parts and cycles
+
+@item force?:
+boolean indicating if promises should be forced or not
+
+@item width:
+for pretty-printing: width of output usually equal to port width
+
+@item shift:
+for pretty-printing: number of implicit spaces at start of line
+
+@item close-parens:
+for pretty-printing: number of ')' remaining to output
+
+@item level:
+nesting level counter to elide deeply nested parts
+
+@item limit:
+remaining number of character counter to limit length of output
+
+@item max-unescaped-char:
+character above which escapes are used when writing
+out characters (to use only ASCII in output)
+
+@item symbol @code{not-abandoned}:
+the @var{mutex} is in the unlocked/not-abandoned
+state
+
+@end itemize
+
+We use ``write environment'' to implement extensions for printer.
+Here is an example:
+
+@smallexample
+@b{} we = write environment, obj = object to write
+
+ (##include "~~lib/_gambit#.scm")
+
+ (define-type area length width)
+
+ (##wr-set!
+  (let ((old-wr ##wr))
+    (lambda (we obj)
+      (if (not (area? obj))
+          (old-wr we obj)
+          (case (macro-writeenv-style we)
+            ((mark)
+             #f) 
+            (else
+             (##wr-str we "#<area-of-rectangle>")))))))
+
+ (write-shared (list (make-area 1 2) (make-area 3 4) (make-area 5 6)))
+ (write-shared (let ((x (make-area 1 2))) (list x x x)))
+The above would generate same:
+ (#<area-of-rectangle> #<aarea-of-rectangle> #<area-of-rectangle>) 
+@end smallexample
+
+We document below how to use various the @code{macro-writeenv-} accessors
+to extract relevant information.
+
+The functions you define to write values should recursively call @code{##wr}
+on the sub-objects of objects they are writing, to enjoy the benefits
+of the write algorithm and its handling of more values
+than you may know how to handle.
+
+@end deffn
+
+@code{##wr}
+
+@deffn ##default-wr @var{write-env} @var{object}
+This is the default writer for Gambit.
+Your writer functions can delegate to it the writing of all Gambit values,
+so you only needs handle new entities that Gambit doesn't print to your liking.
+You can also use it to reset the current writer, as already previously explained.
+@end deffn
+
+All the writer functions take a write environment object as parameter.
+You may access this environment with the following macros:
+
+@deffn macro-writeenv-style @var{write-env}
+The accessor will return the ``style'' of the write environment.
+The value may be one of the symbols
+@code{mark}, @code{display}, @code{print}, @code{pretty-print}, @code{write} or @code{write-shared}.
+
+Your code does not need to distinguish between most of these styles,
+but you @emph{must} pay attention to @code{mark}:
+to handle circular data structures and objects that cannot be printed readably,
+the Gambit writer will first traverse the graph of objects to write with
+a write environment of style @code{mark};
+during that traversal, Gambit will mark objects that have already been seen,
+and assign numbers to those that appear multiple times.
+
+@smallexample
+
+(##include "~~lib/_gambit#.scm")
+
+(define-type point x y)
+
+@b{} we = write environment, obj = object to write
+
+ (##wr-set!
+  (let ((old-wr ##wr))
+    (lambda (we obj) ;; we = write environment, obj = object to write
+      (if (not (point? obj))
+          (old-wr we obj) ;; write other objects like before
+          (case (macro-writeenv-style we)
+            ((mark)
+             (if (##wr-mark-begin we obj)    ;; begin a marking extent
+                 (begin                      ;; this is first visit of obj
+                   (##wr we (point-x obj))   ;; recursively mark x field
+                   (##wr we (point-y obj))   ;; recursively mark y field
+                   (##wr-mark-end we obj)))) ;; end the marking extent
+            (else
+             (if (##wr-stamp we obj)
+                 (begin
+                   (##wr-str we "#<pt x: ")
+                   (##wr we (point-x obj))
+                   (##wr-str we " y: ")
+                   (##wr we (point-y obj))
+                   (##wr-str we ">")))))))))
+
+ (let* ((obj0 (make-point 1 2))
+        (root (make-point obj0 obj0)))
+   (point-y-set! obj0 obj0)
+   (write-shared root))
+
+@end smallexample
+
+Your writer functions must @emph{not} write anything to the output port,
+not call any function with write side-effects,
+when the style is @code{mark};
+instead your writer functions @emph{must} recurse through the same objects
+as they will in the second phase, when they will actually print them,
+and call the @code{##wr} function on them.
+@end deffn
+
+@deffn macro-writeenv-port @var{write-env}
+@end deffn
+
+@deffn macro-writeenv-readtable @var{write-env}
+An important part of the write environment is the “readtable”
+that defines the external representation of objects,
+so that calling write with a specific readtable
+will output a representation that can be read back
+with read with the same readtable.
+@end deffn
+
+@deffn macro-writeenv-marktable @var{write-env}
+@end deffn
+
+@deffn macro-writeenv-force? @var{write-env}
+@end deffn
+
+@deffn macro-writeenv-width @var{write-env}
+@end deffn
+
+@deffn macro-writeenv-shift @var{write-env}
+@end deffn
+
+@deffn macro-writeenv-close-parens @var{write-env}
+@end deffn
+
+@deffn macro-writeenv-level @var{write-env}
+@end deffn
+
+@deffn macro-writeenv-limit @var{write-env}
+@end deffn
+
+@deffn macro-writeenv-max-unescaped-char @var{write-env}
+@end deffn
+
+@deffn ##wr-str @var{write-env} @var{string}
+@end deffn
+
+@deffn ##wr-substr @var{write-env} @var{string} @var{start} @var{end}
+@end deffn
+
+@deffn ##wr-filler @var{write-env} @var{n} @var{string}
+@end deffn
+
+@deffn ##wr-spaces @var{write-env} @var{n}
+@end deffn
+
+@deffn ##wr-indent @var{write-env} @var{shifted-column}
+@end deffn
+
+@deffn ##wr-sn @var{write-env} @var{object} @var{type} @var{name}
+@end deffn
+
+@node System limitations, Copyright and license, Internal APIs, Top
+
+
+
+
+
 @chapter System limitations
 @cindex limitations
 
