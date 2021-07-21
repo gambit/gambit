@@ -18110,6 +18110,23 @@ Here is an example:
 ;; (#<area-of-rectangle> #<aarea-of-rectangle> #<area-of-rectangle>) 
 @end smallexample
 
+Another basic example:
+@smallexample
+(include "~~lib/_gambit#.scm")
+
+ (##wr-set!
+    (lambda (we obj)
+      (case (macro-writeenv-style we)
+        ((mark)
+          (##default-wr we obj)) 
+        (else
+          (if (##symbol? obj)
+              (##write-string "abc" (macro-writeenv-port we))
+              (##default-wr we obj))))))
+                 
+ (write 'hello)
+@end smallexample
+
 We document below how to use various the @code{macro-writeenv-} accessors
 to extract relevant information.
 
