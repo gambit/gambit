@@ -18087,7 +18087,7 @@ We use ``write environment'' to implement extensions for printer.
 Here is an example:
 
 @smallexample
-@b{} we = write environment, obj = object to write
+;; we = write environment, obj = object to write
 
  (##include "~~lib/_gambit#.scm")
 
@@ -18106,8 +18106,8 @@ Here is an example:
 
  (write-shared (list (make-area 1 2) (make-area 3 4) (make-area 5 6)))
  (write-shared (let ((x (make-area 1 2))) (list x x x)))
-The above would generate same:
- (#<area-of-rectangle> #<aarea-of-rectangle> #<area-of-rectangle>) 
+;;The above would generate same:
+;; (#<area-of-rectangle> #<aarea-of-rectangle> #<area-of-rectangle>) 
 @end smallexample
 
 We document below how to use various the @code{macro-writeenv-} accessors
@@ -18146,12 +18146,11 @@ during that traversal, Gambit will mark objects that have already been seen,
 and assign numbers to those that appear multiple times.
 
 @smallexample
+;; we = write environment, obj = object to write
 
 (##include "~~lib/_gambit#.scm")
 
 (define-type point x y)
-
-@b{} we = write environment, obj = object to write
 
  (##wr-set!
   (let ((old-wr ##wr))
@@ -18178,6 +18177,23 @@ and assign numbers to those that appear multiple times.
         (root (make-point obj0 obj0)))
    (point-y-set! obj0 obj0)
    (write-shared root))
+
+;; Let see the difference between @code{write-shared} and @code{write}.
+;; The difference is that @code{write-shared} will use datum labels for any 
+;  shared part (including cycles) and @code{write} will only use datum labels for cycles
+
+> @b{(begin (write (let ((x (vector))) (list x x x))) (newline))}
+(#() #() #())
+> @b{(begin (write-shared (let ((x (vector))) (list x x x))) (newline))}
+(#0=#() #0# #0#)
+> @b{(begin (write (circular-list 1 2 3)) (newline))}                        
+#0=(1 2 3 . #0#)
+> @b{(begin (write-shared (circular-list 1 2 3)) (newline))}
+#0=(1 2 3 . #0#)
+> @b{(begin (write-shared (let ((x (vector))) (circular-list x x x))) (newline))}
+#0=(#1=#() #1# #1# . #0#)
+> @b{(begin (write (let ((x (vector))) (circular-list x x x))) (newline))}       
+#0=(#() #() #() . #0#)
 
 @end smallexample
 
@@ -18240,6 +18256,23 @@ with read with the same readtable.
 @end deffn
 
 @deffn ##wr-sn @var{write-env} @var{object} @var{type} @var{name}
+@end deffn
+
+You may set this ``write-env'' with the following macros:
+
+@deffn macro-writeenv-level-set! @var{write-env} @var{number}
+@end deffn
+
+@deffn macro-writeenv-shift-set! @var{write-env} @var{number}
+@end deffn
+
+@deffn macro-writeenv-style-set! @var{write-env} @var{symbol}
+@end deffn
+
+@deffn macro-writeenv-close-parens-set! @var{write-env} @var{number}
+@end deffn
+
+@deffn macro-writeenv-limit-set! @var{write-env} @var{number}
 @end deffn
 
 @node System limitations, Copyright and license, Internal APIs, Top
