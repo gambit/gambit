@@ -18010,6 +18010,11 @@ to pay a developer to document those you'd like to use.
 By using the following internals, you can extend the Gambit writer,
 as invoked by @code{write}, to specially recognize and print your data structures.
 
+The Scheme printer (that is used for the implementation of write, display,
+pretty-print, and print) is bound to the global variable ##wr, which can be
+assigned.  By redefining ##wr it is possible to intercept the printing of
+all objects.
+
 @deffn ##wr-set! @var{write-function}
 The @code{##wr} function used to print objects will be bound to @var{write-function},
 replacing the @code{##default-wr} or any previous replacement function.
@@ -18125,6 +18130,71 @@ Another basic example:
               (##default-wr we obj))))))
                  
  (write 'hello)
+@end smallexample
+
+And advanced example:
+@smallexample
+ (include "~~lib/_gambit#.scm")
+
+ (define foreign-writers (make-table))
+
+ (define (write-foreign we obj)
+   (case (macro-writeenv-style we)
+     ((mark)
+      (##wr-mark we obj))
+     (else
+      (let ((tags (##foreign-tags obj)))
+        (if (##pair? tags)
+            ((table-ref foreign-writers (##car tags) ##wr-foreign) we obj)
+            (##wr-foreign we obj))))))
+
+ (let ((old-wr ##wr))
+   (set! ##wr
+         (lambda (we obj)
+           (if (##foreign? obj)
+               (write-foreign we obj)
+               (old-wr we obj)))))
+
+ (c-declare #<<end-of-c-declare
+
+ #include <stdlib.h>
+
+ typedef struct { int x, y; } point;
+
+ point *make_point( int x, int y ) {
+   point *p = ___CAST(point*, malloc(sizeof(point)));
+   p->x = x;
+   p->y = y;
+ }
+
+ int point_x( point* p ) { return p->x; }
+ int point_y( point* p ) { return p->y; }
+
+ end-of-c-declare
+ )
+
+ (c-define-type point "point")
+ (c-define-type point* (pointer point))
+
+ (define make-point (c-lambda (int int) point* "make_point"))
+ (define point-x (c-lambda (point*) int "point_x"))
+ (define point-y (c-lambda (point*) int "point_y"))
+
+ (define p (make-point 11 22))
+
+ (pp p) ;; prints: #<point* #2 0x1006064d0>
+
+ (table-set!
+  foreign-writers
+  'point*
+  (lambda (we obj)
+    (##wr-str we "{")
+    (##wr we (point-x obj))
+    (##wr-str we ",")
+    (##wr we (point-y obj))
+    (##wr-str we "}")))
+
+ (pp p) ;; prints: {11,22}
 @end smallexample
 
 We document below how to use various the @code{macro-writeenv-} accessors
