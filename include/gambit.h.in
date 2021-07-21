@@ -1799,12 +1799,27 @@
 #ifdef __GNUC__
 #if ___GNUC_VERSION > 500000
 #define ___USE_builtin_op_overflow
+#if 0
+/* don't use __builtin_popcount which is slower than the portable code */
+#define ___USE_builtin_popcount
+#endif
+#define ___USE_builtin_ffs
+#define ___USE_builtin_clrsb
 #endif
 #endif
 
 #ifdef __clang__
 #if __has_builtin(__builtin_add_overflow) && __has_builtin(__builtin_sub_overflow) && __has_builtin(__builtin_mul_overflow)
 #define ___USE_builtin_op_overflow
+#endif
+#if __has_builtin(__builtin_popcount)
+#define ___USE_builtin_popcount
+#endif
+#if __has_builtin(__builtin_ffs)
+#define ___USE_builtin_ffs
+#endif
+#if __has_builtin(__builtin_clrsb)
+#define ___USE_builtin_clrsb
 #endif
 #endif
 
@@ -3207,70 +3222,100 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___FIXABSP_NOTFALSEP(var,x)((x)<0?(___EXPECT_FALSE((x)==___FIX(___MIN_FIX))?0:(var=___FIXNEG(x),1)):(var=(x),1))
 #define ___FIXABSP(x)((x)<0?(___EXPECT_FALSE((x)==___FIX(___MIN_FIX))?___FAL:___FIXNEG(x)):(x))
 
-#if ___SCMOBJ_WIDTH == 32
-#define ___SCMOBJ_MASK(x,y)y
-#define ___BITCOUNT_TEMP() \
-(___temp=(___temp&___SCMOBJ_MASK(0x55555555,0x55555555))+ \
-         ((___temp>>1)&___SCMOBJ_MASK(0x55555555,0x55555555)), \
- ___temp=(___temp&___SCMOBJ_MASK(0x33333333,0x33333333))+ \
-         ((___temp>>2)&___SCMOBJ_MASK(0x33333333,0x33333333)), \
- ___temp=(___temp&___SCMOBJ_MASK(0x0f0f0f0f,0x0f0f0f0f))+ \
-         ((___temp>>4)&___SCMOBJ_MASK(0x0f0f0f0f,0x0f0f0f0f)), \
+#define ___POPCOUNT_WORD_TEMP_32() \
+(___temp-=(___temp>>1)&___MASK_32_64(0x55555555), \
+ ___temp=(___temp&___MASK_32_64(0x33333333))+ \
+         ((___temp>>2)&___MASK_32_64(0x33333333)), \
+ ___temp=(___temp&___MASK_32_64(0x0f0f0f0f))+ \
+         ((___temp>>4)&___MASK_32_64(0x0f0f0f0f)), \
  ___temp=___temp+(___temp>>8), \
- ___temp=___temp+(___temp>>16), \
- ___FIX(___temp&0xff))
-#define ___FIXLENGTH(x) \
-(((___temp=___INT(x))<0)&&(___temp=~___temp), \
- ___temp|=(___temp>>1), \
+ ___temp=___temp+(___temp>>16))
+
+#define ___SET_ALL_LOWER_BITS_WORD_TEMP_32() \
+(___temp|=(___temp>>1), \
  ___temp|=(___temp>>2), \
  ___temp|=(___temp>>4), \
  ___temp|=(___temp>>8), \
- ___temp|=(___temp>>16), \
- ___BITCOUNT_TEMP())
-#define ___FIXFIRSTBITSET(x) \
-(((___temp=(x))==0) \
- ?___FIX(-1) \
- :(___temp=(___temp&-___temp), \
-   ___FIX((((___temp&~___SCMOBJ_MASK(0x55555555,0x55555555))!=0)| \
-           (((___temp&~___SCMOBJ_MASK(0x33333333,0x33333333))!=0)<<1)| \
-           (((___temp&~___SCMOBJ_MASK(0x0f0f0f0f,0x0f0f0f0f))!=0)<<2)| \
-           (((___temp&~___SCMOBJ_MASK(0x00ff00ff,0x00ff00ff))!=0)<<3)| \
-           (((___temp&~___SCMOBJ_MASK(0x0000ffff,0x0000ffff))!=0)<<4))-___TB)))
+ ___temp|=(___temp>>16))
+
+#if ___WORD_WIDTH == 32
+#define ___MASK_32_64(x)x
+#define ___POPCOUNT_WORD_TEMP() \
+(___POPCOUNT_WORD_TEMP_32(),___temp&0xff)
+#define ___LOG2_WORD_TEMP() \
+(___SET_ALL_LOWER_BITS_WORD_TEMP_32(), \
+ ___POPCOUNT_WORD_TEMP())
 #else
-#define ___SCMOBJ_MASK(x,y)((___CAST(___SCMOBJ,x)<<32)|y)
-#define ___BITCOUNT_TEMP() \
-(___temp=((___temp)&___SCMOBJ_MASK(0x55555555,0x55555555))+ \
-         (((___temp)>>1)&___SCMOBJ_MASK(0x55555555,0x55555555)), \
- ___temp=(___temp&___SCMOBJ_MASK(0x33333333,0x33333333))+ \
-         ((___temp>>2)&___SCMOBJ_MASK(0x33333333,0x33333333)), \
- ___temp=(___temp&___SCMOBJ_MASK(0x0f0f0f0f,0x0f0f0f0f))+ \
-         ((___temp>>4)&___SCMOBJ_MASK(0x0f0f0f0f,0x0f0f0f0f)), \
- ___temp=___temp+(___temp>>8), \
- ___temp=___temp+(___temp>>16), \
- ___temp=___temp+(___temp>>32), \
- ___FIX(___temp&0xff))
-#define ___FIXLENGTH(x) \
-(((___temp=___INT(x))<0)&&(___temp=~___temp), \
- ___temp|=(___temp>>1), \
- ___temp|=(___temp>>2), \
- ___temp|=(___temp>>4), \
- ___temp|=(___temp>>8), \
- ___temp|=(___temp>>16), \
+#define ___MASK_32_64(x)((___CAST(___WORD,x)<<32)|x)
+#define ___POPCOUNT_WORD_TEMP() \
+(___POPCOUNT_WORD_TEMP_32(),(___temp+(___temp>>32))&0xff)
+#define ___LOG2_WORD_TEMP() \
+(___SET_ALL_LOWER_BITS_WORD_TEMP_32(), \
  ___temp|=(___temp>>32), \
- ___BITCOUNT_TEMP())
-#define ___FIXFIRSTBITSET(x) \
-(((___temp=(x))==0) \
- ?___FIX(-1) \
- :(___temp=(___temp&-___temp), \
-   ___FIX((((___temp&~___SCMOBJ_MASK(0x55555555,0x55555555))!=0)| \
-           (((___temp&~___SCMOBJ_MASK(0x33333333,0x33333333))!=0)<<1)| \
-           (((___temp&~___SCMOBJ_MASK(0x0f0f0f0f,0x0f0f0f0f))!=0)<<2)| \
-           (((___temp&~___SCMOBJ_MASK(0x00ff00ff,0x00ff00ff))!=0)<<3)| \
-           (((___temp&~___SCMOBJ_MASK(0x0000ffff,0x0000ffff))!=0)<<4)| \
-           (((___temp&~___SCMOBJ_MASK(0x00000000,0xffffffff))!=0)<<5))-___TB)))
+ ___POPCOUNT_WORD_TEMP())
 #endif
+
+#ifdef ___USE_builtin_popcount
+
+#undef ___POPCOUNT_WORD_TEMP
+
+#if ___WORD_WIDTH == ___INT_WIDTH
+#define ___POPCOUNT_WORD_TEMP() __builtin_popcount(___CAST(___UWORD,___temp))
+#else
+#if ___WORD_WIDTH == ___LONG_WIDTH
+#define ___POPCOUNT_WORD_TEMP() __builtin_popcountl(___CAST(___UWORD,___temp))
+#else
+#define ___POPCOUNT_WORD_TEMP() __builtin_popcountll(___CAST(___UWORD,___temp))
+#endif
+#endif
+
+#endif
+
+#define ___FFS_WORD_TEMP() \
+(___temp==0 ? 0 : (___temp=((___temp-1)&~___temp),___POPCOUNT_WORD_TEMP()+1))
+
+#ifdef ___USE_builtin_ffs
+
+#undef ___FFS_WORD_TEMP
+
+#if ___WORD_WIDTH == ___INT_WIDTH
+#define ___FFS_WORD_TEMP() __builtin_ffs(___temp)
+#else
+#if ___WORD_WIDTH == ___LONG_WIDTH
+#define ___FFS_WORD_TEMP() __builtin_ffsl(___temp)
+#else
+#define ___FFS_WORD_TEMP() __builtin_ffsll(___temp)
+#endif
+#endif
+
+#endif
+
+#ifdef ___USE_builtin_clrsb
+
+#undef ___LOG2_WORD_TEMP
+#define ___LOG2_WORD_TEMP() ((___WORD_WIDTH-1) - ___CLRSB_WORD_TEMP())
+
+#if ___WORD_WIDTH == ___INT_WIDTH
+#define ___CLRSB_WORD_TEMP() __builtin_clrsb(___temp)
+#else
+#if ___WORD_WIDTH == ___LONG_WIDTH
+#define ___CLRSB_WORD_TEMP() __builtin_clrsbl(___temp)
+#else
+#define ___CLRSB_WORD_TEMP() __builtin_clrsbll(___temp)
+#endif
+#endif
+
+#endif
+
+#define ___FIXLENGTH(x) \
+(((___temp=___INT(x))<0)&&(___temp=~___temp),___FIX(___LOG2_WORD_TEMP()))
+
 #define ___FIXBITCOUNT(x) \
-((((___temp=___INT(x))<0)&&(___temp=~___temp)),___BITCOUNT_TEMP())
+(((___temp=___INT(x))<0)&&(___temp=~___temp),___FIX(___POPCOUNT_WORD_TEMP()))
+
+#define ___FIXFIRSTBITSET(x) \
+(___temp=___INT(x),___FIX(___FFS_WORD_TEMP()-1))
+
 #define ___FIXBITSETP(x,y)((y)&(___CAST(___SCMOBJ,1)<<(___INT(x)+___TB)))
 
 #define ___FIXWRAPASH(x,y)___FIXASH(x,y)
