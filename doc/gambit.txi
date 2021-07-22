@@ -18152,7 +18152,36 @@ Another basic example(with recursion):
  (write 'hello)
 @end smallexample
 
-And advanced example:
+Interesting example:
+@smallexample
+ (##include "~~lib/_gambit#.scm")
+
+ (define-type reactangle length width)
+
+ (##wr-set!
+  (let ((old-wr ##wr))
+    (lambda (we obj)
+      (if (not (reactangle? obj))
+          (old-wr we obj)
+          (case (macro-writeenv-style we)
+            ((mark)
+             #f) 
+            (else
+              (##wr-str we "Components of Reactangle: ")
+              (##wr-str we "{")
+    	        (##wr we (reactangle-length obj))
+    	        (##wr-str we ",")
+              (##wr we (reactangle-width obj))
+              (##wr-str we "}")
+              (##wr-str we "\nArea of Reactangle: ")
+              (##wr we (##fx*  (reactangle-length obj) (reactangle-width obj)))))))))
+                 
+ (write (make-reactangle 89 10))
+ ;; Components of Reactangle: {89,10}
+ ;; Area of Reactangle: 890
+@end smallexample
+
+An advanced example:
 @smallexample
  (include "~~lib/_gambit#.scm")
 
