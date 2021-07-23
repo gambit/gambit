@@ -1002,11 +1002,12 @@
 ;;; Representation of write environments.
 
 ;; A writeenv structure maintains the "write environment" throughout
-;; the writing of a Scheme datum.  It includes the write style
-;; (display, write, pretty-print, mark), the port on which to write,
-;; the readtable, the marktable (for detecting cycles), the force flag,
-;; the pretty-print width, the number of closing parentheses to follow
-;; the datum, the current nesting level, and the character count limit.
+;; the writing of a Scheme datum.  It includes the write style (one of
+;; the symbols display, write, pretty-print, mark, etc), the port on
+;; which to write, the readtable, the marktable (for detecting
+;; cycles), the force flag, the pretty-print width, the number of
+;; closing parentheses to follow the datum, the current nesting level,
+;; the character count limit, and the maximum unescaped character.
 
 (define-type writeenv
   id: f5cfcf78-bba4-4140-9aa0-1a136c50d36b
@@ -1018,18 +1019,119 @@
   opaque:
   unprintable:
 
-  style
-  port
-  readtable
-  marktable
-  force?
-  width
-  shift
-  close-parens
-  level
-  limit
-  max-unescaped-char
+  style ;; 1 of write-simple/write-shared/write/display/print/pretty-print/mark
+  port  ;; character output port to write to
+  readtable ;; the readtable to use to achieve write/read invariance
+  marktable ;; the marktable to use to detect shared parts and cycles
+  force?    ;; boolean indicating if promises should be forced or not
+  width     ;; for pretty-printing: width of output usually equal to port width
+  shift     ;; for pretty-printing: number of implicit spaces at start of line
+  close-parens ;; for pretty-printing: number of ')' remaining to output
+  level     ;; nesting level counter to elide deeply nested parts
+  limit     ;; remaining number of character counter to limit length of output
+  max-unescaped-char ;; character above which escapes are used when writing
+                     ;; out characters (to use only ASCII in output)
 )
+
+;; Accessing the fields of the write environment is useful when
+;; implementing extensions to the printer, for example to format
+;; data types specially.  For example:
+;;
+;; (##include "~~lib/_gambit#.scm")
+;;
+;; (define-type point x y)  ;; define a data type to format specially
+;;
+;; (##wr-set!
+;;  (let ((old-wr ##wr))
+;;    (lambda (we obj) ;; we = write environment, obj = object to write
+;;      (if (not (point? obj))
+;;          (old-wr we obj) ;; write other objects like before
+;;          (case (macro-writeenv-style we)
+;;            ((mark) ;; the mark style is used by the printer to handle shared
+;;             #f)    ;; structures... here we don't do anything special
+;;            (else
+;;             (##wr-str we "#<a-point>")))))))
+;;
+;; (write-shared (list (make-point 1 2) (make-point 3 4) (make-point 5 6)))
+;; (write-shared (let ((x (make-point 1 2))) (list x x x)))
+;;
+;; Note that the two calls to write-shared will output the same thing:
+;;
+;; (#<a-point> #<a-point> #<a-point>)
+;;
+;; For the second call of write-shared this is not ideal because the
+;; list contains 3 references to the same object and it would be good
+;; to use datum labels to show the sharing like this:
+;;
+;; (#0=#<a-point> #0# #0#)
+;;
+;; To achieve this the printer uses a two phase algorithm: a mark
+;; phase followed by an output phase.  During the mark phase the
+;; structure is recursively walked to find the number of references it
+;; contains to each object.  When an object is referenced more than
+;; once a datum label will be used when referring to it.  There is no
+;; output generated during the mark phase.
+;;
+;; To implement this a call to (##wr-mark we obj) must be added so
+;; that the object is registered in the marktable during the mark
+;; phase.  Then in the output phase a call to (##wr-stamp we obj) will
+;; either return #t after writing nothing (when the object has been
+;; visited once during the mark phase) or the datum label definition
+;; #N= (when the object has been visited multiple times during the
+;; mark phase, but the first time during the output phase), or return
+;; #f after writing the datum label reference #N# (when the object has
+;; been visited multiple times during the mark phase, and after the
+;; first time during the output phase).  The updated code is:
+;;
+;; (##wr-set!
+;;  (let ((old-wr ##wr))
+;;    (lambda (we obj) ;; we = write environment, obj = object to write
+;;      (if (not (point? obj))
+;;          (old-wr we obj) ;; write other objects like before
+;;          (case (macro-writeenv-style we)
+;;            ((mark)                  ;; this is the mark phase...
+;;             (##wr-mark we obj))     ;; register the object in the marktable
+;;            (else                    ;; this is the output phase...
+;;             (if (##wr-stamp we obj) ;; write datum label if needed
+;;                 (##wr-str we "#<a-point>"))))))))
+;;
+;; An obviously nice feature to add is an output formatting of the
+;; structure that shows the content of the structure's fields.  This
+;; can be done with recursive calls of ##wr like this:
+;;
+;; (##wr-set!
+;;  (let ((old-wr ##wr))
+;;    (lambda (we obj) ;; we = write environment, obj = object to write
+;;      (if (not (point? obj))
+;;          (old-wr we obj) ;; write other objects like before
+;;          (case (macro-writeenv-style we)
+;;            ((mark)
+;;             (if (##wr-mark-begin we obj)    ;; begin a marking extent
+;;                 (begin                      ;; this is first visit of obj
+;;                   (##wr we (point-x obj))   ;; recursively mark x field
+;;                   (##wr we (point-y obj))   ;; recursively mark y field
+;;                   (##wr-mark-end we obj)))) ;; end the marking extent
+;;            (else
+;;             (if (##wr-stamp we obj)
+;;                 (begin
+;;                   (##wr-str we "#<pt x: ")
+;;                   (##wr we (point-x obj))
+;;                   (##wr-str we " y: ")
+;;                   (##wr we (point-y obj))
+;;                   (##wr-str we ">")))))))))
+;;
+;; Note that both the mark and output phases must recursively call
+;; ##wr .  This is necessary to support structures with sharing or
+;; cycles.  For example:
+;;
+;; (let* ((obj0 (make-point 1 2))
+;;        (root (make-point obj0 obj0)))
+;;   (point-y-set! obj0 obj0)
+;;   (write-shared root))
+;;
+;; will produce the output:
+;;
+;; #<pt x: #0=#<pt x: 1 y: #0#> y: #0#>
 
 ;;;----------------------------------------------------------------------------
 
