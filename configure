@@ -5079,15 +5079,17 @@ fi
 
 ###############################################################################
 #
+
 # Check if system should be built for a specific machine architecture.
-# The default is to build for the "native" architecture.  An empty
-# string selects the architecture the C compiler defaults to.
+# The default, an empty string, will select the architecture the C
+# compiler defaults to.  Using "native" as the architecture will select
+# the architecture being used for the build.
 
 # Check whether --enable-march was given.
 if test "${enable_march+set}" = set; then :
   enableval=$enable_march; ENABLE_MARCH=$enableval
 else
-  ENABLE_MARCH=native
+  ENABLE_MARCH=no_enable_march
 fi
 
 
@@ -11426,7 +11428,7 @@ DASH_fno_ipa_ra="$ac_cv_DASH_fno_ipa_ra"
 
 
   # machine architecture option:
-  if test "$ENABLE_MARCH" != ""; then
+  if test "$ENABLE_MARCH" != "" -a "$ENABLE_MARCH" != "no_enable_march"; then
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -march=$ENABLE_MARCH" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -march=$ENABLE_MARCH... " >&6; }
 if ${ac_cv_DASH_march+:} false; then :
@@ -16702,6 +16704,39 @@ if test -n "$ac_unrecognized_opts" && test "$enable_option_checking" != no; then
 $as_echo "$as_me: WARNING: unrecognized options: $ac_unrecognized_opts" >&2;}
 fi
 
+
+if test "$ENABLE_MARCH" == "no_enable_march"; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}:
+**************************************************************************
+***                                                                    ***
+*** The option \"--enable-march=<arch>\" was not specified to the        ***
+*** configure script.  The Gambit system will compile correctly but    ***
+*** typically the executables will be less optimized than when         ***
+*** \"--enable-march=native\" is specified.  On the other hand the build ***
+*** with \"--enable-march=native\" will require that the executables be  ***
+*** run on machine architectures compatible with the architecture      ***
+*** being used for the build, so this should be avoided for prebuilt   ***
+*** executables meant to run on a variety of machines.  To avoid this  ***
+*** warning you can use an empty string for <arch>.                    ***
+***                                                                    ***
+**************************************************************************
+" >&5
+$as_echo "$as_me:
+**************************************************************************
+***                                                                    ***
+*** The option \"--enable-march=<arch>\" was not specified to the        ***
+*** configure script.  The Gambit system will compile correctly but    ***
+*** typically the executables will be less optimized than when         ***
+*** \"--enable-march=native\" is specified.  On the other hand the build ***
+*** with \"--enable-march=native\" will require that the executables be  ***
+*** run on machine architectures compatible with the architecture      ***
+*** being used for the build, so this should be avoided for prebuilt   ***
+*** executables meant to run on a variety of machines.  To avoid this  ***
+*** warning you can use an empty string for <arch>.                    ***
+***                                                                    ***
+**************************************************************************
+" >&6;}
+fi
 
 if test "$ENABLE_SINGLE_HOST" != yes -a "$C_COMP_LLVM" != yes; then
   { $as_echo "$as_me:${as_lineno-$LINENO}:

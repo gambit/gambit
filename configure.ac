@@ -552,15 +552,17 @@ AC_ARG_ENABLE(gnu-gcc-no-strict-aliasing,
 
 ###############################################################################
 #
+
 # Check if system should be built for a specific machine architecture.
-# The default is to build for the "native" architecture.  An empty
-# string selects the architecture the C compiler defaults to.
+# The default, an empty string, will select the architecture the C
+# compiler defaults to.  Using "native" as the architecture will select
+# the architecture being used for the build.
 
 AC_ARG_ENABLE(march,
               AS_HELP_STRING([--enable-march=arch],
                              [build for specific machine architecture (default is native)]),
               ENABLE_MARCH=$enableval,
-              ENABLE_MARCH=native)
+              ENABLE_MARCH=no_enable_march)
 
 ###############################################################################
 #
@@ -2316,7 +2318,7 @@ if test "$C_COMP_GNUC" = yes; then
   AC_CHECK_C_COMPILER_OPT(-fno-ipa-ra, DASH_fno_ipa_ra)
 
   # machine architecture option:
-  if test "$ENABLE_MARCH" != ""; then
+  if test "$ENABLE_MARCH" != "" -a "$ENABLE_MARCH" != "no_enable_march"; then
     AC_CHECK_C_COMPILER_OPT(-march=$ENABLE_MARCH,DASH_march)
   fi
 
@@ -3553,6 +3555,24 @@ prebuilt/windows/build-phase2 \
 githooks/makefile \
 )
 AC_OUTPUT
+
+if test "$ENABLE_MARCH" == "no_enable_march"; then
+  AC_MSG_NOTICE([
+**************************************************************************
+***                                                                    ***
+*** The option "--enable-march=<arch>" was not specified to the        ***
+*** configure script.  The Gambit system will compile correctly but    ***
+*** typically the executables will be less optimized than when         ***
+*** "--enable-march=native" is specified.  On the other hand the build ***
+*** with "--enable-march=native" will require that the executables be  ***
+*** run on machine architectures compatible with the architecture      ***
+*** being used for the build, so this should be avoided for prebuilt   ***
+*** executables meant to run on a variety of machines.  To avoid this  ***
+*** warning you can use an empty string for <arch>.                    ***
+***                                                                    ***
+**************************************************************************
+])
+fi
 
 if test "$ENABLE_SINGLE_HOST" != yes -a "$C_COMP_LLVM" != yes; then
   AC_MSG_NOTICE([
