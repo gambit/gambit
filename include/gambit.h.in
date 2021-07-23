@@ -3222,37 +3222,7 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___FIXABSP_NOTFALSEP(var,x)((x)<0?(___EXPECT_FALSE((x)==___FIX(___MIN_FIX))?0:(var=___FIXNEG(x),1)):(var=(x),1))
 #define ___FIXABSP(x)((x)<0?(___EXPECT_FALSE((x)==___FIX(___MIN_FIX))?___FAL:___FIXNEG(x)):(x))
 
-#define ___POPCOUNT_WORD_TEMP() \
-(___temp-=(___temp>>1)&___MASK_32_64(0x55555555), \
- ___temp=(___temp&___MASK_32_64(0x33333333))+ \
-         ((___temp>>2)&___MASK_32_64(0x33333333)), \
- ___temp=(___temp&___MASK_32_64(0x0f0f0f0f))+ \
-         ((___temp>>4)&___MASK_32_64(0x0f0f0f0f)), \
- (((___UWORD)___temp)*((___UWORD)___MASK_32_64(0x01010101))>>(___WORD_WIDTH-8)))
-
-#define ___SET_ALL_LOWER_BITS_WORD_TEMP_32() \
-(___temp|=(___temp>>1), \
- ___temp|=(___temp>>2), \
- ___temp|=(___temp>>4), \
- ___temp|=(___temp>>8), \
- ___temp|=(___temp>>16))
-
-#if ___WORD_WIDTH == 32
-#define ___MASK_32_64(x)x
-#define ___LOG2_WORD_TEMP() \
-(___SET_ALL_LOWER_BITS_WORD_TEMP_32(), \
- ___POPCOUNT_WORD_TEMP())
-#else
-#define ___MASK_32_64(x)((___CAST(___WORD,x)<<32)|x)
-#define ___LOG2_WORD_TEMP() \
-(___SET_ALL_LOWER_BITS_WORD_TEMP_32(), \
- ___temp|=(___temp>>32), \
- ___POPCOUNT_WORD_TEMP())
-#endif
-
 #ifdef ___USE_builtin_popcount
-
-#undef ___POPCOUNT_WORD_TEMP
 
 #if ___WORD_WIDTH == ___INT_WIDTH
 #define ___POPCOUNT_WORD_TEMP() __builtin_popcount(___CAST(___UWORD,___temp))
@@ -3264,14 +3234,21 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #endif
 #endif
 
+#else
+
+#define ___MASK_WORD_BYTEWISE(m) (~___CAST(___UWORD,0)/0xff*m)
+
+#define ___POPCOUNT_WORD_TEMP() \
+(___temp-=(___temp>>1)&___MASK_WORD_BYTEWISE(0x55),  \
+ ___temp=(___temp&___MASK_WORD_BYTEWISE(0x33))+ \
+         ((___temp>>2)&___MASK_WORD_BYTEWISE(0x33)), \
+ (___MASK_WORD_BYTEWISE(0x01)* \
+  ((___temp&___MASK_WORD_BYTEWISE(0x0f))+ \
+   ((___temp>>4)&___MASK_WORD_BYTEWISE(0x0f)))) >> (___WORD_WIDTH-8))
+
 #endif
 
-#define ___FFS_WORD_TEMP() \
-(___temp==0 ? 0 : (___temp=((___temp-1)&~___temp),___POPCOUNT_WORD_TEMP()+1))
-
 #ifdef ___USE_builtin_ffs
-
-#undef ___FFS_WORD_TEMP
 
 #if ___WORD_WIDTH == ___INT_WIDTH
 #define ___FFS_WORD_TEMP() __builtin_ffs(___temp)
@@ -3283,11 +3260,15 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #endif
 #endif
 
+#else
+
+#define ___FFS_WORD_TEMP() \
+(___temp==0 ? 0 : (___temp=((___temp-1)&~___temp),___POPCOUNT_WORD_TEMP()+1))
+
 #endif
 
 #ifdef ___USE_builtin_clrsb
 
-#undef ___LOG2_WORD_TEMP
 #define ___LOG2_WORD_TEMP() ((___WORD_WIDTH-1) - ___CLRSB_WORD_TEMP())
 
 #if ___WORD_WIDTH == ___INT_WIDTH
@@ -3298,6 +3279,26 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #else
 #define ___CLRSB_WORD_TEMP() __builtin_clrsbll(___temp)
 #endif
+#endif
+
+#else
+
+#define ___SET_ALL_LOWER_BITS_WORD_TEMP_32() \
+(___temp|=(___temp>>1), \
+ ___temp|=(___temp>>2), \
+ ___temp|=(___temp>>4), \
+ ___temp|=(___temp>>8), \
+ ___temp|=(___temp>>16))
+
+#if ___WORD_WIDTH == 32
+#define ___LOG2_WORD_TEMP() \
+(___SET_ALL_LOWER_BITS_WORD_TEMP_32(), \
+ ___POPCOUNT_WORD_TEMP())
+#else
+#define ___LOG2_WORD_TEMP() \
+(___SET_ALL_LOWER_BITS_WORD_TEMP_32(), \
+ ___temp|=(___temp>>32), \
+ ___POPCOUNT_WORD_TEMP())
 #endif
 
 #endif
