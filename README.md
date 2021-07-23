@@ -68,6 +68,8 @@ Detailed installation instructions are given in the file [INSTALL.txt](https://g
 
 41: [Streams](https://srfi.schemers.org/srfi-41/srfi-41.html)
 
+62: [S-expression comments](https://srfi.schemers.org/srfi-62/srfi-62.html) (builtin)
+
 64: [A Scheme API for test suites](https://srfi.schemers.org/srfi-64/srfi-64.html) (incomplete implementation)
 
 69: [Basic hash tables](https://srfi.schemers.org/srfi-69/srfi-69.html)

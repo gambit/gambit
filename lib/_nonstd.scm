@@ -437,6 +437,7 @@
      srfi-30 SRFI-30
 ;;;     srfi-38 SRFI-38
      srfi-39 SRFI-39
+     srfi-62 SRFI-62
      srfi-88 SRFI-88
 ;;;     srfi-89 SRFI-89
 ;;;     srfi-90 SRFI-90
