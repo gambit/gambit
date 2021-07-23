@@ -186,6 +186,8 @@ The configure options which are specific to the Gambit system are:
                           use GNU GCC specific options (default=YES)
   --enable-gnu-gcc-no-strict-aliasing
                           use GNU GCC -fno-strict-aliasing option (default=YES)
+  --enable-march=arch     build for specific machine architecture
+                          (default = native, empty string = C compiler default)
   --enable-cplusplus      compile using C++ compiler
   --enable-shared         build the Scheme runtime system as a shared library
   --enable-pic            build system with position independent code (default

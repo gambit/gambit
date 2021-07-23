@@ -820,6 +820,7 @@ DASH_fpic
 DASH_fPIC
 DASH_freschedule_modulo_scheduled_loops
 DASH_fmodulo_sched
+DASH_march
 DASH_fno_ipa_ra
 DASH_fomit_frame_pointer
 DASH_ftrapv
@@ -973,6 +974,7 @@ enable_inline_jumps
 enable_gcc_opts
 enable_gnu_gcc_specific_options
 enable_gnu_gcc_no_strict_aliasing
+enable_march
 enable_char_size
 enable_path_encoding
 enable_module_search_order
@@ -1701,6 +1703,8 @@ Optional Features:
   --enable-gnu-gcc-no-strict-aliasing
                           use GNU GCC -fno-strict-aliasing option (default is
                           YES)
+  --enable-march=arch     build for specific machine architecture (default is
+                          native)
   --enable-char-size=N    Scheme character size in bytes (default is 4)
   --enable-path-encoding=utf8|latin1|ucs2|ucs4|wchar|native
                           Filesystem path encoding (default is ucs2 on Windows
@@ -5070,6 +5074,20 @@ if test "${enable_gnu_gcc_no_strict_aliasing+set}" = set; then :
   enableval=$enable_gnu_gcc_no_strict_aliasing; ENABLE_GNU_GCC_NO_STRICT_ALIASING=$enableval
 else
   ENABLE_GNU_GCC_NO_STRICT_ALIASING=yes
+fi
+
+
+###############################################################################
+#
+# Check if system should be built for a specific machine architecture.
+# The default is to build for the "native" architecture.  An empty
+# string selects the architecture the C compiler defaults to.
+
+# Check whether --enable-march was given.
+if test "${enable_march+set}" = set; then :
+  enableval=$enable_march; ENABLE_MARCH=$enableval
+else
+  ENABLE_MARCH=native
 fi
 
 
@@ -11407,6 +11425,53 @@ DASH_fno_ipa_ra="$ac_cv_DASH_fno_ipa_ra"
 
 
 
+  # machine architecture option:
+  if test "$ENABLE_MARCH" != ""; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -march=$ENABLE_MARCH" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -march=$ENABLE_MARCH... " >&6; }
+if ${ac_cv_DASH_march+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-march=$ENABLE_MARCH"
+CXXFLAGS="-march=$ENABLE_MARCH"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_march=" -march=$ENABLE_MARCH"
+else
+  ac_cv_DASH_march=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_march" >&5
+$as_echo "$ac_cv_DASH_march" >&6; }
+DASH_march="$ac_cv_DASH_march"
+
+
+  fi
+
   FLAGS_OPT_LO="$DASH_O1"
 
   if test "$DASH_O3" != ""; then
@@ -12000,6 +12065,8 @@ DASH_shared="$ac_cv_DASH_shared"
   if test "$GNU_GCC_MOVE_LOOP_INVARIANTS_POSSIBLE_BUG" = yes; then
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_move_loop_invariants"
   fi
+
+  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_march"
 
   if test "$ENABLE_FEEDBACK1" = yes -o "$ENABLE_COVERAGE" = yes; then
 

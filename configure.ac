@@ -552,6 +552,18 @@ AC_ARG_ENABLE(gnu-gcc-no-strict-aliasing,
 
 ###############################################################################
 #
+# Check if system should be built for a specific machine architecture.
+# The default is to build for the "native" architecture.  An empty
+# string selects the architecture the C compiler defaults to.
+
+AC_ARG_ENABLE(march,
+              AS_HELP_STRING([--enable-march=arch],
+                             [build for specific machine architecture (default is native)]),
+              ENABLE_MARCH=$enableval,
+              ENABLE_MARCH=native)
+
+###############################################################################
+#
 # Check the width of Scheme characters.
 
 AC_ARG_ENABLE(char-size,
@@ -2303,6 +2315,11 @@ if test "$C_COMP_GNUC" = yes; then
   AC_CHECK_C_COMPILER_OPT(-fomit-frame-pointer,DASH_fomit_frame_pointer)
   AC_CHECK_C_COMPILER_OPT(-fno-ipa-ra, DASH_fno_ipa_ra)
 
+  # machine architecture option:
+  if test "$ENABLE_MARCH" != ""; then
+    AC_CHECK_C_COMPILER_OPT(-march=$ENABLE_MARCH,DASH_march)
+  fi
+
   FLAGS_OPT_LO="$DASH_O1"
 
   if test "$DASH_O3" != ""; then
@@ -2476,6 +2493,8 @@ if test "$C_COMP_GNUC" = yes; then
   if test "$GNU_GCC_MOVE_LOOP_INVARIANTS_POSSIBLE_BUG" = yes; then
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_move_loop_invariants"
   fi
+
+  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_march"
 
   if test "$ENABLE_FEEDBACK1" = yes -o "$ENABLE_COVERAGE" = yes; then
     AC_DEFINE([___DONT_UNLOAD_DYN_CODE],[],[Disable unloading of dynamically loaded code])

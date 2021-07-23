@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 herefromroot="prebuilt/macosx"
 rootfromhere="../.."
@@ -67,7 +67,7 @@ EOF
   chmod +x gcc
   export PATH="`pwd`:$PATH"
 
-  CFLAGS="$CONFIG_ARCH -mmacosx-version-min=10.12" LDFLAGS="$CONFIG_ARCH" ./configure "$CONFIG_BUILD" --prefix="$INSTALL_PREFIX" --enable-multiple-versions --enable-symlinks --enable-single-host --disable-gnu-gcc-specific-options --enable-openssl ENABLE_OPENSSL_STATIC_LINK=yes CC="gcc"
+  CFLAGS="$CONFIG_ARCH -mmacosx-version-min=10.12" LDFLAGS="$CONFIG_ARCH" ./configure "$CONFIG_BUILD" --prefix="$INSTALL_PREFIX" --enable-multiple-versions --enable-symlinks --enable-single-host --disable-gnu-gcc-specific-options --enable-march= --enable-openssl ENABLE_OPENSSL_STATIC_LINK=yes CC="gcc"
 
   cd "$herefromroot"
 

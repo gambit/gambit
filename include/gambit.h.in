@@ -1786,6 +1786,12 @@
 #endif
 #endif
 
+#ifdef __clang__
+#if __has_builtin(__builtin_expect)
+#define ___USE_builtin_expect
+#endif
+#endif
+
 #ifdef ___USE_builtin_expect
 #define ___EXPECT_TRUE(x) __builtin_expect((x),1)
 #define ___EXPECT_FALSE(x) __builtin_expect((x),0)
@@ -1799,10 +1805,7 @@
 #ifdef __GNUC__
 #if ___GNUC_VERSION > 500000
 #define ___USE_builtin_op_overflow
-#if 0
-/* don't use __builtin_popcount which is slower than the portable code */
 #define ___USE_builtin_popcount
-#endif
 #define ___USE_builtin_ffs
 #define ___USE_builtin_clrsb
 #endif
@@ -3243,8 +3246,7 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
  ___temp=(___temp&___MASK_WORD_BYTEWISE(0x33))+ \
          ((___temp>>2)&___MASK_WORD_BYTEWISE(0x33)), \
  (___MASK_WORD_BYTEWISE(0x01)* \
-  ((___temp&___MASK_WORD_BYTEWISE(0x0f))+ \
-   ((___temp>>4)&___MASK_WORD_BYTEWISE(0x0f)))) >> (___WORD_WIDTH-8))
+  (___MASK_WORD_BYTEWISE(0x0f)&(___temp+(___temp>>4)))) >> (___WORD_WIDTH-8))
 
 #endif
 

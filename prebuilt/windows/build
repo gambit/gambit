@@ -1,6 +1,6 @@
 #! /bin/sh
 
-# Copyright (c) 1994-2015 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 herefromroot="prebuilt/windows"
 rootfromhere="../.."
@@ -56,7 +56,7 @@ for VARIANT in mingw32 mingw64 visualc32 visualc64; do
              ;;
   esac
 
-  echo "export PATH=\"$ADDPATH\$PATH\";./configure --prefix=\"$INSTALL_PREFIX\" --enable-multiple-versions --enable-symlinks --enable-single-host CC=\"$CONFIG_CC\"" > build-cmds
+  echo "export PATH=\"$ADDPATH\$PATH\";./configure --prefix=\"$INSTALL_PREFIX\" --enable-multiple-versions --enable-symlinks --enable-single-host --enable-march= CC=\"$CONFIG_CC\"" > build-cmds
 
   cat build-cmds
 
