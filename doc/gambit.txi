@@ -18152,6 +18152,27 @@ Another basic example(with recursion):
  (write 'hello)
 @end smallexample
 
+Simple example:
+@smallexample
+  (include "~~lib/_gambit#.scm")
+
+  (##wr-set!
+    (lambda (we obj)
+      (if (##symbol? obj)
+        (case (macro-writeenv-style we)
+      ((mark)
+      (##wr-mark we obj))
+      ((display print)
+      (##wr-str we (##symbol->string obj)))
+      (else
+      (if (##wr-stamp we obj)
+          (##wr-escaped-string we (##symbol->string obj) #\" )))))))
+  ;; >'loop
+  ;; loop
+  ;; >(display 'loop)
+  ;; "loop"
+@end smallexample
+
 Interesting example:
 @smallexample
  (##include "~~lib/_gambit#.scm")
