@@ -18383,6 +18383,26 @@ with read with the same readtable.
 @end deffn
 
 @deffn macro-writeenv-shift @var{write-env}
+The below example include shift's set and accessor functions
+@smallexample
+(##wr-set!
+  (lambda (we obj)
+    (let ((shift (macro-writeenv-shift we))
+        (magic-number 5))
+      (macro-writeenv-shift-set! we (##fx+ shift magic-number)) ;; increase shift
+      (if (##symbol? obj)
+        (case (macro-writeenv-style we)
+      ((mark)
+      (##wr-mark we obj))
+      ((display print)
+      (begin
+      (##wr-str we ";;")
+      (##wr-str we (##symbol->string obj))
+      (##wr-str we "\n")))
+      (else
+      (if (##wr-stamp we obj)
+          (##wr-escaped-string we (##symbol->string obj)  #\" ))))))))
+@end smallexample
 @end deffn
 
 @deffn macro-writeenv-close-parens @var{write-env}
