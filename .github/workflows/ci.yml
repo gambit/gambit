@@ -38,7 +38,7 @@ jobs:
 
     - name: Build
       run: |
-        ./configure --enable-debug
+        ./configure --enable-debug --enable-debug-c-backtrace
         echo "#undef HAVE_CLOCK_GETTIME" >> include/config.h
         make -j`nproc`
 
@@ -88,7 +88,7 @@ jobs:
       run: |
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=14.16
         set PATH=%RUNNER_TEMP%\msys\msys64\usr\bin;%PATH%
-        msys2 -c "./configure --enable-c-opt=-Od --enable-debug CC='cl' && make -j%NUMBER_OF_PROCESSORS%"
+        msys2 -c "./configure --enable-c-opt=-Od --enable-debug --enable-debug-c-backtrace CC='cl' && make -j%NUMBER_OF_PROCESSORS%"
 
     - name: Test
       shell: cmd
@@ -138,7 +138,7 @@ jobs:
     - name: Build and Test
       run: |
         export PROCS=`nproc`
-        ./configure --enable-debug --enable-multiple-threaded-vms && make clean && make -j$PROCS && make check && make clean && ./configure --enable-debug --enable-multiple-threaded-vms --enable-cplusplus && make -j$PROCS && make check && make clean && ./configure --enable-ansi-c && make -j$PROCS && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
+        ./configure --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms && make clean && make -j$PROCS && make check && make clean && ./configure --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms --enable-cplusplus && make -j$PROCS && make check && make clean && ./configure --enable-ansi-c && make -j$PROCS && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
 
     - name: Build Gambit for Use
       run: |
@@ -180,7 +180,7 @@ jobs:
         export CC=gcc-9
         export CXX=g++-9
         export PROCS=`sysctl -n hw.physicalcpu`
-        ./configure --enable-debug --enable-multiple-threaded-vms && make clean && make -j$PROCS && make check && make clean && ./configure --enable-debug --enable-multiple-threaded-vms --enable-cplusplus && make -j$PROCS && make check && make clean && ./configure --enable-ansi-c && make -j$PROCS && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
+        ./configure --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms && make clean && make -j$PROCS && make check && make clean && ./configure --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms --enable-cplusplus && make -j$PROCS && make check && make clean && ./configure --enable-ansi-c && make -j$PROCS && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
 
     - name: Build Gambit for Use
       run: |
