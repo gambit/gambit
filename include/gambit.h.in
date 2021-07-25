@@ -1247,10 +1247,6 @@
  * Compiling to produce a shared-library or not (default).
  */
 
-#ifdef ___DYNAMIC_LIB
-#define ___SHARED
-#endif
-
 #ifdef ___SHARED
 #ifdef ___NONSHARED
 #error "Define either ___SHARED or ___NONSHARED"
