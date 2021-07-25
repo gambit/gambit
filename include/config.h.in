@@ -55,6 +55,15 @@
 /* Define as 1 if thread local storage variables can be referenced from dynamically loaded code */
 #undef ___DYNAMIC_TLS
 
+/* Define as 1 if C library functions can be called from dynamically loaded code */
+#undef ___CAN_IMPORT_CLIB_DYNAMICALLY
+
+/* Define as 1 if C library setjmp function can be called from dynamically loaded code */
+#undef ___CAN_IMPORT_SETJMP_DYNAMICALLY
+
+/* Define as 1 if Gambit RTS functions can be called from dynamically loaded code */
+#undef ___CAN_IMPORT_DYNAMICALLY
+
 /*---------------------------------------------------------------------------*/
 
 /* Determine which header files are available. */

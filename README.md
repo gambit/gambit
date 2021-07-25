@@ -19,7 +19,7 @@ related to Gambit can be obtained from the Gambit wiki at:
 
     git clone https://github.com/gambit/gambit.git
     cd gambit
-    ./configure        # --enable-single-host optional but recommended
+    ./configure        # --enable-single-host --enable-march=native --enable-dynamic-clib are optional but recommended
     make               # build runtime library, gsi and gsc (add -j8 if you can)
     make modules       # compile the builtin modules (optional but recommended)
     make check         # run self tests (optional but recommended)

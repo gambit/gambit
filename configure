@@ -975,6 +975,7 @@ enable_gcc_opts
 enable_gnu_gcc_specific_options
 enable_gnu_gcc_no_strict_aliasing
 enable_march
+enable_dynamic_clib
 enable_char_size
 enable_path_encoding
 enable_module_search_order
@@ -1705,6 +1706,8 @@ Optional Features:
                           YES)
   --enable-march=arch     build for specific machine architecture (default is
                           native)
+  --enable-dynamic-clib   allow direct calls to C library in dynamically
+                          loaded modules (default is NO)
   --enable-char-size=N    Scheme character size in bytes (default is 4)
   --enable-path-encoding=utf8|latin1|ucs2|ucs4|wchar|native
                           Filesystem path encoding (default is ucs2 on Windows
@@ -5092,6 +5095,32 @@ else
   ENABLE_MARCH=no_enable_march
 fi
 
+
+###############################################################################
+#
+# Check if direct calls to C library functions should be generated for
+# dynamically loaded modules.  This typically leads to more efficient
+# code by allowing the C compiler to inline C library calls in
+# dynamically loaded modules (for example calls to the math functions
+# sqrt, sin, etc).
+
+# Check whether --enable-dynamic-clib was given.
+if test "${enable_dynamic_clib+set}" = set; then :
+  enableval=$enable_dynamic_clib; ENABLE_DYNAMIC_CLIB=$enableval
+else
+  ENABLE_DYNAMIC_CLIB=no
+fi
+
+
+if test "$ENABLE_DYNAMIC_CLIB" = yes; then
+
+$as_echo "#define ___CAN_IMPORT_CLIB_DYNAMICALLY /**/" >>confdefs.h
+
+
+$as_echo "#define ___CAN_IMPORT_SETJMP_DYNAMICALLY /**/" >>confdefs.h
+
+  DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___CAN_IMPORT_CLIB_DYNAMICALLY -D___CAN_IMPORT_SETJMP_DYNAMICALLY"
+fi
 
 ###############################################################################
 #
@@ -16733,6 +16762,31 @@ $as_echo "$as_me:
 *** being used for the build, so this should be avoided for prebuilt   ***
 *** executables meant to run on a variety of machines.  To avoid this  ***
 *** warning you can use an empty string for <arch>.                    ***
+***                                                                    ***
+**************************************************************************
+" >&6;}
+fi
+
+if test "$ENABLE_DYNAMIC_CLIB" != yes; then
+  { $as_echo "$as_me:${as_lineno-$LINENO}:
+**************************************************************************
+***                                                                    ***
+*** The option \"--enable-dynamic-clib\" was not specified to the        ***
+*** configure script.  The Gambit system will compile correctly but    ***
+*** typically dynamically compiled modules will be less optimized than ***
+*** when \"--enable-dynamic-clib\" is specified.  This option may not    ***
+*** work on some operating systems.                                    ***
+***                                                                    ***
+**************************************************************************
+" >&5
+$as_echo "$as_me:
+**************************************************************************
+***                                                                    ***
+*** The option \"--enable-dynamic-clib\" was not specified to the        ***
+*** configure script.  The Gambit system will compile correctly but    ***
+*** typically dynamically compiled modules will be less optimized than ***
+*** when \"--enable-dynamic-clib\" is specified.  This option may not    ***
+*** work on some operating systems.                                    ***
 ***                                                                    ***
 **************************************************************************
 " >&6;}

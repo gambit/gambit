@@ -106,9 +106,21 @@ at this point) the speed of the Gambit interpreter improves by roughly
 compiling Gambit with --enable-c-opt, notably GCC 4.6.0 .  So the
 --enable-c-opt option should be used with great care.
 
-These options are not used by default because compilation is typically
-longer and requires more RAM.  In fact some platforms and C compilers
-may not have
+The --enable-march=native option will use C compiler options to
+optimize the system for best execution speed on the machine
+architecture that is used for the build.  This may restrict the
+execution to that specific machine architecture.
+
+The --enable-dynamic-clib option will generate direct calls to the C
+library functions in dynamically loadable modules.  This typically
+leads to more efficient code by allowing the C compiler to inline C
+library calls in dynamically loaded modules (for example calls to the
+math functions sqrt, sin, etc).  However this may not work on some
+operating systems.
+
+These options are not used by default because they can cause issues on
+some systems.  The C compiler may take a long time and a lot of memory
+to compile.  In fact some platforms and C compilers may not have
 enough resources to build the system this way.  With
 --enable-single-host the build takes roughly 500 megabytes and 2 to 4
 minutes on a 2 GHz Intel Core Duo based MacBook Pro with the GCC 4.0.1
@@ -188,6 +200,8 @@ The configure options which are specific to the Gambit system are:
                           use GNU GCC -fno-strict-aliasing option (default=YES)
   --enable-march=arch     build for specific machine architecture
                           (the default is to use the C compiler default)
+  --enable-dynamic-clib   allow C library to be called directly from
+                          dynamically loaded modules (default=NO)
   --enable-cplusplus      compile using C++ compiler
   --enable-shared         build the Scheme runtime system as a shared library
   --enable-pic            build system with position independent code (default
@@ -324,7 +338,7 @@ The configure options which are specific to the Gambit system are:
                           max number of processors per Gambit VM
                           (default is 64)
   --enable-dynamic-tls    allow thread local storage variables to be
-                          referenced from dynamically loaded code
+                          referenced from dynamically loaded modules
   --enable-openssl        compile with SSL support using OpenSSL
 
 The option --enable-cplusplus should be used when applications

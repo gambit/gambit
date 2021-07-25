@@ -566,6 +566,26 @@ AC_ARG_ENABLE(march,
 
 ###############################################################################
 #
+# Check if direct calls to C library functions should be generated for
+# dynamically loaded modules.  This typically leads to more efficient
+# code by allowing the C compiler to inline C library calls in
+# dynamically loaded modules (for example calls to the math functions
+# sqrt, sin, etc).
+
+AC_ARG_ENABLE(dynamic-clib,
+              AS_HELP_STRING([--enable-dynamic-clib],
+                             [allow direct calls to C library in dynamically loaded modules (default is NO)]),
+              ENABLE_DYNAMIC_CLIB=$enableval,
+              ENABLE_DYNAMIC_CLIB=no)
+
+if test "$ENABLE_DYNAMIC_CLIB" = yes; then
+  AC_DEFINE([___CAN_IMPORT_CLIB_DYNAMICALLY],[],[Enable direct calls to C library in dynamically loaded modules])
+  AC_DEFINE([___CAN_IMPORT_SETJMP_DYNAMICALLY],[],[Enable direct calls to setjmp in dynamically loaded modules])
+  DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___CAN_IMPORT_CLIB_DYNAMICALLY -D___CAN_IMPORT_SETJMP_DYNAMICALLY"
+fi
+
+###############################################################################
+#
 # Check the width of Scheme characters.
 
 AC_ARG_ENABLE(char-size,
@@ -3569,6 +3589,20 @@ if test "$ENABLE_MARCH" == "no_enable_march"; then
 *** being used for the build, so this should be avoided for prebuilt   ***
 *** executables meant to run on a variety of machines.  To avoid this  ***
 *** warning you can use an empty string for <arch>.                    ***
+***                                                                    ***
+**************************************************************************
+])
+fi
+
+if test "$ENABLE_DYNAMIC_CLIB" != yes; then
+  AC_MSG_NOTICE([
+**************************************************************************
+***                                                                    ***
+*** The option "--enable-dynamic-clib" was not specified to the        ***
+*** configure script.  The Gambit system will compile correctly but    ***
+*** typically dynamically compiled modules will be less optimized than ***
+*** when "--enable-dynamic-clib" is specified.  This option may not    ***
+*** work on some operating systems.                                    ***
 ***                                                                    ***
 **************************************************************************
 ])
