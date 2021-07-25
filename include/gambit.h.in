@@ -11069,44 +11069,36 @@ typedef struct ___global_state_struct
     void *(*___alloc_mem)
        ___P((___SIZE_T bytes),
             ());
-#define ___ALLOC_MEM(bytes)___EXT(___alloc_mem) (bytes)
     void (*___free_mem)
        ___P((void *ptr),
             ());
-#define ___FREE_MEM(ptr)___EXT(___free_mem) (ptr)
     void *(*___alloc_mem_heap)
        ___P((___SIZE_T bytes),
             ());
-#define ___ALLOC_MEM_HEAP(bytes)___EXT(___alloc_mem_heap) (bytes)
     void (*___free_mem_heap)
        ___P((void *ptr),
             ());
-#define ___FREE_MEM_HEAP(ptr)___EXT(___free_mem_heap) (ptr)
 #else
     void *(*___alloc_mem)
        ___P((___SIZE_T bytes,
              int lineno,
              char *file),
             ());
-#define ___ALLOC_MEM(bytes)___EXT(___alloc_mem) (bytes,__LINE__,__FILE__)
     void (*___free_mem)
        ___P((void *ptr,
              int lineno,
              char *file),
             ());
-#define ___FREE_MEM(ptr)___EXT(___free_mem) (ptr,__LINE__,__FILE__)
     void *(*___alloc_mem_heap)
        ___P((___SIZE_T bytes,
              int lineno,
              char *file),
             ());
-#define ___ALLOC_MEM_HEAP(bytes)___EXT(___alloc_mem_heap) (bytes,__LINE__,__FILE__)
     void (*___free_mem_heap)
        ___P((void *ptr,
              int lineno,
              char *file),
             ());
-#define ___FREE_MEM_HEAP(ptr)___EXT(___free_mem_heap) (ptr,__LINE__,__FILE__)
 #endif
     void *(*___alloc_mem_code)
        ___P((___SIZE_T bytes),
@@ -12521,6 +12513,18 @@ ___IMP_FUNC(void,___mask_child_interrupts_begin)
 ___IMP_FUNC(void,___mask_child_interrupts_end)
    ___P((___mask_child_interrupts_state *state),
         ());
+#endif
+
+#ifndef ___DEBUG_ALLOC_MEM
+#define ___ALLOC_MEM(bytes)___EXT(___alloc_mem) (bytes)
+#define ___FREE_MEM(ptr)___EXT(___free_mem) (ptr)
+#define ___ALLOC_MEM_HEAP(bytes)___EXT(___alloc_mem_heap) (bytes)
+#define ___FREE_MEM_HEAP(ptr)___EXT(___free_mem_heap) (ptr)
+#else
+#define ___ALLOC_MEM(bytes)___EXT(___alloc_mem) (bytes,__LINE__,__FILE__)
+#define ___FREE_MEM(ptr)___EXT(___free_mem) (ptr,__LINE__,__FILE__)
+#define ___ALLOC_MEM_HEAP(bytes)___EXT(___alloc_mem_heap) (bytes,__LINE__,__FILE__)
+#define ___FREE_MEM_HEAP(ptr)___EXT(___free_mem_heap) (ptr,__LINE__,__FILE__)
 #endif
 
 #ifndef ___INCLUDED_FROM_OS_BASE
