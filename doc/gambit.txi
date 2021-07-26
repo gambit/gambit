@@ -18386,26 +18386,28 @@ with read with the same readtable.
 The below example include shift's set and accessor functions
 @smallexample
 (##wr-set!
-  (lambda (we obj)
-    (let ((shift (macro-writeenv-shift we))
-         (magic-number 10)) 
-      (if (##symbol? obj)
-        (case (macro-writeenv-style we)
-          ((mark)
-            (begin
-              (macro-writeenv-shift-set! we shift)
-              (##wr-mark we obj)))
-          ((pretty-print)
-            (begin
-              (macro-writeenv-shift-set! we (##fx+ shift magic-number)) ;; increase shift
-              (##wr-str we ";;")
-              (##wr-str we (##symbol->string obj))
-              (##wr-str we "\n")))
-          (else
-            (begin
-              (macro-writeenv-shift-set! we shift)
-              (if (##wr-stamp we obj)
-                  (##wr-escaped-string we (##symbol->string obj)  #\" )))))))))
+  (let ((old-wr ##wr))
+	  (lambda (we obj)
+		  (if (not (symbol? obj))
+		    (old-wr we obj)
+        (let ((shift (macro-writeenv-shift we))
+          (magic-number 10))
+          (case (macro-writeenv-style we)
+            ((mark)
+              (begin
+                (macro-writeenv-shift-set! we shift)
+                (##wr-mark we obj)))
+            ((pretty-print)
+              (begin
+                (macro-writeenv-shift-set! we (##fx+ shift magic-number))
+                (##wr-str we ";;")
+                (##wr-str we (##symbol->string obj))
+                (##wr-str we "\n")))
+            (else
+              (begin
+                (macro-writeenv-shift-set! we shift)
+                (if (##wr-stamp we obj)
+                  (##wr-escaped-string we (##symbol->string obj) #\"))))))))))
 @end smallexample
 @end deffn
 
