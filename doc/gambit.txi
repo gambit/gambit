@@ -18412,6 +18412,29 @@ The below example include shift's set and accessor functions
 @end deffn
 
 @deffn macro-writeenv-close-parens @var{write-env}
+@smallexample
+;; This includes macro-writeenv-close-parens and macro-writeenv-close-parens-set!
+;; It is also uses ##wr-pair
+(##wr-set!
+  (let ((old-wr ##wr))
+	  (lambda (we obj)
+		   (if (not (pair? obj))
+		       (old-wr we obj)
+           (let ((close-parens (macro-writeenv-close-parens we))
+                (magic-number 10))
+              (case (macro-writeenv-style we)
+                ((mark)
+                  (##wr-mark we obj))
+                ((pretty-print)
+                  (begin
+                    (macro-writeenv-close-parens-set! we (##fx+ close-parens magic-number))
+                    (##wr-pair we obj)))
+                (else
+                  (old-wr we obj))))))))
+;;> (pretty-print (list 90 88))
+;;> (list 90 88)
+
+@end smallexample
 @end deffn
 
 @deffn macro-writeenv-level @var{write-env}
