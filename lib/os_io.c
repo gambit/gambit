@@ -3925,6 +3925,7 @@ int direction;)
   d->base.base.base.vtbl = &___device_process_table;
   d->base.h_rd = hstdout;
   d->base.h_wr = hstdin;
+  d->base.poll_interval_nsecs = 0; /* writing end already opened */
   d->pi = pi;
   d->status = -1;
   d->got_status = 0;
