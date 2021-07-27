@@ -1,6 +1,6 @@
 /* File: "os_setup.c" */
 
-/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -2953,6 +2953,7 @@ ___SCMOBJ ___setup_os ___PVOID
                   ___set_signal_handler (SIGBUS,  crash_signal_handler);
                   ___set_signal_handler (SIGSEGV, crash_signal_handler);
                   ___set_signal_handler (SIGILL,  crash_signal_handler);
+                  ___set_signal_handler (SIGABRT, crash_signal_handler);
 #endif
 #endif
                   return ___FIX(___NO_ERR);
