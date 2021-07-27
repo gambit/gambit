@@ -18390,7 +18390,31 @@ Joh
 		        (##wr-str we obj))))))))
 >@b{"loop"}
           loop
-@end sample
+@end smallsample
+
+@smallexample
+;; This example uses ##wr-ch
+(##wr-set!
+  (let ((old-wr ##wr))
+	  (lambda (we obj)
+		  (if (not (string? obj))
+		    (old-wr we obj)
+		    (case (macro-writeenv-style we)
+          ((mark)
+            (##wr-mark we obj))
+          (else
+            (let ((new-col 20))
+              (##wr-ch we #\space)
+              (##wr-str we obj)
+              (##wr-ch we #\newline))))))))
+>@b{(display "home")}
+ home
+>@b{(write "home")}  
+ home
+>@{(pretty-print "home")}
+ home
+
+@end smallsample
 
 Your writer functions must @emph{not} write anything to the output port,
 not call any function with write side-effects,
@@ -18422,6 +18446,7 @@ with read with the same readtable.
 
 @deffn macro-writeenv-shift @var{write-env}
 The below example include shift's set and accessor functions
+It also includes @code{##wr-escaped-string} function
 @smallexample
 (##wr-set!
   (let ((old-wr ##wr))
