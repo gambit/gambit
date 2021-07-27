@@ -18374,6 +18374,24 @@ and assign numbers to those that appear multiple times.
 Joh
 @end smallexample
 
+@smallexample
+;; This example uses ##wr-indent
+(##wr-set!
+  (let ((old-wr ##wr))
+	  (lambda (we obj)
+		   (if (not (string? obj))
+		      (old-wr we obj)
+		      (case (macro-writeenv-style we)
+		    ((mark)
+		      (##wr-mark we obj))
+		    (else
+		      (let ((new-col 20))
+		        (##wr-indent we new-col)
+		        (##wr-str we obj))))))))
+>@b{"loop"}
+          loop
+@end sample
+
 Your writer functions must @emph{not} write anything to the output port,
 not call any function with write side-effects,
 when the style is @code{mark};
