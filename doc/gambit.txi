@@ -18390,7 +18390,26 @@ Joh
 		        (##wr-str we obj))))))))
 >@b{"loop"}
           loop
-@end smallsample
+@end smallexample
+
+@smallexample
+;; This example uses ##wr-vector
+(##wr-set!
+  (let ((old-wr ##wr))
+	  (lambda (we obj)
+      (if (not (vector? obj))
+        (old-wr we obj)
+        (case (macro-writeenv-style we)
+          ((mark)
+            (##wr-mark we obj))
+          (else
+            (begin
+              (##wr-str we "vector:")
+              (##wr-vector we obj))))))))
+
+>@b{(vector 9 8 8)}
+vector:#(9 8 8)
+@end smallexample
 
 @smallexample
 ;; This example uses ##wr-ch
@@ -18403,7 +18422,7 @@ Joh
           ((mark)
             (##wr-mark we obj))
           (else
-            (let ((new-col 20))
+            (begin
               (##wr-ch we #\space)
               (##wr-str we obj)
               (##wr-ch we #\newline))))))))
@@ -18414,7 +18433,7 @@ Joh
 >@{(pretty-print "home")}
  home
 
-@end smallsample
+@end smallexample
 
 Your writer functions must @emph{not} write anything to the output port,
 not call any function with write side-effects,
