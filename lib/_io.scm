@@ -6907,6 +6907,12 @@
                           (##string? directory))))
            (fail)
            (let* ((path-and-arguments
+                   ;; Note that the path is not resolved when opening a
+                   ;; process port.  This is so that the current PATH
+                   ;; environment variable is used to resolve the path
+                   ;; of the program.  It is the caller's responsibility
+                   ;; to call (path-expand path) if the path must be
+                   ;; interpreted relative to the current directory.
                    (##cons path
                            (macro-psettings-arguments psettings)))
                   (environment
