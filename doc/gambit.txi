@@ -18354,6 +18354,26 @@ and assign numbers to those that appear multiple times.
 
 @end smallexample
 
+@smallexample
+;; This example uses ##wr-substr
+(##wr-set!
+  (let ((old-wr ##wr))
+	  (lambda (we obj)
+		  (if (not (string? obj))
+		    (old-wr we obj)
+        (let ((len (string-length obj))
+          (max-length 3))
+          (case (macro-writeenv-style we)
+            ((mark)
+              (##wr-mark we obj))
+            (else
+              (if (< max-length len)
+                (##wr-substr we obj 0 max-length)
+                (##wr-substr we obj 0 len)))))))))
+> @b{"John Ojukwu"}
+Joh
+@end smallexample
+
 Your writer functions must @emph{not} write anything to the output port,
 not call any function with write side-effects,
 when the style is @code{mark};
