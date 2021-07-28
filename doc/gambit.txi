@@ -18444,10 +18444,15 @@ vector:#(9 8 8)
               (##wr-mark we obj))
             (else
               (begin
-                (##wr-str we "The fields ")
+                (##wr-str we "The fields , ")
                 (old-wr we (##type-fields obj))
-                (##wr-str we " of ")
+                (##wr-str we ", of ")
                 (##wr-sn we obj 'type (##type-name obj)))))))))
+>@b{(define-type point x y)}          
+>@b{(define p (make-point 1 2))}      
+>@b{(define goo (##structure-type p))}
+>@{goo}
+The fields #(x 0 #f y 0 #f) of #<type #2 point>
 @end smallexample
 
 
