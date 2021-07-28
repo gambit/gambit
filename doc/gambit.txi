@@ -18433,6 +18433,26 @@ vector:#(9 8 8)
 @end smallexample
 
 @smallexample
+;; This example uses ##wr-sn
+(##wr-set!
+  (let ((old-wr ##wr))
+	  (lambda (we obj)
+		   (if (not (##type? obj))
+		      (old-wr we obj)
+		      (case (macro-writeenv-style we)
+            ((mark)
+              (##wr-mark we obj))
+            (else
+              (begin
+                (##wr-str we "The fields ")
+                (old-wr we (##type-fields obj))
+                (##wr-str we " of ")
+                (##wr-sn we obj 'type (##type-name obj)))))))))
+@end smallexample
+
+
+
+@smallexample
 ;; This example uses ##wr-ch
 (##wr-set!
   (let ((old-wr ##wr))
