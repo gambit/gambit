@@ -18177,29 +18177,29 @@ Interesting example:
 @smallexample
  (##include "~~lib/_gambit#.scm")
 
- (define-type reactangle length width)
+ (define-type rectangle length width)
 
  (##wr-set!
   (let ((old-wr ##wr))
     (lambda (we obj)
-      (if (not (reactangle? obj))
+      (if (not (rectangle? obj))
           (old-wr we obj)
           (case (macro-writeenv-style we)
             ((mark)
              #f) 
             (else
-              (##wr-str we "Components of Reactangle: ")
+              (##wr-str we "Components of Rectangle: ")
               (##wr-str we "{")
-    	        (##wr we (reactangle-length obj))
+    	        (##wr we (rectangle-length obj))
     	        (##wr-str we ",")
-              (##wr we (reactangle-width obj))
+              (##wr we (rectangle-width obj))
               (##wr-str we "}")
-              (##wr-str we "\nArea of Reactangle: ")
-              (##wr we (##fx*  (reactangle-length obj) (reactangle-width obj)))))))))
+              (##wr-str we "\nArea of Rectangle: ")
+              (##wr we (##fx*  (rectangle-length obj) (rectangle-width obj)))))))))
                  
- (write (make-reactangle 89 10))
- ;; Components of Reactangle: {89,10}
- ;; Area of Reactangle: 890
+ (write (make-rectangle 89 10))
+ ;; Components of Rectangle: {89,10}
+ ;; Area of Rectangle: 890
 @end smallexample
 
 An advanced example:
@@ -18451,7 +18451,7 @@ vector:#(9 8 8)
 >@b{(define-type point x y)}          
 >@b{(define p (make-point 1 2))}      
 >@b{(define goo (##structure-type p))}
->@{goo}
+>@b{goo}
 The fields #(x 0 #f y 0 #f) of #<type #2 point>
 @end smallexample
 
