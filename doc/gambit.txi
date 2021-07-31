@@ -18455,7 +18455,41 @@ vector:#(9 8 8)
 The fields #(x 0 #f y 0 #f) of #<type #2 point>
 @end smallexample
 
-
+@smallexample
+;; This example uses ##wr-sn*
+(##wr-set!
+  (let ((old-wr ##wr))
+	  (lambda (we obj)
+		   (if (not (##type? obj))
+		       (old-wr we obj)
+		       (case (macro-writeenv-style we)
+			    ((mark)
+			     (##wr-mark we obj))
+			    (else
+			     (begin
+			      (##wr-str we "Fields, ")
+			      (old-wr we (##type-fields obj))
+			      (##wr-str we ", of ")
+			      (##wr-sn* we 
+			               obj 
+			               'type 
+			               (lambda (we obj)
+			                 (##wr-str we " ")
+			                 (let ((addr (##foreign-address obj)))
+			                   (if (##number? addr)
+			                       (begin
+			                         (##wr-str we "0x")
+			                         (##wr-str we
+			                                   (##number->string
+			                                     addr
+			                                     16)))
+			                       (##wr-no-display we addr))))))))))))
+> @b{(define-type point x y)}          
+> @b{(define p (make-point 1 2))}      
+> @b{(define goo (##structure-type p))}
+> @b{goo}
+Fields, #(x 0 #f y 0 #f), of #<type #2 0x557cb253e961>
+@end sample
 
 @smallexample
 ;; This example uses ##wr-ch
