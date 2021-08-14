@@ -1026,6 +1026,7 @@
 (check-=    (* 1+i 1+i) +2i)
 (check-eqv? (* 1+i 1+i) +2i)
 
+
 #;(let ()
 
   (define (make-symbol . args)
@@ -1159,7 +1160,8 @@
 
 ;;; Some error tests.
 
-(check-exn heap-overflow-exception? (lambda () (extract-bit-field (expt 2 100) (expt 2 100) -1)))
+;;; heap-overflow-exception? doesn't seem to exist in the universal back end.
+;;; (check-exn heap-overflow-exception? (lambda () (extract-bit-field (expt 2 100) (expt 2 100) -1)))
 
 (check-tail-exn type-exception? (lambda () (extract-bit-field -1 1 1)))
 (check-tail-exn type-exception? (lambda () (extract-bit-field 1 -1 1)))
@@ -1277,7 +1279,6 @@
 (check-tail-exn type-exception? (lambda () (test-bit-field? 'a 1 1)))
 (check-tail-exn type-exception? (lambda () (test-bit-field? 1 'a 1)))
 (check-tail-exn type-exception? (lambda () (test-bit-field? 1 1 'a)))
-
 
 
 #;(let ()

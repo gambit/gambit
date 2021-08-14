@@ -10000,9 +10000,10 @@ end-of-code
     (let ((x-width (##fx* x-length ##bignum.mdigit-width)))
       (cond ((##fx< x-width ##bignum.naive-mul-max-width)
              (naive-mul y y-length x x-length))
-            ((or (##fx< x-width ##bignum.fft-mul-min-width)
+            ((or (##not (use-fast-bignum-algorithms))    ;; Use Karatsuba even for very large integers.
+                 (##fx< x-width ##bignum.fft-mul-min-width)
                  (##fx< ##bignum.fft-mul-max-width
-                             (##fx* y-length ##bignum.mdigit-width)))
+                        (##fx* y-length ##bignum.mdigit-width)))
              (karatsuba-mul x y))
             (else
              (fft-mul x y)))))
@@ -10017,27 +10018,33 @@ end-of-code
   ;; This is done in mul.
 
   (define (low-bits-to-shift x)
-    (let ((size (##integer-length x))
-          (low-bits (##first-bit-set x)))
-      (if (##fx< size (##fx+ low-bits low-bits))
-          low-bits
-          0)))
-
+    (or (let ((size (##integer-length x)))
+          (and (##fx< 300 size)
+               (let ((low-bits (##first-bit-set x)))
+                 (and (##fx< size (##fx+ low-bits low-bits))
+                      ;; shift full adigits.
+                      (##fx* (##fxquotient low-bits ##bignum.adigit-width)
+                             ##bignum.adigit-width)))))
+        0))
+  
   (define (possibly-unnormalized-bignum-arithmetic-shift x bits)
     (if (##fx= bits 0)
-        (if (##fx= (##bignum.adigit-length x) 1)
-            (##bignum.normalize! x)
-            x)
+        ;; arithmetic-shift assumes the argument
+        ;; is normalized and just returns x when the shift is 0 bits.
+        ;; Se we have to call ##bignum.normalize! ourselves in this case.
+        (##bignum.normalize! x)
         (##arithmetic-shift x bits)))
 
   (let ((x-length (##bignum.mdigit-length x))
         (y-length (##bignum.mdigit-length y)))
-    (cond ((or (##not (use-fast-bignum-algorithms))
-               (and (##fx< x-length 50)
-                    (##fx< y-length 50)))
+    (cond ((and (##fx< x-length 20)
+                (##fx< y-length 20))
+           ;; Don't bother shifting out low order zero bits,
+           ;; just use naive multiplication
            (if (##fx< x-length y-length)
                (naive-mul y y-length x x-length)
                (naive-mul x x-length y y-length)))
+          ;; Shift out low-order zero bits if that will help
           ((##eq? x y)
            (let ((low-bits (low-bits-to-shift x)))
              (if (##fx= low-bits 0)
@@ -10052,6 +10059,8 @@ end-of-code
                  (if (##fx< x-length y-length)
                      (mul x x-length y y-length)
                      (mul y y-length x x-length))
+                 ;; Here x or y might be a bignumified fixnum, so we can't
+                 ;; just use ##arithmetic-shift.
                  (##arithmetic-shift
                   (##* (possibly-unnormalized-bignum-arithmetic-shift x (##fx- x-low-bits))
                        (possibly-unnormalized-bignum-arithmetic-shift y (##fx- y-low-bits)))
