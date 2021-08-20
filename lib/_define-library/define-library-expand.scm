@@ -2,7 +2,7 @@
 
 ;;; File: "_define-library-expand.scm"
 
-;;; Copyright (c) 2014-2020 by Marc Feeley and Frédéric Hamel, All Rights Reserved.
+;;; Copyright (c) 2014-2021 by Marc Feeley and Frédéric Hamel, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -530,11 +530,11 @@
                            (let* ((def-body
                                     (caddr (##desourcify def)))
                                   (define-type-expand-params
-                                   (and (= (##proper-length def-body) 3)
+                                   (and (eqv? (##proper-length def-body) 3)
                                         (eq? (list-ref def-body 0) '##lambda)
                                         (eq? (list-ref def-body 1) 'args)
                                         (let ((x (list-ref def-body 2)))
-                                          (and (= (##proper-length x) 5)
+                                          (and (eqv? (##proper-length x) 5)
                                                (eq? (list-ref x 0)
                                                     '##define-type-expand)
                                                (eq? (list-ref x 4)
