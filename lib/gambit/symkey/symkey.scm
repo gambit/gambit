@@ -2,7 +2,7 @@
 
 ;;; File: "symkey.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -77,7 +77,7 @@
         ;; is not atomic; it simply means a possible close repetition
         ;; of the same hash code.  The counter will wrap around eventually.
         (set! ##symbol-counter n)
-        (##make-uninterned-symbol str (##partial-bit-reverse n)))
+        (##make-uninterned-symbol str (##fxand 536870911 (##fxxor n (##partial-bit-reverse n)))))
       (##make-uninterned-symbol str hash)))
 
 (define-prim (string->uninterned-symbol
@@ -157,7 +157,7 @@
         ;; is not atomic; it simply means a possible close repetition
         ;; of the same hash code.  The counter will wrap around eventually.
         (set! ##keyword-counter n)
-        (##make-uninterned-keyword str (##partial-bit-reverse n)))
+        (##make-uninterned-keyword str (##fxand 536870911 (##fxxor n (##partial-bit-reverse n)))))
       (##make-uninterned-keyword str hash)))
 
 (define-prim (string->uninterned-keyword
