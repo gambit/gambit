@@ -2,7 +2,7 @@
 
 ;;; File: "test.scm"
 
-;;; Copyright (c) 2018-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2018-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -152,5 +152,18 @@
 (test-error-tail type-exception? (hamt-values 1))
 (test-error-tail wrong-number-of-arguments-exception? (hamt-values))
 (test-error-tail wrong-number-of-arguments-exception? (hamt-values 1 2))
+
+;; collision tests
+
+(define k1 (expt 2 28)) ;; these keys hash to the same alist bucket
+(define k2 (- k1))
+(define k3 0)
+
+(define h (hamt-set (hamt-set (hamt-set (make-hamt) k1 1) k2 2) k3 3))
+
+(test-equal 3 (hamt-length h))
+(test-equal 1 (hamt-ref h k1))
+(test-equal 2 (hamt-ref h k2))
+(test-equal 3 (hamt-ref h k3))
 
 ;;;============================================================================

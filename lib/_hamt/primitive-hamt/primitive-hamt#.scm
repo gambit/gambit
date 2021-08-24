@@ -2,7 +2,7 @@
 
 ;;; File: "primitive-hamt#.scm"
 
-;;; Copyright (c) 2018-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2018-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -365,8 +365,8 @@
                                    ;; put kv in alist
                                    (let ((alist
                                           (,(or alist-remove 'macro-alist-remove)
-                                           (car kv)
                                            x
+                                           (car kv)
                                            ,@equ?-ctx)))
                                      ;; if alist did not change then key is
                                      ;; being added so update length if needed
@@ -454,8 +454,8 @@
                            (cond ((fx= 1 next-h) ;; max level reached?
                                   (let ((new-x
                                          (,(or alist-remove 'macro-alist-remove)
-                                          key
                                           x
+                                          key
                                           ,@equ?-ctx)))
                                     (cond ((eq? new-x x)
                                            curr)
