@@ -10000,16 +10000,16 @@ end-of-code
     (let ((x-width (##fx* x-length ##bignum.mdigit-width)))
       (cond ((##fx< x-width ##bignum.naive-mul-max-width)
              (naive-mul y y-length x x-length))
-            ((or (##not (use-fast-bignum-algorithms))    ;; Use Karatsuba even for very large integers.
-                 (##fx< x-width ##bignum.fft-mul-min-width)
-                 (##fx< ##bignum.fft-mul-max-width
+            ((or (##not (use-fast-bignum-algorithms))       ;; Use Karatsuba even for very large integers
+                 (##fx< x-width ##bignum.fft-mul-min-width) ;; or if x is small enough
+                 (##fx< ##bignum.fft-mul-max-width          ;; or if y is too large for FFT to work.
                         (##fx* y-length ##bignum.mdigit-width)))
              (karatsuba-mul x y))
             (else
              (fft-mul x y)))))
 
   ;; Certain decisions must be made for multiplication.
-  ;; First, if both bignums are small, just do naive mul to avoid
+  ;; First, if either bignum is small, just do naive mul to avoid
   ;; further overhead.
   ;; This is done in the main body of ##bignum.*.
   ;; Second, if it would help to shift out low-order zeros of an
@@ -10018,39 +10018,31 @@ end-of-code
   ;; This is done in mul.
 
   (define (low-bits-to-shift x)
-    (or (let ((size (##integer-length x)))
-          (and (##fx< 300 size)
-               (let ((low-bits (##first-bit-set x)))
-                 (and (##fx< size (##fx+ low-bits low-bits))
-                      ;; shift full adigits.
-                      (##fx* (##fxquotient low-bits ##bignum.adigit-width)
-                             ##bignum.adigit-width)))))
-        0))
+    (let ((size (##integer-length x))
+          (low-bits (##first-bit-set x)))
+      (if (##fx< size (##fx+ low-bits low-bits))
+          ;; At least half the lowest bits are zero
+          (##fx* (##fxquotient low-bits ##bignum.adigit-width) ;; Shift full adigits.
+                 ##bignum.adigit-width)
+          0)))
   
-  (define (possibly-unnormalized-bignum-arithmetic-shift x bits)
-    (if (##fx= bits 0)
-        ;; arithmetic-shift assumes the argument
-        ;; is normalized and just returns x when the shift is 0 bits.
-        ;; Se we have to call ##bignum.normalize! ourselves in this case.
-        (##bignum.normalize! x)
-        (##arithmetic-shift x bits)))
-
   (let ((x-length (##bignum.mdigit-length x))
         (y-length (##bignum.mdigit-length y)))
-    (cond ((and (##fx< x-length 20)
-                (##fx< y-length 20))
+    (cond ((or (##fx< x-length 20)
+               (##fx< y-length 20))
            ;; Don't bother shifting out low order zero bits,
            ;; just use naive multiplication
            (if (##fx< x-length y-length)
                (naive-mul y y-length x x-length)
                (naive-mul x x-length y y-length)))
+          ;; Both x and y are normalized bignums.
           ;; Shift out low-order zero bits if that will help
           ((##eq? x y)
            (let ((low-bits (low-bits-to-shift x)))
              (if (##fx= low-bits 0)
                  (mul x x-length x x-length)
                  (##arithmetic-shift
-                  (##exact-int.square (##arithmetic-shift x (##fx- low-bits)))
+                  (##exact-int.square (##bignum.arithmetic-shift x (##fx- low-bits)))
                   (##fx+ low-bits low-bits)))))
           (else
            (let ((x-low-bits (low-bits-to-shift x))
@@ -10062,8 +10054,8 @@ end-of-code
                  ;; Here x or y might be a bignumified fixnum, so we can't
                  ;; just use ##arithmetic-shift.
                  (##arithmetic-shift
-                  (##* (possibly-unnormalized-bignum-arithmetic-shift x (##fx- x-low-bits))
-                       (possibly-unnormalized-bignum-arithmetic-shift y (##fx- y-low-bits)))
+                  (##* (##arithmetic-shift x (##fx- x-low-bits))
+                       (##arithmetic-shift y (##fx- y-low-bits)))
                   (##fx+ x-low-bits y-low-bits))))))))
 
 (define-prim (##bignum.arithmetic-shift x shift)
