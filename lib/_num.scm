@@ -10051,8 +10051,6 @@ end-of-code
                  (if (##fx< x-length y-length)
                      (mul x x-length y y-length)
                      (mul y y-length x x-length))
-                 ;; Here x or y might be a bignumified fixnum, so we can't
-                 ;; just use ##arithmetic-shift.
                  (##arithmetic-shift
                   (##* (##arithmetic-shift x (##fx- x-low-bits))
                        (##arithmetic-shift y (##fx- y-low-bits)))
