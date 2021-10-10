@@ -1178,6 +1178,7 @@ typedef struct fem_context
     ___SCMOBJ program_descr;
     ___UTF_8STRING module_script_line;
     ___SCMOBJ flags;
+    ___BOOL collect_undef_glo;
   } fem_context;
 
 
@@ -1265,15 +1266,15 @@ int n;)
 
 
 ___HIDDEN ___SCMOBJ make_global
-   ___P((___processor_state ___ps,
+   ___P((___BOOL collect_undef_glo,
          ___UTF_8STRING str,
          int supply,
          ___glo_struct **glo),
-        (___ps,
+        (collect_undef_glo,
          str,
          supply,
          glo)
-___processor_state ___ps;
+___BOOL collect_undef_glo;
 ___UTF_8STRING str;
 int supply;
 ___glo_struct **glo;)
@@ -1291,7 +1292,7 @@ ___glo_struct **glo;)
 
   g = ___GLOBALVARSTRUCT(sym);
 
-  if (___ps != NULL)
+  if (collect_undef_glo)
     {
       /*
        * If the variable is supplied by the module, mark it specially
@@ -1316,6 +1317,7 @@ ___HIDDEN ___SCMOBJ setup_module_fixup
 fem_context *ctx;
 ___module_struct *module;)
 {
+  ___processor_state ___ps = ctx->ps;
   int i, j;
   int flags;
   ___FAKEWORD *glotbl;
@@ -1430,15 +1432,16 @@ ___module_struct *module;)
        * variables bound to c-lambdas are created last.
        */
 
-      ___processor_state ___ps = ctx->ps;
-
       i = 0;
       while (glo_names[i] != 0)
         i++;
       while (i-- > 0)
         {
           ___glo_struct *glo = 0;
-          ___SCMOBJ e = make_global (___ps, glo_names[i], i<supcount, &glo);
+          ___SCMOBJ e = make_global (ctx->collect_undef_glo,
+                                     glo_names[i],
+                                     i<supcount,
+                                     &glo);
           if (e != ___FIX(___NO_ERR))
             return e;
           glotbl[i] = ___CAST(___FAKEWORD,glo);
@@ -1568,8 +1571,12 @@ ___module_struct *module;)
 
                   if (___LABEL_HOST_GET(lbl) != current_host)
                     {
+                      ___ps->pc = ___FIX(0); /* special marker indicating that */
+                                             /* we want the goto labels */
+
                       current_host = ___LABEL_HOST_GET(lbl);
-                      hlbl_ptr = ___CAST(void**,current_host (0));
+                      current_host (___ps);
+                      hlbl_ptr = ___CAST(void**,___ps->pc);
                       hlbl_ptr++; /* skip INTRO label */
                     }
 
@@ -1759,11 +1766,14 @@ ___mod_or_lnk mol;)
 
 ___HIDDEN ___SCMOBJ setup_modules
    ___P((___processor_state ___ps,
-         ___mod_or_lnk mol),
+         ___mod_or_lnk mol,
+         ___BOOL collect_undef_glo),
         (___ps,
-         mol)
+         mol,
+         collect_undef_glo)
 ___processor_state ___ps;
-___mod_or_lnk mol;)
+___mod_or_lnk mol;
+___BOOL collect_undef_glo;)
 {
   ___SCMOBJ result;
   ___SCMOBJ script_line;
@@ -1778,6 +1788,7 @@ ___mod_or_lnk mol;)
   ctx->ps = ___ps;
   ctx->module_count = 0;
   ctx->program_descr = result;
+  ctx->collect_undef_glo = collect_undef_glo;
 
   /* Fixup objects and tables in all the modules and count modules */
 
@@ -1787,7 +1798,7 @@ ___mod_or_lnk mol;)
       != ___FIX(___NO_ERR))
     return result;
 
-  if (___ps != NULL)
+  if (collect_undef_glo)
     {
       /* Collect undefined globals */
 
@@ -1850,7 +1861,7 @@ ___SCMOBJ linkername;)
         result = ___FIX(___MODULE_ALREADY_LOADED_ERR);
       else
         {
-          result = setup_modules (___PSTATE, mol);
+          result = setup_modules (___PSTATE, mol, 1);
           mol->linkfile.version = -1; /* mark link file as 'setup' */
         }
     }
@@ -2969,6 +2980,8 @@ ___mod_or_lnk mol;)
  */
 
 
+#ifndef ___USE_TRUE_TAIL_CALL_EXCLUSIVELY
+
 #ifdef EMSCRIPTEN
 
 /*
@@ -2986,14 +2999,14 @@ void ___trampoline
         (___ps)
 ___processor_state ___ps;)
 {
-  ___SCMOBJ ___pc = ___ps->pc;
-
   for (;;)
     {
+
 #ifdef ___DEBUG_TRAMPOLINE
 
 #define CALL_STEP_DEBUG \
 do { \
+  ___SCMOBJ ___pc = ___ps->pc; \
   ___SCMOBJ sym = ___subprocedure_parent_name (___pc); \
   printf ("___pc = "); \
   if (sym == ___FAL) { \
@@ -3017,7 +3030,7 @@ do { \
 #define CALL_STEP \
 do { \
   CALL_STEP_DEBUG; \
-  ___pc = ___LABEL_HOST_GET(___pc)(___ps); \
+  ___CALL_LABEL_HOST(___ps->pc,___ps); \
 } while (0)
 
       CALL_STEP;
@@ -3030,6 +3043,8 @@ do { \
       CALL_STEP;
     }
 }
+
+#endif
 
 
 ___EXP_FUNC(___SCMOBJ,___call)
@@ -3111,11 +3126,33 @@ ___SCMOBJ stack_marker;)
   ___ps->pc = ___LABEL_ENTRY_GET(proc);
   ___PSSELF = proc;
 
+#ifdef ___USE_TRUE_TAIL_CALL_EXCLUSIVELY
+
   ___BEGIN_TRY
 
-  ___trampoline (___ps);
+  ___CALL_LABEL_HOST(___ps->pc,___ps);
 
   ___END_TRY
+
+#else
+
+#ifdef ___USE_UNWIND_C_STACK_TO_TRAMPOLINE
+  do
+    {
+      ___SETUP_C_STACK_TRIP(___c_stack_ptr);
+#endif
+
+      ___BEGIN_TRY
+
+      ___trampoline (___ps);
+
+      ___END_TRY
+
+#ifdef ___USE_UNWIND_C_STACK_TO_TRAMPOLINE
+    } while (___err == ___FIX(___UNWIND_C_STACK_TO_TRAMPOLINE));
+#endif
+
+#endif
 
   if (___err != ___FIX(___UNWIND_C_STACK) ||
       stack_marker != ___ps->fp[___FRAME_SPACE(2)-2]) /*need more unwinding?*/
@@ -3160,7 +3197,7 @@ ___SCMOBJ thunk;)
 #ifdef ___SUPPORT_LOWLEVEL_EXEC
 
 
-___EXP_FUNC(___WORD,___lowlevel_exec)
+___EXP_FUNC(void,___lowlevel_exec)
    ___P((___processor_state ___ps),
         (___ps)
 ___processor_state ___ps;)
@@ -3769,7 +3806,10 @@ ___processor_state ___ps;)
 
 #endif
 
-  return ___ps->pc;
+  {
+    ___WORD ___pc = ___ps->pc;
+    ___EXIT_HOST();
+  }
 }
 
 
@@ -5984,7 +6024,7 @@ ___setup_params_struct *setup_params;)
        * Setup each module.
        */
 
-      err = setup_modules (NULL, mol);
+      err = setup_modules (___ps, mol, 0);
 
       if (___FIXNUMP(err))
         break;

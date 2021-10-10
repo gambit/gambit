@@ -1476,6 +1476,14 @@
 
 /* Dependencies on language (i.e. C++, ANSI-C, and K&R C). */
 
+#ifndef __has_builtin
+#define __has_builtin(x) 0
+#endif
+
+#ifndef __has_attribute
+#define __has_attribute(x) 0
+#endif
+
 #ifdef __cplusplus
 
 #define ___BEGIN_C_LINKAGE extern "C" {
@@ -1550,10 +1558,6 @@
 
 #include <setjmp.h>
 
-#ifndef __has_builtin
-#define __has_builtin(x) 0
-#endif
-
 #if __has_builtin(builtin_setjmp) || (defined(__GNUC__) && ___GNUC_VERSION > 500000)
 #ifndef ___DONT_USE_BUILTIN_SETJMP
 #undef ___USE_builtin_setjmp
@@ -1576,6 +1580,30 @@
 
 #endif
 
+#endif
+
+
+#if __has_attribute(musttail)
+#define ___PROPER_TAIL_CALL(call) __attribute__((musttail)) return call
+#endif
+
+#ifdef ___PROPER_TAIL_CALL
+#define ___TAIL_CALL_VOID(call) ___PROPER_TAIL_CALL(call)
+#define ___TAIL_CALL_NONVOID(call) ___PROPER_TAIL_CALL(call)
+#else
+#define ___TAIL_CALL_VOID(call) do { call; return; } while (0)
+#define ___TAIL_CALL_NONVOID(call) return call
+#endif
+
+#undef ___USE_PROPER_TAIL_CALL_EXCLUSIVELY_TO_EXIT_HOST
+#undef ___USE_TAIL_CALL_TO_EXIT_HOST
+
+#if !defined(___CENTRALIZED_TRAMPOLINE) && (defined(___PROPER_TAIL_CALL) || !defined(__llvm__))
+#define ___USE_TAIL_CALL_TO_EXIT_HOST
+#endif
+
+#if defined(___PROPER_TAIL_CALL) && defined(___USE_TAIL_CALL_TO_EXIT_HOST) && !defined(___SUPPORT_MULTIPLE_C_COMPILERS)
+#define ___USE_PROPER_TAIL_CALL_EXCLUSIVELY_TO_EXIT_HOST
 #endif
 
 
@@ -4567,7 +4595,7 @@ ___SET_R0(___ps->handler_break)
 #define ___W_ALL ___SM(___MW_ALL,___PW_ALL)
 
 #define ___BEGIN_COD \
-___HIDDEN ___WORD ___HOST_PROC ___P((___processor_state ___ps),(___ps) \
+___HIDDEN void ___HOST_PROC ___P((___processor_state ___ps),(___ps) \
 ___processor_state ___ps;) { \
 ___WORD ___pc, ___start, ___temp; \
 ___S32 ___s32_temp; /*******************/ \
@@ -4577,7 +4605,53 @@ ___U64 ___u64_temp; /*******************/ \
 ___D_ALL
 
 #define ___END_COD \
-___ps->pc=___pc; ___W_ALL return ___pc; }
+___ps->pc = ___pc; \
+___W_ALL \
+___EXIT_HOST(); \
+}
+
+#ifndef ___USE_TAIL_CALL_TO_EXIT_HOST
+
+#define ___EXIT_HOST() /* fallthrough to end of host */
+
+#else
+
+#ifdef ___USE_PROPER_TAIL_CALL_EXCLUSIVELY_TO_EXIT_HOST
+
+#define ___EXIT_HOST() ___TAIL_CALL_VOID(___CALL_LABEL_HOST(___pc,___ps))
+
+#else
+
+#define ___USE_UNWIND_C_STACK_TO_TRAMPOLINE
+
+#define ___EXIT_HOST() \
+do { \
+  ___IF_C_STACK_TRIPPED(___c_stack_ptr) \
+    ___EXT(___throw_error) (___FIX(___UNWIND_C_STACK_TO_TRAMPOLINE)); \
+  ___TAIL_CALL_VOID(___CALL_LABEL_HOST(___pc,___ps)); \
+} while (0)
+
+#define ___C_STACK_PTR_DECL(id) \
+___WORD ___c_stack_ptr_temp; \
+___WORD *id = &___c_stack_ptr_temp;
+
+#define ___SETUP_C_STACK_TRIP(id) \
+___C_STACK_PTR_DECL(id) \
+___ps->c_stack_trip = id
+
+#define ___IF_C_STACK_TRIPPED(id) \
+___C_STACK_PTR_DECL(id) \
+if (___CAST(___U32,id-___ps->c_stack_trip+___C_STACK_TRIP_DIST) >= 2*___C_STACK_TRIP_DIST)
+
+#ifndef ___C_STACK_TRIP_DIST
+#define ___C_STACK_TRIP_DIST 2048
+#endif
+
+#endif
+
+#endif
+
+#define ___CALL_LABEL_HOST(pc,ps) ___LABEL_HOST_GET(pc)(ps)
 
 #ifdef ___DEBUG_CTRL_FLOW_HISTORY
 
@@ -4623,10 +4697,15 @@ ___EXT(___register_host_entry) (___PSP ___start, ___MODULE_NAME, __FILE__, __LIN
 #define ___DEF_HLBL_INTRO 0,
 #define ___DEF_HLBL(id)&&id,
 #define ___END_HLBL \
-0}; if (___EXPECT_FALSE(___ps == 0)) return ___CAST(___WORD,___hlbltbl);
+0}; \
+___pc=___ps->pc; \
+if (___EXPECT_FALSE(___pc == ___FIX(0))) { \
+  ___ps->pc = ___CAST(___WORD,___hlbltbl); \
+  return; \
+}
 
 #define ___BEGIN_SW \
-___R_ALL ___start=___MLBL(___HOST_LBL0); ___pc=___ps->pc; \
+___R_ALL ___start=___MLBL(___HOST_LBL0); \
 ___REGISTER_HOST_ENTRY \
 goto *___LABEL_HOST_LABEL_GET(___pc);
 
@@ -7452,7 +7531,12 @@ HRESULT_CODE(___HRESULT_FROM_ERR_CODE(err))
 #define ___CTOS_NONNULLWCHARSTRINGLIST_ERR      (___ERR_BASE+(123<<7))
 #define ___CTOS_VARIANT_ERR                     (___ERR_BASE+(124<<7))
 #define ___CTOS_HEAP_OVERFLOW_ERR               (___ERR_BASE+(125<<7))
+#ifdef ___USE_UNWIND_C_STACK_TO_TRAMPOLINE
+#define ___UNWIND_C_STACK_TO_TRAMPOLINE         (___ERR_BASE+(126<<7))
+#define ___CTOS_MAX                             (___ERR_BASE+(127<<7)-1)
+#else
 #define ___CTOS_MAX                             (___ERR_BASE+(126<<7)-1)
+#endif
 
 #define ___RETURN_POS 127
 
@@ -9248,6 +9332,10 @@ typedef struct ___processor_state_struct
 
     ___WORD processor_scmobj[___SUBTYPED_BODY+___PROCESSOR_SIZE+___PADDING_SIZE]; /* Scheme processor object */
 
+#ifdef ___USE_UNWIND_C_STACK_TO_TRAMPOLINE
+    ___WORD *c_stack_trip;
+#endif
+
 #ifdef ___ACTIVITY_LOG
     ___pstate_actlog actlog; /* activity log state */
 #endif
@@ -9353,7 +9441,7 @@ typedef struct ___aligned_processor_state_struct
 #endif
   } ___aligned_processor_state_struct;
 
-typedef ___WORD (*___host) ___P((___processor_state ___ps),());
+typedef void (*___host) ___P((___processor_state ___ps),());
 
 typedef struct ___label_struct
   {
@@ -10959,7 +11047,7 @@ typedef struct ___global_state_struct
              ___SCMOBJ thunk),
             ());
 #ifdef ___SUPPORT_LOWLEVEL_EXEC
-    ___WORD (*___lowlevel_exec)
+    void (*___lowlevel_exec)
        ___P((___processor_state ___ps),
             ());
 #endif
@@ -12395,7 +12483,7 @@ ___IMP_FUNC(___SCMOBJ,___run)
    ___P((___SCMOBJ thunk),
         ());
 #ifdef ___SUPPORT_LOWLEVEL_EXEC
-___IMP_FUNC(___WORD,___lowlevel_exec)
+___IMP_FUNC(void,___lowlevel_exec)
    ___P((___processor_state ___ps),
         ());
 #endif
