@@ -4627,7 +4627,7 @@ ___EXIT_HOST(); \
 #define ___EXIT_HOST() \
 do { \
   ___IF_C_STACK_TRIPPED(___c_stack_ptr) \
-    ___EXT(___throw_error) (___FIX(___UNWIND_C_STACK_TO_TRAMPOLINE)); \
+    ___EXT(___unwind_c_stack_to_trampoline) (___PSPNC); \
   ___TAIL_CALL_VOID(___CALL_LABEL_HOST(___pc,___ps)); \
 } while (0)
 
@@ -11046,6 +11046,11 @@ typedef struct ___global_state_struct
        ___P((___PSD
              ___SCMOBJ thunk),
             ());
+#ifdef ___USE_UNWIND_C_STACK_TO_TRAMPOLINE
+    void (*___unwind_c_stack_to_trampoline)
+       ___P((___PSDNC),
+            ());
+#endif
 #ifdef ___SUPPORT_LOWLEVEL_EXEC
     void (*___lowlevel_exec)
        ___P((___processor_state ___ps),
@@ -12482,6 +12487,11 @@ ___IMP_FUNC(___SCMOBJ,___call)
 ___IMP_FUNC(___SCMOBJ,___run)
    ___P((___SCMOBJ thunk),
         ());
+#ifdef ___USE_UNWIND_C_STACK_TO_TRAMPOLINE
+___IMP_FUNC(void,___unwind_c_stack_to_trampoline)
+   ___P((___PSDNC),
+        ());
+#endif
 #ifdef ___SUPPORT_LOWLEVEL_EXEC
 ___IMP_FUNC(void,___lowlevel_exec)
    ___P((___processor_state ___ps),

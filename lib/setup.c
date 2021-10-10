@@ -3194,6 +3194,23 @@ ___SCMOBJ thunk;)
 }
 
 
+#ifdef ___USE_UNWIND_C_STACK_TO_TRAMPOLINE
+
+
+___EXP_FUNC(void,___unwind_c_stack_to_trampoline)
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
+{
+  ___PSGET
+
+  ___THROW (___FIX(___UNWIND_C_STACK_TO_TRAMPOLINE));
+}
+
+
+#endif
+
+
 #ifdef ___SUPPORT_LOWLEVEL_EXEC
 
 
@@ -5782,6 +5799,13 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
 
   ___GSTATE->___run
     = ___run;
+
+#ifdef ___USE_UNWIND_C_STACK_TO_TRAMPOLINE
+
+  ___GSTATE->___unwind_c_stack_to_trampoline
+    = ___unwind_c_stack_to_trampoline;
+
+#endif
 
 #ifdef ___SUPPORT_LOWLEVEL_EXEC
 
