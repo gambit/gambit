@@ -1598,7 +1598,7 @@
 #undef ___USE_PROPER_TAIL_CALL_EXCLUSIVELY_TO_EXIT_HOST
 #undef ___USE_TAIL_CALL_TO_EXIT_HOST
 
-#if !defined(___CENTRALIZED_TRAMPOLINE) && (defined(___PROPER_TAIL_CALL) || !defined(__llvm__))
+#if !defined(___CENTRALIZED_TRAMPOLINE) && defined(___USE_SETJMP) && (defined(___PROPER_TAIL_CALL) || !defined(__llvm__))
 #define ___USE_TAIL_CALL_TO_EXIT_HOST
 #endif
 
