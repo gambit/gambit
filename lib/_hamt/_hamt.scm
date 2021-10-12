@@ -2,7 +2,7 @@
 
 ;;; File: "_hamt.scm"
 
-;;; Copyright (c) 2018-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2018-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -157,14 +157,14 @@
                      test: test
                      hash: hash)
                     (check-hash
-                     test
+                     (test-procedure->test test)
                      arg-num)))))
 
           (define (check-hash test-fn arg-num)
             (if (eq? hash (macro-absent-obj))
                 (checks-done
                  test-fn
-                 (test->hash test-fn))
+                 (test-procedure->hash test-fn))
                 (let ((arg-num (fx+ arg-num 2)))
                   (macro-check-procedure
                     hash
@@ -384,7 +384,7 @@
         (if (pair? x)
             (let ((couple (car x)))
               (macro-force-vars (couple)
-                (macro-check-pair-list
+                (macro-check-pair-list-pair
                   couple
                   1
                   (list->hamt
@@ -459,24 +459,51 @@
                           (lambda (key val2)
                             (test val val2))))))))
 
-(define (test->hash test-fn)
+(define (test-procedure->test proc)
   (declare (extended-bindings) (standard-bindings))
-  (cond ((or (eq? test-fn ##eq?)
-             (eq? test-fn (let () (namespace ("")) eq?)))
-         ##eq?-hash)
-        ((or (eq? test-fn ##eqv?)
-             (eq? test-fn (let () (namespace ("")) eqv?)))
-         ##eqv?-hash)
-        ((or (eq? test-fn ##equal?)
-             (eq? test-fn (let () (namespace ("")) equal?)))
-         ##equal?-hash)
-        ((or (eq? test-fn ##string=?)
-             (eq? test-fn (let () (namespace ("")) string=?)))
-         ##string=?-hash)
-        ((or (eq? test-fn ##string-ci=?)
-             (eq? test-fn (let () (namespace ("")) string-ci=?)))
-         ##string-ci=?-hash)
+  (cond ((or (eq? proc (primitive eq?))
+             (eq? proc (standard eq?)))
+         (primitive eq?))
+        ((or (eq? proc (primitive eqv?))
+             (eq? proc (standard eqv?)))
+         (primitive eqv?))
+        ((or (eq? proc (primitive equal?))
+             (eq? proc (standard equal?)))
+         (primitive equal?))
         (else
-         ##generic-hash)))
+         proc)))
+
+(define (test-procedure->hash proc)
+  (declare (extended-bindings) (standard-bindings))
+  (cond ((or (eq? proc (primitive eq?))
+             (eq? proc (standard eq?)))
+         (primitive eq?-hash))
+        ((or (eq? proc (primitive eqv?))
+             (eq? proc (standard eqv?)))
+         (primitive eqv?-hash))
+        ((or (eq? proc (primitive equal?))
+             (eq? proc (standard equal?)))
+         (primitive equal?-hash))
+        ((eq? proc (primitive string=?))
+         (primitive string=?-hash))
+        ((eq? proc (standard string=?))
+         (standard string=?-hash))
+        ((eq? proc (primitive string-ci=?))
+         (primitive string-ci=?-hash))
+        ((eq? proc (standard string-ci=?))
+         (standard string-ci=?-hash))
+        (else
+         (primitive generic-hash))))
+
+(define (hash-procedure->hash proc)
+  (declare (extended-bindings) (standard-bindings))
+  (cond ((eq? proc (standard eq?-hash))
+         (primitive eq?-hash))
+        ((eq? proc (standard eqv?-hash))
+         (primitive eqv?-hash))
+        ((eq? proc (standard equal?-hash))
+         (primitive equal?-hash))
+        (else
+         proc)))
 
 ;;;============================================================================

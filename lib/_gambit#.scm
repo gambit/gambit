@@ -163,6 +163,33 @@
                  (table-set! meta-info-tbl 'safe-define-procedure))))
        `(##begin)))))
 
+(##define-syntax standard
+  (lambda (src)
+
+    (define (err)
+      (##raise-expression-parsing-exception
+       'ill-formed-special-form
+       src
+       (##source-strip (car (##source-strip src)))))
+
+    (define (proc sym)
+      `(##let () (##namespace ("")) ,sym))
+
+    (##deconstruct-call
+     src
+     2
+     (lambda (arg-src)
+       (let ((arg (##desourcify arg-src)))
+         (cond ((symbol? arg)
+                (proc arg))
+               ((pair? arg)
+                (let ((name (##desourcify (car arg))))
+                  (if (symbol? name)
+                      (cons (proc name) (cdr arg))
+                      (err))))
+               (else
+                (err))))))))
+
 (##define-syntax primitive
   (lambda (src)
 
