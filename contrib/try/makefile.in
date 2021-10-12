@@ -148,15 +148,17 @@ try.tgz: try
 	gzip -9 try.tar
 	mv try.tar.gz try.tgz
 
+PRELUDE_OPT = -prelude "(define-cond-expand-feature|disable-s8vector|)(define-cond-expand-feature|disable-u16vector|)(define-cond-expand-feature|disable-s16vector|)(define-cond-expand-feature|disable-u32vector|)(define-cond-expand-feature|disable-s32vector|)(define-cond-expand-feature|disable-u64vector|)(define-cond-expand-feature|disable-s64vector|)(define-cond-expand-feature|disable-f32vector|)"
+
 VM.js: extra.scm VM.scm
 	cp `$(GSC) -e '(display (path-expand "~~lib/_six/js.scm"))'` .
 	cp `$(GSC) -e '(display (path-expand "~~lib/_six/js#.scm"))'` .
 	cp `$(GSC) -e '(display (path-expand "~~lib/_six/six-expand.scm"))'` .
 	cp `$(GSC) -e '(display (path-expand "~~lib/_six/six-expand#.scm"))'` .
-	$(GSC) -target js -label-namespace "z" -exe -o VM.js VM.scm
+	$(GSC) -target js -label-namespace "z" -exe -o VM.js $(PRELUDE_OPT) VM.scm
 
 VM.min.js: VM.js
-	npx google-closure-compiler --language_in=ECMASCRIPT_2015 --language_out=ECMASCRIPT_2015 --js VM.js --js_output_file VM.min.js
+	npx google-closure-compiler --language_in=ECMASCRIPT_2020 --language_out=ECMASCRIPT_2020 --js VM.js --js_output_file VM.min.js
 	sed -i.tmp -e "s/^'use strict';//" VM.min.js
 	gzip -k -9 VM.min.js
 
