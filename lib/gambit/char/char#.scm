@@ -415,9 +415,13 @@ integer->char
       (let ((has-full
              (make-vector (+ max-char 1) #f))
             (alist
-             (filter (lambda (x)
-                       (not (member #f (map (lambda (c) (<= c max-char)) x))))
-                     alist)))
+             (apply
+              append
+              (map (lambda (x)
+                     (if (member #f (map (lambda (c) (<= c max-char)) x))
+                         '()
+                         (list x)))
+                   alist))))
         (if (null? alist)
             (vector (vector #f 0 0 0) '() #f has-full)
             (let* ((dict
