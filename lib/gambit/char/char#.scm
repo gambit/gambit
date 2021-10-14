@@ -37,14 +37,19 @@ integer->char
 
 ;;;----------------------------------------------------------------------------
 
+;; This code has been tested with https://github.com/feeley/r7rs-unicode-check
+
 ;; The latest Unicode tables are available here:
 ;;
 ;; https://www.unicode.org/Public/UCD/latest/ucd/UnicodeData.txt
 ;; https://www.unicode.org/Public/UCD/latest/ucd/PropList.txt
 ;; https://www.unicode.org/Public/UCD/latest/ucd/CaseFolding.txt
+;; https://www.unicode.org/Public/UCD/latest/ucd/SpecialCasing.txt
 ;;
 ;; This directory contains a copy, which can be updated when new versions
-;; become available.
+;; become available by executing
+;;
+;;   make update-unicode
 ;;
 ;; The tables define various character properties (used in the
 ;; definition of char-alphabetic, char-lower-case?, etc), as follows:
@@ -60,6 +65,9 @@ integer->char
 ;;
 ;; CaseFolding.txt defines the simple and full case folding mappings
 ;; (used in the definition of char-foldcase and string-foldcase)
+;;
+;; SpecialCasing.txt defines the full case mappings
+;; (used in the definition of string-downcase and string-upcase)
 
 ;; This is the meaning of the character properties in UnicodeData.txt:
 ;;
@@ -108,17 +116,18 @@ integer->char
 (macro-define-syntax macro-define-unicode-tables
   (lambda (src)
 
+    (define support-title-case?        #t)
+    (define support-full-case-folding? #t)
+
     (define max-char (or (##deconstruct-call src 2 ##desourcify)
                          ##max-char))
 
     (define this-dir (path-directory (##source-path src)))
 
-    (define UnicodeData-path (path-expand "UnicodeData.txt" this-dir))
-    (define PropList-path    (path-expand "PropList.txt"    this-dir))
-    (define CaseFolding-path (path-expand "CaseFolding.txt" this-dir))
-
-    (define support-title-case?        #t)
-    (define support-full-case-folding? #t)
+    (define UnicodeData-path   (path-expand "UnicodeData.txt"   this-dir))
+    (define PropList-path      (path-expand "PropList.txt"      this-dir))
+    (define CaseFolding-path   (path-expand "CaseFolding.txt"   this-dir))
+    (define SpecialCasing-path (path-expand "SpecialCasing.txt" this-dir))
 
     (define digit-class-end        10)
     (define no-class               digit-class-end)
@@ -312,6 +321,16 @@ integer->char
               (lambda (port)
                 (read-all port read-line))))))
 
+    (define (make-simple-full)
+      (let ((simple-table (make-vector (+ max-char 1)))
+            (full-table (make-vector (+ max-char 1) #f)))
+        (let loop ((i 0))
+          (if (<= i max-char)
+              (begin
+                (vector-set! simple-table i i)
+                (loop (+ i 1)))))
+        (cons simple-table full-table)))
+
     (define (get-CaseFolding)
       (apply
        append
@@ -335,29 +354,21 @@ integer->char
                 (read-all port read-line))))))
 
     (define case-folding
-      (let ((simple-table (make-vector (+ max-char 1)))
-            (full-table (make-vector (+ max-char 1) #f)))
-        (let loop ((i 0))
-          (if (<= i max-char)
-              (begin
-                (vector-set! simple-table i i)
-                (loop (+ i 1)))))
+      (let ((case-folding (make-simple-full)))
         (for-each
          (lambda (entry)
            (let ((code   (hex (vector-ref entry 0) #f))
                  (status (vector-ref entry 1)))
              (cond ((> code max-char))
                    ((member status '("C" "S"))
-                    (let ((mapping (hex (vector-ref entry 2) #f))
-                          (s (vector-ref simple-table code)))
-                      (vector-set! simple-table code mapping)))
+                    (let ((mapping (hex (vector-ref entry 2) #f)))
+                      (vector-set! (car case-folding) code mapping)))
                    ((and support-full-case-folding?
                          (equal? status "F"))
-                    (let ((mapping (hex-list (vector-ref entry 2)))
-                          (s (vector-ref simple-table code)))
-                      (vector-set! full-table code mapping))))))
+                    (let ((mapping (hex-list (vector-ref entry 2))))
+                      (vector-set! (cdr case-folding) code mapping))))))
          (get-CaseFolding))
-        (cons simple-table full-table)))
+        case-folding))
 
     (define props
       (let ((props-table (make-vector (+ max-char 1) '())))
@@ -400,6 +411,211 @@ integer->char
                 (vector-set! unicode-titlecase-dist j (vector-ref dists 3))
                 (loop1 (+ i 1) (cdr lst)))))))
 
+    (define (create-unicode-full-casing-info alist)
+      (let ((has-full
+             (make-vector (+ max-char 1) #f))
+            (alist
+             (filter (lambda (x)
+                       (not (member #f (map (lambda (c) (<= c max-char)) x))))
+                     alist)))
+        (if (null? alist)
+            (vector (vector #f 0 0 0) '() #f has-full)
+            (let* ((dict
+                    (create-int-dict alist))
+                   (v
+                    (vector-ref dict 0))
+                   (n
+                    (length (apply append (vector->list v))))
+                   (mapping
+                    (make-vector (max 1 n) 0))
+                   (alloc
+                    0)
+                   (mapping-lengths
+                    (let loop1 ((i 0) (lengths '()))
+                      (if (< i (vector-length v))
+                          (loop1 (+ i 1)
+                                 (let ((x (vector-ref v i)))
+                                   (if (pair? x)
+                                       (let* ((m (cdr x))
+                                              (mlen (length m)))
+                                         (let loop2 ((lst (reverse m)))
+                                           (if (pair? lst)
+                                               (begin
+                                                 (set! alloc (+ alloc 1))
+                                                 (vector-set!
+                                                  mapping
+                                                  alloc
+                                                  (car lst))
+                                                 (loop2 (cdr lst)))))
+                                         (vector-set! v i alloc)
+                                         (set! alloc (+ alloc 1))
+                                         (if (member mlen lengths)
+                                             lengths
+                                             (cons mlen lengths)))
+                                       (begin
+                                         (vector-set! v i 0)
+                                         lengths))))
+                          lengths))))
+              (vector-set! dict 0 (specialize-vector v))
+              (let loop ((lst alist))
+                (if (pair? lst)
+                    (let ((x (car lst)))
+                      (vector-set! has-full (car x) #t)
+                      (loop (cdr lst)))))
+              (vector dict
+                      (sort-list mapping-lengths <)
+                      (specialize-vector mapping)
+                      has-full)))))
+
+    (define (create-int-dict alist)
+
+      (define (create-simple-dict alist m salt)
+        (let ((sd (make-vector m '())))
+          (let loop ((lst alist))
+            (if (pair? lst)
+                (let* ((x (car lst))
+                       (i (modulo (bitwise-xor (car x) salt) m)))
+                  (and (null? (vector-ref sd i))
+                       (begin
+                         (vector-set! sd i x)
+                         (loop (cdr lst)))))
+                sd))))
+
+      (define (empty-span-length vect start)
+        (let loop ((i start))
+          (if (and (< i (vector-length vect))
+                   (null? (vector-ref vect i)))
+              (loop (+ i 1))
+              (- i start))))
+
+      (define (compact-dict sd salt)
+        (let* ((shift (empty-span-length sd 0))
+               (m (vector-length sd))
+               (shifted-sd
+                (vector-append (subvector sd shift m)
+                               (subvector sd 0 shift))))
+          (let loop ((i 0) (best-i 0) (best-len 0))
+            (if (< i m)
+                (let ((len (empty-span-length shifted-sd i)))
+                  (if (> len best-len)
+                      (loop (+ (+ i 1) len) i len)
+                      (loop (+ (+ i 1) len) best-i best-len)))
+                (vector (vector-append
+                         (subvector shifted-sd (+ best-i best-len) m)
+                         (subvector shifted-sd 0 best-i))
+                        salt
+                        (modulo (- (+ shift (+ best-i best-len))) m)
+                        m)))))
+
+      (define (smallest-compact-dict alist)
+        (let loop1 ((m (length alist)) (best-cd #f))
+          (if (or (not best-cd)
+                  (< m (* 2 (vector-ref best-cd 3))))
+              (let loop2 ((m m) (salt 0) (best-cd best-cd))
+                (if (< salt 32)
+                    (loop2 m
+                           (+ salt 1)
+                           (let ((sd (create-simple-dict alist m salt)))
+                             (if (not sd)
+                                 best-cd
+                                 (let ((cd (compact-dict sd salt)))
+                                   (if (or (not best-cd)
+                                           (< (vector-length
+                                               (vector-ref cd 0))
+                                              (vector-length
+                                               (vector-ref best-cd 0))))
+                                       cd
+                                       best-cd)))))
+                    (loop1 (+ m 1) best-cd)))
+              best-cd)))
+
+      (smallest-compact-dict alist))
+
+    (define unicode-full-foldcase-info
+      (create-unicode-full-casing-info
+       (let loop ((i (- (vector-length (cdr case-folding)) 1))
+                  (alist '()))
+         (if (>= i 0)
+             (loop (- i 1)
+                   (let ((x (vector-ref (cdr case-folding) i)))
+                     (if x
+                         (cons (cons i x) alist)
+                         alist)))
+             alist))))
+
+    (define (get-SpecialCasing)
+      (apply
+       append
+       (map (lambda (line)
+              (if (or (= (string-length line) 0)
+                      (char-whitespace? (string-ref line 0))
+                      (char=? #\# (string-ref line 0)))
+                  '()
+                  (call-with-input-string
+                      line
+                    (lambda (port)
+                      (let* ((code       (read-line port #\;))
+                             (space      (read-line port #\space))
+                             (lc-mapping (read-line port #\;))
+                             (space      (read-line port #\space))
+                             (tc-mapping (read-line port #\;))
+                             (space      (read-line port #\space))
+                             (uc-mapping (read-line port #\;))
+                             (space      (read-line port #\space))
+                             (condition
+                              (if (char=? #\# (peek-char port))
+                                  #f
+                                  (read-line port #\;))))
+                        (list (vector code
+                                      lc-mapping
+                                      tc-mapping
+                                      uc-mapping
+                                      condition)))))))
+            (call-with-input-file
+                SpecialCasing-path
+              (lambda (port)
+                (read-all port read-line))))))
+
+    (define special-casing
+      (let ((special-casing
+             (vector '()     ;; upcase
+                     '()     ;; downcase
+                     '())))  ;; titlecase
+        (for-each
+         (lambda (entry)
+
+           (define (add code mapping casing)
+             (if (not (and (pair? mapping)
+                           (null? (cdr mapping))))
+                 (vector-set! special-casing
+                              casing
+                              (cons (cons code mapping)
+                                    (vector-ref special-casing
+                                                casing)))))
+
+           (let ((code       (hex (vector-ref entry 0) #f))
+                 (lc-mapping (hex-list (vector-ref entry 1)))
+                 (tc-mapping (hex-list (vector-ref entry 2)))
+                 (uc-mapping (hex-list (vector-ref entry 3)))
+                 (condition  (vector-ref entry 4)))
+             (if (not condition) ;; ignore language specific mappings
+                 (begin
+                   (add code uc-mapping 0)
+                   (add code lc-mapping 1)
+                   (if support-title-case?
+                       (add code tc-mapping 2))))))
+         (get-SpecialCasing))
+        special-casing))
+
+    (define unicode-full-downcase-info
+      (create-unicode-full-casing-info (vector-ref special-casing 1)))
+
+    (define unicode-full-upcase-info
+      (create-unicode-full-casing-info (vector-ref special-casing 0)))
+
+    (define unicode-full-titlecase-info
+      (create-unicode-full-casing-info (vector-ref special-casing 2)))
+
     (define range-start #f)
 
     (define (process-data entry encode)
@@ -430,6 +646,15 @@ integer->char
         (define (enc code x)
           (vector-set! encode code x))
 
+        (define (compute-dist code simple info)
+          (let ((dist (- simple code)))
+            (if (null? (vector-ref info 1)) ;; 1-to-1 mapping?
+                dist
+                (+ (* 2 dist)
+                   (if (vector-ref (vector-ref info 3) code)
+                       1
+                       0)))))
+
         (define (setup code)
           (if (<= code max-char)
               (let* ((uppercase?
@@ -439,7 +664,8 @@ integer->char
                       (or (eq? General_Category 'Ll)
                           (member "Other_Lowercase" (vector-ref props code))))
                      (titlecase?
-                      (eq? General_Category 'Lt))
+                      (and support-title-case?
+                           (eq? General_Category 'Lt)))
                      (alphabetic?
                       (or uppercase?
                           lowercase?
@@ -451,19 +677,25 @@ integer->char
                 (cond (alphabetic?
                        (let* ((upper (hex Simple_Uppercase_Mapping code))
                               (lower (hex Simple_Lowercase_Mapping code))
-                              (title (hex Simple_Titlecase_Mapping upper))
-                              (upper-dist (- upper code))
-                              (lower-dist (- lower code))
-                              (title-dist (- title code))
-                              (fold-dist  (+ (* 2 (- (vector-ref
-                                                      (car case-folding)
-                                                      code)
-                                                     code))
-                                             (if (vector-ref
-                                                  (cdr case-folding)
-                                                  code)
-                                                 1
-                                                 0)))
+                              (title (if support-title-case?
+                                         (hex Simple_Titlecase_Mapping upper)
+                                         code))
+                              (upper-dist (compute-dist
+                                           code
+                                           upper
+                                           unicode-full-upcase-info))
+                              (lower-dist (compute-dist
+                                           code
+                                           lower
+                                           unicode-full-downcase-info))
+                              (title-dist (compute-dist
+                                           code
+                                           title
+                                           unicode-full-titlecase-info))
+                              (fold-dist (compute-dist
+                                          code
+                                          (vector-ref (car case-folding) code)
+                                          unicode-full-foldcase-info))
                               (dists
                                (vector upper-dist
                                        lower-dist
@@ -551,146 +783,220 @@ integer->char
                    (if (= (vector-ref table i) no-class)
                        (loop (- i 1))
                        i))))
-            (subvector table 0 hi-limit)))))
-
-    (define (create-unicode-full-foldcase-info)
-      (let ((alist
-             (let loop ((i (- (vector-length (cdr case-folding)) 1))
-                        (alist '()))
-               (if (>= i 0)
-                   (loop (- i 1)
-                         (let ((x (vector-ref (cdr case-folding) i)))
-                           (if x
-                               (cons (cons i x) alist)
-                               alist)))
-                   alist))))
-        (if (null? alist)
-            (vector (vector #f 0 0 0) '() #f)
-            (let* ((dict
-                    (create-int-dict alist))
-                   (v
-                    (vector-ref dict 0))
-                   (n
-                    (length (apply append (vector->list v))))
-                   (mapping
-                    (make-vector (max 1 n) 0))
-                   (alloc
-                    0)
-                   (mapping-lengths
-                    (let loop1 ((i 0) (lengths '()))
-                      (if (< i (vector-length v))
-                          (loop1 (+ i 1)
-                                 (let ((x (vector-ref v i)))
-                                   (if (pair? x)
-                                       (let* ((m (cdr x))
-                                              (mlen (length m)))
-                                         (let loop2 ((lst (reverse m)))
-                                           (if (pair? lst)
-                                               (begin
-                                                 (set! alloc (+ alloc 1))
-                                                 (vector-set!
-                                                  mapping
-                                                  alloc
-                                                  (car lst))
-                                                 (loop2 (cdr lst)))))
-                                         (vector-set! v i alloc)
-                                         (set! alloc (+ alloc 1))
-                                         (if (member mlen lengths)
-                                             lengths
-                                             (cons mlen lengths)))
-                                       (begin
-                                         (vector-set! v i 0)
-                                         lengths))))
-                          lengths))))
-              (vector-set! dict 0 (specialize-vector v))
-              (vector dict
-                      (sort-list mapping-lengths <)
-                      (specialize-vector mapping))))))
-
-    (define (create-int-dict alist)
-
-      (define (create-simple-dict alist m salt)
-        (let ((sd (make-vector m '())))
-          (let loop ((lst alist))
-            (if (pair? lst)
-                (let* ((x (car lst))
-                       (i (modulo (bitwise-xor (car x) salt) m)))
-                  (and (null? (vector-ref sd i))
-                       (begin
-                         (vector-set! sd i x)
-                         (loop (cdr lst)))))
-                sd))))
-
-      (define (empty-span-length vect start)
-        (let loop ((i start))
-          (if (and (< i (vector-length vect))
-                   (null? (vector-ref vect i)))
-              (loop (+ i 1))
-              (- i start))))
-
-      (define (compact-dict sd salt)
-        (let* ((shift (empty-span-length sd 0))
-               (m (vector-length sd))
-               (shifted-sd
-                (vector-append (subvector sd shift m)
-                               (subvector sd 0 shift))))
-          (let loop ((i 0) (best-i 0) (best-len 0))
-            (if (< i m)
-                (let ((len (empty-span-length shifted-sd i)))
-                  (if (> len best-len)
-                      (loop (+ (+ i 1) len) i len)
-                      (loop (+ (+ i 1) len) best-i best-len)))
-                (vector (vector-append
-                         (subvector shifted-sd (+ best-i best-len) m)
-                         (subvector shifted-sd 0 best-i))
-                        salt
-                        (modulo (- (+ shift (+ best-i best-len))) m)
-                        m)))))
-
-      (define (smallest-compact-dict alist)
-        (let loop1 ((m (length alist)) (best-cd #f))
-          (if (or (not best-cd)
-                  (< m (* 2 (vector-ref best-cd 3))))
-              (let loop2 ((m m) (salt 0) (best-cd best-cd))
-                (if (< salt 32)
-                    (loop2 m
-                           (+ salt 1)
-                           (let ((sd (create-simple-dict alist m salt)))
-                             (if (not sd)
-                                 best-cd
-                                 (let ((cd (compact-dict sd salt)))
-                                   (if (or (not best-cd)
-                                           (< (vector-length
-                                               (vector-ref cd 0))
-                                              (vector-length
-                                               (vector-ref best-cd 0))))
-                                       cd
-                                       best-cd)))))
-                    (loop1 (+ m 1) best-cd)))
-              best-cd)))
-
-      (smallest-compact-dict alist))
+            (subvector table 0 (+ hi-limit 1))))))
 
     ;; generate macro definitions that depend on Unicode character database
 
     (let* ((unicode-class
             (specialize-vector (create-unicode-class)))
-           (unicode-downcase-dist
-            (specialize-vector unicode-downcase-dist))
+
            (unicode-upcase-dist
             (specialize-vector unicode-upcase-dist))
+
+           (unicode-downcase-dist
+            (specialize-vector unicode-downcase-dist))
+
            (unicode-foldcase-dist
             (specialize-vector unicode-foldcase-dist))
+
            (unicode-titlecase-dist
             (specialize-vector unicode-titlecase-dist))
-           (unicode-full-foldcase-info
-            (create-unicode-full-foldcase-info))
+
            (unicode-full-foldcase-start
             (vector-ref (vector-ref unicode-full-foldcase-info 0) 0))
-           (unicode-full-foldcase-mapping-lengths
-            (vector-ref unicode-full-foldcase-info 1))
            (unicode-full-foldcase-mapping
             (vector-ref unicode-full-foldcase-info 2)))
+
+      (define (sym . lst)
+        (string->symbol (apply string-append (map symbol->string lst))))
+
+      (define extra-unicode-tables-definitions
+        `())
+
+      (define (gen-mapping-definitions name dist info)
+
+        (set! extra-unicode-tables-definitions
+          (append
+           (if (null? (vector-ref info 1)) ;; 1 to 1 mapping?
+               '()
+               `((define ,(sym '##unicode-full- name '-mapping)
+                   ',(vector-ref info 2))
+                 (define ,(sym '##unicode-full- name '-start)
+                   ,(vector-ref (vector-ref info 0) 0))))
+           `((define ,(sym '##unicode- name '-dist) ',dist))
+           extra-unicode-tables-definitions))
+
+        (let ((start
+               (vector-ref (vector-ref info 0) 0))
+              (mapping-lengths
+               (vector-ref info 1))
+              (mapping
+               (vector-ref info 2)))
+          `((define-macro (,(sym 'macro-full- name '-salt))
+              ,(vector-ref (vector-ref info 0) 1))
+
+            (define-macro (,(sym 'macro-full- name '-offset))
+              ,(vector-ref (vector-ref info 0) 2))
+
+            (define-macro (,(sym 'macro-full- name '-mod))
+              ,(vector-ref (vector-ref info 0) 3))
+
+            (define-macro (,(sym 'macro-full- name '-mapping-length) var)
+              ,(if (null? mapping-lengths)
+                   1  ;; when mapping is always 1 to 1, length is always 1
+                   (list 'quasiquote
+                         (let ()
+
+                           (define (gen mapping-lengths)
+                             (if (pair? mapping-lengths)
+                                 (let ((mlen (car mapping-lengths)))
+                                   (if (null? (cdr mapping-lengths))
+                                       mlen
+                                       `(if (##fx=
+                                             0
+                                             (,(sym 'macro-full- name '-mapping)
+                                              (##fx- ,',var ,mlen)))
+                                            ,mlen
+                                            ,(gen (cdr mapping-lengths)))))
+                                 1))
+
+                           (gen mapping-lengths)))))
+
+            (define-macro (,(sym 'macro-full- name '-start) code)
+              `(,',(specialized-vector-ref-op start)
+                ,',(sym '##unicode-full- name '-start)
+                (##fxmodulo
+                 (##fx+
+                  (##fxxor ,code (,',(sym 'macro-full- name '-salt)))
+                  (,',(sym 'macro-full- name '-offset)))
+                 (,',(sym 'macro-full- name '-mod)))))
+
+            (define-macro (,(sym 'macro-full- name '-mapping) i)
+              `(,',(specialized-vector-ref-op mapping)
+                ,',(sym '##unicode-full- name '-mapping)
+                ,i))
+
+            (define-macro (,(sym 'macro- name '-dist) class)
+              `(,',(specialized-vector-ref-op dist)
+                ,',(sym '##unicode- name '-dist)
+                ,class))
+
+            (define-macro (,(sym 'macro- name '-dist-simple) class)
+              ,(if (null? mapping-lengths)
+                   ``(,',(sym 'macro- name '-dist) class)
+                   ``(##fxarithmetic-shift-right
+                      (,',(sym 'macro- name '-dist) class)
+                      1)))
+
+            (define-macro (,(sym 'macro-char- name) c)
+              `(macro-let-char-class-with-default
+                ,c c code class
+                c
+                (##integer->char
+                 (##fx+ code
+                        (,',(sym 'macro- name '-dist-simple) class)))))
+
+            (define-macro (,(sym 'macro-string- name) str start end)
+              ,(if (null? mapping-lengths)
+
+                   ;; when mapping is always 1 to 1, use simple loop
+                   ``(let ((str ,str)
+                           (start ,start)
+                           (end ,end))
+
+                       (let* ((len (##fx- end start))
+                              (result (##make-string len)))
+                         (let loop ((i (##fx- len 1)))
+                           (if (##fx< i 0)
+                               result
+                               (begin
+                                 (##string-set!
+                                  result
+                                  i
+                                  (,',(sym 'macro-char- name)
+                                   (##string-ref str i)))
+                                 (loop (##fx- i 1)))))))
+
+                   ;; when mapping is not always 1 to 1, compute result length
+                   ``(let ((str ,str)
+                           (start ,start)
+                           (end ,end))
+
+                       (define (length-loop i len)
+                         (if (##fx>= i end)
+                             len
+                             (macro-let-char-class
+                              (##string-ref str i) c code class
+                              (let ((dist (,',(sym 'macro- name '-dist) class)))
+                                (if (##fxeven? dist)
+                                    (length-loop
+                                     (##fx+ i 1)
+                                     (##fx+ len 1))
+                                    (length-loop
+                                     (##fx+ i 1)
+                                     (##fx+ len
+                                            (let ((m (,',(sym 'macro-full- name '-start) code)))
+                                              (,',(sym 'macro-full- name '-mapping-length) m)))))))))
+
+                       (define (transform-loop result i j)
+                         (if (##fx>= i end)
+                             result
+                             (macro-let-char-class
+                              (##string-ref str i) c code class
+                              (let ((dist (,',(sym 'macro- name '-dist) class)))
+                                (if (##fxeven? dist)
+                                    (begin
+                                      (##string-set!
+                                       result
+                                       j
+                                       (##integer->char
+                                        (##fx+ code
+                                               (##fxarithmetic-shift-right dist 1))))
+                                      (transform-loop
+                                       result
+                                       (##fx+ i 1)
+                                       (##fx+ j 1)))
+                                    (let loop ((m (,',(sym 'macro-full- name '-start) code))
+                                               (j j))
+                                      (let ((code* (,',(sym 'macro-full- name '-mapping) m)))
+                                        (if (##fx= 0 code*)
+                                            (transform-loop
+                                             result
+                                             (##fx+ i 1)
+                                             j)
+                                            (begin
+                                              (##string-set!
+                                               result
+                                               j
+                                               (##integer->char code*))
+                                              (loop (##fx- m 1) (##fx+ j 1)))))))))))
+
+                       (transform-loop (##make-string (length-loop start 0))
+                                       start
+                                       0)))))))
+
+      (define upcase-definitions
+        (gen-mapping-definitions 'upcase
+                                 unicode-upcase-dist
+                                 unicode-full-upcase-info))
+
+      (define downcase-definitions
+        (gen-mapping-definitions 'downcase
+                                 unicode-downcase-dist
+                                 unicode-full-downcase-info))
+
+      (define foldcase-definitions
+        (gen-mapping-definitions 'foldcase
+                                 unicode-foldcase-dist
+                                 unicode-full-foldcase-info))
+
+      (define titlecase-definitions
+        (if support-title-case?
+            (gen-mapping-definitions 'titlecase
+                                     unicode-titlecase-dist
+                                     unicode-full-titlecase-info)
+            '()))
+
       `(begin
 
          (define-macro (macro-implement-unicode-tables)
@@ -699,24 +1005,7 @@ integer->char
               (define ##unicode-class
                 ',',unicode-class)
 
-              (define ##unicode-downcase-dist
-                ',',unicode-downcase-dist)
-
-              (define ##unicode-upcase-dist
-                ',',unicode-upcase-dist)
-
-              (define ##unicode-foldcase-dist
-                ',',unicode-foldcase-dist)
-
-              (define ##unicode-titlecase-dist
-                ',',unicode-titlecase-dist)
-
-              ,@,(if (null? unicode-full-foldcase-mapping-lengths)
-                     ``()
-                     ``((define ##unicode-full-foldcase-start
-                          ',',unicode-full-foldcase-start)
-                        (define ##unicode-full-foldcase-mapping
-                          ',',unicode-full-foldcase-mapping)))))
+              ,@',(reverse extra-unicode-tables-definitions)))
 
          (define-macro (macro-alphabetic-class-start)
            ,alphabetic-class-start)
@@ -736,46 +1025,10 @@ integer->char
          (define-macro (macro-lower-class-start)    ,lower-class-start)
          (define-macro (macro-alphabetic-class-end) ,alphabetic-class-end)
 
-         (define-macro (macro-full-foldcase-salt)
-           ,(vector-ref (vector-ref unicode-full-foldcase-info 0) 1))
-
-         (define-macro (macro-full-foldcase-offset)
-           ,(vector-ref (vector-ref unicode-full-foldcase-info 0) 2))
-
-         (define-macro (macro-full-foldcase-mod)
-           ,(vector-ref (vector-ref unicode-full-foldcase-info 0) 3))
-
-         ,(if (null? unicode-full-foldcase-mapping-lengths)
-              `(define-macro (macro-full-foldcase-mapping-length var) 1)
-              `(define-macro (macro-full-foldcase-mapping-length var)
-
-                 (define (gen mapping-lengths)
-                   (if (pair? mapping-lengths)
-                       (let ((mlen (car mapping-lengths)))
-                         (if (null? (cdr mapping-lengths))
-                             mlen
-                             `(if (##fx= 0
-                                         (macro-full-foldcase-mapping
-                                          (##fx- ,var ,mlen)))
-                                  ,mlen
-                                  ,(gen (cdr mapping-lengths)))))
-                       1))
-
-                 (gen ',unicode-full-foldcase-mapping-lengths)))
-
-         (define-macro (macro-full-foldcase-start code)
-           `(,',(specialized-vector-ref-op unicode-full-foldcase-start)
-             ##unicode-full-foldcase-start
-             (##fxmodulo
-              (##fx+
-               (##fxxor ,code (macro-full-foldcase-salt))
-               (macro-full-foldcase-offset))
-              (macro-full-foldcase-mod))))
-
-         (define-macro (macro-full-foldcase-mapping i)
-           `(,',(specialized-vector-ref-op unicode-full-foldcase-mapping)
-             ##unicode-full-foldcase-mapping
-             ,i))
+         ,@upcase-definitions
+         ,@downcase-definitions
+         ,@foldcase-definitions
+         ,@titlecase-definitions
 
          (define-macro (macro-let-char-class
                         char
@@ -866,57 +1119,6 @@ integer->char
                           `(and (##fx>= class (macro-title-class-start))
                                 (##fx< class (macro-lower-class-start)))))))
 
-         (define-macro (macro-upcase-dist class)
-           `(,',(specialized-vector-ref-op unicode-upcase-dist)
-             ##unicode-upcase-dist
-             ,class))
-
-         (define-macro (macro-char-upcase c)
-           `(macro-let-char-class-with-default
-             ,c c code class
-             c
-             (##integer->char
-              (##fx+ code (macro-upcase-dist class)))))
-
-         (define-macro (macro-downcase-dist class)
-           `(,',(specialized-vector-ref-op unicode-downcase-dist)
-             ##unicode-downcase-dist
-             ,class))
-
-         (define-macro (macro-char-downcase c)
-           `(macro-let-char-class-with-default
-             ,c c code class
-             c
-             (##integer->char
-              (##fx+ code (macro-downcase-dist class)))))
-
-         (define-macro (macro-titlecase-dist class)
-           `(,',(specialized-vector-ref-op unicode-titlecase-dist)
-             ##unicode-titlecase-dist
-             ,class))
-
-         (define-macro (macro-char-titlecase c)
-           `(macro-let-char-class-with-default
-             ,c c code class
-             c
-             (##integer->char
-              (##fx+ code (macro-titlecase-dist class)))))
-
-         (define-macro (macro-foldcase-dist class)
-           `(,',(specialized-vector-ref-op unicode-foldcase-dist)
-             ##unicode-foldcase-dist
-             ,class))
-
-         (define-macro (macro-char-foldcase c)
-           `(macro-let-char-class-with-default
-             ,c c code class
-             c
-             (##integer->char
-              (##fx+ code
-                     (##fxarithmetic-shift-right
-                      (macro-foldcase-dist class)
-                      1)))))
-
          (define-macro (macro-digit-value c)
            `(macro-let-char-class-with-default
              ,c c code class
@@ -978,53 +1180,71 @@ integer->char
                           (##string-ref str2 i2) c2 code2 class2
                           (let ((dist1 (macro-foldcase-dist class1))
                                 (dist2 (macro-foldcase-dist class2)))
-                            (if (##fxeven? dist1)
-                                (if (##fxeven? dist2)
-                                    (compare-simp-simp
+                            ,',(if (null? (vector-ref ;; 1 to 1 mapping
+                                           unicode-full-foldcase-info
+                                           1))
+                                   `(compare-simp-simp
                                      (##fx+ i1 1)
                                      (##fx+ i2 1)
-                                     (##fx+ code1
-                                            (##fxarithmetic-shift-right dist1
-                                                                        1))
-                                     (##fx+ code2
-                                            (##fxarithmetic-shift-right dist2
-                                                                        1)))
-                                    (let* ((m2
-                                            (macro-full-foldcase-start code2))
-                                           (code2*
-                                            (macro-full-foldcase-mapping m2)))
-                                      (compare-simp-spec
-                                       (##fx+ i1 1)
-                                       (##fx+ i2 1)
-                                       (##fx- m2 1)
-                                       (##fx+ code1
-                                              (##fxarithmetic-shift-right dist1
-                                                                          1))
-                                       code2*)))
-                                (let* ((m1
-                                        (macro-full-foldcase-start code1))
-                                       (code1*
-                                        (macro-full-foldcase-mapping m1)))
-                                  (if (##fxeven? dist2)
-                                      (compare-spec-simp
-                                       (##fx+ i1 1)
-                                       (##fx+ i2 1)
-                                       (##fx- m1 1)
-                                       code1*
-                                       (##fx+ code2
-                                              (##fxarithmetic-shift-right dist2
-                                                                          1)))
-                                      (let* ((m2
-                                              (macro-full-foldcase-start code2))
-                                             (code2*
-                                              (macro-full-foldcase-mapping m2)))
-                                        (compare-spec-spec
-                                         (##fx+ i1 1)
-                                         (##fx+ i2 1)
-                                         (##fx- m1 1)
-                                         (##fx- m2 1)
-                                         code1*
-                                         code2*)))))))))))
+                                     (##fx+ code1 dist1)
+                                     (##fx+ code2 dist2))
+                                   `(if (##fxeven? dist1)
+                                        (if (##fxeven? dist2)
+                                            (compare-simp-simp
+                                             (##fx+ i1 1)
+                                             (##fx+ i2 1)
+                                             (##fx+ code1
+                                                    (##fxarithmetic-shift-right
+                                                     dist1
+                                                     1))
+                                             (##fx+ code2
+                                                    (##fxarithmetic-shift-right
+                                                     dist2
+                                                     1)))
+                                            (let* ((m2
+                                                    (macro-full-foldcase-start
+                                                     code2))
+                                                   (code2*
+                                                    (macro-full-foldcase-mapping
+                                                     m2)))
+                                              (compare-simp-spec
+                                               (##fx+ i1 1)
+                                               (##fx+ i2 1)
+                                               (##fx- m2 1)
+                                               (##fx+ code1
+                                                      (##fxarithmetic-shift-right
+                                                       dist1
+                                                       1))
+                                               code2*)))
+                                        (let* ((m1
+                                                (macro-full-foldcase-start
+                                                 code1))
+                                               (code1*
+                                                (macro-full-foldcase-mapping
+                                                 m1)))
+                                          (if (##fxeven? dist2)
+                                              (compare-spec-simp
+                                               (##fx+ i1 1)
+                                               (##fx+ i2 1)
+                                               (##fx- m1 1)
+                                               code1*
+                                               (##fx+ code2
+                                                      (##fxarithmetic-shift-right
+                                                       dist2
+                                                       1)))
+                                              (let* ((m2
+                                                      (macro-full-foldcase-start
+                                                       code2))
+                                                     (code2*
+                                                      (macro-full-foldcase-mapping
+                                                       m2)))
+                                                (compare-spec-spec
+                                                 (##fx+ i1 1)
+                                                 (##fx+ i2 1)
+                                                 (##fx- m1 1)
+                                                 (##fx- m2 1)
+                                                 code1*
+                                                 code2*))))))))))))
 
               (define (compare-spec-simp i1 i2 m1 code1 code2)
                 (if (##fx= code1 code2)
@@ -1122,65 +1342,7 @@ integer->char
                            code1
                            code2)))))
 
-              (loop-simp-simp start1 start2)))
-
-         (define-macro (macro-string-foldcase str start end)
-           `(let ((str ,str)
-                  (start ,start)
-                  (end ,end))
-
-              (define (length-loop i len)
-                (if (##fx>= i end)
-                    len
-                    (macro-let-char-class
-                     (##string-ref str i) c code class
-                     (let ((dist (macro-foldcase-dist class)))
-                       (if (##fxeven? dist)
-                           (length-loop
-                            (##fx+ i 1)
-                            (##fx+ len 1))
-                           (length-loop
-                            (##fx+ i 1)
-                            (##fx+ len
-                                   (let ((m (macro-full-foldcase-start code)))
-                                     (macro-full-foldcase-mapping-length m)))))))))
-
-              (define (foldcase-loop result i j)
-                (if (##fx>= i end)
-                    result
-                    (macro-let-char-class
-                     (##string-ref str i) c code class
-                     (let ((dist (macro-foldcase-dist class)))
-                       (if (##fxeven? dist)
-                           (begin
-                             (##string-set!
-                              result
-                              j
-                              (##integer->char
-                               (##fx+ code
-                                      (##fxarithmetic-shift-right dist 1))))
-                             (foldcase-loop
-                              result
-                              (##fx+ i 1)
-                              (##fx+ j 1)))
-                           (let loop ((m (macro-full-foldcase-start code))
-                                      (j j))
-                             (let ((code* (macro-full-foldcase-mapping m)))
-                               (if (##fx= 0 code*)
-                                   (foldcase-loop
-                                    result
-                                    (##fx+ i 1)
-                                    j)
-                                   (begin
-                                     (##string-set!
-                                      result
-                                      j
-                                      (##integer->char code*))
-                                     (loop (##fx- m 1) (##fx+ j 1)))))))))))
-
-              (foldcase-loop (##make-string (length-loop start 0))
-                             start
-                             0)))))))
+              (loop-simp-simp start1 start2)))))))
 
 (macro-define-unicode-tables #f)
 

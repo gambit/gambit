@@ -2,7 +2,7 @@
 
 ;;; File: "_system.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -839,14 +839,15 @@
 
   ;; FNV1a hash function adapted to fixnums fitting in 32 bit words
 
-  (let loop ((h (macro-fnv1a-offset-basis-fixnum32))
-             (i 0))
-    (if (##fx< i (##string-length str))
-        (loop (macro-hash-combine
-               h
-               (##char->integer (##char-downcase (##string-ref str i))))
-              (##fx+ i 1))
-        h)))
+  (let ((str (##string-foldcase str)))
+    (let loop ((h (macro-fnv1a-offset-basis-fixnum32))
+               (i 0))
+      (if (##fx< i (##string-length str))
+          (loop (macro-hash-combine
+                 h
+                 (##char->integer (##string-ref str i)))
+                (##fx+ i 1))
+          h))))
 
 (define-prim (string-ci=?-hash str)
   (macro-force-vars (str)

@@ -2,7 +2,7 @@
 
 ;;; File: "string.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -201,18 +201,8 @@
 (define (##string-upcase str)
 
   (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
-  (namespace ("" string-upcase)) ;; but not string-upcase to ##string-upcase
 
-  (let* ((start 0)
-         (end (string-length str))
-         (len (fx- end start))
-         (result (make-string len)))
-    (let loop ((i (fx- len 1)))
-      (if (fx< i 0)
-          result
-          (begin
-            (string-set! result i (macro-char-upcase (string-ref str i)))
-            (loop (fx- i 1)))))))
+  (macro-string-upcase str 0 (string-length str)))
 
 (define-prim (string-upcase str)
   (macro-force-vars (str)
@@ -226,16 +216,7 @@
 
   (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
 
-  (let* ((start 0)
-         (end (string-length str))
-         (len (fx- end start))
-         (result (make-string len)))
-    (let loop ((i (fx- len 1)))
-      (if (fx< i 0)
-          result
-          (begin
-            (string-set! result i (macro-char-downcase (string-ref str i)))
-            (loop (fx- i 1)))))))
+  (macro-string-downcase str 0 (string-length str)))
 
 (define-prim (string-downcase str)
 
