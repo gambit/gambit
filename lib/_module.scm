@@ -137,7 +137,7 @@
 
   (define (reverse-split-at-module-path-sep str tail)
     (and tail
-         (##reverse-string-split-at str ##module-path-sep tail)))
+         (##string-split-at-char-reversed str ##module-path-sep tail)))
 
   (define (reverse-split-path lst tail)
     (let loop ((lst lst) (rev-parts tail))
@@ -199,7 +199,7 @@
         #t))
 
   (define (valid-host-name? str) ;; syntax: component.component[.component]*
-    (let ((x (##reverse-string-split-at str #\. '())))
+    (let ((x (##string-split-at-char-reversed  str #\.)))
       (and (##pair? (##cdr x)) ;; must have at least one "."
            (valid-components? x 'host)))) ;; and valid host components
 
@@ -235,7 +235,7 @@
   (define (parse-rest nb-dots rev-parts)
     (if (##pair? rev-parts)
         (let* ((head (##car rev-parts))
-               (x (##reverse-string-split-at head #\@ '()))
+               (x (##string-split-at-char-reversed  head #\@))
                (len (##length x)))
           (cond ((##fx> len 2) ;; improper syntax to have more than one "@"
                  #f)
@@ -289,21 +289,6 @@
                    (##cdr code))
             (parse code
                    '())))))
-
-(define (##reverse-string-split-at str sep #!optional (rest '()))
-  (let ((len (##string-length str)))
-    (let loop ((i 0) (j 0) (lst rest))
-      (if (##fx< j (##string-length str))
-          (let ((c (##string-ref str j))
-                (j+1 (##fx+ j 1)))
-            (if (##char=? c sep)
-                (loop j+1
-                      j+1
-                      (##cons (##substring str i j) lst))
-                (loop i
-                      j+1
-                      lst)))
-          (##cons (##substring str i j) lst)))))
 
 ;;;----------------------------------------------------------------------------
 

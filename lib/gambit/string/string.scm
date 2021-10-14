@@ -337,6 +337,44 @@
                        (loop1 (fx+ i 1)))
                    i)))))))
 
+(define-primitive (string-split-at-char
+                   (string    string)
+                   (delimiter char)
+                   (tail      object '())
+                   (start     (index-range-incl 0 (string-length string)) 0)
+                   (end       (index-range-incl start (string-length string)) (string-length string)))
+  (let loop ((lo end) (hi end) (lst tail))
+    (if (fx< start lo)
+        (let* ((lo-1 (fx- lo 1))
+               (c (string-ref string lo-1)))
+          (if (char=? c delimiter)
+              (loop lo-1
+                    lo-1
+                    (cons (substring string lo hi) lst))
+              (loop lo-1
+                    hi
+                    lst)))
+        (cons (substring string lo hi) lst))))
+
+(define-primitive (string-split-at-char-reversed
+                   (string    string)
+                   (delimiter char)
+                   (tail      object '())
+                   (start     (index-range-incl 0 (string-length string)) 0)
+                   (end       (index-range-incl start (string-length string)) (string-length string)))
+  (let loop ((lo start) (hi start) (lst tail))
+    (if (fx< hi end)
+        (let* ((c (string-ref string hi))
+               (hi+1 (fx+ hi 1)))
+          (if (char=? c delimiter)
+              (loop hi+1
+                    hi+1
+                    (cons (substring string lo hi) lst))
+              (loop lo
+                    hi+1
+                    lst)))
+        (cons (substring string lo hi) lst))))
+
 ;;;----------------------------------------------------------------------------
 
 ;; UTF-8 encoding and decoding

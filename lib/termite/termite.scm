@@ -828,7 +828,7 @@
 (##unknown-procedure-handler-set!
   (lambda (name id)
     (let* ((name-str (##symbol->string name))
-           (proc/ns (##reverse-string-split-at name-str #\#)))
+           (proc/ns (##string-split-at-char-reversed name-str #\#)))
       (and (##pair? (##cdr proc/ns))
            (let ((mod-name (##last proc/ns)))
              (##load-module (##string->symbol mod-name))
