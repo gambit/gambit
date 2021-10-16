@@ -650,6 +650,8 @@ read-all
 read-bytevector
 read-bytevector!
 read-error?
+read-file-as-string
+read-file-as-u8vector
 read-line
 read-string
 read-substring

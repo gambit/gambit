@@ -2211,6 +2211,52 @@
 
 ;;;----------------------------------------------------------------------------
 
+(define-prim&proc (read-file-as-string path-or-settings)
+  (##open-file-generic
+   (macro-direction-in)
+   #t ;; raise-os-exception?
+   (lambda (port)
+     (let ((result (##read-line port #f)))
+       (##close-port port)
+       result))
+   read-file-as-string
+   path-or-settings))
+
+(define-prim&proc (read-file-as-u8vector (path string))
+  (let ((info (##file-info-aux path)))
+    (if (fixnum? info)
+        (##raise-os-exception #f info read-file-as-u8vector path)
+        (let* ((size (macro-file-info-size info))
+               (size+1 (fx+ size 1))
+               (u8vect (make-u8vector size+1)))
+          (##open-file-generic
+           (macro-direction-in)
+           #t ;; raise-os-exception?
+           (lambda (port)
+             (let ((n (if (fx= size 0)
+                          0
+                          (read-subu8vector u8vect 0 size+1 port))))
+               (if (fx< n size+1) ;; file did not grow since file-info called?
+                   (begin
+                     (u8vector-shrink! u8vect n)
+                     (close-port port)
+                     u8vect)
+                   (let loop ((chunks (list u8vect)))
+                     (define chunk-size 4096)
+                     (let* ((new-chunk (make-u8vector chunk-size))
+                            (n (read-subu8vector new-chunk 0 chunk-size port))
+                            (new-chunks (cons new-chunk chunks)))
+                       (u8vector-shrink! new-chunk n)
+                       (if (fx< n chunk-size)
+                           (begin
+                             (close-port port)
+                             (append-u8vectors (reverse new-chunks)))
+                           (loop new-chunks)))))))
+           read-file-as-u8vector
+           path)))))
+
+;;;----------------------------------------------------------------------------
+
 ;;; Implementation of user-info objects.
 
 (implement-library-type-user-info)

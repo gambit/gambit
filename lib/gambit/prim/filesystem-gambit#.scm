@@ -2,7 +2,7 @@
 
 ;;; File: "filesystem-gambit#.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -60,6 +60,8 @@ path-strip-extension
 path-strip-trailing-directory-separator
 path-strip-volume
 path-volume
+read-file-as-string
+read-file-as-u8vector
 rename-file
 
 ))

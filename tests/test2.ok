@@ -1121,10 +1121,10 @@
 ;;; (Argument 1, proc) PROCEDURE expected: (for-each #f '(1 2 3) '(0 2 6) '(10 100 1000))
 (force 123) => 123
 ;;; CALL EXPRESSION (call/cc #f) IS WRONG: (call-with-current-continuation #f)
-;;; (Argument 1) STRING or port settings expected: (call-with-input-file #f '#<procedure #5 list>)
+;;; (Argument 1, path-or-settings) STRING or port settings expected: (call-with-input-file #f '#<procedure #5 list>)
 ;;; (Argument 2) PROCEDURE expected: (call-with-input-file "tmp" #f)
 ;;; No such file or directory: (call-with-input-file "notexist" '#<procedure #5 list>)
-;;; (Argument 1) STRING or port settings expected: (call-with-output-file #f '#<procedure #5 list>)
+;;; (Argument 1, path-or-settings) STRING or port settings expected: (call-with-output-file #f '#<procedure #5 list>)
 ;;; (Argument 2) PROCEDURE expected: (call-with-output-file "tmp" #f)
 (input-port? '#<input-port #6 (stdin)>) => #t
 (input-port? '#<output-port #7 (stdout)>) => #f
@@ -1134,14 +1134,14 @@
 (output-port? #f) => #f
 (current-input-port) => #<input-port #6 (stdin)>
 (current-output-port) => #<output-port #7 (stdout)>
-;;; (Argument 1) STRING or port settings expected: (with-input-from-file #f '#<procedure #5 list>)
+;;; (Argument 1, path-or-settings) STRING or port settings expected: (with-input-from-file #f '#<procedure #5 list>)
 ;;; (Argument 2) PROCEDURE expected: (with-input-from-file "tmp" #f)
 ;;; No such file or directory: (with-input-from-file "noexist" '#<procedure #5 list>)
-;;; (Argument 1) STRING or port settings expected: (with-output-to-file #f '#<procedure #5 list>)
+;;; (Argument 1, path-or-settings) STRING or port settings expected: (with-output-to-file #f '#<procedure #5 list>)
 ;;; (Argument 2) PROCEDURE expected: (with-output-to-file "tmp" #f)
-;;; (Argument 1) STRING or port settings expected: (open-input-file #f)
+;;; (Argument 1, path-or-settings) STRING or port settings expected: (open-input-file #f)
 ;;; No such file or directory: (open-input-file "noexist")
-;;; (Argument 1) STRING or port settings expected: (open-output-file #f)
+;;; (Argument 1, path-or-settings) STRING or port settings expected: (open-output-file #f)
 ;;; (Argument 1) INPUT PORT expected: (close-input-port '#<output-port #7 (stdout)>)
 ;;; (Argument 1) INPUT PORT expected: (close-input-port #f)
 ;;; (Argument 1) OUTPUT PORT expected: (close-output-port '#<input-port #6 (stdin)>)

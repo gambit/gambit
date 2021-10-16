@@ -5138,7 +5138,7 @@ With old-fashioned modularization, the code that implements the
 module's functionality is put in a source code file and this module is
 accessed by other code by using a @code{load} or @code{include} of
 that file.  Here is an example of an @code{angle0} module that is used
-by an @code{angle0-app} main program:
+by an @code{app0} main program:
 
 @smallexample
 ;;;---------------------------------------- file: @b{angle0/angle0.scm}
@@ -5188,7 +5188,7 @@ accidental clashes.
 
 @end itemize
 
-@node Primitive Modules, R7RS Compatible Modules, Old-Fashioned Modules, Modules
+@node Primitive Modules, Primitive Procedures, Old-Fashioned Modules, Modules
 @section Primitive Modules
 
 @menu
@@ -5343,7 +5343,7 @@ mapping and the loading of @code{angle3.scm} because it is equivalent to:
  (##demand-module angle3))
 @end smallexample
 
-@node Macros, Primitive Procedures, ##namespace and ##import forms, Primitive Modules
+@node Macros, , ##namespace and ##import forms, Primitive Modules
 @subsection Macros
 
 In addition to procedures, a module @code{M} may export macros.  The
@@ -5419,7 +5419,7 @@ example can be written like this:
 (println "sind(90) is " (sind 90))
 @end smallexample
 
-@node Primitive Procedures, R7RS Compatible Modules, Macros, Modules
+@node Primitive Procedures, R7RS Compatible Modules, Primitive Modules, Modules
 @section Primitive Procedures
 
 Identifiers with a @code{##} prefix are not valid identifiers according
@@ -5437,15 +5437,27 @@ For those reasons @code{##} prefixed identifiers should be used
 sparingly in new code, and existing code should gradually be rewritten
 to avoid them. The primitive operations which are used to build
 higher-level operations are all defined as procedures with a @code{##}
-prefix. The purpose of the @code{primitive} special form is to abstract
-from the @code{##} prefix. The call @code{(primitive foo)} is equivalent
-to @code{##foo} and @code{(primitive (foo a b c))} is equivalent to
-@code{(##foo a b c)}. Another Scheme implementation could define
-@code{primitive} differently to use a different prefix (or no prefix) or
-implement an arbitrary mapping to implementation dependent identifiers.
+prefix.
 
-The @code{primitive} special form works in tandem with the
-@code{define-procedure} and @code{define-primitive} forms and the
+The file @code{~~lib/_gambit#.scm} contains the definition of the
+@code{primitive} macro whose purpose is to abstract from the @code{##}
+prefix. The call @code{(primitive foo)} is equivalent to @code{##foo}
+and @code{(primitive (foo a b))} is equivalent to @code{(##foo a b)}.
+The file @code{~~lib/_gambit#.scm} also contains the definition of the
+@code{standard} macro whose purpose is similar, but forces the use of
+the empty namespace.  The call @code{(standard +)} is equivalent to
+@code{(##let () (##namespace ("" +)) +)} and @code{(standard (+ a b))}
+is equivalent to @code{((##let () (##namespace ("" +)) +) a
+b)}.  Code that uses the @code{primitive} and @code{standard}
+macros can be ported to other Scheme implementations
+by defining implementation specific @code{primitive} and
+@code{standard} macros that implement the appropriate mapping for
+that implementation.
+
+The file @code{~~lib/_gambit#.scm} also contains definitions for the
+@code{define-procedure} and @code{define-primitive} macros.
+The @code{primitive} and @code{standard} macros work in tandem with the
+@code{define-procedure} and @code{define-primitive} macros and the
 @code{~~lib/gambit/prim/prim#.scm} file and @code{(gambit prim)}
 library. The file @code{~~lib/gambit/prim/prim#.scm} contains namespace
 declarations that map operations exported by the runtime library without
@@ -5471,30 +5483,30 @@ is equivalent to this code:
 
 The namespace declarations in @code{~~lib/gambit/prim/prim#.scm} have
 caused a mapping of @code{square} to @code{##square}, @code{car} to
-@code{##car} and println to @code{##println} because those primitives
-perform the same operations (assuming the code has no errors). Note that
-@code{foo} and @code{bar} have remained the same (because they are not
-procedures exported by the runtime library) but @code{pp} has been
+@code{##car} and @code{println} to @code{##println} because those primitives
+perform the same operations (when the code has no errors). Note that
+@code{foo} and @code{bar} have remained the same, because they are not
+procedures exported by the runtime library, and @code{pp} has been
 mapped to @code{##pp#unimplemented} because @code{pp} is a procedure
 exported by the runtime library but @code{##pp} is not defined. Having
-@code{unimplemented} in the name will help catch situations where the
+@code{unimplemented} in the name helps catch situations where the
 programmer expected a primitive operation to exist but this isn't the
 case.
 
-The @code{define-procedure} form does two things. It supports type
+The @code{define-procedure} macro does two things. It supports type
 annotations in the parameter list and it inserts a @code{(include
 "~~lib/gambit/prim/prim#.scm")} in the body so that primitive operations
 can be used without the @code{##} prefix. Type checking and automatic
-forcing of promise arguments are also added implicitly. The form
+forcing of promise arguments are also added implicitly. The macro
 @code{define-primitive} is similar, but the procedure defined is
 implicitly prefixed with @code{##}.
 
 So all of these things work together to abstract away from the concept
-of "primitive" operations. "Primitives" are implemented using procedures
+of @emph{primitive} operations. @emph{Primitives} are implemented using procedures
 with a @code{##} prefix, but other Scheme implementations could do it
 differently.
 
-Finally, there's the @code{(declare-safe-define-procedure <bool>)} form
+Finally, there's the @code{(declare-safe-define-procedure <bool>)} macro
 that can be used to enable/disable the mapping of names exported by the
 runtime library to the corresponding primitives. This is useful to
 enable type checks in the code. For example the following definition:
@@ -5526,7 +5538,7 @@ If the code is in the scope of a @code{(declare-safe-define-procedure
 @code{##vector-ref} which will both check that @var{x} is a vector
 (redundantly) and that the index is in range. However, the use of
 @code{##vector-ref} can be forced by writing the code with an explicit
-use of the primitive special form:
+use of the @code{primitive} macro:
 
 @example
 (define-procedure (foo (x vector))
@@ -5552,150 +5564,241 @@ proper list (i.e. that it ends with the empty list).
 
 @subsubsection Basic types (other than numbers)
 
-@example
-boolean                    x is a boolean
-char                       x is a character
-pair                       x is a pair
-procedure                  x is a procedure
-string                     x is a string
-symbol                     x is a symbol
-vector                     x is a vector
-@end example
+@table @code
+@item boolean
+@var{x} is a boolean
+@item char
+@var{x} is a character
+@item pair
+@var{x} is a pair
+@item procedure
+@var{x} is a procedure
+@item string
+@var{x} is a string
+@item symbol
+@var{x} is a symbol
+@item vector
+@var{x} is a vector
+@end table
 
 @subsubsection Numbers
 
-@example
-number                     x is a number (possibly complex, rational, etc)
+@table @code
+@item number
+@var{x} is a number (possibly complex, rational, etc)
 
-real                       x is a real number (any number except complex)
+@item real
+@var{x} is a real number (any number except complex)
 
-fixnum                     x is a fixnum and -2^(64-3) <= x <= 2^(64-3) - 1
-(fixnum-range lo hi)       x is a fixnum and lo <= x < hi
-(fixnum-range-incl lo hi)  x is a fixnum and lo <= x <= hi
+@item fixnum
+@var{x} is a fixnum and -2^(W-3) <= @var{x} <= 2^(W-3) - 1
+@item (fixnum-range lo hi)
+@var{x} is a fixnum and lo <= @var{x} < hi
+@item (fixnum-range-incl lo hi)
+@var{x} is a fixnum and lo <= @var{x} <= hi
 
-index                      x is a fixnum and 0 <= x <= 2^(64-3) - 1
-(index-range lo hi)        x is a fixnum and 0 <= lo <= x < hi
-(index-range-incl lo hi)   x is a fixnum and 0 <= lo <= x <= hi
+@item index
+@var{x} is a fixnum and 0 <= @var{x}
+@item (index-range lo hi)
+@var{x} is a fixnum and 0 <= lo <= @var{x} < hi
+@item (index-range-incl lo hi)
+@var{x} is a fixnum and 0 <= lo <= @var{x} <= hi
 
-exact-signed-int8          x is an exact integer, -128 <= x <= 127
-exact-signed-int16         x is an exact integer n, -32768 <= x <= 32767
-exact-signed-int32         x is an exact integer n, -2^31 <= x <= 2^31 - 1
-exact-signed-int64         x is an exact integer n, -2^63 <= x <= 2^63 - 1
-exact-unsigned-int8        x is an exact integer n, 0 <= x <= 255
-exact-unsigned-int16       x is an exact integer n, 0 <= x <= 65535
-exact-unsigned-int32       x is an exact integer n, 0 <= x <= 2^32 - 1
-exact-unsigned-int64       x is an exact integer n, 0 <= x <= 2^64 - 1
+@item exact-signed-int8
+@var{x} is an exact integer, -128 <= @var{x} <= 127
+@item exact-signed-int16
+@var{x} is an exact integer n, -32768 <= @var{x} <= 32767
+@item exact-signed-int32
+@var{x} is an exact integer n, -2^31 <= @var{x} <= 2^31 - 1
+@item exact-signed-int64
+@var{x} is an exact integer n, -2^63 <= @var{x} <= 2^63 - 1
+@item exact-unsigned-int8
+@var{x} is an exact integer n, 0 <= @var{x} <= 255
+@item exact-unsigned-int16
+@var{x} is an exact integer n, 0 <= @var{x} <= 65535
+@item exact-unsigned-int32
+@var{x} is an exact integer n, 0 <= @var{x} <= 2^32 - 1
+@item exact-unsigned-int64
+@var{x} is an exact integer n, 0 <= @var{x} <= 2^64 - 1
 
-flonum                     x is a flonum (floating point number)
-inexact-real               x is a flonum
-inexact-real-list          x is a flonum, exception mentions LIST
-@end example
+@item flonum
+@var{x} is a flonum (floating point number)
+@item inexact-real
+@var{x} is a flonum
+@item inexact-real-list
+@var{x} is a flonum, exception mentions LIST
+@end table
 
 @subsubsection Time types
 
-@example
-time                       x is a time object
-absrel-time                x is a real or a time object
-absrel-time-or-false       x is #f or a real or a time object
-@end example
+@table @code
+@item time
+@var{x} is a time object
+@item absrel-time
+@var{x} is a real or a time object
+@item absrel-time-or-false
+@var{x} is @code{#f} or a real or a time object
+@end table
 
 @subsubsection Ports
 
-@example
-port                       x is a port (input, output, or input-output)
-input-port                 x is an input port
-output-port                x is an output port
+@table @code
+@item port
+@var{x} is a port (input, output, or input-output)
+@item input-port
+@var{x} is an input port
+@item output-port
+@var{x} is an output port
 
-object-input-port          x is an object input port
-object-output-port         x is an object output port
-vector-input-port          x is a vector input port
-vector-output-port         x is a vector output port
+@item object-input-port
+@var{x} is an object input port
+@item object-output-port
+@var{x} is an object output port
+@item vector-input-port
+@var{x} is a vector input port
+@item vector-output-port
+@var{x} is a vector output port
 
-character-input-port       x is a character input port
-character-output-port      x is a character output port
-string-input-port          x is a string input port
-string-output-port         x is a string output port
+@item character-input-port
+@var{x} is a character input port
+@item character-output-port
+@var{x} is a character output port
+@item string-input-port
+@var{x} is a string input port
+@item string-output-port
+@var{x} is a string output port
 
-byte-port                  x is a byte port (input, output, or input-output)
-byte-input-port            x is a byte input port
-byte-output-port           x is a byte output port
-u8vector-input-port        x is a u8vector input port
+@item byte-port
+@var{x} is a byte port (input, output, or input-output)
+@item byte-input-port
+@var{x} is a byte input port
+@item byte-output-port
+@var{x} is a byte output port
+@item u8vector-input-port
+@var{x} is a u8vector input port
 u8vector-output-port       x is a u8vector output port
 
-device-input-port          x is a device intput port
-device-output-port         x is a device output port
-process-port               x is a process port
+@item device-input-port
+@var{x} is a device intput port
+@item device-output-port
+@var{x} is a device output port
+@item process-port
+@var{x} is a process port
 
-tcp-client-port            x is a tcp-client port
-tcp-server-port            x is a tcp-server port
+@item tcp-client-port
+@var{x} is a tcp-client port
+@item tcp-server-port
+@var{x} is a tcp-server port
 
-udp-port                   x is a udp port
-udp-input-port             x is a udp input port
-udp-output-port            x is a udp output port
+@item udp-port
+@var{x} is a udp port
+@item udp-input-port
+@var{x} is a udp input port
+@item udp-output-port
+@var{x} is a udp output port
 
-tty-port                   x is a tty port
-@end example
+@item tty-port
+@var{x} is a tty port
+@end table
 
 @subsubsection List and vector variants of above
 
-@example
-list                       x is '(), exception mentions LIST
-char-list                  x is a character, exception mentions LIST
-char-vector                x is a character, exception mentions VECTOR
-pair-list                  x is a pair, exception mentions LIST
-exact-signed-int8-list     x is an exact-signed-int8, exception mentions LIST
-exact-signed-int16-list    x is an exact-signed-int16, exception mentions LIST
-exact-signed-int32-list    x is an exact-signed-int32, exception mentions LIST
-exact-signed-int64-list    x is an exact-signed-int64, exception mentions LIST
-exact-unsigned-int8-list   x is an exact-unsigned-int8, exception mentions LIST
-exact-unsigned-int16-list  x is an exact-unsigned-int16, exception mentions LIST
-exact-unsigned-int32-list  x is an exact-unsigned-int32, exception mentions LIST
-exact-unsigned-int64-list  x is an exact-unsigned-int64, exception mentions LIST
-@end example
+@table @code
+@item list
+@var{x} is @code{'()}, exception mentions LIST
+@item char-list
+@var{x} is a character, exception mentions LIST
+@item char-vector
+@var{x} is a character, exception mentions VECTOR
+@item pair-list
+@var{x} is a pair, exception mentions LIST
+@item exact-signed-int8-list
+@var{x} is an exact-signed-int8, exception mentions LIST
+@item exact-signed-int16-list
+@var{x} is an exact-signed-int16, exception mentions LIST
+@item exact-signed-int32-list
+@var{x} is an exact-signed-int32, exception mentions LIST
+@item exact-signed-int64-list
+@var{x} is an exact-signed-int64, exception mentions LIST
+@item exact-unsigned-int8-list
+@var{x} is an exact-unsigned-int8, exception mentions LIST
+@item exact-unsigned-int16-list
+@var{x} is an exact-unsigned-int16, exception mentions LIST
+@item exact-unsigned-int32-list
+@var{x} is an exact-unsigned-int32, exception mentions LIST
+@item exact-unsigned-int64-list
+@var{x} is an exact-unsigned-int64, exception mentions LIST
+@end table
 
 @subsubsection Gambit types
 
-@example
-error-exception            x is an error-exception object
-box                        x is a box
-condvar                    x is a condition variable
-f32vector                  x is a f32vector
-f64vector                  x is a f64vector
-foreign                    x is a foreign object
-keyword                    x is a keyword
-mutex                      x is a mutex
-processor                  x is a processor object
-s16vector                  x is a s16vector
-s32vector                  x is a s32vector
-s64vector                  x is a s64vector
-s8vector                   x is a s8vector
-table                      x is a table
-tgroup                     x is a thread group
-thread                     x is a thread
-u16vector                  x is a u16vector
-u32vector                  x is a u32vector
-u64vector                  x is a u64vector
-u8vector                   x is a u8vector
-will                       x is a will
-continuation               x is a continuation object
-random-source              x is a random-source object
-readtable                  x is a readtable
-type                       x is a structure type descriptor
-mutable                    x is a mutable object
-@end example
+@table @code
+@item error-exception
+@var{x} is an error-exception object
+@item box
+@var{x} is a box
+@item condvar
+@var{x} is a condition variable
+@item f32vector
+@var{x} is a f32vector
+@item f64vector
+@var{x} is a f64vector
+@item foreign
+@var{x} is a foreign object
+@item keyword
+@var{x} is a keyword
+@item mutex
+@var{x} is a mutex
+@item processor
+@var{x} is a processor object
+@item s16vector
+@var{x} is a s16vector
+@item s32vector
+@var{x} is a s32vector
+@item s64vector
+@var{x} is a s64vector
+@item s8vector
+@var{x} is a s8vector
+@item table
+@var{x} is a table
+@item tgroup
+@var{x} is a thread group
+@item thread
+@var{x} is a thread
+@item u16vector
+@var{x} is a u16vector
+@item u32vector
+@var{x} is a u32vector
+@item u64vector
+@var{x} is a u64vector
+@item u8vector
+@var{x} is a u8vector
+@item will
+@var{x} is a will
+@item continuation
+@var{x} is a continuation object
+@item random-source
+@var{x} is a random-source object
+@item readtable
+@var{x} is a readtable
+@item type
+@var{x} is a structure type descriptor
+@item mutable
+@var{x} is a mutable object
+@end table
 
 @subsubsection Others
 
-@example
-initialized-thread
-not-initialized-thread
-not-started-thread
-not-started-thread-given-initialized
-string-or-ip-address
-string-or-nonnegative-fixnum
-@end example
+@table @code
+@item initialized-thread
+@item not-initialized-thread
+@item not-started-thread
+@item not-started-thread-given-initialized
+@item string-or-ip-address
+@item string-or-nonnegative-fixnum
+@end table
 
-@node R7RS Compatible Modules, Installing Modules, Primitive Modules, Modules
+@node R7RS Compatible Modules, Installing Modules, Primitive Procedures, Modules
 @section R7RS Compatible Modules
 
 TODO!
@@ -5705,7 +5808,7 @@ TODO!
 
 TODO!
 
-@node Built-in data types, Characters and strings, Modules, Top
+@node Built-in data types, Records, Modules, Top
 @chapter Built-in data types
 
 @menu
@@ -5717,10 +5820,9 @@ TODO!
 * Vectors::                         Vectors
 * Homogeneous numeric vectors::     Homogeneous numeric vectors
 * Hashing and weak references::     Hashing and weak references
-* Tables::                          Tables
 @end menu
 
-@node Numbers, Homogeneous numeric vectors, Characters and strings, Built-in data types
+@node Numbers, Booleans, , Built-in data types
 @section Numbers
 
 @menu
@@ -7200,7 +7302,7 @@ For example:
 
 @end deffn
 
-@node Hashing and weak references, Records, Homogeneous numeric vectors, Built-in data types
+@node Hashing and weak references, , Homogeneous numeric vectors, Built-in data types
 @section Hashing and weak references
 @cindex hashing
 @cindex weak references
@@ -7951,7 +8053,7 @@ For example:
 
 @end deffn
 
-@node Records, Threads, Hashing and weak references, Top
+@node Records, Threads, Built-in data types, Top
 @chapter Records
 
 @deffn {special form} define-structure @r{@i{name}} @r{@i{field}}@dots{}
@@ -13937,6 +14039,55 @@ For example:
 1
 > @b{(read p)}
 bcd!fghij
+@end smallexample
+
+@end deffn
+
+@deffn procedure read-file-as-string @var{path-or-settings}
+
+The procedure @code{read-file-as-string} opens the file designated by
+@var{path-or-settings} and reads the text it contains as a single
+string which is returned.
+
+The @var{path-or-settings} argument is either a string denoting a
+filesystem path or a list of port settings which must contain a
+@code{path:} setting.  The same settings as @code{open-input-file}
+are allowed, and the same default settings are used.
+The default value of the @code{char-encoding:}
+setting depends on how the runtime system was configured but typically
+UTF-8 is used.  The default can be overridden through various runtime
+options (@pxref{Runtime options}), such as @samp{-:file-settings=...}
+and @samp{-:io-settings=...}.
+
+For example:
+
+@smallexample
+> @b{(with-output-to-file
+    "test"
+    (lambda () (for-each pretty-print (map square (iota 5)))))}
+> @b{(read-file-as-string "test")}
+"0\n1\n4\n9\n16\n"
+@end smallexample
+
+@end deffn
+
+@deffn procedure read-file-as-u8vector @var{path}
+
+The procedure @code{read-file-as-u8vector} opens the file designated by
+@var{path} and reads the bytes it contains as a single u8vector which
+is returned.  The @var{path} argument must be a string denoting a
+filesystem path.
+
+For example:
+
+@smallexample
+> @b{(with-output-to-file
+    "test"
+    (lambda () (for-each pretty-print (map square (iota 5)))))}
+> @b{(read-file-as-u8vector "test")}
+#u8(48 10 49 10 52 10 57 10 49 54 10)
+> @b{(utf8->string (read-file-as-u8vector "test"))}
+"0\n1\n4\n9\n16\n"
 @end smallexample
 
 @end deffn

@@ -9641,7 +9641,7 @@
               (arg2 (macro-absent-obj)))
 
   (define (fail)
-    (##fail-check-string-or-settings 1 prim path-or-settings arg2))
+    (##fail-check-string-or-settings '(1 . path-or-settings) prim path-or-settings arg2))
 
   (##make-path-psettings
    direction
