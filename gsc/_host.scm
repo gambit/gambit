@@ -733,7 +733,7 @@
   (##open-file-generic
    (macro-direction-in)
    #f
-   (lambda (port resolved-path) (if (input-port? port) port #f))
+   (lambda (port . resolved-path) (if (input-port? port) port #f))
    open-input-file
    path))
 
