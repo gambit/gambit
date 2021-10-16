@@ -1937,9 +1937,13 @@
               path
               #!optional
               (chase? (macro-absent-obj)))
-  (let* ((resolved-path
-          (##path-resolve path))
-         (fi
+  (##file-info-resolved-path (##path-resolve path) chase?))
+
+(define-prim (##file-info-resolved-path
+              resolved-path
+              #!optional
+              (chase? (macro-absent-obj)))
+  (let* ((fi
           (macro-make-file-info ;; will be initialized by ##os-file-info
            0  ;; type
            0  ;; device
@@ -2211,49 +2215,117 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim&proc (read-file-as-string path-or-settings)
+(define-prim&proc (read-file-string path-or-settings)
   (##open-file-generic
    (macro-direction-in)
    #t ;; raise-os-exception?
-   (lambda (port)
+   (lambda (port resolved-path)
      (let ((result (##read-line port #f)))
-       (##close-port port)
+       (close-port port)
        result))
-   read-file-as-string
+   (standard read-file-string)
    path-or-settings))
 
-(define-prim&proc (read-file-as-u8vector (path string))
-  (let ((info (##file-info-aux path)))
-    (if (fixnum? info)
-        (##raise-os-exception #f info read-file-as-u8vector path)
-        (let* ((size (macro-file-info-size info))
-               (size+1 (fx+ size 1))
-               (u8vect (make-u8vector size+1)))
-          (##open-file-generic
-           (macro-direction-in)
-           #t ;; raise-os-exception?
-           (lambda (port)
-             (let ((n (if (fx= size 0)
-                          0
-                          (read-subu8vector u8vect 0 size+1 port))))
-               (if (fx< n size+1) ;; file did not grow since file-info called?
-                   (begin
-                     (u8vector-shrink! u8vect n)
-                     (close-port port)
-                     u8vect)
-                   (let loop ((chunks (list u8vect)))
-                     (define chunk-size 4096)
-                     (let* ((new-chunk (make-u8vector chunk-size))
-                            (n (read-subu8vector new-chunk 0 chunk-size port))
-                            (new-chunks (cons new-chunk chunks)))
-                       (u8vector-shrink! new-chunk n)
-                       (if (fx< n chunk-size)
-                           (begin
-                             (close-port port)
-                             (append-u8vectors (reverse new-chunks)))
-                           (loop new-chunks)))))))
-           read-file-as-u8vector
-           path)))))
+(define-prim&proc (read-file-string-list path-or-settings)
+  (##open-file-generic
+   (macro-direction-in)
+   #t ;; raise-os-exception?
+   (lambda (port resolved-path)
+     (let loop ((lst '()))
+       (let ((line (##read-line port)))
+         (if (string? line)
+             (loop (cons line lst))
+             (begin
+               (close-port port)
+               (reverse lst))))))
+   (standard read-file-string-list)
+   path-or-settings))
+
+(define-prim&proc (read-file-u8vector path-or-settings)
+  (##open-file-generic
+   (macro-direction-in)
+   #t ;; raise-os-exception?
+   (lambda (port resolved-path)
+     (let ((info (##file-info-resolved-path resolved-path)))
+       (if (fixnum? info)
+           (##raise-os-exception #f info (standard read-file-u8vector) path-or-settings)
+           (let* ((size (macro-file-info-size info))
+                  (size+1 (fx+ size 1))
+                  (u8vect (make-u8vector size+1))
+                  (n (if (fx= size 0)
+                         0
+                         (read-subu8vector u8vect 0 size+1 port))))
+             (if (fx< n size+1) ;; file did not grow since file-info called?
+                 (begin
+                   (u8vector-shrink! u8vect n)
+                   (close-port port)
+                   u8vect)
+                 (let loop ((chunks (list u8vect)))
+                   (define chunk-size 4096)
+                   (let* ((new-chunk (make-u8vector chunk-size))
+                          (n (read-subu8vector new-chunk 0 chunk-size port))
+                          (new-chunks (cons new-chunk chunks)))
+                     (u8vector-shrink! new-chunk n)
+                     (if (fx< n chunk-size)
+                         (begin
+                           (close-port port)
+                           (append-u8vectors (reverse new-chunks)))
+                         (loop new-chunks)))))))))
+   (standard read-file-u8vector)
+   path-or-settings))
+
+(define-prim&proc (write-file-string path-or-settings
+                                     (string string))
+  (##open-file-generic
+   (macro-direction-out)
+   #t ;; raise-os-exception?
+   (lambda (port resolved-path)
+     (##write-substring string 0 (string-length string) port)
+     (close-port port)
+     (void))
+   (standard write-file-string)
+   path-or-settings
+   string))
+
+(define-prim&proc (write-file-string-list path-or-settings
+                                          (string-list proper-list))
+  (##open-file-generic
+   (macro-direction-out)
+   #t ;; raise-os-exception?
+   (lambda (port resolved-path)
+     (let loop ((lst string-list))
+       (macro-force-vars (lst)
+         (if (pair? lst)
+             (let ((string (car lst)))
+               (macro-force-vars (string)
+                 (if (string? string)
+                     (begin
+                       (##write-substring string 0 (string-length string) port)
+                       (newline port)
+                       (loop (cdr lst)))
+                     (begin
+                       (close-port port)
+                       (##fail-check-string-list '(2 . string-list) (standard write-file-string-list) path-or-settings string-list)))))
+             (begin
+               (close-port port)
+               (macro-check-proper-list-null lst '(2 . string-list) (write-file-string-list path-or-settings string-list)
+                 (void)))))))
+   (standard write-file-string-list)
+   path-or-settings
+   string-list))
+
+(define-prim&proc (write-file-u8vector path-or-settings
+                                       (u8vector u8vector))
+  (##open-file-generic
+   (macro-direction-out)
+   #t ;; raise-os-exception?
+   (lambda (port resolved-path)
+     (##write-subu8vector u8vector 0 (u8vector-length u8vector) port)
+     (close-port port)
+     (void))
+   (standard write-file-u8vector)
+   path-or-settings
+   u8vector))
 
 ;;;----------------------------------------------------------------------------
 

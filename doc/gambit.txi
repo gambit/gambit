@@ -5558,7 +5558,7 @@ on the value of @var{x}.
 Note that there is no direct way for specifying the type "list" or "list
 of elements of type T". For lists, the procedure body must iterate on
 the pairs, going from cdr to cdr until a non-pair is found and then do a
-check for the empty list with @code{(macro-check-list lst <arg-id>
+check for the empty list with @code{(macro-check-proper-list lst <arg-id>
 (<procedure-name> <args>...) <body>)} to check that the parameter is a
 proper list (i.e. that it ends with the empty list).
 
@@ -5622,11 +5622,11 @@ proper list (i.e. that it ends with the empty list).
 @var{x} is an exact integer n, 0 <= @var{x} <= 2^64 - 1
 
 @item flonum
-@var{x} is a flonum (floating point number)
+@var{x} is a flonum, exception mentions FLONUM
 @item inexact-real
-@var{x} is a flonum
+@var{x} is a flonum, exception mentions Inexact REAL
 @item inexact-real-list
-@var{x} is a flonum, exception mentions LIST
+@var{x} is a flonum, exception mentions Inexact REAL LIST
 @end table
 
 @subsubsection Time types
@@ -5704,30 +5704,32 @@ u8vector-output-port       x is a u8vector output port
 @subsubsection List and vector variants of above
 
 @table @code
-@item list
-@var{x} is @code{'()}, exception mentions LIST
+@item proper-list
+@var{x} is @code{()}, exception mentions PROPER LIST
+@item proper-or-circular-list
+@var{x} is @code{()}, exception mentions PROPER or CIRCULAR LIST
 @item char-list
-@var{x} is a character, exception mentions LIST
+@var{x} is a character, exception mentions CHARACTER LIST
 @item char-vector
-@var{x} is a character, exception mentions VECTOR
+@var{x} is a character, exception mentions CHARACTER VECTOR
 @item pair-list
-@var{x} is a pair, exception mentions LIST
+@var{x} is a pair, exception mentions PAIR LIST
 @item exact-signed-int8-list
-@var{x} is an exact-signed-int8, exception mentions LIST
+@var{x} is an exact-signed-int8, exception mentions INTEGER LIST
 @item exact-signed-int16-list
-@var{x} is an exact-signed-int16, exception mentions LIST
+@var{x} is an exact-signed-int16, exception mentions INTEGER LIST
 @item exact-signed-int32-list
-@var{x} is an exact-signed-int32, exception mentions LIST
+@var{x} is an exact-signed-int32, exception mentions INTEGER LIST
 @item exact-signed-int64-list
-@var{x} is an exact-signed-int64, exception mentions LIST
+@var{x} is an exact-signed-int64, exception mentions INTEGER LIST
 @item exact-unsigned-int8-list
-@var{x} is an exact-unsigned-int8, exception mentions LIST
+@var{x} is an exact-unsigned-int8, exception mentions INTEGER LIST
 @item exact-unsigned-int16-list
-@var{x} is an exact-unsigned-int16, exception mentions LIST
+@var{x} is an exact-unsigned-int16, exception mentions INTEGER LIST
 @item exact-unsigned-int32-list
-@var{x} is an exact-unsigned-int32, exception mentions LIST
+@var{x} is an exact-unsigned-int32, exception mentions INTEGER LIST
 @item exact-unsigned-int64-list
-@var{x} is an exact-unsigned-int64, exception mentions LIST
+@var{x} is an exact-unsigned-int64, exception mentions INTEGER LIST
 @end table
 
 @subsubsection Gambit types
@@ -14043,55 +14045,6 @@ bcd!fghij
 
 @end deffn
 
-@deffn procedure read-file-as-string @var{path-or-settings}
-
-The procedure @code{read-file-as-string} opens the file designated by
-@var{path-or-settings} and reads the text it contains as a single
-string which is returned.
-
-The @var{path-or-settings} argument is either a string denoting a
-filesystem path or a list of port settings which must contain a
-@code{path:} setting.  The same settings as @code{open-input-file}
-are allowed, and the same default settings are used.
-The default value of the @code{char-encoding:}
-setting depends on how the runtime system was configured but typically
-UTF-8 is used.  The default can be overridden through various runtime
-options (@pxref{Runtime options}), such as @samp{-:file-settings=...}
-and @samp{-:io-settings=...}.
-
-For example:
-
-@smallexample
-> @b{(with-output-to-file
-    "test"
-    (lambda () (for-each pretty-print (map square (iota 5)))))}
-> @b{(read-file-as-string "test")}
-"0\n1\n4\n9\n16\n"
-@end smallexample
-
-@end deffn
-
-@deffn procedure read-file-as-u8vector @var{path}
-
-The procedure @code{read-file-as-u8vector} opens the file designated by
-@var{path} and reads the bytes it contains as a single u8vector which
-is returned.  The @var{path} argument must be a string denoting a
-filesystem path.
-
-For example:
-
-@smallexample
-> @b{(with-output-to-file
-    "test"
-    (lambda () (for-each pretty-print (map square (iota 5)))))}
-> @b{(read-file-as-u8vector "test")}
-#u8(48 10 49 10 52 10 57 10 49 54 10)
-> @b{(utf8->string (read-file-as-u8vector "test"))}
-"0\n1\n4\n9\n16\n"
-@end smallexample
-
-@end deffn
-
 @node Process devices, Network devices, Filesystem devices, Device-ports
 @subsection Process devices
 
@@ -15363,6 +15316,83 @@ For example:
 > @b{(print port: p 1 #\2 "345")}
 > @b{(get-output-string p)}
 "12345"
+@end smallexample
+
+@end deffn
+
+@deffn procedure read-file-string @var{path-or-settings}
+@deffnx procedure read-file-string-list @var{path-or-settings}
+@deffnx procedure read-file-u8vector @var{path-or-settings}
+
+These procedures open the file designated by @var{path-or-settings}
+and read the whole content.  They respectively return a string (the
+characters in the file), a list of strings (the lines in the file),
+and a u8vector (the bytes in the file).
+
+The @var{path-or-settings} parameter is either a string denoting a
+filesystem path or a list of port settings which must contain a
+@code{path:} setting.  The same settings as @code{open-input-file}
+are allowed, and the same default settings are used.
+The default value of the @code{char-encoding:}
+setting (which is relevant for
+@code{read-file-string} and @code{read-file-string-list})
+depends on how the runtime system was configured but typically
+UTF-8 is used.  The default can be overridden through various runtime
+options (@pxref{Runtime options}), such as @samp{-:file-settings=...}
+and @samp{-:io-settings=...}.
+
+For example:
+
+@smallexample
+> @b{(with-output-to-file
+    "test"
+    (lambda () (for-each pretty-print (map square (iota 5)))))}
+> @b{(read-file-string "test")}
+"0\n1\n4\n9\n16\n"
+> @b{(read-file-string-list "test")}
+("0" "1" "4" "9" "16")
+> @b{(read-file-u8vector "test")}
+#u8(48 10 49 10 52 10 57 10 49 54 10)
+> @b{(utf8->string (read-file-u8vector "test"))}
+"0\n1\n4\n9\n16\n"
+@end smallexample
+
+@end deffn
+
+@deffn procedure write-file-string @var{path-or-settings} @var{string}
+@deffnx procedure write-file-string-list @var{path-or-settings} @var{string-list}
+@deffnx procedure write-file-u8vector @var{path-or-settings} @var{u8vector}
+
+These procedures open the file designated by @var{path-or-settings}
+and write the data specified by the second parameter.  They
+respectively write a string (the characters to write to the file), a
+list of strings (the lines to write to the file), and a u8vector (the
+bytes to write to the file).  These procedures return the void object.
+
+The @var{path-or-settings} parameter is either a string denoting a
+filesystem path or a list of port settings which must contain a
+@code{path:} setting.  The same settings as @code{open-output-file}
+are allowed, and the same default settings are used.
+The default value of the @code{char-encoding:}
+setting (which is relevant for
+@code{write-file-string} and @code{write-file-string-list})
+depends on how the runtime system was configured but typically
+UTF-8 is used.  The default can be overridden through various runtime
+options (@pxref{Runtime options}), such as @samp{-:file-settings=...}
+and @samp{-:io-settings=...}.
+
+For example:
+
+@smallexample
+> @b{(write-file-string "test" "1\n2\n3\n")}
+> @b{(read-file-u8vector "test")}
+#u8(49 10 50 10 51 10)
+> @b{(write-file-string-list "test" (list "1" "2" "3"))}
+> @b{(read-file-u8vector "test")}
+#u8(49 10 50 10 51 10)
+> @b{(write-file-u8vector "test" (u8vector 97 98 99))}
+> @b{(read-file-string "test")}
+"abc"
 @end smallexample
 
 @end deffn

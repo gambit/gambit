@@ -380,7 +380,7 @@
         (let ((mod-path (##string-append mod-path-noext (##car ext))))
           (try-opening-source-file
            mod-path
-           (lambda (port)
+           (lambda (port resolved-path)
              (and (##not (##fixnum? port))
                   (##vector mod-dir
                             mod-filename-noext

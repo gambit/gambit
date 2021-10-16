@@ -60,9 +60,13 @@ path-strip-extension
 path-strip-trailing-directory-separator
 path-strip-volume
 path-volume
-read-file-as-string
-read-file-as-u8vector
+read-file-string
+read-file-string-list
+read-file-u8vector
 rename-file
+write-file-string
+write-file-string-list
+write-file-u8vector
 
 ))
 

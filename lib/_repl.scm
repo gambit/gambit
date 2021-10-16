@@ -2532,7 +2532,7 @@
                    (##open-file-generic
                     (macro-direction-in)
                     #f
-                    (lambda (port)
+                    (lambda (port resolved-path)
                       (if (##port? port)
                           (let ((history (##read-line port #f #f ##max-fixnum)))
                             (##close-port port)
@@ -2546,7 +2546,7 @@
                       (##open-file-generic
                        (macro-direction-out)
                        #f
-                       (lambda (port)
+                       (lambda (port resolved-path)
                          (if (##port? port)
                              (let ((history (##tty-history input-port)))
                                (##display history port)

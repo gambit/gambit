@@ -650,8 +650,9 @@ read-all
 read-bytevector
 read-bytevector!
 read-error?
-read-file-as-string
-read-file-as-u8vector
+read-file-string
+read-file-string-list
+read-file-u8vector
 read-line
 read-string
 read-substring
@@ -1140,6 +1141,9 @@ with-output-to-string
 with-output-to-u8vector
 with-output-to-vector
 write-bytevector
+write-file-string
+write-file-string-list
+write-file-u8vector
 write-shared
 write-simple
 write-string

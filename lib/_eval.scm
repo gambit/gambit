@@ -1142,7 +1142,7 @@
          (case-conversion? '()))
 
   (define (fail)
-    (##fail-check-string-or-settings 1 open-input-file path-or-settings))
+    (##fail-check-string-or-settings '(1 . path-or-settings) open-input-file path-or-settings))
 
   (let ((path (macro-psettings-path psettings)))
     (if (##not path)
@@ -1150,7 +1150,7 @@
         (##open-file-generic-from-psettings
          psettings
          #f
-         (lambda (port)
+         (lambda (port resolved-path)
            (if (##fixnum? port)
                port
                (let* ((extension

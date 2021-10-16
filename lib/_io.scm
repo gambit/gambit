@@ -9681,12 +9681,13 @@
     (if (##fixnum? device)
         (if raise-os-exception?
             (##raise-os-exception #f device prim path-or-settings arg2)
-            (cont device))
+            (cont device resolved-path))
         (cont
          (##make-device-port-from-single-device
           (##path-unresolve resolved-path)
           device
-          psettings)))))
+          psettings)
+         resolved-path))))
 
 (define-prim (##path-reference path relative-to-path)
   (##path-expand
@@ -9699,7 +9700,7 @@
   (##open-file-generic
    (macro-direction-inout)
    #t
-   (lambda (port) port)
+   (lambda (port resolved-path) port)
    open-file
    path-or-settings))
 
@@ -9711,7 +9712,7 @@
   (##open-file-generic
    (macro-direction-in)
    #t
-   (lambda (port) port)
+   (lambda (port resolved-path) port)
    open-input-file
    path-or-settings))
 
@@ -9723,7 +9724,7 @@
   (##open-file-generic
    (macro-direction-in)
    #t
-   (lambda (port) port)
+   (lambda (port resolved-path) port)
    open-binary-input-file
    path-or-settings))
 
@@ -9731,7 +9732,7 @@
   (##open-file-generic
    (macro-direction-out)
    #t
-   (lambda (port) port)
+   (lambda (port resolved-path) port)
    open-output-file
    path-or-settings))
 
@@ -9743,7 +9744,7 @@
   (##open-file-generic
    (macro-direction-out)
    #t
-   (lambda (port) port)
+   (lambda (port resolved-path) port)
    open-binary-output-file
    path-or-settings))
 
@@ -9751,7 +9752,7 @@
   (##open-file-generic
    (macro-direction-in)
    #t
-   (lambda (port)
+   (lambda (port resolved-path)
      (let ((results ;; may get bound to a multiple-values object
             (proc port)))
        (##close-port port)
@@ -9772,7 +9773,7 @@
   (##open-file-generic
    (macro-direction-out)
    #t
-   (lambda (port)
+   (lambda (port resolved-path)
      (let ((results ;; may get bound to a multiple-values object
             (proc port)))
        (##force-output port)
@@ -9794,7 +9795,7 @@
   (##open-file-generic
    (macro-direction-in)
    #t
-   (lambda (port)
+   (lambda (port resolved-path)
      (let ((results ;; may get bound to a multiple-values object
             (macro-dynamic-bind input-port port thunk)))
        (##close-port port)
@@ -9815,7 +9816,7 @@
   (##open-file-generic
    (macro-direction-out)
    #t
-   (lambda (port)
+   (lambda (port resolved-path)
      (let ((results ;; may get bound to a multiple-values object
             (macro-dynamic-bind output-port port thunk)))
        (##force-output port)
