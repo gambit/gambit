@@ -149,6 +149,8 @@
 (define (targ-string-space n)  (targ-max-words (* (+ n 1) targ-min-word-size)))
 (define (targ-s8vector-space n)(targ-max-words (+ n targ-min-word-size)))
 (define (targ-vector-space n)  (targ-max-words (* (+ n 1) targ-min-word-size)))
+(define targ-small-alloc-limit 64) ;; worst case for 64 elements
+(define targ-small-alloc-space (targ-s8vector-space (* targ-small-alloc-limit 8))) ;; worst case space usage
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

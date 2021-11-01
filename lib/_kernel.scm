@@ -3223,6 +3223,13 @@ end-of-code
         (##raise-heap-overflow-exception)
         (##make-f64vector k fill))
       v)))
+
+  (define-prim (##make-values k #!optional (fill 0))
+    ;; Note: this will create a box object when k = 1
+    (let ((vals (##make-vector k fill)))
+      (##subtype-set! vals (macro-subtype-boxvalues))
+      vals))
+
 )
 
   (else
@@ -3270,6 +3277,9 @@ end-of-code
 
    (define-prim (##make-f64vector k #!optional (fill 0.0))
      (##make-f64vector k fill))
+
+   (define-prim (##make-values k #!optional (fill 0))
+     (##make-values k fill))
 
 ))
 
@@ -3422,24 +3432,6 @@ end-of-code
                   (app proc rest))))))
 
       (app proc arg1)))
-
-;;;----------------------------------------------------------------------------
-
-;;; Values.
-
-(define-prim (##make-values len #!optional (init 0))
-  (let ((vals (##make-vector len init)))
-    (##subtype-set! vals (macro-subtype-boxvalues))
-    vals))
-
-(define-prim (##values-length vals)
-  (##vector-length vals))
-
-(define-prim (##values-ref vals i)
-  (##vector-ref vals i))
-
-(define-prim (##values-set! vals i val)
-  (##vector-set! vals i val))
 
 ;;;----------------------------------------------------------------------------
 

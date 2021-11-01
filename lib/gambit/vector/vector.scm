@@ -2,7 +2,7 @@
 
 ;;; File: "vector.scm"
 
-;;; Copyright (c) 2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2020-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -14,6 +14,8 @@
 
 (define-prim-vector-procedures
   vector
+  obj
+  object
   0
   macro-no-force
   macro-no-check
@@ -25,6 +27,8 @@
 
 (define-prim-vector-procedures
   u8vector
+  u8value
+  exact-unsigned-int8
   0
   macro-force-vars
   macro-check-exact-unsigned-int8
@@ -37,6 +41,8 @@
 (macro-if-s8vector
  (define-prim-vector-procedures
    s8vector
+   s8value
+   exact-signed-int8
    0
    macro-force-vars
    macro-check-exact-signed-int8
@@ -49,6 +55,8 @@
 (macro-if-u16vector
  (define-prim-vector-procedures
    u16vector
+   u16value
+   exact-unsigned-int16
    0
    macro-force-vars
    macro-check-exact-unsigned-int16
@@ -61,6 +69,8 @@
 (macro-if-s16vector
  (define-prim-vector-procedures
    s16vector
+   s16value
+   exact-signed-int16
    0
    macro-force-vars
    macro-check-exact-signed-int16
@@ -73,6 +83,8 @@
 (macro-if-u32vector
  (define-prim-vector-procedures
    u32vector
+   u32value
+   exact-unsigned-int32
    0
    macro-force-vars
    macro-check-exact-unsigned-int32
@@ -85,6 +97,8 @@
 (macro-if-s32vector
  (define-prim-vector-procedures
    s32vector
+   s32value
+   exact-signed-int32
    0
    macro-force-vars
    macro-check-exact-signed-int32
@@ -97,6 +111,8 @@
 (macro-if-u64vector
  (define-prim-vector-procedures
    u64vector
+   u64value
+   exact-unsigned-int64
    0
    macro-force-vars
    macro-check-exact-unsigned-int64
@@ -109,6 +125,8 @@
 (macro-if-s64vector
  (define-prim-vector-procedures
    s64vector
+   s64value
+   exact-signed-int64
    0
    macro-force-vars
    macro-check-exact-signed-int64
@@ -121,6 +139,8 @@
 (macro-if-f32vector
  (define-prim-vector-procedures
    f32vector
+   f32value
+   inexact-real
    0.
    macro-force-vars
    macro-check-inexact-real
@@ -132,6 +152,8 @@
 
 (define-prim-vector-procedures
   f64vector
+  f64value
+  inexact-real
   0.
   macro-force-vars
   macro-check-inexact-real
@@ -140,6 +162,19 @@
   ##fail-check-inexact-real
   #f
   ##fleqv?)
+
+(define-prim-vector-procedures
+  values
+  obj
+  object
+  0
+  macro-no-force
+  macro-no-check
+  macro-no-check
+  #f
+  #f
+  #f
+  ##equal?)
 
 ;;;----------------------------------------------------------------------------
 

@@ -14,6 +14,8 @@
 
 (define-prim-vector-procedures
   string
+  char
+  char
   #\nul
   macro-force-vars
   macro-check-char

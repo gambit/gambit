@@ -152,6 +152,8 @@
 (define mostly-fixnum-flonum-sym (string->canonical-symbol "mostly-fixnum-flonum"))
 (define mostly-flonum-fixnum-sym (string->canonical-symbol "mostly-flonum-fixnum"))
 
+(define allocation-limit-sym   (string->canonical-symbol "allocation-limit"))
+
 (define int8-sym               (string->canonical-symbol "int8"))
 (define unsigned-int8-sym      (string->canonical-symbol "unsigned-int8"))
 (define int16-sym              (string->canonical-symbol "int16"))

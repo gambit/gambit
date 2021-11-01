@@ -513,6 +513,12 @@
 ;;
 ;; (mostly-flonum-fixnum)            flonum and fixnum arithmetic is frequent
 ;; (mostly-flonum-fixnum <var1> ...) apply only to primitives specified
+;;
+;; Optimizing small object allocation declaration:
+;;
+;; (allocation-limit n)              variable-size allocations, such as
+;;                                   make-vector, have no more than n elements
+;;                                   (a value of 0 means no limit)
 
 (define-namable-decl generic-sym 'arith)
 (define-namable-decl fixnum-sym  'arith)
@@ -529,6 +535,11 @@
 
 (define (mostly-arith-implementation name env)
   (declaration-value 'mostly-arith name mostly-fixnum-flonum-sym env))
+
+(define-parameterized-decl allocation-limit-sym)
+
+(define (allocation-limit env) ;; returns the allocation limit
+  (max 0 (min 1000000 (declaration-value allocation-limit-sym #f 0 env))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

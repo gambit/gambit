@@ -2541,17 +2541,17 @@
 (define (targ-apply-cons)
   (targ-apply-alloc
     (lambda (n) targ-pair-space)
-    #t
-    #f
-    #f
+    #t ;; proc-safe?
+    #f ;; side-effects?
+    #f ;; flo-result?
     (targ-apply-simp-generator #f #f "CONS")))
 
 (define (targ-apply-list)
   (targ-apply-alloc
     (lambda (n) (* n targ-pair-space))
-    #t
-    #f
-    #f
+    #t ;; proc-safe?
+    #f ;; side-effects?
+    #f ;; flo-result?
     (lambda (opnds sn)
       (cond ((null? opnds)
              '("NUL"))
@@ -2573,66 +2573,66 @@
 (define (targ-apply-box)
   (targ-apply-alloc
     (lambda (n) targ-box-space)
-    #t
-    #f
-    #f
+    #t ;; proc-safe?
+    #f ;; side-effects?
+    #f ;; flo-result?
     (targ-apply-simp-generator #f #f "BOX")))
 
 (define (targ-apply-make-will)
   (targ-apply-alloc
     (lambda (n) targ-will-space)
-    #t
-    'expr ; this is an expression with side-effects
-    #f
+    #t ;; proc-safe?
+    'expr ;; this is an expression with side-effects
+    #f ;; flo-result?
     (lambda (opnds sn)
       (targ-apply-simp-gen opnds #f "MAKEWILL"))))
 
 (define (targ-apply-make-delay-promise)
   (targ-apply-alloc
     (lambda (n) targ-delay-promise-space)
-    #t
-    #f
-    #f
+    #t ;; proc-safe?
+    #f ;; side-effects?
+    #f ;; flo-result?
     (targ-apply-simp-generator #f #f "MAKEDELAYPROMISE")))
 
 (define (targ-apply-make-continuation)
   (targ-apply-alloc
     (lambda (n) targ-continuation-space)
-    #t
-    #f
-    #f
+    #t ;; proc-safe?
+    #f ;; side-effects?
+    #f ;; flo-result?
     (targ-apply-simp-generator #f #f "MAKECONTINUATION")))
 
 (define (targ-apply-ratnum-make)
   (targ-apply-alloc
     (lambda (n) targ-ratnum-space)
-    #t
-    #f
-    #f
+    #t ;; proc-safe?
+    #f ;; side-effects?
+    #f ;; flo-result?
     (targ-apply-simp-generator #f #f "RATNUMMAKE")))
 
 (define (targ-apply-cpxnum-make)
   (targ-apply-alloc
     (lambda (n) targ-cpxnum-space)
-    #t
-    #f
-    #f
+    #t ;; proc-safe?
+    #f ;; side-effects?
+    #f ;; flo-result?
     (targ-apply-simp-generator #f #f "CPXNUMMAKE")))
 
 (define (targ-apply-make-symbol)
   (targ-apply-alloc
     (lambda (n) targ-symbol-space)
-    #t
-    #f
-    #f
+    #t ;; proc-safe?
+    #f ;; side-effects?
+    #f ;; flo-result?
     (targ-apply-simp-generator #f #f "MAKESYMBOL")))
 
 (define (targ-apply-make-keyword)
   (targ-apply-alloc
     (lambda (n) targ-keyword-space)
-    #t
-    #f
-    #f
+    #t ;; proc-safe?
+    #f ;; side-effects?
+    #f ;; flo-result?
     (targ-apply-simp-generator #f #f "MAKEKEYWORD")))
 
 (define (targ-apply-vector-s kind)
@@ -2644,8 +2644,8 @@
 (define (targ-apply-vector proc-safe? kind)
   (targ-setup-inlinable-proc
     proc-safe?
-    #f
-    #f
+    #f ;; side-effects?
+    #f ;; flo-result?
     (lambda (opnds sn)
       (let ((n (length opnds)))
         (if (and (eq? kind 'values) (= n 1))
@@ -2755,6 +2755,27 @@
                 (list end-allocator-name n))
               (list getter-operation n))))))))
 
+(define (targ-apply-small-alloc-u name)
+  (targ-apply-small-alloc #f name))
+
+(define (targ-apply-small-alloc proc-safe? name)
+  (targ-setup-inlinable-proc
+   (lambda (env)
+     (let ((limit (allocation-limit env)))
+       (and (not (= limit 0))
+            (<= limit targ-small-alloc-limit)
+            (or proc-safe?
+                (not (safe? env))))))
+    #f ;; side-effects?
+    #f ;; flo-result?
+    (lambda (opnds sn)
+      (targ-heap-reserve-and-check
+       targ-small-alloc-space ;; TODO: use (allocation-limit env)
+       (targ-sn-opnds opnds sn))
+      (targ-emit (cons (string-append name (number->string (length opnds)))
+                       (map targ-opnd opnds)))
+      '("GET_SMALL_ALLOC"))))
+
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (define (targ-apply-force)
@@ -2783,7 +2804,7 @@
 
 (define (targ-apply-first-argument)
   (targ-setup-inlinable-proc*
-    #t
+    #t ;; proc-safe?
     (lambda (opnds sn)
       (targ-opnd (car opnds)))))
 
@@ -2850,7 +2871,7 @@
   (targ-setup-inlinable-proc
     proc-safe?
     side-effects?
-    #f
+    #f ;; flo-result?
     (targ-apply-simp-generator flo? ssb-space name)))
 
 (define (targ-apply-fold-s flo? name0 name1 name2)
@@ -2865,13 +2886,13 @@
       (targ-apply-alloc
         (lambda (n) 0) ; targ-apply-alloc accounts for space for flonum result
         proc-safe?
-        #f
-        #t
+        #f ;; side-effects?
+        #t ;; flo-result?
         generator)
       (targ-setup-inlinable-proc
         proc-safe?
-        #f
-        #f
+        #f ;; side-effects?
+        #f ;; flo-result?
         generator))))
 
 (define (targ-apply-ifjump proc-safe? name0 name1 name2)
@@ -2896,8 +2917,8 @@
     (lambda (prim)
       ((targ-setup-inlinable-proc
         proc-safe?
-        #f
-        #f
+        #f ;; side-effects?
+        #f ;; flo-result?
         apply-generator)
        prim)
       ((targ-setup-test-proc
@@ -2917,8 +2938,8 @@
   (targ-apply-alloc
     (lambda (n) 0) ; targ-apply-alloc accounts for space for flonum result
     proc-safe?
-    #f
-    #t
+    #f ;; side-effects?
+    #t ;; flo-result?
     (targ-apply-simp-generator flo? #f name)))
 
 (define (targ-apply-simpflo2-s flo? name1 name2)
@@ -2931,8 +2952,8 @@
   (targ-apply-alloc
     (lambda (n) 0) ; targ-apply-alloc accounts for space for flonum result
     proc-safe?
-    #f
-    #t
+    #f ;; side-effects?
+    #t ;; flo-result?
     (lambda (opnds sn)
       (if (= (length opnds) 1)
         (targ-apply-simp-gen opnds flo? name1)
@@ -2947,8 +2968,8 @@
 (define (targ-apply-simpflo3 proc-safe? name); 3 arg prim. whose last arg is a flonum
   (targ-setup-inlinable-proc
     proc-safe?
-    #t
-    #f
+    #t ;; side-effects?
+    #f ;; flo-result?
     (lambda (opnds sn)
       (let* ((arg1 (targ-opnd (car opnds)))
              (arg2 (targ-opnd (cadr opnds)))
@@ -2965,8 +2986,8 @@
   (targ-apply-alloc
     (lambda (n) (targ-s8vector-space (* (quotient targ-max-adigit-width 8) 3))) ; space for 2^64-1 including 64 bit alignment  ;;;;;;;;;;ugly code!
     proc-safe?
-    #f
-    #f
+    #f ;; side-effects?
+    #f ;; flo-result?
     (lambda (opnds sn)
       (targ-apply-simp-gen opnds #f name))))
 
@@ -2982,8 +3003,8 @@
      prim)
     ((targ-setup-inlinable-proc
        proc-safe?
-       #f
-       #f
+       #f ;; side-effects?
+       #f ;; flo-result?
        (lambda (opnds sn)
          (list "BOOLEAN" (generator opnds #f sn))))
      prim)))
@@ -2992,9 +3013,11 @@
   (lambda (prim)
     (proc-obj-testable?-set!
      prim
-     (lambda (env)
-       (or proc-safe?
-           (not (safe? env)))))
+     (if (procedure? proc-safe?)
+         proc-safe?
+         (lambda (env)
+           (or proc-safe?
+               (not (safe? env))))))
     (proc-obj-test-set!
      prim
      (vector
@@ -3052,16 +3075,22 @@
        (lambda (opnds loc fs)
          (list "NOTFALSEP" (generator opnds fs))))
      prim)
-    ((targ-setup-inlinable-proc proc-safe? #f #f generator)
+    ((targ-setup-inlinable-proc
+      proc-safe?
+      #f ;; side-effects?
+      #f ;; flo-result?
+      generator)
      prim)))
 
 (define (targ-setup-inlinable-proc proc-safe? side-effects? flo-result? generator)
   (lambda (prim)
     (proc-obj-inlinable?-set!
       prim
-      (lambda (env)
-        (or proc-safe?
-            (not (safe? env)))))
+      (if (procedure? proc-safe?)
+          proc-safe?
+          (lambda (env)
+            (or proc-safe?
+                (not (safe? env))))))
     (proc-obj-inline-set!
       prim
       (lambda (opnds loc sn)
@@ -3087,9 +3116,11 @@
   (lambda (prim)
     (proc-obj-inlinable?-set!
       prim
-      (lambda (env)
-        (or proc-safe?
-            (not (safe? env)))))
+      (if (procedure? proc-safe?)
+          proc-safe?
+          (lambda (env)
+            (or proc-safe?
+                (not (safe? env))))))
     (proc-obj-inline-set!
       prim
       (lambda (opnds loc sn)
@@ -3320,9 +3351,9 @@
 (targ-op "##flonum->string-host"
   (targ-apply-alloc
     (lambda (n) (targ-string-space 50)) ;; account for result of max length 50
-    #t
-    #f
-    #f
+    #t ;; proc-safe?
+    #f ;; side-effects?
+    #f ;; flo-result?
     (targ-apply-simp-generator #t #f "F64TOSTRING")))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3345,7 +3376,7 @@
           (lambda (n) 0) ; targ-apply-alloc accounts for space for flonum result
           #f ;; proc-safe?
           #f ;; side-effects?
-          #t
+          #t ;; flo-result?
           (lambda (opnds sn)
             (let ((opnd1 (car opnds))
                   (opnd2 (cadr opnds)))
@@ -3355,7 +3386,7 @@
          (targ-setup-inlinable-proc
           #f ;; proc-safe?
           #f ;; side-effects?
-          #f
+          #f ;; flo-result?
           (lambda (opnds sn)
             (let ((opnd1 (car opnds)))
               (list "F64ILOGB" (targ-opnd-flo opnd1))))))
@@ -3496,6 +3527,12 @@
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (targ-op "##string"           (targ-apply-vector-u 'string))
+(targ-op "##make-string"      (targ-apply-small-alloc-u "SMALLMAKESTRING"))
+(targ-op "##substring"        (targ-apply-small-alloc-u "SMALLSUBSTRING"))
+(targ-op "##string-copy"      (targ-apply-small-alloc-u "SMALLSTRINGCOPY"))
+(targ-op "##string-set"       (targ-apply-small-alloc-u "SMALLSTRINGUPDATE"))
+(targ-op "##string-insert"    (targ-apply-small-alloc-u "SMALLSTRINGINSERT"))
+(targ-op "##string-delete"    (targ-apply-small-alloc-u "SMALLSTRINGDELETE"))
 (targ-op "##string-length"    (targ-apply-simp-u #f #f #f "STRINGLENGTH"))
 (targ-op "##string-ref"       (targ-apply-simp-u #f #f #f "STRINGREF"))
 (targ-op "##string-set!"      (targ-apply-simp-u #f #t #f "STRINGSET"))
@@ -3504,6 +3541,12 @@
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (targ-op "##vector"           (targ-apply-vector-s 'vector))
+(targ-op "##make-vector"      (targ-apply-small-alloc-u "SMALLMAKEVECTOR"))
+(targ-op "##subvector"        (targ-apply-small-alloc-u "SMALLSUBVECTOR"))
+(targ-op "##vector-copy"      (targ-apply-small-alloc-u "SMALLVECTORCOPY"))
+(targ-op "##vector-set"       (targ-apply-small-alloc-u "SMALLVECTORUPDATE"))
+(targ-op "##vector-insert"    (targ-apply-small-alloc-u "SMALLVECTORINSERT"))
+(targ-op "##vector-delete"    (targ-apply-small-alloc-u "SMALLVECTORDELETE"))
 (targ-op "##vector-length"    (targ-apply-simp-u #f #f #f "VECTORLENGTH"))
 (targ-op "##vector-ref"       (targ-ifjump-apply-u "VECTORREF"))
 (targ-op "##vector-set!"      (targ-apply-simp-u #f #t 1 "VECTORSET"))
@@ -3513,9 +3556,9 @@
 (targ-op
  "##vector-inc!"
  (targ-setup-inlinable-proc
-  #f
-  'expr
-  #f
+  #f ;; proc-safe?
+  'expr ;; side-effects?
+  #f ;; flo-result?
   (lambda (opnds sn)
     (let* ((arg1 (targ-opnd (car opnds)))
            (arg2 (targ-opnd (cadr opnds)))
@@ -3527,60 +3570,120 @@
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (targ-op "##s8vector"         (targ-apply-vector-u 's8vector))
+(targ-op "##make-s8vector"    (targ-apply-small-alloc-u "SMALLMAKES8VECTOR"))
+(targ-op "##subs8vector"      (targ-apply-small-alloc-u "SMALLSUBS8VECTOR"))
+(targ-op "##s8vector-copy"    (targ-apply-small-alloc-u "SMALLS8VECTORCOPY"))
+(targ-op "##s8vector-set"     (targ-apply-small-alloc-u "SMALLS8VECTORUPDATE"))
+(targ-op "##s8vector-insert"  (targ-apply-small-alloc-u "SMALLS8VECTORINSERT"))
+(targ-op "##s8vector-delete"  (targ-apply-small-alloc-u "SMALLS8VECTORDELETE"))
 (targ-op "##s8vector-length"  (targ-apply-simp-u #f #f #f "S8VECTORLENGTH"))
 (targ-op "##s8vector-ref"     (targ-apply-simp-u #f #f #f "S8VECTORREF"))
 (targ-op "##s8vector-set!"    (targ-apply-simp-u #f #t #f "S8VECTORSET"))
 (targ-op "##s8vector-shrink!" (targ-apply-simp-u #f #t #f "S8VECTORSHRINK"))
 
 (targ-op "##u8vector"         (targ-apply-vector-u 'u8vector))
+(targ-op "##make-u8vector"    (targ-apply-small-alloc-u "SMALLMAKEU8VECTOR"))
+(targ-op "##subu8vector"      (targ-apply-small-alloc-u "SMALLSUBU8VECTOR"))
+(targ-op "##u8vector-copy"    (targ-apply-small-alloc-u "SMALLU8VECTORCOPY"))
+(targ-op "##u8vector-set"     (targ-apply-small-alloc-u "SMALLU8VECTORUPDATE"))
+(targ-op "##u8vector-insert"  (targ-apply-small-alloc-u "SMALLU8VECTORINSERT"))
+(targ-op "##u8vector-delete"  (targ-apply-small-alloc-u "SMALLU8VECTORDELETE"))
 (targ-op "##u8vector-length"  (targ-apply-simp-u #f #f #f "U8VECTORLENGTH"))
 (targ-op "##u8vector-ref"     (targ-apply-simp-u #f #f #f "U8VECTORREF"))
 (targ-op "##u8vector-set!"    (targ-apply-simp-u #f #t #f "U8VECTORSET"))
 (targ-op "##u8vector-shrink!" (targ-apply-simp-u #f #t #f "U8VECTORSHRINK"))
 
 (targ-op "##s16vector"        (targ-apply-vector-u 's16vector))
+(targ-op "##make-s16vector"   (targ-apply-small-alloc-u "SMALLMAKES16VECTOR"))
+(targ-op "##subs16vector"     (targ-apply-small-alloc-u "SMALLSUBS16VECTOR"))
+(targ-op "##s16vector-copy"   (targ-apply-small-alloc-u "SMALLS16VECTORCOPY"))
+(targ-op "##s16vector-set"    (targ-apply-small-alloc-u "SMALLS16VECTORUPDATE"))
+(targ-op "##s16vector-insert" (targ-apply-small-alloc-u "SMALLS16VECTORINSERT"))
+(targ-op "##s16vector-delete" (targ-apply-small-alloc-u "SMALLS16VECTORDELETE"))
 (targ-op "##s16vector-length" (targ-apply-simp-u #f #f #f "S16VECTORLENGTH"))
 (targ-op "##s16vector-ref"    (targ-apply-simp-u #f #f #f "S16VECTORREF"))
 (targ-op "##s16vector-set!"   (targ-apply-simp-u #f #t #f "S16VECTORSET"))
 (targ-op "##s16vector-shrink!"(targ-apply-simp-u #f #t #f "S16VECTORSHRINK"))
 
 (targ-op "##u16vector"        (targ-apply-vector-u 'u16vector))
+(targ-op "##make-u16vector"   (targ-apply-small-alloc-u "SMALLMAKEU16VECTOR"))
+(targ-op "##subu16vector"     (targ-apply-small-alloc-u "SMALLSUBU16VECTOR"))
+(targ-op "##u16vector-copy"   (targ-apply-small-alloc-u "SMALLU16VECTORCOPY"))
+(targ-op "##u16vector-set"    (targ-apply-small-alloc-u "SMALLU16VECTORUPDATE"))
+(targ-op "##u16vector-insert" (targ-apply-small-alloc-u "SMALLU16VECTORINSERT"))
+(targ-op "##u16vector-delete" (targ-apply-small-alloc-u "SMALLU16VECTORDELETE"))
 (targ-op "##u16vector-length" (targ-apply-simp-u #f #f #f "U16VECTORLENGTH"))
 (targ-op "##u16vector-ref"    (targ-apply-simp-u #f #f #f "U16VECTORREF"))
 (targ-op "##u16vector-set!"   (targ-apply-simp-u #f #t #f "U16VECTORSET"))
 (targ-op "##u16vector-shrink!"(targ-apply-simp-u #f #t #f "U16VECTORSHRINK"))
 
 (targ-op "##s32vector"        (targ-apply-vector-u 's32vector))
+(targ-op "##make-s32vector"   (targ-apply-small-alloc-u "SMALLMAKES32VECTOR"))
+(targ-op "##subs32vector"     (targ-apply-small-alloc-u "SMALLSUBS32VECTOR"))
+(targ-op "##s32vector-copy"   (targ-apply-small-alloc-u "SMALLS32VECTORCOPY"))
+(targ-op "##s32vector-set"    (targ-apply-small-alloc-u "SMALLS32VECTORUPDATE"))
+(targ-op "##s32vector-insert" (targ-apply-small-alloc-u "SMALLS32VECTORINSERT"))
+(targ-op "##s32vector-delete" (targ-apply-small-alloc-u "SMALLS32VECTORDELETE"))
 (targ-op "##s32vector-length" (targ-apply-simp-u #f #f #f "S32VECTORLENGTH"))
 (targ-op "##s32vector-ref"    (targ-apply-simpbig-u "S32VECTORREF"))
 (targ-op "##s32vector-set!"   (targ-apply-simp-u #f #t #f "S32VECTORSET"))
 (targ-op "##s32vector-shrink!"(targ-apply-simp-u #f #t #f "S32VECTORSHRINK"))
 
 (targ-op "##u32vector"        (targ-apply-vector-u 'u32vector))
+(targ-op "##make-u32vector"   (targ-apply-small-alloc-u "SMALLMAKEU32VECTOR"))
+(targ-op "##subu32vector"     (targ-apply-small-alloc-u "SMALLSUBU32VECTOR"))
+(targ-op "##u32vector-copy"   (targ-apply-small-alloc-u "SMALLU32VECTORCOPY"))
+(targ-op "##u32vector-set"    (targ-apply-small-alloc-u "SMALLU32VECTORUPDATE"))
+(targ-op "##u32vector-insert" (targ-apply-small-alloc-u "SMALLU32VECTORINSERT"))
+(targ-op "##u32vector-delete" (targ-apply-small-alloc-u "SMALLU32VECTORDELETE"))
 (targ-op "##u32vector-length" (targ-apply-simp-u #f #f #f "U32VECTORLENGTH"))
 (targ-op "##u32vector-ref"    (targ-apply-simpbig-u "U32VECTORREF"))
 (targ-op "##u32vector-set!"   (targ-apply-simp-u #f #t #f "U32VECTORSET"))
 (targ-op "##u32vector-shrink!"(targ-apply-simp-u #f #t #f "U32VECTORSHRINK"))
 
 (targ-op "##s64vector"        (targ-apply-vector-u 's64vector))
+(targ-op "##make-s64vector"   (targ-apply-small-alloc-u "SMALLMAKES64VECTOR"))
+(targ-op "##subs64vector"     (targ-apply-small-alloc-u "SMALLSUBS64VECTOR"))
+(targ-op "##s64vector-copy"   (targ-apply-small-alloc-u "SMALLS64VECTORCOPY"))
+(targ-op "##s64vector-set"    (targ-apply-small-alloc-u "SMALLS64VECTORUPDATE"))
+(targ-op "##s64vector-insert" (targ-apply-small-alloc-u "SMALLS64VECTORINSERT"))
+(targ-op "##s64vector-delete" (targ-apply-small-alloc-u "SMALLS64VECTORDELETE"))
 (targ-op "##s64vector-length" (targ-apply-simp-u #f #f #f "S64VECTORLENGTH"))
 (targ-op "##s64vector-ref"    (targ-apply-simpbig-u "S64VECTORREF"))
 (targ-op "##s64vector-set!"   (targ-apply-simp-u #f #t #f "S64VECTORSET"))
 (targ-op "##s64vector-shrink!"(targ-apply-simp-u #f #t #f "S64VECTORSHRINK"))
 
 (targ-op "##u64vector"        (targ-apply-vector-u 'u64vector))
+(targ-op "##make-u64vector"   (targ-apply-small-alloc-u "SMALLMAKEU64VECTOR"))
+(targ-op "##subu64vector"     (targ-apply-small-alloc-u "SMALLSUBU64VECTOR"))
+(targ-op "##u64vector-copy"   (targ-apply-small-alloc-u "SMALLU64VECTORCOPY"))
+(targ-op "##u64vector-set"    (targ-apply-small-alloc-u "SMALLU64VECTORUPDATE"))
+(targ-op "##u64vector-insert" (targ-apply-small-alloc-u "SMALLU64VECTORINSERT"))
+(targ-op "##u64vector-delete" (targ-apply-small-alloc-u "SMALLU64VECTORDELETE"))
 (targ-op "##u64vector-length" (targ-apply-simp-u #f #f #f "U64VECTORLENGTH"))
 (targ-op "##u64vector-ref"    (targ-apply-simpbig-u "U64VECTORREF"))
 (targ-op "##u64vector-set!"   (targ-apply-simp-u #f #t #f "U64VECTORSET"))
 (targ-op "##u64vector-shrink!"(targ-apply-simp-u #f #t #f "U64VECTORSHRINK"))
 
 (targ-op "##f32vector"        (targ-apply-vector-u 'f32vector))
+(targ-op "##make-f32vector"   (targ-apply-small-alloc-u "SMALLMAKEF32VECTOR"))
+(targ-op "##subf32vector"     (targ-apply-small-alloc-u "SMALLSUBF32VECTOR"))
+(targ-op "##f32vector-copy"   (targ-apply-small-alloc-u "SMALLF32VECTORCOPY"))
+(targ-op "##f32vector-set"    (targ-apply-small-alloc-u "SMALLF32VECTORUPDATE"))
+(targ-op "##f32vector-insert" (targ-apply-small-alloc-u "SMALLF32VECTORINSERT"))
+(targ-op "##f32vector-delete" (targ-apply-small-alloc-u "SMALLF32VECTORDELETE"))
 (targ-op "##f32vector-length" (targ-apply-simp-u #f #f #f "F32VECTORLENGTH"))
 (targ-op "##f32vector-ref"    (targ-apply-simpflo-u #f "F32VECTORREF"))
 (targ-op "##f32vector-set!"   (targ-apply-simpflo3-u "F32VECTORSET"))
 (targ-op "##f32vector-shrink!"(targ-apply-simp-u #f #t #f "F32VECTORSHRINK"))
 
 (targ-op "##f64vector"        (targ-apply-vector-u 'f64vector))
+(targ-op "##make-f64vector"   (targ-apply-small-alloc-u "SMALLMAKEF64VECTOR"))
+(targ-op "##subf64vector"     (targ-apply-small-alloc-u "SMALLSUBF64VECTOR"))
+(targ-op "##f64vector-copy"   (targ-apply-small-alloc-u "SMALLF64VECTORCOPY"))
+(targ-op "##f64vector-set"    (targ-apply-small-alloc-u "SMALLF64VECTORUPDATE"))
+(targ-op "##f64vector-insert" (targ-apply-small-alloc-u "SMALLF64VECTORINSERT"))
+(targ-op "##f64vector-delete" (targ-apply-small-alloc-u "SMALLF64VECTORDELETE"))
 (targ-op "##f64vector-length" (targ-apply-simp-u #f #f #f "F64VECTORLENGTH"))
 (targ-op "##f64vector-ref"    (targ-apply-simpflo-u #f "F64VECTORREF"))
 (targ-op "##f64vector-set!"   (targ-apply-simpflo3-u "F64VECTORSET"))
