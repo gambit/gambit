@@ -73,18 +73,23 @@
 
 (define-prim&proc-c...r 1 4) ;; define car to cddddr
 
-(define-prim&proc (set-car! (pair pair)
+(define-primitive (set-car! (pair pair)
+                            (obj  object)))
+
+(define-procedure (set-car! (pair pair)
                             (obj  object))
-  (set-car! pair obj)
+  (primitive (set-car! pair obj))
   (void))
 
-(define-prim&proc (set-cdr! (pair pair)
+(define-primitive (set-cdr! (pair pair)
+                            (obj  object)))
+
+(define-procedure (set-cdr! (pair pair)
                             (obj  object))
-  (set-cdr! pair obj)
+  (primitive (set-cdr! pair obj))
   (void))
 
-(define-prim&proc (null? (obj object))
-  (null? obj))
+(define-prim&proc (null? (obj object)))
 
 ;; Floyd's tortoise and hare algorithm for cycle detection
 
@@ -317,7 +322,8 @@
     (macro-force-vars (x)
       (macro-if-checks
        (if (not (pair? x))
-           (primitive (raise-range-exception '(2 . k) list-ref list k))
+           (macro-check-proper-list-null x '(1 . list) (list-ref list k)
+             (primitive (raise-range-exception '(2 . k) list-ref list k)))
            (if (fx< 0 i)
                (loop (cdr x) (fx- i 1))
                (car x)))
@@ -342,11 +348,8 @@
     (macro-force-vars (x)
       (macro-if-checks
        (if (not (pair? x))
-           (if (null? x)
-               (primitive
-                (raise-range-exception '(2 . k) list-set! list k obj))
-               (primitive
-                (fail-check-proper-list '(1 . list) list-set! list k obj)))
+           (macro-check-proper-list-null x '(1 . list) (list-set! list k obj)
+             (primitive (raise-range-exception '(2 . k) list-set! list k obj)))
            (if (fx< 0 i)
                (loop (cdr x) (fx- i 1))
                (macro-check-mutable x '(1 . list) (list-set! list k obj)
@@ -515,7 +518,7 @@
 
 (define-primitive (assoc (obj object)
                          (alist pair-list)
-                         (compare procedure ##equal?))
+                         (compare procedure (primitive equal?)))
   (let loop ((x alist))
     (if (pair? x)
         (let ((couple (car x)))
@@ -526,7 +529,7 @@
 
 (define-procedure (assoc (obj object)
                          (alist pair-list)
-                         (compare procedure ##equal?))
+                         (compare procedure (primitive equal?)))
   (let loop ((x alist))
     (macro-force-vars (x)
       (if (pair? x)
@@ -558,7 +561,9 @@
      (let ((new-list (filter-tail ,list)))
        (macro-if-checks (if (or (pair? new-list) (null? new-list))
                             new-list
-                            (macro-fail-check-list 2 ,prim-call))
+                            (let ()
+                              (namespace ("" ,(car prim-call)))
+                              (macro-fail-check-list '(2 . list) ,prim-call)))
                         new-list))))
 
 (define-prim&proc (filter (pred procedure) (list object))
@@ -877,7 +882,8 @@
           (macro-if-checks
            (if (pair? x)
                (loop (cdr x) (fx- i 1))
-               (primitive (raise-range-exception '(2 . k) list-tail list k)))
+               (macro-check-proper-list-null x '(1 . list) (list-tail list k)
+                 (primitive (raise-range-exception '(2 . k) list-tail list k))))
            (loop (cdr x) (fx- i 1))))
         x)))
 
@@ -903,9 +909,9 @@
                 elts))))
       elt1))
 
-(define-prim&proc (make-list (n    index)
+(define-prim&proc (make-list (k    index)
                              (fill object 0))
-  (let loop ((i n) (result '()))
+  (let loop ((i k) (result '()))
     (if (fx> i 0)
         (loop (fx- i 1) (cons fill result))
         result)))
