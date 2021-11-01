@@ -269,6 +269,31 @@
     (define strict-object-check '(strict-object))
     (define aux-suffix '-aux)
 
+    (define (parse-check check-src)
+      (let ((check (##source-strip check-src)))
+        (cond ((symbol? check)
+               (list check))
+              ((and (pair? check)
+                    (symbol? (##source-strip (car check))))
+               (cons (##source-strip (car check))
+                     (cdr check)))
+              (else
+               #f))))
+
+    (define (parse-type type-src)
+      (let ((type (##source-strip type-src)))
+        (if (and (pair? type)
+                 (eq? 'and (##source-strip (car type))))
+            (let loop ((lst (cdr type)) (rev-checks '()))
+              (if (pair? lst)
+                  (let ((check (parse-check (car lst))))
+                    (and check
+                         (loop (cdr lst) (cons check rev-checks))))
+                  (reverse rev-checks)))
+            (let ((check (parse-check type-src)))
+              (and check
+                   (list check))))))
+
     (define (parse-parameters prim? name body params)
       (let loop ((lst params)
                  (rev-req '())
@@ -281,31 +306,20 @@
                                      body
                                      (reverse rev-req)
                                      (reverse rev-opt)
-                                     (vector param object-check)))
+                                     (vector param (list object-check))))
                 ((pair? param)
                  (let ((len (##proper-length param)))
                    (if (eqv? len 2)
                        (let* ((var-src (car param))
                               (var (##source-strip var-src))
-                              (type-src (cadr param))
-                              (type (##source-strip type-src))
-                              (check
-                               (cond ((symbol? type)
-                                      (list type))
-                                     ((and (pair? type)
-                                           (symbol?
-                                            (##source-strip (car type))))
-                                      (cons (##source-strip (car type))
-                                            (cdr type)))
-                                     (else
-                                      #f))))
-                         (if check
+                              (checks (parse-type (cadr param))))
+                         (if checks
                              (process-parameters prim?
                                                  name
                                                  body
                                                  (reverse rev-req)
                                                  (reverse rev-opt)
-                                                 (vector var check))
+                                                 (vector var checks))
                              (err)))
                        (err))))
                 (else
@@ -327,7 +341,7 @@
                         (parse-rest-param param))
                        ((and (null? rev-opt) (symbol? param))
                         (loop (cdr lst)
-                              (cons (vector param object-check)
+                              (cons (vector param (list object-check))
                                     rev-req)
                               rev-opt))
                        ((pair? param)
@@ -336,32 +350,21 @@
                                   (eqv? len 3))
                               (let* ((var-src (car param))
                                      (var (##source-strip var-src))
-                                     (type-src (cadr param))
-                                     (type (##source-strip type-src))
-                                     (check
-                                      (cond ((symbol? type)
-                                             (list type))
-                                            ((and (pair? type)
-                                                  (symbol?
-                                                   (##source-strip (car type))))
-                                             (cons (##source-strip (car type))
-                                                   (cdr type)))
-                                            (else
-                                             #f))))
-                                (cond ((not check)
+                                     (checks (parse-type (cadr param))))
+                                (cond ((not checks)
                                        (err))
                                       ((eqv? len 3)
                                        (let ((default-src (caddr param)))
                                          (loop (cdr lst)
                                                rev-req
                                                (cons (vector var
-                                                             check
+                                                             checks
                                                              default-src)
                                                      rev-opt))))
                                       (else
                                        (loop (cdr lst)
                                              (cons (vector var
-                                                           check)
+                                                           checks)
                                                      rev-req)
                                              rev-opt))))
                               (err))))
@@ -375,7 +378,7 @@
           param
           (vector-ref param 0)))
 
-    (define (var-check param)
+    (define (var-checks param)
       (vector-ref param 1))
 
     (define (default param)
@@ -394,7 +397,7 @@
            (fx= 3 (vector-length param))))
 
     (define (force? param)
-      (not (equal? (var-check param) object-check)))
+      (not (equal? (car (var-checks param)) object-check)))
 
     (define (append-sym sym1 sym2)
       (string->symbol
@@ -415,13 +418,15 @@
         (and (eq? prim? 'prim&proc) rest-param))
 
       (define (gen-definition kind)
-        (let ((req-opt-params
-               (append req-params opt-params))
-              (proc-name
-               (case kind
-                 ((procedure) name)
-                 ((primitive) (prim name))
-                 ((primitive-aux) (prim (append-sym name aux-suffix))))))
+        (let* ((req-opt-params
+                (append req-params opt-params))
+               (prim-name
+                (prim name))
+               (proc-name
+                (case kind
+                  ((procedure) name)
+                  ((primitive) prim-name)
+                  ((primitive-aux) (prim (append-sym name aux-suffix))))))
 
           (define (gen-bind-non-opt expr)
             (let ((params
@@ -461,34 +466,45 @@
                           ,expr))
                 expr))
 
-          (define (gen-check param arg-num expr)
-            (let ((check (var-check param)))
-              (if (or (equal? check object-check)
-                      (equal? check strict-object-check)
-                      (not (eq? kind 'procedure)))
-                  expr
-                  `(,(append-sym 'macro-check- (car check))
-                    ,(var-name param)
-                    '(,arg-num . ,(var-name param))
-                    ,@(cdr check)
-                    (,proc-name
-                     ,@(append (map exception-param-name req-opt-params)
-                               (if (not rest-param)
-                                   '()
-                                   (exception-param-name rest-param))))
-                    ,expr))))
+          (define (gen-check param arg-num check expr)
+            (if (or (equal? check object-check)
+                    (equal? check strict-object-check)
+                    (not (eq? kind 'procedure)))
+                expr
+                `(,(append-sym 'macro-check- (car check))
+                  ,(var-name param)
+                  '(,arg-num . ,(var-name param))
+                  ,@(cdr check)
+                  (,proc-name
+                   ,@(append (map exception-param-name req-opt-params)
+                             (if (not rest-param)
+                                 '()
+                                 (exception-param-name rest-param))))
+                  ,expr)))
+
+          (define (gen-checks param arg-num checks expr)
+            (if (pair? checks)
+                (gen-check param
+                           arg-num
+                           (car checks)
+                           (gen-checks param
+                                       arg-num
+                                       (cdr checks)
+                                       expr))
+                expr))
 
           (define (gen-defaults-and-checks params arg-num expr)
             (if (null? params)
                 expr
                 (let ((param (car params)))
                   (gen-default param
-                               (gen-check param
-                                          arg-num
-                                          (gen-defaults-and-checks
-                                           (cdr params)
-                                           (fx+ arg-num 1)
-                                           expr))))))
+                               (gen-checks param
+                                           arg-num
+                                           (var-checks param)
+                                           (gen-defaults-and-checks
+                                            (cdr params)
+                                            (fx+ arg-num 1)
+                                            expr))))))
 
           (define (gen-body)
             (let ((req (map var-name req-params))
@@ -511,6 +527,7 @@
                              (##declare (not interrupts-enabled))
                              (primitive (,proc-name ,@req ,@opt)))
                           `(##let ()
+                             (##declare (not interrupts-enabled))
                              (##declare (not safe))
                              (,proc-name ,@req ,@opt)))
                       `(##let ()
