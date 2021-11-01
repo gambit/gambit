@@ -364,10 +364,13 @@ cfun-conversion-exception-procedure
 cfun-conversion-exception?
 char-foldcase
 circular-list
+circular-list?
 clear-bit-field
 close-port
+command-args
 command-line
 command-name
+compilation-target
 compile-file
 compile-file-to-target
 condition-variable-broadcast!
@@ -408,6 +411,7 @@ datum-parsing-exception-kind
 datum-parsing-exception-parameters
 datum-parsing-exception-readenv
 datum-parsing-exception?
+dead-end
 deadlock-exception?
 defer-user-interrupts
 delete-directory
@@ -426,6 +430,7 @@ display-procedure-environment
 divide-by-zero-exception-arguments
 divide-by-zero-exception-procedure
 divide-by-zero-exception?
+dotted-list?
 drop
 emergency-exit
 eof-object
@@ -509,6 +514,7 @@ file-number-of-links
 file-owner
 file-size
 file-type
+filter
 finite?
 first-bit-set
 fixnum->flonum
@@ -518,6 +524,7 @@ fixnum-overflow-exception?
 fixnum?
 fl*
 fl+
+fl+*
 fl-
 fl/
 fl<
@@ -691,7 +698,8 @@ keyword-hash
 keyword?
 last
 last-pair
-length-mismatch-exception-arg-num
+length+
+length-mismatch-exception-arg-id
 length-mismatch-exception-arguments
 length-mismatch-exception-procedure
 length-mismatch-exception?
@@ -771,6 +779,9 @@ nonprocedure-operator-exception-code
 nonprocedure-operator-exception-operator
 nonprocedure-operator-exception-rte
 nonprocedure-operator-exception?
+not-in-compilation-context-exception-arguments
+not-in-compilation-context-exception-procedure
+not-in-compilation-context-exception?
 number-of-arguments-limit-exception-arguments
 number-of-arguments-limit-exception-procedure
 number-of-arguments-limit-exception?
@@ -829,6 +840,7 @@ path-volume
 permission-denied-exception-arguments
 permission-denied-exception-procedure
 permission-denied-exception?
+poll-point
 port-io-exception-handler-set!
 port-settings-set!
 port?
@@ -843,6 +855,7 @@ process-times
 processor-id
 processor?
 promise?
+proper-list?
 protocol-info
 protocol-info-aliases
 protocol-info-name
@@ -862,7 +875,7 @@ random-source-state-ref
 random-source-state-set!
 random-source?
 random-u8vector
-range-exception-arg-num
+range-exception-arg-id
 range-exception-arguments
 range-exception-procedure
 range-exception?
@@ -870,6 +883,9 @@ read-all
 read-bytevector
 read-bytevector!
 read-error?
+read-file-string
+read-file-string-list
+read-file-u8vector
 read-line
 read-string
 read-substring
@@ -899,6 +915,8 @@ readtable-write-extended-read-macros?
 readtable-write-extended-read-macros?-set
 readtable?
 real-time
+remove
+remq
 rename-file
 repl-display-environment?
 repl-error-port
@@ -1014,7 +1032,6 @@ six.make-array
 six.new
 six.notx
 six.null
-six.prefix
 six.procedure
 six.procedure-body
 six.return
@@ -1161,6 +1178,7 @@ terminated-thread-exception-procedure
 terminated-thread-exception?
 test-bit-field?
 textual-port?
+thread
 thread-base-priority
 thread-base-priority-set!
 thread-group->thread-group-list
@@ -1227,7 +1245,7 @@ tty-paren-balance-duration-set!
 tty-text-attributes-set!
 tty-type-set!
 tty?
-type-exception-arg-num
+type-exception-arg-id
 type-exception-arguments
 type-exception-procedure
 type-exception-type-id
@@ -1356,6 +1374,9 @@ with-output-to-string
 with-output-to-u8vector
 with-output-to-vector
 write-bytevector
+write-file-string
+write-file-string-list
+write-file-u8vector
 write-shared
 write-simple
 write-string
