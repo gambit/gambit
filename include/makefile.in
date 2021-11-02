@@ -1,6 +1,6 @@
 # makefile for Gambit include directory.
 
-# Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 herefromroot = include
 rootfromhere = ..
@@ -70,7 +70,7 @@ mandir = @mandir@
 
 .SUFFIXES:
 
-RCFILES = makefile.in gambit.h.in config.h.in stamp.h
+RCFILES = makefile.in gambit.h.in config.h.in stamp-release.h
 
 GENDISTFILES =
 

@@ -1,6 +1,6 @@
 # makefile for Gambit system.
 
-# Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -84,7 +84,7 @@ SUBDIRS = include bin lib gsi gsc misc doc tests examples contrib prebuilt bench
 
 RCFILES = README README.md INSTALL.txt LICENSE-2.0.txt LGPL.txt \
 makefile.in configure configure.ac config.guess config.sub install-sh mkidirs \
-relpath gsc-boot.unix gsc-boot.bat.windows .travis.yml appveyor.yml
+relpath gsc-boot.unix gsc-boot.bat.windows appveyor.yml
 
 GITRCFILES = .gitignore .gitattributes
 HGRCFILES = .hgignore .hgtags
@@ -502,6 +502,9 @@ dist-devel-pre: doc
 	  echo "    .git"; \
 	  ln $(srcdirpfx).git $(PACKAGE_TARNAME) 2> /dev/null \
 	    || cp -p -R $(srcdirpfx).git $(PACKAGE_TARNAME); \
+	  echo "    .github"; \
+	  ln $(srcdirpfx).github $(PACKAGE_TARNAME) 2> /dev/null \
+	    || cp -p -R $(srcdirpfx).github $(PACKAGE_TARNAME); \
 	else \
 	  for file in $(HGDISTFILES); do \
 	    echo "    $$file"; \
@@ -511,6 +514,9 @@ dist-devel-pre: doc
 	  echo "    .hg"; \
 	  ln $(srcdirpfx).hg $(PACKAGE_TARNAME) 2> /dev/null \
 	    || cp -p -R $(srcdirpfx).hg $(PACKAGE_TARNAME); \
+	  echo "    .github"; \
+	  ln $(srcdirpfx).github $(PACKAGE_TARNAME) 2> /dev/null \
+	    || cp -p -R $(srcdirpfx).github $(PACKAGE_TARNAME); \
 	fi
 
 dist-devel-post:

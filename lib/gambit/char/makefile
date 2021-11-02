@@ -7,7 +7,7 @@ HEADERS_SCM = char\#.scm
 MODULES_SCM = char.scm char.sld
 MAIN_MODULES = char
 UNICODE_DATA_FILES = CaseFolding.txt PropList.txt SpecialCasing.txt UnicodeData.txt
-DATA_FILES = $UNICODE_DATA_FILES
+DATA_FILES = $(UNICODE_DATA_FILES)
 OTHER_RCFILES = makefile
 
 include $(libfromhere)/module-common.mk
