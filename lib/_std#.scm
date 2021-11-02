@@ -276,7 +276,7 @@
                   macro-check-elem
                   macro-check-elem-list
                   macro-test-elem
-                  ##fail-check-elem
+                  prim-fail-check-elem
                   define-map-and-for-each
                   elem=)
 
@@ -290,75 +290,77 @@
 
     (define macro-check-vect (sym 'macro-check- name))
     (define vect-list        (sym name '-list))
-    (define ##fail-check-vect (sym '##fail-check- name))
-    (define ##fail-check-vect-list (sym '##fail-check- name '-list))
 
-    (define ##vect?          (sym "##" name '?))
-    (define ##make-vect      (sym '##make- name))
-    (define ##vect           (sym "##" name))
-    (define ##vect-length    (sym "##" name '-length))
-    (define ##vect-ref       (sym "##" name '-ref))
-    (define ##vect-set!      (sym "##" name '-set!))
-    (define ##vect-set       (sym "##" name '-set))
-    (define ##vect->list     (sym "##" name '->list))
-    (define ##list->vect     (sym '##list-> name))
-    (define ##vect-copy      (sym "##" name '-copy))
-    (define ##vect-copy!     (sym "##" name '-copy!))
-    (define ##vect-delete    (sym "##" name '-delete))
-    (define ##vect-insert    (sym "##" name '-insert))
-    (define ##vect-fill!     (sym "##" name '-fill!))
-    (define ##subvect        (sym '##sub name))
-    (define ##append-vects   (sym '##append- name 's))
-    (define ##vect-append    (sym "##" name '-append))
-    (define ##subvect-move!  (sym '##sub name '-move!))
-    (define ##subvect-fill!  (sym '##sub name '-fill!))
-    (define ##vect-shrink!   (sym "##" name '-shrink!))
-    (define ##vect-equal?    (sym "##" name '-equal?))
+    (define prim-fail-check-vect (sym '##fail-check- name))
+    (define prim-fail-check-vect-list (sym '##fail-check- name '-list))
 
-    (define vect?            (sym name '?))
-    (define make-vect        (sym 'make- name))
-    (define vect             (sym name))
-    (define vect-length      (sym name '-length))
-    (define vect-ref         (sym name '-ref))
-    (define vect-set!        (sym name '-set!))
-    (define vect-set         (sym name '-set))
-    (define vect->list       (sym name '->list))
-    (define list->vect       (sym 'list-> name))
-    (define vect->string     (sym name '->string))
-    (define string->vect     (sym 'string-> name))
-    (define vect-copy        (sym name '-copy))
-    (define vect-copy!       (sym name '-copy!))
-    (define vect-fill!       (sym name '-fill!))
-    (define subvect          (sym 'sub name))
-    (define append-vects     (sym 'append- name 's))
-    (define vect-append      (sym name '-append))
-    (define subvect-move!    (sym 'sub name '-move!))
-    (define subvect-fill!    (sym 'sub name '-fill!))
-    (define vect-shrink!     (sym name '-shrink!))
-    (define vect-map         (sym name '-map))
-    (define vect-for-each    (sym name '-for-each))
+    (define prim-vect?          (sym "##" name '?))
+    (define prim-make-vect      (sym '##make- name))
+    (define prim-vect           (sym "##" name))
+    (define prim-vect-length    (sym "##" name '-length))
+    (define prim-vect-ref       (sym "##" name '-ref))
+    (define prim-vect-set!      (sym "##" name '-set!))
+    (define prim-vect-set       (sym "##" name '-set))
+    (define prim-vect->list     (sym "##" name '->list))
+    (define prim-list->vect     (sym '##list-> name))
+    (define prim-vect-copy      (sym "##" name '-copy))
+    (define prim-vect-copy!     (sym "##" name '-copy!))
+    (define prim-vect-delete    (sym "##" name '-delete))
+    (define prim-vect-insert    (sym "##" name '-insert))
+    (define prim-vect-fill!     (sym "##" name '-fill!))
+    (define prim-subvect        (sym '##sub name))
+    (define prim-append-vects   (sym '##append- name 's))
+    (define prim-vect-append    (sym "##" name '-append))
+    (define prim-subvect-move!  (sym '##sub name '-move!))
+    (define prim-subvect-fill!  (sym '##sub name '-fill!))
+    (define prim-vect-shrink!   (sym "##" name '-shrink!))
+    (define prim-vect-equal?    (sym "##" name '-equal?))
+
+    (define vect?               (sym name '?))
+    (define make-vect           (sym 'make- name))
+    (define vect                (sym name))
+    (define vect-length         (sym name '-length))
+    (define vect-ref            (sym name '-ref))
+    (define vect-set!           (sym name '-set!))
+    (define vect-set            (sym name '-set))
+    (define vect->list          (sym name '->list))
+    (define list->vect          (sym 'list-> name))
+    (define vect->string        (sym name '->string))
+    (define string->vect        (sym 'string-> name))
+    (define vect-copy           (sym name '-copy))
+    (define vect-copy!          (sym name '-copy!))
+    (define vect-delete         (sym name '-delete))
+    (define vect-insert         (sym name '-insert))
+    (define vect-fill!          (sym name '-fill!))
+    (define subvect             (sym 'sub name))
+    (define append-vects        (sym 'append- name 's))
+    (define vect-append         (sym name '-append))
+    (define subvect-move!       (sym 'sub name '-move!))
+    (define subvect-fill!       (sym 'sub name '-fill!))
+    (define vect-shrink!        (sym name '-shrink!))
+    (define vect-map            (sym name '-map))
+    (define vect-for-each       (sym name '-for-each))
 
     `(begin
 
        (define-fail-check-type ,name ',name)
        (define-fail-check-type ,vect-list ',vect-list)
 
-       (define-prim (,##vect? obj))
+       (define-primitive (,vect? obj))
 
        ,@(if (memq name '(values))
              `()
              `(
-               (define-prim (,vect? obj)
-                 (macro-force-vars (obj)
-                   (,##vect? obj)))
+               (define-procedure (,vect? (obj strict-object))
+                 (,prim-vect? obj))
 
                (define-procedure (,make-vect (k index)
                                              (fill ,elem-type
                                                    ,default-elem-value))
-                 (,##make-vect k fill))))
+                 (,prim-make-vect k fill))))
 
-       (define-prim (,##vect . lst)
-         (,##list->vect lst))
+       (define-primitive (,vect elems ...)
+         (,prim-list->vect elems))
 
        ,@(if (memq name '(vector))
              `((define-prim (,vect
@@ -370,33 +372,33 @@
                              #!rest
                              others)
                  (if (##eq? elem1 (macro-absent-obj))
-                     (,##vect)
+                     (,prim-vect)
                      (,macro-force-elem (elem1)
                        (,macro-check-elem elem1 1 (,vect elem1 elem2 elem3 elem4 . others)
                          (if (##eq? elem2 (macro-absent-obj))
-                             (,##vect elem1)
+                             (,prim-vect elem1)
                              (,macro-force-elem (elem2)
                                (,macro-check-elem elem2 2 (,vect elem1 elem2 elem3 elem4 . others)
                                  (if (##eq? elem3 (macro-absent-obj))
-                                     (,##vect elem1 elem2)
+                                     (,prim-vect elem1 elem2)
                                      (,macro-force-elem (elem3)
                                        (,macro-check-elem elem3 3 (,vect elem1 elem2 elem3 elem4 . others)
                                          (if (##eq? elem4 (macro-absent-obj))
-                                             (,##vect elem1 elem2 elem3)
+                                             (,prim-vect elem1 elem2 elem3)
                                              (,macro-force-elem (elem4)
                                                (,macro-check-elem elem4 4 (,vect elem1 elem2 elem3 elem4 . others)
                                                  (if (##null? others)
-                                                     (,##vect elem1 elem2 elem3 elem4)
+                                                     (,prim-vect elem1 elem2 elem3 elem4)
                                                      (let loop1 ((x others)
                                                                  (n 4))
                                                        (if (##pair? x)
                                                            (loop1 (##cdr x)
                                                                   (##fx+ n 1))
-                                                           (let ((vect (,##make-vect n)))
-                                                             (,##vect-set! vect 0 elem1)
-                                                             (,##vect-set! vect 1 elem2)
-                                                             (,##vect-set! vect 2 elem3)
-                                                             (,##vect-set! vect 3 elem4)
+                                                           (let ((vect (,prim-make-vect n)))
+                                                             (,prim-vect-set! vect 0 elem1)
+                                                             (,prim-vect-set! vect 1 elem2)
+                                                             (,prim-vect-set! vect 2 elem3)
+                                                             (,prim-vect-set! vect 3 elem4)
                                                              (let loop2 ((x others)
                                                                          (i 4))
                                                                (if (##pair? x)
@@ -404,102 +406,106 @@
                                                                      (,macro-force-elem (elem)
                                                                        (,macro-check-elem elem (##fx+ i 1) (,vect elem1 elem2 elem3 elem4 . others)
                                                                          (begin
-                                                                           (,##vect-set! vect i elem)
+                                                                           (,prim-vect-set! vect i elem)
                                                                            (loop2 (##cdr x)
                                                                                   (##fx+ i 1))))))
                                                                    vect))))))))))))))))))))
-             `((define-prim (,vect . others)
-                 (let loop1 ((x others) (n 0))
-                   (if (##pair? x)
-                       (loop1 (##cdr x) (##fx+ n 1))
-                       (let ((vect (,##make-vect n)))
-                         (let loop2 ((x others) (i 0))
-                           (if (##pair? x)
-                               (let ((elem (##car x)))
+             `((define-procedure (,vect (elems ,elem-type) ...)
+                 (let loop1 ((x elems) (n 0))
+                   (if (pair? x)
+                       (loop1 (cdr x) (fx+ n 1))
+                       (let ((vect (,prim-make-vect n)))
+                         (let loop2 ((x elems) (i 0))
+                           (if (pair? x)
+                               (let ((elem (car x)))
                                  (,macro-force-elem (elem)
-                                   (,macro-check-elem elem (##fx+ i 1) (,vect . others)
+                                   (,macro-check-elem elem (fx+ i 1) (,vect . elems)
                                      (begin
-                                       (,##vect-set! vect i elem)
-                                       (loop2 (##cdr x) (##fx+ i 1))))))
+                                       (,prim-vect-set! vect i elem)
+                                       (loop2 (cdr x) (fx+ i 1))))))
                                vect))))))))
 
-       (define-prim (,##vect-length vect))
+       (define-primitive (,vect-length ,name))
 
        ,@(if (memq name '(values))
              `()
              `((define-procedure (,vect-length (,name ,name))
-                 (,##vect-length ,name))))
+                 (,prim-vect-length ,name))))
 
-       (define-prim (,##vect-ref vect k))
-
-       ,@(if (memq name '(values))
-             `()
-             `((define-procedure (,vect-ref (,name ,name)
-                                            (k (index-range
-                                                0
-                                                (,##vect-length ,name))))
-                 (,##vect-ref ,name k))))
-
-       (define-prim (,##vect-set! vect k val))
+       (define-primitive (,vect-ref ,name k))
 
        ,@(if (memq name '(values))
              `()
-             `((define-procedure (,vect-set! (,name (and ,name mutable))
-                                             (k (index-range
-                                                 0
-                                                 (,##vect-length ,name)))
-                                             (,elem-name ,elem-type))
-                 (,##vect-set! ,name k ,elem-name)
-                 (##void))))
+             `((define-procedure (,vect-ref
+                                  (,name ,name)
+                                  (k (index-range
+                                      0
+                                      (,prim-vect-length ,name))))
+                 (,prim-vect-ref ,name k))))
 
-       (define-prim (,##vect-set vect k val)
-         (let ((result (,##vect-copy vect)))
-           (,##vect-set! result k val)
+       (define-primitive (,vect-set! ,name k ,elem-name))
+
+       ,@(if (memq name '(values))
+             `()
+             `((define-procedure (,vect-set!
+                                  (,name (and ,name mutable))
+                                  (k (index-range
+                                      0
+                                      (,prim-vect-length ,name)))
+                                  (,elem-name ,elem-type))
+                 (,prim-vect-set! ,name k ,elem-name)
+                 (void))))
+
+       (define-primitive (,vect-set ,name k val)
+         (let ((result (,prim-vect-copy ,name)))
+           (,prim-vect-set! result k val)
            result))
 
        ,@(if (memq name '(values))
              `()
-             `((define-procedure (,vect-set (,name ,name)
-                                            (k (index-range
-                                                0
-                                                (,##vect-length ,name)))
-                                            (,elem-name ,elem-type))
-                 (,##vect-set ,name k ,elem-name))))
+             `((define-procedure (,vect-set
+                                  (,name ,name)
+                                  (k (index-range
+                                      0
+                                      (,prim-vect-length ,name)))
+                                  (,elem-name ,elem-type))
+                 (,prim-vect-set ,name k ,elem-name))))
 
-       (define-prim (,##vect->list
-                     vect
-                     #!optional
-                     (start 0)
-                     (end (,##vect-length vect)))
-         (let loop ((lst '()) (i (##fx- end 1)))
-           (if (##fx< i start)
+       (define-primitive (,vect->list ,name
+                                      (start object
+                                             0)
+                                      (end object
+                                           (,prim-vect-length ,name)))
+         (let loop ((lst '()) (i (fx- end 1)))
+           (if (fx< i start)
                lst
-               (loop (##cons (,##vect-ref vect i) lst) (##fx- i 1)))))
+               (loop (cons (,prim-vect-ref ,name i) lst) (fx- i 1)))))
 
        ,@(if (memq name '(values))
              `()
-             `((define-procedure (,vect->list (,name ,name)
-                                              (start (index-range-incl
-                                                      0
-                                                      (,##vect-length ,name))
-                                                     0)
-                                              (end (index-range-incl
-                                                    start
-                                                    (,##vect-length ,name))
-                                                   (,##vect-length ,name)))
-                 (,##vect->list ,name start end))))
+             `((define-procedure (,vect->list
+                                  (,name ,name)
+                                  (start (index-range-incl
+                                          0
+                                          (,prim-vect-length ,name))
+                                         0)
+                                  (end (index-range-incl
+                                        start
+                                        (,prim-vect-length ,name))
+                                       (,prim-vect-length ,name)))
+                 (,prim-vect->list ,name start end))))
 
-       (define-prim (,##list->vect lst)
-         (let loop1 ((x lst) (n 0))
-           (if (##pair? x)
-               (loop1 (##cdr x) (##fx+ n 1))
-               (let ((vect (,##make-vect n ,default-elem-value)))
-                 (let loop2 ((x lst) (i 0))
-                   (if (and (##pair? x)  ;; double check in case another
-                            (##fx< i n)) ;; thread mutates the list
-                       (let ((elem (##car x)))
-                         (,##vect-set! vect i elem)
-                         (loop2 (##cdr x) (##fx+ i 1)))
+       (define-primitive (,list->vect list)
+         (let loop1 ((x list) (n 0))
+           (if (pair? x)
+               (loop1 (cdr x) (fx+ n 1))
+               (let ((vect (,prim-make-vect n ,default-elem-value)))
+                 (let loop2 ((x list) (i 0))
+                   (if (and (pair? x)  ;; double check in case another
+                            (fx< i n)) ;; thread mutates the list
+                       (let ((elem (car x)))
+                         (,prim-vect-set! vect i elem)
+                         (loop2 (cdr x) (fx+ i 1)))
                        vect))))))
 
        ,@(if (memq name '(values))
@@ -510,7 +516,7 @@
                      (if (##pair? x)
                          (loop1 (cdr x) (##fx+ n 1))
                          (macro-check-proper-list-null x '(1 . list) (,list->vect list)
-                           (let ((vect (,##make-vect n ,default-elem-value)))
+                           (let ((vect (,prim-make-vect n ,default-elem-value)))
                              (let loop2 ((x list) (i 0))
                                (macro-force-vars (x)
                                  (if (and (##pair? x)  ;; double check in case another
@@ -518,57 +524,59 @@
                                      (let ((elem (##car x)))
                                        (,macro-check-elem-list elem '(1 . list) (,list->vect list)
                                          (begin
-                                           (,##vect-set! vect i elem)
+                                           (,prim-vect-set! vect i elem)
                                            (loop2 (cdr x) (##fx+ i 1)))))
                                      vect)))))))))))
 
        ,@(if (eq? name 'vector)
              `(
-               (define-procedure (,vect->string (,name ,name)
-                                                (start (index-range-incl
-                                                        0
-                                                        (,##vect-length ,name))
-                                                       0)
-                                                (end (index-range-incl
-                                                      start
-                                                      (,##vect-length ,name))
-                                                     (,##vect-length ,name)))
+               (define-procedure (,vect->string
+                                  (,name ,name)
+                                  (start (index-range-incl
+                                          0
+                                          (,prim-vect-length ,name))
+                                         0)
+                                  (end (index-range-incl
+                                        start
+                                        (,prim-vect-length ,name))
+                                       (,prim-vect-length ,name)))
 
                  (define (convert s e)
                    (let* ((len (##fx- e s))
-                          (result (##make-string len)))
+                          (result (primitive (make-string len))))
                      (let loop ((i (##fx- len 1)))
                        (if (##fx< i 0)
                            result
-                           (let ((elem (,##vect-ref ,name (##fx+ i s))))
+                           (let ((elem (,prim-vect-ref ,name (##fx+ i s))))
                              (macro-check-char-vector
                                elem
                                '(1 . ,name)
                                (,vect->string ,name start end)
                                (begin
-                                 (##string-set! result i elem)
+                                 (primitive (string-set! result i elem))
                                  (loop (fx- i 1)))))))))
 
                  (convert start end))
 
-               (define-procedure (,string->vect (string string)
-                                                (start (index-range-incl
-                                                        0
-                                                        (##string-length string))
-                                                       0)
-                                                (end (index-range-incl
-                                                      start
-                                                      (##string-length string))
-                                                     (##string-length string)))
+               (define-procedure (,string->vect
+                                  (string string)
+                                  (start (index-range-incl
+                                          0
+                                          (primitive (string-length string)))
+                                         0)
+                                  (end (index-range-incl
+                                        start
+                                        (primitive (string-length string)))
+                                       (primitive (string-length string))))
 
                  (define (convert s e)
                    (let* ((len (##fx- e s))
-                          (result (,##make-vect len)))
+                          (result (,prim-make-vect len)))
                      (let loop ((i (##fx- len 1)))
                        (if (##fx< i 0)
                            result
-                           (let ((elem (##string-ref string (##fx+ i s))))
-                             (,##vect-set! result i elem)
+                           (let ((elem (primitive (string-ref string (##fx+ i s)))))
+                             (,prim-vect-set! result i elem)
                              (loop (##fx- i 1)))))))
 
                  (convert start end))
@@ -577,34 +585,26 @@
        ,@(if (memq name '(values))
              `()
              `(
-               (define-prim (,##vect-fill!
-                             ,name
-                             fill
-                             #!optional
-                             (start 0)
-                             (end (,##vect-length ,name)))
-                 (,##subvect-fill! ,name start end fill))
-
-               (define-procedure (,vect-fill!
+               (define-prim&proc (,vect-fill!
                                   (,name (and ,name mutable))
                                   (fill ,elem-type)
                                   (start (index-range-incl
                                           0
-                                          (,##vect-length ,name))
+                                          (,prim-vect-length ,name))
                                          0)
                                   (end (index-range-incl
                                         start
-                                        (,##vect-length ,name))
-                                       (,##vect-length ,name)))
-                 (,##vect-fill! ,name fill start end))))
+                                        (,prim-vect-length ,name))
+                                       (,prim-vect-length ,name)))
+                 (,prim-subvect-fill! ,name start end fill))))
 
-       (define-prim (,##vect-copy
-                     ,name
-                     #!optional
-                     (start 0)
-                     (end (,##vect-length ,name)))
-         (let ((len (##fx- end start)))
-           (,##subvect-move! ,name start end (,##make-vect len) 0)))
+       (define-primitive (,vect-copy ,name
+                                     (start object
+                                            0)
+                                     (end object
+                                          (,prim-vect-length ,name)))
+         (let ((len (fx- end start)))
+           (,prim-subvect-move! ,name start end (,prim-make-vect len) 0)))
 
        ,@(if (memq name '(values))
              `()
@@ -613,22 +613,23 @@
                                   (,name ,name)
                                   (start (index-range-incl
                                           0
-                                          (,##vect-length ,name))
+                                          (,prim-vect-length ,name))
                                          0)
                                   (end (index-range-incl
                                         start
-                                        (,##vect-length ,name))
-                                       (,##vect-length ,name)))
-                 (,##vect-copy ,name start end))
+                                        (,prim-vect-length ,name))
+                                       (,prim-vect-length ,name)))
+                 (,prim-vect-copy ,name start end))
 
-               (define-prim (,##vect-copy!
-                             dst-vect
-                             dst-start
-                             src-vect
-                             #!optional
-                             (src-start 0)
-                             (src-end (,##vect-length src-vect)))
-                 (,##subvect-move!
+               (define-primitive (,vect-copy!
+                                  dst-vect
+                                  dst-start
+                                  src-vect
+                                  (src-start object
+                                             0)
+                                  (src-end object
+                                           (,prim-vect-length src-vect)))
+                 (,prim-subvect-move!
                   src-vect
                   src-start
                   src-end
@@ -639,18 +640,18 @@
                                   (dst-vect (and ,name mutable))
                                   (dst-start (index-range-incl
                                               0
-                                              (,##vect-length dst-vect)))
+                                              (,prim-vect-length dst-vect)))
                                   (src-vect ,name)
                                   (src-start (index-range-incl
                                               0
-                                              (,##vect-length src-vect))
+                                              (,prim-vect-length src-vect))
                                              0)
                                   (src-end (index-range-incl
                                             src-start
-                                            (,##vect-length src-vect))
-                                           (,##vect-length src-vect)))
+                                            (,prim-vect-length src-vect))
+                                           (,prim-vect-length src-vect)))
                  (if (##fx> (##fx- src-end src-start)
-                            (##fx- (,##vect-length dst-vect) dst-start))
+                            (##fx- (,prim-vect-length dst-vect) dst-start))
                      (##raise-range-exception
                       '(2 . dst-start)
                       ,vect-copy!
@@ -660,7 +661,7 @@
                       %src-start ;; use % to refer to possible absent param
                       %src-end)  ;; use % to refer to possible absent param
                      (begin
-                       (,##subvect-move!
+                       (,prim-subvect-move!
                         src-vect
                         src-start
                         src-end
@@ -668,119 +669,121 @@
                         dst-start)
                        (##void))))))
 
-       (define-prim (,##vect-delete vect i)
-         (let* ((len (,##vect-length vect))
-                (result (,##make-vect (##fx- len 1))))
-           (,##subvect-move! vect 0 i result 0)
-           (,##subvect-move! vect (##fx+ i 1) len result i)
+       (define-primitive (,vect-delete ,name k)
+         (let* ((len (,prim-vect-length ,name))
+                (result (,prim-make-vect (fx- len 1))))
+           (,prim-subvect-move! ,name 0 k result 0)
+           (,prim-subvect-move! ,name (fx+ k 1) len result k)
            result))
 
-       (define-prim (,##vect-insert vect i x)
-         (let* ((len (,##vect-length vect))
-                (result (,##make-vect (##fx+ len 1))))
-           (,##subvect-move! vect 0 i result 0)
-           (,##subvect-move! vect i len result (##fx+ i 1))
-           (,##vect-set! result i x)
+       (define-primitive (,vect-insert ,name k ,elem-name)
+         (let* ((len (,prim-vect-length ,name))
+                (result (,prim-make-vect (fx+ len 1))))
+           (,prim-subvect-move! ,name 0 k result 0)
+           (,prim-subvect-move! ,name k len result (fx+ k 1))
+           (,prim-vect-set! result k ,elem-name)
            result))
 
        ,@(if (memq name '(values))
              `()
              `(
-               (define-prim (,##subvect ,name start end)
-                 (,##subvect-move!
+               (define-primitive (,subvect ,name start end)
+                 (,prim-subvect-move!
                   ,name
                   start
                   end
-                  (,##make-vect (##fxmax (##fx- end start) 0))
+                  (,prim-make-vect (fxmax (fx- end start) 0))
                   0))
 
-               (define-procedure (,subvect (,name ,name)
-                                           (start (index-range-incl
-                                                   0
-                                                   (,##vect-length ,name)))
-                                           (end (index-range-incl
-                                                 start
-                                                 (,##vect-length ,name))))
-                 (,##subvect ,name start end))
+               (define-procedure (,subvect
+                                  (,name ,name)
+                                  (start (index-range-incl
+                                          0
+                                          (,prim-vect-length ,name)))
+                                  (end (index-range-incl
+                                        start
+                                        (,prim-vect-length ,name))))
+                 (,prim-subvect ,name start end))
 
-               (define-prim (,##append-vects
-                             lst
-                             #!optional
-                             (sep (macro-absent-obj)))
+               (define-primitive (,append-vects
+                                  ,vect-list
+                                  (separator object
+                                             (macro-absent-obj)))
+                 (namespace ("" ,vect-append))
                  (let loop1 ((n 0)
-                             (probe lst)
+                             (probe ,vect-list)
                              (arg-num 1))
-                   (cond ((##pair? probe)
-                          (let ((vect (##car probe)))
+                   (cond ((pair? probe)
+                          (let ((vect (car probe)))
                             (macro-force-vars (vect)
-                              (if (##not (,##vect? vect))
-                                  (if (##eq? sep (macro-deleted-obj))
-                                      (,##fail-check-vect arg-num '() ,vect-append lst)
-                                      (,##fail-check-vect-list 1 ,append-vects lst sep))
-                                  (loop1 (##fx+ n (,##vect-length vect))
-                                         (##cdr probe)
-                                         (##fx+ arg-num 1))))))
-                         ((##null? probe)
-                          (if (##not (or (##eq? sep (macro-deleted-obj)) ;; for vect-append
-                                         (##eq? sep (macro-absent-obj))
-                                         (,##vect? sep)))
-                              (,##fail-check-vect 2 '() ,append-vects lst sep)
-                              (if (##not (##pair? lst))
-                                  (,##make-vect 0)
+                              (if (not (,prim-vect? vect))
+                                  (if (eq? separator (macro-deleted-obj))
+                                      (,prim-fail-check-vect arg-num '() ,vect-append ,vect-list)
+                                      (,prim-fail-check-vect-list '(1 . ,vect-list) ,append-vects ,vect-list separator))
+                                  (loop1 (fx+ n (,prim-vect-length vect))
+                                         (cdr probe)
+                                         (fx+ arg-num 1))))))
+                         ((null? probe)
+                          (if (not (or (eq? separator (macro-deleted-obj)) ;; for vect-append
+                                       (eq? separator (macro-absent-obj))
+                                       (,prim-vect? separator)))
+                              (,prim-fail-check-vect '(2 . separator) '() ,append-vects ,vect-list separator)
+                              (if (not (pair? ,vect-list))
+                                  (,prim-make-vect 0)
                                   (let* ((n
-                                          (if (,##vect? sep)
-                                              (##fx+ n
-                                                     (##fx* (##fx- arg-num 2)
-                                                            (,##vect-length sep)))
+                                          (if (,prim-vect? separator)
+                                              (fx+ n
+                                                   (fx* (fx- arg-num 2)
+                                                        (,prim-vect-length separator)))
                                               n))
                                          (result
-                                          (,##make-vect n)))
+                                          (,prim-make-vect n)))
                                     (let loop2 ((i 0)
-                                                (probe lst))
-                                      (let* ((vect (##car probe))
-                                             (len (,##vect-length vect)))
-                                        (,##subvect-move! vect 0 len result i)
-                                        (let* ((i+len (##fx+ i len))
-                                               (rest (##cdr probe)))
-                                          (if (##pair? rest)
-                                              (if (,##vect? sep)
-                                                  (let ((len-sep (,##vect-length sep)))
-                                                    (,##subvect-move! sep 0 len-sep result i+len)
-                                                    (loop2 (##fx+ i+len len-sep)
+                                                (probe ,vect-list))
+                                      (let* ((vect (car probe))
+                                             (len (,prim-vect-length vect)))
+                                        (,prim-subvect-move! vect 0 len result i)
+                                        (let* ((i+len (fx+ i len))
+                                               (rest (cdr probe)))
+                                          (if (pair? rest)
+                                              (if (,prim-vect? separator)
+                                                  (let ((len-sep (,prim-vect-length separator)))
+                                                    (,prim-subvect-move! separator 0 len-sep result i+len)
+                                                    (loop2 (fx+ i+len len-sep)
                                                            rest))
                                                   (loop2 i+len
                                                          rest))
                                               result))))))))
                          (else
-                          (,##fail-check-vect-list 1 ,append-vects lst sep)))))
+                          (,prim-fail-check-vect-list '(1 . ,vect-list) ,append-vects ,vect-list separator)))))
 
-               (define-prim (,append-vects lst #!optional (sep (macro-absent-obj)))
-                 (,##append-vects lst sep))
+               (define-procedure (,append-vects
+                                  ,vect-list
+                                  (separator object
+                                             (macro-absent-obj)))
+                 (,prim-append-vects ,vect-list separator))
 
-               (define-prim (,##vect-append . lst)
-                 (,##append-vects lst (macro-deleted-obj)))
-
-               (define-prim (,vect-append . lst)
-                 (,##append-vects lst (macro-deleted-obj)))))
+               (define-prim&proc (,vect-append ,vect ...)
+                 (,prim-append-vects ,vect (macro-deleted-obj)))))
 
        (macro-case-target
 
         ((c C)
-         (define-prim (,##subvect-move! src-vect src-start src-end dst-vect dst-start)
+         (define-primitive (,subvect-move! src-vect src-start src-end dst-vect dst-start)
            (##c-code
             ,(string-append
 #<<end-of-code
 {
 end-of-code
-              (case ##subvect-move!
-                ((##subvector-move!)
+              (case name
+                ((vector)
 #<<end-of-code
   void *src = ___CAST(void*,&___FIELD(___ARG1,___INT(___ARG2)));
   void *dst = ___CAST(void*,&___FIELD(___ARG4,___INT(___ARG5)));
   ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * ___WS;
 end-of-code
 )
-                ((##substring-move!)
+                ((string)
 #<<end-of-code
   void *src =
         ___CAST(void*,
@@ -795,77 +798,77 @@ end-of-code
   ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * ___CS;
 end-of-code
 )
-                ((##subs8vector-move!)
+                ((s8vector)
 #<<end-of-code
   void *src = ___CAST(void*,&___FETCH_S8(___BODY(___ARG1),___INT(___ARG2)));
   void *dst = ___CAST(void*,&___FETCH_S8(___BODY(___ARG4),___INT(___ARG5)));
   ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * sizeof (___S8);
 end-of-code
 )
-                ((##subu8vector-move!)
+                ((u8vector)
 #<<end-of-code
   void *src = ___CAST(void*,&___FETCH_U8(___BODY(___ARG1),___INT(___ARG2)));
   void *dst = ___CAST(void*,&___FETCH_U8(___BODY(___ARG4),___INT(___ARG5)));
   ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * sizeof (___U8);
 end-of-code
 )
-                ((##subs16vector-move!)
+                ((s16vector)
 #<<end-of-code
   void *src = ___CAST(void*,&___FETCH_S16(___BODY(___ARG1),___INT(___ARG2)));
   void *dst = ___CAST(void*,&___FETCH_S16(___BODY(___ARG4),___INT(___ARG5)));
   ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * sizeof (___S16);
 end-of-code
 )
-                ((##subu16vector-move!)
+                ((u16vector)
 #<<end-of-code
   void *src = ___CAST(void*,&___FETCH_U16(___BODY(___ARG1),___INT(___ARG2)));
   void *dst = ___CAST(void*,&___FETCH_U16(___BODY(___ARG4),___INT(___ARG5)));
   ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * sizeof (___U16);
 end-of-code
 )
-                ((##subs32vector-move!)
+                ((s32vector)
 #<<end-of-code
   void *src = ___CAST(void*,&___FETCH_S32(___BODY(___ARG1),___INT(___ARG2)));
   void *dst = ___CAST(void*,&___FETCH_S32(___BODY(___ARG4),___INT(___ARG5)));
   ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * sizeof (___S32);
 end-of-code
 )
-                ((##subu32vector-move!)
+                ((u32vector)
 #<<end-of-code
   void *src = ___CAST(void*,&___FETCH_U32(___BODY(___ARG1),___INT(___ARG2)));
   void *dst = ___CAST(void*,&___FETCH_U32(___BODY(___ARG4),___INT(___ARG5)));
   ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * sizeof (___U32);
 end-of-code
 )
-                ((##subs64vector-move!)
+                ((s64vector)
 #<<end-of-code
   void *src = ___CAST(void*,&___FETCH_S64(___BODY(___ARG1),___INT(___ARG2)));
   void *dst = ___CAST(void*,&___FETCH_S64(___BODY(___ARG4),___INT(___ARG5)));
   ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * sizeof (___S64);
 end-of-code
 )
-                ((##subu64vector-move!)
+                ((u64vector)
 #<<end-of-code
   void *src = ___CAST(void*,&___FETCH_U64(___BODY(___ARG1),___INT(___ARG2)));
   void *dst = ___CAST(void*,&___FETCH_U64(___BODY(___ARG4),___INT(___ARG5)));
   ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * sizeof (___U64);
 end-of-code
 )
-                ((##subf32vector-move!)
+                ((f32vector)
 #<<end-of-code
   void *src = ___CAST(void*,___CAST(___F32*,___BODY(___ARG1))+___INT(___ARG2));
   void *dst = ___CAST(void*,___CAST(___F32*,___BODY(___ARG4))+___INT(___ARG5));
   ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * sizeof (___F32);
 end-of-code
 )
-                ((##subf64vector-move!)
+                ((f64vector)
 #<<end-of-code
   void *src = ___CAST(void*,___CAST(___F64*,___BODY(___ARG1))+___INT(___ARG2));
   void *dst = ___CAST(void*,___CAST(___F64*,___BODY(___ARG4))+___INT(___ARG5));
   ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * sizeof (___F64);
 end-of-code
 )
-                ((##subvalues-move!)
+                ((values)
 #<<end-of-code
   void *src = ___CAST(void*,&___FIELD(___ARG1,___INT(___ARG2)));
   void *dst = ___CAST(void*,&___FIELD(___ARG4,___INT(___ARG5)));
@@ -887,7 +890,7 @@ end-of-code
             dst-start)))
 
         (else
-         (define-prim (,##subvect-move! src-vect src-start src-end dst-vect dst-start)
+         (define-prim (,prim-subvect-move! src-vect src-start src-end dst-vect dst-start)
            ;; Copy direction must be selected in case src-vect and
            ;; dst-vect are the same object.
            (if (##fx< src-start dst-start)
@@ -899,14 +902,14 @@ end-of-code
                  (if (##fx< i src-start)
                      dst-vect
                      (begin
-                       (,##vect-set! dst-vect j (,##vect-ref src-vect i))
+                       (,prim-vect-set! dst-vect j (,prim-vect-ref src-vect i))
                        (loop1 (##fx- i 1)
                               (##fx- j 1)))))
                (let loop2 ((i src-start)
                            (j dst-start))
                  (if (##fx< i src-end)
                      (begin
-                       (,##vect-set! dst-vect j (,##vect-ref src-vect i))
+                       (,prim-vect-set! dst-vect j (,prim-vect-ref src-vect i))
                        (loop2 (##fx+ i 1)
                               (##fx+ j 1)))
                      dst-vect))))))
@@ -924,13 +927,13 @@ end-of-code
                        src-start
                        2
                        0
-                       (,##vect-length src-vect)
+                       (,prim-vect-length src-vect)
                        (,subvect-move! src-vect src-start src-end dst-vect dst-start)
                        (macro-check-index-range-incl
                          src-end
                          3
                          src-start
-                         (,##vect-length src-vect)
+                         (,prim-vect-length src-vect)
                          (,subvect-move! src-vect src-start src-end dst-vect dst-start)
                          (,macro-check-vect
                            dst-vect
@@ -944,19 +947,19 @@ end-of-code
                                dst-start
                                5
                                0
-                               (##fx- (,##vect-length dst-vect)
+                               (##fx- (,prim-vect-length dst-vect)
                                       (##fx- src-end src-start))
                                (,subvect-move! src-vect src-start src-end dst-vect dst-start)
                                (begin
-                                 (,##subvect-move! src-vect src-start src-end dst-vect dst-start)
+                                 (,prim-subvect-move! src-vect src-start src-end dst-vect dst-start)
                                  (##void))))))))))
 
-               (define-prim (,##subvect-fill! vect start end fill)
+               (define-prim (,prim-subvect-fill! vect start end fill)
                  (let loop ((i (##fx- end 1)))
                    (if (##fx< i start)
                        (##void)
                        (begin
-                         (,##vect-set! vect i fill)
+                         (,prim-vect-set! vect i fill)
                          (loop (##fx- i 1))))))
 
                (define-prim (,subvect-fill! vect start end fill)
@@ -968,21 +971,21 @@ end-of-code
                            start
                            2
                            0
-                           (,##vect-length vect)
+                           (,prim-vect-length vect)
                            (,subvect-fill! vect start end fill)
                            (macro-check-index-range-incl
                              end
                              3
                              start
-                             (,##vect-length vect)
+                             (,prim-vect-length vect)
                              (,subvect-fill! vect start end fill)
                              (,macro-check-elem
                                fill
                                4
                                (,subvect-fill! vect start end fill)
-                               (,##subvect-fill! vect start end fill)))))))))
+                               (,prim-subvect-fill! vect start end fill)))))))))
 
-               (define-prim (,##vect-shrink! vect k))
+               (define-prim (,prim-vect-shrink! vect k))
 
                (define-prim (,vect-shrink! vect k)
                  (macro-force-vars (vect k)
@@ -992,22 +995,22 @@ end-of-code
                          k
                          2
                          0
-                         (,##vect-length vect)
+                         (,prim-vect-length vect)
                          (,vect-shrink! vect k)
                          (begin
-                           (,##vect-shrink! vect k)
+                           (,prim-vect-shrink! vect k)
                            (##void)))))))
 
-               (define-prim (,##vect-equal? vect1 vect2)
+               (define-prim (,prim-vect-equal? vect1 vect2)
                  (or (##eq? vect1 vect2)
-                     (let ((len (,##vect-length vect1)))
-                       (and (##fx= len (,##vect-length vect2))
+                     (let ((len (,prim-vect-length vect1)))
+                       (and (##fx= len (,prim-vect-length vect2))
                             (let loop ((i (##fx- len 1)))
                               (or (##fx< i 0)
                                   (and (let ()
                                          (##declare (generic)) ;; avoid fixnum specific ##eqv?
-                                         (,elem= (,##vect-ref vect1 i)
-                                                 (,##vect-ref vect2 i)))
+                                         (,elem= (,prim-vect-ref vect1 i)
+                                                 (,prim-vect-ref vect2 i)))
                                        (loop (##fx- i 1)))))))))))
 
        ,@(if define-map-and-for-each
@@ -1024,32 +1027,32 @@ end-of-code
                            ,(if macro-test-elem
 
                                 `(define (vect-map-1 i)
-                                   (if (##fx< i (,##vect-length x))
+                                   (if (##fx< i (,prim-vect-length x))
                                        (let err ((result
-                                                  (proc (,##vect-ref x i))))
+                                                  (proc (,prim-vect-ref x i))))
                                          (,macro-force-elem (result)
                                            (if (,macro-test-elem result)
                                                (let ((vect
                                                       (vect-map-1
                                                        (##fx+ i 1))))
-                                                 (,##vect-set! vect i result)
+                                                 (,prim-vect-set! vect i result)
                                                  vect)
-                                                (err (,##fail-check-elem
+                                                (err (,prim-fail-check-elem
                                                       0
                                                       proc
-                                                      (,##vect-ref x i))))))
-                                       (,##make-vect i)))
+                                                      (,prim-vect-ref x i))))))
+                                       (,prim-make-vect i)))
 
                                 `(define (vect-map-1 i)
-                                   (if (##fx< i (,##vect-length x))
-                                       (let ((result (proc (,##vect-ref x i))))
+                                   (if (##fx< i (,prim-vect-length x))
+                                       (let ((result (proc (,prim-vect-ref x i))))
                                          (,macro-force-elem (result)
                                            (let ((vect
                                                   (vect-map-1
                                                    (##fx+ i 1))))
-                                             (,##vect-set! vect i result)
+                                             (,prim-vect-set! vect i result)
                                              vect)))
-                                       (,##make-vect i))))
+                                       (,prim-make-vect i))))
 
                            (vect-map-1 0))
 
@@ -1063,7 +1066,7 @@ end-of-code
                                          (if (##pair? lst)
                                              (loop (##cdr lst)
                                                    (##cons
-                                                    (,##vect-ref (##car lst) i)
+                                                    (,prim-vect-ref (##car lst) i)
                                                     args))
                                              (let err ((result
                                                         (##apply proc args)))
@@ -1072,13 +1075,13 @@ end-of-code
                                                      (let ((vect
                                                             (vect-map-n
                                                              (##fx+ i 1))))
-                                                       (,##vect-set! vect i result)
+                                                       (,prim-vect-set! vect i result)
                                                        vect)
-                                                     (err (,##fail-check-elem
+                                                     (err (,prim-fail-check-elem
                                                            0
                                                            proc
-                                                           (,##vect-ref x i))))))))
-                                       (,##make-vect i)))
+                                                           (,prim-vect-ref x i))))))))
+                                       (,prim-make-vect i)))
 
                                 `(define (vect-map-n i)
                                    (if (##fx< i len)
@@ -1086,7 +1089,7 @@ end-of-code
                                          (if (##pair? lst)
                                              (loop (##cdr lst)
                                                    (##cons
-                                                    (,##vect-ref (##car lst) i)
+                                                    (,prim-vect-ref (##car lst) i)
                                                     args))
                                              (let ((result
                                                     (##apply proc args)))
@@ -1094,9 +1097,9 @@ end-of-code
                                                  (let ((vect
                                                         (vect-map-n
                                                          (##fx+ i 1))))
-                                                   (,##vect-set! vect i result)
+                                                   (,prim-vect-set! vect i result)
                                                    vect)))))
-                                       (,##make-vect i))))
+                                       (,prim-make-vect i))))
 
                            (vect-map-n 0))
 
@@ -1104,7 +1107,7 @@ end-of-code
                              (vect-map-1 x)
                              (if ##allow-length-mismatch?
 
-                                 (let ((len-x (,##vect-length x))
+                                 (let ((len-x (,prim-vect-length x))
                                        (x-y (##cons x y)))
                                    (let loop ((lst y)
                                               (rev-x-y (##cons x '()))
@@ -1117,14 +1120,14 @@ end-of-code
                                                arg
                                                arg-num
                                                (,vect-map proc . x-y)
-                                               (let ((len-arg (,##vect-length arg)))
+                                               (let ((len-arg (,prim-vect-length arg)))
                                                  (loop (##cdr lst)
                                                        (##cons arg rev-x-y)
                                                        (##fxmin min-len len-arg)
                                                        (##fx+ arg-num 1))))))
                                          (vect-map-n min-len rev-x-y))))
 
-                                 (let ((len-x (,##vect-length x))
+                                 (let ((len-x (,prim-vect-length x))
                                        (x-y (##cons x y)))
                                    (let loop ((lst y)
                                               (rev-x-y (##cons x '()))
@@ -1139,7 +1142,7 @@ end-of-code
                                                arg
                                                arg-num
                                                (,vect-map proc . x-y)
-                                               (let ((len-arg (,##vect-length arg)))
+                                               (let ((len-arg (,prim-vect-length arg)))
                                                  (if (##fx> len-arg max-len)
                                                      (loop (##cdr lst)
                                                            (##cons arg rev-x-y)
@@ -1171,9 +1174,9 @@ end-of-code
                          (define (vect-for-each-1 x)
 
                            (define (vect-for-each-1 i)
-                             (if (##fx< i (,##vect-length x))
+                             (if (##fx< i (,prim-vect-length x))
                                  (begin
-                                   (proc (,##vect-ref x i))
+                                   (proc (,prim-vect-ref x i))
                                    (vect-for-each-1 (##fx+ i 1)))
                                  (##void)))
 
@@ -1187,7 +1190,7 @@ end-of-code
                                    (if (##pair? lst)
                                        (loop (##cdr lst)
                                              (##cons
-                                              (,##vect-ref (##car lst) i)
+                                              (,prim-vect-ref (##car lst) i)
                                               args))
                                        (begin
                                          (##apply proc args)
@@ -1200,7 +1203,7 @@ end-of-code
                              (vect-for-each-1 x)
                              (if ##allow-length-mismatch?
 
-                                 (let ((len-x (,##vect-length x))
+                                 (let ((len-x (,prim-vect-length x))
                                        (x-y (##cons x y)))
                                    (let loop ((lst y)
                                               (rev-x-y (##cons x '()))
@@ -1214,14 +1217,14 @@ end-of-code
                                                arg-num
                                                (,vect-for-each proc . x-y)
                                                (let ((len-arg
-                                                      (,##vect-length arg)))
+                                                      (,prim-vect-length arg)))
                                                  (loop (##cdr lst)
                                                        (##cons arg rev-x-y)
                                                        (##fxmin min-len len-arg)
                                                        (##fx+ arg-num 1))))))
                                          (vect-for-each-n min-len rev-x-y))))
 
-                                 (let ((len-x (,##vect-length x))
+                                 (let ((len-x (,prim-vect-length x))
                                        (x-y (##cons x y)))
                                    (let loop ((lst y)
                                               (rev-x-y (##cons x '()))
@@ -1237,7 +1240,7 @@ end-of-code
                                                arg-num
                                                (,vect-for-each proc . x-y)
                                                (let ((len-arg
-                                                      (,##vect-length arg)))
+                                                      (,prim-vect-length arg)))
                                                  (if (##fx> len-arg max-len)
                                                      (loop (##cdr lst)
                                                            (##cons arg rev-x-y)
