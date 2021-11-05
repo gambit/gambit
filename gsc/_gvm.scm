@@ -1856,10 +1856,7 @@
 ;; -------------------
 
 (define (write-bb bb port)
-  (write-gvm-instr (bb-label-instr bb) port)
-  (display " [precedents=" port)
-  (write (bb-precedents bb) port)
-  (display "]" port)
+  (write-gvm-instr (bb-label-instr bb) port bb)
   (newline port)
 
   (for-each (lambda (gvm-instr)
@@ -1913,7 +1910,7 @@
                     (display (code-slots-needed code) port)
                     (display " | " port)))
 
-              (write-gvm-instr gvm-instr port)
+              (write-gvm-instr gvm-instr port (code-bb code))
               (newline port)))))
 
     (if (proc-obj-primitive? p)
@@ -2470,7 +2467,7 @@
 ;; Virtual instruction writing:
 ;; ---------------------------
 
-(define (write-gvm-instr gvm-instr port)
+(define (write-gvm-instr gvm-instr port . bb)
 
   (define (spaces n)
     (if (> n 0)
@@ -2478,7 +2475,8 @@
         (begin (display "        " port) (spaces (- n 8)))
         (begin (display " " port) (spaces (- n 1))))))
 
-  (let ((str (apply string-append (format-gvm-instr gvm-instr))))
+  (let ((str (apply string-append
+                    (apply format-gvm-instr (cons gvm-instr bb)))))
     (display str port)
     (spaces (- 43 (string-length str)))
     (display " " port)
@@ -2545,7 +2543,7 @@
                         (loop2 (+ i 1) (cdr l) " "))
                       (loop2 (+ i 1) (cdr l) sep)))))))))
 
-(define (format-gvm-instr gvm-instr)
+(define (format-gvm-instr gvm-instr . bb)
 
   (define (format-closure-parms parms)
     `(" "
@@ -2614,7 +2612,15 @@
        ,(number->string (frame-size (gvm-instr-frame gvm-instr)))
        ,@(case (label-type gvm-instr)
            ((simple)
-            '())
+            (let ((precedents (if (pair? bb) (bb-precedents (car bb)) '())))
+              (if (pair? precedents)
+                  (cons "   <-"
+                        (apply
+                         append
+                         (map (lambda (i)
+                                (list " " (format-gvm-lbl i)))
+                              precedents)))
+                  '())))
            ((entry)
             `(,(if (label-entry-closed? gvm-instr)
                    " closure-entry-point "
