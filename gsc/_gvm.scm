@@ -2025,7 +2025,8 @@
               (define (reference? x)
                 (or (table-ref proc-tbl x #f)
                     (and (>= (string-length x) 2)
-                         (char=? (string-ref x 0) #\#))))
+                         (char=? (string-ref x 0) #\#)
+                         (string->number (substring x 1 (string-length x))))))
 
               (define (add-ref from side to dotted?)
                 (dot-digraph-add-edge!
