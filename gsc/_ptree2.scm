@@ -367,20 +367,28 @@
       (gen-disj-multi source env (cdr nodes)))
     (car nodes)))
 
-(define (gen-uniform-type-checks source env vars type-check tail)
+(define (gen-var-type-checks source env vars type-checks tail)
 
-  (define (loop result lst)
+  (define (cdr-type-checks type-checks)
+    (if (pair? (cdr type-checks))
+        (cdr type-checks)
+        type-checks))
+
+  (define (loop result lst type-checks)
     (if (pair? lst)
-      (loop (new-conj source env
-              (type-check (car lst))
-              result)
-            (cdr lst))
-      result))
+        (loop (new-conj source env
+                ((car type-checks) (car lst))
+                result)
+              (cdr lst)
+              type-checks)
+        result))
 
   (cond (tail
-         (loop tail vars))
+         (loop tail vars type-checks))
         ((pair? vars)
-         (loop (type-check (car vars)) (cdr vars)))
+         (loop ((car type-checks) (car vars))
+               (cdr vars)
+               (cdr-type-checks type-checks)))
         (else
          #f)))
 

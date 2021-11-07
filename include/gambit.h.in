@@ -4269,6 +4269,9 @@ ___GET_SUBTYPED(___SYMBOL_SIZE))
 #define ___SYMBOLHASHSET(obj,val)___FIELD(obj,___SYMKEY_HASH) = val;
 #define ___SYMBOLINTERNEDP(obj)___FIELD(obj,___SYMKEY_NEXT)
 
+#define ___SYMBOL2STRINGP_NOTFALSEP(var,x)(___temp=___SYMBOLNAME(x),___EXPECT_FALSE(___FIXNUMP(___temp))?0:(var=___temp,1))
+#define ___SYMBOL2STRINGP(x)(___SYMBOL2STRINGP_NOTFALSEP(___temp,x)?___temp:___FAL)
+
 #define ___MAKEKEYWORD(name,hash) \
 (___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(___KEYWORD_SIZE,___sKEYWORD)), \
 ___ADD_SUBTYPED_ELEM(___SYMKEY_NAME,name), \
@@ -4282,6 +4285,9 @@ ___GET_SUBTYPED(___KEYWORD_SIZE))
 #define ___KEYWORDHASH(obj)___FIELD(obj,___SYMKEY_HASH)
 #define ___KEYWORDHASHSET(obj,val)___FIELD(obj,___SYMKEY_HASH) = val;
 #define ___KEYWORDINTERNEDP(obj)___FIELD(obj,___SYMKEY_NEXT)
+
+#define ___KEYWORD2STRINGP_NOTFALSEP(var,x)(___temp=___KEYWORDNAME(x),___EXPECT_FALSE(___FIXNUMP(___temp))?0:(var=___temp,1))
+#define ___KEYWORD2STRINGP(x)(___KEYWORD2STRINGP_NOTFALSEP(___temp,x)?___temp:___FAL)
 
 #define ___MAKEWILL(testator,action) \
 (___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(___WILL_SIZE,___sWEAK)), \

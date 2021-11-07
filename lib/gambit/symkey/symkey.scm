@@ -26,6 +26,12 @@
   (macro-force-vars (obj)
     (##symbol? obj)))
 
+(define-prim (##symbol->string? sym)
+  (let ((name (##symbol-name sym)))
+    (if (##fixnum? name)
+        #f
+        name)))
+
 (define-prim (##symbol->string sym)
   (let ((name (##symbol-name sym)))
     (if (##fixnum? name)
@@ -105,6 +111,12 @@
 
 (define-prim (keyword? obj)
   (##keyword? obj))
+
+(define-prim (##keyword->string? key)
+  (let ((name (##keyword-name key)))
+    (if (##fixnum? name)
+        #f
+        name)))
 
 (define-prim (##keyword->string key)
   (let ((name (##keyword-name key)))

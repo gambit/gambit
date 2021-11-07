@@ -1245,6 +1245,7 @@
 ("##symbol?"                          (1)   #f ()    0    boolean extended)
 ("symbol->string"                     (1)   #f 0     0    string  ieee)
 ("##symbol->string"                   (1)   #f ()    0    string  extended)
+("##symbol->string?"                  (1)   #f ()    0    #f      extended)
 ("string->symbol"                     (1)   #f 0     0    symbol  ieee)
 ("##string->symbol"                   (1)   #f ()    0    symbol  extended)
 
@@ -1270,6 +1271,7 @@
 
 ("keyword->string"                    (1)   #f 0     0    string  gambit)
 ("##keyword->string"                  (1)   #f ()    0    string  extended)
+("##keyword->string?"                 (1)   #f ()    0    #f      extended)
 ("keyword-hash"                       (1)   #f 0     0    fixnum  gambit)
 ("##keyword-hash"                     (1)   #f ()    0    fixnum  extended)
 ("##keyword-hash-set!"                (2)   #t ()    0    #f      extended)
@@ -2500,16 +2502,20 @@
          env
          vars
          check-run-time-binding
-         check-prim
+         check-prims
          tail
          succeed
          fail)
   (let ((type-checks
-         (gen-uniform-type-checks source env
-           vars
-           (lambda (var)
-             (gen-call-prim-vars-notsafe source env check-prim (list var)))
-           tail)))
+         (and check-prims
+              (gen-var-type-checks source env
+                vars
+                (map
+                 (lambda (check-prim)
+                   (lambda (var)
+                     (gen-call-prim-vars-notsafe source env check-prim (list var))))
+                 check-prims)
+                tail))))
     (if (or type-checks
             check-run-time-binding)
       (new-tst source env
@@ -2524,7 +2530,7 @@
         (fail))
       (succeed))))
 
-(define (gen-simple-case check-prim prim)
+(define (gen-simple-case check-prims prim)
   (lambda (source
            env
            vars
@@ -2536,13 +2542,13 @@
      env
      vars
      check-run-time-binding
-     check-prim
+     check-prims
      #f
      (lambda ()
        (gen-call-prim-vars-notsafe source env prim vars))
      fail)))
 
-(define (gen-validating-case check-prim gen)
+(define (gen-validating-case check-prims gen)
   (lambda (source
            env
            vars
@@ -2554,7 +2560,7 @@
      env
      vars
      check-run-time-binding
-     check-prim
+     check-prims
      #f
      (lambda ()
        (gen source env vars out-of-line))
@@ -2578,6 +2584,97 @@
             check-run-time-binding
             generic-call
             generic-call))))))
+
+(define (make-nary-generator zero one two-or-more)
+  (lambda (source env vars out-of-line)
+    (cond ((null? vars)
+           (zero source env vars out-of-line))
+          ((null? (cdr vars))
+           (one source env vars out-of-line))
+          (else
+           (two-or-more source env vars out-of-line)))))
+
+(define (gen-fold source env vars out-of-line op-sym)
+
+  (define (fold result vars)
+    (if (null? vars)
+      result
+      (fold (gen-call-prim-notsafe source env
+              op-sym
+              (list result
+                    (new-ref source env
+                      (car vars))))
+            (cdr vars))))
+
+  (fold (new-ref source env
+          (car vars))
+        (cdr vars)))
+
+(define (make-fold-generator op-sym)
+  (lambda (source env vars out-of-line)
+    (gen-fold source env
+      vars
+      out-of-line
+      op-sym)))
+
+(define (gen-conditional-fold source env vars out-of-line gen-op)
+
+  (define (conditional-fold result-var vars intermediate-result-vars)
+    (if (null? vars)
+      (new-ref source env
+        result-var)
+      (let ((var (car intermediate-result-vars)))
+        (new-call source env
+          (gen-prc source env
+            (list var)
+            (new-tst source env
+              (new-ref source env
+                var)
+              (conditional-fold var
+                                (cdr vars)
+                                (cdr intermediate-result-vars))
+              (out-of-line)))
+          (list (gen-op source env result-var (car vars)))))))
+
+  (conditional-fold (car vars)
+                    (cdr vars)
+                    (gen-temp-vars source (cdr vars))))
+
+(define (make-conditional-fold-generator conditional-op-sym)
+  (lambda (source env vars out-of-line)
+    (gen-conditional-fold source env
+      vars
+      out-of-line
+      (lambda (source env var1 var2)
+        (gen-call-prim-vars-notsafe source env
+          conditional-op-sym
+          (list var1 var2))))))
+
+(define (make-conditional-fixed-arity-generator conditional-op-sym)
+  (lambda (source env vars out-of-line)
+    (let ((var (car (gen-temp-vars source '(#f)))))
+      (new-call source env
+        (gen-prc source env
+          (list var)
+          (new-tst source env
+            (new-ref source env
+              var)
+            (new-ref source env
+              var)
+            (out-of-line)))
+        (list (gen-call-prim-vars-notsafe source env
+                conditional-op-sym
+                vars))))))
+
+(define (make-conditional-fast-path conditional-op-sym)
+  (let ((gen (make-conditional-fixed-arity-generator conditional-op-sym)))
+    (lambda (source
+             env
+             vars
+             check-run-time-binding
+             out-of-line
+             fail)
+      (gen source env vars out-of-line))))
 
 (define (setup-list-primitives)
 
@@ -3198,7 +3295,7 @@
   (define **cpxnum-imag-sym (string->canonical-symbol "##cpxnum-imag"))
 
   (define (gen-fixnum-case gen)
-    (gen-validating-case **fixnum?-sym gen))
+    (gen-validating-case (list **fixnum?-sym) gen))
 
   (define (gen-fixnum-division-case gen)
     (lambda (source
@@ -3212,7 +3309,7 @@
        env
        vars
        check-run-time-binding
-       **fixnum?-sym
+       (list **fixnum?-sym)
        (gen-call-prim-notsafe source env
          **not-sym
          (list (gen-call-prim-notsafe source env
@@ -3226,7 +3323,7 @@
        fail)))
 
   (define (gen-flonum-case gen)
-    (gen-validating-case **flonum?-sym gen))
+    (gen-validating-case (list **flonum?-sym) gen))
 
   (define (gen-log-flonum-case gen)
     (lambda (source
@@ -3240,7 +3337,7 @@
        env
        vars
        check-run-time-binding
-       **flonum?-sym
+       (list **flonum?-sym)
        (new-disj source env
          (gen-call-prim-vars-notsafe source env
            **flnan?-sym
@@ -3271,7 +3368,7 @@
        env
        vars
        check-run-time-binding
-       **flonum?-sym
+       (list **flonum?-sym)
        (new-disj source env
          (gen-call-prim-notsafe source env
            **not-sym
@@ -3297,7 +3394,7 @@
        env
        vars
        check-run-time-binding
-       **flonum?-sym
+       (list **flonum?-sym)
        (gen-call-prim-notsafe source env
          **not-sym
          (list (gen-call-prim-vars-notsafe source env
@@ -3319,7 +3416,7 @@
        env
        vars
        check-run-time-binding
-       **flonum?-sym
+       (list **flonum?-sym)
        (gen-call-prim-vars-notsafe source env
          **flfinite?-sym
          vars)
@@ -3339,7 +3436,7 @@
        env
        vars
        check-run-time-binding
-       **flonum?-sym
+       (list **flonum?-sym)
        (and (= (length vars) 1)
             (new-conj source env
               (gen-call-prim-notsafe source env
@@ -3374,7 +3471,7 @@
        env
        vars
        check-run-time-binding
-       **flonum?-sym
+       (list **flonum?-sym)
        (gen-call-prim-notsafe source env
          **not-sym
          (list (gen-call-prim-notsafe source env
@@ -3399,7 +3496,7 @@
        env
        vars
        check-run-time-binding
-       **flonum?-sym
+       (list **flonum?-sym)
        (gen-call-prim-vars-notsafe source env
          **flinteger?-sym
          vars)
@@ -3518,118 +3615,37 @@
       (new-ref source env
         (car vars))))
 
-  (define (make-nary-generator zero one two-or-more)
-    (lambda (source env vars out-of-line)
-      (cond ((null? vars)
-             (zero source env vars out-of-line))
-            ((null? (cdr vars))
-             (one source env vars out-of-line))
-            (else
-             (two-or-more source env vars out-of-line)))))
-
-  (define (gen-fold source env vars out-of-line op-sym)
-
-    (define (fold result vars)
-      (if (null? vars)
-        result
-        (fold (gen-call-prim-notsafe source env
-                op-sym
-                (list result
-                      (new-ref source env
-                        (car vars))))
-              (cdr vars))))
-
-    (fold (new-ref source env
-            (car vars))
-          (cdr vars)))
-
-  (define (make-fold-generator op-sym)
-    (lambda (source env vars out-of-line)
-      (gen-fold source env
-        vars
-        out-of-line
-        op-sym)))
-
-  (define (gen-conditional-fold source env vars out-of-line gen-op)
-
-    (define (conditional-fold result-var vars intermediate-result-vars)
-      (if (null? vars)
-        (new-ref source env
-          result-var)
-        (let ((var (car intermediate-result-vars)))
-          (new-call source env
-            (gen-prc source env
-              (list var)
-              (new-tst source env
-                (new-ref source env
-                  var)
-                (conditional-fold var
-                                  (cdr vars)
-                                  (cdr intermediate-result-vars))
-                (out-of-line)))
-            (list (gen-op source env result-var (car vars)))))))
-
-    (conditional-fold (car vars)
-                      (cdr vars)
-                      (gen-temp-vars source (cdr vars))))
-
-  (define (make-conditional-fold-generator conditional-op-sym)
-    (lambda (source env vars out-of-line)
-      (gen-conditional-fold source env
-        vars
-        out-of-line
-        (lambda (source env var1 var2)
-          (gen-call-prim-vars-notsafe source env
-            conditional-op-sym
-            (list var1 var2))))))
-
-  (define (make-conditional-fixed-arity-generator conditional-op-sym)
-    (lambda (source env vars out-of-line)
-      (let ((var (car (gen-temp-vars source '(#f)))))
-        (new-call source env
-          (gen-prc source env
-            (list var)
-            (new-tst source env
-              (new-ref source env
-                var)
-              (new-ref source env
-                var)
-              (out-of-line)))
-          (list (gen-call-prim-vars-notsafe source env
-                  conditional-op-sym
-                  vars))))))
-
   (let ()
 
     (define case-fx=
-      (gen-simple-case **fixnum?-sym **fx=-sym))
+      (gen-simple-case (list **fixnum?-sym) **fx=-sym))
 
     (define case-fx<
-      (gen-simple-case **fixnum?-sym **fx<-sym))
+      (gen-simple-case (list **fixnum?-sym) **fx<-sym))
 
     (define case-fx>
-      (gen-simple-case **fixnum?-sym **fx>-sym))
+      (gen-simple-case (list **fixnum?-sym) **fx>-sym))
 
     (define case-fx<=
-      (gen-simple-case **fixnum?-sym **fx<=-sym))
+      (gen-simple-case (list **fixnum?-sym) **fx<=-sym))
 
     (define case-fx>=
-      (gen-simple-case **fixnum?-sym **fx>=-sym))
+      (gen-simple-case (list **fixnum?-sym) **fx>=-sym))
 
     (define case-fxzero?
-      (gen-simple-case **fixnum?-sym **fxzero?-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxzero?-sym))
 
     (define case-fxpositive?
-      (gen-simple-case **fixnum?-sym **fxpositive?-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxpositive?-sym))
 
     (define case-fxnegative?
-      (gen-simple-case **fixnum?-sym **fxnegative?-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxnegative?-sym))
 
     (define case-fxodd?
-      (gen-simple-case **fixnum?-sym **fxodd?-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxodd?-sym))
 
     (define case-fxeven?
-      (gen-simple-case **fixnum?-sym **fxeven?-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxeven?-sym))
 
     (define case-fxmax
       (gen-fixnum-case
@@ -3820,51 +3836,51 @@
        (make-prim-generator **fxmodulo-sym)))
 
     (define case-fxwrapabs
-      (gen-simple-case **fixnum?-sym **fxwrapabs-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxwrapabs-sym))
 
     (define case-fxabs
       (gen-fixnum-case
        (make-conditional-fixed-arity-generator **fxabs?-sym)))
 
     (define case-fxwrapsquare
-      (gen-simple-case **fixnum?-sym **fxwrapsquare-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxwrapsquare-sym))
 
     (define case-fxsquare
       (gen-fixnum-case
        (make-conditional-fixed-arity-generator **fxsquare?-sym)))
 
     (define case-fxand
-      (gen-simple-case **fixnum?-sym **fxand-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxand-sym))
 
     (define case-fxandc1
-      (gen-simple-case **fixnum?-sym **fxandc1-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxandc1-sym))
 
     (define case-fxandc2
-      (gen-simple-case **fixnum?-sym **fxandc2-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxandc2-sym))
 
     (define case-fxeqv
-      (gen-simple-case **fixnum?-sym **fxeqv-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxeqv-sym))
 
     (define case-fxior
-      (gen-simple-case **fixnum?-sym **fxior-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxior-sym))
 
     (define case-fxnand
-      (gen-simple-case **fixnum?-sym **fxnand-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxnand-sym))
 
     (define case-fxnor
-      (gen-simple-case **fixnum?-sym **fxnor-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxnor-sym))
 
     (define case-fxnot
-      (gen-simple-case **fixnum?-sym **fxnot-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxnot-sym))
 
     (define case-fxorc1
-      (gen-simple-case **fixnum?-sym **fxorc1-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxorc1-sym))
 
     (define case-fxorc2
-      (gen-simple-case **fixnum?-sym **fxorc2-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxorc2-sym))
 
     (define case-fxxor
-      (gen-simple-case **fixnum?-sym **fxxor-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxxor-sym))
 
     (define case-fxwraparithmetic-shift
       (gen-fixnum-case
@@ -3909,31 +3925,31 @@
        gen-first-arg))
 
     (define case-fl=
-      (gen-simple-case **flonum?-sym **fl=-sym))
+      (gen-simple-case (list **flonum?-sym) **fl=-sym))
 
     (define case-fl<
-      (gen-simple-case **flonum?-sym **fl<-sym))
+      (gen-simple-case (list **flonum?-sym) **fl<-sym))
 
     (define case-fl>
-      (gen-simple-case **flonum?-sym **fl>-sym))
+      (gen-simple-case (list **flonum?-sym) **fl>-sym))
 
     (define case-fl<=
-      (gen-simple-case **flonum?-sym **fl<=-sym))
+      (gen-simple-case (list **flonum?-sym) **fl<=-sym))
 
     (define case-fl>=
-      (gen-simple-case **flonum?-sym **fl>=-sym))
+      (gen-simple-case (list **flonum?-sym) **fl>=-sym))
 
     (define case-flinteger?
-      (gen-simple-case **flonum?-sym **flinteger?-sym))
+      (gen-simple-case (list **flonum?-sym) **flinteger?-sym))
 
     (define case-flzero?
-      (gen-simple-case **flonum?-sym **flzero?-sym))
+      (gen-simple-case (list **flonum?-sym) **flzero?-sym))
 
     (define case-flpositive?
-      (gen-simple-case **flonum?-sym **flpositive?-sym))
+      (gen-simple-case (list **flonum?-sym) **flpositive?-sym))
 
     (define case-flnegative?
-      (gen-simple-case **flonum?-sym **flnegative?-sym))
+      (gen-simple-case (list **flonum?-sym) **flnegative?-sym))
 
     (define case-flodd?
       (gen-odd-even-flonum-case
@@ -3944,13 +3960,13 @@
        (make-prim-generator **fleven?-sym)))
 
     (define case-flfinite?
-      (gen-simple-case **flonum?-sym **flfinite?-sym))
+      (gen-simple-case (list **flonum?-sym) **flfinite?-sym))
 
     (define case-flinfinite?
-      (gen-simple-case **flonum?-sym **flinfinite?-sym))
+      (gen-simple-case (list **flonum?-sym) **flinfinite?-sym))
 
     (define case-flnan?
-      (gen-simple-case **flonum?-sym **flnan?-sym))
+      (gen-simple-case (list **flonum?-sym) **flnan?-sym))
 
     (define case-flmax
       (gen-flonum-case
@@ -3995,10 +4011,10 @@
         (make-fold-generator **fl/-sym))))
 
     (define case-flabs
-      (gen-simple-case **flonum?-sym **flabs-sym))
+      (gen-simple-case (list **flonum?-sym) **flabs-sym))
 
     (define case-flsquare
-      (gen-simple-case **flonum?-sym **flsquare-sym))
+      (gen-simple-case (list **flonum?-sym) **flsquare-sym))
 
     (define case-flfloor
       (gen-finite-flonum-case
@@ -4017,79 +4033,79 @@
        (make-prim-generator **flround-sym)))
 
     (define case-flexp
-      (gen-simple-case **flonum?-sym **flexp-sym))
+      (gen-simple-case (list **flonum?-sym) **flexp-sym))
 
     (define case-fllog
-      (gen-simple-case **flonum?-sym **fllog-sym))
+      (gen-simple-case (list **flonum?-sym) **fllog-sym))
 
     (define case-log-flonum
       (gen-log-flonum-case
        (make-prim-generator **fllog-sym)))
 
     (define case-flsin
-      (gen-simple-case **flonum?-sym **flsin-sym))
+      (gen-simple-case (list **flonum?-sym) **flsin-sym))
 
     (define case-flcos
-      (gen-simple-case **flonum?-sym **flcos-sym))
+      (gen-simple-case (list **flonum?-sym) **flcos-sym))
 
     (define case-fltan
-      (gen-simple-case **flonum?-sym **fltan-sym))
+      (gen-simple-case (list **flonum?-sym) **fltan-sym))
 
     (define case-flasin
-      (gen-simple-case **flonum?-sym **flasin-sym))
+      (gen-simple-case (list **flonum?-sym) **flasin-sym))
 
     (define case-asin-flonum
       (gen-asin-acos-atanh-flonum-case
        (make-prim-generator **flasin-sym)))
 
     (define case-flacos
-      (gen-simple-case **flonum?-sym **flacos-sym))
+      (gen-simple-case (list **flonum?-sym) **flacos-sym))
 
     (define case-acos-flonum
       (gen-asin-acos-atanh-flonum-case
        (make-prim-generator **flacos-sym)))
 
     (define case-flatan
-      (gen-simple-case **flonum?-sym **flatan-sym))
+      (gen-simple-case (list **flonum?-sym) **flatan-sym))
 
     (define case-flsinh
-      (gen-simple-case **flonum?-sym **flsinh-sym))
+      (gen-simple-case (list **flonum?-sym) **flsinh-sym))
 
     (define case-flcosh
-      (gen-simple-case **flonum?-sym **flcosh-sym))
+      (gen-simple-case (list **flonum?-sym) **flcosh-sym))
 
     (define case-fltanh
-      (gen-simple-case **flonum?-sym **fltanh-sym))
+      (gen-simple-case (list **flonum?-sym) **fltanh-sym))
 
     (define case-flasinh
-      (gen-simple-case **flonum?-sym **flasinh-sym))
+      (gen-simple-case (list **flonum?-sym) **flasinh-sym))
 
     (define case-flacosh
-      (gen-simple-case **flonum?-sym **flacosh-sym))
+      (gen-simple-case (list **flonum?-sym) **flacosh-sym))
 
     (define case-acosh-flonum
       (gen-acosh-flonum-case
        (make-prim-generator **flacosh-sym)))
 
     (define case-flatanh
-      (gen-simple-case **flonum?-sym **flatanh-sym))
+      (gen-simple-case (list **flonum?-sym) **flatanh-sym))
 
     (define case-atanh-flonum
       (gen-asin-acos-atanh-flonum-case
        (make-prim-generator **flatanh-sym)))
 
     (define case-flhypot
-      (gen-simple-case **flonum?-sym **flhypot-sym))
+      (gen-simple-case (list **flonum?-sym) **flhypot-sym))
 
     (define case-flexpt
-      (gen-simple-case **flonum?-sym **flexpt-sym))
+      (gen-simple-case (list **flonum?-sym) **flexpt-sym))
 
     (define case-expt-flonum
       (gen-expt-flonum-case
        (make-prim-generator **flexpt-sym)))
 
     (define case-flsqrt
-      (gen-simple-case **flonum?-sym **flsqrt-sym))
+      (gen-simple-case (list **flonum?-sym) **flsqrt-sym))
 
     (define case-sqrt-flonum
       (gen-sqrt-flonum-case
@@ -4492,22 +4508,22 @@
     (def-exp2
      "numerator"
      (make-simple-expander
-      (gen-simple-case **ratnum?-sym **ratnum-numerator-sym)))
+      (gen-simple-case (list **ratnum?-sym) **ratnum-numerator-sym)))
 
     (def-exp2
      "denominator"
      (make-simple-expander
-      (gen-simple-case **ratnum?-sym **ratnum-denominator-sym)))
+      (gen-simple-case (list **ratnum?-sym) **ratnum-denominator-sym)))
 
     (def-exp2
      "real-part"
      (make-simple-expander
-      (gen-simple-case **cpxnum?-sym **cpxnum-real-sym)))
+      (gen-simple-case (list **cpxnum?-sym) **cpxnum-real-sym)))
 
     (def-exp2
      "imag-part"
      (make-simple-expander
-      (gen-simple-case **cpxnum?-sym **cpxnum-imag-sym)))
+      (gen-simple-case (list **cpxnum?-sym) **cpxnum-imag-sym)))
 
     (if (eq? (target-name targ) 'C)
         (begin
@@ -4540,34 +4556,34 @@
 ;;  (define **char-ci>=?-sym (string->canonical-symbol "##char-ci>=?"))
 
   (define case-char=?
-    (gen-simple-case **char?-sym **char=?-sym))
+    (gen-simple-case (list **char?-sym) **char=?-sym))
 
   (define case-char<?
-    (gen-simple-case **char?-sym **char<?-sym))
+    (gen-simple-case (list **char?-sym) **char<?-sym))
 
   (define case-char>?
-    (gen-simple-case **char?-sym **char>?-sym))
+    (gen-simple-case (list **char?-sym) **char>?-sym))
 
   (define case-char<=?
-    (gen-simple-case **char?-sym **char<=?-sym))
+    (gen-simple-case (list **char?-sym) **char<=?-sym))
 
   (define case-char>=?
-    (gen-simple-case **char?-sym **char>=?-sym))
+    (gen-simple-case (list **char?-sym) **char>=?-sym))
 
 ;;  (define case-char-ci=?
-;;    (gen-simple-case **char?-sym **char-ci=?-sym))
+;;    (gen-simple-case (list **char?-sym) **char-ci=?-sym))
 ;;
 ;;  (define case-char-ci<?
-;;    (gen-simple-case **char?-sym **char-ci<?-sym))
+;;    (gen-simple-case (list **char?-sym) **char-ci<?-sym))
 ;;
 ;;  (define case-char-ci>?
-;;    (gen-simple-case **char?-sym **char-ci>?-sym))
+;;    (gen-simple-case (list **char?-sym) **char-ci>?-sym))
 ;;
 ;;  (define case-char-ci<=?
-;;    (gen-simple-case **char?-sym **char-ci<=?-sym))
+;;    (gen-simple-case (list **char?-sym) **char-ci<=?-sym))
 ;;
 ;;  (define case-char-ci>=?
-;;    (gen-simple-case **char?-sym **char-ci>=?-sym))
+;;    (gen-simple-case (list **char?-sym) **char-ci>=?-sym))
 
   (def-exp "char=?" (make-simple-expander case-char=?))
   (def-exp "char<?" (make-simple-expander case-char<?))
@@ -5263,68 +5279,48 @@
   (define **write-char1?-sym (string->canonical-symbol "##write-char1?"))
   (define **write-char2?-sym (string->canonical-symbol "##write-char2?"))
 
-  (define (fast-path sym)
-    (lambda (source
-             env
-             vars
-             check-run-time-binding
-             out-of-line
-             fail)
-      (new-disj source env
-        (gen-call-prim-vars-notsafe source env
-          sym
-          vars)
-        (out-of-line))))
-
   (def-exp "##peek-char0"
-           (make-simple-expander (fast-path **peek-char0?-sym)))
+           (make-simple-expander
+            (make-conditional-fast-path **peek-char0?-sym)))
 
   (def-exp "##peek-char1"
-           (make-simple-expander (fast-path **peek-char1?-sym)))
+           (make-simple-expander
+            (make-conditional-fast-path **peek-char1?-sym)))
 
   (def-exp "##read-char0"
-           (make-simple-expander (fast-path **read-char0?-sym)))
+           (make-simple-expander
+            (make-conditional-fast-path **read-char0?-sym)))
 
   (def-exp "##read-char1"
-           (make-simple-expander (fast-path **read-char1?-sym)))
+           (make-simple-expander
+            (make-conditional-fast-path **read-char1?-sym)))
 
   (def-exp "##write-char1"
-           (make-simple-expander (fast-path **write-char1?-sym)))
+           (make-simple-expander
+            (make-conditional-fast-path **write-char1?-sym)))
 
   (def-exp "##write-char2"
-           (make-simple-expander (fast-path **write-char2?-sym)))
+           (make-simple-expander
+            (make-conditional-fast-path **write-char2?-sym)))
 
 )
 
 (define (setup-misc-primitives)
 
-  (define **symbol->string-sym (string->canonical-symbol "##symbol->string"))
-  (define **symbol-name-sym (string->canonical-symbol "##symbol-name"))
-  (define **string?-sym (string->canonical-symbol "##string?"))
+  (define **symbol->string?-sym (string->canonical-symbol "##symbol->string?"))
+  (define **symbol?-sym (string->canonical-symbol "##symbol?"))
 
   (def-exp "##symbol->string"
            (make-simple-expander
-            (lambda (source
-                     env
-                     vars
-                     check-run-time-binding
-                     out-of-line
-                     fail)
-              (new-call source env
-                (let ((vars2 (gen-temp-vars source '(#f))))
-                  (gen-prc source env
-                    vars2
-                    (new-tst source env
-                      (gen-call-prim-notsafe source env
-                        **string?-sym
-                        (list (new-ref source env
-                                (car vars2))))
-                      (new-ref source env
-                        (car vars2))
-                      (fail))))
-                (list (gen-call-prim-vars-notsafe source env
-                        **symbol-name-sym
-                        vars))))))
+            (gen-validating-case
+             #f
+             (make-conditional-fixed-arity-generator **symbol->string?-sym))))
+
+  (def-exp "symbol->string"
+           (make-simple-expander
+            (gen-validating-case
+             (list **symbol?-sym)
+             (make-conditional-fixed-arity-generator **symbol->string?-sym))))
 
 )
 

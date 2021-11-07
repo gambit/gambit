@@ -2405,11 +2405,6 @@
    (lambda (ctx return arg1)
      (return (^symbol? arg1)))))
 
-(univ-define-prim "##symbol->string" #f
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^str->string (^symbol-unbox arg1))))))
-
 (univ-define-prim "##string->symbol" #f
   (make-translated-operand-generator
    (lambda (ctx return arg1)
@@ -2418,20 +2413,18 @@
 (univ-define-prim "##make-uninterned-symbol" #f
   (make-translated-operand-generator
    (lambda (ctx return name hash)
-     (return (^symbol-box-uninterned (^string->str name) hash)))))
+     (return (^symbol-box-uninterned name hash)))))
 
 (univ-define-prim "##symbol-name" #f
   (make-translated-operand-generator
    (lambda (ctx return sym)
      ;;;;FIXME for host representation
-     (return
-       (^str->string (^field 'name (^cast* 'symbol sym)))))))
+     (return (^field 'name (^cast* 'symbol sym))))))
 
 (univ-define-prim "##symbol-name-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return sym name)
-     (^ (^assign (^field 'name (^cast* 'symbol sym))
-                 (^string->str name))
+     (^ (^assign (^field 'name (^cast* 'symbol sym)) name)
         (return sym)))))
 
 (univ-define-prim "##symbol-hash" #f
@@ -2451,15 +2444,17 @@
    (lambda (ctx return sym)
      (return (^field 'interned (^cast* 'symbol sym))))));;;;FIXME for host representation
 
+(univ-define-prim "##symbol->string?" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (let ((tmp (^local-var (univ-gensym ctx 'tmp))))
+       (^ (^var-declaration 'scmobj tmp (^field 'name (^cast* 'symbol arg1)))
+          (return (^if-expr 'scmobj (^fixnum? tmp) (^obj #f) tmp)))))))
+
 (univ-define-prim-bool "##keyword?" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1)
      (return (^keyword? arg1)))))
-
-(univ-define-prim "##keyword->string" #f
-  (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^str->string (^keyword-unbox arg1))))))
 
 (univ-define-prim "##string->keyword" #f
   (make-translated-operand-generator
@@ -2469,20 +2464,18 @@
 (univ-define-prim "##make-uninterned-keyword" #f
   (make-translated-operand-generator
    (lambda (ctx return name hash)
-     (return (^keyword-box-uninterned (^string->str name) hash)))))
+     (return (^keyword-box-uninterned name hash)))))
 
 (univ-define-prim "##keyword-name" #f
   (make-translated-operand-generator
    (lambda (ctx return key)
      ;;;;FIXME for host representation
-     (return
-       (^str->string (^field 'name (^cast* 'keyword key)))))))
+     (return (^field 'name (^cast* 'keyword key))))))
 
 (univ-define-prim "##keyword-name-set!" #f
   (make-translated-operand-generator
    (lambda (ctx return key name)
-     (^ (^assign (^field 'name (^cast* 'keyword key))
-                 (^string->str name))
+     (^ (^assign (^field 'name (^cast* 'keyword key)) name)
         (return key)))))
 
 (univ-define-prim "##keyword-hash" #f
@@ -2501,6 +2494,13 @@
   (make-translated-operand-generator
    (lambda (ctx return key)
      (return (^field 'interned (^cast* 'keyword key))))));;;;FIXME for host representation
+
+(univ-define-prim "##keyword->string?" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1)
+     (let ((tmp (^local-var (univ-gensym ctx 'tmp))))
+       (^ (^var-declaration 'scmobj tmp (^field 'name (^cast* 'keyword arg1)))
+          (return (^if-expr 'scmobj (^fixnum? tmp) (^obj #f) tmp)))))))
 
 (univ-define-prim-bool "##closure?" #t
   (make-translated-operand-generator

@@ -4394,7 +4394,7 @@ tanh
       (case (univ-symbol-representation ctx)
 
         ((class)
-         (^field 'name (^cast* 'symbol expr)))
+         (^string->str (^field 'name (^cast* 'symbol expr))))
 
         (else
          (case (target-name (ctx-target ctx))
@@ -4500,7 +4500,7 @@ tanh
       (case (univ-keyword-representation ctx)
 
         ((class)
-         (^field 'name (^cast* 'keyword expr)))
+         (^string->str (^field 'name (^cast* 'keyword expr))))
 
         (else
          (compiler-internal-error

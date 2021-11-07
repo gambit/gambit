@@ -2517,7 +2517,7 @@
     '() ;; properties
     'scmobj ;; extends
     '() ;; class-fields
-    (list (univ-field 'name 'str #f '(public)) ;; instance-fields
+    (list (univ-field 'name 'scmobj #f '(public)) ;; instance-fields
           (univ-field 'hash 'scmobj #f '(public))
           (univ-field 'interned 'scmobj #f '(public)))
     '() ;; class-methods
@@ -2533,7 +2533,7 @@
          ctx
          "\n"
          (lambda (ctx)
-           (^return (^field 'name (^this)))))
+           (^return (^tostr (^field 'name (^this))))))
         (^type 'symbol))))))
 
   (univ-define-rtlib-feature 'make_interned_symbol
@@ -2555,7 +2555,7 @@
            (^if (^null? obj)
                 (^ (^assign obj
                             (^symbol-box-uninterned
-                             name
+                             (^str->string name)
                              (^fixnum-box
                               (^call-prim
                                (^rts-method-use 'str_hash)
@@ -2578,7 +2578,7 @@
     '() ;; properties
     'scmobj ;; extends
     '() ;; class-fields
-    (list (univ-field 'name 'str #f '(public)) ;; instance-fields
+    (list (univ-field 'name 'scmobj #f '(public)) ;; instance-fields
           (univ-field 'hash 'scmobj #f '(public))
           (univ-field 'interned 'scmobj #f '(public)))
     '() ;; class-methods
@@ -2594,7 +2594,7 @@
          ctx
          "\n"
          (lambda (ctx)
-           (^return (^field 'name (^this)))))
+           (^return (^tostr (^field 'name (^this))))))
         (^type 'keyword))))))
 
   (univ-define-rtlib-feature 'make_interned_keyword
@@ -2616,7 +2616,7 @@
            (^if (^null? obj)
                 (^ (^assign obj
                             (^keyword-box-uninterned
-                             name
+                             (^str->string name)
                              (^fixnum-box
                               (^call-prim
                                (^rts-method-use 'str_hash)
