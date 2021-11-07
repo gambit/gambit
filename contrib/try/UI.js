@@ -109,7 +109,7 @@ UI.prototype.add_console = function (dev) {
       2, '(define (end id html) (insert (get id) "beforeend" html))\n',
       2, '(after "ui" "<h1 id=\\"msg\\">Hello</h1>")\n',
       2,
-      (ui.vm.os_web_origin.indexOf('://gambitscheme.org/') > 0
+      (ui.vm.os_web_origin.indexOf('://try.gambitscheme.org/') > 0
        ? '(end "msg" " Gambit Schemers!")\n'
        : '(end "msg" " Schemers!")\n'),
       8, '\\document.getElementById("msg").innerHTML=""\n',
