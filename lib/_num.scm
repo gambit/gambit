@@ -4335,7 +4335,7 @@ for a discussion of branch cuts.
 
 (define ##char-to-digit-table (macro-make-char-to-digit-table))
 
-(define-prim (##string->number str #!optional (rad 10) (check-only? #f))
+(define-prim (##string->number-slow-path str #!optional (rad 10) (check-only? #f))
 
   ;; The number grammar parsed by this procedure is:
   ;;
@@ -4973,6 +4973,12 @@ for a discussion of branch cuts.
          (after-prefix 0 str rad #f))
         (else
          #f)))
+
+(define-prim (##string->number str #!optional (rad 10) (check-only? #f))
+  (if (and (##fx= rad 10) (##not check-only?))
+      (or (macro-string->number-decimal-fast-path str)
+          (##string->number-slow-path str rad check-only?))
+      (##string->number-slow-path str rad check-only?)))
 
 (define-prim (string->number str #!optional (r (macro-absent-obj)))
   (macro-force-vars (str r)

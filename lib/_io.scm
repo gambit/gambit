@@ -12832,7 +12832,9 @@
         (string->symbol-object str)
         (string->uninterned-symbol-object str)))
 
-  (or (and intern? (string->number str 10))
+  (or (and intern?
+           (or (macro-string->number-decimal-fast-path str)
+               (##string->number-slow-path str 10)))
       (let ((str2
              (##convert-case
               (macro-readenv-case-conversion? re)

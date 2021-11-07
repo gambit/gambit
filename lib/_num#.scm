@@ -657,4 +657,56 @@
           (##real-part x)
           x)))))
 
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+;; Fast path for conversion of small integers and floating point numbers
+;; possibly prefixed with a sign.
+
+(##define-macro (macro-string->number-decimal-fast-path str)
+  `(let ((str ,str))
+     (declare (standard-bindings) (extended-bindings) (not safe) (not interrupts-enabled))
+     (let ((len (string-length str)))
+       (and (fx< 0 len) ;; at least one character
+            (let ((start
+                   (let ((first (string-ref str 0)))
+                     (if (or (char=? first #\+)
+                             (char=? first #\-))
+                         1
+                         0))))
+              (and (fx< (fx- len start) 9) ;; won't overflow 32 bit fixnums?
+                   (fx< start len) ;; at least one remaining character
+                   (let loop1 ((i start)
+                               (n 0))
+                     (if (fx< i (string-length str))
+                         (let ((d (fx- (char->integer (string-ref str i)) 48)))
+                           (if (and (fx>= d 0) (fx<= d 9))
+                               (loop1 (fx+ i 1)
+                                      (fx+ (fx* n 10) d))
+                               (if (fx= d -2) ;; character is "."?
+                                   (let loop2 ((i (fx+ i 1)) (n n) (p10 1))
+                                     (if (fx< i (string-length str))
+                                         (let ((d (fx- (char->integer (string-ref str i)) 48)))
+                                           (if (and (fx>= d 0) (fx<= d 9))
+                                               (loop2 (fx+ i 1)
+                                                      (fx+ (fx* n 10) d)
+                                                      (fx* p10 10))
+                                               #f))
+                                         (let ((first (string-ref str 0)))
+                                           (and (or (fx< 1 p10) ;; end != "."
+                                                    (not (fx= i
+                                                              (if (or (char=? first #\+)
+                                                                      (char=? first #\-))
+                                                                  2
+                                                                  1))))
+                                                (##flcopysign
+                                                 (fl/ (fixnum->flonum n)
+                                                      (fixnum->flonum p10))
+                                                 (if (char=? first #\-)
+                                                     (macro-inexact--1)
+                                                     (macro-inexact-+1)))))))
+                                   #f)))
+                         (if (char=? (string-ref str 0) #\-)
+                             (fx- n)
+                             n)))))))))
+
 ;;;============================================================================
