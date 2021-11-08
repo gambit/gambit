@@ -1026,7 +1026,8 @@
            (##bignum.* x x))
          (fixnum-overflow)))
     (##bignum.* x x)
-    (##ratnum.* x x)
+    (macro-ratnum-make (##square (macro-ratnum-numerator x))
+                       (##square (macro-ratnum-denominator x)))
     (##fl* x x)
     (let ((real (macro-cpxnum-real x))
           (imag (macro-cpxnum-imag x)))
@@ -1073,6 +1074,20 @@
   (##define-macro (type-error-on-y) `'(2))
   (##define-macro (fixnum-overflow) `#f)
 
+  (define (int-rat int rat)
+    (macro-ratnum-make
+     (##- (##* (macro-ratnum-denominator rat)
+               int)
+          (macro-ratnum-numerator rat))
+     (macro-ratnum-denominator rat)))
+
+  (define (rat-int rat int)
+    (macro-ratnum-make
+     (##- (macro-ratnum-numerator rat)
+          (##* (macro-ratnum-denominator rat)
+               int))
+     (macro-ratnum-denominator rat)))
+
   (macro-number-dispatch x (type-error-on-x)
 
     (macro-number-dispatch y (type-error-on-y) ;; x = fixnum
@@ -1083,7 +1098,7 @@
       (##bignum.- (##fixnum->bignum x) y)
       (if (##fxzero? x)
           (##negate y)
-          (##ratnum.- (macro-exact-int->ratnum x) y))
+          (int-rat x y))
       (if (and (macro-special-case-exact-zero?) (##fxzero? x))
           (##fl- y)
           (##fl- (##fixnum->flonum x) y))
@@ -1094,15 +1109,15 @@
           x
           (##bignum.- x (##fixnum->bignum y)))
       (##bignum.- x y)
-      (##ratnum.- (macro-exact-int->ratnum x) y)
+      (int-rat x y)
       (##fl- (##exact-int->flonum x) y)
       (##cpxnum.- (macro-noncpxnum->cpxnum x) y))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = ratnum
       (if (##fxzero? y)
           x
-          (##ratnum.- x (macro-exact-int->ratnum y)))
-      (##ratnum.- x (macro-exact-int->ratnum y))
+          (rat-int x y))
+      (rat-int x y)
       (##ratnum.- x y)
       (##fl- (##ratnum->flonum x) y)
       (##cpxnum.- (macro-noncpxnum->cpxnum x) y))
@@ -1192,6 +1207,32 @@
 
   (define (divide-by-zero-error) #f)
 
+  (define (finish-rat num den)
+    (cond ((##eqv? den 1)
+           num)
+          ((##eqv? den -1)
+           (##negate num))
+          ((##negative? den)
+           (macro-ratnum-make (##negate num) (##negate den)))
+          (else
+           (macro-ratnum-make num den))))
+
+  (define (int/rat int rat)
+    (let* ((num (macro-ratnum-numerator rat))
+           (den (macro-ratnum-denominator rat))
+           (gcd (##gcd num int))
+           (result-num (##* den (##quotient int gcd)))
+           (result-den (##quotient num gcd)))
+      (finish-rat result-num result-den)))
+
+  (define (rat/int rat int)
+    (let* ((num (macro-ratnum-numerator rat))
+           (den (macro-ratnum-denominator rat))
+           (gcd (##gcd num int))
+           (result-num (##quotient num gcd))
+           (result-den (##* den (##quotient int gcd))))
+      (finish-rat result-num result-den)))
+
   (define (divide-exact-ints)
     (macro-if-ratnum
      (##ratnum.normalize x y)
@@ -1230,7 +1271,7 @@
             ((##fx= y -1)
              (##negate x))
             (else
-             (##ratnum./ x (macro-exact-int->ratnum y))))
+             (rat/int x y)))
       (cond ((##fxzero? y)
              (divide-by-zero-error))
             ((##fx= y 1)
@@ -1252,7 +1293,7 @@
             (else
              (divide-exact-ints)))
       (divide-exact-ints)
-      (##ratnum./ x (macro-exact-int->ratnum y))
+      (rat/int x y)
       (##fl/ x (##exact-int->flonum y))
       (##cpxnum./ x (macro-noncpxnum->cpxnum y)))
 
@@ -1262,14 +1303,16 @@
             ((##fx= x 1)
              (##inverse y))
             (else
-             (##ratnum./ (macro-exact-int->ratnum x) y)))
-      (##ratnum./ (macro-exact-int->ratnum x) y)
+             (int/rat x y)))
+      (int/rat x y)
       (##ratnum./ x y)
       (##fl/ x (##ratnum->flonum y))
       (##cpxnum./ x (macro-noncpxnum->cpxnum y)))
 
     (macro-number-dispatch x (type-error-on-x) ;; y = flonum, no error possible
-      (##fl/ (##fixnum->flonum x) y)
+      (if (and (macro-special-case-exact-zero?) (##fxzero? x))
+          0
+          (##fl/ (##fixnum->flonum x) y))
       (##fl/ (##exact-int->flonum x) y)
       (##fl/ (##ratnum->flonum x) y)
       (##fl/ x y)
