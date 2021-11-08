@@ -791,6 +791,13 @@
   (##define-macro (type-error-on-y) `'(2))
   (##define-macro (fixnum-overflow) `#f)
 
+  (define (int+rat int rat)
+    (macro-ratnum-make
+     (##+ (##* (macro-ratnum-denominator rat)
+               int)
+          (macro-ratnum-numerator rat))
+     (macro-ratnum-denominator rat)))
+
   (macro-number-dispatch x (type-error-on-x)
 
     (macro-number-dispatch y (type-error-on-y) ;; x = fixnum
@@ -803,7 +810,7 @@
           (##bignum.+ (##fixnum->bignum x) y))
       (if (##fxzero? x)
           y
-          (##ratnum.+ (macro-exact-int->ratnum x) y))
+          (int+rat x y))
       (if (and (macro-special-case-exact-zero?) (##fxzero? x))
           y
           (##fl+ (##fixnum->flonum x) y))
@@ -816,15 +823,15 @@
           x
           (##bignum.+ x (##fixnum->bignum y)))
       (##bignum.+ x y)
-      (##ratnum.+ (macro-exact-int->ratnum x) y)
+      (int+rat x y)
       (##fl+ (##exact-int->flonum x) y)
       (##cpxnum.+ (macro-noncpxnum->cpxnum x) y))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = ratnum
       (if (##fxzero? y)
           x
-          (##ratnum.+ x (macro-exact-int->ratnum y)))
-      (##ratnum.+ x (macro-exact-int->ratnum y))
+          (int+rat y x))
+      (int+rat y x)
       (##ratnum.+ x y)
       (##fl+ (##ratnum->flonum x) y)
       (##cpxnum.+ (macro-noncpxnum->cpxnum x) y))
@@ -869,6 +876,16 @@
   (##define-macro (type-error-on-y) `'(2))
   (##define-macro (fixnum-overflow) `#f)
 
+  (define (int*rat int rat)
+    (let* ((num (macro-ratnum-numerator rat))
+           (den (macro-ratnum-denominator rat))
+           (gcd (##gcd den int))
+           (result-num (##* num (##quotient int gcd)))
+           (result-den (##quotient den gcd)))
+      (if (##eqv? result-den 1)
+          result-num
+          (macro-ratnum-make result-num result-den))))
+  
   (macro-number-dispatch x (type-error-on-x)
 
     (macro-number-dispatch y (type-error-on-y) ;; x = fixnum
@@ -897,7 +914,7 @@
             ((##fx= x -1)
              (##negate y))
             (else
-             (##ratnum.* (macro-exact-int->ratnum x) y)))
+             (int*rat x y)))
       (cond ((and (macro-special-case-exact-zero?)
                   (##fxzero? x))
              0)
@@ -923,7 +940,7 @@
             (else
              (##bignum.* x (##fixnum->bignum y))))
       (##bignum.* x y)
-      (##ratnum.* (macro-exact-int->ratnum x) y)
+      (int*rat x y)
       (##fl* (##exact-int->flonum x) y)
       (##cpxnum.* (macro-noncpxnum->cpxnum x) y))
 
@@ -935,8 +952,8 @@
             ((##fx= y -1)
              (##negate x))
             (else
-             (##ratnum.* x (macro-exact-int->ratnum y))))
-      (##ratnum.* x (macro-exact-int->ratnum y))
+             (int*rat y x)))
+      (int*rat y x)
       (##ratnum.* x y)
       (##fl* (##ratnum->flonum x) y)
       (##cpxnum.* (macro-noncpxnum->cpxnum x) y))
