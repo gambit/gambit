@@ -4998,6 +4998,30 @@
       (input-port-characters-buffered port)
       (##input-port-characters-buffered port))))
 
+(##define-macro (macro-char-input-port-cache-fill port)
+  `(macro-case-target
+    ((C)
+     (##c-code
+      "___ps->type_cache[___CHAR_INPUT_PORT_TYPE_CACHE] = ___ARG1;"
+      (##structure-type ,port)))
+    (else
+     #f)))
+
+(##define-macro (macro-char-output-port-cache-fill port)
+  `(macro-case-target
+    ((C)
+     (##c-code
+      "___ps->type_cache[___CHAR_OUTPUT_PORT_TYPE_CACHE] = ___ARG1;"
+      (##structure-type ,port)))
+    (else
+     #f)))
+
+(define-prim (##char-input-port?-cached obj)
+  (macro-character-input-port? obj))
+
+(define-prim (##char-output-port?-cached obj)
+  (macro-character-output-port? obj))
+
 (define-prim (##char-ready?1 port)
 
   (##declare (not interrupts-enabled))
@@ -5053,7 +5077,9 @@
                (macro-current-input-port)
                port)))
       (macro-check-character-input-port p 1 (char-ready? p)
-        (##char-ready?1 p)))))
+        (begin
+          (macro-char-input-port-cache-fill p)
+          (##char-ready?1 p))))))
 
 (define-prim (##peek-char1 port)
 
@@ -5140,7 +5166,9 @@
                (macro-current-input-port)
                port)))
       (macro-check-character-input-port p 1 (peek-char p)
-        (##peek-char1 p)))))
+        (begin
+          (macro-char-input-port-cache-fill p)
+          (##peek-char1 p))))))
 
 (define-prim (##read-char1 port)
 
@@ -5252,7 +5280,9 @@
                (macro-current-input-port)
                port)))
       (macro-check-character-input-port p 1 (read-char p)
-        (##read-char1 p)))))
+        (begin
+          (macro-char-input-port-cache-fill p)
+          (##read-char1 p))))))
 
 (define-prim (##read-substring
               str
@@ -5700,7 +5730,9 @@
                port)))
       (macro-check-char c 1 (write-char c port)
         (macro-check-character-output-port p 2 (write-char c p)
-          (##write-char2 c p))))))
+          (begin
+            (macro-char-output-port-cache-fill p)
+            (##write-char2 c p)))))))
 
 (define-prim (##write-substring str start end port)
   (##declare (not interrupts-enabled))

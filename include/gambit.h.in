@@ -3524,6 +3524,9 @@ else \
       ___temp = ___FAL; \
   }
 
+#define ___CHARINPUTPORTPCACHED(x)(___STRUCTUREP(x)&&___STRUCTURETYPE(x)==___ps->type_cache[___CHAR_INPUT_PORT_TYPE_CACHE])
+#define ___CHAROUTPUTPORTPCACHED(x)(___STRUCTUREP(x)&&___STRUCTURETYPE(x)==___ps->type_cache[___CHAR_OUTPUT_PORT_TYPE_CACHE])
+
 /* IFJUMP-able operations */
 
 #define ___FIXZEROP(x)((x)==0)
@@ -9662,6 +9665,10 @@ typedef struct ___processor_state_struct
     ___WORD na;
 
     ___WORD saved[3]; /* Scheme objects protected from GC */
+
+    ___WORD type_cache[2];
+#define ___CHAR_INPUT_PORT_TYPE_CACHE  0
+#define ___CHAR_OUTPUT_PORT_TYPE_CACHE 1
 
     /* these handlers are duplicated from the global state for quick access */
 

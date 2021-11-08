@@ -1386,6 +1386,8 @@
 ("##write-char2"                      (2)   #t ()    0    #f      extended)
 ("##write-char1?"                     (1)   #t ()    0    #f      extended)
 ("##write-char2?"                     (2)   #t ()    0    #f      extended)
+("##char-input-port?-cached"          (1)   #f 0     0    boolean extended)
+("##char-output-port?-cached"         (1)   #f 0     0    boolean extended)
 
 ("eof-object?"                        (1)   #f 0     0    boolean ieee)
 ("##eof-object?"                      (1)   #f ()    0    boolean extended)
@@ -2674,7 +2676,13 @@
              check-run-time-binding
              out-of-line
              fail)
-      (gen source env vars out-of-line))))
+      (gen-check-run-time-binding
+       check-run-time-binding
+       source
+       env
+       (lambda ()
+         (gen source env vars out-of-line))
+       fail))))
 
 (define (setup-list-primitives)
 
@@ -5279,6 +5287,59 @@
   (define **write-char1?-sym (string->canonical-symbol "##write-char1?"))
   (define **write-char2?-sym (string->canonical-symbol "##write-char2?"))
 
+  (define **char?-sym (string->canonical-symbol "##char?"))
+
+  (define **char-input-port?-cached-sym (string->canonical-symbol "##char-input-port?-cached"))
+  (define **char-output-port?-cached-sym (string->canonical-symbol "##char-output-port?-cached"))
+
+  (define (make-0-or-1-args-expander gen0 gen1)
+    (lambda (ptree oper args generate-call check-run-time-binding)
+      (let* ((source
+              (node-source ptree))
+             (env
+              (node-env ptree))
+             (vars
+              (gen-temp-vars source args))
+             (generic-call
+              (lambda ()
+                (generate-call vars #f))) ;; handle other cases
+             (gen
+              (if (null? args)
+                  gen0
+                  gen1)))
+        (gen-prc source env
+          vars
+          (gen source
+               env
+               vars
+               check-run-time-binding
+               generic-call
+               generic-call)))))
+
+  (define (make-1-or-2-args-expander gen1 gen2)
+    (lambda (ptree oper args generate-call check-run-time-binding)
+      (let* ((source
+              (node-source ptree))
+             (env
+              (node-env ptree))
+             (vars
+              (gen-temp-vars source args))
+             (generic-call
+              (lambda ()
+                (generate-call vars #f))) ;; handle other cases
+             (gen
+              (if (and (pair? args) (null? (cdr args)))
+                  gen1
+                  gen2)))
+        (gen-prc source env
+          vars
+          (gen source
+               env
+               vars
+               check-run-time-binding
+               generic-call
+               generic-call)))))
+
   (def-exp "##peek-char0"
            (make-simple-expander
             (make-conditional-fast-path **peek-char0?-sym)))
@@ -5286,6 +5347,17 @@
   (def-exp "##peek-char1"
            (make-simple-expander
             (make-conditional-fast-path **peek-char1?-sym)))
+
+  (def-exp "peek-char"
+           (make-0-or-1-args-expander
+            (gen-validating-case
+             (list)
+             (make-conditional-fixed-arity-generator
+              **peek-char0?-sym))
+            (gen-validating-case
+             (list **char-input-port?-cached-sym)
+             (make-conditional-fixed-arity-generator
+              **peek-char1?-sym))))
 
   (def-exp "##read-char0"
            (make-simple-expander
@@ -5295,6 +5367,17 @@
            (make-simple-expander
             (make-conditional-fast-path **read-char1?-sym)))
 
+  (def-exp "read-char"
+           (make-0-or-1-args-expander
+            (gen-validating-case
+             (list)
+             (make-conditional-fixed-arity-generator
+              **read-char0?-sym))
+            (gen-validating-case
+             (list **char-input-port?-cached-sym)
+             (make-conditional-fixed-arity-generator
+              **read-char1?-sym))))
+
   (def-exp "##write-char1"
            (make-simple-expander
             (make-conditional-fast-path **write-char1?-sym)))
@@ -5303,6 +5386,16 @@
            (make-simple-expander
             (make-conditional-fast-path **write-char2?-sym)))
 
+  (def-exp "write-char"
+           (make-1-or-2-args-expander
+            (gen-validating-case
+             (list **char?-sym)
+             (make-conditional-fixed-arity-generator
+              **write-char1?-sym))
+            (gen-validating-case
+             (list **char?-sym **char-output-port?-cached-sym)
+             (make-conditional-fixed-arity-generator
+              **write-char2?-sym))))
 )
 
 (define (setup-misc-primitives)

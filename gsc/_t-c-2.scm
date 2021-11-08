@@ -3851,6 +3851,12 @@
 (targ-op "##write-char2?"
          (targ-setup-inlinable-proc-io-fast-path #t "WRITECHAR2P"))
 
+(targ-op "##char-input-port?-cached"
+         (targ-ifjump-simp-s #f "CHARINPUTPORTPCACHED"))
+
+(targ-op "##char-output-port?-cached"
+         (targ-ifjump-simp-s #f "CHAROUTPUTPORTPCACHED"))
+
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (targ-op

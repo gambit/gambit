@@ -4485,6 +4485,9 @@ ___virtual_machine_state ___vms;)
   for (i=0; i<sizeof(___ps->saved)/sizeof(*___ps->saved); i++)
     ___ps->saved[i] = ___VOID;
 
+  for (i=0; i<sizeof(___ps->type_cache)/sizeof(*___ps->type_cache); i++)
+    ___ps->type_cache[i] = ___VOID;
+
   /*
    * Copy handlers from global state to processor state.
    */

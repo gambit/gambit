@@ -2290,13 +2290,14 @@ ___SCMOBJ val;)
 #define IN_OBJECT           0
 #define IN_REGISTER         1
 #define IN_SAVED            2
-#define IN_PROCESSOR_SCMOBJ 3
-#define IN_VM_SCMOBJ        4
-#define IN_SYMKEY_TABLE     5
-#define IN_GLOBAL_VAR       6
-#define IN_WILL_LIST        7
-#define IN_CONTINUATION     8
-#define IN_RC               9
+#define IN_TYPE_CACHE       3
+#define IN_PROCESSOR_SCMOBJ 4
+#define IN_VM_SCMOBJ        5
+#define IN_SYMKEY_TABLE     6
+#define IN_GLOBAL_VAR       7
+#define IN_WILL_LIST        8
+#define IN_CONTINUATION     9
+#define IN_RC               10
 
 
 ___HIDDEN void print_prefix
@@ -2668,6 +2669,10 @@ char *msg;)
 
     case IN_SAVED:
       ___printf (">>> The reference was found in the saved objects\n");
+      break;
+
+    case IN_TYPE_CACHE:
+      ___printf (">>> The reference was found in a type cache\n");
       break;
 
     case IN_PROCESSOR_SCMOBJ:
@@ -6119,6 +6124,21 @@ ___PSDKR)
 }
 
 
+___HIDDEN void mark_type_cache
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
+{
+  ___PSGET
+
+#ifdef ENABLE_CONSISTENCY_CHECKS
+  reference_location = IN_TYPE_CACHE;
+#endif
+
+  mark_array (___PSP ___ps->type_cache, sizeof(___ps->type_cache)/sizeof(*___ps->type_cache));
+}
+
+
 ___HIDDEN void mark_processor_scmobj
    ___P((___PSDNC),
         (___PSVNC)
@@ -6422,6 +6442,8 @@ ___PSDKR)
   mark_registers (___PSPNC);
 
   mark_saved (___PSPNC);
+
+  mark_type_cache (___PSPNC);
 
   mark_processor_scmobj (___PSPNC);
 
