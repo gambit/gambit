@@ -1207,31 +1207,30 @@
 
   (define (divide-by-zero-error) #f)
 
-  (define (finish-rat num den)
-    (cond ((##eqv? den 1)
-           num)
-          ((##eqv? den -1)
-           (##negate num))
-          ((##negative? den)
-           (macro-ratnum-make (##negate num) (##negate den)))
-          (else
-           (macro-ratnum-make num den))))
-
   (define (int/rat int rat)
     (let* ((num (macro-ratnum-numerator rat))
            (den (macro-ratnum-denominator rat))
            (gcd (##gcd num int))
            (result-num (##* den (##quotient int gcd)))
            (result-den (##quotient num gcd)))
-      (finish-rat result-num result-den)))
+      (cond ((##eqv? result-den 1)
+           result-num)
+          ((##eqv? result-den -1)
+           (##negate result-num))
+          ((##negative? result-den)
+           (macro-ratnum-make (##negate result-num) (##negate result-den)))
+          (else
+           (macro-ratnum-make result-num result-den)))))
 
   (define (rat/int rat int)
     (let* ((num (macro-ratnum-numerator rat))
            (den (macro-ratnum-denominator rat))
            (gcd (##gcd num int))
            (result-num (##quotient num gcd))
-           (result-den (##* den (##quotient int gcd))))
-      (finish-rat result-num result-den)))
+           (result-den (##* den (##quotient int gcd))))  ;; |result-den|>1
+      (if (##negative? den)
+          (macro-ratnum-make (##negate result-num) (##negate result-den))
+          (macro-ratnum-make result-num result-den))))
 
   (define (divide-exact-ints)
     (macro-if-ratnum
