@@ -1228,7 +1228,7 @@
            (gcd (##gcd num int))
            (result-num (##quotient num gcd))
            (result-den (##* den (##quotient int gcd))))  ;; |result-den|>1
-      (if (##negative? den)
+      (if (##negative? result-den)
           (macro-ratnum-make (##negate result-num) (##negate result-den))
           (macro-ratnum-make result-num result-den))))
 
