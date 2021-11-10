@@ -2303,21 +2303,33 @@ The next functions are from
  Much Ado About Nothing's Sign Bit
  by W. Kahan
 
- Full reference:
+Full reference:
 
- Kahan, W: Branch cuts for complex elementary functions; or, Much ado about nothing’s sign bit. In Iserles, A., and Powell, M. (eds.), The state of the art in numerical analysis. Clarendon Press (1987) pp 165-211.
+Kahan, W: Branch cuts for complex elementary functions;
+or, Much ado about nothing's sign bit. In Iserles, A., and Powell, M. (eds.),
+The state of the art in numerical analysis. Clarendon Press (1987) pp 165-211.
 
-Note that Kahan's paper contains two treatments of branch cuts---Section 4, which deals with arithmetic with signed zeros (like IEEE arithmetic) and Section 5, which deals with arithmetic with only unsigned zeros.  The codes in the paper are only for IEEE-style arithmetic.
+Note that Kahan's paper contains two treatments of branch cuts---Section 4,
+which deals with arithmetic with signed zeros (like IEEE arithmetic) and
+Section 5, which deals with arithmetic with only unsigned zeros.
+The codes in the paper are only for IEEE-style arithmetic.
 
-Gambit Scheme is in a funny position, as it allows mixed-exactness complex numbers.  We'll consider inexact real zeros (+0., -0.) as signed (of course), but we'll interpret exact zero (0) as unsigned.
+Gambit Scheme is in a funny position, as it allows mixed-exactness
+complex numbers.  We'll consider inexact real zeros (+0., -0.)
+as signed (of course), but we'll interpret exact zero (0) as unsigned.
 
-The branch cuts of all the functions considered here lie on the exact real axis or the exact imaginary axis.
+The branch cuts of all the functions considered here lie on the exact
+real axis or the exact imaginary axis.
 
-All of the inverse functions are defined in terms of log and sqrt, and the side of the continuity at the branch cuts is determined by the sides of continuity of those two functions.
+All of the inverse functions are defined in terms of log and sqrt, and
+the side of the continuity at the branch cuts is determined by the sides
+of continuity of those two functions.
 
-I believe that this is the same as the continuity rules that the CLHS gives for atan, asin, acos, etc., along branch cuts.
+I believe that this is the same as the continuity rules that the CLHS
+gives for atan, asin, acos, etc., along branch cuts.
 
-Thanks to Raymond Toy for email discussions and for the code for cmucl, which gets this stuff right in the Common Lisp context.
+Thanks to Raymond Toy for email discussions and for the code for cmucl,
+which gets this stuff right in the Common Lisp context.
 
 See
 
@@ -2366,11 +2378,15 @@ for a discussion of branch cuts.
            (let* ((x^2 (##flsquare x))
                   (y^2 (##flsquare y))
                   (rho (##fl+ x^2 y^2)))
-             (if (or (##flinfinite? rho)                    ;; if rho is NaN, this is false
-                     (and (or (##fl< x^2 (macro-inexact-lambda))    ;; poor man's way to see whether underflow flag was set
+             (if (or (##flinfinite? rho)     ;; false if rho is NaN
+                     (and (or (##fl< x^2 (macro-inexact-lambda)) ;; underflow?
                               (##fl< y^2 (macro-inexact-lambda)))
-                          (##fl< rho (##fl/ (macro-inexact-lambda) (macro-inexact-epsilon))))) ;; if rho is NaN, this is false
-                 ;; rho is not NaN, so x and y are not NaN, and x and y are not infinite.  Whew.
+                          (##fl< rho
+                                 (##fl/
+                                  (macro-inexact-lambda) ;; false if rho is NaN
+                                  (macro-inexact-epsilon)))))
+                 ;; rho is not NaN, so x and y are not NaN,
+                 ;; and x and y are not infinite.  Whew.
                  (let ((k (##flilogb (##flmax (##flabs x) (##flabs y)))))
                    (##cons (##fl+ (##flsquare (##flscalbn x (##fx- k)))
                                   (##flsquare (##flscalbn y (##fx- k))))
@@ -2408,16 +2424,18 @@ for a discussion of branch cuts.
   (let ((sqrt-z-1 (##sqrt (##- z 1)))
         (sqrt-z+1 (##sqrt (##+ z 1))))
 
-    ;; if z is real and > 1, then the imaginary part of the next expression can be
-    ;; inexact 0, but that's OK because this routine is not called in this case.
+    ;; if z is real and > 1, then the imaginary part of the next expression
+    ;; can be inexact 0, but that's OK because this routine is not called
+    ;; in this case.
 
-    (##make-rectangular (##asinh (##real-part (##* (##conjugate sqrt-z-1) sqrt-z+1)))
-                        (##* 2 (##atan2 (##imag-part sqrt-z-1) (##real-part sqrt-z+1))))))
+    (##make-rectangular
+     (##asinh (##real-part (##* (##conjugate sqrt-z-1) sqrt-z+1)))
+     (##* 2 (##atan2 (##imag-part sqrt-z-1) (##real-part sqrt-z+1))))))
 
 (define-prim (##casin z)
 
-  ;; if (##real-part z) is exact zero, then there is a correlation of errors in sqrt-1-z and sqrt-1+z that
-  ;; allows the next substitution
+  ;; if (##real-part z) is exact zero, then there is a correlation of
+  ;; errors in sqrt-1-z and sqrt-1+z that allows the next substitution
 
   (let ((x (##real-part z)))
     (if (##eqv? x 0)
@@ -2458,25 +2476,27 @@ for a discussion of branch cuts.
                       (macro-cpxnum-make (##exact->inexact (x/x^2+y^2 inexact-x inexact-y))
                                          (##flcopysign pi/2 inexact-y)))
                      ((##fl= inexact-x (macro-inexact-+1))
-                      (macro-cpxnum-make (##fllog (##fl/ (##flsqrt (##flsqrt (##fl+ (macro-inexact-+4) (##flsquare abs-y))))
-                                                         (##flsqrt (##fl+ abs-y rho))))
-                                         (##fl/ (##flcopysign (##fl+ pi/2 (##flatan (##fl/ (##fl+ abs-y rho) (macro-inexact-+2))))
-                                                              inexact-y)
-                                                (macro-inexact-+2))))
+                      (macro-cpxnum-make
+                       (##fllog (##fl/ (##flsqrt (##flsqrt (##fl+ (macro-inexact-+4) (##flsquare abs-y))))
+                                       (##flsqrt (##fl+ abs-y rho))))
+                       (##fl/ (##flcopysign (##fl+ pi/2 (##flatan (##fl/ (##fl+ abs-y rho) (macro-inexact-+2))))
+                                            inexact-y)
+                              (macro-inexact-+2))))
                      (else
-                      (macro-cpxnum-make (if (##eqv? x 0)
-                                             ;; if rho and abs-y were exact in the next expression (no matter their values)
-                                             ;; then the argument to fllog1p would be exact 0, so the result would be exact 0.
-                                             0
-                                             (##fl/ (##fllog1p (##fl/ (##fl* (macro-inexact-+4) inexact-x)                 ;; was (##* 4 x) originally
-                                                                      (##fl+ (##flsquare (##fl- (macro-inexact-+1) inexact-x))
-                                                                             (##flsquare (##fl+ abs-y rho)))))
-                                                    (macro-inexact-+4)))
-                                         (##fl/ (##carg (macro-cpxnum-make (##fl- (##fl* (##fl- (macro-inexact-+1) inexact-x)
-                                                                                         (##fl+ (macro-inexact-+1) inexact-x))
-                                                                                  (##flsquare (##fl+ abs-y rho)))
-                                                                           (##fl* (macro-inexact-+2) inexact-y)))
-                                                (macro-inexact-+2)))))))
+                      (macro-cpxnum-make
+                       (if (##eqv? x 0)
+                           ;; if rho and abs-y were exact in the next expression (no matter their values)
+                           ;; then the argument to fllog1p would be exact 0, so the result would be exact 0.
+                           0
+                           (##fl/ (##fllog1p (##fl/ (##fl* (macro-inexact-+4) inexact-x)   ;; was (##* 4 x) originally
+                                                    (##fl+ (##flsquare (##fl- (macro-inexact-+1) inexact-x))
+                                                           (##flsquare (##fl+ abs-y rho)))))
+                                  (macro-inexact-+4)))
+                       (##fl/ (##carg (macro-cpxnum-make (##fl- (##fl* (##fl- (macro-inexact-+1) inexact-x)
+                                                                       (##fl+ (macro-inexact-+1) inexact-x))
+                                                                (##flsquare (##fl+ abs-y rho)))
+                                                         (##fl* (macro-inexact-+2) inexact-y)))
+                              (macro-inexact-+2)))))))
     (##* beta (##conjugate zeta))))
 
 (define-prim (##ctanh xi+ieta)
@@ -2485,13 +2505,15 @@ for a discussion of branch cuts.
          (eta (macro-cpxnum-imag xi+ieta)))
     (if (##< (##fl/ (##flasinh (macro-inexact-omega)) (macro-inexact-+4))
              (##abs xi))
-        (macro-cpxnum-make (##flcopysign (macro-inexact-+1) (##exact->inexact xi))     ;; xi cannot be exact 0
-                           (##flcopysign (macro-inexact-+0) (##exact->inexact eta)))   ;; eta cannot be exact 0
-        (let* ((t (##tan eta))                                    ;; sin(eta)/cos(eta) can't be exact 0, so can't be exact
-               (beta (##fl+ (macro-inexact-+1) (##flsquare t)))                   ;; 1/cos^2(eta), can't be exact
-               (s (##sinh xi))                                    ;; sinh(xi), can't be exact zero, so can't be exact
-               (rho (##flsqrt (##fl+ (macro-inexact-+1) (##flsquare s)))))        ;; cosh(xi), can't be exact
-          (if (##infinite? t)                                     ;; if sin(eta)/cos(eta) = infinity (how, I don't know)
+        (macro-cpxnum-make
+         (##flcopysign (macro-inexact-+1) (##exact->inexact xi))   ;; xi cannot be exact 0
+         (##flcopysign (macro-inexact-+0) (##exact->inexact eta))) ;; eta cannot be exact 0
+        (let* ((t (##tan eta))                                     ;; sin(eta)/cos(eta) can't be exact 0, so can't be exact
+               (beta (##fl+ (macro-inexact-+1) (##flsquare t)))    ;; 1/cos^2(eta), can't be exact
+               (s (##sinh xi))                                     ;; sinh(xi), can't be exact zero, so can't be exact
+               (rho (##flsqrt (##fl+ (macro-inexact-+1)            ;; cosh(xi), can't be exact
+                                     (##flsquare s)))))
+          (if (##infinite? t)                                      ;; if sin(eta)/cos(eta) = infinity (how, I don't know)
               (macro-cpxnum-make (##fl/ rho s)
                                  (##fl/ t))
               (let ((one+beta*s^2 (##fl+ (macro-inexact-+1) (##fl* beta (##flsquare s)))))
@@ -9522,7 +9544,7 @@ end-of-code
     (define epsilon (expt 2. -53))
     (define bigepsilon (* epsilon (sqrt 5)))
     (define n 26)
-    (define beta 4.158491068379826e-16)      ;; accuracy of trigonometric inputs (check) error in product of three entries from the tables
+    (define beta 4.158491068379826e-16)      ;; accuracy of product of three entries from the tables
     (define norm-x (sqrt (* (expt 2 n) (* 255 255))))
     (define norm-y norm-x)
     (define error (* norm-x
@@ -9541,8 +9563,8 @@ end-of-code
 
     So if x and y have fewer than 2^{26}\times 8=536,870,912 bits, this computes the product exactly.
 
-    It appears that we need tables only of size 2^9 complex entries rather than 2^10 if we do this.  That would
-    cut down on memory.
+    It appears that we need tables only of size 2^9 complex entries rather than 2^10 if we do this.
+    That would cut down on memory.
 
     Let's look at what happens when you have 4-bit fft words:
 
@@ -9604,7 +9626,7 @@ end-of-code
     (define epsilon (expt 2. -53))
     (define bigepsilon (* epsilon (sqrt 5)))
     (define n 26)
-    (define beta 4.164343159519809e-16)      ;; accuracy of trigonometric inputs (check) error in product of three entries from the tables
+    (define beta 4.164343159519809e-16)      ;; accuracy of product of three entries from the tables
     (define norm-x (sqrt (* (expt 2 n) (* 255 255))))
     (define norm-y norm-x)
     (define error (* norm-x
@@ -10420,7 +10442,10 @@ end-of-code
           (if (##fx= q-mdigits 1)
               ;; final result can't be bignum
               (let* ((top-bits-of-u
-                      (##bignum.arithmetic-shift-into! u (##fx- (##fx* 2 ##bignum.mdigit-width) v-bits) temp))
+                      (##bignum.arithmetic-shift-into!
+                       u
+                       (##fx- (##fx* 2 ##bignum.mdigit-width) v-bits)
+                       temp))
                      (q-hat-estimate
                       (estimate-q-hat top-bits-of-u v_n-1 v_n-2))
                      (q-hat
@@ -10431,7 +10456,10 @@ end-of-code
               (let loop3 ((j (##fx- q-mdigits 1)))
                 (if (##not (##fx< j 0))
                     (let* ((top-bits-of-u
-                            (##bignum.arithmetic-shift-into! u (##fx- (##fx* (##fx- 2 j) ##bignum.mdigit-width) v-bits) temp))
+                            (##bignum.arithmetic-shift-into!
+                             u
+                             (##fx- (##fx* (##fx- 2 j) ##bignum.mdigit-width) v-bits)
+                             temp))
                            (q-hat-estimate
                             (estimate-q-hat top-bits-of-u v_n-1 v_n-2))
                            (q-hat
@@ -11448,7 +11476,9 @@ end-of-code
   
   Full reference:
   
-  Kahan, W: Branch cuts for complex elementary functions; or, Much ado about nothing’s sign bit. In Iserles, A., and Powell, M. (eds.), The state of the art in numerical analysis. Clarendon Press (1987) pp 165-211.
+  Kahan, W: Branch cuts for complex elementary functions; or,
+  Much ado about nothing's sign bit. In Iserles, A., and Powell, M. (eds.),
+  The state of the art in numerical analysis. Clarendon Press (1987) pp 165-211.
   
   Code to compute the constants using my computable reals package.
 
