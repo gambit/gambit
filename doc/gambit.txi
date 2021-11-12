@@ -4231,7 +4231,20 @@ the definition of the procedure referred to at the call site (if the
 procedure is bound to a global variable, the definition site must have a
 @code{(block)} declaration).  Note that inlining usually causes much
 less code expansion than specified by the inlining limit (an expansion
-around 10% is common for @var{n}=350).
+around 10% is common for @var{n}=370).
+
+@item (allocation-limit @var{n})
+@opindex allocation-limit
+Indicate the maximum size of objects allocated with
+@code{make-vector}, @code{make-string}, @code{make-u8vector}, etc.
+Knowing the maximum size allows the compiler to inline calls to these
+allocators for small allocations.  This is only supported by the C
+target and only up to a size that is allowed for @emph{movable
+objects} (typically on the order of 1-2 KB).  When @var{n} is an exact
+nonnegative integer it is the upper-bound on the number of elements of
+the allocated objects.  When @var{n} is @code{#t} a dynamic test of
+the size is done.  When @var{n} is @code{#f} the allocation operation
+is not inlined.
 
 @item (@r{[}not@r{]} lambda-lift)
 @opindex lambda-lift
@@ -4424,6 +4437,7 @@ The default declarations used by the compiler are equivalent to:
   (inline)
   (inline-primitives)
   (inlining-limit 370)
+  (allocation-limit #t)
   (constant-fold)
   (lambda-lift)
   (not standard-bindings)

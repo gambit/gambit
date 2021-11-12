@@ -113,7 +113,9 @@
 ;; portable to different word sizes and to perform a few optimizations.
 ;; In the following definitions, space is expressed in number of words.
 
-(define targ-msection-biggest 4096) ; Maximum size of objects in msections.
+(define targ-msection-biggest  255) ;; Max size in words of msection objects
+(define targ-msection-fudge   4096) ;; Space in words reserved for allocations
+                                    ;; before heap overflow check
 
 ;; Number of tag bits per pointer:
 
@@ -122,35 +124,81 @@
 
 ;; Upper bound on space needed by various objects:
 
-(define (targ-max-words i) ; minimum k such that targ-min-word-size*k >= i
-                           ; and targ-min-word-size*k mod targ-alignment = 0
+(define (targ-round-up-to-multiple-of n i)
+  (* (quotient (+ i (- n 1)) n) n))
 
-  (define (round-up-to-multiple-of n i)
-    (* (quotient (+ i (- n 1)) n) n))
-
-  (quotient (round-up-to-multiple-of
+(define (targ-max-words i) ;; minimum k such that targ-min-word-size*k >= i
+                           ;; and targ-min-word-size*k mod targ-alignment = 0
+  (quotient (targ-round-up-to-multiple-of
               targ-min-word-size
-              (round-up-to-multiple-of targ-alignment i))
+              (targ-round-up-to-multiple-of targ-alignment i))
             targ-min-word-size))
 
 ;; Space occupied by various types of objects.
 
-(define targ-pair-space        (targ-max-words (* 3 targ-min-word-size)))
-(define targ-box-space         (targ-max-words (* 2 targ-min-word-size)))
-(define targ-will-space        (targ-max-words (* 4 targ-min-word-size)))
-(define targ-flonum-space      (targ-max-words 16))
-(define targ-delay-promise-space (targ-max-words (* 5 targ-min-word-size)))
-(define targ-continuation-space(targ-max-words (* 3 targ-min-word-size)))
-(define targ-ratnum-space      (targ-max-words (* 3 targ-min-word-size)))
-(define targ-cpxnum-space      (targ-max-words (* 3 targ-min-word-size)))
-(define targ-symbol-space      (targ-max-words (* 5 targ-min-word-size)))
-(define targ-keyword-space     (targ-max-words (* 4 targ-min-word-size)))
-(define (targ-closure-space n) (targ-max-words (* (+ n 2) targ-min-word-size)))
-(define (targ-string-space n)  (targ-max-words (* (+ n 1) targ-min-word-size)))
-(define (targ-s8vector-space n)(targ-max-words (+ n targ-min-word-size)))
-(define (targ-vector-space n)  (targ-max-words (* (+ n 1) targ-min-word-size)))
-(define targ-small-alloc-limit 64) ;; worst case for 64 elements
-(define targ-small-alloc-space (targ-s8vector-space (* targ-small-alloc-limit 8))) ;; worst case space usage
+(define targ-header-words 2) ;; account for possible handle
+
+(define (targ-obj-words words)
+  (targ-max-words (* targ-min-word-size (+ targ-header-words words))))
+
+(define targ-pair-space          (targ-obj-words 2))
+(define targ-box-space           (targ-obj-words 1))
+(define targ-will-space          (targ-obj-words 3))
+(define targ-delay-promise-space (targ-obj-words 4))
+(define targ-continuation-space  (targ-obj-words 2))
+(define targ-ratnum-space        (targ-obj-words 2))
+(define targ-cpxnum-space        (targ-obj-words 2))
+(define targ-symbol-space        (targ-obj-words 4))
+(define targ-keyword-space       (targ-obj-words 3))
+
+(define (targ-vector-of-byte-elements-space n) ;; no alignment constraints
+  (quotient
+   (targ-round-up-to-multiple-of
+    targ-min-word-size
+    (+ n (* targ-header-words targ-min-word-size)))
+   targ-min-word-size))
+
+(define (targ-vector-of-64-bit-elements-space n) ;; has alignment constraints
+  (quotient
+   (targ-round-up-to-multiple-of
+    8
+    (+ (* 8 n) targ-min-word-size (* targ-header-words targ-min-word-size)))
+   targ-min-word-size))
+
+(define targ-flonum-space
+  (targ-vector-of-64-bit-elements-space 1))
+
+(define (targ-closure-space n)
+  (targ-obj-words (+ n 1)))
+
+(define (targ-string-space n)
+  (targ-s8vector-space (* n 4))) ;; 4 bytes max per character
+
+(define (targ-s8vector-space n)
+  (targ-vector-of-byte-elements-space n))
+
+(define (targ-vector-space n)
+  (targ-obj-words n))
+
+(define (targ-max-small-allocation vect-kind)
+  (let ((min-msection-max-size-bytes
+         (* (- targ-msection-biggest targ-header-words)
+            targ-min-word-size)))
+    (quotient
+     min-msection-max-size-bytes
+     (case vect-kind
+       ((string)
+        4) ;; 4 bytes max per character
+       ((s8vector u8vector)
+        1)
+       ((s16vector u16vector)
+        2)
+       ((s32vector u32vector f32vector)
+        4)
+       ((s64vector u64vector f64vector)
+        8)
+       (else ;; vector
+        targ-min-word-size)))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -174,7 +222,7 @@
 
 (define (targ-make-target)
   (let ((targ
-         (make-target 14
+         (make-target 15
                       'C
                       '((".c"    . C)
                         (".C"    . C++)
@@ -218,6 +266,8 @@
 
     (target-begin!-set! targ begin!)
     (target-end!-set! targ end!)
+
+    (target-max-small-allocation-set! targ targ-max-small-allocation)
 
     targ))
 

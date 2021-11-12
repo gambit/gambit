@@ -62,7 +62,7 @@
 (define (cpu-make-target target-arch file-extensions backend-info)
 
   (let ((targ (make-target
-                14
+                15
                 target-arch
                 file-extensions
                 '() ; XXX

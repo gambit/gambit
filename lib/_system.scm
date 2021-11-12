@@ -20,7 +20,6 @@
 (macro-if-ratnum (define-prim (##ratnum? obj)))
 (macro-if-cpxnum (define-prim (##cpxnum? obj)))
 (define-prim (##structure? obj))
-(define-prim (##values? obj))
 (define-prim (##frame? obj))
 (define-prim (##continuation? obj))
 (define-prim (##promise? obj))

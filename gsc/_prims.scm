@@ -733,8 +733,10 @@
 ("##list->string"                     (1)   #f ()    0    string    extended)
 ("make-string"                        (1 2) #f 0     0    string    ieee)
 ("##make-string"                      (1 2) #f ()    0    string    extended)
+("##make-string-small"                (1 2) #f ()    0    string    extended)
 ("substring"                          (3)   #f 0     0    string    ieee)
 ("##substring"                        (3)   #f ()    0    string    extended)
+("##substring-small"                  (3)   #f ()    0    string    extended)
 ("string"                             0     #f 0     0    string    ieee)
 ("##string"                           0     #f ()    0    string    extended)
 ("string->list"                       (1)   #f 0     0    list      r4rs)
@@ -743,6 +745,7 @@
 ("##string-append"                    0     #f ()    0    string    extended)
 ("string-copy"                        (1 2 3)#f 0    0    string    r4rs)
 ("##string-copy"                      (1 2 3)#f ()   0    string    extended)
+("##string-copy-small"                (1 2 3)#f ()   0    string    extended)
 ("string-fill!"                       (2 3 4)#t 0    0    #f        r4rs)
 ("##string-fill!"                     (2 3 4)#t ()   0    #f        extended)
 ("string-length"                      (1)   #f 0     0    fixnum    ieee)
@@ -781,7 +784,9 @@
 ("string-copy!"                       (3 4 5)#t 0    0    #f        r7rs)
 ("##string-copy!"                     (3 4 5)#t ()   0    string    extended)
 ("##string-insert"                    (3)   #f ()    0    string    extended)
+("##string-insert-small"              (3)   #f ()    0    string    extended)
 ("##string-delete"                    (2)   #f ()    0    string    extended)
+("##string-delete-small"              (2)   #f ()    0    string    extended)
 ("string-foldcase"                    (1)   #f 0     0    string    r7rs)
 ("##string-foldcase"                  (1)   #f ()    0    string    extended)
 ("string-upcase"                      (1)   #f 0     0    string    r7rs)
@@ -797,6 +802,7 @@
 ("##substring-move!"                  (5)   #t ()    0    string    extended)
 ("string-set"                         (3)   #f 0     0    string    gambit)
 ("##string-set"                       (3)   #f ()    0    string    extended)
+("##string-set-small"                 (3)   #f ()    0    string    extended)
 ("string-shrink!"                     (2)   #t 0     0    #f        gambit)
 ("##string-shrink!"                   (2)   #t ()    0    string    extended)
 
@@ -806,6 +812,7 @@
 ("##list->vector"                     (1)   #f ()    0    vector    extended)
 ("make-vector"                        (1 2) #f (1)   0    vector    ieee)
 ("##make-vector"                      (1 2) #f ()    0    vector    extended)
+("##make-vector-small"                (1 2) #f ()    0    vector    extended)
 ("vector"                             0     #f ()    0    vector    ieee)
 ("##vector"                           0     #f ()    0    vector    extended)
 ("vector->list"                       (1)   #f 0     0    list      r4rs)
@@ -825,15 +832,19 @@
 ("##vector-append"                    0     #f ()    0    vector    extended)
 ("vector-copy"                        (1 2 3)#f 0    0    vector    r7rs)
 ("##vector-copy"                      (1 2 3)#f ()   0    vector    extended)
+("##vector-copy-small"                (1 2 3)#f ()   0    vector    extended)
 ("vector-copy!"                       (3 4 5)#t 0    0    #f        r7rs)
 ("##vector-copy!"                     (3 4 5)#t ()   0    vector    extended)
 ("##vector-insert"                    (3)   #f ()    0    vector    extended)
+("##vector-insert-small"              (3)   #f ()    0    vector    extended)
 ("##vector-delete"                    (2)   #f ()    0    vector    extended)
+("##vector-delete-small"              (2)   #f ()    0    vector    extended)
 
 ("append-vectors"                     (1)   #f 0     0    vector    gambit)
 ("##append-vectors"                   (1)   #f ()    0    vector    extended)
 ("subvector"                          (3)   #f 0     0    vector    gambit)
 ("##subvector"                        (3)   #f ()    0    vector    extended)
+("##subvector-small"                  (3)   #f ()    0    vector    extended)
 ("subvector-fill!"                    (4)   #t 0     0    #f        gambit)
 ("##subvector-fill!"                  (4)   #t ()    0    #f        extended)
 ("subvector-move!"                    (5)   #t 0     0    #f        gambit)
@@ -844,6 +855,7 @@
 ("##vector-inc!"                      (2 3) #t ()    0    fixnum    extended)
 ("vector-set"                         (3)   #f 0     0    vector    gambit)
 ("##vector-set"                       (3)   #f ()    0    vector    extended)
+("##vector-set-small"                 (3)   #f ()    0    vector    extended)
 ("vector-shrink!"                     (2)   #t 0     0    #f        gambit)
 ("##vector-shrink!"                   (2)   #t ()    0    vector    extended)
 
@@ -855,8 +867,10 @@
 ("##list->s8vector"                   (1)   #f ()    0    s8vector  extended)
 ("make-s8vector"                      (1 2) #f 0     0    s8vector  gambit)
 ("##make-s8vector"                    (1 2) #f ()    0    s8vector  extended)
+("##make-s8vector-small"              (1 2) #f ()    0    s8vector  extended)
 ("subs8vector"                        (3)   #f 0     0    s8vector  gambit)
 ("##subs8vector"                      (3)   #f ()    0    s8vector  extended)
+("##subs8vector-small"                (3)   #f ()    0    s8vector  extended)
 ("subs8vector-fill!"                  (4)   #t 0     0    #f        gambit)
 ("##subs8vector-fill!"                (4)   #t ()    0    #f        extended)
 ("subs8vector-move!"                  (5)   #t 0     0    #f        gambit)
@@ -869,6 +883,7 @@
 ("##s8vector-append"                  0     #f ()    0    s8vector  extended)
 ("s8vector-copy"                      (1 2 3)#f 0    0    s8vector  gambit)
 ("##s8vector-copy"                    (1 2 3)#f ()   0    s8vector  extended)
+("##s8vector-copy-small"              (1 2 3)#f ()   0    s8vector  extended)
 ("s8vector-copy!"                     (3 4 5)#t 0    0    #f        gambit)
 ("##s8vector-copy!"                   (3 4 5)#t ()   0    s8vector  extended)
 ("s8vector-fill!"                     (2 3 4)#t 0    0    #f        gambit)
@@ -879,6 +894,7 @@
 ("##s8vector-ref"                     (2)   #f ()    0    fixnum    extended)
 ("s8vector-set"                       (3)   #f 0     0    s8vector  gambit)
 ("##s8vector-set"                     (3)   #f ()    0    s8vector  extended)
+("##s8vector-set-small"               (3)   #f ()    0    s8vector  extended)
 ("s8vector-set!"                      (3)   #t 0     0    #f        gambit)
 ("##s8vector-set!"                    (3)   #t ()    0    s8vector  extended)
 ("s8vector-shrink!"                   (2)   #t 0     0    #f        gambit)
@@ -886,7 +902,9 @@
 ("s8vector?"                          (1)   #f 0     0    boolean   gambit)
 ("##s8vector?"                        (1)   #f ()    0    boolean   extended)
 ("##s8vector-insert"                  (3)   #f ()    0    s8vector  extended)
+("##s8vector-insert-small"            (3)   #f ()    0    s8vector  extended)
 ("##s8vector-delete"                  (2)   #f ()    0    s8vector  extended)
+("##s8vector-delete-small"            (2)   #f ()    0    s8vector  extended)
 
 ("append-u8vectors"                   (1)   #f 0     0    u8vector  gambit)
 ("##append-u8vectors"                 (1)   #f ()    0    u8vector  extended)
@@ -894,8 +912,10 @@
 ("##list->u8vector"                   (1)   #f ()    0    u8vector  extended)
 ("make-u8vector"                      (1 2) #f 0     0    u8vector  gambit)
 ("##make-u8vector"                    (1 2) #f ()    0    u8vector  extended)
+("##make-u8vector-small"              (1 2) #f ()    0    u8vector  extended)
 ("subu8vector"                        (3)   #f 0     0    u8vector  gambit)
 ("##subu8vector"                      (3)   #f ()    0    u8vector  extended)
+("##subu8vector-small"                (3)   #f ()    0    u8vector  extended)
 ("subu8vector-fill!"                  (4)   #t 0     0    #f        gambit)
 ("##subu8vector-fill!"                (4)   #t ()    0    #f        extended)
 ("subu8vector-move!"                  (5)   #t 0     0    #f        gambit)
@@ -908,6 +928,7 @@
 ("##u8vector-append"                  0     #f ()    0    u8vector  extended)
 ("u8vector-copy"                      (1 2 3)#f 0    0    u8vector  gambit)
 ("##u8vector-copy"                    (1 2 3)#f ()   0    u8vector  extended)
+("##u8vector-copy-small"              (1 2 3)#f ()   0    u8vector  extended)
 ("u8vector-copy!"                     (3 4 5)#t 0    0    #f        gambit)
 ("##u8vector-copy!"                   (3 4 5)#t ()   0    u8vector  extended)
 ("u8vector-fill!"                     (2 3 4)#t 0    0    #f        gambit)
@@ -918,6 +939,7 @@
 ("##u8vector-ref"                     (2)   #f ()    0    fixnum    extended)
 ("u8vector-set"                       (3)   #f 0     0    u8vector  gambit)
 ("##u8vector-set"                     (3)   #f ()    0    u8vector  extended)
+("##u8vector-set-small"               (3)   #f ()    0    u8vector  extended)
 ("u8vector-set!"                      (3)   #t 0     0    #f        gambit)
 ("##u8vector-set!"                    (3)   #t ()    0    u8vector  extended)
 ("u8vector-shrink!"                   (2)   #t 0     0    #f        gambit)
@@ -925,7 +947,9 @@
 ("u8vector?"                          (1)   #f 0     0    boolean   gambit)
 ("##u8vector?"                        (1)   #f ()    0    boolean   extended)
 ("##u8vector-insert"                  (3)   #f ()    0    u8vector  extended)
+("##u8vector-insert-small"            (3)   #f ()    0    u8vector  extended)
 ("##u8vector-delete"                  (2)   #f ()    0    u8vector  extended)
+("##u8vector-delete-small"            (2)   #f ()    0    u8vector  extended)
 
 ("append-s16vectors"                  (1)   #f 0     0    s16vector gambit)
 ("##append-s16vectors"                (1)   #f ()    0    s16vector extended)
@@ -933,8 +957,10 @@
 ("##list->s16vector"                  (1)   #f ()    0    s16vector extended)
 ("make-s16vector"                     (1 2) #f 0     0    s16vector gambit)
 ("##make-s16vector"                   (1 2) #f ()    0    s16vector extended)
+("##make-s16vector-small"             (1 2) #f ()    0    s16vector extended)
 ("subs16vector"                       (3)   #f 0     0    s16vector gambit)
 ("##subs16vector"                     (3)   #f ()    0    s16vector extended)
+("##subs16vector-small"               (3)   #f ()    0    s16vector extended)
 ("subs16vector-fill!"                 (4)   #t 0     0    #f        gambit)
 ("##subs16vector-fill!"               (4)   #t ()    0    #f        extended)
 ("subs16vector-move!"                 (5)   #t 0     0    #f        gambit)
@@ -947,6 +973,7 @@
 ("##s16vector-append"                 0     #f ()    0    s16vector extended)
 ("s16vector-copy"                     (1 2 3)#f 0    0    s16vector gambit)
 ("##s16vector-copy"                   (1 2 3)#f ()   0    s16vector extended)
+("##s16vector-copy-small"             (1 2 3)#f ()   0    s16vector extended)
 ("s16vector-copy!"                    (3 4 5)#t 0    0    #f        gambit)
 ("##s16vector-copy!"                  (3 4 5)#t ()   0    s16vector extended)
 ("s16vector-fill!"                    (2 3 4)#t 0    0    #f        gambit)
@@ -957,6 +984,7 @@
 ("##s16vector-ref"                    (2)   #f ()    0    fixnum    extended)
 ("s16vector-set"                      (3)   #f 0     0    s16vector gambit)
 ("##s16vector-set"                    (3)   #f ()    0    s16vector extended)
+("##s16vector-set-small"              (3)   #f ()    0    s16vector extended)
 ("s16vector-set!"                     (3)   #t 0     0    #f        gambit)
 ("##s16vector-set!"                   (3)   #t ()    0    s16vector extended)
 ("s16vector-shrink!"                  (2)   #t 0     0    #f        gambit)
@@ -964,7 +992,9 @@
 ("s16vector?"                         (1)   #f 0     0    boolean   gambit)
 ("##s16vector?"                       (1)   #f ()    0    boolean   extended)
 ("##s16vector-insert"                 (3)   #f ()    0    s16vector extended)
+("##s16vector-insert-small"           (3)   #f ()    0    s16vector extended)
 ("##s16vector-delete"                 (2)   #f ()    0    s16vector extended)
+("##s16vector-delete-small"           (2)   #f ()    0    s16vector extended)
 
 ("append-u16vectors"                  (1)   #f 0     0    u16vector gambit)
 ("##append-u16vectors"                (1)   #f ()    0    u16vector extended)
@@ -972,8 +1002,10 @@
 ("##list->u16vector"                  (1)   #f ()    0    u16vector extended)
 ("make-u16vector"                     (1 2) #f 0     0    u16vector gambit)
 ("##make-u16vector"                   (1 2) #f ()    0    u16vector extended)
+("##make-u16vector-small"             (1 2) #f ()    0    u16vector extended)
 ("subu16vector"                       (3)   #f 0     0    u16vector gambit)
 ("##subu16vector"                     (3)   #f ()    0    u16vector extended)
+("##subu16vector-small"               (3)   #f ()    0    u16vector extended)
 ("subu16vector-fill!"                 (4)   #t 0     0    #f        gambit)
 ("##subu16vector-fill!"               (4)   #t ()    0    #f        extended)
 ("subu16vector-move!"                 (5)   #t 0     0    #f        gambit)
@@ -986,6 +1018,7 @@
 ("##u16vector-append"                 0     #f ()    0    u16vector extended)
 ("u16vector-copy"                     (1 2 3)#f 0    0    u16vector gambit)
 ("##u16vector-copy"                   (1 2 3)#f ()   0    u16vector extended)
+("##u16vector-copy-small"             (1 2 3)#f ()   0    u16vector extended)
 ("u16vector-copy!"                    (3 4 5)#t 0    0    #f        gambit)
 ("##u16vector-copy!"                  (3 4 5)#t ()   0    u16vector extended)
 ("u16vector-fill!"                    (2 3 4)#t 0    0    #f        gambit)
@@ -996,6 +1029,7 @@
 ("##u16vector-ref"                    (2)   #f ()    0    fixnum    extended)
 ("u16vector-set"                      (3)   #f 0     0    u16vector gambit)
 ("##u16vector-set"                    (3)   #f ()    0    u16vector extended)
+("##u16vector-set-small"              (3)   #f ()    0    u16vector extended)
 ("u16vector-set!"                     (3)   #t 0     0    #f        gambit)
 ("##u16vector-set!"                   (3)   #t ()    0    u16vector extended)
 ("u16vector-shrink!"                  (2)   #t 0     0    #f        gambit)
@@ -1003,7 +1037,9 @@
 ("u16vector?"                         (1)   #f 0     0    boolean   gambit)
 ("##u16vector?"                       (1)   #f ()    0    boolean   extended)
 ("##u16vector-insert"                 (3)   #f ()    0    u16vector extended)
+("##u16vector-insert-small"           (3)   #f ()    0    u16vector extended)
 ("##u16vector-delete"                 (2)   #f ()    0    u16vector extended)
+("##u16vector-delete-small"           (2)   #f ()    0    u16vector extended)
 
 ("append-s32vectors"                  (1)   #f 0     0    s32vector gambit)
 ("##append-s32vectors"                (1)   #f ()    0    s32vector extended)
@@ -1011,8 +1047,10 @@
 ("##list->s32vector"                  (1)   #f ()    0    s32vector extended)
 ("make-s32vector"                     (1 2) #f 0     0    s32vector gambit)
 ("##make-s32vector"                   (1 2) #f ()    0    s32vector extended)
+("##make-s32vector-small"             (1 2) #f ()    0    s32vector extended)
 ("subs32vector"                       (3)   #f 0     0    s32vector gambit)
 ("##subs32vector"                     (3)   #f ()    0    s32vector extended)
+("##subs32vector-small"               (3)   #f ()    0    s32vector extended)
 ("subs32vector-fill!"                 (4)   #t 0     0    #f        gambit)
 ("##subs32vector-fill!"               (4)   #t ()    0    #f        extended)
 ("subs32vector-move!"                 (5)   #t 0     0    #f        gambit)
@@ -1025,6 +1063,7 @@
 ("##s32vector-append"                 0     #f ()    0    s32vector extended)
 ("s32vector-copy"                     (1 2 3)#f 0    0    s32vector gambit)
 ("##s32vector-copy"                   (1 2 3)#f ()   0    s32vector extended)
+("##s32vector-copy-small"             (1 2 3)#f ()   0    s32vector extended)
 ("s32vector-copy!"                    (3 4 5)#t 0    0    #f        gambit)
 ("##s32vector-copy!"                  (3 4 5)#t ()   0    s32vector extended)
 ("s32vector-fill!"                    (2 3 4)#t 0    0    #f        gambit)
@@ -1035,6 +1074,7 @@
 ("##s32vector-ref"                    (2)   #f ()    0    integer   extended)
 ("s32vector-set"                      (3)   #f 0     0    s32vector gambit)
 ("##s32vector-set"                    (3)   #f ()    0    s32vector extended)
+("##s32vector-set-small"              (3)   #f ()    0    s32vector extended)
 ("s32vector-set!"                     (3)   #t 0     0    #f        gambit)
 ("##s32vector-set!"                   (3)   #t ()    0    s32vector extended)
 ("s32vector-shrink!"                  (2)   #t 0     0    #f        gambit)
@@ -1042,7 +1082,9 @@
 ("s32vector?"                         (1)   #f 0     0    boolean   gambit)
 ("##s32vector?"                       (1)   #f ()    0    boolean   extended)
 ("##s32vector-insert"                 (3)   #f ()    0    s32vector extended)
+("##s32vector-insert-small"           (3)   #f ()    0    s32vector extended)
 ("##s32vector-delete"                 (2)   #f ()    0    s32vector extended)
+("##s32vector-delete-small"           (2)   #f ()    0    s32vector extended)
 
 ("append-u32vectors"                  (1)   #f 0     0    u32vector gambit)
 ("##append-u32vectors"                (1)   #f ()    0    u32vector extended)
@@ -1050,8 +1092,10 @@
 ("##list->u32vector"                  (1)   #f ()    0    u32vector extended)
 ("make-u32vector"                     (1 2) #f 0     0    u32vector gambit)
 ("##make-u32vector"                   (1 2) #f ()    0    u32vector extended)
+("##make-u32vector-small"             (1 2) #f ()    0    u32vector extended)
 ("subu32vector"                       (3)   #f 0     0    u32vector gambit)
 ("##subu32vector"                     (3)   #f ()    0    u32vector extended)
+("##subu32vector-small"               (3)   #f ()    0    u32vector extended)
 ("subu32vector-fill!"                 (4)   #t 0     0    #f        gambit)
 ("##subu32vector-fill!"               (4)   #t ()    0    #f        extended)
 ("subu32vector-move!"                 (5)   #t 0     0    #f        gambit)
@@ -1064,6 +1108,7 @@
 ("##u32vector-append"                 0     #f ()    0    u32vector extended)
 ("u32vector-copy"                     (1 2 3)#f 0    0    u32vector gambit)
 ("##u32vector-copy"                   (1 2 3)#f ()   0    u32vector extended)
+("##u32vector-copy-small"             (1 2 3)#f ()   0    u32vector extended)
 ("u32vector-copy!"                    (3 4 5)#t 0    0    #f        gambit)
 ("##u32vector-copy!"                  (3 4 5)#t ()   0    u32vector extended)
 ("u32vector-fill!"                    (2 3 4)#t 0    0    #f        gambit)
@@ -1074,6 +1119,7 @@
 ("##u32vector-ref"                    (2)   #f ()    0    integer   extended)
 ("u32vector-set"                      (3)   #f 0     0    u32vector gambit)
 ("##u32vector-set"                    (3)   #f ()    0    u32vector extended)
+("##u32vector-set-small"              (3)   #f ()    0    u32vector extended)
 ("u32vector-set!"                     (3)   #t 0     0    #f        gambit)
 ("##u32vector-set!"                   (3)   #t ()    0    u32vector extended)
 ("u32vector-shrink!"                  (2)   #t 0     0    #f        gambit)
@@ -1081,7 +1127,9 @@
 ("u32vector?"                         (1)   #f 0     0    boolean   gambit)
 ("##u32vector?"                       (1)   #f ()    0    boolean   extended)
 ("##u32vector-insert"                 (3)   #f ()    0    u32vector extended)
+("##u32vector-insert-small"           (3)   #f ()    0    u32vector extended)
 ("##u32vector-delete"                 (2)   #f ()    0    u32vector extended)
+("##u32vector-delete-small"           (2)   #f ()    0    u32vector extended)
 
 ("append-s64vectors"                  (1)   #f 0     0    s64vector gambit)
 ("##append-s64vectors"                (1)   #f ()    0    s64vector extended)
@@ -1089,8 +1137,10 @@
 ("##list->s64vector"                  (1)   #f ()    0    s64vector extended)
 ("make-s64vector"                     (1 2) #f 0     0    s64vector gambit)
 ("##make-s64vector"                   (1 2) #f ()    0    s64vector extended)
+("##make-s64vector-small"             (1 2) #f ()    0    s64vector extended)
 ("subs64vector"                       (3)   #f 0     0    s64vector gambit)
 ("##subs64vector"                     (3)   #f ()    0    s64vector extended)
+("##subs64vector-small"               (3)   #f ()    0    s64vector extended)
 ("subs64vector-fill!"                 (4)   #t 0     0    #f        gambit)
 ("##subs64vector-fill!"               (4)   #t ()    0    #f        extended)
 ("subs64vector-move!"                 (5)   #t 0     0    #f        gambit)
@@ -1103,6 +1153,7 @@
 ("##s64vector-append"                 0     #f ()    0    s64vector extended)
 ("s64vector-copy"                     (1 2 3)#f 0    0    s64vector gambit)
 ("##s64vector-copy"                   (1 2 3)#f ()   0    s64vector extended)
+("##s64vector-copy-small"             (1 2 3)#f ()   0    s64vector extended)
 ("s64vector-copy!"                    (3 4 5)#t 0    0    #f        gambit)
 ("##s64vector-copy!"                  (3 4 5)#t ()   0    s64vector extended)
 ("s64vector-fill!"                    (2 3 4)#t 0    0    #f        gambit)
@@ -1113,6 +1164,7 @@
 ("##s64vector-ref"                    (2)   #f ()    0    integer   extended)
 ("s64vector-set"                      (3)   #f 0     0    s64vector gambit)
 ("##s64vector-set"                    (3)   #f ()    0    s64vector extended)
+("##s64vector-set-small"              (3)   #f ()    0    s64vector extended)
 ("s64vector-set!"                     (3)   #t 0     0    #f        gambit)
 ("##s64vector-set!"                   (3)   #t ()    0    s64vector extended)
 ("s64vector-shrink!"                  (2)   #t 0     0    #f        gambit)
@@ -1120,7 +1172,9 @@
 ("s64vector?"                         (1)   #f 0     0    boolean   gambit)
 ("##s64vector?"                       (1)   #f ()    0    boolean   extended)
 ("##s64vector-insert"                 (3)   #f ()    0    s64vector extended)
+("##s64vector-insert-small"           (3)   #f ()    0    s64vector extended)
 ("##s64vector-delete"                 (2)   #f ()    0    s64vector extended)
+("##s64vector-delete-small"           (2)   #f ()    0    s64vector extended)
 
 ("append-u64vectors"                  (1)   #f 0     0    u64vector gambit)
 ("##append-u64vectors"                (1)   #f ()    0    u64vector extended)
@@ -1128,8 +1182,10 @@
 ("##list->u64vector"                  (1)   #f ()    0    u64vector extended)
 ("make-u64vector"                     (1 2) #f 0     0    u64vector gambit)
 ("##make-u64vector"                   (1 2) #f ()    0    u64vector extended)
+("##make-u64vector-small"             (1 2) #f ()    0    u64vector extended)
 ("subu64vector"                       (3)   #f 0     0    u64vector gambit)
 ("##subu64vector"                     (3)   #f ()    0    u64vector extended)
+("##subu64vector-small"               (3)   #f ()    0    u64vector extended)
 ("subu64vector-fill!"                 (4)   #t 0     0    #f        gambit)
 ("##subu64vector-fill!"               (4)   #t ()    0    #f        extended)
 ("subu64vector-move!"                 (5)   #t 0     0    #f        gambit)
@@ -1142,6 +1198,7 @@
 ("##u64vector-append"                 0     #f ()    0    u64vector extended)
 ("u64vector-copy"                     (1 2 3)#f 0    0    u64vector gambit)
 ("##u64vector-copy"                   (1 2 3)#f ()   0    u64vector extended)
+("##u64vector-copy-small"             (1 2 3)#f ()   0    u64vector extended)
 ("u64vector-copy!"                    (3 4 5)#t 0    0    #f        gambit)
 ("##u64vector-copy!"                  (3 4 5)#t ()   0    u64vector extended)
 ("u64vector-fill!"                    (2 3 4)#t 0    0    #f        gambit)
@@ -1152,6 +1209,7 @@
 ("##u64vector-ref"                    (2)   #f ()    0    integer   extended)
 ("u64vector-set"                      (3)   #f 0     0    u64vector gambit)
 ("##u64vector-set"                    (3)   #f ()    0    u64vector extended)
+("##u64vector-set-small"              (3)   #f ()    0    u64vector extended)
 ("u64vector-set!"                     (3)   #t 0     0    #f        gambit)
 ("##u64vector-set!"                   (3)   #t ()    0    u64vector extended)
 ("u64vector-shrink!"                  (2)   #t 0     0    #f        gambit)
@@ -1159,7 +1217,9 @@
 ("u64vector?"                         (1)   #f 0     0    boolean   gambit)
 ("##u64vector?"                       (1)   #f ()    0    boolean   extended)
 ("##u64vector-insert"                 (3)   #f ()    0    u64vector extended)
+("##u64vector-insert-small"           (3)   #f ()    0    u64vector extended)
 ("##u64vector-delete"                 (2)   #f ()    0    u64vector extended)
+("##u64vector-delete-small"           (2)   #f ()    0    u64vector extended)
 
 ("append-f32vectors"                  (1)   #f 0     0    f32vector gambit)
 ("##append-f32vectors"                (1)   #f ()    0    f32vector extended)
@@ -1167,8 +1227,10 @@
 ("##list->f32vector"                  (1)   #f ()    0    f32vector extended)
 ("make-f32vector"                     (1 2) #f 0     0    f32vector gambit)
 ("##make-f32vector"                   (1 2) #f ()    0    f32vector extended)
+("##make-f32vector-small"             (1 2) #f ()    0    f32vector extended)
 ("subf32vector"                       (3)   #f 0     0    f32vector gambit)
 ("##subf32vector"                     (3)   #f ()    0    f32vector extended)
+("##subf32vector-small"               (3)   #f ()    0    f32vector extended)
 ("subf32vector-fill!"                 (4)   #t 0     0    #f        gambit)
 ("##subf32vector-fill!"               (4)   #t ()    0    #f        extended)
 ("subf32vector-move!"                 (5)   #t 0     0    #f        gambit)
@@ -1181,6 +1243,7 @@
 ("##f32vector-append"                 0     #f ()    0    f32vector extended)
 ("f32vector-copy"                     (1 2 3)#f 0    0    f32vector gambit)
 ("##f32vector-copy"                   (1 2 3)#f ()   0    f32vector extended)
+("##f32vector-copy-small"             (1 2 3)#f ()   0    f32vector extended)
 ("f32vector-copy!"                    (3 4 5)#t 0    0    #f        gambit)
 ("##f32vector-copy!"                  (3 4 5)#t ()   0    f32vector extended)
 ("f32vector-fill!"                    (2 3 4)#t 0    0    #f        gambit)
@@ -1191,6 +1254,7 @@
 ("##f32vector-ref"                    (2)   #f ()    0    flonum    extended)
 ("f32vector-set"                      (3)   #f 0     0    f32vector gambit)
 ("##f32vector-set"                    (3)   #f ()    0    f32vector extended)
+("##f32vector-set-small"              (3)   #f ()    0    f32vector extended)
 ("f32vector-set!"                     (3)   #t 0     0    #f        gambit)
 ("##f32vector-set!"                   (3)   #t ()    0    f32vector extended)
 ("f32vector-shrink!"                  (2)   #t 0     0    #f        gambit)
@@ -1198,7 +1262,9 @@
 ("f32vector?"                         (1)   #f 0     0    boolean   gambit)
 ("##f32vector?"                       (1)   #f ()    0    boolean   extended)
 ("##f32vector-insert"                 (3)   #f ()    0    f32vector extended)
+("##f32vector-insert-small"           (3)   #f ()    0    f32vector extended)
 ("##f32vector-delete"                 (2)   #f ()    0    f32vector extended)
+("##f32vector-delete-small"           (2)   #f ()    0    f32vector extended)
 
 ("append-f64vectors"                  (1)   #f 0     0    f64vector gambit)
 ("##append-f64vectors"                (1)   #f ()    0    f64vector extended)
@@ -1206,8 +1272,10 @@
 ("##list->f64vector"                  (1)   #f ()    0    f64vector extended)
 ("make-f64vector"                     (1 2) #f 0     0    f64vector gambit)
 ("##make-f64vector"                   (1 2) #f ()    0    f64vector extended)
+("##make-f64vector-small"             (1 2) #f ()    0    f64vector extended)
 ("subf64vector"                       (3)   #f 0     0    f64vector gambit)
 ("##subf64vector"                     (3)   #f ()    0    f64vector extended)
+("##subf64vector-small"               (3)   #f ()    0    f64vector extended)
 ("subf64vector-fill!"                 (4)   #t 0     0    #f        gambit)
 ("##subf64vector-fill!"               (4)   #t ()    0    #f        extended)
 ("subf64vector-move!"                 (5)   #t 0     0    #f        gambit)
@@ -1220,6 +1288,7 @@
 ("##f64vector-append"                 0     #f ()    0    f64vector extended)
 ("f64vector-copy"                     (1 2 3)#f 0    0    f64vector gambit)
 ("##f64vector-copy"                   (1 2 3)#f ()   0    f64vector extended)
+("##f64vector-copy-small"             (1 2 3)#f ()   0    f64vector extended)
 ("f64vector-copy!"                    (3 4 5)#t 0    0    #f        gambit)
 ("##f64vector-copy!"                  (3 4 5)#t ()   0    f64vector extended)
 ("f64vector-fill!"                    (2 3 4)#t 0    0    #f        gambit)
@@ -1230,6 +1299,7 @@
 ("##f64vector-ref"                    (2)   #f ()    0    flonum    extended)
 ("f64vector-set"                      (3)   #f 0     0    f64vector gambit)
 ("##f64vector-set"                    (3)   #f ()    0    f64vector extended)
+("##f64vector-set-small"              (3)   #f ()    0    f64vector extended)
 ("f64vector-set!"                     (3)   #t 0     0    #f        gambit)
 ("##f64vector-set!"                   (3)   #t ()    0    f64vector extended)
 ("f64vector-shrink!"                  (2)   #t 0     0    #f        gambit)
@@ -1237,7 +1307,9 @@
 ("f64vector?"                         (1)   #f 0     0    boolean   gambit)
 ("##f64vector?"                       (1)   #f ()    0    boolean   extended)
 ("##f64vector-insert"                 (3)   #f ()    0    f64vector extended)
+("##f64vector-insert-small"           (3)   #f ()    0    f64vector extended)
 ("##f64vector-delete"                 (2)   #f ()    0    f64vector extended)
+("##f64vector-delete-small"           (2)   #f ()    0    f64vector extended)
 
 ;; symbol
 
@@ -1310,12 +1382,16 @@
 ("##values?"                          (1)   #f ()    0    boolean extended)
 ("##values"                           0     #f ()    0    (#f)    extended)
 ("##make-values"                      (1 2) #f ()    0    (#f)    extended)
+("##make-values-small"                (1 2) #f ()    0    (#f)    extended)
 ("##values-length"                    (1)   #f ()    0    fixnum  extended)
 ("##values-ref"                       (2)   #f ()    0    (#f)    extended)
 ("##values-set!"                      (3)   #t ()    0    (#f)    extended)
 ("##values-set"                       (3)   #f ()    0    (#f)    extended)
+("##values-set-small"                 (3)   #f ()    0    (#f)    extended)
 ("##values-insert"                    (3)   #f ()    0    (#f)    extended)
+("##values-insert-small"              (3)   #f ()    0    (#f)    extended)
 ("##values-delete"                    (2)   #f ()    0    (#f)    extended)
+("##values-delete-small"              (2)   #f ()    0    (#f)    extended)
 
 ;; table
 
@@ -2586,6 +2662,54 @@
             check-run-time-binding
             generic-call
             generic-call))))))
+
+(define (make-0-or-1-args-expander gen0 gen1)
+  (lambda (ptree oper args generate-call check-run-time-binding)
+    (let* ((source
+            (node-source ptree))
+           (env
+            (node-env ptree))
+           (vars
+            (gen-temp-vars source args))
+           (generic-call
+            (lambda ()
+              (generate-call vars #f))) ;; handle other cases
+           (gen
+            (if (null? args)
+                gen0
+                gen1)))
+      (gen-prc source env
+        vars
+        (gen source
+             env
+             vars
+             check-run-time-binding
+             generic-call
+             generic-call)))))
+
+(define (make-1-or-2-args-expander gen1 gen2)
+  (lambda (ptree oper args generate-call check-run-time-binding)
+    (let* ((source
+            (node-source ptree))
+           (env
+            (node-env ptree))
+           (vars
+            (gen-temp-vars source args))
+           (generic-call
+            (lambda ()
+              (generate-call vars #f))) ;; handle other cases
+           (gen
+            (if (and (pair? args) (null? (cdr args)))
+                gen1
+                gen2)))
+      (gen-prc source env
+        vars
+        (gen source
+             env
+             vars
+             check-run-time-binding
+             generic-call
+             generic-call)))))
 
 (define (make-nary-generator zero one two-or-more)
   (lambda (source env vars out-of-line)
@@ -4608,12 +4732,14 @@
 
 (define (setup-vector-primitives)
 
-  (define **fixnum?-sym (string->canonical-symbol "##fixnum?"))
-  (define **flonum?-sym (string->canonical-symbol "##flonum?"))
-  (define **char?-sym   (string->canonical-symbol "##char?"))
-  (define **fx<-sym     (string->canonical-symbol "##fx<"))
-  (define **fx<=-sym    (string->canonical-symbol "##fx<="))
-  (define **mutable?-sym (string->canonical-symbol "##mutable?"))
+  (define **fixnum?-sym     (string->canonical-symbol "##fixnum?"))
+  (define **flonum?-sym     (string->canonical-symbol "##flonum?"))
+  (define **char?-sym       (string->canonical-symbol "##char?"))
+  (define **fx<-sym         (string->canonical-symbol "##fx<"))
+  (define **fx<=-sym        (string->canonical-symbol "##fx<="))
+  (define **fxnegative?-sym (string->canonical-symbol "##fxnegative?"))
+  (define **mutable?-sym    (string->canonical-symbol "##mutable?"))
+  (define **not?-sym        (string->canonical-symbol "##not"))
 
   (define **string?-sym          (string->canonical-symbol "##string?"))
   (define **string-length-sym    (string->canonical-symbol "##string-length"))
@@ -4733,7 +4859,25 @@
                         hi))))))
       interval-check))
 
+  (define (gen-fixnum-nonneg-check source env var)
+    (let* ((fixnum-check
+            (gen-call-prim-vars-notsafe source env
+              **fixnum?-sym
+              (list var)))
+           (nonneg-check
+            (gen-call-prim-notsafe source env
+              **not-sym
+              (list (gen-call-prim-vars-notsafe source env
+                      **fxnegative?-sym
+                      (list var)))))
+           (fixnum-nonneg-check
+            (new-conj source env
+              fixnum-check
+              nonneg-check)))
+      fixnum-nonneg-check))
+
   (define (make-vector-expanders
+           vect-kind
            make-vect-str
            subvect-str
            vect-copy-str
@@ -4744,10 +4888,15 @@
            vect-cas!-str
            vect-inc!-str
            **make-vect-str
+           **make-vect-small-str
            **subvect-str
+           **subvect-small-str
            **vect-copy-str
+           **vect-copy-small-str
            **vect-insert-str
+           **vect-insert-small-str
            **vect-delete-str
+           **vect-delete-small-str
            **vect?-str
            **vect-length-str
            **vect-ref-str
@@ -4755,12 +4904,19 @@
            **vect-cas!-str
            **vect-inc!-str
            value-checker)
-    (let ((vect?-sym (string->canonical-symbol vect?-str))
+    (let ((make-vect-sym (string->canonical-symbol make-vect-str))
+          (subvect-sym (string->canonical-symbol subvect-str))
+          (vect-copy-sym (string->canonical-symbol vect-copy-str))
+          (vect?-sym (string->canonical-symbol vect?-str))
           (vect-length-sym (string->canonical-symbol vect-length-str))
           (vect-ref-sym (string->canonical-symbol vect-ref-str))
           (vect-set!-sym (string->canonical-symbol vect-set!-str))
           (vect-cas!-sym (and vect-cas!-str (string->canonical-symbol vect-cas!-str)))
           (vect-inc!-sym (and vect-inc!-str (string->canonical-symbol vect-inc!-str)))
+          (**make-vect-sym (string->canonical-symbol **make-vect-str))
+          (**make-vect-small-sym (string->canonical-symbol **make-vect-small-str))
+          (**subvect-sym (string->canonical-symbol **subvect-str))
+          (**vect-copy-sym (string->canonical-symbol **vect-copy-str))
           (**vect?-sym (string->canonical-symbol **vect?-str))
           (**vect-length-sym (string->canonical-symbol **vect-length-str))
           (**vect-ref-sym (string->canonical-symbol **vect-ref-str))
@@ -4768,10 +4924,13 @@
           (**vect-cas!-sym (and **vect-cas!-str (string->canonical-symbol **vect-cas!-str)))
           (**vect-inc!-sym (and **vect-inc!-str (string->canonical-symbol **vect-inc!-str))))
 
-      (define (gen-type-check source env vect-arg)
+      (define (gen-vect-type-check source env vect-arg)
         (gen-call-prim-vars-notsafe source env
           **vect?-sym
           (list vect-arg)))
+
+      (define (gen-size-check source env size-arg)
+        (gen-fixnum-nonneg-check source env size-arg))
 
       (define (gen-mutability-check source env vect-arg)
         (gen-call-prim-vars-notsafe source env
@@ -4788,6 +4947,81 @@
             (list vect-arg))
           #f))
 
+      (define (make-make-vect-expander type-check?)
+        (lambda (ptree oper args generate-call check-run-time-binding)
+          (let* ((source
+                  (node-source ptree))
+                 (env
+                  (node-env ptree))
+                 (vars
+                  (gen-temp-vars source args))
+                 (arg1
+                  (car vars))
+                 (size-check
+                  (and type-check?
+                       (gen-size-check source env arg1)))
+                 (value-check
+                  (and type-check?
+                       value-checker
+                       (pair? (cdr vars))
+                       (value-checker source env (cadr vars))))
+                 (size-value-check
+                  (if (and size-check value-check)
+                      (new-conj source env
+                        size-check
+                        value-check)
+                      (or size-check value-check)))
+                 (checks
+                  (if check-run-time-binding
+                      (let ((rtb-check (check-run-time-binding)))
+                        (if size-value-check
+                            (new-conj source env
+                              rtb-check
+                              size-value-check)
+                            rtb-check))
+                      size-value-check)))
+
+            (define (call-make-vect small? env)
+              (gen-call-prim-vars-notsafe source env
+               (if small? **make-vect-small-sym **make-vect-sym)
+               vars))
+
+            (define (call-make-vect-possibly-small-alloc env)
+              (let* ((limit
+                      (allocation-limit env))
+                     (max-small-alloc
+                      (target-max-small-allocation targ))
+                     (max-limit
+                      (or (and max-small-alloc
+                               (max-small-alloc vect-kind))
+                          -1)))
+                (cond ((or (< max-limit 0)
+                           (eq? limit #f))
+                       (call-make-vect #f env))
+                      ((or (eq? limit #t)
+                           (> limit max-limit))
+                       (new-tst source env
+                         (gen-call-prim-notsafe source env
+                           **fx<=-sym
+                           (list (new-ref source env
+                                   arg1)
+                                 (new-cst source env
+                                   max-limit)))
+                         (call-make-vect #t env)
+                         (call-make-vect #f env)))
+                      (else
+                       (call-make-vect (<= limit max-limit) env)))))
+
+            (gen-prc source env
+              vars
+              (if checks
+                (new-tst source env
+                  checks
+                  (call-make-vect-possibly-small-alloc env)
+                  (generate-call vars
+                                 (not check-run-time-binding)))
+                (call-make-vect-possibly-small-alloc env))))))
+
       (define (make-length-expander type-check?)
         (lambda (ptree oper args generate-call check-run-time-binding)
           (let* ((source
@@ -4800,7 +5034,7 @@
                   (car vars))
                  (type-check
                   (and type-check?
-                       (gen-type-check source env arg1)))
+                       (gen-vect-type-check source env arg1)))
                  (checks
                   (if check-run-time-binding
                     (let ((rtb-check (check-run-time-binding)))
@@ -4838,7 +5072,7 @@
                   (cadr vars))
                  (type-check
                   (and type-check?
-                       (gen-type-check source env arg1)))
+                       (gen-vect-type-check source env arg1)))
                  (mutability-check
                   (and (not (eq? kind 'ref))
                        type-check
@@ -4902,6 +5136,19 @@
                                    (not check-run-time-binding)))
                   call-prim)))))
 
+      ;; inline make-vect and ##make-vect is target supports small allocations
+
+      (if (target-max-small-allocation targ)
+          (begin
+
+           (def-exp
+            make-vect-str
+            (make-make-vect-expander #t))
+
+           (def-exp
+            **make-vect-str
+            (make-make-vect-expander #f))))
+
       (def-exp
        vect-length-str
        (make-length-expander #t))
@@ -4925,6 +5172,7 @@
             (make-ref-set!-cas!-inc!-expander #t 'inc!)))))
 
   (make-vector-expanders
+   'vector
    "make-vector"
    "subvector"
    "vector-copy"
@@ -4935,10 +5183,15 @@
    "vector-cas!"
    "vector-inc!"
    "##make-vector"
+   "##make-vector-small"
    "##subvector"
+   "##subvector-small"
    "##vector-copy"
+   "##vector-copy-small"
    "##vector-insert"
+   "##vector-insert-small"
    "##vector-delete"
+   "##vector-delete-small"
    "##vector?"
    "##vector-length"
    "##vector-ref"
@@ -4948,6 +5201,7 @@
    #f)
 
   (make-vector-expanders
+   'string
    "make-string"
    "substring"
    "string-copy"
@@ -4958,10 +5212,15 @@
    #f
    #f
    "##make-string"
+   "##make-string-small"
    "##substring"
+   "##substring-small"
    "##string-copy"
+   "##string-copy-small"
    "##string-insert"
+   "##string-insert-small"
    "##string-delete"
+   "##string-delete-small"
    "##string?"
    "##string-length"
    "##string-ref"
@@ -4974,6 +5233,7 @@
        (list var))))
 
   (make-vector-expanders
+   's8vector
    "make-s8vector"
    "subs8vector"
    "s8vector-copy"
@@ -4984,10 +5244,15 @@
    #f
    #f
    "##make-s8vector"
+   "##make-s8vector-small"
    "##subs8vector"
+   "##subs8vector-small"
    "##s8vector-copy"
+   "##s8vector-copy-small"
    "##s8vector-insert"
+   "##s8vector-insert-small"
    "##s8vector-delete"
+   "##s8vector-delete-small"
    "##s8vector?"
    "##s8vector-length"
    "##s8vector-ref"
@@ -4997,6 +5262,7 @@
    (make-fixnum-interval-checker -128 127))
 
   (make-vector-expanders
+   'u8vector
    "make-u8vector"
    "subu8vector"
    "u8vector-copy"
@@ -5007,10 +5273,15 @@
    #f
    #f
    "##make-u8vector"
+   "##make-u8vector-small"
    "##subu8vector"
+   "##subu8vector-small"
    "##u8vector-copy"
+   "##u8vector-copy-small"
    "##u8vector-insert"
+   "##u8vector-insert-small"
    "##u8vector-delete"
+   "##u8vector-delete-small"
    "##u8vector?"
    "##u8vector-length"
    "##u8vector-ref"
@@ -5020,6 +5291,7 @@
    (make-fixnum-interval-checker 0 255))
 
   (make-vector-expanders
+   's16vector
    "make-s16vector"
    "subs16vector"
    "s16vector-copy"
@@ -5030,10 +5302,15 @@
    #f
    #f
    "##make-s16vector"
+   "##make-s16vector-small"
    "##subs16vector"
+   "##subs16vector-small"
    "##s16vector-copy"
+   "##s16vector-copy-small"
    "##s16vector-insert"
+   "##s16vector-insert-small"
    "##s16vector-delete"
+   "##s16vector-delete-small"
    "##s16vector?"
    "##s16vector-length"
    "##s16vector-ref"
@@ -5043,6 +5320,7 @@
    (make-fixnum-interval-checker -32768 32767))
 
   (make-vector-expanders
+   'u16vector
    "make-u16vector"
    "subu16vector"
    "u16vector-copy"
@@ -5053,10 +5331,15 @@
    #f
    #f
    "##make-u16vector"
+   "##make-u16vector-small"
    "##subu16vector"
+   "##subu16vector-small"
    "##u16vector-copy"
+   "##u16vector-copy-small"
    "##u16vector-insert"
+   "##u16vector-insert-small"
    "##u16vector-delete"
+   "##u16vector-delete-small"
    "##u16vector?"
    "##u16vector-length"
    "##u16vector-ref"
@@ -5067,6 +5350,7 @@
 
 #;
   (make-vector-expanders
+   's32vector
    "make-s32vector"
    "subs32vector"
    "s32vector-copy"
@@ -5077,10 +5361,15 @@
    #f
    #f
    "##make-s32vector"
+   "##make-s32vector-small"
    "##subs32vector"
+   "##subs32vector-small"
    "##s32vector-copy"
+   "##s32vector-copy-small"
    "##s32vector-insert"
+   "##s32vector-insert-small"
    "##s32vector-delete"
+   "##s32vector-delete-small"
    "##s32vector?"
    "##s32vector-length"
    "##s32vector-ref"
@@ -5091,6 +5380,7 @@
 
 #;
   (make-vector-expanders
+   'u32vector
    "make-u32vector"
    "subu32vector"
    "u32vector-copy"
@@ -5101,10 +5391,15 @@
    #f
    #f
    "##make-u32vector"
+   "##make-u32vector-small"
    "##subu32vector"
+   "##subu32vector-small"
    "##u32vector-copy"
+   "##u32vector-copy-small"
    "##u32vector-insert"
+   "##u32vector-insert-small"
    "##u32vector-delete"
+   "##u32vector-delete-small"
    "##u32vector?"
    "##u32vector-length"
    "##u32vector-ref"
@@ -5115,6 +5410,7 @@
 
 #;
   (make-vector-expanders
+   's64vector
    "make-s64vector"
    "subs64vector"
    "s64vector-copy"
@@ -5125,10 +5421,15 @@
    #f
    #f
    "##make-s64vector"
+   "##make-s64vector-small"
    "##subs64vector"
+   "##subs64vector-small"
    "##s64vector-copy"
+   "##s64vector-copy-small"
    "##s64vector-insert"
+   "##s64vector-insert-small"
    "##s64vector-delete"
+   "##s64vector-delete-small"
    "##s64vector?"
    "##s64vector-length"
    "##s64vector-ref"
@@ -5139,6 +5440,7 @@
 
 #;
   (make-vector-expanders
+   'u64vector
    "make-u64vector"
    "subu64vector"
    "u64vector-copy"
@@ -5149,10 +5451,15 @@
    #f
    #f
    "##make-u64vector"
+   "##make-u64vector-small"
    "##subu64vector"
+   "##subu64vector-small"
    "##u64vector-copy"
+   "##u64vector-copy-small"
    "##u64vector-insert"
+   "##u64vector-insert-small"
    "##u64vector-delete"
+   "##u64vector-delete-small"
    "##u64vector?"
    "##u64vector-length"
    "##u64vector-ref"
@@ -5162,6 +5469,7 @@
    (make-fixnum-interval-checker 0 18446744073709551615))
 
   (make-vector-expanders
+   'f32vector
    "make-f32vector"
    "subf32vector"
    "f32vector-copy"
@@ -5172,10 +5480,15 @@
    #f
    #f
    "##make-f32vector"
+   "##make-f32vector-small"
    "##subf32vector"
+   "##subf32vector-small"
    "##f32vector-copy"
+   "##f32vector-copy-small"
    "##f32vector-insert"
+   "##f32vector-insert-small"
    "##f32vector-delete"
+   "##f32vector-delete-small"
    "##f32vector?"
    "##f32vector-length"
    "##f32vector-ref"
@@ -5185,6 +5498,7 @@
    (make-flonum-checker))
 
   (make-vector-expanders
+   'f64vector
    "make-f64vector"
    "subf64vector"
    "f64vector-copy"
@@ -5195,10 +5509,15 @@
    #f
    #f
    "##make-f64vector"
+   "##make-f64vector-small"
    "##subf64vector"
+   "##subf64vector-small"
    "##f64vector-copy"
+   "##f64vector-copy-small"
    "##f64vector-insert"
+   "##f64vector-insert-small"
    "##f64vector-delete"
+   "##f64vector-delete-small"
    "##f64vector?"
    "##f64vector-length"
    "##f64vector-ref"
@@ -5225,7 +5544,7 @@
   (define **unchecked-structure-cas!-sym
     (string->canonical-symbol "##unchecked-structure-cas!"))
 
-  (define (gen-type-check source env obj-arg type-arg)
+  (define (gen-structure-type-check source env obj-arg type-arg)
     (gen-call-prim-notsafe source env
       **structure-direct-instance-of?-sym
       (list (new-ref source env
@@ -5247,7 +5566,7 @@
              (type-var
               (list-ref vars (case kind ((ref) 2) ((set!) 3) (else 4))))
              (type-check
-              (gen-type-check source env obj-var type-var))
+              (gen-structure-type-check source env obj-var type-var))
              (call-prim
               (gen-call-prim-vars-notsafe source env
                 (case kind
@@ -5291,54 +5610,6 @@
 
   (define **char-input-port?-cached-sym (string->canonical-symbol "##char-input-port?-cached"))
   (define **char-output-port?-cached-sym (string->canonical-symbol "##char-output-port?-cached"))
-
-  (define (make-0-or-1-args-expander gen0 gen1)
-    (lambda (ptree oper args generate-call check-run-time-binding)
-      (let* ((source
-              (node-source ptree))
-             (env
-              (node-env ptree))
-             (vars
-              (gen-temp-vars source args))
-             (generic-call
-              (lambda ()
-                (generate-call vars #f))) ;; handle other cases
-             (gen
-              (if (null? args)
-                  gen0
-                  gen1)))
-        (gen-prc source env
-          vars
-          (gen source
-               env
-               vars
-               check-run-time-binding
-               generic-call
-               generic-call)))))
-
-  (define (make-1-or-2-args-expander gen1 gen2)
-    (lambda (ptree oper args generate-call check-run-time-binding)
-      (let* ((source
-              (node-source ptree))
-             (env
-              (node-env ptree))
-             (vars
-              (gen-temp-vars source args))
-             (generic-call
-              (lambda ()
-                (generate-call vars #f))) ;; handle other cases
-             (gen
-              (if (and (pair? args) (null? (cdr args)))
-                  gen1
-                  gen2)))
-        (gen-prc source env
-          vars
-          (gen source
-               env
-               vars
-               check-run-time-binding
-               generic-call
-               generic-call)))))
 
   (def-exp "##peek-char0"
            (make-simple-expander

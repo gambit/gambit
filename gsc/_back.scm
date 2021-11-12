@@ -95,6 +95,13 @@
 ;;              option depends on the target and some targets may
 ;;              ignore it.
 ;;
+;; max-small-allocation  Procedure (lambda (vect-kind) ...)
+;;              If the concept of a small allocaiton is supported by the
+;;              target max-small-allocation is a procedure that returns
+;;              an integer denoting the maximum size of a small allocation
+;;              for the vector "vect-kind".  Otherwise max-small-allocation
+;;              is #f.
+;;
 ;; prim-info    Procedure (lambda (name) ...)
 ;;              This procedure is used to get information about the
 ;;              Scheme primitive procedures built into the system (not
@@ -147,7 +154,7 @@
                      semantics-preserving-options
                      extra)
 
-  (define current-target-version 14) ;; number for this version of the module
+  (define current-target-version 15) ;; number for this version of the module
 
   (define common-semantics-changing-options
     '((nb-gvm-regs fixnum)
@@ -161,7 +168,7 @@
       (compiler-internal-error
        "make-target, version of target module is not current" name))
 
-  (let ((targ (make-vector (+ 21 extra))))
+  (let ((targ (make-vector (+ 22 extra))))
 
     (vector-set! targ 0 'target)
     (vector-set! targ 1 name)
@@ -180,6 +187,10 @@
      targ
      (lambda (nb-args)
        (default-jump-info targ nb-args)))
+
+    (target-max-small-allocation-set!
+     targ
+     #f) ;; by default the target does not support inlining small allocations
 
     targ))
 
@@ -205,25 +216,27 @@
 (define (target-nb-arg-regs-set! x y)       (vector-set! x 11 y))
 (define (target-compactness x)              (vector-ref x 12))
 (define (target-compactness-set! x y)       (vector-set! x 12 y))
-(define (target-prim-info x)                (vector-ref x 13))
-(define (target-prim-info-set! x y)         (vector-set! x 13 y))
-(define (target-label-info x)               (vector-ref x 14))
-(define (target-label-info-set! x y)        (vector-set! x 14 y))
-(define (target-jump-info x)                (vector-ref x 15))
-(define (target-jump-info-set! x y)         (vector-set! x 15 y))
-(define (target-frame-constraints x)        (vector-ref x 16))
-(define (target-frame-constraints-set! x y) (vector-set! x 16 y))
-(define (target-proc-result x)              (vector-ref x 17))
-(define (target-proc-result-set! x y)       (vector-set! x 17 y))
-(define (target-switch-testable? x)         (vector-ref x 18))
-(define (target-switch-testable?-set! x y)  (vector-set! x 18 y))
-(define (target-eq-testable? x)             (vector-ref x 19))
-(define (target-eq-testable?-set! x y)      (vector-set! x 19 y))
-(define (target-object-type x)              (vector-ref x 20))
-(define (target-object-type-set! x y)       (vector-set! x 20 y))
+(define (target-max-small-allocation x)     (vector-ref x 13))
+(define (target-max-small-allocation-set! x y) (vector-set! x 13 y))
+(define (target-prim-info x)                (vector-ref x 14))
+(define (target-prim-info-set! x y)         (vector-set! x 14 y))
+(define (target-label-info x)               (vector-ref x 15))
+(define (target-label-info-set! x y)        (vector-set! x 15 y))
+(define (target-jump-info x)                (vector-ref x 16))
+(define (target-jump-info-set! x y)         (vector-set! x 16 y))
+(define (target-frame-constraints x)        (vector-ref x 17))
+(define (target-frame-constraints-set! x y) (vector-set! x 17 y))
+(define (target-proc-result x)              (vector-ref x 18))
+(define (target-proc-result-set! x y)       (vector-set! x 18 y))
+(define (target-switch-testable? x)         (vector-ref x 19))
+(define (target-switch-testable?-set! x y)  (vector-set! x 19 y))
+(define (target-eq-testable? x)             (vector-ref x 20))
+(define (target-eq-testable?-set! x y)      (vector-set! x 20 y))
+(define (target-object-type x)              (vector-ref x 21))
+(define (target-object-type-set! x y)       (vector-set! x 21 y))
 
-(define (target-extra x i)                  (vector-ref x (+ 21 i)))
-(define (target-extra-set! x i y)           (vector-set! x (+ 21 i) y))
+(define (target-extra x i)                  (vector-ref x (+ 22 i)))
+(define (target-extra-set! x i y)           (vector-set! x (+ 22 i) y))
 
 ;;;; Frame constraints structure
 
@@ -536,10 +549,13 @@
 (define (mostly-arith-implementation name env)
   (declaration-value 'mostly-arith name mostly-fixnum-flonum-sym env))
 
-(define-parameterized-decl allocation-limit-sym)
+(define-parameterized-decl allocation-limit-sym #t)
 
 (define (allocation-limit env) ;; returns the allocation limit
-  (max 0 (min 1000000 (declaration-value allocation-limit-sym #f 0 env))))
+  (let ((val (declaration-value allocation-limit-sym #f #t env)))
+    (if (boolean? val)
+        val
+        (max 0 (min 1000000 val)))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

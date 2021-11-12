@@ -160,7 +160,7 @@
 ;; Initialization/finalization of back-end.
 (define (x86-setup arch)
   (let ((targ
-         (make-target 14
+         (make-target 15
                       arch
                       '((".asm" . nasm))
                       '()

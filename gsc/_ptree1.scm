@@ -492,7 +492,7 @@
 
 (define-boolean-decl inline-sym)
 (define-namable-boolean-decl inline-primitives-sym)
-(define-parameterized-decl inlining-limit-sym)
+(define-parameterized-decl inlining-limit-sym #f)
 
 (define-flag-decl block-sym    'compilation-strategy)
 (define-flag-decl separate-sym 'compilation-strategy)
@@ -2667,30 +2667,42 @@
                      "Declaration name must be an identifier"))
 
                   ((assq id flag-declarations)
-                   (cond ((not pos)
-                          (pt-syntax-error
-                            id-source
-                            "Declaration can't be negated"))
-                         ((null? (cdr x))
-                          (flag-decl
-                            source
-                            (cdr (assq id flag-declarations))
-                            id))
-                         (else
-                          (pt-syntax-error source "Ill-formed declaration"))))
+                   =>
+                   (lambda (decl)
+                     (cond ((not pos)
+                            (pt-syntax-error
+                             id-source
+                             "Declaration can't be negated"))
+                           ((null? (cdr x))
+                            (flag-decl
+                             source
+                             (cdr decl)
+                             id))
+                           (else
+                            (pt-syntax-error source
+                                             "Ill-formed declaration")))))
 
-                  ((memq id parameterized-declarations)
-                   (cond ((not pos)
-                          (pt-syntax-error
-                            id-source
-                            "Declaration can't be negated"))
-                         ((eqv? (proper-length x) 2)
-                          (let ((parm (source->expression (cadr x))))
-                            (if (not (and (integer? parm) (exact? parm)))
-                              (pt-syntax-error source "Exact integer expected")
-                              (parameterized-decl source id parm))))
-                         (else
-                          (pt-syntax-error source "Ill-formed declaration"))))
+                  ((assq id parameterized-declarations)
+                   =>
+                   (lambda (decl)
+                     (cond ((not pos)
+                            (pt-syntax-error
+                             id-source
+                             "Declaration can't be negated"))
+                           ((eqv? (proper-length x) 2)
+                            (let ((parm (source->expression (cadr x)))
+                                  (allow-boolean (cdr decl)))
+                              (if (or (and (boolean? parm) allow-boolean)
+                                      (and (integer? parm) (exact? parm)))
+                                  (parameterized-decl source id parm)
+                                  (pt-syntax-error
+                                   source
+                                   (if allow-boolean
+                                       "Exact integer or boolean expected"
+                                       "Exact integer expected")))))
+                           (else
+                            (pt-syntax-error source
+                                             "Ill-formed declaration")))))
 
                   ((memq id boolean-declarations)
                    (if (null? (cdr x))
@@ -2698,16 +2710,18 @@
                      (pt-syntax-error source "Ill-formed declaration")))
 
                   ((assq id namable-declarations)
-                   (cond ((not pos)
-                          (pt-syntax-error
-                            id-source
-                            "Declaration can't be negated"))
-                         (else
-                          (namable-decl
-                            source
-                            (cdr (assq id namable-declarations))
-                            id
-                            (extract-names source (cdr x))))))
+                   =>
+                   (lambda (decl)
+                     (cond ((not pos)
+                            (pt-syntax-error
+                             id-source
+                             "Declaration can't be negated"))
+                           (else
+                            (namable-decl
+                             source
+                             (cdr decl)
+                             id
+                             (extract-names source (cdr x)))))))
 
                   ((memq id namable-boolean-declarations)
                    (namable-boolean-decl

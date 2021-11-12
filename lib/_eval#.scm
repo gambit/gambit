@@ -292,7 +292,10 @@
   `(##list->vector (##cons ,rte ,lst)))
 
 (##define-macro (macro-make-rte* rte ns)
-  `(let (($rte (##make-vector (##fx+ ,ns 1) '#!unbound)))
+  `(let (($rte
+          (let ()
+            (declare (not inline-primitives ##make-vector))
+            (##make-vector (##fx+ ,ns 1) '#!unbound))))
      (##vector-set! $rte 0 ,rte)
      $rte))
 

@@ -260,8 +260,8 @@
   (set! flag-declarations (cons (cons name type) flag-declarations))
   '())
 
-(define (define-parameterized-decl name)
-  (set! parameterized-declarations (cons name parameterized-declarations))
+(define (define-parameterized-decl name allow-boolean)
+  (set! parameterized-declarations (cons (cons name allow-boolean) parameterized-declarations))
   '())
 
 (define (define-boolean-decl name)

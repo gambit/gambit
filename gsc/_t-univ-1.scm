@@ -301,7 +301,7 @@
       (label-namespace string)))
 
   (let ((targ
-         (make-target 14
+         (make-target 15
                       target-language
                       file-extensions
                       (append semantics-changing-options
