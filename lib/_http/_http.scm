@@ -4,6 +4,7 @@
 
 ;;; Copyright (c) 2019-2020 by Frédéric Hamel, All Rights Reserved.
 ;;; Copyright (c) 2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2020 by David Wilson, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -220,7 +221,7 @@
 
 
 ;;; (http-get (list host: "foo.com" port: 80)
-(define (http-get-aux url ver encode?)
+(define (http-get-aux url ver encode? headers)
   (let ((uri (string->uri (if encode?
                             (encode-for-uri url)
                             url) #f)))
@@ -265,10 +266,17 @@
 
           (print
             port: port
-            (list
-              "GET " path " " ver eol
-              "Host: " host eol
-              eol))
+            (list "GET " path " " ver eol
+                  "Host: " host eol))
+
+          (when headers
+            (for-each (lambda (header-pair)
+                        (print
+                          port: port
+                          (list (symbol->string (car header-pair)) ": " (cdr header-pair) eol)))
+                      headers))
+
+          (print port: port eol)
 
           ;(display "GET " port)
           ;(display path port)
@@ -285,24 +293,17 @@
             (vector header body)))))))
 
 (define (http-get url
-                  #!optional
-                  (ver (macro-absent-obj))
-                  (enc? (macro-absent-obj)))
-  (macro-force-vars (url ver)
-    (let ((http-version (if (or (eq? ver (macro-absent-obj))
-                                (eq? ver #f))
+                  #!key
+                  (version (macro-absent-obj))
+                  (encode-url? (macro-absent-obj))
+                  (headers (macro-absent-obj)))
+  (macro-force-vars (url version)
+    (let ((http-version (if (or (eq? version (macro-absent-obj))
+                                (eq? version #f))
                           'HTTP/1.1
-                          ver))
-          (encode? (if (eq? enc? (macro-absent-obj))
+                          version))
+          (encode? (if (eq? encode-url? (macro-absent-obj))
                      #t
-                     enc?)))
-      (macro-check-string
-        url
-        1
-        (http-get url ver enc?)
-        (macro-check-symbol
-          http-version
-          3
-          (http-get url ver enc?)
-          (http-get-aux url http-version encode?))))))
+                     encode-url?)))
 
+      (http-get-aux url http-version encode? headers))))

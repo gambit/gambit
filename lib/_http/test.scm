@@ -144,6 +144,18 @@
 
                                                 (loop (read serv-port)))))))
 
+                                       ((string=? path "/request-headers")
+                                        (if (equal? "application/json" (cdr (assoc "accept" attributes)))
+                                            (begin
+                                              (display "HTTP/1.1 200 ok\r\nContent-Type: text/plain\r\nContent-Length: " conn)
+                                              (display (string-length path) conn)
+                                              (display "\r\n\r\n" conn)
+                                              (display path conn)
+                                              (force-output conn)
+                                              (close-port conn)
+                                              (loop (read serv-port)))
+                                            (send-error 400 "Missing expected header 'accept'" conn)))
+
                                        ((string=? path "/close")
                                         ;; return empty body
                                         (display "HTTP/1.1 200 ok\r\nContent-Length: 0\r\n\r\n" conn)
@@ -182,8 +194,8 @@
 ;; Test
 (let ((base-url (string-append "http://localhost:" port-number "/identity")))
   (define result-identity0 (http-get (string-append base-url "/foo bar")))
-  (define result-identity1 (http-get (string-append base-url "/foo bar") #f #t))
-  (define result-identity2 (http-get (string-append base-url "/foo%20bar") #f #f))
+  (define result-identity1 (http-get (string-append base-url "/foo bar") encode-url?: #t))
+  (define result-identity2 (http-get (string-append base-url "/foo%20bar") encode-url?: #f))
 
   (test-equal "/identity/foo bar"
               (u8vector->string
@@ -194,8 +206,8 @@
 
 (let ((base-url (string-append "http://localhost:" port-number "/chunked")))
   (define result-chunked0 (http-get (string-append base-url "/foo bar")))
-  (define result-chunked1 (http-get (string-append base-url "/foo bar") #f #t))
-  (define result-chunked2 (http-get (string-append base-url "/foo%20bar") #f #f))
+  (define result-chunked1 (http-get (string-append base-url "/foo bar") encode-url?: #t))
+  (define result-chunked2 (http-get (string-append base-url "/foo%20bar") encode-url?: #f))
 
   (test-equal "/chunked/foo bar"
               (u8vector->string
@@ -203,6 +215,14 @@
 
   (test-equal result-chunked0 result-chunked1)
   (test-equal result-chunked0 result-chunked2))
+
+(let ((base-url (string-append "http://localhost:" port-number "/request-headers")))
+  (define result-headers (http-get base-url headers: '((accept . "application/json"))))
+
+  (test-equal '(200 . "ok")
+    (vector-ref
+     (vector-ref result-headers 0)
+     0)))
 
 (let ((base-url (string-append "http://localhost:" port-number "/close")))
   (define result-empty (http-get base-url))
