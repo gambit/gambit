@@ -676,26 +676,6 @@
 (check-eqv? (bitwise-xor  902345798234656542928345617042360 123443)
 	    (test-bitwise-xor  902345798234656542928345617042360 123443))
 
-(check-tail-exn type-exception? (lambda () (gcd 1 'a)))
-(check-tail-exn type-exception? (lambda () (gcd 'a 1)))
-(check-tail-exn type-exception? (lambda () (gcd 3/2 1)))
-(check-tail-exn type-exception? (lambda () (gcd 1 3/2)))
-(check-eqv? (gcd (expt 3 100) (expt 5 100)) 1)
-(if (##use-fast-bignum-algorithms?)
-    (begin
-      (check-eqv? (gcd (expt 3 10000) (expt 5 10000)) 1)
-      (check-eqv? (gcd (expt 3 100000) (expt 5 100000)) 1)))
-(check-eqv? (gcd (expt 3. 30) (expt 5. 30)) 1.)
-(check-eqv? (gcd (expt 3 30) (expt 5. 30)) 1.)
-(check-eqv? (gcd (expt 3. 30) (expt 5 30)) 1.)
-
-;; fixnum-fixnum
-(check-eqv? (gcd (expt 3 10) (expt 5 10)) 1)
-;; fixnum-bignum
-(check-eqv? (gcd (expt 3 10) (expt 5 50)) 1)
-;; bignum-fixnum
-(check-eqv? (gcd (expt 3 60) (expt 5 10)) 1)
-
 (if (##use-fast-bignum-algorithms?)
     (check-eqv? (expt 15 1000000) (* (expt 3 1000000) (expt 5 1000000))))
 
