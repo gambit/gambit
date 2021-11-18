@@ -137,6 +137,7 @@
     ("^macro-check"            . defun)
     ("^macro-force-vars$"      . defun)
     ("^macro-number-dispatch$" . defun)
+    ("^macro-exact-int-dispatch$" . defun)
     ("^macro-gen"              . defun)
     ("^macro-make-gen"         . defun)
     ("^macro-make-code"        . defun)
