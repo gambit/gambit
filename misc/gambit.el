@@ -583,6 +583,7 @@ enlarge the window if it is too small."
   ;; Emacs 19 uses a 1-bit flag.  We will have to set up our
   ;; syntax tables differently to handle this.
   ;; Stolen from CC Mode.
+'
   (let ((table (copy-syntax-table))
         entry)
     (modify-syntax-entry ?a ". 12345678" table)
