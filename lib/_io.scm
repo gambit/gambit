@@ -12320,30 +12320,45 @@
 ;; indexed using a character.
 
 (define (##make-chartable default)
-  (vector (make-vector 128 default) default '()))
+  (##declare (not interrupts-enabled))
+  (let ((ct (make-vector 130 default)))
+    (vector-set! ct 129 '())
+    ct))
 
 (define (##chartable-copy ct)
-  (vector (vector-copy (vector-ref ct 0))
-          (vector-ref ct 1)
-          (map (lambda (x) (cons (car x) (cdr x))) (vector-ref ct 2))))
+  (##declare (not interrupts-enabled))
+  (let ((ct-copy (vector-copy ct)))
+    (vector-set! ct-copy
+                 129
+                 (map (lambda (x) (cons (car x) (cdr x))) (vector-ref ct 129)))
+    ct-copy))
+
+(##define-macro (macro-chartable-ref ct c)
+  `(let ((ct ,ct) (c ,c))
+     (let ((i (character->UCS-4 c)))
+       (if (< i 128)
+           (vector-ref ct i)
+           (##chartable-ref ct c)))))
 
 (define (##chartable-ref ct c)
+  (##declare (not interrupts-enabled))
   (let ((i (character->UCS-4 c)))
     (if (< i 128)
-        (vector-ref (vector-ref ct 0) i)
-        (let ((x (assq i (vector-ref ct 2))))
+        (vector-ref ct i)
+        (let ((x (assq i (vector-ref ct 129))))
           (if x
               (cdr x)
-              (vector-ref ct 1))))))
+              (vector-ref ct 128))))))
 
 (define (##chartable-set! ct c val)
+  (##declare (not interrupts-enabled))
   (let ((i (character->UCS-4 c)))
     (if (< i 128)
-        (vector-set! (vector-ref ct 0) i val)
-        (let ((x (assq i (vector-ref ct 2))))
+        (vector-set! ct i val)
+        (let ((x (assq i (vector-ref ct 129))))
           (if x
               (set-cdr! x val)
-              (vector-set! ct 2 (cons (cons i val) (vector-ref ct 2))))))))
+              (vector-set! ct 129 (cons (cons i val) (vector-ref ct 129))))))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -12352,28 +12367,36 @@
 ;; encountered.
 
 (define (##readtable-char-delimiter? rt c)
-  (##chartable-ref (macro-readtable-char-delimiter?-table rt) c))
+  (##declare (not interrupts-enabled))
+  (macro-chartable-ref (macro-readtable-char-delimiter?-table rt) c))
 
 (define (##readtable-char-delimiter?-set! rt c delimiter?)
+  (##declare (not interrupts-enabled))
   (##chartable-set! (macro-readtable-char-delimiter?-table rt) c delimiter?))
 
 (define (##readtable-char-handler rt c)
-  (##chartable-ref (macro-readtable-char-handler-table rt) c))
+  (##declare (not interrupts-enabled))
+  (macro-chartable-ref (macro-readtable-char-handler-table rt) c))
 
 (define (##readtable-char-handler-set! rt c handler)
+  (##declare (not interrupts-enabled))
   (##chartable-set! (macro-readtable-char-handler-table rt) c handler))
 
 (define (##readtable-char-sharp-handler rt c)
-  (##chartable-ref (macro-readtable-char-sharp-handler-table rt) c))
+  (##declare (not interrupts-enabled))
+  (macro-chartable-ref (macro-readtable-char-sharp-handler-table rt) c))
 
 (define (##readtable-char-sharp-handler-set! rt c handler)
+  (##declare (not interrupts-enabled))
   (##chartable-set! (macro-readtable-char-sharp-handler-table rt) c handler))
 
 (define (##readtable-char-class-set! rt c delimiter? handler)
+  (##declare (not interrupts-enabled))
   (##readtable-char-delimiter?-set! rt c delimiter?)
   (##readtable-char-handler-set! rt c handler))
 
 (define (##convert-case case-conversion? s)
+  (##declare (not interrupts-enabled))
   (if case-conversion?
       (if (eq? case-conversion? 'upcase)
           (let loop ((i (- (string-length s) 1)))
@@ -12386,6 +12409,7 @@
       s))
 
 (define (##readtable-parse-keyword rt s intern? create?)
+  (##declare (not interrupts-enabled))
   (let ((keywords-allowed? (macro-readtable-keywords-allowed? rt)))
     (and keywords-allowed?
          (let ((len (string-length s)))
@@ -12421,6 +12445,7 @@
 ;; which case it is the position where the datum starts.
 
 (define (##read-datum-or-eof re)
+  (##declare (not interrupts-enabled))
   (case (macro-readtable-start-syntax (macro-readenv-readtable re))
     ((six)
      (let ((autosemi? #f)
@@ -12458,10 +12483,12 @@
 ;; where the datum starts.
 
 (define (##read-datum-or-label re)
+  (##declare (not interrupts-enabled))
   (let* ((old-pos (macro-readenv-filepos re))
          (obj (##read-datum-or-label-or-none re)))
     (if (eq? obj (##none-marker))
-        (begin
+        (let ()
+          (##declare (interrupts-enabled))
           (macro-readenv-filepos-set! re (##readenv-current-filepos re))
           (let ((c (macro-read-next-char-or-eof re))) ;; force progress
             (##raise-datum-parsing-exception 'datum-expected re)
@@ -12484,10 +12511,12 @@
 ;; position where the datum starts.
 
 (define (##read-datum-or-label-or-none re)
+  (##declare (not interrupts-enabled))
   (let* ((old-pos (macro-readenv-filepos re))
          (obj (##read-datum-or-label-or-none-or-dot re)))
     (if (eq? obj (##dot-marker))
-        (begin
+        (let ()
+          (##declare (interrupts-enabled))
           (macro-readenv-filepos-set! re (##readenv-relative-filepos re 1))
           (##raise-datum-parsing-exception 'improperly-placed-dot re)
           (macro-readenv-filepos-set! re old-pos) ;; restore pos
