@@ -1619,18 +1619,38 @@
 
 ;;; gcd, lcm
 
-(define-prim (##gcd2 x y)
-
+(define-primitive (gcd2 x y)
+  
+  ;; We're going to write this assuming that every
+  ;; other routine like ##abs, ##negate, ##exact->inexact,
+  ;; etc, return #f if, e.g., bignums don't exist and an
+  ;; operation would otherwise return a bignum.
+  
   (##define-macro (type-error-on-x) `'(1))
   (##define-macro (type-error-on-y) `'(2))
-
+  (##define-macro (fixnum-overflow) `#f)
+  
   (define (fast-gcd u v)
 
     ;; See the paper "Fast Reduction and Composition of Binary
     ;; Quadratic Forms" by Arnold Schoenhage.  His algorithm and proof
     ;; are derived from, and basically the same for, his Controlled
-    ;; Euclidean Descent algorithm for gcd, which he has never
-    ;; published.  This algorithm has complexity log N times a
+    ;; Euclidean Descent algorithm for gcd, which is outlined in
+    ;; Section 7.2.1 of the following book:
+    ;; @book {MR1290996,
+    ;;     AUTHOR = {Sch\"{o}nhage, Arnold and Grotefeld, Andreas F. W. and Vetter,
+    ;;               Ekkehart},
+    ;;      TITLE = {Fast algorithms},
+    ;;       NOTE = {A multitape Turing machine implementation},
+    ;;  PUBLISHER = {Bibliographisches Institut, Mannheim},
+    ;;       YEAR = {1994},
+    ;;      PAGES = {x+297},
+    ;;       ISBN = {3-411-16891-9},
+    ;;    MRCLASS = {68Q05 (11Y16 68Q25)},
+    ;;   MRNUMBER = {1290996},
+    ;; MRREVIEWER = {Jeffrey O. Shallit},
+    ;; }
+    ;; This algorithm has complexity log N times a
     ;; constant times the complexity of a multiplication of the same
     ;; size.  We don't use it until we get to about 6800 bits.  Note
     ;; that this is the same place that we start using FFT
@@ -1638,7 +1658,7 @@
     ;; finding inverses.
 
     ;; Niels Mo"ller has written two papers about an improved version
-    ;; of this algorithm.
+    ;; of this algorithm that he wrote for GMP.
 
     ;; assumes u and v are nonnegative exact ints
 
@@ -1723,7 +1743,7 @@
 
     (define (x>=2^n x n)
       (##fx< n (##integer-length x)))
-
+  
     (define (determined-minimal? u v s)
       ;; assumes  2^s <= u , v; s>= 0 fixnum
       ;; returns #t if we can determine that |u-v|<2^s
@@ -1940,8 +1960,6 @@
 
     ((lambda (cont)
        (if (and (use-fast-bignum-algorithms)
-                (##bignum? u)
-                (##bignum? v)
                 (x>=2^n u ##bignum.fast-gcd-size)
                 (x>=2^n v ##bignum.fast-gcd-size))
            (MR cont u v ##bignum.fast-gcd-size #f)
@@ -1962,80 +1980,213 @@
               (general-base b r)))))
 
   (define (fixnum-base a b)
+    
+    ;; Note that (remainder a b) has the same
+    ;; sign as a with absolute value < |b|, so we allow
+    ;; these fixnums to be negative, which allows
+    ;; us to handle ##min-fixnum gracefully when there
+    ;; are no bignums unless the result itself is ##min-fixnum.
+
     (##declare (not interrupts-enabled))
     (if (##eqv? b 0)
-        a
+        (##abs a)
         (let ((a b)
               (b (##fxremainder a b)))
           (if (##eqv? b 0)
-              a
+              (##abs a)
               (fixnum-base b (##fxremainder a b))))))
 
-  (define (exact-gcd x y)
-    ;; always returns an exact result, even with inexact arguments.
-    (let ((x (cond ((##inexact? x)
-                    (##inexact->exact (##flabs x)))
-                   ((##negative? x)
-                    (##negate x))
-                   ((macro-if-bignum (##bignum? x) #f)
-                    (##bignum.copy x))
-                   (else ;; nonnegative fixnum
-                    x)))
-          (y (cond ((##inexact? y)
-                    (##inexact->exact (##flabs y)))
-                   ((##negative? y)
-                    (##negate y))
-                   ((macro-if-bignum (##bignum? y) #f)
-                    (##bignum.copy y))
-                   (else ;; nonnegative fixnum
-                    y))))
-      ;; now x and y are newly allocated, so we can overwrite them if
-      ;; necessary in general-base
-      (cond ((##eqv? x 0)
-             y)
-            ((##eqv? y 0)
-             x)
-            ((macro-if-bignum (##fixnum? x) #t)
-             (if (macro-if-bignum (##fixnum? y) #t)
-                 (fixnum-base x y)
-                 (fixnum-base x (##remainder y x))))
-            ((macro-if-bignum (##fixnum? y) #t)
-             (fixnum-base y (##remainder x y)))
-            (else
-             (let* ((first-x-bit
-                     (##first-bit-set x))
-                    (first-y-bit
-                     (##first-bit-set y))
-                    (shift-x?
-                     (##fx> (##fx* 2 first-x-bit) (##integer-length x)))
-                    (shift-y?
-                     (##fx> (##fx* 2 first-y-bit) (##integer-length y)))
-                    (x
-                     (if shift-x?
-                         (##arithmetic-shift x (##fx- first-x-bit))
-                         x))
-                    (y
-                     (if shift-y?
-                         (##arithmetic-shift y (##fx- first-y-bit))
-                         y)))
-               (if (or shift-x? shift-y?)
-                   ;; we've shifted out all the powers of two in at
-                   ;; least one argument, so we need to put them back
-                   ;; in the gcd.
-                   (##arithmetic-shift (##gcd x y)
-                                       (##fxmin first-x-bit first-y-bit))
-                   (fast-gcd x y)))))))
+  (define (bignums-case x y)
+    (let* ((x-negative?     (##bignum.negative? x))
+           (y-negative?     (##bignum.negative? y))
+           (x-first-bit     (##first-bit-set x))
+           (y-first-bit     (##first-bit-set y))
+           (x-length        (##integer-length x))
+           (y-length        (##integer-length y))
+           
+           ;; We need to decide whether to shift out lower zero bits.
+           ;; There are two algorithms for GCD, a naive one that's
+           ;; O(N^2), and a "fast" one that's O(N (\log N)^2). A shift
+           ;; takes O(N) time.  N is the size of the arguments in bits.
 
-  (cond ((##not (##integer? x))
-         (type-error-on-x))
-        ((##not (##integer? y))
-         (type-error-on-y))
-        ((##eq? x y)
-         (##abs x))
-        (else
-         (if (and (##exact? x) (##exact? y))
-             (exact-gcd x y)
-             (##exact->inexact (exact-gcd x y))))))
+           ;; To do our very naive analysis, we'll assume that all
+           ;; constants are 1, so the algorithms take N^2, N(\log N)^2,
+           ;; and N time, respectively, and logarithms are base 2.
+
+           ;; If the arguments are small enough that we use the naive
+           ;; algorithm, then shifting out K low-order zero bits
+           ;; reduces the run time to
+           ;; (N-K)^2 = N^2 - 2NK + K^2,
+           ;; which always pays for the cost of the shift.
+
+           ;; If both arguments are large, then shifting out K
+           ;; low-order zero bits results in a runtime of
+           ;; (N-K) (\log (N-K))^2 \approx N (\log N)^2 - K (\log N)^2
+           ;; so for the reduction to be greater than N, the shift cost,
+           ;; N < K(\log N)^2 or K > N/(log N)^2.
+
+           (use-fast-gcd-algorithm?
+            (and (use-fast-bignum-algorithms)
+                 (##fx>= (##fx= x-length x-first-bit)
+                         ##bignum.fast-gcd-size)
+                 (##fx>= (##fx- y-length y-first-bit)
+                         ##bignum.fast-gcd-size)))
+           (N
+            (##fxmin x-length y-length))
+           (shift-zero-bits?
+            (if use-fast-gcd-algorithm?
+                (##fx> (##fxmax x-first-bit y-first-bit)
+                       (##fxquotient N (##fxsquare (##fxlength N))))
+                (##fxpositive? (##fxmax x-first-bit y-first-bit))))
+
+           ;; We'll rename x and y for simplicity.  Both are nonzero.
+
+           (x
+            (##abs (if shift-zero-bits?
+                       (##arithmetic-shift x (##fx- x-first-bit))
+                       x)))
+           (y
+            (##abs (if shift-zero-bits?
+                       (##arithmetic-shift y (##fx- y-first-bit))
+                       y))))
+        
+      (##arithmetic-shift
+       (macro-exact-int-dispatch y #f
+         
+         (macro-exact-int-dispatch x #f                ;; y = fixnum
+           (fixnum-base x y)
+           (fixnum-base y (##remainder x y)))
+         
+         (macro-exact-int-dispatch x #f                ;; y = bignum
+           (fixnum-base x (##remainder y x))
+           
+           ;; fast-gcd requires that its bignum arguments
+           ;; are newly allocated.
+           
+           (fast-gcd
+            (if (or x-negative?
+                    (and shift-zero-bits?
+                         (##fxpositive? x-first-bit)))
+                x
+                (##bignum.copy x))
+            (if (or y-negative?
+                    (and shift-zero-bits?
+                         (##fxpositive? y-first-bit)))
+                y
+                (##bignum.copy y)))))
+       (if shift-zero-bits?
+           (##fxmin x-first-bit y-first-bit)
+           0))))
+
+  ;; Beginning of body of top-level routine.
+
+  (macro-number-dispatch y (type-error-on-y)
+
+    (macro-number-dispatch x (type-error-on-x)        ;; y = fixnum
+      (fixnum-base x y)
+      (cond ((##eqv? y 0)
+             (##abs x))
+            ((or (##eqv? y 1)
+                 (##eqv? y -1))
+             1)
+            (else
+             (fixnum-base y (##remainder x y))))
+      (type-error-on-x)
+      (if (##flinteger? x)
+          (cond ((##eqv? y 0)
+                 (##flabs x))
+                ((or (##eqv? y 1)
+                     (##eqv? y -1))
+                 (macro-inexact-+1))
+                (else
+                 (let ((exact-x (##inexact->exact x)))
+                   (and exact-x
+                        (##exact->inexact
+                         (fixnum-base y (##remainder exact-x y)))))))
+          (type-error-on-x))
+      (type-error-on-x))
+
+    (macro-number-dispatch x (type-error-on-x)       ;; y = bignum
+      (cond ((##eqv? x 0)
+             (##abs y))
+            ((or (##eqv? x 1)
+                 (##eqv? x -1))
+             1)
+            (else
+             (fixnum-base x (##remainder y x))))
+      (if (##= x y)
+          (##abs x)
+          (bignums-case x y))
+      (type-error-on-x)
+      (if (##flinteger? x)
+          (cond ((##flzero? x)
+                 (##flabs (##exact->inexact y)))
+                ((##fl= (##flabs x) (macro-inexact-+1))
+                 (macro-inexact-+1))
+                (else
+                 ;; bignums exist, so exact-x is not #f
+                 (let ((exact-x (##inexact->exact x)))
+                   (##exact->inexact
+                    (if (##fixnum? exact-x)
+                        (fixnum-base exact-x (##remainder y exact-x))
+                        (bignums-case exact-x y))))))
+          (type-error-on-x))
+      (type-error-on-x))
+
+    (type-error-on-y)                                ;; y = ratnum
+    
+    (if (##flinteger? y)                             ;; y = flonum
+          (macro-number-dispatch x (type-error-on-x)
+            (cond ((##eqv? x 0)                ;; x = fixnum
+                   (##flabs y))
+                  ((or (##eqv? x 1)
+                       (##eqv? x -1))
+                   (macro-inexact-+1))
+                  (else
+                   (let ((exact-y (##inexact->exact y)))
+                     (and exact-y
+                          (##exact->inexact
+                           (fixnum-base x (##remainder exact-y x)))))))
+            ;; In the following, bignums exist,
+            ;; so exact-y is not #f
+            (cond ((##flzero? y)               ;; x = bignum
+                   (##flabs (##exact->inexact x)))
+                  ((##fl= (##flabs y) (macro-inexact-+1))
+                   (macro-inexact-+1))
+                  (else
+                   (##exact->inexact
+                    (let ((exact-y (##inexact->exact y)))
+                      (if (##fixnum? exact-y)
+                          (fixnum-base exact-y (##remainder x exact-y))
+                          (bignums-case x exact-y))))))
+            (type-error-on-x)                  ;; x = ratnum
+            (if (##flinteger? x)               ;; x = flonum
+                (cond ((##fl= (##flabs x) (##flabs y))
+                       (##flabs x))
+                      ((##flzero? x)
+                       (##flabs y))
+                      ((##flzero? y)
+                       (##flabs x))
+                      ((or (##fl= (##flabs x) (macro-inexact-+1))
+                           (##fl= (##flabs y) (macro-inexact-+1)))
+                       (macro-inexact-+1))
+                      (else
+                       (let ((exact-x (##inexact->exact x))
+                             (exact-y (##inexact->exact y)))
+                         (and exact-x
+                              exact-y
+                              (##exact->inexact
+                               (macro-exact-int-dispatch exact-x #f
+                                 (macro-exact-int-dispatch exact-y #f        ;; exact-x = fixnum
+                                   (fixnum-base exact-x exact-y)
+                                   (fixnum-base exact-x (##remainder exact-y exact-x)))
+                                 (macro-exact-int-dispatch exact-y #f        ;; exact-x = bignum
+                                   (fixnum-base exact-y (##remainder exact-x exact-y))
+                                   (bignums-case exact-x exact-y))))))))
+                (type-error-on-x))
+            (type-error-on-x)))                ;; x = cpxnum
+    
+    (type-error-on-y)))
 
 (define-prim-nary (##gcd x y)
   0
