@@ -12,8 +12,8 @@
 (import (srfi 132))
 (import (_test))
 
-(##include "vr7rs.scm")
-(##include "vqsort3.scm")
+(##include "../vr7rs.scm")
+(##include "../vqsort3.scm")
 
 
 ;;; r7rs-vector-copy
