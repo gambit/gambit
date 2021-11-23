@@ -82,6 +82,8 @@ Detailed installation instructions are given in the file [INSTALL.txt](https://g
 
 88: [Keyword objects](https://srfi.schemers.org/srfi-88/srfi-88.html) (builtin)
 
+124: [Ephemerons](https://srfi.schemers.org/srfi-124/srfi-124.html)
+
 132: [Sort Libraries](https://srfi.schemers.org/srfi-132/srfi-132.html)
 
 158: [Generators and Accumulators](https://srfi.schemers.org/srfi-158/srfi-158.html)
