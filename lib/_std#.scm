@@ -441,7 +441,7 @@
                            (if (pair? x)
                                (let ((elem (car x)))
                                  (,macro-force-elem (elem)
-                                   (,macro-check-elem elem (fx+ i 1) (,vect . elems)
+                                   (,macro-check-elem elem (fx+ i 1) ((%procedure%) . elems)
                                      (begin
                                        (,prim-vect-set! vect i elem)
                                        (loop2 (cdr x) (fx+ i 1))))))
@@ -540,14 +540,14 @@
                    (macro-force-vars (x)
                      (if (##pair? x)
                          (loop1 (cdr x) (##fx+ n 1))
-                         (macro-check-proper-list-null x '(1 . list) (,list->vect list)
+                         (macro-check-proper-list-null x '(1 . list) ((%procedure%) list)
                            (let ((vect (,prim-make-vect n ,default-elem-value)))
                              (let loop2 ((x list) (i 0))
                                (macro-force-vars (x)
                                  (if (and (##pair? x)  ;; double check in case another
                                           (##fx< i n)) ;; thread mutates the list
                                      (let ((elem (##car x)))
-                                       (,macro-check-elem-list elem '(1 . list) (,list->vect list)
+                                       (,macro-check-elem-list elem '(1 . list) ((%procedure%) list)
                                          (begin
                                            (,prim-vect-set! vect i elem)
                                            (loop2 (cdr x) (##fx+ i 1)))))
@@ -576,7 +576,7 @@
                              (macro-check-char-vector
                                elem
                                '(1 . ,name)
-                               (,vect->string ,name start end)
+                               ((%procedure%) ,name start end)
                                (begin
                                  (primitive (string-set! result i elem))
                                  (loop (fx- i 1)))))))))
@@ -679,7 +679,7 @@
                             (##fx- (,prim-vect-length dst-vect) dst-start))
                      (##raise-range-exception
                       '(2 . dst-start)
-                      ,vect-copy!
+                      (%procedure%)
                       dst-vect
                       dst-start
                       src-vect
