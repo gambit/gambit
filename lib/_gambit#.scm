@@ -475,7 +475,7 @@
                   ,(var-name param)
                   '(,arg-num . ,(var-name param))
                   ,@(cdr check)
-                  (,proc-name
+                  ((%procedure%)
                    ,@(append (map exception-param-name req-opt-params)
                              (if (not rest-param)
                                  '()
@@ -567,20 +567,18 @@
                   (gen-block
                    `(##define ,proc-name
                       (##lambda ,param-list
-                        (##declare (extended-bindings))
-                        ,@(if (safe-define-procedure?)
-                              `((##declare (safe)))
-                              `((##declare (not safe))
-                                (##include "~~lib/gambit/prim/prim#.scm")))
-                        ,@(if (eq? kind 'procedure)
-                              `((##namespace ("" ,proc-name)))
-                              `())
-                        ,(gen-force
-                          (gen-bind-non-opt
-                           (gen-defaults-and-checks
-                            req-opt-params
-                            1
-                            (gen-body)))))))))
+                        (##let ((%procedure% (##lambda () ,name)))
+                          (##declare (extended-bindings))
+                          ,@(if (safe-define-procedure?)
+                                `((##declare (safe)))
+                                `((##declare (not safe))
+                                  (##include "~~lib/gambit/prim/prim#.scm")))
+                          ,(gen-force
+                            (gen-bind-non-opt
+                             (gen-defaults-and-checks
+                              req-opt-params
+                              1
+                              (gen-body))))))))))
             ;;(pp (##desourcify expansion))
             expansion)))
 

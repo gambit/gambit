@@ -6,7 +6,7 @@ SUBDIRS =
 
 HEADERS_SCM = _define-library\#.scm define-library-expand\#.scm
 
-MODULES_SCM = _define-library.scm define-library-expand.scm debug.scm test.scm
+MODULES_SCM = _define-library.scm define-library-expand.scm debug.scm test/test.scm
 
 MAIN_MODULES = _define-library define-library-expand debug
 

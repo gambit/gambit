@@ -12,7 +12,7 @@
 ;; TODO: add more!
 
 (test-equal
-  "(lambda ()\n  (##host-define-function-and-call-dynamic\n   '#&\"g_function2scm(async function () {\\n return 0;\\n})\"))\n"
+  "(lambda ()\n  ((##host-function-memoized '#&\"(async function () {\\n return 0;\\n})\")))\n"
   (call-with-output-string (lambda (port) (pp (lambda () \0) port))))
 
 ;;;============================================================================

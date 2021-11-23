@@ -6,7 +6,7 @@ SUBDIRS =
 
 HEADERS_SCM = js\#.scm six-expand\#.scm
 
-MODULES_SCM = js.scm js.sld six-expand.scm test.scm
+MODULES_SCM = js.scm js.sld six-expand.scm test/test.scm
 
 MAIN_MODULES = js six-expand
 
