@@ -3335,47 +3335,50 @@ for a discussion of branch cuts.
             ;; their square roots do not have any common factors
             (macro-ratnum-make (macro-sr-s sqrt-p)
                                (macro-sr-s sqrt-q))
-            (let ((wp (##integer-length p))
-                  (wq (##integer-length q)))
+            (let ((inexact-x (##exact->inexact x)))
+              (if (##= x inexact-x)
+                  (##flsqrt inexact-x)
+                  (let ((wp (##integer-length p))
+                        (wq (##integer-length q)))
 
-              ;; for IEEE 754 double precision, we need at least
-              ;; 53 or 54 (I can't seem to work it out) of the
-              ;; leading bits of (sqrt (/ p q)).  Here we get
-              ;; about 64 leading bits.  We just shift p (either
-              ;; right or left) until it is about 128 bits longer
-              ;; than q (shift must be even), then take the
-              ;; integer square root of the result.
+                    ;; for IEEE 754 double precision, we need at least
+                    ;; 53 or 54 (I can't seem to work it out) of the
+                    ;; leading bits of (sqrt (/ p q)).  Here we get
+                    ;; about 64 leading bits.  We just shift p (either
+                    ;; right or left) until it is about 128 bits longer
+                    ;; than q (shift must be even), then take the
+                    ;; integer square root of the result.
 
-              (let* ((shift
-                      (##fxarithmetic-shift-left
-                       (##fxarithmetic-shift-right
-                        (##fx- 128 (##fx- wp wq))
-                        1)
-                       1))
-                     (leading-bits
-                      (macro-sr-s
-                       (##exact-int.sqrt
-                        (##quotient
-                         (##arithmetic-shift p shift)
-                         q))))
-                     (pre-rounded-result
-                      (if (##fxnegative? shift)
-                          (##arithmetic-shift
-                           leading-bits
-                           (##fx-
-                            (##fxarithmetic-shift-right
-                             shift
-                             1)))
-                          (##ratnum.normalize
-                           leading-bits
-                           (##arithmetic-shift
-                            1
-                            (##fxarithmetic-shift-right
-                             shift
-                             1))))))
-                (if (##ratnum? pre-rounded-result)
-                    (##ratnum->flonum pre-rounded-result #t)
-                    (##exact-int->flonum  pre-rounded-result #t))))))))
+                    (let* ((shift
+                            (##fxarithmetic-shift-left
+                             (##fxarithmetic-shift-right
+                              (##fx- 128 (##fx- wp wq))
+                              1)
+                             1))
+                           (leading-bits
+                            (macro-sr-s
+                             (##exact-int.sqrt
+                              (##quotient
+                               (##arithmetic-shift p shift)
+                               q))))
+                           (pre-rounded-result
+                            (if (##fxnegative? shift)
+                                (##arithmetic-shift
+                                 leading-bits
+                                 (##fx-
+                                  (##fxarithmetic-shift-right
+                                   shift
+                                   1)))
+                                (##ratnum.normalize
+                                 leading-bits
+                                 (##arithmetic-shift
+                                  1
+                                  (##fxarithmetic-shift-right
+                                   shift
+                                   1))))))
+                      (if (##ratnum? pre-rounded-result)
+                          (##ratnum->flonum pre-rounded-result #t)
+                          (##exact-int->flonum  pre-rounded-result #t))))))))))
 
   (macro-number-dispatch x (type-error)
     (exact-int-sqrt x)
