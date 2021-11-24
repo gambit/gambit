@@ -20,6 +20,10 @@
 ;; bignum-fixnum
 (check-eqv? (gcd (expt 3 60) (expt 5 10)) 1)
 
+;;; Tickled a previous bug
+
+(check-eqv? (gcd 6369051672525773 9007199254740992) 1)
+
 #|
 
 The following tests were generated as part of a new version of gcd.
