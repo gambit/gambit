@@ -14,7 +14,9 @@
 
 ;;; Test that we avoid double rounding in rational sqrt
 
-(check-eqv? (sqrt 1705056691889483/8551613288065582) .4465245948075691)
+(check-eqv? (sqrt 1/7) .37796447300922725)
+(check-eqv? (sqrt 3/7) .6546536707079772)
+(check-eqv? (sqrt 4/7) .7559289460184545)
 
 ;;; Test exceptions
 
