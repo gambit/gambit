@@ -1,6 +1,6 @@
 # common makefile for gambit modules, to be included by specific makefile
 
-# Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 # The specific makefile must contain:
 #
@@ -8,7 +8,7 @@
 # libfromhere = ../../../..        # as many .. as components in herefromlib
 # SUBDIRS = <subdir1> <subdir2>    # as many as there are subdirs
 # HEADERS_SCM = foo\#.scm
-# MODULES_SCM = foo.scm foo.sld test.scm
+# MODULES_SCM = foo.scm foo.sld test/test.scm
 # MAIN_MODULES = foo
 # OTHER_RCFILES = makefile
 # include $(libfromhere)/module-common.mk
@@ -155,7 +155,7 @@ test-modules-all: test-modules-all-pre
 test-modules-all-pre:
 	@here_prefix="`echo $(herefromlib) | sed -e 's,[^/]*$$,,'`"; \
 	here_suffix="`echo $(herefromlib) | sed -e 's,.*/,,'`"; \
-	if test -r "test.scm"; then \
+	if test -d "test"; then \
 	  modref="$(herefromlib)"; \
 	  echo "*** testing $$modref"; \
 	  @SETDLPATH@ $(rootfromhere)/gsi/gsi@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include \
@@ -171,7 +171,7 @@ test-modules: test-modules-pre
 test-modules-pre:
 	@here_prefix="`echo $(herefromlib) | sed -e 's,[^/]*$$,,'`"; \
 	here_suffix="`echo $(herefromlib) | sed -e 's,.*/,,'`"; \
-	if test -r "test.scm"; then \
+	if test -d "test"; then \
 	  modref="$(herefromlib)"; \
 	  echo "*** testing $$modref"; \
 	  @SETDLPATH@ $(rootfromhere)/gsi/gsi@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include \
@@ -187,23 +187,27 @@ modules-pre:
 	version_num=`eval expr "\( 100000 \\* $$major \) + \( 1000 \\* $$minor \) + $$revision"`; \
 	for target in $(BUILD_TARGETS); do \
 	  for main_mod in $(MAIN_MODULES); do \
+	    mod_dir=""; \
 	    if test "$$main_mod" = "$$here_suffix"; then \
 	      modref="$(herefromlib)"; \
 	    else \
 	      modref="$(herefromlib)/$$main_mod"; \
+	      if test -d "$$main_mod"; then \
+	        mod_dir="$$main_mod/"; \
+	      fi; \
 	    fi; \
 	    need_to_build_module=no; \
-	    build_dir="$$main_mod@$$version_num@$$target"; \
-	    if test ! -d "$$build_dir" \
+	    build_dir="$$mod_dir$$main_mod@$$version_num@$$target"; \
+	    if test ! -d "$$mod_dir$$build_dir" \
 	         -o "$(rootfromhere)/gsc/gsc@exe@" -nt "$$build_dir" \
-	         -o -f "$$main_mod.sld" -a "$$main_mod.sld" -nt "$$build_dir" \
-	         -o -f "$$main_mod.scm" -a "$$main_mod.scm" -nt "$$build_dir" \
-	         -o -f "$$main_mod#.scm" -a "$$main_mod#.scm" -nt "$$build_dir"; then \
+	         -o -f "$$mod_dir$$main_mod.sld" -a "$$mod_dir$$main_mod.sld" -nt "$$build_dir" \
+	         -o -f "$$mod_dir$$main_mod.scm" -a "$$mod_dir$$main_mod.scm" -nt "$$build_dir" \
+	         -o -f "$$mod_dir$$main_mod#.scm" -a "$$mod_dir$$main_mod#.scm" -nt "$$build_dir"; then \
 	      need_to_build_module=yes; \
 	    fi; \
 	    if test "$$need_to_build_module" = "yes"; then \
 	      echo ">>>> building module $$modref for $$target"; \
-	      @SETDLPATH@ $(rootfromhere)/gsc/gsc@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -e "(let ((x (##build-module \"$$main_mod\" (quote $$target) (quote ((module-ref $$modref)))))) (if (not x) (begin (println \"*** module failed to build\") (exit 1))))"; \
+	      @SETDLPATH@ $(rootfromhere)/gsc/gsc@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -e "(let ((x (##build-module \"$$mod_dir$$main_mod\" (quote $$target) (quote ((module-ref $$modref)))))) (if (not x) (begin (println \"*** module failed to build\") (exit 1))))"; \
 	    else \
 	      echo ">>>> no need to build module $$modref for $$target"; \
 	    fi; \
