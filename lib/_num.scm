@@ -2027,7 +2027,7 @@
 
            (use-fast-gcd-algorithm?
             (and (use-fast-bignum-algorithms)
-                 (##fx>= (##fx= x-length x-first-bit)
+                 (##fx>= (##fx- x-length x-first-bit)
                          ##bignum.fast-gcd-size)
                  (##fx>= (##fx- y-length y-first-bit)
                          ##bignum.fast-gcd-size)))
