@@ -110,7 +110,7 @@ mandir = @mandir@
 
 .SUFFIXES: .scm .js
 
-MODULES_JS = VM.js extra.js
+MODULES_JS = VM.js
 
 RCFILES = makefile.in README UI.css UI.js VM.scm extra.scm index.html \
 https-server.py https-server-certificate.pem
@@ -155,7 +155,7 @@ VM.js: extra.scm VM.scm
 	cp `$(GSC) -e '(display (path-expand "~~lib/_six/js#.scm"))'` .
 	cp `$(GSC) -e '(display (path-expand "~~lib/_six/six-expand.scm"))'` .
 	cp `$(GSC) -e '(display (path-expand "~~lib/_six/six-expand#.scm"))'` .
-	$(GSC) -target js -label-namespace "z" -exe -o VM.js $(PRELUDE_OPT) VM.scm
+	$(GSC) -target js -label-namespace "z" -exe -o VM.js $(PRELUDE_OPT) -nopreload js.scm six-expand.scm extra.scm VM.scm
 
 VM.min.js: VM.js
 	npx google-closure-compiler --language_in=ECMASCRIPT_2020 --language_out=ECMASCRIPT_2020 --js VM.js --js_output_file VM.min.js
