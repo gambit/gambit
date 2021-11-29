@@ -209,9 +209,21 @@
         (let ((lst (string->list ns)))
           (list->string (cons (char-upcase (car lst)) (cdr lst)))))))
 
-(define (univ-label-ns sem-preserving-opts)
-  (let ((x (assq 'label-namespace sem-preserving-opts)))
-    (and x (pair? (cdr x)) (string->c-id (cadr x)))))
+(define (univ-label-ns sem-preserving-options)
+  (let ((x (assq 'label-namespace sem-preserving-options)))
+    (and x
+         (pair? (cdr x))
+         (let* ((lns (string->c-id (cadr x)))
+                (y (assq 'sequence-number sem-preserving-options))
+                (sn
+                 (or (and y (pair? (cdr y)) (nonneg-integer->c-id (cadr y)))
+                     "")))
+           (cond ((equal? "" lns)
+                  sn)
+                 ((equal? "" sn)
+                  lns)
+                 (else
+                  (string-append lns "_" sn)))))))
 
 (define univ-processor-current-thread-slot 14)
 (define univ-thread-cont-slot 23)
@@ -298,7 +310,8 @@
   (define common-semantics-preserving-options
     '((always-return-jump)
       (never-return-jump)
-      (label-namespace string)))
+      (label-namespace string)
+      (sequence-number fixnum)))
 
   (let ((targ
          (make-target 15

@@ -11,16 +11,6 @@
 (declare (extended-bindings) (standard-bindings) (block))
 (declare (not inline))
 
-(##define-macro (incl filename)
-  `(##declare-scope
-    (##macro-scope
-     (##namespace-scope
-      (##include ,filename)))))
-
-(incl "js.scm")
-(incl "six-expand.scm")
-(incl "extra.scm")
-
 ;;;----------------------------------------------------------------------------
 
 (##inline-host-declaration #<<EOF
@@ -46,7 +36,9 @@ VM.prototype.init = function (ui_elem) {
   vm.os_web_origin = @os_web_origin@;
   vm.ui = new UI(vm, ui_elem);
 
-  @program_start@(); // Start execution of Scheme code.
+  if (vm.os_web) {
+    @program_start@(); // Start execution of Scheme code.
+  }
 };
 
 VM.prototype.os_condvar_ready_set = function (condvar_scm, ready) {

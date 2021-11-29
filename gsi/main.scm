@@ -441,7 +441,15 @@ usage-end
                           (rev-obj-files '())
                           (rev-tmp-files '())
                           (flags '())
-                          (meta-info-file #f))
+                          (meta-info-file #f)
+                          (seq-num 0))
+
+                      (define (add-seq-num opts)
+                        (let ((sn seq-num))
+                          (set! seq-num (##fx+ seq-num 1))
+                          (if (##fx< 1 nb-output-files)
+                              (##cons (##list 'sequence-number sn) opts)
+                              opts)))
 
                       (define (add-gen-file file)
                         (set! rev-gen-files
@@ -496,7 +504,7 @@ usage-end
                         (or (if output
                                 (compile-file
                                  file
-                                 options: opts
+                                 options: (add-seq-num opts)
                                  output: output
                                  cc: cc
                                  cc-options: cc-options
@@ -506,7 +514,7 @@ usage-end
                                  pkg-config-path: pkg-config-path)
                                 (compile-file
                                  file
-                                 options: opts
+                                 options: (add-seq-num opts)
                                  cc: cc
                                  cc-options: cc-options
                                  ld-options-prelude: ld-options-prelude
@@ -527,11 +535,11 @@ usage-end
                           (or (if output
                                   (compile-file-to-target
                                    file
-                                   options: opts
+                                   options: (add-seq-num opts)
                                    output: output)
                                   (compile-file-to-target
                                    file
-                                   options: opts))
+                                   options: (add-seq-num opts)))
                               (exit-abnormally))))
 
                       (define (do-build-executable base obj-files output-filename)

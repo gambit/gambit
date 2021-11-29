@@ -126,7 +126,7 @@
                          check force keep-temp
                          o l module-ref linker-name prelude postlude
                          cc cc-options ld-options-prelude ld-options
-                         pkg-config pkg-config-path asm)
+                         pkg-config pkg-config-path asm sequence-number)
                       #t) ;; these options are innocuous
                      (else
                       ;; OK if the option is a target specific option
