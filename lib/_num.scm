@@ -1958,6 +1958,9 @@
                (cont M alpha beta)
                (gcd-small-step loop M alpha beta m))))))
 
+    ;; Beginning of body of fast-gcd; requires a and b to be
+    ;; overwriteable (i.e., newly allocated).
+
     ((lambda (cont)
        (if (and (use-fast-bignum-algorithms)
                 (x>=2^n u ##bignum.fast-gcd-size)
@@ -1996,7 +1999,7 @@
               (##abs a)
               (fixnum-base b (##fxremainder a b))))))
 
-  (define (bignums-case x y)
+  (define (bignums-case x new-x? y new-y?)
     (let* ((x-negative?     (##bignum.negative? x))
            (y-negative?     (##bignum.negative? y))
            (x-first-bit     (##first-bit-set x))
@@ -2064,12 +2067,14 @@
            ;; are newly allocated.
            
            (fast-gcd
-            (if (or x-negative?
+            (if (or new-x?
+                    x-negative?
                     (and shift-zero-bits?
                          (##fxpositive? x-first-bit)))
                 x
                 (##bignum.copy x))
-            (if (or y-negative?
+            (if (or new-y?
+                    y-negative?
                     (and shift-zero-bits?
                          (##fxpositive? y-first-bit)))
                 y
@@ -2116,7 +2121,7 @@
              (fixnum-base x (##remainder y x))))
       (if (##= x y)
           (##abs x)
-          (bignums-case x y))
+          (bignums-case x  #f y #f))
       (type-error-on-x)
       (if (##flinteger? x)
           (cond ((##flzero? x)
@@ -2129,7 +2134,7 @@
                    (##exact->inexact
                     (if (##fixnum? exact-x)
                         (fixnum-base exact-x (##remainder y exact-x))
-                        (bignums-case exact-x y))))))
+                        (bignums-case exact-x #t y #f))))))
           (type-error-on-x))
       (type-error-on-x))
 
@@ -2158,7 +2163,7 @@
                     (let ((exact-y (##inexact->exact y)))
                       (if (##fixnum? exact-y)
                           (fixnum-base exact-y (##remainder x exact-y))
-                          (bignums-case x exact-y))))))
+                          (bignums-case x #f exact-y #t))))))
             (type-error-on-x)                  ;; x = ratnum
             (if (##flinteger? x)               ;; x = flonum
                 (cond ((##fl= (##flabs x) (##flabs y))
@@ -2182,11 +2187,11 @@
                                    (fixnum-base exact-x (##remainder exact-y exact-x)))
                                  (macro-exact-int-dispatch exact-y #f        ;; exact-x = bignum
                                    (fixnum-base exact-y (##remainder exact-x exact-y))
-                                   (bignums-case exact-x exact-y))))))))
+                                   (bignums-case exact-x #t exact-y #t))))))))
                 (type-error-on-x))
             (type-error-on-x)))                ;; x = cpxnum
     
-    (type-error-on-y)))
+    (type-error-on-y)))                              ;; y = cpxnum
 
 (define-prim-nary (##gcd x y)
   0
