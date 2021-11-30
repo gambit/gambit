@@ -1163,17 +1163,17 @@
   (define (divide-by-zero-error) #f)
 
   (macro-number-dispatch x (type-error)
-    (if (##fxzero? x)
-        (divide-by-zero-error)
-        (macro-if-ratnum
-         (if (##fxnegative? x)
-             (if (##fx= x -1)
-                 x
-                 (macro-ratnum-make -1 (##negate x)))
-             (if (##fx= x 1)
-                 x
-                 (macro-ratnum-make 1 x)))
-         (##fl/ (macro-inexact-+1) (##fixnum->flonum x))))
+    (cond ((##eqv? x 0)
+           (divide-by-zero-error))
+          ((or (##eqv? x 1)
+               (##eqv? x -1))
+           x)
+          (else
+           (macro-if-ratnum
+            (if (##fxnegative? x)
+                (macro-ratnum-make -1 (##negate x))
+                (macro-ratnum-make 1 x))
+            (##fl/ (macro-inexact-+1) (##fixnum->flonum x)))))
     (if (##bignum.negative? x)
         (macro-ratnum-make -1 (##negate x))
         (macro-ratnum-make 1 x))
