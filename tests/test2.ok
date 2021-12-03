@@ -306,14 +306,19 @@
 (dotted-list? '(1 2 . 3)) => #t
 (length+ '(1 2 3)) => 3
 ;;; (Argument 1, clist) LIST expected: (length+ #f)
+(filter '#<procedure #5 odd?> '()) => ()
 (filter '#<procedure #5 odd?> '(1 2 3 4)) => (1 3)
-;;; (Argument 2, list) LIST expected: (filter '#<procedure #5 odd?> '(1 2 3 . 4))
+;;; (Argument 2, list) PROPER LIST expected: (filter '#<procedure #5 odd?> '(1 2 3 . 4))
+;;; (Argument 2, list) LIST expected: (filter '#<procedure #5 odd?> #f)
 ;;; (Argument 1, pred) PROCEDURE expected: (filter #f '(1 2 3))
+(remove '#<procedure #5 odd?> '()) => ()
 (remove '#<procedure #5 odd?> '(1 2 3 4)) => (2 4)
-;;; (Argument 2, list) LIST expected: (remove '#<procedure #5 odd?> '(1 2 3 . 4))
+;;; (Argument 2, list) PROPER LIST expected: (remove '#<procedure #5 odd?> '(1 2 3 . 4))
+;;; (Argument 2, list) LIST expected: (remove '#<procedure #5 odd?> #f)
 ;;; (Argument 1, pred) PROCEDURE expected: (remove #f '(1 2 3))
-(remq 'b '(a b c)) => (a c)
 (remq 'b '()) => ()
+(remq 'b '(a b c)) => (a c)
+;;; (Argument 2, list) PROPER LIST expected: (remq 'b '(a b c . d))
 ;;; (Argument 2, list) LIST expected: (remq 'b #f)
 (xcons 1 2) => (2 . 1)
 (cons* 1) => 1
@@ -1343,8 +1348,8 @@ A(write-char #\A '#<output-port #10 (stdout)>) => #!void
 (file-type "newdir2") => directory
 (file-type "newdir2/bbb") => regular
 ;;; No such file or directory: (file-type "notexist")
-(file-size "error.scm") => 72707
-(file-size "newdir2/bbb") => 72707
+(file-size "error.scm") => 72858
+(file-size "newdir2/bbb") => 72858
 ;;; No such file or directory: (file-size "notexist")
 ;;; #<os-exception #11>: (delete-directory "newdir2")
 (delete-file "newdir2/aaa") => #!void

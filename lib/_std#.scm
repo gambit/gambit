@@ -225,26 +225,52 @@
 (define-check-type pair 'pair
   ##pair?)
 
-(define-check-type (pair-list pair-list-pair) 'pair-list
-  ##pair?)
+;; The list type covers all types of lists including circular and dotted.
 
 (define-check-type list 'list
-  ##null?)
+  (lambda (obj) #t)) ;; a non-null non-pair object is a dotted list...
+
+;; The proper-list type covers possibly empty chains of pairs ending with '().
 
 (define-check-type (list proper-list) #f
-  (lambda (obj) (or (##null? obj) (##pair? obj))))
-
-(define-check-type (list proper-or-circular-list) #f
-  (lambda (obj) (or (##null? obj) (##pair? obj))))
-
-(define-check-type (list pair-list) #f
-  (lambda (obj) (or (##null? obj) (##pair? obj))))
+  (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
 
 (define-check-type (proper-list proper-list-null) 'proper-list
   ##null?)
 
+(##define-macro (macro-check-proper-list-null* var orig arg-id form expr)
+  `(macro-if-checks
+    (if (##null? ,var)
+        ,expr
+        (if (##eq? ,var ,orig)
+            (macro-fail-check-list ,arg-id ,form)
+            (macro-fail-check-proper-list ,arg-id ,form)))
+    ,expr))
+
+;; The proper-or-circular-list type excludes dotted lists.
+
+(define-check-type (list proper-or-circular-list) #f
+  (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
+
 (define-check-type (proper-or-circular-list proper-or-circular-list-null) 'proper-or-circular-list
   ##null?)
+
+(##define-macro (macro-check-proper-or-circular-list-null* var orig arg-id form expr)
+  `(macro-if-checks
+    (if (##null? ,var)
+        ,expr
+        (if (##eq? ,var ,orig)
+            (macro-fail-check-list ,arg-id ,form)
+            (macro-fail-check-proper-or-circular-list ,arg-id ,form)))
+    ,expr))
+
+;; The pair-list type is a proper-list of pairs.
+
+(define-check-type (list pair-list) #f
+  (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
+
+(define-check-type (pair-list pair-list-pair) 'pair-list
+  ##pair?)
 
 (define-check-type symbol 'symbol
   ##symbol?)
@@ -540,7 +566,7 @@
                    (macro-force-vars (x)
                      (if (##pair? x)
                          (loop1 (cdr x) (##fx+ n 1))
-                         (macro-check-proper-list-null x '(1 . list) ((%procedure%) list)
+                         (macro-check-proper-list-null* x list '(1 . list) ((%procedure%) list)
                            (let ((vect (,prim-make-vect n ,default-elem-value)))
                              (let loop2 ((x list) (i 0))
                                (macro-force-vars (x)

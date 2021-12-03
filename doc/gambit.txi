@@ -5530,7 +5530,7 @@ enable type checks in the code. For example the following definition:
   (vector-ref x 5))
 @end example
 
-is equivalent to
+which expands to
 
 @example
 (define (foo x)
@@ -5538,7 +5538,7 @@ is equivalent to
     (##vector-ref x 5)))
 @end example
 
-which is equivalent to
+which expands to
 
 @example
 (define (foo x)
@@ -5559,7 +5559,7 @@ use of the @code{primitive} macro:
   (primitive (vector-ref x 5)))
 @end example
 
-In conclusion, the intent is for the @code{primitive} special form to be
+The expectation is that the @code{primitive} special form will be
 used sparingly. Searching the source code for uses of @code{(primitive}
 is a good way to find potentially unsafe code.
 
@@ -5569,12 +5569,13 @@ Here is a list of the available type specifiers for a
 @code{define-procedure} parameter @var{x} and the associated constraint
 on the value of @var{x}.
 
-Note that there is no direct way for specifying the type "list" or "list
-of elements of type T". For lists, the procedure body must iterate on
-the pairs, going from cdr to cdr until a non-pair is found and then do a
-check for the empty list with @code{(macro-check-proper-list lst <arg-id>
-(<procedure-name> <args>...) <body>)} to check that the parameter is a
-proper list (i.e. that it ends with the empty list).
+Note that there is no direct way for checking for a "list" or "list of
+elements of type T". A procedure taking a list parameter will likely
+iterate on the list's pairs going from cdr to cdr until a non-pair is
+found. Then a check for the empty list with
+@code{(macro-check-proper-list-null lst <arg-id> (<procedure-name>
+<args>...) <body>)} will check that the parameter is a proper list
+(i.e. that it ends with the empty list).
 
 @subsubsection Basic types (other than numbers)
 
@@ -5718,10 +5719,19 @@ u8vector-output-port       x is a u8vector output port
 @subsubsection List and vector variants of above
 
 @table @code
+@item list
+no type checking (a non-null non-pair object is in fact a degenerate dotted list),
+exception mentions LIST
 @item proper-list
-@var{x} is @code{()}, exception mentions PROPER LIST
+no type checking (code traversing the list must check for a proper-list),
+exception mentions PROPER LIST
+@item proper-list-null
+@var{x} is the empty list, exception mentions PROPER LIST
 @item proper-or-circular-list
-@var{x} is @code{()}, exception mentions PROPER or CIRCULAR LIST
+no type checking (code traversing the list must check for a proper-list or circular-list),
+exception mentions PROPER or CIRCULAR LIST
+@item proper-or-circular-list-null
+@var{x} is the empty list, exception mentions PROPER LIST
 @item char-list
 @var{x} is a character, exception mentions CHARACTER LIST
 @item char-vector

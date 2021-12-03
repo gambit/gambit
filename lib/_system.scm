@@ -2094,7 +2094,7 @@
                     (if (##eq? table (##table-ref table key table))
                         (##table-set! table key (##cdr couple)))
                     (loop (##cdr x))))))
-            (macro-check-list
+            (macro-check-proper-list-null
               x
               1
               (list->table lst
@@ -2496,7 +2496,7 @@
                                 (##car couple)
                                 (##cdr couple)))
             (loop (##cdr x)))
-          (macro-check-list
+          (macro-check-proper-list-null
            x
            1
            (list->table lst

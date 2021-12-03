@@ -1124,6 +1124,7 @@
 
     (define macro-fail-check-type (sym 'macro-fail-check- type-name))
     (define ##fail-check-type (sym '##fail-check- type-name))
+
     `(begin
 
        ,@(if type
@@ -1133,29 +1134,15 @@
                  `(macro-handle-failure ,',##fail-check-type ,arg-id ,form)))
              `())
 
-     (##define-macro (,macro-test-test var)
-       `(,',predicate ,var ,@',arguments))
+       (##define-macro (,macro-test-test var)
+         `(,',predicate ,var ,@',arguments))
 
-     (##define-macro (,macro-check-test var arg-id form expr)
-       `(macro-if-checks
-          (if (,',predicate ,var ,@',arguments)
-            ,expr
-            (,',macro-fail-check-type ,arg-id ,form))
-          ,expr)))))
-
-(##define-macro (macro-fail-check-list arg-id form) ;; TODO: remove when no longer used
-  `(macro-handle-failure ##fail-check-list ,arg-id ,form))
-
-(##define-macro (macro-fail-check-proper-list arg-id form)
-  `(macro-handle-failure ##fail-check-proper-list ,arg-id ,form))
-
-(##define-macro (macro-fail-check-proper-or-circular-list arg-id form)
-  `(macro-handle-failure ##fail-check-proper-or-circular-list ,arg-id ,form))
-
-(##define-macro (macro-fail-check-proper-or-dotted-list arg-id form)
-  `(macro-handle-failure ##fail-check-proper-or-dotted-list ,arg-id ,form))
-
-
+       (##define-macro (,macro-check-test var arg-id form expr)
+         `(macro-if-checks
+           (if (,',predicate ,var ,@',arguments)
+               ,expr
+               (,',macro-fail-check-type ,arg-id ,form))
+           ,expr)))))
 
 (##define-macro (define-fail-check-type type-name . type-id)
 

@@ -392,7 +392,7 @@
                    test: test
                    hash: hash)
                   (loop (cdr x) (cons couple rev-alist)))))
-            (macro-check-list
+            (macro-check-proper-list-null
               x
               1
               (list->hamt

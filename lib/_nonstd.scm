@@ -2308,7 +2308,7 @@
                        (##fail-check-string-list '(2 . string-list) (standard write-file-string-list) path-or-settings string-list)))))
              (begin
                (close-port port)
-               (macro-check-proper-list-null lst '(2 . string-list) (write-file-string-list path-or-settings string-list)
+               (macro-check-proper-list-null* lst string-list '(2 . string-list) (write-file-string-list path-or-settings string-list)
                  (void)))))))
    (standard write-file-string-list)
    path-or-settings
