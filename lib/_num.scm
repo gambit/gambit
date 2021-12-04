@@ -11718,11 +11718,13 @@ end-of-code
             (##flcopysign abs-result (macro-inexact--1))
             abs-result)))
 
-    (if (and (##exact-int->flonum-exact? num)
-             (##exact-int->flonum-exact? den))
+    (if (and (##fixnum? num)
+             (##fixnum? den)
+             (##fixnum->flonum-exact? num)
+             (##fixnum->flonum-exact? den))
 
-        (##fl/ (##exact-int->flonum num)
-               (##exact-int->flonum den))
+        (##fl/ (##fixnum->flonum num)
+               (##fixnum->flonum den))
 
         (let* ((n (##abs num))
                (d den)
