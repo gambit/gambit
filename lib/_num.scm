@@ -11688,14 +11688,10 @@ end-of-code
 (macro-if-ratnum
 
 (define-prim (##ratnum->flonum x #!optional (nonzero-fractional-part? #f))
-  (let* ((num (macro-ratnum-numerator x))
-         (n (##abs num))
-         (d (macro-ratnum-denominator x))
-         (wn (##integer-length n)) ;; 2^(wn-1) <= n < 2^wn
-         (wd (##integer-length d)) ;; 2^(wd-1) <= d < 2^wd
-         (p (##fx- wn wd)))
+  (let ((num (macro-ratnum-numerator x))
+        (den (macro-ratnum-denominator x)))
 
-    (define (f1 sn sd)
+    (define (f1 sn sd p)
       (if (##< sn sd) ;; n/(d*2^p) < 1 ?
           (f2 (##arithmetic-shift sn 1) sd (##fx- p 1))
           (f2 sn sd p)))
@@ -11722,12 +11718,24 @@ end-of-code
             (##flcopysign abs-result (macro-inexact--1))
             abs-result)))
 
-    ;; 2^(p-1) <= n/d < 2^(p+1)
-    ;; 1/2 <= n/(d*2^p) < 2  or equivalently  1/2 <= (n*2^-p)/d < 2
+    (if (and (##exact-int->flonum-exact? num)
+             (##exact-int->flonum-exact? den))
 
-    (if (##fxnegative? p)
-        (f1 (##arithmetic-shift n (##fx- p)) d)
-        (f1 n (##arithmetic-shift d p)))))
+        (##fl/ (##exact-int->flonum num)
+               (##exact-int->flonum den))
+
+        (let* ((n (##abs num))
+               (d den)
+               (wn (##integer-length n)) ;; 2^(wn-1) <= n < 2^wn
+               (wd (##integer-length d)) ;; 2^(wd-1) <= d < 2^wd
+               (p (##fx- wn wd)))
+
+          ;; 2^(p-1) <= n/d < 2^(p+1)
+          ;; 1/2 <= n/(d*2^p) < 2  or equivalently  1/2 <= (n*2^-p)/d < 2
+
+          (if (##fxnegative? p)
+              (f1 (##arithmetic-shift n (##fx- p)) d p)
+              (f1 n (##arithmetic-shift d p) p))))))
 
 )
 
