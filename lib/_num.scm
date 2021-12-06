@@ -247,8 +247,7 @@
       (or (##eq? x y)
           (##exact-int.= x y))
       #f
-      (and (##flfinite? y)
-           (##exact-int->flonum-exact? x)
+      (and (##exact-int->flonum-exact? x)
            (##fl= (##exact-int->flonum x) y))
       (##cpxnum.= (macro-noncpxnum->cpxnum x) y))
 
@@ -264,8 +263,7 @@
     (macro-number-dispatch y (type-error-on-y) ;; x = flonum
       (and (##fixnum->flonum-exact? y)
            (##fl= x (##fixnum->flonum y)))
-      (and (##flfinite? x)
-           (##exact-int->flonum-exact? y)
+      (and (##exact-int->flonum-exact? y)
            (##fl= (##exact-int->flonum y) x))
       (and (##flfinite? x)
            (##ratnum.= (##flonum->ratnum x) y))
@@ -11746,8 +11744,11 @@ end-of-code
    (##fixnum->flonum-exact? x)             ;; x = fixnum
    (let ((len   (##integer-length x))      ;; x = bignum
          (first (##first-bit-set x)))
-     (and (##fx<= len (macro-flonum-e-bias-plus-1))
-          (##fx<= (##fx- len first) (macro-flonum-m-bits-plus-1))))))
+     (##not (or (##fx> len (macro-flonum-e-bias-plus-1))
+                (##fx> (##fx- len first) (macro-flonum-m-bits-plus-1))
+                (and (##fx= len first)
+                     (##fx= len (macro-flonum-e-bias-plus-1))
+                     (##bignum.negative? x)))))))
 
 (define-prim (##exact-int->flonum x #!optional (nonzero-fractional-part? #f))
 
