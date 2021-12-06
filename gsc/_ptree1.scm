@@ -2851,8 +2851,8 @@
           (make-descr var
                       proc
                       -1)
-          (if (or (**lambda-expr? proc env)
-                  (lambda-expr? proc env))
+          (if (or (**lambda-expr? proc #f) ;; check for ##lambda or lambda
+                  (lambda-expr? proc #f))  ;; not sensitive to compile env
               (make-descr var
                           proc
                           (form-size
