@@ -2,7 +2,7 @@
 
 ;;; File: "s64vector.sld"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -16,7 +16,6 @@
 
 ;; gambit
 
-append-s64vectors
 list->s64vector
 make-s64vector
 subs64vector
@@ -25,6 +24,7 @@ subs64vector-move!
 s64vector
 s64vector->list
 s64vector-append
+s64vector-concatenate
 s64vector-copy
 s64vector-copy!
 s64vector-fill!

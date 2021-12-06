@@ -2,7 +2,7 @@
 
 ;;; File: "u16vector.sld"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -16,7 +16,6 @@
 
 ;; gambit
 
-append-u16vectors
 list->u16vector
 make-u16vector
 subu16vector
@@ -25,6 +24,7 @@ subu16vector-move!
 u16vector
 u16vector->list
 u16vector-append
+u16vector-concatenate
 u16vector-copy
 u16vector-copy!
 u16vector-fill!

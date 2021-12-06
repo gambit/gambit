@@ -3,7 +3,7 @@
 ;;; File: "_geiser.scm"
 
 ;;; Copyright (c) 2019 by Mathieu Perron, All Rights Reserved.
-;;; Copyright (c) 2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2020-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -226,8 +226,8 @@
     (angle ("args" (("required" z) ("optional") ("key")))("module"))
     (any-bits-set? ("args" (("required" n1 n2) ("optional") ("key")))("module"))
     (append ("args" (("required" list  [...]) ("optional") ("key")))("module"))
-    (append-strings ("args" (("required" lst) ("optional") ("key")))("module"))
-    (append-vectors ("args" (("required" lst) ("optional") ("key")))("module"))
+    (string-concatenate ("args" (("required" lst) ("optional" separator) ("key")))("module"))
+    (vector-concatenate ("args" (("required" lst) ("optional" separator) ("key")))("module"))
     (apply ("args"
             (("required" proc [arg1  ...] args) ("optional") ("key")))("module"))
     (arithmetic-shift ("args" (("required" n1 n2) ("optional") ("key")))("module"))

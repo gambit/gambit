@@ -2,7 +2,7 @@
 
 ;;; File: "string.sld"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -24,10 +24,10 @@ string-set
 string->list
 list->string
 string-fill!
+string-concatenate
 string-copy
 string-copy!
 substring
-append-strings
 string-append
 substring-move!
 substring-fill!

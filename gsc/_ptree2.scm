@@ -3157,7 +3157,7 @@
     (if (>= i 0)
         (loop (- i 1)
               (cons (char->c-id (string-ref str i)) lst))
-        (append-strings lst))))
+        (string-concatenate lst))))
 
 (define (scheme-id->c-id s)
   (let loop1 ((i (- (string-length s) 1)) (lst '()))

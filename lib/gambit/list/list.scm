@@ -14,6 +14,7 @@
 
 (implement-check-type-pair)
 (implement-check-type-pair-list)
+(implement-check-type-list-list)
 (implement-check-type-list)
 (implement-check-type-proper-list)
 (implement-check-type-proper-or-circular-list)
@@ -185,11 +186,26 @@
                        (else
                         (loop (fx+ len 1) (cdr fast) (cdr slow)))))))))))
 
+(define-primitive (proper-list-append2 (list1 list)
+                                       (list2 list))
+
+  (define (app list1 list2)
+    (if (pair? list1)
+        (cons (car list1) (app (cdr list1) list2))
+        (and (null? list1)
+             list2)))
+
+  (app list1 list2))
+
 (define-primitive (append2 (list1 list)
                            (list2 list))
-  (if (pair? list1)
-      (cons (car list1) (primitive (append2 (cdr list1) list2)))
-      list2))
+
+  (define (app list1 list2)
+    (if (pair? list1)
+        (cons (car list1) (app (cdr list1) list2))
+        list2))
+
+  (app list1 list2))
 
 (define-primitive (append-lists (list-of-lists proper-list))
   (if (pair? list-of-lists)
@@ -297,6 +313,13 @@
                     -1))))) ;; error: list expected
         (else
          (append-multiple list1 (cons list2 lists) 1))))
+
+(define-primitive (proper-list-reverse (list list))
+  (let loop ((x list) (result '()))
+    (if (pair? x)
+        (loop (cdr x) (cons (car x) result))
+        (and (null? x)
+             result))))
 
 (define-primitive (reverse (list proper-list))
   (let loop ((x list) (result '()))
@@ -1025,7 +1048,14 @@
                  (fx- j 1))))
         probe)))
 
-(define-prim&proc (last-pair (pair pair))
+(define-primitive (last-pair (pair pair))
+  (let loop ((probe pair))
+    (let ((tail (cdr probe)))
+      (if (pair? tail)
+          (loop tail)
+          probe))))
+
+(define-procedure (last-pair (pair pair))
   (let loop ((probe pair))
     (let ((tail (cdr probe)))
       (macro-force-vars (tail)
@@ -1049,6 +1079,318 @@
         '()))
 
   (butlast pair))
+
+(define-primitive (concatenate-reverse (rlist-of-lists proper-list)
+                                       (separator      proper-list '()))
+  (if (pair? rlist-of-lists)
+      (let loop ((rlst (cdr rlist-of-lists)) (result (car rlist-of-lists)))
+        (if (pair? rlst)
+            (loop (cdr rlst)
+                  (primitive (append2 (car rlst)
+                                      (if (eq? separator '())
+                                          result
+                                          (primitive (append2 separator
+                                                              result))))))
+            result))
+      '()))
+
+(define-primitive (concatenate (list-of-lists proper-list)
+                               (separator     proper-list '()))
+  (primitive (concatenate-reverse (reverse list-of-lists) separator)))
+
+(define-procedure (concatenate (list-of-lists proper-list)
+                               (separator     proper-list '()))
+
+  (define (fail-check-list1)
+    (macro-fail-check-list
+     '(1 . list-of-lists)
+     ((%procedure%) list-of-lists %separator)))
+
+  (define (fail-check-proper-list1)
+    (macro-fail-check-proper-list
+     '(1 . list-of-lists)
+     ((%procedure%) list-of-lists %separator)))
+
+  (define (fail-check-list-list1)
+    (macro-fail-check-list-list
+     '(1 . list-of-lists)
+     ((%procedure%) list-of-lists %separator)))
+
+  (define (fail-check-list2)
+    (macro-fail-check-list
+     '(2 . separator)
+     ((%procedure%) list-of-lists %separator)))
+
+  (define (fail-check-proper-list2)
+    (macro-fail-check-proper-list
+     '(2 . separator)
+     ((%procedure%) list-of-lists %separator)))
+
+  (define (add-force-list! last probe)
+    (macro-force-vars (probe)
+      (add-list! last probe)))
+
+  (define (add-list! last probe)
+    (if (pair? probe)
+        (add-pair! last probe)
+        last))
+
+  (define (add-pair! last probe)
+    (let ((cdr-probe (cdr probe)))
+      (macro-force-vars (cdr-probe)
+        (let ((next (cons (car probe) cdr-probe)))
+          (set-cdr! last next)
+          (add-list! next cdr-probe)))))
+
+  (define (concat-with-null-separator lst-of-lst)
+    ;; lst-of-lst is known to be a pair and there is no separator
+    ;; This procedure calls itself recursively to find the first pair element
+    ;; of list-of-lists.
+    (let* ((elem (car lst-of-lst))
+           (rest (cdr lst-of-lst)))
+      (macro-force-vars (rest)
+        (if (pair? rest)
+
+            (macro-force-vars (elem)
+              (if (pair? elem)
+
+                  (let ()
+
+                    ;; first pair element of list-of-lists found
+
+                    (define (concat-next-list result last rest)
+                      (let ((elem (car rest))
+                            (rest (cdr rest)))
+                        (macro-force-vars (rest)
+                          (if (pair? rest)
+                              (macro-force-vars (elem)
+                                (if (pair? elem)
+                                    (let ((last (add-pair! last elem)))
+                                      (macro-if-checks
+                                       (if (null? (cdr last))
+                                           ;; elem is a proper list
+                                           (concat-next-list result last rest)
+                                           (fail-check-list-list1))
+                                       (concat-next-list result last rest)))
+                                    (macro-if-checks
+                                     (if (null? elem)
+                                         (concat-next-list result last rest)
+                                         (fail-check-list-list1))
+                                     (concat-next-list result last rest))))
+                              (begin
+                                (set-cdr! last elem)
+                                (macro-if-checks
+                                 (if (null? rest)
+                                     result
+                                     (fail-check-proper-list1))
+                                 result))))))
+
+                    (let* ((cdr-elem (cdr elem))
+                           (result (cons (car elem) cdr-elem))
+                           (last (add-force-list! result cdr-elem)))
+                      (macro-if-checks
+                       (if (null? (cdr last))
+                           ;; elem is a proper list
+                           (concat-next-list result last rest)
+                           (fail-check-list-list1))
+                       (concat-next-list result last rest))))
+
+                  (macro-if-checks
+                   (if (null? elem)
+                       (concat-with-null-separator rest)
+                       (fail-check-list-list1))
+                   (concat-with-null-separator rest))))
+
+            (macro-if-checks
+             (if (null? rest)
+                 elem
+                 (fail-check-proper-list1))
+             elem)))))
+
+  (define (concat-with-pair-separator)
+    ;; list-of-lists is known to be a pair and separator is known to be a pair
+    (let* ((elem (car list-of-lists))
+           (rest (cdr list-of-lists)))
+      (macro-force-vars (rest)
+        (if (pair? rest)
+
+            (macro-force-vars (elem)
+              (let ()
+
+                (define (concat-separator result last rest)
+                  (let ((last (add-list! last separator)))
+                    (macro-if-checks
+                     (if (null? (cdr last))
+                         ;; separator is a proper list
+                         (concat-next-list result last rest)
+                         (fail-check-proper-list2))
+                     (concat-next-list result last rest))))
+
+                (define (concat-next-list result last rest)
+                  (let ((elem (car rest))
+                        (rest (cdr rest)))
+                    (macro-force-vars (rest)
+                      (if (pair? rest)
+                          (macro-force-vars (elem)
+                            (if (pair? elem)
+                                (let ((last (add-pair! last elem)))
+                                  (macro-if-checks
+                                   (if (null? (cdr last))
+                                       ;; elem is a proper list
+                                       (concat-separator result last rest)
+                                       (fail-check-list-list1))
+                                   (concat-separator result last rest)))
+                                (macro-if-checks
+                                 (if (null? elem)
+                                     (concat-separator result last rest)
+                                     (fail-check-list-list1))
+                                 (concat-separator result last rest))))
+                          (begin
+                            (set-cdr! last elem)
+                            (macro-if-checks
+                             (if (null? rest)
+                                 result
+                                 (fail-check-proper-list1))
+                             result))))))
+
+                (if (pair? elem)
+                    (let* ((cdr-elem (cdr elem))
+                           (result (cons (car elem) cdr-elem))
+                           (last (add-force-list! result cdr-elem)))
+                      (macro-if-checks
+                       (if (null? (cdr last))
+                           ;; elem is a proper list
+                           (concat-separator result last rest)
+                           (fail-check-list-list1))
+                       (concat-separator result last rest)))
+                    (let* ((cdr-separator (cdr separator))
+                           (result (cons (car separator) cdr-separator))
+                           (last (add-force-list! result cdr-separator)))
+                      (macro-if-checks
+                       (if (null? elem)
+                           ;; elem is a proper list
+                           (if (null? (cdr last))
+                               ;; separator is a proper list
+                               (concat-next-list result last rest)
+                               (fail-check-proper-list2))
+                           (fail-check-list-list1))
+                       (concat-next-list result last rest))))))
+
+            ;; end of list-of-lists
+            (macro-if-checks
+             (if (null? rest)
+                 elem
+                 (fail-check-proper-list1))
+             elem)))))
+
+  (if (pair? list-of-lists)
+
+      (if (pair? separator)
+          (concat-with-pair-separator)
+          (macro-if-checks
+           (if (null? separator)
+               (concat-with-null-separator list-of-lists)
+               (fail-check-list2))
+           (concat-with-null-separator list-of-lists)))
+
+      (macro-if-checks
+       (if (null? list-of-lists)
+           (if (or (null? separator) (pair? separator))
+               '()
+               (fail-check-list2))
+           (fail-check-list1))
+       '())))
+
+(define-primitive (concatenate! (list-of-lists proper-list))
+  (if (pair? list-of-lists)
+      (let loop1 ((lst list-of-lists))
+        (let ((elem (car lst))
+              (rest (cdr lst)))
+          (if (pair? rest)
+              (if (pair? elem)
+                  (let loop2 ((result elem)
+                              (lst rest)
+                              (last (last-pair elem)))
+                    (let ((elem (car lst))
+                          (rest (cdr lst)))
+                      (set-cdr! last elem)
+                      (if (pair? rest)
+                          (loop2 result
+                                 rest
+                                 (last-pair last))
+                          result)))
+                  (loop1 rest))
+              elem)))
+      '()))
+
+(define-procedure (concatenate! (list-of-lists proper-list))
+
+  (define (last-pair-with-auto-forcing! pair)
+    (let loop ((probe pair))
+      (let ((tail (cdr probe)))
+        (macro-if-auto-forcing
+         (macro-force-vars (tail)
+           (begin
+             (set-cdr! probe tail)
+             (if (pair? tail)
+                 (loop tail)
+                 probe)))
+         (if (pair? tail)
+             (loop tail)
+             probe)))))
+
+  (if (pair? list-of-lists)
+
+      (let loop1 ((lst list-of-lists))
+        (let ((elem (car lst))
+              (rest (cdr lst)))
+          (macro-force-vars (rest)
+            (if (pair? rest)
+
+                (macro-force-vars (elem)
+                  (if (pair? elem)
+
+                      ;; first pair element of list-of-lists found
+                      (let loop2 ((result elem)
+                                  (lst rest)
+                                  (last (last-pair-with-auto-forcing! elem)))
+                        (macro-check-list-list-null
+                          (cdr last)
+                          '(1 . list-of-lists)
+                          ((%procedure%) list-of-lists)
+                          (let ((elem (car lst))
+                                (rest (cdr lst)))
+                            (set-cdr! last elem)
+                            (macro-force-vars (rest)
+                              (if (pair? rest)
+                                  (loop2 result
+                                         rest
+                                         (last-pair-with-auto-forcing! last))
+                                  (macro-check-proper-list-null
+                                    rest
+                                    '(1 . list-of-lists)
+                                    ((%procedure%) list-of-lists)
+                                    result))))))
+
+                      ;; first pair element not yet found
+                      (macro-check-list-list-null
+                        elem
+                        '(1 . list-of-lists)
+                        ((%procedure%) list-of-lists)
+                        (loop1 rest))))
+
+                ;; all elements of list-of-lists before last are null
+                (macro-check-proper-list-null
+                  rest
+                  '(1 . list-of-lists)
+                  ((%procedure%) list-of-lists)
+                  elem)))))
+
+      (macro-check-list-null
+        list-of-lists
+        '(1 . list-of-lists)
+        ((%procedure%) list-of-lists)
+        '())))
 
 ;; ##reverse! defined in _kernel.scm
 

@@ -2,7 +2,7 @@
 
 ;;; File: "prim.sld"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -222,7 +222,7 @@ with-exception-handler
 
 ;; gambit
 
-append-f32vectors
+f32vector-concatenate
 list->f32vector
 make-f32vector
 subf32vector
@@ -245,7 +245,7 @@ f32vector?
 
 ;; gambit
 
-append-f64vectors
+f64vector-concatenate
 list->f64vector
 make-f64vector
 subf64vector
@@ -1025,7 +1025,7 @@ write-subu8vector
 
 ;; gambit
 
-append-s16vectors
+s16vector-concatenate
 list->s16vector
 make-s16vector
 subs16vector
@@ -1048,7 +1048,7 @@ s16vector?
 
 ;; gambit
 
-append-s32vectors
+s32vector-concatenate
 list->s32vector
 make-s32vector
 subs32vector
@@ -1071,7 +1071,7 @@ s32vector?
 
 ;; gambit
 
-append-s64vectors
+s64vector-concatenate
 list->s64vector
 make-s64vector
 subs64vector
@@ -1094,7 +1094,7 @@ s64vector?
 
 ;; gambit
 
-append-s8vectors
+s8vector-concatenate
 list->s8vector
 make-s8vector
 subs8vector
@@ -1299,7 +1299,7 @@ utf8->string
 
 ;; gambit
 
-append-strings
+string-concatenate
 string-ci=?-hash
 string-set
 string-shrink!
@@ -1447,7 +1447,7 @@ table?
 
 ;; gambit
 
-append-u16vectors
+u16vector-concatenate
 list->u16vector
 make-u16vector
 subu16vector
@@ -1470,7 +1470,7 @@ u16vector?
 
 ;; gambit
 
-append-u32vectors
+u32vector-concatenate
 list->u32vector
 make-u32vector
 subu32vector
@@ -1493,7 +1493,7 @@ u32vector?
 
 ;; gambit
 
-append-u64vectors
+u64vector-concatenate
 list->u64vector
 make-u64vector
 subu64vector
@@ -1516,7 +1516,7 @@ u64vector?
 
 ;; gambit
 
-append-u8vectors
+u8vector-concatenate
 list->u8vector
 make-u8vector
 subu8vector
@@ -1559,7 +1559,7 @@ vector-copy!
 
 ;; gambit
 
-append-vectors
+vector-concatenate
 vector-set
 vector-shrink!
 subvector

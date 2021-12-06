@@ -14,6 +14,8 @@ append-reverse
 append-reverse!
 circular-list
 circular-list?
+concatenate
+concatenate!
 cons*
 dotted-list?
 drop

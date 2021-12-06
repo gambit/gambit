@@ -30,7 +30,7 @@
 
 ;; Gambit
 
-(append-vectors '(#(1) #(2) #(3)))
+(vector-concatenate '(#(1) #(2) #(3)))
 (vector-set '#(1 2 3 4 5) 2 99)
 (let ((x (vector 1 2 3 4 5))) (vector-shrink! x 3) x)
 (subvector '#(1 2 3 4 5) 1 3)

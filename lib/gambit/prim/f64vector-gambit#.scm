@@ -2,7 +2,7 @@
 
 ;;; File: "f64vector-gambit#.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -10,7 +10,6 @@
 
 (##namespace ("##"
 
-append-f64vectors
 list->f64vector
 make-f64vector
 subf64vector
@@ -19,6 +18,7 @@ subf64vector-move!
 f64vector
 f64vector->list
 f64vector-append
+f64vector-concatenate
 f64vector-copy
 f64vector-copy!
 f64vector-fill!

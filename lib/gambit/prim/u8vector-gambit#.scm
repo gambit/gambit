@@ -2,7 +2,7 @@
 
 ;;; File: "u8vector-gambit#.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -10,7 +10,6 @@
 
 (##namespace ("##"
 
-append-u8vectors
 list->u8vector
 make-u8vector
 subu8vector
@@ -19,6 +18,7 @@ subu8vector-move!
 u8vector
 u8vector->list
 u8vector-append
+u8vector-concatenate
 u8vector-copy
 u8vector-copy!
 u8vector-fill!

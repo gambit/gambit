@@ -4144,7 +4144,7 @@ def @os_load_object_file@(path, linker_name):
                                                 out)))
                           (##error "Unbound substitution variable in" str))))
                 (##error "Unbalanced delimiter in" str)))
-          (##append-strings
+          (##string-concatenate
            (##reverse (##cons (##substring str i start) out)))))))
 
 (define (##expand-inline-host-code code-str substs)
@@ -4244,7 +4244,7 @@ def @host_exec@(stmts):
                      ""))))
 
 (define (##host-create-header params)
-  (##append-strings (##map ##host-convert-param params)))
+  (##string-concatenate (##map ##host-convert-param params)))
 
 (define (##host-define-function-dynamic name params expr)
   (##declare (not interrupts-enabled))
@@ -4254,7 +4254,7 @@ def @host_exec@(stmts):
     (##inline-host-statement
      "@host_define_function@(@scm2host@(@1@),@scm2host@(@2@),@scm2host@(@3@),@scm2host@(@4@))"
      name
-     (##append-strings params ",")
+     (##string-concatenate params ",")
      (##host-create-header params)
      (##string-append (##inline-host-expression "@host2scm@('@host2scm@(')")
                       expr
@@ -4276,7 +4276,7 @@ def @host_exec@(stmts):
     (##inline-host-statement
      "@host_define_procedure@(@scm2host@(@1@),@scm2host@(@2@),@scm2host@(@3@),@scm2host@(@4@))"
      name
-     (##append-strings params ",")
+     (##string-concatenate params ",")
      (##host-create-header params)
      stmts))
 

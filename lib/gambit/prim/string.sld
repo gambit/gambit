@@ -54,7 +54,7 @@ utf8->string
 
 ;; gambit
 
-append-strings
+string-concatenate
 string-ci=?-hash
 string-set
 string-shrink!

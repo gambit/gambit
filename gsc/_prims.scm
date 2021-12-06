@@ -794,8 +794,8 @@
 ("string-downcase"                    (1)   #f 0     0    string    r7rs)
 ("##string-downcase"                  (1)   #f ()    0    string    extended)
 
-("append-strings"                     (1)   #f 0     0    string    gambit)
-("##append-strings"                   (1)   #f ()    0    string    extended)
+("string-concatenate"                 (1 2) #f 0     0    string    gambit)
+("##string-concatenate"               (1 2) #f ()    0    string    extended)
 ("substring-fill!"                    (4)   #t 0     0    #f        gambit)
 ("##substring-fill!"                  (4)   #t ()    0    #f        extended)
 ("substring-move!"                    (5)   #t 0     0    #f        gambit)
@@ -840,8 +840,8 @@
 ("##vector-delete"                    (2)   #f ()    0    vector    extended)
 ("##vector-delete-small"              (2)   #f ()    0    vector    extended)
 
-("append-vectors"                     (1)   #f 0     0    vector    gambit)
-("##append-vectors"                   (1)   #f ()    0    vector    extended)
+("vector-concatenate"                 (1 2) #f 0     0    vector    gambit)
+("##vector-concatenate"               (1 2) #f ()    0    vector    extended)
 ("subvector"                          (3)   #f 0     0    vector    gambit)
 ("##subvector"                        (3)   #f ()    0    vector    extended)
 ("##subvector-small"                  (3)   #f ()    0    vector    extended)
@@ -861,8 +861,8 @@
 
 ;; homogeneous vector
 
-("append-s8vectors"                   (1)   #f 0     0    s8vector  gambit)
-("##append-s8vectors"                 (1)   #f ()    0    s8vector  extended)
+("s8vector-concatenate"               (1 2) #f 0     0    s8vector  gambit)
+("##s8vector-concatenate"             (1 2) #f ()    0    s8vector  extended)
 ("list->s8vector"                     (1)   #f 0     0    s8vector  gambit)
 ("##list->s8vector"                   (1)   #f ()    0    s8vector  extended)
 ("make-s8vector"                      (1 2) #f 0     0    s8vector  gambit)
@@ -906,8 +906,8 @@
 ("##s8vector-delete"                  (2)   #f ()    0    s8vector  extended)
 ("##s8vector-delete-small"            (2)   #f ()    0    s8vector  extended)
 
-("append-u8vectors"                   (1)   #f 0     0    u8vector  gambit)
-("##append-u8vectors"                 (1)   #f ()    0    u8vector  extended)
+("u8vector-concatenate"               (1 2) #f 0     0    u8vector  gambit)
+("##u8vector-concatenate"             (1 2) #f ()    0    u8vector  extended)
 ("list->u8vector"                     (1)   #f 0     0    u8vector  gambit)
 ("##list->u8vector"                   (1)   #f ()    0    u8vector  extended)
 ("make-u8vector"                      (1 2) #f 0     0    u8vector  gambit)
@@ -951,8 +951,8 @@
 ("##u8vector-delete"                  (2)   #f ()    0    u8vector  extended)
 ("##u8vector-delete-small"            (2)   #f ()    0    u8vector  extended)
 
-("append-s16vectors"                  (1)   #f 0     0    s16vector gambit)
-("##append-s16vectors"                (1)   #f ()    0    s16vector extended)
+("s16vector-concatenate"              (1 2) #f 0     0    s16vector gambit)
+("##s16vector-concatenate"            (1 2) #f ()    0    s16vector extended)
 ("list->s16vector"                    (1)   #f 0     0    s16vector gambit)
 ("##list->s16vector"                  (1)   #f ()    0    s16vector extended)
 ("make-s16vector"                     (1 2) #f 0     0    s16vector gambit)
@@ -996,8 +996,8 @@
 ("##s16vector-delete"                 (2)   #f ()    0    s16vector extended)
 ("##s16vector-delete-small"           (2)   #f ()    0    s16vector extended)
 
-("append-u16vectors"                  (1)   #f 0     0    u16vector gambit)
-("##append-u16vectors"                (1)   #f ()    0    u16vector extended)
+("u16vector-concatenate"              (1 2) #f 0     0    u16vector gambit)
+("##u16vector-concatenate"            (1 2) #f ()    0    u16vector extended)
 ("list->u16vector"                    (1)   #f 0     0    u16vector gambit)
 ("##list->u16vector"                  (1)   #f ()    0    u16vector extended)
 ("make-u16vector"                     (1 2) #f 0     0    u16vector gambit)
@@ -1041,8 +1041,8 @@
 ("##u16vector-delete"                 (2)   #f ()    0    u16vector extended)
 ("##u16vector-delete-small"           (2)   #f ()    0    u16vector extended)
 
-("append-s32vectors"                  (1)   #f 0     0    s32vector gambit)
-("##append-s32vectors"                (1)   #f ()    0    s32vector extended)
+("s32vector-concatenate"              (1 2) #f 0     0    s32vector gambit)
+("##s32vector-concatenate"            (1 2) #f ()    0    s32vector extended)
 ("list->s32vector"                    (1)   #f 0     0    s32vector gambit)
 ("##list->s32vector"                  (1)   #f ()    0    s32vector extended)
 ("make-s32vector"                     (1 2) #f 0     0    s32vector gambit)
@@ -1086,8 +1086,8 @@
 ("##s32vector-delete"                 (2)   #f ()    0    s32vector extended)
 ("##s32vector-delete-small"           (2)   #f ()    0    s32vector extended)
 
-("append-u32vectors"                  (1)   #f 0     0    u32vector gambit)
-("##append-u32vectors"                (1)   #f ()    0    u32vector extended)
+("u32vector-concatenate"              (1 2) #f 0     0    u32vector gambit)
+("##u32vector-concatenate"            (1 2) #f ()    0    u32vector extended)
 ("list->u32vector"                    (1)   #f 0     0    u32vector gambit)
 ("##list->u32vector"                  (1)   #f ()    0    u32vector extended)
 ("make-u32vector"                     (1 2) #f 0     0    u32vector gambit)
@@ -1131,8 +1131,8 @@
 ("##u32vector-delete"                 (2)   #f ()    0    u32vector extended)
 ("##u32vector-delete-small"           (2)   #f ()    0    u32vector extended)
 
-("append-s64vectors"                  (1)   #f 0     0    s64vector gambit)
-("##append-s64vectors"                (1)   #f ()    0    s64vector extended)
+("s64vector-concatenate"              (1 2) #f 0     0    s64vector gambit)
+("##s64vector-concatenate"            (1 2) #f ()    0    s64vector extended)
 ("list->s64vector"                    (1)   #f 0     0    s64vector gambit)
 ("##list->s64vector"                  (1)   #f ()    0    s64vector extended)
 ("make-s64vector"                     (1 2) #f 0     0    s64vector gambit)
@@ -1176,8 +1176,8 @@
 ("##s64vector-delete"                 (2)   #f ()    0    s64vector extended)
 ("##s64vector-delete-small"           (2)   #f ()    0    s64vector extended)
 
-("append-u64vectors"                  (1)   #f 0     0    u64vector gambit)
-("##append-u64vectors"                (1)   #f ()    0    u64vector extended)
+("u64vector-concatenate"              (1 2) #f 0     0    u64vector gambit)
+("##u64vector-concatenate"            (1 2) #f ()    0    u64vector extended)
 ("list->u64vector"                    (1)   #f 0     0    u64vector gambit)
 ("##list->u64vector"                  (1)   #f ()    0    u64vector extended)
 ("make-u64vector"                     (1 2) #f 0     0    u64vector gambit)
@@ -1221,8 +1221,8 @@
 ("##u64vector-delete"                 (2)   #f ()    0    u64vector extended)
 ("##u64vector-delete-small"           (2)   #f ()    0    u64vector extended)
 
-("append-f32vectors"                  (1)   #f 0     0    f32vector gambit)
-("##append-f32vectors"                (1)   #f ()    0    f32vector extended)
+("f32vector-concatenate"              (1 2) #f 0     0    f32vector gambit)
+("##f32vector-concatenate"            (1 2) #f ()    0    f32vector extended)
 ("list->f32vector"                    (1)   #f 0     0    f32vector gambit)
 ("##list->f32vector"                  (1)   #f ()    0    f32vector extended)
 ("make-f32vector"                     (1 2) #f 0     0    f32vector gambit)
@@ -1266,8 +1266,8 @@
 ("##f32vector-delete"                 (2)   #f ()    0    f32vector extended)
 ("##f32vector-delete-small"           (2)   #f ()    0    f32vector extended)
 
-("append-f64vectors"                  (1)   #f 0     0    f64vector gambit)
-("##append-f64vectors"                (1)   #f ()    0    f64vector extended)
+("f64vector-concatenate"              (1 2) #f 0     0    f64vector gambit)
+("##f64vector-concatenate"            (1 2) #f ()    0    f64vector extended)
 ("list->f64vector"                    (1)   #f 0     0    f64vector gambit)
 ("##list->f64vector"                  (1)   #f ()    0    f64vector extended)
 ("make-f64vector"                     (1 2) #f 0     0    f64vector gambit)
@@ -2208,7 +2208,7 @@
 (def-spec "string-foldcase"    (spec-u "##string-foldcase"))
 (def-spec "utf8->string"       (spec-u "##utf8->string"))
 
-(def-spec "append-strings"     (spec-u "##append-strings"))
+(def-spec "string-concatenate" (spec-u "##string-concatenate"))
 (def-spec "substring-fill!"    (spec-u "##substring-fill!"))
 (def-spec "substring-move!"    (spec-u "##substring-move!"))
 (def-spec "string-set"         (spec-u "##string-set"))
@@ -2230,7 +2230,7 @@
 (def-spec "vector-copy"        (spec-u "##vector-copy"))
 (def-spec "vector-copy!"       (spec-u "##vector-copy!"))
 
-(def-spec "append-vectors"     (spec-u "##append-vectors"))
+(def-spec "vector-concatenate" (spec-u "##vector-concatenate"))
 (def-spec "subvector"          (spec-u "##subvector"))
 (def-spec "subvector-fill!"    (spec-u "##subvector-fill!"))
 (def-spec "subvector-move!"    (spec-u "##subvector-move!"))
@@ -2241,7 +2241,7 @@
 
 ;; homogeneous vector
 
-(def-spec "append-s8vectors"   (spec-u "##append-s8vectors"))
+(def-spec "s8vector-concatenate"(spec-u "##s8vector-concatenate"))
 (def-spec "list->s8vector"     (spec-u "##list->s8vector"))
 (def-spec "make-s8vector"      (spec-u "##make-s8vector"))
 (def-spec "subs8vector"        (spec-u "##subs8vector"))
@@ -2260,7 +2260,7 @@
 (def-spec "s8vector-shrink!"   (spec-u "##s8vector-shrink!"))
 (def-spec "s8vector?"          (spec-s "##s8vector?"))
 
-(def-spec "append-u8vectors"   (spec-u "##append-u8vectors"))
+(def-spec "u8vector-concatenate"(spec-u "##u8vector-concatenate"))
 (def-spec "list->u8vector"     (spec-u "##list->u8vector"))
 (def-spec "make-u8vector"      (spec-u "##make-u8vector"))
 (def-spec "subu8vector"        (spec-u "##subu8vector"))
@@ -2279,7 +2279,7 @@
 (def-spec "u8vector-shrink!"   (spec-u "##u8vector-shrink!"))
 (def-spec "u8vector?"          (spec-s "##u8vector?"))
 
-(def-spec "append-s16vectors"  (spec-u "##append-s16vectors"))
+(def-spec "s16vector-concatenate"(spec-u "##s16vector-concatenate"))
 (def-spec "list->s16vector"    (spec-u "##list->s16vector"))
 (def-spec "make-s16vector"     (spec-u "##make-s16vector"))
 (def-spec "subs16vector"       (spec-u "##subs16vector"))
@@ -2298,7 +2298,7 @@
 (def-spec "s16vector-shrink!"  (spec-u "##s16vector-shrink!"))
 (def-spec "s16vector?"         (spec-s "##s16vector?"))
 
-(def-spec "append-u16vectors"  (spec-u "##append-u16vectors"))
+(def-spec "u16vector-concatenate"(spec-u "##u16vector-concatenate"))
 (def-spec "list->u16vector"    (spec-u "##list->u16vector"))
 (def-spec "make-u16vector"     (spec-u "##make-u16vector"))
 (def-spec "subu16vector"       (spec-u "##subu16vector"))
@@ -2317,7 +2317,7 @@
 (def-spec "u16vector-shrink!"  (spec-u "##u16vector-shrink!"))
 (def-spec "u16vector?"         (spec-s "##u16vector?"))
 
-(def-spec "append-s32vectors"  (spec-u "##append-s32vectors"))
+(def-spec "s32vector-concatenate"(spec-u "##s32vector-concatenate"))
 (def-spec "list->s32vector"    (spec-u "##list->s32vector"))
 (def-spec "make-s32vector"     (spec-u "##make-s32vector"))
 (def-spec "subs32vector"       (spec-u "##subs32vector"))
@@ -2336,7 +2336,7 @@
 (def-spec "s32vector-shrink!"  (spec-u "##s32vector-shrink!"))
 (def-spec "s32vector?"         (spec-s "##s32vector?"))
 
-(def-spec "append-u32vectors"  (spec-u "##append-u32vectors"))
+(def-spec "u32vector-concatenate"(spec-u "##u32vector-concatenate"))
 (def-spec "list->u32vector"    (spec-u "##list->u32vector"))
 (def-spec "make-u32vector"     (spec-u "##make-u32vector"))
 (def-spec "subu32vector"       (spec-u "##subu32vector"))
@@ -2355,7 +2355,7 @@
 (def-spec "u32vector-shrink!"  (spec-u "##u32vector-shrink!"))
 (def-spec "u32vector?"         (spec-s "##u32vector?"))
 
-(def-spec "append-s64vectors"  (spec-u "##append-s64vectors"))
+(def-spec "s64vector-concatenate"(spec-u "##s64vector-concatenate"))
 (def-spec "list->s64vector"    (spec-u "##list->s64vector"))
 (def-spec "make-s64vector"     (spec-u "##make-s64vector"))
 (def-spec "subs64vector"       (spec-u "##subs64vector"))
@@ -2374,7 +2374,7 @@
 (def-spec "s64vector-shrink!"  (spec-u "##s64vector-shrink!"))
 (def-spec "s64vector?"         (spec-s "##s64vector?"))
 
-(def-spec "append-u64vectors"  (spec-u "##append-u64vectors"))
+(def-spec "u64vector-concatenate"(spec-u "##u64vector-concatenate"))
 (def-spec "list->u64vector"    (spec-u "##list->u64vector"))
 (def-spec "make-u64vector"     (spec-u "##make-u64vector"))
 (def-spec "subu64vector"       (spec-u "##subu64vector"))
@@ -2393,7 +2393,7 @@
 (def-spec "u64vector-shrink!"  (spec-u "##u64vector-shrink!"))
 (def-spec "u64vector?"         (spec-s "##u64vector?"))
 
-(def-spec "append-f32vectors"  (spec-u "##append-f32vectors"))
+(def-spec "f32vector-concatenate"(spec-u "##f32vector-concatenate"))
 (def-spec "list->f32vector"    (spec-u "##list->f32vector"))
 (def-spec "make-f32vector"     (spec-u "##make-f32vector"))
 (def-spec "subf32vector"       (spec-u "##subf32vector"))
@@ -2412,7 +2412,7 @@
 (def-spec "f32vector-shrink!"  (spec-u "##f32vector-shrink!"))
 (def-spec "f32vector?"         (spec-s "##f32vector?"))
 
-(def-spec "append-f64vectors"  (spec-u "##append-f64vectors"))
+(def-spec "f64vector-concatenate"(spec-u "##f64vector-concatenate"))
 (def-spec "list->f64vector"    (spec-u "##list->f64vector"))
 (def-spec "make-f64vector"     (spec-u "##make-f64vector"))
 (def-spec "subf64vector"       (spec-u "##subf64vector"))

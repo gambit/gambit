@@ -5515,7 +5515,7 @@
                             (##eq? (##string-ref new-chunk (##fx- m2 1)) ;; note: separator is a char or #f
                                    separator)
                             (##fx= ml m2))
-                        (##append-strings (##reverse new-chunks))
+                        (##string-concatenate (##reverse new-chunks))
                         (loop (##fx- ml m2)
                               new-chunks)))))))
 
@@ -13047,7 +13047,7 @@
           (let* ((new-chunk (read-chunk))
                  (new-chunks (cons new-chunk chunks)))
             (if (< (string-length new-chunk) max-chunk-length)
-                (##append-strings (reverse new-chunks))
+                (##string-concatenate (reverse new-chunks))
                 (loop new-chunks)))))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -13450,7 +13450,7 @@
                      (if (string? line)
                          (if (string=? line tag)
                              (let* ((str
-                                     (##append-strings (##reverse lines-rev)))
+                                     (##string-concatenate (##reverse lines-rev)))
                                     (len
                                      (string-length str)))
                                (if (< 0 len)

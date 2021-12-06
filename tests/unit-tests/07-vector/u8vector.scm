@@ -219,8 +219,8 @@
 (check-equal? (u8vector-append '#u8(0 255) '#u8(0 1 255)) v6)
 (check-equal? (u8vector-append v6 v7 v6) '#u8(0 255 0 1 255 0 0 0 255 0 1 255))
 
-(check-equal? (append-u8vectors (list v6 v7 v6)) '#u8(0 255 0 1 255 0 0 0 255 0 1 255))
-(check-equal? (append-u8vectors (list v6 v7 v6) '#u8(1 1 1)) '#u8(0 255 0 1 255 1 1 1 0 0 1 1 1 0 255 0 1 255))
+(check-equal? (u8vector-concatenate (list v6 v7 v6)) '#u8(0 255 0 1 255 0 0 0 255 0 1 255))
+(check-equal? (u8vector-concatenate (list v6 v7 v6) '#u8(1 1 1)) '#u8(0 255 0 1 255 1 1 1 0 0 1 1 1 0 255 0 1 255))
 
 (check-equal? (u8vector-copy '#u8()) '#u8())
 (check-equal? (u8vector-copy v6) v6)
@@ -351,9 +351,9 @@
 (check-tail-exn type-exception? (lambda () (u8vector-append bool v9)))
 (check-tail-exn type-exception? (lambda () (u8vector-append v9 bool)))
 
-(check-tail-exn type-exception? (lambda () (append-u8vectors bool)))
-(check-tail-exn type-exception? (lambda () (append-u8vectors '(1 2 3))))
-(check-tail-exn type-exception? (lambda () (append-u8vectors (list v9 v9) bool)))
+(check-tail-exn type-exception? (lambda () (u8vector-concatenate bool)))
+(check-tail-exn type-exception? (lambda () (u8vector-concatenate '(1 2 3))))
+(check-tail-exn type-exception? (lambda () (u8vector-concatenate (list v9 v9) bool)))
 
 (check-tail-exn type-exception? (lambda () (u8vector-copy bool)))
 (check-tail-exn type-exception? (lambda () (u8vector-copy v9 bool)))
@@ -449,8 +449,8 @@
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (list->u8vector)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (list->u8vector '() '())))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (append-u8vectors)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (append-u8vectors '() '() '())))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (u8vector-concatenate)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (u8vector-concatenate '() '() '())))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (u8vector-copy)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (u8vector-copy v1 0 0 0)))

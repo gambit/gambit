@@ -3960,7 +3960,7 @@ form the concatenation of the given vectors.
 
 
 
-<a name="Definition_of_append-vectors"></a><a name="Procedure_append-vectors"></a><a name="index-append_002dvectors"></a><table width="100%"><tr><td align="left"> <code>(</code><code><b><a href="event:browse:http://gambitscheme.org/wiki/index.php?title=Documentation:Procedure_append-vectors">append-vectors</a></b></code><i> <var>lst</var></i><code>)</code></td><td align="right">procedure</td></tr></table>
+<a name="Definition_of_vector-concatenate"></a><a name="Procedure_vector-concatenate"></a><a name="index-append_002dvectors"></a><table width="100%"><tr><td align="left"> <code>(</code><code><b><a href="event:browse:http://gambitscheme.org/wiki/index.php?title=Documentation:Procedure_vector-concatenate">vector-concatenate</a></b></code><i> <var>lst</var></i><code>)</code></td><td align="right">procedure</td></tr></table>
 
 <p>This procedure returns a newly allocated vector whose elements form
 the concatenation of all the vectors in the list <var>lst</var>. It is
@@ -3969,7 +3969,7 @@ equivalent to <code>(apply vector-append <span class="roman"><var>lst</var></spa
 <p>For example:
 </p>
 <table><tr><td>&nbsp;</td><td><pre class="smallexample">&gt; <b>(define v '#(1 2 3))</b>
-&gt; <b>(append-vectors (list v v v))</b>
+&gt; <b>(vector-concatenate (list v v v))</b>
 #(1 2 3 1 2 3 1 2 3)
 </pre></td></tr></table>
 
@@ -4030,7 +4030,7 @@ is <var>k</var>.  The value returned is unspecified.
 
 
 
-<a name="Definition_of_append-strings"></a><a name="Procedure_append-strings"></a><a name="index-append_002dstrings"></a><table width="100%"><tr><td align="left"> <code>(</code><code><b><a href="event:browse:http://gambitscheme.org/wiki/index.php?title=Documentation:Procedure_append-strings">append-strings</a></b></code><i> <var>lst</var></i><code>)</code></td><td align="right">procedure</td></tr></table>
+<a name="Definition_of_string-concatenate"></a><a name="Procedure_string-concatenate"></a><a name="index-append_002dstrings"></a><table width="100%"><tr><td align="left"> <code>(</code><code><b><a href="event:browse:http://gambitscheme.org/wiki/index.php?title=Documentation:Procedure_string-concatenate">string-concatenate</a></b></code><i> <var>lst</var></i><code>)</code></td><td align="right">procedure</td></tr></table>
 
 <p>This procedure returns a newly allocated string whose elements form
 the concatenation of all the strings in the list <var>lst</var>. It is
@@ -4039,7 +4039,7 @@ equivalent to <code>(apply string-append <span class="roman"><var>lst</var></spa
 <p>For example:
 </p>
 <table><tr><td>&nbsp;</td><td><pre class="smallexample">&gt; <b>(define s &quot;abc&quot;)</b>
-&gt; <b>(append-strings (list s s s))</b>
+&gt; <b>(string-concatenate (list s s s))</b>
 &quot;abcabcabc&quot;
 </pre></td></tr></table>
 
@@ -18724,12 +18724,12 @@ That's all there is to it!
 <tr><td></td><td valign="top"><a href="#index-append_002ds32vectors"><code>append-s32vectors</code></a></td><td valign="top"><a href="#Homogeneous-vectors">10. Homogeneous vectors</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-append_002ds64vectors"><code>append-s64vectors</code></a></td><td valign="top"><a href="#Homogeneous-vectors">10. Homogeneous vectors</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-append_002ds8vectors"><code>append-s8vectors</code></a></td><td valign="top"><a href="#Homogeneous-vectors">10. Homogeneous vectors</a></td></tr>
-<tr><td></td><td valign="top"><a href="#index-append_002dstrings"><code>append-strings</code></a></td><td valign="top"><a href="#Miscellaneous-extensions">6.3 Miscellaneous extensions</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-append_002dstrings"><code>string-concatenate</code></a></td><td valign="top"><a href="#Miscellaneous-extensions">6.3 Miscellaneous extensions</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-append_002du16vectors"><code>append-u16vectors</code></a></td><td valign="top"><a href="#Homogeneous-vectors">10. Homogeneous vectors</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-append_002du32vectors"><code>append-u32vectors</code></a></td><td valign="top"><a href="#Homogeneous-vectors">10. Homogeneous vectors</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-append_002du64vectors"><code>append-u64vectors</code></a></td><td valign="top"><a href="#Homogeneous-vectors">10. Homogeneous vectors</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-append_002du8vectors"><code>append-u8vectors</code></a></td><td valign="top"><a href="#Homogeneous-vectors">10. Homogeneous vectors</a></td></tr>
-<tr><td></td><td valign="top"><a href="#index-append_002dvectors"><code>append-vectors</code></a></td><td valign="top"><a href="#Miscellaneous-extensions">6.3 Miscellaneous extensions</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-append_002dvectors"><code>vector-concatenate</code></a></td><td valign="top"><a href="#Miscellaneous-extensions">6.3 Miscellaneous extensions</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-arithmetic_002dshift"><code>arithmetic-shift</code></a></td><td valign="top"><a href="#Bitwise_002doperations-on-exact-integers">9.4 Bitwise-operations on exact integers</a></td></tr>
 <tr><td colspan="3"> <hr></td></tr>
 <tr><th><a name="General-index-1_cp_letter-B">B</a></th><td></td><td></td></tr>

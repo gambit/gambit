@@ -4293,6 +4293,7 @@
     (mutable                      . "MUTABLE object")
     (pair                         . "PAIR")
     (pair-list                    . "PAIR LIST")
+    (list-list                    . "LIST LIST")
     (char                         . "CHARACTER")
     (char-list                    . "CHARACTER LIST")
     (char-vector                  . "CHARACTER VECTOR")

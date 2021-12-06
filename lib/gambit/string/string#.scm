@@ -2,7 +2,7 @@
 
 ;;; File: "string#.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -10,7 +10,6 @@
 
 (##namespace (""
 
-append-strings
 invalid-utf8-encoding-exception-arguments
 invalid-utf8-encoding-exception-procedure
 invalid-utf8-encoding-exception?
@@ -25,6 +24,7 @@ string-ci<?
 string-ci=?
 string-ci>=?
 string-ci>?
+string-concatenate
 string-copy!
 string-copy
 string-downcase

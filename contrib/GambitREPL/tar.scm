@@ -623,7 +623,7 @@
                 y
                 (p2u p y))))))
 
-  (append-strings (p2u (path-strip-volume path) '())))
+  (string-concatenate (p2u (path-strip-volume path) '())))
 
 ;;;----------------------------------------------------------------------------
 

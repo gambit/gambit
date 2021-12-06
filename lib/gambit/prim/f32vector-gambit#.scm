@@ -2,7 +2,7 @@
 
 ;;; File: "f32vector-gambit#.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -10,7 +10,6 @@
 
 (##namespace ("##"
 
-append-f32vectors
 list->f32vector
 make-f32vector
 subf32vector
@@ -19,6 +18,7 @@ subf32vector-move!
 f32vector
 f32vector->list
 f32vector-append
+f32vector-concatenate
 f32vector-copy
 f32vector-copy!
 f32vector-fill!

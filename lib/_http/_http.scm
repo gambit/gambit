@@ -3,7 +3,7 @@
 ;;; File: "_http.scm"
 
 ;;; Copyright (c) 2019-2020 by Frédéric Hamel, All Rights Reserved.
-;;; Copyright (c) 2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2020-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -161,7 +161,7 @@
                 (done-header
                   (if (null? result)
                     line
-                    (append-strings (reverse (cons line rev-result))))))
+                    (string-concatenate (reverse (cons line rev-result))))))
 
               (loop (cons line rev-result)))))))
 
@@ -179,7 +179,7 @@
             (let ((trailing-chunk (read-line p)))
               (if (and (string? trailing-chunk)
                        (string=? trailing-chunk "\r"))
-                (done p (append-strings (reverse rev-result)))
+                (done p (string-concatenate (reverse rev-result)))
                 (raise (macro-make-http-exception "Missing trailing chunk")))))
 
           (begin

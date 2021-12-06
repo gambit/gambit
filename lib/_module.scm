@@ -43,8 +43,8 @@
                                  (##cdr rpath))
                          rpath))))
          (name
-          (##append-strings parts
-                            (##string ##module-path-sep))))
+          (##string-concatenate parts
+                                (##string ##module-path-sep))))
     (if namespace?
         (##string-append name "#")
         name)))
@@ -623,7 +623,7 @@
                             ##os-bat-extension-string-saved)
            (##path-normalize-directory-existing "~~bin")))
          (arguments
-          (##list (##append-strings
+          (##list (##string-concatenate
                    (##cons (##string-append "-:=" (##os-path-gambitdir))
                            (install-dir "lib"
                                         (install-dir "userlib"

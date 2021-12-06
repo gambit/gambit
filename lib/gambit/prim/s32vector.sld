@@ -2,7 +2,7 @@
 
 ;;; File: "s32vector.sld"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -16,7 +16,6 @@
 
 ;; gambit
 
-append-s32vectors
 list->s32vector
 make-s32vector
 subs32vector
@@ -25,6 +24,7 @@ subs32vector-move!
 s32vector
 s32vector->list
 s32vector-append
+s32vector-concatenate
 s32vector-copy
 s32vector-copy!
 s32vector-fill!

@@ -158,7 +158,7 @@
 (define (##string-or-string-list-join x sep)
   (if (##string? x)
       x
-      (##append-strings x sep)))
+      (##string-concatenate x sep)))
 
 (define (##multiple-args-join x)
   (##string-or-string-list-join x "\n"))

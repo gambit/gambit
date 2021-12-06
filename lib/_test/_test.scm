@@ -2,7 +2,7 @@
 
 ;;; File: "_test.scm"
 
-;;; Copyright (c) 2013-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2013-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -281,7 +281,7 @@
 
 (define (test-indent)
   (let ((n (length context)))
-    (append-strings (map (lambda (x) "| ") (iota n)))))
+    (string-concatenate (map (lambda (x) "| ") (iota n)))))
 
 (define (%test-group suite-name body-thunk)
   (%test-begin suite-name #f)

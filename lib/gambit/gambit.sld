@@ -302,20 +302,8 @@ address-info?
 address-infos
 all-bits-set?
 any-bits-set?
-append-f32vectors
-append-f64vectors
 append-reverse
 append-reverse!
-append-s16vectors
-append-s32vectors
-append-s64vectors
-append-s8vectors
-append-strings
-append-u16vectors
-append-u32vectors
-append-u64vectors
-append-u8vectors
-append-vectors
 apropos
 arithmetic-shift
 asinh
@@ -446,8 +434,8 @@ error-object-irritants
 error-object-message
 error-object?
 exact
-exact-integer?
 exact-integer-sqrt
+exact-integer?
 executable-path
 exit
 expression-parsing-exception-kind
@@ -458,6 +446,7 @@ extract-bit-field
 f32vector
 f32vector->list
 f32vector-append
+f32vector-concatenate
 f32vector-copy
 f32vector-copy!
 f32vector-fill!
@@ -470,6 +459,7 @@ f32vector?
 f64vector
 f64vector->list
 f64vector-append
+f64vector-concatenate
 f64vector-copy
 f64vector-copy!
 f64vector-fill!
@@ -933,6 +923,7 @@ rpc-remote-error-exception?
 s16vector
 s16vector->list
 s16vector-append
+s16vector-concatenate
 s16vector-copy
 s16vector-copy!
 s16vector-fill!
@@ -945,6 +936,7 @@ s16vector?
 s32vector
 s32vector->list
 s32vector-append
+s32vector-concatenate
 s32vector-copy
 s32vector-copy!
 s32vector-fill!
@@ -957,6 +949,7 @@ s32vector?
 s64vector
 s64vector->list
 s64vector-append
+s64vector-concatenate
 s64vector-copy
 s64vector-copy!
 s64vector-fill!
@@ -969,6 +962,7 @@ s64vector?
 s8vector
 s8vector->list
 s8vector-append
+s8vector-concatenate
 s8vector-copy
 s8vector-copy!
 s8vector-fill!
@@ -1075,15 +1069,15 @@ six.x>y
 six.x?y:z
 six.x^=y
 six.x^y
-|six.x,y|
-|six.x\|=y|
-|six.x\|y|
-|six.x\|\|y|
 six.xandy
 six.xiny
 six.xisy
 six.xory
 six.~x
+|six.x,y|
+|six.x\|=y|
+|six.x\|\|y|
+|six.x\|y|
 socket-info-address
 socket-info-family
 socket-info-port-number
@@ -1101,6 +1095,7 @@ string->uninterned-symbol
 string->utf8
 string->vector
 string-ci=?-hash
+string-concatenate
 string-copy!
 string-downcase
 string-foldcase
@@ -1253,6 +1248,7 @@ type-exception?
 u16vector
 u16vector->list
 u16vector-append
+u16vector-concatenate
 u16vector-copy
 u16vector-copy!
 u16vector-fill!
@@ -1265,6 +1261,7 @@ u16vector?
 u32vector
 u32vector->list
 u32vector-append
+u32vector-concatenate
 u32vector-copy
 u32vector-copy!
 u32vector-fill!
@@ -1277,6 +1274,7 @@ u32vector?
 u64vector
 u64vector->list
 u64vector-append
+u64vector-concatenate
 u64vector-copy
 u64vector-copy!
 u64vector-fill!
@@ -1291,6 +1289,7 @@ u8vector
 u8vector->list
 u8vector->object
 u8vector-append
+u8vector-concatenate
 u8vector-copy
 u8vector-copy!
 u8vector-fill!
@@ -1311,15 +1310,15 @@ unbound-global-exception-code
 unbound-global-exception-rte
 unbound-global-exception-variable
 unbound-global-exception?
+unbound-key-exception-arguments
+unbound-key-exception-procedure
+unbound-key-exception?
 unbound-os-environment-variable-exception-arguments
 unbound-os-environment-variable-exception-procedure
 unbound-os-environment-variable-exception?
 unbound-serial-number-exception-arguments
 unbound-serial-number-exception-procedure
 unbound-serial-number-exception?
-unbound-key-exception-arguments
-unbound-key-exception-procedure
-unbound-key-exception?
 unbox
 unbreak
 uncaught-exception-arguments
@@ -1350,6 +1349,7 @@ utf8->string
 vector->string
 vector-append
 vector-cas!
+vector-concatenate
 vector-copy
 vector-copy!
 vector-for-each

@@ -94,6 +94,8 @@
 ;; Gambit
 
 (list-ref (circular-list 1) 10) (list-ref (circular-list 1 2) 10) (list-ref (circular-list 1 2 3) 10)
+(concatenate '((1 2) (3 4) 5))
+(let ((a (list 1 2)) (b (list 3 4))) (list a b (concatenate! (list a b 5))))
 (cons* 1) (cons* 1 2) (cons* 1 2 3)
 (drop '(1 2 3 4) 2)
 (fold list 1 '(2 3 4 5))

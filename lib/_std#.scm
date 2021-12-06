@@ -230,6 +230,9 @@
 (define-check-type list 'list
   (lambda (obj) #t)) ;; a non-null non-pair object is a dotted list...
 
+(define-check-type (list list-null) 'list
+  ##null?)
+
 ;; The proper-list type covers possibly empty chains of pairs ending with '().
 
 (define-check-type (list proper-list) #f
@@ -271,6 +274,14 @@
 
 (define-check-type (pair-list pair-list-pair) 'pair-list
   ##pair?)
+
+;; The pair-list type is a proper-list of lists.
+
+(define-check-type (list list-list) #f
+  (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
+
+(define-check-type (list-list list-list-null) 'list-list
+  ##null?)
 
 (define-check-type symbol 'symbol
   ##symbol?)
@@ -341,8 +352,8 @@
     (define prim-vect-fill!        (sym "##" name '-fill!))
     (define prim-subvect           (sym '##sub name))
     (define prim-subvect-small     (sym '##sub name '-small))
-    (define prim-append-vects      (sym '##append- name 's))
     (define prim-vect-append       (sym "##" name '-append))
+    (define prim-vect-concatenate  (sym "##" name '-concatenate))
     (define prim-subvect-move!     (sym '##sub name '-move!))
     (define prim-subvect-fill!     (sym '##sub name '-fill!))
     (define prim-vect-shrink!      (sym "##" name '-shrink!))
@@ -371,8 +382,8 @@
     (define vect-fill!             (sym name '-fill!))
     (define subvect                (sym 'sub name))
     (define subvect-small          (sym 'sub name '-small))
-    (define append-vects           (sym 'append- name 's))
     (define vect-append            (sym name '-append))
+    (define vect-concatenate       (sym name '-concatenate))
     (define subvect-move!          (sym 'sub name '-move!))
     (define subvect-fill!          (sym 'sub name '-fill!))
     (define vect-shrink!           (sym name '-shrink!))
@@ -765,7 +776,7 @@
                                         (,prim-vect-length ,name))))
                  (,prim-subvect ,name start end))
 
-               (define-primitive (,append-vects
+               (define-primitive (,vect-concatenate
                                   ,vect-list
                                   (separator object
                                              (macro-absent-obj)))
@@ -779,7 +790,7 @@
                               (if (not (,prim-vect? vect))
                                   (if (eq? separator (macro-deleted-obj))
                                       (,prim-fail-check-vect arg-num '() ,vect-append ,vect-list)
-                                      (,prim-fail-check-vect-list '(1 . ,vect-list) ,append-vects ,vect-list separator))
+                                      (,prim-fail-check-vect-list '(1 . ,vect-list) ,vect-concatenate ,vect-list separator))
                                   (loop1 (fx+ n (,prim-vect-length vect))
                                          (cdr probe)
                                          (fx+ arg-num 1))))))
@@ -787,7 +798,7 @@
                           (if (not (or (eq? separator (macro-deleted-obj)) ;; for vect-append
                                        (eq? separator (macro-absent-obj))
                                        (,prim-vect? separator)))
-                              (,prim-fail-check-vect '(2 . separator) '() ,append-vects ,vect-list separator)
+                              (,prim-fail-check-vect '(2 . separator) '() ,vect-concatenate ,vect-list separator)
                               (if (not (pair? ,vect-list))
                                   (,prim-make-vect 0)
                                   (let* ((n
@@ -815,16 +826,16 @@
                                                          rest))
                                               result))))))))
                          (else
-                          (,prim-fail-check-vect-list '(1 . ,vect-list) ,append-vects ,vect-list separator)))))
+                          (,prim-fail-check-vect-list '(1 . ,vect-list) ,vect-concatenate ,vect-list separator)))))
 
-               (define-procedure (,append-vects
+               (define-procedure (,vect-concatenate
                                   ,vect-list
                                   (separator object
                                              (macro-absent-obj)))
-                 (,prim-append-vects ,vect-list separator))
+                 (,prim-vect-concatenate ,vect-list separator))
 
                (define-prim&proc (,vect-append ,vect ...)
-                 (,prim-append-vects ,vect (macro-deleted-obj)))))
+                 (,prim-vect-concatenate ,vect (macro-deleted-obj)))))
 
        (macro-case-target
 

@@ -3698,7 +3698,7 @@ For example:
 
 @end deffn
 
-@deffn procedure append-vectors @var{lst} @r{[}@var{separator}@r{]}
+@deffn procedure vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
 
 This procedure returns a newly allocated vector whose elements form
 the concatenation of all the vectors in the list @var{lst}. If the
@@ -3711,9 +3711,9 @@ For example:
 
 @smallexample
 > @b{(define v '#(1 2 3))}
-> @b{(append-vectors (list v v v))}
+> @b{(vector-concatenate (list v v v))}
 #(1 2 3 1 2 3 1 2 3)
-> @b{(append-vectors (list v v v) '#(88 99))}
+> @b{(vector-concatenate (list v v v) '#(88 99))}
 #(1 2 3 88 99 1 2 3 88 99 1 2 3)
 @end smallexample
 
@@ -3777,7 +3777,7 @@ For example:
 
 @end deffn
 
-@deffn procedure append-strings @var{lst} @r{[}@var{separator}@r{]}
+@deffn procedure string-concatenate @var{lst} @r{[}@var{separator}@r{]}
 
 This procedure returns a newly allocated string which is the
 concatenation of all the strings in the list @var{lst}. If the
@@ -3790,9 +3790,9 @@ For example:
 
 @smallexample
 > @b{(define s "abc")}
-> @b{(append-strings (list s s s))}
+> @b{(string-concatenate (list s s s))}
 "abcabcabc"
-> @b{(append-strings (list s s s) ",")}
+> @b{(string-concatenate (list s s s) ",")}
 "abc,abc,abc"
 @end smallexample
 
@@ -7077,7 +7077,7 @@ homogeneous vector types.
 @deffnx procedure list->s8vector @var{list-of-exact-int8}
 @deffnx procedure s8vector-fill! @var{s8vector} @var{fill} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure subs8vector-fill! @var{vector} @var{start} @var{end} @var{fill}
-@deffnx procedure append-s8vectors @var{lst} @r{[}@var{separator}@r{]}
+@deffnx procedure s8vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
 @deffnx procedure s8vector-copy @var{s8vector}
 @deffnx procedure s8vector-append @var{s8vector}@dots{}
 @deffnx procedure subs8vector @var{s8vector} @var{start} @var{end}
@@ -7096,7 +7096,7 @@ homogeneous vector types.
 @deffnx procedure list->u8vector @var{list-of-exact-int8}
 @deffnx procedure u8vector-fill! @var{u8vector} @var{fill} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure subu8vector-fill! @var{vector} @var{start} @var{end} @var{fill}
-@deffnx procedure append-u8vectors @var{lst} @r{[}@var{separator}@r{]}
+@deffnx procedure u8vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
 @deffnx procedure u8vector-copy @var{u8vector}
 @deffnx procedure u8vector-append @var{u8vector}@dots{}
 @deffnx procedure subu8vector @var{u8vector} @var{start} @var{end}
@@ -7115,7 +7115,7 @@ homogeneous vector types.
 @deffnx procedure list->s16vector @var{list-of-exact-int16}
 @deffnx procedure s16vector-fill! @var{s16vector} @var{fill} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure subs16vector-fill! @var{vector} @var{start} @var{end} @var{fill}
-@deffnx procedure append-s16vectors @var{lst} @r{[}@var{separator}@r{]}
+@deffnx procedure s16vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
 @deffnx procedure s16vector-copy @var{s16vector}
 @deffnx procedure s16vector-append @var{s16vector}@dots{}
 @deffnx procedure subs16vector @var{s16vector} @var{start} @var{end}
@@ -7134,7 +7134,7 @@ homogeneous vector types.
 @deffnx procedure list->u16vector @var{list-of-exact-int16}
 @deffnx procedure u16vector-fill! @var{u16vector} @var{fill} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure subu16vector-fill! @var{vector} @var{start} @var{end} @var{fill}
-@deffnx procedure append-u16vectors @var{lst} @r{[}@var{separator}@r{]}
+@deffnx procedure u16vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
 @deffnx procedure u16vector-copy @var{u16vector}
 @deffnx procedure u16vector-append @var{u16vector}@dots{}
 @deffnx procedure subu16vector @var{u16vector} @var{start} @var{end}
@@ -7153,7 +7153,7 @@ homogeneous vector types.
 @deffnx procedure list->s32vector @var{list-of-exact-int32}
 @deffnx procedure s32vector-fill! @var{s32vector} @var{fill} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure subs32vector-fill! @var{vector} @var{start} @var{end} @var{fill}
-@deffnx procedure append-s32vectors @var{lst} @r{[}@var{separator}@r{]}
+@deffnx procedure s32vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
 @deffnx procedure s32vector-copy @var{s32vector}
 @deffnx procedure s32vector-append @var{s32vector}@dots{}
 @deffnx procedure subs32vector @var{s32vector} @var{start} @var{end}
@@ -7172,7 +7172,7 @@ homogeneous vector types.
 @deffnx procedure list->u32vector @var{list-of-exact-int32}
 @deffnx procedure u32vector-fill! @var{u32vector} @var{fill} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure subu32vector-fill! @var{vector} @var{start} @var{end} @var{fill}
-@deffnx procedure append-u32vectors @var{lst} @r{[}@var{separator}@r{]}
+@deffnx procedure u32vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
 @deffnx procedure u32vector-copy @var{u32vector}
 @deffnx procedure u32vector-append @var{u32vector}@dots{}
 @deffnx procedure subu32vector @var{u32vector} @var{start} @var{end}
@@ -7191,7 +7191,7 @@ homogeneous vector types.
 @deffnx procedure list->s64vector @var{list-of-exact-int64}
 @deffnx procedure s64vector-fill! @var{s64vector} @var{fill} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure subs64vector-fill! @var{vector} @var{start} @var{end} @var{fill}
-@deffnx procedure append-s64vectors @var{lst} @r{[}@var{separator}@r{]}
+@deffnx procedure s64vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
 @deffnx procedure s64vector-copy @var{s64vector}
 @deffnx procedure s64vector-append @var{s64vector}@dots{}
 @deffnx procedure subs64vector @var{s64vector} @var{start} @var{end}
@@ -7210,7 +7210,7 @@ homogeneous vector types.
 @deffnx procedure list->u64vector @var{list-of-exact-int64}
 @deffnx procedure u64vector-fill! @var{u64vector} @var{fill} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure subu64vector-fill! @var{vector} @var{start} @var{end} @var{fill}
-@deffnx procedure append-u64vectors @var{lst} @r{[}@var{separator}@r{]}
+@deffnx procedure u64vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
 @deffnx procedure u64vector-copy @var{u64vector}
 @deffnx procedure u64vector-append @var{u64vector}@dots{}
 @deffnx procedure subu64vector @var{u64vector} @var{start} @var{end}
@@ -7229,7 +7229,7 @@ homogeneous vector types.
 @deffnx procedure list->f32vector @var{list-of-inexact-real}
 @deffnx procedure f32vector-fill! @var{f32vector} @var{fill} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure subf32vector-fill! @var{vector} @var{start} @var{end} @var{fill}
-@deffnx procedure append-f32vectors @var{lst} @r{[}@var{separator}@r{]}
+@deffnx procedure f32vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
 @deffnx procedure f32vector-copy @var{f32vector}
 @deffnx procedure f32vector-append @var{f32vector}@dots{}
 @deffnx procedure subf32vector @var{f32vector} @var{start} @var{end}
@@ -7248,7 +7248,7 @@ homogeneous vector types.
 @deffnx procedure list->f64vector @var{list-of-inexact-real}
 @deffnx procedure f64vector-fill! @var{f64vector} @var{fill} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure subf64vector-fill! @var{vector} @var{start} @var{end} @var{fill}
-@deffnx procedure append-f64vectors @var{lst} @r{[}@var{separator}@r{]}
+@deffnx procedure f64vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
 @deffnx procedure f64vector-copy @var{f64vector}
 @deffnx procedure f64vector-append @var{f64vector}@dots{}
 @deffnx procedure subf64vector @var{f64vector} @var{start} @var{end}

@@ -2,7 +2,7 @@
 
 ;;; File: "vector.sld"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -36,7 +36,7 @@ vector-copy!
 
 ;; gambit
 
-append-vectors
+vector-concatenate
 vector-set
 vector-shrink!
 subvector

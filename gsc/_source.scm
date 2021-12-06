@@ -123,7 +123,7 @@
 (define (false-obj)
   false-object)
 
-(define (**append-strings lst)
+(define (**string-concatenate lst)
   (let loop1 ((n 0) (x lst) (y '()))
     (if (pair? x)
       (let ((s (car x)))
@@ -1067,7 +1067,7 @@
         (let* ((new-chunk (read-chunk))
                (new-chunks (cons new-chunk chunks)))
           (if (< (string-length new-chunk) max-chunk-length)
-            (**append-strings (reverse new-chunks))
+            (**string-concatenate (reverse new-chunks))
             (loop new-chunks)))))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

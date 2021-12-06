@@ -4,7 +4,7 @@
 
 ;; Gambit
 
-(append-s32vectors '(#s32(1) #s32(2) #s32(3)))
+(s32vector-concatenate '(#s32(1) #s32(2) #s32(3)))
 (list->s32vector '(1 2 3))
 (s32vector-length (make-s32vector 5)) (make-s32vector 5 9)
 (subs32vector '#s32(1 2 3 4 5) 1 3)

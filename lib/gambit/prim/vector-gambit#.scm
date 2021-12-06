@@ -2,7 +2,7 @@
 
 ;;; File: "vector-gambit#.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -10,7 +10,7 @@
 
 (##namespace ("##"
 
-append-vectors
+vector-concatenate
 vector-set
 vector-shrink!
 subvector

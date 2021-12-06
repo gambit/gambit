@@ -2,7 +2,7 @@
 
 ;;; File: "test.scm"
 
-;;; Copyright (c) 2014-2019 by Marc Feeley and Frédéric Hamel, All Rights Reserved.
+;;; Copyright (c) 2014-2021 by Marc Feeley and Frédéric Hamel, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -75,7 +75,7 @@
          "  (include \"foo.scm\"))\n")))
 
     (test-equal "hello!\n"
-                (gsi (append-strings
+                (gsi (string-concatenate
                        (list "-:debug=-,search="
                              (search lib-dir)
                              (search dir)
@@ -102,7 +102,7 @@
           "    (define (main)\n"
           "      (display \"[A] main\\n\"))))\n"))))
     (test-equal "[A] main\n"
-                (gsi (append-strings
+                (gsi (string-concatenate
                        (list "-:debug=-,search="
                              (search lib-dir)
                              (search userlib-dir)
@@ -162,7 +162,7 @@
            "      (display \"[A] main\\n\"))))\n")))))
 
     (test-equal "[A/B1] main\n[A/B2] main\n[A/C] main\n[A] main\n"
-                (gsi (append-strings
+                (gsi (string-concatenate
                        (list "-:debug=-,search="
                              (search lib-dir)
                              (search userlib-dir)
@@ -216,7 +216,7 @@
             "      (display \"[A/C] main\\n\"))))\n"))))))
 
     (test-equal "[A/B1] main\n[A/B2] main\n[A/C] main\n"
-                (gsi (append-strings
+                (gsi (string-concatenate
                        (list "-:debug=-,search="
                              (search lib-dir)
                              (search userlib-dir)

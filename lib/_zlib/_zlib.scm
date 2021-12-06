@@ -2,7 +2,7 @@
 
 ;;; File: "_zlib.scm"
 
-;;; Copyright (c) 2006-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2006-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -173,7 +173,7 @@
       (let ((u8vect (make-u8vector 512)))
         (let ((n (get u8vect 0 (u8vector-length u8vect))))
           (if (not n)
-              (append-u8vectors (reverse rev-chunks))
+              (u8vector-concatenate (reverse rev-chunks))
               (begin
                 (u8vector-shrink! u8vect n)
                 (loop (fx+ i n) (cons u8vect rev-chunks)))))))))
@@ -1029,7 +1029,7 @@
     (let ((u8vect (make-u8vector 512)))
       (let ((n (get-outbuf u8vect 0 (u8vector-length u8vect))))
         (if (not n)
-            (append-u8vectors (reverse rev-chunks))
+            (u8vector-concatenate (reverse rev-chunks))
             (begin
               (u8vector-shrink! u8vect n)
               (loop (fx+ i n) (cons u8vect rev-chunks))))))))

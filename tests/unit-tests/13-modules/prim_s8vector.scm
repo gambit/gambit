@@ -4,7 +4,7 @@
 
 ;; Gambit
 
-(append-s8vectors '(#s8(1) #s8(2) #s8(3)))
+(s8vector-concatenate '(#s8(1) #s8(2) #s8(3)))
 (list->s8vector '(1 2 3))
 (s8vector-length (make-s8vector 5)) (make-s8vector 5 9)
 (subs8vector '#s8(1 2 3 4 5) 1 3)

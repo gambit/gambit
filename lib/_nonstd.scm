@@ -2269,7 +2269,7 @@
                      (if (fx< n chunk-size)
                          (begin
                            (close-port port)
-                           (append-u8vectors (reverse new-chunks)))
+                           (u8vector-concatenate (reverse new-chunks)))
                          (loop new-chunks)))))))))
    (standard read-file-u8vector)
    path-or-settings))
