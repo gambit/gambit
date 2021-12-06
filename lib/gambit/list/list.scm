@@ -14,8 +14,10 @@
 
 (implement-check-type-pair)
 (implement-check-type-pair-list)
+(implement-check-type-deeper-pair-tree)
 (implement-check-type-list-list)
 (implement-check-type-list)
+(implement-check-type-longer-list)
 (implement-check-type-proper-list)
 (implement-check-type-proper-or-circular-list)
 
@@ -58,7 +60,7 @@
                             ,(gen2 'x (quotient pattern 2)))))))
               (if (eq? var 'pair) ;; avoid repeating initial pair check
                   body
-                  `(macro-check-pair ,var '(1 . pair) ((%procedure%) pair);;TODO: error message confusing?
+                  `(macro-check-deeper-pair-tree-pair ,var '(1 . pair) ((%procedure%) pair)
                      ,body))))
 
           `((define-primitive (,name (pair pair))
@@ -335,29 +337,37 @@
           (macro-check-proper-list-null* x list '(1 . list) ((%procedure%) list)
             result)))))
 
-(define-primitive (list-ref (list proper-list)
+(define-primitive (list-ref (list list)
                             (k    index))
   (let loop ((x list) (i k))
     (if (fx< 0 i)
         (loop (cdr x) (fx- i 1))
         (car x))))
 
-(define-procedure (list-ref (list proper-list)
+(define-procedure (list-ref (list list)
                             (k    index))
-  (let loop ((x list) (i k))
-    (macro-force-vars (x)
-      (macro-if-checks
-       (if (not (pair? x))
-           (macro-check-proper-list-null* x list '(1 . list) ((%procedure%) list k)
-             (primitive (raise-range-exception '(2 . k) (%procedure%) list k)))
-           (if (fx< 0 i)
-               (loop (cdr x) (fx- i 1))
-               (car x)))
-       (if (fx< 0 i)
-           (loop (cdr x) (fx- i 1))
-           (car x))))))
 
-(define-primitive (list-set! (list proper-list)
+  (define (process list k)
+    (let loop ((x list) (i k))
+      (if (fx< 0 i)
+          (let ((cdr-x (cdr x)))
+            (macro-force-vars (cdr-x)
+              (macro-check-longer-list-pair
+                cdr-x
+                '(1 . list)
+                ((%procedure%) list k)
+                (loop cdr-x (fx- i 1)))))
+          (car x))))
+
+  (macro-if-checks
+   (if (pair? list)
+       (process list k)
+       (if (null? list)
+           (macro-fail-check-longer-list '(1 . list) ((%procedure%) list k))
+           (macro-fail-check-list '(1 . list) ((%procedure%) list k))))
+   (process list k)))
+
+(define-primitive (list-set! (list list)
                              (k    index)
                              (obj  object))
   (let loop ((x list) (i k))
@@ -367,28 +377,34 @@
           (set-car! x obj)
           (void)))))
 
-(define-procedure (list-set! (list proper-list)
+(define-procedure (list-set! (list list)
                              (k    index)
                              (obj  object))
-  (let loop ((x list) (i k))
-    (macro-force-vars (x)
-      (macro-if-checks
-       (if (not (pair? x))
-           (macro-check-proper-list-null* x list '(1 . list) ((%procedure%) list k obj)
-             (primitive (raise-range-exception '(2 . k) (%procedure%) list k obj)))
-           (if (fx< 0 i)
-               (loop (cdr x) (fx- i 1))
-               (macro-check-mutable x '(1 . list) ((%procedure%) list k obj)
-                 (begin
-                   (set-car! x obj)
-                   (void)))))
-       (if (fx< 0 i)
-           (loop (cdr x) (fx- i 1))
-           (begin
-             (set-car! x obj)
-             (void)))))))
 
-(define-primitive (list-set (list proper-list)
+  (define (process list k obj)
+    (let loop ((x list) (i k))
+      (if (fx< 0 i)
+          (let ((cdr-x (cdr x)))
+            (macro-force-vars (cdr-x)
+              (macro-check-longer-list-pair
+                cdr-x
+                '(1 . list)
+                ((%procedure%) list k obj)
+                (loop cdr-x (fx- i 1)))))
+          (macro-check-mutable x '(1 . list) ((%procedure%) list k obj)
+            (begin
+              (set-car! x obj)
+              (void))))))
+
+  (macro-if-checks
+   (if (pair? list)
+       (process list k obj)
+       (if (null? list)
+           (macro-fail-check-longer-list '(1 . list) ((%procedure%) list k obj))
+           (macro-fail-check-list '(1 . list) ((%procedure%) list k obj))))
+   (process list k obj)))
+
+(define-primitive (list-set (list list)
                             (k    index)
                             (obj  object))
 
@@ -399,34 +415,35 @@
 
   (set list k))
 
-(define-procedure (list-set (list proper-list)
+(define-procedure (list-set (list list)
                             (k    index)
                             (obj  object))
 
-  (define (set x i)
-    (macro-force-vars (x)
-      (if (pair? x)
-          (if (fx< 0 i)
-              (let ((r (set (cdr x) (fx- i 1))))
-                (if (pair? r)
-                    (cons (car x) r)
-                    r))
-              (cons obj (cdr x)))
-          (null? x) )))
+  (define (process x i obj)
+    (let ((cdr-x (cdr x)))
+      (if (fx< 0 i)
+          (macro-force-vars (cdr-x)
+            (macro-if-checks
+             (and (pair? cdr-x)
+                  (let ((r (process cdr-x (fx- i 1) obj)))
+                    (if (pair? r)
+                        (cons (car x) r)
+                        r)))
+             (let ((r (process cdr-x (fx- i 1) obj)))
+               (if (pair? r)
+                   (cons (car x) r)
+                   r))))
+          (cons obj cdr-x))))
 
   (macro-if-checks
-   (let ((r (set list k)))
-     (if (pair? r)
-         r
-         (if r
-             (primitive
-              (raise-range-exception '(2 . k) (%procedure%) list k obj))
-             (if (or (null? list) (pair? list))
-                 (primitive
-                  (fail-check-proper-list '(1 . list) (%procedure%) list k obj))
-                 (primitive
-                  (fail-check-list '(1 . list) (%procedure%) list k obj))))))
-   (set list k)))
+   (if (pair? list)
+       (let ((r (process list k obj)))
+         (or r
+             (macro-fail-check-longer-list '(1 . list) ((%procedure%) list k obj))))
+       (if (null? list)
+           (macro-fail-check-longer-list '(1 . list) ((%procedure%) list k obj))
+           (macro-fail-check-list '(1 . list) ((%procedure%) list k obj))))
+   (process list k obj)))
 
 (define-primitive (memq (obj  object)
                         (list proper-list))

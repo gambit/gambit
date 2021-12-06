@@ -225,6 +225,9 @@
 (define-check-type pair 'pair
   ##pair?)
 
+(define-check-type (deeper-pair-tree deeper-pair-tree-pair) 'deeper-pair-tree
+  ##pair?)
+
 ;; The list type covers all types of lists including circular and dotted.
 
 (define-check-type list 'list
@@ -232,6 +235,9 @@
 
 (define-check-type (list list-null) 'list
   ##null?)
+
+(define-check-type (longer-list longer-list-pair) 'longer-list
+  ##pair?)
 
 ;; The proper-list type covers possibly empty chains of pairs ending with '().
 
