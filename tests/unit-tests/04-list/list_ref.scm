@@ -19,7 +19,7 @@
 (check-tail-exn type-exception? (lambda () (list-ref bool 0)))
 (check-tail-exn type-exception? (lambda () (list-ref lst1 bool)))
 (check-tail-exn range-exception? (lambda () (list-ref lst1 -1)))
-(check-tail-exn range-exception? (lambda () (list-ref lst1 3)))
+(check-tail-exn type-exception? (lambda () (list-ref lst1 3)))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (list-ref)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (list-ref lst1)))

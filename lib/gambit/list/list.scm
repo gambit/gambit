@@ -337,37 +337,27 @@
           (macro-check-proper-list-null* x list '(1 . list) ((%procedure%) list)
             result)))))
 
-(define-primitive (list-ref (list list)
+(define-primitive (list-ref (list pair)
                             (k    index))
   (let loop ((x list) (i k))
     (if (fx< 0 i)
         (loop (cdr x) (fx- i 1))
         (car x))))
 
-(define-procedure (list-ref (list list)
+(define-procedure (list-ref (list pair)
                             (k    index))
+  (let loop ((x list) (i k))
+    (if (fx< 0 i)
+        (let ((cdr-x (cdr x)))
+          (macro-force-vars (cdr-x)
+            (macro-check-longer-list-pair
+              cdr-x
+              '(1 . list)
+              ((%procedure%) list k)
+              (loop cdr-x (fx- i 1)))))
+        (car x))))
 
-  (define (process list k)
-    (let loop ((x list) (i k))
-      (if (fx< 0 i)
-          (let ((cdr-x (cdr x)))
-            (macro-force-vars (cdr-x)
-              (macro-check-longer-list-pair
-                cdr-x
-                '(1 . list)
-                ((%procedure%) list k)
-                (loop cdr-x (fx- i 1)))))
-          (car x))))
-
-  (macro-if-checks
-   (if (pair? list)
-       (process list k)
-       (if (null? list)
-           (macro-fail-check-longer-list '(1 . list) ((%procedure%) list k))
-           (macro-fail-check-list '(1 . list) ((%procedure%) list k))))
-   (process list k)))
-
-(define-primitive (list-set! (list list)
+(define-primitive (list-set! (list pair)
                              (k    index)
                              (obj  object))
   (let loop ((x list) (i k))
@@ -377,34 +367,24 @@
           (set-car! x obj)
           (void)))))
 
-(define-procedure (list-set! (list list)
+(define-procedure (list-set! (list pair)
                              (k    index)
                              (obj  object))
+  (let loop ((x list) (i k))
+    (if (fx< 0 i)
+        (let ((cdr-x (cdr x)))
+          (macro-force-vars (cdr-x)
+            (macro-check-longer-list-pair
+              cdr-x
+              '(1 . list)
+              ((%procedure%) list k obj)
+              (loop cdr-x (fx- i 1)))))
+        (macro-check-mutable x '(1 . list) ((%procedure%) list k obj)
+          (begin
+            (set-car! x obj)
+            (void))))))
 
-  (define (process list k obj)
-    (let loop ((x list) (i k))
-      (if (fx< 0 i)
-          (let ((cdr-x (cdr x)))
-            (macro-force-vars (cdr-x)
-              (macro-check-longer-list-pair
-                cdr-x
-                '(1 . list)
-                ((%procedure%) list k obj)
-                (loop cdr-x (fx- i 1)))))
-          (macro-check-mutable x '(1 . list) ((%procedure%) list k obj)
-            (begin
-              (set-car! x obj)
-              (void))))))
-
-  (macro-if-checks
-   (if (pair? list)
-       (process list k obj)
-       (if (null? list)
-           (macro-fail-check-longer-list '(1 . list) ((%procedure%) list k obj))
-           (macro-fail-check-list '(1 . list) ((%procedure%) list k obj))))
-   (process list k obj)))
-
-(define-primitive (list-set (list list)
+(define-primitive (list-set (list pair)
                             (k    index)
                             (obj  object))
 
@@ -415,7 +395,7 @@
 
   (set list k))
 
-(define-procedure (list-set (list list)
+(define-procedure (list-set (list pair)
                             (k    index)
                             (obj  object))
 
@@ -436,13 +416,9 @@
           (cons obj cdr-x))))
 
   (macro-if-checks
-   (if (pair? list)
-       (let ((r (process list k obj)))
-         (or r
-             (macro-fail-check-longer-list '(1 . list) ((%procedure%) list k obj))))
-       (if (null? list)
-           (macro-fail-check-longer-list '(1 . list) ((%procedure%) list k obj))
-           (macro-fail-check-list '(1 . list) ((%procedure%) list k obj))))
+   (let ((r (process list k obj)))
+     (or r
+         (macro-fail-check-longer-list '(1 . list) ((%procedure%) list k obj))))
    (process list k obj)))
 
 (define-primitive (memq (obj  object)
