@@ -3214,7 +3214,7 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #ifdef ___USE_builtin_op_overflow
 #define ___FIXMULP_NOTFALSEP(var,x,y)!___EXPECT_FALSE(__builtin_mul_overflow((___WORD)(x),___INT(y),&var))
 #else
-#define ___FIXMULP_NOTFALSEP(var,x,y)(___EXPECT_FALSE(___FIXQUO((___temp=___FIXWRAPMUL(x,y)),y)!=(x))?0:(var=___temp,1))
+#define ___FIXMULP_NOTFALSEP(var,x,y)(___temp=___FIXWRAPMUL(x,y),___EXPECT_FALSE(___FIXQUO(___temp,y)!=(x))?0:(var=___temp,1))
 #endif
 #define ___FIXMULP(x,y)(___FIXMULP_NOTFALSEP(___temp,x,y)?___temp:___FAL)
 
@@ -3239,10 +3239,43 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___FIXSUBP(x,y)(___FIXSUBP_NOTFALSEP(___temp,x,y)?___temp:___FAL)
 
 #define ___FIXWRAPQUO(x,y)((y)==___FIX(-1)?___FIXWRAPNEG(x):___FIXQUO(x,y))
-#define ___FIXQUO(x,y)___FIX(((x)/(y)))
 
-#define ___FIXREM(x,y)((___WORD)((x)%(y)))/****is this ok?*******/
-#define ___FIXMOD(x,y)((___temp=___FIXREM((___ps->temp1=x),(___ps->temp2=y)))==0?___FIX(0):((___ps->temp1<0)==(___ps->temp2<0)?___temp:___FIXADD(___temp,___ps->temp2)))
+#if ___WORD_WIDTH == 32 || defined(___HAVE_FAST_DIV64)
+
+#define ___FIXQUO(x,y)___FIX(((x)/(y)))
+#define ___FIXREM(x,y)___CAST(___WORD,(x)%(y))
+
+#else
+
+/*
+ * Typical processors have a 32 by 32 integer division instruction
+ * that is considerably faster than the 64 by 64 integer division
+ * instruction.  The following macros will dynamically check the
+ * arguments of the division to determine if a 32 by 32 division will
+ * work and use that when possible.  To always use the 64 by 64 bit
+ * division, define ___HAVE_FAST_DIV64 when compiling the C code.
+ */
+
+#define ___S64_FITS_IN_S32(x)(___CAST(___UWORD,((x)>>31)+1)<2)
+
+#define ___FIXQUO(x,y) \
+(___S64_FITS_IN_S32(x) && ___S64_FITS_IN_S32(y) \
+ ?___FIX(___CAST(___WORD,___CAST(___S32,x)/___CAST(___S32,y))) \
+ :___FIX((x)/(y)))
+
+#define ___FIXREM(x,y) \
+(___S64_FITS_IN_S32(x) && ___S64_FITS_IN_S32(y) \
+ ?___CAST(___WORD,___CAST(___S32,x)%___CAST(___S32,y))  \
+ :___CAST(___WORD,(x)%(y)))
+
+#endif
+
+#define ___FIXMOD(x,y) \
+((___temp=___FIXREM(x,y)) != ___FIX(0) && \
+  ((x)>>(___WORD_WIDTH-1)) != ((y)>>(___WORD_WIDTH-1)) \
+ ?___FIXADD(___temp,y) \
+ :___temp)
+
 #define ___FIXAND(x,y)((___WORD)((x)&(y)))
 #define ___FIXANDC1(x,y)((___WORD)(~(x)&(y)))
 #define ___FIXANDC2(x,y)((___WORD)((x)&~(y)))
