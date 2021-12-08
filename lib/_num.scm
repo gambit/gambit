@@ -5818,7 +5818,7 @@ for a discussion of branch cuts.
                   (else
                    (##fx+ 1 size))))
            (result-word-length
-            (##fxceiling-ratio result-bit-length ##bignum.adigit-width))
+            (##bignum.adigit-div (##fx+ result-bit-length ##bignum.adigit-width -1)))
            (result
             (##bignum.arithmetic-shift-into!
              n (##max ##min-fixnum (##- position)) (##bignum.make result-word-length #f #f))))
@@ -10484,10 +10484,6 @@ end-of-code
 (define ##bignum.mdigit-base*16
   (##fx* ##bignum.mdigit-base 16))
 
-(define (##fxceiling-ratio a b)
-  ;; computes (ceiling (/ a b)) with a b fixnums
-  (##fxquotient (##fx+ a b -1) b))
-
 (define-prim (##bignum.div u v #!optional (need-quotient? #t) (keep-dividend? #t))
 
   ;; u is an unnormalized bignum, v is a normalized exact-int
@@ -10626,11 +10622,12 @@ end-of-code
           (v-bits
            (##integer-length v)))
       (let* ((n
-              (##fxceiling-ratio v-bits ##bignum.mdigit-width))
+              (##bignum.mdigit-div (fx+ v-bits ##bignum.mdigit-width -1)))
              (temp
               ;; need three mdigits for top-bits-of-u
-              (##bignum.make (##fxceiling-ratio (##fx* 3 ##bignum.mdigit-width)
-                                                ##bignum.adigit-width)
+              (##bignum.make (##bignum.adigit-div (+ (##fx* 3 ##bignum.mdigit-width)
+                                                     ##bignum.adigit-width
+                                                     -1))
                              #f
                              #f))
              (top-2*mdigit-width-bits-of-v
@@ -10650,9 +10647,9 @@ end-of-code
         (let* ((q-bits                             ;; maximum number of possible bits in q
                 (##fx+ (##fx- u-bits v-bits) 2))   ;; 1 is not always sufficient...
                (q-adigits
-                (##fxceiling-ratio q-bits ##bignum.adigit-width))
+                (##bignum.adigit-div (fx+ q-bits ##bignum.adigit-width -1)))
                (q-mdigits
-                (##fxceiling-ratio q-bits ##bignum.mdigit-width))
+                (##bignum.mdigit-div (fx+ q-bits ##bignum.mdigit-width -1)))
                (q
                 (and need-quotient?
                      (##fx> q-mdigits 1) ;; result might be bignum
@@ -10700,8 +10697,9 @@ end-of-code
                  (##fx+ i 1)
                  (loop6 (##fx- i 1))))))
       (let ((work-u (##bignum.make
-                     (##fxceiling-ratio (##fx* 2 ##bignum.mdigit-width)
-                                        ##bignum.adigit-width)
+                     (##bignum.adigit-div (##fx+ (##fx* 2 ##bignum.mdigit-width)
+                                                 ##bignum.adigit-width
+                                                 -1))
                      #f
                      #f))
             (q (and need-quotient?
