@@ -2871,14 +2871,19 @@
     #f ;; flo-result?
     (targ-apply-simp-generator flo? ssb-space name)))
 
-(define (targ-apply-fold-s flo? name0 name1 name2)
-  (targ-apply-fold #t flo? name0 name1 name2))
+(define (targ-apply-fold-s flo? name0 name1 name2 . maybe-name2consty)
+  (let ((name2consty
+         (if (pair? maybe-name2consty) (car maybe-name2consty) name2)))
+    (targ-apply-fold #t flo? name0 name1 name2 name2consty)))
 
-(define (targ-apply-fold-u flo? name0 name1 name2)
-  (targ-apply-fold #f flo? name0 name1 name2))
+(define (targ-apply-fold-u flo? name0 name1 name2 . maybe-name2consty)
+  (let ((name2consty
+         (if (pair? maybe-name2consty) (car maybe-name2consty) name2)))
+    (targ-apply-fold #f flo? name0 name1 name2 name2consty)))
 
-(define (targ-apply-fold proc-safe? flo? name0 name1 name2)
-  (let ((generator (targ-apply-fold-generator flo? name0 name1 name2)))
+(define (targ-apply-fold proc-safe? flo? name0 name1 name2 name2consty)
+  (let ((generator
+         (targ-apply-fold-generator flo? name0 name1 name2 name2consty)))
     (if flo?
       (targ-apply-alloc
         (lambda (n) 0) ; targ-apply-alloc accounts for space for flonum result
@@ -2892,8 +2897,10 @@
         #f ;; flo-result?
         generator))))
 
-(define (targ-apply-ifjump proc-safe? name0 name1 name2)
-  (let* ((apply-generator
+(define (targ-apply-ifjump proc-safe? name0 name1 name2 . maybe-name2consty)
+  (let* ((name2consty
+          (if (pair? maybe-name2consty) (car maybe-name2consty) name2))
+         (apply-generator
           (lambda (opnds sn)
             (if (not (pair? opnds))
                 (list name0)
@@ -2901,7 +2908,11 @@
                   (if (not (pair? (cdr opnds)))
                       (list name1 (targ-opnd o1))
                       (let ((o2 (cadr opnds)))
-                        (list name2 (targ-opnd o1) (targ-opnd o2))))))))
+                        (list (if (obj? o2)
+                                  name2consty
+                                  name2)
+                              (targ-opnd o1)
+                              (targ-opnd o2))))))))
          (ifjump-generator
           (lambda (opnds loc sn)
             (let ((x (apply-generator opnds sn)))
@@ -3145,11 +3156,11 @@
                     args)))
       (cons name (reverse args)))))
 
-(define (targ-apply-fold-generator flo? name0 name1 name2)
+(define (targ-apply-fold-generator flo? name0 name1 name2 name2consty)
   (lambda (opnds sn)
-    (targ-apply-fold-gen opnds flo? name0 name1 name2)))
+    (targ-apply-fold-gen opnds flo? name0 name1 name2 name2consty)))
 
-(define (targ-apply-fold-gen opnds flo? name0 name1 name2)
+(define (targ-apply-fold-gen opnds flo? name0 name1 name2 name2consty)
   (if (not (pair? opnds))
     (list name0)
     (let* ((o (car opnds))
@@ -3160,7 +3171,9 @@
           (if (pair? l)
             (let ((opnd (car l)))
               (loop (cdr l)
-                    (list name2
+                    (list (if (obj? opnd)
+                              name2consty
+                              name2)
                           r
                           (if flo? (targ-opnd-flo opnd) (targ-opnd opnd)))))
             r))))))
@@ -3285,14 +3298,14 @@
 (targ-op "##fx+?"           (targ-apply-ifjump #f #f #f "FIXADDP"))
 (targ-op "##fxwrap*"        (targ-apply-fold-u #f "FIX_1"  "FIXPOS" "FIXWRAPMUL"))
 (targ-op "##fx*"            (targ-apply-fold-u #f "FIX_1"  "FIXPOS" "FIXMUL"))
-(targ-op "##fx*?"           (targ-apply-ifjump #f #f #f "FIXMULP"))
+(targ-op "##fx*?"           (targ-apply-ifjump #f #f #f "FIXMULP" "FIXMULPCONSTY"))
 (targ-op "##fxwrap-"        (targ-apply-fold-u #f #f       "FIXWRAPNEG" "FIXWRAPSUB"))
 (targ-op "##fx-"            (targ-apply-fold-u #f #f       "FIXNEG" "FIXSUB"))
 (targ-op "##fx-?"           (targ-apply-ifjump #f #f "FIXNEGP""FIXSUBP"))
-(targ-op "##fxwrapquotient" (targ-apply-fold-u #f #f       #f       "FIXWRAPQUO"))
-(targ-op "##fxquotient"     (targ-apply-fold-u #f #f       #f       "FIXQUO"))
-(targ-op "##fxremainder"    (targ-apply-fold-u #f #f       #f       "FIXREM"))
-(targ-op "##fxmodulo"       (targ-apply-fold-u #f #f       #f       "FIXMOD"))
+(targ-op "##fxwrapquotient" (targ-apply-fold-u #f #f       #f       "FIXWRAPQUO" "FIXWRAPQUOCONSTY"))
+(targ-op "##fxquotient"     (targ-apply-fold-u #f #f       #f       "FIXQUO" "FIXQUOCONSTY"))
+(targ-op "##fxremainder"    (targ-apply-fold-u #f #f       #f       "FIXREM" "FIXREMCONSTY"))
+(targ-op "##fxmodulo"       (targ-apply-fold-u #f #f       #f       "FIXMOD" "FIXMODCONSTY"))
 (targ-op "##fxand"          (targ-apply-fold-u #f "FIX_M1" "FIXPOS" "FIXAND"))
 (targ-op "##fxandc1"        (targ-apply-simp-u #f #f       #f       "FIXANDC1"))
 (targ-op "##fxandc2"        (targ-apply-simp-u #f #f       #f       "FIXANDC2"))
