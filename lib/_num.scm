@@ -1746,13 +1746,13 @@
                    (if (and (##fxzero? u-digit)
                             (##fxzero? v-digit))
                        (loop (##fx- i 1))
-                       (and (##fx= (##fxquotient s ##bignum.mdigit-width)
+                       (and (##fx= (##bignum.mdigit-div s)
                                    i)
                             (##fx< (##fxmax (##fx- u-digit v-digit)
                                             (##fx- v-digit u-digit))
                                    (##fxarithmetic-shift-left
                                     1
-                                    (##fxremainder s ##bignum.mdigit-width)))))))))))
+                                    (##bignum.mdigit-mod s)))))))))))
 
     (define (gcd-small-step cont M u v s)
       ;;  u, v >= 2^s
@@ -5737,12 +5737,12 @@ for a discussion of branch cuts.
               (##fxnegative? y)))
       (if (##fxnegative? x)
           (range-error)
-          (let ((i (##fxquotient x ##bignum.mdigit-width)))
+          (let ((i (##bignum.mdigit-div x)))
             (if (##fx< i (##bignum.mdigit-length y))
                 (##fxodd?
                  (##fxarithmetic-shift-right
                   (##bignum.mdigit-ref y i)
-                  (##fxmodulo x ##bignum.mdigit-width)))
+                  (##bignum.mdigit-mod x)))
                 (##bignum.negative? y)))))
 
     (macro-exact-int-dispatch y (type-error-on-y) ;; x = bignum
@@ -5823,8 +5823,8 @@ for a discussion of branch cuts.
             (##bignum.arithmetic-shift-into!
              n (##max ##min-fixnum (##- position)) (##bignum.make result-word-length #f #f))))
       ;; zero top bits of result and normalize
-      (let ((size-words (##fxquotient  size ##bignum.mdigit-width))
-            (size-bits  (##fxremainder size ##bignum.mdigit-width)))
+      (let ((size-words (##bignum.mdigit-div size))
+            (size-bits  (##bignum.mdigit-mod size)))
         (##declare (not interrupts-enabled))
         (let loop ((i (##fx- (##bignum.mdigit-length result) 1)))
           (if (##fx< size-words i)
@@ -6768,7 +6768,33 @@ for a discussion of branch cuts.
   (define-prim (##bignum.fdigit-ref x i))
 
   ;; Sets x[i] to fdigit (accessing x as fdigits)
-  (define-prim (##bignum.fdigit-set! x i fdigit)))
+  (define-prim (##bignum.fdigit-set! x i fdigit))
+
+  ;; Caclulates (fxmodulo x ##bignum.adigit-width)
+
+  (define-prim (##bignum.adigit-mod x)
+    (##fxmodulo x ##bignum.adigit-width))
+
+  ;; Assumes that x is either nonnegative or
+  ;; a multiple of ##bignum.adigit-width.
+  ;; Calculates  (##fxquotient x ##bignum.adigit-width)
+
+  (define-prim (##bignum.adigit-div x)
+    (##fxquotient x ##bignum.adigit-width))
+
+  ;; Caclulates (fxmodulo x ##bignum.mdigit-width)
+
+  (define-prim (##bignum.mdigit-mod x)
+    (##fxmodulo x ##bignum.mdigit-width))
+
+  ;; Assumes that x is either nonnegative or
+  ;; a multiple of ##bignum.mdigit-width.
+  ;; Calculates  (##fxquotient x ##bignum.mdigit-width)
+
+  (define-prim (##bignum.mdigit-div x)
+    (##fxquotient x ##bignum.mdigit-width))
+
+  )
 
  (else
 
@@ -6801,8 +6827,35 @@ for a discussion of branch cuts.
                          fdigit)
                 (##fxior (##fxarithmetic-shift-left fdigit ##bignum.fdigit-width)
                          (##fxand mdigit ##bignum.fdigit-mask)))))
-      (##bignum.mdigit-set! x i/2 new-mdigit))))
+      (##bignum.mdigit-set! x i/2 new-mdigit)))
+
+  ;; Caclulates (fxmodulo x ##bignum.adigit-width)
+
+  (define-prim (##bignum.adigit-mod x)
+    (##fxmodulo x ##bignum.adigit-width))
+
+  ;; Assumes that x is either nonnegative or
+  ;; a multiple of ##bignum.adigit-width.
+  ;; Calculates  (##fxquotient x ##bignum.adigit-width)
+
+  (define-prim (##bignum.adigit-div x)
+    (##fxquotient x ##bignum.adigit-width))
+
+  ;; Caclulates (fxmodulo x ##bignum.mdigit-width)
+
+  (define-prim (##bignum.mdigit-mod x)
+    (##fxmodulo x ##bignum.mdigit-width))
+
+  ;; Assumes that x is either nonnegative or
+  ;; a multiple of ##bignum.mdigit-width.
+  ;; Calculates  (##fxquotient x ##bignum.mdigit-width)
+
+  (define-prim (##bignum.mdigit-div x)
+    (##fxquotient x ##bignum.mdigit-width))
+
   )
+
+ )
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -10256,7 +10309,7 @@ end-of-code
           (low-bits (##first-bit-set x)))
       (if (##fx< size (##fx+ low-bits low-bits))
           ;; At least half the lowest bits are zero
-          (##fx* (##fxquotient low-bits ##bignum.adigit-width) ;; Shift full adigits.
+          (##fx* (##bignum.adigit-div low-bits) ;; Shift full adigits.
                  ##bignum.adigit-width)
           0)))
   
@@ -10292,9 +10345,9 @@ end-of-code
 
 (define-prim (##bignum.arithmetic-shift x shift)
   (let* ((bit-shift
-          (##fxmodulo shift ##bignum.adigit-width))
+          (##bignum.adigit-mod shift))
          (digit-shift
-          (##fxquotient (##fx- shift bit-shift) ##bignum.adigit-width))
+          (##bignum.adigit-div (##fx- shift bit-shift)))
          (x-length
           (##bignum.adigit-length x))
          (result-length
@@ -10321,10 +10374,9 @@ end-of-code
   (declare (not interrupts-enabled))
 
   (let* ((bit-shift
-          (##fxmodulo shift ##bignum.adigit-width))
+          (##bignum.adigit-mod shift))
          (digit-shift
-          (##fxquotient (##fx- shift bit-shift)
-                        ##bignum.adigit-width))
+          (##bignum.adigit-div (##fx- shift bit-shift)))
          (x-length
           (##bignum.adigit-length x))
          (result-length
