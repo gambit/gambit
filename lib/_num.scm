@@ -6761,6 +6761,8 @@ for a discussion of branch cuts.
 
 (macro-case-target
  ((C)
+  ;; fdigit operations
+
   ;; Returns the number of fdigits in x
   (define-prim (##bignum.fdigit-length x))
 
@@ -6770,33 +6772,52 @@ for a discussion of branch cuts.
   ;; Sets x[i] to fdigit (accessing x as fdigits)
   (define-prim (##bignum.fdigit-set! x i fdigit))
 
+  ;; adigit operations
+
+  (define ##bignum.adigit-log-width
+    (##fx- (##fxlength ##bignum.adigit-width) 1))
+
+  (define ##bignum.adigit-log-mask
+    (##fx- ##bignum.adigit-width 1))
+
   ;; Caclulates (fxmodulo x ##bignum.adigit-width)
 
   (define-prim (##bignum.adigit-mod x)
-    (##fxmodulo x ##bignum.adigit-width))
+    (##fxand x ##bignum.adigit-log-mask))
 
   ;; Assumes that x is either nonnegative or
   ;; a multiple of ##bignum.adigit-width.
   ;; Calculates  (##fxquotient x ##bignum.adigit-width)
 
   (define-prim (##bignum.adigit-div x)
-    (##fxquotient x ##bignum.adigit-width))
+    (##fxarithmetic-shift-right x ##bignum.adigit-log-width))
+
+  ;; mdigit operations
+
+  (define ##bignum.mdigit-log-width
+    (##fx- (##fxlength ##bignum.mdigit-width) 1))
+
+  (define ##bignum.mdigit-log-mask
+    (##fx- ##bignum.mdigit-width 1))
 
   ;; Caclulates (fxmodulo x ##bignum.mdigit-width)
 
   (define-prim (##bignum.mdigit-mod x)
-    (##fxmodulo x ##bignum.mdigit-width))
+    (##fxand x ##bignum.mdigit-log-mask))
 
   ;; Assumes that x is either nonnegative or
   ;; a multiple of ##bignum.mdigit-width.
   ;; Calculates  (##fxquotient x ##bignum.mdigit-width)
 
   (define-prim (##bignum.mdigit-div x)
-    (##fxquotient x ##bignum.mdigit-width))
+    (##fxarithmetic-shift-right x ##bignum.mdigit-log-width))
+
 
   )
 
  (else
+
+  ;; fdigit operations
 
   ;; assumes that mdigits are 14 bits wide and fdigits are
   ;; halves of mdigits
@@ -6829,6 +6850,8 @@ for a discussion of branch cuts.
                          (##fxand mdigit ##bignum.fdigit-mask)))))
       (##bignum.mdigit-set! x i/2 new-mdigit)))
 
+  ;; adigit operations
+
   ;; Caclulates (fxmodulo x ##bignum.adigit-width)
 
   (define-prim (##bignum.adigit-mod x)
@@ -6840,6 +6863,8 @@ for a discussion of branch cuts.
 
   (define-prim (##bignum.adigit-div x)
     (##fxquotient x ##bignum.adigit-width))
+
+  ;; mdigit operations
 
   ;; Caclulates (fxmodulo x ##bignum.mdigit-width)
 
