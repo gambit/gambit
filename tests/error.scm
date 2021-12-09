@@ -2298,6 +2298,20 @@
 )
 (test-string-fill!)
 
+(define (test-string-concatenate)
+(try 'string-concatenate string-concatenate '())
+(try 'string-concatenate string-concatenate '("ab"))
+(try 'string-concatenate string-concatenate '("ab" "cd"))
+(try 'string-concatenate string-concatenate '("ab" "cd" "ef"))
+(try 'string-concatenate string-concatenate 12345678901234567890)
+(try 'string-concatenate string-concatenate '(12345678901234567890))
+(try 'string-concatenate string-concatenate '("ab" 12345678901234567890))
+(try 'string-concatenate string-concatenate '(12345678901234567890 "cd"))
+(try 'string-concatenate string-concatenate '("ab" "cd" 12345678901234567890))
+(try 'string-concatenate string-concatenate '("ab" "cd" . 12345678901234567890))
+)
+(test-string-concatenate)
+
 (define (test-vector?) ; no error possible
 (vector? '#(5 6 7 8))
 (vector? 12345678901234567890)
