@@ -40,6 +40,8 @@ Detailed installation instructions are given in the file [INSTALL.txt](https://g
 
 0: [Feature-based conditional expansion construct](https://srfi.schemers.org/srfi-0/srfi-0.html) (builtin)
 
+1: [List Library](https://srfi.schemers.org/srfi-1/srfi-1.html)
+
 2: [AND-LET*: an AND with local bindings, a guarded LET* special form](https://srfi.schemers.org/srfi-2/srfi-2.html)
 
 4: [Homogeneous numeric vector datatypes](https://srfi.schemers.org/srfi-4/srfi-4.html) (builtin)
@@ -49,6 +51,10 @@ Detailed installation instructions are given in the file [INSTALL.txt](https://g
 8: [receive: Binding to multiple values](https://srfi.schemers.org/srfi-8/srfi-8.html) (builtin)
 
 9: [Defining Record Types](https://srfi.schemers.org/srfi-9/srfi-9.html) (builtin)
+
+13: [String Libraries](https://srfi.schemers.org/srfi-13/srfi-13.html)
+
+14: [Character-set Library](https://srfi.schemers.org/srfi-14/srfi-14.html)
 
 16: [Syntax for procedures of variable arity](https://srfi.schemers.org/srfi-16/srfi-16.html) (builtin)
 
