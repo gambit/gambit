@@ -199,13 +199,14 @@
        src
        (##source-strip (car (##source-strip src)))))
 
-    (define (append-sym sym1 sym2)
-      (string->symbol
-       (string-append (symbol->string sym1)
-                      (symbol->string sym2))))
+    (define (symbol-append . lst)
+      ;;TODO: simplify after bootstrap
+      (let ((sc (or (##global-var-ref (##make-global-var 'string-concatenate))
+                    (lambda (string-list) (apply string-append string-list)))))
+        (string->symbol (sc (map symbol->string lst)))))
 
     (define (prim sym)
-      (append-sym '|##| sym))
+      (symbol-append '|##| sym))
 
     (##deconstruct-call
      src
@@ -385,7 +386,7 @@
       (vector-ref param 2))
 
     (define (param-name param)
-      (append-sym '% (var-name param)))
+      (symbol-append '% (var-name param)))
 
     (define (exception-param-name param)
       (if (optional? param)
@@ -399,13 +400,14 @@
     (define (force? param)
       (not (equal? (car (var-checks param)) object-check)))
 
-    (define (append-sym sym1 sym2)
-      (string->symbol
-       (string-append (symbol->string sym1)
-                      (symbol->string sym2))))
+    (define (symbol-append . lst)
+      ;;TODO: simplify after bootstrap
+      (let ((sc (or (##global-var-ref (##make-global-var 'string-concatenate))
+                    (lambda (string-list) (apply string-append string-list)))))
+        (string->symbol (sc (map symbol->string lst)))))
 
     (define (prim sym)
-      (append-sym '|##| sym))
+      (symbol-append '|##| sym))
 
     (define (process-parameters prim?
                                 name
@@ -426,7 +428,7 @@
                 (case kind
                   ((procedure) name)
                   ((primitive) prim-name)
-                  ((primitive-aux) (prim (append-sym name aux-suffix))))))
+                  ((primitive-aux) (prim (symbol-append name aux-suffix))))))
 
           (define (gen-bind-non-opt expr)
             (let ((params
@@ -471,7 +473,7 @@
                     (equal? check strict-object-check)
                     (not (eq? kind 'procedure)))
                 expr
-                `(,(append-sym 'macro-check- (car check))
+                `(,(symbol-append 'macro-check- (car check))
                   ,(var-name param)
                   '(,arg-num . ,(var-name param))
                   ,@(cdr check)
@@ -515,7 +517,7 @@
                          ,@body)
                       `(##let ()
                          (##declare (not interrupts-enabled))
-                         (,(prim (append-sym name aux-suffix))
+                         (,(prim (symbol-append name aux-suffix))
                           ,@req
                           ,@opt
                           ,(var-name rest-param))))
@@ -1107,8 +1109,11 @@
 
 (##define-macro (define-check-type type-and-test-name type predicate . arguments)
 
-  (define (sym . lst)
-    (string->symbol (apply string-append (map symbol->string lst))))
+  (define (symbol-append . lst)
+    ;;TODO: simplify after bootstrap
+    (let ((sc (or (##global-var-ref (##make-global-var 'string-concatenate))
+               (lambda (string-list) (apply string-append string-list)))))
+      (string->symbol (sc (map symbol->string lst)))))
 
   (let ((type-name
          (if (symbol? type-and-test-name)
@@ -1119,16 +1124,16 @@
              type-and-test-name
              (cadr type-and-test-name))))
 
-    (define macro-check-test (sym 'macro-check- test-name))
-    (define macro-test-test (sym 'macro-test- test-name))
+    (define macro-check-test (symbol-append 'macro-check- test-name))
+    (define macro-test-test (symbol-append 'macro-test- test-name))
 
-    (define macro-fail-check-type (sym 'macro-fail-check- type-name))
-    (define ##fail-check-type (sym '##fail-check- type-name))
+    (define macro-fail-check-type (symbol-append 'macro-fail-check- type-name))
+    (define ##fail-check-type (symbol-append '##fail-check- type-name))
 
     `(begin
 
        ,@(if type
-             `((##define-macro (,(sym 'implement-check-type- type-name))
+             `((##define-macro (,(symbol-append 'implement-check-type- type-name))
                  '(define-fail-check-type ,type-name ,type))
                (##define-macro (,macro-fail-check-type arg-id form)
                  `(macro-handle-failure ,',##fail-check-type ,arg-id ,form)))
@@ -1146,12 +1151,15 @@
 
 (##define-macro (define-fail-check-type type-name . type-id)
 
-  (define (sym . lst)
-    (string->symbol (apply string-append (map symbol->string lst))))
+  (define (symbol-append . lst)
+    ;;TODO: simplify after bootstrap
+    (let ((sc (or (##global-var-ref (##make-global-var 'string-concatenate))
+               (lambda (string-list) (apply string-append string-list)))))
+      (string->symbol (sc (map symbol->string lst)))))
 
   (let ()
 
-    (define ##fail-check-type (sym '##fail-check- type-name))
+    (define ##fail-check-type (symbol-append '##fail-check- type-name))
 
     `(define-prim (,##fail-check-type arg-id proc . args)
        (##raise-type-exception
@@ -1199,12 +1207,15 @@
 
 (##define-macro (define-check-index-range-macro type-id predicate . arguments)
 
-  (define (sym . lst)
-    (string->symbol (apply string-append (map symbol->string lst))))
+  (define (symbol-append . lst)
+    ;;TODO: simplify after bootstrap
+    (let ((sc (or (##global-var-ref (##make-global-var 'string-concatenate))
+               (lambda (string-list) (apply string-append string-list)))))
+      (string->symbol (sc (map symbol->string lst)))))
 
   (let ()
 
-    (define macro-check-type (sym 'macro-check- type-id))
+    (define macro-check-type (symbol-append 'macro-check- type-id))
 
     `(##define-macro (,macro-check-type var arg-id ,@arguments form expr)
        `(macro-if-checks
