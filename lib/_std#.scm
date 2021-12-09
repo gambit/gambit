@@ -786,7 +786,7 @@
                                   ,vect-list
                                   (separator object
                                              (macro-absent-obj)))
-                 (namespace ("" ,vect-append))
+                 (namespace ("" ,vect-append ,vect-concatenate))
                  (let loop1 ((n 0)
                              (probe ,vect-list)
                              (arg-num 1))

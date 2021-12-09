@@ -1227,6 +1227,16 @@
 (string-fill! "56" #\a) => #!void "aa"
 ;;; (Argument 2, fill) CHARACTER expected: (string-fill! "56" 'a)
 ;;; (Argument 1, string) STRING expected: (string-fill! 12345678901234567890 #\a)
+(string-concatenate '()) => ""
+(string-concatenate '("ab")) => "ab"
+(string-concatenate '("ab" "cd")) => "abcd"
+(string-concatenate '("ab" "cd" "ef")) => "abcdef"
+;;; (Argument 1, string-list) STRING LIST expected: (string-concatenate 12345678901234567890)
+;;; (Argument 1, string-list) STRING LIST expected: (string-concatenate '(12345678901234567890))
+;;; (Argument 1, string-list) STRING LIST expected: (string-concatenate '("ab" 12345678901234567890))
+;;; (Argument 1, string-list) STRING LIST expected: (string-concatenate '(12345678901234567890 "cd"))
+;;; (Argument 1, string-list) STRING LIST expected: (string-concatenate '("ab" "cd" 12345678901234567890))
+;;; (Argument 1, string-list) STRING LIST expected: (string-concatenate '("ab" "cd" . 12345678901234567890))
 (make-vector 0) => #()
 (make-vector 3) => #(0 0 0)
 ;;; CALL EXPRESSION ("???") IS WRONG: (make-vector 536870911)
@@ -1408,8 +1418,8 @@ A(write-char #\A '#<output-port #10 (stdout)>) => #!void
 (file-type "newdir2") => directory
 (file-type "newdir2/bbb") => regular
 ;;; No such file or directory: (file-type "notexist")
-(file-size "error.scm") => 78012
-(file-size "newdir2/bbb") => 78012
+(file-size "error.scm") => 78741
+(file-size "newdir2/bbb") => 78741
 ;;; No such file or directory: (file-size "notexist")
 ;;; #<os-exception #11>: (delete-directory "newdir2")
 (delete-file "newdir2/aaa") => #!void
