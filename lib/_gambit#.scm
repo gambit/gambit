@@ -201,8 +201,10 @@
 
     (define (symbol-append . lst)
       ;;TODO: simplify after bootstrap
-      (let ((sc (or (##global-var-ref (##make-global-var 'string-concatenate))
-                    (lambda (string-list) (apply string-append string-list)))))
+      (let* ((sc (##global-var-ref (##make-global-var 'string-concatenate)))
+             (sc (if (##unbound? sc)
+                     (lambda (string-list) (apply string-append string-list))
+                     sc)))
         (string->symbol (sc (map symbol->string lst)))))
 
     (define (prim sym)
@@ -402,8 +404,10 @@
 
     (define (symbol-append . lst)
       ;;TODO: simplify after bootstrap
-      (let ((sc (or (##global-var-ref (##make-global-var 'string-concatenate))
-                    (lambda (string-list) (apply string-append string-list)))))
+      (let* ((sc (##global-var-ref (##make-global-var 'string-concatenate)))
+             (sc (if (##unbound? sc)
+                     (lambda (string-list) (apply string-append string-list))
+                     sc)))
         (string->symbol (sc (map symbol->string lst)))))
 
     (define (prim sym)
@@ -1111,8 +1115,10 @@
 
   (define (symbol-append . lst)
     ;;TODO: simplify after bootstrap
-    (let ((sc (or (##global-var-ref (##make-global-var 'string-concatenate))
-               (lambda (string-list) (apply string-append string-list)))))
+    (let* ((sc (##global-var-ref (##make-global-var 'string-concatenate)))
+           (sc (if (##unbound? sc)
+                   (lambda (string-list) (apply string-append string-list))
+                   sc)))
       (string->symbol (sc (map symbol->string lst)))))
 
   (let ((type-name
@@ -1153,8 +1159,10 @@
 
   (define (symbol-append . lst)
     ;;TODO: simplify after bootstrap
-    (let ((sc (or (##global-var-ref (##make-global-var 'string-concatenate))
-               (lambda (string-list) (apply string-append string-list)))))
+    (let* ((sc (##global-var-ref (##make-global-var 'string-concatenate)))
+           (sc (if (##unbound? sc)
+                   (lambda (string-list) (apply string-append string-list))
+                   sc)))
       (string->symbol (sc (map symbol->string lst)))))
 
   (let ()
@@ -1209,8 +1217,10 @@
 
   (define (symbol-append . lst)
     ;;TODO: simplify after bootstrap
-    (let ((sc (or (##global-var-ref (##make-global-var 'string-concatenate))
-               (lambda (string-list) (apply string-append string-list)))))
+    (let* ((sc (##global-var-ref (##make-global-var 'string-concatenate)))
+           (sc (if (##unbound? sc)
+                   (lambda (string-list) (apply string-append string-list))
+                   sc)))
       (string->symbol (sc (map symbol->string lst)))))
 
   (let ()
