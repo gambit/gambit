@@ -90,7 +90,7 @@
            (newline port)))
        (test-output-port))))
 
-(define (failed-test failed-msg #!optional (actual-result absent))
+(define (failed-test failed-msg #!optional (actual-result absent) (exception-cont #f))
   (set! nb-failed-tests (fx+ nb-failed-tests 1))
   (display
    (call-with-output-string
@@ -100,8 +100,14 @@
       (if (not (eq? actual-result absent))
           (begin
             (display " GOT " port)
-            (write actual-result port)))
-      (newline port)))
+            (if exception-cont
+                (let ()
+                  (namespace ("" display-exception-in-context))
+                  (display-exception-in-context actual-result exception-cont port))
+                (begin
+                  (write actual-result port)
+                  (newline port))))
+          (newline port))))
    (test-output-port))
   (if (not test-all?)
       (##exit)))
@@ -133,16 +139,18 @@
      (define (passed actual-result)
        (passed-test (message #t) actual-result))
 
-     (define (failed actual-result)
-       (failed-test (message #f) actual-result))
+     (define (failed actual-result cont)
+       (failed-test (message #f) actual-result cont))
 
      (let ((expression-value
             (with-exception-handler
                 (lambda (exn)
-                  (##continuation-graft return failed exn))
+                  (##continuation-capture
+                   (lambda (cont)
+                     (##continuation-graft return failed exn cont))))
               expression-thunk)))
        (if (eq? positive? (not (predicate expression-value)))
-           (failed expression-value)
+           (failed expression-value #f)
            (passed expression-value))))))
 
 (define (%test-relation test-name
@@ -163,22 +171,26 @@
      (define (passed actual-result)
        (passed-test (message #t) actual-result))
 
-     (define (failed actual-result)
-       (failed-test (message #f) actual-result))
+     (define (failed actual-result cont)
+       (failed-test (message #f) actual-result cont))
 
      (let* ((expected-value
              (with-exception-handler
                  (lambda (exn)
-                   (##continuation-graft return failed exn))
+                   (##continuation-capture
+                    (lambda (cont)
+                      (##continuation-graft return failed exn cont))))
                expected-thunk))
             (test-expr-value
              (with-exception-handler
                  (lambda (exn)
-                   (##continuation-graft return failed exn))
+                   (##continuation-capture
+                    (lambda (cont)
+                      (##continuation-graft return failed exn cont))))
                test-expr-thunk)))
        (if (eq? positive? (relation expected-value test-expr-value))
            (passed test-expr-value)
-           (failed test-expr-value))))))
+           (failed test-expr-value #f))))))
 
 (define (%test-approximate test-name
                            expected-thunk
@@ -198,8 +210,8 @@
      (define (passed actual-result)
        (passed-test (message #t) actual-result))
 
-     (define (failed actual-result)
-       (failed-test (message #f) actual-result))
+     (define (failed actual-result cont)
+       (failed-test (message #f) actual-result cont))
 
      (define (approximately= x y)
        (and (>= x (- y error))
@@ -208,12 +220,16 @@
      (let* ((expected-value
              (with-exception-handler
                  (lambda (exn)
-                   (##continuation-graft return failed exn))
+                   (##continuation-capture
+                    (lambda (cont)
+                      (##continuation-graft return failed exn cont))))
                expected-thunk))
             (test-expr-value
              (with-exception-handler
                  (lambda (exn)
-                   (##continuation-graft return failed exn))
+                   (##continuation-capture
+                    (lambda (cont)
+                      (##continuation-graft return failed exn cont))))
                test-expr-thunk)))
        (if (eq? positive?
                 (and (number? expected-value)
@@ -223,7 +239,7 @@
                      (approximately= (imag-part expected-value)
                                      (imag-part test-expr-value))))
            (passed test-expr-value)
-           (failed test-expr-value))))))
+           (failed test-expr-value #f))))))
 
 (define (%test-error test-name
                      error-type?
@@ -242,8 +258,8 @@
      (define (passed actual-result)
        (passed-test (message #t) actual-result))
 
-     (define (failed actual-result)
-       (failed-test (message #f) actual-result))
+     (define (failed actual-result cont)
+       (failed-test (message #f) actual-result cont))
 
      (with-exception-handler
       (lambda (exn)
@@ -255,14 +271,14 @@
               (let ((creator (##continuation-creator cont)))
                 (cond ((and (not (boolean? error-type?))
                             (not (error-type? exn)))
-                       (failed exn))
+                       (failed exn cont))
                       ((and tail?
                             (not (eq? creator call-thunk)))
-                       (failed (list 'nontail-exception-raised-in creator)))
+                       (failed (list 'nontail-exception-raised-in creator) #f))
                       (else
                        (passed absent)))))))))
       (lambda ()
-        (failed (call-thunk test-expr-thunk)))))))
+        (failed (call-thunk test-expr-thunk) #f))))))
 
 (define (%test-begin suite-name count)
   (if (not test-quiet?)
