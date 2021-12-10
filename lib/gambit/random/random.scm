@@ -2,7 +2,7 @@
 
 ;;; File: "random.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -375,7 +375,7 @@
 
       (let ((len (integer-length range)))
         (if (##fx= (##fx- len 1) ;; check if range is a power of 2
-                   (##first-bit-set range))
+                   (##first-set-bit range))
             (rand-integer-2^ (##fx- len 1))
             (let* ((inv
                     (##fxquotient

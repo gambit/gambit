@@ -6300,7 +6300,7 @@ For example:
 
 @end deffn
 
-@deffn procedure first-bit-set @var{n}
+@deffn procedure first-set-bit @var{n}
 
 This procedure returns the bit index of the least significant bit of
 @var{n} equal to 1 (which is also the number of 0 bits that are below
@@ -6310,9 +6310,9 @@ the least significant 1 bit).  This procedure returns @code{-1} when
 For example:
 
 @smallexample
-> @b{(first-bit-set 24) @r{@i{; ...00011000}}}
+> @b{(first-set-bit 24) @r{@i{; ...00011000}}}
 3
-> @b{(first-bit-set 0)  @r{@i{; ...00000000}}}
+> @b{(first-set-bit 0)  @r{@i{; ...00000000}}}
 -1
 @end smallexample
 
@@ -6429,7 +6429,7 @@ For example:
 @deffn procedure fxeven? @var{n}
 @end deffn
 
-@deffn procedure fxfirst-bit-set @var{n}
+@deffn procedure fxfirst-set-bit @var{n}
 @end deffn
 
 @deffn procedure fxif @var{n1} @var{n2} @var{n3}

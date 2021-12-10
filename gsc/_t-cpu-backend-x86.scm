@@ -1175,7 +1175,7 @@
         (x86-popcnt cgc x86-arg1 x86-arg1)
         (x86-shl cgc x86-arg1 (x86-imm-int type-tag-bits))))))
 
-(define x86-prim-##fxfirst-bit-set
+(define x86-prim-##fxfirst-set-bit
   (const-nargs-prim 1 1 '((reg))
     (lambda (cgc result-action args arg1 tmp1)
       (let ((width (get-word-width-bits cgc))
@@ -1726,7 +1726,7 @@
     (table-set! table '##fxsquare?      (make-prim-obj x86-prim-##fxsquare?     1 #t #t #t))
 
     (table-set! table '##fxbit-count     (make-prim-obj x86-prim-##fxbit-count     1 #t #t))
-    (table-set! table '##fxfirst-bit-set (make-prim-obj x86-prim-##fxfirst-bit-set 1 #t #t))
+    (table-set! table '##fxfirst-set-bit (make-prim-obj x86-prim-##fxfirst-set-bit 1 #t #t))
     (table-set! table '##fxlength        (make-prim-obj (x86-prim-##fxlength)      1 #t #t))
     (table-set! table '##fxbit-set?      (make-prim-obj x86-prim-##fxbit-set?      2 #t #t #t))
 

@@ -2,7 +2,7 @@
 
 ;;; File: "number-gambit#.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -36,7 +36,7 @@ copy-bit-field
 cosh
 (default-random-source default-random-source#unimplemented)
 extract-bit-field
-first-bit-set
+first-set-bit
 integer-length
 integer-nth-root
 integer-sqrt

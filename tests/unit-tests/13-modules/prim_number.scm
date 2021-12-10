@@ -124,7 +124,7 @@
 (cosh .5) (cosh 1/2)
 ;;unimplemented;;default-random-source
 (extract-bit-field 4 2 240)
-(first-bit-set 0) (first-bit-set 1) (first-bit-set 20)
+(first-set-bit 0) (first-set-bit 1) (first-set-bit 20)
 (integer-length 0) (integer-length 10)
 (integer-nth-root 1024 3)
 (integer-sqrt 200)

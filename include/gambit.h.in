@@ -3395,7 +3395,7 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___FIXBITCOUNT(x) \
 (((___temp=___INT(x))<0)&&(___temp=~___temp),___FIX(___POPCOUNT_WORD_TEMP()))
 
-#define ___FIXFIRSTBITSET(x) \
+#define ___FIXFIRSTSETBIT(x) \
 (___temp=___INT(x),___FIX(___FFS_WORD_TEMP()-1))
 
 #define ___FIXBITSETP(x,y)((y)&(___CAST(___SCMOBJ,1)<<(___INT(x)+___TB)))

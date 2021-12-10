@@ -36,7 +36,7 @@
 (fxbit-set? 0 5) (fxbit-set? 1 5) (fxbit-set? 2 5) (fxbit-set? 10 5)
 (fxeqv) (fxeqv 85) (fxeqv 85 204) (fxeqv 85 204 240)
 (fxeven? -1) (fxeven? 0) (fxeven? 1)
-(fxfirst-bit-set -8)(fxfirst-bit-set 0)(fxfirst-bit-set 1)(fxfirst-bit-set 8)
+(fxfirst-set-bit -8)(fxfirst-set-bit 0)(fxfirst-set-bit 1)(fxfirst-set-bit 8)
 (fxif 12 10 5)
 (fxior) (fxior 13) (fxior 13 7) (fxior 13 7 6)
 (fxlength -2) (fxlength -1) (fxlength -0) (fxlength 1) (fxlength 2) (fxlength 3)

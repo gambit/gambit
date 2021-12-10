@@ -1990,8 +1990,8 @@
   (define (bignums-case x new-x? y new-y?)
     (let* ((x-negative?     (##bignum.negative? x))
            (y-negative?     (##bignum.negative? y))
-           (x-first-bit     (##first-bit-set x))
-           (y-first-bit     (##first-bit-set y))
+           (x-first-bit     (##first-set-bit x))
+           (y-first-bit     (##first-set-bit y))
            (x-length        (##integer-length x))
            (y-length        (##integer-length y))
            
@@ -3402,7 +3402,7 @@ for a discussion of branch cuts.
   ;; assumes n is a positive fixnum or bignum
   (if (macro-if-bignum (##fixnum? n) #t)
       (##fxzero? (##fxand n (##fx- n 1)))
-      (##fx= (##fx+ (##first-bit-set n) 1)
+      (##fx= (##fx+ (##first-set-bit n) 1)
              (##integer-length n))))
 
 (define-prim (##expt x y)
@@ -3544,7 +3544,7 @@ for a discussion of branch cuts.
              (or (and (##eqv? (macro-ratnum-denominator y) 2)
                       (##eqv? (macro-ratnum-numerator y) 1)
                       (##sqrt x))
-                 (let ((root? (exact-dyadic-root? x (##first-bit-set (macro-ratnum-denominator y)))))
+                 (let ((root? (exact-dyadic-root? x (##first-set-bit (macro-ratnum-denominator y)))))
                    (and root?
                         (##expt root? (macro-ratnum-numerator y))))))
         (complex-expt x y)))
@@ -5781,25 +5781,25 @@ for a discussion of branch cuts.
      y 2 (all-bits-set? x y)
      (##all-bits-set? x y)))))
 
-(define-prim (##first-bit-set x)
+(define-prim (##first-set-bit x)
 
   (define (type-error)
-    (##fail-check-exact-integer 1 first-bit-set x))
+    (##fail-check-exact-integer 1 first-set-bit x))
 
   (macro-exact-int-dispatch x (type-error)
-    (##fxfirst-bit-set x)
+    (##fxfirst-set-bit x)
     (let ((x-length (##bignum.mdigit-length x)))
       (let loop ((i 0))
         (let ((mdigit (##bignum.mdigit-ref x i)))
           (if (##fx= mdigit 0)
               (loop (##fx+ i 1))
               (##fx+
-               (##fxfirst-bit-set mdigit)
+               (##fxfirst-set-bit mdigit)
                (##fx* i ##bignum.mdigit-width))))))))
 
-(define-prim (first-bit-set x)
+(define-prim (first-set-bit x)
   (macro-force-vars (x)
-    (##first-bit-set x)))
+    (##first-set-bit x)))
 
 (define-prim&proc (extract-bit-field (size     nonnegative-exact-integer)
                                      (position nonnegative-exact-integer)
@@ -6343,15 +6343,15 @@ for a discussion of branch cuts.
       (fxlength x)
       (##fxlength x))))
 
-(define-prim (##fxfirst-bit-set x))
+(define-prim (##fxfirst-set-bit x))
 
-(define-prim (fxfirst-bit-set x)
+(define-prim (fxfirst-set-bit x)
   (macro-force-vars (x)
     (macro-check-fixnum
       x
       1
-      (fxfirst-bit-set x)
-      (##fxfirst-bit-set x))))
+      (fxfirst-set-bit x)
+      (##fxfirst-set-bit x))))
 
 (define-prim (##fxbit-set? x y))
 
@@ -10331,7 +10331,7 @@ end-of-code
 
   (define (low-bits-to-shift x)
     (let ((size (##integer-length x))
-          (low-bits (##first-bit-set x)))
+          (low-bits (##first-set-bit x)))
       (if (##fx< size (##fx+ low-bits low-bits))
           ;; At least half the lowest bits are zero
           (##fx* (##bignum.adigit-div low-bits) ;; Shift full adigits.
@@ -10549,7 +10549,7 @@ end-of-code
                              (##arithmetic-shift
                               temp
                               (##fx- bits-to-shift))))
-                       (if (##fx< (##first-bit-set temp) bits-to-shift)
+                       (if (##fx< (##first-set-bit temp) bits-to-shift)
                            (macro-make-rb (##+ shifted-temp 1) bits)
                            (macro-make-rb shifted-temp bits))))))
 
@@ -10733,24 +10733,24 @@ end-of-code
     ;; u and v are positive bignums
 
     (let ((v-length (##integer-length v))
-          (v-first-bit-set (##first-bit-set v)))
+          (v-first-set-bit (##first-set-bit v)))
       ;; first we check whether it may be beneficial to shift out
       ;; low-order zero bits of v
-      (if (##fx>= v-first-bit-set
+      (if (##fx>= v-first-set-bit
                   (##fxarithmetic-shift-right v-length 1))
           (let ((reduced-quotient
                  (##exact-int.div
-                  (##bignum.arithmetic-shift u (##fx- v-first-bit-set))
-                  (##bignum.arithmetic-shift v (##fx- v-first-bit-set))
+                  (##bignum.arithmetic-shift u (##fx- v-first-set-bit))
+                  (##bignum.arithmetic-shift v (##fx- v-first-set-bit))
                   #t          ;; need-quotient?
                   #f          ;; keep-dividend?
                   ))
                 (extra-remainder
-                 (##extract-bit-field v-first-bit-set 0 u)))
+                 (##extract-bit-field v-first-set-bit 0 u)))
             (macro-make-qr (macro-qr-q reduced-quotient)
                            (##+ (##arithmetic-shift
                                  (macro-qr-r reduced-quotient)
-                                 v-first-bit-set)
+                                 v-first-set-bit)
                                 extra-remainder)))
           (if (##fx< v-length ##bignum.fft-mul-min-width)
               (naive-div u v)
@@ -11818,7 +11818,7 @@ end-of-code
   (macro-exact-int-dispatch-no-error x
    (##fixnum->flonum-exact? x)             ;; x = fixnum
    (let ((len   (##integer-length x))      ;; x = bignum
-         (first (##first-bit-set x)))
+         (first (##first-set-bit x)))
      (##not (or (##fx> len (macro-flonum-e-bias-plus-1))
                 (##fx> (##fx- len first) (macro-flonum-m-bits-plus-1))
                 (and (##fx= len first)
@@ -11844,7 +11844,7 @@ end-of-code
              (f2 (if (and (##bit-set? next-bit-index x)
                           (or nonzero-fractional-part?
                               (##exact-int.odd? q)
-                              (##fx< (##first-bit-set x)
+                              (##fx< (##first-set-bit x)
                                      next-bit-index)))
                      (##+ q 1)
                      q)))))))

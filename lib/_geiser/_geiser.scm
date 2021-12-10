@@ -451,7 +451,7 @@
      ("args" (("required" path [atime [mtime]]) ("optional") ("key")))("module"))
     (file-type ("args" (("required" path) ("optional") ("key")))("module"))
     (finite? ("args" (("required" x) ("optional") ("key")))("module"))
-    (first-bit-set ("args" (("required" n) ("optional") ("key")))("module"))
+    (first-set-bit ("args" (("required" n) ("optional") ("key")))("module"))
     (fixnum->flonum ("args" (("required" n) ("optional") ("key")))("module"))
     (fixnum-overflow-exception?
      ("args" (("required" obj) ("optional") ("key")))("module"))
@@ -522,7 +522,7 @@
     (fxbit-count ("args" (("required" n) ("optional") ("key")))("module"))
     (fxbit-set? ("args" (("required" n1 n2) ("optional") ("key")))("module"))
     (fxeven? ("args" (("required" n) ("optional") ("key")))("module"))
-    (fxfirst-bit-set ("args" (("required" n) ("optional") ("key")))("module"))
+    (fxfirst-set-bit ("args" (("required" n) ("optional") ("key")))("module"))
     (fxif ("args" (("required" n1 n2 n3) ("optional") ("key")))("module"))
     (fxior ("args" (("required" n1 [...]) ("optional") ("key")))("module"))
     (fxlength ("args" (("required" n) ("optional") ("key")))("module"))

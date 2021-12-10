@@ -629,7 +629,7 @@
            (^popcount! tmp)
            (return (^fixnum-box tmp)))))))
 
-(univ-define-prim "##fxfirst-bit-set" #f
+(univ-define-prim "##fxfirst-set-bit" #f
   (make-translated-operand-generator
     (lambda (ctx return arg)
       (let ((tmp (^local-var (univ-gensym ctx 'tmp))))

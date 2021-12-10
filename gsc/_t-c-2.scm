@@ -3320,7 +3320,7 @@
 (targ-op "##fxif"           (targ-apply-simp-u #f #f #f "FIXIF"))
 (targ-op "##fxbit-count"    (targ-apply-simp-u #f #f #f "FIXBITCOUNT"))
 (targ-op "##fxlength"       (targ-apply-simp-u #f #f #f "FIXLENGTH"))
-(targ-op "##fxfirst-bit-set"(targ-apply-simp-u #f #f #f "FIXFIRSTBITSET"))
+(targ-op "##fxfirst-set-bit"(targ-apply-simp-u #f #f #f "FIXFIRSTSETBIT"))
 (targ-op "##fxbit-set?"     (targ-ifjump-simp-u #f "FIXBITSETP"))
 (targ-op "##fxwraparithmetic-shift"     (targ-apply-simp-u #f #f #f "FIXWRAPASH"))
 (targ-op "##fxwraparithmetic-shift?"    (targ-apply-simp-u #f #f #f "FIXWRAPASHP"))
