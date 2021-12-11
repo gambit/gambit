@@ -76,9 +76,13 @@ Detailed installation instructions are given in the file [INSTALL.txt](https://g
 
 31: [A special form rec for recursive evaluation](https://srfi.schemers.org/srfi-31/srfi-31.html)
 
+33: [Integer Bitwise-operation Library](https://srfi.schemers.org/srfi-33/srfi-33.html)
+
 39: [Parameter objects](https://srfi.schemers.org/srfi-39/srfi-39.html) (builtin)
 
 41: [Streams](https://srfi.schemers.org/srfi-41/srfi-41.html)
+
+45: [Primitives for Expressing Iterative Lazy Algorithms](https://srfi.schemers.org/srfi-45/srfi-45.html)
 
 62: [S-expression comments](https://srfi.schemers.org/srfi-62/srfi-62.html) (builtin)
 
@@ -87,6 +91,8 @@ Detailed installation instructions are given in the file [INSTALL.txt](https://g
 69: [Basic hash tables](https://srfi.schemers.org/srfi-69/srfi-69.html)
 
 88: [Keyword objects](https://srfi.schemers.org/srfi-88/srfi-88.html) (builtin)
+
+111: [Boxes](https://srfi.schemers.org/srfi-111/srfi-111.html) (builtin)
 
 124: [Ephemerons](https://srfi.schemers.org/srfi-124/srfi-124.html)
 
