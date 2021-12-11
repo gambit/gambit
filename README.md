@@ -46,6 +46,8 @@ Detailed installation instructions are given in the file [INSTALL.txt](https://g
 
 4: [Homogeneous numeric vector datatypes](https://srfi.schemers.org/srfi-4/srfi-4.html) (builtin)
 
+5: [A compatible let form with signatures and rest arguments](https://srfi.schemers.org/srfi-5/srfi-5.html)
+
 6: [Basic String Ports](https://srfi.schemers.org/srfi-6/srfi-6.html) (builtin)
 
 8: [receive: Binding to multiple values](https://srfi.schemers.org/srfi-8/srfi-8.html) (builtin)
