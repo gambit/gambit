@@ -4915,6 +4915,13 @@ For example:
 @deffnx procedure nan? @var{x}
 @end deffn
 
+@deffn procedure bits @var{bool}@dots{}
+@deffnx procedure bits->list @var{i} @r{[}@var{len}@r{]}
+@deffnx procedure list->bits @var{list}
+@deffnx procedure bits->vector @var{i} @r{[}@var{len}@r{]}
+@deffnx procedure vector->bits @var{vector}
+@end deffn
+
 @deffn {special form} six.infix @var{datum}
 @deffnx undefined six.!
 @deffnx {special form} six.!x @var{x}
@@ -5738,22 +5745,22 @@ exception mentions PROPER or CIRCULAR LIST
 @var{x} is a character, exception mentions CHARACTER VECTOR
 @item pair-list
 @var{x} is a pair, exception mentions PAIR LIST
-@item exact-signed-int8-list
-@var{x} is an exact-signed-int8, exception mentions INTEGER LIST
-@item exact-signed-int16-list
-@var{x} is an exact-signed-int16, exception mentions INTEGER LIST
-@item exact-signed-int32-list
-@var{x} is an exact-signed-int32, exception mentions INTEGER LIST
-@item exact-signed-int64-list
-@var{x} is an exact-signed-int64, exception mentions INTEGER LIST
-@item exact-unsigned-int8-list
+@item exact-unsigned-int8-list-exact-unsigned-int8
 @var{x} is an exact-unsigned-int8, exception mentions INTEGER LIST
-@item exact-unsigned-int16-list
+@item exact-unsigned-int16-list-exact-unsigned-int16
 @var{x} is an exact-unsigned-int16, exception mentions INTEGER LIST
-@item exact-unsigned-int32-list
+@item exact-unsigned-int32-list-exact-unsigned-int32
 @var{x} is an exact-unsigned-int32, exception mentions INTEGER LIST
-@item exact-unsigned-int64-list
+@item exact-unsigned-int64-list-exact-unsigned-int64
 @var{x} is an exact-unsigned-int64, exception mentions INTEGER LIST
+@item exact-signed-int8-list-exact-signed-int8
+@var{x} is an exact-signed-int8, exception mentions INTEGER LIST
+@item exact-signed-int16-list-exact-signed-int16
+@var{x} is an exact-signed-int16, exception mentions INTEGER LIST
+@item exact-signed-int32-list-exact-signed-int32
+@var{x} is an exact-signed-int32, exception mentions INTEGER LIST
+@item exact-signed-int64-list-exact-signed-int64
+@var{x} is an exact-signed-int64, exception mentions INTEGER LIST
 @end table
 
 @subsubsection Gambit types

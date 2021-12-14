@@ -4307,6 +4307,8 @@
     (symbol                       . "SYMBOL")
     (keyword                      . "KEYWORD")
     (boolean                      . "BOOLEAN")
+    (boolean-list                 . "BOOLEAN LIST")
+    (boolean-vector               . "BOOLEAN VECTOR")
     (vector                       . "VECTOR")
     (vector-list                  . "VECTOR LIST")
     (s8vector                     . "S8VECTOR")

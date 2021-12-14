@@ -78,6 +78,9 @@ atanh
 binary-port?
 bit-count
 bit-set?
+bits
+bits->list
+bits->vector
 bitwise-and
 bitwise-andc1
 bitwise-andc2
@@ -464,6 +467,7 @@ length-mismatch-exception-procedure
 length-mismatch-exception?
 link-flat
 link-incremental
+list->bits
 list->f32vector
 list->f64vector
 list->s16vector
@@ -1115,6 +1119,7 @@ user-info-uid
 user-info?
 user-name
 utf8->string
+vector->bits
 vector->string
 vector-append
 vector-cas!

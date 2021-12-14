@@ -2,7 +2,7 @@
 
 ;;; File: "number.sld"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -100,6 +100,9 @@ asinh
 atanh
 bit-count
 bit-set?
+;;UNIMPLEMENTED bits
+;;UNIMPLEMENTED bits->list
+;;UNIMPLEMENTED bits->vector
 bitwise-and
 bitwise-andc1
 bitwise-andc2
@@ -122,6 +125,7 @@ first-bit-set
 integer-length
 integer-nth-root
 integer-sqrt
+;;UNIMPLEMENTED list->bits
 ;;UNIMPLEMENTED make-random-source
 ;;UNIMPLEMENTED random-f64vector
 ;;UNIMPLEMENTED random-integer
@@ -140,6 +144,7 @@ replace-bit-field
 sinh
 tanh
 test-bit-field?
+;;UNIMPLEMENTED vector->bits
 
 ))
 

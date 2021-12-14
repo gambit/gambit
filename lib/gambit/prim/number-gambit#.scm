@@ -18,6 +18,9 @@ asinh
 atanh
 bit-count
 bit-set?
+(bits bits#unimplemented)
+(bits->list bits->list#unimplemented)
+(bits->vector bits->vector#unimplemented)
 bitwise-and
 bitwise-andc1
 bitwise-andc2
@@ -40,6 +43,7 @@ first-set-bit
 integer-length
 integer-nth-root
 integer-sqrt
+(list->bits list->bits#unimplemented)
 (make-random-source make-random-source#unimplemented)
 (random-f64vector random-f64vector#unimplemented)
 (random-integer random-integer#unimplemented)
@@ -58,6 +62,7 @@ replace-bit-field
 sinh
 tanh
 test-bit-field?
+(vector->bits vector->bits#unimplemented)
 
 ))
 

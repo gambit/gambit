@@ -251,9 +251,25 @@
 (define-check-type (f64vector-list f64vector-list-f64vector) 'f64vector-list
   ##f64vector?)
 
-;;; Boolean type.
+;;; Boolean types.
 
 (define-check-type boolean 'boolean
+  ##boolean?)
+
+;; The boolean-list type is a proper-list of booleans.
+
+(define-check-type (list boolean-list) #f
+  (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
+
+(define-check-type (boolean-list boolean-list-boolean) 'boolean-list
+  ##boolean?)
+
+;; The boolean-vector type is a vector of booleans.
+
+(define-check-type (vector boolean-vector) 'vector
+  ##vector?) ;; defer detailed checks to logic traversing the vector
+
+(define-check-type (boolean-vector boolean-vector-boolean) 'boolean-vector
   ##boolean?)
 
 ;;; Character types.

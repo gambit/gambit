@@ -2,7 +2,7 @@
 
 ;;; File: "boolean.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -13,6 +13,8 @@
 ;;;----------------------------------------------------------------------------
 
 (define-fail-check-type boolean 'boolean)
+(define-fail-check-type boolean-list 'boolean-list)
+(define-fail-check-type boolean-vector 'boolean-vector)
 
 (define-prim (##boolean? obj)
   (or (##eq? obj #t) (##eq? obj #f)))

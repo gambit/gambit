@@ -5934,6 +5934,63 @@ for a discussion of branch cuts.
 (define-prim (##bit-mask size)
   (##bitwise-not (##arithmetic-shift -1 size)))
 
+(define-procedure (bits . (bool boolean))
+  (let loop ((lst bool) (pow2 1) (result 0))
+    (if (pair? lst)
+        (let ((elem (car lst)))
+          (macro-check-boolean elem (integer-length pow2) ((%procedure%) . bool)
+            (loop (cdr lst)
+                  (arithmetic-shift pow2 1)
+                  (if elem
+                      (+ result pow2)
+                      result))))
+        result)))
+
+(define-procedure (list->bits (list list))
+  (let loop ((lst list) (pow2 1) (result 0))
+    (if (pair? lst)
+        (let ((elem (car lst)))
+          (macro-check-boolean-list-boolean elem '(1 . list) ((%procedure%) list)
+            (loop (cdr lst)
+                  (arithmetic-shift pow2 1)
+                  (if elem
+                      (+ result pow2)
+                      result))))
+        (macro-check-proper-list-null* lst list '(1 . list) ((%procedure%) list)
+          result))))
+
+(define-procedure (vector->bits (vector boolean-vector))
+  (let ((len (vector-length vector)))
+    (let loop ((i (fx- len 1)) (result 0))
+      (if (fx< i 0)
+          result
+          (let ((elem (vector-ref vector i)))
+            (macro-check-boolean-vector-boolean elem '(1 . vector) ((%procedure%) vector)
+              (let ((result*2 (arithmetic-shift result 1)))
+                (loop (fx- i 1)
+                      (if elem
+                          (+ result*2 1)
+                          result*2)))))))))
+
+(define-procedure (bits->list (i   exact-integer)
+                              (len index (integer-length i)))
+  (let loop ((j (fx- len 1)) (result '()))
+    (if (fx< j 0)
+        result
+        (loop (fx- j 1)
+              (cons (bit-set? j i) result)))))
+
+(define-procedure (bits->vector (i   exact-integer)
+                                (len index (integer-length i)))
+  (let ((vect (make-vector len #f)))
+    (let loop ((j (fx- len 1)))
+      (if (fx< j 0)
+          vect
+          (begin
+            (if (bit-set? j i)
+                (vector-set! vect j #t))
+            (loop (fx- j 1)))))))
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Fixnum operations
