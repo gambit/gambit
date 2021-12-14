@@ -71,24 +71,48 @@
 ;;; Define type checking procedures.
 ;;; If you add another, update the list in _repl.scm.
 
-(define-fail-check-type exact-signed-int8 'exact-signed-int8)
-(define-fail-check-type exact-signed-int8-list 'exact-signed-int8-list)
 (define-fail-check-type exact-unsigned-int8 'exact-unsigned-int8)
 (define-fail-check-type exact-unsigned-int8-list 'exact-unsigned-int8-list)
-(define-fail-check-type exact-signed-int16 'exact-signed-int16)
-(define-fail-check-type exact-signed-int16-list 'exact-signed-int16-list)
-(define-fail-check-type exact-unsigned-int16 'exact-unsigned-int16)
-(define-fail-check-type exact-unsigned-int16-list 'exact-unsigned-int16-list)
-(define-fail-check-type exact-signed-int32 'exact-signed-int32)
-(define-fail-check-type exact-signed-int32-list 'exact-signed-int32-list)
-(define-fail-check-type exact-unsigned-int32 'exact-unsigned-int32)
-(define-fail-check-type exact-unsigned-int32-list 'exact-unsigned-int32-list)
-(define-fail-check-type exact-signed-int64 'exact-signed-int64)
-(define-fail-check-type exact-signed-int64-list 'exact-signed-int64-list)
-(define-fail-check-type exact-unsigned-int64 'exact-unsigned-int64)
-(define-fail-check-type exact-unsigned-int64-list 'exact-unsigned-int64-list)
+
+(macro-if-s8vector
+ (begin
+   (define-fail-check-type exact-signed-int8 'exact-signed-int8)
+   (define-fail-check-type exact-signed-int8-list 'exact-signed-int8-list)))
+
+(macro-if-u16vector
+ (begin
+   (define-fail-check-type exact-unsigned-int16 'exact-unsigned-int16)
+   (define-fail-check-type exact-unsigned-int16-list 'exact-unsigned-int16-list)))
+
+(macro-if-s16vector
+ (begin
+   (define-fail-check-type exact-signed-int16 'exact-signed-int16)
+   (define-fail-check-type exact-signed-int16-list 'exact-signed-int16-list)))
+
+
+(macro-if-u32vector
+ (begin
+   (define-fail-check-type exact-unsigned-int32 'exact-unsigned-int32)
+   (define-fail-check-type exact-unsigned-int32-list 'exact-unsigned-int32-list)))
+
+(macro-if-s32vector
+ (begin
+   (define-fail-check-type exact-signed-int32 'exact-signed-int32)
+   (define-fail-check-type exact-signed-int32-list 'exact-signed-int32-list)))
+
+(macro-if-u64vector
+ (begin
+   (define-fail-check-type exact-unsigned-int64 'exact-unsigned-int64)
+   (define-fail-check-type exact-unsigned-int64-list 'exact-unsigned-int64-list)))
+
+(macro-if-s64vector
+ (begin
+   (define-fail-check-type exact-signed-int64 'exact-signed-int64)
+   (define-fail-check-type exact-signed-int64-list 'exact-signed-int64-list)))
+
 (define-fail-check-type inexact-real 'inexact-real)
 (define-fail-check-type inexact-real-list 'inexact-real-list)
+
 (define-fail-check-type number 'number)
 (define-fail-check-type real 'real)
 (define-fail-check-type finite-real 'finite-real)

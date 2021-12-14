@@ -29,204 +29,14 @@
 
 ;;;----------------------------------------------------------------------------
 
-;; u8vector and f64vector are always enabled
-
-(macro-define-syntax macro-if-s8vector
-  (lambda (stx)
-    (syntax-case stx ()
-      ((_ yes)
-       #'(macro-if-s8vector yes (##begin)))
-      ((_ yes no)
-       #'(cond-expand
-          ((or enable-s8vector (not disable-s8vector))
-           yes)
-          (else
-           no))))))
-
-(macro-define-syntax macro-if-u16vector
-  (lambda (stx)
-    (syntax-case stx ()
-      ((_ yes)
-       #'(macro-if-u16vector yes (##begin)))
-      ((_ yes no)
-       #'(cond-expand
-          ((or enable-u16vector (not disable-u16vector))
-           yes)
-          (else
-           no))))))
-
-(macro-define-syntax macro-if-s16vector
-  (lambda (stx)
-    (syntax-case stx ()
-      ((_ yes)
-       #'(macro-if-s16vector yes (##begin)))
-      ((_ yes no)
-       #'(cond-expand
-          ((or enable-s16vector (not disable-s16vector))
-           yes)
-          (else
-           no))))))
-
-(macro-define-syntax macro-if-u32vector
-  (lambda (stx)
-    (syntax-case stx ()
-      ((_ yes)
-       #'(macro-if-u32vector yes (##begin)))
-      ((_ yes no)
-       #'(cond-expand
-          ((or enable-u32vector (not disable-u32vector))
-           yes)
-          (else
-           no))))))
-
-(macro-define-syntax macro-if-s32vector
-  (lambda (stx)
-    (syntax-case stx ()
-      ((_ yes)
-       #'(macro-if-s32vector yes (##begin)))
-      ((_ yes no)
-       #'(cond-expand
-          ((or enable-s32vector (not disable-s32vector))
-           yes)
-          (else
-           no))))))
-
-(macro-define-syntax macro-if-u64vector
-  (lambda (stx)
-    (syntax-case stx ()
-      ((_ yes)
-       #'(macro-if-u64vector yes (##begin)))
-      ((_ yes no)
-       #'(cond-expand
-          ((or enable-u64vector (not disable-u64vector))
-           yes)
-          (else
-           no))))))
-
-(macro-define-syntax macro-if-s64vector
-  (lambda (stx)
-    (syntax-case stx ()
-      ((_ yes)
-       #'(macro-if-s64vector yes (##begin)))
-      ((_ yes no)
-       #'(cond-expand
-          ((or enable-s64vector (not disable-s64vector))
-           yes)
-          (else
-           no))))))
-
-(macro-define-syntax macro-if-f32vector
-  (lambda (stx)
-    (syntax-case stx ()
-      ((_ yes)
-       #'(macro-if-f32vector yes (##begin)))
-      ((_ yes no)
-       #'(cond-expand
-          ((or enable-f32vector (not disable-f32vector))
-           yes)
-          (else
-           no))))))
-
-;;;----------------------------------------------------------------------------
-
 ;;; Define type checking macros.
 
-(define-check-type string 'string
-  ##string?)
-
-(define-check-type string-list 'string-list
-  ##string?)
-
-(define-check-type vector 'vector
-  ##vector?)
-
-(define-check-type vector-list 'vector-list
-  ##vector?)
-
-(define-check-type u8vector 'u8vector
-  ##u8vector?)
-
-(define-check-type u8vector-list 'u8vector-list
-  ##u8vector?)
-
-(macro-if-s8vector
- (define-check-type s8vector 's8vector
-   ##s8vector?))
-
-(macro-if-s8vector
- (define-check-type s8vector-list 's8vector-list
-   ##s8vector?))
-
-(macro-if-u16vector
- (define-check-type u16vector 'u16vector
-   ##u16vector?))
-
-(macro-if-u16vector
- (define-check-type u16vector-list 'u16vector-list
-   ##u16vector?))
-
-(macro-if-s16vector
- (define-check-type s16vector 's16vector
-   ##s16vector?))
-
-(macro-if-s16vector
- (define-check-type s16vector-list 's16vector-list
-   ##s16vector?))
-
-(macro-if-u32vector
- (define-check-type u32vector 'u32vector
-   ##u32vector?))
-
-(macro-if-u32vector
- (define-check-type u32vector-list 'u32vector-list
-   ##u32vector?))
-
-(macro-if-s32vector
- (define-check-type s32vector 's32vector
-   ##s32vector?))
-
-(macro-if-s32vector
- (define-check-type s32vector-list 's32vector-list
-   ##s32vector?))
-
-(macro-if-u64vector
- (define-check-type u64vector 'u64vector
-   ##u64vector?))
-
-(macro-if-u64vector
- (define-check-type u64vector-list 'u64vector-list
-   ##u64vector?))
-
-(macro-if-s64vector
- (define-check-type s64vector 's64vector
-   ##s64vector?))
-
-(macro-if-s64vector
- (define-check-type s64vector-list 's64vector-list
-   ##s64vector?))
-
-(macro-if-f32vector
- (define-check-type f32vector 'f32vector
-   ##f32vector?))
-
-(macro-if-f32vector
- (define-check-type f32vector-list 'f32vector-list
-   ##f32vector?))
-
-(define-check-type f64vector 'f64vector
-  ##f64vector?)
-
-(define-check-type f64vector-list 'f64vector-list
-  ##f64vector?)
+;;; Mutable object type check.
 
 (define-check-type mutable 'mutable
   ##mutable?)
 
-(define-check-type pair 'pair
-  ##pair?)
-
-(define-check-type (deeper-pair-tree deeper-pair-tree-pair) 'deeper-pair-tree
-  ##pair?)
+;;; General list types.
 
 ;; The list type covers all types of lists including circular and dotted.
 
@@ -273,6 +83,14 @@
             (macro-fail-check-proper-or-circular-list ,arg-id ,form)))
     ,expr))
 
+;;; Pair types.
+
+(define-check-type pair 'pair
+  ##pair?)
+
+(define-check-type (deeper-pair-tree deeper-pair-tree-pair) 'deeper-pair-tree
+  ##pair?)
+
 ;; The pair-list type is a proper-list of pairs.
 
 (define-check-type (list pair-list) #f
@@ -281,7 +99,7 @@
 (define-check-type (pair-list pair-list-pair) 'pair-list
   ##pair?)
 
-;; The pair-list type is a proper-list of lists.
+;; The list-list type is a proper-list of lists.
 
 (define-check-type (list list-list) #f
   (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
@@ -289,26 +107,190 @@
 (define-check-type (list-list list-list-null) 'list-list
   ##null?)
 
-(define-check-type symbol 'symbol
-  ##symbol?)
+;;; Vector types.
+
+(define-check-type vector 'vector
+  ##vector?)
+
+;; The vector-list type is a proper-list of vectors.
+
+(define-check-type (list vector-list) #f
+  (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
+
+(define-check-type (vector-list vector-list-vector) 'vector-list
+  ##vector?)
+
+;;; String types.
+
+(define-check-type string 'string
+  ##string?)
+
+;; The string-list type is a proper-list of strings.
+
+(define-check-type (list string-list) #f
+  (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
+
+(define-check-type (string-list string-list-string) 'string-list
+  ##string?)
+
+;;; Homogeneous vector types.
+
+(define-check-type u8vector 'u8vector
+  ##u8vector?)
+
+;; The u8vector-list type is a proper-list of u8vectors.
+
+(define-check-type (list u8vector-list) #f
+  (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
+
+(define-check-type (u8vector-list u8vector-list-u8vector) 'u8vector-list
+  ##u8vector?)
+
+(macro-if-s8vector
+ (begin
+
+   (define-check-type s8vector 's8vector
+     ##s8vector?)
+
+   (define-check-type (list s8vector-list) #f
+     (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
+
+   (define-check-type (s8vector-list s8vector-list-s8vector) 's8vector-list
+     ##s8vector?)))
+
+(macro-if-u16vector
+ (begin
+
+   (define-check-type u16vector 'u16vector
+     ##u16vector?)
+
+   (define-check-type (list u16vector-list) #f
+     (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
+
+   (define-check-type (u16vector-list u16vector-list-u16vector) 'u16vector-list
+     ##u16vector?)))
+
+(macro-if-s16vector
+ (begin
+
+   (define-check-type s16vector 's16vector
+     ##s16vector?)
+
+   (define-check-type (list s16vector-list) #f
+     (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
+
+   (define-check-type (s16vector-list s16vector-list-s16vector) 's16vector-list
+     ##s16vector?)))
+
+(macro-if-u32vector
+ (begin
+
+   (define-check-type u32vector 'u32vector
+     ##u32vector?)
+
+   (define-check-type (list u32vector-list) #f
+     (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
+
+   (define-check-type (u32vector-list u32vector-list-u32vector) 'u32vector-list
+     ##u32vector?)))
+
+(macro-if-s32vector
+ (begin
+
+   (define-check-type s32vector 's32vector
+     ##s32vector?)
+
+   (define-check-type (list s32vector-list) #f
+     (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
+
+   (define-check-type (s32vector-list s32vector-list-s32vector) 's32vector-list
+     ##s32vector?)))
+
+(macro-if-u64vector
+ (begin
+
+   (define-check-type u64vector 'u64vector
+     ##u64vector?)
+
+   (define-check-type (list u64vector-list) #f
+     (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
+
+   (define-check-type (u64vector-list u64vector-list-u64vector) 'u64vector-list
+     ##u64vector?)))
+
+(macro-if-s64vector
+ (begin
+
+   (define-check-type s64vector 's64vector
+     ##s64vector?)
+
+   (define-check-type (list s64vector-list) #f
+     (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
+
+   (define-check-type (s64vector-list s64vector-list-s64vector) 's64vector-list
+     ##s64vector?)))
+
+(macro-if-f32vector
+ (begin
+
+   (define-check-type f32vector 'f32vector
+     ##f32vector?)
+
+   (define-check-type (list f32vector-list) #f
+     (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
+
+   (define-check-type (f32vector-list f32vector-list-f32vector) 'f32vector-list
+     ##f32vector?)))
+
+(define-check-type f64vector 'f64vector
+  ##f64vector?)
+
+(define-check-type (list f64vector-list) #f
+  (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
+
+(define-check-type (f64vector-list f64vector-list-f64vector) 'f64vector-list
+  ##f64vector?)
+
+;;; Boolean type.
+
+(define-check-type boolean 'boolean
+  ##boolean?)
+
+;;; Character types.
 
 (define-check-type char 'char
   ##char?)
 
-(define-check-type char-list 'char-list
+;; The char-list type is a proper-list of characters.
+
+(define-check-type (list char-list) #f
+  (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
+
+(define-check-type (char-list char-list-char) 'char-list
   ##char?)
 
-(define-check-type char-vector 'char-vector
+;; The char-vector type is a vector of characters.
+
+(define-check-type (vector char-vector) 'vector
+  ##vector) ;; defer detailed checks to logic traversing the vector
+
+(define-check-type (char-vector char-vector-char) 'char-vector
   ##char?)
 
-(define-check-type procedure 'procedure
-  ##procedure?)
+;;; Symbol type.
+
+(define-check-type symbol 'symbol
+  ##symbol?)
+
+;;; Keyword type.
 
 (define-check-type keyword 'keyword
   ##keyword?)
 
-(define-check-type boolean 'boolean
-  ##boolean?)
+;;; Procedure type.
+
+(define-check-type procedure 'procedure
+  ##procedure?)
 
 (##define-macro (define-prim-vector-procedures
                   name
@@ -616,7 +598,7 @@
                        (if (##fx< i 0)
                            result
                            (let ((elem (,prim-vect-ref ,name (##fx+ i s))))
-                             (macro-check-char-vector
+                             (macro-check-char-vector-char
                                elem
                                '(1 . ,name)
                                ((%procedure%) ,name start end)

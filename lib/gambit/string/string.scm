@@ -19,7 +19,7 @@
   #\nul
   macro-force-vars
   macro-check-char
-  macro-check-char-list
+  macro-check-char-list-char
   macro-test-char
   ##fail-check-char
   define-map-and-for-each

@@ -32,7 +32,7 @@
   0
   macro-force-vars
   macro-check-exact-unsigned-int8
-  macro-check-exact-unsigned-int8-list
+  macro-check-exact-unsigned-int8-list-exact-unsigned-int8
   macro-test-exact-unsigned-int8
   ##fail-check-exact-unsigned-int8
   #f
@@ -46,7 +46,7 @@
    0
    macro-force-vars
    macro-check-exact-signed-int8
-   macro-check-exact-signed-int8-list
+   macro-check-exact-signed-int8-list-exact-signed-int8
    macro-test-exact-signed-int8
    ##fail-check-exact-signed-int8
    #f
@@ -60,7 +60,7 @@
    0
    macro-force-vars
    macro-check-exact-unsigned-int16
-   macro-check-exact-unsigned-int16-list
+   macro-check-exact-unsigned-int16-list-exact-unsigned-int16
    macro-test-exact-unsigned-int16
    ##fail-check-exact-unsigned-int16
    #f
@@ -74,7 +74,7 @@
    0
    macro-force-vars
    macro-check-exact-signed-int16
-   macro-check-exact-signed-int16-list
+   macro-check-exact-signed-int16-list-exact-signed-int16
    macro-test-exact-signed-int16
    ##fail-check-exact-signed-int16
    #f
@@ -88,7 +88,7 @@
    0
    macro-force-vars
    macro-check-exact-unsigned-int32
-   macro-check-exact-unsigned-int32-list
+   macro-check-exact-unsigned-int32-list-exact-unsigned-int32
    macro-test-exact-unsigned-int32
    ##fail-check-exact-unsigned-int32
    #f
@@ -102,7 +102,7 @@
    0
    macro-force-vars
    macro-check-exact-signed-int32
-   macro-check-exact-signed-int32-list
+   macro-check-exact-signed-int32-list-exact-signed-int32
    macro-test-exact-signed-int32
    ##fail-check-exact-signed-int32
    #f
@@ -116,7 +116,7 @@
    0
    macro-force-vars
    macro-check-exact-unsigned-int64
-   macro-check-exact-unsigned-int64-list
+   macro-check-exact-unsigned-int64-list-exact-unsigned-int64
    macro-test-exact-unsigned-int64
    ##fail-check-exact-unsigned-int64
    #f
@@ -130,7 +130,7 @@
    0
    macro-force-vars
    macro-check-exact-signed-int64
-   macro-check-exact-signed-int64-list
+   macro-check-exact-signed-int64-list-exact-signed-int64
    macro-test-exact-signed-int64
    ##fail-check-exact-signed-int64
    #f
@@ -144,7 +144,7 @@
    0.
    macro-force-vars
    macro-check-inexact-real
-   macro-check-inexact-real-list
+   macro-check-inexact-real-list-inexact-real
    macro-test-inexact-real
    ##fail-check-inexact-real
    #f
@@ -157,7 +157,7 @@
   0.
   macro-force-vars
   macro-check-inexact-real
-  macro-check-inexact-real-list
+  macro-check-inexact-real-list-inexact-real
   macro-test-inexact-real
   ##fail-check-inexact-real
   #f

@@ -1472,6 +1472,106 @@
 
 ;;;----------------------------------------------------------------------------
 
+;; u8vector and f64vector are always enabled
+
+(macro-define-syntax macro-if-s8vector
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ yes)
+       #'(macro-if-s8vector yes (##begin)))
+      ((_ yes no)
+       #'(cond-expand
+          ((or enable-s8vector (not disable-s8vector))
+           yes)
+          (else
+           no))))))
+
+(macro-define-syntax macro-if-u16vector
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ yes)
+       #'(macro-if-u16vector yes (##begin)))
+      ((_ yes no)
+       #'(cond-expand
+          ((or enable-u16vector (not disable-u16vector))
+           yes)
+          (else
+           no))))))
+
+(macro-define-syntax macro-if-s16vector
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ yes)
+       #'(macro-if-s16vector yes (##begin)))
+      ((_ yes no)
+       #'(cond-expand
+          ((or enable-s16vector (not disable-s16vector))
+           yes)
+          (else
+           no))))))
+
+(macro-define-syntax macro-if-u32vector
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ yes)
+       #'(macro-if-u32vector yes (##begin)))
+      ((_ yes no)
+       #'(cond-expand
+          ((or enable-u32vector (not disable-u32vector))
+           yes)
+          (else
+           no))))))
+
+(macro-define-syntax macro-if-s32vector
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ yes)
+       #'(macro-if-s32vector yes (##begin)))
+      ((_ yes no)
+       #'(cond-expand
+          ((or enable-s32vector (not disable-s32vector))
+           yes)
+          (else
+           no))))))
+
+(macro-define-syntax macro-if-u64vector
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ yes)
+       #'(macro-if-u64vector yes (##begin)))
+      ((_ yes no)
+       #'(cond-expand
+          ((or enable-u64vector (not disable-u64vector))
+           yes)
+          (else
+           no))))))
+
+(macro-define-syntax macro-if-s64vector
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ yes)
+       #'(macro-if-s64vector yes (##begin)))
+      ((_ yes no)
+       #'(cond-expand
+          ((or enable-s64vector (not disable-s64vector))
+           yes)
+          (else
+           no))))))
+
+(macro-define-syntax macro-if-f32vector
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ yes)
+       #'(macro-if-f32vector yes (##begin)))
+      ((_ yes no)
+       #'(cond-expand
+          ((or enable-f32vector (not disable-f32vector))
+           yes)
+          (else
+           no))))))
+
+;;;----------------------------------------------------------------------------
+
 (##include "_kernel#.scm")
 (##include "_thread#.scm")
 (##include "_system#.scm")

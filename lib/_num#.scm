@@ -54,8 +54,7 @@
         (##fx< ,var ,hi)))
 
 (##define-macro (macro-fixnum-range-incl? var lo hi)
-  `(and (##not (##fx< ,var ,lo))
-        (##not (##fx< ,hi ,var))))
+  `(##fx<= ,lo ,var ,hi))
 
 (##define-macro (macro-fixnum-and-fixnum-range-incl? var lo hi)
   `(and (##fixnum? ,var)
@@ -94,85 +93,130 @@
   lo
   hi)
 
-(define-check-type exact-signed-int8 'exact-signed-int8
-  macro-fixnum-and-fixnum-range-incl?
-  -128
-  127)
-
-(define-check-type exact-signed-int8-list 'exact-signed-int8-list
-  macro-fixnum-and-fixnum-range-incl?
-  -128
-  127)
-
 (define-check-type exact-unsigned-int8 'exact-unsigned-int8
   macro-fixnum-and-fixnum-range-incl?
   0
   255)
 
-(define-check-type exact-unsigned-int8-list 'exact-unsigned-int8-list
+(define-check-type (list exact-unsigned-int8-list) #f
+  (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
+
+(define-check-type (exact-unsigned-int8-list exact-unsigned-int8-list-exact-unsigned-int8) 'exact-unsigned-int8-list
   macro-fixnum-and-fixnum-range-incl?
   0
   255)
 
-(define-check-type exact-signed-int16 'exact-signed-int16
-  macro-fixnum-and-fixnum-range-incl?
-  -32768
-  32767)
+(macro-if-s8vector
+ (begin
 
-(define-check-type exact-signed-int16-list 'exact-signed-int16-list
-  macro-fixnum-and-fixnum-range-incl?
-  -32768
-  32767)
+   (define-check-type exact-signed-int8 'exact-signed-int8
+     macro-fixnum-and-fixnum-range-incl?
+     -128
+     127)
 
-(define-check-type exact-unsigned-int16 'exact-unsigned-int16
-  macro-fixnum-and-fixnum-range-incl?
-  0
-  65535)
+   (define-check-type (list exact-signed-int8-list) #f
+     (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
 
-(define-check-type exact-unsigned-int16-list 'exact-unsigned-int16-list
-  macro-fixnum-and-fixnum-range-incl?
-  0
-  65535)
+   (define-check-type (exact-signed-int8-list exact-signed-int8-list-exact-signed-int8) 'exact-signed-int8-list
+     macro-fixnum-and-fixnum-range-incl?
+     -128
+     127)))
 
-(define-check-type exact-signed-int32 'exact-signed-int32
-  macro-range-incl?
-  -2147483648
-  2147483647)
+(macro-if-u16vector
+ (begin
 
-(define-check-type exact-signed-int32-list 'exact-signed-int32-list
-  macro-range-incl?
-  -2147483648
-  2147483647)
+   (define-check-type exact-unsigned-int16 'exact-unsigned-int16
+     macro-fixnum-and-fixnum-range-incl?
+     0
+     65535)
 
-(define-check-type exact-unsigned-int32 'exact-unsigned-int32
-  macro-range-incl?
-  0
-  4294967295)
+   (define-check-type (list exact-unsigned-int16-list) #f
+     (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
 
-(define-check-type exact-unsigned-int32-list 'exact-unsigned-int32-list
-  macro-range-incl?
-  0
-  4294967295)
+   (define-check-type (exact-unsigned-int16-list exact-unsigned-int16-list-exact-unsigned-int16) 'exact-unsigned-int16-list
+     macro-fixnum-and-fixnum-range-incl?
+     0
+     65535)))
 
-(define-check-type exact-signed-int64 'exact-signed-int64
-  macro-range-incl?
-  -9223372036854775808
-  9223372036854775807)
+(macro-if-s16vector
+ (begin
 
-(define-check-type exact-signed-int64-list 'exact-signed-int64-list
-  macro-range-incl?
-  -9223372036854775808
-  9223372036854775807)
+   (define-check-type exact-signed-int16 'exact-signed-int16
+     macro-fixnum-and-fixnum-range-incl?
+     -32768
+     32767)
 
-(define-check-type exact-unsigned-int64 'exact-unsigned-int64
-  macro-range-incl?
-  0
-  18446744073709551615)
+   (define-check-type (list exact-signed-int16-list) #f
+     (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
 
-(define-check-type exact-unsigned-int64-list 'exact-unsigned-int64-list
-  macro-range-incl?
-  0
-  18446744073709551615)
+   (define-check-type (exact-signed-int16-list exact-signed-int16-list-exact-signed-int16) 'exact-signed-int16-list
+     macro-fixnum-and-fixnum-range-incl?
+     -32768
+     32767)))
+
+(macro-if-u32vector
+ (begin
+
+   (define-check-type exact-unsigned-int32 'exact-unsigned-int32
+     macro-range-incl?
+     0
+     4294967295)
+
+   (define-check-type (list exact-unsigned-int32-list) #f
+     (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
+
+   (define-check-type (exact-unsigned-int32-list exact-unsigned-int32-list-exact-unsigned-int32) 'exact-unsigned-int32-list
+     macro-range-incl?
+     0
+     4294967295)))
+
+(macro-if-s32vector
+ (begin
+
+   (define-check-type exact-signed-int32 'exact-signed-int32
+     macro-range-incl?
+     -2147483648
+     2147483647)
+
+   (define-check-type (list exact-signed-int32-list) #f
+     (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
+
+   (define-check-type (exact-signed-int32-list exact-signed-int32-list-exact-signed-int32) 'exact-signed-int32-list
+     macro-range-incl?
+     -2147483648
+     2147483647)))
+
+(macro-if-u64vector
+ (begin
+
+   (define-check-type exact-unsigned-int64 'exact-unsigned-int64
+     macro-range-incl?
+     0
+     18446744073709551615)
+
+   (define-check-type (list exact-unsigned-int64-list) #f
+     (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
+
+   (define-check-type (exact-unsigned-int64-list exact-unsigned-int64-list-exact-unsigned-int64) 'exact-unsigned-int64-list
+     macro-range-incl?
+     0
+     18446744073709551615)))
+
+(macro-if-s64vector
+ (begin
+
+   (define-check-type exact-signed-int64 'exact-signed-int64
+     macro-range-incl?
+     -9223372036854775808
+     9223372036854775807)
+
+   (define-check-type (list exact-signed-int64-list) #f
+     (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
+
+   (define-check-type (exact-signed-int64-list exact-signed-int64-list-exact-signed-int64) 'exact-signed-int64-list
+     macro-range-incl?
+     -9223372036854775808
+     9223372036854775807)))
 
 (define-check-type exact-integer 'exact-integer
   macro-exact-int?)
@@ -183,7 +227,10 @@
 (define-check-type inexact-real 'inexact-real
   ##flonum?)
 
-(define-check-type inexact-real-list 'inexact-real-list
+(define-check-type (list inexact-real-list) #f
+  (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
+
+(define-check-type (inexact-real-list inexact-real-list-inexact-real) 'inexact-real-list
   ##flonum?)
 
 (define-check-type number 'number
