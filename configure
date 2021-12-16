@@ -821,6 +821,7 @@ DASH_fPIC
 DASH_freschedule_modulo_scheduled_loops
 DASH_fmodulo_sched
 DASH_march
+DASH_foptimize_sibling_calls
 DASH_fno_ipa_ra
 DASH_fomit_frame_pointer
 DASH_ftrapv
@@ -971,6 +972,7 @@ enable_feedback2
 enable_single_host
 enable_lowlevel_exec
 enable_inline_jumps
+enable_trust_c_tco
 enable_gcc_opts
 enable_gnu_gcc_specific_options
 enable_gnu_gcc_no_strict_aliasing
@@ -1698,6 +1700,7 @@ Optional Features:
   --enable-lowlevel-exec  build system so C and machine code can be mixed
                           (default is NO)
   --enable-inline-jumps   generate inline code for jumps (default is NO)
+  --enable-trust-c-tco    trust C compiler does TCO properly (default is NO)
   --enable-gcc-opts       use expensive GCC optimizations (default is NO)
   --enable-gnu-gcc-specific-options
                           use GNU GCC specific options (default is YES)
@@ -5038,6 +5041,26 @@ if test "$ENABLE_INLINE_JUMPS" = yes; then
 $as_echo "#define ___INLINE_JUMPS /**/" >>confdefs.h
 
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___INLINE_JUMPS"
+fi
+
+###############################################################################
+#
+# Check if code should trust that the C compiler does TCO (tail call
+# optimization) properly.
+
+# Check whether --enable-trust-c-tco was given.
+if test "${enable_trust_c_tco+set}" = set; then :
+  enableval=$enable_trust_c_tco; ENABLE_TRUST_C_TCO=$enableval
+else
+  ENABLE_TRUST_C_TCO=no
+fi
+
+
+if test "$ENABLE_TRUST_C_TCO" = yes; then
+
+$as_echo "#define ___TRUST_C_TCO /**/" >>confdefs.h
+
+  DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___TRUST_C_TCO"
 fi
 
 ###############################################################################
@@ -11455,6 +11478,49 @@ $as_echo "$ac_cv_DASH_fno_ipa_ra" >&6; }
 DASH_fno_ipa_ra="$ac_cv_DASH_fno_ipa_ra"
 
 
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -foptimize-sibling-calls" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -foptimize-sibling-calls... " >&6; }
+if ${ac_cv_DASH_foptimize_sibling_calls+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-foptimize-sibling-calls"
+CXXFLAGS="-foptimize-sibling-calls"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_foptimize_sibling_calls=" -foptimize-sibling-calls"
+else
+  ac_cv_DASH_foptimize_sibling_calls=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_foptimize_sibling_calls" >&5
+$as_echo "$ac_cv_DASH_foptimize_sibling_calls" >&6; }
+DASH_foptimize_sibling_calls="$ac_cv_DASH_foptimize_sibling_calls"
+
+
 
   # machine architecture option:
   if test "$ENABLE_MARCH" != "" -a "$ENABLE_MARCH" != "no_enable_march"; then
@@ -11557,7 +11623,6 @@ DASH_march="$ac_cv_DASH_march"
 #  AC_CHECK_C_COMPILER_OPT(-freorder-functions,DASH_freorder_functions)
 #  AC_CHECK_C_COMPILER_OPT(-fcaller-saves,DASH_fcaller_saves)
 #  AC_CHECK_C_COMPILER_OPT(-fno-if-conversion2,DASH_fno_if_conversion2)
-#  AC_CHECK_C_COMPILER_OPT(-foptimize-sibling-calls,DASH_foptimize_sibling_calls)
 #  AC_CHECK_C_COMPILER_OPT(-fcse-skip-blocks,DASH_fcse_skip_blocks)
 #  AC_CHECK_C_COMPILER_OPT(-funit-at-a-time,DASH_funit_at_a_time)
 #  AC_CHECK_C_COMPILER_OPT(-finline-functions,DASH_finline_functions)
@@ -12061,13 +12126,14 @@ DASH_shared="$ac_cv_DASH_shared"
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_math_errno"
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fschedule_insns2"
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_keep_inline_dllexport"
+  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_foptimize_sibling_calls"
 
 #  if test "$ENABLE_CPLUSPLUS" = yes; then
 #    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fpermissive"
 #  fi
 
 # It isn't clear these are useful:
-#  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_trapping_math$DASH_fno_strict_aliasing$DASH_fwrapv$DASH_ftrapv$DASH_fexpensive_optimizations$DASH_fforce_addr$DASH_fpeephole2$DASH_falign_jumps$DASH_falign_functions$DASH_fno_function_cse$DASH_ftree_copyrename$DASH_ftree_fre$DASH_ftree_dce$DASH_fschedule_interblock$DASH_fregmove$DASH_fgcse_las$DASH_freorder_functions$DASH_fcaller_saves$DASH_fno_if_conversion2$DASH_foptimize_sibling_calls$DASH_fcse_skip_blocks$DASH_funit_at_a_time$DASH_finline_functions"
+#  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_trapping_math$DASH_fno_strict_aliasing$DASH_fwrapv$DASH_ftrapv$DASH_fexpensive_optimizations$DASH_fforce_addr$DASH_fpeephole2$DASH_falign_jumps$DASH_falign_functions$DASH_fno_function_cse$DASH_ftree_copyrename$DASH_ftree_fre$DASH_ftree_dce$DASH_fschedule_interblock$DASH_fregmove$DASH_fgcse_las$DASH_freorder_functions$DASH_fcaller_saves$DASH_fno_if_conversion2$DASH_fcse_skip_blocks$DASH_funit_at_a_time$DASH_finline_functions"
 
   if test "$ENABLE_GCC_OPTS" = yes; then
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fmodulo_sched"

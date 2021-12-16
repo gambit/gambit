@@ -46,6 +46,9 @@
 /* Define as 1 if you want trampoline jumps to be inlined.  */
 #undef ___INLINE_JUMPS
 
+/* Define as 1 if you trust the C compiler does TCO properly */
+#undef ___TRUST_C_TCO
+
 /* Define as 1 if you want to compile as a shared library.  */
 #undef ___SHARED
 

@@ -193,6 +193,8 @@ The configure options which are specific to the Gambit system are:
 
   --enable-single-host    compile each Scheme module as a single C function
   --enable-c-opt[=level]  use higher C optimization level
+  --enable-trust-c-tco    trust the C compiler will do TCO properly (for clang
+                          this is autodetected, for gcc you need >= version 10)
   --enable-gcc-opts       use expensive GCC optimizations
   --enable-gnu-gcc-specific-options
                           use GNU GCC specific options (default=YES)

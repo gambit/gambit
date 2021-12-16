@@ -3219,6 +3219,8 @@ ___EXP_FUNC(void,___lowlevel_exec)
         (___ps)
 ___processor_state ___ps;)
 {
+  {
+
 #ifdef __GNUC__
 
 #define PS_FP   PS_FIELD("2")
@@ -3822,6 +3824,8 @@ ___processor_state ___ps;)
 #endif
 
 #endif
+
+  }
 
   {
     ___WORD ___pc = ___ps->pc;

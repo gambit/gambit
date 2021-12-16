@@ -2670,7 +2670,7 @@
              (if sfun? "SFUN_SET_RESULT" "CFUN_SET_RESULT")
              nl-str)))))
 
-(define (c-make-function sfun? param-typs result-typ make-body)
+(define (c-make-function sfun? name param-typs result-typ make-body)
   (let ((cleanup?
          (not (every? (lambda (t) (not (type-needs-cleanup? t)))
                       param-typs))))
@@ -2711,7 +2711,10 @@
              "BEGIN_SFUN_VOID("
              sfun?
              ")")
-            "BEGIN_CFUN_VOID")
+            (string-append
+             "BEGIN_CFUN_VOID("
+             name
+             ")"))
           nl-str
           (convert-param-list)
           c-id-prefix
@@ -2740,14 +2743,20 @@
                        "BEGIN_SFUN_SCMOBJ("
                        sfun?
                        ")")
-                      "BEGIN_CFUN_SCMOBJ")
+                      (string-append
+                       "BEGIN_CFUN_SCMOBJ("
+                       name
+                       ")"))
                     (string-append
                       (if sfun?
                         (string-append
                           "BEGIN_SFUN("
                           sfun?
                           ",")
-                        "BEGIN_CFUN(")
+                        (string-append
+                          "BEGIN_CFUN("
+                          name
+                          ","))
                       (if indirect-access-result
                         (string-append "void* " c-id "_voidstar"
                                        (if sfun? " = 0" ""))
@@ -2943,6 +2952,7 @@
                       proc-name
                       scope
                       (c-make-function proc-val
+                                       #f
                                        param-typs
                                        result-typ
                                        make-body)))))
@@ -3084,6 +3094,7 @@
                   c-name
                   arity
                   (c-make-function #f
+                                   c-name
                                    stripped-param-typs
                                    result-typ
                                    make-body)))

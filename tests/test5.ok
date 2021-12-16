@@ -7,7 +7,7 @@
 ("mix")
 ()
 (("mix"))
-(
+( #|*/"*/"symbols|#
 "!procedure!"
 "*"
 "+"
@@ -221,15 +221,15 @@
 "x"
 "y"
 "z"
-)
-(
+) #|*/"*/"symbols|#
+( #|*/"*/"keywords|#
 "b"
 "c"
 "d"
 "x"
 "y"
-)
-(
+) #|*/"*/"keywords|#
+( #|*/"*/"globals-s-d|#
 "*current-num*"
 "*primitives*"
 "add-binding"
@@ -378,8 +378,8 @@
 "try"
 "width"
 "word-size"
-)
-(
+) #|*/"*/"globals-s-d|#
+( #|*/"*/"globals-s-nd|#
 "a"
 "c1"
 "c10"
@@ -405,8 +405,8 @@
 "not-constant?"
 "partial-evaluate"
 "try-peval"
-)
-(
+) #|*/"*/"globals-s-nd|#
+( #|*/"*/"globals-ns|#
 "##/"
 "##append"
 "##call-with-current-continuation"
@@ -609,7 +609,7 @@
 "vector?"
 "with-exception-handler"
 "write"
-)
+) #|*/"*/"globals-ns|#
 ( #|*/"*/"meta-info|#
 ) #|*/"*/"meta-info|#
 )

@@ -23,7 +23,7 @@
 ;; Back end for C language (part 2)
 ;; -----------------------
 
-(define (targ-scan-procedure obj)
+(define (targ-scan-procedure obj c-decls-queue)
   (let* ((proc (car obj))
          (p (cdr obj)))
 
@@ -52,8 +52,8 @@
 
     (let ((x (proc-obj-code proc)))
       (if (bbs? x)
-        (targ-scan-scheme-procedure x)
-        (targ-scan-c-procedure x)))
+        (targ-scan-scheme-procedure x c-decls-queue)
+        (targ-scan-c-procedure x c-decls-queue)))
 
 ;;    (targ-repr-end-proc!)
 
@@ -97,7 +97,7 @@
 
     ))
 
-(define (targ-scan-scheme-procedure bbs)
+(define (targ-scan-scheme-procedure bbs c-decls-queue)
 
   (set! targ-proc-entry-lbl   (bbs-entry-lbl-num bbs))
   (set! targ-proc-lbl-counter (make-counter (bbs-next-lbl-num bbs)))
@@ -120,7 +120,7 @@
 
         (loop pres-bb pres-gvm-instr (cdr l))))))
 
-(define (targ-scan-c-procedure c-proc)
+(define (targ-scan-c-procedure c-proc c-decls-queue)
 
   (define (ps-opnd opnd)
     (cond ((reg? opnd)
@@ -185,8 +185,33 @@
     (targ-emit
       (targ-adjust-stack (targ-align-frame (+ fs targ-frame-reserve))))
 
-    (targ-emit
-      (list 'append (c-proc-body c-proc)))
+    (let ((code (list 'append (c-proc-body c-proc))))
+      (if targ-inline-c-proc? ;; should C code be inlined?
+
+          ;; put C code inline with compiled Scheme code
+          (begin
+            (targ-emit
+             (list 'append
+                   "#define " c-id-prefix "CFUN_SELECT(inl,ool)inl"
+                   #\newline))
+            (targ-emit code)
+            (targ-emit
+             (list 'append
+                   "#undef " c-id-prefix "CFUN_SELECT"
+                   #\newline)))
+
+          ;; put C code in its own C function (this avoids issues with
+          ;; setjmp interfering with C TCO)
+          (let ((c-name (c-proc-c-name c-proc)))
+            (queue-put! c-decls-queue
+                        (list 'append
+                              "#define " c-id-prefix "CFUN_SELECT(inl,ool)ool"
+                              #\newline
+                              code
+                              "#undef " c-id-prefix "CFUN_SELECT"
+                              #\newline))
+            (targ-emit
+             (list "CFUN_OOL" c-name)))))
 
     (targ-emit
       (list "JUMPPRM"
@@ -212,6 +237,8 @@
 
 ;;    (targ-repr-end-block!)
 ))
+
+(define targ-inline-c-proc? #f)
 
 ;;;----------------------------------------------------------------------------
 

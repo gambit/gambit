@@ -518,6 +518,22 @@ fi
 
 ###############################################################################
 #
+# Check if code should trust that the C compiler does TCO (tail call
+# optimization) properly.
+
+AC_ARG_ENABLE(trust-c-tco,
+              AS_HELP_STRING([--enable-trust-c-tco],
+                             [trust C compiler does TCO properly (default is NO)]),
+              ENABLE_TRUST_C_TCO=$enableval,
+              ENABLE_TRUST_C_TCO=no)
+
+if test "$ENABLE_TRUST_C_TCO" = yes; then
+  AC_DEFINE([___TRUST_C_TCO],[],[Trust C compiler does TCO properly])
+  DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___TRUST_C_TCO"
+fi
+
+###############################################################################
+#
 # Check if expensive GCC optimizations should be used.  This makes the
 # executable faster but the compilation will be much longer and take
 # much more memory.
@@ -2336,6 +2352,7 @@ if test "$C_COMP_GNUC" = yes; then
   AC_CHECK_C_COMPILER_OPT(-ftrapv,DASH_ftrapv)
   AC_CHECK_C_COMPILER_OPT(-fomit-frame-pointer,DASH_fomit_frame_pointer)
   AC_CHECK_C_COMPILER_OPT(-fno-ipa-ra, DASH_fno_ipa_ra)
+  AC_CHECK_C_COMPILER_OPT(-foptimize-sibling-calls,DASH_foptimize_sibling_calls)
 
   # machine architecture option:
   if test "$ENABLE_MARCH" != "" -a "$ENABLE_MARCH" != "no_enable_march"; then
@@ -2396,7 +2413,6 @@ if test "$C_COMP_GNUC" = yes; then
 #  AC_CHECK_C_COMPILER_OPT(-freorder-functions,DASH_freorder_functions)
 #  AC_CHECK_C_COMPILER_OPT(-fcaller-saves,DASH_fcaller_saves)
 #  AC_CHECK_C_COMPILER_OPT(-fno-if-conversion2,DASH_fno_if_conversion2)
-#  AC_CHECK_C_COMPILER_OPT(-foptimize-sibling-calls,DASH_foptimize_sibling_calls)
 #  AC_CHECK_C_COMPILER_OPT(-fcse-skip-blocks,DASH_fcse_skip_blocks)
 #  AC_CHECK_C_COMPILER_OPT(-funit-at-a-time,DASH_funit_at_a_time)
 #  AC_CHECK_C_COMPILER_OPT(-finline-functions,DASH_finline_functions)
@@ -2480,13 +2496,14 @@ if test "$C_COMP_GNUC" = yes; then
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_math_errno"
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fschedule_insns2"
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_keep_inline_dllexport"
+  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_foptimize_sibling_calls"
 
 #  if test "$ENABLE_CPLUSPLUS" = yes; then
 #    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fpermissive"
 #  fi
 
 # It isn't clear these are useful:
-#  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_trapping_math$DASH_fno_strict_aliasing$DASH_fwrapv$DASH_ftrapv$DASH_fexpensive_optimizations$DASH_fforce_addr$DASH_fpeephole2$DASH_falign_jumps$DASH_falign_functions$DASH_fno_function_cse$DASH_ftree_copyrename$DASH_ftree_fre$DASH_ftree_dce$DASH_fschedule_interblock$DASH_fregmove$DASH_fgcse_las$DASH_freorder_functions$DASH_fcaller_saves$DASH_fno_if_conversion2$DASH_foptimize_sibling_calls$DASH_fcse_skip_blocks$DASH_funit_at_a_time$DASH_finline_functions"
+#  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_trapping_math$DASH_fno_strict_aliasing$DASH_fwrapv$DASH_ftrapv$DASH_fexpensive_optimizations$DASH_fforce_addr$DASH_fpeephole2$DASH_falign_jumps$DASH_falign_functions$DASH_fno_function_cse$DASH_ftree_copyrename$DASH_ftree_fre$DASH_ftree_dce$DASH_fschedule_interblock$DASH_fregmove$DASH_fgcse_las$DASH_freorder_functions$DASH_fcaller_saves$DASH_fno_if_conversion2$DASH_fcse_skip_blocks$DASH_funit_at_a_time$DASH_finline_functions"
 
   if test "$ENABLE_GCC_OPTS" = yes; then
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fmodulo_sched"

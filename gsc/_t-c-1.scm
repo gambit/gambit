@@ -334,7 +334,7 @@
 ;; Dumping of a compilation module
 
 (define (targ-dump procs output c-intf module-descr linker-name)
-  (let ((c-decls (c-intf-decls c-intf))
+  (let ((c-decls-queue (list->queue (c-intf-decls c-intf)))
         (c-procs (c-intf-procs c-intf))
         (c-inits (c-intf-inits c-intf))
         (c-objs (c-intf-objs c-intf)))
@@ -365,7 +365,9 @@
     (let loop ()
       (if (not (queue-empty? targ-prc-objs-to-scan))
         (begin
-          (targ-scan-procedure (queue-get! targ-prc-objs-to-scan))
+          (targ-scan-procedure
+           (queue-get! targ-prc-objs-to-scan)
+           c-decls-queue)
           (loop))))
 
     (if targ-info-port
@@ -375,7 +377,7 @@
 
     (targ-heap-dump
      output
-     c-decls
+     (queue->list c-decls-queue)
      c-inits
      (map (lambda (x) (cons (car x) (targ-use-obj (cdr x)))) c-objs)
      module-descr
@@ -1278,13 +1280,6 @@
          glo-rsrc
          meta-info)
 
-  (define (display-escaped obj)
-    ;; writes obj so that it can't be part of valid C code (even in a
-    ;; C comment or C string)
-    (targ-display "#|*/\"*/\"")
-    (write obj targ-port)
-    (targ-display "|#"))
-
   (set! targ-port (open-output-file-preserving-case filename))
   (set! targ-line-size 0)
   (set! targ-line-number 1)
@@ -1325,14 +1320,23 @@
   (write mods-and-flags targ-port)
   (targ-line)
 
-  (targ-write-rsrc-names sym-rsrc)
-  (targ-write-rsrc-names key-rsrc)
-  (targ-write-rsrc-names (keep targ-rsrc-supplied-and-demanded? glo-rsrc))
-  (targ-write-rsrc-names (keep targ-rsrc-supplied-and-not-demanded? glo-rsrc))
-  (targ-write-rsrc-names (keep targ-rsrc-not-supplied? glo-rsrc))
+  (targ-write-rsrc-names 'symbols
+                         sym-rsrc)
+
+  (targ-write-rsrc-names 'keywords
+                         key-rsrc)
+
+  (targ-write-rsrc-names 'globals-s-d
+                         (keep targ-rsrc-supplied-and-demanded? glo-rsrc))
+
+  (targ-write-rsrc-names 'globals-s-nd
+                         (keep targ-rsrc-supplied-and-not-demanded? glo-rsrc))
+
+  (targ-write-rsrc-names 'globals-ns
+                         (keep targ-rsrc-not-supplied? glo-rsrc))
 
   (targ-display "( ")
-  (display-escaped 'meta-info)
+  (targ-write-escaped 'meta-info)
   (targ-line)
   (let loop1 ((lst meta-info))
     (if (pair? lst)
@@ -1350,7 +1354,7 @@
             (if (pair? attribs)
                 (let ((attrib (car attribs)))
                   (targ-display " ")
-                  (display-escaped key)
+                  (targ-write-escaped key)
                   (write attrib targ-port)
                   (targ-line)
                   (loop2 (cdr attribs)))))
@@ -1358,7 +1362,7 @@
           (targ-line)
           (loop1 (cdr lst)))))
   (targ-display ") ")
-  (display-escaped 'meta-info)
+  (targ-write-escaped 'meta-info)
   (targ-line)
 
   (targ-display ")")
@@ -1379,8 +1383,9 @@
     (lambda (x y)
       (string<? (->string (car x)) (->string (car y))))))
 
-(define (targ-write-rsrc-names lst)
-  (targ-display "(")
+(define (targ-write-rsrc-names marker lst)
+  (targ-display "( ")
+  (targ-write-escaped marker)
   (targ-line)
   (for-each
     (lambda (r)
@@ -1388,8 +1393,16 @@
         (write name targ-port)
         (targ-line)))
     lst)
-  (targ-display ")")
+  (targ-display ") ")
+  (targ-write-escaped marker)
   (targ-line))
+
+(define (targ-write-escaped obj)
+  ;; writes obj so that it can't be part of valid C code (even in a
+  ;; C string or mutliline C comment)
+  (targ-display "#|*/\"*/\"")
+  (write obj targ-port)
+  (targ-display "|#"))
 
 (define (targ-dump-module-info name linker-name linkfile? extension? meta-info)
 
@@ -1847,7 +1860,7 @@
       (targ-line)
       (for-each
         (lambda (x)
-          (targ-display x)
+          (targ-code x)
           (targ-line))
         c-decls)))
 

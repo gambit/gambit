@@ -1582,9 +1582,12 @@
 
 #endif
 
-
 #if __has_attribute(musttail)
 #define ___PROPER_TAIL_CALL(call) __attribute__((musttail)) return call
+#else
+#if defined(___TRUST_C_TCO)
+#define ___PROPER_TAIL_CALL(call) return call
+#endif
 #endif
 
 #ifdef ___PROPER_TAIL_CALL
@@ -5001,7 +5004,7 @@ ___SET_R0(___ps->handler_break)
 #define ___BEGIN_COD \
 ___HIDDEN void ___HOST_PROC ___P((___processor_state ___ps),(___ps) \
 ___processor_state ___ps;) { \
-___WORD ___pc, ___start, ___temp; \
+___WORD ___pc; { ___WORD ___start, ___temp; \
 ___S32 ___s32_temp; /*******************/ \
 ___U32 ___u32_temp; /*******************/ \
 ___S64 ___s64_temp; /*******************/ \
@@ -5010,7 +5013,7 @@ ___D_ALL
 
 #define ___END_COD \
 ___ps->pc = ___pc; \
-___W_ALL \
+___W_ALL } \
 ___EXIT_HOST(); \
 }
 
@@ -8178,8 +8181,6 @@ ___HIDDEN ___SCMOBJ id \
 void *___x;) \
 { ___DELETE_TYPE(name,___x); return ___FIX(___NO_ERR); }
 
-#define ___CFUN_CONV_ERROR if ((___err!=___FIX(___NO_ERR))&&(___err!=___FIX(___UNWIND_C_STACK))) {___ps->temp1=___err;___ps->temp2=___errdata;___ps->temp3=___LBL(0);___ps->temp4=___errhandler;___JUMPEXTPRM(___SET_NARGS(___NARGS),___ps->handler_cfun_conv_error;)}
-
 #define ___STOC3(f,s,c,i)___err=___EXT(f)(___PSP s,c,i)
 #define ___STOC4(f,s,c,t,i)___err=___EXT(f)(___PSP s,c,t,i)
 #define ___CTOS3(f,c,s,i)___err=___EXT(f)(___ps,c,s,i)
@@ -8465,17 +8466,6 @@ void *___x;) \
 #define ___CFUN_CAST_AND_DEREF(type,arg)(*___CAST(type,arg))
 #define ___CFUN_CAST(type,arg)___CAST(type,arg)
 
-/* TODO: remove these obsolete definitions after bootstrap */
-#define ___CFUN_CALL_VOID(call)call;
-#define ___CFUN_CALL(r,call)r = call;
-#define ___CFUN_CALL_STRUCT(n,r,call)___ASSIGN_NEW_WITH_INIT(r,struct n,call);
-#define ___CFUN_CALL_UNION(n,r,call)___ASSIGN_NEW_WITH_INIT(r,union n,call);
-#define ___CFUN_CALL_TYPE(n,r,call)___ASSIGN_NEW_WITH_INIT(r,n,call);
-#define ___CFUN_CALL_POINTER(r,call)r = call;
-#define ___CFUN_CALL_NONNULLPOINTER(r,call)r = call;
-#define ___CFUN_CALL_FUNCTION(r,call)r = call;
-#define ___CFUN_CALL_NONNULLFUNCTION(r,call)r = call;
-
 #define ___CFUN_ASSIGN(r,val)r = val;
 #define ___CFUN_ASSIGN_STRUCT(n,r,val)___ASSIGN_NEW_WITH_INIT(r,struct n,val);
 #define ___CFUN_ASSIGN_UNION(n,r,val)___ASSIGN_NEW_WITH_INIT(r,union n,val);
@@ -8485,28 +8475,79 @@ void *___x;) \
 #define ___CFUN_ASSIGN_FUNCTION(r,val)r = val;
 #define ___CFUN_ASSIGN_NONNULLFUNCTION(r,val)r = val;
 
+#define ___BEGIN_CFUN_CTX ___SET_STK(-___FRAME_STACK_RA,___R0) ___W_ALL {
+#define ___END_CFUN_CTX } ___R_ALL
+
+#define ___BEGIN_CFUN_DEF(cproc) \
+___HIDDEN void cproc ___P((___processor_state ___ps), () \
+___processor_state ___ps;) {
+#define ___END_CFUN_DEF }
+
+#define ___R_ALL_INL ___CFUN_SELECT(___R_ALL,)
+#define ___W_ALL_INL ___CFUN_SELECT(___W_ALL,)
+
+#define ___BEGIN_CFUN_VOID(cproc) ___BEGIN_CFUN(cproc,)
+#define ___END_CFUN_VOID ___END_CFUN
+
+#define ___BEGIN_CFUN_SCMOBJ(cproc) ___BEGIN_CFUN(cproc,___SCMOBJ ___result)
+#define ___END_CFUN_SCMOBJ ___END_CFUN
+
+#define ___BEGIN_CFUN(cproc,decl) \
+___CFUN_SELECT(___BEGIN_CFUN_CTX,___BEGIN_CFUN_DEF(cproc)) \
+___SCMOBJ ___err=___FIX(___NO_ERR); \
+___SCMOBJ ___errdata=___FAL; \
+___SCMOBJ ___errhandler=___FAL; \
+decl; \
+___CFUN_SELECT(,___ps->temp1=___FIX(___NO_ERR);)
+#define ___END_CFUN \
+___CFUN_SELECT(___END_CFUN_CTX,___END_CFUN_DEF)
+
+#define ___CFUN_CONV_ERROR_EXIT_INL \
+___ps->temp3=___LBL(0); \
+___JUMPEXTPRM(___SET_NARGS(___NARGS),___ps->handler_cfun_conv_error)
+
+#define ___CFUN_CONV_ERROR_EXIT_OOL \
+___SET_NARGS(___NARGS) return;
+
+#define ___CFUN_CONV_ERROR \
+if ((___err!=___FIX(___NO_ERR))&&(___err!=___FIX(___UNWIND_C_STACK))) { \
+  ___ps->temp1=___err; \
+  ___ps->temp2=___errdata; \
+  ___ps->temp4=___errhandler; \
+  ___CFUN_SELECT(___CFUN_CONV_ERROR_EXIT_INL,___CFUN_CONV_ERROR_EXIT_OOL) \
+}
+
+#define ___CFUN_OOL(cproc) \
+___BEGIN_CFUN_CTX \
+cproc (___ps); \
+___END_CFUN_CTX \
+ if (___ps->temp1 != ___FIX(___NO_ERR)) { \
+  ___ps->temp3=___LBL(0); \
+  ___JUMPEXTPRM(___NOTHING,___ps->handler_cfun_conv_error) \
+}
+
 #define ___BEGIN_CFUN_BODY
 #define ___END_CFUN_BODY ___AT_END
-#define ___BEGIN_CFUN_BODY_CLEANUP ___W_ALL ___BEGIN_TRY
-#define ___END_CFUN_BODY_CLEANUP ___AT_END ___END_TRY ___R_ALL
+#define ___BEGIN_CFUN_BODY_CLEANUP ___W_ALL_INL ___BEGIN_TRY
+#define ___END_CFUN_BODY_CLEANUP ___AT_END ___END_TRY ___R_ALL_INL
 
-#define ___BEGIN_CFUN_VOID ___SET_STK(-___FRAME_STACK_RA,___R0) ___W_ALL {___SCMOBJ ___err=___FIX(___NO_ERR);___SCMOBJ ___errdata=___FAL;___SCMOBJ ___errhandler=___FAL;
+#define ___BEGIN_CFUN_VOIDold ___BEGIN_CFUN_CTX ___SCMOBJ ___err=___FIX(___NO_ERR);___SCMOBJ ___errdata=___FAL;___SCMOBJ ___errhandler=___FAL;
 #define ___CFUN_SET_RESULT_VOID ___CFUN_RESULT = ___VOID;
 #define ___CFUN_ERROR_VOID ___CFUN_CONV_ERROR
 #define ___CFUN_ERROR_CLEANUP_VOID ___CFUN_CONV_ERROR ___EXT(___propagate_error) (___PSP ___err);
-#define ___END_CFUN_VOID } ___R_ALL
+#define ___END_CFUN_VOIDold ___END_CFUN_CTX
 
-#define ___BEGIN_CFUN_SCMOBJ ___SET_STK(-___FRAME_STACK_RA,___R0) ___W_ALL {___SCMOBJ ___err=___FIX(___NO_ERR);___SCMOBJ ___result;___SCMOBJ ___errdata=___FAL;___SCMOBJ ___errhandler=___FAL;
+#define ___BEGIN_CFUN_SCMOBJold ___BEGIN_CFUN_CTX ___SCMOBJ ___err=___FIX(___NO_ERR);___SCMOBJ ___result;___SCMOBJ ___errdata=___FAL;___SCMOBJ ___errhandler=___FAL;
 #define ___CFUN_SET_RESULT_SCMOBJ ___CFUN_RESULT = ___result;
 #define ___CFUN_ERROR_SCMOBJ ___CFUN_CONV_ERROR
 #define ___CFUN_ERROR_CLEANUP_SCMOBJ ___CFUN_CONV_ERROR ___EXT(___propagate_error) (___PSP ___err);
-#define ___END_CFUN_SCMOBJ } ___R_ALL
+#define ___END_CFUN_SCMOBJold ___END_CFUN_CTX
 
-#define ___BEGIN_CFUN(decl)___SET_STK(-___FRAME_STACK_RA,___R0) ___W_ALL {___SCMOBJ ___err=___FIX(___NO_ERR);___SCMOBJ ___errdata=___FAL;___SCMOBJ ___errhandler=___FAL;decl;
+#define ___BEGIN_CFUNold(decl) ___BEGIN_CFUN_CTX ___SCMOBJ ___err=___FIX(___NO_ERR);___SCMOBJ ___errdata=___FAL;___SCMOBJ ___errhandler=___FAL;decl;
 #define ___CFUN_SET_RESULT /* done in conversion function */
 #define ___CFUN_ERROR ___CFUN_CONV_ERROR
 #define ___CFUN_ERROR_CLEANUP ___CFUN_CONV_ERROR ___EXT(___propagate_error) (___PSP ___err);
-#define ___END_CFUN } ___R_ALL
+#define ___END_CFUNold ___END_CFUN_CTX
 
 #define ___BEGIN_CFUN_ARG(i,decl)decl;
 #define ___END_CFUN_ARG(i)
