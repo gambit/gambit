@@ -2980,7 +2980,7 @@ ___mod_or_lnk mol;)
  */
 
 
-#ifndef ___USE_TRUE_TAIL_CALL_EXCLUSIVELY
+#ifndef ___USE_PROPER_TAIL_CALL_EXCLUSIVELY_TO_EXIT_HOST
 
 #ifdef EMSCRIPTEN
 
@@ -3126,7 +3126,7 @@ ___SCMOBJ stack_marker;)
   ___ps->pc = ___LABEL_ENTRY_GET(proc);
   ___PSSELF = proc;
 
-#ifdef ___USE_TRUE_TAIL_CALL_EXCLUSIVELY
+#ifdef ___USE_PROPER_TAIL_CALL_EXCLUSIVELY_TO_EXIT_HOST
 
   ___BEGIN_TRY
 
