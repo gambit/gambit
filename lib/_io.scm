@@ -5295,6 +5295,8 @@
 
   (##declare (not interrupts-enabled))
 
+  (macro-port-mutex-lock! port) ;; get exclusive access to port
+
   (let loop ((n 0))
     (let ((remaining (##fx- end (##fx+ start n))))
       (if (##not (##fx< 0 remaining))
@@ -5735,14 +5737,65 @@
             (##write-char2 c p)))))))
 
 (define-prim (##write-substring str start end port)
+
   (##declare (not interrupts-enabled))
-  (let loop ((i start))
-    (if (##fx< i end)
-        (begin
-          (macro-write-char (##string-ref str i) port)
-          (let ()
-            (##declare (interrupts-enabled))
-            (loop (##fx+ i 1)))))))
+
+  (if (##not (macro-fully-buffered?
+              (macro-port-woptions port)))
+
+      (let loop ((i start))
+        (if (##fx< i end)
+            (begin
+              (macro-write-char (##string-ref str i) port)
+              (let ()
+                (##declare (interrupts-enabled))
+                (loop (##fx+ i 1))))
+            (##void)))
+
+      (begin
+
+        (macro-port-mutex-lock! port) ;; get exclusive access to port
+
+        (let loop ((i start))
+          (if (##fx< i end)
+              (let* ((char-wbuf (macro-character-port-wbuf port))
+                     (char-whi (macro-character-port-whi port))
+                     (n (##fxmin (##fx- end i)
+                                 (##fx- (##string-length char-wbuf) char-whi))))
+                (if (##fx< 0 n)
+
+                    ;; there is enough space in the character write buffer to
+                    ;; write n characters, so do that and increment whi
+
+                    (let ((i+n (##fx+ i n)))
+
+                      (##substring-move!
+                       str
+                       i
+                       i+n
+                       char-wbuf
+                       char-whi)
+
+                      ;; advance whi
+
+                      (macro-character-port-whi-set! port (##fx+ char-whi n))
+
+                      (loop i+n))
+
+                    ;; make some space in the character buffer and try again
+
+                    (let ((code ((macro-character-port-wbuf-drain port) port)))
+                      (if (##fixnum? code)
+                          (begin
+                            (macro-port-mutex-unlock! port)
+                            (if (##fx= code ##err-code-EAGAIN)
+                                #f
+                                (##raise-os-io-exception port #f code write-substring str start end port)))
+                          (loop i)))))
+
+              (begin
+                (macro-port-mutex-unlock! port)
+                (##void)))))))
 
 (define-prim (write-substring
               str

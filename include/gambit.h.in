@@ -3533,10 +3533,20 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
     { \
       rlo = ___FIELD(port,___PORT_CHAR_RLO); \
       rhi = ___FIELD(port,___PORT_CHAR_RHI); \
-      if (___FIXGE(rlo,rhi) || ___CHAREQP((___temp = ___STRINGREF(___FIELD(port,___PORT_CHAR_RBUF),rlo)),___CHR(10))) \
+      if (___FIXGE(rlo,rhi)) \
         ___temp = ___FAL; \
       else \
-        ___FIELD(port,___PORT_CHAR_RLO) = ___FIXADD(rlo,___FIX(1L)); \
+       { \
+         ___temp = ___STRINGREF(___FIELD(port,___PORT_CHAR_RBUF),rlo); \
+         ___FIELD(port,___PORT_CHAR_RLO) = rlo = ___FIXADD(rlo,___FIX(1L)); \
+         if (___CHAREQP(___temp,___CHR(10))) \
+           { \
+             ___FIELD(port,___PORT_CHAR_RCURLINE) = \
+               ___FIXADD(___FIELD(port,___PORT_CHAR_RCHARS),rlo); \
+             ___FIELD(port,___PORT_CHAR_RLINES) = \
+               ___FIXADD(___FIELD(port,___PORT_CHAR_RLINES),___FIX(1L)); \
+           } \
+       } \
       ___PRIMITIVEUNLOCK(mutex,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2)) \
     } \
   else \
@@ -3549,7 +3559,7 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 }
 
 #define ___WRITECHAR2P(c,port) \
-if (___CHAREQP(c,___CHR(10)) || ___FIXLT(___FIXAND(___FIELD(port,___PORT_WOPTIONS),___FIX(2047L)),___FIX(1024L))) \
+if (___FIXLT(___FIXAND(___FIELD(port,___PORT_WOPTIONS),___FIX(2047L)),___FIX(1536L)) && (___FIXLT(___FIXAND(___FIELD(port,___PORT_WOPTIONS),___FIX(2047L)),___FIX(1024L)) || ___CHAREQP(c,___CHR(10)))) \
   ___temp = ___FAL; \
 else \
   { \
@@ -3566,6 +3576,13 @@ else \
           { \
             ___STRINGSET(wbuf,___FIXSUB(whi,___FIX(1L)),c) \
             ___FIELD(port,___PORT_CHAR_WHI) = whi; \
+            if (___CHAREQP(c,___CHR(10))) \
+              { \
+                ___FIELD(port,___PORT_CHAR_WCURLINE) = \
+                  ___FIXADD(___FIELD(port,___PORT_CHAR_WCHARS),whi); \
+                ___FIELD(port,___PORT_CHAR_WLINES) = \
+                  ___FIXADD(___FIELD(port,___PORT_CHAR_WLINES),___FIX(1L)); \
+              } \
             ___temp = ___VOID; \
           } \
         ___PRIMITIVEUNLOCK(mutex,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2)) \
