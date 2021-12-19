@@ -238,12 +238,12 @@ The configure options which are specific to the Gambit system are:
   --enable-default-runtime-options=...
                           default runtime options (default is none)
   --enable-default-compile-options=...
-                          default compile options (default is none)
+                          default compile options (default is (compactness 9))
   --enable-module-search-order=...
                           module search order (default is ~~lib,~~userlib)
   --enable-module-whitelist=...
                           module whitelist (default is github.com/gambit)
-  --enable-targets=...    targets to build in addition to C
+  --enable-targets=...    targets to build in addition to C (default is js)
   --enable-ansi-c         link only with ANSI C libraries
   --enable-symlinks       use symbolic links for installed files not in the
                           Gambit central installation directory

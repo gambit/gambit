@@ -1722,8 +1722,8 @@ Optional Features:
   --enable-default-runtime-options=...
                           Default runtime options (default is none)
   --enable-default-compile-options=...
-                          Default compile options (default is none)
-  --enable-targets=...    Targets to build in addition to C (default is none)
+                          Default compile options (default is (compactness 9))
+  --enable-targets=...    Targets to build in addition to C (default is js)
   --enable-shared         build the Scheme runtime system as a shared library
                           (default is NO)
   --enable-ansi-c         link only with ANSI C libraries (default is NO)
@@ -5297,7 +5297,7 @@ fi
 if test "${enable_default_compile_options+set}" = set; then :
   enableval=$enable_default_compile_options; ENABLE_DEFAULT_COMPILE_OPTIONS=$enableval
 else
-  ENABLE_DEFAULT_COMPILE_OPTIONS=
+  ENABLE_DEFAULT_COMPILE_OPTIONS="(compactness 9)"
 fi
 
 
@@ -5325,7 +5325,7 @@ fi
 if test "${enable_targets+set}" = set; then :
   enableval=$enable_targets; ENABLE_TARGETS=$enableval
 else
-  ENABLE_TARGETS=
+  ENABLE_TARGETS=js
 fi
 
 

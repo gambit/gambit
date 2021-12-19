@@ -724,9 +724,9 @@ fi
 
 AC_ARG_ENABLE(default-compile-options,
               AS_HELP_STRING([--enable-default-compile-options=...],
-                             [Default compile options (default is none)]),
+                             [Default compile options (default is (compactness 9))]),
               ENABLE_DEFAULT_COMPILE_OPTIONS=$enableval,
-              ENABLE_DEFAULT_COMPILE_OPTIONS=)
+              ENABLE_DEFAULT_COMPILE_OPTIONS="(compactness 9)")
 
 
 if test "$ENABLE_DEFAULT_COMPILE_OPTIONS" != ""; then
@@ -746,9 +746,9 @@ fi
 
 AC_ARG_ENABLE(targets,
               AS_HELP_STRING([--enable-targets=...],
-                             [Targets to build in addition to C (default is none)]),
+                             [Targets to build in addition to C (default is js)]),
               ENABLE_TARGETS=$enableval,
-              ENABLE_TARGETS=)
+              ENABLE_TARGETS=js)
 
 BUILD_TARGETS="C"
 
