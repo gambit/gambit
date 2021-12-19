@@ -897,7 +897,7 @@
       (if *ptree-port*
         (newline *ptree-port*))
 
-      (check-multiple-global-defs env)
+      (check-global-defs env)
 
       (proc (if (null? lst)
               (list (new-cst (expression->source false-object #f) env
@@ -906,21 +906,29 @@
             env
             (c-interface-end)))))
 
-(define (check-multiple-global-defs env)
+(define (check-global-defs env)
   (let ((global-vars (env-global-variables env)))
     (for-each
-      (lambda (var)
-        (let ((defs (keep def? (ptset->list (var-sets var)))))
-          (if (> (length defs) 1)
-            (for-each
-             (lambda (def)
-               (if (warnings? (node-env def))
-                 (compiler-user-warning
-                  (source-locat (node-source def))
-                  "More than one 'define' of global variable"
-                  (var-name var))))
-             defs))))
-      global-vars)))
+     (lambda (var)
+       (let* ((defs (keep def? (ptset->list (var-sets var))))
+              (nb-defs (length defs)))
+         (for-each
+          (lambda (def)
+            (let ((env (node-env def)))
+              (if (warnings? env)
+                  (let ((name (var-name var)))
+                    (if (standard-proc-obj (target.prim-info name) name env)
+                        (compiler-user-warning
+                         (source-locat (node-source def))
+                         "Definition of standardly bound global variable"
+                         name))
+                    (if (> nb-defs 1)
+                        (compiler-user-warning
+                         (source-locat (node-source def))
+                         "More than one 'define' of global variable"
+                         name))))))
+          defs)))
+     (reverse global-vars))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ;;
