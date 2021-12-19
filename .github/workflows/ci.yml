@@ -40,7 +40,7 @@ jobs:
       run: |
         ./configure --enable-debug --enable-debug-c-backtrace
         echo "#undef HAVE_CLOCK_GETTIME" >> include/config.h
-        make -j`nproc`
+        make -j`nproc` core
 
     # Only run tests for MinGW64 for now
     - name: Test
@@ -52,7 +52,7 @@ jobs:
         mkdir dist
         ./configure --prefix=$(pwd)/dist
         echo "#undef HAVE_CLOCK_GETTIME" >> include/config.h
-        make -j`nproc`
+        make -j`nproc` core
         make modules
         make install
 
@@ -88,7 +88,7 @@ jobs:
       run: |
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=14.16
         set PATH=%RUNNER_TEMP%\msys\msys64\usr\bin;%PATH%
-        msys2 -c "./configure --enable-c-opt=-Od --enable-debug --enable-debug-c-backtrace CC='cl' && make -j%NUMBER_OF_PROCESSORS%"
+        msys2 -c "./configure --enable-c-opt=-Od --enable-debug --enable-debug-c-backtrace CC='cl' && make -j%NUMBER_OF_PROCESSORS% core"
 
     - name: Test
       shell: cmd
@@ -110,7 +110,7 @@ jobs:
       run: |
         call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=14.16
         mkdir dist
-        msys2 -c "./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist CC='cl' && make -j%NUMBER_OF_PROCESSORS% && make modules && make install"
+        msys2 -c "./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist CC='cl' && make -j%NUMBER_OF_PROCESSORS% core && make modules && make install"
 
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v1
@@ -138,12 +138,12 @@ jobs:
     - name: Build and Test
       run: |
         export PROCS=`nproc`
-        ./configure --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms && make clean && make -j$PROCS && make check && make clean && ./configure --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms --enable-cplusplus && make -j$PROCS && make check && make clean && ./configure --enable-ansi-c && make -j$PROCS && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
+        ./configure --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms && make clean && make -j$PROCS core && make check && make clean && ./configure --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms --enable-cplusplus && make -j$PROCS core && make check && make clean && ./configure --enable-ansi-c && make -j$PROCS core && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
 
     - name: Build Gambit for Use
       run: |
         mkdir dist
-        ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist && make -j`nproc` && make modules && make install
+        ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist && make -j`nproc` core && make modules && make install
         cd dist/
         tar -cvzf ../gambit-linux-x86_64.tgz ./
         cd ..
@@ -180,14 +180,14 @@ jobs:
         export CC=gcc-9
         export CXX=g++-9
         export PROCS=`sysctl -n hw.physicalcpu`
-        ./configure --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms && make clean && make -j$PROCS && make check && make clean && ./configure --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms --enable-cplusplus && make -j$PROCS && make check && make clean && ./configure --enable-ansi-c && make -j$PROCS && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
+        ./configure --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms && make clean && make -j$PROCS core && make check && make clean && ./configure --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms --enable-cplusplus && make -j$PROCS core && make check && make clean && ./configure --enable-ansi-c && make -j$PROCS core && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
 
     - name: Build Gambit for Use
       run: |
         mkdir dist
         export CC=gcc-9
         export CXX=g++-9
-        ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist && make -j`sysctl -n hw.physicalcpu` && make modules && make install
+        ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist && make -j`sysctl -n hw.physicalcpu` core && make modules && make install
         cd dist/
         tar -cvzf ../gambit-macos-x86_64.tgz ./
         cd ..
