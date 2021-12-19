@@ -1,6 +1,6 @@
 # makefile for regression tests.
 
-# Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 herefromroot = tests
 rootfromhere = ..
@@ -84,11 +84,13 @@ GAMBITDIR_LIB = $(srcdirpfx)$(rootfromhere)/lib
 GAMBITDIR_LIB_GSI = $(srcdirpfx)$(rootfromhere)/gsi
 GAMBITDIR_LIB_GSC = $(srcdirpfx)$(rootfromhere)/gsc
 
-all:
+all: core
 
-all-pre:
+core:
 
-all-post:
+core-pre:
+
+core-post:
 	@if [ ! -f debug.scm ]; then \
 	  cp $(srcdirpfx)debug.scm .; \
 	  touch debug.rm; \
@@ -106,7 +108,7 @@ all-post:
 
 .NOTPARALLEL:
 
-check: all test1 test2 test3 test4 test5 test6 test7 test8 test9 test10 test11
+check: core test1 test2 test3 test4 test5 test6 test7 test8 test9 test10 test11
 	@echo "============ ALL TESTS SUCCESSFUL"
 	rm -f mem.c mem_.c mem@obj@ mem.o1 mem_@obj@ mem@exe@ \
 	  mix.c mix_.c mix@obj@ mix_@obj@ mix@exe@ \
@@ -235,7 +237,7 @@ bootstrap-post:
 
 install-pre:
 
-install-post: all
+install-post: core
 
 uninstall-pre:
 
@@ -300,7 +302,7 @@ dist-pre dist-devel-pre:
 
 dist-post dist-devel-post:
 
-all-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+core-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
 	    target=`echo $@ | sed 's/-recursive//'`; \
@@ -309,11 +311,11 @@ all-recursive bootstrap-recursive install-recursive uninstall-recursive select-g
 	  done \
 	fi
 
-all: all-post
+core: core-post
 
-all-post: all-recursive
+core-post: core-recursive
 
-all-recursive: all-pre
+core-recursive: core-pre
 
 bootstrap: bootstrap-post
 

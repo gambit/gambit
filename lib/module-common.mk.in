@@ -99,11 +99,13 @@ includedir=$(includedir) libdir=$(libdir) \
 bindir=$(bindir) docdir=$(docdir) \
 infodir=$(infodir) emacsdir=$(emacsdir)
 
-all:
+all: core
 
-all-pre:
+core:
 
-all-post:
+core-pre:
+
+core-post:
 
 bootstrap-pre:
 
@@ -115,16 +117,27 @@ clean-modules: clean-modules-pre
 	done
 
 clean-modules-pre:
-	@major=`echo $(PACKAGE_VERSION) | sed -e "s/v//g" -e "s/\.[^.]*\.[^.]*//g"`; \
+	@here_prefix="`echo $(herefromlib) | sed -e 's,[^/]*$$,,'`"; \
+	here_suffix="`echo $(herefromlib) | sed -e 's,.*/,,'`"; \
+	major=`echo $(PACKAGE_VERSION) | sed -e "s/v//g" -e "s/\.[^.]*\.[^.]*//g"`; \
 	minor=`echo $(PACKAGE_VERSION) | sed -e "s/v[^.]*\.//g" -e "s/\.[^.]*//g"`; \
 	revision=`echo $(PACKAGE_VERSION) | sed -e "s/v[^.]*\.[^.]*\.//g" -e "s///g"`; \
 	version_num=`eval expr "\( 100000 \\* $$major \) + \( 1000 \\* $$minor \) + $$revision"`; \
 	for target in $(BUILD_TARGETS); do \
 	  for main_mod in $(MAIN_MODULES); do \
+	    mod_dir=""; \
+	    if test "$$main_mod" = "$$here_suffix"; then \
+	      modref="$(herefromlib)"; \
+	    else \
+	      modref="$(herefromlib)/$$main_mod"; \
+	      if test -d "$$main_mod"; then \
+	        mod_dir="$$main_mod/"; \
+	      fi; \
+	    fi; \
 	    build_dir="$$main_mod@gambit$$version_num@$$target"; \
-	    if test -d "$$build_dir"; then \
-	      echo "removing $(herefromroot)/$$build_dir"; \
-	      rm -rf "$$build_dir"; \
+	    if test -d "$$mod_dir$$build_dir"; then \
+	      echo "removing module $$modref ($(herefromroot)/$$mod_dir$$build_dir)"; \
+	      rm -rf "$$mod_dir$$build_dir"; \
 	    fi; \
 	  done; \
 	done
@@ -139,7 +152,7 @@ list-modules: list-modules-pre
 	  else \
 	    modref="$(herefromlib)/$$main_mod"; \
 	  fi; \
-	  echo "($$modref)"; \
+	  echo "$$modref"; \
 	done
 
 list-modules-pre:
@@ -197,12 +210,12 @@ modules-pre:
 	      fi; \
 	    fi; \
 	    need_to_build_module=no; \
-	    build_dir="$$mod_dir$$main_mod@$$version_num@$$target"; \
+	    build_dir="$$main_mod@gambit$$version_num@$$target"; \
 	    if test ! -d "$$mod_dir$$build_dir" \
-	         -o "$(rootfromhere)/gsc/gsc@exe@" -nt "$$build_dir" \
-	         -o -f "$$mod_dir$$main_mod.sld" -a "$$mod_dir$$main_mod.sld" -nt "$$build_dir" \
-	         -o -f "$$mod_dir$$main_mod.scm" -a "$$mod_dir$$main_mod.scm" -nt "$$build_dir" \
-	         -o -f "$$mod_dir$$main_mod#.scm" -a "$$mod_dir$$main_mod#.scm" -nt "$$build_dir"; then \
+	         -o "$(rootfromhere)/gsc/gsc" -nt "$$mod_dir$$build_dir" \
+	         -o -f "$$mod_dir$$main_mod.sld" -a "$$mod_dir$$main_mod.sld" -nt "$$mod_dir$$build_dir" \
+	         -o -f "$$mod_dir$$main_mod.scm" -a "$$mod_dir$$main_mod.scm" -nt "$$mod_dir$$build_dir" \
+	         -o -f "$$mod_dir$$main_mod#.scm" -a "$$mod_dir$$main_mod#.scm" -nt "$$mod_dir$$build_dir"; then \
 	      need_to_build_module=yes; \
 	    fi; \
 	    if test "$$need_to_build_module" = "yes"; then \
@@ -218,7 +231,7 @@ modules-post:
 
 install-pre:
 
-install-post: all
+install-post: core
 	c_libdir="$(DESTDIR)$(prefix)/$(herefromroot)"; \
 	i_libdir="$(DESTDIR)$(libdir)`echo $(herefromroot)/ | sed -e s:^lib:: -e s:/\\$$::`"; \
 	t_libdir="$$i_libdir"; \
@@ -324,7 +337,7 @@ dist-pre dist-devel-pre:
 
 dist-post dist-devel-post:
 
-all-recursive bootstrap-recursive modules-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+core-recursive bootstrap-recursive modules-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
 	    target=`echo $@ | sed 's/-recursive//'`; \
@@ -335,11 +348,11 @@ all-recursive bootstrap-recursive modules-recursive install-recursive uninstall-
 $(SUBDIR):
 	(cd $@ && $(MAKE) modules) || exit 1
 
-all: all-post
+core: core-post
 
-all-post: all-recursive
+core-post: core-recursive
 
-all-recursive: all-pre
+core-recursive: core-pre
 
 bootstrap: bootstrap-post
 

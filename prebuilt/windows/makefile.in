@@ -1,6 +1,6 @@
 # makefile for Gambit build on Windows.
 
-# Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 herefromroot = prebuilt/windows
 rootfromhere = ../..
@@ -78,11 +78,13 @@ GENDISTFILES =
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
-all:
+all: core
 
-all-pre:
+core:
 
-all-post:
+core-pre:
+
+core-post:
 
 prebuilt:
 	PATH="$(rootfromhere)/gsi:$$PATH" ../remote-connect windows "" "(define tmpdir \"gambtmp1\")(define gambit-dist \"$(PACKAGE_TARNAME)\")(define timeout 2000)(ssh timeout (string-append \"rm -rf \" tmpdir \";mkdir \" tmpdir \";\"))(scp-to timeout (string-append \"$(rootfromhere)/\" gambit-dist \".tgz\") (string-append tmpdir \"/.\"))(ssh timeout (string-append \"sh --login -c \\\"cd \" tmpdir \";tar zxf \" gambit-dist \".tgz;cd \" gambit-dist \";$(herefromroot)/build\\\"\"))(scp-from timeout (string-append tmpdir \"/\" gambit-dist \"/$(PACKAGE_TARNAME)-*\") \"$(rootfromhere)\")"
@@ -93,7 +95,7 @@ bootstrap-post:
 
 install-pre:
 
-install-post: all
+install-post: core
 
 uninstall-pre:
 
@@ -145,7 +147,7 @@ dist-pre dist-devel-pre:
 
 dist-post dist-devel-post:
 
-all-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+core-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
 	    target=`echo $@ | sed 's/-recursive//'`; \
@@ -154,11 +156,11 @@ all-recursive bootstrap-recursive install-recursive uninstall-recursive select-g
 	  done \
 	fi
 
-all: all-post
+core: core-post
 
-all-post: all-recursive
+core-post: core-recursive
 
-all-recursive: all-pre
+core-recursive: core-pre
 
 bootstrap: bootstrap-post
 

@@ -103,15 +103,18 @@ BUILD_HOST = localhost
 
 .SUFFIXES:
 
-all:
+all: core
+	$(MAKE) modules  # comment this line during development to avoid building the modules on every change
 
-all-pre: gsc-boot@exe@
+core:
+
+core-pre: gsc-boot@exe@
 	$(MAKE) stamp
 	@if echo "MAKEFLAGS: $(MAKEFLAGS)" | fgrep -e "--jobserver-fds="; then \
 	  $(MAKE) phases; \
 	fi
 
-all-post:
+core-post:
 	@echo "*** to compile the builtin modules you should: make modules"
 
 phases:
@@ -138,7 +141,7 @@ from-scratch: fake_target
 	$(MAKE) bootclean
 	$(MAKE) bootstrap # make gsc compiler corresponding to repo HEAD
 	$(MAKE) bootclean
-	$(MAKE) all       # make everything with repo HEAD gsc compiler
+	$(MAKE) core       # make everything with repo HEAD gsc compiler
 
 boot-most-recent-release: fake_target
 	@if test -x "boot/gsc-boot@exe@" && \
@@ -204,13 +207,13 @@ fake_target:
 doc info pdf html txt: fake_target
 	@cd doc && $(MAKE) $(MDEFINES) $@
 
-check ut ut-C ut-js ut-python ut-ruby ut-php ut-java st st-C st-js st-python st-ruby st-php st-java: fake_target all
+check ut ut-C ut-js ut-python ut-ruby ut-php ut-java st st-C st-js st-python st-ruby st-php st-java: fake_target core
 	@cd tests && $(MAKE) $(MDEFINES) $@
 
-bench: fake_target all
+bench: fake_target core
 	@cd bench && $(MAKE) $(MDEFINES) $@
 
-examples: fake_target all
+examples: fake_target core
 	@cd examples && $(MAKE) $(MDEFINES) $@
 
 prebuilt: dist dist-devel
@@ -371,7 +374,7 @@ modules _gambit.java _gambit.js _gambit.php _gambit.py _gambit.rb _gambit.go:
 update-unicode:
 	@cd lib && $(MAKE) $(MDEFINES) $@
 
-bootstrap-pre: all
+bootstrap-pre: core
 
 bootstrap-post:
 
@@ -383,7 +386,7 @@ install-pre:
 	  exit 1; \
 	fi
 
-install-post: all
+install-post: core
 	if test "@ENABLE_MULTIPLE_VERSIONS@" = "yes"; then \
 	  if test "@bat@" = ""; then \
 	    $(srcdirpfx)./mkidirs "$(DESTDIR)$(prefix)"; \
@@ -536,18 +539,18 @@ dist-boot-post:
 	mv boot-$(PACKAGE_TARNAME)/boot.tar.gz boot.tgz
 	rm -rf boot-$(PACKAGE_TARNAME)
 
-all-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+core-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@for subdir in $(SUBDIRS); do \
 	  target=`echo $@ | sed 's/-recursive//'`; \
 	  echo making $$target in $$subdir; \
 	  (cd $$subdir && $(MAKE) $$target) || exit 1; \
 	done
 
-all: all-post
+core: core-post
 
-all-post: all-recursive
+core-post: core-recursive
 
-all-recursive: all-pre
+core-recursive: core-pre
 
 bootstrap: bootstrap-post
 

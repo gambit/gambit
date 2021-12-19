@@ -1,6 +1,6 @@
 # makefile for Gambit interpreter.
 
-# Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 herefromroot = gsi
 rootfromhere = ..
@@ -170,11 +170,13 @@ BUILD_EXE_LD_OPTIONS_PARAM = $(LIBRARY)
 
 PRELUDE_OPT = -prelude "@RTLIB_COND_EXPAND_FEATURES@(\#\#include\"$(srcdirpfx)../lib/header.scm\")"
 
-all:
+all: core
 
-all-pre: $(LIBRARY) $(EXECUTABLE)
+core:
 
-all-post:
+core-pre: $(LIBRARY) $(EXECUTABLE)
+
+core-post:
 	$(MAKE) deselect-gen-for-commit-post-nonrec
 
 phase1: $(LIBRARY_MODULES_C_IN_COMPILE_ORDER) $(EXECUTABLE_MODULES_C)
@@ -188,7 +190,7 @@ phase3:
 	  $(MAKE) $(LIBRARY); \
 	fi
 
-phase4: all
+phase4: core
 
 $(LIBRARY): $(LIBRARY_OBJECTS_IN_COMPILE_ORDER)
 	rm -f "$(LIBRARY)$(LIB_VERSION_SUFFIX)" "$(LIBRARY)$(LIB_MAJOR_VERSION_SUFFIX)" "$(LIBRARY)"
@@ -263,7 +265,7 @@ bootstrap-post:
 
 install-pre:
 
-install-post: all
+install-post: core
 	c_bindir="$(DESTDIR)$(prefix)/bin"; \
 	i_bindir="$(DESTDIR)$(bindir)"; \
 	t_bindir="$$i_bindir"; \
@@ -389,7 +391,7 @@ dist-pre dist-devel-pre:
 
 dist-post dist-devel-post:
 
-all-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+core-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
 	    target=`echo $@ | sed 's/-recursive//'`; \
@@ -398,11 +400,11 @@ all-recursive bootstrap-recursive install-recursive uninstall-recursive select-g
 	  done \
 	fi
 
-all: all-post
+core: core-post
 
-all-post: all-recursive
+core-post: core-recursive
 
-all-recursive: all-pre
+core-recursive: core-pre
 
 bootstrap: bootstrap-post
 

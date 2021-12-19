@@ -119,11 +119,13 @@ GENDISTFILES =
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
-all:
+all: core
 
-all-pre:
+core:
 
-all-post:
+core-pre:
+
+core-post:
 
 try: browserfs.min.js codemirror UI.css UI.js index.html VM.min.js
 	@echo "===== Copying library files"; \
@@ -195,7 +197,7 @@ view: try
 	  fi; \
 	done
 
-view-safari: all
+view-safari: core
 	@URL=https://localhost:4443/try/; \
 	osascript -e "tell application \"Safari\"" -e "open location \"$$URL\"" -e "end tell"
 
@@ -205,7 +207,7 @@ bootstrap-post:
 
 install-pre:
 
-install-post: all
+install-post: core
 
 uninstall-pre:
 
@@ -259,7 +261,7 @@ dist-pre dist-devel-pre:
 
 dist-post dist-devel-post:
 
-all-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+core-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
 	    target=`echo $@ | sed 's/-recursive//'`; \
@@ -268,11 +270,11 @@ all-recursive bootstrap-recursive install-recursive uninstall-recursive select-g
 	  done \
 	fi
 
-all: all-post
+core: core-post
 
-all-post: all-recursive
+core-post: core-recursive
 
-all-recursive: all-pre
+core-recursive: core-pre
 
 bootstrap: bootstrap-post
 

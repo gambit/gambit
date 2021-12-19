@@ -20,7 +20,6 @@ related to Gambit can be obtained from the Gambit wiki at:
     cd gambit
     ./configure
     make               # build runtime library, gsi and gsc (add -j8 if you can)
-    make modules       # compile the builtin modules (optional but recommended)
     make check         # run self tests (optional but recommended)
     make doc           # build the documentation
     sudo make install  # install

@@ -1,6 +1,6 @@
 # makefile for Gambit documentation.
 
-# Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 herefromroot = doc
 rootfromhere = ..
@@ -91,11 +91,13 @@ INSTFILES_DOC = gambit.pdf gambit*.html gambit.tsv gambit.txt
 INSTFILES_INFO = gambit.info*
 INSTFILES_MAN = gsi.1
 
-all:
+all: core
 
-all-pre:
+core:
 
-all-post:
+core-pre:
+
+core-post:
 
 doc: info pdf html txt ps
 
@@ -154,7 +156,7 @@ bootstrap-post:
 
 install-pre:
 
-install-post: all doc
+install-post: core doc
 	c_docdir="$(DESTDIR)$(prefix)/doc"; \
 	i_docdir="$(DESTDIR)$(docdir)"; \
 	t_docdir="$$i_docdir"; \
@@ -305,7 +307,7 @@ dist-pre dist-devel-pre:
 
 dist-post dist-devel-post:
 
-all-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+core-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
 	    target=`echo $@ | sed 's/-recursive//'`; \
@@ -314,11 +316,11 @@ all-recursive bootstrap-recursive install-recursive uninstall-recursive select-g
 	  done \
 	fi
 
-all: all-post
+core: core-post
 
-all-post: all-recursive
+core-post: core-recursive
 
-all-recursive: all-pre
+core-recursive: core-pre
 
 bootstrap: bootstrap-post
 

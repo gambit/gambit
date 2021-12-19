@@ -76,9 +76,11 @@ GENDISTFILES =
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
-all:
+all: core
 
-all-pre:
+core:
+
+core-pre:
 	@major=`echo $(PACKAGE_VERSION) | sed -e "s/v//g" -e "s/\.[^.]*\.[^.]*//g"`; \
 	minor=`echo $(PACKAGE_VERSION) | sed -e "s/v[^.]*\.//g" -e "s/\.[^.]*//g"`; \
 	revision=`echo $(PACKAGE_VERSION) | sed -e "s/v[^.]*\.[^.]*\.//g" -e "s///g"`; \
@@ -90,9 +92,9 @@ all-pre:
 	echo "#define ___VERSION $$version_num" >> gambit-not$$version_num.h; \
 	echo "#include \"gambit.h\"" >> gambit-not$$version_num.h
 
-all-post: gambit.h
+core-post: gambit.h
 
-phase1: all
+phase1: core
 
 phase2:
 
@@ -106,7 +108,7 @@ bootstrap-post:
 
 install-pre:
 
-install-post: all
+install-post: core
 	c_includedir="$(DESTDIR)$(prefix)/include"; \
 	i_includedir="$(DESTDIR)$(includedir)"; \
 	t_includedir="$$i_includedir"; \
@@ -203,7 +205,7 @@ dist-pre dist-devel-pre:
 
 dist-post dist-devel-post:
 
-all-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+core-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
 	    target=`echo $@ | sed 's/-recursive//'`; \
@@ -212,11 +214,11 @@ all-recursive bootstrap-recursive install-recursive uninstall-recursive select-g
 	  done \
 	fi
 
-all: all-post
+core: core-post
 
-all-post: all-recursive
+core-post: core-recursive
 
-all-recursive: all-pre
+core-recursive: core-pre
 
 bootstrap: bootstrap-post
 

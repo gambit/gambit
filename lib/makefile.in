@@ -168,11 +168,13 @@ BUILD_OBJ_INPUT_FILENAMES_PARAM = $(srcdirpfx)$*.c
 
 PRELUDE_OPT = -prelude "@RTLIB_COND_EXPAND_FEATURES@(\#\#include\"$(srcdirpfx)../lib/header.scm\")"
 
-all:
+all: core
 
-all-pre: $(LIBRARY) $(GAMBIT_LIBS)
+core:
 
-all-post:
+core-pre: $(LIBRARY) $(GAMBIT_LIBS)
+
+core-post:
 	$(MAKE) deselect-gen-for-commit-post-nonrec
 
 .scm.c:
@@ -182,7 +184,7 @@ phase1: $(MODULES_C_IN_COMPILE_ORDER) $(GAMBIT_LIB_C)
 
 phase2:
 
-phase3: all
+phase3: core
 
 phase4:
 
@@ -375,12 +377,12 @@ modules-post:
 
 install-pre:
 
-install-post-comp-sc: all
+install-post-comp-sc: core
 	@echo "*** Compiling ~~lib/syntax-case.scm (this may take a while)"
 	rm -f syntax-case.o*
 	@SETDLPATH@ $(srcdirpfx)$(rootfromhere)/gsc/gsc@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -warnings syntax-case
 
-install-post: all
+install-post: core
 	c_libdir="$(DESTDIR)$(prefix)/$(herefromroot)"; \
 	i_libdir="$(DESTDIR)$(libdir)`echo $(herefromroot)/ | sed -e s:^lib:: -e s:/\\$$::`"; \
 	t_libdir="$$i_libdir"; \
@@ -491,10 +493,10 @@ dist-pre dist-devel-pre:
 
 dist-post dist-devel-post:
 
-all-recursive:
+core-recursive:
 	@if test -n "@RTLIBSUBSYS@"; then \
 	  for subdir in ""@RTLIBSUBSYS@; do \
-	    (cd $$subdir && $(MAKE) all) || exit 1; \
+	    (cd $$subdir && $(MAKE) core) || exit 1; \
 	  done \
 	fi
 
@@ -512,11 +514,11 @@ modules-recursive: univ-libs $(SUBDIRS)
 $(SUBDIRS):
 	@(cd $@ && $(MAKE) modules) || exit 1
 
-all: all-post
+core: core-post
 
-all-post: all-recursive
+core-post: core-recursive
 
-all-recursive: all-pre
+core-recursive: core-pre
 
 bootstrap: bootstrap-post
 
