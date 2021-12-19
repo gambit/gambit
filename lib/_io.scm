@@ -15764,7 +15764,7 @@
     rt))
 
 (define-prim (##main-readtable-set! x)
-  (set! ##main-readtable-set! x))
+  (set! ##main-readtable x))
 
 (define main ;; predefine main procedure so scripts don't have to
   (##first-argument
