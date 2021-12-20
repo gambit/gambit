@@ -36,7 +36,7 @@ fxbit-count
 fxbit-set?
 fxeqv
 fxeven?
-fxfirst-bit-set
+fxfirst-set-bit
 fxif
 fxior
 fxlength

@@ -349,7 +349,7 @@ fxbit-count
 fxbit-set?
 fxeqv
 fxeven?
-fxfirst-bit-set
+fxfirst-set-bit
 fxif
 fxior
 fxlength
@@ -721,7 +721,7 @@ copy-bit-field
 cosh
 ;;UNIMPLEMENTED default-random-source
 extract-bit-field
-first-bit-set
+first-set-bit
 integer-length
 integer-nth-root
 integer-sqrt

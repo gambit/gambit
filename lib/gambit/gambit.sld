@@ -509,7 +509,7 @@ file-size
 file-type
 filter
 finite?
-first-bit-set
+first-set-bit
 fixnum->flonum
 fixnum-overflow-exception-arguments
 fixnum-overflow-exception-procedure
@@ -597,7 +597,7 @@ fxbit-count
 fxbit-set?
 fxeqv
 fxeven?
-fxfirst-bit-set
+fxfirst-set-bit
 fxif
 fxior
 fxlength
