@@ -732,7 +732,8 @@
                   linker-name
                   warnings?))
 
-(define (##c-code . args) ;; avoid errors when using -expansion
-  (error "##c-code is not callable dynamically"))
+(set! ##c-code ;; avoid errors when using -expansion
+  (lambda args
+    (error "##c-code is not callable dynamically")))
 
 ;;;============================================================================

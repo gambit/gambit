@@ -2,7 +2,7 @@
 
 ;;; File: "_utils.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -54,30 +54,12 @@
           ((string=? (car l) x) i)
           (else                 (loop (cdr l) (+ i 1))))))
 
-(define (take l n)
-  (let loop ((l l) (n n))
-    (if (> n 0)
-      (cons (car l) (loop (cdr l) (- n 1)))
-      '())))
-
-(define (drop l n)
-  (let loop ((l l) (n n))
-    (if (> n 0)
-      (loop (cdr l) (- n 1))
-      l)))
-
 (define (pair-up l1 l2)
   (define (pair l1 l2)
     (if (pair? l1)
       (cons (cons (car l1) (car l2)) (pair (cdr l1) (cdr l2)))
       '()))
   (pair l1 l2))
-
-(define (last-pair l)
-  (let loop ((l l))
-    (if (pair? (cdr l))
-      (loop (cdr l))
-      l)))
 
 (define (keep keep? lst)
   (cond ((null? lst)       '())
@@ -662,30 +644,12 @@
           ((string=? (car l) x) i)
           (else                 (loop (cdr l) (+ i 1))))))
 
-(define (take l n)
-  (let loop ((l l) (n n))
-    (if (> n 0)
-      (cons (car l) (loop (cdr l) (- n 1)))
-      '())))
-
-(define (drop l n)
-  (let loop ((l l) (n n))
-    (if (> n 0)
-      (loop (cdr l) (- n 1))
-      l)))
-
 (define (pair-up l1 l2)
   (define (pair l1 l2)
     (if (pair? l1)
       (cons (cons (car l1) (car l2)) (pair (cdr l1) (cdr l2)))
       '()))
   (pair l1 l2))
-
-(define (last-pair l)
-  (let loop ((l l))
-    (if (pair? (cdr l))
-      (loop (cdr l))
-      l)))
 
 (define (keep keep? lst)
   (let loop ((lst lst) (head '()))

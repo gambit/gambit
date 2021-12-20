@@ -746,8 +746,6 @@
                    #t)))
     (open-input-file* path)))
 
-(define open-output-file ##open-output-file)
-
 (define (open-output-file-preserving-case path)
   (parameterize ((current-readtable
                   (readtable-keywords-allowed?-set
