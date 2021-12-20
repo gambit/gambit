@@ -4,7 +4,9 @@
 
 herefromroot = lib
 rootfromhere = ..
-SUBDIRS = @RTLIBSUBSYS@ _define-library _digest _geiser _git _hamt _http _match _pkg _six _tar _test _uri _zlib gambit scheme termite srfi
+SUBDIRS1 = _define-library
+SUBDIRS2 = @RTLIBSUBSYS@ _digest _geiser _git _hamt _http _match _pkg _six _tar _test _uri _zlib gambit scheme termite srfi
+SUBDIRS = $(SUBDIRS1) $(SUBDIRS2)
 
 PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -509,7 +511,8 @@ bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-
 	  done \
 	fi
 
-modules-recursive: univ-libs $(SUBDIRS)
+modules-recursive: $(SUBDIRS1)
+	@$(MAKE) univ-libs $(SUBDIRS2)
 
 $(SUBDIRS):
 	@(cd $@ && $(MAKE) modules) || exit 1
@@ -529,6 +532,11 @@ bootstrap-recursive: bootstrap-pre
 clean-modules: clean-modules-pre
 	@for subdir in $(SUBDIRS); do \
 	  (cd $$subdir && $(MAKE) $@); \
+	done; \
+	for file in $(GAMBIT_LIBS_UNIV); do \
+	  if test -e "$$file"; then \
+	    rm -f "$$file"; \
+	  fi; \
 	done
 
 clean-modules-pre:
