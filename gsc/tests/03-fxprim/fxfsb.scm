@@ -8,7 +8,7 @@
 (define f 357913941)
 
 (define (test x)
-  (println (##fxfirst-bit-set x)))
+  (println (##fxfirst-set-bit x)))
 
 (test a)
 (test b)

@@ -431,7 +431,7 @@ file-owner
 file-size
 file-type
 finite?
-first-bit-set
+first-set-bit
 fixnum->flonum
 fixnum-overflow-exception-arguments
 fixnum-overflow-exception-procedure
@@ -498,7 +498,7 @@ fxarithmetic-shift-right
 fxbit-count
 fxbit-set?
 fxeven?
-fxfirst-bit-set
+fxfirst-set-bit
 fxif
 fxior
 fxlength

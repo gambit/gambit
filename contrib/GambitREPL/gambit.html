@@ -5641,7 +5641,7 @@ is implemented more efficiently than the naive definition:
 
 
 
-<a name="Definition_of_first-bit-set"></a><a name="Procedure_first-bit-set"></a><a name="index-first_002dbit_002dset"></a><table width="100%"><tr><td align="left"> <code>(</code><code><b><a href="event:browse:http://gambitscheme.org/wiki/index.php?title=Documentation:Procedure_first-bit-set">first-bit-set</a></b></code><i> <var>n</var></i><code>)</code></td><td align="right">procedure</td></tr></table>
+<a name="Definition_of_first-set-bit"></a><a name="Procedure_first-set-bit"></a><a name="index-first_002dset_002dbit"></a><table width="100%"><tr><td align="left"> <code>(</code><code><b><a href="event:browse:http://gambitscheme.org/wiki/index.php?title=Documentation:Procedure_first-set-bit">first-set-bit</a></b></code><i> <var>n</var></i><code>)</code></td><td align="right">procedure</td></tr></table>
 
 <p>This procedure returns the bit index of the least significant bit of
 <var>n</var> equal to 1 (which is also the number of 0 bits that are below
@@ -5650,9 +5650,9 @@ the least significant 1 bit).  This procedure returns <code>-1</code> when
 </p>
 <p>For example:
 </p>
-<table><tr><td>&nbsp;</td><td><pre class="smallexample">&gt; <b>(first-bit-set 24) <span class="roman"><i>; ...00011000</i></span></b>
+<table><tr><td>&nbsp;</td><td><pre class="smallexample">&gt; <b>(first-set-bit 24) <span class="roman"><i>; ...00011000</i></span></b>
 3
-&gt; <b>(first-bit-set 0)  <span class="roman"><i>; ...00000000</i></span></b>
+&gt; <b>(first-set-bit 0)  <span class="roman"><i>; ...00000000</i></span></b>
 -1
 </pre></td></tr></table>
 
@@ -5775,7 +5775,7 @@ bit-field replaced with the (same index and size) bit-field in
 <a name="Definition_of_fxeven?"></a><a name="Procedure_fxeven?"></a><a name="index-fxeven_003f"></a><table width="100%"><tr><td align="left"> <code>(</code><code><b><a href="event:browse:http://gambitscheme.org/wiki/index.php?title=Documentation:Procedure_fxeven?">fxeven?</a></b></code><i> <var>n</var></i><code>)</code></td><td align="right">procedure</td></tr></table>
 
 
-<a name="Definition_of_fxfirst-bit-set"></a><a name="Procedure_fxfirst-bit-set"></a><a name="index-fxfirst_002dbit_002dset"></a><table width="100%"><tr><td align="left"> <code>(</code><code><b><a href="event:browse:http://gambitscheme.org/wiki/index.php?title=Documentation:Procedure_fxfirst-bit-set">fxfirst-bit-set</a></b></code><i> <var>n</var></i><code>)</code></td><td align="right">procedure</td></tr></table>
+<a name="Definition_of_fxfirst-set-bit"></a><a name="Procedure_fxfirst-set-bit"></a><a name="index-fxfirst_002dset_002dbit"></a><table width="100%"><tr><td align="left"> <code>(</code><code><b><a href="event:browse:http://gambitscheme.org/wiki/index.php?title=Documentation:Procedure_fxfirst-set-bit">fxfirst-set-bit</a></b></code><i> <var>n</var></i><code>)</code></td><td align="right">procedure</td></tr></table>
 
 
 <a name="Definition_of_fxif"></a><a name="Procedure_fxif"></a><a name="index-fxif"></a><table width="100%"><tr><td align="left"> <code>(</code><code><b><a href="event:browse:http://gambitscheme.org/wiki/index.php?title=Documentation:Procedure_fxif">fxif</a></b></code><i> <var>n1</var> <var>n2</var> <var>n3</var></i><code>)</code></td><td align="right">procedure</td></tr></table>
@@ -18950,7 +18950,7 @@ That's all there is to it!
 <tr><td></td><td valign="top"><a href="#index-file_002escm"><code><var>file</var>.scm</code></a></td><td valign="top"><a href="#GSC-batch-mode">3.3 Batch mode</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-file_002esix"><code><var>file</var>.six</code></a></td><td valign="top"><a href="#GSC-batch-mode">3.3 Batch mode</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-finite_003f"><code>finite?</code></a></td><td valign="top"><a href="#Undocumented-extensions">6.4 Undocumented extensions</a></td></tr>
-<tr><td></td><td valign="top"><a href="#index-first_002dbit_002dset"><code>first-bit-set</code></a></td><td valign="top"><a href="#Bitwise_002doperations-on-exact-integers">9.4 Bitwise-operations on exact integers</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-first_002dset_002dbit"><code>first-set-bit</code></a></td><td valign="top"><a href="#Bitwise_002doperations-on-exact-integers">9.4 Bitwise-operations on exact integers</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-fixnum"><code>fixnum</code></a></td><td valign="top"><a href="#Miscellaneous-extensions">6.3 Miscellaneous extensions</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-fixnum_002d_003eflonum"><code>fixnum-&gt;flonum</code></a></td><td valign="top"><a href="#Flonum-specific-operations">9.6 Flonum specific operations</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-fixnum_002doverflow_002dexception_002darguments"><code>fixnum-overflow-exception-arguments</code></a></td><td valign="top"><a href="#Fixnum-specific-operations">9.5 Fixnum specific operations</a></td></tr>
@@ -19022,7 +19022,7 @@ That's all there is to it!
 <tr><td></td><td valign="top"><a href="#index-fxbit_002dcount"><code>fxbit-count</code></a></td><td valign="top"><a href="#Fixnum-specific-operations">9.5 Fixnum specific operations</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-fxbit_002dset_003f"><code>fxbit-set?</code></a></td><td valign="top"><a href="#Fixnum-specific-operations">9.5 Fixnum specific operations</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-fxeven_003f"><code>fxeven?</code></a></td><td valign="top"><a href="#Fixnum-specific-operations">9.5 Fixnum specific operations</a></td></tr>
-<tr><td></td><td valign="top"><a href="#index-fxfirst_002dbit_002dset"><code>fxfirst-bit-set</code></a></td><td valign="top"><a href="#Fixnum-specific-operations">9.5 Fixnum specific operations</a></td></tr>
+<tr><td></td><td valign="top"><a href="#index-fxfirst_002dset_002dbit"><code>fxfirst-set-bit</code></a></td><td valign="top"><a href="#Fixnum-specific-operations">9.5 Fixnum specific operations</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-fxif"><code>fxif</code></a></td><td valign="top"><a href="#Fixnum-specific-operations">9.5 Fixnum specific operations</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-fxior"><code>fxior</code></a></td><td valign="top"><a href="#Fixnum-specific-operations">9.5 Fixnum specific operations</a></td></tr>
 <tr><td></td><td valign="top"><a href="#index-fxlength"><code>fxlength</code></a></td><td valign="top"><a href="#Fixnum-specific-operations">9.5 Fixnum specific operations</a></td></tr>
