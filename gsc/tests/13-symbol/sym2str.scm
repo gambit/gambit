@@ -5,7 +5,7 @@
 (define s3 '|a b c|)
 
 (define (test x)
-  (let ((s (##symbol->string x)))
+  (let ((s (##symbol->string? x)))
     (println s)
     (println (##string? s))))
 

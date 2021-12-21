@@ -1,6 +1,32 @@
+(declare (extended-bindings) (not constant-fold) (not safe))
+
 (define (display-newline obj)
-  (display obj)
-  (newline))
+  (cond ((##pair? obj)
+         (println "(")
+         (let loop ((lst obj))
+           (if (##pair? lst)
+               (begin
+                 (display-newline (##car lst))
+                 (loop (##cdr lst)))
+               (println ")"))))
+        ((##null? obj)
+         (println "()"))
+        (else
+         (println obj))))
+
+(define (##apply-global-with-procedure-check-nary gv . args)
+  (##declare (not interrupts-enabled))
+  (##apply-with-procedure-check (##global-var-ref gv) args))
+
+(define (##apply-with-procedure-check-nary oper . args)
+  (##declare (not interrupts-enabled))
+  (##apply-with-procedure-check oper args))
+
+(define (##apply-with-procedure-check oper args)
+  (##declare (not interrupts-enabled))
+  (if (##procedure? oper)
+      (##apply oper args)
+      (println "nonprocedure-operator-exception")))
 
 ;; Testing no optional parameters and no rest
 (define (normal-0) 1)

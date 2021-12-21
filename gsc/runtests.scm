@@ -4,7 +4,7 @@
 
 ;;; File: "runtests.scm"
 
-;;; Copyright (c) 2012-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2012-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
@@ -113,7 +113,7 @@
   (let* ((port
           (open-process (list path: path
                               arguments: args
-                              pseudo-terminal: #t
+                              pseudo-terminal: #f
                               )))
          (output
           (read-line port #f))
@@ -135,33 +135,41 @@
   (force-output)
 
   (let ((results (test-with-each-target file))
-        (diff? #f))
+        (failed-msg? #f)
+        (expected-msg? #f))
 
     (for-each
      (lambda (x)
-       (let ((target (car x))
-             (result (cdr x)))
+       (let* ((target (car x))
+              (result (cdr x))
+              (crashed? (not (equal? (car result) 0)))
+              (expected-output? (equal? (cdr result) (cddar results))))
 
          ;;(pp result)
          ;;(pp (cdar results))
 
-         (if (not (equal? result (cdar results)))
+         (if (or crashed? (not expected-output?))
              (begin
-               (if (not diff?)
+               (if (not failed-msg?)
                    (begin
                      (print "\n")
                      (print "*********************** FAILED TEST " file "\n")
-                     (print "======================= EXPECTED:\n" (cdr (cdar results)))))
-               (set! diff? #t)
-               (print "======================= ")
-               (write (cons (car target) (caddr target)))
-               (print ":\n")
-               (print (cdr result))
-               #;(print (diff (car target) (cdr (cdar results)) (cdr result)))
-               ))))
+                     (set! failed-msg? #t)))
+               (if (not crashed?)
+                   (begin
+                     (if (not expected-msg?)
+                         (begin
+                           (print "======================= EXPECTED:\n" (cdr (cdar results)))
+                           (set! expected-msg? #t)))
+                     (print "======================= ")
+                     (write (cons (car target) (caddr target)))
+                     (print ":\n")
+                     (print (cdr result))
+                     #;(print (diff (car target) (cdr (cdar results)) (cdr result)))
+                     ))))))
      (cdr results))
 
-    (if diff?
+    (if failed-msg?
         (set! nb-fail (+ nb-fail 1))
         (set! nb-good (+ nb-good 1)))
 
@@ -269,6 +277,8 @@
             "cat "
             (string-append file-no-ext "_" ext)
             " "
+;;            (string-append "../lib/_gambit" ext)
+;;            " "
             (string-append file-no-ext ext)
             " > "
             (string-append file-no-ext "_merged" ext)))
@@ -282,31 +292,31 @@
 (define target-configs
   '(
     ("gambit" ".scm"  ()
-                      "./gsc" "-i")
+                      "./gsc" "-:d-" "-i")
 
     ("C"      ".o1"   ()
-                      "./gsc" "-i")
+                      "./gsc" "-:d-" "-i")
 
     ("x86"    #f      ()
-                      "./gsc32" "-:=.." "-target" "nat" "-c" "-e" "(load \"_t-x86.scm\")")
+                      "./gsc32" "-:d-,=.." "-target" "nat" "-c" "-e" "(load \"_t-x86.scm\")")
 
 ;;    ("x86-64" #f      ()
-;;                      "./gsc64" "-:=.." "-target" "nat" "-c" "-e" "(load \"_t-x86.scm\")")
+;;                      "./gsc64" "-:=d-,.." "-target" "nat" "-c" "-e" "(load \"_t-x86.scm\")")
 
 ;;    ("x86-32" ".o1"   ()
-;;                      "./gsc" "-i")
+;;                      "./gsc" "-:d-" "-i")
 
     ("x86-64" ".o1"   ()
-                      "./gsc" "-i")
+                      "./gsc" "-:d-" "-i")
 
     ("arm" ".o1"      ()
-                      "./gsc" "-i")
+                      "./gsc" "-:d-" "-i")
 
     ("riscv-32" ".o1" ()
-                      "./gsc" "-i")
+                      "./gsc" "-:d-" "-i")
 
     ("riscv-64" ".o1" ()
-                      "./gsc" "-i")
+                      "./gsc" "-:d-" "-i")
 
     ("java"   ".java" ()
                       "java")
@@ -318,50 +328,50 @@
                       "node")
 
     ;; repr-module = globals
-    ("js"     ".js"   ("-repr-module"    "globals"
+#;    ("js"     ".js"   ("-repr-module"    "globals"
                        "-repr-procedure" "host"
                        "-repr-fixnum"    "host"
                        "-repr-flonum"    "class"
                       )
                       "node")
-    ("js"     ".js"   ("-repr-module"    "globals"
+#;    ("js"     ".js"   ("-repr-module"    "globals"
                        "-repr-procedure" "class"
                        "-repr-fixnum"    "host"
                        "-repr-flonum"    "class"
                       )
                       "node")
-    ("js"     ".js"   ("-repr-module"    "globals"
+#;    ("js"     ".js"   ("-repr-module"    "globals"
                        "-repr-procedure" "host"
                        "-repr-fixnum"    "class"
                        "-repr-flonum"    "class"
                       )
                       "node")
-    ("js"     ".js"   ("-repr-module"    "globals"
+#;    ("js"     ".js"   ("-repr-module"    "globals"
                        "-repr-procedure" "host"
                        "-repr-fixnum"    "class"
                        "-repr-flonum"    "host"
                       )
                       "node")
     ;; repr-module = class
-    ("js"     ".js"   ("-repr-module"    "class"
+#;    ("js"     ".js"   ("-repr-module"    "class"
                        "-repr-procedure" "host"
                        "-repr-fixnum"    "host"
                        "-repr-flonum"    "class"
                       )
                       "node")
-    ("js"     ".js"   ("-repr-module"    "class"
+#;    ("js"     ".js"   ("-repr-module"    "class"
                        "-repr-procedure" "class"
                        "-repr-fixnum"    "host"
                        "-repr-flonum"    "class"
                       )
                       "node")
-    ("js"     ".js"   ("-repr-module"    "class"
+#;    ("js"     ".js"   ("-repr-module"    "class"
                        "-repr-procedure" "host"
                        "-repr-fixnum"    "class"
                        "-repr-flonum"    "class"
                       )
                       "node")
-    ("js"     ".js"   ("-repr-module"    "class"
+#;    ("js"     ".js"   ("-repr-module"    "class"
                        "-repr-procedure" "host"
                        "-repr-fixnum"    "class"
                        "-repr-flonum"    "host"
@@ -614,7 +624,6 @@
         ((keep? (car lst)) (cons (car lst) (keep keep? (cdr lst))))
         (else              (keep keep? (cdr lst)))))
 
-(define modes '())
 (define targets '())
 
 (define default-dir
@@ -652,20 +661,18 @@
                        (cons (string->symbol word)
                              targets)))
                 (else
-                 (set! modes
-                       (cons (string->symbol word)
-                             modes))))
+                 (println "*** unknown option " (car args))))
           (set! args (cdr args))
           (loop))))
 
   (if (null? args)
       (set! args (list default-dir)))
 
-  (if (null? modes)
-      (set! modes '(gsi)))
-
   (if (null? targets)
       (set! targets '(C)))
+
+  (if (null? (cdr targets))
+      (set! targets (cons 'gambit targets)))
 
   (let ((files
          (sort-list

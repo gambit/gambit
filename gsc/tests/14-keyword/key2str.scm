@@ -5,7 +5,7 @@
 (define k3 '|a b c|:)
 
 (define (test x)
-  (let ((s (##keyword->string x)))
+  (let ((s (##keyword->string? x)))
     (println s)
     (println (##string? s))))
 

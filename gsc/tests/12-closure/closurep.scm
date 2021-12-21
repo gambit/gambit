@@ -5,5 +5,5 @@
 
 (define c (make-clo-add 1))
 
-(println (##closure? make-clo-add))
+(println (##closure? println))
 (println (##closure? c))

@@ -1,20 +1,20 @@
 (declare (extended-bindings) (not constant-fold) (not safe))
 
-(define (make-clo a b c)
-  (lambda (x) (##fx+ x (##fx+ a (##fx+ b c)))))
+(define (make-clo1 a)
+  (lambda () a))
 
-(define c1 (make-clo 11 22 33))
-(define c2 (make-clo 44 55 66))
+(define (make-clo2 a)
+  (lambda () (##cons a a)))
 
-(##closure-set! c1 2 77)
-(##closure-set! c1 3 88)
+(define c1 (make-clo1 (##vector 1 2 3 4 5 6 7 8)))
+(define c2 (make-clo2 (##vector 0 1 2 3 4 5 6 7)))
 
-(##closure-set! c2 1 99)
+(let ((x (##closure-ref c1 1))
+      (y (##closure-ref c2 1)))
+  (println (##eq? x y)))
 
-(println (##closure-ref c1 1))
-(println (##closure-ref c1 2))
-(println (##closure-ref c1 3))
+(##closure-set! c1 1 (##closure-ref c2 1))
 
-(println (##closure-ref c2 1))
-(println (##closure-ref c2 2))
-(println (##closure-ref c2 3))
+(let ((x (##closure-ref c1 1))
+      (y (##closure-ref c2 1)))
+  (println (##eq? x y)))
