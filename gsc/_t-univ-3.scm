@@ -4714,7 +4714,9 @@ tanh
   (^assign (^array-index (univ-clo-slots ctx expr1) expr2) expr3))
 
 (define (univ-emit-new-delay-promise ctx expr)
-  (^new 'promise expr))
+  (^call-prim
+   (^rts-method-use 'make_delay_promise)
+   (^cast* 'entrypt expr)))
 
 (define (univ-emit-promise? ctx expr)
   (case (target-name (ctx-target ctx))

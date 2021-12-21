@@ -4180,6 +4180,29 @@ EOF
        ctx
        (list (univ-field 'state 'scmobj #f '(public)))))) ;; instance-fields
 
+    ((make_delay_promise)
+     (rts-method
+      'make_delay_promise
+      '(public)
+      'scmobj
+      (list (univ-field 'thunk 'entrypt))
+      "\n"
+      '()
+      (lambda (ctx)
+        (let ((thunk (^local-var 'thunk))
+              (state (^local-var 'state)))
+          (^ (^var-declaration
+              'scmobj
+              state
+              (^vector-box
+               (^array-literal
+                'scmobj
+                (list (^obj #f)
+                      thunk))))
+             (^vector-set! state (^int 0) state) ;; start in undetermined state
+             (^return
+              (^new 'promise state)))))))
+
     ((will)
      (rts-class
       'will
