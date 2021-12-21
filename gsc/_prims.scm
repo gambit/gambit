@@ -2933,9 +2933,12 @@
                   (gen-call-prim-vars-notsafe source env
                     **mutable?-sym
                     (list (car vars))))
-                (gen-call-prim-vars-notsafe source env
-                  (op-prim pattern)
-                  vars)
+                (new-seq source env
+                  (gen-call-prim-vars-notsafe source env
+                    (op-prim pattern)
+                    vars)
+                  (new-cst source env
+                    void-object))
                 (generate-call vars
                                (not check-run-time-binding))))))))
 
