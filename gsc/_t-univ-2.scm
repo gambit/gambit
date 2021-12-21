@@ -1416,8 +1416,6 @@
               (^obj #f) ;; toq-parent
               (^obj #f) ;; toq-left
               (^obj #f) ;; toq-leftmost
-              (^obj #f) ;; current-thread
-              #;
               (^structure-box  ;; current-thread
                (^array-literal
                 'scmobj
@@ -1445,7 +1443,22 @@
                       (^obj #f)  ;; exception?
                       (^obj #f)  ;; result
                       (^obj #f)  ;; cont
-                      (^obj '()) ;; denv
+                      (^vector-box ;; denv
+                       (^array-literal
+                        'scmobj
+                        (list (^vector-box
+                               (^array-literal
+                                'scmobj
+                                (list (^obj #f)
+                                      (^obj '())
+                                      (^obj '()))))
+                              (^obj #f)
+                              (^obj #f)
+                              (^obj #f)
+                              (^obj #f)
+                              (^obj #f)
+                              (^obj #f)
+                              (^obj #f))))
                       (^obj #f)  ;; denv-cache1
                       (^obj #f)  ;; denv-cache2
                       (^obj #f)  ;; denv-cache3
