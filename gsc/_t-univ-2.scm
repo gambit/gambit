@@ -5209,7 +5209,7 @@ EOF
         "\n"
         (lambda (ctx)
           (if (eq? 'js (target-name (ctx-target ctx)))
-              (univ-use-rtlib ctx 'parententrypt_init))
+              (univ-use-rtlib ctx 'entrypt_init))
           (^ (^expr-statement
               (^call-prim
                (^rts-method-use 'println)
