@@ -896,6 +896,9 @@ def @os_device_from_basic_console@():
   ;; do nothing because wills are only implemented in C backend
   #f)
 
+(define (##force obj)
+  (##force-out-of-line obj))
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Subprocedure information.
