@@ -19,36 +19,55 @@ function UI(vm, elem) {
 
   // Create console multiplexer
 
-  var cons_mux = new Multiplexer(elem);
+  var cons_mux_elem = document.createElement('div');
+  cons_mux_elem.classList.add('g-console-multiplexer');
+  cons_mux_elem.classList.add('g-pane-rigid');
+  var cons_mux = new Multiplexer(cons_mux_elem, true);
 
   cons_mux.get_more_menu_items = function () {
+    return ui.get_more_menu_items_console();
+  }
 
-    var items = [];
+  // cons_mux.tg.extra_elem().innerHTML = 'extra';
 
-    items.push(menu_item('New REPL', ['data-g-bold'], function (event) {
-      cons_mux.focus();
-      ui.new_repl();
-    }));
+  // Create editor multiplexer
 
-    items.push(document.createElement('hr'));
+  var editor_mux_elem = document.createElement('div');
+  editor_mux_elem.classList.add('g-editor-multiplexer');
+  editor_mux_elem.classList.add('g-pane-elastic');
+  var editor_mux = new Multiplexer(editor_mux_elem, true);
 
-    cons_mux.channels.forEach(function (channel) {
-      var attrs = [];
-      if (channel.needs_attention()) attrs.push('data-g-attention');
-      items.push(menu_item(channel.get_title(), attrs, function (event) {
-        ui.activate_console(channel);
-      }));
-    });
+  editor_mux.get_more_menu_items = function () {
+    return ui.get_more_menu_items_editor();
+  }
 
-    return items;
-  };
+  // Create splitter
+
+  var splitter_elem = document.createElement('div');
+  splitter_elem.classList.add('g-pane-splitter');
+
+  // Initialize UI container
+
+  elem.innerHTML = '';  // remove all children
+  elem.appendChild(cons_mux_elem);
+  elem.appendChild(splitter_elem);
+  elem.appendChild(editor_mux_elem);
+  elem.classList.add('g-h-panes');
+
+  setup_splitter(elem);
 
   ui.vm = vm;
+  ui.elem = elem;
   ui.cons_mux = cons_mux;
+  ui.editor_mux = editor_mux;
   ui.demo_commands = [];
   ui.demo_index = 0;
   ui.demo_timeoutId = null;
   ui.debug = false;
+  ui.fs = _os_fs;
+  ui.root_dir = '';
+
+  ui.init_predefined_files();
 }
 
 UI.prototype.new_repl = function () {
@@ -70,15 +89,17 @@ UI.prototype.add_console = function (dev) {
 
   ui.cons_mux.add_channel(dev);
 
-  if (ui.cons_mux.channels.length === 1) {
+  if (ui.cons_mux.channels.length === 1 && !ui.file_exists('/nodemo')) {
     dev.vm.ui.demo([
       8,
       0, '(display "hello world!\\n")   ;; automatic demo... click console to cancel',
       2, '(display "hello world!\\n")   ;; automatic demo... click console to cancel\n',
       5, null,
-      0, '(import (srfi 28))   ;; use your favourite libraries and SRFIs\n',
-      8, '(format "sqrt(2)=~a" (sqrt 2))\n',
-      5, '(integer-sqrt (* 2 (expt 100 100)))   ;; fast bignum support\n',
+      0, '(import (srfi 28))   ;; import SRFI 28\n',
+      4, '(format "sqrt(2)=~a" (sqrt 2))\n',
+      8, '(import (angle))     ;; import R7RS library from "angle/angle.sld"\n',
+      4, '(map deg->rad \'(0 90 180 270 360))\n',
+      8, '(integer-sqrt (* 2 (expt 100 100)))   ;; bignums!\n',
       5, '(define (fact n) (if (= n 0) 1 (* n (fact (- n 1)))))\n',
       5, '(time (fact 500))\n',
       8, null,
@@ -97,8 +118,14 @@ UI.prototype.add_console = function (dev) {
       2, ',s   ;; execute the third step, which evaluates 3\n',
       2, ',s   ;; execute the fourth step, which is the call to +\n',
       8, null,
-      1, '(define prompt \\prompt)   ;; import JavaScript\'s prompt function',
-      2, '(define prompt \\prompt)   ;; import JavaScript\'s prompt function\n',
+      1, '(host-eval "Math.random()")  ;; interface to JavaScript code',
+      2, '(host-eval "Math.random()")  ;; interface to JavaScript code\n',
+      2, '(host-eval "[1+2*3, 1<2, Array(2*@1@).fill(0), (new Date).toString()]" 3)',
+      2, '(host-eval "[1+2*3, 1<2, Array(2*@1@).fill(0), (new Date).toString()]" 3)\n',
+      1, '(host-exec "console.log(@1@)" "this message will appear in the JavaScript console")',
+      2, '(host-exec "console.log(@1@)" "this message will appear in the JavaScript console")\n',
+      1, '(define prompt \\prompt)   ;; import JavaScript\'s prompt function using SIX',
+      2, '(define prompt \\prompt)   ;; import JavaScript\'s prompt function using SIX\n',
       1, 'prompt',
       2, 'prompt\n',
       1, '(display (format "hello ~a!\\n" (prompt "your name please?")))',
@@ -109,13 +136,22 @@ UI.prototype.add_console = function (dev) {
       2, '(define (end id html) (insert (get id) "beforeend" html))\n',
       2, '(after "ui" "<h1 id=\\"msg\\">Hello</h1>")\n',
       2,
-      (ui.vm.os_web_origin.indexOf('://try.gambitscheme.org/') > 0
-       ? '(end "msg" " Gambit Schemers!")\n'
-       : '(end "msg" " Schemers!")\n'),
+      (ui.vm.os_web_origin.indexOf('://try.scheme.org/') > 0
+       ? '(end "msg" " Schemers!")\n'
+       : '(end "msg" " Gambit Schemers!")\n'),
       8, '\\document.getElementById("msg").innerHTML=""\n',
       1, null,
-      0, '(current-directory)  ;; CWD is the web server document root\n',
-      3, '(substring (read-file-string "UI.css") 0 70)  ;; read file from web server\n',
+      0, '(current-directory)',
+      1, '(current-directory)\n',
+      2, '(directory-files)\n',
+      2, '(with-output-to-file "hello" (lambda () (display "hello!\\n")))\n',
+      2, '(directory-files)\n',
+      2, '(read-file-string "hello")\n',
+      4, null,
+      0, '##initial-current-directory  ;; initial CWD is the web server document root\n',
+      1, '(define path (path-expand "UI.css" ##initial-current-directory))\n',
+      1, 'path\n',
+      3, '(substring (read-file-string path) 0 70)  ;; read file from web server\n',
       5, '\\_os_whitelist_add("https://raw.githubusercontent.com/")  ;; allow reading from this domain\n',
       5, '(println (read-file-string "https://raw.githubusercontent.com/feeley/fib/master/README.md"))  ;; get a file\n',
       5, '(load "https://raw.githubusercontent.com/feeley/fib/master/fib.scm")  ;; load code from github\n',
@@ -142,14 +178,14 @@ UI.prototype.add_console = function (dev) {
   }
 };
 
-UI.prototype.remove_console = function (dev, tab_only) {
+UI.prototype.remove_console = function (dev) {
 
   var ui = this;
 
   if (ui.debug)
-    console.log('UI().remove_console(..., '+tab_only+')');
+    console.log('UI().remove_console(...)');
 
-  ui.cons_mux.remove_channel(dev, tab_only);
+  ui.cons_mux.remove_channel(dev);
 };
 
 UI.prototype.activate_console = function (dev) {
@@ -162,19 +198,21 @@ UI.prototype.activate_console = function (dev) {
   ui.cons_mux.activate_channel(dev);
 };
 
-UI.prototype.send_to_active_console = function (text) {
+UI.prototype.send_to_active_console = function (text, focus) {
 
   var ui = this;
 
   if (ui.debug)
-    console.log('UI().send_to_active_console(\''+text+'\')');
+    console.log('UI().send_to_active_console(\''+text+','+focus+'\')');
 
   var cons_mux = ui.cons_mux;
   var tab_index = cons_mux.tg.active_tab_index();
 
   if (tab_index >= 0) {
     var dev = cons_mux.tabs[tab_index];
-    dev.focus();
+    if (focus) {
+      dev.focus();
+    }
     dev.cons.send(text);
   }
 };
@@ -194,7 +232,7 @@ UI.prototype.demo = function (commands) {
       ui.demo_timeoutId = setTimeout(next, delay);
 
       if (command === null || typeof command === 'string') {
-        ui.send_to_active_console(command);
+        ui.send_to_active_console(command, false);
       }
     }
   }
@@ -226,13 +264,436 @@ UI.prototype.demo_cancel = function () {
 
 };
 
+UI.prototype.get_more_menu_items_console = function () {
+
+  var ui = this;
+  var items = [];
+
+  items.push(menu_item('New REPL', ['data-g-bold'], function (event) {
+    ui.cons_mux.focus();
+    ui.new_repl();
+  }));
+
+  items.push(document.createElement('hr'));
+
+  ui.cons_mux.channels.forEach(function (channel) {
+    var attrs = [];
+    if (channel.needs_attention()) attrs.push('data-g-attention');
+    items.push(menu_item(channel.get_title(), attrs, function (event) {
+      ui.activate_console(channel);
+    }));
+  });
+
+  return items;
+};
+
+UI.prototype.get_more_menu_items_editor = function () {
+
+  var ui = this;
+  var items = [];
+
+  items.push(menu_item('New file', ['data-g-bold'], function (event) {
+    ui.editor_mux.focus();
+    ui.edit_new_file();
+  }));
+
+  items.push(document.createElement('hr'));
+
+  var files = ui.all_files(ui.root_dir);
+
+  files.sort();
+
+  files.forEach(function (path) {
+    items.push(menu_item(path, [], function (event) {
+      ui.edit_file(path);
+    }));
+  });
+
+  return items;
+};
+
+UI.prototype.get_unique_file_path = function (base) {
+
+  var ui = this;
+  var existing_files = ui.all_files(ui.root_dir);
+  var path;
+  var i = 0;
+
+  do {
+    path = base;
+    if (i>0) path += i;
+    path += '.scm';
+    i++;
+  } while (existing_files.indexOf(path) >= 0);
+
+  return path;
+};
+
+UI.prototype.edit_new_file = function () {
+
+  var ui = this;
+
+  var path = ui.get_unique_file_path('untitled');
+  var content = '';
+
+  ui.write_file(path, content);
+
+  ui.edit_file(path);
+};
+
+UI.prototype.edit_file = function (path) {
+
+  var ui = this;
+
+  var index = ui.editor_mux.index_of_channel_by_title(path);
+  var editor;
+
+  if (index >= 0) {
+
+    // file is open in an editor tab (no need to create a new one)
+
+    editor = ui.editor_mux.channels[index];
+
+  } else {
+
+    var editor_elem = document.createElement('div');
+    editor = new Editor(editor_elem, ui, path);
+    ui.editor_mux.add_channel(editor);
+
+    var content = ui.read_file(path, null);
+
+    if (content === null) {
+      content = '';
+      ui.write_file(path, content);
+    }
+
+    editor.replace_content(content);
+    editor.set_dirty(false);
+  }
+
+  ui.editor_mux.activate_channel(editor);
+};
+
+UI.prototype.init_predefined_files = function () {
+
+  var ui = this;
+
+  ui.write_file('README', '\
+The left area is the REPL where interaction\n\
+with the interpreter takes place. The right\n\
+area allows creating and editing files that are\n\
+local to the browser and accessible to Scheme\n\
+code as files in the root directory, i.e. "/".\n\
+The files will persist in the browser between\n\
+sessions.\n\
+\n\
+By default a demo will automatically start\n\
+after a few seconds. The demo can be stopped\n\
+by clicking inside the REPL. The demo can also\n\
+be disabled by creating the file "nodemo".\n\
+\n\
+The following keybindings are available:\n\
+\n\
+  Keybindings in REPL:\n\
+    Enter   send the current line to the REPL\n\
+    ^D      end-of-file when line is empty\n\
+    ^C      interrupt execution\n\
+    ^L      clear transcript\n\
+    ^P/^N   move back/forward in history\n\
+\n\
+  Keybindings in editor:\n\
+    ^S      save file\n\
+    ^Enter  save file and load it in the REPL\n\
+');
+
+  ui.write_file('angle/angle.sld', '\
+(define-library (angle)\n\
+\n\
+  (export deg->rad rad->deg)\n\
+\n\
+  (import (scheme base)\n\
+          (scheme inexact))\n\
+\n\
+  (begin\n\
+    (define factor (/ (atan 1) 45))\n\
+    (define (deg->rad x) (* x factor))\n\
+    (define (rad->deg x) (/ x factor))))\n\
+');
+
+  ui.edit_file('README');
+};
+
+UI.prototype.file_exists = function (path) {
+
+  var ui = this;
+
+  try {
+    return ui.fs.existsSync(path);
+  } catch (exn) {
+    return false;
+  }
+};
+
+UI.prototype.read_file = function (path, content) {
+
+  var ui = this;
+
+  try {
+    content = ui.fs.readFileSync(path, { encoding: 'utf8', flag: 'r' });
+  } catch (exn) {
+    // ignore error
+  }
+
+  return content;
+};
+
+UI.prototype.write_file_possibly_editor = function (path, content) {
+
+  var ui = this;
+
+  ui.write_file(path, content);
+};
+
+UI.prototype.write_file = function (path, content) {
+
+  var ui = this;
+
+  var last_dir_sep = path.lastIndexOf('/');
+
+  if (last_dir_sep > 0) {
+    try {
+      ui.fs.mkdirSync(path.slice(0, last_dir_sep), { recursive: true });
+    } catch (exn) {
+      // ignore existing directory
+    }
+  }
+
+  try {
+    ui.fs.writeFileSync(path, content, { encoding: 'utf8', flag: 'w' });
+    return true;
+  } catch (exn) {
+    return false;
+  }
+};
+
+UI.prototype.delete_file_possibly_editor = function (path) {
+
+  var ui = this;
+
+  var index = ui.editor_mux.index_of_channel_by_title(path);
+
+  if (index >= 0) {
+
+    // file is open in an editor tab (the editor must be deleted)
+
+    var editor = ui.editor_mux.channels[index];
+
+    ui.editor_mux.remove_channel(editor);
+  }
+
+  ui.delete_file(path);
+};
+
+UI.prototype.delete_file = function (path) {
+
+  var ui = this;
+
+  try {
+    ui.fs.unlinkSync(path);
+    return true;
+  } catch (exn) {
+    return false;
+  }
+};
+
+UI.prototype.close_editor = function (path) {
+
+  var ui = this;
+
+  console.log('close_editor '+path);
+};
+
+UI.prototype.rename_file = function (path) {
+
+  var ui = this;
+
+  var new_path = prompt('New path for file ' + path);
+
+  if (new_path !== null && new_path !== '') {
+    ui.rename_file_possibly_editor(path, new_path);
+  }
+};
+
+UI.prototype.rename_file_possibly_editor = function (src_path, dest_path) {
+
+  var ui = this;
+
+  var src_content = ui.read_file(src_path, null);
+
+  if (src_content === null ||
+      !ui.write_file(dest_path, src_content)) {
+    return;
+  }
+
+  ui.delete_file(src_path);
+
+  var src_index = ui.editor_mux.index_of_channel_by_title(src_path);
+  var dest_index = ui.editor_mux.index_of_channel_by_title(dest_path);
+  var dest_channel = (dest_index >= 0) ? ui.editor_mux.channels[dest_index] : null;
+
+  if (src_index >= 0) {
+
+    // source file is open in an editor tab
+
+    var src_channel = ui.editor_mux.channels[src_index];
+
+    ui.editor_mux.set_channel_title(src_channel, dest_path);
+
+    if (dest_channel !== null) {
+
+      // destination file is open in an editor tab, so remove it
+
+      ui.editor_mux.remove_channel(dest_channel);
+    }
+
+  } else {
+
+    // source file not open in an editor tab
+
+    if (dest_channel !== null) {
+
+      // destination file is open in an editor tab, so update its content
+
+      dest_channel.replace_content(src_content);
+    }
+  }
+};
+
+UI.prototype.all_files = function (root_dir) {
+
+  var ui = this;
+  var files = [];
+
+  function is_dir(path) {
+    try {
+      return ui.fs.statSync(path).isDirectory();
+    } catch (exn) {
+      return false;
+    }
+  }
+
+  function walk_dir(relative_path) {
+    var files_in_dir = [];
+    try {
+      files_in_dir = ui.fs.readdirSync(root_dir + relative_path);
+    } catch (exn) {
+      // ignore this dir
+    }
+    for (var i=0; i<files_in_dir.length; i++) {
+      var name = files_in_dir[i];
+      walk((relative_path==='' ? '' : relative_path+'/') + name);
+    }
+  }
+
+  function walk(relative_path) {
+    if (is_dir(root_dir + relative_path)) {
+      walk_dir(relative_path);
+    } else {
+      files.push(relative_path);
+    }
+  }
+
+  if (root_dir.slice(-1) !== '/') {
+    root_dir += '/';
+  }
+
+  walk_dir('');
+
+  return files;
+};
+
 //-----------------------------------------------------------------------------
 
-function Multiplexer(elem) {
+function setup_splitter(container_elem, set_size) {
+
+  function px(style, property) {
+    return parseInt(style.getPropertyValue(property).slice(0, -2));
+  }
+
+  if (!container_elem) return;
+
+  var rigid_elem = container_elem.querySelector(':scope > .g-pane-rigid');
+  var elastic_elem = container_elem.querySelector(':scope > .g-pane-elastic');
+  var splitter_elem = container_elem.querySelector(':scope > .g-pane-splitter');
+
+  if (!(rigid_elem && elastic_elem && splitter_elem)) return;
+
+  var rigid_pane_last = splitter_elem.nextElementSibling === rigid_elem;
+  var container_style = window.getComputedStyle(container_elem);
+  var rigid_style = window.getComputedStyle(rigid_elem);
+  var elastic_style = window.getComputedStyle(elastic_elem);
+
+  var vert = container_style.getPropertyValue('flex-direction') === 'column';
+  var size_prop = vert ? 'height' : 'width';
+  var size_min_prop = vert ? 'min-height' : 'min-width';
+
+  var rigid_size_min = px(rigid_style, size_min_prop);
+  var elastic_size_min = px(elastic_style, size_min_prop);
+
+  var start_pos = null;
+  var start_size = null;
+  var current_size = null;
+
+  //console.log(rigid_elem);
+  //console.log(rigid_style.getPropertyValue('height'));
+
+  rigid_elem.style.flexBasis = rigid_style.getPropertyValue(size_prop);
+
+  function mouse_down(event) {
+    start_pos = vert ? event.pageY : event.pageX;
+    start_size = px(rigid_style, size_prop);
+    current_size = start_size;
+    document.body.addEventListener('mousemove', mouse_move);
+    document.body.addEventListener('mouseup', mouse_end);
+    event.preventDefault();
+  }
+
+  function mouse_move(event) {
+    if (event.buttons && start_pos !== null) {
+      var elasticSize = px(elastic_style, size_prop);
+      var pos = vert ? event.pageY : event.pageX;
+      var dist = pos - start_pos;
+      if (rigid_pane_last) dist = -dist;
+      var delta = Math.min(dist - (current_size - start_size),
+                           elasticSize - elastic_size_min);
+      var size = Math.max(rigid_size_min, delta + current_size);
+      //console.log(elasticSize, pos, dist, delta, size);
+      rigid_elem.style.flexBasis = size + 'px';
+      if (set_size) set_size(size);
+      current_size = size;
+    } else {
+      mouse_end();
+    }
+    event.preventDefault();
+  }
+
+  function mouse_end(event) {
+    start_pos = null;
+    document.body.removeEventListener('mouseup', mouse_end);
+    splitter_elem.removeEventListener('mousemove', mouse_move);
+  }
+
+  splitter_elem.addEventListener('mousedown', mouse_down);
+}
+
+//-----------------------------------------------------------------------------
+
+function Multiplexer(elem, has_more_tab) {
 
   var mux = this;
 
   mux.elem = elem;
+  mux.has_more_tab = has_more_tab;
   elem.classList.add('g-multiplexer');
   mux.init();
 }
@@ -241,9 +702,9 @@ Multiplexer.prototype.init = function () {
 
   var mux = this;
 
-  mux.channels = [];
-  mux.tabs = [];
-  mux.mra = []; // most recently active tabs
+  mux.channels = [];  // array of channels
+  mux.tabs = [];      // array of channels (in tab order)
+  mux.mra = [];       // most recently active tabs
   mux.max_nb_tabs = 999999;
   mux.debug = false;
 
@@ -255,7 +716,9 @@ Multiplexer.prototype.init = function () {
 
   tg.clicked_tab = function (index, event) { mux.clicked_tab(index, event); };
 
-  tg.add_pane('+');
+  if (mux.has_more_tab) {
+    tg.add_pane('+');
+  }
 };
 
 Multiplexer.prototype.max_nb_tabs_set = function (max_nb_tabs) {
@@ -284,11 +747,11 @@ Multiplexer.prototype.clicked_tab = function (tab_index, event) {
   var mux = this;
 
   function hide_menu(elem) {
-    mux.focus();
     elem.removeAttribute('data-g-dropdown-menu-show');
     while (elem.childNodes.length > 1) {
       elem.removeChild(elem.lastChild);
     }
+    mux.focus();
   }
 
   function is_visible(elem) {
@@ -340,7 +803,7 @@ Multiplexer.prototype.clicked_tab = function (tab_index, event) {
     hide_menu(elem);
 
   } else {
-    if (tab_index === tg.nb_tabs()-1) {
+    if (mux.has_more_tab && tab_index === tg.nb_tabs()-1) {
 
       // clicked on the '+' tab so show the list of available channels
 
@@ -368,7 +831,23 @@ Multiplexer.prototype.shrink_nb_tabs = function (n) {
   var mux = this;
 
   while (mux.tabs.length > n) {
-    mux.remove_channel(mux.tabs[mux.mra[mux.tabs.length-1]], true);
+    mux.remove_channel(mux.tabs[mux.mra[mux.tabs.length-1]]);
+  }
+};
+
+Multiplexer.prototype.set_channel_title = function (channel, title) {
+
+  var mux = this;
+
+  if (mux.debug)
+    console.log('Multiplexer().set_channel_title('+channel.get_title()+', '+title+')');
+
+  var tab_index = mux.tab_index_of_channel(channel);
+
+  if (tab_index >= 0) {
+    if (channel.set_title(title)) {
+      mux.tg.set_tab_name(tab_index, title);
+    }
   }
 };
 
@@ -380,9 +859,9 @@ Multiplexer.prototype.add_channel = function (channel, become_active) {
     console.log('Multiplexer().add_channel('+channel.get_title()+', '+become_active+')');
 
   var title = channel.get_title();
-  var i = mux.index_of_channel_by_title(title);
+  var index = mux.channels.length; // add to end of channels
 
-  mux.channels.splice(i, 0, channel);
+  mux.channels.splice(index, 0, channel);
 
   if (mux.tabs.length === 0) become_active = true;
 
@@ -392,12 +871,13 @@ Multiplexer.prototype.add_channel = function (channel, become_active) {
 
     mux.shrink_nb_tabs(mux.max_nb_tabs-1);
     mux.tabs.push(channel);
-    i = tg.add_pane(title, channel.get_elem(), -2);
+    var tab_index = mux.tabs.length-1;
+    i = tg.add_pane(title, channel.get_elem(), mux.has_more_tab ? -2 : -1);
     if (become_active) {
-      mux.mra.splice(0, 0, i);
-      tg.active_tab_set(i);
+      mux.mra.splice(0, 0, tab_index); ///////????????????????
+      tg.active_tab_set(tab_index);
     } else {
-      mux.mra.push(i);
+      mux.mra.push(tab_index);
     }
 
   } else {
@@ -417,32 +897,44 @@ Multiplexer.prototype.add_channel = function (channel, become_active) {
   }
 };
 
-Multiplexer.prototype.remove_channel = function (channel, tab_only) {
+Multiplexer.prototype.remove_channel = function (channel) {
 
   var mux = this;
 
   if (mux.debug)
-    console.log('Multiplexer().remove_channel('+channel.get_title()+', '+tab_only+')');
+    console.log('Multiplexer().remove_channel('+channel.get_title()+')');
 
-  if (!tab_only) {
-    var i = mux.index_of_channel(channel);
-    if (i >= 0) mux.channels.splice(i, 1);
+  var keep_pane = channel.preserve_elem();
+
+  if (!keep_pane) {
+    var index = mux.index_of_channel(channel);
+    if (index >= 0) mux.channels.splice(index, 1);
   }
 
-  var tab_index = mux.index_of_channel_tab(channel);
+  var tab_index = mux.tab_index_of_channel(channel);
 
   if (tab_index >= 0) {
     var tabs = mux.tabs;
     var mra = mux.mra;
     tabs.splice(tab_index, 1);
-    mra.splice(mra.indexOf(tab_index), 1);
+    for (;;) {
+      var i = mra.indexOf(tab_index);
+      if (i < 0) break;
+      mra.splice(i, 1);
+    }
     for (var j=0; j<mra.length; j++) {
       if (mra[j] > tab_index) mra[j]--;
     }
-    mux.tg.remove_tab(tab_index);
-    if (tab_index === mux.tg.active_tab_index()) {
+
+    mux.tg.remove_tab(tab_index, keep_pane);
+    if (mux.tg.active_tab_index() > tab_index)
+      mux.tg.act_tab_index--;
+    else if (mux.tg.active_tab_index() === tab_index) {
+      mux.tg.act_tab_index = -1;
       if (tabs.length > 0) {
         mux.activate_channel(tabs[mra[0]]);
+      } else {
+        mux.tg.deactivate(tab_index);
       }
     }
   }
@@ -458,11 +950,12 @@ Multiplexer.prototype.remove_channel = function (channel, tab_only) {
 Multiplexer.prototype.activate_channel = function (channel) {
 
   var mux = this;
-  var tab_index = mux.index_of_channel_tab(channel);
-  var tg = mux.tg;
 
   if (mux.debug)
     console.log('Multiplexer().activate_channel('+channel.get_title()+')');
+
+  var tab_index = mux.tab_index_of_channel(channel);
+  var tg = mux.tg;
 
   if (tab_index !== tg.active_tab_index()) {
 
@@ -471,7 +964,7 @@ Multiplexer.prototype.activate_channel = function (channel) {
     if (tab_index >= 0) {
       mra.splice(mra.indexOf(tab_index), 1);
     } else {
-      tab_index = tg.add_pane(channel.get_title(), channel.get_elem(), -2);
+      tab_index = tg.add_pane(channel.get_title(), channel.get_elem(), mux.has_more_tab ? -2 : -1);
       mux.tabs.splice(tab_index, 0, channel);
     }
 
@@ -492,25 +985,25 @@ Multiplexer.prototype.index_of_channel = function (channel) {
 
   var mux = this;
   var channels = mux.channels;
-  var i = 0;
+  var index = 0;
 
-  while (i < channels.length) {
-    if (channel === channels[i]) return i;
-    i++;
+  while (index < channels.length) {
+    if (channel === channels[index]) return index;
+    index++;
   }
 
   return -1;
 };
 
-Multiplexer.prototype.index_of_channel_tab = function (channel) {
+Multiplexer.prototype.tab_index_of_channel = function (channel) {
 
   var mux = this;
   var tabs = mux.tabs;
-  var i = 0;
+  var tab_index = 0;
 
-  while (i < tabs.length) {
-    if (channel === tabs[i]) return i;
-    i++;
+  while (tab_index < tabs.length) {
+    if (channel === tabs[tab_index]) return tab_index;
+    tab_index++;
   }
 
   return -1;
@@ -520,14 +1013,14 @@ Multiplexer.prototype.index_of_channel_by_title = function (title) {
 
   var mux = this;
   var channels = mux.channels;
-  var i = 0;
+  var index = 0;
 
-  while (i < channels.length) {
-    if (title < channels[i].get_title()) break;
-    i++;
+  while (index < channels.length) {
+    if (title === channels[index].get_title()) return index;
+    index++;
   }
 
-  return i;
+  return -1;
 };
 
 //-----------------------------------------------------------------------------
@@ -582,14 +1075,14 @@ Tab_group.prototype.index_of_tab_elem = function (elem) {
   return -1;
 };
 
-Tab_group.prototype.tab_elem = function (index) {
+Tab_group.prototype.tab_elem = function (tab_index) {
   var tg = this;
-  return tg.elem.firstChild.children[index];
+  return tg.elem.firstChild.children[tab_index];
 };
 
-Tab_group.prototype.pane_elem = function (index) {
+Tab_group.prototype.pane_elem = function (tab_index) {
   var tg = this;
-  return tg.elem.lastChild.children[index];
+  return tg.elem.lastChild.children[tab_index];
 };
 
 Tab_group.prototype.extra_elem = function () {
@@ -597,14 +1090,14 @@ Tab_group.prototype.extra_elem = function () {
   return tg.elem.firstChild.lastChild;
 };
 
-Tab_group.prototype.set_tab_name = function (index, name) {
+Tab_group.prototype.set_tab_name = function (tab_index, name) {
   var tg = this;
   var tabs_elem = tg.elem.firstChild;
-  tabs_elem.children[index].firstChild.firstChild.innerText = name;
-  tg.tab_names[index] = name;
+  tabs_elem.children[tab_index].firstChild.firstChild.innerText = name;
+  tg.tab_names[tab_index] = name;
 };
 
-Tab_group.prototype.remove_tab = function (tab_index) {
+Tab_group.prototype.remove_tab = function (tab_index, keep_pane) {
 
   var tg = this;
 
@@ -615,7 +1108,8 @@ Tab_group.prototype.remove_tab = function (tab_index) {
 
   var pane_elem = panes_elem.children[tab_index];
   pane_elem.remove();
-  panes_elem.appendChild(pane_elem);
+  if (keep_pane)
+    panes_elem.appendChild(pane_elem);
 
   tg.tab_names.splice(tab_index, 1);
 };
@@ -658,8 +1152,8 @@ Tab_group.prototype.add_pane = function (tab_name, pane_elem, tab_index) {
     }
 
     function click(event) {
-      var index = tg.index_of_tab_elem(tab_elem);
-      if (index >= 0) tg.clicked_tab(index, event);
+      var tab_index = tg.index_of_tab_elem(tab_elem);
+      if (tab_index >= 0) tg.clicked_tab(tab_index, event);
     }
 
     tab_elem.addEventListener('click', click);
@@ -687,20 +1181,27 @@ Tab_group.prototype.active_tab_index = function () {
   return tg.act_tab_index;
 };
 
-Tab_group.prototype.active_tab_set = function (index) {
+Tab_group.prototype.deactivate = function (tab_index) {
 
   var tg = this;
 
-  var tab_elem = tg.elem.firstChild.querySelector(':scope > li[data-active]');
-  if (tab_elem) tab_elem.removeAttribute('data-active');
+  var tab_elem = tg.elem.firstChild.querySelector(':scope > li[data-g-active]');
+  if (tab_elem) tab_elem.removeAttribute('data-g-active');
 
-  var pane_elem = tg.elem.lastChild.querySelector(':scope > div[data-active]');
-  if (pane_elem) pane_elem.removeAttribute('data-active');
+  var pane_elem = tg.elem.lastChild.querySelector(':scope > div[data-g-active]');
+  if (pane_elem) pane_elem.removeAttribute('data-g-active');
+};
 
-  if (index >= 0) {
-    tg.tab_elem(index).setAttribute('data-active', '');
-    tg.pane_elem(index).setAttribute('data-active', '');
-    tg.act_tab_index = index;
+Tab_group.prototype.active_tab_set = function (tab_index) {
+
+  var tg = this;
+
+  tg.deactivate(tab_index);
+
+  if (tab_index >= 0) {
+    tg.tab_elem(tab_index).setAttribute('data-g-active', '');
+    tg.pane_elem(tab_index).setAttribute('data-g-active', '');
+    tg.act_tab_index = tab_index;
   } else {
     tg.act_tab_index = -1;
   }
@@ -727,7 +1228,6 @@ function Device_console(vm, title, flags, ui, thread_scm) {
   dev.read_condvar_scm = null;
   dev.delayed_output = '';
 
-  dev.mux = null;
   dev.focused = false;
   dev.dirty = false;
 
@@ -968,6 +1468,16 @@ Device_console.prototype.get_title = function () {
   return dev.title;
 };
 
+Device_console.prototype.set_title = function (title) {
+
+  var dev = this;
+
+  if (dev.debug)
+    console.log('Device_console(\''+dev.title+'\').set_title('+title+')');
+
+  return false; // can't set title
+};
+
 Device_console.prototype.needs_attention = function () {
 
   var dev = this;
@@ -1001,26 +1511,6 @@ Device_console.prototype.blur = function () {
   dev.cons.blur();
 };
 
-Device_console.prototype.connect_multiplexer = function (mux) {
-
-  var dev = this;
-
-  if (dev.debug)
-    console.log('Device_console(\''+dev.title+'\').connect_multiplexer(...)');
-
-  dev.mux = mux;
-};
-
-Device_console.prototype.disconnect_multiplexer = function () {
-
-  var dev = this;
-
-  if (dev.debug)
-    console.log('Device_console(\''+dev.title+'\').disconnect_multiplexer()');
-
-  dev.mux = null;
-};
-
 Device_console.prototype.get_menu_items = function () {
 
   var dev = this;
@@ -1032,15 +1522,15 @@ Device_console.prototype.get_menu_items = function () {
 
 //  items.push(menu_item('Close tab', [], function (event) {
 //    console.log('close tab ' + dev.title);
-//    dev.vm.ui.remove_console(dev, true);
+//    dev.vm.ui.remove_console(dev);
 //  }));
 
-  items.push(menu_item('Interrupt thread', [], function (event) {
+  items.push(menu_item('Interrupt thread', ['data-g-bold'], function (event) {
     dev.cons.user_interrupt();
   }));
 
   if (dev.title !== '#<thread #1 primordial>') {
-    items.push(menu_item('Terminate thread', [], function (event) {
+    items.push(menu_item('Terminate thread', ['data-g-bold'], function (event) {
       dev.cons.terminate_thread();
     }));
   }
@@ -1056,6 +1546,16 @@ Device_console.prototype.get_elem = function () {
     console.log('Device_console(\''+dev.title+'\').get_elem()');
 
   return dev.elem;
+};
+
+Device_console.prototype.preserve_elem = function () {
+
+  var dev = this;
+
+  if (dev.debug)
+    console.log('Device_console(\''+dev.title+'\').preserve_elem()');
+
+  return true;
 };
 
 function menu_item(title, attrs, handler) {
@@ -1097,7 +1597,7 @@ function Console(elem) {
     }
   };
 
-  elem.classList.add('console');
+  elem.classList.add('g-console');
   cons.cm = CodeMirror(elem, cm_opts);
   cons.id = elem.id || 'DefaultConsole';
   cons.doc = cons.cm.getDoc();
@@ -1110,7 +1610,7 @@ function Console(elem) {
 }
 
 Console.prototype.transcript_opts = {
-  className: 'console_transcript',
+  className: 'g-console-transcript',
   inclusiveLeft: false,
   inclusiveRight: false,
   atomic: true,
@@ -1118,13 +1618,13 @@ Console.prototype.transcript_opts = {
 };
 
 Console.prototype.input_opts = {
-  className: 'console_input',
+  className: 'g-console-input',
   inclusiveLeft: true,
   inclusiveRight: false
 };
 
 Console.prototype.output_opts = {
-  className: 'console_output',
+  className: 'g-console-output',
   inclusiveLeft: true,
   inclusiveRight: false
 };
@@ -1371,6 +1871,246 @@ Console.prototype.focus = function () {
   var cons = this;
   cons.cm.refresh();
   cons.cm.focus();
+};
+
+//-----------------------------------------------------------------------------
+
+function Editor(elem, ui, title) {
+
+  var editor = this;
+
+  var cm_opts = {
+    value: '',
+    matchBrackets: true,
+    mode: 'scheme',
+    keyMap: 'emacs',
+    autofocus: true,
+    lineWrapping: true,
+    extraKeys: {
+      'Ctrl-S': function (cm) { editor.save(); },
+      'Ctrl-Enter': function (cm) { editor.save_and_load(); }
+    }
+  };
+
+  elem.classList.add('g-editor');
+  editor.elem = elem;
+  editor.ui = ui;
+  editor.cm = CodeMirror(elem, cm_opts);
+  editor.id = elem.id || 'DefaultEditor';
+  editor.doc = editor.cm.getDoc();
+  editor.title = title;
+  editor.focused = false;
+  editor.dirty = false;
+
+  editor.cm.on('change', function(cm, event) {
+    editor.set_dirty(true);
+  });
+
+  editor.debug = false;
+}
+
+Editor.prototype.get_title = function () {
+
+  var editor = this;
+
+  if (editor.debug)
+    console.log('Editor(\''+editor.title+'\').get_title()');
+
+  return editor.title;
+};
+
+Editor.prototype.set_title = function (title) {
+
+  var editor = this;
+
+  if (editor.debug)
+    console.log('Editor(\''+editor.title+'\').set_title('+title+')');
+
+  editor.title = title;
+
+  return true;
+};
+
+Editor.prototype.set_dirty = function (dirty) {
+
+  var editor = this;
+
+  if (editor.debug)
+    console.log('Editor(\''+editor.title+'\').set_dirty('+dirty+')');
+
+  editor.dirty = dirty;
+
+  var tab_index = editor.ui.editor_mux.tab_index_of_channel(editor);
+
+  if (tab_index >= 0) {
+
+    var tab_elem = editor.ui.editor_mux.tg.tab_elem(tab_index);
+
+    if (dirty) {
+      tab_elem.setAttribute('data-g-dirty', '');
+    } else {
+      tab_elem.removeAttribute('data-g-dirty');
+    }
+  }
+};
+
+Editor.prototype.needs_attention = function () {
+
+  var editor = this;
+
+  if (editor.debug)
+    console.log('Editor(\''+editor.title+'\').needs_attention()');
+
+  return !editor.focused && editor.dirty;
+};
+
+Editor.prototype.focus = function () {
+
+  var editor = this;
+
+  if (editor.debug)
+    console.log('Editor(\''+editor.title+'\').focus()');
+
+  editor.focused = true;
+  editor.cm.refresh();
+  editor.cm.focus();
+};
+
+Editor.prototype.blur = function () {
+
+  var editor = this;
+
+  if (editor.debug)
+    console.log('Editor(\''+editor.title+'\').blur()');
+
+  editor.focused = false;
+  editor.dirty = false;
+  editor.cm.blur();
+};
+
+Editor.prototype.get_menu_items = function () {
+
+  var editor = this;
+
+  if (editor.debug)
+    console.log('Editor(\''+editor.title+'\').get_menu_items()');
+
+  var items = [];
+
+  items.push(menu_item('Close tab', ['data-g-bold'], function (event) {
+    editor.close_tab();
+  }));
+
+  items.push(menu_item('Save (Ctrl-S)', ['data-g-bold'], function (event) {
+    editor.save();
+  }));
+
+  items.push(menu_item('Save and load (Ctrl-Enter)', ['data-g-bold'], function (event) {
+    editor.save_and_load();
+  }));
+
+  items.push(menu_item('Rename', ['data-g-bold'], function (event) {
+    editor.rename();
+  }));
+
+  items.push(menu_item('Delete', ['data-g-bold'], function (event) {
+    editor.delete();
+  }));
+
+  return items;
+};
+
+Editor.prototype.get_elem = function () {
+
+  var editor = this;
+
+  if (editor.debug)
+    console.log('Editor(\''+editor.title+'\').get_elem()');
+
+  return editor.elem;
+};
+
+Editor.prototype.get_content = function () {
+
+  var editor = this;
+
+  return editor.doc.getRange(editor.doc.posFromIndex(0),
+                             editor.doc.posFromIndex(Infinity));
+};
+
+Editor.prototype.replace_content = function (content) {
+
+  var editor = this;
+
+  editor.doc.replaceRange(content,
+                          editor.doc.posFromIndex(0),
+                          editor.doc.posFromIndex(Infinity));
+};
+
+Editor.prototype.close_tab = function () {
+
+  var editor = this;
+
+  if (editor.debug)
+    console.log('Editor(\''+editor.title+'\').close_tab()');
+
+  editor.ui.editor_mux.remove_channel(editor);
+};
+
+Editor.prototype.rename = function () {
+
+  var editor = this;
+
+  if (editor.debug)
+    console.log('Editor(\''+editor.title+'\').rename()');
+
+  editor.ui.rename_file(editor.title);
+};
+
+Editor.prototype.save = function () {
+
+  var editor = this;
+
+  if (editor.debug)
+    console.log('Editor(\''+editor.title+'\').save()');
+
+  editor.ui.write_file(editor.title, editor.get_content());
+
+  editor.set_dirty(false);
+};
+
+Editor.prototype.save_and_load = function () {
+
+  var editor = this;
+
+  if (editor.debug)
+    console.log('Editor(\''+editor.title+'\').load()');
+
+  editor.save();
+
+  var escaped = ('/'+editor.title).replace('\\','\\\\').replace('"','\\"');
+
+  editor.ui.send_to_active_console('(load "' + escaped + '")\n', false);
+};
+
+Editor.prototype.delete = function () {
+
+  var editor = this;
+
+  if (editor.debug)
+    console.log('Editor(\''+editor.title+'\').delete()');
+
+  editor.ui.delete_file_possibly_editor(editor.title);
+};
+
+Editor.prototype.preserve_elem = function () {
+
+  var editor = this;
+
+  if (editor.debug)
+    console.log('Editor(\''+editor.title+'\').preserve_elem()');
+
+  return false;
 };
 
 //-----------------------------------------------------------------------------

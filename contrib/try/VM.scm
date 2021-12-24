@@ -19,12 +19,24 @@ function VM() {
 
   var vm = this;
 
+  // Determine if code is running in a web browser (alternative is nodejs).
+
   vm.os_web = (function () { return this === this.window; })();
   vm.os_web_origin = '';
   vm.ui = null;
 
   if (vm.os_web) {
-    // Defer program execution until vm.init is called.
+
+    // The @all_modules_registered@ function is called when all
+    // the JavaScript code of the program's Scheme modules are
+    // registered.  It is predefined by the runtime system to
+    // call @program_start@ to start the execution of the Scheme
+    // code.  However this may be too early for the web application,
+    // in particular the DOM elements for the UI may not exist yet.
+    // To work around this issue the @all_modules_registered@ function
+    // is redefined to do nothing and the start of the execution of the
+    // Scheme code will require an explicit call to the VM's init method.
+
     @all_modules_registered@ = function () { };
   }
 };
@@ -33,12 +45,17 @@ VM.prototype.init = function (ui_elem) {
 
   var vm = this;
 
+  // The init method is only called when running in a web browser, i.e.
+  // vm.os_web is true.  It is typically called when the web page is
+  // fully loaded. For example:
+  //
+  //    <body onload="main_vm.init('#ui');">
+  //    <div id="ui"></div>
+
   vm.os_web_origin = @os_web_origin@;
   vm.ui = new UI(vm, ui_elem);
 
-  if (vm.os_web) {
-    @program_start@(); // Start execution of Scheme code.
-  }
+  @program_start@(); // Start execution of Scheme code.
 };
 
 VM.prototype.os_condvar_ready_set = function (condvar_scm, ready) {
@@ -105,7 +122,7 @@ EOF
 
 ")
   (##inline-host-expression
-   "@os_device_stream_open_console@(main_vm,@1@,@2@,@3@)"
+   "@os_device_stream_open_console@(main_vm,@1@,@2@,@3@,@4@)"
    title
    flags
    ui
@@ -239,11 +256,20 @@ EOF
     "window.open(@scm2host@(@1@));"
     (##string-append "doc/gambit.html#" arg4))))
 
+;; When running in web browser set current directory to / and
+;; add that directory to module search order.
+
+(if (##inline-host-expression "@host2scm@(main_vm.os_web)")
+    (begin
+      (##current-directory "/")
+      (##module-search-order-set! (cons "/" ##module-search-order))))
+
 ;; Start the REPL of the primordial thread.
 
+(##include "../../gsi/_gsi.scm")
+
 (if (##inline-host-expression
-     "@host2scm@(main_vm.os_web_origin.indexOf('://gambitscheme.org/') > 0)")
-    (##repl-debug-main)
-    (##repl-no-banner))
+     "@host2scm@(main_vm.os_web_origin.indexOf('://try.scheme.org/') > 0)")
+    (set! ##repl-debug-main ##repl-no-banner))
 
 ;;;============================================================================
