@@ -1327,7 +1327,7 @@ def @os_group_info@(gi, group):
 
    ((compilation-target python)
     (##inline-host-expression
-     "@host2scm@((lambda v: os.environ[v] if v in os.environ else False)(@scm2host@(@1@)))"
+     "@host2scm@(os.environ.get(@scm2host@(@1@), False))"
      var))
 
    (else
@@ -1473,7 +1473,14 @@ def @os_shell_command@(cmd):
     "/usr/local/Gambit/")))
 
 (define (##os-path-gambitdir-map-lookup name)
-  #f)
+  (let ((x (##assoc-string-equal? name ##gambitdir-map)))
+    (and x (##cdr x))))
+
+(define ##gambitdir-map
+  '(("userlib" . "~/.gambit_userlib")))
+
+(define (##gambitdir-map-set! alist)
+  (set! ##gambitdir-map alist))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1659,20 +1666,47 @@ def @os_path_normalize_directory@(path):
    ((compilation-target js)
     (##inline-host-declaration "
 
+@os_runtime_options@ = '';
 @os_argv@ = [''];
+
 if (@os_nodejs@) {
   @os_argv@ = process.argv.slice(1);
+  if (@os_argv@.length >= 2 && @os_argv@[1].slice(0,2) == '-:') {
+    @os_runtime_options@ = @os_argv@[1].slice(2);
+    @os_argv@.splice(1,1);
+  }
 }
 
 ")
     (##vector->list (##inline-host-expression "@host2scm@(@os_argv@)")))
 
    ((compilation-target python)
-    (##vector->list (##inline-host-expression "@host2scm@(sys.argv)")))
+    (##inline-host-declaration "
+
+@os_runtime_options@ = ''
+@os_argv@ = sys.argv[:]
+
+if len(@os_argv@) >= 2 and @os_argv@[1][:2] == '-:':
+  @os_runtime_options@ = @os_argv@.pop(1)[2:]
+
+")
+    (##vector->list (##inline-host-expression "@host2scm@(@os_argv@)")))
 
    (else
-     (println "unimplemented ##get-command-line called")
+    (println "unimplemented ##get-command-line called")
     '())))
+
+(define (##get-runtime-options)
+  (##declare (not interrupts-enabled))
+  (##first-argument #f ##get-command-line)
+  (cond-expand
+
+    ((compilation-target js python)
+     (##inline-host-expression "@host2scm@(@os_runtime_options@)"))
+
+    (else
+     (println "unimplemented ##get-runtime-options called")
+     "")))
 
 ;;;----------------------------------------------------------------------------
 
@@ -4216,7 +4250,7 @@ def @host_define_function@(name, params, header, expr):
     @exec@('def ' + name + '(' + params + '):' + header + '\\n return ' + expr)
 
 def @host_define_procedure@(name, params, header, stmts):
-    @exec@('def ' + name + '(' + params + '):' + header + stmts + '\\n')
+    @exec@('def ' + name + '(' + params + '):' + '\\n '.join((header+'\\n'+stmts).split('\\n')) + '\\n')
 
 def @host_function_call@(fn, args):
     return globals()[fn](*args)
@@ -4236,7 +4270,7 @@ def @host_exec@(stmts):
 
 (define (##host-convert-param param)
   (##declare (not interrupts-enabled))
-  (##string-append "\n " param
+  (##string-append "\n" param
                    (##inline-host-expression "@host2scm@(' = @scm2host@(')")
                    param
                    ")"
@@ -4417,6 +4451,40 @@ def @host_exec@(stmts):
 
 ;;;----------------------------------------------------------------------------
 
+;; Convenience Scheme procedure to pass Scheme objects to JavaScript
+;; without an automatic conversion.
+
+(define (scheme scmobj)
+  (##inline-host-expression
+   "@scm2scheme@(@1@)"
+   scmobj))
+
+(cond-expand
+
+ ((compilation-target js)
+  (##inline-host-declaration "
+
+// The following defines the 'foreign' JavaScript function which
+// allows passing JavaScript objects to Scheme without an automatic
+// conversion.
+
+foreign = @host2foreign@;
+
+"))
+
+ ((compilation-target python)
+  (##inline-host-declaration "
+
+# The following defines the 'foreign' Python function which
+# allows passing Python objects to Scheme without an automatic
+# conversion.
+
+foreign = @host2foreign@
+
+"))
+
+ (else))
+
 (cond-expand
 
  ((compilation-target js)
@@ -4510,21 +4578,7 @@ def @host_exec@(stmts):
   }
 };
 
-// The following defines the 'foreign' JavaScript function which
-// allows passing JavaScript objects to Scheme without an automatic
-// conversion.
-
-foreign = @host2foreign@;
-
 ")
-
-  ;; Convenience Scheme procedure to pass Scheme objects to JavaScript
-  ;; without an automatic conversion.
-
-  (define (scheme scmobj)
-    (##inline-host-expression
-     "@scm2scheme@(@1@)"
-     scmobj))
 
   ;; The ##scm2host-call-return procedure takes a JavaScript promise or value
   ;; as parameter.  If it is a value it returns the value.  If it is a
