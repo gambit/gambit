@@ -2530,7 +2530,8 @@
     '() ;; properties
     'scmobj ;; extends
     '() ;; class-fields
-    (list (univ-field 'name 'scmobj #f '(public)) ;; instance-fields
+    (list (univ-field 'hname 'str #f '(public)) ;; instance-fields
+          (univ-field 'name 'scmobj #f '(public))
           (univ-field 'hash 'scmobj #f '(public))
           (univ-field 'interned 'scmobj #f '(public)))
     '() ;; class-methods
@@ -2546,38 +2547,39 @@
          ctx
          "\n"
          (lambda (ctx)
-           (^return (^tostr (^field 'name (^this))))))
+           (^return (^field 'hname (^this)))))
         (^type 'symbol))))))
 
   (univ-define-rtlib-feature 'make_interned_symbol
    (univ-rtlib-feature-method
     '(public)
     'symbol
-    (list (univ-field 'name 'str))
+    (list (univ-field 'hname 'str))
     "\n"
     '()
     (lambda (ctx)
-      (let ((name (^local-var 'name))
+      (let ((hname (^local-var 'hname))
             (obj (^local-var 'obj)))
         (^ (^var-declaration
             'symbol
             obj
             (^dict-get-or-null 'symbol
                                (^rts-field-use-priv 'symbol_table)
-                               name))
+                               hname))
            (^if (^null? obj)
                 (^ (^assign obj
                             (^symbol-box-uninterned
-                             (^str->string name)
+                             hname
+                             (^str->string hname)
                              (^fixnum-box
                               (^call-prim
                                (^rts-method-use 'str_hash)
-                               name))))
+                               hname))))
                    (^assign (^field 'interned obj)
                             (^obj #t))
                    (^dict-set 'symbol
                               (^rts-field-use-priv 'symbol_table)
-                              name
+                              hname
                               obj)))
            (^return obj))))))
 
@@ -2591,7 +2593,8 @@
     '() ;; properties
     'scmobj ;; extends
     '() ;; class-fields
-    (list (univ-field 'name 'scmobj #f '(public)) ;; instance-fields
+    (list (univ-field 'hname 'str #f '(public)) ;; instance-fields
+          (univ-field 'name 'scmobj #f '(public))
           (univ-field 'hash 'scmobj #f '(public))
           (univ-field 'interned 'scmobj #f '(public)))
     '() ;; class-methods
@@ -2607,38 +2610,39 @@
          ctx
          "\n"
          (lambda (ctx)
-           (^return (^tostr (^field 'name (^this))))))
+           (^return (^field 'hname (^this)))))
         (^type 'keyword))))))
 
   (univ-define-rtlib-feature 'make_interned_keyword
    (univ-rtlib-feature-method
     '(public)
     'keyword
-    (list (univ-field 'name 'str))
+    (list (univ-field 'hname 'str))
     "\n"
     '()
     (lambda (ctx)
-      (let ((name (^local-var 'name))
+      (let ((hname (^local-var 'hname))
             (obj (^local-var 'obj)))
         (^ (^var-declaration
             'keyword
             obj
             (^dict-get-or-null 'keyword
                                (^rts-field-use-priv 'keyword_table)
-                               name))
+                               hname))
            (^if (^null? obj)
                 (^ (^assign obj
                             (^keyword-box-uninterned
-                             (^str->string name)
+                             hname
+                             (^str->string hname)
                              (^fixnum-box
                               (^call-prim
                                (^rts-method-use 'str_hash)
-                               name))))
+                               hname))))
                    (^assign (^field 'interned obj)
                             (^obj #t))
                    (^dict-set 'keyword
                               (^rts-field-use-priv 'keyword_table)
-                              name
+                              hname
                               obj)))
            (^return obj))))))
 

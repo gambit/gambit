@@ -1123,11 +1123,11 @@
 (define-macro (^symbol-obj obj force-var?)
   `(univ-emit-symbol-obj ctx ,obj ,force-var?))
 
-(define-macro (^symbol-box name)
-  `(univ-emit-symbol-box ctx ,name))
+(define-macro (^symbol-box hname)
+  `(univ-emit-symbol-box ctx ,hname))
 
-(define-macro (^symbol-box-uninterned name hash)
-  `(univ-emit-symbol-box-uninterned ctx ,name ,hash))
+(define-macro (^symbol-box-uninterned hname name hash)
+  `(univ-emit-symbol-box-uninterned ctx ,hname ,name ,hash))
 
 (define-macro (^symbol-unbox symbol)
   `(univ-emit-symbol-unbox ctx ,symbol))
@@ -1138,11 +1138,11 @@
 (define-macro (^keyword-obj obj force-var?)
   `(univ-emit-keyword-obj ctx ,obj ,force-var?))
 
-(define-macro (^keyword-box name)
-  `(univ-emit-keyword-box ctx ,name))
+(define-macro (^keyword-box hname)
+  `(univ-emit-keyword-box ctx ,hname))
 
-(define-macro (^keyword-box-uninterned name hash)
-  `(univ-emit-keyword-box-uninterned ctx ,name ,hash))
+(define-macro (^keyword-box-uninterned hname name hash)
+  `(univ-emit-keyword-box-uninterned ctx ,hname ,name ,hash))
 
 (define-macro (^keyword-unbox keyword)
   `(univ-emit-keyword-unbox ctx ,keyword))

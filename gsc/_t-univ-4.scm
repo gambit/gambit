@@ -2402,18 +2402,18 @@
 
 (univ-define-prim-bool "##symbol?" #t
   (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^symbol? arg1)))))
+   (lambda (ctx return obj)
+     (return (^symbol? obj)))))
 
 (univ-define-prim "##string->symbol" #f
   (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^symbol-box (^string->str arg1))))))
+   (lambda (ctx return name)
+     (return (^symbol-box (^string->str name))))))
 
 (univ-define-prim "##make-uninterned-symbol" #f
   (make-translated-operand-generator
    (lambda (ctx return name hash)
-     (return (^symbol-box-uninterned name hash)))))
+     (return (^symbol-box-uninterned (^string->str name) name hash)))))
 
 (univ-define-prim "##symbol-name" #f
   (make-translated-operand-generator
@@ -2453,18 +2453,18 @@
 
 (univ-define-prim-bool "##keyword?" #t
   (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^keyword? arg1)))))
+   (lambda (ctx return obj)
+     (return (^keyword? obj)))))
 
 (univ-define-prim "##string->keyword" #f
   (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^keyword-box (^string->str arg1))))))
+   (lambda (ctx return name)
+     (return (^keyword-box (^string->str name))))))
 
 (univ-define-prim "##make-uninterned-keyword" #f
   (make-translated-operand-generator
    (lambda (ctx return name hash)
-     (return (^keyword-box-uninterned name hash)))))
+     (return (^keyword-box-uninterned (^string->str name) name hash)))))
 
 (univ-define-prim "##keyword-name" #f
   (make-translated-operand-generator

@@ -4355,35 +4355,35 @@ tanh
         (compiler-internal-error
          "univ-emit-symbol-obj, unknown target"))))))
 
-(define (univ-emit-symbol-box ctx name)
+(define (univ-emit-symbol-box ctx hname)
   (case (univ-symbol-representation ctx)
 
     ((class)
      (univ-box
       (^call-prim
        (^rts-method-use 'make_interned_symbol)
-       name)
-      name))
+       hname)
+      hname))
 
     (else
-     (^symbol-box-uninterned name #f))))
+     (^symbol-box-uninterned hname (^str->string hname) #f))))
 
-(define (univ-emit-symbol-box-uninterned ctx name hash)
+(define (univ-emit-symbol-box-uninterned ctx hname name hash)
   (case (univ-symbol-representation ctx)
 
     ((class)
      (univ-box
-      (^new 'symbol name hash (^obj #f))
-      name))
+      (^new 'symbol hname name hash (^obj #f))
+      hname))
 
     (else
      (case (target-name (ctx-target ctx))
 
        ((js php python)
-        name)
+        hname)
 
        ((ruby)
-        (^ name ".to_sym"))
+        (^ hname ".to_sym"))
 
        (else
         (compiler-internal-error
@@ -4394,7 +4394,7 @@ tanh
       (case (univ-symbol-representation ctx)
 
         ((class)
-         (^string->str (^field 'name (^cast* 'symbol expr))))
+         (^field 'hname (^cast* 'symbol expr)))
 
         (else
          (case (target-name (ctx-target ctx))
@@ -4461,35 +4461,35 @@ tanh
      (compiler-internal-error
       "univ-emit-keyword-box, host representation not implemented"))))
 
-(define (univ-emit-keyword-box ctx name)
+(define (univ-emit-keyword-box ctx hname)
   (case (univ-keyword-representation ctx)
 
     ((class)
      (univ-box
       (^call-prim
        (^rts-method-use 'make_interned_keyword)
-       name)
-      name))
+       hname)
+      hname))
 
     (else
-     (^keyword-box-uninterned name #f))))
+     (^keyword-box-uninterned hname (^str->string hname) #f))))
 
-(define (univ-emit-keyword-box-uninterned ctx name hash)
+(define (univ-emit-keyword-box-uninterned ctx hname name hash)
   (case (univ-keyword-representation ctx)
 
     ((class)
      (univ-box
-      (^new 'keyword name hash (^obj #f))
-      name))
+      (^new 'keyword hname name hash (^obj #f))
+      hname))
 
     (else
      (case (target-name (ctx-target ctx))
 
        ((js php python)
-        name)
+        hname)
 
        ((ruby)
-        (^ name ".to_sym"))
+        (^ hname ".to_sym"))
 
        (else
         (compiler-internal-error
@@ -4500,7 +4500,7 @@ tanh
       (case (univ-keyword-representation ctx)
 
         ((class)
-         (^string->str (^field 'name (^cast* 'keyword expr))))
+         (^field 'hname (^cast* 'keyword expr)))
 
         (else
          (compiler-internal-error

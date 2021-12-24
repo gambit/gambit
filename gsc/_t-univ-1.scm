@@ -3577,7 +3577,7 @@
 (define (univ-get-symbol-name ctx sym)
   (if (and (univ-compactness>=? ctx 9)
            (>= (string-length (symbol->string sym)) 6))
-      (^field 'name (^obj sym))
+      (^symbol-unbox (^obj sym))
       (^str (symbol->string sym))))
 
 (define (univ-emit-getpeps ctx name)
@@ -4259,32 +4259,94 @@
       (^array-literal type (map (lambda (n) (^num-of-type type n)) elems))))
 
 (define univ-renamed-fields
-  '((car      . a)
-    (cdr      . b)
-    (code     . c)
-    (codes    . d)
-    (ctrlpts  . e)
-    (den      . f)
-    (denv     . g)
-    (digits   . h)
-    (elems    . i)
-    (frame    . j)
-    (fs       . k)
-    (hash     . l)
-    (id       . m)
-    (imag     . n)
-    (info     . o)
-    (interned . p)
-    (link     . q)
-    (name     . r)
-    (nfree    . s)
-    (num      . t)
-    (parent   . u)
-    (real     . v)
-    (scmobj   . w)
-    (slots    . x)
-    (val      . y)
-    (vals     . z)))
+  '(
+    ;; classes ctrlpt and part of entrypt, parententrypoint, and returnpt
+    (id        . a)
+    (parent    . b)
+
+    ;; classes entrypt and part of parententrypoint
+    ;;(id        . a)
+    ;;(parent    . b)
+    (nfree     . c)
+
+    ;; class parententrypoint
+    ;;(id        . a)
+    ;;(parent    . b)
+    ;;(nfree     . c)
+    (name      . d)
+    (ctrlpts   . e)
+    (info      . f)
+    (prim      . g)
+
+    ;; class returnpt
+    ;;(id        . a)
+    ;;(parent    . b)
+    (fs        . h) ;; must not clash with nfree field to implement procedure?
+    (link      . d)
+
+    ;; class closure
+    (slots     . a)
+
+    ;; class promise
+    (state     . a)
+
+    ;; class will
+    (testator  . a)
+    (action    . b)
+
+    ;; class values
+    (vals      . a)
+
+    ;; class fixnum, flonum, boolean, box and part of foreign
+    (val       . a)
+
+    ;; class foreign
+    ;;(val       . a)
+    (tags      . b)
+
+    ;; class scheme
+    (scmobj    . a)
+
+    ;; class bignum
+    (digits    . a)
+
+    ;; class ratnum
+    (num       . a)
+    (den       . b)
+
+    ;; class cpxnum
+    (real      . a)
+    (imag      . b)
+
+    ;; class pair
+    (car       . a)
+    (cdr       . b)
+
+    ;; class vector, u8vector, etc
+    (elems     . a)
+
+    ;; class structure and frame
+    (slots     . a)
+
+    ;; class continuation
+    (frame     . a)
+    (denv      . b)
+
+    ;; class char
+    (code      . a)
+
+    ;; class string
+    (codes     . a)
+
+    ;; class modlinkinfo
+    ;;(name      . d)
+    (index     . a)
+
+    ;; class symbol and keyword
+    (hname     . a)
+    ;;(name      . d)
+    (hash      . b)
+    (interned  . c)))
 
 (define (univ-field-rename ctx name)
   (if (univ-compactness>=? ctx 5)
