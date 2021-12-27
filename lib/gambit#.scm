@@ -115,6 +115,7 @@ call-with-output-u8vector
 call-with-output-vector
 call-with-port
 call/cc
+car+cdr
 cfun-conversion-exception-arguments
 cfun-conversion-exception-code
 cfun-conversion-exception-message
@@ -194,6 +195,7 @@ dotted-list?
 drop
 emergency-exit
 eof-object
+eighth
 eq?-hash
 equal?-hash
 eqv?-hash
@@ -242,6 +244,7 @@ f64vector-set!
 f64vector-shrink!
 f64vector?
 features
+fifth
 file-attributes
 file-creation-time
 file-device
@@ -278,6 +281,7 @@ file-size
 file-type
 filter
 finite?
+first
 first-set-bit
 fixnum->flonum
 fixnum-overflow-exception-arguments
@@ -347,6 +351,7 @@ foreign-release!
 foreign-released?
 foreign-tags
 foreign?
+fourth
 fx*
 fx+
 fx-
@@ -485,6 +490,7 @@ list-set!
 list-sort
 list-sort!
 list-tabulate
+list=
 mailbox-receive-timeout-exception-arguments
 mailbox-receive-timeout-exception-procedure
 mailbox-receive-timeout-exception?
@@ -529,6 +535,7 @@ network-info-aliases
 network-info-name
 network-info-number
 network-info?
+ninth
 no-such-file-or-directory-exception-arguments
 no-such-file-or-directory-exception-procedure
 no-such-file-or-directory-exception?
@@ -545,6 +552,8 @@ nonprocedure-operator-exception?
 not-in-compilation-context-exception-arguments
 not-in-compilation-context-exception-procedure
 not-in-compilation-context-exception?
+not-pair?
+null-list?
 number-of-arguments-limit-exception-arguments
 number-of-arguments-limit-exception-procedure
 number-of-arguments-limit-exception?
@@ -749,6 +758,7 @@ scheduler-exception-reason
 scheduler-exception?
 script-directory
 script-file
+second
 seconds->time
 serial-number->object
 service-info
@@ -759,6 +769,7 @@ service-info-protocol
 service-info?
 set-box!
 setenv
+seventh
 sfun-conversion-exception-arguments
 sfun-conversion-exception-code
 sfun-conversion-exception-message
@@ -851,6 +862,7 @@ six.~x
 |six.x\|=y|
 |six.x\|\|y|
 |six.x\|y|
+sixth
 socket-info-address
 socket-info-family
 socket-info-port-number
@@ -941,11 +953,13 @@ tcp-client-self-socket-info
 tcp-server-socket-info
 tcp-service-register!
 tcp-service-unregister!
+tenth
 terminated-thread-exception-arguments
 terminated-thread-exception-procedure
 terminated-thread-exception?
 test-bit-field?
 textual-port?
+third
 thread
 thread-base-priority
 thread-base-priority-set!

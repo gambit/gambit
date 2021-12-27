@@ -567,6 +567,16 @@
           (macro-check-proper-list-null* x alist '(2 . alist) ((%procedure%) obj alist %compare) ;; need to use %compare to avoid showing a third argument when none was given
             #f)))))
 
+(define-primitive (assoc-string-equal? (str   string)
+                                       (alist pair-list))
+  (let loop ((x alist))
+    (if (pair? x)
+        (let ((couple (car x)))
+          (if (primitive (string-equal? str (car couple)))
+              couple
+              (loop (cdr x))))
+        #f)))
+
 (define-macro (macro-filter prim-call list var test-expr)
   `(let ((lst ,list))
      (define (filter-tail lst)
@@ -1599,8 +1609,6 @@
 
 ;;; Sorting.
 
-;;(declare-safe-define-procedure #t)
-
 (define-primitive (list-sort! (proc procedure)
                               (list proper-list))
 
@@ -1676,5 +1684,220 @@
           '(2 . list)
           ((%procedure%) proc list))))
    (list-sort! proc (list-copy list))))
+
+(define-primitive (nth-pair (pair pair)
+                            (k    index))
+  (let loop ((x pair) (i k))
+    (if (fx< 0 i)
+        (let ((tail (cdr x)))
+          (and (pair? tail)
+               (loop tail (fx- i 1))))
+        x)))
+
+(define-macro (macro-nth pair n)
+  `(let ((x (primitive (nth-pair ,pair ,n))))
+     (macro-check-deeper-pair-tree-pair x '(1 . pair) ((%procedure%) pair)
+       (car x))))
+
+(define-prim&proc (first (pair pair))
+  (car pair))
+
+(define-prim&proc (second (pair pair))
+  (macro-nth pair 1))
+
+(define-prim&proc (third (pair pair))
+  (macro-nth pair 2))
+
+(define-prim&proc (fourth (pair pair))
+  (macro-nth pair 3))
+
+(define-prim&proc (fifth (pair pair))
+  (macro-nth pair 4))
+
+(define-prim&proc (sixth (pair pair))
+  (macro-nth pair 5))
+
+(define-prim&proc (seventh (pair pair))
+  (macro-nth pair 6))
+
+(define-prim&proc (eighth (pair pair))
+  (macro-nth pair 7))
+
+(define-prim&proc (ninth (pair pair))
+  (macro-nth pair 8))
+
+(define-prim&proc (tenth (pair pair))
+  (macro-nth pair 9))
+
+(define-prim&proc (not-pair? (x object))
+  (not (pair? x)))
+
+(define-prim&proc (null-list? (list proper-list))
+  (if (pair? list) ;; does not check that list is not a dotted list
+      #f
+      (macro-check-proper-list-null list '(1 . list) ((%procedure%) list)
+        #t)))
+
+(define-prim&proc (car+cdr (pair pair))
+  (values (car pair) (cdr pair)))
+
+(define-procedure (list= (elt=  procedure)
+                         (list1 proper-list (macro-absent-obj))
+                         (list2 proper-list (macro-absent-obj))
+                         (lists proper-list) ...)
+
+  (define (compare list1 list2)
+    (or (eq? list1 list2)
+        (if (pair? list1)
+            (if (pair? list2)
+                (and (elt= (car list1) (car list2))
+                     (compare (cdr list1) (cdr list2)))
+                (macro-if-checks
+                 (if (null? list2)
+                     #f
+                     2) ;; list2 not proper list
+                 #f))
+            (if (pair? list2)
+                (macro-if-checks
+                 (if (null? list1)
+                     #f
+                     1) ;; list1 not proper list
+                 #f)
+                (macro-if-checks
+                 (if (null? list1)
+                     2  ;; list2 not proper list because we know list2 != '()
+                     1) ;; list1 not proper list
+                 #f)))))
+
+  (if (or (eq? list1 (macro-absent-obj))
+          (eq? list2 (macro-absent-obj)))
+      #t
+      (let loop ((list1 list1) (list2 list2) (lists lists) (arg-num 1))
+        (let ((result (compare list1 list2)))
+          (macro-if-checks
+           (if (fixnum? result)
+               (macro-fail-check-proper-list
+                (fx+ arg-num result)
+                ((%procedure%) elt= list1 list2 . lists))
+               (and result
+                    (if (pair? lists)
+                        (loop list2 (car lists) (cdr lists) (fx+ arg-num 1))
+                        #t)))
+           (and result
+                (if (pair? lists)
+                    (loop list2 (car lists) (cdr lists) (fx+ arg-num 1))
+                    #t)))))))
+
+#|
+
+;; TODO:
+
+take-right flist i -> object
+drop-right flist i -> list
+
+take! x i -> list
+drop-right! flist i -> list
+
+split-at  x i -> [list object]
+split-at! x i -> [list object]
+
+append! list1 ... -> list
+
+zip clist1 clist2 ... -> list
+(lambda lists (apply map list lists))
+
+unzip1 list -> list
+unzip2 list -> [list list]
+unzip3 list -> [list list list]
+unzip4 list -> [list list list list]
+unzip5 list -> [list list list list list]
+
+count pred clist1 clist2 -> integer
+
+pair-fold kons knil clist1 clist2 ... -> value
+
+pair-fold-right kons knil clist1 clist2 ... -> value
+
+reduce f ridentity list -> value
+
+reduce-right f ridentity list -> value
+
+unfold p f g seed [tail-gen] -> list
+
+unfold-right p f g seed [tail] -> list
+
+append-map  f clist1 clist2 ... -> value
+append-map! f clist1 clist2 ... -> value
+
+map! f list1 clist2 ... -> list
+
+map-in-order f clist1 clist2 ... -> list
+
+pair-for-each f clist1 clist2 ... -> unspecific
+
+filter-map f clist1 clist2 ... -> list
+
+partition pred list -> [list list]
+
+filter!    pred list -> list
+partition! pred list -> [list list]
+remove!    pred list -> list
+
+find pred clist -> value
+
+find-tail pred clist -> pair or false
+
+take-while  pred clist -> list
+take-while! pred clist -> list
+
+drop-while pred clist -> list
+
+span   pred clist -> [list clist]
+span!  pred list  -> [list list]
+break  pred clist -> [list clist]
+break! pred list  -> [list list]
+
+any pred clist1 clist2 ... -> value
+
+every pred clist1 clist2 ... -> value
+
+list-index pred clist1 clist2 ... -> integer or false
+
+delete  x list [=] -> list
+delete! x list [=] -> list
+
+delete-duplicates  list [=] -> list
+delete-duplicates! list [=] -> list
+
+alist-cons key datum alist -> alist
+
+alist-copy alist -> alist
+
+alist-delete  key alist [=] -> alist
+alist-delete! key alist [=] -> alist
+
+lset<= = list1 ... -> boolean
+
+lset= = list1 list2 ... -> boolean
+
+lset-adjoin = list elt1 ... -> list
+
+lset-union = list1 ... -> list
+
+lset-intersection = list1 list2 ... -> list
+
+lset-difference = list1 list2 ... -> list
+
+lset-xor = list1 ... -> list
+
+lset-diff+intersection = list1 list2 ... -> [list list]
+
+lset-union!             = list1 ... -> list
+lset-intersection!      = list1 list2 ... -> list
+lset-difference!        = list1 list2 ... -> list
+lset-xor!               = list1 ... -> list
+lset-diff+intersection! = list1 list2 ... -> [list list]
+
+|#
 
 ;;;============================================================================

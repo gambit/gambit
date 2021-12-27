@@ -4860,6 +4860,59 @@ For example:
 @end deffn
 
 @deffn {special form} case-lambda @dots{}
+@deffnx {special form} syntax-case @dots{}
+@deffnx {special form} syntax @dots{}
+@end deffn
+
+@deffn procedure datum->syntax @var{obj}
+@deffnx procedure syntax->datum @var{stx}
+@deffnx procedure syntax->list @var{stx}
+@deffnx procedure syntax->vector @var{stx}
+@end deffn
+
+@deffn procedure length+ @var{clist}
+@end deffn
+
+@deffn procedure car+cdr @var{pair}
+@end deffn
+
+@deffn procedure first @var{pair}
+@deffnx procedure second @var{pair}
+@deffnx procedure third @var{pair}
+@deffnx procedure fourth @var{pair}
+@deffnx procedure fifth @var{pair}
+@deffnx procedure sixth @var{pair}
+@deffnx procedure seventh @var{pair}
+@deffnx procedure eighth @var{pair}
+@deffnx procedure ninth @var{pair}
+@deffnx procedure tenth @var{pair}
+@end deffn
+
+@deffn procedure not-pair? @var{x}
+@end deffn
+
+@deffn procedure null-list? @var{list}
+@end deffn
+
+@deffn procedure proper-list? @var{s}
+@end deffn
+
+@deffn procedure circular-list? @var{s}
+@end deffn
+
+@deffn procedure dotted-list? @var{s}
+@end deffn
+
+@deffn procedure filter @var{pred} @var{list}
+@deffnx procedure remove @var{pred} @var{list}
+@deffnx procedure remq @var{elem} @var{list}
+@end deffn
+
+@deffn procedure concatenate @var{list-of-lists} @r{[}@var{separator}@r{]}
+@deffnx procedure concatenate! @var{list-of-lists}
+@end deffn
+
+@deffn procedure list= @var{elt=} @var{list} @dots{}
 @end deffn
 
 @deffn procedure list-set @var{list} @var{k} @var{val}
