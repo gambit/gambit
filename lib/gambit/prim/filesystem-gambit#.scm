@@ -51,6 +51,7 @@ file-last-access-and-modification-times-set!
 (file-owner file-owner#unimplemented)
 (file-size file-size#unimplemented)
 (file-type file-type#unimplemented)
+initial-current-directory
 path-directory
 path-expand
 path-extension

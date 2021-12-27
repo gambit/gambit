@@ -11322,7 +11322,13 @@ denotes a file in the home directory of the given user.  Under UNIX
 and macOS this is found using the password file.  There is no
 equivalent under MSDOS and Microsoft Windows.
 
-@deffn procedure current-directory @r{[}@var{new-current-directory}@r{]}
+@deffn procedure initial-current-directory
+@deffnx procedure current-directory @r{[}@var{new-current-directory}@r{]}
+
+@cindex initial current working directory
+The procedure @code{initial-current-directory} returns
+the absolute @dfn{normalized path} of the current working
+directory of the current process when it was started.
 
 @cindex current working directory
 The parameter object @code{current-directory} is bound to the current
@@ -11330,8 +11336,8 @@ working directory.  Calling this procedure with no argument returns
 the absolute @dfn{normalized path} of the directory and calling this
 procedure with one argument sets the directory to
 @var{new-current-directory}.  The initial binding of this parameter
-object is the current working directory of the current process.  The
-path returned by @code{current-directory} always contains a trailing
+object is the path returned by @code{initial-current-directory}.
+The path returned by @code{current-directory} always contains a trailing
 directory separator.  Modifications of the parameter object do not
 change the current working directory of the current process (i.e.
 that is accessible with the UNIX @code{getcwd()} function and the
@@ -11346,6 +11352,8 @@ For example under UNIX:
 > @b{(current-directory "..")}
 > @b{(current-directory)}
 "/Users/feeley/gambit/"
+> @b{(initial-current-directory)}
+"/Users/feeley/gambit/doc/"
 > @b{(path-expand "foo" "~~")}
 "/usr/local/Gambit/foo"
 > @b{(parameterize ((current-directory "~~")) (path-expand "foo"))}

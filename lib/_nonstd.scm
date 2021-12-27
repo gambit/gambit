@@ -2702,7 +2702,7 @@
         (expand path (if (##eq? origin (macro-absent-obj)) #f origin)))))
 
 (define-prim (##path-expand-in-initial-current-directory path)
-  (##path-expand path ##initial-current-directory))
+  (##path-expand path (##initial-current-directory)))
 
 (define-prim (path-expand
               path

@@ -430,6 +430,7 @@ inactive-thread-exception-procedure
 inactive-thread-exception?
 inexact
 infinite?
+initial-current-directory
 initialized-thread-exception-arguments
 initialized-thread-exception-procedure
 initialized-thread-exception?

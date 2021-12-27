@@ -273,12 +273,26 @@
 (define current-error-port
   ##current-error-port)
 
-(define ##initial-current-directory
+(define ##initial-current-directory-saved
   (let ((current-dir
          (##os-path-normalize-directory #f)))
     (if (##fixnum? current-dir)
         (##exit-with-err-code current-dir)
         current-dir)))
+
+(define-prim (##current-directory-set-filter val)
+  (if (##eq? val (macro-absent-obj))
+      ##initial-current-directory-saved
+      (macro-check-string val 1 (##current-directory val)
+        (##path-normalize-directory-existing val))))
+
+(define ##initial-current-directory
+  (##make-parameter
+   (macro-absent-obj)
+   ##current-directory-set-filter))
+
+(define initial-current-directory
+  ##initial-current-directory)
 
 (define-prim (##path-normalize-directory-existing path)
   (let ((normalized-dir
@@ -286,12 +300,6 @@
     (if (##fixnum? normalized-dir)
         (##raise-os-exception #f normalized-dir ##current-directory path)
         normalized-dir)))
-
-(define-prim (##current-directory-set-filter val)
-  (if (##eq? val (macro-absent-obj))
-      ##initial-current-directory
-      (macro-check-string val 1 (##current-directory val)
-        (##path-normalize-directory-existing val))))
 
 (define ##current-directory
   (##make-parameter
@@ -3135,9 +3143,9 @@
   ;; start scheduling threads on this processor
   (##thread-schedule-with-acquired-processor!))
 
-(set! ##c-return-on-other-processor-hook
-      (lambda (id)
-        (##thread-migrate-to! id)))
+(##c-return-on-other-processor-hook-set!
+ (lambda (id)
+   (##thread-migrate-to! id)))
 
 (define-prim (##thread-migrate-to! id)
   (##declare (not interrupts-enabled))
@@ -5561,12 +5569,26 @@
 (define current-error-port
   ##current-error-port)
 
-(define ##initial-current-directory
+(define ##initial-current-directory-saved
   (let ((current-dir
          (##os-path-normalize-directory #f)))
     (if (##fixnum? current-dir)
         (##exit-with-err-code current-dir)
         current-dir)))
+
+(define-prim (##current-directory-set-filter val)
+  (if (##eq? val (macro-absent-obj))
+      ##initial-current-directory-saved
+      (macro-check-string val 1 (##current-directory val)
+        (##path-normalize-directory-existing val))))
+
+(define ##initial-current-directory
+  (##make-parameter
+   (macro-absent-obj)
+   ##current-directory-set-filter))
+
+(define initial-current-directory
+  ##initial-current-directory)
 
 (define-prim (##path-normalize-directory-existing path)
   (let ((normalized-dir
@@ -5574,12 +5596,6 @@
     (if (##fixnum? normalized-dir)
         (##raise-os-exception #f normalized-dir ##current-directory path)
         normalized-dir)))
-
-(define-prim (##current-directory-set-filter val)
-  (if (##eq? val (macro-absent-obj))
-      ##initial-current-directory
-      (macro-check-string val 1 (##current-directory val)
-        (##path-normalize-directory-existing val))))
 
 (define ##current-directory
   (##make-parameter
