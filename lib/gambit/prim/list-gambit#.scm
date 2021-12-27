@@ -37,6 +37,21 @@ reverse!
 take
 xcons
 
+car+cdr
+eighth
+fifth
+first
+fourth
+(list= unimplemented#list=)
+ninth
+not-pair?
+null-list?
+second
+seventh
+sixth
+tenth
+third
+
 ))
 
 ;;;============================================================================

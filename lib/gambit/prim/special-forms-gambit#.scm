@@ -2,7 +2,7 @@
 
 ;;; File: "special-forms-gambit#.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -21,10 +21,15 @@ define-macro
 define-structure
 define-type
 define-type-of-thread
+define-values
 future
+import
 namespace
 r7rs-guard
 receive
+six.infix
+syntax
+syntax-case
 this-source-file
 time
 

@@ -3462,11 +3462,14 @@
 (define-runtime-macro (six.x*y x y)
   `(* ,x ,y))
 
+(define-runtime-macro (six.x@y x y)
+  `(@ ,x ,y))
+
 (define-runtime-macro (six.*x x)
   (##infix-lvalue-fetch (##list 'six.*x x)))
 
 (define-runtime-macro (six.x//y x y)
-  `(quotient ,x ,y))
+  `(floor-quotient ,x ,y))
 
 (define-runtime-macro (six.x/y x y)
   `(/ ,x ,y))
@@ -3488,6 +3491,9 @@
 
 (define-runtime-macro (six.x>>y x y)
   `(arithmetic-shift ,x (- ,y)))
+
+(define-runtime-macro (six.x>>>y x y)
+  `(bitwise-and 4294967295 (arithmetic-shift ,x (- ,y))))
 
 (define-runtime-macro (six.x<y x y)
   `(< ,x ,y))
@@ -3719,6 +3725,9 @@
 (define-runtime-macro (six.x*=y x y)
   (##infix-update-in-place 'six.x*=y x 'six.x*y y #t))
 
+(define-runtime-macro (six.x@=y x y)
+  (##infix-update-in-place 'six.x@=y x 'six.x@y y #t))
+
 (define-runtime-macro (six.x+=y x y)
   (##infix-update-in-place 'six.x+=y x 'six.x+y y #t))
 
@@ -3748,6 +3757,9 @@
 
 (define-runtime-macro (six.x>>=y x y)
   (##infix-update-in-place 'six.x>>=y x 'six.x>>y y #t))
+
+(define-runtime-macro (six.x>>>=y x y)
+  (##infix-update-in-place 'six.x>>>=y x 'six.x>>>y y #t))
 
 (define-runtime-macro (six.x^=y x y)
   (##infix-update-in-place 'six.x^=y x 'six.x^y y #t))
@@ -3980,6 +3992,33 @@
 ;;   `(void))
 ;;
 ;; (define-runtime-macro (six.!)
+;;   `(void))
+;;
+;; (define-runtime-macro (six.**x x)
+;;   `(void))
+;;
+;; (define-runtime-macro (six.import x)
+;;   `(void))
+;;
+;; (define-runtime-macro (six.from-import x y)
+;;   `(void))
+;;
+;; (define-runtime-macro (six.from-import-* x)
+;;   `(void))
+;;
+;; (define-runtime-macro (six.xinstanceofy x y)
+;;   `(void))
+;;
+;; (define-runtime-macro (six.typeofx x)
+;;   `(void))
+;;
+;; (define-runtime-macro (six.awaitx x)
+;;   `(void))
+;;
+;; (define-runtime-macro (six.asyncx x)
+;;   `(void))
+;;
+;; (define-runtime-macro (six.yieldx x)
 ;;   `(void))
 
 ;;;----------------------------------------------------------------------------

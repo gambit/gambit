@@ -2,14 +2,14 @@
 
 ;;; File: "port#.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
 ;;; Port operations.
 
-(##include "~~lib/gambit/prim/port-r4rs#.scm")
-(##include "~~lib/gambit/prim/port-r7rs#.scm")
-(##include "~~lib/gambit/prim/port-gambit#.scm")
+(##include "port-r4rs#.scm")
+(##include "port-r7rs#.scm")
+(##include "port-gambit#.scm")
 
 ;;;============================================================================

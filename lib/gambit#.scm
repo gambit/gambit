@@ -9,14 +9,12 @@
 ;; Identifiers bound to syntactic forms and procedures defined by Gambit
 ;; are mapped to the empty namespace (no prefix).
 
-(##include "~~lib/r5rs#.scm") ;; most identifier bindings are inherited from R5RS
+(##include "r7rs#.scm") ;; most identifier bindings are inherited from R7RS
 
 (##namespace ("" ;; these identifier bindings are specific to Gambit
 
 ;; special forms
-define-library
 define-module-alias
-define-record-type
 define-structure
 define-type
 define-type-of-thread
@@ -28,28 +26,13 @@ c-define
 define-macro
 future
 import
-include
-include-ci
 declare
 namespace
 this-source-file
-parameterize
 receive
 time
-cond-expand
 define-cond-expand-feature
-case-lambda
-let*-values
-let-values
-letrec*
-letrec*-values
-letrec-values
 define-values
-when
-unless
-syntax-error
-delay-force
-guard
 r7rs-guard
 syntax
 syntax-case
@@ -75,7 +58,6 @@ apropos
 arithmetic-shift
 asinh
 atanh
-binary-port?
 bit-count
 bit-set?
 bits
@@ -93,18 +75,9 @@ bitwise-not
 bitwise-orc1
 bitwise-orc2
 bitwise-xor
-boolean=?
 box
 box?
 break
-bytevector
-bytevector-append
-bytevector-copy
-bytevector-copy!
-bytevector-length
-bytevector-u8-ref
-bytevector-u8-set!
-bytevector?
 call-with-input-process
 call-with-input-string
 call-with-input-u8vector
@@ -113,7 +86,6 @@ call-with-output-process
 call-with-output-string
 call-with-output-u8vector
 call-with-output-vector
-call-with-port
 call/cc
 car+cdr
 cfun-conversion-exception-arguments
@@ -121,13 +93,10 @@ cfun-conversion-exception-code
 cfun-conversion-exception-message
 cfun-conversion-exception-procedure
 cfun-conversion-exception?
-char-foldcase
 circular-list
 circular-list?
 clear-bit-field
-close-port
 command-args
-command-line
 command-name
 compilation-target
 compile-file
@@ -158,12 +127,9 @@ create-link
 create-symbolic-link
 create-temporary-directory
 current-directory
-current-error-port
 current-exception-handler
-current-jiffy
 current-processor
 current-readtable
-current-second
 current-thread
 current-time
 current-user-interrupt-handler
@@ -176,9 +142,7 @@ dead-end
 deadlock-exception?
 defer-user-interrupts
 delete-directory
-delete-file
 delete-file-or-directory
-digit-value
 directory-files
 display-continuation-backtrace
 display-continuation-dynamic-environment
@@ -193,8 +157,6 @@ divide-by-zero-exception-procedure
 divide-by-zero-exception?
 dotted-list?
 drop
-emergency-exit
-eof-object
 eighth
 eq?-hash
 equal?-hash
@@ -204,14 +166,7 @@ error
 error-exception-message
 error-exception-parameters
 error-exception?
-error-object-irritants
-error-object-message
-error-object?
-exact
-exact-integer-sqrt
-exact-integer?
 executable-path
-exit
 expression-parsing-exception-kind
 expression-parsing-exception-parameters
 expression-parsing-exception-source
@@ -243,16 +198,13 @@ f64vector-set
 f64vector-set!
 f64vector-shrink!
 f64vector?
-features
 fifth
 file-attributes
 file-creation-time
 file-device
-file-error?
 file-exists-exception-arguments
 file-exists-exception-procedure
 file-exists-exception?
-file-exists?
 file-group
 file-info
 file-info-attributes
@@ -280,7 +232,6 @@ file-owner
 file-size
 file-type
 filter
-finite?
 first
 first-set-bit
 fixnum->flonum
@@ -328,9 +279,6 @@ flnegative?
 flnumerator
 flodd?
 flonum?
-floor-quotient
-floor-remainder
-floor/
 flpositive?
 flround
 flscalbn
@@ -341,7 +289,6 @@ flsquare
 fltan
 fltanh
 fltruncate
-flush-output-port
 flzero?
 fold
 fold-right
@@ -403,10 +350,6 @@ fxzero?
 gc-report-set!
 generate-proper-tail-calls
 gensym
-get-environment-variable
-get-environment-variables
-get-output-bytevector
-get-output-string
 get-output-u8vector
 get-output-vector
 getenv
@@ -428,8 +371,6 @@ identity
 inactive-thread-exception-arguments
 inactive-thread-exception-procedure
 inactive-thread-exception?
-inexact
-infinite?
 initial-current-directory
 initialized-thread-exception-arguments
 initialized-thread-exception-procedure
@@ -440,7 +381,6 @@ input-port-char-position
 input-port-characters-buffered
 input-port-column
 input-port-line
-input-port-open?
 input-port-readtable
 input-port-readtable-set!
 input-port-timeout-set!
@@ -454,7 +394,6 @@ invalid-utf8-encoding-exception-arguments
 invalid-utf8-encoding-exception-procedure
 invalid-utf8-encoding-exception?
 iota
-jiffies-per-second
 join-timeout-exception-arguments
 join-timeout-exception-procedure
 join-timeout-exception?
@@ -485,9 +424,7 @@ list->u16vector
 list->u32vector
 list->u64vector
 list->u8vector
-list-copy
 list-set
-list-set!
 list-sort
 list-sort!
 list-tabulate
@@ -496,14 +433,10 @@ mailbox-receive-timeout-exception-arguments
 mailbox-receive-timeout-exception-procedure
 mailbox-receive-timeout-exception?
 main
-make-bytevector
 make-condition-variable
 make-f32vector
 make-f64vector
-make-list
 make-mutex
-make-parameter
-make-promise
 make-random-source
 make-root-thread
 make-s16vector
@@ -530,7 +463,6 @@ mutex-specific-set!
 mutex-state
 mutex-unlock!
 mutex?
-nan?
 network-info
 network-info-aliases
 network-info-name
@@ -561,20 +493,15 @@ number-of-arguments-limit-exception?
 object->serial-number
 object->string
 object->u8vector
-open-binary-input-file
-open-binary-output-file
 open-directory
 open-dummy
 open-event-queue
 open-file
-open-input-bytevector
 open-input-process
-open-input-string
 open-input-u8vector
 open-input-vector
 open-output-bytevector
 open-output-process
-open-output-string
 open-output-u8vector
 open-output-vector
 open-process
@@ -596,7 +523,6 @@ output-port-byte-position
 output-port-char-position
 output-port-column
 output-port-line
-output-port-open?
 output-port-readtable
 output-port-readtable-set!
 output-port-timeout-set!
@@ -616,7 +542,6 @@ permission-denied-exception?
 poll-point
 port-io-exception-handler-set!
 port-settings-set!
-port?
 pp
 pretty-print
 primordial-exception-handler
@@ -627,7 +552,6 @@ process-status
 process-times
 processor-id
 processor?
-promise?
 proper-list?
 protocol-info
 protocol-info-aliases
@@ -653,17 +577,11 @@ range-exception-arguments
 range-exception-procedure
 range-exception?
 read-all
-read-bytevector
-read-bytevector!
-read-error?
 read-file-string
 read-file-string-list
 read-file-u8vector
-read-line
-read-string
 read-substring
 read-subu8vector
-read-u8
 readtable-case-conversion?
 readtable-case-conversion?-set
 readtable-comment-handler
@@ -781,12 +699,15 @@ sinh
 six.!
 six.!x
 six.&x
+six.**x
 six.*x
 six.++x
 six.+x
 six.--x
 six.-x
 six.arrow
+six.asyncx
+six.awaitx
 six.break
 six.call
 six.case
@@ -799,9 +720,12 @@ six.define-variable
 six.do-while
 six.dot
 six.for
+six.from-import
+six.from-import-*
 six.goto
 six.identifier
 six.if
+six.import
 six.index
 six.infix
 six.label
@@ -815,6 +739,7 @@ six.procedure
 six.procedure-body
 six.return
 six.switch
+six.typeofx
 six.while
 six.x!==y
 six.x!=y
@@ -849,15 +774,21 @@ six.x==y
 six.x=y
 six.x>=y
 six.x>>=y
+six.x>>>=y
+six.x>>>y
 six.x>>y
 six.x>y
 six.x?y:z
+six.x@=y
+six.x@y
 six.x^=y
 six.x^y
 six.xandy
+six.xinstanceofy
 six.xiny
 six.xisy
 six.xory
+six.yieldx
 six.~x
 |six.x,y|
 |six.x\|=y|
@@ -868,7 +799,6 @@ socket-info-address
 socket-info-family
 socket-info-port-number
 socket-info?
-square
 stack-overflow-exception?
 started-thread-exception-arguments
 started-thread-exception-procedure
@@ -878,18 +808,10 @@ step-level-set!
 string->keyword
 string->uninterned-keyword
 string->uninterned-symbol
-string->utf8
-string->vector
 string-ci=?-hash
 string-concatenate
-string-copy!
-string-downcase
-string-foldcase
-string-for-each
-string-map
 string-set
 string-shrink!
-string-upcase
 string=?-hash
 subf32vector
 subf32vector-fill!
@@ -927,7 +849,6 @@ subvector
 subvector-fill!
 subvector-move!
 symbol-hash
-symbol=?
 syntax->datum
 syntax->list
 syntax->vector
@@ -959,7 +880,6 @@ terminated-thread-exception-arguments
 terminated-thread-exception-procedure
 terminated-thread-exception?
 test-bit-field?
-textual-port?
 third
 thread
 thread-base-priority
@@ -1017,9 +937,6 @@ timeout->time
 top
 touch
 trace
-truncate-quotient
-truncate-remainder
-truncate/
 tty-history
 tty-history-max-length-set!
 tty-history-set!
@@ -1072,7 +989,6 @@ u64vector-set
 u64vector-set!
 u64vector-shrink!
 u64vector?
-u8-ready?
 u8vector
 u8vector->list
 u8vector->object
@@ -1133,17 +1049,10 @@ user-info-shell
 user-info-uid
 user-info?
 user-name
-utf8->string
 vector->bits
-vector->string
-vector-append
 vector-cas!
 vector-concatenate
-vector-copy
-vector-copy!
-vector-for-each
 vector-inc!
-vector-map
 vector-set
 vector-shrink!
 void
@@ -1162,16 +1071,11 @@ with-output-to-process
 with-output-to-string
 with-output-to-u8vector
 with-output-to-vector
-write-bytevector
 write-file-string
 write-file-string-list
 write-file-u8vector
-write-shared
-write-simple
-write-string
 write-substring
 write-subu8vector
-write-u8
 wrong-number-of-arguments-exception-arguments
 wrong-number-of-arguments-exception-procedure
 wrong-number-of-arguments-exception?

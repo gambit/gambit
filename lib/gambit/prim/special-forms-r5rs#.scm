@@ -1,14 +1,20 @@
 ;;;============================================================================
 
-;;; File: "boolean#.scm"
+;;; File: "special-forms-r5rs#.scm"
 
 ;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
-;;; Boolean operations.
+;;; Special forms in R5RS.
 
-(##include "boolean-r4rs#.scm")
-(##include "boolean-r7rs#.scm")
+(##namespace ("##"
+
+define-syntax
+;;let-syntax ;; not implemented
+;;letrec-syntax ;; not implemented
+syntax-rules
+
+))
 
 ;;;============================================================================

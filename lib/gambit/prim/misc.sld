@@ -2,7 +2,7 @@
 
 ;;; File: "misc.sld"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -45,8 +45,17 @@ values
 
 ;; gambit
 
+apropos
+
 ;;UNIMPLEMENTED break
 ;;UNIMPLEMENTED call/cc
+
+compilation-target
+
+;;UNIMPLEMENTED not-in-compilation-context-exception-arguments
+;;UNIMPLEMENTED not-in-compilation-context-exception-procedure
+
+;;UNIMPLEMENTED not-in-compilation-context-exception?
 ;;UNIMPLEMENTED compile-file
 ;;UNIMPLEMENTED compile-file-to-target
 
@@ -54,6 +63,9 @@ continuation-capture
 continuation-graft
 continuation-return
 continuation?
+
+dead-end
+define-module-alias
 
 ;;UNIMPLEMENTED display-continuation-backtrace
 ;;UNIMPLEMENTED display-continuation-dynamic-environment
@@ -67,6 +79,7 @@ continuation?
 eq?-hash
 equal?-hash
 eqv?-hash
+force
 
 ;;UNIMPLEMENTED gc-report-set!
 ;;UNIMPLEMENTED generate-proper-tail-calls
@@ -79,9 +92,15 @@ identity
 ;;UNIMPLEMENTED link-incremental
 ;;UNIMPLEMENTED main
 ;;UNIMPLEMENTED object->serial-number
+
+poll-point
+
 ;;UNIMPLEMENTED repl-display-environment?
-;;UNIMPLEMENTED repl-input-port
-;;UNIMPLEMENTED repl-output-port
+
+repl-error-port
+repl-input-port
+repl-output-port
+
 ;;UNIMPLEMENTED repl-result-history-max-length-set!
 ;;UNIMPLEMENTED repl-result-history-ref
 ;;UNIMPLEMENTED serial-number->object

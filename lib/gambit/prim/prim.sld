@@ -314,6 +314,7 @@ file-last-access-and-modification-times-set!
 ;;UNIMPLEMENTED file-owner
 ;;UNIMPLEMENTED file-size
 ;;UNIMPLEMENTED file-type
+initial-current-directory
 path-directory
 path-expand
 path-extension
@@ -323,7 +324,13 @@ path-strip-extension
 path-strip-trailing-directory-separator
 path-strip-volume
 path-volume
+read-file-string
+read-file-string-list
+read-file-u8vector
 rename-file
+write-file-string
+write-file-string-list
+write-file-u8vector
 
 ;;; fixnum.sld
 
@@ -332,6 +339,7 @@ rename-file
 fixnum?
 fx*
 fx+
+fl+*
 fx-
 fx<
 fx<=
@@ -494,6 +502,8 @@ cddddr
 cdddr
 cddr
 cdr
+concatenate
+concatenate!
 cons
 for-each
 length
@@ -519,19 +529,44 @@ list-set!
 
 ;; gambit
 
+append-reverse
+append-reverse!
 circular-list
+circular-list?
 cons*
+dotted-list?
 drop
+filter
 fold
 fold-right
 iota
 last
 last-pair
+length+
 list-set
+list-sort
+list-sort!
 list-tabulate
+proper-list?
+remove
+remq
 reverse!
 take
 xcons
+
+car+cdr
+eighth
+fifth
+first
+fourth
+ninth
+not-pair?
+null-list?
+second
+seventh
+sixth
+tenth
+third
 
 ;;; misc.sld
 
@@ -566,8 +601,17 @@ values
 
 ;; gambit
 
+apropos
+
 ;;UNIMPLEMENTED break
 ;;UNIMPLEMENTED call/cc
+
+compilation-target
+
+;;UNIMPLEMENTED not-in-compilation-context-exception-arguments
+;;UNIMPLEMENTED not-in-compilation-context-exception-procedure
+
+;;UNIMPLEMENTED not-in-compilation-context-exception?
 ;;UNIMPLEMENTED compile-file
 ;;UNIMPLEMENTED compile-file-to-target
 
@@ -575,6 +619,9 @@ continuation-capture
 continuation-graft
 continuation-return
 continuation?
+
+dead-end
+define-module-alias
 
 ;;UNIMPLEMENTED display-continuation-backtrace
 ;;UNIMPLEMENTED display-continuation-dynamic-environment
@@ -588,6 +635,7 @@ continuation?
 eq?-hash
 equal?-hash
 eqv?-hash
+force
 
 ;;UNIMPLEMENTED gc-report-set!
 ;;UNIMPLEMENTED generate-proper-tail-calls
@@ -600,6 +648,9 @@ identity
 ;;UNIMPLEMENTED link-incremental
 ;;UNIMPLEMENTED main
 ;;UNIMPLEMENTED object->serial-number
+
+poll-point
+
 ;;UNIMPLEMENTED repl-display-environment?
 ;;UNIMPLEMENTED repl-input-port
 ;;UNIMPLEMENTED repl-output-port
@@ -768,6 +819,10 @@ exit
 ;;UNIMPLEMENTED address-info-socket-type
 ;;UNIMPLEMENTED address-info?
 ;;UNIMPLEMENTED address-infos
+
+command-args
+command-name
+
 ;;UNIMPLEMENTED configure-command-string
 ;;UNIMPLEMENTED cpu-time
 
@@ -803,6 +858,8 @@ getenv
 ;;UNIMPLEMENTED protocol-info?
 ;;UNIMPLEMENTED real-time
 
+script-directory
+script-file
 seconds->time
 
 ;;UNIMPLEMENTED service-info
@@ -813,8 +870,8 @@ seconds->time
 ;;UNIMPLEMENTED service-info?
 
 setenv
+shell-command
 
-;;UNIMPLEMENTED shell-command
 ;;UNIMPLEMENTED socket-info-address
 ;;UNIMPLEMENTED socket-info-family
 ;;UNIMPLEMENTED socket-info-port-number
@@ -986,6 +1043,11 @@ read-subu8vector
 ;;UNIMPLEMENTED readtable-write-extended-read-macros?
 ;;UNIMPLEMENTED readtable-write-extended-read-macros?-set
 ;;UNIMPLEMENTED readtable?
+
+repl-error-port
+repl-input-port
+repl-output-port
+
 ;;UNIMPLEMENTED tcp-client-local-socket-info
 ;;UNIMPLEMENTED tcp-client-peer-socket-info
 ;;UNIMPLEMENTED tcp-client-self-socket-info
@@ -1203,7 +1265,6 @@ cond
 define
 delay
 do
-force
 if
 lambda
 let
@@ -1214,26 +1275,30 @@ quasiquote
 quote
 set!
 
+;; r5rs
+
+define-syntax
+;;let-syntax ;; not implemented
+;;letrec-syntax ;; not implemented
+syntax-rules
+
 ;; r7rs
 
 case-lambda
 cond-expand
+define-library
 define-record-type
-define-syntax
 delay-force
 guard
 include
 include-ci
 let*-values
-let-syntax
 let-values
 letrec*
 letrec*-values
-letrec-syntax
 letrec-values
 parameterize
 syntax-error
-syntax-rules
 unless
 when
 
@@ -1250,10 +1315,15 @@ define-macro
 define-structure
 define-type
 define-type-of-thread
+define-values
 future
+import
 namespace
 r7rs-guard
 receive
+six.infix
+syntax
+syntax-case
 this-source-file
 time
 

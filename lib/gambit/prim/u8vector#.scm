@@ -2,12 +2,12 @@
 
 ;;; File: "u8vector#.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
 ;;; U8vector operations.
 
-(##include "~~lib/gambit/prim/u8vector-gambit#.scm")
+(##include "u8vector-gambit#.scm")
 
 ;;;============================================================================

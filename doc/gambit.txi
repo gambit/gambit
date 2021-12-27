@@ -3647,25 +3647,6 @@ For example:
 @node Miscellaneous extensions, Undocumented extensions, Extensions to standard special forms, Scheme extensions
 @section Miscellaneous extensions
 
-@deffn procedure vector-copy @var{vector}
-
-This procedure returns a newly allocated vector with the same content
-as the vector @var{vector}.  Note that the elements are not
-recursively copied.
-
-For example:
-
-@smallexample
-> @b{(define v1 '#(1 2 3))}
-> @b{(define v2 (vector-copy v1))}
-> @b{v2}
-#(1 2 3)
-> @b{(eq? v1 v2)}
-#f
-@end smallexample
-
-@end deffn
-
 @deffn procedure subvector @var{vector} @var{start} @var{end}
 
 This procedure is the vector analog of the @code{substring}
@@ -3678,6 +3659,59 @@ For example:
 @smallexample
 > @b{(subvector '#(a b c d e f) 3 5)}
 #(d e)
+@end smallexample
+
+@end deffn
+
+@deffn procedure vector-copy @var{vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
+
+This procedure is like the procedure @code{subvector} except the
+parameter @var{start} defaults to 0 and the parameter @var{end{
+defaults to the length of the vector @var{vector}.  Note that the
+elements are not recursively copied.
+
+For example:
+
+@smallexample
+> @b{(define v1 '#(a b c d e f))}
+> @b{(define v2 (vector-copy v1))}
+> @b{v2}
+#(a b c d e f)
+> @b{(eq? v1 v2)}
+#f
+> @b{(vector-copy v1 3)}
+#(d e f)
+> @b{(vector-copy v1 3 5)}
+#(d e)
+@end smallexample
+
+@end deffn
+
+@deffn procedure vector-copy! @var{dest-vector} @var{dest-start} @var{vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
+
+This procedure mutates the vector @var{dest-vector}.  It copies the
+elements of the vector @var{vector} beginning with index @var{start}
+(inclusive) and ending with index @var{end} (exclusive) to the vector
+@var{dest-vector} at index @var{dest-start}.  The parameters
+@var{start} and @var{end} default respectively to 0 and the length of
+the vector @var{vector}.  It is an error to copy more elements than
+will fit in the tail of the vector @var{dest-vector} starting at index
+@var{dest-start}.  Note that the elements are not recursively copied.
+
+For example:
+
+@smallexample
+> @b{(define v1 (vector 10 11 12 13 14 15))}
+> @b{(define v2 (vector 20 21 22 23))}
+> @b{(vector-copy! v1 1 v2)}
+> @b{v1}
+#(10 20 21 22 23 15)
+> @b{(vector-copy! v1 1 v2 3)}
+> @b{v1}
+#(10 23 21 22 23 15)
+> @b{(vector-copy! v1 1 v2 1 3)}
+> @b{v1}
+#(10 21 22 22 23 15)
 @end smallexample
 
 @end deffn
@@ -3773,6 +3807,94 @@ For example:
 > @b{(vector-shrink! v 3)}
 > @b{v}
 #(a b c)
+@end smallexample
+
+@end deffn
+
+@deffn procedure vector-cas! @var{vector} @var{k} @var{new-value} @var{old-value}
+
+The procedure @code{vector-cas!} performs an atomic compare-and-swap
+operation on the element of vector @var{vector} at index @var{k}.  If
+the element's value is @code{eq?} to @var{old-value} then the element
+is changed to @var{new-value), otherwise the value does not change.
+Regardless what happened, the element's value prior to any change is
+returned.  It is thus possible to detect a change by an explicit
+@code{eq?}  test of the result.
+
+For example:
+
+@smallexample
+> @b{(define v (vector 'a))}
+> @b{(eq? 'foo (vector-cas! v 0 'b 'foo))}
+#f
+> @b{v}
+#(a)
+> @b{(eq? 'a (vector-cas! v 0 'b 'a))}
+#t
+> @b{v}
+#(b)
+@end smallexample
+
+@end deffn
+
+@deffn procedure vector-inc! @var{vector} @var{k} @r{[}@var{step}@r{]}
+
+The procedure @code{vector-inc!} performs an atomic incrementation
+on the element of vector @var{vector} at index @var{k}, which must be a
+fixnum.  The parameter @var{step} defaults to 1 and it is the fixnum value
+that is added (with wraparound) to the element.  The procedure returns
+the value of the element prior to the incrementation.
+
+For example:
+
+@smallexample
+> @b{(define v (vector 100))}
+> @b{(vector-inc! v 0)}
+100
+> @b{(vector-inc! v 0)}
+101
+> @b{(vector-inc! v 0 5)}
+102
+> @b{v}
+#(107)
+@end smallexample
+
+@end deffn
+
+@deffn procedure vector-set @var{vector} @var{k} @var{obj}
+
+The procedure @code{vector-set} returns a new copy of the vector
+@var{vector} with the element at index @var{k} replaced with
+@var{obj}.
+
+For example:
+
+@smallexample
+> @b{(define v1 (vector 10 11 12 13))}
+> @b{(define v2 (vector-set v1 2 99))}
+> @b{v2}
+#(10 11 99 13)
+> @b{(eq? v1 v2)}
+#f
+@end smallexample
+
+@end deffn
+
+@deffn procedure string-set @var{string} @var{k} @var{char}
+
+The procedure @code{string-set} returns a new copy of the string
+@var{string} with the character at index @var{k} replaced with
+@var{char}.
+
+For example:
+
+@smallexample
+> @b{(define s1 (string #\a #\b #\c #\d))}
+> @b{(define s2 (string-set s1 2 #\.))}
+> @b{s2}
+"ab.d"
+> @b{(eq? s1 s2)}
+#f
 @end smallexample
 
 @end deffn
@@ -4659,6 +4781,8 @@ For example:
 @deffnx procedure thread-group->thread-group-vector @var{thread-group}
 @deffnx procedure thread-group->thread-list @var{thread-group}
 @deffnx procedure thread-group->thread-vector @var{thread-group}
+@deffnx procedure thread-group-specific @var{thread-group}
+@deffnx procedure thread-group-specific-set! @var{thread-group} @var{obj}
 @end deffn
 
 @deffn procedure thread-state @var{thread}
@@ -4713,6 +4837,16 @@ For example:
 @deffnx procedure rpc-remote-error-exception-message @var{exc}
 @end deffn
 
+@deffn procedure invalid-utf8-encoding-exception? @var{obj}
+@deffnx procedure invalid-utf8-encoding-exception-procedure @var{exc}
+@deffnx procedure invalid-utf8-encoding-exception-arguments @var{exc}
+@end deffn
+
+@deffn procedure module-not-found-exception? @var{obj}
+@deffnx procedure module-not-found-exception-procedure @var{exc}
+@deffnx procedure module-not-found-exception-arguments @var{exc}
+@end deffn
+
 @deffn procedure processor? @var{obj}
 @deffnx procedure current-processor
 @deffnx procedure processor-id @var{processor}
@@ -4737,6 +4871,14 @@ For example:
 @end deffn
 
 @deffn procedure executable-path
+@end deffn
+
+@deffn procedure command-name
+@deffnx procedure command-args
+@end deffn
+
+@deffn procedure script-file
+@deffnx procedure script-directory
 @end deffn
 
 @deffn procedure open-dummy
@@ -4789,6 +4931,7 @@ For example:
 
 @deffn procedure tcp-client-local-socket-info @var{tcp-client-port}
 @deffnx procedure tcp-client-peer-socket-info @var{tcp-client-port}
+@deffnx procedure tcp-client-self-socket-info @var{tcp-client-port}
 @end deffn
 
 @deffn procedure tcp-server-socket-info @var{tcp-server-port}
@@ -4850,13 +4993,19 @@ For example:
 @deffnx {special form} define-type @dots{}
 @end deffn
 
-@deffn {special form} namespace @dots{}
-@end deffn
-
 @deffn {special form} this-source-file
 @end deffn
 
 @deffn {special form} receive @dots{}
+@end deffn
+
+@deffn {special form} define-values @dots{}
+@end deffn
+
+@deffn {special form} define-module-alias @dots{}
+@end deffn
+
+@deffn {special form} r7rs-guard @dots{}
 @end deffn
 
 @deffn {special form} case-lambda @dots{}
@@ -4968,6 +5117,27 @@ For example:
 @deffnx procedure nan? @var{x}
 @end deffn
 
+@deffn procedure acosh @var{x}
+@end deffn
+
+@deffn procedure asinh @var{x}
+@end deffn
+
+@deffn procedure atanh @var{x}
+@end deffn
+
+@deffn procedure cosh @var{x}
+@end deffn
+
+@deffn procedure sinh @var{x}
+@end deffn
+
+@deffn procedure tanh @var{x}
+@end deffn
+
+@deffn procedure conjugate @var{x}
+@end deffn
+
 @deffn procedure bits @var{bool}@dots{}
 @deffnx procedure bits->list @var{i} @r{[}@var{len}@r{]}
 @deffnx procedure list->bits @var{list}
@@ -4986,6 +5156,8 @@ For example:
 @deffnx {special form} six.--x @var{x}
 @deffnx {special form} six.-x @var{x}
 @deffnx {special form} six.arrow @var{expr} @var{ident}
+@deffnx undefined six.asyncx @var{x}
+@deffnx undefined six.awaitx @var{x}
 @deffnx undefined six.break
 @deffnx {special form} six.call @var{func} @var{arg}@dots{}
 @deffnx undefined six.case
@@ -4998,14 +5170,14 @@ For example:
 @deffnx {special form} six.do-while @var{stat} @var{expr}
 @deffnx {special form} six.dot @var{expr} @var{ident}
 @deffnx {special form} six.for @var{stat1} @var{expr2} @var{expr3} @var{stat2}
-@deffnx undefined six.goto
-@deffnx undefined six.import @var{expr}
+@deffnx undefined six.goto @var{expr}
 @deffnx undefined six.from-import @var{expr1} @var{expr2}
 @deffnx undefined six.from-import-* @var{expr}
 @deffnx {special form} six.identifier @var{ident}
 @deffnx {special form} six.if @var{expr} @var{stat1} @r{[}@var{stat2}@r{]}
+@deffnx undefined six.import @var{expr}
 @deffnx {special form} six.index @var{expr1} @var{expr2}
-@deffnx undefined six.label
+@deffnx undefined six.label @var{ident} @var{stat}
 @deffnx {special form} six.list @var{x} @var{y}
 @deffnx {special form} six.literal @var{value}
 @deffnx procedure six.make-array @var{init} @var{dim}@dots{}
@@ -5015,6 +5187,7 @@ For example:
 @deffnx {special form} six.procedure-body @var{stat}@dots{}
 @deffnx undefined six.return
 @deffnx undefined six.switch
+@deffnx undefined six.typeofx @var{x}
 @deffnx {special form} six.while @var{expr} @var{stat}@dots{}
 @deffnx {special form} six.x!==y @var{x} @var{y}
 @deffnx {special form} six.x!=y @var{x} @var{y}
@@ -5027,12 +5200,12 @@ For example:
 @deffnx {special form} six.x**y @var{x} @var{y}
 @deffnx {special form} six.x*=y @var{x} @var{y}
 @deffnx {special form} six.x*y @var{x} @var{y}
-@deffnx undefined six.x@@=y @var{x} @var{y}
-@deffnx undefined six.x@@y @var{x} @var{y}
+@deffnx {special form} six.x@@=y @var{x} @var{y}
+@deffnx {special form} six.x@@y @var{x} @var{y}
 @deffnx {special form} six.x++ @var{x}
 @deffnx {special form} six.x+=y @var{x} @var{y}
 @deffnx {special form} six.x+y @var{x} @var{y}
-@deffnx {special form} {|six.x,y|} @var{x} @var{y}
+@deffnx {special form} |six.x,y| @var{x} @var{y}
 @deffnx {special form} six.x-- @var{x}
 @deffnx {special form} six.x-=y @var{x} @var{y}
 @deffnx {special form} six.x-y @var{x} @var{y}
@@ -5051,8 +5224,8 @@ For example:
 @deffnx {special form} six.x==y @var{x} @var{y}
 @deffnx {special form} six.x=y @var{x} @var{y}
 @deffnx {special form} six.x>=y @var{x} @var{y}
-@deffnx undefined six.x>>>=y @var{x} @var{y}
-@deffnx undefined six.x>>>y @var{x} @var{y}
+@deffnx {special form} six.x>>>=y @var{x} @var{y}
+@deffnx {special form} six.x>>>y @var{x} @var{y}
 @deffnx {special form} six.x>>=y @var{x} @var{y}
 @deffnx {special form} six.x>>y @var{x} @var{y}
 @deffnx {special form} six.x>y @var{x} @var{y}
@@ -5063,18 +5236,27 @@ For example:
 @deffnx {special form} |six.x\|y| @var{x} @var{y}
 @deffnx {special form} |six.x\|\|y| @var{x} @var{y}
 @deffnx {special form} six.xandy @var{x} @var{y}
+@deffnx undefined six.xinstanceofy @var{x} @var{y}
 @deffnx {special form} six.xiny @var{x} @var{y}
 @deffnx {special form} six.xisy @var{x} @var{y}
 @deffnx {special form} six.notx @var{x} @var{y}
 @deffnx {special form} six.xory @var{x} @var{y}
 @deffnx {special form} six.~x @var{x}
+@deffnx undefined six.yieldx @var{x}
+@end deffn
+
+@deffn procedure readtable-comment-handler @var{readtable}
+@deffn procedure readtable-comment-handler-set @var{readtable} @var{new-value}
+@end deffn
+
+@deffn procedure open-output-bytevector @r{[}@var{u8vector-or-settings}@r{]}
 @end deffn
 
 @node Modules, Built-in data types, Scheme extensions, Top
 @chapter Modules
 
 @menu
-* Old-Fashioned Modules::   Old-Fashioned Modules
+* Legacy Modules::          Legacy Modules
 * Primitive Modules::       Primitive Modules
 * Primitive Procedures::    Primitive Procedures
 * R7RS Compatible Modules:: R7RS Compatible Modules
@@ -5082,17 +5264,17 @@ For example:
 @end menu
 
 Gambit supports multiple modularization approaches and constructs:
-old-fashioned modules, primitive modules and R7RS compatible modules.
+legacy modules, primitive modules and R7RS compatible modules.
 These are described in that order, which corresponds to increased
 abstraction level.  Unless there is a need for detailed control over
 the modules, it is best to use the R7RS compatible module system for
 the development of new code.
 
-@node Old-Fashioned Modules, Primitive Modules, Modules, Modules
-@section Old-Fashioned Modules
+@node Legacy Modules, Primitive Modules, Modules, Modules
+@section Legacy Modules
 
-The old-fashioned way of modularizing code, which was popular up to
-R5RS, is also supported by Gambit.  It consists of using the
+The legacy way of modularizing code, which was popular up to
+R5RS, is still supported by Gambit.  It consists of using the
 @code{load} procedure and the @code{include} form.  We discuss it
 first to introduce some useful terms and explain the shortcomings
 of this modularization approach.
@@ -5208,7 +5390,7 @@ howdy!
 
 @end deffn
 
-With old-fashioned modularization, the code that implements the
+With legacy modularization, the code that implements the
 module's functionality is put in a source code file and this module is
 accessed by other code by using a @code{load} or @code{include} of
 that file.  Here is an example of an @code{angle0} module that is used
@@ -5262,7 +5444,7 @@ accidental clashes.
 
 @end itemize
 
-@node Primitive Modules, Primitive Procedures, Old-Fashioned Modules, Modules
+@node Primitive Modules, Primitive Procedures, Legacy Modules, Modules
 @section Primitive Modules
 
 @menu
@@ -5326,6 +5508,10 @@ example can be rewritten like this:
 @node ##namespace and ##import forms, Macros, ##demand-module and ##supply-module forms, Primitive Modules
 @subsection @code{##namespace} and @code{##import} forms
 
+@deffn {special form} namespace @dots{}
+@deffnx {special form} import @var{module-ref}
+@end deffn
+
 The @code{##namespace} form offers a way to avoid name clashes by
 specifying a mapping between identifiers.  The mapping it specifies
 has the same scope as a macro definition: it applies to the rest of a
@@ -5386,10 +5572,21 @@ combines the semantics of the @code{include} and
 the module search order directories to locate the source code file of
 module @code{M} and will expand to an @code{include} of the ``hash''
 file @code{M#@var{.ext}} if it exists in the same directory, and a
-@code{(##demand-module M)}.  Using a (builtin) module @code{gambit}
-containing all the global names exported by Gambit's runtime system
-and the @code{##import} form, the previous example can be rewritten
-like this:
+@code{(##demand-module M)}.
+
+In addition, a builtin module @code{gambit} exists that contains all
+the global names exported by the runtime library.  The @code{gambit}
+module's ``hash'' file @code{gambit#.scm} contains a
+@code{##namespace} form that lists all the names exported by the
+runtime library in an empty namespace:
+
+@smallexample
+;;;---------------------------------------- file: @b{~~lib/gambit#.scm}
+(##namespace ("" define if quote set! cons car cdr + - * / ;; etc
+@end smallexample
+
+Using the @code{gambit} module and the @code{##import} form, the
+previous example can be rewritten like this:
 
 @smallexample
 ;;;---------------------------------------- file: @b{angle3/angle3#.scm}
@@ -5620,7 +5817,7 @@ use of the @code{primitive} macro:
 @end example
 
 The expectation is that the @code{primitive} special form will be
-used sparingly. Searching the source code for uses of @code{(primitive}
+used sparingly. Searching the source code for the pattern @code{"(primitive"}
 is a good way to find potentially unsafe code.
 
 @subsection Type specifiers
@@ -5886,6 +6083,166 @@ exception mentions PROPER or CIRCULAR LIST
 
 @node R7RS Compatible Modules, Installing Modules, Primitive Procedures, Modules
 @section R7RS Compatible Modules
+
+The R7RS Scheme standard specifies a modularization approach based on
+the concept of library.  Libraries are defined using the
+@code{define-library} form.  Gambit implements this form with a
+few extensions.
+
+@subsection Identifying libraries
+
+Each library is given a name so that it can be referred to in various
+contexts, most notably in @code{import} forms and the interpreter's
+and compiler's command line.  The R7RS defines a @var{<library name>}
+as a list whose members are identifiers and exact non-negative
+integers, for example @code{(widget)}, @code{(_hamt)}, @code{(scheme
+base)}, and @code{(srfi 64)}.
+
+The system maps these R7RS library names to module identifiers that
+are symbols formed by concatenating the parts of the library name
+separated with @code{/}.  The library name and module name
+are interchangeable.  Consequently, @code{(import srfi/64)} and
+@code{(import _hamt)} are respectively equivalent to @code{(import
+(srfi 64))} and @code{(import (_hamt))}.  Using the module name to
+identify libraries on the command-line is convenient as it avoids
+having to escape parentheses and spaces.
+
+@subsection The @code{define-library} form
+
+A library definition takes the following form:
+
+@example
+(define-library @r{@var{<library name>}}
+  @r{@var{<library declaration>}} ...)
+@end example
+
+@noindent
+where each @var{<library declaration>} is one of:
+
+@example
+(export @r{@var{<export spec>}} ...)
+(import @r{@var{<import set>}} ...)
+(begin @r{@var{<command or definition>}} ...)
+(include @r{@var{<filename>}} ...)
+(include-ci @r{@var{<filename>}} ...)
+(include-library-declarations @r{@var{<filename>}} ...)
+(cond-expand @r{@var{<cond expand features>}} ...)
+(namespace @r{@var{<namespace>}})
+(cc-options @r{@var{<options>}} ...)
+(ld-options @r{@var{<options>}} ...)
+(ld-options-prelude @r{@var{<options>}} ...)
+(pkg-config @r{@var{<options>}} ...)
+(pkg-config-path @r{@var{<path>}} ...)
+@end example
+
+@subsection @code{(export @r{@var{<export spec>}} ...)}
+
+An @code{export} declaration specifies a list of identifiers which
+can be made visible to other libraries or programs.
+An @var{<export spec>} takes one of the following forms:
+
+@example
+@r{@var{<identifier>}}
+(rename @r{@var{<identifier>@sub{1}}} @r{@var{<identifier>@sub{2}}})
+@end example
+
+In an @var{<export spec>}, an @var{<identifier>} names a single
+binding (variable or macro) defined within or imported into the library, where the
+external name for the export is the same as the name of the binding
+within the library. A @code{rename} spec exports the binding
+defined within or imported into the library and named by
+@var{<identifier>@sub{1}} in each
+@code{(@r{@var{<identifier>@sub{1}}} @r{@var{<identifier>@sub{2}}})} pairing,
+using @var{identifier2} as the external name.
+
+@subsection @code{(import @r{@var{<import set>}} ...)}
+
+A library declares a dependency to another library with the
+@code{import} declaration.  The @code{(import @r{@var{<import set>}}
+...)}  form identifies the imported library or libraries.
+
+Each @var{<import set>} names a set of bindings
+from a library and possibly specifies local names for the
+imported bindings. An @var{<import set>} takes one of the following forms:
+
+@example
+@r{@var{<library name>}}
+(only @r{@var{<import set>}} @r{@var{<identifier>}} ...)
+(except @r{@var{<import set>}} @r{@var{<identifier>}} ...)
+(prefix @r{@var{<import set>}} @r{@var{<identifier>}})
+(rename @r{@var{<import set>}} (@r{@var{<identifier>@sub{1}}} @r{@var{<identifier>@sub{2}}}) ...)
+@end example
+
+In the first form, all of the identifiers in the named library's @code{export}
+clauses are imported with the same names (or the exported names if
+exported with @code{rename}).  The additional @var{<import set>}
+forms modify this set as follows:
+
+@itemize @bullet{}
+
+@item
+@code{only} produces a subset of the given
+@var{<import set>} including only the listed identifiers (after any
+renaming).  It is an error if any of the listed identifiers are
+not found in the original set.
+
+@item
+@code{except} produces a subset of the given
+@var{<import set>}, excluding the listed identifiers (after any
+renaming). It is an error if any of the listed identifiers are not
+found in the original set.
+
+@item
+@code{rename} modifies the given @var{<import set>},
+replacing each instance of @var{<identifier>@sub{1}} with
+@var{<identifier>@sub{2}}. It is an error if any of the listed
+@var{<identifier>@sub{1}}s are not found in the original set.
+
+@item
+@code{prefix} automatically renames all identifiers in
+the given @var{<import set>}, prefixing each with the specified
+@var{<identifier>}.
+
+@end itemize
+
+It is an error to import the same identifier more than once with
+different bindings, or to redefine or mutate an imported binding with
+a definition or with @code{set!}, or to refer to an identifier before
+it is imported.
+
+As an extension to the R7RS syntax it is allowed for
+a @var{<library name>} to contain a trailing @code{@@@r{@var{version}}}
+that indicates the specific library version required.
+For example, @code{(import (github.com/gambit hello @@1.0))} or
+equivalently @code{(import github.com/gambit/hello@@1.0)}.
+Note that the version specifier is not separated with a @code{/}
+in the module name.
+
+@subsection @code{(begin @r{@var{<command or definition>}} ...)}, @code{(include @r{@var{<filename>}} ...)} @code{(include-ci @r{@var{<filename>}} ...)}
+
+The @code{begin}, @code{include}, and @code{include-ci} declarations are
+used to specify the body of
+the library.  They have the same syntax and semantics as the corresponding
+expression types.
+This form of @code{begin} is analogous to, but not the same as, the
+two types of @code{begin} expressions.
+
+@subsection @code{(include-library-declarations @r{@var{<filename>}} ...)}
+
+The @code{include-library-declarations} declaration is similar to
+@code{include} except that the contents of the file are spliced directly into the
+current library definition.  This can be used, for example, to share the
+same @code{export} declaration among multiple libraries as a simple
+form of library interface.
+
+@subsection @code{(cond-expand @r{@var{<cond expand features>}} ...)}
+
+The @code{cond-expand} declaration has the same syntax and semantics as
+the @code{cond-expand} expression type, except that it expands to
+spliced-in library declarations rather than expressions enclosed in @code{begin}.
+
+@subsection Extensions to the R7RS library declarations
+
 
 TODO!
 
@@ -6570,6 +6927,12 @@ For example:
 @deffn procedure fxzero? @var{n}
 @end deffn
 
+@deffn procedure fxsquare @var{n}
+@end deffn
+
+@deffn procedure fxwrapsquare @var{n}
+@end deffn
+
 @deffn procedure fixnum-overflow-exception? @var{obj}
 @deffnx procedure fixnum-overflow-exception-procedure @var{exc}
 @deffnx procedure fixnum-overflow-exception-arguments @var{exc}
@@ -6727,6 +7090,42 @@ For example:
 @end deffn
 
 @deffn procedure flzero? @var{x}
+@end deffn
+
+@deffn procedure fl+* @var{x1} @var{x2} @var{x3}
+@end deffn
+
+@deffn procedure flacosh @var{x}
+@end deffn
+
+@deffn procedure flasinh @var{x}
+@end deffn
+
+@deffn procedure flatanh @var{x}
+@end deffn
+
+@deffn procedure flcosh @var{x}
+@end deffn
+
+@deffn procedure flexpm1 @var{x}
+@end deffn
+
+@deffn procedure flilogb @var{x}
+@end deffn
+
+@deffn procedure fllog1p @var{x}
+@end deffn
+
+@deffn procedure flscalbn @var{x}
+@end deffn
+
+@deffn procedure flsinh @var{x}
+@end deffn
+
+@deffn procedure flsquare @var{x}
+@end deffn
+
+@deffn procedure fltanh @var{x}
 @end deffn
 
 @node Pseudo random numbers, , Flonum specific operations, Numbers
@@ -7138,7 +7537,8 @@ homogeneous vector types.
 @deffnx procedure s8vector-fill! @var{s8vector} @var{fill} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure subs8vector-fill! @var{vector} @var{start} @var{end} @var{fill}
 @deffnx procedure s8vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
-@deffnx procedure s8vector-copy @var{s8vector}
+@deffnx procedure s8vector-copy @var{s8vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
+@deffn procedure s8vector-copy! @var{dest-s8vector} @var{dest-start} @var{s8vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure s8vector-append @var{s8vector}@dots{}
 @deffnx procedure subs8vector @var{s8vector} @var{start} @var{end}
 @deffnx procedure subs8vector-move! @var{src-s8vector} @var{src-start} @var{src-end} @var{dst-s8vector} @var{dst-start}
@@ -7157,7 +7557,8 @@ homogeneous vector types.
 @deffnx procedure u8vector-fill! @var{u8vector} @var{fill} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure subu8vector-fill! @var{vector} @var{start} @var{end} @var{fill}
 @deffnx procedure u8vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
-@deffnx procedure u8vector-copy @var{u8vector}
+@deffnx procedure u8vector-copy @var{u8vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
+@deffn procedure u8vector-copy! @var{dest-u8vector} @var{dest-start} @var{u8vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure u8vector-append @var{u8vector}@dots{}
 @deffnx procedure subu8vector @var{u8vector} @var{start} @var{end}
 @deffnx procedure subu8vector-move! @var{src-u8vector} @var{src-start} @var{src-end} @var{dst-u8vector} @var{dst-start}
@@ -7176,7 +7577,8 @@ homogeneous vector types.
 @deffnx procedure s16vector-fill! @var{s16vector} @var{fill} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure subs16vector-fill! @var{vector} @var{start} @var{end} @var{fill}
 @deffnx procedure s16vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
-@deffnx procedure s16vector-copy @var{s16vector}
+@deffnx procedure s16vector-copy @var{s16vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
+@deffn procedure s16vector-copy! @var{dest-s16vector} @var{dest-start} @var{s16vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure s16vector-append @var{s16vector}@dots{}
 @deffnx procedure subs16vector @var{s16vector} @var{start} @var{end}
 @deffnx procedure subs16vector-move! @var{src-s16vector} @var{src-start} @var{src-end} @var{dst-s16vector} @var{dst-start}
@@ -7195,7 +7597,8 @@ homogeneous vector types.
 @deffnx procedure u16vector-fill! @var{u16vector} @var{fill} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure subu16vector-fill! @var{vector} @var{start} @var{end} @var{fill}
 @deffnx procedure u16vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
-@deffnx procedure u16vector-copy @var{u16vector}
+@deffnx procedure u16vector-copy @var{u16vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
+@deffn procedure u16vector-copy! @var{dest-u16vector} @var{dest-start} @var{u16vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure u16vector-append @var{u16vector}@dots{}
 @deffnx procedure subu16vector @var{u16vector} @var{start} @var{end}
 @deffnx procedure subu16vector-move! @var{src-u16vector} @var{src-start} @var{src-end} @var{dst-u16vector} @var{dst-start}
@@ -7214,7 +7617,8 @@ homogeneous vector types.
 @deffnx procedure s32vector-fill! @var{s32vector} @var{fill} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure subs32vector-fill! @var{vector} @var{start} @var{end} @var{fill}
 @deffnx procedure s32vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
-@deffnx procedure s32vector-copy @var{s32vector}
+@deffnx procedure s32vector-copy @var{s32vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
+@deffn procedure s32vector-copy! @var{dest-s32vector} @var{dest-start} @var{s32vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure s32vector-append @var{s32vector}@dots{}
 @deffnx procedure subs32vector @var{s32vector} @var{start} @var{end}
 @deffnx procedure subs32vector-move! @var{src-s32vector} @var{src-start} @var{src-end} @var{dst-s32vector} @var{dst-start}
@@ -7233,7 +7637,8 @@ homogeneous vector types.
 @deffnx procedure u32vector-fill! @var{u32vector} @var{fill} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure subu32vector-fill! @var{vector} @var{start} @var{end} @var{fill}
 @deffnx procedure u32vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
-@deffnx procedure u32vector-copy @var{u32vector}
+@deffnx procedure u32vector-copy @var{u32vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
+@deffn procedure u32vector-copy! @var{dest-u32vector} @var{dest-start} @var{u32vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure u32vector-append @var{u32vector}@dots{}
 @deffnx procedure subu32vector @var{u32vector} @var{start} @var{end}
 @deffnx procedure subu32vector-move! @var{src-u32vector} @var{src-start} @var{src-end} @var{dst-u32vector} @var{dst-start}
@@ -7252,7 +7657,8 @@ homogeneous vector types.
 @deffnx procedure s64vector-fill! @var{s64vector} @var{fill} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure subs64vector-fill! @var{vector} @var{start} @var{end} @var{fill}
 @deffnx procedure s64vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
-@deffnx procedure s64vector-copy @var{s64vector}
+@deffnx procedure s64vector-copy @var{s64vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
+@deffn procedure s64vector-copy! @var{dest-s64vector} @var{dest-start} @var{s64vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure s64vector-append @var{s64vector}@dots{}
 @deffnx procedure subs64vector @var{s64vector} @var{start} @var{end}
 @deffnx procedure subs64vector-move! @var{src-s64vector} @var{src-start} @var{src-end} @var{dst-s64vector} @var{dst-start}
@@ -7271,7 +7677,8 @@ homogeneous vector types.
 @deffnx procedure u64vector-fill! @var{u64vector} @var{fill} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure subu64vector-fill! @var{vector} @var{start} @var{end} @var{fill}
 @deffnx procedure u64vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
-@deffnx procedure u64vector-copy @var{u64vector}
+@deffnx procedure u64vector-copy @var{u64vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
+@deffn procedure u64vector-copy! @var{dest-u64vector} @var{dest-start} @var{u64vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure u64vector-append @var{u64vector}@dots{}
 @deffnx procedure subu64vector @var{u64vector} @var{start} @var{end}
 @deffnx procedure subu64vector-move! @var{src-u64vector} @var{src-start} @var{src-end} @var{dst-u64vector} @var{dst-start}
@@ -7290,7 +7697,8 @@ homogeneous vector types.
 @deffnx procedure f32vector-fill! @var{f32vector} @var{fill} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure subf32vector-fill! @var{vector} @var{start} @var{end} @var{fill}
 @deffnx procedure f32vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
-@deffnx procedure f32vector-copy @var{f32vector}
+@deffnx procedure f32vector-copy @var{f32vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
+@deffn procedure f32vector-copy! @var{dest-f32vector} @var{dest-start} @var{f32vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure f32vector-append @var{f32vector}@dots{}
 @deffnx procedure subf32vector @var{f32vector} @var{start} @var{end}
 @deffnx procedure subf32vector-move! @var{src-f32vector} @var{src-start} @var{src-end} @var{dst-f32vector} @var{dst-start}
@@ -7309,7 +7717,8 @@ homogeneous vector types.
 @deffnx procedure f64vector-fill! @var{f64vector} @var{fill} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure subf64vector-fill! @var{vector} @var{start} @var{end} @var{fill}
 @deffnx procedure f64vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
-@deffnx procedure f64vector-copy @var{f64vector}
+@deffnx procedure f64vector-copy @var{f64vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
+@deffn procedure f64vector-copy! @var{dest-f64vector} @var{dest-start} @var{f64vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure f64vector-append @var{f64vector}@dots{}
 @deffnx procedure subf64vector @var{f64vector} @var{start} @var{end}
 @deffnx procedure subf64vector-move! @var{src-f64vector} @var{src-start} @var{src-end} @var{dst-f64vector} @var{dst-start}
@@ -10613,6 +11022,18 @@ Gambit @value{VERSION}
 
 @end deffn
 
+@deffn procedure wrong-processor-c-return-exception? @var{obj}
+
+Wrong-processor-c-return-exception objects are raised by the runtime
+system when a C to Scheme procedure call returns and that call's stack frame
+was created by another processor.
+
+The procedure @code{wrong-processor-c-return-exception?} returns @code{#t}
+when @var{obj} is a wrong-processor-c-return-exception object and @code{#f}
+otherwise.
+
+@end deffn
+
 @node Exception objects related to the reader, Exception objects related to evaluation and compilation, Exception objects related to C-interface, Exceptions
 @section Exception objects related to the reader
 
@@ -10972,45 +11393,30 @@ For example:
 
 @end deffn
 
-@deffn procedure improper-length-list-exception? @var{obj}
-@deffnx procedure improper-length-list-exception-procedure @var{exc}
-@deffnx procedure improper-length-list-exception-arguments @var{exc}
-@deffnx procedure improper-length-list-exception-arg-id @var{exc}
+@deffn procedure length-mismatch-exception? @var{obj}
+@deffnx procedure length-mismatch-exception-procedure @var{exc}
+@deffnx procedure length-mismatch-exception-arguments @var{exc}
+@deffnx procedure length-mismatch-exception-arg-id @var{exc}
 
-Improper-length-list-exception objects are raised by the @code{map}
-and @code{for-each} procedures when they are called with two or more
-list arguments and the lists are not of the same length.  The
-parameter @var{exc} must be an improper-length-list-exception object.
+Length-mismatch-exception objects are raised by some procedures when
+they are called with two or more list arguments and the lists are not
+of the same length.  The parameter @var{exc} must be a
+length-mismatch-exception object.
 
-The procedure @code{improper-length-list-exception?} returns
-@code{#t} when @var{obj} is an improper-length-list-exception
+The procedure @code{length-mismatch-exception?} returns
+@code{#t} when @var{obj} is an length-mismatch-exception
 object and @code{#f} otherwise.
 
-The procedure @code{improper-length-list-exception-procedure}
+The procedure @code{length-mismatch-exception-procedure}
 returns the procedure that raised @var{exc}.
 
-The procedure @code{improper-length-list-exception-arguments}
+The procedure @code{length-mismatch-exception-arguments}
 returns the list of arguments of the procedure that raised @var{exc}.
 
-The procedure @code{improper-length-list-exception-arg-id} returns the identity of the
+The procedure @code{length-mismatch-exception-arg-id} returns the identity of the
 argument whose length is the shortest, which can be an exact integer position
 (1 for the first argument) or a pair whose @code{car} is the position
 and the @code{cdr} is the parameter name as a symbol.
-
-For example:
-
-@smallexample
-> @b{(define (handler exc)
-    (if (improper-length-list-exception? exc)
-        (list (improper-length-list-exception-procedure exc)
-              (improper-length-list-exception-arguments exc)
-              (improper-length-list-exception-arg-id exc))
-        'not-improper-length-list-exception))}
-> @b{(with-exception-catcher
-    handler
-    (lambda () (map + '(1 2) '(3) '(4 5))))}
-(#<procedure #2 map> (#<procedure #3 +> (1 2) (3) (4 5)) 3)
-@end smallexample
 
 @end deffn
 
@@ -11122,6 +11528,41 @@ For example:
     handler
     (lambda () (11 22 33)))}
 (11 (22 33))
+@end smallexample
+
+@end deffn
+
+@deffn procedure wrong-number-of-values-exception? @var{obj}
+@deffnx procedure wrong-number-of-values-exception-vals @var{exc}
+@deffnx procedure wrong-number-of-values-exception-code @var{exc}
+@deffnx procedure wrong-number-of-values-exception-rte @var{exc}
+
+Wrong-number-of-values-exception objects are raised by the
+@code{let-values} and @code{define-values} forms when the number of
+values does not conform to the number of variables to be bound.  The
+parameter @var{exc} must be an wrong-number-of-values-exception
+object.
+
+The procedure @code{wrong-number-of-values-exception?} returns
+@code{#t} when @var{obj} is an wrong-number-of-values-exception
+object and @code{#f} otherwise.
+
+The procedure @code{wrong-number-of-values-exception-vals} returns
+the values that were to be bound.
+
+For example:
+
+@smallexample
+> @b{(define (handler exc)
+    (if (wrong-number-of-values-exception? exc)
+        (call-with-values
+         (lambda () (wrong-number-of-values-exception-vals exc))
+         list)
+        'not-wrong-number-of-values-exception))}
+> @b{(with-exception-catcher
+    handler
+    (lambda () (let-values (((a b) (values 11 22 33))) (* a b))))}
+(11 22 33)
 @end smallexample
 
 @end deffn
@@ -13868,24 +14309,18 @@ use this end-of-line encoding.
 @subsection Byte-port operations
 
 @deffn procedure read-u8 @r{[}@var{port}@r{]}
+@deffnx procedure peek-u8 @r{[}@var{port}@r{]}
 
-This procedure reads the byte input-port @var{port} and returns the
-byte at the current byte location and advances the current byte
-location to the next byte, unless the @var{port} is already at
-end-of-file in which case @code{read-u8} returns the end-of-file
-object.  If it is not specified, @var{port} defaults to the current
-input-port.
-
-This procedure must be called when the port's input character buffer
-is empty otherwise the character-stream and byte-stream may be out of
-sync due to buffering.  The input character buffer is used for bulk
-decoding of encoded characters (i.e. to translate the byte-stream into
-a character-stream).  The input character buffer is initially empty.
-It is only when characters are read that it is filled with characters
-obtained by decoding the byte-stream.
+These procedures read the byte input-port @var{port} and return the
+byte at the current byte location unless the @var{port} is already at
+end-of-file in which case the end-of-file object is returned.  If the
+end-of-file is not reached then the procedure @code{read-u8} advances
+the current byte location to the next byte.  The procedure
+@code{peek-u8} does not advance the port's current byte location.  If
+it is not specified, @var{port} defaults to the current input-port.
 
 One way to ensure that the port's input character buffer is empty is
-to call @code{read-u8} strictly before any use of the port in a character
+to call @code{peek-u8} strictly before any use of the port in a character
 input operation (i.e. a call to the procedures @code{read},
 @code{read-char}, @code{peek-char}, etc).  Alternatively
 @code{input-port-characters-buffered} can be used to get the number of
@@ -13902,6 +14337,8 @@ For example:
 (11 22)
 > @b{(call-with-input-u8vector '#u8() read-u8)}
 #!eof
+> @b{(with-input-from-u8vector '#u8(1 5) (lambda () (+ (peek-u8) (peek-u8))))}
+2
 @end smallexample
 
 @end deffn

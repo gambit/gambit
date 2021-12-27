@@ -18,7 +18,11 @@
 ;;unimplemented;;divide-by-zero-exception-arguments
 ;;unimplemented;;divide-by-zero-exception-procedure
 ;;unimplemented;;divide-by-zero-exception?
-;;unimplemented;;error
+
+(with-exception-catcher
+ (lambda (e) 42)
+ (lambda () (begin (error "boom!") 99)))
+
 ;;unimplemented;;error-exception-message
 ;;unimplemented;;error-exception-parameters
 ;;unimplemented;;error-exception?

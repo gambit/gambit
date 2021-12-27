@@ -2,21 +2,21 @@
 
 ;;; File: "r5rs#.scm"
 
-;;; Copyright (c) 2005-2016 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2005-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
 ;; Identifiers bound to syntactic forms and procedures defined by R5RS
 ;; are mapped to the empty namespace (no prefix).
 
-(##include "~~lib/r4rs#.scm") ;; most identifier bindings are inherited from R4RS
+(##include "r4rs#.scm") ;; most identifier bindings are inherited from R4RS
 
 (##namespace ("" ;; these identifier bindings are new in R5RS
 
 ;; special forms
 define-syntax
-let-syntax
-letrec-syntax
+;;let-syntax ;; not implemented
+;;letrec-syntax ;; not implemented
 syntax-rules
 
 ;; procedures

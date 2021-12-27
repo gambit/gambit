@@ -2,12 +2,12 @@
 
 ;;; File: "foreign#.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
 ;;; Foreign operations.
 
-(##include "~~lib/gambit/prim/foreign-gambit#.scm")
+(##include "foreign-gambit#.scm")
 
 ;;;============================================================================

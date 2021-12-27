@@ -2,7 +2,7 @@
 
 ;;; File: "filesystem.sld"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -62,6 +62,7 @@ file-last-access-and-modification-times-set!
 ;;UNIMPLEMENTED file-owner
 ;;UNIMPLEMENTED file-size
 ;;UNIMPLEMENTED file-type
+initial-current-directory
 path-directory
 path-expand
 path-extension
@@ -71,7 +72,13 @@ path-strip-extension
 path-strip-trailing-directory-separator
 path-strip-volume
 path-volume
+read-file-string
+read-file-string-list
+read-file-u8vector
 rename-file
+write-file-string
+write-file-string-list
+write-file-u8vector
 
 ))
 

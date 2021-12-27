@@ -2,7 +2,7 @@
 
 ;;; File: "os.sld"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -36,6 +36,10 @@ exit
 ;;UNIMPLEMENTED address-info-socket-type
 ;;UNIMPLEMENTED address-info?
 ;;UNIMPLEMENTED address-infos
+
+command-args
+command-name
+
 ;;UNIMPLEMENTED configure-command-string
 ;;UNIMPLEMENTED cpu-time
 
@@ -71,6 +75,8 @@ getenv
 ;;UNIMPLEMENTED protocol-info?
 ;;UNIMPLEMENTED real-time
 
+script-directory
+script-file
 seconds->time
 
 ;;UNIMPLEMENTED service-info
@@ -81,8 +87,8 @@ seconds->time
 ;;UNIMPLEMENTED service-info?
 
 setenv
+shell-command
 
-;;UNIMPLEMENTED shell-command
 ;;UNIMPLEMENTED socket-info-address
 ;;UNIMPLEMENTED socket-info-family
 ;;UNIMPLEMENTED socket-info-port-number

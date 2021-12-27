@@ -2,7 +2,7 @@
 
 ;;; File: "port-r7rs#.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -10,35 +10,35 @@
 
 (##namespace ("##"
 
-(binary-port? binary-port?#unimplemented)
+(binary-port? unimplemented#binary-port?)
 call-with-port
 close-port
 current-error-port
 eof-object
-(flush-output-port flush-output-port#unimplemented)
-(get-output-bytevector get-output-bytevector#unimplemented)
+(flush-output-port unimplemented#flush-output-port)
+(get-output-bytevector unimplemented#get-output-bytevector)
 get-output-string
-(input-port-open? input-port-open?#unimplemented)
-(open-binary-input-file open-binary-input-file#unimplemented)
-(open-binary-output-file open-binary-output-file#unimplemented)
-(open-input-bytevector open-input-bytevector#unimplemented)
+(input-port-open? unimplemented#input-port-open?)
+(open-binary-input-file unimplemented#open-binary-input-file)
+(open-binary-output-file unimplemented#open-binary-output-file)
+(open-input-bytevector unimplemented#open-input-bytevector)
 open-input-string
 open-output-string
-(output-port-open? output-port-open?#unimplemented)
-(peek-u8 peek-u8#unimplemented)
+(output-port-open? unimplemented#output-port-open?)
+(peek-u8 unimplemented#peek-u8)
 port?
-(read-bytevector read-bytevector#unimplemented)
-(read-bytevector! read-bytevector!#unimplemented)
-(read-error? read-error?#unimplemented)
+(read-bytevector unimplemented#read-bytevector)
+(read-bytevector! unimplemented#read-bytevector!)
+(read-error? unimplemented#read-error?)
 read-line
-(read-string read-string#unimplemented)
+(read-string unimplemented#read-string)
 read-u8
-(textual-port? textual-port?#unimplemented)
+(textual-port? unimplemented#textual-port?)
 u8-ready?
 write-bytevector
 write-shared
 write-simple
-(write-string write-string#unimplemented)
+(write-string unimplemented#write-string)
 write-u8
 
 ))

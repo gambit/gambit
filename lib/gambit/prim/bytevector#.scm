@@ -2,12 +2,12 @@
 
 ;;; File: "bytevector#.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
 ;;; Bytevector operations.
 
-(##include "~~lib/gambit/prim/bytevector-r7rs#.scm")
+(##include "bytevector-r7rs#.scm")
 
 ;;;============================================================================

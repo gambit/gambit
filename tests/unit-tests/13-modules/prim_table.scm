@@ -16,7 +16,7 @@
 (let ((x (list->table '((a . 1))))) (table-merge! x (list->table '((a . 2))) #t) x)
 (table-ref (list->table '((a . 1))) 'a)
 (table-ref (list->table '((a . 1))) 'b #f)
-;;table-search
+(table-search (lambda (k v) (and (even? k) (+ k v))) (list->table '((1 . 11) (2 . 22))))
 (let ((x (list->table '((a . 1))))) (table-set! x 'b 2) x)
 (let ((x (list->table '((a . 1))))) (table-set! x 'a) x)
 (table? (list->table '((a . 1)))) (table? 123)

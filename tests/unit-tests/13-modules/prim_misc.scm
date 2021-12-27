@@ -14,6 +14,8 @@
 
 (eqv? 123 123)
 
+(force 42)
+
 ;;unimplemented;;load
 
 (procedure? ##list)
@@ -44,8 +46,13 @@
 
 ;; Gambit
 
+(apropos) (apropos "$_!*%") (call-with-output-string (lambda (port) (apropos "$_!*%" port)))
+
 ;;unimplemented;;break
 ;;unimplemented;;call/cc
+
+(with-exception-catcher (lambda (e) 42) (lambda () (compilation-target) 99))
+
 ;;unimplemented;;compile-file
 ;;unimplemented;;compile-file-to-target
 
@@ -63,6 +70,10 @@
 
 (continuation? (##continuation-capture (lambda (k) k)))
 
+(procedure? dead-end) ;; minimal test
+(if #f ;; the race condition might not work on some platforms
+    (let* ((c #f) (t (thread-start! (make-thread (lambda () (dead-end) (set! c #t)))))) (thread-sleep! 0.01) (thread-terminate! t) c))
+
 ;;unimplemented;;display-continuation-backtrace
 ;;unimplemented;;display-continuation-dynamic-environment
 ;;unimplemented;;display-continuation-environment
@@ -71,21 +82,31 @@
 ;;unimplemented;;display-exception
 ;;unimplemented;;display-exception-in-context
 ;;unimplemented;;display-procedure-environment
-;;unimplemented;;eq?-hash
-;;unimplemented;;equal?-hash
-;;unimplemented;;eqv?-hash
+
+(eq?-hash 1)
+(equal?-hash 2)
+(eqv?-hash 3)
+
 ;;unimplemented;;gc-report-set!
 ;;unimplemented;;generate-proper-tail-calls
 ;;unimplemented;;help
 ;;unimplemented;;help-browser
-;;unimplemented;;identity
+
+(identity 42)
+
 ;;unimplemented;;link-flat
 ;;unimplemented;;link-incremental
 ;;unimplemented;;main
 ;;unimplemented;;object->serial-number
+
+(poll-point)
+
 ;;unimplemented;;repl-display-environment?
-;;unimplemented;;repl-input-port
-;;unimplemented;;repl-output-port
+
+(repl-input-port)
+(repl-output-port)
+(repl-error-port)
+
 ;;unimplemented;;repl-result-history-max-length-set!
 ;;unimplemented;;repl-result-history-ref
 ;;unimplemented;;serial-number->object

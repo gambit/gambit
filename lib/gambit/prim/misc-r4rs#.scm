@@ -2,7 +2,7 @@
 
 ;;; File: "misc-r4rs#.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -15,10 +15,11 @@ call-with-current-continuation
 eq?
 equal?
 eqv?
-(load load#unimplemented)
+force
+(load unimplemented#load)
 procedure?
-(transcript-off transcript-off#unimplemented)
-(transcript-on transcript-on#unimplemented)
+(transcript-off unimplemented#transcript-off)
+(transcript-on unimplemented#transcript-on)
 
 ))
 

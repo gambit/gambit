@@ -84,6 +84,7 @@ circular-list?
 cons*
 dotted-list?
 drop
+filter
 fold
 fold-right
 iota
@@ -95,9 +96,25 @@ list-sort
 list-sort!
 list-tabulate
 proper-list?
+remove
+remq
 reverse!
 take
 xcons
+
+car+cdr
+eighth
+fifth
+first
+fourth
+ninth
+not-pair?
+null-list?
+second
+seventh
+sixth
+tenth
+third
 
 ))
 

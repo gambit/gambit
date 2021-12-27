@@ -2,12 +2,12 @@
 
 ;;; File: "fixnum#.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
 ;;; Fixnum operations.
 
-(##include "~~lib/gambit/prim/fixnum-gambit#.scm")
+(##include "fixnum-gambit#.scm")
 
 ;;;============================================================================

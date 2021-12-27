@@ -2,13 +2,13 @@
 
 ;;; File: "os#.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
 ;;; OS operations.
 
-(##include "~~lib/gambit/prim/os-r7rs#.scm")
-(##include "~~lib/gambit/prim/os-gambit#.scm")
+(##include "os-r7rs#.scm")
+(##include "os-gambit#.scm")
 
 ;;;============================================================================

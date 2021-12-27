@@ -6036,6 +6036,78 @@
         (read-u8 p)
         (##read-u8 p)))))
 
+(define-prim (##peek-u8
+              #!optional
+              (port (macro-current-input-port)))
+
+  (##declare (not interrupts-enabled))
+
+  (macro-lock-and-check-input-port-character-buffer-empty
+   port
+   (peek-u8 port)
+   (let loop ()
+     (let* ((byte-rlo
+             (macro-byte-port-rlo port))
+            (byte-rhi
+             (macro-byte-port-rhi port)))
+       (if (##fx< byte-rlo byte-rhi)
+           (let* ((byte-rbuf
+                   (macro-byte-port-rbuf port))
+                  (result
+                   (##u8vector-ref byte-rbuf byte-rlo)))
+             ;;don't advance rlo
+             ;;(macro-byte-port-rlo-set! port (##fx+ byte-rlo 1))
+             (macro-port-mutex-unlock! port)
+             result)
+           (let ((code
+                  ((macro-byte-port-rbuf-fill port)
+                   port
+                   1
+                   #t)))
+             (cond ((##fixnum? code)
+
+                    ;; an error occurred
+
+                    (macro-port-mutex-unlock! port)
+
+                    (if (##fx= code ##err-code-EAGAIN)
+                        #!eof ;; the read timeout thunk returned #f
+                        (##raise-os-io-exception
+                         port
+                         #f
+                         code
+                         peek-u8
+                         port)))
+
+                   (code
+
+                    ;; bytes were added to byte buffer, so try again
+                    ;; to transfer bytes from the byte buffer
+
+                    (loop))
+
+                   (else
+
+                    ;; no bytes were added to byte buffer
+                    ;; (end-of-file was reached)
+
+                    (macro-port-mutex-unlock! port)
+                    #!eof))))))))
+
+(define-prim (peek-u8
+              #!optional
+              (port (macro-absent-obj)))
+  (macro-force-vars (port)
+    (let ((p
+           (if (##eq? port (macro-absent-obj))
+               (macro-current-input-port)
+               port)))
+      (macro-check-byte-input-port
+        p
+        1
+        (peek-u8 p)
+        (##peek-u8 p)))))
+
 (define-prim (##read-subu8vector
               u8vect
               start

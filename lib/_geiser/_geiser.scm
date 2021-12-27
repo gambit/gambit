@@ -580,8 +580,6 @@
          (("required" test consequent alternate) ("optional") ("key")))("module"))
     (if ("args" (("required" test consequent) ("optional") ("key")))("module"))
     (imag-part ("args" (("required" z) ("optional") ("key")))("module"))
-    (improper-length-list-exception?
-     ("args" (("required" obj) ("optional") ("key")))("module"))
     (inactive-thread-exception?
      ("args" (("required" obj) ("optional") ("key")))("module"))
     (inexact->exact ("args" (("required" z) ("optional") ("key")))("module"))

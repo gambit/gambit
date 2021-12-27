@@ -2,7 +2,7 @@
 
 ;;; File: "special-forms.sld"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -23,7 +23,6 @@ cond
 define
 delay
 do
-force
 if
 lambda
 let
@@ -34,26 +33,30 @@ quasiquote
 quote
 set!
 
+;; r5rs
+
+define-syntax
+;;let-syntax ;; not implemented
+;;letrec-syntax ;; not implemented
+syntax-rules
+
 ;; r7rs
 
 case-lambda
 cond-expand
+define-library
 define-record-type
-define-syntax
 delay-force
 guard
 include
 include-ci
 let*-values
-let-syntax
 let-values
 letrec*
 letrec*-values
-letrec-syntax
 letrec-values
 parameterize
 syntax-error
-syntax-rules
 unless
 when
 
@@ -70,10 +73,15 @@ define-macro
 define-structure
 define-type
 define-type-of-thread
+define-values
 future
+import
 namespace
 r7rs-guard
 receive
+six.infix
+syntax
+syntax-case
 this-source-file
 time
 

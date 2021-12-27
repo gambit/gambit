@@ -2,12 +2,12 @@
 
 ;;; File: "exception#.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
 ;;; Exception operations.
 
-(##include "~~lib/gambit/prim/exception-gambit#.scm")
+(##include "exception-gambit#.scm")
 
 ;;;============================================================================

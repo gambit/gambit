@@ -10,7 +10,9 @@
 ;;unimplemented;;current-second
 ;;unimplemented;;emergency-exit
 
-;;(exit) (exit 0);; can't actually test these
+(procedure? exit) ;; minimal test
+(if #f ;; can't actually test these
+    (begin (exit) (exit 0)))
 
 ;;unimplemented;;get-environment-variable
 ;;unimplemented;;get-environment-variables
@@ -19,6 +21,7 @@
 ;; Gambit
 
 (command-name)
+(command-args)
 (script-file)
 (script-directory)
 
@@ -74,7 +77,8 @@
 
 (setenv "UNKNOWNVAR2") (setenv "UNKNOWNVAR2" "123")
 
-;;unimplemented;;shell-command
+(shell-command "type #.scm") (shell-command "type #.scm" #t)
+
 ;;unimplemented;;socket-info-address
 ;;unimplemented;;socket-info-family
 ;;unimplemented;;socket-info-port-number

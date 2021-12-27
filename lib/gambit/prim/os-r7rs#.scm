@@ -2,7 +2,7 @@
 
 ;;; File: "os-r7rs#.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -12,15 +12,15 @@
 
 command-line
 
-(current-jiffy current-jiffy#unimplemented)
-(current-second current-second#unimplemented)
-(emergency-exit emergency-exit#unimplemented)
+(current-jiffy unimplemented#current-jiffy)
+(current-second unimplemented#current-second)
+(emergency-exit unimplemented#emergency-exit)
 
 exit
 
-(get-environment-variable get-environment-variable#unimplemented)
-(get-environment-variables get-environment-variables#unimplemented)
-(jiffies-per-second jiffies-per-second#unimplemented)
+(get-environment-variable unimplemented#get-environment-variable)
+(get-environment-variables unimplemented#get-environment-variables)
+(jiffies-per-second unimplemented#jiffies-per-second)
 
 ))
 
