@@ -1428,7 +1428,7 @@ def @os_shell_command@(cmd):
    ((compilation-target js)
     (##inline-host-declaration "
 
-@executable_path@ = (@os_nodejs@) ? __filename : '/program';
+@executable_path@ = (@os_nodejs@) ? __filename : '/program.exe';
 
 ")
     (##inline-host-expression "@host2scm@(@executable_path@)"))
@@ -1443,7 +1443,7 @@ def @os_shell_command@(cmd):
 
    (else
     (println "unimplemented ##os-executable-path called")
-    "/program")))
+    "/program.exe")))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1522,7 +1522,19 @@ def @os_shell_command@(cmd):
   } else if (@os_web@) {
     if (path === false) {
       return @host2scm@(@os_web_origin@);
-    } else if (path.slice(0,1) === '/' || @os_uri_scheme_prefixed@(path)) {
+    }
+    if (@os_fs@ && !@os_uri_scheme_prefixed@(path)) {
+      var is_dir = false;
+      try {
+        is_dir = @os_fs@.statSync(path).isDirectory();
+      } catch (exn) {
+        // ignore error
+      }
+      if (!is_dir) {
+        return @host2scm@(-2); // ENOENT (file does not exist)
+      }
+    }
+    if (path.slice(0,1) === '/' || @os_uri_scheme_prefixed@(path)) {
       return @host2scm@(path + (path.slice(-1) === '/' ? '' : '/'));
     } else {
       return @host2scm@(@os_web_origin@ + path);

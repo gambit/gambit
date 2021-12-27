@@ -94,8 +94,7 @@ UI.prototype.add_console = function (dev) {
       8,
       0, '(display "hello world!\\n")   ;; automatic demo... click console to cancel',
       2, '(display "hello world!\\n")   ;; automatic demo... click console to cancel\n',
-      5, null,
-      0, '(import (srfi 28))   ;; import SRFI 28\n',
+      5, '(import (srfi 28))   ;; import SRFI 28\n',
       4, '(format "sqrt(2)=~a" (sqrt 2))\n',
       8, '(import (angle))     ;; import R7RS library from "angle/angle.sld"\n',
       4, '(map deg->rad \'(0 90 180 270 360))\n',
@@ -118,7 +117,7 @@ UI.prototype.add_console = function (dev) {
       2, ',s   ;; execute the third step, which evaluates 3\n',
       2, ',s   ;; execute the fourth step, which is the call to +\n',
       8, null,
-      1, '(host-eval "Math.random()")  ;; interface to JavaScript code',
+      0, '(host-eval "Math.random()")  ;; interface to JavaScript code',
       2, '(host-eval "Math.random()")  ;; interface to JavaScript code\n',
       2, '(host-eval "[1+2*3, 1<2, Array(2*@1@).fill(0), (new Date).toString()]" 3)',
       2, '(host-eval "[1+2*3, 1<2, Array(2*@1@).fill(0), (new Date).toString()]" 3)\n',
@@ -147,17 +146,17 @@ UI.prototype.add_console = function (dev) {
       2, '(with-output-to-file "hello" (lambda () (display "hello!\\n")))\n',
       2, '(directory-files)\n',
       2, '(read-file-string "hello")\n',
-      4, null,
-      0, '##initial-current-directory  ;; initial CWD is the web server document root\n',
-      1, '(define path (path-expand "UI.css" ##initial-current-directory))\n',
+      4, '(initial-current-directory)  ;; initial CWD is the web server document root\n',
+      4, '(define path (path-expand "UI.css" (initial-current-directory)))\n',
       1, 'path\n',
-      3, '(substring (read-file-string path) 0 70)  ;; read file from web server\n',
-      5, '\\_os_whitelist_add("https://raw.githubusercontent.com/")  ;; allow reading from this domain\n',
-      5, '(println (read-file-string "https://raw.githubusercontent.com/feeley/fib/master/README.md"))  ;; get a file\n',
-      5, '(load "https://raw.githubusercontent.com/feeley/fib/master/fib.scm")  ;; load code from github\n',
-      5, '(println (read-file-string "https://raw.githubusercontent.com/feeley/fib/master/fib.scm"))  ;; show code\n',
+      4, '(substring (read-file-string path) 0 70)  ;; read file from web server\n',
+      5, null,
+      0, '\\_os_whitelist_add("https://raw.githubusercontent.com/")  ;; allow reading from github\n',
+      2, '(println (read-file-string "https://raw.githubusercontent.com/feeley/fib/master/README.md"))  ;; get a file\n',
+      8, '(load "https://raw.githubusercontent.com/feeley/fib/master/fib.scm")  ;; load code from github\n',
+      8, '(println (read-file-string "https://raw.githubusercontent.com/feeley/fib/master/fib.scm"))  ;; show code\n',
       8, null,
-      '(define (create-thread id)   ;; green threads are supported\n',
+      '(define (create-thread id)   ;; SRFI 18 thread example\n',
       '    (thread-start!\n',
       '     (make-thread\n',
       '      (lambda ()\n',
@@ -458,14 +457,21 @@ UI.prototype.write_file = function (path, content) {
 
   var ui = this;
 
-  var last_dir_sep = path.lastIndexOf('/');
+  var dir_sep = 0;
 
-  if (last_dir_sep > 0) {
+  for (;;) {
+
+    var dir_sep = path.indexOf('/', dir_sep);
+
+    if (dir_sep < 0) break;
+
     try {
-      ui.fs.mkdirSync(path.slice(0, last_dir_sep), { recursive: true });
+      ui.fs.mkdirSync(path.slice(0, dir_sep));
     } catch (exn) {
       // ignore existing directory
     }
+
+    dir_sep++;
   }
 
   try {
