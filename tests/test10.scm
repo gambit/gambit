@@ -21,28 +21,28 @@
     (car ##processed-command-line))
 
   (define doc-filename
-    "doc/gambit.txi")
+    (path-expand "gambit.txi" "doc"))
 
   (define lib-hash-filenames
-    '("lib/gambit#.scm"
-      "lib/r7rs#.scm"
-      "lib/r5rs#.scm"
-      "lib/r4rs#.scm"))
+    (list (path-expand "gambit#.scm" "lib")
+          (path-expand "r7rs#.scm" "lib")
+          (path-expand "r5rs#.scm" "lib")
+          (path-expand "r4rs#.scm" "lib")))
 
   (define lib-gambit-directory
-    "lib/gambit")
+    (path-expand "gambit" "lib"))
 
   (define lib-gambit-filename
     "gambit.sld")
 
   (define lib-prim-directory
-    "lib/gambit/prim")
+    (path-expand "prim" (path-expand "gambit" "lib")))
 
   (define main-prim-filename
     "prim.sld")
 
   (define unit-tests-directory
-    "tests/unit-tests")
+    (path-expand "unit-tests" "tests"))
 
   (define prim-tests-dirname
     "13-modules")
@@ -316,7 +316,9 @@ default-random-source
                              (if m2
                                  (let ((filename2 (caddr m2)))
                                    (if (or (not allow-from-same-file?)
-                                           (not (equal? filename1 filename2)))
+                                           (not (equal?
+                                                 (path-normalize filename1)
+                                                 (path-normalize filename2))))
                                        (let ()
                                          (define (refer f filename)
                                            (if (string=? f filename)
