@@ -3666,7 +3666,7 @@ For example:
 @deffn procedure vector-copy @var{vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 
 This procedure is like the procedure @code{subvector} except the
-parameter @var{start} defaults to 0 and the parameter @var{end{
+parameter @var{start} defaults to 0 and the parameter @var{end}
 defaults to the length of the vector @var{vector}.  Note that the
 elements are not recursively copied.
 
@@ -3816,7 +3816,7 @@ For example:
 The procedure @code{vector-cas!} performs an atomic compare-and-swap
 operation on the element of vector @var{vector} at index @var{k}.  If
 the element's value is @code{eq?} to @var{old-value} then the element
-is changed to @var{new-value), otherwise the value does not change.
+is changed to @var{new-value}, otherwise the value does not change.
 Regardless what happened, the element's value prior to any change is
 returned.  It is thus possible to detect a change by an explicit
 @code{eq?}  test of the result.
@@ -5246,7 +5246,7 @@ For example:
 @end deffn
 
 @deffn procedure readtable-comment-handler @var{readtable}
-@deffn procedure readtable-comment-handler-set @var{readtable} @var{new-value}
+@deffnx procedure readtable-comment-handler-set @var{readtable} @var{new-value}
 @end deffn
 
 @deffn procedure open-output-bytevector @r{[}@var{u8vector-or-settings}@r{]}
@@ -7538,7 +7538,7 @@ homogeneous vector types.
 @deffnx procedure subs8vector-fill! @var{vector} @var{start} @var{end} @var{fill}
 @deffnx procedure s8vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
 @deffnx procedure s8vector-copy @var{s8vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
-@deffn procedure s8vector-copy! @var{dest-s8vector} @var{dest-start} @var{s8vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
+@deffnx procedure s8vector-copy! @var{dest-s8vector} @var{dest-start} @var{s8vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure s8vector-append @var{s8vector}@dots{}
 @deffnx procedure subs8vector @var{s8vector} @var{start} @var{end}
 @deffnx procedure subs8vector-move! @var{src-s8vector} @var{src-start} @var{src-end} @var{dst-s8vector} @var{dst-start}
@@ -7558,7 +7558,7 @@ homogeneous vector types.
 @deffnx procedure subu8vector-fill! @var{vector} @var{start} @var{end} @var{fill}
 @deffnx procedure u8vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
 @deffnx procedure u8vector-copy @var{u8vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
-@deffn procedure u8vector-copy! @var{dest-u8vector} @var{dest-start} @var{u8vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
+@deffnx procedure u8vector-copy! @var{dest-u8vector} @var{dest-start} @var{u8vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure u8vector-append @var{u8vector}@dots{}
 @deffnx procedure subu8vector @var{u8vector} @var{start} @var{end}
 @deffnx procedure subu8vector-move! @var{src-u8vector} @var{src-start} @var{src-end} @var{dst-u8vector} @var{dst-start}
@@ -7578,7 +7578,7 @@ homogeneous vector types.
 @deffnx procedure subs16vector-fill! @var{vector} @var{start} @var{end} @var{fill}
 @deffnx procedure s16vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
 @deffnx procedure s16vector-copy @var{s16vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
-@deffn procedure s16vector-copy! @var{dest-s16vector} @var{dest-start} @var{s16vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
+@deffnx procedure s16vector-copy! @var{dest-s16vector} @var{dest-start} @var{s16vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure s16vector-append @var{s16vector}@dots{}
 @deffnx procedure subs16vector @var{s16vector} @var{start} @var{end}
 @deffnx procedure subs16vector-move! @var{src-s16vector} @var{src-start} @var{src-end} @var{dst-s16vector} @var{dst-start}
@@ -7598,7 +7598,7 @@ homogeneous vector types.
 @deffnx procedure subu16vector-fill! @var{vector} @var{start} @var{end} @var{fill}
 @deffnx procedure u16vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
 @deffnx procedure u16vector-copy @var{u16vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
-@deffn procedure u16vector-copy! @var{dest-u16vector} @var{dest-start} @var{u16vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
+@deffnx procedure u16vector-copy! @var{dest-u16vector} @var{dest-start} @var{u16vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure u16vector-append @var{u16vector}@dots{}
 @deffnx procedure subu16vector @var{u16vector} @var{start} @var{end}
 @deffnx procedure subu16vector-move! @var{src-u16vector} @var{src-start} @var{src-end} @var{dst-u16vector} @var{dst-start}
@@ -7618,7 +7618,7 @@ homogeneous vector types.
 @deffnx procedure subs32vector-fill! @var{vector} @var{start} @var{end} @var{fill}
 @deffnx procedure s32vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
 @deffnx procedure s32vector-copy @var{s32vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
-@deffn procedure s32vector-copy! @var{dest-s32vector} @var{dest-start} @var{s32vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
+@deffnx procedure s32vector-copy! @var{dest-s32vector} @var{dest-start} @var{s32vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure s32vector-append @var{s32vector}@dots{}
 @deffnx procedure subs32vector @var{s32vector} @var{start} @var{end}
 @deffnx procedure subs32vector-move! @var{src-s32vector} @var{src-start} @var{src-end} @var{dst-s32vector} @var{dst-start}
@@ -7638,7 +7638,7 @@ homogeneous vector types.
 @deffnx procedure subu32vector-fill! @var{vector} @var{start} @var{end} @var{fill}
 @deffnx procedure u32vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
 @deffnx procedure u32vector-copy @var{u32vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
-@deffn procedure u32vector-copy! @var{dest-u32vector} @var{dest-start} @var{u32vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
+@deffnx procedure u32vector-copy! @var{dest-u32vector} @var{dest-start} @var{u32vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure u32vector-append @var{u32vector}@dots{}
 @deffnx procedure subu32vector @var{u32vector} @var{start} @var{end}
 @deffnx procedure subu32vector-move! @var{src-u32vector} @var{src-start} @var{src-end} @var{dst-u32vector} @var{dst-start}
@@ -7658,7 +7658,7 @@ homogeneous vector types.
 @deffnx procedure subs64vector-fill! @var{vector} @var{start} @var{end} @var{fill}
 @deffnx procedure s64vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
 @deffnx procedure s64vector-copy @var{s64vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
-@deffn procedure s64vector-copy! @var{dest-s64vector} @var{dest-start} @var{s64vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
+@deffnx procedure s64vector-copy! @var{dest-s64vector} @var{dest-start} @var{s64vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure s64vector-append @var{s64vector}@dots{}
 @deffnx procedure subs64vector @var{s64vector} @var{start} @var{end}
 @deffnx procedure subs64vector-move! @var{src-s64vector} @var{src-start} @var{src-end} @var{dst-s64vector} @var{dst-start}
@@ -7678,7 +7678,7 @@ homogeneous vector types.
 @deffnx procedure subu64vector-fill! @var{vector} @var{start} @var{end} @var{fill}
 @deffnx procedure u64vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
 @deffnx procedure u64vector-copy @var{u64vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
-@deffn procedure u64vector-copy! @var{dest-u64vector} @var{dest-start} @var{u64vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
+@deffnx procedure u64vector-copy! @var{dest-u64vector} @var{dest-start} @var{u64vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure u64vector-append @var{u64vector}@dots{}
 @deffnx procedure subu64vector @var{u64vector} @var{start} @var{end}
 @deffnx procedure subu64vector-move! @var{src-u64vector} @var{src-start} @var{src-end} @var{dst-u64vector} @var{dst-start}
@@ -7698,7 +7698,7 @@ homogeneous vector types.
 @deffnx procedure subf32vector-fill! @var{vector} @var{start} @var{end} @var{fill}
 @deffnx procedure f32vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
 @deffnx procedure f32vector-copy @var{f32vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
-@deffn procedure f32vector-copy! @var{dest-f32vector} @var{dest-start} @var{f32vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
+@deffnx procedure f32vector-copy! @var{dest-f32vector} @var{dest-start} @var{f32vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure f32vector-append @var{f32vector}@dots{}
 @deffnx procedure subf32vector @var{f32vector} @var{start} @var{end}
 @deffnx procedure subf32vector-move! @var{src-f32vector} @var{src-start} @var{src-end} @var{dst-f32vector} @var{dst-start}
@@ -7718,7 +7718,7 @@ homogeneous vector types.
 @deffnx procedure subf64vector-fill! @var{vector} @var{start} @var{end} @var{fill}
 @deffnx procedure f64vector-concatenate @var{lst} @r{[}@var{separator}@r{]}
 @deffnx procedure f64vector-copy @var{f64vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
-@deffn procedure f64vector-copy! @var{dest-f64vector} @var{dest-start} @var{f64vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
+@deffnx procedure f64vector-copy! @var{dest-f64vector} @var{dest-start} @var{f64vector} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
 @deffnx procedure f64vector-append @var{f64vector}@dots{}
 @deffnx procedure subf64vector @var{f64vector} @var{start} @var{end}
 @deffnx procedure subf64vector-move! @var{src-f64vector} @var{src-start} @var{src-end} @var{dst-f64vector} @var{dst-start}

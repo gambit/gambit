@@ -83,7 +83,7 @@ test1.scm test2.scm test3.scm gsi.1
 
 GENDISTFILES = stamp.vti version.txi \
 gambit.pdf gambit*.html gambit.txt \
-gambit.info gambit.info-1 gambit.info-2 gambit.info-3
+gambit.info
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
