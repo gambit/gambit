@@ -7,7 +7,6 @@
 ;;;============================================================================
 
 (##include "gambit#.scm")
-(##namespace ("" cond-expand)) ;; TODO: remove after bootstrap
 (##include "_gambit#.scm")
 
 (##declare

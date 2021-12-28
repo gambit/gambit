@@ -2,7 +2,7 @@
 
 ;;; File: "fixnum.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 (##declare
   (standard-bindings)
@@ -14,5 +14,18 @@
      (##declare (not core))
      (##include ,(string-append "../gsc/" filename))
      (##declare (core))))
+
+;; TODO: remove after bootstrap
+(macro-define-syntax ##cond-expand
+  (lambda (src)
+    (##deconstruct-call
+     src
+     -1
+     (lambda clauses
+       (##expand-source-template
+        src
+        (##cond-expand-build
+         src
+         clauses))))))
 
 ;;;============================================================================
