@@ -16,7 +16,7 @@
      (##declare (core))))
 
 ;; TODO: remove after bootstrap
-(macro-define-syntax ##cond-expand
+(define-runtime-syntax ##cond-expand
   (lambda (src)
     (##deconstruct-call
      src
