@@ -1841,13 +1841,7 @@
           (bars w output-port))))
 
   (define (output-to-repl proc)
-    (let ((old (##current-user-interrupt-handler)))
-      (##parameterize1
-       ##current-user-interrupt-handler
-       ##defer-user-interrupts
-       (lambda ()
-         (##repl proc)
-         (##current-user-interrupt-handler old)))))
+    (##repl proc))
 
   (define (output-to-repl-with-indent depth prompt obj)
     (let* ((repl-port
@@ -2345,6 +2339,12 @@
   (let ((channel (##thread-repl-channel-get! (macro-current-thread))))
     (macro-mutex-unlock! (macro-repl-channel-owner-mutex channel))))
 
+(define-prim (##repl-channel-have-ownership?)
+  (let* ((ct (macro-current-thread))
+         (channel (macro-thread-repl-channel ct)))
+    (and channel
+         (##eq? (##mutex-state (macro-repl-channel-owner-mutex channel)) ct))))
+
 (define-prim (##repl-channel-input-port)
   (let ((channel (##thread-repl-channel-get! (macro-current-thread))))
     (macro-repl-channel-input-port channel)))
@@ -2840,15 +2840,11 @@
      (##repl-context-with-clean-exception-handling
       repl-context
       (lambda ()
-        (##parameterize1
-         ##current-user-interrupt-handler
-         ##void ;; ignore user interrupts
-         (lambda ()
-           (macro-dynamic-bind repl-context
-                               repl-context
-                               (lambda ()
-                                 (thunk)
-                                 (##repl-context-prompt repl-context))))))))))
+        (macro-dynamic-bind repl-context
+                            repl-context
+                            (lambda ()
+                              (thunk)
+                              (##repl-context-prompt repl-context))))))))
 
 (define-prim (##default-repl-context-prompt repl-context)
 
@@ -3314,7 +3310,7 @@
                     (##thread-interrupt!
                      val
                      (lambda ()
-                       (##handle-interrupt #f)))
+                       (##user-interrupt-current-thread! #f)))
                     (##thread-yield!)
                     (##repl-channel-acquire-ownership!)
                     (##repl-context-prompt repl-context))
@@ -3469,18 +3465,18 @@
 (define-prim (##default-user-interrupt-handler)
   (let* ((settings (##set-debug-settings! 0 0))
          (settings-user-intr (macro-debug-settings-user-intr settings))
-         (defer? (##fx= settings-user-intr
-                        (macro-debug-settings-user-intr-defer))))
-    (if defer?
-        (set! ##deferred-user-interrupt? #t)
-        (let ((quit? (##fx= settings-user-intr
-                            (macro-debug-settings-user-intr-quit))))
-          (if (and quit?
-                   (##fx= (macro-debug-settings-level settings) 0))
-              (##exit-abruptly)
-              (##handle-interrupt quit?))))))
+         (quit? (##fx= settings-user-intr
+                       (macro-debug-settings-user-intr-quit))))
+    (if (and quit? (##fx= (macro-debug-settings-level settings) 0))
+        (##exit-abruptly)
+        ;; ignore interrupts when the thread has acquired
+        ;; ownership of it's repl channel
+        (if (##not (##repl-channel-have-ownership?))
+            (##user-interrupt-current-thread! quit?)))))
 
-(define-prim (##handle-interrupt quit?)
+(define default-user-interrupt-handler ##default-user-interrupt-handler)
+
+(define-prim (##user-interrupt-current-thread! quit?)
   (##with-no-result-expected
    (lambda ()
      (##repl
@@ -3495,15 +3491,17 @@
             (##exit-abruptly)
             #f))))))
 
-(set! ##primordial-exception-handler-hook ##repl-exception-handler-hook)
-;;TODO: replace with
-;;(##primordial-exception-handler-hook-set! ##repl-exception-handler-hook)
+(##primordial-exception-handler-hook-set! ##repl-exception-handler-hook)
 
 (if (##fx= (macro-debug-settings-error (##set-debug-settings! 0 0))
            (macro-debug-settings-error-single-step))
     (##step-on)) ;; turn on stepping on current stepper
 
-(##current-user-interrupt-handler ##default-user-interrupt-handler)
+(let* ((settings (##set-debug-settings! 0 0))
+       (settings-user-intr (macro-debug-settings-user-intr settings)))
+  (if (##not (##fx= settings-user-intr
+                    (macro-debug-settings-user-intr-defer)))
+      (##current-user-interrupt-handler ##default-user-interrupt-handler)))
 
 (define-prim (##exception->kind exc)
   (cond (#f;;;;;;;;;;;;;;

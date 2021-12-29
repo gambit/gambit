@@ -35,9 +35,11 @@
 ;;unimplemented;;cpu-time
 
 (##time? (current-time))
+(current-user-interrupt-handler defer-user-interrupts)
+(and #f ;; can't actually test this
+     (default-user-interrupt-handler))
+(defer-user-interrupts)
 
-;;unimplemented;;current-user-interrupt-handler
-;;unimplemented;;defer-user-interrupts
 ;;unimplemented;;err-code->string
 
 (getenv "PATH") (getenv "UNKNOWNVAR" #f)

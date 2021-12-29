@@ -140,6 +140,7 @@ datum-parsing-exception-readenv
 datum-parsing-exception?
 dead-end
 deadlock-exception?
+default-user-interrupt-handler
 defer-user-interrupts
 delete-directory
 delete-file-or-directory

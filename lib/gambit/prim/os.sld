@@ -44,9 +44,10 @@ command-name
 ;;UNIMPLEMENTED cpu-time
 
 current-time
+current-user-interrupt-handler
+default-user-interrupt-handler
+defer-user-interrupts
 
-;;UNIMPLEMENTED current-user-interrupt-handler
-;;UNIMPLEMENTED defer-user-interrupts
 ;;UNIMPLEMENTED err-code->string
 
 getenv

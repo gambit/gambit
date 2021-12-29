@@ -24,9 +24,10 @@ command-name
 (cpu-time unimplemented#cpu-time)
 
 current-time
+current-user-interrupt-handler
+default-user-interrupt-handler
+defer-user-interrupts
 
-(current-user-interrupt-handler unimplemented#current-user-interrupt-handler)
-(defer-user-interrupts unimplemented#defer-user-interrupts)
 (err-code->string unimplemented#err-code->string)
 
 getenv

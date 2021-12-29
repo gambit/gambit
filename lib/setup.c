@@ -175,14 +175,16 @@ ___EXP_FUNC(void,___end_interrupt_service_pstate)
 ___processor_state ___ps;
 int code;)
 {
-  if (___ps->intr_enabled != ___FIX(0))
+  ___WORD enabled = ___ps->intr_enabled & ~___ps->intr_mask;
+
+  if (enabled != ___FIX(0))
     {
 #ifdef CALL_HANDLER_AT_EVERY_POLL
       ___STACK_TRIP_ON();
 #else
       while (code < ___NB_INTRS)
         {
-          if ((___ps->intr_flag[code] & ___ps->intr_enabled & ~___ps->intr_mask) != ___FIX(0))
+          if ((___ps->intr_flag[code] & enabled) != ___FIX(0))
             {
               ___STACK_TRIP_ON();
               break;
@@ -235,9 +237,6 @@ ___processor_state ___ps;)
   /* None of the interrupts are requested */
   for (i=0; i<___NB_INTRS; i++)
     ___ps->intr_flag[i] = ___FIX(0);
-
-  ___begin_interrupt_service_pstate (___ps);
-  ___end_interrupt_service_pstate (___ps, 0);
 }
 
 
@@ -4465,6 +4464,13 @@ ___virtual_machine_state ___vms;)
 #endif
 
   /*
+   * Setup interrupt system of this processor.
+   */
+
+  if (!(___vms == &___GSTATE->vmstate0 && ___PROCESSOR_ID(___ps, ___vms) == 0))
+    setup_interrupts_pstate (___ps);  /* processor 0 of vm 0 has early init */
+
+  /*
    * Setup processor's OS specific structures and memory management.
    */
 
@@ -4521,12 +4527,6 @@ ___virtual_machine_state ___vms;)
   ___ps->catcher = 0;
 
 #endif
-
-  /*
-   * Setup interrupt system of this processor.
-   */
-
-  setup_interrupts_pstate (___ps);
 
   /*
    * Setup synchronous operation system.
@@ -6014,6 +6014,15 @@ ___setup_params_struct *setup_params;)
     }
 
 #endif
+
+  /*
+   * Setup interrupt system of processor 0 of vm 0.
+   */
+
+  {
+    ___virtual_machine_state ___vms = &___GSTATE->vmstate0;
+    setup_interrupts_pstate (___PSTATE_FROM_PROCESSOR_ID(0,___vms));
+  }
 
   /*
    * Setup support for dynamic linking.

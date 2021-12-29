@@ -2103,7 +2103,7 @@ process.
 @opindex -:debug=D
 @opindex -:dD
 When a user interrupt occurs it will be deferred until the parameter
-@code{current-user-interrupt-handler} is bound.
+object @code{current-user-interrupt-handler} is set or bound.
 
 @item @code{@b{Q}}
 @opindex -:debug=Q
@@ -4908,6 +4908,7 @@ For example:
 @end deffn
 
 @deffn procedure current-user-interrupt-handler @r{[}@var{handler}@r{]}
+@deffnx procedure default-user-interrupt-handler
 @deffnx procedure defer-user-interrupts
 @end deffn
 

@@ -3124,7 +3124,9 @@
 (define primordial-exception-handler ##primordial-exception-handler)
 
 (define ##primordial-exception-handler-hook #f)
-(set! ##primordial-exception-handler-hook #f)
+
+(define (##primordial-exception-handler-hook-set! handler)
+  (set! ##primordial-exception-handler-hook handler))
 
 (define (##startup-processor!)
 
@@ -3492,17 +3494,22 @@
         (macro-mutex-specific-set! mutex obj)
         (##void)))))
 
+(define-prim (##mutex-state mutex)
+
+  (##declare (not interrupts-enabled))
+
+  (macro-lock-mutex! mutex)
+  (let ((result (macro-btq-owner mutex)))
+    (macro-unlock-mutex! mutex)
+    result))
+
 (define-prim (mutex-state mutex)
 
   (##declare (not interrupts-enabled))
 
   (macro-force-vars (mutex)
     (macro-check-mutex mutex 1 (mutex-state mutex)
-      (begin
-        (macro-lock-mutex! mutex)
-        (let ((result (macro-btq-owner mutex)))
-          (macro-unlock-mutex! mutex)
-          result)))))
+      (##mutex-state mutex))))
 
 (define-prim (mutex-lock!
               mutex
@@ -5285,11 +5292,11 @@
 
 ;; (##current-user-interrupt-handler) is called on each user interrupt.
 
-(define ##deferred-user-interrupt? #f)
+(define ##user-interrupt-pending? #f)
 
 (define-prim (##defer-user-interrupts)
    (##declare (not interrupts-enabled))
-   (set! ##deferred-user-interrupt? #t)
+   (set! ##user-interrupt-pending? #t)
    (##void))
 
 (define defer-user-interrupts ##defer-user-interrupts)
@@ -5302,10 +5309,11 @@
        (let ()
          (##declare (not interrupts-enabled))
          (##declare (not safe)) ;; avoid procedure check on the call
-         (let ((int? ##deferred-user-interrupt?))
-           (set! ##deferred-user-interrupt? #f)
-           (if int?
-               (val)))
+         (if (##not (##eq? val ##defer-user-interrupts))
+             (let ((int? ##user-interrupt-pending?))
+               (set! ##user-interrupt-pending? #f)
+               (if int?
+                   (val))))
          val)))))
 
 (define current-user-interrupt-handler
@@ -6612,7 +6620,9 @@
 (define primordial-exception-handler ##primordial-exception-handler)
 
 (define ##primordial-exception-handler-hook #f)
-(set! ##primordial-exception-handler-hook #f)
+
+(define (##primordial-exception-handler-hook-set! handler)
+  (set! ##primordial-exception-handler-hook handler))
 
 (define-prim (##thread-end! thread exception? result)
 
@@ -7776,10 +7786,14 @@
         (macro-mutex-specific-set! mutex obj)
         (##void)))))
 
+(define-prim (##mutex-state mutex)
+  (##declare (not interrupts-enabled))
+  (macro-btq-owner mutex))
+
 (define-prim (mutex-state mutex)
   (macro-force-vars (mutex)
     (macro-check-mutex mutex 1 (mutex-state mutex)
-      (macro-btq-owner mutex))))
+      (##mutex-state mutex))))
 
 (define-prim (mutex-lock!
               mutex
@@ -8741,11 +8755,11 @@
 
 ;; (##current-user-interrupt-handler) is called on each user interrupt.
 
-(define ##deferred-user-interrupt? #f)
+(define ##user-interrupt-pending? #f)
 
 (define-prim (##defer-user-interrupts)
    (##declare (not interrupts-enabled))
-   (set! ##deferred-user-interrupt? #t)
+   (set! ##user-interrupt-pending? #t)
    (##void))
 
 (define defer-user-interrupts ##defer-user-interrupts)
@@ -8758,10 +8772,11 @@
        (let ()
          (##declare (not interrupts-enabled))
          (##declare (not safe)) ;; avoid procedure check on the call
-         (let ((int? ##deferred-user-interrupt?))
-           (set! ##deferred-user-interrupt? #f)
-           (if int?
-               (val)))
+         (if (##not (##eq? val ##defer-user-interrupts))
+             (let ((int? ##user-interrupt-pending?))
+               (set! ##user-interrupt-pending? #f)
+               (if int?
+                   (val))))
          val)))))
 
 (define current-user-interrupt-handler
