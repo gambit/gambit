@@ -3772,11 +3772,14 @@ case "$target_os" in
 ****************************************************************************
 ***                                                                      ***
 *** The target OS is macOS and the option "--enable-poll" was specified. ***
-*** This combination should be avoided because there is a bug in macOS   ***
-*** that causes "poll" on ttys and named pipes to misbehave, causing     ***
-*** a busy wait loop consuming 100% CPU when waiting on those devices    ***
-*** (including waiting for input at the REPL).  For more information,    ***
-*** please see:                                                          ***
+*** This combination has caused issues in the past because some versions ***
+*** of macOS have a bug that causes "poll" on ttys and named pipes to    ***
+*** misbehave, causing a busy wait loop consuming 100% CPU when waiting  ***
+*** on those devices (including waiting for input at the REPL).  The     ***
+*** issue seems to have been fixed in recent versions of macOS (tested   ***
+*** on macOS 11.6, Big Sur).  Nevertheless, for portability to not so    ***
+*** recent version of macOS it may be best to avoid using the option     ***
+*** "--enable-poll".  For more information, please see:                  ***
 ***   https://github.com/gambit/gambit/issues/403                        ***
 ***   https://stackoverflow.com/questions/591826                         ***
 ***                                                                      ***
