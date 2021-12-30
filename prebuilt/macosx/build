@@ -62,7 +62,7 @@ for VARIANT in intel64; do
   rm -f `pwd`/gcc
   cat <<EOF > gcc
 #!/bin/sh
-exec gcc-9 -nostdinc --sysroot=$SYSROOT -isystem $SYSROOT/usr/include -I $GCCDIR/include -fschedule-insns2 -fno-trapping-math -fwrapv -fmodulo-sched -freschedule-modulo-scheduled-loops -static-libgcc "\$@"
+exec gcc-9 -nostdinc --sysroot=$SYSROOT -isystem $SYSROOT/usr/include -I $GCCDIR/include -fwrapv -fno-strict-aliasing -fno-trapping-math -fno-math-errno -fschedule-insns2 -foptimize-sibling-calls -fomit-frame-pointer -static-libgcc -D___DONT_USE_builtin_clrsb"\$@"
 EOF
   chmod +x gcc
   export PATH="`pwd`:$PATH"
