@@ -1,6 +1,6 @@
 /* File: "os.h" */
 
-/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_H
 #define ___OS_H
@@ -723,9 +723,6 @@
 #ifdef HAVE_POLL
 #define USE_poll
 #ifdef HAVE_PPOLL
-#ifndef _GNU_SOURCE
-#define _GNU_SOURCE
-#endif
 #define USE_ppoll
 #endif
 #else

@@ -3124,6 +3124,14 @@ BOOTSTRAP_CONFIGURE_FLAGS=""
 
 ###############################################################################
 #
+# Use GNU functions when available.
+
+
+$as_echo "#define _GNU_SOURCE /**/" >>confdefs.h
+
+
+###############################################################################
+#
 # Check if the system must be compiled using the C compiler or C++ compiler.
 
 # Check whether --enable-cplusplus was given.
@@ -10092,8 +10100,7 @@ if test "$FOUND_THREAD_SYSTEM" = posix; then
 
   cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
-#define _GNU_SOURCE
-     #include <pthread.h>
+#include <pthread.h>
 int
 main ()
 {

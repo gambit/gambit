@@ -82,6 +82,12 @@ AC_SUBST(BOOTSTRAP_CONFIGURE_FLAGS)
 
 ###############################################################################
 #
+# Use GNU functions when available.
+
+AC_DEFINE([_GNU_SOURCE],[],[Use GNU functions when available])
+
+###############################################################################
+#
 # Check if the system must be compiled using the C compiler or C++ compiler.
 
 AC_ARG_ENABLE(cplusplus,
@@ -2203,8 +2209,7 @@ if test "$FOUND_THREAD_SYSTEM" = posix; then
 
   AC_LINK_IFELSE(
    [AC_LANG_PROGRAM(
-    [#define _GNU_SOURCE
-     #include <pthread.h>],
+    [#include <pthread.h>],
     [cpu_set_t cpuset;
      CPU_ZERO (&cpuset);
      CPU_SET (0, &cpuset);

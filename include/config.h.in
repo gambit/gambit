@@ -71,6 +71,8 @@
 
 /* Determine which header files are available. */
 
+#undef _GNU_SOURCE
+
 #undef HAVE_ERRNO_H
 #undef HAVE_UNISTD_H
 #undef HAVE_PWD_H

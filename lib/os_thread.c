@@ -1,19 +1,10 @@
 /* File: "os_thread.c" */
 
-/* Copyright (c) 2013-2017 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 2013-2021 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements thread-related services.
  */
-
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-#ifdef HAVE_PTHREAD_SETAFFINITY_NP
-/* Needed to get pthread.h to define CPU_ZERO and CPU_SET */
-#define _GNU_SOURCE
-#endif
 
 #define ___INCLUDED_FROM_OS_THREAD
 #define ___VERSION 409003
