@@ -82,9 +82,9 @@ AC_SUBST(BOOTSTRAP_CONFIGURE_FLAGS)
 
 ###############################################################################
 #
-# Use GNU functions when available.
+# Use GNU features when available.
 
-AC_DEFINE([_GNU_SOURCE],[],[Use GNU functions when available])
+AC_DEFINE([_GNU_SOURCE],[],[Use GNU features when available])
 
 ###############################################################################
 #
