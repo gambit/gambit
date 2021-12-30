@@ -1559,9 +1559,9 @@
 #include <setjmp.h>
 
 #if __has_builtin(builtin_setjmp) || (defined(__GNUC__) && ___GNUC_VERSION > 500000)
-
 #undef ___USE_builtin_setjmp
 #define ___USE_builtin_setjmp
+#endif
 
 #ifdef ___DONT_USE_builtin_setjmp
 #undef ___USE_builtin_setjmp
@@ -1867,8 +1867,6 @@
 #undef ___USE_builtin_clrsb
 #define ___USE_builtin_clrsb
 #endif
-#endif
-
 #endif
 
 #ifdef ___DONT_USE_builtin_op_overflow
@@ -13203,6 +13201,7 @@ ___IMP_FUNC(void,___set_tls_ptr)
 #endif
 
 #endif
+
 #endif
 
 #endif
