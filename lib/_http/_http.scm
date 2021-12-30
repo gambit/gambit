@@ -159,7 +159,7 @@
                 (string-shrink! line (- (string-length line) 1))
 
                 (done-header
-                  (if (null? result)
+                  (if (null? rev-result)
                     line
                     (string-concatenate (reverse (cons line rev-result))))))
 
@@ -252,15 +252,21 @@
                       #t
                       (lambda (port) port)
                       http-get
-                      (cons address:
-                            (cons
-                              host
-                              (cons
-                                port-number:
-                                (cons port-number
-                                      (if tls-context
-                                        (list tls-context: tls-context)
-                                        '())))))))
+                      (cons
+                       address:
+                       (cons
+                        host
+                        (cons
+                         port-number:
+                         (cons
+                          port-number
+                          (cons
+                           char-encoding:
+                           (cons
+                            'ISO-8859-1
+                            (if tls-context
+                                (list tls-context: tls-context)
+                                '())))))))))
                (eol (CRLF)))
 
           (print
