@@ -82,10 +82,6 @@ mandir = @mandir@
 
 .SUFFIXES:
 
-ifneq ($(SUBDIRS),)
-.PHONY: $(SUBDIRS)
-endif
-
 RCFILES = $(HEADERS_SCM) $(MODULES_SCM) $(DATA_FILES) $(OTHER_RCFILES)
 
 GENDISTFILES =
@@ -345,9 +341,6 @@ core-recursive bootstrap-recursive modules-recursive install-recursive uninstall
 	  done \
 	fi
 
-$(SUBDIR):
-	(cd $@ && $(MAKE) modules) || exit 1
-
 core: core-post
 
 core-post: core-recursive
@@ -364,7 +357,7 @@ modules: modules-post
 
 modules-post: modules-recursive
 
-modules-recursive: modules-pre $(SUBDIRS)
+modules-recursive: modules-pre
 
 install: install-post
 
