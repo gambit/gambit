@@ -11,8 +11,8 @@
 ;;unimplemented;;emergency-exit
 
 (procedure? exit) ;; minimal test
-(if #f ;; can't actually test these
-    (begin (exit) (exit 0)))
+(and #f ;; can't actually test these
+     (begin (exit) (exit 0)))
 
 ;;unimplemented;;get-environment-variable
 ;;unimplemented;;get-environment-variables
@@ -36,6 +36,7 @@
 
 (##time? (current-time))
 (current-user-interrupt-handler defer-user-interrupts)
+(##procedure? default-user-interrupt-handler) ;; minimal test
 (and #f ;; can't actually test this
      (default-user-interrupt-handler))
 (defer-user-interrupts)

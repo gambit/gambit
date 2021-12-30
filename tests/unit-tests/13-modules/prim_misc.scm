@@ -70,9 +70,9 @@
 
 (continuation? (##continuation-capture (lambda (k) k)))
 
-(procedure? dead-end) ;; minimal test
-(if #f ;; the race condition might not work on some platforms
-    (let* ((c #f) (t (thread-start! (make-thread (lambda () (dead-end) (set! c #t)))))) (thread-sleep! 0.01) (thread-terminate! t) c))
+(##procedure? dead-end) ;; minimal test
+(and #f ;; the race condition might not work on some platforms
+     (let* ((c #f) (t (thread-start! (make-thread (lambda () (dead-end) (set! c #t)))))) (thread-sleep! 0.01) (thread-terminate! t) c))
 
 ;;unimplemented;;display-continuation-backtrace
 ;;unimplemented;;display-continuation-dynamic-environment
