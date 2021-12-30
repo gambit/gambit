@@ -1559,10 +1559,12 @@
 #include <setjmp.h>
 
 #if __has_builtin(builtin_setjmp) || (defined(__GNUC__) && ___GNUC_VERSION > 500000)
-#ifndef ___DONT_USE_BUILTIN_SETJMP
+
 #undef ___USE_builtin_setjmp
 #define ___USE_builtin_setjmp
-#endif
+
+#ifdef ___DONT_USE_builtin_setjmp
+#undef ___USE_builtin_setjmp
 #endif
 
 #ifdef ___USE_builtin_setjmp
@@ -1809,14 +1811,20 @@
 
 #ifdef __GNUC__
 #if ___GNUC_VERSION >= 300000
+#undef ___USE_builtin_expect
 #define ___USE_builtin_expect
 #endif
 #endif
 
 #ifdef __clang__
 #if __has_builtin(__builtin_expect)
+#undef ___USE_builtin_expect
 #define ___USE_builtin_expect
 #endif
+#endif
+
+#ifdef ___DONT_USE_builtin_expect
+#undef ___USE_builtin_expect
 #endif
 
 #ifdef ___USE_builtin_expect
@@ -1831,26 +1839,52 @@
 
 #ifdef __GNUC__
 #if ___GNUC_VERSION > 500000
+#undef ___USE_builtin_op_overflow
 #define ___USE_builtin_op_overflow
+#undef ___USE_builtin_popcount
 #define ___USE_builtin_popcount
+#undef ___USE_builtin_ffs
 #define ___USE_builtin_ffs
+#undef ___USE_builtin_clrsb
 #define ___USE_builtin_clrsb
 #endif
 #endif
 
 #ifdef __clang__
 #if __has_builtin(__builtin_add_overflow) && __has_builtin(__builtin_sub_overflow) && __has_builtin(__builtin_mul_overflow)
+#undef ___USE_builtin_op_overflow
 #define ___USE_builtin_op_overflow
 #endif
 #if __has_builtin(__builtin_popcount)
+#undef ___USE_builtin_popcount
 #define ___USE_builtin_popcount
 #endif
 #if __has_builtin(__builtin_ffs)
+#undef ___USE_builtin_ffs
 #define ___USE_builtin_ffs
 #endif
 #if __has_builtin(__builtin_clrsb)
+#undef ___USE_builtin_clrsb
 #define ___USE_builtin_clrsb
 #endif
+#endif
+
+#endif
+
+#ifdef ___DONT_USE_builtin_op_overflow
+#undef ___USE_builtin_op_overflow
+#endif
+
+#ifdef ___DONT_USE_builtin_popcount
+#undef ___USE_builtin_popcount
+#endif
+
+#ifdef ___DONT_USE_builtin_ffs
+#undef ___USE_builtin_ffs
+#endif
+
+#ifdef ___DONT_USE_builtin_clrsb
+#undef ___USE_builtin_clrsb
 #endif
 
 /*---------------------------------------------------------------------------*/
