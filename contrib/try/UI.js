@@ -98,6 +98,8 @@ UI.prototype.add_console = function (dev) {
       4, '(format "sqrt(2)=~a" (sqrt 2))\n',
       8, '(import (angle))     ;; import R7RS library from "angle/angle.sld"\n',
       4, '(map deg->rad \'(0 90 180 270 360))\n',
+      8, '(import (roman))     ;; import R7RS library from "roman/roman.sld"\n',
+      4, '(integer->roman 2048)\n',
       8, '(integer-sqrt (* 2 (expt 100 100)))   ;; bignums!\n',
       5, '(define (fact n) (if (= n 0) 1 (* n (fact (- n 1)))))\n',
       5, '(time (fact 500))\n',
@@ -151,10 +153,11 @@ UI.prototype.add_console = function (dev) {
       1, 'path\n',
       4, '(substring (read-file-string path) 0 70)  ;; read file from web server\n',
       5, null,
-      0, '\\_os_whitelist_add("https://raw.githubusercontent.com/")  ;; allow reading from github\n',
-      2, '(println (read-file-string "https://raw.githubusercontent.com/feeley/fib/master/README.md"))  ;; get a file\n',
-      8, '(load "https://raw.githubusercontent.com/feeley/fib/master/fib.scm")  ;; load code from github\n',
-      8, '(println (read-file-string "https://raw.githubusercontent.com/feeley/fib/master/fib.scm"))  ;; show code\n',
+      0, '(module-whitelist-add! "raw.githubusercontent.com/feeley")  ;; allow reading from github\n',
+      2, '(println (read-file-string "https://raw.githubusercontent.com/feeley/fib/master/fib.scm"))  ;; get a file\n',
+      8, '(load "https://raw.githubusercontent.com/feeley/fib/master/fib.scm")  ;; load it from github\n',
+      8, '(module-search-order-add! "https://raw.githubusercontent.com/feeley/fib/master")\n',
+      8, '(import (fib))  ;; do the same using the module system\n',
       8, null,
       '(define (create-thread id)   ;; SRFI 18 thread example\n',
       '    (thread-start!\n',
@@ -417,6 +420,129 @@ The following keybindings are available:\n\
     (define factor (/ (atan 1) 45))\n\
     (define (deg->rad x) (* x factor))\n\
     (define (rad->deg x) (/ x factor))))\n\
+');
+
+  ui.write_file('roman/roman.sld', '\
+(define-library (roman)\n\
+  (export integer->roman roman->integer)\n\
+  (import (scheme base))\n\
+  (include "roman.scm"))\n\
+');
+
+  ui.write_file('roman/roman.scm', '\
+(define (integer->roman n)\n\
+\n\
+  ;; n must be between 1 and 3999\n\
+\n\
+  (define (digit d1 d5 d10 power10)\n\
+    (let ((d (modulo (quotient n power10) 10)))\n\
+      (cond ((<= d 3)\n\
+             (make-string d d1))\n\
+            ((= d 4)\n\
+             (string d1 d5))\n\
+            ((<= d 8)\n\
+             (string-append (string d5) (make-string (- d 5) d1)))\n\
+            (else\n\
+             (string d1 d10)))))\n\
+\n\
+  (string-append\n\
+   (digit #\\M #\\_ #\\_ 1000)\n\
+   (digit #\\C #\\D #\\M 100)\n\
+   (digit #\\X #\\L #\\C 10)\n\
+   (digit #\\I #\\V #\\X 1)))\n\
+\n\
+(define (roman->integer str)\n\
+\n\
+  (define pos 0)\n\
+\n\
+  (define (digit d1 d5 d10)\n\
+    (let loop ((val 0))\n\
+\n\
+      (define (accept new-val)\n\
+        (set! pos (+ pos 1))\n\
+        (loop new-val))\n\
+\n\
+      (if (< pos (string-length str))\n\
+          (let ((d (string-ref str pos)))\n\
+            (cond ((char=? d d1)\n\
+                   (if (<= (modulo val 5) 2)\n\
+                       (accept (+ val 1))\n\
+                       val))\n\
+                  ((char=? d d5)\n\
+                   (if (<= val 1)\n\
+                       (accept (- 5 val))\n\
+                       val))\n\
+                  ((char=? d d10)\n\
+                   (if (= val 1)\n\
+                       (accept 9)\n\
+                       val))\n\
+                  (else\n\
+                   val)))\n\
+          val)))\n\
+\n\
+  (define d1000 (digit #\\M #\\_ #\\_))\n\
+  (define d100  (digit #\\C #\\D #\\M))\n\
+  (define d10   (digit #\\X #\\L #\\C))\n\
+  (define d1    (digit #\\I #\\V #\\X))\n\
+\n\
+  (and (= pos (string-length str))\n\
+       (> pos 0)\n\
+       (+ (* 1000 d1000)\n\
+          (* 100 d100)\n\
+          (* 10 d10)\n\
+          d1)))\n\
+');
+
+  ui.write_file('roman/demo/demo.sld', '\
+(define-library (demo)\n\
+\n\
+  (import (.. roman) ;; relative reference to roman library\n\
+          (scheme base)\n\
+          (scheme write)\n\
+          (only (srfi 1) iota))\n\
+\n\
+  (begin\n\
+    (for-each (lambda (i)\n\
+                (let ((n (expt 2 i)))\n\
+                  (display n)\n\
+                  (display " is ")\n\
+                  (display (integer->roman n))\n\
+                  (display " in roman numerals\\n")))\n\
+              (iota 7))))\n\
+');
+
+  ui.write_file('roman/test/test.sld', '\
+(define-library (test)\n\
+\n\
+  (import (.. roman) ;; relative reference to roman library\n\
+          (srfi 64))\n\
+\n\
+  (begin\n\
+\n\
+    ;; test integer->roman\n\
+\n\
+    (test-equal "I"         (integer->roman 1))\n\
+    (test-equal "XX"        (integer->roman 20))\n\
+    (test-equal "CIV"       (integer->roman 104))\n\
+    (test-equal "CCCLXXX"   (integer->roman 380))\n\
+    (test-equal "MCMVII"    (integer->roman 1907))\n\
+    (test-equal "MMMCMXCIX" (integer->roman 3999))\n\
+\n\
+    ;; test roman->integer\n\
+\n\
+    (test-equal 1    (roman->integer "I"))\n\
+    (test-equal 20   (roman->integer "XX"))\n\
+    (test-equal 104  (roman->integer "CIV"))\n\
+    (test-equal 380  (roman->integer "CCCLXXX"))\n\
+    (test-equal 1907 (roman->integer "MCMVII"))\n\
+    (test-equal 3999 (roman->integer "MMMCMXCIX"))\n\
+    (test-equal #f   (roman->integer "CIL"))\n\
+    (test-equal #f   (roman->integer "Z"))\n\
+    (test-equal #f   (roman->integer " I"))\n\
+    (test-equal #f   (roman->integer "I "))\n\
+    (test-equal #f   (roman->integer " I "))\n\
+    (test-equal #f   (roman->integer " "))\n\
+    (test-equal #f   (roman->integer ""))))\n\
 ');
 
   ui.edit_file('README');

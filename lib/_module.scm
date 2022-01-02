@@ -12,13 +12,23 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define ##module-search-order (##os-module-search-order))
+(define-prim&proc (module-whitelist-reset!)
+  (##set-module-whitelist! '()))
 
-(define-prim (##module-search-order-set! search-order)
-  (set! ##module-search-order search-order))
+(define-primitive (module-whitelist-add! source)
+  (##set-module-whitelist! (##cons source (##get-module-whitelist))))
 
-(define-prim (##module-search-order-add! dir)
-  (##module-search-order-set! (##cons dir ##module-search-order)))
+(define-procedure (module-whitelist-add! (source string))
+  (##module-whitelist-add! source))
+
+(define-prim&proc (module-search-order-reset!)
+  (##set-module-search-order! '()))
+
+(define-primitive (module-search-order-add! dir)
+  (##set-module-search-order! (##cons dir (##get-module-search-order))))
+
+(define-procedure (module-search-order-add! (dir string))
+  (##module-search-order-add! dir))
 
 (define-prim (##module-search-directory? str)
   (let ((len (##string-length str)))
@@ -353,7 +363,7 @@
 (define-prim (##search-module
               modref
               #!optional
-              (search-order ##module-search-order))
+              (search-order (##get-module-search-order)))
 
   (define (try-opening-source-file path cont)
     (if ##debug-modules? (pp (list 'try-opening-source-file path)));;;;;;;;;;;;;;
@@ -632,8 +642,8 @@
                   "-e"
                   (##object->string
                    `(##begin
-                     (##module-search-order-set!
-                      ',##module-search-order)
+                     (##set-module-search-order!
+                      ',(##get-module-search-order))
                      (##build-module
                       ',path
                       ',target
@@ -680,7 +690,7 @@
 
   ;;; handle the install mode (ask always, ask never, ask when repl)
   (define (module-install-confirm? modstr)
-    (let ((install-mode (##os-module-install-mode)))
+    (let ((install-mode (##get-module-install-mode)))
       (and (or (##fx= install-mode
                       (macro-module-install-mode-ask-always))
                (and (##fx= install-mode
@@ -700,7 +710,7 @@
 
            (and (or (##member
                      mod-string
-                     (##os-module-whitelist)
+                     (##get-module-whitelist)
                      (lambda (a b)
                        (module-prefix=? a b)))
                     ;; Ask user to install.
@@ -720,7 +730,7 @@
 (define-prim (##search-or-else-install-module
               modref
               #!optional
-              (search-order ##module-search-order))
+              (search-order (##get-module-search-order)))
   (or (##search-module modref search-order)
       (and (##install-module modref)
            (##search-module modref search-order))))

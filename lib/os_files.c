@@ -1,6 +1,6 @@
 /* File: "os_files.c" */
 
-/* Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -1757,55 +1757,6 @@ ___SCMOBJ ___os_executable_path ___PVOID
     }
 
   return result;
-}
-
-
-/*---------------------------------------------------------------------------*/
-
-
-___SCMOBJ ___os_module_search_order ___PVOID
-{
-  ___SCMOBJ e;
-  ___SCMOBJ result;
-  ___UCS_2STRING *str_list = ___GSTATE->setup_params.module_search_order;
-
-  if (str_list == 0)
-    result = ___NUL;
-  else if ((e = ___NONNULLUCS_2STRINGLIST_to_SCMOBJ
-                  (___PSTATE,
-                   str_list,
-                   &result,
-                   ___RETURN_POS))
-           != ___FIX(___NO_ERR))
-    return e;
-
-  return result;
-}
-
-
-___SCMOBJ ___os_module_whitelist ___PVOID
-{
-  ___SCMOBJ e;
-  ___SCMOBJ result;
-  ___UCS_2STRING *str_list = ___GSTATE->setup_params.module_whitelist;
-
-  if (str_list == 0)
-    result = ___NUL;
-  else if ((e = ___NONNULLUCS_2STRINGLIST_to_SCMOBJ
-                  (___PSTATE,
-                   str_list,
-                   &result,
-                   ___RETURN_POS))
-           != ___FIX(___NO_ERR))
-    return e;
-
-  return result;
-}
-
-
-___SCMOBJ ___os_module_install_mode ___PVOID
-{
-  return ___FIX(___GSTATE->setup_params.module_install_mode);
 }
 
 

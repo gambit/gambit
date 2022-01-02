@@ -262,6 +262,9 @@ default-random-source
                 '()))
           '())))
 
+  (define (primitive? sym)
+    (has-prefix? "##" (symbol->string sym)))
+
   (define (unimplemented? sym)
     (has-prefix? "##unimplemented#" (symbol->string sym)))
 
@@ -440,7 +443,7 @@ default-random-source
   (define (get-doc-mapping filename)
     (let ((lines
            (call-with-input-file
-               filename
+               (list path: filename char-encoding: 'ISO-8859-1)
              (lambda (port)
                (read-all port read-line))))
           (mapping
@@ -544,7 +547,10 @@ default-random-source
         ;; Check that the Gambit manual documents all the procedures and
         ;; special forms defined by the Gambit runtime library.
 
-        (let ((doc-mapping (get-doc-mapping doc-filename)))
+        (let ((doc-mapping
+               (keep (lambda (x)
+                       (not (primitive? (car x))))
+                     (get-doc-mapping doc-filename))))
           (verify-same-mapping (union-mappings
                                 (list doc-mapping
                                       ;; The next line is to avoid

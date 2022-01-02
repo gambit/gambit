@@ -1,6 +1,6 @@
 /* File: "mem.c" */
 
-/* Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.  */
+/* Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.  */
 
 #define ___INCLUDED_FROM_MEM
 #define ___VERSION 409003
@@ -748,6 +748,16 @@ void *ptr;)
 }
 
 
+___EXP_FUNC(int,___refcount_rc)
+   ___P((void *ptr),
+        (ptr)
+void *ptr;)
+{
+  ___rc_header *h = ___CAST(___rc_header*,ptr) - 1;
+  return h->refcount;
+}
+
+
 ___EXP_FUNC(___SCMOBJ,___data_rc)
    ___P((void *ptr),
         (ptr)
@@ -1409,6 +1419,20 @@ ___EXP_FUNC(void,___still_obj_refcount_dec)
 ___WORD obj;)
 {
   ___BODY0(obj)[___STILL_REFCOUNT-___STILL_BODY]--;
+}
+
+
+/*
+ * '___still_obj_refcount (obj)' returns the reference count of
+ * the still object 'obj'.
+ */
+
+___EXP_FUNC(___WORD,___still_obj_refcount)
+   ___P((___WORD obj),
+        (obj)
+___WORD obj;)
+{
+  return ___BODY0(obj)[___STILL_REFCOUNT-___STILL_BODY];
 }
 
 

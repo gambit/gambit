@@ -2,7 +2,7 @@
 
 ;;; File: "gambit.sld"
 
-;;; Copyright (c) 2005-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2005-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -805,6 +805,10 @@ make-will
 module-not-found-exception-arguments
 module-not-found-exception-procedure
 module-not-found-exception?
+module-search-order-add!
+module-search-order-reset!
+module-whitelist-add!
+module-whitelist-reset!
 multiple-c-return-exception?
 mutex-lock!
 mutex-name

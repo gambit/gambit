@@ -262,7 +262,7 @@ EOF
 (if (##inline-host-expression "@host2scm@(main_vm.os_web)")
     (begin
       (##current-directory "/")
-      (##module-search-order-set! (cons "/" ##module-search-order))))
+      (##module-search-order-add! "/")))
 
 ;; Start the REPL of the primordial thread.
 

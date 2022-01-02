@@ -1,6 +1,6 @@
 /* File: "setup.c" */
 
-/* Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module contains the routines that setup the Scheme program for
@@ -4833,6 +4833,11 @@ ___EXP_FUNC(void,___set_gambitdir)
         (gambitdir)
 ___UCS_2STRING gambitdir;)
 {
+  ___addref_string (gambitdir);
+#if 0
+  /* can't release old setting because it is initially not an RC object */
+  ___release_string (___GSTATE->setup_params.gambitdir);
+#endif
   ___GSTATE->setup_params.gambitdir = gambitdir;
 }
 
@@ -4848,6 +4853,11 @@ ___EXP_FUNC(void,___set_gambitdir_map)
         (gambitdir_map)
 ___UCS_2STRING *gambitdir_map;)
 {
+  ___addref_string_list (gambitdir_map);
+#if 0
+  /* can't release old setting because it is initially not an RC object */
+  ___release_string_list (___GSTATE->setup_params.gambitdir_map);
+#endif
   ___GSTATE->setup_params.gambitdir_map = gambitdir_map;
 }
 
@@ -4863,6 +4873,11 @@ ___EXP_FUNC(void,___set_module_search_order)
         (module_search_order)
 ___UCS_2STRING *module_search_order;)
 {
+  ___addref_string_list (module_search_order);
+#if 0
+  /* can't release old setting because it is initially not an RC object */
+  ___release_string_list (___GSTATE->setup_params.module_search_order);
+#endif
   ___GSTATE->setup_params.module_search_order = module_search_order;
 }
 
@@ -4878,6 +4893,11 @@ ___EXP_FUNC(void,___set_module_whitelist)
         (module_whitelist)
 ___UCS_2STRING *module_whitelist;)
 {
+  ___addref_string_list (module_whitelist);
+#if 0
+  /* can't release old setting because it is initially not an RC object */
+  ___release_string_list (___GSTATE->setup_params.module_whitelist);
+#endif
   ___GSTATE->setup_params.module_whitelist = module_whitelist;
 }
 
@@ -4908,6 +4928,11 @@ ___EXP_FUNC(void,___set_repl_client_addr)
         (repl_client_addr)
 ___UCS_2STRING repl_client_addr;)
 {
+  ___addref_string (repl_client_addr);
+#if 0
+  /* can't release old setting because it is initially not an RC object */
+  ___release_string (___GSTATE->setup_params.repl_client_addr);
+#endif
   ___GSTATE->setup_params.repl_client_addr = repl_client_addr;
 }
 
@@ -4923,6 +4948,11 @@ ___EXP_FUNC(void,___set_repl_server_addr)
         (repl_server_addr)
 ___UCS_2STRING repl_server_addr;)
 {
+  ___addref_string (repl_server_addr);
+#if 0
+  /* can't release old setting because it is initially not an RC object */
+  ___release_string (___GSTATE->setup_params.repl_server_addr);
+#endif
   ___GSTATE->setup_params.repl_server_addr = repl_server_addr;
 }
 
@@ -5648,6 +5678,9 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
   ___GSTATE->___addref_rc
     = ___addref_rc;
 
+  ___GSTATE->___refcount_rc
+    = ___refcount_rc;
+
   ___GSTATE->___data_rc
     = ___data_rc;
 
@@ -5671,6 +5704,9 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
 
   ___GSTATE->___still_obj_refcount_dec
     = ___still_obj_refcount_dec;
+
+  ___GSTATE->___still_obj_refcount
+    = ___still_obj_refcount;
 
   ___GSTATE->___gc_hash_table_ref
     = ___gc_hash_table_ref;

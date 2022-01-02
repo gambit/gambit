@@ -8,9 +8,9 @@ The Gambit Scheme system is a complete, portable, efficient and
 reliable implementation of the Scheme programming language.
 
 The latest official release of the system and other helpful documents
-related to Gambit can be obtained from the Gambit wiki at:
+can be obtained from the Gambit web page at:
 
-  http://gambitscheme.org
+  https://gambitscheme.org
 
 <hr>
 

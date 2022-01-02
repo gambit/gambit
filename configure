@@ -3124,7 +3124,7 @@ BOOTSTRAP_CONFIGURE_FLAGS=""
 
 ###############################################################################
 #
-# Use GNU functions when available.
+# Use GNU features when available.
 
 
 $as_echo "#define _GNU_SOURCE /**/" >>confdefs.h

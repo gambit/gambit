@@ -1,7 +1,7 @@
 /* File: "gambit.h" */
 
 /*
- * Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+ * Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
  */
 
 #ifndef ___GAMBIT_H
@@ -9513,7 +9513,7 @@ typedef struct ___rc_header_struct
   {
     struct ___rc_header_struct *prev;
     struct ___rc_header_struct *next;
-    ___SCMOBJ refcount; /* integer but declared ___SCMOBJ for alignment */
+    ___WORD refcount; /* integer but declared ___WORD for alignment */
     ___SCMOBJ data; /* needed for C closures */
   } ___rc_header;
 
@@ -11406,6 +11406,9 @@ typedef struct ___global_state_struct
     void (*___addref_rc)
        ___P((void *ptr),
             ());
+    ___WORD (*___refcount_rc)
+       ___P((void *ptr),
+            ());
     ___SCMOBJ (*___data_rc)
        ___P((void *ptr),
             ());
@@ -11435,6 +11438,9 @@ typedef struct ___global_state_struct
        ___P((___SCMOBJ obj),
             ());
     void (*___still_obj_refcount_dec)
+       ___P((___SCMOBJ obj),
+            ());
+    ___WORD (*___still_obj_refcount)
        ___P((___SCMOBJ obj),
             ());
     ___SCMOBJ (*___gc_hash_table_ref)
@@ -12713,6 +12719,9 @@ ___IMP_FUNC(void,___release_rc)
 ___IMP_FUNC(void,___addref_rc)
    ___P((void *ptr),
         ());
+___IMP_FUNC(___WORD,___refcount_rc)
+   ___P((void *ptr),
+        ());
 ___IMP_FUNC(___SCMOBJ,___data_rc)
    ___P((void *ptr),
         ());
@@ -12742,6 +12751,9 @@ ___IMP_FUNC(void,___still_obj_refcount_inc)
    ___P((___SCMOBJ obj),
         ());
 ___IMP_FUNC(void,___still_obj_refcount_dec)
+   ___P((___SCMOBJ obj),
+        ());
+___IMP_FUNC(___WORD,___still_obj_refcount)
    ___P((___SCMOBJ obj),
         ());
 ___IMP_FUNC(___SCMOBJ,___gc_hash_table_ref)

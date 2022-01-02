@@ -97,6 +97,12 @@
 ;;unimplemented;;link-flat
 ;;unimplemented;;link-incremental
 ;;unimplemented;;main
+
+(module-search-order-add! ".")
+(module-search-order-reset!)
+(module-whitelist-add! "github.com/gambit")
+(module-whitelist-reset!)
+
 ;;unimplemented;;object->serial-number
 
 (poll-point)

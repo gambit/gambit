@@ -2,7 +2,7 @@
 
 ;;; File: "_test-expand.scm"
 
-;;; Copyright (c) 2013-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2013-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -89,7 +89,7 @@
                                  expression)
     (test-generate
      `(%test-predicate ,test-name
-                       (lambda () ,expression)
+                       (##lambda () ,expression)
                        ,positive?
                        ,predicate
                        ,(test-location-generate src)
@@ -123,8 +123,8 @@
                                 test-expr)
     (test-generate
      `(%test-relation ,test-name
-                      (lambda () ,expected)
-                      (lambda () ,test-expr)
+                      (##lambda () ,expected)
+                      (##lambda () ,test-expr)
                       ,positive?
                       ,relation
                       ,(test-location-generate src)
@@ -158,8 +158,8 @@
                                    error)
     (test-generate
      `(%test-approximate ,test-name
-                         (lambda () ,expected)
-                         (lambda () ,test-expr)
+                         (##lambda () ,expected)
+                         (##lambda () ,test-expr)
                          ,error
                          ,positive?
                          ,(test-location-generate src)
@@ -197,7 +197,7 @@
     (test-generate
      `(%test-error ,test-name
                    ,error-type
-                   (lambda () ,test-expr)
+                   (##lambda () ,test-expr)
                    ,tail?
                    ,(test-location-generate src)
                    ,(test-expression-generate src))))
@@ -226,7 +226,7 @@
      (lambda (suite-name . decl-or-exprs)
        (test-generate
         `(%test-group ,suite-name
-                      (lambda () ,@decl-or-exprs))))))
+                      (##lambda () ,@decl-or-exprs))))))
 
   (define (test-generate expr)
     expr)

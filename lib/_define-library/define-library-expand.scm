@@ -298,7 +298,7 @@
                     pkg-config-path)
                    (let loop ((lst args-srcs))
                      (if (pair? lst)
-                         (let ((arg (##source-strip (car args-srcs))))
+                         (let ((arg (##source-strip (car lst))))
                            (if (not (string? arg))
                                (library-decl-err)
                                (begin

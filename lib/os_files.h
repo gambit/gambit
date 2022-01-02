@@ -1,6 +1,6 @@
 /* File: "os_files.h" */
 
-/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_FILES_H
 #define ___OS_FILES_H
@@ -277,12 +277,6 @@ extern ___SCMOBJ ___os_path_normalize_directory
         ());
 
 extern ___SCMOBJ ___os_executable_path ___PVOID;
-
-extern ___SCMOBJ ___os_module_search_order ___PVOID;
-
-extern ___SCMOBJ ___os_module_whitelist ___PVOID;
-
-extern ___SCMOBJ ___os_module_install_mode ___PVOID;
 
 
 /*---------------------------------------------------------------------------*/

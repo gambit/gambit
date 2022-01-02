@@ -1,6 +1,6 @@
 /* File: "c_intf.c" */
 
-/* Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the conversion functions for the C
@@ -1783,11 +1783,15 @@ void *x;)
   if (x != 0)
     {
       void **string_list = ___CAST(void**,x);
-      void *elem;
-      int i = 0;
 
-      while ((elem = string_list[i++]) != 0)
-        ___release_string (elem);
+      if (___refcount_rc (x) == 1) /* last reference? */
+        {
+          void *elem;
+          int i = 0;
+
+          while ((elem = string_list[i++]) != 0)
+            ___release_string (elem);
+        }
 
       ___release_rc (string_list);
     }

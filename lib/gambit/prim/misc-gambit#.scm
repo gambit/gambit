@@ -2,7 +2,7 @@
 
 ;;; File: "misc-gambit#.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -57,6 +57,12 @@ identity
 (link-flat unimplemented#link-flat)
 (link-incremental unimplemented#link-incremental)
 (main unimplemented#main)
+
+module-search-order-add!
+module-search-order-reset!
+module-whitelist-add!
+module-whitelist-reset!
+
 (object->serial-number unimplemented#object->serial-number)
 
 poll-point

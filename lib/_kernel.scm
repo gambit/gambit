@@ -2,7 +2,7 @@
 
 ;;; File: "_kernel.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -2164,7 +2164,7 @@ end-of-code
 (define-prim ##set-gambitdir!
   (c-lambda (UCS-2-string)
             void
-    "___addref_string (___arg1); ___set_gambitdir (___arg1);"))
+    "___set_gambitdir (___arg1);"))
 
 (define-prim ##get-gambitdir-map
   (c-lambda ()
@@ -2174,7 +2174,7 @@ end-of-code
 (define-prim ##set-gambitdir-map!
   (c-lambda (nonnull-UCS-2-string-list)
             void
-    "___addref_string_list (___arg1); ___set_gambitdir_map (___arg1);"))
+    "___set_gambitdir_map (___arg1);"))
 
 (define-prim ##get-module-search-order
   (c-lambda ()
@@ -2184,7 +2184,7 @@ end-of-code
 (define-prim ##set-module-search-order!
   (c-lambda (nonnull-UCS-2-string-list)
             void
-    "___addref_string_list (___arg1); ___set_module_search_order (___arg1);"))
+    "___set_module_search_order (___arg1);"))
 
 (define-prim ##get-module-whitelist
   (c-lambda ()
@@ -2194,7 +2194,7 @@ end-of-code
 (define-prim ##set-module-whitelist!
   (c-lambda (nonnull-UCS-2-string-list)
             void
-    "___addref_string_list (___arg1); ___set_module_whitelist (___arg1);"))
+    "___set_module_whitelist (___arg1);"))
 
 (define-prim (##get-module-install-mode)
   (##declare (not interrupts-enabled))
@@ -2214,7 +2214,7 @@ end-of-code
 (define-prim ##set-repl-client-addr!
   (c-lambda (UCS-2-string)
             void
-    "___addref_string (___arg1); ___set_repl_client_addr (___arg1);"))
+    "___set_repl_client_addr (___arg1);"))
 
 (define-prim ##get-repl-server-addr
   (c-lambda ()
@@ -2224,7 +2224,7 @@ end-of-code
 (define-prim ##set-repl-server-addr!
   (c-lambda (UCS-2-string)
             void
-    "___addref_string (___arg1); ___set_repl_server_addr (___arg1);"))
+    "___set_repl_server_addr (___arg1);"))
 
 ;;;----------------------------------------------------------------------------
 
@@ -4569,21 +4569,6 @@ end-of-code
   (c-lambda ()
             scheme-object
    "___os_executable_path"))
-
-(define-prim ##os-module-search-order
-  (c-lambda ()
-            scheme-object
-   "___os_module_search_order"))
-
-(define-prim ##os-module-whitelist
-  (c-lambda ()
-            scheme-object
-   "___os_module_whitelist"))
-
-(define-prim ##os-module-install-mode
-  (c-lambda ()
-            scheme-object
-   "___os_module_install_mode"))
 
 (define-prim ##repl-server-addr
   (c-lambda ()

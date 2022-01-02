@@ -2,7 +2,7 @@
 
 ;;; File: "misc.sld"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -91,6 +91,12 @@ identity
 ;;UNIMPLEMENTED link-flat
 ;;UNIMPLEMENTED link-incremental
 ;;UNIMPLEMENTED main
+
+module-search-order-add!
+module-search-order-reset!
+module-whitelist-add!
+module-whitelist-reset!
+
 ;;UNIMPLEMENTED object->serial-number
 
 poll-point

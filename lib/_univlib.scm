@@ -2,7 +2,7 @@
 
 ;;; File: "_univlib.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -819,10 +819,6 @@ def @os_device_from_basic_console@():
 (define ##os-configure-command-string-saved "./configure")
 (define ##os-system-type-string-saved "unknown-system-type")
 (define (##system-stamp) 20200101213000)
-
-(define (##os-module-install-mode) 1)
-(define (##os-module-search-order) '("~~lib" "~~userlib"))
-(define (##os-module-whitelist)    '("github.com/gambit"))
 
 (define (##get-parallelism-level) 1)
 (define (##cpu-count) 1)
@@ -1722,6 +1718,82 @@ if len(@os_argv@) >= 2 and @os_argv@[1][:2] == '-:':
 
 ;;;----------------------------------------------------------------------------
 
+;;; Module whitelist.
+
+(define ##feature-module-whitelist
+  (cond-expand
+
+   ((compilation-target js)
+    (##inline-host-declaration "
+
+@os_module_whitelist@ = ['github.com/gambit'];
+
+@os_get_module_whitelist@ = function () {
+  return @os_module_whitelist@;
+};
+
+@os_set_module_whitelist@ = function (whitelist) {
+  @os_module_whitelist@ = whitelist;
+};
+
+"))
+
+   ((compilation-target python)
+    (##inline-host-declaration "
+
+@os_module_whitelist@ = ['github.com/gambit']
+
+def @os_get_module_whitelist@():
+  return @os_module_whitelist@
+
+def @os_set_module_whitelist@(whitelist):
+  @os_module_whitelist@ = whitelist
+
+"))
+
+   (else
+    #f)))
+
+(define (##get-module-whitelist)
+  (##declare (not interrupts-enabled))
+  (##first-argument #f ##feature-module-whitelist)
+  (cond-expand
+
+    ((compilation-target js python)
+     (##inline-host-expression "@host2scm@(@os_get_module_whitelist@())"))
+
+    (else
+     (println "unimplemented ##get-module-whitelist called")
+     '())))
+
+(define (##set-module-whitelist! whitelist)
+  (##declare (not interrupts-enabled))
+  (##first-argument #f ##feature-module-whitelist)
+  (cond-expand
+
+    ((compilation-target js)
+     (##inline-host-statement
+      "@os_set_module_whitelist@(@scm2host@(@1@));"
+      whitelist))
+
+    ((compilation-target python)
+     (##inline-host-statement
+      "@os_set_module_whitelist@(@scm2host@(@1@))"
+      whitelist))
+
+    (else
+     (println "unimplemented ##set-module-whitelist! called"))))
+
+(define ##module-search-order-var '("~~lib" "~~userlib"))
+(define (##get-module-search-order) ##module-search-order-var)
+(define (##set-module-search-order! x) (set! ##module-search-order-var x))
+
+(define ##module-install-mode-var 1)
+(define (##get-module-install-mode) ##module-install-mode-var)
+(define (##set-module-install-mode x) (set! ##module-install-mode-var x))
+
+;;;----------------------------------------------------------------------------
+
 ;;; File information.
 
 (define ##feature-file-input
@@ -1734,14 +1806,14 @@ if (@os_web@) {
 
   @os_trust_all@ = false;
 
-  @os_confirm_if_not_in_whitelist@ = true;
+  @os_confirm_if_not_in_url_whitelist@ = true;
 
-  @os_whitelist@ = [];
+  @os_url_whitelist@ = [];
 
-  @os_whitelist_add@ = function (url) {
+  @os_url_whitelist_add@ = function (url) {
     if (@os_uri_scheme_prefixed@(url) &&
-        @os_whitelist@.indexOf(url) === -1) {
-      @os_whitelist@.push(url);
+        @os_url_whitelist@.indexOf(url) === -1) {
+      @os_url_whitelist@.push(url);
     }
   };
 
@@ -1753,15 +1825,21 @@ if (@os_web@) {
     if (@os_trust_all@) {
       return true;
     }
-    for (var i=0; i<@os_whitelist@.length; i++) {
-      var w = @os_whitelist@[i];
+    for (var i=0; i<@os_url_whitelist@.length; i++) {
+      var w = @os_url_whitelist@[i];
       if (w.slice(-1) === '/' // if ends with slash
           ? url.indexOf(w) === 0 // then it must be a prefix
           : url === w) { // otherwise it must be an exact match
         return true;
       }
     }
-    if (@os_confirm_if_not_in_whitelist@ &&
+    for (var i=0; i<@os_module_whitelist@.length; i++) {
+      var w = 'https://'+@os_module_whitelist@[i]+'/';
+      if (url.indexOf(w) === 0) { // check if it is a prefix
+        return true;
+      }
+    }
+    if (@os_confirm_if_not_in_url_whitelist@ &&
         reason !== undefined &&
         confirm(url + '\\nis being accessed ' + reason + '.\\nClick OK if you trust this URL for that operation.')) {
       return true;
@@ -1772,7 +1850,7 @@ if (@os_web@) {
   @os_web_origin@ = @os_remove_after_last_slash@(window.location.href);
 
   if (@os_web_origin@.indexOf('https://') === 0) {
-    @os_whitelist_add@(@os_web_origin@); // only trust https origin
+    @os_url_whitelist_add@(@os_web_origin@); // only trust https origin
   }
 
   @os_get_url_async@ = function (method, url, callback) {
