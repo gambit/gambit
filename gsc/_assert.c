@@ -1,47 +1,54 @@
 #ifdef ___LINKER_INFO
-; File: "_assert.c", produced by Gambit v4.9.3
+; File: "_assert.c", produced by Gambit v4.9.4
 (
-409003
+409004
 (C)
 "_assert"
+("_assert")
+()
 (("_assert"))
-(
+( #|*/"*/"symbols|#
 "_assert"
-)
-(
-)
-(
 "_assert#"
-)
-(
-)
-(
-)
- ()
+) #|*/"*/"symbols|#
+( #|*/"*/"keywords|#
+) #|*/"*/"keywords|#
+( #|*/"*/"globals-s-d|#
+"_assert#"
+) #|*/"*/"globals-s-d|#
+( #|*/"*/"globals-s-nd|#
+) #|*/"*/"globals-s-nd|#
+( #|*/"*/"globals-ns|#
+) #|*/"*/"globals-ns|#
+( #|*/"*/"meta-info|#
+) #|*/"*/"meta-info|#
 )
 #else
-#define ___VERSION 409003
+#define ___VERSION 409004
 #define ___MODULE_NAME "_assert"
 #define ___LINKER_ID ___LNK___assert
 #define ___MH_PROC ___H___assert
 #define ___SCRIPT_LINE 0
-#define ___SYMCOUNT 1
+#define ___SYMCOUNT 2
 #define ___GLOCOUNT 1
 #define ___SUPCOUNT 1
-#define ___SUBCOUNT 1
+#define ___SUBCOUNT 3
 #define ___LBLCOUNT 2
 #define ___MODDESCR ___REF_SUB(0)
 #include "gambit.h"
 
 ___NEED_SYM(___S___assert)
+___NEED_SYM(___S___assert_23_)
 
 ___NEED_GLO(___G___assert_23_)
 
 ___BEGIN_SYM
 ___DEF_SYM(0,___S___assert,"_assert")
+___DEF_SYM(1,___S___assert_23_,"_assert#")
 ___END_SYM
 
 #define ___SYM___assert ___SYM(0,___S___assert)
+#define ___SYM___assert_23_ ___SYM(1,___S___assert_23_)
 
 ___BEGIN_GLO
 ___DEF_GLO(0,"_assert#")
@@ -50,16 +57,24 @@ ___END_GLO
 #define ___GLO___assert_23_ ___GLO(0,___G___assert_23_)
 #define ___PRM___assert_23_ ___PRM(0,___G___assert_23_)
 
-___DEF_SUB_VEC(___X0,5UL)
-               ___VEC1(___REF_SYM(0,___S___assert))
-               ___VEC1(___REF_PRC(1))
-               ___VEC1(___REF_FIX(1))
+___DEF_SUB_VEC(___X0,6UL)
+               ___VEC1(___REF_SUB(1))
+               ___VEC1(___REF_SUB(2))
                ___VEC1(___REF_NUL)
+               ___VEC1(___REF_FIX(1))
+               ___VEC1(___REF_PRC(1))
                ___VEC1(___REF_FAL)
+               ___VEC0
+___DEF_SUB_VEC(___X1,1UL)
+               ___VEC1(___REF_SYM(0,___S___assert))
+               ___VEC0
+___DEF_SUB_VEC(___X2,0UL)
                ___VEC0
 
 ___BEGIN_SUB
  ___DEF_SUB(___X0)
+,___DEF_SUB(___X1)
+,___DEF_SUB(___X2)
 ___END_SUB
 
 
@@ -107,7 +122,7 @@ ___END_M_SW
 ___END_M_COD
 
 ___BEGIN_LBL
- ___DEF_LBL_INTRO(___H___assert_23_,"_assert#",___REF_FAL,1,0)
+ ___DEF_LBL_INTRO(___H___assert_23_,___REF_SYM(1,___S___assert_23_),___REF_FAL,1,0)
 ,___DEF_LBL_PROC(___H___assert_23_,0,-1)
 ___END_LBL
 
@@ -124,6 +139,7 @@ ___END_MOD_GLO
 
 ___BEGIN_MOD_SYM_KEY
 ___DEF_MOD_SYM(0,___S___assert,"_assert")
+___DEF_MOD_SYM(1,___S___assert_23_,"_assert#")
 ___END_MOD_SYM_KEY
 
 #endif

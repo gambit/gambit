@@ -1,23 +1,82 @@
 #ifdef ___LINKER_INFO
-; File: "_asm.c", produced by Gambit v4.9.3
+; File: "_asm.c", produced by Gambit v4.9.4
 (
-409003
+409004
 (C)
 "_asm"
+("_asm")
+()
 (("_asm"))
-(
+( #|*/"*/"symbols|#
 "UTF-8"
 "_asm"
+"_asm#"
+"_asm#asm-16"
+"_asm#asm-16-be"
+"_asm#asm-16-le"
+"_asm#asm-32"
+"_asm#asm-32-be"
+"_asm#asm-32-le"
+"_asm#asm-64"
+"_asm#asm-64-be"
+"_asm#asm-64-le"
+"_asm#asm-8"
+"_asm#asm-UTF-8-string"
+"_asm#asm-align"
+"_asm#asm-assemble"
+"_asm#asm-assemble-to-file"
+"_asm#asm-assemble-to-u8vector"
+"_asm#asm-at-assembly"
+"_asm#asm-bits-0-to-7"
+"_asm#asm-bits-16-and-up"
+"_asm#asm-bits-32-and-up"
+"_asm#asm-bits-8-and-up"
+"_asm#asm-code-extend"
+"_asm#asm-copy-code-block"
+"_asm#asm-display-listing"
+"_asm#asm-f32"
+"_asm#asm-f64"
+"_asm#asm-float->bits"
+"_asm#asm-float->exact-exponential-format"
+"_asm#asm-float->inexact-exponential-format"
+"_asm#asm-init-code-block"
+"_asm#asm-int"
+"_asm#asm-int-be"
+"_asm#asm-int-le"
+"_asm#asm-label"
+"_asm#asm-label-id"
+"_asm#asm-label-name"
+"_asm#asm-label-pos"
+"_asm#asm-label?"
+"_asm#asm-listing"
+"_asm#asm-make-code-block"
+"_asm#asm-make-label"
+"_asm#asm-make-stream"
+"_asm#asm-origin"
+"_asm#asm-separated-list"
+"_asm#asm-signed-lo"
+"_asm#asm-signed-lo16"
+"_asm#asm-signed-lo32"
+"_asm#asm-signed-lo64"
+"_asm#asm-signed-lo8"
+"_asm#asm-signed16?"
+"_asm#asm-signed32?"
+"_asm#asm-signed8?"
+"_asm#asm-unsigned-lo"
+"_asm#asm-unsigned-lo16"
+"_asm#asm-unsigned-lo32"
+"_asm#asm-unsigned-lo64"
+"_asm#asm-unsigned-lo8"
 "be"
 "code-block"
 "deferred"
 "label"
 "listing"
-)
-(
+) #|*/"*/"symbols|#
+( #|*/"*/"keywords|#
 "char-encoding"
-)
-(
+) #|*/"*/"keywords|#
+( #|*/"*/"globals-s-d|#
 "_asm#"
 "_asm#asm-16-be"
 "_asm#asm-16-le"
@@ -48,8 +107,8 @@
 "_asm#asm-signed-lo32"
 "_asm#asm-signed-lo64"
 "_asm#asm-signed-lo8"
-)
-(
+) #|*/"*/"globals-s-d|#
+( #|*/"*/"globals-s-nd|#
 "_asm#asm-16"
 "_asm#asm-UTF-8-string"
 "_asm#asm-align"
@@ -82,8 +141,8 @@
 "_asm#asm-unsigned-lo32"
 "_asm#asm-unsigned-lo64"
 "_asm#asm-unsigned-lo8"
-)
-(
+) #|*/"*/"globals-s-nd|#
+( #|*/"*/"globals-ns|#
 "*"
 "+"
 "-"
@@ -148,28 +207,86 @@
 "with-output-to-file"
 "with-output-to-u8vector"
 "write-char"
-)
- ()
+) #|*/"*/"globals-ns|#
+( #|*/"*/"meta-info|#
+) #|*/"*/"meta-info|#
 )
 #else
-#define ___VERSION 409003
+#define ___VERSION 409004
 #define ___MODULE_NAME "_asm"
 #define ___LINKER_ID ___LNK___asm
 #define ___MH_PROC ___H___asm
 #define ___SCRIPT_LINE 0
-#define ___SYMCOUNT 7
+#define ___SYMCOUNT 64
 #define ___KEYCOUNT 1
 #define ___GLOCOUNT 126
 #define ___SUPCOUNT 62
 #define ___CNSCOUNT 2
-#define ___SUBCOUNT 22
-#define ___LBLCOUNT 717
-#define ___OFDCOUNT 5
+#define ___SUBCOUNT 24
+#define ___LBLCOUNT 716
+#define ___OFDCOUNT 6
 #define ___MODDESCR ___REF_SUB(21)
 #include "gambit.h"
 
 ___NEED_SYM(___S_UTF_2d_8)
 ___NEED_SYM(___S___asm)
+___NEED_SYM(___S___asm_23_)
+___NEED_SYM(___S___asm_23_asm_2d_16)
+___NEED_SYM(___S___asm_23_asm_2d_16_2d_be)
+___NEED_SYM(___S___asm_23_asm_2d_16_2d_le)
+___NEED_SYM(___S___asm_23_asm_2d_32)
+___NEED_SYM(___S___asm_23_asm_2d_32_2d_be)
+___NEED_SYM(___S___asm_23_asm_2d_32_2d_le)
+___NEED_SYM(___S___asm_23_asm_2d_64)
+___NEED_SYM(___S___asm_23_asm_2d_64_2d_be)
+___NEED_SYM(___S___asm_23_asm_2d_64_2d_le)
+___NEED_SYM(___S___asm_23_asm_2d_8)
+___NEED_SYM(___S___asm_23_asm_2d_UTF_2d_8_2d_string)
+___NEED_SYM(___S___asm_23_asm_2d_align)
+___NEED_SYM(___S___asm_23_asm_2d_assemble)
+___NEED_SYM(___S___asm_23_asm_2d_assemble_2d_to_2d_file)
+___NEED_SYM(___S___asm_23_asm_2d_assemble_2d_to_2d_u8vector)
+___NEED_SYM(___S___asm_23_asm_2d_at_2d_assembly)
+___NEED_SYM(___S___asm_23_asm_2d_bits_2d_0_2d_to_2d_7)
+___NEED_SYM(___S___asm_23_asm_2d_bits_2d_16_2d_and_2d_up)
+___NEED_SYM(___S___asm_23_asm_2d_bits_2d_32_2d_and_2d_up)
+___NEED_SYM(___S___asm_23_asm_2d_bits_2d_8_2d_and_2d_up)
+___NEED_SYM(___S___asm_23_asm_2d_code_2d_extend)
+___NEED_SYM(___S___asm_23_asm_2d_copy_2d_code_2d_block)
+___NEED_SYM(___S___asm_23_asm_2d_display_2d_listing)
+___NEED_SYM(___S___asm_23_asm_2d_f32)
+___NEED_SYM(___S___asm_23_asm_2d_f64)
+___NEED_SYM(___S___asm_23_asm_2d_float_2d__3e_bits)
+___NEED_SYM(___S___asm_23_asm_2d_float_2d__3e_exact_2d_exponential_2d_format)
+___NEED_SYM(___S___asm_23_asm_2d_float_2d__3e_inexact_2d_exponential_2d_format)
+___NEED_SYM(___S___asm_23_asm_2d_init_2d_code_2d_block)
+___NEED_SYM(___S___asm_23_asm_2d_int)
+___NEED_SYM(___S___asm_23_asm_2d_int_2d_be)
+___NEED_SYM(___S___asm_23_asm_2d_int_2d_le)
+___NEED_SYM(___S___asm_23_asm_2d_label)
+___NEED_SYM(___S___asm_23_asm_2d_label_2d_id)
+___NEED_SYM(___S___asm_23_asm_2d_label_2d_name)
+___NEED_SYM(___S___asm_23_asm_2d_label_2d_pos)
+___NEED_SYM(___S___asm_23_asm_2d_label_3f_)
+___NEED_SYM(___S___asm_23_asm_2d_listing)
+___NEED_SYM(___S___asm_23_asm_2d_make_2d_code_2d_block)
+___NEED_SYM(___S___asm_23_asm_2d_make_2d_label)
+___NEED_SYM(___S___asm_23_asm_2d_make_2d_stream)
+___NEED_SYM(___S___asm_23_asm_2d_origin)
+___NEED_SYM(___S___asm_23_asm_2d_separated_2d_list)
+___NEED_SYM(___S___asm_23_asm_2d_signed_2d_lo)
+___NEED_SYM(___S___asm_23_asm_2d_signed_2d_lo16)
+___NEED_SYM(___S___asm_23_asm_2d_signed_2d_lo32)
+___NEED_SYM(___S___asm_23_asm_2d_signed_2d_lo64)
+___NEED_SYM(___S___asm_23_asm_2d_signed_2d_lo8)
+___NEED_SYM(___S___asm_23_asm_2d_signed16_3f_)
+___NEED_SYM(___S___asm_23_asm_2d_signed32_3f_)
+___NEED_SYM(___S___asm_23_asm_2d_signed8_3f_)
+___NEED_SYM(___S___asm_23_asm_2d_unsigned_2d_lo)
+___NEED_SYM(___S___asm_23_asm_2d_unsigned_2d_lo16)
+___NEED_SYM(___S___asm_23_asm_2d_unsigned_2d_lo32)
+___NEED_SYM(___S___asm_23_asm_2d_unsigned_2d_lo64)
+___NEED_SYM(___S___asm_23_asm_2d_unsigned_2d_lo8)
 ___NEED_SYM(___S_be)
 ___NEED_SYM(___S_code_2d_block)
 ___NEED_SYM(___S_deferred)
@@ -308,20 +425,137 @@ ___NEED_GLO(___G_write_2d_char)
 ___BEGIN_SYM
 ___DEF_SYM(0,___S_UTF_2d_8,"UTF-8")
 ___DEF_SYM(1,___S___asm,"_asm")
-___DEF_SYM(2,___S_be,"be")
-___DEF_SYM(3,___S_code_2d_block,"code-block")
-___DEF_SYM(4,___S_deferred,"deferred")
-___DEF_SYM(5,___S_label,"label")
-___DEF_SYM(6,___S_listing,"listing")
+___DEF_SYM(2,___S___asm_23_,"_asm#")
+___DEF_SYM(3,___S___asm_23_asm_2d_16,"_asm#asm-16")
+___DEF_SYM(4,___S___asm_23_asm_2d_16_2d_be,"_asm#asm-16-be")
+___DEF_SYM(5,___S___asm_23_asm_2d_16_2d_le,"_asm#asm-16-le")
+___DEF_SYM(6,___S___asm_23_asm_2d_32,"_asm#asm-32")
+___DEF_SYM(7,___S___asm_23_asm_2d_32_2d_be,"_asm#asm-32-be")
+___DEF_SYM(8,___S___asm_23_asm_2d_32_2d_le,"_asm#asm-32-le")
+___DEF_SYM(9,___S___asm_23_asm_2d_64,"_asm#asm-64")
+___DEF_SYM(10,___S___asm_23_asm_2d_64_2d_be,"_asm#asm-64-be")
+___DEF_SYM(11,___S___asm_23_asm_2d_64_2d_le,"_asm#asm-64-le")
+___DEF_SYM(12,___S___asm_23_asm_2d_8,"_asm#asm-8")
+___DEF_SYM(13,___S___asm_23_asm_2d_UTF_2d_8_2d_string,"_asm#asm-UTF-8-string")
+___DEF_SYM(14,___S___asm_23_asm_2d_align,"_asm#asm-align")
+___DEF_SYM(15,___S___asm_23_asm_2d_assemble,"_asm#asm-assemble")
+___DEF_SYM(16,___S___asm_23_asm_2d_assemble_2d_to_2d_file,"_asm#asm-assemble-to-file")
+___DEF_SYM(17,___S___asm_23_asm_2d_assemble_2d_to_2d_u8vector,"_asm#asm-assemble-to-u8vector")
+
+___DEF_SYM(18,___S___asm_23_asm_2d_at_2d_assembly,"_asm#asm-at-assembly")
+___DEF_SYM(19,___S___asm_23_asm_2d_bits_2d_0_2d_to_2d_7,"_asm#asm-bits-0-to-7")
+___DEF_SYM(20,___S___asm_23_asm_2d_bits_2d_16_2d_and_2d_up,"_asm#asm-bits-16-and-up")
+___DEF_SYM(21,___S___asm_23_asm_2d_bits_2d_32_2d_and_2d_up,"_asm#asm-bits-32-and-up")
+___DEF_SYM(22,___S___asm_23_asm_2d_bits_2d_8_2d_and_2d_up,"_asm#asm-bits-8-and-up")
+___DEF_SYM(23,___S___asm_23_asm_2d_code_2d_extend,"_asm#asm-code-extend")
+___DEF_SYM(24,___S___asm_23_asm_2d_copy_2d_code_2d_block,"_asm#asm-copy-code-block")
+___DEF_SYM(25,___S___asm_23_asm_2d_display_2d_listing,"_asm#asm-display-listing")
+___DEF_SYM(26,___S___asm_23_asm_2d_f32,"_asm#asm-f32")
+___DEF_SYM(27,___S___asm_23_asm_2d_f64,"_asm#asm-f64")
+___DEF_SYM(28,___S___asm_23_asm_2d_float_2d__3e_bits,"_asm#asm-float->bits")
+___DEF_SYM(29,___S___asm_23_asm_2d_float_2d__3e_exact_2d_exponential_2d_format,"_asm#asm-float->exact-exponential-format")
+
+___DEF_SYM(30,___S___asm_23_asm_2d_float_2d__3e_inexact_2d_exponential_2d_format,"_asm#asm-float->inexact-exponential-format")
+
+___DEF_SYM(31,___S___asm_23_asm_2d_init_2d_code_2d_block,"_asm#asm-init-code-block")
+___DEF_SYM(32,___S___asm_23_asm_2d_int,"_asm#asm-int")
+___DEF_SYM(33,___S___asm_23_asm_2d_int_2d_be,"_asm#asm-int-be")
+___DEF_SYM(34,___S___asm_23_asm_2d_int_2d_le,"_asm#asm-int-le")
+___DEF_SYM(35,___S___asm_23_asm_2d_label,"_asm#asm-label")
+___DEF_SYM(36,___S___asm_23_asm_2d_label_2d_id,"_asm#asm-label-id")
+___DEF_SYM(37,___S___asm_23_asm_2d_label_2d_name,"_asm#asm-label-name")
+___DEF_SYM(38,___S___asm_23_asm_2d_label_2d_pos,"_asm#asm-label-pos")
+___DEF_SYM(39,___S___asm_23_asm_2d_label_3f_,"_asm#asm-label?")
+___DEF_SYM(40,___S___asm_23_asm_2d_listing,"_asm#asm-listing")
+___DEF_SYM(41,___S___asm_23_asm_2d_make_2d_code_2d_block,"_asm#asm-make-code-block")
+___DEF_SYM(42,___S___asm_23_asm_2d_make_2d_label,"_asm#asm-make-label")
+___DEF_SYM(43,___S___asm_23_asm_2d_make_2d_stream,"_asm#asm-make-stream")
+___DEF_SYM(44,___S___asm_23_asm_2d_origin,"_asm#asm-origin")
+___DEF_SYM(45,___S___asm_23_asm_2d_separated_2d_list,"_asm#asm-separated-list")
+___DEF_SYM(46,___S___asm_23_asm_2d_signed_2d_lo,"_asm#asm-signed-lo")
+___DEF_SYM(47,___S___asm_23_asm_2d_signed_2d_lo16,"_asm#asm-signed-lo16")
+___DEF_SYM(48,___S___asm_23_asm_2d_signed_2d_lo32,"_asm#asm-signed-lo32")
+___DEF_SYM(49,___S___asm_23_asm_2d_signed_2d_lo64,"_asm#asm-signed-lo64")
+___DEF_SYM(50,___S___asm_23_asm_2d_signed_2d_lo8,"_asm#asm-signed-lo8")
+___DEF_SYM(51,___S___asm_23_asm_2d_signed16_3f_,"_asm#asm-signed16?")
+___DEF_SYM(52,___S___asm_23_asm_2d_signed32_3f_,"_asm#asm-signed32?")
+___DEF_SYM(53,___S___asm_23_asm_2d_signed8_3f_,"_asm#asm-signed8?")
+___DEF_SYM(54,___S___asm_23_asm_2d_unsigned_2d_lo,"_asm#asm-unsigned-lo")
+___DEF_SYM(55,___S___asm_23_asm_2d_unsigned_2d_lo16,"_asm#asm-unsigned-lo16")
+___DEF_SYM(56,___S___asm_23_asm_2d_unsigned_2d_lo32,"_asm#asm-unsigned-lo32")
+___DEF_SYM(57,___S___asm_23_asm_2d_unsigned_2d_lo64,"_asm#asm-unsigned-lo64")
+___DEF_SYM(58,___S___asm_23_asm_2d_unsigned_2d_lo8,"_asm#asm-unsigned-lo8")
+___DEF_SYM(59,___S_be,"be")
+___DEF_SYM(60,___S_code_2d_block,"code-block")
+___DEF_SYM(61,___S_deferred,"deferred")
+___DEF_SYM(62,___S_label,"label")
+___DEF_SYM(63,___S_listing,"listing")
 ___END_SYM
 
 #define ___SYM_UTF_2d_8 ___SYM(0,___S_UTF_2d_8)
 #define ___SYM___asm ___SYM(1,___S___asm)
-#define ___SYM_be ___SYM(2,___S_be)
-#define ___SYM_code_2d_block ___SYM(3,___S_code_2d_block)
-#define ___SYM_deferred ___SYM(4,___S_deferred)
-#define ___SYM_label ___SYM(5,___S_label)
-#define ___SYM_listing ___SYM(6,___S_listing)
+#define ___SYM___asm_23_ ___SYM(2,___S___asm_23_)
+#define ___SYM___asm_23_asm_2d_16 ___SYM(3,___S___asm_23_asm_2d_16)
+#define ___SYM___asm_23_asm_2d_16_2d_be ___SYM(4,___S___asm_23_asm_2d_16_2d_be)
+#define ___SYM___asm_23_asm_2d_16_2d_le ___SYM(5,___S___asm_23_asm_2d_16_2d_le)
+#define ___SYM___asm_23_asm_2d_32 ___SYM(6,___S___asm_23_asm_2d_32)
+#define ___SYM___asm_23_asm_2d_32_2d_be ___SYM(7,___S___asm_23_asm_2d_32_2d_be)
+#define ___SYM___asm_23_asm_2d_32_2d_le ___SYM(8,___S___asm_23_asm_2d_32_2d_le)
+#define ___SYM___asm_23_asm_2d_64 ___SYM(9,___S___asm_23_asm_2d_64)
+#define ___SYM___asm_23_asm_2d_64_2d_be ___SYM(10,___S___asm_23_asm_2d_64_2d_be)
+#define ___SYM___asm_23_asm_2d_64_2d_le ___SYM(11,___S___asm_23_asm_2d_64_2d_le)
+#define ___SYM___asm_23_asm_2d_8 ___SYM(12,___S___asm_23_asm_2d_8)
+#define ___SYM___asm_23_asm_2d_UTF_2d_8_2d_string ___SYM(13,___S___asm_23_asm_2d_UTF_2d_8_2d_string)
+#define ___SYM___asm_23_asm_2d_align ___SYM(14,___S___asm_23_asm_2d_align)
+#define ___SYM___asm_23_asm_2d_assemble ___SYM(15,___S___asm_23_asm_2d_assemble)
+#define ___SYM___asm_23_asm_2d_assemble_2d_to_2d_file ___SYM(16,___S___asm_23_asm_2d_assemble_2d_to_2d_file)
+#define ___SYM___asm_23_asm_2d_assemble_2d_to_2d_u8vector ___SYM(17,___S___asm_23_asm_2d_assemble_2d_to_2d_u8vector)
+#define ___SYM___asm_23_asm_2d_at_2d_assembly ___SYM(18,___S___asm_23_asm_2d_at_2d_assembly)
+#define ___SYM___asm_23_asm_2d_bits_2d_0_2d_to_2d_7 ___SYM(19,___S___asm_23_asm_2d_bits_2d_0_2d_to_2d_7)
+#define ___SYM___asm_23_asm_2d_bits_2d_16_2d_and_2d_up ___SYM(20,___S___asm_23_asm_2d_bits_2d_16_2d_and_2d_up)
+#define ___SYM___asm_23_asm_2d_bits_2d_32_2d_and_2d_up ___SYM(21,___S___asm_23_asm_2d_bits_2d_32_2d_and_2d_up)
+#define ___SYM___asm_23_asm_2d_bits_2d_8_2d_and_2d_up ___SYM(22,___S___asm_23_asm_2d_bits_2d_8_2d_and_2d_up)
+#define ___SYM___asm_23_asm_2d_code_2d_extend ___SYM(23,___S___asm_23_asm_2d_code_2d_extend)
+#define ___SYM___asm_23_asm_2d_copy_2d_code_2d_block ___SYM(24,___S___asm_23_asm_2d_copy_2d_code_2d_block)
+#define ___SYM___asm_23_asm_2d_display_2d_listing ___SYM(25,___S___asm_23_asm_2d_display_2d_listing)
+#define ___SYM___asm_23_asm_2d_f32 ___SYM(26,___S___asm_23_asm_2d_f32)
+#define ___SYM___asm_23_asm_2d_f64 ___SYM(27,___S___asm_23_asm_2d_f64)
+#define ___SYM___asm_23_asm_2d_float_2d__3e_bits ___SYM(28,___S___asm_23_asm_2d_float_2d__3e_bits)
+#define ___SYM___asm_23_asm_2d_float_2d__3e_exact_2d_exponential_2d_format ___SYM(29,___S___asm_23_asm_2d_float_2d__3e_exact_2d_exponential_2d_format)
+#define ___SYM___asm_23_asm_2d_float_2d__3e_inexact_2d_exponential_2d_format ___SYM(30,___S___asm_23_asm_2d_float_2d__3e_inexact_2d_exponential_2d_format)
+#define ___SYM___asm_23_asm_2d_init_2d_code_2d_block ___SYM(31,___S___asm_23_asm_2d_init_2d_code_2d_block)
+#define ___SYM___asm_23_asm_2d_int ___SYM(32,___S___asm_23_asm_2d_int)
+#define ___SYM___asm_23_asm_2d_int_2d_be ___SYM(33,___S___asm_23_asm_2d_int_2d_be)
+#define ___SYM___asm_23_asm_2d_int_2d_le ___SYM(34,___S___asm_23_asm_2d_int_2d_le)
+#define ___SYM___asm_23_asm_2d_label ___SYM(35,___S___asm_23_asm_2d_label)
+#define ___SYM___asm_23_asm_2d_label_2d_id ___SYM(36,___S___asm_23_asm_2d_label_2d_id)
+#define ___SYM___asm_23_asm_2d_label_2d_name ___SYM(37,___S___asm_23_asm_2d_label_2d_name)
+#define ___SYM___asm_23_asm_2d_label_2d_pos ___SYM(38,___S___asm_23_asm_2d_label_2d_pos)
+#define ___SYM___asm_23_asm_2d_label_3f_ ___SYM(39,___S___asm_23_asm_2d_label_3f_)
+#define ___SYM___asm_23_asm_2d_listing ___SYM(40,___S___asm_23_asm_2d_listing)
+#define ___SYM___asm_23_asm_2d_make_2d_code_2d_block ___SYM(41,___S___asm_23_asm_2d_make_2d_code_2d_block)
+#define ___SYM___asm_23_asm_2d_make_2d_label ___SYM(42,___S___asm_23_asm_2d_make_2d_label)
+#define ___SYM___asm_23_asm_2d_make_2d_stream ___SYM(43,___S___asm_23_asm_2d_make_2d_stream)
+#define ___SYM___asm_23_asm_2d_origin ___SYM(44,___S___asm_23_asm_2d_origin)
+#define ___SYM___asm_23_asm_2d_separated_2d_list ___SYM(45,___S___asm_23_asm_2d_separated_2d_list)
+#define ___SYM___asm_23_asm_2d_signed_2d_lo ___SYM(46,___S___asm_23_asm_2d_signed_2d_lo)
+#define ___SYM___asm_23_asm_2d_signed_2d_lo16 ___SYM(47,___S___asm_23_asm_2d_signed_2d_lo16)
+#define ___SYM___asm_23_asm_2d_signed_2d_lo32 ___SYM(48,___S___asm_23_asm_2d_signed_2d_lo32)
+#define ___SYM___asm_23_asm_2d_signed_2d_lo64 ___SYM(49,___S___asm_23_asm_2d_signed_2d_lo64)
+#define ___SYM___asm_23_asm_2d_signed_2d_lo8 ___SYM(50,___S___asm_23_asm_2d_signed_2d_lo8)
+#define ___SYM___asm_23_asm_2d_signed16_3f_ ___SYM(51,___S___asm_23_asm_2d_signed16_3f_)
+#define ___SYM___asm_23_asm_2d_signed32_3f_ ___SYM(52,___S___asm_23_asm_2d_signed32_3f_)
+#define ___SYM___asm_23_asm_2d_signed8_3f_ ___SYM(53,___S___asm_23_asm_2d_signed8_3f_)
+#define ___SYM___asm_23_asm_2d_unsigned_2d_lo ___SYM(54,___S___asm_23_asm_2d_unsigned_2d_lo)
+#define ___SYM___asm_23_asm_2d_unsigned_2d_lo16 ___SYM(55,___S___asm_23_asm_2d_unsigned_2d_lo16)
+#define ___SYM___asm_23_asm_2d_unsigned_2d_lo32 ___SYM(56,___S___asm_23_asm_2d_unsigned_2d_lo32)
+#define ___SYM___asm_23_asm_2d_unsigned_2d_lo64 ___SYM(57,___S___asm_23_asm_2d_unsigned_2d_lo64)
+#define ___SYM___asm_23_asm_2d_unsigned_2d_lo8 ___SYM(58,___S___asm_23_asm_2d_unsigned_2d_lo8)
+#define ___SYM_be ___SYM(59,___S_be)
+#define ___SYM_code_2d_block ___SYM(60,___S_code_2d_block)
+#define ___SYM_deferred ___SYM(61,___S_deferred)
+#define ___SYM_label ___SYM(62,___S_label)
+#define ___SYM_listing ___SYM(63,___S_listing)
 
 ___BEGIN_KEY
 ___DEF_KEY(0,___K_char_2d_encoding,"char-encoding")
@@ -806,12 +1040,18 @@ ___DEF_SUB_STR(___X19,17UL)
 ___DEF_SUB_BIGFIX(___X20,2UL)
                ___BIGFIX2(0x0L,0x1L)
                ___BIGFIX0
-___DEF_SUB_VEC(___X21,5UL)
-               ___VEC1(___REF_SYM(1,___S___asm))
-               ___VEC1(___REF_PRC(1))
-               ___VEC1(___REF_FIX(1))
+___DEF_SUB_VEC(___X21,6UL)
+               ___VEC1(___REF_SUB(22))
+               ___VEC1(___REF_SUB(23))
                ___VEC1(___REF_NUL)
+               ___VEC1(___REF_FIX(1))
+               ___VEC1(___REF_PRC(1))
                ___VEC1(___REF_FAL)
+               ___VEC0
+___DEF_SUB_VEC(___X22,1UL)
+               ___VEC1(___REF_SYM(1,___S___asm))
+               ___VEC0
+___DEF_SUB_VEC(___X23,0UL)
                ___VEC0
 
 ___BEGIN_SUB
@@ -837,6 +1077,8 @@ ___BEGIN_SUB
 ,___DEF_SUB(___X19)
 ,___DEF_SUB(___X20)
 ,___DEF_SUB(___X21)
+,___DEF_SUB(___X22)
+,___DEF_SUB(___X23)
 ___END_SUB
 
 
@@ -1196,7 +1438,6 @@ ___DEF_M_HLBL(___L73___asm_23_asm_2d_display_2d_listing)
 ___DEF_M_HLBL(___L74___asm_23_asm_2d_display_2d_listing)
 ___DEF_M_HLBL(___L75___asm_23_asm_2d_display_2d_listing)
 ___DEF_M_HLBL(___L76___asm_23_asm_2d_display_2d_listing)
-___DEF_M_HLBL(___L77___asm_23_asm_2d_display_2d_listing)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0___asm_23_asm_2d_assemble)
 ___DEF_M_HLBL(___L1___asm_23_asm_2d_assemble)
@@ -1723,7 +1964,7 @@ ___DEF_SLBL(2,___L2___asm_23_asm_2d_init_2d_code_2d_block)
    ___JUMPGLONOTSAFE(___SET_NARGS(3),121,___G_vector_2d_set_21_)
 ___DEF_SLBL(3,___L3___asm_23_asm_2d_init_2d_code_2d_block)
    ___SET_R0(___LBL(4))
-   ___JUMPINT(___SET_NARGS(0),___PRC(514),___L___asm_23_asm_2d_make_2d_stream)
+   ___JUMPINT(___SET_NARGS(0),___PRC(513),___L___asm_23_asm_2d_make_2d_stream)
 ___DEF_SLBL(4,___L4___asm_23_asm_2d_init_2d_code_2d_block)
    ___SET_R3(___R1)
    ___SET_R1(___STK(-6))
@@ -1854,7 +2095,7 @@ ___DEF_SLBL(2,___L2___asm_23_asm_2d_8)
    ___POLL(3)
 ___DEF_SLBL(3,___L3___asm_23_asm_2d_8)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(519),___L___asm_23_asm_2d_code_2d_extend)
+   ___JUMPINT(___SET_NARGS(2),___PRC(518),___L___asm_23_asm_2d_code_2d_extend)
 ___END_P_SW
 ___END_P_COD
 
@@ -1946,7 +2187,7 @@ ___DEF_GLBL(___L___asm_23_asm_2d_16_2d_be)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___asm_23_asm_2d_16_2d_be)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(1),___PRC(595),___L___asm_23_asm_2d_bits_2d_8_2d_and_2d_up)
+   ___JUMPINT(___SET_NARGS(1),___PRC(594),___L___asm_23_asm_2d_bits_2d_8_2d_and_2d_up)
 ___DEF_SLBL(2,___L2___asm_23_asm_2d_16_2d_be)
    ___SET_R2(___FIX(256L))
    ___SET_R0(___LBL(3))
@@ -1955,7 +2196,7 @@ ___DEF_SLBL(3,___L3___asm_23_asm_2d_16_2d_be)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(4))
-   ___JUMPINT(___SET_NARGS(2),___PRC(519),___L___asm_23_asm_2d_code_2d_extend)
+   ___JUMPINT(___SET_NARGS(2),___PRC(518),___L___asm_23_asm_2d_code_2d_extend)
 ___DEF_SLBL(4,___L4___asm_23_asm_2d_16_2d_be)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-6))
@@ -2003,7 +2244,7 @@ ___DEF_SLBL(1,___L1___asm_23_asm_2d_16_2d_le)
 ___DEF_SLBL(2,___L2___asm_23_asm_2d_16_2d_le)
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(1),___PRC(595),___L___asm_23_asm_2d_bits_2d_8_2d_and_2d_up)
+   ___JUMPINT(___SET_NARGS(1),___PRC(594),___L___asm_23_asm_2d_bits_2d_8_2d_and_2d_up)
 ___DEF_SLBL(3,___L3___asm_23_asm_2d_16_2d_le)
    ___SET_R2(___FIX(256L))
    ___SET_R0(___LBL(4))
@@ -2015,7 +2256,7 @@ ___DEF_SLBL(4,___L4___asm_23_asm_2d_16_2d_le)
    ___POLL(5)
 ___DEF_SLBL(5,___L5___asm_23_asm_2d_16_2d_le)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(519),___L___asm_23_asm_2d_code_2d_extend)
+   ___JUMPINT(___SET_NARGS(2),___PRC(518),___L___asm_23_asm_2d_code_2d_extend)
 ___END_P_SW
 ___END_P_COD
 
@@ -2106,7 +2347,7 @@ ___DEF_GLBL(___L___asm_23_asm_2d_32_2d_be)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___asm_23_asm_2d_32_2d_be)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(1),___PRC(603),___L___asm_23_asm_2d_bits_2d_16_2d_and_2d_up)
+   ___JUMPINT(___SET_NARGS(1),___PRC(602),___L___asm_23_asm_2d_bits_2d_16_2d_and_2d_up)
 ___DEF_SLBL(2,___L2___asm_23_asm_2d_32_2d_be)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
@@ -2158,7 +2399,7 @@ ___DEF_SLBL(1,___L1___asm_23_asm_2d_32_2d_le)
 ___DEF_SLBL(2,___L2___asm_23_asm_2d_32_2d_le)
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(1),___PRC(603),___L___asm_23_asm_2d_bits_2d_16_2d_and_2d_up)
+   ___JUMPINT(___SET_NARGS(1),___PRC(602),___L___asm_23_asm_2d_bits_2d_16_2d_and_2d_up)
 ___DEF_SLBL(3,___L3___asm_23_asm_2d_32_2d_le)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
@@ -2257,7 +2498,7 @@ ___DEF_GLBL(___L___asm_23_asm_2d_64_2d_be)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___asm_23_asm_2d_64_2d_be)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(1),___PRC(611),___L___asm_23_asm_2d_bits_2d_32_2d_and_2d_up)
+   ___JUMPINT(___SET_NARGS(1),___PRC(610),___L___asm_23_asm_2d_bits_2d_32_2d_and_2d_up)
 ___DEF_SLBL(2,___L2___asm_23_asm_2d_64_2d_be)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
@@ -2309,7 +2550,7 @@ ___DEF_SLBL(1,___L1___asm_23_asm_2d_64_2d_le)
 ___DEF_SLBL(2,___L2___asm_23_asm_2d_64_2d_le)
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(1),___PRC(611),___L___asm_23_asm_2d_bits_2d_32_2d_and_2d_up)
+   ___JUMPINT(___SET_NARGS(1),___PRC(610),___L___asm_23_asm_2d_bits_2d_32_2d_and_2d_up)
 ___DEF_SLBL(3,___L3___asm_23_asm_2d_64_2d_le)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
@@ -2425,7 +2666,7 @@ ___DEF_SLBL(2,___L2___asm_23_asm_2d_int_2d_be)
    ___END_IF
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(1),___PRC(542),___L___asm_23_asm_2d_signed_2d_lo8)
+   ___JUMPINT(___SET_NARGS(1),___PRC(541),___L___asm_23_asm_2d_signed_2d_lo8)
 ___DEF_SLBL(3,___L3___asm_23_asm_2d_int_2d_be)
    ___SET_STK(-5,___R1)
    ___SET_R2(___R1)
@@ -2447,7 +2688,7 @@ ___DEF_SLBL(5,___L5___asm_23_asm_2d_int_2d_be)
    ___END_IF
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(6))
-   ___JUMPINT(___SET_NARGS(1),___PRC(551),___L___asm_23_asm_2d_signed_2d_lo16)
+   ___JUMPINT(___SET_NARGS(1),___PRC(550),___L___asm_23_asm_2d_signed_2d_lo16)
 ___DEF_SLBL(6,___L6___asm_23_asm_2d_int_2d_be)
    ___SET_STK(-5,___R1)
    ___SET_R2(___R1)
@@ -2465,7 +2706,7 @@ ___DEF_SLBL(7,___L7___asm_23_asm_2d_int_2d_be)
    ___END_IF
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(8))
-   ___JUMPINT(___SET_NARGS(1),___PRC(560),___L___asm_23_asm_2d_signed_2d_lo32)
+   ___JUMPINT(___SET_NARGS(1),___PRC(559),___L___asm_23_asm_2d_signed_2d_lo32)
 ___DEF_SLBL(8,___L8___asm_23_asm_2d_int_2d_be)
    ___SET_STK(-5,___R1)
    ___SET_R2(___R1)
@@ -2475,7 +2716,7 @@ ___DEF_SLBL(8,___L8___asm_23_asm_2d_int_2d_be)
 ___DEF_GLBL(___L12___asm_23_asm_2d_int_2d_be)
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(9))
-   ___JUMPINT(___SET_NARGS(1),___PRC(569),___L___asm_23_asm_2d_signed_2d_lo64)
+   ___JUMPINT(___SET_NARGS(1),___PRC(568),___L___asm_23_asm_2d_signed_2d_lo64)
 ___DEF_SLBL(9,___L9___asm_23_asm_2d_int_2d_be)
    ___SET_STK(-5,___R1)
    ___SET_R2(___R1)
@@ -2531,7 +2772,7 @@ ___DEF_SLBL(2,___L2___asm_23_asm_2d_int_2d_le)
    ___END_IF
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(1),___PRC(542),___L___asm_23_asm_2d_signed_2d_lo8)
+   ___JUMPINT(___SET_NARGS(1),___PRC(541),___L___asm_23_asm_2d_signed_2d_lo8)
 ___DEF_SLBL(3,___L3___asm_23_asm_2d_int_2d_le)
    ___SET_STK(-5,___R1)
    ___SET_R2(___R1)
@@ -2553,7 +2794,7 @@ ___DEF_SLBL(5,___L5___asm_23_asm_2d_int_2d_le)
    ___END_IF
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(6))
-   ___JUMPINT(___SET_NARGS(1),___PRC(551),___L___asm_23_asm_2d_signed_2d_lo16)
+   ___JUMPINT(___SET_NARGS(1),___PRC(550),___L___asm_23_asm_2d_signed_2d_lo16)
 ___DEF_SLBL(6,___L6___asm_23_asm_2d_int_2d_le)
    ___SET_STK(-5,___R1)
    ___SET_R2(___R1)
@@ -2571,7 +2812,7 @@ ___DEF_SLBL(7,___L7___asm_23_asm_2d_int_2d_le)
    ___END_IF
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(8))
-   ___JUMPINT(___SET_NARGS(1),___PRC(560),___L___asm_23_asm_2d_signed_2d_lo32)
+   ___JUMPINT(___SET_NARGS(1),___PRC(559),___L___asm_23_asm_2d_signed_2d_lo32)
 ___DEF_SLBL(8,___L8___asm_23_asm_2d_int_2d_le)
    ___SET_STK(-5,___R1)
    ___SET_R2(___R1)
@@ -2581,7 +2822,7 @@ ___DEF_SLBL(8,___L8___asm_23_asm_2d_int_2d_le)
 ___DEF_GLBL(___L12___asm_23_asm_2d_int_2d_le)
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(9))
-   ___JUMPINT(___SET_NARGS(1),___PRC(569),___L___asm_23_asm_2d_signed_2d_lo64)
+   ___JUMPINT(___SET_NARGS(1),___PRC(568),___L___asm_23_asm_2d_signed_2d_lo64)
 ___DEF_SLBL(9,___L9___asm_23_asm_2d_int_2d_le)
    ___SET_STK(-5,___R1)
    ___SET_R2(___R1)
@@ -2622,7 +2863,7 @@ ___DEF_GLBL(___L___asm_23_asm_2d_f32)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___asm_23_asm_2d_f32)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(697),___L___asm_23_asm_2d_float_2d__3e_bits)
+   ___JUMPINT(___SET_NARGS(2),___PRC(696),___L___asm_23_asm_2d_float_2d__3e_bits)
 ___DEF_SLBL(2,___L2___asm_23_asm_2d_f32)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
@@ -2665,7 +2906,7 @@ ___DEF_GLBL(___L___asm_23_asm_2d_f64)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___asm_23_asm_2d_f64)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(697),___L___asm_23_asm_2d_float_2d__3e_bits)
+   ___JUMPINT(___SET_NARGS(2),___PRC(696),___L___asm_23_asm_2d_float_2d__3e_bits)
 ___DEF_SLBL(2,___L2___asm_23_asm_2d_f64)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
@@ -2785,7 +3026,7 @@ ___DEF_SLBL(12,___L12___asm_23_asm_2d_UTF_2d_8_2d_string)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(13))
-   ___JUMPINT(___SET_NARGS(2),___PRC(519),___L___asm_23_asm_2d_code_2d_extend)
+   ___JUMPINT(___SET_NARGS(2),___PRC(518),___L___asm_23_asm_2d_code_2d_extend)
 ___DEF_SLBL(13,___L13___asm_23_asm_2d_UTF_2d_8_2d_string)
    ___SET_R1(___STK(-3))
    ___SET_R2(___FIX(1L))
@@ -2953,7 +3194,7 @@ ___DEF_SLBL(3,___L3___asm_23_asm_2d_label)
    ___POLL(4)
 ___DEF_SLBL(4,___L4___asm_23_asm_2d_label)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(519),___L___asm_23_asm_2d_code_2d_extend)
+   ___JUMPINT(___SET_NARGS(2),___PRC(518),___L___asm_23_asm_2d_code_2d_extend)
 ___DEF_GLBL(___L7___asm_23_asm_2d_label)
    ___SET_R1(___STK(-5))
    ___SET_R2(___FIX(2L))
@@ -3329,7 +3570,7 @@ ___DEF_SLBL(21,___L21___asm_23_asm_2d_align)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(22))
-   ___JUMPINT(___SET_NARGS(2),___PRC(519),___L___asm_23_asm_2d_code_2d_extend)
+   ___JUMPINT(___SET_NARGS(2),___PRC(518),___L___asm_23_asm_2d_code_2d_extend)
 ___DEF_SLBL(22,___L22___asm_23_asm_2d_align)
    ___SET_R1(___STK(-4))
    ___SET_R2(___FIX(1L))
@@ -3352,7 +3593,7 @@ ___DEF_SLBL(25,___L25___asm_23_asm_2d_align)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(26))
-   ___JUMPINT(___SET_NARGS(2),___PRC(519),___L___asm_23_asm_2d_code_2d_extend)
+   ___JUMPINT(___SET_NARGS(2),___PRC(518),___L___asm_23_asm_2d_code_2d_extend)
 ___DEF_SLBL(26,___L26___asm_23_asm_2d_align)
    ___SET_R1(___STK(-4))
    ___SET_R2(___FIX(1L))
@@ -3567,7 +3808,7 @@ ___DEF_SLBL(21,___L21___asm_23_asm_2d_origin)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(22))
-   ___JUMPINT(___SET_NARGS(2),___PRC(519),___L___asm_23_asm_2d_code_2d_extend)
+   ___JUMPINT(___SET_NARGS(2),___PRC(518),___L___asm_23_asm_2d_code_2d_extend)
 ___DEF_SLBL(22,___L22___asm_23_asm_2d_origin)
    ___SET_R1(___STK(-4))
    ___SET_R2(___FIX(1L))
@@ -3645,7 +3886,7 @@ ___DEF_SLBL(2,___L2___asm_23_asm_2d_at_2d_assembly)
    ___POLL(3)
 ___DEF_SLBL(3,___L3___asm_23_asm_2d_at_2d_assembly)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(519),___L___asm_23_asm_2d_code_2d_extend)
+   ___JUMPINT(___SET_NARGS(2),___PRC(518),___L___asm_23_asm_2d_code_2d_extend)
 ___END_P_SW
 ___END_P_COD
 
@@ -3687,7 +3928,7 @@ ___DEF_SLBL(2,___L2___asm_23_asm_2d_listing)
    ___POLL(3)
 ___DEF_SLBL(3,___L3___asm_23_asm_2d_listing)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(519),___L___asm_23_asm_2d_code_2d_extend)
+   ___JUMPINT(___SET_NARGS(2),___PRC(518),___L___asm_23_asm_2d_code_2d_extend)
 ___END_P_SW
 ___END_P_COD
 
@@ -3865,7 +4106,6 @@ ___DEF_P_HLBL(___L73___asm_23_asm_2d_display_2d_listing)
 ___DEF_P_HLBL(___L74___asm_23_asm_2d_display_2d_listing)
 ___DEF_P_HLBL(___L75___asm_23_asm_2d_display_2d_listing)
 ___DEF_P_HLBL(___L76___asm_23_asm_2d_display_2d_listing)
-___DEF_P_HLBL(___L77___asm_23_asm_2d_display_2d_listing)
 ___END_P_HLBL
 ___BEGIN_P_SW
 ___DEF_SLBL(0,___L0___asm_23_asm_2d_display_2d_listing)
@@ -3875,7 +4115,7 @@ ___DEF_SLBL(0,___L0___asm_23_asm_2d_display_2d_listing)
    ___WRONG_NARGS(0,1,2,0)
 ___DEF_GLBL(___L___asm_23_asm_2d_display_2d_listing)
    ___IF(___NOT(___EQP(___R2,___ABSENT)))
-   ___GOTO(___L78___asm_23_asm_2d_display_2d_listing)
+   ___GOTO(___L77___asm_23_asm_2d_display_2d_listing)
    ___END_IF
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
@@ -3890,12 +4130,12 @@ ___DEF_SLBL(2,___L2___asm_23_asm_2d_display_2d_listing)
    ___SET_R0(___STK(-7))
    ___SET_STK(-7,___STK(-6))
    ___ADJFP(-7)
-   ___GOTO(___L79___asm_23_asm_2d_display_2d_listing)
-___DEF_GLBL(___L78___asm_23_asm_2d_display_2d_listing)
+   ___GOTO(___L78___asm_23_asm_2d_display_2d_listing)
+___DEF_GLBL(___L77___asm_23_asm_2d_display_2d_listing)
    ___SET_STK(1,___R1)
    ___SET_R1(___R2)
    ___ADJFP(1)
-___DEF_GLBL(___L79___asm_23_asm_2d_display_2d_listing)
+___DEF_GLBL(___L78___asm_23_asm_2d_display_2d_listing)
    ___SET_STK(1,___STK(0))
    ___SET_STK(0,___R3)
    ___SET_STK(2,___STK(1))
@@ -3925,7 +4165,7 @@ ___DEF_SLBL(6,___L6___asm_23_asm_2d_display_2d_listing)
    ___ADJFP(-6)
    ___POLL(7)
 ___DEF_SLBL(7,___L7___asm_23_asm_2d_display_2d_listing)
-   ___GOTO(___L80___asm_23_asm_2d_display_2d_listing)
+   ___GOTO(___L79___asm_23_asm_2d_display_2d_listing)
 ___DEF_SLBL(8,___L8___asm_23_asm_2d_display_2d_listing)
    ___SET_R3(___R1)
    ___SET_R0(___STK(-5))
@@ -3934,7 +4174,7 @@ ___DEF_SLBL(8,___L8___asm_23_asm_2d_display_2d_listing)
    ___ADJFP(-6)
    ___POLL(9)
 ___DEF_SLBL(9,___L9___asm_23_asm_2d_display_2d_listing)
-___DEF_GLBL(___L80___asm_23_asm_2d_display_2d_listing)
+___DEF_GLBL(___L79___asm_23_asm_2d_display_2d_listing)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R2)
@@ -3945,29 +4185,36 @@ ___DEF_SLBL(10,___L10___asm_23_asm_2d_display_2d_listing)
    ___SET_R0(___LBL(11))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),104,___G_pair_3f_)
 ___DEF_SLBL(11,___L11___asm_23_asm_2d_display_2d_listing)
-   ___IF(___NOT(___NOTFALSEP(___R1)))
-   ___GOTO(___L101___asm_23_asm_2d_display_2d_listing)
+   ___IF(___NOTFALSEP(___R1))
+   ___GOTO(___L80___asm_23_asm_2d_display_2d_listing)
    ___END_IF
-   ___SET_R1(___STK(-8))
-   ___SET_R0(___LBL(12))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),72,___G_car)
+   ___SET_R1(___STK(-10))
+   ___SET_R0(___STK(-9))
+   ___POLL(12)
 ___DEF_SLBL(12,___L12___asm_23_asm_2d_display_2d_listing)
-   ___SET_STK(-5,___R1)
+   ___ADJFP(-12)
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),99,___G_newline)
+___DEF_GLBL(___L80___asm_23_asm_2d_display_2d_listing)
+   ___SET_R1(___STK(-8))
    ___SET_R0(___LBL(13))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),122,___G_vector_3f_)
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),72,___G_car)
 ___DEF_SLBL(13,___L13___asm_23_asm_2d_display_2d_listing)
+   ___SET_STK(-5,___R1)
+   ___SET_R0(___LBL(14))
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),122,___G_vector_3f_)
+___DEF_SLBL(14,___L14___asm_23_asm_2d_display_2d_listing)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L99___asm_23_asm_2d_display_2d_listing)
    ___END_IF
    ___SET_R1(___STK(-5))
    ___SET_R2(___FIX(0L))
-   ___SET_R0(___LBL(14))
-   ___JUMPGLONOTSAFE(___SET_NARGS(2),120,___G_vector_2d_ref)
-___DEF_SLBL(14,___L14___asm_23_asm_2d_display_2d_listing)
-   ___SET_R2(___SYM_listing)
    ___SET_R0(___LBL(15))
-   ___JUMPGLONOTSAFE(___SET_NARGS(2),78,___G_eq_3f_)
+   ___JUMPGLONOTSAFE(___SET_NARGS(2),120,___G_vector_2d_ref)
 ___DEF_SLBL(15,___L15___asm_23_asm_2d_display_2d_listing)
+   ___SET_R2(___SYM_listing)
+   ___SET_R0(___LBL(16))
+   ___JUMPGLONOTSAFE(___SET_NARGS(2),78,___G_eq_3f_)
+___DEF_SLBL(16,___L16___asm_23_asm_2d_display_2d_listing)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L98___asm_23_asm_2d_display_2d_listing)
    ___END_IF
@@ -3976,25 +4223,25 @@ ___DEF_SLBL(15,___L15___asm_23_asm_2d_display_2d_listing)
    ___END_IF
    ___SET_R1(___STK(-6))
    ___SET_R2(___FIX(0L))
-   ___SET_R0(___LBL(16))
+   ___SET_R0(___LBL(17))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),86,___G_fx_3d_)
-___DEF_SLBL(16,___L16___asm_23_asm_2d_display_2d_listing)
+___DEF_SLBL(17,___L17___asm_23_asm_2d_display_2d_listing)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L97___asm_23_asm_2d_display_2d_listing)
    ___END_IF
    ___SET_R2(___STK(-7))
    ___SET_R1(___STK(-10))
-   ___SET_R0(___LBL(46))
+   ___SET_R0(___LBL(47))
    ___GOTO(___L82___asm_23_asm_2d_display_2d_listing)
-___DEF_SLBL(17,___L17___asm_23_asm_2d_display_2d_listing)
+___DEF_SLBL(18,___L18___asm_23_asm_2d_display_2d_listing)
 ___DEF_GLBL(___L81___asm_23_asm_2d_display_2d_listing)
    ___SET_R2(___STK(-7))
    ___SET_R1(___STK(-10))
-   ___SET_R0(___LBL(54))
+   ___SET_R0(___LBL(55))
 ___DEF_GLBL(___L82___asm_23_asm_2d_display_2d_listing)
    ___SET_R3(___FIX(6L))
-   ___POLL(18)
-___DEF_SLBL(18,___L18___asm_23_asm_2d_display_2d_listing)
+   ___POLL(19)
+___DEF_SLBL(19,___L19___asm_23_asm_2d_display_2d_listing)
 ___DEF_GLBL(___L83___asm_23_asm_2d_display_2d_listing)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
@@ -4003,94 +4250,94 @@ ___DEF_GLBL(___L83___asm_23_asm_2d_display_2d_listing)
    ___SET_R1(___R3)
    ___SET_R2(___FIX(0L))
    ___ADJFP(8)
-   ___POLL(19)
-___DEF_SLBL(19,___L19___asm_23_asm_2d_display_2d_listing)
-   ___SET_R0(___LBL(20))
-   ___JUMPGLONOTSAFE(___SET_NARGS(2),87,___G_fx_3e_)
+   ___POLL(20)
 ___DEF_SLBL(20,___L20___asm_23_asm_2d_display_2d_listing)
+   ___SET_R0(___LBL(21))
+   ___JUMPGLONOTSAFE(___SET_NARGS(2),87,___G_fx_3e_)
+___DEF_SLBL(21,___L21___asm_23_asm_2d_display_2d_listing)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L89___asm_23_asm_2d_display_2d_listing)
    ___END_IF
    ___SET_R1(___STK(-5))
    ___SET_R2(___FIX(0L))
-   ___SET_R0(___LBL(21))
+   ___SET_R0(___LBL(22))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),85,___G_fx_3c_)
-___DEF_SLBL(21,___L21___asm_23_asm_2d_display_2d_listing)
+___DEF_SLBL(22,___L22___asm_23_asm_2d_display_2d_listing)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L88___asm_23_asm_2d_display_2d_listing)
    ___END_IF
    ___SET_R1(___STK(-4))
    ___SET_R2(___FIX(1L))
-   ___SET_R0(___LBL(22))
+   ___SET_R0(___LBL(23))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),84,___G_fx_2d_)
-___DEF_SLBL(22,___L22___asm_23_asm_2d_display_2d_listing)
+___DEF_SLBL(23,___L23___asm_23_asm_2d_display_2d_listing)
    ___SET_R3(___R1)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-6))
-   ___SET_R0(___LBL(23))
+   ___SET_R0(___LBL(24))
    ___GOTO(___L83___asm_23_asm_2d_display_2d_listing)
-___DEF_SLBL(23,___L23___asm_23_asm_2d_display_2d_listing)
+___DEF_SLBL(24,___L24___asm_23_asm_2d_display_2d_listing)
    ___SET_R1(___STK(-6))
    ___SET_R2(___SUB(5))
    ___SET_R0(___STK(-7))
    ___ADJFP(-8)
-   ___POLL(24)
-___DEF_SLBL(24,___L24___asm_23_asm_2d_display_2d_listing)
-   ___GOTO(___L84___asm_23_asm_2d_display_2d_listing)
+   ___POLL(25)
 ___DEF_SLBL(25,___L25___asm_23_asm_2d_display_2d_listing)
+   ___GOTO(___L84___asm_23_asm_2d_display_2d_listing)
+___DEF_SLBL(26,___L26___asm_23_asm_2d_display_2d_listing)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
    ___SET_R0(___STK(-7))
    ___ADJFP(-8)
-   ___POLL(26)
-___DEF_SLBL(26,___L26___asm_23_asm_2d_display_2d_listing)
+   ___POLL(27)
+___DEF_SLBL(27,___L27___asm_23_asm_2d_display_2d_listing)
 ___DEF_GLBL(___L84___asm_23_asm_2d_display_2d_listing)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R2)
    ___SET_R1(___R2)
    ___ADJFP(8)
-   ___POLL(27)
-___DEF_SLBL(27,___L27___asm_23_asm_2d_display_2d_listing)
-   ___SET_R0(___LBL(28))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),101,___G_null_3f_)
+   ___POLL(28)
 ___DEF_SLBL(28,___L28___asm_23_asm_2d_display_2d_listing)
+   ___SET_R0(___LBL(29))
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),101,___G_null_3f_)
+___DEF_SLBL(29,___L29___asm_23_asm_2d_display_2d_listing)
    ___IF(___NOTFALSEP(___R1))
    ___GOTO(___L87___asm_23_asm_2d_display_2d_listing)
    ___END_IF
    ___SET_R1(___STK(-5))
-   ___SET_R0(___LBL(29))
+   ___SET_R0(___LBL(30))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),104,___G_pair_3f_)
-___DEF_SLBL(29,___L29___asm_23_asm_2d_display_2d_listing)
+___DEF_SLBL(30,___L30___asm_23_asm_2d_display_2d_listing)
    ___IF(___NOTFALSEP(___R1))
    ___GOTO(___L86___asm_23_asm_2d_display_2d_listing)
    ___END_IF
    ___SET_R2(___STK(-6))
    ___SET_R1(___STK(-5))
    ___SET_R0(___STK(-7))
-   ___POLL(30)
-___DEF_SLBL(30,___L30___asm_23_asm_2d_display_2d_listing)
-   ___GOTO(___L85___asm_23_asm_2d_display_2d_listing)
+   ___POLL(31)
 ___DEF_SLBL(31,___L31___asm_23_asm_2d_display_2d_listing)
+   ___GOTO(___L85___asm_23_asm_2d_display_2d_listing)
+___DEF_SLBL(32,___L32___asm_23_asm_2d_display_2d_listing)
    ___SET_R2(___STK(-6))
    ___SET_R0(___STK(-7))
-   ___POLL(32)
-___DEF_SLBL(32,___L32___asm_23_asm_2d_display_2d_listing)
+   ___POLL(33)
+___DEF_SLBL(33,___L33___asm_23_asm_2d_display_2d_listing)
 ___DEF_GLBL(___L85___asm_23_asm_2d_display_2d_listing)
    ___ADJFP(-8)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),77,___G_display)
 ___DEF_GLBL(___L86___asm_23_asm_2d_display_2d_listing)
    ___SET_R1(___STK(-5))
-   ___SET_R0(___LBL(33))
+   ___SET_R0(___LBL(34))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),72,___G_car)
-___DEF_SLBL(33,___L33___asm_23_asm_2d_display_2d_listing)
+___DEF_SLBL(34,___L34___asm_23_asm_2d_display_2d_listing)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
-   ___SET_R0(___LBL(34))
+   ___SET_R0(___LBL(35))
    ___GOTO(___L84___asm_23_asm_2d_display_2d_listing)
-___DEF_SLBL(34,___L34___asm_23_asm_2d_display_2d_listing)
+___DEF_SLBL(35,___L35___asm_23_asm_2d_display_2d_listing)
    ___SET_R1(___STK(-5))
-   ___SET_R0(___LBL(25))
+   ___SET_R0(___LBL(26))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),74,___G_cdr)
 ___DEF_GLBL(___L87___asm_23_asm_2d_display_2d_listing)
    ___ADJFP(-8)
@@ -4098,31 +4345,31 @@ ___DEF_GLBL(___L87___asm_23_asm_2d_display_2d_listing)
 ___DEF_GLBL(___L88___asm_23_asm_2d_display_2d_listing)
    ___SET_R1(___STK(-5))
    ___SET_R2(___FIX(16L))
-   ___SET_R0(___LBL(35))
+   ___SET_R0(___LBL(36))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),90,___G_fxquotient)
-___DEF_SLBL(35,___L35___asm_23_asm_2d_display_2d_listing)
+___DEF_SLBL(36,___L36___asm_23_asm_2d_display_2d_listing)
    ___SET_STK(-3,___R1)
    ___SET_R1(___STK(-4))
    ___SET_R2(___FIX(1L))
-   ___SET_R0(___LBL(36))
+   ___SET_R0(___LBL(37))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),84,___G_fx_2d_)
-___DEF_SLBL(36,___L36___asm_23_asm_2d_display_2d_listing)
+___DEF_SLBL(37,___L37___asm_23_asm_2d_display_2d_listing)
    ___SET_R3(___R1)
    ___SET_R1(___STK(-6))
    ___SET_R2(___STK(-3))
-   ___SET_R0(___LBL(37))
+   ___SET_R0(___LBL(38))
    ___GOTO(___L83___asm_23_asm_2d_display_2d_listing)
-___DEF_SLBL(37,___L37___asm_23_asm_2d_display_2d_listing)
+___DEF_SLBL(38,___L38___asm_23_asm_2d_display_2d_listing)
    ___SET_R1(___STK(-5))
    ___SET_R2(___FIX(16L))
-   ___SET_R0(___LBL(38))
+   ___SET_R0(___LBL(39))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),89,___G_fxmodulo)
-___DEF_SLBL(38,___L38___asm_23_asm_2d_display_2d_listing)
+___DEF_SLBL(39,___L39___asm_23_asm_2d_display_2d_listing)
    ___SET_R2(___R1)
    ___SET_R1(___SUB(6))
-   ___SET_R0(___LBL(31))
+   ___SET_R0(___LBL(32))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),110,___G_string_2d_ref)
-___DEF_SLBL(39,___L39___asm_23_asm_2d_display_2d_listing)
+___DEF_SLBL(40,___L40___asm_23_asm_2d_display_2d_listing)
    ___IF(___NOTFALSEP(___R1))
    ___GOTO(___L90___asm_23_asm_2d_display_2d_listing)
    ___END_IF
@@ -4132,40 +4379,40 @@ ___DEF_GLBL(___L89___asm_23_asm_2d_display_2d_listing)
    ___JUMPPRM(___NOTHING,___STK(1))
 ___DEF_GLBL(___L90___asm_23_asm_2d_display_2d_listing)
    ___SET_R1(___FIX(9L))
-   ___SET_R0(___LBL(40))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),92,___G_integer_2d__3e_char)
-___DEF_SLBL(40,___L40___asm_23_asm_2d_display_2d_listing)
-   ___SET_R2(___STK(-6))
    ___SET_R0(___LBL(41))
-   ___JUMPGLONOTSAFE(___SET_NARGS(2),77,___G_display)
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),92,___G_integer_2d__3e_char)
 ___DEF_SLBL(41,___L41___asm_23_asm_2d_display_2d_listing)
+   ___SET_R2(___STK(-6))
+   ___SET_R0(___LBL(42))
+   ___JUMPGLONOTSAFE(___SET_NARGS(2),77,___G_display)
+___DEF_SLBL(42,___L42___asm_23_asm_2d_display_2d_listing)
    ___SET_R1(___STK(-5))
    ___SET_R2(___FIX(8L))
-   ___SET_R0(___LBL(42))
-   ___JUMPGLONOTSAFE(___SET_NARGS(2),90,___G_fxquotient)
-___DEF_SLBL(42,___L42___asm_23_asm_2d_display_2d_listing)
-   ___SET_R2(___FIX(1L))
    ___SET_R0(___LBL(43))
-   ___JUMPGLONOTSAFE(___SET_NARGS(2),83,___G_fx_2b_)
+   ___JUMPGLONOTSAFE(___SET_NARGS(2),90,___G_fxquotient)
 ___DEF_SLBL(43,___L43___asm_23_asm_2d_display_2d_listing)
+   ___SET_R2(___FIX(1L))
+   ___SET_R0(___LBL(44))
+   ___JUMPGLONOTSAFE(___SET_NARGS(2),83,___G_fx_2b_)
+___DEF_SLBL(44,___L44___asm_23_asm_2d_display_2d_listing)
    ___SET_R2(___R1)
    ___SET_R1(___FIX(8L))
-   ___SET_R0(___LBL(44))
+   ___SET_R0(___LBL(45))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),82,___G_fx_2a_)
-___DEF_SLBL(44,___L44___asm_23_asm_2d_display_2d_listing)
+___DEF_SLBL(45,___L45___asm_23_asm_2d_display_2d_listing)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
    ___SET_R0(___STK(-7))
    ___ADJFP(-8)
-   ___POLL(45)
-___DEF_SLBL(45,___L45___asm_23_asm_2d_display_2d_listing)
-   ___GOTO(___L92___asm_23_asm_2d_display_2d_listing)
+   ___POLL(46)
 ___DEF_SLBL(46,___L46___asm_23_asm_2d_display_2d_listing)
+   ___GOTO(___L92___asm_23_asm_2d_display_2d_listing)
+___DEF_SLBL(47,___L47___asm_23_asm_2d_display_2d_listing)
    ___SET_R1(___FIX(6L))
 ___DEF_GLBL(___L91___asm_23_asm_2d_display_2d_listing)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-10))
-   ___SET_R0(___LBL(48))
+   ___SET_R0(___LBL(49))
 ___DEF_GLBL(___L92___asm_23_asm_2d_display_2d_listing)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
@@ -4173,56 +4420,56 @@ ___DEF_GLBL(___L92___asm_23_asm_2d_display_2d_listing)
    ___SET_R1(___R2)
    ___SET_R2(___FIX(24L))
    ___ADJFP(8)
-   ___POLL(47)
-___DEF_SLBL(47,___L47___asm_23_asm_2d_display_2d_listing)
-   ___SET_R0(___LBL(39))
-   ___JUMPGLONOTSAFE(___SET_NARGS(2),85,___G_fx_3c_)
+   ___POLL(48)
 ___DEF_SLBL(48,___L48___asm_23_asm_2d_display_2d_listing)
+   ___SET_R0(___LBL(40))
+   ___JUMPGLONOTSAFE(___SET_NARGS(2),85,___G_fx_3c_)
+___DEF_SLBL(49,___L49___asm_23_asm_2d_display_2d_listing)
 ___DEF_GLBL(___L93___asm_23_asm_2d_display_2d_listing)
    ___SET_R1(___STK(-5))
    ___SET_R2(___FIX(1L))
-   ___SET_R0(___LBL(49))
+   ___SET_R0(___LBL(50))
    ___ADJFP(-4)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),120,___G_vector_2d_ref)
-___DEF_SLBL(49,___L49___asm_23_asm_2d_display_2d_listing)
+___DEF_SLBL(50,___L50___asm_23_asm_2d_display_2d_listing)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
-   ___SET_R0(___LBL(50))
-   ___GOTO(___L84___asm_23_asm_2d_display_2d_listing)
-___DEF_SLBL(50,___L50___asm_23_asm_2d_display_2d_listing)
-   ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(51))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),99,___G_newline)
+   ___GOTO(___L84___asm_23_asm_2d_display_2d_listing)
 ___DEF_SLBL(51,___L51___asm_23_asm_2d_display_2d_listing)
-   ___SET_R1(___STK(-4))
+   ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(52))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),74,___G_cdr)
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),99,___G_newline)
 ___DEF_SLBL(52,___L52___asm_23_asm_2d_display_2d_listing)
+   ___SET_R1(___STK(-4))
+   ___SET_R0(___LBL(53))
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),74,___G_cdr)
+___DEF_SLBL(53,___L53___asm_23_asm_2d_display_2d_listing)
    ___SET_R2(___STK(-3))
    ___SET_R3(___FIX(0L))
    ___SET_R0(___STK(-5))
    ___ADJFP(-6)
-   ___POLL(53)
-___DEF_SLBL(53,___L53___asm_23_asm_2d_display_2d_listing)
-   ___GOTO(___L80___asm_23_asm_2d_display_2d_listing)
+   ___POLL(54)
 ___DEF_SLBL(54,___L54___asm_23_asm_2d_display_2d_listing)
+   ___GOTO(___L79___asm_23_asm_2d_display_2d_listing)
+___DEF_SLBL(55,___L55___asm_23_asm_2d_display_2d_listing)
    ___SET_R2(___STK(-10))
    ___SET_R1(___SUB(7))
-   ___SET_R0(___LBL(55))
+   ___SET_R0(___LBL(56))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),77,___G_display)
-___DEF_SLBL(55,___L55___asm_23_asm_2d_display_2d_listing)
+___DEF_SLBL(56,___L56___asm_23_asm_2d_display_2d_listing)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-10))
-   ___SET_R0(___LBL(67))
+   ___SET_R0(___LBL(68))
    ___ADJFP(-4)
    ___GOTO(___L94___asm_23_asm_2d_display_2d_listing)
-___DEF_SLBL(56,___L56___asm_23_asm_2d_display_2d_listing)
+___DEF_SLBL(57,___L57___asm_23_asm_2d_display_2d_listing)
    ___IF(___NOTFALSEP(___R1))
    ___GOTO(___L95___asm_23_asm_2d_display_2d_listing)
    ___END_IF
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-10))
-   ___SET_R0(___LBL(64))
+   ___SET_R0(___LBL(65))
 ___DEF_GLBL(___L94___asm_23_asm_2d_display_2d_listing)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
@@ -4230,82 +4477,82 @@ ___DEF_GLBL(___L94___asm_23_asm_2d_display_2d_listing)
    ___SET_R1(___R2)
    ___SET_R2(___FIX(16L))
    ___ADJFP(8)
-   ___POLL(57)
-___DEF_SLBL(57,___L57___asm_23_asm_2d_display_2d_listing)
-   ___SET_R0(___LBL(58))
-   ___JUMPGLONOTSAFE(___SET_NARGS(2),90,___G_fxquotient)
+   ___POLL(58)
 ___DEF_SLBL(58,___L58___asm_23_asm_2d_display_2d_listing)
+   ___SET_R0(___LBL(59))
+   ___JUMPGLONOTSAFE(___SET_NARGS(2),90,___G_fxquotient)
+___DEF_SLBL(59,___L59___asm_23_asm_2d_display_2d_listing)
    ___SET_R2(___R1)
    ___SET_R1(___SUB(6))
-   ___SET_R0(___LBL(59))
+   ___SET_R0(___LBL(60))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),110,___G_string_2d_ref)
-___DEF_SLBL(59,___L59___asm_23_asm_2d_display_2d_listing)
-   ___SET_R2(___STK(-6))
-   ___SET_R0(___LBL(37))
-   ___JUMPGLONOTSAFE(___SET_NARGS(2),77,___G_display)
 ___DEF_SLBL(60,___L60___asm_23_asm_2d_display_2d_listing)
+   ___SET_R2(___STK(-6))
+   ___SET_R0(___LBL(38))
+   ___JUMPGLONOTSAFE(___SET_NARGS(2),77,___G_display)
+___DEF_SLBL(61,___L61___asm_23_asm_2d_display_2d_listing)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L96___asm_23_asm_2d_display_2d_listing)
    ___END_IF
 ___DEF_GLBL(___L95___asm_23_asm_2d_display_2d_listing)
    ___SET_R1(___STK(-6))
    ___SET_R2(___FIX(0L))
-   ___SET_R0(___LBL(61))
-   ___JUMPGLONOTSAFE(___SET_NARGS(2),86,___G_fx_3d_)
-___DEF_SLBL(61,___L61___asm_23_asm_2d_display_2d_listing)
    ___SET_R0(___LBL(62))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),100,___G_not)
+   ___JUMPGLONOTSAFE(___SET_NARGS(2),86,___G_fx_3d_)
 ___DEF_SLBL(62,___L62___asm_23_asm_2d_display_2d_listing)
+   ___SET_R0(___LBL(63))
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),100,___G_not)
+___DEF_SLBL(63,___L63___asm_23_asm_2d_display_2d_listing)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L81___asm_23_asm_2d_display_2d_listing)
    ___END_IF
    ___SET_R1(___STK(-10))
-   ___SET_R0(___LBL(17))
+   ___SET_R0(___LBL(18))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),99,___G_newline)
 ___DEF_GLBL(___L96___asm_23_asm_2d_display_2d_listing)
    ___SET_R2(___FIX(2L))
    ___SET_R1(___FIX(24L))
-   ___SET_R0(___LBL(63))
+   ___SET_R0(___LBL(64))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),84,___G_fx_2d_)
-___DEF_SLBL(63,___L63___asm_23_asm_2d_display_2d_listing)
+___DEF_SLBL(64,___L64___asm_23_asm_2d_display_2d_listing)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
-   ___SET_R0(___LBL(56))
+   ___SET_R0(___LBL(57))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),88,___G_fx_3e__3d_)
-___DEF_SLBL(64,___L64___asm_23_asm_2d_display_2d_listing)
-   ___SET_R1(___STK(-8))
-   ___SET_R0(___LBL(65))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),74,___G_cdr)
 ___DEF_SLBL(65,___L65___asm_23_asm_2d_display_2d_listing)
+   ___SET_R1(___STK(-8))
+   ___SET_R0(___LBL(66))
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),74,___G_cdr)
+___DEF_SLBL(66,___L66___asm_23_asm_2d_display_2d_listing)
    ___SET_STK(-8,___R1)
    ___SET_R1(___STK(-7))
    ___SET_R2(___FIX(1L))
-   ___SET_R0(___LBL(66))
+   ___SET_R0(___LBL(67))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),83,___G_fx_2b_)
-___DEF_SLBL(66,___L66___asm_23_asm_2d_display_2d_listing)
+___DEF_SLBL(67,___L67___asm_23_asm_2d_display_2d_listing)
    ___SET_STK(-7,___R1)
    ___SET_R1(___STK(-6))
    ___SET_R2(___FIX(2L))
    ___SET_R0(___LBL(8))
    ___ADJFP(-4)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),83,___G_fx_2b_)
-___DEF_SLBL(67,___L67___asm_23_asm_2d_display_2d_listing)
-   ___SET_R1(___STK(-4))
-   ___SET_R0(___LBL(68))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),74,___G_cdr)
 ___DEF_SLBL(68,___L68___asm_23_asm_2d_display_2d_listing)
+   ___SET_R1(___STK(-4))
+   ___SET_R0(___LBL(69))
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),74,___G_cdr)
+___DEF_SLBL(69,___L69___asm_23_asm_2d_display_2d_listing)
    ___SET_STK(-4,___R1)
    ___SET_R1(___STK(-3))
    ___SET_R2(___FIX(1L))
-   ___SET_R0(___LBL(69))
-   ___JUMPGLONOTSAFE(___SET_NARGS(2),83,___G_fx_2b_)
-___DEF_SLBL(69,___L69___asm_23_asm_2d_display_2d_listing)
-   ___SET_STK(-3,___R1)
-   ___SET_R2(___FIX(1L))
-   ___SET_R1(___FIX(6L))
    ___SET_R0(___LBL(70))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),83,___G_fx_2b_)
 ___DEF_SLBL(70,___L70___asm_23_asm_2d_display_2d_listing)
+   ___SET_STK(-3,___R1)
+   ___SET_R2(___FIX(1L))
+   ___SET_R1(___FIX(6L))
+   ___SET_R0(___LBL(71))
+   ___JUMPGLONOTSAFE(___SET_NARGS(2),83,___G_fx_2b_)
+___DEF_SLBL(71,___L71___asm_23_asm_2d_display_2d_listing)
    ___SET_R2(___FIX(2L))
    ___SET_R0(___LBL(8))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),83,___G_fx_2b_)
@@ -4315,68 +4562,48 @@ ___DEF_GLBL(___L97___asm_23_asm_2d_display_2d_listing)
 ___DEF_GLBL(___L98___asm_23_asm_2d_display_2d_listing)
    ___SET_R1(___SUB(8))
    ___SET_R0(___STK(-9))
-   ___POLL(71)
-___DEF_SLBL(71,___L71___asm_23_asm_2d_display_2d_listing)
+   ___POLL(72)
+___DEF_SLBL(72,___L72___asm_23_asm_2d_display_2d_listing)
    ___ADJFP(-12)
    ___JUMPGLONOTSAFE(___SET_NARGS(1),70,___G_c_23_compiler_2d_internal_2d_error)
 ___DEF_GLBL(___L99___asm_23_asm_2d_display_2d_listing)
    ___SET_R1(___STK(-11))
-   ___SET_R0(___LBL(72))
+   ___SET_R0(___LBL(73))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),100,___G_not)
-___DEF_SLBL(72,___L72___asm_23_asm_2d_display_2d_listing)
+___DEF_SLBL(73,___L73___asm_23_asm_2d_display_2d_listing)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L100___asm_23_asm_2d_display_2d_listing)
    ___END_IF
    ___SET_R1(___STK(-8))
-   ___SET_R0(___LBL(73))
+   ___SET_R0(___LBL(74))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),74,___G_cdr)
-___DEF_SLBL(73,___L73___asm_23_asm_2d_display_2d_listing)
+___DEF_SLBL(74,___L74___asm_23_asm_2d_display_2d_listing)
    ___SET_STK(-8,___R1)
    ___SET_R1(___STK(-7))
    ___SET_R2(___FIX(1L))
-   ___SET_R0(___LBL(74))
+   ___SET_R0(___LBL(75))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),83,___G_fx_2b_)
-___DEF_SLBL(74,___L74___asm_23_asm_2d_display_2d_listing)
+___DEF_SLBL(75,___L75___asm_23_asm_2d_display_2d_listing)
    ___SET_R2(___R1)
    ___SET_R3(___STK(-6))
    ___SET_R0(___STK(-9))
    ___SET_R1(___STK(-8))
    ___ADJFP(-10)
-   ___POLL(75)
-___DEF_SLBL(75,___L75___asm_23_asm_2d_display_2d_listing)
-   ___GOTO(___L80___asm_23_asm_2d_display_2d_listing)
+   ___POLL(76)
+___DEF_SLBL(76,___L76___asm_23_asm_2d_display_2d_listing)
+   ___GOTO(___L79___asm_23_asm_2d_display_2d_listing)
 ___DEF_GLBL(___L100___asm_23_asm_2d_display_2d_listing)
    ___SET_R1(___STK(-6))
    ___SET_R2(___FIX(0L))
-   ___SET_R0(___LBL(60))
+   ___SET_R0(___LBL(61))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),86,___G_fx_3d_)
-___DEF_GLBL(___L101___asm_23_asm_2d_display_2d_listing)
-   ___SET_R1(___STK(-6))
-   ___SET_R2(___FIX(0L))
-   ___SET_R0(___LBL(76))
-   ___ADJFP(-4)
-   ___JUMPGLONOTSAFE(___SET_NARGS(2),87,___G_fx_3e_)
-___DEF_SLBL(76,___L76___asm_23_asm_2d_display_2d_listing)
-   ___IF(___NOT(___NOTFALSEP(___R1)))
-   ___GOTO(___L102___asm_23_asm_2d_display_2d_listing)
-   ___END_IF
-   ___SET_R1(___STK(-6))
-   ___SET_R0(___STK(-5))
-   ___POLL(77)
-___DEF_SLBL(77,___L77___asm_23_asm_2d_display_2d_listing)
-   ___ADJFP(-8)
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),99,___G_newline)
-___DEF_GLBL(___L102___asm_23_asm_2d_display_2d_listing)
-   ___SET_R1(___VOID)
-   ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(3))
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___asm_23_asm_2d_assemble
 #undef ___PH_LBL0
-#define ___PH_LBL0 349
+#define ___PH_LBL0 348
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -5160,7 +5387,7 @@ ___DEF_GLBL(___L142___asm_23_asm_2d_assemble)
 ___DEF_SLBL(103,___L103___asm_23_asm_2d_assemble)
    ___SET_STK(-8,___R1)
    ___SET_R0(___LBL(104))
-   ___JUMPINT(___SET_NARGS(0),___PRC(514),___L___asm_23_asm_2d_make_2d_stream)
+   ___JUMPINT(___SET_NARGS(0),___PRC(513),___L___asm_23_asm_2d_make_2d_stream)
 ___DEF_SLBL(104,___L104___asm_23_asm_2d_assemble)
    ___SET_R3(___R1)
    ___SET_R1(___STK(-11))
@@ -5257,7 +5484,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___asm_23_asm_2d_assemble_2d_to_2d_file
 #undef ___PH_LBL0
-#define ___PH_LBL0 471
+#define ___PH_LBL0 470
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -5300,7 +5527,7 @@ ___DEF_GLBL(___L___asm_23_asm_2d_assemble_2d_to_2d_file)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___asm_23_asm_2d_assemble_2d_to_2d_file)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(1),___PRC(349),___L___asm_23_asm_2d_assemble)
+   ___JUMPINT(___SET_NARGS(1),___PRC(348),___L___asm_23_asm_2d_assemble)
 ___DEF_SLBL(2,___L2___asm_23_asm_2d_assemble_2d_to_2d_file)
    ___SET_STK(-4,___ALLOC_CLO(1UL))
    ___BEGIN_SETUP_CLO(1,___STK(-4),5)
@@ -5403,7 +5630,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___asm_23_asm_2d_assemble_2d_to_2d_u8vector
 #undef ___PH_LBL0
-#define ___PH_LBL0 492
+#define ___PH_LBL0 491
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -5446,7 +5673,7 @@ ___DEF_GLBL(___L___asm_23_asm_2d_assemble_2d_to_2d_u8vector)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___asm_23_asm_2d_assemble_2d_to_2d_u8vector)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(1),___PRC(349),___L___asm_23_asm_2d_assemble)
+   ___JUMPINT(___SET_NARGS(1),___PRC(348),___L___asm_23_asm_2d_assemble)
 ___DEF_SLBL(2,___L2___asm_23_asm_2d_assemble_2d_to_2d_u8vector)
    ___SET_R2(___FIX(0L))
    ___SET_R0(___LBL(3))
@@ -5561,7 +5788,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___asm_23_asm_2d_make_2d_stream
 #undef ___PH_LBL0
-#define ___PH_LBL0 514
+#define ___PH_LBL0 513
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -5605,7 +5832,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___asm_23_asm_2d_code_2d_extend
 #undef ___PH_LBL0
-#define ___PH_LBL0 519
+#define ___PH_LBL0 518
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -5666,7 +5893,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___asm_23_asm_2d_signed8_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 527
+#define ___PH_LBL0 526
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -5715,7 +5942,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___asm_23_asm_2d_signed16_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 532
+#define ___PH_LBL0 531
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -5764,7 +5991,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___asm_23_asm_2d_signed32_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 537
+#define ___PH_LBL0 536
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -5813,7 +6040,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___asm_23_asm_2d_signed_2d_lo8
 #undef ___PH_LBL0
-#define ___PH_LBL0 542
+#define ___PH_LBL0 541
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -5858,7 +6085,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___asm_23_asm_2d_unsigned_2d_lo8
 #undef ___PH_LBL0
-#define ___PH_LBL0 548
+#define ___PH_LBL0 547
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -5886,7 +6113,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___asm_23_asm_2d_signed_2d_lo16
 #undef ___PH_LBL0
-#define ___PH_LBL0 551
+#define ___PH_LBL0 550
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -5931,7 +6158,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___asm_23_asm_2d_unsigned_2d_lo16
 #undef ___PH_LBL0
-#define ___PH_LBL0 557
+#define ___PH_LBL0 556
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -5959,7 +6186,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___asm_23_asm_2d_signed_2d_lo32
 #undef ___PH_LBL0
-#define ___PH_LBL0 560
+#define ___PH_LBL0 559
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -6004,7 +6231,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___asm_23_asm_2d_unsigned_2d_lo32
 #undef ___PH_LBL0
-#define ___PH_LBL0 566
+#define ___PH_LBL0 565
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -6032,7 +6259,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___asm_23_asm_2d_signed_2d_lo64
 #undef ___PH_LBL0
-#define ___PH_LBL0 569
+#define ___PH_LBL0 568
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -6077,7 +6304,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___asm_23_asm_2d_unsigned_2d_lo64
 #undef ___PH_LBL0
-#define ___PH_LBL0 575
+#define ___PH_LBL0 574
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -6105,7 +6332,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___asm_23_asm_2d_signed_2d_lo
 #undef ___PH_LBL0
-#define ___PH_LBL0 578
+#define ___PH_LBL0 577
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -6140,26 +6367,26 @@ ___DEF_SLBL(1,___L1___asm_23_asm_2d_signed_2d_lo)
 ___DEF_GLBL(___L6___asm_23_asm_2d_signed_2d_lo)
    ___POLL(2)
 ___DEF_SLBL(2,___L2___asm_23_asm_2d_signed_2d_lo)
-   ___JUMPINT(___SET_NARGS(1),___PRC(569),___L___asm_23_asm_2d_signed_2d_lo64)
+   ___JUMPINT(___SET_NARGS(1),___PRC(568),___L___asm_23_asm_2d_signed_2d_lo64)
 ___DEF_GLBL(___L7___asm_23_asm_2d_signed_2d_lo)
    ___POLL(3)
 ___DEF_SLBL(3,___L3___asm_23_asm_2d_signed_2d_lo)
-   ___JUMPINT(___SET_NARGS(1),___PRC(560),___L___asm_23_asm_2d_signed_2d_lo32)
+   ___JUMPINT(___SET_NARGS(1),___PRC(559),___L___asm_23_asm_2d_signed_2d_lo32)
 ___DEF_GLBL(___L8___asm_23_asm_2d_signed_2d_lo)
    ___POLL(4)
 ___DEF_SLBL(4,___L4___asm_23_asm_2d_signed_2d_lo)
-   ___JUMPINT(___SET_NARGS(1),___PRC(551),___L___asm_23_asm_2d_signed_2d_lo16)
+   ___JUMPINT(___SET_NARGS(1),___PRC(550),___L___asm_23_asm_2d_signed_2d_lo16)
 ___DEF_GLBL(___L9___asm_23_asm_2d_signed_2d_lo)
    ___POLL(5)
 ___DEF_SLBL(5,___L5___asm_23_asm_2d_signed_2d_lo)
-   ___JUMPINT(___SET_NARGS(1),___PRC(542),___L___asm_23_asm_2d_signed_2d_lo8)
+   ___JUMPINT(___SET_NARGS(1),___PRC(541),___L___asm_23_asm_2d_signed_2d_lo8)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___asm_23_asm_2d_unsigned_2d_lo
 #undef ___PH_LBL0
-#define ___PH_LBL0 585
+#define ___PH_LBL0 584
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -6218,7 +6445,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___asm_23_asm_2d_bits_2d_0_2d_to_2d_7
 #undef ___PH_LBL0
-#define ___PH_LBL0 592
+#define ___PH_LBL0 591
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -6246,7 +6473,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___asm_23_asm_2d_bits_2d_8_2d_and_2d_up
 #undef ___PH_LBL0
-#define ___PH_LBL0 595
+#define ___PH_LBL0 594
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -6311,7 +6538,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___asm_23_asm_2d_bits_2d_16_2d_and_2d_up
 #undef ___PH_LBL0
-#define ___PH_LBL0 603
+#define ___PH_LBL0 602
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -6376,7 +6603,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___asm_23_asm_2d_bits_2d_32_2d_and_2d_up
 #undef ___PH_LBL0
-#define ___PH_LBL0 611
+#define ___PH_LBL0 610
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -6441,7 +6668,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___asm_23_asm_2d_float_2d__3e_inexact_2d_exponential_2d_format
 #undef ___PH_LBL0
-#define ___PH_LBL0 619
+#define ___PH_LBL0 618
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -6885,7 +7112,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___asm_23_asm_2d_float_2d__3e_exact_2d_exponential_2d_format
 #undef ___PH_LBL0
-#define ___PH_LBL0 673
+#define ___PH_LBL0 672
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -6930,7 +7157,7 @@ ___DEF_GLBL(___L___asm_23_asm_2d_float_2d__3e_exact_2d_exponential_2d_format)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___asm_23_asm_2d_float_2d__3e_exact_2d_exponential_2d_format)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(619),___L___asm_23_asm_2d_float_2d__3e_inexact_2d_exponential_2d_format)
+   ___JUMPINT(___SET_NARGS(2),___PRC(618),___L___asm_23_asm_2d_float_2d__3e_inexact_2d_exponential_2d_format)
 ___DEF_SLBL(2,___L2___asm_23_asm_2d_float_2d__3e_exact_2d_exponential_2d_format)
    ___IF(___NOT(___NOTFALSEP(___STK(-6))))
    ___GOTO(___L23___asm_23_asm_2d_float_2d__3e_exact_2d_exponential_2d_format)
@@ -7072,7 +7299,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___asm_23_asm_2d_float_2d__3e_bits
 #undef ___PH_LBL0
-#define ___PH_LBL0 697
+#define ___PH_LBL0 696
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -7131,7 +7358,7 @@ ___DEF_GLBL(___L22___asm_23_asm_2d_float_2d__3e_bits)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___asm_23_asm_2d_float_2d__3e_bits)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(673),___L___asm_23_asm_2d_float_2d__3e_exact_2d_exponential_2d_format)
+   ___JUMPINT(___SET_NARGS(2),___PRC(672),___L___asm_23_asm_2d_float_2d__3e_exact_2d_exponential_2d_format)
 ___DEF_SLBL(2,___L2___asm_23_asm_2d_float_2d__3e_bits)
    ___SET_STK(-4,___R1)
    ___SET_R2(___FIX(0L))
@@ -7248,7 +7475,7 @@ ___END_M_SW
 ___END_M_COD
 
 ___BEGIN_LBL
- ___DEF_LBL_INTRO(___H___asm_23_,"_asm#",___REF_FAL,8,0)
+ ___DEF_LBL_INTRO(___H___asm_23_,___REF_SYM(2,___S___asm_23_),___REF_FAL,8,0)
 ,___DEF_LBL_PROC(___H___asm_23_,0,-1)
 ,___DEF_LBL_RET(___H___asm_23_,___IFD(___RETI,4,0,0x3f1L))
 ,___DEF_LBL_RET(___H___asm_23_,___IFD(___RETN,1,0,0x1L))
@@ -7257,22 +7484,19 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H___asm_23_,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H___asm_23_,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H___asm_23_,___IFD(___RETN,1,0,0x1L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_make_2d_code_2d_block,"_asm#asm-make-code-block",___REF_FAL,4,0)
-
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_make_2d_code_2d_block,___REF_SYM(41,___S___asm_23_asm_2d_make_2d_code_2d_block),___REF_FAL,4,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_make_2d_code_2d_block,2,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_make_2d_code_2d_block,___IFD(___RETI,8,0,0x3f07L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_make_2d_code_2d_block,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_make_2d_code_2d_block,___IFD(___RETI,8,8,0x3f00L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_init_2d_code_2d_block,"_asm#asm-init-code-block",___REF_FAL,6,0)
-
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_init_2d_code_2d_block,___REF_SYM(31,___S___asm_23_asm_2d_init_2d_code_2d_block),___REF_FAL,6,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_init_2d_code_2d_block,3,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_init_2d_code_2d_block,___IFD(___RETI,8,0,0x3f07L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_init_2d_code_2d_block,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_init_2d_code_2d_block,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_init_2d_code_2d_block,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_init_2d_code_2d_block,___IFD(___RETN,5,0,0x3L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_copy_2d_code_2d_block,"_asm#asm-copy-code-block",___REF_FAL,9,0)
-
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_copy_2d_code_2d_block,___REF_SYM(24,___S___asm_23_asm_2d_copy_2d_code_2d_block),___REF_FAL,9,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_copy_2d_code_2d_block,1,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_copy_2d_code_2d_block,___IFD(___RETI,8,0,0x3f03L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_copy_2d_code_2d_block,___IFD(___RETN,5,0,0x3L))
@@ -7282,74 +7506,74 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_copy_2d_code_2d_block,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_copy_2d_code_2d_block,___IFD(___RETN,5,0,0x5L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_copy_2d_code_2d_block,___IFD(___RETN,5,0,0x5L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_8,"_asm#asm-8",___REF_FAL,4,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_8,___REF_SYM(12,___S___asm_23_asm_2d_8),___REF_FAL,4,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_8,2,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_8,___IFD(___RETI,8,0,0x3f03L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_8,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_8,___IFD(___RETI,8,8,0x3f00L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_16,"_asm#asm-16",___REF_FAL,5,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_16,___REF_SYM(3,___S___asm_23_asm_2d_16),___REF_FAL,5,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_16,2,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_16,___IFD(___RETI,8,0,0x3f07L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_16,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_16,___IFD(___RETI,8,8,0x3f00L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_16,___IFD(___RETI,8,8,0x3f00L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_16_2d_be,"_asm#asm-16-be",___REF_FAL,6,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_16_2d_be,___REF_SYM(4,___S___asm_23_asm_2d_16_2d_be),___REF_FAL,6,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_16_2d_be,2,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_16_2d_be,___IFD(___RETI,8,0,0x3f07L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_16_2d_be,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_16_2d_be,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_16_2d_be,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_16_2d_be,___IFD(___RETI,8,8,0x3f00L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_16_2d_le,"_asm#asm-16-le",___REF_FAL,6,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_16_2d_le,___REF_SYM(5,___S___asm_23_asm_2d_16_2d_le),___REF_FAL,6,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_16_2d_le,2,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_16_2d_le,___IFD(___RETI,8,0,0x3f07L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_16_2d_le,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_16_2d_le,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_16_2d_le,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_16_2d_le,___IFD(___RETI,8,8,0x3f00L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_32,"_asm#asm-32",___REF_FAL,5,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_32,___REF_SYM(6,___S___asm_23_asm_2d_32),___REF_FAL,5,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_32,2,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_32,___IFD(___RETI,8,0,0x3f07L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_32,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_32,___IFD(___RETI,8,8,0x3f00L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_32,___IFD(___RETI,8,8,0x3f00L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_32_2d_be,"_asm#asm-32-be",___REF_FAL,5,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_32_2d_be,___REF_SYM(7,___S___asm_23_asm_2d_32_2d_be),___REF_FAL,5,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_32_2d_be,2,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_32_2d_be,___IFD(___RETI,8,0,0x3f07L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_32_2d_be,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_32_2d_be,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_32_2d_be,___IFD(___RETI,8,8,0x3f00L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_32_2d_le,"_asm#asm-32-le",___REF_FAL,5,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_32_2d_le,___REF_SYM(8,___S___asm_23_asm_2d_32_2d_le),___REF_FAL,5,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_32_2d_le,2,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_32_2d_le,___IFD(___RETI,8,0,0x3f07L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_32_2d_le,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_32_2d_le,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_32_2d_le,___IFD(___RETI,8,8,0x3f00L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_64,"_asm#asm-64",___REF_FAL,5,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_64,___REF_SYM(9,___S___asm_23_asm_2d_64),___REF_FAL,5,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_64,2,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_64,___IFD(___RETI,8,0,0x3f07L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_64,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_64,___IFD(___RETI,8,8,0x3f00L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_64,___IFD(___RETI,8,8,0x3f00L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_64_2d_be,"_asm#asm-64-be",___REF_FAL,5,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_64_2d_be,___REF_SYM(10,___S___asm_23_asm_2d_64_2d_be),___REF_FAL,5,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_64_2d_be,2,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_64_2d_be,___IFD(___RETI,8,0,0x3f07L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_64_2d_be,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_64_2d_be,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_64_2d_be,___IFD(___RETI,8,8,0x3f00L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_64_2d_le,"_asm#asm-64-le",___REF_FAL,5,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_64_2d_le,___REF_SYM(11,___S___asm_23_asm_2d_64_2d_le),___REF_FAL,5,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_64_2d_le,2,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_64_2d_le,___IFD(___RETI,8,0,0x3f07L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_64_2d_le,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_64_2d_le,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_64_2d_le,___IFD(___RETI,8,8,0x3f00L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_int,"_asm#asm-int",___REF_FAL,5,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_int,___REF_SYM(32,___S___asm_23_asm_2d_int),___REF_FAL,5,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_int,3,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_int,___IFD(___RETI,8,0,0x3f0fL))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_int,___IFD(___RETN,5,0,0xfL))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_int,___IFD(___RETI,8,8,0x3f00L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_int,___IFD(___RETI,8,8,0x3f00L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_int_2d_be,"_asm#asm-int-be",___REF_FAL,10,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_int_2d_be,___REF_SYM(33,___S___asm_23_asm_2d_int_2d_be),___REF_FAL,10,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_int_2d_be,3,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_int_2d_be,___IFD(___RETI,8,0,0x3f0fL))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_int_2d_be,___IFD(___RETN,5,0,0xfL))
@@ -7360,7 +7584,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_int_2d_be,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_int_2d_be,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_int_2d_be,___IFD(___RETN,5,0,0x3L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_int_2d_le,"_asm#asm-int-le",___REF_FAL,10,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_int_2d_le,___REF_SYM(34,___S___asm_23_asm_2d_int_2d_le),___REF_FAL,10,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_int_2d_le,3,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_int_2d_le,___IFD(___RETI,8,0,0x3f0fL))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_int_2d_le,___IFD(___RETN,5,0,0xfL))
@@ -7371,17 +7595,17 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_int_2d_le,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_int_2d_le,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_int_2d_le,___IFD(___RETN,5,0,0x3L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_f32,"_asm#asm-f32",___REF_FAL,4,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_f32,___REF_SYM(26,___S___asm_23_asm_2d_f32),___REF_FAL,4,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_f32,2,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_f32,___IFD(___RETI,8,0,0x3f03L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_f32,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_f32,___IFD(___RETI,8,8,0x3f00L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_f64,"_asm#asm-f64",___REF_FAL,4,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_f64,___REF_SYM(27,___S___asm_23_asm_2d_f64),___REF_FAL,4,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_f64,2,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_f64,___IFD(___RETI,8,0,0x3f03L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_f64,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_f64,___IFD(___RETI,8,8,0x3f00L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_UTF_2d_8_2d_string,"_asm#asm-UTF-8-string",___REF_FAL,16,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_UTF_2d_8_2d_string,___REF_SYM(13,___S___asm_23_asm_2d_UTF_2d_8_2d_string),___REF_FAL,16,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_UTF_2d_8_2d_string,2,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_UTF_2d_8_2d_string,___IFD(___RETI,8,0,0x3f03L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_UTF_2d_8_2d_string,___IFD(___RETI,8,0,0x3f03L))
@@ -7398,10 +7622,10 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_UTF_2d_8_2d_string,___IFD(___RETN,5,1,0x1fL))
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_UTF_2d_8_2d_string,0,1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_UTF_2d_8_2d_string,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_make_2d_label,"_asm#asm-make-label",___REF_FAL,2,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_make_2d_label,___REF_SYM(42,___S___asm_23_asm_2d_make_2d_label),___REF_FAL,2,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_make_2d_label,3,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_make_2d_label,___IFD(___RETI,1,4,0x3f0L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_label_3f_,"_asm#asm-label?",___REF_FAL,7,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_label_3f_,___REF_SYM(39,___S___asm_23_asm_2d_label_3f_),___REF_FAL,7,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_label_3f_,1,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_label_3f_,___IFD(___RETI,8,0,0x3f03L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_label_3f_,___IFD(___RETN,5,0,0x3L))
@@ -7409,7 +7633,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_label_3f_,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_label_3f_,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_label_3f_,___IFD(___RETI,4,4,0x3f0L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_label,"_asm#asm-label",___REF_FAL,7,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_label,___REF_SYM(35,___S___asm_23_asm_2d_label),___REF_FAL,7,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_label,2,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_label,___IFD(___RETI,8,0,0x3f07L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_label,___IFD(___RETN,5,0,0x7L))
@@ -7417,10 +7641,10 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_label,___IFD(___RETI,8,8,0x3f00L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_label,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_label,___IFD(___RETI,4,4,0x3f0L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_label_2d_id,"_asm#asm-label-id",___REF_FAL,2,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_label_2d_id,___REF_SYM(36,___S___asm_23_asm_2d_label_2d_id),___REF_FAL,2,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_label_2d_id,1,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_label_2d_id,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_label_2d_name,"_asm#asm-label-name",___REF_FAL,10,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_label_2d_name,___REF_SYM(37,___S___asm_23_asm_2d_label_2d_name),___REF_FAL,10,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_label_2d_name,1,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_label_2d_name,___IFD(___RETI,4,0,0x3f1L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_label_2d_name,___IFD(___RETN,1,0,0x1L))
@@ -7431,13 +7655,13 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_label_2d_name,___IFD(___RETI,8,8,0x3f00L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_label_2d_name,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_label_2d_name,___IFD(___RETI,4,4,0x3f0L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_label_2d_pos,"_asm#asm-label-pos",___REF_FAL,5,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_label_2d_pos,___REF_SYM(38,___S___asm_23_asm_2d_label_2d_pos),___REF_FAL,5,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_label_2d_pos,1,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_label_2d_pos,___IFD(___RETI,8,0,0x3f03L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_label_2d_pos,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_label_2d_pos,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_label_2d_pos,___IFD(___RETI,4,4,0x3f0L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_align,"_asm#asm-align",___REF_FAL,32,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_align,___REF_SYM(14,___S___asm_23_asm_2d_align),___REF_FAL,32,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_align,4,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_align,___IFD(___RETI,3,4,0x3f2L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_align,___IFD(___RETI,3,4,0x3f2L))
@@ -7470,7 +7694,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_align,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_align,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_align,___IFD(___RETI,8,8,0x3f00L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_origin,"_asm#asm-origin",___REF_FAL,28,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_origin,___REF_SYM(44,___S___asm_23_asm_2d_origin),___REF_FAL,28,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_origin,3,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_origin,___IFD(___RETI,2,4,0x3f1L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_origin,___IFD(___RETI,2,4,0x3f1L))
@@ -7499,18 +7723,17 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_origin,___IFD(___RETN,5,0,0xfL))
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_origin,1,1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_origin,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_at_2d_assembly,"_asm#asm-at-assembly",___REF_FAL,4,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_at_2d_assembly,___REF_SYM(18,___S___asm_23_asm_2d_at_2d_assembly),___REF_FAL,4,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_at_2d_assembly,2,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_at_2d_assembly,___IFD(___RETI,8,0,0x3f03L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_at_2d_assembly,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_at_2d_assembly,___IFD(___RETI,8,8,0x3f00L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_listing,"_asm#asm-listing",___REF_FAL,4,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_listing,___REF_SYM(40,___S___asm_23_asm_2d_listing),___REF_FAL,4,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_listing,2,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_listing,___IFD(___RETI,8,0,0x3f03L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_listing,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_listing,___IFD(___RETI,8,8,0x3f00L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_separated_2d_list,"_asm#asm-separated-list",___REF_FAL,10,0)
-
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_separated_2d_list,___REF_SYM(45,___S___asm_23_asm_2d_separated_2d_list),___REF_FAL,10,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_separated_2d_list,2,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_separated_2d_list,___IFD(___RETI,8,0,0x3f07L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_separated_2d_list,___IFD(___RETN,5,0,0x7L))
@@ -7521,8 +7744,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_separated_2d_list,___IFD(___RETI,8,8,0x3f08L))
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_separated_2d_list,1,1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_separated_2d_list,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_display_2d_listing,"_asm#asm-display-listing",___REF_FAL,78,0)
-
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_display_2d_listing,___REF_SYM(25,___S___asm_23_asm_2d_display_2d_listing),___REF_FAL,77,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_display_2d_listing,3,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_display_2d_listing,___IFD(___RETI,8,0,0x3f07L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_display_2d_listing,___IFD(___RETN,5,0,0x7L))
@@ -7535,6 +7757,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_display_2d_listing,___IFD(___RETI,2,4,0x3fbL))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_display_2d_listing,___OFD(___RETI,12,2,0x3f03fL))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_display_2d_listing,___IFD(___RETN,9,2,0x3fL))
+,___DEF_LBL_RET(___H___asm_23_asm_2d_display_2d_listing,___OFD(___RETI,12,12,0x3f000L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_display_2d_listing,___IFD(___RETN,9,2,0x3fL))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_display_2d_listing,___IFD(___RETN,9,2,0x7fL))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_display_2d_listing,___IFD(___RETN,9,2,0x7fL))
@@ -7599,9 +7822,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_display_2d_listing,___IFD(___RETN,9,2,0x37L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_display_2d_listing,___IFD(___RETN,9,2,0x2fL))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_display_2d_listing,___IFD(___RETI,2,4,0x3fbL))
-,___DEF_LBL_RET(___H___asm_23_asm_2d_display_2d_listing,___IFD(___RETN,5,2,0x6L))
-,___DEF_LBL_RET(___H___asm_23_asm_2d_display_2d_listing,___IFD(___RETI,8,8,0x3f00L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_assemble,"_asm#asm-assemble",___REF_FAL,121,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_assemble,___REF_SYM(15,___S___asm_23_asm_2d_assemble),___REF_FAL,121,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_assemble,1,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_assemble,___IFD(___RETI,8,0,0x3f03L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_assemble,___IFD(___RETN,5,0,0x3L))
@@ -7723,8 +7944,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_assemble,___IFD(___RETN,5,1,0x13L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_assemble,___IFD(___RETN,5,1,0x12L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_assemble,___IFD(___RETI,8,8,0x3f00L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_assemble_2d_to_2d_file,"_asm#asm-assemble-to-file",___REF_FAL,20,
-0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_assemble_2d_to_2d_file,___REF_SYM(16,___S___asm_23_asm_2d_assemble_2d_to_2d_file),___REF_FAL,20,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_assemble_2d_to_2d_file,2,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_assemble_2d_to_2d_file,___IFD(___RETI,8,0,0x3f07L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_assemble_2d_to_2d_file,___IFD(___RETN,5,0,0x7L))
@@ -7745,8 +7965,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_assemble_2d_to_2d_file,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_assemble_2d_to_2d_file,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_assemble_2d_to_2d_file,___IFD(___RETN,5,0,0x3L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_assemble_2d_to_2d_u8vector,"_asm#asm-assemble-to-u8vector",___REF_FAL,
-21,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_assemble_2d_to_2d_u8vector,___REF_SYM(17,___S___asm_23_asm_2d_assemble_2d_to_2d_u8vector),___REF_FAL,21,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_assemble_2d_to_2d_u8vector,1,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_assemble_2d_to_2d_u8vector,___IFD(___RETI,8,0,0x3f03L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_assemble_2d_to_2d_u8vector,___IFD(___RETN,5,0,0x3L))
@@ -7768,12 +7987,12 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_assemble_2d_to_2d_u8vector,___IFD(___RETN,5,0,0xbL))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_assemble_2d_to_2d_u8vector,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_assemble_2d_to_2d_u8vector,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_make_2d_stream,"_asm#asm-make-stream",___REF_FAL,4,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_make_2d_stream,___REF_SYM(43,___S___asm_23_asm_2d_make_2d_stream),___REF_FAL,4,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_make_2d_stream,0,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_make_2d_stream,___IFD(___RETI,4,0,0x3f1L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_make_2d_stream,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_make_2d_stream,___IFD(___RETN,5,0,0x3L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_code_2d_extend,"_asm#asm-code-extend",___REF_FAL,7,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_code_2d_extend,___REF_SYM(23,___S___asm_23_asm_2d_code_2d_extend),___REF_FAL,7,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_code_2d_extend,2,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_code_2d_extend,___IFD(___RETI,8,0,0x3f03L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_code_2d_extend,___IFD(___RETN,5,0,0x3L))
@@ -7781,75 +8000,75 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_code_2d_extend,___IFD(___RETN,5,0,0xdL))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_code_2d_extend,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_code_2d_extend,___IFD(___RETI,8,8,0x3f00L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_signed8_3f_,"_asm#asm-signed8?",___REF_FAL,4,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_signed8_3f_,___REF_SYM(53,___S___asm_23_asm_2d_signed8_3f_),___REF_FAL,4,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_signed8_3f_,1,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_signed8_3f_,___IFD(___RETI,8,0,0x3f03L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_signed8_3f_,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_signed8_3f_,___IFD(___RETI,8,8,0x3f00L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_signed16_3f_,"_asm#asm-signed16?",___REF_FAL,4,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_signed16_3f_,___REF_SYM(51,___S___asm_23_asm_2d_signed16_3f_),___REF_FAL,4,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_signed16_3f_,1,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_signed16_3f_,___IFD(___RETI,8,0,0x3f03L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_signed16_3f_,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_signed16_3f_,___IFD(___RETI,8,8,0x3f00L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_signed32_3f_,"_asm#asm-signed32?",___REF_FAL,4,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_signed32_3f_,___REF_SYM(52,___S___asm_23_asm_2d_signed32_3f_),___REF_FAL,4,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_signed32_3f_,1,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_signed32_3f_,___IFD(___RETI,8,0,0x3f03L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_signed32_3f_,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_signed32_3f_,___IFD(___RETI,8,8,0x3f00L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_signed_2d_lo8,"_asm#asm-signed-lo8",___REF_FAL,5,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_signed_2d_lo8,___REF_SYM(50,___S___asm_23_asm_2d_signed_2d_lo8),___REF_FAL,5,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_signed_2d_lo8,1,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_signed_2d_lo8,___IFD(___RETI,4,0,0x3f1L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_signed_2d_lo8,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_signed_2d_lo8,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_signed_2d_lo8,___IFD(___RETI,4,4,0x3f0L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_unsigned_2d_lo8,"_asm#asm-unsigned-lo8",___REF_FAL,2,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_unsigned_2d_lo8,___REF_SYM(58,___S___asm_23_asm_2d_unsigned_2d_lo8),___REF_FAL,2,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_unsigned_2d_lo8,1,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_unsigned_2d_lo8,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_signed_2d_lo16,"_asm#asm-signed-lo16",___REF_FAL,5,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_signed_2d_lo16,___REF_SYM(47,___S___asm_23_asm_2d_signed_2d_lo16),___REF_FAL,5,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_signed_2d_lo16,1,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_signed_2d_lo16,___IFD(___RETI,4,0,0x3f1L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_signed_2d_lo16,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_signed_2d_lo16,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_signed_2d_lo16,___IFD(___RETI,4,4,0x3f0L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_unsigned_2d_lo16,"_asm#asm-unsigned-lo16",___REF_FAL,2,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_unsigned_2d_lo16,___REF_SYM(55,___S___asm_23_asm_2d_unsigned_2d_lo16),___REF_FAL,2,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_unsigned_2d_lo16,1,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_unsigned_2d_lo16,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_signed_2d_lo32,"_asm#asm-signed-lo32",___REF_FAL,5,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_signed_2d_lo32,___REF_SYM(48,___S___asm_23_asm_2d_signed_2d_lo32),___REF_FAL,5,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_signed_2d_lo32,1,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_signed_2d_lo32,___IFD(___RETI,4,0,0x3f1L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_signed_2d_lo32,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_signed_2d_lo32,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_signed_2d_lo32,___IFD(___RETI,4,4,0x3f0L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_unsigned_2d_lo32,"_asm#asm-unsigned-lo32",___REF_FAL,2,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_unsigned_2d_lo32,___REF_SYM(56,___S___asm_23_asm_2d_unsigned_2d_lo32),___REF_FAL,2,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_unsigned_2d_lo32,1,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_unsigned_2d_lo32,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_signed_2d_lo64,"_asm#asm-signed-lo64",___REF_FAL,5,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_signed_2d_lo64,___REF_SYM(49,___S___asm_23_asm_2d_signed_2d_lo64),___REF_FAL,5,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_signed_2d_lo64,1,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_signed_2d_lo64,___IFD(___RETI,4,0,0x3f1L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_signed_2d_lo64,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_signed_2d_lo64,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_signed_2d_lo64,___IFD(___RETI,4,4,0x3f0L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_unsigned_2d_lo64,"_asm#asm-unsigned-lo64",___REF_FAL,2,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_unsigned_2d_lo64,___REF_SYM(57,___S___asm_23_asm_2d_unsigned_2d_lo64),___REF_FAL,2,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_unsigned_2d_lo64,1,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_unsigned_2d_lo64,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_signed_2d_lo,"_asm#asm-signed-lo",___REF_FAL,6,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_signed_2d_lo,___REF_SYM(46,___S___asm_23_asm_2d_signed_2d_lo),___REF_FAL,6,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_signed_2d_lo,2,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_signed_2d_lo,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_signed_2d_lo,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_signed_2d_lo,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_signed_2d_lo,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_signed_2d_lo,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_unsigned_2d_lo,"_asm#asm-unsigned-lo",___REF_FAL,6,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_unsigned_2d_lo,___REF_SYM(54,___S___asm_23_asm_2d_unsigned_2d_lo),___REF_FAL,6,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_unsigned_2d_lo,2,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_unsigned_2d_lo,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_unsigned_2d_lo,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_unsigned_2d_lo,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_unsigned_2d_lo,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_unsigned_2d_lo,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_bits_2d_0_2d_to_2d_7,"_asm#asm-bits-0-to-7",___REF_FAL,2,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_bits_2d_0_2d_to_2d_7,___REF_SYM(19,___S___asm_23_asm_2d_bits_2d_0_2d_to_2d_7),___REF_FAL,2,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_bits_2d_0_2d_to_2d_7,1,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_bits_2d_0_2d_to_2d_7,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_bits_2d_8_2d_and_2d_up,"_asm#asm-bits-8-and-up",___REF_FAL,7,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_bits_2d_8_2d_and_2d_up,___REF_SYM(22,___S___asm_23_asm_2d_bits_2d_8_2d_and_2d_up),___REF_FAL,7,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_bits_2d_8_2d_and_2d_up,1,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_bits_2d_8_2d_and_2d_up,___IFD(___RETI,8,0,0x3f03L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_bits_2d_8_2d_and_2d_up,___IFD(___RETN,5,0,0x3L))
@@ -7857,8 +8076,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_bits_2d_8_2d_and_2d_up,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_bits_2d_8_2d_and_2d_up,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_bits_2d_8_2d_and_2d_up,___IFD(___RETI,4,4,0x3f0L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_bits_2d_16_2d_and_2d_up,"_asm#asm-bits-16-and-up",___REF_FAL,7,0)
-
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_bits_2d_16_2d_and_2d_up,___REF_SYM(20,___S___asm_23_asm_2d_bits_2d_16_2d_and_2d_up),___REF_FAL,7,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_bits_2d_16_2d_and_2d_up,1,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_bits_2d_16_2d_and_2d_up,___IFD(___RETI,8,0,0x3f03L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_bits_2d_16_2d_and_2d_up,___IFD(___RETN,5,0,0x3L))
@@ -7866,8 +8084,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_bits_2d_16_2d_and_2d_up,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_bits_2d_16_2d_and_2d_up,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_bits_2d_16_2d_and_2d_up,___IFD(___RETI,4,4,0x3f0L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_bits_2d_32_2d_and_2d_up,"_asm#asm-bits-32-and-up",___REF_FAL,7,0)
-
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_bits_2d_32_2d_and_2d_up,___REF_SYM(21,___S___asm_23_asm_2d_bits_2d_32_2d_and_2d_up),___REF_FAL,7,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_bits_2d_32_2d_and_2d_up,1,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_bits_2d_32_2d_and_2d_up,___IFD(___RETI,8,0,0x3f03L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_bits_2d_32_2d_and_2d_up,___IFD(___RETN,5,0,0x3L))
@@ -7875,8 +8092,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_bits_2d_32_2d_and_2d_up,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_bits_2d_32_2d_and_2d_up,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_bits_2d_32_2d_and_2d_up,___IFD(___RETI,4,4,0x3f0L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_float_2d__3e_inexact_2d_exponential_2d_format,"_asm#asm-float->inexact-exponential-format",
-___REF_FAL,53,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_float_2d__3e_inexact_2d_exponential_2d_format,___REF_SYM(30,___S___asm_23_asm_2d_float_2d__3e_inexact_2d_exponential_2d_format),___REF_FAL,53,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_float_2d__3e_inexact_2d_exponential_2d_format,2,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_float_2d__3e_inexact_2d_exponential_2d_format,___IFD(___RETI,8,0,0x3f03L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_float_2d__3e_inexact_2d_exponential_2d_format,___IFD(___RETN,5,0,0x3L))
@@ -7930,8 +8146,7 @@ ___REF_FAL,53,0)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_float_2d__3e_inexact_2d_exponential_2d_format,___IFD(___RETN,9,1,0x3eL))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_float_2d__3e_inexact_2d_exponential_2d_format,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_float_2d__3e_inexact_2d_exponential_2d_format,___IFD(___RETN,5,0,0x7L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_float_2d__3e_exact_2d_exponential_2d_format,"_asm#asm-float->exact-exponential-format",
-___REF_FAL,23,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_float_2d__3e_exact_2d_exponential_2d_format,___REF_SYM(29,___S___asm_23_asm_2d_float_2d__3e_exact_2d_exponential_2d_format),___REF_FAL,23,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_float_2d__3e_exact_2d_exponential_2d_format,2,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_float_2d__3e_exact_2d_exponential_2d_format,___IFD(___RETI,8,0,0x3f03L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_float_2d__3e_exact_2d_exponential_2d_format,___IFD(___RETN,5,0,0x3L))
@@ -7955,7 +8170,7 @@ ___REF_FAL,23,0)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_float_2d__3e_exact_2d_exponential_2d_format,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_float_2d__3e_exact_2d_exponential_2d_format,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_float_2d__3e_exact_2d_exponential_2d_format,___IFD(___RETN,5,0,0x7L))
-,___DEF_LBL_INTRO(___H___asm_23_asm_2d_float_2d__3e_bits,"_asm#asm-float->bits",___REF_FAL,20,0)
+,___DEF_LBL_INTRO(___H___asm_23_asm_2d_float_2d__3e_bits,___REF_SYM(28,___S___asm_23_asm_2d_float_2d__3e_bits),___REF_FAL,20,0)
 ,___DEF_LBL_PROC(___H___asm_23_asm_2d_float_2d__3e_bits,2,-1)
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_float_2d__3e_bits,___IFD(___RETI,8,0,0x3f07L))
 ,___DEF_LBL_RET(___H___asm_23_asm_2d_float_2d__3e_bits,___IFD(___RETN,5,0,0x7L))
@@ -7981,6 +8196,8 @@ ___END_LBL
 ___BEGIN_OFD
  ___DEF_OFD(___RETI,12,2)
                ___GCMAP1(0x3f03fL)
+,___DEF_OFD(___RETI,12,12)
+               ___GCMAP1(0x3f000L)
 ,___DEF_OFD(___RETI,12,12)
                ___GCMAP1(0x3f000L)
 ,___DEF_OFD(___RETI,12,2)
@@ -8024,31 +8241,31 @@ ___DEF_MOD_PRM(16,___G___asm_23_asm_2d_at_2d_assembly,249)
 ___DEF_MOD_PRM(43,___G___asm_23_asm_2d_listing,254)
 ___DEF_MOD_PRM(48,___G___asm_23_asm_2d_separated_2d_list,259)
 ___DEF_MOD_PRM(23,___G___asm_23_asm_2d_display_2d_listing,270)
-___DEF_MOD_PRM(13,___G___asm_23_asm_2d_assemble,349)
-___DEF_MOD_PRM(14,___G___asm_23_asm_2d_assemble_2d_to_2d_file,471)
-___DEF_MOD_PRM(15,___G___asm_23_asm_2d_assemble_2d_to_2d_u8vector,492)
-___DEF_MOD_PRM(46,___G___asm_23_asm_2d_make_2d_stream,514)
-___DEF_MOD_PRM(21,___G___asm_23_asm_2d_code_2d_extend,519)
-___DEF_MOD_PRM(56,___G___asm_23_asm_2d_signed8_3f_,527)
-___DEF_MOD_PRM(54,___G___asm_23_asm_2d_signed16_3f_,532)
-___DEF_MOD_PRM(55,___G___asm_23_asm_2d_signed32_3f_,537)
-___DEF_MOD_PRM(53,___G___asm_23_asm_2d_signed_2d_lo8,542)
-___DEF_MOD_PRM(61,___G___asm_23_asm_2d_unsigned_2d_lo8,548)
-___DEF_MOD_PRM(50,___G___asm_23_asm_2d_signed_2d_lo16,551)
-___DEF_MOD_PRM(58,___G___asm_23_asm_2d_unsigned_2d_lo16,557)
-___DEF_MOD_PRM(51,___G___asm_23_asm_2d_signed_2d_lo32,560)
-___DEF_MOD_PRM(59,___G___asm_23_asm_2d_unsigned_2d_lo32,566)
-___DEF_MOD_PRM(52,___G___asm_23_asm_2d_signed_2d_lo64,569)
-___DEF_MOD_PRM(60,___G___asm_23_asm_2d_unsigned_2d_lo64,575)
-___DEF_MOD_PRM(49,___G___asm_23_asm_2d_signed_2d_lo,578)
-___DEF_MOD_PRM(57,___G___asm_23_asm_2d_unsigned_2d_lo,585)
-___DEF_MOD_PRM(17,___G___asm_23_asm_2d_bits_2d_0_2d_to_2d_7,592)
-___DEF_MOD_PRM(20,___G___asm_23_asm_2d_bits_2d_8_2d_and_2d_up,595)
-___DEF_MOD_PRM(18,___G___asm_23_asm_2d_bits_2d_16_2d_and_2d_up,603)
-___DEF_MOD_PRM(19,___G___asm_23_asm_2d_bits_2d_32_2d_and_2d_up,611)
-___DEF_MOD_PRM(28,___G___asm_23_asm_2d_float_2d__3e_inexact_2d_exponential_2d_format,619)
-___DEF_MOD_PRM(27,___G___asm_23_asm_2d_float_2d__3e_exact_2d_exponential_2d_format,673)
-___DEF_MOD_PRM(26,___G___asm_23_asm_2d_float_2d__3e_bits,697)
+___DEF_MOD_PRM(13,___G___asm_23_asm_2d_assemble,348)
+___DEF_MOD_PRM(14,___G___asm_23_asm_2d_assemble_2d_to_2d_file,470)
+___DEF_MOD_PRM(15,___G___asm_23_asm_2d_assemble_2d_to_2d_u8vector,491)
+___DEF_MOD_PRM(46,___G___asm_23_asm_2d_make_2d_stream,513)
+___DEF_MOD_PRM(21,___G___asm_23_asm_2d_code_2d_extend,518)
+___DEF_MOD_PRM(56,___G___asm_23_asm_2d_signed8_3f_,526)
+___DEF_MOD_PRM(54,___G___asm_23_asm_2d_signed16_3f_,531)
+___DEF_MOD_PRM(55,___G___asm_23_asm_2d_signed32_3f_,536)
+___DEF_MOD_PRM(53,___G___asm_23_asm_2d_signed_2d_lo8,541)
+___DEF_MOD_PRM(61,___G___asm_23_asm_2d_unsigned_2d_lo8,547)
+___DEF_MOD_PRM(50,___G___asm_23_asm_2d_signed_2d_lo16,550)
+___DEF_MOD_PRM(58,___G___asm_23_asm_2d_unsigned_2d_lo16,556)
+___DEF_MOD_PRM(51,___G___asm_23_asm_2d_signed_2d_lo32,559)
+___DEF_MOD_PRM(59,___G___asm_23_asm_2d_unsigned_2d_lo32,565)
+___DEF_MOD_PRM(52,___G___asm_23_asm_2d_signed_2d_lo64,568)
+___DEF_MOD_PRM(60,___G___asm_23_asm_2d_unsigned_2d_lo64,574)
+___DEF_MOD_PRM(49,___G___asm_23_asm_2d_signed_2d_lo,577)
+___DEF_MOD_PRM(57,___G___asm_23_asm_2d_unsigned_2d_lo,584)
+___DEF_MOD_PRM(17,___G___asm_23_asm_2d_bits_2d_0_2d_to_2d_7,591)
+___DEF_MOD_PRM(20,___G___asm_23_asm_2d_bits_2d_8_2d_and_2d_up,594)
+___DEF_MOD_PRM(18,___G___asm_23_asm_2d_bits_2d_16_2d_and_2d_up,602)
+___DEF_MOD_PRM(19,___G___asm_23_asm_2d_bits_2d_32_2d_and_2d_up,610)
+___DEF_MOD_PRM(28,___G___asm_23_asm_2d_float_2d__3e_inexact_2d_exponential_2d_format,618)
+___DEF_MOD_PRM(27,___G___asm_23_asm_2d_float_2d__3e_exact_2d_exponential_2d_format,672)
+___DEF_MOD_PRM(26,___G___asm_23_asm_2d_float_2d__3e_bits,696)
 ___END_MOD_PRM
 
 ___BEGIN_MOD_C_INIT
@@ -8087,41 +8304,101 @@ ___DEF_MOD_GLO(16,___G___asm_23_asm_2d_at_2d_assembly,249)
 ___DEF_MOD_GLO(43,___G___asm_23_asm_2d_listing,254)
 ___DEF_MOD_GLO(48,___G___asm_23_asm_2d_separated_2d_list,259)
 ___DEF_MOD_GLO(23,___G___asm_23_asm_2d_display_2d_listing,270)
-___DEF_MOD_GLO(13,___G___asm_23_asm_2d_assemble,349)
-___DEF_MOD_GLO(14,___G___asm_23_asm_2d_assemble_2d_to_2d_file,471)
-___DEF_MOD_GLO(15,___G___asm_23_asm_2d_assemble_2d_to_2d_u8vector,492)
-___DEF_MOD_GLO(46,___G___asm_23_asm_2d_make_2d_stream,514)
-___DEF_MOD_GLO(21,___G___asm_23_asm_2d_code_2d_extend,519)
-___DEF_MOD_GLO(56,___G___asm_23_asm_2d_signed8_3f_,527)
-___DEF_MOD_GLO(54,___G___asm_23_asm_2d_signed16_3f_,532)
-___DEF_MOD_GLO(55,___G___asm_23_asm_2d_signed32_3f_,537)
-___DEF_MOD_GLO(53,___G___asm_23_asm_2d_signed_2d_lo8,542)
-___DEF_MOD_GLO(61,___G___asm_23_asm_2d_unsigned_2d_lo8,548)
-___DEF_MOD_GLO(50,___G___asm_23_asm_2d_signed_2d_lo16,551)
-___DEF_MOD_GLO(58,___G___asm_23_asm_2d_unsigned_2d_lo16,557)
-___DEF_MOD_GLO(51,___G___asm_23_asm_2d_signed_2d_lo32,560)
-___DEF_MOD_GLO(59,___G___asm_23_asm_2d_unsigned_2d_lo32,566)
-___DEF_MOD_GLO(52,___G___asm_23_asm_2d_signed_2d_lo64,569)
-___DEF_MOD_GLO(60,___G___asm_23_asm_2d_unsigned_2d_lo64,575)
-___DEF_MOD_GLO(49,___G___asm_23_asm_2d_signed_2d_lo,578)
-___DEF_MOD_GLO(57,___G___asm_23_asm_2d_unsigned_2d_lo,585)
-___DEF_MOD_GLO(17,___G___asm_23_asm_2d_bits_2d_0_2d_to_2d_7,592)
-___DEF_MOD_GLO(20,___G___asm_23_asm_2d_bits_2d_8_2d_and_2d_up,595)
-___DEF_MOD_GLO(18,___G___asm_23_asm_2d_bits_2d_16_2d_and_2d_up,603)
-___DEF_MOD_GLO(19,___G___asm_23_asm_2d_bits_2d_32_2d_and_2d_up,611)
-___DEF_MOD_GLO(28,___G___asm_23_asm_2d_float_2d__3e_inexact_2d_exponential_2d_format,619)
-___DEF_MOD_GLO(27,___G___asm_23_asm_2d_float_2d__3e_exact_2d_exponential_2d_format,673)
-___DEF_MOD_GLO(26,___G___asm_23_asm_2d_float_2d__3e_bits,697)
+___DEF_MOD_GLO(13,___G___asm_23_asm_2d_assemble,348)
+___DEF_MOD_GLO(14,___G___asm_23_asm_2d_assemble_2d_to_2d_file,470)
+___DEF_MOD_GLO(15,___G___asm_23_asm_2d_assemble_2d_to_2d_u8vector,491)
+___DEF_MOD_GLO(46,___G___asm_23_asm_2d_make_2d_stream,513)
+___DEF_MOD_GLO(21,___G___asm_23_asm_2d_code_2d_extend,518)
+___DEF_MOD_GLO(56,___G___asm_23_asm_2d_signed8_3f_,526)
+___DEF_MOD_GLO(54,___G___asm_23_asm_2d_signed16_3f_,531)
+___DEF_MOD_GLO(55,___G___asm_23_asm_2d_signed32_3f_,536)
+___DEF_MOD_GLO(53,___G___asm_23_asm_2d_signed_2d_lo8,541)
+___DEF_MOD_GLO(61,___G___asm_23_asm_2d_unsigned_2d_lo8,547)
+___DEF_MOD_GLO(50,___G___asm_23_asm_2d_signed_2d_lo16,550)
+___DEF_MOD_GLO(58,___G___asm_23_asm_2d_unsigned_2d_lo16,556)
+___DEF_MOD_GLO(51,___G___asm_23_asm_2d_signed_2d_lo32,559)
+___DEF_MOD_GLO(59,___G___asm_23_asm_2d_unsigned_2d_lo32,565)
+___DEF_MOD_GLO(52,___G___asm_23_asm_2d_signed_2d_lo64,568)
+___DEF_MOD_GLO(60,___G___asm_23_asm_2d_unsigned_2d_lo64,574)
+___DEF_MOD_GLO(49,___G___asm_23_asm_2d_signed_2d_lo,577)
+___DEF_MOD_GLO(57,___G___asm_23_asm_2d_unsigned_2d_lo,584)
+___DEF_MOD_GLO(17,___G___asm_23_asm_2d_bits_2d_0_2d_to_2d_7,591)
+___DEF_MOD_GLO(20,___G___asm_23_asm_2d_bits_2d_8_2d_and_2d_up,594)
+___DEF_MOD_GLO(18,___G___asm_23_asm_2d_bits_2d_16_2d_and_2d_up,602)
+___DEF_MOD_GLO(19,___G___asm_23_asm_2d_bits_2d_32_2d_and_2d_up,610)
+___DEF_MOD_GLO(28,___G___asm_23_asm_2d_float_2d__3e_inexact_2d_exponential_2d_format,618)
+___DEF_MOD_GLO(27,___G___asm_23_asm_2d_float_2d__3e_exact_2d_exponential_2d_format,672)
+___DEF_MOD_GLO(26,___G___asm_23_asm_2d_float_2d__3e_bits,696)
 ___END_MOD_GLO
 
 ___BEGIN_MOD_SYM_KEY
 ___DEF_MOD_SYM(0,___S_UTF_2d_8,"UTF-8")
 ___DEF_MOD_SYM(1,___S___asm,"_asm")
-___DEF_MOD_SYM(2,___S_be,"be")
-___DEF_MOD_SYM(3,___S_code_2d_block,"code-block")
-___DEF_MOD_SYM(4,___S_deferred,"deferred")
-___DEF_MOD_SYM(5,___S_label,"label")
-___DEF_MOD_SYM(6,___S_listing,"listing")
+___DEF_MOD_SYM(2,___S___asm_23_,"_asm#")
+___DEF_MOD_SYM(3,___S___asm_23_asm_2d_16,"_asm#asm-16")
+___DEF_MOD_SYM(4,___S___asm_23_asm_2d_16_2d_be,"_asm#asm-16-be")
+___DEF_MOD_SYM(5,___S___asm_23_asm_2d_16_2d_le,"_asm#asm-16-le")
+___DEF_MOD_SYM(6,___S___asm_23_asm_2d_32,"_asm#asm-32")
+___DEF_MOD_SYM(7,___S___asm_23_asm_2d_32_2d_be,"_asm#asm-32-be")
+___DEF_MOD_SYM(8,___S___asm_23_asm_2d_32_2d_le,"_asm#asm-32-le")
+___DEF_MOD_SYM(9,___S___asm_23_asm_2d_64,"_asm#asm-64")
+___DEF_MOD_SYM(10,___S___asm_23_asm_2d_64_2d_be,"_asm#asm-64-be")
+___DEF_MOD_SYM(11,___S___asm_23_asm_2d_64_2d_le,"_asm#asm-64-le")
+___DEF_MOD_SYM(12,___S___asm_23_asm_2d_8,"_asm#asm-8")
+___DEF_MOD_SYM(13,___S___asm_23_asm_2d_UTF_2d_8_2d_string,"_asm#asm-UTF-8-string")
+___DEF_MOD_SYM(14,___S___asm_23_asm_2d_align,"_asm#asm-align")
+___DEF_MOD_SYM(15,___S___asm_23_asm_2d_assemble,"_asm#asm-assemble")
+___DEF_MOD_SYM(16,___S___asm_23_asm_2d_assemble_2d_to_2d_file,"_asm#asm-assemble-to-file")
+___DEF_MOD_SYM(17,___S___asm_23_asm_2d_assemble_2d_to_2d_u8vector,"_asm#asm-assemble-to-u8vector")
+
+___DEF_MOD_SYM(18,___S___asm_23_asm_2d_at_2d_assembly,"_asm#asm-at-assembly")
+___DEF_MOD_SYM(19,___S___asm_23_asm_2d_bits_2d_0_2d_to_2d_7,"_asm#asm-bits-0-to-7")
+___DEF_MOD_SYM(20,___S___asm_23_asm_2d_bits_2d_16_2d_and_2d_up,"_asm#asm-bits-16-and-up")
+___DEF_MOD_SYM(21,___S___asm_23_asm_2d_bits_2d_32_2d_and_2d_up,"_asm#asm-bits-32-and-up")
+___DEF_MOD_SYM(22,___S___asm_23_asm_2d_bits_2d_8_2d_and_2d_up,"_asm#asm-bits-8-and-up")
+___DEF_MOD_SYM(23,___S___asm_23_asm_2d_code_2d_extend,"_asm#asm-code-extend")
+___DEF_MOD_SYM(24,___S___asm_23_asm_2d_copy_2d_code_2d_block,"_asm#asm-copy-code-block")
+___DEF_MOD_SYM(25,___S___asm_23_asm_2d_display_2d_listing,"_asm#asm-display-listing")
+___DEF_MOD_SYM(26,___S___asm_23_asm_2d_f32,"_asm#asm-f32")
+___DEF_MOD_SYM(27,___S___asm_23_asm_2d_f64,"_asm#asm-f64")
+___DEF_MOD_SYM(28,___S___asm_23_asm_2d_float_2d__3e_bits,"_asm#asm-float->bits")
+___DEF_MOD_SYM(29,___S___asm_23_asm_2d_float_2d__3e_exact_2d_exponential_2d_format,"_asm#asm-float->exact-exponential-format")
+
+___DEF_MOD_SYM(30,___S___asm_23_asm_2d_float_2d__3e_inexact_2d_exponential_2d_format,"_asm#asm-float->inexact-exponential-format")
+
+___DEF_MOD_SYM(31,___S___asm_23_asm_2d_init_2d_code_2d_block,"_asm#asm-init-code-block")
+___DEF_MOD_SYM(32,___S___asm_23_asm_2d_int,"_asm#asm-int")
+___DEF_MOD_SYM(33,___S___asm_23_asm_2d_int_2d_be,"_asm#asm-int-be")
+___DEF_MOD_SYM(34,___S___asm_23_asm_2d_int_2d_le,"_asm#asm-int-le")
+___DEF_MOD_SYM(35,___S___asm_23_asm_2d_label,"_asm#asm-label")
+___DEF_MOD_SYM(36,___S___asm_23_asm_2d_label_2d_id,"_asm#asm-label-id")
+___DEF_MOD_SYM(37,___S___asm_23_asm_2d_label_2d_name,"_asm#asm-label-name")
+___DEF_MOD_SYM(38,___S___asm_23_asm_2d_label_2d_pos,"_asm#asm-label-pos")
+___DEF_MOD_SYM(39,___S___asm_23_asm_2d_label_3f_,"_asm#asm-label?")
+___DEF_MOD_SYM(40,___S___asm_23_asm_2d_listing,"_asm#asm-listing")
+___DEF_MOD_SYM(41,___S___asm_23_asm_2d_make_2d_code_2d_block,"_asm#asm-make-code-block")
+___DEF_MOD_SYM(42,___S___asm_23_asm_2d_make_2d_label,"_asm#asm-make-label")
+___DEF_MOD_SYM(43,___S___asm_23_asm_2d_make_2d_stream,"_asm#asm-make-stream")
+___DEF_MOD_SYM(44,___S___asm_23_asm_2d_origin,"_asm#asm-origin")
+___DEF_MOD_SYM(45,___S___asm_23_asm_2d_separated_2d_list,"_asm#asm-separated-list")
+___DEF_MOD_SYM(46,___S___asm_23_asm_2d_signed_2d_lo,"_asm#asm-signed-lo")
+___DEF_MOD_SYM(47,___S___asm_23_asm_2d_signed_2d_lo16,"_asm#asm-signed-lo16")
+___DEF_MOD_SYM(48,___S___asm_23_asm_2d_signed_2d_lo32,"_asm#asm-signed-lo32")
+___DEF_MOD_SYM(49,___S___asm_23_asm_2d_signed_2d_lo64,"_asm#asm-signed-lo64")
+___DEF_MOD_SYM(50,___S___asm_23_asm_2d_signed_2d_lo8,"_asm#asm-signed-lo8")
+___DEF_MOD_SYM(51,___S___asm_23_asm_2d_signed16_3f_,"_asm#asm-signed16?")
+___DEF_MOD_SYM(52,___S___asm_23_asm_2d_signed32_3f_,"_asm#asm-signed32?")
+___DEF_MOD_SYM(53,___S___asm_23_asm_2d_signed8_3f_,"_asm#asm-signed8?")
+___DEF_MOD_SYM(54,___S___asm_23_asm_2d_unsigned_2d_lo,"_asm#asm-unsigned-lo")
+___DEF_MOD_SYM(55,___S___asm_23_asm_2d_unsigned_2d_lo16,"_asm#asm-unsigned-lo16")
+___DEF_MOD_SYM(56,___S___asm_23_asm_2d_unsigned_2d_lo32,"_asm#asm-unsigned-lo32")
+___DEF_MOD_SYM(57,___S___asm_23_asm_2d_unsigned_2d_lo64,"_asm#asm-unsigned-lo64")
+___DEF_MOD_SYM(58,___S___asm_23_asm_2d_unsigned_2d_lo8,"_asm#asm-unsigned-lo8")
+___DEF_MOD_SYM(59,___S_be,"be")
+___DEF_MOD_SYM(60,___S_code_2d_block,"code-block")
+___DEF_MOD_SYM(61,___S_deferred,"deferred")
+___DEF_MOD_SYM(62,___S_label,"label")
+___DEF_MOD_SYM(63,___S_listing,"listing")
 ___DEF_MOD_KEY(0,___K_char_2d_encoding,"char-encoding")
 ___END_MOD_SYM_KEY
 
