@@ -2,7 +2,7 @@
 
 ;;; File: "_gsclib.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 (include "generic.scm")
 
@@ -45,10 +45,7 @@
         new-opts)))
 
 (define (##default-compile-options)
-  (if (##unbound? ;; TODO: remove dynamic check after bootstrap
-       (##global-var-ref (##make-global-var '##default-compile-options-string)))
-      '()
-      (##call-with-input-string ##default-compile-options-string ##read-all)))
+  (##call-with-input-string ##default-compile-options-string ##read-all))
 
 (define (compile-file-to-target
          filename

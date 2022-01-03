@@ -5370,9 +5370,7 @@ end-of-code
 
 (define-prim (##unchecked-structure-set! obj val i type proc))
 
-(define-prim (##unchecked-structure-cas! obj val oldval i type proc)
-  ;; TODO: remove after bootstrap
-  (##vector-cas! obj i val oldval))
+(define-prim (##unchecked-structure-cas! obj val oldval i type proc))
 
 (define-prim (##structure-copy obj)
   (let* ((len (##structure-length obj))

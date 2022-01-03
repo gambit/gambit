@@ -2,7 +2,7 @@
 
 ;;; File: "vector.scm"
 
-;;; Copyright (c) 2020-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2020-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -178,13 +178,7 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim (##vector-cas! vect k val oldval)
-  ;;TODO: remove after bootstrap
-  (##declare (not interrupts-enabled))
-  (let ((result (##vector-ref vect k)))
-    (if (##eq? result oldval)
-        (##vector-set! vect k val))
-    result))
+(define-prim (##vector-cas! vect k val oldval))
 
 (define-prim (vector-cas! vect k val oldval)
   (macro-force-vars (vect k oldval)
@@ -198,12 +192,7 @@
           (vector-cas! vect k val oldval)
           (##vector-cas! vect k val oldval))))))
 
-(define-prim (##vector-inc! vect k #!optional (val 1))
-  ;;TODO: remove after bootstrap
-  (##declare (not interrupts-enabled))
-  (let ((result (##vector-ref vect k)))
-    (##vector-set! vect k (##fxwrap+ result val))
-    result))
+(define-prim (##vector-inc! vect k val))
 
 (define-prim (vector-inc! vect k #!optional (v (macro-absent-obj)))
   (macro-force-vars (vect k v)

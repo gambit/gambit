@@ -2,7 +2,7 @@
 
 ;;; File: "_eval.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1300,13 +1300,7 @@
   (##make-parameter #f))
 
 (##define-macro (macro-interpreter-target)
-  (let* ((cct ;; TODO: rewrite after bootstrap
-          (##global-var-ref
-           (##make-global-var '##compilation-target)))
-         (target
-          (if (##unbound? cct)
-              'C
-              (cct))))
+  (let ((target (##compilation-target)))
     `'(,target)))
 
 (define (##compile-in-new-compilation-ctx cte src tail? proc)
@@ -5545,26 +5539,12 @@
   (##define-macro (macro-extension-file)
     "~~lib/gambext")
 
-  #; ;;TODO: remove
-  (##define-macro (macro-syntax-case-file)
-    "~~lib/syntax-case")
-
   (##load (macro-extension-file)
           (lambda (script-line script-path) #f)
           #f ;; must be #f for the macros to be added to the interaction environment
           #f
           #f
-          #f)
-
-  #; ;;TODO: remove
-  (let ((standard-level (##get-standard-level)))
-    (if (##fx<= 4 standard-level)
-        (##load (macro-syntax-case-file)
-                (lambda (script-line script-path) #f)
-                #t
-                #t
-                #f
-                #f))))
+          #f))
 
 ;;;----------------------------------------------------------------------------
 

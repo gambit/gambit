@@ -37,6 +37,7 @@
 (let ((x (vector 1 2 3 4 5))) (subvector-fill! x 1 3 99) x)
 (let ((x (vector 1 2 3 4)) (y (vector 6 7 8 9 0))) (subvector-move! x 2 3 y 1) y)
 (let ((x (vector 5))) (vector-cas! x 0 6 5) x)
-(let ((x (vector 5))) (vector-inc! x 0) x)
+
+;;unimplemented;;(let ((x (vector 5))) (vector-inc! x 0) x)
 
 )

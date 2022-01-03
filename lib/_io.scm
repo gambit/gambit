@@ -2,7 +2,7 @@
 
 ;;; File: "_io.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -12217,7 +12217,7 @@
     (##eof-object? x)))
 
 (define-prim (##eof-object)
-  #!eof);;TODO: remove after bootstrap
+  #!eof)
 
 (define-prim (eof-object)
   (##eof-object))

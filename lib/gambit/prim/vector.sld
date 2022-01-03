@@ -2,7 +2,7 @@
 
 ;;; File: "vector.sld"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -43,7 +43,8 @@ subvector
 subvector-fill!
 subvector-move!
 vector-cas!
-vector-inc!
+
+;;UNIMPLEMENTED vector-inc!
 
 ))
 

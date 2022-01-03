@@ -2,7 +2,7 @@
 
 ;;; File: "_prims.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -6056,33 +6056,29 @@
 (def-simp "##flonum->fixnum" (constant-folder-fix inexact->exact flo?))
 (def-simp "fixnum->flonum"   (constant-folder-flo exact->inexact fix32?))
 
-#|
-;; TODO: enable after bootstrap
+(def-simp "fxand"            (constant-folder-fix fxand   fix32?))
+(def-simp "fxandc1"          (constant-folder-fix fxandc1 fix32?))
+(def-simp "fxandc2"          (constant-folder-fix fxandc2 fix32?))
+(def-simp "fxeqv"            (constant-folder-fix fxeqv   fix32?))
+(def-simp "fxior"            (constant-folder-fix fxior   fix32?))
+(def-simp "fxnand"           (constant-folder-fix fxnand  fix32?))
+(def-simp "fxnor"            (constant-folder-fix fxnor   fix32?))
+(def-simp "fxnot"            (constant-folder-fix fxnot   fix32?))
+(def-simp "fxorc1"           (constant-folder-fix fxorc1  fix32?))
+(def-simp "fxorc2"           (constant-folder-fix fxorc2  fix32?))
+(def-simp "fxxor"            (constant-folder-fix fxxor   fix32?))
 
-(def-simp "fxand"            (constant-folder-fix fxand   fix32?)
-(def-simp "fxandc1"          (constant-folder-fix fxandc1 fix32?)
-(def-simp "fxandc2"          (constant-folder-fix fxandc2 fix32?)
-(def-simp "fxeqv"            (constant-folder-fix fxeqv   fix32?)
-(def-simp "fxior"            (constant-folder-fix fxior   fix32?)
-(def-simp "fxnand"           (constant-folder-fix fxnand  fix32?)
-(def-simp "fxnor"            (constant-folder-fix fxnor   fix32?)
-(def-simp "fxnot"            (constant-folder-fix fxnot   fix32?)
-(def-simp "fxorc1"           (constant-folder-fix fxorc1  fix32?)
-(def-simp "fxorc2"           (constant-folder-fix fxorc2  fix32?)
-(def-simp "fxxor"            (constant-folder-fix fxxor   fix32?)
-
-(def-simp "bitwise-and"      (constant-folder-gen bitwise-and   int?)
-(def-simp "bitwise-andc1"    (constant-folder-gen bitwise-andc1 int?)
-(def-simp "bitwise-andc2"    (constant-folder-gen bitwise-andc2 int?)
-(def-simp "bitwise-eqv"      (constant-folder-gen bitwise-eqv   int?)
-(def-simp "bitwise-ior"      (constant-folder-gen bitwise-ior   int?)
-(def-simp "bitwise-nand"     (constant-folder-gen bitwise-nand  int?)
-(def-simp "bitwise-nor"      (constant-folder-gen bitwise-nor   int?)
-(def-simp "bitwise-not"      (constant-folder-gen bitwise-not   int?)
-(def-simp "bitwise-orc1"     (constant-folder-gen bitwise-orc1  int?)
-(def-simp "bitwise-orc2"     (constant-folder-gen bitwise-orc2  int?)
-(def-simp "bitwise-xor"      (constant-folder-gen bitwise-xor   int?)
-|#
+(def-simp "bitwise-and"      (constant-folder-gen bitwise-and   int?))
+(def-simp "bitwise-andc1"    (constant-folder-gen bitwise-andc1 int?))
+(def-simp "bitwise-andc2"    (constant-folder-gen bitwise-andc2 int?))
+(def-simp "bitwise-eqv"      (constant-folder-gen bitwise-eqv   int?))
+(def-simp "bitwise-ior"      (constant-folder-gen bitwise-ior   int?))
+(def-simp "bitwise-nand"     (constant-folder-gen bitwise-nand  int?))
+(def-simp "bitwise-nor"      (constant-folder-gen bitwise-nor   int?))
+(def-simp "bitwise-not"      (constant-folder-gen bitwise-not   int?))
+(def-simp "bitwise-orc1"     (constant-folder-gen bitwise-orc1  int?))
+(def-simp "bitwise-orc2"     (constant-folder-gen bitwise-orc2  int?))
+(def-simp "bitwise-xor"      (constant-folder-gen bitwise-xor   int?))
 
 (def-simp "make-rectangular" (constant-folder-gen make-rectangular real?))
 (def-simp "make-polar"       (constant-folder-gen make-polar     real?))

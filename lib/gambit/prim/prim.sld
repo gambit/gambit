@@ -1643,7 +1643,8 @@ subvector
 subvector-fill!
 subvector-move!
 vector-cas!
-vector-inc!
+
+;;UNIMPLEMENTED vector-inc!
 
 ;;; will.sld
 

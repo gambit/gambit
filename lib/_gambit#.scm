@@ -2,7 +2,7 @@
 
 ;;; File: "_gambit#.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -75,7 +75,7 @@
 
 ;; Special objects.
 
-(##define-macro (macro-absent-obj)   `',(##type-cast -6 (##type #f)));;TODO: remplace with (##absent-object) after next release
+(##define-macro (macro-absent-obj)   `',(##absent-object))
 (##define-macro (macro-unbound1-obj) `',(##type-cast -7 (##type #f)))
 (##define-macro (macro-unbound2-obj) `',(##type-cast -8 (##type #f)))
 (##define-macro (macro-unused-obj)   `',(##type-cast -14 (##type #f)))
@@ -200,12 +200,7 @@
        (##source-strip (car (##source-strip src)))))
 
     (define (symbol-append . lst)
-      ;;TODO: simplify after bootstrap
-      (let* ((sc (##global-var-ref (##make-global-var 'string-concatenate)))
-             (sc (if (##unbound? sc)
-                     (lambda (string-list) (apply string-append string-list))
-                     sc)))
-        (string->symbol (sc (map symbol->string lst)))))
+      (string->symbol (string-concatenate (map symbol->string lst))))
 
     (define (prim sym)
       (symbol-append '|##| sym))
@@ -403,12 +398,7 @@
       (not (equal? (car (var-checks param)) object-check)))
 
     (define (symbol-append . lst)
-      ;;TODO: simplify after bootstrap
-      (let* ((sc (##global-var-ref (##make-global-var 'string-concatenate)))
-             (sc (if (##unbound? sc)
-                     (lambda (string-list) (apply string-append string-list))
-                     sc)))
-        (string->symbol (sc (map symbol->string lst)))))
+      (string->symbol (string-concatenate (map symbol->string lst))))
 
     (define (prim sym)
       (symbol-append '|##| sym))
@@ -1114,12 +1104,7 @@
 (##define-macro (define-check-type type-and-test-name type predicate . arguments)
 
   (define (symbol-append . lst)
-    ;;TODO: simplify after bootstrap
-    (let* ((sc (##global-var-ref (##make-global-var 'string-concatenate)))
-           (sc (if (##unbound? sc)
-                   (lambda (string-list) (apply string-append string-list))
-                   sc)))
-      (string->symbol (sc (map symbol->string lst)))))
+    (string->symbol (string-concatenate (map symbol->string lst))))
 
   (let ((type-name
          (if (symbol? type-and-test-name)
@@ -1158,12 +1143,7 @@
 (##define-macro (define-fail-check-type type-name . type-id)
 
   (define (symbol-append . lst)
-    ;;TODO: simplify after bootstrap
-    (let* ((sc (##global-var-ref (##make-global-var 'string-concatenate)))
-           (sc (if (##unbound? sc)
-                   (lambda (string-list) (apply string-append string-list))
-                   sc)))
-      (string->symbol (sc (map symbol->string lst)))))
+    (string->symbol (string-concatenate (map symbol->string lst))))
 
   (let ()
 
@@ -1216,12 +1196,7 @@
 (##define-macro (define-check-index-range-macro type-id predicate . arguments)
 
   (define (symbol-append . lst)
-    ;;TODO: simplify after bootstrap
-    (let* ((sc (##global-var-ref (##make-global-var 'string-concatenate)))
-           (sc (if (##unbound? sc)
-                   (lambda (string-list) (apply string-append string-list))
-                   sc)))
-      (string->symbol (sc (map symbol->string lst)))))
+    (string->symbol (string-concatenate (map symbol->string lst))))
 
   (let ()
 

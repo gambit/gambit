@@ -2,8 +2,8 @@
 
 ;;; File: "_num.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
-;;; Copyright (c) 2004-2021 by Brad Lucier, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2004-2022 by Brad Lucier, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -4527,7 +4527,7 @@ for a discussion of branch cuts.
                 (non-neg-num->str x rad ""))))))
 
 (define-prim (##flonum->string-host x)
-  (##flonum->string x 10 #f)) ;; TODO: remove after bootstrap
+  (##flonum->string x 10 #f))
 
 (macro-if-cpxnum
  (define-prim (##cpxnum->string x #!optional (rad 10) (force-sign? #f))

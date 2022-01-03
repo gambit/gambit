@@ -1543,6 +1543,38 @@
                          (^fixnum-unbox arg2))
         (return arg1)))))
 
+(univ-define-prim "##vector-cas!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3 arg4)
+     (let ((tmp (^local-var (univ-gensym ctx 'tmp))))
+       (^ (^var-declaration
+           'scmobj
+           tmp
+           (^vector-ref arg1
+                        (^fixnum-unbox arg2)))
+          (^if (^eq? tmp arg4)
+               (^vector-set! arg1
+                             (^fixnum-unbox arg2)
+                             arg3))
+          (return tmp))))))
+
+(univ-define-prim "##vector-inc!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 #!optional (arg3 (^fixnum-box (^int 1))))
+     (let ((tmp (^local-var (univ-gensym ctx 'tmp))))
+       (^ (^var-declaration
+           'scmobj
+           tmp
+           (^fixnum-box
+            (univ-wrap+ ctx
+                        (^fixnum-unbox (^vector-ref arg1
+                                                    (^fixnum-unbox arg2)))
+                        (^fixnum-unbox arg3))))
+          (^vector-set! arg1
+                        (^fixnum-unbox arg2)
+                        tmp)
+          (return tmp))))))
+
 (univ-define-prim-bool "##u8vector?" #t
   (make-translated-operand-generator
    (lambda (ctx return arg1)
@@ -2257,6 +2289,21 @@
                          (^fixnum-unbox arg3)
                          arg2)
         (return arg1)))))
+
+(univ-define-prim "##unchecked-structure-cas!" #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg1 arg2 arg3 arg4 arg5 arg6)
+     (let ((tmp (^local-var (univ-gensym ctx 'tmp))))
+       (^ (^var-declaration
+           'scmobj
+           tmp
+           (^structure-ref arg1
+                           (^fixnum-unbox arg4)))
+          (^if (^eq? tmp arg3)
+               (^structure-set! arg1
+                                (^fixnum-unbox arg4)
+                                arg2))
+          (return tmp))))))
 
 ;;TODO: ("##type-id"                      (1)   #f ()    0    #f      extended)
 ;;TODO: ("##type-name"                    (1)   #f ()    0    #f      extended)

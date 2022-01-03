@@ -2,7 +2,7 @@
 
 ;;; File: "_host.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1088,152 +1088,66 @@
   (##macro-descr-expander-src descr))
 
 (define **compilation-ctx
-  (if (##unbound? ;; TODO: remove dynamic check after bootstrap
-       (##global-var-ref (##make-global-var '##compilation-ctx)))
-      (make-parameter #f)
-      ##compilation-ctx))
+  ##compilation-ctx)
 
 (define (**in-new-compilation-ctx target thunk)
-  (if (##unbound? ;; TODO: remove dynamic check after bootstrap
-       (##global-var-ref (##make-global-var '##in-new-compilation-ctx)))
-
-      ;; bootstrap not yet done
-      (let* ((comp-ctx
-              (vector '() ;; supply-modules
-                      '() ;; demand-modules
-                      (make-table) ;; meta-info
-                      #f ;; module-ref
-                      '() ;; module-aliases
-                      target
-                      (make-table))) ;; extra-info
-             (result
-              (parameterize ((**compilation-ctx comp-ctx)) (thunk))))
-        (values result
-                comp-ctx))
-
-      ;; bootstrap done
-      (##in-new-compilation-ctx target thunk)))
+  (##in-new-compilation-ctx target thunk))
 
 (define (**compilation-meta-info-add! key val)
-  (if (##unbound? ;; TODO: remove dynamic check after bootstrap
-       (##global-var-ref (##make-global-var '##compilation-meta-info-add!)))
-
-      ;; bootstrap not yet done
-      #f ;; ignore meta info
-
-      ;; bootstrap done
-      (##compilation-meta-info-add! key val)))
+  (##compilation-meta-info-add! key val))
 
 (define (**compilation-module-ref-set! module-ref)
-  (if (##unbound? ;; TODO: remove dynamic check after bootstrap
-       (##global-var-ref (##make-global-var '##compilation-module-ref-set!)))
-
-      ;; bootstrap not yet done
-      (let ((ctx (**compilation-ctx)))
-        (**macro-compilation-ctx-module-ref-set! ctx module-ref))
-
-      ;; bootstrap done
-      (##compilation-module-ref-set! module-ref)))
+  (##compilation-module-ref-set! module-ref))
 
 (define (**compilation-target)
-  (if (##unbound? ;; TODO: remove dynamic check after bootstrap
-       (##global-var-ref (##make-global-var '##compilation-target)))
-
-      ;; bootstrap not yet done
-      (let ((ctx (**compilation-ctx)))
-        (**macro-compilation-ctx-target ctx))
-
-      ;; bootstrap done
-      (##compilation-target)))
+  (##compilation-target))
 
 (define (**compilation-extra-info)
-  (if (##unbound? ;; TODO: remove dynamic check after bootstrap
-       (##global-var-ref (##make-global-var '##compilation-extra-info)))
-
-      ;; bootstrap not yet done
-      (let ((ctx (**compilation-ctx)))
-        (**macro-compilation-ctx-extra-info ctx))
-
-      ;; bootstrap done
-      (##compilation-extra-info)))
+  (##compilation-extra-info))
 
 (define (**macro-compilation-ctx-supply-modules ctx)
-  (##vector-ref ctx 0) ;; TODO: remove after bootstrap
-;;  (macro-compilation-ctx-supply-modules ctx)
-)
+  (macro-compilation-ctx-supply-modules ctx))
 
 (define (**macro-compilation-ctx-supply-modules-set! ctx supply-modules)
-  (##vector-set! ctx 0 supply-modules) ;; TODO: remove after bootstrap
-;;  (macro-compilation-ctx-supply-modules-set! ctx supply-modules)
-)
+  (macro-compilation-ctx-supply-modules-set! ctx supply-modules))
 
 (define (**macro-compilation-ctx-demand-modules ctx)
-  (##vector-ref ctx 1) ;; TODO: remove after bootstrap
-;;  (macro-compilation-ctx-demand-modules ctx)
-)
+  (macro-compilation-ctx-demand-modules ctx))
 
 (define (**macro-compilation-ctx-demand-modules-set! ctx demand-modules)
-  (##vector-set! ctx 1 demand-modules) ;; TODO: remove after bootstrap
-;;  (macro-compilation-ctx-demand-modules-set! ctx demand-modules)
-)
+  (macro-compilation-ctx-demand-modules-set! ctx demand-modules))
 
 (define (**macro-compilation-ctx-meta-info ctx)
-  (##vector-ref ctx 2) ;; TODO: remove after bootstrap
-;;  (macro-compilation-ctx-meta-info ctx)
-)
+  (macro-compilation-ctx-meta-info ctx))
 
 (define (**macro-compilation-ctx-meta-info-set! ctx meta-info)
-  (##vector-set! ctx 2 meta-info) ;; TODO: remove after bootstrap
-;;  (macro-compilation-ctx-meta-info-set! ctx meta-info)
-)
+  (macro-compilation-ctx-meta-info-set! ctx meta-info))
 
 (define (**meta-info->alist meta-info)
-  (##table->list meta-info) ;; TODO: remove after bootstrap
-;;  (##meta-info->alist meta-info)
-)
+  (##meta-info->alist meta-info))
 
 (define (**macro-compilation-ctx-module-ref ctx)
-  (##vector-ref ctx 3) ;; TODO: remove after bootstrap
-;;  (macro-compilation-ctx-module-ref ctx)
-)
+  (macro-compilation-ctx-module-ref ctx))
 
 (define (**macro-compilation-ctx-module-ref-set! ctx module-ref)
-  (##vector-set! ctx 3 module-ref) ;; TODO: remove after bootstrap
-;;  (macro-compilation-ctx-module-ref-set! ctx module-ref)
-)
+  (macro-compilation-ctx-module-ref-set! ctx module-ref))
 
 (define (**macro-compilation-ctx-module-aliases ctx)
-  (##vector-ref ctx 4) ;; TODO: remove after bootstrap
-;;  (macro-compilation-ctx-module-aliases ctx)
-)
+  (macro-compilation-ctx-module-aliases ctx))
 
 (define (**macro-compilation-ctx-module-aliases-set! ctx module-aliases)
-  (##vector-set! ctx 4 module-aliases) ;; TODO: remove after bootstrap
-;;  (macro-compilation-ctx-module-aliases-set! ctx module-aliases)
-)
+  (macro-compilation-ctx-module-aliases-set! ctx module-aliases))
 
 (define (**macro-compilation-ctx-target ctx)
-  (##vector-ref ctx 5) ;; TODO: remove after bootstrap
-;;  (macro-compilation-ctx-target ctx)
-)
+  (macro-compilation-ctx-target ctx))
 
 (define (**macro-compilation-ctx-target-set! ctx target)
-  (##vector-set! ctx 5 target) ;; TODO: remove after bootstrap
-;;  (macro-compilation-ctx-target-set! ctx target)
-)
+  (macro-compilation-ctx-target-set! ctx target))
 
 (define (**macro-compilation-ctx-extra-info ctx)
-  (##vector-ref ctx 6) ;; TODO: remove after bootstrap
-;;  (macro-compilation-ctx-extra-info ctx)
-)
+  (macro-compilation-ctx-extra-info ctx))
 
 (define (**macro-compilation-ctx-extra-info-set! ctx extra-info)
-  (##vector-set! ctx 6 extra-info) ;; TODO: remove after bootstrap
-;;  (macro-compilation-ctx-extra-info-set! ctx extra-info)
-)
-
-(if (##unbound? ;; TODO: remove dynamic check after bootstrap
-     (##global-var-ref (##make-global-var '##parameterize)))
-    (##global-var-set! (##make-global-var '##parameterize) ##parameterize1))
+  (macro-compilation-ctx-extra-info-set! ctx extra-info))
 
 ;"

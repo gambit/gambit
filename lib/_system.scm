@@ -2,7 +2,7 @@
 
 ;;; File: "_system.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1263,8 +1263,8 @@
 
 (define-prim (##gc-hash-table-ref gcht key))
 (define-prim (##gc-hash-table-set! gcht key val))
-(define-prim (##gc-hash-table-union! gcht key1 key2) (##c-code "___RESULT = ___GCHASHTABLEUNION(___ARG1,___ARG2,___ARG3);" gcht key1 key2)) ;; TODO: remove after bootstrap
-(define-prim (##gc-hash-table-find! gcht key1 key2) (##c-code "___RESULT = ___GCHASHTABLEFIND(___ARG1,___ARG2,___ARG3);" gcht key1 key2)) ;; TODO: remove after bootstrap
+(define-prim (##gc-hash-table-union! gcht key1 key2))
+(define-prim (##gc-hash-table-find! gcht key1 key2))
 (define-prim (##gc-hash-table-rehash! gcht-src gcht-dst))
 
 (define-prim (##smallest-prime-no-less-than n) ;; n >= 3
