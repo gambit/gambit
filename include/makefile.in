@@ -160,12 +160,12 @@ uninstall-post:
 select-gen-for-commit-pre:
 
 select-gen-for-commit-post select-gen-for-commit-post-nonrec:
-	if [ -e $(rootfromhere)/.git ]; then $(RC) update-index --no-skip-worktree stamp.h; fi
+	if [ -e $(rootfromhere)/.git ]; then $(RC) update-index --no-skip-worktree stamp-release.h; fi
 
 deselect-gen-for-commit-pre:
 
 deselect-gen-for-commit-post deselect-gen-for-commit-post-nonrec:
-	if [ -e $(rootfromhere)/.git ]; then $(RC) update-index --skip-worktree stamp.h; fi
+	if [ -e $(rootfromhere)/.git ]; then $(RC) update-index --skip-worktree stamp-release.h; fi
 
 mostlyclean-pre:
 

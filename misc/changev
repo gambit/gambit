@@ -18,7 +18,7 @@ then
     misc/changev1 $OLDVERSION $NEWVERSION misc/build-gambit-iOS
     misc/changev1 $OLDVERSION $NEWVERSION examples/pthread/pthread.c
     misc/changev1 $OLDVERSION $NEWVERSION contrib/GambitREPL/ViewController.m
-    misc/changev1 $OLDVERSION $NEWVERSION include/gambit.h.in
+    misc/changev1 $OLDVERSION $NEWVERSION include/gambit.h.in include/stamp-release.h
 
   fi
 fi

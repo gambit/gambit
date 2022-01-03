@@ -6,14 +6,14 @@
  * the release time.
  */
 
+#ifndef ___STAMP_RELEASE_VERSION
+#define ___STAMP_RELEASE_VERSION "v4.9.3"
+#endif
+
 #ifndef ___STAMP_RELEASE_YMD
-#define ___STAMP_RELEASE_YMD 20200101
+#define ___STAMP_RELEASE_YMD 20220102
 #endif
 
 #ifndef ___STAMP_RELEASE_HMS
-#define ___STAMP_RELEASE_HMS 213000
-#endif
-
-#ifndef ___STAMP_RELEASE_VERSION
-#define ___STAMP_RELEASE_VERSION "v4.9.3"
+#define ___STAMP_RELEASE_HMS 232246
 #endif
