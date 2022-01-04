@@ -6658,7 +6658,7 @@ For example:
 $ @b{gsi github.com/gambit/hello/demo  @r{@i{# auto-install of github.com/gambit/hello package}}}
 People customarily greet each other when they meet.
 In English you can say: hello Bob, nice to see you!
-In French you can say: bonjour Bob, je suis enchanté!
+In French you can say: bonjour Bob, je suis enchant@'e!
 Demo source code: /Users/feeley/.gambit_userlib/github.com/gambit/hello/@@/demo.scm
 $ @b{gsi github.com/feeley/roman/demo  @r{@i{# no auto-install because not on whitelist}}}
 *** ERROR IN ##main -- No such file or directory
