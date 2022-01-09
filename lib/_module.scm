@@ -366,7 +366,8 @@
               (search-order (##get-module-search-order)))
 
   (define (try-opening-source-file path cont)
-    (if ##debug-modules? (pp (list 'try-opening-source-file path)));;;;;;;;;;;;;;
+    (and ##debug-modules?
+         (##debug-modules-trace 'try-opening-source-file path))
     (##make-input-path-psettings
      (##list 'path: path
              'char-encoding: 'UTF-8
@@ -454,7 +455,9 @@
                (##string-append path-noext
                                 ".o"
                                 (##number->string version 10))))
-             (_ (if ##debug-modules? (pp (list '##file-info-aux resolved-path))));;;;;;;;;;;;;
+             (_
+              (and ##debug-modules?
+                   (##debug-modules-trace 'path-exists? resolved-path)))
              (resolved-info
               (##file-info-aux resolved-path))
              (resolved-path-exists?
@@ -552,7 +555,9 @@
               (##vector-ref path-and-info 0))
              (linker-name
               (##path-strip-directory path))
-             (_ (if ##debug-modules? (pp (list '##os-load-object-file path linker-name))));;;;;;;;;;;;;
+             (_
+              (and ##debug-modules?
+                   (##debug-modules-trace '##os-load-object-file path linker-name)))
              (result
               (##os-load-object-file path linker-name)))
 
@@ -705,7 +710,8 @@
 
   (and (pair? (macro-modref-host modref)) ;; only install hosted modules
        (begin
-         (if ##debug-modules? (pp (list '##install-module modref)));;;;;;;;;;;;;;;;;
+         (and ##debug-modules?
+              (##debug-modules-trace '##install-module modref))
          (let ((mod-string (##modref->string modref)))
 
            (and (or (##member
@@ -804,7 +810,24 @@
                     ;; last resort is to load a file
                     (load-file))))))))
 
-(define ##debug-modules? #f)
+(define (##debug-modules-trace . info)
+  (##repl
+   (lambda (first port)
+     (##write-string "*** " port)
+     (##write info port)
+     (##newline port)
+     #t)))
+
+(define ##debug-modules?
+  (let* ((settings
+          (##set-debug-settings! 0 0))
+         (level
+          (##fxwraplogical-shift-right
+           (##fxand
+            settings
+            (macro-debug-settings-level-mask))
+           (macro-debug-settings-level-shift))))
+    (##fx>= level 4)))
 
 (define-prim (##debug-modules?-set! x)
   (set! ##debug-modules? x))
