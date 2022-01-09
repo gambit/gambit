@@ -4881,6 +4881,7 @@
 
   (define (make-vector-expanders
            vect-kind
+           default-init-val
            make-vect-str
            subvect-str
            vect-copy-str
@@ -4985,9 +4986,20 @@
                       size-value-check)))
 
             (define (call-make-vect small? env)
-              (gen-call-prim-vars-notsafe source env
-               (if small? **make-vect-small-sym **make-vect-sym)
-               vars))
+              (let ((prim (if small? **make-vect-small-sym **make-vect-sym)))
+                (if (and (pair? vars)
+                         (null? (cdr vars))
+                         (safe? env)) ;; make sure there's an init in safe mode
+                    (let ((env (add-not-safe env)))
+                      (gen-call-prim source env
+                        prim
+                        (list (new-ref source env
+                                (car vars))
+                              (new-cst source env
+                                default-init-val))))
+                    (gen-call-prim-vars-notsafe source env
+                     prim
+                     vars))))
 
             (define (call-make-vect-possibly-small-alloc env)
               (let* ((limit
@@ -5176,6 +5188,7 @@
 
   (make-vector-expanders
    'vector
+   0
    "make-vector"
    "subvector"
    "vector-copy"
@@ -5205,6 +5218,7 @@
 
   (make-vector-expanders
    'string
+   (integer->char 0)
    "make-string"
    "substring"
    "string-copy"
@@ -5237,6 +5251,7 @@
 
   (make-vector-expanders
    's8vector
+   0
    "make-s8vector"
    "subs8vector"
    "s8vector-copy"
@@ -5266,6 +5281,7 @@
 
   (make-vector-expanders
    'u8vector
+   0
    "make-u8vector"
    "subu8vector"
    "u8vector-copy"
@@ -5295,6 +5311,7 @@
 
   (make-vector-expanders
    's16vector
+   0
    "make-s16vector"
    "subs16vector"
    "s16vector-copy"
@@ -5324,6 +5341,7 @@
 
   (make-vector-expanders
    'u16vector
+   0
    "make-u16vector"
    "subu16vector"
    "u16vector-copy"
@@ -5354,6 +5372,7 @@
 #;
   (make-vector-expanders
    's32vector
+   0
    "make-s32vector"
    "subs32vector"
    "s32vector-copy"
@@ -5384,6 +5403,7 @@
 #;
   (make-vector-expanders
    'u32vector
+   0
    "make-u32vector"
    "subu32vector"
    "u32vector-copy"
@@ -5414,6 +5434,7 @@
 #;
   (make-vector-expanders
    's64vector
+   0
    "make-s64vector"
    "subs64vector"
    "s64vector-copy"
@@ -5444,6 +5465,7 @@
 #;
   (make-vector-expanders
    'u64vector
+   0
    "make-u64vector"
    "subu64vector"
    "u64vector-copy"
@@ -5473,6 +5495,7 @@
 
   (make-vector-expanders
    'f32vector
+   (macro-inexact-+0)
    "make-f32vector"
    "subf32vector"
    "f32vector-copy"
@@ -5502,6 +5525,7 @@
 
   (make-vector-expanders
    'f64vector
+   (macro-inexact-+0)
    "make-f64vector"
    "subf64vector"
    "f64vector-copy"
