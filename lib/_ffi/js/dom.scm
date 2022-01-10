@@ -7,25 +7,25 @@
 
 ;;;============================================================================
 
-(define (select selector)
+(define (querySelector selector)
   \document.querySelector(`selector))
 
-(define (get id)
-\document.getElementById(`id))
+(define (getElementById id)
+  \document.getElementById(`id))
 
-(define (create-element type)
+(define (createElement type)
   \document.createElement(`type))
 
-(define (set-attribute elem attr val)
+(define (setAttribute elem attr val)
   \(`elem).setAttribute(`attr, `val))
 
-(define (append-child elem child)
+(define (appendChild elem child)
   \(`elem).appendChild(`child))
 
-(define (insert-adjacent-html elem pos html)
+(define (insertAdjacentHTML elem pos html)
   \(`elem).insertAdjacentHTML(`pos, `html))
 
-(define (log msg)
+(define (console.log msg)
   \console.log(`msg))
 
 (define (alert msg)

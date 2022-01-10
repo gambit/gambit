@@ -8,15 +8,14 @@
 ;;;============================================================================
 
 (define-library (dom)
-  (import (gambit))
-  (export
-   select
-   get
-   create-element
-   set-attribute
-   append-child
-   insert-adjacent-html
-   log
-   alert
-   load-js)
+  (import (scheme base) (_six js))
+  (export querySelector
+          getElementById
+          createElement
+          setAttribute
+          appendChild
+          insertAdjacentHTML
+          console.log
+          alert
+          load-js)
   (include "dom.scm"))
