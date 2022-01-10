@@ -2,11 +2,12 @@
 
 ;;; File: "dom.sld"
 
+;;; Copyright (c) 2022 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2022 by Marc-André Bélanger, All Rights Reserved.
 
 ;;;============================================================================
 
-(define-library (js dom)
+(define-library (dom)
   (import (gambit))
   (export
    select
@@ -17,4 +18,5 @@
    insert-adjacent-html
    log
    alert
-   load-js))
+   load-js)
+  (include "dom.scm"))

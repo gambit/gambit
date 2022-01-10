@@ -3,7 +3,7 @@
 
 herefromlib = _ffi/js
 libfromhere = ../..
-SUBDIRS = dom
+SUBDIRS =
 HEADERS_SCM =
 MODULES_SCM =
 MAIN_MODULES =
