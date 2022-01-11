@@ -32,16 +32,16 @@
   \alert(`msg))
 
 (define (load-js url #!optional (async? #f))
-  (let ((script (create-element "script")))
-    (set-attribute script "type" "text/javascript")
+  (let ((script (createElement "script")))
+    (setAttribute script "type" "text/javascript")
     (let ((mut (or async?
                    (let ((mut (make-mutex)))
                      (mutex-lock! mut)
                      mut))))
       (or async?
           \(`script).onload=`(lambda args (mutex-unlock! mut)))
-      (set-attribute script "src" url)
-      (append-child \document.head script)
+      (setAttribute script "src" url)
+      (appendChild \document.head script)
       (or async?
           (begin
             (mutex-lock! mut)
