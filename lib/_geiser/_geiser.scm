@@ -13,6 +13,7 @@
 
 (##namespace ("_geiser#"))                ;; in _geiser#
 (##include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
+(##namespace ("" load))                   ;; a non-primitive
 (##include "~~lib/_gambit#.scm")          ;; for macro-check-string,
                                           ;; macro-absent-obj, etc
 
