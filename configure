@@ -7692,6 +7692,18 @@ fi
 
 done
 
+  for ac_header in cygwin/fs.h
+do :
+  ac_fn_cxx_check_header_mongrel "$LINENO" "cygwin/fs.h" "ac_cv_header_cygwin_fs_h" "$ac_includes_default"
+if test "x$ac_cv_header_cygwin_fs_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_CYGWIN_FS_H 1
+_ACEOF
+
+fi
+
+done
+
   for ac_header in ws2tcpip.h
 do :
   ac_fn_cxx_check_header_mongrel "$LINENO" "ws2tcpip.h" "ac_cv_header_ws2tcpip_h" "$ac_includes_default"

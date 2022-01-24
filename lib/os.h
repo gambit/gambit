@@ -1342,6 +1342,11 @@ ___END_C_LINKAGE
 #define INCLUDE_fcntl_h
 #endif
 
+#ifdef HAVE_CYGWIN_FS_H
+#undef INCLUDE_cygwin_fs_h
+#define INCLUDE_cygwin_fs_h
+#endif
+
 #ifdef USE_renameat2_syscall
 #undef INCLUDE_sys_syscall_h
 #define INCLUDE_sys_syscall_h
@@ -1482,6 +1487,12 @@ ___END_C_LINKAGE
 #ifdef INCLUDE_linux_fs_h
 #ifdef HAVE_LINUX_FS_H
 #include <linux/fs.h>
+#endif
+#endif
+
+#ifdef INCLUDE_cygwin_fs_h
+#ifdef HAVE_CYGWIN_FS_H
+#include <cygwin/fs.h>
 #endif
 #endif
 
