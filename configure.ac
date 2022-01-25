@@ -2935,7 +2935,14 @@ exe="$EXEEXT"
 obj=".$OBJEXT"
 
 if test "$exe" = ".exe"; then
-  bat=".bat"
+  case "$target_os" in
+    cygwin*)
+      bat=""
+      ;;
+    *)
+      bat=".bat"
+      ;;
+  esac
 else
   bat=""
 fi
