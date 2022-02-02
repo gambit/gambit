@@ -4170,13 +4170,21 @@ def @os_condvar_select@(devices_scm, timeout_scm):
         @trampoline@(@r0@);
       }
 
-      var script = document.createElement('script');
-      script.type = 'text/javascript';
-      script.src = path;
-      script.onload = onload;
-      script.onerror = onerror;
-      document.head.append(script);
-
+      if (self.document === undefined) {
+        try {
+          self.importScripts(path);
+          onload();
+        } catch(e) {
+          onerror();
+        }
+      } else {
+        var script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = path;
+        script.onload = onload;
+        script.onerror = onerror;
+        document.head.append(script);
+      }
       return 0; // ignored
     }
   } else {
