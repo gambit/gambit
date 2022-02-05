@@ -87,6 +87,8 @@ Detailed installation instructions are given in the file [INSTALL.txt](https://g
 
 45: [Primitives for Expressing Iterative Lazy Algorithms](https://srfi.schemers.org/srfi-45/srfi-45.html)
 
+48: [Intermediate Format Strings](https://srfi.schemers.org/srfi-48/srfi-48.html)
+
 62: [S-expression comments](https://srfi.schemers.org/srfi-62/srfi-62.html) (builtin)
 
 64: [A Scheme API for test suites](https://srfi.schemers.org/srfi-64/srfi-64.html) (incomplete implementation)
