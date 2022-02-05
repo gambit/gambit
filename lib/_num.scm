@@ -5825,43 +5825,43 @@ for a discussion of branch cuts.
   (macro-force-vars (x)
     (##first-set-bit x)))
 
+(define (##bignum.extract-bit-field size position n)
+  
+  ;; n is a (possibly unnormalized) nonzero bignum, size and position are nonnegative exact integers
+  
+  (let* ((result-bit-length
+          (cond ((##positive? n)
+                 (##fx+ 1 (##min size (##max 0 (##- (##integer-length n) position)))))
+                ((##not (and (##fixnum? size)
+                             (##fx< size ##max-fixnum)))
+                 (##raise-heap-overflow-exception))
+                (else
+                 (##fx+ 1 size))))
+         (result-word-length
+          (##bignum.adigit-div (##fx+ result-bit-length ##bignum.adigit-width -1)))
+         (result
+          (##bignum.arithmetic-shift-into!
+           n (##max ##min-fixnum (##- position)) (##bignum.make result-word-length #f #f))))
+    ;; zero top bits of result and normalize
+    (let ((size-words (##bignum.mdigit-div size))
+          (size-bits  (##bignum.mdigit-mod size)))
+      (##declare (not interrupts-enabled))
+      (let loop ((i (##fx- (##bignum.mdigit-length result) 1)))
+        (if (##fx< size-words i)
+            (begin
+              (##bignum.mdigit-set! result i 0)
+              (loop (##fx- i 1)))
+            (if (##fx= size-words i)
+                (##bignum.mdigit-set!
+                 result i
+                 (##fxand
+                  (##bignum.mdigit-ref result i)
+                  (##fxnot (##fxarithmetic-shift-left -1 size-bits))))))
+        (##bignum.normalize! result)))))
+
 (define-prim&proc (extract-bit-field (size     nonnegative-exact-integer)
                                      (position nonnegative-exact-integer)
                                      (n        exact-integer))
-
-  (define (##bignum.extract-bit-field size position n)
-    
-    ;; n is a (possibly unnormalized) nonzero bignum, size and position are nonnegative exact integers
-    
-    (let* ((result-bit-length
-            (cond ((##positive? n)
-                   (##fx+ 1 (##min size (##max 0 (##- (##integer-length n) position)))))
-                  ((##not (and (##fixnum? size)
-                               (##fx< size ##max-fixnum)))
-                   (##raise-heap-overflow-exception))
-                  (else
-                   (##fx+ 1 size))))
-           (result-word-length
-            (##bignum.adigit-div (##fx+ result-bit-length ##bignum.adigit-width -1)))
-           (result
-            (##bignum.arithmetic-shift-into!
-             n (##max ##min-fixnum (##- position)) (##bignum.make result-word-length #f #f))))
-      ;; zero top bits of result and normalize
-      (let ((size-words (##bignum.mdigit-div size))
-            (size-bits  (##bignum.mdigit-mod size)))
-        (##declare (not interrupts-enabled))
-        (let loop ((i (##fx- (##bignum.mdigit-length result) 1)))
-          (if (##fx< size-words i)
-              (begin
-                (##bignum.mdigit-set! result i 0)
-                (loop (##fx- i 1)))
-              (if (##fx= size-words i)
-                  (##bignum.mdigit-set!
-                   result i
-                   (##fxand
-                    (##bignum.mdigit-ref result i)
-                    (##fxnot (##fxarithmetic-shift-left -1 size-bits))))))
-          (##bignum.normalize! result)))))
 
   (define (fixnum-overflow)
     (##raise-fixnum-overflow-exception extract-bit-field size position n))
@@ -6624,7 +6624,10 @@ for a discussion of branch cuts.
  )
 
 (define ##bignum.fdigit-base
-    (##fxarithmetic-shift-left 1 ##bignum.fdigit-width))
+  (##fxarithmetic-shift-left 1 ##bignum.fdigit-width))
+
+(define ##bignum.fdigit-mask
+  (##fx- ##bignum.fdigit-base 1))
 
 (define ##bignum.mdigit-base
   (##fxarithmetic-shift-left 1 ##bignum.mdigit-width))
@@ -6902,9 +6905,6 @@ for a discussion of branch cuts.
 
   ;; assumes that mdigits are 14 bits wide and fdigits are
   ;; halves of mdigits
-
-  (define ##bignum.fdigit-mask
-    (##fx- ##bignum.fdigit-base 1))
 
   ;; Returns the number of fdigits in x
 
