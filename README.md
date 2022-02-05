@@ -83,6 +83,8 @@ Detailed installation instructions are given in the file [INSTALL.txt](https://g
 
 41: [Streams](https://srfi.schemers.org/srfi-41/srfi-41.html)
 
+42: [Eager Comprehensions](https://srfi.schemers.org/srfi-42/srfi-42.html)
+
 45: [Primitives for Expressing Iterative Lazy Algorithms](https://srfi.schemers.org/srfi-45/srfi-45.html)
 
 62: [S-expression comments](https://srfi.schemers.org/srfi-62/srfi-62.html) (builtin)
