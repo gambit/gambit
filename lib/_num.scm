@@ -5991,6 +5991,459 @@ for a discussion of branch cuts.
                 (vector-set! vect j #t))
             (loop (fx- j 1)))))))
 
+;;;---------------------------------------------------------------------------
+;;;===========================================================================
+;;;
+;;; Bitwise Operations
+;;;
+;;;===========================================================================
+;;;
+;;;---------------------------------------------------------------------------
+;;; These operations are listed in the same way as in
+;;; https://srfi.schemers.org/srfi-151/srfi-151.html
+;;; Code for procedures already in _num.scm is not included here.
+;;;
+;;; bitwise-not
+;;; bitwise-and   bitwise-ior
+;;; bitwise-xor   bitwise-eqv
+;;; bitwise-nand  bitwise-nor
+;;; bitwise-andc1 bitwise-andc2
+;;; bitwise-orc1  bitwise-orc2
+;;;
+;;; arithmetic-shift bit-count
+;;; integer-length bitwise-if
+;;;---------------------------------------------------------------------------
+
+
+(define-prim&proc (bitwise-if (x exact-integer)
+                              (y exact-integer)
+                              (z exact-integer))
+  (##bitwise-ior2 (##bitwise-and2 x y)
+                  (##bitwise-and2 (##bitwise-not x) z)))
+
+;;;---------------------------------------------------------------------------
+;;; bit-set? copy-bit bit-swap
+;;;---------------------------------------------------------------------------
+
+(define-prim&proc (copy-bit (ind  index)
+                            (i    exact-integer)
+                            (bool boolean))
+  
+  (define (fixnum-overflow)
+    (##raise-fixnum-overflow-exception copy-bit ind i bool))
+  
+  (define (general-case)
+    (macro-if-bignum
+     (##bitwise-xor2 i (##arithmetic-shift 1 ind))
+     (fixnum-overflow)))
+  
+  (if (##eq? bool (##bit-set? ind i))
+      i
+      (macro-exact-int-dispatch-no-error
+       i
+       ;; i a fixnum
+       (if (##< ind ##fixnum-width)
+           (##fxxor i (##fxarithmetic-shift-left 1 ind))
+           (general-case))
+       ;; i a bignum
+       (general-case))))
+  
+(define-prim&proc (bit-swap (ind1 index)
+                            (ind2 index)
+                            (i exact-integer))
+  (define (fixnum-overflow)
+    (##raise-fixnum-overflow-exception bit-swap ind i bool))
+  
+  (define (general-case)
+    (macro-if-bignum
+     (##bitwise-xor2 (##bitwise-ior2 (##arithmetic-shift 1 ind1)
+                                     (##arithmetic-shift 1 ind2))
+                    i)
+     (fixnum-overflow)))
+  
+  (if (##eq? (##bit-set? ind1 i)
+             (##bit-set? ind2 i))
+      i
+      (macro-exact-int-dispatch-no-error
+       i
+       (if (and (##fx< ind1 ##fixnum-width)
+                (##fx< ind2 ##fixnum-width))
+           (##fxxor (##fxior (##fxarithmetic-shift-left 1 ind1)
+                             (##fxarithmetic-shift-left 1 ind2))
+                    i)
+           (general-case))
+       (general-case))))
+
+;;;---------------------------------------------------------------------------
+;;; any-bit-set? every-bit-set?
+;;;---------------------------------------------------------------------------
+
+(define-prim&proc (any-bit-set? (test-bits exact-integer)
+                                (i         exact-integer))
+  (##not (##eqv? (##bitwise-and2 test-bits i) 0)))
+
+(define-prim&proc (every-bit-set? (test-bits exact-integer)
+                                  (i         exact-integer))
+  (##eqv? (##bitwise-and2 test-bits i) test-bits))
+
+;;;---------------------------------------------------------------------------
+;;; first-set-bit
+;;;
+;;; bit-field bit-field-any? bit-field-every?
+;;;---------------------------------------------------------------------------
+
+(define-prim&proc (bit-field (i     exact-integer)
+                             (start index)
+                             (end   index))
+  (if (##fx> start end)
+      (##raise-range-exception end bit-field i start end)
+      (let ((size (##- end start)))
+        
+        (define (fixnum-overflow)
+          (##raise-fixnum-overflow-exception bit-field i start end))
+        
+        (define (general-fixnum-case)
+          (macro-if-bignum
+           (##extract-bit-field size start (##fixnum->bignum i))
+           (fixnum-overflow)))
+
+        (cond ((##eqv? size 0)
+               0)
+              ((and (##not (##negative? i))
+                    (##fx< (##fx- (##integer-length i) size)
+                           start))
+               (##arithmetic-shift i (##- start)))
+              (else
+               (macro-exact-int-dispatch-no-error
+                i
+                (cond ((##fx< size ##fixnum-width)
+                       (##fxand (##bit-mask size) (##fxarithmetic-shift-right i start)))
+                      ((##fxnegative? i)
+                       (general-fixnum-case))
+                      (else
+                       (##fxarithmetic-shift-right i start)))
+                (##extract-bit-field size start i)))))))
+
+(define-prim&proc (bit-field-any? (i     exact-integer)
+                                  (start index)
+                                  (end   index))
+  (if (##fx> start end)
+      (##raise-range-exception end bit-field-any? i start end)
+      (let ((size (##- end start)))
+        (if (##eqv? size 0)
+            #f
+            (macro-exact-int-dispatch-no-error
+             i
+             ;; fixnum
+             (##not
+              ;; seems easier to check that no bits are set
+              (if (##fx< size ##fixnum-width)
+                  (##eqv? 0 (##fxand (##bit-mask size)
+                                     (##arithmetic-shift i (##- start))))
+                  (##eqv? 0 (##arithmetic-shift i (##- start)))))
+             ;; bignum
+             (##not (##eqv? 0 (##bitwise-and2 (##bit-mask size)
+                                             (##arithmetic-shift i (##- start))))))))))
+
+(define-prim&proc (bit-field-every? (i     exact-integer)
+                                    (start index)
+                                    (end   index))
+  (if (##fx> start end)
+      (##raise-range-exception end bit-field-any? i start end)
+      (let ((size (##- end start)))
+        (if (##eqv? size 0)
+            #t
+            (macro-exact-int-dispatch-no-error
+             i
+             ;; fixnum
+             (if (##fx< size ##fixnum-width)
+                 (let ((mask (##bit-mask size)))
+                   (##eqv? mask (##fxand mask (##arithmetic-shift i (##- start)))))
+                 (##eqv? -1 (##arithmetic-shift i (##- start))))
+             ;; bignum
+             (let ((mask (##bit-mask size)))
+               (##eqv? mask (##bitwise-and2 mask (##arithmetic-shift i (##- start))))))))))
+
+;;;---------------------------------------------------------------------------
+;;; bit-field-clear bit-field-set
+;;;---------------------------------------------------------------------------
+
+(define-prim&proc (bit-field-clear (i     exact-integer)
+                                   (start index)
+                                   (end   index))
+
+  (define (fixnum-overflow)
+    (##raise-fixnum-overflow-exception bit-field-clear i start end))
+  
+  (define (general-case size)
+    (macro-if-bignum
+     (##bitwise-and2 i (##bitwise-not (##fxarithmetic-shift-left (##bit-mask size) start)))
+     (fixnum-overflow)))
+  
+  (if (##fx> start end)
+      (##raise-range-exception end bit-field-clear i start end)
+      (let ((size (##- end start)))
+        (if (##eqv? size 0)
+            i
+            (macro-exact-int-dispatch-no-error
+             i
+             (cond ((##fx< end ##fixnum-width)
+                    (##fxand i (##fxnot (##fxarithmetic-shift-left (##bit-mask size) start))))
+                   ((##fxnegative? i)
+                    (general-case size))
+                   ((##fx< start ##fixnum-width)
+                    (##fxand i (##fxnot (##fxarithmetic-shift-left -1 start))))
+                   (else
+                    i))
+             (general-case size))))))
+
+(define-prim&proc (bit-field-set (i     exact-integer)
+                                 (start index)
+                                 (end   index))
+
+  (define (fixnum-overflow)
+    (##raise-fixnum-overflow-exception bit-field-set i start end))
+  
+  (define (general-case size)
+    (macro-if-bignum
+     (##bitwise-ior2 i (##fxarithmetic-shift-left (##bit-mask size) start))
+     (fixnum-overflow)))
+  
+  (if (##fx> start end)
+      (##raise-range-exception end bit-field-set i start end)
+      (let ((size (##- end start)))
+        (if (##eqv? size 0)
+            i
+            (macro-exact-int-dispatch-no-error
+             i
+             (cond ((##< end ##fixnum-width)
+                    (##fxior i (##fxarithmetic-shift-left (##bit-mask size) start)))
+                   ((##not (##fxnegative? i))
+                    (general-case size))
+                   ((##< start ##fixnum-width)
+                    (##fxior i (##fxarithmetic-shift-left -1 start)))
+                   (else
+                    i))
+             (general-case size))))))
+
+;;;---------------------------------------------------------------------------
+;;; bit-field-replace bit-field-replace-same
+;;;---------------------------------------------------------------------------
+
+
+(define-prim&proc (bit-field-replace (dest   exact-integer)
+                                     (source exact-integer)
+                                     (start  index)
+                                     (end    index))
+
+  (if (##fx> start end)
+      (##raise-range-exception end bit-field-replace dest source start end)
+      (let ((size (##- end start)))
+        (if (##eqv? size 0)
+            dest
+            (##replace-bit-field size start source dest)))))
+
+(define-prim&proc (bit-field-replace-same (dest   exact-integer)
+                                          (source exact-integer)
+                                          (start  index)
+                                          (end    index))
+  (##if (##fx> start end)
+        (##raise-range-exception end bit-field-replace-same dest source start end)
+        (let ((size (##- end start)))
+          (if (##eqv? size 0)
+              dest
+              (##copy-bit-field size start source dest)))))
+
+;;;---------------------------------------------------------------------------
+;;; bit-field-rotate bit-field-reverse
+;;;---------------------------------------------------------------------------
+ 
+(define-prim&proc (bit-field-rotate (n     exact-integer)
+                                    (count exact-integer); can be neg
+                                    (start index)
+                                    (end   index))
+  (if (##< end start)
+      (##raise-range-exception end bit-field-rotate n count start end)
+      (let ((width (##fx- end start)))
+        (if (##eqv? 0 width)
+            n
+            (let* ((count (##modulo count width))
+                   (mask  (##bit-mask width))
+                   (zn    (##bitwise-and2 mask (##arithmetic-shift n (##- start)))))
+              (##bitwise-ior2
+               (##arithmetic-shift
+                (##bitwise-ior2
+                 (##bitwise-and2
+                  mask
+                  (##arithmetic-shift zn count))
+                 (##arithmetic-shift zn (##fx- count width)))
+                start)
+               (##bitwise-and2
+                (##bitwise-not (##arithmetic-shift mask start))
+                n)))))))
+
+(define ##fdigits-per-adigit
+  (##fxquotient ##bignum.adigit-width ##bignum.fdigit-width))
+
+(define-prim&proc (bit-field-reverse (i     exact-integer)
+                                     (start index)
+                                     (end   index))
+
+  (define (bit-reverse i)
+    
+    ;; 0 <= i <= (- bignum.fdigit-base 1)
+    
+    (define-macro (macro-bit-reverse-table)
+      
+      (define (bit-reverse i)
+        ;; 0 <= i <= (- ##bignum.fdigit-base 1)
+        (let loop ((i i)
+                   (result 0)
+                   (bit ##bignum.fdigit-width))
+          (if (eqv? bit 0)
+              result
+              (loop (fxarithmetic-shift-right i 1)
+                    (fxior (fxarithmetic-shift-left result 1)
+                           (fxand i 1))
+                    (fx- bit 1)))))
+      
+      `',(list->vector
+          (map bit-reverse (iota ##bignum.fdigit-base))))
+    
+    (define bit-reverse-table (macro-bit-reverse-table))
+    
+    (vector-ref bit-reverse-table i))
+
+  (if (##fx< end start)
+      (##raise-range-exception end bit-field-reverse i start end)
+      (let ((width (##fx- end start)))
+        (if (##eqv? width 0)
+            i
+            (let ((reversed-field
+                   (let* ((field
+                           (##bit-field i start end))
+                          (field-fdigit-size
+                           (##fxquotient (fx+ ##bignum.fdigit-width width -1)
+                                         ##bignum.fdigit-width))
+                          (field-bit-size
+                           (##fx* field-fdigit-size ##bignum.fdigit-width)))
+                     (if (##< field-bit-size ##fixnum-width)
+                         ;; fixnum loop
+                         (let loop ((f field)
+                                    (s field-fdigit-size)
+                                    (result 0))
+                           (if (##eqv? s 0)
+                               (##fxarithmetic-shift-right result (##fx- field-bit-size width))
+                               (loop (##fxarithmetic-shift-right f ##bignum.fdigit-width)
+                                     (##fx- s 1)
+                                     (##fxior (##fxarithmetic-shift-left result ##bignum.fdigit-width)
+                                              (bit-reverse (##fxand ##bignum.fdigit-mask f))))))
+                         ;; bignum loop
+                         (let* ((big-field
+                                 (if (##fixnum? field)
+                                     (##fixnum->bignum field)
+                                     field))
+                                (big-field-adigits   ;; want a zero adigit up top
+                                 (##fx+ (##fxquotient (##fx+ field-fdigit-size ##fdigits-per-adigit -1)
+                                                      ##fdigits-per-adigit)
+                                        1))
+                                (big-field-fdigits
+                                 (##fx* big-field-adigits ##fdigits-per-adigit))
+                                (result
+                                 (##bignum.make big-field-adigits big-field #f)))
+                           (let loop ((low 0)
+                                      (high (##fx- big-field-fdigits 1)))
+                             (if (##fx<= low high)
+                                 (let ((temp (##bignum.fdigit-ref result low)))
+                                   ;; redundant but correct when low = high
+                                   (##bignum.fdigit-set! result low  (bit-reverse (##bignum.fdigit-ref result high)))
+                                   (##bignum.fdigit-set! result high (bit-reverse temp))
+                                   (loop (##fx+ low 1)
+                                         (##fx- high 1)))
+                                 (##arithmetic-shift (##bignum.normalize! result) (##fx- width (##fx* big-field-adigits ##bignum.adigit-width))))))))))
+              (##bit-field-replace i reversed-field start end))))))
+
+;;;---------------------------------------------------------------------------
+;;; bits->list list->bits bits->vector vector->bits
+;;; bits
+;;; bitwise-fold bitwise-for-each bitwise-unfold
+;;;---------------------------------------------------------------------------
+
+(define-prim&proc (bitwise-fold (proc procedure)
+                                seed
+                                (i    exact-integer))
+  (macro-exact-int-dispatch-no-error
+   i
+   (let loop ((result seed)
+              (i i)
+              (N (##integer-length i)))
+     (if (##eqv? N 0)
+         result
+         (loop (proc (##fxodd? i) result)
+               (##fxarithmetic-shift-right i 1)
+               (##fx- N 1))))
+   ;; bignum; a linear algorithm in (integer-length i)
+   (let ((N (##integer-length i)))
+     (let loop ((k 0)
+                (result seed))
+       (if (##fx= k N)
+           result
+           (loop (##fx+ k 1)
+                 (proc (##bit-set? k i) result)))))))
+
+(define-prim&proc (bitwise-for-each (proc procedure)
+                                    (i    exact-integer))
+  (macro-exact-int-dispatch-no-error
+   i
+   ;; fixnum
+   (let loop ((i i)
+              (N (##integer-length i)))
+     (if (##< 0 N)
+         (begin
+           (proc (##fxodd? i))
+           (loop (##fxarithmetic-shift-right i 1)
+                 (##fx- N 1)))))
+   ;; bignum, a linear algorithm in (integer-legnth i)
+   (let ((N (##integer-length i)))
+     (let loop ((k 0))
+       (if (##fx< k N)
+           (begin
+             (proc (##bit-set? k i))
+             (loop (##fx+ k 1))))))))
+
+(define-prim&proc (bitwise-unfold (stop?     procedure)
+                                  (mapper    procedure)
+                                  (successor procedure)
+                                  seed)
+  ;; A quadratic algorithm
+  ;; If people complain I guess we can make a linear algorithm
+  (let loop ((result 0)
+             (state seed)
+             (2^i 1))
+    (if (stop? state)
+        result
+        (loop (if (mapper state)
+                  (##bitwise-ior2 result 2^i)
+                  result)
+              (successor state)
+              (##arithmetic-shift 2^i 1)))))
+
+;;;---------------------------------------------------------------------------
+;;; make-bitwise-generator
+;;;---------------------------------------------------------------------------
+
+(define-prim&proc (make-bitwise-generator (i exact-integer))
+  (let ((index 0))
+    (lambda ()
+      (let ((result (##bit-set? index i)))
+        (set! index (##+ index 1))  ;;; this could be a bignum
+        result))))
+
+;;;---------------------------------------------------------------------------
+;;; END
+;;;---------------------------------------------------------------------------
+
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Fixnum operations

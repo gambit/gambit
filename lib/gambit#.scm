@@ -51,6 +51,7 @@ address-info-socket-type
 address-info?
 address-infos
 all-bits-set?
+any-bit-set?
 any-bits-set?
 append-reverse
 append-reverse!
@@ -59,7 +60,17 @@ arithmetic-shift
 asinh
 atanh
 bit-count
+bit-field
+bit-field-any?
+bit-field-clear
+bit-field-every?
+bit-field-replace
+bit-field-replace-same
+bit-field-reverse
+bit-field-rotate
+bit-field-set
 bit-set?
+bit-swap
 bits
 bits->list
 bits->vector
@@ -67,6 +78,9 @@ bitwise-and
 bitwise-andc1
 bitwise-andc2
 bitwise-eqv
+bitwise-fold
+bitwise-for-each
+bitwise-if
 bitwise-ior
 bitwise-merge
 bitwise-nand
@@ -74,6 +88,7 @@ bitwise-nor
 bitwise-not
 bitwise-orc1
 bitwise-orc2
+bitwise-unfold
 bitwise-xor
 box
 box?
@@ -117,6 +132,7 @@ continuation-capture
 continuation-graft
 continuation-return
 continuation?
+copy-bit
 copy-bit-field
 copy-file
 cosh
@@ -167,6 +183,7 @@ error
 error-exception-message
 error-exception-parameters
 error-exception?
+every-bit-set?
 executable-path
 expression-parsing-exception-kind
 expression-parsing-exception-parameters
@@ -434,6 +451,7 @@ mailbox-receive-timeout-exception-arguments
 mailbox-receive-timeout-exception-procedure
 mailbox-receive-timeout-exception?
 main
+make-bitwise-generator
 make-condition-variable
 make-f32vector
 make-f64vector
