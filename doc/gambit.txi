@@ -5376,6 +5376,24 @@ The procedures in this section are not yet documented.
 @deffnx procedure list->bits @var{list}
 @deffnx procedure bits->vector @var{i} @r{[}@var{len}@r{]}
 @deffnx procedure vector->bits @var{vector}
+@deffnx procedure any-bit-set? @var{test-bits} @var{i}
+@deffnx procedure bit-field @var{i} @var{start} @var{end}
+@deffnx procedure bit-field-any? @var{i} @var{start} @var{end}
+@deffnx procedure bit-field-clear @var{i} @var{start} @var{end}
+@deffnx procedure bit-field-every? @var{i} @var{start} @var{end}
+@deffnx procedure bit-field-replace @var{dest} @var{source} @var{start} @var{end}
+@deffnx procedure bit-field-replace-same @var{dest} @var{source} @var{start} @var{end}
+@deffnx procedure bit-field-reverse @var{i} @var{start} @var{end}
+@deffnx procedure bit-field-rotate @var{n} @var{count} @var{start} @var{end}
+@deffnx procedure bit-field-set @var{i} @var{start} @var{end}
+@deffnx procedure bit-swap @var{ind1} @var{ind2} @var{i}
+@deffnx procedure bitwise-fold @var{proc} @var{seed} @var{i}
+@deffnx procedure bitwise-for-each @var{proc} @var{i}
+@deffnx procedure bitwise-if @var{x} @var{y} @var{z}
+@deffnx procedure bitwise-unfold @var{stop?} @var{mapper} @var{successor} @var{seed}
+@deffnx procedure copy-bit @var{ind} @var{i} @var{bool}
+@deffnx procedure every-bit-set? @var{test-bits} @var{i}
+@deffnx procedure make-bitwise-generator @var{i}
 @end deffn
 
 @deffn {special form} six.infix @var{datum}

@@ -6370,7 +6370,7 @@ for a discussion of branch cuts.
 ;;;---------------------------------------------------------------------------
 
 (define-prim&proc (bitwise-fold (proc procedure)
-                                seed
+                                (seed object)
                                 (i    exact-integer))
   (macro-exact-int-dispatch-no-error
    i
@@ -6414,7 +6414,7 @@ for a discussion of branch cuts.
 (define-prim&proc (bitwise-unfold (stop?     procedure)
                                   (mapper    procedure)
                                   (successor procedure)
-                                  seed)
+                                  (seed      object))
   ;; A quadratic algorithm
   ;; If people complain I guess we can make a linear algorithm
   (let loop ((result 0)

@@ -2,7 +2,7 @@
 
 ;;; File: "number-gambit#.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -12,12 +12,23 @@
 
 acosh
 all-bits-set?
+any-bit-set?
 any-bits-set?
 arithmetic-shift
 asinh
 atanh
 bit-count
+bit-field
+bit-field-any?
+bit-field-clear
+bit-field-every?
+bit-field-replace
+bit-field-replace-same
+bit-field-reverse
+bit-field-rotate
+bit-field-set
 bit-set?
+bit-swap
 (bits unimplemented#bits)
 (bits->list unimplemented#bits->list)
 (bits->vector unimplemented#bits->vector)
@@ -25,6 +36,9 @@ bitwise-and
 bitwise-andc1
 bitwise-andc2
 bitwise-eqv
+bitwise-fold
+bitwise-for-each
+bitwise-if
 bitwise-ior
 bitwise-merge
 bitwise-nand
@@ -32,18 +46,22 @@ bitwise-nor
 bitwise-not
 bitwise-orc1
 bitwise-orc2
+bitwise-unfold
 bitwise-xor
 clear-bit-field
 conjugate
+copy-bit
 copy-bit-field
 cosh
 (default-random-source unimplemented#default-random-source)
+every-bit-set?
 extract-bit-field
 first-set-bit
 integer-length
 integer-nth-root
 integer-sqrt
 (list->bits unimplemented#list->bits)
+make-bitwise-generator
 (make-random-source unimplemented#make-random-source)
 (random-f64vector unimplemented#random-f64vector)
 (random-integer unimplemented#random-integer)
