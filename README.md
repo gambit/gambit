@@ -103,6 +103,8 @@ Detailed installation instructions are given in the file [INSTALL.txt](https://g
 
 132: [Sort Libraries](https://srfi.schemers.org/srfi-132/srfi-132.html)
 
+151: [Bitwise Operations](https://srfi.schemers.org/srfi-151/srfi-151.html)
+
 158: [Generators and Accumulators](https://srfi.schemers.org/srfi-158/srfi-158.html)
 
 179: [Nonempty Intervals and Generalized Arrays (Updated)](https://srfi.schemers.org/srfi-179/srfi-179.html)

@@ -812,11 +812,11 @@ make-bitwise-generator
 ;;UNIMPLEMENTED random-source-make-integers
 ;;UNIMPLEMENTED random-source-make-reals
 ;;UNIMPLEMENTED random-source-make-u8vectors
-;;UNIMPLEMENTED random-source-pseudo-randomize
-;;UNIMPLEMENTED random-source-randomize
+;;UNIMPLEMENTED random-source-pseudo-randomize!
+;;UNIMPLEMENTED random-source-randomize!
 ;;UNIMPLEMENTED random-source-state-ref
-;;UNIMPLEMENTED random-source-state-set
-;;UNIMPLEMENTED random-source
+;;UNIMPLEMENTED random-source-state-set!
+;;UNIMPLEMENTED random-source?
 ;;UNIMPLEMENTED random-u8vector
 replace-bit-field
 sinh
