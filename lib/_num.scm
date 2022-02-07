@@ -6285,6 +6285,42 @@ for a discussion of branch cuts.
 (define ##fdigits-per-adigit
   (##fxquotient ##bignum.adigit-width ##bignum.fdigit-width))
 
+(macro-case-target
+ ((C)
+  (define-macro (macro-bit-reverse-table)
+    
+    (define (bit-reverse i)
+      ;; 0 <= i <= (- ##bignum.fdigit-base 1)
+      (let loop ((i i)
+                 (result 0)
+                 (bit 8))
+        (if (eqv? bit 0)
+            result
+            (loop (fxarithmetic-shift-right i 1)
+                  (fxior (fxarithmetic-shift-left result 1)
+                         (fxand i 1))
+                  (fx- bit 1)))))
+    
+    `',(list->vector
+        (map bit-reverse (iota 256)))))
+ (else
+  (define-macro (macro-bit-reverse-table)
+    
+    (define (bit-reverse i)
+      ;; 0 <= i <= (- ##bignum.fdigit-base 1)
+      (let loop ((i i)
+                 (result 0)
+                 (bit 7))
+        (if (eqv? bit 0)
+            result
+            (loop (fxarithmetic-shift-right i 1)
+                  (fxior (fxarithmetic-shift-left result 1)
+                         (fxand i 1))
+                  (fx- bit 1)))))
+    
+    `',(list->vector
+        (map bit-reverse (iota 128))))))
+
 (define-prim&proc (bit-field-reverse (i     exact-integer)
                                      (start index)
                                      (end   index))
@@ -6292,24 +6328,7 @@ for a discussion of branch cuts.
   (define (bit-reverse i)
     
     ;; 0 <= i <= (- bignum.fdigit-base 1)
-    
-    (define-macro (macro-bit-reverse-table)
-      
-      (define (bit-reverse i)
-        ;; 0 <= i <= (- ##bignum.fdigit-base 1)
-        (let loop ((i i)
-                   (result 0)
-                   (bit ##bignum.fdigit-width))
-          (if (eqv? bit 0)
-              result
-              (loop (fxarithmetic-shift-right i 1)
-                    (fxior (fxarithmetic-shift-left result 1)
-                           (fxand i 1))
-                    (fx- bit 1)))))
-      
-      `',(list->vector
-          (map bit-reverse (iota ##bignum.fdigit-base))))
-    
+
     (define bit-reverse-table (macro-bit-reverse-table))
     
     (vector-ref bit-reverse-table i))
