@@ -3,7 +3,7 @@
 herefromlib = srfi/42
 libfromhere = ../..
 SUBDIRS =
-HEADERS_SCM =
+HEADERS_SCM = 42\#.scm
 MODULES_SCM = 42.scm 42.sld test/test.scm
 MAIN_MODULES = 42
 OTHER_RCFILES = makefile
