@@ -381,17 +381,17 @@ UI.prototype.init_predefined_files = function () {
   var ui = this;
 
   ui.write_file('README', '\
-The left area is the REPL where interaction\n\
-with the interpreter takes place. The right\n\
-area allows creating and editing files that are\n\
-local to the browser and accessible to Scheme\n\
-code as files in the root directory, i.e. "/".\n\
-The files will persist in the browser between\n\
+The left area is the REPL where interaction \
+with the interpreter takes place. The right \
+area allows creating and editing files that are \
+local to the browser and accessible to Scheme \
+code as files in the root directory, i.e. "/". \
+The files will persist in the browser between \
 sessions.\n\
 \n\
-By default a demo will automatically start\n\
-after a few seconds. The demo can be stopped\n\
-by clicking inside the REPL. The demo can also\n\
+By default a demo will automatically start \
+after a few seconds. The demo can be stopped \
+by clicking or typing inside the REPL. The demo can also \
 be disabled by creating the file "nodemo".\n\
 \n\
 The following keybindings are available:\n\
@@ -1442,7 +1442,7 @@ Device_console.prototype.activate = function () {
   if (dev.ui !== null) dev.ui.activate_console(dev);
 };
 
-Device_console.prototype.input_add = function (input) {
+Device_console.prototype.input_add = function (input, prevent_echo) {
 
   var dev = this;
 
@@ -1451,12 +1451,12 @@ Device_console.prototype.input_add = function (input) {
 
   var len = dev.rbuf.length-dev.rlo;
   var inp = dev.encoder.encode(input);
-  if (dev.echo) dev.output_add_buffer(inp); // echo the input
-  var newbuf = new Uint8Array(len + inp.length);
-  newbuf.set(newbuf.subarray(dev.rlo, dev.rlo+len));
-  newbuf.set(inp, len);
+  if (!prevent_echo && dev.echo) dev.output_add_buffer(inp); // echo the input
+  var newbuf = new Uint8Array(len + inp.length + 1);
+  newbuf.set(newbuf.subarray(dev.rlo, dev.rlo+len), 1);
+  newbuf.set(inp, len+1);
   dev.rbuf = newbuf;
-  dev.rlo = 0;
+  dev.rlo = 1;
 };
 
 Device_console.prototype.output_add = function (output) {
@@ -1495,22 +1495,39 @@ Device_console.prototype.output_add_buffer = function (buffer) {
 Device_console.prototype.read = function (dev_condvar_scm, buffer, lo, hi) {
 
   var dev = this;
-  var n = hi-lo;
-  var have = dev.rbuf.length-dev.rlo;
 
   if (dev.debug)
     console.log('Device_console(\''+dev.title+'\').read(...,['+buffer.slice(0,10)+'...],'+lo+','+hi+')');
 
-  dev.vm.os_condvar_ready_set(dev_condvar_scm, false);
+  var n;
+  var have;
 
-  if (have === 0) {
+  while (true) {
 
-    if (dev.rlo === 0) {
+    n = hi-lo;
+    have = dev.rbuf.length-dev.rlo;
+
+    if (have > 0) break;
+
+    if (dev.cons.has_unprocessed_input()) {
+
+      var input = dev.cons.read();
+
+      if (input !== null) {
+        dev.input_add(input, true);
+      }
+
+      // will continue loop to check availability again
+
+    } else if (dev.rlo === 0) {
+
       dev.rbuf = new Uint8Array(1); // prevent repeated EOF
       dev.rlo = 1;
       return 0; // signal EOF
 
     } else {
+
+      dev.vm.os_condvar_ready_set(dev_condvar_scm, false);
 
       // Input will be received asynchronously
 
@@ -1521,6 +1538,8 @@ Device_console.prototype.read = function (dev_condvar_scm, buffer, lo, hi) {
       return -35; // return EAGAIN to suspend Scheme thread on condvar
     }
   }
+
+  // some bytes are available to read
 
   if (n > have) n = have;
 
@@ -1724,7 +1743,7 @@ function Console(elem) {
       'Ctrl-P': function (cm) { cons.move_history(true); },
       'Down':   function (cm) { cons.move_history(false); },
       'Ctrl-N': function (cm) { cons.move_history(false); },
-      'Enter':  function (cm) { cons.enter(); },
+      'Enter':  function (cm) { cons.enter(true); },
       'Tab':    function (cm) { cons.tab(); }
     }
   };
@@ -1734,18 +1753,78 @@ function Console(elem) {
   cons.id = elem.id || 'DefaultConsole';
   cons.doc = cons.cm.getDoc();
   cons.transcript_marker = null;
+  cons.internal_op = false;
   cons.input_buffer = [];
+  cons.delayed_input = [];
+  cons.allow_multiline_input = false;
   cons.eof = false;
   cons.peer = null;
   cons.history_max_length = 1000;
   cons.restore_history();
+
+  cons.cm.on('beforeSelectionChange', function(cm, event) {
+
+    // prevent user moving cursor to transcript unless it is for
+    // selecting text
+
+    if (!cons.internal_op) {
+
+      var change = false;
+      var ranges = [];
+      var soi = cons.start_of_input();
+
+      for (var i=0; i<event.ranges.length; i++) {
+        var r = event.ranges[i];
+        if (cons.cmp_pos(r.anchor, r.head) === 0 && // zero length selection
+            cons.cmp_pos(r.anchor, soi) < 0) {
+          ranges.push({ anchor: soi, head: soi });
+          change = true;
+        } else {
+          ranges.push(r);
+        }
+      }
+
+      if (change) {
+        event.update(ranges);
+      }
+    }
+  });
+
+  cons.cm.on('beforeChange', function(cm, event) {
+
+    // prevent user changing text in transcript (it is not sufficient
+    // that the transcript marker is readOnly)
+
+    if (!cons.internal_op) {
+
+      var from = event.from;
+      var to = event.to;
+      var soi = cons.start_of_input();
+
+      if (cons.transcript_marker &&
+          cons.transcript_marker.readOnly &&
+          (cons.cmp_pos(from, soi) < 0 || cons.cmp_pos(to, soi) < 0)) {
+        event.cancel();
+      }
+    }
+  });
+
+  cons.cm.on('change', function(cm, event) {
+
+    // break multiline input into individual lines
+
+    if (!cons.internal_op && !cons.allow_multiline_input) {
+      var notify = (event.origin === '+input' || event.origin === 'paste');
+      cons.add_current_input('', false, notify);
+    }
+  });
 }
 
 Console.prototype.transcript_opts = {
   className: 'g-console-transcript',
-  inclusiveLeft: false,
+  inclusiveLeft: true,
   inclusiveRight: false,
-  atomic: true,
+  readOnly: true,
   selectLeft: false
 };
 
@@ -1769,44 +1848,129 @@ Console.prototype.end_of_doc = function () {
   return cons.doc.posFromIndex(Infinity);
 };
 
-Console.prototype.read = function () {
+Console.prototype.cmp_pos = function (a, b) {
+  return a.line - b.line || a.ch - b.ch;
+};
+
+Console.prototype.start_of_input = function (clear_marker) {
+
   var cons = this;
+  var start;
+
+  if (cons.transcript_marker) {
+    var transcript_range = cons.transcript_marker.find();
+    if (transcript_range) {
+      start = cons.transcript_marker.find().to;
+    } else {
+      start = cons.line0ch0;
+    }
+    if (clear_marker) {
+      cons.transcript_marker.clear();
+      cons.transcript_marker = null;
+    }
+  } else {
+    start = cons.line0ch0;
+  }
+
+  return start;
+};
+
+Console.prototype.read = function () {
+
+  var cons = this;
+
   if (cons.input_buffer.length > 0) {
     return cons.input_buffer.shift();
   } else {
+    var delayed_input = cons.delayed_input;
+    if (delayed_input.length > 0) {
+      var start = cons.start_of_input();
+      var end = cons.end_of_doc();
+      var first = delayed_input.shift();
+      cons.replace_range(first, start, end);
+      if (delayed_input.length > 0) {
+        cons.enter(false); // add to history and input buffer, but no notify
+        return cons.input_buffer.shift();
+      } else {
+        return '';
+      }
+    }
     return null;
   }
 };
 
-Console.prototype.write = function (text) {
+Console.prototype.add_current_input = function (text, replace, notify) {
+
   var cons = this;
-  if (text.length > 0) {
+  var start = cons.start_of_input();
+  var end = cons.end_of_doc();
+  var current_input = cons.doc.getRange(start, end);
+  var new_input = replace ? text : current_input+text;
 
-    var pos;
-    var insert_marker;
+  if (!cons.allow_multiline_input) {
 
-    if (cons.transcript_marker) {
-      pos = cons.transcript_marker.find().to;
-      cons.transcript_marker.clear();
+    var lines = new_input.split('\n');
+    var delayed_input = cons.delayed_input;
+
+    if (delayed_input.length === 0) {
+      delayed_input = lines;
     } else {
-      pos = cons.line0ch0;
+      var last = delayed_input[delayed_input.length-1];
+      delayed_input = delayed_input.slice(0,-1).concat([last+lines[0]],lines.slice(1));
     }
 
-    cons.doc.replaceRange('_', pos, pos);
+    cons.delayed_input = delayed_input;
 
-    var right_of_pos = { line: pos.line, ch: pos.ch+1 };
-    var insert_marker = cons.doc.markText(pos,
-                                          right_of_pos,
+    new_input = delayed_input.shift();
+  }
+
+  if (current_input !== new_input) {
+    cons.replace_range(new_input, start, end);
+  }
+
+  if (cons.allow_multiline_input || delayed_input.length === 0) {
+    return false;
+  } else {
+    cons.enter(notify);
+    return true;
+  }
+};
+
+Console.prototype.replace_range = function (text, from, to) {
+
+  var cons = this;
+  var save = cons.internal_op;
+
+  cons.internal_op = true;
+  cons.doc.replaceRange(text, from, to);
+  cons.internal_op = save;
+};
+
+Console.prototype.write = function (text) {
+
+  var cons = this;
+
+  if (text.length > 0) {
+
+    var insert_marker;
+    var start = cons.start_of_input(true);
+
+    cons.replace_range('_', start, start);
+
+    var right_of_start = { line: start.line, ch: start.ch+1 };
+    var insert_marker = cons.doc.markText(start,
+                                          right_of_start,
                                           cons.output_opts);
 
-    cons.doc.replaceRange(text, pos, pos);
+    cons.replace_range(text, start, start);
 
     pos = insert_marker.find().to;
     var left_of_pos = { line: pos.line, ch: pos.ch-1 };
-    cons.doc.replaceRange('', left_of_pos, pos);
+    cons.replace_range('', left_of_pos, pos);
     cons.transcript_marker = cons.doc.markText(cons.line0ch0,
                                                left_of_pos,
                                                cons.transcript_opts);
+
     cons.cm.scrollIntoView(null); // scroll cursor into view
   }
 };
@@ -1814,21 +1978,13 @@ Console.prototype.write = function (text) {
 Console.prototype.accept_input = function () {
 
   var cons = this;
-  var pos;
-
-  if (cons.transcript_marker) {
-    pos = cons.transcript_marker.find().to;
-    cons.transcript_marker.clear();
-  } else {
-    pos = cons.line0ch0;
-  }
-
+  var start = cons.start_of_input(true);
   var end = cons.end_of_doc();
-  var input = cons.doc.getRange(pos, end);
+  var input = cons.doc.getRange(start, end);
 
   if (end.line > 0 || end.ch > 0) {
 
-    cons.doc.markText(pos, end, cons.input_opts);
+    cons.doc.markText(start, end, cons.input_opts);
 
     cons.transcript_marker = cons.doc.markText(cons.line0ch0,
                                                end,
@@ -1836,6 +1992,8 @@ Console.prototype.accept_input = function () {
   }
 
   cons.write('\n');
+
+  cons.doc.setSelection(end);
 
   return input;
 };
@@ -1845,11 +2003,16 @@ Console.prototype.clear_transcript = function () {
   var cons = this;
 
   if (cons.transcript_marker) {
-    var pos = cons.transcript_marker.find().to;
-    if (pos.line > 0) {
-      var bol = { line: pos.line, ch: 0 };
-      cons.doc.replaceRange('', cons.line0ch0, bol);
-      if (pos.ch === 0) cons.transcript_marker = null;
+    var start = cons.start_of_input();
+    if (start.line > 0) {
+      var bol = { line: start.line, ch: 0 };
+      cons.transcript_marker.readOnly = false;
+      cons.replace_range('', cons.line0ch0, bol);
+      cons.transcript_marker.readOnly = true;
+      if (start.ch === 0) {
+        cons.transcript_marker.clear();
+        cons.transcript_marker = null;
+      }
     }
   }
 };
@@ -1857,32 +2020,37 @@ Console.prototype.clear_transcript = function () {
 Console.prototype.delete_forward = function () {
 
   var cons = this;
-  var pos;
-
-  if (cons.transcript_marker) {
-    pos = cons.transcript_marker.find().to;
-  } else {
-    pos = cons.line0ch0;
-  }
-
+  var start = cons.start_of_input();
   var end = cons.end_of_doc();
 
-  if (pos.line === end.line && pos.ch === end.ch) {
-    cons.add_input(''); // signal EOF
+  if (cons.cmp_pos(start, end) === 0) {
+    cons.add_buffered_input('', true); // signal EOF with notify
   } else {
     cons.cm.execCommand('delCharAfter');
   }
 };
 
-Console.prototype.enter = function () {
+Console.prototype.enter = function (notify) {
+
   var cons = this;
   var input = cons.accept_input();
+
   if (input.length > 0) {
     cons.history[cons.history.length-1] = input;
     cons.save_history();
   }
+
   cons.restore_history();
-  cons.add_input(input + '\n');
+
+  cons.add_buffered_input(input + '\n', notify);
+};
+
+Console.prototype.add_buffered_input = function (text, notify) {
+  var cons = this;
+  cons.input_buffer.push(text);
+  if (notify) {
+    cons.readable();
+  }
 };
 
 Console.prototype.tab = function () {
@@ -1890,17 +2058,18 @@ Console.prototype.tab = function () {
   cons.cm.execCommand('indentAuto');
 };
 
-Console.prototype.add_input = function (text) {
-  var cons = this;
-  cons.input_buffer.push(text);
-  cons.readable();
-};
-
 Console.prototype.connect = function (peer) {
   var cons = this;
   cons.peer = peer;
   cons.writable();
-  if (cons.input_buffer.length > 0) cons.readable();
+  if (cons.has_unprocessed_input()) {
+    cons.readable();
+  }
+};
+
+Console.prototype.has_unprocessed_input = function () {
+  var cons = this;
+  return cons.input_buffer.length > 0 || cons.delayed_input.length > 0;
 };
 
 Console.prototype.writable = function () {
@@ -1964,20 +2133,13 @@ Console.prototype.move_history = function (prev) {
 Console.prototype.change_input = function (text) {
 
   var cons = this;
-  var pos;
-
-  if (cons.transcript_marker) {
-    pos = cons.transcript_marker.find().to;
-  } else {
-    pos = cons.line0ch0;
-  }
-
+  var start = cons.start_of_input();
   var end = cons.end_of_doc();
-  var input = cons.doc.getRange(pos, end);
+  var input = cons.doc.getRange(start, end);
 
   cons.history[cons.history_pos] = input;
 
-  cons.doc.replaceRange(text, pos, end);
+  cons.replace_range(text, start, end);
 };
 
 Console.prototype.send = function (text) {
@@ -1992,7 +2154,7 @@ Console.prototype.send = function (text) {
       var end = text.indexOf('\n');
       if (end < 0) break;
       cons.change_input(text.slice(start, end));
-      cons.enter();
+      cons.enter(true); // with notify
       start = end+1;
     }
     cons.change_input(text.slice(start, text.length));
