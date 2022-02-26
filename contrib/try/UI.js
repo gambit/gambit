@@ -2,7 +2,7 @@
 
 // File: "UI.js"
 
-// Copyright (c) 2020-2021 by Marc Feeley, All Rights Reserved.
+// Copyright (c) 2020-2022 by Marc Feeley, All Rights Reserved.
 
 //=============================================================================
 
@@ -1774,10 +1774,31 @@ function Console(elem) {
       var soi = cons.start_of_input();
 
       for (var i=0; i<event.ranges.length; i++) {
+
         var r = event.ranges[i];
-        if (cons.cmp_pos(r.anchor, r.head) === 0 && // zero length selection
-            cons.cmp_pos(r.anchor, soi) < 0) {
-          ranges.push({ anchor: soi, head: soi });
+        var lo = r.head;
+        var hi = r.anchor;
+
+        if (cons.cmp_pos(lo, hi) > 0) {
+          var t = lo;
+          lo = hi;
+          hi = t;
+        }
+
+        if (cons.cmp_pos(lo, hi) === 0 && // zero length selection in transcript
+            cons.cmp_pos(lo, soi) < 0) {
+          ranges.push({ head: soi, anchor: soi });
+          change = true;
+        } else if (cons.cmp_pos(lo, soi) < 0 && // selection that crosses soi
+                   cons.cmp_pos(hi, soi) >= 0 &&
+                   (event.origin === '+move' ||
+                    (lo.sticky === null &&
+                     hi.sticky === null))) {
+          if (cons.cmp_pos(r.head, r.anchor) < 0) {
+            ranges.push({ head: soi, anchor: r.anchor });
+          } else {
+            ranges.push({ head: r.head, anchor: soi });
+          }
           change = true;
         } else {
           ranges.push(r);
@@ -1792,8 +1813,7 @@ function Console(elem) {
 
   cons.cm.on('beforeChange', function(cm, event) {
 
-    // prevent user changing text in transcript (it is not sufficient
-    // that the transcript marker is readOnly)
+    // redirect any changes to the transcript to the current input
 
     if (!cons.internal_op) {
 
@@ -1803,8 +1823,9 @@ function Console(elem) {
 
       if (cons.transcript_marker &&
           cons.transcript_marker.readOnly &&
-          (cons.cmp_pos(from, soi) < 0 || cons.cmp_pos(to, soi) < 0)) {
-        event.cancel();
+          cons.cmp_pos(from, soi) < 0) {
+        cons.cm.setSelection(soi);
+        event.update(soi, cons.cmp_pos(to, soi) >= 0 ? to : soi, event.text);
       }
     }
   });
@@ -1818,6 +1839,12 @@ function Console(elem) {
       cons.add_current_input('', false, notify);
     }
   });
+
+  cons.ro = new ResizeObserver(function (entries) {
+    cons.refresh();
+  });
+
+  cons.ro.observe(elem);
 }
 
 Console.prototype.transcript_opts = {
@@ -2006,9 +2033,10 @@ Console.prototype.clear_transcript = function () {
     var start = cons.start_of_input();
     if (start.line > 0) {
       var bol = { line: start.line, ch: 0 };
+      var save = cons.transcript_marker.readOnly;
       cons.transcript_marker.readOnly = false;
       cons.replace_range('', cons.line0ch0, bol);
-      cons.transcript_marker.readOnly = true;
+      cons.transcript_marker.readOnly = save;
       if (start.ch === 0) {
         cons.transcript_marker.clear();
         cons.transcript_marker = null;
@@ -2161,6 +2189,11 @@ Console.prototype.send = function (text) {
   }
 };
 
+Console.prototype.refresh = function () {
+  var cons = this;
+  cons.cm.refresh();
+};
+
 Console.prototype.focus = function () {
   var cons = this;
   cons.cm.refresh();
@@ -2199,6 +2232,12 @@ function Editor(elem, ui, title) {
   editor.cm.on('change', function(cm, event) {
     editor.set_dirty(true);
   });
+
+  editor.ro = new ResizeObserver(function (entries) {
+    editor.refresh();
+  });
+
+  editor.ro.observe(elem);
 
   editor.debug = false;
 }
@@ -2256,6 +2295,16 @@ Editor.prototype.needs_attention = function () {
     console.log('Editor(\''+editor.title+'\').needs_attention()');
 
   return !editor.focused && editor.dirty;
+};
+
+Editor.prototype.refresh = function () {
+
+  var editor = this;
+
+  if (editor.debug)
+    console.log('Editor(\''+editor.title+'\').refresh()');
+
+  editor.cm.refresh();
 };
 
 Editor.prototype.focus = function () {

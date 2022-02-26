@@ -1,24 +1,3 @@
-.g-console .CodeMirror {
-  font-family: "Hack", "Andale Mono", Courier, Monaco, monospace;
-  height: auto;
-}
-
-.g-console .CodeMirror-line,
-.g-console .g-console-input {
-  font-weight: bold;
-}
-
-.g-console .CodeMirror-matchingbracket {
-  background-color: #ddd;
-}
-
-.g-console .g-console-output {
-  font-weight: normal;
-}
-
-.g-console .g-console-transcript {
-}
-
 body {
   --g-attention-color: black;
   --g-attention-background: hsl(34, 100%, 70%);
@@ -33,7 +12,7 @@ body {
   --g-tab-background-hover: #F9F9F9;
   --g-tab-separator-width: 1px;
   --g-tab-separator-color: var(--g-border-color);
-  --g-radius: 0.25em;
+  --g-radius: 6px;
   --g-tab-padding: 0.5em;
   --g-btn-border-color: transparent;
   --g-btn-radius: var(--g-radius);
@@ -43,7 +22,10 @@ body {
   --g-dropdown-menu-background: var(--g-tab-background-hover);
   --g-height: 75vh;
   --g-splitter-width: 0.5em;
-//  font-size: 200%;
+  --g-scrollbar-color: var(--g-tab-color-deactivated);
+  --g-scrollbar-background: transparent;
+  --g-matching-bracket-background: #dcdcdc;
+/*  font-size: 200%; */
 }
 
 div.g-tab-group {
@@ -220,7 +202,7 @@ div.g-tab-group > div:last-child > div[data-g-active] {
 
 .g-editor .CodeMirror,
 .g-console .CodeMirror {
-  font-family: "Hack", Monaco, monospace;
+  font-family: "Hack", "Andale Mono", Courier, Monaco, monospace;
   height: auto;
   margin: 2px;
   background: transparent;
@@ -239,7 +221,7 @@ div.g-tab-group > div:last-child > div[data-g-active] {
 
 .g-editor .CodeMirror-matchingbracket,
 .g-console .CodeMirror-matchingbracket {
-  background-color: #ddd;
+  background-color: var(--g-matching-bracket-background);
 }
 
 .g-console .g-console-output {
@@ -309,12 +291,45 @@ div.g-tab-group > div:last-child > div[data-g-active] {
   cursor: row-resize;
   flex: 0 0;
   padding: var(--g-splitter-width) 100% 0 0;
-//  background-color: rgba(0,0,0,0.1);
+/*  background-color: rgba(0,0,0,0.1); */
 }
 
 .g-h-panes > .g-pane-splitter {
   cursor: col-resize;
   flex: 0 0;
   padding: var(--g-height) var(--g-splitter-width) 0 0;
-//  background-color: rgba(0,0,0,0.1);
+/*  background-color: rgba(0,0,0,0.1); */
+}
+
+/* Works on Firefox */
+.g-console .CodeMirror-vscrollbar,
+.g-console .CodeMirror-hscrollbar,
+.g-editor .CodeMirror-vscrollbar,
+.g-editor .CodeMirror-hscrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: var(--g-scrollbar-color) var(--g-scrollbar-background);
+}
+
+/* Works on Chrome, Edge, and Safari */
+.g-console .CodeMirror-vscrollbar::-webkit-scrollbar,
+.g-console .CodeMirror-hscrollbar::-webkit-scrollbar,
+.g-editor .CodeMirror-vscrollbar::-webkit-scrollbar,
+.g-editor .CodeMirror-hscrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.g-console .CodeMirror-vscrollbar::-webkit-scrollbar-track,
+.g-console .CodeMirror-hscrollbar::-webkit-scrollbar-track,
+.g-editor .CodeMirror-vscrollbar::-webkit-scrollbar-track,
+.g-editor .CodeMirror-hscrollbar::-webkit-scrollbar-track {
+  background: var(--g-scrollbar-background);
+}
+
+.g-console .CodeMirror-vscrollbar::-webkit-scrollbar-thumb,
+.g-console .CodeMirror-hscrollbar::-webkit-scrollbar-thumb,
+.g-editor .CodeMirror-vscrollbar::-webkit-scrollbar-thumb,
+.g-editor .CodeMirror-hscrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--g-scrollbar-color);
+  border-radius: 20px;
+  border: 3px solid var(--g-scrollbar-background);
 }
