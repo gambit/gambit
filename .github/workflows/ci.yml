@@ -75,6 +75,8 @@ jobs:
       with:
         fetch-depth: 0 # Checkout history and tags
 
+    - uses: ilammy/msvc-dev-cmd@v1
+
     - name: Install MSYS2
       uses: msys2/setup-msys2@v2
       with:
