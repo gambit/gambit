@@ -75,7 +75,8 @@ jobs:
       with:
         fetch-depth: 0 # Checkout history and tags
 
-    - uses: ilammy/msvc-dev-cmd@v1
+    - name: Install MSVC
+      uses: ilammy/msvc-dev-cmd@v1
 
     - name: Install MSYS2
       uses: msys2/setup-msys2@v2
@@ -88,20 +89,17 @@ jobs:
     - name: Build
       shell: cmd
       run: |
-        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=14.16
         set PATH=%RUNNER_TEMP%\msys\msys64\usr\bin;%PATH%
         msys2 -c "./configure --enable-c-opt=-Od --enable-debug --enable-debug-c-backtrace CC='cl' && make -j%NUMBER_OF_PROCESSORS% core"
 
     - name: Test
       shell: cmd
       run: |
-        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=14.16
         msys2 -c "make check"
 
     - name: Build vstudio.bat
       shell: cmd
       run: |
-        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=14.16
         call misc\vstudio.bat
         cd tests
         ..\gsc\gsc -f -warnings -c -nb-gvm-regs 5 -nb-arg-regs 3 mix.scm
@@ -110,7 +108,6 @@ jobs:
     - name: Build Gambit for Use
       shell: cmd
       run: |
-        call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=14.16
         mkdir dist
         msys2 -c "./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist CC='cl' && make -j%NUMBER_OF_PROCESSORS% core && make modules && make install"
 
