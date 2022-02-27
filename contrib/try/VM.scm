@@ -2,7 +2,7 @@
 
 ;;; File: "VM.scm"
 
-;;; Copyright (c) 2020-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2020-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -95,6 +95,46 @@ VM.prototype.terminate_thread = function (thread_scm) {
                false,
                @glo@['##thread-terminate!'],
                [thread_scm]);
+};
+
+VM.prototype.completions = function (thread_scm, input, cursor) {
+
+  var vm = this;
+
+  var READTABLE_CHAR_DELIMITERP_TABLE = 6;
+  var readtable = @glo@['##main-readtable'];
+  var char_delimiterp_table = readtable.@slots@[READTABLE_CHAR_DELIMITERP_TABLE];
+  var start = cursor-1;
+
+  while (start >= 0) {
+    var c = Math.min(input.charCodeAt(start), 128);
+    if (char_delimiterp_table[c]) break;
+    start--;
+  }
+
+  start++;
+
+  var completions = [];
+
+  if (start < cursor) {
+
+    var prefix = input.slice(start, cursor);
+    var prefix_len = prefix.length;
+
+    for (var sym in @symbol_table@) {
+      if (sym.length >= prefix_len &&
+          sym !== prefix &&
+          sym.slice(0, prefix_len) === prefix) {
+        completions.push(sym);
+      }
+    }
+
+    completions.sort();
+
+    completions.unshift(prefix);
+  }
+
+  return completions;
 };
 
 main_vm = new VM();

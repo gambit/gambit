@@ -1374,6 +1374,16 @@ function Device_console(vm, title, flags, ui, thread_scm) {
   ui.add_console(dev);
 }
 
+Device_console.prototype.console_completions = function (input, cursor) {
+
+  var dev = this;
+
+  if (dev.debug)
+    console.log('Device_console(\''+dev.title+'\').console_completions(...)');
+
+  return dev.vm.completions(dev.thread_scm, input, cursor);
+};
+
 Device_console.prototype.console_writable = function (cons) {
 
   var dev = this;
@@ -1754,6 +1764,8 @@ function Console(elem) {
   cons.doc = cons.cm.getDoc();
   cons.transcript_marker = null;
   cons.internal_op = false;
+  cons.completions = [];
+  cons.completions_pos = 0;
   cons.input_buffer = [];
   cons.delayed_input = [];
   cons.allow_multiline_input = false;
@@ -1808,6 +1820,8 @@ function Console(elem) {
       if (change) {
         event.update(ranges);
       }
+
+      cons.completions.length = 0;
     }
   });
 
@@ -1867,8 +1881,8 @@ Console.prototype.output_opts = {
   inclusiveRight: false
 };
 
-Console.prototype.line0ch0 = { line: 0, ch: 0 };
-Console.prototype.line0ch1 = { line: 0, ch: 1 };
+Console.prototype.line0ch0 = CodeMirror.Pos(0, 0);
+Console.prototype.line0ch1 = CodeMirror.Pos(0, 1);
 
 Console.prototype.end_of_doc = function () {
   var cons = this;
@@ -1911,10 +1925,10 @@ Console.prototype.read = function () {
   } else {
     var delayed_input = cons.delayed_input;
     if (delayed_input.length > 0) {
-      var start = cons.start_of_input();
+      var soi = cons.start_of_input();
       var end = cons.end_of_doc();
       var first = delayed_input.shift();
-      cons.replace_range(first, start, end);
+      cons.replace_range(first, soi, end);
       if (delayed_input.length > 0) {
         cons.enter(false); // add to history and input buffer, but no notify
         return cons.input_buffer.shift();
@@ -1929,9 +1943,9 @@ Console.prototype.read = function () {
 Console.prototype.add_current_input = function (text, replace, notify) {
 
   var cons = this;
-  var start = cons.start_of_input();
+  var soi = cons.start_of_input();
   var end = cons.end_of_doc();
-  var current_input = cons.doc.getRange(start, end);
+  var current_input = cons.doc.getRange(soi, end);
   var new_input = replace ? text : current_input+text;
 
   if (!cons.allow_multiline_input) {
@@ -1952,7 +1966,7 @@ Console.prototype.add_current_input = function (text, replace, notify) {
   }
 
   if (current_input !== new_input) {
-    cons.replace_range(new_input, start, end);
+    cons.replace_range(new_input, soi, end);
   }
 
   if (cons.allow_multiline_input || delayed_input.length === 0) {
@@ -1980,19 +1994,19 @@ Console.prototype.write = function (text) {
   if (text.length > 0) {
 
     var insert_marker;
-    var start = cons.start_of_input(true);
+    var soi = cons.start_of_input(true);
 
-    cons.replace_range('_', start, start);
+    cons.replace_range('_', soi, soi);
 
-    var right_of_start = { line: start.line, ch: start.ch+1 };
-    var insert_marker = cons.doc.markText(start,
-                                          right_of_start,
+    var right_of_soi = CodeMirror.Pos(soi.line, soi.ch+1);
+    var insert_marker = cons.doc.markText(soi,
+                                          right_of_soi,
                                           cons.output_opts);
 
-    cons.replace_range(text, start, start);
+    cons.replace_range(text, soi, soi);
 
     pos = insert_marker.find().to;
-    var left_of_pos = { line: pos.line, ch: pos.ch-1 };
+    var left_of_pos = CodeMirror.Pos(pos.line, pos.ch-1);
     cons.replace_range('', left_of_pos, pos);
     cons.transcript_marker = cons.doc.markText(cons.line0ch0,
                                                left_of_pos,
@@ -2005,13 +2019,13 @@ Console.prototype.write = function (text) {
 Console.prototype.accept_input = function () {
 
   var cons = this;
-  var start = cons.start_of_input(true);
+  var soi = cons.start_of_input(true);
   var end = cons.end_of_doc();
-  var input = cons.doc.getRange(start, end);
+  var input = cons.doc.getRange(soi, end);
 
   if (end.line > 0 || end.ch > 0) {
 
-    cons.doc.markText(start, end, cons.input_opts);
+    cons.doc.markText(soi, end, cons.input_opts);
 
     cons.transcript_marker = cons.doc.markText(cons.line0ch0,
                                                end,
@@ -2030,14 +2044,14 @@ Console.prototype.clear_transcript = function () {
   var cons = this;
 
   if (cons.transcript_marker) {
-    var start = cons.start_of_input();
-    if (start.line > 0) {
-      var bol = { line: start.line, ch: 0 };
+    var soi = cons.start_of_input();
+    if (soi.line > 0) {
+      var bol = CodeMirror.Pos(soi.line, 0);
       var save = cons.transcript_marker.readOnly;
       cons.transcript_marker.readOnly = false;
       cons.replace_range('', cons.line0ch0, bol);
       cons.transcript_marker.readOnly = save;
-      if (start.ch === 0) {
+      if (soi.ch === 0) {
         cons.transcript_marker.clear();
         cons.transcript_marker = null;
       }
@@ -2048,10 +2062,10 @@ Console.prototype.clear_transcript = function () {
 Console.prototype.delete_forward = function () {
 
   var cons = this;
-  var start = cons.start_of_input();
+  var soi = cons.start_of_input();
   var end = cons.end_of_doc();
 
-  if (cons.cmp_pos(start, end) === 0) {
+  if (cons.cmp_pos(soi, end) === 0) {
     cons.add_buffered_input('', true); // signal EOF with notify
   } else {
     cons.cm.execCommand('delCharAfter');
@@ -2082,8 +2096,51 @@ Console.prototype.add_buffered_input = function (text, notify) {
 };
 
 Console.prototype.tab = function () {
+
   var cons = this;
-  cons.cm.execCommand('indentAuto');
+
+  var from = cons.doc.getCursor('from');
+  var to = cons.doc.getCursor('to');
+  var soi = cons.start_of_input();
+
+  if (cons.cmp_pos(from, soi) >= 0) {
+    if (cons.cmp_pos(from, to) === 0) {
+
+      // zero length selection inside current input
+
+      if (cons.completions.length === 0 && cons.peer) { // get new completions?
+        var cursor = cons.doc.indexFromPos(from) - cons.doc.indexFromPos(soi);
+        var end = cons.end_of_doc();
+        var input = cons.doc.getRange(soi, end);
+        cons.completions = cons.peer.console_completions(input, cursor);
+        cons.completions_pos = 0;
+      }
+
+      if (cons.completions.length > 0) { // are there completions possible?
+
+        var old_len = cons.completions[cons.completions_pos].length;
+        var pos = (cons.completions_pos+1) % cons.completions.length;
+        var new_text = cons.completions[pos];
+        var new_len = new_text.length;
+
+        cons.completions_pos = pos;
+
+        var new_from = CodeMirror.Pos(from.line, Math.max(0, from.ch-old_len));
+
+        if (cons.cmp_pos(new_from, soi) < 0) {
+          new_from.line = soi.line;
+          new_from.ch = soi.ch;
+        }
+
+        cons.replace_range(new_text, new_from, CodeMirror.Pos(to.line, to.ch));
+
+      } else {
+
+        cons.cm.execCommand('indentAuto');
+
+      }
+    }
+  }
 };
 
 Console.prototype.connect = function (peer) {
@@ -2161,13 +2218,13 @@ Console.prototype.move_history = function (prev) {
 Console.prototype.change_input = function (text) {
 
   var cons = this;
-  var start = cons.start_of_input();
+  var soi = cons.start_of_input();
   var end = cons.end_of_doc();
-  var input = cons.doc.getRange(start, end);
+  var input = cons.doc.getRange(soi, end);
 
   cons.history[cons.history_pos] = input;
 
-  cons.replace_range(text, start, end);
+  cons.replace_range(text, soi, end);
 };
 
 Console.prototype.send = function (text) {
