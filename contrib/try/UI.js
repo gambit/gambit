@@ -190,14 +190,14 @@ UI.prototype.remove_console = function (dev) {
   ui.cons_mux.remove_channel(dev);
 };
 
-UI.prototype.activate_console = function (dev) {
+UI.prototype.activate_console = function (dev, no_focus) {
 
   var ui = this;
 
   if (ui.debug)
     console.log('UI().activate_console(...)');
 
-  ui.cons_mux.activate_channel(dev);
+  ui.cons_mux.activate_channel(dev, no_focus);
 };
 
 UI.prototype.send_to_active_console = function (text, focus) {
@@ -343,7 +343,7 @@ UI.prototype.edit_new_file = function () {
   ui.edit_file(path);
 };
 
-UI.prototype.edit_file = function (path) {
+UI.prototype.open_in_editor = function (path) {
 
   var ui = this;
 
@@ -373,7 +373,17 @@ UI.prototype.edit_file = function (path) {
     editor.set_dirty(false);
   }
 
-  ui.editor_mux.activate_channel(editor);
+  return editor;
+};
+
+UI.prototype.edit_file = function (path, no_focus) {
+
+  var ui = this;
+  var editor = ui.open_in_editor(path);
+
+  ui.editor_mux.activate_channel(editor, no_focus);
+
+  return editor;
 };
 
 UI.prototype.init_predefined_files = function () {
@@ -744,6 +754,58 @@ UI.prototype.all_files = function (root_dir) {
   return files;
 };
 
+UI.prototype.clear_highlighting = function () {
+
+  var ui = this;
+
+  ui.cons_mux.clear_highlighting();
+  ui.editor_mux.clear_highlighting();
+};
+
+UI.prototype.pinpoint = function (container_scm, line0, col0) {
+
+  var ui = this;
+
+  if (ui.debug)
+    console.log('UI().pinpoint(...)');
+
+  if (typeof container_scm === 'object') {
+
+    if (container_scm instanceof _ScmString) {
+
+      var path = container_scm.toString();
+
+      if (path.slice(0, 1) === '/') {
+        path = path.slice(1);
+      }
+
+      if (ui.file_exists(path)) {
+        var editor = ui.edit_file(path, true);
+        return editor.pinpoint(line0, col0);
+      }
+
+    } else if (container_scm instanceof _ScmSymbol) {
+
+      var name = container_scm.toString();
+      var channels = ui.cons_mux.channels;
+      var index = channels.length-1;
+
+      while (index >= 0 ) {
+        if (name === channels[index].name) break;
+        index--;
+      }
+
+      if (index >= 0) {
+        var dev = channels[index];
+        return dev.pinpoint(line0, col0);
+      }
+
+    }
+  }
+
+  return false;
+};
+
 //-----------------------------------------------------------------------------
 
 function setup_splitter(container_elem, set_size) {
@@ -872,6 +934,15 @@ Multiplexer.prototype.focus = function () {
   if (tab_index >= 0) {
     mux.tabs[tab_index].focus();
   }
+};
+
+Multiplexer.prototype.clear_highlighting = function () {
+
+  var mux = this;
+
+  mux.channels.forEach(function (channel) {
+    channel.clear_highlighting();
+  });
 };
 
 Multiplexer.prototype.clicked_tab = function (tab_index, event) {
@@ -1018,7 +1089,6 @@ Multiplexer.prototype.add_channel = function (channel, become_active) {
 
   if (become_active) {
     mux.activate_channel(channel);
-    channel.focus();
   }
 
   if (mux.debug) {
@@ -1079,7 +1149,7 @@ Multiplexer.prototype.remove_channel = function (channel) {
   }
 };
 
-Multiplexer.prototype.activate_channel = function (channel) {
+Multiplexer.prototype.activate_channel = function (channel, no_focus) {
 
   var mux = this;
 
@@ -1102,8 +1172,9 @@ Multiplexer.prototype.activate_channel = function (channel) {
 
     mra.splice(0, 0, tab_index);
     tg.active_tab_set(tab_index);
-    channel.focus();
   }
+
+  if (!no_focus) channel.focus();
 
   if (mux.debug) {
     console.log('mux.mra and mux.tabs:');
@@ -1341,7 +1412,7 @@ Tab_group.prototype.active_tab_set = function (tab_index) {
 
 //-----------------------------------------------------------------------------
 
-function Device_console(vm, title, flags, ui, thread_scm) {
+function Device_console(vm, title, name, flags, ui, thread_scm) {
 
   var dev = this;
 
@@ -1350,6 +1421,7 @@ function Device_console(vm, title, flags, ui, thread_scm) {
   dev.vm = vm;
   dev.ui = ui;
   dev.title = title;
+  dev.name = name;
   dev.flags = flags;
   dev.wbuf = new Uint8Array(0);
   dev.rbuf = new Uint8Array(1);
@@ -1403,7 +1475,10 @@ Device_console.prototype.console_readable = function (cons) {
   if (dev.debug)
     console.log('Device_console(\''+dev.title+'\').console_readable(...)');
 
+  if (dev.ui !== null) dev.ui.clear_highlighting();
+
   dev.cons = cons;
+
   var input = cons.read();
   var condvar_scm = dev.read_condvar_scm;
   if (condvar_scm !== null) {
@@ -1442,14 +1517,14 @@ Device_console.prototype.console_terminate_thread = function (cons) {
   dev.vm.terminate_thread(dev.thread_scm);
 };
 
-Device_console.prototype.activate = function () {
+Device_console.prototype.activate = function (no_focus) {
 
   var dev = this;
 
   if (dev.debug)
     console.log('Device_console(\''+dev.title+'\').activate()');
 
-  if (dev.ui !== null) dev.ui.activate_console(dev);
+  if (dev.ui !== null) dev.ui.activate_console(dev, no_focus);
 };
 
 Device_console.prototype.input_add = function (input, prevent_echo) {
@@ -1672,6 +1747,28 @@ Device_console.prototype.blur = function () {
   dev.cons.blur();
 };
 
+Device_console.prototype.clear_highlighting = function () {
+
+  var dev = this;
+
+  dev.cons.cm.clear_highlighting();
+};
+
+Device_console.prototype.pinpoint = function (line0, col0) {
+
+  var dev = this;
+
+  var start = dev.cons.convert_position(CodeMirror.Pos(line0, col0));
+
+  if (start === null) return false;
+
+  var end = dev.cons.cm.forward_sexpr(start);
+
+  if (!end) return false;
+
+  return dev.cons.cm.set_highlighting(start, end);
+};
+
 Device_console.prototype.get_menu_items = function () {
 
   var dev = this;
@@ -1754,7 +1851,13 @@ function Console(elem) {
       'Down':   function (cm) { cons.move_history(false); },
       'Ctrl-N': function (cm) { cons.move_history(false); },
       'Enter':  function (cm) { cons.enter(true); },
-      'Tab':    function (cm) { cons.tab(); }
+      'Tab':    function (cm) { cons.tab(); },
+      'F7':     function (cm) { cons.enter_text('#||#,t;', true); },
+      'F8':     function (cm) { cons.enter_text('#||#,c;', true); },
+      'F9':     function (cm) { cons.enter_text('#||#,-;', true); },
+      'F10':    function (cm) { cons.enter_text('#||#,+;', true); },
+      'F11':    function (cm) { cons.enter_text('#||#,s;', true); },
+      'F12':    function (cm) { cons.enter_text('#||#,l;', true); }
     }
   };
 
@@ -1773,6 +1876,9 @@ function Console(elem) {
   cons.peer = null;
   cons.history_max_length = 1000;
   cons.restore_history();
+  cons.input_positions = [];
+  cons.input_line = 0;
+  cons.stamp = 0; // use position of transcript's top line as stamp
 
   cons.cm.on('beforeSelectionChange', function(cm, event) {
 
@@ -1791,22 +1897,22 @@ function Console(elem) {
         var lo = r.head;
         var hi = r.anchor;
 
-        if (cons.cmp_pos(lo, hi) > 0) {
+        if (CodeMirror.cmp_pos(lo, hi) > 0) {
           var t = lo;
           lo = hi;
           hi = t;
         }
 
-        if (cons.cmp_pos(lo, hi) === 0 && // zero length selection in transcript
-            cons.cmp_pos(lo, soi) < 0) {
+        if (CodeMirror.cmp_pos(lo, hi) === 0 && // zero length selection in transcript
+            CodeMirror.cmp_pos(lo, soi) < 0) {
           ranges.push({ head: soi, anchor: soi });
           change = true;
-        } else if (cons.cmp_pos(lo, soi) < 0 && // selection that crosses soi
-                   cons.cmp_pos(hi, soi) >= 0 &&
+        } else if (CodeMirror.cmp_pos(lo, soi) < 0 && // selection that crosses soi
+                   CodeMirror.cmp_pos(hi, soi) >= 0 &&
                    (event.origin === '+move' ||
                     (lo.sticky === null &&
                      hi.sticky === null))) {
-          if (cons.cmp_pos(r.head, r.anchor) < 0) {
+          if (CodeMirror.cmp_pos(r.head, r.anchor) < 0) {
             ranges.push({ head: soi, anchor: r.anchor });
           } else {
             ranges.push({ head: r.head, anchor: soi });
@@ -1837,9 +1943,9 @@ function Console(elem) {
 
       if (cons.transcript_marker &&
           cons.transcript_marker.readOnly &&
-          cons.cmp_pos(from, soi) < 0) {
+          CodeMirror.cmp_pos(from, soi) < 0) {
         cons.cm.setSelection(soi);
-        event.update(soi, cons.cmp_pos(to, soi) >= 0 ? to : soi, event.text);
+        event.update(soi, CodeMirror.cmp_pos(to, soi) >= 0 ? to : soi, event.text);
       }
     }
   });
@@ -1887,10 +1993,6 @@ Console.prototype.line0ch1 = CodeMirror.Pos(0, 1);
 Console.prototype.end_of_doc = function () {
   var cons = this;
   return cons.doc.posFromIndex(Infinity);
-};
-
-Console.prototype.cmp_pos = function (a, b) {
-  return a.line - b.line || a.ch - b.ch;
 };
 
 Console.prototype.start_of_input = function (clear_marker) {
@@ -1943,9 +2045,7 @@ Console.prototype.read = function () {
 Console.prototype.add_current_input = function (text, replace, notify) {
 
   var cons = this;
-  var soi = cons.start_of_input();
-  var end = cons.end_of_doc();
-  var current_input = cons.doc.getRange(soi, end);
+  var current_input = cons.current_input();
   var new_input = replace ? text : current_input+text;
 
   if (!cons.allow_multiline_input) {
@@ -1966,7 +2066,7 @@ Console.prototype.add_current_input = function (text, replace, notify) {
   }
 
   if (current_input !== new_input) {
-    cons.replace_range(new_input, soi, end);
+    cons.set_current_input(new_input);
   }
 
   if (cons.allow_multiline_input || delayed_input.length === 0) {
@@ -1987,7 +2087,7 @@ Console.prototype.replace_range = function (text, from, to) {
   cons.internal_op = save;
 };
 
-Console.prototype.write = function (text) {
+Console.prototype.write = function (text, css_class) {
 
   var cons = this;
 
@@ -2006,6 +2106,11 @@ Console.prototype.write = function (text) {
     cons.replace_range(text, soi, soi);
 
     pos = insert_marker.find().to;
+
+    if (css_class) {
+      cons.doc.markText(soi, pos, { className: css_class });
+    }
+
     var left_of_pos = CodeMirror.Pos(pos.line, pos.ch-1);
     cons.replace_range('', left_of_pos, pos);
     cons.transcript_marker = cons.doc.markText(cons.line0ch0,
@@ -2016,14 +2121,47 @@ Console.prototype.write = function (text) {
   }
 };
 
-Console.prototype.accept_input = function () {
+Console.prototype.write_line_widget = function (widget) {
+
+  var cons = this;
+
+  var soi = cons.start_of_input();
+
+  if (soi.ch !== 0) {
+    cons.write('\n');
+    soi = cons.start_of_input();
+  }
+
+  cons.cm.addLineWidget(soi.line-1, widget);
+
+  cons.cm.scrollIntoView(null); // scroll cursor into view
+};
+
+Console.prototype.current_input = function () {
+
+  var cons = this;
+  var soi = cons.start_of_input();
+  var end = cons.end_of_doc();
+
+  return cons.doc.getRange(soi, end);
+};
+
+Console.prototype.set_current_input = function (text) {
+
+  var cons = this;
+  var soi = cons.start_of_input();
+  var end = cons.end_of_doc();
+
+  cons.replace_range(text, soi, end);
+};
+
+Console.prototype.accept_current_input = function () {
 
   var cons = this;
   var soi = cons.start_of_input(true);
   var end = cons.end_of_doc();
-  var input = cons.doc.getRange(soi, end);
 
-  if (end.line > 0 || end.ch > 0) {
+  if (!(end.line === 0 && end.ch === 0)) {
 
     cons.doc.markText(soi, end, cons.input_opts);
 
@@ -2032,11 +2170,13 @@ Console.prototype.accept_input = function () {
                                                cons.transcript_opts);
   }
 
+  cons.input_positions.push({ line: cons.input_line, start: soi });
+
+  cons.input_line += end.line - soi.line + 1;
+
   cons.write('\n');
 
   cons.doc.setSelection(end);
-
-  return input;
 };
 
 Console.prototype.clear_transcript = function () {
@@ -2055,8 +2195,32 @@ Console.prototype.clear_transcript = function () {
         cons.transcript_marker.clear();
         cons.transcript_marker = null;
       }
+      cons.input_positions = [];
+      cons.stamp += soi.line;
     }
   }
+};
+
+Console.prototype.convert_position = function (pos) {
+
+  var cons = this;
+  var input_positions = cons.input_positions;
+
+  for (var i=input_positions.length-1; i>=0; i--) {
+    var input_pos = input_positions[i];
+    if (pos.line >= input_pos.line) {
+      var start = input_pos.start;
+      if (pos.line === input_pos.line) {
+        return CodeMirror.Pos(start.line,
+                              start.ch + pos.ch);
+      } else {
+        return CodeMirror.Pos(start.line + pos.line - input_pos.line,
+                              pos.ch);
+      }
+    }
+  }
+
+  return null;
 };
 
 Console.prototype.delete_forward = function () {
@@ -2065,7 +2229,7 @@ Console.prototype.delete_forward = function () {
   var soi = cons.start_of_input();
   var end = cons.end_of_doc();
 
-  if (cons.cmp_pos(soi, end) === 0) {
+  if (CodeMirror.cmp_pos(soi, end) === 0) {
     cons.add_buffered_input('', true); // signal EOF with notify
   } else {
     cons.cm.execCommand('delCharAfter');
@@ -2075,16 +2239,26 @@ Console.prototype.delete_forward = function () {
 Console.prototype.enter = function (notify) {
 
   var cons = this;
-  var input = cons.accept_input();
+  var current_input = cons.current_input();
 
-  if (input.length > 0) {
-    cons.history[cons.history.length-1] = input;
+  cons.accept_current_input();
+
+  if (current_input.length > 0) {
+    cons.history[cons.history.length-1] = current_input;
     cons.save_history();
   }
 
   cons.restore_history();
 
-  cons.add_buffered_input(input + '\n', notify);
+  cons.add_buffered_input(current_input + '\n', notify);
+};
+
+Console.prototype.enter_text = function (text, notify) {
+
+  var cons = this;
+
+  cons.set_current_input(text);
+  cons.enter(notify);
 };
 
 Console.prototype.add_buffered_input = function (text, notify) {
@@ -2103,16 +2277,15 @@ Console.prototype.tab = function () {
   var to = cons.doc.getCursor('to');
   var soi = cons.start_of_input();
 
-  if (cons.cmp_pos(from, soi) >= 0) {
-    if (cons.cmp_pos(from, to) === 0) {
+  if (CodeMirror.cmp_pos(from, soi) >= 0) {
+    if (CodeMirror.cmp_pos(from, to) === 0) {
 
       // zero length selection inside current input
 
       if (cons.completions.length === 0 && cons.peer) { // get new completions?
         var cursor = cons.doc.indexFromPos(from) - cons.doc.indexFromPos(soi);
-        var end = cons.end_of_doc();
-        var input = cons.doc.getRange(soi, end);
-        cons.completions = cons.peer.console_completions(input, cursor);
+        var current_input = cons.current_input();
+        cons.completions = cons.peer.console_completions(current_input, cursor);
         cons.completions_pos = 0;
       }
 
@@ -2127,7 +2300,7 @@ Console.prototype.tab = function () {
 
         var new_from = CodeMirror.Pos(from.line, Math.max(0, from.ch-old_len));
 
-        if (cons.cmp_pos(new_from, soi) < 0) {
+        if (CodeMirror.cmp_pos(new_from, soi) < 0) {
           new_from.line = soi.line;
           new_from.ch = soi.ch;
         }
@@ -2189,7 +2362,9 @@ Console.prototype.restore_history = function () {
   }
 
   cons.history_pos = cons.history.length;
+  cons.history_backing = Array(cons.history.length).fill(null);
   cons.history.push('');
+  cons.history_backing.push('');
 };
 
 Console.prototype.save_history = function () {
@@ -2210,7 +2385,12 @@ Console.prototype.move_history = function (prev) {
 
   if (prev ? pos > 0 : pos < cons.history.length-1) {
     var newpos = prev ? pos-1 : pos+1;
-    cons.change_input(cons.history[newpos]);
+    var backing = cons.history_backing[newpos];
+    if (backing === null) {
+      backing = cons.history[newpos];
+      cons.history_backing[newpos] = backing;
+    }
+    cons.change_input(backing);
     cons.history_pos = newpos;
   }
 };
@@ -2218,13 +2398,11 @@ Console.prototype.move_history = function (prev) {
 Console.prototype.change_input = function (text) {
 
   var cons = this;
-  var soi = cons.start_of_input();
-  var end = cons.end_of_doc();
-  var input = cons.doc.getRange(soi, end);
+  var current_input = cons.current_input();
 
-  cons.history[cons.history_pos] = input;
+  cons.history_backing[cons.history_pos] = current_input;
 
-  cons.replace_range(text, soi, end);
+  cons.set_current_input(text);
 };
 
 Console.prototype.send = function (text) {
@@ -2287,7 +2465,9 @@ function Editor(elem, ui, title) {
   editor.dirty = false;
 
   editor.cm.on('change', function(cm, event) {
-    editor.set_dirty(true);
+    if (event.origin !== undefined) {
+      editor.set_dirty(true);
+    }
   });
 
   editor.ro = new ResizeObserver(function (entries) {
@@ -2386,6 +2566,27 @@ Editor.prototype.blur = function () {
   editor.focused = false;
   editor.dirty = false;
   editor.cm.blur();
+};
+
+Editor.prototype.clear_highlighting = function () {
+
+  var editor = this;
+
+  editor.cm.clear_highlighting();
+};
+
+Editor.prototype.pinpoint = function (line0, col0) {
+
+  var editor = this;
+
+  var start = CodeMirror.Pos(line0, col0);
+  var end = editor.cm.forward_sexpr(start);
+
+  if (!end) return false;
+
+  editor.cm.setSelection(end);
+
+  return editor.cm.set_highlighting(start, end);
 };
 
 Editor.prototype.get_menu_items = function () {
@@ -2511,6 +2712,328 @@ Editor.prototype.preserve_elem = function () {
     console.log('Editor(\''+editor.title+'\').preserve_elem()');
 
   return false;
+};
+
+//-----------------------------------------------------------------------------
+
+CodeMirror.prototype.clear_highlighting = function () {
+
+  var cm = this;
+  var h = cm.highlighting;
+
+  if (h) {
+    if (h.all) h.all.clear();
+    if (h.end) h.end.clear();
+    var eol_class_name = h.class_name+'-eol';
+    for (var i=h.eol_start; i<h.eol_end; i++) {
+      cm.removeLineClass(i, 'text', eol_class_name);
+    }
+    cm.highlighting = null;
+  }
+};
+
+CodeMirror.prototype.set_highlighting = function (start, end, end_class_name, class_name) {
+
+  var cm = this;
+
+  if (!class_name) {
+    class_name = 'g-highlight';
+  }
+
+  var doc = cm.getDoc();
+  var len = doc.posFromIndex(doc.indexFromPos(CodeMirror.Pos(end.line, null))).ch;
+  var has_eol = end.ch <= 0 || end.ch > len;
+
+  if (has_eol) {
+    if (end.ch > 0) end.line += 1;
+    end.ch = 0;
+    end = doc.posFromIndex(doc.indexFromPos(end)-1);
+  }
+
+  var eol_start = start.line;
+  var eol_end = end.line + has_eol;
+
+  var highlight_past_eol = true; // select style for multiline highlighting
+
+  if (!highlight_past_eol && has_eol) {
+    eol_start = eol_end - 1;
+  }
+
+  if (eol_start >= eol_end && CodeMirror.cmp_pos(start, end) >= 0) return false;
+
+  cm.clear_highlighting();
+
+  var eol_class_name = class_name+'-eol';
+
+  for (var i=eol_start; i<eol_end; i++) {
+    cm.addLineClass(i, 'text', eol_class_name);
+  }
+
+  var all = null;
+
+  if (CodeMirror.cmp_pos(start, end) < 0) {
+    all = doc.markText(start, end, { className: class_name });
+    if (end_class_name) {
+      var left_of_end = doc.posFromIndex(doc.indexFromPos(end)-1);
+      end = doc.markText(left_of_end, end, { className: end_class_name });
+    } else {
+      end = null;
+    }
+  } else {
+    end = null;
+  }
+
+  cm.highlighting = { class_name: class_name,
+                      all: all,
+                      end: end,
+                      eol_start: eol_start,
+                      eol_end: eol_end
+                    };
+
+  return true;
+};
+
+CodeMirror.cmp_pos = function (a, b) {
+  return a.line - b.line || a.ch - b.ch;
+};
+
+CodeMirror.prototype.forward_sexpr = function (start) {
+
+  var cm = this;
+  var line = start.line;
+  var pos = start.ch;
+  var buf = cm.getLine(line);
+  var depth = 0;
+  var count = cm.lineCount();
+  var ignore = [0];
+
+  function next() {
+    if (pos < buf.length) {
+      return buf.charCodeAt(pos++);
+    } else if (pos++ === buf.length) {
+      return 10; // newline
+    } else {
+      line++;
+      pos = 0;
+      if (line >= count) {
+        return -1; // EOF
+      } else {
+        buf = cm.getLine(line);
+        if (pos < buf.length) {
+          return buf.charCodeAt(pos++);
+        } else {
+          pos++;
+          return 10; // newline
+        }
+      }
+    }
+  }
+
+  function is_whitespace(c) {
+    return (c <= 32); // " "
+  }
+
+  function is_comment(c) {
+    return (c === 59); // ";"
+  }
+
+  function is_quote(c) {
+    return (c === 39 || c === 96); // "'" or "`"
+  }
+
+  function is_comma(c) {
+    return (c === 44); // ","
+  }
+
+  function is_string(c) {
+    return (c === 34); // "\""
+  }
+
+  function is_quotedsym(c) {
+    return (c === 124); // "|"
+  }
+
+  function is_open_paren(c) {
+    return (c === 40 || c === 91 || c === 123); // "(" or "[" or "{"
+  }
+
+  function is_close_paren(c) {
+    return (c === 41 || c === 93 || c === 125); // ")" or "]" or "}"
+  }
+
+  function is_alpha(c) {
+    return ((c >= 65 && c <= 90) ||  // "A".."Z"
+            (c >= 97 && c <= 122) || // "a".."z"
+            c >= 128);               // non-ascii
+  }
+
+  function read_rest_of_token() {
+    while (!(is_whitespace(c) ||
+             is_comment(c) ||
+             is_quote(c) ||
+             is_comma(c) ||
+             is_string(c) ||
+             is_quotedsym(c) ||
+             is_open_paren(c) ||
+             is_close_paren(c) ||
+             c < 0)) {
+      c = next();
+    }
+  }
+
+  var c = next();
+
+  while (true) {
+
+    if (c < 0) return false;
+
+    // ignore whitespace
+
+    if (is_whitespace(c)) {
+      c = next();
+      continue;
+    }
+
+    // ignore comments
+
+    if (is_comment(c)) {
+      c = next();
+      while (c >= 0 && c !== 10) c = next(); // skip to newline
+      if (c >= 0) {
+        c = next();
+      }
+      continue;
+    }
+
+    // skip standard read-macros
+
+    while (c >= 0) {
+      if (is_quote(c)) {
+        c = next();
+      } else if (is_comma(c)) {
+        c = next();
+        if (c === 64) { // "@"
+          c = next();
+        }
+      } else {
+        break;
+      }
+    }
+
+    // check for datums starting with "#"
+
+    if (c === 35) { // "#"
+      c = next();
+      if (c === 102 || c === 115 || c === 117) { // "f" or "s" or "u"
+        var kind = c;
+        c = next();
+        if (kind !== 102 && c === 56) { // "8"
+          c = next();
+          if (c === 40) { // "("
+            c = next();
+            depth++;
+            continue;
+          }
+        } else if (kind !== 102 && c === 49) { // "1"
+          c = next();
+          if (c === 54) { // "6"
+            c = next();
+            if (c === 40) { // "("
+              c = next();
+              depth++;
+              continue;
+            }
+          }
+        } else if (c === 51) { // "3"
+          c = next();
+          if (c === 50) { // "2"
+            c = next();
+            if (c === 40) { // "("
+              c = next();
+              depth++;
+              continue;
+            }
+          }
+        } else if (c === 54) { // "6"
+          c = next();
+          if (c === 52) { // "4"
+            c = next();
+            if (c === 40) { // "("
+              c = next();
+              depth++;
+              continue;
+            }
+          }
+        }
+      } else if (c === 92) { // "\\"
+        c = next();
+        if (!is_alpha(c)) {
+          next();
+          c = 32; // force end of token
+        }
+      } else if (c === 124) { // "|"
+        var nest = 1;
+        while (c >= 0 && nest > 0) {
+          c = next();
+          if (c === 35) { // "#"
+            c = next();
+            if (c === 124) { // "|"
+              nest++;
+            }
+          } else {
+            while (c === 124) { // "|"
+              c = next();
+              if (c === 35) { // "#"
+                nest--;
+                break;
+              }
+            }
+          }
+        }
+        if (nest > 0) return false;
+        c = next();
+        continue;
+      } else if (c === 59) { // ";"
+        c = next();
+        ignore[ignore.length-1]++;
+        continue;
+      }
+      read_rest_of_token();
+    } else if (is_string(c) || is_quotedsym(c)) {
+      var delim = c;
+      c = next();
+      while (c >= 0 && c !== delim) {
+        if (c === 92) { // "\\"
+          c = next();
+          if (c === delim) c = 32; // force progress
+        } else {
+          c = next();
+        }
+      }
+      if (c !== delim) return false;
+      c = next();
+    } else if (is_open_paren(c)) {
+      c = next();
+      depth++;
+      ignore.push(0);
+      continue;
+    } else if (is_close_paren(c)) {
+      depth--;
+      if (depth < 0) return false;
+      if (ignore.pop() !== 0) return false;
+      c = next();
+    } else {
+      read_rest_of_token();
+    }
+
+    // completed parsing of a datum
+
+    if (ignore[ignore.length-1] > 0) {
+      ignore[ignore.length-1]--;
+    } else if (depth === 0) {
+      return CodeMirror.Pos(line, pos-1);
+    }
+  }
 };
 
 //-----------------------------------------------------------------------------

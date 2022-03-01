@@ -1318,7 +1318,8 @@
 
 (define-prim (##display-locat locat pinpoint? port)
   (if locat ;; locat is #f if location unknown
-      (let* ((container (##locat-container locat))
+      (let* ((pinpoint? (and pinpoint? (##not (##pinpoint-locat locat))))
+             (container (##locat-container locat))
              (path (##container->path container)))
         (if path
             (##write (##repl-path-normalize path) port)
@@ -1330,6 +1331,17 @@
           (##write line port)
           (##write-string (if pinpoint? "." ":") port)
           (##write col port)))))
+
+(define ##pinpoint-locat-hook #f)
+
+(define-prim (##pinpoint-locat-hook-set! x)
+  (set! ##pinpoint-locat-hook x))
+
+(define-prim (##pinpoint-locat locat)
+  (let ((pl-hook ##pinpoint-locat-hook))
+    (if (##procedure? pl-hook)
+        (pl-hook locat)
+        #f)))
 
 (define ##repl-path-normalize-hook #f)
 

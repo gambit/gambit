@@ -25,6 +25,7 @@ body {
   --g-scrollbar-color: var(--g-tab-color-deactivated);
   --g-scrollbar-background: transparent;
   --g-matching-bracket-background: #dcdcdc;
+  --g-highlight-color: #ffff00;
 /*  font-size: 200%; */
 }
 
@@ -202,7 +203,7 @@ div.g-tab-group > div:last-child > div[data-g-active] {
 
 .g-editor .CodeMirror,
 .g-console .CodeMirror {
-  font-family: "Hack", "Andale Mono", Courier, Monaco, monospace;
+  font-family: ui-monospace, monospace;
   height: auto;
   margin: 2px;
   background: transparent;
@@ -214,21 +215,38 @@ div.g-tab-group > div:last-child > div[data-g-active] {
   max-height: var(--g-height);
 }
 
-.g-console .CodeMirror-line,
-.g-console .g-console-input {
-  font-weight: bold;
-}
-
 .g-editor .CodeMirror-matchingbracket,
 .g-console .CodeMirror-matchingbracket {
   background-color: var(--g-matching-bracket-background);
 }
 
-.g-console .g-console-output {
+/* style for console input */
+.g-console span:not(.g-console-transcript) {
+  font-weight: bold;
+}
+
+/* style for console output (overrides the console input style) */
+.g-console span.g-console-output {
   font-weight: normal;
 }
 
-.g-console .g-console-transcript {
+/* style for highlighted text */
+.g-editor span.g-highlight,
+.g-console span.g-highlight {
+  background-color: var(--g-highlight-color);
+}
+
+.g-editor .g-highlight-eol > span,
+.g-console .g-highlight-eol > span {
+  display: flex;
+  width: 100%;
+}
+
+.g-editor .g-highlight-eol > span:after,
+.g-console .g-highlight-eol > span:after {
+  flex-grow: 1;
+  content: " ";
+  background-color: var(--g-highlight-color);
 }
 
 .g-console-multiplexer {

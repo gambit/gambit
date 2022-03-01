@@ -137,6 +137,13 @@ VM.prototype.completions = function (thread_scm, input, cursor) {
   return completions;
 };
 
+VM.prototype.pinpoint = function (container, line0, col0) {
+
+  var vm = this;
+
+  vm.ui.pinpoint(container, line0, col0);
+};
+
 main_vm = new VM();
 
 EOF
@@ -146,24 +153,26 @@ EOF
 
 ;; Define "console" ports that support multiple independent REPLs.
 
-(define (##os-device-stream-open-console title flags ui thread)
+(define (##os-device-stream-open-console title name flags ui thread)
   (##inline-host-declaration "
 
-@os_device_stream_open_console@ = function (vm, title_scm, flags_scm, ui_scm, thread_scm) {
+@os_device_stream_open_console@ = function (vm, title_scm, name_scm, flags_scm, ui_scm, thread_scm) {
 
   var title = @scm2host@(title_scm);
+  var name = @scm2host@(name_scm);
   var flags = @scm2host@(flags_scm);
   var ui = @scm2host@(ui_scm);
 
-  var dev = new Device_console(vm, title, flags, ui, thread_scm);
+  var dev = new Device_console(vm, title, name, flags, ui, thread_scm);
 
   return @host2foreign@(dev);
 };
 
 ")
   (##inline-host-expression
-   "@os_device_stream_open_console@(main_vm,@1@,@2@,@3@,@4@)"
+   "@os_device_stream_open_console@(main_vm,@1@,@2@,@3@,@4@,@5@)"
    title
+   name
    flags
    ui
    thread))
@@ -189,6 +198,7 @@ EOF
        (let ((device
               (##os-device-stream-open-console
                title
+               name
                (##psettings->device-flags psettings)
                ui
                thread)))
@@ -220,8 +230,35 @@ EOF
                    'console
                    (##string->symbol
                     (##string-append "console" (##number->string sn 10)))))
-         (port (##open-console title name (or ui (##current-ui)) thread)))
-    (##make-repl-channel-ports port port port)))
+         (port (##open-console title name (or ui (##current-ui)) thread))
+         (repl-channel (##make-repl-channel-ports port port port)))
+    repl-channel))
+
+(##pinpoint-locat-hook-set!
+ (lambda (locat)
+   (let* ((container (##locat-container locat))
+          (filepos (##position->filepos (##locat-position locat)))
+          (line0 (##filepos-line filepos))
+          (col0 (##filepos-col filepos)))
+     (##os-pinpoint container line0 col0))))
+
+(define (##os-pinpoint container line0 col0)
+  (##inline-host-declaration "
+
+@os_pinpoint@ = function (vm, container_scm, line0_scm, col0_scm) {
+
+  var line0 = @scm2host@(line0_scm);
+  var col0 = @scm2host@(col0_scm);
+
+  return @host2foreign@(vm.ui.pinpoint(container_scm, line0, col0));
+};
+
+")
+  (##inline-host-expression
+   "@os_pinpoint@(main_vm,@1@,@2@,@3@)"
+   container
+   line0
+   col0))
 
 ;; Enable web console.
 
