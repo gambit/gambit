@@ -1991,7 +1991,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                                          "Not all elements of the source can be stored in destination: ")
                                         destination source i j k l item))))))
                             (else
-                             (let ((index 0))
+                             (let ((index initial-offset))
                                (lambda multi-index
                                  (let ((item (apply getter multi-index)))
                                    (if (checker item)
