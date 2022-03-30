@@ -2617,11 +2617,21 @@ for a discussion of branch cuts.
   (##* -i (##casin (##* +i z))))
 
 (define-prim (##catanh x+iy)
+
   (define (x/x^2+y^2 x y)
-    (if (##fl< (##flabs y) (##flabs x))
-        (##fl/ (macro-inexact-+1) (##fl+ x (##fl* (##fl/ y x) y)))
-        (let ((x/y (##fl/ x y)))
-          (##fl/ x/y (##fl+ (##fl* x x/y) y)))))
+    (let ((abs-x (flabs x))
+          (abs-y (flabs y)))
+      (cond ((or (= abs-x (macro-inexact-+inf))
+                 (= abs-y (macro-inexact-+inf)))
+             (##flcopysign (macro-inexact-+0) x))
+            ((or (nan? abs-x)
+                 (nan? abs-y))
+             (macro-inexact-+nan))
+            ((fl< abs-y abs-x)
+             (fl/ (macro-inexact-+1) (fl+ x (fl* (fl/ y x) y))))
+            (else
+             (let ((x/y (fl/ x y)))
+               (fl/ x/y (fl+ (fl* x x/y) y)))))))
 
   (define (##->exact-sign x)
     ;; returns an exact number with the same sign as x, returns 1 if x is exact zero
@@ -2645,8 +2655,10 @@ for a discussion of branch cuts.
                                          (##flcopysign pi/2 inexact-y)))
                      ((##fl= inexact-x (macro-inexact-+1))
                       (macro-cpxnum-make
-                       (##fllog (##fl/ (##flsqrt (##flsqrt (##fl+ (macro-inexact-+4) (##flsquare abs-y))))
-                                       (##flsqrt (##fl+ abs-y rho))))
+                       (if (fl= inexact-y (macro-inexact-+0))
+                           (macro-inexact--inf)
+                           (##fllog (##fl/ (##flsqrt (##flsqrt (##fl+ (macro-inexact-+4) (##flsquare abs-y))))
+                                           (##flsqrt (##fl+ abs-y rho)))))
                        (##fl/ (##flcopysign (##fl+ pi/2 (##flatan (##fl/ (##fl+ abs-y rho) (macro-inexact-+2))))
                                             inexact-y)
                               (macro-inexact-+2))))
