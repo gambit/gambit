@@ -2610,7 +2610,10 @@ for a discussion of branch cuts.
         (##make-rectangular 0 (##asinh (##imag-part z)))
         (let ((sqrt-1-z (##sqrt (##- 1 z)))
               (sqrt-1+z (##sqrt (##+ 1 z))))
-          (##make-rectangular (##atan2 x (##real-part (##* sqrt-1-z sqrt-1+z)))
+          (##make-rectangular (if (and (##= (##abs x) (macro-inexact-+inf))
+                                       (##finite? (##imag-part z)))
+                                  (##flcopysign (macro-inexact-+pi/2) x)
+                                  (##atan2 x (##real-part (##* sqrt-1-z sqrt-1+z))))
                               (##asinh (##imag-part (##* (##conjugate sqrt-1-z) sqrt-1+z))))))))
 
 (define-prim (##casinh z)

@@ -18,6 +18,7 @@
 (check-eqv? (atanh 1e-30+1e-40i) 1e-30+1e-40i)
 
 ;;; CPP reference std::atanh(std::complex)
+;;; https://en.cppreference.com/w/cpp/numeric/complex/atanh
 
 (check-eqv? (atanh +0.+0.i)    +0.+0.i)
 
