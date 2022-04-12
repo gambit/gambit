@@ -141,7 +141,7 @@ VM.prototype.pinpoint = function (container, line0, col0) {
 
   var vm = this;
 
-  vm.ui.pinpoint(container, line0, col0);
+  if (vm.ui) vm.ui.pinpoint(container, line0, col0);
 };
 
 main_vm = new VM();
@@ -250,7 +250,7 @@ EOF
   var line0 = @scm2host@(line0_scm);
   var col0 = @scm2host@(col0_scm);
 
-  return @host2foreign@(vm.ui.pinpoint(container_scm, line0, col0));
+  return @host2foreign@(vm.pinpoint(container_scm, line0, col0));
 };
 
 ")
