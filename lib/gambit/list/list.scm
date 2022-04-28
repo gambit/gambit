@@ -632,13 +632,15 @@
                     (values (if (or (pair? in) (null? in))
                                 (if (eq? tail in)
                                     lst
-                                    (cons x in)))
+                                    (cons x in))
+                                in)
                             out)
                     (values in
                             (if (or (pair? out) (null? out))
                                 (if (eq? tail out)
                                     lst
-                                    (cons x out))))))))
+                                    (cons x out))
+                                out))))))
           (macro-if-checks
            (if (null? lst)
                (values lst lst)
