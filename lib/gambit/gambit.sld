@@ -169,6 +169,7 @@ open-input-file
 open-output-file
 output-port?
 pair?
+partition
 peek-char
 positive?
 procedure?

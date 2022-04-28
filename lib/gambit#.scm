@@ -550,6 +550,7 @@ output-port-readtable
 output-port-readtable-set!
 output-port-timeout-set!
 output-port-width
+partition
 path-directory
 path-expand
 path-extension

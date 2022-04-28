@@ -5287,6 +5287,7 @@ The procedures in this section are not yet documented.
 
 @deffn procedure filter @var{pred} @var{list}
 @deffnx procedure remove @var{pred} @var{list}
+@deffnx procedure partition @var{pred} @var{list}
 @deffnx procedure remq @var{elem} @var{list}
 @end deffn
 

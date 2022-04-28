@@ -617,6 +617,50 @@
 (define-prim&proc (remq (elem object) (list proper-list))
   (macro-filter (remq elem list) list x (not (eq? x elem))))
 
+(define-prim&proc (partition (pred procedure) (list proper-list))
+  (let ((lst list))
+    (define (partition-tail lst)
+      (if (pair? lst)
+          (let* ((x (car lst))
+                 (matches? (pred x))
+                 (tail (cdr lst)))
+            (call-with-values
+                (lambda ()
+                  (partition-tail tail))
+              (lambda (in out)
+                (if matches?
+                    (values (if (or (pair? in) (null? in))
+                                (if (eq? tail in)
+                                    lst
+                                    (cons x in)))
+                            out)
+                    (values in
+                            (if (or (pair? out) (null? out))
+                                (if (eq? tail out)
+                                    lst
+                                    (cons x out))))))))
+          (macro-if-checks
+           (if (null? lst)
+               (values lst lst)
+               (values #t #t))
+           (values lst lst))))
+    (macro-if-checks
+     (call-with-values
+         (lambda ()
+           (partition-tail lst))
+       (lambda (in out)
+         (if (and (or (pair? in)  (null? in))
+                  (or (pair? out) (null? out)))
+             (values in out)
+             (if (or (pair? lst) (null? lst))
+                 (macro-fail-check-proper-list
+                  '(2 . list)
+                  ((%procedure%) pred list))
+                 (macro-fail-check-list
+                  '(2 . list)
+                  ((%procedure%) pred list))))))
+     (partition-tail lst))))
+
 ;;;----------------------------------------------------------------------------
 
 (define ##allow-length-mismatch? #t)
