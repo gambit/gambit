@@ -5335,6 +5335,7 @@ The procedures in this section are not yet documented.
 
 @deffn procedure take @var{x} @var{i}
 @deffnx procedure drop @var{x} @var{i}
+@deffnx procedure split-at @var{x} @var{i}
 @end deffn
 
 @deffn procedure last @var{pair}

@@ -822,6 +822,7 @@ socket-info-address
 socket-info-family
 socket-info-port-number
 socket-info?
+split-at
 stack-overflow-exception?
 started-thread-exception-arguments
 started-thread-exception-procedure
