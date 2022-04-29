@@ -1,6 +1,6 @@
 /* File: "os_io.c" */
 
-/* Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -8386,7 +8386,10 @@ int io_settings)
                     dgroup,
                     direction))
             == ___FIX(___NO_ERR))
-          *dev = ___CAST(___device_stream*,d);
+          {
+            d->stage = TTY_STAGE_OPENED_FRESH;
+            *dev = ___CAST(___device_stream*,d);
+          }
         break;
       }
 
