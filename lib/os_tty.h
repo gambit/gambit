@@ -1,6 +1,6 @@
 /* File: "os_tty.h" */
 
-/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_TTY_H
 #define ___OS_TTY_H
@@ -284,9 +284,10 @@ typedef struct ___device_tty_struct
     int stage; /* the tty's initialisation stage */
 
 #define TTY_STAGE_NOT_OPENED     0
-#define TTY_STAGE_MODE_NOT_SAVED 1
-#define TTY_STAGE_MODE_NOT_SET   2
-#define TTY_STAGE_INIT_DONE      3
+#define TTY_STAGE_OPENED_FRESH   1
+#define TTY_STAGE_MODE_NOT_SAVED 2
+#define TTY_STAGE_MODE_NOT_SET   3
+#define TTY_STAGE_INIT_DONE      4
 
     struct ___device_tty_struct *mode_save_stack_next;
 

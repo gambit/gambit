@@ -1,6 +1,6 @@
 /* File: "os_tty.c" */
 
-/* Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -877,6 +877,7 @@ ___device_tty *self;)
   switch (d->stage)
     {
     case TTY_STAGE_NOT_OPENED:
+    case TTY_STAGE_OPENED_FRESH:
       {
 #ifdef USE_POSIX
 
@@ -935,23 +936,28 @@ ___device_tty *self;)
         HANDLE sout = GetStdHandle (STD_OUTPUT_HANDLE); /* ignore error */
         HANDLE serr = GetStdHandle (STD_ERROR_HANDLE); /* ignore error */
 
+
+        if (d->stage == TTY_STAGE_NOT_OPENED) {
+
 #ifdef USE_GetConsoleWindow
 
-        HWND cons_wind = GetConsoleWindow ();
-        if (cons_wind == NULL || !IsWindowVisible (cons_wind))
-          FreeConsole ();
+          HWND cons_wind = GetConsoleWindow ();
+          if (cons_wind == NULL || !IsWindowVisible (cons_wind))
+            FreeConsole ();
 
 #endif
 
-        if (AllocConsole ())
-          {
-            /* restore initial standard handles */
+          if (AllocConsole ())
+            {
+              /* restore initial standard handles */
 
-            SetConsoleCtrlHandler (console_event_handler, TRUE); /* ignore error */
-            SetStdHandle (STD_INPUT_HANDLE, sin); /* ignore error */
-            SetStdHandle (STD_OUTPUT_HANDLE, sout); /* ignore error */
-            SetStdHandle (STD_ERROR_HANDLE, serr); /* ignore error */
-          }
+              SetConsoleCtrlHandler (console_event_handler, TRUE); /* ignore error */
+              SetStdHandle (STD_INPUT_HANDLE, sin); /* ignore error */
+              SetStdHandle (STD_OUTPUT_HANDLE, sout); /* ignore error */
+              SetStdHandle (STD_ERROR_HANDLE, serr); /* ignore error */
+            }
+
+        }
 
         in = CreateFile
                (_T("CONIN$"),
