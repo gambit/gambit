@@ -244,7 +244,7 @@
              ((and (pair? type) (eq? (car type) 'dict))
               (base (^ "map[" (^type (cadr type)) "]" (^type (caddr type)))))
              ((and (pair? type) (eq? (car type) 'fn))
-              (univ-emit-fn-decl ctx #f (caddr type) (cadr type)))
+              (univ-emit-fn-decl ctx #f (caddr type) (cadr type) #f))
              (else
               (case type
                 ((frm)      (decl* '(array scmobj) #f))
