@@ -1548,6 +1548,7 @@
 ;;;----------------------------------------------------------------------------
 
 (##include "_kernel#.scm")
+(##include "_fifo#.scm")
 (##include "_thread#.scm")
 (##include "_system#.scm")
 (##include "_num#.scm")

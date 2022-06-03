@@ -1,11 +1,11 @@
 # makefile for Gambit library.
 
-# Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 herefromroot = lib
 rootfromhere = ..
 SUBDIRS1 = _define-library
-SUBDIRS2 = @RTLIBSUBSYS@ _digest _geiser _git _hamt _http _match _pkg _six _tar _test _uri _zlib gambit scheme termite srfi
+SUBDIRS2 = @RTLIBSUBSYS@ _base64 _digest _geiser _git _hamt _http _match _pkg _six _tar _test _uri _zlib gambit scheme termite srfi
 SUBDIRS = $(SUBDIRS1) $(SUBDIRS2)
 
 PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
@@ -91,7 +91,7 @@ NORMAL_SOURCES = $(NORMAL_C) $(NORMAL_CPP) $(NORMAL_H)
 HEADERS_SCM = "_kernel\#.scm" "_system\#.scm" "_num\#.scm" "_std\#.scm" \
 "_eval\#.scm" "_module\#.scm" "_io\#.scm" "_nonstd\#.scm" "_thread\#.scm" \
 "_repl\#.scm" "_gambit\#.scm" "gambit\#.scm" \
-"r7rs\#.scm" "r5rs\#.scm" "r4rs\#.scm" "_optional\#.scm" \
+"r7rs\#.scm" "r5rs\#.scm" "r4rs\#.scm" "_optional\#.scm" "_fifo\#.scm" \
 _define-syntax.scm _syntax-boot.scm _syntax-case-xform-boot.scm \
 _syntax-case-xform.scm _syntax-common.scm _syntax-pattern.scm \
 _syntax-rules-xform.scm _syntax-template.scm \
