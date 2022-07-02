@@ -342,6 +342,12 @@ The configure options which are specific to the Gambit system are:
   --enable-dynamic-tls    allow thread local storage variables to be
                           referenced from dynamically loaded modules
   --enable-openssl        compile with SSL support using OpenSSL
+  --enable-corcxxflags-gambuild=FLAGS
+                          C compiler flags gambuild-C script will use instead
+                          of current CFLAGS/CXXFLAGS
+  --enable-ldflags-gambuild=FLAGS
+                          C linker flags gambuild-C script will use instead of
+                          current LDFLAGS
 
 The option --enable-cplusplus should be used when applications
 developped with the Gambit compiler are to be linked with code or

@@ -1,28 +1,38 @@
 #! /bin/sh
 
-# The following settings are determined by the configure script.
+# The following bindings are determined by the configure script.  The
+# bindings for CORCXXFLAGS_GAMBUILD and LDFLAGS_GAMBUILD can be
+# overridden by setting the corresponding environment variables.
+
+if test "${CORCXXFLAGS_GAMBUILD+set}" != set; then
+  CORCXXFLAGS_GAMBUILD=@CORCXXFLAGS_GAMBUILD_SH@
+fi
+
+if test "${LDFLAGS_GAMBUILD+set}" != set; then
+  LDFLAGS_GAMBUILD=@LDFLAGS_GAMBUILD_SH@
+fi
 
 C_COMPILER=@C_COMPILER_SH@
 C_PREPROC=@C_PREPROC_SH@
 PKG_CONFIG=@PKG_CONFIG_SH@
 
-FLAGS_OBJ=@FLAGS_OBJ_SH@
-FLAGS_DYN=@FLAGS_DYN_SH@
-FLAGS_LIB=@FLAGS_LIB_SH@
-FLAGS_EXE=@FLAGS_EXE_SH@
+FLAGS_OBJ=@FLAGS_OBJ_GAMBUILD_SH@
+FLAGS_DYN=@FLAGS_DYN_GAMBUILD_SH@
+FLAGS_LIB=@FLAGS_LIB_GAMBUILD_SH@
+FLAGS_EXE=@FLAGS_EXE_GAMBUILD_SH@
 
-FLAGS_OPT=@FLAGS_OPT_SH@
-FLAGS_OPT_RTS=@FLAGS_OPT_RTS_SH@
+FLAGS_OPT=@FLAGS_OPT_GAMBUILD_SH@
+FLAGS_OPT_RTS=@FLAGS_OPT_RTS_GAMBUILD_SH@
 
-DEFS_OBJ=@DEFS_OBJ_SH@
-DEFS_DYN=@DEFS_DYN_SH@
-DEFS_LIB=@DEFS_LIB_SH@
-DEFS_EXE=@DEFS_EXE_SH@
+DEFS_OBJ=@DEFS_OBJ_GAMBUILD_SH@
+DEFS_DYN=@DEFS_DYN_GAMBUILD_SH@
+DEFS_LIB=@DEFS_LIB_GAMBUILD_SH@
+DEFS_EXE=@DEFS_EXE_GAMBUILD_SH@
 
-BUILD_OBJ=@BUILD_OBJ_SH@
-BUILD_DYN=@BUILD_DYN_SH@
-BUILD_LIB=@BUILD_LIB_SH@
-BUILD_EXE=@BUILD_EXE_SH@
+BUILD_OBJ=@BUILD_OBJ_GAMBUILD_SH@
+BUILD_DYN=@BUILD_DYN_GAMBUILD_SH@
+BUILD_LIB=@BUILD_LIB_GAMBUILD_SH@
+BUILD_EXE=@BUILD_EXE_GAMBUILD_SH@
 
 DEFS=@DEFS_SH@
 LIBS=@LIBS_SH@
@@ -174,12 +184,12 @@ process_pkg_config()
       GAMBUILD_SAVE_IFS2="$IFS"
       IFS="${GAMBUILD_SPACE}"
       set -e
-      GAMBUILD_CFLAGS="$(${PKG_CONFIG} --cflags $arg)"
-      GAMBUILD_LIBS="$(${PKG_CONFIG} --libs $arg)"
+      GAMBUILD_PKG_CONFIG_CFLAGS="$(${PKG_CONFIG} --cflags $arg)"
+      GAMBUILD_PKG_CONFIG_LIBS="$(${PKG_CONFIG} --libs $arg)"
       set +e
       IFS="${GAMBUILD_SAVE_IFS2}"
-      accumulate_cc_options "${GAMBUILD_CFLAGS}" "${GAMBUILD_NL}"
-      accumulate_ld_options "${GAMBUILD_LIBS}" "${GAMBUILD_NL}"
+      accumulate_cc_options "${GAMBUILD_PKG_CONFIG_CFLAGS}" "${GAMBUILD_NL}"
+      accumulate_ld_options "${GAMBUILD_PKG_CONFIG_LIBS}" "${GAMBUILD_NL}"
     fi
   done
 }
@@ -400,6 +410,14 @@ case "$1" in
     eval "${BUILD_EXE_CMD}"
     ;;
 
+  "CORCXXFLAGS_GAMBUILD")
+    printf "%s\n" "${CORCXXFLAGS_GAMBUILD}"
+    ;;
+
+  "LDFLAGS_GAMBUILD")
+    printf "%s\n" "${LDFLAGS_GAMBUILD}"
+    ;;
+
   "C_COMPILER")
     printf "%s\n" "${C_COMPILER}"
     ;;
@@ -525,45 +543,48 @@ case "$1" in
 
     ESC_SH="sed -e s/\\\\/\\\\\\\\\\\\\\\\/g -e s/\\\"/\\\\\\\"/g -e s/\\\$/\\\\\\\$/g -e s/^/\"/ -e s/$/\"/"
 
-    echo C_COMPILER=`echo "${C_COMPILER}" | ${ESC_SH}`
-    echo C_PREPROC=`echo "${C_PREPROC}" | ${ESC_SH}`
-    echo PKG_CONFIG=`echo "${PKG_CONFIG}" | ${ESC_SH}`
+    printf "%s\n" C_COMPILER=`printf "%s" "${C_COMPILER}" | ${ESC_SH}`
+    printf "%s\n" C_PREPROC=`printf "%s" "${C_PREPROC}" | ${ESC_SH}`
+    printf "%s\n" PKG_CONFIG=`printf "%s" "${PKG_CONFIG}" | ${ESC_SH}`
 
-    echo FLAGS_OBJ=`echo "${FLAGS_OBJ}" | ${ESC_SH}`
-    echo FLAGS_DYN=`echo "${FLAGS_DYN}" | ${ESC_SH}`
-    echo FLAGS_LIB=`echo "${FLAGS_LIB}" | ${ESC_SH}`
-    echo FLAGS_EXE=`echo "${FLAGS_EXE}" | ${ESC_SH}`
+    printf "%s\n" CORCXXFLAGS_GAMBUILD=`printf "%s" "${CORCXXFLAGS_GAMBUILD}" | ${ESC_SH}`
+    printf "%s\n" LDFLAGS_GAMBUILD=`printf "%s" "${LDFLAGS_GAMBUILD}" | ${ESC_SH}`
 
-    echo FLAGS_OPT=`echo "${FLAGS_OPT}" | ${ESC_SH}`
-    echo FLAGS_OPT_RTS=`echo "${FLAGS_OPT_RTS}" | ${ESC_SH}`
+    printf "%s\n" FLAGS_OBJ=`printf "%s" "${FLAGS_OBJ}" | ${ESC_SH}`
+    printf "%s\n" FLAGS_DYN=`printf "%s" "${FLAGS_DYN}" | ${ESC_SH}`
+    printf "%s\n" FLAGS_LIB=`printf "%s" "${FLAGS_LIB}" | ${ESC_SH}`
+    printf "%s\n" FLAGS_EXE=`printf "%s" "${FLAGS_EXE}" | ${ESC_SH}`
 
-    echo DEFS_OBJ=`echo "${DEFS_OBJ}" | ${ESC_SH}`
-    echo DEFS_DYN=`echo "${DEFS_DYN}" | ${ESC_SH}`
-    echo DEFS_LIB=`echo "${DEFS_LIB}" | ${ESC_SH}`
-    echo DEFS_EXE=`echo "${DEFS_EXE}" | ${ESC_SH}`
+    printf "%s\n" FLAGS_OPT=`printf "%s" "${FLAGS_OPT}" | ${ESC_SH}`
+    printf "%s\n" FLAGS_OPT_RTS=`printf "%s" "${FLAGS_OPT_RTS}" | ${ESC_SH}`
 
-    echo BUILD_OBJ=`echo "${BUILD_OBJ}" | ${ESC_SH}`
-    echo BUILD_DYN=`echo "${BUILD_DYN}" | ${ESC_SH}`
-    echo BUILD_LIB=`echo "${BUILD_LIB}" | ${ESC_SH}`
-    echo BUILD_EXE=`echo "${BUILD_EXE}" | ${ESC_SH}`
+    printf "%s\n" DEFS_OBJ=`printf "%s" "${DEFS_OBJ}" | ${ESC_SH}`
+    printf "%s\n" DEFS_DYN=`printf "%s" "${DEFS_DYN}" | ${ESC_SH}`
+    printf "%s\n" DEFS_LIB=`printf "%s" "${DEFS_LIB}" | ${ESC_SH}`
+    printf "%s\n" DEFS_EXE=`printf "%s" "${DEFS_EXE}" | ${ESC_SH}`
 
-    echo DEFS=`echo "${DEFS}" | ${ESC_SH}`
-    echo LIBS=`echo "${LIBS}" | ${ESC_SH}`
-    echo GAMBITLIB=`echo "${GAMBITLIB}" | ${ESC_SH}`
-    echo GAMBITGSCLIB=`echo "${GAMBITGSCLIB}" | ${ESC_SH}`
-    echo GAMBITGSILIB=`echo "${GAMBITGSILIB}" | ${ESC_SH}`
-    echo LIB_PREFIX=`echo "${LIB_PREFIX}" | ${ESC_SH}`
-    echo LIB_EXTENSION=`echo "${LIB_EXTENSION}" | ${ESC_SH}`
-    echo OBJ_EXTENSION=`echo "${OBJ_EXTENSION}" | ${ESC_SH}`
-    echo EXE_EXTENSION=`echo "${EXE_EXTENSION}" | ${ESC_SH}`
-    echo BAT_EXTENSION=`echo "${BAT_EXTENSION}" | ${ESC_SH}`
-    echo ALL_BUILD_FEATURES=`echo "${ALL_BUILD_FEATURES}" | ${ESC_SH}`
-    echo BUILD_FEATURE_OS=`echo "${BUILD_FEATURE_OS}" | ${ESC_SH}`
-    echo BUILD_FEATURE_C_COMP=`echo "${BUILD_FEATURE_C_COMP}" | ${ESC_SH}`
+    printf "%s\n" BUILD_OBJ=`printf "%s" "${BUILD_OBJ}" | ${ESC_SH}`
+    printf "%s\n" BUILD_DYN=`printf "%s" "${BUILD_DYN}" | ${ESC_SH}`
+    printf "%s\n" BUILD_LIB=`printf "%s" "${BUILD_LIB}" | ${ESC_SH}`
+    printf "%s\n" BUILD_EXE=`printf "%s" "${BUILD_EXE}" | ${ESC_SH}`
+
+    printf "%s\n" DEFS=`printf "%s" "${DEFS}" | ${ESC_SH}`
+    printf "%s\n" LIBS=`printf "%s" "${LIBS}" | ${ESC_SH}`
+    printf "%s\n" GAMBITLIB=`printf "%s" "${GAMBITLIB}" | ${ESC_SH}`
+    printf "%s\n" GAMBITGSCLIB=`printf "%s" "${GAMBITGSCLIB}" | ${ESC_SH}`
+    printf "%s\n" GAMBITGSILIB=`printf "%s" "${GAMBITGSILIB}" | ${ESC_SH}`
+    printf "%s\n" LIB_PREFIX=`printf "%s" "${LIB_PREFIX}" | ${ESC_SH}`
+    printf "%s\n" LIB_EXTENSION=`printf "%s" "${LIB_EXTENSION}" | ${ESC_SH}`
+    printf "%s\n" OBJ_EXTENSION=`printf "%s" "${OBJ_EXTENSION}" | ${ESC_SH}`
+    printf "%s\n" EXE_EXTENSION=`printf "%s" "${EXE_EXTENSION}" | ${ESC_SH}`
+    printf "%s\n" BAT_EXTENSION=`printf "%s" "${BAT_EXTENSION}" | ${ESC_SH}`
+    printf "%s\n" ALL_BUILD_FEATURES=`printf "%s" "${ALL_BUILD_FEATURES}" | ${ESC_SH}`
+    printf "%s\n" BUILD_FEATURE_OS=`printf "%s" "${BUILD_FEATURE_OS}" | ${ESC_SH}`
+    printf "%s\n" BUILD_FEATURE_C_COMP=`printf "%s" "${BUILD_FEATURE_C_COMP}" | ${ESC_SH}`
     ;;
 
   *)
-    echo "gambuild-C unknown operation \"$1\""
+    printf "%s\n" "gambuild-C unknown operation \"$1\""
     exit 1
     ;;
 
