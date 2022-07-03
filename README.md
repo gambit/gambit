@@ -35,6 +35,19 @@ Detailed installation instructions are given in the file [INSTALL.txt](https://g
 
 <hr>
 
+### Contributing
+
+Contributions are welcome in the form of issues, bug reports, pull-requests, entire modules and libraries
+(SRFIs, new modules or ports from other Scheme systems, etc).
+
+Please use the following link if you want to contribute funds that will be used to offer bug bounties
+and rewards for people who contribute to Gambit's development.  A typical bug bounty is on the order of
+$100 CAD (about $80 USD and 75 euros at time of writing).
+
+[![](https://pics.paypal.com/00/s/OWJhNjZlNTEtMTJmZS00YTUyLThjYzQtMzk5YTczYzA4NWMy/file.PNG)](https://www.paypal.com/donate/?business=TNP6XBKEPF8NA&no_recurring=0&item_name=Gambit+Scheme+development+%28contribution+and+bug+bounties%2C+etc%29.+For+example+a+%24500+CAD+donation+typically+funds+5+bug+bounties.&currency_code=CAD)
+
+<hr>
+
 ### SRFIs provided
 
 0: [Feature-based conditional expansion construct](https://srfi.schemers.org/srfi-0/srfi-0.html) (builtin)
