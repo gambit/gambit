@@ -37,14 +37,22 @@ Detailed installation instructions are given in the file [INSTALL.txt](https://g
 
 ### Contributing
 
-Contributions are welcome in the form of issues, bug reports, pull-requests, entire modules and libraries
-(SRFIs, new modules or ports from other Scheme systems, etc).
+We welcome contributions in the form of issues, bug reports, and pull-requests for enhancements, bug fixes, and entire modules
+of code (SRFIs, new modules or ports from other environments, etc).  Thanks to Gambit's module system, individuals can
+also contribute modules and R7RS libraries on their own by simply creating a public git repository (on github.com, gitlab.com,
+etc) that hosts the module's source code (see https://github.com/gambit/hello and
+https://github.com/feeley/bonjour for simple public modules, which can be run with
+`gsi github.com/gambit/hello/demo` and `gsi -:whitelist=github.com/feeley github.com/feeley/bonjour` respectively).
 
-Please use the following link if you want to contribute funds that will be used to offer bug bounties
-and rewards for people who contribute to Gambit's development.  A typical bug bounty is on the order of
+For some issues a reward is offered for fixing the issue (enter the word "bounty" in the "Issues" tab search bar).
+Individuals may offer a bounty for fixing an issue by adding the word "bounty" in the description of the issue and
+giving details on the amount and payment method.
+
+Please click the following button if you want to donate funds that will allow the Gambit maintainers to offer bug bounties
+and rewards to people who contribute to Gambit's development.  As an example, a typical bug bounty is on the order of
 $100 CAD (about $80 USD and 75 euros at time of writing).
 
-[![](https://pics.paypal.com/00/s/OWJhNjZlNTEtMTJmZS00YTUyLThjYzQtMzk5YTczYzA4NWMy/file.PNG)](https://www.paypal.com/donate/?business=TNP6XBKEPF8NA&no_recurring=0&item_name=Gambit+Scheme+development+%28contribution+and+bug+bounties%2C+etc%29.+For+example+a+%24500+CAD+donation+typically+funds+5+bug+bounties.&currency_code=CAD)
+[<img src="https://pics.paypal.com/00/s/OWJhNjZlNTEtMTJmZS00YTUyLThjYzQtMzk5YTczYzA4NWMy/file.PNG" width="150px">](https://www.paypal.com/donate/?business=TNP6XBKEPF8NA&no_recurring=0&item_name=Gambit+Scheme+development+%28contribution+and+bug+bounties%2C+etc%29.+For+example+a+%24500+CAD+donation+typically+funds+5+bug+bounties.&currency_code=CAD)
 
 <hr>
 
