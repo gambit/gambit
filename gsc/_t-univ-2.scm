@@ -518,10 +518,6 @@
     (lambda (ctx feature)
       (rts-field ctx feature type (init ctx) '(public))))
 
-  (define (univ-rtlib-feature-field-priv type init)
-    (lambda (ctx feature)
-      (rts-field ctx feature type (init ctx) '())))
-
   (define poll-interval 100)
 
   ;;---------------------------------------------------------------------------
@@ -1292,9 +1288,9 @@
 
   (univ-define-rtlib-feature 'prepend_arg1
    (univ-rtlib-feature-method
-    '()
+    '(public)
     'noresult
-    (list (univ-field 'arg1 'scmobj))
+    (list (univ-field 'arg1 'entrypt))
     "\n"
     '()
     (lambda (ctx)
@@ -1495,28 +1491,28 @@
           (univ-field 'index 'int #f '(public)))))
 
   (univ-define-rtlib-feature 'module_map
-   (univ-rtlib-feature-field-priv '(dict str modlinkinfo)
-                                  (lambda (ctx)
-                                    (^empty-dict '(dict str modlinkinfo)))))
+   (univ-rtlib-feature-field '(dict str modlinkinfo)
+                             (lambda (ctx)
+                               (^empty-dict '(dict str modlinkinfo)))))
 
   (univ-define-rtlib-feature 'module_count
-   (univ-rtlib-feature-field-priv 'int
-                                  (lambda (ctx)
-                                    (^int 0))))
+   (univ-rtlib-feature-field 'int
+                             (lambda (ctx)
+                               (^int 0))))
 
   (univ-define-rtlib-feature 'module_table
-   (univ-rtlib-feature-field-priv '(array scmobj)
-                                  (lambda (ctx)
-                                    (^null))))
+   (univ-rtlib-feature-field '(array scmobj)
+                             (lambda (ctx)
+                               (^null))))
 
   (univ-define-rtlib-feature 'module_latest_registered
-   (univ-rtlib-feature-field-priv 'scmobj
-                                  (lambda (ctx)
-                                    (^null))))
+   (univ-rtlib-feature-field 'scmobj
+                             (lambda (ctx)
+                               (^null))))
 
   (univ-define-rtlib-feature 'module_registry_init
    (univ-rtlib-feature-method
-    '()
+    '(public)
     'noresult
     (list (univ-field 'link_info '(array modlinkinfo)))
     "\n"
@@ -2392,37 +2388,7 @@
                   'string
                   '(array unicode)))
              (^return
-              (univ-emit-string?-inline ctx (^local-var 'obj)))))))
-
-    (univ-define-rtlib-feature 'procedurep
-      (univ-rtlib-feature-method
-       '(public)
-       'bool
-       (list (univ-field 'obj 'scmobj))
-       "\n"
-       '()
-       (lambda (ctx)
-         (if (eq? 'go (target-name (ctx-target ctx)))
-             (test-instanceof
-              ctx
-              'entrypt)
-             (compiler-internal-error
-              "only available on go target")))))
-
-    (univ-define-rtlib-feature 'returnp
-      (univ-rtlib-feature-method
-       '(public)
-       'bool
-       (list (univ-field 'obj 'scmobj))
-       "\n"
-       '()
-       (lambda (ctx)
-         (if (eq? 'go (target-name (ctx-target ctx)))
-             (test-instanceof
-              ctx
-              'returnpt)
-             (compiler-internal-error
-              "only available on go target"))))))
+              (univ-emit-string?-inline ctx (^local-var 'obj))))))))
 
   ;;---------------------------------------------------------------------------
 
@@ -2618,9 +2584,9 @@
            (^return obj))))))
 
   (univ-define-rtlib-feature 'symbol_table
-   (univ-rtlib-feature-field-priv '(dict str symbol)
-                                  (lambda (ctx)
-                                    (^empty-dict '(dict str symbol)))))
+   (univ-rtlib-feature-field '(dict str symbol)
+                             (lambda (ctx)
+                               (^empty-dict '(dict str symbol)))))
 
   (univ-define-rtlib-feature 'keyword
    (univ-rtlib-feature-class
@@ -2681,9 +2647,9 @@
            (^return obj))))))
 
   (univ-define-rtlib-feature 'keyword_table
-   (univ-rtlib-feature-field-priv '(dict str keyword)
-                                  (lambda (ctx)
-                                    (^empty-dict '(dict str keyword)))))
+   (univ-rtlib-feature-field '(dict str keyword)
+                             (lambda (ctx)
+                               (^empty-dict '(dict str keyword)))))
 
   ;;---------------------------------------------------------------------------
 
@@ -3990,7 +3956,7 @@ EOF
                        dest))
                      (^assign dest
                               (^getglo '##apply-with-procedure-check-nary))))
-             (^return (^cast*-jumpable dest)))))))
+             (^return dest))))))
 
     ((make_subprocedure)
      (rts-method
@@ -5445,9 +5411,10 @@ EOF
 "))
 
             ((go)
-             (^return
-              (^call-prim (^type '(array unicode))
-                          strng)))
+             (lambda (ctx)
+               (^return
+                (^new (^type '(array int32))
+                      strng))))
 
             (else
              (compiler-internal-error
