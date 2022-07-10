@@ -23,6 +23,9 @@
 (define-macro (^while test body)
   `(univ-emit-while ctx ,test ,body))
 
+(define-macro (^try-catch body var catch-body)
+  `(univ-emit-try-catch ctx ,body ,var ,catch-body))
+
 (define-macro (^eq? expr1 expr2)
   `(univ-emit-eq? ctx ,expr1 ,expr2))
 
@@ -189,6 +192,9 @@
 
 (define-macro (^array-length expr)
   `(univ-emit-array-length ctx ,expr))
+
+(define-macro (^array-push! expr1 expr2)
+  `(univ-emit-array-push! ctx ,expr1 ,expr2))
 
 (define-macro (^array-shrink! expr1 expr2)
   `(univ-emit-array-shrink! ctx ,expr1 ,expr2))
@@ -585,6 +591,9 @@
 
 (define-macro (^member expr name)
   `(univ-emit-member ctx ,expr ,name))
+
+(define-macro (^field name expr)
+  `(univ-emit-field ctx ,name ,expr))
 
 (define-macro (^public name)
   `(univ-emit-public ctx ,name))
@@ -1114,11 +1123,11 @@
 (define-macro (^symbol-obj obj force-var?)
   `(univ-emit-symbol-obj ctx ,obj ,force-var?))
 
-(define-macro (^symbol-box name)
-  `(univ-emit-symbol-box ctx ,name))
+(define-macro (^symbol-box hname)
+  `(univ-emit-symbol-box ctx ,hname))
 
-(define-macro (^symbol-box-uninterned name hash)
-  `(univ-emit-symbol-box-uninterned ctx ,name ,hash))
+(define-macro (^symbol-box-uninterned hname name hash)
+  `(univ-emit-symbol-box-uninterned ctx ,hname ,name ,hash))
 
 (define-macro (^symbol-unbox symbol)
   `(univ-emit-symbol-unbox ctx ,symbol))
@@ -1129,11 +1138,11 @@
 (define-macro (^keyword-obj obj force-var?)
   `(univ-emit-keyword-obj ctx ,obj ,force-var?))
 
-(define-macro (^keyword-box name)
-  `(univ-emit-keyword-box ctx ,name))
+(define-macro (^keyword-box hname)
+  `(univ-emit-keyword-box ctx ,hname))
 
-(define-macro (^keyword-box-uninterned name hash)
-  `(univ-emit-keyword-box-uninterned ctx ,name ,hash))
+(define-macro (^keyword-box-uninterned hname name hash)
+  `(univ-emit-keyword-box-uninterned ctx ,hname ,name ,hash))
 
 (define-macro (^keyword-unbox keyword)
   `(univ-emit-keyword-unbox ctx ,keyword))
@@ -1201,8 +1210,17 @@
 (define-macro (^foreign? val)
   `(univ-emit-foreign? ctx ,val))
 
+(define-macro (^new-scheme expr1)
+  `(univ-emit-new-scheme ctx ,expr1))
+
+(define-macro (^scheme? val)
+  `(univ-emit-scheme? ctx ,val))
+
 (define-macro (^popcount! arg)
   `(univ-emit-popcount! ctx ,arg))
 
 (define-macro (^host-primitive? arg)
   `(univ-emit-host-primitive? ctx ,arg))
+
+(define-macro (^indent . code)
+  `(univ-emit-indent ctx ,@code))

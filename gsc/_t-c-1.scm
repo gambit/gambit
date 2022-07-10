@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-1.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -39,12 +39,15 @@
 ;;               3 <= nb-gvm-regs <= 25
 ;; nb-arg-regs = maximum number of arguments passed in registers
 ;;               1 <= nb-arg-regs <= min( 12, nb-gvm-regs-2 )
+;; compactness = compactness of the generated code (0..9)
 
 (define targ-default-nb-gvm-regs 5) ;; default value of nb-gvm-regs
 (define targ-default-nb-arg-regs 3) ;; default value of nb-arg-regs
+(define targ-default-compactness 5) ;; default value of compactness
 
 (define (targ-nb-gvm-regs) (target-nb-regs targ-target))
 (define (targ-nb-arg-regs) (target-nb-arg-regs targ-target))
+(define (targ-compactness) (target-compactness targ-target))
 
 (define (targ-set-nb-regs targ sem-changing-opts)
   (let ((nb-gvm-regs
@@ -54,7 +57,11 @@
         (nb-arg-regs
          (get-option sem-changing-opts
                      'nb-arg-regs
-                     targ-default-nb-arg-regs)))
+                     targ-default-nb-arg-regs))
+        (compactness
+         (get-option sem-changing-opts
+                     'compactness
+                     targ-default-compactness)))
 
     (if (not (and (<= 3 nb-gvm-regs)
                   (<= nb-gvm-regs 25)))
@@ -67,7 +74,8 @@
                         (number->string (min 12 (- nb-gvm-regs 2))))))
 
     (target-nb-regs-set! targ nb-gvm-regs)
-    (target-nb-arg-regs-set! targ nb-arg-regs)))
+    (target-nb-arg-regs-set! targ nb-arg-regs)
+    (target-compactness-set! targ compactness)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -105,7 +113,9 @@
 ;; portable to different word sizes and to perform a few optimizations.
 ;; In the following definitions, space is expressed in number of words.
 
-(define targ-msection-biggest 4096) ; Maximum size of objects in msections.
+(define targ-msection-biggest  255) ;; Max size in words of msection objects
+(define targ-msection-fudge   4096) ;; Space in words reserved for allocations
+                                    ;; before heap overflow check
 
 ;; Number of tag bits per pointer:
 
@@ -114,33 +124,81 @@
 
 ;; Upper bound on space needed by various objects:
 
-(define (targ-max-words i) ; minimum k such that targ-min-word-size*k >= i
-                           ; and targ-min-word-size*k mod targ-alignment = 0
+(define (targ-round-up-to-multiple-of n i)
+  (* (quotient (+ i (- n 1)) n) n))
 
-  (define (round-up-to-multiple-of n i)
-    (* (quotient (+ i (- n 1)) n) n))
-
-  (quotient (round-up-to-multiple-of
+(define (targ-max-words i) ;; minimum k such that targ-min-word-size*k >= i
+                           ;; and targ-min-word-size*k mod targ-alignment = 0
+  (quotient (targ-round-up-to-multiple-of
               targ-min-word-size
-              (round-up-to-multiple-of targ-alignment i))
+              (targ-round-up-to-multiple-of targ-alignment i))
             targ-min-word-size))
 
 ;; Space occupied by various types of objects.
 
-(define targ-pair-space        (targ-max-words (* 3 targ-min-word-size)))
-(define targ-box-space         (targ-max-words (* 2 targ-min-word-size)))
-(define targ-will-space        (targ-max-words (* 4 targ-min-word-size)))
-(define targ-flonum-space      (targ-max-words 16))
-(define targ-delay-promise-space (targ-max-words (* 5 targ-min-word-size)))
-(define targ-continuation-space(targ-max-words (* 3 targ-min-word-size)))
-(define targ-ratnum-space      (targ-max-words (* 3 targ-min-word-size)))
-(define targ-cpxnum-space      (targ-max-words (* 3 targ-min-word-size)))
-(define targ-symbol-space      (targ-max-words (* 5 targ-min-word-size)))
-(define targ-keyword-space     (targ-max-words (* 4 targ-min-word-size)))
-(define (targ-closure-space n) (targ-max-words (* (+ n 2) targ-min-word-size)))
-(define (targ-string-space n)  (targ-max-words (* (+ n 1) targ-min-word-size)))
-(define (targ-s8vector-space n)(targ-max-words (+ n targ-min-word-size)))
-(define (targ-vector-space n)  (targ-max-words (* (+ n 1) targ-min-word-size)))
+(define targ-header-words 2) ;; account for possible handle
+
+(define (targ-obj-words words)
+  (targ-max-words (* targ-min-word-size (+ targ-header-words words))))
+
+(define targ-pair-space          (targ-obj-words 2))
+(define targ-box-space           (targ-obj-words 1))
+(define targ-will-space          (targ-obj-words 3))
+(define targ-delay-promise-space (targ-obj-words 4))
+(define targ-continuation-space  (targ-obj-words 2))
+(define targ-ratnum-space        (targ-obj-words 2))
+(define targ-cpxnum-space        (targ-obj-words 2))
+(define targ-symbol-space        (targ-obj-words 4))
+(define targ-keyword-space       (targ-obj-words 3))
+
+(define (targ-vector-of-byte-elements-space n) ;; no alignment constraints
+  (quotient
+   (targ-round-up-to-multiple-of
+    targ-min-word-size
+    (+ n (* targ-header-words targ-min-word-size)))
+   targ-min-word-size))
+
+(define (targ-vector-of-64-bit-elements-space n) ;; has alignment constraints
+  (quotient
+   (targ-round-up-to-multiple-of
+    8
+    (+ (* 8 n) targ-min-word-size (* targ-header-words targ-min-word-size)))
+   targ-min-word-size))
+
+(define targ-flonum-space
+  (targ-vector-of-64-bit-elements-space 1))
+
+(define (targ-closure-space n)
+  (targ-obj-words (+ n 1)))
+
+(define (targ-string-space n)
+  (targ-s8vector-space (* n 4))) ;; 4 bytes max per character
+
+(define (targ-s8vector-space n)
+  (targ-vector-of-byte-elements-space n))
+
+(define (targ-vector-space n)
+  (targ-obj-words n))
+
+(define (targ-max-small-allocation vect-kind)
+  (let ((min-msection-max-size-bytes
+         (* (- targ-msection-biggest targ-header-words)
+            targ-min-word-size)))
+    (quotient
+     min-msection-max-size-bytes
+     (case vect-kind
+       ((string)
+        4) ;; 4 bytes max per character
+       ((s8vector u8vector)
+        1)
+       ((s16vector u16vector)
+        2)
+       ((s32vector u32vector f32vector)
+        4)
+       ((s64vector u64vector f64vector)
+        8)
+       (else ;; vector
+        targ-min-word-size)))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -164,7 +222,7 @@
 
 (define (targ-make-target)
   (let ((targ
-         (make-target 12
+         (make-target 15
                       'C
                       '((".c"    . C)
                         (".C"    . C++)
@@ -195,7 +253,6 @@
                                            targ-frame-reserve
                                            targ-frame-alignment))
       (target-proc-result-set!       targ (make-reg 1))
-      (target-task-return-set!       targ (make-reg 0))
       (target-switch-testable?-set!  targ targ-switch-testable?)
       (target-eq-testable?-set!      targ targ-eq-testable?)
       (target-object-type-set!       targ targ-object-type)
@@ -209,6 +266,8 @@
 
     (target-begin!-set! targ begin!)
     (target-end!-set! targ end!)
+
+    (target-max-small-allocation-set! targ targ-max-small-allocation)
 
     targ))
 
@@ -275,7 +334,7 @@
 ;; Dumping of a compilation module
 
 (define (targ-dump procs output c-intf module-descr linker-name)
-  (let ((c-decls (c-intf-decls c-intf))
+  (let ((c-decls-queue (list->queue (c-intf-decls c-intf)))
         (c-procs (c-intf-procs c-intf))
         (c-inits (c-intf-inits c-intf))
         (c-objs (c-intf-objs c-intf)))
@@ -306,7 +365,9 @@
     (let loop ()
       (if (not (queue-empty? targ-prc-objs-to-scan))
         (begin
-          (targ-scan-procedure (queue-get! targ-prc-objs-to-scan))
+          (targ-scan-procedure
+           (queue-get! targ-prc-objs-to-scan)
+           c-decls-queue)
           (loop))))
 
     (if targ-info-port
@@ -316,7 +377,7 @@
 
     (targ-heap-dump
      output
-     c-decls
+     (queue->list c-decls-queue)
      c-inits
      (map (lambda (x) (cons (car x) (targ-use-obj (cdr x)))) c-objs)
      module-descr
@@ -706,8 +767,7 @@
     (if (proc-obj-primitive? proc)
       (begin
         (targ-use-glo (string->symbol name) supply?)
-        (if p
-            p
+        (or p
             (targ-c-id-prm2 name)))
       p)))
 
@@ -1220,13 +1280,6 @@
          glo-rsrc
          meta-info)
 
-  (define (display-escaped obj)
-    ;; writes obj so that it can't be part of valid C code (even in a
-    ;; C comment or C string)
-    (targ-display "#|*/\"*/\"")
-    (write obj targ-port)
-    (targ-display "|#"))
-
   (set! targ-port (open-output-file-preserving-case filename))
   (set! targ-line-size 0)
   (set! targ-line-number 1)
@@ -1267,14 +1320,23 @@
   (write mods-and-flags targ-port)
   (targ-line)
 
-  (targ-write-rsrc-names sym-rsrc)
-  (targ-write-rsrc-names key-rsrc)
-  (targ-write-rsrc-names (keep targ-rsrc-supplied-and-demanded? glo-rsrc))
-  (targ-write-rsrc-names (keep targ-rsrc-supplied-and-not-demanded? glo-rsrc))
-  (targ-write-rsrc-names (keep targ-rsrc-not-supplied? glo-rsrc))
+  (targ-write-rsrc-names 'symbols
+                         sym-rsrc)
+
+  (targ-write-rsrc-names 'keywords
+                         key-rsrc)
+
+  (targ-write-rsrc-names 'globals-s-d
+                         (keep targ-rsrc-supplied-and-demanded? glo-rsrc))
+
+  (targ-write-rsrc-names 'globals-s-nd
+                         (keep targ-rsrc-supplied-and-not-demanded? glo-rsrc))
+
+  (targ-write-rsrc-names 'globals-ns
+                         (keep targ-rsrc-not-supplied? glo-rsrc))
 
   (targ-display "( ")
-  (display-escaped 'meta-info)
+  (targ-write-escaped 'meta-info)
   (targ-line)
   (let loop1 ((lst meta-info))
     (if (pair? lst)
@@ -1292,7 +1354,7 @@
             (if (pair? attribs)
                 (let ((attrib (car attribs)))
                   (targ-display " ")
-                  (display-escaped key)
+                  (targ-write-escaped key)
                   (write attrib targ-port)
                   (targ-line)
                   (loop2 (cdr attribs)))))
@@ -1300,7 +1362,7 @@
           (targ-line)
           (loop1 (cdr lst)))))
   (targ-display ") ")
-  (display-escaped 'meta-info)
+  (targ-write-escaped 'meta-info)
   (targ-line)
 
   (targ-display ")")
@@ -1321,8 +1383,9 @@
     (lambda (x y)
       (string<? (->string (car x)) (->string (car y))))))
 
-(define (targ-write-rsrc-names lst)
-  (targ-display "(")
+(define (targ-write-rsrc-names marker lst)
+  (targ-display "( ")
+  (targ-write-escaped marker)
   (targ-line)
   (for-each
     (lambda (r)
@@ -1330,8 +1393,16 @@
         (write name targ-port)
         (targ-line)))
     lst)
-  (targ-display ")")
+  (targ-display ") ")
+  (targ-write-escaped marker)
   (targ-line))
+
+(define (targ-write-escaped obj)
+  ;; writes obj so that it can't be part of valid C code (even in a
+  ;; C string or mutliline C comment)
+  (targ-display "#|*/\"*/\"")
+  (write obj targ-port)
+  (targ-display "|#"))
 
 (define (targ-dump-module-info name linker-name linkfile? extension? meta-info)
 
@@ -1789,7 +1860,7 @@
       (targ-line)
       (for-each
         (lambda (x)
-          (targ-display x)
+          (targ-code x)
           (targ-line))
         c-decls)))
 
@@ -1834,9 +1905,9 @@
          (set! i (+ i 1))
          (targ-code* (list "DEF_LBL_INTRO"
                            host
-                           (if (proc-obj-primitive? proc)
-                             (targ-c-string name)
-                             0)
+                           (targ-heap-ref-obj
+                            (and (proc-obj-primitive? proc)
+                                 (string->symbol name)))
                            (targ-heap-ref-obj proc-info)
                            (length val-lbls)
                            (if c-name c-name 0)))

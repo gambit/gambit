@@ -19,9 +19,9 @@
   (make-thread
    (lambda ()
      (parameterize ((current-user-interrupt-handler
-                     (lambda () (set! var (+ var 1)) 123)))
+                     (lambda () (set! var (+ var 1)))))
        (set! var 0)
-       (waste-time 100)
+       (waste-time 200)
        (set! var (+ var 10))))))
 
 (check-tail-exn inactive-thread-exception? (lambda () (thread-interrupt! t1)))
@@ -34,9 +34,17 @@
   (or var (loop)))
 
 (check-eq? (thread-interrupt! t2 current-thread) t2)
-(check-equal? (thread-interrupt! t2) 123)
+
+(define save var)
+
+(waste-time 100)
+
+(thread-interrupt! t2)
 
 (waste-time 200)
+
+(let loop ()
+  (if (<= var save) (loop)))
 
 (check-equal? var 11)
 

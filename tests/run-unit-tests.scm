@@ -4,7 +4,7 @@
 
 ;;; File: "run-unit-tests.scm"
 
-;;; Copyright (c) 2012-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2012-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
@@ -58,6 +58,12 @@
 
   (mergesort lst))
 
+(define utf-8
+  (equal? ".utf-8"
+          (string-downcase
+           (path-extension
+            (string-append "." (getenv "LANG" ""))))))
+
 (define (show-bar nb-good nb-fail nb-other nb-total elapsed)
 
   (define (ratio n)
@@ -65,10 +71,25 @@
 
   (let* ((istty (tty? (current-output-port)))
          (bar-width 16)
-         (bar-length (ratio bar-width)))
+         (unicode? (and istty utf-8)))
 
     (define (esc x)
       (if istty x ""))
+
+    (define (bar)
+      (if unicode?
+          (let* ((len (ratio (- (* bar-width 8) 1)))
+                 (full (quotient len 8))
+                 (mod (modulo len 8))
+                 (rest (- bar-width full 1)))
+            (string-append
+             (make-string full #\x2588) ;; full block
+             (string (integer->char (- #x258F mod)))
+             (make-string rest #\space)))
+          (let ((len (ratio bar-width)))
+            (string-append
+             (make-string len #\#)
+             (make-string (- bar-width len) #\.)))))
 
     (print (if istty "\r" "\n")
            "["
@@ -80,8 +101,7 @@
            "] "
            (num->string (ratio 100) 3 0)
            "% "
-           (make-string bar-length #\#)
-           (make-string (- bar-width bar-length) #\.)
+           (bar)
            " "
            (num->string elapsed 3 1)
            "s"
@@ -130,7 +150,7 @@
               (lambda ()
                 (print "settings set auto-confirm 1\n"
                        "command script import clean_exit.py\n"
-                       "run -:d-,flu,~~=.. -f " file "\n"
+                       "run -:debug-settings=-,io-settings=lu,~~=.. -f " file "\n"
                        "clean_exit\n"
                        "frame variable\n"
                        "thread backtrace all\n"
@@ -147,7 +167,7 @@
                 "dbg-script"
               (lambda ()
                 (print "set $_exitcode = -1\n"
-                       "run -:d-,flu,~~=.. -f " file "\n"
+                       "run -:debug-settings=-,io-settings=lu,~~=.. -f " file "\n"
                        "if $_exitcode != -1\n"
                        "  quit $_exitcode\n"
                        "end\n"
@@ -164,36 +184,32 @@
 
       (case target
         ((C)
-         (run "../gsi/gsi" "-:d-,flu,~~=.." "-f" file))
+         (run "../gsi/gsi" "-:debug-settings=-,io-settings=lu,~~=.." "-f" file))
         (else
          (let ((gsi (string-append "../gsi/gsi-" (symbol->string target))))
            (run gsi "-f" file))))))
 
 (define (test-using-mode file mode target)
-  (case target
-    ((C)
-     (cond ((member mode '(gsi gsi-dbg))
-            (run-gsi-under-debugger file (eq? mode 'gsi-dbg) target))
-           ((member mode '(gsc gsc-dbg))
+  (cond ((member mode '(gsi gsi-dbg))
+         (run-gsi-under-debugger file (eq? mode 'gsi-dbg) target))
+        ((member mode '(gsc gsc-dbg))
+         (case target
+           ((C)
             (let* ((filename "_test.o1")
-                   (result (run "../gsc/gsc" "-:d-,flu,~~=.." "-f" "-o" filename file)))
+                   (result (run "../gsc/gsc" "-:debug-settings=-,io-settings=lu,~~=.." "-f" "-o" filename file)))
               (if (= 0 (car result))
                   (let ((result (run-gsi-under-debugger filename (eq? mode 'gsc-dbg) target)))
                     (if cleanup? (delete-file filename))
                     result)
-                  result)))))
-    (else
-     (let* ((filename "_test.bat")
-            (result (run "../gsc/gsc" "-:d-,flu,~~=.." "-warnings" "-target" (symbol->string target) "-exe" "-postlude" "(##exit)" "-o" filename file)))
-       (if (string? (cdr result))
-           (begin
-             (print (cdr result))
-             (force-output)))
-       (if (= 0 (car result))
-           (let ((result (run (path-expand filename))))
-             (if cleanup? (delete-file filename))
-             result)
-           result)))))
+                  result)))
+           (else
+            (let* ((filename "_test.bat")
+                   (result (run "../gsc/gsc" "-:debug-settings=-,io-settings=lu,~~=.." "-warnings" "-target" (symbol->string target) "-exe" "-postlude" "(##exit)" "-o" filename file)))
+              (if (= 0 (car result))
+                  (let ((result (run (path-expand filename))))
+                    (if cleanup? (delete-file filename))
+                    result)
+                  result)))))))
 
 (define (trim-filename file)
   (if (and (>= (string-length file) (string-length default-dir))
@@ -214,7 +230,6 @@
             (status (car result))
             (status-hi (quotient status 256))
             (status-lo (modulo status 256)))
-
        (if (= 0 status)
            (set! nb-good (+ nb-good 1))
            (begin

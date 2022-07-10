@@ -10,30 +10,27 @@
 
 (define-library (srfi 64)
 
+  (namespace "_test#")
+
   (export test-assert
           test-equal
           test-eqv
           test-eq
           test-approximate
           test-error
-          test-error-tail
           test-begin
           test-end
           test-group
 
-          test-all?-set!
-          test-quiet?-set!
-          test-verbose?-set!
+          %test-predicate
+          %test-relation
+          %test-approximate
+          %test-error
+          %test-begin
+          %test-end
+          %test-group
 
-          test-predicate-proc
-          test-relation-proc
-          test-approximate-proc
-          test-error-proc
-          test-begin-proc
-          test-end-proc
-          test-group-proc
-
-          $expand-test$)
+          %test-expand)
 
   (import (_test)))
 

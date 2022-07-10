@@ -1,13 +1,13 @@
 /* File: "os_base.c" */
 
-/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the most basic operating system services.
  */
 
 #define ___INCLUDED_FROM_OS_BASE
-#define ___VERSION 409003
+#define ___VERSION 409004
 #include "gambit.h"
 
 #include "os_base.h"
@@ -1142,7 +1142,11 @@ ___HIDDEN const char *gai_code_to_string
         (code)
 int code;)
 {
+#ifdef ___OS_WIN32
+  return gai_strerrorA (code);
+#else
   return gai_strerror (code);
+#endif
 }
 
 
@@ -1274,8 +1278,11 @@ ___SCMOBJ ___err_code_from_GetLastError ___PVOID
   if (e == ERROR_FILE_NOT_FOUND || e == ERROR_PATH_NOT_FOUND)
     return ___ERR_CODE_ENOENT;
 
-  if (e == ERROR_ALREADY_EXISTS)
+  if (e == ERROR_ALREADY_EXISTS || e == ERROR_FILE_EXISTS)
     return ___ERR_CODE_EEXIST;
+
+  if (e == ERROR_ACCESS_DENIED)
+    return ___ERR_CODE_EACCES;
 
   return ___FIX(___WIN32_ERR(e));
 }
@@ -1510,6 +1517,8 @@ ___SCMOBJ err;)
     err_code = ___WIN32_ERR(ERROR_FILE_NOT_FOUND);
   else if (err == ___ERR_CODE_EEXIST)
     err_code = ___WIN32_ERR(ERROR_ALREADY_EXISTS);
+  else if (err == ___ERR_CODE_EACCES)
+    err_code = ___WIN32_ERR(ERROR_ACCESS_DENIED);
   else
 #endif
 
@@ -1545,6 +1554,8 @@ ___SCMOBJ err;)
         append_charstring (buf, &pos, "Module was compiled with an older version of the compiler");
       else if (err_code == ___MODULE_VERSION_TOO_NEW_ERR)
         append_charstring (buf, &pos, "Module was compiled with a newer version of the compiler");
+      else if (err_code == ___MODULE_INCOMPATIBILITY_ERR)
+        append_charstring (buf, &pos, "Module is incompatible (it was compiled with a different C compiler and/or options)");
       else if (err_code == ___MODULE_ALREADY_LOADED_ERR)
         append_charstring (buf, &pos, "Can't load a given object file more than once");
       else if (err_code == ___DYNAMIC_LOADING_NOT_AVAILABLE_ERR)

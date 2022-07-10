@@ -1,6 +1,6 @@
 # makefile for Gambit include directory.
 
-# Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 herefromroot = include
 rootfromhere = ..
@@ -70,15 +70,17 @@ mandir = @mandir@
 
 .SUFFIXES:
 
-RCFILES = makefile.in gambit.h.in config.h.in stamp.h
+RCFILES = makefile.in gambit.h.in config.h.in stamp-release.h
 
 GENDISTFILES =
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
-all:
+all: core
 
-all-pre:
+core:
+
+core-pre:
 	@major=`echo $(PACKAGE_VERSION) | sed -e "s/v//g" -e "s/\.[^.]*\.[^.]*//g"`; \
 	minor=`echo $(PACKAGE_VERSION) | sed -e "s/v[^.]*\.//g" -e "s/\.[^.]*//g"`; \
 	revision=`echo $(PACKAGE_VERSION) | sed -e "s/v[^.]*\.[^.]*\.//g" -e "s///g"`; \
@@ -90,7 +92,15 @@ all-pre:
 	echo "#define ___VERSION $$version_num" >> gambit-not$$version_num.h; \
 	echo "#include \"gambit.h\"" >> gambit-not$$version_num.h
 
-all-post: gambit.h
+core-post: gambit.h
+
+phase1: core
+
+phase2:
+
+phase3:
+
+phase4:
 
 bootstrap-pre:
 
@@ -98,7 +108,7 @@ bootstrap-post:
 
 install-pre:
 
-install-post: all
+install-post: core
 	c_includedir="$(DESTDIR)$(prefix)/include"; \
 	i_includedir="$(DESTDIR)$(includedir)"; \
 	t_includedir="$$i_includedir"; \
@@ -150,10 +160,12 @@ uninstall-post:
 select-gen-for-commit-pre:
 
 select-gen-for-commit-post select-gen-for-commit-post-nonrec:
+	if [ -e $(rootfromhere)/.git ]; then $(RC) update-index --no-skip-worktree stamp-release.h; fi
 
 deselect-gen-for-commit-pre:
 
 deselect-gen-for-commit-post deselect-gen-for-commit-post-nonrec:
+	if [ -e $(rootfromhere)/.git ]; then $(RC) update-index --skip-worktree stamp-release.h; fi
 
 mostlyclean-pre:
 
@@ -193,7 +205,7 @@ dist-pre dist-devel-pre:
 
 dist-post dist-devel-post:
 
-all-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+core-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
 	    target=`echo $@ | sed 's/-recursive//'`; \
@@ -202,11 +214,11 @@ all-recursive bootstrap-recursive install-recursive uninstall-recursive select-g
 	  done \
 	fi
 
-all: all-post
+core: core-post
 
-all-post: all-recursive
+core-post: core-recursive
 
-all-recursive: all-pre
+core-recursive: core-pre
 
 bootstrap: bootstrap-post
 
@@ -287,11 +299,35 @@ dist-devel-post: dist-devel-recursive
 dist-devel-recursive: dist-devel-pre
 
 stamp:
-	rm -f stamp2.h
-	eval `date -u '+stamp_ymd=%Y%m%d stamp_hms=%H%M%S'`; \
-	sed -e "s/#define ___STAMP_YMD [0-9][0-9]*/#define ___STAMP_YMD `expr 0 + $$stamp_ymd`/" -e "s/#define ___STAMP_HMS [0-9][0-9]*/#define ___STAMP_HMS `expr 0 + $$stamp_hms`/" $(srcdirpfx)stamp.h > stamp2.h
-	mv stamp2.h stamp.h
-	$(RC) add stamp.h
+	@if [ -e "$(rootfromhere)/.git" ]; then \
+	    version="$$($(GIT) describe --tag --always | sed 's/-bootstrap$$//')" && \
+	    if grep -F "#define ___STAMP_VERSION \"$$version\"" < stamp.h 2> /dev/null; then \
+	        echo "___STAMP_VERSION unchanged from previous build"; \
+	    else \
+	        echo "___STAMP_VERSION changed to $$version"; \
+	        ymd="$$(expr 0 + "$$(TZ=UTC git show --quiet --date='format-local:%Y%m%d' --format=%cd)")" && \
+	        hms="$$(expr 0 + "$$(TZ=UTC git show --quiet --date='format-local:%H%M%S' --format=%cd)")" && \
+	        { \
+	            echo "/* Automatically generated */" && \
+	            echo "" && \
+	            echo "#ifndef ___STAMP_VERSION" && \
+	            echo "#define ___STAMP_VERSION \"$$version\"" && \
+	            echo "#endif" && \
+	            echo "" && \
+	            echo "#ifndef ___STAMP_YMD" && \
+	            echo "#define ___STAMP_YMD $$ymd" && \
+	            echo "#endif" && \
+	            echo "" && \
+	            echo "#ifndef ___STAMP_HMS" && \
+	            echo "#define ___STAMP_HMS $$hms" && \
+	            echo "#endif"; \
+	        } > stamp.h.new && \
+	        mv -f stamp.h.new stamp.h; \
+	    fi; \
+	else \
+	    echo "Gambit is not being built from a Git clone. Creating empty stamp.h." && \
+	    echo > stamp.h; \
+	fi
 
 makefile: makefile.in $(rootfromhere)/config.status
 	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status

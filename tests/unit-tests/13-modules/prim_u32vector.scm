@@ -1,10 +1,10 @@
 (include "#.scm")
 
-(check-same-behavior ("" "##" "~~lib/_prim-u32vector#.scm")
+(check-same-behavior ("" "##" "~~lib/gambit/prim/u32vector#.scm")
 
 ;; Gambit
 
-(append-u32vectors '(#u32(1) #u32(2) #u32(3)))
+(u32vector-concatenate '(#u32(1) #u32(2) #u32(3)))
 (list->u32vector '(1 2 3))
 (u32vector-length (make-u32vector 5)) (make-u32vector 5 9)
 (subu32vector '#u32(1 2 3 4 5) 1 3)

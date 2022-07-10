@@ -10,7 +10,7 @@
 
 (##supply-module termite/match-support)
 (##namespace ("termite/match-support#"))
-(##include "~~lib/_prim#.scm")
+(##include "~~lib/gambit/prim/prim#.scm")
 (##import termite/utils)
 
 ;; Clause manipulation

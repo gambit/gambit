@@ -1,10 +1,10 @@
 (include "#.scm")
 
-(check-same-behavior ("" "##" "~~lib/_prim-u16vector#.scm")
+(check-same-behavior ("" "##" "~~lib/gambit/prim/u16vector#.scm")
 
 ;; Gambit
 
-(append-u16vectors '(#u16(1) #u16(2) #u16(3)))
+(u16vector-concatenate '(#u16(1) #u16(2) #u16(3)))
 (list->u16vector '(1 2 3))
 (u16vector-length (make-u16vector 5)) (make-u16vector 5 9)
 (subu16vector '#u16(1 2 3 4 5) 1 3)

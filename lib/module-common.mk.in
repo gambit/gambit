@@ -1,6 +1,6 @@
 # common makefile for gambit modules, to be included by specific makefile
 
-# Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 # The specific makefile must contain:
 #
@@ -8,7 +8,7 @@
 # libfromhere = ../../../..        # as many .. as components in herefromlib
 # SUBDIRS = <subdir1> <subdir2>    # as many as there are subdirs
 # HEADERS_SCM = foo\#.scm
-# MODULES_SCM = foo.scm foo.sld test.scm
+# MODULES_SCM = foo.scm foo.sld test/test.scm
 # MAIN_MODULES = foo
 # OTHER_RCFILES = makefile
 # include $(libfromhere)/module-common.mk
@@ -82,51 +82,141 @@ mandir = @mandir@
 
 .SUFFIXES:
 
-RCFILES = $(HEADERS_SCM) $(MODULES_SCM) $(OTHER_RCFILES)
+RCFILES = $(HEADERS_SCM) $(MODULES_SCM) $(DATA_FILES) $(OTHER_RCFILES)
 
 GENDISTFILES =
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
-INSTFILES_LIB_DATA = $(HEADERS_SCM) $(MODULES_SCM)
+INSTFILES_LIB_DATA = $(HEADERS_SCM) $(MODULES_SCM) $(DATA_FILES)
 
 MDEFINES = prefix=$(prefix) exec_prefix=$(exec_prefix) \
 includedir=$(includedir) libdir=$(libdir) \
 bindir=$(bindir) docdir=$(docdir) \
 infodir=$(infodir) emacsdir=$(emacsdir)
 
-all:
+all: core
 
-all-pre:
+core:
 
-all-post:
+core-pre:
+
+core-post:
 
 bootstrap-pre:
 
 bootstrap-post:
 
-modules-pre:
+clean-modules: clean-modules-pre
+	@for subdir in $(SUBDIRS); do \
+	  (cd $$subdir && $(MAKE) $@); \
+	done
+
+clean-modules-pre:
 	@here_prefix="`echo $(herefromlib) | sed -e 's,[^/]*$$,,'`"; \
 	here_suffix="`echo $(herefromlib) | sed -e 's,.*/,,'`"; \
+	major=`echo $(PACKAGE_VERSION) | sed -e "s/v//g" -e "s/\.[^.]*\.[^.]*//g"`; \
+	minor=`echo $(PACKAGE_VERSION) | sed -e "s/v[^.]*\.//g" -e "s/\.[^.]*//g"`; \
+	revision=`echo $(PACKAGE_VERSION) | sed -e "s/v[^.]*\.[^.]*\.//g" -e "s///g"`; \
+	version_num=`eval expr "\( 100000 \\* $$major \) + \( 1000 \\* $$minor \) + $$revision"`; \
 	for target in $(BUILD_TARGETS); do \
 	  for main_mod in $(MAIN_MODULES); do \
+	    mod_dir=""; \
 	    if test "$$main_mod" = "$$here_suffix"; then \
 	      modref="$(herefromlib)"; \
 	    else \
 	      modref="$(herefromlib)/$$main_mod"; \
+	      if test -d "$$main_mod"; then \
+	        mod_dir="$$main_mod/"; \
+	      fi; \
+	    fi; \
+	    build_dir="$$main_mod@gambit$$version_num@$$target"; \
+	    if test -d "$$mod_dir$$build_dir"; then \
+	      echo "removing module $$modref ($(herefromroot)/$$mod_dir$$build_dir)"; \
+	      rm -rf "$$mod_dir$$build_dir"; \
+	    fi; \
+	  done; \
+	done
+
+
+list-modules: list-modules-pre
+	@here_prefix="`echo $(herefromlib) | sed -e 's,[^/]*$$,,'`"; \
+	here_suffix="`echo $(herefromlib) | sed -e 's,.*/,,'`"; \
+	for main_mod in $(MAIN_MODULES); do \
+	  if test "$$main_mod" = "$$here_suffix"; then \
+	    modref="$(herefromlib)"; \
+	  else \
+	    modref="$(herefromlib)/$$main_mod"; \
+	  fi; \
+	  echo "$$modref"; \
+	done
+
+list-modules-pre:
+	@for subdir in $(SUBDIRS); do \
+	  (cd $$subdir && $(MAKE) list-modules); \
+	done
+
+test-modules-all: test-modules-all-pre
+	@for subdir in $(SUBDIRS); do \
+	  (cd $$subdir && $(MAKE) test-modules-all); \
+	done
+
+test-modules-all-pre:
+	@here_prefix="`echo $(herefromlib) | sed -e 's,[^/]*$$,,'`"; \
+	here_suffix="`echo $(herefromlib) | sed -e 's,.*/,,'`"; \
+	if test -d "test"; then \
+	  modref="$(herefromlib)"; \
+	  echo "*** testing $$modref"; \
+	  @SETDLPATH@ $(rootfromhere)/gsi/gsi@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include \
+	      -f -e '(current-directory "$(rootfromhere)")' $$modref/test || \
+	      echo "*** ignoring error"; \
+	fi;
+
+test-modules: test-modules-pre
+	@for subdir in $(SUBDIRS); do \
+	  (cd $$subdir && $(MAKE) test-modules); \
+	done
+
+test-modules-pre:
+	@here_prefix="`echo $(herefromlib) | sed -e 's,[^/]*$$,,'`"; \
+	here_suffix="`echo $(herefromlib) | sed -e 's,.*/,,'`"; \
+	if test -d "test"; then \
+	  modref="$(herefromlib)"; \
+	  echo "*** testing $$modref"; \
+	  @SETDLPATH@ $(rootfromhere)/gsi/gsi@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include \
+	      -f -e '(current-directory "$(rootfromhere)")' $$modref/test; \
+	fi;
+
+modules-pre:
+	@here_prefix="`echo $(herefromlib) | sed -e 's,[^/]*$$,,'`"; \
+	here_suffix="`echo $(herefromlib) | sed -e 's,.*/,,'`"; \
+	major=`echo $(PACKAGE_VERSION) | sed -e "s/v//g" -e "s/\.[^.]*\.[^.]*//g"`; \
+	minor=`echo $(PACKAGE_VERSION) | sed -e "s/v[^.]*\.//g" -e "s/\.[^.]*//g"`; \
+	revision=`echo $(PACKAGE_VERSION) | sed -e "s/v[^.]*\.[^.]*\.//g" -e "s///g"`; \
+	version_num=`eval expr "\( 100000 \\* $$major \) + \( 1000 \\* $$minor \) + $$revision"`; \
+	for target in $(BUILD_TARGETS); do \
+	  for main_mod in $(MAIN_MODULES); do \
+	    mod_dir=""; \
+	    if test "$$main_mod" = "$$here_suffix"; then \
+	      modref="$(herefromlib)"; \
+	    else \
+	      modref="$(herefromlib)/$$main_mod"; \
+	      if test -d "$$main_mod"; then \
+	        mod_dir="$$main_mod/"; \
+	      fi; \
 	    fi; \
 	    need_to_build_module=no; \
-	    build_dir="$$main_mod@gambit409003@$$target"; \
-	    if test ! -d "$$build_dir" \
-	         -o "$(rootfromhere)/gsc/gsc@exe@" -nt "$$build_dir" \
-	         -o -f "$$main_mod.sld" -a "$$main_mod.sld" -nt "$$build_dir" \
-	         -o -f "$$main_mod.scm" -a "$$main_mod.scm" -nt "$$build_dir" \
-	         -o -f "$$main_mod#.scm" -a "$$main_mod#.scm" -nt "$$build_dir"; then \
+	    build_dir="$$main_mod@gambit$$version_num@$$target"; \
+	    if test ! -d "$$mod_dir$$build_dir" \
+	         -o "$(rootfromhere)/gsc/gsc" -nt "$$mod_dir$$build_dir" \
+	         -o -f "$$mod_dir$$main_mod.sld" -a "$$mod_dir$$main_mod.sld" -nt "$$mod_dir$$build_dir" \
+	         -o -f "$$mod_dir$$main_mod.scm" -a "$$mod_dir$$main_mod.scm" -nt "$$mod_dir$$build_dir" \
+	         -o -f "$$mod_dir$$main_mod#.scm" -a "$$mod_dir$$main_mod#.scm" -nt "$$mod_dir$$build_dir"; then \
 	      need_to_build_module=yes; \
 	    fi; \
 	    if test "$$need_to_build_module" = "yes"; then \
 	      echo ">>>> building module $$modref for $$target"; \
-	      @SETDLPATH@ $(rootfromhere)/gsc/gsc@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -e "(let ((x (##build-module \"$$main_mod\" (quote $$target) (quote ((module-ref $$modref)))))) (if (not x) (begin (println \"*** module failed to build\") (exit 1))))"; \
+	      @SETDLPATH@ $(rootfromhere)/gsc/gsc@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -e "(let ((x (##build-module \"$$mod_dir$$main_mod\" (quote $$target) (quote ((module-ref $$modref)))))) (if (not x) (begin (println \"*** module failed to build\") (exit 1))))"; \
 	    else \
 	      echo ">>>> no need to build module $$modref for $$target"; \
 	    fi; \
@@ -137,7 +227,7 @@ modules-post:
 
 install-pre:
 
-install-post: all
+install-post: core
 	c_libdir="$(DESTDIR)$(prefix)/$(herefromroot)"; \
 	i_libdir="$(DESTDIR)$(libdir)`echo $(herefromroot)/ | sed -e s:^lib:: -e s:/\\$$::`"; \
 	t_libdir="$$i_libdir"; \
@@ -243,7 +333,7 @@ dist-pre dist-devel-pre:
 
 dist-post dist-devel-post:
 
-all-recursive bootstrap-recursive modules-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+core-recursive bootstrap-recursive modules-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
 	    target=`echo $@ | sed 's/-recursive//'`; \
@@ -251,11 +341,11 @@ all-recursive bootstrap-recursive modules-recursive install-recursive uninstall-
 	  done \
 	fi
 
-all: all-post
+core: core-post
 
-all-post: all-recursive
+core-post: core-recursive
 
-all-recursive: all-pre
+core-recursive: core-pre
 
 bootstrap: bootstrap-post
 

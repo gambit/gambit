@@ -1,6 +1,6 @@
 (include "#.scm")
 
-(check-same-behavior ("" "##" "~~lib/_prim-vector#.scm")
+(check-same-behavior ("" "##" "~~lib/gambit/prim/vector#.scm")
 
 ;; R4RS
 
@@ -30,13 +30,14 @@
 
 ;; Gambit
 
-(append-vectors '(#(1) #(2) #(3)))
+(vector-concatenate '(#(1) #(2) #(3)))
 (vector-set '#(1 2 3 4 5) 2 99)
 (let ((x (vector 1 2 3 4 5))) (vector-shrink! x 3) x)
 (subvector '#(1 2 3 4 5) 1 3)
 (let ((x (vector 1 2 3 4 5))) (subvector-fill! x 1 3 99) x)
 (let ((x (vector 1 2 3 4)) (y (vector 6 7 8 9 0))) (subvector-move! x 2 3 y 1) y)
 (let ((x (vector 5))) (vector-cas! x 0 6 5) x)
-(let ((x (vector 5))) (vector-inc! x 0) x)
+
+;;unimplemented;;(let ((x (vector 5))) (vector-inc! x 0) x)
 
 )

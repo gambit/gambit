@@ -3,6 +3,7 @@
 ;;; File: "_geiser.scm"
 
 ;;; Copyright (c) 2019 by Mathieu Perron, All Rights Reserved.
+;;; Copyright (c) 2020-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -10,10 +11,11 @@
 
 (##supply-module _geiser)
 
-(##namespace ("_geiser#"))       ;; in _geiser#
-(##include "~~lib/_prim#.scm")   ;; map fx+ to ##fx+, etc
-(##include "~~lib/_gambit#.scm") ;; for macro-check-string,
-                                 ;; macro-absent-obj, etc
+(##namespace ("_geiser#"))                ;; in _geiser#
+(##include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
+(##namespace ("" load))                   ;; a non-primitive
+(##include "~~lib/_gambit#.scm")          ;; for macro-check-string,
+                                          ;; macro-absent-obj, etc
 
 ;(declare (extended-bindings)) ;; ##fx+ is bound to fixnum addition, etc
 ;(declare (not safe))          ;; claim code has no type errors
@@ -225,8 +227,8 @@
     (angle ("args" (("required" z) ("optional") ("key")))("module"))
     (any-bits-set? ("args" (("required" n1 n2) ("optional") ("key")))("module"))
     (append ("args" (("required" list  [...]) ("optional") ("key")))("module"))
-    (append-strings ("args" (("required" lst) ("optional") ("key")))("module"))
-    (append-vectors ("args" (("required" lst) ("optional") ("key")))("module"))
+    (string-concatenate ("args" (("required" lst) ("optional" separator) ("key")))("module"))
+    (vector-concatenate ("args" (("required" lst) ("optional" separator) ("key")))("module"))
     (apply ("args"
             (("required" proc [arg1  ...] args) ("optional") ("key")))("module"))
     (arithmetic-shift ("args" (("required" n1 n2) ("optional") ("key")))("module"))
@@ -417,6 +419,12 @@
      ("args" (("required" n1 n2 n3) ("optional") ("key")))("module"))
     (f32vector? ("args" (("required" obj) ("optional") ("key")))("module"))
     (f64vector? ("args" (("required" obj) ("optional") ("key")))("module"))
+    (file-exists-exception?
+     ("args" (("required" obj) ("optional") ("key")))("module"))
+    (file-exists-exception-procedure
+     ("args" (("required" exc) ("optional") ("key")))("module"))
+    (file-exists-exception-arguments
+     ("args" (("required" exc) ("optional") ("key")))("module"))
     (file-exists?
      ("args" (("required" path [chase?]) ("optional") ("key")))("module"))
     (file-info ("args" (("required" path [chase?]) ("optional") ("key")))("module"))
@@ -444,7 +452,7 @@
      ("args" (("required" path [atime [mtime]]) ("optional") ("key")))("module"))
     (file-type ("args" (("required" path) ("optional") ("key")))("module"))
     (finite? ("args" (("required" x) ("optional") ("key")))("module"))
-    (first-bit-set ("args" (("required" n) ("optional") ("key")))("module"))
+    (first-set-bit ("args" (("required" n) ("optional") ("key")))("module"))
     (fixnum->flonum ("args" (("required" n) ("optional") ("key")))("module"))
     (fixnum-overflow-exception?
      ("args" (("required" obj) ("optional") ("key")))("module"))
@@ -515,7 +523,7 @@
     (fxbit-count ("args" (("required" n) ("optional") ("key")))("module"))
     (fxbit-set? ("args" (("required" n1 n2) ("optional") ("key")))("module"))
     (fxeven? ("args" (("required" n) ("optional") ("key")))("module"))
-    (fxfirst-bit-set ("args" (("required" n) ("optional") ("key")))("module"))
+    (fxfirst-set-bit ("args" (("required" n) ("optional") ("key")))("module"))
     (fxif ("args" (("required" n1 n2 n3) ("optional") ("key")))("module"))
     (fxior ("args" (("required" n1 [...]) ("optional") ("key")))("module"))
     (fxlength ("args" (("required" n) ("optional") ("key")))("module"))
@@ -573,8 +581,6 @@
          (("required" test consequent alternate) ("optional") ("key")))("module"))
     (if ("args" (("required" test consequent) ("optional") ("key")))("module"))
     (imag-part ("args" (("required" z) ("optional") ("key")))("module"))
-    (improper-length-list-exception?
-     ("args" (("required" obj) ("optional") ("key")))("module"))
     (inactive-thread-exception?
      ("args" (("required" obj) ("optional") ("key")))("module"))
     (inexact->exact ("args" (("required" z) ("optional") ("key")))("module"))
@@ -723,6 +729,10 @@
     (newline ("args" (("required" port) ("optional") ("key")))("module"))
     (no-such-file-or-directory-exception?
      ("args" (("required" obj) ("optional") ("key")))("module"))
+    (no-such-file-or-directory-exception-procedure
+     ("args" (("required" exc) ("optional") ("key")))("module"))
+    (no-such-file-or-directory-exception-arguments
+     ("args" (("required" exc) ("optional") ("key")))("module"))
     (nonempty-input-port-character-buffer-exception?
      ("args" (("required" obj) ("optional") ("key")))("module"))
     (nonprocedure-operator-exception?
@@ -786,6 +796,12 @@
     (peek-char ("args" (("required") ("optional" [port]) ("key")))("module"))
     (peek-char ("args" (("required") ("optional") ("key")))("module"))
     (peek-char ("args" (("required" port) ("optional") ("key")))("module"))
+    (permission-denied-exception?
+     ("args" (("required" obj) ("optional") ("key")))("module"))
+    (permission-denied-exception-procedure
+     ("args" (("required" exc) ("optional") ("key")))("module"))
+    (permission-denied-exception-arguments
+     ("args" (("required" exc) ("optional") ("key")))("module"))
     (port-io-exception-handler-set!
      ("args" (("required" port handler) ("optional") ("key")))("module"))
     (port-settings-set!

@@ -3,7 +3,7 @@
 ;;; File: "132#.scm"
 
 ;;; Copyright (c) 2018-2019 by Antoine Doucet, All Rights Reserved.
-;;; Copyright (c) 2018-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2018-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -12,8 +12,8 @@
 (##supply-module srfi/132)
 
 (##namespace ("srfi/132#"))
-(##include "~~lib/_prim#.scm")                   ;; map fx+ to ##fx+, etc
-(##include "~~lib/_gambit#.scm")                 ;; for macro-check-procedure, 
+(##include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
+(##include "~~lib/_gambit#.scm")          ;; for macro-check-procedure, 
 (##include "132#.scm")
 
 (##include "merge.scm")

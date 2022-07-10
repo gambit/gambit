@@ -1,0 +1,362 @@
+# makefile for online Gambit Scheme REPL.
+
+# Copyright (c) 2020-2021 by Marc Feeley, All Rights Reserved.
+
+herefromroot = contrib/try
+rootfromhere = ../..
+SUBDIRS =
+
+CODEMIRROR=codemirror-5.59.1
+BROWSERFS=2.0.0
+
+GSC=@SETDLPATH@ $(rootfromhere)/gsc/gsc@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include
+
+#GSC=gsc
+
+# The online Gambit Scheme REPL is composed of the following files:
+#
+# - VM.scm      the Gambit VM including the interpreter and REPL
+# - VM.js       this file is generated from VM.scm by gsc
+# - UI.js       a simple UI with tabbed consoles built on top of CodeMirror
+# - UI.css      style sheet of UI
+# - index.html  the main HTML file
+#
+# To build VM.js from VM.scm you need a recent Gambit with the JavaScript
+# backend.  It can be compiled like this (from an existing bootstrapped
+# recent installation):
+#
+#   cd gambit
+#   git pull
+#   make clean
+#   ./configure --enable-single-host --enable-targets=js --enable-default-compile-options="(compactness 9)" --prefix=/usr/local/Gambit
+#   make
+#   make doc
+#   make modules
+#   sudo make install   (optional)
+#
+# After that, in this directory create the "try" subdirectory using:
+#
+#   make try
+#
+# To view the online Gambit Scheme REPL locally:
+#
+#   make serve
+#
+# To run the REPL on the desktop using node (without the normal browser UI):
+#
+#   node VM.js
+
+PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
+PACKAGE_NAME = @PACKAGE_NAME@
+PACKAGE_VERSION = @PACKAGE_VERSION@
+PACKAGE_STRING = @PACKAGE_STRING@
+PACKAGE_BUGREPORT = @PACKAGE_BUGREPORT@
+PACKAGE_TARNAME = @PACKAGE_TARNAME@
+
+@SET_MAKE@
+
+srcdir = @srcdir@
+VPATH = @srcdir@
+srcdirpfx = @srcdirpfx@
+
+C_COMPILER = @C_COMPILER_MF@
+C_PREPROC = @C_PREPROC_MF@
+FLAGS_OBJ = @FLAGS_OBJ_MF@
+FLAGS_DYN = @FLAGS_DYN_MF@
+FLAGS_LIB = @FLAGS_LIB_MF@
+FLAGS_EXE = @FLAGS_EXE_MF@
+FLAGS_OPT = @FLAGS_OPT_MF@
+FLAGS_OPT_RTS = @FLAGS_OPT_RTS_MF@
+DEFS = @DEFS@
+LIBS = @LIBS@
+
+GAMBITLIB_DEFS = @GAMBITLIB_DEFS_MF@
+LIB_PREFIX = @LIB_PREFIX@
+LIB_VERSION_SUFFIX = @LIB_VERSION_SUFFIX@
+LIB_MAJOR_VERSION_SUFFIX = @LIB_MAJOR_VERSION_SUFFIX@
+
+LIB_EXTENSION = @LIB_EXTENSION@
+GAMBITLIB = @GAMBITLIB@
+GAMBITGSCLIB = @GAMBITGSCLIB@
+GAMBITGSILIB = @GAMBITGSILIB@
+INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
+INSTALL_LIB = @INSTALL_LIB@
+INSTALL_PROGRAM = @INSTALL_PROGRAM@
+LN_S = @LN_S@
+RANLIB = @RANLIB@
+AR = @AR@
+RC = @RC@
+GIT = @GIT@
+HG = @HG@
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+includedir = @includedir@
+libdir = @libdir@
+bindir = @bindir@
+docdir = @docdir@
+infodir = @infodir@
+emacsdir = @emacsdir@
+libexecdir = @libexecdir@
+datarootdir = @datarootdir@
+datadir = @datadir@
+htmldir = @htmldir@
+dvidir = @dvidir@
+pdfdir = @pdfdir@
+psdir = @psdir@
+localedir = @localedir@
+mandir = @mandir@
+
+.SUFFIXES: .scm .js
+
+MODULES_JS = VM.js
+
+RCFILES = makefile.in README UI.css UI.js VM.scm extra.scm index.html \
+https-server.py https-server-certificate.pem
+
+GENDISTFILES =
+
+DISTFILES = $(RCFILES) $(GENDISTFILES)
+
+all: core
+
+core:
+
+core-pre:
+
+core-post:
+
+try: browserfs.min.js codemirror UI.css UI.js index.html VM.min.js
+	@echo "===== Copying library files"; \
+	INSTALL="`pwd`/$(INSTALL_DATA)"; \
+	DESTDIR="`pwd`/try"; \
+	LIBDIR="`$(GSC) -e '(display (path-expand "~~lib"))'`"; \
+	(cd "$$LIBDIR/.." && find lib \( -path "*js/*" -or -path "*.sld" -or -path "*.scm" \) -exec echo "{}" ";" -exec $$INSTALL "{}" "$$DESTDIR/{}" ";"); \
+	(cd "$$DESTDIR" && find lib -path "*@js/*.o1" -exec echo "{}.js" ";" -exec mv "{}" "$$DESTDIR/{}.js" ";" -exec touch "$$DESTDIR/{}" ";" -exec gzip -k9 "$$DESTDIR/{}.js" ";")
+	mkdir try/doc
+	cp `$(GSC) -e '(display (path-expand "~~doc"))'`/gambit.html try/doc/.
+	cp -r browserfs.min.js try/.
+	cp -r codemirror try/.
+	cp UI.css try/.
+	cp UI.js try/.
+	cp index.html try/.
+	cp VM.min.js try/.
+	cp VM.min.js.gz try/.
+
+try.tgz: try
+	rm -f try.tar try.tar.gz
+	tar cf try.tar try
+	gzip -9 try.tar
+	mv try.tar.gz try.tgz
+
+PRELUDE_OPT = -prelude "(define-cond-expand-feature|disable-s8vector|)(define-cond-expand-feature|disable-u16vector|)(define-cond-expand-feature|disable-s16vector|)(define-cond-expand-feature|disable-u32vector|)(define-cond-expand-feature|disable-s32vector|)(define-cond-expand-feature|disable-u64vector|)(define-cond-expand-feature|disable-s64vector|)(define-cond-expand-feature|disable-f32vector|)"
+
+VM.js: extra.scm VM.scm
+	cp `$(GSC) -e '(display (path-expand "~~lib/_six/js.scm"))'` .
+	cp `$(GSC) -e '(display (path-expand "~~lib/_six/js#.scm"))'` .
+	cp `$(GSC) -e '(display (path-expand "~~lib/_six/six-expand.scm"))'` .
+	cp `$(GSC) -e '(display (path-expand "~~lib/_six/six-expand#.scm"))'` .
+	$(GSC) -target js -label-namespace "z" -exe -o VM.js $(PRELUDE_OPT) -nopreload js.scm six-expand.scm extra.scm VM.scm
+
+VM.min.js: VM.js
+	npx google-closure-compiler --language_in=ECMASCRIPT_2020 --language_out=ECMASCRIPT_2020 --js VM.js --js_output_file VM.min.js
+	sed -i.tmp -e "s/^'use strict';//" VM.min.js
+	gzip -k -9 VM.min.js
+
+browserfs.min.js:
+	wget https://cdnjs.cloudflare.com/ajax/libs/BrowserFS/$(BROWSERFS)/browserfs.min.js
+
+$(CODEMIRROR).zip:
+	wget https://codemirror.net/$(CODEMIRROR).zip
+
+codemirror: $(CODEMIRROR).zip
+	rm -rf -- $(CODEMIRROR)
+	unzip -q $(CODEMIRROR).zip
+	mv $(CODEMIRROR) codemirror
+
+serve: try
+	@echo "===== A local https server with a self signed certificate is"
+	@echo "===== being started on port 4443 and https://localhost:4443/try/"
+	@echo "===== will be opened in the web browser"
+	(sleep 2; $(MAKE) view) &
+	./https-server.py
+
+view: try
+	@URL=https://localhost:4443/try/; \
+	for browser in /Applications/Firefox.app/Contents/MacOS/firefox firefox mozilla netscape chrome chromium chromium-browser osascript; do \
+	  if which $$browser > /dev/null; then \
+	    if [ "$$browser" = "osascript" ]; then \
+	      echo "===== Viewing $$URL with Safari"; \
+	      $(MAKE) view-safari; \
+	    else \
+	      echo "===== Viewing $$URL with $$browser"; \
+	      $$browser $$URL; \
+	    fi; \
+	    break; \
+	  fi; \
+	done
+
+view-safari: core
+	@URL=https://localhost:4443/try/; \
+	osascript -e "tell application \"Safari\"" -e "open location \"$$URL\"" -e "end tell"
+
+bootstrap-pre:
+
+bootstrap-post:
+
+install-pre:
+
+install-post: core
+
+uninstall-pre:
+
+uninstall-post:
+
+select-gen-for-commit-pre:
+
+select-gen-for-commit-post select-gen-for-commit-post-nonrec:
+
+deselect-gen-for-commit-pre:
+
+deselect-gen-for-commit-post deselect-gen-for-commit-post-nonrec:
+
+mostlyclean-pre:
+
+mostlyclean-post mostlyclean-post-nonrec:
+	rm -f $(MODULES_JS)
+
+clean-pre: mostlyclean-pre
+
+clean-post clean-post-nonrec: mostlyclean-post-nonrec
+	rm -rf js.scm js\#.scm six.js six-expand.scm six-expand\#.scm six-expand.js VM.min.js* try try.tgz codemirror $(CODEMIRROR)
+
+distclean-pre: clean-pre
+
+distclean-post distclean-post-nonrec: clean-post-nonrec
+
+bootclean-pre: distclean-pre
+
+bootclean-post bootclean-post-nonrec: distclean-post-nonrec
+
+realclean-pre: bootclean-pre
+
+realclean-post realclean-post-nonrec: bootclean-post-nonrec
+	rm -rf makefile $(CODEMIRROR).zip browserfs.min.js
+
+rc-setup-pre:
+	$(RC) add $(RCFILES)
+
+rc-setup-post:
+
+dist-pre dist-devel-pre:
+	mkdir $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot)
+	chmod 777 $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot)
+	@echo "  Copying distribution files:"
+	@for file in $(DISTFILES); do \
+	  echo "    $(herefromroot)/$$file"; \
+	  ln $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot) 2> /dev/null \
+	    || cp -p $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot); \
+	done
+
+dist-post dist-devel-post:
+
+core-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+	@if test -n "$(SUBDIRS)"; then \
+	  for subdir in ""$(SUBDIRS); do \
+	    target=`echo $@ | sed 's/-recursive//'`; \
+	    echo making $$target in $$subdir; \
+	    (cd $$subdir && $(MAKE) $$target) || exit 1; \
+	  done \
+	fi
+
+core: core-post
+
+core-post: core-recursive
+
+core-recursive: core-pre
+
+bootstrap: bootstrap-post
+
+bootstrap-post: bootstrap-recursive
+
+bootstrap-recursive: bootstrap-pre
+
+install: install-post
+
+install-post: install-recursive
+
+install-recursive: install-pre
+
+uninstall: uninstall-post
+
+uninstall-post: uninstall-recursive
+
+uninstall-recursive: uninstall-pre
+
+select-gen-for-commit: select-gen-for-commit-post
+
+select-gen-for-commit-post: select-gen-for-commit-recursive
+
+select-gen-for-commit-post-nonrec select-gen-for-commit-recursive: select-gen-for-commit-pre
+
+deselect-gen-for-commit: deselect-gen-for-commit-post
+
+deselect-gen-for-commit-post: deselect-gen-for-commit-recursive
+
+deselect-gen-for-commit-post-nonrec deselect-gen-for-commit-recursive: deselect-gen-for-commit-pre
+
+mostlyclean: mostlyclean-post
+
+mostlyclean-post: mostlyclean-recursive
+
+mostlyclean-post-nonrec mostlyclean-recursive: mostlyclean-pre
+
+clean: clean-post
+
+clean-post: clean-recursive
+
+clean-post-nonrec clean-recursive: clean-pre
+
+distclean: distclean-post
+
+distclean-post: distclean-recursive
+
+distclean-post-nonrec distclean-recursive: distclean-pre
+
+bootclean: bootclean-post
+
+bootclean-post: bootclean-recursive
+
+bootclean-post-nonrec bootclean-recursive: bootclean-pre
+
+realclean: realclean-post
+
+realclean-post: realclean-recursive
+
+realclean-post-nonrec realclean-recursive: realclean-pre
+
+rc-setup: rc-setup-post
+
+rc-setup-post: rc-setup-recursive
+
+rc-setup-recursive: rc-setup-pre
+
+dist: dist-post
+
+dist-post: dist-recursive
+
+dist-recursive: dist-pre
+
+dist-devel: dist-devel-post
+
+dist-devel-post: dist-devel-recursive
+
+dist-devel-recursive: dist-devel-pre
+
+makefile: makefile.in $(rootfromhere)/config.status
+	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
+
+# Tell versions [3.59,3.63) of GNU make not to export all variables.
+# Otherwise a system limit (for SysV at least) may be exceeded.
+.NOEXPORT:

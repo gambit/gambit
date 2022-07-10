@@ -1,8 +1,8 @@
 ;;;============================================================================
 
-;;; File: "header.scm", Time-stamp: <2007-11-20 11:27:56 feeley>
+;;; File: "header.scm"
 
-;;; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 

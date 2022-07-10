@@ -9,12 +9,13 @@
 
 (define (gen-char i mod)
   (integer->char
-   (vector-ref
-    '#(#x0000 #x007F
-       #x0080 #x07FF
-       #x0800 #xFFF0
-       #x10000 #x10FFFF)
-    (modulo i mod))))
+   (min ##max-char
+        (vector-ref
+         '#(#x0000 #x007F
+            #x0080 #x07FF
+            #x0800 #xFFF0
+            #x10000 #x10FFFF)
+         (modulo i mod)))))
 
 (define (test1 port mod)
   (let loop ((i 0))

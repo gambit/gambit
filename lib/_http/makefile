@@ -5,7 +5,7 @@ herefromlib = _http
 libfromhere = ..
 SUBDIRS =
 HEADERS_SCM = _http\#.scm
-MODULES_SCM = _http.scm test.scm
+MODULES_SCM = _http.scm test/test.scm
 MAIN_MODULES = _http
 OTHER_RCFILES = makefile
 

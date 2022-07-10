@@ -1,0 +1,212 @@
+name: Gambit
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+
+jobs:
+  Windows-mingw:
+    name: "Windows - ${{ matrix.msystem }}"
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        include:
+          - msystem: "MINGW64"
+            arch: "x86_64"
+          - msystem: "MINGW32"
+            arch: "i686"
+
+    defaults:
+      run:
+        shell: msys2 {0}
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0 # Checkout history and tags
+
+    - name: Install MSYS2
+      uses: msys2/setup-msys2@v2
+      with:
+        update: true
+        install: "autoconf git make tar texinfo mingw-w64-${{ matrix.arch }}-gcc mingw-w64-${{ matrix.arch }}-make mingw-w64-${{ matrix.arch }}-libwinpthread-git"
+        msystem: ${{ matrix.msystem }}
+
+    - name: Build
+      run: |
+        ./configure --enable-debug --enable-debug-c-backtrace
+        echo "#undef HAVE_CLOCK_GETTIME" >> include/config.h
+        make -j`nproc` core
+
+    # Only run tests for MinGW64 for now
+    - name: Test
+      if: ${{ matrix.msystem == 'MINGW64' }}
+      run: make check
+
+    - name: Build Gambit for Use
+      run: |
+        mkdir dist
+        ./configure --prefix=$(pwd)/dist
+        echo "#undef HAVE_CLOCK_GETTIME" >> include/config.h
+        make -j`nproc` core
+        make modules
+        make install
+
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: gambit-win-mingw-${{ matrix.arch }}
+        path: dist/
+
+    - name: Report Failure to Gitter
+      run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
+      if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
+
+  Windows-msvc:
+    name: "Windows - MSVC"
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0 # Checkout history and tags
+
+    - name: Install MSVC
+      uses: ilammy/msvc-dev-cmd@v1
+
+    - name: Install MSYS2
+      uses: msys2/setup-msys2@v2
+      with:
+        update: true
+        install: "autoconf make patch tar texinfo"
+        path-type: inherit
+        msystem: MSYS
+
+    - name: Build
+      shell: cmd
+      run: |
+        set PATH=%RUNNER_TEMP%\msys\msys64\usr\bin;%PATH%
+        msys2 -c "./configure --enable-c-opt=-Od --enable-debug --enable-debug-c-backtrace CC='cl' && make -j%NUMBER_OF_PROCESSORS% core"
+
+    - name: Test
+      shell: cmd
+      run: |
+        msys2 -c "make check"
+
+    - name: Build vstudio.bat
+      shell: cmd
+      run: |
+        call misc\vstudio.bat
+        cd tests
+        ..\gsc\gsc -f -warnings -c -nb-gvm-regs 5 -nb-arg-regs 3 mix.scm
+        echo n | comp mix.c test5.ok
+
+    - name: Build Gambit for Use
+      shell: cmd
+      run: |
+        mkdir dist
+        msys2 -c "./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist CC='cl' && make -j%NUMBER_OF_PROCESSORS% core && make modules && make install"
+
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: gambit-win-msvc-x86_64
+        path: dist/
+
+    - name: Report Failure to Gitter
+      run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
+      if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
+
+  Linux:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0 # Checkout history and tags
+
+    - name: Install Dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install texinfo
+
+    - name: Build and Test
+      run: |
+        export PROCS=`nproc`
+        ./configure --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms && make clean && make -j$PROCS core && make check && make clean && ./configure --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms --enable-cplusplus && make -j$PROCS core && make check && make clean && ./configure --enable-ansi-c && make -j$PROCS core && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
+
+    - name: Build Gambit for Use
+      run: |
+        mkdir dist
+        ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist && make -j`nproc` core && make modules && make install
+        cd dist/
+        tar -cvzf ../gambit-linux-x86_64.tgz ./
+        cd ..
+
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: gambit-linux-x86_64
+        path: gambit-linux-x86_64.tgz
+
+    - name: Package Source
+      run: make dist-boot
+
+    - name: Upload Source
+      uses: actions/upload-artifact@v1
+      with:
+        name: boot
+        path: boot.tgz
+
+    - name: Report Failure to Gitter
+      run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
+      if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
+
+  MacOS:
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0 # Checkout history and tags
+
+    - name: Build and Test
+      run: |
+        export CC=gcc-9
+        export CXX=g++-9
+        export PROCS=`sysctl -n hw.physicalcpu`
+        ./configure --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms && make clean && make -j$PROCS core && make check && make clean && ./configure --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms --enable-cplusplus && make -j$PROCS core && make check && make clean && ./configure --enable-ansi-c && make -j$PROCS core && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
+
+    - name: Build Gambit for Use
+      run: |
+        mkdir dist
+        export CC=gcc-9
+        export CXX=g++-9
+        ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist && make -j`sysctl -n hw.physicalcpu` core && make modules && make install
+        cd dist/
+        tar -cvzf ../gambit-macos-x86_64.tgz ./
+        cd ..
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v1
+      with:
+        name: gambit-macos-x86_64
+        path: gambit-macos-x86_64.tgz
+
+    - name: Report Failure to Gitter
+      run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
+      if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
+
+  ReportResult:
+    runs-on: ubuntu-latest
+    needs: [Windows-mingw, Windows-msvc, Linux, MacOS]
+    if: ${{ success() }}
+
+    steps:
+    - name: Report Success to Gitter
+      run: curl --data-urlencode "message=CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) passed" ${{ secrets.GITTER_URL }}
+      if: success() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)

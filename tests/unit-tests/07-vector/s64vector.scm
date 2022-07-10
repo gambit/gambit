@@ -219,8 +219,8 @@
 (check-equal? (s64vector-append '#s64(-9223372036854775808 -2) '#s64(0 1 9223372036854775807)) v6)
 (check-equal? (s64vector-append v6 v7 v6) '#s64(-9223372036854775808 -2 0 1 9223372036854775807 0 0 -9223372036854775808 -2 0 1 9223372036854775807))
 
-(check-equal? (append-s64vectors (list v6 v7 v6)) '#s64(-9223372036854775808 -2 0 1 9223372036854775807 0 0 -9223372036854775808 -2 0 1 9223372036854775807))
-(check-equal? (append-s64vectors (list v6 v7 v6) '#s64(1 1 1)) '#s64(-9223372036854775808 -2 0 1 9223372036854775807 1 1 1 0 0 1 1 1 -9223372036854775808 -2 0 1 9223372036854775807))
+(check-equal? (s64vector-concatenate (list v6 v7 v6)) '#s64(-9223372036854775808 -2 0 1 9223372036854775807 0 0 -9223372036854775808 -2 0 1 9223372036854775807))
+(check-equal? (s64vector-concatenate (list v6 v7 v6) '#s64(1 1 1)) '#s64(-9223372036854775808 -2 0 1 9223372036854775807 1 1 1 0 0 1 1 1 -9223372036854775808 -2 0 1 9223372036854775807))
 
 (check-equal? (s64vector-copy '#s64()) '#s64())
 (check-equal? (s64vector-copy v6) v6)
@@ -351,9 +351,9 @@
 (check-tail-exn type-exception? (lambda () (s64vector-append bool v9)))
 (check-tail-exn type-exception? (lambda () (s64vector-append v9 bool)))
 
-(check-tail-exn type-exception? (lambda () (append-s64vectors bool)))
-(check-tail-exn type-exception? (lambda () (append-s64vectors '(1 2 3))))
-(check-tail-exn type-exception? (lambda () (append-s64vectors (list v9 v9) bool)))
+(check-tail-exn type-exception? (lambda () (s64vector-concatenate bool)))
+(check-tail-exn type-exception? (lambda () (s64vector-concatenate '(1 2 3))))
+(check-tail-exn type-exception? (lambda () (s64vector-concatenate (list v9 v9) bool)))
 
 (check-tail-exn type-exception? (lambda () (s64vector-copy bool)))
 (check-tail-exn type-exception? (lambda () (s64vector-copy v9 bool)))
@@ -449,8 +449,8 @@
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (list->s64vector)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (list->s64vector '() '())))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (append-s64vectors)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (append-s64vectors '() '() '())))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s64vector-concatenate)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s64vector-concatenate '() '() '())))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (s64vector-copy)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (s64vector-copy v1 0 0 0)))

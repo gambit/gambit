@@ -2,7 +2,7 @@
 
 ;;; File: "_io.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -65,9 +65,14 @@
    (lambda (procedure arguments message code port)
      (##raise-io-exception
       port
-      (if (##fx= code ##err-code-ENOENT)
-          (macro-make-no-such-file-or-directory-exception procedure arguments)
-          (macro-make-os-exception procedure arguments message code))))))
+      (cond ((##fx= code ##err-code-ENOENT)
+             (macro-make-no-such-file-or-directory-exception procedure arguments))
+            ((##fx= code ##err-code-EEXIST)
+             (macro-make-file-exists-exception procedure arguments))
+            ((##fx= code ##err-code-EACCES)
+             (macro-make-permission-denied-exception procedure arguments))
+            (else
+             (macro-make-os-exception procedure arguments message code)))))))
 
 (define-prim (##raise-io-exception port exc)
   (let ((handler (macro-port-io-exception-handler port)))
@@ -76,7 +81,9 @@
         (macro-raise exc))))
 
 (define-prim (file-error? obj)
-  (macro-no-such-file-or-directory-exception? obj))
+  (or (macro-no-such-file-or-directory-exception? obj)
+      (macro-file-exists-exception? obj)
+      (macro-permission-denied-exception? obj)))
 
 ;;;----------------------------------------------------------------------------
 
@@ -4125,6 +4132,10 @@
   (##declare (not interrupts-enabled))
   ((macro-port-name port) port))
 
+(define-prim (##port-name-set! port name)
+  (##declare (not interrupts-enabled))
+  (macro-port-name-set! port (lambda (port) name)))
+
 (define-prim (##read
               #!optional
               (port (macro-current-input-port)))
@@ -4390,7 +4401,7 @@
 
 (macro-case-target
 
- ((C)
+ ((C js python)
 
 (define-prim (##print
               #!key (port (macro-current-output-port))
@@ -4874,6 +4885,36 @@
     (##wr we obj)
     (##get-output-string port)))
 
+(define-prim (##object->string-with-sn
+              obj
+              max-length
+              #!optional
+              (char-encoding-limit (macro-absent-obj))
+              (min-length 0)
+              (actual-obj obj))
+  (let* ((ml
+          (##fxmax max-length min-length))
+         (str
+          (##object->string
+           obj
+           (##fx+ ml 1)
+           char-encoding-limit)))
+    (if (##fx<= (##string-length str) ml)
+        str
+        (let* ((sn
+                (##number->string
+                 (##object->serial-number actual-obj)))
+               (max-length2
+                (##fxmax
+                 (##fx- max-length
+                        (##fx+ 2
+                               (##string-length sn)))
+                 min-length)))
+          (##string-append
+           (##force-limited-string! str max-length2)
+           " #"
+           sn)))))
+
 (define-prim (##object->string
               obj
               #!optional
@@ -4957,6 +4998,30 @@
       (input-port-characters-buffered port)
       (##input-port-characters-buffered port))))
 
+(##define-macro (macro-char-input-port-cache-fill port)
+  `(macro-case-target
+    ((C)
+     (##c-code
+      "___ps->type_cache[___CHAR_INPUT_PORT_TYPE_CACHE] = ___ARG1;"
+      (##structure-type ,port)))
+    (else
+     #f)))
+
+(##define-macro (macro-char-output-port-cache-fill port)
+  `(macro-case-target
+    ((C)
+     (##c-code
+      "___ps->type_cache[___CHAR_OUTPUT_PORT_TYPE_CACHE] = ___ARG1;"
+      (##structure-type ,port)))
+    (else
+     #f)))
+
+(define-prim (##char-input-port?-cached obj)
+  (macro-character-input-port? obj))
+
+(define-prim (##char-output-port?-cached obj)
+  (macro-character-output-port? obj))
+
 (define-prim (##char-ready?1 port)
 
   (##declare (not interrupts-enabled))
@@ -5012,7 +5077,9 @@
                (macro-current-input-port)
                port)))
       (macro-check-character-input-port p 1 (char-ready? p)
-        (##char-ready?1 p)))))
+        (begin
+          (macro-char-input-port-cache-fill p)
+          (##char-ready?1 p))))))
 
 (define-prim (##peek-char1 port)
 
@@ -5099,7 +5166,9 @@
                (macro-current-input-port)
                port)))
       (macro-check-character-input-port p 1 (peek-char p)
-        (##peek-char1 p)))))
+        (begin
+          (macro-char-input-port-cache-fill p)
+          (##peek-char1 p))))))
 
 (define-prim (##read-char1 port)
 
@@ -5211,7 +5280,9 @@
                (macro-current-input-port)
                port)))
       (macro-check-character-input-port p 1 (read-char p)
-        (##read-char1 p)))))
+        (begin
+          (macro-char-input-port-cache-fill p)
+          (##read-char1 p))))))
 
 (define-prim (##read-substring
               str
@@ -5223,6 +5294,8 @@
               (raise-os-exception? #t))
 
   (##declare (not interrupts-enabled))
+
+  (macro-port-mutex-lock! port) ;; get exclusive access to port
 
   (let loop ((n 0))
     (let ((remaining (##fx- end (##fx+ start n))))
@@ -5444,7 +5517,7 @@
                             (##eq? (##string-ref new-chunk (##fx- m2 1)) ;; note: separator is a char or #f
                                    separator)
                             (##fx= ml m2))
-                        (##append-strings (##reverse new-chunks))
+                        (##string-concatenate (##reverse new-chunks))
                         (loop (##fx- ml m2)
                               new-chunks)))))))
 
@@ -5519,116 +5592,6 @@
       (macro-check-object-input-port p 1 (read-all port reader)
         (macro-check-procedure r 2 (read-all port r)
           (##read-all p r))))))
-
-(define-prim (##read-all-as-a-begin-expr-from-path
-              path
-              readtable
-              wrap
-              unwrap
-              #!optional
-              (case-conversion? '()))
-
-  (define (fail)
-    (##fail-check-string 1 open-input-file path))
-
-  (##make-input-path-psettings
-   (##list 'path: path
-           'eol-encoding: 'cr-lf)
-   fail
-   (lambda (psettings)
-     (let ((path (macro-psettings-path psettings)))
-       (if (##not path)
-           (fail)
-           (##read-all-as-a-begin-expr-from-psettings
-            psettings
-            path
-            readtable
-            wrap
-            unwrap
-            case-conversion?))))))
-
-(define-prim (##read-all-as-a-begin-expr-from-psettings
-              psettings
-              path-or-settings
-              readtable
-              wrap
-              unwrap
-              #!optional
-              (case-conversion? '()))
-
-  (define (fail)
-    (##fail-check-string-or-settings 1 open-input-file path-or-settings))
-
-  (let ((path (macro-psettings-path psettings)))
-    (if (##not path)
-        (fail)
-        (##open-file-generic-from-psettings
-         psettings
-         #f
-         (lambda (port)
-           (if (##fixnum? port)
-               port
-               (let* ((extension
-                       (##path-extension path))
-                      (start-syntax
-                       (let ((x (##assoc extension ##scheme-file-extensions)))
-                         (if x
-                             (##cdr x)
-                             (macro-readtable-start-syntax readtable)))))
-                 (##read-all-as-a-begin-expr-from-port
-                  port
-                  readtable
-                  wrap
-                  unwrap
-                  start-syntax
-                  #t
-                  case-conversion?))))
-         open-input-file
-         path-or-settings))))
-
-(define-prim (##read-all-as-a-begin-expr-from-port
-              port
-              readtable
-              wrap
-              unwrap
-              start-syntax
-              close-port?
-              #!optional
-              (case-conversion? '()))
-  (##with-exception-catcher
-   (lambda (exc)
-     (if close-port?
-         (##close-input-port port))
-     (macro-raise exc))
-   (lambda ()
-     (let ((rt
-            (##readtable-copy-shallow readtable)))
-       (macro-readtable-start-syntax-set! rt start-syntax)
-       (let* ((re
-               (##make-readenv port rt wrap unwrap #t case-conversion? #f))
-              (head
-               (##cons (wrap re '##begin)
-                       '())) ;; tail will be replaced with expressions read
-              (expr
-               (wrap re head))
-              (first
-               (##read-datum-or-eof re))
-              (rest
-               (if (##eof-object? first)
-                   '()
-                   (##read-all re ##read-datum-or-eof))))
-         (if close-port?
-             (##close-input-port port))
-         (if (##not (##eof-object? first))
-             (##set-cdr! head
-                         (if (##eq? first (##script-marker))
-                             rest
-                             (##cons first rest))))
-         (let* ((sl (macro-readenv-script-line re))
-                (script-line (and (##string? sl) sl)))
-           (##vector script-line
-                     expr
-                     (##port-name port))))))))
 
 (define-prim (##write-char2 c port)
 
@@ -5718,7 +5681,31 @@
                 (loop)))))))
 
 (define-prim (##write-char2? c port)
-  #f)
+
+  (##declare (not interrupts-enabled))
+
+  (if (or (##char=? c #\newline)
+          (macro-unbuffered? (macro-port-woptions port)))
+      #f
+      (let ((char-wbuf (macro-character-port-wbuf port))
+            (char-whi+1 (##fx+ (macro-character-port-whi port) 1)))
+        (if (##not (##fx< (##string-length char-wbuf) char-whi+1))
+
+            (begin
+
+              ;; there is enough space in the character write buffer, so add
+              ;; character and increment whi
+
+              (##string-set! char-wbuf (##fx- char-whi+1 1) c)
+
+              (macro-character-port-whi-set! port char-whi+1)
+
+              #t)
+
+            ;; there is insufficient space in the character write
+            ;; buffer so bail out (this normally will call ##write-char)
+
+            #f))))
 
 (define-prim (##write-char1 c)
   (##write-char2 c (macro-current-output-port)))
@@ -5745,17 +5732,70 @@
                port)))
       (macro-check-char c 1 (write-char c port)
         (macro-check-character-output-port p 2 (write-char c p)
-          (##write-char2 c p))))))
+          (begin
+            (macro-char-output-port-cache-fill p)
+            (##write-char2 c p)))))))
 
 (define-prim (##write-substring str start end port)
+
   (##declare (not interrupts-enabled))
-  (let loop ((i start))
-    (if (##fx< i end)
-        (begin
-          (macro-write-char (##string-ref str i) port)
-          (let ()
-            (##declare (interrupts-enabled))
-            (loop (##fx+ i 1)))))))
+
+  (if (##not (macro-fully-buffered?
+              (macro-port-woptions port)))
+
+      (let loop ((i start))
+        (if (##fx< i end)
+            (begin
+              (macro-write-char (##string-ref str i) port)
+              (let ()
+                (##declare (interrupts-enabled))
+                (loop (##fx+ i 1))))
+            (##void)))
+
+      (begin
+
+        (macro-port-mutex-lock! port) ;; get exclusive access to port
+
+        (let loop ((i start))
+          (if (##fx< i end)
+              (let* ((char-wbuf (macro-character-port-wbuf port))
+                     (char-whi (macro-character-port-whi port))
+                     (n (##fxmin (##fx- end i)
+                                 (##fx- (##string-length char-wbuf) char-whi))))
+                (if (##fx< 0 n)
+
+                    ;; there is enough space in the character write buffer to
+                    ;; write n characters, so do that and increment whi
+
+                    (let ((i+n (##fx+ i n)))
+
+                      (##substring-move!
+                       str
+                       i
+                       i+n
+                       char-wbuf
+                       char-whi)
+
+                      ;; advance whi
+
+                      (macro-character-port-whi-set! port (##fx+ char-whi n))
+
+                      (loop i+n))
+
+                    ;; make some space in the character buffer and try again
+
+                    (let ((code ((macro-character-port-wbuf-drain port) port)))
+                      (if (##fixnum? code)
+                          (begin
+                            (macro-port-mutex-unlock! port)
+                            (if (##fx= code ##err-code-EAGAIN)
+                                #f
+                                (##raise-os-io-exception port #f code write-substring str start end port)))
+                          (loop i)))))
+
+              (begin
+                (macro-port-mutex-unlock! port)
+                (##void)))))))
 
 (define-prim (write-substring
               str
@@ -5995,6 +6035,78 @@
         1
         (read-u8 p)
         (##read-u8 p)))))
+
+(define-prim (##peek-u8
+              #!optional
+              (port (macro-current-input-port)))
+
+  (##declare (not interrupts-enabled))
+
+  (macro-lock-and-check-input-port-character-buffer-empty
+   port
+   (peek-u8 port)
+   (let loop ()
+     (let* ((byte-rlo
+             (macro-byte-port-rlo port))
+            (byte-rhi
+             (macro-byte-port-rhi port)))
+       (if (##fx< byte-rlo byte-rhi)
+           (let* ((byte-rbuf
+                   (macro-byte-port-rbuf port))
+                  (result
+                   (##u8vector-ref byte-rbuf byte-rlo)))
+             ;;don't advance rlo
+             ;;(macro-byte-port-rlo-set! port (##fx+ byte-rlo 1))
+             (macro-port-mutex-unlock! port)
+             result)
+           (let ((code
+                  ((macro-byte-port-rbuf-fill port)
+                   port
+                   1
+                   #t)))
+             (cond ((##fixnum? code)
+
+                    ;; an error occurred
+
+                    (macro-port-mutex-unlock! port)
+
+                    (if (##fx= code ##err-code-EAGAIN)
+                        #!eof ;; the read timeout thunk returned #f
+                        (##raise-os-io-exception
+                         port
+                         #f
+                         code
+                         peek-u8
+                         port)))
+
+                   (code
+
+                    ;; bytes were added to byte buffer, so try again
+                    ;; to transfer bytes from the byte buffer
+
+                    (loop))
+
+                   (else
+
+                    ;; no bytes were added to byte buffer
+                    ;; (end-of-file was reached)
+
+                    (macro-port-mutex-unlock! port)
+                    #!eof))))))))
+
+(define-prim (peek-u8
+              #!optional
+              (port (macro-absent-obj)))
+  (macro-force-vars (port)
+    (let ((p
+           (if (##eq? port (macro-absent-obj))
+               (macro-current-input-port)
+               port)))
+      (macro-check-byte-input-port
+        p
+        1
+        (peek-u8 p)
+        (##peek-u8 p)))))
 
 (define-prim (##read-subu8vector
               u8vect
@@ -6952,6 +7064,12 @@
                           (##string? directory))))
            (fail)
            (let* ((path-and-arguments
+                   ;; Note that the path is not resolved when opening a
+                   ;; process port.  This is so that the current PATH
+                   ;; environment variable is used to resolve the path
+                   ;; of the program.  It is the caller's responsibility
+                   ;; to call (path-expand path) if the path must be
+                   ;; interpreted relative to the current directory.
                    (##cons path
                            (macro-psettings-arguments psettings)))
                   (environment
@@ -7233,7 +7351,7 @@
 (define-prim (##ip-address? obj)
   (cond ((##u8vector? obj)
          (##fx= (##u8vector-length obj) 4))
-        ((##u16vector? obj)
+        ((macro-if-u16vector (##u16vector? obj) #f)
          (##fx= (##u16vector-length obj) 8))
         (else
          #f)))
@@ -8998,6 +9116,32 @@
         (udp-source-socket-info port)
         (##udp-source-socket-info p)))))
 
+(define-prim (##udp-socket-receive-buffer-size port)
+
+  (macro-port-mutex-lock! port) ;; get exclusive access to port
+
+  (let ((result
+         (##os-device-udp-socket-receive-buffer-size
+          (macro-condvar-name
+           (or (macro-udp-port-rdevice-condvar port)
+               (macro-udp-port-wdevice-condvar port))))))
+
+    (macro-port-mutex-unlock! port)
+    result))
+
+(define-prim (##udp-socket-send-buffer-size port)
+
+  (macro-port-mutex-lock! port) ;; get exclusive access to port
+
+  (let ((result
+         (##os-device-udp-socket-send-buffer-size
+          (macro-condvar-name
+           (or (macro-udp-port-rdevice-condvar port)
+               (macro-udp-port-wdevice-condvar port))))))
+
+    (macro-port-mutex-unlock! port)
+    result))
+
 (define-prim (##udp-write-subu8vector u8vect start end port prim)
 
   (##declare (not interrupts-enabled))
@@ -9377,7 +9521,7 @@
                     (macro-psettings-ignore-hidden psettings))))
              (if (##fixnum? rdevice)
                  (if raise-os-exception?
-                     (##raise-os-exception #f rdevice open-directory path)
+                     (##raise-os-exception #f rdevice prim path)
                      (cont rdevice))
                  (cont (##make-directory-port rdevice path)))))))))
 
@@ -9402,7 +9546,7 @@
 
 (implement-check-type-event-queue-port)
 
-(define-prim (##make-event-queue-port rdevice index)
+(define-prim (##make-event-queue-port rdevice selector)
   (let ((mutex
          (macro-make-port-mutex))
         (rkind
@@ -9431,7 +9575,7 @@
 
       (##declare (not interrupts-enabled))
 
-      (##list 'event-queue (macro-event-queue-port-index port)))
+      (##list 'event-queue (macro-event-queue-port-selector port)))
 
     (define (wait port direction)
 
@@ -9452,18 +9596,18 @@
       (macro-port-mutex-lock! port) ;; get exclusive access to port
 
       (let loop ()
-        (let ((datum
+        (let ((result
                (##os-device-event-queue-read
                 (macro-event-queue-port-rdevice-condvar port))))
-          (if (##fixnum? datum)
+          (if (and (##fixnum? result) (##fx< result 0))
 
-              (cond ((##fx= datum ##err-code-EINTR)
+              (cond ((##fx= result ##err-code-EINTR)
 
                      ;; the read was interrupted, so try again
 
                      (loop))
 
-                    ((##fx= datum ##err-code-EAGAIN)
+                    ((##fx= result ##err-code-EAGAIN)
 
                      ;; the read would block, so wait and then try again
 
@@ -9484,11 +9628,11 @@
                      ;; signal an error
 
                      (macro-port-mutex-unlock! port)
-                     (##raise-os-io-exception port #f datum read port)))
+                     (##raise-os-io-exception port #f result read port)))
 
               (begin
                 (macro-port-mutex-unlock! port)
-                datum)))))
+                result)))))
 
     (define write-datum #f)
 
@@ -9557,7 +9701,7 @@
             newline
             force-output
             rdevice-condvar
-            index)))
+            selector)))
       (##io-condvar-port-set! rdevice-condvar port)
       port)))
 
@@ -9565,28 +9709,28 @@
               raise-os-exception?
               cont
               prim
-              index)
+              selector)
+  (let ((rdevice
+         (##os-device-event-queue-open selector)))
+    (if (##fixnum? rdevice)
+        (if raise-os-exception?
+            (##raise-os-exception #f rdevice prim selector)
+            (cont rdevice))
+        (cont (##make-event-queue-port rdevice selector)))))
+
+(define-prim (open-event-queue selector)
 
   (define (fail)
-    (##fail-check-fixnum 1 prim index))
+    (##fail-check-fixnum 1 open-event-queue selector))
 
-  (if (##not (##fixnum? index))
-      (fail)
-      (let ((rdevice
-             (##os-device-event-queue-open index)))
-        (if (##fixnum? rdevice)
-            (if raise-os-exception?
-                (##raise-os-exception #f rdevice open-event-queue index)
-                (cont rdevice))
-            (cont (##make-event-queue-port rdevice index))))))
-
-(define-prim (open-event-queue index)
-  (macro-force-vars (index)
-    (##open-event-queue
-     #t
-     (lambda (port) port)
-     open-event-queue
-     index)))
+  (macro-force-vars (selector)
+    (if (##not (##fixnum? selector))
+        (fail)
+        (##open-event-queue
+         #t
+         (lambda (port) port)
+         open-event-queue
+         selector))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -9654,7 +9798,7 @@
               (arg2 (macro-absent-obj)))
 
   (define (fail)
-    (##fail-check-string-or-settings 1 prim path-or-settings arg2))
+    (##fail-check-string-or-settings '(1 . path-or-settings) prim path-or-settings arg2))
 
   (##make-path-psettings
    direction
@@ -9694,12 +9838,13 @@
     (if (##fixnum? device)
         (if raise-os-exception?
             (##raise-os-exception #f device prim path-or-settings arg2)
-            (cont device))
+            (cont device resolved-path))
         (cont
          (##make-device-port-from-single-device
           (##path-unresolve resolved-path)
           device
-          psettings)))))
+          psettings)
+         resolved-path))))
 
 (define-prim (##path-reference path relative-to-path)
   (##path-expand
@@ -9712,7 +9857,7 @@
   (##open-file-generic
    (macro-direction-inout)
    #t
-   (lambda (port) port)
+   (lambda (port resolved-path) port)
    open-file
    path-or-settings))
 
@@ -9724,7 +9869,7 @@
   (##open-file-generic
    (macro-direction-in)
    #t
-   (lambda (port) port)
+   (lambda (port resolved-path) port)
    open-input-file
    path-or-settings))
 
@@ -9736,7 +9881,7 @@
   (##open-file-generic
    (macro-direction-in)
    #t
-   (lambda (port) port)
+   (lambda (port resolved-path) port)
    open-binary-input-file
    path-or-settings))
 
@@ -9744,7 +9889,7 @@
   (##open-file-generic
    (macro-direction-out)
    #t
-   (lambda (port) port)
+   (lambda (port resolved-path) port)
    open-output-file
    path-or-settings))
 
@@ -9756,7 +9901,7 @@
   (##open-file-generic
    (macro-direction-out)
    #t
-   (lambda (port) port)
+   (lambda (port resolved-path) port)
    open-binary-output-file
    path-or-settings))
 
@@ -9764,7 +9909,7 @@
   (##open-file-generic
    (macro-direction-in)
    #t
-   (lambda (port)
+   (lambda (port resolved-path)
      (let ((results ;; may get bound to a multiple-values object
             (proc port)))
        (##close-port port)
@@ -9785,7 +9930,7 @@
   (##open-file-generic
    (macro-direction-out)
    #t
-   (lambda (port)
+   (lambda (port resolved-path)
      (let ((results ;; may get bound to a multiple-values object
             (proc port)))
        (##force-output port)
@@ -9807,7 +9952,7 @@
   (##open-file-generic
    (macro-direction-in)
    #t
-   (lambda (port)
+   (lambda (port resolved-path)
      (let ((results ;; may get bound to a multiple-values object
             (macro-dynamic-bind input-port port thunk)))
        (##close-port port)
@@ -9828,7 +9973,7 @@
   (##open-file-generic
    (macro-direction-out)
    #t
-   (lambda (port)
+   (lambda (port resolved-path)
      (let ((results ;; may get bound to a multiple-values object
             (macro-dynamic-bind output-port port thunk)))
        (##force-output port)
@@ -10373,15 +10518,22 @@
 
 (define-prim (##readtable-setup-for-standard-level! rt)
   (let ((standard-level (##get-standard-level)))
-    (cond ((##fx= 1 standard-level) ;; Gambit language
-           (macro-readtable-case-conversion?-set! rt #f)
-           (macro-readtable-keywords-allowed?-set! rt #t))
-          ((##fx= 5 standard-level) ;; R5RS language
+
+    (cond ((or (##fx= standard-level 4)  ;; R4RS language
+               (##fx= standard-level 5)) ;; R5RS language
            (macro-readtable-case-conversion?-set! rt #t)
            (macro-readtable-keywords-allowed?-set! rt #f))
-          ((##fx< 1 standard-level) ;; R7RS language
+
+          ((or (##fx= standard-level 6)  ;; R6RS language
+               (##fx= standard-level 7)) ;; R7RS language
            (macro-readtable-case-conversion?-set! rt #f)
-           (macro-readtable-keywords-allowed?-set! rt #f)))))
+           (macro-readtable-keywords-allowed?-set! rt #f))
+
+          (else ;; Gambit language
+           (macro-readtable-case-conversion?-set! rt #f)
+           (macro-readtable-keywords-allowed?-set! rt #t)
+           (macro-readtable-bracket-handler-set! rt '|[...]|)
+           (macro-readtable-brace-handler-set! rt '|{...}|)))))
 
 (define-prim (##make-readtable-parameter readtable)
   (##make-parameter
@@ -10442,23 +10594,23 @@
                (##wr-will we obj))
               ((##promise? obj)
                (##wr-promise we obj))
-              ((##s8vector? obj)
-               (##wr-s8vector we obj))
               ((##u8vector? obj)
                (##wr-u8vector we obj))
-              ((##s16vector? obj)
-               (##wr-s16vector we obj))
-              ((##u16vector? obj)
+              ((macro-if-s8vector (##s8vector? obj) #f)
+               (##wr-s8vector we obj))
+              ((macro-if-u16vector (##u16vector? obj) #f)
                (##wr-u16vector we obj))
-              ((##s32vector? obj)
-               (##wr-s32vector we obj))
-              ((##u32vector? obj)
+              ((macro-if-s16vector (##s16vector? obj) #f)
+               (##wr-s16vector we obj))
+              ((macro-if-u32vector (##u32vector? obj) #f)
                (##wr-u32vector we obj))
-              ((##s64vector? obj)
-               (##wr-s64vector we obj))
-              ((##u64vector? obj)
+              ((macro-if-s32vector (##s32vector? obj) #f)
+               (##wr-s32vector we obj))
+              ((macro-if-u64vector (##u64vector? obj) #f)
                (##wr-u64vector we obj))
-              ((##f32vector? obj)
+              ((macro-if-s64vector (##s64vector? obj) #f)
+               (##wr-s64vector we obj))
+              ((macro-if-f32vector (##f32vector? obj) #f)
                (##wr-f32vector we obj))
               ((##f64vector? obj)
                (##wr-f64vector we obj))
@@ -10896,7 +11048,8 @@
                        (or (##null? tail)
                            (##pair? tail))))
              (parenthesized-normal))
-            ((##head->open-close we head #f)
+            ((and (##not (##procedure? head))
+                  (##head->open-close we head #f))
              =>
              (lambda (open-close)
                (parenthesized-read-macro open-close)))
@@ -11275,10 +11428,10 @@
 
 (define-prim (##head->open-close we head default)
   (let ((rt (macro-writeenv-readtable we)))
-    (cond ((##eq? head (macro-readtable-paren-keyword rt))   '("(" . ")"))
-          ((##eq? head (macro-readtable-bracket-keyword rt)) '("[" . "]"))
-          ((##eq? head (macro-readtable-brace-keyword rt))   '("{" . "}"))
-          ((##eq? head (macro-readtable-angle-keyword rt))   '("<" . ">"))
+    (cond ((##eq? head (macro-readtable-paren-handler rt))   '("(" . ")"))
+          ((##eq? head (macro-readtable-bracket-handler rt)) '("[" . "]"))
+          ((##eq? head (macro-readtable-brace-handler rt))   '("{" . "}"))
+          ((##eq? head (macro-readtable-angle-handler rt))   '("<" . ">"))
           (else                                              default))))
 
 (define-prim (##wr-vector we obj)
@@ -11605,32 +11758,40 @@
             ##vector-ref
             open-close))))))
 
-(define-prim (##wr-s8vector we obj)
-  (##wr-vector-aux1 we obj (##s8vector-length obj) ##s8vector-ref '("#s8(" . ")")))
-
 (define-prim (##wr-u8vector we obj)
   (##wr-vector-aux1 we obj (##u8vector-length obj) ##u8vector-ref '("#u8(" . ")")))
 
-(define-prim (##wr-s16vector we obj)
-  (##wr-vector-aux1 we obj (##s16vector-length obj) ##s16vector-ref '("#s16(" . ")")))
+(macro-if-s8vector
+ (define-prim (##wr-s8vector we obj)
+   (##wr-vector-aux1 we obj (##s8vector-length obj) ##s8vector-ref '("#s8(" . ")"))))
 
-(define-prim (##wr-u16vector we obj)
-  (##wr-vector-aux1 we obj (##u16vector-length obj) ##u16vector-ref '("#u16(" . ")")))
+(macro-if-u16vector
+ (define-prim (##wr-u16vector we obj)
+   (##wr-vector-aux1 we obj (##u16vector-length obj) ##u16vector-ref '("#u16(" . ")"))))
 
-(define-prim (##wr-s32vector we obj)
-  (##wr-vector-aux1 we obj (##s32vector-length obj) ##s32vector-ref '("#s32(" . ")")))
+(macro-if-s16vector
+ (define-prim (##wr-s16vector we obj)
+   (##wr-vector-aux1 we obj (##s16vector-length obj) ##s16vector-ref '("#s16(" . ")"))))
 
-(define-prim (##wr-u32vector we obj)
-  (##wr-vector-aux1 we obj (##u32vector-length obj) ##u32vector-ref '("#u32(" . ")")))
+(macro-if-u32vector
+ (define-prim (##wr-u32vector we obj)
+   (##wr-vector-aux1 we obj (##u32vector-length obj) ##u32vector-ref '("#u32(" . ")"))))
 
-(define-prim (##wr-s64vector we obj)
-  (##wr-vector-aux1 we obj (##s64vector-length obj) ##s64vector-ref '("#s64(" . ")")))
+(macro-if-s32vector
+ (define-prim (##wr-s32vector we obj)
+   (##wr-vector-aux1 we obj (##s32vector-length obj) ##s32vector-ref '("#s32(" . ")"))))
 
-(define-prim (##wr-u64vector we obj)
-  (##wr-vector-aux1 we obj (##u64vector-length obj) ##u64vector-ref '("#u64(" . ")")))
+(macro-if-u64vector
+ (define-prim (##wr-u64vector we obj)
+   (##wr-vector-aux1 we obj (##u64vector-length obj) ##u64vector-ref '("#u64(" . ")"))))
 
-(define-prim (##wr-f32vector we obj)
-  (##wr-vector-aux1 we obj (##f32vector-length obj) ##f32vector-ref '("#f32(" . ")")))
+(macro-if-s64vector
+ (define-prim (##wr-s64vector we obj)
+   (##wr-vector-aux1 we obj (##s64vector-length obj) ##s64vector-ref '("#s64(" . ")"))))
+
+(macro-if-f32vector
+ (define-prim (##wr-f32vector we obj)
+   (##wr-vector-aux1 we obj (##f32vector-length obj) ##f32vector-ref '("#f32(" . ")"))))
 
 (define-prim (##wr-f64vector we obj)
   (##wr-vector-aux1 we obj (##f64vector-length obj) ##f64vector-ref '("#f64(" . ")")))
@@ -12056,7 +12217,7 @@
     (##eof-object? x)))
 
 (define-prim (##eof-object)
-  #!eof);;TODO: remove after bootstrap
+  #!eof)
 
 (define-prim (eof-object)
   (##eof-object))
@@ -12136,22 +12297,22 @@
 (##define-macro (vector-set! . args)      `(##vector-set! ,@args))
 (##define-macro (vector? . args)          `(##vector? ,@args))
 
-(##define-macro (make-s8vect n)           `(##make-s8vector ,n))
-(##define-macro (s8vect-set! . args)      `(##s8vector-set! ,@args))
 (##define-macro (make-u8vect n)           `(##make-u8vector ,n))
 (##define-macro (u8vect-set! . args)      `(##u8vector-set! ,@args))
-(##define-macro (make-s16vect n)          `(##make-s16vector ,n))
-(##define-macro (s16vect-set! . args)     `(##s16vector-set! ,@args))
+(##define-macro (make-s8vect n)           `(##make-s8vector ,n))
+(##define-macro (s8vect-set! . args)      `(##s8vector-set! ,@args))
 (##define-macro (make-u16vect n)          `(##make-u16vector ,n))
 (##define-macro (u16vect-set! . args)     `(##u16vector-set! ,@args))
-(##define-macro (make-s32vect n)          `(##make-s32vector ,n))
-(##define-macro (s32vect-set! . args)     `(##s32vector-set! ,@args))
+(##define-macro (make-s16vect n)          `(##make-s16vector ,n))
+(##define-macro (s16vect-set! . args)     `(##s16vector-set! ,@args))
 (##define-macro (make-u32vect n)          `(##make-u32vector ,n))
 (##define-macro (u32vect-set! . args)     `(##u32vector-set! ,@args))
-(##define-macro (make-s64vect n)          `(##make-s64vector ,n))
-(##define-macro (s64vect-set! . args)     `(##s64vector-set! ,@args))
+(##define-macro (make-s32vect n)          `(##make-s32vector ,n))
+(##define-macro (s32vect-set! . args)     `(##s32vector-set! ,@args))
 (##define-macro (make-u64vect n)          `(##make-u64vector ,n))
 (##define-macro (u64vect-set! . args)     `(##u64vector-set! ,@args))
+(##define-macro (make-s64vect n)          `(##make-s64vector ,n))
+(##define-macro (s64vect-set! . args)     `(##s64vector-set! ,@args))
 (##define-macro (make-f32vect n)          `(##make-f32vector ,n))
 (##define-macro (f32vect-set! . args)     `(##f32vector-set! ,@args))
 (##define-macro (make-f64vect n)          `(##make-f64vector ,n))
@@ -12284,30 +12445,45 @@
 ;; indexed using a character.
 
 (define (##make-chartable default)
-  (vector (make-vector 128 default) default '()))
+  (##declare (not interrupts-enabled))
+  (let ((ct (make-vector 130 default)))
+    (vector-set! ct 129 '())
+    ct))
 
 (define (##chartable-copy ct)
-  (vector (vector-copy (vector-ref ct 0))
-          (vector-ref ct 1)
-          (map (lambda (x) (cons (car x) (cdr x))) (vector-ref ct 2))))
+  (##declare (not interrupts-enabled))
+  (let ((ct-copy (vector-copy ct)))
+    (vector-set! ct-copy
+                 129
+                 (map (lambda (x) (cons (car x) (cdr x))) (vector-ref ct 129)))
+    ct-copy))
+
+(##define-macro (macro-chartable-ref ct c)
+  `(let ((ct ,ct) (c ,c))
+     (let ((i (character->UCS-4 c)))
+       (if (< i 128)
+           (vector-ref ct i)
+           (##chartable-ref ct c)))))
 
 (define (##chartable-ref ct c)
+  (##declare (not interrupts-enabled))
   (let ((i (character->UCS-4 c)))
     (if (< i 128)
-        (vector-ref (vector-ref ct 0) i)
-        (let ((x (assq i (vector-ref ct 2))))
+        (vector-ref ct i)
+        (let ((x (assq i (vector-ref ct 129))))
           (if x
               (cdr x)
-              (vector-ref ct 1))))))
+              (vector-ref ct 128))))))
 
 (define (##chartable-set! ct c val)
+  (##declare (not interrupts-enabled))
   (let ((i (character->UCS-4 c)))
     (if (< i 128)
-        (vector-set! (vector-ref ct 0) i val)
-        (let ((x (assq i (vector-ref ct 2))))
+        (vector-set! ct i val)
+        (let ((x (assq i (vector-ref ct 129))))
           (if x
               (set-cdr! x val)
-              (vector-set! ct 2 (cons (cons i val) (vector-ref ct 2))))))))
+              (vector-set! ct 129 (cons (cons i val) (vector-ref ct 129))))))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -12316,28 +12492,36 @@
 ;; encountered.
 
 (define (##readtable-char-delimiter? rt c)
-  (##chartable-ref (macro-readtable-char-delimiter?-table rt) c))
+  (##declare (not interrupts-enabled))
+  (macro-chartable-ref (macro-readtable-char-delimiter?-table rt) c))
 
 (define (##readtable-char-delimiter?-set! rt c delimiter?)
+  (##declare (not interrupts-enabled))
   (##chartable-set! (macro-readtable-char-delimiter?-table rt) c delimiter?))
 
 (define (##readtable-char-handler rt c)
-  (##chartable-ref (macro-readtable-char-handler-table rt) c))
+  (##declare (not interrupts-enabled))
+  (macro-chartable-ref (macro-readtable-char-handler-table rt) c))
 
 (define (##readtable-char-handler-set! rt c handler)
+  (##declare (not interrupts-enabled))
   (##chartable-set! (macro-readtable-char-handler-table rt) c handler))
 
 (define (##readtable-char-sharp-handler rt c)
-  (##chartable-ref (macro-readtable-char-sharp-handler-table rt) c))
+  (##declare (not interrupts-enabled))
+  (macro-chartable-ref (macro-readtable-char-sharp-handler-table rt) c))
 
 (define (##readtable-char-sharp-handler-set! rt c handler)
+  (##declare (not interrupts-enabled))
   (##chartable-set! (macro-readtable-char-sharp-handler-table rt) c handler))
 
 (define (##readtable-char-class-set! rt c delimiter? handler)
+  (##declare (not interrupts-enabled))
   (##readtable-char-delimiter?-set! rt c delimiter?)
   (##readtable-char-handler-set! rt c handler))
 
 (define (##convert-case case-conversion? s)
+  (##declare (not interrupts-enabled))
   (if case-conversion?
       (if (eq? case-conversion? 'upcase)
           (let loop ((i (- (string-length s) 1)))
@@ -12350,6 +12534,7 @@
       s))
 
 (define (##readtable-parse-keyword rt s intern? create?)
+  (##declare (not interrupts-enabled))
   (let ((keywords-allowed? (macro-readtable-keywords-allowed? rt)))
     (and keywords-allowed?
          (let ((len (string-length s)))
@@ -12385,9 +12570,12 @@
 ;; which case it is the position where the datum starts.
 
 (define (##read-datum-or-eof re)
+  (##declare (not interrupts-enabled))
   (case (macro-readtable-start-syntax (macro-readenv-readtable re))
     ((six)
-     (##read-six-datum-or-eof re #t))
+     (let ((autosemi? #f)
+           (allow-eof? #t))
+       (##read-six-datum-or-eof re autosemi? allow-eof?)))
     (else
      (let loop ()
        (let* ((old-pos (macro-readenv-filepos re))
@@ -12420,10 +12608,12 @@
 ;; where the datum starts.
 
 (define (##read-datum-or-label re)
+  (##declare (not interrupts-enabled))
   (let* ((old-pos (macro-readenv-filepos re))
          (obj (##read-datum-or-label-or-none re)))
     (if (eq? obj (##none-marker))
-        (begin
+        (let ()
+          (##declare (interrupts-enabled))
           (macro-readenv-filepos-set! re (##readenv-current-filepos re))
           (let ((c (macro-read-next-char-or-eof re))) ;; force progress
             (##raise-datum-parsing-exception 'datum-expected re)
@@ -12446,10 +12636,12 @@
 ;; position where the datum starts.
 
 (define (##read-datum-or-label-or-none re)
+  (##declare (not interrupts-enabled))
   (let* ((old-pos (macro-readenv-filepos re))
          (obj (##read-datum-or-label-or-none-or-dot re)))
     (if (eq? obj (##dot-marker))
-        (begin
+        (let ()
+          (##declare (interrupts-enabled))
           (macro-readenv-filepos-set! re (##readenv-relative-filepos re 1))
           (##raise-datum-parsing-exception 'improperly-placed-dot re)
           (macro-readenv-filepos-set! re old-pos) ;; restore pos
@@ -12643,18 +12835,28 @@
       (if (eq? x (##none-marker))
           (begin
             (##read-next-char-expecting re close)
-            (case kind
-              ((s8vector)  (make-s8vect i))
-              ((u8vector)  (make-u8vect i))
-              ((s16vector) (make-s16vect i))
-              ((u16vector) (make-u16vect i))
-              ((s32vector) (make-s32vect i))
-              ((u32vector) (make-u32vect i))
-              ((s64vector) (make-s64vect i))
-              ((u64vector) (make-u64vect i))
-              ((f32vector) (make-f32vect i))
-              ((f64vector) (make-f64vect i))
-              (else        (make-vector i))))
+            (cond ((##eq? kind 'u8vector)
+                   (make-u8vect i))
+                  ((macro-if-s8vector (##eq? kind 's8vector) #f)
+                   (make-s8vect i))
+                  ((macro-if-u16vector (##eq? kind 'u16vector) #f)
+                   (make-u16vect i))
+                  ((macro-if-s16vector (##eq? kind 's16vector) #f)
+                   (make-s16vect i))
+                  ((macro-if-u32vector (##eq? kind 'u32vector) #f)
+                   (make-u32vect i))
+                  ((macro-if-s32vector (##eq? kind 's32vector) #f)
+                   (make-s32vect i))
+                  ((macro-if-u64vector (##eq? kind 'u64vector) #f)
+                   (make-u64vect i))
+                  ((macro-if-s64vector (##eq? kind 's64vector) #f)
+                   (make-s64vect i))
+                  ((macro-if-f32vector (##eq? kind 'f32vector) #f)
+                   (make-f32vect i))
+                  ((##eq? kind 'f64vector)
+                   (make-f64vect i))
+                  (else
+                   (make-vector i))))
           (if (or (eq? kind 'deserialize)
                   (eq? kind 'vector))
               (let ((vect (loop (+ i 1))))
@@ -12670,87 +12872,87 @@
               (let ((ux
                      (and (not (##label-marker? x))
                           (macro-readenv-unwrap re x))))
-                (case kind
-                  ((s8vector)
-                   (if (exact-integer-check ux -128 127)
-                       (let ((vect (loop (+ i 1))))
-                         (s8vect-set! vect i ux)
-                         vect)
-                       (begin
-                         (##raise-datum-parsing-exception 's8-expected re)
-                         (loop i))))
-                  ((u8vector)
-                   (if (exact-integer-check ux 0 255)
-                       (let ((vect (loop (+ i 1))))
-                         (u8vect-set! vect i ux)
-                         vect)
-                       (begin
-                         (##raise-datum-parsing-exception 'u8-expected re)
-                         (loop i))))
-                  ((s16vector)
-                   (if (exact-integer-check ux -32768 32767)
-                       (let ((vect (loop (+ i 1))))
-                         (s16vect-set! vect i ux)
-                         vect)
-                       (begin
-                         (##raise-datum-parsing-exception 's16-expected re)
-                         (loop i))))
-                  ((u16vector)
-                   (if (exact-integer-check ux 0 65535)
-                       (let ((vect (loop (+ i 1))))
-                         (u16vect-set! vect i ux)
-                         vect)
-                       (begin
-                         (##raise-datum-parsing-exception 'u16-expected re)
-                         (loop i))))
-                  ((s32vector)
-                   (if (exact-integer-check ux -2147483648 2147483647)
-                       (let ((vect (loop (+ i 1))))
-                         (s32vect-set! vect i ux)
-                         vect)
-                       (begin
-                         (##raise-datum-parsing-exception 's32-expected re)
-                         (loop i))))
-                  ((u32vector)
-                   (if (exact-integer-check ux 0 4294967295)
-                       (let ((vect (loop (+ i 1))))
-                         (u32vect-set! vect i ux)
-                         vect)
-                       (begin
-                         (##raise-datum-parsing-exception 'u32-expected re)
-                         (loop i))))
-                  ((s64vector)
-                   (if (exact-integer-check ux -9223372036854775808 9223372036854775807)
-                       (let ((vect (loop (+ i 1))))
-                         (s64vect-set! vect i ux)
-                         vect)
-                       (begin
-                         (##raise-datum-parsing-exception 's64-expected re)
-                         (loop i))))
-                  ((u64vector)
-                   (if (exact-integer-check ux 0 18446744073709551615)
-                       (let ((vect (loop (+ i 1))))
-                         (u64vect-set! vect i ux)
-                         vect)
-                       (begin
-                         (##raise-datum-parsing-exception 'u64-expected re)
-                         (loop i))))
-                  ((f32vector)
-                   (if (inexact-real-check ux)
-                       (let ((vect (loop (+ i 1))))
-                         (f32vect-set! vect i ux)
-                         vect)
-                       (begin
-                         (##raise-datum-parsing-exception 'inexact-real-expected re)
-                         (loop i))))
-                  ((f64vector)
-                   (if (inexact-real-check ux)
-                       (let ((vect (loop (+ i 1))))
-                         (f64vect-set! vect i ux)
-                         vect)
-                       (begin
-                         (##raise-datum-parsing-exception 'inexact-real-expected re)
-                         (loop i)))))))))))
+                (cond
+                 ((##eq? kind 'u8vector)
+                  (if (exact-integer-check ux 0 255)
+                      (let ((vect (loop (+ i 1))))
+                        (u8vect-set! vect i ux)
+                        vect)
+                      (begin
+                        (##raise-datum-parsing-exception 'u8-expected re)
+                        (loop i))))
+                 ((macro-if-s8vector (##eq? kind 's8vector) #f)
+                  (if (exact-integer-check ux -128 127)
+                      (let ((vect (loop (+ i 1))))
+                        (s8vect-set! vect i ux)
+                        vect)
+                      (begin
+                        (##raise-datum-parsing-exception 's8-expected re)
+                        (loop i))))
+                 ((macro-if-u16vector (##eq? kind 'u16vector) #f)
+                  (if (exact-integer-check ux 0 65535)
+                      (let ((vect (loop (+ i 1))))
+                        (u16vect-set! vect i ux)
+                        vect)
+                      (begin
+                        (##raise-datum-parsing-exception 'u16-expected re)
+                        (loop i))))
+                 ((macro-if-s16vector (##eq? kind 's16vector) #f)
+                  (if (exact-integer-check ux -32768 32767)
+                      (let ((vect (loop (+ i 1))))
+                        (s16vect-set! vect i ux)
+                        vect)
+                      (begin
+                        (##raise-datum-parsing-exception 's16-expected re)
+                        (loop i))))
+                 ((macro-if-u32vector (##eq? kind 'u32vector) #f)
+                  (if (exact-integer-check ux 0 4294967295)
+                      (let ((vect (loop (+ i 1))))
+                        (u32vect-set! vect i ux)
+                        vect)
+                      (begin
+                        (##raise-datum-parsing-exception 'u32-expected re)
+                        (loop i))))
+                 ((macro-if-s32vector (##eq? kind 's32vector) #f)
+                  (if (exact-integer-check ux -2147483648 2147483647)
+                      (let ((vect (loop (+ i 1))))
+                        (s32vect-set! vect i ux)
+                        vect)
+                      (begin
+                        (##raise-datum-parsing-exception 's32-expected re)
+                        (loop i))))
+                 ((macro-if-u64vector (##eq? kind 'u64vector) #f)
+                  (if (exact-integer-check ux 0 18446744073709551615)
+                      (let ((vect (loop (+ i 1))))
+                        (u64vect-set! vect i ux)
+                        vect)
+                      (begin
+                        (##raise-datum-parsing-exception 'u64-expected re)
+                        (loop i))))
+                 ((macro-if-s64vector (##eq? kind 's64vector) #f)
+                  (if (exact-integer-check ux -9223372036854775808 9223372036854775807)
+                      (let ((vect (loop (+ i 1))))
+                        (s64vect-set! vect i ux)
+                        vect)
+                      (begin
+                        (##raise-datum-parsing-exception 's64-expected re)
+                        (loop i))))
+                 ((macro-if-f32vector (##eq? kind 'f32vector) #f)
+                  (if (inexact-real-check ux)
+                      (let ((vect (loop (+ i 1))))
+                        (f32vect-set! vect i ux)
+                        vect)
+                      (begin
+                        (##raise-datum-parsing-exception 'inexact-real-expected re)
+                        (loop i))))
+                 ((##eq? kind 'f64vector)
+                  (if (inexact-real-check ux)
+                      (let ((vect (loop (+ i 1))))
+                        (f64vect-set! vect i ux)
+                        vect)
+                      (begin
+                        (##raise-datum-parsing-exception 'inexact-real-expected re)
+                        (loop i)))))))))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -12816,7 +13018,9 @@
         (string->symbol-object str)
         (string->uninterned-symbol-object str)))
 
-  (or (and intern? (string->number str 10))
+  (or (and intern?
+           (or (macro-string->number-decimal-fast-path str)
+               (##string->number-slow-path str 10)))
       (let ((str2
              (##convert-case
               (macro-readenv-case-conversion? re)
@@ -12968,7 +13172,7 @@
           (let* ((new-chunk (read-chunk))
                  (new-chunks (cons new-chunk chunks)))
             (if (< (string-length new-chunk) max-chunk-length)
-                (##append-strings (reverse new-chunks))
+                (##string-concatenate (reverse new-chunks))
                 (loop new-chunks)))))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -13371,7 +13575,7 @@
                      (if (string? line)
                          (if (string=? line tag)
                              (let* ((str
-                                     (##append-strings (##reverse lines-rev)))
+                                     (##string-concatenate (##reverse lines-rev)))
                                     (len
                                      (string-length str)))
                                (if (< 0 len)
@@ -13439,6 +13643,16 @@
       x)))
 
 (define (##wrap-op re pos op args)
+  (let loop ((lst args))
+    (if (pair? lst)
+        (let ((arg (car lst)))
+          (if (##label-marker? arg)
+              (##label-marker-fixup-handler-add!
+               re
+               arg
+               (lambda (resolved-obj)
+                 (set-car! lst resolved-obj))))
+          (loop (cdr lst)))))
   (##wrap re pos (cons (##wrap re pos op) args)))
 
 (define (##wrap-op0 re pos op)
@@ -13518,23 +13732,23 @@
                           (macro-readenv-readtable re))
                          (string-ci=? s "#TRUE")))
                    (macro-readenv-wrap re #t))
-                  ((##read-string=? re s "#s8")
-                   (build-vect re 's8vector))
                   ((##read-string=? re s "#u8")
                    (build-vect re 'u8vector))
-                  ((##read-string=? re s "#s16")
-                   (build-vect re 's16vector))
-                  ((##read-string=? re s "#u16")
+                  ((macro-if-s8vector (##read-string=? re s "#s8") #f)
+                   (build-vect re 's8vector))
+                  ((macro-if-u16vector (##read-string=? re s "#u16") #f)
                    (build-vect re 'u16vector))
-                  ((##read-string=? re s "#s32")
-                   (build-vect re 's32vector))
-                  ((##read-string=? re s "#u32")
+                  ((macro-if-s16vector (##read-string=? re s "#s16") #f)
+                   (build-vect re 's16vector))
+                  ((macro-if-u32vector (##read-string=? re s "#u32") #f)
                    (build-vect re 'u32vector))
-                  ((##read-string=? re s "#s64")
-                   (build-vect re 's64vector))
-                  ((##read-string=? re s "#u64")
+                  ((macro-if-s32vector (##read-string=? re s "#s32") #f)
+                   (build-vect re 's32vector))
+                  ((macro-if-u64vector (##read-string=? re s "#u64") #f)
                    (build-vect re 'u64vector))
-                  ((##read-string=? re s "#f32")
+                  ((macro-if-s64vector (##read-string=? re s "#s64") #f)
+                   (build-vect re 's64vector))
+                  ((macro-if-f32vector (##read-string=? re s "#f32") #f)
                    (build-vect re 'f32vector))
                   ((##read-string=? re s "#f64")
                    (build-vect re 'f64vector))
@@ -13633,24 +13847,26 @@
       (define (prefix keyword)
         (macro-readenv-wrap
          re
-         (cons (macro-readenv-wrap re keyword) lst)))
+         (if (##procedure? keyword)
+             (keyword re lst)
+             (cons (macro-readenv-wrap re keyword) lst))))
 
       (cond ((and (char=? c #\[)
-                  (macro-readtable-bracket-keyword
+                  (macro-readtable-bracket-handler
                    (macro-readenv-readtable re)))
              =>
              prefix)
             ((and (char=? c #\{)
-                  (macro-readtable-brace-keyword
+                  (macro-readtable-brace-handler
                    (macro-readenv-readtable re)))
              =>
              prefix)
             ((and (char=? c #\<)
-                  (macro-readtable-angle-keyword
+                  (macro-readtable-angle-handler
                    (macro-readenv-readtable re)))
              =>
              prefix)
-            ((macro-readtable-paren-keyword
+            ((macro-readtable-paren-handler
               (macro-readenv-readtable re))
              =>
              prefix)
@@ -13730,10 +13946,19 @@
 ;;; Scheme infix extension (SIX) parser.
 
 (define (##read-six re c)
-  (macro-read-next-char-or-eof re) ;; skip backslash
-  (##read-six-datum-or-eof re #f))
+  (let ((start-pos (##readenv-current-filepos re)))
+    (macro-read-next-char-or-eof re) ;; skip backslash
+    (macro-readenv-filepos-set! re start-pos) ;; set pos to start of datum
+    (let ((datum
+           (let ((autosemi? #t)
+                 (allow-eof? #f))
+             (##read-six-datum-or-eof re autosemi? allow-eof?))))
+      (##wrap-op1 re
+                  start-pos
+                  'six.infix
+                  datum))))
 
-(define (##read-six-datum-or-eof re allow-eof?)
+(define (##read-six-datum-or-eof re autosemi? allow-eof?)
 
   (##define-macro (define-six-token name . params)
     `(define ,name
@@ -13788,47 +14013,88 @@
   (define-six-token |token.}|    -11)
   (define-six-token |token.`|    -12)
   (define-six-token |token.#|    -13)
+  (define-six-token |token.;-auto| -14)
 
+  (define-six-op op.async  0  rl #f             six.asyncx       )
   (define-six-op op.!      2  rl six.x!y        six.!x           )
+  (define-six-op op.**     2  rl six.x**y       six.**x          )
   (define-six-op op.++     2  rl #f             six.++x six.x++  )
   (define-six-op op.--     2  rl #f             six.--x six.x--  )
   (define-six-op op.~      2  rl #f             six.~x           )
+  (define-six-op op.await  2  rl #f             six.awaitx       )
+  (define-six-op op.typeof 2  rl #f             six.typeofx      )
   (define-six-op op.%      3  lr six.x%y                         )
   (define-six-op op.*      3  lr six.x*y        six.*x           )
+  (define-six-op op.@      3  lr six.x@y                         )
   (define-six-op op./      3  lr six.x/y                         )
+  (define-six-op op.//     3  lr six.x//y                        )
   (define-six-op op.+      4  lr six.x+y        six.+x           )
   (define-six-op op.-      4  lr six.x-y        six.-x           )
   (define-six-op op.<<     5  lr six.x<<y                        )
   (define-six-op op.>>     5  lr six.x>>y                        )
+  (define-six-op op.>>>    5  lr six.x>>>y                       )
   (define-six-op op.<      6  lr six.x<y                         )
   (define-six-op op.<=     6  lr six.x<=y                        )
   (define-six-op op.>      6  lr six.x>y                         )
   (define-six-op op.>=     6  lr six.x>=y                        )
+  (define-six-op op.in     6  lr six.xiny                        )
+  (define-six-op op.is     6  lr six.xisy                        )
+  (define-six-op op.instanceof 6 lr six.xinstanceofy             )
   (define-six-op op.!=     7  lr six.x!=y                        )
   (define-six-op op.==     7  lr six.x==y                        )
+  (define-six-op op.!==    7  lr six.x!==y                       )
+  (define-six-op op.===    7  lr six.x===y                       )
   (define-six-op op.&      8  lr six.x&y        six.&x           )
   (define-six-op op.^      9  lr six.x^y                         )
   (define-six-op |op.\||   10 lr |six.x\|y|                      )
   (define-six-op op.&&     11 lr six.x&&y                        )
   (define-six-op |op.\|\|| 12 lr |six.x\|\|y|                    )
-  (define-six-op op.?      13 rl six.x?y:z                       )
-  (define-six-op |op.:|    14 rl six.x:y                         )
-  (define-six-op op.%=     15 rl six.x%=y                        )
-  (define-six-op op.&=     15 rl six.x&=y                        )
-  (define-six-op op.*=     15 rl six.x*=y                        )
-  (define-six-op op.+=     15 rl six.x+=y                        )
-  (define-six-op op.-=     15 rl six.x-=y                        )
-  (define-six-op op./=     15 rl six.x/=y                        )
-  (define-six-op op.<<=    15 rl six.x<<=y                       )
-  (define-six-op op.=      15 rl six.x=y                         )
-  (define-six-op op.>>=    15 rl six.x>>=y                       )
-  (define-six-op op.^=     15 rl six.x^=y                        )
-  (define-six-op |op.\|=|  15 rl |six.x\|=y|                     )
-  (define-six-op op.:=     16 rl six.x:=y                        )
-  (define-six-op |op.,|    17 lr |six.x,y|  );;;;;;;;;;;;;;;;  |six.,x|         )
-  (define-six-op op.:-     18 rl six.x:-y                        )
+  (define-six-op op.not    13 rl #f             six.notx         )
+  (define-six-op op.and    14 lr six.xandy                       )
+  (define-six-op op.or     15 lr six.xory                        )
+  (define-six-op op.?      16 rl six.x?y:z                       )
+  (define-six-op |op.:|    17 rl six.x:y                         )
+  (define-six-op op.%=     18 rl six.x%=y                        )
+  (define-six-op op.&=     18 rl six.x&=y                        )
+  (define-six-op op.**=    18 rl six.x**=y                       )
+  (define-six-op op.*=     18 rl six.x*=y                        )
+  (define-six-op op.@=     18 rl six.x@=y                        )
+  (define-six-op op.+=     18 rl six.x+=y                        )
+  (define-six-op op.-=     18 rl six.x-=y                        )
+  (define-six-op op.//=    18 rl six.x//=y                       )
+  (define-six-op op./=     18 rl six.x/=y                        )
+  (define-six-op op.<<=    18 rl six.x<<=y                       )
+  (define-six-op op.=      18 rl six.x=y                         )
+  (define-six-op op.>>>=   18 rl six.x>>>=y                      )
+  (define-six-op op.>>=    18 rl six.x>>=y                       )
+  (define-six-op op.^=     18 rl six.x^=y                        )
+  (define-six-op |op.\|=|  18 rl |six.x\|=y|                     )
+  (define-six-op op.:=     19 rl six.x:=y                        )
+  (define-six-op op.yield  20 rl #f             six.yieldx       )
+  (define-six-op |op.,|    21 lr |six.x,y|  );;;;;;;;;;;;;;;;  |six.,x|         )
+  (define-six-op op.:-     22 rl six.x:-y                        )
 
-  (define max-precedence 18)
+  (define max-precedence 22)
+
+  (define (identifier-op? ident)
+    (or (identifier-unary-op? ident)
+        (identifier-binary-op? ident)))
+
+  (define (identifier-unary-op? ident)
+    (cond ((eq? ident 'not)    op.not)
+          ((eq? ident 'async)  op.async)
+          ((eq? ident 'await)  op.await)
+          ((eq? ident 'yield)  op.yield)
+          ((eq? ident 'typeof) op.typeof)
+          (else                #f)))
+
+  (define (identifier-binary-op? ident)
+    (cond ((eq? ident 'in)         op.in)
+          ((eq? ident 'is)         op.is)
+          ((eq? ident 'or)         op.or)
+          ((eq? ident 'and)        op.and)
+          ((eq? ident 'instanceof) op.instanceof)
+          (else                    #f)))
 
   (define (decimal-digit? c)
     (and (not (char<? c #\0)) (not (char<? #\9 c))))
@@ -13921,16 +14187,26 @@
                        s)))))))
       (string->symbol-object str)))
 
-  (define (parse-token re)
-    (parse-token-starting-with re (macro-peek-next-char-or-eof re)))
+  (define (parse-token re autosemi?)
+    (parse-token-starting-with re autosemi? (macro-peek-next-char-or-eof re)))
 
-  (define (parse-token-starting-with re c)
+  (define (parse-token-starting-with re autosemi? c)
     (cond ((not (char? c))
-           (##none-marker))
+           (if autosemi?
+               |token.;-auto|
+               (##none-marker)))
           ((eq? (##readtable-char-handler (macro-readenv-readtable re) c)
                 ##read-whitespace)
-           (macro-read-next-char-or-eof re) ;; skip whitespace character
-           (parse-token re))
+           (if autosemi?
+               |token.;-auto|
+               (begin
+                 (macro-read-next-char-or-eof re) ;; skip whitespace character
+                 (parse-token re autosemi?))))
+          ((and autosemi?
+                (or (char=? c #\})
+                    (char=? c #\))
+                    (char=? c #\])))
+           |token.;-auto|)
           (else
            (let ((start-pos (##readenv-current-filepos re)))
 
@@ -13940,6 +14216,7 @@
              (cond ((or (char=? c #\+)
                         (char=? c #\-)
                         (char=? c #\*)
+                        (char=? c #\@)
                         (char=? c #\/)
                         (char=? c #\%)
                         (char=? c #\!)
@@ -13975,78 +14252,97 @@
                         (define (token tok)
                           tok)
 
-                        (define (one-char-token tok)
-                          (token tok))
-
-                        (define (two-char-token tok)
+                        (define (token-skip-char tok)
                           (macro-read-next-char-or-eof re) ;; skip last
                           (token tok))
 
                         (cond ((char=? c #\+)
                                (cond ((char=? x #\+)
-                                      (two-char-token op.++))
+                                      (token-skip-char op.++))
                                      ((char=? x #\=)
-                                      (two-char-token op.+=))
+                                      (token-skip-char op.+=))
                                      (else
-                                      (one-char-token op.+))))
+                                      (token op.+))))
                               ((char=? c #\-)
                                (cond ((char=? x #\-)
-                                      (two-char-token op.--))
+                                      (token-skip-char op.--))
                                      ((char=? x #\=)
-                                      (two-char-token op.-=))
+                                      (token-skip-char op.-=))
                                      ((char=? x #\>)
-                                      (two-char-token |token.->|))
+                                      (token-skip-char |token.->|))
                                      (else
-                                      (one-char-token op.-))))
+                                      (token op.-))))
                               ((char=? c #\*)
-                               (cond ((char=? x #\=)
-                                      (two-char-token op.*=))
+                               (cond ((char=? x #\*)
+                                      (macro-read-next-char-or-eof re);;skip #\*
+                                      (if (eqv? (macro-peek-next-char-or-eof re)
+                                                #\=)
+                                          (token-skip-char op.**=)
+                                          (token op.**)))
+                                     ((char=? x #\=)
+                                      (token-skip-char op.*=))
                                      (else
-                                      (one-char-token op.*))))
+                                      (token op.*))))
                               ((char=? c #\/)
-                               (cond ((char=? x #\/)
-                                      (macro-read-next-char-or-eof re);;skip #\/
-                                      (##skip-single-line-comment "//" re)
-                                      (parse-token re))
-                                     ((char=? x #\*)
+                               (cond ((char=? x #\*)
                                       (macro-read-next-char-or-eof re);;skip #\*
                                       (##skip-extended-comment re #\/ x x #\/)
-                                      (parse-token re))
+                                      (parse-token re autosemi?))
+                                     ((char=? x #\/)
+                                      (macro-read-next-char-or-eof re);;skip #\/
+                                      (if (eqv? (macro-peek-next-char-or-eof re)
+                                                #\=)
+                                          (token-skip-char op.//=)
+                                          (token op.//)))
                                      ((char=? x #\=)
-                                      (two-char-token op./=))
+                                      (token-skip-char op./=))
                                      (else
-                                      (one-char-token op./))))
+                                      (token op./))))
                               ((char=? c #\%)
                                (cond ((char=? x #\=)
-                                      (two-char-token op.%=))
+                                      (token-skip-char op.%=))
                                      (else
-                                      (one-char-token op.%))))
+                                      (token op.%))))
+                              ((char=? c #\@)
+                               (cond ((char=? x #\=)
+                                      (token-skip-char op.@=))
+                                     (else
+                                      (token op.@))))
                               ((char=? c #\!)
                                (cond ((char=? x #\=)
-                                      (two-char-token op.!=))
+                                      (macro-read-next-char-or-eof re);;skip #\=
+                                      (let ((next2
+                                             (macro-peek-next-char-or-eof re)))
+                                        (let ((x2 (if (char? next2)
+                                                      next2
+                                                      #\space)))
+                                          (cond ((char=? x2 #\=)
+                                                 (token-skip-char op.!==))
+                                                (else
+                                                 (token op.!=))))))
                                      (else
-                                      (one-char-token op.!))))
+                                      (token op.!))))
                               ((char=? c #\~)
-                               (one-char-token op.~))
+                               (token op.~))
                               ((char=? c #\&)
                                (cond ((char=? x #\&)
-                                      (two-char-token op.&&))
+                                      (token-skip-char op.&&))
                                      ((char=? x #\=)
-                                      (two-char-token op.&=))
+                                      (token-skip-char op.&=))
                                      (else
-                                      (one-char-token op.&))))
+                                      (token op.&))))
                               ((char=? c #\|)
                                (cond ((char=? x #\|)
-                                      (two-char-token |op.\|\||))
+                                      (token-skip-char |op.\|\||))
                                      ((char=? x #\=)
-                                      (two-char-token |op.\|=|))
+                                      (token-skip-char |op.\|=|))
                                      (else
-                                      (one-char-token |op.\||))))
+                                      (token |op.\||))))
                               ((char=? c #\^)
                                (cond ((char=? x #\=)
-                                      (two-char-token op.^=))
+                                      (token-skip-char op.^=))
                                      (else
-                                      (one-char-token op.^))))
+                                      (token op.^))))
                               ((char=? c #\<)
                                (cond ((char=? x #\<)
                                       (macro-read-next-char-or-eof re);;skip #\<
@@ -14056,13 +14352,13 @@
                                                       next2
                                                       #\space)))
                                           (cond ((char=? x2 #\=)
-                                                 (two-char-token op.<<=))
+                                                 (token-skip-char op.<<=))
                                                 (else
-                                                 (one-char-token op.<<))))))
+                                                 (token op.<<))))))
                                      ((char=? x #\=)
-                                      (two-char-token op.<=))
+                                      (token-skip-char op.<=))
                                      (else
-                                      (one-char-token op.<))))
+                                      (token op.<))))
                               ((char=? c #\>)
                                (cond ((char=? x #\>)
                                       (macro-read-next-char-or-eof re);;skip #\>
@@ -14071,38 +14367,58 @@
                                         (let ((x2 (if (char? next2)
                                                       next2
                                                       #\space)))
-                                          (cond ((char=? x2 #\=)
-                                                 (two-char-token op.>>=))
+                                          (cond ((char=? x2 #\>)
+                                                 (macro-read-next-char-or-eof re);;skip #\>
+                                                 (let ((next3
+                                                        (macro-peek-next-char-or-eof re)))
+                                                   (let ((x3 (if (char? next3)
+                                                                 next3
+                                                                 #\space)))
+                                                     (cond ((char=? x3 #\=)
+                                                            (token-skip-char op.>>>=))
+                                                           (else
+                                                            (token op.>>>))))))
+                                                ((char=? x2 #\=)
+                                                 (token-skip-char op.>>=))
                                                 (else
-                                                 (one-char-token op.>>))))))
+                                                 (token op.>>))))))
                                      ((char=? x #\=)
-                                      (two-char-token op.>=))
+                                      (token-skip-char op.>=))
                                      (else
-                                      (one-char-token op.>))))
+                                      (token op.>))))
                               ((char=? c #\=)
                                (cond ((char=? x #\=)
-                                      (two-char-token op.==))
+                                      (macro-read-next-char-or-eof re);;skip #\=
+                                      (let ((next2
+                                             (macro-peek-next-char-or-eof re)))
+                                        (let ((x2 (if (char? next2)
+                                                      next2
+                                                      #\space)))
+                                          (cond ((char=? x2 #\=)
+                                                 (token-skip-char op.===))
+                                                (else
+                                                 (token op.==))))))
                                      (else
-                                      (one-char-token op.=))))
+                                      (token op.=))))
                               ((char=? c #\{)
-                               (one-char-token |token.{|))
+                               (token |token.{|))
                               ((char=? c #\})
-                               (one-char-token |token.}|))
+                               (token |token.}|))
                               ((char=? c #\()
-                               (one-char-token |token.(|))
+                               (token |token.(|))
                               ((char=? c #\))
-                               (one-char-token |token.)|))
+                               (token |token.)|))
                               ((char=? c #\[)
-                               (one-char-token |token.[|))
+                               (token |token.[|))
                               ((char=? c #\])
-                               (one-char-token |token.]|))
+                               (token |token.]|))
                               ((char=? c #\;)
-                               (one-char-token |token.;|))
+                               (token |token.;|))
                               ((char=? c #\,)
-                               (one-char-token |op.,|))
+                               (token |op.,|))
                               ((char=? c #\:)
                                (cond ((char=? x #\=)
-                                      (two-char-token op.:=))
+                                      (token-skip-char op.:=))
                                      ((char=? x #\-)
                                       ;; In the C syntax "1?2:-3" is
                                       ;; parsed as "1 ? 2 : -3".  In
@@ -14113,27 +14429,27 @@
                                       ;; otherwise it will be parsed as
                                       ;; "1 ? 2 :- 3" (which is a
                                       ;; syntax error).
-                                      (two-char-token op.:-))
+                                      (token-skip-char op.:-))
                                      (else
-                                      (one-char-token |op.:|))))
+                                      (token |op.:|))))
                               ((char=? c #\.)
                                (cond ((decimal-digit? x)
                                       (macro-read-next-char-or-eof re) ;; skip x
                                       (token (parse-number re c x)))
                                      ((char=? x #\.)
-                                      (two-char-token |token...|))
+                                      (token-skip-char |token...|))
                                      (else
-                                      (one-char-token |token..|))))
+                                      (token |token..|))))
                               ((char=? c #\?)
-                               (one-char-token op.?))
+                               (token op.?))
                               ((char=? c #\\)
-                               (one-char-token |token.\\|))
-                              ((char=? c #\")
+                               (token |token.\\|))
+                              ((or (char=? c #\") (char=? c #\'))
                                (token (##build-escaped-string-up-to re c)))
-                              ((char=? c #\')
-                               (token (parse-character re c)))
+;;                              ((char=? c #\')
+;;                               (token (parse-character re c)))
                               ((char=? c #\`)
-                               (one-char-token |token.`|))
+                               (token |token.`|))
                               ((char=? c #\#)
                                (if (and (eq? (macro-readenv-script-line re) #t) ;; script allowed?
                                         (eqv? start-pos 0) ;; at start of file
@@ -14142,7 +14458,7 @@
                                      (macro-read-next-char-or-eof re);;skip #\!
                                      (##read-script-line re "")
                                      (##script-marker))
-                                   (one-char-token |token.#|)))
+                                   (token |token.#|)))
                               ((decimal-digit? c)
                                (token (parse-number re #\0 c)))
                               (else
@@ -14161,19 +14477,33 @@
                    (else
                     (##none-marker)))))))
 
-  (define (get-token re maybe-tok)
-    (or maybe-tok (parse-token re)))
+  (define (get-token re autosemi? maybe-tok)
+    (or maybe-tok (parse-token re autosemi?)))
 
-  (define (expect re maybe-tok expected)
-    (let ((tok (get-token re maybe-tok)))
-      (if (eq? tok expected)
+  (define (get-token-no-autosemi re maybe-tok)
+    (get-token re #f maybe-tok))
+
+  (define (expect re autosemi? maybe-tok expected)
+    (let ((tok (get-token re autosemi? maybe-tok)))
+      (if (or (eq? tok expected)
+              (and (eq? tok |token.;-auto|)
+                   (eq? expected |token.;|)))
           #f
           (begin
             (invalid-infix-syntax re)
             tok))))
 
-  (define (read-arguments-tail re maybe-tok cont)
-    (let ((tok (get-token re maybe-tok)))
+  (define (expect-no-autosemi re maybe-tok expected)
+    (expect re #f maybe-tok expected))
+
+  (define (expect-and-get-token re autosemi? maybe-tok expected)
+    (get-token re
+               autosemi?
+               (expect re autosemi? maybe-tok expected)))
+
+  (define (read-arguments-tail re autosemi? maybe-tok cont)
+    (let* ((autosemi? #f) ;; in (...) explicit semicolons are required
+           (tok (get-token-no-autosemi re maybe-tok)))
       (if (eq? tok |token.)|)
           (cont re
                 #f
@@ -14182,19 +14512,20 @@
             (cond ((expression-starter? re tok)
                    (read-expression
                     re
+                    autosemi?
                     tok
                     max-precedence
                     'no-comma
                     (lambda (re maybe-tok expr)
                       (let ((new-args (cons expr args)))
-                        (let ((tok (get-token re maybe-tok)))
+                        (let ((tok (get-token re autosemi? maybe-tok)))
                           (cond ((eq? tok |op.,|)
                                  (loop re
-                                       (get-token re #f)
+                                       (get-token re autosemi? #f)
                                        new-args))
                                 (else
                                  (cont re
-                                       (expect re tok |token.)|)
+                                       (expect re autosemi? tok |token.)|)
                                        (reverse new-args)))))))))
                   (else
                    (invalid-infix-syntax re)
@@ -14202,17 +14533,18 @@
                          tok
                          (reverse args))))))))
 
-  (define (read-list re maybe-tok start-pos cont)
+  (define (read-list re autosemi? maybe-tok start-pos cont)
     (let loop ((re re) (maybe-tok maybe-tok) (first? #t) (cont cont))
-      (let ((tok (get-token re maybe-tok)))
+      (let ((tok (get-token re autosemi? maybe-tok)))
         (cond ((expression-starter? re tok)
                (read-expression
                 re
+                autosemi?
                 tok
                 max-precedence
                 'no-comma-and-no-bar
                 (lambda (re maybe-tok expr1)
-                  (let ((tok (get-token re maybe-tok)))
+                  (let ((tok (get-token re autosemi? maybe-tok)))
                     (cond ((eq? tok |op.,|)
                            (loop re
                                  #f
@@ -14228,12 +14560,13 @@
                           ((eq? tok |op.\||)
                            (read-expression
                             re
+                            autosemi?
                             #f
                             max-precedence
                             #f
                             (lambda (re maybe-tok expr2)
                               (cont re
-                                    (expect re maybe-tok |token.]|)
+                                    (expect re autosemi? maybe-tok |token.]|)
                                     (##wrap-op2 re
                                                 start-pos
                                                 'six.cons
@@ -14241,7 +14574,7 @@
                                                 expr2)))))
                           (else
                            (cont re
-                                 (expect re tok |token.]|)
+                                 (expect re autosemi? tok |token.]|)
                                  (##wrap-op2 re
                                              start-pos
                                              'six.list
@@ -14251,21 +14584,19 @@
                                                          'six.null)))))))))
               (else
                (cont re
-                     (expect re tok |token.]|)
+                     (expect re autosemi? tok |token.]|)
                      (##wrap-op0 re
                                  start-pos
                                  'six.null)))))))
 
   (define (expression-starter? re tok)
     ;; this function must be kept in sync with "read-expression"
-    (or (eq? tok op.*)
+    (or (eq? tok op.**)
+        (eq? tok op.*)
         (eq? tok op.+)
         (eq? tok op.-)
         (eq? tok op.&)
-        (level2-starter? re tok)))
-
-  (define (level2-starter? re tok)
-    (or (eq? tok op.!)
+        (eq? tok op.!)
         (eq? tok op.++)
         (eq? tok op.--)
         (eq? tok op.~)
@@ -14277,35 +14608,42 @@
         (eq? tok |token.\\|)
         (eq? tok |token.`|)
         (eq? tok |token.#|)
-        (symbol? tok)
+        (symbol? tok) ;; catches "not", "function", "await", etc tokens
         (string? tok)
         (char? tok)
         (complex? tok)
         (pair? tok)
         (six-type? re tok)))
 
-  (define (read-expression re maybe-tok level restriction cont)
+  (define (read-expression re autosemi? maybe-tok level restriction cont)
     (let* ((tok
-            (get-token re maybe-tok))
+            (get-token-no-autosemi re maybe-tok))
            (start-pos
             (macro-readenv-filepos re)))
-      (cond ((and (= level 2)
-                  (op? tok)
-                  (unary-prefix? tok))
+
+      (cond ((let ((op (or (and (op? tok) tok)
+                           (identifier-unary-op? tok))))
+               (and op
+                    (= (precedence op) level)
+                    (unary-prefix? op)))
              =>
              (lambda (scheme-name)
-               (let ((tok2 (get-token re #f)))
-                 (if (and (eq? tok |op.!|)
-                          (not (level2-starter? re tok2)))
+               (let ((tok2 (get-token-no-autosemi re #f)))
+                 (if (and (or (eq? tok |op.!|)
+                              (identifier-unary-op? tok))
+                          (not (expression-starter? re tok2)))
                      (cont re
                            tok2
-                           (##wrap-op0 re
-                                       start-pos
-                                       'six.!))
+                           (if (eq? tok |op.!|)
+                               (##wrap-op0 re
+                                           start-pos
+                                           'six.!)
+                               (wrap-identifier re start-pos tok)))
                      (read-expression
                       re
+                      autosemi?
                       tok2
-                      2
+                      level
                       restriction
                       (lambda (re maybe-tok expr)
                         (cont re
@@ -14314,16 +14652,200 @@
                                           start-pos
                                           scheme-name
                                           expr))))))))
-            ((and (= level 2)
-                  (eq? tok 'new))
-             (read-identifier-or-prefix
+
+            ((< 0 level)
+             (read-expression
+              re
+              autosemi?
+              tok
+              (- level 1)
+              restriction
+              (lambda (re maybe-tok expr1)
+                (let ((tok (get-token re autosemi? maybe-tok)))
+                  (if (= level 1)
+                      (let loop ((re re)
+                                 (last-tok tok)
+                                 (last-expr1 expr1))
+                        (cond ((and (op? last-tok)
+                                    (unary-postfix? last-tok))
+                               =>
+                               (lambda (scheme-name)
+                                 (loop re
+                                       (get-token re autosemi? #f)
+                                       (##wrap-op1 re
+                                                   start-pos
+                                                   scheme-name
+                                                   last-expr1))))
+                              ((eq? last-tok |token.(|)
+                               (read-arguments-tail
+                                re
+                                autosemi?
+                                #f
+                                (lambda (re maybe-tok args)
+                                  (loop re
+                                        (get-token re autosemi? maybe-tok)
+                                        (##wrap-op re
+                                                   start-pos
+                                                   'six.call
+                                                   (cons last-expr1
+                                                         args))))))
+                              ((eq? last-tok |token.[|)
+                               (read-expression
+                                re
+                                (let ((autosemi? #f)) ;; semicolons required
+                                  autosemi?)
+                                #f
+                                max-precedence
+                                #f
+                                (lambda (re maybe-tok expr2)
+                                  (loop re
+                                        (expect-and-get-token
+                                         re
+                                         autosemi?
+                                         maybe-tok
+                                         |token.]|)
+                                        (##wrap-op2 re
+                                                    start-pos
+                                                    'six.index
+                                                    last-expr1
+                                                    expr2)))))
+                              ((or (eq? last-tok |token.->|)
+                                   (eq? last-tok |token..|))
+                               (let ((next
+                                      (macro-peek-next-char-or-eof re)))
+                                 (if (or (not (eq? last-tok |token..|))
+                                         (and (char? next)
+                                              (or (identifier-starter? next)
+                                                  (char=? next #\\))))
+                                     (read-identifier-or-backslash
+                                      re
+                                      #f
+                                      #t
+                                      (lambda (re maybe-tok identifier)
+                                        (loop re
+                                              (get-token re autosemi? maybe-tok)
+                                              (##wrap-op2 re
+                                                          start-pos
+                                                          (if (eq? last-tok
+                                                                   |token.->|)
+                                                              'six.arrow
+                                                              'six.dot)
+                                                          last-expr1
+                                                          identifier))))
+                                     (cont re
+                                           last-tok
+                                           last-expr1))))
+                              (else
+                               (cont re
+                                     last-tok
+                                     last-expr1))))
+                      (let ((tok2
+                             (or (identifier-op? tok)
+                                 tok)))
+                        (cond ((and (op? tok2)
+                                    (= level (precedence tok2))
+                                    (not
+                                     (cond ((eq? restriction 'no-comma)
+                                            (eq? tok2 |op.,|))
+                                           ((eq? restriction
+                                                 'no-comma-and-no-bar)
+                                            (or (eq? tok2 |op.,|)
+                                                (eq? tok2 |op.\||)))
+                                           ((eq? restriction 'no-colon)
+                                            (eq? tok2 |op.:|))
+                                           (else
+                                            #f)))
+                                    (binary-or-ternary? tok2))
+                               =>
+                               (lambda (scheme-name)
+                                 (cond ((ternary? tok2)
+                                        =>
+                                        (lambda (end-tok)
+                                          (read-expression
+                                           re
+                                           (let ((autosemi? #f)) ;; allow whitespace
+                                             autosemi?)
+                                           #f
+                                           max-precedence
+                                           'no-colon ;; assumes that end-tok = |op.:|
+                                           (lambda (re maybe-tok expr2)
+                                             (read-expression
+                                              re
+                                              autosemi?
+                                              (expect-no-autosemi re maybe-tok end-tok)
+                                              level
+                                              restriction
+                                              (lambda (re maybe-tok expr3)
+                                                (cont re
+                                                      maybe-tok
+                                                      (##wrap-op3 re
+                                                                  start-pos
+                                                                  scheme-name
+                                                                  expr1
+                                                                  expr2
+                                                                  expr3))))))))
+                                       ((left-to-right? tok2)
+                                        (let loop ((re re)
+                                                   (last-scheme-name scheme-name)
+                                                   (last-expr1 expr1))
+                                          (read-expression
+                                           re
+                                           autosemi?
+                                           #f
+                                           (- level 1)
+                                           restriction
+                                           (lambda (re maybe-tok expr2)
+                                             (let ((expr1
+                                                    (##wrap-op2 re
+                                                                start-pos
+                                                                last-scheme-name
+                                                                last-expr1
+                                                                expr2)))
+                                               (let ((tok (get-token re autosemi? maybe-tok)))
+                                                 (cond ((and (op? tok)
+                                                             (= level
+                                                                (precedence tok))
+                                                             (binary-or-ternary?
+                                                              tok))
+                                                        =>
+                                                        (lambda (scheme-name)
+                                                          (loop re
+                                                                scheme-name
+                                                                expr1)))
+                                                       (else
+                                                        (cont re
+                                                              tok
+                                                              expr1)))))))))
+                                       (else
+                                        (read-expression
+                                         re
+                                         autosemi?
+                                         #f
+                                         level
+                                         restriction
+                                         (lambda (re maybe-tok expr2)
+                                           (cont re
+                                                 maybe-tok
+                                                 (##wrap-op2 re
+                                                             start-pos
+                                                             scheme-name
+                                                             expr1
+                                                             expr2))))))))
+                              (else
+                               (cont re
+                                     tok
+                                     expr1)))))))))
+
+            ((eq? tok 'new)
+             (read-identifier-or-backslash
               re
               #f
               #t
               (lambda (re maybe-tok identifier)
                 (read-arguments-tail
                  re
-                 (expect re #f |token.(|)
+                 autosemi?
+                 (expect-no-autosemi re #f |token.(|)
                  (lambda (re maybe-tok args)
                    (cont re
                          maybe-tok
@@ -14332,181 +14854,17 @@
                                     'six.new
                                     (cons identifier
                                           args))))))))
-            ((< 0 level)
-             (read-expression
+
+            ((or (eq? tok 'function) (six-type? re tok))
+             (read-procedure
               re
-              tok
-              (- level 1)
-              restriction
-              (lambda (re maybe-tok expr1)
-                (let ((tok (get-token re maybe-tok)))
-                  (cond ((= level 1)
-                         (let loop ((re re)
-                                    (last-tok tok)
-                                    (last-expr1 expr1))
-                           (cond ((and (op? last-tok)
-                                       (unary-postfix? last-tok))
-                                  =>
-                                  (lambda (scheme-name)
-                                    (loop re
-                                          (get-token re #f)
-                                          (##wrap-op1 re
-                                                      start-pos
-                                                      scheme-name
-                                                      last-expr1))))
-                                 ((eq? last-tok |token.(|)
-                                  (read-arguments-tail
-                                   re
-                                   #f
-                                   (lambda (re maybe-tok args)
-                                     (loop re
-                                           (get-token re maybe-tok)
-                                           (##wrap-op re
-                                                      start-pos
-                                                      'six.call
-                                                      (cons last-expr1
-                                                            args))))))
-                                 ((eq? last-tok |token.[|)
-                                  (read-expression
-                                   re
-                                   #f
-                                   max-precedence
-                                   #f
-                                   (lambda (re maybe-tok expr2)
-                                     (loop re
-                                           (get-token
-                                            re
-                                            (expect re maybe-tok |token.]|))
-                                           (##wrap-op2 re
-                                                       start-pos
-                                                       'six.index
-                                                       last-expr1
-                                                       expr2)))))
-                                 ((or (eq? last-tok |token.->|)
-                                      (eq? last-tok |token..|))
-                                  (let ((next
-                                         (macro-peek-next-char-or-eof re)))
-                                    (if (or (not (eq? last-tok |token..|))
-                                            (and (char? next)
-                                                 (or (identifier-starter? next)
-                                                     (char=? next #\\))))
-                                        (read-expression
-                                         re
-                                         (parse-token-starting-with re next)
-                                         (- level 1)
-                                         restriction
-                                         (lambda (re maybe-tok expr2)
-                                           (loop re
-                                                 (get-token re maybe-tok)
-                                                 (##wrap-op2 re
-                                                             start-pos
-                                                             (if (eq? last-tok
-                                                                      |token.->|)
-                                                                 'six.arrow;;;;;;;;;;;;;;;
-                                                                 'six.dot)
-                                                             last-expr1
-                                                             expr2))))
-                                        (cont re
-                                              last-tok
-                                              last-expr1))))
-                                 (else
-                                  (cont re
-                                        last-tok
-                                        last-expr1)))))
-                        ((and (op? tok)
-                              (= level (precedence tok))
-                              (not
-                               (cond ((eq? restriction 'no-comma)
-                                      (eq? tok |op.,|))
-                                     ((eq? restriction 'no-comma-and-no-bar)
-                                      (or (eq? tok |op.,|) (eq? tok |op.\||)))
-                                     ((eq? restriction 'no-colon)
-                                      (eq? tok |op.:|))
-                                     (else
-                                      #f)))
-                              (binary-or-ternary? tok))
-                         =>
-                         (lambda (scheme-name)
-                           (cond ((ternary? tok)
-                                  =>
-                                  (lambda (end-tok)
-                                    (read-expression
-                                     re
-                                     #f
-                                     max-precedence
-                                     'no-colon ;; assumes that end-tok = |op.:|
-                                     (lambda (re maybe-tok expr2)
-                                       (read-expression
-                                        re
-                                        (expect re maybe-tok end-tok)
-                                        level
-                                        restriction
-                                        (lambda (re maybe-tok expr3)
-                                          (cont re
-                                                maybe-tok
-                                                (##wrap-op3 re
-                                                            start-pos
-                                                            scheme-name
-                                                            expr1
-                                                            expr2
-                                                            expr3))))))))
-                                 ((left-to-right? tok)
-                                  (let loop ((re re)
-                                             (last-scheme-name scheme-name)
-                                             (last-expr1 expr1))
-                                    (read-expression
-                                     re
-                                     #f
-                                     (- level 1)
-                                     restriction
-                                     (lambda (re maybe-tok expr2)
-                                       (let ((expr1
-                                              (##wrap-op2 re
-                                                          start-pos
-                                                          last-scheme-name
-                                                          last-expr1
-                                                          expr2)))
-                                         (let ((tok (get-token re maybe-tok)))
-                                           (cond ((and (op? tok)
-                                                       (= level
-                                                          (precedence tok))
-                                                       (binary-or-ternary?
-                                                        tok))
-                                                  =>
-                                                  (lambda (scheme-name)
-                                                    (loop re
-                                                          scheme-name
-                                                          expr1)))
-                                                 (else
-                                                  (cont re
-                                                        tok
-                                                        expr1)))))))))
-                                 (else
-                                  (read-expression
-                                   re
-                                   #f
-                                   level
-                                   restriction
-                                   (lambda (re maybe-tok expr2)
-                                     (cont re
-                                           maybe-tok
-                                           (##wrap-op2 re
-                                                       start-pos
-                                                       scheme-name
-                                                       expr1
-                                                       expr2))))))))
-                        (else
-                         (cont re
-                               tok
-                               expr1)))))))
-            ((six-type? re tok)
-             (let ((type (macro-readenv-wrap re tok)))
-               (read-procedure
-                re
-                (expect re #f |token.(|)
-                start-pos
-                type
-                cont)))
+              (expect-no-autosemi re #f |token.(|)
+              start-pos
+              (if (eq? tok 'function)
+                  #f
+                  tok)
+              cont))
+
             ((pair? tok)
              ;; This special token represents two
              ;; consecutive tokens.  This trick is used
@@ -14524,8 +14882,11 @@
                     re
                     #f
                     start-pos
-                    type
+                    (if (eq? type 'function)
+                        #f
+                        type)
                     cont))))
+
             ((or (string? tok)
                  (char? tok)
                  (complex? tok))
@@ -14536,12 +14897,14 @@
                                  start-pos
                                  'six.literal
                                  literal))))
+
             ((eq? tok |token.(|)
-             (let ((tok (get-token re #f)))
+             (let* ((autosemi? #f) ;; in (...) explicit semicolons are required
+                    (tok (get-token-no-autosemi re #f)))
 
                (define (check-closing re maybe-tok x)
                  (cont re
-                       (expect re maybe-tok |token.)|)
+                       (expect re autosemi? maybe-tok |token.)|)
                        x))
 
                (if (eq? tok |token.{|)
@@ -14554,53 +14917,67 @@
                       check-closing))
                    (read-expression
                     re
+                    (let ((autosemi? #f)) ;; allow whitespace
+                      autosemi?)
                     tok
                     max-precedence
                     #f
                     check-closing))))
+
             ((eq? tok |token.[|)
              (read-list
               re
+              (let ((autosemi? #f)) ;; in [...] explicit semicolons are required
+                autosemi?)
               #f
               start-pos
               cont))
+
             ((eq? tok |token.`|)
-             (read-quasiquotation
+             (read-backquote
               re
               start-pos
               cont))
+
             ((eq? tok |token.#|);;;;;;;;;;;;;;;;;;;;;
              (read-sharp
               re
               start-pos
               cont))
+
             (else
-             (read-identifier-or-prefix
+             (read-identifier-or-backslash
               re
               tok
               #f
               cont)))))
 
-  (define (read-paren-expression re maybe-tok cont)
-    (let ((tok
-           (get-token re (expect re maybe-tok |token.(|))))
+  (define (read-paren-expression re get-token-after-close-paren? maybe-tok cont)
+    (let* ((autosemi? #f) ;; require semicolons from "(" to after ")"
+           (tok (expect-and-get-token re autosemi? maybe-tok |token.(|)))
 
       (define (check-closing re maybe-tok x)
         (cont re
-              (expect re maybe-tok |token.)|)
+              (if get-token-after-close-paren?
+                  (expect-and-get-token re autosemi? maybe-tok |token.)|)
+                  (expect re autosemi? maybe-tok |token.)|))
               x))
 
       (let ((start-pos (macro-readenv-filepos re)))
-        (if (six-type? re tok)
+        (if (or (eq? tok 'function) (six-type? re tok))
             (read-definition-or-expression-or-clause
              re
-             tok
+             autosemi?
+             (if (eq? tok 'function)
+                 #f
+                 tok)
              start-pos
              #f
              #f
              check-closing)
             (read-expression-or-clause
              re
+             autosemi?
              tok
              start-pos
              #f
@@ -14609,6 +14986,7 @@
 
   (define (read-expression-or-clause
            re
+           autosemi?
            maybe-tok
            start-pos
            restriction
@@ -14616,13 +14994,14 @@
            cont)
     (read-expression
      re
+     autosemi?
      maybe-tok
      max-precedence
      restriction
      (if terminated?
          (lambda (re maybe-tok expr)
            (let ((tok
-                  (get-token re maybe-tok)))
+                  (get-token re autosemi? maybe-tok)))
              (if (eq? tok |token..|)
                  (cont re
                        #f
@@ -14631,36 +15010,36 @@
                                    'six.clause
                                    expr))
                  (cont re
-                       (expect re tok |token.;|)
+                       (expect re autosemi? tok |token.;|)
                        expr))))
          cont)))
 
   (define (read-definition-or-expression-or-clause
            re
-           tok
+           autosemi?
+           type
            start-pos
            restriction
            terminated?
            cont)
-    (let* ((type
-            (macro-readenv-wrap re tok))
-           (tok
-            (get-token re #f)))
+    (let ((tok (get-token-no-autosemi re #f)))
       (if (eq? tok |token.(|)
           (read-expression-or-clause
            re
+           autosemi?
            (cons type #f) ;; special combined token
            start-pos
            restriction
            terminated?
            cont)
-          (read-identifier-or-prefix
+          (read-identifier-or-backslash
            re
            tok
            #f
            (lambda (re maybe-tok identifier)
              (read-definition
               re
+              autosemi?
               #f
               terminated?
               start-pos
@@ -14668,11 +15047,13 @@
               identifier
               cont))))))
 
-  (define (read-identifier-or-prefix re maybe-tok accept-type? cont)
-    (let* ((tok (get-token re maybe-tok))
-           (start-pos (macro-readenv-filepos re)))
+  (define (read-identifier-or-backslash re maybe-tok accept-type? cont)
+    (let* ((tok
+            (get-token-no-autosemi re maybe-tok))
+           (start-pos
+            (macro-readenv-filepos re)))
       (cond ((eq? tok |token.\\|)
-             (read-prefix
+             (read-backslash
               re
               start-pos
               cont))
@@ -14682,71 +15063,52 @@
              (invalid-infix-syntax re)
              (cont re
                    tok
-                   (##wrap-op1* re
-                                start-pos
-                                'six.prefix
-                                'error)))
+                   (##wrap-op0 re
+                               start-pos
+                               'error)))
             (else
-             (let ((identifier (macro-readenv-wrap re tok)))
-               (cont re
-                     #f
-                     (##wrap-op1 re
-                                 start-pos
-                                 'six.identifier
-                                 identifier)))))))
+             (cont re
+                   #f
+                   (wrap-identifier re start-pos tok))))))
 
-  (define (read-prefix re start-pos cont)
-    (let ((expr (##read-datum-or-label re)))
-      (let* ((obj2
-              (cons expr
-                    '()))
-             (obj1
-              (##wrap-op re
-                         start-pos
-                         'six.prefix
-                         obj2)))
-        (if (##label-marker? expr)
-            (##label-marker-fixup-handler-add!
-             re
-             expr
-             (lambda (resolved-obj)
-               (set-car! obj2 resolved-obj))))
-        (cont re
-              #f
-              obj1))))
+  (define (wrap-identifier re start-pos tok)
+    (let ((identifier (macro-readenv-wrap re tok)))
+      (##wrap-op1 re
+                  start-pos
+                  'six.identifier
+                  identifier)))
 
-  (define (read-quasiquotation re start-pos cont)
+  (define (read-backslash re start-pos cont)
     (cont re
           #f
-          (##wrap-op1 re
-                      start-pos
-                      'six.prefix
-                      (##build-read-macro
-                       re
-                       start-pos
-                       start-pos
-                       (macro-readtable-quasiquote-keyword
-                        (macro-readenv-readtable re))))))
+          (##read-datum-or-label re)))
+
+  (define (read-backquote re start-pos cont)
+    (cont re
+          #f
+          (##build-read-macro
+           re
+           start-pos
+           start-pos
+           (macro-readtable-quasiquote-keyword
+            (macro-readenv-readtable re)))))
 
   (define (read-sharp re start-pos cont)
-    (let ((x (##read-sharp-aux re start-pos)))
-      (cont re
-            #f
-            (##wrap-op1 re
-                        start-pos
-                        'six.prefix
-                        x))));;;;;;;;;;;;;;;;;;;;
+    (cont re
+          #f
+          (##read-sharp-aux re start-pos)))
 
   (define (statement-starter? re tok)
     ;; this function must be kept in sync with "read-statement"
     (or (eq? tok |token.{|)
         (eq? tok |token.;|)
+        (eq? tok |token.;-auto|)
         (six-type? re tok)
         (expression-starter? re tok)))
 
-  (define (read-statement re maybe-tok cont)
+  (define (read-statement re autosemi? maybe-tok cont)
     (let* ((tok
-            (get-token re maybe-tok))
+            (get-token-no-autosemi re maybe-tok))
            (start-pos
             (macro-readenv-filepos re)))
       (cond ((eq? tok |token.{|)
@@ -14759,41 +15121,52 @@
             ((eq? tok 'if)
              (read-paren-expression
               re
+              #t ;; get token after close paren
               #f
               (lambda (re maybe-tok expr)
                 (read-statement
                  re
+                 autosemi?
                  maybe-tok
                  (lambda (re maybe-tok stat1)
-                   (let ((tok
-                          (get-token re maybe-tok)))
-                     (if (eq? tok 'else)
-                         (read-statement
-                          re
-                          #f
-                          (lambda (re maybe-tok stat2)
-                            (cont re
-                                  maybe-tok
-                                  (##wrap-op3 re
-                                              start-pos
-                                              'six.if
-                                              expr
-                                              stat1
-                                              stat2))))
-                         (cont re
-                               tok
-                               (##wrap-op2 re
-                                           start-pos
-                                           'six.if
-                                           expr
-                                           stat1)))))))))
+
+                   (define (one-armed-if maybe-tok)
+                     (cont re
+                           maybe-tok
+                           (##wrap-op2 re
+                                       start-pos
+                                       'six.if
+                                       expr
+                                       stat1)))
+
+                   (if autosemi?
+                       (one-armed-if maybe-tok)
+                       (let ((tok
+                              (get-token re autosemi? maybe-tok)))
+                         (if (eq? tok 'else)
+                             (read-statement
+                              re
+                              autosemi?
+                              #f
+                              (lambda (re maybe-tok stat2)
+                                (cont re
+                                      maybe-tok
+                                      (##wrap-op3 re
+                                                  start-pos
+                                                  'six.if
+                                                  expr
+                                                  stat1
+                                                  stat2))))
+                             (one-armed-if tok)))))))))
             ((eq? tok 'while)
              (read-paren-expression
               re
+              #t ;; get token after close paren
               #f
               (lambda (re maybe-tok expr)
                 (read-statement
                  re
+                 autosemi?
                  maybe-tok
                  (lambda (re maybe-tok stat)
                    (cont re
@@ -14806,75 +15179,87 @@
             ((eq? tok 'do)
              (read-statement
               re
-              #f
+              (let ((autosemi? #f)) ;; semicolons significant in do-while body
+                autosemi?)
+              (get-token-no-autosemi re #f)
               (lambda (re maybe-tok stat)
                 (read-paren-expression
                  re
-                 (expect re maybe-tok 'while)
+                 #f ;; don't get token after close paren
+                 (expect-no-autosemi re maybe-tok 'while)
                  (lambda (re maybe-tok expr)
                    (cont re
-                         (expect re maybe-tok |token.;|)
+                         (expect re autosemi? maybe-tok |token.;|)
                          (##wrap-op2 re
                                      start-pos
                                      'six.do-while
                                      stat
                                      expr)))))))
             ((eq? tok 'for)
-             (let ()
+             (let ((autosemi2? #f)) ;; require semicolons from "(" to after ")"
 
-               (define (get-stat1 re maybe-tok)
+               (define (get-stat1 re autosemi? maybe-tok)
                  (read-statement
                   re
-                  (expect re maybe-tok |token.(|)
+                  autosemi2?
+                  (expect re autosemi2? maybe-tok |token.(|)
                   (lambda (re maybe-tok stat1)
                     (get-expr2 re
+                               autosemi?
                                maybe-tok
                                stat1))))
 
-               (define (get-expr2 re maybe-tok stat1)
+               (define (get-expr2 re autosemi? maybe-tok stat1)
                  (let ((tok
-                        (get-token re maybe-tok)))
+                        (get-token re autosemi2? maybe-tok)))
                    (if (expression-starter? re tok)
                        (read-expression
                         re
+                        autosemi2?
                         tok
                         max-precedence
                         #f
                         (lambda (re maybe-tok expr2)
                           (get-expr3 re
+                                     autosemi?
                                      maybe-tok
                                      stat1
                                      expr2)))
                        (get-expr3 re
+                                  autosemi?
                                   tok
                                   stat1
                                   (##wrap re start-pos #f)))))
 
-               (define (get-expr3 re maybe-tok stat1 expr2)
+               (define (get-expr3 re autosemi? maybe-tok stat1 expr2)
                  (let ((tok
-                        (get-token re (expect re maybe-tok |token.;|))))
+                        (expect-and-get-token re autosemi2? maybe-tok |token.;|)))
                    (if (expression-starter? re tok)
                        (read-expression
                         re
+                        autosemi2?
                         tok
                         max-precedence
                         #f
                         (lambda (re maybe-tok expr3)
                           (get-body re
+                                    autosemi?
                                     maybe-tok
                                     stat1
                                     expr2
                                     expr3)))
                        (get-body re
+                                 autosemi?
                                  tok
                                  stat1
                                  expr2
                                  (##wrap re start-pos #f)))))
 
-               (define (get-body re maybe-tok stat1 expr2 expr3)
+               (define (get-body re autosemi? maybe-tok stat1 expr2 expr3)
                  (read-statement
                   re
-                  (expect re maybe-tok |token.)|)
+                  autosemi? ;; use initial autosemi?
+                  (expect-and-get-token re autosemi2? maybe-tok |token.)|)
                   (lambda (re maybe-tok stat)
                     (cont re
                           maybe-tok
@@ -14887,14 +15272,17 @@
                                       stat)))))
 
                (get-stat1 re
+                          autosemi?
                           #f)))
             ((eq? tok 'switch)
              (read-paren-expression
               re
+              #t ;; get token after close paren
               #f
               (lambda (re maybe-tok expr)
                 (read-statement
                  re
+                 autosemi?
                  maybe-tok
                  (lambda (re maybe-tok stat)
                    (cont re
@@ -14906,46 +15294,48 @@
                                      stat)))))))
             ((eq? tok 'break)
              (cont re
-                   (expect re #f |token.;|)
+                   (expect re autosemi? #f |token.;|)
                    (##wrap-op0 re
                                start-pos
                                'six.break)))
             ((eq? tok 'continue)
              (cont re
-                   (expect re #f |token.;|)
+                   (expect re autosemi? #f |token.;|)
                    (##wrap-op0 re
                                start-pos
                                'six.continue)))
             ((eq? tok 'return)
              (let ((tok
-                    (get-token re #f)))
+                    (get-token-no-autosemi re #f)))
                (if (expression-starter? re tok)
                    (read-expression
                     re
+                    autosemi?
                     tok
                     max-precedence
                     #f
                     (lambda (re maybe-tok expr)
                       (cont re
-                            (expect re maybe-tok |token.;|)
+                            (expect re autosemi? maybe-tok |token.;|)
                             (##wrap-op1 re
                                         start-pos
                                         'six.return
                                         expr))))
                    (cont re
-                         (expect re tok |token.;|)
+                         (expect re autosemi? tok |token.;|)
                          (##wrap-op0 re
                                      start-pos
                                      'six.return)))))
             ((eq? tok 'goto)
              (read-expression
               re
+              autosemi?
               #f
               max-precedence
               #f
               (lambda (re maybe-tok expr)
                 (cont re
-                      (expect re maybe-tok |token.;|)
+                      (expect re autosemi? maybe-tok |token.;|)
                       (##wrap-op1 re
                                   start-pos
                                   'six.goto
@@ -14953,13 +15343,16 @@
             ((eq? tok 'case)
              (read-expression
               re
+              (let ((autosemi? #f)) ;; allow whitespace
+                autosemi?)
               #f
               max-precedence
               'no-colon
               (lambda (re maybe-tok expr)
                 (read-statement
                  re
-                 (expect re maybe-tok |op.:|)
+                 autosemi?
+                 (expect-no-autosemi re maybe-tok |op.:|)
                  (lambda (re maybe-tok stat)
                    (cont re
                          maybe-tok
@@ -14968,16 +15361,70 @@
                                      'six.case
                                      expr
                                      stat)))))))
-            ((eq? tok |token.;|)
+            ((eq? tok 'import)
+             (read-expression
+              re
+              autosemi?
+              #f
+              max-precedence
+              #f
+              (lambda (re maybe-tok expr)
+                (cont re
+                      (expect re autosemi? maybe-tok |token.;|)
+                      (##wrap-op1 re
+                                  start-pos
+                                  'six.import
+                                  expr)))))
+            ((eq? tok 'from)
+             (read-expression
+              re
+              (let ((autosemi? #f)) ;; allow whitespace
+                autosemi?)
+              #f
+              max-precedence
+              #f
+              (lambda (re maybe-tok expr1)
+                (let ((tok2
+                       (expect-and-get-token
+                        re
+                        (let ((autosemi? #f)) ;; allow whitespace
+                          autosemi?)
+                        maybe-tok
+                        'import)))
+                  (if (eq? tok2 op.*)
+                      (cont re
+                            (expect re autosemi? #f |token.;|)
+                            (##wrap-op1 re
+                                        start-pos
+                                        'six.from-import-*
+                                        expr1))
+                      (read-expression
+                       re
+                       autosemi?
+                       tok2
+                       max-precedence
+                       #f
+                       (lambda (re maybe-tok expr2)
+                         (cont re
+                               (expect re autosemi? maybe-tok |token.;|)
+                               (##wrap-op2 re
+                                           start-pos
+                                           'six.from-import
+                                           expr1
+                                           expr2)))))))))
+            ((or (eq? tok |token.;|) (eq? tok |token.;-auto|))
              (cont re
                    #f
                    (##wrap-op0 re
                                start-pos
                                'six.compound)))
-            ((six-type? re tok)
+            ((or (eq? tok 'function) (six-type? re tok))
              (read-definition-or-expression-or-clause
               re
-              tok
+              autosemi?
+              (if (eq? tok 'function)
+                  #f
+                  tok)
               start-pos
               'no-colon
               #t
@@ -14987,10 +15434,11 @@
              (let* ((identifier
                      (macro-readenv-wrap re tok))
                     (tok
-                     (get-token re #f)))
+                     (get-token re autosemi? #f)))
                (if (eq? tok |op.:|)
                    (read-statement
                     re
+                    autosemi?
                     #f
                     (lambda (re maybe-tok stat)
                       (cont re
@@ -15002,6 +15450,7 @@
                                         stat))))
                    (read-expression-or-clause
                     re
+                    autosemi?
                     (cons ;; special combined token
                      (##wrap-op1 re
                                  start-pos
@@ -15015,47 +15464,54 @@
             (else
              (read-expression-or-clause
               re
+              autosemi?
               tok
               start-pos
               'no-colon
               #t
               cont)))))
 
-  (define (read-definition re maybe-tok terminated? start-pos type identifier cont)
+  (define (read-definition re autosemi? maybe-tok terminated? start-pos type identifier cont)
 
-    (define (get-dimensions re maybe-tok rev-dims)
-      (let ((tok (get-token re maybe-tok)))
+    (define (get-dimensions re autosemi? maybe-tok rev-dims)
+      (let ((tok (get-token re autosemi? maybe-tok)))
         (cond ((eq? tok |token.[|)
                (read-expression
                 re
+                (let ((autosemi? #f)) ;; allow whitespace
+                  autosemi?)
                 #f
                 max-precedence
                 #f
                 (lambda (re maybe-tok dim)
                   (get-dimensions re
-                                  (expect re maybe-tok |token.]|)
+                                  autosemi?
+                                  (expect re autosemi? maybe-tok |token.]|)
                                   (cons dim rev-dims)))))
               ((eq? tok op.=)
                (read-expression
                 re
+                autosemi?
                 #f
                 max-precedence
                 #f
                 (lambda (re maybe-tok init)
                   (get-tail re
+                            autosemi?
                             maybe-tok
                             rev-dims
                             init))))
               (else
                (get-tail re
+                         autosemi?
                          tok
                          rev-dims
                          (##wrap re start-pos #f))))))
 
-    (define (get-tail re maybe-tok rev-dims init)
+    (define (get-tail re autosemi? maybe-tok rev-dims init)
       (cont re
             (if terminated?
-                (expect re maybe-tok |token.;|)
+                (expect re autosemi? maybe-tok |token.;|)
                 maybe-tok)
             (##wrap-op4 re
                         start-pos
@@ -15065,11 +15521,12 @@
                         (##wrap re start-pos (reverse rev-dims))
                         init)))
 
-    (let ((tok (get-token re maybe-tok)))
-      (if (eq? tok |token.(|)
+    (let ((tok (get-token re autosemi? maybe-tok)))
+      (if (or (eq? tok |token.(|)
+              (not type)) ;; type = #f for the syntax "function f(..."
           (read-procedure
            re
-           #f
+           (expect-no-autosemi re tok |token.(|)
            start-pos
            type
            (lambda (re maybe-tok proc)
@@ -15081,19 +15538,20 @@
                                identifier
                                proc))))
           (get-dimensions re
+                          autosemi?
                           tok
                           '()))))
 
   (define (read-procedure re maybe-tok start-pos type cont)
     (let* ((tok
-            (get-token re maybe-tok))
+            (get-token-no-autosemi re maybe-tok))
            (params-start-pos
             (macro-readenv-filepos re)))
 
       (define (get-body re maybe-tok rev-params)
         (read-compound-statement
          re
-         (expect re maybe-tok |token.{|)
+         (expect-no-autosemi re maybe-tok |token.{|)
          start-pos
          'six.procedure-body
          (lambda (re maybe-tok stat)
@@ -15106,41 +15564,32 @@
                              (##wrap re params-start-pos (reverse rev-params))
                              stat)))))
 
-      (define (err re tok rev-params)
-        (invalid-infix-syntax re)
+      (define (end re tok rev-params)
         (get-body re
-                  (if (eq? tok |token.)|)
-                      #f
-                      tok)
+                  (expect-no-autosemi re tok |token.)|)
                   rev-params))
 
-      (if (not (six-type? re tok))
-          (get-body re
-                    (expect re tok |token.)|)
-                    '())
-          (let loop ((tok tok) (rev-params '()))
-            (if (not (six-type? re tok))
-                (err re tok rev-params)
-                (let* ((type
-                        (macro-readenv-wrap re tok))
-                       (tok
-                        (get-token re #f)))
-                  (read-identifier-or-prefix
-                   re
-                   tok
-                   #f
-                   (lambda (re maybe-tok identifier)
-                     (let* ((new-rev-params
-                             (cons (macro-readenv-wrap re (list identifier type))
-                                   rev-params))
-                            (tok
-                             (get-token re maybe-tok)))
-                       (if (eq? tok |op.,|)
-                           (loop (get-token re #f)
-                                 new-rev-params)
-                           (get-body re
-                                     (expect re tok |token.)|)
-                                     new-rev-params)))))))))))
+      (define (possibly-typed-argument tok rev-params)
+        (let* ((type (and (six-type? re tok) tok))
+               (tok (if type (get-token-no-autosemi re #f) tok)))
+          (read-identifier-or-backslash
+           re
+           tok
+           #f
+           (lambda (re maybe-tok identifier)
+             (let* ((new-rev-params
+                     (cons (macro-readenv-wrap re (list identifier type))
+                           rev-params))
+                    (tok
+                     (get-token-no-autosemi re maybe-tok)))
+               (if (eq? tok |op.,|)
+                   (possibly-typed-argument (get-token-no-autosemi re #f)
+                                            new-rev-params)
+                   (end re tok new-rev-params)))))))
+
+      (if (eq? tok |token.)|)
+          (end re tok '())
+          (possibly-typed-argument tok '()))))
 
   (define (read-compound-statement re maybe-tok start-pos kind cont)
     (read-statements-tail
@@ -15157,10 +15606,12 @@
                         stats)))))
 
   (define (read-statements-tail re maybe-tok start-pos rev-stats cont)
-    (let ((tok (get-token re maybe-tok)))
+    (let* ((autosemi? #f) ;; in {...} explicit semicolons are required
+           (tok (get-token-no-autosemi re maybe-tok)))
       (if (statement-starter? re tok)
           (read-statement
            re
+           autosemi?
            tok
            (lambda (re maybe-tok stat)
              (read-statements-tail
@@ -15170,7 +15621,7 @@
               (cons stat rev-stats)
               cont)))
           (cont re
-                (expect re tok |token.}|)
+                (expect re autosemi? tok |token.}|)
                 (reverse rev-stats)))))
 
   (define (invalid-infix-syntax re)
@@ -15191,8 +15642,19 @@
   (define (six-type? re tok)
     ((macro-readtable-six-type? (macro-readenv-readtable re)) tok))
 
-  (let ((tok
-         (get-token re #f)))
+  #;
+  (define (next-non-whitespace re)
+    (let loop ()
+      (let ((c (macro-peek-next-char-or-eof re)))
+        (if (and (char? c)
+                 (eq? (##readtable-char-handler (macro-readenv-readtable re) c)
+                      ##read-whitespace))
+            (begin
+              (macro-read-next-char-or-eof re) ;; skip whitespace character
+              (loop))
+            c))))
+
+  (let ((tok (get-token-no-autosemi re #f)))
     (cond ((and allow-eof?
                 (eq? tok (##none-marker))
                 (not (char? (macro-peek-next-char-or-eof re))))
@@ -15203,6 +15665,7 @@
           (else
            (read-statement
             re
+            autosemi?
             tok
             (lambda (re maybe-tok expr)
               expr))))))
@@ -15211,15 +15674,7 @@
   (assq x ##six-types))
 
 (define ##six-types
-  '(
-    (int    . #f)
-    (char   . #f)
-    (bool   . #f)
-    (void   . #f)
-    (float  . #f)
-    (double . #f)
-    (obj    . #f)
-    ))
+  '((scmobj . #f)))
 
 (define-prim (##six-types-set! x)
   (set! ##six-types x))
@@ -15260,10 +15715,10 @@
           'unsyntax-splicing ;; sharp-unquote-splicing-keyword
           'serial-number->object ;; sharp-num-keyword
           'repl-result-history-ref ;; sharp-seq-keyword
-          #f                 ;; paren-keyword
-          #f                 ;; bracket-keyword
-          #f                 ;; brace-keyword
-          #f                 ;; angle-keyword
+          #f                 ;; paren-handler
+          #f                 ;; bracket-handler
+          #f                 ;; brace-handler
+          #f                 ;; angle-handler
           #f                 ;; start-syntax
           ##six-type?        ;; six-type?
           #t                 ;; r6rs-compatible-read?
@@ -15381,7 +15836,7 @@
     rt))
 
 (define-prim (##main-readtable-set! x)
-  (set! ##main-readtable-set! x))
+  (set! ##main-readtable x))
 
 (define main ;; predefine main procedure so scripts don't have to
   (##first-argument
@@ -15394,13 +15849,13 @@
 
   (cond ((macro-language-srfi-22? language)
          (lambda ()
-           (let ((status (call-main (##list (##cdr ##processed-command-line)))))
+           (let ((status (call-main (##list (##command-args)))))
              (if (##fixnum? status)
                  (##exit status)
                  (##exit-abruptly)))))
         (else
          (lambda ()
-           (call-main (##cdr ##processed-command-line))
+           (call-main (##command-args))
            (##exit)))))
 
 ;;;============================================================================

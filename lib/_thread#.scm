@@ -2,7 +2,7 @@
 
 ;;; File: "_thread#.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -793,15 +793,17 @@
 
 ;;; Parameter descriptors.
 
-(##define-macro (macro-make-parameter-descr value hash filter)
-  `(##vector ,value ,hash ,filter))
+(##define-macro (macro-make-parameter-descr value hash set-filter get-filter)
+  `(##vector ,value ,hash ,set-filter ,get-filter))
 
 (##define-macro (macro-parameter-descr-value p)         `(macro-slot 0 ,p))
 (##define-macro (macro-parameter-descr-value-set! p x)  `(macro-slot 0 ,p ,x))
 (##define-macro (macro-parameter-descr-hash p)          `(macro-slot 1 ,p))
 (##define-macro (macro-parameter-descr-hash-set! p x)   `(macro-slot 1 ,p ,x))
-(##define-macro (macro-parameter-descr-filter p)        `(macro-slot 2 ,p))
-(##define-macro (macro-parameter-descr-filter-set! p x) `(macro-slot 2 ,p ,x))
+(##define-macro (macro-parameter-descr-set-filter p)    `(macro-slot 2 ,p))
+(##define-macro (macro-parameter-descr-set-filter-set! p x) `(macro-slot 2 ,p ,x))
+(##define-macro (macro-parameter-descr-get-filter p)    `(macro-slot 3 ,p))
+(##define-macro (macro-parameter-descr-get-filter-set! p x) `(macro-slot 3 ,p ,x))
 
 ;;; Binding of special dynamic variables.
 
@@ -3038,15 +3040,17 @@
 
 ;;; Parameter descriptors.
 
-(##define-macro (macro-make-parameter-descr value hash filter)
-  `(##vector ,value ,hash ,filter))
+(##define-macro (macro-make-parameter-descr value hash set-filter get-filter)
+  `(##vector ,value ,hash ,set-filter ,get-filter))
 
 (##define-macro (macro-parameter-descr-value p)         `(macro-slot 0 ,p))
 (##define-macro (macro-parameter-descr-value-set! p x)  `(macro-slot 0 ,p ,x))
 (##define-macro (macro-parameter-descr-hash p)          `(macro-slot 1 ,p))
 (##define-macro (macro-parameter-descr-hash-set! p x)   `(macro-slot 1 ,p ,x))
-(##define-macro (macro-parameter-descr-filter p)        `(macro-slot 2 ,p))
-(##define-macro (macro-parameter-descr-filter-set! p x) `(macro-slot 2 ,p ,x))
+(##define-macro (macro-parameter-descr-set-filter p)    `(macro-slot 2 ,p))
+(##define-macro (macro-parameter-descr-set-filter-set! p x) `(macro-slot 2 ,p ,x))
+(##define-macro (macro-parameter-descr-get-filter p)    `(macro-slot 3 ,p))
+(##define-macro (macro-parameter-descr-get-filter-set! p x) `(macro-slot 3 ,p ,x))
 
 ;;; Binding of special dynamic variables.
 

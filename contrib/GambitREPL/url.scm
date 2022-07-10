@@ -2,7 +2,7 @@
 
 ;;; File: "url.scm"
 
-;;; Copyright (c) 2011 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -64,7 +64,7 @@
   (let loop ((i start) (chunks '()))
     (let ((span (min (- end i) chunk-length)))
       (if (= span 0)
-          (##append-strings ;; apply string-append
+          (string-concatenate
            (reverse chunks))
           (let* ((next-i (+ i span))
                  (chunk (encode-chunk 0 i next-i)))
@@ -133,7 +133,7 @@
         (let ((x (decode 0 i end)))
           (and x
                (loop (car x) (cons (cdr x) chunks))))
-        (##append-strings ;; apply string-append
+        (string-concatenate
          (reverse chunks)))))
 
 ;;;============================================================================

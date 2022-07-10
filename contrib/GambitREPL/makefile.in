@@ -1,6 +1,6 @@
 # makefile for Gambit REPL app.
 
-# Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 herefromroot = contrib/GambitREPL
 rootfromhere = ../..
@@ -111,11 +111,13 @@ DISTFILES = $(RCFILES) $(GENDISTFILES)
 
 PRELUDE_OPT = -prelude "@RTLIB_COND_EXPAND_FEATURES@(\#\#include\"$(srcdirpfx)../../lib/header.scm\")"
 
-all:
+all: core
 
-all-pre:
+core:
 
-all-post:
+core-pre:
+
+core-post:
 
 ios: grd@exe@ prepare-for-xcode
 
@@ -182,7 +184,7 @@ bootstrap-post:
 
 install-pre:
 
-install-post: all
+install-post: core
 
 uninstall-pre:
 
@@ -236,7 +238,7 @@ dist-pre dist-devel-pre:
 
 dist-post dist-devel-post:
 
-all-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+core-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
 	    target=`echo $@ | sed 's/-recursive//'`; \
@@ -245,11 +247,11 @@ all-recursive bootstrap-recursive install-recursive uninstall-recursive select-g
 	  done \
 	fi
 
-all: all-post
+core: core-post
 
-all-post: all-recursive
+core-post: core-recursive
 
-all-recursive: all-pre
+core-recursive: core-pre
 
 bootstrap: bootstrap-post
 

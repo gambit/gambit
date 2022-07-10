@@ -5,5 +5,5 @@
   (println (if (##promise? b) "promise" "not promise"))
   (println (if (##vector? (##promise-state b)) "vector" "not vector")))
 
-(test (##make-delay-promise (lambda () "executing thunk 0")))
-(test (##make-delay-promise (lambda () "executing thunk 1")))
+(test (##make-delay-promise (lambda () (println "executing thunk 0"))))
+(test (##make-delay-promise (lambda () (println "executing thunk 1"))))

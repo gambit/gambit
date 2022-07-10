@@ -38,16 +38,16 @@
 (define (then-jump-store-location then) (cadddr then))
 
 (define (then-move  store-location) (cons 'mov store-location))
-(define (then-move? then) (eqv? 'mov (car then)))
+(define (then-move? then) (eq? 'mov (car then)))
 (define (then-move-store-location then) (cdr then))
 
 (define (then-return fun-label fun-name) (list 'return fun-label fun-name))
-(define (then-return? then) (eqv? 'return (car then)))
+(define (then-return? then) (eq? 'return (car then)))
 (define (then-return-label then) (cadr then))
 (define (then-return-prim-name then) (caddr then))
 
-(define then-nothing 'nop)
-(define (then-nothing? then) (equal? 'nop then))
+(define then-nothing '(nop))
+(define (then-nothing? then) (eq? 'nop (car then)))
 
 ;; ***** Primitives - High level instructions
 

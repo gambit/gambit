@@ -690,6 +690,13 @@
 (check-true (string-ci>? "\xdf;T" "S\xdf;"))
 (check-false (string-ci<=? "\xdf;T" "S\xdf;"))
 (check-true (string-ci>=? "\xdf;T" "S\xdf;"))
+
+(define-macro (if-max-char-greater-than n code-as-string)
+  (if (> ##max-char n)
+      `(begin ,@(with-input-from-string code-as-string read-all))
+      `(begin)))
+
+(if-max-char-greater-than 255 #<<end-of-at-least-2-byte-chars
 (check-false (string=? "\xfb03;" "fFi"))
 (check-false (string<? "\xfb03;" "fFi"))
 (check-true (string>? "\xfb03;" "fFi"))
@@ -810,3 +817,5 @@
 (check-false (string-ci>? "S\x1e9e;t" "\xdf;\xfb05;"))
 (check-true (string-ci<=? "S\x1e9e;t" "\xdf;\xfb05;"))
 (check-true (string-ci>=? "S\x1e9e;t" "\xdf;\xfb05;"))
+end-of-at-least-2-byte-chars
+)

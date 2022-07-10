@@ -2,7 +2,7 @@
 
 ;;; File: "_num#.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -15,7 +15,7 @@
 
   (procedure unprintable: read-only: no-functional-setter:)
   (arguments unprintable: read-only: no-functional-setter:)
-  (arg-num   unprintable: read-only: no-functional-setter:)
+  (arg-id    unprintable: read-only: no-functional-setter:)
 )
 
 (define-library-type-of-exception divide-by-zero-exception
@@ -54,8 +54,7 @@
         (##fx< ,var ,hi)))
 
 (##define-macro (macro-fixnum-range-incl? var lo hi)
-  `(and (##not (##fx< ,var ,lo))
-        (##not (##fx< ,hi ,var))))
+  `(##fx<= ,lo ,var ,hi))
 
 (##define-macro (macro-fixnum-and-fixnum-range-incl? var lo hi)
   `(and (##fixnum? ,var)
@@ -94,91 +93,148 @@
   lo
   hi)
 
-(define-check-type exact-signed-int8 'exact-signed-int8
-  macro-fixnum-and-fixnum-range-incl?
-  -128
-  127)
-
-(define-check-type exact-signed-int8-list 'exact-signed-int8-list
-  macro-fixnum-and-fixnum-range-incl?
-  -128
-  127)
-
 (define-check-type exact-unsigned-int8 'exact-unsigned-int8
   macro-fixnum-and-fixnum-range-incl?
   0
   255)
 
-(define-check-type exact-unsigned-int8-list 'exact-unsigned-int8-list
+(define-check-type (list exact-unsigned-int8-list) #f
+  (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
+
+(define-check-type (exact-unsigned-int8-list exact-unsigned-int8-list-exact-unsigned-int8) 'exact-unsigned-int8-list
   macro-fixnum-and-fixnum-range-incl?
   0
   255)
 
-(define-check-type exact-signed-int16 'exact-signed-int16
-  macro-fixnum-and-fixnum-range-incl?
-  -32768
-  32767)
+(macro-if-s8vector
+ (begin
 
-(define-check-type exact-signed-int16-list 'exact-signed-int16-list
-  macro-fixnum-and-fixnum-range-incl?
-  -32768
-  32767)
+   (define-check-type exact-signed-int8 'exact-signed-int8
+     macro-fixnum-and-fixnum-range-incl?
+     -128
+     127)
 
-(define-check-type exact-unsigned-int16 'exact-unsigned-int16
-  macro-fixnum-and-fixnum-range-incl?
-  0
-  65535)
+   (define-check-type (list exact-signed-int8-list) #f
+     (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
 
-(define-check-type exact-unsigned-int16-list 'exact-unsigned-int16-list
-  macro-fixnum-and-fixnum-range-incl?
-  0
-  65535)
+   (define-check-type (exact-signed-int8-list exact-signed-int8-list-exact-signed-int8) 'exact-signed-int8-list
+     macro-fixnum-and-fixnum-range-incl?
+     -128
+     127)))
 
-(define-check-type exact-signed-int32 'exact-signed-int32
-  macro-range-incl?
-  -2147483648
-  2147483647)
+(macro-if-u16vector
+ (begin
 
-(define-check-type exact-signed-int32-list 'exact-signed-int32-list
-  macro-range-incl?
-  -2147483648
-  2147483647)
+   (define-check-type exact-unsigned-int16 'exact-unsigned-int16
+     macro-fixnum-and-fixnum-range-incl?
+     0
+     65535)
 
-(define-check-type exact-unsigned-int32 'exact-unsigned-int32
-  macro-range-incl?
-  0
-  4294967295)
+   (define-check-type (list exact-unsigned-int16-list) #f
+     (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
 
-(define-check-type exact-unsigned-int32-list 'exact-unsigned-int32-list
-  macro-range-incl?
-  0
-  4294967295)
+   (define-check-type (exact-unsigned-int16-list exact-unsigned-int16-list-exact-unsigned-int16) 'exact-unsigned-int16-list
+     macro-fixnum-and-fixnum-range-incl?
+     0
+     65535)))
 
-(define-check-type exact-signed-int64 'exact-signed-int64
-  macro-range-incl?
-  -9223372036854775808
-  9223372036854775807)
+(macro-if-s16vector
+ (begin
 
-(define-check-type exact-signed-int64-list 'exact-signed-int64-list
-  macro-range-incl?
-  -9223372036854775808
-  9223372036854775807)
+   (define-check-type exact-signed-int16 'exact-signed-int16
+     macro-fixnum-and-fixnum-range-incl?
+     -32768
+     32767)
 
-(define-check-type exact-unsigned-int64 'exact-unsigned-int64
-  macro-range-incl?
-  0
-  18446744073709551615)
+   (define-check-type (list exact-signed-int16-list) #f
+     (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
 
-(define-check-type exact-unsigned-int64-list 'exact-unsigned-int64-list
-  macro-range-incl?
-  0
-  18446744073709551615)
+   (define-check-type (exact-signed-int16-list exact-signed-int16-list-exact-signed-int16) 'exact-signed-int16-list
+     macro-fixnum-and-fixnum-range-incl?
+     -32768
+     32767)))
+
+(macro-if-u32vector
+ (begin
+
+   (define-check-type exact-unsigned-int32 'exact-unsigned-int32
+     macro-range-incl?
+     0
+     4294967295)
+
+   (define-check-type (list exact-unsigned-int32-list) #f
+     (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
+
+   (define-check-type (exact-unsigned-int32-list exact-unsigned-int32-list-exact-unsigned-int32) 'exact-unsigned-int32-list
+     macro-range-incl?
+     0
+     4294967295)))
+
+(macro-if-s32vector
+ (begin
+
+   (define-check-type exact-signed-int32 'exact-signed-int32
+     macro-range-incl?
+     -2147483648
+     2147483647)
+
+   (define-check-type (list exact-signed-int32-list) #f
+     (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
+
+   (define-check-type (exact-signed-int32-list exact-signed-int32-list-exact-signed-int32) 'exact-signed-int32-list
+     macro-range-incl?
+     -2147483648
+     2147483647)))
+
+(macro-if-u64vector
+ (begin
+
+   (define-check-type exact-unsigned-int64 'exact-unsigned-int64
+     macro-range-incl?
+     0
+     18446744073709551615)
+
+   (define-check-type (list exact-unsigned-int64-list) #f
+     (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
+
+   (define-check-type (exact-unsigned-int64-list exact-unsigned-int64-list-exact-unsigned-int64) 'exact-unsigned-int64-list
+     macro-range-incl?
+     0
+     18446744073709551615)))
+
+(macro-if-s64vector
+ (begin
+
+   (define-check-type exact-signed-int64 'exact-signed-int64
+     macro-range-incl?
+     -9223372036854775808
+     9223372036854775807)
+
+   (define-check-type (list exact-signed-int64-list) #f
+     (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
+
+   (define-check-type (exact-signed-int64-list exact-signed-int64-list-exact-signed-int64) 'exact-signed-int64-list
+     macro-range-incl?
+     -9223372036854775808
+     9223372036854775807)))
+
+(define-check-type exact-integer 'exact-integer
+  macro-exact-int?)
+
+(define-check-type nonnegative-exact-integer 'nonnegative-exact-integer
+  macro-nonnegative-exact-int?)
 
 (define-check-type inexact-real 'inexact-real
   ##flonum?)
 
-(define-check-type inexact-real-list 'inexact-real-list
+(define-check-type (list inexact-real-list) #f
+  (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
+
+(define-check-type (inexact-real-list inexact-real-list-inexact-real) 'inexact-real-list
   ##flonum?)
+
+(define-check-type number 'number
+  ##number?)
 
 (define-check-type real 'real
   ##real?)
@@ -243,6 +299,13 @@
 (##define-macro (macro-exact-int? obj) ;; obj can be any object
   `(macro-exact-int-dispatch ,obj #f #t #t))
 
+(##define-macro (macro-nonnegative-exact-int? obj)
+  `(let ((obj ,obj))
+     (macro-exact-int-dispatch
+       obj #f
+       (##not (##fxnegative? obj))
+       (##not (##negative? obj)))))
+
 (##define-macro (macro-exact-real? obj) ;; obj can be any object
   `(macro-exact-real-dispatch ,obj #f #t #t #t))
 
@@ -285,10 +348,10 @@
   (lambda (stx)
     (syntax-case stx ()
       ((_ yes)
-       #'(macro-if-bignum yes (begin)))
+       #'(macro-if-bignum yes (##begin)))
       ((_ yes no)
        #'(cond-expand
-          (enable-bignum
+          ((or enable-bignum (not disable-bignum))
            yes)
           (else
            no))))))
@@ -297,10 +360,10 @@
   (lambda (stx)
     (syntax-case stx ()
       ((_ yes)
-       #'(macro-if-ratnum yes (begin)))
+       #'(macro-if-ratnum yes (##begin)))
       ((_ yes no)
        #'(cond-expand
-          (enable-ratnum
+          ((or enable-ratnum (not disable-ratnum))
            yes)
           (else
            no))))))
@@ -309,10 +372,10 @@
   (lambda (stx)
     (syntax-case stx ()
       ((_ yes)
-       #'(macro-if-cpxnum yes (begin)))
+       #'(macro-if-cpxnum yes (##begin)))
       ((_ yes no)
        #'(cond-expand
-          (enable-cpxnum
+          ((or enable-cpxnum (not disable-cpxnum))
            yes)
           (else
            no))))))
@@ -640,5 +703,57 @@
         (if (macro-cpxnum-are-possibly-real?)
           (##real-part x)
           x)))))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+;; Fast path for conversion of small integers and floating point numbers
+;; possibly prefixed with a sign.
+
+(##define-macro (macro-string->number-decimal-fast-path str)
+  `(let ((str ,str))
+     (declare (standard-bindings) (extended-bindings) (not safe) (not interrupts-enabled))
+     (let ((len (string-length str)))
+       (and (fx< 0 len) ;; at least one character
+            (let ((start
+                   (let ((first (string-ref str 0)))
+                     (if (or (char=? first #\+)
+                             (char=? first #\-))
+                         1
+                         0))))
+              (and (fx< (fx- len start) 9) ;; won't overflow 32 bit fixnums?
+                   (fx< start len) ;; at least one remaining character
+                   (let loop1 ((i start)
+                               (n 0))
+                     (if (fx< i (string-length str))
+                         (let ((d (fx- (char->integer (string-ref str i)) 48)))
+                           (if (and (fx>= d 0) (fx<= d 9))
+                               (loop1 (fx+ i 1)
+                                      (fx+ (fx* n 10) d))
+                               (if (fx= d -2) ;; character is "."?
+                                   (let loop2 ((i (fx+ i 1)) (n n) (p10 1))
+                                     (if (fx< i (string-length str))
+                                         (let ((d (fx- (char->integer (string-ref str i)) 48)))
+                                           (if (and (fx>= d 0) (fx<= d 9))
+                                               (loop2 (fx+ i 1)
+                                                      (fx+ (fx* n 10) d)
+                                                      (fx* p10 10))
+                                               #f))
+                                         (let ((first (string-ref str 0)))
+                                           (and (or (fx< 1 p10) ;; end != "."
+                                                    (not (fx= i
+                                                              (if (or (char=? first #\+)
+                                                                      (char=? first #\-))
+                                                                  2
+                                                                  1))))
+                                                (##flcopysign
+                                                 (fl/ (fixnum->flonum n)
+                                                      (fixnum->flonum p10))
+                                                 (if (char=? first #\-)
+                                                     (macro-inexact--1)
+                                                     (macro-inexact-+1)))))))
+                                   #f)))
+                         (if (char=? (string-ref str 0) #\-)
+                             (fx- n)
+                             n)))))))))
 
 ;;;============================================================================

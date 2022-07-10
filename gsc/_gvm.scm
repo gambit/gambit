@@ -2,7 +2,7 @@
 
 ;;; File: "_gvm.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -17,6 +17,8 @@
 ;; -----------------------------------------
 
 ;; (See file 'doc/gvm' for details on the virtual machine)
+
+(define return-addr-reg (make-reg 0)) ;; register used to pass return address
 
 ;; Utilities:
 ;; ---------
@@ -166,21 +168,22 @@
             primitive?
             code
             call-pat
-            (lambda (env) #f) ; testable?
-            #f ; test
-            (lambda (env) #f) ; expandable?
-            #f ; expand
-            (lambda (env) #f) ; inlinable?
-            #f ; inline
-            (lambda (env) #f) ; jump-inlinable?
-            #f ; jump-inline
-            #f ; specialize
-            #f ; simplify
+            (lambda (env) #f) ;; testable?
+            #f ;; test
+            (lambda (env) #f) ;; expandable?
+            #f ;; expand
+            (lambda (env) #f) ;; inlinable?
+            #f ;; inline
+            (lambda (env) #f) ;; jump-inlinable?
+            #f ;; jump-inline
+            #f ;; specialize
+            #f ;; simplify
             side-effects?
             strict-pat
             lift-pat
             type
-            standard)))
+            standard
+            #f))) ;; dead-end?
     (proc-obj-specialize-set! proc-obj (lambda (env args) proc-obj))
     proc-obj))
 
@@ -211,8 +214,13 @@
 (define (proc-obj-lift-pat obj)               (vector-ref obj 18))
 (define (proc-obj-type obj)                   (vector-ref obj 19))
 (define (proc-obj-standard obj)               (vector-ref obj 20))
+(define (proc-obj-dead-end? obj)              (vector-ref obj 21))
 
+(define (proc-obj-name-set! obj x)            (vector-set! obj 1 x))
+(define (proc-obj-c-name-set! obj x)          (vector-set! obj 2 x))
+(define (proc-obj-primitive?-set! obj x)      (vector-set! obj 3 x))
 (define (proc-obj-code-set! obj x)            (vector-set! obj 4 x))
+(define (proc-obj-call-pat-set! obj x)        (vector-set! obj 5 x))
 (define (proc-obj-testable?-set! obj x)       (vector-set! obj 6 x))
 (define (proc-obj-test-set! obj x)            (vector-set! obj 7 x))
 (define (proc-obj-expandable?-set! obj x)     (vector-set! obj 8 x))
@@ -223,6 +231,12 @@
 (define (proc-obj-jump-inline-set! obj x)     (vector-set! obj 13 x))
 (define (proc-obj-specialize-set! obj x)      (vector-set! obj 14 x))
 (define (proc-obj-simplify-set! obj x)        (vector-set! obj 15 x))
+(define (proc-obj-side-effects?-set! obj x)   (vector-set! obj 16 x))
+(define (proc-obj-strict-pat-set! obj x)      (vector-set! obj 17 x))
+(define (proc-obj-lift-pat-set! obj x)        (vector-set! obj 18 x))
+(define (proc-obj-type-set! obj x)            (vector-set! obj 19 x))
+(define (proc-obj-standard-set! obj x)        (vector-set! obj 20 x))
+(define (proc-obj-dead-end?-set! obj x)       (vector-set! obj 21 x))
 
 (define (make-pattern nb-parms nb-opts nb-keys rest?)
   (let* ((max-pos-args (- nb-parms nb-keys (if rest? 1 0)))
@@ -972,17 +986,27 @@
                                            ret))
                                       (new-poll?
                                        (or (jump-poll? last-branch)
-                                           poll?)))
-                                 (replace-branch-by
-                                  #f
-                                  (make-jump
-                                   (adjust-opnd (jump-opnd last-branch))
-                                   new-ret
-                                   (jump-nb-args last-branch)
-                                   new-poll?
-                                   (jump-safe? last-branch)
-                                   new-frame
-                                   (gvm-instr-comment last-branch)))))
+                                           poll?))
+                                      (opnd
+                                       (jump-opnd last-branch))
+                                      (dead-end?
+                                       (and (obj? opnd)
+                                            (let ((val (obj-val opnd)))
+                                              (and (proc-obj? val)
+                                                   (proc-obj-dead-end? val))))))
+                                 (if (not dead-end?)
+                                     (replace-branch-by
+                                      #f
+                                      (make-jump
+                                       (if (and ret (eqv? opnd return-addr-reg))
+                                           (make-lbl ret)
+                                           (adjust-opnd opnd))
+                                       new-ret
+                                       (jump-nb-args last-branch)
+                                       new-poll?
+                                       (jump-safe? last-branch)
+                                       new-frame
+                                       (gvm-instr-comment last-branch))))))
 
                               (else
                                (compiler-internal-error
@@ -1832,10 +1856,7 @@
 ;; -------------------
 
 (define (write-bb bb port)
-  (write-gvm-instr (bb-label-instr bb) port)
-  (display " [precedents=" port)
-  (write (bb-precedents bb) port)
-  (display "]" port)
+  (write-gvm-instr (bb-label-instr bb) port bb)
   (newline port)
 
   (for-each (lambda (gvm-instr)
@@ -1889,7 +1910,7 @@
                     (display (code-slots-needed code) port)
                     (display " | " port)))
 
-              (write-gvm-instr gvm-instr port)
+              (write-gvm-instr gvm-instr port (code-bb code))
               (newline port)))))
 
     (if (proc-obj-primitive? p)
@@ -2004,7 +2025,8 @@
               (define (reference? x)
                 (or (table-ref proc-tbl x #f)
                     (and (>= (string-length x) 2)
-                         (char=? (string-ref x 0) #\#))))
+                         (char=? (string-ref x 0) #\#)
+                         (string->number (substring x 1 (string-length x))))))
 
               (define (add-ref from side to dotted?)
                 (dot-digraph-add-edge!
@@ -2193,7 +2215,27 @@
   (for-each
    (lambda (referrer-dependencies)
      (let ((referrer (car referrer-dependencies))
-           (dependencies (cdr referrer-dependencies)))
+           (deps (cdr referrer-dependencies)))
+
+       (define (add dependencies jump?)
+         (for-each
+          (lambda (var)
+            (if (and (not (eq? var referrer)) ;; avoid self cycle
+                     (interesting? var))
+                (begin
+                  (if (not (table-ref dependency-graph var #f))
+                      (table-set! not-defined var #t))
+                  (dot-digraph-add-edge!
+                   dd
+                   (dot-digraph-gen-edge
+                    (gen-label referrer)
+                    (gen-label var)
+                    (not jump?))))))
+          (sort-list (map var-name (varset->list dependencies))
+                     (lambda (x y)
+                       (string<? (symbol->string x)
+                                 (symbol->string y))))))
+
        (if (interesting? referrer)
            (begin
 
@@ -2204,23 +2246,9 @@
                (gen-label referrer)
                (list (gen-label referrer))))
 
-             (for-each
-              (lambda (var)
-                (if (and (not (eq? var referrer)) ;; avoid self cycle
-                         (interesting? var))
-                    (begin
-                      (if (not (table-ref dependency-graph var #f))
-                          (table-set! not-defined var #t))
-                      (dot-digraph-add-edge!
-                       dd
-                       (dot-digraph-gen-edge
-                        (gen-label referrer)
-                        (gen-label var)
-                        #f)))))
-              (sort-list (map var-name (varset->list dependencies))
-                         (lambda (x y)
-                           (string<? (symbol->string x)
-                                     (symbol->string y)))))))))
+             (add (vector-ref deps 0) #t)
+             (add (vector-ref deps 1) #f)))))
+
    (sort-syms dependency-graph))
 
   (for-each
@@ -2440,7 +2468,7 @@
 ;; Virtual instruction writing:
 ;; ---------------------------
 
-(define (write-gvm-instr gvm-instr port)
+(define (write-gvm-instr gvm-instr port . bb)
 
   (define (spaces n)
     (if (> n 0)
@@ -2448,7 +2476,8 @@
         (begin (display "        " port) (spaces (- n 8)))
         (begin (display " " port) (spaces (- n 1))))))
 
-  (let ((str (apply string-append (format-gvm-instr gvm-instr))))
+  (let ((str (apply string-append
+                    (apply format-gvm-instr (cons gvm-instr bb)))))
     (display str port)
     (spaces (- 43 (string-length str)))
     (display " " port)
@@ -2481,7 +2510,7 @@
                   port))
           ((eq? var ret-var)
            (display "#ret" port))
-          ((temp-var? var)
+          ((var-temp? var)
            (display "#" port))
           (else
            (write (var-name var) port))))
@@ -2515,7 +2544,7 @@
                         (loop2 (+ i 1) (cdr l) " "))
                       (loop2 (+ i 1) (cdr l) sep)))))))))
 
-(define (format-gvm-instr gvm-instr)
+(define (format-gvm-instr gvm-instr . bb)
 
   (define (format-closure-parms parms)
     `(" "
@@ -2584,7 +2613,15 @@
        ,(number->string (frame-size (gvm-instr-frame gvm-instr)))
        ,@(case (label-type gvm-instr)
            ((simple)
-            '())
+            (let ((precedents (if (pair? bb) (bb-precedents (car bb)) '())))
+              (if (pair? precedents)
+                  (cons "   <-"
+                        (apply
+                         append
+                         (map (lambda (i)
+                                (list " " (format-gvm-lbl i)))
+                              precedents)))
+                  '())))
            ((entry)
             `(,(if (label-entry-closed? gvm-instr)
                    " closure-entry-point "
@@ -2680,7 +2717,9 @@
        "" ;; tag as a direct jump
        ,(format-gvm-opnd (jump-opnd gvm-instr))
        ,@(if (jump-ret gvm-instr)
-             `(" r0="
+             `(" "
+               ,(format-gvm-opnd return-addr-reg)
+               "="
                ,(format-gvm-opnd (make-lbl (jump-ret gvm-instr))))
              '())
        ,@(if (jump-nb-args gvm-instr)
@@ -2747,19 +2786,19 @@
           (queue-empty)   ;; first-class-label-queue
           (queue-empty))) ;; var-descr-queue
 
-(define (debug-info-generate debug-info-state sharing-table)
+(define (debug-info-generate debug-info-state get-id sharing-table)
 
-  (define (number i lst)
+  (define (assign-ids i lst)
     (if (null? lst)
       '()
-      (cons (list->vect (cons i (car lst)))
-            (number (+ i 1) (cdr lst)))))
+      (cons (list->vect (cons (get-id i) (car lst)))
+            (assign-ids (+ i 1) (cdr lst)))))
 
   (debug-info-compact-using-sharing
    sharing-table
    (if (vector-ref debug-info-state 0) ;; debug-info?
        (vector (list->vect
-                (number
+                (assign-ids
                  0
                  (queue->list
                   (vector-ref debug-info-state 1)))) ;; first-class-label-queue
@@ -2882,7 +2921,7 @@
                           i)
                    (compiler-internal-error
                     "debug-info-add!, multiple closure environments")))
-                ((or (not x) (temp-var? x)) ; not live or temporary var
+                ((or (not x) (var-temp? x)) ; not live or temporary var
                  (loop1 (+ i 1)
                         (cdr lst1)
                         lst2

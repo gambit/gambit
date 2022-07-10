@@ -2,7 +2,7 @@
 
 ;;; File: "_eval#.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -26,6 +26,15 @@
   (code     unprintable: read-only: no-functional-setter:)
   (rte      unprintable: read-only: no-functional-setter:)
   (variable unprintable: read-only: no-functional-setter:)
+)
+
+(define-library-type-of-exception not-in-compilation-context-exception
+  id: a8fb370d-4e13-447f-b5cf-091e5296a5a1
+  constructor: #f
+  opaque:
+
+  (procedure unprintable: read-only: no-functional-setter:)
+  (arguments unprintable: read-only: no-functional-setter:)
 )
 
 ;;;----------------------------------------------------------------------------
@@ -154,26 +163,28 @@
   `(macro-step! #f 7 ,vars ,@body))
 
 (##define-macro (macro-make-no-stepper)
-  ''#(#(#f #f #f #f #f #f #f) #f #f #f #f #f #f #f))
+  ''#(#(#f #f #f #f #f #f #f) #f #f #f #f #f #f #f #(#f #f #f #f #f #f #f)))
 
-(##define-macro (macro-make-step-handlers)
-  '(##vector ##step-handler
-             ##step-handler
-             ##step-handler
-             ##step-handler
-             ##step-handler
-             ##step-handler
-             ##step-handler))
+(##define-macro (macro-make-step-handlers handler)
+  `(##vector ,handler
+             ,handler
+             ,handler
+             ,handler
+             ,handler
+             ,handler
+             ,handler))
 
-(##define-macro (macro-make-main-stepper)
-  '(##vector (##vector-copy ##step-handlers)
-             #f
-             #f
-             #f
-             #f
-             #f
-             #f
-             #f))
+(##define-macro (macro-make-stepper step-handlers)
+  `(let ((step-handlers ,step-handlers))
+     (##vector (##vector-copy step-handlers)
+               #f
+               #f
+               #f
+               #f
+               #f
+               #f
+               #f
+               step-handlers)))
 
 (##define-macro (macro-step! leapable? handler-index vars . body)
   `(let* (($$execute-body
@@ -219,12 +230,14 @@
 
 ;;; Macros to manipulate the compilation context.
 
-(##define-macro (macro-make-compilation-ctx)
+(##define-macro (macro-make-compilation-ctx target)
   `(##vector '() ;; supply-modules
              '() ;; demand-modules
              (##make-meta-info) ;; meta-info
              #f ;; module-ref
-             '())) ;; module-aliases
+             '() ;; module-aliases
+             target
+             (##make-extra-info))) ;; extra-info
 
 (##define-macro (macro-compilation-ctx-supply-modules ctx)
   `(##vector-ref ,ctx 0))
@@ -256,6 +269,18 @@
 (##define-macro (macro-compilation-ctx-module-aliases-set! ctx module-aliases)
    `(##vector-set! ,ctx 4 ,module-aliases))
 
+(##define-macro (macro-compilation-ctx-target ctx)
+   `(##vector-ref ,ctx 5))
+
+(##define-macro (macro-compilation-ctx-target-set! ctx target)
+   `(##vector-set! ,ctx 5 ,target))
+
+(##define-macro (macro-compilation-ctx-extra-info ctx)
+   `(##vector-ref ,ctx 6))
+
+(##define-macro (macro-compilation-ctx-extra-info-set! ctx extra-info)
+   `(##vector-set! ,ctx 6 ,extra-info))
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Macros to manipulate the runtime environment
@@ -267,7 +292,10 @@
   `(##list->vector (##cons ,rte ,lst)))
 
 (##define-macro (macro-make-rte* rte ns)
-  `(let (($rte (##make-vector (##fx+ ,ns 1) '#!unbound)))
+  `(let (($rte
+          (let ()
+            (declare (not inline-primitives ##make-vector))
+            (##make-vector (##fx+ ,ns 1) '#!unbound))))
      (##vector-set! $rte 0 ,rte)
      $rte))
 
@@ -292,8 +320,8 @@
             (else
              (- n)))))
 
-  (let ((src `(lambda ,(cdr pattern) ,@rest)));;;;;;;; lambda --> ##lambda
-    `(##top-cte-add-macro!
+  (let ((src `(##lambda ,(cdr pattern) ,@rest)))
+    `(##top-cte-add-macro-no-dups!
       ##interaction-cte
       ',(car pattern)
       (##make-macro-descr
@@ -303,7 +331,7 @@
        #f))))
 
 (##define-macro (define-runtime-syntax name expander)
-  `(##top-cte-add-macro!
+  `(##top-cte-add-macro-no-dups!
     ##interaction-cte
     ',name
     (##make-macro-descr

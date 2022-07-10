@@ -2,18 +2,18 @@
 
 ;;; File: "_test.scm"
 
-;;; Copyright (c) 2013-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2013-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
 (##supply-module _test)
 
-(##namespace ("_test#"))         ;; in _test#
-(##include "~~lib/_prim#.scm")   ;; map fx+ to ##fx+, etc
-(##include "~~lib/_gambit#.scm") ;; for macro-check-procedure,
-                                 ;; macro-absent-obj, etc
+(##namespace ("_test#"))                  ;; in _test#
+(##include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
+(##include "~~lib/_gambit#.scm")          ;; for macro-check-procedure,
+                                          ;; macro-absent-obj, etc
 
-(##include "_test#.scm")         ;; correctly map test ops
+(##include "_test#.scm")                  ;; correctly map test ops
 
 (declare (extended-bindings)) ;; ##fx+ is bound to fixnum addition, etc
 (declare (not safe))          ;; claim code has no type errors
@@ -24,7 +24,6 @@
 (define test-all? #f) ;; default is to stop at first failure
 (define test-quiet? #f) ;; default is to display summary of tests run
 (define test-verbose? #f) ;; default is to not display passed tests
-(define epsilon 0) ;; default tolerance for check-= numerical check
 
 (define nb-passed-tests 0)  ;; number of tests that passed
 (define nb-failed-tests 0)  ;; number of tests that failed
@@ -91,7 +90,7 @@
            (newline port)))
        (test-output-port))))
 
-(define (failed-test failed-msg #!optional (actual-result absent))
+(define (failed-test failed-msg #!optional (actual-result absent) (exception-cont #f))
   (set! nb-failed-tests (fx+ nb-failed-tests 1))
   (display
    (call-with-output-string
@@ -101,34 +100,17 @@
       (if (not (eq? actual-result absent))
           (begin
             (display " GOT " port)
-            (write actual-result port)))
-      (newline port)))
+            (if exception-cont
+                (let ()
+                  (namespace ("" display-exception-in-context))
+                  (display-exception-in-context actual-result exception-cont port))
+                (begin
+                  (write actual-result port)
+                  (newline port))))
+          (newline port))))
    (test-output-port))
   (if (not test-all?)
       (##exit)))
-
-(define (check-exn-proc exn? thunk passed-msg failed-msg tail-exn?)
-  (##continuation-capture
-   (lambda (return)
-     (with-exception-handler
-      (lambda (e)
-        (##continuation-capture
-         (lambda (cont)
-           (##continuation-graft
-            return
-            (lambda ()
-              (let ((creator (##continuation-creator cont)))
-                (cond ((not (exn? e))
-                       (failed-test failed-msg e))
-                      ((and tail-exn?
-                            (not (eq? creator call-thunk)))
-                       (failed-test
-                        failed-msg
-                        (list 'nontail-exception-raised-in creator)))
-                      (else
-                       (passed-test passed-msg)))))))))
-      (lambda ()
-        (failed-test failed-msg (call-thunk thunk)))))))
 
 (define call-thunk
   (let ()
@@ -140,126 +122,10 @@
       ;; make sure continuation of thunk has call-thunk as creator
       (##first-argument (thunk)))))
 
-(define (check-=-proc n1 n2 tolerance passed-msg failed-msg)
-  (if (or (not (number? n1))
-          (not (number? n2))
-          (< tolerance (magnitude (- n1 n2))))
-      (failed-test failed-msg n2)
-      (passed-test passed-msg n2)))
-
-(define (test-predicate-proc test-name
-                             expression-thunk
-                             positive?
-                             predicate
-                             test-location
-                             test-source)
-  (##continuation-capture
-   (lambda (return)
-
-     (define (message passed?)
-       (string-append (or test-location "")
-                      (if passed? "PASSED " "FAILED ")
-                      (if (string? test-name) test-name test-source)))
-
-     (define (passed actual-result)
-       (passed-test (message #t) actual-result))
-
-     (define (failed actual-result)
-       (failed-test (message #f) actual-result))
-
-     (let ((expression-value
-            (with-exception-handler
-                (lambda (exn)
-                  (##continuation-graft return failed exn))
-              expression-thunk)))
-       (if (eq? positive? (not (predicate expression-value)))
-           (failed expression-value)
-           (passed expression-value))))))
-
-(define (test-relation-proc test-name
-                            expected-thunk
-                            test-expr-thunk
-                            positive?
-                            relation
-                            test-location
-                            test-source)
-  (##continuation-capture
-   (lambda (return)
-
-     (define (message passed?)
-       (string-append (or test-location "")
-                      (if passed? "PASSED " "FAILED ")
-                      (if (string? test-name) test-name test-source)))
-
-     (define (passed actual-result)
-       (passed-test (message #t) actual-result))
-
-     (define (failed actual-result)
-       (failed-test (message #f) actual-result))
-
-     (let* ((expected-value
-             (with-exception-handler
-                 (lambda (exn)
-                   (##continuation-graft return failed exn))
-               expected-thunk))
-            (test-expr-value
-             (with-exception-handler
-                 (lambda (exn)
-                   (##continuation-graft return failed exn))
-               test-expr-thunk)))
-       (if (eq? positive? (relation expected-value test-expr-value))
-           (passed test-expr-value)
-           (failed test-expr-value))))))
-
-(define (test-approximate-proc test-name
-                               expected-thunk
-                               test-expr-thunk
-                               error
-                               positive?
-                               test-location
-                               test-source)
-  (##continuation-capture
-   (lambda (return)
-
-     (define (message passed?)
-       (string-append (or test-location "")
-                      (if passed? "PASSED " "FAILED ")
-                      (if (string? test-name) test-name test-source)))
-
-     (define (passed actual-result)
-       (passed-test (message #t) actual-result))
-
-     (define (failed actual-result)
-       (failed-test (message #f) actual-result))
-
-     (define (approximately= x y)
-       (and (>= x (- y error))
-            (<= x (+ y error))))
-
-     (let* ((expected-value
-             (with-exception-handler
-                 (lambda (exn)
-                   (##continuation-graft return failed exn))
-               expected-thunk))
-            (test-expr-value
-             (with-exception-handler
-                 (lambda (exn)
-                   (##continuation-graft return failed exn))
-               test-expr-thunk)))
-       (if (eq? positive?
-                (and (number? expected-value)
-                     (number? test-expr-value)
-                     (approximately= (real-part expected-value)
-                                     (real-part test-expr-value))
-                     (approximately= (imag-part expected-value)
-                                     (imag-part test-expr-value))))
-           (passed test-expr-value)
-           (failed test-expr-value))))))
-
-(define (test-error-proc test-name
-                         error-type?
-                         test-expr-thunk
-                         tail?
+(define (%test-predicate test-name
+                         expression-thunk
+                         positive?
+                         predicate
                          test-location
                          test-source)
   (##continuation-capture
@@ -273,8 +139,127 @@
      (define (passed actual-result)
        (passed-test (message #t) actual-result))
 
-     (define (failed actual-result)
-       (failed-test (message #f) actual-result))
+     (define (failed actual-result cont)
+       (failed-test (message #f) actual-result cont))
+
+     (let ((expression-value
+            (with-exception-handler
+                (lambda (exn)
+                  (##continuation-capture
+                   (lambda (cont)
+                     (##continuation-graft return failed exn cont))))
+              expression-thunk)))
+       (if (eq? positive? (not (predicate expression-value)))
+           (failed expression-value #f)
+           (passed expression-value))))))
+
+(define (%test-relation test-name
+                        expected-thunk
+                        test-expr-thunk
+                        positive?
+                        relation
+                        test-location
+                        test-source)
+  (##continuation-capture
+   (lambda (return)
+
+     (define (message passed?)
+       (string-append (or test-location "")
+                      (if passed? "PASSED " "FAILED ")
+                      (if (string? test-name) test-name test-source)))
+
+     (define (passed actual-result)
+       (passed-test (message #t) actual-result))
+
+     (define (failed actual-result cont)
+       (failed-test (message #f) actual-result cont))
+
+     (let* ((expected-value
+             (with-exception-handler
+                 (lambda (exn)
+                   (##continuation-capture
+                    (lambda (cont)
+                      (##continuation-graft return failed exn cont))))
+               expected-thunk))
+            (test-expr-value
+             (with-exception-handler
+                 (lambda (exn)
+                   (##continuation-capture
+                    (lambda (cont)
+                      (##continuation-graft return failed exn cont))))
+               test-expr-thunk)))
+       (if (eq? positive? (relation expected-value test-expr-value))
+           (passed test-expr-value)
+           (failed test-expr-value #f))))))
+
+(define (%test-approximate test-name
+                           expected-thunk
+                           test-expr-thunk
+                           error
+                           positive?
+                           test-location
+                           test-source)
+  (##continuation-capture
+   (lambda (return)
+
+     (define (message passed?)
+       (string-append (or test-location "")
+                      (if passed? "PASSED " "FAILED ")
+                      (if (string? test-name) test-name test-source)))
+
+     (define (passed actual-result)
+       (passed-test (message #t) actual-result))
+
+     (define (failed actual-result cont)
+       (failed-test (message #f) actual-result cont))
+
+     (define (approximately= x y)
+       (and (>= x (- y error))
+            (<= x (+ y error))))
+
+     (let* ((expected-value
+             (with-exception-handler
+                 (lambda (exn)
+                   (##continuation-capture
+                    (lambda (cont)
+                      (##continuation-graft return failed exn cont))))
+               expected-thunk))
+            (test-expr-value
+             (with-exception-handler
+                 (lambda (exn)
+                   (##continuation-capture
+                    (lambda (cont)
+                      (##continuation-graft return failed exn cont))))
+               test-expr-thunk)))
+       (if (eq? positive?
+                (and (number? expected-value)
+                     (number? test-expr-value)
+                     (approximately= (real-part expected-value)
+                                     (real-part test-expr-value))
+                     (approximately= (imag-part expected-value)
+                                     (imag-part test-expr-value))))
+           (passed test-expr-value)
+           (failed test-expr-value #f))))))
+
+(define (%test-error test-name
+                     error-type?
+                     test-expr-thunk
+                     tail?
+                     test-location
+                     test-source)
+  (##continuation-capture
+   (lambda (return)
+
+     (define (message passed?)
+       (string-append (or test-location "")
+                      (if passed? "PASSED " "FAILED ")
+                      (if (string? test-name) test-name test-source)))
+
+     (define (passed actual-result)
+       (passed-test (message #t) actual-result))
+
+     (define (failed actual-result cont)
+       (failed-test (message #f) actual-result cont))
 
      (with-exception-handler
       (lambda (exn)
@@ -286,23 +271,23 @@
               (let ((creator (##continuation-creator cont)))
                 (cond ((and (not (boolean? error-type?))
                             (not (error-type? exn)))
-                       (failed exn))
+                       (failed exn cont))
                       ((and tail?
                             (not (eq? creator call-thunk)))
-                       (failed (list 'nontail-exception-raised-in creator)))
+                       (failed (list 'nontail-exception-raised-in creator) #f))
                       (else
                        (passed absent)))))))))
       (lambda ()
-        (failed (call-thunk test-expr-thunk)))))))
+        (failed (call-thunk test-expr-thunk) #f))))))
 
-(define (test-begin-proc suite-name count)
+(define (%test-begin suite-name count)
   (if (not test-quiet?)
       (let ((output-port (test-output-port)))
         (display (string-append (test-indent) "testing " suite-name "\n")
                  output-port)))
   (set! context (cons suite-name context)))
 
-(define (test-end-proc suite-name)
+(define (%test-end suite-name)
   (if (pair? context)
       (if (or (not suite-name) (equal? (car context) suite-name))
           (set! context (cdr context))
@@ -312,16 +297,38 @@
 
 (define (test-indent)
   (let ((n (length context)))
-    (append-strings (map (lambda (x) "| ") (iota n)))))
+    (string-concatenate (map (lambda (x) "| ") (iota n)))))
 
-(define (test-group-proc suite-name body-thunk)
-  (test-begin-proc suite-name #f)
+(define (%test-group suite-name body-thunk)
+  (%test-begin suite-name #f)
   (body-thunk)
-  (test-end-proc suite-name))
+  (%test-end suite-name))
 
-
-
-
+(define (test-msg thunk) ;; for testing checks that fail
+  (let ((save-test-all? test-all?)
+        (save-test-quiet? test-quiet?)
+        (save-test-verbose? test-verbose?)
+        (save-nb-passed-tests nb-passed-tests)
+        (save-nb-failed-tests nb-failed-tests)
+        (save-nb-skipped-tests nb-skipped-tests)
+        (save-context context))
+    (set! test-all? #t)
+    (set! test-quiet? #f)
+    (set! test-verbose? #t)
+    (let ((msg
+           (call-with-output-string ;; capture test output messages
+             ""
+             (lambda (port)
+               (parameterize ((redirect-test-output-port port))
+                 (thunk))))))
+      (set! test-all? save-test-all?)
+      (set! test-quiet? save-test-quiet?)
+      (set! test-verbose? save-test-verbose?)
+      (set! nb-passed-tests save-nb-passed-tests)
+      (set! nb-failed-tests save-nb-failed-tests)
+      (set! nb-skipped-tests save-nb-skipped-tests)
+      (set! context save-context)
+      msg)))
 
 (define (test-all?-set! val)
   (set! test-all? val))

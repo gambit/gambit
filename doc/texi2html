@@ -5610,9 +5610,19 @@ $definition_category      = \&t2h_default_definition_category;
 $definition_index_entry   = \&t2h_default_definition_index_entry;
 $copying_comment          = \&t2h_default_copying_comment;
 $documentdescription      = \&t2h_default_documentdescription;
-$index_summary_file_entry = \&t2h_default_index_summary_file_entry;
-$index_summary_file_end   = \&t2h_default_index_summary_file_end;
-$index_summary_file_begin = \&t2h_default_index_summary_file_begin;
+
+###GAMBIT###
+#
+# Using custom versions of these functions to dump the index in the
+# same format as `makeinfo --internal-links`.
+#
+#$index_summary_file_entry = \&t2h_default_index_summary_file_entry;
+#$index_summary_file_end   = \&t2h_default_index_summary_file_end;
+#$index_summary_file_begin = \&t2h_default_index_summary_file_begin;
+$index_summary_file_entry = \&gambit_index_summary_file_entry;
+$index_summary_file_end   = \&gambit_index_summary_file_end;
+$index_summary_file_begin = \&gambit_index_summary_file_begin;
+
 $empty_line               = \&t2h_default_empty_line;
 $unknown                  = \&t2h_default_unknown;
 $unknown_style            = \&t2h_default_unknown_style;
@@ -7637,6 +7647,60 @@ sub t2h_default_cartouche($$)
     }
     return '';
 } 
+
+###GAMBIT### added this variable
+#
+# texi2html writes its default index into multiple files, but we write
+# it all into one file like makeinfo does. First time we open the
+# file, we overwrite it; thereafter we append to it.
+#
+our $gambit_index_summary_has_begun = 0;
+
+###GAMBIT### added this function
+sub gambit_index_summary_file_entry ($$$$$$$$$)
+{
+    my $index_name = shift;
+    my $key = shift;
+    my $origin_href = shift;
+    my $entry = shift;
+    my $texi_entry = shift;
+    my $element_href = shift;
+    my $element_text = shift;
+    my $is_printed = shift;
+    my $manual_name = shift;
+
+    print IDXFILE $origin_href . "\t" . $index_name . "\t" . $key . "\n";
+}
+
+###GAMBIT### added this function
+sub gambit_index_summary_file_begin($$$)
+{
+    my $name = shift;
+    my $is_printed = shift;
+    my $manual_name = shift;
+
+    my $open_mode = ">";
+    if (our $gambit_index_summary_has_begun) {
+        $open_mode = ">>";
+    }
+    our $gambit_index_summary_has_begun = 1;
+    my $tsv_file =
+        $Texi2HTML::THISDOC{'destination_directory'} .
+        $Texi2HTML::THISDOC{'file_base_name'} .
+        ".tsv";
+    open(IDXFILE, $open_mode, $tsv_file)
+        || die "Can't open $tsv_file for writing: $!\n";
+}
+
+###GAMBIT### added this function
+sub gambit_index_summary_file_end($$$)
+{
+    my $name = shift;
+    my $is_printed = shift;
+    my $manual_name = shift;
+
+    close (IDXFILE);
+}
 
 # key:          
 # origin_href:  

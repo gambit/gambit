@@ -2,7 +2,7 @@
 
 ;;; File: "28.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -10,10 +10,10 @@
 
 (##supply-module srfi/28)
 
-(##namespace ("srfi/28#"))       ;; in srfi/28#
-(##include "~~lib/_prim#.scm")   ;; map fx+ to ##fx+, etc
-(##include "~~lib/_gambit#.scm") ;; for macro-check-string,
-                                 ;; macro-absent-obj, etc
+(##namespace ("srfi/28#"))                ;; in srfi/28#
+(##include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
+(##include "~~lib/_gambit#.scm")          ;; for macro-check-string,
+                                          ;; macro-absent-obj, etc
 
 (##include "28#.scm")
 

@@ -219,8 +219,8 @@
 (check-equal? (u16vector-append '#u16(0 65535) '#u16(0 1 65535)) v6)
 (check-equal? (u16vector-append v6 v7 v6) '#u16(0 65535 0 1 65535 0 0 0 65535 0 1 65535))
 
-(check-equal? (append-u16vectors (list v6 v7 v6)) '#u16(0 65535 0 1 65535 0 0 0 65535 0 1 65535))
-(check-equal? (append-u16vectors (list v6 v7 v6) '#u16(1 1 1)) '#u16(0 65535 0 1 65535 1 1 1 0 0 1 1 1 0 65535 0 1 65535))
+(check-equal? (u16vector-concatenate (list v6 v7 v6)) '#u16(0 65535 0 1 65535 0 0 0 65535 0 1 65535))
+(check-equal? (u16vector-concatenate (list v6 v7 v6) '#u16(1 1 1)) '#u16(0 65535 0 1 65535 1 1 1 0 0 1 1 1 0 65535 0 1 65535))
 
 (check-equal? (u16vector-copy '#u16()) '#u16())
 (check-equal? (u16vector-copy v6) v6)
@@ -351,9 +351,9 @@
 (check-tail-exn type-exception? (lambda () (u16vector-append bool v9)))
 (check-tail-exn type-exception? (lambda () (u16vector-append v9 bool)))
 
-(check-tail-exn type-exception? (lambda () (append-u16vectors bool)))
-(check-tail-exn type-exception? (lambda () (append-u16vectors '(1 2 3))))
-(check-tail-exn type-exception? (lambda () (append-u16vectors (list v9 v9) bool)))
+(check-tail-exn type-exception? (lambda () (u16vector-concatenate bool)))
+(check-tail-exn type-exception? (lambda () (u16vector-concatenate '(1 2 3))))
+(check-tail-exn type-exception? (lambda () (u16vector-concatenate (list v9 v9) bool)))
 
 (check-tail-exn type-exception? (lambda () (u16vector-copy bool)))
 (check-tail-exn type-exception? (lambda () (u16vector-copy v9 bool)))
@@ -449,8 +449,8 @@
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (list->u16vector)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (list->u16vector '() '())))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (append-u16vectors)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (append-u16vectors '() '() '())))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (u16vector-concatenate)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (u16vector-concatenate '() '() '())))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (u16vector-copy)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (u16vector-copy v1 0 0 0)))

@@ -1,6 +1,6 @@
 /* File: "os_tty.c" */
 
-/* Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -8,7 +8,7 @@
  */
 
 #define ___INCLUDED_FROM_OS_TTY
-#define ___VERSION 409003
+#define ___VERSION 409004
 #include "gambit.h"
 
 #include "os_setup.h"
@@ -825,11 +825,19 @@ ___UCS_2 *name;)
 
 ___HIDDEN ___BOOL lineeditor_under_emacs ___PVOID
 {
-  static ___UCS_2 emacs_env_name_old[] = { 'E', 'M', 'A', 'C', 'S', '\0' };
-  static ___UCS_2 emacs_env_name_new[] = { 'I', 'N', 'S', 'I', 'D', 'E', '_', 'E', 'M', 'A', 'C', 'S', '\0' };
+#ifdef USE_OLD_INSIDE_EMACS_DETECTION
+  {
+    static ___UCS_2 emacs_env_name_old[] = { 'E', 'M', 'A', 'C', 'S', '\0' };
+    if (env_var_defined_UCS_2 (emacs_env_name_old)) return 1;
+  }
+#endif
 
-  return env_var_defined_UCS_2 (emacs_env_name_old) ||
-         env_var_defined_UCS_2 (emacs_env_name_new);
+  {
+    static ___UCS_2 emacs_env_name_new[] = { 'I', 'N', 'S', 'I', 'D', 'E', '_', 'E', 'M', 'A', 'C', 'S', '\0' };
+    if (env_var_defined_UCS_2 (emacs_env_name_new)) return 1;
+  }
+
+  return 0;
 }
 
 
@@ -869,6 +877,7 @@ ___device_tty *self;)
   switch (d->stage)
     {
     case TTY_STAGE_NOT_OPENED:
+    case TTY_STAGE_OPENED_FRESH:
       {
 #ifdef USE_POSIX
 
@@ -927,23 +936,28 @@ ___device_tty *self;)
         HANDLE sout = GetStdHandle (STD_OUTPUT_HANDLE); /* ignore error */
         HANDLE serr = GetStdHandle (STD_ERROR_HANDLE); /* ignore error */
 
+
+        if (d->stage == TTY_STAGE_NOT_OPENED) {
+
 #ifdef USE_GetConsoleWindow
 
-        HWND cons_wind = GetConsoleWindow ();
-        if (cons_wind == NULL || !IsWindowVisible (cons_wind))
-          FreeConsole ();
+          HWND cons_wind = GetConsoleWindow ();
+          if (cons_wind == NULL || !IsWindowVisible (cons_wind))
+            FreeConsole ();
 
 #endif
 
-        if (AllocConsole ())
-          {
-            /* restore initial standard handles */
+          if (AllocConsole ())
+            {
+              /* restore initial standard handles */
 
-            SetConsoleCtrlHandler (console_event_handler, TRUE); /* ignore error */
-            SetStdHandle (STD_INPUT_HANDLE, sin); /* ignore error */
-            SetStdHandle (STD_OUTPUT_HANDLE, sout); /* ignore error */
-            SetStdHandle (STD_ERROR_HANDLE, serr); /* ignore error */
-          }
+              SetConsoleCtrlHandler (console_event_handler, TRUE); /* ignore error */
+              SetStdHandle (STD_INPUT_HANDLE, sin); /* ignore error */
+              SetStdHandle (STD_OUTPUT_HANDLE, sout); /* ignore error */
+              SetStdHandle (STD_ERROR_HANDLE, serr); /* ignore error */
+            }
+
+        }
 
         in = CreateFile
                (_T("CONIN$"),
@@ -2392,7 +2406,7 @@ ___device_tty *self;)
 
       while (len > 0)
         {
-          ___stream_index len_done;
+          ___stream_index len_done = 0;
           ___U8 *byte_buf = d->output_byte + d->output_byte_lo;
 
           if ((e = ___device_tty_write
@@ -4853,7 +4867,7 @@ ___stream_index *len_done;)
 
       ___SCMOBJ e;
       ___stream_index len;
-      ___stream_index done;
+      ___stream_index done = 0;
       ___U8 *byte_buf;
       int byte_buf_avail;
       int char_buf_avail;
@@ -5321,7 +5335,7 @@ int plain;)
 #if defined(USE_POSIX) || defined(USE_WIN32) || defined(USE_tcgetsetattr)
   else
     {
-      if (___TERMINAL_LINE_EDITING(___GSTATE->setup_params.terminal_settings) !=
+      if (___TERMINAL_LINE_EDITING(___GSTATE->setup_params.io_settings[___IO_SETTINGS_TERMINAL]) !=
           ___TERMINAL_LINE_EDITING_OFF)
         d->lineeditor_mode = LINEEDITOR_MODE_SCHEME;
     }
@@ -8027,54 +8041,24 @@ ___HIDDEN ___SCMOBJ ___device_tty_default_options_virt
         (self)
 ___device_stream *self;)
 {
-  int settings = ___GSTATE->setup_params.terminal_settings;
+  int settings = ___io_settings_finalize
+                   (self->io_settings,
+                    ___BUFFERING_MASK(___IO_SETTINGS_DEFAULT)|___NO_BUFFERING);
   int char_encoding_errors = ___CHAR_ENCODING_ERRORS(settings);
   int char_encoding = ___CHAR_ENCODING(settings);
   int eol_encoding = ___EOL_ENCODING(settings);
   int buffering = ___BUFFERING(settings);
 
-  if (char_encoding_errors == 0)
-    char_encoding_errors = ___CHAR_ENCODING_ERRORS_ON;
-
-  switch (char_encoding)
-    {
-    case ___CHAR_ENCODING_UCS_2:
-#ifdef ___BIG_ENDIAN
-      char_encoding = ___CHAR_ENCODING_UCS_2BE;
-#else
-      char_encoding = ___CHAR_ENCODING_UCS_2LE;
-#endif
-      break;
-
-    case ___CHAR_ENCODING_UCS_4:
-#ifdef ___BIG_ENDIAN
-      char_encoding = ___CHAR_ENCODING_UCS_4BE;
-#else
-      char_encoding = ___CHAR_ENCODING_UCS_4LE;
-#endif
-      break;
-
-    case 0:
 #ifdef USE_WIN32
-      char_encoding =
-        TTY_CHAR_SELECT(___CHAR_ENCODING_ASCII,___CHAR_ENCODING_UCS_2LE);
-#else
-      char_encoding = ___CHAR_ENCODING_ASCII;
-#endif
-      break;
-    }
 
-  if (eol_encoding == 0)
-    {
-#ifdef USE_WIN32
-      eol_encoding = ___EOL_ENCODING_CRLF;
-#else
-      eol_encoding = ___EOL_ENCODING_LF;
-#endif
-    }
+  /* force character and EOL encoding when using Win32 console */
 
-  if (buffering == 0)
-    buffering = ___NO_BUFFERING;
+  char_encoding =
+    TTY_CHAR_SELECT(___CHAR_ENCODING_ASCII,___CHAR_ENCODING_UCS_2LE);
+
+  eol_encoding = ___EOL_ENCODING_CRLF;
+
+#endif
 
 #ifdef ___DEBUG_TTY
 
@@ -8250,6 +8234,7 @@ int direction;)
            (&d->base,
             dgroup,
             direction,
+            ___GSTATE->setup_params.io_settings[___IO_SETTINGS_TERMINAL],
             0);
 }
 
@@ -8273,8 +8258,7 @@ ___SCMOBJ ___device_tty_setup_from_fd
 ___device_tty **dev;
 ___device_group *dgroup;
 int fd;
-int direction;
-int close_direction;)
+int direction;)
 {
   ___device_tty *d;
   ___SCMOBJ e;
@@ -8312,6 +8296,7 @@ int close_direction;)
            (&d->base,
             dgroup,
             direction,
+            ___GSTATE->setup_params.io_settings[___IO_SETTINGS_TERMINAL],
             0);
 }
 
@@ -8358,6 +8343,7 @@ int direction;)
            (&d->base,
             dgroup,
             direction,
+            ___GSTATE->setup_params.io_settings[___IO_SETTINGS_TERMINAL],
             0);
 }
 
@@ -8382,27 +8368,30 @@ int direction;)
   ___setbuf (___stdin, NULL);
   ___setbuf (___stdout, NULL);
 
-  return ___device_tty_setup_from_stdio (dev,
-                                         dgroup,
-                                         direction);
+  return ___device_tty_setup_from_stdio
+           (dev,
+            dgroup,
+            direction);
 
 #endif
 #endif
 
 #ifdef USE_POSIX
 
-  return ___device_tty_setup_from_fd (dev,
-                                      dgroup,
-                                      -1,
-                                      direction);
+  return ___device_tty_setup_from_fd
+           (dev,
+            dgroup,
+            -1,
+            direction);
 
 #endif
 
 #ifdef USE_WIN32
 
-  return ___device_tty_setup_from_console (dev,
-                                           dgroup,
-                                           direction);
+  return ___device_tty_setup_from_console
+           (dev,
+            dgroup,
+            direction);
 
 #endif
 }

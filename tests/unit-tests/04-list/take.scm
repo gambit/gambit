@@ -19,8 +19,7 @@
 (check-equal? (take bool 0) '())
 (check-equal? (take '(1 2 . 3) 2) '(1 2))
 
-(check-tail-exn type-exception? (lambda () (take lst1 4)))
-
+(check-tail-exn range-exception? (lambda () (take lst1 4)))
 (check-tail-exn range-exception? (lambda () (take lst1 -1)))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (take)))

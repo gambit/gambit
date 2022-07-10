@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-3.scm"
 
-;;; Copyright (c) 2011-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2021 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -110,20 +110,21 @@
     ((hashtable_weak_keys_values) 'HashTableWeakKeysValues)
     ((jumpable)      'Jumpable)
     ((key)           'Key)
-    ((keyword)       'Keyword)
+    ((keyword)       'ScmKeyword) ;; add "Scm" to avoid possible clashes
     ((modlinkinfo)   'ModLinkInfo)
     ((null)          'Null)
     ((optional)      'Optional)
     ((pair)          'Pair)
     ((parententrypt) 'ParentEntryPoint)
-    ((promise)       'Promise)
+    ((promise)       'ScmPromise) ;; add "Scm" to avoid possible clashes
     ((ratnum)        'Ratnum)
     ((rest)          'Rest)
     ((returnpt)      'ReturnPoint)
+    ((scheme)        'Scheme)
     ((scmobj)        'ScmObj)
-    ((string)        'ScmString) ;; to avoid clashes with host's String class
+    ((string)        'ScmString) ;; add "Scm" to avoid possible clashes
     ((structure)     'Structure)
-    ((symbol)        'Symbol)
+    ((symbol)        'ScmSymbol) ;; add "Scm" to avoid possible clashes
     ((u8vector)      'U8Vector)
     ((u16vector)     'U16Vector)
     ((u32vector)     'U32Vector)
@@ -193,7 +194,10 @@
            (decl* (cadr type) #f)
            (if name
                name
-               (map-type type))))
+               (case type
+                 ((bigint) (base 'BigInt))
+                 ((number) (base 'Number))
+                 (else     (base (map-type type)))))))
 
       ((java)
        (cond ((and (pair? type) (eq? (car type) 'array))
@@ -240,7 +244,7 @@
              ((and (pair? type) (eq? (car type) 'dict))
               (base (^ "map[" (^type (cadr type)) "]" (^type (caddr type)))))
              ((and (pair? type) (eq? (car type) 'fn))
-              (univ-emit-fn-decl ctx #f (caddr type) (cadr type)))
+              (univ-emit-fn-decl ctx #f (caddr type) (cadr type) #f))
              (else
               (case type
                 ((frm)      (decl* '(array scmobj) #f))
@@ -452,10 +456,10 @@
           body))
         (lambda (ctx)
           (^ (^assign
-              (^member prefixed-root-name (^public 'jump))
+              (^field 'jump prefixed-root-name)
               jump-meth)
              (^assign
-              (^member prefixed-root-name (^public 'parent))
+              (^field 'parent prefixed-root-name)
               (univ-force-init ctx (univ-field-init (list-ref attribs 1)))))))))
 
     (else
@@ -490,7 +494,7 @@
   (define ctrlpt-structure        '(ctrlpt        id    parent))
   (define returnpt-structure      '(returnpt      fs    link))
   (define entrypt-structure       '(entrypt       nfree))
-  (define parententrypt-structure '(parententrypt name  ctrlpts info))
+  (define parententrypt-structure '(parententrypt name  ctrlpts info prim))
 
   (case jumpable-type
     ((jumpable)
@@ -573,7 +577,7 @@
             (map (lambda (attrib)
                    (let ((val (univ-force-init ctx (univ-field-init attrib))))
                      (^assign
-                      (^member name (^public (univ-field-name attrib)))
+                      (^field (univ-field-name attrib) name)
                       val)))
                  attribs))))
 
@@ -586,7 +590,7 @@
              (map (lambda (attrib)
                     (let ((val (univ-force-init ctx (univ-field-init attrib))))
                       (^assign-expr
-                       (^local-var (univ-field-name attrib))
+                       (^local-var (univ-field-rename ctx (univ-field-name attrib)))
                        val)))
                   attribs))
             "; ")))
@@ -594,14 +598,14 @@
     ((ruby)
      (if (null? attribs)
          (^)
-         (^ "class << " name "; attr_accessor :" (univ-field-name (car attribs))
+         (^ "class << " name "; attr_accessor :" (univ-field-rename ctx (univ-field-name (car attribs)))
             (map (lambda (attrib)
-                   (^ ", :" (univ-field-name attrib)))
+                   (^ ", :" (univ-field-rename ctx (univ-field-name attrib))))
                  (cdr attribs))
             "; end\n"
             (map (lambda (attrib)
                    (let ((val (univ-force-init ctx (univ-field-init attrib))))
-                     (^assign (^member name (^public (univ-field-name attrib)))
+                     (^assign (^field (univ-field-name attrib) name)
                               val)))
                  attribs))))
 
@@ -614,6 +618,11 @@
     (else
      (compiler-internal-error
       "univ-emit-function-attribs, unknown target"))))
+
+(define (univ-use-ctrlpt-init? ctx)
+  (and (eq? 'js (target-name (ctx-target ctx)))
+       univ-js-define-globals-using-assignment
+       (univ-compactness>=? ctx 6)))
 
 (define (univ-emit-function-declaration
          ctx
@@ -634,15 +643,43 @@
               (if global?
                   (^global-var prn)
                   (^local-var root-name)))))
-    ;;(pp (list root-name prn));;;;;;;;;;;;;
     (case (target-name (ctx-target ctx))
 
       ((js go)
-       (^ (univ-emit-fn-decl ctx name result-type params body modifier global?)
-          (if (null? attribs)
-              (^ "\n")
-              (^ "\n"
-                 (univ-emit-function-attribs ctx name attribs)))))
+       (cond ((and (univ-use-ctrlpt-init? ctx)
+                   (assoc (map univ-field-name attribs)
+                          '(((id parent)
+                             ctrlpt_init)
+                            ((id parent fs link)
+                             returnpt_init)
+                            ((id parent nfree)
+                             entrypt_init)
+                            ((id parent nfree name ctrlpts info prim)
+                             parententrypt_init))))
+              =>
+              (lambda (x)
+                (let ((decl
+                       (univ-emit-fn-decl ctx name result-type params body modifier 'expr))
+                      (attrib-params
+                       (map (lambda (f)
+                              (univ-force-init ctx (univ-field-init f)))
+                            (keep (lambda (f)
+                                    (not (memq (univ-field-name f)
+                                               '(id parent ctrlpts))))
+                                  attribs))))
+                  (^expr-statement
+                   (apply univ-emit-call-prim
+                          (cons ctx
+                                (cons (^rts-method-use (cadr x))
+                                      (cons decl attrib-params))))))))
+             (else
+              (let ((decl
+                     (univ-emit-fn-decl ctx name result-type params body modifier global?)))
+                (^ decl
+                   (if (null? attribs)
+                       (^ "\n")
+                       (^ "\n"
+                          (univ-emit-function-attribs ctx name attribs))))))))
 
       ((php)
        (let ((decl
@@ -727,7 +764,8 @@
          body
          #!optional
          (modifier #f)
-         (global? #f))
+         (global? #f)
+         (constructor-or-method? #f))
   (case (target-name (ctx-target ctx))
 
     ((js)
@@ -740,14 +778,21 @@
                       (not univ-js-define-globals-using-assignment))
                   name))
             (fn
-             (^ "function " (or fn-name "") "(" formals ") {"
+             (^ (if (or fn-name
+                        constructor-or-method?
+                        (not (univ-compactness>=? ctx 1)))
+                    (^ "function " (or fn-name "") "(" formals ") ")
+                    (^ "(" formals ") => "))
+                "{"
                 (if body
-                    (univ-indent body)
+                    (^indent body)
                     "")
                 "}")))
        (if (or (not name) fn-name)
            fn
-           (^var-declaration 'ctrlpt name fn global?))))
+           (if (eq? global? 'expr)
+               (^assign-expr name fn)
+               (^var-declaration 'ctrlpt name fn global?)))))
 
     ((php)
      (let ((formals
@@ -760,7 +805,7 @@
        (^ "function " (or name "") "(" formals ")"
           (if body
               (^ " {"
-                 (univ-indent body)
+                 (^indent body)
                  "}")
               ";"))))
 
@@ -773,7 +818,7 @@
                        (if (univ-field-init x) (^ "=" (^bool #f)) (^))))
                   params))))
        (^ "def " name "(" formals "):"
-          (univ-indent
+          (^indent
            (or body
                "\npass\n")))))
 
@@ -789,13 +834,13 @@
 
            (^ "def " name (if (null? params) (^) (^ "(" formals ")"))
               (if body
-                  (univ-indent body)
+                  (^indent body)
                   "\n")
               "end")
 
            (^ "lambda {" (if (null? params) (^) (^ "|" formals "|"))
               (if body
-                  (univ-indent body)
+                  (^indent body)
                   "")
               "}"))))
 
@@ -810,7 +855,7 @@
           (or name "") "(" formals ")"
           (if body
               (^ " {"
-                 (univ-indent body)
+                 (^indent body)
                  "}")
               ";"))))
 
@@ -833,7 +878,7 @@
               (^))
           (if body
               (^ " {"
-                 (univ-indent body)
+                 (^indent body)
                  "}")
               (^)))))
 
@@ -1075,7 +1120,10 @@
                             #f
                             (univ-method-result-type method)
                             (univ-method-params method)
-                            (univ-method-body method)))
+                            (univ-method-body method)
+                            #f
+                            #f
+                            #t))
                   (univ-emit-function-attribs
                    ctx
                    (^member obj (univ-method-name method))
@@ -1116,7 +1164,8 @@
                    (if constructor (constructor ctx) (^)))
                 (^))))
          #f
-         (not obj)))
+         (not obj)
+         #t))
 
       (let ((objname name)) ;;(if obj (^member obj name) name)))
         ;;(pp (list obj name objname))
@@ -1126,12 +1175,10 @@
                   "\n"))
 
            (if extends
-               (begin ;;(pp (list 'extends extends (^type extends)))
                (^ "\n"
                   (^assign (^member objname 'prototype)
                            (^call-prim (^member "Object" 'create)
                                        (^member (^type extends) 'prototype))))
-               )
                (^))
 
            (assign-method-decls (^member objname 'prototype) instance-methods)
@@ -1212,7 +1259,7 @@
             (if abstract? "abstract " "") "class " name
             (if extends (^ " extends " (^type extends)) "")
             " {"
-            (univ-indent
+            (^indent
              (^ (if (and (null? all-fields)
                          (null? all-methods)
                          (null? c-inits))
@@ -1226,7 +1273,7 @@
                 (if (null? c-inits)
                     (^)
                     (^ "static {"
-                       (univ-indent c-inits)
+                       (^indent c-inits)
                        "}\n"))))
             "}\n")))
 
@@ -1244,7 +1291,7 @@
          (^ "class " name
             (if extends (^ "(" (^type extends) ")") "")
             ":\n"
-            (univ-indent
+            (^indent
              (if (and (not abstract?)
                       (or constructor
                           (not (null? c-classes))
@@ -1281,7 +1328,7 @@
       ((ruby)
        (^ "class " name
           (if extends (^ " < " (^type extends)) "")
-          (univ-indent
+          (^indent
            (if (or constructor
                    (not (null? class-fields))
                    (not (null? instance-fields))
@@ -1303,7 +1350,7 @@
                           (not (null? class-methods)))
                       (^ "\n"
                          "class << " (^this)
-                         (univ-indent
+                         (^indent
                           (^ (ruby-attr-accessors class-fields)
                              (qualified-method-decls '() class-methods)))
                          "end\n"
@@ -1322,7 +1369,7 @@
                           (map univ-field-name
                                (initless instance-fields)))
                          ")\n"
-                         (univ-indent
+                         (^indent
                           (^ (assign-field-decls (^this) instance-fields)
                              (if constructor (constructor ctx) (^))))
                          "end\n")
@@ -1381,7 +1428,7 @@
             name (if generic (^ "<" (univ-separated-list ", " (map (lambda (x) (^type x)) (cdr generic))) "> ") "")
             (if extends (^ " extends " (^type extends)) "")
             " {"
-            (univ-indent
+            (^indent
              (^ (if (and (null? c-classes)
                          (or abstract?
                              (null? all-methods)))
@@ -1393,7 +1440,7 @@
                 (if (null? c-inits)
                     (^)
                     (^ "static {"
-                       (univ-indent c-inits)
+                       (^indent c-inits)
                        "}\n"))))
             "}\n")))
 
@@ -1433,32 +1480,13 @@
             (if (null? all-defs-in-type)
                 "{}\n"
                 (^ " {"
-                   (univ-indent all-defs-in-type)
+                   (^indent all-defs-in-type)
                    "}\n"))
             concrete-i-methods)))
 
       (else
        (compiler-internal-error
         "univ-emit-class-declaration, unknown target")))))
-
-(define (univ-emit-comment ctx comment)
-  ;; generates a single line comment
-  (^ (univ-single-line-comment-prefix (target-name (ctx-target ctx)))
-     " "
-     comment))
-
-(define (univ-single-line-comment-prefix targ-name)
-  (case targ-name
-
-    ((js php java go)
-     "//")
-
-    ((python ruby)
-     "#")
-
-    (else
-     (compiler-internal-error
-      "univ-single-line-comment-prefix, unknown target"))))
 
 (define (univ-emit-return-poll ctx expr poll? call?)
 
@@ -1471,14 +1499,18 @@
 
 (define (univ-emit-poll-or-continue ctx expr poll? cont)
   (if poll?
-      (^inc-by (gvm-state-pollcount-use ctx 'rdwr)
-               -1
-               (lambda (inc)
-                 (^if (^= inc (^int 0))
-                      (^return-call-prim
-                       (^rts-method-use 'poll)
-                       expr) ;;(^upcast* '??? 'ctrlpt expr)
-                      (cont))))
+      (if (univ-compactness>=? ctx 9)
+          (^return-call-prim
+           (^rts-method-use 'poll)
+           expr)
+          (^inc-by (gvm-state-pollcount-use ctx 'rdwr)
+                   -1
+                   (lambda (inc)
+                     (^if (^= inc (^int 0))
+                          (^return-call-prim
+                           (^rts-method-use 'poll)
+                           expr) ;;(^upcast* '??? 'ctrlpt expr)
+                          (cont)))))
       (cont)))
 
 (define (univ-emit-return-call-prim ctx expr . params)
@@ -1608,11 +1640,22 @@
      (compiler-internal-error
        "univ-emit-str?, unknown target"))))
 
+(define (univ-emit-js-number? ctx expr)
+  (if (univ-compactness>=? ctx 9)
+      (^call-prim (^rts-method-use 'jsnumberp) expr)
+      (univ-emit-js-number?-inline ctx expr)))
+
+(define (univ-emit-js-number?-inline ctx expr)
+  (^typeof "number" expr))
+
+(define (univ-emit-js-bigint? ctx expr)
+  (^typeof "bigint" expr))
+
 (define (univ-emit-float? ctx expr)
   (case (target-name (ctx-target ctx))
 
     ((js)
-     (^typeof "number" expr))
+     (univ-emit-js-number? ctx expr))
 
     ((php)
      (^ "is_float(" expr ")"))
@@ -1631,7 +1674,7 @@
   (case (target-name (ctx-target ctx))
 
    ((js)
-    (^typeof "number" expr))
+    (univ-emit-js-number? ctx expr))
 
    ((php)
     (^call-prim "is_int" expr))
@@ -1750,7 +1793,12 @@
 (define (univ-emit-bool ctx val)
   (case (target-name (ctx-target ctx))
 
-    ((js ruby php java go)
+    ((js)
+     (if (univ-compactness>=? ctx 5)
+         (univ-constant (if val "!0" "!1"))
+         (univ-constant (if val "true" "false"))))
+
+    ((ruby php java go)
      (univ-constant (if val "true" "false")))
 
     ((python)
@@ -1810,7 +1858,7 @@
       (case (univ-boolean-representation ctx)
 
         ((class)
-         (^member (^cast* 'boolean expr) (^public 'val)))
+         (^field 'val (^cast* 'boolean expr)))
 
         (else
          (^downcast* 'bool expr)))))
@@ -1819,7 +1867,7 @@
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_boolean) expr))
+     (^call-prim (^rts-method-use 'booleanp) expr))
 
     (else
      (case (univ-boolean-representation ctx)
@@ -1878,7 +1926,7 @@
       (case (univ-char-representation ctx)
 
         ((class)
-         (^member (^cast* 'char expr) (^public 'code)))
+         (^field 'code (^cast* 'char expr)))
 
         (else
          (^downcast* 'chr expr)))))
@@ -1944,7 +1992,7 @@
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_char) expr))
+     (^call-prim (^rts-method-use 'charp) expr))
 
     (else
      (case (univ-char-representation ctx)
@@ -2023,7 +2071,7 @@
       (case (univ-fixnum-representation ctx)
 
         ((class)
-         (^member (^cast* 'fixnum expr) (^public 'val)))
+         (^field 'val (^cast* 'fixnum expr)))
 
         (else
          (^downcast* 'int expr)))))
@@ -2032,7 +2080,7 @@
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_fixnum) expr))
+     (^call-prim (^rts-method-use 'fixnump) expr))
 
     (else
      (case (univ-fixnum-representation ctx)
@@ -2226,6 +2274,9 @@
      (compiler-internal-error
       "univ-emit-member, unknown target"))))
 
+(define (univ-emit-field ctx name expr)
+  (^member expr (^public (univ-field-rename ctx name))))
+
 (define (univ-emit-public ctx name)
   (case (target-name (ctx-target ctx))
     ((go)
@@ -2267,13 +2318,13 @@
   (case (univ-procedure-representation ctx)
 
     ((class struct)
-     (^member ctrlpt (^public attrib)))
+     (^field attrib ctrlpt))
 
     (else
      (case (target-name (ctx-target ctx))
 
        ((js python ruby)
-        (^member ctrlpt (^public attrib)))
+        (^field attrib ctrlpt))
 
        ((php)
         (let ((attribs-var (^ ctrlpt "_attribs")))
@@ -2287,16 +2338,16 @@
   (case (univ-procedure-representation ctx)
 
     ((class)
-     (^assign (^member ctrlpt (^public attrib)) val))
+     (^assign (^field attrib ctrlpt) val))
 
     ((struct)
-     (^assign (^member (cdr ctrlpt) (^public attrib)) val))
+     (^assign (^field attrib (cdr ctrlpt)) val))
 
     (else
      (case (target-name (ctx-target ctx))
 
        ((js python ruby)
-        (^assign (^member ctrlpt (^public attrib)) val))
+        (^assign (^field attrib ctrlpt) val))
 
        ((php)
         (let ((attribs-var (^ ctrlpt "_attribs")))
@@ -2321,28 +2372,38 @@
            (univ-get-ctrlpt-attrib ctx ctrlpt attrib)))))))
 
 (define (univ-emit-pair? ctx expr)
+  (if (univ-compactness>=? ctx 9)
+      (^call-prim (^rts-method-use 'pairp) expr)
+      (univ-emit-pair?-inline ctx expr)))
+
+(define (univ-emit-pair?-inline ctx expr)
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_pair) expr))
+     (^call-prim (^rts-method-use 'pairp) expr))
 
     (else
      (^instanceof (^type 'pair) (^cast*-scmobj expr)))))
 
 (define (univ-emit-cons ctx expr1 expr2)
+  (if (univ-compactness>=? ctx 9)
+      (^call-prim (^rts-method-use 'cons) expr1 expr2)
+      (univ-emit-cons-inline ctx expr1 expr2)))
+
+(define (univ-emit-cons-inline ctx expr1 expr2)
   (^new 'pair expr1 expr2))
 
 (define (univ-emit-getcar ctx expr)
-  (^member (^cast* 'pair expr) (^public 'car)))
+  (^field 'car (^cast* 'pair expr)))
 
 (define (univ-emit-getcdr ctx expr)
-  (^member (^cast* 'pair expr) (^public 'cdr)))
+  (^field 'cdr (^cast* 'pair expr)))
 
 (define (univ-emit-setcar ctx expr1 expr2)
-  (^assign (^member (^cast* 'pair expr1) (^public 'car)) expr2))
+  (^assign (^field 'car (^cast* 'pair expr1)) expr2))
 
 (define (univ-emit-setcdr ctx expr1 expr2)
-  (^assign (^member (^cast* 'pair expr1) (^public 'cdr)) expr2))
+  (^assign (^field 'cdr (^cast* 'pair expr1)) expr2))
 
 (define (univ-emit-float ctx val)
   ;; TODO: generate correct syntax
@@ -3107,6 +3168,15 @@ tanh
                       (^float-nan? expr2)))))))
 
 (define (univ-emit-flonum-box ctx expr)
+  (if (univ-compactness>=? ctx 9)
+
+      (univ-box
+       (^call-prim (^rts-method-use 'flonumbox) expr)
+       expr)
+
+      (univ-emit-flonum-box-inline ctx expr)))
+
+(define (univ-emit-flonum-box-inline ctx expr)
   (case (univ-flonum-representation ctx)
 
     ((class)
@@ -3122,16 +3192,21 @@ tanh
       (case (univ-flonum-representation ctx)
 
         ((class)
-         (^member (^cast* 'flonum expr) (^public 'val)))
+         (^field 'val (^cast* 'flonum expr)))
 
         (else
          (^downcast* 'float expr)))))
 
 (define (univ-emit-flonum? ctx expr)
+  (if (univ-compactness>=? ctx 9)
+      (^call-prim (^rts-method-use 'flonump) expr)
+      (univ-emit-flonum?-inline ctx expr)))
+
+(define (univ-emit-flonum?-inline ctx expr)
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_flonum) expr))
+     (^call-prim (^rts-method-use 'flonump) expr))
 
     (else
      (case (univ-flonum-representation ctx)
@@ -3149,7 +3224,7 @@ tanh
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_cpxnum) expr))
+     (^call-prim (^rts-method-use 'cpxnump) expr))
 
     (else
      (^instanceof (^type 'cpxnum) (^cast*-scmobj expr)))))
@@ -3161,7 +3236,7 @@ tanh
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_ratnum) expr))
+     (^call-prim (^rts-method-use 'ratnump) expr))
 
     (else
      (^instanceof (^type 'ratnum) (^cast*-scmobj expr)))))
@@ -3173,13 +3248,13 @@ tanh
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_bignum) expr))
+     (^call-prim (^rts-method-use 'bignump) expr))
 
     (else
      (^instanceof (^type 'bignum) (^cast*-scmobj expr)))))
 
 (define (univ-emit-bignum-digits ctx val)
-  (^member (^cast* 'bignum val) (^public 'digits)))
+  (^field 'digits (^cast* 'bignum val)))
 
 (define (univ-emit-u32-box ctx n)
   (^call-prim (^rts-method-use 'u32_box) n))
@@ -3209,7 +3284,7 @@ tanh
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_box) expr))
+     (^call-prim (^rts-method-use 'boxp) expr))
 
     (else
      (^instanceof (^type 'box) (^cast*-scmobj expr)))))
@@ -3218,10 +3293,10 @@ tanh
   (^new 'box expr))
 
 (define (univ-emit-unbox ctx expr)
-  (^member (^cast* 'box expr) (^public 'val)))
+  (^field 'val (^cast* 'box expr)))
 
 (define (univ-emit-setbox ctx expr1 expr2)
-  (^assign (^member expr1 (^public 'val)) expr2))
+  (^assign (^field 'val expr1) expr2))
 
 (define (univ-emit-values-box ctx expr)
   (case (univ-values-representation ctx)
@@ -3236,7 +3311,7 @@ tanh
   (case (univ-values-representation ctx)
 
     ((class)
-     (^member (^cast* 'values expr) (^public 'vals)))
+     (^field 'vals (^cast* 'values expr)))
 
     (else
      expr)))
@@ -3245,7 +3320,7 @@ tanh
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_values) expr))
+     (^call-prim (^rts-method-use 'valuesp) expr))
 
     (else
      (case (univ-values-representation ctx)
@@ -3329,16 +3404,21 @@ tanh
   (case (univ-vector-representation ctx 'scmobj)
 
     ((class)
-     (^member (^cast* 'vector expr) (^public 'elems)))
+     (^field 'elems (^cast* 'vector expr)))
 
     (else
      (^downcast* '(array scmobj) expr))))
 
 (define (univ-emit-vector? ctx expr)
+  (if (univ-compactness>=? ctx 9)
+      (^call-prim (^rts-method-use 'vectorp) expr)
+      (univ-emit-vector?-inline ctx expr)))
+
+(define (univ-emit-vector?-inline ctx expr)
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_vector) expr))
+     (^call-prim (^rts-method-use 'vectorp) expr))
 
     (else
      (case (univ-vector-representation ctx 'scmobj)
@@ -3374,7 +3454,7 @@ tanh
   (case (univ-vector-representation ctx 'u8)
 
     ((class)
-     (^member (^cast* 'u8vector expr) (^public 'elems)))
+     (^field 'elems (^cast* 'u8vector expr)))
 
     (else
      (^downcast* '(array u8) expr))))
@@ -3383,7 +3463,7 @@ tanh
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_u8vector) expr))
+     (^call-prim (^rts-method-use 'u8vectorp) expr))
 
     (else
      (case (univ-vector-representation ctx 'u8)
@@ -3398,16 +3478,17 @@ tanh
   (^array-length (^u8vector-unbox expr)))
 
 (define (univ-shrink-by-copying-elems! ctx type expr1 expr2)
-  (^assign (^member (^cast* type expr1) (^public 'elems))
+  (^assign (^field 'elems (^cast* type expr1))
            (case (target-name (ctx-target ctx))
 
              ((js)
-              (^call-prim (^member (^member (^cast* type expr1) (^public 'elems)) 'subarray)
+              (^call-prim (^member (^field 'elems (^cast* type expr1))
+                                   'subarray)
                           (^int 0)
                           expr2))
 
              (else
-              (^subarray (^member (^cast* type expr1) (^public 'elems))
+              (^subarray (^field 'elems (^cast* type expr1))
                          0
                          expr2)))))
 
@@ -3442,7 +3523,7 @@ tanh
   (case (univ-vector-representation ctx 'u16)
 
     ((class)
-     (^member (^cast* 'u16vector expr) (^public 'elems)))
+     (^field 'elems (^cast* 'u16vector expr)))
 
     (else
      expr)))
@@ -3451,7 +3532,7 @@ tanh
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_u16vector) expr))
+     (^call-prim (^rts-method-use 'u16vectorp) expr))
 
     (else
      (case (univ-vector-representation ctx 'u16)
@@ -3496,7 +3577,7 @@ tanh
   (case (univ-vector-representation ctx 'u32)
 
     ((class)
-     (^member (^cast* 'u32vector expr) (^public 'elems)))
+     (^field 'elems (^cast* 'u32vector expr)))
 
     (else
      (^downcast* '(array u32) expr))))
@@ -3505,7 +3586,7 @@ tanh
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_u32vector) expr))
+     (^call-prim (^rts-method-use 'u32vectorp) expr))
 
     (else
      (case (univ-vector-representation ctx 'u32)
@@ -3547,7 +3628,7 @@ tanh
   (case (univ-vector-representation ctx 'u64)
 
     ((class)
-     (^member (^cast* 'u64vector expr) (^public 'elems)))
+     (^field 'elems (^cast* 'u64vector expr)))
 
     (else
      (^downcast* '(array u64) expr))))
@@ -3556,7 +3637,7 @@ tanh
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_u64vector) expr))
+     (^call-prim (^rts-method-use 'u64vectorp) expr))
 
     (else
      (case (univ-vector-representation ctx 'u64)
@@ -3598,7 +3679,7 @@ tanh
   (case (univ-vector-representation ctx 's8)
 
     ((class)
-     (^member (^cast* 's8vector expr) (^public 'elems)))
+     (^field 'elems (^cast* 's8vector expr)))
 
     (else
      (^downcast* '(array s8) expr))))
@@ -3607,7 +3688,7 @@ tanh
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_s8vector) expr))
+     (^call-prim (^rts-method-use 's8vectorp) expr))
 
     (else
      (case (univ-vector-representation ctx 's8)
@@ -3649,7 +3730,7 @@ tanh
   (case (univ-vector-representation ctx 's16)
 
     ((class)
-     (^member (^cast* 's16vector expr) (^public 'elems)))
+     (^field 'elems (^cast* 's16vector expr)))
 
     (else
      (^downcast* '(array s16) expr))))
@@ -3658,7 +3739,7 @@ tanh
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_s16vector) expr))
+     (^call-prim (^rts-method-use 's16vectorp) expr))
 
     (else
      (case (univ-vector-representation ctx 's16)
@@ -3700,7 +3781,7 @@ tanh
   (case (univ-vector-representation ctx 's32)
 
     ((class)
-     (^member (^cast* 's32vector expr) (^public 'elems)))
+     (^field 'elems (^cast* 's32vector expr)))
 
     (else
      (^downcast* '(array s32) expr))))
@@ -3709,7 +3790,7 @@ tanh
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_s32vector) expr))
+     (^call-prim (^rts-method-use 's32vectorp) expr))
 
     (else
      (case (univ-vector-representation ctx 's32)
@@ -3751,7 +3832,7 @@ tanh
   (case (univ-vector-representation ctx 's64)
 
     ((class)
-     (^member (^cast* 's64vector expr) (^public 'elems)))
+     (^field 'elems (^cast* 's64vector expr)))
 
     (else
      (^downcast* '(array s64) expr))))
@@ -3760,7 +3841,7 @@ tanh
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_s64vector) expr))
+     (^call-prim (^rts-method-use 's64vectorp) expr))
 
     (else
      (case (univ-vector-representation ctx 's64)
@@ -3802,7 +3883,7 @@ tanh
   (case (univ-vector-representation ctx 'f32)
 
     ((class)
-     (^member (^cast* 'f32vector expr) (^public 'elems)))
+     (^field 'elems (^cast* 'f32vector expr)))
 
     (else
      (^downcast* '(array f32) expr))))
@@ -3811,7 +3892,7 @@ tanh
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_f32vector) expr))
+     (^call-prim (^rts-method-use 'f32vectorp) expr))
 
     (else
      (case (univ-vector-representation ctx 'f32)
@@ -3854,7 +3935,7 @@ tanh
   (case (univ-vector-representation ctx 'f64)
 
     ((class)
-     (^member (^cast* 'f64vector expr) (^public 'elems)))
+     (^field 'elems (^cast* 'f64vector expr)))
 
     (else
      (^downcast* '(array f64) expr))))
@@ -3869,7 +3950,7 @@ tanh
      (case (target-name (ctx-target ctx))
 
        ((go)
-        (^call-prim (^rts-method-use 'is_f64vector) expr))
+        (^call-prim (^rts-method-use 'f64vectorp) expr))
 
        (else
         (^instanceof (^type '(array f64)) expr))))))
@@ -3906,7 +3987,7 @@ tanh
   (case (univ-structure-representation ctx)
 
     ((class)
-     (^member (^cast* 'structure expr) (^public 'slots)))
+     (^field 'slots (^cast* 'structure expr)))
 
     (else
      (compiler-internal-error
@@ -3916,7 +3997,7 @@ tanh
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_structure) expr))
+     (^call-prim (^rts-method-use 'structurep) expr))
 
     (else
      (case (univ-structure-representation ctx)
@@ -4027,11 +4108,11 @@ tanh
     (else
      str)))
 
-(define (univ-str-to-array-literal ctx str)
-  (^array-literal
+(define (univ-str-to-num-array-constant ctx str)
+  (univ-num-array-constant
+   ctx
    'unicode
-   (map (lambda (c) (^int (char->integer c)))
-        (string->list str))))
+   (map char->integer (string->list str))))
 
 (define (univ-emit-str-length ctx str)
   (case (target-name (ctx-target ctx))
@@ -4081,7 +4162,7 @@ tanh
   (case (univ-string-representation ctx)
 
     ((class)
-     (let ((x (univ-str-to-array-literal ctx obj)))
+     (let ((x (univ-str-to-num-array-constant ctx obj)))
        (univ-obj-use
         ctx
         obj
@@ -4093,7 +4174,7 @@ tanh
      (case (target-name (ctx-target ctx))
 
        ((go)
-        (univ-str-to-array-literal ctx obj))
+        (univ-str-to-num-array-constant ctx obj))
 
        (else
         (^str obj))))))
@@ -4111,7 +4192,7 @@ tanh
   (case (univ-string-representation ctx)
 
     ((class)
-     (^member (^cast* 'string expr) (^public 'codes)))
+     (^field 'codes (^cast* 'string expr)))
 
     (else
      (case (target-name (ctx-target ctx))
@@ -4123,10 +4204,15 @@ tanh
         expr)))))
 
 (define (univ-emit-string? ctx expr)
+  (if (univ-compactness>=? ctx 9)
+      (^call-prim (^rts-method-use 'stringp) expr)
+      (univ-emit-string?-inline ctx expr)))
+
+(define (univ-emit-string?-inline ctx expr)
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_string) expr))
+     (^call-prim (^rts-method-use 'stringp) expr))
 
     (else
      (case (univ-string-representation ctx)
@@ -4269,35 +4355,35 @@ tanh
         (compiler-internal-error
          "univ-emit-symbol-obj, unknown target"))))))
 
-(define (univ-emit-symbol-box ctx name)
+(define (univ-emit-symbol-box ctx hname)
   (case (univ-symbol-representation ctx)
 
     ((class)
      (univ-box
       (^call-prim
        (^rts-method-use 'make_interned_symbol)
-       name)
-      name))
+       hname)
+      hname))
 
     (else
-     (^symbol-box-uninterned name #f))))
+     (^symbol-box-uninterned hname (^str->string hname) #f))))
 
-(define (univ-emit-symbol-box-uninterned ctx name hash)
+(define (univ-emit-symbol-box-uninterned ctx hname name hash)
   (case (univ-symbol-representation ctx)
 
     ((class)
      (univ-box
-      (^new 'symbol name hash (^obj #f))
-      name))
+      (^new 'symbol hname name hash (^obj #f))
+      hname))
 
     (else
      (case (target-name (ctx-target ctx))
 
        ((js php python)
-        name)
+        hname)
 
        ((ruby)
-        (^ name ".to_sym"))
+        (^ hname ".to_sym"))
 
        (else
         (compiler-internal-error
@@ -4308,7 +4394,7 @@ tanh
       (case (univ-symbol-representation ctx)
 
         ((class)
-         (^member (^cast* 'symbol expr) (^public 'name)))
+         (^field 'hname (^cast* 'symbol expr)))
 
         (else
          (case (target-name (ctx-target ctx))
@@ -4330,7 +4416,7 @@ tanh
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_symbol) expr))
+     (^call-prim (^rts-method-use 'symbolp) expr))
 
     (else
      (case (univ-symbol-representation ctx)
@@ -4375,35 +4461,35 @@ tanh
      (compiler-internal-error
       "univ-emit-keyword-box, host representation not implemented"))))
 
-(define (univ-emit-keyword-box ctx name)
+(define (univ-emit-keyword-box ctx hname)
   (case (univ-keyword-representation ctx)
 
     ((class)
      (univ-box
       (^call-prim
        (^rts-method-use 'make_interned_keyword)
-       name)
-      name))
+       hname)
+      hname))
 
     (else
-     (^keyword-box-uninterned name #f))))
+     (^keyword-box-uninterned hname (^str->string hname) #f))))
 
-(define (univ-emit-keyword-box-uninterned ctx name hash)
+(define (univ-emit-keyword-box-uninterned ctx hname name hash)
   (case (univ-keyword-representation ctx)
 
     ((class)
      (univ-box
-      (^new 'keyword name hash (^obj #f))
-      name))
+      (^new 'keyword hname name hash (^obj #f))
+      hname))
 
     (else
      (case (target-name (ctx-target ctx))
 
        ((js php python)
-        name)
+        hname)
 
        ((ruby)
-        (^ name ".to_sym"))
+        (^ hname ".to_sym"))
 
        (else
         (compiler-internal-error
@@ -4414,7 +4500,7 @@ tanh
       (case (univ-keyword-representation ctx)
 
         ((class)
-         (^member (^cast* 'keyword expr) (^public 'name)))
+         (^field 'hname (^cast* 'keyword expr)))
 
         (else
          (compiler-internal-error
@@ -4424,7 +4510,7 @@ tanh
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_keyword) expr))
+     (^call-prim (^rts-method-use 'keywordp) expr))
 
     (else
      (case (univ-keyword-representation ctx)
@@ -4452,8 +4538,7 @@ tanh
       (case (univ-frame-representation ctx)
 
         ((class)
-         (^member (^cast* 'frame expr)
-                  (^public 'slots)))
+         (^field 'slots (^cast* 'frame expr)))
 
         (else
          (^downcast* 'frm expr)))))
@@ -4463,8 +4548,7 @@ tanh
       (case (univ-frame-representation ctx)
 
         ((class)
-         (^member expr
-                  (^public 'slots)))
+         (^field 'slots expr))
 
         (else
          expr))))
@@ -4473,7 +4557,7 @@ tanh
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_frame) expr))
+     (^call-prim (^rts-method-use 'framep) expr))
 
     (else
      (case (univ-frame-representation ctx)
@@ -4491,7 +4575,7 @@ tanh
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_continuation) expr))
+     (^call-prim (^rts-method-use 'continuationp) expr))
 
     (else
      (^instanceof (^type 'continuation) (^cast*-scmobj expr)))))
@@ -4522,7 +4606,7 @@ tanh
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_procedure) expr))
+     (^call-prim (^rts-method-use 'procedurep) expr))
 
     (else
      (case (univ-procedure-representation ctx)
@@ -4532,13 +4616,29 @@ tanh
         (^instanceof (^type 'jumpable) (^cast*-scmobj expr)))
 
        (else
-        (^function? expr))))))
+        (^and (^function? expr)
+              (case (target-name (ctx-target ctx))
+
+                ((js)
+                 (^not (^prop-index-exists?
+                        expr
+                        (^str (symbol->string (univ-field-rename ctx 'fs))))))
+
+                ((python)
+                 (^not
+                  (^call-prim
+                   "hasattr"
+                   expr
+                   (^str (symbol->string (univ-field-rename ctx 'fs))))))
+
+                (else
+                 (^bool #f))))))))) ;;TODO: implement
 
 (define (univ-emit-return? ctx expr)
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_return) expr))
+     (^call-prim (^rts-method-use 'returnp) expr))
 
     (else
      (case (univ-procedure-representation ctx)
@@ -4547,13 +4647,28 @@ tanh
         (^instanceof (^type 'returnpt) (^cast*-scmobj expr)))
 
        (else
-        (^bool #f)))))) ;;TODO: implement
+        (^and (^function? expr)
+              (case (target-name (ctx-target ctx))
+
+                ((js)
+                 (^prop-index-exists?
+                  expr
+                  (^str (symbol->string (univ-field-rename ctx 'fs)))))
+
+                ((python)
+                 (^call-prim
+                  "hasattr"
+                  expr
+                  (^str (symbol->string (univ-field-rename ctx 'fs)))))
+
+                (else
+                 (^bool #f))))))))) ;;TODO: implement
 
 (define (univ-emit-closure? ctx expr)
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_closure) expr))
+     (^call-prim (^rts-method-use 'closurep) expr))
 
     (else
      (case (univ-procedure-representation ctx)
@@ -4565,7 +4680,9 @@ tanh
         (case (target-name (ctx-target ctx))
 
           ((js)
-           (^not (^prop-index-exists? expr (^str "id"))))
+           (^not (^prop-index-exists?
+                  expr
+                  (^str (symbol->string (univ-field-rename ctx 'id))))))
 
           ((php)
            (^instanceof (^type 'closure) expr))
@@ -4575,7 +4692,7 @@ tanh
             (^call-prim
              "hasattr"
              expr
-             (^str "id"))))
+             (^str (symbol->string (univ-field-rename ctx 'id))))))
 
           ((ruby)
            (^= (^ expr ".instance_variables.length") (^int 0)))
@@ -4597,13 +4714,15 @@ tanh
   (^assign (^array-index (univ-clo-slots ctx expr1) expr2) expr3))
 
 (define (univ-emit-new-delay-promise ctx expr)
-  (^new 'promise expr))
+  (^call-prim
+   (^rts-method-use 'make_delay_promise)
+   (^cast* 'entrypt expr)))
 
 (define (univ-emit-promise? ctx expr)
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_promise) expr))
+     (^call-prim (^rts-method-use 'promisep) expr))
 
     (else
      (^instanceof (^type 'promise) (^cast*-scmobj expr)))))
@@ -4615,7 +4734,7 @@ tanh
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_will) expr))
+     (^call-prim (^rts-method-use 'willp) expr))
 
     (else
      (^instanceof (^type 'will) (^cast*-scmobj expr)))))
@@ -4627,10 +4746,22 @@ tanh
   (case (target-name (ctx-target ctx))
 
     ((go)
-     (^call-prim (^rts-method-use 'is_foreign) expr))
+     (^call-prim (^rts-method-use 'foreignp) expr))
 
     (else
      (^instanceof (^type 'foreign) (^cast*-scmobj expr)))))
+
+(define (univ-emit-new-scheme ctx expr1)
+  (^new 'scheme expr1))
+
+(define (univ-emit-scheme? ctx expr)
+  (case (target-name (ctx-target ctx))
+
+    ((go)
+     (^call-prim (^rts-method-use 'schemep) expr))
+
+    (else
+     (^instanceof (^type 'scheme) (^cast*-scmobj expr)))))
 
 (define (univ-emit-call-prim ctx expr . params)
   (univ-emit-call-prim-aux ctx expr params))
@@ -4654,7 +4785,7 @@ tanh
   (case (univ-procedure-representation ctx)
 
     ((class struct)
-     (univ-emit-call-prim-aux ctx (^member (^parens proc) (^public 'jump)) params))
+     (univ-emit-call-prim-aux ctx (^field 'jump (^parens proc)) params))
 
     (else
      (univ-emit-call-aux ctx proc params))))
@@ -4904,7 +5035,12 @@ tanh
    (lambda (ctx return . opnds)
      (apply ifjump-gen
             (cons ctx
-                  (cons (lambda (result) (return (^boolean-box result)))
+                  (cons (lambda (result)
+                          (return
+                           (^boolean-box
+                            (if (or (eq? result #f) (eq? result #t))
+                                (^bool result)
+                                result))))
                         opnds))))
    ifjump-gen))
 

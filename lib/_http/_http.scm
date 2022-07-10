@@ -2,7 +2,8 @@
 
 ;;; File: "_http.scm"
 
-;;; Copyright (c) 2019 by Frédéric Hamel, All Rights Reserved.
+;;; Copyright (c) 2019-2020 by Frédéric Hamel, All Rights Reserved.
+;;; Copyright (c) 2020-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -14,9 +15,9 @@
   (extended-bindings))
 
 (##namespace ("_http#"))
-(##include "~~lib/_prim#.scm")   ;; map fx+ to ##fx+, etc
+(##include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
 (##include "~~lib/gambit#.scm")
-(##include "~~lib/_gambit#.scm") ;; for macro-check-string,
+(##include "~~lib/_gambit#.scm") ;; for macro-check-string
 
 (##import _tar)
 (##import _uri)
@@ -144,7 +145,7 @@
   (define (read-chunk-header p)
     (define (done-header val)
       (if (< 0 (string-length val))
-          (##string-split-at val #\;)
+          (##string-split-at-char val #\;)
           (invalid-chunk-error)))
 
     (let loop ((rev-result '()))
@@ -158,9 +159,9 @@
                 (string-shrink! line (- (string-length line) 1))
 
                 (done-header
-                  (if (null? result)
+                  (if (null? rev-result)
                     line
-                    (append-strings (reverse (cons line rev-result))))))
+                    (string-concatenate (reverse (cons line rev-result))))))
 
               (loop (cons line rev-result)))))))
 
@@ -178,7 +179,7 @@
             (let ((trailing-chunk (read-line p)))
               (if (and (string? trailing-chunk)
                        (string=? trailing-chunk "\r"))
-                (done p (append-strings (reverse rev-result)))
+                (done p (string-concatenate (reverse rev-result)))
                 (raise (macro-make-http-exception "Missing trailing chunk")))))
 
           (begin
@@ -228,7 +229,7 @@
                (string-append "Invalid url '" url "'")))
       (let* ((scheme (uri-scheme uri))
              (host+port
-               (##string-split-at (uri-authority uri) #\:))
+              (##string-split-at-char (uri-authority uri) #\:))
              (tls-context (cond
                             ((string=? scheme "https")
                              (make-tls-context))
@@ -251,15 +252,21 @@
                       #t
                       (lambda (port) port)
                       http-get
-                      (cons address:
-                            (cons
-                              host
-                              (cons
-                                port-number:
-                                (cons port-number
-                                      (if tls-context
-                                        (list tls-context: tls-context)
-                                        '())))))))
+                      (cons
+                       address:
+                       (cons
+                        host
+                        (cons
+                         port-number:
+                         (cons
+                          port-number
+                          (cons
+                           char-encoding:
+                           (cons
+                            'ISO-8859-1
+                            (if tls-context
+                                (list tls-context: tls-context)
+                                '())))))))))
                (eol (CRLF)))
 
           (print

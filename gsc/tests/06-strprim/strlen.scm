@@ -4,7 +4,7 @@
 (define s2 (##make-string 10 #\!))
 (define s3 "hello")
 (define s4 "abc\0def")
-(define s5 "été")
+(define s5 "Ã©tÃ©")
 
 (define (test v)
   (println (##string-length v)))

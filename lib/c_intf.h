@@ -1,6 +1,6 @@
-/* File: "c_intf.h", Time-stamp: <2009-08-06 19:07:29 feeley> */
+/* File: "c_intf.h" */
 
-/* Copyright (c) 1994-2009 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___C_INTF_H
 #define ___C_INTF_H
@@ -23,6 +23,9 @@ extern void ___UTF_8_put
 extern ___UCS_4 ___UTF_8_get
    ___P((___UTF_8STRING *ptr),
         ());
+
+#define ___UTF_8_get_var(ptr, var) \
+((var = *(*(ptr))) <= 0x7f ? ((*(ptr))++, var) : (var = ___UTF_8_get (ptr)))
 
 
 /*---------------------------------------------------------------------------*/

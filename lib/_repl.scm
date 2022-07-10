@@ -2,7 +2,7 @@
 
 ;;; File: "_repl.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -875,23 +875,37 @@
   (if ##show-all-continuations?
       #f
       (let ((parent (##continuation-parent cont)))
-        (or (##eq? parent ##interp-procedure-wrapper);;;;;;;;;;;;;;;;;;
-            (##eq? parent ##dynamic-wind)
-            (##eq? parent ##dynamic-env-bind)
-            (##eq? parent ##kernel-handlers)
-            (##eq? parent ##load-vm)
-            (##eq? parent ##repl-debug)
-            (##eq? parent ##repl-debug-main)
-            (##eq? parent ##repl-within)
-            (##eq? parent ##eval-within)
-            (##eq? parent ##with-no-result-expected)
-            (##eq? parent ##with-no-result-expected-toplevel)
-            (##eq? parent ##check-heap)
-            (##eq? parent ##nontail-call-for-leap)
-            (##eq? parent ##nontail-call-for-step)
-            (##eq? parent ##trace-generate)
-            (##eq? parent ##thread-interrupt!)
-            (##eq? parent ##thread-call)))))
+        (##hidden-continuation-parent? parent))))
+
+(define ##default-hidden-continuation-parent?
+  (lambda (parent)
+    (or (##eq? parent ##interp-procedure-wrapper) ;;;;;;;;;;;;;;;;;;
+        (##eq? parent ##dynamic-wind)
+        (##eq? parent ##dynamic-env-bind)
+        (##eq? parent ##kernel-handlers)
+        (##eq? parent ##load-vm)
+        (##eq? parent ##repl-debug)
+        (##eq? parent ##repl-debug-main)
+        (##eq? parent ##repl-within)
+        (##eq? parent ##eval-within)
+        (##eq? parent ##with-no-result-expected)
+        (##eq? parent ##with-no-result-expected-toplevel)
+        (##eq? parent ##check-heap)
+        (##eq? parent ##nontail-call-for-leap)
+        (##eq? parent ##nontail-call-for-step)
+        (##eq? parent ##trace-generate)
+        (##eq? parent ##thread-check-interrupts!)
+        (##eq? parent ##thread-interrupt!)
+        (##eq? parent ##thread-execute-and-end!)
+        (##eq? parent ##thread-resume-execution!)
+        (##eq? parent ##thread-sleep!)
+        (##eq? parent ##thread-call))))
+
+(define ##hidden-continuation-parent?
+  ##default-hidden-continuation-parent?)
+
+(define (##hidden-continuation-parent?-set! proc)
+  (set! ##hidden-continuation-parent? proc))
 
 (define-prim (##interp-subproblem-continuation? cont)
   (let ((parent (##continuation-parent cont)))
@@ -1066,8 +1080,10 @@
 ;;;----------------------------------------------------------------------------
 
 (define-prim (##cmd-? port)
+  (##write-system-banner port)
   (##write-string
-",?   | ,help    : Summary of comma commands
+"
+,?   | ,help    : Summary of comma commands
 ,h   | ,(h X)   : Help on procedure of last error or procedure/macro named X
 ,q              : Terminate the process
 ,qt             : Terminate the current thread
@@ -1094,6 +1110,11 @@
 ;;;,(p [N M])    : Configure REPL's pretty printer (N=max level, M=max length)
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(set! ##values-with-sn? #t)
+
+(define (##values-with-sn?-set! x)
+  (set! ##values-with-sn? x))
 
 (define ##backtrace-default-max-head 10)
 
@@ -1157,8 +1178,8 @@
               cont
               #!optional
               (port (macro-absent-obj))
-              (all-frames? (macro-absent-obj))
               (display-env? (macro-absent-obj))
+              (all-frames? (macro-absent-obj))
               (max-head (macro-absent-obj))
               (max-tail (macro-absent-obj))
               (depth (macro-absent-obj)))
@@ -1297,7 +1318,8 @@
 
 (define-prim (##display-locat locat pinpoint? port)
   (if locat ;; locat is #f if location unknown
-      (let* ((container (##locat-container locat))
+      (let* ((pinpoint? (and pinpoint? (##not (##pinpoint-locat locat))))
+             (container (##locat-container locat))
              (path (##container->path container)))
         (if path
             (##write (##repl-path-normalize path) port)
@@ -1309,6 +1331,17 @@
           (##write line port)
           (##write-string (if pinpoint? "." ":") port)
           (##write col port)))))
+
+(define ##pinpoint-locat-hook #f)
+
+(define-prim (##pinpoint-locat-hook-set! x)
+  (set! ##pinpoint-locat-hook x))
+
+(define-prim (##pinpoint-locat locat)
+  (let ((pl-hook ##pinpoint-locat-hook))
+    (if (##procedure? pl-hook)
+        (pl-hook locat)
+        #f)))
 
 (define ##repl-path-normalize-hook #f)
 
@@ -1391,17 +1424,25 @@
   (##write var port)
   (##write-string (if mutable? " = " " == ") port)
   (##write-string
-   (##object->string
-    (if (##cte-top? cte)
-        (##inverse-eval-in-env val cte)
-        (##inverse-eval-in-env val (##cte-parent-cte cte)))
-    (##fx- (##output-port-width port)
-           (##output-port-column port))
-    port)
+   (let* ((expr
+           (if (##cte-top? cte)
+               (##inverse-eval-in-env val cte)
+               (##inverse-eval-in-env val (##cte-parent-cte cte))))
+          (max-length
+           (##fx- (##output-port-width port)
+                  (##output-port-column port))))
+     (##value->string val expr max-length port))
    port)
   (##newline port))
 
 (define (##display-rte cte rte indent port)
+  (##for-each-rte-binding
+   cte
+   rte
+   (lambda (var val-or-box cte)
+     (##display-var-val var val-or-box cte indent port))))
+
+(define (##for-each-rte-binding cte rte proc)
   (let loop1 ((c cte)
               (r rte))
     (cond ((##cte-top? c))
@@ -1412,7 +1453,7 @@
                  (let ((var (##car vars)))
                    (if (##not (##hidden-local-var? var))
                        (let ((val-or-box (##car vals)))
-                         (##display-var-val var val-or-box c indent port)))
+                         (proc var val-or-box c)))
                    (loop2 (##cdr vars)
                           (##cdr vals)))
                  (loop1 (##cte-parent-cte c)
@@ -1602,16 +1643,18 @@
 
   (let ((port-width (##output-port-width port)))
 
-    (define thread-width 14)
+    (define min-thread-width 13) ;; minimal thread column width
+                                 ;; actual width adds 1/8 the remaining
+                                 ;; width of the output port
 
     (let ((extra
            (##fxmax
             0
             (##fxquotient
-             (##fx- port-width thread-width)
-             5))))
+             (##fx- port-width min-thread-width)
+             8))))
       (##write thread port)
-      (tab (##fx+ thread-width extra))
+      (tab (##fx+ min-thread-width extra))
       (let ((ts (##thread-state thread)))
         (cond ((macro-thread-state-uninitialized? ts)
                (##write-string "UNINITIALIZED" port))
@@ -1661,9 +1704,11 @@
   (define interval 1.0)
 
   (define (up n)
-    (##write-string "\033[" port)
-    (##write n port)
-    (##write-string "A\033[J" port))
+    (if (##tty? port)
+        (begin
+          (##write-string "\033[" port)
+          (##write n port)
+          (##write-string "A\033[J" port))))
 
   (let* ((start-time-point (##current-time-point))
          (end-time-point (macro-time-point (##timeout->time timeout))))
@@ -1732,33 +1777,54 @@
 (define-prim (##make-default-entry-hook)
   (let ((settings (##vector #f #f)))
     (lambda (proc args execute)
-      (if (##vector-ref settings 0)
-          (##step-on)) ;; turn on single-stepping
-      (if (##vector-ref settings 1)
-          (##trace-generate
-           (##make-call-form proc
-                             (##argument-list-remove-absent! args '())
-                             ##max-fixnum)
-           execute
-           #f)
-          (execute)))))
+      (let ((stepping? (##vector-ref settings 0))
+            (trace? (##vector-ref settings 1))
+            (stepper (macro-code-stepper (##interp-procedure-code proc))))
+        (if trace?
+            (##trace-generate
+             (##make-friendly-call-form
+              proc
+              (##argument-list-remove-absent! args '())
+              ##max-fixnum
+              ##inverse-eval
+              #f)
+             execute
+             (and stepping? 's)
+             stepper)
+            (begin
+              (if stepping?
+                  (##step-on stepper)) ;; turn on stepping
+              (execute)))))))
 
-(define-prim (##make-call-form proc args max-args)
+(define-prim (##make-friendly-call-form proc args max-args transform-arg annotate?)
+  (##make-friendly-form (let ((x (##procedure-friendly-name proc)))
+                          (if annotate? (##cons proc x) x))
+                        args
+                        max-args
+                        transform-arg
+                        annotate?))
 
-  (define (inverse-eval-args i lst)
+(define-prim (##make-friendly-form head args max-args transform-arg annotate?)
+
+  (define (ann expr val)
+    (if annotate? (##cons expr val) val))
+
+  (define (process-args i lst)
     (if (##pair? lst)
-        (if (##fx< max-args i)
-            '(...)
-            (##cons (##inverse-eval (##car lst))
-                    (inverse-eval-args (##fx+ i 1) (##cdr lst))))
-        '()))
+        (if (##fx> i max-args)
+            (##cons (ann '... '...) (##cdr (##last-pair lst)))
+            (let* ((obj (##car lst))
+                   (val (transform-arg obj)))
+              (##cons (ann obj val)
+                      (process-args (##fx+ i 1) (##cdr lst)))))
+        lst))
 
-  (##cons (##procedure-friendly-name proc)
-          (inverse-eval-args 1 args)))
+  (##cons head
+          (process-args 1 args)))
 
 (define ##trace-depth (##make-parameter 0))
 
-(define-prim (##trace-generate form execute leap?)
+(define-prim (##trace-generate form execute s-or-l stepper)
 
   (define max-depth 10)
 
@@ -1784,17 +1850,30 @@
             (##write-string "[" output-port)
             (##write-string depth-str output-port)
             (##write-string "]" output-port))
-          (bars w output-port))
-      w))
+          (bars w output-port))))
 
   (define (output-to-repl proc)
-    (let ((old (##current-user-interrupt-handler)))
-      (##parameterize1
-       ##current-user-interrupt-handler
-       ##defer-user-interrupts
-       (lambda ()
-         (##repl proc)
-         (##current-user-interrupt-handler old)))))
+    (##repl proc))
+
+  (define (output-to-repl-with-indent depth prompt obj)
+    (let* ((repl-port
+            (##repl-output-port))
+           (width
+            (##fx+ (bars-width depth) 1 (##string-length prompt)))
+           (obj-str
+            (##object->string
+             obj
+             (##fx- (##output-port-width repl-port) width)
+             repl-port)))
+      (output-to-repl
+       (lambda (first port)
+         (indent depth port)
+         (##write-string prompt port)
+         (##write-string obj-str port)
+         (##newline port)
+         #t))))
+
+  (##step-off stepper)
 
   (##continuation-capture
    (lambda (cont)
@@ -1810,63 +1889,48 @@
                  (##fx+ current-depth 1)
                  current-depth)))
 
-       (define (nest wrapper)
-         (let ((result
-                (##parameterize1
-                 ##trace-depth
-                 depth
-                 (lambda () (wrapper execute)))))
+       (output-to-repl-with-indent depth " > " form) ;; show form
 
-           (output-to-repl
-            (lambda (first port)
-              (let ((width
-                     (##fx+ (indent depth port) 1)))
-                (##write-string " " port)
-                (##write-string
-                 (##object->string
-                  result
-                  (##fx- (##output-port-width port) width)
-                  port)
-                 port)
-                (##newline port)
-                #t)))
+       (cond ((##eq? ##nontail-call-for-leap parent)
+              (if (##eq? s-or-l 's)
+                  ;; turn on stepping before tail call (execute)
+                  (##step-on stepper))
+              (execute))
+             ((##eq? ##nontail-call-for-step parent)
+              (if (##eq? s-or-l 'l)
+                  (##nontail-call-for-leap execute)
+                  (begin
+                    (if (##eq? s-or-l 's)
+                        ;; turn on stepping before tail call (execute)
+                        (##step-on stepper))
+                    (execute))))
+             (else
+              (let ((result
+                     (##parameterize1
+                      ##trace-depth
+                      depth
+                      (if (##eq? s-or-l 'l)
+                          (lambda ()
+                            (##nontail-call-for-leap execute))
+                          (lambda ()
+                            (if (##eq? s-or-l 's)
+                                ;; turn on stepping before nontail call (execute)
+                                (##step-on stepper))
+                            (##nontail-call-for-step execute))))))
 
-           result))
+                (let ((saved-stepper
+                       (##vector-copy (##current-stepper))))
+                  (##step-off stepper)
+                  (output-to-repl-with-indent depth " " result) ;; show result
+                  (##step-restore saved-stepper)
+                  result))))))))
 
-       (output-to-repl
-        (lambda (first port)
-          (let ((width
-                 (##fx+ (indent depth port) 3)))
-            (##write-string " > " port)
-            (##write-string
-             (##object->string
-              form
-              (##fx- (##output-port-width port) width)
-              port)
-             port)
-            (##newline port)
-            #t)))
-
-       (if leap?
-           (cond ((##eq? ##nontail-call-for-leap parent)
-                  (execute))
-                 ((##eq? ##nontail-call-for-step parent)
-                  (##nontail-call-for-leap execute))
-                 (else
-                  (nest ##nontail-call-for-leap)))
-           (cond ((##eq? ##nontail-call-for-leap parent)
-                  (execute))
-                 ((##eq? ##nontail-call-for-step parent)
-                  (execute))
-                 (else
-                  (nest ##nontail-call-for-step))))))))
-
-(define-prim (##nontail-call-for-leap execute)
-  (let ((result (execute)))
-    (##step-on)
-    result))
+(define-prim (##nontail-call-for-leap execute stepper)
+  (##declare (not interrupts-enabled))
+  (##step-on stepper (execute))) ;; turn on stepping at end of a leap
 
 (define-prim (##nontail-call-for-step execute)
+  (##declare (not interrupts-enabled))
   (##first-argument (execute)))
 
 (define ##trace-list '())
@@ -1953,41 +2017,67 @@
    ##unbreak
    (if (##pair? args) args ##break-list)))
 
-(define-prim (##step-on)
+(define-prim (##step-on
+              #!optional
+              (stepper (##current-stepper))
+              (result (##void)))
   (##declare (not interrupts-enabled))
-  (let* ((stepper (##current-stepper))
-         (handlers (##vector-ref stepper 0)))
+  (let ((handlers (##vector-ref stepper 0)))
     (let loop ((i (##vector-length handlers)))
       (if (##not (##fx< i 1))
           (let ((i-1 (##fx- i 1)))
             (##vector-set! stepper i (##vector-ref handlers i-1))
             (loop i-1))))
-    (##void)))
+    result))
 
-(define-prim (##step-off)
+(define-prim (##step-off
+              #!optional
+              (stepper (##current-stepper)))
   (##declare (not interrupts-enabled))
-  (let* ((stepper (##current-stepper))
-         (handlers (##vector-ref stepper 0)))
-    (let loop ((i (##vector-length handlers)))
+  (let* ((handlers (##vector-ref stepper 0))
+         (len (##vector-length handlers)))
+    (let loop ((i len))
       (if (##not (##fx< i 1))
           (let ((i-1 (##fx- i 1)))
             (##vector-set! stepper i #f)
             (loop i-1))))
     (##void)))
 
-(define-prim (step)
-  (##step-on))
-
-(define-prim (##step-level-set! n)
+(define-prim (##step-restore
+              saved-stepper
+              #!optional
+              (stepper (##current-stepper)))
   (##declare (not interrupts-enabled))
-  (let* ((stepper (##current-stepper))
-         (handlers (##vector-ref stepper 0)))
-    (let loop ((i (##vector-length handlers)))
+  (let* ((handlers (##vector-ref stepper 0))
+         (len (##vector-length handlers)))
+    (let loop ((i len))
       (if (##not (##fx< i 1))
           (let ((i-1 (##fx- i 1)))
-            (##vector-set! handlers i-1
+            (##vector-set! stepper
+                           i
+                           (and (##vector-ref saved-stepper i)
+                                (##vector-ref handlers i-1)))
+            (loop i-1))))
+    (##void)))
+
+(define-prim (step)
+  (##step-on)) ;; turn on stepping on current stepper
+
+(define-prim (##step-level-set!
+              n
+              #!optional
+              (stepper (##current-stepper)))
+  (##declare (not interrupts-enabled))
+  (let* ((handlers (##vector-ref stepper 0))
+         (len (##vector-length handlers))
+         (step-handlers (##vector-ref stepper (##fx+ len 1))))
+    (let loop ((i len))
+      (if (##not (##fx< i 1))
+          (let ((i-1 (##fx- i 1)))
+            (##vector-set! handlers
+                           i-1
                            (if (##fx< i-1 n)
-                               (##vector-ref ##step-handlers i-1)
+                               (##vector-ref step-handlers i-1)
                                #f))
             (loop i-1))))
     (##void)))
@@ -1997,9 +2087,10 @@
     (macro-check-fixnum-range-incl n 1 0 7 (step-level-set! n)
       (##step-level-set! n))))
 
-(define ##step-handlers (macro-make-step-handlers))
+(define ##default-step-handlers
+  (macro-make-step-handlers ##step-handler))
 
-(##main-stepper-set! (macro-make-main-stepper))
+(##current-stepper (macro-make-stepper ##default-step-handlers))
 
 (define ##repl-display-environment?
   (##make-parameter #f))
@@ -2014,7 +2105,7 @@
 
 (define-prim (##step-handler leapable? $code rte execute-body . other)
   (##declare (not interrupts-enabled) (environment-map))
-  (##step-off) ;; turn off single-stepping
+  (##step-off (macro-code-stepper $code)) ;; turn off stepping
   (##step-handler-continue
    (##step-handler-get-command $code rte)
    leapable?
@@ -2043,7 +2134,13 @@
      (##newline port)
      #f)))
 
-(define-prim (##step-handler-continue cmd leapable? $code rte execute-body other)
+(define-prim (##step-handler-continue
+              cmd
+              leapable?
+              $code
+              rte
+              execute-body
+              other)
 
   ;; cmd is one of the symbols "c", "s" or "l" or a one element vector
 
@@ -2052,11 +2149,11 @@
 
   (cond ((##eq? cmd 'c)
          (execute))
-        ((and (##eq? cmd 'l) leapable?)
-         (##trace-generate (##decomp $code) execute #t))
         ((or (##eq? cmd 'l) (##eq? cmd 's))
-         (##step-on)
-         (##trace-generate (##decomp $code) execute #f))
+         (##trace-generate (##decomp $code)
+                           execute
+                           (if (and (##eq? cmd 'l) leapable?) 'l 's)
+                           (macro-code-stepper $code)))
         (else
          (##vector-ref cmd 0))))
 
@@ -2254,6 +2351,12 @@
   (let ((channel (##thread-repl-channel-get! (macro-current-thread))))
     (macro-mutex-unlock! (macro-repl-channel-owner-mutex channel))))
 
+(define-prim (##repl-channel-have-ownership?)
+  (let* ((ct (macro-current-thread))
+         (channel (macro-thread-repl-channel ct)))
+    (and channel
+         (##eq? (##mutex-state (macro-repl-channel-owner-mutex channel)) ct))))
+
 (define-prim (##repl-channel-input-port)
   (let ((channel (##thread-repl-channel-get! (macro-current-thread))))
     (macro-repl-channel-input-port channel)))
@@ -2441,7 +2544,7 @@
                    (##open-file-generic
                     (macro-direction-in)
                     #f
-                    (lambda (port)
+                    (lambda (port resolved-path)
                       (if (##port? port)
                           (let ((history (##read-line port #f #f ##max-fixnum)))
                             (##close-port port)
@@ -2455,7 +2558,7 @@
                       (##open-file-generic
                        (macro-direction-out)
                        #f
-                       (lambda (port)
+                       (lambda (port resolved-path)
                          (if (##port? port)
                              (let ((history (##tty-history input-port)))
                                (##display history port)
@@ -2665,8 +2768,7 @@
      (if (##tty? port)
          (##tty-text-attributes-set! port (attrs input) (attrs banner)))
 
-     (##write-string "Gambit " port)
-     (##write-string (##system-version-string) port)
+     (##write-system-banner port)
 
      (if (##tty? port)
          (##tty-text-attributes-set! port (attrs input) (attrs output)))
@@ -2677,6 +2779,10 @@
    #t)
 
   (##exit))
+
+(define-prim (##write-system-banner port)
+  (##write-string "Gambit " port)
+  (##write-string (##system-version-string) port))
 
 (define-prim (##repl-context-display-continuation repl-context)
   (##repl-channel-display-continuation
@@ -2746,15 +2852,11 @@
      (##repl-context-with-clean-exception-handling
       repl-context
       (lambda ()
-        (##parameterize1
-         ##current-user-interrupt-handler
-         ##void ;; ignore user interrupts
-         (lambda ()
-           (macro-dynamic-bind repl-context
-                               repl-context
-                               (lambda ()
-                                 (thunk)
-                                 (##repl-context-prompt repl-context))))))))))
+        (macro-dynamic-bind repl-context
+                            repl-context
+                            (lambda ()
+                              (thunk)
+                              (##repl-context-prompt repl-context))))))))
 
 (define-prim (##default-repl-context-prompt repl-context)
 
@@ -2776,7 +2878,7 @@
                          src))
                    src))))))
 
-  (##step-off) ;; turn off single-stepping
+  (##step-off) ;; turn off stepping on current stepper
 
   (##repl-context-command repl-context (read-command)))
 
@@ -3220,7 +3322,7 @@
                     (##thread-interrupt!
                      val
                      (lambda ()
-                       (##handle-interrupt #f)))
+                       (##user-interrupt-current-thread! #f)))
                     (##thread-yield!)
                     (##repl-channel-acquire-ownership!)
                     (##repl-context-prompt repl-context))
@@ -3348,15 +3450,26 @@
         (##repl
          (lambda (first port)
            (let ((quit? (##fx= (macro-debug-settings-error settings)
-                               (macro-debug-settings-error-quit))))
-             (if (and quit?
-                      (##fx= (macro-debug-settings-level settings) 0))
-                 (##exit-with-exception exc)
+                               (macro-debug-settings-error-quit)))
+                 (level (macro-debug-settings-level settings)))
+             (if quit?
+                 (begin
+                   (if (##fx>= level 1)
+                       (begin
+                         (##display-exception-in-context exc first port)
+                         (if (##fx>= level 2) ;; display backtrace?
+                             (##display-continuation-backtrace
+                              first ;; cont
+                              port ;; port
+                              (##fx>= level 3) ;; display-env?
+                              #f ;; all-frames?
+                              ##backtrace-default-max-head ;; max-head
+                              ##backtrace-default-max-tail ;; max-tail
+                              0)))) ;; depth
+                   (##exit-with-exception exc))
                  (begin
                    (##display-exception-in-context exc first port)
-                   (if quit?
-                       (##exit-with-exception exc)
-                       #f)))))
+                   #f))))
          exc
          #f
          #t))))
@@ -3364,18 +3477,18 @@
 (define-prim (##default-user-interrupt-handler)
   (let* ((settings (##set-debug-settings! 0 0))
          (settings-user-intr (macro-debug-settings-user-intr settings))
-         (defer? (##fx= settings-user-intr
-                        (macro-debug-settings-user-intr-defer))))
-    (if defer?
-        (set! ##deferred-user-interrupt? #t)
-        (let ((quit? (##fx= settings-user-intr
-                            (macro-debug-settings-user-intr-quit))))
-          (if (and quit?
-                   (##fx= (macro-debug-settings-level settings) 0))
-              (##exit-abruptly)
-              (##handle-interrupt quit?))))))
+         (quit? (##fx= settings-user-intr
+                       (macro-debug-settings-user-intr-quit))))
+    (if (and quit? (##fx= (macro-debug-settings-level settings) 0))
+        (##exit-abruptly)
+        ;; ignore interrupts when the thread has acquired
+        ;; ownership of it's repl channel
+        (if (##not (##repl-channel-have-ownership?))
+            (##user-interrupt-current-thread! quit?)))))
 
-(define-prim (##handle-interrupt quit?)
+(define default-user-interrupt-handler ##default-user-interrupt-handler)
+
+(define-prim (##user-interrupt-current-thread! quit?)
   (##with-no-result-expected
    (lambda ()
      (##repl
@@ -3390,15 +3503,17 @@
             (##exit-abruptly)
             #f))))))
 
-(set! ##primordial-exception-handler-hook ##repl-exception-handler-hook)
-;;TODO: replace with
-;;(##primordial-exception-handler-hook-set! ##repl-exception-handler-hook)
+(##primordial-exception-handler-hook-set! ##repl-exception-handler-hook)
 
 (if (##fx= (macro-debug-settings-error (##set-debug-settings! 0 0))
            (macro-debug-settings-error-single-step))
-    (##step-on))
+    (##step-on)) ;; turn on stepping on current stepper
 
-(##current-user-interrupt-handler ##default-user-interrupt-handler)
+(let* ((settings (##set-debug-settings! 0 0))
+       (settings-user-intr (macro-debug-settings-user-intr settings)))
+  (if (##not (##fx= settings-user-intr
+                    (macro-debug-settings-user-intr-defer)))
+      (##current-user-interrupt-handler ##default-user-interrupt-handler)))
 
 (define-prim (##exception->kind exc)
   (cond (#f;;;;;;;;;;;;;;
@@ -3492,33 +3607,56 @@
           (display-call* proc (##cdr proc-and-args)))))
 
   (define (display-call* proc args)
-    (let* ((call
-            (##make-call-form proc args max-displayed-args))
-           (width
+    (display-form (##make-friendly-call-form
+                   proc
+                   args
+                   max-displayed-args
+                   ##inverse-eval
+                   #t)))
+
+  (define (display-form annotated-form)
+    (let* ((width
             (##output-port-width port))
+           (form
+            (##map ##cdr annotated-form))
            (str
-            (##object->string call width port)))
+            (##object->string form width port)))
       (if (##fx< (##string-length str) width)
           (begin
             (##write-string str port)
             (##newline port))
-          (let loop ((i 0) (lst call))
-            (##write-string (if (##fx= i 0) "(" " ") port)
-            (let* ((last?
-                    (##null? (##cdr lst)))
-                   (w
-                    (##fx- width 2))
-                   (s
-                    (##object->string (##car lst) w port)))
-              (##write-string s port)
-              (if last?
-                  (begin
-                    (if (##fx= (##string-length s) w) (##newline port))
-                    (##write-string ")" port)
-                    (##newline port))
-                  (begin
-                    (##newline port)
-                    (loop (##fx+ i 1) (##cdr lst)))))))))
+          (let ((w (##fx- width 2)))
+
+            (define (end s)
+              (if (##not (##fx< (##string-length s) w)) (##newline port))
+              (##write-string ")" port)
+              (##newline port))
+
+            (let loop ((i 0) (lst annotated-form))
+              (##write-string (if (##fx= i 0) "(" " ") port)
+              (let* ((val-expr
+                      (##car lst))
+                     (val
+                      (##car val-expr))
+                     (expr
+                      (##cdr val-expr))
+                     (s
+                      (##value->string val expr w port)))
+                (##write-string s port)
+                (let ((rest (##cdr lst)))
+                  (cond ((##pair? rest)
+                         (##newline port)
+                         (loop (##fx+ i 1) rest))
+                        ((##null? rest)
+                         (end s))
+                        (else
+                         (let ((s2 (##object->string rest w port)))
+                           (##newline port)
+                           (##write-string " ." port)
+                           (##newline port)
+                           (##write-string " " port)
+                           (##write-string s2 port)
+                           (end s2)))))))))))
 
   (define-prim (write-items items)
     (let loop ((lst items))
@@ -3528,12 +3666,17 @@
             (##write (##car lst) port)
             (loop (##cdr lst))))))
 
-  (define-prim (display-arg-num arg-num)
-    (if (##fx< 0 arg-num)
-        (begin
-          (##write-string "(Argument " port)
-          (##write arg-num port)
-          (##write-string ") " port))))
+  (define-prim (display-arg-id arg-id)
+    (let ((arg-num (if (##pair? arg-id) (##car arg-id) arg-id)))
+      (if (##fx< 0 arg-num)
+          (begin
+            (##write-string "(Argument " port)
+            (##write arg-num port)
+            (if (##pair? arg-id)
+                (begin
+                  (##write-string ", " port)
+                  (##write (##cdr arg-id) port)))
+            (##write-string ") " port)))))
 
   (define-prim (display-known-exception exc)
 
@@ -3655,20 +3798,43 @@
                          (if x
                              (##cdr x)
                              "Unknown expression parsing exception")))))
-             (##write-string name port))
-           (write-items (macro-expression-parsing-exception-parameters exc))
-           (##newline port)
-           (let* ((source (macro-expression-parsing-exception-source exc))
-                  (locat (##source-locat source)))
-             (if (##not locat)
-                 (##pretty-print (##desourcify source) port))))
+             (##write-string name port)
+             (write-items (macro-expression-parsing-exception-parameters exc))
+             (##newline port)
+             (if (##eq? kind 'ill-formed-special-form)
+                 (display-form
+                  (let* ((src (macro-expression-parsing-exception-source exc))
+                         (code (##desourcify src)))
+                    (if (##pair? code)
+                        (let* ((head
+                                (##car code))
+                               (friendly-head
+                                (if (##symbol? head)
+                                    (let* ((name (##symbol->string head))
+                                           (len (##string-length name)))
+                                      (if (and (##fx< 2 len)
+                                               (##char=? #\#
+                                                         (##string-ref name 0))
+                                               (##char=? #\#
+                                                         (##string-ref name 1)))
+                                          (##string->symbol
+                                           (##substring name 2 len))
+                                          head))
+                                    head)))
+                          (##make-friendly-form (##cons friendly-head
+                                                        friendly-head)
+                                                (##cdr code)
+                                                max-displayed-args
+                                                ##identity
+                                                #t))
+                        code))))))
 
           ((macro-heap-overflow-exception? exc)
            (##write-string "Heap overflow" port)
            (##newline port))
 
           ((macro-length-mismatch-exception? exc)
-           (display-arg-num (macro-length-mismatch-exception-arg-num exc))
+           (display-arg-id (macro-length-mismatch-exception-arg-id exc))
            (##write-string "Length does not match other arguments" port)
            (##newline port)
            (display-call))
@@ -3746,13 +3912,18 @@
            (##newline port)
            (display-call))
 
+          ((macro-permission-denied-exception? exc)
+           (##write-string "Permission denied" port)
+           (##newline port)
+           (display-call))
+
           ((macro-module-not-found-exception? exc)
            (##write-string "Module not found" port)
            (##newline port)
            (display-call))
 
           ((macro-range-exception? exc)
-           (display-arg-num (macro-range-exception-arg-num exc))
+           (display-arg-id (macro-range-exception-arg-id exc))
            (##write-string "Out of range" port)
            (##newline port)
            (display-call))
@@ -3792,7 +3963,7 @@
            (display-call))
 
           ((macro-type-exception? exc)
-           (display-arg-num (macro-type-exception-arg-num exc))
+           (display-arg-id (macro-type-exception-arg-id exc))
            (let ((type-id
                   (macro-type-exception-type-id exc)))
              (if (##type? type-id)
@@ -3844,6 +4015,13 @@
            (##newline port)
            (display-call))
 
+          ((macro-not-in-compilation-context-exception? exc)
+           (##write-string
+            "Not in compilation context"
+            port)
+           (##newline port)
+           (display-call))
+
           (else
            (##write-string "This object was raised: " port)
            (##write exc port)
@@ -3862,6 +4040,19 @@
               (display-call))
             (display-known-exception exc)))
       (display-known-exception exc)))
+
+(define-prim (##value->string val expr max-length char-encoding-limit)
+  (if ##values-with-sn?
+      (##object->string-with-sn
+       expr
+       max-length
+       char-encoding-limit
+       3 ;; at least "..."
+       val)
+      (##object->string
+       expr
+       max-length
+       char-encoding-limit)))
 
 (define-prim (##exception-procedure-and-arguments exc)
 
@@ -3961,6 +4152,16 @@
             (macro-no-such-file-or-directory-exception-procedure exc)
             (macro-no-such-file-or-directory-exception-arguments exc)))
 
+          ((macro-file-exists-exception? exc)
+           (##cons
+            (macro-file-exists-exception-procedure exc)
+            (macro-file-exists-exception-arguments exc)))
+
+          ((macro-permission-denied-exception? exc)
+           (##cons
+            (macro-permission-denied-exception-procedure exc)
+            (macro-permission-denied-exception-arguments exc)))
+
           ((macro-module-not-found-exception? exc)
            (##cons
             (macro-module-not-found-exception-procedure exc)
@@ -4015,6 +4216,11 @@
            (##cons
             (macro-wrong-number-of-arguments-exception-procedure exc)
             (macro-wrong-number-of-arguments-exception-arguments exc)))
+
+          ((macro-not-in-compilation-context-exception? exc)
+           (##cons
+            (macro-not-in-compilation-context-exception-procedure exc)
+            (macro-not-in-compilation-context-exception-arguments exc)))
 
           (else
            #f)))
@@ -4097,15 +4303,22 @@
     (mutable                      . "MUTABLE object")
     (pair                         . "PAIR")
     (pair-list                    . "PAIR LIST")
+    (deeper-pair-tree             . "Deeper PAIR tree")
+    (list-list                    . "LIST LIST")
+    (longer-list                  . "Longer LIST")
     (char                         . "CHARACTER")
     (char-list                    . "CHARACTER LIST")
     (char-vector                  . "CHARACTER VECTOR")
     (string                       . "STRING")
     (string-list                  . "STRING LIST")
     (list                         . "LIST")
+    (proper-list                  . "PROPER LIST")
+    (proper-or-circular-list      . "PROPER or CIRCULAR LIST")
     (symbol                       . "SYMBOL")
     (keyword                      . "KEYWORD")
     (boolean                      . "BOOLEAN")
+    (boolean-list                 . "BOOLEAN LIST")
+    (boolean-vector               . "BOOLEAN VECTOR")
     (vector                       . "VECTOR")
     (vector-list                  . "VECTOR LIST")
     (s8vector                     . "S8VECTOR")
@@ -4155,6 +4368,7 @@
     (rational                     . "RATIONAL")
     (integer                      . "INTEGER")
     (exact-integer                . "Exact INTEGER")
+    (nonnegative-exact-integer    . "Nonnegative exact INTEGER")
     (fixnum                       . "FIXNUM")
     (flonum                       . "FLONUM")
     (random-source-state          . "RANDOM-SOURCE state")
@@ -4269,7 +4483,7 @@
     (variable-is-immutable            . "Variable is immutable:")
     (ill-formed-macro-transformer     . "Macro transformer must be a lambda expression")
     (reserved-used-as-variable        . "Reserved identifier can't be used as a variable:")
-    (ill-formed-special-form          . "Ill-formed special form:")
+    (ill-formed-special-form          . "Ill-formed special form")
     (module-not-found                 . "Module not found:")
     (cannot-open-file                 . "Can't open file")
     (filename-expected                . "Filename expected")
@@ -4313,41 +4527,45 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim (##gambdoc . args)
+(define ##gambdoc
+  (lambda args
 
-  (define prefix "GAMBDOC_")
+    (define prefix "GAMBDOC_")
 
-  (let* ((path
-          (##path-expand
-           (##string-append "gambdoc"
-                            ##os-bat-extension-string-saved)
-           (##path-normalize-directory-existing "~~bin")))
-         (add-vars ;; pass arguments in shell environment variables
-          (##append
-           (##shell-var-bindings
-            (##shell-args-numbered args)
-            prefix)
-           (##shell-var-bindings
-            (##shell-install-dirs '("doc"))
-            ""
-            ""))))
+    (let* ((path
+            (##path-expand
+             (##string-append "gambdoc"
+                              ##os-bat-extension-string-saved)
+             (##path-normalize-directory-existing "~~bin")))
+           (add-vars ;; pass arguments in shell environment variables
+            (##append
+             (##shell-var-bindings
+              (##shell-args-numbered args)
+              prefix)
+             (##shell-var-bindings
+              (##shell-install-dirs '("doc"))
+              ""
+              ""))))
 
-    (##tty-mode-reset) ;; reset tty (in case subprocess needs to read tty)
+      (##tty-mode-reset) ;; reset tty (in case subprocess needs to read tty)
 
-    (let ((exit-status
-           (##run-subprocess
-            path
-            '() ;; no arguments
-            #f  ;; don't capture output
-            #f  ;; don't redirect stdin
-            #f  ;; run in current directory
-            add-vars)))
+      (let ((exit-status
+             (##run-subprocess
+              path
+              '() ;; no arguments
+              #f  ;; don't capture output
+              #f  ;; don't redirect stdin
+              #f  ;; run in current directory
+              add-vars)))
 
-      (if (##fx= exit-status 0)
-          (##void)
-          (##raise-error-exception
-           "failed to display the document"
-           args)))))
+        (if (##fx= exit-status 0)
+            (##void)
+            (##raise-error-exception
+             "failed to display the document"
+             args))))))
+
+(define (##gambdoc-set! x)
+  (set! ##gambdoc x))
 
 (define-prim (##escape-link str)
   (##apply ##string-append
@@ -4520,51 +4738,51 @@
                        #!optional
                        (port (macro-absent-obj)))
   (if (eq? port (macro-absent-obj))
-      `(##time (lambda () ,expr) ',expr)
-      `(##time (lambda () ,expr) ',expr ,port)))
+      `(##time-thunk (lambda () ,expr) ',expr)
+      `(##time-thunk (lambda () ,expr) ',expr ,port)))
 
 (define-prim (##exec-stats thunk)
   (let* ((at-start (##process-statistics))
          (result (thunk))
          (at-end (##process-statistics))
          (user-time
-          (##- (##f64vector-ref at-end 0)
-               (##f64vector-ref at-start 0)))
+          (##fl- (##f64vector-ref at-end 0)
+                 (##f64vector-ref at-start 0)))
          (sys-time
-          (##- (##f64vector-ref at-end 1)
-               (##f64vector-ref at-start 1)))
+          (##fl- (##f64vector-ref at-end 1)
+                 (##f64vector-ref at-start 1)))
          (real-time
-          (##- (##f64vector-ref at-end 2)
-               (##f64vector-ref at-start 2)))
+          (##fl- (##f64vector-ref at-end 2)
+                 (##f64vector-ref at-start 2)))
          (gc-user-time
-          (##- (##f64vector-ref at-end 3)
-               (##f64vector-ref at-start 3)))
+          (##fl- (##f64vector-ref at-end 3)
+                 (##f64vector-ref at-start 3)))
          (gc-sys-time
-          (##- (##f64vector-ref at-end 4)
-               (##f64vector-ref at-start 4)))
+          (##fl- (##f64vector-ref at-end 4)
+                 (##f64vector-ref at-start 4)))
          (gc-real-time
-          (##- (##f64vector-ref at-end 5)
-               (##f64vector-ref at-start 5)))
+          (##fl- (##f64vector-ref at-end 5)
+                 (##f64vector-ref at-start 5)))
          (nb-gcs
           (##flonum->exact-int
-           (##- (##f64vector-ref at-end 6)
-                (##f64vector-ref at-start 6))))
+           (##fl- (##f64vector-ref at-end 6)
+                  (##f64vector-ref at-start 6))))
          (minflt
           (##flonum->exact-int
-           (##- (##f64vector-ref at-end 10)
-                (##f64vector-ref at-start 10))))
+           (##fl- (##f64vector-ref at-end 10)
+                  (##f64vector-ref at-start 10))))
          (majflt
           (##flonum->exact-int
-           (##- (##f64vector-ref at-end 11)
-                (##f64vector-ref at-start 11))))
+           (##fl- (##f64vector-ref at-end 11)
+                  (##f64vector-ref at-start 11))))
          (bytes-allocated
           (##flonum->exact-int
-           (##- (##- (##f64vector-ref at-end 7)
-                     (##f64vector-ref at-start 7))
-                (##+ (if (##interp-procedure? thunk)
-                         (##f64vector-ref at-end 8) ;; thunk call frame space
-                         (macro-inexact-+0))
-                     (##f64vector-ref at-end 9)))))) ;; at-end structure space
+           (##fl- (##fl- (##f64vector-ref at-end 7)
+                         (##f64vector-ref at-start 7))
+                  (##fl+ (if (##interp-procedure? thunk)
+                             (##f64vector-ref at-end 8) ;; thunk call frame space
+                             (macro-inexact-+0))
+                         (##f64vector-ref at-end 9)))))) ;; at-end structure space
 
     (##list (##cons 'result          result)
             (##cons 'user-time       user-time)
@@ -4578,7 +4796,7 @@
             (##cons 'majflt          majflt)
             (##cons 'bytes-allocated bytes-allocated))))
 
-(define-prim (##time
+(define-prim (##time-thunk
               thunk
               expr
               #!optional (port (macro-absent-obj)))
@@ -4587,7 +4805,7 @@
            (if (##eq? port (macro-absent-obj))
                (##repl-output-port)
                port)))
-      (macro-check-output-port p 3 (##time thunk expr p)
+      (macro-check-output-port p 3 (##time-thunk thunk expr p)
         (let* ((stats (##exec-stats thunk))
                (result (##cdar stats))
                (stats (##cdr stats))

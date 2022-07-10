@@ -1,6 +1,6 @@
 (include "#.scm")
 
-(check-same-behavior ("" "##" "~~lib/_prim-os#.scm")
+(check-same-behavior ("" "##" "~~lib/gambit/prim/os#.scm")
 
 ;; R7RS
 
@@ -10,13 +10,20 @@
 ;;unimplemented;;current-second
 ;;unimplemented;;emergency-exit
 
-;;(exit) (exit 0);; can't actually test these
+(procedure? exit) ;; minimal test
+(and #f ;; can't actually test these
+     (begin (exit) (exit 0)))
 
 ;;unimplemented;;get-environment-variable
 ;;unimplemented;;get-environment-variables
 ;;unimplemented;;jiffies-per-second
 
 ;; Gambit
+
+(command-name)
+(command-args)
+(script-file)
+(script-directory)
 
 ;;unimplemented;;address-info-family
 ;;unimplemented;;address-info-protocol
@@ -28,9 +35,12 @@
 ;;unimplemented;;cpu-time
 
 (##time? (current-time))
+(current-user-interrupt-handler defer-user-interrupts)
+(##procedure? default-user-interrupt-handler) ;; minimal test
+(and #f ;; can't actually test this
+     (default-user-interrupt-handler))
+(defer-user-interrupts)
 
-;;unimplemented;;current-user-interrupt-handler
-;;unimplemented;;defer-user-interrupts
 ;;unimplemented;;err-code->string
 
 (getenv "PATH") (getenv "UNKNOWNVAR" #f)
@@ -70,7 +80,8 @@
 
 (setenv "UNKNOWNVAR2") (setenv "UNKNOWNVAR2" "123")
 
-;;unimplemented;;shell-command
+(shell-command "type #.scm") (shell-command "type #.scm" #t)
+
 ;;unimplemented;;socket-info-address
 ;;unimplemented;;socket-info-family
 ;;unimplemented;;socket-info-port-number

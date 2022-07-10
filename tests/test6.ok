@@ -7892,62 +7892,62 @@ ok
 ok
 ok
 ok
-*** ERROR IN test-form -- (Argument 1) Out of range
+*** ERROR IN test-form -- (Argument 1, k) Out of range
 (make-string -1)
 ok
 *** ERROR IN ##make-string -- Heap overflow
 ok
 *** ERROR IN ##make-string -- Heap overflow
 ok
-*** ERROR IN test-form -- (Argument 1) Out of range
+*** ERROR IN test-form -- (Argument 1, k) Out of range
 (make-string 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) Exact INTEGER expected
+*** ERROR IN test-form -- (Argument 1, k) Exact INTEGER expected
 (make-string 1.5)
 ok
-*** ERROR IN test-form -- (Argument 2) CHARACTER expected
+*** ERROR IN test-form -- (Argument 2, fill) CHARACTER expected
 (make-string 1 'a)
 ok
 *** ERROR IN test-form -- (Argument 2) CHARACTER expected
 (string #\5 'b)
 ok
-*** ERROR IN test-form -- (Argument 1) STRING expected
+*** ERROR IN test-form -- (Argument 1, string) STRING expected
 (string-length 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) STRING expected
+*** ERROR IN test-form -- (Argument 1, string) STRING expected
 (string-ref 123456789012345678901 0)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (string-ref "56" -1)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (string-ref "56" 2)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (string-ref "56" 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) STRING expected
+*** ERROR IN test-form -- (Argument 1, string) STRING expected
 (string-set! 123456789012345678901 0 #\3)
 ok
-*** ERROR IN run-strings -- (Argument 2) Out of range
+*** ERROR IN run-strings -- (Argument 2, k) Out of range
 (string-set! "56" -1 #\3)
 ok
-*** ERROR IN run-strings -- (Argument 2) Out of range
+*** ERROR IN run-strings -- (Argument 2, k) Out of range
 (string-set! "56" 2 #\3)
 ok
-*** ERROR IN run-strings -- (Argument 2) Out of range
+*** ERROR IN run-strings -- (Argument 2, k) Out of range
 (string-set! "56" 123456789012345678901 #\3)
 ok
-*** ERROR IN run-strings -- (Argument 3) CHARACTER expected
+*** ERROR IN run-strings -- (Argument 3, char) CHARACTER expected
 (string-set! "56" 1 'a)
 ok
-*** ERROR IN test-form -- (Argument 1) STRING expected
+*** ERROR IN test-form -- (Argument 1, string) STRING expected
 (string->list 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) LIST expected
+*** ERROR IN test-form -- (Argument 1, list) LIST expected
 (list->string 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) CHARACTER LIST expected
+*** ERROR IN test-form -- (Argument 1, list) CHARACTER LIST expected
 (list->string '(#\5 b))
 ok
 ok
@@ -7963,50 +7963,50 @@ ok
 ok
 ok
 ok
-*** ERROR IN test-form -- (Argument 1) Out of range
+*** ERROR IN test-form -- (Argument 1, k) Out of range
 (make-vector -1)
 ok
 *** ERROR IN ##make-vector -- Heap overflow
 ok
 *** ERROR IN ##make-vector -- Heap overflow
 ok
-*** ERROR IN test-form -- (Argument 1) Out of range
+*** ERROR IN test-form -- (Argument 1, k) Out of range
 (make-vector 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) Exact INTEGER expected
+*** ERROR IN test-form -- (Argument 1, k) Exact INTEGER expected
 (make-vector 1.5)
 ok
-*** ERROR IN test-form -- (Argument 1) VECTOR expected
+*** ERROR IN test-form -- (Argument 1, vector) VECTOR expected
 (vector-length 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) VECTOR expected
+*** ERROR IN test-form -- (Argument 1, vector) VECTOR expected
 (vector-ref 123456789012345678901 0)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (vector-ref #(5 6) -1)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (vector-ref #(5 6) 2)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (vector-ref #(5 6) 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) VECTOR expected
+*** ERROR IN test-form -- (Argument 1, vector) VECTOR expected
 (vector-set! 123456789012345678901 0 3)
 ok
-*** ERROR IN run-vectors -- (Argument 2) Out of range
+*** ERROR IN run-vectors -- (Argument 2, k) Out of range
 (vector-set! #(5 6) -1 3)
 ok
-*** ERROR IN run-vectors -- (Argument 2) Out of range
+*** ERROR IN run-vectors -- (Argument 2, k) Out of range
 (vector-set! #(5 6) 2 3)
 ok
-*** ERROR IN run-vectors -- (Argument 2) Out of range
+*** ERROR IN run-vectors -- (Argument 2, k) Out of range
 (vector-set! #(5 6) 123456789012345678901 3)
 ok
-*** ERROR IN test-form -- (Argument 1) VECTOR expected
+*** ERROR IN test-form -- (Argument 1, vector) VECTOR expected
 (vector->list 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) LIST expected
+*** ERROR IN test-form -- (Argument 1, list) LIST expected
 (list->vector 123456789012345678901)
 ok
 ok
@@ -8022,74 +8022,74 @@ ok
 ok
 ok
 ok
-*** ERROR IN test-form -- (Argument 1) Out of range
+*** ERROR IN test-form -- (Argument 1, k) Out of range
 (make-s8vector -1)
 ok
 *** ERROR IN ##make-s8vector -- Heap overflow
 ok
 *** ERROR IN ##make-s8vector -- Heap overflow
 ok
-*** ERROR IN test-form -- (Argument 1) Out of range
+*** ERROR IN test-form -- (Argument 1, k) Out of range
 (make-s8vector 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) Exact INTEGER expected
+*** ERROR IN test-form -- (Argument 1, k) Exact INTEGER expected
 (make-s8vector 1.5)
 ok
-*** ERROR IN test-form -- (Argument 2) Signed 8 bit exact INTEGER expected
+*** ERROR IN test-form -- (Argument 2, fill) Signed 8 bit exact INTEGER expected
 (make-s8vector 1 'a)
 ok
 *** ERROR IN test-form -- (Argument 2) Signed 8 bit exact INTEGER expected
 (s8vector 5 'b)
 ok
-*** ERROR IN test-form -- (Argument 1) S8VECTOR expected
+*** ERROR IN test-form -- (Argument 1, s8vector) S8VECTOR expected
 (s8vector-length 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) S8VECTOR expected
+*** ERROR IN test-form -- (Argument 1, s8vector) S8VECTOR expected
 (s8vector-ref 123456789012345678901 0)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (s8vector-ref #s8(5 6) -1)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (s8vector-ref #s8(5 6) 2)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (s8vector-ref #s8(5 6) 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) S8VECTOR expected
+*** ERROR IN test-form -- (Argument 1, s8vector) S8VECTOR expected
 (s8vector-set! 123456789012345678901 0 3)
 ok
-*** ERROR IN run-s8vectors -- (Argument 2) Out of range
+*** ERROR IN run-s8vectors -- (Argument 2, k) Out of range
 (s8vector-set! #s8(5 6) -1 3)
 ok
-*** ERROR IN run-s8vectors -- (Argument 2) Out of range
+*** ERROR IN run-s8vectors -- (Argument 2, k) Out of range
 (s8vector-set! #s8(5 6) 2 3)
 ok
-*** ERROR IN run-s8vectors -- (Argument 2) Out of range
+*** ERROR IN run-s8vectors -- (Argument 2, k) Out of range
 (s8vector-set! #s8(5 6) 123456789012345678901 3)
 ok
-*** ERROR IN run-s8vectors -- (Argument 3) Signed 8 bit exact INTEGER expected
+*** ERROR IN run-s8vectors -- (Argument 3, s8value) Signed 8 bit exact INTEGER expected
 (s8vector-set! #s8(5 6) 1 -129)
 ok
-*** ERROR IN run-s8vectors -- (Argument 3) Signed 8 bit exact INTEGER expected
+*** ERROR IN run-s8vectors -- (Argument 3, s8value) Signed 8 bit exact INTEGER expected
 (s8vector-set! #s8(5 6) 1 128)
 ok
-*** ERROR IN run-s8vectors -- (Argument 3) Signed 8 bit exact INTEGER expected
+*** ERROR IN run-s8vectors -- (Argument 3, s8value) Signed 8 bit exact INTEGER expected
 (s8vector-set! #s8(5 6) 1 123456789012345678901)
 ok
-*** ERROR IN run-s8vectors -- (Argument 3) Signed 8 bit exact INTEGER expected
+*** ERROR IN run-s8vectors -- (Argument 3, s8value) Signed 8 bit exact INTEGER expected
 (s8vector-set! #s8(5 6) 1 'a)
 ok
-*** ERROR IN test-form -- (Argument 1) S8VECTOR expected
+*** ERROR IN test-form -- (Argument 1, s8vector) S8VECTOR expected
 (s8vector->list 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) LIST expected
+*** ERROR IN test-form -- (Argument 1, list) LIST expected
 (list->s8vector 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) Signed 8 bit exact INTEGER LIST expected
+*** ERROR IN test-form -- (Argument 1, list) Signed 8 bit exact INTEGER LIST expected
 (list->s8vector '(5 b))
 ok
-*** ERROR IN test-form -- (Argument 1) Signed 8 bit exact INTEGER LIST expected
+*** ERROR IN test-form -- (Argument 1, list) Signed 8 bit exact INTEGER LIST expected
 (list->s8vector '(128))
 ok
 ok
@@ -8105,74 +8105,74 @@ ok
 ok
 ok
 ok
-*** ERROR IN test-form -- (Argument 1) Out of range
+*** ERROR IN test-form -- (Argument 1, k) Out of range
 (make-u8vector -1)
 ok
 *** ERROR IN ##make-u8vector -- Heap overflow
 ok
 *** ERROR IN ##make-u8vector -- Heap overflow
 ok
-*** ERROR IN test-form -- (Argument 1) Out of range
+*** ERROR IN test-form -- (Argument 1, k) Out of range
 (make-u8vector 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) Exact INTEGER expected
+*** ERROR IN test-form -- (Argument 1, k) Exact INTEGER expected
 (make-u8vector 1.5)
 ok
-*** ERROR IN test-form -- (Argument 2) Unsigned 8 bit exact INTEGER expected
+*** ERROR IN test-form -- (Argument 2, fill) Unsigned 8 bit exact INTEGER expected
 (make-u8vector 1 'a)
 ok
 *** ERROR IN test-form -- (Argument 2) Unsigned 8 bit exact INTEGER expected
 (u8vector 5 'b)
 ok
-*** ERROR IN test-form -- (Argument 1) U8VECTOR expected
+*** ERROR IN test-form -- (Argument 1, u8vector) U8VECTOR expected
 (u8vector-length 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) U8VECTOR expected
+*** ERROR IN test-form -- (Argument 1, u8vector) U8VECTOR expected
 (u8vector-ref 123456789012345678901 0)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (u8vector-ref #u8(5 6) -1)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (u8vector-ref #u8(5 6) 2)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (u8vector-ref #u8(5 6) 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) U8VECTOR expected
+*** ERROR IN test-form -- (Argument 1, u8vector) U8VECTOR expected
 (u8vector-set! 123456789012345678901 0 3)
 ok
-*** ERROR IN run-u8vectors -- (Argument 2) Out of range
+*** ERROR IN run-u8vectors -- (Argument 2, k) Out of range
 (u8vector-set! #u8(5 6) -1 3)
 ok
-*** ERROR IN run-u8vectors -- (Argument 2) Out of range
+*** ERROR IN run-u8vectors -- (Argument 2, k) Out of range
 (u8vector-set! #u8(5 6) 2 3)
 ok
-*** ERROR IN run-u8vectors -- (Argument 2) Out of range
+*** ERROR IN run-u8vectors -- (Argument 2, k) Out of range
 (u8vector-set! #u8(5 6) 123456789012345678901 3)
 ok
-*** ERROR IN run-u8vectors -- (Argument 3) Unsigned 8 bit exact INTEGER expected
+*** ERROR IN run-u8vectors -- (Argument 3, u8value) Unsigned 8 bit exact INTEGER expected
 (u8vector-set! #u8(5 6) 1 -1)
 ok
-*** ERROR IN run-u8vectors -- (Argument 3) Unsigned 8 bit exact INTEGER expected
+*** ERROR IN run-u8vectors -- (Argument 3, u8value) Unsigned 8 bit exact INTEGER expected
 (u8vector-set! #u8(5 6) 1 256)
 ok
-*** ERROR IN run-u8vectors -- (Argument 3) Unsigned 8 bit exact INTEGER expected
+*** ERROR IN run-u8vectors -- (Argument 3, u8value) Unsigned 8 bit exact INTEGER expected
 (u8vector-set! #u8(5 6) 1 123456789012345678901)
 ok
-*** ERROR IN run-u8vectors -- (Argument 3) Unsigned 8 bit exact INTEGER expected
+*** ERROR IN run-u8vectors -- (Argument 3, u8value) Unsigned 8 bit exact INTEGER expected
 (u8vector-set! #u8(5 6) 1 'a)
 ok
-*** ERROR IN test-form -- (Argument 1) U8VECTOR expected
+*** ERROR IN test-form -- (Argument 1, u8vector) U8VECTOR expected
 (u8vector->list 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) LIST expected
+*** ERROR IN test-form -- (Argument 1, list) LIST expected
 (list->u8vector 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) Unsigned 8 bit exact INTEGER LIST expected
+*** ERROR IN test-form -- (Argument 1, list) Unsigned 8 bit exact INTEGER LIST expected
 (list->u8vector '(5 b))
 ok
-*** ERROR IN test-form -- (Argument 1) Unsigned 8 bit exact INTEGER LIST expected
+*** ERROR IN test-form -- (Argument 1, list) Unsigned 8 bit exact INTEGER LIST expected
 (list->u8vector '(256))
 ok
 ok
@@ -8188,74 +8188,74 @@ ok
 ok
 ok
 ok
-*** ERROR IN test-form -- (Argument 1) Out of range
+*** ERROR IN test-form -- (Argument 1, k) Out of range
 (make-s16vector -1)
 ok
 *** ERROR IN ##make-s16vector -- Heap overflow
 ok
 *** ERROR IN ##make-s16vector -- Heap overflow
 ok
-*** ERROR IN test-form -- (Argument 1) Out of range
+*** ERROR IN test-form -- (Argument 1, k) Out of range
 (make-s16vector 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) Exact INTEGER expected
+*** ERROR IN test-form -- (Argument 1, k) Exact INTEGER expected
 (make-s16vector 1.5)
 ok
-*** ERROR IN test-form -- (Argument 2) Signed 16 bit exact INTEGER expected
+*** ERROR IN test-form -- (Argument 2, fill) Signed 16 bit exact INTEGER expected
 (make-s16vector 1 'a)
 ok
 *** ERROR IN test-form -- (Argument 2) Signed 16 bit exact INTEGER expected
 (s16vector 5 'b)
 ok
-*** ERROR IN test-form -- (Argument 1) S16VECTOR expected
+*** ERROR IN test-form -- (Argument 1, s16vector) S16VECTOR expected
 (s16vector-length 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) S16VECTOR expected
+*** ERROR IN test-form -- (Argument 1, s16vector) S16VECTOR expected
 (s16vector-ref 123456789012345678901 0)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (s16vector-ref #s16(5 6) -1)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (s16vector-ref #s16(5 6) 2)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (s16vector-ref #s16(5 6) 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) S16VECTOR expected
+*** ERROR IN test-form -- (Argument 1, s16vector) S16VECTOR expected
 (s16vector-set! 123456789012345678901 0 3)
 ok
-*** ERROR IN run-s16vectors -- (Argument 2) Out of range
+*** ERROR IN run-s16vectors -- (Argument 2, k) Out of range
 (s16vector-set! #s16(5 6) -1 3)
 ok
-*** ERROR IN run-s16vectors -- (Argument 2) Out of range
+*** ERROR IN run-s16vectors -- (Argument 2, k) Out of range
 (s16vector-set! #s16(5 6) 2 3)
 ok
-*** ERROR IN run-s16vectors -- (Argument 2) Out of range
+*** ERROR IN run-s16vectors -- (Argument 2, k) Out of range
 (s16vector-set! #s16(5 6) 123456789012345678901 3)
 ok
-*** ERROR IN run-s16vectors -- (Argument 3) Signed 16 bit exact INTEGER expected
+*** ERROR IN run-s16vectors -- (Argument 3, s16value) Signed 16 bit exact INTEGER expected
 (s16vector-set! #s16(5 6) 1 -32769)
 ok
-*** ERROR IN run-s16vectors -- (Argument 3) Signed 16 bit exact INTEGER expected
+*** ERROR IN run-s16vectors -- (Argument 3, s16value) Signed 16 bit exact INTEGER expected
 (s16vector-set! #s16(5 6) 1 32768)
 ok
-*** ERROR IN run-s16vectors -- (Argument 3) Signed 16 bit exact INTEGER expected
+*** ERROR IN run-s16vectors -- (Argument 3, s16value) Signed 16 bit exact INTEGER expected
 (s16vector-set! #s16(5 6) 1 123456789012345678901)
 ok
-*** ERROR IN run-s16vectors -- (Argument 3) Signed 16 bit exact INTEGER expected
+*** ERROR IN run-s16vectors -- (Argument 3, s16value) Signed 16 bit exact INTEGER expected
 (s16vector-set! #s16(5 6) 1 'a)
 ok
-*** ERROR IN test-form -- (Argument 1) S16VECTOR expected
+*** ERROR IN test-form -- (Argument 1, s16vector) S16VECTOR expected
 (s16vector->list 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) LIST expected
+*** ERROR IN test-form -- (Argument 1, list) LIST expected
 (list->s16vector 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) Signed 16 bit exact INTEGER LIST expected
+*** ERROR IN test-form -- (Argument 1, list) Signed 16 bit exact INTEGER LIST expected
 (list->s16vector '(5 b))
 ok
-*** ERROR IN test-form -- (Argument 1) Signed 16 bit exact INTEGER LIST expected
+*** ERROR IN test-form -- (Argument 1, list) Signed 16 bit exact INTEGER LIST expected
 (list->s16vector '(32768))
 ok
 ok
@@ -8271,74 +8271,74 @@ ok
 ok
 ok
 ok
-*** ERROR IN test-form -- (Argument 1) Out of range
+*** ERROR IN test-form -- (Argument 1, k) Out of range
 (make-u16vector -1)
 ok
 *** ERROR IN ##make-u16vector -- Heap overflow
 ok
 *** ERROR IN ##make-u16vector -- Heap overflow
 ok
-*** ERROR IN test-form -- (Argument 1) Out of range
+*** ERROR IN test-form -- (Argument 1, k) Out of range
 (make-u16vector 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) Exact INTEGER expected
+*** ERROR IN test-form -- (Argument 1, k) Exact INTEGER expected
 (make-u16vector 1.5)
 ok
-*** ERROR IN test-form -- (Argument 2) Unsigned 16 bit exact INTEGER expected
+*** ERROR IN test-form -- (Argument 2, fill) Unsigned 16 bit exact INTEGER expected
 (make-u16vector 1 'a)
 ok
 *** ERROR IN test-form -- (Argument 2) Unsigned 16 bit exact INTEGER expected
 (u16vector 5 'b)
 ok
-*** ERROR IN test-form -- (Argument 1) U16VECTOR expected
+*** ERROR IN test-form -- (Argument 1, u16vector) U16VECTOR expected
 (u16vector-length 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) U16VECTOR expected
+*** ERROR IN test-form -- (Argument 1, u16vector) U16VECTOR expected
 (u16vector-ref 123456789012345678901 0)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (u16vector-ref #u16(5 6) -1)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (u16vector-ref #u16(5 6) 2)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (u16vector-ref #u16(5 6) 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) U16VECTOR expected
+*** ERROR IN test-form -- (Argument 1, u16vector) U16VECTOR expected
 (u16vector-set! 123456789012345678901 0 3)
 ok
-*** ERROR IN run-u16vectors -- (Argument 2) Out of range
+*** ERROR IN run-u16vectors -- (Argument 2, k) Out of range
 (u16vector-set! #u16(5 6) -1 3)
 ok
-*** ERROR IN run-u16vectors -- (Argument 2) Out of range
+*** ERROR IN run-u16vectors -- (Argument 2, k) Out of range
 (u16vector-set! #u16(5 6) 2 3)
 ok
-*** ERROR IN run-u16vectors -- (Argument 2) Out of range
+*** ERROR IN run-u16vectors -- (Argument 2, k) Out of range
 (u16vector-set! #u16(5 6) 123456789012345678901 3)
 ok
-*** ERROR IN run-u16vectors -- (Argument 3) Unsigned 16 bit exact INTEGER expected
+*** ERROR IN run-u16vectors -- (Argument 3, u16value) Unsigned 16 bit exact INTEGER expected
 (u16vector-set! #u16(5 6) 1 -1)
 ok
-*** ERROR IN run-u16vectors -- (Argument 3) Unsigned 16 bit exact INTEGER expected
+*** ERROR IN run-u16vectors -- (Argument 3, u16value) Unsigned 16 bit exact INTEGER expected
 (u16vector-set! #u16(5 6) 1 65536)
 ok
-*** ERROR IN run-u16vectors -- (Argument 3) Unsigned 16 bit exact INTEGER expected
+*** ERROR IN run-u16vectors -- (Argument 3, u16value) Unsigned 16 bit exact INTEGER expected
 (u16vector-set! #u16(5 6) 1 123456789012345678901)
 ok
-*** ERROR IN run-u16vectors -- (Argument 3) Unsigned 16 bit exact INTEGER expected
+*** ERROR IN run-u16vectors -- (Argument 3, u16value) Unsigned 16 bit exact INTEGER expected
 (u16vector-set! #u16(5 6) 1 'a)
 ok
-*** ERROR IN test-form -- (Argument 1) U16VECTOR expected
+*** ERROR IN test-form -- (Argument 1, u16vector) U16VECTOR expected
 (u16vector->list 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) LIST expected
+*** ERROR IN test-form -- (Argument 1, list) LIST expected
 (list->u16vector 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) Unsigned 16 bit exact INTEGER LIST expected
+*** ERROR IN test-form -- (Argument 1, list) Unsigned 16 bit exact INTEGER LIST expected
 (list->u16vector '(5 b))
 ok
-*** ERROR IN test-form -- (Argument 1) Unsigned 16 bit exact INTEGER LIST expected
+*** ERROR IN test-form -- (Argument 1, list) Unsigned 16 bit exact INTEGER LIST expected
 (list->u16vector '(65536))
 ok
 ok
@@ -8355,71 +8355,71 @@ ok
 ok
 ok
 ok
-*** ERROR IN test-form -- (Argument 1) Out of range
+*** ERROR IN test-form -- (Argument 1, k) Out of range
 (make-s32vector -1)
 ok
 *** ERROR IN ##make-s32vector -- Heap overflow
 ok
 *** ERROR IN ##make-s32vector -- Heap overflow
 ok
-*** ERROR IN test-form -- (Argument 1) Out of range
+*** ERROR IN test-form -- (Argument 1, k) Out of range
 (make-s32vector 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) Exact INTEGER expected
+*** ERROR IN test-form -- (Argument 1, k) Exact INTEGER expected
 (make-s32vector 1.5)
 ok
-*** ERROR IN test-form -- (Argument 2) Signed 32 bit exact INTEGER expected
+*** ERROR IN test-form -- (Argument 2, fill) Signed 32 bit exact INTEGER expected
 (make-s32vector 1 'a)
 ok
 *** ERROR IN test-form -- (Argument 2) Signed 32 bit exact INTEGER expected
 (s32vector 5 'b)
 ok
-*** ERROR IN test-form -- (Argument 1) S32VECTOR expected
+*** ERROR IN test-form -- (Argument 1, s32vector) S32VECTOR expected
 (s32vector-length 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) S32VECTOR expected
+*** ERROR IN test-form -- (Argument 1, s32vector) S32VECTOR expected
 (s32vector-ref 123456789012345678901 0)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (s32vector-ref #s32(5 6) -1)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (s32vector-ref #s32(5 6) 2)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (s32vector-ref #s32(5 6) 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) S32VECTOR expected
+*** ERROR IN test-form -- (Argument 1, s32vector) S32VECTOR expected
 (s32vector-set! 123456789012345678901 0 3)
 ok
-*** ERROR IN run-s32vectors -- (Argument 2) Out of range
+*** ERROR IN run-s32vectors -- (Argument 2, k) Out of range
 (s32vector-set! #s32(5 6) -1 3)
 ok
-*** ERROR IN run-s32vectors -- (Argument 2) Out of range
+*** ERROR IN run-s32vectors -- (Argument 2, k) Out of range
 (s32vector-set! #s32(5 6) 2 3)
 ok
-*** ERROR IN run-s32vectors -- (Argument 2) Out of range
+*** ERROR IN run-s32vectors -- (Argument 2, k) Out of range
 (s32vector-set! #s32(5 6) 123456789012345678901 3)
 ok
-*** ERROR IN run-s32vectors -- (Argument 3) Signed 32 bit exact INTEGER expected
+*** ERROR IN run-s32vectors -- (Argument 3, s32value) Signed 32 bit exact INTEGER expected
 (s32vector-set! #s32(5 6) 1 -2147483649)
 ok
-*** ERROR IN run-s32vectors -- (Argument 3) Signed 32 bit exact INTEGER expected
+*** ERROR IN run-s32vectors -- (Argument 3, s32value) Signed 32 bit exact INTEGER expected
 (s32vector-set! #s32(5 6) 1 2147483648)
 ok
-*** ERROR IN run-s32vectors -- (Argument 3) Signed 32 bit exact INTEGER expected
+*** ERROR IN run-s32vectors -- (Argument 3, s32value) Signed 32 bit exact INTEGER expected
 (s32vector-set! #s32(5 6) 1 'a)
 ok
-*** ERROR IN test-form -- (Argument 1) S32VECTOR expected
+*** ERROR IN test-form -- (Argument 1, s32vector) S32VECTOR expected
 (s32vector->list 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) LIST expected
+*** ERROR IN test-form -- (Argument 1, list) LIST expected
 (list->s32vector 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) Signed 32 bit exact INTEGER LIST expected
+*** ERROR IN test-form -- (Argument 1, list) Signed 32 bit exact INTEGER LIST expected
 (list->s32vector '(5 b))
 ok
-*** ERROR IN test-form -- (Argument 1) Signed 32 bit exact INTEGER LIST expected
+*** ERROR IN test-form -- (Argument 1, list) Signed 32 bit exact INTEGER LIST expected
 (list->s32vector '(2147483648))
 ok
 ok
@@ -8436,71 +8436,71 @@ ok
 ok
 ok
 ok
-*** ERROR IN test-form -- (Argument 1) Out of range
+*** ERROR IN test-form -- (Argument 1, k) Out of range
 (make-u32vector -1)
 ok
 *** ERROR IN ##make-u32vector -- Heap overflow
 ok
 *** ERROR IN ##make-u32vector -- Heap overflow
 ok
-*** ERROR IN test-form -- (Argument 1) Out of range
+*** ERROR IN test-form -- (Argument 1, k) Out of range
 (make-u32vector 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) Exact INTEGER expected
+*** ERROR IN test-form -- (Argument 1, k) Exact INTEGER expected
 (make-u32vector 1.5)
 ok
-*** ERROR IN test-form -- (Argument 2) Unsigned 32 bit exact INTEGER expected
+*** ERROR IN test-form -- (Argument 2, fill) Unsigned 32 bit exact INTEGER expected
 (make-u32vector 1 'a)
 ok
 *** ERROR IN test-form -- (Argument 2) Unsigned 32 bit exact INTEGER expected
 (u32vector 5 'b)
 ok
-*** ERROR IN test-form -- (Argument 1) U32VECTOR expected
+*** ERROR IN test-form -- (Argument 1, u32vector) U32VECTOR expected
 (u32vector-length 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) U32VECTOR expected
+*** ERROR IN test-form -- (Argument 1, u32vector) U32VECTOR expected
 (u32vector-ref 123456789012345678901 0)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (u32vector-ref #u32(5 6) -1)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (u32vector-ref #u32(5 6) 2)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (u32vector-ref #u32(5 6) 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) U32VECTOR expected
+*** ERROR IN test-form -- (Argument 1, u32vector) U32VECTOR expected
 (u32vector-set! 123456789012345678901 0 3)
 ok
-*** ERROR IN run-u32vectors -- (Argument 2) Out of range
+*** ERROR IN run-u32vectors -- (Argument 2, k) Out of range
 (u32vector-set! #u32(5 6) -1 3)
 ok
-*** ERROR IN run-u32vectors -- (Argument 2) Out of range
+*** ERROR IN run-u32vectors -- (Argument 2, k) Out of range
 (u32vector-set! #u32(5 6) 2 3)
 ok
-*** ERROR IN run-u32vectors -- (Argument 2) Out of range
+*** ERROR IN run-u32vectors -- (Argument 2, k) Out of range
 (u32vector-set! #u32(5 6) 123456789012345678901 3)
 ok
-*** ERROR IN run-u32vectors -- (Argument 3) Unsigned 32 bit exact INTEGER expected
+*** ERROR IN run-u32vectors -- (Argument 3, u32value) Unsigned 32 bit exact INTEGER expected
 (u32vector-set! #u32(5 6) 1 -1)
 ok
-*** ERROR IN run-u32vectors -- (Argument 3) Unsigned 32 bit exact INTEGER expected
+*** ERROR IN run-u32vectors -- (Argument 3, u32value) Unsigned 32 bit exact INTEGER expected
 (u32vector-set! #u32(5 6) 1 4294967296)
 ok
-*** ERROR IN run-u32vectors -- (Argument 3) Unsigned 32 bit exact INTEGER expected
+*** ERROR IN run-u32vectors -- (Argument 3, u32value) Unsigned 32 bit exact INTEGER expected
 (u32vector-set! #u32(5 6) 1 'a)
 ok
-*** ERROR IN test-form -- (Argument 1) U32VECTOR expected
+*** ERROR IN test-form -- (Argument 1, u32vector) U32VECTOR expected
 (u32vector->list 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) LIST expected
+*** ERROR IN test-form -- (Argument 1, list) LIST expected
 (list->u32vector 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) Unsigned 32 bit exact INTEGER LIST expected
+*** ERROR IN test-form -- (Argument 1, list) Unsigned 32 bit exact INTEGER LIST expected
 (list->u32vector '(5 b))
 ok
-*** ERROR IN test-form -- (Argument 1) Unsigned 32 bit exact INTEGER LIST expected
+*** ERROR IN test-form -- (Argument 1, list) Unsigned 32 bit exact INTEGER LIST expected
 (list->u32vector '(4294967296))
 ok
 ok
@@ -8517,71 +8517,71 @@ ok
 ok
 ok
 ok
-*** ERROR IN test-form -- (Argument 1) Out of range
+*** ERROR IN test-form -- (Argument 1, k) Out of range
 (make-s64vector -1)
 ok
 *** ERROR IN ##make-s64vector -- Heap overflow
 ok
 *** ERROR IN ##make-s64vector -- Heap overflow
 ok
-*** ERROR IN test-form -- (Argument 1) Out of range
+*** ERROR IN test-form -- (Argument 1, k) Out of range
 (make-s64vector 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) Exact INTEGER expected
+*** ERROR IN test-form -- (Argument 1, k) Exact INTEGER expected
 (make-s64vector 1.5)
 ok
-*** ERROR IN test-form -- (Argument 2) Signed 64 bit exact INTEGER expected
+*** ERROR IN test-form -- (Argument 2, fill) Signed 64 bit exact INTEGER expected
 (make-s64vector 1 'a)
 ok
 *** ERROR IN test-form -- (Argument 2) Signed 64 bit exact INTEGER expected
 (s64vector 5 'b)
 ok
-*** ERROR IN test-form -- (Argument 1) S64VECTOR expected
+*** ERROR IN test-form -- (Argument 1, s64vector) S64VECTOR expected
 (s64vector-length 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) S64VECTOR expected
+*** ERROR IN test-form -- (Argument 1, s64vector) S64VECTOR expected
 (s64vector-ref 123456789012345678901 0)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (s64vector-ref #s64(5 6) -1)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (s64vector-ref #s64(5 6) 2)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (s64vector-ref #s64(5 6) 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) S64VECTOR expected
+*** ERROR IN test-form -- (Argument 1, s64vector) S64VECTOR expected
 (s64vector-set! 123456789012345678901 0 3)
 ok
-*** ERROR IN run-s64vectors -- (Argument 2) Out of range
+*** ERROR IN run-s64vectors -- (Argument 2, k) Out of range
 (s64vector-set! #s64(5 6) -1 3)
 ok
-*** ERROR IN run-s64vectors -- (Argument 2) Out of range
+*** ERROR IN run-s64vectors -- (Argument 2, k) Out of range
 (s64vector-set! #s64(5 6) 2 3)
 ok
-*** ERROR IN run-s64vectors -- (Argument 2) Out of range
+*** ERROR IN run-s64vectors -- (Argument 2, k) Out of range
 (s64vector-set! #s64(5 6) 123456789012345678901 3)
 ok
-*** ERROR IN run-s64vectors -- (Argument 3) Signed 64 bit exact INTEGER expected
+*** ERROR IN run-s64vectors -- (Argument 3, s64value) Signed 64 bit exact INTEGER expected
 (s64vector-set! #s64(5 6) 1 -9223372036854775809)
 ok
-*** ERROR IN run-s64vectors -- (Argument 3) Signed 64 bit exact INTEGER expected
+*** ERROR IN run-s64vectors -- (Argument 3, s64value) Signed 64 bit exact INTEGER expected
 (s64vector-set! #s64(5 6) 1 9223372036854775808)
 ok
-*** ERROR IN run-s64vectors -- (Argument 3) Signed 64 bit exact INTEGER expected
+*** ERROR IN run-s64vectors -- (Argument 3, s64value) Signed 64 bit exact INTEGER expected
 (s64vector-set! #s64(5 6) 1 'a)
 ok
-*** ERROR IN test-form -- (Argument 1) S64VECTOR expected
+*** ERROR IN test-form -- (Argument 1, s64vector) S64VECTOR expected
 (s64vector->list 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) LIST expected
+*** ERROR IN test-form -- (Argument 1, list) LIST expected
 (list->s64vector 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) Signed 64 bit exact INTEGER LIST expected
+*** ERROR IN test-form -- (Argument 1, list) Signed 64 bit exact INTEGER LIST expected
 (list->s64vector '(5 b))
 ok
-*** ERROR IN test-form -- (Argument 1) Signed 64 bit exact INTEGER LIST expected
+*** ERROR IN test-form -- (Argument 1, list) Signed 64 bit exact INTEGER LIST expected
 (list->s64vector '(9223372036854775808))
 ok
 ok
@@ -8598,71 +8598,71 @@ ok
 ok
 ok
 ok
-*** ERROR IN test-form -- (Argument 1) Out of range
+*** ERROR IN test-form -- (Argument 1, k) Out of range
 (make-u64vector -1)
 ok
 *** ERROR IN ##make-u64vector -- Heap overflow
 ok
 *** ERROR IN ##make-u64vector -- Heap overflow
 ok
-*** ERROR IN test-form -- (Argument 1) Out of range
+*** ERROR IN test-form -- (Argument 1, k) Out of range
 (make-u64vector 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) Exact INTEGER expected
+*** ERROR IN test-form -- (Argument 1, k) Exact INTEGER expected
 (make-u64vector 1.5)
 ok
-*** ERROR IN test-form -- (Argument 2) Unsigned 64 bit exact INTEGER expected
+*** ERROR IN test-form -- (Argument 2, fill) Unsigned 64 bit exact INTEGER expected
 (make-u64vector 1 'a)
 ok
 *** ERROR IN test-form -- (Argument 2) Unsigned 64 bit exact INTEGER expected
 (u64vector 5 'b)
 ok
-*** ERROR IN test-form -- (Argument 1) U64VECTOR expected
+*** ERROR IN test-form -- (Argument 1, u64vector) U64VECTOR expected
 (u64vector-length 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) U64VECTOR expected
+*** ERROR IN test-form -- (Argument 1, u64vector) U64VECTOR expected
 (u64vector-ref 123456789012345678901 0)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (u64vector-ref #u64(5 6) -1)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (u64vector-ref #u64(5 6) 2)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (u64vector-ref #u64(5 6) 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) U64VECTOR expected
+*** ERROR IN test-form -- (Argument 1, u64vector) U64VECTOR expected
 (u64vector-set! 123456789012345678901 0 3)
 ok
-*** ERROR IN run-u64vectors -- (Argument 2) Out of range
+*** ERROR IN run-u64vectors -- (Argument 2, k) Out of range
 (u64vector-set! #u64(5 6) -1 3)
 ok
-*** ERROR IN run-u64vectors -- (Argument 2) Out of range
+*** ERROR IN run-u64vectors -- (Argument 2, k) Out of range
 (u64vector-set! #u64(5 6) 2 3)
 ok
-*** ERROR IN run-u64vectors -- (Argument 2) Out of range
+*** ERROR IN run-u64vectors -- (Argument 2, k) Out of range
 (u64vector-set! #u64(5 6) 123456789012345678901 3)
 ok
-*** ERROR IN run-u64vectors -- (Argument 3) Unsigned 64 bit exact INTEGER expected
+*** ERROR IN run-u64vectors -- (Argument 3, u64value) Unsigned 64 bit exact INTEGER expected
 (u64vector-set! #u64(5 6) 1 -1)
 ok
-*** ERROR IN run-u64vectors -- (Argument 3) Unsigned 64 bit exact INTEGER expected
+*** ERROR IN run-u64vectors -- (Argument 3, u64value) Unsigned 64 bit exact INTEGER expected
 (u64vector-set! #u64(5 6) 1 18446744073709551616)
 ok
-*** ERROR IN run-u64vectors -- (Argument 3) Unsigned 64 bit exact INTEGER expected
+*** ERROR IN run-u64vectors -- (Argument 3, u64value) Unsigned 64 bit exact INTEGER expected
 (u64vector-set! #u64(5 6) 1 'a)
 ok
-*** ERROR IN test-form -- (Argument 1) U64VECTOR expected
+*** ERROR IN test-form -- (Argument 1, u64vector) U64VECTOR expected
 (u64vector->list 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) LIST expected
+*** ERROR IN test-form -- (Argument 1, list) LIST expected
 (list->u64vector 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) Unsigned 64 bit exact INTEGER LIST expected
+*** ERROR IN test-form -- (Argument 1, list) Unsigned 64 bit exact INTEGER LIST expected
 (list->u64vector '(5 b))
 ok
-*** ERROR IN test-form -- (Argument 1) Unsigned 64 bit exact INTEGER LIST expected
+*** ERROR IN test-form -- (Argument 1, list) Unsigned 64 bit exact INTEGER LIST expected
 (list->u64vector '(18446744073709551616))
 ok
 ok
@@ -8678,62 +8678,62 @@ ok
 ok
 ok
 ok
-*** ERROR IN test-form -- (Argument 1) Out of range
+*** ERROR IN test-form -- (Argument 1, k) Out of range
 (make-f32vector -1)
 ok
 *** ERROR IN ##make-f32vector -- Heap overflow
 ok
 *** ERROR IN ##make-f32vector -- Heap overflow
 ok
-*** ERROR IN test-form -- (Argument 1) Out of range
+*** ERROR IN test-form -- (Argument 1, k) Out of range
 (make-f32vector 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) Exact INTEGER expected
+*** ERROR IN test-form -- (Argument 1, k) Exact INTEGER expected
 (make-f32vector 1.5)
 ok
-*** ERROR IN test-form -- (Argument 2) Inexact REAL expected
+*** ERROR IN test-form -- (Argument 2, fill) Inexact REAL expected
 (make-f32vector 1 'a)
 ok
 *** ERROR IN test-form -- (Argument 2) Inexact REAL expected
 (f32vector 5. 'b)
 ok
-*** ERROR IN test-form -- (Argument 1) F32VECTOR expected
+*** ERROR IN test-form -- (Argument 1, f32vector) F32VECTOR expected
 (f32vector-length 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) F32VECTOR expected
+*** ERROR IN test-form -- (Argument 1, f32vector) F32VECTOR expected
 (f32vector-ref 123456789012345678901 0)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (f32vector-ref #f32(5. 6.) -1)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (f32vector-ref #f32(5. 6.) 2)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (f32vector-ref #f32(5. 6.) 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) F32VECTOR expected
+*** ERROR IN test-form -- (Argument 1, f32vector) F32VECTOR expected
 (f32vector-set! 123456789012345678901 0 3.)
 ok
-*** ERROR IN run-f32vectors -- (Argument 2) Out of range
+*** ERROR IN run-f32vectors -- (Argument 2, k) Out of range
 (f32vector-set! #f32(5. 6.) -1 3.)
 ok
-*** ERROR IN run-f32vectors -- (Argument 2) Out of range
+*** ERROR IN run-f32vectors -- (Argument 2, k) Out of range
 (f32vector-set! #f32(5. 6.) 2 3.)
 ok
-*** ERROR IN run-f32vectors -- (Argument 2) Out of range
+*** ERROR IN run-f32vectors -- (Argument 2, k) Out of range
 (f32vector-set! #f32(5. 6.) 123456789012345678901 3.)
 ok
-*** ERROR IN run-f32vectors -- (Argument 3) Inexact REAL expected
+*** ERROR IN run-f32vectors -- (Argument 3, f32value) Inexact REAL expected
 (f32vector-set! #f32(5. 6.) 1 'a)
 ok
-*** ERROR IN test-form -- (Argument 1) F32VECTOR expected
+*** ERROR IN test-form -- (Argument 1, f32vector) F32VECTOR expected
 (f32vector->list 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) LIST expected
+*** ERROR IN test-form -- (Argument 1, list) LIST expected
 (list->f32vector 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) Inexact REAL LIST expected
+*** ERROR IN test-form -- (Argument 1, list) Inexact REAL LIST expected
 (list->f32vector '(5. b))
 ok
 ok
@@ -8749,62 +8749,62 @@ ok
 ok
 ok
 ok
-*** ERROR IN test-form -- (Argument 1) Out of range
+*** ERROR IN test-form -- (Argument 1, k) Out of range
 (make-f64vector -1)
 ok
 *** ERROR IN ##make-f64vector -- Heap overflow
 ok
 *** ERROR IN ##make-f64vector -- Heap overflow
 ok
-*** ERROR IN test-form -- (Argument 1) Out of range
+*** ERROR IN test-form -- (Argument 1, k) Out of range
 (make-f64vector 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) Exact INTEGER expected
+*** ERROR IN test-form -- (Argument 1, k) Exact INTEGER expected
 (make-f64vector 1.5)
 ok
-*** ERROR IN test-form -- (Argument 2) Inexact REAL expected
+*** ERROR IN test-form -- (Argument 2, fill) Inexact REAL expected
 (make-f64vector 1 'a)
 ok
 *** ERROR IN test-form -- (Argument 2) Inexact REAL expected
 (f64vector 5. 'b)
 ok
-*** ERROR IN test-form -- (Argument 1) F64VECTOR expected
+*** ERROR IN test-form -- (Argument 1, f64vector) F64VECTOR expected
 (f64vector-length 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) F64VECTOR expected
+*** ERROR IN test-form -- (Argument 1, f64vector) F64VECTOR expected
 (f64vector-ref 123456789012345678901 0)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (f64vector-ref #f64(5. 6.) -1)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (f64vector-ref #f64(5. 6.) 2)
 ok
-*** ERROR IN test-form -- (Argument 2) Out of range
+*** ERROR IN test-form -- (Argument 2, k) Out of range
 (f64vector-ref #f64(5. 6.) 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) F64VECTOR expected
+*** ERROR IN test-form -- (Argument 1, f64vector) F64VECTOR expected
 (f64vector-set! 123456789012345678901 0 3.)
 ok
-*** ERROR IN run-f64vectors -- (Argument 2) Out of range
+*** ERROR IN run-f64vectors -- (Argument 2, k) Out of range
 (f64vector-set! #f64(5. 6.) -1 3.)
 ok
-*** ERROR IN run-f64vectors -- (Argument 2) Out of range
+*** ERROR IN run-f64vectors -- (Argument 2, k) Out of range
 (f64vector-set! #f64(5. 6.) 2 3.)
 ok
-*** ERROR IN run-f64vectors -- (Argument 2) Out of range
+*** ERROR IN run-f64vectors -- (Argument 2, k) Out of range
 (f64vector-set! #f64(5. 6.) 123456789012345678901 3.)
 ok
-*** ERROR IN run-f64vectors -- (Argument 3) Inexact REAL expected
+*** ERROR IN run-f64vectors -- (Argument 3, f64value) Inexact REAL expected
 (f64vector-set! #f64(5. 6.) 1 'a)
 ok
-*** ERROR IN test-form -- (Argument 1) F64VECTOR expected
+*** ERROR IN test-form -- (Argument 1, f64vector) F64VECTOR expected
 (f64vector->list 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) LIST expected
+*** ERROR IN test-form -- (Argument 1, list) LIST expected
 (list->f64vector 123456789012345678901)
 ok
-*** ERROR IN test-form -- (Argument 1) Inexact REAL LIST expected
+*** ERROR IN test-form -- (Argument 1, list) Inexact REAL LIST expected
 (list->f64vector '(5. b))
 ok
 OK

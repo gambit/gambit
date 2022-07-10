@@ -2,7 +2,7 @@
 
 ;;; File: "main.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
@@ -51,11 +51,12 @@ Scheme compiler and linker options
     -flat                       Force a flat link file instead of incremental
 
 C compiler and linker options
-    -pkg-config library         Get compile and link flags using pkg-config
-    -pkg-config-path dir        Add directory to pkg-config search path
+    -cc compiler                Use specific C compiler (gcc, clang, tcc, ...)
     -cc-options 'option ...'    Extra command line options for C compiler
     -ld-options 'option ...'    Extra command line options for C linker
     -ld-options-prelude 'option ...'
+    -pkg-config library         Get compile and link flags using pkg-config
+    -pkg-config-path dir        Add directory to pkg-config search path
 
 Debug information options
     -debug                 Include all debug info
@@ -240,8 +241,8 @@ usage-end
                                          language)
                                         (##start-main language))
                                       ##exit))
-                                (set! ##processed-command-line
-                                  (##cons script-path rest)))))))
+                                (##script-command-line-set!
+                                 (##cons script-path rest)))))))
                   (##load-module-or-file arg script-callback)
                   (if starter
                       (starter)
@@ -372,6 +373,11 @@ usage-end
                             (if x
                                 (##cadr x)
                                 #f)))
+                         (cc
+                          (let ((x (##assq 'cc options)))
+                            (if x
+                                (##cadr x)
+                                #f)))
                          (cc-options
                           (let ((x (##assq 'cc-options options)))
                             (if x
@@ -435,7 +441,15 @@ usage-end
                           (rev-obj-files '())
                           (rev-tmp-files '())
                           (flags '())
-                          (meta-info-file #f))
+                          (meta-info-file #f)
+                          (seq-num 0))
+
+                      (define (add-seq-num opts)
+                        (let ((sn seq-num))
+                          (set! seq-num (##fx+ seq-num 1))
+                          (if (##fx< 1 nb-output-files)
+                              (##cons (##list 'sequence-number sn) opts)
+                              opts)))
 
                       (define (add-gen-file file)
                         (set! rev-gen-files
@@ -490,8 +504,9 @@ usage-end
                         (or (if output
                                 (compile-file
                                  file
-                                 options: opts
+                                 options: (add-seq-num opts)
                                  output: output
+                                 cc: cc
                                  cc-options: cc-options
                                  ld-options-prelude: ld-options-prelude
                                  ld-options: ld-options
@@ -499,7 +514,8 @@ usage-end
                                  pkg-config-path: pkg-config-path)
                                 (compile-file
                                  file
-                                 options: opts
+                                 options: (add-seq-num opts)
+                                 cc: cc
                                  cc-options: cc-options
                                  ld-options-prelude: ld-options-prelude
                                  ld-options: ld-options
@@ -508,16 +524,23 @@ usage-end
                             (exit-abnormally)))
 
                       (define (do-compile-file-to-target file opts output)
-                        (handling file)
-                        (or (if output
-                                (compile-file-to-target
-                                 file
-                                 options: opts
-                                 output: output)
-                                (compile-file-to-target
-                                 file
-                                 options: opts))
-                            (exit-abnormally)))
+                        (let* ((modref (##parse-module-ref file))
+                               (opts (if (##not modref)
+                                         opts
+                                         (##cons
+                                           (##list 'module-ref
+                                                   (##string->symbol file))
+                                           opts))))
+                          (handling file)
+                          (or (if output
+                                  (compile-file-to-target
+                                   file
+                                   options: (add-seq-num opts)
+                                   output: output)
+                                  (compile-file-to-target
+                                   file
+                                   options: (add-seq-num opts)))
+                              (exit-abnormally))))
 
                       (define (do-build-executable base obj-files output-filename)
                         (or (##build-executable
@@ -525,6 +548,7 @@ usage-end
                              obj-files
                              options
                              output-filename
+                             cc
                              cc-options
                              ld-options-prelude
                              ld-options
@@ -897,15 +921,21 @@ usage-end
 
   (##load-support-libraries)
 
-  (let ((language-and-tail
-         (##extract-language-and-tail (##car ##processed-command-line))))
+  (let* ((cmd-name
+          (##command-name))
+         (cmd-args
+          (##command-args))
+         (language-and-tail
+          (##extract-language-and-tail cmd-name)))
+
+    (##script-command-line-set! '("")) ;; per SRFI-193
 
     (if language-and-tail
       (let ((language (##car language-and-tail)))
         (##readtable-setup-for-language! (##current-readtable) language)))
 
     (split-command-line
-      (##cdr ##processed-command-line)
+      cmd-args
       '((f) (h) (help) (-help) (i) (v))
       #t
       (lambda (main-options arguments)
@@ -941,9 +971,7 @@ usage-end
                      (##assq '-help main-options))
                  (write-usage-to-port
                   (if (interpreter-or #f) gsi-usage gsc-usage)
-                  (##path-strip-extension
-                   (##path-strip-directory
-                    (##car (##command-line))))
+                  cmd-name
                   ##stdout-port)
                  (##exit))
 
@@ -962,6 +990,7 @@ usage-end
                  (let* ((common-compiler-options
                          '((target symbol)
                            (c) (dynamic) (exe) (obj) (link) (flat)
+                           (compactness fixnum)
                            (warnings) (verbose) (report)
                            (expansion) (gvm) (cfg) (dg) (asm) (keep-temp)
 ;;TODO: enable and document when compiler supports these options
@@ -972,6 +1001,7 @@ usage-end
                            (o string) (l string)
                            (module-ref symbol) (linker-name string)
                            (prelude string) (postlude string)
+                           (cc string)
                            (cc-options string)
                            (ld-options-prelude string)
                            (ld-options string)

@@ -1,10 +1,10 @@
 (include "#.scm")
 
-(check-same-behavior ("" "##" "~~lib/_prim-f32vector#.scm")
+(check-same-behavior ("" "##" "~~lib/gambit/prim/f32vector#.scm")
 
 ;; Gambit
 
-(append-f32vectors '(#f32(1.) #f32(2.) #f32(3.)))
+(f32vector-concatenate '(#f32(1.) #f32(2.) #f32(3.)))
 (list->f32vector '(1. 2. 3.))
 (f32vector-length (make-f32vector 5)) (make-f32vector 5 9.)
 (subf32vector '#f32(1. 2. 3. 4. 5.) 1 3)

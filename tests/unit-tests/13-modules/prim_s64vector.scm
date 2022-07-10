@@ -1,10 +1,10 @@
 (include "#.scm")
 
-(check-same-behavior ("" "##" "~~lib/_prim-s64vector#.scm")
+(check-same-behavior ("" "##" "~~lib/gambit/prim/s64vector#.scm")
 
 ;; Gambit
 
-(append-s64vectors '(#s64(1) #s64(2) #s64(3)))
+(s64vector-concatenate '(#s64(1) #s64(2) #s64(3)))
 (list->s64vector '(1 2 3))
 (s64vector-length (make-s64vector 5)) (make-s64vector 5 9)
 (subs64vector '#s64(1 2 3 4 5) 1 3)

@@ -1758,7 +1758,7 @@
 (define c4 -1.)
 (define c5 0.)
 (define c6 -0.)
-(define c7 +nan.0)
+(define c7 (let () (declare (not constant-fold)) (fl+ +inf.0 -inf.0))) ;; NaN is not represented the same on ARM and x86
 (define c8 +inf.0)
 (define c9 -inf.0)
 (define c10 1e40)
@@ -1772,7 +1772,7 @@
   (write (fl/ c3 c6)) (newline)
   (write (fl/ c4 c6)) (newline)
   (write c7) (newline)
-  (write (fl+ c9 c8)) (newline)
+  (write (let () (declare (not constant-fold)) (fl+ c9 c8))) (newline)
   (write (fl< (fllog c5) -1.797693e308)) (newline)
   (write (fl< 1.797693e308 (flexp c10))) (newline)
   (write (fl/ c11 c10)) (newline)
@@ -1817,6 +1817,110 @@
       (display "*** warning: (fl= +nan.0 -inf.0) => #t" (current-error-port))
       (newline (current-error-port))))
 )
+
+;------------------------------------------------------------------------------
+
+(define (check-env-maps proc expected-env-maps)
+
+  (define (env-map x)
+    (let ((subproc (##make-subprocedure proc (vector-ref x 0))))
+      (if (procedure? subproc)
+          '!procedure!
+          (list-sort (lambda (x y)
+                       (string<? (symbol->string x) (symbol->string y)))
+                     (##subprocedure-locals subproc)))))
+
+  (if (not (##closure? proc))
+      (let* ((info (##subprocedure-parent-info proc))
+             (env-maps
+              (if (not info)
+                  'no-env-maps
+                  (list-sort
+                   (lambda (x y)
+                     (string<? (object->string x) (object->string y)))
+                   (map env-map
+                        (vector->list (##vector-ref info 0)))))))
+        (if (not (equal? env-maps expected-env-maps))
+            (begin
+              (display "*** wrong environment maps, got:\n")
+              (pretty-print env-maps)
+              (display "*** expected:\n")
+              (pretty-print expected-env-maps))))))
+              
+(define (env-map-test0 var1 var2 var3 x)
+  (declare (environment-map) (not interrupts-enabled))
+  (declare (optimize-dead-local-variables))
+  (declare (proper-tail-calls))
+  (let ((local1 (x)))
+    (let ((local2 (x)))
+      (local1))
+    (let ((local3 (x)))
+      (local3)
+      0)
+    (x (x var1)
+       (x var2)
+       (x var3))))
+
+(define (env-map-test1 var1 var2 var3 x)
+  (declare (environment-map) (not interrupts-enabled))
+  (declare (not optimize-dead-local-variables))
+  (declare (proper-tail-calls))
+  (let ((local1 (x)))
+    (let ((local2 (x)))
+      (local1))
+    (let ((local3 (x)))
+      (local3)
+      0)
+    (x (x var1)
+       (x var2)
+       (x var3))))
+
+(define (env-map-test2 var1 var2 var3 x)
+  (declare (environment-map) (not interrupts-enabled))
+  (declare (not optimize-dead-local-variables))
+  (declare (not proper-tail-calls))
+  (let ((local1 (x)))
+    (let ((local2 (x)))
+      (local1))
+    (let ((local3 (x)))
+      (local3)
+      0)
+    (x (x var1)
+       (x var2)
+       (x var3))))
+
+(define (test6)
+  (check-env-maps env-map-test0
+                  '(!procedure!
+                    (local1 var1 var2 var3 x)
+                    (var1 var2 var3 x)
+                    (var1 var2 var3 x)
+                    (var1 var2 var3 x)
+                    (var1 var2 var3 x)
+                    (var2 var3 x)
+                    (var3 x)
+                    (x)))
+  (check-env-maps env-map-test1
+                  '(!procedure!
+                    (local1 local2 var1 var2 var3 x)
+                    (local1 local3 var1 var2 var3 x)
+                    (local1 var1 var2 var3 x)
+                    (local1 var1 var2 var3 x)
+                    (local1 var1 var2 var3 x)
+                    (local1 var1 var2 var3 x)
+                    (local1 var1 var2 var3 x)
+                    (var1 var2 var3 x)))
+  (check-env-maps env-map-test2
+                  '(!procedure!
+                    (local1 local2 var1 var2 var3 x)
+                    (local1 local3 var1 var2 var3 x)
+                    (local1 var1 var2 var3 x)
+                    (local1 var1 var2 var3 x)
+                    (local1 var1 var2 var3 x)
+                    (local1 var1 var2 var3 x)
+                    (local1 var1 var2 var3 x)
+                    (local1 var1 var2 var3 x)
+                    (var1 var2 var3 x))))
 
 ;------------------------------------------------------------------------------
 
@@ -1888,6 +1992,7 @@
 (test3)
 (test4)
 (test5)
+(test6)
 
 (force-output)
 

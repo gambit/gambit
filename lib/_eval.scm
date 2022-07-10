@@ -2,7 +2,7 @@
 
 ;;; File: "_eval.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -24,6 +24,21 @@
   (macro-raise
    (macro-make-unbound-global-exception code rte variable)))
 
+(implement-library-type-not-in-compilation-context-exception)
+
+(define-prim (##raise-not-in-compilation-context-exception proc . args)
+  (##extract-procedure-and-arguments
+   proc
+   args
+   #f
+   #f
+   #f
+   (lambda (procedure arguments dummy1 dummy2 dummy3)
+     (macro-raise
+      (macro-make-not-in-compilation-context-exception
+       procedure
+       arguments)))))
+
 ;;;----------------------------------------------------------------------------
 
 (define (##make-code* code-prc cte src stepper lst n)
@@ -41,14 +56,11 @@
             (loop (##fx+ i 1) (##cdr l)))
           code))))
 
-(define (##no-stepper) (macro-make-no-stepper))
+(define (##no-stepper)
+  (macro-make-no-stepper))
 
-(define ##main-stepper (##no-stepper))
-
-(define-prim (##main-stepper-set! x)
-  (set! ##main-stepper x))
-
-(define (##current-stepper) ##main-stepper)
+(define ##current-stepper
+  (##make-parameter (##no-stepper)))
 
 ;;;----------------------------------------------------------------------------
 
@@ -273,6 +285,11 @@
     (and locat
          (##container->path (##locat-container locat)))))
 
+(define (##source-strip x)
+  (if (##source? x)
+      (##source-code x)
+      x))
+
 (define (##desourcify src)
   (let ((visited (##make-table-aux 0 (macro-absent-obj) #f #f ##eq?)))
 
@@ -472,6 +489,12 @@
 (##define-macro (glo-access? x)
   `(##not (##vector? ,x)))
 
+(##define-macro (glo-access-ref var)
+  `(##global-var-ref ,var))
+
+(##define-macro (glo-access-set! var val)
+  `(##global-var-set! ,var ,val))
+
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 ;;; Representation of compile time environments
@@ -497,6 +520,9 @@
 
 (define (##cte-parent-cte cte)
   (##vector-ref cte 0))
+
+(define (##cte-parent-cte-set! cte new-cte)
+  (##vector-set! cte 0 new-cte))
 
 (define (##cte-frame parent-cte vars)
   (##vector parent-cte vars))
@@ -727,10 +753,25 @@
     top-cte))
 
 (define (##top-cte-add-macro! top-cte name def)
-  (let ((global-name (##cte-global-macro-name (##cte-top-cte top-cte) name)))
+  (let* ((cte (##cte-top-cte top-cte))
+         (global-name (##cte-global-macro-name cte name)))
     (##cte-mutate-top-cte!
      top-cte
      (lambda (cte) (##cte-add-macro cte global-name def)))))
+
+(define (##top-cte-add-macro-no-dups! top-cte name def)
+
+  ;; this could be implemented as (##top-cte-add-macro! top-cte name def)
+  ;; but we know that top-cte has no duplicates so just add the macro
+  ;; at the tail with a mutation thus avoiding the allocation that
+  ;; would be caused by a relinking
+
+  (let* ((cte (##cte-top-cte top-cte))
+         (global-name (##cte-global-macro-name cte name)))
+    (let loop ((prev-cte top-cte) (cte cte))
+      (if (##cte-top? cte)
+          (##cte-parent-cte-set! prev-cte (##cte-macro cte global-name def))
+          (loop cte (##cte-parent-cte cte))))))
 
 (define (##top-cte-process-declare! top-cte src)
   (##cte-mutate-top-cte!
@@ -823,6 +864,13 @@
 
 (define (##full-name? sym) ;; full name if it contains a namespace separator
   (##fx>= (##namespace-separator-index (##symbol->string sym)) 0))
+
+(define (##namespace-split sym)
+  (let* ((str (##symbol->string sym))
+         (i (##fx+ 1 (##namespace-separator-index str))))
+    (##cons (##substring str 0 i)
+            (##string->symbol
+             (##substring str i (##string-length str))))))
 
 (define (##make-full-name prefix sym)
   (if (##fx= (##string-length prefix) 0)
@@ -977,14 +1025,14 @@
                 ))
       (##vector? val)
       (##u8vector? val)
-      (##s8vector? val)
-      (##u16vector? val)
-      (##s16vector? val)
-      (##u32vector? val)
-      (##s32vector? val)
-      (##u64vector? val)
-      (##s64vector? val)
-      (##f32vector? val)
+      (macro-if-s8vector  (##s8vector? val)  #f)
+      (macro-if-u16vector (##u16vector? val) #f)
+      (macro-if-s16vector (##s16vector? val) #f)
+      (macro-if-u32vector (##u32vector? val) #f)
+      (macro-if-s32vector (##s32vector? val) #f)
+      (macro-if-u64vector (##u64vector? val) #f)
+      (macro-if-s64vector (##s64vector? val) #f)
+      (macro-if-f32vector (##f32vector? val) #f)
       (##f64vector? val)))
 
 (define (##variable src)
@@ -996,19 +1044,12 @@
 
 (define (##shape src x size)
   (if (##not (##shape? x size))
-      (##raise-expression-parsing-exception
-       'ill-formed-special-form
-       src
-       (let* ((code (##source-code src))
-              (head-src (##sourcify (##car code) src))
-              (head (##source-code head-src))
-              (name (##symbol->string head))
-              (len (##string-length name)))
-         (if (and (##fx< 2 len)
-                  (##char=? #\# (##string-ref name 0))
-                  (##char=? #\# (##string-ref name 1)))
-             (##string->symbol (##substring name 2 len))
-             (##desourcify head-src))))))
+      (##raise-ill-formed-special-form src)))
+
+(define (##raise-ill-formed-special-form src)
+  (##raise-expression-parsing-exception
+   'ill-formed-special-form
+   src))
 
 (define (##shape? x size)
   (let* ((code (##source-code x))
@@ -1063,6 +1104,145 @@
         (##make-source
          (##cons '##begin lst)
          src))))
+
+(define (##read-all-as-a-begin-expr-from-path
+         path
+         #!optional
+         (readtable (##current-readtable))
+         (wrap ##wrap-datum)
+         (unwrap ##unwrap-datum)
+         (case-conversion? '()))
+
+  (define (fail)
+    (##fail-check-string 1 open-input-file path))
+
+  (##make-input-path-psettings
+   (##list 'path: path
+           'eol-encoding: 'cr-lf)
+   fail
+   (lambda (psettings)
+     (let ((path (macro-psettings-path psettings)))
+       (if (##not path)
+           (fail)
+           (##read-all-as-a-begin-expr-from-psettings
+            psettings
+            path
+            readtable
+            wrap
+            unwrap
+            case-conversion?))))))
+
+(define (##read-all-as-a-begin-expr-from-psettings
+         psettings
+         path-or-settings
+         #!optional
+         (readtable (##current-readtable))
+         (wrap ##wrap-datum)
+         (unwrap ##unwrap-datum)
+         (case-conversion? '()))
+
+  (define (fail)
+    (##fail-check-string-or-settings '(1 . path-or-settings) open-input-file path-or-settings))
+
+  (let ((path (macro-psettings-path psettings)))
+    (if (##not path)
+        (fail)
+        (##open-file-generic-from-psettings
+         psettings
+         #f
+         (lambda (port resolved-path)
+           (if (##fixnum? port)
+               port
+               (let* ((extension
+                       (##path-extension path))
+                      (start-syntax
+                       (let ((x (##assoc extension ##scheme-file-extensions)))
+                         (if x
+                             (##cdr x)
+                             (macro-readtable-start-syntax readtable)))))
+                 (##read-all-as-a-begin-expr-from-port
+                  port
+                  readtable
+                  wrap
+                  unwrap
+                  start-syntax
+                  #t
+                  case-conversion?))))
+         open-input-file
+         path-or-settings))))
+
+(define (##read-all-as-a-begin-expr-from-port
+         port
+         #!optional
+         (readtable (##current-readtable))
+         (wrap ##wrap-datum)
+         (unwrap ##unwrap-datum)
+         (start-syntax '()) ;; default to readtable start syntax
+         (close-port? #t)
+         (case-conversion? '())) ;; default to readtable case conversion
+  (##with-exception-catcher
+   (lambda (exc)
+     (if close-port?
+         (##close-input-port port))
+     (macro-raise exc))
+   (lambda ()
+     (let ((rt
+            (##readtable-copy-shallow readtable)))
+       (if (##not (##eq? start-syntax '())) ;; do not default to readtable?
+           (macro-readtable-start-syntax-set! rt start-syntax))
+       (let* ((re
+               (##make-readenv port rt wrap unwrap #t case-conversion? #f))
+              (head
+               (##cons (wrap re '##begin)
+                       '())) ;; tail will be replaced with expressions read
+              (expr
+               (wrap re head))
+              (first
+               (##read-datum-or-eof re))
+              (rest
+               (if (##eof-object? first)
+                   '()
+                   (##read-all re ##read-datum-or-eof))))
+         (if close-port?
+             (##close-input-port port))
+         (if (##not (##eof-object? first))
+             (##set-cdr! head
+                         (if (##eq? first (##script-marker))
+                             rest
+                             (##cons first rest))))
+         (let* ((sl (macro-readenv-script-line re))
+                (script-line (and (##string? sl) sl)))
+           (##vector script-line
+                     expr
+                     (##port-name port))))))))
+
+(define (##read-all-as-a-begin-expr-from-string
+         content
+         #!optional
+         (name #f)
+         (line #f)
+         (col #f)
+         (readtable (##current-readtable))
+         (wrap ##wrap-datum)
+         (unwrap ##unwrap-datum)
+         (start-syntax '()) ;; default to readtable start syntax
+         (case-conversion? '())) ;; default to readtable case conversion
+  (##call-with-input-string
+   content
+   (lambda (port)
+     (if name
+         (##port-name-set! port name))
+     (if line
+         (##input-port-line-set! port line))
+     (if col
+         (##input-port-column-set! port col))
+     (##read-all-as-a-begin-expr-from-port
+      port
+      readtable
+      wrap
+      unwrap
+      start-syntax
+      case-conversion?))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1119,10 +1299,15 @@
 (define ##compilation-ctx
   (##make-parameter #f))
 
+(##define-macro (macro-interpreter-target)
+  (let ((target (##compilation-target)))
+    `'(,target)))
+
 (define (##compile-in-new-compilation-ctx cte src tail? proc)
   (##call-with-values
    (lambda ()
      (##in-new-compilation-ctx
+      (macro-interpreter-target)
       (lambda ()
         (proc cte (##expand-source src) tail?))))
    (lambda (code comp-ctx)
@@ -1154,11 +1339,11 @@
   (convert! #f code)
   code)
 
-(define (##in-new-compilation-ctx thunk)
+(define (##in-new-compilation-ctx target thunk)
   (let* ((comp-scope;;TODO: deprecated interface
           (##make-table-aux 0 (macro-absent-obj) #f #f ##eq?))
          (comp-ctx
-          (macro-make-compilation-ctx))
+          (macro-make-compilation-ctx target))
          (result
           (##parameterize1
            ##compilation-scope;;TODO: deprecated interface
@@ -1171,33 +1356,70 @@
     (##values result
               comp-ctx)))
 
-(define (##compilation-ctx-supply-modules-add! module-ref)
+(define (##compilation-supply-modules-add! module-ref)
   (let ((ctx (##compilation-ctx)))
-    (macro-compilation-ctx-supply-modules-set!
-     ctx
-     (##add-to-set-ordered!
-      (macro-compilation-ctx-supply-modules ctx)
-      module-ref))))
+    (if (##not ctx)
+        (##raise-not-in-compilation-context-exception
+         ##compilation-supply-modules-add!
+         module-ref)
+        (macro-compilation-ctx-supply-modules-set!
+         ctx
+         (##add-to-set-ordered!
+          (macro-compilation-ctx-supply-modules ctx)
+          module-ref)))))
 
-(define (##compilation-ctx-demand-modules-add! module-ref)
+(define (##compilation-demand-modules-add! module-ref)
   (let ((ctx (##compilation-ctx)))
-    (macro-compilation-ctx-demand-modules-set!
-     ctx
-     (##add-to-set-ordered!
-      (macro-compilation-ctx-demand-modules ctx)
-      module-ref))))
+    (if (##not ctx)
+        (##raise-not-in-compilation-context-exception
+         ##compilation-demand-modules-add!
+         module-ref)
+        (macro-compilation-ctx-demand-modules-set!
+         ctx
+         (##add-to-set-ordered!
+          (macro-compilation-ctx-demand-modules ctx)
+          module-ref)))))
 
-(define (##compilation-ctx-meta-info-add! key val)
-  (let* ((ctx (##compilation-ctx))
-         (meta-info (macro-compilation-ctx-meta-info ctx)))
-    (##meta-info-add! meta-info key val)))
+(define (##compilation-meta-info-add! key val)
+  (let ((ctx (##compilation-ctx)))
+    (if (##not ctx)
+        (##raise-not-in-compilation-context-exception
+         ##compilation-meta-info-add!
+         key
+         val)
+        (let ((meta-info (macro-compilation-ctx-meta-info ctx)))
+          (##meta-info-add! meta-info key val)))))
 
-(define (##compilation-ctx-module-aliases-add! alias)
-  (let* ((ctx (##compilation-ctx))
-         (module-aliases (macro-compilation-ctx-module-aliases (##compilation-ctx))))
-    (macro-compilation-ctx-module-aliases-set!
-     ctx
-     (##extend-module-aliases alias module-aliases))))
+(define (##compilation-module-aliases-add! alias)
+  (let ((ctx (##compilation-ctx)))
+    (if (##not ctx)
+        (##raise-not-in-compilation-context-exception
+         ##compilation-module-aliases-add!
+         alias)
+        (let ((module-aliases (macro-compilation-ctx-module-aliases ctx)))
+          (macro-compilation-ctx-module-aliases-set!
+           ctx
+           (##extend-module-aliases alias module-aliases))))))
+
+(define (##compilation-target)
+  (let ((ctx (##compilation-ctx)))
+    (if (##not ctx)
+        (##raise-not-in-compilation-context-exception
+         compilation-target)
+        (macro-compilation-ctx-target ctx))))
+
+(define (compilation-target)
+  (##compilation-target))
+
+(define (##compilation-extra-info)
+  (let ((ctx (##compilation-ctx)))
+    (if (##not ctx)
+        (##raise-not-in-compilation-context-exception
+         ##compilation-extra-info)
+        (macro-compilation-ctx-extra-info ctx))))
+
+(define (##make-extra-info)
+  (##make-table-aux 0 (macro-absent-obj) #f #f ##eq?))
 
 (define (##extend-module-aliases alias module-aliases)
   (##cons alias module-aliases))
@@ -1244,20 +1466,30 @@
             ordered-set)) ;; obj already in the ordered set
       (##list obj))) ;; ordered set was empty, so create singleton set
 
-(define (##compilation-ctx-module-ref-set! module-ref)
+(define (##compilation-module-ref-set! module-ref)
   (let ((ctx (##compilation-ctx)))
-    (macro-compilation-ctx-module-ref-set! ctx module-ref)))
+    (if (##not ctx)
+        (##raise-not-in-compilation-context-exception
+         ##compilation-module-ref-set!
+         module-ref)
+        (macro-compilation-ctx-module-ref-set! ctx module-ref))))
 
 ;;;----------------------------------------------------------------------------
 
 (define (##comp-top top-cte src tail?)
+  (or (##comp-top* top-cte src tail?)
+      (let ((cte (##cte-top-cte top-cte)))
+        (macro-gen ##gen-cst-no-step src
+          (##void)))))
+
+(define (##comp-top* top-cte src tail?)
   (let ((code (##source-code src))
         (cte (##cte-top-cte top-cte)))
     (if (##pair? code)
         (let* ((first-src (##sourcify (##car code) src))
                (descr (##macro-lookup cte (##source-code first-src))))
           (if (vector? descr)
-              (##comp-top top-cte (##macro-expand cte src descr) tail?)
+              (##comp-top* top-cte (##macro-expand cte src descr) tail?)
               (case descr
                 ((##begin)
                  (##comp-top-begin top-cte src tail?))
@@ -1291,19 +1523,24 @@
 (define (##comp-top-seq top-cte src tail? seq)
   (if (##pair? seq)
       (##comp-top-seq-aux top-cte src tail? seq)
-      (let ((cte (##cte-top-cte top-cte)))
-        (macro-gen ##gen-cst-no-step src
-          (##void)))))
+      #f))
 
 (define (##comp-top-seq-aux top-cte src tail? seq)
   (let ((first-src (##sourcify (##car seq) src))
         (rest (##cdr seq)))
     (if (##pair? rest)
         (let ((cte (##cte-top-cte top-cte)))
-          (macro-gen ##gen-seq first-src
-            (##comp-top top-cte first-src #f)
-            (##comp-top-seq-aux top-cte src tail? rest)))
-        (##comp-top top-cte first-src tail?))))
+          (let* ((code1 (##comp-top* top-cte first-src #f))
+                 (code2 (##comp-top-seq-aux top-cte src tail? rest)))
+            (cond ((##not code1)
+                   code2)
+                  (code2
+                   (macro-gen ##gen-seq first-src
+                     code1
+                     code2))
+                  (else
+                   code1))))
+        (##comp-top* top-cte first-src tail?))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1361,9 +1598,9 @@
 
 (define (##comp-top-include top-cte src tail?)
   (##shape src src -2)
-  (##comp-top top-cte
-              (##include-file-as-a-begin-expr src)
-              tail?))
+  (##comp-top* top-cte
+               (##include-file-as-a-begin-expr src)
+               tail?))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1381,8 +1618,7 @@
      top-cte
      (##source-code name)
      (##macro-descr val def-syntax?))
-    (macro-gen ##gen-cst-no-step src
-      (##void))))
+    #f))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1390,8 +1626,7 @@
   (##shape src src -1)
   (let ((cte (##cte-top-cte top-cte)))
     (##top-cte-process-declare! top-cte src)
-    (macro-gen ##gen-cst-no-step src
-      (##void))))
+    #f))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1399,8 +1634,7 @@
   (##shape src src -1)
   (let ((cte (##cte-top-cte top-cte)))
     (##top-cte-process-namespace! top-cte src)
-    (macro-gen ##gen-cst-no-step src
-      (##void))))
+    #f))
 
 ;;;----------------------------------------------------------------------------
 
@@ -2334,7 +2568,7 @@
      clauses
      (lambda ()
        (macro-gen ##gen-cst-no-step src
-                  (##void))))))
+         (##void))))))
 
 (define (##comp-cond-clauses cte src tail? clauses inner)
   (if (##pair? clauses)
@@ -3064,7 +3298,7 @@
 (define ##cprc-glo-ref
   (macro-make-cprc
    (macro-reference-step! ()
-     (let ((val (##global-var-ref (^ 0))))
+     (let ((val (glo-access-ref (^ 0))))
        (if (macro-unbound? val)
            (##first-argument ;; keep $code and rte in environment-map
             (##raise-unbound-global-exception $code rte (^ 0))
@@ -3119,13 +3353,13 @@
   (macro-make-cprc
    (let ((val (macro-code-run (^ 0))))
      (macro-set!-step! (val)
-       (if (macro-unbound? (##global-var-ref (^ 1)))
+       (if (macro-unbound? (glo-access-ref (^ 1)))
            (##first-argument ;; keep $code and rte in environment-map
             (##raise-unbound-global-exception $code rte (^ 1))
             $code
             rte)
            (begin
-             (##global-var-set! (^ 1) val)
+             (glo-access-set! (^ 1) val)
              (##void)))))))
 
 (define ##gen-glo-set
@@ -3141,7 +3375,7 @@
    (let ((val (macro-code-run (^ 0))))
      (macro-define-step! (val)
        (begin
-         (##global-var-set! (^ 1) val)
+         (glo-access-set! (^ 1) val)
          (##void))))))
 
 (define ##gen-glo-def
@@ -3164,7 +3398,7 @@
                    (let loop ((i (##fx- len 1)))
                      (if (##fx>= i 0)
                          (begin
-                           (##global-var-set!
+                           (glo-access-set!
                             (##vector-ref inds i)
                             (##values-ref vals i))
                            (loop (##fx- i 1)))
@@ -3173,7 +3407,7 @@
 
              (if (##fx= 1 (##vector-length inds))
                  (begin
-                   (##global-var-set!
+                   (glo-access-set!
                     (##vector-ref inds 0)
                     vals)
                    (##void))
@@ -3200,13 +3434,13 @@
                          (loop1 (##fx- i 1)
                                 (##cons (##values-ref vals i) rest))
                          (begin
-                           (##global-var-set!
+                           (glo-access-set!
                             (##vector-ref inds n-1)
                             rest)
                            (let loop2 ((i i))
                              (if (##fx>= i 0)
                                  (begin
-                                   (##global-var-set!
+                                   (glo-access-set!
                                     (##vector-ref inds i)
                                     (##values-ref vals i))
                                    (loop2 (##fx- i 1)))
@@ -3215,16 +3449,16 @@
 
              (if (##fx= 1 (##vector-length inds))
                  (begin
-                   (##global-var-set!
+                   (glo-access-set!
                     (##vector-ref inds 0)
                     (##list vals))
                    (##void))
                  (if (##fx= 2 (##vector-length inds))
                      (begin
-                       (##global-var-set!
+                       (glo-access-set!
                         (##vector-ref inds 0)
                         vals)
-                       (##global-var-set!
+                       (glo-access-set!
                         (##vector-ref inds 1)
                         '())
                        (##void))
@@ -5305,26 +5539,12 @@
   (##define-macro (macro-extension-file)
     "~~lib/gambext")
 
-  #; ;;TODO: remove
-  (##define-macro (macro-syntax-case-file)
-    "~~lib/syntax-case")
-
   (##load (macro-extension-file)
           (lambda (script-line script-path) #f)
           #f ;; must be #f for the macros to be added to the interaction environment
           #f
           #f
-          #f)
-
-  #; ;;TODO: remove
-  (let ((standard-level (##get-standard-level)))
-    (if (##fx<= 4 standard-level)
-        (##load (macro-syntax-case-file)
-                (lambda (script-line script-path) #f)
-                #t
-                #t
-                #f
-                #f))))
+          #f))
 
 ;;;----------------------------------------------------------------------------
 
@@ -5333,17 +5553,23 @@
 (define ##interaction-cte
   (let ((##interaction-cte (##make-top-cte)))
 
+    (define-runtime-syntax lambda
+      (##make-alias-syntax '##lambda))
+
     (define-runtime-syntax quote
       (##make-alias-syntax '##quote))
+
+    (define-runtime-syntax let
+      (##make-alias-syntax '##let))
+
+    (define-runtime-syntax define
+      (##make-alias-syntax '##define))
 
     (define-runtime-syntax quasiquote
       (##make-alias-syntax '##quasiquote))
 
     (define-runtime-syntax set!
       (##make-alias-syntax '##set!))
-
-    (define-runtime-syntax lambda
-      (##make-alias-syntax '##lambda))
 
     (define-runtime-syntax if
       (##make-alias-syntax '##if))
@@ -5359,9 +5585,6 @@
 
     (define-runtime-syntax case
       (##make-alias-syntax '##case))
-
-    (define-runtime-syntax let
-      (##make-alias-syntax '##let))
 
     (define-runtime-syntax let*
       (##make-alias-syntax '##let*))
@@ -5423,9 +5646,6 @@
     (define-runtime-syntax begin
       (##make-alias-syntax '##begin))
 
-    (define-runtime-syntax define
-      (##make-alias-syntax '##define))
-
     (define-runtime-syntax define-macro
       (##make-alias-syntax '##define-macro))
 
@@ -5482,23 +5702,23 @@
 
     (define-runtime-syntax syntax-rules
       (lambda (src)
-        ((##eval '(lambda (src)
-                    (##import _define-library/define-library-expand)
-                    (syn#syntax-rules-form-transformer src)))
+        ((##eval '(##let ()
+                    (##demand-module _define-library/define-library-expand)
+                    syn#syntax-rules-form-transformer))
          src)))
 
     (define-runtime-syntax define-library
       (lambda (src)
-        ((##eval '(lambda (src)
-                    (##import _define-library/define-library-expand)
-                    (define-library-expand src)))
+        ((##eval '(##let ()
+                    (##demand-module _define-library/define-library-expand)
+                    _define-library/define-library-expand#define-library-expand))
          src)))
 
     (define-runtime-syntax import
       (lambda (src)
-        ((##eval '(lambda (src)
-                    (##import _define-library/define-library-expand)
-                    (import-expand src)))
+        ((##eval '(##let ()
+                    (##demand-module _define-library/define-library-expand)
+                    _define-library/define-library-expand#import-expand))
          src)))
 
     ##interaction-cte))

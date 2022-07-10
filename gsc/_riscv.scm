@@ -205,7 +205,7 @@
                 (instr cgc rd rs (riscv-imm-int lo12)))))
         (begin
           (riscv-assert-64bit-mode cgc)
-          (let* ((shamt (+ 12 (first-bit-set (asm-unsigned-lo64 hi52))))
+          (let* ((shamt (+ 12 (first-set-bit (asm-unsigned-lo64 hi52))))
                  (hi52 (arithmetic-shift
                          (asm-signed-lo64 (arithmetic-shift
                                             (arithmetic-shift hi52 (- (- shamt 12)))

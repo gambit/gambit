@@ -1,7 +1,7 @@
 /* File: "config.h.in" */
 
 /*
- * Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+ * Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
  */
 
 #ifndef CONFIG_H
@@ -46,6 +46,9 @@
 /* Define as 1 if you want trampoline jumps to be inlined.  */
 #undef ___INLINE_JUMPS
 
+/* Define as 1 if you trust the C compiler does TCO properly */
+#undef ___TRUST_C_TCO
+
 /* Define as 1 if you want to compile as a shared library.  */
 #undef ___SHARED
 
@@ -55,9 +58,22 @@
 /* Define as 1 if thread local storage variables can be referenced from dynamically loaded code */
 #undef ___DYNAMIC_TLS
 
+/* Define as 1 if C library functions can be called from dynamically loaded code */
+#undef ___CAN_IMPORT_CLIB_DYNAMICALLY
+
+/* Define as 1 if C library setjmp function can be called from dynamically loaded code */
+#undef ___CAN_IMPORT_SETJMP_DYNAMICALLY
+
+/* Define as 1 if Gambit RTS functions can be called from dynamically loaded code */
+#undef ___CAN_IMPORT_DYNAMICALLY
+
 /*---------------------------------------------------------------------------*/
 
 /* Determine which header files are available. */
+
+#ifndef _GNU_SOURCE
+#undef _GNU_SOURCE
+#endif
 
 #undef HAVE_ERRNO_H
 #undef HAVE_UNISTD_H
@@ -293,6 +309,9 @@
 /* Define as 1 if you want to enable high-resolution timing */
 #undef USE_HIGH_RES_TIMING
 
+/* Define as 1 if you want to force using ITIMER_REAL for itimer */
+#undef USE_ITIMER_REAL
+
 /* Define as 1 to select a filesystem path encoding */
 #undef ___PATH_ENCODING_UTF8
 #undef ___PATH_ENCODING_LATIN1
@@ -306,6 +325,12 @@
  * runtime options, e.g. #define ___DEFAULT_RUNTIME_OPTIONS {'d','2','\0'}
  */
 #undef ___DEFAULT_RUNTIME_OPTIONS
+
+/*
+ * Define as a UCS_2 array initialization containing the default
+ * compile options
+ */
+#undef ___DEFAULT_COMPILE_OPTIONS
 
 /*---------------------------------------------------------------------------*/
 

@@ -2,78 +2,614 @@
 
 ;;; File: "_univlib.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
-(macro-case-target
+(cond-expand
 
- ((js)
+ ((compilation-target js)
   (##inline-host-declaration "
 
-if ((function () { return this !== this.window; })()) { // nodejs?
+// Autodetect when running in a web browser (as opposed to nodejs).
+@os_web@ = (function () { return this === this.window; })();
 
+// Autodetect availability of nodejs features.
+if (typeof @os_nodejs@ === 'undefined') {
+  @os_nodejs@ = !@os_web@;
+}
+
+if (@os_nodejs@) {
   os = require('os');
-  fs = require('fs');
   vm = require('vm');
   process = require('process');
   child_process = require('child_process')
-
-  g_os_encode_error = function (exn) {
-    switch (exn.code) {
-      case 'EPERM':  return -1;
-      case 'ENOENT': return -2;
-      case 'EINTR':  return -4;
-      case 'EIO':    return -5;
-      case 'EBADF':  return -9;
-      case 'EACCES': return -13;
-      case 'EEXIST': return -17;
-      case 'EAGAIN': return -35;
-    }
-    return -8888;
-  };
-
-  g_os_decode_error = function (code) {
-    switch (code) {
-      case -1:  return 'EPERM (Operation not permitted)';
-      case -2:  return 'ENOENT (No such file or directory)';
-      case -4:  return 'EINTR (Interrupted system call)';
-      case -5:  return 'EIO (Input/output error)';
-      case -9:  return 'EBADF (Bad file descriptor)';
-      case -13: return 'EACCES (Permission denied)';
-      case -17: return 'EEXIST (File exists)';
-      case -35: return 'EAGAIN (Resource temporarily unavailable)';
-    }
-    return 'E??? (unknown error)';
-  };
+  if (typeof @os_fs@ === 'undefined') {
+    @os_fs@ = require('fs');
+    @os_buffer@ = require('buffer');
+  }
 }
 
-g_current_time = function () {
+if (typeof @os_fs@ === 'undefined') {
+
+  @os_fs@ = null;
+
+  // Autodetect BrowserFS and use it if available for local filesystem.
+  if (typeof BrowserFS !== 'undefined') {
+    BrowserFS.configure({
+      fs: 'LocalStorage'
+    }, function (err) {
+      if (!err) {
+        @os_fs@ = BrowserFS.BFSRequire('fs');
+        @os_buffer@ = BrowserFS.BFSRequire('buffer');
+      }
+    });
+  }
+}
+
+@os_uri_scheme_prefixed@ = function (string) {
+  return string.match(/^[a-zA-Z][-+.a-zA-Z0-9]*:\\/\\//);
+};
+
+@os_encode_error@ = function (exn) {
+  switch (exn.code) {
+    case 'EPERM':     return -1;
+    case 'ENOENT':    return -2;
+    case 'EINTR':     return -4;
+    case 'EIO':       return -5;
+    case 'EBADF':     return -9;
+    case 'EACCES':    return -13;
+    case 'EEXIST':    return -17;
+    case 'ENOTDIR':   return -20;
+    case 'EISDIR':    return -21;
+    case 'EINVAL':    return -22;
+    case 'ENOSPC':    return -28;
+    case 'EAGAIN':    return -35;
+    case 'ENOTEMPTY': return -66;
+  }
+  return -8888;
+};
+
+@os_decode_error@ = function (code) {
+  switch (code) {
+    case -1:  return 'EPERM (Operation not permitted)';
+    case -2:  return 'ENOENT (No such file or directory)';
+    case -4:  return 'EINTR (Interrupted system call)';
+    case -5:  return 'EIO (Input/output error)';
+    case -9:  return 'EBADF (Bad file descriptor)';
+    case -13: return 'EACCES (Permission denied)';
+    case -17: return 'EEXIST (File exists)';
+    case -20: return 'ENOTDIR (Not a directory)';
+    case -21: return 'EISDIR (Is a directory)';
+    case -22: return 'EINVAL (Invalid argument)';
+    case -28: return 'ENOSPC (No space left on device)';
+    case -35: return 'EAGAIN (Resource temporarily unavailable)';
+    case -66: return 'ENOTEMPTY (Directory not empty)';
+  }
+  return 'E??? (unknown error)';
+};
+
+@os_current_time@ = function () {
   return new Date().getTime() / 1000;
 };
 
-g_start_time = g_current_time();
+@os_start_time@ = @os_current_time@();
 
-g_set_process_times = function (vect) {
-  var elapsed = g_current_time() - g_start_time;
-  vect.elems[0] = elapsed;
-  vect.elems[1] = 0.0;
-  vect.elems[2] = elapsed;
+@os_set_process_times@ = function (vect) {
+  var elapsed = @os_current_time@() - @os_start_time@;
+  vect.@elems@[0] = elapsed;
+  vect.@elems@[1] = 0.0;
+  vect.@elems@[2] = elapsed;
   return vect;
 };
 
-G_Device = function (fd) {
-  this.fd = fd;
-  this.rbuf = new Uint8Array(1024);
-  this.rlo = 1;
-  this.rhi = 1; // 0 would mean EOF
+@os_debug@ = false;
+
+@os_condvar_ready_set@ = function (condvar_scm, ready) {
+  // redefined when @os_condvar_select@ is required
 };
 
-g_os_debug = false;
+@Device_jsconsole@ = function () {
+  var dev = this;
+  dev.wbuf = []; // buffer to accumulate chars up to end of line
+};
+
+@Device_jsconsole@.prototype.read = function (dev_condvar_scm, buffer, lo, hi) {
+
+  var dev = this;
+
+  if (@os_debug@)
+    console.log('@Device_jsconsole@().read(...,['+buffer.slice(0,10)+'...],'+lo+','+hi+')');
+
+  return -1; // EPERM (operation not permitted)
+};
+
+@Device_jsconsole@.prototype.write = function (dev_condvar_scm, buffer, lo, hi) {
+
+  var dev = this;
+
+  if (@os_debug@)
+    console.log('@Device_jsconsole@().write(...,['+buffer.slice(0,10)+'...],'+lo+','+hi+')');
+
+  for (var i=lo; i<hi; i++) {
+    var c = buffer[i];
+    if (c === 10) { // end of line?
+      console.log(String.fromCharCode.apply(null, dev.wbuf));
+      dev.wbuf = [];
+    } else {
+      dev.wbuf.push(c);
+    }
+  }
+
+  return hi-lo; // number of bytes transferred
+};
+
+@Device_jsconsole@.prototype.force_output = function (dev_condvar_scm, level) {
+
+  var dev = this;
+
+  if (@os_debug@)
+    console.log('@Device_jsconsole@().force_output(...,'+level+')');
+
+  return 0; // no error
+};
+
+@Device_jsconsole@.prototype.seek = function (dev_condvar_scm, pos, whence) {
+
+  var dev = this;
+
+  if (@os_debug@)
+    console.log('@Device_jsconsole@().seek(...,'+pos+','+whence+')');
+
+  return -1; // EPERM (operation not permitted)
+};
+
+@Device_jsconsole@.prototype.width = function (dev_condvar_scm) {
+
+  var dev = this;
+
+  if (@os_debug@)
+    console.log('@Device_jsconsole@().width()');
+
+  return 80;
+};
+
+@Device_jsconsole@.prototype.close = function (direction) {
+
+  var dev = this;
+
+  if (@os_debug@)
+    console.log('@Device_jsconsole@().close('+direction+')');
+
+  return -1; // EPERM (operation not permitted)
+};
+
+if (@os_fs@) {
+
+  @async_op_done@ = -99;
+  @async_op_in_progress@ = -98;
+
+  @Device_fd@ = function (fd) {
+    var dev = this;
+    dev.fd = fd;
+    dev.async_read_progress = @async_op_done@; // no previous result
+    dev.async_write_progress = @async_op_done@; // no previous result
+  };
+
+  @Device_fd@.prototype.read = function (dev_condvar_scm, buffer, lo, hi) {
+
+    var dev = this;
+
+    if (@os_debug@)
+      console.log('@Device_fd@('+dev.fd+').read(...,['+buffer.slice(0,10)+'...],'+lo+','+hi+')');
+
+    var async_read_progress = dev.async_read_progress;
+
+    if (async_read_progress === @async_op_in_progress@) {
+
+        return -35; // return EAGAIN because other async read is in progress
+
+    } else if (async_read_progress !== @async_op_done@) {
+
+        dev.async_read_progress = @async_op_done@;
+        return async_read_progress; // return result of async read
+
+    } else {
+
+      // Start an async read of the file descriptor
+
+      function callback(err, bytesRead) {
+        var progress = dev.async_read_progress;
+        if (err) {
+          err = @os_encode_error@(err);
+          if (err === -35) { // fd is in non-blocking mode... poll it at 10Hz
+            setTimeout(function () {
+              if (dev.async_read_progress === @async_op_in_progress@) {
+                dev.async_read_progress = @async_op_done@;
+                @os_condvar_ready_set@(dev_condvar_scm, true);
+              }
+            }, 100);
+            return;
+          }
+          dev.async_read_progress = err; // can't be EAGAIN
+        } else {
+          dev.async_read_progress = bytesRead; // possibly 0 to signal EOF
+        }
+        if (progress === @async_op_in_progress@) {
+          @os_condvar_ready_set@(dev_condvar_scm, true);
+        }
+      }
+
+      var fd = (dev.fd < 0) ? 0 : dev.fd; // basic console reads from stdin
+
+      @os_fs@.read(fd, @os_buffer@.Buffer.from(buffer.buffer), lo, hi-lo, null, callback);
+
+      if (dev.async_read_progress !== @async_op_done@) {
+        // handle synchronous execution of callback
+        var progress = dev.async_read_progress;
+        dev.async_read_progress = @async_op_done@;
+        return progress;
+      } else {
+        @os_condvar_ready_set@(dev_condvar_scm, false);
+        dev.async_read_progress = @async_op_in_progress@;
+        return -35; // return EAGAIN to suspend Scheme thread on condvar
+      }
+    }
+  };
+
+  @Device_fd@.prototype.write = function (dev_condvar_scm, buffer, lo, hi) {
+
+    var dev = this;
+
+    if (@os_debug@)
+      console.log('@Device_fd@('+dev.fd+').write(...,['+buffer.slice(0,10)+'...],'+lo+','+hi+')');
+
+    var async_write_progress = dev.async_write_progress;
+
+    if (async_write_progress === @async_op_in_progress@) {
+
+        return -35; // return EAGAIN because other async write is in progress
+
+    } else if (async_write_progress !== @async_op_done@) {
+
+        dev.async_write_progress = @async_op_done@;
+        return async_write_progress; // return result of async write
+
+    } else {
+
+      // Start an async write of the file descriptor
+
+      function callback(err, bytesWritten) {
+        var progress = dev.async_write_progress;
+        if (err) {
+          err = @os_encode_error@(err);
+          if (err === -35) { // fd is in non-blocking mode... poll it at 10Hz
+            setTimeout(function () {
+              if (dev.async_write_progress === @async_op_in_progress@) {
+                dev.async_write_progress = @async_op_done@;
+                @os_condvar_ready_set@(dev_condvar_scm, true);
+              }
+            }, 100);
+            return;
+          }
+          dev.async_write_progress = err; // can't be EAGAIN
+        } else {
+          dev.async_write_progress = bytesWritten;
+        }
+        if (progress === @async_op_in_progress@) {
+          @os_condvar_ready_set@(dev_condvar_scm, true);
+        }
+      }
+
+      var fd = (dev.fd < 0) ? 1 : dev.fd; // basic console writes to stdout
+
+      @os_fs@.write(fd, @os_buffer@.Buffer.from(buffer.buffer), lo, hi-lo, null, callback);
+
+      if (dev.async_write_progress !== @async_op_done@) {
+        // handle synchronous execution of callback
+        var progress = dev.async_write_progress;
+        dev.async_write_progress = @async_op_done@;
+        return progress;
+      } else {
+        @os_condvar_ready_set@(dev_condvar_scm, false);
+        dev.async_write_progress = @async_op_in_progress@;
+        return -35; // return EAGAIN to suspend Scheme thread on condvar
+      }
+    }
+  };
+
+  @Device_fd@.prototype.force_output = function (dev_condvar_scm, level) {
+
+    var dev = this;
+
+    if (@os_debug@)
+      console.log('@Device_fd@('+dev.fd+').force_output(...,'+level+')');
+
+    return 0; // no error
+  };
+
+  @Device_fd@.prototype.seek = function (dev_condvar_scm, pos, whence) {
+
+    var dev = this;
+
+    if (@os_debug@)
+      console.log('@Device_fd@('+dev.fd+').seek(...,'+pos+','+whence+')');
+
+    return -1; // EPERM (operation not permitted)
+  };
+
+  @Device_fd@.prototype.width = function (dev_condvar_scm) {
+
+    var dev = this;
+
+    if (@os_debug@)
+      console.log('@Device_fd@('+dev.fd+').width()');
+
+    return 80;
+  };
+
+  @Device_fd@.prototype.close = function (direction) {
+
+    var dev = this;
+
+    if (@os_debug@)
+      console.log('@Device_fd@('+dev.fd+').close('+direction+')');
+
+    if ((direction & 1) != 0 ||  // DIRECTION_RD
+        (direction & 2) != 0) {  // DIRECTION_WR
+
+      // Start an async close of the file descriptor
+
+      var async_progress = @async_op_done@; // close not yet started
+      var ra = @r0@;
+
+      function callback(err) {
+        var progress = async_progress;
+        if (err) {
+          async_progress = @os_encode_error@(err);
+        } else {
+          async_progress = 0; // no error
+        }
+        if (progress === @async_op_in_progress@) {
+          @r1@ = @host2scm@(async_progress);
+          @r0@ = ra;
+          @trampoline@(@r0@);
+        }
+      }
+
+      if (dev.fd >= 0) { // don't close basic console
+        @os_fs@.close(dev.fd, callback);
+      }
+
+      if (async_progress !== @async_op_done@) {
+        // handle synchronous execution of callback
+        return async_progress;
+      } else {
+        async_progress = @async_op_in_progress@;
+        @r0@ = null; // exit trampoline
+        return 0; // ignored
+      }
+    }
+
+    return 0; // no error
+  };
+
+  @os_device_from_fd@ = function (fd) {
+    return new @Device_fd@(fd);
+  };
+
+  @os_device_from_stdin@ = function () {
+    return @os_device_from_fd@(0);
+  };
+
+  @os_device_from_stdout@ = function () {
+    return @os_device_from_fd@(1);
+  };
+
+  @os_device_from_stderr@ = function () {
+    return @os_device_from_fd@(2);
+  };
+
+  @os_console@ = null;
+
+  @os_device_from_basic_console@ = function () {
+    if (@os_console@ === null) @os_console@ = @os_device_from_fd@(-1);
+    return @os_console@;
+  };
+
+}
+
+if (@os_web@) {
+
+  @Device_basic_console@ = function () {
+
+    var dev = this;
+    dev.wbuf = new Uint8Array(0);
+    dev.rbuf = new Uint8Array(1);
+    dev.rlo = 1;
+    dev.encoder = new TextEncoder();
+    dev.decoder = new TextDecoder();
+    dev.echo = true;
+    dev.read_condvar_scm = null;
+  };
+
+  @Device_basic_console@.prototype.input_add = function (input) {
+
+    var dev = this;
+    var len = dev.rbuf.length-dev.rlo;
+    var inp = dev.encoder.encode(input);
+    if (dev.echo) dev.output_add_buffer(inp); // echo the input
+    var newbuf = new Uint8Array(len + inp.length);
+    newbuf.set(newbuf.subarray(dev.rlo, dev.rlo+len));
+    newbuf.set(inp, len);
+    dev.rbuf = newbuf;
+    dev.rlo = 0;
+  };
+
+  @Device_basic_console@.prototype.output_add = function (output) {
+
+    var dev = this;
+    dev.output_add_buffer(dev.encoder.encode(output));
+  };
+
+  @Device_basic_console@.prototype.output_add_buffer = function (buffer) {
+
+    var dev = this;
+    var len = dev.wbuf.length;
+    var newbuf = new Uint8Array(len + buffer.length);
+    newbuf.set(dev.wbuf);
+    newbuf.set(buffer, len);
+    dev.wbuf = newbuf;
+
+    if (!dev.use_async_output()) {
+      // heuristic trimming of output so that it fits in the 'prompt' dialog
+      var end = newbuf.length;
+      var nl = end-1;
+      var trim = 7; // trim to last 7 lines
+      for (var n=0; n<trim; n++) {
+        var prev = nl-1;
+        while (prev >= 0 && newbuf[prev] !== 10) prev--; // find prev newline
+        if (n > 1 && end-prev > 35*trim) break;
+        nl = prev;
+        if (prev < 0) break;
+      }
+      if (nl >= 0) dev.wbuf = newbuf.subarray(nl+1);
+    }
+  };
+
+  @Device_basic_console@.prototype.use_async_input = function () {
+    return false; // use a synchronous call to 'prompt' to get console input
+  };
+
+  @Device_basic_console@.prototype.use_async_output = function () {
+    return false; // use a synchronous call to 'prompt' to show console output
+  };
+
+  @Device_basic_console@.prototype.read = function (dev_condvar_scm, buffer, lo, hi) {
+
+    var dev = this;
+    var n = hi-lo;
+    var have = dev.rbuf.length-dev.rlo;
+
+    if (@os_debug@)
+      console.log('@Device_basic_console@().read(...,['+buffer.slice(0,10)+'...],'+lo+','+hi+')');
+
+    @os_condvar_ready_set@(dev_condvar_scm, false);
+
+    if (have === 0) {
+
+      if (dev.rlo === 0) {
+        dev.rbuf = new Uint8Array(1); // prevent repeated EOF
+        dev.rlo = 1;
+        return 0; // signal EOF
+
+      } else if (dev.use_async_input()) {
+
+        // Input will be received asynchronously
+
+        if (dev.read_condvar_scm === null) {
+          dev.read_condvar_scm = dev_condvar_scm;
+        }
+
+        return -35; // return EAGAIN to suspend Scheme thread on condvar
+
+      } else {
+
+        var input = prompt(dev.decoder.decode(dev.wbuf) + '\\u258b                                                                                ');
+        dev.wbuf = new Uint8Array(0);
+        if (input === null) return 0; // cancel button gives EOF
+
+        dev.input_add(input + '\\n');
+
+        have = dev.rbuf.length-dev.rlo;
+      }
+    }
+
+    if (n > have) n = have;
+
+    buffer.set(dev.rbuf.subarray(dev.rlo, dev.rlo+n), lo);
+
+    dev.rlo += n;
+
+    return n; // number of bytes transferred
+  };
+
+  @Device_basic_console@.prototype.write = function (dev_condvar_scm, buffer, lo, hi) {
+
+    var dev = this;
+
+    if (@os_debug@)
+      console.log('@Device_basic_console@().write(...,['+buffer.slice(0,10)+'...],'+lo+','+hi+')');
+
+    dev.output_add_buffer(buffer.subarray(lo, hi));
+
+    return hi-lo;
+  };
+
+  @Device_basic_console@.prototype.force_output = function (dev_condvar_scm, level) {
+
+    var dev = this;
+
+    if (@os_debug@)
+      console.log('@Device_basic_console@().force_output(...,'+level+')');
+
+    return 0; // no error
+  };
+
+  @Device_basic_console@.prototype.seek = function (dev_condvar_scm, pos, whence) {
+
+    var dev = this;
+
+    if (@os_debug@)
+      console.log('@Device_basic_console@().seek(...,'+pos+','+whence+')');
+
+    return -1; // EPERM (operation not permitted)
+  };
+
+  @Device_basic_console@.prototype.width = function (dev_condvar_scm) {
+
+    var dev = this;
+
+    if (@os_debug@)
+      console.log('@Device_basic_console@().width()');
+
+    return 80;
+  };
+
+  @Device_basic_console@.prototype.close = function (direction) {
+
+    var dev = this;
+
+    if (@os_debug@)
+      console.log('@Device_basic_console@().close('+direction+')');
+
+    return 0; // no error
+  };
+
+  @os_console@ = null;
+
+  @os_device_from_basic_console@ = function () {
+    if (@os_console@ === null) @os_console@ = new @Device_basic_console@();
+    return @os_console@;
+  };
+
+  @os_device_from_stdin@ = function () {
+    return @os_device_from_basic_console@();
+  };
+
+  @os_device_from_stdout@ = function () {
+    return new @Device_jsconsole@();
+  };
+
+  @os_device_from_stderr@ = function () {
+    return new @Device_jsconsole@();
+  };
+
+}
 
 "))
 
- ((python)
+ ((compilation-target python)
   (##inline-host-declaration "
 
 import os
@@ -85,26 +621,38 @@ import errno
 import getpass
 import functools
 
-def g_os_encode_error(exn):
+def @os_encode_error@(exn):
     e = exn.errno
     if e == errno.EPERM:
       return -1
     elif e == errno.ENOENT:
         return -2
     elif e == errno.EINTR:
-        return -5
+        return -4
     elif e == errno.EIO:
-        return -9
+        return -5
     elif e == errno.EBADF:
-        return -13
+        return -9
     elif e == errno.EACCES:
-        return -17
+        return -13
     elif e == errno.EEXIST:
+        return -17
+    elif e == errno.ENOTDIR:
+        return -20
+    elif e == errno.EISDIR:
+        return -21
+    elif e == errno.EINVAL:
+        return -22
+    elif e == errno.ENOSPC:
+        return -28
+    elif e == errno.EAGAIN:
         return -35
+    elif e == errno.ENOTEMPTY:
+        return -66
     else:
         return -8888
 
-def g_os_decode_error(code):
+def @os_decode_error@(code):
     if code == -1:
         return 'EPERM (Operation not permitted)'
     elif code == -2:
@@ -119,30 +667,131 @@ def g_os_decode_error(code):
         return 'EACCES (Permission denied)'
     elif code == -17:
         return 'EEXIST (File exists)'
+    elif code == -20:
+        return 'ENOTDIR (Not a directory)'
+    elif code == -21:
+        return 'EISDIR (Is a directory)'
+    elif code == -22:
+        return 'EINVAL (Invalid argument)'
+    elif code == -28:
+        return 'ENOSPC (No space left on device)'
     elif code == -35:
         return 'EAGAIN (Resource temporarily unavailable)'
+    elif code == -66:
+        return 'ENOTEMPTY (Directory not empty)'
     else:
         return 'E??? (unknown error)'
 
-def g_current_time():
+def @os_current_time@():
     return time.time()
 
-g_start_time = g_current_time()
+@os_start_time@ = @os_current_time@()
 
-def g_set_process_times(vect):
-    elapsed = g_current_time() - g_start_time
-    vect.elems[0] = elapsed
-    vect.elems[1] = 0.0
-    vect.elems[2] = elapsed
+def @os_set_process_times@(vect):
+    elapsed = @os_current_time@() - @os_start_time@
+    vect.@elems@[0] = elapsed
+    vect.@elems@[1] = 0.0
+    vect.@elems@[2] = elapsed
     return vect
 
-class G_Device:
+@os_debug@ = False
 
-    def __init__(self, fd):
-        self.fd = fd
+class @Device_fd@:
 
+    def __init__(dev, fd):
+        dev.fd = fd
 
-g_os_debug = False
+    def read(dev, dev_condvar_scm, buffer, lo, hi):
+
+        if @os_debug@:
+            print('@Device_fd@('+repr(dev.fd)+').read(...,'+repr(buffer[0:20])+','+repr(lo)+','+repr(hi)+')')
+
+        try:
+            b = os.read(dev.fd, hi-lo)
+            n = len(b)
+            buffer[lo:lo+n] = b
+        except OSError as exn:
+            return @os_encode_error@(exn)
+
+        return n  # number of bytes transferred
+
+    def write(dev, dev_condvar_scm, buffer, lo, hi):
+
+        if @os_debug@:
+            print('@Device_fd@('+repr(dev.fd)+').write(...,'+repr(buffer[0:20])+','+repr(lo)+','+repr(hi)+')')
+
+        try:
+            n = os.write(dev.fd, buffer[lo:hi])
+        except OSError as exn:
+            return @os_encode_error@(exn)
+
+        return n  # number of bytes transferred
+
+    def force_output(dev, dev_condvar_scm, level):
+
+        if @os_debug@:
+            print('@Device_fd@('+repr(dev.fd)+').force_output(...,'+repr(level)+')')
+
+        return 0  # no error
+
+    def seek(dev, dev_condvar_scm, pos, whence):
+
+        if @os_debug@:
+            print('@Device_fd@('+repr(dev.fd)+').seek(...,'+repr(pos)+','+repr(whence)+')')
+
+        if whence == 0:
+            how = os.SEEK_SET
+        elif whence == 1:
+            how = os.SEEK_CUR
+        else:
+            how = os.SEEK_END
+
+        try:
+            os.lseek(dev.fd, pos, how)
+        except OSError as exn:
+            return @os_encode_error@(exn)
+
+        return 0  # no error
+
+    def width(dev, dev_condvar_scm):
+
+        if @os_debug@:
+            print('@Device_fd@('+repr(dev.fd)+').width(...)')
+
+        return 80
+
+    def close(dev, direction):
+
+        if @os_debug@:
+            print('@Device_fd@('+repr(dev.fd)+').close('+repr(direction)+')')
+
+        if not ((direction & 3) == 0):  # DIRECTION_RD or DIRECTION_WR
+            try:
+                os.close(dev.fd)
+            except OSError as exn:
+                return @os_encode_error@(exn)
+
+        return 0  # no error
+
+def @os_device_from_fd@(fd):
+    return @Device_fd@(fd)
+
+def @os_device_from_stdin@():
+    return @os_device_from_fd@(0)
+
+def @os_device_from_stdout@():
+    return @os_device_from_fd@(1)
+
+def @os_device_from_stderr@():
+    return @os_device_from_fd@(2)
+
+@os_console@ = None
+
+def @os_device_from_basic_console@():
+    global @os_console@
+    if @os_console@ is None:
+        @os_console@ = @os_device_from_stdout@()
+    return @os_console@
 
 "))
 
@@ -152,6 +801,7 @@ g_os_debug = False
 
 (define ##err-code-ENOENT             -2)
 (define ##err-code-EINTR              -4)
+(define ##err-code-EACCES            -13)
 (define ##err-code-EEXIST            -17)
 (define ##err-code-EAGAIN            -35)
 (define ##err-code-unimplemented   -9999)
@@ -170,19 +820,20 @@ g_os_debug = False
 (define ##os-system-type-string-saved "unknown-system-type")
 (define (##system-stamp) 20200101213000)
 
-(define (##os-path-gambitdir) "/usr/local/Gambit")
-(define (##os-path-gambitdir-map-lookup name) #f)
-
-(define (##os-module-install-mode) 1)
-(define (##os-module-search-order) '("~~lib" "~~userlib"))
-(define (##os-module-whitelist)    '("github.com/gambit"))
-
 (define (##get-parallelism-level) 1)
 (define (##cpu-count) 1)
 (define (##current-vm-resize vm n) #f)
 
 (define (##get-standard-level) 0)
-(define (##set-debug-settings! mask new-settings) 0)
+
+(define ##debug-settings 16) ;; exceptions start a REPL
+
+(define (##set-debug-settings! mask new-settings)
+  (let ((old-settings ##debug-settings))
+    (set! ##debug-settings
+          (##fxior (##fxand old-settings (##fxnot mask))
+                   (##fxand new-settings mask)))
+    old-settings))
 
 (define (##disable-interrupts!) #f)
 (define (##enable-interrupts!) #f)
@@ -196,18 +847,6 @@ g_os_debug = False
 (define (##explode-frame frame) #f)
 
 (define (##kernel-handlers) #f)
-
-(define (##os-condvar-select! devices timeout) #f)
-
-(define (##os-copy-file src-path dest-path) -5555)
-(define (##os-create-directory path permissions) -5555)
-(define (##os-create-fifo path permissions) -5555)
-(define (##os-create-link old-path new-path) -5555)
-(define (##os-create-symbolic-link old-path new-path) -5555)
-(define (##os-delete-directory path) -5555)
-(define (##os-delete-file path) -5555)
-(define (##os-rename-file old-path new-path replace?) -5555)
-(define (##os-file-times-set! path a-time m-time) -5555)
 
 (define (##os-host-info hi host) -5555)
 (define (##os-network-info ni network) -5555)
@@ -237,8 +876,8 @@ g_os_debug = False
 (define-prim (##os-device-tty-mode-set! dev input-allow-special input-echo input-raw output-raw speed)
   (error "##os-device-tty-mode-set! not implemented yet"))
 
-(define-prim (##os-device-tty-mode-reset dev)
-  (error "##os-device-tty-mode-reset not implemented yet"))
+(define-prim (##os-device-tty-mode-reset)
+  (##void))
 
 (define-prim (##os-device-tty-paren-balance-duration-set! dev duration)
   (error "##os-device-tty-paren-balance-duration-set! not implemented yet"))
@@ -249,7 +888,16 @@ g_os_debug = False
 (define-prim (##os-device-tty-type-set! dev term-type emacs-bindings)
   (error "##os-device-tty-type-set! not implemented yet"))
 
+(define (##execute-final-wills!)
+  ;; do nothing because wills are only implemented in C backend
+  #f)
+
+(define (##force obj)
+  (##force-out-of-line obj))
+
 ;;;----------------------------------------------------------------------------
+
+;;; Subprocedure information.
 
 (define-prim (##subprocedure-id proc))
 (define-prim (##subprocedure-parent proc))
@@ -379,19 +1027,19 @@ g_os_debug = False
 
 (define (##global-vars)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##map ##string->symbol
            (##vector->list
             (##inline-host-expression
-             "g_host2scm(Object.keys(g_glo))"))))
+             "@host2scm@(Object.keys(@glo@))"))))
 
-   ((python)
+   ((compilation-target python)
     (##map ##string->symbol
            (##vector->list
             (##inline-host-expression
-             "g_host2scm(list(g_glo.keys()))"))))
+             "@host2scm@(list(@glo@.keys()))"))))
 
    (else
     (println "unimplemented ##global-vars called")
@@ -399,19 +1047,19 @@ g_os_debug = False
 
 (define (##interned-symbols)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##map ##string->symbol
            (##vector->list
             (##inline-host-expression
-             "g_host2scm(Object.keys(g_symbol_table))"))))
+             "@host2scm@(Object.keys(@symbol_table@))"))))
 
-   ((python)
+   ((compilation-target python)
     (##map ##string->symbol
            (##vector->list
             (##inline-host-expression
-             "g_host2scm(list(g_symbol_table.keys()))"))))
+             "@host2scm@(list(@symbol_table@.keys()))"))))
 
    (else
     (println "unimplemented ##interned-symbols called")
@@ -435,267 +1083,20 @@ g_os_debug = False
 
 ;;;----------------------------------------------------------------------------
 
-;;; Host FFI.
-
-(define (##string-substitute str delim alist)
-
-  (define (index-of c start)
-    (let loop ((i start))
-      (if (##fx< i (##string-length str))
-          (if (##char=? c (##string-ref str i))
-              i
-              (loop (##fx+ i 1)))
-          i)))
-
-  (let loop ((i 0) (j 0) (out '()))
-    (let ((start (index-of delim j)))
-      (if (##fx< start (##string-length str))
-          (let ((end (index-of delim (##fx+ start 1))))
-            (if (##fx< end (##string-length str))
-                (if (##fx= start (##fx- end 1)) ;; two delimiters in a row?
-                    (loop (##fx+ end 1)
-                          (##fx+ end 1)
-                          (##cons (##substring str i end)
-                                  out))
-                    (let* ((var (##substring str (##fx+ start 1) end))
-                           (x (##assoc var alist)))
-                      (if x
-                          (loop (##fx+ end 1)
-                                (##fx+ end 1)
-                                (##cons (##cdr x)
-                                        (##cons (##substring str i start)
-                                                out)))
-                          (##error "Unbound substitution variable in" str))))
-                (##error "Unbalanced delimiter in" str)))
-          (##append-strings
-           (##reverse (##cons (##substring str i start) out)))))))
-
-(macro-case-target
-
- ((js)
-  (##inline-host-declaration "
-
-g_eval = function (expr) {
-  return (1,eval)(expr);
-};
-
-g_exec = function (stmts) {
-  (1,eval)(stmts);
-};
-
-g_host_define_function = function (name, params, expr) {
-  g_exec(name + '= function (' + params + ') { return ' + expr + '; };');
-};
-
-g_host_define_procedure = function (name, params, stmts) {
-  g_exec(name + '= function (' + params + ') {' + stmts + '\\n};');
-};
-
-g_host_function_call = function (fn, args) {
-  return g_eval(fn).apply(this, args);
-};
-
-g_host_procedure_call = function (proc, args) {
-  g_eval(proc).apply(this, args);
-};
-
-g_host_eval = function (expr) {
-  return g_eval(expr);
-};
-
-g_host_exec = function (stmts) {
-  g_exec(stmts);
-};
-
-"))
-
- ((python)
-  (##inline-host-declaration "
-
-def g_eval(expr):
-    return eval(expr, globals())
-
-def g_exec(stmts):
-    exec(stmts, globals())
-
-def g_host_define_function(name, params, expr):
-    g_exec('def ' + name + '(' + params + '):\\n return ' + expr)
-
-def g_host_define_procedure(name, params, stmts):
-    g_exec('def ' + name + '(' + params + '):' + stmts + '\\n')
-
-def g_host_function_call(fn, args):
-    return globals()[fn](*args)
-
-def g_host_procedure_call(proc, args):
-    globals()[proc](*args)
-
-def g_host_eval(expr):
-    return g_eval(expr)
-
-def g_host_exec(stmts):
-    g_exec(stmts)
-
-"))
-
- (else))
-
-(define (##host-define-function-dynamic name params expr)
-  (##declare (not interrupts-enabled))
-  (macro-case-target
-
-   ((js python)
-    (##inline-host-statement
-     "g_host_define_function(g_scm2host(@1@),g_scm2host(@2@),g_scm2host(@3@))"
-     name
-     (##append-strings params ",")
-     expr))
-
-   (else
-    (println "unimplemented ##host-define-function-dynamic called with name=")
-    (println name)
-    (println "and params=")
-    (println params)
-    (println "and expr=")
-    (println expr))))
-
-(define (##host-define-procedure-dynamic name params stmts)
-  (##declare (not interrupts-enabled))
-  (macro-case-target
-
-   ((js python)
-    (##inline-host-statement
-     "g_host_define_procedure(g_scm2host(@1@),g_scm2host(@2@),g_scm2host(@3@))"
-     name
-     (##append-strings params ",")
-     stmts))
-
-   (else
-    (println "unimplemented ##host-define-procedure-dynamic called with name=")
-    (println name)
-    (println "and params=")
-    (println params)
-    (println "and stmts=")
-    (println stmts))))
-
-(define (##host-function-call fn args)
-  (##declare (not interrupts-enabled))
-  (macro-case-target
-
-   ((js python)
-    (##inline-host-expression
-     "g_host_function_call(g_scm2host(@1@), @2@)"
-     fn
-     args))
-
-   (else
-    (println "unimplemented ##host-function-call called with fn=")
-    (println fn)
-    (println "and args=")
-    (println args)
-    #f)))
-
-(define (##host-procedure-call proc args)
-  (##declare (not interrupts-enabled))
-  (macro-case-target
-
-   ((js python)
-    (##inline-host-statement
-     "g_host_procedure_call(g_scm2host(@1@), @2@)"
-     proc
-     args))
-
-   (else
-    (println "unimplemented ##host-procedure-call called with proc=")
-    (println proc)
-    (println "and args=")
-    (println args))))
-
-(define (##host-eval-dynamic expr)
-  (##declare (not interrupts-enabled))
-  (macro-case-target
-
-   ((js python)
-    (##inline-host-expression
-     "g_host_eval(g_scm2host(@1@))"
-     expr))
-
-   (else
-    (println "unimplemented ##host-eval-dynamic called with expr=")
-    (println expr)
-    #f)))
-
-(define (##host-exec-dynamic stmts)
-  (##declare (not interrupts-enabled))
-  (macro-case-target
-
-   ((js python)
-    (##inline-host-statement
-     "g_host_exec(g_scm2host(@1@))"
-     stmts))
-
-   (else
-    (println "unimplemented ##host-exec-dynamic called with stmts=")
-    (println stmts))))
-
-(define (##host-decl-expand decl)
-  (##host-exec-dynamic decl)
-  `(##begin))
-
-(define ##host-fn-counter 0)
-
-(define (##host-exec-expand stmts args-src)
-  (set! ##host-fn-counter (##fx+ ##host-fn-counter 1))
-  (let ((name
-         (##string-append "g_fn" (##number->string ##host-fn-counter)))
-        (substs
-         (##map (lambda (i)
-                  (let ((i-str (##number->string i)))
-                    (##cons i-str
-                            (##string-append "g_arg" i-str))))
-                (##iota (##length args-src) 1))))
-    (##host-define-procedure-dynamic
-     name
-     (##map ##cdr substs)
-     (##string-substitute stmts #\@ substs))
-    `(##host-procedure-call
-      ,name
-      (##vector ,@args-src))))
-
-(define (##host-eval-expand expr args-src)
-  (set! ##host-fn-counter (##fx+ ##host-fn-counter 1))
-  (let ((name
-         (##string-append "g_fn" (##number->string ##host-fn-counter)))
-        (substs
-         (##map (lambda (i)
-                  (let ((i-str (##number->string i)))
-                    (##cons i-str
-                            (##string-append "g_arg" i-str))))
-                (##iota (##length args-src) 1))))
-    (##host-define-function-dynamic
-     name
-     (##map ##cdr substs)
-     (##string-substitute expr #\@ substs))
-    `(##host-function-call
-      ,name
-      (##vector ,@args-src))))
-
-;;;----------------------------------------------------------------------------
-
 ;;; Error codes.
 
 (define (##os-err-code->string code)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-expression
-     "g_host2scm((function () { return this !== this.window; })() ? g_os_decode_error(g_scm2host(@1@)) : 'Unknown error')"
+     "@host2scm@(@os_decode_error@(@scm2host@(@1@)))"
      code))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-expression
-     "g_host2scm(g_os_decode_error(g_scm2host(@1@)))"
+     "@host2scm@(@os_decode_error@(@scm2host@(@1@)))"
      code))
 
    (else
@@ -709,15 +1110,15 @@ def g_host_exec(stmts):
 
 (define (##os-getpid)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-expression
-     "g_host2scm((function () { return this !== this.window; })() ? process.pid : 0)"))
+     "@host2scm@(@os_nodejs@ ? process.pid : 0)"))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-expression
-     "g_host2scm(os.getpid())"))
+     "@host2scm@(os.getpid())"))
 
    (else
     (println "unimplemented ##os-getpid called")
@@ -729,15 +1130,15 @@ def g_host_exec(stmts):
 
 (define (##os-host-name)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-expression
-     "g_host2scm((function () { return this !== this.window; })() ? os.hostname() : 'host-name')"))
+     "@host2scm@(@os_nodejs@ ? os.hostname() : 'host-name')"))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-expression
-     "g_host2scm(os.uname()[1])"))
+     "@host2scm@(os.uname()[1])"))
 
    (else
     (println "unimplemented ##os-host-name called")
@@ -749,15 +1150,15 @@ def g_host_exec(stmts):
 
 (define (##os-user-name)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-expression
-     "g_host2scm((function () { return this !== this.window; })() ? os.userInfo().username : 'user')"))
+     "@host2scm@(@os_nodejs@ ? os.userInfo().username : 'user')"))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-expression
-     "g_host2scm(getpass.getuser())"))
+     "@host2scm@(getpass.getuser())"))
 
    (else
     (println "unimplemented ##os-user-name called")
@@ -769,59 +1170,65 @@ def g_host_exec(stmts):
 
 (define (##os-user-info ui user)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
-g_user_info = function (ui, user) {
-  if ((function () { return this !== this.window; })()) { // nodejs?
+@os_user_info@ = function (ui, user) {
+  if (@os_nodejs@) {
+
     try {
       var posix = require('posix');
       var pw = posix.getpwnam(user);
     } catch (exn) {
       if (exn instanceof Error && exn.hasOwnProperty('code')) {
-        return g_host2scm(g_os_encode_error(exn));
+        return @host2scm@(@os_encode_error@(exn));
       } else {
         throw exn;
       }
     }
-    ui.slots[1] = g_host2scm(pw.name);
-    ui.slots[2] = g_host2scm(pw.uid);
-    ui.slots[3] = g_host2scm(pw.gid);
-    ui.slots[4] = g_host2scm(pw.dir);
-    ui.slots[5] = g_host2scm(pw.shell);
+    ui.@slots@[1] = @host2scm@(pw.name);
+    ui.@slots@[2] = @host2scm@(pw.uid);
+    ui.@slots@[3] = @host2scm@(pw.gid);
+    ui.@slots@[4] = @host2scm@(pw.dir);
+    ui.@slots@[5] = @host2scm@(pw.shell);
     return ui;
+
+  } else if (@os_web@) {
+
+    ui.@slots@[1] = @host2scm@('user');
+    ui.@slots@[2] = @host2scm@(111);
+    ui.@slots@[3] = @host2scm@(222);
+    ui.@slots@[4] = @host2scm@('/home/user');
+    ui.@slots@[5] = @host2scm@('/bin/sh');
+    return ui;
+
   } else {
-    ui.slots[1] = g_host2scm('user');
-    ui.slots[2] = g_host2scm(111);
-    ui.slots[3] = g_host2scm(222);
-    ui.slots[4] = g_host2scm('/home/user');
-    ui.slots[5] = g_host2scm('/bin/sh');
-    return ui;
+    return @host2scm@(-1); // EPERM (operation not permitted)
   }
 };
 
 ")
-    (##inline-host-expression "g_user_info(@1@, g_scm2host(@2@))" ui user))
+    (##inline-host-expression "@os_user_info@(@1@, @scm2host@(@2@))" ui user))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
-def g_user_info(ui, user):
+def @os_user_info@(ui, user):
     try:
         pw = pwd.getpwuid(user) if isinstance(user,int) else pwd.getpwnam(user)
     except OSError as exn:
-        return g_host2scm(g_os_encode_error(exn))
-    ui.slots[1] = g_host2scm(pw[0])
-    ui.slots[2] = g_host2scm(pw[2])
-    ui.slots[3] = g_host2scm(pw[3])
-    ui.slots[4] = g_host2scm(pw[5])
-    ui.slots[5] = g_host2scm(pw[6])
+        return @host2scm@(@os_encode_error@(exn))
+    ui.@slots@[1] = @host2scm@(pw[0])
+    ui.@slots@[2] = @host2scm@(pw[2])
+    ui.@slots@[3] = @host2scm@(pw[3])
+    ui.@slots@[4] = @host2scm@(pw[5])
+    ui.@slots@[5] = @host2scm@(pw[6])
     return ui
 
 ")
-    (##inline-host-expression "g_user_info(@1@, g_scm2host(@2@))" ui user))
+    (##inline-host-expression "@os_user_info@(@1@, @scm2host@(@2@))" ui user))
 
    (else
     (println "unimplemented ##os-user-info called with user=")
@@ -835,53 +1242,59 @@ def g_user_info(ui, user):
 
 (define (##os-group-info gi group)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
-g_group_info = function (gi, group) {
-  if ((function () { return this !== this.window; })()) { // nodejs?
+@os_group_info@ = function (gi, group) {
+  if (@os_nodejs@) {
+
     try {
       var posix = require('posix');
       var gr = posix.getgrnam(group);
     } catch (exn) {
       if (exn instanceof Error && exn.hasOwnProperty('code')) {
-        return g_host2scm(g_os_encode_error(exn));
+        return @host2scm@(@os_encode_error@(exn));
       } else {
         throw exn;
       }
     }
-    gi.slots[1] = g_host2scm(gr.name);
-    gi.slots[2] = g_host2scm(gr.gid);
-    gi.slots[3] = g_host2scm(gr.members);
+    gi.@slots@[1] = @host2scm@(gr.name);
+    gi.@slots@[2] = @host2scm@(gr.gid);
+    gi.@slots@[3] = @host2scm@(gr.members);
     return gi;
+
+  } else if (@os_web@) {
+
+    gi.@slots@[1] = @host2scm@('group');
+    gi.@slots@[2] = @host2scm@(222);
+    gi.@slots@[3] = @host2scm@([]);
+    return gi;
+
   } else {
-    gi.slots[1] = g_host2scm('group');
-    gi.slots[2] = g_host2scm(222);
-    gi.slots[3] = g_host2scm([]);
-    return gi;
+    return @host2scm@(-1); // EPERM (operation not permitted)
   }
 };
 
 ")
-    (##inline-host-expression "g_group_info(@1@, g_scm2host(@2@))" gi group))
+    (##inline-host-expression "@os_group_info@(@1@, @scm2host@(@2@))" gi group))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
-def g_group_info(gi, group):
+def @os_group_info@(gi, group):
     try:
         gr = grp.getgrgid(group) if isinstance(group,int) else pwd.getgrnam(group)
     except OSError as exn:
-        return g_host2scm(g_os_encode_error(exn))
-    gi.slots[1] = g_host2scm(gr[0])
-    gi.slots[2] = g_host2scm(gr[2])
-    gi.slots[3] = g_host2scm(gr[3])
+        return @host2scm@(@os_encode_error@(exn))
+    gi.@slots@[1] = @host2scm@(gr[0])
+    gi.@slots@[2] = @host2scm@(gr[2])
+    gi.@slots@[3] = @host2scm@(gr[3])
     return gi
 
 ")
-    (##inline-host-expression "g_group_info(@1@, g_scm2host(@2@))" gi group))
+    (##inline-host-expression "@os_group_info@(@1@, @scm2host@(@2@))" gi group))
 
    (else
     (println "unimplemented ##os-group-info called with group=")
@@ -901,16 +1314,16 @@ def g_group_info(gi, group):
 
 (define (##os-getenv var)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-expression
-     "g_host2scm((function (v) { return this !== this.window && Object.hasOwnProperty.call(process.env,v) ? process.env[v] : false; })(g_scm2host(@1@)))"
+     "@host2scm@((function (v) { return this !== this.window && Object.hasOwnProperty.call(process.env,v) ? process.env[v] : false; })(@scm2host@(@1@)))"
      var))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-expression
-     "g_host2scm((lambda v: os.environ[v] if v in os.environ else False)(g_scm2host(@1@)))"
+     "@host2scm@(os.environ.get(@scm2host@(@1@), False))"
      var))
 
    (else
@@ -920,18 +1333,18 @@ def g_group_info(gi, group):
 
 (define (##os-setenv var val)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-statement
-     "if ((function (v) { return this !== this.window; })()) process.env[g_scm2host(@1@)] = g_scm2host(@2@);"
+     "if ((function (v) { return this !== this.window; })()) process.env[@scm2host@(@1@)] = @scm2host@(@2@);"
      var
      val)
     0)
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-statement
-     "os.environ[g_scm2host(@1@)] = g_scm2host(@2@)"
+     "os.environ[@scm2host@(@1@)] = @scm2host@(@2@)"
      var
      val)
     0)
@@ -945,12 +1358,12 @@ def g_group_info(gi, group):
 
 (define (##os-shell-command cmd)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
-g_shell_command = function (cmd) {
+@os_shell_command@ = function (cmd) {
   var r = child_process.spawnSync('sh',['-c',cmd]);
   var output = r.stdout.toString();
   if (output.length > 0) {
@@ -961,18 +1374,18 @@ g_shell_command = function (cmd) {
 
 ")
     (##inline-host-expression
-     "g_host2scm(g_shell_command(g_scm2host(@1@)))"
+     "@host2scm@(@os_shell_command@(@scm2host@(@1@)))"
      cmd))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
-def g_shell_command(cmd):
+def @os_shell_command@(cmd):
     return os.system(cmd)
 
 ")
     (##inline-host-expression
-     "g_host2scm(g_shell_command(g_scm2host(@1@)))"
+     "@host2scm@(@os_shell_command@(@scm2host@(@1@)))"
      cmd))
 
    (else
@@ -986,15 +1399,15 @@ def g_shell_command(cmd):
 
 (define (##os-path-homedir)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-expression
-     "g_host2scm((function () { return this !== this.window; })() ? os.homedir() : '/')"))
+     "@host2scm@(@os_nodejs@ ? os.homedir() : '/')"))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-expression
-     "g_host2scm(os.path.expanduser('~'))"))
+     "@host2scm@(os.path.expanduser('~'))"))
 
    (else
     (println "unimplemented ##os-path-homedir called")
@@ -1006,27 +1419,64 @@ def g_shell_command(cmd):
 
 (define (##os-executable-path)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
-g_executable_path = ((function () { return this !== this.window; })()) ? __filename : '/program';
+@executable_path@ = (@os_nodejs@) ? __filename : '/program.exe';
 
 ")
-    (##inline-host-expression "g_host2scm(g_executable_path)"))
+    (##inline-host-expression "@host2scm@(@executable_path@)"))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
-g_executable_path = os.path.abspath(__file__)
+@executable_path@ = os.path.abspath(__file__)
 
 ")
-    (##inline-host-expression "g_host2scm(g_executable_path)"))
+    (##inline-host-expression "@host2scm@(@executable_path@)"))
 
    (else
     (println "unimplemented ##os-executable-path called")
-    "/program")))
+    "/program.exe")))
+
+;;;----------------------------------------------------------------------------
+
+;;; Gambit directories.
+
+(define (##os-path-gambitdir)
+  (##declare (not interrupts-enabled))
+  (cond-expand
+
+   ((compilation-target js)
+    (##inline-host-declaration "
+
+@os_path_gambitdir@ = function () {
+  if (@os_nodejs@) {
+    return @host2scm@('/usr/local/Gambit/');
+  } else if (@os_web@) {
+    return @host2scm@(@os_web_origin@);
+  } else {
+    return @host2scm@(-1); // EPERM (operation not permitted)
+  }
+};
+
+")
+    (##inline-host-expression "@os_path_gambitdir@()"))
+
+   (else
+    "/usr/local/Gambit/")))
+
+(define (##os-path-gambitdir-map-lookup name)
+  (let ((x (##assoc-string-equal? name ##gambitdir-map)))
+    (and x (##cdr x))))
+
+(define ##gambitdir-map
+  '(("userlib" . "~/.gambit_userlib")))
+
+(define (##gambitdir-map-set! alist)
+  (set! ##gambitdir-map alist))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1034,13 +1484,13 @@ g_executable_path = os.path.abspath(__file__)
 
 (define (##os-path-normalize-directory path)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
-g_normalize_dir = function (path) {
-  if ((function () { return this !== this.window; })()) { // nodejs?
+@os_path_normalize_directory@ = function (path) {
+  if (@os_nodejs@) {
     var old = process.cwd();
     var dir;
     if (path === false) {
@@ -1050,7 +1500,7 @@ g_normalize_dir = function (path) {
         process.chdir(path);
       } catch (exn) {
         if (exn instanceof Error && exn.hasOwnProperty('code')) {
-          return g_host2scm(g_os_encode_error(exn));
+          return @host2scm@(@os_encode_error@(exn));
         } else {
           throw exn;
         }
@@ -1059,24 +1509,44 @@ g_normalize_dir = function (path) {
       process.chdir(old);
     }
     if (dir[dir.length-1] === '/' || dir[dir.length-1] === '\\\\') {
-      return g_host2scm(dir);
+      return @host2scm@(dir);
     } else if (dir[0] === '/') {
-      return g_host2scm(dir + '/')
+      return @host2scm@(dir + '/');
     } else {
-      return g_host2scm(dir + '\\\\')
+      return @host2scm@(dir + '\\\\');
+    }
+  } else if (@os_web@) {
+    if (path === false) {
+      return @host2scm@(@os_web_origin@);
+    }
+    if (@os_fs@ && !@os_uri_scheme_prefixed@(path)) {
+      var is_dir = false;
+      try {
+        is_dir = @os_fs@.statSync(path).isDirectory();
+      } catch (exn) {
+        // ignore error
+      }
+      if (!is_dir) {
+        return @host2scm@(-2); // ENOENT (file does not exist)
+      }
+    }
+    if (path.slice(0,1) === '/' || @os_uri_scheme_prefixed@(path)) {
+      return @host2scm@(path + (path.slice(-1) === '/' ? '' : '/'));
+    } else {
+      return @host2scm@(@os_web_origin@ + path);
     }
   } else {
-    return '/';
+    return @host2scm@(-1); // EPERM (operation not permitted)
   }
 };
 
 ")
-    (##inline-host-expression "g_normalize_dir(g_scm2host(@1@))" path))
+    (##inline-host-expression "@os_path_normalize_directory@(@scm2host@(@1@))" path))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
-def g_normalize_dir(path):
+def @os_path_normalize_directory@(path):
     old = os.getcwd()
     if path is False:
         dir = old
@@ -1084,18 +1554,18 @@ def g_normalize_dir(path):
         try:
             os.chdir(path)
         except OSError as exn:
-            return g_host2scm(g_os_encode_error(exn))
+            return @host2scm@(@os_encode_error@(exn))
         dir = os.getcwd()
         os.chdir(old)
     if dir[-1] == '/' or dir[-1] == '\\\\':
-        return g_host2scm(dir)
+        return @host2scm@(dir)
     elif dir[0] == '/':
-        return g_host2scm(dir + '/')
+        return @host2scm@(dir + '/')
     else:
-        return g_host2scm(dir + '\\\\')
+        return @host2scm@(dir + '\\\\')
 
 ")
-    (##inline-host-expression "g_normalize_dir(g_scm2host(@1@))" path))
+    (##inline-host-expression "@os_path_normalize_directory@(@scm2host@(@1@))" path))
 
    (else
     (println "unimplemented ##os-path-normalize-directory called with path=")
@@ -1108,13 +1578,13 @@ def g_normalize_dir(path):
 
 (define-prim (##exit-with-err-code-no-cleanup err-code)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-statement
      "
-      var code = g_scm2host(@1@);
-      if ((function () { return this !== this.window; })()) { // nodejs?
+      var code = @scm2host@(@1@);
+      if (@os_nodejs@) {
         process.exit(code);
       } else {
         throw Error('process exiting with code=' + code);
@@ -1122,26 +1592,22 @@ def g_normalize_dir(path):
      "
      (##fx- err-code 1)))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-statement "exit(@1@)" (##fx- err-code 1)))
 
    (else
     (println "unimplemented ##exit-with-err-code-no-cleanup called with err-code=")
     (println err-code))))
 
-(define (##execute-final-wills!)
-  ;; do nothing because wills are only implemented in C backend
-  #f)
-
 (define (##exit-trampoline)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
-    (##inline-host-statement "return null;"))
+   ((compilation-target js)
+    (##inline-host-statement "@r0@ = null;"))
 
-   ((python)
-    (##inline-host-statement "return None"))
+   ((compilation-target python)
+    (##inline-host-statement "@r0@ = None"))
 
    (else
     (println "unimplemented ##exit-trampoline called"))))
@@ -1155,10 +1621,10 @@ def g_normalize_dir(path):
   (##f64vector-set!
    floats
    i
-   (macro-case-target
+   (cond-expand
 
-    ((js python)
-     (##inline-host-expression "g_host2scm(g_current_time())"))
+    ((compilation-target js python)
+     (##inline-host-expression "@host2scm@(@os_current_time@())"))
 
     (else
      (println "unimplemented ##get-current-time! called")
@@ -1167,10 +1633,10 @@ def g_normalize_dir(path):
 (define (##process-statistics)
   (##declare (not interrupts-enabled))
   (let ((v (##make-f64vector 20 0.0)))
-    (macro-case-target
+    (cond-expand
 
-     ((js python)
-      (##inline-host-expression "g_set_process_times(@1@)" v))
+     ((compilation-target js python)
+      (##inline-host-expression "@os_set_process_times@(@1@)" v))
 
      (else
       (println "unimplemented ##process-statistics called")
@@ -1179,10 +1645,10 @@ def g_normalize_dir(path):
 (define (##process-times)
   (##declare (not interrupts-enabled))
   (let ((v (##make-f64vector 3 0.0)))
-    (macro-case-target
+    (cond-expand
 
-     ((js python)
-      (##inline-host-expression "g_set_process_times(@1@)" v))
+     ((compilation-target js python)
+      (##inline-host-expression "@os_set_process_times@(@1@)" v))
 
      (else
       (println "unimplemented ##process-times called")
@@ -1203,115 +1669,349 @@ def g_normalize_dir(path):
 
 (define (##get-command-line)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
-g_argv = [];
-if ((function () { return this !== this.window; })()) { // nodejs?
-  g_argv = process.argv.slice(1);
+@os_runtime_options@ = '';
+@os_argv@ = [''];
+
+if (@os_nodejs@) {
+  @os_argv@ = process.argv.slice(1);
+  if (@os_argv@.length >= 2 && @os_argv@[1].slice(0,2) == '-:') {
+    @os_runtime_options@ = @os_argv@[1].slice(2);
+    @os_argv@.splice(1,1);
+  }
 }
 
 ")
-    (##vector->list (##inline-host-expression "g_host2scm(g_argv)")))
+    (##vector->list (##inline-host-expression "@host2scm@(@os_argv@)")))
 
-   ((python)
-    (##vector->list (##inline-host-expression "g_host2scm(sys.argv)")))
+   ((compilation-target python)
+    (##inline-host-declaration "
+
+@os_runtime_options@ = ''
+@os_argv@ = sys.argv[:]
+
+if len(@os_argv@) >= 2 and @os_argv@[1][:2] == '-:':
+  @os_runtime_options@ = @os_argv@.pop(1)[2:]
+
+")
+    (##vector->list (##inline-host-expression "@host2scm@(@os_argv@)")))
 
    (else
-     (println "unimplemented ##command-line called")
+    (println "unimplemented ##get-command-line called")
     '())))
 
-(define ##processed-command-line
-  (let ((cmd-line (##get-command-line)))
-    (if (##pair? cmd-line)
-        cmd-line
-        '("program"))))
+(define (##get-runtime-options)
+  (##declare (not interrupts-enabled))
+  (##first-argument #f ##get-command-line)
+  (cond-expand
 
-(define (##processed-command-line-set! x)
-  (set! ##processed-command-line x))
+    ((compilation-target js python)
+     (##inline-host-expression "@host2scm@(@os_runtime_options@)"))
+
+    (else
+     (println "unimplemented ##get-runtime-options called")
+     "")))
+
+;;;----------------------------------------------------------------------------
+
+;;; Module whitelist.
+
+(define ##feature-module-whitelist
+  (cond-expand
+
+   ((compilation-target js)
+    (##inline-host-declaration "
+
+@os_module_whitelist@ = ['github.com/gambit'];
+
+@os_get_module_whitelist@ = function () {
+  return @os_module_whitelist@;
+};
+
+@os_set_module_whitelist@ = function (whitelist) {
+  @os_module_whitelist@ = whitelist;
+};
+
+"))
+
+   ((compilation-target python)
+    (##inline-host-declaration "
+
+@os_module_whitelist@ = ['github.com/gambit']
+
+def @os_get_module_whitelist@():
+  return @os_module_whitelist@
+
+def @os_set_module_whitelist@(whitelist):
+  @os_module_whitelist@ = whitelist
+
+"))
+
+   (else
+    #f)))
+
+(define (##get-module-whitelist)
+  (##declare (not interrupts-enabled))
+  (##first-argument #f ##feature-module-whitelist)
+  (cond-expand
+
+    ((compilation-target js python)
+     (##inline-host-expression "@host2scm@(@os_get_module_whitelist@())"))
+
+    (else
+     (println "unimplemented ##get-module-whitelist called")
+     '())))
+
+(define (##set-module-whitelist! whitelist)
+  (##declare (not interrupts-enabled))
+  (##first-argument #f ##feature-module-whitelist)
+  (cond-expand
+
+    ((compilation-target js)
+     (##inline-host-statement
+      "@os_set_module_whitelist@(@scm2host@(@1@));"
+      whitelist))
+
+    ((compilation-target python)
+     (##inline-host-statement
+      "@os_set_module_whitelist@(@scm2host@(@1@))"
+      whitelist))
+
+    (else
+     (println "unimplemented ##set-module-whitelist! called"))))
+
+(define ##module-search-order-var '("~~lib" "~~userlib"))
+(define (##get-module-search-order) ##module-search-order-var)
+(define (##set-module-search-order! x) (set! ##module-search-order-var x))
+
+(define ##module-install-mode-var 1)
+(define (##get-module-install-mode) ##module-install-mode-var)
+(define (##set-module-install-mode x) (set! ##module-install-mode-var x))
 
 ;;;----------------------------------------------------------------------------
 
 ;;; File information.
 
-(define (##os-file-info fi path chase?)
-  (##declare (not interrupts-enabled))
-  (macro-case-target
+(define ##feature-file-input
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
-g_file_info = function (fi, path, chase) {
+if (@os_web@) {
 
-  if ((function () { return this !== this.window; })()) { // nodejs?
+  @os_trust_all@ = false;
 
-    var st;
+  @os_confirm_if_not_in_url_whitelist@ = true;
 
-    try {
-      if (chase) {
-        st = fs.statSync(path);
-      } else {
-        st = fs.lstatSync(path);
+  @os_url_whitelist@ = [];
+
+  @os_url_whitelist_add@ = function (url) {
+    if (@os_uri_scheme_prefixed@(url) &&
+        @os_url_whitelist@.indexOf(url) === -1) {
+      @os_url_whitelist@.push(url);
+    }
+  };
+
+  @os_remove_after_last_slash@ = function (string) {
+    return string.slice(0, 1+string.lastIndexOf('/'));
+  };
+
+  @os_trusted_url@ = function (url, reason) {
+    if (@os_trust_all@) {
+      return true;
+    }
+    for (var i=0; i<@os_url_whitelist@.length; i++) {
+      var w = @os_url_whitelist@[i];
+      if (w.slice(-1) === '/' // if ends with slash
+          ? url.indexOf(w) === 0 // then it must be a prefix
+          : url === w) { // otherwise it must be an exact match
+        return true;
       }
-    } catch (exn) {
-      if (exn instanceof Error && exn.hasOwnProperty('code')) {
-        return g_host2scm(g_os_encode_error(exn));
-      } else {
-        throw exn;
+    }
+    for (var i=0; i<@os_module_whitelist@.length; i++) {
+      var w = 'https://'+@os_module_whitelist@[i]+'/';
+      if (url.indexOf(w) === 0) { // check if it is a prefix
+        return true;
+      }
+    }
+    if (@os_confirm_if_not_in_url_whitelist@ &&
+        reason !== undefined &&
+        confirm(url + '\\nis being accessed ' + reason + '.\\nClick OK if you trust this URL for that operation.')) {
+      return true;
+    }
+    return false;
+  };
+
+  @os_web_origin@ = @os_remove_after_last_slash@(window.location.href);
+
+  if (@os_web_origin@.indexOf('https://') === 0) {
+    @os_url_whitelist_add@(@os_web_origin@); // only trust https origin
+  }
+
+  @os_get_url_async@ = function (method, url, callback) {
+
+    var req = new XMLHttpRequest();
+
+    var onreadystatechange = function () {
+      if (req.readyState == 4) { // DONE?
+        callback(req);
+      }
+    };
+
+    req.open(method, url);
+    req.responseType = 'text';
+    req.onreadystatechange = onreadystatechange;
+    req.send();
+  };
+
+  @os_uri_encode@ = function (uri) {
+
+    function encode(c) {
+      switch (c) {
+        case '#': return '%23';
+        default: return c;
       }
     }
 
-    if (st.isFile())
-      typ = 1;
-    else if (st.isDirectory())
-      typ = 2;
-    else if (st.isCharacterDevice())
-      typ = 3;
-    else if (st.isBlockDevice())
-      typ = 4;
-    else if (st.isFIFO())
-      typ = 5;
-    else if (st.isSymbolicLink())
-      typ = 6;
-    else if (st.isSocket())
-      typ = 7;
-    else
-      typ = 0;
+    return uri.split('').map(encode).join('');
+  };
+}
 
-    fi.slots[ 1] = g_host2scm(typ);
-    fi.slots[ 2] = g_host2scm(st.dev);
-    fi.slots[ 3] = g_host2scm(st.ino);
-    fi.slots[ 4] = g_host2scm(st.mode);
-    fi.slots[ 5] = g_host2scm(st.nlink);
-    fi.slots[ 6] = g_host2scm(st.uid);
-    fi.slots[ 7] = g_host2scm(st.gid);
-    fi.slots[ 8] = g_host2scm(st.size);
-    fi.slots[ 9] = new G_Flonum(-Infinity);
-    fi.slots[10] = new G_Flonum(-Infinity);
-    fi.slots[11] = new G_Flonum(-Infinity);
-    fi.slots[12] = g_host2scm(0);
-    fi.slots[13] = new G_Flonum(-Infinity);
+"))
 
-    return fi;
+   (else
+    #f)))
+
+(define (##os-file-info fi path chase?)
+  (##declare (not interrupts-enabled))
+  (cond-expand
+
+   ((compilation-target js)
+    (##first-argument #f ##feature-file-input)
+    (##inline-host-declaration "
+
+@os_file_info@ = function (fi, path, chase) {
+
+  if (@os_uri_scheme_prefixed@(path)) { // accessing a URL?
+
+    if (!(@os_web@ && @os_trusted_url@(path, 'to check that document\\'s information'))) { // accessing an untrusted URL?
+      return @host2scm@(-1); // EPERM (operation not permitted)
+    } else {
+
+      var ra = @r0@;
+      @r0@ = null; // exit trampoline
+
+      function callback(req) {
+
+        if (req.status === 404) {
+          @r1@ = @host2scm@(-2); // ENOENT (file does not exist)
+        } else if (req.status !== 200) {
+          @r1@ = @host2scm@(-1); // EPERM (operation not permitted)
+        } else {
+
+          var size = +req.getResponseHeader('Content-Length');
+
+          fi.@slots@[ 1] = @host2scm@(1); // regular file
+          fi.@slots@[ 2] = @host2scm@(0);
+          fi.@slots@[ 3] = @host2scm@(0);
+          fi.@slots@[ 4] = @host2scm@(0);
+          fi.@slots@[ 5] = @host2scm@(0);
+          fi.@slots@[ 6] = @host2scm@(0);
+          fi.@slots@[ 7] = @host2scm@(0);
+          fi.@slots@[ 8] = @host2scm@(size);
+          fi.@slots@[ 9] = new @Flonum@(-Infinity);
+          fi.@slots@[10] = new @Flonum@(-Infinity);
+          fi.@slots@[11] = new @Flonum@(-Infinity);
+          fi.@slots@[12] = @host2scm@(0);
+          fi.@slots@[13] = new @Flonum@(-Infinity);
+
+          @r1@ = fi;
+        }
+
+        @r0@ = ra;
+        @trampoline@(@r0@);
+      }
+
+      @os_get_url_async@('HEAD', @os_uri_encode@(path), callback);
+
+      return 0; // ignored
+    }
 
   } else {
-    return g_host2scm(-5555);
+
+    if (!@os_fs@) {
+      return @host2scm@(-1); // EPERM (operation not permitted)
+    } else {
+
+      var st;
+
+      try {
+        if (chase) {
+          st = @os_fs@.statSync(path);
+        } else {
+          st = @os_fs@.lstatSync(path);
+        }
+      } catch (exn) {
+        if (exn instanceof Error && exn.hasOwnProperty('code')) {
+          return @host2scm@(@os_encode_error@(exn));
+        } else {
+          throw exn;
+        }
+      }
+
+      if (st.isFile())
+        typ = 1;
+      else if (st.isDirectory())
+        typ = 2;
+      else if (st.isCharacterDevice())
+        typ = 3;
+      else if (st.isBlockDevice())
+        typ = 4;
+      else if (st.isFIFO())
+        typ = 5;
+      else if (st.isSymbolicLink())
+        typ = 6;
+      else if (st.isSocket())
+        typ = 7;
+      else
+        typ = 0;
+
+      fi.@slots@[ 1] = @host2scm@(typ);
+      fi.@slots@[ 2] = @host2scm@(st.dev);
+      fi.@slots@[ 3] = @host2scm@(st.ino);
+      fi.@slots@[ 4] = @host2scm@(st.mode);
+      fi.@slots@[ 5] = @host2scm@(st.nlink);
+      fi.@slots@[ 6] = @host2scm@(st.uid);
+      fi.@slots@[ 7] = @host2scm@(st.gid);
+      fi.@slots@[ 8] = @host2scm@(st.size);
+      fi.@slots@[ 9] = new @Flonum@(-Infinity);
+      fi.@slots@[10] = new @Flonum@(-Infinity);
+      fi.@slots@[11] = new @Flonum@(-Infinity);
+      fi.@slots@[12] = @host2scm@(0);
+      fi.@slots@[13] = new @Flonum@(-Infinity);
+
+      return fi;
+
+    }
   }
 };
 
 ")
     (##inline-host-expression
-     "g_file_info(@1@, g_scm2host(@2@), g_scm2host(@3@))"
+     "@os_file_info@(@1@, @scm2host@(@2@), @scm2host@(@3@))"
      fi
      path
      chase?))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
-def g_file_info(fi, path, chase):
+def @os_file_info@(fi, path, chase):
 
     try:
         if chase:
@@ -1319,44 +2019,44 @@ def g_file_info(fi, path, chase):
         else:
             st = os.lstat(path)
     except OSError as exn:
-        return g_host2scm(g_os_encode_error(exn))
+        return @host2scm@(@os_encode_error@(exn))
 
     if stat.S_ISREG(st.st_mode):
-      typ = 1
+        typ = 1
     elif stat.S_ISDIR(st.st_mode):
-      typ = 2
+        typ = 2
     elif stat.S_ISCHR(st.st_mode):
-      typ = 3
+        typ = 3
     elif stat.S_ISBLK(st.st_mode):
-      typ = 4
+        typ = 4
     elif stat.S_ISFIFO(st.st_mode):
-      typ = 5
+        typ = 5
     elif stat.S_ISLNK(st.st_mode):
-      typ = 6
+        typ = 6
     elif stat.S_ISSOCK(st.st_mode):
-      typ = 7
+        typ = 7
     else:
-      typ = 0
+        typ = 0
 
-    fi.slots[ 1] = g_host2scm(typ)
-    fi.slots[ 2] = g_host2scm(st.st_dev)
-    fi.slots[ 3] = g_host2scm(st.st_ino)
-    fi.slots[ 4] = g_host2scm(st.st_mode)
-    fi.slots[ 5] = g_host2scm(st.st_nlink)
-    fi.slots[ 6] = g_host2scm(st.st_uid)
-    fi.slots[ 7] = g_host2scm(st.st_gid)
-    fi.slots[ 8] = g_host2scm(st.st_size)
-    fi.slots[ 9] = G_Flonum(float('-inf'))
-    fi.slots[10] = G_Flonum(float('-inf'))
-    fi.slots[11] = G_Flonum(float('-inf'))
-    fi.slots[12] = g_host2scm(0)
-    fi.slots[13] = G_Flonum(float('-inf'))
+    fi.@slots@[ 1] = @host2scm@(typ)
+    fi.@slots@[ 2] = @host2scm@(st.st_dev)
+    fi.@slots@[ 3] = @host2scm@(st.st_ino)
+    fi.@slots@[ 4] = @host2scm@(st.st_mode)
+    fi.@slots@[ 5] = @host2scm@(st.st_nlink)
+    fi.@slots@[ 6] = @host2scm@(st.st_uid)
+    fi.@slots@[ 7] = @host2scm@(st.st_gid)
+    fi.@slots@[ 8] = @host2scm@(st.st_size)
+    fi.@slots@[ 9] = @Flonum@(float('-inf'))
+    fi.@slots@[10] = @Flonum@(float('-inf'))
+    fi.@slots@[11] = @Flonum@(float('-inf'))
+    fi.@slots@[12] = @host2scm@(0)
+    fi.@slots@[13] = @Flonum@(float('-inf'))
 
     return fi
 
 ")
     (##inline-host-expression
-     "g_file_info(@1@, g_scm2host(@2@), g_scm2host(@3@))"
+     "@os_file_info@(@1@, @scm2host@(@2@), @scm2host@(@3@))"
      fi
      path
      chase?))
@@ -1368,64 +2068,327 @@ def g_file_info(fi, path, chase):
     (println chase?)
     -5555)))
 
+(define (##os-file-times-set! path a-time m-time)
+  (println "unimplemented ##os-file-times-set! called with path=")
+  (println path)
+  (println "and a-time=")
+  (println a-time)
+  (println "and m-time=")
+  (println m-time)
+  -5555)
+
 ;;;----------------------------------------------------------------------------
 
-;;; Loading of compiled files.
+;;; Filesystem operations.
 
-(define (##os-load-object-file path linker-name)
+(define (##os-delete-directory path)
   (##declare (not interrupts-enabled))
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
-g_load_object_file = function (path, linker_name) {
+@os_delete_directory@ = function (path) {
 
-  if ((function () { return this !== this.window; })()) { // nodejs?
+  if (@os_uri_scheme_prefixed@(path)) { // accessing a URL?
 
-    try {
-      require(path);
-    } catch (exn) {
-      if (exn instanceof Error && exn.hasOwnProperty('code')) {
-        return g_host2scm(g_os_encode_error(exn));
-      } else {
-        throw exn;
-      }
-    }
-
-    return [[g_module_latest_registered], null, false];
+    return @host2scm@(-1); // EPERM (operation not permitted)
 
   } else {
-    return [g_host2scm('unimplemented ##os-load-object-file'), g_host2scm(linker_name)];
+
+    if (!@os_fs@) {
+      return @host2scm@(-1); // EPERM (operation not permitted)
+    } else {
+
+      try {
+        @os_fs@.rmdirSync(path);
+      } catch (exn) {
+        if (exn instanceof Error && exn.hasOwnProperty('code')) {
+          return @host2scm@(@os_encode_error@(exn));
+        } else {
+          throw exn;
+        }
+      }
+
+      return @host2scm@(0); // no error
+    }
   }
 };
 
 ")
     (##inline-host-expression
-     "g_load_object_file(g_scm2host(@1@), g_scm2host(@2@))"
-     path
-     linker-name))
+     "@os_delete_directory@(@scm2host@(@1@))"
+     path))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
-def g_load_object_file(path, linker_name):
+def @os_delete_directory@(path):
 
     try:
-        g_exec(open(path).read())
+        os.rmdir(path);
     except OSError as exn:
-        return g_host2scm(g_os_encode_error(exn))
+        return @host2scm@(@os_encode_error@(exn))
 
-    return [[g_module_latest_registered], g_null_obj, False];
+    return @host2scm@(0)  # no error
 
 ")
     (##inline-host-expression
-     "g_load_object_file(g_scm2host(@1@), g_scm2host(@2@))"
-     path
-     linker-name))
+     "@os_delete_directory@(@scm2host@(@1@))"
+     path))
 
    (else
-    (##vector "load-object-file not implemented" linker-name))))
+    (println "unimplemented ##os-delete-directory called with path=")
+    (println path)
+    -5555)))
+
+(define (##os-delete-file path)
+  (##declare (not interrupts-enabled))
+  (cond-expand
+
+   ((compilation-target js)
+    (##inline-host-declaration "
+
+@os_delete_file@ = function (path) {
+
+  if (@os_uri_scheme_prefixed@(path)) { // accessing a URL?
+
+    return @host2scm@(-1); // EPERM (operation not permitted)
+
+  } else {
+
+    if (!@os_fs@) {
+      return @host2scm@(-1); // EPERM (operation not permitted)
+    } else {
+
+      try {
+        @os_fs@.unlinkSync(path);
+      } catch (exn) {
+        if (exn instanceof Error && exn.hasOwnProperty('code')) {
+          return @host2scm@(@os_encode_error@(exn));
+        } else {
+          throw exn;
+        }
+      }
+
+      return @host2scm@(0); // no error
+    }
+  }
+};
+
+")
+    (##inline-host-expression
+     "@os_delete_file@(@scm2host@(@1@))"
+     path))
+
+   ((compilation-target python)
+    (##inline-host-declaration "
+
+def @os_delete_file@(path):
+
+    try:
+        os.unlink(path);
+    except OSError as exn:
+        return @host2scm@(@os_encode_error@(exn))
+
+    return @host2scm@(0)  # no error
+
+")
+    (##inline-host-expression
+     "@os_delete_file@(@scm2host@(@1@))"
+     path))
+
+   (else
+    (println "unimplemented ##os-delete-file called with path=")
+    (println path)
+    -5555)))
+
+(define (##os-rename-file old-path new-path replace?)
+  (##declare (not interrupts-enabled))
+  (cond-expand
+
+   ((compilation-target js)
+    (##inline-host-declaration "
+
+@os_rename_file@ = function (old_path, new_path, replace) {
+
+  if (@os_uri_scheme_prefixed@(old_path) ||
+      @os_uri_scheme_prefixed@(new_path)) { // accessing a URL?
+
+    return @host2scm@(-1); // EPERM (operation not permitted)
+
+  } else {
+
+    if (!@os_fs@) {
+      return @host2scm@(-1); // EPERM (operation not permitted)
+    } else {
+
+      if (!replace) {
+        // new_path should not be an existing file so this is checked
+        // before renaming old_path (TODO: find a way to do this atomically)
+        var st = null;
+        try {
+          st = @os_fs@.statSync(new_path);
+        } catch (exn) {
+        }
+        if (st !== null) {
+          return @host2scm@(-17); // return EEXIST
+        }
+      }
+
+      try {
+        @os_fs@.renameSync(old_path, new_path);
+      } catch (exn) {
+        if (exn instanceof Error && exn.hasOwnProperty('code')) {
+          return @host2scm@(@os_encode_error@(exn));
+        } else {
+          throw exn;
+        }
+      }
+
+      return @host2scm@(0); // no error
+    }
+  }
+};
+
+")
+    (##inline-host-expression
+     "@os_rename_file@(@scm2host@(@1@),@scm2host@(@2@),@scm2host@(@3@))"
+     old-path
+     new-path
+     replace?))
+
+   ((compilation-target python)
+    (##inline-host-declaration "
+
+def @os_rename_file@(old_path, new_path, replace):
+
+    if not replace:
+        # new_path should not be an existing file so this is checked
+        # before renaming old_path (TODO: find a way to do this atomically)
+        st = None
+        try:
+            st = os.stat(new_path)
+        except OSError as exn:
+            pass
+        if st is not None:
+            return @host2scm@(-17)  # return EEXIST
+
+    try:
+        os.rename(old_path, new_path);
+    except OSError as exn:
+        return @host2scm@(@os_encode_error@(exn))
+
+    return @host2scm@(0)  # no error
+
+")
+    (##inline-host-expression
+     "@os_rename_file@(@scm2host@(@1@),@scm2host@(@2@),@scm2host@(@3@))"
+     old-path
+     new-path
+     replace?))
+
+   (else
+    (println "unimplemented ##os-rename-file called with old-path=")
+    (println old-path)
+    (println "and new-path=")
+    (println new-path)
+    (println "and replace?=")
+    (println replace?)
+    -5555)))
+
+(define (##os-create-directory path permissions)
+  (##declare (not interrupts-enabled))
+  (cond-expand
+
+   ((compilation-target js)
+    (##inline-host-declaration "
+
+@os_create_directory@ = function (path, permissions) {
+
+  if (@os_uri_scheme_prefixed@(path)) { // accessing a URL?
+
+    return @host2scm@(-1); // EPERM (operation not permitted)
+
+  } else {
+
+    if (!@os_fs@) {
+      return @host2scm@(-1); // EPERM (operation not permitted)
+    } else {
+
+      try {
+        @os_fs@.mkdirSync(path, permissions);
+      } catch (exn) {
+        if (exn instanceof Error && exn.hasOwnProperty('code')) {
+          return @host2scm@(@os_encode_error@(exn));
+        } else {
+          throw exn;
+        }
+      }
+
+      return @host2scm@(0); // no error
+    }
+  }
+};
+
+")
+    (##inline-host-expression
+     "@os_create_directory@(@scm2host@(@1@),@scm2host@(@2@))"
+     path
+     permissions))
+
+   ((compilation-target python)
+    (##inline-host-declaration "
+
+def @os_create_directory@(path, permissions):
+
+    try:
+        os.mkdir(path, permissions);
+    except OSError as exn:
+        return @host2scm@(@os_encode_error@(exn))
+
+    return @host2scm@(0)  # no error
+
+")
+    (##inline-host-expression
+     "@os_create_directory@(@scm2host@(@1@),@scm2host@(@2@))"
+     path
+     permissions))
+
+   (else
+    (println "unimplemented ##os-create-directory called with path=")
+    (println path)
+    (println "and permissions=")
+    (println permissions)
+    -5555)))
+
+(define (##os-create-fifo path permissions)
+  (println "unimplemented ##os-create-fifo called with path=")
+  (println path)
+  (println "and permissions=")
+  (println permissions)
+  -5555)
+
+(define (##os-create-link old-path new-path)
+  (println "unimplemented ##os-create-link called with old-path=")
+  (println old-path)
+  (println "and new-path=")
+  (println new-path)
+  -5555)
+
+(define (##os-create-symbolic-link old-path new-path)
+  (println "unimplemented ##os-create-symbolic-link called with old-path=")
+  (println old-path)
+  (println "and new-path=")
+  (println new-path)
+  -5555)
+
+(define (##os-copy-file src-path dest-path)
+  (println "unimplemented ##os-copy-file called with src-path=")
+  (println src-path)
+  (println "and dest-path=")
+  (println dest-path)
+  -5555)
 
 ;;;----------------------------------------------------------------------------
 
@@ -1434,229 +2397,224 @@ def g_load_object_file(path, linker_name):
 (##declare (inline))
 
 (define ##feature-port-fields
-  (macro-case-target
+  (cond-expand
 
-   ((js)
-
+   ((compilation-target js)
     (##inline-host-declaration "
 
-g_CONDVAR_NAME              = 10;
+@BTQ_DEQ_NEXT@              = 2;
+@BTQ_DEQ_PREV@              = 3;
+@BTQ_COLOR@                 = 4;
+@BTQ_PARENT@                = 5;
+@BTQ_LEFT@                  = 6;
+@BTQ_RIGHT@                 = 7;
+@BTQ_LEFTMOST@              = 7;
+@BTQ_OWNER@                 = 8;
 
-g_PORT_MUTEX                = 1;
-g_PORT_RKIND                = 2;
-g_PORT_WKIND                = 3;
-g_PORT_NAME                 = 4;
-g_PORT_WAIT                 = 5;
-g_PORT_CLOSE                = 6;
-g_PORT_ROPTIONS             = 7;
-g_PORT_RTIMEOUT             = 8;
-g_PORT_RTIMEOUT_THUNK       = 9;
-g_PORT_SET_RTIMEOUT         = 10;
-g_PORT_WOPTIONS             = 11;
-g_PORT_WTIMEOUT             = 12;
-g_PORT_WTIMEOUT_THUNK       = 13;
-g_PORT_SET_WTIMEOUT         = 14;
-g_PORT_IO_EXCEPTION_HANDLER = 15;
+@FOR_READING@               = 0;
+@FOR_WRITING@               = 1;
+@FOR_EVENT@                 = 2;
 
-g_PORT_OBJECT_READ_DATUM    = 16;
-g_PORT_OBJECT_WRITE_DATUM   = 17;
-g_PORT_OBJECT_NEWLINE       = 18;
-g_PORT_OBJECT_FORCE_OUTPUT  = 19;
+@CONDVAR_NAME@              = 10;
 
-g_PORT_OBJECT_OTHER1        = 20;
-g_PORT_OBJECT_OTHER2        = 21;
-g_PORT_OBJECT_OTHER3        = 22;
+@PORT_MUTEX@                = 1;
+@PORT_RKIND@                = 2;
+@PORT_WKIND@                = 3;
+@PORT_NAME@                 = 4;
+@PORT_WAIT@                 = 5;
+@PORT_CLOSE@                = 6;
+@PORT_ROPTIONS@             = 7;
+@PORT_RTIMEOUT@             = 8;
+@PORT_RTIMEOUT_THUNK@       = 9;
+@PORT_SET_RTIMEOUT@         = 10;
+@PORT_WOPTIONS@             = 11;
+@PORT_WTIMEOUT@             = 12;
+@PORT_WTIMEOUT_THUNK@       = 13;
+@PORT_SET_WTIMEOUT@         = 14;
+@PORT_IO_EXCEPTION_HANDLER@ = 15;
 
-g_PORT_CHAR_RBUF            = 20;
-g_PORT_CHAR_RLO             = 21;
-g_PORT_CHAR_RHI             = 22;
-g_PORT_CHAR_RCHARS          = 23;
-g_PORT_CHAR_RLINES          = 24;
-g_PORT_CHAR_RCURLINE        = 25;
-g_PORT_CHAR_RBUF_FILL       = 26;
-g_PORT_CHAR_PEEK_EOFP       = 27;
+@PORT_OBJECT_READ_DATUM@    = 16;
+@PORT_OBJECT_WRITE_DATUM@   = 17;
+@PORT_OBJECT_NEWLINE@       = 18;
+@PORT_OBJECT_FORCE_OUTPUT@  = 19;
 
-g_PORT_CHAR_WBUF            = 28;
-g_PORT_CHAR_WLO             = 29;
-g_PORT_CHAR_WHI             = 30;
-g_PORT_CHAR_WCHARS          = 31;
-g_PORT_CHAR_WLINES          = 32;
-g_PORT_CHAR_WCURLINE        = 33;
-g_PORT_CHAR_WBUF_DRAIN      = 34;
-g_PORT_INPUT_READTABLE      = 35;
-g_PORT_OUTPUT_READTABLE     = 36;
-g_PORT_OUTPUT_WIDTH         = 37;
+@PORT_OBJECT_OTHER1@        = 20;
+@PORT_OBJECT_OTHER2@        = 21;
+@PORT_OBJECT_OTHER3@        = 22;
 
-g_PORT_CHAR_OTHER1          = 38;
-g_PORT_CHAR_OTHER2          = 39;
-g_PORT_CHAR_OTHER3          = 40;
-g_PORT_CHAR_OTHER4          = 41;
-g_PORT_CHAR_OTHER5          = 42;
+@PORT_CHAR_RBUF@            = 20;
+@PORT_CHAR_RLO@             = 21;
+@PORT_CHAR_RHI@             = 22;
+@PORT_CHAR_RCHARS@          = 23;
+@PORT_CHAR_RLINES@          = 24;
+@PORT_CHAR_RCURLINE@        = 25;
+@PORT_CHAR_RBUF_FILL@       = 26;
+@PORT_CHAR_PEEK_EOFP@       = 27;
 
-g_PORT_BYTE_RBUF            = 38;
-g_PORT_BYTE_RLO             = 39;
-g_PORT_BYTE_RHI             = 40;
-g_PORT_BYTE_RBUF_FILL       = 41;
+@PORT_CHAR_WBUF@            = 28;
+@PORT_CHAR_WLO@             = 29;
+@PORT_CHAR_WHI@             = 30;
+@PORT_CHAR_WCHARS@          = 31;
+@PORT_CHAR_WLINES@          = 32;
+@PORT_CHAR_WCURLINE@        = 33;
+@PORT_CHAR_WBUF_DRAIN@      = 34;
+@PORT_INPUT_READTABLE@      = 35;
+@PORT_OUTPUT_READTABLE@     = 36;
+@PORT_OUTPUT_WIDTH@         = 37;
 
-g_PORT_BYTE_WBUF            = 42;
-g_PORT_BYTE_WLO             = 43;
-g_PORT_BYTE_WHI             = 44;
-g_PORT_BYTE_WBUF_DRAIN      = 45;
+@PORT_CHAR_OTHER1@          = 38;
+@PORT_CHAR_OTHER2@          = 39;
+@PORT_CHAR_OTHER3@          = 40;
+@PORT_CHAR_OTHER4@          = 41;
+@PORT_CHAR_OTHER5@          = 42;
 
-g_PORT_BYTE_OTHER1          = 46;
-g_PORT_BYTE_OTHER2          = 47;
+@PORT_BYTE_RBUF@            = 38;
+@PORT_BYTE_RLO@             = 39;
+@PORT_BYTE_RHI@             = 40;
+@PORT_BYTE_RBUF_FILL@       = 41;
 
-g_PORT_RDEVICE_COND         = 46;
-g_PORT_WDEVICE_COND         = 47;
+@PORT_BYTE_WBUF@            = 42;
+@PORT_BYTE_WLO@             = 43;
+@PORT_BYTE_WHI@             = 44;
+@PORT_BYTE_WBUF_DRAIN@      = 45;
 
-g_PORT_DEVICE_OTHER1        = 48;
-g_PORT_DEVICE_OTHER2        = 49;
+@PORT_BYTE_OTHER1@          = 46;
+@PORT_BYTE_OTHER2@          = 47;
+
+@PORT_RDEVICE_COND@         = 46;
+@PORT_WDEVICE_COND@         = 47;
+
+@PORT_DEVICE_OTHER1@        = 48;
+@PORT_DEVICE_OTHER2@        = 49;
 
 "))
 
-   ((python)
-
+   ((compilation-target python)
     (##inline-host-declaration "
 
-g_CONDVAR_NAME              = 10
+@BTQ_DEQ_NEXT@              = 2
+@BTQ_DEQ_PREV@              = 3
+@BTQ_COLOR@                 = 4
+@BTQ_PARENT@                = 5
+@BTQ_LEFT@                  = 6
+@BTQ_RIGHT@                 = 7
+@BTQ_LEFTMOST@              = 7
+@BTQ_OWNER@                 = 8
 
-g_PORT_MUTEX                = 1
-g_PORT_RKIND                = 2
-g_PORT_WKIND                = 3
-g_PORT_NAME                 = 4
-g_PORT_WAIT                 = 5
-g_PORT_CLOSE                = 6
-g_PORT_ROPTIONS             = 7
-g_PORT_RTIMEOUT             = 8
-g_PORT_RTIMEOUT_THUNK       = 9
-g_PORT_SET_RTIMEOUT         = 10
-g_PORT_WOPTIONS             = 11
-g_PORT_WTIMEOUT             = 12
-g_PORT_WTIMEOUT_THUNK       = 13
-g_PORT_SET_WTIMEOUT         = 14
-g_PORT_IO_EXCEPTION_HANDLER = 15
+@FOR_READING@               = 0
+@FOR_WRITING@               = 1
+@FOR_EVENT@                 = 2
 
-g_PORT_OBJECT_READ_DATUM    = 16
-g_PORT_OBJECT_WRITE_DATUM   = 17
-g_PORT_OBJECT_NEWLINE       = 18
-g_PORT_OBJECT_FORCE_OUTPUT  = 19
+@CONDVAR_NAME@              = 10
 
-g_PORT_OBJECT_OTHER1        = 20
-g_PORT_OBJECT_OTHER2        = 21
-g_PORT_OBJECT_OTHER3        = 22
+@PORT_MUTEX@                = 1
+@PORT_RKIND@                = 2
+@PORT_WKIND@                = 3
+@PORT_NAME@                 = 4
+@PORT_WAIT@                 = 5
+@PORT_CLOSE@                = 6
+@PORT_ROPTIONS@             = 7
+@PORT_RTIMEOUT@             = 8
+@PORT_RTIMEOUT_THUNK@       = 9
+@PORT_SET_RTIMEOUT@         = 10
+@PORT_WOPTIONS@             = 11
+@PORT_WTIMEOUT@             = 12
+@PORT_WTIMEOUT_THUNK@       = 13
+@PORT_SET_WTIMEOUT@         = 14
+@PORT_IO_EXCEPTION_HANDLER@ = 15
 
-g_PORT_CHAR_RBUF            = 20
-g_PORT_CHAR_RLO             = 21
-g_PORT_CHAR_RHI             = 22
-g_PORT_CHAR_RCHARS          = 23
-g_PORT_CHAR_RLINES          = 24
-g_PORT_CHAR_RCURLINE        = 25
-g_PORT_CHAR_RBUF_FILL       = 26
-g_PORT_CHAR_PEEK_EOFP       = 27
+@PORT_OBJECT_READ_DATUM@    = 16
+@PORT_OBJECT_WRITE_DATUM@   = 17
+@PORT_OBJECT_NEWLINE@       = 18
+@PORT_OBJECT_FORCE_OUTPUT@  = 19
 
-g_PORT_CHAR_WBUF            = 28
-g_PORT_CHAR_WLO             = 29
-g_PORT_CHAR_WHI             = 30
-g_PORT_CHAR_WCHARS          = 31
-g_PORT_CHAR_WLINES          = 32
-g_PORT_CHAR_WCURLINE        = 33
-g_PORT_CHAR_WBUF_DRAIN      = 34
-g_PORT_INPUT_READTABLE      = 35
-g_PORT_OUTPUT_READTABLE     = 36
-g_PORT_OUTPUT_WIDTH         = 37
+@PORT_OBJECT_OTHER1@        = 20
+@PORT_OBJECT_OTHER2@        = 21
+@PORT_OBJECT_OTHER3@        = 22
 
-g_PORT_CHAR_OTHER1          = 38
-g_PORT_CHAR_OTHER2          = 39
-g_PORT_CHAR_OTHER3          = 40
-g_PORT_CHAR_OTHER4          = 41
-g_PORT_CHAR_OTHER5          = 42
+@PORT_CHAR_RBUF@            = 20
+@PORT_CHAR_RLO@             = 21
+@PORT_CHAR_RHI@             = 22
+@PORT_CHAR_RCHARS@          = 23
+@PORT_CHAR_RLINES@          = 24
+@PORT_CHAR_RCURLINE@        = 25
+@PORT_CHAR_RBUF_FILL@       = 26
+@PORT_CHAR_PEEK_EOFP@       = 27
 
-g_PORT_BYTE_RBUF            = 38
-g_PORT_BYTE_RLO             = 39
-g_PORT_BYTE_RHI             = 40
-g_PORT_BYTE_RBUF_FILL       = 41
+@PORT_CHAR_WBUF@            = 28
+@PORT_CHAR_WLO@             = 29
+@PORT_CHAR_WHI@             = 30
+@PORT_CHAR_WCHARS@          = 31
+@PORT_CHAR_WLINES@          = 32
+@PORT_CHAR_WCURLINE@        = 33
+@PORT_CHAR_WBUF_DRAIN@      = 34
+@PORT_INPUT_READTABLE@      = 35
+@PORT_OUTPUT_READTABLE@     = 36
+@PORT_OUTPUT_WIDTH@         = 37
 
-g_PORT_BYTE_WBUF            = 42
-g_PORT_BYTE_WLO             = 43
-g_PORT_BYTE_WHI             = 44
-g_PORT_BYTE_WBUF_DRAIN      = 45
+@PORT_CHAR_OTHER1@          = 38
+@PORT_CHAR_OTHER2@          = 39
+@PORT_CHAR_OTHER3@          = 40
+@PORT_CHAR_OTHER4@          = 41
+@PORT_CHAR_OTHER5@          = 42
 
-g_PORT_BYTE_OTHER1          = 46
-g_PORT_BYTE_OTHER2          = 47
+@PORT_BYTE_RBUF@            = 38
+@PORT_BYTE_RLO@             = 39
+@PORT_BYTE_RHI@             = 40
+@PORT_BYTE_RBUF_FILL@       = 41
 
-g_PORT_RDEVICE_CONDVAR      = 46
-g_PORT_WDEVICE_CONDVAR      = 47
+@PORT_BYTE_WBUF@            = 42
+@PORT_BYTE_WLO@             = 43
+@PORT_BYTE_WHI@             = 44
+@PORT_BYTE_WBUF_DRAIN@      = 45
 
-g_PORT_DEVICE_OTHER1        = 48
-g_PORT_DEVICE_OTHER2        = 49
+@PORT_BYTE_OTHER1@          = 46
+@PORT_BYTE_OTHER2@          = 47
+
+@PORT_RDEVICE_CONDVAR@      = 46
+@PORT_WDEVICE_CONDVAR@      = 47
+
+@PORT_DEVICE_OTHER1@        = 48
+@PORT_DEVICE_OTHER2@        = 49
 
 "))
 
-   (else)))
-
+   (else
+    #f)))
 
 (define-prim (##os-device-close dev direction)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
-g_os_device_close = function (dev_scm, direction_scm) {
+@os_device_close@ = function (dev_scm, direction_scm) {
 
-  var dev = dev_scm.val;
-  var direction = g_scm2host(direction_scm);
+  var dev = @foreign2host@(dev_scm);
+  var direction = @scm2host@(direction_scm);
 
-  if (g_os_debug)
-    console.log('g_os_device_close('+dev.fd+','+direction+')  ***not fully implemented***');
-
-  if ((function () { return this === this.window; })()) {
-  } else {
-
-    if ((direction & 1) != 0 ||  // DIRECTION_RD
-        (direction & 2) != 0) {  // DIRECTION_WR
-      try {
-        fs.closeSync(dev.fd);
-      } catch (exn) {
-        if (exn instanceof Error && exn.hasOwnProperty('code')) {
-          return g_host2scm(g_os_encode_error(exn));
-        } else {
-          throw exn;
-        }
-      }
-    }
-  }
-
-  return g_host2scm(0) // no error
+  return @host2scm@(dev.close(direction));
 };
 
 ")
     (##inline-host-expression
-     "g_os_device_close(@1@,@2@)"
+     "@os_device_close@(@1@,@2@)"
      dev
      direction))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
-def g_os_device_close(dev_scm, direction_scm):
+def @os_device_close@(dev_scm, direction_scm):
 
-    dev = dev_scm.val
-    direction = g_scm2host(direction_scm)
+    dev = @foreign2host@(dev_scm)
+    direction = @scm2host@(direction_scm)
 
-    if g_os_debug:
-        print('g_os_device_close('+repr(dev.fd)+','+repr(direction)+')  ***not fully implemented***')
-
-    if not ((direction & 3) == 0):  # DIRECTION_RD or DIRECTION_WR
-        try:
-            os.close(dev.fd)
-        except OSError as exn:
-            return g_host2scm(g_os_encode_error(exn))
-
-    return g_host2scm(0)  # no error
+    return @host2scm@(dev.close(direction))
 
 ")
     (##inline-host-expression
-     "g_os_device_close(@1@,@2@)"
+     "@os_device_close@(@1@,@2@)"
      dev
      direction))
 
@@ -1664,217 +2622,39 @@ def g_os_device_close(dev_scm, direction_scm):
     (println "unimplemented ##os-device-close called")
     -5555)))
 
-(define-prim (##os-device-directory-open-path path ignore-hidden)
-  (macro-case-target
-
-   ((js)
-    (##inline-host-declaration "
-
-g_os_device_directory_open_path = function (path_scm, ignore_hidden_scm) {
-
-  var path = g_scm2host(path_scm);
-  var ignore_hidden = g_scm2host(ignore_hidden_scm);
-
-  if (g_os_debug)
-    console.log('g_os_device_directory_open_path(\\''+path+'\\','+ignore_hidden+')  ***not implemented***');
-
-  return g_host2scm(-1); // error
-};
-
-")
-    (##inline-host-expression
-     "g_os_device_directory_open_path(@1@,@2@)"
-     path
-     ignore-hidden))
-
-   ((python)
-    (##inline-host-declaration "
-
-def g_os_device_directory_open_path(path_scm, ignore_hidden_scm):
-
-    path = g_scm2host(path_scm)
-    ignore_hidden = g_scm2host(ignore_hidden_scm)
-
-    if g_os_debug:
-        print('g_os_device_directory_open_path('+repr(path)+','+repr(ignore_hidden)+')  ***not implemented***')
-
-    return g_host2scm(-1)  # error
-
-")
-    (##inline-host-expression
-     "g_os_device_directory_open_path(@1@,@2@)"
-     path
-     ignore-hidden))
-
-   (else
-    (println "unimplemented ##os-device-directory-open-path called")
-    -5555)))
-
-(define-prim (##os-device-directory-read dev-condvar)
-  (macro-case-target
-
-   ((js)
-    (##inline-host-declaration "
-
-g_os_device_directory_read = function (dev_condvar_scm) {
-
-  var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
-
-  if (g_os_debug)
-    console.log('g_os_device_directory_read('+dev.fd+')  ***not implemented***');
-
-  return g_host2scm(-1); // error
-};
-
-")
-    (##inline-host-expression
-     "g_os_device_directory_read(@1@)"
-     dev-condvar))
-
-   ((python)
-    (##inline-host-declaration "
-
-def g_os_device_directory_read(dev_condvar_scm):
-
-    dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val
-
-    if g_os_debug:
-        print('g_os_device_directory_read('+repr(dev.fd)+')  ***not implemented***')
-
-    return g_host2scm(-1)  # error
-
-")
-    (##inline-host-expression
-     "g_os_device_directory_read(@1@)"
-     dev-condvar))
-
-   (else
-    (println "unimplemented ##os-device-directory-read called")
-    -5555)))
-
-(define-prim (##os-device-event-queue-open selector)
-  (macro-case-target
-
-   ((js)
-    (##inline-host-declaration "
-
-g_os_device_event_queue_open = function (selector_scm) {
-
-  var selector = g_scm2host(selector_scm);
-
-  if (g_os_debug)
-    console.log('g_os_device_event_queue_open('+selector+')  ***not implemented***');
-
-  return g_host2scm(-1); // error
-};
-
-")
-    (##inline-host-expression
-     "g_os_device_event_queue_open(@1@)"
-     selector))
-
-   ((python)
-    (##inline-host-declaration "
-
-def g_os_device_event_queue_open(selector_scm):
-
-    selector = g_scm2host(selector_scm)
-
-    if g_os_debug:
-        print('g_os_device_event_queue_open('+repr(selector)+')  ***not implemented***')
-
-    return g_host2scm(-1)  # error
-
-")
-    (##inline-host-expression
-     "g_os_device_event_queue_open(@1@)"
-     selector))
-
-   (else
-    (println "unimplemented ##os-device-event-queue-open called")
-    -5555)))
-
-(define-prim (##os-device-event-queue-read dev-condvar)
-  (macro-case-target
-
-   ((js)
-    (##inline-host-declaration "
-
-g_os_device_event_queue_read = function (dev_condvar_scm) {
-
-  var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
-
-  if (g_os_debug)
-    console.log('g_os_device_event_queue_read('+dev.fd+')  ***not implemented***');
-
-  return g_host2scm(-1); // error
-};
-
-")
-    (##inline-host-expression
-     "g_os_device_event_queue_read(@1@)"
-     dev-condvar))
-
-   ((python)
-    (##inline-host-declaration "
-
-def g_os_device_event_queue_read(dev_condvar_scm):
-
-    dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val
-
-    if g_os_debug:
-        print('g_os_device_event_queue_read('+repr(dev.fd)+')  ***not implemented***')
-
-    return g_host2scm(-1)  # error
-
-")
-    (##inline-host-expression
-     "g_os_device_event_queue_read(@1@)"
-     dev-condvar))
-
-   (else
-    (println "unimplemented ##os-device-event-queue-read called")
-    -5555)))
-
 (define-prim (##os-device-force-output dev-condvar level)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
-g_os_device_force_output = function (dev_condvar_scm, level_scm) {
+@os_device_force_output@ = function (dev_condvar_scm, level_scm) {
 
-  var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
-  var level = g_scm2host(level_scm);
+  var dev = @foreign2host@(dev_condvar_scm.@slots@[@CONDVAR_NAME@]);
+  var level = @scm2host@(level_scm);
 
-  if (g_os_debug)
-    console.log('g_os_device_force_output('+dev.fd+','+level+')  ***not fully implemented***');
-
-  return g_host2scm(0) // no error
+  return @host2scm@(dev.force_output(dev_condvar_scm, level));
 };
 
 ")
     (##inline-host-expression
-     "g_os_device_force_output(@1@,@2@)"
+     "@os_device_force_output@(@1@,@2@)"
      dev-condvar
      level))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
-def g_os_device_force_output(dev_condvar_scm, level_scm):
+def @os_device_force_output@(dev_condvar_scm, level_scm):
 
-    dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val
-    level = g_scm2host(level_scm)
+    dev = @foreign2host@(dev_condvar_scm.@slots@[@CONDVAR_NAME@])
+    level = @scm2host@(level_scm)
 
-    if g_os_debug:
-        print('g_os_device_force_output('+repr(dev.fd)+','+repr(level)+')  ***not fully implemented***')
-
-    return g_host2scm(0)  # no error
+    return @host2scm@(dev.force_output(dev_condvar_scm, level))
 
 ")
     (##inline-host-expression
-     "g_os_device_force_output(@1@,@2@)"
+     "@os_device_force_output@(@1@,@2@)"
      dev-condvar
      level))
 
@@ -1883,82 +2663,444 @@ def g_os_device_force_output(dev_condvar_scm, level_scm):
     -5555)))
 
 (define-prim (##os-device-kind dev)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
-g_os_device_kind = function (dev_scm) {
+@os_device_kind@ = function (dev_scm) {
 
-  var dev = dev_scm.val;
+  var dev = @foreign2host@(dev_scm);
 
-  if (g_os_debug)
-    console.log('g_os_device_kind('+dev.fd+')  ***not fully implemented***');
+  if (@os_debug@)
+    console.log('@os_device_kind@(...)  ***not fully implemented***');
 
-  return g_host2scm(31); // file device
+  return @host2scm@(31+32); // file device
 };
 
 ")
     (##inline-host-expression
-     "g_os_device_kind(@1@)"
+     "@os_device_kind@(@1@)"
      dev))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
-def g_os_device_kind(dev_scm):
+def @os_device_kind@(dev_scm):
 
-    dev = dev_scm.val
+    dev = @foreign2host@(dev_scm)
 
-    if g_os_debug:
-        print('g_os_device_kind('+repr(dev.fd)+')  ***not fully implemented***')
+    if @os_debug@:
+        print('@os_device_kind@(...)  ***not fully implemented***')
 
-    return g_host2scm(31)  # file device
+    return @host2scm@(31+32)  # file device
 
 ")
     (##inline-host-expression
-     "g_os_device_kind(@1@)"
+     "@os_device_kind@(@1@)"
      dev))
 
    (else
     (println "unimplemented ##os-device-kind called")
     -5555)))
 
-(define-prim (##os-device-stream-open-process path-and-args environment directory options)
-  (macro-case-target
+(define ##feature-device-directory
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
-g_os_device_stream_open_process = function (path_and_args_scm, environment_scm, directory_scm, options_scm) {
+@Device_directory@ = function (filenames) {
+  var dev = this;
+  dev.filenames = filenames;
+  dev.index = 0;
+};
 
-  if (g_os_debug)
-    console.log('g_os_device_stream_open_process(...)  ***not implemented***');
+@Device_directory@.prototype.read = function (dev_condvar_scm) {
 
-  return g_host2scm(-1); // error
+  var dev = this;
+
+  if (@os_debug@)
+    console.log('@Device_directory@([...]).read(...)');
+
+  if (dev.index >= dev.filenames.length) {
+    return @eof_obj@; // end of list of filenames
+  } else {
+    dev.index++;
+    return @host2scm@(dev.filenames[dev.index-1]);
+  }
+};
+
+@Device_directory@.prototype.close = function (direction) {
+
+  var dev = this;
+
+  if (@os_debug@)
+    console.log('@Device_directory@([...]).close('+direction+')');
+
+  return 0; // no error
+};
+
+"))
+
+   ((compilation-target python)
+    (##inline-host-declaration "
+
+class @Device_directory@:
+
+    def __init__(dev, filenames):
+        dev.filenames = filenames
+        dev.index = 0
+
+    def read(dev, dev_condvar_scm):
+
+        if @os_debug@:
+            print('@Device_directory@([...]).read(...)')
+
+        if dev.index >= len(dev.filenames):
+            return @eof_obj@  # end of list of filenames
+        else:
+            dev.index += 1
+            return @host2scm@(dev.filenames[dev.index-1])
+
+    def close(dev, direction):
+
+        if @os_debug@:
+            print('@Device_directory@([...]).close('+repr(direction)+')')
+
+        return 0  # no error
+"))
+
+   (else
+    #f)))
+
+(define-prim (##os-device-directory-open-path path ignore-hidden)
+  (##first-argument #f ##feature-device-directory)
+  (cond-expand
+
+   ((compilation-target js)
+    (##inline-host-declaration "
+
+@os_device_directory_open_path@ = function (path_scm, ignore_hidden_scm) {
+
+  var path = @scm2host@(path_scm);
+  var ignore_hidden = @scm2host@(ignore_hidden_scm);
+
+  if (@os_debug@)
+    console.log('@os_device_directory_open_path@(\\''+path+'\\','+ignore_hidden+')');
+
+  var filenames;
+
+  try {
+    filenames = @os_fs@.readdirSync(path);
+  } catch (exn) {
+    if (exn instanceof Error && exn.hasOwnProperty('code')) {
+      return @host2scm@(@os_encode_error@(exn));
+    } else {
+      throw exn;
+    }
+  }
+
+  switch (ignore_hidden) {
+    case 0:
+      // list all files
+      // need to add '.' and '..' which are not returned by readdirSync
+      filenames = ['.', '..'].concat(filenames);
+      break;
+    case 1:
+      // list all files except '.' and '..'
+      // this is already the case when using readdirSync
+      break;
+    default: // ignore_hidden == 2
+      // list all files except hidden files ('.', '..', etc)
+      filenames = filenames.filter(function (name) {
+                    return !name.startsWith('.');
+                  });
+      break;
+  }
+
+  var dev = new @Device_directory@(filenames);
+
+  return @host2foreign@(dev);
 };
 
 ")
     (##inline-host-expression
-     "g_os_device_stream_open_process(@1@,@2@,@3@,@4@)"
+     "@os_device_directory_open_path@(@1@,@2@)"
+     path
+     ignore-hidden))
+
+   ((compilation-target python)
+    (##inline-host-declaration "
+
+def @os_device_directory_open_path@(path_scm, ignore_hidden_scm):
+
+    path = @scm2host@(path_scm)
+    ignore_hidden = @scm2host@(ignore_hidden_scm)
+
+    if @os_debug@:
+        print('@os_device_directory_open_path@('+repr(path)+','+repr(ignore_hidden)+')')
+
+    try:
+        filenames = os.listdir(path)
+    except OSError as exn:
+        return @host2scm@(@os_encode_error@(exn))
+
+    if ignore_hidden == 0:
+        # list all files
+        # need to add '.' and '..' which are not returned by os.listdir
+        filenames = ['.', '..'] + filenames
+    elif ignore_hidden == 1:
+        # list all files except '.' and '..'
+        # this is already the case when using readdirSync
+        pass
+    else: # ignore_hidden == 2
+        # list all files except hidden files ('.', '..', etc)
+        filenames = filter(lambda name: name[:1] != '.', filenames)
+
+    dev = @Device_directory@(filenames)
+
+    return @host2foreign@(dev)
+
+")
+    (##inline-host-expression
+     "@os_device_directory_open_path@(@1@,@2@)"
+     path
+     ignore-hidden))
+
+   (else
+    (println "unimplemented ##os-device-directory-open-path called")
+    -5555)))
+
+(define-prim (##os-device-directory-read dev-condvar)
+  (cond-expand
+
+   ((compilation-target js)
+    (##first-argument #f ##feature-device-directory)
+    (##inline-host-declaration "
+
+@os_device_directory_read@ = function (dev_condvar_scm) {
+
+  var dev = @foreign2host@(dev_condvar_scm.@slots@[@CONDVAR_NAME@]);
+
+  if (@os_debug@)
+    console.log('@os_device_directory_read@(...)');
+
+  return dev.read(dev_condvar_scm);
+};
+
+")
+    (##inline-host-expression
+     "@os_device_directory_read@(@1@)"
+     dev-condvar))
+
+   ((compilation-target python)
+    (##inline-host-declaration "
+
+def @os_device_directory_read@(dev_condvar_scm):
+
+    dev = @foreign2host@(dev_condvar_scm.@slots@[@CONDVAR_NAME@])
+
+    if @os_debug@:
+        print('@os_device_directory_read@(...)')
+
+    return dev.read(dev_condvar_scm)
+
+")
+    (##inline-host-expression
+     "@os_device_directory_read@(@1@)"
+     dev-condvar))
+
+   (else
+    (println "unimplemented ##os-device-directory-read called")
+    -5555)))
+
+(define ##feature-callback-queue
+  (cond-expand
+
+   ((compilation-target js)
+    (##inline-host-declaration "
+
+@Device_event_queue@ = function (selector) {
+  var dev = this;
+  dev.selector = selector;
+  dev.queue = [];
+  dev.read_condvar_scm = null;
+};
+
+@Device_event_queue@.prototype.read = function (dev_condvar_scm) {
+
+  var dev = this;
+
+  if (@os_debug@)
+    console.log('@Device_event_queue@('+dev.selector+').read(...)');
+
+  if (dev.queue.length === 0) {
+
+    @os_condvar_ready_set@(dev_condvar_scm, false);
+
+    if (dev.read_condvar_scm === null) {
+      dev.read_condvar_scm = dev_condvar_scm;
+    }
+
+    return -35; // return EAGAIN to suspend Scheme thread on condvar
+  }
+
+  return dev.queue.shift(); // return first available event
+};
+
+@Device_event_queue@.prototype.write = function (event_scm) {
+
+  var dev = this;
+
+  if (@os_debug@)
+    console.log('@Device_event_queue@('+dev.selector+').write(...)');
+
+  dev.queue.push(event_scm);
+
+  var condvar_scm = dev.read_condvar_scm;
+
+  if (condvar_scm !== null) {
+    dev.read_condvar_scm = null;
+    @os_condvar_ready_set@(condvar_scm, true);
+  }
+};
+
+@callback_queue@ = new @Device_event_queue@(@host2scm@(false));
+
+"))
+
+   (else
+    #f)))
+
+(define-prim (##os-device-event-queue-open selector)
+  (cond-expand
+
+   ((compilation-target js)
+    (##inline-host-declaration "
+
+@os_device_event_queue_open@ = function (selector_scm) {
+
+  var selector = @scm2host@(selector_scm);
+
+  if (@os_debug@)
+    console.log('@os_device_event_queue_open@('+selector+')');
+
+  var dev;
+
+  if (selector === false) {
+    dev = @callback_queue@;
+  } else {
+    dev = new @Device_event_queue@(selector);
+  }
+
+  return @host2foreign@(dev);
+};
+
+")
+    (##inline-host-expression
+     "@os_device_event_queue_open@(@1@)"
+     selector))
+
+   ((compilation-target python)
+    (##inline-host-declaration "
+
+def @os_device_event_queue_open@(selector_scm):
+
+    selector = @scm2host@(selector_scm)
+
+    if @os_debug@:
+        print('@os_device_event_queue_open@('+repr(selector)+')  ***not implemented***')
+
+    return @host2scm@(-1)  # EPERM (operation not permitted)
+
+")
+    (##inline-host-expression
+     "@os_device_event_queue_open@(@1@)"
+     selector))
+
+   (else
+    (println "unimplemented ##os-device-event-queue-open called")
+    -5555)))
+
+(define-prim (##os-device-event-queue-read dev-condvar)
+  (cond-expand
+
+   ((compilation-target js)
+    (##first-argument #f ##feature-callback-queue)
+    (##inline-host-declaration "
+
+@os_device_event_queue_read@ = function (dev_condvar_scm) {
+
+  var dev = @foreign2host@(dev_condvar_scm.@slots@[@CONDVAR_NAME@]);
+
+  if (@os_debug@)
+    console.log('@os_device_event_queue_read@(...)');
+
+  return dev.read(dev_condvar_scm);
+};
+
+")
+    (##inline-host-expression
+     "@os_device_event_queue_read@(@1@)"
+     dev-condvar))
+
+   ((compilation-target python)
+    (##inline-host-declaration "
+
+def @os_device_event_queue_read@(dev_condvar_scm):
+
+    dev = @foreign2host@(dev_condvar_scm.@slots@[@CONDVAR_NAME@])
+
+    if @os_debug@:
+        print('@os_device_event_queue_read@(...)  ***not implemented***')
+
+    return @host2scm@(-1)  # EPERM (operation not permitted)
+
+")
+    (##inline-host-expression
+     "@os_device_event_queue_read@(@1@)"
+     dev-condvar))
+
+   (else
+    (println "unimplemented ##os-device-event-queue-read called")
+    -5555)))
+
+(define-prim (##os-device-stream-open-process path-and-args environment directory options)
+  (cond-expand
+
+   ((compilation-target js)
+    (##inline-host-declaration "
+
+@os_device_stream_open_process@ = function (path_and_args_scm, environment_scm, directory_scm, options_scm) {
+
+  if (@os_debug@)
+    console.log('@os_device_stream_open_process@(...)  ***not implemented***');
+
+  return @host2scm@(-1); // EPERM (operation not permitted)
+};
+
+")
+    (##inline-host-expression
+     "@os_device_stream_open_process@(@1@,@2@,@3@,@4@)"
      path-and-args
      environment
      directory
      options))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
-def g_os_device_stream_open_process(path_and_args_scm, environment_scm, directory_scm, options_scm):
+def @os_device_stream_open_process@(path_and_args_scm, environment_scm, directory_scm, options_scm):
 
-    if g_os_debug:
-        print('g_os_device_stream_open_process(...)  ***not implemented***')
+    if @os_debug@:
+        print('@os_device_stream_open_process@(...)  ***not implemented***')
 
-    return g_host2scm(-1)  # error
+    return @host2scm@(-1)  # EPERM (operation not permitted)
 
 ")
     (##inline-host-expression
-     "g_os_device_stream_open_process(@1@,@2@,@3@,@4@)"
+     "@os_device_stream_open_process@(@1@,@2@,@3@,@4@)"
      path-and-args
      environment
      directory
@@ -1969,41 +3111,41 @@ def g_os_device_stream_open_process(path_and_args_scm, environment_scm, director
     -5555)))
 
 (define-prim (##os-device-process-pid dev)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
-g_os_device_process_pid = function (dev_scm) {
+@os_device_process_pid@ = function (dev_scm) {
 
-  var dev = dev_scm.val;
+  var dev = @foreign2host@(dev_scm);
 
-  if (g_os_debug)
-    console.log('g_os_device_process_pid('+dev.fd+')  ***not implemented***');
+  if (@os_debug@)
+    console.log('@os_device_process_pid@(...)  ***not implemented***');
 
-  return g_host2scm(-1); // error
+  return @host2scm@(-1); // EPERM (operation not permitted)
 };
 
 ")
     (##inline-host-expression
-     "g_os_device_process_pid(@1@)"
+     "@os_device_process_pid@(@1@)"
      dev))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
-def g_os_device_process_pid(dev_scm):
+def @os_device_process_pid@(dev_scm):
 
-    dev = dev_scm.val
+    dev = @foreign2host@(dev_scm)
 
-    if g_os_debug:
-        print('g_os_device_process_pid('+repr(dev.fd)+')  ***not implemented***')
+    if @os_debug@:
+        print('@os_device_process_pid@(...)  ***not implemented***')
 
-    return g_host2scm(-1)  # error
+    return @host2scm@(-1)  # EPERM (operation not permitted)
 
 ")
     (##inline-host-expression
-     "g_os_device_process_pid(@1@)"
+     "@os_device_process_pid@(@1@)"
      dev))
 
    (else
@@ -2011,41 +3153,41 @@ def g_os_device_process_pid(dev_scm):
     -5555)))
 
 (define-prim (##os-device-process-status dev)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
-g_os_device_process_status = function (dev_scm) {
+@os_device_process_status@ = function (dev_scm) {
 
-  var dev = dev_scm.val;
+  var dev = @foreign2host@(dev_scm);
 
-  if (g_os_debug)
-    console.log('g_os_device_process_status('+dev.fd+')  ***not implemented***');
+  if (@os_debug@)
+    console.log('@os_device_process_status@(...)  ***not implemented***');
 
-  return g_host2scm(-1); // error
+  return @host2scm@(-1); // EPERM (operation not permitted)
 };
 
 ")
     (##inline-host-expression
-     "g_os_device_process_status(@1@)"
+     "@os_device_process_status@(@1@)"
      dev))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
-def g_os_device_process_status(dev_scm):
+def @os_device_process_status@(dev_scm):
 
-    dev = dev_scm.val
+    dev = @foreign2host@(dev_scm)
 
-    if g_os_debug:
-        print('g_os_device_process_status('+repr(dev.fd)+')  ***not implemented***')
+    if @os_debug@:
+        print('@os_device_process_status@(...)  ***not implemented***')
 
-    return g_host2scm(-1)  # error
+    return @host2scm@(-1)  # EPERM (operation not permitted)
 
 ")
     (##inline-host-expression
-     "g_os_device_process_status(@1@)"
+     "@os_device_process_status@(@1@)"
      dev))
 
    (else
@@ -2053,41 +3195,41 @@ def g_os_device_process_status(dev_scm):
     -5555)))
 
 (define-prim (##os-device-stream-default-options dev)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
-g_os_device_stream_default_options = function (dev_scm) {
+@os_device_stream_default_options@ = function (dev_scm) {
 
-  var dev = dev_scm.val;
+  var dev = @foreign2host@(dev_scm);
 
-  if (g_os_debug)
-    console.log('g_os_device_stream_default_options('+dev.fd+')  ***not fully implemented***');
+  if (@os_debug@)
+    console.log('@os_device_stream_default_options@(...)  ***not fully implemented***');
 
-  return g_host2scm(2<<9); // line buffering
+  return @host2scm@(((2<<9)<<15)+(2<<9)); // line buffering
 };
 
 ")
     (##inline-host-expression
-     "g_os_device_stream_default_options(@1@)"
+     "@os_device_stream_default_options@(@1@)"
      dev))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
-def g_os_device_stream_default_options(dev_scm):
+def @os_device_stream_default_options@(dev_scm):
 
-    dev = dev_scm.val
+    dev = @foreign2host@(dev_scm)
 
-    if g_os_debug:
-        print('g_os_device_stream_default_options('+repr(dev.fd)+')  ***not fully implemented***')
+    if @os_debug@:
+        print('@os_device_stream_default_options@(...)  ***not fully implemented***')
 
-    return g_host2scm(2<<9)  # line buffering
+    return @host2scm@(((2<<9)<<15)+(2<<9))  # line buffering
 
 ")
     (##inline-host-expression
-     "g_os_device_stream_default_options(@1@)"
+     "@os_device_stream_default_options@(@1@)"
      dev))
 
    (else
@@ -2095,44 +3237,44 @@ def g_os_device_stream_default_options(dev_scm):
     -5555)))
 
 (define-prim (##os-device-stream-options-set! dev options)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
-g_os_device_stream_options_set = function (dev_scm, options_scm) {
+@os_device_stream_options_set@ = function (dev_scm, options_scm) {
 
-  var dev = dev_scm.val;
-  var options = g_scm2host(options_scm);
+  var dev = @foreign2host@(dev_scm);
+  var options = @scm2host@(options_scm);
 
-  if (g_os_debug)
-    console.log('g_os_device_stream_options_set('+dev.fd+','+options+')  ***not implemented***');
+  if (@os_debug@)
+    console.log('@os_device_stream_options_set@(...,'+options+')  ***not implemented***');
 
-  return g_host2scm(-1); // error
+  return @host2scm@(-1); // EPERM (operation not permitted)
 };
 
 ")
     (##inline-host-expression
-     "g_os_device_stream_options_set(@1@,@2@)"
+     "@os_device_stream_options_set@(@1@,@2@)"
      dev
      options))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
-def g_os_device_stream_options_set(dev_scm, options_scm):
+def @os_device_stream_options_set@(dev_scm, options_scm):
 
-    dev = dev_scm.val
-    options = g_scm2host(options_scm)
+    dev = @foreign2host@(dev_scm)
+    options = @scm2host@(options_scm)
 
-    if g_os_debug:
-        print('g_os_device_stream_options_set('+repr(dev.fd)+','+repr(options)+')  ***not implemented***')
+    if @os_debug@:
+        print('@os_device_stream_options_set@(...,'+repr(options)+')  ***not implemented***')
 
-    return g_host2scm(-1)  # error
+    return @host2scm@(-1)  # EPERM (operation not permitted)
 
 ")
     (##inline-host-expression
-     "g_os_device_stream_options_set(@1@,@2@)"
+     "@os_device_stream_options_set@(@1@,@2@)"
      dev
      options))
 
@@ -2141,65 +3283,65 @@ def g_os_device_stream_options_set(dev_scm, options_scm):
     -5555)))
 
 (define-prim (##os-device-stream-open-predefined index flags)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
-g_os_device_stream_open_predefined = function (index_scm, flags_scm) {
+@os_device_stream_open_predefined@ = function (index_scm, flags_scm) {
 
-  var index = g_scm2host(index_scm);
-  var flags = g_scm2host(flags_scm);
+  var index = @scm2host@(index_scm);
+  var flags = @scm2host@(flags_scm);
 
-  if (g_os_debug)
-    console.log('g_os_device_stream_open_predefined('+index+','+flags+')  ***not fully implemented***');
+  if (@os_debug@)
+    console.log('@os_device_stream_open_predefined@('+index+','+flags+')');
 
-  var fd;
+  var dev;
 
   switch (index) {
-    case -1: fd = 0; break; // stdin
-    case -2: fd = 1; break; // stdout
-    case -3: fd = 2; break; // stderr
-    case -4: fd = 1; break; // console
-    default: fd = index; break;
+    case -1: dev = @os_device_from_stdin@();   break;
+    case -2: dev = @os_device_from_stdout@();  break;
+    case -3: dev = @os_device_from_stderr@();  break;
+    case -4: dev = @os_device_from_basic_console@(); break;
+    default: dev = @os_device_from_fd@(index); break;
   }
 
-  return new G_Foreign(new G_Device(fd), g_host2scm(false));
+  return @host2foreign@(dev);
 };
 
 ")
     (##inline-host-expression
-     "g_os_device_stream_open_predefined(@1@,@2@)"
+     "@os_device_stream_open_predefined@(@1@,@2@)"
      index
      flags))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
-def g_os_device_stream_open_predefined(index_scm, flags_scm):
+def @os_device_stream_open_predefined@(index_scm, flags_scm):
 
-    index = g_scm2host(index_scm)
-    flags = g_scm2host(flags_scm)
+    index = @scm2host@(index_scm)
+    flags = @scm2host@(flags_scm)
 
-    if g_os_debug:
-      print('g_os_device_stream_open_predefined('+repr(index)+','+repr(flags)+')  ***not fully implemented***')
+    if @os_debug@:
+      print('@os_device_stream_open_predefined@('+repr(index)+','+repr(flags)+')')
 
     if index == -1:
-        fd = 0  # stdin
+        dev = @os_device_from_stdin@()
     elif index == -2:
-        fd = 1  # stdout
+        dev = @os_device_from_stdout@()
     elif index == -3:
-        fd = 2  # stderr
+        dev = @os_device_from_stderr@()
     elif index == -4:
-        fd = 1  # console
+        dev = @os_device_from_basic_console@()
     else:
-        fd = index
+        dev = @os_device_from_fd@(index)
 
-    return G_Foreign(G_Device(fd), g_host2scm(False))
+    return @host2foreign@(dev)
 
 ")
     (##inline-host-expression
-     "g_os_device_stream_open_predefined(@1@,@2@)"
+     "@os_device_stream_open_predefined@(@1@,@2@)"
      index
      flags))
 
@@ -2208,89 +3350,246 @@ def g_os_device_stream_open_predefined(index_scm, flags_scm):
     -5555)))
 
 (define-prim (##os-device-stream-open-path path flags mode)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
+    (##first-argument #f ##feature-file-input)
     (##inline-host-declaration "
 
-if ((function () { return this !== this.window; })()) { // nodejs?
+if (@os_fs@) {
 
-  g_os_translate_flags = function (flags) {
+  @os_translate_flags@ = function (flags) {
 
-    var result;
+    var direction = (flags >> 4) & 3;
+    var append = ((flags >> 3) & 1) !== 0;
+    var creat = ((flags >> 1) & 3) !== 0;
+    var excl = ((flags >> 1) & 3) === 2;
+    var trunc = (flags & 1) !== 0;
 
-    switch ((flags >> 4) & 3)
-      {
-      default:
-      case 1:
-        result = fs.constants.O_RDONLY;
-        break;
-      case 2:
-        result = fs.constants.O_WRONLY;
-        break;
-      case 3:
-        result = fs.constants.O_RDWR;
-        break;
+    if (direction === 1) {
+      // O_RDONLY
+      return 'r';
+    } else if (direction === 2) {
+      // O_WRONLY
+      if (creat) {
+        if (trunc) {
+          return excl ? 'wx' : 'w';
+        } else if (append) {
+          return excl ? 'ax' : 'a';
+        } else {
+          return null; // unknown mode
+        }
+      } else {
+        return null; // unknown mode
       }
-
-    if ((flags & (1 << 3)) != 0)
-      result |= fs.constants.O_APPEND;
-
-    switch ((flags >> 1) & 3)
-      {
-      default:
-      case 0: break;
-      case 1: result |= fs.constants.O_CREAT; break;
-      case 2: result |= fs.constants.O_CREAT|fs.constants.O_EXCL; break;
+    } else {
+      // O_RDWR
+      if (creat) {
+        if (trunc) {
+          return excl ? 'wx+' : 'w+';
+        } else if (append) {
+          return excl ? 'ax+' : 'a+';
+        } else {
+          return null; // unknown mode
+        }
+      } else {
+        return 'r+';
       }
-
-    if ((flags & 1) != 0)
-      result |= fs.constants.O_TRUNC;
-
-    return result;
+    }
   };
-
 }
 
-g_os_device_stream_open_path = function (path_scm, flags_scm, mode_scm) {
+if (@os_web@) {
 
-  var path = g_scm2host(path_scm);
-  var flags = g_scm2host(flags_scm);
-  var mode = g_scm2host(mode_scm);
+  @Device_blob@ = function (blob) {
+    var dev = this;
+    dev.rbuf = blob;
+    dev.rlo = 0;
+    dev.rhi = blob.length;
+  };
 
-  if ((function () { return this === this.window; })()) {
-    throw Error('g_os_device_stream_open_path(\\''+path+'\\','+flags+','+mode+')  ***not implemented***');
-  }
+  @Device_blob@.prototype.read = function (dev_condvar_scm, buffer, lo, hi) {
 
-  if (g_os_debug)
-    console.log('g_os_device_stream_open_path(\\''+path+'\\','+flags+','+mode+')  ***not fully implemented***');
+    var dev = this;
 
-  var fd;
+    if (@os_debug@)
+      console.log('@Device_blob@(...).read(...,['+buffer.slice(0,10)+'...],'+lo+','+hi+')');
 
-  try {
-    fd = fs.openSync(path, g_os_translate_flags(flags), mode);
-  } catch (exn) {
-    if (exn instanceof Error && exn.hasOwnProperty('code')) {
-      return g_host2scm(g_os_encode_error(exn));
+    var n = hi-lo;
+    var have = dev.rhi-dev.rlo;
+
+    if (have <= 0) {
+      return @host2scm@(0); // signal EOF
     } else {
-      throw exn;
+
+      if (n > have) n = have;
+
+      buffer.set(dev.rbuf.subarray(dev.rlo, dev.rlo+n), lo);
+
+      dev.rlo += n;
+
+      return @host2scm@(n); // number of bytes transferred
+    };
+  };
+
+  @Device_blob@.prototype.write = function (dev_condvar_scm, buffer, lo, hi) {
+
+    var dev = this;
+
+    if (@os_debug@)
+      console.log('@Device_blob@(...).write(...,['+buffer.slice(0,10)+'...],'+lo+','+hi+')');
+
+    return -1; // EPERM (operation not permitted)
+  };
+
+  @Device_blob@.prototype.force_output = function (dev_condvar_scm, level) {
+
+    var dev = this;
+
+    if (@os_debug@)
+      console.log('@Device_blob@(...).force_output(...,'+level+')');
+
+    return -1; // EPERM (operation not permitted)
+  };
+
+  @Device_blob@.prototype.seek = function (dev_condvar_scm, pos, whence) {
+
+    var dev = this;
+
+    if (@os_debug@)
+      console.log('@Device_blob@(...).seek(...,'+pos+','+whence+')');
+
+    return -1; // EPERM (operation not permitted)
+  };
+
+  @Device_blob@.prototype.width = function (dev_condvar_scm) {
+
+    var dev = this;
+
+    if (@os_debug@)
+      console.log('@Device_blob@(...).width()');
+
+    return -1; // EPERM (operation not permitted)
+  };
+
+  @Device_blob@.prototype.close = function (direction) {
+
+    var dev = this;
+
+    if (@os_debug@)
+      console.log('@Device_blob@(...).close('+direction+')');
+
+    if ((direction & 1) != 0 ||  // DIRECTION_RD
+        (direction & 2) != 0) {  // DIRECTION_WR
+
+      dev.rbuf = new Uint8Array(0);
+      dev.rlo = 0;
+      dev.rhi = 0;
+
+      return 0; // ignored
+    }
+
+    return 0; // no error
+  };
+
+  @os_device_from_blob@ = function (blob) {
+    return new @Device_blob@(blob);
+  };
+}
+
+@os_device_stream_open_path@ = function (path_scm, flags_scm, mode_scm) {
+
+  var path = @scm2host@(path_scm);
+  var flags = @scm2host@(flags_scm);
+  var mode = @scm2host@(mode_scm);
+
+  if (@os_debug@)
+    console.log('@os_device_stream_open_path@(\\''+path+'\\','+flags+','+mode+')');
+
+  if (@os_uri_scheme_prefixed@(path)) { // accessing a URL?
+
+    if (!(@os_web@ && @os_trusted_url@(path, 'to read that document'))) { // accessing an untrusted URL?
+      return @host2scm@(-1); // EPERM (operation not permitted)
+    } else {
+
+      if (((flags >> 4) & 3) === 1) { // for reading?
+
+        var ra = @r0@;
+        @r0@ = null; // exit trampoline
+
+        function callback(req) {
+
+          if (req.status === 404) {
+            @r1@ = @host2scm@(-2); // ENOENT (file does not exist)
+          } else if (req.status !== 200) {
+            @r1@ = @host2scm@(-1); // EPERM (operation not permitted)
+          } else {
+            var dev = @os_device_from_blob@(new TextEncoder().encode(req.responseText));
+            @r1@ = @host2foreign@(dev);
+          }
+
+          @r0@ = ra;
+          @trampoline@(@r0@);
+        }
+
+        @os_get_url_async@('GET', @os_uri_encode@(path), callback);
+
+        return 0; // ignored
+      } else {
+        return @host2scm@(-1); // EPERM (operation not permitted)
+      }
+    }
+
+  } else {
+
+    if (!@os_fs@) {
+      return @host2scm@(-1); // EPERM (operation not permitted)
+    } else {
+
+      // Start an async open of the file
+
+      var async_progress = @async_op_done@; // open not yet started
+      var ra = @r0@;
+
+      function callback(err, fd) {
+        var progress = async_progress;
+        if (err) {
+          async_progress = @host2scm@(@os_encode_error@(err));
+        } else {
+          async_progress = @host2foreign@(@os_device_from_fd@(fd));
+        }
+        if (progress === @async_op_in_progress@) {
+          @r1@ = async_progress;
+          @r0@ = ra;
+          @trampoline@(@r0@);
+        }
+      }
+
+      @os_fs@.open(path, @os_translate_flags@(flags), mode, callback);
+
+      if (async_progress !== @async_op_done@) {
+        // handle synchronous execution of callback
+        return async_progress;
+      } else {
+        async_progress = @async_op_in_progress@;
+        @r0@ = null; // exit trampoline
+        return 0; // ignored
+      }
     }
   }
-
-  return new G_Foreign(new G_Device(fd), g_host2scm(false));
 };
 
 ")
     (##inline-host-expression
-     "g_os_device_stream_open_path(@1@,@2@,@3@)"
+     "@os_device_stream_open_path@(@1@,@2@,@3@)"
      path
      flags
      mode))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
-def g_os_translate_flags(flags):
+def @os_translate_flags@(flags):
 
     code = (flags >> 4) & 3
 
@@ -2316,25 +3615,27 @@ def g_os_translate_flags(flags):
 
     return result
 
-def g_os_device_stream_open_path(path_scm, flags_scm, mode_scm):
+def @os_device_stream_open_path@(path_scm, flags_scm, mode_scm):
 
-    path = g_scm2host(path_scm)
-    flags = g_scm2host(flags_scm)
-    mode = g_scm2host(mode_scm)
+    path = @scm2host@(path_scm)
+    flags = @scm2host@(flags_scm)
+    mode = @scm2host@(mode_scm)
 
-    if g_os_debug:
-        print('g_os_device_stream_open_path('+repr(path)+','+repr(flags)+','+repr(mode)+')  ***not fully implemented***')
+    if @os_debug@:
+        print('@os_device_stream_open_path@('+repr(path)+','+repr(flags)+','+repr(mode)+')')
 
     try:
-        fd = os.open(path, g_os_translate_flags(flags), mode)
+        fd = os.open(path, @os_translate_flags@(flags), mode)
     except OSError as exn:
-        return g_host2scm(g_os_encode_error(exn))
+        return @host2scm@(@os_encode_error@(exn))
 
-    return G_Foreign(G_Device(fd), g_host2scm(False))
+    dev = @os_device_from_fd@(fd)
+
+    return @host2foreign@(dev)
 
 ")
     (##inline-host-expression
-     "g_os_device_stream_open_path(@1@,@2@,@3@)"
+     "@os_device_stream_open_path@(@1@,@2@,@3@)"
      path
      flags
      mode))
@@ -2344,83 +3645,44 @@ def g_os_device_stream_open_path(path_scm, flags_scm, mode_scm):
     -5555)))
 
 (define-prim (##os-device-stream-read dev-condvar buffer lo hi)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
-g_os_device_stream_read = function (dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
+@os_device_stream_read@ = function (dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
 
-  var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
-  var buffer = buffer_scm.elems;
-  var lo = g_scm2host(lo_scm);
-  var hi = g_scm2host(hi_scm);
+  var dev = @foreign2host@(dev_condvar_scm.@slots@[@CONDVAR_NAME@]);
+  var buffer = buffer_scm.@elems@;
+  var lo = @scm2host@(lo_scm);
+  var hi = @scm2host@(hi_scm);
 
-  if ((function () { return this === this.window; })()) {
-    throw Error('g_os_device_stream_read('+dev.fd+',['+buffer+'],'+lo+','+hi+')  ***not implemented***');
-  }
-
-  if (g_os_debug)
-    console.log('g_os_device_stream_read('+dev.fd+',['+buffer+'],'+lo+','+hi+')  ***not fully implemented***');
-
-  var n = hi-lo;
-  var have = dev.rhi-dev.rlo;
-
-  if (have === 0) {
-    have = fs.readSync(dev.fd, dev.rbuf, 0, dev.rbuf.length, null);
-    dev.rlo = 0;
-    dev.rhi = have;
-  }
-
-  if (have === 0) {
-
-    return g_host2scm(0); // 0 means EOF
-
-  } else {
-
-    if (n > have) n = have;
-
-    buffer.set(dev.rbuf.subarray(dev.rlo, dev.rlo+n), lo);
-
-    dev.rlo += n;
-
-    return g_host2scm(n); // number of bytes transferred
-  }
+  return @host2scm@(dev.read(dev_condvar_scm, buffer, lo, hi));
 };
 
 ")
     (##inline-host-expression
-     "g_os_device_stream_read(@1@,@2@,@3@,@4@)"
+     "@os_device_stream_read@(@1@,@2@,@3@,@4@)"
      dev-condvar
      buffer
      lo
      hi))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
-def g_os_device_stream_read(dev_condvar_scm, buffer_scm, lo_scm, hi_scm):
+def @os_device_stream_read@(dev_condvar_scm, buffer_scm, lo_scm, hi_scm):
 
-    dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val
-    buffer = buffer_scm.elems
-    lo = g_scm2host(lo_scm)
-    hi = g_scm2host(hi_scm)
+    dev = @foreign2host@(dev_condvar_scm.@slots@[@CONDVAR_NAME@])
+    buffer = buffer_scm.@elems@
+    lo = @scm2host@(lo_scm)
+    hi = @scm2host@(hi_scm)
 
-    if g_os_debug:
-        print('g_os_device_stream_read('+repr(dev.fd)+','+repr(buffer)+','+repr(lo)+','+repr(hi)+')  ***not fully implemented***')
-
-    try:
-        b = os.read(dev.fd, hi-lo)
-        n = len(b)
-        buffer[lo:lo+n] = b
-    except OSError as exn:
-        return g_host2scm(g_os_encode_error(exn))
-
-    return g_host2scm(n)
+    return @host2scm@(dev.read(dev_condvar_scm, buffer, lo, hi))
 
 ")
     (##inline-host-expression
-     "g_os_device_stream_read(@1@,@2@,@3@,@4@)"
+     "@os_device_stream_read@(@1@,@2@,@3@,@4@)"
      dev-condvar
      buffer
      lo
@@ -2431,88 +3693,44 @@ def g_os_device_stream_read(dev_condvar_scm, buffer_scm, lo_scm, hi_scm):
     -5555)))
 
 (define-prim (##os-device-stream-write dev-condvar buffer lo hi)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
-g_stdout_buf = [];
+@os_device_stream_write@ = function (dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
 
-g_os_device_stream_write = function (dev_condvar_scm, buffer_scm, lo_scm, hi_scm) {
+  var dev = @foreign2host@(dev_condvar_scm.@slots@[@CONDVAR_NAME@]);
+  var buffer = buffer_scm.@elems@;
+  var lo = @scm2host@(lo_scm);
+  var hi = @scm2host@(hi_scm);
 
-  var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
-  var buffer = buffer_scm.elems;
-  var lo = g_scm2host(lo_scm);
-  var hi = g_scm2host(hi_scm);
-
-  if (g_os_debug)
-    console.log('g_os_device_stream_write('+dev.fd+',['+buffer+'],'+lo+','+hi+')  ***not fully implemented***');
-
-  var n;
-
-  if ((function () { return this === this.window; })()) {
-
-    if (dev.fd === 1) { // stdout?
-      for (var i=lo; i<hi; i++) {
-        var c = buffer[i];
-        if (c === 10) {
-          console.log(String.fromCharCode.apply(null, g_stdout_buf));
-          g_stdout_buf = [];
-        } else {
-          g_stdout_buf.push(c);
-        }
-      }
-    }
-
-    n = hi-lo;
-
-  } else {
-
-    try {
-      n = fs.writeSync(dev.fd, buffer, lo, hi-lo, null);
-    } catch (exn) {
-      if (exn instanceof Error && exn.hasOwnProperty('code')) {
-        return g_host2scm(g_os_encode_error(exn));
-      } else {
-        throw exn;
-      }
-    }
-  }
-
-  return g_host2scm(n);
+  return @host2scm@(dev.write(dev_condvar_scm, buffer, lo, hi));
 };
 
 ")
     (##inline-host-expression
-     "g_os_device_stream_write(@1@,@2@,@3@,@4@)"
+     "@os_device_stream_write@(@1@,@2@,@3@,@4@)"
      dev-condvar
      buffer
      lo
      hi))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
-def g_os_device_stream_write(dev_condvar_scm, buffer_scm, lo_scm, hi_scm):
+def @os_device_stream_write@(dev_condvar_scm, buffer_scm, lo_scm, hi_scm):
 
-    dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val
-    buffer = buffer_scm.elems
-    lo = g_scm2host(lo_scm)
-    hi = g_scm2host(hi_scm)
+    dev = @foreign2host@(dev_condvar_scm.@slots@[@CONDVAR_NAME@])
+    buffer = buffer_scm.@elems@
+    lo = @scm2host@(lo_scm)
+    hi = @scm2host@(hi_scm)
 
-    if g_os_debug:
-        print('g_os_device_stream_write('+repr(dev.fd)+','+repr(buffer)+','+repr(lo)+','+repr(hi)+')  ***not fully implemented***')
-
-    try:
-        n = os.write(dev.fd, buffer[lo:hi])
-    except OSError as exn:
-        return g_host2scm(g_os_encode_error(exn))
-
-    return g_host2scm(n)
+    return @host2scm@(dev.write(dev_condvar_scm, buffer, lo, hi))
 
 ")
     (##inline-host-expression
-     "g_os_device_stream_write(@1@,@2@,@3@,@4@)"
+     "@os_device_stream_write@(@1@,@2@,@3@,@4@)"
      dev-condvar
      buffer
      lo
@@ -2523,63 +3741,41 @@ def g_os_device_stream_write(dev_condvar_scm, buffer_scm, lo_scm, hi_scm):
     -5555)))
 
 (define-prim (##os-device-stream-seek dev-condvar pos whence)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
-g_os_device_stream_seek = function (dev_condvar_scm, pos_scm, whence_scm) {
+@os_device_stream_seek@ = function (dev_condvar_scm, pos_scm, whence_scm) {
 
-  var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
-  var pos = g_scm2host(pos_scm);
-  var whence = g_scm2host(whence_scm);
+  var dev = @foreign2host@(dev_condvar_scm.@slots@[@CONDVAR_NAME@]);
+  var pos = @scm2host@(pos_scm);
+  var whence = @scm2host@(whence_scm);
 
-  if ((function () { return this === this.window; })()) {
-    throw Error('g_os_device_stream_seek('+dev.fd+','+pos+','+whence+')  ***not implemented***');
-  }
-
-  if (g_os_debug)
-    console.log('g_os_device_stream_seek('+dev.fd+','+pos+','+whence+')  ***not implemented***');
-
-  return g_host2scm(-1); // error
+  return @host2scm@(dev.seek(dev_condvar_scm, pos, whence));
 };
 
 ")
     (##inline-host-expression
-     "g_os_device_stream_seek(@1@,@2@,@3@)"
+     "@os_device_stream_seek@(@1@,@2@,@3@)"
      dev-condvar
      pos
      whence))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
-def g_os_device_stream_seek(dev_condvar_scm, pos_scm, whence_scm):
+def @os_device_stream_seek@(dev_condvar_scm, pos_scm, whence_scm):
 
-    dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val
-    pos = g_scm2host(pos_scm)
-    whence = g_scm2host(whence_scm)
+    dev = @foreign2host@(dev_condvar_scm.@slots@[@CONDVAR_NAME@])
+    pos = @scm2host@(pos_scm)
+    whence = @scm2host@(whence_scm)
 
-    if g_os_debug:
-        print('g_os_device_stream_seek('+repr(dev.fd)+','+repr(pos)+','+repr(whence)+')  ***not implemented***')
-
-    if whence == 0:
-        how = os.SEEK_SET
-    elif whence == 1:
-        how = os.SEEK_CUR
-    else:
-        how = os.SEEK_END
-
-    try:
-        os.lseek(dev.fd, pos, how)
-    except OSError as exn:
-        return g_host2scm(g_os_encode_error(exn))
-
-    return g_host2scm(0)  # no error
+    return @host2scm@(dev.seek(dev_condvar_scm, pos, whence))
 
 ")
     (##inline-host-expression
-     "g_os_device_stream_seek(@1@,@2@,@3@)"
+     "@os_device_stream_seek@(@1@,@2@,@3@)"
      dev-condvar
      pos
      whence))
@@ -2589,41 +3785,35 @@ def g_os_device_stream_seek(dev_condvar_scm, pos_scm, whence_scm):
     -5555)))
 
 (define-prim (##os-device-stream-width dev-condvar)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
-g_os_device_stream_width = function (dev_condvar_scm) {
+@os_device_stream_width@ = function (dev_condvar_scm) {
 
-  var dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val;
+  var dev = @foreign2host@(dev_condvar_scm.@slots@[@CONDVAR_NAME@]);
 
-  if (g_os_debug)
-    console.log('g_os_device_stream_width('+dev.fd+')  ***not fully implemented***');
-
-  return g_host2scm(80);
+  return @host2scm@(dev.width(dev_condvar_scm));
 };
 
 ")
     (##inline-host-expression
-     "g_os_device_stream_width(@1@)"
+     "@os_device_stream_width@(@1@)"
      dev-condvar))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
-def g_os_device_stream_width(dev_condvar_scm):
+def @os_device_stream_width@(dev_condvar_scm):
 
-    dev = dev_condvar_scm.slots[g_CONDVAR_NAME].val
+    dev = @foreign2host@(dev_condvar_scm.@slots@[@CONDVAR_NAME@])
 
-    if g_os_debug:
-        print('g_os_device_stream_width('+repr(dev.fd)+')  ***not fully implemented***')
-
-    return g_host2scm(80)
+    return @host2scm@(dev.width(dev_condvar_scm))
 
 ")
     (##inline-host-expression
-     "g_os_device_stream_width(@1@)"
+     "@os_device_stream_width@(@1@)"
      dev-condvar))
 
    (else
@@ -2632,26 +3822,26 @@ def g_os_device_stream_width(dev_condvar_scm):
 
 (define-prim (##os-port-decode-chars! port want eof)
   (##first-argument #f ##feature-port-fields)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
-g_os_port_decode_chars = function (port_scm, want_scm, eof_scm) {
+@os_port_decode_chars@ = function (port_scm, want_scm, eof_scm) {
 
-  var want = g_scm2host(want_scm);
-  var eof = g_scm2host(eof_scm);
+  var want = @scm2host@(want_scm);
+  var eof = @scm2host@(eof_scm);
 
-  if (g_os_debug)
-    console.log('g_os_port_decode_chars(port,'+want+','+eof+')  ***not implemented***');
+  if (@os_debug@)
+    console.log('@os_port_decode_chars@(port,'+want+','+eof+')  ***not fully implemented***');
 
-  var cbuf_scm = port_scm.slots[g_PORT_CHAR_RBUF];
-  var chi = g_scm2host(port_scm.slots[g_PORT_CHAR_RHI]);
-  var cend = cbuf_scm.codes.length;
-  var bbuf = port_scm.slots[g_PORT_BYTE_RBUF].elems
-  var blo = g_scm2host(port_scm.slots[g_PORT_BYTE_RLO]);
-  var bhi = g_scm2host(port_scm.slots[g_PORT_BYTE_RHI]);
-  var options = g_scm2host(port_scm.slots[g_PORT_ROPTIONS]);
+  var cbuf_scm = port_scm.@slots@[@PORT_CHAR_RBUF@];
+  var chi = @scm2host@(port_scm.@slots@[@PORT_CHAR_RHI@]);
+  var cend = cbuf_scm.@codes@.length;
+  var bbuf = port_scm.@slots@[@PORT_BYTE_RBUF@].@elems@
+  var blo = @scm2host@(port_scm.@slots@[@PORT_BYTE_RLO@]);
+  var bhi = @scm2host@(port_scm.@slots@[@PORT_BYTE_RHI@]);
+  var options = @scm2host@(port_scm.@slots@[@PORT_ROPTIONS@]);
 
   if (want != false)
     {
@@ -2664,43 +3854,43 @@ g_os_port_decode_chars = function (port_scm, want_scm, eof_scm) {
   var bbuf_avail = bhi - blo;
 
   while (cbuf_avail > 0 && bbuf_avail > 0) {
-    cbuf_scm.codes[cend - cbuf_avail] = bbuf[bhi - bbuf_avail];
+    cbuf_scm.@codes@[cend - cbuf_avail] = bbuf[bhi - bbuf_avail];
     bbuf_avail--;
     cbuf_avail--;
   }
 
-  port_scm.slots[g_PORT_CHAR_RHI] = g_host2scm(cend - cbuf_avail);
-  port_scm.slots[g_PORT_BYTE_RLO] = g_host2scm(bhi - bbuf_avail);
-  port_scm.slots[g_PORT_ROPTIONS] = g_host2scm(options);
+  port_scm.@slots@[@PORT_CHAR_RHI@] = @host2scm@(cend - cbuf_avail);
+  port_scm.@slots@[@PORT_BYTE_RLO@] = @host2scm@(bhi - bbuf_avail);
+  port_scm.@slots@[@PORT_ROPTIONS@] = @host2scm@(options);
 
-  return g_host2scm(0) // no error
+  return @host2scm@(0) // no error
 };
 
 ")
     (##inline-host-expression
-     "g_os_port_decode_chars(@1@,@2@,@3@)"
+     "@os_port_decode_chars@(@1@,@2@,@3@)"
      port
      want
      eof))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
-def g_os_port_decode_chars(port_scm, want_scm, eof_scm):
+def @os_port_decode_chars@(port_scm, want_scm, eof_scm):
 
-    want = g_scm2host(want_scm)
-    eof = g_scm2host(eof_scm)
+    want = @scm2host@(want_scm)
+    eof = @scm2host@(eof_scm)
 
-    if g_os_debug:
-        print('g_os_port_decode_chars(port,'+repr(want)+','+repr(eof)+')  ***not implemented***')
+    if @os_debug@:
+        print('@os_port_decode_chars@(port,'+repr(want)+','+repr(eof)+')  ***not fully implemented***')
 
-    cbuf_scm = port_scm.slots[g_PORT_CHAR_RBUF]
-    chi = g_scm2host(port_scm.slots[g_PORT_CHAR_RHI])
-    cend = len(cbuf_scm.codes)
-    bbuf = port_scm.slots[g_PORT_BYTE_RBUF].elems
-    blo = g_scm2host(port_scm.slots[g_PORT_BYTE_RLO])
-    bhi = g_scm2host(port_scm.slots[g_PORT_BYTE_RHI])
-    options = g_scm2host(port_scm.slots[g_PORT_ROPTIONS])
+    cbuf_scm = port_scm.@slots@[@PORT_CHAR_RBUF@]
+    chi = @scm2host@(port_scm.@slots@[@PORT_CHAR_RHI@])
+    cend = len(cbuf_scm.@codes@)
+    bbuf = port_scm.@slots@[@PORT_BYTE_RBUF@].@elems@
+    blo = @scm2host@(port_scm.@slots@[@PORT_BYTE_RLO@])
+    bhi = @scm2host@(port_scm.@slots@[@PORT_BYTE_RHI@])
+    options = @scm2host@(port_scm.@slots@[@PORT_ROPTIONS@])
 
     if not want == False:
         cend2 = chi + want
@@ -2711,19 +3901,19 @@ def g_os_port_decode_chars(port_scm, want_scm, eof_scm):
     bbuf_avail = bhi - blo
 
     while cbuf_avail > 0 and bbuf_avail > 0:
-        cbuf_scm.codes[cend - cbuf_avail] = bbuf[bhi - bbuf_avail]
+        cbuf_scm.@codes@[cend - cbuf_avail] = bbuf[bhi - bbuf_avail]
         bbuf_avail = bbuf_avail-1
         cbuf_avail = cbuf_avail-1
 
-    port_scm.slots[g_PORT_CHAR_RHI] = g_host2scm(cend - cbuf_avail)
-    port_scm.slots[g_PORT_BYTE_RLO] = g_host2scm(bhi - bbuf_avail)
-    port_scm.slots[g_PORT_ROPTIONS] = g_host2scm(options)
+    port_scm.@slots@[@PORT_CHAR_RHI@] = @host2scm@(cend - cbuf_avail)
+    port_scm.@slots@[@PORT_BYTE_RLO@] = @host2scm@(bhi - bbuf_avail)
+    port_scm.@slots@[@PORT_ROPTIONS@] = @host2scm@(options)
 
-    return g_host2scm(0)  # no error
+    return @host2scm@(0)  # no error
 
 ")
     (##inline-host-expression
-     "g_os_port_decode_chars(@1@,@2@,@3@)"
+     "@os_port_decode_chars@(@1@,@2@,@3@)"
      port
      want
      eof))
@@ -2734,81 +3924,300 @@ def g_os_port_decode_chars(port_scm, want_scm, eof_scm):
 
 (define-prim (##os-port-encode-chars! port)
   (##first-argument #f ##feature-port-fields)
-  (macro-case-target
+  (cond-expand
 
-   ((js)
+   ((compilation-target js)
     (##inline-host-declaration "
 
-g_os_port_encode_chars = function (port_scm) {
+@os_port_encode_chars@ = function (port_scm) {
 
-  if (g_os_debug)
-    console.log('g_os_port_encode_chars(port)  ***not fully implemented***');
+  if (@os_debug@)
+    console.log('@os_port_encode_chars@(port)  ***not fully implemented***');
 
-  var cbuf_scm = port_scm.slots[g_PORT_CHAR_WBUF];
-  var clo = g_scm2host(port_scm.slots[g_PORT_CHAR_WLO]);
-  var chi = g_scm2host(port_scm.slots[g_PORT_CHAR_WHI]);
-  var bbuf = port_scm.slots[g_PORT_BYTE_WBUF].elems
-  var bhi = g_scm2host(port_scm.slots[g_PORT_BYTE_WHI]);
+  var cbuf_scm = port_scm.@slots@[@PORT_CHAR_WBUF@];
+  var clo = @scm2host@(port_scm.@slots@[@PORT_CHAR_WLO@]);
+  var chi = @scm2host@(port_scm.@slots@[@PORT_CHAR_WHI@]);
+  var bbuf = port_scm.@slots@[@PORT_BYTE_WBUF@].@elems@
+  var bhi = @scm2host@(port_scm.@slots@[@PORT_BYTE_WHI@]);
   var bend = bbuf.length;
-  var options = g_scm2host(port_scm.slots[g_PORT_WOPTIONS]);
+  var options = @scm2host@(port_scm.@slots@[@PORT_WOPTIONS@]);
   var cbuf_avail = chi - clo;
   var bbuf_avail = bend - bhi;
 
   while (cbuf_avail > 0 && bbuf_avail > 0) {
-    bbuf[bend - bbuf_avail] = cbuf_scm.codes[chi - cbuf_avail];
+    bbuf[bend - bbuf_avail] = cbuf_scm.@codes@[chi - cbuf_avail];
     bbuf_avail--;
     cbuf_avail--;
   }
 
-  port_scm.slots[g_PORT_CHAR_WLO] = g_host2scm(chi - cbuf_avail);
-  port_scm.slots[g_PORT_BYTE_WHI] = g_host2scm(bend - bbuf_avail);
-  port_scm.slots[g_PORT_WOPTIONS] = g_host2scm(options);
+  port_scm.@slots@[@PORT_CHAR_WLO@] = @host2scm@(chi - cbuf_avail);
+  port_scm.@slots@[@PORT_BYTE_WHI@] = @host2scm@(bend - bbuf_avail);
+  port_scm.@slots@[@PORT_WOPTIONS@] = @host2scm@(options);
 
-  return g_host2scm(0) // no error
+  return @host2scm@(0) // no error
 };
 
 ")
     (##inline-host-expression
-     "g_os_port_encode_chars(@1@)"
+     "@os_port_encode_chars@(@1@)"
      port))
 
-   ((python)
+   ((compilation-target python)
     (##inline-host-declaration "
 
-def g_os_port_encode_chars(port_scm):
+def @os_port_encode_chars@(port_scm):
 
-    if g_os_debug:
-        print('g_os_port_encode_chars(port)  ***not fully implemented***')
+    if @os_debug@:
+        print('@os_port_encode_chars@(port)  ***not fully implemented***')
 
-    cbuf_scm = port_scm.slots[g_PORT_CHAR_WBUF]
-    clo = g_scm2host(port_scm.slots[g_PORT_CHAR_WLO])
-    chi = g_scm2host(port_scm.slots[g_PORT_CHAR_WHI])
-    bbuf = port_scm.slots[g_PORT_BYTE_WBUF].elems
-    bhi = g_scm2host(port_scm.slots[g_PORT_BYTE_WHI])
+    cbuf_scm = port_scm.@slots@[@PORT_CHAR_WBUF@]
+    clo = @scm2host@(port_scm.@slots@[@PORT_CHAR_WLO@])
+    chi = @scm2host@(port_scm.@slots@[@PORT_CHAR_WHI@])
+    bbuf = port_scm.@slots@[@PORT_BYTE_WBUF@].@elems@
+    bhi = @scm2host@(port_scm.@slots@[@PORT_BYTE_WHI@])
     bend = len(bbuf)
-    options = g_scm2host(port_scm.slots[g_PORT_WOPTIONS])
+    options = @scm2host@(port_scm.@slots@[@PORT_WOPTIONS@])
     cbuf_avail = chi - clo
     bbuf_avail = bend - bhi
 
     while cbuf_avail > 0 and bbuf_avail > 0:
-        bbuf[bend - bbuf_avail] = cbuf_scm.codes[chi - cbuf_avail]
+        bbuf[bend - bbuf_avail] = cbuf_scm.@codes@[chi - cbuf_avail]
         bbuf_avail = bbuf_avail-1
         cbuf_avail = cbuf_avail-1
 
-    port_scm.slots[g_PORT_CHAR_WLO] = g_host2scm(chi - cbuf_avail)
-    port_scm.slots[g_PORT_BYTE_WHI] = g_host2scm(bend - bbuf_avail)
-    port_scm.slots[g_PORT_WOPTIONS] = g_host2scm(options)
+    port_scm.@slots@[@PORT_CHAR_WLO@] = @host2scm@(chi - cbuf_avail)
+    port_scm.@slots@[@PORT_BYTE_WHI@] = @host2scm@(bend - bbuf_avail)
+    port_scm.@slots@[@PORT_WOPTIONS@] = @host2scm@(options)
 
-    return g_host2scm(0)  # no error
+    return @host2scm@(0)  # no error
 
 ")
     (##inline-host-expression
-     "g_os_port_encode_chars(@1@)"
+     "@os_port_encode_chars@(@1@)"
      port))
 
    (else
     (println "unimplemented ##os-port-encode-chars! called")
     -5555)))
+
+(define-prim (##os-condvar-select! devices timeout)
+  (##declare (not interrupts-enabled))
+  (##first-argument #f ##feature-port-fields)
+  (cond-expand
+
+   ((compilation-target js)
+    (##first-argument #f ##feature-callback-queue)
+    (##inline-host-declaration "
+
+@os_condvar_ready_set@ = function (condvar_scm, ready) {
+
+  var owner = condvar_scm.@slots@[@BTQ_OWNER@];
+
+  if (ready) {
+    condvar_scm.@slots@[@BTQ_OWNER@] = owner | 1; // mark as 'ready'
+    @os_condvar_select_resume@();
+  } else {
+    condvar_scm.@slots@[@BTQ_OWNER@] = owner & ~1; // mark as 'not ready'
+  }
+
+};
+
+@os_condvar_select_resume@ = function () {
+
+  @os_condvar_select_resume_cancel@();
+
+  // execute continuation if there is one
+
+  var cont = @os_condvar_select_resume_ra@;
+
+  if (cont !== null) {
+    @os_condvar_select_resume_ra@ = null;
+    @r1@ = @host2scm@(0);
+    @r0@ = cont;
+    @trampoline@(@r0@);
+  }
+};
+
+@os_condvar_select_resume_cancel@ = function () {
+
+  // cancel time-delayed resume if there is one
+
+  if (@os_condvar_select_resume_timeoutId@ !== null) {
+    clearTimeout(@os_condvar_select_resume_timeoutId@);
+    @os_condvar_select_resume_timeoutId@ = null;
+  }
+
+};
+
+@os_condvar_select_resume_timeoutId@ = null;
+@os_condvar_select_resume_ra@ = null;
+
+@os_condvar_select@ = function (devices_scm, timeout_scm) {
+
+  var timeout_ms;
+
+  if (timeout_scm === false)
+    timeout_ms = 0;
+  else if (timeout_scm === true)
+    timeout_ms = 999999; // almost forever...
+  else
+    timeout_ms = (timeout_scm.@elems@[0]-@os_current_time@()) * 1000;
+
+  if (@os_debug@) {
+    var no_devices = (devices_scm === false ||
+                      devices_scm === devices_scm.@slots@[@BTQ_DEQ_NEXT@]);
+    console.log('@os_condvar_select@('+(no_devices?'no devices':'some devices')+', '+timeout_ms+' ms)');
+  }
+
+  if (@callback_queue@.queue.length > 0) {
+    // There are callbacks available in the callback queue, so there
+    // is no need to wait for other callbacks.
+    timeout_ms = 0;
+  }
+
+  // The Scheme code execution needs to be suspended to allow the
+  // JavaScript VM (browser) to handle events.  These events (or
+  // expiration of the timeout) will in turn cause the execution
+  // of the Scheme code to resume.  Note that browsers implement
+  // 'clamping' of the timeout after a certain number of nested calls
+  // (typically 5 ms), and this may impact performance.
+
+  // resume execution at @r0@ after the timeout
+
+  @os_condvar_select_resume_ra@ = @r0@;
+  @r0@ = null; // exit trampoline
+  @os_condvar_select_resume_timeoutId@ =
+    setTimeout(@os_condvar_select_resume@, Math.max(0, timeout_ms));
+
+  return 0; // ignored
+};
+
+")
+    (##inline-host-expression
+     "@os_condvar_select@(@1@,@2@)"
+     devices
+     timeout))
+
+   ((compilation-target python)
+    (##inline-host-declaration "
+
+def @os_condvar_select@(devices_scm, timeout_scm):
+
+    if @os_debug@:
+        print('@os_condvar_select@(devices, timeout)')
+
+    return @host2scm@(False)  # no error
+
+")
+    (##inline-host-expression
+     "@os_condvar_select@(@1@,@2@)"
+     devices
+     timeout))
+
+   (else
+    (println "unimplemented ##os-condvar-select! called")
+    -5555)))
+
+;;;----------------------------------------------------------------------------
+
+;;; Loading of compiled files.
+
+(define (##os-load-object-file path linker-name)
+  (##declare (not interrupts-enabled))
+  (cond-expand
+
+   ((compilation-target js)
+    (##inline-host-declaration "
+
+@os_load_object_file@ = function (path, linker_name) {
+
+  if (@os_nodejs@) {
+
+    try {
+      require(path);
+    } catch (exn) {
+      if (exn instanceof Error && exn.hasOwnProperty('code')) {
+        return @host2scm@(@os_encode_error@(exn));
+      } else {
+        throw exn;
+      }
+    }
+
+    return [[@module_latest_registered@], null, false];
+
+  } else if (@os_web@) {
+
+    path += '.js'; // add a .js extension to force application/javascript
+                   // MIME type (this requires the .o1 file to be copied to
+                   // a .o1.js file)
+
+    if (!@os_trusted_url@(path, 'to execute that code')) { // accessing an untrusted URL?
+      return @host2scm@(-1); // EPERM (operation not permitted)
+    } else {
+
+      var ra = @r0@;
+      @r0@ = null; // exit trampoline
+
+      function onload() {
+        @r1@ = [[@module_latest_registered@], null, false];
+        @r0@ = ra;
+        @trampoline@(@r0@);
+      }
+
+      function onerror() {
+        @r1@ = @host2scm@(-2); // ENOENT (file does not exist)
+        @r0@ = ra;
+        @trampoline@(@r0@);
+      }
+
+      if (self.document === undefined) {
+        try {
+          self.importScripts(path);
+          onload();
+        } catch(e) {
+          onerror();
+        }
+      } else {
+        var script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.src = path;
+        script.onload = onload;
+        script.onerror = onerror;
+        document.head.append(script);
+      }
+      return 0; // ignored
+    }
+  } else {
+    return @host2scm@(-1); // EPERM (operation not permitted)
+  }
+};
+
+")
+    (##inline-host-expression
+     "@os_load_object_file@(@scm2host@(@1@), @scm2host@(@2@))"
+     path
+     linker-name))
+
+   ((compilation-target python)
+    (##inline-host-declaration "
+
+def @os_load_object_file@(path, linker_name):
+
+    try:
+        @exec@(open(path).read())
+    except OSError as exn:
+        return @host2scm@(@os_encode_error@(exn))
+
+    return [[@module_latest_registered@], @null_obj@, False]
+
+")
+    (##inline-host-expression
+     "@os_load_object_file@(@scm2host@(@1@), @scm2host@(@2@))"
+     path
+     linker-name))
+
+   (else
+    (##vector "load-object-file not implemented" linker-name))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -2833,6 +4242,610 @@ def g_os_port_encode_chars(port_scm):
 
 ;;;----------------------------------------------------------------------------
 
+;;; Host FFI.
+
+(define (##string-substitute str delim proc-or-alist)
+
+  (define (index-of c start)
+    (let loop ((i start))
+      (if (##fx< i (##string-length str))
+          (if (##char=? c (##string-ref str i))
+              i
+              (loop (##fx+ i 1)))
+          i)))
+
+  (let loop ((i 0) (j 0) (out '()))
+    (let ((start (index-of delim j)))
+      (if (##fx< start (##string-length str))
+          (let ((end (index-of delim (##fx+ start 1))))
+            (if (##fx< end (##string-length str))
+                (if (##fx= start (##fx- end 1)) ;; two delimiters in a row?
+                    (loop (##fx+ end 1)
+                          (##fx+ end 1)
+                          (##cons (##substring str i end)
+                                  out))
+                    (let* ((var
+                            (##substring str (##fx+ start 1) end))
+                           (subst
+                            (if (##procedure? proc-or-alist)
+                                (proc-or-alist var)
+                                (let ((x (##assoc-string-equal? var proc-or-alist)))
+                                  (and x (##cdr x))))))
+                      (if subst
+                          (loop (##fx+ end 1)
+                                (##fx+ end 1)
+                                (##cons subst
+                                        (##cons (##substring str i start)
+                                                out)))
+                          (##error "Unbound substitution variable in" str))))
+                (##error "Unbalanced delimiter in" str)))
+          (##string-concatenate
+           (##reverse (##cons (##substring str i start) out)))))))
+
+(define (##expand-inline-host-code code-str substs)
+
+  (define (substitute str)
+    (let ((x (##assoc-string-equal? str substs)))
+      (if x
+          (##cdr x)
+          (##string-append
+           (if (##char-upper-case? (##string-ref str 0))
+               (##inline-host-expression "@host2scm@('@Z@'.slice(0, -1))")
+               (##inline-host-expression "@host2scm@('@z@'.slice(0, -1))"))
+           str))))
+
+  (##string-substitute code-str #\@ substitute))
+
+(cond-expand
+
+ ((compilation-target js)
+  (##inline-host-declaration "
+
+@eval@ = function (expr) {
+  return (1,eval)(expr);
+};
+
+@exec@ = function (stmts) {
+  (1,eval)(stmts);
+};
+
+@host_define_function@ = function (name, params, header, expr) {
+  @exec@(name + ' = function (' + params + ') {' + header + '\\n return ' + expr + ';\\n};');
+};
+
+@host_define_procedure@ = function (name, params, header, stmts) {
+  @exec@(name + ' = function (' + params + ') {' + header + '\\n' + stmts + '\\n};');
+};
+
+@host_function_call@ = function (fn, args) {
+  return @eval@(fn).apply(this, args);
+};
+
+@host_procedure_call@ = function (proc, args) {
+  @eval@(proc).apply(this, args);
+};
+
+@host_eval@ = function (expr) {
+  return @eval@(expr);
+};
+
+@host_exec@ = function (stmts) {
+  @exec@(stmts);
+};
+
+"))
+
+ ((compilation-target python)
+  (##inline-host-declaration "
+
+def @eval@(expr):
+    return eval(expr, globals())
+
+def @exec@(stmts):
+    exec(stmts, globals())
+
+def @host_define_function@(name, params, header, expr):
+    @exec@('def ' + name + '(' + params + '):' + header + '\\n return ' + expr)
+
+def @host_define_procedure@(name, params, header, stmts):
+    @exec@('def ' + name + '(' + params + '):' + '\\n '.join((header+'\\n'+stmts).split('\\n')) + '\\n')
+
+def @host_function_call@(fn, args):
+    return globals()[fn](*args)
+
+def @host_procedure_call@(proc, args):
+    globals()[proc](*args)
+
+def @host_eval@(expr):
+    return @eval@(expr)
+
+def @host_exec@(stmts):
+    @exec@(stmts)
+
+"))
+
+ (else))
+
+(define (##host-convert-param param)
+  (##declare (not interrupts-enabled))
+  (##string-append "\n" param
+                   (##inline-host-expression "@host2scm@(' = @scm2host@(')")
+                   param
+                   ")"
+                   (cond-expand
+                    ((compilation-target js)
+                     ";")
+                    (else
+                     ""))))
+
+(define (##host-create-header params)
+  (##string-concatenate (##map ##host-convert-param params)))
+
+(define (##host-define-function-dynamic name params expr)
+  (##declare (not interrupts-enabled))
+  (cond-expand
+
+   ((compilation-target js python)
+    (##inline-host-statement
+     "@host_define_function@(@scm2host@(@1@),@scm2host@(@2@),@scm2host@(@3@),@scm2host@(@4@))"
+     name
+     (##string-concatenate params ",")
+     (##host-create-header params)
+     (##string-append (##inline-host-expression "@host2scm@('@host2scm@(')")
+                      expr
+                      ")")))
+
+   (else
+    (println "unimplemented ##host-define-function-dynamic called with name=")
+    (println name)
+    (println "and params=")
+    (println params)
+    (println "and expr=")
+    (println expr))))
+
+(define (##host-define-procedure-dynamic name params stmts)
+  (##declare (not interrupts-enabled))
+  (cond-expand
+
+   ((compilation-target js python)
+    (##inline-host-statement
+     "@host_define_procedure@(@scm2host@(@1@),@scm2host@(@2@),@scm2host@(@3@),@scm2host@(@4@))"
+     name
+     (##string-concatenate params ",")
+     (##host-create-header params)
+     stmts))
+
+   (else
+    (println "unimplemented ##host-define-procedure-dynamic called with name=")
+    (println name)
+    (println "and params=")
+    (println params)
+    (println "and stmts=")
+    (println stmts))))
+
+(define (##host-function-call fn args)
+  (##declare (not interrupts-enabled))
+  (cond-expand
+
+   ((compilation-target js python)
+    (##inline-host-expression
+     "@host_function_call@(@scm2host@(@1@), @2@)"
+     fn
+     args))
+
+   (else
+    (println "unimplemented ##host-function-call called with fn=")
+    (println fn)
+    (println "and args=")
+    (println args)
+    #f)))
+
+(define (##host-procedure-call proc args)
+  (##declare (not interrupts-enabled))
+  (cond-expand
+
+   ((compilation-target js python)
+    (##inline-host-statement
+     "@host_procedure_call@(@scm2host@(@1@), @2@)"
+     proc
+     args))
+
+   (else
+    (println "unimplemented ##host-procedure-call called with proc=")
+    (println proc)
+    (println "and args=")
+    (println args))))
+
+(define (##host-eval-dynamic expr)
+  (##declare (not interrupts-enabled))
+  (cond-expand
+
+   ((compilation-target js python)
+    (##inline-host-expression
+     "@host2scm@(@host_eval@(@scm2host@(@1@)))"
+     expr))
+
+   (else
+    (println "unimplemented ##host-eval-dynamic called with expr=")
+    (println expr)
+    #f)))
+
+(define (##host-exec-dynamic stmts)
+  (##declare (not interrupts-enabled))
+  (cond-expand
+
+   ((compilation-target js python)
+    (##inline-host-statement
+     "@host_exec@(@scm2host@(@1@))"
+     stmts))
+
+   (else
+    (println "unimplemented ##host-exec-dynamic called with stmts=")
+    (println stmts))))
+
+;; The ##host-function-memoized procedure takes a descriptor and
+;; returns a procedure.  The descriptor is a box containing a string
+;; that evaluates to a function.  In this state the string will be
+;; passed to the host's eval function to create a Scheme procedure
+;; that will be returned.  After this first evaluation the Scheme
+;; procedure obtained is stored in the descriptor to avoid calling the
+;; host's eval function on each call of ##host-function-memoized with
+;; that descriptor.
+
+(define (##host-function-memoized descr)
+  (let ((x (##unbox descr)))
+    (if (##string? x)
+        (let ((host-fn (##host-eval-dynamic x)))
+          (##set-box! descr host-fn)
+          host-fn)
+        x)))
+
+(define (##host-decl-expand decl)
+  (##host-exec-dynamic decl)
+  `(##begin))
+
+(define ##host-fn-counter 0)
+
+(define (##host-exec-expand stmts args-src)
+  (set! ##host-fn-counter (##fx+ ##host-fn-counter 1))
+  (let ((name
+         (##string-append "___fn" (##fixnum->string ##host-fn-counter)))
+        (substs
+         (##map (lambda (i)
+                  (let ((i-str (##fixnum->string i)))
+                    (##cons i-str
+                            (##string-append "___arg" i-str))))
+                (##iota-fixnum (##length args-src) 1))))
+    (##host-define-procedure-dynamic
+     name
+     (##map ##cdr substs)
+     (##expand-inline-host-code stmts substs))
+    `(##host-procedure-call
+      ,name
+      (##vector ,@args-src))))
+
+(define (##host-eval-expand expr args-src)
+  (set! ##host-fn-counter (##fx+ ##host-fn-counter 1))
+  (let ((name
+         (##string-append "___fn" (##fixnum->string ##host-fn-counter)))
+        (substs
+         (##map (lambda (i)
+                  (let ((i-str (##fixnum->string i)))
+                    (##cons i-str
+                            (##string-append "___arg" i-str))))
+                (##iota-fixnum (##length args-src) 1))))
+    (##host-define-function-dynamic
+     name
+     (##map ##cdr substs)
+     (##expand-inline-host-code expr substs))
+    `(##host-function-call
+      ,name
+      (##vector ,@args-src))))
+
+(define (##scmobj obj)
+  (##inline-host-expression
+   "@scm2scheme@(@1@)"
+   obj))
+
+;;;----------------------------------------------------------------------------
+
+;; Convenience Scheme procedure to pass Scheme objects to JavaScript
+;; without an automatic conversion.
+
+(define (scheme scmobj)
+  (##inline-host-expression
+   "@scm2scheme@(@1@)"
+   scmobj))
+
+(cond-expand
+
+ ((compilation-target js)
+  (##inline-host-declaration "
+
+// The following defines the 'foreign' JavaScript function which
+// allows passing JavaScript objects to Scheme without an automatic
+// conversion.
+
+foreign = @host2foreign@;
+
+"))
+
+ ((compilation-target python)
+  (##inline-host-declaration "
+
+# The following defines the 'foreign' Python function which
+# allows passing Python objects to Scheme without an automatic
+# conversion.
+
+foreign = @host2foreign@
+
+"))
+
+ (else))
+
+(cond-expand
+
+ ((compilation-target js)
+  (##inline-host-declaration "
+
+// Redefine ##check-heap-limit so that it checks interrupts (to allow
+// preemptive thread scheduling and user interrupts in interpreted code).
+
+@heartbeat_interval@ = 5000;
+@heartbeat_count@ = @heartbeat_interval@;
+
+@check_heap_limit0@ = function () {
+  if (--@heartbeat_count@ === 0) {
+    @heartbeat_count@ = @heartbeat_interval@;
+    setTimeout(function () {
+      @call_start@(@glo@['##heartbeat!'], [], @r0@);
+    }, 10);
+    return null; // exit trampoline
+  } else {
+    @r1@ = void 0;
+    return @r0@;
+  }
+};
+
+// Redefine @procedure2host@ to implement a bridge for JavaScript to
+// Scheme calls.  When a Scheme procedure is converted to a
+// JavaScript function using @procedure2host@, the JavaScript
+// function will return a promise which eventually resolves to the
+// result of the Scheme procedure (converted to JavaScript) or is
+// rejected with an Error when the Scheme procedure raises an
+// exception.
+
+@procedure2host@ = function (proc_scm) {
+
+  function fn() {
+    var args = Array.prototype.slice.call(arguments);
+    args.forEach(function (arg, i) { args[i] = @host2scm@(arg); });
+    return @async_call@(true, // need result back
+                        @current_processor@.@slots@[14], // in current thread
+                        proc_scm,
+                        args);
+  }
+
+  return fn;
+};
+
+@async_call@ = function (need_result, thread_scm, proc_scm, args_scm) {
+
+  var promise = new Promise(function (resolve, reject) {
+
+    function done(err, result) {
+      if (err !== null) {
+        reject(new Error(err));
+      } else {
+        resolve(@scm2host@(result));
+      }
+    };
+
+    args_scm.unshift(proc_scm);               // procedure to call
+
+    if (need_result) {
+      args_scm.unshift(@function2scm@(done)); // Scheme callback for result
+    } else {
+      args_scm.unshift(@host2scm@(false));    // no result needed
+      done(null, @host2scm@(void 0));         // cause #!void to be returned
+    }
+
+    args_scm.unshift(thread_scm);             // run in specific thread
+
+    @callback_queue@.write(args_scm);
+  });
+
+  return promise;
+};
+
+// Patch continuation-next to properly undo dynamic binding environment.
+
+@continuation_next@ = function (cont) {
+  var frame = cont.@frame@;
+  var denv = cont.@denv@;
+  var ra = frame[0];
+  var link = ra.@link@;
+  var next_frame = frame[link];
+  if (next_frame === void 0) {
+    return @host2scm@(false);
+  } else {
+    if (ra === @peps@['##dynamic-env-bind'].@ctrlpts@[1]) {
+      denv = frame[2];
+    }
+    return new @Continuation@(next_frame,denv);
+  }
+};
+
+")
+
+  ;; The ##scm2host-call-return procedure takes a JavaScript promise or value
+  ;; as parameter.  If it is a value it returns the value.  If it is a
+  ;; promise it blocks the execution of the current thread until the
+  ;; promise is fulfilled or rejected.
+
+  (define (##scm2host-call-return promise-or-value)
+    (cond ((##not (##foreign? promise-or-value))
+           promise-or-value)
+
+          ((##inline-host-expression
+            "@scm2host@(@1@) instanceof Promise" promise-or-value)
+
+           (let ((result-mutex (macro-make-mutex 'scm2host-call-return)))
+
+             ;; Setup mutex in locked state
+             (macro-mutex-lock! result-mutex #f (macro-current-thread))
+
+             ;; Add callback for when promise is settled
+             (##inline-host-statement
+              "
+var promise = @scm2host@(@1@);
+var callback = @2@;
+
+function onFulfilled(value) {
+  @async_call@(false, // no result needed
+               false, // any thread
+               callback,
+               [@host2scm@([value])]);
+}
+
+function onRejected(reason) {
+  @async_call@(false, // no result needed
+               false, // any thread
+               callback,
+               [@host2scm@(reason.toString())]);
+}
+
+promise.then(onFulfilled, onRejected);
+"
+              promise-or-value
+              (lambda (result) ;; callback
+                (macro-mutex-specific-set! result-mutex result)
+                ;; wake up waiting Scheme thread
+                (macro-mutex-unlock! result-mutex)
+                (##void)))
+
+             ;; Wait for promise to be settled
+             (macro-mutex-lock! result-mutex #f (macro-current-thread))
+             (macro-mutex-unlock! result-mutex) ;; avoid space leak
+
+             ;; Determine what happened
+             (let ((msg (macro-mutex-specific result-mutex)))
+               (if (##vector? msg)
+                   (##vector-ref msg 0)
+                   (##scm2host-call-error msg)))))
+
+          (else
+           (##inline-host-expression "@host2scm@(@scm2host@(@1@))" promise-or-value)))))
+
+ ((compilation-target python)
+
+  (define (##scm2host-call-return value)
+    value))
+
+ (else))
+
+(define (##scm2host-call-error message)
+  (##error message))
+
+;;;----------------------------------------------------------------------------
+
+;; The "callback loop" takes care of processing callbacks that
+;; come from the JavaScript runtime system.
+
+(define (##callback-loop)
+
+  (define (exec callback)
+    (let* ((nargs (##fx- (##vector-length callback) 3))
+           (proc (##vector-ref callback 2)))
+      (cond ((##fx= nargs 0)
+             (proc))
+            ((##fx= nargs 1)
+             (proc (##vector-ref callback 3)))
+            ((##fx= nargs 2)
+             (proc (##vector-ref callback 3)
+                   (##vector-ref callback 4)))
+            ((##fx= nargs 3)
+             (proc (##vector-ref callback 3)
+                   (##vector-ref callback 4)
+                   (##vector-ref callback 5)))
+            (else
+             (let loop ((i (##fx- (##vector-length callback) 1))
+                        (args '()))
+               (if (##fx>= i 3)
+                   (loop (##fx- i 1)
+                         (##cons (##vector-ref callback i) args))
+                   (##apply proc args)))))))
+
+  (define (handle callback)
+    (if (##vector-ref callback 1) ;; response required?
+        (##with-exception-catcher
+         (lambda (exc)
+           ;; send exception back to host
+           ((##vector-ref callback 1)
+            (##call-with-output-string
+             (lambda (port)
+               (##display-exception exc port)))
+            (##void)))
+         (lambda ()
+           ;; send result back to host
+           ((##vector-ref callback 1)
+            (macro-absent-obj) ;; signal completion with no error
+            (exec callback))))
+        (exec callback)))
+
+  (let* ((selector #f)
+         (rdevice (##os-device-event-queue-open selector))
+         (callback-queue (##make-event-queue-port rdevice selector)))
+    (let loop ()
+      (let* ((callback (##read callback-queue))
+             (thread ;; handle callback in which thread?
+              (or (##vector-ref callback 0)
+                  (macro-current-thread))))
+        (cond ((##eq? thread (macro-current-thread))
+               ;; handle callback synchronously in callback-loop
+               (handle callback))
+              ((##eq? thread #t)
+               ;; handle callback asynchronously by creating
+               ;; a new thread just for this callback
+               (##thread (lambda () (handle callback))))
+              (else
+               ;; handle callback asynchronously by interrupting
+               ;; an existing thread
+               (##thread-int! thread
+                              (lambda ()
+                                (handle callback)
+                                (##void)))))
+        (loop)))))
+
+(define (##start-callback-loop-thread)
+  (let* ((tgroup
+          (##make-tgroup 'callback-loop #f))
+         (callback-loop-thread
+          (##make-root-thread
+           ##callback-loop
+           'callback-loop
+           tgroup)))
+    (##thread-start! callback-loop-thread)))
+
+(##start-callback-loop-thread)
+
+;;;----------------------------------------------------------------------------
+
+(define (##heartbeat!)
+  (##declare (not interrupts-enabled))
+  (##thread-check-devices! #f)
+  (##thread-heartbeat!))
+
+(##hidden-continuation-parent?-set!
+ (lambda (parent)
+   (or (##eq? parent ##thread-check-devices!)
+       (##eq? parent ##heartbeat!)
+       (##eq? parent ##callback-loop)
+       (##eq? parent ##start-callback-loop-thread)
+       (##default-hidden-continuation-parent? parent))))
+
+;;;----------------------------------------------------------------------------
+
 ;;; Host FFI macros.
 
 (define-runtime-syntax ##host-decl
@@ -2844,10 +4857,7 @@ def g_os_port_encode_chars(port_scm):
        (let ((decl (##desourcify decl-src)))
          (if (##string? decl)
              (##host-decl-expand decl)
-             (##raise-expression-parsing-exception
-              'ill-formed-special-form
-              src
-              (##car (##desourcify src)))))))))
+             (##raise-ill-formed-special-form src)))))))
 
 (define-runtime-syntax host-decl
   (##make-alias-syntax '##host-decl))
@@ -2861,10 +4871,7 @@ def g_os_port_encode_chars(port_scm):
        (let ((stmts (##desourcify stmts-src)))
          (if (##string? stmts)
              (##host-exec-expand stmts args-src)
-             (##raise-expression-parsing-exception
-              'ill-formed-special-form
-              src
-              (##car (##desourcify src)))))))))
+             (##raise-ill-formed-special-form src)))))))
 
 (define-runtime-syntax host-exec
   (##make-alias-syntax '##host-exec))
@@ -2878,13 +4885,16 @@ def g_os_port_encode_chars(port_scm):
        (let ((stmts (##desourcify stmts-src)))
          (if (##string? stmts)
              (##host-eval-expand stmts args-src)
-             (##raise-expression-parsing-exception
-              'ill-formed-special-form
-              src
-              (##car (##desourcify src)))))))))
+             (##raise-ill-formed-special-form src)))))))
 
 (define-runtime-syntax host-eval
   (##make-alias-syntax '##host-eval))
+
+(define (scmobj obj)
+  (##scmobj obj))
+
+(define-prim (##foreign-address f)
+  0)
 
 ;;;----------------------------------------------------------------------------
 

@@ -1,6 +1,6 @@
 # makefile for regression tests.
 
-# Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 herefromroot = tests
 rootfromhere = ..
@@ -84,11 +84,13 @@ GAMBITDIR_LIB = $(srcdirpfx)$(rootfromhere)/lib
 GAMBITDIR_LIB_GSI = $(srcdirpfx)$(rootfromhere)/gsi
 GAMBITDIR_LIB_GSC = $(srcdirpfx)$(rootfromhere)/gsc
 
-all:
+all: core
 
-all-pre:
+core:
 
-all-post:
+core-pre:
+
+core-post:
 	@if [ ! -f debug.scm ]; then \
 	  cp $(srcdirpfx)debug.scm .; \
 	  touch debug.rm; \
@@ -106,7 +108,7 @@ all-post:
 
 .NOTPARALLEL:
 
-check: all test1 test2 test3 test4 test5 test6 test7 test8 test9 test10 test11
+check: core test1 test2 test3 test4 test5 test6 test7 test8 test9 test10 test11
 	@echo "============ ALL TESTS SUCCESSFUL"
 	rm -f mem.c mem_.c mem@obj@ mem.o1 mem_@obj@ mem@exe@ \
 	  mix.c mix_.c mix@obj@ mix_@obj@ mix@exe@ \
@@ -125,7 +127,7 @@ test2:
 
 test3:
 	@echo "------------ TEST 3 (interpreter and library functions)"
-	@SETDLPATH@ $(rootfromhere)/gsi/gsi@exe@ -:s,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -e '(begin (load "r4rstest.scm") (test-cont) (test-sc4) (test-delay) (exit))' > test3.out
+	@SETDLPATH@ $(rootfromhere)/gsi/gsi@exe@ -:r4rs,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -e '(begin (load "r4rstest.scm") (test-cont) (test-sc4) (test-delay) (exit))' > test3.out
 	diff $(srcdirpfx)test3.ok test3.out && rm -f test3.out tmp*
 
 test4:
@@ -137,13 +139,13 @@ test4:
 test5:
 	@echo "------------ TEST 5 (compiler generating C code)"
 	rm -f mix.c
-	@SETDLPATH@ $(rootfromhere)/gsc/gsc@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -c -nb-gvm-regs 5 -nb-arg-regs 3 mix.scm
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -c -nb-gvm-regs 5 -nb-arg-regs 3 mix.scm
 	diff $(srcdirpfx)test5.ok mix.c
 
 test6:
 	@echo "------------ TEST 6 (link and execute the code generated)"
 	rm -f mix_.c mix@obj@ mix_@obj@ mix@exe@
-	@SETDLPATH@ $(rootfromhere)/gsc/gsc@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -c mix.scm
+	@SETDLPATH@ $(rootfromhere)/gsc/gsc@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -c mix.scm
 	@SETDLPATH@ $(rootfromhere)/gsc/gsc@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -warnings -o mix@exe@ -exe mix.c
 	@SETDLPATH@ ./mix@exe@ -:m5000 > test6.out
 	diff $(srcdirpfx)test6.ok test6.out && \
@@ -174,7 +176,7 @@ test9: test7
 	diff $(srcdirpfx)test9.ok test9.out && rm -f test9.out mem@obj@ mem.o1
 
 test10:
-	@echo "------------ TEST 10 (consistency of lib/gambit#.scm)"
+	@echo "------------ TEST 10 (consistency of runtime library exports)"
 	rm -rf mem@obj@ mem.o*
 	@SETDLPATH@ $(rootfromhere)/gsc/gsc@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -i test10.scm
 
@@ -235,7 +237,7 @@ bootstrap-post:
 
 install-pre:
 
-install-post: all
+install-post: core
 
 uninstall-pre:
 
@@ -300,7 +302,7 @@ dist-pre dist-devel-pre:
 
 dist-post dist-devel-post:
 
-all-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+core-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
 	    target=`echo $@ | sed 's/-recursive//'`; \
@@ -309,11 +311,11 @@ all-recursive bootstrap-recursive install-recursive uninstall-recursive select-g
 	  done \
 	fi
 
-all: all-post
+core: core-post
 
-all-post: all-recursive
+core-post: core-recursive
 
-all-recursive: all-pre
+core-recursive: core-pre
 
 bootstrap: bootstrap-post
 

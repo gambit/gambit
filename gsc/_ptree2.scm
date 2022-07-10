@@ -2,7 +2,7 @@
 
 ;;; File: "_ptree2.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -174,8 +174,9 @@
          ptree)))
 
 (define (epc-ref ptree)
-  (let ((proc (global-proc-obj ptree)))
-    (if proc
+  (let ((proc (and (global? (ref-var ptree))
+                   (global-proc-obj ptree))))
+    (if (and proc (proc-obj-standard proc))
         (let ((proc-node
                (new-cst (node-source ptree) (node-env ptree)
                  proc)))
@@ -366,20 +367,28 @@
       (gen-disj-multi source env (cdr nodes)))
     (car nodes)))
 
-(define (gen-uniform-type-checks source env vars type-check tail)
+(define (gen-var-type-checks source env vars type-checks tail)
 
-  (define (loop result lst)
+  (define (cdr-type-checks type-checks)
+    (if (pair? (cdr type-checks))
+        (cdr type-checks)
+        type-checks))
+
+  (define (loop result lst type-checks)
     (if (pair? lst)
-      (loop (new-conj source env
-              (type-check (car lst))
-              result)
-            (cdr lst))
-      result))
+        (loop (new-conj source env
+                ((car type-checks) (car lst))
+                result)
+              (cdr lst)
+              type-checks)
+        result))
 
   (cond (tail
-         (loop tail vars))
+         (loop tail vars type-checks))
         ((pair? vars)
-         (loop (type-check (car vars)) (cdr vars)))
+         (loop ((car type-checks) (car vars))
+               (cdr vars)
+               (cdr-type-checks type-checks)))
         (else
          #f)))
 
@@ -637,7 +646,8 @@
                           #t
                           (ptset-empty)
                           (ptset-empty)
-                          (var-source var))))
+                          (var-source var)
+                          (var-temp? var))))
            (var-boxed?-set! cloned-var (var-boxed? var))
            cloned-var))
        vars))
@@ -1335,7 +1345,8 @@
 
   (let* ((oper (app-oper ptree))
          (proc (cond ((cst? oper) (cst-val oper))
-                     ((ref? oper) (global-proc-obj oper))
+                     ((ref? oper) (and (global? (ref-var oper))
+                                       (global-proc-obj oper)))
                      (else        #f))))
     (if (proc-obj? proc)
         (let* ((lift-pat
@@ -2659,7 +2670,7 @@
              (if sfun? "SFUN_SET_RESULT" "CFUN_SET_RESULT")
              nl-str)))))
 
-(define (c-make-function sfun? param-typs result-typ make-body)
+(define (c-make-function sfun? name param-typs result-typ make-body)
   (let ((cleanup?
          (not (every? (lambda (t) (not (type-needs-cleanup? t)))
                       param-typs))))
@@ -2700,7 +2711,10 @@
              "BEGIN_SFUN_VOID("
              sfun?
              ")")
-            "BEGIN_CFUN_VOID")
+            (string-append
+             "BEGIN_CFUN_VOID("
+             name
+             ")"))
           nl-str
           (convert-param-list)
           c-id-prefix
@@ -2729,14 +2743,20 @@
                        "BEGIN_SFUN_SCMOBJ("
                        sfun?
                        ")")
-                      "BEGIN_CFUN_SCMOBJ")
+                      (string-append
+                       "BEGIN_CFUN_SCMOBJ("
+                       name
+                       ")"))
                     (string-append
                       (if sfun?
                         (string-append
                           "BEGIN_SFUN("
                           sfun?
                           ",")
-                        "BEGIN_CFUN(")
+                        (string-append
+                          "BEGIN_CFUN("
+                          name
+                          ","))
                       (if indirect-access-result
                         (string-append "void* " c-id "_voidstar"
                                        (if sfun? " = 0" ""))
@@ -2932,6 +2952,7 @@
                       proc-name
                       scope
                       (c-make-function proc-val
+                                       #f
                                        param-typs
                                        result-typ
                                        make-body)))))
@@ -3073,10 +3094,81 @@
                   c-name
                   arity
                   (c-make-function #f
+                                   c-name
                                    stripped-param-typs
                                    result-typ
                                    make-body)))
     scheme-name))
+
+(define (nonneg-integer->c-id n)
+
+  (declare (generic))
+
+  ;; With the parameters below, n must be in 0..3002032123531 (~41 bit int).
+
+  ;; For n in 0..51 (a lowercase or uppercase ASCII letter) the result is a
+  ;; one character string.
+  ;;
+  ;; For n in 52..259 (which covers the rest of the latin-1 characters) the
+  ;; result is a two character string.
+  ;;
+  ;; For n in 260..3483 the result is a three character string. Etc.
+
+  (define nb-initial 52) ;; upper and lowercase letters
+  (define nb-subseq  10) ;; digits 0..9
+  (define nb-bicodes  3) ;; integer in 0..9
+  (define nb-digits  62) ;; (+ nb-initial nb-subseq)
+  (define digits
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+
+  (define (digit d)
+    (string-ref digits d))
+
+  (if (< n nb-initial)
+      (string (digit n))
+      (let* ((n (- n nb-initial))
+             (q (quotient n nb-initial)))
+        (if (< q nb-bicodes)
+            (string (digit (modulo n nb-initial))
+                    (digit (+ q nb-initial)))
+            (let ((n (- n (* nb-bicodes nb-initial))))
+              (let loop1 ((m n)
+                          (len 1))
+                (let ((range (* nb-initial (expt nb-digits (- len 1)))))
+                  (if (>= m range)
+                      (and (< len (- nb-subseq nb-bicodes))
+                           (loop1 (- m range)
+                                  (+ len 1)))
+                      (let loop2 ((i 1)
+                                  (n (quotient m nb-initial))
+                                  (lst (list (digit (modulo m nb-initial)))))
+                        (if (< i len)
+                            (loop2 (+ i 1)
+                                   (quotient n nb-digits)
+                                   (cons (digit (modulo n nb-digits)) lst))
+                            (list->string
+                             (let ((x (+ len nb-initial nb-bicodes -1)))
+                               (reverse (cons (digit x) lst))))))))))))))
+
+(define (char->c-id c)
+  (nonneg-integer->c-id
+   (let ((n (char->integer c)))
+     (if (<= n 90)            ;; #\Z
+         (if (>= n 65)        ;; #\A
+             (+ n (+ 26 -65)) ;; #\A
+             (+ n 52))
+         (if (<= n 122)    ;; #\z
+             (if (>= n 97) ;; #\a
+                 (+ n -97) ;; #\a
+                 (+ n 26))
+             n)))))
+
+(define (string->c-id str)
+  (let loop ((i (- (string-length str) 1)) (lst '()))
+    (if (>= i 0)
+        (loop (- i 1)
+              (cons (char->c-id (string-ref str i)) lst))
+        (string-concatenate lst))))
 
 (define (scheme-id->c-id s)
   (let loop1 ((i (- (string-length s) 1)) (lst '()))

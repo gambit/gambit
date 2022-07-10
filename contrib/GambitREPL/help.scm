@@ -2,7 +2,7 @@
 
 ;;; File: "help.scm"
 
-;;; Copyright (c) 2011-2014 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -241,18 +241,18 @@ address-info?
 address-infos
 all-bits-set?
 any-bits-set?
-append-f32vectors
-append-f64vectors
-append-s16vectors
-append-s32vectors
-append-s64vectors
-append-s8vectors
-append-strings
-append-u16vectors
-append-u32vectors
-append-u64vectors
-append-u8vectors
-append-vectors
+f32vector-concatenate
+f64vector-concatenate
+s16vector-concatenate
+s32vector-concatenate
+s64vector-concatenate
+s8vector-concatenate
+string-concatenate
+u16vector-concatenate
+u32vector-concatenate
+u64vector-concatenate
+u8vector-concatenate
+vector-concatenate
 arithmetic-shift
 bit-count
 bit-set?
@@ -401,6 +401,9 @@ f64vector?
 file-attributes
 file-creation-time
 file-device
+file-exists-exception-arguments
+file-exists-exception-procedure
+file-exists-exception?
 file-exists?
 file-group
 file-info
@@ -428,7 +431,7 @@ file-owner
 file-size
 file-type
 finite?
-first-bit-set
+first-set-bit
 fixnum->flonum
 fixnum-overflow-exception-arguments
 fixnum-overflow-exception-procedure
@@ -495,7 +498,7 @@ fxarithmetic-shift-right
 fxbit-count
 fxbit-set?
 fxeven?
-fxfirst-bit-set
+fxfirst-set-bit
 fxif
 fxior
 fxlength
@@ -699,6 +702,9 @@ path-strip-trailing-directory-separator
 path-strip-volume
 path-volume
 peek-char
+permission-denied-exception-arguments
+permission-denied-exception-procedure
+permission-denied-exception?
 port-settings-set!
 port?
 pp

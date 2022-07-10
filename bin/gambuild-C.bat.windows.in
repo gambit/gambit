@@ -3,29 +3,39 @@
 setlocal EnableDelayedExpansion
 set "_errorlevel=0"
 
-rem The following settings are determined by the configure script.
+rem The following bindings are determined by the configure script.  The
+rem bindings for CORCXXFLAGS_GAMBUILD and LDFLAGS_GAMBUILD can be
+rem overridden by setting the corresponding environment variables.
+
+if defined CORCXXFLAGS_GAMBUILD goto :corcxxflags_done
+set CORCXXFLAGS_GAMBUILD=@CORCXXFLAGS_GAMBUILD_BAT@
+:corcxxflags_done
+
+if defined LDFLAGS_GAMBUILD goto :ldflags_done
+set LDFLAGS_GAMBUILD=@LDFLAGS_GAMBUILD_BAT@
+:ldflags_done
 
 set C_COMPILER=@C_COMPILER_BAT@
 set C_PREPROC=@C_PREPROC_BAT@
 set PKG_CONFIG=@PKG_CONFIG_BAT@
 
-set FLAGS_OBJ=@FLAGS_OBJ_BAT@
-set FLAGS_DYN=@FLAGS_DYN_BAT@
-set FLAGS_LIB=@FLAGS_LIB_BAT@
-set FLAGS_EXE=@FLAGS_EXE_BAT@
+set FLAGS_OBJ=@FLAGS_OBJ_GAMBUILD_BAT@
+set FLAGS_DYN=@FLAGS_DYN_GAMBUILD_BAT@
+set FLAGS_LIB=@FLAGS_LIB_GAMBUILD_BAT@
+set FLAGS_EXE=@FLAGS_EXE_GAMBUILD_BAT@
 
-set FLAGS_OPT=@FLAGS_OPT_BAT@
-set FLAGS_OPT_RTS=@FLAGS_OPT_RTS_BAT@
+set FLAGS_OPT=@FLAGS_OPT_GAMBUILD_BAT@
+set FLAGS_OPT_RTS=@FLAGS_OPT_RTS_GAMBUILD_BAT@
 
-set DEFS_OBJ=@DEFS_OBJ_BAT@
-set DEFS_DYN=@DEFS_DYN_BAT@
-set DEFS_LIB=@DEFS_LIB_BAT@
-set DEFS_EXE=@DEFS_EXE_BAT@
+set DEFS_OBJ=@DEFS_OBJ_GAMBUILD_BAT@
+set DEFS_DYN=@DEFS_DYN_GAMBUILD_BAT@
+set DEFS_LIB=@DEFS_LIB_GAMBUILD_BAT@
+set DEFS_EXE=@DEFS_EXE_GAMBUILD_BAT@
 
-set BUILD_OBJ=@BUILD_OBJ_BAT@
-set BUILD_DYN=@BUILD_DYN_BAT@
-set BUILD_LIB=@BUILD_LIB_BAT@
-set BUILD_EXE=@BUILD_EXE_BAT@
+set BUILD_OBJ=@BUILD_OBJ_GAMBUILD_BAT@
+set BUILD_DYN=@BUILD_DYN_GAMBUILD_BAT@
+set BUILD_LIB=@BUILD_LIB_GAMBUILD_BAT@
+set BUILD_EXE=@BUILD_EXE_GAMBUILD_BAT@
 
 set DEFS=@DEFS_BAT@
 set LIBS=@LIBS_BAT@
@@ -231,6 +241,7 @@ exit /b 0
 
 
 :for_each_line_of_var
+if not defined %for_each_line_of_var_var% goto :for_each_line_of_var_done
 for /f "tokens=1* delims==" %%i in ('set %for_each_line_of_var_var%') do (
   if not "%%j" == "" (
     set "_arg=%%j"
@@ -549,6 +560,11 @@ if "%1" == "obj" goto obj
 if not "%1" == ""obj"" goto not_obj
 :obj
 
+if not defined BUILD_OBJ_CC_PARAM goto :obj_cc_done
+set "C_COMPILER=!BUILD_OBJ_CC_PARAM!"
+set "FLAGS_OBJ= "
+:obj_cc_done
+
 set "BUILD_OBJ_LD_OPTIONS_PRELUDE_PARAM= "
 set "BUILD_OBJ_LD_OPTIONS_PARAM= "
 
@@ -570,6 +586,11 @@ if "%1" == "dyn" goto dyn
 if not "%1" == ""dyn"" goto not_dyn
 :dyn
 
+if not defined BUILD_DYN_CC_PARAM goto :dyn_cc_done
+set "C_COMPILER=!BUILD_DYN_CC_PARAM!"
+set "FLAGS_DYN= "
+:dyn_cc_done
+
 call :prepare_params BUILD_DYN_META_INFO_FILE_PARAM BUILD_DYN_PKG_CONFIG_PARAM BUILD_DYN_PKG_CONFIG_PATH_PARAM BUILD_DYN_CC_OPTIONS_PARAM BUILD_DYN_LD_OPTIONS_PRELUDE_PARAM BUILD_DYN_LD_OPTIONS_PARAM BUILD_DYN_INPUT_FILENAMES_PARAM BUILD_DYN_OUTPUT_FILENAME_PARAM
 if not "%_errorlevel%" == "0" goto :end
 
@@ -590,6 +611,11 @@ if "%1" == "lib" goto lib
 if not "%1" == ""lib"" goto not_lib
 :lib
 
+if not defined BUILD_LIB_CC_PARAM goto :lib_cc_done
+set "C_COMPILER=!BUILD_LIB_CC_PARAM!"
+set "FLAGS_LIB= "
+:lib_cc_done
+
 set "_shell_command=@BUILD_LIB_ECHO_BAT@"
 
 call :eval_shell_command
@@ -600,6 +626,11 @@ goto end
 if "%1" == "exe" goto exe
 if not "%1" == ""exe"" goto not_exe
 :exe
+
+if not defined BUILD_EXE_CC_PARAM goto :exe_cc_done
+set "C_COMPILER=!BUILD_EXE_CC_PARAM!"
+set "FLAGS_EXE= "
+:exe_cc_done
 
 call :prepare_params BUILD_EXE_META_INFO_FILE_PARAM BUILD_EXE_PKG_CONFIG_PARAM BUILD_EXE_PKG_CONFIG_PATH_PARAM BUILD_EXE_CC_OPTIONS_PARAM BUILD_EXE_LD_OPTIONS_PRELUDE_PARAM BUILD_EXE_LD_OPTIONS_PARAM BUILD_EXE_INPUT_FILENAMES_PARAM BUILD_EXE_OUTPUT_FILENAME_PARAM
 if not "%_errorlevel%" == "0" goto :end
@@ -616,6 +647,20 @@ call :eval_shell_command
 
 goto end
 :not_exe
+
+if "%1" == "CORCXXFLAGS_GAMBUILD" goto CORCXXFLAGS_GAMBUILD
+if not "%1" == ""CORCXXFLAGS_GAMBUILD"" goto not_CORCXXFLAGS_GAMBUILD
+:CORCXXFLAGS_GAMBUILD
+echo.%CORCXXFLAGS_GAMBUILD%
+goto end
+:not_CORCXXFLAGS_GAMBUILD
+
+if "%1" == "LDFLAGS_GAMBUILD" goto LDFLAGS_GAMBUILD
+if not "%1" == ""LDFLAGS_GAMBUILD"" goto not_LDFLAGS_GAMBUILD
+:LDFLAGS_GAMBUILD
+echo.%LDFLAGS_GAMBUILD%
+goto end
+:not_LDFLAGS_GAMBUILD
 
 if "%1" == "C_COMPILER" goto C_COMPILER
 if not "%1" == ""C_COMPILER"" goto not_C_COMPILER

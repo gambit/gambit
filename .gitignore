@@ -6,6 +6,14 @@
 bin/gambcomp*
 !bin/gambcomp*.in
 
+# gambuild
+bin/gambuild*
+!bin/gambuild*.in
+
+# gamvcs
+bin/gambvcs*
+!bin/gambvcs*.in
+
 bin/gambdoc
 bin/gambdoc.unix
 bin/gambdoc.bat
@@ -24,6 +32,7 @@ bin/scheme-r5rs.bat
 bin/scheme-srfi-0
 bin/scheme-srfi-0.bat
 bin/six
+bin/six.bat
 bin/six.exe
 bin/six-script
 bin/six-script.bat
@@ -45,6 +54,7 @@ doc/gambit.pdf
 doc/gambit.pg
 doc/gambit.toc
 doc/gambit.tp
+doc/gambit.tsv
 doc/gambit.txt
 doc/gambit.vr
 doc/makefile
@@ -131,6 +141,7 @@ include/config.h
 include/gambit.h
 include/gambit-not*.h
 include/makefile
+include/stamp.h
 lib/_eval.o
 lib/_gambit.o
 lib/_io.o
@@ -149,6 +160,7 @@ lib/libgambit.a
 lib/main.o
 lib/makefile
 lib/mem.o
+lib/module-common.mk
 lib/os.o
 lib/os_base.o
 lib/os_dyn.o
@@ -161,7 +173,16 @@ lib/setup.o
 prebuilt/macosx/build-phase2
 prebuilt/windows/build-phase2
 /makefile
+bench/makefile
+contrib/GambitREPL/makefile
+contrib/makefile
+contrib/try/makefile
+contrib/xactlog/makefile
+githooks/makefile
 misc/makefile
+prebuilt/macosx/makefile
+prebuilt/makefile
+prebuilt/windows/makefile
 tests/makefile
 autom4te.cache
 gsc-boot
@@ -192,3 +213,16 @@ gambit-v*.tgz
 *.o
 *.gvm
 gambit.log
+boot.tgz
+
+# Universal backend targets:
+lib/_gambit.go
+lib/_gambit.java
+lib/_gambit.js
+lib/_gambit.php
+lib/_gambit.py
+lib/_gambit.rb
+
+# Library build products, for example:
+# lib/_define-library/_define-library@gambit409003@C/
+*@gambit*@*

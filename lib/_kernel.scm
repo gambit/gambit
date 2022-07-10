@@ -2,7 +2,7 @@
 
 ;;; File: "_kernel.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -16,7 +16,6 @@
 #include "os_setup.h"
 #include "os_base.h"
 #include "os_time.h"
-#include "os_shell.h"
 #include "os_files.h"
 #include "os_dyn.h"
 #include "os_tty.h"
@@ -25,7 +24,20 @@
 #include "mem.h"
 #include "c_intf.h"
 
+#include "stamp-release.h"
 #include "stamp.h"
+
+#ifndef ___STAMP_VERSION
+#define ___STAMP_VERSION ___STAMP_RELEASE_VERSION
+#endif
+
+#ifndef ___STAMP_YMD
+#define ___STAMP_YMD ___STAMP_RELEASE_YMD
+#endif
+
+#ifndef ___STAMP_HMS
+#define ___STAMP_HMS ___STAMP_RELEASE_HMS
+#endif
 
 c-declare-end
 )
@@ -1292,13 +1304,16 @@ end-of-code
               (loop (##cdr x))))
         #f)))
 
-(define-prim (##reverse! lst)
-  (let loop ((prev '()) (curr lst))
+(define-prim (##append-reverse! lst tail)
+  (let loop ((prev tail) (curr lst))
     (if (##pair? curr)
         (let ((next (##cdr curr)))
           (##set-cdr! curr prev)
           (loop curr next))
         prev)))
+
+(define-prim (##reverse! lst)
+  (##append-reverse! lst '()))
 
 (define-prim (##vector-last vect)
   (##vector-ref vect (##fx- (##vector-length vect) 1)))
@@ -1660,6 +1675,8 @@ end-of-code
              (macro-make-no-such-file-or-directory-exception procedure arguments))
             ((##fx= code ##err-code-EEXIST)
              (macro-make-file-exists-exception procedure arguments))
+            ((##fx= code ##err-code-EACCES)
+             (macro-make-permission-denied-exception procedure arguments))
             (else
              (macro-make-os-exception procedure arguments message code)))))))
 
@@ -1690,6 +1707,21 @@ end-of-code
    (lambda (procedure arguments dummy1 dummy2 dummy3)
      (macro-raise
       (macro-make-file-exists-exception
+       procedure
+       arguments)))))
+
+(implement-library-type-permission-denied-exception)
+
+(define-prim (##raise-permission-denied-exception proc . args)
+  (##extract-procedure-and-arguments
+   proc
+   args
+   #f
+   #f
+   #f
+   (lambda (procedure arguments dummy1 dummy2 dummy3)
+     (macro-raise
+      (macro-make-permission-denied-exception
        procedure
        arguments)))))
 ))
@@ -2111,34 +2143,17 @@ end-of-code
    mask
    new-settings))
 
-(define-prim (##get-file-settings)
-  (##declare (not interrupts-enabled))
-  (##c-code "___RESULT = ___FIX(___get_file_settings ());"))
-
-(define-prim (##set-file-settings! settings)
+(define-prim (##get-io-settings index)
   (##declare (not interrupts-enabled))
   (##c-code
-   "___set_file_settings (___INT(___ARG1)); ___RESULT = ___VOID;"
-   settings))
+   "___RESULT = ___FIX(___get_io_settings (___INT(___ARG1)));"
+   index))
 
-(define-prim (##get-terminal-settings)
-  (##declare (not interrupts-enabled))
-  (##c-code "___RESULT = ___FIX(___get_terminal_settings ());"))
-
-(define-prim (##set-terminal-settings! settings)
+(define-prim (##set-io-settings! index settings)
   (##declare (not interrupts-enabled))
   (##c-code
-   "___set_terminal_settings (___INT(___ARG1)); ___RESULT = ___VOID;"
-   settings))
-
-(define-prim (##get-stdio-settings)
-  (##declare (not interrupts-enabled))
-  (##c-code "___RESULT = ___FIX(___get_stdio_settings ());"))
-
-(define-prim (##set-stdio-settings! settings)
-  (##declare (not interrupts-enabled))
-  (##c-code
-   "___set_stdio_settings (___INT(___ARG1)); ___RESULT = ___VOID;"
+   "___set_io_settings (___INT(___ARG1), ___INT(___ARG2)); ___RESULT = ___VOID;"
+   index
    settings))
 
 (define-prim ##get-gambitdir
@@ -2149,7 +2164,7 @@ end-of-code
 (define-prim ##set-gambitdir!
   (c-lambda (UCS-2-string)
             void
-    "___addref_string (___arg1); ___set_gambitdir (___arg1);"))
+    "___set_gambitdir (___arg1);"))
 
 (define-prim ##get-gambitdir-map
   (c-lambda ()
@@ -2159,7 +2174,7 @@ end-of-code
 (define-prim ##set-gambitdir-map!
   (c-lambda (nonnull-UCS-2-string-list)
             void
-    "___addref_string_list (___arg1); ___set_gambitdir_map (___arg1);"))
+    "___set_gambitdir_map (___arg1);"))
 
 (define-prim ##get-module-search-order
   (c-lambda ()
@@ -2169,7 +2184,7 @@ end-of-code
 (define-prim ##set-module-search-order!
   (c-lambda (nonnull-UCS-2-string-list)
             void
-    "___addref_string_list (___arg1); ___set_module_search_order (___arg1);"))
+    "___set_module_search_order (___arg1);"))
 
 (define-prim ##get-module-whitelist
   (c-lambda ()
@@ -2179,7 +2194,7 @@ end-of-code
 (define-prim ##set-module-whitelist!
   (c-lambda (nonnull-UCS-2-string-list)
             void
-    "___addref_string_list (___arg1); ___set_module_whitelist (___arg1);"))
+    "___set_module_whitelist (___arg1);"))
 
 (define-prim (##get-module-install-mode)
   (##declare (not interrupts-enabled))
@@ -2199,7 +2214,7 @@ end-of-code
 (define-prim ##set-repl-client-addr!
   (c-lambda (UCS-2-string)
             void
-    "___addref_string (___arg1); ___set_repl_client_addr (___arg1);"))
+    "___set_repl_client_addr (___arg1);"))
 
 (define-prim ##get-repl-server-addr
   (c-lambda ()
@@ -2209,7 +2224,7 @@ end-of-code
 (define-prim ##set-repl-server-addr!
   (c-lambda (UCS-2-string)
             void
-    "___addref_string (___arg1); ___set_repl_server_addr (___arg1);"))
+    "___set_repl_server_addr (___arg1);"))
 
 ;;;----------------------------------------------------------------------------
 
@@ -2452,78 +2467,6 @@ end-of-code
         (##make-string k fill))
       s)))
 
-(define-prim (##make-s8vector k #!optional (fill (macro-absent-obj)))
-  (##declare (not interrupts-enabled))
-  (let ((v (##c-code #<<end-of-code
-
-___SCMOBJ k;
-___SCMOBJ fill;
-___SIZE_TS i;
-___SIZE_TS n;
-___SCMOBJ result;
-___POP_ARGS2(k,fill);
-___ps->saved[0] = k;
-___ps->saved[1] = fill;
-n = ___INT(k);
-if (n > ___CAST(___WORD, ___LMASK>>___LF))
-  result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
-else
-  {
-    ___SIZE_TS words = ___WORDS(n) + 1;
-    if (words > ___MSECTION_BIGGEST)
-      {
-        ___FRAME_STORE_RA(___R0)
-        ___W_ALL
-        result = ___EXT(___alloc_scmobj) (___ps, ___sS8VECTOR, n);
-        ___R_ALL
-        ___SET_R0(___FRAME_FETCH_RA)
-        if (!___FIXNUMP(result))
-          ___still_obj_refcount_dec (result);
-      }
-    else
-      {
-        ___BOOL overflow = 0;
-        ___hp += words;
-        if (___hp > ___ps->heap_limit)
-          {
-            ___FRAME_STORE_RA(___R0)
-            ___W_ALL
-            overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
-            ___R_ALL
-            ___SET_R0(___FRAME_FETCH_RA)
-          }
-        else
-          ___hp -= words;
-        if (overflow)
-          result = ___FIX(___HEAP_OVERFLOW_ERR);
-        else
-          {
-            result = ___SUBTYPED_FROM_START(___hp);
-            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES(n, ___sS8VECTOR));
-            ___hp += words;
-          }
-      }
-  }
-k = ___ps->saved[0];
-fill = ___ps->saved[1];
-___ps->saved[0] = ___VOID;
-___ps->saved[1] = ___VOID;
-if (!___FIXNUMP(result) && fill != ___ABSENT)
-  {
-    for (i=0; i<n; i++)
-      ___S8VECTORSET(result,___FIX(i),fill);
-  }
-___RESULT = result;
-___PUSH_ARGS2(k,fill);
-
-end-of-code
-)))
-    (if (##fixnum? v)
-      (begin
-        (##raise-heap-overflow-exception)
-        (##make-s8vector k fill))
-      v)))
-
 (define-prim (##make-u8vector k #!optional (fill (macro-absent-obj)))
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
@@ -2596,7 +2539,8 @@ end-of-code
         (##make-u8vector k fill))
       v)))
 
-(define-prim (##make-s16vector k #!optional (fill (macro-absent-obj)))
+(macro-if-s8vector
+(define-prim (##make-s8vector k #!optional (fill (macro-absent-obj)))
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
 
@@ -2609,16 +2553,16 @@ ___POP_ARGS2(k,fill);
 ___ps->saved[0] = k;
 ___ps->saved[1] = fill;
 n = ___INT(k);
-if (n > ___CAST(___WORD, ___LMASK>>(___LF+1)))
+if (n > ___CAST(___WORD, ___LMASK>>___LF))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else
   {
-    ___SIZE_TS words = ___WORDS((n<<1)) + 1;
+    ___SIZE_TS words = ___WORDS(n) + 1;
     if (words > ___MSECTION_BIGGEST)
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        result = ___EXT(___alloc_scmobj) (___ps, ___sS16VECTOR, n<<1);
+        result = ___EXT(___alloc_scmobj) (___ps, ___sS8VECTOR, n);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
         if (!___FIXNUMP(result))
@@ -2643,7 +2587,7 @@ else
         else
           {
             result = ___SUBTYPED_FROM_START(___hp);
-            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<1), ___sS16VECTOR));
+            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES(n, ___sS8VECTOR));
             ___hp += words;
           }
       }
@@ -2655,7 +2599,7 @@ ___ps->saved[1] = ___VOID;
 if (!___FIXNUMP(result) && fill != ___ABSENT)
   {
     for (i=0; i<n; i++)
-      ___S16VECTORSET(result,___FIX(i),fill);
+      ___S8VECTORSET(result,___FIX(i),fill);
   }
 ___RESULT = result;
 ___PUSH_ARGS2(k,fill);
@@ -2665,9 +2609,10 @@ end-of-code
     (if (##fixnum? v)
       (begin
         (##raise-heap-overflow-exception)
-        (##make-s16vector k fill))
-      v)))
+        (##make-s8vector k fill))
+      v))))
 
+(macro-if-u16vector
 (define-prim (##make-u16vector k #!optional (fill (macro-absent-obj)))
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
@@ -2738,9 +2683,10 @@ end-of-code
       (begin
         (##raise-heap-overflow-exception)
         (##make-u16vector k fill))
-      v)))
+      v))))
 
-(define-prim (##make-s32vector k #!optional (fill (macro-absent-obj)))
+(macro-if-s16vector
+(define-prim (##make-s16vector k #!optional (fill (macro-absent-obj)))
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
 
@@ -2753,16 +2699,16 @@ ___POP_ARGS2(k,fill);
 ___ps->saved[0] = k;
 ___ps->saved[1] = fill;
 n = ___INT(k);
-if (n > ___CAST(___WORD, ___LMASK>>(___LF+2)))
+if (n > ___CAST(___WORD, ___LMASK>>(___LF+1)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else
   {
-    ___SIZE_TS words = ___WORDS((n<<2)) + 1;
+    ___SIZE_TS words = ___WORDS((n<<1)) + 1;
     if (words > ___MSECTION_BIGGEST)
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        result = ___EXT(___alloc_scmobj) (___ps, ___sS32VECTOR, n<<2);
+        result = ___EXT(___alloc_scmobj) (___ps, ___sS16VECTOR, n<<1);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
         if (!___FIXNUMP(result))
@@ -2787,7 +2733,7 @@ else
         else
           {
             result = ___SUBTYPED_FROM_START(___hp);
-            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<2), ___sS32VECTOR));
+            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<1), ___sS16VECTOR));
             ___hp += words;
           }
       }
@@ -2799,7 +2745,7 @@ ___ps->saved[1] = ___VOID;
 if (!___FIXNUMP(result) && fill != ___ABSENT)
   {
     for (i=0; i<n; i++)
-      ___S32VECTORSET(result,___FIX(i),fill);
+      ___S16VECTORSET(result,___FIX(i),fill);
   }
 ___RESULT = result;
 ___PUSH_ARGS2(k,fill);
@@ -2809,9 +2755,10 @@ end-of-code
     (if (##fixnum? v)
       (begin
         (##raise-heap-overflow-exception)
-        (##make-s32vector k fill))
-      v)))
+        (##make-s16vector k fill))
+      v))))
 
+(macro-if-u32vector
 (define-prim (##make-u32vector k #!optional (fill (macro-absent-obj)))
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
@@ -2882,9 +2829,10 @@ end-of-code
       (begin
         (##raise-heap-overflow-exception)
         (##make-u32vector k fill))
-      v)))
+      v))))
 
-(define-prim (##make-s64vector k #!optional (fill (macro-absent-obj)))
+(macro-if-s32vector
+(define-prim (##make-s32vector k #!optional (fill (macro-absent-obj)))
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
 
@@ -2897,21 +2845,16 @@ ___POP_ARGS2(k,fill);
 ___ps->saved[0] = k;
 ___ps->saved[1] = fill;
 n = ___INT(k);
-if (n > ___CAST(___WORD, ___LMASK>>(___LF+3)))
+if (n > ___CAST(___WORD, ___LMASK>>(___LF+2)))
   result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
 else
   {
-    ___SIZE_TS words = ___WORDS((n<<3)) + ___SUBTYPED_BODY;
-
-#if ___WS == 4
-    words++;
-#endif
-
+    ___SIZE_TS words = ___WORDS((n<<2)) + 1;
     if (words > ___MSECTION_BIGGEST)
       {
         ___FRAME_STORE_RA(___R0)
         ___W_ALL
-        result = ___EXT(___alloc_scmobj) (___ps, ___sS64VECTOR, n<<3);
+        result = ___EXT(___alloc_scmobj) (___ps, ___sS32VECTOR, n<<2);
         ___R_ALL
         ___SET_R0(___FRAME_FETCH_RA)
         if (!___FIXNUMP(result))
@@ -2935,12 +2878,8 @@ else
           result = ___FIX(___HEAP_OVERFLOW_ERR);
         else
           {
-#if ___WS == 4
-            result = ___SUBTYPED_FROM_BODY(___CAST(___WORD,___hp+___SUBTYPED_BODY+1)&~7);
-#else
             result = ___SUBTYPED_FROM_START(___hp);
-#endif
-            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<3), ___sS64VECTOR));
+            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<2), ___sS32VECTOR));
             ___hp += words;
           }
       }
@@ -2952,7 +2891,7 @@ ___ps->saved[1] = ___VOID;
 if (!___FIXNUMP(result) && fill != ___ABSENT)
   {
     for (i=0; i<n; i++)
-      ___S64VECTORSET(result,___FIX(i),fill);
+      ___S32VECTORSET(result,___FIX(i),fill);
   }
 ___RESULT = result;
 ___PUSH_ARGS2(k,fill);
@@ -2962,9 +2901,10 @@ end-of-code
     (if (##fixnum? v)
       (begin
         (##raise-heap-overflow-exception)
-        (##make-s64vector k fill))
-      v)))
+        (##make-s32vector k fill))
+      v))))
 
+(macro-if-u64vector
 (define-prim (##make-u64vector k #!optional (fill (macro-absent-obj)))
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
@@ -3044,8 +2984,91 @@ end-of-code
       (begin
         (##raise-heap-overflow-exception)
         (##make-u64vector k fill))
-      v)))
+      v))))
 
+(macro-if-s64vector
+(define-prim (##make-s64vector k #!optional (fill (macro-absent-obj)))
+  (##declare (not interrupts-enabled))
+  (let ((v (##c-code #<<end-of-code
+
+___SCMOBJ k;
+___SCMOBJ fill;
+___SIZE_TS i;
+___SIZE_TS n;
+___SCMOBJ result;
+___POP_ARGS2(k,fill);
+___ps->saved[0] = k;
+___ps->saved[1] = fill;
+n = ___INT(k);
+if (n > ___CAST(___WORD, ___LMASK>>(___LF+3)))
+  result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
+else
+  {
+    ___SIZE_TS words = ___WORDS((n<<3)) + ___SUBTYPED_BODY;
+
+#if ___WS == 4
+    words++;
+#endif
+
+    if (words > ___MSECTION_BIGGEST)
+      {
+        ___FRAME_STORE_RA(___R0)
+        ___W_ALL
+        result = ___EXT(___alloc_scmobj) (___ps, ___sS64VECTOR, n<<3);
+        ___R_ALL
+        ___SET_R0(___FRAME_FETCH_RA)
+        if (!___FIXNUMP(result))
+          ___still_obj_refcount_dec (result);
+      }
+    else
+      {
+        ___BOOL overflow = 0;
+        ___hp += words;
+        if (___hp > ___ps->heap_limit)
+          {
+            ___FRAME_STORE_RA(___R0)
+            ___W_ALL
+            overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
+            ___R_ALL
+            ___SET_R0(___FRAME_FETCH_RA)
+          }
+        else
+          ___hp -= words;
+        if (overflow)
+          result = ___FIX(___HEAP_OVERFLOW_ERR);
+        else
+          {
+#if ___WS == 4
+            result = ___SUBTYPED_FROM_BODY(___CAST(___WORD,___hp+___SUBTYPED_BODY+1)&~7);
+#else
+            result = ___SUBTYPED_FROM_START(___hp);
+#endif
+            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<3), ___sS64VECTOR));
+            ___hp += words;
+          }
+      }
+  }
+k = ___ps->saved[0];
+fill = ___ps->saved[1];
+___ps->saved[0] = ___VOID;
+___ps->saved[1] = ___VOID;
+if (!___FIXNUMP(result) && fill != ___ABSENT)
+  {
+    for (i=0; i<n; i++)
+      ___S64VECTORSET(result,___FIX(i),fill);
+  }
+___RESULT = result;
+___PUSH_ARGS2(k,fill);
+
+end-of-code
+)))
+    (if (##fixnum? v)
+      (begin
+        (##raise-heap-overflow-exception)
+        (##make-s64vector k fill))
+      v))))
+
+(macro-if-f32vector
 (define-prim (##make-f32vector k #!optional (fill (macro-absent-obj)))
   (##declare (not interrupts-enabled))
   (let ((v (##c-code #<<end-of-code
@@ -3117,7 +3140,7 @@ end-of-code
       (begin
         (##raise-heap-overflow-exception)
         (##make-f32vector k fill))
-      v)))
+      v))))
 
 (define-prim (##make-f64vector k #!optional (fill (macro-absent-obj)))
   (##declare (not interrupts-enabled))
@@ -3200,6 +3223,13 @@ end-of-code
         (##raise-heap-overflow-exception)
         (##make-f64vector k fill))
       v)))
+
+  (define-prim (##make-values k #!optional (fill 0))
+    ;; Note: this will create a box object when k = 1
+    (let ((vals (##make-vector k fill)))
+      (##subtype-set! vals (macro-subtype-boxvalues))
+      vals))
+
 )
 
   (else
@@ -3210,35 +3240,46 @@ end-of-code
    (define-prim (##make-string k #!optional (fill #\nul))
      (##make-string k fill))
 
-   (define-prim (##make-s8vector k #!optional (fill 0))
-     (##make-s8vector k fill))
-
    (define-prim (##make-u8vector k #!optional (fill 0))
      (##make-u8vector k fill))
 
-   (define-prim (##make-s16vector k #!optional (fill 0))
-     (##make-s16vector k fill))
+   (macro-if-s8vector
+   (define-prim (##make-s8vector k #!optional (fill 0))
+     (##make-s8vector k fill)))
 
+   (macro-if-u16vector
    (define-prim (##make-u16vector k #!optional (fill 0))
-     (##make-u16vector k fill))
+     (##make-u16vector k fill)))
 
-   (define-prim (##make-s32vector k #!optional (fill 0))
-     (##make-s32vector k fill))
+   (macro-if-s16vector
+   (define-prim (##make-s16vector k #!optional (fill 0))
+     (##make-s16vector k fill)))
 
+   (macro-if-u32vector
    (define-prim (##make-u32vector k #!optional (fill 0))
-     (##make-u32vector k fill))
+     (##make-u32vector k fill)))
 
-   (define-prim (##make-s64vector k #!optional (fill 0))
-     (##make-s64vector k fill))
+   (macro-if-s32vector
+   (define-prim (##make-s32vector k #!optional (fill 0))
+     (##make-s32vector k fill)))
 
+   (macro-if-u64vector
    (define-prim (##make-u64vector k #!optional (fill 0))
-     (##make-u64vector k fill))
+     (##make-u64vector k fill)))
 
+   (macro-if-s64vector
+   (define-prim (##make-s64vector k #!optional (fill 0))
+     (##make-s64vector k fill)))
+
+   (macro-if-f32vector
    (define-prim (##make-f32vector k #!optional (fill 0.0))
-     (##make-f32vector k fill))
+     (##make-f32vector k fill)))
 
    (define-prim (##make-f64vector k #!optional (fill 0.0))
      (##make-f64vector k fill))
+
+   (define-prim (##make-values k #!optional (fill 0))
+     (##make-values k fill))
 
 ))
 
@@ -3391,24 +3432,6 @@ end-of-code
                   (app proc rest))))))
 
       (app proc arg1)))
-
-;;;----------------------------------------------------------------------------
-
-;;; Values.
-
-(define-prim (##make-values len #!optional (init 0))
-  (let ((vals (##make-vector len init)))
-    (##subtype-set! vals (macro-subtype-boxvalues))
-    vals))
-
-(define-prim (##values-length vals)
-  (##vector-length vals))
-
-(define-prim (##values-ref vals i)
-  (##vector-ref vals i))
-
-(define-prim (##values-set! vals i val)
-  (##vector-set! vals i val))
 
 ;;;----------------------------------------------------------------------------
 
@@ -4253,12 +4276,32 @@ end-of-code
              nonnull-char-string
     "___os_bat_extension_string")))
 
+(define ##default-compile-options-string
+  (macro-case-target
+
+   ((C)
+    ((c-lambda () nonnull-UCS-2-string #<<end-of-code
+
+#ifndef ___DEFAULT_COMPILE_OPTIONS
+#define ___DEFAULT_COMPILE_OPTIONS {'\0'}
+#endif
+
+static ___UCS_2 default_compile_options[] = ___DEFAULT_COMPILE_OPTIONS;
+
+___return(default_compile_options);
+
+end-of-code
+)))
+
+   (else
+    "")))
+
+(define-prim (##default-compile-options-string-set! x)
+  (set! ##default-compile-options-string x))
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Miscellaneous definitions.
-
-(define ##err-code-EAGAIN
-  (##c-code "___RESULT = ___FIX(___ERRNO_ERR(EAGAIN));"))
 
 (define ##err-code-ENOENT
   (##c-code "___RESULT = ___FIX(___ERRNO_ERR(ENOENT));"))
@@ -4266,8 +4309,14 @@ end-of-code
 (define ##err-code-EINTR
   (##c-code "___RESULT = ___FIX(___ERRNO_ERR(EINTR));"))
 
+(define ##err-code-EACCES
+  (##c-code "___RESULT = ___FIX(___ERRNO_ERR(EACCES));"))
+
 (define ##err-code-EEXIST
   (##c-code "___RESULT = ___FIX(___ERRNO_ERR(EEXIST));"))
+
+(define ##err-code-EAGAIN
+  (##c-code "___RESULT = ___FIX(___ERRNO_ERR(EAGAIN));"))
 
 (define ##err-code-unimplemented
   (##c-code "___RESULT = ___FIX(___UNIMPL_ERR);"))
@@ -4317,7 +4366,9 @@ end-of-code
 
     if (!___FIXNUMP(result))
     {
-      n = ___bytes_allocated (___PSPNC) - n;
+      ___F64 ba = ___bytes_allocated (___PSPNC);
+
+      n = ba - n;
 
       ___process_times (&user, &sys, &real);
       ___vm_stats (&minflt, &majflt);
@@ -4329,7 +4380,7 @@ end-of-code
       ___F64VECTORSET(result,___FIX(4),___vms->mem.gc_sys_time_)
       ___F64VECTORSET(result,___FIX(5),___vms->mem.gc_real_time_)
       ___F64VECTORSET(result,___FIX(6),___vms->mem.nb_gcs_)
-      ___F64VECTORSET(result,___FIX(7),___bytes_allocated (___PSPNC))
+      ___F64VECTORSET(result,___FIX(7),ba)
       ___F64VECTORSET(result,___FIX(8),(2*(1+2)<<___LWS))
       ___F64VECTORSET(result,___FIX(9),n)
       ___F64VECTORSET(result,___FIX(10),minflt)
@@ -4519,21 +4570,6 @@ end-of-code
             scheme-object
    "___os_executable_path"))
 
-(define-prim ##os-module-search-order
-  (c-lambda ()
-            scheme-object
-   "___os_module_search_order"))
-
-(define-prim ##os-module-whitelist
-  (c-lambda ()
-            scheme-object
-   "___os_module_whitelist"))
-
-(define-prim ##os-module-install-mode
-  (c-lambda ()
-            scheme-object
-   "___os_module_install_mode"))
-
 (define-prim ##repl-server-addr
   (c-lambda ()
             UCS-2-string
@@ -4543,41 +4579,6 @@ end-of-code
   (c-lambda ()
             UCS-2-string
    "___return(___GSTATE->setup_params.repl_client_addr);"))
-
-;;;----------------------------------------------------------------------------
-
-;;; Command line, environment variables, and shell command execution.
-
-(define-prim (##command-line)
-  (##declare (not interrupts-enabled))
-  (##c-code "___RESULT = ___GSTATE->command_line;"))
-
-(define ##processed-command-line
-  (##command-line))
-
-(define-prim (##processed-command-line-set! x)
-  (set! ##processed-command-line x))
-
-(define-prim ##os-getenv
-  (c-lambda (scheme-object)
-            scheme-object
-   "___os_getenv"))
-
-(define-prim ##os-setenv
-  (c-lambda (scheme-object
-             scheme-object)
-            scheme-object
-   "___os_setenv"))
-
-(define-prim ##os-environ
-  (c-lambda ()
-            scheme-object
-   "___os_environ"))
-
-(define-prim ##os-shell-command
-  (c-lambda (scheme-object)
-            scheme-object
-   "___os_shell_command"))
 
 ;;;----------------------------------------------------------------------------
 
@@ -4759,6 +4760,16 @@ end-of-code
             scheme-object   ;; addr
    "___os_device_udp_socket_info"))
 
+(define-prim ##os-device-udp-socket-receive-buffer-size
+  (c-lambda (scheme-object) ;; dev
+            scheme-object   ;; size
+   "___os_device_udp_socket_receive_buffer_size"))
+
+(define-prim ##os-device-udp-socket-send-buffer-size
+  (c-lambda (scheme-object) ;; dev
+            scheme-object   ;; size
+   "___os_device_udp_socket_send_buffer_size"))
+
 (define-prim ##os-device-directory-open-path
   (c-lambda (scheme-object  ;; path
              scheme-object) ;; ignore_hidden
@@ -4842,7 +4853,7 @@ end-of-code
 (define-prim (##device-select-abort! processor)
   (##declare (not interrupts-enabled))
   (##c-code
-   "___device_select_abort (___PSTATE_FROM_PROCESSOR_ID(___INT(___ARG1),___VMSTATE_FROM_PSTATE(___ps)));"
+   "___device_select_abort (___PSTATE_FROM_PROCESSOR_ID(___INT(___ARG1),___VMSTATE_FROM_PSTATE(___ps))); ___RESULT = ___VOID;"
    processor))
 
 (define-prim ##os-port-decode-chars!
@@ -5080,26 +5091,52 @@ end-of-code
   (##declare (not interrupts-enabled))
   (##first-argument (thunk))) ;; force nontail-call to thunk
 
+(define-prim (##dead-end)
+  (##declare (interrupts-enabled))
+  (##dead-end)) ;; endless loop
+
+(define-prim (dead-end)
+  (##dead-end)) ;; endless loop
+
+(define-prim (##poll-point) ;; TODO: add a corresponding inlined primitive
+  (##declare (interrupts-enabled) (not inline)) ;; make sure the poll point is generated
+  (define (dummy) (##void))
+  (dummy))
+
+(define-prim (poll-point) ;; TODO: add a corresponding inlined primitive
+  (##declare (interrupts-enabled) (not inline)) ;; make sure the poll point is generated
+  (define (dummy) (##void))
+  (dummy))
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Version information.
 
 (define-prim (##system-version)
 
-  (##define-macro (result)
+  (##define-macro (comp-version)
     (c#compiler-version))
 
-  (result))
+  (comp-version))
 
 (define-prim (system-version)
   (##system-version))
 
+(define ##os-system-version-string-saved
+  (let ()
+
+    (##define-macro (comp-version-string)
+      (c#compiler-version-string))
+
+    (macro-case-target
+     ((C)
+      (or ((c-lambda () char-string "___return(___STAMP_VERSION);"))
+          (comp-version-string)))
+     (else
+      (comp-version-string)))))
+
 (define-prim (##system-version-string)
-
-  (##define-macro (result)
-    (c#compiler-version-string))
-
-  (result))
+  ##os-system-version-string-saved)
 
 (define-prim (system-version-string)
   (##system-version-string))
@@ -5333,9 +5370,7 @@ end-of-code
 
 (define-prim (##unchecked-structure-set! obj val i type proc))
 
-(define-prim (##unchecked-structure-cas! obj val oldval i type proc)
-  ;; TODO: remove after bootstrap
-  (##vector-cas! obj i val oldval))
+(define-prim (##unchecked-structure-cas! obj val oldval i type proc))
 
 (define-prim (##structure-copy obj)
   (let* ((len (##structure-length obj))
@@ -5473,7 +5508,7 @@ end-of-code
 
 (define-prim (##collect-modules module-refs
                                 #!optional
-                                (level ##max-fixnum))
+                                (level 999999)) ;; init up to highest level
 
   (define visited '()) ;; modules visited to correctly handle circular deps
 

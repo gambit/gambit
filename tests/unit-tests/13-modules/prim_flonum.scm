@@ -5,7 +5,7 @@
 (define ##x3 1.0)
 (define ##x4 2.0)
 
-(check-same-behavior ("" "##" "~~lib/_prim-flonum#.scm")
+(check-same-behavior ("" "##" "~~lib/gambit/prim/flonum#.scm")
 
 ;; Gambit
 
@@ -13,6 +13,7 @@
 
 (fl*) (fl* 2.) (fl* 3. 4.) (fl* 5. 6. 7.)
 (fl+) (fl+ 1.) (fl+ 2. 3.) (fl+ 4. 5. 6.)
+(fl+* 2. 3. 4.)
 (fl- 1.) (fl- 2. 3.) (fl- 4. 5. 6.)
 (fl/ 2.) (fl/ 3. 4.) (fl/ 5. 6. 7.)
 

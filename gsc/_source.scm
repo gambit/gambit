@@ -2,7 +2,7 @@
 
 ;;; File: "_source.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -123,7 +123,7 @@
 (define (false-obj)
   false-object)
 
-(define (**append-strings lst)
+(define (**string-concatenate lst)
   (let loop1 ((n 0) (x lst) (y '()))
     (if (pair? x)
       (let ((s (car x)))
@@ -189,9 +189,7 @@
               (display "EXPRESSION ")
               (write expr)
               (if source
-                  (locat-show " " (source-locat source))))))
-
-    (display "UNKNOWN LOCATION")))
+                  (locat-show " " (source-locat source))))))))
 
 (define (locat-filename-and-line loc)
   (if loc
@@ -423,11 +421,13 @@
        path
        (##current-readtable);;;;;;;;;;;;;;;;;;;;
        (lambda (re x)
-         (let ((locat
-                (##make-locat container
-                              (##filepos->position
-                               (macro-readenv-filepos re)))))
-           (make-source x locat)))
+         (if (source? x)
+             x
+             (let ((locat
+                    (##make-locat container
+                                  (##filepos->position
+                                   (macro-readenv-filepos re)))))
+               (make-source x locat))))
        (lambda (re x)
          (source-code x)))))
 
@@ -1067,7 +1067,7 @@
         (let* ((new-chunk (read-chunk))
                (new-chunks (cons new-chunk chunks)))
           (if (< (string-length new-chunk) max-chunk-length)
-            (**append-strings (reverse new-chunks))
+            (**string-concatenate (reverse new-chunks))
             (loop new-chunks)))))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

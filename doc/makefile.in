@@ -1,6 +1,6 @@
 # makefile for Gambit documentation.
 
-# Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 herefromroot = doc
 rootfromhere = ..
@@ -83,19 +83,21 @@ test1.scm test2.scm test3.scm gsi.1
 
 GENDISTFILES = stamp.vti version.txi \
 gambit.pdf gambit*.html gambit.txt \
-gambit.info gambit.info-1 gambit.info-2 gambit.info-3
+gambit.info
 
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
-INSTFILES_DOC = gambit.pdf gambit*.html gambit.txt
+INSTFILES_DOC = gambit.pdf gambit*.html gambit.tsv gambit.txt
 INSTFILES_INFO = gambit.info*
 INSTFILES_MAN = gsi.1
 
-all:
+all: core
 
-all-pre:
+core:
 
-all-post:
+core-pre:
+
+core-post:
 
 doc: info pdf html txt ps
 
@@ -105,7 +107,7 @@ pdf: gambit.pdf
 
 ps: gambit.ps
 
-html: gambit.html
+html: gambit.html gambit.tsv
 
 txt: gambit.txt
 
@@ -118,8 +120,8 @@ gambit.ps: gambit.pdf
 gambit.pdf: gambit.txi version.txi
 	(cd $(srcdir) && cd $(srcdir) && $(TEXI2DVI) -p gambit.txi) || (echo "*** $@ could not be built (perhaps $(TEXI2DVI) is not installed?)" > $@)
 
-gambit.html: gambit.txi
-	(cd $(srcdir) && $(TEXI2HTML) -def-table gambit.txi) || (echo "*** $@ could not be built (perhaps $(TEXI2HTML) is not installed?)" > $@)
+gambit.html gambit.tsv: gambit.txi
+	(cd $(srcdir) && $(TEXI2HTML) --idx-sum --def-table gambit.txi) || (echo "*** $@ could not be built (perhaps $(TEXI2HTML) is not installed?)" > $@)
 
 gambit.txt: gambit.txi
 	(cd $(srcdir) && $(MAKEINFO) --no-split --no-headers --output gambit.txt gambit.txi) || (echo "*** $@ could not be built (perhaps $(MAKEINFO) is not installed?)" > $@)
@@ -154,7 +156,7 @@ bootstrap-post:
 
 install-pre:
 
-install-post: all doc
+install-post: core doc
 	c_docdir="$(DESTDIR)$(prefix)/doc"; \
 	i_docdir="$(DESTDIR)$(docdir)"; \
 	t_docdir="$$i_docdir"; \
@@ -271,7 +273,7 @@ clean-pre: mostlyclean-pre
 
 clean-post clean-post-nonrec: mostlyclean-post-nonrec
 	rm -f *.aux *.cp *.cps *.dvi *.fn *.fns *.ky *.log *.pg \
-	  *.toc *.tp *.vr *.cm *.fl *.op *.tmp
+	  *.toc *.tp *.tsv *.vr *.cm *.fl *.op *.tmp
 
 distclean-pre: clean-pre
 
@@ -305,7 +307,7 @@ dist-pre dist-devel-pre:
 
 dist-post dist-devel-post:
 
-all-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+core-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
 	    target=`echo $@ | sed 's/-recursive//'`; \
@@ -314,11 +316,11 @@ all-recursive bootstrap-recursive install-recursive uninstall-recursive select-g
 	  done \
 	fi
 
-all: all-post
+core: core-post
 
-all-post: all-recursive
+core-post: core-recursive
 
-all-recursive: all-pre
+core-recursive: core-pre
 
 bootstrap: bootstrap-post
 

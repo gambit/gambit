@@ -3,13 +3,13 @@
 ;;; File: "_pkg.scm"
 
 ;;; Copyright (c) 2019 by Frédéric Hamel, All Rights Reserved.
-;;; Copyright (c) 2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2019-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
 ;;; Description:
 ;;; A module that manages the installation, update
-;;; and removal of Gambit modules.
+;;; and removal of Gambit packages.
 ;;;
 ;;; It exports the following functionalities:
 ;;;
@@ -29,7 +29,7 @@
 (##supply-module _pkg)
 
 (##namespace ("_pkg#"))
-(##include "~~lib/_prim#.scm")
+(##include "~~lib/gambit/prim/prim#.scm")
 (##include "~~lib/_gambit#.scm")
 (##include "~~lib/_module#.scm")
 
@@ -424,7 +424,7 @@
 
   (define (usage)
     (##repl (lambda (first port)
-              (##write-string "Usage: gsi -update [-dir dir] module ..." port)
+              (##write-string "Usage: gsi -update [-dir dir] package ..." port)
               (##newline port)
               #t)))
 
@@ -467,7 +467,7 @@
 
   (define (usage)
     (##repl (lambda (first port)
-              (##write-string "Usage: gsi -install [-dir dir] module ..." port)
+              (##write-string "Usage: gsi -install [-dir dir] package ..." port)
               (##newline port)
               #t)))
 
@@ -515,7 +515,7 @@
   (define (usage)
     (##repl
      (lambda (first port)
-       (##write-string "Usage: gsi -uninstall [-dir dir] module ..." port)
+       (##write-string "Usage: gsi -uninstall [-dir dir] package ..." port)
        (##newline port)
        #t)))
 

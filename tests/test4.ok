@@ -8444,62 +8444,62 @@ ok
 ok
 ok
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Out of range
 (make-string -1)
 ok
 *** ERROR IN ##make-string -- Heap overflow
 ok
 *** ERROR IN ##make-string -- Heap overflow
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Out of range
 (make-string 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Exact INTEGER expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Exact INTEGER expected
 (make-string 1.5)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) CHARACTER expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, fill) CHARACTER expected
 (make-string 1 'a)
 ok
 *** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) CHARACTER expected
 (string #\5 'b)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) STRING expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, string) STRING expected
 (string-length 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) STRING expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, string) STRING expected
 (string-ref 123456789012345678901 0)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (string-ref "56" -1)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (string-ref "56" 2)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (string-ref "56" 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) STRING expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, string) STRING expected
 (string-set! 123456789012345678901 0 #\3)
 ok
-*** ERROR IN #<procedure #2022>, "mix.scm"@1195.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2022>, "mix.scm"@1195.3 -- (Argument 2, k) Out of range
 (string-set! "56" -1 #\3)
 ok
-*** ERROR IN #<procedure #2023>, "mix.scm"@1196.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2023>, "mix.scm"@1196.3 -- (Argument 2, k) Out of range
 (string-set! "56" 2 #\3)
 ok
-*** ERROR IN #<procedure #2024>, "mix.scm"@1197.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2024>, "mix.scm"@1197.3 -- (Argument 2, k) Out of range
 (string-set! "56" 123456789012345678901 #\3)
 ok
-*** ERROR IN #<procedure #2025>, "mix.scm"@1198.3 -- (Argument 3) CHARACTER expected
+*** ERROR IN #<procedure #2025>, "mix.scm"@1198.3 -- (Argument 3, char) CHARACTER expected
 (string-set! "56" 1 'a)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) STRING expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, string) STRING expected
 (string->list 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) LIST expected
 (list->string 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) CHARACTER LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) CHARACTER LIST expected
 (list->string '(#\5 b))
 ok
 ok
@@ -8515,50 +8515,50 @@ ok
 ok
 ok
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Out of range
 (make-vector -1)
 ok
 *** ERROR IN ##make-vector -- Heap overflow
 ok
 *** ERROR IN ##make-vector -- Heap overflow
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Out of range
 (make-vector 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Exact INTEGER expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Exact INTEGER expected
 (make-vector 1.5)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, vector) VECTOR expected
 (vector-length 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, vector) VECTOR expected
 (vector-ref 123456789012345678901 0)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (vector-ref #(5 6) -1)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (vector-ref #(5 6) 2)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (vector-ref #(5 6) 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, vector) VECTOR expected
 (vector-set! 123456789012345678901 0 3)
 ok
-*** ERROR IN #<procedure #2026>, "mix.scm"@1228.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2026>, "mix.scm"@1228.3 -- (Argument 2, k) Out of range
 (vector-set! #(5 6) -1 3)
 ok
-*** ERROR IN #<procedure #2027>, "mix.scm"@1229.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2027>, "mix.scm"@1229.3 -- (Argument 2, k) Out of range
 (vector-set! #(5 6) 2 3)
 ok
-*** ERROR IN #<procedure #2028>, "mix.scm"@1230.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2028>, "mix.scm"@1230.3 -- (Argument 2, k) Out of range
 (vector-set! #(5 6) 123456789012345678901 3)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, vector) VECTOR expected
 (vector->list 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) LIST expected
 (list->vector 123456789012345678901)
 ok
 ok
@@ -8574,74 +8574,74 @@ ok
 ok
 ok
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Out of range
 (make-s8vector -1)
 ok
 *** ERROR IN ##make-s8vector -- Heap overflow
 ok
 *** ERROR IN ##make-s8vector -- Heap overflow
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Out of range
 (make-s8vector 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Exact INTEGER expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Exact INTEGER expected
 (make-s8vector 1.5)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Signed 8 bit exact INTEGER expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, fill) Signed 8 bit exact INTEGER expected
 (make-s8vector 1 'a)
 ok
 *** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Signed 8 bit exact INTEGER expected
 (s8vector 5 'b)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) S8VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, s8vector) S8VECTOR expected
 (s8vector-length 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) S8VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, s8vector) S8VECTOR expected
 (s8vector-ref 123456789012345678901 0)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (s8vector-ref #s8(5 6) -1)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (s8vector-ref #s8(5 6) 2)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (s8vector-ref #s8(5 6) 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) S8VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, s8vector) S8VECTOR expected
 (s8vector-set! 123456789012345678901 0 3)
 ok
-*** ERROR IN #<procedure #2029>, "mix.scm"@1261.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2029>, "mix.scm"@1261.3 -- (Argument 2, k) Out of range
 (s8vector-set! #s8(5 6) -1 3)
 ok
-*** ERROR IN #<procedure #2030>, "mix.scm"@1262.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2030>, "mix.scm"@1262.3 -- (Argument 2, k) Out of range
 (s8vector-set! #s8(5 6) 2 3)
 ok
-*** ERROR IN #<procedure #2031>, "mix.scm"@1263.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2031>, "mix.scm"@1263.3 -- (Argument 2, k) Out of range
 (s8vector-set! #s8(5 6) 123456789012345678901 3)
 ok
-*** ERROR IN #<procedure #2032>, "mix.scm"@1264.3 -- (Argument 3) Signed 8 bit exact INTEGER expected
+*** ERROR IN #<procedure #2032>, "mix.scm"@1264.3 -- (Argument 3, s8value) Signed 8 bit exact INTEGER expected
 (s8vector-set! #s8(5 6) 1 -129)
 ok
-*** ERROR IN #<procedure #2033>, "mix.scm"@1265.3 -- (Argument 3) Signed 8 bit exact INTEGER expected
+*** ERROR IN #<procedure #2033>, "mix.scm"@1265.3 -- (Argument 3, s8value) Signed 8 bit exact INTEGER expected
 (s8vector-set! #s8(5 6) 1 128)
 ok
-*** ERROR IN #<procedure #2034>, "mix.scm"@1266.3 -- (Argument 3) Signed 8 bit exact INTEGER expected
+*** ERROR IN #<procedure #2034>, "mix.scm"@1266.3 -- (Argument 3, s8value) Signed 8 bit exact INTEGER expected
 (s8vector-set! #s8(5 6) 1 123456789012345678901)
 ok
-*** ERROR IN #<procedure #2035>, "mix.scm"@1267.3 -- (Argument 3) Signed 8 bit exact INTEGER expected
+*** ERROR IN #<procedure #2035>, "mix.scm"@1267.3 -- (Argument 3, s8value) Signed 8 bit exact INTEGER expected
 (s8vector-set! #s8(5 6) 1 'a)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) S8VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, s8vector) S8VECTOR expected
 (s8vector->list 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) LIST expected
 (list->s8vector 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Signed 8 bit exact INTEGER LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) Signed 8 bit exact INTEGER LIST expected
 (list->s8vector '(5 b))
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Signed 8 bit exact INTEGER LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) Signed 8 bit exact INTEGER LIST expected
 (list->s8vector '(128))
 ok
 ok
@@ -8657,74 +8657,74 @@ ok
 ok
 ok
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Out of range
 (make-u8vector -1)
 ok
 *** ERROR IN ##make-u8vector -- Heap overflow
 ok
 *** ERROR IN ##make-u8vector -- Heap overflow
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Out of range
 (make-u8vector 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Exact INTEGER expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Exact INTEGER expected
 (make-u8vector 1.5)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Unsigned 8 bit exact INTEGER expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, fill) Unsigned 8 bit exact INTEGER expected
 (make-u8vector 1 'a)
 ok
 *** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Unsigned 8 bit exact INTEGER expected
 (u8vector 5 'b)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) U8VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, u8vector) U8VECTOR expected
 (u8vector-length 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) U8VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, u8vector) U8VECTOR expected
 (u8vector-ref 123456789012345678901 0)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (u8vector-ref #u8(5 6) -1)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (u8vector-ref #u8(5 6) 2)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (u8vector-ref #u8(5 6) 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) U8VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, u8vector) U8VECTOR expected
 (u8vector-set! 123456789012345678901 0 3)
 ok
-*** ERROR IN #<procedure #2036>, "mix.scm"@1300.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2036>, "mix.scm"@1300.3 -- (Argument 2, k) Out of range
 (u8vector-set! #u8(5 6) -1 3)
 ok
-*** ERROR IN #<procedure #2037>, "mix.scm"@1301.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2037>, "mix.scm"@1301.3 -- (Argument 2, k) Out of range
 (u8vector-set! #u8(5 6) 2 3)
 ok
-*** ERROR IN #<procedure #2038>, "mix.scm"@1302.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2038>, "mix.scm"@1302.3 -- (Argument 2, k) Out of range
 (u8vector-set! #u8(5 6) 123456789012345678901 3)
 ok
-*** ERROR IN #<procedure #2039>, "mix.scm"@1303.3 -- (Argument 3) Unsigned 8 bit exact INTEGER expected
+*** ERROR IN #<procedure #2039>, "mix.scm"@1303.3 -- (Argument 3, u8value) Unsigned 8 bit exact INTEGER expected
 (u8vector-set! #u8(5 6) 1 -1)
 ok
-*** ERROR IN #<procedure #2040>, "mix.scm"@1304.3 -- (Argument 3) Unsigned 8 bit exact INTEGER expected
+*** ERROR IN #<procedure #2040>, "mix.scm"@1304.3 -- (Argument 3, u8value) Unsigned 8 bit exact INTEGER expected
 (u8vector-set! #u8(5 6) 1 256)
 ok
-*** ERROR IN #<procedure #2041>, "mix.scm"@1305.3 -- (Argument 3) Unsigned 8 bit exact INTEGER expected
+*** ERROR IN #<procedure #2041>, "mix.scm"@1305.3 -- (Argument 3, u8value) Unsigned 8 bit exact INTEGER expected
 (u8vector-set! #u8(5 6) 1 123456789012345678901)
 ok
-*** ERROR IN #<procedure #2042>, "mix.scm"@1306.3 -- (Argument 3) Unsigned 8 bit exact INTEGER expected
+*** ERROR IN #<procedure #2042>, "mix.scm"@1306.3 -- (Argument 3, u8value) Unsigned 8 bit exact INTEGER expected
 (u8vector-set! #u8(5 6) 1 'a)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) U8VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, u8vector) U8VECTOR expected
 (u8vector->list 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) LIST expected
 (list->u8vector 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Unsigned 8 bit exact INTEGER LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) Unsigned 8 bit exact INTEGER LIST expected
 (list->u8vector '(5 b))
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Unsigned 8 bit exact INTEGER LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) Unsigned 8 bit exact INTEGER LIST expected
 (list->u8vector '(256))
 ok
 ok
@@ -8740,74 +8740,74 @@ ok
 ok
 ok
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Out of range
 (make-s16vector -1)
 ok
 *** ERROR IN ##make-s16vector -- Heap overflow
 ok
 *** ERROR IN ##make-s16vector -- Heap overflow
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Out of range
 (make-s16vector 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Exact INTEGER expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Exact INTEGER expected
 (make-s16vector 1.5)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Signed 16 bit exact INTEGER expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, fill) Signed 16 bit exact INTEGER expected
 (make-s16vector 1 'a)
 ok
 *** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Signed 16 bit exact INTEGER expected
 (s16vector 5 'b)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) S16VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, s16vector) S16VECTOR expected
 (s16vector-length 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) S16VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, s16vector) S16VECTOR expected
 (s16vector-ref 123456789012345678901 0)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (s16vector-ref #s16(5 6) -1)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (s16vector-ref #s16(5 6) 2)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (s16vector-ref #s16(5 6) 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) S16VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, s16vector) S16VECTOR expected
 (s16vector-set! 123456789012345678901 0 3)
 ok
-*** ERROR IN #<procedure #2043>, "mix.scm"@1339.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2043>, "mix.scm"@1339.3 -- (Argument 2, k) Out of range
 (s16vector-set! #s16(5 6) -1 3)
 ok
-*** ERROR IN #<procedure #2044>, "mix.scm"@1340.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2044>, "mix.scm"@1340.3 -- (Argument 2, k) Out of range
 (s16vector-set! #s16(5 6) 2 3)
 ok
-*** ERROR IN #<procedure #2045>, "mix.scm"@1341.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2045>, "mix.scm"@1341.3 -- (Argument 2, k) Out of range
 (s16vector-set! #s16(5 6) 123456789012345678901 3)
 ok
-*** ERROR IN #<procedure #2046>, "mix.scm"@1342.3 -- (Argument 3) Signed 16 bit exact INTEGER expected
+*** ERROR IN #<procedure #2046>, "mix.scm"@1342.3 -- (Argument 3, s16value) Signed 16 bit exact INTEGER expected
 (s16vector-set! #s16(5 6) 1 -32769)
 ok
-*** ERROR IN #<procedure #2047>, "mix.scm"@1343.3 -- (Argument 3) Signed 16 bit exact INTEGER expected
+*** ERROR IN #<procedure #2047>, "mix.scm"@1343.3 -- (Argument 3, s16value) Signed 16 bit exact INTEGER expected
 (s16vector-set! #s16(5 6) 1 32768)
 ok
-*** ERROR IN #<procedure #2048>, "mix.scm"@1344.3 -- (Argument 3) Signed 16 bit exact INTEGER expected
+*** ERROR IN #<procedure #2048>, "mix.scm"@1344.3 -- (Argument 3, s16value) Signed 16 bit exact INTEGER expected
 (s16vector-set! #s16(5 6) 1 123456789012345678901)
 ok
-*** ERROR IN #<procedure #2049>, "mix.scm"@1345.3 -- (Argument 3) Signed 16 bit exact INTEGER expected
+*** ERROR IN #<procedure #2049>, "mix.scm"@1345.3 -- (Argument 3, s16value) Signed 16 bit exact INTEGER expected
 (s16vector-set! #s16(5 6) 1 'a)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) S16VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, s16vector) S16VECTOR expected
 (s16vector->list 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) LIST expected
 (list->s16vector 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Signed 16 bit exact INTEGER LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) Signed 16 bit exact INTEGER LIST expected
 (list->s16vector '(5 b))
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Signed 16 bit exact INTEGER LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) Signed 16 bit exact INTEGER LIST expected
 (list->s16vector '(32768))
 ok
 ok
@@ -8823,74 +8823,74 @@ ok
 ok
 ok
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Out of range
 (make-u16vector -1)
 ok
 *** ERROR IN ##make-u16vector -- Heap overflow
 ok
 *** ERROR IN ##make-u16vector -- Heap overflow
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Out of range
 (make-u16vector 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Exact INTEGER expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Exact INTEGER expected
 (make-u16vector 1.5)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Unsigned 16 bit exact INTEGER expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, fill) Unsigned 16 bit exact INTEGER expected
 (make-u16vector 1 'a)
 ok
 *** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Unsigned 16 bit exact INTEGER expected
 (u16vector 5 'b)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) U16VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, u16vector) U16VECTOR expected
 (u16vector-length 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) U16VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, u16vector) U16VECTOR expected
 (u16vector-ref 123456789012345678901 0)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (u16vector-ref #u16(5 6) -1)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (u16vector-ref #u16(5 6) 2)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (u16vector-ref #u16(5 6) 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) U16VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, u16vector) U16VECTOR expected
 (u16vector-set! 123456789012345678901 0 3)
 ok
-*** ERROR IN #<procedure #2050>, "mix.scm"@1378.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2050>, "mix.scm"@1378.3 -- (Argument 2, k) Out of range
 (u16vector-set! #u16(5 6) -1 3)
 ok
-*** ERROR IN #<procedure #2051>, "mix.scm"@1379.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2051>, "mix.scm"@1379.3 -- (Argument 2, k) Out of range
 (u16vector-set! #u16(5 6) 2 3)
 ok
-*** ERROR IN #<procedure #2052>, "mix.scm"@1380.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2052>, "mix.scm"@1380.3 -- (Argument 2, k) Out of range
 (u16vector-set! #u16(5 6) 123456789012345678901 3)
 ok
-*** ERROR IN #<procedure #2053>, "mix.scm"@1381.3 -- (Argument 3) Unsigned 16 bit exact INTEGER expected
+*** ERROR IN #<procedure #2053>, "mix.scm"@1381.3 -- (Argument 3, u16value) Unsigned 16 bit exact INTEGER expected
 (u16vector-set! #u16(5 6) 1 -1)
 ok
-*** ERROR IN #<procedure #2054>, "mix.scm"@1382.3 -- (Argument 3) Unsigned 16 bit exact INTEGER expected
+*** ERROR IN #<procedure #2054>, "mix.scm"@1382.3 -- (Argument 3, u16value) Unsigned 16 bit exact INTEGER expected
 (u16vector-set! #u16(5 6) 1 65536)
 ok
-*** ERROR IN #<procedure #2055>, "mix.scm"@1383.3 -- (Argument 3) Unsigned 16 bit exact INTEGER expected
+*** ERROR IN #<procedure #2055>, "mix.scm"@1383.3 -- (Argument 3, u16value) Unsigned 16 bit exact INTEGER expected
 (u16vector-set! #u16(5 6) 1 123456789012345678901)
 ok
-*** ERROR IN #<procedure #2056>, "mix.scm"@1384.3 -- (Argument 3) Unsigned 16 bit exact INTEGER expected
+*** ERROR IN #<procedure #2056>, "mix.scm"@1384.3 -- (Argument 3, u16value) Unsigned 16 bit exact INTEGER expected
 (u16vector-set! #u16(5 6) 1 'a)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) U16VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, u16vector) U16VECTOR expected
 (u16vector->list 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) LIST expected
 (list->u16vector 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Unsigned 16 bit exact INTEGER LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) Unsigned 16 bit exact INTEGER LIST expected
 (list->u16vector '(5 b))
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Unsigned 16 bit exact INTEGER LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) Unsigned 16 bit exact INTEGER LIST expected
 (list->u16vector '(65536))
 ok
 ok
@@ -8907,71 +8907,71 @@ ok
 ok
 ok
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Out of range
 (make-s32vector -1)
 ok
 *** ERROR IN ##make-s32vector -- Heap overflow
 ok
 *** ERROR IN ##make-s32vector -- Heap overflow
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Out of range
 (make-s32vector 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Exact INTEGER expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Exact INTEGER expected
 (make-s32vector 1.5)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Signed 32 bit exact INTEGER expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, fill) Signed 32 bit exact INTEGER expected
 (make-s32vector 1 'a)
 ok
 *** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Signed 32 bit exact INTEGER expected
 (s32vector 5 'b)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) S32VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, s32vector) S32VECTOR expected
 (s32vector-length 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) S32VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, s32vector) S32VECTOR expected
 (s32vector-ref 123456789012345678901 0)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (s32vector-ref #s32(5 6) -1)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (s32vector-ref #s32(5 6) 2)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (s32vector-ref #s32(5 6) 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) S32VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, s32vector) S32VECTOR expected
 (s32vector-set! 123456789012345678901 0 3)
 ok
-*** ERROR IN #<procedure #2057>, "mix.scm"@1418.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2057>, "mix.scm"@1418.3 -- (Argument 2, k) Out of range
 (s32vector-set! #s32(5 6) -1 3)
 ok
-*** ERROR IN #<procedure #2058>, "mix.scm"@1419.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2058>, "mix.scm"@1419.3 -- (Argument 2, k) Out of range
 (s32vector-set! #s32(5 6) 2 3)
 ok
-*** ERROR IN #<procedure #2059>, "mix.scm"@1420.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2059>, "mix.scm"@1420.3 -- (Argument 2, k) Out of range
 (s32vector-set! #s32(5 6) 123456789012345678901 3)
 ok
-*** ERROR IN #<procedure #2060>, "mix.scm"@1421.3 -- (Argument 3) Signed 32 bit exact INTEGER expected
+*** ERROR IN #<procedure #2060>, "mix.scm"@1421.3 -- (Argument 3, s32value) Signed 32 bit exact INTEGER expected
 (s32vector-set! #s32(5 6) 1 -2147483649)
 ok
-*** ERROR IN #<procedure #2061>, "mix.scm"@1422.3 -- (Argument 3) Signed 32 bit exact INTEGER expected
+*** ERROR IN #<procedure #2061>, "mix.scm"@1422.3 -- (Argument 3, s32value) Signed 32 bit exact INTEGER expected
 (s32vector-set! #s32(5 6) 1 2147483648)
 ok
-*** ERROR IN #<procedure #2062>, "mix.scm"@1423.3 -- (Argument 3) Signed 32 bit exact INTEGER expected
+*** ERROR IN #<procedure #2062>, "mix.scm"@1423.3 -- (Argument 3, s32value) Signed 32 bit exact INTEGER expected
 (s32vector-set! #s32(5 6) 1 'a)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) S32VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, s32vector) S32VECTOR expected
 (s32vector->list 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) LIST expected
 (list->s32vector 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Signed 32 bit exact INTEGER LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) Signed 32 bit exact INTEGER LIST expected
 (list->s32vector '(5 b))
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Signed 32 bit exact INTEGER LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) Signed 32 bit exact INTEGER LIST expected
 (list->s32vector '(2147483648))
 ok
 ok
@@ -8988,71 +8988,71 @@ ok
 ok
 ok
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Out of range
 (make-u32vector -1)
 ok
 *** ERROR IN ##make-u32vector -- Heap overflow
 ok
 *** ERROR IN ##make-u32vector -- Heap overflow
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Out of range
 (make-u32vector 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Exact INTEGER expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Exact INTEGER expected
 (make-u32vector 1.5)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Unsigned 32 bit exact INTEGER expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, fill) Unsigned 32 bit exact INTEGER expected
 (make-u32vector 1 'a)
 ok
 *** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Unsigned 32 bit exact INTEGER expected
 (u32vector 5 'b)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) U32VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, u32vector) U32VECTOR expected
 (u32vector-length 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) U32VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, u32vector) U32VECTOR expected
 (u32vector-ref 123456789012345678901 0)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (u32vector-ref #u32(5 6) -1)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (u32vector-ref #u32(5 6) 2)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (u32vector-ref #u32(5 6) 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) U32VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, u32vector) U32VECTOR expected
 (u32vector-set! 123456789012345678901 0 3)
 ok
-*** ERROR IN #<procedure #2063>, "mix.scm"@1457.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2063>, "mix.scm"@1457.3 -- (Argument 2, k) Out of range
 (u32vector-set! #u32(5 6) -1 3)
 ok
-*** ERROR IN #<procedure #2064>, "mix.scm"@1458.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2064>, "mix.scm"@1458.3 -- (Argument 2, k) Out of range
 (u32vector-set! #u32(5 6) 2 3)
 ok
-*** ERROR IN #<procedure #2065>, "mix.scm"@1459.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2065>, "mix.scm"@1459.3 -- (Argument 2, k) Out of range
 (u32vector-set! #u32(5 6) 123456789012345678901 3)
 ok
-*** ERROR IN #<procedure #2066>, "mix.scm"@1460.3 -- (Argument 3) Unsigned 32 bit exact INTEGER expected
+*** ERROR IN #<procedure #2066>, "mix.scm"@1460.3 -- (Argument 3, u32value) Unsigned 32 bit exact INTEGER expected
 (u32vector-set! #u32(5 6) 1 -1)
 ok
-*** ERROR IN #<procedure #2067>, "mix.scm"@1461.3 -- (Argument 3) Unsigned 32 bit exact INTEGER expected
+*** ERROR IN #<procedure #2067>, "mix.scm"@1461.3 -- (Argument 3, u32value) Unsigned 32 bit exact INTEGER expected
 (u32vector-set! #u32(5 6) 1 4294967296)
 ok
-*** ERROR IN #<procedure #2068>, "mix.scm"@1462.3 -- (Argument 3) Unsigned 32 bit exact INTEGER expected
+*** ERROR IN #<procedure #2068>, "mix.scm"@1462.3 -- (Argument 3, u32value) Unsigned 32 bit exact INTEGER expected
 (u32vector-set! #u32(5 6) 1 'a)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) U32VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, u32vector) U32VECTOR expected
 (u32vector->list 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) LIST expected
 (list->u32vector 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Unsigned 32 bit exact INTEGER LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) Unsigned 32 bit exact INTEGER LIST expected
 (list->u32vector '(5 b))
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Unsigned 32 bit exact INTEGER LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) Unsigned 32 bit exact INTEGER LIST expected
 (list->u32vector '(4294967296))
 ok
 ok
@@ -9069,71 +9069,71 @@ ok
 ok
 ok
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Out of range
 (make-s64vector -1)
 ok
 *** ERROR IN ##make-s64vector -- Heap overflow
 ok
 *** ERROR IN ##make-s64vector -- Heap overflow
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Out of range
 (make-s64vector 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Exact INTEGER expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Exact INTEGER expected
 (make-s64vector 1.5)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Signed 64 bit exact INTEGER expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, fill) Signed 64 bit exact INTEGER expected
 (make-s64vector 1 'a)
 ok
 *** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Signed 64 bit exact INTEGER expected
 (s64vector 5 'b)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) S64VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, s64vector) S64VECTOR expected
 (s64vector-length 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) S64VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, s64vector) S64VECTOR expected
 (s64vector-ref 123456789012345678901 0)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (s64vector-ref #s64(5 6) -1)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (s64vector-ref #s64(5 6) 2)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (s64vector-ref #s64(5 6) 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) S64VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, s64vector) S64VECTOR expected
 (s64vector-set! 123456789012345678901 0 3)
 ok
-*** ERROR IN #<procedure #2069>, "mix.scm"@1496.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2069>, "mix.scm"@1496.3 -- (Argument 2, k) Out of range
 (s64vector-set! #s64(5 6) -1 3)
 ok
-*** ERROR IN #<procedure #2070>, "mix.scm"@1497.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2070>, "mix.scm"@1497.3 -- (Argument 2, k) Out of range
 (s64vector-set! #s64(5 6) 2 3)
 ok
-*** ERROR IN #<procedure #2071>, "mix.scm"@1498.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2071>, "mix.scm"@1498.3 -- (Argument 2, k) Out of range
 (s64vector-set! #s64(5 6) 123456789012345678901 3)
 ok
-*** ERROR IN #<procedure #2072>, "mix.scm"@1499.3 -- (Argument 3) Signed 64 bit exact INTEGER expected
+*** ERROR IN #<procedure #2072>, "mix.scm"@1499.3 -- (Argument 3, s64value) Signed 64 bit exact INTEGER expected
 (s64vector-set! #s64(5 6) 1 -9223372036854775809)
 ok
-*** ERROR IN #<procedure #2073>, "mix.scm"@1500.3 -- (Argument 3) Signed 64 bit exact INTEGER expected
+*** ERROR IN #<procedure #2073>, "mix.scm"@1500.3 -- (Argument 3, s64value) Signed 64 bit exact INTEGER expected
 (s64vector-set! #s64(5 6) 1 9223372036854775808)
 ok
-*** ERROR IN #<procedure #2074>, "mix.scm"@1501.3 -- (Argument 3) Signed 64 bit exact INTEGER expected
+*** ERROR IN #<procedure #2074>, "mix.scm"@1501.3 -- (Argument 3, s64value) Signed 64 bit exact INTEGER expected
 (s64vector-set! #s64(5 6) 1 'a)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) S64VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, s64vector) S64VECTOR expected
 (s64vector->list 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) LIST expected
 (list->s64vector 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Signed 64 bit exact INTEGER LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) Signed 64 bit exact INTEGER LIST expected
 (list->s64vector '(5 b))
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Signed 64 bit exact INTEGER LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) Signed 64 bit exact INTEGER LIST expected
 (list->s64vector '(9223372036854775808))
 ok
 ok
@@ -9150,71 +9150,71 @@ ok
 ok
 ok
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Out of range
 (make-u64vector -1)
 ok
 *** ERROR IN ##make-u64vector -- Heap overflow
 ok
 *** ERROR IN ##make-u64vector -- Heap overflow
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Out of range
 (make-u64vector 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Exact INTEGER expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Exact INTEGER expected
 (make-u64vector 1.5)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Unsigned 64 bit exact INTEGER expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, fill) Unsigned 64 bit exact INTEGER expected
 (make-u64vector 1 'a)
 ok
 *** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Unsigned 64 bit exact INTEGER expected
 (u64vector 5 'b)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) U64VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, u64vector) U64VECTOR expected
 (u64vector-length 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) U64VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, u64vector) U64VECTOR expected
 (u64vector-ref 123456789012345678901 0)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (u64vector-ref #u64(5 6) -1)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (u64vector-ref #u64(5 6) 2)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (u64vector-ref #u64(5 6) 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) U64VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, u64vector) U64VECTOR expected
 (u64vector-set! 123456789012345678901 0 3)
 ok
-*** ERROR IN #<procedure #2075>, "mix.scm"@1535.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2075>, "mix.scm"@1535.3 -- (Argument 2, k) Out of range
 (u64vector-set! #u64(5 6) -1 3)
 ok
-*** ERROR IN #<procedure #2076>, "mix.scm"@1536.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2076>, "mix.scm"@1536.3 -- (Argument 2, k) Out of range
 (u64vector-set! #u64(5 6) 2 3)
 ok
-*** ERROR IN #<procedure #2077>, "mix.scm"@1537.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2077>, "mix.scm"@1537.3 -- (Argument 2, k) Out of range
 (u64vector-set! #u64(5 6) 123456789012345678901 3)
 ok
-*** ERROR IN #<procedure #2078>, "mix.scm"@1538.3 -- (Argument 3) Unsigned 64 bit exact INTEGER expected
+*** ERROR IN #<procedure #2078>, "mix.scm"@1538.3 -- (Argument 3, u64value) Unsigned 64 bit exact INTEGER expected
 (u64vector-set! #u64(5 6) 1 -1)
 ok
-*** ERROR IN #<procedure #2079>, "mix.scm"@1539.3 -- (Argument 3) Unsigned 64 bit exact INTEGER expected
+*** ERROR IN #<procedure #2079>, "mix.scm"@1539.3 -- (Argument 3, u64value) Unsigned 64 bit exact INTEGER expected
 (u64vector-set! #u64(5 6) 1 18446744073709551616)
 ok
-*** ERROR IN #<procedure #2080>, "mix.scm"@1540.3 -- (Argument 3) Unsigned 64 bit exact INTEGER expected
+*** ERROR IN #<procedure #2080>, "mix.scm"@1540.3 -- (Argument 3, u64value) Unsigned 64 bit exact INTEGER expected
 (u64vector-set! #u64(5 6) 1 'a)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) U64VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, u64vector) U64VECTOR expected
 (u64vector->list 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) LIST expected
 (list->u64vector 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Unsigned 64 bit exact INTEGER LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) Unsigned 64 bit exact INTEGER LIST expected
 (list->u64vector '(5 b))
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Unsigned 64 bit exact INTEGER LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) Unsigned 64 bit exact INTEGER LIST expected
 (list->u64vector '(18446744073709551616))
 ok
 ok
@@ -9230,62 +9230,62 @@ ok
 ok
 ok
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Out of range
 (make-f32vector -1)
 ok
 *** ERROR IN ##make-f32vector -- Heap overflow
 ok
 *** ERROR IN ##make-f32vector -- Heap overflow
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Out of range
 (make-f32vector 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Exact INTEGER expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Exact INTEGER expected
 (make-f32vector 1.5)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Inexact REAL expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, fill) Inexact REAL expected
 (make-f32vector 1 'a)
 ok
 *** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Inexact REAL expected
 (f32vector 5. 'b)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) F32VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, f32vector) F32VECTOR expected
 (f32vector-length 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) F32VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, f32vector) F32VECTOR expected
 (f32vector-ref 123456789012345678901 0)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (f32vector-ref #f32(5. 6.) -1)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (f32vector-ref #f32(5. 6.) 2)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (f32vector-ref #f32(5. 6.) 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) F32VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, f32vector) F32VECTOR expected
 (f32vector-set! 123456789012345678901 0 3.)
 ok
-*** ERROR IN #<procedure #2081>, "mix.scm"@1573.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2081>, "mix.scm"@1573.3 -- (Argument 2, k) Out of range
 (f32vector-set! #f32(5. 6.) -1 3.)
 ok
-*** ERROR IN #<procedure #2082>, "mix.scm"@1574.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2082>, "mix.scm"@1574.3 -- (Argument 2, k) Out of range
 (f32vector-set! #f32(5. 6.) 2 3.)
 ok
-*** ERROR IN #<procedure #2083>, "mix.scm"@1575.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2083>, "mix.scm"@1575.3 -- (Argument 2, k) Out of range
 (f32vector-set! #f32(5. 6.) 123456789012345678901 3.)
 ok
-*** ERROR IN #<procedure #2084>, "mix.scm"@1576.3 -- (Argument 3) Inexact REAL expected
+*** ERROR IN #<procedure #2084>, "mix.scm"@1576.3 -- (Argument 3, f32value) Inexact REAL expected
 (f32vector-set! #f32(5. 6.) 1 'a)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) F32VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, f32vector) F32VECTOR expected
 (f32vector->list 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) LIST expected
 (list->f32vector 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Inexact REAL LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) Inexact REAL LIST expected
 (list->f32vector '(5. b))
 ok
 ok
@@ -9301,62 +9301,62 @@ ok
 ok
 ok
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Out of range
 (make-f64vector -1)
 ok
 *** ERROR IN ##make-f64vector -- Heap overflow
 ok
 *** ERROR IN ##make-f64vector -- Heap overflow
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Out of range
 (make-f64vector 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Exact INTEGER expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, k) Exact INTEGER expected
 (make-f64vector 1.5)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Inexact REAL expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, fill) Inexact REAL expected
 (make-f64vector 1 'a)
 ok
 *** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Inexact REAL expected
 (f64vector 5. 'b)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) F64VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, f64vector) F64VECTOR expected
 (f64vector-length 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) F64VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, f64vector) F64VECTOR expected
 (f64vector-ref 123456789012345678901 0)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (f64vector-ref #f64(5. 6.) -1)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (f64vector-ref #f64(5. 6.) 2)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2) Out of range
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 2, k) Out of range
 (f64vector-ref #f64(5. 6.) 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) F64VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, f64vector) F64VECTOR expected
 (f64vector-set! 123456789012345678901 0 3.)
 ok
-*** ERROR IN #<procedure #2085>, "mix.scm"@1608.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2085>, "mix.scm"@1608.3 -- (Argument 2, k) Out of range
 (f64vector-set! #f64(5. 6.) -1 3.)
 ok
-*** ERROR IN #<procedure #2086>, "mix.scm"@1609.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2086>, "mix.scm"@1609.3 -- (Argument 2, k) Out of range
 (f64vector-set! #f64(5. 6.) 2 3.)
 ok
-*** ERROR IN #<procedure #2087>, "mix.scm"@1610.3 -- (Argument 2) Out of range
+*** ERROR IN #<procedure #2087>, "mix.scm"@1610.3 -- (Argument 2, k) Out of range
 (f64vector-set! #f64(5. 6.) 123456789012345678901 3.)
 ok
-*** ERROR IN #<procedure #2088>, "mix.scm"@1611.3 -- (Argument 3) Inexact REAL expected
+*** ERROR IN #<procedure #2088>, "mix.scm"@1611.3 -- (Argument 3, f64value) Inexact REAL expected
 (f64vector-set! #f64(5. 6.) 1 'a)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) F64VECTOR expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, f64vector) F64VECTOR expected
 (f64vector->list 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) LIST expected
 (list->f64vector 123456789012345678901)
 ok
-*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1) Inexact REAL LIST expected
+*** ERROR IN test-form, "mix.scm"@648.15 -- (Argument 1, list) Inexact REAL LIST expected
 (list->f64vector '(5. b))
 ok
 OK

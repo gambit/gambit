@@ -2,7 +2,7 @@
 
 ;;; File: "primitive-hamt#.scm"
 
-;;; Copyright (c) 2018-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2018-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -147,7 +147,7 @@
 
   (define local-declarations
     `(
-      (##include "~~lib/_prim#.scm")
+      (##include "~~lib/gambit/prim/prim#.scm")
 
       (declare (extended-bindings)) ;; ##fx+ is bound to fixnum addition, etc
       (declare (not safe))          ;; claim code has no type errors
@@ -239,12 +239,15 @@
            (,cont bm ci)))
 
       (define-macro (macro-compressed-vector-replace val)
-        `(let ((result (vector-copy v)))
-           (vector-set! result ci ,val)
-           result))
+        `(let ()
+           (##declare (allocation-limit ,,(+ arity 1)))
+           (##vector-set-small v ci ,val)))
 
       (define-macro (macro-compressed-vector-insert val)
-        `(let ((result (##vector-insert v ci ,val)))
+        `(let ((result
+                (let ()
+                  (##declare (allocation-limit ,,(+ arity 1)))
+                  (##vector-insert-small v ci ,val))))
            (macro-compressed-vector-bitmap-set! result (macro-bit-set bm i))
            result))
 
@@ -260,7 +263,10 @@
                   (macro-compressed-vector-insert val))))))
 
       (define-macro (macro-compressed-vector-del)
-        `(let ((result (##vector-delete v ci)))
+        `(let ((result
+                (let ()
+                  (##declare (allocation-limit ,,(+ arity 1)))
+                  (##vector-delete-small v ci))))
            (macro-compressed-vector-bitmap-set! result
                                                 (macro-bit-clear bm i))
            result))
@@ -360,43 +366,52 @@
                            ;; x is an alist,
                            ;; otherwise, curr is not at the max level and
                            ;; x is a pair or compressed vector
-                           (macro-compressed-vector-replace
-                            (cond ((fx= 1 next-h) ;; max level reached?
-                                   ;; put kv in alist
-                                   (let ((alist
-                                          (,(or alist-remove 'macro-alist-remove)
-                                           (car kv)
-                                           x
-                                           ,@equ?-ctx)))
-                                     ;; if alist did not change then key is
-                                     ;; being added so update length if needed
-                                     ,@(if length-inc!
-                                           `((if (eq? x alist)
-                                                 (,length-inc! ,@equ?-ctx)))
-                                           `())
-                                     (cons kv alist)))
-                                  ((pair? x)
-                                   (let* ((kv2 x)
-                                          (k2 (car kv2)))
-                                     (if (,equ? k2 (car kv) ,@equ?-ctx)
-                                         kv ;; no length change
-                                         (begin
-                                           ;; key collision of different keys
-                                           ;; so update length if needed
-                                           ,@(if length-inc!
-                                                 `((,length-inc! ,@equ?-ctx))
-                                                 `())
-                                           (let ((h2
-                                                  (let loop ((b ,stop-bit)
-                                                             (h2 (macro-hash k2)))
-                                                    (if (fx= 0
-                                                             (fxand b next-h))
-                                                        (loop (fxarithmetic-shift-right b ,log2-arity)
-                                                              (fxarithmetic-shift-right h2 ,log2-arity))
-                                                        h2))))
-                                             (collision kv next-h kv2 h2))))))
-                                  (else
-                                   (set x kv next-h ,@equ?-ctx))))))))
+
+                           (cond ((fx= 1 next-h) ;; max level reached?
+                                  ;; put kv in alist
+                                  (let ((alist
+                                         (,(or alist-remove 'macro-alist-remove)
+                                          x
+                                          (car kv)
+                                          ,@equ?-ctx)))
+                                    ;; if alist did not change then key is
+                                    ;; being added so update length if needed
+                                    ,@(if length-inc!
+                                          `((if (eq? x alist)
+                                                (,length-inc! ,@equ?-ctx)))
+                                          `())
+                                    (macro-compressed-vector-replace (cons kv alist))))
+                                 ((pair? x)
+                                  (let* ((kv2 x)
+                                         (k2 (car kv2)))
+                                    (if (,equ? k2 (car kv) ,@equ?-ctx)
+                                        (if (eq? (cdr kv2) (cdr kv))
+                                            v
+                                            (macro-compressed-vector-replace
+                                             kv))
+                                        (begin
+                                          ;; key collision of different keys
+                                          ;; so update length if needed
+                                          ,@(if length-inc!
+                                                `((,length-inc! ,@equ?-ctx))
+                                                `())
+                                          (let ((h2
+                                                 (let loop ((b ,stop-bit)
+                                                            (h2 (macro-hash k2)))
+                                                   (if (fx= 0
+                                                            (fxand b next-h))
+                                                       (loop (fxarithmetic-shift-right b ,log2-arity)
+                                                             (fxarithmetic-shift-right h2 ,log2-arity))
+                                                       h2))))
+
+                                            (macro-compressed-vector-replace
+                                             (collision kv next-h kv2 h2)))))))
+                                 (else
+                                  (let ((new-x (set x kv next-h ,@equ?-ctx)))
+                                    (if (eq? new-x x)
+                                        v
+                                        (macro-compressed-vector-replace
+                                         new-x)))))))))
 
                     (define (collision kv1 h1 kv2 h2)
                       (let* ((i1 (fxand h1 ,arity-mask))
@@ -454,8 +469,8 @@
                            (cond ((fx= 1 next-h) ;; max level reached?
                                   (let ((new-x
                                          (,(or alist-remove 'macro-alist-remove)
-                                          key
                                           x
+                                          key
                                           ,@equ?-ctx)))
                                     (cond ((eq? new-x x)
                                            curr)

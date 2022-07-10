@@ -1,8 +1,10 @@
-# Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 herefromlib = gambit
 libfromhere = ..
-SUBDIRS =
+SUBDIRS = \
+prim boolean symkey char list vector string \
+procedure process promise parameter random unstable env-vars
 HEADERS_SCM = gambit\#.scm
 MODULES_SCM = gambit.scm gambit.sld
 MAIN_MODULES = gambit

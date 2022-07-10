@@ -1,6 +1,6 @@
 /* File: "os_time.h" */
 
-/* Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_TIME_H
 #define ___OS_TIME_H
@@ -177,12 +177,6 @@ extern ___F64 ___time_to_seconds
 extern void ___time_from_seconds
    ___P((___time *tim,
          ___F64 seconds),
-        ());
-
-extern void ___process_times
-   ___P((___F64 *user,
-         ___F64 *sys,
-         ___F64 *real),
         ());
 
 extern ___F64 ___get_heartbeat_interval ___PVOID;

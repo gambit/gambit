@@ -1,6 +1,6 @@
 (include "#.scm")
 
-(check-same-behavior ("" "##" "~~lib/_prim-exception#.scm")
+(check-same-behavior ("" "##" "~~lib/gambit/prim/exception#.scm")
 
 ;; Gambit
 
@@ -18,7 +18,11 @@
 ;;unimplemented;;divide-by-zero-exception-arguments
 ;;unimplemented;;divide-by-zero-exception-procedure
 ;;unimplemented;;divide-by-zero-exception?
-;;unimplemented;;error
+
+(with-exception-catcher
+ (lambda (e) 42)
+ (lambda () (begin (error "boom!") 99)))
+
 ;;unimplemented;;error-exception-message
 ;;unimplemented;;error-exception-parameters
 ;;unimplemented;;error-exception?
@@ -45,7 +49,7 @@
 ;;unimplemented;;keyword-expected-exception-arguments
 ;;unimplemented;;keyword-expected-exception-procedure
 ;;unimplemented;;keyword-expected-exception?
-;;unimplemented;;length-mismatch-exception-arg-num
+;;unimplemented;;length-mismatch-exception-arg-id
 ;;unimplemented;;length-mismatch-exception-arguments
 ;;unimplemented;;length-mismatch-exception-procedure
 ;;unimplemented;;length-mismatch-exception?
@@ -74,11 +78,14 @@
 ;;unimplemented;;os-exception-message
 ;;unimplemented;;os-exception-procedure
 ;;unimplemented;;os-exception?
+;;unimplemented;;permission-denied-exception-arguments
+;;unimplemented;;permission-denied-exception-procedure
+;;unimplemented;;permission-denied-exception?
 ;;unimplemented;;primordial-exception-handler
 
 (##with-exception-catcher ##list (lambda () (raise 123)))
 
-;;unimplemented;;range-exception-arg-num
+;;unimplemented;;range-exception-arg-id
 ;;unimplemented;;range-exception-arguments
 ;;unimplemented;;range-exception-procedure
 ;;unimplemented;;range-exception?
@@ -94,7 +101,7 @@
 ;;unimplemented;;sfun-conversion-exception-procedure
 ;;unimplemented;;sfun-conversion-exception?
 ;;unimplemented;;stack-overflow-exception?
-;;unimplemented;;type-exception-arg-num
+;;unimplemented;;type-exception-arg-id
 ;;unimplemented;;type-exception-arguments
 ;;unimplemented;;type-exception-procedure
 ;;unimplemented;;type-exception-type-id

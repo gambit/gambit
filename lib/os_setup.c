@@ -1,6 +1,6 @@
 /* File: "os_setup.c" */
 
-/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -30,7 +30,7 @@
  */
 
 #define ___INCLUDED_FROM_OS_SETUP
-#define ___VERSION 409003
+#define ___VERSION 409004
 #include "gambit.h"
 
 #include "os_setup.h"
@@ -120,6 +120,65 @@ ___SIZE_T len;)
 
   return result;
 }
+
+
+#ifdef USE_open
+
+int ___open_no_EINTR
+   ___P((char *path,
+         int flags,
+         mode_t mode),
+        (path,
+         flags,
+         mode)
+char *path;
+int flags;
+mode_t mode;)
+{
+  int result;
+
+  for (;;)
+    {
+      result = open (path, flags, mode);
+      if (result >= 0 || errno != EINTR)
+        break;
+    }
+
+  return result;
+}
+
+#endif
+
+
+#ifdef USE_openat
+
+int ___openat_no_EINTR
+   ___P((int fd,
+         char *path,
+         int flags,
+         mode_t mode),
+        (fd,
+         path,
+         flags,
+         mode)
+int fd;
+char *path;
+int flags;
+mode_t mode;)
+{
+  int result;
+
+  for (;;)
+    {
+      result = openat (fd, path, flags, mode);
+      if (result >= 0 || errno != EINTR)
+        break;
+    }
+
+  return result;
+}
+
+#endif
 
 
 int ___close_no_EINTR
@@ -254,6 +313,28 @@ int end;)
     }
 }
 
+
+#endif
+
+
+#ifdef USE_opendir
+
+DIR *___opendir_no_EINTR
+   ___P((char *path),
+        (path)
+char *path;)
+{
+  DIR *result;
+
+  for (;;)
+    {
+      result = opendir (path);
+      if (result != NULL || errno != EINTR)
+        break;
+    }
+
+  return result;
+}
 
 #endif
 
@@ -647,10 +728,6 @@ ___BOOL pinpoint;)
 
 #ifdef USE_NETWORKING
 
-#ifdef AF_INET6
-#define USE_IPV6
-#endif
-
 
 ___HIDDEN int network_family_decode
    ___P((int family),
@@ -994,7 +1071,7 @@ int arg_num;)
       struct sockaddr_in *sa_in = ___CAST(struct sockaddr_in*,sa);
       *salen = sizeof (*sa_in);
       memset (sa_in, 0, sizeof (*sa_in));
-      sa_in->sin_family = AF_INET;
+      sa->sa_family = AF_INET;
       sa_in->sin_port = htons (port);
       result = ___SCMOBJ_to_in_addr (addr, &sa_in->sin_addr, arg_num);
     }
@@ -1004,7 +1081,7 @@ int arg_num;)
       struct sockaddr_in6 *sa_in6 = ___CAST(struct sockaddr_in6*,sa);
       *salen = sizeof (*sa_in6);
       memset (sa_in6, 0, sizeof (*sa_in6));
-      sa_in6->sin6_family = AF_INET6;
+      sa->sa_family = AF_INET6;
       sa_in6->sin6_port = htons (port);
       result = ___SCMOBJ_to_in6_addr (addr, &sa_in6->sin6_addr, arg_num);
     }
@@ -2876,6 +2953,7 @@ ___SCMOBJ ___setup_os ___PVOID
                   ___set_signal_handler (SIGBUS,  crash_signal_handler);
                   ___set_signal_handler (SIGSEGV, crash_signal_handler);
                   ___set_signal_handler (SIGILL,  crash_signal_handler);
+                  ___set_signal_handler (SIGABRT, crash_signal_handler);
 #endif
 #endif
                   return ___FIX(___NO_ERR);

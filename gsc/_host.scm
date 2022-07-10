@@ -2,7 +2,7 @@
 
 ;;; File: "_host.scm"
 
-;;; Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -332,28 +332,6 @@
 
 ;; Bytevector data types.
 
-(define s8vect-tag (list 's8vect))
-
-(define (make-s8vect n)
-  (vector s8vect-tag (make-vector n 0)))
-
-(define (s8vect? x)
-  (and (vector? x)
-       (> (vector-length x) 0)
-       (eq? (vector-ref x 0) s8vect-tag)))
-
-(define (s8vect->list v)
-  (vect->list (vector-ref v 1)))
-
-(define (s8vect-length v)
-  (vector-length (vector-ref v 1)))
-
-(define (s8vect-ref v i)
-  (vector-ref (vector-ref v 1) i))
-
-(define (s8vect-set! v i n)
-  (vector-set! (vector-ref v 1) i n))
-
 (define u8vect-tag (list 'u8vect))
 
 (define (make-u8vect n)
@@ -376,26 +354,26 @@
 (define (u8vect-set! v i n)
   (vector-set! (vector-ref v 1) i n))
 
-(define s16vect-tag (list 's16vect))
+(define s8vect-tag (list 's8vect))
 
-(define (make-s16vect n)
-  (vector s16vect-tag (make-vector n 0)))
+(define (make-s8vect n)
+  (vector s8vect-tag (make-vector n 0)))
 
-(define (s16vect? x)
+(define (s8vect? x)
   (and (vector? x)
        (> (vector-length x) 0)
-       (eq? (vector-ref x 0) s16vect-tag)))
+       (eq? (vector-ref x 0) s8vect-tag)))
 
-(define (s16vect->list v)
+(define (s8vect->list v)
   (vect->list (vector-ref v 1)))
 
-(define (s16vect-length v)
+(define (s8vect-length v)
   (vector-length (vector-ref v 1)))
 
-(define (s16vect-ref v i)
+(define (s8vect-ref v i)
   (vector-ref (vector-ref v 1) i))
 
-(define (s16vect-set! v i n)
+(define (s8vect-set! v i n)
   (vector-set! (vector-ref v 1) i n))
 
 (define u16vect-tag (list 'u16vect))
@@ -420,26 +398,26 @@
 (define (u16vect-set! v i n)
   (vector-set! (vector-ref v 1) i n))
 
-(define s32vect-tag (list 's32vect))
+(define s16vect-tag (list 's16vect))
 
-(define (make-s32vect n)
-  (vector s32vect-tag (make-vector n 0)))
+(define (make-s16vect n)
+  (vector s16vect-tag (make-vector n 0)))
 
-(define (s32vect? x)
+(define (s16vect? x)
   (and (vector? x)
        (> (vector-length x) 0)
-       (eq? (vector-ref x 0) s32vect-tag)))
+       (eq? (vector-ref x 0) s16vect-tag)))
 
-(define (s32vect->list v)
+(define (s16vect->list v)
   (vect->list (vector-ref v 1)))
 
-(define (s32vect-length v)
+(define (s16vect-length v)
   (vector-length (vector-ref v 1)))
 
-(define (s32vect-ref v i)
+(define (s16vect-ref v i)
   (vector-ref (vector-ref v 1) i))
 
-(define (s32vect-set! v i n)
+(define (s16vect-set! v i n)
   (vector-set! (vector-ref v 1) i n))
 
 (define u32vect-tag (list 'u32vect))
@@ -464,26 +442,26 @@
 (define (u32vect-set! v i n)
   (vector-set! (vector-ref v 1) i n))
 
-(define s64vect-tag (list 's64vect))
+(define s32vect-tag (list 's32vect))
 
-(define (make-s64vect n)
-  (vector s64vect-tag (make-vector n 0)))
+(define (make-s32vect n)
+  (vector s32vect-tag (make-vector n 0)))
 
-(define (s64vect? x)
+(define (s32vect? x)
   (and (vector? x)
        (> (vector-length x) 0)
-       (eq? (vector-ref x 0) s64vect-tag)))
+       (eq? (vector-ref x 0) s32vect-tag)))
 
-(define (s64vect->list v)
+(define (s32vect->list v)
   (vect->list (vector-ref v 1)))
 
-(define (s64vect-length v)
+(define (s32vect-length v)
   (vector-length (vector-ref v 1)))
 
-(define (s64vect-ref v i)
+(define (s32vect-ref v i)
   (vector-ref (vector-ref v 1) i))
 
-(define (s64vect-set! v i n)
+(define (s32vect-set! v i n)
   (vector-set! (vector-ref v 1) i n))
 
 (define u64vect-tag (list 'u64vect))
@@ -506,6 +484,28 @@
   (vector-ref (vector-ref v 1) i))
 
 (define (u64vect-set! v i n)
+  (vector-set! (vector-ref v 1) i n))
+
+(define s64vect-tag (list 's64vect))
+
+(define (make-s64vect n)
+  (vector s64vect-tag (make-vector n 0)))
+
+(define (s64vect? x)
+  (and (vector? x)
+       (> (vector-length x) 0)
+       (eq? (vector-ref x 0) s64vect-tag)))
+
+(define (s64vect->list v)
+  (vect->list (vector-ref v 1)))
+
+(define (s64vect-length v)
+  (vector-length (vector-ref v 1)))
+
+(define (s64vect-ref v i)
+  (vector-ref (vector-ref v 1) i))
+
+(define (s64vect-set! v i n)
   (vector-set! (vector-ref v 1) i n))
 
 (define f32vect-tag (list 'f32vect))
@@ -555,14 +555,14 @@
 (define (vector-object? obj)
   (and (vector? obj)
        (not (box-object? obj))
-       (not (s8vect? obj))
        (not (u8vect? obj))
-       (not (s16vect? obj))
+       (not (s8vect? obj))
        (not (u16vect? obj))
-       (not (s32vect? obj))
+       (not (s16vect? obj))
        (not (u32vect? obj))
-       (not (s64vect? obj))
+       (not (s32vect? obj))
        (not (u64vect? obj))
+       (not (s64vect? obj))
        (not (f32vect? obj))
        (not (f64vect? obj))
        (not (table? obj))))
@@ -629,7 +629,6 @@
 
 (define (table->list table)
   (vector-ref table 2))
-
 )
 
 ;;;============================================================================
@@ -734,7 +733,7 @@
   (##open-file-generic
    (macro-direction-in)
    #f
-   (lambda (port) (if (input-port? port) port #f))
+   (lambda (port . resolved-path) (if (input-port? port) port #f))
    open-input-file
    path))
 
@@ -746,8 +745,6 @@
                     #f)
                    #t)))
     (open-input-file* path)))
-
-(define open-output-file ##open-output-file)
 
 (define (open-output-file-preserving-case path)
   (parameterize ((current-readtable
@@ -818,13 +815,6 @@
 
 (define scheme-file-extensions ##scheme-file-extensions)
 
-(define (make-s8vect n)      (##make-s8vector n 0))
-(define s8vect?              ##s8vector?)
-(define s8vect->list         ##s8vector->list)
-(define s8vect-length        ##s8vector-length)
-(define s8vect-ref           ##s8vector-ref)
-(define s8vect-set!          ##s8vector-set!)
-
 (define (make-u8vect n)      (##make-u8vector n 0))
 (define u8vect?              ##u8vector?)
 (define u8vect->list         ##u8vector->list)
@@ -832,54 +822,205 @@
 (define u8vect-ref           ##u8vector-ref)
 (define u8vect-set!          ##u8vector-set!)
 
-(define (make-s16vect n)     (##make-s16vector n 0))
-(define s16vect?             ##s16vector?)
-(define s16vect->list        ##s16vector->list)
-(define s16vect-length       ##s16vector-length)
-(define s16vect-ref          ##s16vector-ref)
-(define s16vect-set!         ##s16vector-set!)
+(cond-expand
+  ((or enable-s8vector (not disable-s8vector))
+   (define (make-s8vect n)      (##make-s8vector n 0))
+   (define s8vect?              ##s8vector?)
+   (define s8vect->list         ##s8vector->list)
+   (define s8vect-length        ##s8vector-length)
+   (define s8vect-ref           ##s8vector-ref)
+   (define s8vect-set!          ##s8vector-set!))
+  (else
+   (define s8vect-tag (list 's8vect))
+   (define (make-s8vect n)
+     (vector s8vect-tag (make-vector n 0)))
+   (define (s8vect? x)
+     (and (vector? x)
+          (> (vector-length x) 0)
+          (eq? (vector-ref x 0) s8vect-tag)))
+   (define (s8vect->list v)
+     (vect->list (vector-ref v 1)))
+   (define (s8vect-length v)
+     (vector-length (vector-ref v 1)))
+   (define (s8vect-ref v i)
+     (vector-ref (vector-ref v 1) i))
+   (define (s8vect-set! v i n)
+     (vector-set! (vector-ref v 1) i n))))
 
-(define (make-u16vect n)     (##make-u16vector n 0))
-(define u16vect?             ##u16vector?)
-(define u16vect->list        ##u16vector->list)
-(define u16vect-length       ##u16vector-length)
-(define u16vect-ref          ##u16vector-ref)
-(define u16vect-set!         ##u16vector-set!)
+(cond-expand
+  ((or enable-u16vector (not disable-u16vector))
+   (define (make-u16vect n)     (##make-u16vector n 0))
+   (define u16vect?             ##u16vector?)
+   (define u16vect->list        ##u16vector->list)
+   (define u16vect-length       ##u16vector-length)
+   (define u16vect-ref          ##u16vector-ref)
+   (define u16vect-set!         ##u16vector-set!))
+  (else
+   (define u16vect-tag (list 'u16vect))
+   (define (make-u16vect n)
+     (vector u16vect-tag (make-vector n 0)))
+   (define (u16vect? x)
+     (and (vector? x)
+          (> (vector-length x) 0)
+          (eq? (vector-ref x 0) u16vect-tag)))
+   (define (u16vect->list v)
+     (vect->list (vector-ref v 1)))
+   (define (u16vect-length v)
+     (vector-length (vector-ref v 1)))
+   (define (u16vect-ref v i)
+     (vector-ref (vector-ref v 1) i))
+   (define (u16vect-set! v i n)
+     (vector-set! (vector-ref v 1) i n))))
 
-(define (make-s32vect n)     (##make-s32vector n 0))
-(define s32vect?             ##s32vector?)
-(define s32vect->list        ##s32vector->list)
-(define s32vect-length       ##s32vector-length)
-(define s32vect-ref          ##s32vector-ref)
-(define s32vect-set!         ##s32vector-set!)
+(cond-expand
+  ((or enable-s16vector (not disable-s16vector))
+   (define (make-s16vect n)     (##make-s16vector n 0))
+   (define s16vect?             ##s16vector?)
+   (define s16vect->list        ##s16vector->list)
+   (define s16vect-length       ##s16vector-length)
+   (define s16vect-ref          ##s16vector-ref)
+   (define s16vect-set!         ##s16vector-set!))
+  (else
+   (define s16vect-tag (list 's16vect))
+   (define (make-s16vect n)
+     (vector s16vect-tag (make-vector n 0)))
+   (define (s16vect? x)
+     (and (vector? x)
+          (> (vector-length x) 0)
+          (eq? (vector-ref x 0) s16vect-tag)))
+   (define (s16vect->list v)
+     (vect->list (vector-ref v 1)))
+   (define (s16vect-length v)
+     (vector-length (vector-ref v 1)))
+   (define (s16vect-ref v i)
+     (vector-ref (vector-ref v 1) i))
+   (define (s16vect-set! v i n)
+     (vector-set! (vector-ref v 1) i n))))
 
-(define (make-u32vect n)     (##make-u32vector n 0))
-(define u32vect?             ##u32vector?)
-(define u32vect->list        ##u32vector->list)
-(define u32vect-length       ##u32vector-length)
-(define u32vect-ref          ##u32vector-ref)
-(define u32vect-set!         ##u32vector-set!)
+(cond-expand
+  ((or enable-u32vector (not disable-u32vector))
+   (define (make-u32vect n)     (##make-u32vector n 0))
+   (define u32vect?             ##u32vector?)
+   (define u32vect->list        ##u32vector->list)
+   (define u32vect-length       ##u32vector-length)
+   (define u32vect-ref          ##u32vector-ref)
+   (define u32vect-set!         ##u32vector-set!))
+  (else
+   (define u32vect-tag (list 'u32vect))
+   (define (make-u32vect n)
+     (vector u32vect-tag (make-vector n 0)))
+   (define (u32vect? x)
+     (and (vector? x)
+          (> (vector-length x) 0)
+          (eq? (vector-ref x 0) u32vect-tag)))
+   (define (u32vect->list v)
+     (vect->list (vector-ref v 1)))
+   (define (u32vect-length v)
+     (vector-length (vector-ref v 1)))
+   (define (u32vect-ref v i)
+     (vector-ref (vector-ref v 1) i))
+   (define (u32vect-set! v i n)
+     (vector-set! (vector-ref v 1) i n))))
 
-(define (make-s64vect n)     (##make-s64vector n 0))
-(define s64vect?             ##s64vector?)
-(define s64vect->list        ##s64vector->list)
-(define s64vect-length       ##s64vector-length)
-(define s64vect-ref          ##s64vector-ref)
-(define s64vect-set!         ##s64vector-set!)
+(cond-expand
+  ((or enable-s32vector (not disable-s32vector))
+   (define (make-s32vect n)     (##make-s32vector n 0))
+   (define s32vect?             ##s32vector?)
+   (define s32vect->list        ##s32vector->list)
+   (define s32vect-length       ##s32vector-length)
+   (define s32vect-ref          ##s32vector-ref)
+   (define s32vect-set!         ##s32vector-set!))
+  (else
+   (define s32vect-tag (list 's32vect))
+   (define (make-s32vect n)
+     (vector s32vect-tag (make-vector n 0)))
+   (define (s32vect? x)
+     (and (vector? x)
+          (> (vector-length x) 0)
+          (eq? (vector-ref x 0) s32vect-tag)))
+   (define (s32vect->list v)
+     (vect->list (vector-ref v 1)))
+   (define (s32vect-length v)
+     (vector-length (vector-ref v 1)))
+   (define (s32vect-ref v i)
+     (vector-ref (vector-ref v 1) i))
+   (define (s32vect-set! v i n)
+     (vector-set! (vector-ref v 1) i n))))
 
-(define (make-u64vect n)     (##make-u64vector n 0))
-(define u64vect?             ##u64vector?)
-(define u64vect->list        ##u64vector->list)
-(define u64vect-length       ##u64vector-length)
-(define u64vect-ref          ##u64vector-ref)
-(define u64vect-set!         ##u64vector-set!)
+(cond-expand
+  ((or enable-u64vector (not disable-u64vector))
+   (define (make-u64vect n)     (##make-u64vector n 0))
+   (define u64vect?             ##u64vector?)
+   (define u64vect->list        ##u64vector->list)
+   (define u64vect-length       ##u64vector-length)
+   (define u64vect-ref          ##u64vector-ref)
+   (define u64vect-set!         ##u64vector-set!))
+  (else
+   (define u64vect-tag (list 'u64vect))
+   (define (make-u64vect n)
+     (vector u64vect-tag (make-vector n 0)))
+   (define (u64vect? x)
+     (and (vector? x)
+          (> (vector-length x) 0)
+          (eq? (vector-ref x 0) u64vect-tag)))
+   (define (u64vect->list v)
+     (vect->list (vector-ref v 1)))
+   (define (u64vect-length v)
+     (vector-length (vector-ref v 1)))
+   (define (u64vect-ref v i)
+     (vector-ref (vector-ref v 1) i))
+   (define (u64vect-set! v i n)
+     (vector-set! (vector-ref v 1) i n))))
 
-(define (make-f32vect n)     (##make-f32vector n (macro-inexact-+0)))
-(define f32vect?             ##f32vector?)
-(define f32vect->list        ##f32vector->list)
-(define f32vect-length       ##f32vector-length)
-(define f32vect-ref          ##f32vector-ref)
-(define f32vect-set!         ##f32vector-set!)
+(cond-expand
+  ((or enable-s64vector (not disable-s64vector))
+   (define (make-s64vect n)     (##make-s64vector n 0))
+   (define s64vect?             ##s64vector?)
+   (define s64vect->list        ##s64vector->list)
+   (define s64vect-length       ##s64vector-length)
+   (define s64vect-ref          ##s64vector-ref)
+   (define s64vect-set!         ##s64vector-set!))
+  (else
+   (define s64vect-tag (list 's64vect))
+   (define (make-s64vect n)
+     (vector s64vect-tag (make-vector n 0)))
+   (define (s64vect? x)
+     (and (vector? x)
+          (> (vector-length x) 0)
+          (eq? (vector-ref x 0) s64vect-tag)))
+   (define (s64vect->list v)
+     (vect->list (vector-ref v 1)))
+   (define (s64vect-length v)
+     (vector-length (vector-ref v 1)))
+   (define (s64vect-ref v i)
+     (vector-ref (vector-ref v 1) i))
+   (define (s64vect-set! v i n)
+     (vector-set! (vector-ref v 1) i n))))
+
+(cond-expand
+  ((or enable-f32vector (not disable-f32vector))
+   (define (make-f32vect n)     (##make-f32vector n (macro-inexact-+0)))
+   (define f32vect?             ##f32vector?)
+   (define f32vect->list        ##f32vector->list)
+   (define f32vect-length       ##f32vector-length)
+   (define f32vect-ref          ##f32vector-ref)
+   (define f32vect-set!         ##f32vector-set!))
+  (else
+   (define f32vect-tag (list 'f32vect))
+   (define (make-f32vect n)
+     (vector f32vect-tag (make-vector n 0.)))
+   (define (f32vect? x)
+     (and (vector? x)
+          (> (vector-length x) 0)
+          (eq? (vector-ref x 0) f32vect-tag)))
+   (define (f32vect->list v)
+     (vect->list (vector-ref v 1)))
+   (define (f32vect-length v)
+     (vector-length (vector-ref v 1)))
+   (define (f32vect-ref v i)
+     (vector-ref (vector-ref v 1) i))
+   (define (f32vect-set! v i n)
+     (vector-set! (vector-ref v 1) i n))))
 
 (define (make-f64vect n)     (##make-f64vector n (macro-inexact-+0)))
 (define f64vect?             ##f64vector?)
@@ -889,7 +1030,23 @@
 (define f64vect-set!         ##f64vector-set!)
 
 (define (vector-object? obj)
-  (vector? obj))
+  (and (vector? obj)
+       (cond-expand ((or enable-s8vector (not disable-s8vector)) #t)
+                    (else (not (s8vect? obj))))
+       (cond-expand ((or enable-u16vector (not disable-u16vector)) #t)
+                    (else (not (u16vect? obj))))
+       (cond-expand ((or enable-s16vector (not disable-s16vector)) #t)
+                    (else (not (s16vect? obj))))
+       (cond-expand ((or enable-u32vector (not disable-u32vector)) #t)
+                    (else (not (u32vect? obj))))
+       (cond-expand ((or enable-s32vector (not disable-s32vector)) #t)
+                    (else (not (s32vect? obj))))
+       (cond-expand ((or enable-u64vector (not disable-u64vector)) #t)
+                    (else (not (u64vect? obj))))
+       (cond-expand ((or enable-s64vector (not disable-s64vector)) #t)
+                    (else (not (s64vect? obj))))
+       (cond-expand ((or enable-f32vector (not disable-f32vector)) #t)
+                    (else (not (f32vect? obj))))))
 
 (define float-copysign ##flcopysign)
 
@@ -930,95 +1087,67 @@
 (define (**macro-descr-expander-src descr)
   (##macro-descr-expander-src descr))
 
-(define **compilation-ctx (make-parameter #f))
+(define **compilation-ctx
+  ##compilation-ctx)
 
-(define (**in-new-compilation-ctx thunk)
-  (if (##unbound? ;; TODO: remove dynamic check after bootstrap
-       (##global-var-ref (##make-global-var '##in-new-compilation-ctx)))
+(define (**in-new-compilation-ctx target thunk)
+  (##in-new-compilation-ctx target thunk))
 
-      ;; bootstrap not yet done
-      (let* ((comp-ctx
-              (vector '() ;; supply-modules
-                      '() ;; demand-modules
-                      (make-table) ;; meta-info
-                      #f ;; module-ref
-                      '())) ;; module-aliases
-             (result
-              (parameterize ((**compilation-ctx comp-ctx)) (thunk))))
-        (values result
-                comp-ctx))
+(define (**compilation-meta-info-add! key val)
+  (##compilation-meta-info-add! key val))
 
-      ;; bootstrap done
-      (##in-new-compilation-ctx thunk)))
+(define (**compilation-module-ref-set! module-ref)
+  (##compilation-module-ref-set! module-ref))
 
-(define (**compilation-ctx-meta-info-add! key val)
-  (if (##unbound? ;; TODO: remove dynamic check after bootstrap
-       (##global-var-ref (##make-global-var '##compilation-ctx-meta-info-add!)))
+(define (**compilation-target)
+  (##compilation-target))
 
-      ;; bootstrap not yet done
-      #f ;; ignore meta info
-
-      ;; bootstrap done
-      (##compilation-ctx-meta-info-add! key val)))
-
-(define (**compilation-ctx-module-ref-set! module-ref)
-  (if (##unbound? ;; TODO: remove dynamic check after bootstrap
-       (##global-var-ref (##make-global-var '##compilation-ctx-module-ref-set!)))
-
-      ;; bootstrap not yet done
-      (let ((ctx (**compilation-ctx)))
-        (**macro-compilation-ctx-module-ref-set! ctx module-ref))
-
-      ;; bootstrap done
-      (##compilation-ctx-module-ref-set! module-ref)))
+(define (**compilation-extra-info)
+  (##compilation-extra-info))
 
 (define (**macro-compilation-ctx-supply-modules ctx)
-  (##vector-ref ctx 0) ;; TODO: remove after bootstrap
-;;  (macro-compilation-ctx-supply-modules ctx)
-)
+  (macro-compilation-ctx-supply-modules ctx))
 
 (define (**macro-compilation-ctx-supply-modules-set! ctx supply-modules)
-  (##vector-set! ctx 0 supply-modules) ;; TODO: remove after bootstrap
-;;  (macro-compilation-ctx-supply-modules-set! ctx supply-modules)
-)
+  (macro-compilation-ctx-supply-modules-set! ctx supply-modules))
 
 (define (**macro-compilation-ctx-demand-modules ctx)
-  (##vector-ref ctx 1) ;; TODO: remove after bootstrap
-;;  (macro-compilation-ctx-demand-modules ctx)
-)
+  (macro-compilation-ctx-demand-modules ctx))
 
 (define (**macro-compilation-ctx-demand-modules-set! ctx demand-modules)
-  (##vector-set! ctx 0 demand-modules) ;; TODO: remove after bootstrap
-;;  (macro-compilation-ctx-demand-modules-set! ctx demand-modules)
-)
+  (macro-compilation-ctx-demand-modules-set! ctx demand-modules))
 
 (define (**macro-compilation-ctx-meta-info ctx)
-  (##vector-ref ctx 2) ;; TODO: remove after bootstrap
-;;  (macro-compilation-ctx-meta-info ctx)
-)
+  (macro-compilation-ctx-meta-info ctx))
 
 (define (**macro-compilation-ctx-meta-info-set! ctx meta-info)
-  (##vector-set! ctx 2 meta-info) ;; TODO: remove after bootstrap
-;;  (macro-compilation-ctx-meta-info-set! ctx meta-info)
-)
+  (macro-compilation-ctx-meta-info-set! ctx meta-info))
 
 (define (**meta-info->alist meta-info)
-  (##table->list meta-info) ;; TODO: remove after bootstrap
-;;  (##meta-info->alist meta-info)
-)
+  (##meta-info->alist meta-info))
 
 (define (**macro-compilation-ctx-module-ref ctx)
-  (##vector-ref ctx 3) ;; TODO: remove after bootstrap
-;;  (macro-compilation-ctx-module-ref ctx)
-)
+  (macro-compilation-ctx-module-ref ctx))
 
 (define (**macro-compilation-ctx-module-ref-set! ctx module-ref)
-  (##vector-set! ctx 3 module-ref) ;; TODO: remove after bootstrap
-;;  (macro-compilation-ctx-module-ref-set! ctx module-ref)
-)
+  (macro-compilation-ctx-module-ref-set! ctx module-ref))
 
-(if (##unbound? ;; TODO: remove dynamic check after bootstrap
-     (##global-var-ref (##make-global-var '##parameterize)))
-    (##global-var-set! (##make-global-var '##parameterize) ##parameterize1))
+(define (**macro-compilation-ctx-module-aliases ctx)
+  (macro-compilation-ctx-module-aliases ctx))
+
+(define (**macro-compilation-ctx-module-aliases-set! ctx module-aliases)
+  (macro-compilation-ctx-module-aliases-set! ctx module-aliases))
+
+(define (**macro-compilation-ctx-target ctx)
+  (macro-compilation-ctx-target ctx))
+
+(define (**macro-compilation-ctx-target-set! ctx target)
+  (macro-compilation-ctx-target-set! ctx target))
+
+(define (**macro-compilation-ctx-extra-info ctx)
+  (macro-compilation-ctx-extra-info ctx))
+
+(define (**macro-compilation-ctx-extra-info-set! ctx extra-info)
+  (macro-compilation-ctx-extra-info-set! ctx extra-info))
 
 ;"

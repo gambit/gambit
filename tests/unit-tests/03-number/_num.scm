@@ -676,25 +676,275 @@
 (check-eqv? (bitwise-xor  902345798234656542928345617042360 123443)
 	    (test-bitwise-xor  902345798234656542928345617042360 123443))
 
-(check-tail-exn type-exception? (lambda () (gcd 1 'a)))
-(check-tail-exn type-exception? (lambda () (gcd 'a 1)))
-(check-tail-exn type-exception? (lambda () (gcd 3/2 1)))
-(check-tail-exn type-exception? (lambda () (gcd 1 3/2)))
-(check-eqv? (gcd (expt 3 100) (expt 5 100)) 1)
-(if (##use-fast-bignum-algorithms?)
-    (begin
-      (check-eqv? (gcd (expt 3 10000) (expt 5 10000)) 1)
-      (check-eqv? (gcd (expt 3 100000) (expt 5 100000)) 1)))
-(check-eqv? (gcd (expt 3. 30) (expt 5. 30)) 1.)
-(check-eqv? (gcd (expt 3 30) (expt 5. 30)) 1.)
-(check-eqv? (gcd (expt 3. 30) (expt 5 30)) 1.)
+(check-tail-exn type-exception? (lambda () (bits 123)))
+(check-tail-exn type-exception? (lambda () (bits "foo")))
+(check-eqv? (bits) 0)
+(check-eqv? (bits #f) 0)
+(check-eqv? (bits #t) 1)
+(check-eqv? (bits #f #t #f #t) 10)
 
-;; fixnum-fixnum
-(check-eqv? (gcd (expt 3 10) (expt 5 10)) 1)
-;; fixnum-bignum
-(check-eqv? (gcd (expt 3 10) (expt 5 50)) 1)
-;; bignum-fixnum
-(check-eqv? (gcd (expt 3 60) (expt 5 10)) 1)
+(check-tail-exn type-exception? (lambda () (list->bits "foo")))
+(check-tail-exn type-exception? (lambda () (list->bits '(123))))
+(check-tail-exn type-exception? (lambda () (list->bits '("foo"))))
+(check-tail-exn type-exception? (lambda () (list->bits '(#f . #f))))
+(check-eqv? (list->bits '()) 0)
+(check-eqv? (list->bits '(#f)) 0)
+(check-eqv? (list->bits '(#t)) 1)
+(check-eqv? (list->bits '(#t #t #t #f)) 7)
+(check-eqv? (list->bits '(#f #t #f #t)) 10)
+
+(check-tail-exn type-exception? (lambda () (vector->bits "foo")))
+(check-tail-exn type-exception? (lambda () (vector->bits '#(123))))
+(check-tail-exn type-exception? (lambda () (vector->bits '#("foo"))))
+(check-eqv? (vector->bits '#()) 0)
+(check-eqv? (vector->bits '#(#f)) 0)
+(check-eqv? (vector->bits '#(#t)) 1)
+(check-eqv? (vector->bits '#(#t #t #t #f)) 7)
+(check-eqv? (vector->bits '#(#f #t #f #t)) 10)
+
+(check-tail-exn type-exception? (lambda () (bits->vector "foo")))
+(check-tail-exn type-exception? (lambda () (bits->vector 10 "foo")))
+(check-equal? (bits->vector -9) '#(#t #t #t #f))
+(check-equal? (bits->vector -1) '#())
+(check-equal? (bits->vector 0) '#())
+(check-equal? (bits->vector 1) '#(#t))
+(check-equal? (bits->vector 10) '#(#f #t #f #t))
+(check-equal? (bits->vector -9 3) '#(#t #t #t))
+(check-equal? (bits->vector -1 3) '#(#t #t #t))
+(check-equal? (bits->vector 0 3) '#(#f #f #f))
+(check-equal? (bits->vector 1 3) '#(#t #f #f))
+(check-equal? (bits->vector 10 3) '#(#f #t #f))
+
+(check-tail-exn type-exception? (lambda () (bits->list "foo")))
+(check-tail-exn type-exception? (lambda () (bits->list 10 "foo")))
+(check-equal? (bits->list -9) '(#t #t #t #f))
+(check-equal? (bits->list -1) '())
+(check-equal? (bits->list 0) '())
+(check-equal? (bits->list 1) '(#t))
+(check-equal? (bits->list 10) '(#f #t #f #t))
+(check-equal? (bits->list -9 3) '(#t #t #t))
+(check-equal? (bits->list -1 3) '(#t #t #t))
+(check-equal? (bits->list 0 3) '(#f #f #f))
+(check-equal? (bits->list 1 3) '(#t #f #f))
+(check-equal? (bits->list 10 3) '(#f #t #f))
+
+;;;------------------------------------------------------------
+;;; Minimal new tests for the remainder of SRFI 151 routines
+;;;------------------------------------------------------------
+
+(check-tail-exn type-exception? (lambda () (bitwise-if 'a 3 2)))
+(check-tail-exn type-exception? (lambda () (bitwise-if 2 'a 3)))
+(check-tail-exn type-exception? (lambda () (bitwise-if 2 2 'a)))
+(check-eqv? (bitwise-if 3 1 8)  9)
+(check-eqv? (bitwise-if 3 8 1)  0)
+(check-eqv? (bitwise-if 1 1 2)  3)
+(check-eqv? (bitwise-if #b00111100 #b11110000 #b00001111)  #b00110011)
+
+(check-tail-exn type-exception? (lambda () (copy-bit 0 0 'a)))
+(check-tail-exn type-exception? (lambda () (copy-bit 0 'a #f)))
+(check-tail-exn type-exception? (lambda () (copy-bit 'a -1 #f)))
+(check-tail-exn range-exception? (lambda () (copy-bit -1 -1 #f)))
+(check-eqv? (copy-bit 0 0 #f) 0)
+(check-eqv? (copy-bit 30 0 #f) 0)
+(check-eqv? (copy-bit 31 0 #f) 0)
+(check-eqv? (copy-bit 62 0 #f) 0)
+(check-eqv? (copy-bit 63 0 #f) 0)
+(check-eqv? (copy-bit 128 0 #f) 0)
+(check-eqv? (copy-bit 0 -1 #t) -1)
+(check-eqv? (copy-bit 30 -1 #t) -1)
+(check-eqv? (copy-bit 31 -1 #t) -1)
+(check-eqv? (copy-bit 62 -1 #t) -1)
+(check-eqv? (copy-bit 63 -1 #t) -1)
+(check-eqv? (copy-bit 128 -1 #t) -1)
+(check-eqv? (copy-bit 0 0 #t) 1)
+(check-eqv? (copy-bit 8 6 #t) 262)
+(check-eqv? (copy-bit 8 6 #f) 6)
+(check-eqv? (copy-bit 0 -1 #f) -2)
+(check-eqv? (copy-bit 128 340282366920938463463374607431768211456 #f) 0)
+(check-eqv?
+ (copy-bit 128 340282366920938463463374607431768211456 #t)
+ 340282366920938463463374607431768211456)
+(check-eqv?
+ (copy-bit 64 340282366920938463463374607431768211456 #f)
+ 340282366920938463463374607431768211456)
+(check-eqv?
+ (copy-bit 64 -340282366920938463463374607431768211456 #f)
+ -340282366920938463463374607431768211456)
+(check-eqv?
+ (copy-bit 256 -340282366920938463463374607431768211456 #t)
+ -340282366920938463463374607431768211456)
+(check-eqv? (copy-bit 2 0 #t) 4)
+(check-eqv? (copy-bit 2 15 #f) 11)
+(check-eqv? (copy-bit 0 0 #t) 1)
+
+(check-tail-exn type-exception? (lambda () (bit-swap 1 2 'a)))
+(check-tail-exn type-exception? (lambda () (bit-swap 1'a -1)))
+(check-tail-exn range-exception? (lambda () (bit-swap 1 -1 -1)))
+(check-tail-exn type-exception? (lambda () (bit-swap 'a 1 -1)))
+(check-tail-exn range-exception? (lambda () (bit-swap -1 1 -1)))
+(check-eqv? (bit-swap 1 2 13) 11)
+(check-eqv? (bit-swap 2 1 13) 11)
+(check-eqv? (bit-swap 0 1 13) 14)
+(check-eqv? (bit-swap 3 10 13) 1029)
+(check-eqv? (bit-swap 0 2 4) 1)
+
+(check-tail-exn type-exception? (lambda () (any-bit-set? 'a 6)))
+(check-tail-exn type-exception? (lambda () (any-bit-set?  6 'a)))
+(check-eqv? (any-bit-set? 3 6) #t)
+(check-eqv? (any-bit-set? 3 12) #f)
+(check-eqv? (every-bit-set? 4 6) #t)
+(check-eqv? (every-bit-set? 7 6) #f)
+
+(check-tail-exn type-exception? (lambda () (every-bit-set? 'a 6)))
+(check-tail-exn type-exception? (lambda () (every-bit-set?  6 'a)))
+(check-eqv? (every-bit-set? 4 6) #t)
+(check-eqv? (every-bit-set? 7 6) #f)
+
+(check-tail-exn type-exception? (lambda () (bit-field 6 0 'a)))
+(check-tail-exn type-exception? (lambda () (bit-field 6 'a 1)))
+(check-tail-exn type-exception? (lambda () (bit-field 'a 0 1)))
+(check-tail-exn range-exception? (lambda () (bit-field 6 0 -1)))
+(check-tail-exn range-exception? (lambda () (bit-field 6 -1 1)))
+(check-tail-exn range-exception? (lambda () (bit-field 6 2 1)))
+(check-eqv? (bit-field 6 0 1) 0)
+(check-eqv? (bit-field 6 1 3) 3)
+(check-eqv? (bit-field 6 2 999) 1)
+(check-eqv? (bit-field 340282366920938463463374607431768211456 128 129) 1)
+(check-eqv? (bit-field 874 0 4) 10)
+(check-eqv? (bit-field 874 3 9) 45)
+(check-eqv? (bit-field 874 4 9) 22)
+(check-eqv? (bit-field 874 4 10) 54)
+
+(check-tail-exn type-exception? (lambda () (bit-field-any? 6 0 'a)))
+(check-tail-exn type-exception? (lambda () (bit-field-any? 6 'a 1)))
+(check-tail-exn type-exception? (lambda () (bit-field-any? 'a 0 1)))
+(check-tail-exn range-exception? (lambda () (bit-field-any? 6 0 -1)))
+(check-tail-exn range-exception? (lambda () (bit-field-any? 6 -1 1)))
+(check-tail-exn range-exception? (lambda () (bit-field-any? 6 2 1)))
+(check-eqv? (bit-field-any? 45 0 2) #t)
+(check-eqv? (bit-field-any? 45 2 4) #t)
+(check-eqv? (bit-field-any? 45 1 2) #f)
+
+
+(check-tail-exn type-exception? (lambda () (bit-field-every? 6 0 'a)))
+(check-tail-exn type-exception? (lambda () (bit-field-every? 6 'a 1)))
+(check-tail-exn type-exception? (lambda () (bit-field-every? 'a 0 1)))
+(check-tail-exn range-exception? (lambda () (bit-field-every? 6 0 -1)))
+(check-tail-exn range-exception? (lambda () (bit-field-every? 6 -1 1)))
+(check-tail-exn range-exception? (lambda () (bit-field-every? 6 2 1)))
+(check-eqv? (bit-field-every? 45 0 2) #f)
+(check-eqv? (bit-field-every? 45 2 4) #t)
+(check-eqv? (bit-field-every? 45 0 1) #t)
+
+
+(check-tail-exn type-exception? (lambda () (bit-field-clear 6 0 'a)))
+(check-tail-exn type-exception? (lambda () (bit-field-clear 6 'a 1)))
+(check-tail-exn type-exception? (lambda () (bit-field-clear 'a 0 1)))
+(check-tail-exn range-exception? (lambda () (bit-field-clear 6 0 -1)))
+(check-tail-exn range-exception? (lambda () (bit-field-clear 6 -1 1)))
+(check-tail-exn range-exception? (lambda () (bit-field-clear 6 2 1)))
+(check-eqv? (bit-field-clear 42 1 4) 32)
+
+(check-tail-exn type-exception? (lambda () (bit-field-set 6 0 'a)))
+(check-tail-exn type-exception? (lambda () (bit-field-set 6 'a 1)))
+(check-tail-exn type-exception? (lambda () (bit-field-set 'a 0 1)))
+(check-tail-exn range-exception? (lambda () (bit-field-set 6 0 -1)))
+(check-tail-exn range-exception? (lambda () (bit-field-set 6 -1 1)))
+(check-tail-exn range-exception? (lambda () (bit-field-set 6 2 1)))
+(check-eqv? (bit-field-set 42 1 4) 46)
+
+(check-tail-exn type-exception? (lambda () (bit-field-replace 'a 1 0 1)))
+(check-tail-exn type-exception? (lambda () (bit-field-replace 6 'a 0 1)))
+(check-tail-exn type-exception? (lambda () (bit-field-replace 6 1 'a 1)))
+(check-tail-exn type-exception? (lambda () (bit-field-replace 6 1 0 'a)))
+(check-tail-exn range-exception? (lambda () (bit-field-replace 6 1 -1 1)))
+(check-tail-exn range-exception? (lambda () (bit-field-replace 6 1 0 -1)))
+(check-tail-exn range-exception? (lambda () (bit-field-replace 6 1 2 1)))
+(check-eqv? (bit-field-replace 6 1 0 1) 7)
+(check-eqv? (bit-field-replace 6 1 1 2) 6)
+(check-eqv? (bit-field-replace 6 1 1 3) 2)
+(check-eqv? (bit-field-replace 42 2 1 4) 36)
+
+(check-tail-exn type-exception? (lambda () (bit-field-replace-same 'a 1 0 1)))
+(check-tail-exn type-exception? (lambda () (bit-field-replace-same 6 'a 0 1)))
+(check-tail-exn type-exception? (lambda () (bit-field-replace-same 6 1 'a 1)))
+(check-tail-exn type-exception? (lambda () (bit-field-replace-same 6 1 0 'a)))
+(check-tail-exn range-exception? (lambda () (bit-field-replace-same 6 1 -1 1)))
+(check-tail-exn range-exception? (lambda () (bit-field-replace-same 6 1 0 -1)))
+(check-tail-exn range-exception? (lambda () (bit-field-replace-same 6 1 2 1)))
+(check-eqv? (bit-field-replace-same 15 0 1 3) 9)
+
+
+(check-tail-exn type-exception? (lambda () (bit-field-rotate 'a 0 0 10)))
+(check-tail-exn type-exception? (lambda () (bit-field-rotate #b110 'a 0 10)))
+(check-tail-exn type-exception? (lambda () (bit-field-rotate #b110 0 'a 10)))
+(check-tail-exn type-exception? (lambda () (bit-field-rotate #b110 0 0 'a)))
+(check-tail-exn range-exception? (lambda () (bit-field-rotate #b110 0 -1 10)))
+(check-tail-exn range-exception? (lambda () (bit-field-rotate #b110 0 0 -1)))
+(check-tail-exn range-exception? (lambda () (bit-field-rotate #b110 0 2 1)))
+(check-eqv? (bit-field-rotate #b110 0 0 10)  #b110)
+(check-eqv? (bit-field-rotate #b110 0 0 256)  #b110)
+(check-eqv? (bit-field-rotate #x100000000000000000000000000000000 1 0 129)  1)
+(check-eqv? (bit-field-rotate #b110 1 1 2)  #b110)
+(check-eqv? (bit-field-rotate #b110 1 2 4)  #b1010)
+(check-eqv? (bit-field-rotate #b0111 -1 1 4)  #b1011)
+
+
+(check-tail-exn type-exception? (lambda () (bit-field-reverse 'a 1 4)))
+(check-tail-exn type-exception? (lambda () (bit-field-reverse 6 'a 4)))
+(check-tail-exn type-exception? (lambda () (bit-field-reverse 6 1 'a)))
+(check-tail-exn range-exception? (lambda () (bit-field-reverse 6 -1 3)))
+(check-tail-exn range-exception? (lambda () (bit-field-reverse 6 1 -1)))
+(check-tail-exn range-exception? (lambda () (bit-field-reverse 6 3 1)))
+(check-eqv? (bit-field-reverse 6 1 3)  6)
+(check-eqv? (bit-field-reverse 6 1 4)  12)
+(check-eqv? (bit-field-reverse 1 0 32)  #x80000000)
+(check-eqv? (bit-field-reverse 1 0 31)  #x40000000)
+(check-eqv? (bit-field-reverse 1 0 30)  #x20000000)
+(check-eqv? (bit-field-reverse #x140000000000000000000000000000000 0 129)  5)
+
+(check-tail-exn type-exception? (lambda () (bitwise-fold 'a '() #b1010111)))
+(check-tail-exn type-exception? (lambda () (bitwise-fold cons '() 'a)))
+(check-equal? (bitwise-fold cons '() #b1010111) '(#t #f #t #f #t #t #t))
+
+(check-tail-exn type-exception? (lambda () (bitwise-for-each 'a #b1010111)))
+(check-tail-exn type-exception? (lambda () (bitwise-for-each (lambda (b) #t) 'a)))
+(check-eqv? (let ((count 0))
+              (bitwise-for-each (lambda (b) (if b (set! count (+ count 1))))
+                                #b1010111)
+              count)
+            5)
+
+(check-tail-exn type-exception? (lambda ()
+                                  (bitwise-unfold 'a
+                                                  even?
+                                                  (lambda (i) (+ i 1))
+                                                  0)))
+(check-tail-exn type-exception? (lambda ()
+                                  (bitwise-unfold (lambda (i) (= i 10))
+                                                  'a
+                                                  (lambda (i) (+ i 1))
+                                                  0)))(check-tail-exn type-exception? (lambda ()
+                                  (bitwise-unfold (lambda (i) (= i 10))
+                                                  even?
+                                                  'a
+                                                  0)))
+(check-eqv? (bitwise-unfold (lambda (i) (= i 10))
+                            even?
+                            (lambda (i) (+ i 1))
+                            0)
+            #b101010101)
+
+(check-tail-exn type-exception? (lambda () (make-bitwise-generator 1.)))
+(let ((g (make-bitwise-generator #b110)))
+  (check-eqv? (g) #f)
+  (check-eqv? (g) #t)
+  (check-eqv? (g) #t)
+  (check-eqv? (g) #f))
+
+;;;------------------------------------------------------------
+;;; End of tests for the remainder of SRFI 151 routines
+;;;------------------------------------------------------------
 
 (if (##use-fast-bignum-algorithms?)
     (check-eqv? (expt 15 1000000) (* (expt 3 1000000) (expt 5 1000000))))
@@ -1026,6 +1276,7 @@
 (check-=    (* 1+i 1+i) +2i)
 (check-eqv? (* 1+i 1+i) +2i)
 
+
 #;(let ()
 
   (define (make-symbol . args)
@@ -1066,7 +1317,7 @@
 			  ns))
 	      '(extract-bit-field test-bit-field? clear-bit-field))
     ))
-	      
+
 (check-eqv? (extract-bit-field 79 109 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261)
             (test-extract-bit-field 79 109 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261))
 (check-eqv? (extract-bit-field 79 13 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261)
@@ -1139,6 +1390,146 @@
 (check-eqv? (clear-bit-field 79 13 -608462309321751311) (test-clear-bit-field 79 13 -608462309321751311))
 (check-eqv? (clear-bit-field 4 109 -608462309321751311) (test-clear-bit-field 4 109 -608462309321751311))
 (check-eqv? (clear-bit-field 4 13 -608462309321751311) (test-clear-bit-field 4 13 -608462309321751311))
+
+;;; extract-bit-field
+
+;;; Now some ad-hoc tests with size and position bignums
+
+(check-eqv? (extract-bit-field 4 (expt 2 100) -1) 15)
+(check-eqv? (extract-bit-field (expt 2 100) 0 15) 15)
+(check-eqv? (extract-bit-field (expt 2 100) (expt 3 100) 15) 0)
+
+;;; Have size be bigger than (integer-length x)
+
+(check-eqv? (extract-bit-field 200 0 (expt 3 110)) (expt 3 110))
+
+;;; This is a quality of implementation test:
+
+(let ((x (expt 3 110)))
+  (check-eq? (extract-bit-field 200 0 x) x))
+
+;;; Some error tests.
+
+;;; heap-overflow-exception? doesn't seem to exist in the universal back end.
+;;; (check-exn heap-overflow-exception? (lambda () (extract-bit-field (expt 2 100) (expt 2 100) -1)))
+
+(check-tail-exn type-exception? (lambda () (extract-bit-field -1 1 1)))
+(check-tail-exn type-exception? (lambda () (extract-bit-field 1 -1 1)))
+(check-tail-exn type-exception? (lambda () (extract-bit-field 'a 1 1)))
+(check-tail-exn type-exception? (lambda () (extract-bit-field 1 'a 1)))
+(check-tail-exn type-exception? (lambda () (extract-bit-field 1 1 'a)))
+
+;;; test-bit-field
+
+;;; Some ad-hoc tests
+
+#| The following was generated with:
+
+(for-each (lambda (n)
+            (for-each (lambda (size)
+                        (for-each (lambda (position)
+                                    (pp `(check-eqv? (test-bit-field?      ,size ,position ,n)
+                                                     (test-test-bit-field? ,size ,position ,n))))
+                                  (iota 3 0)))
+                      (iota 3 1)))
+          (iota 9 -4))
+|#
+
+(check-eqv? (test-bit-field? 1 0 -4) (test-test-bit-field? 1 0 -4))
+(check-eqv? (test-bit-field? 1 1 -4) (test-test-bit-field? 1 1 -4))
+(check-eqv? (test-bit-field? 1 2 -4) (test-test-bit-field? 1 2 -4))
+(check-eqv? (test-bit-field? 2 0 -4) (test-test-bit-field? 2 0 -4))
+(check-eqv? (test-bit-field? 2 1 -4) (test-test-bit-field? 2 1 -4))
+(check-eqv? (test-bit-field? 2 2 -4) (test-test-bit-field? 2 2 -4))
+(check-eqv? (test-bit-field? 3 0 -4) (test-test-bit-field? 3 0 -4))
+(check-eqv? (test-bit-field? 3 1 -4) (test-test-bit-field? 3 1 -4))
+(check-eqv? (test-bit-field? 3 2 -4) (test-test-bit-field? 3 2 -4))
+(check-eqv? (test-bit-field? 1 0 -3) (test-test-bit-field? 1 0 -3))
+(check-eqv? (test-bit-field? 1 1 -3) (test-test-bit-field? 1 1 -3))
+(check-eqv? (test-bit-field? 1 2 -3) (test-test-bit-field? 1 2 -3))
+(check-eqv? (test-bit-field? 2 0 -3) (test-test-bit-field? 2 0 -3))
+(check-eqv? (test-bit-field? 2 1 -3) (test-test-bit-field? 2 1 -3))
+(check-eqv? (test-bit-field? 2 2 -3) (test-test-bit-field? 2 2 -3))
+(check-eqv? (test-bit-field? 3 0 -3) (test-test-bit-field? 3 0 -3))
+(check-eqv? (test-bit-field? 3 1 -3) (test-test-bit-field? 3 1 -3))
+(check-eqv? (test-bit-field? 3 2 -3) (test-test-bit-field? 3 2 -3))
+(check-eqv? (test-bit-field? 1 0 -2) (test-test-bit-field? 1 0 -2))
+(check-eqv? (test-bit-field? 1 1 -2) (test-test-bit-field? 1 1 -2))
+(check-eqv? (test-bit-field? 1 2 -2) (test-test-bit-field? 1 2 -2))
+(check-eqv? (test-bit-field? 2 0 -2) (test-test-bit-field? 2 0 -2))
+(check-eqv? (test-bit-field? 2 1 -2) (test-test-bit-field? 2 1 -2))
+(check-eqv? (test-bit-field? 2 2 -2) (test-test-bit-field? 2 2 -2))
+(check-eqv? (test-bit-field? 3 0 -2) (test-test-bit-field? 3 0 -2))
+(check-eqv? (test-bit-field? 3 1 -2) (test-test-bit-field? 3 1 -2))
+(check-eqv? (test-bit-field? 3 2 -2) (test-test-bit-field? 3 2 -2))
+(check-eqv? (test-bit-field? 1 0 -1) (test-test-bit-field? 1 0 -1))
+(check-eqv? (test-bit-field? 1 1 -1) (test-test-bit-field? 1 1 -1))
+(check-eqv? (test-bit-field? 1 2 -1) (test-test-bit-field? 1 2 -1))
+(check-eqv? (test-bit-field? 2 0 -1) (test-test-bit-field? 2 0 -1))
+(check-eqv? (test-bit-field? 2 1 -1) (test-test-bit-field? 2 1 -1))
+(check-eqv? (test-bit-field? 2 2 -1) (test-test-bit-field? 2 2 -1))
+(check-eqv? (test-bit-field? 3 0 -1) (test-test-bit-field? 3 0 -1))
+(check-eqv? (test-bit-field? 3 1 -1) (test-test-bit-field? 3 1 -1))
+(check-eqv? (test-bit-field? 3 2 -1) (test-test-bit-field? 3 2 -1))
+(check-eqv? (test-bit-field? 1 0 0) (test-test-bit-field? 1 0 0))
+(check-eqv? (test-bit-field? 1 1 0) (test-test-bit-field? 1 1 0))
+(check-eqv? (test-bit-field? 1 2 0) (test-test-bit-field? 1 2 0))
+(check-eqv? (test-bit-field? 2 0 0) (test-test-bit-field? 2 0 0))
+(check-eqv? (test-bit-field? 2 1 0) (test-test-bit-field? 2 1 0))
+(check-eqv? (test-bit-field? 2 2 0) (test-test-bit-field? 2 2 0))
+(check-eqv? (test-bit-field? 3 0 0) (test-test-bit-field? 3 0 0))
+(check-eqv? (test-bit-field? 3 1 0) (test-test-bit-field? 3 1 0))
+(check-eqv? (test-bit-field? 3 2 0) (test-test-bit-field? 3 2 0))
+(check-eqv? (test-bit-field? 1 0 1) (test-test-bit-field? 1 0 1))
+(check-eqv? (test-bit-field? 1 1 1) (test-test-bit-field? 1 1 1))
+(check-eqv? (test-bit-field? 1 2 1) (test-test-bit-field? 1 2 1))
+(check-eqv? (test-bit-field? 2 0 1) (test-test-bit-field? 2 0 1))
+(check-eqv? (test-bit-field? 2 1 1) (test-test-bit-field? 2 1 1))
+(check-eqv? (test-bit-field? 2 2 1) (test-test-bit-field? 2 2 1))
+(check-eqv? (test-bit-field? 3 0 1) (test-test-bit-field? 3 0 1))
+(check-eqv? (test-bit-field? 3 1 1) (test-test-bit-field? 3 1 1))
+(check-eqv? (test-bit-field? 3 2 1) (test-test-bit-field? 3 2 1))
+(check-eqv? (test-bit-field? 1 0 2) (test-test-bit-field? 1 0 2))
+(check-eqv? (test-bit-field? 1 1 2) (test-test-bit-field? 1 1 2))
+(check-eqv? (test-bit-field? 1 2 2) (test-test-bit-field? 1 2 2))
+(check-eqv? (test-bit-field? 2 0 2) (test-test-bit-field? 2 0 2))
+(check-eqv? (test-bit-field? 2 1 2) (test-test-bit-field? 2 1 2))
+(check-eqv? (test-bit-field? 2 2 2) (test-test-bit-field? 2 2 2))
+(check-eqv? (test-bit-field? 3 0 2) (test-test-bit-field? 3 0 2))
+(check-eqv? (test-bit-field? 3 1 2) (test-test-bit-field? 3 1 2))
+(check-eqv? (test-bit-field? 3 2 2) (test-test-bit-field? 3 2 2))
+(check-eqv? (test-bit-field? 1 0 3) (test-test-bit-field? 1 0 3))
+(check-eqv? (test-bit-field? 1 1 3) (test-test-bit-field? 1 1 3))
+(check-eqv? (test-bit-field? 1 2 3) (test-test-bit-field? 1 2 3))
+(check-eqv? (test-bit-field? 2 0 3) (test-test-bit-field? 2 0 3))
+(check-eqv? (test-bit-field? 2 1 3) (test-test-bit-field? 2 1 3))
+(check-eqv? (test-bit-field? 2 2 3) (test-test-bit-field? 2 2 3))
+(check-eqv? (test-bit-field? 3 0 3) (test-test-bit-field? 3 0 3))
+(check-eqv? (test-bit-field? 3 1 3) (test-test-bit-field? 3 1 3))
+(check-eqv? (test-bit-field? 3 2 3) (test-test-bit-field? 3 2 3))
+(check-eqv? (test-bit-field? 1 0 4) (test-test-bit-field? 1 0 4))
+(check-eqv? (test-bit-field? 1 1 4) (test-test-bit-field? 1 1 4))
+(check-eqv? (test-bit-field? 1 2 4) (test-test-bit-field? 1 2 4))
+(check-eqv? (test-bit-field? 2 0 4) (test-test-bit-field? 2 0 4))
+(check-eqv? (test-bit-field? 2 1 4) (test-test-bit-field? 2 1 4))
+(check-eqv? (test-bit-field? 2 2 4) (test-test-bit-field? 2 2 4))
+(check-eqv? (test-bit-field? 3 0 4) (test-test-bit-field? 3 0 4))
+(check-eqv? (test-bit-field? 3 1 4) (test-test-bit-field? 3 1 4))
+(check-eqv? (test-bit-field? 3 2 4) (test-test-bit-field? 3 2 4))
+
+;;; the following should not overflow the heap.
+
+(check-eqv? (test-bit-field? (expt 2 100) (expt 2 100) -1)
+            #t)
+
+;;; Some error tests
+
+(check-tail-exn type-exception? (lambda () (test-bit-field? -1 1 1)))
+(check-tail-exn type-exception? (lambda () (test-bit-field? 1 -1 1)))
+(check-tail-exn type-exception? (lambda () (test-bit-field? 'a 1 1)))
+(check-tail-exn type-exception? (lambda () (test-bit-field? 1 'a 1)))
+(check-tail-exn type-exception? (lambda () (test-bit-field? 1 1 'a)))
+
 
 #;(let ()
 

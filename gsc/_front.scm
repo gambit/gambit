@@ -2,7 +2,7 @@
 
 ;;; File: "_front.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -125,8 +125,8 @@
                      ((c dynamic exe obj link flat
                          check force keep-temp
                          o l module-ref linker-name prelude postlude
-                         cc-options ld-options-prelude ld-options
-                         pkg-config pkg-config-path asm)
+                         cc cc-options ld-options-prelude ld-options
+                         pkg-config pkg-config-path asm sequence-number)
                       #t) ;; these options are innocuous
                      (else
                       ;; OK if the option is a target specific option
@@ -227,10 +227,11 @@
     (call-with-values
      (lambda ()
        (**in-new-compilation-ctx
+        (cadr (assq 'target opts))
         (lambda ()
           (if script-line
-              (**compilation-ctx-meta-info-add! 'script-line script-line))
-          (**compilation-ctx-module-ref-set! module-ref)
+              (**compilation-meta-info-add! 'script-line script-line))
+          (**compilation-module-ref-set! module-ref)
           (parse-program
            program
            (make-global-environment)
@@ -705,7 +706,7 @@
     (if dependency-graph
         (table-set! dependency-graph
                     (string->symbol main-proc-name)
-                    (varset-empty)))
+                    (vector (varset-empty) (varset-empty))))
 
     (if info-port
         (display "Compiling:" info-port))
@@ -734,18 +735,19 @@
              (let* ((var (def-var ptree))
                     (val (global-single-def var)))
                (if (and val (prc? val))
-                   (let ((proc
-                          (make-proc-obj
-                           (symbol->string (var-name var)) ;; name
-                           (prc-c-name val)   ;; c-name
-                           #t                 ;; primitive?
-                           #f                 ;; code
-                           (call-pattern val) ;; call-pat
-                           #t                 ;; side-effects?
-                           '()                ;; strict-pat
-                           0                  ;; lift-pat
-                           '(#f)              ;; type
-                           #f)))              ;; standard
+                   (let ((proc (prc-proc-obj-get val)))
+                     (proc-obj-name-set!
+                      proc
+                      (symbol->string (var-name var)))
+                     (proc-obj-c-name-set!
+                      proc
+                      (prc-c-name val))
+                     (proc-obj-primitive?-set!
+                      proc
+                      #t)
+                     (proc-obj-call-pat-set!
+                      proc
+                      (call-pattern val))
                      (add-constant-var var (make-obj proc))
                      (set! const-procs (cons proc const-procs))))))))
      program)
@@ -900,11 +902,11 @@
   (case (label-type gvm-instr)
 
     ((entry)
-     (for-each (lambda (obj) (emit-obj! (obj-val obj)))
+     (for-each (lambda (obj) (emit-obj! (obj-val obj) #f))
                (label-entry-opts gvm-instr))
      (let ((keys (label-entry-keys gvm-instr)))
        (and keys
-            (for-each (lambda (x) (emit-obj! (obj-val (cdr x))))
+            (for-each (lambda (x) (emit-obj! (obj-val (cdr x)) #f))
                       keys)))))
 
   gvm-instr)
@@ -921,17 +923,17 @@
 
     ((apply)
      (emit-opnds! (apply-opnds gvm-instr))
-     (emit-opnd! (apply-loc gvm-instr))
+     (emit-opnd! (apply-loc gvm-instr) #f)
      (non-branch))
 
     ((copy)
-     (emit-opnd! (copy-opnd gvm-instr))
-     (emit-opnd! (copy-loc gvm-instr))
+     (emit-opnd! (copy-opnd gvm-instr) #f)
+     (emit-opnd! (copy-loc gvm-instr) #f)
      (non-branch))
 
     ((close)
      (for-each (lambda (parms)
-                 (emit-opnd! (closure-parms-loc parms))
+                 (emit-opnd! (closure-parms-loc parms) #f)
                  (emit-opnds! (closure-parms-opnds parms)))
                (close-parms gvm-instr))
      (non-branch))
@@ -941,30 +943,30 @@
      (branch))
 
     ((switch)
-     (emit-opnd! (switch-opnd gvm-instr))
-     (for-each (lambda (c) (emit-obj! (switch-case-obj c)))
+     (emit-opnd! (switch-opnd gvm-instr) #f)
+     (for-each (lambda (c) (emit-obj! (switch-case-obj c) #f))
                (switch-cases gvm-instr))
      (branch))
 
     ((jump)
-     (emit-opnd! (jump-opnd gvm-instr))
+     (emit-opnd! (jump-opnd gvm-instr) #t)
      (branch))))
 
 (define (emit-opnds! opnds)
-  (for-each emit-opnd! opnds))
+  (for-each (lambda (opnd) (emit-opnd! opnd #f)) opnds))
 
-(define (emit-opnd! opnd)
+(define (emit-opnd! opnd jump?)
   (cond ((not opnd))
         ((obj? opnd)
-         (emit-obj! (obj-val opnd)))
+         (emit-obj! (obj-val opnd) jump?))
         ((clo? opnd)
-         (emit-opnd! (clo-base opnd)))
+         (emit-opnd! (clo-base opnd) #f))
         ((glo? opnd)
-         (reach-global-var! (glo-name opnd)))))
+         (reach-global-var! (glo-name opnd) jump?))))
 
-(define (emit-obj! obj)
+(define (emit-obj! obj jump?)
   (if (proc-obj? obj)
-      (reach-global-var! (string->symbol (proc-obj-name obj)))))
+      (reach-global-var! (string->symbol (proc-obj-name obj)) jump?)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -986,18 +988,18 @@
               (set! live-definition-queue
                     (cons def live-definition-queue)))))))
 
-(define (reach-global-var! name)
+(define (reach-global-var! name jump?)
   (let ((var (env-lookup-global-var *global-env* name)))
-    (register-dependency var)
+    (register-dependency var jump?)
     (for-each reach-definition! (ptset->list (var-sets var)))))
 
-(define (register-dependency var)
+(define (register-dependency var jump?)
   (if dependency-graph
-      (let ((referrer (string->symbol (proc-obj-name *proc*))))
-        (table-set!
-         dependency-graph
-         referrer
-         (varset-adjoin (table-ref dependency-graph referrer) var)))))
+      (let* ((referrer (string->symbol (proc-obj-name *proc*)))
+             (deps (table-ref dependency-graph referrer)))
+        (if jump?
+            (vector-set! deps 0 (varset-adjoin (vector-ref deps 0) var))
+            (vector-set! deps 1 (varset-adjoin (vector-ref deps 1) var))))))
 
 (define (gen-definition ptree info-port)
 
@@ -1006,7 +1008,9 @@
           (val (def-val ptree)))
 
       (if dependency-graph
-          (table-set! dependency-graph (var-name var) (varset-empty)))
+          (table-set! dependency-graph
+                      (var-name var)
+                      (vector (varset-empty) (varset-empty))))
 
       (if (not (prc? val))
 
@@ -1030,17 +1034,20 @@
                  (proc
                   (if var-is-const
                       (obj-val var-is-const)
-                      (make-proc-obj
-                       (symbol->string (var-name var)) ;; name
-                       (prc-c-name val)                ;; c-name
-                       #f                              ;; primitive?
-                       #f                              ;; code
-                       (call-pattern val)              ;; call-pat
-                       #t                              ;; side-effects?
-                       '()                             ;; strict-pat
-                       0                               ;; lift-pat
-                       '(#f)                           ;; type
-                       #f)))                           ;; standard
+                      (let ((proc (prc-proc-obj-get val)))
+                        (proc-obj-name-set!
+                         proc
+                         (symbol->string (var-name var)))
+                        (proc-obj-c-name-set!
+                         proc
+                         (prc-c-name val))
+                        (proc-obj-primitive?-set!
+                         proc
+                         #f)
+                        (proc-obj-call-pat-set!
+                         proc
+                         (call-pattern val))
+                        proc)))
                  (bbs
                   (make-bbs)))
 
@@ -1463,7 +1470,7 @@
               (make-reg i)
               (if (live-reg-var? reg0 live-v)
                 #f
-                (make-reg 0)))
+                return-addr-reg))
             (if (live-reg-var? (car rest) live-v)
               (loop (cdr rest) (+ i 1))
               (make-reg i))))))))
@@ -1471,7 +1478,7 @@
 (define (highest-dead-reg live)
   (let ((live-v (live-vars live)))
     (cond ((or (null? regs) (not (live-reg-var? (car regs) live-v)))
-           (make-reg 0))
+           return-addr-reg)
           ((< (length regs) target.nb-regs)
            (make-reg (- target.nb-regs 1)))
           (else
@@ -1733,7 +1740,8 @@
            reason
            (if (reason-side? reason)
              (make-obj void-object)
-             (let ((proc (global-proc-obj node)))
+             (let ((proc (and (global? (ref-var node))
+                              (global-proc-obj node))))
                (if proc
                  (make-obj proc)
                  (var->opnd (ref-var node)))))))
@@ -3262,11 +3270,19 @@
                    in-reg))
                  (live-after
                   (if (reason-tail? reason2)
-                    (varset-empty)
-                    live))
+                      (varset-empty)
+                      live))
+                 (force-live
+                  (if (and (reason-tail? reason2)
+                           (optimize-dead-local-variables? (node-env node)))
+                      (varset-empty)
+                      (list->varset
+                       (keep (lambda (var) (not (var-temp? var)))
+                             (varset->list live)))))
                  (live-vars-at-each-reg
                   (compute-live-vars-at-each-expr
                    live-after
+                   force-live
                    (map car eval-order)
                    (make-reason-tail)))
                  (return-lbl
@@ -3274,12 +3290,22 @@
                  (live-vars-at-each-slot
                   (compute-live-vars-at-each-expr
                    (car live-vars-at-each-reg)
+                   force-live
                    in-stk
                    reason2))
                  (where
                   (if (reason-tail? reason2)
                       'tail-call
-                      (if proc 'internal 'call))))
+                      (if proc 'internal 'call)))
+                 (dead-end?
+                  (or (dead-end-calls?
+                       (node-env node))
+                      (and proc
+                           (proc-obj-dead-end? proc))))
+                 (dead-end-lbl
+                  (and return-lbl
+                       dead-end?
+                       (bbs-new-lbl! *bbs*))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 #;
@@ -3554,24 +3580,33 @@
                                  "Nontail call with interrupts disabled"))
 
                               (emit-instr!
-                               (make-jump
-                                opnd
-                                return-lbl
-                                (if local-proc-info #f nb-args)
-                                #f
-                                (and (safe? (node-env node))
-                                     (not local-proc-info)
-                                     (not (and (obj? opnd)
-                                               (let ((val (obj-val opnd)))
-                                                 (and (proc-obj? val)
-                                                      (proc-obj-primitive? val))))))
-                                (current-frame
-                                 (if return-lbl
-                                     (let ((ret-v (make-temp-var 0)))
-                                       (put-var (make-reg 0) ret-v)
-                                       (varset-adjoin liv ret-v))
-                                     liv))
-                                (node->comment node)))
+                               (if (and dead-end-lbl
+                                        (eq? proc **dead-end-proc-obj))
+                                   (make-jump (make-lbl dead-end-lbl)
+                                              #f
+                                              #f
+                                              #f
+                                              #f
+                                              (current-frame liv)
+                                              (node->comment node))
+                                   (make-jump
+                                    opnd
+                                    return-lbl
+                                    (if local-proc-info #f nb-args)
+                                    #f
+                                    (and (safe? (node-env node))
+                                         (not local-proc-info)
+                                         (not (and (obj? opnd)
+                                                   (let ((val (obj-val opnd)))
+                                                     (and (proc-obj? val)
+                                                          (proc-obj-primitive? val))))))
+                                    (current-frame
+                                     (if return-lbl
+                                         (let ((ret-v (make-temp-var 0)))
+                                           (put-var return-addr-reg ret-v)
+                                           (varset-adjoin liv ret-v))
+                                         liv))
+                                    (node->comment node))))
 
                               ; ==== FIFTH: put return label if there is one
 
@@ -3581,59 +3616,19 @@
                                 (flush-regs)
                                 (put-var target.proc-result result-var)
 
-                                (if (reason-tail? reason2)
+                                (if (not return-lbl)
                                   target.proc-result
-                                  (let ((frame
-                                         (current-frame
-                                          (varset-adjoin live result-var))))
+                                  (begin
 
-                                    (set! poll (return-poll poll where))
+                                    (if (not dead-end?)
+                                        (set! poll (return-poll poll where)))
 
-                                    (set! *bb* (make-bb
-                                                (emit-label!
-                                                 (make-label-return
-                                                  return-lbl
-                                                  frame
-                                                  (node->comment node)))
-                                                *bbs*))
-
-                                    (if (dead-end-calls? (node-env node))
-                                        (let* ((lbl1 (bbs-new-lbl! *bbs*))
-                                               (lbl2 (bbs-new-lbl! *bbs*)))
-
-                                          (emit-instr!
-                                           (make-jump (make-lbl lbl1)
-                                                      #f
-                                                      #f
-                                                      #f
-                                                      #f
-                                                      frame
-                                                      (node->comment node)))
-
-                                          (set! *bb* (make-bb
-                                                      (emit-label!
-                                                       (make-label-simple
-                                                        lbl1
-                                                        frame
-                                                        (node->comment node)))
-                                                      *bbs*))
-
-                                          (emit-instr!
-                                           (make-jump (make-lbl lbl1)
-                                                      #f
-                                                      #f
-                                                      #f
-                                                      #f
-                                                      frame
-                                                      (node->comment node)))
-
-                                          (set! *bb* (make-bb
-                                                      (emit-label!
-                                                       (make-label-simple
-                                                        lbl2
-                                                        frame
-                                                        (node->comment node)))
-                                                      *bbs*))))
+                                    (gen-return-label
+                                     node
+                                     return-lbl
+                                     dead-end-lbl
+                                     live
+                                     result-var)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 #;
@@ -3650,6 +3645,57 @@
 
 
                                     (gen-return node live reason target.proc-result)))))))))))))))))))
+
+(define (gen-return-label node return-lbl dead-end-lbl live result-var)
+  (let ((frame
+         (current-frame
+          (varset-adjoin live result-var))))
+
+    (set! *bb* (make-bb
+                (emit-label!
+                 (make-label-return
+                  return-lbl
+                  frame
+                  (node->comment node)))
+                *bbs*))
+
+    (if dead-end-lbl
+        (let ((after-lbl (bbs-new-lbl! *bbs*)))
+
+          (emit-instr!
+           (make-jump (make-lbl dead-end-lbl)
+                      #f
+                      #f
+                      #f
+                      #f
+                      (current-frame live)
+                      (node->comment node)))
+
+          (set! *bb* (make-bb
+                      (emit-label!
+                       (make-label-simple
+                        dead-end-lbl
+                        frame
+                        (node->comment node)))
+                      *bbs*))
+
+          (emit-instr!
+           (make-jump (make-obj
+                       **dead-end-proc-obj)
+                      return-lbl
+                      0 ;; nb-args
+                      #f
+                      #f
+                      frame
+                      (node->comment node)))
+
+          (set! *bb* (make-bb
+                      (emit-label!
+                       (make-label-simple
+                        after-lbl
+                        frame
+                        (node->comment node)))
+                      *bbs*))))))
 
 (define (contained-reg/slot opnd)
   (cond ((reg? opnd)
@@ -3882,13 +3928,13 @@
               (remove-free-vars! (free-v (car best-arg)))
               (loop (remq best-arg args) (cons best-arg ordered-args)))))))))
 
-(define (compute-live-vars-at-each-expr live exprs reason)
+(define (compute-live-vars-at-each-expr live force-live exprs reason)
   (if (null? exprs)
     (list live)
     (let* ((live-vars-at-next-exprs
-             (compute-live-vars-at-each-expr live (cdr exprs) reason))
+             (compute-live-vars-at-each-expr live force-live (cdr exprs) reason))
            (live-after
-             (car live-vars-at-next-exprs)))
+            (varset-union force-live (car live-vars-at-next-exprs))))
       (cond ((not (car exprs))
              (cons live-after
                    live-vars-at-next-exprs))
@@ -3988,7 +4034,9 @@
             (let* ((var (car vars*))
                    (val (var->val var))
                    (needed (vals-live-vars liv (map var->val (cdr vars*)))))
-              (if (var-useless? var)
+              (if (and (var-useless? var)
+                       (or (var-temp? var)
+                           (optimize-dead-local-variables? (node-env node))))
                 (gen-node val needed (make-reason-side))
                 (save-val (gen-node val
                                     needed
@@ -4124,7 +4172,7 @@
 
       ; move return address to where task expects it
       (save-opnd-to-reg (make-lbl return-lbl)
-                        target.task-return
+                        return-addr-reg
                         ret-var*
                         (varset-remove live-starting-task ret-var*)
                         (node->comment node))

@@ -2,7 +2,7 @@
 
 ;;; File: "Xlib.scm"
 
-;;; Copyright (c) 2006-2015 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2006-2021 by Marc Feeley, All Rights Reserved.
 
 ;;; A simple interface to the X Window System Xlib library.
 
@@ -383,7 +383,7 @@ end-of-c-declare
 (define XGCValues-foreground
   (c-lambda (XGCValues*)    ;; XGCValues box
             unsigned-long
-            "return ___arg1->foreground;"))
+            "___return(___arg1->foreground);"))
 
 (define XGCValues-foreground-set!
   (c-lambda (XGCValues*     ;; XGCValues box
@@ -394,7 +394,7 @@ end-of-c-declare
 (define XGCValues-background
   (c-lambda (XGCValues*)    ;; XGCValues box
             unsigned-long
-            "return ___arg1->background;"))
+            "___return(___arg1->background);"))
 
 (define XGCValues-background-set!
   (c-lambda (XGCValues*     ;; XGCValues box
@@ -405,7 +405,7 @@ end-of-c-declare
 (define XGCValues-font
   (c-lambda (XGCValues*)    ;; XGCValues box
             Font
-            "return ___arg1->font;"))
+            "___return(___arg1->font);"))
 
 (define XGCValues-font-set!
   (c-lambda (XGCValues*     ;; XGCValues box

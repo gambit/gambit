@@ -2,7 +2,7 @@
 
 ;;; File: "_prims.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -226,8 +226,8 @@
 ("##cosh"                             (1)   #f ()    0    number  extended)
 ("extract-bit-field"                  (3)   #f 0     0    integer gambit)
 ("##extract-bit-field"                (3)   #f ()    0    integer extended)
-("first-bit-set"                      (1)   #f 0     0    fixnum  gambit)
-("##first-bit-set"                    (1)   #f ()    0    fixnum  extended)
+("first-set-bit"                      (1)   #f 0     0    fixnum  gambit)
+("##first-set-bit"                    (1)   #f ()    0    fixnum  extended)
 ("integer-length"                     (1)   #f 0     0    fixnum  gambit)
 ("##integer-length"                   (1)   #f ()    0    fixnum  extended)
 ("integer-nth-root"                   (2)   #f 0     0    integer gambit)
@@ -339,8 +339,8 @@
 ("##fxeven?"                          (1)   #f ()    0    boolean extended)
 ("fxeqv"                              0     #f 0     0    fixnum  extended)
 ("##fxeqv"                            0     #f ()    0    fixnum  extended)
-("fxfirst-bit-set"                    (1)   #f 0     0    fixnum  r6rs)
-("##fxfirst-bit-set"                  (1)   #f ()    0    fixnum  extended)
+("fxfirst-set-bit"                    (1)   #f 0     0    fixnum  r6rs)
+("##fxfirst-set-bit"                  (1)   #f ()    0    fixnum  extended)
 ("fxif"                               (3)   #f 0     0    fixnum  r6rs)
 ("##fxif"                             (3)   #f ()    0    fixnum  extended)
 ("fxior"                              0     #f 0     0    fixnum  r6rs)
@@ -733,8 +733,10 @@
 ("##list->string"                     (1)   #f ()    0    string    extended)
 ("make-string"                        (1 2) #f 0     0    string    ieee)
 ("##make-string"                      (1 2) #f ()    0    string    extended)
+("##make-string-small"                (1 2) #f ()    0    string    extended)
 ("substring"                          (3)   #f 0     0    string    ieee)
 ("##substring"                        (3)   #f ()    0    string    extended)
+("##substring-small"                  (3)   #f ()    0    string    extended)
 ("string"                             0     #f 0     0    string    ieee)
 ("##string"                           0     #f ()    0    string    extended)
 ("string->list"                       (1)   #f 0     0    list      r4rs)
@@ -743,6 +745,7 @@
 ("##string-append"                    0     #f ()    0    string    extended)
 ("string-copy"                        (1 2 3)#f 0    0    string    r4rs)
 ("##string-copy"                      (1 2 3)#f ()   0    string    extended)
+("##string-copy-small"                (1 2 3)#f ()   0    string    extended)
 ("string-fill!"                       (2 3 4)#t 0    0    #f        r4rs)
 ("##string-fill!"                     (2 3 4)#t ()   0    #f        extended)
 ("string-length"                      (1)   #f 0     0    fixnum    ieee)
@@ -774,23 +777,32 @@
 ("string-ci>?"                        0     #f 0     0    boolean   ieee)
 ("##string-ci>?"                      0     #f ()    0    boolean   extended)
 
+("utf8->string"                       (1)   #f 0     0    string    r7rs)
+("##utf8->string"                     (1)   #f ()    0    string    extended)
 ("string->utf8"                       (1)   #f 0     0    u8vector  r7rs)
 ("##string->utf8"                     (1)   #f ()    0    u8vector  extended)
 ("string-copy!"                       (3 4 5)#t 0    0    #f        r7rs)
 ("##string-copy!"                     (3 4 5)#t ()   0    string    extended)
+("##string-insert"                    (3)   #f ()    0    string    extended)
+("##string-insert-small"              (3)   #f ()    0    string    extended)
+("##string-delete"                    (2)   #f ()    0    string    extended)
+("##string-delete-small"              (2)   #f ()    0    string    extended)
 ("string-foldcase"                    (1)   #f 0     0    string    r7rs)
 ("##string-foldcase"                  (1)   #f ()    0    string    extended)
-("utf8->string"                       (1)   #f 0     0    string    r7rs)
-("##utf8->string"                     (1)   #f ()    0    string    extended)
+("string-upcase"                      (1)   #f 0     0    string    r7rs)
+("##string-upcase"                    (1)   #f ()    0    string    extended)
+("string-downcase"                    (1)   #f 0     0    string    r7rs)
+("##string-downcase"                  (1)   #f ()    0    string    extended)
 
-("append-strings"                     (1)   #f 0     0    string    gambit)
-("##append-strings"                   (1)   #f ()    0    string    extended)
+("string-concatenate"                 (1 2) #f 0     0    string    gambit)
+("##string-concatenate"               (1 2) #f ()    0    string    extended)
 ("substring-fill!"                    (4)   #t 0     0    #f        gambit)
 ("##substring-fill!"                  (4)   #t ()    0    #f        extended)
 ("substring-move!"                    (5)   #t 0     0    #f        gambit)
 ("##substring-move!"                  (5)   #t ()    0    string    extended)
 ("string-set"                         (3)   #f 0     0    string    gambit)
 ("##string-set"                       (3)   #f ()    0    string    extended)
+("##string-set-small"                 (3)   #f ()    0    string    extended)
 ("string-shrink!"                     (2)   #t 0     0    #f        gambit)
 ("##string-shrink!"                   (2)   #t ()    0    string    extended)
 
@@ -800,6 +812,7 @@
 ("##list->vector"                     (1)   #f ()    0    vector    extended)
 ("make-vector"                        (1 2) #f (1)   0    vector    ieee)
 ("##make-vector"                      (1 2) #f ()    0    vector    extended)
+("##make-vector-small"                (1 2) #f ()    0    vector    extended)
 ("vector"                             0     #f ()    0    vector    ieee)
 ("##vector"                           0     #f ()    0    vector    extended)
 ("vector->list"                       (1)   #f 0     0    list      r4rs)
@@ -819,13 +832,19 @@
 ("##vector-append"                    0     #f ()    0    vector    extended)
 ("vector-copy"                        (1 2 3)#f 0    0    vector    r7rs)
 ("##vector-copy"                      (1 2 3)#f ()   0    vector    extended)
+("##vector-copy-small"                (1 2 3)#f ()   0    vector    extended)
 ("vector-copy!"                       (3 4 5)#t 0    0    #f        r7rs)
 ("##vector-copy!"                     (3 4 5)#t ()   0    vector    extended)
+("##vector-insert"                    (3)   #f ()    0    vector    extended)
+("##vector-insert-small"              (3)   #f ()    0    vector    extended)
+("##vector-delete"                    (2)   #f ()    0    vector    extended)
+("##vector-delete-small"              (2)   #f ()    0    vector    extended)
 
-("append-vectors"                     (1)   #f 0     0    vector    gambit)
-("##append-vectors"                   (1)   #f ()    0    vector    extended)
+("vector-concatenate"                 (1 2) #f 0     0    vector    gambit)
+("##vector-concatenate"               (1 2) #f ()    0    vector    extended)
 ("subvector"                          (3)   #f 0     0    vector    gambit)
 ("##subvector"                        (3)   #f ()    0    vector    extended)
+("##subvector-small"                  (3)   #f ()    0    vector    extended)
 ("subvector-fill!"                    (4)   #t 0     0    #f        gambit)
 ("##subvector-fill!"                  (4)   #t ()    0    #f        extended)
 ("subvector-move!"                    (5)   #t 0     0    #f        gambit)
@@ -836,19 +855,22 @@
 ("##vector-inc!"                      (2 3) #t ()    0    fixnum    extended)
 ("vector-set"                         (3)   #f 0     0    vector    gambit)
 ("##vector-set"                       (3)   #f ()    0    vector    extended)
+("##vector-set-small"                 (3)   #f ()    0    vector    extended)
 ("vector-shrink!"                     (2)   #t 0     0    #f        gambit)
 ("##vector-shrink!"                   (2)   #t ()    0    vector    extended)
 
 ;; homogeneous vector
 
-("append-s8vectors"                   (1)   #f 0     0    s8vector  gambit)
-("##append-s8vectors"                 (1)   #f ()    0    s8vector  extended)
+("s8vector-concatenate"               (1 2) #f 0     0    s8vector  gambit)
+("##s8vector-concatenate"             (1 2) #f ()    0    s8vector  extended)
 ("list->s8vector"                     (1)   #f 0     0    s8vector  gambit)
 ("##list->s8vector"                   (1)   #f ()    0    s8vector  extended)
 ("make-s8vector"                      (1 2) #f 0     0    s8vector  gambit)
 ("##make-s8vector"                    (1 2) #f ()    0    s8vector  extended)
+("##make-s8vector-small"              (1 2) #f ()    0    s8vector  extended)
 ("subs8vector"                        (3)   #f 0     0    s8vector  gambit)
 ("##subs8vector"                      (3)   #f ()    0    s8vector  extended)
+("##subs8vector-small"                (3)   #f ()    0    s8vector  extended)
 ("subs8vector-fill!"                  (4)   #t 0     0    #f        gambit)
 ("##subs8vector-fill!"                (4)   #t ()    0    #f        extended)
 ("subs8vector-move!"                  (5)   #t 0     0    #f        gambit)
@@ -861,6 +883,7 @@
 ("##s8vector-append"                  0     #f ()    0    s8vector  extended)
 ("s8vector-copy"                      (1 2 3)#f 0    0    s8vector  gambit)
 ("##s8vector-copy"                    (1 2 3)#f ()   0    s8vector  extended)
+("##s8vector-copy-small"              (1 2 3)#f ()   0    s8vector  extended)
 ("s8vector-copy!"                     (3 4 5)#t 0    0    #f        gambit)
 ("##s8vector-copy!"                   (3 4 5)#t ()   0    s8vector  extended)
 ("s8vector-fill!"                     (2 3 4)#t 0    0    #f        gambit)
@@ -871,21 +894,28 @@
 ("##s8vector-ref"                     (2)   #f ()    0    fixnum    extended)
 ("s8vector-set"                       (3)   #f 0     0    s8vector  gambit)
 ("##s8vector-set"                     (3)   #f ()    0    s8vector  extended)
+("##s8vector-set-small"               (3)   #f ()    0    s8vector  extended)
 ("s8vector-set!"                      (3)   #t 0     0    #f        gambit)
 ("##s8vector-set!"                    (3)   #t ()    0    s8vector  extended)
 ("s8vector-shrink!"                   (2)   #t 0     0    #f        gambit)
 ("##s8vector-shrink!"                 (2)   #t ()    0    s8vector  extended)
 ("s8vector?"                          (1)   #f 0     0    boolean   gambit)
 ("##s8vector?"                        (1)   #f ()    0    boolean   extended)
+("##s8vector-insert"                  (3)   #f ()    0    s8vector  extended)
+("##s8vector-insert-small"            (3)   #f ()    0    s8vector  extended)
+("##s8vector-delete"                  (2)   #f ()    0    s8vector  extended)
+("##s8vector-delete-small"            (2)   #f ()    0    s8vector  extended)
 
-("append-u8vectors"                   (1)   #f 0     0    u8vector  gambit)
-("##append-u8vectors"                 (1)   #f ()    0    u8vector  extended)
+("u8vector-concatenate"               (1 2) #f 0     0    u8vector  gambit)
+("##u8vector-concatenate"             (1 2) #f ()    0    u8vector  extended)
 ("list->u8vector"                     (1)   #f 0     0    u8vector  gambit)
 ("##list->u8vector"                   (1)   #f ()    0    u8vector  extended)
 ("make-u8vector"                      (1 2) #f 0     0    u8vector  gambit)
 ("##make-u8vector"                    (1 2) #f ()    0    u8vector  extended)
+("##make-u8vector-small"              (1 2) #f ()    0    u8vector  extended)
 ("subu8vector"                        (3)   #f 0     0    u8vector  gambit)
 ("##subu8vector"                      (3)   #f ()    0    u8vector  extended)
+("##subu8vector-small"                (3)   #f ()    0    u8vector  extended)
 ("subu8vector-fill!"                  (4)   #t 0     0    #f        gambit)
 ("##subu8vector-fill!"                (4)   #t ()    0    #f        extended)
 ("subu8vector-move!"                  (5)   #t 0     0    #f        gambit)
@@ -898,6 +928,7 @@
 ("##u8vector-append"                  0     #f ()    0    u8vector  extended)
 ("u8vector-copy"                      (1 2 3)#f 0    0    u8vector  gambit)
 ("##u8vector-copy"                    (1 2 3)#f ()   0    u8vector  extended)
+("##u8vector-copy-small"              (1 2 3)#f ()   0    u8vector  extended)
 ("u8vector-copy!"                     (3 4 5)#t 0    0    #f        gambit)
 ("##u8vector-copy!"                   (3 4 5)#t ()   0    u8vector  extended)
 ("u8vector-fill!"                     (2 3 4)#t 0    0    #f        gambit)
@@ -908,21 +939,28 @@
 ("##u8vector-ref"                     (2)   #f ()    0    fixnum    extended)
 ("u8vector-set"                       (3)   #f 0     0    u8vector  gambit)
 ("##u8vector-set"                     (3)   #f ()    0    u8vector  extended)
+("##u8vector-set-small"               (3)   #f ()    0    u8vector  extended)
 ("u8vector-set!"                      (3)   #t 0     0    #f        gambit)
 ("##u8vector-set!"                    (3)   #t ()    0    u8vector  extended)
 ("u8vector-shrink!"                   (2)   #t 0     0    #f        gambit)
 ("##u8vector-shrink!"                 (2)   #t ()    0    u8vector  extended)
 ("u8vector?"                          (1)   #f 0     0    boolean   gambit)
 ("##u8vector?"                        (1)   #f ()    0    boolean   extended)
+("##u8vector-insert"                  (3)   #f ()    0    u8vector  extended)
+("##u8vector-insert-small"            (3)   #f ()    0    u8vector  extended)
+("##u8vector-delete"                  (2)   #f ()    0    u8vector  extended)
+("##u8vector-delete-small"            (2)   #f ()    0    u8vector  extended)
 
-("append-s16vectors"                  (1)   #f 0     0    s16vector gambit)
-("##append-s16vectors"                (1)   #f ()    0    s16vector extended)
+("s16vector-concatenate"              (1 2) #f 0     0    s16vector gambit)
+("##s16vector-concatenate"            (1 2) #f ()    0    s16vector extended)
 ("list->s16vector"                    (1)   #f 0     0    s16vector gambit)
 ("##list->s16vector"                  (1)   #f ()    0    s16vector extended)
 ("make-s16vector"                     (1 2) #f 0     0    s16vector gambit)
 ("##make-s16vector"                   (1 2) #f ()    0    s16vector extended)
+("##make-s16vector-small"             (1 2) #f ()    0    s16vector extended)
 ("subs16vector"                       (3)   #f 0     0    s16vector gambit)
 ("##subs16vector"                     (3)   #f ()    0    s16vector extended)
+("##subs16vector-small"               (3)   #f ()    0    s16vector extended)
 ("subs16vector-fill!"                 (4)   #t 0     0    #f        gambit)
 ("##subs16vector-fill!"               (4)   #t ()    0    #f        extended)
 ("subs16vector-move!"                 (5)   #t 0     0    #f        gambit)
@@ -935,6 +973,7 @@
 ("##s16vector-append"                 0     #f ()    0    s16vector extended)
 ("s16vector-copy"                     (1 2 3)#f 0    0    s16vector gambit)
 ("##s16vector-copy"                   (1 2 3)#f ()   0    s16vector extended)
+("##s16vector-copy-small"             (1 2 3)#f ()   0    s16vector extended)
 ("s16vector-copy!"                    (3 4 5)#t 0    0    #f        gambit)
 ("##s16vector-copy!"                  (3 4 5)#t ()   0    s16vector extended)
 ("s16vector-fill!"                    (2 3 4)#t 0    0    #f        gambit)
@@ -945,21 +984,28 @@
 ("##s16vector-ref"                    (2)   #f ()    0    fixnum    extended)
 ("s16vector-set"                      (3)   #f 0     0    s16vector gambit)
 ("##s16vector-set"                    (3)   #f ()    0    s16vector extended)
+("##s16vector-set-small"              (3)   #f ()    0    s16vector extended)
 ("s16vector-set!"                     (3)   #t 0     0    #f        gambit)
 ("##s16vector-set!"                   (3)   #t ()    0    s16vector extended)
 ("s16vector-shrink!"                  (2)   #t 0     0    #f        gambit)
 ("##s16vector-shrink!"                (2)   #t ()    0    s16vector extended)
 ("s16vector?"                         (1)   #f 0     0    boolean   gambit)
 ("##s16vector?"                       (1)   #f ()    0    boolean   extended)
+("##s16vector-insert"                 (3)   #f ()    0    s16vector extended)
+("##s16vector-insert-small"           (3)   #f ()    0    s16vector extended)
+("##s16vector-delete"                 (2)   #f ()    0    s16vector extended)
+("##s16vector-delete-small"           (2)   #f ()    0    s16vector extended)
 
-("append-u16vectors"                  (1)   #f 0     0    u16vector gambit)
-("##append-u16vectors"                (1)   #f ()    0    u16vector extended)
+("u16vector-concatenate"              (1 2) #f 0     0    u16vector gambit)
+("##u16vector-concatenate"            (1 2) #f ()    0    u16vector extended)
 ("list->u16vector"                    (1)   #f 0     0    u16vector gambit)
 ("##list->u16vector"                  (1)   #f ()    0    u16vector extended)
 ("make-u16vector"                     (1 2) #f 0     0    u16vector gambit)
 ("##make-u16vector"                   (1 2) #f ()    0    u16vector extended)
+("##make-u16vector-small"             (1 2) #f ()    0    u16vector extended)
 ("subu16vector"                       (3)   #f 0     0    u16vector gambit)
 ("##subu16vector"                     (3)   #f ()    0    u16vector extended)
+("##subu16vector-small"               (3)   #f ()    0    u16vector extended)
 ("subu16vector-fill!"                 (4)   #t 0     0    #f        gambit)
 ("##subu16vector-fill!"               (4)   #t ()    0    #f        extended)
 ("subu16vector-move!"                 (5)   #t 0     0    #f        gambit)
@@ -972,6 +1018,7 @@
 ("##u16vector-append"                 0     #f ()    0    u16vector extended)
 ("u16vector-copy"                     (1 2 3)#f 0    0    u16vector gambit)
 ("##u16vector-copy"                   (1 2 3)#f ()   0    u16vector extended)
+("##u16vector-copy-small"             (1 2 3)#f ()   0    u16vector extended)
 ("u16vector-copy!"                    (3 4 5)#t 0    0    #f        gambit)
 ("##u16vector-copy!"                  (3 4 5)#t ()   0    u16vector extended)
 ("u16vector-fill!"                    (2 3 4)#t 0    0    #f        gambit)
@@ -982,21 +1029,28 @@
 ("##u16vector-ref"                    (2)   #f ()    0    fixnum    extended)
 ("u16vector-set"                      (3)   #f 0     0    u16vector gambit)
 ("##u16vector-set"                    (3)   #f ()    0    u16vector extended)
+("##u16vector-set-small"              (3)   #f ()    0    u16vector extended)
 ("u16vector-set!"                     (3)   #t 0     0    #f        gambit)
 ("##u16vector-set!"                   (3)   #t ()    0    u16vector extended)
 ("u16vector-shrink!"                  (2)   #t 0     0    #f        gambit)
 ("##u16vector-shrink!"                (2)   #t ()    0    u16vector extended)
 ("u16vector?"                         (1)   #f 0     0    boolean   gambit)
 ("##u16vector?"                       (1)   #f ()    0    boolean   extended)
+("##u16vector-insert"                 (3)   #f ()    0    u16vector extended)
+("##u16vector-insert-small"           (3)   #f ()    0    u16vector extended)
+("##u16vector-delete"                 (2)   #f ()    0    u16vector extended)
+("##u16vector-delete-small"           (2)   #f ()    0    u16vector extended)
 
-("append-s32vectors"                  (1)   #f 0     0    s32vector gambit)
-("##append-s32vectors"                (1)   #f ()    0    s32vector extended)
+("s32vector-concatenate"              (1 2) #f 0     0    s32vector gambit)
+("##s32vector-concatenate"            (1 2) #f ()    0    s32vector extended)
 ("list->s32vector"                    (1)   #f 0     0    s32vector gambit)
 ("##list->s32vector"                  (1)   #f ()    0    s32vector extended)
 ("make-s32vector"                     (1 2) #f 0     0    s32vector gambit)
 ("##make-s32vector"                   (1 2) #f ()    0    s32vector extended)
+("##make-s32vector-small"             (1 2) #f ()    0    s32vector extended)
 ("subs32vector"                       (3)   #f 0     0    s32vector gambit)
 ("##subs32vector"                     (3)   #f ()    0    s32vector extended)
+("##subs32vector-small"               (3)   #f ()    0    s32vector extended)
 ("subs32vector-fill!"                 (4)   #t 0     0    #f        gambit)
 ("##subs32vector-fill!"               (4)   #t ()    0    #f        extended)
 ("subs32vector-move!"                 (5)   #t 0     0    #f        gambit)
@@ -1009,6 +1063,7 @@
 ("##s32vector-append"                 0     #f ()    0    s32vector extended)
 ("s32vector-copy"                     (1 2 3)#f 0    0    s32vector gambit)
 ("##s32vector-copy"                   (1 2 3)#f ()   0    s32vector extended)
+("##s32vector-copy-small"             (1 2 3)#f ()   0    s32vector extended)
 ("s32vector-copy!"                    (3 4 5)#t 0    0    #f        gambit)
 ("##s32vector-copy!"                  (3 4 5)#t ()   0    s32vector extended)
 ("s32vector-fill!"                    (2 3 4)#t 0    0    #f        gambit)
@@ -1019,21 +1074,28 @@
 ("##s32vector-ref"                    (2)   #f ()    0    integer   extended)
 ("s32vector-set"                      (3)   #f 0     0    s32vector gambit)
 ("##s32vector-set"                    (3)   #f ()    0    s32vector extended)
+("##s32vector-set-small"              (3)   #f ()    0    s32vector extended)
 ("s32vector-set!"                     (3)   #t 0     0    #f        gambit)
 ("##s32vector-set!"                   (3)   #t ()    0    s32vector extended)
 ("s32vector-shrink!"                  (2)   #t 0     0    #f        gambit)
 ("##s32vector-shrink!"                (2)   #t ()    0    s32vector extended)
 ("s32vector?"                         (1)   #f 0     0    boolean   gambit)
 ("##s32vector?"                       (1)   #f ()    0    boolean   extended)
+("##s32vector-insert"                 (3)   #f ()    0    s32vector extended)
+("##s32vector-insert-small"           (3)   #f ()    0    s32vector extended)
+("##s32vector-delete"                 (2)   #f ()    0    s32vector extended)
+("##s32vector-delete-small"           (2)   #f ()    0    s32vector extended)
 
-("append-u32vectors"                  (1)   #f 0     0    u32vector gambit)
-("##append-u32vectors"                (1)   #f ()    0    u32vector extended)
+("u32vector-concatenate"              (1 2) #f 0     0    u32vector gambit)
+("##u32vector-concatenate"            (1 2) #f ()    0    u32vector extended)
 ("list->u32vector"                    (1)   #f 0     0    u32vector gambit)
 ("##list->u32vector"                  (1)   #f ()    0    u32vector extended)
 ("make-u32vector"                     (1 2) #f 0     0    u32vector gambit)
 ("##make-u32vector"                   (1 2) #f ()    0    u32vector extended)
+("##make-u32vector-small"             (1 2) #f ()    0    u32vector extended)
 ("subu32vector"                       (3)   #f 0     0    u32vector gambit)
 ("##subu32vector"                     (3)   #f ()    0    u32vector extended)
+("##subu32vector-small"               (3)   #f ()    0    u32vector extended)
 ("subu32vector-fill!"                 (4)   #t 0     0    #f        gambit)
 ("##subu32vector-fill!"               (4)   #t ()    0    #f        extended)
 ("subu32vector-move!"                 (5)   #t 0     0    #f        gambit)
@@ -1046,6 +1108,7 @@
 ("##u32vector-append"                 0     #f ()    0    u32vector extended)
 ("u32vector-copy"                     (1 2 3)#f 0    0    u32vector gambit)
 ("##u32vector-copy"                   (1 2 3)#f ()   0    u32vector extended)
+("##u32vector-copy-small"             (1 2 3)#f ()   0    u32vector extended)
 ("u32vector-copy!"                    (3 4 5)#t 0    0    #f        gambit)
 ("##u32vector-copy!"                  (3 4 5)#t ()   0    u32vector extended)
 ("u32vector-fill!"                    (2 3 4)#t 0    0    #f        gambit)
@@ -1056,21 +1119,28 @@
 ("##u32vector-ref"                    (2)   #f ()    0    integer   extended)
 ("u32vector-set"                      (3)   #f 0     0    u32vector gambit)
 ("##u32vector-set"                    (3)   #f ()    0    u32vector extended)
+("##u32vector-set-small"              (3)   #f ()    0    u32vector extended)
 ("u32vector-set!"                     (3)   #t 0     0    #f        gambit)
 ("##u32vector-set!"                   (3)   #t ()    0    u32vector extended)
 ("u32vector-shrink!"                  (2)   #t 0     0    #f        gambit)
 ("##u32vector-shrink!"                (2)   #t ()    0    u32vector extended)
 ("u32vector?"                         (1)   #f 0     0    boolean   gambit)
 ("##u32vector?"                       (1)   #f ()    0    boolean   extended)
+("##u32vector-insert"                 (3)   #f ()    0    u32vector extended)
+("##u32vector-insert-small"           (3)   #f ()    0    u32vector extended)
+("##u32vector-delete"                 (2)   #f ()    0    u32vector extended)
+("##u32vector-delete-small"           (2)   #f ()    0    u32vector extended)
 
-("append-s64vectors"                  (1)   #f 0     0    s64vector gambit)
-("##append-s64vectors"                (1)   #f ()    0    s64vector extended)
+("s64vector-concatenate"              (1 2) #f 0     0    s64vector gambit)
+("##s64vector-concatenate"            (1 2) #f ()    0    s64vector extended)
 ("list->s64vector"                    (1)   #f 0     0    s64vector gambit)
 ("##list->s64vector"                  (1)   #f ()    0    s64vector extended)
 ("make-s64vector"                     (1 2) #f 0     0    s64vector gambit)
 ("##make-s64vector"                   (1 2) #f ()    0    s64vector extended)
+("##make-s64vector-small"             (1 2) #f ()    0    s64vector extended)
 ("subs64vector"                       (3)   #f 0     0    s64vector gambit)
 ("##subs64vector"                     (3)   #f ()    0    s64vector extended)
+("##subs64vector-small"               (3)   #f ()    0    s64vector extended)
 ("subs64vector-fill!"                 (4)   #t 0     0    #f        gambit)
 ("##subs64vector-fill!"               (4)   #t ()    0    #f        extended)
 ("subs64vector-move!"                 (5)   #t 0     0    #f        gambit)
@@ -1083,6 +1153,7 @@
 ("##s64vector-append"                 0     #f ()    0    s64vector extended)
 ("s64vector-copy"                     (1 2 3)#f 0    0    s64vector gambit)
 ("##s64vector-copy"                   (1 2 3)#f ()   0    s64vector extended)
+("##s64vector-copy-small"             (1 2 3)#f ()   0    s64vector extended)
 ("s64vector-copy!"                    (3 4 5)#t 0    0    #f        gambit)
 ("##s64vector-copy!"                  (3 4 5)#t ()   0    s64vector extended)
 ("s64vector-fill!"                    (2 3 4)#t 0    0    #f        gambit)
@@ -1093,21 +1164,28 @@
 ("##s64vector-ref"                    (2)   #f ()    0    integer   extended)
 ("s64vector-set"                      (3)   #f 0     0    s64vector gambit)
 ("##s64vector-set"                    (3)   #f ()    0    s64vector extended)
+("##s64vector-set-small"              (3)   #f ()    0    s64vector extended)
 ("s64vector-set!"                     (3)   #t 0     0    #f        gambit)
 ("##s64vector-set!"                   (3)   #t ()    0    s64vector extended)
 ("s64vector-shrink!"                  (2)   #t 0     0    #f        gambit)
 ("##s64vector-shrink!"                (2)   #t ()    0    s64vector extended)
 ("s64vector?"                         (1)   #f 0     0    boolean   gambit)
 ("##s64vector?"                       (1)   #f ()    0    boolean   extended)
+("##s64vector-insert"                 (3)   #f ()    0    s64vector extended)
+("##s64vector-insert-small"           (3)   #f ()    0    s64vector extended)
+("##s64vector-delete"                 (2)   #f ()    0    s64vector extended)
+("##s64vector-delete-small"           (2)   #f ()    0    s64vector extended)
 
-("append-u64vectors"                  (1)   #f 0     0    u64vector gambit)
-("##append-u64vectors"                (1)   #f ()    0    u64vector extended)
+("u64vector-concatenate"              (1 2) #f 0     0    u64vector gambit)
+("##u64vector-concatenate"            (1 2) #f ()    0    u64vector extended)
 ("list->u64vector"                    (1)   #f 0     0    u64vector gambit)
 ("##list->u64vector"                  (1)   #f ()    0    u64vector extended)
 ("make-u64vector"                     (1 2) #f 0     0    u64vector gambit)
 ("##make-u64vector"                   (1 2) #f ()    0    u64vector extended)
+("##make-u64vector-small"             (1 2) #f ()    0    u64vector extended)
 ("subu64vector"                       (3)   #f 0     0    u64vector gambit)
 ("##subu64vector"                     (3)   #f ()    0    u64vector extended)
+("##subu64vector-small"               (3)   #f ()    0    u64vector extended)
 ("subu64vector-fill!"                 (4)   #t 0     0    #f        gambit)
 ("##subu64vector-fill!"               (4)   #t ()    0    #f        extended)
 ("subu64vector-move!"                 (5)   #t 0     0    #f        gambit)
@@ -1120,6 +1198,7 @@
 ("##u64vector-append"                 0     #f ()    0    u64vector extended)
 ("u64vector-copy"                     (1 2 3)#f 0    0    u64vector gambit)
 ("##u64vector-copy"                   (1 2 3)#f ()   0    u64vector extended)
+("##u64vector-copy-small"             (1 2 3)#f ()   0    u64vector extended)
 ("u64vector-copy!"                    (3 4 5)#t 0    0    #f        gambit)
 ("##u64vector-copy!"                  (3 4 5)#t ()   0    u64vector extended)
 ("u64vector-fill!"                    (2 3 4)#t 0    0    #f        gambit)
@@ -1130,21 +1209,28 @@
 ("##u64vector-ref"                    (2)   #f ()    0    integer   extended)
 ("u64vector-set"                      (3)   #f 0     0    u64vector gambit)
 ("##u64vector-set"                    (3)   #f ()    0    u64vector extended)
+("##u64vector-set-small"              (3)   #f ()    0    u64vector extended)
 ("u64vector-set!"                     (3)   #t 0     0    #f        gambit)
 ("##u64vector-set!"                   (3)   #t ()    0    u64vector extended)
 ("u64vector-shrink!"                  (2)   #t 0     0    #f        gambit)
 ("##u64vector-shrink!"                (2)   #t ()    0    u64vector extended)
 ("u64vector?"                         (1)   #f 0     0    boolean   gambit)
 ("##u64vector?"                       (1)   #f ()    0    boolean   extended)
+("##u64vector-insert"                 (3)   #f ()    0    u64vector extended)
+("##u64vector-insert-small"           (3)   #f ()    0    u64vector extended)
+("##u64vector-delete"                 (2)   #f ()    0    u64vector extended)
+("##u64vector-delete-small"           (2)   #f ()    0    u64vector extended)
 
-("append-f32vectors"                  (1)   #f 0     0    f32vector gambit)
-("##append-f32vectors"                (1)   #f ()    0    f32vector extended)
+("f32vector-concatenate"              (1 2) #f 0     0    f32vector gambit)
+("##f32vector-concatenate"            (1 2) #f ()    0    f32vector extended)
 ("list->f32vector"                    (1)   #f 0     0    f32vector gambit)
 ("##list->f32vector"                  (1)   #f ()    0    f32vector extended)
 ("make-f32vector"                     (1 2) #f 0     0    f32vector gambit)
 ("##make-f32vector"                   (1 2) #f ()    0    f32vector extended)
+("##make-f32vector-small"             (1 2) #f ()    0    f32vector extended)
 ("subf32vector"                       (3)   #f 0     0    f32vector gambit)
 ("##subf32vector"                     (3)   #f ()    0    f32vector extended)
+("##subf32vector-small"               (3)   #f ()    0    f32vector extended)
 ("subf32vector-fill!"                 (4)   #t 0     0    #f        gambit)
 ("##subf32vector-fill!"               (4)   #t ()    0    #f        extended)
 ("subf32vector-move!"                 (5)   #t 0     0    #f        gambit)
@@ -1157,6 +1243,7 @@
 ("##f32vector-append"                 0     #f ()    0    f32vector extended)
 ("f32vector-copy"                     (1 2 3)#f 0    0    f32vector gambit)
 ("##f32vector-copy"                   (1 2 3)#f ()   0    f32vector extended)
+("##f32vector-copy-small"             (1 2 3)#f ()   0    f32vector extended)
 ("f32vector-copy!"                    (3 4 5)#t 0    0    #f        gambit)
 ("##f32vector-copy!"                  (3 4 5)#t ()   0    f32vector extended)
 ("f32vector-fill!"                    (2 3 4)#t 0    0    #f        gambit)
@@ -1167,21 +1254,28 @@
 ("##f32vector-ref"                    (2)   #f ()    0    flonum    extended)
 ("f32vector-set"                      (3)   #f 0     0    f32vector gambit)
 ("##f32vector-set"                    (3)   #f ()    0    f32vector extended)
+("##f32vector-set-small"              (3)   #f ()    0    f32vector extended)
 ("f32vector-set!"                     (3)   #t 0     0    #f        gambit)
 ("##f32vector-set!"                   (3)   #t ()    0    f32vector extended)
 ("f32vector-shrink!"                  (2)   #t 0     0    #f        gambit)
 ("##f32vector-shrink!"                (2)   #t ()    0    f32vector extended)
 ("f32vector?"                         (1)   #f 0     0    boolean   gambit)
 ("##f32vector?"                       (1)   #f ()    0    boolean   extended)
+("##f32vector-insert"                 (3)   #f ()    0    f32vector extended)
+("##f32vector-insert-small"           (3)   #f ()    0    f32vector extended)
+("##f32vector-delete"                 (2)   #f ()    0    f32vector extended)
+("##f32vector-delete-small"           (2)   #f ()    0    f32vector extended)
 
-("append-f64vectors"                  (1)   #f 0     0    f64vector gambit)
-("##append-f64vectors"                (1)   #f ()    0    f64vector extended)
+("f64vector-concatenate"              (1 2) #f 0     0    f64vector gambit)
+("##f64vector-concatenate"            (1 2) #f ()    0    f64vector extended)
 ("list->f64vector"                    (1)   #f 0     0    f64vector gambit)
 ("##list->f64vector"                  (1)   #f ()    0    f64vector extended)
 ("make-f64vector"                     (1 2) #f 0     0    f64vector gambit)
 ("##make-f64vector"                   (1 2) #f ()    0    f64vector extended)
+("##make-f64vector-small"             (1 2) #f ()    0    f64vector extended)
 ("subf64vector"                       (3)   #f 0     0    f64vector gambit)
 ("##subf64vector"                     (3)   #f ()    0    f64vector extended)
+("##subf64vector-small"               (3)   #f ()    0    f64vector extended)
 ("subf64vector-fill!"                 (4)   #t 0     0    #f        gambit)
 ("##subf64vector-fill!"               (4)   #t ()    0    #f        extended)
 ("subf64vector-move!"                 (5)   #t 0     0    #f        gambit)
@@ -1194,6 +1288,7 @@
 ("##f64vector-append"                 0     #f ()    0    f64vector extended)
 ("f64vector-copy"                     (1 2 3)#f 0    0    f64vector gambit)
 ("##f64vector-copy"                   (1 2 3)#f ()   0    f64vector extended)
+("##f64vector-copy-small"             (1 2 3)#f ()   0    f64vector extended)
 ("f64vector-copy!"                    (3 4 5)#t 0    0    #f        gambit)
 ("##f64vector-copy!"                  (3 4 5)#t ()   0    f64vector extended)
 ("f64vector-fill!"                    (2 3 4)#t 0    0    #f        gambit)
@@ -1204,12 +1299,17 @@
 ("##f64vector-ref"                    (2)   #f ()    0    flonum    extended)
 ("f64vector-set"                      (3)   #f 0     0    f64vector gambit)
 ("##f64vector-set"                    (3)   #f ()    0    f64vector extended)
+("##f64vector-set-small"              (3)   #f ()    0    f64vector extended)
 ("f64vector-set!"                     (3)   #t 0     0    #f        gambit)
 ("##f64vector-set!"                   (3)   #t ()    0    f64vector extended)
 ("f64vector-shrink!"                  (2)   #t 0     0    #f        gambit)
 ("##f64vector-shrink!"                (2)   #t ()    0    f64vector extended)
 ("f64vector?"                         (1)   #f 0     0    boolean   gambit)
 ("##f64vector?"                       (1)   #f ()    0    boolean   extended)
+("##f64vector-insert"                 (3)   #f ()    0    f64vector extended)
+("##f64vector-insert-small"           (3)   #f ()    0    f64vector extended)
+("##f64vector-delete"                 (2)   #f ()    0    f64vector extended)
+("##f64vector-delete-small"           (2)   #f ()    0    f64vector extended)
 
 ;; symbol
 
@@ -1217,6 +1317,7 @@
 ("##symbol?"                          (1)   #f ()    0    boolean extended)
 ("symbol->string"                     (1)   #f 0     0    string  ieee)
 ("##symbol->string"                   (1)   #f ()    0    string  extended)
+("##symbol->string?"                  (1)   #f ()    0    #f      extended)
 ("string->symbol"                     (1)   #f 0     0    symbol  ieee)
 ("##string->symbol"                   (1)   #f ()    0    symbol  extended)
 
@@ -1242,6 +1343,7 @@
 
 ("keyword->string"                    (1)   #f 0     0    string  gambit)
 ("##keyword->string"                  (1)   #f ()    0    string  extended)
+("##keyword->string?"                 (1)   #f ()    0    #f      extended)
 ("keyword-hash"                       (1)   #f 0     0    fixnum  gambit)
 ("##keyword-hash"                     (1)   #f ()    0    fixnum  extended)
 ("##keyword-hash-set!"                (2)   #t ()    0    #f      extended)
@@ -1280,9 +1382,16 @@
 ("##values?"                          (1)   #f ()    0    boolean extended)
 ("##values"                           0     #f ()    0    (#f)    extended)
 ("##make-values"                      (1 2) #f ()    0    (#f)    extended)
+("##make-values-small"                (1 2) #f ()    0    (#f)    extended)
 ("##values-length"                    (1)   #f ()    0    fixnum  extended)
 ("##values-ref"                       (2)   #f ()    0    (#f)    extended)
 ("##values-set!"                      (3)   #t ()    0    (#f)    extended)
+("##values-set"                       (3)   #f ()    0    (#f)    extended)
+("##values-set-small"                 (3)   #f ()    0    (#f)    extended)
+("##values-insert"                    (3)   #f ()    0    (#f)    extended)
+("##values-insert-small"              (3)   #f ()    0    (#f)    extended)
+("##values-delete"                    (2)   #f ()    0    (#f)    extended)
+("##values-delete-small"              (2)   #f ()    0    (#f)    extended)
 
 ;; table
 
@@ -1353,6 +1462,8 @@
 ("##write-char2"                      (2)   #t ()    0    #f      extended)
 ("##write-char1?"                     (1)   #t ()    0    #f      extended)
 ("##write-char2?"                     (2)   #t ()    0    #f      extended)
+("##char-input-port?-cached"          (1)   #f 0     0    boolean extended)
+("##char-output-port?-cached"         (1)   #f 0     0    boolean extended)
 
 ("eof-object?"                        (1)   #f 0     0    boolean ieee)
 ("##eof-object?"                      (1)   #f ()    0    boolean extended)
@@ -1529,6 +1640,9 @@
 ("void"                               (0)   #f 0     0    #f      gambit)
 ("##void"                             (0)   #f ()    0    #f      extended)
 
+("dead-end"                           (0)   #t 0     0    #f      extended)
+("##dead-end"                         (0)   #t ()    0    #f      extended)
+
 ;; for system interface
 
 ("##type"                             (1)   #f ()    0    fixnum  extended)
@@ -1556,6 +1670,8 @@
 
 ("##first-argument"                   1     #f ()    0    (#f)    extended)
 ("##check-heap-limit"                 (0)   #t ()    0    (#f)    extended)
+
+("##poll-point"                       (0)   #t ()    0    (#f)    extended)
 
 ;; for front end
 
@@ -1656,6 +1772,14 @@
             '(boolean null absent unused deleted void eof optional
               key rest
               fixnum char))))
+
+(define (def-dead-end name)
+  (let ((proc (get-prim-info name)))
+    (proc-obj-dead-end?-set! proc #t)))
+
+(def-dead-end "##dead-end")
+
+(def-spec "dead-end"           (spec-s "##dead-end"))
 
 ;; boolean
 
@@ -1819,7 +1943,7 @@
 (def-spec "cosh"               (spec-arith #f "flcosh" "##cosh"))
 (def-spec "##cosh"             (spec-arith #f "##flcosh"))
 (def-spec "extract-bit-field"  (spec-u "##extract-bit-field"))
-(def-spec "first-bit-set"      (spec-u "##first-bit-set"))
+(def-spec "first-set-bit"      (spec-u "##first-set-bit"))
 (def-spec "integer-length"     (spec-u "##integer-length"))
 (def-spec "integer-nth-root"   (spec-u "##integer-nth-root"))
 (def-spec "integer-sqrt"       (spec-u "##integer-sqrt"))
@@ -1871,7 +1995,7 @@
 (def-spec "fxbit-set?"         (spec-u "##fxbit-set?"))
 (def-spec "fxeqv"              (spec-u "##fxeqv"))
 (def-spec "fxeven?"            (spec-u "##fxeven?"))
-(def-spec "fxfirst-bit-set"    (spec-u "##fxfirst-bit-set"))
+(def-spec "fxfirst-set-bit"    (spec-u "##fxfirst-set-bit"))
 (def-spec "fxif"               (spec-u "##fxif"))
 (def-spec "fxior"              (spec-u "##fxior"))
 (def-spec "fxlength"           (spec-u "##fxlength"))
@@ -2084,7 +2208,7 @@
 (def-spec "string-foldcase"    (spec-u "##string-foldcase"))
 (def-spec "utf8->string"       (spec-u "##utf8->string"))
 
-(def-spec "append-strings"     (spec-u "##append-strings"))
+(def-spec "string-concatenate" (spec-u "##string-concatenate"))
 (def-spec "substring-fill!"    (spec-u "##substring-fill!"))
 (def-spec "substring-move!"    (spec-u "##substring-move!"))
 (def-spec "string-set"         (spec-u "##string-set"))
@@ -2106,7 +2230,7 @@
 (def-spec "vector-copy"        (spec-u "##vector-copy"))
 (def-spec "vector-copy!"       (spec-u "##vector-copy!"))
 
-(def-spec "append-vectors"     (spec-u "##append-vectors"))
+(def-spec "vector-concatenate" (spec-u "##vector-concatenate"))
 (def-spec "subvector"          (spec-u "##subvector"))
 (def-spec "subvector-fill!"    (spec-u "##subvector-fill!"))
 (def-spec "subvector-move!"    (spec-u "##subvector-move!"))
@@ -2117,7 +2241,7 @@
 
 ;; homogeneous vector
 
-(def-spec "append-s8vectors"   (spec-u "##append-s8vectors"))
+(def-spec "s8vector-concatenate"(spec-u "##s8vector-concatenate"))
 (def-spec "list->s8vector"     (spec-u "##list->s8vector"))
 (def-spec "make-s8vector"      (spec-u "##make-s8vector"))
 (def-spec "subs8vector"        (spec-u "##subs8vector"))
@@ -2136,7 +2260,7 @@
 (def-spec "s8vector-shrink!"   (spec-u "##s8vector-shrink!"))
 (def-spec "s8vector?"          (spec-s "##s8vector?"))
 
-(def-spec "append-u8vectors"   (spec-u "##append-u8vectors"))
+(def-spec "u8vector-concatenate"(spec-u "##u8vector-concatenate"))
 (def-spec "list->u8vector"     (spec-u "##list->u8vector"))
 (def-spec "make-u8vector"      (spec-u "##make-u8vector"))
 (def-spec "subu8vector"        (spec-u "##subu8vector"))
@@ -2155,7 +2279,7 @@
 (def-spec "u8vector-shrink!"   (spec-u "##u8vector-shrink!"))
 (def-spec "u8vector?"          (spec-s "##u8vector?"))
 
-(def-spec "append-s16vectors"  (spec-u "##append-s16vectors"))
+(def-spec "s16vector-concatenate"(spec-u "##s16vector-concatenate"))
 (def-spec "list->s16vector"    (spec-u "##list->s16vector"))
 (def-spec "make-s16vector"     (spec-u "##make-s16vector"))
 (def-spec "subs16vector"       (spec-u "##subs16vector"))
@@ -2174,7 +2298,7 @@
 (def-spec "s16vector-shrink!"  (spec-u "##s16vector-shrink!"))
 (def-spec "s16vector?"         (spec-s "##s16vector?"))
 
-(def-spec "append-u16vectors"  (spec-u "##append-u16vectors"))
+(def-spec "u16vector-concatenate"(spec-u "##u16vector-concatenate"))
 (def-spec "list->u16vector"    (spec-u "##list->u16vector"))
 (def-spec "make-u16vector"     (spec-u "##make-u16vector"))
 (def-spec "subu16vector"       (spec-u "##subu16vector"))
@@ -2193,7 +2317,7 @@
 (def-spec "u16vector-shrink!"  (spec-u "##u16vector-shrink!"))
 (def-spec "u16vector?"         (spec-s "##u16vector?"))
 
-(def-spec "append-s32vectors"  (spec-u "##append-s32vectors"))
+(def-spec "s32vector-concatenate"(spec-u "##s32vector-concatenate"))
 (def-spec "list->s32vector"    (spec-u "##list->s32vector"))
 (def-spec "make-s32vector"     (spec-u "##make-s32vector"))
 (def-spec "subs32vector"       (spec-u "##subs32vector"))
@@ -2212,7 +2336,7 @@
 (def-spec "s32vector-shrink!"  (spec-u "##s32vector-shrink!"))
 (def-spec "s32vector?"         (spec-s "##s32vector?"))
 
-(def-spec "append-u32vectors"  (spec-u "##append-u32vectors"))
+(def-spec "u32vector-concatenate"(spec-u "##u32vector-concatenate"))
 (def-spec "list->u32vector"    (spec-u "##list->u32vector"))
 (def-spec "make-u32vector"     (spec-u "##make-u32vector"))
 (def-spec "subu32vector"       (spec-u "##subu32vector"))
@@ -2231,7 +2355,7 @@
 (def-spec "u32vector-shrink!"  (spec-u "##u32vector-shrink!"))
 (def-spec "u32vector?"         (spec-s "##u32vector?"))
 
-(def-spec "append-s64vectors"  (spec-u "##append-s64vectors"))
+(def-spec "s64vector-concatenate"(spec-u "##s64vector-concatenate"))
 (def-spec "list->s64vector"    (spec-u "##list->s64vector"))
 (def-spec "make-s64vector"     (spec-u "##make-s64vector"))
 (def-spec "subs64vector"       (spec-u "##subs64vector"))
@@ -2250,7 +2374,7 @@
 (def-spec "s64vector-shrink!"  (spec-u "##s64vector-shrink!"))
 (def-spec "s64vector?"         (spec-s "##s64vector?"))
 
-(def-spec "append-u64vectors"  (spec-u "##append-u64vectors"))
+(def-spec "u64vector-concatenate"(spec-u "##u64vector-concatenate"))
 (def-spec "list->u64vector"    (spec-u "##list->u64vector"))
 (def-spec "make-u64vector"     (spec-u "##make-u64vector"))
 (def-spec "subu64vector"       (spec-u "##subu64vector"))
@@ -2269,7 +2393,7 @@
 (def-spec "u64vector-shrink!"  (spec-u "##u64vector-shrink!"))
 (def-spec "u64vector?"         (spec-s "##u64vector?"))
 
-(def-spec "append-f32vectors"  (spec-u "##append-f32vectors"))
+(def-spec "f32vector-concatenate"(spec-u "##f32vector-concatenate"))
 (def-spec "list->f32vector"    (spec-u "##list->f32vector"))
 (def-spec "make-f32vector"     (spec-u "##make-f32vector"))
 (def-spec "subf32vector"       (spec-u "##subf32vector"))
@@ -2288,7 +2412,7 @@
 (def-spec "f32vector-shrink!"  (spec-u "##f32vector-shrink!"))
 (def-spec "f32vector?"         (spec-s "##f32vector?"))
 
-(def-spec "append-f64vectors"  (spec-u "##append-f64vectors"))
+(def-spec "f64vector-concatenate"(spec-u "##f64vector-concatenate"))
 (def-spec "list->f64vector"    (spec-u "##list->f64vector"))
 (def-spec "make-f64vector"     (spec-u "##make-f64vector"))
 (def-spec "subf64vector"       (spec-u "##subf64vector"))
@@ -2456,16 +2580,20 @@
          env
          vars
          check-run-time-binding
-         check-prim
+         check-prims
          tail
          succeed
          fail)
   (let ((type-checks
-         (gen-uniform-type-checks source env
-           vars
-           (lambda (var)
-             (gen-call-prim-vars-notsafe source env check-prim (list var)))
-           tail)))
+         (and check-prims
+              (gen-var-type-checks source env
+                vars
+                (map
+                 (lambda (check-prim)
+                   (lambda (var)
+                     (gen-call-prim-vars-notsafe source env check-prim (list var))))
+                 check-prims)
+                tail))))
     (if (or type-checks
             check-run-time-binding)
       (new-tst source env
@@ -2480,7 +2608,7 @@
         (fail))
       (succeed))))
 
-(define (gen-simple-case check-prim prim)
+(define (gen-simple-case check-prims prim)
   (lambda (source
            env
            vars
@@ -2492,13 +2620,13 @@
      env
      vars
      check-run-time-binding
-     check-prim
+     check-prims
      #f
      (lambda ()
        (gen-call-prim-vars-notsafe source env prim vars))
      fail)))
 
-(define (gen-validating-case check-prim gen)
+(define (gen-validating-case check-prims gen)
   (lambda (source
            env
            vars
@@ -2510,7 +2638,7 @@
      env
      vars
      check-run-time-binding
-     check-prim
+     check-prims
      #f
      (lambda ()
        (gen source env vars out-of-line))
@@ -2534,6 +2662,151 @@
             check-run-time-binding
             generic-call
             generic-call))))))
+
+(define (make-0-or-1-args-expander gen0 gen1)
+  (lambda (ptree oper args generate-call check-run-time-binding)
+    (let* ((source
+            (node-source ptree))
+           (env
+            (node-env ptree))
+           (vars
+            (gen-temp-vars source args))
+           (generic-call
+            (lambda ()
+              (generate-call vars #f))) ;; handle other cases
+           (gen
+            (if (null? args)
+                gen0
+                gen1)))
+      (gen-prc source env
+        vars
+        (gen source
+             env
+             vars
+             check-run-time-binding
+             generic-call
+             generic-call)))))
+
+(define (make-1-or-2-args-expander gen1 gen2)
+  (lambda (ptree oper args generate-call check-run-time-binding)
+    (let* ((source
+            (node-source ptree))
+           (env
+            (node-env ptree))
+           (vars
+            (gen-temp-vars source args))
+           (generic-call
+            (lambda ()
+              (generate-call vars #f))) ;; handle other cases
+           (gen
+            (if (and (pair? args) (null? (cdr args)))
+                gen1
+                gen2)))
+      (gen-prc source env
+        vars
+        (gen source
+             env
+             vars
+             check-run-time-binding
+             generic-call
+             generic-call)))))
+
+(define (make-nary-generator zero one two-or-more)
+  (lambda (source env vars out-of-line)
+    (cond ((null? vars)
+           (zero source env vars out-of-line))
+          ((null? (cdr vars))
+           (one source env vars out-of-line))
+          (else
+           (two-or-more source env vars out-of-line)))))
+
+(define (gen-fold source env vars out-of-line op-sym)
+
+  (define (fold result vars)
+    (if (null? vars)
+      result
+      (fold (gen-call-prim-notsafe source env
+              op-sym
+              (list result
+                    (new-ref source env
+                      (car vars))))
+            (cdr vars))))
+
+  (fold (new-ref source env
+          (car vars))
+        (cdr vars)))
+
+(define (make-fold-generator op-sym)
+  (lambda (source env vars out-of-line)
+    (gen-fold source env
+      vars
+      out-of-line
+      op-sym)))
+
+(define (gen-conditional-fold source env vars out-of-line gen-op)
+
+  (define (conditional-fold result-var vars intermediate-result-vars)
+    (if (null? vars)
+      (new-ref source env
+        result-var)
+      (let ((var (car intermediate-result-vars)))
+        (new-call source env
+          (gen-prc source env
+            (list var)
+            (new-tst source env
+              (new-ref source env
+                var)
+              (conditional-fold var
+                                (cdr vars)
+                                (cdr intermediate-result-vars))
+              (out-of-line)))
+          (list (gen-op source env result-var (car vars)))))))
+
+  (conditional-fold (car vars)
+                    (cdr vars)
+                    (gen-temp-vars source (cdr vars))))
+
+(define (make-conditional-fold-generator conditional-op-sym)
+  (lambda (source env vars out-of-line)
+    (gen-conditional-fold source env
+      vars
+      out-of-line
+      (lambda (source env var1 var2)
+        (gen-call-prim-vars-notsafe source env
+          conditional-op-sym
+          (list var1 var2))))))
+
+(define (make-conditional-fixed-arity-generator conditional-op-sym)
+  (lambda (source env vars out-of-line)
+    (let ((var (car (gen-temp-vars source '(#f)))))
+      (new-call source env
+        (gen-prc source env
+          (list var)
+          (new-tst source env
+            (new-ref source env
+              var)
+            (new-ref source env
+              var)
+            (out-of-line)))
+        (list (gen-call-prim-vars-notsafe source env
+                conditional-op-sym
+                vars))))))
+
+(define (make-conditional-fast-path conditional-op-sym)
+  (let ((gen (make-conditional-fixed-arity-generator conditional-op-sym)))
+    (lambda (source
+             env
+             vars
+             check-run-time-binding
+             out-of-line
+             fail)
+      (gen-check-run-time-binding
+       check-run-time-binding
+       source
+       env
+       (lambda ()
+         (gen source env vars out-of-line))
+       fail))))
 
 (define (setup-list-primitives)
 
@@ -2660,9 +2933,12 @@
                   (gen-call-prim-vars-notsafe source env
                     **mutable?-sym
                     (list (car vars))))
-                (gen-call-prim-vars-notsafe source env
-                  (op-prim pattern)
-                  vars)
+                (new-seq source env
+                  (gen-call-prim-vars-notsafe source env
+                    (op-prim pattern)
+                    vars)
+                  (new-cst source env
+                    void-object))
                 (generate-call vars
                                (not check-run-time-binding))))))))
 
@@ -3154,7 +3430,7 @@
   (define **cpxnum-imag-sym (string->canonical-symbol "##cpxnum-imag"))
 
   (define (gen-fixnum-case gen)
-    (gen-validating-case **fixnum?-sym gen))
+    (gen-validating-case (list **fixnum?-sym) gen))
 
   (define (gen-fixnum-division-case gen)
     (lambda (source
@@ -3168,7 +3444,7 @@
        env
        vars
        check-run-time-binding
-       **fixnum?-sym
+       (list **fixnum?-sym)
        (gen-call-prim-notsafe source env
          **not-sym
          (list (gen-call-prim-notsafe source env
@@ -3182,7 +3458,7 @@
        fail)))
 
   (define (gen-flonum-case gen)
-    (gen-validating-case **flonum?-sym gen))
+    (gen-validating-case (list **flonum?-sym) gen))
 
   (define (gen-log-flonum-case gen)
     (lambda (source
@@ -3196,7 +3472,7 @@
        env
        vars
        check-run-time-binding
-       **flonum?-sym
+       (list **flonum?-sym)
        (new-disj source env
          (gen-call-prim-vars-notsafe source env
            **flnan?-sym
@@ -3227,7 +3503,7 @@
        env
        vars
        check-run-time-binding
-       **flonum?-sym
+       (list **flonum?-sym)
        (new-disj source env
          (gen-call-prim-notsafe source env
            **not-sym
@@ -3253,7 +3529,7 @@
        env
        vars
        check-run-time-binding
-       **flonum?-sym
+       (list **flonum?-sym)
        (gen-call-prim-notsafe source env
          **not-sym
          (list (gen-call-prim-vars-notsafe source env
@@ -3275,7 +3551,7 @@
        env
        vars
        check-run-time-binding
-       **flonum?-sym
+       (list **flonum?-sym)
        (gen-call-prim-vars-notsafe source env
          **flfinite?-sym
          vars)
@@ -3295,7 +3571,7 @@
        env
        vars
        check-run-time-binding
-       **flonum?-sym
+       (list **flonum?-sym)
        (and (= (length vars) 1)
             (new-conj source env
               (gen-call-prim-notsafe source env
@@ -3330,7 +3606,7 @@
        env
        vars
        check-run-time-binding
-       **flonum?-sym
+       (list **flonum?-sym)
        (gen-call-prim-notsafe source env
          **not-sym
          (list (gen-call-prim-notsafe source env
@@ -3355,7 +3631,7 @@
        env
        vars
        check-run-time-binding
-       **flonum?-sym
+       (list **flonum?-sym)
        (gen-call-prim-vars-notsafe source env
          **flinteger?-sym
          vars)
@@ -3474,118 +3750,37 @@
       (new-ref source env
         (car vars))))
 
-  (define (make-nary-generator zero one two-or-more)
-    (lambda (source env vars out-of-line)
-      (cond ((null? vars)
-             (zero source env vars out-of-line))
-            ((null? (cdr vars))
-             (one source env vars out-of-line))
-            (else
-             (two-or-more source env vars out-of-line)))))
-
-  (define (gen-fold source env vars out-of-line op-sym)
-
-    (define (fold result vars)
-      (if (null? vars)
-        result
-        (fold (gen-call-prim-notsafe source env
-                op-sym
-                (list result
-                      (new-ref source env
-                        (car vars))))
-              (cdr vars))))
-
-    (fold (new-ref source env
-            (car vars))
-          (cdr vars)))
-
-  (define (make-fold-generator op-sym)
-    (lambda (source env vars out-of-line)
-      (gen-fold source env
-        vars
-        out-of-line
-        op-sym)))
-
-  (define (gen-conditional-fold source env vars out-of-line gen-op)
-
-    (define (conditional-fold result-var vars intermediate-result-vars)
-      (if (null? vars)
-        (new-ref source env
-          result-var)
-        (let ((var (car intermediate-result-vars)))
-          (new-call source env
-            (gen-prc source env
-              (list var)
-              (new-tst source env
-                (new-ref source env
-                  var)
-                (conditional-fold var
-                                  (cdr vars)
-                                  (cdr intermediate-result-vars))
-                (out-of-line)))
-            (list (gen-op source env result-var (car vars)))))))
-
-    (conditional-fold (car vars)
-                      (cdr vars)
-                      (gen-temp-vars source (cdr vars))))
-
-  (define (make-conditional-fold-generator conditional-op-sym)
-    (lambda (source env vars out-of-line)
-      (gen-conditional-fold source env
-        vars
-        out-of-line
-        (lambda (source env var1 var2)
-          (gen-call-prim-vars-notsafe source env
-            conditional-op-sym
-            (list var1 var2))))))
-
-  (define (make-conditional-fixed-arity-generator conditional-op-sym)
-    (lambda (source env vars out-of-line)
-      (let ((var (car (gen-temp-vars source '(#f)))))
-        (new-call source env
-          (gen-prc source env
-            (list var)
-            (new-tst source env
-              (new-ref source env
-                var)
-              (new-ref source env
-                var)
-              (out-of-line)))
-          (list (gen-call-prim-vars-notsafe source env
-                  conditional-op-sym
-                  vars))))))
-
   (let ()
 
     (define case-fx=
-      (gen-simple-case **fixnum?-sym **fx=-sym))
+      (gen-simple-case (list **fixnum?-sym) **fx=-sym))
 
     (define case-fx<
-      (gen-simple-case **fixnum?-sym **fx<-sym))
+      (gen-simple-case (list **fixnum?-sym) **fx<-sym))
 
     (define case-fx>
-      (gen-simple-case **fixnum?-sym **fx>-sym))
+      (gen-simple-case (list **fixnum?-sym) **fx>-sym))
 
     (define case-fx<=
-      (gen-simple-case **fixnum?-sym **fx<=-sym))
+      (gen-simple-case (list **fixnum?-sym) **fx<=-sym))
 
     (define case-fx>=
-      (gen-simple-case **fixnum?-sym **fx>=-sym))
+      (gen-simple-case (list **fixnum?-sym) **fx>=-sym))
 
     (define case-fxzero?
-      (gen-simple-case **fixnum?-sym **fxzero?-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxzero?-sym))
 
     (define case-fxpositive?
-      (gen-simple-case **fixnum?-sym **fxpositive?-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxpositive?-sym))
 
     (define case-fxnegative?
-      (gen-simple-case **fixnum?-sym **fxnegative?-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxnegative?-sym))
 
     (define case-fxodd?
-      (gen-simple-case **fixnum?-sym **fxodd?-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxodd?-sym))
 
     (define case-fxeven?
-      (gen-simple-case **fixnum?-sym **fxeven?-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxeven?-sym))
 
     (define case-fxmax
       (gen-fixnum-case
@@ -3776,51 +3971,51 @@
        (make-prim-generator **fxmodulo-sym)))
 
     (define case-fxwrapabs
-      (gen-simple-case **fixnum?-sym **fxwrapabs-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxwrapabs-sym))
 
     (define case-fxabs
       (gen-fixnum-case
        (make-conditional-fixed-arity-generator **fxabs?-sym)))
 
     (define case-fxwrapsquare
-      (gen-simple-case **fixnum?-sym **fxwrapsquare-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxwrapsquare-sym))
 
     (define case-fxsquare
       (gen-fixnum-case
        (make-conditional-fixed-arity-generator **fxsquare?-sym)))
 
     (define case-fxand
-      (gen-simple-case **fixnum?-sym **fxand-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxand-sym))
 
     (define case-fxandc1
-      (gen-simple-case **fixnum?-sym **fxandc1-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxandc1-sym))
 
     (define case-fxandc2
-      (gen-simple-case **fixnum?-sym **fxandc2-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxandc2-sym))
 
     (define case-fxeqv
-      (gen-simple-case **fixnum?-sym **fxeqv-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxeqv-sym))
 
     (define case-fxior
-      (gen-simple-case **fixnum?-sym **fxior-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxior-sym))
 
     (define case-fxnand
-      (gen-simple-case **fixnum?-sym **fxnand-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxnand-sym))
 
     (define case-fxnor
-      (gen-simple-case **fixnum?-sym **fxnor-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxnor-sym))
 
     (define case-fxnot
-      (gen-simple-case **fixnum?-sym **fxnot-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxnot-sym))
 
     (define case-fxorc1
-      (gen-simple-case **fixnum?-sym **fxorc1-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxorc1-sym))
 
     (define case-fxorc2
-      (gen-simple-case **fixnum?-sym **fxorc2-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxorc2-sym))
 
     (define case-fxxor
-      (gen-simple-case **fixnum?-sym **fxxor-sym))
+      (gen-simple-case (list **fixnum?-sym) **fxxor-sym))
 
     (define case-fxwraparithmetic-shift
       (gen-fixnum-case
@@ -3865,31 +4060,31 @@
        gen-first-arg))
 
     (define case-fl=
-      (gen-simple-case **flonum?-sym **fl=-sym))
+      (gen-simple-case (list **flonum?-sym) **fl=-sym))
 
     (define case-fl<
-      (gen-simple-case **flonum?-sym **fl<-sym))
+      (gen-simple-case (list **flonum?-sym) **fl<-sym))
 
     (define case-fl>
-      (gen-simple-case **flonum?-sym **fl>-sym))
+      (gen-simple-case (list **flonum?-sym) **fl>-sym))
 
     (define case-fl<=
-      (gen-simple-case **flonum?-sym **fl<=-sym))
+      (gen-simple-case (list **flonum?-sym) **fl<=-sym))
 
     (define case-fl>=
-      (gen-simple-case **flonum?-sym **fl>=-sym))
+      (gen-simple-case (list **flonum?-sym) **fl>=-sym))
 
     (define case-flinteger?
-      (gen-simple-case **flonum?-sym **flinteger?-sym))
+      (gen-simple-case (list **flonum?-sym) **flinteger?-sym))
 
     (define case-flzero?
-      (gen-simple-case **flonum?-sym **flzero?-sym))
+      (gen-simple-case (list **flonum?-sym) **flzero?-sym))
 
     (define case-flpositive?
-      (gen-simple-case **flonum?-sym **flpositive?-sym))
+      (gen-simple-case (list **flonum?-sym) **flpositive?-sym))
 
     (define case-flnegative?
-      (gen-simple-case **flonum?-sym **flnegative?-sym))
+      (gen-simple-case (list **flonum?-sym) **flnegative?-sym))
 
     (define case-flodd?
       (gen-odd-even-flonum-case
@@ -3900,13 +4095,13 @@
        (make-prim-generator **fleven?-sym)))
 
     (define case-flfinite?
-      (gen-simple-case **flonum?-sym **flfinite?-sym))
+      (gen-simple-case (list **flonum?-sym) **flfinite?-sym))
 
     (define case-flinfinite?
-      (gen-simple-case **flonum?-sym **flinfinite?-sym))
+      (gen-simple-case (list **flonum?-sym) **flinfinite?-sym))
 
     (define case-flnan?
-      (gen-simple-case **flonum?-sym **flnan?-sym))
+      (gen-simple-case (list **flonum?-sym) **flnan?-sym))
 
     (define case-flmax
       (gen-flonum-case
@@ -3951,10 +4146,10 @@
         (make-fold-generator **fl/-sym))))
 
     (define case-flabs
-      (gen-simple-case **flonum?-sym **flabs-sym))
+      (gen-simple-case (list **flonum?-sym) **flabs-sym))
 
     (define case-flsquare
-      (gen-simple-case **flonum?-sym **flsquare-sym))
+      (gen-simple-case (list **flonum?-sym) **flsquare-sym))
 
     (define case-flfloor
       (gen-finite-flonum-case
@@ -3973,79 +4168,79 @@
        (make-prim-generator **flround-sym)))
 
     (define case-flexp
-      (gen-simple-case **flonum?-sym **flexp-sym))
+      (gen-simple-case (list **flonum?-sym) **flexp-sym))
 
     (define case-fllog
-      (gen-simple-case **flonum?-sym **fllog-sym))
+      (gen-simple-case (list **flonum?-sym) **fllog-sym))
 
     (define case-log-flonum
       (gen-log-flonum-case
        (make-prim-generator **fllog-sym)))
 
     (define case-flsin
-      (gen-simple-case **flonum?-sym **flsin-sym))
+      (gen-simple-case (list **flonum?-sym) **flsin-sym))
 
     (define case-flcos
-      (gen-simple-case **flonum?-sym **flcos-sym))
+      (gen-simple-case (list **flonum?-sym) **flcos-sym))
 
     (define case-fltan
-      (gen-simple-case **flonum?-sym **fltan-sym))
+      (gen-simple-case (list **flonum?-sym) **fltan-sym))
 
     (define case-flasin
-      (gen-simple-case **flonum?-sym **flasin-sym))
+      (gen-simple-case (list **flonum?-sym) **flasin-sym))
 
     (define case-asin-flonum
       (gen-asin-acos-atanh-flonum-case
        (make-prim-generator **flasin-sym)))
 
     (define case-flacos
-      (gen-simple-case **flonum?-sym **flacos-sym))
+      (gen-simple-case (list **flonum?-sym) **flacos-sym))
 
     (define case-acos-flonum
       (gen-asin-acos-atanh-flonum-case
        (make-prim-generator **flacos-sym)))
 
     (define case-flatan
-      (gen-simple-case **flonum?-sym **flatan-sym))
+      (gen-simple-case (list **flonum?-sym) **flatan-sym))
 
     (define case-flsinh
-      (gen-simple-case **flonum?-sym **flsinh-sym))
+      (gen-simple-case (list **flonum?-sym) **flsinh-sym))
 
     (define case-flcosh
-      (gen-simple-case **flonum?-sym **flcosh-sym))
+      (gen-simple-case (list **flonum?-sym) **flcosh-sym))
 
     (define case-fltanh
-      (gen-simple-case **flonum?-sym **fltanh-sym))
+      (gen-simple-case (list **flonum?-sym) **fltanh-sym))
 
     (define case-flasinh
-      (gen-simple-case **flonum?-sym **flasinh-sym))
+      (gen-simple-case (list **flonum?-sym) **flasinh-sym))
 
     (define case-flacosh
-      (gen-simple-case **flonum?-sym **flacosh-sym))
+      (gen-simple-case (list **flonum?-sym) **flacosh-sym))
 
     (define case-acosh-flonum
       (gen-acosh-flonum-case
        (make-prim-generator **flacosh-sym)))
 
     (define case-flatanh
-      (gen-simple-case **flonum?-sym **flatanh-sym))
+      (gen-simple-case (list **flonum?-sym) **flatanh-sym))
 
     (define case-atanh-flonum
       (gen-asin-acos-atanh-flonum-case
        (make-prim-generator **flatanh-sym)))
 
     (define case-flhypot
-      (gen-simple-case **flonum?-sym **flhypot-sym))
+      (gen-simple-case (list **flonum?-sym) **flhypot-sym))
 
     (define case-flexpt
-      (gen-simple-case **flonum?-sym **flexpt-sym))
+      (gen-simple-case (list **flonum?-sym) **flexpt-sym))
 
     (define case-expt-flonum
       (gen-expt-flonum-case
        (make-prim-generator **flexpt-sym)))
 
     (define case-flsqrt
-      (gen-simple-case **flonum?-sym **flsqrt-sym))
+      (gen-simple-case (list **flonum?-sym) **flsqrt-sym))
 
     (define case-sqrt-flonum
       (gen-sqrt-flonum-case
@@ -4448,22 +4643,22 @@
     (def-exp2
      "numerator"
      (make-simple-expander
-      (gen-simple-case **ratnum?-sym **ratnum-numerator-sym)))
+      (gen-simple-case (list **ratnum?-sym) **ratnum-numerator-sym)))
 
     (def-exp2
      "denominator"
      (make-simple-expander
-      (gen-simple-case **ratnum?-sym **ratnum-denominator-sym)))
+      (gen-simple-case (list **ratnum?-sym) **ratnum-denominator-sym)))
 
     (def-exp2
      "real-part"
      (make-simple-expander
-      (gen-simple-case **cpxnum?-sym **cpxnum-real-sym)))
+      (gen-simple-case (list **cpxnum?-sym) **cpxnum-real-sym)))
 
     (def-exp2
      "imag-part"
      (make-simple-expander
-      (gen-simple-case **cpxnum?-sym **cpxnum-imag-sym)))
+      (gen-simple-case (list **cpxnum?-sym) **cpxnum-imag-sym)))
 
     (if (eq? (target-name targ) 'C)
         (begin
@@ -4496,34 +4691,34 @@
 ;;  (define **char-ci>=?-sym (string->canonical-symbol "##char-ci>=?"))
 
   (define case-char=?
-    (gen-simple-case **char?-sym **char=?-sym))
+    (gen-simple-case (list **char?-sym) **char=?-sym))
 
   (define case-char<?
-    (gen-simple-case **char?-sym **char<?-sym))
+    (gen-simple-case (list **char?-sym) **char<?-sym))
 
   (define case-char>?
-    (gen-simple-case **char?-sym **char>?-sym))
+    (gen-simple-case (list **char?-sym) **char>?-sym))
 
   (define case-char<=?
-    (gen-simple-case **char?-sym **char<=?-sym))
+    (gen-simple-case (list **char?-sym) **char<=?-sym))
 
   (define case-char>=?
-    (gen-simple-case **char?-sym **char>=?-sym))
+    (gen-simple-case (list **char?-sym) **char>=?-sym))
 
 ;;  (define case-char-ci=?
-;;    (gen-simple-case **char?-sym **char-ci=?-sym))
+;;    (gen-simple-case (list **char?-sym) **char-ci=?-sym))
 ;;
 ;;  (define case-char-ci<?
-;;    (gen-simple-case **char?-sym **char-ci<?-sym))
+;;    (gen-simple-case (list **char?-sym) **char-ci<?-sym))
 ;;
 ;;  (define case-char-ci>?
-;;    (gen-simple-case **char?-sym **char-ci>?-sym))
+;;    (gen-simple-case (list **char?-sym) **char-ci>?-sym))
 ;;
 ;;  (define case-char-ci<=?
-;;    (gen-simple-case **char?-sym **char-ci<=?-sym))
+;;    (gen-simple-case (list **char?-sym) **char-ci<=?-sym))
 ;;
 ;;  (define case-char-ci>=?
-;;    (gen-simple-case **char?-sym **char-ci>=?-sym))
+;;    (gen-simple-case (list **char?-sym) **char-ci>=?-sym))
 
   (def-exp "char=?" (make-simple-expander case-char=?))
   (def-exp "char<?" (make-simple-expander case-char<?))
@@ -4540,12 +4735,14 @@
 
 (define (setup-vector-primitives)
 
-  (define **fixnum?-sym (string->canonical-symbol "##fixnum?"))
-  (define **flonum?-sym (string->canonical-symbol "##flonum?"))
-  (define **char?-sym   (string->canonical-symbol "##char?"))
-  (define **fx<-sym     (string->canonical-symbol "##fx<"))
-  (define **fx<=-sym    (string->canonical-symbol "##fx<="))
-  (define **mutable?-sym (string->canonical-symbol "##mutable?"))
+  (define **fixnum?-sym     (string->canonical-symbol "##fixnum?"))
+  (define **flonum?-sym     (string->canonical-symbol "##flonum?"))
+  (define **char?-sym       (string->canonical-symbol "##char?"))
+  (define **fx<-sym         (string->canonical-symbol "##fx<"))
+  (define **fx<=-sym        (string->canonical-symbol "##fx<="))
+  (define **fxnegative?-sym (string->canonical-symbol "##fxnegative?"))
+  (define **mutable?-sym    (string->canonical-symbol "##mutable?"))
+  (define **not?-sym        (string->canonical-symbol "##not"))
 
   (define **string?-sym          (string->canonical-symbol "##string?"))
   (define **string-length-sym    (string->canonical-symbol "##string-length"))
@@ -4665,13 +4862,45 @@
                         hi))))))
       interval-check))
 
+  (define (gen-fixnum-nonneg-check source env var)
+    (let* ((fixnum-check
+            (gen-call-prim-vars-notsafe source env
+              **fixnum?-sym
+              (list var)))
+           (nonneg-check
+            (gen-call-prim-notsafe source env
+              **not-sym
+              (list (gen-call-prim-vars-notsafe source env
+                      **fxnegative?-sym
+                      (list var)))))
+           (fixnum-nonneg-check
+            (new-conj source env
+              fixnum-check
+              nonneg-check)))
+      fixnum-nonneg-check))
+
   (define (make-vector-expanders
+           vect-kind
+           default-init-val
+           make-vect-str
+           subvect-str
+           vect-copy-str
            vect?-str
            vect-length-str
            vect-ref-str
            vect-set!-str
            vect-cas!-str
            vect-inc!-str
+           **make-vect-str
+           **make-vect-small-str
+           **subvect-str
+           **subvect-small-str
+           **vect-copy-str
+           **vect-copy-small-str
+           **vect-insert-str
+           **vect-insert-small-str
+           **vect-delete-str
+           **vect-delete-small-str
            **vect?-str
            **vect-length-str
            **vect-ref-str
@@ -4679,12 +4908,19 @@
            **vect-cas!-str
            **vect-inc!-str
            value-checker)
-    (let ((vect?-sym (string->canonical-symbol vect?-str))
+    (let ((make-vect-sym (string->canonical-symbol make-vect-str))
+          (subvect-sym (string->canonical-symbol subvect-str))
+          (vect-copy-sym (string->canonical-symbol vect-copy-str))
+          (vect?-sym (string->canonical-symbol vect?-str))
           (vect-length-sym (string->canonical-symbol vect-length-str))
           (vect-ref-sym (string->canonical-symbol vect-ref-str))
           (vect-set!-sym (string->canonical-symbol vect-set!-str))
           (vect-cas!-sym (and vect-cas!-str (string->canonical-symbol vect-cas!-str)))
           (vect-inc!-sym (and vect-inc!-str (string->canonical-symbol vect-inc!-str)))
+          (**make-vect-sym (string->canonical-symbol **make-vect-str))
+          (**make-vect-small-sym (string->canonical-symbol **make-vect-small-str))
+          (**subvect-sym (string->canonical-symbol **subvect-str))
+          (**vect-copy-sym (string->canonical-symbol **vect-copy-str))
           (**vect?-sym (string->canonical-symbol **vect?-str))
           (**vect-length-sym (string->canonical-symbol **vect-length-str))
           (**vect-ref-sym (string->canonical-symbol **vect-ref-str))
@@ -4692,10 +4928,13 @@
           (**vect-cas!-sym (and **vect-cas!-str (string->canonical-symbol **vect-cas!-str)))
           (**vect-inc!-sym (and **vect-inc!-str (string->canonical-symbol **vect-inc!-str))))
 
-      (define (gen-type-check source env vect-arg)
+      (define (gen-vect-type-check source env vect-arg)
         (gen-call-prim-vars-notsafe source env
           **vect?-sym
           (list vect-arg)))
+
+      (define (gen-size-check source env size-arg)
+        (gen-fixnum-nonneg-check source env size-arg))
 
       (define (gen-mutability-check source env vect-arg)
         (gen-call-prim-vars-notsafe source env
@@ -4712,6 +4951,92 @@
             (list vect-arg))
           #f))
 
+      (define (make-make-vect-expander type-check?)
+        (lambda (ptree oper args generate-call check-run-time-binding)
+          (let* ((source
+                  (node-source ptree))
+                 (env
+                  (node-env ptree))
+                 (vars
+                  (gen-temp-vars source args))
+                 (arg1
+                  (car vars))
+                 (size-check
+                  (and type-check?
+                       (gen-size-check source env arg1)))
+                 (value-check
+                  (and type-check?
+                       value-checker
+                       (pair? (cdr vars))
+                       (value-checker source env (cadr vars))))
+                 (size-value-check
+                  (if (and size-check value-check)
+                      (new-conj source env
+                        size-check
+                        value-check)
+                      (or size-check value-check)))
+                 (checks
+                  (if check-run-time-binding
+                      (let ((rtb-check (check-run-time-binding)))
+                        (if size-value-check
+                            (new-conj source env
+                              rtb-check
+                              size-value-check)
+                            rtb-check))
+                      size-value-check)))
+
+            (define (call-make-vect small? env)
+              (let ((prim (if small? **make-vect-small-sym **make-vect-sym)))
+                (if (and (pair? vars)
+                         (null? (cdr vars))
+                         (safe? env)) ;; make sure there's an init in safe mode
+                    (let ((env (add-not-safe env)))
+                      (gen-call-prim source env
+                        prim
+                        (list (new-ref source env
+                                (car vars))
+                              (new-cst source env
+                                default-init-val))))
+                    (gen-call-prim-vars-notsafe source env
+                     prim
+                     vars))))
+
+            (define (call-make-vect-possibly-small-alloc env)
+              (let* ((limit
+                      (allocation-limit env))
+                     (max-small-alloc
+                      (target-max-small-allocation targ))
+                     (max-limit
+                      (or (and max-small-alloc
+                               (max-small-alloc vect-kind))
+                          -1)))
+                (cond ((or (< max-limit 0)
+                           (eq? limit #f))
+                       (call-make-vect #f env))
+                      ((or (eq? limit #t)
+                           (> limit max-limit))
+                       (new-tst source env
+                         (gen-call-prim-notsafe source env
+                           **fx<=-sym
+                           (list (new-ref source env
+                                   arg1)
+                                 (new-cst source env
+                                   max-limit)))
+                         (call-make-vect #t env)
+                         (call-make-vect #f env)))
+                      (else
+                       (call-make-vect (<= limit max-limit) env)))))
+
+            (gen-prc source env
+              vars
+              (if checks
+                (new-tst source env
+                  checks
+                  (call-make-vect-possibly-small-alloc env)
+                  (generate-call vars
+                                 (not check-run-time-binding)))
+                (call-make-vect-possibly-small-alloc env))))))
+
       (define (make-length-expander type-check?)
         (lambda (ptree oper args generate-call check-run-time-binding)
           (let* ((source
@@ -4724,7 +5049,7 @@
                   (car vars))
                  (type-check
                   (and type-check?
-                       (gen-type-check source env arg1)))
+                       (gen-vect-type-check source env arg1)))
                  (checks
                   (if check-run-time-binding
                     (let ((rtb-check (check-run-time-binding)))
@@ -4762,7 +5087,7 @@
                   (cadr vars))
                  (type-check
                   (and type-check?
-                       (gen-type-check source env arg1)))
+                       (gen-vect-type-check source env arg1)))
                  (mutability-check
                   (and (not (eq? kind 'ref))
                        type-check
@@ -4826,6 +5151,19 @@
                                    (not check-run-time-binding)))
                   call-prim)))))
 
+      ;; inline make-vect and ##make-vect is target supports small allocations
+
+      (if (target-max-small-allocation targ)
+          (begin
+
+           (def-exp
+            make-vect-str
+            (make-make-vect-expander #t))
+
+           (def-exp
+            **make-vect-str
+            (make-make-vect-expander #f))))
+
       (def-exp
        vect-length-str
        (make-length-expander #t))
@@ -4849,12 +5187,27 @@
             (make-ref-set!-cas!-inc!-expander #t 'inc!)))))
 
   (make-vector-expanders
+   'vector
+   0
+   "make-vector"
+   "subvector"
+   "vector-copy"
    "vector?"
    "vector-length"
    "vector-ref"
    "vector-set!"
    "vector-cas!"
    "vector-inc!"
+   "##make-vector"
+   "##make-vector-small"
+   "##subvector"
+   "##subvector-small"
+   "##vector-copy"
+   "##vector-copy-small"
+   "##vector-insert"
+   "##vector-insert-small"
+   "##vector-delete"
+   "##vector-delete-small"
    "##vector?"
    "##vector-length"
    "##vector-ref"
@@ -4864,12 +5217,27 @@
    #f)
 
   (make-vector-expanders
+   'string
+   (integer->char 0)
+   "make-string"
+   "substring"
+   "string-copy"
    "string?"
    "string-length"
    "string-ref"
    "string-set!"
    #f
    #f
+   "##make-string"
+   "##make-string-small"
+   "##substring"
+   "##substring-small"
+   "##string-copy"
+   "##string-copy-small"
+   "##string-insert"
+   "##string-insert-small"
+   "##string-delete"
+   "##string-delete-small"
    "##string?"
    "##string-length"
    "##string-ref"
@@ -4882,12 +5250,27 @@
        (list var))))
 
   (make-vector-expanders
+   's8vector
+   0
+   "make-s8vector"
+   "subs8vector"
+   "s8vector-copy"
    "s8vector?"
    "s8vector-length"
    "s8vector-ref"
    "s8vector-set!"
    #f
    #f
+   "##make-s8vector"
+   "##make-s8vector-small"
+   "##subs8vector"
+   "##subs8vector-small"
+   "##s8vector-copy"
+   "##s8vector-copy-small"
+   "##s8vector-insert"
+   "##s8vector-insert-small"
+   "##s8vector-delete"
+   "##s8vector-delete-small"
    "##s8vector?"
    "##s8vector-length"
    "##s8vector-ref"
@@ -4897,12 +5280,27 @@
    (make-fixnum-interval-checker -128 127))
 
   (make-vector-expanders
+   'u8vector
+   0
+   "make-u8vector"
+   "subu8vector"
+   "u8vector-copy"
    "u8vector?"
    "u8vector-length"
    "u8vector-ref"
    "u8vector-set!"
    #f
    #f
+   "##make-u8vector"
+   "##make-u8vector-small"
+   "##subu8vector"
+   "##subu8vector-small"
+   "##u8vector-copy"
+   "##u8vector-copy-small"
+   "##u8vector-insert"
+   "##u8vector-insert-small"
+   "##u8vector-delete"
+   "##u8vector-delete-small"
    "##u8vector?"
    "##u8vector-length"
    "##u8vector-ref"
@@ -4912,12 +5310,27 @@
    (make-fixnum-interval-checker 0 255))
 
   (make-vector-expanders
+   's16vector
+   0
+   "make-s16vector"
+   "subs16vector"
+   "s16vector-copy"
    "s16vector?"
    "s16vector-length"
    "s16vector-ref"
    "s16vector-set!"
    #f
    #f
+   "##make-s16vector"
+   "##make-s16vector-small"
+   "##subs16vector"
+   "##subs16vector-small"
+   "##s16vector-copy"
+   "##s16vector-copy-small"
+   "##s16vector-insert"
+   "##s16vector-insert-small"
+   "##s16vector-delete"
+   "##s16vector-delete-small"
    "##s16vector?"
    "##s16vector-length"
    "##s16vector-ref"
@@ -4927,12 +5340,27 @@
    (make-fixnum-interval-checker -32768 32767))
 
   (make-vector-expanders
+   'u16vector
+   0
+   "make-u16vector"
+   "subu16vector"
+   "u16vector-copy"
    "u16vector?"
    "u16vector-length"
    "u16vector-ref"
    "u16vector-set!"
    #f
    #f
+   "##make-u16vector"
+   "##make-u16vector-small"
+   "##subu16vector"
+   "##subu16vector-small"
+   "##u16vector-copy"
+   "##u16vector-copy-small"
+   "##u16vector-insert"
+   "##u16vector-insert-small"
+   "##u16vector-delete"
+   "##u16vector-delete-small"
    "##u16vector?"
    "##u16vector-length"
    "##u16vector-ref"
@@ -4943,12 +5371,27 @@
 
 #;
   (make-vector-expanders
+   's32vector
+   0
+   "make-s32vector"
+   "subs32vector"
+   "s32vector-copy"
    "s32vector?"
    "s32vector-length"
    "s32vector-ref"
    "s32vector-set!"
    #f
    #f
+   "##make-s32vector"
+   "##make-s32vector-small"
+   "##subs32vector"
+   "##subs32vector-small"
+   "##s32vector-copy"
+   "##s32vector-copy-small"
+   "##s32vector-insert"
+   "##s32vector-insert-small"
+   "##s32vector-delete"
+   "##s32vector-delete-small"
    "##s32vector?"
    "##s32vector-length"
    "##s32vector-ref"
@@ -4959,12 +5402,27 @@
 
 #;
   (make-vector-expanders
+   'u32vector
+   0
+   "make-u32vector"
+   "subu32vector"
+   "u32vector-copy"
    "u32vector?"
    "u32vector-length"
    "u32vector-ref"
    "u32vector-set!"
    #f
    #f
+   "##make-u32vector"
+   "##make-u32vector-small"
+   "##subu32vector"
+   "##subu32vector-small"
+   "##u32vector-copy"
+   "##u32vector-copy-small"
+   "##u32vector-insert"
+   "##u32vector-insert-small"
+   "##u32vector-delete"
+   "##u32vector-delete-small"
    "##u32vector?"
    "##u32vector-length"
    "##u32vector-ref"
@@ -4975,12 +5433,27 @@
 
 #;
   (make-vector-expanders
+   's64vector
+   0
+   "make-s64vector"
+   "subs64vector"
+   "s64vector-copy"
    "s64vector?"
    "s64vector-length"
    "s64vector-ref"
    "s64vector-set!"
    #f
    #f
+   "##make-s64vector"
+   "##make-s64vector-small"
+   "##subs64vector"
+   "##subs64vector-small"
+   "##s64vector-copy"
+   "##s64vector-copy-small"
+   "##s64vector-insert"
+   "##s64vector-insert-small"
+   "##s64vector-delete"
+   "##s64vector-delete-small"
    "##s64vector?"
    "##s64vector-length"
    "##s64vector-ref"
@@ -4991,12 +5464,27 @@
 
 #;
   (make-vector-expanders
+   'u64vector
+   0
+   "make-u64vector"
+   "subu64vector"
+   "u64vector-copy"
    "u64vector?"
    "u64vector-length"
    "u64vector-ref"
    "u64vector-set!"
    #f
    #f
+   "##make-u64vector"
+   "##make-u64vector-small"
+   "##subu64vector"
+   "##subu64vector-small"
+   "##u64vector-copy"
+   "##u64vector-copy-small"
+   "##u64vector-insert"
+   "##u64vector-insert-small"
+   "##u64vector-delete"
+   "##u64vector-delete-small"
    "##u64vector?"
    "##u64vector-length"
    "##u64vector-ref"
@@ -5006,12 +5494,27 @@
    (make-fixnum-interval-checker 0 18446744073709551615))
 
   (make-vector-expanders
+   'f32vector
+   (macro-inexact-+0)
+   "make-f32vector"
+   "subf32vector"
+   "f32vector-copy"
    "f32vector?"
    "f32vector-length"
    "f32vector-ref"
    "f32vector-set!"
    #f
    #f
+   "##make-f32vector"
+   "##make-f32vector-small"
+   "##subf32vector"
+   "##subf32vector-small"
+   "##f32vector-copy"
+   "##f32vector-copy-small"
+   "##f32vector-insert"
+   "##f32vector-insert-small"
+   "##f32vector-delete"
+   "##f32vector-delete-small"
    "##f32vector?"
    "##f32vector-length"
    "##f32vector-ref"
@@ -5021,12 +5524,27 @@
    (make-flonum-checker))
 
   (make-vector-expanders
+   'f64vector
+   (macro-inexact-+0)
+   "make-f64vector"
+   "subf64vector"
+   "f64vector-copy"
    "f64vector?"
    "f64vector-length"
    "f64vector-ref"
    "f64vector-set!"
    #f
    #f
+   "##make-f64vector"
+   "##make-f64vector-small"
+   "##subf64vector"
+   "##subf64vector-small"
+   "##f64vector-copy"
+   "##f64vector-copy-small"
+   "##f64vector-insert"
+   "##f64vector-insert-small"
+   "##f64vector-delete"
+   "##f64vector-delete-small"
    "##f64vector?"
    "##f64vector-length"
    "##f64vector-ref"
@@ -5053,7 +5571,7 @@
   (define **unchecked-structure-cas!-sym
     (string->canonical-symbol "##unchecked-structure-cas!"))
 
-  (define (gen-type-check source env obj-arg type-arg)
+  (define (gen-structure-type-check source env obj-arg type-arg)
     (gen-call-prim-notsafe source env
       **structure-direct-instance-of?-sym
       (list (new-ref source env
@@ -5075,7 +5593,7 @@
              (type-var
               (list-ref vars (case kind ((ref) 2) ((set!) 3) (else 4))))
              (type-check
-              (gen-type-check source env obj-var type-var))
+              (gen-structure-type-check source env obj-var type-var))
              (call-prim
               (gen-call-prim-vars-notsafe source env
                 (case kind
@@ -5115,68 +5633,85 @@
   (define **write-char1?-sym (string->canonical-symbol "##write-char1?"))
   (define **write-char2?-sym (string->canonical-symbol "##write-char2?"))
 
-  (define (fast-path sym)
-    (lambda (source
-             env
-             vars
-             check-run-time-binding
-             out-of-line
-             fail)
-      (new-disj source env
-        (gen-call-prim-vars-notsafe source env
-          sym
-          vars)
-        (out-of-line))))
+  (define **char?-sym (string->canonical-symbol "##char?"))
+
+  (define **char-input-port?-cached-sym (string->canonical-symbol "##char-input-port?-cached"))
+  (define **char-output-port?-cached-sym (string->canonical-symbol "##char-output-port?-cached"))
 
   (def-exp "##peek-char0"
-           (make-simple-expander (fast-path **peek-char0?-sym)))
+           (make-simple-expander
+            (make-conditional-fast-path **peek-char0?-sym)))
 
   (def-exp "##peek-char1"
-           (make-simple-expander (fast-path **peek-char1?-sym)))
+           (make-simple-expander
+            (make-conditional-fast-path **peek-char1?-sym)))
+
+  (def-exp "peek-char"
+           (make-0-or-1-args-expander
+            (gen-validating-case
+             (list)
+             (make-conditional-fixed-arity-generator
+              **peek-char0?-sym))
+            (gen-validating-case
+             (list **char-input-port?-cached-sym)
+             (make-conditional-fixed-arity-generator
+              **peek-char1?-sym))))
 
   (def-exp "##read-char0"
-           (make-simple-expander (fast-path **read-char0?-sym)))
+           (make-simple-expander
+            (make-conditional-fast-path **read-char0?-sym)))
 
   (def-exp "##read-char1"
-           (make-simple-expander (fast-path **read-char1?-sym)))
+           (make-simple-expander
+            (make-conditional-fast-path **read-char1?-sym)))
+
+  (def-exp "read-char"
+           (make-0-or-1-args-expander
+            (gen-validating-case
+             (list)
+             (make-conditional-fixed-arity-generator
+              **read-char0?-sym))
+            (gen-validating-case
+             (list **char-input-port?-cached-sym)
+             (make-conditional-fixed-arity-generator
+              **read-char1?-sym))))
 
   (def-exp "##write-char1"
-           (make-simple-expander (fast-path **write-char1?-sym)))
+           (make-simple-expander
+            (make-conditional-fast-path **write-char1?-sym)))
 
   (def-exp "##write-char2"
-           (make-simple-expander (fast-path **write-char2?-sym)))
+           (make-simple-expander
+            (make-conditional-fast-path **write-char2?-sym)))
 
+  (def-exp "write-char"
+           (make-1-or-2-args-expander
+            (gen-validating-case
+             (list **char?-sym)
+             (make-conditional-fixed-arity-generator
+              **write-char1?-sym))
+            (gen-validating-case
+             (list **char?-sym **char-output-port?-cached-sym)
+             (make-conditional-fixed-arity-generator
+              **write-char2?-sym))))
 )
 
 (define (setup-misc-primitives)
 
-  (define **symbol->string-sym (string->canonical-symbol "##symbol->string"))
-  (define **symbol-name-sym (string->canonical-symbol "##symbol-name"))
-  (define **string?-sym (string->canonical-symbol "##string?"))
+  (define **symbol->string?-sym (string->canonical-symbol "##symbol->string?"))
+  (define **symbol?-sym (string->canonical-symbol "##symbol?"))
 
   (def-exp "##symbol->string"
            (make-simple-expander
-            (lambda (source
-                     env
-                     vars
-                     check-run-time-binding
-                     out-of-line
-                     fail)
-              (new-call source env
-                (let ((vars2 (gen-temp-vars source '(#f))))
-                  (gen-prc source env
-                    vars2
-                    (new-tst source env
-                      (gen-call-prim-notsafe source env
-                        **string?-sym
-                        (list (new-ref source env
-                                (car vars2))))
-                      (new-ref source env
-                        (car vars2))
-                      (fail))))
-                (list (gen-call-prim-vars-notsafe source env
-                        **symbol-name-sym
-                        vars))))))
+            (gen-validating-case
+             #f
+             (make-conditional-fixed-arity-generator **symbol->string?-sym))))
+
+  (def-exp "symbol->string"
+           (make-simple-expander
+            (gen-validating-case
+             (list **symbol?-sym)
+             (make-conditional-fixed-arity-generator **symbol->string?-sym))))
 
 )
 
@@ -5545,33 +6080,29 @@
 (def-simp "##flonum->fixnum" (constant-folder-fix inexact->exact flo?))
 (def-simp "fixnum->flonum"   (constant-folder-flo exact->inexact fix32?))
 
-#|
-;; TODO: enable after bootstrap
+(def-simp "fxand"            (constant-folder-fix fxand   fix32?))
+(def-simp "fxandc1"          (constant-folder-fix fxandc1 fix32?))
+(def-simp "fxandc2"          (constant-folder-fix fxandc2 fix32?))
+(def-simp "fxeqv"            (constant-folder-fix fxeqv   fix32?))
+(def-simp "fxior"            (constant-folder-fix fxior   fix32?))
+(def-simp "fxnand"           (constant-folder-fix fxnand  fix32?))
+(def-simp "fxnor"            (constant-folder-fix fxnor   fix32?))
+(def-simp "fxnot"            (constant-folder-fix fxnot   fix32?))
+(def-simp "fxorc1"           (constant-folder-fix fxorc1  fix32?))
+(def-simp "fxorc2"           (constant-folder-fix fxorc2  fix32?))
+(def-simp "fxxor"            (constant-folder-fix fxxor   fix32?))
 
-(def-simp "fxand"            (constant-folder-fix fxand   fix32?)
-(def-simp "fxandc1"          (constant-folder-fix fxandc1 fix32?)
-(def-simp "fxandc2"          (constant-folder-fix fxandc2 fix32?)
-(def-simp "fxeqv"            (constant-folder-fix fxeqv   fix32?)
-(def-simp "fxior"            (constant-folder-fix fxior   fix32?)
-(def-simp "fxnand"           (constant-folder-fix fxnand  fix32?)
-(def-simp "fxnor"            (constant-folder-fix fxnor   fix32?)
-(def-simp "fxnot"            (constant-folder-fix fxnot   fix32?)
-(def-simp "fxorc1"           (constant-folder-fix fxorc1  fix32?)
-(def-simp "fxorc2"           (constant-folder-fix fxorc2  fix32?)
-(def-simp "fxxor"            (constant-folder-fix fxxor   fix32?)
-
-(def-simp "bitwise-and"      (constant-folder-gen bitwise-and   int?)
-(def-simp "bitwise-andc1"    (constant-folder-gen bitwise-andc1 int?)
-(def-simp "bitwise-andc2"    (constant-folder-gen bitwise-andc2 int?)
-(def-simp "bitwise-eqv"      (constant-folder-gen bitwise-eqv   int?)
-(def-simp "bitwise-ior"      (constant-folder-gen bitwise-ior   int?)
-(def-simp "bitwise-nand"     (constant-folder-gen bitwise-nand  int?)
-(def-simp "bitwise-nor"      (constant-folder-gen bitwise-nor   int?)
-(def-simp "bitwise-not"      (constant-folder-gen bitwise-not   int?)
-(def-simp "bitwise-orc1"     (constant-folder-gen bitwise-orc1  int?)
-(def-simp "bitwise-orc2"     (constant-folder-gen bitwise-orc2  int?)
-(def-simp "bitwise-xor"      (constant-folder-gen bitwise-xor   int?)
-|#
+(def-simp "bitwise-and"      (constant-folder-gen bitwise-and   int?))
+(def-simp "bitwise-andc1"    (constant-folder-gen bitwise-andc1 int?))
+(def-simp "bitwise-andc2"    (constant-folder-gen bitwise-andc2 int?))
+(def-simp "bitwise-eqv"      (constant-folder-gen bitwise-eqv   int?))
+(def-simp "bitwise-ior"      (constant-folder-gen bitwise-ior   int?))
+(def-simp "bitwise-nand"     (constant-folder-gen bitwise-nand  int?))
+(def-simp "bitwise-nor"      (constant-folder-gen bitwise-nor   int?))
+(def-simp "bitwise-not"      (constant-folder-gen bitwise-not   int?))
+(def-simp "bitwise-orc1"     (constant-folder-gen bitwise-orc1  int?))
+(def-simp "bitwise-orc2"     (constant-folder-gen bitwise-orc2  int?))
+(def-simp "bitwise-xor"      (constant-folder-gen bitwise-xor   int?))
 
 (def-simp "make-rectangular" (constant-folder-gen make-rectangular real?))
 (def-simp "make-polar"       (constant-folder-gen make-polar     real?))

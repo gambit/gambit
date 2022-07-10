@@ -1,9 +1,9 @@
 /* File: "mem.c" */
 
-/* Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.  */
+/* Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.  */
 
 #define ___INCLUDED_FROM_MEM
-#define ___VERSION 409003
+#define ___VERSION 409004
 #include "gambit.h"
 
 #include "os_setup.h"
@@ -346,6 +346,8 @@
 #define latest_gc_live          ___VMSTATE_MEM(latest_gc_live_)
 #define latest_gc_movable       ___VMSTATE_MEM(latest_gc_movable_)
 #define latest_gc_still         ___VMSTATE_MEM(latest_gc_still_)
+
+#define custom_msection_alloc   ___VMSTATE_MEM(custom_msection_alloc_)
 
 /* words occupied by this processor by movable objects */
 
@@ -743,6 +745,16 @@ void *ptr;)
       ___rc_header *h = ___CAST(___rc_header*,ptr) - 1;
       h->refcount++;
     }
+}
+
+
+___EXP_FUNC(int,___refcount_rc)
+   ___P((void *ptr),
+        (ptr)
+void *ptr;)
+{
+  ___rc_header *h = ___CAST(___rc_header*,ptr) - 1;
+  return h->refcount;
 }
 
 
@@ -1410,6 +1422,20 @@ ___WORD obj;)
 }
 
 
+/*
+ * '___still_obj_refcount (obj)' returns the reference count of
+ * the still object 'obj'.
+ */
+
+___EXP_FUNC(___WORD,___still_obj_refcount)
+   ___P((___WORD obj),
+        (obj)
+___WORD obj;)
+{
+  return ___BODY0(obj)[___STILL_REFCOUNT-___STILL_BODY];
+}
+
+
 /*---------------------------------------------------------------------------*/
 
 /*
@@ -1761,7 +1787,7 @@ ___UTF_8STRING str;)
   for (;;)
     {
       ___UTF_8STRING start = p;
-      c = ___UTF_8_get (&p);
+      ___UTF_8_get_var (&p, c);
       if (p == start || c > ___MAX_CHR)
         return ___FIX(___CTOS_UTF_8STRING_ERR);
       if (c == 0)
@@ -1959,11 +1985,12 @@ unsigned int subtype;)
       ___SIZE_T i;
       ___SIZE_T n = ___INT(___STRINGLENGTH(name));
       ___UTF_8STRING p = str;
+      ___UCS_4 c;
       for (i=0; i<n; i++)
-        if (___UTF_8_get (&p) !=
+        if (___UTF_8_get_var (&p, c) !=
             ___CAST(___UCS_4,___INT(___STRINGREF(name,___FIX(i)))))
           goto next;
-      if (___UTF_8_get (&p) == 0)
+      if (___UTF_8_get_var (&p, c) == 0)
         return probe;
     next:
       probe = ___FIELD(probe,___SYMKEY_NEXT);
@@ -2287,13 +2314,14 @@ ___SCMOBJ val;)
 #define IN_OBJECT           0
 #define IN_REGISTER         1
 #define IN_SAVED            2
-#define IN_PROCESSOR_SCMOBJ 3
-#define IN_VM_SCMOBJ        4
-#define IN_SYMKEY_TABLE     5
-#define IN_GLOBAL_VAR       6
-#define IN_WILL_LIST        7
-#define IN_CONTINUATION     8
-#define IN_RC               9
+#define IN_TYPE_CACHE       3
+#define IN_PROCESSOR_SCMOBJ 4
+#define IN_VM_SCMOBJ        5
+#define IN_SYMKEY_TABLE     6
+#define IN_GLOBAL_VAR       7
+#define IN_WILL_LIST        8
+#define IN_CONTINUATION     9
+#define IN_RC               10
 
 
 ___HIDDEN void print_prefix
@@ -2667,6 +2695,10 @@ char *msg;)
       ___printf (">>> The reference was found in the saved objects\n");
       break;
 
+    case IN_TYPE_CACHE:
+      ___printf (">>> The reference was found in a type cache\n");
+      break;
+
     case IN_PROCESSOR_SCMOBJ:
       ___printf (">>> The reference was found in the processor object\n");
       break;
@@ -2903,6 +2935,9 @@ ___msection *ms;)
    * lasts 0.2 microseconds and next_msection_without_locking
    * is called every 300 microseconds.
    */
+
+  if (custom_msection_alloc != 0)
+    return custom_msection_alloc ();
 
   if (nb_msections_assigned == 0)
     result = the_msections->head; /* start at head of free msections */
@@ -4557,6 +4592,10 @@ ___virtual_machine_state ___vms;)
   latest_gc_movable = 0.0;
   latest_gc_still = 0.0;
 
+  /* No custom msection allocator */
+
+  custom_msection_alloc = 0;
+
   /* Allocate msections of VM */
 
   init_nb_sections =
@@ -5707,10 +5746,10 @@ ___BOOL find;)
   ___SCMOBJ allocated;
   ___SCMOBJ obj1;
   ___SCMOBJ obj2;
-  ___SCMOBJ k1;
-  ___SCMOBJ k1_probe2;
-  ___SCMOBJ k2;
-  ___SCMOBJ k2_probe2;
+  ___SCMOBJ k1 = ___FIX(0);
+  ___SCMOBJ k1_probe2 = ___FIX(0);
+  ___SCMOBJ k2 = ___FIX(0);
+  ___SCMOBJ k2_probe2 = ___FIX(0);
 
   if (!___FIXZEROP(___FIXAND(___FIELD(ht, ___GCHASHTABLE_FLAGS),
                              ___FIX(___GCHASHTABLE_FLAG_KEY_MOVED))))
@@ -6109,6 +6148,21 @@ ___PSDKR)
 }
 
 
+___HIDDEN void mark_type_cache
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
+{
+  ___PSGET
+
+#ifdef ENABLE_CONSISTENCY_CHECKS
+  reference_location = IN_TYPE_CACHE;
+#endif
+
+  mark_array (___PSP ___ps->type_cache, sizeof(___ps->type_cache)/sizeof(*___ps->type_cache));
+}
+
+
 ___HIDDEN void mark_processor_scmobj
    ___P((___PSDNC),
         (___PSVNC)
@@ -6412,6 +6466,8 @@ ___PSDKR)
   mark_registers (___PSPNC);
 
   mark_saved (___PSPNC);
+
+  mark_type_cache (___PSPNC);
 
   mark_processor_scmobj (___PSPNC);
 
@@ -7070,7 +7126,8 @@ ___PSDKR)
   alloc_stack_ptr = ___ps->fp;
   alloc_heap_ptr  = ___ps->hp;
 
-  return bytes_allocated_minus_occupied + bytes_occupied(___ps);
+  return bytes_allocated_minus_occupied + bytes_occupied(___ps) +
+         ___CAST(___F64,occupied_words_still) * ___WS;
 }
 
 

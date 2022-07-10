@@ -2,7 +2,7 @@
 
 ;;; File: "_module.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -12,13 +12,23 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define ##module-search-order (##os-module-search-order))
+(define-prim&proc (module-whitelist-reset!)
+  (##set-module-whitelist! '()))
 
-(define-prim (##module-search-order-set! search-order)
-  (set! ##module-search-order search-order))
+(define-primitive (module-whitelist-add! source)
+  (##set-module-whitelist! (##cons source (##get-module-whitelist))))
 
-(define-prim (##module-search-order-add! dir)
-  (##module-search-order-set! (##cons dir ##module-search-order)))
+(define-procedure (module-whitelist-add! (source string))
+  (##module-whitelist-add! source))
+
+(define-prim&proc (module-search-order-reset!)
+  (##set-module-search-order! '()))
+
+(define-primitive (module-search-order-add! dir)
+  (##set-module-search-order! (##cons dir (##get-module-search-order))))
+
+(define-procedure (module-search-order-add! (dir string))
+  (##module-search-order-add! dir))
 
 (define-prim (##module-search-directory? str)
   (let ((len (##string-length str)))
@@ -43,8 +53,8 @@
                                  (##cdr rpath))
                          rpath))))
          (name
-          (##append-strings parts
-                            (##string ##module-path-sep))))
+          (##string-concatenate parts
+                                (##string ##module-path-sep))))
     (if namespace?
         (##string-append name "#")
         name)))
@@ -93,6 +103,21 @@
      tag
      (##append rpath (or host '())))))
 
+(define-prim (##modref->namespace modref)
+  (##modref->string modref #t))
+
+(define-prim (##make-module-var modref sym)
+  (##make-global-var
+   (##string->symbol
+    (##string-append (##modref->namespace modref)
+                     (##symbol->string sym)))))
+
+(define (##module-var-ref modref sym)
+  (##global-var-ref (##make-module-var modref sym)))
+
+(define (##module-var-set! modref sym val)
+  (##global-var-set! (##make-module-var modref sym) val))
+
 ;;;----------------------------------------------------------------------------
 
 (define ##module-path-sep #\/)
@@ -122,7 +147,7 @@
 
   (define (reverse-split-at-module-path-sep str tail)
     (and tail
-         (##reverse-string-split-at str ##module-path-sep tail)))
+         (##string-split-at-char-reversed str ##module-path-sep tail)))
 
   (define (reverse-split-path lst tail)
     (let loop ((lst lst) (rev-parts tail))
@@ -152,6 +177,9 @@
                ;; a host name component must not start or end with "-"
                (##not (or (##char=? (##string-ref str 0) #\-)
                           (##char=? (##string-ref str (##fx- len 1)) #\-))))
+           ;; a component must not start or end with "."
+           (##not (or (##char=? (##string-ref str 0) #\.)
+                      (##char=? (##string-ref str (##fx- len 1)) #\.)))
            (let loop ((i (##fx- len 1)))
              (if (##fx< i 0)
                  #t
@@ -167,7 +195,9 @@
                                   (##char=? c #\_)
                                   ;; in tag, allow "."
                                   (and (##eq? context 'tag)
-                                       (##char=? c #\.)))))
+                                       (##char=? c #\.)
+                                       ;; must not be followed by "."
+                                       (##not (##char=? (##string-ref str (##fx+ i 1)) #\.))))))
                         (loop (##fx- i 1)))))))))
 
   (define (valid-components? lst context)
@@ -179,7 +209,7 @@
         #t))
 
   (define (valid-host-name? str) ;; syntax: component.component[.component]*
-    (let ((x (##reverse-string-split-at str #\. '())))
+    (let ((x (##string-split-at-char-reversed  str #\.)))
       (and (##pair? (##cdr x)) ;; must have at least one "."
            (valid-components? x 'host)))) ;; and valid host components
 
@@ -215,7 +245,7 @@
   (define (parse-rest nb-dots rev-parts)
     (if (##pair? rev-parts)
         (let* ((head (##car rev-parts))
-               (x (##reverse-string-split-at head #\@ '()))
+               (x (##string-split-at-char-reversed  head #\@))
                (len (##length x)))
           (cond ((##fx> len 2) ;; improper syntax to have more than one "@"
                  #f)
@@ -269,21 +299,6 @@
                    (##cdr code))
             (parse code
                    '())))))
-
-(define (##reverse-string-split-at str sep #!optional (rest '()))
-  (let ((len (##string-length str)))
-    (let loop ((i 0) (j 0) (lst rest))
-      (if (##fx< j (##string-length str))
-          (let ((c (##string-ref str j))
-                (j+1 (##fx+ j 1)))
-            (if (##char=? c sep)
-                (loop j+1
-                      j+1
-                      (##cons (##substring str i j) lst))
-                (loop i
-                      j+1
-                      lst)))
-          (##cons (##substring str i j) lst)))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -348,10 +363,11 @@
 (define-prim (##search-module
               modref
               #!optional
-              (search-order ##module-search-order))
+              (search-order (##get-module-search-order)))
 
   (define (try-opening-source-file path cont)
-    (if ##debug-modules? (pp (list 'try-opening-source-file path)));;;;;;;;;;;;;;
+    (and ##debug-modules?
+         (##debug-modules-trace 'try-opening-source-file path))
     (##make-input-path-psettings
      (##list 'path: path
              'char-encoding: 'UTF-8
@@ -375,7 +391,7 @@
         (let ((mod-path (##string-append mod-path-noext (##car ext))))
           (try-opening-source-file
            mod-path
-           (lambda (port)
+           (lambda (port resolved-path)
              (and (##not (##fixnum? port))
                   (##vector mod-dir
                             mod-filename-noext
@@ -415,8 +431,8 @@
    #f
    (lambda (cte src tail?)
      (if script-line
-         (##compilation-ctx-meta-info-add! 'script-line script-line))
-     (##compilation-ctx-module-ref-set! module-ref)
+         (##compilation-meta-info-add! 'script-line script-line))
+     (##compilation-module-ref-set! module-ref)
      (let ((comp-scope (##compilation-scope)));;TODO: deprecated interface
        (##table-set! comp-scope '##module-root module-root)
        (##table-set! comp-scope '##modref-path modref-path))
@@ -430,7 +446,7 @@
      ##get-module
      module-ref))
 
-  (define (search-for-highest-object-file path-noext)
+  (define (search-for-highest-object-file path-noext stop-at-first?)
     (let loop ((version 1)
                (highest-object-file-path #f)
                (highest-object-file-info #f))
@@ -439,16 +455,23 @@
                (##string-append path-noext
                                 ".o"
                                 (##number->string version 10))))
-             (_ (if ##debug-modules? (pp (list '##file-info-aux resolved-path))));;;;;;;;;;;;;
+             (_
+              (and ##debug-modules?
+                   (##debug-modules-trace 'path-exists? resolved-path)))
              (resolved-info
               (##file-info-aux resolved-path))
              (resolved-path-exists?
               (##not (##fixnum? resolved-info))))
         (if resolved-path-exists?
-            (loop (##fx+ version 1)
-                  resolved-path
-                  resolved-info)
-            highest-object-file-path))))
+            (if stop-at-first?
+                (##vector resolved-path
+                          resolved-info)
+                (loop (##fx+ version 1)
+                      resolved-path
+                      resolved-info))
+            (and highest-object-file-path
+                 (##vector highest-object-file-path
+                           highest-object-file-info))))))
 
 ;;  (pp `(##get-module-from-file module-ref: ,module-ref modref: ,(##vector-copy modref) mod-info: ,mod-info))
 
@@ -505,14 +528,15 @@
                          (##meta-info->alist
                           (macro-compilation-ctx-meta-info comp-ctx)))
                         (module-descr
-                         (##vector supply-modules
-                                   demand-modules
-                                   meta-info
-                                   0
-                                   (lambda ()
-                                     (let ((rte #f))
-                                       (macro-code-run code)))
-                                   #f)))
+                         (macro-make-module-descr
+                          supply-modules
+                          demand-modules
+                          meta-info
+                          0
+                          (lambda ()
+                            (let ((rte #f))
+                              (macro-code-run code)))
+                          #f)))
                    (macro-code-parent-set!
                     code
                     (macro-make-code-attributes
@@ -525,11 +549,15 @@
                    (or (##lookup-registered-module module-ref)
                        (err)))))))))
 
-    (define (get-from-object-file path)
+    (define (get-from-object-file path-and-info)
       (##close-port port)
-      (let* ((linker-name
+      (let* ((path
+              (##vector-ref path-and-info 0))
+             (linker-name
               (##path-strip-directory path))
-             (_ (if ##debug-modules? (pp (list '##os-load-object-file path linker-name))));;;;;;;;;;;;;
+             (_
+              (and ##debug-modules?
+                   (##debug-modules-trace '##os-load-object-file path linker-name)))
              (result
               (##os-load-object-file path linker-name)))
 
@@ -548,20 +576,33 @@
                  (or (##lookup-registered-module module-ref)
                      (err)))))))
 
-    (define (search-for-object-file mod-filename-noext dir)
+    (define (search-for-object-file dir stop-at-first?)
       (search-for-highest-object-file
-       (##path-expand mod-filename-noext dir)))
+       (##path-expand mod-filename-noext dir)
+       stop-at-first?))
 
     (let* ((build-subdir-path
             (##module-build-subdir-path mod-dir
                                         mod-filename-noext
                                         (macro-target)))
-           (object-file-path
-            (or (search-for-object-file mod-filename-noext build-subdir-path)
-                (search-for-object-file mod-filename-noext mod-dir))))
+           (object-file-path-and-info
+            (or (search-for-object-file build-subdir-path #t)
+                (search-for-object-file mod-dir #f))))
 
-      (cond (object-file-path
-             (get-from-object-file object-file-path))
+      (cond ((and object-file-path-and-info
+                  ;; check that the object file is not older than the
+                  ;; source file
+                  (let ((mod-path-info
+                         (##file-info-aux mod-path)))
+                    (and mod-path-info ;; source file (still) exists
+                         (##not (##fl<
+                                 (macro-time-point
+                                  (macro-file-info-last-modification-time
+                                   (##vector-ref object-file-path-and-info 1)))
+                                 (macro-time-point
+                                  (macro-file-info-last-modification-time
+                                   mod-path-info)))))))
+             (get-from-object-file object-file-path-and-info))
 
             ((##file-exists?
               (##path-expand
@@ -574,12 +615,10 @@
               (macro-target)
               (##list (##list 'module-ref module-ref)))
 
-             (let ((object-file-path
-                    (search-for-object-file
-                     mod-filename-noext
-                     build-subdir-path)))
-               (if object-file-path
-                   (get-from-object-file object-file-path)
+             (let ((object-file-path-and-info
+                    (search-for-object-file build-subdir-path #t)))
+               (if object-file-path-and-info
+                   (get-from-object-file object-file-path-and-info)
                    (get-from-source-file))))
 
             (else
@@ -596,10 +635,10 @@
   (let* ((gsc-path
           (##path-expand
            (##string-append "gsc-script"
-                            ##os-exe-extension-string-saved)
+                            ##os-bat-extension-string-saved)
            (##path-normalize-directory-existing "~~bin")))
          (arguments
-          (##list (##append-strings
+          (##list (##string-concatenate
                    (##cons (##string-append "-:=" (##os-path-gambitdir))
                            (install-dir "lib"
                                         (install-dir "userlib"
@@ -608,12 +647,14 @@
                   "-e"
                   (##object->string
                    `(##begin
-                     (##module-search-order-set!
-                      ',##module-search-order)
+                     (##set-module-search-order!
+                      ',(##get-module-search-order))
                      (##build-module
                       ',path
                       ',target
-                      ',options))))))
+                      ',(##append
+                         options
+                         ##build-module-subprocess-default-options)))))))
 
     (##tty-mode-reset) ;; reset tty (in case subprocess needs to read tty)
 
@@ -625,6 +666,11 @@
             #f  ;; don't redirect stdin
             #f))) ;; run in current directory
       (##eqv? status 0))))
+
+(define ##build-module-subprocess-default-options '())
+
+(define-prim (##build-module-subprocess-default-options-set! default-options)
+  (set! ##build-module-subprocess-default-options default-options))
 
 (define-prim (##install-module modref)
 
@@ -649,7 +695,7 @@
 
   ;;; handle the install mode (ask always, ask never, ask when repl)
   (define (module-install-confirm? modstr)
-    (let ((install-mode (##os-module-install-mode)))
+    (let ((install-mode (##get-module-install-mode)))
       (and (or (##fx= install-mode
                       (macro-module-install-mode-ask-always))
                (and (##fx= install-mode
@@ -664,18 +710,23 @@
 
   (and (pair? (macro-modref-host modref)) ;; only install hosted modules
        (begin
-         (if ##debug-modules? (pp (list '##install-module modref)));;;;;;;;;;;;;;;;;
+         (and ##debug-modules?
+              (##debug-modules-trace '##install-module modref))
          (let ((mod-string (##modref->string modref)))
 
            (and (or (##member
                      mod-string
-                     (##os-module-whitelist)
+                     (##get-module-whitelist)
                      (lambda (a b)
                        (module-prefix=? a b)))
                     ;; Ask user to install.
                     (module-install-confirm? mod-string))
 
-                ((##eval '(let () (##import _pkg) install)) mod-string)
+                ((##eval '(##let ()
+                            (##demand-module _pkg)
+                            _pkg#install))
+                 mod-string)
+
                 ;; Return the modref
                 modref)))))
 
@@ -685,7 +736,7 @@
 (define-prim (##search-or-else-install-module
               modref
               #!optional
-              (search-order ##module-search-order))
+              (search-order (##get-module-search-order)))
   (or (##search-module modref search-order)
       (and (##install-module modref)
            (##search-module modref search-order))))
@@ -759,7 +810,24 @@
                     ;; last resort is to load a file
                     (load-file))))))))
 
-(define ##debug-modules? #f)
+(define (##debug-modules-trace . info)
+  (##repl
+   (lambda (first port)
+     (##write-string "*** " port)
+     (##write info port)
+     (##newline port)
+     #t)))
+
+(define ##debug-modules?
+  (let* ((settings
+          (##set-debug-settings! 0 0))
+         (level
+          (##fxwraplogical-shift-right
+           (##fxand
+            settings
+            (macro-debug-settings-level-mask))
+           (macro-debug-settings-level-shift))))
+    (##fx>= level 4)))
 
 (define-prim (##debug-modules?-set! x)
   (set! ##debug-modules? x))
@@ -924,7 +992,7 @@
 
 (define-prim ##parse-define-module-alias
   (lambda (src)
-    (##compilation-ctx-module-aliases-add!
+    (##compilation-module-aliases-add!
      (##validate-define-module-alias src))
 
     (##expand-source-template
@@ -943,10 +1011,7 @@
   (let ((modref (##parse-module-ref arg-src)))
     (if (##not modref)
 
-        (##raise-expression-parsing-exception
-         'ill-formed-special-form
-         src
-         (##source-strip (##car (##source-strip src))))
+        (##raise-ill-formed-special-form src)
 
         (let* ((relative-to-path
                 (##source-path src))
@@ -1004,7 +1069,7 @@
                       (##path-expand (##string-append
                                       (##vector-ref mod-info 1)
                                       "#"
-                                      (##car (##vector-ref mod-info 2)))
+                                      ".scm" #;(##car (##vector-ref mod-info 2)))
                                      (##vector-ref mod-info 0))
                       #f))
                     (port
@@ -1020,13 +1085,22 @@
 ;;;----------------------------------------------------------------------------
 
 (define (##gsi-option-update args)
-  ((##eval '(let () (##import _pkg) gsi-option-update)) args))
+  ((##eval '(##let ()
+              (##demand-module _pkg)
+              _pkg#gsi-option-update))
+   args))
 
 (define (##gsi-option-install args)
-  ((##eval '(let () (##import _pkg) gsi-option-install)) args))
+  ((##eval '(##let ()
+              (##demand-module _pkg)
+              _pkg#gsi-option-install))
+   args))
 
 (define (##gsi-option-uninstall args)
-  ((##eval '(let () (##import _pkg) gsi-option-uninstall)) args))
+  ((##eval '(##let ()
+              (##demand-module _pkg)
+              _pkg#gsi-option-uninstall))
+   args))
 
 (define ##gsi-option-handlers
  (##list (##cons 'update  ##gsi-option-update)

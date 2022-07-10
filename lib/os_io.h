@@ -1,6 +1,6 @@
 /* File: "os_io.h" */
 
-/* Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_IO_H
 #define ___OS_IO_H
@@ -170,13 +170,23 @@ extern ___BOOL ___fdset_resize
 
 #endif
 
+extern int ___io_settings_merge
+   ___P((int io_settings,
+         int io_settings_to_fill_default),
+        ());
+
+extern int ___io_settings_finalize
+   ___P((int io_settings,
+         int io_settings_to_fill_default),
+        ());
+
 extern void ___device_select_add_relative_timeout
    ___P((___device_select_state *state,
          int i,
          ___F64 seconds),
         ());
 
-void ___device_select_add_timeout
+extern void ___device_select_add_timeout
    ___P((___device_select_state *state,
          int i,
          ___time timeout),
@@ -480,6 +490,8 @@ typedef struct ___device_stream_struct
   {
     ___device base;
 
+    int io_settings; /* I/O settings that override defaults */
+
 #ifdef USE_PUMPS
     ___device_stream_pump *read_pump;
     ___device_stream_pump *write_pump;
@@ -622,6 +634,7 @@ extern ___SCMOBJ ___device_stream_setup
    ___P((___device_stream *dev,
          ___device_group *dgroup,
          int direction,
+         int io_settings,
          int pumps_on),
         ());
 
@@ -837,6 +850,14 @@ extern ___SCMOBJ ___os_device_udp_destination_set
 extern ___SCMOBJ ___os_device_udp_socket_info
    ___P((___SCMOBJ dev,
          ___SCMOBJ source),
+        ());
+
+extern ___SCMOBJ ___os_device_udp_socket_receive_buffer_size
+   ___P((___SCMOBJ dev),
+        ());
+
+extern ___SCMOBJ ___os_device_udp_socket_send_buffer_size
+   ___P((___SCMOBJ dev),
         ());
 
 /*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */

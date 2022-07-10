@@ -2,7 +2,7 @@
 
 ;;; File: "_gsclib.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 (include "generic.scm")
 
@@ -24,11 +24,28 @@
     (extract-macros (##cte-top-cte ##interaction-cte))))
 
 (define (##compile-options-normalize options)
-  (##map (lambda (opt)
-           (if (##pair? opt)
-               opt
-               (##list opt)))
-         options))
+  (##add-default-compile-options
+   (##map (lambda (opt)
+            (if (##pair? opt)
+                opt
+                (##list opt)))
+          options)))
+
+(define (##add-default-compile-options opts)
+  (let loop ((lst (##default-compile-options)) (new-opts opts))
+    (if (##pair? lst)
+        (let ((opt (##car lst)))
+          (if (and (##pair? opt)
+                   (##pair? (##cdr opt))
+                   (##null? (##cddr opt))
+                   (##symbol? (##car opt))
+                   (##not (##assq (##car opt) new-opts)))
+              (loop (##cdr lst) (##cons opt new-opts))
+              (loop (##cdr lst) new-opts)))
+        new-opts)))
+
+(define (##default-compile-options)
+  (##call-with-input-string ##default-compile-options-string ##read-all))
 
 (define (compile-file-to-target
          filename
@@ -138,7 +155,7 @@
 (define (##string-or-string-list-join x sep)
   (if (##string? x)
       x
-      (##append-strings x sep)))
+      (##string-concatenate x sep)))
 
 (define (##multiple-args-join x)
   (##string-or-string-list-join x "\n"))
@@ -150,6 +167,7 @@
          (options (macro-absent-obj))
          (output (macro-absent-obj))
          (base (macro-absent-obj))
+         (cc (macro-absent-obj))
          (cc-options (macro-absent-obj))
          (ld-options-prelude (macro-absent-obj))
          (ld-options (macro-absent-obj))
@@ -175,6 +193,11 @@
                   #f
                   (macro-force-vars (base)
                     base)))
+             (c
+              (if (##eq? cc (macro-absent-obj))
+                  #f
+                  (macro-force-vars (cc)
+                    cc)))
              (cc-opts
               (if (##eq? cc-options (macro-absent-obj))
                   '()
@@ -215,6 +238,8 @@
                (error "string expected for output: parameter")) ;;;;;;;;;;
               ((##not (or (##string? bas) (##eq? bas #f)))
                (error "string or #f expected for base: parameter")) ;;;;;;;;;;
+              ((##not (or (##string? c) (##eq? c #f)))
+               (error "string or #f expected for cc: parameter")) ;;;;;;;;;;
               ((##not (##string-or-string-list? cc-opts))
                (error "string or string list expected for cc-options: parameter")) ;;;;;;;;;;
               ((##not (##string-or-string-list? ld-opts-prelude))
@@ -230,6 +255,7 @@
                                opts
                                out
                                bas
+                               c
                                cc-opts
                                ld-opts-prelude
                                ld-opts
@@ -241,6 +267,7 @@
          options
          output
          base
+         cc
          cc-options
          ld-options-prelude
          ld-options
@@ -349,6 +376,7 @@
                      (##base-library-from-base base)
                      (##list target-filename-relative-to-output-dir)
                      output-filename-no-dir
+                     cc
                      cc-options
                      ld-options-prelude
                      ld-options
@@ -365,61 +393,67 @@
                   (##list filename))))))))
 
 (define (##build-module path target options)
+  (let ((options
+         (##compile-options-normalize options)))
 
-  (define (get-option key)
-    (cond ((##assq key options) => ##cdr)
-          (else '())))
+    (define (get-option key default)
+      (cond ((##assq key options) => ##cdr)
+            (else default)))
 
-  (let* ((module-dir
-          (##path-normalize (##path-directory path)))
-         (module-filename
-          (##path-strip-directory path))
-         (module-filename-noext
-          (##path-strip-extension module-filename))
-         (module-object-filename
-          (##string-append module-filename-noext ".o1"))
-         (build-subdir
-          (##module-build-subdir-path module-dir module-filename-noext target))
-         (cc-options
-          (get-option 'cc-options))
-         (ld-options-prelude
-          (get-option 'ld-options-prelude))
-         (ld-options
-          (get-option 'ld-options))
-         (pkg-config
-          (get-option 'pkg-config))
-         (pkg-config-path
-          (get-option 'pkg-config-path)))
+    (let* ((module-dir
+            (##path-normalize (##path-directory path)))
+           (module-filename
+            (##path-strip-directory path))
+           (module-filename-noext
+            (##path-strip-extension module-filename))
+           (module-object-filename
+            (##string-append module-filename-noext ".o1"))
+           (build-subdir
+            (##module-build-subdir-path module-dir module-filename-noext target))
+           (cc
+            (get-option 'cc #f))
+           (cc-options
+            (get-option 'cc-options '()))
+           (ld-options-prelude
+            (get-option 'ld-options-prelude '()))
+           (ld-options
+            (get-option 'ld-options '()))
+           (pkg-config
+            (get-option 'pkg-config '()))
+           (pkg-config-path
+            (get-option 'pkg-config-path '())))
 
-    ;; create build subdirectory (removing it first to make sure it is empty)
-    (##delete-file-or-directory build-subdir #t #f)
-    (##create-directory build-subdir)
+      ;; create build subdirectory (removing it first to make sure it is empty)
+      (##delete-file-or-directory build-subdir #t #f)
+      (##create-directory build-subdir)
 
-    (let* ((opts
-            (##cons (##list 'target target)
-                    (##cons
-                     (##list 'linker-name module-object-filename)
-                     options)))
-           (target-file
-            (##compile-file-to-target path opts build-subdir)))
-      (and target-file
-           (##compile-file
-            target-file
-            opts
-            (##path-expand module-object-filename build-subdir)
-            #f ;; base
-            cc-options
-            ld-options-prelude
-            ld-options
-            pkg-config
-            pkg-config-path)
-           build-subdir))))
+      (let* ((opts
+              (##cons (##list 'target target)
+                      (##cons
+                       (##list 'linker-name module-object-filename)
+                       options)))
+             (target-file
+              (##compile-file-to-target path opts build-subdir)))
+        (and target-file
+             (##compile-file
+              target-file
+              opts
+              (##path-expand module-object-filename build-subdir)
+              #f ;; base
+              cc
+              cc-options
+              ld-options-prelude
+              ld-options
+              pkg-config
+              pkg-config-path)
+             build-subdir)))))
 
 (define (##build-executable
          base
          obj-files
          options
          output-filename
+         cc
          cc-options
          ld-options-prelude
          ld-options
@@ -445,6 +479,7 @@
             (##map (lambda (path) (##path-relative-to-dir path output-dir))
                    obj-files)
             output-filename-no-dir
+            cc
             cc-options
             ld-options-prelude
             ld-options
@@ -464,6 +499,7 @@
          base-library
          input-filenames
          output-filename
+         cc
          cc-options
          ld-options-prelude
          ld-options
@@ -483,6 +519,9 @@
            (and output-filename
                 (##cons "OUTPUT_FILENAME"
                         output-filename))
+           (and cc
+                (##cons "CC"
+                        cc))
            (and cc-options
                 (##cons "CC_OPTIONS"
                         (##multiple-args-join cc-options)))
@@ -690,7 +729,8 @@
                   linker-name
                   warnings?))
 
-(define (##c-code . args) ;; avoid errors when using -expansion
-  (error "##c-code is not callable dynamically"))
+(set! ##c-code ;; avoid errors when using -expansion
+  (lambda args
+    (error "##c-code is not callable dynamically")))
 
 ;;;============================================================================

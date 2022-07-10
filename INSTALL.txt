@@ -66,10 +66,10 @@ The system can then be tested and installed using the following commands:
   % sudo make install
 
 On a computer with multiple cores it is normally beneficial to build
-the system in parallel by adding a "-j" option to the invocation
-of make:
+the system in parallel by adding a "-jN" option to the invocation
+of make with a suitable value for N (typically the number of cores):
 
-  % make -j
+  % make -j8
 
 
 3) Recommended "configure" script options
@@ -106,9 +106,21 @@ at this point) the speed of the Gambit interpreter improves by roughly
 compiling Gambit with --enable-c-opt, notably GCC 4.6.0 .  So the
 --enable-c-opt option should be used with great care.
 
-These options are not used by default because compilation is typically
-longer and requires more RAM.  In fact some platforms and C compilers
-may not have
+The --enable-march=native option will use C compiler options to
+optimize the system for best execution speed on the machine
+architecture that is used for the build.  This may restrict the
+execution to that specific machine architecture.
+
+The --enable-dynamic-clib option will generate direct calls to the C
+library functions in dynamically loadable modules.  This typically
+leads to more efficient code by allowing the C compiler to inline C
+library calls in dynamically loaded modules (for example calls to the
+math functions sqrt, sin, etc).  However this may not work on some
+operating systems.
+
+These options are not used by default because they can cause issues on
+some systems.  The C compiler may take a long time and a lot of memory
+to compile.  In fact some platforms and C compilers may not have
 enough resources to build the system this way.  With
 --enable-single-host the build takes roughly 500 megabytes and 2 to 4
 minutes on a 2 GHz Intel Core Duo based MacBook Pro with the GCC 4.0.1
@@ -125,8 +137,9 @@ by the compiler evolve and vary in computational complexity.  Since
 the C files are so large, the compile time is very sensitive to the
 computational complexity of the optimization algorithms.  See the
 table at the end of this file for performance information for
-different versions of GCC.  On a recent multicore computer a "make -j"
-typically takes less than 2 minutes.
+different versions of GCC.  On a recent 8 core computer a "make" takes
+about 140 seconds and a "make -j8" takes about 30 seconds (when
+starting from a "release" or a distribution .tgz produced by "make dist").
 
 Finally, in order to support installing multiple versions of Gambit,
 it is recommended to use these options:
@@ -180,11 +193,17 @@ The configure options which are specific to the Gambit system are:
 
   --enable-single-host    compile each Scheme module as a single C function
   --enable-c-opt[=level]  use higher C optimization level
+  --enable-trust-c-tco    trust the C compiler will do TCO properly (for clang
+                          this is autodetected, for gcc you need >= version 10)
   --enable-gcc-opts       use expensive GCC optimizations
   --enable-gnu-gcc-specific-options
                           use GNU GCC specific options (default=YES)
   --enable-gnu-gcc-no-strict-aliasing
                           use GNU GCC -fno-strict-aliasing option (default=YES)
+  --enable-march=arch     build for specific machine architecture
+                          (the default is to use the C compiler default)
+  --enable-dynamic-clib   allow C library to be called directly from
+                          dynamically loaded modules (default=NO)
   --enable-cplusplus      compile using C++ compiler
   --enable-shared         build the Scheme runtime system as a shared library
   --enable-pic            build system with position independent code (default
@@ -218,11 +237,13 @@ The configure options which are specific to the Gambit system are:
                           and utf8 on other OSes)
   --enable-default-runtime-options=...
                           default runtime options (default is none)
+  --enable-default-compile-options=...
+                          default compile options (default is (compactness 9))
   --enable-module-search-order=...
                           module search order (default is ~~lib,~~userlib)
   --enable-module-whitelist=...
                           module whitelist (default is github.com/gambit)
-  --enable-targets=...    targets to build in addition to C
+  --enable-targets=...    targets to build in addition to C (default is js)
   --enable-ansi-c         link only with ANSI C libraries
   --enable-symlinks       use symbolic links for installed files not in the
                           Gambit central installation directory
@@ -261,6 +282,22 @@ The configure options which are specific to the Gambit system are:
   --enable-ratnum         support exact rational numbers
                           (requires: make bootstrap; make bootclean; make)
   --enable-cpxnum         support complex numbers
+                          (requires: make bootstrap; make bootclean; make)
+  --enable-s8vector       support s8vector type
+                          (requires: make bootstrap; make bootclean; make)
+  --enable-u16vector      support u16vector type
+                          (requires: make bootstrap; make bootclean; make)
+  --enable-s16vector      support s16vector type
+                          (requires: make bootstrap; make bootclean; make)
+  --enable-u32vector      support u32vector type
+                          (requires: make bootstrap; make bootclean; make)
+  --enable-s32vector      support s32vector type
+                          (requires: make bootstrap; make bootclean; make)
+  --enable-u64vector      support u64vector type
+                          (requires: make bootstrap; make bootclean; make)
+  --enable-s64vector      support s64vector type
+                          (requires: make bootstrap; make bootclean; make)
+  --enable-f32vector      support f32vector type
                           (requires: make bootstrap; make bootclean; make)
   --enable-rtlib-debug
                           cause the inclusion of all debugging information
@@ -303,8 +340,14 @@ The configure options which are specific to the Gambit system are:
                           max number of processors per Gambit VM
                           (default is 64)
   --enable-dynamic-tls    allow thread local storage variables to be
-                          referenced from dynamically loaded code
+                          referenced from dynamically loaded modules
   --enable-openssl        compile with SSL support using OpenSSL
+  --enable-corcxxflags-gambuild=FLAGS
+                          C compiler flags gambuild-C script will use instead
+                          of current CFLAGS/CXXFLAGS
+  --enable-ldflags-gambuild=FLAGS
+                          C linker flags gambuild-C script will use instead of
+                          current LDFLAGS
 
 The option --enable-cplusplus should be used when applications
 developped with the Gambit compiler are to be linked with code or
@@ -487,6 +530,9 @@ Here is a description of the most useful "make" targets:
   % make dist-devel          Creates a compressed tar file of
                              the system including all the source code
                              management files.
+
+  % make dist-boot           Creates a compressed tar file of
+                             the system like "make dist" but named boot.tgz
 
   % make doc                 Builds the documentation.
 

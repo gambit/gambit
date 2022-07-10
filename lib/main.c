@@ -1,11 +1,11 @@
 /* File: "main.c" */
 
-/* Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved. */
 
 /* This is the driver of the Gambit system */
 
 #define ___INCLUDED_FROM_MAIN
-#define ___VERSION 409003
+#define ___VERSION 409004
 #include "gambit.h"
 
 #include "os_setup.h"
@@ -48,8 +48,7 @@ int debug_settings;)
         "                     processors), or end with % (ratio of available processors)\n"
 #endif
         "  gambit             set Gambit mode, shorthand: S (default mode)\n"
-        "  r5rs               set R5RS mode, shorthand: s\n"
-        "  r7rs               set R7RS mode\n"
+        "  r4rs | ... | r7rs  set RnRS mode (R7RS mode shorthand: s)\n"
         "  debug[=[OPT...]]   set debugging options, shorthand: d[OPT...], OPT is one of\n"
         "                      p|a       treat uncaught exceptions as errors\n"
         "                                (primordial-thread only|all threads)\n"
@@ -80,11 +79,14 @@ int debug_settings;)
         "                      repl      only if a REPL is running (default)\n"
         "  add-arg=ARGUMENT   add ARGUMENT to the command line before other arguments,\n"
         "                     shorthand: +ARGUMENT\n"
-        "  file-settings=[IO...]      set file IO settings, shorthand: f[IO...]\n"
+        "  io-settings=[IO...]        set general IO settings, shorthand: i[IO...]\n"
+        "  file-settings=[IO...]      set general file IO settings, shorthand: f[IO...]\n"
+        "  stdio-settings=[IO...]     set general stdio IO settings, shorthand: -[IO...]\n"
+        "  0=[IO...]                  set stdin IO settings (1 and 2 for stdout/stderr)\n"
         "  terminal-settings=[IO...]  set terminal IO settings, shorthand: t[IO...]\n"
-        "  stdio-settings=[IO...]     set stdin/out/err IO settings, shorthand: -[IO...]\n"
         "where IO is one of\n"
         "  A|1|2|4|6|8|U   character encoding (ASCII|ISO-8859-1|UCS-2/4|UTF-16/8|UTF)\n"
+        "  L               use LC_ALL, LC_CTYPE, and LANG env vars to set char encoding\n"
         "  l|c|cl          end-of-line encoding (LF|CR|CR-LF)\n"
         "  u|n|f           buffering (unbuffered|newline buffered|fully buffered)\n"
         "  r|R             enable character encoding errors (on|off)\n"
@@ -291,6 +293,38 @@ char *prefix;)
 }
 
 
+___HIDDEN int permissive_suffix
+   ___P((___UCS_2STRING start,
+         char *suffix),
+        (start,
+         suffix)
+___UCS_2STRING start;
+char *suffix;)
+{
+  int len1 = 0;
+  int len2 = 0;
+
+  while (*start != '\0') { len1++; start++; }
+  while (*suffix != '\0') { len2++; suffix++; }
+
+  if (len2 > len1)
+    return 0;
+
+  while (len2-- > 0)
+    {
+      ___UCS_2 c1 = *--start;
+      char c2 = *--suffix;
+      /* permissive character comparison... 'a'=='A' and '_'=='-' */
+      if (!(c1 == c2 ||
+            (c2 >= 'A' && c2 <= 'Z' && c1 == (c2 + 'a' - 'A')) ||
+            (c2 == '-' && c1 == '_')))
+        return 0;
+    }
+
+  return 1;
+}
+
+
 ___HIDDEN int option_equal
    ___P((___UCS_2STRING start,
          char *option),
@@ -308,6 +342,19 @@ char *option;)
 }
 
 
+___HIDDEN ___UCS_2 lc_all_env_var[] =
+{'L', 'C', '_', 'A', 'L', 'L', '\0'};
+
+___HIDDEN ___UCS_2 lc_ctype_env_var[] =
+{'L', 'C', '_', 'C', 'T', 'Y', 'P', 'E', '\0'};
+
+___HIDDEN ___UCS_2 lc_lang_env_var[] =
+{'L', 'A', 'N', 'G', '\0'};
+
+___HIDDEN ___UCS_2STRING lc_env_vars[] =
+{ lc_all_env_var, lc_ctype_env_var, lc_lang_env_var };
+
+
 int ___main
    ___P((___mod_or_lnk (*linker)(___global_state)),
         (linker)
@@ -318,8 +365,8 @@ ___mod_or_lnk (*linker)();)
   ___UCS_2STRING *argv;
   ___UCS_2STRING *current_argv;
   ___UCS_2STRING cmd_line_runtime_options;
-  ___UCS_2STRING script_line;
-  int extra_arg_pos;
+  ___UCS_2STRING script_line = 0;
+  int extra_arg_pos = 1;
   int contract_argv;
   int options_source;
   int options_source_min;
@@ -341,9 +388,8 @@ ___mod_or_lnk (*linker)();)
   int parallelism_level;
   int standard_level;
   int debug_settings;
-  int file_settings;
-  int terminal_settings;
-  int stdio_settings;
+  int io_settings[___IO_SETTINGS_LAST+1];
+  int settings_index;
   ___SCMOBJ e;
   ___setup_params_struct setup_params;
 
@@ -375,11 +421,11 @@ ___mod_or_lnk (*linker)();)
     parallelism_level = ___CEILING_DIV(count*50,100); /* default = 50% */
   }
 #endif
-  standard_level = 0;
+  standard_level = -1;
   debug_settings = ___DEBUG_SETTINGS_INITIAL;
-  file_settings = ___FILE_SETTINGS_INITIAL;
-  terminal_settings = ___TERMINAL_SETTINGS_INITIAL;
-  stdio_settings = ___STDIO_SETTINGS_INITIAL;
+
+  for (settings_index=0; settings_index<=___IO_SETTINGS_LAST; settings_index++)
+    io_settings[settings_index] = 0;
 
   /*
    * Runtime options can come from several sources:
@@ -467,7 +513,6 @@ ___mod_or_lnk (*linker)();)
     }
 
   current_argv = argv;
-  extra_arg_pos = 1;
 
   for (options_source = options_source_min;
        options_source <= options_source_max;
@@ -524,15 +569,17 @@ ___mod_or_lnk (*linker)();)
                     goto mhlp_options;
                   else if (starts_with (s, "debug"))
                     goto debug_option;
-                  else if (starts_with (s, "file-settings"))
-                    goto io_settings_options;
-                  else if (starts_with (s, "terminal-settings"))
-                    goto io_settings_options;
                   else if (starts_with (s, "stdio-settings"))
                     {
                       s += 5; /* point to the '-' */
                       goto io_settings_options;
                     }
+                  else if (starts_with (s, "terminal-settings"))
+                    goto io_settings_options;
+                  else if (starts_with (s, "file-settings"))
+                    goto io_settings_options;
+                  else if (starts_with (s, "io-settings"))
+                    goto io_settings_options;
                   else if (starts_with (s, "add-arg"))
                     goto add_arg_option;
                   else if (starts_with (s, "search"))
@@ -626,8 +673,12 @@ ___mod_or_lnk (*linker)();)
                 }
               else if (option_equal (s, "debug"))
                 goto debug_option;
+              else if (option_equal (s, "r4rs"))
+                goto r4rs_option;
               else if (option_equal (s, "r5rs"))
                 goto r5rs_option;
+              else if (option_equal (s, "r6rs"))
+                goto r6rs_option;
               else if (option_equal (s, "r7rs"))
                 goto r7rs_option;
               else if (option_equal (s, "gambit"))
@@ -729,14 +780,22 @@ ___mod_or_lnk (*linker)();)
 
             case 'S':
             gambit_option:
-              standard_level = 1;
+              standard_level = 0;
               break;
 
-            case 's':
+            r4rs_option:
+              standard_level = 4;
+              break;
+
             r5rs_option:
               standard_level = 5;
               break;
 
+            r6rs_option:
+              standard_level = 6;
+              break;
+
+            case 's':
             r7rs_option:
               standard_level = 7;
               break;
@@ -938,30 +997,82 @@ ___mod_or_lnk (*linker)();)
                 break;
               }
 
+            case '0':
+            case '1':
+            case '2':
             case 't':
-            case 'f':
             case '-':
+            case 'f':
+            case 'i':
             io_settings_options:
               {
                 int settings = 0;
 
+                settings_index = ___IO_SETTINGS_GENERAL;
+
                 switch (*s)
                   {
-                  case 'f':
-                    settings = file_settings;
+                  case '0':
+                    settings_index = ___IO_SETTINGS_STDIN;
+                    break;
+                  case '1':
+                    settings_index = ___IO_SETTINGS_STDOUT;
+                    break;
+                  case '2':
+                    settings_index = ___IO_SETTINGS_STDERR;
                     break;
                   case 't':
-                    settings = terminal_settings;
+                    settings_index = ___IO_SETTINGS_TERMINAL;
                     break;
                   case '-':
-                    settings = stdio_settings;
+                    settings_index = ___IO_SETTINGS_STDIO;
+                    break;
+                  case 'f':
+                    settings_index = ___IO_SETTINGS_FILE;
                     break;
                   }
+
+                settings = io_settings[settings_index];
 
                 while (*arg != '\0' && *arg != ' ' && *arg != ',')
                   {
                     switch (*arg++)
                       {
+                      case 'L':
+                        {
+                          ___UCS_2STRING val;
+                          int i;
+
+                          for (i=0; i<___NBELEMS(lc_env_vars); i++)
+                            {
+                              if ((e = ___getenv_UCS_2 (lc_env_vars[i], &val))
+                                  != ___FIX(___NO_ERR))
+                                goto after_setup;
+
+                              if (val != 0)
+                                {
+                                  if (permissive_suffix (val, ".UTF-8") ||
+                                      permissive_suffix (val, ".UTF8"))
+                                    {
+                                      settings = ___CHAR_ENCODING_MASK(settings)
+                                                 |___CHAR_ENCODING_UTF_8;
+                                      i = ___NBELEMS(lc_env_vars);
+                                    }
+                                  else if (permissive_suffix (val, ".ISO-8859-1") ||
+                                           permissive_suffix (val, ".ISO8859-1") ||
+                                           permissive_suffix (val, ".LATIN-1") ||
+                                           permissive_suffix (val, ".LATIN1"))
+                                    {
+                                      settings = ___CHAR_ENCODING_MASK(settings)
+                                                 |___CHAR_ENCODING_ISO_8859_1;
+                                      i = ___NBELEMS(lc_env_vars);
+                                    }
+                                  ___free_UCS_2STRING (val);
+                                }
+                            }
+
+                          break;
+                        }
                       case 'A': settings = ___CHAR_ENCODING_MASK(settings)
                                            |___CHAR_ENCODING_ASCII;
                                 break;
@@ -1030,7 +1141,7 @@ ___mod_or_lnk (*linker)();)
                                            |___CHAR_ENCODING_ERRORS_OFF;
                                 break;
                       case 'e':
-                      case 'E': if (*s != 't')
+                      case 'E': if (settings_index != ___IO_SETTINGS_TERMINAL)
                                   {
                                     e = usage_err (debug_settings);
                                     goto after_setup;
@@ -1047,18 +1158,7 @@ ___mod_or_lnk (*linker)();)
                       }
                   }
 
-                switch (*s)
-                  {
-                  case 'f':
-                    file_settings = settings;
-                    break;
-                  case 't':
-                    terminal_settings = settings;
-                    break;
-                  case '-':
-                    stdio_settings = settings;
-                    break;
-                  }
+                io_settings[settings_index] = settings;
 
                 break;
               }
@@ -1108,9 +1208,8 @@ ___mod_or_lnk (*linker)();)
   setup_params.parallelism_level   = parallelism_level;
   setup_params.standard_level      = standard_level;
   setup_params.debug_settings      = debug_settings;
-  setup_params.file_settings       = file_settings;
-  setup_params.terminal_settings   = terminal_settings;
-  setup_params.stdio_settings      = stdio_settings;
+  for (settings_index=0; settings_index<=___IO_SETTINGS_LAST; settings_index++)
+    setup_params.io_settings[settings_index] = io_settings[settings_index];
   setup_params.gambitdir           = gambitdir;
   setup_params.gambitdir_map       = gambitdir_map;
   setup_params.module_search_order = module_search_order;

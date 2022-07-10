@@ -1,22 +1,13 @@
 /* File: "os_thread.c" */
 
-/* Copyright (c) 2013-2017 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 2013-2021 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements thread-related services.
  */
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
-#ifdef HAVE_PTHREAD_SETAFFINITY_NP
-/* Needed to get pthread.h to define CPU_ZERO and CPU_SET */
-#define _GNU_SOURCE
-#endif
-
 #define ___INCLUDED_FROM_OS_THREAD
-#define ___VERSION 409003
+#define ___VERSION 409004
 #include "gambit.h"
 
 #include "os_base.h"
@@ -223,7 +214,11 @@ void ___thread_set_pstate
         (___ps)
 ___processor_state ___ps;)
 {
-  ___SET_PSTATE(___ps);
+#ifdef ___SUPPORT_PSTATE_BIND
+  ___ps->pstate_binding = ___ps;
+#endif
+
+  ___SET_REAL_PSTATE(___ps);
 
 #ifdef ___USE_POSIX_THREAD_SYSTEM
 

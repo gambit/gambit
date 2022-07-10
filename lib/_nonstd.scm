@@ -2,7 +2,7 @@
 
 ;;; File: "_nonstd.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -57,10 +57,7 @@
             (if (##fx< 0 size)
                 (##not (##fx= n size))
                 (##fx< n (##fx- 0 size))))
-        (##raise-expression-parsing-exception
-         'ill-formed-special-form
-         src
-         (##source-strip (##car code)))
+        (##raise-ill-formed-special-form src)
         (##apply proc (##cdr code)))))
 
 (define-prim (##expand-source-template src template)
@@ -96,11 +93,6 @@
 
     (expand template)))
 
-(define-prim (##source-strip x)
-  (if (##source? x)
-      (##source-code x)
-      x))
-
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (define-prim (##error message . parameters)
@@ -131,15 +123,15 @@
     (##deconstruct-call
      src
      -2
-     (lambda (message . args)
-       (let ((m (##desourcify message)))
-         (if (##string? m)
-             (##apply ##raise-expression-parsing-exception
-                      (##cons m (##cons src (##map ##desourcify args))))
-             (##raise-expression-parsing-exception
-              'ill-formed-special-form
-              src
-              'syntax-error)))))))
+     (lambda args
+       (##apply ##raise-syntax-error
+                (##cons src (##map ##desourcify args)))))))
+
+(define-prim (##raise-syntax-error src message . args)
+  (if (##string? message)
+      (##apply ##raise-expression-parsing-exception
+               (##cons message (##cons src args)))
+      (##raise-ill-formed-special-form src)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -151,14 +143,11 @@
      (let ((sym (##desourcify sym-src)))
 
        (if (##not (##symbol? sym))
-           (##raise-expression-parsing-exception
-            'ill-formed-special-form
-            src
-            (##source-strip (##car (##source-strip src)))))
+           (##raise-ill-formed-special-form src))
 
        (if supply?
-           (##compilation-ctx-supply-modules-add! sym)
-           (##compilation-ctx-demand-modules-add! sym)))
+           (##compilation-supply-modules-add! sym)
+           (##compilation-demand-modules-add! sym)))
 
      (##expand-source-template
       src
@@ -185,7 +174,7 @@
            (let ((attribs (##map ##desourcify rest)))
              (##for-each
               (lambda (attrib)
-                (##compilation-ctx-meta-info-add! key attrib))
+                (##compilation-meta-info-add! key attrib))
               attribs)
              (##expand-source-template
               src
@@ -273,6 +262,42 @@
            'unknown-location
            src)))))
 
+(define-runtime-syntax ##from-source-location
+  (lambda (src)
+
+    (define (syntax-err)
+      (##raise-ill-formed-special-form src))
+
+    (##deconstruct-call
+     src
+     3
+     (lambda (location-src expr-src)
+       (let* ((loc (##desourcify location-src))
+              (len (##proper-length loc)))
+         (if (##not (or (##eqv? len 3) (##eqv? len 4)))
+             (syntax-err)
+             (let ((path (##car loc))
+                   (line (##cadr loc))
+                   (col (##caddr loc))
+                   (deep? (if (##eqv? len 3) #f (##cadddr loc))))
+               (if (and (##string? path)
+                        (##fixnum? line)
+                        (##fixnum? col)
+                        (##fx>= line 1)
+                        (##fx>= col 1))
+                   (let* ((container
+                           (##path->container path))
+                          (filepos
+                           (##make-filepos (##fx- line 1) (##fx- col 1) 0))
+                          (locat
+                           (##make-locat container filepos)))
+                     (##make-source
+                      (if deep?
+                          (##desourcify expr-src)
+                          (##source-strip expr-src))
+                      locat))
+                   (syntax-err)))))))))
+
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (define-runtime-syntax ##cond-expand
@@ -313,10 +338,7 @@
                     (let* ((lib-src (##cadr feature-requirement))
                            (modref (##parse-module-ref lib-src)))
                       (if (##not modref)
-                          (##raise-expression-parsing-exception
-                           'ill-formed-special-form
-                           src
-                           'cond-expand)
+                          (##raise-ill-formed-special-form src)
                           (##call-with-values
                            (lambda ()
                              (##find-mod-info src lib-src))
@@ -328,6 +350,22 @@
                                    (if port
                                        (##close-port port))
                                    #t)))))))
+                   ((##eq? first 'compilation-target)
+                    (let ((fr (##sourcify feature-requirement src)))
+                      (##shape src fr -1)
+                      (let ((ct (##compilation-target)))
+                        (let loop ((lst (##cdr (##source-strip fr))))
+                          (and (##pair? lst)
+                               (let ((t (##desourcify (##car lst))))
+                                 (or (if (##pair? t)
+                                         (and (##pair? ct)
+                                              (##null? (##cdr ct))
+                                              (##null? (##cdr t))
+                                              (let ((x (##car t)))
+                                                (or (##eq? x '_)
+                                                    (##eq? x (##car ct)))))
+                                         (##eq? t ct))
+                                     (loop (##cdr lst)))))))))
                    (else
                     (macro-raise
                      (macro-make-expression-parsing-exception
@@ -400,10 +438,12 @@
      srfi-30 SRFI-30
 ;;;     srfi-38 SRFI-38
      srfi-39 SRFI-39
+     srfi-62 SRFI-62
      srfi-88 SRFI-88
 ;;;     srfi-89 SRFI-89
 ;;;     srfi-90 SRFI-90
 ;;;     srfi-91 SRFI-91
+     srfi-193 SRFI-193
 
      exact-closed
      exact-complex
@@ -503,7 +543,7 @@
                    (trigger
                     (##bitwise-and params-covered
                                    (##bitwise-not covered))))
-              (if (##equal? trigger 0)
+              (if (##eqv? trigger 0)
                   (begin
                     ;; this case already covered by previous clauses
                     (loop (##cdr clauses)
@@ -873,7 +913,7 @@
                 `',type-static))
            (type-id-expression
             (if generative?
-                `(let ()
+                `(##let ()
                    (##declare (extended-bindings) (not safe))
                    (##type-id ,type-expression))
                 `',(##type-id type-static)))
@@ -914,15 +954,15 @@
                                '##direct-structure-ref)))
                       (if macros?
                           `((##define-macro (,getter-name obj)
-                              (##list '(let ()
+                              (##list '(##let ()
                                          (##declare (extended-bindings))
                                          ,getter-method)
                                       obj
                                       ,field-index
                                       ',type-expression
                                       #f)))
-                          `((define (,getter-name obj)
-                              ((let ()
+                          `((##define (,getter-name obj)
+                              ((##let ()
                                  (##declare (extended-bindings))
                                  ,getter-method)
                                obj
@@ -946,7 +986,7 @@
                                '##direct-structure-set!)))
                       (if macros?
                           `((##define-macro (,setter-name obj val)
-                              (##list '(let ()
+                              (##list '(##let ()
                                          (##declare (extended-bindings))
                                          ,setter-method)
                                       obj
@@ -954,8 +994,8 @@
                                       ,field-index
                                       ',type-expression
                                       #f)))
-                          `((define (,setter-name obj val)
-                              ((let ()
+                          `((##define (,setter-name obj val)
+                              ((##let ()
                                  (##declare (extended-bindings))
                                  ,setter-method)
                                obj
@@ -980,7 +1020,7 @@
                                '##direct-structure-set)))
                       (if macros?
                           `((##define-macro (,fsetter-name obj val)
-                              (##list '(let ()
+                              (##list '(##let ()
                                          (##declare (extended-bindings))
                                          ,fsetter-method)
                                       obj
@@ -988,8 +1028,8 @@
                                       ,field-index
                                       ',type-expression
                                       #f)))
-                          `((define (,fsetter-name obj val)
-                              ((let ()
+                          `((##define (,fsetter-name obj val)
+                              ((##let ()
                                  (##declare (extended-bindings))
                                  ,fsetter-method)
                                obj
@@ -1004,12 +1044,12 @@
                                         tail)))))
 
       (define (generate-structure-type-definition)
-        `(define ,type-expression
-           ((let ()
+        `(##define ,type-expression
+           ((##let ()
               (##declare (extended-bindings))
               ##structure)
             ##type-type
-            ((let ()
+            ((##let ()
                (##declare (extended-bindings))
                ##string->uninterned-symbol)
              ,augmented-id-str)
@@ -1023,7 +1063,7 @@
                 (if macros?
                     `((##define-macro (,type-exhibitor)
                         ',type-expression))
-                    `((define (,type-exhibitor)
+                    `((##define (,type-exhibitor)
                         ,type-expression)))
                 '())
 
@@ -1034,7 +1074,7 @@
                            constructor)))
                   (if macros?
                       `((##define-macro (,constructor-name ,@parameters)
-                          (##list '(let ()
+                          (##list '(##let ()
                                      (##declare (extended-bindings))
                                      ##structure)
                                   ',type-expression
@@ -1042,7 +1082,7 @@
                                      field-alist
                                      parameters
                                      #t))))
-                      `((define (,constructor-name ,@parameters)
+                      `((##define (,constructor-name ,@parameters)
                           (##declare (extended-bindings))
                           (##structure
                            ,type-expression
@@ -1066,11 +1106,11 @@
           ,@(if copier
                 (if macros?
                     `((##define-macro (,copier obj)
-                        (##list '(let ()
+                        (##list '(##let ()
                                    (##declare (extended-bindings))
                                    ##structure-copy)
                                 obj)))
-                    `((define (,copier obj)
+                    `((##define (,copier obj)
                         (##declare (extended-bindings))
                         (##structure-copy obj))))
                 '())
@@ -1079,22 +1119,22 @@
                 (if macros?
                     `((##define-macro (,predicate obj)
                         ,(if extender
-                             ``(let ((obj ,,'obj))
+                             ``(##let ((obj ,,'obj))
                                  (##declare (extended-bindings))
-                                 (and (##structure? obj)
-                                      (let ((t0 (##structure-type obj))
-                                            (type-id ,',type-id-expression))
-                                        (or (##eq? (##type-id t0) type-id)
-                                            (let ((t1 (##type-super t0)))
-                                              (and t1
-                                                   (or (##eq? (##type-id t1) type-id)
-                                                       (##structure-instance-of? obj type-id))))))))
-                             ``((let ()
+                                 (##and (##structure? obj)
+                                        (##let ((t0 (##structure-type obj))
+                                                (type-id ,',type-id-expression))
+                                          (##or (##eq? (##type-id t0) type-id)
+                                                (##let ((t1 (##type-super t0)))
+                                                  (##and t1
+                                                         (##or (##eq? (##type-id t1) type-id)
+                                                               (##structure-instance-of? obj type-id))))))))
+                             ``((##let ()
                                   (##declare (extended-bindings))
                                   ##structure-direct-instance-of?)
                                 ,,'obj
                                 ,',type-id-expression))))
-                    `((define (,predicate obj)
+                    `((##define (,predicate obj)
                         (##declare (extended-bindings))
                         ,(if extender
                              `(##structure-instance-of?
@@ -1118,7 +1158,7 @@
                     (generate-constructor-copier-predicate-getters-setters))
             (generate-constructor-copier-predicate-getters-setters)))
 
-      `(begin
+      `(##begin
 
          ,@(if extender
                (##list `(##define-macro (,extender . args)
@@ -1134,10 +1174,10 @@
                    (##cons `(##define-macro (,implementer)
                               ',(if generative?
                                     (generate-structure-type-definition)
-                                    '(begin)))
+                                    '(##begin)))
                            (generate-constructor-copier-predicate-getters-setters))
                    (##list `(##define-macro (,implementer)
-                              ',(##cons 'begin
+                              ',(##cons '##begin
                                         (generate-definitions)))))
                (generate-definitions)))))
 
@@ -1464,7 +1504,7 @@
                            (else
                             (##symbol-append prefix
                                              name
-                                             '-copy))))
+                                             '-copy)))) ;; should be a prefix
                     (predicate
                      (cond ((##assq 'predicate: flags)
                             =>
@@ -1547,13 +1587,12 @@
         `',(##apply ##structure
                     (##cons type (##reverse lst2))))))
 
-(define-prim (##ill-formed-special-form form-name args)
+(define-prim (##ill-formed-special-form form-name args) ;; TODO: deprecate
   (##raise-expression-parsing-exception
    'ill-formed-special-form
    (##sourcify
     (##cons form-name args)
-    (##make-source #f #f))
-   form-name))
+    (##make-source #f #f))))
 
 (define-prim (##constant-expression? expr)
   (or (##self-eval? expr)
@@ -1612,7 +1651,7 @@
               (##set-debug-settings! 0 0))
              (level
               (macro-debug-settings-level settings)))
-        (or (##fx< 1 level)
+        (or (##fx>= level 5)
             ##gc-report?))
       (let* ((stats
               (##process-statistics))
@@ -1843,328 +1882,8 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(define-prim (exit #!optional (status (macro-absent-obj)))
-  (if (##eq? status (macro-absent-obj))
-      (##exit (macro-EXIT-CODE-OK))
-      (macro-force-vars (status)
-        (if (##eq? status #f)
-            (##exit (macro-EXIT-CODE-SOFTWARE))
-            (macro-check-exact-unsigned-int8 status 1 (exit status)
-              (##exit status))))))
-
-(define-prim (emergency-exit #!optional (status (macro-absent-obj)))
-  (if (##eq? status (macro-absent-obj))
-      (##exit-abruptly (macro-EXIT-CODE-OK))
-      (macro-force-vars (status)
-        (if (##eq? status #f)
-            (##exit-abruptly (macro-EXIT-CODE-SOFTWARE))
-            (macro-check-exact-unsigned-int8 status 1 (emergency-exit status)
-              (##exit-abruptly status))))))
-
-(define-prim (##get-environment-variables)
-  (let ((result (##os-environ)))
-    (if (##fixnum? result)
-        (##raise-os-exception #f result get-environment-variables)
-        (begin
-          (let loop1 ((lst result))
-            (if (##pair? lst)
-                (let ((s (##car lst)))
-                  (let loop2 ((i 0))
-                    (if (##fx< i (##string-length s))
-                        (let ((c (##string-ref s i)))
-                          (if (##char=? c #\=)
-                              (##set-car!
-                               lst
-                               (##cons (##substring s
-                                                    0
-                                                    i)
-                                       (##substring s
-                                                    (##fx+ i 1)
-                                                    (##string-length s))))
-                              (loop2 (##fx+ i 1))))
-                        (##set-car!
-                         lst
-                         (##cons s
-                                 ""))))
-                  (loop1 (##cdr lst)))))
-          result))))
-
-(define-prim (get-environment-variables)
-  (##get-environment-variables))
-
-(define-prim (##getenv
-              name
-              #!optional
-              (default-value (macro-absent-obj)))
-  (let ((result (##os-getenv name)))
-    (cond ((##fixnum? result)
-           (##raise-os-exception
-            #f
-            result
-            getenv
-            name
-            default-value))
-          ((##not result)
-           (if (##eq? default-value (macro-absent-obj))
-               (##raise-unbound-os-environment-variable-exception
-                getenv
-                name)
-               default-value))
-          (else
-           result))))
-
-(define-prim (getenv name #!optional (default-value (macro-absent-obj)))
-  (macro-force-vars (name)
-    (macro-check-string name 1 (getenv name default-value)
-      (##getenv name default-value))))
-
-(define-prim (##get-environment-variable name)
-  (let ((result (##os-getenv name)))
-    (if (##fixnum? result)
-        (##raise-os-exception
-         #f
-         result
-         get-environment-variable
-         name)
-        result)))
-
-(define-prim (get-environment-variable name)
-  (macro-force-vars (name)
-    (macro-check-string name 1 (get-environment-variable name)
-      (##get-environment-variable name))))
-
-(define-prim (##setenv name #!optional (value (macro-absent-obj)))
-  (let ((code (##os-setenv name value)))
-    (if (##fx< code 0)
-        (##raise-os-exception #f code setenv name value)
-        (##void))))
-
-(define-prim (setenv name #!optional (value (macro-absent-obj)))
-  (macro-force-vars (name value)
-    (macro-check-string name 1 (setenv name value)
-      (if (##eq? value (macro-absent-obj))
-          (##setenv name)
-          (macro-check-string value 2 (setenv name value)
-            (##setenv name value))))))
-
-(define-prim (##command-line)
-  ##processed-command-line)
-
-(define-prim (command-line)
-  (##command-line))
-
-(define-prim (##shell-command-blocking cmd)
-  (let ((code (##os-shell-command cmd)))
-    (if (##fx< code 0)
-        (##raise-os-exception #f code ##shell-command-blocking cmd)
-        code)))
-
-(define-prim (##run-subprocess
-              path
-              #!optional
-              (arguments (macro-absent-obj))
-              (capture? (macro-absent-obj))
-              (null-stdin? (macro-absent-obj))
-              (directory (macro-absent-obj))
-              (add-vars (macro-absent-obj))
-              (raise-os-exception? (macro-absent-obj))
-              (cont (macro-absent-obj)))
-
-  ;;                subprocess stdout/stderr
-  ;; capture? = #f  not redirected (so will appear on current stdout/stderr)
-  ;; capture? = #t  captured to a string and returned in cdr of result
-  ;; capture? = ()  captured but discarded
-
-  ;; null-stdin? = #f  subprocess stdin will be the same as current stdin
-  ;; null-stdin? = #t  subprocess stdin will be empty
-
-  (##open-process-generic
-   (if (##eq? null-stdin? #t)
-       (macro-direction-in)
-       (macro-direction-inout))
-   #f
-   (lambda (port)
-     (let ((cont2 (if (##eq? cont (macro-absent-obj)) ##identity cont)))
-       (if (##fixnum? port)
-           (if (##eq? raise-os-exception? #f)
-               (cont2 port)
-               (##raise-os-exception
-                #f
-                (if (##fx= port 1) ;; couldn't set current directory?
-                    ##err-code-ENOENT ;; pretend directory does not exist
-                    port)
-                ##run-subprocess
-                path
-                arguments
-                capture?
-                null-stdin?
-                directory
-                add-vars
-                raise-os-exception?
-                cont))
-           (begin
-             (if (##not (##eq? null-stdin? #t))
-                 (##close-output-port port))
-             (if (##eq? capture? #t)
-                 (let* ((out (##read-line port #f #f ##max-fixnum))
-                        (output (if (##string? out) out "")))
-                   (##close-input-port port)
-                   (let ((status (##process-status port)))
-                     (cont2 (##cons status output))))
-                 (let loop ()
-                   (if (##char? (##read-char port))
-                       (loop)
-                       (begin
-                         (##close-input-port port)
-                         (cont2 (##process-status port))))))))))
-   open-process
-   (let ((cap (##not (or (##eq? capture? (macro-absent-obj))
-                         (##not capture?)))))
-     (##list path: path
-             arguments: (if (##eq? arguments (macro-absent-obj)) '() arguments)
-             directory: (if (##eq? directory (macro-absent-obj)) #f directory)
-             environment:
-             (##append (if (##eq? add-vars (macro-absent-obj)) '() add-vars)
-                       (let ((env (##os-environ)))
-                         (if (##fixnum? env) '() env)))
-             stdin-redirection: (##eq? null-stdin? #t)
-             stdout-redirection: cap
-             stderr-redirection: cap))))
-
-(define-prim (##shell-var-binding
-              var
-              val
-              #!optional
-              (var-prefix (macro-absent-obj))
-              (var-suffix (macro-absent-obj)))
-  (##string-append
-   (if (##eq? var-prefix (macro-absent-obj)) "" var-prefix)
-   var
-   (if (##eq? var-suffix (macro-absent-obj)) "_PARAM" var-suffix)
-   "="
-   val))
-
-(define-prim (##shell-var-bindings
-              alist
-              #!optional
-              (var-prefix (macro-absent-obj))
-              (var-suffix (macro-absent-obj)))
-  (##map (lambda (var-val)
-           (##shell-var-binding (##car var-val)
-                                (##cdr var-val)
-                                var-prefix
-                                var-suffix))
-         alist))
-
-(define-prim (##shell-args-numbered lst)
-
-  (define (gen lst i)
-    (if (##pair? lst)
-        (##cons (##cons (##string-append "ARG" (##number->string i 10))
-                        (##car lst))
-                (gen (##cdr lst) (##fx+ i 1)))
-        '()))
-
-  (gen lst 1))
-
-(define-prim (##shell-install-dirs lst)
-  (##map (lambda (str)
-           (##cons (##string-append "GAMBITDIR_" (##string-upcase str))
-                   (##path-strip-trailing-directory-separator
-                    (##path-normalize-directory-existing
-                     (##string-append "~~" str)))))
-         lst))
-
-(define ##shell-program #f)
-(define ##shell-command-fallback #t)
-
-(define-prim (##get-shell-program)
-
-  (define unix-shell-program    '("/bin/sh" . "-c"))
-  (define windows-shell-program '("CMD.EXE" . "/C"))
-  (define default-shell-program '("sh"      . "-c"))
-
-  (or ##shell-program
-      (let* ((cd
-              (##current-directory))
-             (directory-separator
-              (##string-ref cd (##fx- (##string-length cd) 1)))
-             (sp
-              (if (##char=? #\\ directory-separator)
-                  (let ((comspec (##getenv "COMSPEC" #f)))
-                    (if comspec
-                        (##cons comspec "/C")
-                        windows-shell-program))
-                  (if (##file-exists? (##car unix-shell-program))
-                      unix-shell-program
-                      default-shell-program))))
-        (set! ##shell-program sp)
-        sp)))
-
-(define-prim (##shell-command cmd #!optional (capture? (macro-absent-obj)))
-  (let ((shell-prog (##get-shell-program)))
-    (##run-subprocess
-     (##car shell-prog)
-     (##list (##cdr shell-prog) cmd)
-     capture?
-     #f  ;; subprocess will receive same stdin as current stdin
-     #f  ;; use current directory
-     '() ;; no additional environment variables
-     #f  ;; don't raise OS exceptions
-     (lambda (result)
-       (if (and (##fixnum? result)
-                (##fx< result 0))
-           (if (and ##shell-command-fallback
-                    (##fx= result ##err-code-unimplemented))
-               (let ((code (##os-shell-command cmd)))
-                 (if (##fx< code 0)
-                     (##raise-os-exception #f code shell-command cmd capture?)
-                     (if (##eq? capture? #t)
-                         (##cons code "")
-                         code)))
-               (##raise-os-exception #f result shell-command cmd capture?))
-           result)))))
-
-#;
-(define-prim (##escape-string str escape-char to-escape)
-  (let* ((len
-          (##string-length str))
-         (nb-escapes
-          (let loop1 ((i (##fx- len 1))
-                      (n 0))
-            (if (##fx< i 0)
-                n
-                (let ((c (##string-ref str i)))
-                  (loop1 (##fx- i 1)
-                         (if (##memq c to-escape)
-                             (##fx+ n 1)
-                             n))))))
-         (escaped-len
-          (##fx+ len nb-escapes))
-         (escaped-str
-          (##make-string escaped-len 0)))
-    (let loop2 ((i (##fx- len 1))
-                (j (##fx- escaped-len 1)))
-      (if (and (##not (##fx< i 0)) (##not (##fx< j 0)))
-          (let ((c (##string-ref str i)))
-            (##string-set! escaped-str j c)
-            (loop2 (##fx- i 1)
-                   (if (and (##fx< 0 j)
-                            (##memq c to-escape))
-                       (let ()
-                         (##string-set! escaped-str
-                                        (##fx- j 1)
-                                        escape-char)
-                         (##fx- j 2))
-                       (##fx- j 1))))
-          escaped-str))))
-
-(define-prim (shell-command cmd #!optional (capture? (macro-absent-obj)))
-  (macro-force-vars (cmd capture?)
-    (macro-check-string cmd 1 (shell-command cmd capture?)
-      (if (##eq? capture? (macro-absent-obj))
-          (##shell-command cmd)
-          (##shell-command cmd capture?)))))
+(##include "~~lib/gambit/env-vars/env-vars.scm")
+(##include "~~lib/gambit/process/process.scm")
 
 ;;;----------------------------------------------------------------------------
 
@@ -2218,9 +1937,13 @@
               path
               #!optional
               (chase? (macro-absent-obj)))
-  (let* ((resolved-path
-          (##path-resolve path))
-         (fi
+  (##file-info-resolved-path (##path-resolve path) chase?))
+
+(define-prim (##file-info-resolved-path
+              resolved-path
+              #!optional
+              (chase? (macro-absent-obj)))
+  (let* ((fi
           (macro-make-file-info ;; will be initialized by ##os-file-info
            0  ;; type
            0  ;; device
@@ -2492,6 +2215,120 @@
 
 ;;;----------------------------------------------------------------------------
 
+(define-prim&proc (read-file-string path-or-settings)
+  (##open-file-generic
+   (macro-direction-in)
+   #t ;; raise-os-exception?
+   (lambda (port resolved-path)
+     (let ((result (##read-line port #f)))
+       (close-port port)
+       result))
+   (standard read-file-string)
+   path-or-settings))
+
+(define-prim&proc (read-file-string-list path-or-settings)
+  (##open-file-generic
+   (macro-direction-in)
+   #t ;; raise-os-exception?
+   (lambda (port resolved-path)
+     (let loop ((lst '()))
+       (let ((line (##read-line port)))
+         (if (string? line)
+             (loop (cons line lst))
+             (begin
+               (close-port port)
+               (reverse lst))))))
+   (standard read-file-string-list)
+   path-or-settings))
+
+(define-prim&proc (read-file-u8vector path-or-settings)
+  (##open-file-generic
+   (macro-direction-in)
+   #t ;; raise-os-exception?
+   (lambda (port resolved-path)
+     (let ((info (##file-info-resolved-path resolved-path)))
+       (if (fixnum? info)
+           (##raise-os-exception #f info (standard read-file-u8vector) path-or-settings)
+           (let* ((size (macro-file-info-size info))
+                  (size+1 (fx+ size 1))
+                  (u8vect (make-u8vector size+1))
+                  (n (if (fx= size 0)
+                         0
+                         (read-subu8vector u8vect 0 size+1 port))))
+             (if (fx< n size+1) ;; file did not grow since file-info called?
+                 (begin
+                   (u8vector-shrink! u8vect n)
+                   (close-port port)
+                   u8vect)
+                 (let loop ((chunks (list u8vect)))
+                   (define chunk-size 4096)
+                   (let* ((new-chunk (make-u8vector chunk-size))
+                          (n (read-subu8vector new-chunk 0 chunk-size port))
+                          (new-chunks (cons new-chunk chunks)))
+                     (u8vector-shrink! new-chunk n)
+                     (if (fx< n chunk-size)
+                         (begin
+                           (close-port port)
+                           (u8vector-concatenate (reverse new-chunks)))
+                         (loop new-chunks)))))))))
+   (standard read-file-u8vector)
+   path-or-settings))
+
+(define-prim&proc (write-file-string path-or-settings
+                                     (string string))
+  (##open-file-generic
+   (macro-direction-out)
+   #t ;; raise-os-exception?
+   (lambda (port resolved-path)
+     (##write-substring string 0 (string-length string) port)
+     (close-port port)
+     (void))
+   (standard write-file-string)
+   path-or-settings
+   string))
+
+(define-prim&proc (write-file-string-list path-or-settings
+                                          (string-list proper-list))
+  (##open-file-generic
+   (macro-direction-out)
+   #t ;; raise-os-exception?
+   (lambda (port resolved-path)
+     (let loop ((lst string-list))
+       (macro-force-vars (lst)
+         (if (pair? lst)
+             (let ((string (car lst)))
+               (macro-force-vars (string)
+                 (if (string? string)
+                     (begin
+                       (##write-substring string 0 (string-length string) port)
+                       (newline port)
+                       (loop (cdr lst)))
+                     (begin
+                       (close-port port)
+                       (##fail-check-string-list '(2 . string-list) (standard write-file-string-list) path-or-settings string-list)))))
+             (begin
+               (close-port port)
+               (macro-check-proper-list-null* lst string-list '(2 . string-list) (write-file-string-list path-or-settings string-list)
+                 (void)))))))
+   (standard write-file-string-list)
+   path-or-settings
+   string-list))
+
+(define-prim&proc (write-file-u8vector path-or-settings
+                                       (u8vector u8vector))
+  (##open-file-generic
+   (macro-direction-out)
+   #t ;; raise-os-exception?
+   (lambda (port resolved-path)
+     (##write-subu8vector u8vector 0 (u8vector-length u8vector) port)
+     (close-port port)
+     (void))
+   (standard write-file-u8vector)
+   path-or-settings
+   u8vector))
+
+;;;----------------------------------------------------------------------------
+
 ;;; Implementation of user-info objects.
 
 (implement-library-type-user-info)
@@ -2544,47 +2381,84 @@
 
 ;;; Pathname operations.
 
-(define-prim (##path-volume-end-using-dir-sep path directory-separator)
-  (cond ((##char=? #\: directory-separator)
-         (let loop1 ((i 0))
-           (if (##fx< i (##string-length path))
-               (let ((c (##string-ref path i)))
-                 (if (##char=? #\: c)
-                     i
-                     (loop1 (##fx+ i 1))))
-               0)))
-        ((##char=? #\\ directory-separator)
-         (if (##fx= 0 (##string-length path))
-             0
-             (let ((c (##string-ref path 0)))
-               (cond ((or (and (##char<=? #\a c)
-                               (##char<=? c #\z))
-                          (and (##char<=? #\A c)
-                               (##char<=? c #\Z)))
-                      (if (and (##fx< 1 (##string-length path))
-                               (##char=? #\: (##string-ref path 1)))
-                          2
-                          0))
-                     ((or (##char=? #\\ c)
-                          (##char=? #\/ c))
-                      (if (and (##fx< 1 (##string-length path))
-                               (let ((c (##string-ref path 1)))
-                                 (or (##char=? #\\ c)
-                                     (##char=? #\/ c))))
-                          (let loop2 ((i 2))
-                            (if (##fx< i (##string-length path))
-                                (let ((c (##string-ref path i)))
-                                  (if (or (##char=? #\\ c)
-                                          (##char=? #\/ c))
-                                      i
-                                      (loop2 (##fx+ i 1))))
-                                0))
-                          0))
-                     (else
-                      0)))))
-        (else
-         0)))
+(define (##uri-scheme-prefix-end str start end)
 
+  ;; Parses the string str between the indexes start and end, and checks
+  ;; that it is a valid URI scheme followed by :// .  The procedure
+  ;; returns the index after the second slash, otherwise it returns #f.
+
+  (let loop ((i start))
+    (and (##fx< i end)
+         (let ((c (##string-ref str i)))
+           (cond ((or (and (##char<=? #\a c)
+                           (##char<=? c #\z))
+                      (and (##char<=? #\A c)
+                           (##char<=? c #\Z))
+                      (and (##fx> i start)
+                           (or (and (##char<=? #\0 c)
+                                    (##char<=? c #\9))
+                               (##char=? c #\+)
+                               (##char=? c #\-)
+                               (##char=? c #\.))))
+                  (loop (##fx+ i 1)))
+                 ((##char=? c #\:)
+                  (and (##fx< (##fx+ i 2) end)
+                       (##char=? (##string-ref str (##fx+ i 1)) #\/)
+                       (##char=? (##string-ref str (##fx+ i 2)) #\/)
+                       (##fx+ i 3)))
+                 (else
+                  #f))))))
+
+(define (##uri-scheme-prefixed? path)
+  (macro-case-target
+   ((js)
+    (##uri-scheme-prefix-end path 0 (##string-length path)))
+   (else
+    #f)))
+
+(define-prim (##path-volume-end-using-dir-sep path directory-separator)
+  (if (##uri-scheme-prefixed? path)
+      0
+      (cond #; ;; old Mac paths are deprecated
+            ((##char=? #\: directory-separator)
+             (let loop1 ((i 0))
+               (if (##fx< i (##string-length path))
+                   (let ((c (##string-ref path i)))
+                     (if (##char=? #\: c)
+                         i
+                         (loop1 (##fx+ i 1))))
+                   0)))
+            ((##char=? #\\ directory-separator)
+             (if (##fx= 0 (##string-length path))
+                 0
+                 (let ((c (##string-ref path 0)))
+                   (cond ((or (and (##char<=? #\a c)
+                                   (##char<=? c #\z))
+                              (and (##char<=? #\A c)
+                                   (##char<=? c #\Z)))
+                          (if (and (##fx< 1 (##string-length path))
+                                   (##char=? #\: (##string-ref path 1)))
+                              2
+                              0))
+                         ((or (##char=? #\\ c)
+                              (##char=? #\/ c))
+                          (if (and (##fx< 1 (##string-length path))
+                                   (let ((c (##string-ref path 1)))
+                                     (or (##char=? #\\ c)
+                                         (##char=? #\/ c))))
+                              (let loop2 ((i 2))
+                                (if (##fx< i (##string-length path))
+                                    (let ((c (##string-ref path i)))
+                                      (if (or (##char=? #\\ c)
+                                              (##char=? #\/ c))
+                                          i
+                                          (loop2 (##fx+ i 1))))
+                                    0))
+                              0))
+                         (else
+                          0)))))
+            (else
+             0))))
 
 (define ##path-resolve-hook #f)
 
@@ -2654,172 +2528,181 @@
               path
               #!optional
               (origin (macro-absent-obj)))
-  (let* ((cd
-          (##current-directory))
-         (directory-separator
-          (if (##fx< 0 (##string-length cd))
-              (##string-ref cd (##fx- (##string-length cd) 1))
-              #\/)))
+  (if (##uri-scheme-prefixed? path)
+      path
+      (let* ((cd
+              (##current-directory))
+             (directory-separator
+              (if (or (##fx= 0 (##string-length cd))
+                      (##uri-scheme-prefixed? cd))
+                  #\/
+                  (##string-ref cd (##fx- (##string-length cd) 1)))))
 
-    (define (expand p orig)
+        (define (expand p orig)
 
-      (define (relative dir-sep?)
-        (let* ((dir
-                (if (##not orig)
-                    cd
-                    (let* ((d orig) ;; (expand orig #f)
-                           (len (##string-length d)))
-                      (if (or (##fx= len 0)
-                              (##char=? (##string-ref d
-                                                      (##fx- len 1))
-                                        directory-separator))
-                          d
-                          (##string-append
-                           d
-                           (##string directory-separator))))))
-               (len
-                (if dir-sep?
-                    (if (##char=? #\: directory-separator)
-                        (##fx- (##string-length dir) 1)
-                        (##path-volume-end-using-dir-sep
-                         dir
-                         directory-separator))
-                    (##string-length dir))))
-          (if (##fx= len 0)
-              p
-              (let ((result
-                     (##make-string
-                      (##fx+ len (##string-length p)))))
-                (##substring-move! dir 0 len result 0)
-                (##substring-move! p 0 (##string-length p) result len)
-                result))))
-
-      (define (absolute vol-end dir-sep?)
-        (if dir-sep?
-            p
-            (let ((result
-                   (##make-string (##fx+ 1 (##string-length p)))))
-              (##substring-move! p 0 vol-end result 0)
-              (##string-set! result vol-end directory-separator)
-              (##substring-move! p vol-end (##string-length p) result (##fx+ vol-end 1))
-              result)))
-
-      (define (tilde-end)
-        (if (##fx= 0 (##string-length p))
-            0
-            (if (##char=? #\~ (##string-ref p 0))
-                (let loop ((i 1))
-                  (if (##fx< i (##string-length p))
-                      (let ((c (##string-ref p i)))
-                        (cond ((or (##char=? c directory-separator)
-                                   (and (##char=? #\\ directory-separator)
-                                        (##char=? #\/ c)))
-                               i)
-                              (else
-                               (loop (##fx+ i 1)))))
-                      i))
-                0)))
-
-      (define (prepend-directory dir start)
-        (if (##fixnum? dir)
-            (##raise-os-exception #f dir path-expand path origin)
-            (let* ((dir-len
-                    (##string-length dir))
-                   (ends-with-dir-sep?
-                    (and (##fx< 0 dir-len)
-                         (##char=? directory-separator
-                                   (##string-ref dir (##fx- dir-len 1)))))
-                   (dir-end
-                    (if ends-with-dir-sep? (##fx- dir-len 1) dir-len))
-                   (rest-len
-                    (##fx- (##string-length p)
-                           start))
+          (define (relative dir-sep?)
+            (let* ((dir
+                    (if (##not orig)
+                        cd
+                        (let* ((d orig) ;; (expand orig #f)
+                               (len (##string-length d)))
+                          (if (or (##fx= len 0)
+                                  (##char=? (##string-ref d
+                                                          (##fx- len 1))
+                                            directory-separator))
+                              d
+                              (##string-append
+                               d
+                               (##string directory-separator))))))
                    (len
-                    (##fx+ dir-end
-                           1 ;; for directory separator
-                           (if (##fx< 0 rest-len)
-                               (##fx- rest-len 1)
-                               0)))
-                   (result
-                    (##make-string len)))
-              (##substring-move! dir 0 dir-end result 0)
-              (##substring-move! p start (##string-length p) result dir-end)
-              (##string-set! result dir-end directory-separator)
-              (expand result orig))))
+                    (if dir-sep?
+                        (if #f
+                            #; ;; old Mac paths are deprecated
+                            (##char=? #\: directory-separator)
+                            (##fx- (##string-length dir) 1)
+                            (##path-volume-end-using-dir-sep
+                             dir
+                             directory-separator))
+                        (##string-length dir))))
+              (if (##fx= len 0)
+                  p
+                  (let ((result
+                         (##make-string
+                          (##fx+ len (##string-length p)))))
+                    (##substring-move! dir 0 len result 0)
+                    (##substring-move! p 0 (##string-length p) result len)
+                    result))))
 
-      (define (err code)
-        (##raise-os-exception #f code path-expand path origin))
+          (define (absolute vol-end dir-sep?)
+            (if dir-sep?
+                p
+                (let ((result
+                       (##make-string (##fx+ 1 (##string-length p)))))
+                  (##substring-move! p 0 vol-end result 0)
+                  (##string-set! result vol-end directory-separator)
+                  (##substring-move! p vol-end (##string-length p) result (##fx+ vol-end 1))
+                  result)))
 
-      (define (expand-in-instdir relpath instdir-name)
-        (let ((dir (##os-path-gambitdir-map-lookup instdir-name)))
-          (cond ((##fixnum? dir)
-                 (err dir))
-                (dir
-                 (let ((expanded-dir
-                        (##path-expand-in-initial-current-directory dir)))
-                   (expand relpath
-                           expanded-dir)))
-                (else
-                 (let ((dir (##os-path-gambitdir)))
-                   (if (##fixnum? dir)
-                       (err dir)
-                       (let ((expanded-dir
-                              (##path-expand-in-initial-current-directory dir)))
-                         (expand relpath
-                                 (if (##fx= 0 (##string-length instdir-name))
-                                     expanded-dir
-                                     (expand instdir-name
-                                             expanded-dir))))))))))
+          (define (tilde-end)
+            (if (##fx= 0 (##string-length p))
+                0
+                (if (##char=? #\~ (##string-ref p 0))
+                    (let loop ((i 1))
+                      (if (##fx< i (##string-length p))
+                          (let ((c (##string-ref p i)))
+                            (cond ((or (##char=? c directory-separator)
+                                       (##char=? c #\/))
+                                   i)
+                                  (else
+                                   (loop (##fx+ i 1)))))
+                          i))
+                    0)))
 
-      (let ((t-end (tilde-end)))
-        (if (##fx< 0 t-end)
+          (define (prepend-directory dir start)
+            (if (##fixnum? dir)
+                (##raise-os-exception #f dir path-expand path origin)
+                (let* ((dir-len
+                        (##string-length dir))
+                       (ends-with-dir-sep?
+                        (and (##fx< 0 dir-len)
+                             (##char=? directory-separator
+                                       (##string-ref dir (##fx- dir-len 1)))))
+                       (dir-end
+                        (if ends-with-dir-sep? (##fx- dir-len 1) dir-len))
+                       (rest-len
+                        (##fx- (##string-length p)
+                               start))
+                       (len
+                        (##fx+ dir-end
+                               1 ;; for directory separator
+                               (if (##fx< 0 rest-len)
+                                   (##fx- rest-len 1)
+                                   0)))
+                       (result
+                        (##make-string len)))
+                  (##substring-move! dir 0 dir-end result 0)
+                  (##substring-move! p start (##string-length p) result dir-end)
+                  (##string-set! result dir-end directory-separator)
+                  (expand result orig))))
 
-            (cond ((##fx= 1 t-end)
-                   (let ((homedir (##os-path-homedir)))
-                     (cond ((##fixnum? homedir)
-                            (err homedir))
-                           (homedir
-                            (prepend-directory homedir t-end))
-                           (else
-                            (expand "~~" #f)))))
-                  ((##char=? #\~ (##string-ref p 1))
-                   (let* ((len
-                           (##string-length p))
-                          (instdir-name
-                           (##substring p 2 t-end))
-                          (relpath
-                           (##substring p
-                                        (if (##fx= t-end len)
-                                            t-end
-                                            (##fx+ t-end 1))
-                                        len)))
-                     (expand-in-instdir
-                      relpath
-                      instdir-name)))
-                  (else
-                   (let ((info (##user-info (##substring p 1 t-end) #f)))
-                     (prepend-directory
-                      (if (##fixnum? info)
-                          info
-                          (macro-user-info-home info))
-                      t-end))))
+          (define (err code)
+            (##raise-os-exception #f code path-expand path origin))
 
-            (let* ((vol-end
-                    (##path-volume-end-using-dir-sep p directory-separator))
-                   (dir-sep?
-                    (and (##fx< vol-end (##string-length p))
-                         (let ((c (##string-ref p vol-end)))
-                           (or (##char=? c directory-separator)
-                               (and (##char=? #\\ directory-separator)
-                                    (##char=? #\/ c)))))))
-              (if (##fx= vol-end 0)
-                  (relative dir-sep?)
-                  (absolute vol-end dir-sep?))))))
+          (define (expand-in-instdir relpath instdir-name)
+            (let ((dir (##os-path-gambitdir-map-lookup instdir-name)))
+              (cond ((##fixnum? dir)
+                     (err dir))
+                    (dir
+                     (let ((expanded-dir
+                            (##path-expand-in-initial-current-directory dir)))
+                       (expand relpath
+                               expanded-dir)))
+                    ((##string=? instdir-name "execdir")
+                     (let ((exec-path (##os-executable-path)))
+                       (if (##fixnum? exec-path)
+                           (err exec-path)
+                           (expand relpath
+                                   (##path-directory exec-path)))))
+                    (else
+                     (let ((dir (##os-path-gambitdir)))
+                       (if (##fixnum? dir)
+                           (err dir)
+                           (let ((expanded-dir
+                                  (##path-expand-in-initial-current-directory dir)))
+                             (expand relpath
+                                     (if (##fx= 0 (##string-length instdir-name))
+                                         expanded-dir
+                                         (expand instdir-name
+                                                 expanded-dir))))))))))
 
-    (expand path (if (##eq? origin (macro-absent-obj)) #f origin))))
+          (let ((t-end (tilde-end)))
+            (if (##fx< 0 t-end)
+
+                (cond ((##fx= 1 t-end)
+                       (let ((homedir (##os-path-homedir)))
+                         (cond ((##fixnum? homedir)
+                                (err homedir))
+                               (homedir
+                                (prepend-directory homedir t-end))
+                               (else
+                                (expand "~~" #f)))))
+                      ((##char=? #\~ (##string-ref p 1))
+                       (let* ((len
+                               (##string-length p))
+                              (instdir-name
+                               (##substring p 2 t-end))
+                              (relpath
+                               (##substring p
+                                            (if (##fx= t-end len)
+                                                t-end
+                                                (##fx+ t-end 1))
+                                            len)))
+                         (expand-in-instdir
+                          relpath
+                          instdir-name)))
+                      (else
+                       (let ((info (##user-info (##substring p 1 t-end) #f)))
+                         (prepend-directory
+                          (if (##fixnum? info)
+                              info
+                              (macro-user-info-home info))
+                          t-end))))
+
+                (let* ((vol-end
+                        (##path-volume-end-using-dir-sep p directory-separator))
+                       (dir-sep?
+                        (and (##fx< vol-end (##string-length p))
+                             (let ((c (##string-ref p vol-end)))
+                               (or (##char=? c directory-separator)
+                                   (##char=? c #\/))))))
+                  (if (##fx= vol-end 0)
+                      (relative dir-sep?)
+                      (absolute vol-end dir-sep?))))))
+
+        (expand path (if (##eq? origin (macro-absent-obj)) #f origin)))))
 
 (define-prim (##path-expand-in-initial-current-directory path)
-  (##path-expand path ##initial-current-directory))
+  (##path-expand path (##initial-current-directory)))
 
 (define-prim (path-expand
               path
@@ -2858,108 +2741,117 @@
                 (##string-append parent-dir (##path-strip-directory path))))
           dir)))
 
-  (let* ((cd
-          (##current-directory))
-         (directory-separator
-          (##string-ref cd (##fx- (##string-length cd) 1)))
-         (dir
-          (if (or (##not origin) (##eq? origin (macro-absent-obj)))
-              cd
-              (normalize (##path-expand origin cd))))
-         (p
-          (normalize (##path-expand path dir))))
-    (if (##fixnum? p)
-        (if raise-os-exception?
-            (##raise-os-exception
-             #f
-             p
-             path-normalize
-             path
-             allow-relative?
-             origin
-             raise-os-exception?)
-            p)
-        (if (or (##eq? allow-relative? (macro-absent-obj))
-                (##not allow-relative?))
-            p
-            (let* ((first-diff
-                    (let loop1 ((i 0))
-                      (if (and (##fx< i (##string-length dir))
-                               (##fx< i (##string-length p))
-                               (##char=? (##string-ref dir i) (##string-ref p i)))
-                          (loop1 (##fx+ i 1))
-                          i)))
-                   (vol-end
-                    (##path-volume-end-using-dir-sep dir directory-separator)))
-              (if (##fx< first-diff vol-end)
-                  p
-                  (let* ((common-dir-end
-                          (let loop2 ((i (##fx- first-diff 1)))
-                            (if (##fx< i vol-end)
-                                0
-                                (let ((c (##string-ref dir i)))
-                                  (if (or (##char=? c directory-separator)
-                                          (and (##char=? #\\ directory-separator)
-                                               (##char=? #\/ c)))
-                                      (##fx+ i 1)
-                                      (loop2 (##fx- i 1)))))))
-                         (nb-hops
-                          (let loop3 ((i first-diff) (nb-hops 0))
-                            (if (##fx< i (##string-length dir))
-                                (loop3 (##fx+ i 1)
-                                       (let ((c (##string-ref dir i)))
-                                         (if (or (##char=? c directory-separator)
-                                                 (and (##char=? #\\ directory-separator)
-                                                      (##char=? #\/ c)))
-                                             (##fx+ nb-hops 1)
-                                             nb-hops)))
-                                (if (and (##char=? #\: directory-separator)
-                                         (or (##fx< 0 nb-hops)
-                                             (let loop4 ((i first-diff))
-                                               (if (##fx< i (##string-length p))
-                                                   (if (##char=? #\:
-                                                                 (##string-ref p i))
-                                                       #t
-                                                       (loop4 (##fx+ i 1)))
-                                                   #f))))
-                                    (##fx+ nb-hops 1)
-                                    nb-hops))))
-                         (hop
-                          (cond ((##char=? #\: directory-separator)
-                                 ":")
-                                ((##char=? #\\ directory-separator)
-                                 "..\\")
-                                (else
-                                 "../")))
-                         (hop-len
-                          (##fx* (##string-length hop) nb-hops))
-                         (length-reduction
-                          (##fx- common-dir-end hop-len)))
+  (if (##uri-scheme-prefixed? path)
+      path
+      (let* ((cd
+              (##current-directory))
+             (directory-separator
+              (##string-ref cd (##fx- (##string-length cd) 1)))
+             (dir
+              (if (or (##not origin) (##eq? origin (macro-absent-obj)))
+                  cd
+                  (normalize (##path-expand origin cd))))
+             (p
+              (normalize (##path-expand path dir))))
+        (if (##fixnum? p)
+            (if raise-os-exception?
+                (##raise-os-exception
+                 #f
+                 p
+                 path-normalize
+                 path
+                 allow-relative?
+                 origin
+                 raise-os-exception?)
+                p)
+            (if (or (##eq? allow-relative? (macro-absent-obj))
+                    (##not allow-relative?))
+                p
+                (let* ((first-diff
+                        (let loop1 ((i 0))
+                          (if (and (##fx< i (##string-length dir))
+                                   (##fx< i (##string-length p))
+                                   (##char=? (##string-ref dir i)
+                                             (##string-ref p i)))
+                              (loop1 (##fx+ i 1))
+                              i)))
+                       (vol-end
+                        (##path-volume-end-using-dir-sep dir directory-separator)))
+                  (if (##fx< first-diff vol-end)
+                      p
+                      (let* ((common-dir-end
+                              (let loop2 ((i (##fx- first-diff 1)))
+                                (if (##fx< i vol-end)
+                                    0
+                                    (let ((c (##string-ref dir i)))
+                                      (if (or (##char=? c directory-separator)
+                                              (##char=? c #\/))
+                                          (##fx+ i 1)
+                                          (loop2 (##fx- i 1)))))))
+                             (nb-hops
+                              (let loop3 ((i first-diff) (nb-hops 0))
+                                (if (##fx< i (##string-length dir))
+                                    (loop3 (##fx+ i 1)
+                                           (let ((c (##string-ref dir i)))
+                                             (if (or (##char=? c directory-separator)
+                                                     (##char=? c #\/))
+                                                 (##fx+ nb-hops 1)
+                                                 nb-hops)))
+                                    (if #f
+                                        #; ;; old Mac paths are deprecated
+                                        (and (##char=? #\: directory-separator)
+                                             (or (##fx< 0 nb-hops)
+                                                 (let loop4 ((i first-diff))
+                                                   (if (##fx<
+                                                        i
+                                                        (##string-length p))
+                                                       (if (##char=?
+                                                            #\:
+                                                            (##string-ref p i))
+                                                           #t
+                                                           (loop4 (##fx+ i 1)))
+                                                       #f))))
+                                        (##fx+ nb-hops 1)
+                                        nb-hops))))
+                             (hop
+                              (cond
+                               #; ;; old Mac paths are deprecated
+                               ((##char=? #\: directory-separator)
+                                ":")
+                               ((##char=? #\\ directory-separator)
+                                "..\\")
+                               (else
+                                "../")))
+                             (hop-len
+                              (##fx* (##string-length hop) nb-hops))
+                             (length-reduction
+                              (##fx- common-dir-end hop-len)))
 
-                    (if (and (##fx< length-reduction (##string-length p))
-                             (or (##not (##eq? allow-relative? 'shortest))
-                                 (##fx< 0 length-reduction)))
-                        (let ((result
-                               (##make-string
-                                (##fx- (##string-length p) length-reduction))))
-                          (##substring-move!
-                           p
-                           common-dir-end
-                           (##string-length p)
-                           result
-                           hop-len)
-                          (let loop5 ((i (##fx- nb-hops 1)))
-                            (if (##fx< i 0)
-                                result
-                                (begin
-                                  (##substring-move!
-                                   hop
-                                   0
-                                   (##string-length hop)
-                                   result
-                                   (##fx* i (##string-length hop)))
-                                  (loop5 (##fx- i 1))))))
-                        p))))))))
+                        (if (and (##fx< length-reduction (##string-length p))
+                                 (or (##not (##eq? allow-relative? 'shortest))
+                                     (##fx< 0 length-reduction)))
+                            (let ((result
+                                   (##make-string
+                                    (##fx- (##string-length p)
+                                           length-reduction))))
+                              (##substring-move!
+                               p
+                               common-dir-end
+                               (##string-length p)
+                               result
+                               hop-len)
+                              (let loop5 ((i (##fx- nb-hops 1)))
+                                (if (##fx< i 0)
+                                    result
+                                    (begin
+                                      (##substring-move!
+                                       hop
+                                       0
+                                       (##string-length hop)
+                                       result
+                                       (##fx* i (##string-length hop)))
+                                      (loop5 (##fx- i 1))))))
+                            p)))))))))
 
 (define-prim (path-normalize
               path
@@ -2979,18 +2871,18 @@
                     (##path-normalize path allow-relative? origin raise-os-exception?))))))))
 
 (define-prim (##path-extension-start path)
-  (let* ((cd
-          (##current-directory))
-         (directory-separator
-          (##string-ref cd (##fx- (##string-length cd) 1)))
+  (let* ((directory-separator
+          (if (##uri-scheme-prefixed? path)
+              #\/
+              (let ((cd (##current-directory)))
+                (##string-ref cd (##fx- (##string-length cd) 1)))))
          (vol-end
           (##path-volume-end-using-dir-sep path directory-separator)))
     (let loop ((i (##fx- (##string-length path) 1)))
       (if (##fx< vol-end i)
           (let ((c (##string-ref path (##fx- i 1))))
             (cond ((or (##char=? c directory-separator)
-                       (and (##char=? #\\ directory-separator)
-                            (##char=? #\/ c)))
+                       (##char=? c #\/))
                    (##string-length path))
                   ((##char=? (##string-ref path i) #\.)
                    i)
@@ -3015,10 +2907,11 @@
       (##path-strip-extension path))))
 
 (define-prim (##path-directory-end path)
-  (let* ((cd
-          (##current-directory))
-         (directory-separator
-          (##string-ref cd (##fx- (##string-length cd) 1)))
+  (let* ((directory-separator
+          (if (##uri-scheme-prefixed? path)
+              #\/
+              (let ((cd (##current-directory)))
+                (##string-ref cd (##fx- (##string-length cd) 1)))))
          (vol-end
           (##path-volume-end-using-dir-sep path directory-separator)))
     (let loop ((i (##fx- (##string-length path) 1)))
@@ -3026,8 +2919,7 @@
           vol-end
           (let ((c (##string-ref path i)))
             (cond ((or (##char=? c directory-separator)
-                       (and (##char=? #\\ directory-separator)
-                            (##char=? #\/ c)))
+                       (##char=? c #\/))
                    (##fx+ i 1))
                   (else
                    (loop (##fx- i 1)))))))))
@@ -3049,17 +2941,17 @@
       (##path-strip-directory path))))
 
 (define-prim (##path-strip-trailing-directory-separator path)
-  (let* ((cd
-          (##current-directory))
-         (directory-separator
-          (##string-ref cd (##fx- (##string-length cd) 1)))
+  (let* ((directory-separator
+          (if (##uri-scheme-prefixed? path)
+              #\/
+              (let ((cd (##current-directory)))
+                (##string-ref cd (##fx- (##string-length cd) 1)))))
          (len
           (##string-length path)))
     (if (and (##fx< 0 len)
              (let ((c (##string-ref path (##fx- len 1))))
                (or (##char=? c directory-separator)
-                   (and (##char=? #\\ directory-separator)
-                        (##char=? #\/ c)))))
+                   (##char=? c #\/))))
         (##substring path 0 (##fx- len 1))
         path)))
 
@@ -3069,10 +2961,11 @@
       (##path-strip-trailing-directory-separator path))))
 
 (define-prim (##path-volume-end path)
-  (let* ((cd
-          (##current-directory))
-         (directory-separator
-          (##string-ref cd (##fx- (##string-length cd) 1)))
+  (let* ((directory-separator
+          (if (##uri-scheme-prefixed? path)
+              #\/
+              (let ((cd (##current-directory)))
+                (##string-ref cd (##fx- (##string-length cd) 1)))))
          (vol-end
           (##path-volume-end-using-dir-sep path directory-separator)))
     vol-end))
@@ -3402,12 +3295,21 @@
                      (begin
                        (##close-port dir-port)
                        #f)
-                     (let ((result (del (##path-expand filename dir-path))))
-                       (if result
-                           (begin
-                             (##close-port dir-port)
-                             result)
-                           (loop))))))))
+                     (if (or (##string=? filename ".")
+                             (##string=? filename ".."))
+                         ;; it should never be the case that filename is
+                         ;; "." or ".." because of the use of the option
+                         ;; ignore-hidden: 'dot-and-dot-dot
+                         ;; but we double check anyway because it would
+                         ;; be very bad to recurse on "." and ".." if
+                         ;; there was a bug in ##open-directory-aux
+                         (loop)
+                         (let ((result (del (##path-expand filename dir-path))))
+                           (if result
+                               (begin
+                                 (##close-port dir-port)
+                                 result)
+                               (loop)))))))))
        open-directory
        (##list path: dir-path
                ignore-hidden: 'dot-and-dot-dot)))
@@ -3505,6 +3407,15 @@
                                           (##cons #\_ lst)))))))))
               (##list->string lst))))))
 
+(define (##c-id? str #!optional (allow-upper? #t))
+  (let ((len (##string-length str)))
+    (and (##fx> len 0)
+         (##c-id-initial? (##string-ref str 0) allow-upper?)
+         (let loop ((i (##fx- len 1)))
+           (or (##fx= i 0)
+               (and (##c-id-subsequent? (##string-ref str i) allow-upper?)
+                    (loop (##fx- i 1))))))))
+
 (define (##c-id-initial? c allow-upper?) ;; c is an ASCII letter or _
   (let ((n (##char->integer c)))
     (or (and (##fx>= n 97) (##fx<= n 122))
@@ -3518,7 +3429,13 @@
 
 ;;;----------------------------------------------------------------------------
 
+(define-runtime-syntax six.infix
+  (lambda (src) (##deconstruct-call src 2 (lambda (expr) expr))))
+
 (define-runtime-macro (six.!x x)
+  `(not ,x))
+
+(define-runtime-macro (six.notx x)
   `(not ,x))
 
 (define-runtime-macro (six.++x x)
@@ -3539,11 +3456,20 @@
 (define-runtime-macro (six.x%y x y)
   `(modulo ,x ,y))
 
+(define-runtime-macro (six.x**y x y)
+  `(expt ,x ,y))
+
 (define-runtime-macro (six.x*y x y)
   `(* ,x ,y))
 
+(define-runtime-macro (six.x@y x y)
+  `(@ ,x ,y))
+
 (define-runtime-macro (six.*x x)
   (##infix-lvalue-fetch (##list 'six.*x x)))
+
+(define-runtime-macro (six.x//y x y)
+  `(floor-quotient ,x ,y))
 
 (define-runtime-macro (six.x/y x y)
   `(/ ,x ,y))
@@ -3566,6 +3492,9 @@
 (define-runtime-macro (six.x>>y x y)
   `(arithmetic-shift ,x (- ,y)))
 
+(define-runtime-macro (six.x>>>y x y)
+  `(bitwise-and 4294967295 (arithmetic-shift ,x (- ,y))))
+
 (define-runtime-macro (six.x<y x y)
   `(< ,x ,y))
 
@@ -3584,24 +3513,38 @@
 (define-runtime-macro (six.x==y x y)
   `(equal? ,x ,y))
 
+(define-runtime-macro (six.x!==y x y)
+  `(not (eq? ,x ,y)))
+
+(define-runtime-macro (six.x===y x y)
+  `(eq? ,x ,y))
+
+(define-runtime-macro (six.xisy x y)
+  `(eq? ,x ,y))
+
+(define-runtime-macro (six.xiny x y)
+  `(member ,x ,y))
+
 (define-runtime-macro (six.x&y x y)
   `(bitwise-and ,x ,y))
 
 (define-prim (##infix-id x)
-  (if (##pair? x)
-      (let* ((first (##car x))
-             (rest (##cdr x)))
-        (if (and (or (##eq? first 'six.identifier)
-                     (##eq? first 'six.prefix))
-                 (##pair? rest))
-            (let* ((second (##car rest))
-                   (rest (##cdr rest)))
-              (if (and (##symbol? second)
-                       (##null? rest))
-                  second
-                  #f))
-            #f))
-      #f))
+  (cond ((##symbol? x)
+         x)
+        ((##pair? x)
+         (let* ((first (##car x))
+                (rest (##cdr x)))
+           (if (and (##eq? first 'six.identifier)
+                    (##pair? rest))
+               (let* ((second (##car rest))
+                      (rest (##cdr rest)))
+                 (if (and (##symbol? second)
+                          (##null? rest))
+                     second
+                     #f))
+               #f)))
+        (else
+         #f)))
 
 (define-runtime-macro (six.&x x)
   (##infix-lvalue-access
@@ -3624,89 +3567,101 @@
   (define (err)
     (##ill-formed-special-form form-name args))
 
-  (if (##pair? x)
-      (let* ((first (##car x))
-             (rest (##cdr x)))
-        (if (##pair? rest)
-            (let* ((second (##car rest))
-                   (rest (##cdr rest)))
-              (cond ((##pair? rest)
-                     (let* ((third (##car rest))
-                            (rest (##cdr rest)))
-                       (cond ((##not (##null? rest))
-                              (err))
-                             ((##eq? first 'six.index)
-                              (let* ((vect (##gensym))
-                                     (index (##gensym)))
-                                (cont (lambda (body)
-                                        `(let ((,vect ,second) (,index ,third))
-                                           ,body))
-                                      (lambda ()
-                                        `(vector-ref ,vect ,index))
-                                      (lambda ()
-                                        `(vector-ref ,second ,third))
-                                      (lambda (val)
-                                        `(vector-set! ,vect ,index ,val))
-                                      (lambda (val)
-                                        `(vector-set! ,second ,third ,val)))))
-                             ((and (or (##eq? first 'six.arrow)
-                                       (##eq? first 'six.dot))
-                                   (##infix-id third))
-                              =>
-                              (lambda (id)
-                                (let* ((struct (##gensym))
-                                       (mutator
-                                        (##string->symbol
-                                         (##string-append
-                                          (##symbol->string id)
-                                          "-set!"))))
-                                  (cont (lambda (body)
-                                          `(let ((,struct ,second))
-                                             ,body))
-                                        (lambda ()
-                                          `(,id ,struct))
-                                        (lambda ()
-                                          `(,id ,second))
-                                        (lambda (val)
-                                          `(,mutator ,struct ,val))
-                                        (lambda (val)
-                                          `(,mutator ,second ,val))))))
-                             (else
-                              (err)))))
-                    ((##null? rest)
-                     (cond ((##eq? first 'six.*x)
-                            (let ((ptr (##gensym)))
-                              (cont (lambda (body)
-                                      `(let ((,ptr ,second))
-                                         ,body))
-                                    (lambda ()
-                                      `(,ptr))
-                                    (lambda ()
-                                      `(,second))
-                                    (lambda (val)
-                                      `(,ptr ,val))
-                                    (lambda (val)
-                                      `(,second ,val)))))
-                           ((and (or (##eq? first 'six.identifier)
-                                     (##eq? first 'six.prefix))
-                                 (##symbol? second))
-                            (let ((var (##gensym)))
-                              (cont (lambda (body)
-                                      body)
-                                    (lambda ()
-                                      second)
-                                    (lambda ()
-                                      second)
-                                    (lambda (val)
-                                      `(set! ,second ,val))
-                                    (lambda (val)
-                                      `(set! ,second ,val)))))
-                           (else
-                            (err))))
-                    (else
-                     (err))))
-            (err)))
-      (err)))
+  (cond ((##symbol? x)
+         (let ((var (##gensym)))
+           (cont (lambda (body)
+                   body)
+                 (lambda ()
+                   x)
+                 (lambda ()
+                   x)
+                 (lambda (val)
+                   `(set! ,x ,val))
+                 (lambda (val)
+                   `(set! ,x ,val)))))
+        ((##pair? x)
+         (let* ((first (##car x))
+                (rest (##cdr x)))
+           (if (##pair? rest)
+               (let* ((second (##car rest))
+                      (rest (##cdr rest)))
+                 (cond ((##pair? rest)
+                        (let* ((third (##car rest))
+                               (rest (##cdr rest)))
+                          (cond ((##not (##null? rest))
+                                 (err))
+                                ((##eq? first 'six.index)
+                                 (let* ((vect (##gensym))
+                                        (index (##gensym)))
+                                   (cont (lambda (body)
+                                           `(let ((,vect ,second) (,index ,third))
+                                              ,body))
+                                         (lambda ()
+                                           `(vector-ref ,vect ,index))
+                                         (lambda ()
+                                           `(vector-ref ,second ,third))
+                                         (lambda (val)
+                                           `(vector-set! ,vect ,index ,val))
+                                         (lambda (val)
+                                           `(vector-set! ,second ,third ,val)))))
+                                ((and (or (##eq? first 'six.arrow)
+                                          (##eq? first 'six.dot))
+                                      (##infix-id third))
+                                 =>
+                                 (lambda (id)
+                                   (let* ((struct (##gensym))
+                                          (mutator
+                                           (##string->symbol
+                                            (##string-append
+                                             (##symbol->string id)
+                                             "-set!"))))
+                                     (cont (lambda (body)
+                                             `(let ((,struct ,second))
+                                                ,body))
+                                           (lambda ()
+                                             `(,id ,struct))
+                                           (lambda ()
+                                             `(,id ,second))
+                                           (lambda (val)
+                                             `(,mutator ,struct ,val))
+                                           (lambda (val)
+                                             `(,mutator ,second ,val))))))
+                                (else
+                                 (err)))))
+                       ((##null? rest)
+                        (cond ((##eq? first 'six.*x)
+                               (let ((ptr (##gensym)))
+                                 (cont (lambda (body)
+                                         `(let ((,ptr ,second))
+                                            ,body))
+                                       (lambda ()
+                                         `(,ptr))
+                                       (lambda ()
+                                         `(,second))
+                                       (lambda (val)
+                                         `(,ptr ,val))
+                                       (lambda (val)
+                                         `(,second ,val)))))
+                              ((and (##eq? first 'six.identifier)
+                                    (##symbol? second))
+                               (let ((var (##gensym)))
+                                 (cont (lambda (body)
+                                         body)
+                                       (lambda ()
+                                         second)
+                                       (lambda ()
+                                         second)
+                                       (lambda (val)
+                                         `(set! ,second ,val))
+                                       (lambda (val)
+                                         `(set! ,second ,val)))))
+                              (else
+                               (err))))
+                       (else
+                        (err))))
+               (err))))
+        (else
+         (err))))
 
 (define-prim (##infix-lvalue-fetch form)
   (##infix-lvalue-access
@@ -3743,7 +3698,13 @@
 (define-runtime-macro (six.x&&y x y)
   `(and ,x ,y))
 
+(define-runtime-macro (six.xandy x y)
+  `(and ,x ,y))
+
 (define-runtime-macro (|six.x\|\|y| x y)
+  `(or ,x ,y))
+
+(define-runtime-macro (six.xory x y)
   `(or ,x ,y))
 
 (define-runtime-macro (six.x?y:z x y z)
@@ -3758,14 +3719,23 @@
 (define-runtime-macro (six.x&=y x y)
   (##infix-update-in-place 'six.x&=y x 'six.x&y y #t))
 
+(define-runtime-macro (six.x**=y x y)
+  (##infix-update-in-place 'six.x**=y x 'six.x**y y #t))
+
 (define-runtime-macro (six.x*=y x y)
   (##infix-update-in-place 'six.x*=y x 'six.x*y y #t))
+
+(define-runtime-macro (six.x@=y x y)
+  (##infix-update-in-place 'six.x@=y x 'six.x@y y #t))
 
 (define-runtime-macro (six.x+=y x y)
   (##infix-update-in-place 'six.x+=y x 'six.x+y y #t))
 
 (define-runtime-macro (six.x-=y x y)
   (##infix-update-in-place 'six.x-=y x 'six.x-y y #t))
+
+(define-runtime-macro (six.x//=y x y)
+  (##infix-update-in-place 'six.x//=y x 'six.x//y y #t))
 
 (define-runtime-macro (six.x/=y x y)
   (##infix-update-in-place 'six.x/=y x 'six.x/y y #t))
@@ -3787,6 +3757,9 @@
 
 (define-runtime-macro (six.x>>=y x y)
   (##infix-update-in-place 'six.x>>=y x 'six.x>>y y #t))
+
+(define-runtime-macro (six.x>>>=y x y)
+  (##infix-update-in-place 'six.x>>>=y x 'six.x>>>y y #t))
 
 (define-runtime-macro (six.x^=y x y)
   (##infix-update-in-place 'six.x^=y x 'six.x^y y #t))
@@ -3847,9 +3820,6 @@
 (define-runtime-macro (six.identifier identifier)
   (##infix-lvalue-fetch (##list 'six.identifier identifier)))
 
-(define-runtime-macro (six.prefix datum)
-  datum)
-
 (define-runtime-macro (six.if expr stat1 . stat2)
   `(if ,expr ,stat1 ,@stat2))
 
@@ -3862,7 +3832,9 @@
     `(let ,loop () (begin ,stat (if ,expr (,loop))))))
 
 (define-runtime-macro (six.for stat1 expr2 expr3 stat2)
-  (if (##equal? stat1 '(six.compound))
+  (if (and (##pair? stat1)
+           (##null? (##cdr stat1))
+           (##eq? (##car stat1) 'six.compound))
       (let* ((loop (gensym))
              (body `(begin ,stat2 ,@(if expr3 `(,expr3) '()) (,loop))))
         `(let ,loop ()
@@ -4020,6 +3992,33 @@
 ;;   `(void))
 ;;
 ;; (define-runtime-macro (six.!)
+;;   `(void))
+;;
+;; (define-runtime-macro (six.**x x)
+;;   `(void))
+;;
+;; (define-runtime-macro (six.import x)
+;;   `(void))
+;;
+;; (define-runtime-macro (six.from-import x y)
+;;   `(void))
+;;
+;; (define-runtime-macro (six.from-import-* x)
+;;   `(void))
+;;
+;; (define-runtime-macro (six.xinstanceofy x y)
+;;   `(void))
+;;
+;; (define-runtime-macro (six.typeofx x)
+;;   `(void))
+;;
+;; (define-runtime-macro (six.awaitx x)
+;;   `(void))
+;;
+;; (define-runtime-macro (six.asyncx x)
+;;   `(void))
+;;
+;; (define-runtime-macro (six.yieldx x)
 ;;   `(void))
 
 ;;;----------------------------------------------------------------------------

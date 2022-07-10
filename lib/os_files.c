@@ -1,6 +1,6 @@
 /* File: "os_files.c" */
 
-/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -8,9 +8,10 @@
  */
 
 #define ___INCLUDED_FROM_OS_FILES
-#define ___VERSION 409003
+#define ___VERSION 409004
 #include "gambit.h"
 
+#include "os_setup.h"
 #include "os_base.h"
 #include "os_shell.h"
 #include "os_files.h"
@@ -512,7 +513,7 @@ int dir;)
   if (dir != AT_FDCWD)
     {
       int save = errno;
-      close (dir);
+      ___close_no_EINTR (dir); /* ignore error */
       errno = save;
     }
 }
@@ -539,7 +540,7 @@ char *path;)
         {
           int new_dir;
           *last_sep = '\0';
-          new_dir = openat (dir, start, O_DIRECTORY);
+          new_dir = ___openat_no_EINTR (dir, start, O_DIRECTORY, 0);
           at_close_dir (dir);
           *last_sep = '/';
           if (new_dir < 0)
@@ -584,7 +585,7 @@ mode_t mode;)
 
   if ((path2 = at_long_path (&dir, path)) != NULL)
     {
-      fd = openat (dir, path2, flags, mode);
+      fd = ___openat_no_EINTR (dir, path2, flags, mode);
       at_close_dir (dir);
     }
 
@@ -592,7 +593,7 @@ mode_t mode;)
 
 #else
 
-  return open (path, flags, mode);
+  return ___open_no_EINTR (path, flags, mode);
 
 #endif
 }
@@ -959,7 +960,7 @@ char *path;)
 
   if ((path2 = at_long_path (&dir, path)) != NULL)
     {
-      int fd = openat (dir, path2, O_DIRECTORY);
+      int fd = ___openat_no_EINTR (dir, path2, O_DIRECTORY, 0);
       if (fd >= 0)
         result = fdopendir (fd);
       at_close_dir (dir);
@@ -969,7 +970,7 @@ char *path;)
 
 #else
 
-  return opendir (path);
+  return ___opendir_no_EINTR (path);
 
 #endif
 }
@@ -1422,7 +1423,7 @@ ___SCMOBJ path;)
     {
       ___STRING_TYPE(___PATH_CE_SELECT) p =
         ___CAST(___STRING_TYPE(___PATH_CE_SELECT),cpath);
-      ___STRING_TYPE(___PATH_CE_SELECT) dir;
+      ___STRING_TYPE(___PATH_CE_SELECT) dir = 0;
 
 #ifndef USE_chdir
 #ifndef USE_WIN32
@@ -1756,55 +1757,6 @@ ___SCMOBJ ___os_executable_path ___PVOID
     }
 
   return result;
-}
-
-
-/*---------------------------------------------------------------------------*/
-
-
-___SCMOBJ ___os_module_search_order ___PVOID
-{
-  ___SCMOBJ e;
-  ___SCMOBJ result;
-  ___UCS_2STRING *str_list = ___GSTATE->setup_params.module_search_order;
-
-  if (str_list == 0)
-    result = ___NUL;
-  else if ((e = ___NONNULLUCS_2STRINGLIST_to_SCMOBJ
-                  (___PSTATE,
-                   str_list,
-                   &result,
-                   ___RETURN_POS))
-           != ___FIX(___NO_ERR))
-    return e;
-
-  return result;
-}
-
-
-___SCMOBJ ___os_module_whitelist ___PVOID
-{
-  ___SCMOBJ e;
-  ___SCMOBJ result;
-  ___UCS_2STRING *str_list = ___GSTATE->setup_params.module_whitelist;
-
-  if (str_list == 0)
-    result = ___NUL;
-  else if ((e = ___NONNULLUCS_2STRINGLIST_to_SCMOBJ
-                  (___PSTATE,
-                   str_list,
-                   &result,
-                   ___RETURN_POS))
-           != ___FIX(___NO_ERR))
-    return e;
-
-  return result;
-}
-
-
-___SCMOBJ ___os_module_install_mode ___PVOID
-{
-  return ___FIX(___GSTATE->setup_params.module_install_mode);
 }
 
 

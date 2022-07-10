@@ -2,7 +2,7 @@
 
 ;;; File: "_ptree1.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -134,9 +134,11 @@
     (compiler-internal-error "disj-alt, 'disj' node expected" x)))
 
 (define (new-prc source env name c-name parms opts keys rest? body)
-  (let* ((children (list body))
-         (node (make-prc #f children #t #t env source
-                         name c-name parms opts keys rest?)))
+  (let* ((children
+          (list body))
+         (node
+          (make-prc #f children #t #t env source
+                    name c-name parms opts keys rest? #f)))
     (for-each (lambda (x) (var-bound-set! x node)) parms)
     (node-parent-set! body node)
     node))
@@ -149,6 +151,23 @@
 (define (prc-req-and-opt-parms-only? x)
   (and (not (prc-keys x))
        (not (prc-rest? x))))
+
+(define (prc-proc-obj-get x)
+  (or (prc-proc-obj x)
+      (let ((proc-obj
+             (make-proc-obj ;; create proc-obj that will be modified later
+              "*anonymous*" ;; name
+              #f            ;; c-name
+              #f            ;; primitive?
+              #f            ;; code
+              0             ;; call-pat
+              #t            ;; side-effects?
+              '()           ;; strict-pat
+              0             ;; lift-pat
+              '(#f)         ;; type
+              #f)))         ;; standard
+        (prc-proc-obj-set! x proc-obj)
+        proc-obj)))
 
 (define (new-call source env oper args)
   (let ((node (make-app #f (cons oper args) #t #t env source)))
@@ -231,13 +250,19 @@
             #t
             (ptset-empty)
             (ptset-empty)
-            source))
+            source
+            #t))
 
 (define (new-variables sources)
   (map new-variable sources))
 
 (define (new-variable source)
-  (make-var (source-code source) #t (ptset-empty) (ptset-empty) source))
+  (make-var (source-code source)
+            #t
+            (ptset-empty)
+            (ptset-empty)
+            source
+            #f))
 
 (define (set-prc-names! vars vals)
   (let loop ((vars vars) (vals vals))
@@ -295,26 +320,29 @@
 (define (global? var)
   (not (bound? var)))
 
-(define (global-single-def var) ; get definition of a global if it is only
-  (and (global? var)            ; defined once and it will never change
-       (let ((sets (ptset->list (var-sets var))))
-         (and (pair? sets)
-              (null? (cdr sets))
-              (def? (car sets))
-              (block-compilation? (node-env (car sets)))
-              (def-val (car sets))))))
+(define (global-single-def var)
+  ;; get definition of a global if it is only defined once and it will
+  ;; never change
+  (let ((sets (ptset->list (var-sets var))))
+    (and (pair? sets)
+         (null? (cdr sets))
+         (def? (car sets))
+         (block-compilation? (node-env (car sets)))
+         (def-val (car sets)))))
 
 (define (global-proc-obj node)
-  (let ((var (ref-var node)))
-    (and (global? var)
-         (let ((name (var-name var)))
-           (standard-proc-obj (target.prim-info name)
-                              name
-                              (node-env node))))))
+  (global-standard-proc-obj node))
+
+(define (global-standard-proc-obj node)
+  (let* ((var (ref-var node))
+         (name (var-name var)))
+    (standard-proc-obj (target.prim-info name)
+                       name
+                       (node-env node))))
 
 (define (global-singly-bound? node)
   (or (global-single-def (ref-var node))
-      (global-proc-obj node)))
+      (global-standard-proc-obj node)))
 
 (define (app->specialized-proc node)
   (let ((oper (app-oper node))
@@ -329,7 +357,8 @@
             (and (proc-obj? val)
                  val)))
          ((ref? oper)
-          (global-proc-obj oper))
+          (and (global? (ref-var oper))
+               (global-proc-obj oper)))
          (else
           #f))
    args
@@ -463,7 +492,7 @@
 
 (define-boolean-decl inline-sym)
 (define-namable-boolean-decl inline-primitives-sym)
-(define-parameterized-decl inlining-limit-sym)
+(define-parameterized-decl inlining-limit-sym #f)
 
 (define-flag-decl block-sym    'compilation-strategy)
 (define-flag-decl separate-sym 'compilation-strategy)
@@ -868,7 +897,7 @@
       (if *ptree-port*
         (newline *ptree-port*))
 
-      (check-multiple-global-defs env)
+      (check-global-defs env)
 
       (proc (if (null? lst)
               (list (new-cst (expression->source false-object #f) env
@@ -877,21 +906,29 @@
             env
             (c-interface-end)))))
 
-(define (check-multiple-global-defs env)
+(define (check-global-defs env)
   (let ((global-vars (env-global-variables env)))
     (for-each
-      (lambda (var)
-        (let ((defs (keep def? (ptset->list (var-sets var)))))
-          (if (> (length defs) 1)
-            (for-each
-             (lambda (def)
-               (if (warnings? (node-env def))
-                 (compiler-user-warning
-                  (source-locat (node-source def))
-                  "More than one 'define' of global variable"
-                  (var-name var))))
-             defs))))
-      global-vars)))
+     (lambda (var)
+       (let* ((defs (keep def? (ptset->list (var-sets var))))
+              (nb-defs (length defs)))
+         (for-each
+          (lambda (def)
+            (let ((env (node-env def)))
+              (if (warnings? env)
+                  (let ((name (var-name var)))
+                    (if (standard-proc-obj (target.prim-info name) name env)
+                        (compiler-user-warning
+                         (source-locat (node-source def))
+                         "Definition of standardly bound global variable"
+                         name))
+                    (if (> nb-defs 1)
+                        (compiler-user-warning
+                         (source-locat (node-source def))
+                         "More than one 'define' of global variable"
+                         name))))))
+          defs)))
+     (reverse global-vars))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ;;
@@ -1553,6 +1590,22 @@
                                            (cdr exprs)
                                            (env-macros-set env save)
                                            cont)))))
+          ((**c-declare-expr? (car exprs) env)
+           (let ((body (source-code (c-declaration-body (car exprs)))))
+             (add-c-decl body)
+             (extract-defs defs
+                           non-defs
+                           (cdr exprs)
+                           env
+                           cont)))
+          ((**c-initialize-expr? (car exprs) env)
+           (let ((body (source-code (c-initialization-body (car exprs)))))
+             (add-c-init body)
+             (extract-defs defs
+                           non-defs
+                           (cdr exprs)
+                           env
+                           cont)))
           (else
            (extract-defs defs
                          (cons (vector (car exprs) env)
@@ -2622,30 +2675,42 @@
                      "Declaration name must be an identifier"))
 
                   ((assq id flag-declarations)
-                   (cond ((not pos)
-                          (pt-syntax-error
-                            id-source
-                            "Declaration can't be negated"))
-                         ((null? (cdr x))
-                          (flag-decl
-                            source
-                            (cdr (assq id flag-declarations))
-                            id))
-                         (else
-                          (pt-syntax-error source "Ill-formed declaration"))))
+                   =>
+                   (lambda (decl)
+                     (cond ((not pos)
+                            (pt-syntax-error
+                             id-source
+                             "Declaration can't be negated"))
+                           ((null? (cdr x))
+                            (flag-decl
+                             source
+                             (cdr decl)
+                             id))
+                           (else
+                            (pt-syntax-error source
+                                             "Ill-formed declaration")))))
 
-                  ((memq id parameterized-declarations)
-                   (cond ((not pos)
-                          (pt-syntax-error
-                            id-source
-                            "Declaration can't be negated"))
-                         ((eqv? (proper-length x) 2)
-                          (let ((parm (source->expression (cadr x))))
-                            (if (not (and (integer? parm) (exact? parm)))
-                              (pt-syntax-error source "Exact integer expected")
-                              (parameterized-decl source id parm))))
-                         (else
-                          (pt-syntax-error source "Ill-formed declaration"))))
+                  ((assq id parameterized-declarations)
+                   =>
+                   (lambda (decl)
+                     (cond ((not pos)
+                            (pt-syntax-error
+                             id-source
+                             "Declaration can't be negated"))
+                           ((eqv? (proper-length x) 2)
+                            (let ((parm (source->expression (cadr x)))
+                                  (allow-boolean (cdr decl)))
+                              (if (or (and (boolean? parm) allow-boolean)
+                                      (and (integer? parm) (exact? parm)))
+                                  (parameterized-decl source id parm)
+                                  (pt-syntax-error
+                                   source
+                                   (if allow-boolean
+                                       "Exact integer or boolean expected"
+                                       "Exact integer expected")))))
+                           (else
+                            (pt-syntax-error source
+                                             "Ill-formed declaration")))))
 
                   ((memq id boolean-declarations)
                    (if (null? (cdr x))
@@ -2653,16 +2718,18 @@
                      (pt-syntax-error source "Ill-formed declaration")))
 
                   ((assq id namable-declarations)
-                   (cond ((not pos)
-                          (pt-syntax-error
-                            id-source
-                            "Declaration can't be negated"))
-                         (else
-                          (namable-decl
-                            source
-                            (cdr (assq id namable-declarations))
-                            id
-                            (extract-names source (cdr x))))))
+                   =>
+                   (lambda (decl)
+                     (cond ((not pos)
+                            (pt-syntax-error
+                             id-source
+                             "Declaration can't be negated"))
+                           (else
+                            (namable-decl
+                             source
+                             (cdr decl)
+                             id
+                             (extract-names source (cdr x)))))))
 
                   ((memq id namable-boolean-declarations)
                    (namable-boolean-decl
@@ -2792,8 +2859,8 @@
           (make-descr var
                       proc
                       -1)
-          (if (or (**lambda-expr? proc env)
-                  (lambda-expr? proc env))
+          (if (or (**lambda-expr? proc #f) ;; check for ##lambda or lambda
+                  (lambda-expr? proc #f))  ;; not sensitive to compile env
               (make-descr var
                           proc
                           (form-size

@@ -4,7 +4,7 @@
   (lambda (x) (##fx+ x (##fx+ a (##fx+ b c)))))
 
 (define (make-clo-mul a b c)
-  (lambda (x) (##fx* x (##fx* a (##fx* b c)))))
+  (lambda (x y) (##fx* (##fx* x y) (##fx* a (##fx* b c)))))
 
 (define c1 (make-clo-add 11 22 33))
 (define c2 (make-clo-add 44 55 66))

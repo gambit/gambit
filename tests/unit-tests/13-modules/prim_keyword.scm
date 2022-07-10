@@ -1,6 +1,6 @@
 (include "#.scm")
 
-(check-same-behavior ("" "##" "~~lib/_prim-keyword#.scm")
+(check-same-behavior ("" "##" "~~lib/gambit/prim/keyword#.scm")
 
 ;; Gambit
 

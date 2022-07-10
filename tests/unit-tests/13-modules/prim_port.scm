@@ -3,7 +3,7 @@
 (define ##_temp-file "test_temp_file.txt")
 (define ##_input-file "test_input_file.txt")
 
-(check-same-behavior ("" "##" "~~lib/_prim-port#.scm")
+(check-same-behavior ("" "##" "~~lib/gambit/prim/port#.scm")
 
 (##call-with-output-file ##_input-file (lambda (p) (display "2\n1\n3\n" p)))
 

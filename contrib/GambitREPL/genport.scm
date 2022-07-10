@@ -127,7 +127,7 @@
      (lambda (genport)
        (if (not genport)
            (let ((result
-                  (##append-u8vectors
+                  (##u8vector-concatenate
                    (reverse (cons (subu8vector buf 0 pos) rev-bufs)))))
              (set! pos 0)
              (set! rev-bufs '())

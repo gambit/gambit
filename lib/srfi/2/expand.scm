@@ -1,0 +1,30 @@
+(##supply-module srfi/2/expand)
+(##namespace ("srfi/2/expand#"))
+(##import gambit)
+(##import srfi/2/syntax-utils)
+(##include "expand#.scm")
+
+(define (and-let*-expand src)
+  (let ((bindings (reverse (map claw->binding (syntax->list (syntax-cadr src)))))
+        (body     (cddr (syntax->list src))))
+    (fold (lambda (var expr expansion)
+            `(##let ((,var ,expr))
+               (##and ,var ,expansion)))
+          `(##begin
+            ,(or (null? bindings) (syntax-car (car bindings)))
+            ,@body)
+          (map syntax-car  bindings)
+          (map syntax-cadr bindings))))
+
+(define (claw->binding src)
+  (datum->syntax
+   src
+   (let ((datum (syntax->datum src)))
+     (cond ((symbol? datum)
+            (list src src))
+           ((list? datum)
+            (case (length datum)
+              ((1) (list (gensym) (syntax-car src)))
+              ((2) src)
+              (else (##raise-expression-parsing-exception 'ill-formed-special-form src))))
+           (else (##raise-expression-parsing-exception 'ill-formed-special-form src))))))

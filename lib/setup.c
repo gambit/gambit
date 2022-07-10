@@ -1,6 +1,6 @@
 /* File: "setup.c" */
 
-/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module contains the routines that setup the Scheme program for
@@ -8,7 +8,7 @@
  */
 
 #define ___INCLUDED_FROM_SETUP
-#define ___VERSION 409003
+#define ___VERSION 409004
 #include "gambit.h"
 
 #include "os_setup.h"
@@ -175,14 +175,16 @@ ___EXP_FUNC(void,___end_interrupt_service_pstate)
 ___processor_state ___ps;
 int code;)
 {
-  if (___ps->intr_enabled != ___FIX(0))
+  ___WORD enabled = ___ps->intr_enabled & ~___ps->intr_mask;
+
+  if (enabled != ___FIX(0))
     {
 #ifdef CALL_HANDLER_AT_EVERY_POLL
       ___STACK_TRIP_ON();
 #else
       while (code < ___NB_INTRS)
         {
-          if ((___ps->intr_flag[code] & ___ps->intr_enabled & ~___ps->intr_mask) != ___FIX(0))
+          if ((___ps->intr_flag[code] & enabled) != ___FIX(0))
             {
               ___STACK_TRIP_ON();
               break;
@@ -235,9 +237,6 @@ ___processor_state ___ps;)
   /* None of the interrupts are requested */
   for (i=0; i<___NB_INTRS; i++)
     ___ps->intr_flag[i] = ___FIX(0);
-
-  ___begin_interrupt_service_pstate (___ps);
-  ___end_interrupt_service_pstate (___ps, 0);
 }
 
 
@@ -1178,6 +1177,7 @@ typedef struct fem_context
     ___SCMOBJ program_descr;
     ___UTF_8STRING module_script_line;
     ___SCMOBJ flags;
+    ___BOOL collect_undef_glo;
   } fem_context;
 
 
@@ -1222,48 +1222,58 @@ ___SCMOBJ (*proc) ();)
 }
 
 
-___HIDDEN void fixref
+___HIDDEN void fixrefs
    ___P((___module_struct *module,
-         ___SCMOBJ *p),
+         ___SCMOBJ *p,
+         int n),
         (module,
-         p)
+         p,
+         n)
 ___module_struct *module;
-___SCMOBJ *p;)
+___SCMOBJ *p;
+int n;)
 {
-  ___SCMOBJ v = *p;
-  int n = ___INT(v);
-  switch (___TYP(v))
+  while (n > 0)
     {
-    case ___tMEM1:
-      if (n < 0)
-        *p = ___CAST(___SCMOBJ*,module->keytbl)[-1-n];
-      else if (n < module->subcount)
-        *p = ___CAST(___SCMOBJ*,module->subtbl)[n];
-      else
-        *p = ___SUBTYPED_FROM_BODY(&module->lbltbl[n-module->subcount].entry_or_descr);
-      break;
+      ___SCMOBJ v = *p;
+      int x = ___INT(v);
+      switch (___TYP(v))
+        {
 
-    case ___tMEM2:
-      if (n < 0)
-        *p = ___CAST(___SCMOBJ*,module->symtbl)[-1-n];
-      else
-        *p = ___PAIR_FROM_START(&___CAST(___SCMOBJ*,module->cnstbl)[
-                                   n*(___PAIR_BODY+___PAIR_SIZE)]);
-      break;
+        case ___tMEM1:
+          if (x < 0)
+            *p = ___CAST(___SCMOBJ*,module->keytbl)[-1-x];
+          else if (x < module->subcount)
+            *p = ___CAST(___SCMOBJ*,module->subtbl)[x];
+          else
+            *p = ___SUBTYPED_FROM_BODY(&module->lbltbl[x-module->subcount].entry_or_descr);
+          break;
+
+        case ___tMEM2:
+          if (x < 0)
+            *p = ___CAST(___SCMOBJ*,module->symtbl)[-1-x];
+          else
+            *p = ___PAIR_FROM_START(&___CAST(___SCMOBJ*,module->cnstbl)[
+                                     x*(___PAIR_BODY+___PAIR_SIZE)]);
+          break;
+        }
+
+      p++;
+      n--;
     }
 }
 
 
 ___HIDDEN ___SCMOBJ make_global
-   ___P((___processor_state ___ps,
+   ___P((___BOOL collect_undef_glo,
          ___UTF_8STRING str,
          int supply,
          ___glo_struct **glo),
-        (___ps,
+        (collect_undef_glo,
          str,
          supply,
          glo)
-___processor_state ___ps;
+___BOOL collect_undef_glo;
 ___UTF_8STRING str;
 int supply;
 ___glo_struct **glo;)
@@ -1281,7 +1291,7 @@ ___glo_struct **glo;)
 
   g = ___GLOBALVARSTRUCT(sym);
 
-  if (___ps != NULL)
+  if (collect_undef_glo)
     {
       /*
        * If the variable is supplied by the module, mark it specially
@@ -1306,6 +1316,7 @@ ___HIDDEN ___SCMOBJ setup_module_fixup
 fem_context *ctx;
 ___module_struct *module;)
 {
+  ___processor_state ___ps = ctx->ps;
   int i, j;
   int flags;
   ___FAKEWORD *glotbl;
@@ -1319,7 +1330,7 @@ ___module_struct *module;)
   ___UTF_8STRING *key_names;
   ___SCMOBJ *lp;
   ___label_struct *lbltbl;
-  ___label_struct *new_lbltbl;
+  ___label_struct *new_lbltbl = 0;
   int lblcount;
   ___SCMOBJ *ofdtbl;
   int ofd_length;
@@ -1372,6 +1383,19 @@ ___module_struct *module;)
   if (module->version > ___VERSION)
     return ___FIX(___MODULE_VERSION_TOO_NEW_ERR);
 
+  /*
+   * Check that the module was compiled with a C compiler and options that
+   * give the same size structures for ___GSTATE, ___VMSTATE and ___PSTATE.
+   * This is a simple check that catches most mismatches that would cause
+   * problems later.
+   */
+
+  if (module->sizeof_module_struct != sizeof(___module_struct) ||
+      module->sizeof_global_state_struct != sizeof(___global_state_struct) ||
+      module->sizeof_virtual_machine_state_struct != sizeof(___virtual_machine_state_struct) ||
+      module->sizeof_processor_state_struct != sizeof(___processor_state_struct))
+    return ___FIX(___MODULE_INCOMPATIBILITY_ERR);
+
   /* Align label table */
 
   if (lblcount > 0)
@@ -1407,15 +1431,16 @@ ___module_struct *module;)
        * variables bound to c-lambdas are created last.
        */
 
-      ___processor_state ___ps = ctx->ps;
-
       i = 0;
       while (glo_names[i] != 0)
         i++;
       while (i-- > 0)
         {
           ___glo_struct *glo = 0;
-          ___SCMOBJ e = make_global (___ps, glo_names[i], i<supcount, &glo);
+          ___SCMOBJ e = make_global (ctx->collect_undef_glo,
+                                     glo_names[i],
+                                     i<supcount,
+                                     &glo);
           if (e != ___FIX(___NO_ERR))
             return e;
           glotbl[i] = ___CAST(___FAKEWORD,glo);
@@ -1469,21 +1494,14 @@ ___module_struct *module;)
 
   /* Fix reference in module's descriptor */
 
-  fixref (module, &module->moddescr);
+  fixrefs (module, &module->moddescr, 1);
 
   /* Fix references in module's pair table */
 
   for (i=cnscount-1; i>=0; i--)
-    {
-      fixref (module,
-              cnstbl
-              + i*(___PAIR_BODY+___PAIR_SIZE)
-              + (___PAIR_BODY+___PAIR_CAR));
-      fixref (module,
-              cnstbl
-              + i*(___PAIR_BODY+___PAIR_SIZE)
-              + (___PAIR_BODY+___PAIR_CDR));
-    }
+    fixrefs (module,
+             cnstbl + i*(___PAIR_BODY+___PAIR_SIZE) + ___PAIR_BODY,
+             ___PAIR_SIZE);
 
   /* Fix references in module's subtyped object table */
 
@@ -1491,21 +1509,8 @@ ___module_struct *module;)
     {
       ___SCMOBJ *p = ___SUBTYPED_TO_START(subtbl[j]);
       ___SCMOBJ head = p[0];
-      int subtype = ___HD_SUBTYPE(head);
-      int words = ___HD_WORDS(head);
-      switch (subtype)
-        {
-        case ___sSYMBOL:
-        case ___sKEYWORD:
-        case ___sVECTOR:
-        case ___sSTRUCTURE:
-        case ___sRATNUM:
-        case ___sCPXNUM:
-        case ___sBOXVALUES:
-          p += ___SUBTYPED_BODY;
-          for (i=0; i<words; i++)
-            fixref (module, p+i);
-        }
+      if (___HD_SUBTYPE(head) <= ___sKEYWORD)
+        fixrefs (module, p+___SUBTYPED_BODY, ___HD_WORDS(head));
     }
 
   /* Align module's out-of-line frame descriptor table */
@@ -1536,33 +1541,14 @@ ___module_struct *module;)
                * (##subprocedure-parent-name proc)
                */
 
-              ___UTF_8STRING name =
-                ___CAST(___UTF_8STRING, ___LABEL_NAME_GET(lbl));
-
-              if (name == 0)
-                ___LABEL_NAME_SET(lbl, ___FAL);
-              else
-                {
-                  /* TODO: the time needed to create these symbols dynamically dominates the module setup time... optimize by using the local symbol table... this may require changes to the linker */
-
-                  ___SCMOBJ sym =
-                    ___find_symkey_from_UTF_8_string (name, ___sSYMBOL);
-
-                  if (___FIXNUMP(sym))
-                    return sym;
-
-                  if (sym == ___FAL)
-                    return ___FIX(___UNKNOWN_ERR);
-
-                  ___LABEL_NAME_SET(lbl, sym);
-                }
+              fixrefs (module, ___SUBTYPED_TO(lbl, ___LABEL_NAME), 1);
 
               /*
                * Setup debugging information returned by
                * (##subprocedure-parent-info proc)
                */
 
-              fixref (module, ___SUBTYPED_TO(lbl, ___LABEL_INFO));
+              fixrefs (module, ___SUBTYPED_TO(lbl, ___LABEL_INFO), 1);
 
 #ifdef ___SUPPORT_LABEL_VALUES
               if (hlbl_ptr != 0)
@@ -1584,8 +1570,12 @@ ___module_struct *module;)
 
                   if (___LABEL_HOST_GET(lbl) != current_host)
                     {
+                      ___ps->pc = ___FIX(0); /* special marker indicating that */
+                                             /* we want the goto labels */
+
                       current_host = ___LABEL_HOST_GET(lbl);
-                      hlbl_ptr = ___CAST(void**,current_host (0));
+                      current_host (___ps);
+                      hlbl_ptr = ___CAST(void**,___ps->pc);
                       hlbl_ptr++; /* skip INTRO label */
                     }
 
@@ -1775,11 +1765,14 @@ ___mod_or_lnk mol;)
 
 ___HIDDEN ___SCMOBJ setup_modules
    ___P((___processor_state ___ps,
-         ___mod_or_lnk mol),
+         ___mod_or_lnk mol,
+         ___BOOL collect_undef_glo),
         (___ps,
-         mol)
+         mol,
+         collect_undef_glo)
 ___processor_state ___ps;
-___mod_or_lnk mol;)
+___mod_or_lnk mol;
+___BOOL collect_undef_glo;)
 {
   ___SCMOBJ result;
   ___SCMOBJ script_line;
@@ -1794,6 +1787,7 @@ ___mod_or_lnk mol;)
   ctx->ps = ___ps;
   ctx->module_count = 0;
   ctx->program_descr = result;
+  ctx->collect_undef_glo = collect_undef_glo;
 
   /* Fixup objects and tables in all the modules and count modules */
 
@@ -1803,7 +1797,7 @@ ___mod_or_lnk mol;)
       != ___FIX(___NO_ERR))
     return result;
 
-  if (___ps != NULL)
+  if (collect_undef_glo)
     {
       /* Collect undefined globals */
 
@@ -1866,7 +1860,7 @@ ___SCMOBJ linkername;)
         result = ___FIX(___MODULE_ALREADY_LOADED_ERR);
       else
         {
-          result = setup_modules (___PSTATE, mol);
+          result = setup_modules (___PSTATE, mol, 1);
           mol->linkfile.version = -1; /* mark link file as 'setup' */
         }
     }
@@ -2985,6 +2979,8 @@ ___mod_or_lnk mol;)
  */
 
 
+#ifndef ___USE_PROPER_TAIL_CALL_EXCLUSIVELY_TO_EXIT_HOST
+
 #ifdef EMSCRIPTEN
 
 /*
@@ -3002,11 +2998,40 @@ void ___trampoline
         (___ps)
 ___processor_state ___ps;)
 {
-  ___SCMOBJ ___pc = ___ps->pc;
-
   for (;;)
     {
-#define CALL_STEP ___pc = ___LABEL_HOST_GET(___pc)(___ps)
+
+#ifdef ___DEBUG_TRAMPOLINE
+
+#define CALL_STEP_DEBUG \
+do { \
+  ___SCMOBJ ___pc = ___ps->pc; \
+  ___SCMOBJ sym = ___subprocedure_parent_name (___pc); \
+  printf ("___pc = "); \
+  if (sym == ___FAL) { \
+    printf ("???\n"); \
+  } else { \
+    ___SCMOBJ name = ___FIELD(sym,___SYMKEY_NAME); \
+    int i; \
+    for (i=0; i<___INT(___STRINGLENGTH(name)); i++) \
+      printf ("%c", ___INT(___STRINGREF(name,___FIX(i)))); \
+    printf ("\n"); \
+  } \
+  fflush (stdout); \
+} while (0)
+
+#else
+
+#define CALL_STEP_DEBUG
+
+#endif
+
+#define CALL_STEP \
+do { \
+  CALL_STEP_DEBUG; \
+  ___CALL_LABEL_HOST(___ps->pc,___ps); \
+} while (0)
+
       CALL_STEP;
       CALL_STEP;
       CALL_STEP;
@@ -3017,6 +3042,8 @@ ___processor_state ___ps;)
       CALL_STEP;
     }
 }
+
+#endif
 
 
 ___EXP_FUNC(___SCMOBJ,___call)
@@ -3098,11 +3125,33 @@ ___SCMOBJ stack_marker;)
   ___ps->pc = ___LABEL_ENTRY_GET(proc);
   ___PSSELF = proc;
 
+#ifdef ___USE_PROPER_TAIL_CALL_EXCLUSIVELY_TO_EXIT_HOST
+
   ___BEGIN_TRY
 
-  ___trampoline (___ps);
+  ___CALL_LABEL_HOST(___ps->pc,___ps);
 
   ___END_TRY
+
+#else
+
+#ifdef ___USE_UNWIND_C_STACK_TO_TRAMPOLINE
+  do
+    {
+      ___SETUP_C_STACK_TRIP(___c_stack_ptr);
+#endif
+
+      ___BEGIN_TRY
+
+      ___trampoline (___ps);
+
+      ___END_TRY
+
+#ifdef ___USE_UNWIND_C_STACK_TO_TRAMPOLINE
+    } while (___err == ___FIX(___UNWIND_C_STACK_TO_TRAMPOLINE));
+#endif
+
+#endif
 
   if (___err != ___FIX(___UNWIND_C_STACK) ||
       stack_marker != ___ps->fp[___FRAME_SPACE(2)-2]) /*need more unwinding?*/
@@ -3144,14 +3193,33 @@ ___SCMOBJ thunk;)
 }
 
 
+#ifdef ___USE_UNWIND_C_STACK_TO_TRAMPOLINE
+
+
+___EXP_FUNC(void,___unwind_c_stack_to_trampoline)
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
+{
+  ___PSGET
+
+  ___THROW (___FIX(___UNWIND_C_STACK_TO_TRAMPOLINE));
+}
+
+
+#endif
+
+
 #ifdef ___SUPPORT_LOWLEVEL_EXEC
 
 
-___EXP_FUNC(___WORD,___lowlevel_exec)
+___EXP_FUNC(void,___lowlevel_exec)
    ___P((___processor_state ___ps),
         (___ps)
 ___processor_state ___ps;)
 {
+  {
+
 #ifdef __GNUC__
 
 #define PS_FP   PS_FIELD("2")
@@ -3756,7 +3824,12 @@ ___processor_state ___ps;)
 
 #endif
 
-  return ___ps->pc;
+  }
+
+  {
+    ___WORD ___pc = ___ps->pc;
+    ___EXIT_HOST();
+  }
 }
 
 
@@ -4391,6 +4464,13 @@ ___virtual_machine_state ___vms;)
 #endif
 
   /*
+   * Setup interrupt system of this processor.
+   */
+
+  if (!(___vms == &___GSTATE->vmstate0 && ___PROCESSOR_ID(___ps, ___vms) == 0))
+    setup_interrupts_pstate (___ps);  /* processor 0 of vm 0 has early init */
+
+  /*
    * Setup processor's OS specific structures and memory management.
    */
 
@@ -4414,6 +4494,9 @@ ___virtual_machine_state ___vms;)
 
   for (i=0; i<sizeof(___ps->saved)/sizeof(*___ps->saved); i++)
     ___ps->saved[i] = ___VOID;
+
+  for (i=0; i<sizeof(___ps->type_cache)/sizeof(*___ps->type_cache); i++)
+    ___ps->type_cache[i] = ___VOID;
 
   /*
    * Copy handlers from global state to processor state.
@@ -4444,12 +4527,6 @@ ___virtual_machine_state ___vms;)
   ___ps->catcher = 0;
 
 #endif
-
-  /*
-   * Setup interrupt system of this processor.
-   */
-
-  setup_interrupts_pstate (___ps);
 
   /*
    * Setup synchronous operation system.
@@ -4595,6 +4672,7 @@ ___EXP_FUNC(void,___setup_params_reset)
         (setup_params)
 ___setup_params_struct *setup_params;)
 {
+  int index;
   setup_params->version             = 0;
   setup_params->argv                = setup_params->reset_argv;
   setup_params->min_heap            = 0;
@@ -4610,9 +4688,8 @@ ___setup_params_struct *setup_params;)
   setup_params->fatal_error         = 0;
   setup_params->standard_level      = 0;
   setup_params->debug_settings      = 0;
-  setup_params->file_settings       = 0;
-  setup_params->terminal_settings   = 0;
-  setup_params->stdio_settings      = 0;
+  for (index=0; index<=___IO_SETTINGS_LAST; index++)
+    setup_params->io_settings[index] = 0;
   setup_params->gambitdir           = 0;
   setup_params->gambitdir_map       = 0;
   setup_params->module_search_order = 0;
@@ -4620,7 +4697,7 @@ ___setup_params_struct *setup_params;)
   setup_params->repl_client_addr    = 0;
   setup_params->repl_server_addr    = 0;
   setup_params->linker              = 0;
-  setup_params->reset_argv0[0]      = 0;
+  setup_params->reset_argv0[0]      = '\0'; /* empty string */
   setup_params->reset_argv[0]       = setup_params->reset_argv0;
   setup_params->reset_argv[1]       = 0;
 }
@@ -4724,48 +4801,24 @@ int new_settings;)
 }
 
 
-___EXP_FUNC(int,___get_file_settings) ___PVOID
+___EXP_FUNC(int,___get_io_settings)
+   ___P((int index),
+        (index)
+int index;)
 {
-  return ___GSTATE->setup_params.file_settings;
+  return ___GSTATE->setup_params.io_settings[index];
 }
 
 
-___EXP_FUNC(void,___set_file_settings)
-   ___P((int settings),
-        (settings)
+___EXP_FUNC(void,___set_io_settings)
+   ___P((int index,
+         int settings),
+        (index,
+         settings)
+int index;
 int settings;)
 {
-  ___GSTATE->setup_params.file_settings = settings;
-}
-
-
-___EXP_FUNC(int,___get_terminal_settings) ___PVOID
-{
-  return ___GSTATE->setup_params.terminal_settings;
-}
-
-
-___EXP_FUNC(void,___set_terminal_settings)
-   ___P((int settings),
-        (settings)
-int settings;)
-{
-  ___GSTATE->setup_params.terminal_settings = settings;
-}
-
-
-___EXP_FUNC(int,___get_stdio_settings) ___PVOID
-{
-  return ___GSTATE->setup_params.stdio_settings;
-}
-
-
-___EXP_FUNC(void,___set_stdio_settings)
-   ___P((int settings),
-        (settings)
-int settings;)
-{
-  ___GSTATE->setup_params.stdio_settings = settings;
+  ___GSTATE->setup_params.io_settings[index] = settings;
 }
 
 
@@ -4780,6 +4833,11 @@ ___EXP_FUNC(void,___set_gambitdir)
         (gambitdir)
 ___UCS_2STRING gambitdir;)
 {
+  ___addref_string (gambitdir);
+#if 0
+  /* can't release old setting because it is initially not an RC object */
+  ___release_string (___GSTATE->setup_params.gambitdir);
+#endif
   ___GSTATE->setup_params.gambitdir = gambitdir;
 }
 
@@ -4795,6 +4853,11 @@ ___EXP_FUNC(void,___set_gambitdir_map)
         (gambitdir_map)
 ___UCS_2STRING *gambitdir_map;)
 {
+  ___addref_string_list (gambitdir_map);
+#if 0
+  /* can't release old setting because it is initially not an RC object */
+  ___release_string_list (___GSTATE->setup_params.gambitdir_map);
+#endif
   ___GSTATE->setup_params.gambitdir_map = gambitdir_map;
 }
 
@@ -4810,6 +4873,11 @@ ___EXP_FUNC(void,___set_module_search_order)
         (module_search_order)
 ___UCS_2STRING *module_search_order;)
 {
+  ___addref_string_list (module_search_order);
+#if 0
+  /* can't release old setting because it is initially not an RC object */
+  ___release_string_list (___GSTATE->setup_params.module_search_order);
+#endif
   ___GSTATE->setup_params.module_search_order = module_search_order;
 }
 
@@ -4825,6 +4893,11 @@ ___EXP_FUNC(void,___set_module_whitelist)
         (module_whitelist)
 ___UCS_2STRING *module_whitelist;)
 {
+  ___addref_string_list (module_whitelist);
+#if 0
+  /* can't release old setting because it is initially not an RC object */
+  ___release_string_list (___GSTATE->setup_params.module_whitelist);
+#endif
   ___GSTATE->setup_params.module_whitelist = module_whitelist;
 }
 
@@ -4855,6 +4928,11 @@ ___EXP_FUNC(void,___set_repl_client_addr)
         (repl_client_addr)
 ___UCS_2STRING repl_client_addr;)
 {
+  ___addref_string (repl_client_addr);
+#if 0
+  /* can't release old setting because it is initially not an RC object */
+  ___release_string (___GSTATE->setup_params.repl_client_addr);
+#endif
   ___GSTATE->setup_params.repl_client_addr = repl_client_addr;
 }
 
@@ -4870,6 +4948,11 @@ ___EXP_FUNC(void,___set_repl_server_addr)
         (repl_server_addr)
 ___UCS_2STRING repl_server_addr;)
 {
+  ___addref_string (repl_server_addr);
+#if 0
+  /* can't release old setting because it is initially not an RC object */
+  ___release_string (___GSTATE->setup_params.repl_server_addr);
+#endif
   ___GSTATE->setup_params.repl_server_addr = repl_server_addr;
 }
 
@@ -5595,6 +5678,9 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
   ___GSTATE->___addref_rc
     = ___addref_rc;
 
+  ___GSTATE->___refcount_rc
+    = ___refcount_rc;
+
   ___GSTATE->___data_rc
     = ___data_rc;
 
@@ -5618,6 +5704,9 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
 
   ___GSTATE->___still_obj_refcount_dec
     = ___still_obj_refcount_dec;
+
+  ___GSTATE->___still_obj_refcount
+    = ___still_obj_refcount;
 
   ___GSTATE->___gc_hash_table_ref
     = ___gc_hash_table_ref;
@@ -5697,23 +5786,11 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
   ___GSTATE->___set_debug_settings
     = ___set_debug_settings;
 
-  ___GSTATE->___get_file_settings
-    = ___get_file_settings;
+  ___GSTATE->___get_io_settings
+    = ___get_io_settings;
 
-  ___GSTATE->___set_file_settings
-    = ___set_file_settings;
-
-  ___GSTATE->___get_terminal_settings
-    = ___get_terminal_settings;
-
-  ___GSTATE->___set_terminal_settings
-    = ___set_terminal_settings;
-
-  ___GSTATE->___get_stdio_settings
-    = ___get_stdio_settings;
-
-  ___GSTATE->___set_stdio_settings
-    = ___set_stdio_settings;
+  ___GSTATE->___set_io_settings
+    = ___set_io_settings;
 
   ___GSTATE->___get_gambitdir
     = ___get_gambitdir;
@@ -5765,6 +5842,13 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
 
   ___GSTATE->___run
     = ___run;
+
+#ifdef ___USE_UNWIND_C_STACK_TO_TRAMPOLINE
+
+  ___GSTATE->___unwind_c_stack_to_trampoline
+    = ___unwind_c_stack_to_trampoline;
+
+#endif
 
 #ifdef ___SUPPORT_LOWLEVEL_EXEC
 
@@ -5968,6 +6052,15 @@ ___setup_params_struct *setup_params;)
 #endif
 
   /*
+   * Setup interrupt system of processor 0 of vm 0.
+   */
+
+  {
+    ___virtual_machine_state ___vms = &___GSTATE->vmstate0;
+    setup_interrupts_pstate (___PSTATE_FROM_PROCESSOR_ID(0,___vms));
+  }
+
+  /*
    * Setup support for dynamic linking.
    */
 
@@ -6007,7 +6100,7 @@ ___setup_params_struct *setup_params;)
        * Setup each module.
        */
 
-      err = setup_modules (NULL, mol);
+      err = setup_modules (___ps, mol, 0);
 
       if (___FIXNUMP(err))
         break;

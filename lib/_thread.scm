@@ -2,7 +2,7 @@
 
 ;;; File: "_thread.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -273,12 +273,26 @@
 (define current-error-port
   ##current-error-port)
 
-(define ##initial-current-directory
+(define ##initial-current-directory-saved
   (let ((current-dir
          (##os-path-normalize-directory #f)))
     (if (##fixnum? current-dir)
         (##exit-with-err-code current-dir)
         current-dir)))
+
+(define-prim (##current-directory-set-filter val)
+  (if (##eq? val (macro-absent-obj))
+      ##initial-current-directory-saved
+      (macro-check-string val 1 (##current-directory val)
+        (##path-normalize-directory-existing val))))
+
+(define ##initial-current-directory
+  (##make-parameter
+   (macro-absent-obj)
+   ##current-directory-set-filter))
+
+(define initial-current-directory
+  ##initial-current-directory)
 
 (define-prim (##path-normalize-directory-existing path)
   (let ((normalized-dir
@@ -287,16 +301,10 @@
         (##raise-os-exception #f normalized-dir ##current-directory path)
         normalized-dir)))
 
-(define-prim (##current-directory-filter val)
-  (if (##eq? val (macro-absent-obj))
-      ##initial-current-directory
-      (macro-check-string val 1 (##current-directory val)
-        (##path-normalize-directory-existing val))))
-
 (define ##current-directory
   (##make-parameter
    (macro-absent-obj)
-   ##current-directory-filter))
+   ##current-directory-set-filter))
 
 (define current-directory
   ##current-directory)
@@ -318,7 +326,8 @@
       (if (##parameter? param)
         (##dynamic-let
          param
-         ((macro-parameter-descr-filter (macro-parameter-descr param)) val)
+         (let ((descr (macro-parameter-descr param)))
+           ((macro-parameter-descr-set-filter descr) val))
          thunk)
         (let ((save (param)))
           (##dynamic-wind
@@ -372,8 +381,8 @@
                             current-thread
                             x)
                            (##cdr x))
-                         (macro-parameter-descr-value
-                          (macro-parameter-descr param)))))))))))))
+                         (let ((descr (macro-parameter-descr param)))
+                           (macro-parameter-descr-value descr)))))))))))))
 
 (define-prim (##dynamic-set! param val)
   (##declare (not interrupts-enabled))
@@ -427,10 +436,8 @@
                             x)
                            (##set-cdr! x val)
                            (##void))
-                         (begin
-                           (macro-parameter-descr-value-set!
-                            (macro-parameter-descr param)
-                            val)
+                         (let ((descr (macro-parameter-descr param)))
+                           (macro-parameter-descr-value-set! descr val)
                            (##void)))))))))))))
 
 (define-prim (##dynamic-let param val thunk)
@@ -957,6 +964,22 @@
 
 ;;;----------------------------------------------------------------------------
 
+;; The procedure thread creates and returns a started thread
+;; (i.e. there's an implicit call to the procedure thread-start!
+;; after the thread is created and initialized).
+
+(define-prim (thread thunk)
+  (##declare (not interrupts-enabled))
+  (macro-force-vars (thunk)
+    (macro-check-procedure thunk 1 (thread thunk)
+      (##thread thunk))))
+
+(define-prim (##thread thunk)
+  (##declare (not interrupts-enabled))
+  (##thread-start! (##make-thread thunk)))
+
+;;;----------------------------------------------------------------------------
+
 ;; The procedure make-thread creates and returns an initialized
 ;; thread.  This thread is not automatically made runnable (the
 ;; procedure thread-start! must be used for this).
@@ -972,20 +995,22 @@
   (macro-force-vars (thunk n tg)
     (let* ((name
             (if (##eq? n (macro-absent-obj))
-              (##void)
-              n))
+                (##void)
+                n))
            (tgroup
             (if (##eq? tg (macro-absent-obj))
-              (macro-thread-tgroup (macro-current-thread))
-              tg)))
+                (macro-thread-tgroup (macro-current-thread))
+                tg)))
       (macro-check-procedure thunk 1 (make-thread thunk n tg)
         (macro-check-tgroup tgroup 3 (make-thread thunk n tg)
           (##make-thread thunk name tgroup))))))
 
-(define-prim (##make-thread thunk name tgroup)
-
+(define-prim (##make-thread
+              thunk
+              #!optional
+              (name (##void))
+              (tgroup (macro-thread-tgroup (macro-current-thread))))
   (##declare (not interrupts-enabled))
-
   (macro-make-thread thunk name tgroup))
 
 ;; The procedure make-root-thread creates and returns an initialized
@@ -1012,20 +1037,20 @@
   (macro-force-vars (thunk n tg ip op)
     (let* ((name
             (if (##eq? n (macro-absent-obj))
-              (##void)
-              n))
+                (##void)
+                n))
            (tgroup
             (if (##eq? tg (macro-absent-obj))
-              (macro-thread-tgroup (macro-current-thread))
-              tg))
+                (macro-thread-tgroup (macro-current-thread))
+                tg))
            (input-port
             (if (##eq? ip (macro-absent-obj))
-              ##stdin-port
-              ip))
+                ##stdin-port
+                ip))
            (output-port
             (if (##eq? op (macro-absent-obj))
-              ##stdout-port
-              op)))
+                ##stdout-port
+                op)))
       (macro-check-procedure thunk 1 (make-root-thread thunk n tg ip op)
         (macro-check-tgroup tgroup 3 (make-root-thread thunk n tg ip op)
           (macro-check-input-port input-port 4 (make-root-thread thunk n tg ip op)
@@ -1034,10 +1059,11 @@
 
 (define-prim (##make-root-thread
               thunk
-              name
-              tgroup
-              input-port
-              output-port)
+              #!optional
+              (name (##void))
+              (tgroup (macro-thread-tgroup ##primordial-thread))
+              (input-port ##stdin-port)
+              (output-port ##stdout-port))
 
   (##declare (not interrupts-enabled))
 
@@ -1110,7 +1136,7 @@
 
 ;; Uninitialized threads can be created when using the special form
 ;; define-type-of-thread, which defines subtypes of the basic thread
-;; type.  When the constuctor of a thread subtype is called, it
+;; type.  When the constructor of a thread subtype is called, it
 ;; creates an uninitialized thread (i.e. it doesn't yet have a thunk
 ;; to run, a name, and a thread group).
 ;;
@@ -1143,12 +1169,12 @@
   (macro-force-vars (thread thunk n tg)
     (let* ((name
             (if (##eq? n (macro-absent-obj))
-              (##void)
-              n))
+                (##void)
+                n))
            (tgroup
             (if (##eq? tg (macro-absent-obj))
-              (macro-thread-tgroup (macro-current-thread))
-              tg)))
+                (macro-thread-tgroup (macro-current-thread))
+                tg)))
       (macro-check-thread thread 1 (thread-init! thread thunk n tg)
         (macro-check-procedure thunk 2 (thread-init! thread thunk n tg)
           (macro-check-tgroup tgroup 4 (thread-init! thread thunk n tg)
@@ -3098,7 +3124,9 @@
 (define primordial-exception-handler ##primordial-exception-handler)
 
 (define ##primordial-exception-handler-hook #f)
-(set! ##primordial-exception-handler-hook #f)
+
+(define (##primordial-exception-handler-hook-set! handler)
+  (set! ##primordial-exception-handler-hook handler))
 
 (define (##startup-processor!)
 
@@ -3117,9 +3145,9 @@
   ;; start scheduling threads on this processor
   (##thread-schedule-with-acquired-processor!))
 
-(set! ##c-return-on-other-processor-hook
-      (lambda (id)
-        (##thread-migrate-to! id)))
+(##c-return-on-other-processor-hook-set!
+ (lambda (id)
+   (##thread-migrate-to! id)))
 
 (define-prim (##thread-migrate-to! id)
   (##declare (not interrupts-enabled))
@@ -3466,17 +3494,22 @@
         (macro-mutex-specific-set! mutex obj)
         (##void)))))
 
+(define-prim (##mutex-state mutex)
+
+  (##declare (not interrupts-enabled))
+
+  (macro-lock-mutex! mutex)
+  (let ((result (macro-btq-owner mutex)))
+    (macro-unlock-mutex! mutex)
+    result))
+
 (define-prim (mutex-state mutex)
 
   (##declare (not interrupts-enabled))
 
   (macro-force-vars (mutex)
     (macro-check-mutex mutex 1 (mutex-state mutex)
-      (begin
-        (macro-lock-mutex! mutex)
-        (let ((result (macro-btq-owner mutex)))
-          (macro-unlock-mutex! mutex)
-          result)))))
+      (##mutex-state mutex))))
 
 (define-prim (mutex-lock!
               mutex
@@ -4659,8 +4692,8 @@
                                      (##cons lift3
                                              others))))))))))
 
-(define call/cc
-  call-with-current-continuation)
+(define call/cc call-with-current-continuation)
+(##global-var-primitive-set! (##make-global-var 'call/cc) call/cc)
 
 (define ##initial-dynwind
   '#(0)) ;; only the "level" field is needed
@@ -5259,11 +5292,11 @@
 
 ;; (##current-user-interrupt-handler) is called on each user interrupt.
 
-(define ##deferred-user-interrupt? #f)
+(define ##user-interrupt-pending? #f)
 
 (define-prim (##defer-user-interrupts)
    (##declare (not interrupts-enabled))
-   (set! ##deferred-user-interrupt? #t)
+   (set! ##user-interrupt-pending? #t)
    (##void))
 
 (define defer-user-interrupts ##defer-user-interrupts)
@@ -5276,10 +5309,11 @@
        (let ()
          (##declare (not interrupts-enabled))
          (##declare (not safe)) ;; avoid procedure check on the call
-         (let ((int? ##deferred-user-interrupt?))
-           (set! ##deferred-user-interrupt? #f)
-           (if int?
-               (val)))
+         (if (##not (##eq? val ##defer-user-interrupts))
+             (let ((int? ##user-interrupt-pending?))
+               (set! ##user-interrupt-pending? #f)
+               (if int?
+                   (val))))
          val)))))
 
 (define current-user-interrupt-handler
@@ -5543,12 +5577,26 @@
 (define current-error-port
   ##current-error-port)
 
-(define ##initial-current-directory
+(define ##initial-current-directory-saved
   (let ((current-dir
          (##os-path-normalize-directory #f)))
     (if (##fixnum? current-dir)
         (##exit-with-err-code current-dir)
         current-dir)))
+
+(define-prim (##current-directory-set-filter val)
+  (if (##eq? val (macro-absent-obj))
+      ##initial-current-directory-saved
+      (macro-check-string val 1 (##current-directory val)
+        (##path-normalize-directory-existing val))))
+
+(define ##initial-current-directory
+  (##make-parameter
+   (macro-absent-obj)
+   ##current-directory-set-filter))
+
+(define initial-current-directory
+  ##initial-current-directory)
 
 (define-prim (##path-normalize-directory-existing path)
   (let ((normalized-dir
@@ -5557,16 +5605,10 @@
         (##raise-os-exception #f normalized-dir ##current-directory path)
         normalized-dir)))
 
-(define-prim (##current-directory-filter val)
-  (if (##eq? val (macro-absent-obj))
-      ##initial-current-directory
-      (macro-check-string val 1 (##current-directory val)
-        (##path-normalize-directory-existing val))))
-
 (define ##current-directory
   (##make-parameter
    (macro-absent-obj)
-   ##current-directory-filter))
+   ##current-directory-set-filter))
 
 (define current-directory
   ##current-directory)
@@ -5588,7 +5630,8 @@
       (if (##parameter? param)
         (##dynamic-let
          param
-         ((macro-parameter-descr-filter (macro-parameter-descr param)) val)
+         (let ((descr (macro-parameter-descr param)))
+           ((macro-parameter-descr-set-filter descr) val))
          thunk)
         (let ((save (param)))
           (##dynamic-wind
@@ -5642,8 +5685,8 @@
                             current-thread
                             x)
                            (##cdr x))
-                         (macro-parameter-descr-value
-                          (macro-parameter-descr param)))))))))))))
+                         (let ((descr (macro-parameter-descr param)))
+                           (macro-parameter-descr-value descr)))))))))))))
 
 (define-prim (##dynamic-set! param val)
   (##declare (not interrupts-enabled))
@@ -5697,10 +5740,8 @@
                             x)
                            (##set-cdr! x val)
                            (##void))
-                         (begin
-                           (macro-parameter-descr-value-set!
-                            (macro-parameter-descr param)
-                            val)
+                         (let ((descr (macro-parameter-descr param)))
+                           (macro-parameter-descr-value-set! descr val)
                            (##void)))))))))))))
 
 (define-prim (##dynamic-let param val thunk)
@@ -5919,8 +5960,9 @@
 ;;;----------------------------------------------------------------------------
 
 ;;;for debugging
-(define ##thread-trace 0)
+;;(define ##thread-trace 0)
 (define-macro (thread-trace n expr)
+  expr #;
   `(begin (set! ##thread-trace (##fx+ ,n (##fx* (##fxmodulo ##thread-trace 10000000) 10))) ,expr))
 
 (define-prim (##btq-abandon! btq)
@@ -5955,7 +5997,15 @@
 
 (define-prim (##object-before? x y))
 
-(define-prim (##make-thread thunk name tgroup)
+(define-prim (##thread thunk)
+  (##declare (not interrupts-enabled))
+  (##thread-start! (##make-thread thunk)))
+
+(define-prim (##make-thread
+              thunk
+              #!optional
+              (name (##void))
+              (tgroup (macro-thread-tgroup (macro-current-thread))))
   (##declare (not interrupts-enabled))
   (macro-make-thread thunk name tgroup))
 
@@ -6447,7 +6497,12 @@
            (##raise-inactive-thread-exception thread-interrupt! thread action))
 
           (else
-           (##thread-call thread act)))))
+           (if (##eq? act ##user-interrupt!)
+               (begin
+                 (##thread-int! thread
+                                (lambda () (##user-interrupt!) (##void)))
+                 (##void))
+               (##thread-call thread act))))))
 
 (define-prim (##thread-int! thread thunk-returning-void)
 
@@ -6565,7 +6620,9 @@
 (define primordial-exception-handler ##primordial-exception-handler)
 
 (define ##primordial-exception-handler-hook #f)
-(set! ##primordial-exception-handler-hook #f)
+
+(define (##primordial-exception-handler-hook-set! handler)
+  (set! ##primordial-exception-handler-hook handler))
 
 (define-prim (##thread-end! thread exception? result)
 
@@ -6694,10 +6751,11 @@
 
 (define-prim (##make-root-thread
               thunk
-              name
-              tgroup
-              input-port
-              output-port)
+              #!optional
+              (name (##void))
+              (tgroup (macro-thread-tgroup ##primordial-thread))
+              (input-port ##stdin-port)
+              (output-port ##stdout-port))
 
   (##declare (not interrupts-enabled))
 
@@ -6769,23 +6827,26 @@
               (tg (macro-absent-obj))
               (ip (macro-absent-obj))
               (op (macro-absent-obj)))
+
+  (##declare (not interrupts-enabled))
+
   (macro-force-vars (thunk n tg ip op)
     (let* ((name
             (if (##eq? n (macro-absent-obj))
-              (##void)
-              n))
+                (##void)
+                n))
            (tgroup
             (if (##eq? tg (macro-absent-obj))
-              (macro-thread-tgroup (macro-current-thread))
-              tg))
+                (macro-thread-tgroup (macro-current-thread))
+                tg))
            (input-port
             (if (##eq? ip (macro-absent-obj))
-              ##stdin-port
-              ip))
+                ##stdin-port
+                ip))
            (output-port
             (if (##eq? op (macro-absent-obj))
-              ##stdout-port
-              op)))
+                ##stdout-port
+                op)))
       (macro-check-procedure thunk 1 (make-root-thread thunk n tg ip op)
         (macro-check-tgroup tgroup 3 (make-root-thread thunk n tg ip op)
           (macro-check-input-port input-port 4 (make-root-thread thunk n tg ip op)
@@ -6801,17 +6862,8 @@
 
   (let* ((tgroup
           (##make-tgroup 'local #f))
-         (input-port
-          ##stdin-port)
-         (output-port
-          ##stdout-port)
          (thread
-          (##make-root-thread
-           #f
-           'local
-           tgroup
-           input-port
-           output-port)))
+          (##make-root-thread #f 'local tgroup)))
 
     (macro-processor-current-thread-set!
      (macro-current-processor)
@@ -7443,20 +7495,29 @@
   (macro-force-vars (obj)
     (macro-thread? obj)))
 
+(define-prim (thread thunk)
+  (##declare (not interrupts-enabled))
+  (macro-force-vars (thunk)
+    (macro-check-procedure thunk 1 (thread thunk)
+      (##thread thunk))))
+
 (define-prim (make-thread
               thunk
               #!optional
               (n (macro-absent-obj))
               (tg (macro-absent-obj)))
+
+  (##declare (not interrupts-enabled))
+
   (macro-force-vars (thunk n tg)
     (let* ((name
             (if (##eq? n (macro-absent-obj))
-              (##void)
-              n))
+                (##void)
+                n))
            (tgroup
             (if (##eq? tg (macro-absent-obj))
-              (macro-thread-tgroup (macro-current-thread))
-              tg)))
+                (macro-thread-tgroup (macro-current-thread))
+                tg)))
       (macro-check-procedure thunk 1 (make-thread thunk n tg)
         (macro-check-tgroup tgroup 3 (make-thread thunk n tg)
           (macro-make-thread thunk name tgroup))))))
@@ -7467,22 +7528,25 @@
               #!optional
               (n (macro-absent-obj))
               (tg (macro-absent-obj)))
+
+  (##declare (not interrupts-enabled))
+
   (macro-force-vars (thread thunk n tg)
     (let* ((name
             (if (##eq? n (macro-absent-obj))
-              (##void)
-              n))
+                (##void)
+                n))
            (tgroup
             (if (##eq? tg (macro-absent-obj))
-              (macro-thread-tgroup (macro-current-thread))
-              tg)))
+                (macro-thread-tgroup (macro-current-thread))
+                tg)))
       (macro-check-thread thread 1 (thread-init! thread thunk n tg)
         (macro-check-procedure thunk 2 (thread-init! thread thunk n tg)
           (macro-check-tgroup tgroup 4 (thread-init! thread thunk n tg)
             (macro-check-not-initialized-thread
-             thread
-             (thread-init! thread thunk n tg)
-             (macro-thread-init! thread thunk name tgroup))))))))
+              thread
+              (thread-init! thread thunk n tg)
+              (macro-thread-init! thread thunk name tgroup))))))))
 
 (define-prim (thread-name thread)
   (macro-force-vars (thread)
@@ -7517,19 +7581,19 @@
 (define-prim (thread-base-priority-set! thread base-priority)
   (macro-force-vars (thread base-priority)
     (macro-check-thread
-     thread
-     1
-     (thread-base-priority-set! thread base-priority)
-     (macro-check-real
-      base-priority
-      2
+      thread
+      1
       (thread-base-priority-set! thread base-priority)
-      (macro-check-initialized-thread
-       thread
-       (thread-base-priority-set! thread base-priority)
-       (##thread-base-priority-set!
-        thread
-        (macro-real->inexact base-priority)))))))
+      (macro-check-real
+        base-priority
+        2
+        (thread-base-priority-set! thread base-priority)
+        (macro-check-initialized-thread
+          thread
+          (thread-base-priority-set! thread base-priority)
+          (##thread-base-priority-set!
+           thread
+           (macro-real->inexact base-priority)))))))
 
 (define-prim (thread-quantum thread)
   (macro-force-vars (thread)
@@ -7541,16 +7605,16 @@
   (macro-force-vars (thread quantum)
     (macro-check-thread thread 1 (thread-quantum-set! thread quantum)
       (macro-check-real
-       quantum
-       2
-       (thread-quantum-set! thread quantum)
-       (let ((q (macro-real->inexact quantum)))
-         (if (##flnegative? q)
-           (##raise-range-exception 2 thread-quantum-set! thread quantum)
-           (macro-check-initialized-thread
-            thread
-            (thread-quantum-set! thread quantum)
-            (##thread-quantum-set! thread q))))))))
+        quantum
+        2
+        (thread-quantum-set! thread quantum)
+        (let ((q (macro-real->inexact quantum)))
+          (if (##flnegative? q)
+              (##raise-range-exception 2 thread-quantum-set! thread quantum)
+              (macro-check-initialized-thread
+                thread
+                (thread-quantum-set! thread quantum)
+                (##thread-quantum-set! thread q))))))))
 
 (define-prim (thread-priority-boost thread)
   (macro-force-vars (thread)
@@ -7561,32 +7625,32 @@
 (define-prim (thread-priority-boost-set! thread priority-boost)
   (macro-force-vars (thread priority-boost)
     (macro-check-thread
-     thread
-     1
-     (thread-priority-boost-set! thread priority-boost)
-     (macro-check-real
-      priority-boost
-      2
+      thread
+      1
       (thread-priority-boost-set! thread priority-boost)
-      (let ((b (macro-real->inexact priority-boost)))
-        (if (##flnegative? b)
-          (##raise-range-exception 2
-                                   thread-priority-boost-set!
-                                   thread
-                                   priority-boost)
-          (macro-check-initialized-thread
-           thread
-           (thread-priority-boost-set! thread priority-boost)
-           (##thread-priority-boost-set! thread b))))))))
+      (macro-check-real
+        priority-boost
+        2
+        (thread-priority-boost-set! thread priority-boost)
+        (let ((b (macro-real->inexact priority-boost)))
+          (if (##flnegative? b)
+              (##raise-range-exception 2
+                                       thread-priority-boost-set!
+                                       thread
+                                       priority-boost)
+              (macro-check-initialized-thread
+                thread
+                (thread-priority-boost-set! thread priority-boost)
+                (##thread-priority-boost-set! thread b))))))))
 
 (define-prim (thread-start! thread)
   (macro-force-vars (thread)
     (macro-check-thread thread 1 (thread-start! thread)
       (macro-check-initialized-thread thread (thread-start! thread)
         (macro-check-not-started-thread-given-initialized
-         thread
-         (thread-start! thread)
-         (##thread-start! thread))))))
+          thread
+          (thread-start! thread)
+          (##thread-start! thread))))))
 
 (define-prim (thread-yield!)
   (##thread-yield!))
@@ -7625,21 +7689,21 @@
               (timeout-val (macro-absent-obj)))
   (macro-force-vars (thread absrel-timeout)
     (macro-check-thread
-     thread
-     1
-     (thread-join! thread absrel-timeout timeout-val)
-     (if (or (##eq? absrel-timeout (macro-absent-obj))
-             (macro-absrel-time-or-false? absrel-timeout))
-       (macro-check-initialized-thread
-        thread
-        (thread-join! thread absrel-timeout timeout-val)
-        (##thread-join! thread absrel-timeout timeout-val))
-       (##fail-check-absrel-time-or-false
-        2
-        thread-join!
-        thread
-        absrel-timeout
-        timeout-val)))))
+      thread
+      1
+      (thread-join! thread absrel-timeout timeout-val)
+      (if (or (##eq? absrel-timeout (macro-absent-obj))
+              (macro-absrel-time-or-false? absrel-timeout))
+          (macro-check-initialized-thread
+            thread
+            (thread-join! thread absrel-timeout timeout-val)
+            (##thread-join! thread absrel-timeout timeout-val))
+          (##fail-check-absrel-time-or-false
+           2
+           thread-join!
+           thread
+           absrel-timeout
+           timeout-val)))))
 
 (define-prim (thread-interrupt!
               thread
@@ -7722,10 +7786,14 @@
         (macro-mutex-specific-set! mutex obj)
         (##void)))))
 
+(define-prim (##mutex-state mutex)
+  (##declare (not interrupts-enabled))
+  (macro-btq-owner mutex))
+
 (define-prim (mutex-state mutex)
   (macro-force-vars (mutex)
     (macro-check-mutex mutex 1 (mutex-state mutex)
-      (macro-btq-owner mutex))))
+      (##mutex-state mutex))))
 
 (define-prim (mutex-lock!
               mutex
@@ -7743,13 +7811,13 @@
                     (macro-mutex-lock-anonymously! mutex absrel-timeout))
                    (else
                     (macro-check-thread
-                     thread
-                     1
-                     (mutex-lock! mutex absrel-timeout thread)
-                     (macro-check-initialized-thread
                       thread
+                      1
                       (mutex-lock! mutex absrel-timeout thread)
-                      (macro-mutex-lock! mutex absrel-timeout thread))))))
+                      (macro-check-initialized-thread
+                        thread
+                        (mutex-lock! mutex absrel-timeout thread)
+                        (macro-mutex-lock! mutex absrel-timeout thread))))))
             ((macro-absrel-time? absrel-timeout)
              (cond ((##eq? thread (macro-absent-obj))
                     (macro-mutex-lock!
@@ -7762,16 +7830,16 @@
                      absrel-timeout))
                    (else
                     (macro-check-thread
-                     thread
-                     3
-                     (mutex-lock! mutex absrel-timeout thread)
-                     (macro-check-initialized-thread
                       thread
+                      3
                       (mutex-lock! mutex absrel-timeout thread)
-                      (macro-mutex-lock!
-                       mutex
-                       absrel-timeout
-                       thread))))))
+                      (macro-check-initialized-thread
+                        thread
+                        (mutex-lock! mutex absrel-timeout thread)
+                        (macro-mutex-lock!
+                         mutex
+                         absrel-timeout
+                         thread))))))
             (else
              (##fail-check-absrel-time-or-false
               2
@@ -7787,31 +7855,31 @@
               (absrel-timeout (macro-absent-obj)))
   (macro-force-vars (mutex condvar absrel-timeout)
     (macro-check-mutex
-     mutex
-     1
-     (mutex-unlock! mutex condvar absrel-timeout)
-     (if (##eq? condvar (macro-absent-obj))
-       (macro-mutex-unlock! mutex)
-       (macro-check-condvar
-        condvar
-        2
-        (mutex-unlock! mutex condvar absrel-timeout)
-        (cond ((or (##eq? absrel-timeout (macro-absent-obj))
-                   (##not absrel-timeout))
-               (##mutex-signal-and-condvar-wait! mutex condvar #t))
-              ((macro-absrel-time? absrel-timeout)
-               (let ((timeout (##absrel-timeout->timeout absrel-timeout)))
-                 (##mutex-signal-and-condvar-wait!
-                  mutex
-                  condvar
-                  timeout)))
-              (else
-               (##fail-check-absrel-time-or-false
-                3
-                mutex-unlock!
-                mutex
-                condvar
-                absrel-timeout))))))))
+      mutex
+      1
+      (mutex-unlock! mutex condvar absrel-timeout)
+      (if (##eq? condvar (macro-absent-obj))
+          (macro-mutex-unlock! mutex)
+          (macro-check-condvar
+            condvar
+            2
+            (mutex-unlock! mutex condvar absrel-timeout)
+            (cond ((or (##eq? absrel-timeout (macro-absent-obj))
+                       (##not absrel-timeout))
+                   (##mutex-signal-and-condvar-wait! mutex condvar #t))
+                  ((macro-absrel-time? absrel-timeout)
+                   (let ((timeout (##absrel-timeout->timeout absrel-timeout)))
+                     (##mutex-signal-and-condvar-wait!
+                      mutex
+                      condvar
+                      timeout)))
+                  (else
+                   (##fail-check-absrel-time-or-false
+                    3
+                    mutex-unlock!
+                    mutex
+                    condvar
+                    absrel-timeout))))))))
 
 ;;; User accessible primitives for condition variables
 
@@ -8089,8 +8157,8 @@
                                      (##cons lift3
                                              others))))))))))
 
-(define call/cc
-  call-with-current-continuation)
+(define call/cc call-with-current-continuation)
+(##global-var-primitive-set! (##make-global-var 'call/cc) call/cc)
 
 (define ##initial-dynwind
   '#(0)) ;; only the "level" field is needed
@@ -8622,9 +8690,7 @@
                  (##make-root-thread
                   (lambda () (##tcp-service-serve server-port thunk tgroup))
                   local-address-and-local-port-number
-                  ##tcp-service-tgroup
-                  ##stdin-port
-                  ##stdout-port)))
+                  ##tcp-service-tgroup)))
             (##tcp-service-update! local-address-and-local-port-number
                                    (##cons server-port new-thread))
             (##thread-start! new-thread)
@@ -8689,11 +8755,11 @@
 
 ;; (##current-user-interrupt-handler) is called on each user interrupt.
 
-(define ##deferred-user-interrupt? #f)
+(define ##user-interrupt-pending? #f)
 
 (define-prim (##defer-user-interrupts)
    (##declare (not interrupts-enabled))
-   (set! ##deferred-user-interrupt? #t)
+   (set! ##user-interrupt-pending? #t)
    (##void))
 
 (define defer-user-interrupts ##defer-user-interrupts)
@@ -8706,10 +8772,11 @@
        (let ()
          (##declare (not interrupts-enabled))
          (##declare (not safe)) ;; avoid procedure check on the call
-         (let ((int? ##deferred-user-interrupt?))
-           (set! ##deferred-user-interrupt? #f)
-           (if int?
-               (val)))
+         (if (##not (##eq? val ##defer-user-interrupts))
+             (let ((int? ##user-interrupt-pending?))
+               (set! ##user-interrupt-pending? #f)
+               (if int?
+                   (val))))
          val)))))
 
 (define current-user-interrupt-handler

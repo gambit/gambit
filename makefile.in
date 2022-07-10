@@ -1,6 +1,6 @@
 # makefile for Gambit system.
 
-# Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
 
 PACKAGE_SHORTNAME = @PACKAGE_SHORTNAME@
 PACKAGE_NAME = @PACKAGE_NAME@
@@ -84,7 +84,7 @@ SUBDIRS = include bin lib gsi gsc misc doc tests examples contrib prebuilt bench
 
 RCFILES = README README.md INSTALL.txt LICENSE-2.0.txt LGPL.txt \
 makefile.in configure configure.ac config.guess config.sub install-sh mkidirs \
-relpath gsc-boot.unix gsc-boot.bat.windows .travis.yml appveyor.yml
+relpath gsc-boot.unix gsc-boot.bat.windows appveyor.yml
 
 GITRCFILES = .gitignore .gitattributes
 HGRCFILES = .hgignore .hgtags
@@ -103,32 +103,61 @@ BUILD_HOST = localhost
 
 .SUFFIXES:
 
-all:
+all: core
+	$(MAKE) modules  # comment this line during development to avoid building the modules on every change
 
-all-pre: gsc-boot@exe@
+core:
 
-all-post:
-	@echo "**** to compile the builtin modules you should: make modules"
+core-pre: gsc-boot@exe@
+	$(MAKE) stamp
+	@if echo "MAKEFLAGS: $(MAKEFLAGS)" | fgrep -e "--jobserver-fds="; then \
+	  $(MAKE) phases; \
+	fi
+
+core-post:
+	@echo "*** to compile the builtin modules you should: make modules"
+
+phases:
+	@for phase in phase1 phase2 phase3 phase4; do \
+	  echo "*** making $$phase"; \
+	  $(MAKE) $$phase; \
+	done
+
+phase1: include-phase1 bin-phase1 lib-phase1 gsi-phase1 gsc-phase1
+
+phase2: include-phase2 bin-phase2 lib-phase2 gsi-phase2 gsc-phase2
+
+phase3: include-phase3 bin-phase3 lib-phase3 gsi-phase3 gsc-phase3
+
+phase4: include-phase4 bin-phase4 lib-phase4 gsi-phase4 gsc-phase4
+
+include-phase1 bin-phase1 lib-phase1 gsi-phase1 gsc-phase1 include-phase2 bin-phase2 lib-phase2 gsi-phase2 gsc-phase2 include-phase3 bin-phase3 lib-phase3 gsi-phase3 gsc-phase3 include-phase4 bin-phase4 lib-phase4 gsi-phase4 gsc-phase4:
+	@target=`echo $@ | sed 's/.*-//'`; \
+	subdir=`echo $@ | sed 's/-phase.*//'`; \
+	echo making $$target in $$subdir; \
+	(cd $$subdir && $(MAKE) $$target) || exit 1
 
 from-scratch: fake_target
 	$(MAKE) bootclean
 	$(MAKE) bootstrap # make gsc compiler corresponding to repo HEAD
 	$(MAKE) bootclean
-	$(MAKE) all       # make everything with repo HEAD gsc compiler
+	$(MAKE) core       # make everything with repo HEAD gsc compiler
 
 boot-most-recent-release: fake_target
 	@if test -x "boot/gsc-boot@exe@" && \
 	    test "`boot/gsc-boot@exe@ -v | sed -e 's/ .*//'`" = "$(PACKAGE_VERSION)"; then \
-	  echo "**** boot/gsc-boot@exe@ doesn't need to be rebuilt"; \
+	  echo "*** boot/gsc-boot@exe@ doesn't need to be rebuilt"; \
 	else \
 	  $(MAKE) boot-most-recent-release-gsc-boot; \
 	fi
 
 boot-most-recent-release-gsc-boot: fake_target
-	@echo "**** building boot/gsc-boot@exe@"
+	@echo "*** building boot/gsc-boot@exe@"
 	rm -rf boot
 	mkdir -p boot
 	$(GIT) archive tags/$(PACKAGE_VERSION) | (cd boot && tar xf -)
+	cp config.guess boot
+	cp config.sub boot
 	cd boot && \
 	./configure $(BOOTSTRAP_CONFIGURE_FLAGS) CC='$(C_COMPILER)' && \
 	$(MAKE) bootstrap
@@ -137,13 +166,13 @@ boot-wip-compiler: fake_target
 	@if test -x "boot/gsc/gsc@exe@" && \
 	    test "`boot/gsc/gsc@exe@ -v | sed -e 's/ .*//'`" = "$(PACKAGE_VERSION)" && \
 	    test "`find gsc/makefile.in gsc/*.scm -exec diff -q \{\} boot/\{\} \; 2>&1`" = ""; then \
-	  echo "**** boot/gsc/gsc@exe@ doesn't need to be rebuilt"; \
+	  echo "*** boot/gsc/gsc@exe@ doesn't need to be rebuilt"; \
 	else \
 	  $(MAKE) boot-wip-compiler-gsc-gsc && $(MAKE) bootclean; \
 	fi
 
 boot-wip-compiler-gsc-gsc: boot-most-recent-release
-	@echo "**** building boot/gsc/gsc@exe@ using boot/gsc-boot@exe@"
+	@echo "*** building boot/gsc/gsc@exe@ using boot/gsc-boot@exe@"
 	cd boot && \
 	rm -f gsc/makefile && \
 	cp ../gsc/makefile.in ../gsc/*.scm gsc && \
@@ -166,10 +195,10 @@ gsc-boot@exe@:
 	    $(GIT) --version > /dev/null 2> /dev/null && \
 	    $(GIT) describe --tags > /dev/null 2> /dev/null && \
 	    test "`$(GIT) describe --tags`" != "$(PACKAGE_VERSION)"; then \
-	  echo "**** checking if current gsc-boot must be built"; \
+	  echo "*** checking if current gsc-boot must be built"; \
 	  $(MAKE) current-gsc-boot; \
 	else \
-	  echo "**** using a dummy gsc-boot"; \
+	  echo "*** using a dummy gsc-boot"; \
 	  $(MAKE) dummy-gsc-boot; \
 	fi
 
@@ -178,13 +207,13 @@ fake_target:
 doc info pdf html txt: fake_target
 	@cd doc && $(MAKE) $(MDEFINES) $@
 
-check ut ut-C ut-js ut-python ut-ruby ut-php ut-java st st-C st-js st-python st-ruby st-php st-java: fake_target all
+check ut ut-C ut-js ut-python ut-ruby ut-php ut-java st st-C st-js st-python st-ruby st-php st-java: fake_target core
 	@cd tests && $(MAKE) $(MDEFINES) $@
 
-bench: fake_target all
+bench: fake_target core
 	@cd bench && $(MAKE) $(MDEFINES) $@
 
-examples: fake_target all
+examples: fake_target core
 	@cd examples && $(MAKE) $(MDEFINES) $@
 
 prebuilt: dist dist-devel
@@ -197,7 +226,7 @@ xactlog@exe@: fake_target
 stamp: fake_target
 	@cd include && $(MAKE) $(MDEFINES) $@
 
-commit: stamp deselect-gen-for-commit
+commit: deselect-gen-for-commit
 	$(RC) commit
 
 diff: fake_target
@@ -315,13 +344,37 @@ release: fake_target
 publish-release: fake_target
 	misc/publish-release $(PACKAGE_VERSION) $(PACKAGE_TARNAME).tgz $(PACKAGE_TARNAME)-*.*
 
+
+print-make:
+	echo $(MAKE)
+
+clean-modules: clean-modules-pre
+	@cd lib && $(MAKE) $@
+
+clean-modules-pre:
+
+list-modules: list-modules-pre
+	@cd lib && $(MAKE) $@
+
+list-modules-pre:
+
+test-modules-all: test-modules-all-pre
+	@cd lib && $(MAKE) $@
+
+test-modules-all-pre:
+
+test-modules: test-modules-pre
+	@cd lib && $(MAKE) $@
+
+test-modules-pre:
+
 modules _gambit.java _gambit.js _gambit.php _gambit.py _gambit.rb _gambit.go:
 	@cd lib && $(MAKE) $(MDEFINES) $@
 
 update-unicode:
 	@cd lib && $(MAKE) $(MDEFINES) $@
 
-bootstrap-pre: all
+bootstrap-pre: core
 
 bootstrap-post:
 
@@ -333,7 +386,7 @@ install-pre:
 	  exit 1; \
 	fi
 
-install-post: all
+install-post: core
 	if test "@ENABLE_MULTIPLE_VERSIONS@" = "yes"; then \
 	  if test "@bat@" = ""; then \
 	    $(srcdirpfx)./mkidirs "$(DESTDIR)$(prefix)"; \
@@ -416,7 +469,7 @@ rc-setup-post:
 	  $(HG) commit -m "Initial commit of $(PACKAGE_STRING)"; \
 	fi
 
-dist-pre:
+dist-pre: doc
 	rm -rf $(PACKAGE_TARNAME)
 	mkdir $(PACKAGE_TARNAME)
 	chmod 777 $(PACKAGE_TARNAME)
@@ -433,7 +486,7 @@ dist-post:
 	mv $(PACKAGE_TARNAME).tar.gz $(PACKAGE_TARNAME).tgz
 	rm -rf $(PACKAGE_TARNAME)
 
-dist-devel-pre:
+dist-devel-pre: doc
 	rm -rf $(PACKAGE_TARNAME)
 	mkdir $(PACKAGE_TARNAME)
 	chmod 777 $(PACKAGE_TARNAME)
@@ -452,6 +505,9 @@ dist-devel-pre:
 	  echo "    .git"; \
 	  ln $(srcdirpfx).git $(PACKAGE_TARNAME) 2> /dev/null \
 	    || cp -p -R $(srcdirpfx).git $(PACKAGE_TARNAME); \
+	  echo "    .github"; \
+	  ln $(srcdirpfx).github $(PACKAGE_TARNAME) 2> /dev/null \
+	    || cp -p -R $(srcdirpfx).github $(PACKAGE_TARNAME); \
 	else \
 	  for file in $(HGDISTFILES); do \
 	    echo "    $$file"; \
@@ -461,6 +517,9 @@ dist-devel-pre:
 	  echo "    .hg"; \
 	  ln $(srcdirpfx).hg $(PACKAGE_TARNAME) 2> /dev/null \
 	    || cp -p -R $(srcdirpfx).hg $(PACKAGE_TARNAME); \
+	  echo "    .github"; \
+	  ln $(srcdirpfx).github $(PACKAGE_TARNAME) 2> /dev/null \
+	    || cp -p -R $(srcdirpfx).github $(PACKAGE_TARNAME); \
 	fi
 
 dist-devel-post:
@@ -471,18 +530,27 @@ dist-devel-post:
 	mv $(PACKAGE_TARNAME)-devel.tar.gz $(PACKAGE_TARNAME)-devel.tgz
 	rm -rf $(PACKAGE_TARNAME)-devel
 
-all-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+dist-boot-post:
+	rm -rf boot-$(PACKAGE_TARNAME)
+	mkdir boot-$(PACKAGE_TARNAME)
+	chmod 777 boot-$(PACKAGE_TARNAME)
+	mv $(PACKAGE_TARNAME) boot-$(PACKAGE_TARNAME)/boot
+	(cd boot-$(PACKAGE_TARNAME) && COPYFILE_DISABLE=1 tar chof boot.tar boot && gzip -9 boot.tar) || exit 1
+	mv boot-$(PACKAGE_TARNAME)/boot.tar.gz boot.tgz
+	rm -rf boot-$(PACKAGE_TARNAME)
+
+core-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@for subdir in $(SUBDIRS); do \
 	  target=`echo $@ | sed 's/-recursive//'`; \
 	  echo making $$target in $$subdir; \
 	  (cd $$subdir && $(MAKE) $$target) || exit 1; \
 	done
 
-all: all-post
+core: core-post
 
-all-post: all-recursive
+core-post: core-recursive
 
-all-recursive: all-pre
+core-recursive: core-pre
 
 bootstrap: bootstrap-post
 
@@ -550,17 +618,21 @@ rc-setup-post: rc-setup-recursive
 
 rc-setup-recursive: rc-setup-pre
 
-dist: doc dist-post
+dist: dist-post
 
 dist-post: dist-recursive
 
 dist-recursive: dist-pre
 
-dist-devel: doc dist-devel-post
+dist-devel: dist-devel-post
 
 dist-devel-post: dist-devel-recursive
 
 dist-devel-recursive: dist-devel-pre
+
+dist-boot: dist-boot-post
+
+dist-boot-post: dist-recursive
 
 # For an explanation of the following makefile rules, see node
 # `Automatic Remaking' in GNU Autoconf documentation.

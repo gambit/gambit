@@ -2,7 +2,7 @@
 
 ;;; File: "_system.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -16,10 +16,10 @@
 
 ;; (##vector? obj) is defined in "_std.scm"
 
-(define-prim (##ratnum? obj))
-(define-prim (##cpxnum? obj))
+(macro-if-bignum (define-prim (##bignum? obj)))
+(macro-if-ratnum (define-prim (##ratnum? obj)))
+(macro-if-cpxnum (define-prim (##cpxnum? obj)))
 (define-prim (##structure? obj))
-(define-prim (##values? obj))
 (define-prim (##frame? obj))
 (define-prim (##continuation? obj))
 (define-prim (##promise? obj))
@@ -38,7 +38,6 @@
 ;; (##f64vector? obj) is defined in "_std.scm"
 
 (define-prim (##flonum? obj))
-(define-prim (##bignum? obj))
 (define-prim (##unbound? obj))
 (define-prim (##foreign? obj))
 
@@ -56,7 +55,7 @@
 (define-prim (##subtyped.vector? obj) #f)
 (define-prim (##subtyped.symbol? obj) #f)
 (define-prim (##subtyped.flonum? obj) #f)
-(define-prim (##subtyped.bignum? obj) #f)
+(macro-if-bignum (define-prim (##subtyped.bignum? obj) #f))
 (define-prim (##special? obj) #f)
 (define-prim (##meroon? obj) #f)
 (define-prim (##jazz? obj) #f)
@@ -399,13 +398,13 @@
                            (##fx= obj1 obj2))
                       (true)
                       (false)))
-                 ((##bignum? obj1)
+                 ((macro-if-bignum (##bignum? obj1) #f)
                   (profile! 4)
                   (if (and (##bignum? obj2)
                            (##exact-int.= obj1 obj2))
                       (true)
                       (false)))
-                 ((##ratnum? obj1)
+                 ((macro-if-ratnum (##ratnum? obj1) #f)
                   (profile! 5)
                   (if (and (##ratnum? obj2)
                            (##ratnum.= obj1 obj2))
@@ -417,7 +416,7 @@
                            (##fleqv? obj1 obj2))
                       (true)
                       (false)))
-                 ((##cpxnum? obj1)
+                 ((macro-if-cpxnum (##cpxnum? obj1) #f)
                   (profile! 7)
                   (if (and (##cpxnum? obj2)
                            (##eqv? (macro-cpxnum-real obj1)
@@ -514,49 +513,49 @@
                            (##u8vector-equal? obj1 obj2))
                       (true)
                       (false)))
-                 ((##s8vector? obj1)
+                 ((macro-if-s8vector (##s8vector? obj1) #f)
                   (profile! 13)
                   (if (and (##s8vector? obj2)
                            (##s8vector-equal? obj1 obj2))
                       (true)
                       (false)))
-                 ((##u16vector? obj1)
+                 ((macro-if-u16vector (##u16vector? obj1) #f)
                   (profile! 14)
                   (if (and (##u16vector? obj2)
                            (##u16vector-equal? obj1 obj2))
                       (true)
                       (false)))
-                 ((##s16vector? obj1)
+                 ((macro-if-s16vector (##s16vector? obj1) #f)
                   (profile! 15)
                   (if (and (##s16vector? obj2)
                            (##s16vector-equal? obj1 obj2))
                       (true)
                       (false)))
-                 ((##u32vector? obj1)
+                 ((macro-if-u32vector (##u32vector? obj1) #f)
                   (profile! 16)
                   (if (and (##u32vector? obj2)
                            (##u32vector-equal? obj1 obj2))
                       (true)
                       (false)))
-                 ((##s32vector? obj1)
+                 ((macro-if-s32vector (##s32vector? obj1) #f)
                   (profile! 17)
                   (if (and (##s32vector? obj2)
                            (##s32vector-equal? obj1 obj2))
                       (true)
                       (false)))
-                 ((##u64vector? obj1)
+                 ((macro-if-u64vector (##u64vector? obj1) #f)
                   (profile! 18)
                   (if (and (##u64vector? obj2)
                            (##u64vector-equal? obj1 obj2))
                       (true)
                       (false)))
-                 ((##s64vector? obj1)
+                 ((macro-if-s64vector (##s64vector? obj1) #f)
                   (profile! 19)
                   (if (and (##s64vector? obj2)
                            (##s64vector-equal? obj1 obj2))
                       (true)
                       (false)))
-                 ((##f32vector? obj1)
+                 ((macro-if-f32vector (##f32vector? obj1) #f)
                   (profile! 20)
                   (if (and (##f32vector? obj2)
                            (##f32vector-equal? obj1 obj2))
@@ -839,14 +838,15 @@
 
   ;; FNV1a hash function adapted to fixnums fitting in 32 bit words
 
-  (let loop ((h (macro-fnv1a-offset-basis-fixnum32))
-             (i 0))
-    (if (##fx< i (##string-length str))
-        (loop (macro-hash-combine
-               h
-               (##char->integer (##char-downcase (##string-ref str i))))
-              (##fx+ i 1))
-        h)))
+  (let ((str (##string-foldcase str)))
+    (let loop ((h (macro-fnv1a-offset-basis-fixnum32))
+               (i 0))
+      (if (##fx< i (##string-length str))
+          (loop (macro-hash-combine
+                 h
+                 (##char->integer (##string-ref str i)))
+                (##fx+ i 1))
+          h))))
 
 (define-prim (string-ci=?-hash str)
   (macro-force-vars (str)
@@ -868,12 +868,7 @@
            (##keyword-hash obj))
           (else
            (##fxand
-            (let ((sn (##object->serial-number obj)))
-              (if (##fixnum? sn)
-                  sn
-                  (##fxarithmetic-shift-left
-                   (##bignum.mdigit-ref sn 0)
-                   10)))
+            (##object->serial-number obj) ;; always a nonnegative fixnum
             (macro-max-fixnum32)))))
 
   (macro-case-target
@@ -913,11 +908,29 @@
       (macro-hash-combine (hash (macro-ratnum-numerator obj)) ;; obj = ratnum
                           (hash (macro-ratnum-denominator obj)))
       ;; TODO: hash flonums in a portable way
-      (macro-hash-combine (##u16vector-ref obj 0) ;; obj = flonum
-                          (macro-hash-combine (##u16vector-ref obj 1)
-                                              (macro-hash-combine
-                                               (##u16vector-ref obj 2)
-                                               (##u16vector-ref obj 3))))
+      (macro-if-u16vector ;; obj = flonum
+       (macro-hash-combine
+        (##u16vector-ref obj 0)
+        (macro-hash-combine
+         (##u16vector-ref obj 1)
+         (macro-hash-combine
+          (##u16vector-ref obj 2)
+          (##u16vector-ref obj 3))))
+       (macro-hash-combine
+        (##u8vector-ref obj 0)
+        (macro-hash-combine
+         (##u8vector-ref obj 1)
+         (macro-hash-combine
+          (##u8vector-ref obj 2)
+          (macro-hash-combine
+           (##u8vector-ref obj 3)
+           (macro-hash-combine
+            (##u8vector-ref obj 4)
+            (macro-hash-combine
+             (##u8vector-ref obj 5)
+             (macro-hash-combine
+              (##u8vector-ref obj 6)
+              (##u8vector-ref obj 7)))))))))
       (macro-hash-combine (hash (macro-cpxnum-real obj)) ;; obj = cpxnum
                           (hash (macro-cpxnum-imag obj)))))
 
@@ -1071,7 +1084,9 @@
                              (cond ((##string? obj)
                                     (##string=?-hash obj))
                                    ((or (##flonum? obj)
-                                        (##bignum? obj))
+                                        (macro-if-bignum
+                                         (##bignum? obj)
+                                         #f))
                                     (##eqv?-hash obj))
                                    (else
                                     ;; TODO: hash bytevectors in a portable way
@@ -1088,8 +1103,14 @@
     (define (u16vect-hash h i)
       (if (##fx< i 0)
           h
-          (u16vect-hash (macro-hash-combine (##u16vector-ref obj i) h)
-                        (##fx- i 1))))
+          (let ((x
+                 (macro-if-u16vector
+                  (##u16vector-ref obj i)
+                  (let ((j (##fx* i 2)))
+                    (##fx+ (##fxarithmetic-shift-left (##u8vector-ref obj j) 8)
+                           (##u8vector-ref obj (##fx+ j 1)))))))
+            (u16vect-hash (macro-hash-combine x h)
+                          (##fx- i 1)))))
 
     (let ((len (##u8vector-length obj)))
       (u16vect-hash (##fxxor
@@ -1242,8 +1263,8 @@
 
 (define-prim (##gc-hash-table-ref gcht key))
 (define-prim (##gc-hash-table-set! gcht key val))
-(define-prim (##gc-hash-table-union! gcht key1 key2) (##c-code "___RESULT = ___GCHASHTABLEUNION(___ARG1,___ARG2,___ARG3);" gcht key1 key2)) ;; TODO: remove after bootstrap
-(define-prim (##gc-hash-table-find! gcht key1 key2) (##c-code "___RESULT = ___GCHASHTABLEFIND(___ARG1,___ARG2,___ARG3);" gcht key1 key2)) ;; TODO: remove after bootstrap
+(define-prim (##gc-hash-table-union! gcht key1 key2))
+(define-prim (##gc-hash-table-find! gcht key1 key2))
 (define-prim (##gc-hash-table-rehash! gcht-src gcht-dst))
 
 (define-prim (##smallest-prime-no-less-than n) ;; n >= 3
@@ -1292,19 +1313,19 @@
                      (p (smallest-prime-no-less-than hi)))
                 ;;(pp (list i n x lo '.. hi p))
                 (loop (+ i 1) (cons p lst)))
-              (list->u64vector (reverse lst))))))
+              (list->vector (reverse lst))))))
 
     `(define-prim (##loose-smallest-prime-no-less-than n)
        (let* ((primes ',(vector-of-primes))
               (len (##fxlength n))
               (shift (##fx- len ,res)))
          (if (##fx< shift 0)
-             (##u64vector-ref primes 0)
+             (##vector-ref primes 0)
              (let ((i (##fx+ (##fxand (##fxarithmetic-shift-right n shift)
                                       ,2^resm1-1)
                              (##fxarithmetic-shift-left shift ,resm1))))
-               (if (##fx< i (##u64vector-length primes))
-                   (##u64vector-ref primes i)
+               (if (##fx< i (##vector-length primes))
+                   (##vector-ref primes i)
                    #f)))))))
 
 (define-loose-smallest-prime-no-less-than 4294967295 4)
@@ -2057,7 +2078,7 @@
         (if (##pair? x)
             (let ((couple (##car x)))
               (macro-force-vars (couple)
-                (macro-check-pair-list
+                (macro-check-pair-list-pair
                   couple
                   1
                   (list->table lst
@@ -2073,7 +2094,7 @@
                     (if (##eq? table (##table-ref table key table))
                         (##table-set! table key (##cdr couple)))
                     (loop (##cdr x))))))
-            (macro-check-list
+            (macro-check-proper-list-null
               x
               1
               (list->table lst
@@ -2459,7 +2480,7 @@
     (let loop ((x lst))
       (if (##pair? x)
           (let ((couple (##car x)))
-            (macro-check-pair-list
+            (macro-check-pair-list-pair
              couple
              1
              (list->table lst
@@ -2475,7 +2496,7 @@
                                 (##car couple)
                                 (##cdr couple)))
             (loop (##cdr x)))
-          (macro-check-list
+          (macro-check-proper-list-null
            x
            1
            (list->table lst
@@ -2939,95 +2960,6 @@
 (##define-macro (make-table . args)
   `(##make-table-aux 0 #f #f #f ##eq?))
 
-;; Representation of fifos.
-
-(##define-macro (macro-make-fifo)
-  `(let ((fifo (##cons '() '())))
-     (macro-fifo-tail-set! fifo fifo)
-     fifo))
-
-(##define-macro (macro-fifo-next fifo)        `(##cdr ,fifo))
-(##define-macro (macro-fifo-next-set! fifo x) `(##set-cdr! ,fifo ,x))
-(##define-macro (macro-fifo-tail fifo)        `(##car ,fifo))
-(##define-macro (macro-fifo-tail-set! fifo x) `(##set-car! ,fifo ,x))
-(##define-macro (macro-fifo-elem fifo)        `(##car ,fifo))
-(##define-macro (macro-fifo-elem-set! fifo x) `(##set-car! ,fifo ,x))
-
-(##define-macro (macro-fifo->list fifo)
-  `(macro-fifo-next ,fifo))
-
-(##define-macro (macro-fifo-remove-all! fifo)
-  `(let ((fifo ,fifo))
-
-     (##declare (not interrupts-enabled))
-
-     (let ((head (macro-fifo-next fifo)))
-       (macro-fifo-tail-set! fifo fifo)
-       (macro-fifo-next-set! fifo '())
-       head)))
-
-(##define-macro (macro-fifo-remove-head! fifo)
-  `(let ((fifo ,fifo))
-
-     (##declare (not interrupts-enabled))
-
-     (let ((head (macro-fifo-next fifo)))
-       (if (##pair? head)
-         (let ((next (macro-fifo-next head)))
-           (if (##null? next)
-             (macro-fifo-tail-set! fifo fifo))
-           (macro-fifo-next-set! fifo next)
-           (macro-fifo-next-set! head '())))
-       head)))
-
-(##define-macro (macro-fifo-insert-at-tail! fifo elem)
-  `(let ((fifo ,fifo) (elem ,elem))
-     (let ((x (##cons elem '())))
-
-       (##declare (not interrupts-enabled))
-
-       (let ((tail (macro-fifo-tail fifo)))
-         (macro-fifo-next-set! tail x)
-         (macro-fifo-tail-set! fifo x)
-         (##void)))))
-
-(##define-macro (macro-fifo-insert-at-head! fifo elem)
-  `(let ((fifo ,fifo) (elem ,elem))
-     (let ((x (##cons elem '())))
-
-       (##declare (not interrupts-enabled))
-
-       ;; To obtain an atomic update of the fifo, we must force a
-       ;; garbage-collection to occur right away if needed by the
-       ;; ##cons, so that any finalization that might mutate this fifo
-       ;; will be done before updating the fifo.
-
-       (##check-heap-limit)
-
-       (let ((head (macro-fifo-next fifo)))
-         (if (##null? head)
-           (macro-fifo-tail-set! fifo x))
-         (macro-fifo-next-set! fifo x)
-         (macro-fifo-next-set! x head)
-         (##void)))))
-
-(##define-macro (macro-fifo-advance-to-tail! fifo)
-  `(let ((fifo ,fifo))
-     ;; It is assumed that the fifo contains at least one element
-     ;; (i.e. the fifo's tail does not change).
-     (let ((new-head (macro-fifo-tail fifo)))
-       (macro-fifo-next-set! fifo new-head)
-       (macro-fifo-elem new-head))))
-
-(##define-macro (macro-fifo-advance! fifo)
-  `(let ((fifo ,fifo))
-     ;; It is assumed that the fifo contains at least two elements
-     ;; (i.e. the fifo's tail does not change).
-     (let* ((head (macro-fifo-next fifo))
-            (new-head (macro-fifo-next head)))
-       (macro-fifo-next-set! fifo new-head)
-       (macro-fifo-elem new-head))))
-
 (define-prim (##object->u8vector
               obj
               #!optional
@@ -3353,10 +3285,10 @@
                    (serialize-flonum-64! obj)
                    (alloc! obj))))
 
-            ((bignum? obj)
+            ((macro-if-bignum (bignum? obj) #f)
              (serialize-exact-int! obj))
 
-            ((ratnum? obj)
+            ((macro-if-ratnum (ratnum? obj) #f)
              (or (share obj)
                  (begin
                    (write-u8 (ratnum-tag))
@@ -3364,7 +3296,7 @@
                    (serialize! (macro-ratnum-denominator obj))
                    (alloc! obj))))
 
-            ((cpxnum? obj)
+            ((macro-if-cpxnum (cpxnum? obj) #f)
              (or (share obj)
                  (begin
                    (write-u8 (cpxnum-tag))
@@ -3436,14 +3368,6 @@
                              (serialize! (values-ref obj i))
                              (loop (fx+ i 1)))))))))
 
-            ((s8vector? obj)
-             (serialize-homintvector!
-              obj
-              (s8vector-tag)
-              (lambda (v) (s8vector-length v))
-              (lambda (v i) (s8vector-ref v i))
-              1))
-
             ((u8vector? obj)
              (serialize-homintvector!
               obj
@@ -3452,15 +3376,15 @@
               (lambda (v i) (u8vector-ref v i))
               1))
 
-            ((s16vector? obj)
+            ((macro-if-s8vector (s8vector? obj) #f)
              (serialize-homintvector!
               obj
-              (s16vector-tag)
-              (lambda (v) (s16vector-length v))
-              (lambda (v i) (s16vector-ref v i))
-              2))
+              (s8vector-tag)
+              (lambda (v) (s8vector-length v))
+              (lambda (v i) (s8vector-ref v i))
+              1))
 
-            ((u16vector? obj)
+            ((macro-if-u16vector (u16vector? obj) #f)
              (serialize-homintvector!
               obj
               (u16vector-tag)
@@ -3468,15 +3392,15 @@
               (lambda (v i) (u16vector-ref v i))
               2))
 
-            ((s32vector? obj)
+            ((macro-if-s16vector (s16vector? obj) #f)
              (serialize-homintvector!
               obj
-              (s32vector-tag)
-              (lambda (v) (s32vector-length v))
-              (lambda (v i) (s32vector-ref v i))
-              4))
+              (s16vector-tag)
+              (lambda (v) (s16vector-length v))
+              (lambda (v i) (s16vector-ref v i))
+              2))
 
-            ((u32vector? obj)
+            ((macro-if-u32vector (u32vector? obj) #f)
              (serialize-homintvector!
               obj
               (u32vector-tag)
@@ -3484,15 +3408,15 @@
               (lambda (v i) (u32vector-ref v i))
               4))
 
-            ((s64vector? obj)
+            ((macro-if-s32vector (s32vector? obj) #f)
              (serialize-homintvector!
               obj
-              (s64vector-tag)
-              (lambda (v) (s64vector-length v))
-              (lambda (v i) (s64vector-ref v i))
-              8))
+              (s32vector-tag)
+              (lambda (v) (s32vector-length v))
+              (lambda (v i) (s32vector-ref v i))
+              4))
 
-            ((u64vector? obj)
+            ((macro-if-u64vector (u64vector? obj) #f)
              (serialize-homintvector!
               obj
               (u64vector-tag)
@@ -3500,7 +3424,15 @@
               (lambda (v i) (u64vector-ref v i))
               8))
 
-            ((f32vector? obj)
+            ((macro-if-s64vector (s64vector? obj) #f)
+             (serialize-homintvector!
+              obj
+              (s64vector-tag)
+              (lambda (v) (s64vector-length v))
+              (lambda (v i) (s64vector-ref v i))
+              8))
+
+            ((macro-if-f32vector (f32vector? obj) #f)
              (serialize-homfloatvector!
               obj
               (f32vector-tag)
@@ -3911,7 +3843,7 @@
                            (alloc! obj)
                            obj))
 
-                        ((fx= x (ratnum-tag))
+                        ((macro-if-ratnum (fx= x (ratnum-tag)) #f)
                          (let* ((num (deserialize!))
                                 (den (deserialize!)))
                            (if #f #;(or (and (fixnum? den)
@@ -3924,282 +3856,282 @@
                              (alloc! obj)
                              obj))))
 
-                  ((fx= x (cpxnum-tag))
-                   (let* ((real (deserialize!))
-                          (imag (deserialize!)))
-                     (if #f #;(or (not (real? real))
-                                  (not (real? imag)))
-                         (err)
-                         (let ((obj (macro-cpxnum-make real imag)))
-                           (alloc! obj)
-                           obj))))
-
-                  ((fx= x (pair-tag))
-                   (let ((obj (cons #f #f)))
-                     (alloc! obj)
-                     (let* ((a (deserialize!))
-                            (d (deserialize!)))
-                       (set-car! obj a)
-                       (set-cdr! obj d)
-                       obj)))
-
-                  ((fx= x (continuation-tag))
-                   (let ((obj
-                          (make-continuation (macro-end-of-cont-marker) #f)))
-                     (alloc! obj)
-                     (let* ((frame (deserialize!))
-                            (denv (deserialize!)))
-                       (if #f #;(not (frame? frame)) ;; should also check denv
-                           (err)
-                           (begin
-                             (continuation-frame-set! obj frame)
-                             (continuation-denv-set! obj denv)
-                             obj)))))
-
-                  ((fx= x (boxvalues-tag))
-                   (let ((len (deserialize-nonneg-fixnum! 0 0)))
-                     (if (fx= len 1)
-                         (let ((obj (box #f)))
-                           (alloc! obj)
-                           (set-box! obj (deserialize!))
-                           obj)
-                         (let ((obj (make-values len)))
-                           (alloc! obj)
-                           (let loop ((i 0))
-                             (if (fx< i len)
-                                 (begin
-                                   (values-set! obj i (deserialize!))
-                                   (loop (fx+ i 1)))
-                                 obj))))))
-
-                  ((fx= x (ui-symbol-tag))
-                   (let* ((y (read-u8))
-                          (name (deserialize-string! y #xff))
-                          (hash (deserialize-exact-int-of-length! 4))
-                          (obj (##make-uninterned-symbol name hash)))
-                     (create-global-var-if-needed obj)
-                     (alloc! obj)
-                     obj))
-
-                  ((fx= x (keyword-tag))
-                   (let* ((name (deserialize-string! 0 0))
-                          (obj (string->keyword name)))
-                     (alloc! obj)
-                     obj))
-
-                  ((fx= x (ui-keyword-tag))
-                   (let* ((y (read-u8))
-                          (name (deserialize-string! y #xff))
-                          (hash (deserialize-exact-int-of-length! 4))
-                          (obj (##make-uninterned-keyword name hash)))
-                     (alloc! obj)
-                     obj))
-
-                  ((fx= x (closure-tag))
-                   (let ((subproc (deserialize-subprocedure!)))
-                     (if #f ;;;;;;;not subprocedure
-                         (err)
-                         (let ((nb-closed
-                                (subprocedure-nb-closed subproc)))
-                           (if #f ;;;;; nb-closed < 0
+                        ((macro-if-cpxnum (fx= x (cpxnum-tag)) #f)
+                         (let* ((real (deserialize!))
+                                (imag (deserialize!)))
+                           (if #f #;(or (not (real? real))
+                               (not (real? imag)))
                                (err)
-                               (let ((obj (make-closure subproc nb-closed)))
+                               (let ((obj (macro-cpxnum-make real imag)))
+                                 (alloc! obj)
+                                 obj))))
+
+                        ((fx= x (pair-tag))
+                         (let ((obj (cons #f #f)))
+                           (alloc! obj)
+                           (let* ((a (deserialize!))
+                                  (d (deserialize!)))
+                             (set-car! obj a)
+                             (set-cdr! obj d)
+                             obj)))
+
+                        ((fx= x (continuation-tag))
+                         (let ((obj
+                                (make-continuation (macro-end-of-cont-marker) #f)))
+                           (alloc! obj)
+                           (let* ((frame (deserialize!))
+                                  (denv (deserialize!)))
+                             (if #f #;(not (frame? frame)) ;; should also check denv
+                                 (err)
+                                 (begin
+                                   (continuation-frame-set! obj frame)
+                                   (continuation-denv-set! obj denv)
+                                   obj)))))
+
+                        ((fx= x (boxvalues-tag))
+                         (let ((len (deserialize-nonneg-fixnum! 0 0)))
+                           (if (fx= len 1)
+                               (let ((obj (box #f)))
+                                 (alloc! obj)
+                                 (set-box! obj (deserialize!))
+                                 obj)
+                               (let ((obj (make-values len)))
+                                 (alloc! obj)
+                                 (let loop ((i 0))
+                                   (if (fx< i len)
+                                       (begin
+                                         (values-set! obj i (deserialize!))
+                                         (loop (fx+ i 1)))
+                                       obj))))))
+
+                        ((fx= x (ui-symbol-tag))
+                         (let* ((y (read-u8))
+                                (name (deserialize-string! y #xff))
+                                (hash (deserialize-exact-int-of-length! 4))
+                                (obj (##make-uninterned-symbol name hash)))
+                           (create-global-var-if-needed obj)
+                           (alloc! obj)
+                           obj))
+
+                        ((fx= x (keyword-tag))
+                         (let* ((name (deserialize-string! 0 0))
+                                (obj (string->keyword name)))
+                           (alloc! obj)
+                           obj))
+
+                        ((fx= x (ui-keyword-tag))
+                         (let* ((y (read-u8))
+                                (name (deserialize-string! y #xff))
+                                (hash (deserialize-exact-int-of-length! 4))
+                                (obj (##make-uninterned-keyword name hash)))
+                           (alloc! obj)
+                           obj))
+
+                        ((fx= x (closure-tag))
+                         (let ((subproc (deserialize-subprocedure!)))
+                           (if #f ;;;;;;;not subprocedure
+                               (err)
+                               (let ((nb-closed
+                                      (subprocedure-nb-closed subproc)))
+                                 (if #f ;;;;; nb-closed < 0
+                                     (err)
+                                     (let ((obj (make-closure subproc nb-closed)))
+                                       (alloc! obj)
+                                       (let loop ((i 1))
+                                         (if (fx<= i nb-closed)
+                                             (let ((x (deserialize!)))
+                                               (closure-set! obj i x)
+                                               (loop (fx+ i 1)))
+                                             obj))))))))
+
+                        ((fx= x (frame-tag))
+                         (let ((subproc (deserialize-subprocedure!)))
+                           (if #f #;(not (##return? subproc))
+                               (err)
+                               (let* ((obj (make-frame subproc))
+                                      (fs (frame-fs obj)))
                                  (alloc! obj)
                                  (let loop ((i 1))
-                                   (if (fx<= i nb-closed)
-                                       (let ((x (deserialize!)))
-                                         (closure-set! obj i x)
-                                         (loop (fx+ i 1)))
-                                       obj))))))))
-
-                  ((fx= x (frame-tag))
-                   (let ((subproc (deserialize-subprocedure!)))
-                     (if #f #;(not (##return? subproc))
-                         (err)
-                         (let* ((obj (make-frame subproc))
-                                (fs (frame-fs obj)))
-                           (alloc! obj)
-                           (let loop ((i 1))
-                             (if (fx<= i fs)
-                                 (begin
-                                   (frame-set!
-                                    obj
-                                    i
-                                    (if (frame-slot-live? obj i)
-                                        (deserialize!)
-                                        0))
-                                   (loop (fx+ i 1)))
-                                 obj))))))
-
-                  ((and (macro-case-target ((c C) #t) (else #f))
-                        (fx= x (gchashtable-tag)))
-                   (let* ((len (deserialize-nonneg-fixnum! 0 0))
-                          (flags (deserialize-nonneg-fixnum! 0 0))
-                          (count (deserialize-nonneg-fixnum! 0 0))
-                          (min-count (deserialize-nonneg-fixnum! 0 0))
-                          (free (deserialize-nonneg-fixnum! 0 0)))
-                     (if #f ;;;;;;;;parameters OK?
-                         (err)
-                         (let ((obj (make-vector len (macro-unused-obj))))
-                           (alloc! obj)
-                           (macro-gc-hash-table-flags-set!
-                            obj
-                            (fxior ;; force rehash at next access!
-                             flags
-                             (fx+ (macro-gc-hash-table-flag-key-moved)
-                                  (macro-gc-hash-table-flag-need-rehash))))
-                           (macro-gc-hash-table-count-set! obj count)
-                           (macro-gc-hash-table-min-count-set! obj min-count)
-                           (macro-gc-hash-table-free-set! obj free)
-                           (let loop ((i (macro-gc-hash-table-key0)))
-                             (if (fx< i (vector-length obj))
-                                 (let ((key (deserialize!)))
-                                   (if (not (eq? key (macro-unused-obj)))
-                                       (let ((val (deserialize!)))
-                                         (vector-set! obj i key)
-                                         (vector-set! obj (fx+ i 1) val)
-                                         (loop (fx+ i 2)))
+                                   (if (fx<= i fs)
                                        (begin
-                                         (subtype-set!
+                                         (frame-set!
                                           obj
-                                          (macro-subtype-weak))
-                                         obj)))
-                                 (err)))))))
+                                          i
+                                          (if (frame-slot-live? obj i)
+                                              (deserialize!)
+                                              0))
+                                         (loop (fx+ i 1)))
+                                       obj))))))
 
-                  ((fx= x (homvector-tag))
-                   (let* ((len/type
-                           (deserialize-nonneg-fixnum! 0 0))
-                          (len
-                           (fxwraplogical-shift-right len/type 4))
-                          (type
-                           (fxand len/type #x0f)))
-                     (cond ((fx= type (s8vector-tag))
-                            (deserialize-homintvector!
-                             (lambda (n) (make-s8vector n))
-                             (lambda (v i n) (s8vector-set! v i n))
-                             1
-                             #t
-                             len))
-                           ((fx= type (u8vector-tag))
-                            (deserialize-homintvector!
-                             (lambda (n) (make-u8vector n))
-                             (lambda (v i n) (u8vector-set! v i n))
-                             1
-                             #f
-                             len))
-                           ((fx= type (s16vector-tag))
-                            (deserialize-homintvector!
-                             (lambda (n) (make-s16vector n))
-                             (lambda (v i n) (s16vector-set! v i n))
-                             2
-                             #t
-                             len))
-                           ((fx= type (u16vector-tag))
-                            (deserialize-homintvector!
-                             (lambda (n) (make-u16vector n))
-                             (lambda (v i n) (u16vector-set! v i n))
-                             2
-                             #f
-                             len))
-                           ((fx= type (s32vector-tag))
-                            (deserialize-homintvector!
-                             (lambda (n) (make-s32vector n))
-                             (lambda (v i n) (s32vector-set! v i n))
-                             4
-                             #t
-                             len))
-                           ((fx= type (u32vector-tag))
-                            (deserialize-homintvector!
-                             (lambda (n) (make-u32vector n))
-                             (lambda (v i n) (u32vector-set! v i n))
-                             4
-                             #f
-                             len))
-                           ((fx= type (s64vector-tag))
-                            (deserialize-homintvector!
-                             (lambda (n) (make-s64vector n))
-                             (lambda (v i n) (s64vector-set! v i n))
-                             8
-                             #t
-                             len))
-                           ((fx= type (u64vector-tag))
-                            (deserialize-homintvector!
-                             (lambda (n) (make-u64vector n))
-                             (lambda (v i n) (u64vector-set! v i n))
-                             8
-                             #f
-                             len))
-                           ((fx= type (f32vector-tag))
-                            (deserialize-homfloatvector!
-                             (lambda (n) (make-f32vector n))
-                             (lambda (v i n) (f32vector-set! v i n))
-                             len
-                             #t))
-                           ((fx= type (f64vector-tag))
-                            (deserialize-homfloatvector!
-                             (lambda (n) (make-f64vector n))
-                             (lambda (v i n) (f64vector-set! v i n))
-                             len
-                             #f))
-                           (else
-                            (err)))))
+                        ((and (macro-case-target ((c C) #t) (else #f))
+                              (fx= x (gchashtable-tag)))
+                         (let* ((len (deserialize-nonneg-fixnum! 0 0))
+                                (flags (deserialize-nonneg-fixnum! 0 0))
+                                (count (deserialize-nonneg-fixnum! 0 0))
+                                (min-count (deserialize-nonneg-fixnum! 0 0))
+                                (free (deserialize-nonneg-fixnum! 0 0)))
+                           (if #f ;;;;;;;;parameters OK?
+                               (err)
+                               (let ((obj (make-vector len (macro-unused-obj))))
+                                 (alloc! obj)
+                                 (macro-gc-hash-table-flags-set!
+                                  obj
+                                  (fxior ;; force rehash at next access!
+                                   flags
+                                   (fx+ (macro-gc-hash-table-flag-key-moved)
+                                        (macro-gc-hash-table-flag-need-rehash))))
+                                 (macro-gc-hash-table-count-set! obj count)
+                                 (macro-gc-hash-table-min-count-set! obj min-count)
+                                 (macro-gc-hash-table-free-set! obj free)
+                                 (let loop ((i (macro-gc-hash-table-key0)))
+                                   (if (fx< i (vector-length obj))
+                                       (let ((key (deserialize!)))
+                                         (if (not (eq? key (macro-unused-obj)))
+                                             (let ((val (deserialize!)))
+                                               (vector-set! obj i key)
+                                               (vector-set! obj (fx+ i 1) val)
+                                               (loop (fx+ i 2)))
+                                             (begin
+                                               (subtype-set!
+                                                obj
+                                                (macro-subtype-weak))
+                                               obj)))
+                                       (err)))))))
 
-                  (else
-                   (err))))
+                        ((fx= x (homvector-tag))
+                         (let* ((len/type
+                                 (deserialize-nonneg-fixnum! 0 0))
+                                (len
+                                 (fxwraplogical-shift-right len/type 4))
+                                (type
+                                 (fxand len/type #x0f)))
+                           (cond ((fx= type (u8vector-tag))
+                                  (deserialize-homintvector!
+                                   (lambda (n) (make-u8vector n))
+                                   (lambda (v i n) (u8vector-set! v i n))
+                                   1
+                                   #f
+                                   len))
+                                 ((macro-if-s8vector (fx= type (s8vector-tag)) #f)
+                                  (deserialize-homintvector!
+                                   (lambda (n) (make-s8vector n))
+                                   (lambda (v i n) (s8vector-set! v i n))
+                                   1
+                                   #t
+                                   len))
+                                 ((macro-if-u16vector (fx= type (u16vector-tag)) #f)
+                                  (deserialize-homintvector!
+                                   (lambda (n) (make-u16vector n))
+                                   (lambda (v i n) (u16vector-set! v i n))
+                                   2
+                                   #f
+                                   len))
+                                 ((macro-if-s16vector (fx= type (s16vector-tag)) #f)
+                                  (deserialize-homintvector!
+                                   (lambda (n) (make-s16vector n))
+                                   (lambda (v i n) (s16vector-set! v i n))
+                                   2
+                                   #t
+                                   len))
+                                 ((macro-if-u32vector (fx= type (u32vector-tag)) #f)
+                                  (deserialize-homintvector!
+                                   (lambda (n) (make-u32vector n))
+                                   (lambda (v i n) (u32vector-set! v i n))
+                                   4
+                                   #f
+                                   len))
+                                 ((macro-if-s32vector (fx= type (s32vector-tag)) #f)
+                                  (deserialize-homintvector!
+                                   (lambda (n) (make-s32vector n))
+                                   (lambda (v i n) (s32vector-set! v i n))
+                                   4
+                                   #t
+                                   len))
+                                 ((macro-if-u64vector (fx= type (u64vector-tag)) #f)
+                                  (deserialize-homintvector!
+                                   (lambda (n) (make-u64vector n))
+                                   (lambda (v i n) (u64vector-set! v i n))
+                                   8
+                                   #f
+                                   len))
+                                 ((macro-if-s64vector (fx= type (s64vector-tag)) #f)
+                                  (deserialize-homintvector!
+                                   (lambda (n) (make-s64vector n))
+                                   (lambda (v i n) (s64vector-set! v i n))
+                                   8
+                                   #t
+                                   len))
+                                 ((macro-if-f32vector (fx= type (f32vector-tag)) #f)
+                                  (deserialize-homfloatvector!
+                                   (lambda (n) (make-f32vector n))
+                                   (lambda (v i n) (f32vector-set! v i n))
+                                   len
+                                   #t))
+                                 ((fx= type (f64vector-tag))
+                                  (deserialize-homfloatvector!
+                                   (lambda (n) (make-f64vector n))
+                                   (lambda (v i n) (f64vector-set! v i n))
+                                   len
+                                   #f))
+                                 (else
+                                  (err)))))
 
-            ((fx>= x (exact-int-tag))
-             (let ((lo (fxand x #x0f)))
-               (if (fx< lo #x0b)
-                   lo
-                   (let* ((len
-                           (if (fx= lo #x0f)
-                               (deserialize-nonneg-fixnum! 0 0)
-                               (fx- #x0f lo)))
-                          (n
-                           (deserialize-exact-int-of-length! len)))
-                     (if (fx= lo #x0e)
-                         n
-                         (begin
-                           (alloc! n)
-                           n))))))
+                        (else
+                         (err))))
 
-            ((fx>= x (subprocedure-tag))
-             (let ((subproc-id
-                    (let ((id (fxand x #x0f)))
-                      (if (fx< id #x0f)
-                          id
-                          (deserialize-nonneg-fixnum! 0 0)))))
-               (deserialize-subprocedure-with-id! subproc-id)))
+                 ((fx>= x (exact-int-tag))
+                  (let ((lo (fxand x #x0f)))
+                    (if (fx< lo #x0b)
+                        lo
+                        (let* ((len
+                                (if (fx= lo #x0f)
+                                    (deserialize-nonneg-fixnum! 0 0)
+                                    (fx- #x0f lo)))
+                               (n
+                                (deserialize-exact-int-of-length! len)))
+                          (if (fx= lo #x0e)
+                              n
+                              (begin
+                                (alloc! n)
+                                n))))))
 
-            ((fx>= x (structure-tag))
-             (deserialize-vector-like!
-              x
-              (lambda (len)
-                (##make-structure
-                 (macro-type-partially-initialized-structure)
-                 len))
-              (lambda (obj i val)
-                (##unchecked-structure-set! obj val i #f #f))))
+                 ((fx>= x (subprocedure-tag))
+                  (let ((subproc-id
+                         (let ((id (fxand x #x0f)))
+                           (if (fx< id #x0f)
+                               id
+                               (deserialize-nonneg-fixnum! 0 0)))))
+                    (deserialize-subprocedure-with-id! subproc-id)))
 
-            ((fx>= x (vector-tag))
-             (deserialize-vector-like!
-              x
-              (lambda (len)
-                (##make-vector len))
-              (lambda (obj i val)
-                (##vector-set! obj i val))))
+                 ((fx>= x (structure-tag))
+                  (deserialize-vector-like!
+                   x
+                   (lambda (len)
+                     (##make-structure
+                      (macro-type-partially-initialized-structure)
+                      len))
+                   (lambda (obj i val)
+                     (##unchecked-structure-set! obj val i #f #f))))
 
-            ((fx>= x (string-tag))
-             (let ((obj (deserialize-string! x #x0f)))
-               (alloc! obj)
-               obj))
+                 ((fx>= x (vector-tag))
+                  (deserialize-vector-like!
+                   x
+                   (lambda (len)
+                     (##make-vector len))
+                   (lambda (obj i val)
+                     (##vector-set! obj i val))))
 
-            (else ;; symbol-tag
-             (let* ((name (deserialize-string! x #x0f))
-                    (obj (string->symbol name)))
-               (create-global-var-if-needed obj)
-               (alloc! obj)
-               obj)))))))
+                 ((fx>= x (string-tag))
+                  (let ((obj (deserialize-string! x #x0f)))
+                    (alloc! obj)
+                    obj))
+
+                 (else ;; symbol-tag
+                  (let* ((name (deserialize-string! x #x0f))
+                         (obj (string->symbol name)))
+                    (create-global-var-if-needed obj)
+                    (alloc! obj)
+                    obj)))))))
 
   (let ((obj (deserialize!)))
     (if (eof?)

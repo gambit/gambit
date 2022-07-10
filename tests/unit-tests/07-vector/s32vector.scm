@@ -219,8 +219,8 @@
 (check-equal? (s32vector-append '#s32(-2147483648 -2) '#s32(0 1 2147483647)) v6)
 (check-equal? (s32vector-append v6 v7 v6) '#s32(-2147483648 -2 0 1 2147483647 0 0 -2147483648 -2 0 1 2147483647))
 
-(check-equal? (append-s32vectors (list v6 v7 v6)) '#s32(-2147483648 -2 0 1 2147483647 0 0 -2147483648 -2 0 1 2147483647))
-(check-equal? (append-s32vectors (list v6 v7 v6) '#s32(1 1 1)) '#s32(-2147483648 -2 0 1 2147483647 1 1 1 0 0 1 1 1 -2147483648 -2 0 1 2147483647))
+(check-equal? (s32vector-concatenate (list v6 v7 v6)) '#s32(-2147483648 -2 0 1 2147483647 0 0 -2147483648 -2 0 1 2147483647))
+(check-equal? (s32vector-concatenate (list v6 v7 v6) '#s32(1 1 1)) '#s32(-2147483648 -2 0 1 2147483647 1 1 1 0 0 1 1 1 -2147483648 -2 0 1 2147483647))
 
 (check-equal? (s32vector-copy '#s32()) '#s32())
 (check-equal? (s32vector-copy v6) v6)
@@ -351,9 +351,9 @@
 (check-tail-exn type-exception? (lambda () (s32vector-append bool v9)))
 (check-tail-exn type-exception? (lambda () (s32vector-append v9 bool)))
 
-(check-tail-exn type-exception? (lambda () (append-s32vectors bool)))
-(check-tail-exn type-exception? (lambda () (append-s32vectors '(1 2 3))))
-(check-tail-exn type-exception? (lambda () (append-s32vectors (list v9 v9) bool)))
+(check-tail-exn type-exception? (lambda () (s32vector-concatenate bool)))
+(check-tail-exn type-exception? (lambda () (s32vector-concatenate '(1 2 3))))
+(check-tail-exn type-exception? (lambda () (s32vector-concatenate (list v9 v9) bool)))
 
 (check-tail-exn type-exception? (lambda () (s32vector-copy bool)))
 (check-tail-exn type-exception? (lambda () (s32vector-copy v9 bool)))
@@ -449,8 +449,8 @@
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (list->s32vector)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (list->s32vector '() '())))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (append-s32vectors)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (append-s32vectors '() '() '())))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s32vector-concatenate)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s32vector-concatenate '() '() '())))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (s32vector-copy)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (s32vector-copy v1 0 0 0)))

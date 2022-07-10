@@ -1,6 +1,6 @@
 (include "#.scm")
 
-(check-same-behavior ("" "##" "~~lib/_prim-string#.scm")
+(check-same-behavior ("" "##" "~~lib/gambit/prim/string#.scm")
 
 ;; R4RS
 
@@ -48,7 +48,7 @@
 
 ;; Gambit
 
-(append-strings '("a" "b" "c"))
+(string-concatenate '("a" "b" "c"))
 (string-ci=?-hash "AbCdE")
 (string-set "abcde" 2 #\x)
 (let ((x (string #\a #\b #\c #\d #\e))) (string-shrink! x 3) x)
