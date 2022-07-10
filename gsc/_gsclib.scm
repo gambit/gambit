@@ -729,7 +729,7 @@
                   linker-name
                   warnings?))
 
-(set! ##c-code ;; avoid errors when using -expansion
+(define ##c-code ;; avoid errors when using -expansion
   (lambda args
     (error "##c-code is not callable dynamically")))
 

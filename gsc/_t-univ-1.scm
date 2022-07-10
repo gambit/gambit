@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-1.scm"
 
-;;; Copyright (c) 2011-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2022 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -2455,7 +2455,7 @@
                (let* ((id
                        (gvm-bb-use ctx (label-lbl-num gvm-instr) (ctx-ns ctx)))
                       (header
-                       (case (label-type gvm-instr)
+                       (case (label-kind gvm-instr)
 
                          ((simple)
                           (^ "\n"))
@@ -2489,7 +2489,7 @@
 
                          (else
                           (compiler-internal-error
-                           "scan-gvm-label, unknown label type"))))
+                           "scan-gvm-label, unknown label kind"))))
                       (entry
                        (bbs-entry-lbl-num bbs))
                       (lbl-num
@@ -2497,7 +2497,7 @@
                       (parent?
                        (= lbl-num entry))
                       (jumpable-type
-                       (case (label-type gvm-instr)
+                       (case (label-kind gvm-instr)
                          ((entry)  (if parent?
                                        'parententrypt
                                        'entrypt))
@@ -2518,7 +2518,7 @@
                                   (^ "\"*** entering " id "\"")))
                                 "")
 
-                            (case (label-type gvm-instr)
+                            (case (label-kind gvm-instr)
 
                               ((entry)
                                (univ-label-entry ctx
@@ -2541,7 +2541,7 @@
                   ctrlpt-id
                   (cons jumpable-type lbl-num))
 
-                 (case (label-type gvm-instr)
+                 (case (label-kind gvm-instr)
                    ((entry return)
                     (let ((node
                            (comment-get
@@ -2557,7 +2557,7 @@
                       (debug-info-add!
                        debug-info-state
                        node
-                       (if (eq? (label-type gvm-instr) 'entry)
+                       (if (eq? (label-kind gvm-instr) 'entry)
                            '()
                            (reverse (frame-slots frame)))
                        frame))))
@@ -2669,7 +2669,7 @@
             ;;(write-gvm-instr gvm-instr ##stderr-port)(newline ##stderr-port);;;;;;;;;;;;;;;;;;
 
             ;; TODO: combine with scan-gvm-opnd
-            (case (gvm-instr-type gvm-instr)
+            (case (gvm-instr-kind gvm-instr)
 
               ((apply)
                (for-each scan-opnd (apply-opnds gvm-instr))
@@ -2700,7 +2700,7 @@
                (if (jump-ret gvm-instr)
                    (todo-lbl-num! (jump-ret gvm-instr)))))
 
-            (case (gvm-instr-type gvm-instr)
+            (case (gvm-instr-kind gvm-instr)
 
               ((apply)
                (let ((loc (apply-loc gvm-instr))
@@ -2946,7 +2946,7 @@
                              (ctx-allow-jump-destination-inlining? ctx)
                              (let* ((bb (lbl-num->bb n bbs))
                                     (label-instr (bb-label-instr bb)))
-                               (and (eq? (label-type label-instr) 'simple)
+                               (and (eq? (label-kind label-instr) 'simple)
                                     (or (= (length (bb-precedents bb)) 1)
                                         (= (length (bb-non-branch-instrs bb)) 0))))) ;; very short destination bb?
                         (let* ((bb (lbl-num->bb n bbs))

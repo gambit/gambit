@@ -1022,19 +1022,19 @@
 
 (define (encode-gvm-instr cgc prev-code code next-code)
   (let* ((gvm-instr (code-gvm-instr code))
-         (instr-type (gvm-instr-type gvm-instr))
+         (instr-kind (gvm-instr-kind gvm-instr))
          (current-frame (gvm-instr-frame gvm-instr))
          (old-frame (codegen-context-frame cgc)))
 
     (codegen-context-current-code-set! cgc code)
     (codegen-context-frame-set! cgc current-frame)
 
-    (if (equal? 'label instr-type)
+    (if (equal? 'label instr-kind)
       (begin
         (reset-registers-status cgc)
         (update-registers-status-from-frame cgc current-frame #f)))
 
-    (case instr-type
+    (case instr-kind
       ((label)  (encode-label-instr  cgc prev-code code next-code))
       ((jump)   (encode-jump-instr   cgc prev-code code next-code))
       ((ifjump) (encode-ifjump-instr cgc prev-code code next-code))
@@ -1044,7 +1044,7 @@
       ((switch) (encode-switch-instr cgc prev-code code next-code))
       (else
         (compiler-error
-          "encode-gvm-instr, unknown 'gvm-instr-type':" instr-type)))
+          "encode-gvm-instr, unknown 'gvm-instr-kind':" instr-kind)))
 
     (update-registers-status-from-frame cgc current-frame old-frame)))
 
@@ -1235,7 +1235,7 @@
          (label-num (label-lbl-num gvm-instr))
          (label (get-proc-label cgc proc label-num)))
 
-    (case (label-type gvm-instr)
+    (case (label-kind gvm-instr)
       ((entry)
         (let ((narg (label-entry-nb-parms gvm-instr))
               (opts (label-entry-opts gvm-instr))
@@ -1269,11 +1269,11 @@
 
 ;; ***** (if)Jump instruction encoding
 
-(define (get-next-label-type proc code)
+(define (get-next-label-kind proc code)
   (let* ((bb-index (bb-lbl-num (code-bb code)))
          (next-bb (get-bb proc (+ 1 bb-index))))
     (if next-bb
-      (bb-label-type next-bb)
+      (bb-label-kind next-bb)
       next-bb)))
 
 (define (encode-jump-instr cgc prev-code code next-code)
@@ -1314,7 +1314,7 @@
       ((and
         (lbl? jmp-opnd)
         (= (lbl-num jmp-opnd) (+ 1 label-num))
-        (equal? 'simple (get-next-label-type proc code)))
+        (equal? 'simple (get-next-label-kind proc code)))
         ;; Jump to next label AND Next label is simple => No need to jump
         #f)
 
@@ -1336,8 +1336,8 @@
          (false-label-num (ifjump-false gvm-instr))
          (true-label (get-proc-label cgc proc true-label-num))
          (false-label (get-proc-label cgc proc false-label-num))
-         (next-label-type (get-next-label-type proc code))
-         (simple? (equal? next-label-type 'simple))
+         (next-label-kind (get-next-label-kind proc code))
+         (simple? (equal? next-label-kind 'simple))
          (true-loc  (if (and simple? (= next-label-num true-label-num))
             #f true-label))
          (false-loc (if (and simple? (= next-label-num false-label-num))
@@ -1395,8 +1395,8 @@
   (if (and code1 code2)
       (let ((gvm-instr1 (code-gvm-instr code1))
             (gvm-instr2 (code-gvm-instr code2)))
-        (and (eq? (gvm-instr-type gvm-instr1) 'apply)
-             (eq? (gvm-instr-type gvm-instr2) 'ifjump)
+        (and (eq? (gvm-instr-kind gvm-instr1) 'apply)
+             (eq? (gvm-instr-kind gvm-instr2) 'ifjump)
              (let* ((prim-sym (proc-obj-name (apply-prim gvm-instr1)))
                     (prim-obj (get-primitive-object cgc prim-sym)))
                (and prim-obj (get-primitive-jump-inlinable? prim-obj)))

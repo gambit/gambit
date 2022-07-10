@@ -2,7 +2,7 @@
 
 ;;; File: "_gvm.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -132,6 +132,16 @@
                 (frame-closed frame)
                 (frame-live frame))))
 
+(define (types-truncate types frame)
+  (and types
+       (locenv-resize
+        types
+        (length (frame-regs frame))
+        (length (frame-slots frame))
+        (length (frame-closed frame))
+        0
+        type-top)))
+
 (define (frame-live? var frame)
   (let ((live (frame-live frame)))
     (if (eq? var closure-env-var)
@@ -178,6 +188,8 @@
             #f ;; jump-inline
             #f ;; specialize
             #f ;; simplify
+            #f ;; type-infer
+            #f ;; type-narrow
             side-effects?
             strict-pat
             lift-pat
@@ -209,13 +221,15 @@
 (define (proc-obj-jump-inline obj)            (vector-ref obj 13))
 (define (proc-obj-specialize obj)             (vector-ref obj 14))
 (define (proc-obj-simplify obj)               (vector-ref obj 15))
-(define (proc-obj-side-effects? obj)          (vector-ref obj 16))
-(define (proc-obj-strict-pat obj)             (vector-ref obj 17))
-(define (proc-obj-lift-pat obj)               (vector-ref obj 18))
-(define (proc-obj-type obj)                   (vector-ref obj 19))
-(define (proc-obj-standard obj)               (vector-ref obj 20))
-(define (proc-obj-dead-end? obj)              (vector-ref obj 21))
+(define (proc-obj-type-infer obj)             (vector-ref obj 16))
+(define (proc-obj-type-narrow obj)            (vector-ref obj 17))
 
+(define (proc-obj-side-effects? obj)          (vector-ref obj 18))
+(define (proc-obj-strict-pat obj)             (vector-ref obj 19))
+(define (proc-obj-lift-pat obj)               (vector-ref obj 20))
+(define (proc-obj-type obj)                   (vector-ref obj 21))
+(define (proc-obj-standard obj)               (vector-ref obj 22))
+(define (proc-obj-dead-end? obj)              (vector-ref obj 23))
 (define (proc-obj-name-set! obj x)            (vector-set! obj 1 x))
 (define (proc-obj-c-name-set! obj x)          (vector-set! obj 2 x))
 (define (proc-obj-primitive?-set! obj x)      (vector-set! obj 3 x))
@@ -231,12 +245,14 @@
 (define (proc-obj-jump-inline-set! obj x)     (vector-set! obj 13 x))
 (define (proc-obj-specialize-set! obj x)      (vector-set! obj 14 x))
 (define (proc-obj-simplify-set! obj x)        (vector-set! obj 15 x))
-(define (proc-obj-side-effects?-set! obj x)   (vector-set! obj 16 x))
-(define (proc-obj-strict-pat-set! obj x)      (vector-set! obj 17 x))
-(define (proc-obj-lift-pat-set! obj x)        (vector-set! obj 18 x))
-(define (proc-obj-type-set! obj x)            (vector-set! obj 19 x))
-(define (proc-obj-standard-set! obj x)        (vector-set! obj 20 x))
-(define (proc-obj-dead-end?-set! obj x)       (vector-set! obj 21 x))
+(define (proc-obj-type-infer-set! obj x)      (vector-set! obj 16 x))
+(define (proc-obj-type-narrow-set! obj x)     (vector-set! obj 17 x))
+(define (proc-obj-side-effects?-set! obj x)   (vector-set! obj 18 x))
+(define (proc-obj-strict-pat-set! obj x)      (vector-set! obj 19 x))
+(define (proc-obj-lift-pat-set! obj x)        (vector-set! obj 20 x))
+(define (proc-obj-type-set! obj x)            (vector-set! obj 21 x))
+(define (proc-obj-standard-set! obj x)        (vector-set! obj 22 x))
+(define (proc-obj-dead-end?-set! obj x)       (vector-set! obj 23 x))
 
 (define (make-pattern nb-parms nb-opts nb-keys rest?)
   (let* ((max-pos-args (- nb-parms nb-keys (if rest? 1 0)))
@@ -343,7 +359,7 @@
     bb))
 
 (define (bb-lbl-num bb)                  (label-lbl-num (vector-ref bb 0)))
-(define (bb-label-type bb)               (if (not bb) (step)) (label-type (vector-ref bb 0)))
+(define (bb-label-kind bb)               (label-kind (vector-ref bb 0)))
 (define (bb-label-instr bb)              (vector-ref bb 0))
 (define (bb-label-instr-set! bb l)       (vector-set! bb 0 l))
 (define (bb-non-branch-instrs bb)        (queue->list (vector-ref bb 1)))
@@ -391,50 +407,61 @@
 
 ;; Virtual machine instruction representation:
 
-(define (gvm-instr-type gvm-instr)    (vector-ref gvm-instr 0))
+(define (gvm-instr-kind gvm-instr)    (vector-ref gvm-instr 0))
 (define (gvm-instr-frame gvm-instr)   (vector-ref gvm-instr 1))
-(define (gvm-instr-comment gvm-instr) (vector-ref gvm-instr 2))
+(define (gvm-instr-types gvm-instr)   (vector-ref gvm-instr 2))
+(define (gvm-instr-types-set! gvm-instr x) (vector-set! gvm-instr 2 x))
+(define (gvm-instr-comment gvm-instr) (vector-ref gvm-instr 3))
+
+(define (gvm-instr-types-set!-returning-instr gvm-instr x)
+  (gvm-instr-types-set! gvm-instr x)
+  gvm-instr)
+
+(define (gvm-instr-copy-types! gvm-instr1 gvm-instr2)
+  (gvm-instr-types-set!-returning-instr
+   gvm-instr2
+   (gvm-instr-types gvm-instr1)))
 
 (define (make-label-simple lbl-num frame comment)
-  (vector 'label frame comment lbl-num 'simple))
+  (vector 'label frame #f comment lbl-num 'simple))
 
 (define (make-label-entry lbl-num nb-parms opts keys rest? closed? frame comment)
-  (vector 'label frame comment lbl-num 'entry nb-parms opts keys rest? closed?))
+  (vector 'label frame #f comment lbl-num 'entry nb-parms opts keys rest? closed?))
 
 (define (make-label-return lbl-num frame comment)
-  (vector 'label frame comment lbl-num 'return))
+  (vector 'label frame #f comment lbl-num 'return))
 
 (define (make-label-task-entry lbl-num frame comment)
-  (vector 'label frame comment lbl-num 'task-entry))
+  (vector 'label frame #f comment lbl-num 'task-entry))
 
 (define (make-label-task-return lbl-num frame comment)
-  (vector 'label frame comment lbl-num 'task-return))
+  (vector 'label frame #f comment lbl-num 'task-return))
 
-(define (label-lbl-num gvm-instr)        (vector-ref gvm-instr 3))
-(define (label-lbl-num-set! gvm-instr n) (vector-set! gvm-instr 3 n))
-(define (label-type gvm-instr)           (vector-ref gvm-instr 4))
+(define (label-lbl-num gvm-instr)        (vector-ref gvm-instr 4))
+(define (label-lbl-num-set! gvm-instr n) (vector-set! gvm-instr 4 n))
+(define (label-kind gvm-instr)           (vector-ref gvm-instr 5))
 
-(define (label-entry-nb-parms gvm-instr) (vector-ref gvm-instr 5))
-(define (label-entry-opts gvm-instr)     (vector-ref gvm-instr 6))
-(define (label-entry-keys gvm-instr)     (vector-ref gvm-instr 7))
-(define (label-entry-rest? gvm-instr)    (vector-ref gvm-instr 8))
-(define (label-entry-closed? gvm-instr)  (vector-ref gvm-instr 9))
+(define (label-entry-nb-parms gvm-instr) (vector-ref gvm-instr 6))
+(define (label-entry-opts gvm-instr)     (vector-ref gvm-instr 7))
+(define (label-entry-keys gvm-instr)     (vector-ref gvm-instr 8))
+(define (label-entry-rest? gvm-instr)    (vector-ref gvm-instr 9))
+(define (label-entry-closed? gvm-instr)  (vector-ref gvm-instr 10))
 
 (define (make-apply prim opnds loc frame comment)
-  (vector 'apply frame comment prim opnds loc))
-(define (apply-prim gvm-instr)  (vector-ref gvm-instr 3))
-(define (apply-opnds gvm-instr) (vector-ref gvm-instr 4))
-(define (apply-loc gvm-instr)   (vector-ref gvm-instr 5))
+  (vector 'apply frame #f comment prim opnds loc))
+(define (apply-prim gvm-instr)  (vector-ref gvm-instr 4))
+(define (apply-opnds gvm-instr) (vector-ref gvm-instr 5))
+(define (apply-loc gvm-instr)   (vector-ref gvm-instr 6))
 
 (define (make-copy opnd loc frame comment)
-  (vector 'copy frame comment opnd loc))
+  (vector 'copy frame #f comment opnd loc))
 
-(define (copy-opnd gvm-instr) (vector-ref gvm-instr 3))
-(define (copy-loc gvm-instr)  (vector-ref gvm-instr 4))
+(define (copy-opnd gvm-instr) (vector-ref gvm-instr 4))
+(define (copy-loc gvm-instr)  (vector-ref gvm-instr 5))
 
 (define (make-close parms frame comment)
-  (vector 'close frame comment parms))
-(define (close-parms gvm-instr) (vector-ref gvm-instr 3))
+  (vector 'close frame #f comment parms))
+(define (close-parms gvm-instr) (vector-ref gvm-instr 4))
 
 (define (make-closure-parms loc lbl opnds)
   (vector loc lbl opnds))
@@ -443,32 +470,39 @@
 (define (closure-parms-opnds x) (vector-ref x 2))
 
 (define (make-ifjump test opnds true false poll? frame comment)
-  (vector 'ifjump frame comment test opnds true false poll?))
-(define (ifjump-test gvm-instr)  (vector-ref gvm-instr 3))
-(define (ifjump-opnds gvm-instr) (vector-ref gvm-instr 4))
-(define (ifjump-true gvm-instr)  (vector-ref gvm-instr 5))
-(define (ifjump-false gvm-instr) (vector-ref gvm-instr 6))
-(define (ifjump-poll? gvm-instr) (vector-ref gvm-instr 7))
+  (vector 'ifjump frame #f comment test opnds true false poll?))
+(define (ifjump-test gvm-instr)  (vector-ref gvm-instr 4))
+(define (ifjump-opnds gvm-instr) (vector-ref gvm-instr 5))
+(define (ifjump-true gvm-instr)  (vector-ref gvm-instr 6))
+(define (ifjump-false gvm-instr) (vector-ref gvm-instr 7))
+(define (ifjump-poll? gvm-instr) (vector-ref gvm-instr 8))
 
 (define (make-switch opnd cases default poll? frame comment)
-  (vector 'switch frame comment opnd cases default poll?))
-(define (switch-opnd gvm-instr)    (vector-ref gvm-instr 3))
-(define (switch-cases gvm-instr)   (vector-ref gvm-instr 4))
-(define (switch-default gvm-instr) (vector-ref gvm-instr 5))
-(define (switch-poll? gvm-instr)   (vector-ref gvm-instr 6))
+  (vector 'switch frame #f comment opnd cases default poll?))
+(define (switch-opnd gvm-instr)    (vector-ref gvm-instr 4))
+(define (switch-cases gvm-instr)   (vector-ref gvm-instr 5))
+(define (switch-default gvm-instr) (vector-ref gvm-instr 6))
+(define (switch-poll? gvm-instr)   (vector-ref gvm-instr 7))
 
 (define (make-switch-case obj lbl) (cons obj lbl))
 (define (switch-case-obj switch-case) (car switch-case))
 (define (switch-case-lbl switch-case) (cdr switch-case))
 
 (define (make-jump opnd ret nb-args poll? safe? frame comment)
-  (vector 'jump frame comment opnd ret nb-args poll? safe?))
-(define (jump-opnd gvm-instr)    (vector-ref gvm-instr 3))
-(define (jump-ret gvm-instr)     (vector-ref gvm-instr 4))
-(define (jump-nb-args gvm-instr) (vector-ref gvm-instr 5))
-(define (jump-poll? gvm-instr)   (vector-ref gvm-instr 6))
-(define (jump-safe? gvm-instr)   (vector-ref gvm-instr 7))
+  (vector 'jump frame #f comment opnd ret nb-args poll? safe?))
+(define (jump-opnd gvm-instr)    (vector-ref gvm-instr 4))
+(define (jump-ret gvm-instr)     (vector-ref gvm-instr 5))
+(define (jump-nb-args gvm-instr) (vector-ref gvm-instr 6))
+(define (jump-poll? gvm-instr)   (vector-ref gvm-instr 7))
+(define (jump-safe? gvm-instr)   (vector-ref gvm-instr 8))
 (define (first-class-jump? gvm-instr) (jump-nb-args gvm-instr))
+
+(define (gvm-instr-branch? gvm-instr)
+  (case (gvm-instr-kind gvm-instr)
+    ((ifjump switch jump)
+     #t)
+    (else
+     #f)))
 
 (define (make-comment)
   (cons 'comment '()))
@@ -526,107 +560,113 @@
      (replacement-lbl-num (closure-parms-lbl p))
      (map clone-gvm-opnd (closure-parms-opnds p))))
 
-  (case (gvm-instr-type instr)
+  (define (clone-instr instr)
+    (case (gvm-instr-kind instr)
 
-    ((label)
-     (case (label-type instr)
+      ((label)
+       (case (label-kind instr)
 
-       ((simple)
-        (make-label-simple
-         (replacement-lbl-num (label-lbl-num instr))
-         (gvm-instr-frame instr)
-         (gvm-instr-comment instr)))
+         ((simple)
+          (make-label-simple
+           (replacement-lbl-num (label-lbl-num instr))
+           (gvm-instr-frame instr)
+           (gvm-instr-comment instr)))
 
-       ((entry)
-        (make-label-entry
-         (replacement-lbl-num (label-lbl-num instr))
-         (label-entry-nb-parms instr)
-         (label-entry-opts instr)
-         (label-entry-keys instr)
-         (label-entry-rest? instr)
-         (label-entry-closed? instr)
-         (gvm-instr-frame instr)
-         (gvm-instr-comment instr)))
+         ((entry)
+          (make-label-entry
+           (replacement-lbl-num (label-lbl-num instr))
+           (label-entry-nb-parms instr)
+           (label-entry-opts instr)
+           (label-entry-keys instr)
+           (label-entry-rest? instr)
+           (label-entry-closed? instr)
+           (gvm-instr-frame instr)
+           (gvm-instr-comment instr)))
 
-       ((return)
-        (make-label-return
-         (replacement-lbl-num (label-lbl-num instr))
-         (gvm-instr-frame instr)
-         (gvm-instr-comment instr)))
+         ((return)
+          (make-label-return
+           (replacement-lbl-num (label-lbl-num instr))
+           (gvm-instr-frame instr)
+           (gvm-instr-comment instr)))
 
-       ((task-entry)
-        (make-label-task-entry
-         (replacement-lbl-num (label-lbl-num instr))
-         (gvm-instr-frame instr)
-         (gvm-instr-comment instr)))
+         ((task-entry)
+          (make-label-task-entry
+           (replacement-lbl-num (label-lbl-num instr))
+           (gvm-instr-frame instr)
+           (gvm-instr-comment instr)))
 
-       ((task-return)
-        (make-label-task-return
-         (replacement-lbl-num (label-lbl-num instr))
-         (gvm-instr-frame instr)
-         (gvm-instr-comment instr)))
+         ((task-return)
+          (make-label-task-return
+           (replacement-lbl-num (label-lbl-num instr))
+           (gvm-instr-frame instr)
+           (gvm-instr-comment instr)))
 
-       (else
-        (compiler-internal-error
-         "gvm-instr-clone-replacing-lbls, unknown 'instr':" instr))))
+         (else
+          (compiler-internal-error
+           "gvm-instr-clone-replacing-lbls, unknown 'instr':" instr))))
 
-    ((apply)
-     (make-apply
-      (apply-prim instr)
-      (map clone-gvm-opnd (apply-opnds instr))
-      (clone-gvm-opnd (apply-loc instr))
-      (gvm-instr-frame instr)
-      (gvm-instr-comment instr)))
+      ((apply)
+       (make-apply
+        (apply-prim instr)
+        (map clone-gvm-opnd (apply-opnds instr))
+        (clone-gvm-opnd (apply-loc instr))
+        (gvm-instr-frame instr)
+        (gvm-instr-comment instr)))
 
-    ((copy)
-     (make-copy
-      (clone-gvm-opnd (copy-opnd instr))
-      (clone-gvm-opnd (copy-loc instr))
-      (gvm-instr-frame instr)
-      (gvm-instr-comment instr)))
+      ((copy)
+       (make-copy
+        (clone-gvm-opnd (copy-opnd instr))
+        (clone-gvm-opnd (copy-loc instr))
+        (gvm-instr-frame instr)
+        (gvm-instr-comment instr)))
 
-    ((close)
-     (make-close
-      (map clone-closure-parms (close-parms instr))
-      (gvm-instr-frame instr)
-      (gvm-instr-comment instr)))
+      ((close)
+       (make-close
+        (map clone-closure-parms (close-parms instr))
+        (gvm-instr-frame instr)
+        (gvm-instr-comment instr)))
 
-    ((ifjump)
-     (make-ifjump
-      (ifjump-test instr)
-      (map clone-gvm-opnd (ifjump-opnds instr))
-      (replacement-lbl-num (ifjump-true instr))
-      (replacement-lbl-num (ifjump-false instr))
-      (ifjump-poll? instr)
-      (gvm-instr-frame instr)
-      (gvm-instr-comment instr)))
+      ((ifjump)
+       (make-ifjump
+        (ifjump-test instr)
+        (map clone-gvm-opnd (ifjump-opnds instr))
+        (replacement-lbl-num (ifjump-true instr))
+        (replacement-lbl-num (ifjump-false instr))
+        (ifjump-poll? instr)
+        (gvm-instr-frame instr)
+        (gvm-instr-comment instr)))
 
-    ((switch)
-     (make-switch
-      (clone-gvm-opnd (switch-opnd instr))
-      (map (lambda (c)
-             (make-switch-case
-              (switch-case-obj c)
-              (replacement-lbl-num (switch-case-lbl c))))
-           (switch-cases instr))
-      (replacement-lbl-num (switch-default instr))
-      (switch-poll? instr)
-      (gvm-instr-frame instr)
-      (gvm-instr-comment instr)))
+      ((switch)
+       (make-switch
+        (clone-gvm-opnd (switch-opnd instr))
+        (map (lambda (c)
+               (make-switch-case
+                (switch-case-obj c)
+                (replacement-lbl-num (switch-case-lbl c))))
+             (switch-cases instr))
+        (replacement-lbl-num (switch-default instr))
+        (switch-poll? instr)
+        (gvm-instr-frame instr)
+        (gvm-instr-comment instr)))
 
-    ((jump)
-     (make-jump
-      (clone-gvm-opnd (jump-opnd instr))
-      (and (jump-ret instr) (replacement-lbl-num (jump-ret instr)))
-      (jump-nb-args instr)
-      (jump-poll? instr)
-      (jump-safe? instr)
-      (gvm-instr-frame instr)
-      (gvm-instr-comment instr)))
+      ((jump)
+       (make-jump
+        (clone-gvm-opnd (jump-opnd instr))
+        (and (jump-ret instr) (replacement-lbl-num (jump-ret instr)))
+        (jump-nb-args instr)
+        (jump-poll? instr)
+        (jump-safe? instr)
+        (gvm-instr-frame instr)
+        (gvm-instr-comment instr)))
 
-    (else
-     (compiler-internal-error
-      "gvm-instr-clone-replacing-lbls, unknown 'instr':" instr))))
+      (else
+       (compiler-internal-error
+        "gvm-instr-clone-replacing-lbls, unknown 'instr':" instr))))
+
+  (gvm-instr-copy-types! instr (clone-instr instr)))
+
+(define (gvm-instr-clone instr)
+  (gvm-instr-clone-replacing-lbls instr (lambda (lbl) lbl)))
 
 ;; Determining basic block references and precedents.
 
@@ -669,7 +709,7 @@
           ((clo? gvm-opnd)
            (scan-opnd (clo-base gvm-opnd)))))
 
-  (case (gvm-instr-type instr)
+  (case (gvm-instr-kind instr)
 
     ((label)
      '())
@@ -713,7 +753,7 @@
 
     (else
      (compiler-internal-error
-      "gvm-instr-determine-refs!, unknown GVM instruction type"))))
+      "gvm-instr-determine-refs!, unknown GVM instruction kind"))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ;;
@@ -729,14 +769,21 @@
 ;; is always the entry point.
 
 (define (bbs-purify bbs)
-  (let loop ((bbs1 bbs))
-    (let* ((bbs2 (bbs-remove-jump-cascades bbs1))
-           (bbs3 (bbs-remove-dead-code bbs2))
-           (bbs4 (bbs-remove-common-code bbs3))
-           (bbs5 (bbs-remove-useless-jumps bbs4)))
-      (if (not (eq? bbs3 bbs5)) ;; iterate until code does not change
-          (loop bbs5)
-          (bbs-order bbs5)))))
+
+  (define (purify-step bbs0)
+    (let* ((bbs1 (bbs-remove-jump-cascades bbs0))
+           (bbs2 (bbs-remove-dead-code bbs1))
+           (bbs3 (bbs-remove-common-code bbs2))
+           (bbs4 (bbs-remove-useless-jumps bbs3)))
+      (cons bbs2 bbs4)))
+
+  (let loop ((bbs0 (bbs-type-specialize (cdr (purify-step bbs)))))
+    (let* ((bbs1-bbs2 (purify-step bbs0))
+           (bbs1 (car bbs1-bbs2))
+           (bbs2 (cdr bbs1-bbs2)))
+      (if (not (eq? bbs1 bbs2)) ;; iterate until code does not change
+          (loop bbs2)
+          (bbs-order bbs2)))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -749,11 +796,11 @@
         (lbl-changed? #f))
 
     (define (empty-bb? bb)
-      (and (eq? (bb-label-type bb) 'simple)     ;; simple label and
+      (and (eq? (bb-label-kind bb) 'simple)     ;; simple label and
            (null? (bb-non-branch-instrs bb))))  ;; no non-branching instrs
 
     (define (jump-to-non-entry-lbl? branch)
-      (and (eq? (gvm-instr-type branch) 'jump)
+      (and (eq? (gvm-instr-kind branch) 'jump)
            (not (first-class-jump? branch)) ;; not a jump to an entry label
            (jump-lbl? branch)))
 
@@ -820,21 +867,25 @@
                         (bbs-new-lbl! new-bbs))
                        (new-bb2
                         (make-bb
-                         (make-label-simple
-                          lbl2
-                          (gvm-instr-frame last-jump/ret)
-                          (gvm-instr-comment last-jump/ret))
+                         (gvm-instr-copy-types!
+                          last-jump/ret
+                          (make-label-simple
+                           lbl2
+                           (gvm-instr-frame last-jump/ret)
+                           (gvm-instr-comment last-jump/ret)))
                          new-bbs)))
                   (bb-branch-instr-set!
                    new-bb
-                   (make-jump
-                    (make-lbl lbl2)
-                    (jump-ret last-jump/ret)
-                    #f
-                    #f
-                    #f
-                    (gvm-instr-frame last-jump/ret)
-                    (gvm-instr-comment last-jump/ret)))
+                   (gvm-instr-copy-types!
+                    last-jump/ret
+                    (make-jump
+                     (make-lbl lbl2)
+                     (jump-ret last-jump/ret)
+                     #f
+                     #f
+                     #f
+                     (gvm-instr-frame last-jump/ret)
+                     (gvm-instr-comment last-jump/ret))))
                   (bb-branch-instr-set! new-bb2 new-branch-instr)))))
 
         (stretchable-vector-set!
@@ -842,7 +893,7 @@
          (bb-lbl-num bb)
          bb)
 
-        (case (gvm-instr-type branch)
+        (case (gvm-instr-kind branch)
 
           ((ifjump) ;; branch is an 'ifjump'
            (set! lbl-changed? #f)
@@ -857,14 +908,16 @@
              (if lbl-changed?
                  (replace-branch-by
                   #f
-                  (make-ifjump
-                   (ifjump-test branch)
-                   (ifjump-opnds branch)
-                   new-true
-                   new-false
-                   new-poll?
-                   (gvm-instr-frame branch)
-                   (gvm-instr-comment branch))))))
+                  (gvm-instr-copy-types!
+                   branch
+                   (make-ifjump
+                    (ifjump-test branch)
+                    (ifjump-opnds branch)
+                    new-true
+                    new-false
+                    new-poll?
+                    (gvm-instr-frame branch)
+                    (gvm-instr-comment branch)))))))
 
           ((switch) ;; branch is a 'switch'
            (set! lbl-changed? #f)
@@ -883,13 +936,15 @@
              (if lbl-changed?
                  (replace-branch-by
                   #f
-                  (make-switch
-                   (switch-opnd branch)
-                   new-cases
-                   new-default
-                   new-poll?
-                   (gvm-instr-frame branch)
-                   (gvm-instr-comment branch))))))
+                  (gvm-instr-copy-types!
+                   branch
+                   (make-switch
+                    (switch-opnd branch)
+                    new-cases
+                    new-default
+                    new-poll?
+                    (gvm-instr-frame branch)
+                    (gvm-instr-comment branch)))))))
 
           ((jump) ;; branch is a 'jump'
            (let ((dest-lbl (jump-lbl? branch)))
@@ -903,7 +958,7 @@
                            (last-branch (bb-branch-instr dest-bb)))
                       (if (and (empty-bb? dest-bb)
                                (or (not poll?) ;;TODO: remove this part
-                                   (case (gvm-instr-type last-branch)
+                                   (case (gvm-instr-kind last-branch)
                                      ((ifjump)
                                       (ifjump-poll? last-branch))
                                      ((switch)
@@ -916,7 +971,10 @@
                           (let* ((new-fs (+ fs (bb-slots-gained dest-bb)))
                                  (new-frame (frame-truncate
                                              (gvm-instr-frame branch)
-                                             new-fs)))
+                                             new-fs))
+                                 (new-types (types-truncate
+                                             (gvm-instr-types branch)
+                                             new-frame)))
 
                             (define (adjust-opnd opnd)
                               (cond ((stk? opnd)
@@ -929,7 +987,7 @@
                                     (else
                                      opnd)))
 
-                            (case (gvm-instr-type last-branch)
+                            (case (gvm-instr-kind last-branch)
 
                               ((ifjump)
                                (let* ((new-poll?
@@ -943,15 +1001,17 @@
                                                   new-poll?)))
                                  (replace-branch-by
                                   last-jump/ret
-                                  (make-ifjump
-                                   (ifjump-test last-branch)
-                                   (map adjust-opnd
-                                        (ifjump-opnds last-branch))
-                                   new-true
-                                   new-false
-                                   new-poll?
-                                   new-frame
-                                   (gvm-instr-comment last-branch)))))
+                                  (gvm-instr-types-set!-returning-instr
+                                   (make-ifjump
+                                    (ifjump-test last-branch)
+                                    (map adjust-opnd
+                                         (ifjump-opnds last-branch))
+                                    new-true
+                                    new-false
+                                    new-poll?
+                                    new-frame
+                                    (gvm-instr-comment last-branch))
+                                   new-types))))
 
                               ((switch)
                                (let* ((new-poll?
@@ -969,13 +1029,15 @@
                                                   new-poll?)))
                                  (replace-branch-by
                                   last-jump/ret
-                                  (make-switch
-                                   (adjust-opnd (switch-opnd last-branch))
-                                   new-cases
-                                   new-default
-                                   new-poll?
-                                   new-frame
-                                   (gvm-instr-comment last-branch)))))
+                                  (gvm-instr-types-set!-returning-instr
+                                   (make-switch
+                                    (adjust-opnd (switch-opnd last-branch))
+                                    new-cases
+                                    new-default
+                                    new-poll?
+                                    new-frame
+                                    (gvm-instr-comment last-branch))
+                                   new-types))))
 
                               ((jump)
                                (let* ((ret
@@ -997,20 +1059,22 @@
                                  (if (not dead-end?)
                                      (replace-branch-by
                                       #f
-                                      (make-jump
-                                       (if (and ret (eqv? opnd return-addr-reg))
-                                           (make-lbl ret)
-                                           (adjust-opnd opnd))
-                                       new-ret
-                                       (jump-nb-args last-branch)
-                                       new-poll?
-                                       (jump-safe? last-branch)
-                                       new-frame
-                                       (gvm-instr-comment last-branch))))))
+                                      (gvm-instr-types-set!-returning-instr
+                                       (make-jump
+                                        (if (and ret (eqv? opnd return-addr-reg))
+                                            (make-lbl ret)
+                                            (adjust-opnd opnd))
+                                        new-ret
+                                        (jump-nb-args last-branch)
+                                        new-poll?
+                                        (jump-safe? last-branch)
+                                        new-frame
+                                        (gvm-instr-comment last-branch))
+                                       new-types)))))
 
                               (else
                                (compiler-internal-error
-                                "bbs-remove-jump-cascades, unknown branch type"))))
+                                "bbs-remove-jump-cascades, unknown branch kind"))))
 
                           (let* ((ret
                                   (and last-jump/ret
@@ -1024,22 +1088,30 @@
                             (if (or (not (eqv? new-ret ret))
                                     (not (eqv? new-poll? poll?))
                                     (not (= lbl dest-lbl)))
-                                (replace-branch-by
-                                 #f
-                                 (make-jump
-                                  (make-lbl lbl)
-                                  new-ret
-                                  (jump-nb-args branch)
-                                  new-poll?
-                                  (jump-safe? branch)
-                                  (frame-truncate
-                                   (gvm-instr-frame branch)
-                                   fs)
-                                  (gvm-instr-comment branch))))))))))))
+                                (let* ((new-frame
+                                        (frame-truncate
+                                         (gvm-instr-frame branch)
+                                         fs))
+                                       (new-types
+                                        (types-truncate
+                                         (gvm-instr-types branch)
+                                         new-frame)))
+                                  (replace-branch-by
+                                   #f
+                                   (gvm-instr-types-set!-returning-instr
+                                    (make-jump
+                                     (make-lbl lbl)
+                                     new-ret
+                                     (jump-nb-args branch)
+                                     new-poll?
+                                     (jump-safe? branch)
+                                     new-frame
+                                     (gvm-instr-comment branch))
+                                    new-types))))))))))))
 
           (else
            (compiler-internal-error
-            "bbs-remove-jump-cascades, unknown branch type")))))
+            "bbs-remove-jump-cascades, unknown branch kind")))))
 
     (bbs-next-lbl-num-set! new-bbs (bbs-next-lbl-num bbs))
     (bbs-entry-lbl-num-set! new-bbs (bbs-entry-lbl-num bbs))
@@ -1097,6 +1169,8 @@
 
 (define (bbs-remove-common-code-aux bbs)
 
+  (define tctx (make-tctx))
+
   (let* ((n (bbs-next-lbl-num bbs))
          (hash-table-length (if (< n 50) 43 403))
          (hash-table (make-vector hash-table-length '()))
@@ -1130,7 +1204,7 @@
       ;; instruction and ignoring labels
       (let ((branch (bb-branch-instr bb)))
         (modulo
-         (case (gvm-instr-type branch)
+         (case (gvm-instr-kind branch)
            ((ifjump)
             (+ (hash-opnds (ifjump-opnds branch))
                (* 10 (hash-prim (ifjump-test branch)))
@@ -1174,6 +1248,22 @@
                      h
                      (add-bb bb (vector-ref hash-table h)))))
 
+    (define (types-merge types1 types2)
+      (and types1
+           types2
+           (locenv-merge types1
+                         types2
+                         0
+                         (lambda (type1 type2)
+                           (type-union tctx type1 type2 #f)))))
+
+    (define (instr-merge instr1 instr2)
+      (let ((new-instr (gvm-instr-clone instr1)))
+        (gvm-instr-types-set!-returning-instr
+         new-instr
+         (types-merge (gvm-instr-types instr1)
+                      (gvm-instr-types instr2)))))
+
     (define (add-bb bb lst) ;; add basic block 'bb' to list of basic blocks
       (if (pair? lst)
           (let ((bb2 (car lst))) ;; pick next basic block in list
@@ -1183,6 +1273,22 @@
             (if (eqv-bb? bb bb2) ;; are they the same?
 
                 (begin
+                  ;; merge types of bb to bb2
+                  (bb-label-instr-set!
+                   bb2
+                   (instr-merge
+                    (bb-label-instr bb2)
+                    (bb-label-instr bb)))
+                  (bb-non-branch-instrs-set!
+                   bb2
+                   (map instr-merge
+                        (bb-non-branch-instrs bb2)
+                        (bb-non-branch-instrs bb)))
+                  (bb-branch-instr-set!
+                   bb2
+                   (instr-merge
+                    (bb-branch-instr bb2)
+                    (bb-branch-instr bb)))
                   (set! changed? #t)
                   lst)
 
@@ -1194,8 +1300,8 @@
                       (extract-common-tail ;; check if tail is the same
                        bb
                        bb2
-                       (lambda (head head2 tail)
-                         (if (<= (length tail) 10) ;; common tail long enough?
+                       (lambda (head1 head2 tail1 tail2)
+                         (if (<= (length tail1) 10) ;; common tail long enough?
 
                              ;; no, so try rest of list
                              (cons bb2 (add-bb bb (cdr lst)))
@@ -1203,25 +1309,38 @@
                              ;; create bb for common tail
                              (let* ((lbl-common
                                      (bbs-new-lbl! new-bbs))
-                                    (branch
+                                    (branch1
                                      (bb-branch-instr bb))
+                                    (branch2
+                                     (bb-branch-instr bb2))
                                     (fs-common
-                                     (need-gvm-instrs tail branch))
+                                     (need-gvm-instrs tail1 branch1))
+                                    (last1
+                                     (if (pair? head1) (car head1) (bb-label-instr bb)))
+                                    (last2
+                                     (if (pair? head2) (car head2) (bb-label-instr bb2)))
                                     (frame-common
                                      (frame-truncate
-                                      (gvm-instr-frame
-                                       (if (null? head)
-                                           (bb-label-instr bb)
-                                           (car head)))
+                                      (gvm-instr-frame last1)
                                       fs-common))
+                                    (types-join1
+                                     (gvm-instr-types last1))
+                                    (types-join2
+                                     (gvm-instr-types last2))
+                                    (types-common
+                                     (types-truncate
+                                      (types-merge types-join1 types-join2)
+                                      frame-common))
                                     (comment-common
-                                     (gvm-instr-comment (car tail)))
+                                     (gvm-instr-comment (car tail1)))
                                     (bb-common
                                      (make-bb
-                                      (make-label-simple
-                                       lbl-common
-                                       frame-common
-                                       comment-common)
+                                      (gvm-instr-types-set!-returning-instr
+                                       (make-label-simple
+                                        lbl-common
+                                        frame-common
+                                        comment-common)
+                                       types-common)
                                       new-bbs))
                                     (new-bb
                                      (make-bb (bb-label-instr bb) new-bbs))
@@ -1229,8 +1348,12 @@
                                      (make-bb (bb-label-instr bb2) new-bbs)))
 
                                ;; create bb for common part
-                               (bb-non-branch-instrs-set! bb-common tail)
-                               (bb-branch-instr-set! bb-common branch)
+                               (bb-non-branch-instrs-set!
+                                bb-common
+                                (map instr-merge tail1 tail2))
+                               (bb-branch-instr-set!
+                                bb-common
+                                (instr-merge branch1 branch2))
 
                                ;; create trimmed bb2 jumping to common part
                                (bb-non-branch-instrs-set!
@@ -1238,29 +1361,33 @@
                                 (reverse head2))
                                (bb-branch-instr-set!
                                 new-bb2
-                                (make-jump
-                                 (make-lbl lbl-common)
-                                 #f
-                                 #f
-                                 #f
-                                 #f
-                                 frame-common
-                                 comment-common))
+                                (gvm-instr-copy-types!
+                                 last2
+                                 (make-jump
+                                  (make-lbl lbl-common)
+                                  #f
+                                  #f
+                                  #f
+                                  #f
+                                  frame-common
+                                  comment-common)))
 
                                ;; create trimmed bb jumping to common part
                                (bb-non-branch-instrs-set!
                                 new-bb
-                                (reverse head))
+                                (reverse head1))
                                (bb-branch-instr-set!
                                 new-bb
-                                (make-jump
-                                 (make-lbl lbl-common)
-                                 #f
-                                 #f
-                                 #f
-                                 #f
-                                 frame-common
-                                 comment-common))
+                                (gvm-instr-copy-types!
+                                 last1
+                                 (make-jump
+                                  (make-lbl lbl-common)
+                                  #f
+                                  #f
+                                  #f
+                                  #f
+                                  frame-common
+                                  comment-common)))
 
                                (set! changed? #t)
 
@@ -1273,14 +1400,15 @@
     (define (extract-common-tail bb1 bb2 cont)
       (let loop ((lst1 (reverse (bb-non-branch-instrs bb1)))
                  (lst2 (reverse (bb-non-branch-instrs bb2)))
-                 (tail '()))
+                 (tail1 '())
+                 (tail2 '()))
         (if (and (pair? lst1) (pair? lst2))
             (let ((i1 (car lst1))
                   (i2 (car lst2)))
               (if (eqv-gvm-instr? i1 i2)
-                  (loop (cdr lst1) (cdr lst2) (cons i1 tail))
-                  (cont lst1 lst2 tail)))
-            (cont lst1 lst2 tail))))
+                  (loop (cdr lst1) (cdr lst2) (cons i1 tail1) (cons i2 tail2))
+                  (cont lst1 lst2 tail1 tail2)))
+            (cont lst1 lst2 tail1 tail2))))
 
     (define (eqv-bb? bb1 bb2)
       (let ((bb1-non-branch (bb-non-branch-instrs bb1))
@@ -1340,19 +1468,20 @@
                           (debug-source? env)
                           (debug-environments? env)))))))
 
-      (let ((type1 (gvm-instr-type instr1))
-            (type2 (gvm-instr-type instr2)))
-        (and (eq? type1 type2)
+      (let ((kind1 (gvm-instr-kind instr1))
+            (kind2 (gvm-instr-kind instr2)))
+        (and (eq? kind1 kind2)
              (frame-eq? (gvm-instr-frame instr1) (gvm-instr-frame instr2))
              (not (has-debug-info? instr1))
              (not (has-debug-info? instr2))
-             (case type1
+;;;;;;;;;;             (equal? (gvm-instr-types instr1) (gvm-instr-types instr2))
+             (case kind1
 
                ((label)
-                (let ((ltype1 (label-type instr1))
-                      (ltype2 (label-type instr2)))
-                  (and (eq? ltype1 ltype2)
-                       (case ltype1
+                (let ((lkind1 (label-kind instr1))
+                      (lkind2 (label-kind instr2)))
+                  (and (eq? lkind1 lkind2)
+                       (case lkind1
                          ((simple return task-entry task-return)
                           #t)
                          ((entry)
@@ -1373,7 +1502,7 @@
                                     (label-entry-closed? instr2))))
                          (else
                           (compiler-internal-error
-                           "eqv-gvm-instr?, unknown label type"))))))
+                           "eqv-gvm-instr?, unknown label kind"))))))
 
                ((apply)
                 (and (eq? (apply-prim instr1) (apply-prim instr2))
@@ -1491,7 +1620,7 @@
 
           ;; is it a non-polling 'jump' to a label without a return address?
 
-          (if (and (eq? (gvm-instr-type branch) 'jump)
+          (if (and (eq? (gvm-instr-kind branch) 'jump)
                    (not (first-class-jump? branch))
                    (not (jump-ret branch))
                    (not (jump-poll? branch))
@@ -1503,8 +1632,9 @@
                 ;; is it a 'simple' label with the same frame as the last
                 ;; non-branch instruction?
 
-                (if (and (eq? (bb-label-type dest-bb) 'simple)
-                         (frame-eq? frame1 frame2)
+                (if (and (eq? (bb-label-kind dest-bb) 'simple)
+;;                         (frame-eq? frame1 frame2) ;; too restrictive, just use frame-size equality
+                         (= (frame-size frame1) (frame-size frame2))
                          (= (length (bb-precedents dest-bb)) 1))
 
                     (let* ((new-bb (make-bb (bb-label-instr bb) new-bbs)))
@@ -1569,13 +1699,13 @@
 
       (define (branches-to-lbl? bb)
         (let ((branch (bb-branch-instr bb)))
-          (case (gvm-instr-type branch)
+          (case (gvm-instr-kind branch)
             ((ifjump) #t)
             ((switch) #t)
             ((jump) (lbl? (jump-opnd branch)))
             (else
              (compiler-internal-error
-              "bbs-order, unknown branch type")))))
+              "bbs-order, unknown branch kind")))))
 
       (define (best-succ bb1 bb2)   ;; heuristic that determines which
         (if (branches-to-lbl? bb1)  ;; bb is most frequently executed
@@ -1588,7 +1718,7 @@
                bb1))))
 
       (let ((branch (bb-branch-instr bb)))
-        (case (gvm-instr-type branch)
+        (case (gvm-instr-kind branch)
 
           ((ifjump)
            (let* ((true-bb
@@ -1613,7 +1743,7 @@
 
           (else
            (compiler-internal-error
-             "bbs-order, unknown branch type")))))
+             "bbs-order, unknown branch kind")))))
 
     ;; schedule a given basic block 'bb' with it's predecessors and
     ;; successors.
@@ -1699,6 +1829,12 @@
 
       (bbs-determine-refs! new-bbs)
 
+;;      (set! new-bbs (bbs-type-analysis! new-bbs))
+
+;;      (bbs-determine-refs! new-bbs)
+
+;;      (bbs-dominators! new-bbs)
+
       new-bbs)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1750,7 +1886,7 @@
              (gvm-instr (code-gvm-instr code)))
         (loop1
          (cdr lst)
-         (case (gvm-instr-type gvm-instr)
+         (case (gvm-instr-kind gvm-instr)
 
            ((label)
             (if (> sn-rest (frame-size (gvm-instr-frame gvm-instr)))
@@ -1776,7 +1912,7 @@
                     (frame-size (gvm-instr-frame branch)))))
 
 (define (need-gvm-instr gvm-instr sn-rest)
-  (case (gvm-instr-type gvm-instr)
+  (case (gvm-instr-kind gvm-instr)
 
     ((label)
      sn-rest)
@@ -1852,6 +1988,1109 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ;;
+;; Dominators:
+;; ----------
+
+(define (bbs-dominators! bbs)
+
+  (define all-lbls '())
+
+  (define (intersect lbl a b)
+    (keep (lambda (x) (or (= x lbl) (memv x b))) a))
+
+  (define (intersect-multi lbl lst)
+    (let loop ((lst lst) (result all-lbls))
+      (if (pair? lst)
+          (loop (cdr lst) (intersect lbl result (car lst)))
+          result)))
+
+  (bbs-for-each-bb
+   (lambda (bb)
+     (set! all-lbls (cons (bb-lbl-num bb) all-lbls)))
+   bbs)
+
+  (set! all-lbls (reverse all-lbls))
+
+  (bbs-for-each-bb
+   (lambda (bb)
+     (let ((label (bb-label-instr bb)))
+       (comment-put! (gvm-instr-comment label) 'doms all-lbls)))
+   bbs)
+
+  (let* ((entry-lbl (bbs-entry-lbl-num bbs))
+         (bb (lbl-num->bb entry-lbl bbs))
+         (label (bb-label-instr bb)))
+    (comment-put! (gvm-instr-comment label) 'doms (list entry-lbl)))
+
+  (let loop ()
+    (define changed? #f)
+    (bbs-for-each-bb
+     (lambda (bb)
+       (if (not (= (bbs-entry-lbl-num bbs) (bb-lbl-num bb)))
+           (let* ((label
+                   (bb-label-instr bb))
+                  (precedents
+                   (bb-precedents bb))
+                  (old
+                   (comment-get (gvm-instr-comment label)
+                                'doms))
+                  (new
+                   (intersect-multi (bb-lbl-num bb)
+                                    (map (lambda (p)
+                                           (comment-get
+                                            (gvm-instr-comment
+                                             (bb-label-instr
+                                              (lbl-num->bb p bbs)))
+                                            'doms))
+                                         precedents))))
+             (if (not (equal? old new))
+                 (begin
+                   (comment-put! (gvm-instr-comment label) 'doms new)
+                   (set! changed? #t))))))
+     bbs)
+    (if changed? (loop)))
+
+  (bbs-for-each-bb
+   (lambda (bb)
+     (let* ((label (bb-label-instr bb))
+            (doms
+             (map (lambda (lbl)
+                    (string-append " " (format-gvm-lbl lbl)))
+                  (comment-get
+                   (gvm-instr-comment label)
+                   'doms))))
+       (if (pair? doms)
+           (comment-put!
+            (gvm-instr-comment label)
+            'cfg-bb-info
+            (list (cons 'info (apply string-append doms)))))))
+   bbs))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;;
+;; Type analysis:
+;; -------------
+
+(define (bbs-type-specialize bbs)
+
+  (define tctx (make-tctx))
+
+  (define new-bbs (make-bbs))
+
+  (define versions (make-table))
+
+  (define (generic-frame-types frame)
+    (let ((nb-regs (length (frame-regs frame)))
+          (nb-slots (length (frame-slots frame)))
+          (nb-closed (length (frame-closed frame))))
+      (make-locenv nb-regs nb-slots nb-closed type-top)))
+
+  (define (resized-frame-types frame types)
+    (locenv-resize
+     types
+     (length (frame-regs frame))
+     (length (frame-slots frame))
+     (length (frame-closed frame))
+     0
+     type-top))
+
+  (define foo '
+        (let* ((bb (lbl-num->bb lbl bbs))
+               (label (bb-label-instr bb))
+               (frame (gvm-instr-frame label))
+               (types (generic-frame-types frame)))
+          ...))
+
+  (define step-count 0)
+
+  (define nb-versions (make-table))
+
+  (define (walk-bbs bbs)
+    (let ()
+
+      (define (reach lbl types-before)
+#;
+        (let ((nbv (table-ref nb-versions lbl 0)))
+          (table-set! nb-versions lbl (+ nbv 1))
+          (if (>= nbv 10)
+              (set! types-before
+                (make-locenv (vector-ref (vector-ref types-before 0) 0)
+                             (vector-ref (vector-ref types-before 0) 1)
+                             (vector-ref (vector-ref types-before 0) 2)
+                             type-top))))
+        (let* ((bb (lbl-num->bb lbl bbs))
+               (label (bb-label-instr bb))
+               (frame (gvm-instr-frame label))
+               (types-before (resized-frame-types frame types-before))
+               (key (list lbl types-before))
+               (x (table-ref versions key #f)))
+          (if x
+              x
+              (let* ((bb (lbl-num->bb lbl bbs))
+                     (new-lbl (bbs-new-lbl! new-bbs))
+                     (step-num (begin (set! step-count (+ 1 step-count)) step-count)))
+                (table-set! versions key new-lbl)
+#;                (print "\n[step " step-num "      #" lbl " ==> #" new-lbl "]\n")
+                (walk-bb bb types-before new-lbl)
+
+;;                (print "\nstep " step-num "      #" lbl " ==>\n")
+;;                (write-bb (lbl-num->bb new-lbl new-bbs) (current-output-port))
+;;                (print "\n")
+
+                new-lbl))))
+
+      (define (walk-bb bb types-before new-lbl)
+;;        (pp `(walk-bb ,(bb-lbl-num bb) ,types-before ,new-lbl))
+
+        (let ((new-bb #f))
+
+          (define show #t)
+          (define (reach* lbl types-before)
+#;
+            (if show
+                (begin
+                  (write-bb new-bb (current-output-port))
+                  (print "...\n")
+                  (set! show #f)))
+            (reach lbl types-before))
+
+        (define (walk-opnd gvm-opnd)
+          (and gvm-opnd
+               (if (lbl? gvm-opnd)
+                   (let* ((lbl
+                           (lbl-num gvm-opnd))
+                          (bb
+                           (lbl-num->bb lbl bbs))
+                          (label
+                           (bb-label-instr bb))
+                          (types-bef
+                           (generic-frame-types (gvm-instr-frame label))))
+                     (make-lbl (reach* lbl types-bef)))
+                   gvm-opnd)))
+
+        (define (walk-loc gvm-opnd)
+          (walk-opnd gvm-opnd))
+
+        (define (walk-instr gvm-instr types-before)
+
+          (define (opnd-type gvm-opnd types)
+            (cond ((not gvm-opnd)
+                   type-top)
+                  ((locenv-loc? gvm-opnd)
+                   (locenv-ref types
+                               (gvm-loc->locenv-index types gvm-opnd)))
+                  ((obj? gvm-opnd)
+                   (make-type-singleton (obj-val gvm-opnd)))
+                  (else
+                   type-top)))
+
+          (let ((types-after
+                 (resized-frame-types
+                  (gvm-instr-frame gvm-instr)
+                  types-before)))
+
+            (case (gvm-instr-kind gvm-instr)
+
+              ((label)
+;;               (pp '****label)
+               (let ((new-instr
+                      (case (label-kind gvm-instr)
+
+                        ((simple)
+                         (make-label-simple
+                          new-lbl
+                          (gvm-instr-frame gvm-instr)
+                          (gvm-instr-comment gvm-instr)))
+
+                        ((entry)
+                         (make-label-entry
+                          new-lbl
+                          (label-entry-nb-parms gvm-instr)
+                          (label-entry-opts gvm-instr)
+                          (label-entry-keys gvm-instr)
+                          (label-entry-rest? gvm-instr)
+                          (label-entry-closed? gvm-instr)
+                          (gvm-instr-frame gvm-instr)
+                          (gvm-instr-comment gvm-instr)))
+
+                        ((return)
+                         (make-label-return
+                          new-lbl
+                          (gvm-instr-frame gvm-instr)
+                          (gvm-instr-comment gvm-instr)))
+
+                        ((task-entry)
+                         (make-label-task-entry
+                          new-lbl
+                          (gvm-instr-frame gvm-instr)
+                          (gvm-instr-comment gvm-instr)))
+
+                        ((task-return)
+                         (make-label-task-return
+                          new-lbl
+                          (gvm-instr-frame gvm-instr)
+                          (gvm-instr-comment gvm-instr)))
+
+                        (else
+                         (compiler-internal-error
+                          "walk-instr, unknown 'gvm-instr':" gvm-instr)))))
+                 (gvm-instr-types-set! new-instr types-after)
+                 new-instr))
+
+              ((apply)
+;;               (pp '****apply)
+               (let* ((prim
+                       (apply-prim gvm-instr))
+#;
+                      (prim
+                       (if (equal? (proc-obj-name prim) "##fx-?")
+                           ((target-prim-info target) (string->canonical-symbol "##fx-"))
+                           prim))
+                      (opnds
+                       (map walk-opnd (apply-opnds gvm-instr)))
+                      (loc
+                       (walk-loc (apply-loc gvm-instr)))
+                      (types-after
+                       (if (locenv-loc? loc)
+                           (let* ((type-infer
+                                   (proc-obj-type-infer prim))
+                                  (dst-loc
+                                   (gvm-loc->locenv-index types-after loc))
+                                  (dst-type
+                                   (if type-infer
+                                       (type-infer
+                                        tctx
+                                        (map (lambda (opnd)
+                                               (opnd-type opnd types-before))
+                                             opnds))
+                                       type-top)))
+                             (locenv-set types-after ;; change type of dst-loc
+                                         dst-loc
+                                         dst-type))
+                           types-after)) ;; no change
+                      (new-instr
+                       (make-apply
+                        prim
+                        opnds
+                        loc
+                        (gvm-instr-frame gvm-instr)
+                        (gvm-instr-comment gvm-instr))))
+                 (gvm-instr-types-set! new-instr types-after)
+                 new-instr))
+
+              ((copy)
+;;               (pp '****copy)
+               (let* ((opnd
+                       (walk-opnd (copy-opnd gvm-instr)))
+                      (loc
+                       (walk-loc (copy-loc gvm-instr)))
+                      (types-after
+                       (if (locenv-loc? loc)
+                           (let ((dst-loc
+                                  (gvm-loc->locenv-index types-after loc)))
+                             (if (locenv-loc? opnd)
+                                 (let ((src-loc
+                                        (gvm-loc->locenv-index types-after opnd)))
+                                   (locenv-copy types-after dst-loc src-loc))
+                                 (locenv-set types-after dst-loc (opnd-type opnd types-before))))
+                           types-after)) ;; no change
+                      (new-instr
+                       (make-copy
+                        opnd
+                        loc
+                        (gvm-instr-frame gvm-instr)
+                        (gvm-instr-comment gvm-instr))))
+                 (gvm-instr-types-set! new-instr types-after)
+                 new-instr))
+
+              ((close)
+;;               (pp '****close) (exit 1)
+               (let loop1 ((lst (close-parms gvm-instr))
+                           (types-after types-after))
+                 (if (pair? lst)
+                     (loop1
+                      (cdr lst)
+                      (let* ((parms (car lst))
+                             (loc (walk-loc (closure-parms-loc parms))))
+                        (if (locenv-loc? loc)
+                            (let ((dst-loc
+                                   (gvm-loc->locenv-index types-after loc)))
+                              (locenv-set types-after
+                                          dst-loc
+                                          type-procedure))
+                            types-after)))
+                     (begin
+                       (for-each
+                        (lambda (parms)
+                          (let ((lbl
+                                 (closure-parms-lbl parms))
+                                (opnds
+                                 (map walk-opnd (closure-parms-opnds parms))))
+                            '...))
+                        (close-parms gvm-instr))
+                       types-after))))
+
+              ((ifjump)
+;;               (pp '****ifjump)
+               (let* ((test
+                       (ifjump-test gvm-instr))
+                      (opnds
+                       (map walk-opnd (ifjump-opnds gvm-instr)))
+                      (type-narrow
+                       (proc-obj-type-narrow test))
+#;
+                      (type-narrow
+                       (if (equal? (proc-obj-name test) "##fixnum?")
+                           (lambda (tctx args) (cons args #f))
+                           type-narrow))
+                      (result-types
+                       (and type-narrow
+                            (type-narrow
+                             tctx
+                             (map (lambda (opnd)
+                                    (opnd-type opnd types-before))
+                                  opnds))))
+                      (new-instr
+                       (if (pair? result-types)
+
+                           (let ()
+
+                             (define (narrow opnd-types)
+                               (and opnd-types
+                                    (locenv-update types-after opnds opnd-types)))
+
+                             (let* ((true-types
+                                     (narrow (car result-types)))
+                                    (true-lbl
+                                     (and true-types
+                                          (reach* (ifjump-true gvm-instr)
+                                                 true-types)))
+                                    (false-types
+                                     (narrow (cdr result-types)))
+                                    (false-lbl
+                                     (and false-types
+                                          (reach* (ifjump-false gvm-instr)
+                                                 false-types))))
+
+                               (if true-lbl
+                                   (if false-lbl
+                                       (make-ifjump
+                                        test
+                                        opnds
+                                        true-lbl
+                                        false-lbl
+                                        (ifjump-poll? gvm-instr)
+                                        (gvm-instr-frame gvm-instr)
+                                        (gvm-instr-comment gvm-instr))
+                                       (make-jump
+                                        (make-lbl true-lbl)
+                                        #f
+                                        #f
+                                        (ifjump-poll? gvm-instr)
+                                        #f
+                                        (gvm-instr-frame gvm-instr)
+                                        (gvm-instr-comment gvm-instr)))
+                                   (if false-lbl
+                                       (make-jump
+                                        (make-lbl false-lbl)
+                                        #f
+                                        #f
+                                        (ifjump-poll? gvm-instr)
+                                        #f
+                                        (gvm-instr-frame gvm-instr)
+                                        (gvm-instr-comment gvm-instr))
+                                       (error)))))
+
+                           (make-ifjump
+                            test
+                            opnds
+                            (reach* (ifjump-true gvm-instr) types-after)
+                            (reach* (ifjump-false gvm-instr) types-after)
+                            (ifjump-poll? gvm-instr)
+                            (gvm-instr-frame gvm-instr)
+                            (gvm-instr-comment gvm-instr)))))
+                 (gvm-instr-types-set! new-instr types-after)
+                 new-instr))
+
+              ((switch)
+;;               (pp '****switch) (exit 1)
+               (let ((opnd (walk-opnd (switch-opnd gvm-instr))))
+                 '(for-each (lambda (c) (scan-obj (switch-case-obj c)))
+                            (switch-cases gvm-instr))
+                 types-after))
+
+              ((jump)
+;;               (pp '****jump)
+               (let* ((opnd
+                       (jump-opnd gvm-instr))
+                      (ret
+                       (jump-ret gvm-instr))
+#;(_                (if (and opnd (lbl? opnd) ret)
+                      (begin (pp '*********error)(exit 1))))
+
+                      (new-instr
+                       (make-jump
+                        (if (lbl? opnd)
+                            (make-lbl (reach* (lbl-num opnd) types-after))
+                            (walk-opnd opnd))
+                        (and ret
+                            (let* ((result-loc
+                                    (gvm-loc->locenv-index types-after (make-reg 1)))
+                                   (types-return
+                                    (locenv-set types-after
+                                                result-loc
+                                                type-top)))
+                              (reach* ret types-return)));;;;;;;;;TODO
+                        (jump-nb-args gvm-instr)
+                        (jump-poll? gvm-instr)
+                        (jump-safe? gvm-instr)
+                        (gvm-instr-frame gvm-instr)
+                        (gvm-instr-comment gvm-instr))))
+                 (gvm-instr-types-set! new-instr types-after)
+                 new-instr)))))
+
+          (set! new-bb
+            (make-bb (walk-instr (bb-label-instr bb) types-before)
+                     new-bbs))
+
+          (let loop ((instrs
+                      (bb-non-branch-instrs bb))
+                     (types-before
+                      (gvm-instr-types (bb-label-instr new-bb))))
+            (if (pair? instrs)
+                (let ((new-instr
+                       (walk-instr (car instrs) types-before)))
+                  (bb-put-non-branch! new-bb new-instr)
+                  (loop (cdr instrs)
+                        (gvm-instr-types new-instr)))
+                (let ((new-instr
+                       (walk-instr (bb-branch-instr bb) types-before)))
+                  (bb-put-branch! new-bb new-instr))))))
+
+      (let* ((entry-lbl
+              (bbs-entry-lbl-num bbs))
+             (entry-bb
+              (lbl-num->bb entry-lbl bbs))
+             (entry-label
+              (bb-label-instr entry-bb))
+             (types-before
+              (generic-frame-types (gvm-instr-frame entry-label))))
+
+        (bbs-entry-lbl-num-set! new-bbs (reach entry-lbl types-before))
+
+        )))
+
+;;  (write-bbs bbs (current-output-port))
+
+  (walk-bbs bbs)
+
+;;  (write-bbs new-bbs (current-output-port))
+
+  new-bbs)
+
+
+
+#;
+(define (bbs-type-analysis!-old bbs)
+
+  (define tctx (make-tctx))
+
+  (define (bbs-init! bbs)
+
+    (define (bb-init! bb)
+
+      (define (instr-init! gvm-instr init)
+        (let* ((frame (gvm-instr-frame gvm-instr))
+               (nb-regs (length (frame-regs frame)))
+               (nb-slots (length (frame-slots frame)))
+               (nb-closed (length (frame-closed frame)))
+               (types (make-locenv nb-regs nb-slots nb-closed init)))
+          (gvm-instr-types-set! gvm-instr types)))
+
+      (let ((init
+             (if (= (bb-lbl-num bb) (bbs-entry-lbl-num bbs))
+                 type-top
+                 type-bot)))
+        (instr-init! (bb-label-instr bb) init))
+      (for-each (lambda (gvm-instr) (instr-init! gvm-instr type-bot))
+                (bb-non-branch-instrs bb))
+      (instr-init! (bb-branch-instr bb) type-bot))
+
+    (bbs-for-each-bb bb-init! bbs))
+
+  (define (bbs-iterate! bbs iteration-count) (pp `(***********iteration-count= ,iteration-count))
+    (let ((visited (make-stretchable-vector 0))
+          (changed? #f))
+
+      (define (reach lbl types)
+        (let* ((bb (lbl-num->bb lbl bbs))
+               (label (bb-label-instr bb))
+               (bb-types (gvm-instr-types label))
+               (widen?
+                (= 1 (stretchable-vector-ref visited lbl)))
+               (new-bb-types
+                (locenv-merge bb-types
+                              types
+                              0
+                              (lambda (type1 type2)
+                                (type-union tctx type1 type2 widen?)))))
+
+          (pp `(----------------------reach
+                ,lbl
+                ,types
+                ,bb-types
+                ,new-bb-types))
+          (if (not (equal? bb-types new-bb-types)) (set! changed? #t))
+
+          (gvm-instr-types-set! label new-bb-types)
+
+          (if (= 0 (stretchable-vector-ref visited lbl))
+              (begin
+                (stretchable-vector-set! visited lbl 1)
+                (bb-analyze! bb)
+                (stretchable-vector-set! visited lbl 2)))))
+
+      (define (bb-analyze! bb)
+
+        (define (scan-opnd gvm-opnd)
+          gvm-opnd)
+
+        (define (instr-analyze! gvm-instr types)
+
+(let ((xxx
+          (let ((after
+                 (let ((frame (gvm-instr-frame gvm-instr)))
+                   (locenv-resize
+                    types
+                    (length (frame-regs frame))
+                    (length (frame-slots frame))
+                    (length (frame-closed frame))
+                    0
+                    type-bot))))
+
+            (define (opnd-type gvm-opnd types)
+              (cond ((not gvm-opnd)
+                     type-top)
+                    ((locenv-loc? gvm-opnd)
+                     (locenv-ref types (gvm-loc->locenv-index types gvm-opnd)))
+                    ((obj? gvm-opnd)
+                     (make-type-singleton (obj-val gvm-opnd)))
+                    (else
+                     type-top)))
+
+            (case (gvm-instr-kind gvm-instr)
+
+              ((apply)
+               (let ((opnds (map scan-opnd (apply-opnds gvm-instr)))
+                     (loc (scan-opnd (apply-loc gvm-instr))))
+                 (if (locenv-loc? loc)
+                     (let ((dst-loc
+                            (gvm-loc->locenv-index after loc))
+                           (type-infer
+                            (proc-obj-type-infer (apply-prim gvm-instr))))
+                       (locenv-set after
+                                   dst-loc
+                                   (if type-infer
+                                       (type-infer
+                                        tctx
+                                        (map (lambda (opnd)
+                                               (opnd-type opnd types))
+                                             opnds))
+                                       type-top)))
+                     after)))
+
+              ((copy)
+               (let* ((opnd (scan-opnd (copy-opnd gvm-instr)))
+                      (loc (scan-opnd (copy-loc gvm-instr))))
+                 (pp (list 'xxxxxxxxx (format-gvm-opnd loc) (format-gvm-opnd opnd)))
+                 (if (locenv-loc? loc)
+                     (let ((dst-loc
+                            (gvm-loc->locenv-index after loc)))
+                       (if (locenv-loc? opnd)
+                           (let ((src-loc
+                                  (gvm-loc->locenv-index after opnd)))
+                             (locenv-copy after dst-loc src-loc))
+                           (locenv-set after dst-loc (opnd-type opnd types))))
+                     after)))
+
+              ((close)
+               (let loop1 ((lst (close-parms gvm-instr)) (after after))
+                 (if (pair? lst)
+                     (loop1
+                      (cdr lst)
+                      (let* ((parms (car lst))
+                             (loc (scan-opnd (closure-parms-loc parms))))
+                        (if (locenv-loc? loc)
+                            (let ((dst-loc
+                                   (gvm-loc->locenv-index after loc)))
+                              (locenv-set after
+                                          dst-loc
+                                          type-procedure))
+                            after)))
+                     (begin
+                       (for-each
+                        (lambda (parms)
+                          (let ((lbl
+                                 (closure-parms-lbl parms))
+                                (opnds
+                                 (map scan-opnd (closure-parms-opnds parms))))
+                            '...))
+                        (close-parms gvm-instr))
+                       after))))
+
+              ((ifjump)
+               (let* ((opnds
+                       (map scan-opnd (ifjump-opnds gvm-instr)))
+                      (type-narrow
+                       (proc-obj-type-narrow (ifjump-test gvm-instr)))
+                      (result
+                       (and type-narrow
+                            (type-narrow
+                             tctx
+                             (map (lambda (opnd)
+                                    (opnd-type opnd types))
+                                  opnds)))))
+                 (if (pair? result)
+                     (let ()
+                       (define (narrow where opnd-types)
+                         (and opnd-types
+                              (let ((x (locenv-update after opnds opnd-types)))
+                                (pp `(=========== ,where ,x))
+                                x)))
+                       (let* ((true (narrow 't (car result)))
+                              (false (narrow 'f (cdr result))))
+                         (if true (reach (ifjump-true gvm-instr) true))
+                         (if false (reach (ifjump-false gvm-instr) false))
+                         after))
+                     (begin
+                       (reach (ifjump-true gvm-instr) after)
+                       (reach (ifjump-false gvm-instr) after)
+                       after))))
+
+              ((switch)
+               (let ((opnd (scan-opnd (switch-opnd gvm-instr))))
+                 '(for-each (lambda (c) (scan-obj (switch-case-obj c)))
+                            (switch-cases gvm-instr))
+                 after))
+
+              ((jump)
+               (let ((opnd (scan-opnd (jump-opnd gvm-instr))))
+                 (if (lbl? opnd)
+                     (reach (lbl-num opnd) after))
+                 after))))))
+  (gvm-instr-types-set! gvm-instr xxx) (pp xxx)
+  xxx))
+
+        (pp `(bb-analyze! ,(bb-lbl-num bb)))
+
+        (let loop ((lst (bb-non-branch-instrs bb))
+                   (types (gvm-instr-types (bb-label-instr bb))))
+          (pp `(types= ,types))
+          (if (pair? lst)
+              (loop (cdr lst) (instr-analyze! (car lst) types))
+              (instr-analyze! (bb-branch-instr bb) types))))
+
+      (pp iteration-count)
+      (bb-analyze! (lbl-num->bb (bbs-entry-lbl-num bbs) bbs))
+
+      (if changed?
+          (bbs-iterate! bbs (+ 1 iteration-count)))))
+
+
+
+    ;;deprecated
+    (define (bb-iterate2! bb)
+      (let* ((branch
+              (bb-branch-instr bb))
+             (frame
+              (gvm-instr-frame branch))
+             (fs
+              (frame-size frame))
+             (sn
+              (case (gvm-instr-kind branch)
+                ((ifjump)
+                 (need-gvm-opnds (ifjump-opnds gvm-instr) fs))
+                ((switch)
+                 (need-gvm-opnd (switch-opnd gvm-instr) fs))
+                ((jump)
+                 (need-gvm-opnd (jump-opnd gvm-instr) fs))
+                (else
+                 (compiler-internal-error
+                  "bbs-type-analysis!, unknown branch kind"))))
+             (types
+              (make-locenv (length (frame-regs frame))
+                           sn-rest
+                           (length (frame-closed frame)))))
+        (gvm-instr-types-set! branch types)))
+
+  (bbs-init! bbs)
+  (bbs-iterate! bbs 1))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;;
+;; Environments for virtual machine locations:
+;; ------------------------------------------
+
+;; The locenv structure is used to track the properties (currently
+;; only the type) of the contents of virtual machine locations
+;; (registers, stack slot and closed variables).  It also tracks if
+;; two locations are in the same equivalence class (i.e. they contain
+;; the same value).  There could be different equivalence classes for
+;; eq?, eqv?, etc but currently only eq? equivalence is tracked.
+
+(define locenv-start-regs 1)
+(define locenv-entry-size 2)
+
+(define (locenv-loc? gvm-opnd)
+  (and gvm-opnd
+       (or (reg? gvm-opnd)
+           (stk? gvm-opnd)
+           (clo? gvm-opnd))))
+
+(define (gvm-loc->locenv-index locenv gvm-loc)
+  (if (reg? gvm-loc)
+      (+ locenv-start-regs
+         (* locenv-entry-size (reg-num gvm-loc)))
+      (let ((start-slots
+             (+ locenv-start-regs
+                (* locenv-entry-size
+                   (vector-ref (vector-ref locenv 0) 0)))))
+        (if (stk? gvm-loc)
+            (+ start-slots
+               (* locenv-entry-size
+                  (- (stk-num gvm-loc) 1)))
+            ;; (clo? gvm-loc) must be true
+            (let ((start-closed
+                   (+ start-slots
+                      (* locenv-entry-size
+                         (vector-ref (vector-ref locenv 0) 1)))))
+              (+ start-closed
+                 (* locenv-entry-size
+                    (- (clo-index gvm-loc) 1))))))))
+
+(define (locenv-val-eqv? locenv val1 val2)
+  (type-eqv? val1 val2))
+
+(define (make-locenv nb-regs nb-slots nb-closed init)
+  (let* ((locenv
+          (make-locenv-from-lengths (vector nb-regs nb-slots nb-closed)))
+         (len
+          (+ locenv-start-regs
+             (* locenv-entry-size (+ nb-regs nb-slots nb-closed)))))
+    (let loop ((i locenv-start-regs))
+      (if (< i len)
+          (begin
+            (vector-set! locenv i i)
+            (vector-set! locenv (+ i 1) init)
+            (loop (+ i locenv-entry-size)))
+          locenv))))
+
+(define (make-locenv-from-lengths lengths)
+  (let* ((nb-regs (vector-ref lengths 0))
+         (nb-slots (vector-ref lengths 1))
+         (nb-closed (vector-ref lengths 2))
+         (len (+ locenv-start-regs
+                 (* locenv-entry-size (+ nb-regs nb-slots nb-closed))))
+         (locenv (make-vector len 0)))
+    (vector-set! locenv 0 lengths)
+    locenv))
+
+(define (locenv-resize locenv nb-regs nb-slots nb-closed slot-shift init)
+  (let ((lengths (vector-ref locenv 0)))
+    (if (and (= nb-regs (vector-ref lengths 0))
+             (= nb-slots (vector-ref lengths 1))
+             (= nb-closed (vector-ref lengths 2))
+             (= slot-shift 0))
+        locenv ;; no change
+        (locenv-resize-from-lengths locenv
+                                    (vector nb-regs nb-slots nb-closed)
+                                    slot-shift
+                                    init))))
+
+(define (locenv-resize-from-lengths locenv new-lengths slot-shift init)
+  (let* ((new-locenv
+          (make-locenv-from-lengths new-lengths))
+         (lengths
+          (vector-ref locenv 0))
+         (nb-regs
+          (vector-ref lengths 0))
+         (nb-slots
+          (vector-ref lengths 1))
+         (nb-closed
+          (vector-ref lengths 2))
+         (start-slots
+          (+ locenv-start-regs (* locenv-entry-size nb-regs)))
+         (start-closed
+          (+ start-slots (* locenv-entry-size nb-slots)))
+         (new-nb-regs
+          (vector-ref new-lengths 0))
+         (new-nb-slots
+          (vector-ref new-lengths 1))
+         (new-nb-closed
+          (vector-ref new-lengths 2))
+         (new-start-slots
+          (+ locenv-start-regs (* locenv-entry-size new-nb-regs)))
+         (new-start-closed
+          (+ new-start-slots (* locenv-entry-size new-nb-slots)))
+         (len
+          (+ locenv-start-regs
+             (* locenv-entry-size (+ nb-regs nb-slots nb-closed)))))
+
+    (define (index->new i) ;; map index from locenv to new-locenv
+      (cond ((< i start-slots)
+             (and (< i new-start-slots) i))
+            ((< i start-closed)
+             (let ((i* (+ (- i start-slots) (* locenv-entry-size slot-shift))))
+               (and (>= i* 0)
+                    (< i* (* locenv-entry-size new-nb-slots))
+                    (+ i* new-start-slots))))
+            (else
+             (let ((i* (- i start-closed)))
+               (and (< i* (* locenv-entry-size new-nb-closed))
+                    (+ i* new-start-closed))))))
+
+    (let loop1 ((i locenv-start-regs))
+      (if (< i len)
+          (let ((j (index->new i)))
+            (if (not j) ;; location removed by resize?
+                (loop1 (+ i locenv-entry-size))
+                (let ((ec (vector-ref locenv i)))
+                  (if (= ec i) ;; alone in equivalence class
+                      (begin
+                        (vector-set!
+                         new-locenv
+                         j
+                         j)
+                        (vector-set!
+                         new-locenv
+                         (+ j 1)
+                         (vector-ref locenv (+ i 1)))
+                        (loop1 (+ i locenv-entry-size)))
+                      (let ((x (vector-ref new-locenv j)))
+                        (if (not (eqv? x 0)) ;; not head of equivalence class
+                            ;; new-locenv already ok for this i
+                            (loop1 (+ i locenv-entry-size))
+                            (let loop2 ((prev i)
+                                        (curr ec)
+                                        (new-prev j))
+                              (if (= curr i) ;; finished iterating over class?
+                                  (begin
+                                    (vector-set!
+                                     new-locenv
+                                     new-prev
+                                     j)
+                                    (vector-set!
+                                     new-locenv
+                                     (+ new-prev 1)
+                                     (vector-ref locenv (+ prev 1)))
+                                    (loop1 (+ i locenv-entry-size)))
+                                  (let ((new-curr (index->new curr)))
+                                    (if (not new-curr) ;; removed by resize?
+                                        (loop2 prev
+                                               (vector-ref locenv curr)
+                                               new-prev)
+                                        (begin
+                                          (vector-set!
+                                           new-locenv
+                                           new-prev
+                                           new-curr)
+                                          (vector-set!
+                                           new-locenv
+                                           (+ new-prev 1)
+                                           (vector-ref locenv (+ prev 1)))
+                                          (loop2 curr
+                                                 (vector-ref locenv curr)
+                                                 new-curr))))))))))))
+          (let loop3 ((j locenv-start-regs))
+            (if (< j (vector-length new-locenv))
+                (begin
+                  (if (eqv? (vector-ref new-locenv j) 0)
+                      (begin
+                        (vector-set!
+                         new-locenv
+                         j
+                         j)
+                        (vector-set!
+                         new-locenv
+                         (+ j 1)
+                         init)))
+                  (loop3 (+ j locenv-entry-size)))
+                new-locenv))))))
+
+(define (locenv-merge locenv other-locenv slot-shift union)
+  (let* ((lengths
+          (vector-ref locenv 0))
+         (nb-regs
+          (vector-ref lengths 0))
+         (nb-slots
+          (vector-ref lengths 1))
+         (nb-closed
+          (vector-ref lengths 2))
+         (new-locenv
+          (make-locenv-from-lengths lengths))
+         (start-slots
+          (+ locenv-start-regs (* locenv-entry-size nb-regs)))
+         (start-closed
+          (+ start-slots (* locenv-entry-size nb-slots)))
+         (other-lengths
+          (vector-ref other-locenv 0))
+         (other-nb-regs
+          (vector-ref other-lengths 0))
+         (other-nb-slots
+          (vector-ref other-lengths 1))
+         (other-nb-closed
+          (vector-ref other-lengths 2))
+         (other-start-slots
+          (+ locenv-start-regs (* locenv-entry-size other-nb-regs)))
+         (other-start-closed
+          (+ other-start-slots (* locenv-entry-size other-nb-slots)))
+         (len
+          (+ locenv-start-regs
+             (* locenv-entry-size (+ nb-regs nb-slots nb-closed)))))
+
+    (define (index->other i) ;; map index from locenv to other-locenv
+      (cond ((< i start-slots)
+             (and (< i other-start-slots) i))
+            ((< i start-closed)
+             (let ((i* (+ (- i start-slots) (* locenv-entry-size slot-shift))))
+               (and (>= i* 0)
+                    (< i* (* locenv-entry-size other-nb-slots))
+                    (+ i* other-start-slots))))
+            (else
+             (let ((i* (- i start-closed)))
+               (and (< i* (* locenv-entry-size other-nb-closed))
+                    (+ i* other-start-closed))))))
+
+    (let loop ((i locenv-start-regs))
+      (if (< i len)
+          (let* ((j (index->other i))
+                 (type (vector-ref locenv (+ i 1))))
+            (vector-set! new-locenv i i) ;; TODO: merge ec
+            (vector-set!
+             new-locenv
+             (+ i 1)
+             (if (not j)
+                 type
+                 (union type (vector-ref other-locenv (+ j 1)))))
+            (loop (+ i locenv-entry-size)))
+          new-locenv))))
+
+(define (locenv-ec-detach locenv loc)
+
+  ;; This procedure removes the location loc from its current
+  ;; equivalence class.
+
+  (let ((new-locenv (vector-copy locenv)))
+    (locenv-ec-detach! new-locenv loc)))
+
+(define (locenv-ec-detach! locenv loc)
+
+  ;; This procedure removes the location loc from its current
+  ;; equivalence class.
+
+  (let ((ec (vector-ref locenv loc)))
+    (if (= ec loc) ;; already in its own equivalence class?
+        locenv
+        (begin
+          (vector-set! locenv loc loc)
+          (let loop ((prev loc) (curr ec))
+            (if (= curr loc)
+                (begin
+                  (vector-set! locenv prev ec)
+                  locenv)
+                (loop curr (vector-ref locenv curr))))))))
+
+(define (locenv-add! locenv loc-dst loc-src)
+
+  ;; This procedure adds the location loc-dst to the equivalence
+  ;; class of the location loc-src.
+
+  (vector-set! locenv loc-dst (vector-ref locenv loc-src))
+  (vector-set! locenv (+ loc-dst 1) (vector-ref locenv (+ loc-src 1)))
+  (vector-set! locenv loc-src loc-dst)
+  locenv)
+
+(define (locenv-copy locenv loc-dst loc-src)
+
+  ;; This procedure adds the location loc-dst to the equivalence
+  ;; class of the loc-src location (after removing the loc-dst
+  ;; location from its current equivalence class).
+
+  ;; As an optimization, check if the src and dst locations are in the
+  ;; same equivalence class and the only ones in that class (this also
+  ;; covers the case src = dst).
+
+  (if (and (= (vector-ref locenv loc-src) loc-dst)
+           (= (vector-ref locenv loc-dst) loc-src))
+
+      locenv ;; nothing needs to change
+
+      (let ((new-locenv (vector-copy locenv)))
+        (locenv-ec-detach! new-locenv loc-dst)
+        (locenv-add! new-locenv loc-dst loc-src))))
+
+(define (locenv-set locenv loc val)
+
+  ;; This procedure stores val in the location loc after removing it
+  ;; from its current equivalence class.
+
+  ;; As an optimization, check if the location loc is alone in its
+  ;; equivalence class and it currently contains val.
+
+  (if (and (= (vector-ref locenv loc) loc)
+           (locenv-val-eqv? locenv (vector-ref locenv (+ loc 1)) val))
+
+      locenv ;; nothing needs to change
+
+      (let ((new-locenv (vector-copy locenv)))
+        (locenv-ec-detach! new-locenv loc)
+        (vector-set! new-locenv (+ loc 1) val)
+        new-locenv)))
+
+(define (locenv-update locenv opnds vals)
+
+  ;; This procedure stores the values in vals in the corresponding
+  ;; locations in opnds and the locations in its equivalence class.
+
+  ;; As an optimization, only create a new locenv if there is a change.
+
+  (let loop1 ((opnds opnds)
+              (vals vals)
+              (new-locenv #f))
+    (if (pair? opnds)
+        (let ((opnd (car opnds)))
+          (if (locenv-loc? opnd)
+              (let* ((le (or new-locenv locenv))
+                     (loc (gvm-loc->locenv-index le opnd))
+                     (val (vector-ref le (+ loc 1)))
+                     (new-val (car vals)))
+                (if (locenv-val-eqv? le val new-val)
+                    (loop1 (cdr opnds)
+                           (cdr vals)
+                           new-locenv)
+                    (let ((new-locenv
+                           (or new-locenv
+                               (vector-copy locenv))))
+                      (let loop2 ((i (vector-ref new-locenv loc)))
+                        (vector-set! new-locenv (+ i 1) new-val)
+                        (if (= i loc)
+                            (loop1 (cdr opnds)
+                                   (cdr vals)
+                                   new-locenv)
+                            (loop2 (vector-ref new-locenv i)))))))
+              (loop1 (cdr opnds)
+                     (cdr vals)
+                     new-locenv)))
+        (or new-locenv locenv))))
+
+(define (locenv-ref locenv loc)
+
+  ;; This procedure retrieves the value associated with the location loc.
+
+  (vector-ref locenv (+ loc 1)))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;;
 ;; Basic block writing:
 ;; -------------------
 
@@ -1871,7 +3110,7 @@
 
 (define (useful-gvm-instr? gvm-instr)
   (or show-frame-padding?
-      (not (and (eq? (gvm-instr-type gvm-instr) 'copy)
+      (not (and (eq? (gvm-instr-kind gvm-instr) 'copy)
                 (not (copy-opnd gvm-instr))))))
 
 (define (write-bbs bbs port)
@@ -1972,9 +3211,10 @@
 
   (define dd (make-dot-digraph (proc-obj-name (car procs))))
 
-  (define node-bgcolor       dot-digraph-gray80)
-  (define node-type-bgcolor  dot-digraph-gray60)
   (define node-entry-bgcolor dot-digraph-black)
+  (define node-type-bgcolor  dot-digraph-gray60)
+  (define node-info-bgcolor  dot-digraph-gray70)
+  (define node-bgcolor       dot-digraph-gray80)
 
   (let ((proc-tbl (make-table)))
 
@@ -2013,8 +3253,12 @@
             (set! port-count (+ port-count 1))
             (number->string port-count))
 
-          (define (decorate-instr lst last-instr?)
-            (let ((line-id (gen-port)))
+          (define nb-ports 0) ;; need to count ports to work around dot bug
+
+          (define (decorate-instr code-and-rest last-instr?)
+            (let ((code (car code-and-rest))
+                  (rest (cdr code-and-rest))
+                  (line-id (gen-port)))
 
               (define (target-id ref)
                 (or (table-ref proc-tbl ref #f)
@@ -2039,76 +3283,126 @@
               (dot-digraph-gen-row
                (dot-digraph-gen-col
                 #f
-                #f
                 "left"
                 (dot-digraph-gen-table
                  line-id
                  #f
                  (dot-digraph-gen-row
-                  (let loop ((before
-                              (list (dot-digraph-gen-html-escape
-                                     (car lst))))
-                             (lst
-                              (cdr lst)))
-                    (if (pair? lst)
-                        (let ((x (car lst)))
+                  (let loop1 ((before
+                               (list (dot-digraph-gen-html-escape
+                                      (car code))))
+                              (code
+                               (cdr code)))
+                    (if (pair? code)
+                        (let ((x (car code)))
                           (if (reference? x)
                               (let ((jump?
                                      (and (pair? before)
                                           (equal? (car before) ""))))
                                 (if last-instr?
                                     (let ((ref-id (gen-port)))
+                                      (set! nb-ports (+ nb-ports 1))
                                       (add-ref ref-id
                                                ":s"
                                                (target-id x)
                                                (not jump?))
                                       `(,@(dot-digraph-gen-col
                                            #f
-                                           #f
                                            "left"
                                            (reverse before))
                                         ,@(dot-digraph-gen-col
                                            ref-id
-                                           #f
                                            "left"
                                            `(,(dot-digraph-gen-html-escape x)))
-                                        ,@(loop '()
-                                                (cdr lst))))
+                                        ,@(loop1 '()
+                                                 (cdr code))))
                                     (begin
                                       (add-ref line-id
                                                ":w"
                                                (target-id x)
                                                (not jump?))
-                                      (loop (cons
-                                             (dot-digraph-gen-html-escape x)
-                                             before)
-                                            (cdr lst)))))
-                              (loop (cons
-                                     (dot-digraph-gen-html-escape x)
-                                     before)
-                                    (cdr lst))))
-                        (dot-digraph-gen-col
-                         #f
-                         #t
-                         "left"
-                         (reverse before))))))))))
+                                      (loop1 (cons
+                                              (dot-digraph-gen-html-escape x)
+                                              before)
+                                             (cdr code)))))
+                              (loop1 (cons
+                                      (dot-digraph-gen-html-escape x)
+                                      before)
+                                     (cdr code))))
+                        `(,@(dot-digraph-gen-col
+                             #f
+                             "left"
+                             (reverse before))
+                          ,@(if (pair? rest)
+                                (let loop2 ((n (* 2 (if last-instr? 0 nb-ports))))
+                                  (if (> n 0)
+                                      `(,@(dot-digraph-gen-col
+                                           #f
+                                           "left"
+                                           `())
+                                        ,@(loop2 (- n 1)))
+                                      (dot-digraph-gen-col
+                                       #f
+                                       "left"
+                                       (dot-digraph-gen-text-style
+                                        'comment
+                                        (map dot-digraph-gen-html-escape
+                                             rest)))))
+                                `()))))))))))
 
-          (let ((instrs
-                 (cons (format-gvm-instr (bb-label-instr bb))
-                       (append (map format-gvm-instr
-                                    (keep useful-gvm-instr?
-                                          (bb-non-branch-instrs bb)))
-                               (list
-                                (format-gvm-instr (bb-branch-instr bb))))))
-                (gv-bb-info
-                 (append
-                  (if (= (bbs-entry-lbl-num bbs)
-                         (bb-lbl-num bb))
-                      (list (cons 'entry (format-gvm-obj proc)))
-                      '())
-                  (or (comment-get (gvm-instr-comment (bb-label-instr bb))
-                                   'gv-bb-info)
-                      '()))))
+          (define (format-instr gvm-instr)
+            (cons gvm-instr
+                  (format-gvm-instr-code gvm-instr)))
+
+          (define (format-length lst)
+            (let loop ((lst lst) (len 0))
+              (if (pair? lst)
+                  (loop (cdr lst) (+ len (string-length (car lst))))
+                  len)))
+
+          (define (max-format-length lst)
+            (let loop ((lst lst) (len 0))
+              (if (pair? lst)
+                  (loop (cdr lst) (max len (format-length (car lst))))
+                  len)))
+
+          (let* ((gvm-instrs
+                  (cons (bb-label-instr bb)
+                        (append (keep useful-gvm-instr?
+                                      (bb-non-branch-instrs bb))
+                                (list
+                                 (bb-branch-instr bb)))))
+                 (code-rows
+                  (map format-gvm-instr-code gvm-instrs))
+                 (rows
+                  (if #f
+                      (map list code-rows)
+                      (let* ((frame-rows
+                              (map format-gvm-instr-frame gvm-instrs))
+                             (width-code
+                              (max-format-length code-rows))
+                             (width-frame
+                              (max-format-length frame-rows)))
+                        (map (lambda (code-row frame-row)
+                               (cons `(,@code-row
+                                       ,(make-string
+                                         (+ 1 (- width-code (format-length code-row)))
+                                         #\space))
+                                     `(,@frame-row
+                                       ,(make-string
+                                         (- width-frame (format-length frame-row))
+                                         #\space))))
+                             code-rows
+                             frame-rows))))
+                 (bb-info
+                  (append
+                   (if (= (bbs-entry-lbl-num bbs)
+                          (bb-lbl-num bb))
+                       (list (cons 'entry (format-gvm-obj proc #f)))
+                       '())
+                   (or (comment-get (gvm-instr-comment (bb-label-instr bb))
+                                    'cfg-bb-info)
+                       '()))))
             (dot-digraph-add-node!
              dd
              (dot-digraph-gen-node
@@ -2127,6 +3421,8 @@
                                              node-entry-bgcolor)
                                             ((type)
                                              node-type-bgcolor)
+                                            ((info)
+                                             node-info-bgcolor)
                                             (else
                                              #f)))
                                          (esc-line
@@ -2134,10 +3430,9 @@
                                                  line)))
                                          (decorated-line
                                           (case style
-                                            ((entry)
-                                             (dot-digraph-gen-font
-                                              "Courier Bold"
-                                              "white"
+                                            ((entry info)
+                                             (dot-digraph-gen-text-style
+                                              style
                                               esc-line))
                                             (else
                                              esc-line)))
@@ -2150,7 +3445,6 @@
                                   (dot-digraph-gen-row
                                    (dot-digraph-gen-col
                                     #f
-                                    #f
                                     "left"
                                     (dot-digraph-gen-table
                                      #f
@@ -2158,16 +3452,18 @@
                                      (dot-digraph-gen-row
                                       (dot-digraph-gen-col
                                        #f
-                                       #f
                                        align
                                        decorated-line)))))))
-                                gv-bb-info))
-                  ,@(let loop ((lst instrs))
+                                bb-info))
+                  ,@(let loop ((lst (reverse rows))
+                               (last-instr? #t)
+                               (result '()))
                       (if (pair? lst)
-                          (let ((rest (cdr lst)))
-                            `(,@(decorate-instr (car lst) (null? rest))
-                              ,@(loop rest)))
-                          '()))))))))))
+                          (loop (cdr lst)
+                                #f
+                                `(,@(decorate-instr (car lst) last-instr?)
+                                  ,@result))
+                          result))))))))))
 
       (bbs-for-each-bb dump-bb bbs))
 
@@ -2266,10 +3562,8 @@
             (dot-digraph-gen-col
              #f
              #f
-             #f
-             (dot-digraph-gen-font
-              "Courier Bold"
-              "white"
+             (dot-digraph-gen-text-style
+              'invert
               (list
                " "
                (dot-digraph-gen-html-escape (gen-label-string var))
@@ -2302,7 +3596,7 @@
       (define (scan-bb bb)
 
         (define (scan-gvm-instr gvm-instr)
-          (case (gvm-instr-type gvm-instr)
+          (case (gvm-instr-kind gvm-instr)
 
             ((apply)
              (for-each scan-opnd (apply-opnds gvm-instr))
@@ -2381,7 +3675,7 @@
 (define (dot-digraph-gen-digraph dd)
   `("digraph \"" ,(dot-digraph-name dd) "\" {\n"
     "  graph [splines = true overlap = false rankdir = \"TD\"];\n"
-    "  node [fontname = \"Courier New\" shape = \"none\"];\n"
+    "  node [fontname = \"" ,dot-digraph-font-default "\" shape = \"none\"];\n"
     ,@(dot-digraph-nodes dd)
     ,@(dot-digraph-edges dd)
     "}\n"))
@@ -2415,7 +3709,7 @@
     ,@content
     "</tr>"))
 
-(define (dot-digraph-gen-col id last? align content)
+(define (dot-digraph-gen-col id align content)
   `("<td"
     ,@(if align
           `(" align=\"" ,align "\"")
@@ -2423,21 +3717,51 @@
     ,@(if id
           `(" port=\"" ,id "\"")
           '())
-    ,(if last?
-         " colspan=\"20\""
-         "")
     ">"
     ,@content
     "</td>"))
 
-(define (dot-digraph-gen-font face color content)
-  `("<font face=\"" ,face "\""
-    ,@(if color
-          `(" color=\"" ,color "\"")
-          '())
-    ">"
+(define dot-digraph-font-default "Courier")
+;;(define dot-digraph-font-default "Courier New")
+;;(define dot-digraph-font-default "Andale Mono")
+;;(define dot-digraph-font-default "Monaco")
+
+(define (dot-digraph-gen-text-style style content)
+  (let* ((x (assq style
+                  '((plain   #f #f   #f        #f #f)
+                    (invert  #f #f   "#ffffff" #f #f)
+                    (comment #f "9"  "#000080" #t #f)
+                    (info    #f "7"  #f        #t #f)
+                    (entry   #f "18" "#ffffff" #t #f))))
+         (face       (and x (list-ref x 1)))
+         (point-size (and x (list-ref x 2)))
+         (color      (and x (list-ref x 3)))
+         (bold?      (and x (list-ref x 4)))
+         (italic?    (and x (list-ref x 5))))
+    (dot-digraph-gen-font face point-size color bold? italic? content)))
+
+(define (dot-digraph-gen-font face point-size color bold? italic? content)
+  `(,@(if (or face point-size color)
+          `("<font"
+            ,@(if face
+                  `(" face=\"" ,face "\"")
+                  '())
+            ,@(if point-size
+                  `(" point-size=\"" ,point-size "\"")
+                  '())
+            ,@(if color
+                  `(" color=\"" ,color "\"")
+                  '())
+            ">")
+          '(""))
+    ,@(if bold? '("<b>") '(""))
+    ,@(if italic? '("<i>") '(""))
     ,@content
-    "</font>"))
+    ,@(if italic? '("</i>") '(""))
+    ,@(if bold? '("</b>") '(""))
+    ,(if (or face point-size color)
+         "</font>"
+         "")))
 
 (define (dot-digraph-gen-html-label content)
   `("<"
@@ -2459,8 +3783,9 @@
      (display str port))
    (dot-digraph-gen-digraph dd)))
 
-(define dot-digraph-gray80 "gray80")
 (define dot-digraph-gray60 "gray60")
+(define dot-digraph-gray70 "gray70")
+(define dot-digraph-gray80 "gray80")
 (define dot-digraph-black  "black")
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2477,12 +3802,12 @@
         (begin (display " " port) (spaces (- n 1))))))
 
   (let ((str (apply string-append
-                    (apply format-gvm-instr (cons gvm-instr bb)))))
+                    (apply format-gvm-instr-code (cons gvm-instr bb)))))
     (display str port)
     (spaces (- 43 (string-length str)))
     (display " " port)
     (if show-frame?
-        (write-frame (gvm-instr-frame gvm-instr) port)))
+        (write-gvm-instr-frame gvm-instr port)))
 
   (let ((x (gvm-instr-comment gvm-instr)))
     (if x
@@ -2492,59 +3817,107 @@
             (display " ; " port)
             (display y port)))))))
 
-(define (write-frame frame port)
+(define (write-gvm-instr-frame gvm-instr port)
+  (display (apply string-append (format-gvm-instr-frame gvm-instr))
+           port))
 
-  (define (write-opnd var opnd sep)
-    (display sep port)
-    (write-gvm-opnd opnd port)
-    (if var
-        (begin
-          (display "=" port)
-          (write-var var port))))
+(define (format-gvm-instr-frame gvm-instr)
+  (let ((frame (gvm-instr-frame gvm-instr))
+        (types (gvm-instr-types gvm-instr)))
 
-  (define (write-var var sep)
-    (cond ((not var)
-           (display "." port))
-          ((eq? var closure-env-var)
-           (write (map var-name (frame-closed frame))
-                  port))
-          ((eq? var ret-var)
-           (display "#ret" port))
-          ((var-temp? var)
-           (display "#" port))
-          (else
-           (write (var-name var) port))))
+    (define (format-type-gvm-loc gvm-loc)
+      (if types
+          (let ((type
+                 (locenv-ref types (gvm-loc->locenv-index types gvm-loc))))
+            (if (type-eqv? type type-top)
+                '("")
+                `("|" ,@(format-type type))))
+          '("")))
 
-  (define (live? var)
-    (let ((live (frame-live frame)))
-      (or (varset-member? var live)
-          (and (eq? var closure-env-var)
-               (varset-intersects?
-                 live
-                 (list->varset (frame-closed frame)))))))
+    (define (format-var var)
+      (cond ((eq? var closure-env-var)
+             (let ((closed (frame-closed frame)))
+               (let loop ((i (length closed))
+                          (lst (reverse closed))
+                          (sep `())
+                          (result `(")")))
+                 (if (pair? lst)
+                     (loop (- i 1)
+                           (cdr lst)
+                           `(" ")
+                           (let* ((var (car lst))
+                                  (type (format-type-gvm-loc (make-clo #f i))))
+                             `(,(symbol->string (var-name (car lst)))
+                               ,@type
+                               ,@sep
+                               ,@result)))
+                     `("(" ,@result)))))
+            ((eq? var ret-var)
+             `("#ret"))
+            ((var-temp? var)
+             `("#"))
+            (else
+             `(,(symbol->string (var-name var))))))
 
-  (let ((slots (reverse (frame-slots frame)))
-        (regs (frame-regs frame)))
-    (display "[" port)
-    (let loop1 ((i 1) (l slots) (sep ""))
-      (if (pair? l)
-          (let ((var (car l)))
-            (display sep port)
-            (write-var (if (live? var) var #f) sep)
-            (loop1 (+ i 1) (cdr l) " "))
-          (display "]" port)))
-    (if (pair? regs)
-        (begin
-          (let loop2 ((i 0) (l regs) (sep " "))
-            (if (pair? l)
-                (let ((var (car l)))
-                  (if (live? var)
-                      (begin
-                        (write-opnd var (make-reg i) sep)
-                        (loop2 (+ i 1) (cdr l) " "))
-                      (loop2 (+ i 1) (cdr l) sep)))))))))
+    (define (live? var)
+      (let ((live (frame-live frame)))
+        (or (varset-member? var live)
+            (and (eq? var closure-env-var)
+                 (varset-intersects?
+                  live
+                  (list->varset (frame-closed frame)))))))
 
-(define (format-gvm-instr gvm-instr . bb)
+    (let ((regs (frame-regs frame)))
+      (let loop1 ((i (- (length regs) 1))
+                  (lst (reverse regs))
+                  (sep `())
+                  (result `()))
+        (if (pair? lst)
+            (let ((var (car lst)))
+              (if (live? var) ;; only include live registers
+                  (loop1 (- i 1)
+                         (cdr lst)
+                         `(" ")
+                         (let* ((reg (make-reg i))
+                                (info (if var
+                                          `("=" ,@(format-var var))
+                                          `()))
+                                (type (if var
+                                          (format-type-gvm-loc reg)
+                                          `())))
+                           `(,(format-gvm-opnd reg)
+                             ,@info
+                             ,@type
+                             ,@sep
+                             ,@result)))
+                  (loop1 (- i 1)
+                         (cdr lst)
+                         sep
+                         result)))
+            (let ((slots (frame-slots frame)))
+              (let loop2 ((i (length slots))
+                          (lst slots)
+                          (sep `())
+                          (result `("]" ,@sep ,@result)))
+                (if (pair? lst)
+                    (loop2 (- i 1)
+                           (cdr lst)
+                           `(" ")
+                           (let ((var (car lst)))
+                             (if (live? var)
+                                 (let* ((stk (make-stk i))
+                                        (info (format-var var))
+                                        (type (format-type-gvm-loc stk)))
+                                   `(,@info
+                                     ,@type
+                                     ,@sep
+                                     ,@result))
+                                 `("."
+                                   ,@sep
+                                   ,@result))))
+                    `("[" ,@result)))))))))
+
+(define (format-gvm-instr-code gvm-instr . bb)
 
   (define (format-closure-parms parms)
     `(" "
@@ -2605,13 +3978,13 @@
         (cons (string-append "(" (proc-obj-name prim))
               (format-spaced-opnd-list opnds))))
 
-  (case (gvm-instr-type gvm-instr)
+  (case (gvm-instr-kind gvm-instr)
 
     ((label)
      `(,(format-gvm-lbl (label-lbl-num gvm-instr))
        " fs="
        ,(number->string (frame-size (gvm-instr-frame gvm-instr)))
-       ,@(case (label-type gvm-instr)
+       ,@(case (label-kind gvm-instr)
            ((simple)
             (let ((precedents (if (pair? bb) (bb-precedents (car bb)) '())))
               (if (pair? precedents)
@@ -2635,7 +4008,7 @@
             `(" task-return-point"))
            (else
             (compiler-internal-error
-             "format-gvm-instr, unknown label type")))))
+             "format-gvm-instr-code, unknown label kind")))))
 
     ((apply)
      `("  "
@@ -2690,7 +4063,7 @@
            (if (pair? cases)
                (let ((c (car cases))
                      (next (cdr cases)))
-                 `(,(format-gvm-obj (switch-case-obj c))
+                 `(,(format-gvm-obj (switch-case-obj c) #f)
                    " => "
                    "" ;; tag as a direct jump
                    ,(format-gvm-lbl (switch-case-lbl c))
@@ -2729,7 +4102,7 @@
 
     (else
      (compiler-internal-error
-      "format-gvm-instr, unknown 'gvm-instr':"
+      "format-gvm-instr-code, unknown 'gvm-instr':"
       gvm-instr))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2759,7 +4132,7 @@
         ((lbl? gvm-opnd)
          (format-gvm-lbl (lbl-num gvm-opnd)))
         ((obj? gvm-opnd)
-         (string-append "'" (format-gvm-obj (obj-val gvm-opnd))))
+         (format-gvm-obj (obj-val gvm-opnd) #t))
         (else
          (compiler-internal-error
            "format-gvm-opnd, unknown 'gvm-opnd':"
@@ -2768,16 +4141,25 @@
 (define (format-gvm-lbl lbl)
   (string-append "#" (number->string lbl)))
 
-(define (format-gvm-obj val)
-  (cond ((proc-obj? val)
-         (string-append
-          (if (proc-obj-primitive? val)
-              "#<primitive "
-              "#<procedure ")
-          (proc-obj-name val)
-          ">"))
-        (else
-         (object->string val))))
+(define (format-gvm-obj val quote?)
+  (let ((str
+         (if (proc-obj? val)
+             (string-append
+              (if (proc-obj-primitive? val)
+                  "#<primitive "
+                  "#<procedure ")
+              (proc-obj-name val)
+              ">")
+             (object->string val))))
+    (if (or (not quote?)
+            (proc-obj? val)
+            (number? val)
+            (boolean? val)
+            (char? val)
+            (string? val)
+            (void-object? val))
+        str
+        (string-append "'" str))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

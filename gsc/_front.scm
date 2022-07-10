@@ -2,7 +2,7 @@
 
 ;;; File: "_front.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -899,7 +899,7 @@
 
 (define (emit-label! gvm-instr)
 
-  (case (label-type gvm-instr)
+  (case (label-kind gvm-instr)
 
     ((entry)
      (for-each (lambda (obj) (emit-obj! (obj-val obj) #f))
@@ -919,7 +919,7 @@
   (define (branch)
     (bb-put-branch! *bb* gvm-instr))
 
-  (case (gvm-instr-type gvm-instr)
+  (case (gvm-instr-kind gvm-instr)
 
     ((apply)
      (emit-opnds! (apply-opnds gvm-instr))

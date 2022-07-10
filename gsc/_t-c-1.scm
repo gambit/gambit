@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-1.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -1944,7 +1944,7 @@
                       (targ-c-hex gc-map)))))
                  (else
                   (compiler-internal-error
-                   "targ-dump-prc, unknown label type"))))))
+                   "targ-dump-prc, unknown label kind"))))))
           val-lbls)))
      objs))
 

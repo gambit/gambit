@@ -561,7 +561,7 @@
 
   (define (next-lbl)
     (if (and next-gvm-instr
-             (memq (label-type next-gvm-instr)
+             (memq (label-kind next-gvm-instr)
                    '(simple task-entry)))
         (label-lbl-num next-gvm-instr)
         #f))
@@ -584,12 +584,12 @@
         (targ-emit
          (list 'line line filename)))))
 
-  (case (gvm-instr-type gvm-instr)
+  (case (gvm-instr-kind gvm-instr)
 
     ((label)
      (set! targ-proc-entry-frame targ-proc-exit-frame)
      (targ-start-bb (frame-size targ-proc-exit-frame))
-     (case (label-type gvm-instr)
+     (case (label-kind gvm-instr)
        ((simple)
         (targ-gen-label-simple (label-lbl-num gvm-instr)
                                sn))
@@ -612,7 +612,7 @@
                                     sn))
        (else
         (compiler-internal-error
-          "targ-gen-gvm-instr, unknown label type"))))
+          "targ-gen-gvm-instr, unknown label kind"))))
 
     ((apply)
      (if (not (targ-apply-ifjump-optimization? gvm-instr next-gvm-instr))
@@ -681,8 +681,8 @@
   ;;    loc = (prim ...)         <- gvm-instr1
   ;;    if loc ...               <- gvm-instr2
 
-  (and (eq? (gvm-instr-type gvm-instr1) 'apply)
-       (eq? (gvm-instr-type gvm-instr2) 'ifjump)
+  (and (eq? (gvm-instr-kind gvm-instr1) 'apply)
+       (eq? (gvm-instr-kind gvm-instr2) 'ifjump)
        (let* ((prim (apply-prim gvm-instr1))
               (x (proc-obj-test prim)))
          (and x

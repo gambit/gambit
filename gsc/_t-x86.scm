@@ -620,7 +620,7 @@
 
 (define (x86-gen-gvm-instr cgc ctx prev-gvm-instr gvm-instr next-gvm-instr sn)
   (let ((targ (codegen-context-target cgc)))
-    (case (gvm-instr-type gvm-instr)
+    (case (gvm-instr-kind gvm-instr)
 
       ((label)
        (let* ((lbl (make-lbl (label-lbl-num gvm-instr)))
@@ -630,7 +630,7 @@
          (codegen-context-frame-size-set! cgc fs)
          (x86-label cgc asm-lbl)
 
-         (case (label-type gvm-instr)
+         (case (label-kind gvm-instr)
 
            ((simple)
             #f)
@@ -654,7 +654,7 @@
 
            (else
             (compiler-internal-error
-             "unknown label type")))))
+             "unknown label kind")))))
 
       ((copy)
        (let* ((loc (copy-loc gvm-instr))
@@ -695,7 +695,7 @@
          (if (or (not (lbl? opnd))
                  (let ((next-lbl
                         (if (and next-gvm-instr
-                                 (memq (label-type next-gvm-instr)
+                                 (memq (label-kind next-gvm-instr)
                                        '(simple task-entry)))
                             (label-lbl-num next-gvm-instr)
                             #f)))
@@ -722,7 +722,7 @@
               (poll? (ifjump-poll? gvm-instr))
               (next-lbl
                (if (and next-gvm-instr
-                        (memq (label-type next-gvm-instr)
+                        (memq (label-kind next-gvm-instr)
                               '(simple task-entry)))
                    (label-lbl-num next-gvm-instr)
                    #f))
@@ -737,7 +737,7 @@
 
 
       (else
-       (compiler-internal-error "unrecognized GVM instruction type")))))
+       (compiler-internal-error "unrecognized GVM instruction kind")))))
 
 ;; Do the code generation for a procedure.
 (define (translate-proc cgc proc)
@@ -748,10 +748,10 @@
     (for-each
      (lambda (bb)
        (let* ((gvm-instr (code-gvm-instr bb))
-              (gvm-type (gvm-instr-type gvm-instr)))
+              (gvm-kind (gvm-instr-kind gvm-instr)))
          ;;(write-gvm-instr gvm-instr (current-output-port)) (newline)
-         ;;(pp gvm-type)
-         (case gvm-type
+         ;;(pp gvm-kind)
+         (case gvm-kind
            ((label)
             (let* ((lbl (make-lbl (label-lbl-num gvm-instr)))
                    (lbl-name (translate-lbl ctx lbl))
@@ -760,7 +760,7 @@
               (codegen-context-frame-size-set! cgc fs)
               (x86-label cgc asm-lbl)
 
-              (case (label-type gvm-instr)
+              (case (label-kind gvm-instr)
 
                 ((simple)
                  #f)
@@ -784,7 +784,7 @@
 
                 (else
                  (compiler-internal-error
-                  "translate-proc, unknown label type")))))
+                  "translate-proc, unknown label kind")))))
 
            ((copy)
             (let* ((loc (copy-loc gvm-instr))
@@ -850,7 +850,7 @@
 
 
            (else
-            (compiler-internal-error "unrecognized type:" gvm-type)))
+            (compiler-internal-error "unrecognized kind:" gvm-kind)))
        ))
      lst)))
 
