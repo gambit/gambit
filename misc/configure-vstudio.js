@@ -11,6 +11,7 @@
  * STEP 1 -- Ensure that the Visual Studio tools are in the path
  *
  *   C:\gambit>"C:\Program Files\Microsoft Visual Studio\2017\Community\Common7\Tools\VsDevCmd.bat"
+nfigure script options
  *
  * STEP 2 -- Run the script using --prefix=... to specify install destination
  *
@@ -32,7 +33,6 @@
  *   Hello World!
  *   C:\gambit>type hello.scm
  *   (display "Hello World!\n")
- *
  *
  * The script accepts a subset of the configure script options.
  * The supported options are:

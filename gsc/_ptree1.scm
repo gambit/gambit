@@ -371,7 +371,10 @@
          (let ((spec
                 ((proc-obj-specialize proc)
                  env
-                 (map (lambda (arg) (if (cst? arg) (cst-val arg) void-object))
+                 (map (lambda (arg)
+                        (if (cst? arg)
+                            (make-type-singleton (cst-val arg))
+                            (make-type-universal)))
                       args))))
            (if (eq? spec proc)
              proc
@@ -414,6 +417,11 @@
 ;;
 ;; (inlining-limit n)                    inlined user procedures must not be
 ;;                                       bigger than 'n'
+;;
+;; Basic-block versioning declarations:
+;;
+;; (versioning-limit n)                  no more than 'n' versions of this
+;;                                       code
 ;;
 ;; Compilation strategy declarations:
 ;;
@@ -494,6 +502,8 @@
 (define-namable-boolean-decl inline-primitives-sym)
 (define-parameterized-decl inlining-limit-sym #f)
 
+(define-parameterized-decl versioning-limit-sym)
+
 (define-flag-decl block-sym    'compilation-strategy)
 (define-flag-decl separate-sym 'compilation-strategy)
 
@@ -545,6 +555,9 @@
 
 (define (inlining-limit env) ; returns the inlining limit
   (max 0 (min 1000000 (declaration-value inlining-limit-sym #f 370 env))))
+
+(define (versioning-limit env) ; returns the versioning limit
+  (max 1 (min 1000000 (declaration-value versioning-limit-sym #f 1 env))))
 
 (define (block-compilation? env) ; true iff block compilation strategy
   (eq? (declaration-value 'compilation-strategy #f separate-sym env)
