@@ -8184,13 +8184,10 @@
 
   (declare (generic))
 
-  (define max-fixnum (tctx-smallest-max-fixnum tctx))
-  (define min-fixnum (tctx-smallest-min-fixnum tctx))
-
   (define (<=? x val) (type-fixnum-<=-num x val))
   (define (>=? x val) (type-fixnum->=-num x val))
 
-  (define (empty) (make-type-bot))
+  (define (empty) type-bot)
 
   (define (clamp>= val bound)
     (if (>=? val bound)
@@ -8202,7 +8199,7 @@
         val
         bound))
 
-  (define (quadrants-union fixnums)
+  (define (quadrants-union . fixnums)
     (define (quadrants-union-aux fixnums)
       (cond
         ((null? fixnums)
@@ -8210,7 +8207,7 @@
         ((null? (cdr fixnums))
           (car fixnums))
         (else
-          (type-union tctx (car fixnums) (union* (cdr fixnums)) #f))))
+          (type-union tctx (car fixnums) (quadrants-union-aux (cdr fixnums)) #f))))
 
     (quadrants-union-aux (filter (lambda (x) x) fixnums)))
 
@@ -8280,9 +8277,9 @@
   (define (abstract-neg-neg-fxquotient x y)
     ;; assume x < 0 and y < 0
     (cond ((eq? x '>=)
-           (if (<=? y 2)
-               '<=
-               #f)) ;; overflow
+           (make-type-fixnum
+             0
+             (if (<=? y 2) '<= #f))) ;; overflow
           ((eq? x '>)
            (make-type-fixnum 0 '<=))
           ;; dividend is a specific number
@@ -8314,44 +8311,44 @@
     (and (>=? hi1 0)
          (<=? lo2 -1)
          (make-type-fixnum
-           ;; smaller bound takes min dividend and max divisor
+           ;; smaller bound takes max dividend and min absolute divisor
            (fixnum-lo
              (abstract-pos-neg-fxquotient
-               (clamp>= lo1 0)
-               lo2))
-           ;; higher bound takes max dividend and min divisor
+               hi1
+               (clamp<= hi2 -1)))
+           ;; higher bound takes min dividend and max absolute divisor
            (fixnum-hi
              (abstract-pos-neg-fxquotient
-               hi1
-               (clamp<= hi2 -1))))))
+               (clamp>= lo1 0)
+               lo2)))))
 
   (define (make-neg-pos-interval?)
     (and (<=? lo1 -1)
          (>=? hi2 1)
          (make-type-fixnum
-           ;; smaller bound takes min dividend and max divisor
+           ;; smaller bound takes max absolute dividend and min divisor
            (fixnum-lo
              (abstract-neg-pos-fxquotient
-               (clamp<= hi1 0)
-               hi2))
-           ;; higher bound takes max dividend and min divisor
+               lo1
+               (clamp>= lo2 1)))
+           ;; higher bound takes min absolute dividend and max divisor
            (fixnum-hi
              (abstract-neg-pos-fxquotient
-               lo1
-               (clamp>= lo2 1))))))
+               (clamp<= hi1 -1)
+               hi2)))))
 
   (define (make-neg-neg-interval?)
     (and (<=? lo1 -1)
          (<=? lo2 -1)
          (make-type-fixnum
-           ;; smaller bound takes min dividend and max divisor in absolute value
+           ;; smaller bound takes min absolute dividend and max absolute divisor
            (fixnum-lo
-             (abstract-nonneg-fxquotient
-               (clamp<= hi1 0)
+             (abstract-neg-neg-fxquotient
+               (clamp<= hi1 -1)
                lo2))
-           ;; higher bound takes max dividend and min divisor
+           ;; higher bound takes max absolute dividend and min absolute divisor
            (fixnum-hi
-             (abstract-nonneg-fxquotient
+             (abstract-neg-neg-fxquotient
                lo1
                (clamp<= hi2 -1))))))
 
