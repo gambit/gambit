@@ -6974,8 +6974,8 @@
 (def-type-infer "fx*"     (infer-fx* type-fixnum-overflow-normalize-clamp))
 (def-type-infer "fxwrap*" (infer-fx* type-fixnum-overflow-normalize-wrap))
 
-;;(def-type-infer "fxquotient"     (infer-fxquotient  type-fixnum-overflow-normalize-clamp))
-;;(def-type-infer "fxwrapquotient" (infer-fxquotient  type-fixnum-overflow-normalize-wrap))
+(def-type-infer "fxquotient"     (infer-fxquotient  type-fixnum-overflow-normalize-clamp))
+(def-type-infer "fxwrapquotient" (infer-fxquotient  type-fixnum-overflow-normalize-wrap))
 ;;(def-type-infer "fxremainder"    (infer-fxremainder type-fixnum-overflow-normalize-clamp))
 ;;(def-type-infer "fxmodulo"       (infer-fxmodulo    type-fixnum-overflow-normalize-clamp))
 
@@ -8890,7 +8890,7 @@
 (test-prim prim-fx*?    (false ##fx*?)    'fx*?)
 (test-prim prim-fxwrap* (wrap  ##fxwrap*) 'fxwrap*)
 
-;;(test-prim prim-fxquotient     (clamp-no0 ##fxquotient)     'fxquotient)
+(test-prim prim-fxquotient     (clamp-no0 ##fxquotient)     'fxquotient)
 ;;(test-prim prim-fxremainder    (clamp-no0 ##fxremainder)    'fxremainder)
 ;;(test-prim prim-fxmodulo       (clamp-no0 ##fxmodulo)       'fxmodulo)
 )
