@@ -7009,6 +7009,8 @@
 ;;(def-type-infer "fxremainder"    (infer-fxremainder type-fixnum-overflow-normalize-clamp))
 ;;(def-type-infer "fxmodulo"       (infer-fxmodulo    type-fixnum-overflow-normalize-clamp))
 
+(def-type-infer "fxior"   (infer-fxior))
+
 (def-type-narrow "fx="  #f)
 (def-type-narrow "fx<"  (type-narrow-fold type-narrow-fx<))
 (def-type-narrow "fx<=" (type-narrow-fold type-narrow-fx<=))
@@ -7524,17 +7526,17 @@
          #f))) ;; type is not for a unique object
 
 (define (make-type-motley-for-unique-obj obj)
-  (cond ((false-object? obj)
+  (cond ((eq? obj #f)
          type-motley-false)
         ((eq? obj #t)
          type-motley-true)
         ((null? obj)
          type-motley-null)
-        ((void-object? obj)
+        ((eq? obj #!void)
          type-motley-void)
-        ((end-of-file-object? obj)
+        ((eof-object? obj)
          type-motley-eof)
-        ((absent-object? obj)
+        ((eq? obj ##absent-object)
          type-motley-absent)
         (else
          #f))) ;; obj does not have its own type
@@ -8396,6 +8398,106 @@
 (define (type-infer-common-fxmodulo tctx lo1 hi1 lo2 hi2)
   (make-type-fixnum 0 -1)) ;; TODO: implement!
 
+(define (type-infer-common-fxior tctx lo1 hi1 lo2 hi2)
+
+  (declare (generic))
+
+  (define highest-bit (expt 2 64))
+
+  (define (min-ior lo1 hi1 lo2 hi2)
+    ;; Henry S. Warren, Hacker's Delight, 2003. p 59
+    (let loop ((m highest-bit))
+      (cond
+        ((= m 0) (bitwise-ior lo1 lo2))
+        ((not
+          (= 0
+            (bitwise-and
+              (bitwise-not lo1)
+              lo2
+              m)))
+          (let ((temp (bitwise-and (bitwise-ior lo1 m) (- m))))
+            (if (<= temp hi1)
+                (bitwise-ior temp lo2)
+                (loop (arithmetic-shift m -1)))))
+        ((not
+          (= 0
+            (bitwise-and
+              lo1
+              (bitwise-not lo2)
+              m)))
+          (let ((temp (bitwise-and (bitwise-ior lo2 m) (- m))))
+            (if (<= temp hi2)
+                (bitwise-ior lo1 temp)
+                (loop (arithmetic-shift m -1)))))
+        (else
+          (loop (arithmetic-shift m -1))))))
+
+  (define (max-ior lo1 hi1 lo2 hi2)
+    ;; Henry S. Warren, Hacker's Delight, 2003. p 60
+    (let loop ((m highest-bit))
+      (cond
+        ((= m 0) (bitwise-ior hi1 hi2))
+        ((not
+          (= 0
+            (bitwise-and
+              hi1
+              hi2
+              m)))
+          (let ((temp1 (bitwise-ior (- hi1 m) (- m 1)))
+                (temp2 (bitwise-ior (- hi2 m) (- m 1))))
+            (cond
+              ((>= temp1 lo1)
+                (bitwise-ior temp1 hi2))
+              ((>= temp2 lo2)
+                (bitwise-ior hi1 temp2))
+              (else
+                (loop (arithmetic-shift m -1))))))
+        (else
+          (loop (arithmetic-shift m -1))))))
+
+  (define (signs)
+    (define (sign x)
+      (cond
+        ((not (number? x)) '?)
+        ((< x 0) '-)
+        (else '+)))
+
+    (string->symbol
+      (append-strings
+        (map
+          symbol->string
+          (list (sign lo1) (sign hi1) (sign lo2) (sign hi2))))))
+
+
+  (case (signs)
+    ('----
+      (make-type-fixnum '>= '<=)) ;; TODO: not tight
+    ('---+
+      (make-type-fixnum lo1 -1))
+    ('--++
+      (make-type-fixnum '>= '<=)) ;; TODO: not tight
+    ('-+--
+      (make-type-fixnum lo2 -1))
+    ('-+-+
+      (make-type-fixnum (min lo1 lo2) (max-ior 0 hi1 0 hi2)))
+    ('-+++
+      (make-type-fixnum
+        '>= ; TODO: not tight
+        (max-ior 0 hi1 lo2 hi2)))
+    ('++--
+      (make-type-fixnum '>= '<=)) ;; TODO: not tight
+    ('++-+
+      (make-type-fixnum
+        '>= ; TODO: not tight
+        (max-ior lo1 hi1 0 hi2)))
+    ('++++
+      (make-type-fixnum
+        (min-ior lo1 hi1 lo2 hi2)
+        (max-ior lo1 hi1 lo2 hi2)))
+    (else ;; one of the bounds is <, <=, > or >=
+      ;; TODO we can sometimes refine the sign of the output
+      (make-type-fixnum '>= '<=))))
+
 (define (infer-fx+ overflow-normalize)
   (type-infer-fold
    (lambda (tctx)
@@ -8454,6 +8556,12 @@
       (overflow-normalize
        tctx
        (type-infer-fixnum2 tctx type-infer-common-fxmodulo type1 type2)))))
+
+(define (infer-fxior)
+  (lambda (tctx args)
+    (let ((type1 (car args))
+          (type2 (cadr args)))
+      (type-infer-fixnum2 tctx type-infer-common-fxior type1 type2))))
 
 ;;; type narrowing
 
@@ -8779,6 +8887,8 @@
 (define prim-fxremainder  (infer-fxremainder type-fixnum-overflow-normalize-clamp))
 (define prim-fxmodulo     (infer-fxmodulo type-fixnum-overflow-normalize-clamp))
 
+(define prim-fxior        (infer-fxior))
+
 (define (ft type)
   (string-concatenate (format-type type)))
 
@@ -8923,6 +9033,8 @@
 (test-prim prim-fxquotient     (clamp-no0 ##fxquotient)     'fxquotient)
 ;;(test-prim prim-fxremainder    (clamp-no0 ##fxremainder)    'fxremainder)
 ;;(test-prim prim-fxmodulo       (clamp-no0 ##fxmodulo)       'fxmodulo)
+
+(test-prim prim-fxior   (clamp ##fxior)   'fxior)
 )
 
-;;(test-types)
+(test-types)
