@@ -2071,6 +2071,8 @@
 ;; Type analysis:
 ;; -------------
 
+(define debug-bbv? #f)
+
 (define (bbs-type-specialize bbs)
 
   (define tctx (make-tctx))
@@ -2078,6 +2080,7 @@
   (define new-bbs (make-bbs))
 
   (define versions (make-table))
+  (define lbl-mapping (make-table))
 
   (define (generic-frame-types frame)
     (let ((nb-regs (length (frame-regs frame)))
@@ -2094,12 +2097,46 @@
      0
      type-top))
 
-  (define foo '
-        (let* ((bb (lbl-num->bb lbl bbs))
-               (label (bb-label-instr bb))
-               (frame (gvm-instr-frame label))
-               (types (generic-frame-types frame)))
-          ...))
+  (define (type-distance tctx type1 type2)
+    (let* ((t1 (type-motley-force tctx type1))
+           (t2 (type-motley-force tctx type2)))
+      (let* ((bitset1 (type-motley-bitset t1))
+             (bitset2 (type-motley-bitset t2))
+             (bs1
+              (+ (bitwise-and bitset1 (- (expt 2 30) 1))
+                 (if (type-motley-included? t1 type-fixnum)
+                     (expt 2 30)
+                     0)))
+             (bs2
+              (+ (bitwise-and bitset2 (- (expt 2 30) 1))
+                 (if (type-motley-included? t2 type-fixnum)
+                     (expt 2 30)
+                     0))))
+        (bit-count (bitwise-eqv bs1 bs2)))))
+
+  (define (types-distance tctx types1 types2)
+    (let ((len (vector-length types1)))
+      (let loop ((i locenv-start-regs) (d 0))
+        (if (< i len)
+            (let* ((type1 (vector-ref types1 (+ i 1)))
+                   (type2 (vector-ref types2 (+ i 1))))
+              (loop (+ i locenv-entry-size)
+                    (+ d (type-distance tctx type1 type2))))
+            d))))
+
+  (define (types-merge2 types1 types2 widen?)
+    (locenv-merge types1
+                  types2
+                  0
+                  (lambda (type1 type2)
+                    (type-union tctx type1 type2 widen?))))
+
+  (define (types-merge-multi types-list widen?)
+    (let loop ((types (car types-list)) (lst (cdr types-list)))
+      (if (pair? lst)
+          (loop (types-merge2 types (car lst) widen?)
+                (cdr lst))
+          types)))
 
   (define step-count 0)
 
@@ -2123,19 +2160,157 @@
                (frame (gvm-instr-frame label))
                (types-before (resized-frame-types frame types-before))
                (key (list lbl types-before))
-               (x (table-ref versions key #f)))
-          (if x
-              x
+               (bb-versions (or (table-ref versions lbl #f)
+                                (let ((bb-versions
+                                       (vector '() (make-table))))
+                                  (table-set! versions lbl bb-versions)
+                                  bb-versions)))
+               (do-later (lambda () #f))
+               (types-lbl-alist (vector-ref bb-versions 0))
+               (all-versions-tbl (vector-ref bb-versions 1)))
+
+          (or (table-ref all-versions-tbl types-before #f)
+
               (let* ((bb (lbl-num->bb lbl bbs))
                      (new-lbl (bbs-new-lbl! new-bbs))
                      (step-num (begin (set! step-count (+ 1 step-count)) step-count)))
-                (table-set! versions key new-lbl)
-#;                (print "\n[step " step-num "      #" lbl " ==> #" new-lbl "]\n")
+
+                (table-set! all-versions-tbl types-before new-lbl)
+
+                (vector-set!
+                 bb-versions
+                 0
+                 (cons (cons types-before new-lbl)
+                       types-lbl-alist))
+
+
+                (if (> (length types-lbl-alist) 5)
+                    (let* ((types-lbl-vect
+                            (list->vector types-lbl-alist))
+                           (n
+                            (vector-length types-lbl-vect))
+                           (min-dist
+                            99999999)
+                           (min-dist-pair
+                            #f)
+                           (dist-matrix
+                            (make-vector n)))
+
+                      (define (get-distance i j)
+                        (if (= i j)
+                            0
+                            (vector-ref
+                             (vector-ref dist-matrix
+                                         (max i j))
+                             (min i j))))
+
+                      (define (partition-distance i d)
+                        (let loop ((j 0) (in '()) (out '()))
+                          (if (< j n)
+                              (if (= i j)
+                                  (loop (+ j 1)
+                                        (cons j in)
+                                        out)
+                                  (if (= (get-distance i j) d)
+                                      (loop (+ j 1)
+                                            (cons j in)
+                                            out)
+                                      (loop (+ j 1)
+                                            in
+                                            (cons j out))))
+                              (cons in out))))
+
+                      (let loop1 ((i 0))
+                        (if (< i n)
+                            (let ((row (make-vector i)))
+                              (vector-set! dist-matrix i row)
+                              (let loop2 ((j 0))
+                                (if (< j i)
+                                    (let ((d (types-distance
+                                              tctx
+                                              (car (vector-ref
+                                                    types-lbl-vect
+                                                    i))
+                                              (car (vector-ref
+                                                    types-lbl-vect
+                                                    j)))))
+                                      (vector-set! row j d)
+                                      (if (< d min-dist)
+                                          (begin
+                                            (set! min-dist d)
+                                            (set! min-dist-pair (cons i j))))
+                                      (loop2 (+ j 1)))
+                                    (loop1 (+ i 1)))))))
+
+                      (let* ((i1 (car min-dist-pair))
+                             (i2 (cdr min-dist-pair))
+                             (p1 (partition-distance i1 min-dist))
+                             (p2 (partition-distance i2 min-dist))
+                             (p
+                              (if (> (length (car p1)) (length (car p2)))
+                                  p1
+                                  p2))
+                             (in
+                              (car p))
+                             (out
+                              (cdr p)))
+
+                        (if debug-bbv?
+                            (pp (list (list 'in in) (list 'out out))))
+
+                        (let* ((versions-to-merge
+                                (map (lambda (i) (vector-ref types-lbl-vect i))
+                                     in))
+                               (versions-to-keep
+                                (map (lambda (i) (vector-ref types-lbl-vect i))
+                                     out))
+                               (merged-types
+                                (types-merge-multi
+                                 (map car versions-to-merge)
+                                 #t))
+                               (merging-latest-version?
+                                (member 0 in)) ;; merging latest version?
+                               (new-lbl2
+                                (if merging-latest-version?
+                                    new-lbl
+                                    (bbs-new-lbl! new-bbs))))
+
+                          (for-each
+                           (lambda (types-lbl)
+                             (let ((types (car types-lbl))
+                                   (lbl (cdr types-lbl)))
+                               (if (not (= lbl new-lbl2))
+                                   (begin
+                                     (if debug-bbv?
+                                         (pp (list 'adding lbl '--> new-lbl2)))
+                                     (table-set! lbl-mapping lbl new-lbl2)))))
+                           versions-to-merge)
+
+                          (table-set! all-versions-tbl merged-types new-lbl2)
+
+                          (vector-set!
+                           bb-versions
+                           0
+                           (cons (cons merged-types new-lbl2)
+                                 versions-to-keep))
+
+                          (write (list 'MERGED-TYPES= merged-types))(newline)
+                          (if merging-latest-version?
+                              (set! types-before merged-types)
+                              (begin
+                                (print "\n[STEP " step-num "      #" lbl " ==> #" new-lbl "]\n")
+                                (walk-bb bb merged-types new-lbl2)))))))
+
+                (if debug-bbv?
+                    (print "\n[step " step-num "      #" lbl " ==> #" new-lbl "]\n"))
+
                 (walk-bb bb types-before new-lbl)
 
-;;                (print "\nstep " step-num "      #" lbl " ==>\n")
-;;                (write-bb (lbl-num->bb new-lbl new-bbs) (current-output-port))
-;;                (print "\n")
+                (if debug-bbv?
+                    (begin
+                      (print "\nstep " step-num "      #" lbl " ==>\n")
+                      (write-bb (lbl-num->bb new-lbl new-bbs) (current-output-port))
+                      (print "\n")))
 
                 new-lbl))))
 
@@ -2146,8 +2321,7 @@
 
           (define show #t)
           (define (reach* lbl types-before)
-#;
-            (if show
+            (if (and debug-bbv? show)
                 (begin
                   (write-bb new-bb (current-output-port))
                   (print "...\n")
@@ -2485,6 +2659,25 @@
   (walk-bbs bbs)
 
 ;;  (write-bbs new-bbs (current-output-port))
+
+  (bbs-for-each-bb
+    (lambda (bb)
+
+      (define (replacement-lbl-num lbl)
+        (let ((x (table-ref lbl-mapping lbl #f)))
+          (if x
+              (begin
+                (if debug-bbv?
+                    (pp (list lbl '--> x)))
+                (replacement-lbl-num x))
+              lbl)))
+
+      (bb-clone-replacing-lbls
+       bb
+       new-bbs
+       replacement-lbl-num
+       #f))
+    new-bbs)
 
   new-bbs)
 

@@ -2660,7 +2660,7 @@
      check-prims
      #f
      (lambda ()
-       (gen source env vars out-of-line))
+       (gen source env vars out-of-line fail))
      fail)))
 
 (define (make-simple-expander gen-case)
@@ -2675,12 +2675,15 @@
         vars
         (let ((generic-call
                (lambda ()
-                 (generate-call vars #f)))) ;; handle other cases
+                 (generate-call vars #f))) ;; handle other possibly valid cases
+              (dead-end-call
+               (lambda ()
+                 (generate-call vars #t)))) ;; handle failure
           (gen-case source env
             vars
             check-run-time-binding
             generic-call
-            generic-call))))))
+            dead-end-call))))))
 
 (define (make-0-or-1-args-expander gen0 gen1)
   (lambda (ptree oper args generate-call check-run-time-binding)
@@ -2692,7 +2695,10 @@
             (gen-temp-vars source args))
            (generic-call
             (lambda ()
-              (generate-call vars #f))) ;; handle other cases
+              (generate-call vars #f))) ;; handle other possibly valid cases
+           (dead-end-call
+            (lambda ()
+              (generate-call vars #t))) ;; handle failure
            (gen
             (if (null? args)
                 gen0
@@ -2704,7 +2710,7 @@
              vars
              check-run-time-binding
              generic-call
-             generic-call)))))
+             dead-end-call)))))
 
 (define (make-1-or-2-args-expander gen1 gen2)
   (lambda (ptree oper args generate-call check-run-time-binding)
@@ -2716,7 +2722,10 @@
             (gen-temp-vars source args))
            (generic-call
             (lambda ()
-              (generate-call vars #f))) ;; handle other cases
+              (generate-call vars #f))) ;; handle other possibly valid cases
+           (dead-end-call
+            (lambda ()
+              (generate-call vars #t))) ;; handle failure
            (gen
             (if (and (pair? args) (null? (cdr args)))
                 gen1
@@ -2728,18 +2737,18 @@
              vars
              check-run-time-binding
              generic-call
-             generic-call)))))
+             dead-end-call)))))
 
 (define (make-nary-generator zero one two-or-more)
-  (lambda (source env vars out-of-line)
+  (lambda (source env vars out-of-line fail)
     (cond ((null? vars)
-           (zero source env vars out-of-line))
+           (zero source env vars out-of-line fail))
           ((null? (cdr vars))
-           (one source env vars out-of-line))
+           (one source env vars out-of-line fail))
           (else
-           (two-or-more source env vars out-of-line)))))
+           (two-or-more source env vars out-of-line fail)))))
 
-(define (gen-fold source env vars out-of-line op-sym)
+(define (gen-fold source env vars out-of-line fail op-sym)
 
   (define (fold result vars)
     (if (null? vars)
@@ -2756,13 +2765,14 @@
         (cdr vars)))
 
 (define (make-fold-generator op-sym)
-  (lambda (source env vars out-of-line)
+  (lambda (source env vars out-of-line fail)
     (gen-fold source env
       vars
       out-of-line
+      fail
       op-sym)))
 
-(define (gen-conditional-fold source env vars out-of-line gen-op)
+(define (gen-conditional-fold source env vars false gen-op)
 
   (define (conditional-fold result-var vars intermediate-result-vars)
     (if (null? vars)
@@ -2778,25 +2788,26 @@
               (conditional-fold var
                                 (cdr vars)
                                 (cdr intermediate-result-vars))
-              (out-of-line)))
+              (false)))
           (list (gen-op source env result-var (car vars)))))))
 
   (conditional-fold (car vars)
                     (cdr vars)
                     (gen-temp-vars source (cdr vars))))
 
-(define (make-conditional-fold-generator conditional-op-sym)
-  (lambda (source env vars out-of-line)
+(define (make-conditional-fold-generator conditional-op-sym fail-on-false?)
+  (lambda (source env vars out-of-line fail)
     (gen-conditional-fold source env
       vars
-      out-of-line
+      (if fail-on-false? fail out-of-line)
       (lambda (source env var1 var2)
         (gen-call-prim-vars-notsafe source env
           conditional-op-sym
           (list var1 var2))))))
 
-(define (make-conditional-fixed-arity-generator conditional-op-sym)
-  (lambda (source env vars out-of-line)
+(define (make-conditional-fixed-arity-generator conditional-op-sym fail-on-false?)
+  (lambda (source env vars out-of-line fail)
+(pp (list '************* conditional-op-sym fail-on-false?))
     (let ((var (car (gen-temp-vars source '(#f)))))
       (new-call source env
         (gen-prc source env
@@ -2806,13 +2817,13 @@
               var)
             (new-ref source env
               var)
-            (out-of-line)))
+            (if fail-on-false? (fail) (out-of-line))))
         (list (gen-call-prim-vars-notsafe source env
                 conditional-op-sym
                 vars))))))
 
 (define (make-conditional-fast-path conditional-op-sym)
-  (let ((gen (make-conditional-fixed-arity-generator conditional-op-sym)))
+  (let ((gen (make-conditional-fixed-arity-generator conditional-op-sym #f)))
     (lambda (source
              env
              vars
@@ -2824,7 +2835,7 @@
        source
        env
        (lambda ()
-         (gen source env vars out-of-line))
+         (gen source env vars out-of-line fail))
        fail))))
 
 (define (setup-list-primitives)
@@ -3473,7 +3484,7 @@
                        (new-cst source env
                          0)))))
        (lambda ()
-         (gen source env vars out-of-line))
+         (gen source env vars out-of-line fail))
        fail)))
 
   (define (gen-flonum-case gen)
@@ -3507,7 +3518,7 @@
                                  (new-ref source env
                                    (car vars)))))))))
        (lambda ()
-         (gen source env vars out-of-line))
+         (gen source env vars out-of-line fail))
        fail)))
 
   (define (gen-expt-flonum-case gen)
@@ -3533,7 +3544,7 @@
            **flinteger?-sym
            (list (cadr vars))))
        (lambda ()
-         (gen source env vars out-of-line))
+         (gen source env vars out-of-line fail))
        fail)))
 
   (define (gen-sqrt-flonum-case gen)
@@ -3555,7 +3566,7 @@
                  **flnegative?-sym
                  vars)))
        (lambda ()
-         (gen source env vars out-of-line))
+         (gen source env vars out-of-line fail))
        fail)))
 
   (define (gen-finite-flonum-case gen)
@@ -3575,7 +3586,7 @@
          **flfinite?-sym
          vars)
        (lambda ()
-         (gen source env vars out-of-line))
+         (gen source env vars out-of-line fail))
        fail)))
 
   (define (gen-asin-acos-atanh-flonum-case gen)
@@ -3610,7 +3621,7 @@
                               (new-cst source env
                                 (macro-inexact--1))))))))
        (lambda ()
-         (gen source env vars out-of-line))
+         (gen source env vars out-of-line fail))
        fail)))
 
   (define (gen-acosh-flonum-case gen)
@@ -3635,7 +3646,7 @@
                        (new-cst source env
                          (macro-inexact-+1))))))
        (lambda ()
-         (gen source env vars out-of-line))
+         (gen source env vars out-of-line fail))
        fail)))
 
   (define (gen-odd-even-flonum-case gen)
@@ -3655,7 +3666,7 @@
          **flinteger?-sym
          vars)
        (lambda ()
-         (gen source env vars out-of-line))
+         (gen source env vars out-of-line fail))
        fail)))
 
   (define (no-case source
@@ -3731,41 +3742,44 @@
                     (gen-temp-vars source args)))
                (gen-prc source env
                  vars
-                 (let ((generic-call
-                        (lambda ()
-                          (generate-call vars #f)))) ;; handle other cases
+                 (let* ((generic-call
+                         (lambda ()
+                           (generate-call vars #f))) ;; handle other possibly valid cases
+                        (dead-end-call
+                         (lambda ()
+                           (generate-call vars #t)))) ;; handle failure
                    (gen-case source env
                      vars
                      check-run-time-binding
                      generic-call
-                     generic-call))))))))
+                     dead-end-call))))))))
 
   (define (make-prim-generator prim)
-    (lambda (source env vars out-of-line)
+    (lambda (source env vars out-of-line fail)
       (gen-call-prim-vars-notsafe source env prim vars)))
 
   (define gen-fixnum-0
-    (lambda (source env vars out-of-line)
+    (lambda (source env vars out-of-line fail)
       (new-cst source env
         0)))
 
   (define gen-fixnum-1
-    (lambda (source env vars out-of-line)
+    (lambda (source env vars out-of-line fail)
       (new-cst source env
         1)))
 
   (define gen-flonum-0
-    (lambda (source env vars out-of-line)
+    (lambda (source env vars out-of-line fail)
       (new-cst source env
         (macro-inexact-+0))))
 
   (define gen-flonum-1
-    (lambda (source env vars out-of-line)
+    (lambda (source env vars out-of-line fail)
       (new-cst source env
         (macro-inexact-+1))))
 
   (define gen-first-arg
-    (lambda (source env vars out-of-line)
+    (lambda (source env vars out-of-line fail)
       (new-ref source env
         (car vars))))
 
@@ -3827,7 +3841,7 @@
        (make-nary-generator
         gen-fixnum-0
         gen-first-arg
-        (make-conditional-fold-generator **fx+?-sym))))
+        (make-conditional-fold-generator **fx+?-sym #t))))
 
     (define case-fxwrap*
       (gen-fixnum-case
@@ -3841,7 +3855,7 @@
        (make-nary-generator
         gen-fixnum-1
         gen-first-arg
-        (lambda (source env vars out-of-line)
+        (lambda (source env vars out-of-line fail)
           (new-tst source env
             (gen-disj-multi source env
               (map (lambda (var)
@@ -3856,7 +3870,7 @@
               0)
             (gen-conditional-fold source env
               vars
-              out-of-line
+              fail
               (lambda (source env var1 var2)
                 (new-tst source env
                   (gen-call-prim-notsafe source env
@@ -3883,11 +3897,11 @@
       (gen-fixnum-case
        (make-nary-generator
         gen-fixnum-0 ; ignored
-        (make-conditional-fixed-arity-generator **fx-?-sym)
-        (lambda (source env vars out-of-line)
+        (make-conditional-fixed-arity-generator **fx-?-sym #t)
+        (lambda (source env vars out-of-line fail)
           (gen-conditional-fold source env
             vars
-            out-of-line
+            fail
             (lambda (source env var1 var2)
               (gen-call-prim-vars-notsafe source env
                 **fx-?-sym
@@ -3895,14 +3909,14 @@
 
     (define case-fxwrapquotient
       (gen-fixnum-division-case
-       (lambda (source env vars out-of-line)
+       (lambda (source env vars out-of-line fail)
          (gen-call-prim-vars-notsafe source env
            **fxwrapquotient-sym
            vars))))
 
     (define case-fxquotient
       (gen-fixnum-division-case
-       (lambda (source env vars out-of-line)
+       (lambda (source env vars out-of-line fail)
          (new-tst source env
            (gen-call-prim-notsafe source env
              **eqv?-sym
@@ -3914,7 +3928,7 @@
              (gen-call-prim-vars-notsafe source env
                **fx-?-sym
                (list (car vars)))
-             (out-of-line))
+             (fail))
            (gen-call-prim-vars-notsafe source env
              **fxquotient-sym
              vars)))))
@@ -3923,10 +3937,10 @@
       (gen-fixnum-case
        (make-nary-generator
         gen-fixnum-0 ; ignored
-        (lambda (source env vars out-of-line)
+        (lambda (source env vars out-of-line fail)
           ;; call / to compute inverse
           (out-of-line))
-        (lambda (source env vars out-of-line)
+        (lambda (source env vars out-of-line fail)
           (new-tst source env
             (gen-disj-multi source env
               (map (lambda (var)
@@ -3965,7 +3979,7 @@
                                     (new-cst source env
                                       0)))
                             (fold-quotient q-var (cdr rest-vars))
-                            (out-of-line)))
+                            (fail)))
                         (list (gen-call-prim-notsafe source env
                                 **fxquotient-sym
                                 (list (new-ref source env
@@ -3994,14 +4008,14 @@
 
     (define case-fxabs
       (gen-fixnum-case
-       (make-conditional-fixed-arity-generator **fxabs?-sym)))
+       (make-conditional-fixed-arity-generator **fxabs?-sym #t)))
 
     (define case-fxwrapsquare
       (gen-simple-case (list **fixnum?-sym) **fxwrapsquare-sym))
 
     (define case-fxsquare
       (gen-fixnum-case
-       (make-conditional-fixed-arity-generator **fxsquare?-sym)))
+       (make-conditional-fixed-arity-generator **fxsquare?-sym #t)))
 
     (define case-fxand
       (gen-simple-case (list **fixnum?-sym) **fxand-sym))
@@ -4039,32 +4053,38 @@
     (define case-fxwraparithmetic-shift
       (gen-fixnum-case
        (make-conditional-fixed-arity-generator
-        **fxwraparithmetic-shift?-sym)))
+        **fxwraparithmetic-shift?-sym
+        #t)))
 
     (define case-fxarithmetic-shift
       (gen-fixnum-case
        (make-conditional-fixed-arity-generator
-        **fxarithmetic-shift?-sym)))
+        **fxarithmetic-shift?-sym
+        #t)))
 
     (define case-fxwraparithmetic-shift-left
       (gen-fixnum-case
        (make-conditional-fixed-arity-generator
-        **fxwraparithmetic-shift-left?-sym)))
+        **fxwraparithmetic-shift-left?-sym
+        #t)))
 
     (define case-fxarithmetic-shift-left
       (gen-fixnum-case
        (make-conditional-fixed-arity-generator
-        **fxarithmetic-shift-left?-sym)))
+        **fxarithmetic-shift-left?-sym
+        #t)))
 
     (define case-fxarithmetic-shift-right
       (gen-fixnum-case
        (make-conditional-fixed-arity-generator
-        **fxarithmetic-shift-right?-sym)))
+        **fxarithmetic-shift-right?-sym
+        #t)))
 
     (define case-fxwraplogical-shift-right
       (gen-fixnum-case
        (make-conditional-fixed-arity-generator
-        **fxwraplogical-shift-right?-sym)))
+        **fxwraplogical-shift-right?-sym
+        #t)))
 
     (define case-fixnum->flonum
       (gen-fixnum-case
@@ -5670,11 +5690,13 @@
             (gen-validating-case
              (list)
              (make-conditional-fixed-arity-generator
-              **peek-char0?-sym))
+              **peek-char0?-sym
+              #f))
             (gen-validating-case
              (list **char-input-port?-cached-sym)
              (make-conditional-fixed-arity-generator
-              **peek-char1?-sym))))
+              **peek-char1?-sym
+              #f))))
 
   (def-exp "##read-char0"
            (make-simple-expander
@@ -5689,11 +5711,13 @@
             (gen-validating-case
              (list)
              (make-conditional-fixed-arity-generator
-              **read-char0?-sym))
+              **read-char0?-sym
+              #f))
             (gen-validating-case
              (list **char-input-port?-cached-sym)
              (make-conditional-fixed-arity-generator
-              **read-char1?-sym))))
+              **read-char1?-sym
+              #f))))
 
   (def-exp "##write-char1"
            (make-simple-expander
@@ -5708,11 +5732,13 @@
             (gen-validating-case
              (list **char?-sym)
              (make-conditional-fixed-arity-generator
-              **write-char1?-sym))
+              **write-char1?-sym
+              #f))
             (gen-validating-case
              (list **char?-sym **char-output-port?-cached-sym)
              (make-conditional-fixed-arity-generator
-              **write-char2?-sym))))
+              **write-char2?-sym
+              #f))))
 )
 
 (define (setup-misc-primitives)
@@ -5724,13 +5750,17 @@
            (make-simple-expander
             (gen-validating-case
              #f
-             (make-conditional-fixed-arity-generator **symbol->string?-sym))))
+             (make-conditional-fixed-arity-generator
+              **symbol->string?-sym
+              #f))))
 
   (def-exp "symbol->string"
            (make-simple-expander
             (gen-validating-case
              (list **symbol?-sym)
-             (make-conditional-fixed-arity-generator **symbol->string?-sym))))
+             (make-conditional-fixed-arity-generator
+              **symbol->string?-sym
+              #f))))
 
 )
 
