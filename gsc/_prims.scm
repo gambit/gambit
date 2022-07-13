@@ -7004,8 +7004,8 @@
 (def-type-infer "fx*"     (infer-fx* type-fixnum-overflow-normalize-clamp))
 (def-type-infer "fxwrap*" (infer-fx* type-fixnum-overflow-normalize-wrap))
 
-;;(def-type-infer "fxquotient"     (infer-fxquotient  type-fixnum-overflow-normalize-clamp))
-;;(def-type-infer "fxwrapquotient" (infer-fxquotient  type-fixnum-overflow-normalize-wrap))
+(def-type-infer "fxquotient"     (infer-fxquotient  type-fixnum-overflow-normalize-clamp))
+(def-type-infer "fxwrapquotient" (infer-fxquotient  type-fixnum-overflow-normalize-wrap))
 ;;(def-type-infer "fxremainder"    (infer-fxremainder type-fixnum-overflow-normalize-clamp))
 ;;(def-type-infer "fxmodulo"       (infer-fxmodulo    type-fixnum-overflow-normalize-clamp))
 
@@ -8211,7 +8211,184 @@
          (make-type-fixnum #f #f))))
 
 (define (type-infer-common-fxquotient tctx lo1 hi1 lo2 hi2)
-  (make-type-fixnum 0 -1)) ;; TODO: implement!
+
+  (declare (generic))
+
+  (define (<=? x val) (type-fixnum-<=-num x val))
+  (define (>=? x val) (type-fixnum->=-num x val))
+
+  (define (empty) type-bot)
+
+  (define (clamp>= val bound)
+    (if (>=? val bound)
+        val
+        bound))
+
+  (define (clamp<= val bound)
+    (if (<=? val bound)
+        val
+        bound))
+
+  (define (quadrants-union . fixnums)
+    (define (quadrants-union-aux fixnums)
+      (cond
+        ((null? fixnums)
+          (empty))
+        ((null? (cdr fixnums))
+          (car fixnums))
+        (else
+          (type-union tctx (car fixnums) (quadrants-union-aux (cdr fixnums)) #f))))
+
+    (quadrants-union-aux (filter (lambda (x) x) fixnums)))
+
+  (define (fixnum-lo fixnum)
+    (if (number? fixnum)
+        fixnum
+        (type-fixnum-lo fixnum)))
+
+  (define (fixnum-hi fixnum)
+    (if (number? fixnum)
+        fixnum
+        (type-fixnum-hi fixnum)))
+
+  (define (fixnum-bound fixnum)
+    (let* ((lo (type-fixnum-lo fixnum))
+           (hi (type-fixnum-hi fixnum)))
+      (make-type-fixnum-bounded tctx lo hi)))
+
+  (define (abstract-pos-pos-fxquotient x y)
+    ;; assume x >= 0 and y > 0
+    (cond ((eq? x '<=)
+           (make-type-fixnum 0 '<=))
+          ((eq? x '<)
+           (make-type-fixnum 0 '<))
+          ;; dividend is a specific number
+          ((eq? y '<)
+           (make-type-fixnum 0 x))
+          ((eq? y '<=)
+           (make-type-fixnum 0 x))
+          ;; divisor is a number as well
+          (else
+            (let ((result (quotient x y)))
+              (make-type-fixnum result result)))))
+
+  (define (abstract-pos-neg-fxquotient x y)
+    ;; assume x >= 0 and y < 0
+    (cond ((eq? x '<=)
+           (make-type-fixnum '> 0))
+          ((eq? x '<)
+           (make-type-fixnum '> 0))
+          ;; dividend is a specific number
+          ((eq? y '>)
+           (make-type-fixnum (- x) 0))
+          ((eq? y '>=)
+           (make-type-fixnum (- x) 0))
+          ;; divisor is a number as well
+          (else
+            (let ((result (quotient x y)))
+              (make-type-fixnum result result)))))
+
+  (define (abstract-neg-pos-fxquotient x y)
+    ;; assume x < 0 and y > 0
+    (cond ((eq? x '>=)
+           (make-type-fixnum '>= 0))
+          ((eq? x '>)
+           (make-type-fixnum '> 0))
+          ;; dividend is a specific number
+          ((eq? y '<)
+           (make-type-fixnum x 0))
+          ((eq? y '<=)
+           (make-type-fixnum x 0))
+          ;; divisor is a number as well
+          (else
+            (let ((result (quotient x y)))
+              (make-type-fixnum result result)))))
+
+  (define (abstract-neg-neg-fxquotient x y)
+    ;; assume x < 0 and y < 0
+    (cond ((eq? x '>=)
+           (make-type-fixnum
+             0
+             (if (<=? y 2) '<= #f))) ;; overflow
+          ((eq? x '>)
+           (make-type-fixnum 0 '<=))
+          ;; dividend is a specific number
+          ((eq? y '>=)
+           (make-type-fixnum 0 (- x))) ;; can overflow, must be bounded later
+          ((eq? y '>)
+           (make-type-fixnum 0 (- x))) ;; can overflow, must be bounded later
+          ;; divisor is a number as well
+          (else
+            (let ((result (quotient x y))) ;; can overflow, must be bounded later
+              (make-type-fixnum result result)))))
+
+  (define (make-pos-pos-interval?)
+    (and (>=? hi1 0)
+         (>=? hi2 1)
+         (make-type-fixnum
+           ;; smaller bound takes min dividend and max divisor
+           (fixnum-lo
+             (abstract-pos-pos-fxquotient
+               (clamp>= lo1 0)
+               hi2))
+           ;; higher bound takes max dividend and min divisor
+           (fixnum-hi
+             (abstract-pos-pos-fxquotient
+               hi1
+               (clamp>= lo2 1))))))
+
+  (define (make-pos-neg-interval?)
+    (and (>=? hi1 0)
+         (<=? lo2 -1)
+         (make-type-fixnum
+           ;; smaller bound takes max dividend and min absolute divisor
+           (fixnum-lo
+             (abstract-pos-neg-fxquotient
+               hi1
+               (clamp<= hi2 -1)))
+           ;; higher bound takes min dividend and max absolute divisor
+           (fixnum-hi
+             (abstract-pos-neg-fxquotient
+               (clamp>= lo1 0)
+               lo2)))))
+
+  (define (make-neg-pos-interval?)
+    (and (<=? lo1 -1)
+         (>=? hi2 1)
+         (make-type-fixnum
+           ;; smaller bound takes max absolute dividend and min divisor
+           (fixnum-lo
+             (abstract-neg-pos-fxquotient
+               lo1
+               (clamp>= lo2 1)))
+           ;; higher bound takes min absolute dividend and max divisor
+           (fixnum-hi
+             (abstract-neg-pos-fxquotient
+               (clamp<= hi1 -1)
+               hi2)))))
+
+  (define (make-neg-neg-interval?)
+    (and (<=? lo1 -1)
+         (<=? lo2 -1)
+         (make-type-fixnum
+           ;; smaller bound takes min absolute dividend and max absolute divisor
+           (fixnum-lo
+             (abstract-neg-neg-fxquotient
+               (clamp<= hi1 -1)
+               lo2))
+           ;; higher bound takes max absolute dividend and min absolute divisor
+           (fixnum-hi
+             (abstract-neg-neg-fxquotient
+               lo1
+               (clamp<= hi2 -1))))))
+
+  (fixnum-bound
+    (quadrants-union
+      (make-pos-pos-interval?)
+      (make-pos-neg-interval?)
+      (make-neg-pos-interval?)
+      (make-neg-neg-interval?))))
+
 
 (define (type-infer-common-fxremainder tctx lo1 hi1 lo2 hi2)
   (make-type-fixnum 0 -1)) ;; TODO: implement!
@@ -8743,7 +8920,7 @@
 (test-prim prim-fx*?    (false ##fx*?)    'fx*?)
 (test-prim prim-fxwrap* (wrap  ##fxwrap*) 'fxwrap*)
 
-;;(test-prim prim-fxquotient     (clamp-no0 ##fxquotient)     'fxquotient)
+(test-prim prim-fxquotient     (clamp-no0 ##fxquotient)     'fxquotient)
 ;;(test-prim prim-fxremainder    (clamp-no0 ##fxremainder)    'fxremainder)
 ;;(test-prim prim-fxmodulo       (clamp-no0 ##fxmodulo)       'fxmodulo)
 )
