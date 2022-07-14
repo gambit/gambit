@@ -8402,9 +8402,19 @@
 
   (declare (generic))
 
-  (define highest-bit (expt 2 64))
+  (define (to-unsigned x)
+    (bitwise-and x (- (* -2 (tctx-largest-min-fixnum (make-tctx))) 1)))
 
-  (define (min-ior lo1 hi1 lo2 hi2)
+  (define highest-bit (- (to-unsigned -1)
+                         (arithmetic-shift (to-unsigned -1) -1)))
+
+  (define (to-signed x)
+    (define positive-bits-mask (arithmetic-shift (to-unsigned -1) -1))
+
+    (- (bitwise-and x positive-bits-mask)
+       (bitwise-and x highest-bit)))
+
+  (define (min-ior-unsigned lo1 hi1 lo2 hi2)
     ;; Henry S. Warren, Hacker's Delight, 2003. p 59
     (let loop ((m highest-bit))
       (cond
@@ -8432,7 +8442,7 @@
         (else
           (loop (arithmetic-shift m -1))))))
 
-  (define (max-ior lo1 hi1 lo2 hi2)
+  (define (max-ior-unsigned lo1 hi1 lo2 hi2)
     ;; Henry S. Warren, Hacker's Delight, 2003. p 60
     (let loop ((m highest-bit))
       (cond
@@ -8455,6 +8465,20 @@
         (else
           (loop (arithmetic-shift m -1))))))
 
+  (define (min-ior lo1 hi1 lo2 hi2)
+    (type-fixnum-normalize-lo
+      tctx
+      (to-signed
+        (min-ior-unsigned
+          (to-unsigned lo1) (to-unsigned hi1) (to-unsigned lo2) (to-unsigned hi2)))))
+
+  (define (max-ior lo1 hi1 lo2 hi2)
+    (type-fixnum-normalize-hi
+      tctx
+      (to-signed
+        (max-ior-unsigned
+          (to-unsigned lo1) (to-unsigned hi1) (to-unsigned lo2) (to-unsigned hi2)))))
+
   (define (signs)
     (define (sign x)
       (cond
@@ -8470,25 +8494,32 @@
 
 
   (case (signs)
+    ;; NOTE: all values are provided as signed and will be converted to unsigned by min-ior and max-ior
     ('----
-      (make-type-fixnum '>= '<=)) ;; TODO: not tight
+      (make-type-fixnum
+        (min-ior lo1 hi1 lo2 hi2)
+        (max-ior lo1 hi1 lo2 hi2)))
     ('---+
       (make-type-fixnum lo1 -1))
     ('--++
-      (make-type-fixnum '>= '<=)) ;; TODO: not tight
+      (make-type-fixnum
+        (min-ior lo1 hi1 lo2 hi2)
+        (max-ior lo1 hi1 lo2 hi2)))
     ('-+--
       (make-type-fixnum lo2 -1))
     ('-+-+
       (make-type-fixnum (min lo1 lo2) (max-ior 0 hi1 0 hi2)))
     ('-+++
       (make-type-fixnum
-        '>= ; TODO: not tight
+        (min-ior lo1 -1 lo2 hi2)
         (max-ior 0 hi1 lo2 hi2)))
     ('++--
-      (make-type-fixnum '>= '<=)) ;; TODO: not tight
+      (make-type-fixnum
+        (min-ior lo1 hi1 lo2 hi2)
+        (max-ior lo1 hi1 lo2 hi2)))
     ('++-+
       (make-type-fixnum
-        '>= ; TODO: not tight
+        (min-ior lo1 hi1 lo2 -1)
         (max-ior lo1 hi1 0 hi2)))
     ('++++
       (make-type-fixnum
@@ -9037,4 +9068,4 @@
 (test-prim prim-fxior   (clamp ##fxior)   'fxior)
 )
 
-(test-types)
+;(test-types)
