@@ -7010,6 +7010,7 @@
 ;;(def-type-infer "fxmodulo"       (infer-fxmodulo    type-fixnum-overflow-normalize-clamp))
 
 (def-type-infer "fxior"   (infer-fxior))
+(def-type-infer "fxnot"   (infer-fxnot))
 
 (def-type-narrow "fx="  #f)
 (def-type-narrow "fx<"  (type-narrow-fold type-narrow-fx<))
@@ -8533,6 +8534,20 @@
     (else
       (make-type-fixnum '>= '<=))))
 
+(define (type-infer-common-fxnot tctx lo hi)
+  (define (abstract-fxnot x)
+    (case x
+      ('<= '>=)
+      ('<  '>)
+      ('>  '<)
+      ('>= '<=)
+      (else
+        (- 0 x 1))))
+
+  (make-type-fixnum
+    (abstract-fxnot hi)
+    (abstract-fxnot lo)))
+
 (define (infer-fx+ overflow-normalize)
   (type-infer-fold
    (lambda (tctx)
@@ -8597,6 +8612,11 @@
     (let ((type1 (car args))
           (type2 (cadr args)))
       (type-infer-fixnum2 tctx type-infer-common-fxior type1 type2))))
+
+(define (infer-fxnot)
+  (lambda (tctx args)
+    (let ((type (car args)))
+      (type-infer-fixnum1 tctx type-infer-common-fxnot type))))
 
 ;;; type narrowing
 
@@ -8923,6 +8943,7 @@
 (define prim-fxmodulo     (infer-fxmodulo type-fixnum-overflow-normalize-clamp))
 
 (define prim-fxior        (infer-fxior))
+(define prim-fxnot        (infer-fxnot))
 
 (define (ft type)
   (string-concatenate (format-type type)))
@@ -8982,7 +9003,34 @@
   (let ((range (type-fixnum-range tctx type)))
     (iota (+ 1 (- (cdr range) (car range))) (car range))))
 
-(define (test-prim prim fn name)
+(define (test-prim1 prim fn name)
+  (let ((min-fixnum (tctx-smallest-min-fixnum tctx))
+        (max-fixnum (tctx-smallest-max-fixnum tctx)))
+    (for-each-fixnum-range
+     tctx
+     (lambda (type)
+       (let* ((result
+               (type-motley-force tctx (prim tctx (list type))))
+              (result-range
+               (type-fixnum-range tctx result))
+              (lst
+               (type-fixnum->list tctx (type-motley-force tctx type))))
+         (for-each
+          (lambda (n)
+            (let ((r (fn tctx n)))
+              (if (and (not (eq? r 'error))
+                       (if (not r) ;; result = #f?
+                           (= 0 (bitwise-and
+                                 (type-motley-bitset result)
+                                 type-false-bit))
+                           (not (and (>= r (car result-range))
+                                     (<= r (cdr result-range))))))
+                  (begin
+                    (pp `((,name ,n) => ,r which is not in ,result))
+                    (exit)))))
+          lst))))))
+
+(define (test-prim2 prim fn name)
   (let ((min-fixnum (tctx-smallest-min-fixnum tctx))
         (max-fixnum (tctx-smallest-max-fixnum tctx)))
     (for-each-fixnum-range-pair
@@ -9024,6 +9072,14 @@
               'error ;; primitive raises an error on overflow
               r)))))
 
+(define (clamp1 fn)
+  (lambda (tctx val1)
+      (let ((r (fn val1)))
+        (if (or (< r (tctx-smallest-min-fixnum tctx))
+                (> r (tctx-smallest-max-fixnum tctx)))
+            'error ;; primitive raises an error on overflow
+            r))))
+
 (define (false fn #!optional no0?)
   (lambda (tctx val1 val2)
     (if (and (= val2 0) no0?)
@@ -9053,23 +9109,24 @@
 (define (wrap-no0 fn)  (wrap fn #t))
 
 
-(test-prim prim-fx+     (clamp ##fx+)     'fx+)
-(test-prim prim-fx+?    (false ##fx+?)    'fx+?)
-(test-prim prim-fxwrap+ (wrap  ##fxwrap+) 'fxwrap+)
+(test-prim2 prim-fx+     (clamp ##fx+)     'fx+)
+(test-prim2 prim-fx+?    (false ##fx+?)    'fx+?)
+(test-prim2 prim-fxwrap+ (wrap  ##fxwrap+) 'fxwrap+)
 
-(test-prim prim-fx-     (clamp ##fx-)     'fx-)
-(test-prim prim-fx-?    (false ##fx-?)    'fx-?)
-(test-prim prim-fxwrap- (wrap  ##fxwrap-) 'fxwrap-)
+(test-prim2 prim-fx-     (clamp ##fx-)     'fx-)
+(test-prim2 prim-fx-?    (false ##fx-?)    'fx-?)
+(test-prim2 prim-fxwrap- (wrap  ##fxwrap-) 'fxwrap-)
 
-(test-prim prim-fx*     (clamp ##fx*)     'fx*)
-(test-prim prim-fx*?    (false ##fx*?)    'fx*?)
-(test-prim prim-fxwrap* (wrap  ##fxwrap*) 'fxwrap*)
+(test-prim2 prim-fx*     (clamp ##fx*)     'fx*)
+(test-prim2 prim-fx*?    (false ##fx*?)    'fx*?)
+(test-prim2 prim-fxwrap* (wrap  ##fxwrap*) 'fxwrap*)
 
-(test-prim prim-fxquotient     (clamp-no0 ##fxquotient)     'fxquotient)
-;;(test-prim prim-fxremainder    (clamp-no0 ##fxremainder)    'fxremainder)
-;;(test-prim prim-fxmodulo       (clamp-no0 ##fxmodulo)       'fxmodulo)
+(test-prim2 prim-fxquotient     (clamp-no0 ##fxquotient)     'fxquotient)
+;;(test-prim2 prim-fxremainder    (clamp-no0 ##fxremainder)    'fxremainder)
+;;(test-prim2 prim-fxmodulo       (clamp-no0 ##fxmodulo)       'fxmodulo)
 
-(test-prim prim-fxior   (clamp ##fxior)   'fxior)
+(test-prim2 prim-fxior   (clamp ##fxior)   'fxior)
+(test-prim1 prim-fxnot   (clamp1 ##fxnot)  'fxnot)
 )
 
-;;(test-types)
+(test-types)
