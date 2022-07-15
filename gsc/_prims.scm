@@ -7010,6 +7010,7 @@
 ;;(def-type-infer "fxmodulo"       (infer-fxmodulo    type-fixnum-overflow-normalize-clamp))
 
 (def-type-infer "fxior"   (infer-fxior))
+(def-type-infer "fxand"   (infer-fxand))
 (def-type-infer "fxnot"   (infer-fxnot))
 
 (def-type-narrow "fx="  #f)
@@ -8548,6 +8549,25 @@
     (abstract-fxnot hi)
     (abstract-fxnot lo)))
 
+(define (type-infer-common-fxand tctx lo1 hi1 lo2 hi2)
+  ;; Apply De Morgan
+  (let* ((not-left (type-infer-common-fxnot tctx lo1 hi1))
+         (not-right (type-infer-common-fxnot tctx lo2 hi2))
+         (or-left-right
+           (type-infer-common-fxior
+             tctx
+             (type-fixnum-lo not-left)
+             (type-fixnum-hi not-left)
+             (type-fixnum-lo not-right)
+             (type-fixnum-hi not-right)))
+         (not-result
+           (type-infer-common-fxnot
+             tctx
+             (type-fixnum-lo or-left-right)
+             (type-fixnum-hi or-left-right))))
+    not-result))
+
+
 (define (infer-fx+ overflow-normalize)
   (type-infer-fold
    (lambda (tctx)
@@ -8612,6 +8632,12 @@
     (let ((type1 (car args))
           (type2 (cadr args)))
       (type-infer-fixnum2 tctx type-infer-common-fxior type1 type2))))
+
+(define (infer-fxand)
+  (lambda (tctx args)
+    (let ((type1 (car args))
+          (type2 (cadr args)))
+      (type-infer-fixnum2 tctx type-infer-common-fxand type1 type2))))
 
 (define (infer-fxnot)
   (lambda (tctx args)
@@ -8943,6 +8969,7 @@
 (define prim-fxmodulo     (infer-fxmodulo type-fixnum-overflow-normalize-clamp))
 
 (define prim-fxior        (infer-fxior))
+(define prim-fxand        (infer-fxand))
 (define prim-fxnot        (infer-fxnot))
 
 (define (ft type)
@@ -9126,6 +9153,7 @@
 ;;(test-prim2 prim-fxmodulo       (clamp-no0 ##fxmodulo)       'fxmodulo)
 
 (test-prim2 prim-fxior   (clamp ##fxior)   'fxior)
+(test-prim2 prim-fxand   (clamp ##fxand)   'fxand)
 (test-prim1 prim-fxnot   (clamp1 ##fxnot)  'fxnot)
 )
 
