@@ -8525,8 +8525,12 @@
       (make-type-fixnum
         (min-ior lo1 hi1 lo2 hi2)
         (max-ior lo1 hi1 lo2 hi2)))
-    (else ;; one of the bounds is <, <=, > or >=
-      ;; TODO we can sometimes refine the sign of the output
+    ;; limit bounts >=, >, <, <= in which case we can sometime infer sign
+    ('?-?-
+      (make-type-fixnum '>= -1))
+    ('+?+?
+      (make-type-fixnum 0 '<=))
+    (else
       (make-type-fixnum '>= '<=))))
 
 (define (infer-fx+ overflow-normalize)
@@ -9068,4 +9072,4 @@
 (test-prim prim-fxior   (clamp ##fxior)   'fxior)
 )
 
-;(test-types)
+;;(test-types)
