@@ -9157,4 +9157,4 @@
 (test-prim1 prim-fxnot   (clamp1 ##fxnot)  'fxnot)
 )
 
-(test-types)
+;;(test-types)
