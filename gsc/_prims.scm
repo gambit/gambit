@@ -7528,17 +7528,17 @@
          #f))) ;; type is not for a unique object
 
 (define (make-type-motley-for-unique-obj obj)
-  (cond ((eq? obj #f)
+  (cond ((false-object? obj)
          type-motley-false)
         ((eq? obj #t)
          type-motley-true)
         ((null? obj)
          type-motley-null)
-        ((eq? obj #!void)
+        ((void-object? obj)
          type-motley-void)
-        ((eof-object? obj)
+        ((end-of-file-object? obj)
          type-motley-eof)
-        ((eq? obj ##absent-object)
+        ((absent-object? obj)
          type-motley-absent)
         (else
          #f))) ;; obj does not have its own type
@@ -8404,21 +8404,18 @@
 
   (declare (generic))
 
-  (define (to-unsigned x)
-    (bitwise-and x (- (* -2 (tctx-largest-min-fixnum (make-tctx))) 1)))
+  (define limit-bit (* -2 (tctx-largest-min-fixnum tctx)))
 
-  (define highest-bit (- (to-unsigned -1)
-                         (arithmetic-shift (to-unsigned -1) -1)))
+  (define (to-unsigned n) (bitwise-and n (- limit-bit 1)))
 
-  (define (to-signed x)
-    (define positive-bits-mask (arithmetic-shift (to-unsigned -1) -1))
-
-    (- (bitwise-and x positive-bits-mask)
-       (bitwise-and x highest-bit)))
+  (define (to-signed n)
+    (if (< (tctx-largest-max-fixnum tctx) n)
+        (+ n (* 2 (tctx-largest-min-fixnum tctx)))
+        n))
 
   (define (min-ior-unsigned lo1 hi1 lo2 hi2)
     ;; Henry S. Warren, Hacker's Delight, 2003. p 59
-    (let loop ((m highest-bit))
+    (let loop ((m limit-bit))
       (cond
         ((= m 0) (bitwise-ior lo1 lo2))
         ((not
@@ -8446,7 +8443,7 @@
 
   (define (max-ior-unsigned lo1 hi1 lo2 hi2)
     ;; Henry S. Warren, Hacker's Delight, 2003. p 60
-    (let loop ((m highest-bit))
+    (let loop ((m limit-bit))
       (cond
         ((= m 0) (bitwise-ior hi1 hi2))
         ((not
@@ -8481,56 +8478,74 @@
         (max-ior-unsigned
           (to-unsigned lo1) (to-unsigned hi1) (to-unsigned lo2) (to-unsigned hi2)))))
 
-  (define (signs)
-    (define (sign x)
-      (cond
-        ((not (number? x)) '?)
-        ((< x 0) '-)
-        (else '+)))
+  (define-macro (case-signs args . body)
+    (define sign-procedure-symbol (gensym 'get-sign))
 
-    (string->symbol
-      (append-strings
-        (map
-          symbol->string
-          (list (sign lo1) (sign hi1) (sign lo2) (sign hi2))))))
+    (define else-clause
+      (let ((clause (assq 'else body)))
+        (and clause (cadr clause))))
 
+    (define (make-conds parent-signs args)
+      (if (null? args)
+        (let ((clause (assoc (reverse parent-signs) body)))
+          (if clause (cadr clause) else-clause))
+        (let ((sign-symbol (gensym 'sign)))
+          `(let ((,sign-symbol (,sign-procedure-symbol ,(car args))))
+             (cond
+               ((eq? ,sign-symbol '+)
+                 ,(make-conds (cons '+ parent-signs) (cdr args)))
+               ((eq? ,sign-symbol '-)
+                 ,(make-conds (cons '- parent-signs) (cdr args)))
+               ((eq? ,sign-symbol '?)
+                 ,(make-conds (cons '? parent-signs) (cdr args))))))))
 
-  (case (signs)
+   `(let ((,sign-procedure-symbol
+           (lambda (x)
+             (cond
+               ((not (number? x))
+                 '?)
+               ((< x 0)
+                 '-)
+               (else
+                 '+)))))
+      ,(make-conds '() args)))
+
+  (case-signs (lo1 hi1 lo2 hi2)
     ;; NOTE: all values are provided as signed and will be converted to unsigned by min-ior and max-ior
-    ('----
+    ((- - - -)
       (make-type-fixnum
         (min-ior lo1 hi1 lo2 hi2)
         (max-ior lo1 hi1 lo2 hi2)))
-    ('---+
+    ((- - - +)
       (make-type-fixnum lo1 -1))
-    ('--++
+    ((- - + +)
       (make-type-fixnum
         (min-ior lo1 hi1 lo2 hi2)
         (max-ior lo1 hi1 lo2 hi2)))
-    ('-+--
+    ((- + - -)
       (make-type-fixnum lo2 -1))
-    ('-+-+
+    ((- + - +)
       (make-type-fixnum (min lo1 lo2) (max-ior 0 hi1 0 hi2)))
-    ('-+++
+    ((- + + +)
       (make-type-fixnum
         (min-ior lo1 -1 lo2 hi2)
         (max-ior 0 hi1 lo2 hi2)))
-    ('++--
+    ((+ + - -)
       (make-type-fixnum
         (min-ior lo1 hi1 lo2 hi2)
         (max-ior lo1 hi1 lo2 hi2)))
-    ('++-+
+    ((+ + - +)
       (make-type-fixnum
         (min-ior lo1 hi1 lo2 -1)
         (max-ior lo1 hi1 0 hi2)))
-    ('++++
+    ((+ + + +)
       (make-type-fixnum
         (min-ior lo1 hi1 lo2 hi2)
         (max-ior lo1 hi1 lo2 hi2)))
-    ;; limit bounts >=, >, <, <= in which case we can sometime infer sign
-    ('?-?-
+    ;; limit bounds >=, >, <, <= in which case we can sometime infer sign
+    ((? - ? -)
       (make-type-fixnum '>= -1))
-    ('+?+?
+    ((+ ? + ?)
       (make-type-fixnum 0 '<=))
     (else
       (make-type-fixnum '>= '<=))))
@@ -8543,7 +8558,7 @@
       ('>  '<)
       ('>= '<=)
       (else
-        (- 0 x 1))))
+        (- -1 x))))
 
   (make-type-fixnum
     (abstract-fxnot hi)
