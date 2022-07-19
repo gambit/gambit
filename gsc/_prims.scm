@@ -7011,6 +7011,7 @@
 
 (def-type-infer "fxior"   (infer-fxior))
 (def-type-infer "fxand"   (infer-fxand))
+(def-type-infer "fxnand"  (infer-fxnand))
 (def-type-infer "fxnot"   (infer-fxnot))
 
 (def-type-narrow "fx="  #f)
@@ -8582,6 +8583,17 @@
              (type-fixnum-hi or-left-right))))
     not-result))
 
+(define (type-infer-common-fxnand tctx lo1 hi1 lo2 hi2)
+  (let* ((not-left (type-infer-common-fxnot tctx lo1 hi1))
+         (not-right (type-infer-common-fxnot tctx lo2 hi2))
+         (not-and
+           (type-infer-common-fxior
+             tctx
+             (type-fixnum-lo not-left)
+             (type-fixnum-hi not-left)
+             (type-fixnum-lo not-right)
+             (type-fixnum-hi not-right))))
+    not-and))
 
 (define (infer-fx+ overflow-normalize)
   (type-infer-fold
@@ -8653,6 +8665,12 @@
     (let ((type1 (car args))
           (type2 (cadr args)))
       (type-infer-fixnum2 tctx type-infer-common-fxand type1 type2))))
+
+(define (infer-fxnand)
+  (lambda (tctx args)
+    (let ((type1 (car args))
+          (type2 (cadr args)))
+      (type-infer-fixnum2 tctx type-infer-common-fxnand type1 type2))))
 
 (define (infer-fxnot)
   (lambda (tctx args)
@@ -8985,6 +9003,7 @@
 
 (define prim-fxior        (infer-fxior))
 (define prim-fxand        (infer-fxand))
+(define prim-fxnand       (infer-fxnand))
 (define prim-fxnot        (infer-fxnot))
 
 (define (ft type)
@@ -9169,6 +9188,7 @@
 
 (test-prim2 prim-fxior   (clamp ##fxior)   'fxior)
 (test-prim2 prim-fxand   (clamp ##fxand)   'fxand)
+(test-prim2 prim-fxnand  (clamp ##fxnand)  'fxnand)
 (test-prim1 prim-fxnot   (clamp1 ##fxnot)  'fxnot)
 )
 
