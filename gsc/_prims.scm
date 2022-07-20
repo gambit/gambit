@@ -8633,7 +8633,7 @@
 
   (case-signs (lo1 hi1 lo2 hi2)
     ;; Adaptation of the ior table of Hacker's Delight to xor
-    ;; NOTE: all values are provided as signed and will be converted to unsigned by min-ior and max-ior
+    ;; NOTE: all values are provided as signed and will be converted to unsigned by min-xor and max-xor
     ((- - - -)
       (make-type-fixnum
         (min-xor lo1 hi1 lo2 hi2)
