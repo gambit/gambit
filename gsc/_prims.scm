@@ -8806,6 +8806,27 @@
             (type-fixnum-hi xor-result))))
     not-xor))
 
+(define (type-infer-common-fxif tctx lo1 hi1 lo2 hi2 lo3 hi3)
+  ;; (fxif x y z) = (fxior (fxand x y) (fxand (fxnot x) z))
+  ;; NOTE: this bound is not strict since x is not independant from (fxnot x)
+  (let* ((not1 (type-infer-common-fxnot tctx lo1 hi1))
+         (fxand-1-2 (type-infer-common-fxand tctx lo1 hi1 lo2 hi2))
+         (fxand-not1-3
+           (type-infer-common-fxand
+             tctx
+             (type-fixnum-lo not1)
+             (type-fixnum-hi not1)
+             lo2
+             hi2))
+         (result
+           (type-infer-common-fxior
+             tctx
+             (type-fixnum-lo fxand-1-2)
+             (type-fixnum-hi fxand-1-2)
+             (type-fixnum-lo fxand-not1-3)
+             (type-fixnum-hi fxand-not1-3))))
+   result))
+
 (define (infer-fx+ overflow-normalize)
   (type-infer-fold
    (lambda (tctx)
@@ -9458,5 +9479,17 @@
 (test-prim2 prim-fxeqv   (clamp ##fxeqv)   'fxeqv)
 (test-prim1 prim-fxnot   (clamp1 ##fxnot)  'fxnot)
 )
+
+(define (make-tctx-test)
+
+  ;; For testing, assume fixnums only have 4 bits
+
+  (define smallest-min-fixnum -8)
+  (define smallest-max-fixnum 7)
+
+  (vector smallest-min-fixnum
+          smallest-max-fixnum
+          smallest-min-fixnum
+          smallest-max-fixnum))
 
 ;;(test-types)
