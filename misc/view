@@ -21,17 +21,20 @@ case "$FILE" in
 
 esac
 
+SKIM_EXECUTING="no"
+
 view_file()
 {
-  if test "$PREV_LAST_MOD" = "" ; then
-    if test -e "/Applications/Skim.app" ; then
+  if test -e "/Applications/Skim.app" ; then
+    if test "$SKIM_EXECUTING" != "yes" ; then
       osascript -e "tell application \"Skim\" to open \"$1\"" > /dev/null
+      SKIM_EXECUTING="yes"
+    fi
+  else
+    if test -e "/System/Applications/Preview.app" ; then
+      osascript -e "tell application \"Preview\" to open \"$1\"" > /dev/null
     else
-      if test -e "/System/Applications/Preview.app" ; then
-        osascript -e "tell application \"Preview\" to open \"$1\"" > /dev/null
-      else
-        open "$1"
-      fi
+      open "$1"
     fi
   fi
 }

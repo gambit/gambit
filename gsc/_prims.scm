@@ -2807,7 +2807,6 @@
 
 (define (make-conditional-fixed-arity-generator conditional-op-sym fail-on-false?)
   (lambda (source env vars out-of-line fail)
-(pp (list '************* conditional-op-sym fail-on-false?))
     (let ((var (car (gen-temp-vars source '(#f)))))
       (new-call source env
         (gen-prc source env
@@ -8683,13 +8682,13 @@
 
 (define (make-tctx)
 
-  (define tag-bits 3)
+  (define tag-bits 2)
 
-  (define smallest-min-fixnum (- (expt 2 (- 32 tag-bits))))
-  (define smallest-max-fixnum (- (expt 2 (- 32 tag-bits)) 1))
+  (define smallest-min-fixnum (- (expt 2 (- (- 32 tag-bits) 1))))
+  (define smallest-max-fixnum (- (expt 2 (- (- 32 tag-bits) 1)) 1))
 
-  (define largest-min-fixnum (- (expt 2 (- 64 tag-bits))))
-  (define largest-max-fixnum (- (expt 2 (- 64 tag-bits)) 1))
+  (define largest-min-fixnum (- (expt 2 (- (- 64 tag-bits) 1))))
+  (define largest-max-fixnum (- (expt 2 (- (- 64 tag-bits) 1)) 1))
 
   (vector smallest-min-fixnum
           smallest-max-fixnum

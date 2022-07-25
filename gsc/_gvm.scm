@@ -778,6 +778,7 @@
       (cons bbs2 bbs4)))
 
   (let loop ((bbs0 (bbs-type-specialize (cdr (purify-step bbs)))))
+    (bbs-determine-refs! bbs0) (bbs-order bbs0) #;
     (let* ((bbs1-bbs2 (purify-step bbs0))
            (bbs1 (car bbs1-bbs2))
            (bbs2 (cdr bbs1-bbs2)))
@@ -2073,6 +2074,9 @@
 
 (define debug-bbv? #f)
 
+(define instr-cost 1)
+(define call-cost 100)
+
 (define (bbs-type-specialize bbs)
 
   (define tctx (make-tctx))
@@ -2142,10 +2146,15 @@
 
   (define nb-versions (make-table))
 
+  (define (make-bbvctx types cost path) (vector types cost path))
+  (define (bbvctx-types bbvctx) (vector-ref bbvctx 0))
+  (define (bbvctx-cost bbvctx) (vector-ref bbvctx 1))
+  (define (bbvctx-path bbvctx) (vector-ref bbvctx 2))
+
   (define (walk-bbs bbs)
     (let ()
 
-      (define (reach lbl types-before)
+      (define (reach lbl bbvctx)
 #;
         (let ((nbv (table-ref nb-versions lbl 0)))
           (table-set! nb-versions lbl (+ nbv 1))
@@ -2155,7 +2164,10 @@
                              (vector-ref (vector-ref types-before 0) 1)
                              (vector-ref (vector-ref types-before 0) 2)
                              type-top))))
-        (let* ((bb (lbl-num->bb lbl bbs))
+        (let* ((types-before (bbvctx-types bbvctx))
+               (cost (bbvctx-cost bbvctx))
+               (path (bbvctx-path bbvctx))
+               (bb (lbl-num->bb lbl bbs))
                (label (bb-label-instr bb))
                (frame (gvm-instr-frame label))
                (types-before (resized-frame-types frame types-before))
@@ -2173,7 +2185,11 @@
 
               (let* ((bb (lbl-num->bb lbl bbs))
                      (new-lbl (bbs-new-lbl! new-bbs))
-                     (step-num (begin (set! step-count (+ 1 step-count)) step-count)))
+                     (step-num (begin (set! step-count (+ 1 step-count)) step-count))
+                     (looping? (assoc lbl path)))
+
+                (if looping?
+                    (pp `(********************looping ,looping?)))
 
                 (table-set! all-versions-tbl types-before new-lbl)
 
@@ -2299,12 +2315,12 @@
                               (set! types-before merged-types)
                               (begin
                                 (print "\n[STEP " step-num "      #" lbl " ==> #" new-lbl "]\n")
-                                (walk-bb bb merged-types new-lbl2)))))))
+                                (walk-bb bb merged-types cost path lbl new-lbl2)))))))
 
                 (if debug-bbv?
                     (print "\n[step " step-num "      #" lbl " ==> #" new-lbl "]\n"))
 
-                (walk-bb bb types-before new-lbl)
+                (walk-bb bb types-before cost path lbl new-lbl)
 
                 (if debug-bbv?
                     (begin
@@ -2314,19 +2330,19 @@
 
                 new-lbl))))
 
-      (define (walk-bb bb types-before new-lbl)
-;;        (pp `(walk-bb ,(bb-lbl-num bb) ,types-before ,new-lbl))
+      (define (walk-bb bb types-before cost path orig-lbl new-lbl)
+;;        (pp `(walk-bb ,(bb-lbl-num bb) ,types-before ,cost ,path ,new-lbl))
 
         (let ((new-bb #f))
 
           (define show #t)
-          (define (reach* lbl types-before)
+          (define (reach* lbl bbvctx)
             (if (and debug-bbv? show)
                 (begin
                   (write-bb new-bb (current-output-port))
                   (print "...\n")
                   (set! show #f)))
-            (reach lbl types-before))
+            (reach lbl bbvctx))
 
         (define (walk-opnd gvm-opnd)
           (and gvm-opnd
@@ -2338,8 +2354,10 @@
                           (label
                            (bb-label-instr bb))
                           (types-bef
-                           (generic-frame-types (gvm-instr-frame label))))
-                     (make-lbl (reach* lbl types-bef)))
+                           (generic-frame-types (gvm-instr-frame label)))
+                          (bbvctx
+                           (make-bbvctx types-bef cost path)))
+                     (make-lbl (reach* lbl bbvctx)))
                    gvm-opnd)))
 
         (define (walk-loc gvm-opnd)
@@ -2363,9 +2381,12 @@
                   (gvm-instr-frame gvm-instr)
                   types-before)))
 
+            (set! cost (+ cost instr-cost))
+
             (case (gvm-instr-kind gvm-instr)
 
               ((label)
+               (set! cost (- cost instr-cost)) ;; undo cost for labels
 ;;               (pp '****label)
                (let ((new-instr
                       (case (label-kind gvm-instr)
@@ -2538,14 +2559,19 @@
                                     (true-lbl
                                      (and true-types
                                           (reach* (ifjump-true gvm-instr)
-                                                 true-types)))
+                                                  (make-bbvctx
+                                                   true-types
+                                                   cost
+                                                   path))))
                                     (false-types
                                      (narrow (cdr result-types)))
                                     (false-lbl
                                      (and false-types
                                           (reach* (ifjump-false gvm-instr)
-                                                 false-types))))
-
+                                                  (make-bbvctx
+                                                   false-types
+                                                   cost
+                                                   path)))))
                                (if true-lbl
                                    (if false-lbl
                                        (make-ifjump
@@ -2578,8 +2604,16 @@
                            (make-ifjump
                             test
                             opnds
-                            (reach* (ifjump-true gvm-instr) types-after)
-                            (reach* (ifjump-false gvm-instr) types-after)
+                            (reach* (ifjump-true gvm-instr)
+                                    (make-bbvctx
+                                     types-after
+                                     cost
+                                     path))
+                            (reach* (ifjump-false gvm-instr)
+                                    (make-bbvctx
+                                     types-after
+                                     cost
+                                     path))
                             (ifjump-poll? gvm-instr)
                             (gvm-instr-frame gvm-instr)
                             (gvm-instr-comment gvm-instr)))))
@@ -2605,7 +2639,11 @@
                       (new-instr
                        (make-jump
                         (if (lbl? opnd)
-                            (make-lbl (reach* (lbl-num opnd) types-after))
+                            (make-lbl (reach* (lbl-num opnd)
+                                              (make-bbvctx
+                                               types-after
+                                               cost
+                                               path)))
                             (walk-opnd opnd))
                         (and ret
                             (let* ((result-loc
@@ -2614,7 +2652,11 @@
                                     (locenv-set types-after
                                                 result-loc
                                                 type-top)))
-                              (reach* ret types-return)));;;;;;;;;TODO
+                              (reach* ret
+                                      (make-bbvctx
+                                       types-return
+                                       (+ (- cost instr-cost) call-cost)
+                                       path))));;;;;;;;;TODO
                         (jump-nb-args gvm-instr)
                         (jump-poll? gvm-instr)
                         (jump-safe? gvm-instr)
@@ -2623,9 +2665,16 @@
                  (gvm-instr-types-set! new-instr types-after)
                  new-instr)))))
 
+          (set! path (cons (cons orig-lbl cost) path))
+
           (set! new-bb
             (make-bb (walk-instr (bb-label-instr bb) types-before)
                      new-bbs))
+
+          (comment-put!
+           (gvm-instr-comment (bb-label-instr new-bb))
+           'cfg-bb-info
+           (list (cons 'info (object->string (list orig-lbl '-> new-lbl 'cost= cost 'path= (map car (cdr path)))))))
 
           (let loop ((instrs
                       (bb-non-branch-instrs bb))
@@ -2650,7 +2699,9 @@
              (types-before
               (generic-frame-types (gvm-instr-frame entry-label))))
 
-        (bbs-entry-lbl-num-set! new-bbs (reach entry-lbl types-before))
+        (bbs-entry-lbl-num-set! new-bbs
+                                (reach entry-lbl
+                                       (make-bbvctx types-before 0 '())))
 
         )))
 
