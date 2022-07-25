@@ -7008,6 +7008,18 @@
 ;;(def-type-infer "fxremainder"    (infer-fxremainder type-fixnum-overflow-normalize-clamp))
 ;;(def-type-infer "fxmodulo"       (infer-fxmodulo    type-fixnum-overflow-normalize-clamp))
 
+(def-type-infer "fxior"   (infer-fxior))
+(def-type-infer "fxxor"   (infer-fxxor))
+(def-type-infer "fxand"   (infer-fxand))
+(def-type-infer "fxandc1" (infer-fxandc1))
+(def-type-infer "fxandc2" (infer-fxandc2))
+(def-type-infer "fxorc1"  (infer-fxorc1))
+(def-type-infer "fxorc2"  (infer-fxorc2))
+(def-type-infer "fxnand"  (infer-fxnand))
+(def-type-infer "fxnor"   (infer-fxnor))
+(def-type-infer "fxeqv"   (infer-fxeqv))
+(def-type-infer "fxnot"   (infer-fxnot))
+
 (def-type-narrow "fx="  #f)
 (def-type-narrow "fx<"  (type-narrow-fold type-narrow-fx<))
 (def-type-narrow "fx<=" (type-narrow-fold type-narrow-fx<=))
@@ -7521,6 +7533,12 @@
          (make-type-singleton absent-object))
         (else
          #f))) ;; type is not for a unique object
+
+;; uncomment to test as standalone file
+;;(define (false-object? obj) (not obj))
+;;(define (void-object? obj) (eq? obj #!void))
+;;(define (end-of-file-object? obj) (eof-object? obj))
+;;(define (absent-object? obj) (eq? obj ##absent-object))
 
 (define (make-type-motley-for-unique-obj obj)
   (cond ((false-object? obj)
@@ -8395,6 +8413,419 @@
 (define (type-infer-common-fxmodulo tctx lo1 hi1 lo2 hi2)
   (make-type-fixnum 0 -1)) ;; TODO: implement!
 
+(define-macro (case-signs args . body)
+  (define sign-procedure-symbol (gensym 'get-sign))
+
+  (define else-clause
+    (let ((clause (assq 'else body)))
+      (and clause (cadr clause))))
+
+  (define (make-conds parent-signs args)
+    (if (null? args)
+      (let ((clause (assoc (reverse parent-signs) body)))
+        (if clause (cadr clause) else-clause))
+      (let ((sign-symbol (gensym 'sign)))
+        `(let ((,sign-symbol (,sign-procedure-symbol ,(car args))))
+           (cond
+             ((eq? ,sign-symbol '+)
+               ,(make-conds (cons '+ parent-signs) (cdr args)))
+             ((eq? ,sign-symbol '-)
+               ,(make-conds (cons '- parent-signs) (cdr args)))
+             ((eq? ,sign-symbol '?)
+               ,(make-conds (cons '? parent-signs) (cdr args))))))))
+
+ `(let ((,sign-procedure-symbol
+         (lambda (x)
+           (cond
+             ((not (number? x))
+               '?)
+             ((< x 0)
+               '-)
+             (else
+               '+)))))
+    ,(make-conds '() args)))
+
+(define (get-limit-bit tctx)
+  (* -2 (tctx-largest-min-fixnum tctx)))
+
+(define (to-unsigned tctx n)
+  (bitwise-and n (- (get-limit-bit tctx) 1)))
+
+(define (to-signed tctx n)
+  (if (< (tctx-largest-max-fixnum tctx) n)
+      (+ n (* 2 (tctx-largest-min-fixnum tctx)))
+      n))
+
+(define (type-infer-common-fxior tctx lo1 hi1 lo2 hi2)
+
+  (declare (generic))
+
+  (define (min-ior-unsigned lo1 hi1 lo2 hi2)
+    ;; Henry S. Warren, Hacker's Delight, 2003. p 59
+    (let loop ((m (get-limit-bit tctx)))
+      (cond
+        ((= m 0) (bitwise-ior lo1 lo2))
+        ((not
+          (= 0
+            (bitwise-and
+              (bitwise-not lo1)
+              lo2
+              m)))
+          (let ((temp (bitwise-and (bitwise-ior lo1 m) (- m))))
+            (if (<= temp hi1)
+                (bitwise-ior temp lo2)
+                (loop (arithmetic-shift m -1)))))
+        ((not
+          (= 0
+            (bitwise-and
+              lo1
+              (bitwise-not lo2)
+              m)))
+          (let ((temp (bitwise-and (bitwise-ior lo2 m) (- m))))
+            (if (<= temp hi2)
+                (bitwise-ior lo1 temp)
+                (loop (arithmetic-shift m -1)))))
+        (else
+          (loop (arithmetic-shift m -1))))))
+
+  (define (max-ior-unsigned lo1 hi1 lo2 hi2)
+    ;; Henry S. Warren, Hacker's Delight, 2003. p 60
+    (let loop ((m (get-limit-bit tctx)))
+      (cond
+        ((= m 0) (bitwise-ior hi1 hi2))
+        ((not
+          (= 0
+            (bitwise-and
+              hi1
+              hi2
+              m)))
+          (let ((temp1 (bitwise-ior (- hi1 m) (- m 1)))
+                (temp2 (bitwise-ior (- hi2 m) (- m 1))))
+            (cond
+              ((>= temp1 lo1)
+                (bitwise-ior temp1 hi2))
+              ((>= temp2 lo2)
+                (bitwise-ior hi1 temp2))
+              (else
+                (loop (arithmetic-shift m -1))))))
+        (else
+          (loop (arithmetic-shift m -1))))))
+
+  (define (min-ior lo1 hi1 lo2 hi2)
+    (type-fixnum-normalize-lo
+      tctx
+      (to-signed
+        tctx
+        (min-ior-unsigned
+          (to-unsigned tctx lo1) (to-unsigned tctx hi1) (to-unsigned tctx lo2) (to-unsigned tctx hi2)))))
+
+  (define (max-ior lo1 hi1 lo2 hi2)
+    (type-fixnum-normalize-hi
+      tctx
+      (to-signed
+        tctx
+        (max-ior-unsigned
+          (to-unsigned tctx lo1) (to-unsigned tctx hi1) (to-unsigned tctx lo2) (to-unsigned tctx hi2)))))
+
+  (case-signs (lo1 hi1 lo2 hi2)
+    ;; NOTE: all values are provided as signed and will be converted to unsigned by min-ior and max-ior
+    ((- - - -)
+      (make-type-fixnum
+        (min-ior lo1 hi1 lo2 hi2)
+        (max-ior lo1 hi1 lo2 hi2)))
+    ((- - - +)
+      (make-type-fixnum lo1 -1))
+    ((- - + +)
+      (make-type-fixnum
+        (min-ior lo1 hi1 lo2 hi2)
+        (max-ior lo1 hi1 lo2 hi2)))
+    ((- + - -)
+      (make-type-fixnum lo2 -1))
+    ((- + - +)
+      (make-type-fixnum (min lo1 lo2) (max-ior 0 hi1 0 hi2)))
+    ((- + + +)
+      (make-type-fixnum
+        (min-ior lo1 -1 lo2 hi2)
+        (max-ior 0 hi1 lo2 hi2)))
+    ((+ + - -)
+      (make-type-fixnum
+        (min-ior lo1 hi1 lo2 hi2)
+        (max-ior lo1 hi1 lo2 hi2)))
+    ((+ + - +)
+      (make-type-fixnum
+        (min-ior lo1 hi1 lo2 -1)
+        (max-ior lo1 hi1 0 hi2)))
+    ((+ + + +)
+      (make-type-fixnum
+        (min-ior lo1 hi1 lo2 hi2)
+        (max-ior lo1 hi1 lo2 hi2)))
+    ;; limit bounds >=, >, <, <= in which case we can sometime infer sign
+    ((? - ? -)
+      (make-type-fixnum '>= -1))
+    ((+ ? + ?)
+      (make-type-fixnum 0 '<=))
+    (else
+      (make-type-fixnum '>= '<=))))
+
+(define (type-infer-common-fxxor tctx lo1 hi1 lo2 hi2)
+
+  (declare (generic))
+
+  (define (min-xor-unsigned lo1 hi1 lo2 hi2)
+    ;; Henry S. Warren, Hacker's Delight, 2003. p 59
+    (let loop ((m (get-limit-bit tctx)))
+      (cond
+        ((= m 0) (bitwise-xor lo1 lo2))
+        ((not
+          (= 0
+            (bitwise-and
+              (bitwise-not lo1)
+              lo2
+              m)))
+          (let ((temp (bitwise-and (bitwise-ior lo1 m) (- m))))
+            (if (<= temp hi1) (set! lo1 temp))
+            (loop (arithmetic-shift m -1))))
+        ((not
+          (= 0
+            (bitwise-and
+              lo1
+              (bitwise-not lo2)
+              m)))
+          (let ((temp (bitwise-and (bitwise-ior lo2 m) (- m))))
+            (if (<= temp hi2) (set! lo2 temp))
+            (loop (arithmetic-shift m -1))))
+        (else
+          (loop (arithmetic-shift m -1))))))
+
+  (define (max-xor-unsigned lo1 hi1 lo2 hi2)
+    ;; Henry S. Warren, Hacker's Delight, 2003. p 60
+    (let loop ((m (get-limit-bit tctx)))
+      (cond
+        ((= m 0) (bitwise-xor hi1 hi2))
+        ((not
+          (= 0
+            (bitwise-and
+              hi1
+              hi2
+              m)))
+          (let ((temp1 (bitwise-ior (- hi1 m) (- m 1)))
+                (temp2 (bitwise-ior (- hi2 m) (- m 1))))
+            (cond
+              ((>= temp1 lo1)
+                (set! hi1 temp1))
+              ((>= temp2 lo2)
+                (set! hi2 temp2)))
+            (loop (arithmetic-shift m -1))))
+        (else
+          (loop (arithmetic-shift m -1))))))
+
+  (define (min-xor lo1 hi1 lo2 hi2)
+    (type-fixnum-normalize-lo
+      tctx
+      (to-signed
+        tctx
+        (min-xor-unsigned
+          (to-unsigned tctx lo1) (to-unsigned tctx hi1) (to-unsigned tctx lo2) (to-unsigned tctx hi2)))))
+
+  (define (max-xor lo1 hi1 lo2 hi2)
+    (type-fixnum-normalize-hi
+      tctx
+      (to-signed
+        tctx
+        (max-xor-unsigned
+          (to-unsigned tctx lo1) (to-unsigned tctx hi1) (to-unsigned tctx lo2) (to-unsigned tctx hi2)))))
+
+  (case-signs (lo1 hi1 lo2 hi2)
+    ;; Adaptation of the ior table of Hacker's Delight to xor
+    ;; NOTE: all values are provided as signed and will be converted to unsigned by min-xor and max-xor
+    ((- - - -)
+      (make-type-fixnum
+        (min-xor lo1 hi1 lo2 hi2)
+        (max-xor lo1 hi1 lo2 hi2)))
+    ((- - - +)
+      (make-type-fixnum
+        (min-xor lo1 hi1 0 hi2)
+        (max-xor lo1 hi1 lo2 -1)))
+    ((- - + +)
+      (make-type-fixnum
+        (min-xor lo1 hi1 lo2 hi2)
+        (max-xor lo1 hi1 lo2 hi2)))
+    ((- + - -)
+      (make-type-fixnum
+        (min-xor 0 hi1 lo2 hi2)
+        (max-xor lo1 -1 lo2 hi2)))
+    ((- + - +)
+      (make-type-fixnum
+        (type-fixnum-min-hi
+          (min-xor lo1 -1 0 hi2)
+          (min-xor 0 hi1 lo2 -1))
+        (type-fixnum-max-lo
+          (max-xor 0 hi1 0 hi2)
+          (max-xor lo1 -1 lo2 -1))))
+    ((- + + +)
+      (make-type-fixnum
+        (min-xor lo1 -1 lo2 hi2)
+        (max-xor 0 hi1 lo2 hi2)))
+    ((+ + - -)
+      (make-type-fixnum
+        (min-xor lo1 hi1 lo2 hi2)
+        (max-xor lo1 hi1 lo2 hi2)))
+    ((+ + - +)
+      (make-type-fixnum
+        (min-xor lo1 hi1 lo2 -1)
+        (max-xor lo1 hi1 0 hi2)))
+    ((+ + + +)
+      (make-type-fixnum
+        (min-xor lo1 hi1 lo2 hi2)
+        (max-xor lo1 hi1 lo2 hi2)))
+    ;; limit bounds >=, >, <, <= in which case we can sometime infer sign
+    ((? - ? -)
+      (make-type-fixnum 0 '<=))
+    ((+ ? + ?)
+      (make-type-fixnum 0 '<=))
+    (else
+      (make-type-fixnum '>= '<=))))
+
+(define (type-infer-common-fxnot tctx lo hi)
+  (define (abstract-fxnot x)
+    (case x
+      ('<= '>=)
+      ('<  '>)
+      ('>  '<)
+      ('>= '<=)
+      (else
+        (- -1 x))))
+
+  (make-type-fixnum
+    (abstract-fxnot hi)
+    (abstract-fxnot lo)))
+
+(define (type-infer-common-fxand tctx lo1 hi1 lo2 hi2)
+  ;; Apply De Morgan
+  (let* ((not-left (type-infer-common-fxnot tctx lo1 hi1))
+         (not-right (type-infer-common-fxnot tctx lo2 hi2))
+         (or-left-right
+           (type-infer-common-fxior
+             tctx
+             (type-fixnum-lo not-left)
+             (type-fixnum-hi not-left)
+             (type-fixnum-lo not-right)
+             (type-fixnum-hi not-right)))
+         (not-result
+           (type-infer-common-fxnot
+             tctx
+             (type-fixnum-lo or-left-right)
+             (type-fixnum-hi or-left-right))))
+    not-result))
+
+(define (type-infer-common-fxandc1 tctx lo1 hi1 lo2 hi2)
+  (let* ((not-left (type-infer-common-fxnot tctx lo1 hi1))
+         (result
+           (type-infer-common-fxand
+             tctx
+             (type-fixnum-lo not-left)
+             (type-fixnum-hi not-left)
+             lo2
+             hi2)))
+    result))
+
+(define (type-infer-common-fxandc2 tctx lo1 hi1 lo2 hi2)
+  (let* ((not-right (type-infer-common-fxnot tctx lo2 hi2))
+         (result
+           (type-infer-common-fxand
+             tctx
+             lo1
+             hi1
+             (type-fixnum-lo not-right)
+             (type-fixnum-hi not-right))))
+    result))
+
+(define (type-infer-common-fxorc1 tctx lo1 hi1 lo2 hi2)
+  (let* ((not-left (type-infer-common-fxnot tctx lo1 hi1))
+         (result
+           (type-infer-common-fxior
+             tctx
+             (type-fixnum-lo not-left)
+             (type-fixnum-hi not-left)
+             lo2
+             hi2)))
+    result))
+
+(define (type-infer-common-fxorc2 tctx lo1 hi1 lo2 hi2)
+  (let* ((not-right (type-infer-common-fxnot tctx lo2 hi2))
+         (result
+           (type-infer-common-fxior
+             tctx
+             lo1
+             hi1
+             (type-fixnum-lo not-right)
+             (type-fixnum-hi not-right))))
+    result))
+
+(define (type-infer-common-fxnand tctx lo1 hi1 lo2 hi2)
+  (let* ((not-left (type-infer-common-fxnot tctx lo1 hi1))
+         (not-right (type-infer-common-fxnot tctx lo2 hi2))
+         (not-and
+           (type-infer-common-fxior
+             tctx
+             (type-fixnum-lo not-left)
+             (type-fixnum-hi not-left)
+             (type-fixnum-lo not-right)
+             (type-fixnum-hi not-right))))
+    not-and))
+
+(define (type-infer-common-fxnor tctx lo1 hi1 lo2 hi2)
+  (let* ((or-result
+          (type-infer-common-fxior
+            tctx
+            lo1
+            hi1
+            lo2
+            hi2))
+         (not-or
+          (type-infer-common-fxnot
+            tctx
+            (type-fixnum-lo or-result)
+            (type-fixnum-hi or-result))))
+    not-or))
+
+(define (type-infer-common-fxeqv tctx lo1 hi1 lo2 hi2)
+  ;; (fxeqv x y) = (fxnot (fxxor x y))
+  (let* ((xor-result
+          (type-infer-common-fxxor
+            tctx
+            lo1
+            hi1
+            lo2
+            hi2))
+         (not-xor
+          (type-infer-common-fxnot
+            tctx
+            (type-fixnum-lo xor-result)
+            (type-fixnum-hi xor-result))))
+    not-xor))
+
+(define (type-infer-common-fxif tctx lo1 hi1 lo2 hi2 lo3 hi3)
+  ;; (fxif x y z) = (fxior (fxand x y) (fxand (fxnot x) z))
+  ;; NOTE: this bound is not strict since x is not independant from (fxnot x)
+  (let* ((not1 (type-infer-common-fxnot tctx lo1 hi1))
+         (fxand-1-2 (type-infer-common-fxand tctx lo1 hi1 lo2 hi2))
+         (fxand-not1-3
+           (type-infer-common-fxand
+             tctx
+             (type-fixnum-lo not1)
+             (type-fixnum-hi not1)
+             lo2
+             hi2))
+         (result
+           (type-infer-common-fxior
+             tctx
+             (type-fixnum-lo fxand-1-2)
+             (type-fixnum-hi fxand-1-2)
+             (type-fixnum-lo fxand-not1-3)
+             (type-fixnum-hi fxand-not1-3))))
+   result))
+
 (define (infer-fx+ overflow-normalize)
   (type-infer-fold
    (lambda (tctx)
@@ -8453,6 +8884,71 @@
       (overflow-normalize
        tctx
        (type-infer-fixnum2 tctx type-infer-common-fxmodulo type1 type2)))))
+
+(define (infer-fxior)
+  (lambda (tctx args)
+    (let ((type1 (car args))
+          (type2 (cadr args)))
+      (type-infer-fixnum2 tctx type-infer-common-fxior type1 type2))))
+
+(define (infer-fxxor)
+  (lambda (tctx args)
+    (let ((type1 (car args))
+          (type2 (cadr args)))
+      (type-infer-fixnum2 tctx type-infer-common-fxxor type1 type2))))
+
+(define (infer-fxand)
+  (lambda (tctx args)
+    (let ((type1 (car args))
+          (type2 (cadr args)))
+      (type-infer-fixnum2 tctx type-infer-common-fxand type1 type2))))
+
+(define (infer-fxandc1)
+  (lambda (tctx args)
+    (let ((type1 (car args))
+          (type2 (cadr args)))
+      (type-infer-fixnum2 tctx type-infer-common-fxandc1 type1 type2))))
+
+(define (infer-fxandc2)
+  (lambda (tctx args)
+    (let ((type1 (car args))
+          (type2 (cadr args)))
+      (type-infer-fixnum2 tctx type-infer-common-fxandc2 type1 type2))))
+
+(define (infer-fxorc1)
+  (lambda (tctx args)
+    (let ((type1 (car args))
+          (type2 (cadr args)))
+      (type-infer-fixnum2 tctx type-infer-common-fxorc1 type1 type2))))
+
+(define (infer-fxorc2)
+  (lambda (tctx args)
+    (let ((type1 (car args))
+          (type2 (cadr args)))
+      (type-infer-fixnum2 tctx type-infer-common-fxorc2 type1 type2))))
+
+(define (infer-fxnand)
+  (lambda (tctx args)
+    (let ((type1 (car args))
+          (type2 (cadr args)))
+      (type-infer-fixnum2 tctx type-infer-common-fxnand type1 type2))))
+
+(define (infer-fxnor)
+  (lambda (tctx args)
+    (let ((type1 (car args))
+          (type2 (cadr args)))
+      (type-infer-fixnum2 tctx type-infer-common-fxnor type1 type2))))
+
+(define (infer-fxeqv)
+  (lambda (tctx args)
+    (let ((type1 (car args))
+          (type2 (cadr args)))
+      (type-infer-fixnum2 tctx type-infer-common-fxeqv type1 type2))))
+
+(define (infer-fxnot)
+  (lambda (tctx args)
+    (let ((type (car args)))
+      (type-infer-fixnum1 tctx type-infer-common-fxnot type))))
 
 ;;; type narrowing
 
@@ -8778,6 +9274,18 @@
 (define prim-fxremainder  (infer-fxremainder type-fixnum-overflow-normalize-clamp))
 (define prim-fxmodulo     (infer-fxmodulo type-fixnum-overflow-normalize-clamp))
 
+(define prim-fxior        (infer-fxior))
+(define prim-fxxor        (infer-fxxor))
+(define prim-fxand        (infer-fxand))
+(define prim-fxandc1      (infer-fxandc1))
+(define prim-fxandc2      (infer-fxandc2))
+(define prim-fxorc1       (infer-fxorc1))
+(define prim-fxorc2       (infer-fxorc2))
+(define prim-fxnand       (infer-fxnand))
+(define prim-fxnor        (infer-fxnor))
+(define prim-fxeqv        (infer-fxeqv))
+(define prim-fxnot        (infer-fxnot))
+
 (define (ft type)
   (string-concatenate (format-type type)))
 
@@ -8836,7 +9344,34 @@
   (let ((range (type-fixnum-range tctx type)))
     (iota (+ 1 (- (cdr range) (car range))) (car range))))
 
-(define (test-prim prim fn name)
+(define (test-prim1 prim fn name)
+  (let ((min-fixnum (tctx-smallest-min-fixnum tctx))
+        (max-fixnum (tctx-smallest-max-fixnum tctx)))
+    (for-each-fixnum-range
+     tctx
+     (lambda (type)
+       (let* ((result
+               (type-motley-force tctx (prim tctx (list type))))
+              (result-range
+               (type-fixnum-range tctx result))
+              (lst
+               (type-fixnum->list tctx (type-motley-force tctx type))))
+         (for-each
+          (lambda (n)
+            (let ((r (fn tctx n)))
+              (if (and (not (eq? r 'error))
+                       (if (not r) ;; result = #f?
+                           (= 0 (bitwise-and
+                                 (type-motley-bitset result)
+                                 type-false-bit))
+                           (not (and (>= r (car result-range))
+                                     (<= r (cdr result-range))))))
+                  (begin
+                    (pp `((,name ,n) => ,r which is not in ,result))
+                    (exit)))))
+          lst))))))
+
+(define (test-prim2 prim fn name)
   (let ((min-fixnum (tctx-smallest-min-fixnum tctx))
         (max-fixnum (tctx-smallest-max-fixnum tctx)))
     (for-each-fixnum-range-pair
@@ -8878,6 +9413,14 @@
               'error ;; primitive raises an error on overflow
               r)))))
 
+(define (clamp1 fn)
+  (lambda (tctx val1)
+      (let ((r (fn val1)))
+        (if (or (< r (tctx-smallest-min-fixnum tctx))
+                (> r (tctx-smallest-max-fixnum tctx)))
+            'error ;; primitive raises an error on overflow
+            r))))
+
 (define (false fn #!optional no0?)
   (lambda (tctx val1 val2)
     (if (and (= val2 0) no0?)
@@ -8907,21 +9450,45 @@
 (define (wrap-no0 fn)  (wrap fn #t))
 
 
-(test-prim prim-fx+     (clamp ##fx+)     'fx+)
-(test-prim prim-fx+?    (false ##fx+?)    'fx+?)
-(test-prim prim-fxwrap+ (wrap  ##fxwrap+) 'fxwrap+)
+(test-prim2 prim-fx+     (clamp ##fx+)     'fx+)
+(test-prim2 prim-fx+?    (false ##fx+?)    'fx+?)
+(test-prim2 prim-fxwrap+ (wrap  ##fxwrap+) 'fxwrap+)
 
-(test-prim prim-fx-     (clamp ##fx-)     'fx-)
-(test-prim prim-fx-?    (false ##fx-?)    'fx-?)
-(test-prim prim-fxwrap- (wrap  ##fxwrap-) 'fxwrap-)
+(test-prim2 prim-fx-     (clamp ##fx-)     'fx-)
+(test-prim2 prim-fx-?    (false ##fx-?)    'fx-?)
+(test-prim2 prim-fxwrap- (wrap  ##fxwrap-) 'fxwrap-)
 
-(test-prim prim-fx*     (clamp ##fx*)     'fx*)
-(test-prim prim-fx*?    (false ##fx*?)    'fx*?)
-(test-prim prim-fxwrap* (wrap  ##fxwrap*) 'fxwrap*)
+(test-prim2 prim-fx*     (clamp ##fx*)     'fx*)
+(test-prim2 prim-fx*?    (false ##fx*?)    'fx*?)
+(test-prim2 prim-fxwrap* (wrap  ##fxwrap*) 'fxwrap*)
 
-(test-prim prim-fxquotient     (clamp-no0 ##fxquotient)     'fxquotient)
-;;(test-prim prim-fxremainder    (clamp-no0 ##fxremainder)    'fxremainder)
-;;(test-prim prim-fxmodulo       (clamp-no0 ##fxmodulo)       'fxmodulo)
+(test-prim2 prim-fxquotient     (clamp-no0 ##fxquotient)     'fxquotient)
+;;(test-prim2 prim-fxremainder    (clamp-no0 ##fxremainder)    'fxremainder)
+;;(test-prim2 prim-fxmodulo       (clamp-no0 ##fxmodulo)       'fxmodulo)
+
+(test-prim2 prim-fxior   (clamp ##fxior)   'fxior)
+(test-prim2 prim-fxxor   (clamp ##fxxor)   'fxxor)
+(test-prim2 prim-fxand   (clamp ##fxand)   'fxand)
+(test-prim2 prim-fxandc1 (clamp ##fxandc1) 'fxandc1)
+(test-prim2 prim-fxandc2 (clamp ##fxandc2) 'fxandc2)
+(test-prim2 prim-fxorc1  (clamp ##fxorc1)  'fxorc1)
+(test-prim2 prim-fxorc2  (clamp ##fxorc2)  'fxorc2)
+(test-prim2 prim-fxnand  (clamp ##fxnand)  'fxnand)
+(test-prim2 prim-fxnor   (clamp ##fxnor)   'fxnor)
+(test-prim2 prim-fxeqv   (clamp ##fxeqv)   'fxeqv)
+(test-prim1 prim-fxnot   (clamp1 ##fxnot)  'fxnot)
 )
+
+(define (make-tctx-test)
+
+  ;; For testing, assume fixnums only have 4 bits
+
+  (define smallest-min-fixnum -8)
+  (define smallest-max-fixnum 7)
+
+  (vector smallest-min-fixnum
+          smallest-max-fixnum
+          smallest-min-fixnum
+          smallest-max-fixnum))
 
 ;;(test-types)
