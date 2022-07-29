@@ -2671,10 +2671,18 @@
             (make-bb (walk-instr (bb-label-instr bb) types-before)
                      new-bbs))
 
-          (comment-put!
-           (gvm-instr-comment (bb-label-instr new-bb))
-           'cfg-bb-info
-           (list (cons 'info (object->string (list orig-lbl '-> new-lbl 'cost= cost 'path= (map car (cdr path)))))))
+          (let ((instr-comment (gvm-instr-comment (bb-label-instr new-bb))))
+            (comment-put!
+             instr-comment
+             'cfg-bb-info
+             (list
+               (cons 'info
+                 (object->string
+                   (list orig-lbl '-> new-lbl 'cost= cost 'path= (map car (cdr path)))))))
+            (comment-put!
+              instr-comment
+              'orig-lbl
+              orig-lbl))
 
           (let loop ((instrs
                       (bb-non-branch-instrs bb))
@@ -3457,8 +3465,29 @@
 
   (define node-entry-bgcolor dot-digraph-black)
   (define node-type-bgcolor  dot-digraph-gray60)
-  (define node-info-bgcolor  dot-digraph-gray70)
+  (define node-info-default-bgcolor  dot-digraph-gray70)
   (define node-bgcolor       dot-digraph-gray80)
+
+  (define (get-unique-node-info-bgcolor orig-lbl)
+    ;; loop through pre-selected distinct colors
+    ;; https://stackoverflow.com/a/20298027/5079316
+    (define colors
+      #("#ff0056" "#00ff00" "#0000ff" "#ff0000" "#01fffe" "#ffa6fe"
+        "#ffdb66" "#006401" "#010067" "#95003a" "#007db5" "#ff00f6"
+        "#ffeee8" "#774d00" "#90fb92" "#0076ff" "#d5ff00" "#ff937e"
+        "#6a826c" "#ff029d" "#fe8900" "#7a4782" "#7e2dd2" "#85a900"
+        "#e85ebe" "#a42400" "#00ae7e" "#683d3b" "#bdc6ff" "#263400"
+        "#bdd393" "#00b917" "#9e008e" "#001544" "#c28c9f" "#ff74a3"
+        "#01d0ff" "#004754" "#e56ffe" "#788231" "#0e4ca1" "#91d0cb"
+        "#be9970" "#968ae8" "#bb8800" "#43002c" "#deff74" "#00ffc6"
+        "#ffe502" "#620e00" "#008f9c" "#98ff52" "#7544b1" "#b500ff"
+        "#00ff78" "#ff6e41" "#005f39" "#6b6882" "#5fad4e" "#a75740"
+        "#a5ffd2" "#ffb167" "#009bff"))
+
+    (if orig-lbl
+      (vector-ref colors (modulo orig-lbl (vector-length colors)))
+      node-info-default-bgcolor))
+
 
   (let ((proc-tbl (make-table)))
 
@@ -3666,7 +3695,11 @@
                                             ((type)
                                              node-type-bgcolor)
                                             ((info)
-                                             node-info-bgcolor)
+                                              (let ((instr-comment (gvm-instr-comment (bb-label-instr bb))))
+                                                 (get-unique-node-info-bgcolor
+                                                   (comment-get
+                                                     instr-comment
+                                                     'orig-lbl))))
                                             (else
                                              #f)))
                                          (esc-line
