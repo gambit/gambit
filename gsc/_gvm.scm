@@ -3468,7 +3468,7 @@
   (define node-info-default-bgcolor  dot-digraph-gray70)
   (define node-bgcolor       dot-digraph-gray80)
 
-  (define (get-unique-node-info-bgcolor orig-lbl)
+  (define (get-unique-node-info-bgcolor orig-lbl force-default-color)
     ;; loop through pre-selected distinct colors
     ;; https://stackoverflow.com/a/20298027/5079316
     (define colors
@@ -3484,7 +3484,7 @@
         "#00ff78" "#ff6e41" "#005f39" "#6b6882" "#5fad4e" "#a75740"
         "#a5ffd2" "#ffb167" "#009bff"))
 
-    (if orig-lbl
+    (if (and orig-lbl (not force-default-color))
       (vector-ref colors (modulo orig-lbl (vector-length colors)))
       node-info-default-bgcolor))
 
@@ -3513,6 +3513,24 @@
             (dump-proc-bbs proc proc-index x))))
 
     (define (dump-proc-bbs proc proc-index bbs)
+
+      (define (make-versions-table)
+        (define table (make-table))
+
+        (define (add-to-table bb)
+          (let* ((instr-comment (gvm-instr-comment (bb-label-instr bb)))
+                 (orig-lbl (comment-get instr-comment 'orig-lbl))
+                 (versions (table-ref table orig-lbl '())))
+            (table-set! table orig-lbl (cons bb versions))))
+        (bbs-for-each-bb add-to-table bbs)
+        table)
+
+      (define versions-table (make-versions-table))
+
+      (define (bb-has-cousin-versions? bb)
+        (let* ((instr-comment (gvm-instr-comment (bb-label-instr bb)))
+               (orig-lbl (comment-get instr-comment 'orig-lbl)))
+          (> (length (table-ref versions-table orig-lbl)) 1)))
 
       (define (dump-bb bb)
         (let ((id (bb-id (bb-lbl-num bb) proc-index))
@@ -3699,7 +3717,8 @@
                                                  (get-unique-node-info-bgcolor
                                                    (comment-get
                                                      instr-comment
-                                                     'orig-lbl))))
+                                                     'orig-lbl)
+                                                   (not (bb-has-cousin-versions? bb)))))
                                             (else
                                              #f)))
                                          (esc-line
