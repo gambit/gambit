@@ -1619,12 +1619,10 @@
       (let loop ((bb bb))
         (let* ((branch (bb-branch-instr bb))
                (branch-kind (gvm-instr-kind branch)))
-
-          ;; is it a non-polling 'jump' to a label without a return address?
-
           (cond
-            ((and (eq? branch-kind 'ifjump) ;; TODO: test side-effects
-                  ;; #f
+            ;; is it an if which then and else jump to the same location?
+            ((and (eq? branch-kind 'ifjump)
+                  (not (proc-obj-side-effects? (ifjump-test branch)))
                   (= (ifjump-true branch) (ifjump-false branch)))
               (let* ((new-bb (make-bb (bb-label-instr bb) new-bbs)))
                 (bb-non-branch-instrs-set!
@@ -1643,6 +1641,7 @@
                    ))
                 (set! changed? #t)
                 (loop new-bb)))
+            ;; is it a non-polling 'jump' to a label without a return address?
             ((and (eq? branch-kind 'jump)
                   (not (first-class-jump? branch))
                   (not (jump-ret branch))
