@@ -956,11 +956,9 @@ ___time timeout;)
   ___time delta;
 
 #ifdef USE_ASYNC_DEVICE_SELECT_ABORT
-#ifdef USE_MsgWaitForMultipleObjects
 
   ___BOOL aborted = 0;
 
-#endif
 #endif
 
   state.devs = devs;
@@ -1337,36 +1335,6 @@ ___time timeout;)
   }
 #endif
 
-#ifdef USE_ASYNC_DEVICE_SELECT_ABORT
-
-  if (___FD_ISSET(___PSTATE->os.select_abort.reading_fd, state.readfds))
-    {
-      /* self-pipe has available data to read, discard all of it */
-
-      e = ___FIX(___ERRNO_ERR(EINTR));
-
-      for (;;)
-        {
-          char buf[256];
-          int n = read (___PSTATE->os.select_abort.reading_fd, buf, sizeof(buf));
-
-          if (n < 0)
-            {
-              if (errno == EAGAIN)
-                break;
-              if (errno != EINTR)
-                {
-                  e = err_code_from_errno ();
-                  break;
-                }
-            }
-          else if (n < sizeof(buf))
-            break;
-        }
-    }
-
-#endif
-
 #endif
 
 #ifdef USE_MsgWaitForMultipleObjects
@@ -1497,25 +1465,6 @@ ___time timeout;)
 
   ___ACTLOG_END();
 
-  if (e == ___FIX(___NO_ERR))
-    {
-      for (i=read_pos-1; i>=0; i--)
-        {
-          ___device *d = devs[i];
-          if (d != NULL)
-            if ((e = ___device_select_virt
-                       (d,
-                        i>=write_pos ? FOR_READING
-                                     : i>=event_pos ? FOR_WRITING
-                                                    : FOR_EVENT,
-                        i,
-                        ___SELECT_PASS_CHECK,
-                        &state))
-                != ___FIX(___NO_ERR))
-              break;
-        }
-    }
-
 #ifdef USE_ASYNC_DEVICE_SELECT_ABORT
 
 #ifdef USE_select_or_poll
@@ -1524,7 +1473,7 @@ ___time timeout;)
     {
       /* self-pipe has available data to read, discard all of it */
 
-      e = ___FIX(___ERRNO_ERR(EINTR));
+      aborted = 1;
 
       for (;;)
         {
@@ -1548,12 +1497,31 @@ ___time timeout;)
 
 #endif
 
-#ifdef USE_MsgWaitForMultipleObjects
-
-  if (aborted)
-    e = ___FIX(___ERRNO_ERR(EINTR));
-
 #endif
+
+  if (e == ___FIX(___NO_ERR))
+    {
+      for (i=read_pos-1; i>=0; i--)
+        {
+          ___device *d = devs[i];
+          if (d != NULL)
+            if ((e = ___device_select_virt
+                       (d,
+                        i>=write_pos ? FOR_READING
+                                     : i>=event_pos ? FOR_WRITING
+                                                    : FOR_EVENT,
+                        i,
+                        ___SELECT_PASS_CHECK,
+                        &state))
+                != ___FIX(___NO_ERR))
+              break;
+        }
+    }
+
+#ifdef USE_ASYNC_DEVICE_SELECT_ABORT
+
+  if (aborted && e == ___FIX(___NO_ERR))
+    e = ___FIX(___ERRNO_ERR(EINTR));
 
 #endif
 
