@@ -2,7 +2,7 @@
 
 ;;; File: "_repl.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -2501,6 +2501,10 @@
 
 (implement-type-repl-channel-ports)
 
+(define-prim (##exit-with-exception-on-exception thunk)
+  ;; TODO: improve so that exit happens only for output on port
+  (##with-exception-handler ##exit-with-exception thunk))
+
 (define-prim (##make-repl-channel-ports input-port output-port error-port)
   (macro-make-repl-channel-ports
 
@@ -2578,14 +2582,16 @@
   (define prompt "> ")
 
   (let ((output-port (macro-repl-channel-output-port channel)))
-    (if (##fx< 0 level)
-        (##write level output-port))
-    (if (##fx< 0 depth)
-        (begin
-          (##write-string "\\" output-port)
-          (##write depth output-port)))
-    (##write-string prompt output-port)
-    (##force-output output-port))
+    (##exit-with-exception-on-exception
+     (lambda ()
+       (if (##fx< 0 level)
+           (##write level output-port))
+       (if (##fx< 0 depth)
+           (begin
+             (##write-string "\\" output-port)
+             (##write depth output-port)))
+       (##write-string prompt output-port)
+       (##force-output output-port))))
 
   ((macro-repl-channel-ports-read-expr channel) channel))
 
@@ -2596,7 +2602,9 @@
        (if (##not (##eq? obj (##void)))
            (begin
              (##repl-channel-result-history-add channel obj)
-             (##pretty-print obj output-port ##max-fixnum #f))))
+             (##exit-with-exception-on-exception
+              (lambda ()
+                (##pretty-print obj output-port ##max-fixnum #f))))))
      results)))
 
 (define-prim (##repl-channel-ports-display-monoline-message
@@ -2608,8 +2616,10 @@
          (if err?
              (macro-repl-channel-error-port channel)
              (macro-repl-channel-output-port channel))))
-    (writer port)
-    (##newline port)))
+    (##exit-with-exception-on-exception
+     (lambda ()
+       (writer port)
+       (##newline port)))))
 
 (define-prim (##repl-channel-ports-display-multiline-message
               channel
@@ -2620,7 +2630,9 @@
          (if err?
              (macro-repl-channel-error-port channel)
              (macro-repl-channel-output-port channel))))
-    (writer port)))
+    (##exit-with-exception-on-exception
+     (lambda ()
+       (writer port)))))
 
 (define-prim (##repl-channel-ports-display-continuation channel cont depth)
   (if (##repl-display-environment?)
@@ -2634,19 +2646,25 @@
 (define-prim (##repl-channel-ports-really-exit? channel)
   (let ((input-port (macro-repl-channel-input-port channel))
         (output-port (macro-repl-channel-output-port channel)))
-    (##write-string "*** EOF again to exit" output-port)
-    (##newline output-port)
-    (##force-output output-port)
+    (##exit-with-exception-on-exception
+     (lambda ()
+       (##write-string "*** EOF again to exit" output-port)
+       (##newline output-port)
+       (##force-output output-port)))
     (##not (##char? (##peek-char input-port)))))
 
 (define-prim (##repl-channel-ports-newline channel)
   (let ((output-port (macro-repl-channel-output-port channel)))
-    (##newline output-port)))
+    (##exit-with-exception-on-exception
+     (lambda ()
+       (##newline output-port)))))
 
 (define-prim (##repl-channel-ports-ask channel prompt echo?)
   (let ((input-port (macro-repl-channel-input-port channel))
         (output-port (macro-repl-channel-output-port channel)))
-    (##write-string prompt output-port)
+    (##exit-with-exception-on-exception
+     (lambda ()
+       (##write-string prompt output-port)))
     (##repl-channel-discard-buffered-input channel)
     (let ((answer (##read-line input-port)))
       (##output-port-column-set! output-port 1)
