@@ -6935,6 +6935,7 @@ typedef struct ___device_event_queue_vtbl_struct
     ___device_vtbl base;
   } ___device_event_queue_vtbl;
 
+
 ___HIDDEN int ___device_event_queue_kind
    ___P((___device *self),
         (self)
@@ -6942,6 +6943,7 @@ ___device *self;)
 {
   return ___EVENT_QUEUE_KIND;
 }
+
 
 ___HIDDEN ___SCMOBJ ___device_event_queue_close_virt
    ___P((___device *self,
@@ -6963,6 +6965,7 @@ int direction;)
 
   return ___FIX(___NO_ERR);
 }
+
 
 ___HIDDEN ___SCMOBJ ___device_event_queue_select_virt
    ___P((___device *self,
@@ -7081,7 +7084,7 @@ ___SCMOBJ selector;)
 
 #ifdef USE_WIN32
 
-  d->event_mask = ___INT(selector);
+  d->event_mask = ___INT(selector & QS_ALLINPUT);
 
 #endif
 
@@ -7116,30 +7119,29 @@ ___SCMOBJ *event;)
 
 #ifdef USE_WIN32
 
-  {
-    MSG *msg = ___CAST(MSG*, ___alloc_rc (___PSA(___PSTATE)
-                                          sizeof (MSG)));
+  if (GetQueueStatus (dev->event_mask) != 0)
+    {
+      void *ev = ___alloc_rc (___PSA(___PSTATE) sizeof (MSG)));
 
-    if (msg == 0)
-      return ___FIX(___STOC_HEAP_OVERFLOW_ERR+___RETURN_POS);
+      if (ev == 0)
+        return ___FIX(___STOC_HEAP_OVERFLOW_ERR+___RETURN_POS);
 
-    if (GetQueueStatus (dev->event_mask) != 0 &&
-        PeekMessage (msg,
-                     NULL,        /* retrieve messages for window and thread */
-                     0,           /* no constraint on the message type */
-                     0,
-                     PM_REMOVE))  /* remove message */
-      /* TODO: check if ___release_scmobj (...); needed to avoid memory leak */
-      return ___NONNULLPOINTER_to_SCMOBJ
-               (___PSTATE,
-                ___CAST(void*,msg),
-                ___FAL,
-                ___release_event,
-                event,
-                ___RETURN_POS);
+      if (PeekMessage (___CAST(MSG*, ev),
+                       NULL,      /* retrieve messages for window and thread */
+                       0,         /* no constraint on the message type */
+                       0,
+                       PM_REMOVE))/* remove message */
+        /* TODO: check if ___release_scmobj (...); needed to avoid memory leak */
+        return ___NONNULLPOINTER_to_SCMOBJ
+                  (___PSTATE,
+                   ev,
+                   ___FAL,
+                   ___release_event,
+                   event,
+                   ___RETURN_POS);
 
-    ___release_rc (msg);
-  }
+      ___release_event (ev);
+    }
 
 #endif
 
