@@ -7121,7 +7121,7 @@ ___SCMOBJ *event;)
 
   if (GetQueueStatus (dev->event_mask) != 0)
     {
-      void *ev = ___alloc_rc (___PSA(___PSTATE) sizeof (MSG)));
+      void *ev = ___alloc_rc (___PSA(___PSTATE) sizeof (MSG));
 
       if (ev == 0)
         return ___FIX(___STOC_HEAP_OVERFLOW_ERR+___RETURN_POS);
