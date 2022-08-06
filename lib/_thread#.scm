@@ -1213,7 +1213,8 @@
   (mailbox          init: #f)
   (specific         init: '#!void)
   (resume-thunk     init: #f)
-  (interrupts       init: '())
+  (interrupts-head  init: '())
+  (interrupts-tail  init: '())
   (last-processor   init: #f)
   (pinned           init: #f)
 )
@@ -2012,7 +2013,8 @@
   ;; temporary float
   ;; fields 17 and 18 are the deq links of blocked processors
   ;; field 19 is the id of the processor
-  ;; field 20 is the queue of pending high-level interrupts
+  ;; field 20 is the head of the queue of pending high-level interrupts
+  ;; field 21 is the tail of the queue of pending high-level interrupts
   lock1
   condvar-deq-next
   condvar-deq-prev
@@ -2032,7 +2034,8 @@
   processor-deq-next
   processor-deq-prev
   id
-  interrupts
+  interrupts-head
+  interrupts-tail
 )
 
 (##define-macro (macro-make-floats)
@@ -2077,6 +2080,7 @@
            #f
            #f
            ,id
+           '()
            '())))
      (macro-btq-deq-init! processor)
      (macro-btq-init! processor)
@@ -2095,7 +2099,8 @@
      (macro-toq-init! processor)
      (macro-processor-deq-init! processor)
      (macro-processor-id-set! processor id)
-     (macro-processor-interrupts-set! processor '())
+     (macro-processor-interrupts-head-set! processor '())
+     (macro-processor-interrupts-tail-set! processor '())
      processor))
 
 ;;;----------------------------------------------------------------------------
@@ -3391,7 +3396,8 @@
   (mailbox          init: #f)
   (specific         init: '#!void)
   (resume-thunk     init: #f)
-  (interrupts       init: '())
+  (interrupts-head  init: '())
+  (interrupts-tail  init: '())
   (last-processor   init: #f) ;; last processor that executed thread or #f
 )
 
@@ -4013,14 +4019,15 @@
   ;; fields 4 to 6 are for maintaining a queue of runnable threads
   ;; field 7 is the leftmost thread in the queue of runnable threads
   ;; field 8 must be #f (the queue of runnable threads has no owner)
-  ;; fields 10 to 11 are for maintaining a timeout queue of threads
+  ;; fields 10 to 12 are for maintaining a timeout queue of threads
   ;; field 13 is the leftmost thread in the timeout queue of threads
   ;; field 14 is the thread currently running on this processor
   ;; field 16 is for storing the current time, heartbeat interval and a
   ;; temporary float
   ;; fields 17 and 18 are the deq links of blocked processors
   ;; field 19 is the id of the processor
-  ;; field 20 is the queue of pending high-level interrupts
+  ;; field 20 is the head of the queue of pending high-level interrupts
+  ;; field 21 is the tail of the queue of pending high-level interrupts
   lock1
   condvar-deq-next
   condvar-deq-prev
@@ -4040,7 +4047,8 @@
   processor-deq-next
   processor-deq-prev
   id
-  interrupts
+  interrupts-head
+  interrupts-tail
 )
 
 (##define-macro (macro-make-floats)
@@ -4085,6 +4093,7 @@
            #f
            #f
            ,id
+           '()
            '())))
      (macro-btq-deq-init! processor)
      (macro-btq-init! processor)
@@ -4105,7 +4114,8 @@
      (macro-toq-init! processor)
      (macro-processor-deq-init! processor)
      (macro-processor-id-set! processor id)
-     (macro-processor-interrupts-set! processor '())
+     (macro-processor-interrupts-head-set! processor '())
+     (macro-processor-interrupts-tail-set! processor '())
      processor))
 
 ;;;----------------------------------------------------------------------------
@@ -4265,3 +4275,36 @@
 ;;;============================================================================
 
 ))
+
+;; Common stuff.
+
+(##define-macro (macro-thread-interrupts-insert-at-tail! thread intr)
+  `(let ((thread ,thread) (intr ,intr))
+
+     (##declare (not interrupts-enabled))
+
+     ;; Add item to tail of queue of interrupts
+
+     (let ((tail (macro-thread-interrupts-tail thread)))
+       (macro-thread-interrupts-tail-set! thread intr)
+       (if (##null? tail)
+           (macro-thread-interrupts-head-set! thread intr)
+           (##vector-set! tail 0 intr)))))
+
+(##define-macro (macro-thread-interrupts-remove-from-head! interrupt yes no)
+  `(let ()
+
+     (##declare (not interrupts-enabled))
+
+     ;; Remove item from head of queue of interrupts
+
+     (let ((,interrupt (macro-thread-interrupts-head (macro-current-thread))))
+       (if (##null? ,interrupt)
+           (begin
+             ,no)
+           (let (($$next (##vector-ref ,interrupt 0)))
+             (##vector-set! ,interrupt 0 '())
+             (macro-thread-interrupts-head-set! (macro-current-thread) $$next)
+             (if (##null? $$next)
+                 (macro-thread-interrupts-tail-set! (macro-current-thread) '()))
+             ,yes)))))

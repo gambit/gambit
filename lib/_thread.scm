@@ -1330,7 +1330,7 @@
   ;; being sent, an abandoned mutex exception will be raised.
 
   (let* ((result-mutex (##make-mutex thunk))
-         (interrupt (##cons result-mutex '())))
+         (interrupt (##vector '() result-mutex)))
     (macro-mutex-specific-set! result-mutex thread)
     (macro-mutex-lock! result-mutex #f thread)
     (##thread-intr-propagate! interrupt)
@@ -1347,11 +1347,11 @@
 
   (##thread-lock-remove-btq-toq!
 
-   (macro-mutex-specific (##car interrupt)) ;; target thread of interrupt
+   (macro-mutex-specific (##vector-ref interrupt 1)) ;; target thread of interrupt
 
    (lambda (interrupt)
 
-     (let ((thread (macro-mutex-specific (##car interrupt))))
+     (let ((thread (macro-mutex-specific (##vector-ref interrupt 1))))
        (if (##not (macro-terminated-thread-given-initialized? thread))
 
            (let ((last-processor (macro-thread-last-processor thread)))
@@ -1371,16 +1371,19 @@
                      (macro-unlock-thread! thread)
 
                      ;; propagate interrupt
-                     (##processor-intr! last-processor interrupt))
+                     (##raise-high-level-interrupt last-processor interrupt))
 
                    (begin
 
                      ;; The thread is not currently executing, so schedule
                      ;; its execution on the current processor.
 
-                     ;; add pair to thread's high-level interrupt queue
-                     (##set-cdr! interrupt (macro-thread-interrupts thread))
-                     (macro-thread-interrupts-set! thread interrupt)
+                     ;; add interrupt to thread's interrupt queue
+                     (let ((tail (macro-thread-interrupts-tail thread)))
+                       (macro-thread-interrupts-tail-set! thread interrupt)
+                       (if (##null? tail)
+                           (macro-thread-interrupts-head-set! thread interrupt)
+                           (##vector-set! tail 0 interrupt)))
 
                      (macro-add-thread-to-run-queue-of-current-processor-preferably! thread)
 
@@ -1389,7 +1392,7 @@
 
    interrupt))
 
-(define-prim (##high-level-interrupt!)
+(define-prim (##other-interrupt!)
 
   (##declare (not interrupts-enabled))
 
@@ -1398,24 +1401,29 @@
 
   (let loop ()
     (macro-lock-current-processor!)
-    (let ((interrupt (macro-processor-interrupts (macro-current-processor))))
+    (let ((interrupt
+           (macro-processor-interrupts-head (macro-current-processor))))
       (if (##null? interrupt)
           (macro-unlock-current-processor!)
-          (begin
-            (macro-processor-interrupts-set!
+          (let ((next (##vector-ref interrupt 0)))
+            (macro-processor-interrupts-head-set!
              (macro-current-processor)
-             (##cdr interrupt))
+             next)
+            (if (##null? next)
+                (macro-processor-interrupts-tail-set!
+                 (macro-current-processor)
+                 '()))
             (macro-unlock-current-processor!)
-            (let ((x (##car interrupt)))
+            (let ((x (##vector-ref interrupt 1)))
 
               ;; There are two types of interrupts:
               ;;
-              ;; - thunk: interrupt targets the processor
+              ;; - procedure: interrupt targets the processor
               ;;
               ;; - mutex: interrupt targets a specific thread
 
               (cond ((##procedure? x)
-                     (x))
+                     (x interrupt))
 
                     ((macro-mutex? x)
                      ;; mutex-specific is thread to interrupt and result
@@ -1427,23 +1435,6 @@
                              (macro-mutex-unlock! x))
                            (##thread-intr-propagate! interrupt))))))
             (loop))))))
-
-(define-prim (##processor-intr! processor interrupt)
-
-  (##declare (not interrupts-enabled))
-
-  ;; acquire low-level lock of processor
-  (macro-lock-processor! processor)
-
-  ;; add pair to processor's high-level interrupt queue
-  (##set-cdr! interrupt (macro-processor-interrupts processor))
-  (macro-processor-interrupts-set! processor interrupt)
-
-  ;; release low-level lock of processor
-  (macro-unlock-processor! processor)
-
-  ;; raise high-level interrupt so processor will execute interrupt
-  (##raise-high-level-interrupt! (macro-processor-id processor)))
 
 ;;TODO:deprecated
 (define-prim (##thread-call thread thunk)
@@ -2737,26 +2728,23 @@
   (let ((resume-thunk (macro-thread-resume-thunk (macro-current-thread))))
     (let loop ()
       (macro-lock-current-thread!)
-      (let ((interrupt (macro-thread-interrupts (macro-current-thread))))
-        (if (##null? interrupt)
-            (begin
-              (macro-unlock-current-thread!)
-              (resume-thunk))
-            (begin
-              (macro-thread-interrupts-set!
-               (macro-current-thread)
-               (##cdr interrupt))
-              (macro-unlock-current-thread!)
-              (let ((x (##car interrupt)))
-                (cond ((##procedure? x)
-                       (x))
-                      ((macro-mutex? x)
-                       ;; mutex-specific is thread to interrupt and result
-                       ;; mutex-name is thunk
-                       (let ((thunk (macro-mutex-name x)))
-                         (macro-mutex-specific-set! x (thunk))
-                         (macro-mutex-unlock! x)))))
-              (loop)))))))
+      (macro-thread-interrupts-remove-from-head!
+       interrupt
+       (begin
+         (macro-unlock-current-thread!)
+         (let ((x (##vector-ref interrupt 1)))
+           (cond ((##procedure? x)
+                  (x interrupt))
+                 ((macro-mutex? x)
+                  ;; mutex-specific is thread to interrupt and result
+                  ;; mutex-name is thunk
+                  (let ((thunk (macro-mutex-name x)))
+                    (macro-mutex-specific-set! x (thunk))
+                    (macro-mutex-unlock! x)))))
+         (loop))
+       (begin
+         (macro-unlock-current-thread!)
+         (resume-thunk))))))
 
 ;;; The procedure ##thread-schedule! implements the central logic of
 ;;; the thread scheduler.  It is called by a processor when it needs
@@ -3253,7 +3241,7 @@
     (##interrupt-vector-set! 2 ##thread-heartbeat!) ;; ___INTR_HEARTBEAT
     (##interrupt-vector-set! 3 ##user-interrupt!) ;; ___INTR_USER
     (##interrupt-vector-set! 4 ##gc-interrupt!) ;; ___INTR_GC
-    (##interrupt-vector-set! 5 ##high-level-interrupt!) ;; ___INTR_HIGH_LEVEL
+    (##interrupt-vector-set! 5 ##other-interrupt!) ;; ___INTR_OTHER
 
     (##void)))
 
@@ -4548,6 +4536,11 @@
 
 ;;; User accessible primitives for exception handling.
 
+(define-prim (##with-exception-handler handler thunk)
+  (macro-dynamic-bind exception-handler
+   handler
+   thunk))
+
 (define-prim (with-exception-handler handler thunk)
   (macro-force-vars (handler thunk)
     (macro-check-procedure handler 1 (with-exception-handler handler thunk)
@@ -5330,7 +5323,7 @@
   (##declare (not interrupts-enabled))
 
   ;;TODO: add the following procedures to ##hidden-continuation?
-  ;;  ##high-level-interrupt!
+  ;;  ##other-interrupt!
   ;;  ##interrupt-handler
   ;;  ##thread-resume-execution!
 
@@ -6335,13 +6328,12 @@
 
   (let ((resume-thunk (macro-thread-resume-thunk (macro-current-thread))))
     (let loop ()
-      (let ((x (macro-thread-interrupts (macro-current-thread))))
-        (if (##null? x)
-            (resume-thunk)
-            (let ((thunk (##car x)))
-              (macro-thread-interrupts-set! (macro-current-thread) (##cdr x))
-              (thunk)
-              (loop)))))))
+      (macro-thread-interrupts-remove-from-head!
+       interrupt
+       (let ((proc (##vector-ref interrupt 1)))
+         (proc interrupt)
+         (loop))
+       (resume-thunk)))))
 
 (define-prim (##thread-schedule!)
 
@@ -6517,10 +6509,11 @@
   (macro-thread-btq-remove-if-in-btq! thread)
   (macro-thread-toq-remove-if-in-toq! thread)
 
-  (macro-thread-interrupts-set!
+  (macro-thread-interrupts-insert-at-tail!
    thread
-   (##cons thunk-returning-void
-           (macro-thread-interrupts thread)))
+   (##vector '()
+             (lambda (self) ((##vector-ref self 2)))
+             thunk-returning-void))
 
   (##btq-insert! (macro-current-processor) thread))
 
@@ -7473,8 +7466,8 @@
 
 ;;;----------------------------------------------------------------------------
 
-;; The procedure processor? returns #t when the parameter is a processor
-;; and #f otherwise.
+;; The procedure processor-id returns the integer id of the processor
+;; (0, 1, ...).
 
 (define-prim (processor-id processor)
 
@@ -7483,6 +7476,31 @@
   (macro-force-vars (processor)
     (macro-check-processor processor 1 (processor-id processor)
       (macro-processor-id processor))))
+
+(define-prim (##other-interrupt!)
+
+  (##declare (not interrupts-enabled))
+
+  ;; This procedure is called by a processor to handle the processor's
+  ;; high-level interrupts (generated from Scheme code).
+
+  (let loop ()
+    (let ((interrupt
+           (macro-processor-interrupts-head (macro-current-processor))))
+      (if (##null? interrupt)
+          #f
+          (let ((next (##vector-ref interrupt 0)))
+            (macro-processor-interrupts-head-set!
+             (macro-current-processor)
+             next)
+            (if (##null? next)
+                (macro-processor-interrupts-tail-set!
+                 (macro-current-processor)
+                 '()))
+            (let ((x (##vector-ref interrupt 1)))
+              (cond ((##procedure? x)
+                     (x interrupt))))
+            (loop))))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -8791,6 +8809,8 @@
           (handler)))))
 
 (##interrupt-vector-set! 3 ##user-interrupt!) ;; ___INTR_USER
+
+(##interrupt-vector-set! 5 ##other-interrupt!) ;; ___INTR_OTHER
 
 (##startup-threading!)
 

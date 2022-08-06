@@ -1359,31 +1359,8 @@ end-of-code
 
   (let loop ()
     (let ((id
-           (##c-code #<<end-of-code
-
-            ___RESULT = ___FAL;
-
-            ___EXT(___begin_interrupt_service_pstate) (___ps);
-
-            if (___ps->intr_enabled != ___FIX(0))
-              {
-                int i;
-
-                for (i=0; i<___NB_INTRS; i++)
-                  if (___EXT(___check_interrupt_pstate) (___ps, i))
-                    break;
-
-                ___EXT(___end_interrupt_service_pstate) (___ps, i+1);
-
-                if (i < ___NB_INTRS)
-                  ___RESULT = ___FIX(i);
-              }
-            else
-              ___EXT(___end_interrupt_service_pstate) (___ps, 0);
-
-end-of-code
-)))
-
+           (##c-code
+            "___RESULT = ___EXT(___service_interrupts_pstate) (___ps);")))
       (if id
           (let ((handler
                  (or (##vector-ref ##interrupt-vector id)
@@ -1399,7 +1376,7 @@ end-of-code
                 (handler)))))))
 
 (define ##interrupt-vector
-  (##vector ##sync-op-interrupt! #f #f #f #f #f #f #f))
+  (##vector ##sync-op-interrupt! #f #f #f #f #f #f))
 
 (define-prim (##interrupt-vector-set! code handler)
   (##declare (not interrupts-enabled))
@@ -1446,26 +1423,25 @@ end-of-code
 
 ;;;----------------------------------------------------------------------------
 
-;; The high-level interrupt is used for interprocessor interruption
-;; initiated at the Scheme level.
+;; High-level interrupts are handled by the Scheme thread scheduler on a
+;; specific processor.
 
-(define-prim (##raise-high-level-interrupt! processor-id)
+(define-prim (##raise-high-level-interrupt processor-id intr)
   (##declare (not interrupts-enabled))
   (##c-code #<<end-of-code
 
-   {
-     ___processor_state ps =
-       ___PSTATE_FROM_PROCESSOR_ID(___INT(___ARG1),
-                                   ___VMSTATE_FROM_PSTATE(___ps));
+   ___processor_state ps =
+     ___PSTATE_FROM_PROCESSOR_ID(___INT(___ARG1),
+                                 ___VMSTATE_FROM_PSTATE(___ps));
 
-     ___raise_interrupt_pstate (ps, ___INTR_HIGH_LEVEL);
+   ___raise_high_level_interrupt_pstate (ps, ___ARG2);
 
-     ___RESULT = ___VOID;
-   }
+   ___RESULT = ___VOID;
 
 end-of-code
 
-   processor-id))
+   processor-id
+   intr))
 
 ))
 

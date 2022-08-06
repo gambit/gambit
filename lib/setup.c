@@ -46,6 +46,7 @@ ___NEED_GLO(___G__23__23_dynamic_2d_env_2d_bind)
  * Interrupt handling.
  */
 
+
 /*
  * '___raise_interrupt_pstate (___ps, code)' is called when an
  * interrupt has occured.  At some later point in time, the Gambit
@@ -59,7 +60,7 @@ ___NEED_GLO(___G__23__23_dynamic_2d_env_2d_bind)
  *   ___INTR_HEARTBEAT   heartbeat time interval has elapsed
  *   ___INTR_USER        user has interrupted the program (e.g. ctrl-C)
  *   ___INTR_GC          a garbage collection has finished
- *   ___INTR_HIGH_LEVEL  a Scheme-level interrupt is requested
+ *   ___INTR_OTHER       some other interrupt is requested
  */
 
 ___EXP_FUNC(void,___raise_interrupt_pstate)
@@ -82,8 +83,7 @@ int code;)
     return;
 #endif
 
-  if (___INTERRUPT_REQ(___ps->intr_flag[code] = ___FIX(1)<<code,
-                       ___ps->intr_mask))
+  if (___INTERRUPT_REQ(___ps->intr_flag[code] = ___FIX(1)<<code))
     {
       ___STACK_TRIP_ON();
       ___SHARED_MEMORY_BARRIER(); /* make sure write happens promptly */
@@ -140,59 +140,141 @@ int code;)
 }
 
 
-___EXP_FUNC(void,___begin_interrupt_service_pstate)
+___EXP_FUNC(void,___init_procedural_interrupt)
+   ___P((void *intr,
+         ___SCMOBJ (*execute_fn) ___P((void *self, ___SCMOBJ op),())),
+        (intr,
+         execute_fn)
+void *intr;
+___SCMOBJ (*execute_fn) ();)
+{
+  ___procedural_interrupt_header *h =
+    ___CAST(___procedural_interrupt_header*, intr);
+
+  h->execute_fn = execute_fn;
+}
+
+
+___HIDDEN ___SCMOBJ release_procedural_interrupt
+   ___P((void *intr),
+        (intr)
+void *intr;)
+{
+  ___procedural_interrupt_header *h =
+    ___CAST(___procedural_interrupt_header*, intr);
+
+  return h->execute_fn (intr, ___FAL);
+}
+
+
+___HIDDEN ___SCMOBJ service_procedural_interrupts_pstate
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+  ___SCMOBJ err = ___FIX(___NO_ERR);
+  ___procedural_interrupt_header *probe;
+
+  ___MUTEX_LOCK(___ps->procedural_interrupts_mut);
+
+  while ((probe = ___ps->procedural_interrupts_head) != NULL)
+    {
+      ___procedural_interrupt_header *next = probe->next;
+
+      ___ps->procedural_interrupts_head = next;
+
+      if (next == NULL)
+        ___ps->procedural_interrupts_tail = NULL;
+
+      ___MUTEX_UNLOCK(___ps->procedural_interrupts_mut);
+
+      if ((err = probe->execute_fn (___CAST(void*, probe), ___TRU))
+          != ___FIX(___NO_ERR))
+        break;
+
+      ___MUTEX_LOCK(___ps->procedural_interrupts_mut);
+    }
+
+  ___MUTEX_UNLOCK(___ps->procedural_interrupts_mut);
+
+  return err;
+}
+
+
+___EXP_FUNC(___SCMOBJ,___service_interrupts_pstate)
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+  ___SCMOBJ result = ___FAL;
+  ___WORD ___temp;
+
+  ___STACK_TRIP_OFF();
+
+  ___temp = ___INT(___INTERRUPT_AFTER_MASKING(___INTERRUPT_FLAGS()));
+
+  if (___temp != 0)
+    {
+      /* choose the lowest interrupt (first bit set of ___temp) */
+      int code = ___FFS_WORD_TEMP()-1;
+
+      if (code < ___INTR_OTHER ||
+          service_procedural_interrupts_pstate (___ps) == ___FIX(___NO_ERR))
+        {
+          ___ps->intr_flag[code] = ___FIX(0);
+
+          result = ___FIX(code);
+
+          /* check if there are other unserviced interrupts */
+          if ((___temp & ~(1<<code)) != ___FIX(0))
+            ___STACK_TRIP_ON();
+        }
+      else
+        {
+          /* call service_procedural_interrupts_pstate again soon */
+          ___STACK_TRIP_ON();
+        }
+    }
+
+  return result;
+}
+
+
+___EXP_FUNC(void,___refresh_interrupts_pstate)
    ___P((___processor_state ___ps),
         (___ps)
 ___processor_state ___ps;)
 {
   ___STACK_TRIP_OFF();
+  ___STACK_TRIP_ON_IF_INTERRUPT_REQ();
 }
 
 
-___EXP_FUNC(___BOOL,___check_interrupt_pstate)
+___EXP_FUNC(void,___raise_high_level_interrupt_pstate)
    ___P((___processor_state ___ps,
-         int code),
+         ___SCMOBJ intr),
         (___ps,
-         code)
+         intr)
 ___processor_state ___ps;
-int code;)
+___SCMOBJ intr;)
 {
-  if ((___ps->intr_flag[code] & ~___ps->intr_mask) != ___FIX(0))
-    {
-      ___ps->intr_flag[code] = ___FIX(0);
-      return 1;
-    }
+  ___SCMOBJ ps = ___PROCESSOR_SCMOBJ(___ps);
+  ___SCMOBJ tail;
 
-  return 0;
-}
+  ___PRIMITIVELOCK(ps,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2))
 
+  tail = ___FIELD(ps,___PROCESSOR_INTERRUPTS_TAIL);
 
-___EXP_FUNC(void,___end_interrupt_service_pstate)
-   ___P((___processor_state ___ps,
-         int code),
-        (___ps,
-         code)
-___processor_state ___ps;
-int code;)
-{
-  ___WORD enabled = ___ps->intr_enabled & ~___ps->intr_mask;
+  ___FIELD(ps,___PROCESSOR_INTERRUPTS_TAIL) = intr;
 
-  if (enabled != ___FIX(0))
-    {
-#ifdef CALL_HANDLER_AT_EVERY_POLL
-      ___STACK_TRIP_ON();
-#else
-      while (code < ___NB_INTRS)
-        {
-          if ((___ps->intr_flag[code] & enabled) != ___FIX(0))
-            {
-              ___STACK_TRIP_ON();
-              break;
-            }
-          code++;
-        }
-#endif
-    }
+  if (tail == ___NUL)
+    ___FIELD(ps,___PROCESSOR_INTERRUPTS_HEAD) = intr;
+  else
+    ___FIELD(tail,0) = intr;
+
+  ___PRIMITIVEUNLOCK(ps,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2))
+
+  ___raise_interrupt_pstate (___ps, ___INTR_OTHER);
 }
 
 
@@ -204,8 +286,7 @@ ___processor_state ___ps;)
   /* Disable all interrupts except ___INTR_SYNC_OP */
   ___ps->intr_enabled = ___FIX(1<<___INTR_SYNC_OP);
 
-  ___begin_interrupt_service_pstate (___ps);
-  ___end_interrupt_service_pstate (___ps, 0);
+  ___refresh_interrupts_pstate (___ps);
 }
 
 
@@ -214,10 +295,10 @@ ___EXP_FUNC(void,___enable_interrupts_pstate)
         (___ps)
 ___processor_state ___ps;)
 {
+  /* Enable all interrupts */
   ___ps->intr_enabled = ___FIX((1<<___NB_INTRS)-1);
 
-  ___begin_interrupt_service_pstate (___ps);
-  ___end_interrupt_service_pstate (___ps, 0);
+  ___refresh_interrupts_pstate (___ps);
 }
 
 
@@ -237,6 +318,67 @@ ___processor_state ___ps;)
   /* None of the interrupts are requested */
   for (i=0; i<___NB_INTRS; i++)
     ___ps->intr_flag[i] = ___FIX(0);
+
+  /* Initialize empty queue of procedural interrupts */
+  ___ps->procedural_interrupts_head = NULL;
+  ___ps->procedural_interrupts_tail = NULL;
+  ___MUTEX_INIT(___ps->procedural_interrupts_mut);
+}
+
+
+___EXP_FUNC(void,___raise_procedural_interrupt_pstate)
+   ___P((___processor_state ___ps,
+         void *intr),
+        (___ps,
+         intr)
+___processor_state ___ps;
+void *intr;)
+{
+  ___procedural_interrupt_header *h =
+    ___CAST(___procedural_interrupt_header*, intr);
+  ___procedural_interrupt_header *tail;
+
+  h->next = NULL;
+
+  ___MUTEX_LOCK(___ps->procedural_interrupts_mut);
+
+  tail = ___ps->procedural_interrupts_tail;
+
+  ___ps->procedural_interrupts_tail = h;
+
+  if (tail == NULL)
+    ___ps->procedural_interrupts_head = h;
+  else
+    tail->next = h;
+
+  ___MUTEX_UNLOCK(___ps->procedural_interrupts_mut);
+
+  ___raise_interrupt_pstate (___ps, ___INTR_OTHER);
+}
+
+
+___HIDDEN void cleanup_interrupts_pstate
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+  ___procedural_interrupt_header *probe;
+
+  ___MUTEX_LOCK(___ps->procedural_interrupts_mut);
+
+  probe = ___ps->procedural_interrupts_head;
+
+  while (probe != NULL)
+    {
+      ___procedural_interrupt_header *next = probe->next;
+      release_procedural_interrupt (___CAST(void*,probe));
+      probe = next;
+    }
+
+  ___ps->procedural_interrupts_head = NULL;
+  ___ps->procedural_interrupts_tail = NULL;
+
+  ___MUTEX_UNLOCK(___ps->procedural_interrupts_mut);
 }
 
 
@@ -1031,7 +1173,6 @@ ___EXP_FUNC(___BOOL, ___fdset_resize)
 int fd1;
 int fd2;)
 {
-
   ___processor_state ___ps = ___PSTATE;
   ___virtual_machine_state ___vms = ___VMSTATE_FROM_PSTATE(___ps);
   ___sync_op_struct sop;
@@ -4440,6 +4581,7 @@ ___EXP_FUNC(void,___cleanup_pstate)
         (___ps)
 ___processor_state ___ps;)
 {
+  cleanup_interrupts_pstate (___ps);
   cleanup_os_and_mem_pstate (___ps);
 }
 
@@ -4547,7 +4689,7 @@ ___EXP_FUNC(void,___cleanup_vmstate)
         (___vms)
 ___virtual_machine_state ___vms;)
 {
-  ___cleanup_mem_vmstate (___vms);
+  cleanup_os_and_mem_vmstate (___vms);
   ___cleanup_actlog_vmstate (___vms);
 }
 
@@ -5895,8 +6037,14 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
 
 #endif
 
-  ___GSTATE->___raise_interrupt_pstate
-    = ___raise_interrupt_pstate;
+  ___GSTATE->___raise_high_level_interrupt_pstate
+    = ___raise_high_level_interrupt_pstate;
+
+  ___GSTATE->___init_procedural_interrupt
+    = ___init_procedural_interrupt;
+
+  ___GSTATE->___raise_procedural_interrupt_pstate
+    = ___raise_procedural_interrupt_pstate;
 
   ___GSTATE->___raise_interrupt_vmstate
     = ___raise_interrupt_vmstate;
@@ -5904,14 +6052,11 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
   ___GSTATE->___raise_interrupt
     = ___raise_interrupt;
 
-  ___GSTATE->___begin_interrupt_service_pstate
-    = ___begin_interrupt_service_pstate;
+  ___GSTATE->___service_interrupts_pstate
+    = ___service_interrupts_pstate;
 
-  ___GSTATE->___check_interrupt_pstate
-    = ___check_interrupt_pstate;
-
-  ___GSTATE->___end_interrupt_service_pstate
-    = ___end_interrupt_service_pstate;
+  ___GSTATE->___refresh_interrupts_pstate
+    = ___refresh_interrupts_pstate;
 
   ___GSTATE->___disable_interrupts_pstate
     = ___disable_interrupts_pstate;
@@ -5954,6 +6099,12 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
 
   ___GSTATE->___free_mem_code
     = ___free_mem_code;
+
+  ___GSTATE->___thread_create
+    = ___thread_create;
+
+  ___GSTATE->___thread_join
+    = ___thread_join;
 
 #ifdef ___USE_emulated_sync
 
