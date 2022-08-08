@@ -15812,13 +15812,22 @@ Name of the Elliptic Curve to use, according to RFC 4492. Used only if
 TCP Client example with TLS encryption.
 
 @smallexample
-(define ctx (make-tls-context))
-(define c (open-tcp-client (list address: "twitter.com"
-                                 port-number: 443
-                                 tls-context: ctx)))
-(display "GET / HTTP/1.1\nHost: twitter.com\n\n" c)
-(force-output c)
-(read-line c)
+(define (https-get host document)
+  (let* ((ctx (make-tls-context))
+         (conn (open-tcp-client (list address: host
+                                      port-number: 443
+                                      tls-context: ctx))))
+    (print port: conn
+           "GET " document " HTTP/1.1\n"
+           "Host: " host "\n"
+           "Connection: close\n"
+           "\n")
+    (force-output conn)
+    (let ((string (read-line conn #f)))
+      (close-port conn)
+      string)))
+
+(display (https-get "example.com" "/"))
 @end smallexample
 
 TCP Server example with several options. These are not mandatory, except
