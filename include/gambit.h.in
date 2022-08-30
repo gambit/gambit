@@ -11425,6 +11425,13 @@ typedef struct ___global_state_struct
     void (*___kill_sfun_stack_marker)
        ___P((___SCMOBJ marker),
             ());
+    void *(*___alloc_rc_no_register)
+       ___P((___SIZE_T bytes),
+            ());
+    void *(*___register_rc)
+       ___P((___PSD
+             void *ptr),
+            ());
     void *(*___alloc_rc)
        ___P((___PSD
              ___SIZE_T bytes),
@@ -12755,6 +12762,13 @@ ___IMP_FUNC(void,___kill_sfun_stack_marker)
 #endif
 
 #ifndef ___INCLUDED_FROM_MEM
+___IMP_FUNC(void*,___alloc_rc_no_register)
+   ___P((___SIZE_T bytes),
+        ());
+___IMP_FUNC(void*,___register_rc)
+   ___P((___PSD
+         void *ptr),
+        ());
 ___IMP_FUNC(void*,___alloc_rc)
    ___P((___PSD
          ___SIZE_T bytes),

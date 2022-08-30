@@ -5811,6 +5811,12 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
   ___GSTATE->___kill_sfun_stack_marker
     = ___kill_sfun_stack_marker;
 
+  ___GSTATE->___alloc_rc_no_register
+    = ___alloc_rc_no_register;
+
+  ___GSTATE->___register_rc
+    = ___register_rc;
+
   ___GSTATE->___alloc_rc
     = ___alloc_rc;
 

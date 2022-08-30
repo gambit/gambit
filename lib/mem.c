@@ -680,6 +680,46 @@ ___processor_state ___ps;)
 }
 
 
+___EXP_FUNC(void*,___alloc_rc_no_register)
+   ___P((___SIZE_T bytes),
+        (bytes)
+___SIZE_T bytes;)
+{
+  ___rc_header *h = ___CAST(___rc_header*,
+                            ___ALLOC_MEM(bytes + sizeof (___rc_header)));
+
+  if (h != 0)
+    {
+      h->refcount = 1;
+      h->data = ___FAL;
+
+      return ___CAST(void*,h+1);
+    }
+
+  return 0;
+}
+
+
+___EXP_FUNC(void,___register_rc)
+   ___P((___PSD
+         void *ptr),
+        (___PSV
+         ptr)
+___PSDKR
+void *ptr;)
+{
+  ___PSGET
+  ___rc_header *h = ___CAST(___rc_header*, ptr) - 1;
+  ___rc_header *head = &rc_head;
+  ___rc_header *tail = head->prev;
+
+  h->prev = tail;
+  h->next = head;
+  head->prev = h;
+  tail->next = h;
+}
+
+
 ___EXP_FUNC(void*,___alloc_rc)
    ___P((___PSD
          ___SIZE_T bytes),
@@ -689,26 +729,11 @@ ___PSDKR
 ___SIZE_T bytes;)
 {
   ___PSGET
-  ___rc_header *h = ___CAST(___rc_header*,
-                            ___ALLOC_MEM(bytes + sizeof (___rc_header)));
+  void *ptr = ___alloc_rc_no_register (bytes);
 
-  if (h != 0)
-    {
-      ___rc_header *head = &rc_head;
-      ___rc_header *tail = head->prev;
+  if (ptr != 0) ___register_rc (___PSP ptr);
 
-      h->prev = tail;
-      h->next = head;
-      head->prev = h;
-      tail->next = h;
-
-      h->refcount = 1;
-      h->data = ___FAL;
-
-      return ___CAST(void*,h+1);
-    }
-
-  return 0;
+  return ptr;
 }
 
 
