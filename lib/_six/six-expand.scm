@@ -498,8 +498,6 @@
                                      body)))
                 `((##py-function-memoized ',(box def)) ;; literal box
                   ,@(map cdr params)))))))))
-                ;; `((python-eval ,def)
-                ;;   ,@(map cdr params)))))))))
 
 (define (six->target ast-src target)
   (case target
@@ -554,12 +552,8 @@
                                 ((1)
                                  (list target-op
                                        (infix (car rest) 1 inner-op)))
-                                 ;;                                ((2)
-                                 ;; (list (infix (car rest) 0 inner-op)
-                                 ;;       target-op
-                                 ;;       (infix (cadr rest) 1 inner-op)))
                                 ((2)
-                                ;; Hack to handle six.x=y assignments only for python
+                                ;; Handle six.x=y assignments for Python
                                 (if (and (eq? (conversion-ctx-target cctx) 'python)
                                          (not (conversion-ctx-incall cctx))
                                          (equal? target-op "="))

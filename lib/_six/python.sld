@@ -15,7 +15,6 @@
 
   (include "python#.scm")
   (begin
-    ;; (##include "python#.scm")
     (##include "python.scm")))
 
 ;;;============================================================================

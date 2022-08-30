@@ -14637,8 +14637,8 @@
                                       (wrap-identifier re start-pos tok)
                                       expr1)))))
            ((eq? tok2 'as)
-            (let ((as-name (get-token re #f #f))
-                  (tok3 (get-token re #t #f)))
+            (let* ((as-name (get-token re #f #f))
+                   (tok3 (get-token re #t #f)))
               (cond
                ((eq? tok3 |token.;-auto|)
                 (cont re
@@ -15430,8 +15430,8 @@
                                               start-pos
                                               'six.import expr)))))
             ((eq? tok 'from)
-             (let ((tok (get-token re #f #f))
-                   (tok1 (get-token re #f #f)))
+             (let* ((tok (get-token re #f #f))
+                    (tok1 (get-token re #f #f)))
                (if (eq? tok1 'import)
                    (let ((tok2 (get-token re #f #f)))
                      (if (eq? tok2 op.*)
