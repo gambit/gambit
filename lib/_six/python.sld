@@ -1,19 +1,20 @@
 ;;;============================================================================
 
-;;; File: "six-expand#.scm"
+;;; File: "python.sld"
 
 ;;; Copyright (c) 2020-2022 by Marc Feeley, All Rights Reserved.
-;;; Copyright (c) 2022 by Marc-André Bélanger, All Rights Reserved.
+;;; Copyright (c) 2021-2022 by Marc-André Bélanger, All Rights Reserved.
 
 ;;;============================================================================
 
-;; six.infix special form expander.
+;;; Python FFI based on SIX.
 
-(##namespace ("_six/six-expand#"
+(define-library (python)
 
-six.infix-js-expand
-six.infix-python-expand
+  (export six.infix)
 
-))
+  (include "python#.scm")
+  (begin
+    (##include "python.scm")))
 
 ;;;============================================================================
