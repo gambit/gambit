@@ -6100,11 +6100,17 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
   ___GSTATE->___free_mem_code
     = ___free_mem_code;
 
+  ___GSTATE->___thread_init_from_self
+    = ___thread_init_from_self;
+
   ___GSTATE->___thread_create
     = ___thread_create;
 
   ___GSTATE->___thread_join
     = ___thread_join;
+
+  ___GSTATE->___thread_exit
+    = ___thread_exit;
 
 #ifdef ___USE_emulated_sync
 

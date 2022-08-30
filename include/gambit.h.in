@@ -11748,12 +11748,16 @@ typedef struct ___global_state_struct
     void (*___free_mem_code)
        ___P((void *ptr),
             ());
+    ___SCMOBJ (*___thread_init_from_self)
+       ___P((___thread *thread),
+            ());
     ___SCMOBJ (*___thread_create)
        ___P((___thread *thread),
             ());
     ___SCMOBJ (*___thread_join)
        ___P((___thread *thread),
             ());
+    void (*___thread_exit) ___PVOID;
 #ifdef ___USE_emulated_sync
     ___WORD (*___emulated_compare_and_swap_word)
        ___P((___VOLATILE ___WORD *ptr,
@@ -13238,12 +13242,16 @@ ___IMP_FUNC(void,___free_mem_code)
 #endif
 
 #ifndef ___INCLUDED_FROM_OS_THREAD
+___IMP_FUNC(___SCMOBJ,___thread_init_from_self)
+   ___P((___thread *thread),
+        ());
 ___IMP_FUNC(___SCMOBJ,___thread_create)
    ___P((___thread *thread),
         ());
 ___IMP_FUNC(___SCMOBJ,___thread_join)
    ___P((___thread *thread),
         ());
+___IMP_FUNC(void,___thread_exit) ___PVOID;
 #ifdef ___USE_emulated_sync
 ___IMP_FUNC(___WORD,___emulated_compare_and_swap_word)
    ___P((___VOLATILE ___WORD *ptr,

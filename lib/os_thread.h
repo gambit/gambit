@@ -61,20 +61,6 @@ extern ___thread_module ___thread_mod;
 /*---------------------------------------------------------------------------*/
 
 
-extern ___SCMOBJ ___thread_init_from_self
-   ___P((___thread *thread),
-        ());
-
-extern ___SCMOBJ ___thread_create
-   ___P((___thread *thread),
-        ());
-
-extern ___SCMOBJ ___thread_join
-   ___P((___thread *thread),
-        ());
-
-extern void ___thread_exit ___PVOID;
-
 extern void ___thread_set_pstate
    ___P((___processor_state ___ps),
         ());
