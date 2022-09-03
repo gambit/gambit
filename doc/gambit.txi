@@ -17527,14 +17527,35 @@ such as a closing parenthesis).  For example @code{(f \2*n (list)
 @item
 @meta{import stat} @syntaxdef{}
 @item
-@syntaxspc{}@code{import} @meta{expr} @code{;} @tab @code{(six.import @var{$2})}
+@syntaxspc{}@code{import} @meta{nonempty import clause list} @code{;} @tab @code{(six.import @var{$2}...)}
 
 @item
 @meta{from stat} @syntaxdef{}
 @item
-@syntaxspc{}@code{from} @meta{expr} @code{import} @meta{expr} @code{;} @tab @code{(six.from-import @var{$2} @var{$4})}
+@syntaxspc{}@code{from} @meta{expr} @code{import} @meta{nonempty import clause list} @code{;} @tab @code{(six.from-import @var{$2} @var{$4}...)}
 @item
 @syntaxspc{}@code{from} @meta{expr} @code{import} @code{*} @code{;} @tab @code{(six.from-import-* @var{$2})}
+
+@item
+@meta{import clause} @syntaxdef{}
+@item
+@syntaxspc{}@meta{expr1} @code{as} @meta{expr2} @tab @code{(six.xasy @var{$1} @var{$3})}
+@item
+@syntaxbar{}@meta{expr1} @tab @var{$1}
+
+@item
+@meta{import clause list} @syntaxdef{}
+@item
+@syntaxspc{}@meta{nonempty import clause list} @tab @code{(@var{$1}...)}
+@item
+@syntaxbar{}@tab @code{()}
+
+@item
+@meta{nonempty import clause list} @syntaxdef{}
+@item
+@syntaxspc{}@meta{import clause} @tab @code{(@var{$1})}
+@item
+@syntaxbar{}@meta{import clause} @code{,} @meta{nonempty import clause list} @tab @code{(@var{$1} @var{$3}...)}
 
 @item
 @meta{expression stat} @syntaxdef{}
@@ -17966,8 +17987,8 @@ associativity and precedence of operators cannot be changed as that is
 a syntactic issue, so this will give a left associative exponentiation
 operator with an unusual precedence.
 
-The following identifiers do not have a predefined semantics (they
-are undefined identifiers):
+Note that some identifiers do not have a predefined semantics and
+are undefined identifiers, for example:
 @code{six.label}, @code{six.goto}, @code{six.switch}, @code{six.case},
 @code{six.break}, @code{six.continue}, @code{six.return},
 @code{six.clause}, @code{six.x:-y}, @code{six.@@}, @code{six.@@=},
