@@ -470,23 +470,28 @@
         ((and (pair? ast)
               (eq? 'six.from-import (##source-strip (car ast))))
          (let ((stmt (string-concatenate
-                       `("from "
-                         ,@(six->python (##source-strip (cadr ast)))
-                         " import "
-                         ,@(six->python (##source-strip (caddr ast)))))))
+                      `("from "
+                        ,@(six->python (##source-strip (cadr ast)))
+                        " import "
+                        ,(flatten-string
+                          (comma-separated
+                           (map (lambda (e) (six->python e))
+                                (##source-strip (cddr ast)))))))))
                `(begin
                   (python-exec ,stmt)
                   (void))))
         ((and (pair? ast)
               (eq? 'six.import (##source-strip (car ast)))
-              (pair? (cdr ast))
-              (null? (cddr ast)))
-         (let ((imports (##source-strip (cadr ast))))
-           (if (pair? imports)
-               `(begin
-                  (python-exec ,(string-concatenate (cons "import " (six->python imports))))
-                  (void))
-               (error "invalid import"))))
+              (pair? (cdr ast)))
+         (let ((stmt `(string-concatenate
+                       (list "import "
+                             ,(flatten-string
+                               (comma-separated
+                                (map (lambda (e) (six->python e))
+                                     (##source-strip (cdr ast)))))))))
+           `(begin
+              (python-exec ,stmt)
+              (void))))
         (else (let* ((x (six->python ast-src))
                      (body (car x))
                      (params (cdr x))
