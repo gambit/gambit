@@ -4,11 +4,11 @@ herefromlib = _six
 libfromhere = ..
 SUBDIRS =
 
-HEADERS_SCM = js\#.scm six-expand\#.scm
+HEADERS_SCM = js\#.scm python\#.scm six-expand\#.scm
 
-MODULES_SCM = js.scm js.sld six-expand.scm test/test.scm
+MODULES_SCM = js.scm js.sld python.scm python.sld six-expand.scm test/test.scm
 
-MAIN_MODULES = js six-expand
+MAIN_MODULES = js python six-expand
 
 OTHER_RCFILES = makefile
 
