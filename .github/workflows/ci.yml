@@ -50,7 +50,7 @@ jobs:
     - name: Build Gambit for Use
       run: |
         mkdir dist
-        ./configure --prefix=$(pwd)/dist
+        ./configure --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist
         echo "#undef HAVE_CLOCK_GETTIME" >> include/config.h
         make -j`nproc` core
         make modules
@@ -65,7 +65,7 @@ jobs:
     - name: Build Gambit for Use (--enable-multiple-threaded-vms)
       run: |
         mkdir dist-mt
-        ./configure --prefix=$(pwd)/dist-mt --enable-multiple-threaded-vms
+        ./configure --enable-multiple-threaded-vms --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist-mt
         echo "#undef HAVE_CLOCK_GETTIME" >> include/config.h
         make -j`nproc` core
         make modules
