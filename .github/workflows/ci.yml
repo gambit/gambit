@@ -33,7 +33,7 @@ jobs:
       uses: msys2/setup-msys2@v2
       with:
         update: true
-        install: "autoconf git make tar texinfo mingw-w64-${{ matrix.arch }}-gcc mingw-w64-${{ matrix.arch }}-make mingw-w64-${{ matrix.arch }}-libwinpthread-git base-devel gdb"
+        install: "autoconf git make tar texinfo mingw-w64-${{ matrix.arch }}-gcc mingw-w64-${{ matrix.arch }}-make mingw-w64-${{ matrix.arch }}-libwinpthread-git"
         msystem: ${{ matrix.msystem }}
 
     - name: Build
@@ -65,16 +65,9 @@ jobs:
     - name: Build Gambit for Use (--enable-multiple-threaded-vms)
       run: |
         mkdir dist-mt
-        ./configure --enable-multiple-threaded-vms --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist-mt
+        ./configure --enable-debug --enable-multiple-threaded-vms --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist-mt
         echo "#undef HAVE_CLOCK_GETTIME" >> include/config.h
         make -j`nproc` core
-#        echo "run -:p1,d9 -v" | gdb gsi/gsi.exe
-#        echo "run -v" | gdb gsi/gsi.exe
-#        make check
-#        cd lib/_define-library
-#        make modules
-#        cd ../..
-#        make modules
         make install
 
     - name: Upload Build Artifact (--enable-multiple-threaded-vms)
