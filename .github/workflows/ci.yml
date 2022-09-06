@@ -33,7 +33,7 @@ jobs:
       uses: msys2/setup-msys2@v2
       with:
         update: true
-        install: "autoconf git make tar texinfo mingw-w64-${{ matrix.arch }}-gcc mingw-w64-${{ matrix.arch }}-make mingw-w64-${{ matrix.arch }}-libwinpthread-git"
+        install: "autoconf git make tar texinfo mingw-w64-${{ matrix.arch }}-gcc mingw-w64-${{ matrix.arch }}-make mingw-w64-${{ matrix.arch }}-libwinpthread-git base-devel gdb"
         msystem: ${{ matrix.msystem }}
 
     - name: Build
@@ -68,7 +68,6 @@ jobs:
         ./configure --enable-multiple-threaded-vms --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist-mt
         echo "#undef HAVE_CLOCK_GETTIME" >> include/config.h
         make -j`nproc` core
-        mingw-get.exe install gdb
         echo "run -:p1,d9 -v" | gdb gsi/gsi.exe
         echo "run -v" | gdb gsi/gsi.exe
         make check
