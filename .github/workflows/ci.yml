@@ -68,7 +68,8 @@ jobs:
         ./configure --enable-multiple-threaded-vms --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist-mt
         echo "#undef HAVE_CLOCK_GETTIME" >> include/config.h
         make -j`nproc` core
-        echo "run -:p1 -v" | gdb gsi/gsi.exe
+        mingw-get.exe install gdb
+        echo "run -:p1,d9 -v" | gdb gsi/gsi.exe
         echo "run -v" | gdb gsi/gsi.exe
         make check
         cd lib/_define-library
