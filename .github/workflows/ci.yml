@@ -48,6 +48,7 @@ jobs:
       run: make check
 
     - name: Build Gambit for Use
+      if: github.event_name == 'push'
       run: |
         mkdir dist
         make clean
@@ -59,11 +60,13 @@ jobs:
 
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v1
+      if: github.event_name == 'push'
       with:
         name: gambit-win-mingw-${{ matrix.arch }}
         path: dist/
 
     - name: Build Gambit for Use (--enable-multiple-threaded-vms)
+      if: github.event_name == 'push'
       run: |
         mkdir dist-mt
         make clean
@@ -75,6 +78,7 @@ jobs:
 
     - name: Upload Build Artifact (--enable-multiple-threaded-vms)
       uses: actions/upload-artifact@v1
+      if: github.event_name == 'push'
       with:
         name: gambit-win-mingw-${{ matrix.arch }}-mt
         path: dist-mt/
@@ -117,6 +121,7 @@ jobs:
     - name: Build vstudio.bat
       shell: cmd
       run: |
+        msys2 -c "make clean"
         call misc\vstudio.bat
         cd tests
         ..\gsc\gsc -f -warnings -c -nb-gvm-regs 5 -nb-arg-regs 3 mix.scm
@@ -124,24 +129,28 @@ jobs:
 
     - name: Build Gambit for Use
       shell: cmd
+      if: github.event_name == 'push'
       run: |
         mkdir dist
         msys2 -c "make clean && ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist CC='cl' && make -j%NUMBER_OF_PROCESSORS% core && make modules && make install"
 
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v1
+      if: github.event_name == 'push'
       with:
         name: gambit-win-msvc-x86_64
         path: dist/
 
     - name: Build Gambit for Use (--enable-multiple-threaded-vms)
       shell: cmd
+      if: github.event_name == 'push'
       run: |
         mkdir dist-mt
         msys2 -c "make clean && ./configure --enable-single-host --enable-multiple-threaded-vms --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist-mt CC='cl' && make -j%NUMBER_OF_PROCESSORS% core && make modules && make install"
 
     - name: Upload Build Artifact (--enable-multiple-threaded-vms)
       uses: actions/upload-artifact@v1
+      if: github.event_name == 'push'
       with:
         name: gambit-win-msvc-x86_64-mt
         path: dist-mt/
@@ -169,6 +178,7 @@ jobs:
         ./configure --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms && make clean && make -j$PROCS core && make check && make clean && ./configure --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms --enable-cplusplus && make -j$PROCS core && make check && make clean && ./configure --enable-ansi-c && make -j$PROCS core && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
 
     - name: Build Gambit for Use
+      if: github.event_name == 'push'
       run: |
         mkdir dist
         make clean
@@ -179,11 +189,13 @@ jobs:
 
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v1
+      if: github.event_name == 'push'
       with:
         name: gambit-linux-x86_64
         path: gambit-linux-x86_64.tgz
 
     - name: Build Gambit for Use (--enable-multiple-threaded-vms)
+      if: github.event_name == 'push'
       run: |
         mkdir dist-mt
         make clean
@@ -194,6 +206,7 @@ jobs:
 
     - name: Upload Build Artifact (--enable-multiple-threaded-vms)
       uses: actions/upload-artifact@v1
+      if: github.event_name == 'push'
       with:
         name: gambit-linux-x86_64-mt
         path: gambit-linux-x86_64-mt.tgz
@@ -227,6 +240,7 @@ jobs:
         ./configure --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms && make clean && make -j$PROCS core && make check && make clean && ./configure --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms --enable-cplusplus && make -j$PROCS core && make check && make clean && ./configure --enable-ansi-c && make -j$PROCS core && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
 
     - name: Build Gambit for Use
+      if: github.event_name == 'push'
       run: |
         mkdir dist
         export CC=gcc-9
@@ -239,11 +253,13 @@ jobs:
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v1
+      if: github.event_name == 'push'
       with:
         name: gambit-macos-x86_64
         path: gambit-macos-x86_64.tgz
 
     - name: Build Gambit for Use (--enable-multiple-threaded-vms)
+      if: github.event_name == 'push'
       run: |
         mkdir dist-mt
         export CC=gcc-9
@@ -256,6 +272,7 @@ jobs:
 
     - name: Upload Artifact (--enable-multiple-threaded-vms)
       uses: actions/upload-artifact@v1
+      if: github.event_name == 'push'
       with:
         name: gambit-macos-x86_64-mt
         path: gambit-macos-x86_64-mt.tgz
