@@ -278,6 +278,10 @@ AC_ARG_ENABLE(c-opt,
               ENABLE_C_OPT=$enableval,
               ENABLE_C_OPT=no)
 
+if test "$ENABLE_C_OPT" != no; then
+  BOOTSTRAP_CONFIGURE_FLAGS="$BOOTSTRAP_CONFIGURE_FLAGS --enable-c-opt=$ENABLE_C_OPT"
+fi
+
 ###############################################################################
 #
 # Check if a specific C optimization level should be used for the RTS.  An
@@ -289,6 +293,10 @@ AC_ARG_ENABLE(c-opt-rts,
                              [use specified C optimization level for the RTS (default is the highest supported by the compiler)]),
               ENABLE_C_OPT_RTS=$enableval,
               ENABLE_C_OPT_RTS=yes)
+
+if test "$ENABLE_C_OPT_RTS" != yes; then
+  BOOTSTRAP_CONFIGURE_FLAGS="$BOOTSTRAP_CONFIGURE_FLAGS --enable-c-opt-rts=$ENABLE_C_OPT_RTS"
+fi
 
 ###############################################################################
 #
@@ -2485,9 +2493,17 @@ if test "$C_COMP_GNUC" = yes; then
   fi
 
   if test "$ENABLE_DEBUG" = yes; then
-    FLAGS_OPT=""
-    FLAGS_OPT_RTS=""
+
+    if test "$ENABLE_C_OPT" = no; then
+      FLAGS_OPT=""
+    fi
+
+    if test "$ENABLE_C_OPT_RTS" = yes; then
+      FLAGS_OPT_RTS=""
+    fi
+
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_g$DASH_ftrapv"
+
   else
     # TODO: remove the use of -fwrapv once runtime system is cleaned up
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fwrapv"
@@ -2602,6 +2618,17 @@ else if test "$C_COMP_VISUALC" = yes; then
       no) ;;
 
        *) FLAGS_OPT=" $ENABLE_C_OPT"
+          ;;
+
+  esac
+  case "$ENABLE_C_OPT_RTS" in
+
+     yes) ;;
+
+      no) FLAGS_OPT_RTS="$FLAGS_OPT_LO"
+          ;;
+
+       *) FLAGS_OPT_RTS=" $ENABLE_C_OPT_RTS"
           ;;
 
   esac

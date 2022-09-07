@@ -38,8 +38,9 @@ jobs:
 
     - name: Build
       run: |
-        ./configure --enable-debug --enable-debug-c-backtrace
+        ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms
         echo "#undef HAVE_CLOCK_GETTIME" >> include/config.h
+        make clean
         make -j`nproc` core
 
     # Only run tests for MinGW64 for now
@@ -48,33 +49,37 @@ jobs:
       run: make check
 
     - name: Build Gambit for Use
+      if: github.event_name == 'push'
       run: |
         mkdir dist
-        make clean
         ./configure --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist
         echo "#undef HAVE_CLOCK_GETTIME" >> include/config.h
+        make clean
         make -j`nproc` core
         make modules
         make install
 
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v1
+      if: github.event_name == 'push'
       with:
         name: gambit-win-mingw-${{ matrix.arch }}
         path: dist/
 
     - name: Build Gambit for Use (--enable-multiple-threaded-vms)
+      if: github.event_name == 'push'
       run: |
         mkdir dist-mt
-        make clean
         ./configure --enable-multiple-threaded-vms --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist-mt
         echo "#undef HAVE_CLOCK_GETTIME" >> include/config.h
+        make clean
         make -j`nproc` core
         make modules
         make install
 
     - name: Upload Build Artifact (--enable-multiple-threaded-vms)
       uses: actions/upload-artifact@v1
+      if: github.event_name == 'push'
       with:
         name: gambit-win-mingw-${{ matrix.arch }}-mt
         path: dist-mt/
@@ -107,7 +112,7 @@ jobs:
       shell: cmd
       run: |
         set PATH=%RUNNER_TEMP%\msys\msys64\usr\bin;%PATH%
-        msys2 -c "./configure --enable-c-opt=-Od --enable-debug --enable-debug-c-backtrace CC='cl' && make -j%NUMBER_OF_PROCESSORS% core"
+        msys2 -c "./configure --enable-c-opt=-Od --enable-c-opt-rts=-Od --enable-debug --enable-debug-c-backtrace CC='cl' && make clean && make -j%NUMBER_OF_PROCESSORS% core"
 
     - name: Test
       shell: cmd
@@ -116,7 +121,9 @@ jobs:
 
     - name: Build vstudio.bat
       shell: cmd
+      if: github.event_name == 'push'
       run: |
+        msys2 -c "make clean"
         call misc\vstudio.bat
         cd tests
         ..\gsc\gsc -f -warnings -c -nb-gvm-regs 5 -nb-arg-regs 3 mix.scm
@@ -124,24 +131,28 @@ jobs:
 
     - name: Build Gambit for Use
       shell: cmd
+      if: github.event_name == 'push'
       run: |
         mkdir dist
-        msys2 -c "make clean && ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist CC='cl' && make -j%NUMBER_OF_PROCESSORS% core && make modules && make install"
+        msys2 -c "./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist CC='cl' && make clean && make -j%NUMBER_OF_PROCESSORS% core && make modules && make install"
 
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v1
+      if: github.event_name == 'push'
       with:
         name: gambit-win-msvc-x86_64
         path: dist/
 
     - name: Build Gambit for Use (--enable-multiple-threaded-vms)
       shell: cmd
+      if: github.event_name == 'push'
       run: |
         mkdir dist-mt
-        msys2 -c "make clean && ./configure --enable-single-host --enable-multiple-threaded-vms --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist-mt CC='cl' && make -j%NUMBER_OF_PROCESSORS% core && make modules && make install"
+        msys2 -c "./configure --enable-single-host --enable-multiple-threaded-vms --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist-mt CC='cl' && make clean && make -j%NUMBER_OF_PROCESSORS% core && make modules && make install"
 
     - name: Upload Build Artifact (--enable-multiple-threaded-vms)
       uses: actions/upload-artifact@v1
+      if: github.event_name == 'push'
       with:
         name: gambit-win-msvc-x86_64-mt
         path: dist-mt/
@@ -163,37 +174,51 @@ jobs:
         sudo apt-get update
         sudo apt-get install texinfo
 
-    - name: Build and Test
+    - name: Build and Test with C compiler
       run: |
         export PROCS=`nproc`
-        ./configure --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms && make clean && make -j$PROCS core && make check && make clean && ./configure --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms --enable-cplusplus && make -j$PROCS core && make check && make clean && ./configure --enable-ansi-c && make -j$PROCS core && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
+        ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms && make clean && make -j$PROCS core && make check
+
+    - name: Build and Test with C++ compiler
+      if: github.event_name == 'push'
+      run: |
+        export PROCS=`nproc`
+        ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms --enable-cplusplus && make clean && make -j$PROCS core && make check
+
+    - name: Build and Test with C compiler and --enable-ansi-c
+      if: github.event_name == 'push'
+      run: |
+        export PROCS=`nproc`
+        ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-ansi-c && make clean && make -j$PROCS core && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
 
     - name: Build Gambit for Use
+      if: github.event_name == 'push'
       run: |
         mkdir dist
-        make clean
-        ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist && make -j`nproc` core && make modules && make install
+        ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist && make clean && make -j`nproc` core && make modules && make install
         cd dist/
         tar -cvzf ../gambit-linux-x86_64.tgz ./
         cd ..
 
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v1
+      if: github.event_name == 'push'
       with:
         name: gambit-linux-x86_64
         path: gambit-linux-x86_64.tgz
 
     - name: Build Gambit for Use (--enable-multiple-threaded-vms)
+      if: github.event_name == 'push'
       run: |
         mkdir dist-mt
-        make clean
-        ./configure --enable-single-host --enable-multiple-threaded-vms --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist-mt && make -j`nproc` core && make modules && make install
+        ./configure --enable-single-host --enable-multiple-threaded-vms --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist-mt && make clean && make -j`nproc` core && make modules && make install
         cd dist-mt/
         tar -cvzf ../gambit-linux-x86_64-mt.tgz ./
         cd ..
 
     - name: Upload Build Artifact (--enable-multiple-threaded-vms)
       uses: actions/upload-artifact@v1
+      if: github.event_name == 'push'
       with:
         name: gambit-linux-x86_64-mt
         path: gambit-linux-x86_64-mt.tgz
@@ -219,43 +244,61 @@ jobs:
       with:
         fetch-depth: 0 # Checkout history and tags
 
-    - name: Build and Test
+    - name: Build and Test with C compiler
       run: |
         export CC=gcc-9
         export CXX=g++-9
         export PROCS=`sysctl -n hw.physicalcpu`
-        ./configure --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms && make clean && make -j$PROCS core && make check && make clean && ./configure --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms --enable-cplusplus && make -j$PROCS core && make check && make clean && ./configure --enable-ansi-c && make -j$PROCS core && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
+        ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms && make clean && make -j$PROCS core && make check
+
+    - name: Build and Test with C++ compiler
+      if: github.event_name == 'push'
+      run: |
+        export CC=gcc-9
+        export CXX=g++-9
+        export PROCS=`sysctl -n hw.physicalcpu`
+        ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms --enable-cplusplus && make clean && make -j$PROCS core && make check
+
+    - name: Build and Test with C compiler and --enable-ansi-c
+      if: github.event_name == 'push'
+      run: |
+        export CC=gcc-9
+        export CXX=g++-9
+        export PROCS=`sysctl -n hw.physicalcpu`
+        ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-ansi-c && make clean && make -j$PROCS core && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
 
     - name: Build Gambit for Use
+      if: github.event_name == 'push'
       run: |
         mkdir dist
         export CC=gcc-9
         export CXX=g++-9
-        make clean
-        ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist && make -j`sysctl -n hw.physicalcpu` core && make modules && make install
+        ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist && make clean && make -j`sysctl -n hw.physicalcpu` core && make modules && make install
         cd dist/
         tar -cvzf ../gambit-macos-x86_64.tgz ./
         cd ..
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v1
+      if: github.event_name == 'push'
       with:
         name: gambit-macos-x86_64
         path: gambit-macos-x86_64.tgz
 
     - name: Build Gambit for Use (--enable-multiple-threaded-vms)
+      if: github.event_name == 'push'
       run: |
         mkdir dist-mt
         export CC=gcc-9
         export CXX=g++-9
-        make clean
-        ./configure --enable-single-host --enable-multiple-threaded-vms --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist-mt && make -j`sysctl -n hw.physicalcpu` core && make modules && make install
+        ./configure --enable-single-host --enable-multiple-threaded-vms --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist-mt && make -j`sysctl -n hw.physicalcpu` core && make clean && make modules && make install
         cd dist-mt/
         tar -cvzf ../gambit-macos-x86_64-mt.tgz ./
         cd ..
 
     - name: Upload Artifact (--enable-multiple-threaded-vms)
       uses: actions/upload-artifact@v1
+      if: github.event_name == 'push'
       with:
         name: gambit-macos-x86_64-mt
         path: gambit-macos-x86_64-mt.tgz
