@@ -112,7 +112,7 @@ jobs:
       shell: cmd
       run: |
         set PATH=%RUNNER_TEMP%\msys\msys64\usr\bin;%PATH%
-        msys2 -c "./configure --enable-c-opt=-Od --enable-debug --enable-debug-c-backtrace CC='cl' && make clean && make -j%NUMBER_OF_PROCESSORS% core"
+        msys2 -c "./configure --enable-c-opt-rts=-Od --enable-debug --enable-debug-c-backtrace CC='cl' && make clean && make -j%NUMBER_OF_PROCESSORS% core"
 
     - name: Test
       shell: cmd
@@ -121,6 +121,7 @@ jobs:
 
     - name: Build vstudio.bat
       shell: cmd
+      if: github.event_name == 'push'
       run: |
         msys2 -c "make clean"
         call misc\vstudio.bat
