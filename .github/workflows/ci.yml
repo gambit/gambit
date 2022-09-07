@@ -38,7 +38,7 @@ jobs:
 
     - name: Build
       run: |
-        ./configure --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms
+        ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms
         echo "#undef HAVE_CLOCK_GETTIME" >> include/config.h
         make clean
         make -j`nproc` core
@@ -112,7 +112,7 @@ jobs:
       shell: cmd
       run: |
         set PATH=%RUNNER_TEMP%\msys\msys64\usr\bin;%PATH%
-        msys2 -c "./configure --enable-c-opt-rts=-Od --enable-debug --enable-debug-c-backtrace CC='cl' && make clean && make -j%NUMBER_OF_PROCESSORS% core"
+        msys2 -c "./configure --enable-c-opt=-Od --enable-c-opt-rts=-Od --enable-debug --enable-debug-c-backtrace CC='cl' && make clean && make -j%NUMBER_OF_PROCESSORS% core"
 
     - name: Test
       shell: cmd
@@ -177,19 +177,19 @@ jobs:
     - name: Build and Test with C compiler
       run: |
         export PROCS=`nproc`
-        ./configure --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms && make clean && make -j$PROCS core && make check
+        ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms && make clean && make -j$PROCS core && make check
 
     - name: Build and Test with C++ compiler
       if: github.event_name == 'push'
       run: |
         export PROCS=`nproc`
-        ./configure --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms --enable-cplusplus && make clean && make -j$PROCS core && make check
+        ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms --enable-cplusplus && make clean && make -j$PROCS core && make check
 
     - name: Build and Test with C compiler and --enable-ansi-c
       if: github.event_name == 'push'
       run: |
         export PROCS=`nproc`
-        ./configure --enable-ansi-c && make clean && make -j$PROCS core && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
+        ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-ansi-c && make clean && make -j$PROCS core && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
 
     - name: Build Gambit for Use
       if: github.event_name == 'push'
@@ -249,7 +249,7 @@ jobs:
         export CC=gcc-9
         export CXX=g++-9
         export PROCS=`sysctl -n hw.physicalcpu`
-        ./configure --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms && make clean && make -j$PROCS core && make check
+        ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms && make clean && make -j$PROCS core && make check
 
     - name: Build and Test with C++ compiler
       if: github.event_name == 'push'
@@ -257,7 +257,7 @@ jobs:
         export CC=gcc-9
         export CXX=g++-9
         export PROCS=`sysctl -n hw.physicalcpu`
-        ./configure --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms --enable-cplusplus && make clean && make -j$PROCS core && make check
+        ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms --enable-cplusplus && make clean && make -j$PROCS core && make check
 
     - name: Build and Test with C compiler and --enable-ansi-c
       if: github.event_name == 'push'
@@ -265,7 +265,7 @@ jobs:
         export CC=gcc-9
         export CXX=g++-9
         export PROCS=`sysctl -n hw.physicalcpu`
-        ./configure --enable-ansi-c && make clean && make -j$PROCS core && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
+        ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-ansi-c && make clean && make -j$PROCS core && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
 
     - name: Build Gambit for Use
       if: github.event_name == 'push'
