@@ -50,6 +50,7 @@ jobs:
     - name: Build Gambit for Use
       run: |
         mkdir dist
+        make clean
         ./configure --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist
         echo "#undef HAVE_CLOCK_GETTIME" >> include/config.h
         make -j`nproc` core
@@ -65,6 +66,7 @@ jobs:
     - name: Build Gambit for Use (--enable-multiple-threaded-vms)
       run: |
         mkdir dist-mt
+        make clean
         ./configure --enable-multiple-threaded-vms --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist-mt
         echo "#undef HAVE_CLOCK_GETTIME" >> include/config.h
         make -j`nproc` core
@@ -124,7 +126,7 @@ jobs:
       shell: cmd
       run: |
         mkdir dist
-        msys2 -c "./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist CC='cl' && make -j%NUMBER_OF_PROCESSORS% core && make modules && make install"
+        msys2 -c "make clean && ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist CC='cl' && make -j%NUMBER_OF_PROCESSORS% core && make modules && make install"
 
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v1
@@ -136,7 +138,7 @@ jobs:
       shell: cmd
       run: |
         mkdir dist-mt
-        msys2 -c "./configure --enable-single-host --enable-multiple-threaded-vms --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist-mt CC='cl' && make -j%NUMBER_OF_PROCESSORS% core && make modules && make install"
+        msys2 -c "make clean && ./configure --enable-single-host --enable-multiple-threaded-vms --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist-mt CC='cl' && make -j%NUMBER_OF_PROCESSORS% core && make modules && make install"
 
     - name: Upload Build Artifact (--enable-multiple-threaded-vms)
       uses: actions/upload-artifact@v1
@@ -169,6 +171,7 @@ jobs:
     - name: Build Gambit for Use
       run: |
         mkdir dist
+        make clean
         ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist && make -j`nproc` core && make modules && make install
         cd dist/
         tar -cvzf ../gambit-linux-x86_64.tgz ./
@@ -183,6 +186,7 @@ jobs:
     - name: Build Gambit for Use (--enable-multiple-threaded-vms)
       run: |
         mkdir dist-mt
+        make clean
         ./configure --enable-single-host --enable-multiple-threaded-vms --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist-mt && make -j`nproc` core && make modules && make install
         cd dist-mt/
         tar -cvzf ../gambit-linux-x86_64-mt.tgz ./
@@ -227,6 +231,7 @@ jobs:
         mkdir dist
         export CC=gcc-9
         export CXX=g++-9
+        make clean
         ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist && make -j`sysctl -n hw.physicalcpu` core && make modules && make install
         cd dist/
         tar -cvzf ../gambit-macos-x86_64.tgz ./
@@ -243,6 +248,7 @@ jobs:
         mkdir dist-mt
         export CC=gcc-9
         export CXX=g++-9
+        make clean
         ./configure --enable-single-host --enable-multiple-threaded-vms --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist-mt && make -j`sysctl -n hw.physicalcpu` core && make modules && make install
         cd dist-mt/
         tar -cvzf ../gambit-macos-x86_64-mt.tgz ./
