@@ -2493,9 +2493,17 @@ if test "$C_COMP_GNUC" = yes; then
   fi
 
   if test "$ENABLE_DEBUG" = yes; then
-    FLAGS_OPT=""
-    FLAGS_OPT_RTS=""
+
+    if test "$ENABLE_C_OPT" = no; then
+      FLAGS_OPT=""
+    fi
+
+    if test "$ENABLE_C_OPT_RTS" = yes; then
+      FLAGS_OPT_RTS=""
+    fi
+
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_g$DASH_ftrapv"
+
   else
     # TODO: remove the use of -fwrapv once runtime system is cleaned up
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fwrapv"
