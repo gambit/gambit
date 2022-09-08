@@ -291,7 +291,7 @@ jobs:
         mkdir dist-mt
         export CC=gcc-9
         export CXX=g++-9
-        ./configure --enable-single-host --enable-multiple-threaded-vms --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist-mt && make clean && make -j`sysctl -n hw.physicalcpu` core && make clean && make modules && make install
+        ./configure --enable-single-host --enable-multiple-threaded-vms --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist-mt && make clean && make -j`sysctl -n hw.physicalcpu` core && make modules && make install
         cd dist-mt/
         tar -cvzf ../gambit-macos-x86_64-mt.tgz ./
         cd ..
