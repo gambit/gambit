@@ -778,7 +778,7 @@
       (cons bbs2 bbs4)))
 
   (let loop ((bbs0 (bbs-type-specialize (cdr (purify-step bbs)))))
-    (bbs-determine-refs! bbs0) (bbs-order bbs0) #;
+    ;;(bbs-determine-refs! bbs0) (bbs-order bbs0) #;
     (let* ((bbs1-bbs2 (purify-step bbs0))
            (bbs1 (car bbs1-bbs2))
            (bbs2 (cdr bbs1-bbs2)))
@@ -1617,15 +1617,36 @@
        bb)
 
       (let loop ((bb bb))
-        (let ((branch (bb-branch-instr bb)))
-
-          ;; is it a non-polling 'jump' to a label without a return address?
-
-          (if (and (eq? (gvm-instr-kind branch) 'jump)
-                   (not (first-class-jump? branch))
-                   (not (jump-ret branch))
-                   (not (jump-poll? branch))
-                   (jump-lbl? branch))
+        (let* ((branch (bb-branch-instr bb))
+               (branch-kind (gvm-instr-kind branch)))
+          (cond
+            ;; is it an if which then and else jump to the same location?
+            ((and (eq? branch-kind 'ifjump)
+                  (not (proc-obj-side-effects? (ifjump-test branch)))
+                  (= (ifjump-true branch) (ifjump-false branch)))
+              (let* ((new-bb (make-bb (bb-label-instr bb) new-bbs)))
+                (bb-non-branch-instrs-set!
+                 new-bb
+                 (bb-non-branch-instrs bb))
+                (bb-branch-instr-set!
+                 new-bb
+                 (make-jump
+                   (make-lbl (ifjump-true branch)) ;; opnd
+                   #f ;; ret
+                   #f ;; nb-args
+                   (ifjump-poll? branch) ;; poll?
+                   #f ;; safe?
+                   (gvm-instr-frame branch) ;; frame
+                   (gvm-instr-comment branch) ;; comment
+                   ))
+                (set! changed? #t)
+                (loop new-bb)))
+            ;; is it a non-polling 'jump' to a label without a return address?
+            ((and (eq? branch-kind 'jump)
+                  (not (first-class-jump? branch))
+                  (not (jump-ret branch))
+                  (not (jump-poll? branch))
+                  (jump-lbl? branch))
               (let* ((dest-bb (lbl-num->bb (jump-lbl? branch) bbs))
                      (frame1 (gvm-instr-frame (bb-last-non-branch-instr bb)))
                      (frame2 (gvm-instr-frame (bb-label-instr dest-bb))))
@@ -1648,7 +1669,7 @@
                        new-bb
                        (bb-branch-instr dest-bb))
                       (set! changed? #t)
-                      (loop new-bb))))))))
+                      (loop new-bb)))))))))
 
     (bbs-next-lbl-num-set! new-bbs (bbs-next-lbl-num bbs))
     (bbs-entry-lbl-num-set! new-bbs (bbs-entry-lbl-num bbs))
