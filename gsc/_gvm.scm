@@ -1857,6 +1857,7 @@
 
 ;;      (bbs-dominators! new-bbs)
 
+      (gvm-interpret bbs)
       new-bbs)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -4712,4 +4713,73 @@
   (set! *opnd-table* '())
   '())
 
-;;;============================================================================
+;;;----------------------------------------------------------------------------
+;;
+;; GVM interpret
+;; -----------------------------------------
+
+(define (make-global-env) (make-table))
+
+(define (make-stack) (vector (make-stretchable-vector 0) 0))
+(define (stack-pointer stack) (vector-ref stack 1))
+(define (stack-stack stack) (vector-ref stack 0))
+(define (stack-ref stack fs index)
+  (stretchable-vector-ref
+    stack
+    (+ index (- (stack-pointer stack) 1 fs))))
+
+(define (make-registers) (make-stretchable-vector 0))
+(define (register-ref registers n) (stretchable-vector-ref registers n))
+
+(define (gvm-interpret bbs)
+  (let ((global-env (make-global-env))
+        (stack (make-stack))
+        (registers (make-registers))
+        (entry-lbl-num (bbs-entry-lbl-num bbs)))
+    (bb-interpret bbs (lbl-num->bb entry-lbl-num bbs) global-env stack registers)))
+
+(define (bb-interpret bbs bb env stack registers)
+  (define (get-value x)
+    (cond
+      ((reg? opnd)
+        (register-ref registers (reg-num x)))
+      ((stk? opnd)
+        (let ((fs (bb-entry-frame-size bb)))
+          (stack-ref stack fs (stk-num opnd))))
+      ((glo? opnd)
+        #f)
+      ((clo? opnd)
+        #f)
+      ((lbl? opnd)
+        #f)
+      ((obj? opnd)
+        #f)))
+
+  (define (copy-interpret instr)
+    (let* ((opnd (copy-opnd instr))
+           (opnd-value (get-value opnd))
+           (target (copy-loc instr)))
+      #f))
+
+  (define (instr-interpret instr)
+    (case (gvm-instr-kind instr)
+      ((apply)
+       #f)
+      ((copy)
+       (copy-interpret instr))
+      ((close)
+       #f)
+      ((ifjump)
+       #f)
+      ((switch)
+       #f)
+      ((jump)
+       #f)
+      (else
+        (error "unknown instruction" (gvm-instr-kind instr)))))
+
+  (let* ((instructions (bb-non-branch-instrs bb))
+         (branch (bb-branch-instr bb)))
+
+    (for-each instr-interpret instructions)
+    (instr-interpret branch)))
