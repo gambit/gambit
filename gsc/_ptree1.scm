@@ -1682,30 +1682,45 @@
         (pt (cadddr code) env use)))))
 
 (define (pt-cond source env use)
+  (pt-cond-clauses
+   source
+   env
+   use
+   (cdr (source-code source))
+   (lambda (source env)
+     (new-cst source env void-object))))
 
-  (define (pt-clauses clauses)
-    (if (length? clauses 0)
-      (new-cst source env void-object)
+(define (pt-cond-clauses source env use clauses fallthrough)
+  (if (length? clauses 0)
+      (fallthrough source env)
       (let* ((clause-source (car clauses))
              (clause (source-code clause-source)))
         (cond ((eq? (source-code (car clause)) else-sym)
                (pt-sequence clause-source (cdr clause) env use))
               ((length? clause 1)
                (new-disj clause-source env
-                 (pt (car clause) env (if (eq? use 'true) 'true 'pred))
-                 (pt-clauses (cdr clauses))))
+                         (pt (car clause) env (if (eq? use 'true) 'true 'pred))
+                         (pt-cond-clauses source env use (cdr clauses) fallthrough)))
               ((eq? (source-code (cadr clause)) =>-sym)
                (new-disj-call clause-source env
-                 (pt (car clause) env 'true)
-                 (pt (caddr clause) env 'true)
-                 (pt-clauses (cdr clauses))))
+                              (pt (car clause) env 'true)
+                              (pt (caddr clause) env 'true)
+                              (pt-cond-clauses source env use (cdr clauses) fallthrough)))
               (else
                (new-tst clause-source env
-                 (pt (car clause) env 'pred)
-                 (pt-sequence clause-source (cdr clause) env use)
-                 (pt-clauses (cdr clauses))))))))
+                        (pt (car clause) env 'pred)
+                        (pt-sequence clause-source (cdr clause) env use)
+                        (pt-cond-clauses source env use (cdr clauses) fallthrough)))))))
 
-  (pt-clauses (cdr (source-code source))))
+(define (pt-cond-clauses-else? clauses)
+  (if (length? clauses 0)
+      #f
+      (let* ((clause-source (car clauses))
+             (clause (source-code clause-source)))
+        (cond ((eq? (source-code (car clause)) else-sym)
+               #t)
+              (else
+               (pt-cond-clauses-else? (cdr clauses)))))))
 
 (define (pt-and source env use)
 
@@ -2021,16 +2036,49 @@
                   step)))))))))
 
 (define (pt-guard source env use r7rs-guard?)
-  (let ((code (source-code source)))
+  (let* ((code (source-code source))
+         (var-and-clauses (source-code (cadr code)))
+         (clauses (cdr var-and-clauses))
+         (extra-handler-parms
+          (if (and r7rs-guard? (not (pt-cond-clauses-else? clauses)))
+              (list (new-temp-variable source 'reraise-cont))
+              '()))
+         (exc-var
+          (new-variable (car var-and-clauses)))
+         (handler-parms
+          (cons exc-var extra-handler-parms))
+         (env-catcher
+          (env-frame env handler-parms))
+         (body-ptree
+          (pt-cond-clauses
+           source
+           env-catcher
+           use
+           clauses
+           (lambda (source env)
+             (new-call* source (add-not-safe env)
+               (new-ref-extended-bindings
+                source
+                (if (null? extra-handler-parms)
+                    **raise-sym
+                    **r7rs-reraise-sym)
+                env)
+               (map (lambda (v) (new-ref source env v)) handler-parms)))))
+         (handler-ptree
+          (new-prc source env #f #f handler-parms '() #f #f
+            body-ptree))
+         (thunk-ptree
+          (new-prc source env #f #f '() '() #f #f
+            (pt-sequence source (cddr code) env use))))
     (new-call* source (add-not-safe env)
       (new-ref-extended-bindings
        source
-       (if r7rs-guard?
-           **r7rs-with-exception-catcher-sym
-           **with-exception-catcher-sym)
+       (if (null? extra-handler-parms)
+           **with-exception-catcher-sym
+           **r7rs-with-exception-catcher-sym)
        env)
-      (list (new-prc source env #f #f '() '() #f #f
-              (pt (cadr code) env 'true))))))
+      (list handler-ptree
+            thunk-ptree))))
 
 (define (pt-combination source env use)
   (let* ((code (source-code source))
@@ -2130,7 +2178,7 @@
 
 (define (**cond-expr? source env)
   (and (match **cond-sym -2 source env)
-       (proper-clauses? source)))
+       (proper-cond/guard-clauses? source (cdr (source-code source)) 'cond)))
 
 (define (**and-expr? source env)
   (match **and-sym -1 source env))
@@ -2169,10 +2217,29 @@
        (proper-do-exit? source)))
 
 (define (**guard-expr? source env)
-  (match **guard-sym -3 source env)) ;; TODO: fix
+  (and (match **guard-sym -3 source env)
+       (proper-guard? source env 'guard)))
 
 (define (**r7rs-guard-expr? source env)
-  (match **r7rs-guard-sym -3 source env)) ;; TODO: fix
+  (and (match **r7rs-guard-sym -3 source env)
+       (proper-guard? source env 'r7rs-guard)))
+
+(define (proper-guard? source env form-name)
+  (let* ((var-and-clauses (source-code (cadr (source-code source))))
+         (length (proper-length var-and-clauses)))
+    (if (not (and length (>= length 2)))
+        (pt-syntax-error
+         source
+         (string-append
+          "Ill-formed '"
+          (symbol->string form-name)
+          "' clause"))
+        (let ((var (car var-and-clauses)))
+          (if (bindable-var? var env)
+              (proper-cond/guard-clauses? source (cdr var-and-clauses) form-name)
+              (pt-syntax-error
+               var
+               "Identifier expected"))))))
 
 (define (combination-expr? source env)
   (let ((code (source-code source)))
@@ -2346,7 +2413,7 @@
     (make-source parms loc)
     parms))
 
-(define (proper-clauses? source)
+(define (proper-cond/guard-clauses? source clauses form-name)
 
   (define (proper-clauses clauses)
     (or (null? clauses)
@@ -2358,12 +2425,18 @@
               (if (eq? (source-code (car clause)) else-sym)
                 (cond ((= length 1)
                        (pt-syntax-error
-                         clause-source
-                         "Else clause in 'cond' must have a body"))
+                        clause-source
+                        (string-append
+                         "Else clause in '"
+                         (symbol->string form-name)
+                         "' must have a body")))
                       ((not (null? (cdr clauses)))
                        (pt-syntax-error
-                         clause-source
-                         "Else clause in 'cond' must be last"))
+                        clause-source
+                        (string-append
+                         "Else clause in '"
+                         (symbol->string form-name)
+                         "' must be last")))
                       (else
                        (proper-clauses (cdr clauses))))
                 (if (and (>= length 2)
@@ -2373,10 +2446,20 @@
                     (cadr clause)
                     "'=>' must be followed by a single expression")
                   (proper-clauses (cdr clauses))))
-              (pt-syntax-error clause-source "Ill-formed 'cond' clause"))
-            (pt-syntax-error clause-source "Ill-formed 'cond' clause")))))
+              (pt-syntax-error
+               clause-source
+               (string-append
+                "Ill-formed '"
+                (symbol->string form-name)
+                "' clause")))
+            (pt-syntax-error
+             clause-source
+             (string-append
+              "Ill-formed '"
+              (symbol->string form-name)
+              "' clause"))))))
 
-  (proper-clauses (cdr (source-code source))))
+  (proper-clauses clauses))
 
 (define (proper-case-clauses? source)
 

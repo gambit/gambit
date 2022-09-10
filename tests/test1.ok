@@ -382,9 +382,12 @@
 #procedure(##cprc-guard 3)
 #procedure(##cprc-guard 4)
 #return(##cprc-guard 5) : ($code rte)
+#return(##cprc-guard 6) : ($code handler rte thunk)
+#procedure(##cprc-guard 7)
+#return(##cprc-guard 8) : ($code rte)
 
-#procedure(##cprc-guard-reraise)
-#return(##cprc-guard-reraise 1) : ($code rte)
+#procedure(##cprc-reraise)
+#return(##cprc-reraise 1) : ($code rte)
 
 #procedure(##subproblem-apply0)
 #procedure(##subproblem-apply0 1)

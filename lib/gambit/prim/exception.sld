@@ -2,7 +2,7 @@
 
 ;;; File: "exception.sld"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -93,6 +93,9 @@ error
 ;;UNIMPLEMENTED permission-denied-exception?
 ;;UNIMPLEMENTED primordial-exception-handler
 
+r7rs-raise
+r7rs-raise-continuable
+r7rs-with-exception-handler
 raise
 
 ;;UNIMPLEMENTED range-exception-arg-num

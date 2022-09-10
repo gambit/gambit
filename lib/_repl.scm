@@ -518,7 +518,7 @@
   (mk-degen ()
     (##list 'future (##decomp (^ 0)))))
 
-(define-prim ##degen-guard-reraise
+(define-prim ##degen-reraise
   (mk-degen ()
     (##void)))
 
@@ -608,7 +608,7 @@
    (##cons ##cprc-future      ##degen-future)
 
    (##cons ##cprc-guard       (mk-degen () (degen ##degen-guard 'guard)))
-   (##cons ##cprc-guard-reraise ##degen-guard-reraise)))
+   (##cons ##cprc-reraise     ##degen-reraise)))
 
 ;;;----------------------------------------------------------------------------
 
@@ -819,7 +819,8 @@
    (or (##eq? var (macro-self-var))
        (##eq? var (macro-selector-var))
        (##eq? var (macro-do-loop-var))
-       (##eq? var (macro-guard-var)))))
+       (##eq? var (macro-guard-exc-var))
+       (##eq? var (macro-guard-cont-var)))))
 
 (define-prim (##hidden-parameter? param)
   (or (##eq? param ##trace-depth)

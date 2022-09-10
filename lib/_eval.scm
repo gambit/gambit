@@ -2622,17 +2622,20 @@
               (##eq? (##source-code (##sourcify (##car code) src))
                      '##r7rs-guard))
              (handler
-              (let ((cte
-                     (##cte-frame-i cte
-                                    (##list var
-                                            (macro-guard-var)))))
+              (let* ((cte
+                      (##cte-frame-i cte
+                                     (##cons var
+                                             (##cons (macro-guard-exc-var)
+                                                     (if r7rs-guard?
+                                                         (##list (macro-guard-cont-var ))
+                                                         '()))))))
                 (##comp-cond-clauses
                  cte
                  src
                  tail?
                  (##cdr first)
                  (lambda ()
-                   (macro-gen ##gen-guard-reraise src)))))
+                   (macro-gen ##gen-reraise src r7rs-guard?)))))
              (body
               (##comp-body cte src tail? (##cddr code))))
         (macro-gen ##gen-guard src
@@ -3662,35 +3665,50 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(define ##cprc-guard-reraise
+(define ##cprc-reraise
   (macro-make-cprc
-    (##raise (macro-rte-ref rte 2))))
+   (if (^ 0) ;; r7rs-guard?
+       (##r7rs-reraise (macro-rte-ref rte 2) (macro-rte-ref rte 3)) 
+       (##raise (macro-rte-ref rte 2)))))
 
-(define ##gen-guard-reraise
-  (macro-make-gen ()
+(define ##gen-reraise
+  (macro-make-gen (r7rs-guard?)
     (let ((stepper (##no-stepper)))
-      (macro-make-code ##cprc-guard-reraise
+      (macro-make-code ##cprc-reraise
         cte
         src
         stepper
-        ()))))
+        ()
+        r7rs-guard?))))
 
 (define ##cprc-guard
   (macro-make-cprc
-   (let* ((handler
-           (lambda (exc)
-             (let* (($code (^ 1))
-                    (rte (macro-make-rte rte exc exc)))
-               (##first-argument #f) ;; keep $code and rte are in environment-map
-               (##check-heap-limit)
-               (macro-code-run $code))))
-          (thunk
-           (lambda ()
-             (macro-code-run (^ 0)))))
-     (##check-heap-limit)
-     (##first-argument $code rte) ;; keep $code and rte are in environment-map
-     (if (^ 2)
-         (##r7rs-with-exception-catcher handler thunk)
+   (if (^ 2) ;; r7rs-guard?
+       (let* ((handler
+               (lambda (exc cont)
+                 (let* (($code (^ 1))
+                        (rte (macro-make-rte rte exc exc cont)))
+                   (##first-argument #f) ;; keep $code and rte are in environment-map
+                   (##check-heap-limit)
+                   (macro-code-run $code))))
+              (thunk
+               (lambda ()
+                 (macro-code-run (^ 0)))))
+         (##check-heap-limit)
+         (##first-argument $code rte) ;; keep $code and rte are in environment-map
+         (##r7rs-with-exception-catcher handler thunk))
+       (let* ((handler
+               (lambda (exc)
+                 (let* (($code (^ 1))
+                        (rte (macro-make-rte rte exc exc)))
+                   (##first-argument #f) ;; keep $code and rte are in environment-map
+                   (##check-heap-limit)
+                   (macro-code-run $code))))
+              (thunk
+               (lambda ()
+                 (macro-code-run (^ 0)))))
+         (##check-heap-limit)
+         (##first-argument $code rte) ;; keep $code and rte are in environment-map
          (##with-exception-catcher handler thunk)))))
 
 (define ##gen-guard

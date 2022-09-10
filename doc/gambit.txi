@@ -5238,7 +5238,13 @@ The procedures in this section are not yet documented.
 @deffn {special form} define-module-alias @dots{}
 @end deffn
 
-@deffn {special form} r7rs-guard @dots{}
+@deffn {special form} guard @dots{}
+@deffnx {special form} r7rs-guard @dots{}
+@end deffn
+
+@deffn procedure r7rs-with-exception-handler @var{handler} @var{thunk}
+@deffnx procedure r7rs-raise @var{obj}
+@deffnx procedure r7rs-raise-continuable @var{obj}
 @end deffn
 
 @deffn {special form} case-lambda @dots{}

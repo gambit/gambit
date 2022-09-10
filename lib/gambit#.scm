@@ -582,6 +582,9 @@ protocol-info-aliases
 protocol-info-name
 protocol-info-number
 protocol-info?
+r7rs-raise
+r7rs-raise-continuable
+r7rs-with-exception-handler
 raise
 random-f64vector
 random-integer

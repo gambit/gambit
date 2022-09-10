@@ -2,7 +2,7 @@
 
 ;;; File: "exception-gambit#.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -87,6 +87,9 @@ error
 (permission-denied-exception? unimplemented#permission-denied-exception?)
 (primordial-exception-handler unimplemented#primordial-exception-handler)
 
+r7rs-raise
+r7rs-raise-continuable
+r7rs-with-exception-handler
 raise
 
 (range-exception-arg-id unimplemented#range-exception-arg-id)

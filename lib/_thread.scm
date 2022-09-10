@@ -4587,19 +4587,45 @@
           (handler exc))))
      thunk)))
 
+(define-prim (r7rs-with-exception-handler handler thunk)
+  (macro-force-vars (handler thunk)
+    (macro-check-procedure handler 1 (r7rs-with-exception-handler handler thunk)
+      (macro-check-procedure thunk 2 (r7rs-with-exception-handler handler thunk)
+        (##r7rs-with-exception-handler handler thunk)))))
+
 (define (##r7rs-with-exception-catcher handler thunk)
   (##continuation-capture
    (lambda (cont)
-     (##r7rs-with-exception-handler
+     (macro-dynamic-bind
+      exception-handler
       (lambda (exc)
-        (##continuation-graft cont handler exc))
+        (##continuation-capture
+         (lambda (reraise-cont)
+           (##continuation-graft cont handler exc reraise-cont))))
       thunk))))
+
+(define (##r7rs-reraise exc cont)
+  (let ((original-eh (macro-current-exception-handler)))
+    (##continuation-graft
+     cont
+     (lambda ()
+       (macro-dynamic-bind
+        exception-handler
+        original-eh
+        (lambda ()
+          (##raise exc)))))))
 
 (define (##r7rs-raise exc) ;; raise noncontinuable exception
   (##abort exc))
 
+(define-prim (r7rs-raise exc)
+  (##r7rs-raise exc))
+
 (define (##r7rs-raise-continuable exc) ;; raise continuable exception
   (##raise exc))
+
+(define-prim (r7rs-raise-continuable exc)
+  (##r7rs-raise-continuable exc))
 
 ;;;----------------------------------------------------------------------------
 
@@ -8077,19 +8103,45 @@
           (handler exc))))
      thunk)))
 
+(define-prim (r7rs-with-exception-handler handler thunk)
+  (macro-force-vars (handler thunk)
+    (macro-check-procedure handler 1 (r7rs-with-exception-handler handler thunk)
+      (macro-check-procedure thunk 2 (r7rs-with-exception-handler handler thunk)
+        (##r7rs-with-exception-handler handler thunk)))))
+
 (define (##r7rs-with-exception-catcher handler thunk)
   (##continuation-capture
    (lambda (cont)
-     (##r7rs-with-exception-handler
+     (macro-dynamic-bind
+      exception-handler
       (lambda (exc)
-        (##continuation-graft cont handler exc))
+        (##continuation-capture
+         (lambda (reraise-cont)
+           (##continuation-graft cont handler exc reraise-cont))))
       thunk))))
+
+(define (##r7rs-reraise exc cont)
+  (let ((original-eh (macro-current-exception-handler)))
+    (##continuation-graft
+     cont
+     (lambda ()
+       (macro-dynamic-bind
+        exception-handler
+        original-eh
+        (lambda ()
+          (##raise exc)))))))
 
 (define (##r7rs-raise exc) ;; raise noncontinuable exception
   (##abort exc))
 
+(define-prim (r7rs-raise exc)
+  (##r7rs-raise exc))
+
 (define (##r7rs-raise-continuable exc) ;; raise continuable exception
   (##raise exc))
+
+(define-prim (r7rs-raise-continuable exc)
+  (##r7rs-raise-continuable exc))
 
 ;;;----------------------------------------------------------------------------
 

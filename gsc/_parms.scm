@@ -94,8 +94,10 @@
 (define **unbox-sym            (string->canonical-symbol "##unbox"))
 (define **set-box!-sym         (string->canonical-symbol "##set-box!"))
 (define **make-delay-promise-sym (string->canonical-symbol "##make-delay-promise"))
-(define **r7rs-with-exception-catcher-sym (string->canonical-symbol "##r7rs-with-exception-catcher"))
 (define **with-exception-catcher-sym (string->canonical-symbol "##with-exception-catcher"))
+(define **raise-sym            (string->canonical-symbol "##raise"))
+(define **r7rs-with-exception-catcher-sym (string->canonical-symbol "##r7rs-with-exception-catcher"))
+(define **r7rs-reraise-sym     (string->canonical-symbol "##r7rs-reraise"))
 
 (define ieee-scheme-sym        (string->canonical-symbol "ieee-scheme"))
 (define r4rs-scheme-sym        (string->canonical-symbol "r4rs-scheme"))

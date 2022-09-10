@@ -83,6 +83,9 @@
 ;;unimplemented;;permission-denied-exception?
 ;;unimplemented;;primordial-exception-handler
 
+(##with-exception-catcher ##list (lambda () (r7rs-raise 123)))
+(##with-exception-catcher ##list (lambda () (r7rs-raise-continuable 123)))
+(r7rs-with-exception-handler ##list (lambda () (##cons 1 (##raise 123))))
 (##with-exception-catcher ##list (lambda () (raise 123)))
 
 ;;unimplemented;;range-exception-arg-id
