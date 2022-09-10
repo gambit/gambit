@@ -233,4 +233,4 @@
            (list 11 (r7rs-raise-continuable n) 33))))))))
 
 (check-equal? (r7rs-guard-test5 22) '(0 (99 "out" ("foo" "out"))))
-;(check-equal? (r7rs-guard-test5 #f) '(0 (11 (#f "in") 33)))
+(check-equal? (r7rs-guard-test5 #f) '(0 (11 (#f "in") 33)))
