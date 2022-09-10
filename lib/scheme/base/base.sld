@@ -98,7 +98,7 @@ for-each
 gcd
 get-output-bytevector
 get-output-string
-guard
+(rename r7rs-guard guard)
 if
 include
 include-ci
@@ -164,8 +164,8 @@ procedure?
 quasiquote
 quote
 quotient
-raise
-raise-continuable
+(rename r7rs-raise raise)
+(rename r7rs-raise-continuable raise-continuable)
 rational?
 rationalize
 read-bytevector
@@ -235,7 +235,7 @@ vector-ref
 vector-set!
 vector?
 when
-with-exception-handler
+(rename r7rs-with-exception-handler with-exception-handler)
 write-bytevector
 write-char
 write-string

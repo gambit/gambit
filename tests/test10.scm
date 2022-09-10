@@ -249,9 +249,16 @@ default-random-source
             (if ex
                 (map (lambda (x)
                        (let ((y
-                              (if (symbol? x)
-                                  (list x x)
-                                  x)))
+                              (cond ((symbol? x)
+                                     (list x x))
+                                    ((and (list? x)
+                                          (= 3 (length x))
+                                          (eq? (car x) 'rename)
+                                          (symbol? (cadr x))
+                                          (symbol? (caddr x)))
+                                     (list (caddr x) (cadr x)))
+                                    (else
+                                     (error "invalid export spec" x)))))
                          (list (car y)
                                (if ns
                                    (in-ns (cadr ns) (cadr y))
