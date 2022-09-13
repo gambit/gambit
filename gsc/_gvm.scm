@@ -4719,17 +4719,35 @@
 ;; -----------------------------------------
 
 (define (make-global-env) (make-table))
+(define (global-ref env name) (table-ref env name))
+(define (global-set! env name value) (table-set! env name value))
 
 (define (make-stack) (vector (make-stretchable-vector 0) 0))
 (define (stack-pointer stack) (vector-ref stack 1))
+(define (stack-pointer-set! stack sp) (vector-set! stack 1 sp))
 (define (stack-stack stack) (vector-ref stack 0))
+(define (frame-index->stack-index i s fs) (+ i (- (stack-pointer s) 1 fs)))
 (define (stack-ref stack fs index)
   (stretchable-vector-ref
     stack
-    (+ index (- (stack-pointer stack) 1 fs))))
+    (frame-index->stack-index index stack fs)))
+(define (stack-set! stack fs index val)
+  (stretchable-vector-set!
+    stack
+    (frame-index->stack-index index stack fs)
+    val))
+(define (stack-exit-frame! stack bb)
+  (let* ((enter-fs (bb-entry-frame-size bb))
+         (exit-fs (bb-exit-frame-size bb)))
+    (stack-pointer-set!
+      stack
+      (+ (stack-pointer stack) (- exit-fs enter-fs)))))
+
 
 (define (make-registers) (make-stretchable-vector 0))
 (define (register-ref registers n) (stretchable-vector-ref registers n))
+(define (register-set! registers n val)
+  (stretchable-vector-set! registers n val))
 
 (define (gvm-interpret bbs)
   (let ((global-env (make-global-env))
@@ -4739,27 +4757,48 @@
     (bb-interpret bbs (lbl-num->bb entry-lbl-num bbs) global-env stack registers)))
 
 (define (bb-interpret bbs bb env stack registers)
-  (define (get-value x)
-    (cond
-      ((reg? opnd)
-        (register-ref registers (reg-num x)))
-      ((stk? opnd)
-        (let ((fs (bb-entry-frame-size bb)))
-          (stack-ref stack fs (stk-num opnd))))
-      ((glo? opnd)
-        #f)
-      ((clo? opnd)
-        #f)
-      ((lbl? opnd)
-        #f)
-      ((obj? opnd)
-        #f)))
 
+  ;; COPY
   (define (copy-interpret instr)
+    (define (get-copied-value x)
+      (cond
+        ((reg? opnd)
+          (register-ref registers (reg-num x)))
+        ((stk? opnd)
+          (let ((fs (bb-entry-frame-size bb)))
+            (stack-ref stack fs (stk-num opnd))))
+        ((glo? opnd)
+          (global-ref env (glo-name opnd)))
+        (else
+          opnd))) ;; cases clo/lbl/obj
+
     (let* ((opnd (copy-opnd instr))
-           (opnd-value (get-value opnd))
+           (value (get-value opnd))
            (target (copy-loc instr)))
-      #f))
+      (cond
+        ((reg? opnd)
+          (register-set! registers (reg-num x) value))
+        ((stk? opnd)
+          (let ((fs (bb-entry-frame-size bb)))
+            (stack-set! stack fs (stk-num opnd) value)))
+        ((glo? opnd)
+          (global-set! env (glo-name opnd) value))
+        (else
+          (error "cannot COPY to" opnd))))))
+
+  ;; JUMP
+  (define (jump-interpret instr)
+    (let ((opnd (jump-opnd)))
+      (cond
+        ((lbl? opnd)
+          (stack-exit-frame! stack bb)
+          (bb-interpret
+            bbs
+            (lbl-num->bb (lbl-num opnd) bbs)
+            env stack registers))
+        ;; TODO: missing cases
+        )))
+
 
   (define (instr-interpret instr)
     (case (gvm-instr-kind instr)
