@@ -2,7 +2,7 @@
 
 ;;; File: "string.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -272,79 +272,238 @@
 
   (copy lst 1))
 
-(define-prim (##string-prefix=? str prefix)
+(define-prim&proc
+  (string-prefix-length
+   (s1     string)
+   (s2     string)
+   (start1 (index-range-incl 0 (string-length s1)) 0)
+   (end1   (index-range-incl start1 (string-length s1)) (string-length s1))
+   (start2 (index-range-incl 0 (string-length s2)) 0)
+   (end2   (index-range-incl start2 (string-length s2)) (string-length s2)))
 
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
+  (let* ((delta (fxmin (fx- end1 start1) (fx- end2 start2)))
+         (end1 (fx+ start1 delta)))
+
+    (if (and (eq? s1 s2) (fx= start1 start2))
+        delta
+        (let loop ((i start1) (j start2))
+          (if (or (fx>= i end1)
+                  (not (char=? (string-ref s1 i)
+                               (string-ref s2 j))))
+              (fx- i start1)
+              (loop (fx+ i 1) (fx+ j 1)))))))
+
+(define-prim&proc
+  (string-suffix-length
+   (s1     string)
+   (s2     string)
+   (start1 (index-range-incl 0 (string-length s1)) 0)
+   (end1   (index-range-incl start1 (string-length s1)) (string-length s1))
+   (start2 (index-range-incl 0 (string-length s2)) 0)
+   (end2   (index-range-incl start2 (string-length s2)) (string-length s2)))
+
+  (let* ((delta (fxmin (fx- end1 start1) (fx- end2 start2)))
+         (start1 (fx- end1 delta)))
+
+    (if (and (eq? s1 s2) (fx= end1 end2))
+        delta
+        (let loop ((i (fx- end1 1)) (j (fx- end2 1)))
+          (if (or (fx< i start1)
+                  (not (char=? (string-ref s1 i)
+                               (string-ref s2 j))))
+              (fx- (fx- end1 i) 1)
+              (loop (fx- i 1) (fx- j 1)))))))
+
+(define-prim&proc
+  (string-prefix-length-ci
+   (s1     string)
+   (s2     string)
+   (start1 (index-range-incl 0 (string-length s1)) 0)
+   (end1   (index-range-incl start1 (string-length s1)) (string-length s1))
+   (start2 (index-range-incl 0 (string-length s2)) 0)
+   (end2   (index-range-incl start2 (string-length s2)) (string-length s2)))
+
+  (let* ((delta (fxmin (fx- end1 start1) (fx- end2 start2)))
+         (end1 (fx+ start1 delta)))
+
+    (if (and (eq? s1 s2) (fx= start1 start2))
+        delta
+        (let loop ((i start1) (j start2))
+          (if (or (fx>= i end1)
+                  (not (char-ci=? (string-ref s1 i)
+                                  (string-ref s2 j))))
+              (fx- i start1)
+              (loop (fx+ i 1) (fx+ j 1)))))))
+
+(define-prim&proc
+  (string-suffix-length-ci
+   (s1     string)
+   (s2     string)
+   (start1 (index-range-incl 0 (string-length s1)) 0)
+   (end1   (index-range-incl start1 (string-length s1)) (string-length s1))
+   (start2 (index-range-incl 0 (string-length s2)) 0)
+   (end2   (index-range-incl start2 (string-length s2)) (string-length s2)))
+
+  (let* ((delta (fxmin (fx- end1 start1) (fx- end2 start2)))
+         (start1 (fx- end1 delta)))
+
+    (if (and (eq? s1 s2) (fx= end1 end2))
+        delta
+        (let loop ((i (fx- end1 1)) (j (fx- end2 1)))
+          (if (or (fx< i start1)
+                  (not (char-ci=? (string-ref s1 i)
+                                  (string-ref s2 j))))
+              (fx- (fx- end1 i) 1)
+              (loop (fx- i 1) (fx- j 1)))))))
+
+(define-prim&proc
+  (string-prefix?
+   (s1     string)
+   (s2     string)
+   (start1 (index-range-incl 0 (string-length s1)) 0)
+   (end1   (index-range-incl start1 (string-length s1)) (string-length s1))
+   (start2 (index-range-incl 0 (string-length s2)) 0)
+   (end2   (index-range-incl start2 (string-length s2)) (string-length s2)))
+
+  (let ((len1 (fx- end1 start1)))
+    (and (fx<= len1 (fx- end2 start2))
+         (fx= len1
+              (string-prefix-length s1 s2 start1 end1 start2 end2)))))
+
+(define-prim&proc
+  (string-suffix?
+   (s1     string)
+   (s2     string)
+   (start1 (index-range-incl 0 (string-length s1)) 0)
+   (end1   (index-range-incl start1 (string-length s1)) (string-length s1))
+   (start2 (index-range-incl 0 (string-length s2)) 0)
+   (end2   (index-range-incl start2 (string-length s2)) (string-length s2)))
+
+  (let ((len1 (fx- end1 start1)))
+    (and (fx<= len1 (fx- end2 start2))
+         (fx= len1
+              (string-suffix-length s1 s2 start1 end1 start2 end2)))))
+
+(define-prim&proc
+  (string-prefix-ci?
+   (s1     string)
+   (s2     string)
+   (start1 (index-range-incl 0 (string-length s1)) 0)
+   (end1   (index-range-incl start1 (string-length s1)) (string-length s1))
+   (start2 (index-range-incl 0 (string-length s2)) 0)
+   (end2   (index-range-incl start2 (string-length s2)) (string-length s2)))
+
+  (let ((len1 (fx- end1 start1)))
+    (and (fx<= len1 (fx- end2 start2))
+         (fx= len1
+              (string-prefix-length-ci s1 s2 start1 end1 start2 end2)))))
+
+(define-prim&proc
+  (string-suffix-ci?
+   (s1     string)
+   (s2     string)
+   (start1 (index-range-incl 0 (string-length s1)) 0)
+   (end1   (index-range-incl start1 (string-length s1)) (string-length s1))
+   (start2 (index-range-incl 0 (string-length s2)) 0)
+   (end2   (index-range-incl start2 (string-length s2)) (string-length s2)))
+
+  (let ((len1 (fx- end1 start1)))
+    (and (fx<= len1 (fx- end2 start2))
+         (fx= len1
+              (string-suffix-length-ci s1 s2 start1 end1 start2 end2)))))
+
+(define-prim&proc
+  (string-contains
+   (s1     string)
+   (s2     string)
+   (start1 (index-range-incl 0 (string-length s1)) 0)
+   (end1   (index-range-incl start1 (string-length s1)) (string-length s1))
+   (start2 (index-range-incl 0 (string-length s2)) 0)
+   (end2   (index-range-incl start2 (string-length s2)) (string-length s2)))
+
+  (let* ((len (fx- end2 start2))
+	 (limit (fx- end1 len)))
+    (let loop1 ((i start1))
+      (and (fx<= i limit)
+           (let loop2 ((j (fx- len 1)))
+             (if (fx>= j 0)
+                 (if (char=? (string-ref s1 (fx+ i j))
+                             (string-ref s2 j))
+                     (loop2 (fx- j 1))
+                     (loop1 (fx+ i 1)))
+                 i))))))
+
+(define-prim&proc
+  (string-contains-ci
+   (s1     string)
+   (s2     string)
+   (start1 (index-range-incl 0 (string-length s1)) 0)
+   (end1   (index-range-incl start1 (string-length s1)) (string-length s1))
+   (start2 (index-range-incl 0 (string-length s2)) 0)
+   (end2   (index-range-incl start2 (string-length s2)) (string-length s2)))
+
+  (let* ((len (fx- end2 start2))
+	 (limit (fx- end1 len)))
+    (let loop1 ((i start1))
+      (and (fx<= i limit)
+           (let loop2 ((j (fx- len 1)))
+             (if (fx>= j 0)
+                 (if (char-ci=? (string-ref s1 (fx+ i j))
+                                (string-ref s2 j))
+                     (loop2 (fx- j 1))
+                     (loop1 (fx+ i 1)))
+                 i))))))
+
+#;
+(define-primitive
+  (string-starts-with
+   (string string)
+   (prefix string)
+   (start  (index-range-incl 0 (string-length string)) 0)
+   (end    (index-range-incl start (string-length string)) (string-length string)))
 
   (let ((prefix-len (string-length prefix)))
-    (and (fx>= (string-length str) prefix-len)
-         (let loop ((i 0))
-           (if (fx< i prefix-len)
-               (and (char=? (string-ref str i)
-                            (string-ref prefix i))
-                    (loop (fx+ i 1)))
-               (substring str i (string-length str)))))))
+    (and (fx>= (fx- end start) prefix-len)
+         (let ((origin start))
+           (let loop ((i (fx- prefix-len 1)))
+             (or (fx< i 0)
+                 (and (char=? (string-ref string (fx+ origin i))
+                              (string-ref prefix i))
+                      (loop (fx- i 1)))))))))
 
-(define-prim (##string-suffix=? str suffix)
-
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
+#;
+(define-primitive
+  (string-ends-with
+   (string string)
+   (suffix string)
+   (start  (index-range-incl 0 (string-length string)) 0)
+   (end    (index-range-incl start (string-length string)) (string-length string)))
 
   (let ((suffix-len (string-length suffix)))
-    (and (fx>= (string-length str) suffix-len)
-         (let loop ((i suffix-len))
-           (if (fx> i 0)
-               (and (char=? (string-ref str
-                                        (fx- (string-length str) i))
-                            (string-ref suffix
-                                        (fx- suffix-len i)))
-                    (loop (fx- i 1)))
-               (substring str 0 (fx- (string-length str) suffix-len)))))))
+    (and (fx>= (fx- end start) suffix-len)
+         (let ((origin (fx- (string-length string) suffix-len)))
+           (let loop ((i (fx- suffix-len 1)))
+             (or (fx< i 0)
+                 (and (char=? (string-ref string (fx+ origin i))
+                              (string-ref suffix i))
+                      (loop (fx- i 1)))))))))
 
-(define-prim (##string-contains
-              str
-              substr
-              #!optional
-              (start1 (macro-absent-obj))
-              (end1 (macro-absent-obj))
-              (start2 (macro-absent-obj))
-              (end2 (macro-absent-obj)))
+(define-primitive (string-prefix-strip prefix string)
+  (and (string-prefix? prefix string)
+       (substring string (string-length prefix) (string-length string))))
 
-  (include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
+(define-primitive (string-suffix-strip suffix string)
+  (and (string-suffix? suffix string)
+       (substring string 0 (fx- (string-length string) (string-length suffix)))))
 
-  (let* ((s1
-          (if (eq? start1 (macro-absent-obj))
-              0
-              start1))
-         (e1
-          (if (eq? end1 (macro-absent-obj))
-              (string-length str)
-              end1))
-         (s2
-          (if (eq? start2 (macro-absent-obj))
-              0
-              start2))
-         (e2
-          (if (eq? end2 (macro-absent-obj))
-              (string-length substr)
-              end2)))
-    (let* ((len (fx- e2 s2))
-	   (limit (fx- e1 len)))
-      (let loop1 ((i s1))
-	(and (fx<= i limit)
-             (let loop2 ((j (fx- len 1)))
-               (if (fx>= j 0)
-                   (if (char=? (string-ref str (fx+ i j))
-                               (string-ref substr j))
-                       (loop2 (fx- j 1))
-                       (loop1 (fx+ i 1)))
-                   i)))))))
+(define-primitive
+  (string-split-at-char
+   (string    string)
+   (delimiter char)
+   (tail      object '())
+   (start     (index-range-incl 0 (string-length string)) 0)
+   (end       (index-range-incl start (string-length string)) (string-length string)))
 
-(define-primitive (string-split-at-char
-                   (string    string)
-                   (delimiter char)
-                   (tail      object '())
-                   (start     (index-range-incl 0 (string-length string)) 0)
-                   (end       (index-range-incl start (string-length string)) (string-length string)))
   (let loop ((lo end) (hi end) (lst tail))
     (if (fx< start lo)
         (let* ((lo-1 (fx- lo 1))
@@ -358,12 +517,14 @@
                     lst)))
         (cons (substring string lo hi) lst))))
 
-(define-primitive (string-split-at-char-reversed
-                   (string    string)
-                   (delimiter char)
-                   (tail      object '())
-                   (start     (index-range-incl 0 (string-length string)) 0)
-                   (end       (index-range-incl start (string-length string)) (string-length string)))
+(define-primitive
+  (string-split-at-char-reversed
+   (string    string)
+   (delimiter char)
+   (tail      object '())
+   (start     (index-range-incl 0 (string-length string)) 0)
+   (end       (index-range-incl start (string-length string)) (string-length string)))
+
   (let loop ((lo start) (hi start) (lst tail))
     (if (fx< hi end)
         (let* ((c (string-ref string hi))

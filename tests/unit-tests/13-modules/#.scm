@@ -7,7 +7,7 @@
     ,@(map (lambda (namespace)
              `(let ()
                 ,(if (string? namespace)
-                     (if (##string-prefix=? namespace "~~lib/")
+                     (if (##string-prefix? "~~lib/" namespace)
                          `(include ,namespace)
                          `(namespace (,namespace)
                                      ("" list capture-behavior lambda let quote)))
@@ -33,7 +33,7 @@
                       " in "
                       (object->string
                        (if (string? namespace2)
-                           (if (##string-prefix=? namespace2 "~~lib/")
+                           (if (##string-prefix? "~~lib/" namespace2)
                                `(include ,namespace2)
                                `(namespace (,namespace2)))
                            `(##import ,namespace2)))

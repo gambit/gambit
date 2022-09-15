@@ -2,7 +2,7 @@
 
 ;;; File: "_nonstd.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -466,12 +466,12 @@
                     (##cons
                      f
                      (let ((s (##symbol->string f)))
-                       (let ((e (##string-prefix=? s "enable-")))
+                       (let ((e (##string-prefix-strip "enable-" s)))
                          (if e
                              (##remq (##string->symbol
                                       (##string-append "disable-" e))
                                      features)
-                             (let ((d (##string-prefix=? s "disable-")))
+                             (let ((d (##string-prefix-strip "disable-" s)))
                                (if d
                                    (##remq (##string->symbol
                                             (##string-append "enable-" d))

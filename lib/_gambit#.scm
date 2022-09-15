@@ -1554,6 +1554,7 @@
 (##include "_num#.scm")
 (##include "_io#.scm")
 (##include "_eval#.scm")
+(##include "_module#.scm")
 (##include "_repl#.scm")
 (##include "_std#.scm")
 (##include "_nonstd#.scm")

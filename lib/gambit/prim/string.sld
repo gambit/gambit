@@ -2,7 +2,7 @@
 
 ;;; File: "string.sld"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -54,10 +54,20 @@ utf8->string
 
 ;; gambit
 
-string-concatenate
 string-ci=?-hash
+string-concatenate
+string-contains
+string-contains-ci
+string-prefix-ci?
+string-prefix-length
+string-prefix-length-ci
+string-prefix?
 string-set
 string-shrink!
+string-suffix-ci?
+string-suffix-length
+string-suffix-length-ci
+string-suffix?
 string=?-hash
 substring-fill!
 substring-move!
