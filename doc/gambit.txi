@@ -4042,6 +4042,154 @@ For example:
 
 @end deffn
 
+@deffn procedure string-prefix-length @var{s1} @var{s2} @r{[}@var{start1} @r{[}@var{end1} @r{[}@var{start2} @r{[}@var{end2}@r{]}@r{]}@r{]}@r{]}
+@deffnx procedure string-prefix-length-ci @var{s1} @var{s2} @r{[}@var{start1} @r{[}@var{end1} @r{[}@var{start2} @r{[}@var{end2}@r{]}@r{]}@r{]}@r{]}
+
+The procedures @code{string-prefix-length} and
+@code{string-prefix-length-ci} return an exact nonnegative integer
+indicating the length of the longest substring of the strings @var{s1}
+and @var{s2} at the start of those strings that are @code{string=?}
+(for @code{string-prefix-length}) or @code{string-ci=?} (for
+@code{string-prefix-length-ci}).  The optional exact nonnegative
+integer parameters @var{start1}, @var{end1}, @var{start2}, and
+@var{end2} delimit the sections of the strings @var{s1} and @var{s2}
+that are considered.  The parameters @var{start1} and @var{start2}
+default to 0, and the parameters @var{end1} and @var{end2} default to
+the length of the strings @var{s1} and @var{s2} respectively.
+
+For example:
+
+@smallexample
+> @b{(string-prefix-length "abracadabra" "abrac123")}
+5
+> @b{(string-prefix-length "abracadabra" "abrac123" 7)}
+4
+> @b{(string-prefix-length "abracadabra" "AbRaC123")}
+0
+> @b{(string-prefix-length-ci "abracadabra" "AbRaC123")}
+5
+@end smallexample
+
+@end deffn
+
+@deffn procedure string-suffix-length @var{s1} @var{s2} @r{[}@var{start1} @r{[}@var{end1} @r{[}@var{start2} @r{[}@var{end2}@r{]}@r{]}@r{]}@r{]}
+@deffnx procedure string-suffix-length-ci @var{s1} @var{s2} @r{[}@var{start1} @r{[}@var{end1} @r{[}@var{start2} @r{[}@var{end2}@r{]}@r{]}@r{]}@r{]}
+
+The procedures @code{string-suffix-length} and
+@code{string-suffix-length-ci} return an exact nonnegative integer
+indicating the length of the longest substring of the strings @var{s1}
+and @var{s2} at the end of those strings that are @code{string=?} (for
+@code{string-suffix-length}) or @code{string-ci=?} (for
+@code{string-suffix-length-ci}).  The optional exact nonnegative
+integer parameters @var{start1}, @var{end1}, @var{start2}, and
+@var{end2} delimit the sections of the strings @var{s1} and @var{s2}
+that are considered.  The parameters @var{start1} and @var{start2}
+default to 0, and the parameters @var{end1} and @var{end2} default to
+the length of the strings @var{s1} and @var{s2} respectively.
+
+For example:
+
+@smallexample
+> @b{(string-suffix-length "abracadabra" "123dabra")}
+5
+> @b{(string-suffix-length "abracadabra" "123dAbRa" 1 4)}
+1
+> @b{(string-suffix-length-ci "abracadabra" "123dAbRa" 1 4)}
+3
+@end smallexample
+
+@end deffn
+
+@deffn procedure string-prefix? @var{s1} @var{s2} @r{[}@var{start1} @r{[}@var{end1} @r{[}@var{start2} @r{[}@var{end2}@r{]}@r{]}@r{]}@r{]}
+@deffnx procedure string-prefix-ci? @var{s1} @var{s2} @r{[}@var{start1} @r{[}@var{end1} @r{[}@var{start2} @r{[}@var{end2}@r{]}@r{]}@r{]}@r{]}
+
+The procedures @code{string-prefix?} and @code{string-prefix-ci?}
+return a boolean indicating whether the string @var{s1} is a substring
+at the start of string @var{s2} when compared with @code{string=?}
+(for @code{string-prefix?}) or @code{string-ci=?} (for
+@code{string-prefix-ci?}).  The optional exact nonnegative integer
+parameters @var{start1}, @var{end1}, @var{start2}, and @var{end2}
+delimit the sections of the strings @var{s1} and @var{s2} that are
+considered.  The parameters @var{start1} and @var{start2} default to
+0, and the parameters @var{end1} and @var{end2} default to the length
+of the strings @var{s1} and @var{s2} respectively.
+
+For example:
+
+@smallexample
+> @b{(string-prefix? "ab" "abracadabra")}
+#t
+> @b{(string-prefix? "ab" "Abracadabra")}
+#f
+> @b{(string-prefix? "ab" "Abracadabra" 0 2 7)}
+#t
+> @b{(string-prefix-ci? "ab" "ABracadabra")}
+#t
+@end smallexample
+
+@end deffn
+
+@deffn procedure string-suffix? @var{s1} @var{s2} @r{[}@var{start1} @r{[}@var{end1} @r{[}@var{start2} @r{[}@var{end2}@r{]}@r{]}@r{]}@r{]}
+@deffnx procedure string-suffix-ci? @var{s1} @var{s2} @r{[}@var{start1} @r{[}@var{end1} @r{[}@var{start2} @r{[}@var{end2}@r{]}@r{]}@r{]}@r{]}
+
+The procedures @code{string-suffix?} and @code{string-suffix-ci?}
+return a boolean indicating whether the string @var{s1} is a substring
+at the end of string @var{s2} when compared with @code{string=?}
+(for @code{string-suffix?}) or @code{string-ci=?} (for
+@code{string-suffix-ci?}).  The optional exact nonnegative integer
+parameters @var{start1}, @var{end1}, @var{start2}, and @var{end2}
+delimit the sections of the strings @var{s1} and @var{s2} that are
+considered.  The parameters @var{start1} and @var{start2} default to
+0, and the parameters @var{end1} and @var{end2} default to the length
+of the strings @var{s1} and @var{s2} respectively.
+
+For example:
+
+@smallexample
+> @b{(string-suffix? "ra" "abracadabra")}
+#t
+> @b{(string-suffix? "ra" "abracadabrA")}
+#f
+> @b{(string-suffix? "ra" "abracadabrA" 0 2 0 4)}
+#t
+> @b{(string-suffix-ci? "ra" "abracadabrA")}
+#t
+@end smallexample
+
+@end deffn
+
+@deffn procedure string-contains @var{s1} @var{s2} @r{[}@var{start1} @r{[}@var{end1} @r{[}@var{start2} @r{[}@var{end2}@r{]}@r{]}@r{]}@r{]}
+@deffnx procedure string-contains-ci @var{s1} @var{s2} @r{[}@var{start1} @r{[}@var{end1} @r{[}@var{start2} @r{[}@var{end2}@r{]}@r{]}@r{]}@r{]}
+
+The procedures @code{string-contains} and @code{string-contains-ci}
+look for the first substring of the string @var{s1} (in a left to
+right traversal) that is equal to the string @var{s1} according to
+@code{string=?}  (for @code{string-contains}) or @code{string-ci=?}
+(for @code{string-contains-ci}).  The result is @code{#f} when the
+string @var{s2} is not found in @var{s1}, otherwise the result is an
+exact nonnegative integer indicating the index in @var{s1} where the
+first occurrence of @var{s2} is found.  The optional exact nonnegative
+integer parameters @var{start1}, @var{end1}, @var{start2}, and
+@var{end2} delimit the sections of the strings @var{s1} and @var{s2}
+that are considered.  The parameters @var{start1} and @var{start2}
+default to 0, and the parameters @var{end1} and @var{end2} default to
+the length of the strings @var{s1} and @var{s2} respectively.
+
+For example:
+
+@smallexample
+> @b{(string-contains "abracadabra" "ra")}
+2
+> @b{(string-contains "abracadabra" "ra" 3)}
+9
+> @b{(string-contains "abracadabra" "Ra")}
+#f
+> @b{(string-contains-ci "abracadabra" "Ra")}
+2
+@end smallexample
+
+@end deffn
+
 @deffn procedure string-concatenate @var{lst} @r{[}@var{separator}@r{]}
 
 This procedure returns a newly allocated string which is the
@@ -18640,7 +18788,7 @@ Just after the program is loaded and before control is passed to the
 Scheme code, each C file is initialized by calling its associated
 initialization function.  The body of this function is normally empty
 but it can be extended by using the @code{c-initialize} form.  Each
-occurence of the @code{c-initialize} form adds code to the body of the
+occurrence of the @code{c-initialize} form adds code to the body of the
 initialization function in the order of appearance in the source file.
 @i{c-code} must be a string containing the C code to execute.  This
 string is copied to the C file on a new line so it can start with

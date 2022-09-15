@@ -3,7 +3,7 @@
 ;;; File: "_http.scm"
 
 ;;; Copyright (c) 2019-2020 by Frédéric Hamel, All Rights Reserved.
-;;; Copyright (c) 2020-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2020-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -70,8 +70,8 @@
                              (reverse rev-header)))
 
                     ((and (not status+msg)
-                          (or (##string-prefix=? line "HTTP/1.0 ")
-                              (##string-prefix=? line "HTTP/1.1 ")))
+                          (or (##string-prefix-strip "HTTP/1.0 " line)
+                              (##string-prefix-strip "HTTP/1.1 " line)))
                      =>
                      (lambda (rest)
                        (let ((end-of-status (string-index-of rest #\space)))
