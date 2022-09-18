@@ -4718,6 +4718,31 @@
 ;; GVM interpret
 ;; -----------------------------------------
 
+;; Object model
+
+(define-type GVMValue
+  extender: define-gvm-type)
+
+(define-gvm-type Object
+  value)
+
+(define-gvm-type Label
+  id)
+
+(define-gvm-type Primitive
+  procedure)
+
+(define-gvm-type Procedure
+  label-id)
+
+(define-gvm-type Closure
+  vars)
+
+(define (Closure-ref clo i) (vector-ref (Closure-vars clo) i))
+(define (Closure-set! clo i val) (vector-set! (Closure-vars clo) i val))
+
+;; Runtime
+
 (define (make-global-env) (make-table))
 (define (global-ref env name) (table-ref env name))
 (define (global-set! env name value) (table-set! env name value))
@@ -4750,6 +4775,7 @@
   (stretchable-vector-set! registers n val))
 
 (define (gvm-interpret bbs)
+  (pp '***GVM-Interpreter)
   (let ((global-env (make-global-env))
         (stack (make-stack))
         (registers (make-registers))
@@ -4757,38 +4783,47 @@
     (bb-interpret bbs (lbl-num->bb entry-lbl-num bbs) global-env stack registers)))
 
 (define (bb-interpret bbs bb env stack registers)
+  (define (get-value opnd)
+    (cond
+      ((reg? opnd)
+        (register-ref registers (reg-num opnd)))
+      ((stk? opnd)
+        (let ((fs (bb-entry-frame-size bb)))
+          (stack-ref stack fs (stk-num opnd))))
+      ((glo? opnd)
+        (global-ref env (glo-name opnd)))
+      ((clo? opnd)
+        (let ((clo (get-value (clo-base opnd))))
+          (Closure-ref clo (clo-index opnd))))
+      ((lbl? opnd)
+        (make-Label (lbl-num opnd)))
+      ((obj? opnd)
+        (make-Object (obj-val opnd)))
+      (else
+        (error "unknown value to copy" opnd))))
 
   ;; COPY
   (define (copy-interpret instr)
-    (define (get-copied-value x)
-      (cond
-        ((reg? opnd)
-          (register-ref registers (reg-num x)))
-        ((stk? opnd)
-          (let ((fs (bb-entry-frame-size bb)))
-            (stack-ref stack fs (stk-num opnd))))
-        ((glo? opnd)
-          (global-ref env (glo-name opnd)))
-        (else
-          opnd))) ;; cases clo/lbl/obj
-
     (let* ((opnd (copy-opnd instr))
            (value (get-value opnd))
            (target (copy-loc instr)))
       (cond
-        ((reg? opnd)
-          (register-set! registers (reg-num x) value))
-        ((stk? opnd)
+        ((reg? target)
+          (register-set! registers (reg-num target) value))
+        ((stk? target)
           (let ((fs (bb-entry-frame-size bb)))
-            (stack-set! stack fs (stk-num opnd) value)))
-        ((glo? opnd)
-          (global-set! env (glo-name opnd) value))
+            (stack-set! stack fs (stk-num target) value)))
+        ((glo? target)
+          (global-set! env (glo-name target) value))
+        ((clo? target)
+          (let ((clo (get-value (clo-base target))))
+            (Closure-set! clo (clo-index target) value)))
         (else
-          (error "cannot COPY to" opnd))))))
+          (error "cannot COPY to" opnd)))))
 
   ;; JUMP
   (define (jump-interpret instr)
-    (let ((opnd (jump-opnd)))
+    (let ((opnd (jump-opnd instr)))
       (cond
         ((lbl? opnd)
           (stack-exit-frame! stack bb)
@@ -4799,8 +4834,15 @@
         ;; TODO: missing cases
         )))
 
+  (define (ifjump-interpret instr)
+    (let* ((test (ifjump-test instr))
+           (opnds (ifjump-opnds instr))
+           (opnds-values (map get-value opnds)))
+    (step)
+    instr))
 
   (define (instr-interpret instr)
+    (pp (list 'executing: (gvm-instr-kind instr)))
     (case (gvm-instr-kind instr)
       ((apply)
        #f)
@@ -4809,11 +4851,11 @@
       ((close)
        #f)
       ((ifjump)
-       #f)
+       (ifjump-interpret instr))
       ((switch)
        #f)
       ((jump)
-       #f)
+       (jump-interpret instr))
       (else
         (error "unknown instruction" (gvm-instr-kind instr)))))
 
