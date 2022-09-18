@@ -4738,6 +4738,24 @@
 (define-gvm-type Closure
   vars)
 
+(define (make-gvm-primitives . names)
+  (list->table
+    (map
+      (lambda (n) (cons (symbol->string n) (eval n)))
+      names)))
+
+(define gvm-primitives
+  (make-gvm-primitives
+    '##identity
+    '##fixnum?
+    '##fx<
+    '##fx<=
+    '##fx>
+    '##fx>=
+    '##fx=))
+
+(define (get-primitive name) (table-ref gvm-primitives name))
+
 (define (Closure-ref clo i) (vector-ref (Closure-vars clo) i))
 (define (Closure-set! clo i val) (vector-set! (Closure-vars clo) i val))
 
@@ -4821,39 +4839,58 @@
         (else
           (error "cannot COPY to" opnd)))))
 
+  (define (jump-to lbl)
+    (bb-interpret bbs (lbl-num->bb lbl bbs) env stack registers))
+
   ;; JUMP
   (define (jump-interpret instr)
     (let ((opnd (jump-opnd instr)))
       (cond
         ((lbl? opnd)
           (stack-exit-frame! stack bb)
-          (bb-interpret
-            bbs
-            (lbl-num->bb (lbl-num opnd) bbs)
-            env stack registers))
+          (jump-to (lbl-num opnd)))
         ;; TODO: missing cases
         )))
 
+  ;; IFJUMP
   (define (ifjump-interpret instr)
     (let* ((test (ifjump-test instr))
            (opnds (ifjump-opnds instr))
            (opnds-values (map get-value opnds)))
-    (step)
-    instr))
+      (if (and (proc-obj? test)
+               (proc-obj-primitive? test))
+        (let* ((prim (get-primitive (proc-obj-name test)))
+               (result (apply prim opnds-values)))
+          (if result
+            (jump-to (ifjump-true instr))
+            (jump-to (ifjump-false instr))))
+        (error "ifjump test is not a primitive"))))
+
+  ;; APPLY
+  (define (apply-interpret instr)
+    (error "TODO" instr))
+
+  ;; CLOSE
+  (define (close-interpret instr)
+    (error "TODO" instr))
+
+  ;; SWITCH
+  (define (switch-interpret instr)
+    (error "TODO" instr))
 
   (define (instr-interpret instr)
     (pp (list 'executing: (gvm-instr-kind instr)))
     (case (gvm-instr-kind instr)
       ((apply)
-       #f)
+       (apply-interpret instr))
       ((copy)
        (copy-interpret instr))
       ((close)
-       #f)
+       (close-interpret instr))
       ((ifjump)
        (ifjump-interpret instr))
       ((switch)
-       #f)
+       (switch-interpret instr))
       ((jump)
        (jump-interpret instr))
       (else
@@ -4861,6 +4898,5 @@
 
   (let* ((instructions (bb-non-branch-instrs bb))
          (branch (bb-branch-instr bb)))
-
     (for-each instr-interpret instructions)
     (instr-interpret branch)))
