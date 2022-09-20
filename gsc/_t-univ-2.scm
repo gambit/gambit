@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-2.scm"
 
-;;; Copyright (c) 2011-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2022 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -662,7 +662,7 @@
            (^assign (^field 'prim cp) prim)
            (^glo-var-primitive-set! name cp)
            (^if prim
-                (^glo-var-set! name cp))
+                (^glo-var-set! name cp)) ;; implicit definition of global var
            (^assign (^rts-field-use 'current_parententrypt)
                     cp))))))
 

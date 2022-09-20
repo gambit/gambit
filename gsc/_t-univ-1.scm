@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-1.scm"
 
-;;; Copyright (c) 2011-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2022 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -3021,9 +3021,14 @@
                                        ctrlpts-array))))))))))
                  (init2
                   (lambda (ctx)
-                    (if (univ-use-ctrlpt-init? ctx)
-                        (^)
-                        (let ((name (string->symbol (proc-obj-name p))))
+                    (let ((name (string->symbol (proc-obj-name p))))
+                      (if (univ-use-ctrlpt-init? ctx)
+                          (begin
+                            (if (proc-obj-primitive? p)
+                                ;; global variable will be implicitly defined
+                                ;; by parententrypt_init
+                                (univ-glo-dependency ctx name 'wr))
+                            (^))
                           (^ "\n"
                              ;; p is a parententrypt
                              (^setpeps name (^obj-proc-as 'parententrypt p))
