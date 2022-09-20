@@ -4738,6 +4738,15 @@
 (define-gvm-type Closure
   vars)
 
+(define primitive-call-counter
+  (make-table))
+
+(define (pp-primitive-call-counter)
+  (pp '***primitive-call-counter)
+  (table-for-each
+    (lambda a (pp a))
+    primitive-call-counter))
+
 (define-macro (make-gvm-primitives . names)
   `(list->table
     (list
@@ -4747,6 +4756,14 @@
                    (lambda args
                      (pp '***primitive-call)
                      (pp (cons (quote ,n) args))
+                     (table-set!
+                       primitive-call-counter
+                       (quote ,n)
+                       (+ 1
+                          (table-ref
+                            primitive-call-counter
+                            (quote ,n)
+                            0)))
                      (apply ,n args))))
           names))))
 
@@ -4867,7 +4884,7 @@
           (Closure-set! clo (clo-index target) value)))
       (else
         (error "cannot write to" target))))
-        
+
   ;; COPY
   (define (copy-interpret instr)
     (let* ((opnd (copy-opnd instr))
