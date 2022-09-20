@@ -4867,6 +4867,7 @@
           (Closure-set! clo (clo-index target) value)))
       (else
         (error "cannot write to" target))))
+        
   ;; COPY
   (define (copy-interpret instr)
     (let* ((opnd (copy-opnd instr))
