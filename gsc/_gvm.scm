@@ -4738,21 +4738,34 @@
 (define-gvm-type Closure
   vars)
 
-(define (make-gvm-primitives . names)
-  (list->table
-    (map
-      (lambda (n) (cons (symbol->string n) (eval n)))
-      names)))
+(define-macro (make-gvm-primitives . names)
+  `(list->table
+    (list
+      ,@(map
+          (lambda (n)
+            `(cons ,(symbol->string n)
+                   (lambda args
+                     (pp '***primitive-call)
+                     (pp (cons (quote ,n) args))
+                     (apply ,n args))))
+          names))))
 
 (define gvm-primitives
   (make-gvm-primitives
-    '##identity
-    '##fixnum?
-    '##fx<
-    '##fx<=
-    '##fx>
-    '##fx>=
-    '##fx=))
+    ##identity
+    ##mutable?
+    ##fixnum?
+    ##fx<
+    ##fx<=
+    ##fx>
+    ##fx>=
+    ##fx=
+    ##fx+
+    ##fx+?
+    ##fx-
+    ##fx*
+    ##vector-length
+    ##vector-set!))
 
 (define (get-primitive name) (table-ref gvm-primitives name))
 
@@ -4820,27 +4833,46 @@
       (else
         (error "unknown value to copy" opnd))))
 
+  (define (unbox-value val)
+    (cond
+      ((Object? val)
+        (Object-value val))
+      (else
+        (error "unboxing non Object" val))))
+
+  (define (get-value-and-unbox val)
+    (unbox-value (get-value val)))
+
+  ;; HELPERS
+  (define (jump-to lbl)
+    (bb-interpret bbs (lbl-num->bb lbl bbs) env stack registers))
+
+  (define (isa-proc-obj-primitive? obj)
+    (and (proc-obj? obj) (proc-obj-primitive? obj)))
+
+  (define (exec-prim name args)
+    (apply (get-primitive name) args))
+
+  (define (interpret-write target value)
+    (cond
+      ((reg? target)
+        (register-set! registers (reg-num target) value))
+      ((stk? target)
+        (let ((fs (bb-entry-frame-size bb)))
+          (stack-set! stack fs (stk-num target) value)))
+      ((glo? target)
+        (global-set! env (glo-name target) value))
+      ((clo? target)
+        (let ((clo (get-value (clo-base target))))
+          (Closure-set! clo (clo-index target) value)))
+      (else
+        (error "cannot write to" target))))
   ;; COPY
   (define (copy-interpret instr)
     (let* ((opnd (copy-opnd instr))
            (value (get-value opnd))
            (target (copy-loc instr)))
-      (cond
-        ((reg? target)
-          (register-set! registers (reg-num target) value))
-        ((stk? target)
-          (let ((fs (bb-entry-frame-size bb)))
-            (stack-set! stack fs (stk-num target) value)))
-        ((glo? target)
-          (global-set! env (glo-name target) value))
-        ((clo? target)
-          (let ((clo (get-value (clo-base target))))
-            (Closure-set! clo (clo-index target) value)))
-        (else
-          (error "cannot COPY to" opnd)))))
-
-  (define (jump-to lbl)
-    (bb-interpret bbs (lbl-num->bb lbl bbs) env stack registers))
+      (interpret-write target value)))
 
   ;; JUMP
   (define (jump-interpret instr)
@@ -4850,17 +4882,19 @@
           (stack-exit-frame! stack bb)
           (jump-to (lbl-num opnd)))
         ;; TODO: missing cases
-        )))
+        (else
+          (error "JUMP to non label")))))
 
   ;; IFJUMP
   (define (ifjump-interpret instr)
     (let* ((test (ifjump-test instr))
            (opnds (ifjump-opnds instr))
-           (opnds-values (map get-value opnds)))
-      (if (and (proc-obj? test)
-               (proc-obj-primitive? test))
-        (let* ((prim (get-primitive (proc-obj-name test)))
-               (result (apply prim opnds-values)))
+           (opnds-values (map get-value-and-unbox opnds)))
+      (if (isa-proc-obj-primitive? test)
+        (let* ((result
+                 (exec-prim
+                   (proc-obj-name test)
+                   opnds-values)))
           (if result
             (jump-to (ifjump-true instr))
             (jump-to (ifjump-false instr))))
@@ -4868,15 +4902,20 @@
 
   ;; APPLY
   (define (apply-interpret instr)
-    (error "TODO" instr))
+    (let* ((prim (apply-prim instr))
+           (opnds (apply-opnds instr))
+           (opnds-values (map get-value-and-unbox opnds))
+           (loc (apply-loc instr))
+           (result (exec-prim (proc-obj-name prim) opnds-values)))
+      (if loc (interpret-write loc (make-Object result)))))
 
   ;; CLOSE
   (define (close-interpret instr)
-    (error "TODO" instr))
+    (error "TODO close" instr))
 
   ;; SWITCH
   (define (switch-interpret instr)
-    (error "TODO" instr))
+    (error "TODO switch" instr))
 
   (define (instr-interpret instr)
     (pp (list 'executing: (gvm-instr-kind instr)))
