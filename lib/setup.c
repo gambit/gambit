@@ -438,8 +438,6 @@ ___virtual_machine_state ___vms;)
  * Synchronous operations.
  */
 
-#define WASTE_TIME() ___CPU_RELAX()
-
 #define COMBINING_OP(op) ((op)&3)
 #define COMBINING_AND 1
 #define COMBINING_ADD 2
@@ -459,23 +457,12 @@ ___virtual_machine_state ___vms;)
 
 #define SYNC_INIT_MSG(var) var = SYNC_WAITING
 
-#define SYNC_GET_MSG_SPIN_TIMEOUT 2000
-
 #define SYNC_GET_MSG(expr) \
 do { \
-     int loops_left = SYNC_GET_MSG_SPIN_TIMEOUT; \
-     while ((expr) == SYNC_WAITING) \
-       { \
-         WASTE_TIME(); \
-         if (--loops_left == 0) \
-           { \
-             loops_left = SYNC_GET_MSG_SPIN_TIMEOUT; \
-             ___MUTEX_LOCK(___ps->sync_mut); \
-             if ((expr) == SYNC_WAITING) \
-               ___sync_wait (___ps); \
-             ___MUTEX_UNLOCK(___ps->sync_mut); \
-           } \
-       } \
+     ___MUTEX_LOCK(___ps->sync_mut); \
+     while ((expr) == SYNC_WAITING)  \
+       ___sync_wait (___ps); \
+     ___MUTEX_UNLOCK(___ps->sync_mut); \
    } while (0)
 
 #define SYNC_SEND_MSG(ps,field,val) \
