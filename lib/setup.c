@@ -457,12 +457,14 @@ ___virtual_machine_state ___vms;)
 
 #define SYNC_INIT_MSG(var) var = SYNC_WAITING
 
-#define SYNC_GET_MSG(expr) \
+#define SYNC_GET_MSG(ps,field,var) \
 do { \
-     ___MUTEX_LOCK(___ps->sync_mut); \
-     while ((expr) == SYNC_WAITING)  \
-       ___sync_wait (___ps); \
-     ___MUTEX_UNLOCK(___ps->sync_mut); \
+     ___MUTEX_LOCK(ps->sync_mut); \
+     while (ps->field == SYNC_WAITING) \
+       ___sync_wait(ps); \
+     var = ps->field; \
+     SYNC_INIT_MSG(ps->field); \
+     ___MUTEX_UNLOCK(ps->sync_mut); \
    } while (0)
 
 #define SYNC_SEND_MSG(ps,field,val) \
@@ -528,8 +530,7 @@ ___sync_op_struct *sop_ptr;)
       int sid1;
       ___sync_op_struct sop1;
 
-      SYNC_GET_MSG(sid1 = ___ps->sync_id1);
-      SYNC_INIT_MSG(___ps->sync_id1);
+      SYNC_GET_MSG(___ps, sync_id1, sid1);
 
       sop1 = ___ps->sync_op1;
 
@@ -562,8 +563,7 @@ ___sync_op_struct *sop_ptr;)
           int sid2;
           ___sync_op_struct sop2;
 
-          SYNC_GET_MSG(sid2 = ___ps->sync_id2);
-          SYNC_INIT_MSG(___ps->sync_id2);
+          SYNC_GET_MSG(___ps, sync_id2, sid2);
 
           sop2 = ___ps->sync_op2;
 
@@ -625,8 +625,7 @@ ___sync_op_struct *sop_ptr;)
        * Wait for parent to reply with winning operation.
        */
 
-      SYNC_GET_MSG(sid = ___ps->sync_id0);
-      SYNC_INIT_MSG(___ps->sync_id0);
+      SYNC_GET_MSG(___ps, sync_id0, sid);
 
       sop = ___ps->sync_op0;
     }
