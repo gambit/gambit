@@ -229,7 +229,8 @@
                (string-append "Invalid url '" url "'")))
       (let* ((scheme (uri-scheme uri))
              (host+port
-              (##string-split-at-char (uri-authority uri) #\:))
+              (##string-split-at-char (or (uri-authority uri)
+                                          (raise (macro-make-http-exception "No authority"))) #\:))
              (tls-context (cond
                             ((string=? scheme "https")
                              (make-tls-context))
