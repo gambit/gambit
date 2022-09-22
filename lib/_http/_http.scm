@@ -227,7 +227,7 @@
     (if (not uri)
       (raise (macro-make-http-exception
                (string-append "Invalid url '" url "'")))
-      (let* ((scheme (uri-scheme uri))
+      (let* ((scheme (or (uri-scheme uri) (raise (macro-make-http-exception "No scheme"))))
              (host+port
               (##string-split-at-char (or (uri-authority uri)
                                           (raise (macro-make-http-exception "No authority"))) #\:))
