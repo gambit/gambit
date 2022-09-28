@@ -133,3 +133,5 @@ $100 CAD (about $80 USD and 75 euros at time of writing).
 193: [Command line](https://srfi.schemers.org/srfi-193/srfi-193.html) (builtin)
 
 219: [Define higher-order lambda](https://srfi.schemers.org/srfi-219/srfi-219.html)
+
+231: [Intervals and Generalized Arrays](https://srfi.schemers.org/srfi-231/srfi-231.html)
