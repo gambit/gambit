@@ -164,12 +164,16 @@ test-modules-all: test-modules-all-pre
 test-modules-all-pre:
 	@here_prefix="`echo $(herefromlib) | sed -e 's,[^/]*$$,,'`"; \
 	here_suffix="`echo $(herefromlib) | sed -e 's,.*/,,'`"; \
-	if test -d "test"; then \
-	  modref="$(herefromlib)"; \
-	  echo "*** testing $$modref"; \
-	  @SETDLPATH@ $(rootfromhere)/gsi/gsi@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include \
-	      -f -e '(current-directory "$(rootfromhere)")' $$modref/test || \
-	      echo "*** ignoring error"; \
+	modref="$(herefromlib)"; \
+	if test -e "$(libfromhere)/$$modref.sld" -o -e "$(libfromhere)/$$modref.scm" -o -e "$(libfromhere)/$$modref/$${modref##*/}.sld" -o -e "$(libfromhere)/$$modref/$${modref##*/}.scm"; then \
+	  if test -d "test"; then \
+	    echo "*** testing $$modref"; \
+	    @SETDLPATH@ $(rootfromhere)/gsi/gsi@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include \
+	        -f -e '(current-directory "$(rootfromhere)")' $$modref/test || \
+	        echo "*** ignoring error"; \
+	  else \
+	    echo "*** not testing $$modref (lib/$$modref/test/test.scm missing)"; \
+	  fi; \
 	fi;
 
 test-modules: test-modules-pre
@@ -180,11 +184,15 @@ test-modules: test-modules-pre
 test-modules-pre:
 	@here_prefix="`echo $(herefromlib) | sed -e 's,[^/]*$$,,'`"; \
 	here_suffix="`echo $(herefromlib) | sed -e 's,.*/,,'`"; \
-	if test -d "test"; then \
-	  modref="$(herefromlib)"; \
-	  echo "*** testing $$modref"; \
-	  @SETDLPATH@ $(rootfromhere)/gsi/gsi@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include \
-	      -f -e '(current-directory "$(rootfromhere)")' $$modref/test; \
+	modref="$(herefromlib)"; \
+	if test -e "$(libfromhere)/$$modref.sld" -o -e "$(libfromhere)/$$modref.scm" -o -e "$(libfromhere)/$$modref/$${modref##*/}.sld" -o -e "$(libfromhere)/$$modref/$${modref##*/}.scm"; then \
+	  if test -d "test"; then \
+	    echo "*** testing $$modref"; \
+	    @SETDLPATH@ $(rootfromhere)/gsi/gsi@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include \
+	        -f -e '(current-directory "$(rootfromhere)")' $$modref/test; \
+	  else \
+	    echo "*** not testing $$modref (lib/$$modref/test/test.scm missing)"; \
+	  fi; \
 	fi;
 
 modules-pre:
