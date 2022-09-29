@@ -4720,23 +4720,20 @@
 
 ;; Object model
 
-(define-type GVMValue
-  extender: define-gvm-type)
+(define-type GVM-Value
+  extender: define-gvm-value-type)
 
-(define-gvm-type Object
+;; proc-obj can go in there because it uses a sentinel
+(define-gvm-value-type Other-Object
   value)
 
-(define-gvm-type Label
+;; First class label
+(define-gvm-value-type First-Class-Label
+  bbs
   id)
 
-(define-gvm-type Primitive
-  procedure)
-
-(define-gvm-type Procedure
-  label-id)
-
-(define-gvm-type Closure
-  vars)
+(define-gvm-value-type Closure
+  slots) ;; slot 0 is label so ##closure-ref works
 
 (define primitive-call-counter
   (make-table))
@@ -4786,8 +4783,8 @@
 
 (define (get-primitive name) (table-ref gvm-primitives name))
 
-(define (Closure-ref clo i) (vector-ref (Closure-vars clo) i))
-(define (Closure-set! clo i val) (vector-set! (Closure-vars clo) i val))
+(define (Closure-ref clo i) (vector-ref (Closure-slots clo) i))
+(define (Closure-set! clo i val) (vector-set! (Closure-slots clo) i val))
 
 ;; Runtime
 
@@ -4846,14 +4843,19 @@
       ((lbl? opnd)
         (make-Label (lbl-num opnd)))
       ((obj? opnd)
-        (make-Object (obj-val opnd)))
+        (let ((val (obj-val opnd)))
+          (cond
+            ((proc-obj? val)
+              val)
+            (else
+              (make-Other-Object (obj-val opnd))))))
       (else
         (error "unknown value to copy" opnd))))
 
   (define (unbox-value val)
     (cond
-      ((Object? val)
-        (Object-value val))
+      ((Other-Object? val)
+        (Other-Object-value val))
       (else
         (error "unboxing non Object" val))))
 
@@ -4894,14 +4896,25 @@
 
   ;; JUMP
   (define (jump-interpret instr)
+    (define (call-interpret obj)
+      (cond
+        ((proc-obj? obj)
+          (step)
+          (pp "call")
+          #f)
+        (else
+          (error "unknown JUMP to" obj))))
+
     (let ((opnd (jump-opnd instr)))
       (cond
         ((lbl? opnd)
           (stack-exit-frame! stack bb)
           (jump-to (lbl-num opnd)))
-        ;; TODO: missing cases
+        ((obj? opnd)
+          (call-interpret (obj-val opnd)))
         (else
-          (error "JUMP to non label")))))
+          (call-interpret (get-value opnd)))))) ;; reg/stk/glo/clo
+
 
   ;; IFJUMP
   (define (ifjump-interpret instr)
@@ -4925,7 +4938,7 @@
            (opnds-values (map get-value-and-unbox opnds))
            (loc (apply-loc instr))
            (result (exec-prim (proc-obj-name prim) opnds-values)))
-      (if loc (interpret-write loc (make-Object result)))))
+      (if loc (interpret-write loc (make-Other-Object result)))))
 
   ;; CLOSE
   (define (close-interpret instr)
@@ -4936,7 +4949,17 @@
     (error "TODO switch" instr))
 
   (define (instr-interpret instr)
-    (pp (list 'executing: (gvm-instr-kind instr)))
+    ;; trace
+    (begin
+      (pp (list 'executing: (gvm-instr-kind instr)))
+      (println "reg:")
+      (pp (vector-ref registers 0))
+      (println "stk:")
+      (pp (vector-ref (stack-stack stack) 0))
+      (println "glo:")
+      (pp (table->list env))
+      (println))
+
     (case (gvm-instr-kind instr)
       ((apply)
        (apply-interpret instr))
