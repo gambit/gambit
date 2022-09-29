@@ -104,6 +104,9 @@
                      ((cfg)
                       (set! compiler-option-cfg                #t)
                       #t)
+                     ((gvm-interpret)
+                      (set! compiler-option-gvm-interpret      #t)
+                      #t)
                      ((dg)
                       (set! compiler-option-dg                 #t)
                       #t)
@@ -155,6 +158,7 @@
   (set! compiler-option-expansion          #f)
   (set! compiler-option-gvm                #f)
   (set! compiler-option-cfg                #f)
+  (set! compiler-option-gvm-interpret      #f)
   (set! compiler-option-dg                 #f)
   (set! compiler-option-debug              #f)
   (set! compiler-option-debug-location     #f)
@@ -168,6 +172,7 @@
 (define compiler-option-expansion          #f)
 (define compiler-option-gvm                #f)
 (define compiler-option-cfg                #f)
+(define compiler-option-gvm-interpret      #f)
 (define compiler-option-dg                 #f)
 (define compiler-option-debug              #f)
 (define compiler-option-debug-location     #f)
@@ -373,6 +378,9 @@
                        (virtual.dump-dg root dependency-graph dg-port)
                        (close-output-port dg-port)
                        (set! dependency-graph #f)))
+
+                 (if compiler-option-gvm-interpret
+                     (gvm-interpret module-procs))
 
                  (let ((result-thunk
                         (target.dump

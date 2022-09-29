@@ -1857,7 +1857,6 @@
 
 ;;      (bbs-dominators! new-bbs)
 
-      (gvm-interpret bbs)
       new-bbs)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -4812,7 +4811,6 @@
     (stack-pointer-set!
       stack
       (+ (stack-pointer stack) (- exit-fs enter-fs)))))
-
 
 (define (make-registers) (make-stretchable-vector 0))
 (define (register-ref registers n) (stretchable-vector-ref registers n))
