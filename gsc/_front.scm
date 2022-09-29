@@ -2,7 +2,7 @@
 
 ;;; File: "_front.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -854,7 +854,7 @@
             (newline info-port)
             (newline info-port)))
 
-      (proc-obj-code-set! main-proc (bbs-purify *bbs*))
+      (proc-obj-code-set! main-proc *bbs*)
 
       (set! *bb* '())
       (set! *bbs* '())
@@ -868,9 +868,10 @@
 
       (clear-context)
 
-      (cons main-proc
-            (reverse
-             (keep proc-obj-code const-procs))))))
+      (purify-procs
+       (cons main-proc
+             (reverse
+              (keep proc-obj-code const-procs)))))))
 
 (define *bb* '())
 (define *bbs* '())
@@ -1078,7 +1079,7 @@
                                       (do-body)))
                   (do-body))
 
-              (proc-obj-code-set! proc (bbs-purify *bbs*))
+              (proc-obj-code-set! proc *bbs*)
 
               (set! proc-queue p-proc-queue)
               (set! known-procs p-known-procs)

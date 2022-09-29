@@ -2,7 +2,7 @@
 
 ;;; File: "_gvm.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -719,6 +719,17 @@
 ;;
 ;; 'Purification' of basic block sets:
 ;; ----------------------------------
+
+(define (purify-procs procs)
+
+  (for-each
+   (lambda (proc)
+     (let ((bbs (proc-obj-code proc)))
+       (if (bbs? bbs)
+           (proc-obj-code-set! proc (bbs-purify bbs)))))
+   procs)
+
+  procs)
 
 ;; This step removes unreachable basic blocks (i.e. dead code), duplicate
 ;; basic blocks (i.e. common code), useless jumps and jump cascades from
