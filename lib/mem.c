@@ -2155,6 +2155,9 @@ void *data;)
 
 #define start_of_tospace(ms) ms->base + tospace_offset
 
+#define SET_MAX(var,val) do { if ((var) < (val)) var = val; } while (0)
+#define SET_MIN(var,val) do { if ((var) > (val)) var = val; } while (0)
+
 
 /*---------------------------------------------------------------------------*/
 
@@ -2329,6 +2332,95 @@ ___SCMOBJ val;)
     ___printf ("#deleted");
   else
     ___printf ("#unknown(0x" ___PRIxWORD ")", val);
+}
+
+void print_stack
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+  ___WORD *stack_limit = ___ps->stack_limit;
+  ___WORD *fp = ___ps->fp;
+  ___WORD *stack_break = ___ps->stack_break;
+  ___WORD *stack_start = ___ps->stack_start;
+  ___msection *stack_ms = ___ps->mem.stack_msection_;
+  ___WORD *probe;
+
+  ___printf ("------------------ current stack\n");
+
+  ___printf ("stack_msection = %p\n", stack_ms);
+  ___printf ("stack_msection->index = %d\n", stack_ms->index);
+  ___printf ("stack_msection->pos   = %d\n", stack_ms->pos);
+  ___printf ("stack_msection->next  = %p\n", stack_ms->next);
+  ___printf ("stack_msection->prev  = %p\n", stack_ms->prev);
+  ___printf ("fp = %p\n", fp);
+  ___printf ("stack_break = %p\n", stack_break);
+  ___printf ("stack_start = %p\n", stack_start);
+
+  probe = stack_limit - 3;
+
+  while (probe < stack_start)
+    {
+      int span = 0;
+      int skip = 99999999;
+
+#define SET_DIST_LO_HI(ctx_lo, ctx_hi, ptr) \
+do { \
+  int dist = probe - ptr; \
+  if (dist < ctx_lo) \
+    SET_MIN(skip, ctx_lo - dist); \
+  else if (dist <= ctx_hi) \
+    SET_MAX(span, ctx_hi - dist + 1); \
+} while (0)
+
+      SET_DIST_LO_HI( -3,  3, stack_limit);
+      SET_DIST_LO_HI(-10, 10, fp);
+      SET_DIST_LO_HI(-10, 10, stack_break);
+      SET_DIST_LO_HI(-15,  0, stack_start);
+
+      if (span > 0)
+        {
+          while (span > 0)
+            {
+              int i;
+              if (probe < stack_start)
+                ___printf ("%p %p", probe, *probe);
+              else
+                ___printf ("%p", probe);
+              if (probe == stack_limit) ___printf (" <--stack_limit");
+              if (probe == fp)          ___printf (" <--fp");
+              if (probe == stack_break) ___printf (" <--stack_break");
+              if (probe == stack_start) ___printf (" <--stack_start");
+              i = probe - stack_break;
+              if (i == ___BREAK_FRAME_NEXT)
+                ___printf (" [BREAK_FRAME_NEXT]");
+              else
+                {
+                  i = probe - (stack_start - ___FIRST_BREAK_FRAME_SPACE);
+                  switch (i)
+                    {
+                    case ___BREAK_FRAME_NEXT:
+                      ___printf (" [BREAK_FRAME_NEXT]");
+                      break;
+                    case ___FIRST_BREAK_FRAME_STACK_MSECTION:
+                      ___printf (" [FIRST_BREAK_FRAME_STACK_MSECTION]");
+                      break;
+                    case ___FIRST_BREAK_FRAME_STACK_BREAK:
+                      ___printf (" [FIRST_BREAK_FRAME_STACK_BREAK]");
+                      break;
+                    }
+                }
+              ___printf ("\n");
+              probe++;
+              span--;
+            }
+        }
+      else
+        {
+          ___printf("...\n");
+            probe += skip;
+        }
+    }
 }
 
 #endif
@@ -4307,10 +4399,6 @@ ___processor_state ___ps;)
 }
 
 
-#define SET_MAX(var,val) do { if ((var) < (val)) var = val; } while (0)
-#define SET_MIN(var,val) do { if ((var) > (val)) var = val; } while (0)
-
-
 ___HIDDEN ___SIZE_TS adjust_heap
    ___P((___SIZE_TS live),
         (live)
@@ -4472,14 +4560,25 @@ ___processor_state ___ps;)
   setup_rc (___ps);
 
   /*
-   * Create "break frame" of initial top section.
+   * Create "first break frame" of initial top section.  This first
+   * break frame has a null msection link because it is not created
+   * due to a stack section overflow (this information is needed by
+   * ___stack_overflow_undo_if_possible).
    */
 
   ___ps->stack_start = alloc_stack_start;
   alloc_stack_ptr = alloc_stack_start;
 
   ___FP_ADJFP(alloc_stack_ptr,___FIRST_BREAK_FRAME_SPACE)
-  ___FP_SET_STK(alloc_stack_ptr,-___BREAK_FRAME_NEXT,___END_OF_CONT_MARKER)
+
+  ___FP_SET_STK(alloc_stack_ptr,
+                -___BREAK_FRAME_NEXT,
+                ___END_OF_CONT_MARKER) /* no next frame */
+
+  ___FP_SET_STK(alloc_stack_ptr,
+                -___FIRST_BREAK_FRAME_STACK_MSECTION,
+                ___CAST(___WORD,
+                        ___CAST(___msection*,NULL))) /* not a stack section overflow */
 
   ___ps->stack_break = alloc_stack_ptr;
 
@@ -5988,6 +6087,11 @@ ___PSDKR)
     *--p2 = *--p1;
 
   alloc_stack_ptr = p2;
+
+  ___FP_SET_STK(alloc_stack_ptr,
+                -___FIRST_BREAK_FRAME_STACK_MSECTION,
+                ___CAST(___WORD,
+                        ___CAST(___msection*,NULL))) /* not a stack section overflow */
 }
 
 
@@ -6877,22 +6981,22 @@ ___PSDKR)
        * can't be pointing to a break frame,
        * i.e. prev_alloc_stack_ptr != prev_stack_break.
        *
-       * If the topmost frame were to be left on the
-       * stack, when ___stack_overflow_undo would return to it, an
-       * uncontrolled overflow of the stack would be possible
-       * (because the generated code assumes that after returning
-       * from a call to ___stack_limit it is OK to perform a
-       * function call without checking the stack limit).
+       * If the topmost frame were to be left on the stack, when
+       * ___stack_overflow_undo_if_possible would return to it, an
+       * uncontrolled overflow of the stack would be possible (because
+       * the generated code assumes that after returning from a call
+       * to ___stack_limit it is OK to perform a function call without
+       * checking the stack limit).
        *
-       * For this reason, is is necessary for correctness to
-       * transfer the topmost frame to the new stack msection.
-       * However, only transferring the topmost frame may cause
-       * the stack limit handler to be called frequently if there
-       * are many shallow function calls in a row (calls to
-       * ___stack_limit followed by ___stack_overflow_undo in a
-       * tight loop).  To avoid this performance issue, it is best
-       * to transfer a certain number of frames, but no more than
-       * up to the break frame.
+       * For this reason, is is necessary for correctness to transfer
+       * the topmost frame to the new stack msection.  However, only
+       * transferring the topmost frame may cause the stack limit
+       * handler to be called frequently if there are many shallow
+       * function calls in a row (calls to ___stack_limit followed by
+       * ___stack_overflow_undo_if_possible in a tight loop).  To
+       * avoid this performance issue, it is best to transfer a
+       * certain number of frames, but no more than up to the break
+       * frame.
        */
 
       fp = prev_alloc_stack_ptr;
@@ -6955,7 +7059,7 @@ ___PSDKR)
                * Save state of previous stack msection in the
                * first break frame of new stack msection to allow
                * returning to the previous stack msection when
-               * ___stack_overflow_undo is called.
+               * ___stack_overflow_undo_if_possible is called.
                */
 
               ___FP_SET_STK(alloc_stack_ptr,
@@ -7004,17 +7108,19 @@ ___PSDKR)
   ___D_FP
   ___R_FP
 
+  ___msection *ms;
+
   if (stack_msection != heap_msection &&
-      ___ps->stack_start == &___STK(-___FIRST_BREAK_FRAME_SPACE))
+      ___ps->stack_start == &___STK(-___FIRST_BREAK_FRAME_SPACE) &&
+      (ms = ___CAST(___msection*,___STK(-___FIRST_BREAK_FRAME_STACK_MSECTION)))
+      != NULL)
     {
       /*
        * The current stack msection is not shared with the heap and
-       * the break frame is at the start of the stack msection, so
-       * the stack can be moved to the previous stack msection.
+       * the break frame is at the start of the stack msection and it
+       * was created due to a stack section overflow, so the stack can
+       * be moved to the previous stack msection.
        */
-
-      ___msection *ms = ___CAST(___msection*,
-                                ___STK(-___FIRST_BREAK_FRAME_STACK_MSECTION));
 
       stack_msection->base[0] = ___CAST(___WORD,msection_free_list);
       msection_free_list = stack_msection;
