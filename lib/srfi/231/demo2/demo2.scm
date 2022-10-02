@@ -1,21 +1,8 @@
 (import (srfi 231))
 
-;;; Examples from https://srfi.schemers.org/srfi-231/srfi-231.html
-
-(display "
-This demo contains a naive implementation of John
-Conway's Game of Life:
-
-https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life
-
-Try the other demos:
-
-demo:  Determine whether a string is a palindrome, ignoring case.
-demo3: Matrix manipulation routines: multiplication and Gaussian elimination.
-demo4: Image processing algorithms.
-")
-
-;;; John Conway's Game of Life
+;; This demo contains a naive implementation of John Conway's Game of Life:
+;;
+;; https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life
 
 (define (array-pad-periodically a N)
   ;; Pad a periodically with N rows and columns top and bottom, left and right.
@@ -32,8 +19,7 @@ demo4: Image processing algorithms.
   (let* ((big-a      (array-copy! (array-pad-periodically a 1)
                                   (array-storage-class a)))
          (domain     (array-domain a))
-           ;;; Each of the following translates shares the same body
-           ;;; as big-a
+         ;; Each of the following translates shares the same body as big-a
          (translates (map (lambda (translation)
                             (array-extract (array-translate big-a translation) domain))
                           '(#(1 0) #(0 1) #(-1 0) #(0 -1)
@@ -43,18 +29,12 @@ demo4: Image processing algorithms.
     (apply array-map + translates)))
 
 (define (game-rules a neighbor-count)
-  ;; a is a single cell, neighbor-count is the count of 1s in
-  ;; its 8 neighboring cells.
+  ;; a is a single cell, neighbor-count is the count of 1s in the 8 neighbors
   (if (= a 1)
-      (if (or (= neighbor-count 2)
-              (= neighbor-count 3))
-          1 0)
-      ;; (= a 0)
-      (if (= neighbor-count 3)
-          1 0)))
+      (if (or (= neighbor-count 2) (= neighbor-count 3)) 1 0)
+      (if (= neighbor-count 3) 1 0))) ;; when (= a 0)
 
-(define (advance a)
-  ;; Advance the board one generation
+(define (advance a) ;; advance the board one generation
   (array-copy!
    (array-map game-rules a (neighbor-count a))
    (array-storage-class a)))
@@ -81,5 +61,7 @@ demo4: Image processing algorithms.
     (newline)
     (pretty-print (array->list* a))))
 
-(display "\nMovement of a glider in Conway's Game of Life:\n")
+(display "Movement of a glider in Conway's Game of Life:\n")
 (generations glider 5)
+
+(println "\nDemo source code: " (this-source-file))

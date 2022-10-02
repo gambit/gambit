@@ -1,20 +1,7 @@
 (import (srfi 231))
 
-;;; Examples from https://srfi.schemers.org/srfi-231/srfi-231.html
-
-(display "
-This demo implements some naive matrix algorithms, including
-matrix multiplication and Gaussian (LU) decomposition.
-
-Try the other demos:
-
-demo:  Determine whether a string is a palindrome, ignoring case.
-demo2: John Conway's Game of Live.
-demo4: Image processing algorithms.
-")
-
-
-;;; Matrix operations
+;; This demo implements some naive matrix algorithms, including
+;; matrix multiplication and Gaussian (LU) decomposition.
 
 ;;; Matrix multiply
 
@@ -105,7 +92,7 @@ demo4: Image processing algorithms.
                (lambda (i j)
                  (/ (+ 1 i j))))))
 
-(display "\nHilbert matrix:\n\n")
+(display "Hilbert matrix:\n\n")
 (pretty-print (array->list* Hilbert))
 
 (LU-decomposition Hilbert)
@@ -121,3 +108,5 @@ demo4: Image processing algorithms.
 
 (display "\nProduct of lower-triangular and upper triangular factors of Hilbert matrix:\n\n")
 (pretty-print (array->list* (matrix-multiply (L Hilbert) (U Hilbert))))
+
+(println "\nDemo source code: " (this-source-file))

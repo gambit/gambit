@@ -1,7 +1,5 @@
 (import (srfi 231))
 
-;;; Examples from https://srfi.schemers.org/srfi-231/srfi-231.html
-
 (display "
 This example:
 
@@ -14,18 +12,11 @@ It writes three small image files into the directory in which it is invoked:
 
 1. girl.pgm, a small image of a girl.
 2. noisy-girl.pgm, the image girl.pgm to which noise has been added.
-3. denoised-girl.pgm, which uses Haar wavelets to remove some of the
-   noise from noisy-girl.pgm (which, perforce, also removes some
-   image details).
-
-Try the other demos:
-
-demo:  Determine whether a string is a palindrome, ignoring case.
-demo2: John Conway's Game of Live.
-demo3: Matrix manipulation routines: multiplication and Gaussian elimination.
+3. denoised-girl.pgm, which uses Haar wavelets to remove some of the noise
+   from noisy-girl.pgm (which, perforce, also removes some image details).
 ")
 
-;;; Reaing and writing PGM image files.
+;;; Reading and writing PGM image files.
 
 (define make-pgm   cons)
 (define pgm-greys  car)
@@ -284,3 +275,5 @@ demo3: Matrix manipulation routines: multiplication and Gaussian elimination.
         (Haar-inverse-transform transformed-noisy-data)))
   (write-pgm (float-array->image noisy-inexact-image (pgm-greys image)) "noisy-girl.pgm")
   (write-pgm (float-array->image transformed-noisy-data (pgm-greys image)) "denoised-girl.pgm"))
+
+(println "\nDemo source code: " (this-source-file))
