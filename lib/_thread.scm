@@ -1357,7 +1357,8 @@
            (let ((last-processor (macro-thread-last-processor thread)))
              (macro-lock-processor! last-processor)
              (let ((last-processor-current-thread
-                    (macro-processor-current-thread last-processor)))
+                    (macro-processor-current-thread last-processor))
+                   (last-processor-id (macro-processor-id last-processor)))
                (macro-unlock-processor! last-processor)
 
                (if (##eq? thread last-processor-current-thread)
@@ -1371,7 +1372,7 @@
                      (macro-unlock-thread! thread)
 
                      ;; propagate interrupt
-                     (##raise-high-level-interrupt last-processor interrupt))
+                     (##raise-high-level-interrupt last-processor-id interrupt))
 
                    (begin
 
