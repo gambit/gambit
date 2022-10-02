@@ -2,6 +2,19 @@
 
 ;;; Examples from https://srfi.schemers.org/srfi-231/srfi-231.html
 
+(display "
+This demo contains a naive implementation of John
+Conway's Game of Life:
+
+https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life
+
+Try the other demos:
+
+demo:  Determine whether a string is a palindrome, ignoring case.
+demo3: Matrix manipulation routines: multiplication and Gaussian elimination.
+demo4: Image processing algorithms.
+")
+
 ;;; John Conway's Game of Life
 
 (define (array-pad-periodically a N)

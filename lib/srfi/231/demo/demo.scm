@@ -4,6 +4,9 @@
 
 (display
  "
+This demo has a simple program for determining whether
+a string is a palindrome (ignoring case).
+
 Try the other demos:
 demo2: Conway's Game of Life.
 demo3: Matrix operations, Gaussian elimination

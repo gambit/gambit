@@ -2,6 +2,18 @@
 
 ;;; Examples from https://srfi.schemers.org/srfi-231/srfi-231.html
 
+(display "
+This demo implements some naive matrix algorithms, including
+matrix multiplication and Gaussian (LU) decomposition.
+
+Try the other demos:
+
+demo:  Determine whether a string is a palindrome, ignoring case.
+demo2: John Conway's Game of Live.
+demo4: Image processing algorithms.
+")
+
+
 ;;; Matrix operations
 
 ;;; Matrix multiply

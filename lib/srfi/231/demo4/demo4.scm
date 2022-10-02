@@ -2,11 +2,28 @@
 
 ;;; Examples from https://srfi.schemers.org/srfi-231/srfi-231.html
 
-;;; This example:
-;;; 1.  Reads and writes PGM files.
-;;; 2.  Builds separable transforms from 1-D transforms.
-;;; 3.  Defines the Haar wavelet transform.
-;;; 4.  De-noises images through wavelet shrinkage.
+(display "
+This example:
+
+ 1.  Reads and writes PGM files.
+ 2.  Builds separable transforms from 1-D transforms.
+ 3.  Defines the Haar wavelet transform.
+ 4.  De-noises images through wavelet shrinkage.
+
+It writes three small image files into the directory in which it is invoked:
+
+1. girl.pgm, a small image of a girl.
+2. noisy-girl.pgm, the image girl.pgm to which noise has been added.
+3. denoised-girl.pgm, which uses Haar wavelets to remove some of the
+   noise from noisy-girl.pgm (which, perforce, also removes some
+   image details).
+
+Try the other demos:
+
+demo:  Determine whether a string is a palindrome, ignoring case.
+demo2: John Conway's Game of Live.
+demo3: Matrix manipulation routines: multiplication and Gaussian elimination.
+")
 
 ;;; Reaing and writing PGM image files.
 
@@ -237,6 +254,8 @@
 
 (let* ((image
         (read-pgm (path-expand "girl.pgm" (path-directory (this-source-file)))))
+       (ignore
+        (write-pgm image "girl.pgm"))
        (inexact-image
         (image->float-array image))
        (standard-deviation
@@ -263,5 +282,5 @@
         (array-set! transformed-noisy-data average-grey-scale 0 0))
        (ignore
         (Haar-inverse-transform transformed-noisy-data)))
-  (write-pgm (float-array->image noisy-inexact-image (pgm-greys image)) (path-expand "noisy-girl.pgm" (path-directory (this-source-file))))
-  (write-pgm (float-array->image transformed-noisy-data (pgm-greys image)) (path-expand "denoised-girl.pgm" (path-directory (this-source-file)))))
+  (write-pgm (float-array->image noisy-inexact-image (pgm-greys image)) "noisy-girl.pgm")
+  (write-pgm (float-array->image transformed-noisy-data (pgm-greys image)) "denoised-girl.pgm"))
