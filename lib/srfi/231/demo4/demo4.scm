@@ -236,7 +236,7 @@
         u16-storage-class))))
 
 (let* ((image
-        (read-pgm "girl.pgm"))
+        (read-pgm (path-expand "girl.pgm" (path-directory (this-source-file)))))
        (inexact-image
         (image->float-array image))
        (standard-deviation
@@ -263,5 +263,5 @@
         (array-set! transformed-noisy-data average-grey-scale 0 0))
        (ignore
         (Haar-inverse-transform transformed-noisy-data)))
-  (write-pgm (float-array->image noisy-inexact-image (pgm-greys image)) "noisy-girl.pgm")
-  (write-pgm (float-array->image transformed-noisy-data (pgm-greys image)) "denoised-girl.pgm")) 
+  (write-pgm (float-array->image noisy-inexact-image (pgm-greys image)) (path-expand "noisy-girl.pgm" (path-directory (this-source-file))))
+  (write-pgm (float-array->image transformed-noisy-data (pgm-greys image)) (path-expand "denoised-girl.pgm" (path-directory (this-source-file)))))
