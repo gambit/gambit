@@ -4821,8 +4821,22 @@ end-of-code
 
 (define-prim (##os-condvar-select! devices timeout)
   (##declare (not interrupts-enabled))
-  (##c-code
-   "___RESULT = ___os_condvar_select (___ARG1, ___ARG2);"
+  (##c-code #<<end-of-code
+
+   ___SCMOBJ result;
+
+   ___FRAME_STORE_RA(___R0)
+   ___W_ALL
+
+   result = ___os_condvar_select (___ARG1, ___ARG2);
+
+   ___R_ALL
+   ___SET_R0(___FRAME_FETCH_RA)
+
+   ___RESULT = result;
+
+end-of-code
+
    devices
    timeout))
 
