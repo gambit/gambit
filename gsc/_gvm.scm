@@ -4798,11 +4798,11 @@
 (define (frame-index->stack-index i s fs) (+ i (- (stack-pointer s) 1 fs)))
 (define (stack-ref stack fs index)
   (stretchable-vector-ref
-    stack
+    (stack-stack stack)
     (frame-index->stack-index index stack fs)))
 (define (stack-set! stack fs index val)
   (stretchable-vector-set!
-    stack
+    (stack-stack stack)
     (frame-index->stack-index index stack fs)
     val))
 (define (stack-exit-frame! stack bb)
@@ -4817,13 +4817,17 @@
 (define (register-set! registers n val)
   (stretchable-vector-set! registers n val))
 
-(define (gvm-interpret bbs)
+(define (gvm-interpret module-procs)
   (pp '***GVM-Interpreter)
-  (let ((global-env (make-global-env))
-        (stack (make-stack))
-        (registers (make-registers))
-        (entry-lbl-num (bbs-entry-lbl-num bbs)))
-    (bb-interpret bbs (lbl-num->bb entry-lbl-num bbs) global-env stack registers)))
+  (let* ((global-env (make-global-env))
+         (stack (make-stack))
+         (registers (make-registers))
+         (main-proc (car module-procs))
+         (main-bbs (proc-obj-code main-proc))
+         (entry-lbl-num (bbs-entry-lbl-num main-bbs)))
+    ;; dummy empty return adress
+    (register-set! registers 0 'exit-return-address)
+    (bb-interpret main-bbs (lbl-num->bb entry-lbl-num main-bbs) global-env stack registers)))
 
 (define (bb-interpret bbs bb env stack registers)
   (define (get-value opnd)
@@ -4839,7 +4843,7 @@
         (let ((clo (get-value (clo-base opnd))))
           (Closure-ref clo (clo-index opnd))))
       ((lbl? opnd)
-        (make-Label (lbl-num opnd)))
+        (make-First-Class-Label bbs (lbl-num opnd)))
       ((obj? opnd)
         (let ((val (obj-val opnd)))
           (cond
@@ -4861,7 +4865,7 @@
     (unbox-value (get-value val)))
 
   ;; HELPERS
-  (define (jump-to lbl)
+  (define (jump-to bbs lbl)
     (bb-interpret bbs (lbl-num->bb lbl bbs) env stack registers))
 
   (define (isa-proc-obj-primitive? obj)
@@ -4887,32 +4891,47 @@
 
   ;; COPY
   (define (copy-interpret instr)
-    (let* ((opnd (copy-opnd instr))
-           (value (get-value opnd))
-           (target (copy-loc instr)))
-      (interpret-write target value)))
+    (let* ((opnd (copy-opnd instr)))
+      (if opnd ;; skip #f opnd which means allocation of a slot
+          (let ((value (get-value opnd))
+                (target (copy-loc instr)))
+            (interpret-write target value)))))
+
+  (define (call-interpret proc nargs ret)
+    (if ret (register-set! registers 0 (get-value ret)))
+    (let* ((code (proc-obj-code proc))
+           (entry-bb (lbl-num->bb (bbs-entry-lbl-num code) code)))
+      (bb-interpret code entry-bb env stack registers)))
 
   ;; JUMP
   (define (jump-interpret instr)
-    (define (call-interpret obj)
-      (cond
-        ((proc-obj? obj)
-          (step)
-          (pp "call")
-          #f)
-        (else
-          (error "unknown JUMP to" obj))))
-
-    (let ((opnd (jump-opnd instr)))
+    (let ((opnd (jump-opnd instr))
+          (ret (jump-ret instr))
+          (nargs (jump-nb-args instr)))
       (cond
         ((lbl? opnd)
           (stack-exit-frame! stack bb)
-          (jump-to (lbl-num opnd)))
+          (jump-to bbs (lbl-num opnd)))
         ((obj? opnd)
-          (call-interpret (obj-val opnd)))
+          (let ((proc (obj-val opnd)))
+            (if (proc-obj? proc)
+                (call-interpret proc nargs ret)
+                (error "unknown JUMP to" obj))))
         (else
-          (call-interpret (get-value opnd)))))) ;; reg/stk/glo/clo
-
+          (let ((val (get-value opnd))) ;; reg/stk/glo/clo
+            (cond
+              ((eq? val 'exit-return-address)
+                (pp '***GVM-Interpreter-END)
+                #f)
+              ((proc-obj? val)
+                (call-interpret val nargs ret))
+              ((First-Class-Label? val)
+                (let ((lbl-bbs (First-Class-Label-bbs val))
+                      (lbl-id (First-Class-Label-id val)))
+                  (stack-exit-frame! stack bb)
+                  (jump-to lbl-bbs lbl-id)))
+              (else
+                (error "unknown JUMP to" val))))))))
 
   ;; IFJUMP
   (define (ifjump-interpret instr)
@@ -4925,8 +4944,8 @@
                    (proc-obj-name test)
                    opnds-values)))
           (if result
-            (jump-to (ifjump-true instr))
-            (jump-to (ifjump-false instr))))
+            (jump-to bbs (ifjump-true instr))
+            (jump-to bbs (ifjump-false instr))))
         (error "ifjump test is not a primitive"))))
 
   ;; APPLY
@@ -4946,17 +4965,23 @@
   (define (switch-interpret instr)
     (error "TODO switch" instr))
 
+  (define (print-interpreter-trace instr print-state)
+    (pp (list 'executing: (gvm-instr-kind instr)))
+    (write-gvm-instr instr (current-output-port))
+    (println)
+
+    (if print-state
+      (begin
+        (println "reg:")
+        (pp (vector-ref registers 0))
+        (println "stk:")
+        (pp (vector-ref (stack-stack stack) 0))
+        (println "glo:")
+        (pp (table->list env))
+        (println))))
+
   (define (instr-interpret instr)
-    ;; trace
-    (begin
-      (pp (list 'executing: (gvm-instr-kind instr)))
-      (println "reg:")
-      (pp (vector-ref registers 0))
-      (println "stk:")
-      (pp (vector-ref (stack-stack stack) 0))
-      (println "glo:")
-      (pp (table->list env))
-      (println))
+    (print-interpreter-trace instr #f)
 
     (case (gvm-instr-kind instr)
       ((apply)
