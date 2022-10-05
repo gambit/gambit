@@ -4778,7 +4778,8 @@
     ##fx-
     ##fx*
     ##vector-length
-    ##vector-set!))
+    ##vector-set!
+    pp))
 
 (define (get-primitive name) (table-ref gvm-primitives name))
 
@@ -4787,7 +4788,27 @@
 
 ;; Runtime
 
-(define (make-global-env) (make-table))
+(define (make-global-env)
+  (let ((env (make-table)))
+    (table-for-each
+      (lambda (name prim)
+        (table-set!
+          env
+          (string->symbol name)
+          (make-proc-obj
+           name    ;; name
+           #f      ;; c-name
+           #t      ;; primitive?
+           #f       ;; code
+           #f     ;; call-pat
+           #t      ;; side-effects?
+           '()     ;; strict-pat
+           0       ;; lift-pat
+           '(#f)   ;; type
+           #f)))   ;; standard
+      gvm-primitives)
+      (pp (table->list env))
+      env))
 (define (global-ref env name) (table-ref env name))
 (define (global-set! env name value) (table-set! env name value))
 
@@ -4898,10 +4919,17 @@
             (interpret-write target value)))))
 
   (define (call-interpret proc nargs ret)
-    (if ret (register-set! registers 0 (get-value ret)))
-    (let* ((code (proc-obj-code proc))
-           (entry-bb (lbl-num->bb (bbs-entry-lbl-num code) code)))
-      (bb-interpret code entry-bb env stack registers)))
+    (if ret (register-set! registers 0 (make-First-Class-Label bbs ret)))
+
+    (if (proc-obj-primitive? proc)
+      (let* ((args (error "I don't know where arguments come from"))
+             (result (make-Other-Object (exec-prim (proc-obj-name proc) args))))
+        (register-set registers 1 result)
+        (stack-exit-frame! stack bb)
+        (jump-to bbs ret))
+      (let* ((code (proc-obj-code proc))
+             (entry-bb (lbl-num->bb (bbs-entry-lbl-num code) code)))
+        (bb-interpret code entry-bb env stack registers))))
 
   ;; JUMP
   (define (jump-interpret instr)
