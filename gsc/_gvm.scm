@@ -4919,17 +4919,30 @@
             (interpret-write target value)))))
 
   (define (call-interpret proc nargs ret)
-    (if ret (register-set! registers 0 (make-First-Class-Label bbs ret)))
+    (let* ((args-loc (pcontext-map (default-label-info target nargs #f)))
+           (return-loc (cdr (assq 'return args-loc))))
 
-    (if (proc-obj-primitive? proc)
-      (let* ((args (error "I don't know where arguments come from"))
-             (result (make-Other-Object (exec-prim (proc-obj-name proc) args))))
-        (register-set registers 1 result)
-        (stack-exit-frame! stack bb)
-        (jump-to bbs ret))
-      (let* ((code (proc-obj-code proc))
-             (entry-bb (lbl-num->bb (bbs-entry-lbl-num code) code)))
-        (bb-interpret code entry-bb env stack registers))))
+      (if ret
+          (cond
+            ((reg? return-loc)
+               (register-set! registers (reg-num return-loc) (make-First-Class-Label bbs ret)))
+            ((stk? return-loc)
+               (stack-set! stack (stk-num return-loc)) (make-First-Class-Label bbs ret))
+            (else (error "unexpected location for return label"))))
+
+      (if (proc-obj-primitive? proc)
+        (let* ((args
+                 (map
+                   (lambda (i) (get-value (cdr (assq i args-loc))))
+                   (iota nargs 1)))
+               (result (make-Other-Object (exec-prim (proc-obj-name proc) (map unbox-value args)))))
+          ;; TODO get return location from context?
+          (register-set! registers 1 result)
+          (stack-exit-frame! stack bb)
+          (if ret (jump-to bbs ret)))
+        (let* ((code (proc-obj-code proc))
+               (entry-bb (lbl-num->bb (bbs-entry-lbl-num code) code)))
+          (bb-interpret code entry-bb env stack registers)))))
 
   ;; JUMP
   (define (jump-interpret instr)
