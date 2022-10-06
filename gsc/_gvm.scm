@@ -4807,7 +4807,6 @@
            '(#f)   ;; type
            #f)))   ;; standard
       gvm-primitives)
-      (pp (table->list env))
       env))
 (define (global-ref env name) (table-ref env name))
 (define (global-set! env name value) (table-set! env name value))
