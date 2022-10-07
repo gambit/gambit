@@ -4743,44 +4743,36 @@
     (lambda a (pp a))
     primitive-call-counter))
 
-(define-macro (make-gvm-primitives . names)
-  `(list->table
-    (list
-      ,@(map
-          (lambda (n)
-            `(cons ,(symbol->string n)
-                   (lambda args
-                     (pp '***primitive-call)
-                     (pp (cons (quote ,n) args))
-                     (table-set!
+(define (make-gvm-primitives)
+  (let ((registered-primitives-table (make-table)))
+    (table-for-each
+      (lambda (name proc-obj)
+        (let ((scheme-proc
+                (with-exception-handler
+                  (lambda (exc) #f)
+                  (lambda () (eval name)))))
+          (if scheme-proc
+            (table-set!
+              registered-primitives-table
+              (symbol->string name)
+              (lambda args
+                (pp '***primitive-call)
+                (pp (cons name args))
+                (table-set!
+                  primitive-call-counter
+                  name
+                  (+ 1
+                     (table-ref
                        primitive-call-counter
-                       (quote ,n)
-                       (+ 1
-                          (table-ref
-                            primitive-call-counter
-                            (quote ,n)
-                            0)))
-                     (apply ,n args))))
-          names))))
+                       name
+                       0)))
+                (apply scheme-proc args))))))
+      (make-prim-proc-table))
+    registered-primitives-table))
 
-(define gvm-primitives
-  (make-gvm-primitives
-    ##identity
-    ##mutable?
-    ##first-argument
-    ##fixnum?
-    ##fx<
-    ##fx<=
-    ##fx>
-    ##fx>=
-    ##fx=
-    ##fx+
-    ##fx+?
-    ##fx-
-    ##fx*
-    ##vector-length
-    ##vector-set!
-    pp))
+(define gvm-primitives #f) ;; init on first execution
+(define (init-gvm-primitives)
+  (if (not gvm-primitives) (set! gvm-primitives (make-gvm-primitives))))
 
 (define (get-primitive name) (table-ref gvm-primitives name))
 
@@ -4792,22 +4784,8 @@
 (define (make-global-env)
   (let ((env (make-table)))
     (table-for-each
-      (lambda (name prim)
-        (table-set!
-          env
-          (string->symbol name)
-          (make-proc-obj
-           name    ;; name
-           #f      ;; c-name
-           #t      ;; primitive?
-           #f       ;; code
-           #f     ;; call-pat
-           #t      ;; side-effects?
-           '()     ;; strict-pat
-           0       ;; lift-pat
-           '(#f)   ;; type
-           #f)))   ;; standard
-      gvm-primitives)
+      (lambda (name proc-obj) (table-set! env (symbol->string name) proc-obj))
+      (make-prim-proc-table))
       env))
 (define (global-ref env name) (table-ref env name))
 (define (global-set! env name value) (table-set! env name value))
@@ -4840,6 +4818,9 @@
 
 (define (gvm-interpret module-procs)
   (pp '***GVM-Interpreter)
+
+  (init-gvm-primitives)
+
   (let* ((global-env (make-global-env))
          (stack (make-stack))
          (registers (make-registers))
