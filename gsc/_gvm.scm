@@ -2207,23 +2207,21 @@
               (let* ((bb (lbl-num->bb lbl bbs))
                      (new-lbl (bbs-new-lbl! new-bbs))
                      (step-num (begin (set! step-count (+ 1 step-count)) step-count))
-                     (looping? (assoc lbl path)))
+                     (looping? (assoc lbl path))
+                     (new-types-lbl-alist
+                      (cons (cons types-before new-lbl)
+                            types-lbl-alist)))
 
                 (if looping?
                     (pp `(********************looping ,looping?)))
 
                 (table-set! all-versions-tbl types-before new-lbl)
 
-                (vector-set!
-                 bb-versions
-                 0
-                 (cons (cons types-before new-lbl)
-                       types-lbl-alist))
+                (vector-set! bb-versions 0 new-types-lbl-alist)
 
-
-                (if (> (length types-lbl-alist) 5)
+                (if (> (length new-types-lbl-alist) 5)
                     (let* ((types-lbl-vect
-                            (list->vector types-lbl-alist))
+                            (list->vector new-types-lbl-alist))
                            (n
                             (vector-length types-lbl-vect))
                            (min-dist
