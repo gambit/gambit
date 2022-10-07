@@ -4767,6 +4767,7 @@
   (make-gvm-primitives
     ##identity
     ##mutable?
+    ##first-argument
     ##fixnum?
     ##fx<
     ##fx<=
@@ -4847,7 +4848,8 @@
          (entry-lbl-num (bbs-entry-lbl-num main-bbs)))
     ;; dummy empty return adress
     (register-set! registers 0 'exit-return-address)
-    (bb-interpret main-bbs (lbl-num->bb entry-lbl-num main-bbs) global-env stack registers)))
+    (bb-interpret main-bbs (lbl-num->bb entry-lbl-num main-bbs) global-env stack registers)
+    (pp-primitive-call-counter)))
 
 (define (bb-interpret bbs bb env stack registers)
   (define (get-value opnd)
