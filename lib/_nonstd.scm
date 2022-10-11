@@ -510,6 +510,9 @@
     (define (gen-absent-obj)
       (##cons '##quote (##cons (macro-absent-obj) '())))
 
+    (define (extended-bindings var)
+      `(##let () (##declare (extended-bindings ,var)) ,var))
+
     (##shape src src -2)
 
     (let loop ((clauses (##cdr (##source-code src)))
@@ -636,8 +639,9 @@
                                        (##subvector params 0 nreq))
                                       (##list rest-arg))
                             (loop (##fx- j 1)
-                                  `(##cons ,(##vector-ref params j)
-                                           ,rest-arg)))))
+                                  `(,(extended-bindings '##cons)
+                                    ,(##vector-ref params j)
+                                    ,rest-arg)))))
                     (gen-params i))))
 
             (define (gen-dispatch i)
@@ -651,14 +655,16 @@
                        (gen-branch i case-i))
                       (else
                        `(##if ,(if (##fx= i req-and-opt-param-count)
-                                   `(##null? ,rest-param)
-                                   `(##eq? ,(##vector-ref params i)
-                                           ,(gen-absent-obj)))
+                                   `(,(extended-bindings '##null?)
+                                     ,rest-param)
+                                   `(,(extended-bindings '##eq?)
+                                     ,(##vector-ref params i)
+                                     ,(gen-absent-obj)))
                               ,(if case-i
                                    (gen-branch i case-i)
                                    (begin
                                      (set! need-proc-var? #t)
-                                     `(##raise-wrong-number-of-arguments-exception-nary
+                                     `(,(extended-bindings '##raise-wrong-number-of-arguments-exception-nary)
                                        ,proc-var
                                        ,@(gen-params i))))
                               ,(gen-dispatch (##fx+ i 1)))))))
