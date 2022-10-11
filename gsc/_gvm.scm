@@ -4866,8 +4866,15 @@
     (unbox-value (get-value val)))
 
   ;; HELPERS
-  (define (jump-to bbs lbl)
-    (bb-interpret bbs (lbl-num->bb lbl bbs) env stack registers))
+  (define (jump-to bbs lbl-num from-bb nargs ret)
+    (stack-exit-frame! stack from-bb)
+    (bb-interpret bbs (lbl-num->bb lbl-num bbs) env stack registers))
+
+  (define (jump-to-entry bbs from-bb nargs ret)
+    (jump-to bbs (bbs-entry-lbl-num bbs) from-bb nargs ret))
+
+  (define (jump-to-no-args bbs lbl-num from-bb)
+    (jump-to bbs lbl-num from-bb 0 #f))
 
   (define (isa-proc-obj-primitive? obj)
     (and (proc-obj? obj) (proc-obj-primitive? obj)))
@@ -4898,61 +4905,78 @@
                 (target (copy-loc instr)))
             (interpret-write target value)))))
 
-  (define (call-interpret proc nargs ret)
-    (let* ((args-loc (pcontext-map (default-label-info target nargs #f)))
-           (return-loc (cdr (assq 'return args-loc))))
+  ;; CALL HELPERS
 
-      (if ret
-          (cond
-            ((reg? return-loc)
-               (register-set! registers (reg-num return-loc) (make-First-Class-Label bbs ret)))
-            ((stk? return-loc)
-               (stack-set! stack (stk-num return-loc)) (make-First-Class-Label bbs ret))
-            (else (error "unexpected location for return label"))))
+  (define (get-args-loc nargs)
+    (pcontext-map (default-label-info target nargs #f)))
 
-      (if (proc-obj-primitive? proc)
-        (let* ((args
-                 (map
-                   (lambda (i) (get-value (cdr (assq i args-loc))))
-                   (iota nargs 1)))
-               (result (make-Other-Object (exec-prim (proc-obj-name proc) (map unbox-value args)))))
-          ;; TODO get return location from context?
-          (register-set! registers 1 result)
-          (stack-exit-frame! stack bb)
-          (if ret (jump-to bbs ret)))
-        (let* ((code (proc-obj-code proc))
-               (entry-bb (lbl-num->bb (bbs-entry-lbl-num code) code)))
-          (bb-interpret code entry-bb env stack registers)))))
+  (define (get-ret-loc args-loc)
+    (cdr (assq 'return args-loc)))
+
+  (define (get-proc-obj-entry-lbl proc)
+    (let* ((code (proc-obj-code proc))
+           (bb (lbl-num->bb (bbs-entry-lbl-num code) code)))
+      (bb-label-instr bb)))
+
+  (define (get-proc-obj-nparams proc)
+    (label-entry-nb-parms (get-proc-obj-entry-lbl proc)))
+
+  (define (get-proc-obj-rest? proc)
+    (label-entry-rest? (get-proc-obj-entry-lbl proc)))
+
+  (define (set-return-label args-loc ret)
+    (let* ((return-loc (get-ret-loc args-loc)))
+      (cond
+        ((not ret) #f)
+        ((reg? return-loc)
+           (register-set! registers (reg-num return-loc) (make-First-Class-Label bbs ret)))
+        ((stk? return-loc)
+           (stack-set! stack (stk-num return-loc)) (make-First-Class-Label bbs ret))
+        (else (error "unexpected location for return label")))))
+
+
+  (define (set-arguments nargs nparams ret)
+    (let* ((args-loc (get-args-loc nargs)))
+      (set-return-label args-loc ret)
+      (if (not (= nargs nparams))
+          (error "nargs != nparams"))))
+
+  (define (call-proc-obj-interpret proc nargs ret)
+    (if (proc-obj-primitive? proc)
+      ;; primitive
+      (let* ((args-loc (get-args-loc nargs))
+             (args
+               (map
+                 (lambda (i) (get-value (cdr (assq i args-loc))))
+                 (iota nargs 1)))
+             (return-loc (get-ret-loc args-loc))
+             (result (make-Other-Object
+                       (exec-prim (proc-obj-name proc) (map unbox-value args)))))
+        (interpret-write (get-ret-loc args-loc) result)
+        (if ret (jump-to-no-args bbs ret bb)))
+      ;; others
+      (jump-to-entry (proc-obj-code proc) bb nargs ret)))
 
   ;; JUMP
   (define (jump-interpret instr)
     (let ((opnd (jump-opnd instr))
           (ret (jump-ret instr))
           (nargs (jump-nb-args instr)))
-      (cond
-        ((lbl? opnd)
-          (stack-exit-frame! stack bb)
-          (jump-to bbs (lbl-num opnd)))
-        ((obj? opnd)
-          (let ((proc (obj-val opnd)))
-            (if (proc-obj? proc)
-                (call-interpret proc nargs ret)
-                (error "unknown JUMP to" obj))))
-        (else
-          (let ((val (get-value opnd))) ;; reg/stk/glo/clo
+      (if (and (lbl? opnd) (not nargs))
+          (jump-to-no-args bbs (lbl-num opnd) bb) ;; static jump
+          (let ((val (get-value opnd))) ;; call
             (cond
               ((eq? val 'exit-return-address)
                 (pp '***GVM-Interpreter-END)
                 #f)
               ((proc-obj? val)
-                (call-interpret val nargs ret))
+                (call-proc-obj-interpret val nargs ret))
               ((First-Class-Label? val)
                 (let ((lbl-bbs (First-Class-Label-bbs val))
                       (lbl-id (First-Class-Label-id val)))
-                  (stack-exit-frame! stack bb)
-                  (jump-to lbl-bbs lbl-id)))
+                  (jump-to lbl-bbs lbl-id bb nargs ret)))
               (else
-                (error "unknown JUMP to" val))))))))
+                (error "unknown JUMP to" val)))))))
 
   ;; IFJUMP
   (define (ifjump-interpret instr)
@@ -4960,13 +4984,10 @@
            (opnds (ifjump-opnds instr))
            (opnds-values (map get-value-and-unbox opnds)))
       (if (isa-proc-obj-primitive? test)
-        (let* ((result
-                 (exec-prim
-                   (proc-obj-name test)
-                   opnds-values)))
+        (let* ((result (exec-prim (proc-obj-name test) opnds-values)))
           (if result
-            (jump-to bbs (ifjump-true instr))
-            (jump-to bbs (ifjump-false instr))))
+            (jump-to-no-args bbs (ifjump-true instr) bb)
+            (jump-to-no-args bbs (ifjump-false instr) bb)))
         (error "ifjump test is not a primitive"))))
 
   ;; APPLY
