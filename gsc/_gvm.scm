@@ -4720,10 +4720,6 @@
 (define-type GVM-Value
   extender: define-gvm-value-type)
 
-;; proc-obj can go in there because it uses a sentinel
-(define-gvm-value-type Other-Object
-  value)
-
 ;; First class label
 (define-gvm-value-type First-Class-Label
   bbs
@@ -4851,19 +4847,9 @@
             ((proc-obj? val)
               val)
             (else
-              (make-Other-Object (obj-val opnd))))))
+              (obj-val opnd)))))
       (else
         (error "unknown value to copy" opnd))))
-
-  (define (unbox-value val)
-    (cond
-      ((Other-Object? val)
-        (Other-Object-value val))
-      (else
-        (error "unboxing non Object" val))))
-
-  (define (get-value-and-unbox val)
-    (unbox-value (get-value val)))
 
   ;; HELPERS
   (define (get-label-parameters-info nargs)
@@ -4890,18 +4876,43 @@
   (define (set-return-label loc ret)
     (if ret (interpret-write loc (make-First-Class-Label bbs ret))))
 
+  (define (align-args! args nparams rest?)
+    (let* ((params-info (get-label-parameters-info nparams))
+           (args-loc (get-args-loc params-info))
+           (nargs (length args))
+           (nparams-without-rest (if rest? (- nparams 1) nparams))
+           (args-with-rest
+             (cond
+               ((< nargs nparams-without-rest)
+                (error "missing arguments"))
+               (rest?
+                  (let ((rest-arg (list-tail args nparams-without-rest)))
+                    (append (map ;;sublist
+                              (lambda (x y) x)
+                              args
+                              (iota nparams-without-rest))
+                            (list rest-arg))))
+               ((= nargs nparams)
+                 args)
+               (else
+                 (error "too many arguments")))))
+    (for-each interpret-write args-loc args-with-rest)))
+
   (define (jump-to target-bbs lbl-num from-bb nargs ret)
     (let* ((nargs (or nargs 0))
-           (entry-bb (lbl-num->bb (bbs-entry-lbl-num target-bbs) target-bbs))
-           (entry-label (bb-label-instr entry-bb))
+           (target-bb (lbl-num->bb lbl-num target-bbs))
+           (target-label (bb-label-instr target-bb))
            (params-info (get-label-parameters-info nargs))
            (ret-loc (get-ret-loc params-info))
            (args-loc (get-args-loc params-info))
            (args-values (map get-value args-loc)))
-      ;; TODO handle parameters alignment
-      (set-return-label ret-loc ret)
       (stack-exit-frame! stack from-bb)
-      (bb-interpret target-bbs (lbl-num->bb lbl-num target-bbs) env stack registers)))
+      (if (eq? (label-kind target-label) 'entry)
+        (let ((nparams (label-entry-nb-parms target-label))
+              (has-rest (label-entry-rest? target-label)))
+          (align-args! args-values nparams has-rest)
+          (set-return-label ret-loc ret)))
+      (bb-interpret target-bbs target-bb env stack registers)))
 
   (define (jump-to-entry bbs from-bb nargs ret)
     (jump-to bbs (bbs-entry-lbl-num bbs) from-bb nargs ret))
@@ -4944,10 +4955,9 @@
       ;; primitive
       (let* ((params-info (get-label-parameters-info nargs))
              (args (map get-value (get-args-loc params-info)))
-             (return-loc (get-ret-loc args-loc))
-             (result (make-Other-Object
-                       (exec-prim (proc-obj-name proc) (map unbox-value args)))))
-        (interpret-write (get-ret-loc args-loc) result)
+             (return-loc (get-ret-loc params-info))
+             (result (exec-prim (proc-obj-name proc) args)))
+        (interpret-write return-loc result)
         (if ret (jump-to-no-args bbs ret bb)))
       ;; others
       (jump-to-entry (proc-obj-code proc) bb nargs ret)))
@@ -4977,7 +4987,7 @@
   (define (ifjump-interpret instr)
     (let* ((test (ifjump-test instr))
            (opnds (ifjump-opnds instr))
-           (opnds-values (map get-value-and-unbox opnds)))
+           (opnds-values (map get-value opnds)))
       (if (isa-proc-obj-primitive? test)
         (let* ((result (exec-prim (proc-obj-name test) opnds-values)))
           (if result
@@ -4989,10 +4999,10 @@
   (define (apply-interpret instr)
     (let* ((prim (apply-prim instr))
            (opnds (apply-opnds instr))
-           (opnds-values (map get-value-and-unbox opnds))
+           (opnds-values (map get-value opnds))
            (loc (apply-loc instr))
            (result (exec-prim (proc-obj-name prim) opnds-values)))
-      (if loc (interpret-write loc (make-Other-Object result)))))
+      (if loc (interpret-write loc result))))
 
   ;; CLOSE
   (define (close-interpret instr)
