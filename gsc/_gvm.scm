@@ -4717,15 +4717,11 @@
 
 ;; Object model
 
-(define-type GVM-Value
-  extender: define-gvm-value-type)
-
-;; First class label
-(define-gvm-value-type First-Class-Label
+(define-type First-Class-Label
   bbs
   id)
 
-(define-gvm-value-type Closure
+(define-type Closure
   slots) ;; slot 0 is label so ##closure-ref works
 
 (define primitive-call-counter
