@@ -897,7 +897,7 @@
       (if (##eqv? result-den 1)
           result-num
           (macro-ratnum-make result-num result-den))))
-  
+
   (macro-number-dispatch x (type-error-on-x)
 
     (macro-number-dispatch y (type-error-on-y) ;; x = fixnum
@@ -1632,16 +1632,16 @@
 ;;; gcd, lcm
 
 (define-primitive (gcd2 x y)
-  
+
   ;; We're going to write this assuming that every
   ;; other routine like ##abs, ##negate, ##exact->inexact,
   ;; etc, return #f if, e.g., bignums don't exist and an
   ;; operation would otherwise return a bignum.
-  
+
   (##define-macro (type-error-on-x) `'(1))
   (##define-macro (type-error-on-y) `'(2))
   (##define-macro (fixnum-overflow) `#f)
-  
+
   (define (fast-gcd u v)
 
     ;; See the paper "Fast Reduction and Composition of Binary
@@ -1755,7 +1755,7 @@
 
     (define (x>=2^n x n)
       (##fx< n (##integer-length x)))
-  
+
     (define (determined-minimal? u v s)
       ;; assumes  2^s <= u , v; s>= 0 fixnum
       ;; returns #t if we can determine that |u-v|<2^s
@@ -1995,7 +1995,7 @@
               (general-base b r)))))
 
   (define (fixnum-base a b)
-    
+
     ;; Note that (remainder a b) has the same
     ;; sign as a with absolute value < |b|, so we allow
     ;; these fixnums to be negative, which allows
@@ -2018,7 +2018,7 @@
            (y-first-bit     (##first-set-bit y))
            (x-length        (##integer-length x))
            (y-length        (##integer-length y))
-           
+
            ;; We need to decide whether to shift out lower zero bits.
            ;; There are two algorithms for GCD, a naive one that's
            ;; O(N^2), and a "fast" one that's O(N (\log N)^2). A shift
@@ -2064,20 +2064,20 @@
             (##abs (if shift-zero-bits?
                        (##arithmetic-shift y (##fx- y-first-bit))
                        y))))
-        
+
       (##arithmetic-shift
        (macro-exact-int-dispatch y #f
-         
+
          (macro-exact-int-dispatch x #f                ;; y = fixnum
            (fixnum-base x y)
            (fixnum-base y (##remainder x y)))
-         
+
          (macro-exact-int-dispatch x #f                ;; y = bignum
            (fixnum-base x (##remainder y x))
-           
+
            ;; fast-gcd requires that its bignum arguments
            ;; are newly allocated.
-           
+
            (fast-gcd
             (if (or new-x?
                     x-negative?
@@ -2151,7 +2151,7 @@
       (type-error-on-x))
 
     (type-error-on-y)                                ;; y = ratnum
-    
+
     (if (##flinteger? y)                             ;; y = flonum
           (macro-number-dispatch x (type-error-on-x)
             (cond ((##eqv? x 0)                ;; x = fixnum
@@ -2202,7 +2202,7 @@
                                    (bignums-case exact-x #t exact-y #t))))))))
                 (type-error-on-x))
             (type-error-on-x)))                ;; x = cpxnum
-    
+
     (type-error-on-y)))                              ;; y = cpxnum
 
 (define-prim-nary (##gcd x y)
@@ -2877,7 +2877,7 @@ for a discussion of branch cuts.
       (##log2 x y)))
 
 (define-prim (##log2 x y)
-  
+
   ;; Assumes x is not zero and y is not 0 or 1
 
   (define (positive-exact-real? x)
@@ -5841,9 +5841,9 @@ for a discussion of branch cuts.
     (##first-set-bit x)))
 
 (define (##bignum.extract-bit-field size position n)
-  
+
   ;; n is a (possibly unnormalized) nonzero bignum, size and position are nonnegative exact integers
-  
+
   (let* ((result-bit-length
           (cond ((##positive? n)
                  (##fx+ 1 (##min size (##max 0 (##- (##integer-length n) position)))))
@@ -5880,7 +5880,7 @@ for a discussion of branch cuts.
 
   (define (fixnum-overflow)
     (##raise-fixnum-overflow-exception extract-bit-field size position n))
-  
+
   (define (general-fixnum-case)
     (macro-if-bignum
      (##bignum.extract-bit-field size position (##fixnum->bignum n))
@@ -6043,15 +6043,15 @@ for a discussion of branch cuts.
 (define-prim&proc (copy-bit (ind  index)
                             (i    exact-integer)
                             (bool boolean))
-  
+
   (define (fixnum-overflow)
     (##raise-fixnum-overflow-exception copy-bit ind i bool))
-  
+
   (define (general-case)
     (macro-if-bignum
      (##bitwise-xor2 i (##arithmetic-shift 1 ind))
      (fixnum-overflow)))
-  
+
   (if (##eq? bool (##bit-set? ind i))
       i
       (macro-exact-int-dispatch-no-error
@@ -6062,20 +6062,20 @@ for a discussion of branch cuts.
            (general-case))
        ;; i a bignum
        (general-case))))
-  
+
 (define-prim&proc (bit-swap (ind1 index)
                             (ind2 index)
                             (i exact-integer))
   (define (fixnum-overflow)
     (##raise-fixnum-overflow-exception bit-swap ind i bool))
-  
+
   (define (general-case)
     (macro-if-bignum
      (##bitwise-xor2 (##bitwise-ior2 (##arithmetic-shift 1 ind1)
                                      (##arithmetic-shift 1 ind2))
                     i)
      (fixnum-overflow)))
-  
+
   (if (##eq? (##bit-set? ind1 i)
              (##bit-set? ind2 i))
       i
@@ -6113,10 +6113,10 @@ for a discussion of branch cuts.
   (if (##fx> start end)
       (##raise-range-exception end bit-field i start end)
       (let ((size (##- end start)))
-        
+
         (define (fixnum-overflow)
           (##raise-fixnum-overflow-exception bit-field i start end))
-        
+
         (define (general-fixnum-case)
           (macro-if-bignum
            (##extract-bit-field size start (##fixnum->bignum i))
@@ -6189,12 +6189,12 @@ for a discussion of branch cuts.
 
   (define (fixnum-overflow)
     (##raise-fixnum-overflow-exception bit-field-clear i start end))
-  
+
   (define (general-case size)
     (macro-if-bignum
      (##bitwise-and2 i (##bitwise-not (##fxarithmetic-shift-left (##bit-mask size) start)))
      (fixnum-overflow)))
-  
+
   (if (##fx> start end)
       (##raise-range-exception end bit-field-clear i start end)
       (let ((size (##- end start)))
@@ -6218,12 +6218,12 @@ for a discussion of branch cuts.
 
   (define (fixnum-overflow)
     (##raise-fixnum-overflow-exception bit-field-set i start end))
-  
+
   (define (general-case size)
     (macro-if-bignum
      (##bitwise-ior2 i (##fxarithmetic-shift-left (##bit-mask size) start))
      (fixnum-overflow)))
-  
+
   (if (##fx> start end)
       (##raise-range-exception end bit-field-set i start end)
       (let ((size (##- end start)))
@@ -6272,7 +6272,7 @@ for a discussion of branch cuts.
 ;;;---------------------------------------------------------------------------
 ;;; bit-field-rotate bit-field-reverse
 ;;;---------------------------------------------------------------------------
- 
+
 (define-prim&proc (bit-field-rotate (n     exact-integer)
                                     (count exact-integer); can be neg
                                     (start index)
@@ -6303,7 +6303,7 @@ for a discussion of branch cuts.
 (macro-case-target
  ((C)
   (define-macro (macro-bit-reverse-table)
-    
+
     (define (bit-reverse i)
       ;; 0 <= i <= (- ##bignum.fdigit-base 1)
       (let loop ((i i)
@@ -6315,12 +6315,12 @@ for a discussion of branch cuts.
                   (fxior (fxarithmetic-shift-left result 1)
                          (fxand i 1))
                   (fx- bit 1)))))
-    
+
     `',(list->vector
         (map bit-reverse (iota 256)))))
  (else
   (define-macro (macro-bit-reverse-table)
-    
+
     (define (bit-reverse i)
       ;; 0 <= i <= (- ##bignum.fdigit-base 1)
       (let loop ((i i)
@@ -6332,7 +6332,7 @@ for a discussion of branch cuts.
                   (fxior (fxarithmetic-shift-left result 1)
                          (fxand i 1))
                   (fx- bit 1)))))
-    
+
     `',(list->vector
         (map bit-reverse (iota 128))))))
 
@@ -6341,11 +6341,11 @@ for a discussion of branch cuts.
                                      (end   index))
 
   (define (bit-reverse i)
-    
+
     ;; 0 <= i <= (- bignum.fdigit-base 1)
 
     (define bit-reverse-table (macro-bit-reverse-table))
-    
+
     (vector-ref bit-reverse-table i))
 
   (if (##fx< end start)
@@ -7106,7 +7106,7 @@ for a discussion of branch cuts.
  ((C)
   (begin)) ;; ##bignum.fdigit-width defined in _kernel.scm
 
- (else 
+ (else
   (define ##bignum.fdigit-width 7))
  )
 
@@ -10905,7 +10905,7 @@ end-of-code
           (##fx* (##bignum.adigit-div low-bits) ;; Shift full adigits.
                  ##bignum.adigit-width)
           0)))
-  
+
   (let ((x-length (##bignum.mdigit-length x))
         (y-length (##bignum.mdigit-length y)))
     (cond ((or (##fx< x-length 20)
@@ -12257,19 +12257,19 @@ end-of-code
 
   #|
   This function is from
-  
+
   Functions from
   Branch Cuts for Complex Elementary Functions
   or
   Much Ado About Nothing's Sign Bit
   by W. Kahan
-  
+
   Full reference:
-  
+
   Kahan, W: Branch cuts for complex elementary functions; or,
   Much ado about nothing's sign bit. In Iserles, A., and Powell, M. (eds.),
   The state of the art in numerical analysis. Clarendon Press (1987) pp 165-211.
-  
+
   Code to compute the constants using my computable reals package.
 
   (load "exact-reals")
@@ -12288,7 +12288,7 @@ end-of-code
   (for-each pretty-print
             `((define r2 ,r2) (define r2p1 ,r2p1) (define t2p1 ,t2p1)))
   |#
-  
+
   (define r2 1.4142135623730951)
   (define r2p1 2.414213562373095)
   (define t2p1 1.2537167179050217e-16)
@@ -12318,7 +12318,7 @@ end-of-code
     (if (##fl< x y)
         (continue y x)
         (continue x y))))
-  
+
 (define-prim-flonum (flhypot x y)
   (##flhypot x y))
 

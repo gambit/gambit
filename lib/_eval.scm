@@ -3668,7 +3668,7 @@
 (define ##cprc-reraise
   (macro-make-cprc
    (if (^ 0) ;; r7rs-guard?
-       (##r7rs-reraise (macro-rte-ref rte 2) (macro-rte-ref rte 3)) 
+       (##r7rs-reraise (macro-rte-ref rte 2) (macro-rte-ref rte 3))
        (##raise (macro-rte-ref rte 2)))))
 
 (define ##gen-reraise

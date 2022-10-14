@@ -1167,7 +1167,7 @@
               (##declare (interrupts-enabled))
               (loop (##fixnum.+ i 2))))
           (##void))))))
-  
+
 (define-prim (##table-set!
               table
               key
@@ -3329,7 +3329,7 @@
                         (alloc! name)
                         name)))
                  (parent
-                  (##global-var-primitive-ref 
+                  (##global-var-primitive-ref
                    (##make-global-var parent-name))))
             (if (not (procedure? parent)) ;; should also check subproc-id
                 (err)
@@ -5321,7 +5321,7 @@
                         (alloc! name)
                         name)))
                  (parent
-                  (##global-var-primitive-ref 
+                  (##global-var-primitive-ref
                    (##make-global-var parent-name))))
             (if (not (procedure? parent)) ;; should also check subproc-id
                 (err)
