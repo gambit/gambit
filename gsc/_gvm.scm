@@ -4866,9 +4866,42 @@
     (unbox-value (get-value val)))
 
   ;; HELPERS
-  (define (jump-to bbs lbl-num from-bb nargs ret)
-    (stack-exit-frame! stack from-bb)
-    (bb-interpret bbs (lbl-num->bb lbl-num bbs) env stack registers))
+  (define (get-label-parameters-info nargs)
+    (pcontext-map (default-label-info target nargs #f)))
+
+  (define (get-args-loc parameters-info)
+    (let ((nargs (apply max 0 (filter number? (map car parameters-info))))) ;; params start at 1
+      (map (lambda (i) (cdr (assq i parameters-info))) (iota nargs 1))))
+
+  (define (get-ret-loc args-loc)
+    (cdr (assq 'return args-loc)))
+
+  (define (get-proc-obj-entry-lbl proc)
+    (let* ((code (proc-obj-code proc))
+           (bb (lbl-num->bb (bbs-entry-lbl-num code) code)))
+      (bb-label-instr bb)))
+
+  (define (get-proc-obj-nparams proc)
+    (label-entry-nb-parms (get-proc-obj-entry-lbl proc)))
+
+  (define (get-proc-obj-rest? proc)
+    (label-entry-rest? (get-proc-obj-entry-lbl proc)))
+
+  (define (set-return-label loc ret)
+    (if ret (interpret-write loc (make-First-Class-Label bbs ret))))
+
+  (define (jump-to target-bbs lbl-num from-bb nargs ret)
+    (let* ((nargs (or nargs 0))
+           (entry-bb (lbl-num->bb (bbs-entry-lbl-num target-bbs) target-bbs))
+           (entry-label (bb-label-instr entry-bb))
+           (params-info (get-label-parameters-info nargs))
+           (ret-loc (get-ret-loc params-info))
+           (args-loc (get-args-loc params-info))
+           (args-values (map get-value args-loc)))
+      ;; TODO handle parameters alignment
+      (set-return-label ret-loc ret)
+      (stack-exit-frame! stack from-bb)
+      (bb-interpret target-bbs (lbl-num->bb lbl-num target-bbs) env stack registers)))
 
   (define (jump-to-entry bbs from-bb nargs ret)
     (jump-to bbs (bbs-entry-lbl-num bbs) from-bb nargs ret))
@@ -4906,49 +4939,11 @@
             (interpret-write target value)))))
 
   ;; CALL HELPERS
-
-  (define (get-args-loc nargs)
-    (pcontext-map (default-label-info target nargs #f)))
-
-  (define (get-ret-loc args-loc)
-    (cdr (assq 'return args-loc)))
-
-  (define (get-proc-obj-entry-lbl proc)
-    (let* ((code (proc-obj-code proc))
-           (bb (lbl-num->bb (bbs-entry-lbl-num code) code)))
-      (bb-label-instr bb)))
-
-  (define (get-proc-obj-nparams proc)
-    (label-entry-nb-parms (get-proc-obj-entry-lbl proc)))
-
-  (define (get-proc-obj-rest? proc)
-    (label-entry-rest? (get-proc-obj-entry-lbl proc)))
-
-  (define (set-return-label args-loc ret)
-    (let* ((return-loc (get-ret-loc args-loc)))
-      (cond
-        ((not ret) #f)
-        ((reg? return-loc)
-           (register-set! registers (reg-num return-loc) (make-First-Class-Label bbs ret)))
-        ((stk? return-loc)
-           (stack-set! stack (stk-num return-loc)) (make-First-Class-Label bbs ret))
-        (else (error "unexpected location for return label")))))
-
-
-  (define (set-arguments nargs nparams ret)
-    (let* ((args-loc (get-args-loc nargs)))
-      (set-return-label args-loc ret)
-      (if (not (= nargs nparams))
-          (error "nargs != nparams"))))
-
   (define (call-proc-obj-interpret proc nargs ret)
     (if (proc-obj-primitive? proc)
       ;; primitive
-      (let* ((args-loc (get-args-loc nargs))
-             (args
-               (map
-                 (lambda (i) (get-value (cdr (assq i args-loc))))
-                 (iota nargs 1)))
+      (let* ((params-info (get-label-parameters-info nargs))
+             (args (map get-value (get-args-loc params-info)))
              (return-loc (get-ret-loc args-loc))
              (result (make-Other-Object
                        (exec-prim (proc-obj-name proc) (map unbox-value args)))))
