@@ -6,7 +6,7 @@
 ;; Operands are represented with small integers.  Operands can thus be tested
 ;; for equality using 'eqv?'.  The encoding is as follows:
 ;;
-;; OPERAND      ENCODING         
+;; OPERAND      ENCODING
 ;;
 ;; reg(n)       n*8 + 0
 ;; stk(n)       n*8 + 1

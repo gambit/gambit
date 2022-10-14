@@ -76,7 +76,7 @@
         (if (char=? c #\newline)
           (begin
             (**readenv-line-start-set! re char-count)
-            (**readenv-line-count-set! re 
+            (**readenv-line-count-set! re
               (+ (**readenv-line-count re) 1))))))
     c))
 

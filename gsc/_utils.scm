@@ -653,7 +653,7 @@
 
 (define (keep keep? lst)
   (let loop ((lst lst) (head '()))
-    (cond ((null? lst) 
+    (cond ((null? lst)
            (reverse-append! head lst))
           ((keep? (car lst))
            (loop (cdr lst) (cons (car lst) head)))
@@ -1015,7 +1015,7 @@
 (define (gnode-depvars x) (vector-ref x 1))
 
 (define (transitive-closure graph)
-  (let* ((graph-vector 
+  (let* ((graph-vector
           (list->vect
            (sort-list graph
                       (lambda (x y) (varset-< (gnode-var x) (gnode-var y))))))
@@ -1224,7 +1224,7 @@
 
 (define (list->varset lst)          ; convert list to set
   (if (null? lst)
-    (varset-empty) 
+    (varset-empty)
     (let loop ((last (car lst)) (next (cdr lst)))
       (cond ((null? next)
              (varset-wrap lst))             ; sorted
@@ -1259,13 +1259,13 @@
            (let* ((index (quotient (+ f l) 2))
                   (y (vector-ref v index)))
              (or (eq? x y)
-                 (if (varset-< x y) 
+                 (if (varset-< x y)
                    (loop f (- index 1))
                    (loop (+ index 1) l))))))))
 
 (define (varset-adjoin set x)       ; add the element 'x' to the 'set'
   (let loop ((s (varset-unwrap set)) (rev '()))
-    (cond ((or (null? s) 
+    (cond ((or (null? s)
                (varset-< x (car s)))
            (varset-reverse-append! rev (cons x s)))
           ((eq? (car s) x)
@@ -1285,7 +1285,7 @@
 
 (define (varset-equal? s1 s2)       ; are 's1' and 's2' equal sets?
   (let loop ((s1 (varset-unwrap s1)) (s2 (varset-unwrap s2)))
-    (cond ((null? s1) 
+    (cond ((null? s1)
            (null? s2))
           ((null? s2)
            #f)
@@ -1346,7 +1346,7 @@
                (loop (cdr s1) s2))
               (else
                (loop s1 (cdr s2))))))))
-         
+
 (define (varset-union-multi sets)
   (cond ((null? sets)
          (varset-empty))
@@ -1422,7 +1422,7 @@
   ;; with a packet of length 2.  If x is in the range 256..65535 it
   ;; is encoded with a packet of length 3.  If x >= 65536 it is encoded
   ;; with a packet of length 6.  The details are as follows:
-  ;; 
+  ;;
   ;;     a        b        c        d        e        f
   ;;
   ;; +--------+
