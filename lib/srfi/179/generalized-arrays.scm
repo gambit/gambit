@@ -119,7 +119,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 (define (%%finish-interval lower-bounds upper-bounds)
   (make-%%interval (vector-length upper-bounds)
-                   #f                            
+                   #f
                    (vector-copy lower-bounds)
                    (vector-copy upper-bounds)))
 
@@ -1782,7 +1782,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 ;;; We consolidate all moving of array elements to the following procedure.
 
 (define (%%move-array-elements destination source caller)
-  
+
   ;; Here's the logic:
   ;; We require the source and destination to have the same number of elements.
   ;; If destination is a specialized array
@@ -1822,12 +1822,12 @@ OTHER DEALINGS IN THE SOFTWARE.
 
   ;; We check that the elements we move to the destination are OK for the
   ;; destination because if we don't catch errors here they can be very tricky to find.
-  
+
   (if (not (= (%%interval-volume (%%array-domain source))
               (%%interval-volume (%%array-domain destination))))
       (error (string-append caller "Arrays must have the same volume: ")
              destination source))
-  
+
   (if (specialized-array? destination)
       (if (%%array-elements-in-order? destination)
           ;; Now we do not assume that the domains are the same
@@ -2654,11 +2654,11 @@ OTHER DEALINGS IN THE SOFTWARE.
          (%%array-permute array permutation))))
 
 (define (%%rotation->permutation k size)
-  
+
   ;; Generates a permutation that rotates
   ;; 0 1 ... size-1
   ;; left by k units.
-  
+
   (let ((result (make-vector size)))
     (let left-loop ((i 0)
                     (j k))
@@ -3659,7 +3659,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
     ;; Decides whether to include v(k) in the result vector
     ;; by testing p(k), not p(v(k)).
-  
+
     (let ((n (vector-length v)))
       (define (helper k i)
         (cond ((fx= k n)
@@ -3671,7 +3671,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
               (else
                (helper (fx+ k 1) i))))
       (helper 0 0)))
-  
+
   (cond ((not (specialized-array? array))
          (error "specialized-array-reshape: The first argument is not a specialized array: " array new-domain))
         ((not (interval? new-domain))

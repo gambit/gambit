@@ -36,7 +36,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 (##namespace
  ("srfi/179#"
-  ;; Internal SRFI 179 procedures that are either tested or called here. 
+  ;; Internal SRFI 179 procedures that are either tested or called here.
   %%compose-indexers make-%%array %%every %%interval->basic-indexer %%interval-lower-bounds %%interval-upper-bounds %%move-array-elements %%permutation-invert %%vector-every %%vector-permute %%vector-permute->list %%order-unknown %%compute-array-elements-in-order? %%array-domain %%array-indexer %%array-elements-in-order?))
 
 (declare (standard-bindings)(extended-bindings)(block)(not safe) (mostly-fixnum))
@@ -71,7 +71,7 @@ OTHER DEALINGS IN THE SOFTWARE.
      (set! total-tests (+ total-tests 1))
      (if (not (equal? result ,value))
          (begin
-           
+
            (set! failed-tests (+ failed-tests 1))
            (pp (list ',expr" => " result ", not " ,value))))))
 
@@ -114,7 +114,7 @@ OTHER DEALINGS IN THE SOFTWARE.
       (random-source-pseudo-randomize!
        test-random-source
        0 j))))
-  
+
 
 (define test-random-integer
   (random-source-make-integers
@@ -608,10 +608,10 @@ OTHER DEALINGS IN THE SOFTWARE.
   (zero? (random 2)))
 
 (define (array-display A)
-  
+
   (define (display-item x)
     (display x) (display "\t"))
-  
+
   (newline)
   (case (array-dimension A)
     ((1) (array-for-each display-item A) (newline))
@@ -895,7 +895,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 (next-test-random-source-state!)
 
 ;; Elements of extracted arrays of newly created specialized
-;; arrays are not in order unless 
+;; arrays are not in order unless
 ;; (1) the differences in the upper and lower bounds of the
 ;;     first dimensions all equal 1 *and*
 ;; (2) the next dimension doesn't matter *and*
@@ -1112,7 +1112,7 @@ OTHER DEALINGS IN THE SOFTWARE.
           (%%compute-array-elements-in-order? (%%array-domain curried-rotated-array) (%%array-indexer curried-rotated-array)))
     (test (array-elements-in-order? curried-sampled-array)
           (%%compute-array-elements-in-order? (%%array-domain curried-sampled-array) (%%array-indexer curried-sampled-array)))))
-         
+
 (next-test-random-source-state!)
 
 ;;; FIXME: array-reshape tests.
@@ -1331,7 +1331,7 @@ OTHER DEALINGS IN THE SOFTWARE.
             "array-assign!: The destination is not a mutable array: ")))
   (specialized-array-default-mutable? mutable-default))
 
-  
+
 
 (pp "array-copy result tests")
 
@@ -3059,7 +3059,7 @@ OTHER DEALINGS IN THE SOFTWARE.
         #t))
 
 
-  
+
 (do ((d 1 (fx+ d 1)))
     ((= d 6))
   (let* ((unsafe-specialized-destination
@@ -3082,7 +3082,7 @@ OTHER DEALINGS IN THE SOFTWARE.
           "array-assign!: Not all elements of the source can be stored in destination: ")
     (test (array-assign! mutable-destination source)
           "array-setter: value cannot be stored in body: ")))
-                      
+
 (do ((i 0 (fx+ i 1)))
     ((fx= i random-tests))
   (let* ((interval
@@ -3543,7 +3543,7 @@ OTHER DEALINGS IN THE SOFTWARE.
   (array-for-each (lambda (row)
                     (pretty-print (array->list row)))
                   (array-curry b 1))
-  
+
   ;; which prints
   ;; ((0 0) (0 1) (0 2) (0 3) (0 4))
   ;; ((1 1) (1 2) (1 3) (1 4) (1 5))
@@ -4137,8 +4137,8 @@ that computes the componentwise products when we need them, the times are
    (array-copy (array-curry (array-rotate B 1) 1))))
 
 ;; Examples from
-;; http://microapl.com/apl_help/ch_020_020_880.htm 
-   
+;; http://microapl.com/apl_help/ch_020_020_880.htm
+
 (define TABLE1
   (list->array
    '(1 2
@@ -4155,9 +4155,9 @@ that computes the componentwise products when we need them, the times are
 (array-display (inner-product TABLE1 + * TABLE2))
 
 ;;; Displays
-;;; 20 2 5 20 
-;;; 58 10 19 52 
-;;; 18 6 9 12 
+;;; 20 2 5 20
+;;; 58 10 19 52
+;;; 18 6 9 12
 
 (define X   ;; a "row vector"
   (list->array '(1 3 5 7) (make-interval '#(1 4))))
