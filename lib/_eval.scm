@@ -1421,6 +1421,11 @@
 (define (##make-extra-info)
   (##make-table-aux 0 (macro-absent-obj) #f #f ##eq?))
 
+(define ##default-module-aliases '())
+
+(define (##default-module-aliases-set! x)
+  (set! ##default-module-aliases x))
+
 (define (##extend-module-aliases alias module-aliases)
   (##cons alias module-aliases))
 

@@ -2,7 +2,7 @@
 
 ;;; File: "_module.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -918,86 +918,86 @@
                srcs)))))
         module-aliases)))
 
+(define-prim (##make-pattern-module-alias in-modref out-modref)
+  (lambda (modref)
+    (let* ((in-host (macro-modref-host in-modref))
+           (in-tag (macro-modref-tag in-modref))
+           (in-rpath (macro-modref-rpath in-modref))
+           (out-host (macro-modref-host out-modref))
+           (out-tag (macro-modref-tag out-modref))
+           (out-rpath (macro-modref-rpath out-modref)))
+
+      (if (and (##not out-host) out-tag (##null? out-rpath)
+               (##not in-tag) (##pair? in-rpath)
+               (##equal? (macro-modref-host modref) in-host)
+               (##equal? (macro-modref-rpath modref) in-rpath))
+
+          (macro-make-modref
+           in-host
+           out-tag
+           in-rpath)
+
+          (and (##equal? (macro-modref-host modref) in-host)
+               (if in-tag
+                   (##equal? (macro-modref-tag modref) in-tag)
+                   #t)
+               (let loop ((spath (##reverse (macro-modref-rpath modref)))
+                          (ipath (##reverse in-rpath)))
+                 (if (##pair? ipath)
+                     (and (##pair? spath)
+                          (##string=? (##car spath) (##car ipath))
+                          (loop (##cdr spath) (##cdr ipath)))
+                     ;; spath prefix matches so append rest of spath to alias
+                     (let ((rpath (##append (##reverse spath) out-rpath)))
+                       (and (##pair? rpath)
+                            (macro-make-modref
+                             out-host
+                             (or out-tag (macro-modref-tag modref))
+                             rpath))))))))))
+
 (define (##apply-module-alias modref module-alias)
- (let* ((in (##car module-alias))
-        (in-host (macro-modref-host in))
-        (in-tag (macro-modref-tag in))
-        (in-rpath (macro-modref-rpath in))
-
-        (out (##cdr module-alias))
-        (out-host (macro-modref-host out))
-        (out-tag (macro-modref-tag out))
-        (out-rpath (macro-modref-rpath out)))
-
-   (if (and (##not out-host) out-tag (##null? out-rpath)
-            (##not in-tag) (##pair? in-rpath)
-            (##equal? (macro-modref-host modref) in-host)
-            (##equal? (macro-modref-rpath modref) in-rpath))
-       (macro-make-modref
-         in-host
-         out-tag
-         in-rpath)
-
-       (and (##equal? (macro-modref-host modref) in-host)
-            (if in-tag
-                (##equal? (macro-modref-tag modref) in-tag)
-                #t)
-            (let loop ((spath (##reverse (macro-modref-rpath modref)))
-                       (ipath (##reverse (macro-modref-rpath in))))
-              (if (##pair? ipath)
-                (and (##pair? spath)
-                     (##string=? (##car spath) (##car ipath))
-                     (loop (##cdr spath) (##cdr ipath)))               ;; prefix of spath matches so append rest of spath to alias
-                (let ((rpath (##append
-                              (##reverse spath)
-                              (macro-modref-rpath out))))
-                  (and (##pair? rpath)
-                       (macro-make-modref
-                         out-host
-                         (or out-tag (macro-modref-tag modref))
-                         rpath)))))))))
+  (module-alias modref))
 
 ;;;----------------------------------------------------------------------------
 
-;;; validate and return the alias pair
-(define-prim ##validate-define-module-alias
-  (lambda (src)
-    (define (ill-formed-define-module-alias)
-      (##raise-expression-parsing-exception
-       'ill-formed-define-module-alias
-       src))
+;;; validate the define-module-alias and return the alias
 
-    (define (module-alias->modref alias allow-empty-path?)
-      (cond
-        ((or (##symbol? alias)
-             (##pair? alias))
-         (let ((modref (##parse-module-ref alias allow-empty-path?)))
-           (if (macro-modref? modref)
-               modref
-               (ill-formed-define-module-alias))))
-        (else
-          (ill-formed-define-module-alias))))
+(define-prim (##validate-define-module-alias src)
 
-    (##deconstruct-call
-      src
-      3
-      (lambda (name-src value-src)
-        (let* ((name (##desourcify name-src))
-               (value (##desourcify value-src))
-               (name-modref (module-alias->modref name #f))
-               (value-modref (module-alias->modref value #t)))
+  (define (ill-formed-define-module-alias)
+    (##raise-expression-parsing-exception
+     'ill-formed-define-module-alias
+     src))
 
-          ;;; TODO: make and abstraction to alias
-          (##cons name-modref value-modref))))))
+  (define (module-alias->modref alias allow-empty-path?)
+    (cond
+      ((or (##symbol? alias)
+           (##pair? alias))
+       (let ((modref (##parse-module-ref alias allow-empty-path?)))
+         (if (macro-modref? modref)
+             modref
+             (ill-formed-define-module-alias))))
+      (else
+        (ill-formed-define-module-alias))))
 
-(define-prim ##parse-define-module-alias
-  (lambda (src)
-    (##compilation-module-aliases-add!
-     (##validate-define-module-alias src))
+  (##deconstruct-call
+    src
+    3
+    (lambda (in-src out-src)
+      (let* ((in (##desourcify in-src))
+             (out (##desourcify out-src))
+             (in-modref (module-alias->modref in #f))
+             (out-modref (module-alias->modref out #t)))
+        (##make-pattern-module-alias in-modref out-modref)))))
 
-    (##expand-source-template
-     src
-     `(##begin))))
+(define-prim (##parse-define-module-alias src)
+
+  (##compilation-module-aliases-add!
+   (##validate-define-module-alias src))
+
+  (##expand-source-template
+   src
+   `(##begin)))
 
 (define-runtime-syntax ##define-module-alias
   ##parse-define-module-alias)

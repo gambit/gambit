@@ -236,7 +236,7 @@
              '() ;; demand-modules
              (##make-meta-info) ;; meta-info
              #f ;; module-ref
-             '() ;; module-aliases
+             ##default-module-aliases ;; module-aliases
              target
              (##make-extra-info))) ;; extra-info
 
