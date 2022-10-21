@@ -2200,7 +2200,12 @@
                                   bb-versions)))
                (do-later (lambda () #f))
                (types-lbl-alist (vector-ref bb-versions 0))
-               (all-versions-tbl (vector-ref bb-versions 1)))
+               (all-versions-tbl (vector-ref bb-versions 1))
+               (v-limit
+                 (let* ((instr-comment (gvm-instr-comment (bb-label-instr bb)))
+                        (node (comment-get instr-comment 'node))
+                        (env (node-env node)))
+                  (if env (version-limit env) 0))))
 
           (or (table-ref all-versions-tbl types-before #f)
 
@@ -2219,7 +2224,7 @@
 
                 (vector-set! bb-versions 0 new-types-lbl-alist)
 
-                (if (> (length new-types-lbl-alist) 5)
+                (if (> (length new-types-lbl-alist) v-limit)
                     (let* ((types-lbl-vect
                             (list->vector new-types-lbl-alist))
                            (n
@@ -3067,6 +3072,7 @@
     locenv))
 
 (define (locenv-resize locenv nb-regs nb-slots nb-closed slot-shift init)
+  (if (eq? (vector-ref locenv 0) -1) (step))
   (let ((lengths (vector-ref locenv 0)))
     (if (and (= nb-regs (vector-ref lengths 0))
              (= nb-slots (vector-ref lengths 1))
