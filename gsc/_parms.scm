@@ -2,7 +2,7 @@
 
 ;;; File: "_parms.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -110,6 +110,8 @@
 (define inline-sym             (string->canonical-symbol "inline"))
 (define inline-primitives-sym  (string->canonical-symbol "inline-primitives"))
 (define inlining-limit-sym     (string->canonical-symbol "inlining-limit"))
+
+(define version-limit-sym      (string->canonical-symbol "version-limit"))
 
 (define block-sym              (string->canonical-symbol "block"))
 (define separate-sym           (string->canonical-symbol "separate"))

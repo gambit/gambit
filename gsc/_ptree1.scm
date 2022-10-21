@@ -2,7 +2,7 @@
 
 ;;; File: "_ptree1.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -412,8 +412,11 @@
 ;; (not inline-primitives)               can't inline any primitives
 ;; (not inline-primitives <var1> ...)    can't inline primitives <var1> ...
 ;;
-;; (inlining-limit n)                    inlined user procedures must not be
-;;                                       bigger than 'n'
+;; (inlining-limit n)                    inlined user procedures must not
+;;                                       grow code to more than n percent
+;;
+;; (version-limit n)                     code can be specialized up to n
+;;                                       versions (n=0 disables specialization)
 ;;
 ;; Compilation strategy declarations:
 ;;
@@ -494,6 +497,8 @@
 (define-namable-boolean-decl inline-primitives-sym)
 (define-parameterized-decl inlining-limit-sym #f)
 
+(define-parameterized-decl version-limit-sym #f)
+
 (define-flag-decl block-sym    'compilation-strategy)
 (define-flag-decl separate-sym 'compilation-strategy)
 
@@ -545,6 +550,9 @@
 
 (define (inlining-limit env) ; returns the inlining limit
   (max 0 (min 1000000 (declaration-value inlining-limit-sym #f 370 env))))
+
+(define (version-limit env) ; returns the version limit
+  (max 0 (min 1000000 (declaration-value version-limit-sym #f 0 env))))
 
 (define (block-compilation? env) ; true iff block compilation strategy
   (eq? (declaration-value 'compilation-strategy #f separate-sym env)
