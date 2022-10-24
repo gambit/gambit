@@ -272,6 +272,37 @@ EOF
        (##thread-repl-channel-get! (macro-current-thread))
        (lambda (channel) #f))))
 
+;; Allow fetching modules directly from github.com
+
+(##inline-host-statement
+ "@os_url_whitelist_add@('https://raw.githubusercontent.com/');")
+
+(define (##web-search-module-in-search-order modref search-order)
+  (let* ((host
+          (macro-modref-host modref))
+         (tag
+          (macro-modref-tag modref))
+         (rpath
+          (macro-modref-rpath modref)))
+    (if (and (##pair? host)
+             (##equal? (##last host) "github.com")
+             (##member (##modref->string modref)
+                       (##get-module-whitelist)
+                       ##module-prefix=?))
+        (##search-module-at
+         rpath
+         (##butlast rpath)
+         (##path-expand
+          (or tag "master")
+          (##path-expand (##last rpath)
+                         (##path-join-reversed
+                          (##butlast host)
+                          "https://raw.githubusercontent.com")))
+         ##scheme-file-extensions)
+        (##default-search-module-in-search-order modref search-order))))
+
+(##search-module-in-search-order-set! ##web-search-module-in-search-order)
+
 ;;;----------------------------------------------------------------------------
 
 ;; Redirect current input/output ports to the console to avoid surprises

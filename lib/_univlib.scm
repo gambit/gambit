@@ -1760,7 +1760,8 @@ def @os_set_module_whitelist@(whitelist):
   (cond-expand
 
     ((compilation-target js python)
-     (##inline-host-expression "@host2scm@(@os_get_module_whitelist@())"))
+     (##vector->list
+      (##inline-host-expression "@host2scm@(@os_get_module_whitelist@())")))
 
     (else
      (println "unimplemented ##get-module-whitelist called")
@@ -1774,12 +1775,12 @@ def @os_set_module_whitelist@(whitelist):
     ((compilation-target js)
      (##inline-host-statement
       "@os_set_module_whitelist@(@scm2host@(@1@));"
-      whitelist))
+      (##list->vector whitelist)))
 
     ((compilation-target python)
      (##inline-host-statement
       "@os_set_module_whitelist@(@scm2host@(@1@))"
-      whitelist))
+      (##list->vector whitelist)))
 
     (else
      (println "unimplemented ##set-module-whitelist! called"))))
@@ -1788,7 +1789,7 @@ def @os_set_module_whitelist@(whitelist):
 (define (##get-module-search-order) ##module-search-order-var)
 (define (##set-module-search-order! x) (set! ##module-search-order-var x))
 
-(define ##module-install-mode-var 1)
+(define ##module-install-mode-var 0)
 (define (##get-module-install-mode) ##module-install-mode-var)
 (define (##set-module-install-mode x) (set! ##module-install-mode-var x))
 

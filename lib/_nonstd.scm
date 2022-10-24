@@ -2721,13 +2721,18 @@
           (macro-check-string origin 2 (path-expand path origin)
             (##path-expand path origin))))))
 
-(define-prim (##path-join parts dir)
-  (let loop ((lst parts)
-             (result dir))
-    (if (##pair? lst)
-        (loop (##cdr lst)
-              (##path-expand (##car lst) result))
-        result)))
+(define-prim (##path-join parts path)
+  (if (##pair? parts)
+      (##path-join (##cdr parts)
+                   (##path-expand (##car parts) path))
+      path))
+
+(define-prim (##path-join-reversed rparts path)
+  (if (##pair? rparts)
+      (##path-expand (##car rparts)
+                     (##path-join-reversed (##cdr rparts)
+                                           path))
+      path))
 
 (define-prim (##path-normalize
               path

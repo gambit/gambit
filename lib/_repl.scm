@@ -2665,7 +2665,8 @@
         (output-port (macro-repl-channel-output-port channel)))
     (##exit-with-exception-on-exception
      (lambda ()
-       (##write-string prompt output-port)))
+       (##write-string prompt output-port)
+       (##force-output output-port)))
     (##repl-channel-discard-buffered-input channel)
     (let ((answer (##read-line input-port)))
       (##output-port-column-set! output-port 1)

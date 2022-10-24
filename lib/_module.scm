@@ -302,111 +302,119 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim (##search-module-aux modref check-mod search-order)
+(define (##search-module-with-exts mod-filename-noext mod-dir root path exts)
+  (let ((mod-path-noext (##path-expand mod-filename-noext mod-dir)))
 
-  (define (join parts dir)
-    (if (##pair? parts)
-        (##path-expand (##car parts)
-                       (join (##cdr parts) dir))
-        dir))
+    (define (try-opening-source-file path cont)
+      (and ##debug-modules?
+           (##debug-modules-trace 'try-opening-source-file path))
+      (##make-input-path-psettings
+       (##list 'path: path
+               'char-encoding: 'UTF-8
+               'eol-encoding: 'cr-lf)
+       (lambda ()
+         #f)
+       (lambda (psettings)
+         (let ((path (macro-psettings-path psettings)))
+           (##open-file-generic-from-psettings
+            psettings
+            #f ;; raise-os-exception?
+            cont
+            open-input-file
+            path
+            (macro-absent-obj))))))
 
-  (define (search-dir dir)
+    (define (check-source-with-ext ext)
+      (let ((mod-path (##string-append mod-path-noext (##car ext))))
+        (try-opening-source-file
+         mod-path
+         (lambda (port resolved-path)
+           (and (##not (##fixnum? port))
+                (##vector mod-dir
+                          mod-filename-noext
+                          ext
+                          mod-path
+                          port
+                          root
+                          path))))))
 
-    (define (search dirs nested-dirs root check-mod)
-      (and (##pair? dirs)
-           (let ()
+    (let loop ((exts exts))
+      (and (##pair? exts)
+           (or (check-source-with-ext (##car exts))
+               (loop (##cdr exts)))))))
 
-             (define (check dirs2)
-               (check-mod (##car dirs) (join dirs2 root) root dirs2))
+(define (##search-module-at dirs nested-dirs root exts)
+  (and (##pair? dirs)
+       (let ()
 
-             (or (check nested-dirs)
-                 (and (##pair? nested-dirs)
-                      (check (##cdr nested-dirs)))))))
+         (define (check dirs2)
+           (##search-module-with-exts
+            (##car dirs)
+            (##path-join-reversed dirs2 root)
+            root
+            dirs2
+            exts))
 
-    (let* ((host
-            (macro-modref-host modref))
-           (tag
-            (macro-modref-tag modref))
-           (rpath
-            (macro-modref-rpath modref)))
-      (if (or host tag)
+         (or (check nested-dirs)
+             (and (##pair? nested-dirs)
+                  (check (##cdr nested-dirs)))))))
 
-          (search rpath
-                  (##butlast rpath)
-                  (join (##list (##string-append "@" (or tag "")))
-                        (##path-expand (##last rpath)
-                                       (if host
-                                           (join host dir)
-                                           dir)))
-                  check-mod)
+(define (##search-module-in-dir modref dir)
+  (let* ((host
+          (macro-modref-host modref))
+         (tag
+          (macro-modref-tag modref))
+         (rpath
+          (macro-modref-rpath modref)))
+    (if (or host tag)
 
-          (let ((main-repo-path
-                 (##path-expand "@" (##path-expand (##last rpath) dir))))
-            (if (##file-exists? main-repo-path)
+        (##search-module-at
+         rpath
+         (##butlast rpath)
+         (##path-join-reversed
+          (##list (##string-append "@" (or tag "")))
+          (##path-expand (##last rpath)
+                         (if host
+                             (##path-join-reversed host dir)
+                             dir)))
+         ##scheme-file-extensions)
 
-                (search rpath
-                        (##butlast rpath)
-                        main-repo-path
-                        check-mod)
+        (let ((main-repo-path
+               (##path-expand "@" (##path-expand (##last rpath) dir))))
+          (if (##file-exists? main-repo-path)
 
-                (search rpath
-                        rpath
-                        dir
-                        check-mod))))))
+              (##search-module-at
+               rpath
+               (##butlast rpath)
+               main-repo-path
+               ##scheme-file-extensions)
 
+              (##search-module-at
+               rpath
+               rpath
+               dir
+               ##scheme-file-extensions))))))
+
+(define (##default-search-module-in-search-order modref search-order)
   (let loop ((lst search-order))
     (and (##pair? lst)
-         (let ((search-in (##car lst)))
-           (or (search-dir (##path-expand-in-initial-current-directory search-in))
+         (let ((dir (##car lst)))
+           (or (##search-module-in-dir
+                modref
+                (##path-expand-in-initial-current-directory dir))
                (loop (##cdr lst)))))))
+
+(define ##search-module-in-search-order
+  ##default-search-module-in-search-order)
+
+(define-prim (##search-module-in-search-order-set! x)
+  (set! ##search-module-in-search-order x))
 
 (define-prim (##search-module
               modref
               #!optional
               (search-order (##get-module-search-order)))
-
-  (define (try-opening-source-file path cont)
-    (and ##debug-modules?
-         (##debug-modules-trace 'try-opening-source-file path))
-    (##make-input-path-psettings
-     (##list 'path: path
-             'char-encoding: 'UTF-8
-             'eol-encoding: 'cr-lf)
-     (lambda ()
-       #f)
-     (lambda (psettings)
-       (let ((path (macro-psettings-path psettings)))
-         (##open-file-generic-from-psettings
-          psettings
-          #f ;; raise-os-exception?
-          cont
-          open-input-file
-          path
-          (macro-absent-obj))))))
-
-  (define (check-mod mod-filename-noext mod-dir root path)
-    (let ((mod-path-noext (##path-expand mod-filename-noext mod-dir)))
-
-      (define (check-source-with-ext ext)
-        (let ((mod-path (##string-append mod-path-noext (##car ext))))
-          (try-opening-source-file
-           mod-path
-           (lambda (port resolved-path)
-             (and (##not (##fixnum? port))
-                  (##vector mod-dir
-                            mod-filename-noext
-                            ext
-                            mod-path
-                            port
-                            root
-                            path))))))
-
-      (let loop ((exts ##scheme-file-extensions))
-        (and (##pair? exts)
-             (or (check-source-with-ext (##car exts))
-                 (loop (##cdr exts)))))))
-
-  (##search-module-aux modref check-mod search-order))
+  (##search-module-in-search-order modref search-order))
 
 (define-prim (##module-build-subdir-path mod-dir mod-filename-noext target)
   (##path-expand (##module-build-subdir-name mod-filename-noext target)
@@ -672,23 +680,23 @@
 (define-prim (##build-module-subprocess-default-options-set! default-options)
   (set! ##build-module-subprocess-default-options default-options))
 
-(define-prim (##install-module modref)
-
-  (define (module-prefix=? str prefix)
-    (let ((str-len (##string-length str))
-          (prefix-len (##string-length prefix)))
+(define-prim (##module-prefix=? str prefix)
+  (let ((str-len (##string-length str))
+        (prefix-len (##string-length prefix)))
     (and
-      (##fx<= prefix-len str-len)
-      (let loop ((i 0))
-        (if (##fx< i prefix-len)
-          (let ((c1 (##string-ref prefix i))
-                (c2 (##string-ref str i)))
-            (and
+     (##fx<= prefix-len str-len)
+     (let loop ((i 0))
+       (if (##fx< i prefix-len)
+           (let ((c1 (##string-ref prefix i))
+                 (c2 (##string-ref str i)))
+             (and
               (##char=? c1 c2)
               (loop (##fx+ i 1))))
-          (if (##fx= i str-len)
-            #t
-            (##char=? ##module-path-sep (##string-ref str i))))))))
+           (if (##fx= i str-len)
+               #t
+               (##char=? ##module-path-sep (##string-ref str i))))))))
+
+(define-prim (##install-module modref)
 
   (define (repl-confirm? question)
     (##member (##repl-channel-confirm question) '("y" "yes")))
@@ -717,8 +725,7 @@
            (and (or (##member
                      mod-string
                      (##get-module-whitelist)
-                     (lambda (a b)
-                       (module-prefix=? a b)))
+                     ##module-prefix=?)
                     ;; Ask user to install.
                     (module-install-confirm? mod-string))
 
