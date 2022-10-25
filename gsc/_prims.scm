@@ -7726,32 +7726,37 @@
 
   (declare (generic))
 
-  (define widening-acceleration 1) ;; at an acceleration of 0 means lo/hi bounds are
-                                   ;; rounded to the next power of 2
-                                   ;; at an acceleration of 1 lo/hi are rounded
-                                   ;; to the second next power of 2
-                                   ;; an so on...
+  (define (unsigned-widen-up n)
+    (let* ((m (+ n 1))
+           (x (expt 2 (- (expt 2 (max 3 (integer-length (- (integer-length n) 1)))) 2))))
+      (cond ((< m (- x 1)) (- x 2))
+            ((< m x)       (- x 1))
+            (else
+             (let ((x (* x 2)))
+               (cond ((< m (- x 1)) (- x 2))
+                     ((< m x)       (- x 1))
+                     (else
+                      (- (* x 2) 1))))))))
 
-  (define (unsigned-ceil-power2 n)
-    (arithmetic-shift 1 (+ (integer-length n) widening-acceleration)))
-
-  (define (unsigned-floor-power2 n)
-    (arithmetic-shift (unsigned-ceil-power2 (- n 1)) (- 0 widening-acceleration -1)))
+  (define (unsigned-widen-down n)
+    (if (<= n 3)
+        (- n 1)
+        (expt 2 (expt 2 (- (integer-length (- (integer-length (- n 1)) 1)) 1)))))
 
   (define (widen-lo n)
     (cond
       ((< n 0)
-        (- (unsigned-ceil-power2 (abs n))))
+        (- (unsigned-widen-up (abs n))))
       ((= n 0) -1)
       (else
-        (unsigned-floor-power2 n))))
+        (unsigned-widen-down n))))
 
   (define (widen-hi n)
     (cond
       ((< n 0)
-        (- (unsigned-floor-power2 (abs n))))
+        (- (unsigned-widen-down (abs n))))
       (else
-        (unsigned-ceil-power2 n))))
+        (unsigned-widen-up n))))
 
   (let ((lo1 (type-fixnum-lo type1))
         (hi1 (type-fixnum-hi type1))
