@@ -15,11 +15,16 @@
 (define-prim&proc (module-whitelist-reset!)
   (##set-module-whitelist! '()))
 
-(define-primitive (module-whitelist-add! source)
-  (##set-module-whitelist! (##cons source (##get-module-whitelist))))
-
-(define-procedure (module-whitelist-add! (source string))
-  (##module-whitelist-add! source))
+(define-prim&proc (module-whitelist-add! source)
+  (let ((modref (##parse-module-ref source #t)))
+    (if (and modref (macro-modref-host modref))
+        (let ((module-whitelist (##get-module-whitelist))
+              (modref-str (##modref->string modref)))
+          (if (##not (##member modref-str module-whitelist))
+              (##set-module-whitelist!
+               (##cons modref-str module-whitelist)))
+          (##void))
+        (error "hosted module reference expected but got" source))))
 
 (define-prim&proc (module-search-order-reset!)
   (##set-module-search-order! '()))
@@ -716,7 +721,9 @@
              modstr
              " is required but is not installed.\nDownload and install (y/n)? ")))))
 
-  (and (pair? (macro-modref-host modref)) ;; only install hosted modules
+  (and (##not (##fx= (##get-module-install-mode)
+                     (macro-module-install-mode-ask-never)))
+       (##pair? (macro-modref-host modref)) ;; only install hosted modules
        (begin
          (and ##debug-modules?
               (##debug-modules-trace '##install-module modref))

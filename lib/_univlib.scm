@@ -1789,7 +1789,7 @@ def @os_set_module_whitelist@(whitelist):
 (define (##get-module-search-order) ##module-search-order-var)
 (define (##set-module-search-order! x) (set! ##module-search-order-var x))
 
-(define ##module-install-mode-var 0)
+(define ##module-install-mode-var (macro-module-install-mode-ask-never))
 (define (##get-module-install-mode) ##module-install-mode-var)
 (define (##set-module-install-mode x) (set! ##module-install-mode-var x))
 

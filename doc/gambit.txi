@@ -6823,7 +6823,7 @@ source.  The whitelist of trusted sources, which initially contains
 only @code{github.com/gambit}, can be modified using the procedures
 @code{module-whitelist-reset!} and @code{module-whitelist-add!} that
 respectively clear the list and extend the list with the source
-@var{source} which must be a string. The list can also be extended
+@var{source} which must be a string, symbol or list specifying a hosted module reference. The list can also be extended
 with the @code{-:whitelist=}@var{SOURCE} runtime option.
 
 For example:
