@@ -21,7 +21,7 @@
         (A_
          (array-getter A)))
     (do ((i 0 (fx+ i 1)))
-        ((= i (fx- n 1)) A)
+        ((= i n) A)
       (let* ((pivot
               (A_ i i))
              (column/row-domain
