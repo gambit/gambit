@@ -2538,16 +2538,22 @@
                                           dst-loc
                                           type-procedure))
                             types-after)))
-                     (begin
+                     (let ((new-instr
+                             (make-close
+                              (close-parms gvm-instr)
+                              (gvm-instr-frame gvm-instr)
+                              (gvm-instr-comment gvm-instr))))
                        (for-each
-                        (lambda (parms)
-                          (let ((lbl
-                                 (closure-parms-lbl parms))
-                                (opnds
-                                 (map walk-opnd (closure-parms-opnds parms))))
-                            '...))
-                        (close-parms gvm-instr))
-                       types-after))))
+                         (lambda (parms)
+                           (let ((lbl
+                                  (closure-parms-lbl parms))
+                                 (opnds
+                                  (map walk-opnd (closure-parms-opnds parms))))
+                             (reach* lbl (make-bbvctx types-after cost path))
+                             '...))
+                         (close-parms gvm-instr))
+                       (gvm-instr-types-set! new-instr types-after)
+                       new-instr))))
 
               ((ifjump)
 ;;               (pp '****ifjump)
@@ -3072,7 +3078,6 @@
     locenv))
 
 (define (locenv-resize locenv nb-regs nb-slots nb-closed slot-shift init)
-  (if (eq? (vector-ref locenv 0) -1) (step))
   (let ((lengths (vector-ref locenv 0)))
     (if (and (= nb-regs (vector-ref lengths 0))
              (= nb-slots (vector-ref lengths 1))

@@ -7413,22 +7413,25 @@
           (else                      (max hi (+ min-fixnum 2))))))
 
 (define (type-fixnum-overflow-normalize-clamp tctx type)
-  (let ((lo (type-fixnum-lo type))
-        (hi (type-fixnum-hi type)))
+  (let* ((type (type-motley-force tctx type))
+         (lo (type-fixnum-lo type))
+         (hi (type-fixnum-hi type)))
     (type-motley-normalize
      tctx
      (make-type-fixnum-bounded tctx (or lo '>=) (or hi '<=)))))
 
 (define (type-fixnum-overflow-normalize-wrap tctx type)
-  (let ((lo (type-fixnum-lo type))
-        (hi (type-fixnum-hi type)))
+  (let* ((type (type-motley-force tctx type))
+         (lo (type-fixnum-lo type))
+         (hi (type-fixnum-hi type)))
     (if (or (not lo) (not hi))
         type-fixnum
         (type-motley-normalize tctx type))))
 
 (define (type-fixnum-overflow-normalize-false tctx type)
-  (let ((lo (type-fixnum-lo type))
-        (hi (type-fixnum-hi type)))
+  (let* ((type (type-motley-force tctx type))
+         (lo (type-fixnum-lo type))
+         (hi (type-fixnum-hi type)))
     (if (and lo hi)
         (type-motley-normalize tctx type)
         (make-type-fixnum-or-false
