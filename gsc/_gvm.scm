@@ -3072,7 +3072,6 @@
     locenv))
 
 (define (locenv-resize locenv nb-regs nb-slots nb-closed slot-shift init)
-  (if (eq? (vector-ref locenv 0) -1) (step))
   (let ((lengths (vector-ref locenv 0)))
     (if (and (= nb-regs (vector-ref lengths 0))
              (= nb-slots (vector-ref lengths 1))
