@@ -7727,14 +7727,13 @@
   (declare (generic))
 
   (define (unsigned-widen-up n)
-    (let* ((m (+ n 1))
-           (x (expt 2 (- (expt 2 (max 3 (integer-length (- (integer-length n) 1)))) 2))))
-      (cond ((< m (- x 1)) (- x 2))
-            ((< m x)       (- x 1))
+    (let ((x (expt 2 (- (expt 2 (max 3 (integer-length (- (integer-length n) 1)))) 2))))
+      (cond ((< n (- x 1)) (- x 2))
+            ((< n x)       (- x 1))
             (else
              (let ((x (* x 2)))
-               (cond ((< m (- x 1)) (- x 2))
-                     ((< m x)       (- x 1))
+               (cond ((< n (- x 1)) (- x 2))
+                     ((< n x)       (- x 1))
                      (else
                       (- (* x 2) 1))))))))
 
