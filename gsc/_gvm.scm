@@ -4892,17 +4892,22 @@
       ((Closure? o)
         (pp-with-tab "closure"))
       (else
-        (pp o))))
+        (display o) (display "\n"))))
 
 
   (define (pp-stk)
-    (let ((len (stretchable-vector-length (stack-stack stack))))
+    (let ((sp (stack-pointer stack))
+          (len (stretchable-vector-length (stack-stack stack))))
       (for-each
         (lambda (i)
+          (if (= i sp) (display "---> "))
           (display (- len i 1))
           (display ": ")
           (pp-gvm-obj (stretchable-vector-ref (stack-stack stack) i)))
-        (iota len))))
+        (iota len))
+      (display "fs: ")
+      (display (bb-entry-frame-size bb))
+      (display "\n")))
 
   (define (pp-reg)
     (let ((len (stretchable-vector-length registers)))
@@ -4913,8 +4918,14 @@
           (pp-gvm-obj (stretchable-vector-ref registers i)))
         (iota len))))
 
-  (define (get-label-parameters-info nargs)
-    (pcontext-map (default-label-info target nargs #f)))
+  (define (get-label-parameters-info nargs closed?)
+    (pcontext-map ((target-label-info target) nargs closed?)))
+
+  (define (get-jump-parameters-info nargs)
+    (pcontext-map ((target-jump-info target) nargs)))
+
+  (define (get-proc-result-loc)
+    (target-proc-result target))
 
   (define (get-args-loc parameters-info)
     (let ((nargs (apply max 0 (filter number? (map car parameters-info))))) ;; params start at 1
@@ -4938,7 +4949,7 @@
     (if ret (interpret-write loc (make-First-Class-Label bbs ret))))
 
   (define (align-args! args nparams rest?)
-    (let* ((params-info (get-label-parameters-info nparams))
+    (let* ((params-info (get-label-parameters-info nparams #f))
            (args-loc (get-args-loc params-info))
            (nargs (length args))
            (nparams-without-rest (if rest? (- nparams 1) nparams))
@@ -4963,7 +4974,7 @@
     (let* ((nargs (or nargs 0))
            (target-bb (lbl-num->bb lbl-num target-bbs))
            (target-label (bb-label-instr target-bb))
-           (params-info (get-label-parameters-info nargs))
+           (params-info (get-jump-parameters-info nargs))
            (ret-loc (get-ret-loc params-info))
            (args-loc (get-args-loc params-info))
            (args-values (map get-value args-loc)))
@@ -5014,11 +5025,11 @@
   (define (call-proc-obj-interpret proc nargs ret)
     (if (proc-obj-primitive? proc)
       ;; primitive
-      (let* ((params-info (get-label-parameters-info nargs))
+      (let* ((params-info (get-jump-parameters-info nargs))
              (args (map get-value (get-args-loc params-info)))
              (return-loc (get-ret-loc params-info))
              (result (exec-prim (proc-obj-name proc) args)))
-        (interpret-write return-loc result)
+        (interpret-write (get-proc-result-loc) result)
         (if ret (jump-to-no-args bbs ret bb)))
       ;; others
       (jump-to-entry (proc-obj-code proc) bb nargs ret)))
