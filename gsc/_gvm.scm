@@ -4891,23 +4891,34 @@
           (bbs-entry-lbl-num (First-Class-Label-bbs o))))
       ((Closure? o)
         (pp-with-tab "closure"))
+      ((eq? o 'empty-stack-slot)
+        (display ".\n"))
       (else
         (display o) (display "\n"))))
 
 
   (define (pp-stk)
-    (let ((sp (stack-pointer stack))
-          (len (stretchable-vector-length (stack-stack stack))))
+    (let* ((sp (stack-pointer stack))
+           (fs (bb-entry-frame-size bb))
+           (frame-bottom (frame-index->stack-index 0 stack fs))
+           (len (stretchable-vector-length (stack-stack stack))))
       (for-each
         (lambda (i)
-          (if (= i sp) (display "---> "))
-          (display (- len i 1))
-          (display ": ")
-          (pp-gvm-obj (stretchable-vector-ref (stack-stack stack) i)))
+            (let ((frame-index (- i frame-bottom)))
+              (if (= frame-index 1)
+                (begin
+                  (display "--- fs=")
+                  (display fs)
+                  (display " ---\n")))
+              (display (- i frame-bottom))
+              (display ": ")
+              (pp-gvm-obj (stretchable-vector-ref (stack-stack stack) i))))
         (iota len))
-      (display "fs: ")
-      (display (bb-entry-frame-size bb))
-      (display "\n")))
+      (if (= (- len frame-bottom) 1) ;; add fs when current frame is yet unassigned
+        (begin
+          (display "--- fs=")
+          (display fs)
+          (display " ---\n")))))
 
   (define (pp-reg)
     (let ((len (stretchable-vector-length registers)))
@@ -4979,18 +4990,20 @@
            (args-loc (get-args-loc params-info))
            (args-values (map get-value args-loc)))
       (stack-exit-frame! stack from-bb)
+      (if ret (set-return-label ret-loc ret))
       (if (eq? (label-kind target-label) 'entry)
         (let ((nparams (label-entry-nb-parms target-label))
               (has-rest (label-entry-rest? target-label)))
-          (align-args! args-values nparams has-rest)
-          (set-return-label ret-loc ret)))
+          (align-args! args-values nparams has-rest)))
+      (if (eq? (label-kind target-label) 'return)
+        (display "=========== JUMP OUT ===========\n"))
       (bb-interpret target-bbs target-bb env stack registers)))
 
   (define (jump-to-entry bbs from-bb nargs ret)
     (jump-to bbs (bbs-entry-lbl-num bbs) from-bb nargs ret))
 
-  (define (jump-to-no-args bbs lbl-num from-bb)
-    (jump-to bbs lbl-num from-bb 0 #f))
+  (define (jump-to-no-args bbs lbl-num from-bb ret)
+    (jump-to bbs lbl-num from-bb 0 ret))
 
   (define (isa-proc-obj-primitive? obj)
     (and (proc-obj? obj) (proc-obj-primitive? obj)))
@@ -5015,11 +5028,12 @@
 
   ;; COPY
   (define (copy-interpret instr)
-    (let* ((opnd (copy-opnd instr)))
-      (if opnd ;; skip #f opnd which means allocation of a slot
-          (let ((value (get-value opnd))
-                (target (copy-loc instr)))
-            (interpret-write target value)))))
+    (let* ((opnd (copy-opnd instr))
+           (value (if opnd
+                      (get-value opnd)
+                      'empty-stack-slot)) ;; #f opnd means allocation of a slot
+           (target (copy-loc instr)))
+      (interpret-write target value)))
 
   ;; CALL HELPERS
   (define (call-proc-obj-interpret proc nargs ret)
@@ -5030,9 +5044,11 @@
              (return-loc (get-ret-loc params-info))
              (result (exec-prim (proc-obj-name proc) args)))
         (interpret-write (get-proc-result-loc) result)
-        (if ret (jump-to-no-args bbs ret bb)))
+        (if ret (jump-to-no-args bbs ret bb ret)))
       ;; others
-      (jump-to-entry (proc-obj-code proc) bb nargs ret)))
+      (begin
+        (display "=========== JUMP IN ") (display (proc-obj-name proc)) (display " ===========\n")
+        (jump-to-entry (proc-obj-code proc) bb nargs ret))))
 
   ;; JUMP
   (define (jump-interpret instr)
@@ -5040,7 +5056,7 @@
           (ret (jump-ret instr))
           (nargs (jump-nb-args instr)))
       (if (and (lbl? opnd) (not nargs))
-          (jump-to-no-args bbs (lbl-num opnd) bb) ;; static jump
+          (jump-to-no-args bbs (lbl-num opnd) bb ret) ;; static jump
           (let ((val (get-value opnd))) ;; call
             (cond
               ((eq? val 'exit-return-address)
@@ -5063,8 +5079,8 @@
       (if (isa-proc-obj-primitive? test)
         (let* ((result (exec-prim (proc-obj-name test) opnds-values)))
           (if result
-            (jump-to-no-args bbs (ifjump-true instr) bb)
-            (jump-to-no-args bbs (ifjump-false instr) bb)))
+            (jump-to-no-args bbs (ifjump-true instr) bb #f)
+            (jump-to-no-args bbs (ifjump-false instr) bb #f)))
         (error "ifjump test is not a primitive"))))
 
   ;; APPLY
@@ -5084,24 +5100,22 @@
   (define (switch-interpret instr)
     (error "TODO switch" instr))
 
-  (define (print-interpreter-trace instr print-state)
-    (pp (list 'executing: (gvm-instr-kind instr)))
-    (write-gvm-instr instr (current-output-port))
+  (define (print-interpreter-trace instr)
+    (display "Registers:\n")
+    (pp-reg)
+    (display "Stack:\n")
+    (pp-stk)
     (println)
-
-    (if print-state
-      (begin
-        (println "reg:")
-        (pp (vector-ref registers 0))
-        (println "stk:")
-        (pp (vector-ref (stack-stack stack) 0))
-        (println "glo:")
-        (pp (table->list env))
-        (println))))
+    (display "Executing in #")
+    (display (bb-lbl-num bb))
+    (display " - ")
+    (display (gvm-instr-kind instr))
+    (display ":\n")
+    (write-gvm-instr instr (current-output-port))
+    (display "\n\n"))
 
   (define (instr-interpret instr)
-    (print-interpreter-trace instr #f)
-
+    (print-interpreter-trace instr)
     (case (gvm-instr-kind instr)
       ((apply)
        (apply-interpret instr))
