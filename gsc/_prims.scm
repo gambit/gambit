@@ -7726,36 +7726,33 @@
 
   (declare (generic))
 
-  (define (unsigned-widen-up n)
-    (let ((x (expt 2 (- (expt 2 (max 3 (integer-length (- (integer-length n) 1)))) 2))))
-      (cond ((< n (- x 1)) (- x 2))
-            ((< n x)       (- x 1))
-            (else
-             (let ((x (* x 2)))
-               (cond ((< n (- x 1)) (- x 2))
-                     ((< n x)       (- x 1))
-                     (else
-                      (- (* x 2) 1))))))))
+ (define (widen-down n)
+   (if (<= n 3)
+       n
+       (expt 2 (expt 2 (- (integer-length (- (integer-length n) 1)) 1)))))
 
-  (define (unsigned-widen-down n)
-    (if (<= n 3)
-        (- n 1)
-        (expt 2 (expt 2 (- (integer-length (- (integer-length (- n 1)) 1)) 1)))))
+ (define (widen-up n)
+   (if (<= n 3)
+       n
+       (let ((x (expt 2 (- (expt 2 (max 3 (integer-length (- (integer-length n) 1)))) 2))))
+         (cond ((< n (- x 1)) (- x 2))
+               ((< n x)       (- x 1))
+               (else
+                (let ((x (* x 2)))
+                  (cond ((< n (- x 1)) (- x 2))
+                        ((< n x)       (- x 1))
+                        (else
+                         (- (* x 2) 1)))))))))
 
   (define (widen-lo n)
-    (cond
-      ((< n 0)
-        (- (unsigned-widen-up (abs n))))
-      ((= n 0) -1)
-      (else
-        (unsigned-widen-down n))))
+    (if (>= n 0)
+        (widen-down n)
+        (- -1 (widen-up (- -1 n)))))
 
   (define (widen-hi n)
-    (cond
-      ((< n 0)
-        (- (unsigned-widen-down (abs n))))
-      (else
-        (unsigned-widen-up n))))
+    (if (>= n 0)
+        (widen-up n)
+        (- (widen-down (- n)))))
 
   (let ((lo1 (type-fixnum-lo type1))
         (hi1 (type-fixnum-hi type1))
