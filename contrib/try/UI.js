@@ -681,7 +681,7 @@ and even simple arithmetic operations like addition and multiplication are proce
         "current UTC time: ~a\\n"\n\
         (date->string (get-date)))\n\
 ') + '\
-<p>A wide range of characters are allowed in Scheme identifiers including "<code><b>-</b></code>" and "<code><b>&gt;</b></code>" as in the example, and also "<code><b>!</b></code>", "<code><b>?</b></code>", "<code><b>=</b></code>", "<code><b>&lt;</b></code>", "<code><b>+</b></code>", "<code><b>/</b></code>", and other non-letter characters.  Note that single-line comments begin with a <code><b>;</b></code> that is typically doubled.</p>\n\
+<p>A wide range of characters is allowed in Scheme identifiers including "<code><b>-</b></code>" and "<code><b>&gt;</b></code>" as in the example, and also "<code><b>!</b></code>", "<code><b>?</b></code>", "<code><b>=</b></code>", "<code><b>&lt;</b></code>", "<code><b>+</b></code>", "<code><b>/</b></code>", and other non-letter characters.  Note that single-line comments begin with a <code><b>;</b></code> that is typically doubled.</p>\n\
 \n\
 <p>To develop programs in this online environment it is convenient to open and edit the file in the editor area and then press <kbd>Ctrl</kbd> <kbd>Enter</kbd> to save the file and load it in the REPL.</p>\n\
 ');
@@ -874,7 +874,7 @@ even\n\
 <p>These are <i>binding</i> forms that create local variables.  They share the same syntax, here explained with <code><b>let</b></code>:</p>\n\
 <pre class="cm-s-default">    <i>' + ui.syntax_highlight('(let ((<var> <expr>) ...) <body>)') + '</i>\n\
 </pre>\n\
-<p>A cell is created for each variable <code><i>&lt;var&gt;</i></code> mentionned in the list of bindings <code><i>((&lt;var&gt; &lt;expr&gt;) ...)</i></code> and they are initialized to the value of the corresponding expression <code><i>&lt;expr&gt;</i></code>. In the case of the <code><b>let</b></code> form, the scope of the variables is limited to the expression <code><i>&lt;body&gt;</i></code>. In the case of the <code><b>let*</b></code> form, the scope of a variable also includes the expressions that follow in the list of bindings and the expressions are evaluated from left to right. In the case of the <code><b>letrec</b></code> form, the scope of a variable includes all the expressions in the list of bindings, which is particularly useful for recursive procedure definitions.</p>\n\
+<p>A cell is created for each variable <code><i>&lt;var&gt;</i></code> mentioned in the list of bindings <code><i>((&lt;var&gt; &lt;expr&gt;) ...)</i></code> and they are initialized to the value of the corresponding expression <code><i>&lt;expr&gt;</i></code>. In the case of the <code><b>let</b></code> form, the scope of the variables is limited to the expression <code><i>&lt;body&gt;</i></code>. In the case of the <code><b>let*</b></code> form, the scope of a variable also includes the expressions that follow in the list of bindings, and the expressions are evaluated from left to right. In the case of the <code><b>letrec</b></code> form, the scope of a variable includes all the expressions in the list of bindings, which is particularly useful for recursive procedure definitions.</p>\n\
 ' + runnable_repl_example('\
 > (define x 10)\n\
 > (let ((x (+ x 1)) (y (+ x 2))) (list x y))\n\
@@ -904,7 +904,7 @@ even\n\
 neg\n\
 4\n\
 ') + '\n\
-<p>The <code><b>lambda</b></code>, <code><b>let</b></code>, <code><b>let*</b></code>, and <code><b>letrec</b></code></h3> forms can have more than one expression in their <i>&lt;body&gt;</i> in which case they are implicitly wrapped in a <code><b>begin</b></code> form.</p>\n\
+<p>The <code><b>lambda</b></code>, <code><b>let</b></code>, <code><b>let*</b></code>, and <code><b>letrec</b></code></h3> forms can have more than one expression in their <i>&lt;body&gt;</i>, in which case they are implicitly wrapped in a <code><b>begin</b></code> form.</p>\n\
 \n\
 <h3><code><b>and</b></code></h3>\n\
 \n\
@@ -942,7 +942,7 @@ neg\n\
 \n\
 <h3><code><b>case</b></code></h3>\n\
 \n\
-<p>The <code><b>case</b></code> form is a multiway <i>switch</i> based on a value. Each branch is associated with one or more cases. Each branch can have multiple expressions that are implicitly wrapped in a <code><b>begin</b></code> form. It returns the value of the branch that was evaluated.</p>\n\</p>\n\
+<p>The <code><b>case</b></code> form is a multiway <i>switch</i> based on a value. Each branch is associated with one or more cases that are tested with the subject value for equality using the <code><b>eqv?</b></code> procedure. Each branch can have multiple expressions that are implicitly wrapped in a <code><b>begin</b></code> form. It returns the value of the branch that was evaluated.</p>\n\</p>\n\
 ' + runnable_repl_example('\
 > (define n 2)\n\
 > (case n\n\
@@ -989,7 +989,7 @@ neg\n\
       (exclaim "bonjour " name))))\n\
 ') + '\n\
 <p>This library contains the clause <code><b>(export hi salut)</b></code> that indicates that the procedures <code><b>hi</b></code> and <code><b>salut</b></code> are exported by the library. The procedure <code><b>exclaim</b></code> is defined and used in the implementation of the exported procedures but it is not exported by the library. The clause <code><b>(import (scheme base) (scheme write))</b></code> is needed for accessing the bindings of <code><b>define</b></code> and <code><b>display</b></code> that are used in the body of the library.</p>\n\
-<p>To use the <code><b>(hello)</b></code> library a <code><b>(import (hello))</b></code> form must be used. It can be used at the REPL like this:</p>\n\
+<p>To use the <code><b>(hello)</b></code> library an <code><b>(import (hello))</b></code> form must be used. It can be used at the REPL like this:</p>\n\
 ' + runnable_repl_example('\
 > (import (hello))\n\
 > (hi "world")\n\
@@ -1013,7 +1013,7 @@ hello world!\n\
 <p>Libraries are made available for use through a process that depends on the Scheme implementation. One way is to use a system specific <i>installer</i> tool to install libraries. Moreover, systems typically define a list of filesystem directories where libraries are searched (called the <i>module search order</i> here). For convenience, the list is typically configurable and extensible by the user.</p>\n\
 <p>This online environment uses a module search order that includes the (browser local) filesystem root "<code><b>/</b></code>". This is where the file editor stores the edited files, making it convenient to store libraries under development there. The module search order also includes "<code><b>~~lib</b></code>" which is mapped to the web site\'s <code><b>lib</b></code> directory that contains various system libraries and SRFIs. The list can be extended by calling <code><b>(module-search-order-add! "<i>dir</i>")</b></code>.\n\
 <p>A library named <code><b>(A B C)</b></code> must be stored on the filesystem in a module search order directory in either the file <code><b>A/B/C.sld</b></code> or <code><b>A/B/C/C.sld</b></code> relative to that directory. The second approach is usually preferred when the library\'s code is spread among multiple files (that are included with <code><b>include</b></code> forms) or the library contains a sublibrary such as <code><b>(A B C D)</b></code>. To simplify distributing a library\'s code in multiple files the <code><b>include</b></code> form interprets paths relatively to the directory of the file containing the <code><b>include</b></code>.</p>\n\
-<p>Libraries may also be stored on the GitHub platform in public repositories using the same filesystem layout as above, allowing easy publication of new libraries and use of existing ones. For example, the <code><b>(hello)</b></code> library shown above also exists in the repository <a href="https://github.com/gambit/hello">https://github.com/gambit/hello</a> so it can be referred to using the name <code><b>(github.com/gambit/hello)</b></code>:</p>\n\
+<p>Libraries may also be stored on the GitHub platform in public repositories using the same filesystem layout as above, making it easy to use existing libraries and publish new ones. For example, the <code><b>(hello)</b></code> library shown above also exists in the repository <a href="https://github.com/gambit/hello">https://github.com/gambit/hello</a> so it can be referred to using the name <code><b>(github.com/gambit/hello)</b></code>:</p>\n\
 ' + runnable_repl_example('\
 > (import (github.com/gambit/hello))\n\
 > (hi "world")\n\
@@ -3061,8 +3061,6 @@ Console.prototype.add_buffered_input = function (text, notify) {
 Console.prototype.tab = function () {
 
   var cons = this;
-
-//  var dev = ui.active_console_device();
 
   var from = cons.doc.getCursor('from');
   var to = cons.doc.getCursor('to');
