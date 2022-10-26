@@ -4772,9 +4772,8 @@
               registered-primitives-table
               (symbol->string name)
               (lambda args
-                (display "***primitive-call\n")
-                (display (cons name args))
-                (display "\n")
+                (interpret-debug-ln "***primitive-call")
+                (interpret-debug-ln (cons name args))
                 (table-set!
                   primitive-call-counter
                   name
@@ -4832,6 +4831,14 @@
 (define (register-ref registers n) (stretchable-vector-ref registers n))
 (define (register-set! registers n val)
   (stretchable-vector-set! registers n val))
+
+(define interpreter-trace? #f)
+
+(define (interpret-debug-ln msg)
+  (if interpreter-trace? (println msg)))
+
+(define (interpret-debug msg)
+  (if interpreter-trace? (display msg)))
 
 (define (gvm-interpret module-procs)
   (pp '***GVM-Interpreter)
@@ -4897,37 +4904,39 @@
         (display o) (display "\n"))))
 
 
-  (define (pp-stk)
-    (let* ((sp (stack-pointer stack))
-           (fs (bb-entry-frame-size bb))
-           (frame-bottom (frame-index->stack-index 0 stack fs))
-           (len (stretchable-vector-length (stack-stack stack))))
-      (for-each
-        (lambda (i)
-            (let ((frame-index (- i frame-bottom)))
-              (if (= frame-index 1)
-                (begin
-                  (display "--- fs=")
-                  (display fs)
-                  (display " ---\n")))
-              (display (- i frame-bottom))
-              (display ": ")
-              (pp-gvm-obj (stretchable-vector-ref (stack-stack stack) i))))
-        (iota len))
-      (if (= (- len frame-bottom) 1) ;; add fs when current frame is yet unassigned
-        (begin
-          (display "--- fs=")
-          (display fs)
-          (display " ---\n")))))
+  (define (debug-stk)
+    (if interpreter-trace?
+      (let* ((sp (stack-pointer stack))
+             (fs (bb-entry-frame-size bb))
+             (frame-bottom (frame-index->stack-index 0 stack fs))
+             (len (stretchable-vector-length (stack-stack stack))))
+        (for-each
+          (lambda (i)
+              (let ((frame-index (- i frame-bottom)))
+                (if (= frame-index 1)
+                  (begin
+                    (display "--- fs=")
+                    (display fs)
+                    (display " ---\n")))
+                (display (- i frame-bottom))
+                (display ": ")
+                (pp-gvm-obj (stretchable-vector-ref (stack-stack stack) i))))
+          (iota len))
+        (if (= (- len frame-bottom) 1) ;; add fs when current frame is yet unassigned
+          (begin
+            (display "--- fs=")
+            (display fs)
+            (display " ---\n"))))))
 
-  (define (pp-reg)
-    (let ((len (stretchable-vector-length registers)))
-      (for-each
-        (lambda (i)
-          (display i)
-          (display ": ")
-          (pp-gvm-obj (stretchable-vector-ref registers i)))
-        (iota len))))
+  (define (debug-reg)
+    (if interpreter-trace?
+      (let ((len (stretchable-vector-length registers)))
+        (for-each
+          (lambda (i)
+            (display i)
+            (display ": ")
+            (pp-gvm-obj (stretchable-vector-ref registers i)))
+          (iota len)))))
 
   (define (get-label-parameters-info nargs closed?)
     (pcontext-map ((target-label-info target) nargs closed?)))
@@ -4996,7 +5005,7 @@
               (has-rest (label-entry-rest? target-label)))
           (align-args! args-values nparams has-rest)))
       (if (eq? (label-kind target-label) 'return)
-        (display "=========== JUMP OUT ===========\n"))
+        (interpret-debug-ln "=========== JUMP OUT ==========="))
       (bb-interpret target-bbs target-bb env stack registers)))
 
   (define (jump-to-entry bbs from-bb nargs ret)
@@ -5047,7 +5056,9 @@
         (if ret (jump-to-no-args bbs ret bb ret)))
       ;; others
       (begin
-        (display "=========== JUMP IN ") (display (proc-obj-name proc)) (display " ===========\n")
+        (interpret-debug "=========== JUMP IN ")
+        (interpret-debug (proc-obj-name proc))
+        (interpret-debug-ln " ===========")
         (jump-to-entry (proc-obj-code proc) bb nargs ret))))
 
   ;; JUMP
@@ -5060,7 +5071,7 @@
           (let ((val (get-value opnd))) ;; call
             (cond
               ((eq? val 'exit-return-address)
-                (pp '***GVM-Interpreter-END)
+                (interpret-debug-ln '***GVM-Interpreter-END)
                 #f)
               ((proc-obj? val)
                 (call-proc-obj-interpret val nargs ret))
@@ -5101,21 +5112,21 @@
     (error "TODO switch" instr))
 
   (define (print-interpreter-trace instr)
-    (display "Registers:\n")
-    (pp-reg)
-    (display "Stack:\n")
-    (pp-stk)
+    (interpret-debug "Registers:\n")
+    (debug-reg)
+    (interpret-debug "Stack:\n")
+    (debug-stk)
     (println)
-    (display "Executing in #")
-    (display (bb-lbl-num bb))
-    (display " - ")
-    (display (gvm-instr-kind instr))
-    (display ":\n")
-    (write-gvm-instr instr (current-output-port))
-    (display "\n\n"))
+    (interpret-debug "Executing in #")
+    (interpret-debug (bb-lbl-num bb))
+    (interpret-debug " - ")
+    (interpret-debug (gvm-instr-kind instr))
+    (interpret-debug ":\n")
+    (if interpreter-trace? (write-gvm-instr instr (current-output-port)))
+    (interpret-debug "\n\n"))
 
   (define (instr-interpret instr)
-    (print-interpreter-trace instr)
+    ;;(print-interpreter-trace instr)
     (case (gvm-instr-kind instr)
       ((apply)
        (apply-interpret instr))
