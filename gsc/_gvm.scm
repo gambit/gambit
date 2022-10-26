@@ -2676,20 +2676,32 @@
                                                path)))
                             (walk-opnd opnd))
                         (and ret
-                            (let* ((result-loc
-                                    (gvm-loc->locenv-index types-after (make-reg 1)))
-                                   (types-return
-                                    (locenv-set types-after
-                                                result-loc
-                                                type-top)))
-                              (reach* ret
-                                      (make-bbvctx
-                                       types-return
-                                       (+ (- cost instr-cost) call-cost)
-                                       path))));;;;;;;;;TODO
+                             (let* ((result-loc
+                                     (gvm-loc->locenv-index types-after (make-reg 1)))
+                                    (types-after*
+                                     (if (and (jump-safe? gvm-instr)
+                                              (locenv-loc? opnd))
+                                         (locenv-set types-after
+                                                     (gvm-loc->locenv-index types-after opnd)
+                                                     type-procedure)
+                                         types-after))
+                                    (types-return
+                                     (locenv-set types-after*
+                                                 result-loc
+                                                 type-top)))
+                               (reach* ret
+                                       (make-bbvctx
+                                        types-return
+                                        (+ (- cost instr-cost) call-cost)
+                                        path)))) ;;;;;;;;;TODO
                         (jump-nb-args gvm-instr)
                         (jump-poll? gvm-instr)
-                        (jump-safe? gvm-instr)
+                        (if (type-motley-included?
+                             (type-motley-force tctx
+                                                (opnd-type opnd types-before))
+                             type-procedure)
+                            #f
+                            (jump-safe? gvm-instr))
                         (gvm-instr-frame gvm-instr)
                         (gvm-instr-comment gvm-instr))))
                  (gvm-instr-types-set! new-instr types-after)
