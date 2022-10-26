@@ -25,13 +25,9 @@
 ;;;----------------------------------------------------------------------------
 
 
-(define-macro (at-expansion-time expr) (eval expr) '(begin))
+(define-macro (at-expansion-time . exprs) (for-each eval exprs) '(begin))
 
 (at-expansion-time (define ##compilation-options '()))
-
-;; use custom absent object otherwise the interpreter gets confused
-
-(define c#absent-object (string->symbol "#<absent>")) ;; (##type-cast -6 2)
 
 ;; remove runtime options if any
 
@@ -106,6 +102,10 @@
         (##include "~~/lib/header.scm")))
 
 ((load-from-root "gsc/") "_host")
+
+;; use custom absent object otherwise the interpreter gets confused
+
+(define c#absent-object (string->symbol "#<absent>")) ;; (##type-cast -6 2)
 
 (set! c#**main-readtable
   (and c#**main-readtable
