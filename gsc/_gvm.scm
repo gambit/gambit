@@ -2720,7 +2720,10 @@
              (list
                (cons 'info
                  (object->string
-                   (list orig-lbl '-> new-lbl 'cost= cost 'path= (map car (cdr path)))))))
+                   (list orig-lbl '-> new-lbl))
+                 ;;(object->string
+                 ;;(list orig-lbl '-> new-lbl 'cost= cost 'path= (map car (cdr path))))
+                   )))
             (comment-put!
               instr-comment
               'orig-lbl
@@ -4769,8 +4772,9 @@
               registered-primitives-table
               (symbol->string name)
               (lambda args
-                (pp '***primitive-call)
-                (pp (cons name args))
+                (display "***primitive-call\n")
+                (display (cons name args))
+                (display "\n")
                 (table-set!
                   primitive-call-counter
                   name
@@ -4871,6 +4875,44 @@
         (error "unknown value to copy" opnd))))
 
   ;; HELPERS
+  (define (pp-gvm-obj o)
+    (define (pp-with-tag tag . names)
+      (display "<") (display tag)
+      (for-each (lambda (n) (display " ") (display n)) names)
+      (display ">\n"))
+
+    (cond
+      ((proc-obj? o)
+        (pp-with-tag "procedure" (proc-obj-name o)))
+      ((First-Class-Label? o)
+        (pp-with-tag
+          "label"
+          (First-Class-Label-id o)
+          (bbs-entry-lbl-num (First-Class-Label-bbs o))))
+      ((Closure? o)
+        (pp-with-tab "closure"))
+      (else
+        (pp o))))
+
+
+  (define (pp-stk)
+    (let ((len (stretchable-vector-length (stack-stack stack))))
+      (for-each
+        (lambda (i)
+          (display (- len i 1))
+          (display ": ")
+          (pp-gvm-obj (stretchable-vector-ref (stack-stack stack) i)))
+        (iota len))))
+
+  (define (pp-reg)
+    (let ((len (stretchable-vector-length registers)))
+      (for-each
+        (lambda (i)
+          (display i)
+          (display ": ")
+          (pp-gvm-obj (stretchable-vector-ref registers i)))
+        (iota len))))
+
   (define (get-label-parameters-info nargs)
     (pcontext-map (default-label-info target nargs #f)))
 
