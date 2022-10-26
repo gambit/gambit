@@ -1899,7 +1899,7 @@
               (execute))
              ((##eq? ##nontail-call-for-step parent)
               (if (##eq? s-or-l 'l)
-                  (##nontail-call-for-leap execute)
+                  (##nontail-call-for-leap execute stepper)
                   (begin
                     (if (##eq? s-or-l 's)
                         ;; turn on stepping before tail call (execute)
@@ -1912,7 +1912,7 @@
                       depth
                       (if (##eq? s-or-l 'l)
                           (lambda ()
-                            (##nontail-call-for-leap execute))
+                            (##nontail-call-for-leap execute stepper))
                           (lambda ()
                             (if (##eq? s-or-l 's)
                                 ;; turn on stepping before nontail call (execute)
