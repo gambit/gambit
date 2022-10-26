@@ -2125,7 +2125,7 @@
   (##eq? (##continuation-parent cont) ##with-no-result-expected-toplevel))
 
 (define-prim (##step-handler-get-command $code rte)
-  (##repl
+  (##repl-debug
    (lambda (first port)
      (##display-situation
       "STOPPED"
@@ -2725,20 +2725,15 @@
 (define-prim (##repl-debug
               #!optional
               (write-reason #f)
+              (reason #f)
               (toplevel? #f)
               (err? #f))
-  (let* ((old-setting
-          (##set-debug-settings!
-           (##fx+ (macro-debug-settings-error-mask)
-                  (macro-debug-settings-user-intr-mask))
-           (##fx+ (macro-debug-settings-error-repl)
-                  (macro-debug-settings-user-intr-repl))))
-         (results
-          (##repl write-reason #f toplevel? err?)))
-    (##set-debug-settings!
-     (macro-debug-settings-error-mask)
-     old-setting)
-    results))
+  (##set-debug-settings!
+   (##fx+ (macro-debug-settings-error-mask)
+          (macro-debug-settings-user-intr-mask))
+   (##fx+ (macro-debug-settings-error-repl)
+          (macro-debug-settings-user-intr-repl)))
+  (##repl write-reason reason toplevel? err?))
 
 (define-prim (##repl-debug-main)
 
@@ -2796,6 +2791,7 @@
      (##newline port)
      (##newline port)
      #f)
+   #f
    #t)
 
   (##exit))

@@ -2,7 +2,7 @@
 
 ;;; File: "main.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
@@ -196,7 +196,7 @@ usage-end
           (if (option? arg)
             (let ((option-name (convert-option arg)))
               (cond ((##eq? option-name '||)
-                     (##repl-debug #f #t)
+                     (##repl-debug #f #f #t)
                      (loop rest
                            #t))
                     ((##eq? option-name 'e)
@@ -607,7 +607,7 @@ usage-end
                                                  (loop2 (##cdr rest)))
                                                (loop2 rest)))
                                           ((##eq? option-name '||)
-                                           (##repl-debug #f #t)
+                                           (##repl-debug #f #f #t)
                                            (loop2 rest))
                                           ((##eq? option-name 'preload)
                                            (set! flags '((preload . #t)))
