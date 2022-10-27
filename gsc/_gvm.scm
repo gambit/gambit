@@ -2548,13 +2548,40 @@
                                      (car lst))
                                     (lbl
                                      (closure-parms-lbl parms))
+                                    (entry-bb
+                                     (lbl-num->bb lbl bbs))
+                                    (entry-label
+                                     (bb-label-instr entry-bb))
                                     (opnds
                                      (map walk-opnd
-                                          (closure-parms-opnds parms))))
+                                          (closure-parms-opnds parms)))
+                                    (types-entry
+                                     (let loop ((opnds opnds)
+                                                (i 1)
+                                                (types-entry
+                                                 (generic-frame-types
+                                                  (gvm-instr-frame entry-label))))
+                                       (if (pair? opnds)
+                                           (loop
+                                            (cdr opnds)
+                                            (+ i 1)
+                                            (let* ((opnd
+                                                    (car opnds))
+                                                   (dst-loc
+                                                    (gvm-loc->locenv-index
+                                                     types-entry
+                                                     (make-clo #f i)))
+                                                   (type
+                                                    (opnd-type opnd
+                                                               types-after)))
+                                              (locenv-set types-entry
+                                                          dst-loc
+                                                          type)))
+                                           types-entry))))
                                (make-closure-parms
                                 (closure-parms-loc parms)
                                 (reach* lbl
-                                        (make-bbvctx types-after cost path))
+                                        (make-bbvctx types-entry 0 '()))
                                 opnds))
                              rev-parms))
                            (let ((new-instr

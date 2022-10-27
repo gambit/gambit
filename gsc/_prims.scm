@@ -7169,6 +7169,8 @@
     (let ((arg (car args)))
       (type-narrow-type-test tctx type-boolean arg))))
 
+(def-type-infer "box" #f)
+
 )
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -9171,6 +9173,8 @@
      type-pair)
     ((procedure)
      type-procedure)
+    ((box)
+     type-box)
     ((u8)
      (make-type-fixnum 0 255))
     ((s8)
