@@ -2538,22 +2538,32 @@
                                           dst-loc
                                           type-procedure))
                             types-after)))
-                     (let ((new-instr
-                             (make-close
-                              (close-parms gvm-instr)
-                              (gvm-instr-frame gvm-instr)
-                              (gvm-instr-comment gvm-instr))))
-                       (for-each
-                         (lambda (parms)
-                           (let ((lbl
-                                  (closure-parms-lbl parms))
-                                 (opnds
-                                  (map walk-opnd (closure-parms-opnds parms))))
-                             (reach* lbl (make-bbvctx types-after cost path))
-                             '...))
-                         (close-parms gvm-instr))
-                       (gvm-instr-types-set! new-instr types-after)
-                       new-instr))))
+                     (let loop2 ((lst (close-parms gvm-instr))
+                                 (rev-parms '()))
+                       (if (pair? lst)
+                           (loop2
+                            (cdr lst)
+                            (cons
+                             (let* ((parms
+                                     (car lst))
+                                    (lbl
+                                     (closure-parms-lbl parms))
+                                    (opnds
+                                     (map walk-opnd
+                                          (closure-parms-opnds parms))))
+                               (make-closure-parms
+                                (closure-parms-loc parms)
+                                (reach* lbl
+                                        (make-bbvctx types-after cost path))
+                                opnds))
+                             rev-parms))
+                           (let ((new-instr
+                                  (make-close
+                                   (reverse rev-parms)
+                                   (gvm-instr-frame gvm-instr)
+                                   (gvm-instr-comment gvm-instr))))
+                             (gvm-instr-types-set! new-instr types-after)
+                             new-instr))))))
 
               ((ifjump)
 ;;               (pp '****ifjump)
