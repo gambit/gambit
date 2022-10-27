@@ -4934,7 +4934,7 @@
           (First-Class-Label-id o)
           (bbs-entry-lbl-num (First-Class-Label-bbs o))))
       ((Closure? o)
-        (pp-with-tab "closure"))
+        (pp-with-tag "closure"))
       ((eq? o 'empty-stack-slot)
         (display ".\n"))
       (else
@@ -4988,8 +4988,11 @@
     (let ((nargs (apply max 0 (filter number? (map car parameters-info))))) ;; params start at 1
       (map (lambda (i) (cdr (assq i parameters-info))) (iota nargs 1))))
 
-  (define (get-ret-loc args-loc)
-    (cdr (assq 'return args-loc)))
+  (define (get-ret-loc params-info)
+    (cdr (assq 'return params-info)))
+
+  (define (get-closure-loc params-info)
+    (cdr (assq 'closure-env params-info)))
 
   (define (get-proc-obj-entry-lbl proc)
     (let* ((code (proc-obj-code proc))
@@ -5005,8 +5008,9 @@
   (define (set-return-label loc ret)
     (if ret (interpret-write loc (make-First-Class-Label bbs ret))))
 
-  (define (align-args! args nparams rest?)
-    (let* ((params-info (get-label-parameters-info nparams #f))
+  (define (align-args! args nparams rest? clo)
+    (let* ((closed? (if clo #t #f))
+           (params-info (get-label-parameters-info nparams closed?))
            (args-loc (get-args-loc params-info))
            (nargs (length args))
            (nparams-without-rest (if rest? (- nparams 1) nparams))
@@ -5025,31 +5029,36 @@
                  args)
                (else
                  (error "too many arguments")))))
+    (if closed? (interpret-write (get-closure-loc params-info) clo))
     (for-each interpret-write args-loc args-with-rest)))
 
-  (define (jump-to target-bbs lbl-num from-bb nargs ret)
+  (define (jump-to target-bbs lbl-num from-bb nargs ret clo)
     (let* ((nargs (or nargs 0))
            (target-bb (lbl-num->bb lbl-num target-bbs))
            (target-label (bb-label-instr target-bb))
            (params-info (get-jump-parameters-info nargs))
            (ret-loc (get-ret-loc params-info))
            (args-loc (get-args-loc params-info))
-           (args-values (map get-value args-loc)))
+           (args-values (map get-value args-loc))
+           (expect-jump-to-closure (if clo #t #f)))
       (stack-exit-frame! stack from-bb)
       (if ret (set-return-label ret-loc ret))
       (if (eq? (label-kind target-label) 'entry)
         (let ((nparams (label-entry-nb-parms target-label))
-              (has-rest (label-entry-rest? target-label)))
-          (align-args! args-values nparams has-rest)))
+              (has-rest (label-entry-rest? target-label))
+              (closed? (label-entry-closed? target-label)))
+          (if (not (boolean=? expect-jump-to-closure closed?))
+              (error "jump-to closure-entry-point without closure"))
+          (align-args! args-values nparams has-rest clo)))
       (if (eq? (label-kind target-label) 'return)
         (interpret-debug-ln "=========== JUMP OUT ==========="))
       (bb-interpret target-bbs target-bb env stack registers)))
 
   (define (jump-to-entry bbs from-bb nargs ret)
-    (jump-to bbs (bbs-entry-lbl-num bbs) from-bb nargs ret))
+    (jump-to bbs (bbs-entry-lbl-num bbs) from-bb nargs ret #f))
 
   (define (jump-to-no-args bbs lbl-num from-bb ret)
-    (jump-to bbs lbl-num from-bb 0 ret))
+    (jump-to bbs lbl-num from-bb 0 ret #f))
 
   (define (isa-proc-obj-primitive? obj)
     (and (proc-obj? obj) (proc-obj-primitive? obj)))
@@ -5115,7 +5124,12 @@
               ((First-Class-Label? val)
                 (let ((lbl-bbs (First-Class-Label-bbs val))
                       (lbl-id (First-Class-Label-id val)))
-                  (jump-to lbl-bbs lbl-id bb nargs ret)))
+                  (jump-to lbl-bbs lbl-id bb nargs ret #f)))
+              ((Closure? val)
+                (let* ((clo-lbl (Closure-ref val 0))
+                       (lbl-bbs (First-Class-Label-bbs clo-lbl))
+                       (lbl-id (First-Class-Label-id clo-lbl)))
+                  (jump-to lbl-bbs lbl-id bb nargs ret val)))
               (else
                 (error "unknown JUMP to" val)))))))
 
@@ -5142,7 +5156,26 @@
 
   ;; CLOSE
   (define (close-interpret instr)
-    (error "TODO close" instr))
+    (let* ((parms (close-parms instr))
+           (closures
+             (map
+               (lambda (p)
+                 (let* ((loc (closure-parms-loc p))
+                        (closure (make-Closure #f)))
+                    (interpret-write loc closure)
+                    closure))
+               parms)))
+      (for-each
+        (lambda (p c)
+          (let* ((lbl (closure-parms-lbl p))
+                 (opnds (closure-parms-opnds p))
+                 (slots
+                   (list->vector
+                     (cons (make-First-Class-Label bbs lbl)
+                           (map get-value opnds)))))
+          (Closure-slots-set! c slots)))
+        parms closures)))
+
 
   ;; SWITCH
   (define (switch-interpret instr)
@@ -5153,7 +5186,7 @@
     (debug-reg)
     (interpret-debug "Stack:\n")
     (debug-stk)
-    (println)
+    (interpret-debug "\n")
     (interpret-debug "Executing in #")
     (interpret-debug (bb-lbl-num bb))
     (interpret-debug " - ")
@@ -5163,7 +5196,7 @@
     (interpret-debug "\n\n"))
 
   (define (instr-interpret instr)
-    ;;(print-interpreter-trace instr)
+    (print-interpreter-trace instr)
     (case (gvm-instr-kind instr)
       ((apply)
        (apply-interpret instr))
