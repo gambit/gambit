@@ -5024,8 +5024,11 @@
   (define (set-return-label loc ret)
     (if ret (interpret-write loc (make-First-Class-Label bbs ret))))
 
-  (define (align-args! args nparams rest? clo)
+  (define (align-args! args nparams keys opts rest? clo)
+    ;; TODO opts is ignored
+    ;; TODO keys are ignored and they default values are simply pluged-in
     (let* ((closed? (if clo #t #f))
+           (args (append args (map cdr keys))) ;; TODO: temporary hack
            (params-info (get-label-parameters-info nparams closed?))
            (args-loc (get-args-loc params-info))
            (nargs (length args))
@@ -5062,10 +5065,12 @@
       (if (eq? (label-kind target-label) 'entry)
         (let ((nparams (label-entry-nb-parms target-label))
               (has-rest (label-entry-rest? target-label))
+              (opts (label-entry-opts target-label))
+              (keys (label-entry-keys target-label))
               (closed? (label-entry-closed? target-label)))
           (if (not (boolean=? expect-jump-to-closure closed?))
               (error "jump-to closure-entry-point without closure"))
-          (align-args! args-values nparams has-rest clo)))
+          (align-args! args-values nparams keys opts has-rest clo)))
       (if (eq? (label-kind target-label) 'return)
         (interpret-debug-ln "=========== JUMP OUT ==========="))
       (bb-interpret target-bbs target-bb env stack registers)))
@@ -5076,8 +5081,8 @@
   (define (jump-to-no-args bbs lbl-num from-bb ret)
     (jump-to bbs lbl-num from-bb 0 ret #f))
 
-  (define (isa-proc-obj-primitive? obj)
-    (and (proc-obj? obj) (proc-obj-primitive? obj)))
+  (define (gvm-proc-obj-primitive? obj)
+    (and (proc-obj? obj) (proc-obj-primitive? obj) (not (proc-obj-code obj))))
 
   (define (exec-prim name args)
     (apply (get-primitive name) args))
@@ -5108,7 +5113,7 @@
 
   ;; CALL HELPERS
   (define (call-proc-obj-interpret proc nargs ret)
-    (if (proc-obj-primitive? proc)
+    (if (gvm-proc-obj-primitive? proc)
       ;; primitive
       (let* ((params-info (get-jump-parameters-info nargs))
              (args (map get-value (get-args-loc params-info)))
@@ -5154,7 +5159,7 @@
     (let* ((test (ifjump-test instr))
            (opnds (ifjump-opnds instr))
            (opnds-values (map get-value opnds)))
-      (if (isa-proc-obj-primitive? test)
+      (if (gvm-proc-obj-primitive? test)
         (let* ((result (exec-prim (proc-obj-name test) opnds-values)))
           (if result
             (jump-to-no-args bbs (ifjump-true instr) bb #f)
