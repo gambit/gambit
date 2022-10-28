@@ -2172,6 +2172,12 @@
   (define (bbvctx-cost bbvctx) (vector-ref bbvctx 1))
   (define (bbvctx-path bbvctx) (vector-ref bbvctx 2))
 
+  (define (bb-version-limit bb)
+    (let* ((instr-comment (gvm-instr-comment (bb-label-instr bb)))
+           (node (comment-get instr-comment 'node))
+           (env (node-env node)))
+      (if env (version-limit env) 0)))
+
   (define (walk-bbs bbs)
     (let ()
 
@@ -2200,12 +2206,7 @@
                                   bb-versions)))
                (do-later (lambda () #f))
                (types-lbl-alist (vector-ref bb-versions 0))
-               (all-versions-tbl (vector-ref bb-versions 1))
-               (v-limit
-                 (let* ((instr-comment (gvm-instr-comment (bb-label-instr bb)))
-                        (node (comment-get instr-comment 'node))
-                        (env (node-env node)))
-                  (if env (version-limit env) 0))))
+               (all-versions-tbl (vector-ref bb-versions 1)))
 
           (or (table-ref all-versions-tbl types-before #f)
 
@@ -2217,6 +2218,7 @@
                       (cons (cons types-before new-lbl)
                             types-lbl-alist)))
 
+                #;
                 (if looping?
                     (pp `(********************looping ,looping?)))
 
@@ -2224,7 +2226,9 @@
 
                 (vector-set! bb-versions 0 new-types-lbl-alist)
 
-                (if (> (length new-types-lbl-alist) v-limit)
+                (if (> (length new-types-lbl-alist)
+                       (max 1 (bb-version-limit bb)))
+
                     (let* ((types-lbl-vect
                             (list->vector new-types-lbl-alist))
                            (n
@@ -2797,32 +2801,44 @@
 
 ;;  (write-bbs bbs (current-output-port))
 
-  (walk-bbs bbs)
+  (let ((specialize? #f))
 
-;;  (write-bbs new-bbs (current-output-port))
+    (bbs-for-each-bb
+     (lambda (bb)
+       (if (> (bb-version-limit bb) 0)
+           (set! specialize? #t)))
+     bbs)
 
-  (bbs-for-each-bb
-    (lambda (bb)
+    (if (not specialize?)
 
-      (define (replacement-lbl-num lbl)
-        (let ((x (table-ref lbl-mapping lbl #f)))
-          (if x
-              (begin
-                (if debug-bbv?
-                    (pp (list lbl '--> x)))
-                (replacement-lbl-num x))
-              lbl)))
+        bbs
 
-      (bb-clone-replacing-lbls
-       bb
-       new-bbs
-       replacement-lbl-num
-       #f))
-    new-bbs)
+        (begin
 
-  new-bbs)
+          (walk-bbs bbs)
 
+;;          (write-bbs new-bbs (current-output-port))
 
+          (bbs-for-each-bb
+           (lambda (bb)
+
+             (define (replacement-lbl-num lbl)
+               (let ((x (table-ref lbl-mapping lbl #f)))
+                 (if x
+                     (begin
+                       (if debug-bbv?
+                           (pp (list lbl '--> x)))
+                       (replacement-lbl-num x))
+                     lbl)))
+
+             (bb-clone-replacing-lbls
+              bb
+              new-bbs
+              replacement-lbl-num
+              #f))
+           new-bbs)
+
+          new-bbs))))
 
 #;
 (define (bbs-type-analysis!-old bbs)
