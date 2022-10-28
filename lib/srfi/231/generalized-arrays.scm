@@ -3154,7 +3154,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                                     (positive? S_k))
                                (and (vector? S_k)
                                     (%%vector-every (lambda (x) (and (exact-integer? x) (not (negative? x)))) S_k)
-                                    (= (%%vector-fold-left + 0 S_k) (%%interval-width domain k))))
+                                    (= (%%vector-fold-left (lambda (x y) (+ x y)) 0 S_k) (%%interval-width domain k))))
                            (slice-widths-check (fx+ k 1))
                            (error (string-append "array-tile: Axis "
                                                  (number->string k)
@@ -4067,6 +4067,10 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 ;;; applies f to the elements of the arrays in lexicographical order.
 
+(define (%%array-for-each f array arrays)
+  (%%interval-for-each (%%specialize-function-applied-to-array-getters f array arrays)
+                       (%%array-domain array)))
+
 (define (array-for-each f array #!rest arrays)
   (cond ((not (procedure? f))
          (apply error "array-for-each: The first argument is not a procedure: " f array arrays))
@@ -4075,8 +4079,7 @@ OTHER DEALINGS IN THE SOFTWARE.
         ((not (%%every (lambda (d) (%%interval= d (%%array-domain array))) (map %%array-domain arrays)))
          (apply error "array-for-each: Not all arrays have the same domain: " f array arrays))
         (else
-         (%%interval-for-each (%%specialize-function-applied-to-array-getters f array arrays)
-                              (%%array-domain array)))))
+         (%%array-for-each f array arrays))))
 
 (define-macro (macro-make-predicates)
 
@@ -4524,11 +4527,15 @@ OTHER DEALINGS IN THE SOFTWARE.
           (%%array-curry (%%array-permute result-array (%%index-first result-dimension k))
                          domain-dimension)))
     ;; copy each array argument to the associated place in stack
-    (array-for-each (lambda (destination source)
-                      (%%move-array-elements destination source caller))
-                    permuted-and-curried-result
-                    (list->array (make-interval (vector number-of-arrays))
-                                 arrays))
+    (%%array-for-each (lambda (destination source)
+                        (%%move-array-elements destination source caller))
+                      permuted-and-curried-result
+                      (list (%%list->array (make-interval (vector number-of-arrays))
+                                           arrays
+                                           generic-storage-class
+                                           #f
+                                           #f
+                                           caller)))
     (if (not mutable?)
         (%%array-freeze! result-array)
         result-array)))
@@ -4743,11 +4750,11 @@ OTHER DEALINGS IN THE SOFTWARE.
                                                                       (storage-class-default storage-class)
                                                                       safe?))
                             (curried-result (%%array-curry result (%%interval-dimension first-domain))))
-                       (array-for-each (lambda (result argument)
-                                         (%%move-array-elements result
-                                                                argument
-                                                                caller))
-                                       curried-result A)
+                       (%%array-for-each (lambda (result argument)
+                                           (%%move-array-elements result
+                                                                  argument
+                                                                  caller))
+                                         curried-result (list A))
                        (if (not mutable?)
                            (%%array-freeze! result)
                            result)))))))))
@@ -4799,7 +4806,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                           (let ((slices   ;; the slices in that direction
                                  (%%array-curry (%%array-permute A (%%index-first A_dim k))
                                                 (fx- A_dim 1))))
-                            (array-every
+                            (%%array-every
                              (lambda (slice)
                                (let ((kth-width-of-arrays-in-slice
                                       (map (lambda (a)
@@ -4807,7 +4814,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                                            (%%array->list slice))))
                                  (or (null? kth-width-of-arrays-in-slice)
                                      (%%every (lambda (w) (= (car kth-width-of-arrays-in-slice) w)) (cdr kth-width-of-arrays-in-slice)))))
-                             slices)))
+                             slices '())))
                         ks))
                   (error (string-append caller "Cannot stack array elements of the first argument into result array: ") A-arg))
                  (else
