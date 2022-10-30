@@ -2,7 +2,7 @@
 
 ;;; File: "_ptree2.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -197,8 +197,12 @@
                              (var-name var))
                             (proc
                              (target.prim-info name))
+                            (call
+                             (make-specialization-call proc args))
+                            (spec-call
+                             (specialize-call call (node-env oper)))
                             (spec
-                             (specialize-proc proc args (node-env oper)))
+                             (car spec-call))
                             (source
                              (node-source ptree))
                             (env
@@ -326,8 +330,12 @@
                       (proc-obj? (cst-val oper)))
                  (let* ((proc
                          (cst-val oper))
+                        (call
+                         (make-specialization-call proc args))
+                        (spec-call
+                         (specialize-call call (node-env oper)))
                         (spec
-                         (specialize-proc proc args (node-env oper)))
+                         (car spec-call))
                         (source
                          (node-source ptree))
                         (env

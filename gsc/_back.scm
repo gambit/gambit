@@ -2,7 +2,7 @@
 
 ;;; File: "_back.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -130,12 +130,14 @@
 ;;              procedure and task is returned.
 ;;
 ;; switch-testable?  Function.
-;;              This function tests whether an object can be tested
-;;              in a GVM "switch" instruction.
+;;              This function tests whether for a type T it is the case that
+;;              all values of that type can be tested in a GVM "switch"
+;;              instruction.
 ;;
 ;; eq-testable?  Function.
-;;              This function tests whether an object tested to another
-;;              with eq? is equivalent to testing it with equal?.
+;;              This function tests whether for a type T it is the case that
+;;              (eq? t x) and (eqv? t x) and (equal? t x) return the same
+;;              boolean for all values t in T and all possible values x.
 ;;
 ;; object-type  Function.
 ;;              This function returns a symbol indicating the type of its

@@ -1704,22 +1704,26 @@
 (define (spec-s name) ;; Safe specialization
   (lambda (proc proc-name)
     (let ((spec (get-prim-info name)))
-      (lambda (env args) spec))))
+      (lambda (env call)
+        (cons spec (cdr call))))))
 
 (define (spec-u name) ;; Unsafe specialization
   (lambda (proc proc-name)
     (let ((spec (get-prim-info name)))
-      (lambda (env args) (if (not (safe? env)) spec proc)))))
+      (lambda (env call)
+        (if (not (safe? env))
+            (cons spec (cdr call))
+            call)))))
 
 (define (spec-nargs . names) ;; Argument count specialization
   (lambda (proc proc-name)
     (let ((specs (map (lambda (n) (and n (get-prim-info n))) names)))
-      (lambda (env args)
-        (let* ((nargs (length args))
-               (s (and (< nargs (length specs))
-                       (list-ref specs nargs))))
-          (or s
-              proc))))))
+      (lambda (env call)
+        (let* ((args (cdr call))
+               (nargs (length args)))
+          (if (< nargs (length specs))
+              (cons (list-ref specs nargs) args)
+              call))))))
 
 (define (spec-arith fix-name . flo-name-and-unsafe-name) ;; Arithmetic specialization
   (let ((flo-name
@@ -1736,52 +1740,64 @@
              (if flo-name (get-prim-info flo-name) proc))
             (unsafe-spec
              (if unsafe-name (get-prim-info unsafe-name) proc)))
-        (lambda (env args)
-          (let ((arith (arith-implementation proc-name env)))
+        (lambda (env call)
+          (let* ((args (cdr call))
+                 (arith (arith-implementation proc-name env)))
             (cond ((and (not (safe? env)) (not (eq? unsafe-spec proc)))
-                   unsafe-spec)
+                   (cons unsafe-spec args))
                   ((eq? arith fixnum-sym)
-                   fix-spec)
+                   (cons fix-spec args))
                   ((eq? arith flonum-sym)
-                   flo-spec)
+                   (cons flo-spec args))
                   (else
-                   proc))))))))
+                   call))))))))
+
+(define (spec-arith-no-overflow fix-name) ;; Fixnum arithmetic specialization
+  (lambda (proc proc-name)
+    (let ((fix-spec
+           (get-prim-info fix-name)))
+      (lambda (env call)
+        (define tctx (make-tctx)) ;; TODO store in target
+        (let* ((args (cdr call))
+               (arith (arith-implementation proc-name env)))
+          (if (eq? arith fixnum-sym)
+              (cons fix-spec args)
+              (let* ((type-infer
+                      (proc-obj-type-infer proc))
+                     (result-type
+                      (and type-infer
+                           (type-infer tctx
+                                       (map specialization-arg-type args)))))
+                (if (type-included? tctx result-type type-fixnum)
+                    (cons fix-spec args)
+                    call))))))))
 
 (define (spec-s-eqv?) ;; Safe specialization for eqv? and ##eqv?
   (lambda (proc proc-name)
     (let ((spec (get-prim-info "##eq?")))
-      (lambda (env args)
-        (if (and (= (length args) 2)
-                 (or (eq? (arith-implementation proc-name env) fixnum-sym)
-                     (eq-testable-object? (car args))
-                     (eq-testable-object? (cadr args))))
-          spec
-          proc)))))
+      (lambda (env call)
+        ;; TODO: improve to allow specializing (eqv? x "foo")
+        (let ((args (cdr call)))
+          (if (and (= (length args) 2)
+                   (or (eq? (arith-implementation proc-name env) fixnum-sym)
+                       (eq-testable? (specialization-arg-type (car args)))
+                       (eq-testable? (specialization-arg-type (cadr args)))))
+              (cons spec args)
+              call))))))
 
 (define (spec-s-equal?) ;; Safe specialization for equal? and ##equal?
   (lambda (proc proc-name)
     (let ((spec (get-prim-info "##eq?")))
-      (lambda (env args)
-        (if (and (= (length args) 2)
-                 (or (eq-testable-object? (car args))
-                     (eq-testable-object? (cadr args))))
-          spec
-          proc)))))
+      (lambda (env call)
+        (let ((args (cdr call)))
+          (if (and (= (length args) 2)
+                   (or (eq-testable? (specialization-arg-type (car args)))
+                       (eq-testable? (specialization-arg-type (cadr args)))))
+              (cons spec args)
+              call))))))
 
-;;(define (eq-testable-object? type)
-;;  (and (type-singleton? type)
-;;       (testable-with-eq? (type-singleton-val type))))
-(define (eq-testable-object? obj)
-  (and (not (void-object? obj)) ;; the void-object denotes a non-constant
-       (testable-with-eq? obj)))
-
-(define (testable-with-eq? obj)
-  (or (symbol-object? obj)
-      (keyword-object? obj)
-      (memq (targ-obj-type obj) ;; TODO: remove dependency on C back-end
-            '(boolean null absent unused deleted void eof optional
-              key rest
-              fixnum char))))
+(define (eq-testable? type)
+  ((target-eq-testable? targ) type))
 
 (define (def-dead-end name)
   (let ((proc (get-prim-info name)))
@@ -2037,14 +2053,14 @@
 (def-spec "fxwrapquotient"     (spec-u "##fxwrapquotient"))
 (def-spec "fxwrapsquare"       (spec-u "##fxwrapsquare"))
 
-(def-spec "##fx*?"                      (spec-arith "##fx*"))
-(def-spec "##fx+?"                      (spec-arith "##fx+"))
-(def-spec "##fx-?"                      (spec-arith "##fx-"))
-(def-spec "##fxarithmetic-shift?"       (spec-arith "##fxarithmetic-shift"))
-(def-spec "##fxarithmetic-shift-left?"  (spec-arith "##fxarithmetic-shift-left"))
-(def-spec "##fxarithmetic-shift-right?" (spec-arith "##fxarithmetic-shift-right"))
-(def-spec "##fxabs?"                    (spec-arith "##fxabs"))
-(def-spec "##fxsquare?"                 (spec-arith "##fxsquare"))
+(def-spec "##fx*?"                      (spec-arith-no-overflow "##fx*"))
+(def-spec "##fx+?"                      (spec-arith-no-overflow "##fx+"))
+(def-spec "##fx-?"                      (spec-arith-no-overflow "##fx-"))
+(def-spec "##fxarithmetic-shift?"       (spec-arith-no-overflow "##fxarithmetic-shift"))
+(def-spec "##fxarithmetic-shift-left?"  (spec-arith-no-overflow "##fxarithmetic-shift-left"))
+(def-spec "##fxarithmetic-shift-right?" (spec-arith-no-overflow "##fxarithmetic-shift-right"))
+(def-spec "##fxabs?"                    (spec-arith-no-overflow "##fxabs"))
+(def-spec "##fxsquare?"                 (spec-arith-no-overflow "##fxsquare"))
 
 ;; flonum
 
@@ -7479,6 +7495,20 @@
 
 (define type-boolean ;; union of type-false and type-true
   (make-type-motley-non-fixnum (+ type-false-bit type-true-bit)))
+
+(define type-typically-eq-testable ;; union of typically eq? testable types
+  (make-type-motley (+ type-false-bit
+                       type-true-bit
+                       type-null-bit
+                       type-void-bit
+                       type-eof-bit
+                       type-absent-bit
+                       type-char-bit
+                       type-symbol-bit
+                       type-keyword-bit
+                       type-procedure-bit)
+                    '>=
+                    '<=))
 
 ;;; singleton type (corresponds to a single value)
 

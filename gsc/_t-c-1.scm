@@ -312,16 +312,16 @@
 
 ;; ***** OBJECT PROPERTIES
 
-(define (targ-switch-testable? obj)
-  (targ-eq-testable? obj))
+(define (targ-switch-testable? type)
+  (targ-eq-testable? type))
 
-(define (targ-eq-testable? obj)
-  (or (symbol-object? obj)
-      (keyword-object? obj)
-      (memq (targ-obj-type obj)
-            '(boolean null absent unused deleted void eof optional
-              key rest
-              fixnum char))))
+(define (targ-eq-testable? type)
+  (define tctx (make-tctx)) ;; TODO: store in the target
+  (or (type-included? tctx type type-typically-eq-testable)
+      (and (type-singleton? type)
+           (memq (targ-obj-type (type-singleton-val type))
+                 '(;; boolean null void eof absent fixnum char (covered by above)
+                   unused deleted optional key rest)))))
 
 (define (targ-object-type obj)
   (let ((t (targ-obj-type obj)))

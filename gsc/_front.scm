@@ -1991,7 +1991,7 @@
          (let ((var (ref-var arg1))
                (val (cst-val arg2)))
            (and (bound? var)
-                (target.switch-testable? val)
+                (target.switch-testable? (make-type-singleton val))
                 (begin
                   (if (not case-var)
                     (set! case-var var))

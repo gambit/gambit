@@ -351,34 +351,52 @@
     (specialize-app oper args env)))
 
 (define (specialize-app oper args env)
-  (specialize-proc
-   (cond ((cst? oper)
-          (let ((val (cst-val oper)))
-            (and (proc-obj? val)
-                 val)))
-         ((ref? oper)
-          (and (global? (ref-var oper))
-               (global-proc-obj oper)))
-         (else
-          #f))
-   args
-   env))
+  (let ((proc
+         (cond ((cst? oper)
+                (let ((val (cst-val oper)))
+                  (and (proc-obj? val)
+                       val)))
+               ((ref? oper)
+                (and (global? (ref-var oper))
+                     (global-proc-obj oper)))
+               (else
+                #f))))
+    (and proc
+         (let* ((call
+                 (make-specialization-call proc args))
+                (spec-call
+                 (specialize-call call env)))
+           (car spec-call)))))
 
-(define (specialize-proc proc args env)
-  (and proc
-       (nb-args-conforms? (length args) (proc-obj-call-pat proc))
-       (let loop ((proc proc))
-         (let ((spec
-                ((proc-obj-specialize proc)
-                 env
-                 (map (lambda (arg) (if (cst? arg) (cst-val arg) void-object))
-                      args))))
-           (if (eq? spec proc)
-             proc
-             (loop spec))))))
+(define (specialize-call call env)
+  (let ((proc (car call))
+        (args (cdr call)))
+    (if (not (nb-args-conforms? (length args)
+                                (proc-obj-call-pat proc)))
+        #f ;; no further specialization possible
+        (let ((spec-call
+               ((proc-obj-specialize proc) env call)))
+          (if (eq? call spec-call)
+              call ;; no further specialization possible
+              (specialize-call spec-call env))))))
 
 (define (nb-args-conforms? n call-pat)
   (pattern-member? n call-pat))
+
+(define (make-specialization-call proc args)
+  (cons proc (map ptree->specialization-arg args)))
+
+(define (ptree->specialization-arg ptree)
+  (make-specialization-arg
+   (if (cst? ptree)
+       (make-type-singleton (cst-val ptree))
+       type-top)))
+
+(define (make-specialization-arg type)
+  (list type))
+
+(define (specialization-arg-type specialization-arg)
+  (car specialization-arg))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ;;

@@ -196,7 +196,7 @@
             type
             standard
             #f))) ;; dead-end?
-    (proc-obj-specialize-set! proc-obj (lambda (env args) proc-obj))
+    (proc-obj-specialize-set! proc-obj (lambda (env call) call))
     proc-obj))
 
 (define proc-obj-tag (list 'proc-obj))
@@ -2471,21 +2471,32 @@
                            prim))
                       (opnds
                        (map walk-opnd (apply-opnds gvm-instr)))
+                      (type-opnds
+                       (map (lambda (opnd)
+                              (opnd-type opnd types-before))
+                            opnds))
+                      (call
+                       (cons prim (map make-specialization-arg type-opnds)))
+                      (spec-call
+                       (let* ((instr-comment (gvm-instr-comment gvm-instr))
+                              (node (comment-get instr-comment 'node))
+                              (env (node-env node)))
+                         (if env
+                             (specialize-call call env)
+                             call)))
+                      (prim2
+                       (car spec-call))
                       (loc
                        (walk-loc (apply-loc gvm-instr)))
                       (types-after
                        (if (locenv-loc? loc)
                            (let* ((type-infer
-                                   (proc-obj-type-infer prim))
+                                   (proc-obj-type-infer prim2))
                                   (dst-loc
                                    (gvm-loc->locenv-index types-after loc))
                                   (dst-type
                                    (if type-infer
-                                       (type-infer
-                                        tctx
-                                        (map (lambda (opnd)
-                                               (opnd-type opnd types-before))
-                                             opnds))
+                                       (type-infer tctx type-opnds)
                                        type-top)))
                              (locenv-set types-after ;; change type of dst-loc
                                          dst-loc
@@ -2493,7 +2504,7 @@
                            types-after)) ;; no change
                       (new-instr
                        (make-apply
-                        prim
+                        prim2
                         opnds
                         loc
                         (gvm-instr-frame gvm-instr)
