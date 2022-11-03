@@ -5080,6 +5080,7 @@
     ;; TODO opts is ignored
     ;; TODO keys are ignored and they default values are simply pluged-in
     (let* ((closed? (if clo #t #f))
+           (keys (or keys '()))
            (args (append args (map cdr keys))) ;; TODO: temporary hack
            (params-info (get-label-parameters-info nparams closed?))
            (args-loc (get-args-loc params-info))
