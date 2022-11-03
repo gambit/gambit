@@ -357,6 +357,9 @@
                                #f ;; space for foreign pointer to ___module_struct
                                )))
 
+                 (if compiler-option-gvm-interpret
+                     (gvm-interpret module-procs))
+
                  (if compiler-option-report
                      (generate-report env))
 
@@ -378,9 +381,6 @@
                        (virtual.dump-dg root dependency-graph dg-port)
                        (close-output-port dg-port)
                        (set! dependency-graph #f)))
-
-                 (if compiler-option-gvm-interpret
-                     (gvm-interpret module-procs))
 
                  (let ((result-thunk
                         (target.dump

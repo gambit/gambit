@@ -3623,7 +3623,8 @@
       node-info-default-bgcolor))
 
 
-  (let ((proc-tbl (make-table)))
+  (let ((bbs-tbl (make-table 'test: eq?))
+        (proc-tbl (make-table)))
 
     (define (proc-repr proc)
       (format-gvm-opnd (make-obj proc)))
@@ -3669,7 +3670,8 @@
       (define (dump-bb bb)
         (let ((id (bb-id (bb-lbl-num bb) proc-index))
               (port-count 0)
-              (rev-rows '()))
+              (rev-rows '())
+              (branch-counters (get-branch-counters (bb-branch-instr bb))))
 
           (define (add-row row)
             (set! rev-rows (cons row rev-rows)))
@@ -3686,24 +3688,62 @@
                   (line-id (gen-port)))
 
               (define (target-id ref)
-                (or (table-ref proc-tbl ref #f)
-                    (bb-id (string->number
-                            (substring ref 1 (string-length ref)))
-                           proc-index)))
+                (if (pair? ref)
+                    (proc-id (car ref) (cdr ref)) ;; a label outside of this bbs
+                    (bb-id ref proc-index))) ;; a label in this bbs
 
               (define (reference? x)
-                (or (table-ref proc-tbl x #f)
-                    (and (>= (string-length x) 2)
+                (or (table-ref proc-tbl x #f) ;; a label outside of this bbs?
+                    (and (>= (string-length x) 2) ;; a label in this bbs?
                          (char=? (string-ref x 0) #\#)
                          (string->number (substring x 1 (string-length x))))))
 
-              (define (add-ref from side to dotted?)
+              (define (add-edge from side targ-id width label)
                 (dot-digraph-add-edge!
                  dd
                  (dot-digraph-gen-edge
                   (string-append id ":" from side)
-                  to
-                  dotted?)))
+                  targ-id
+                  width
+                  label)))
+
+              (define (add-branch-edge from targ-bbs targ-lbl)
+                (let* ((t (table-ref branch-counters targ-bbs #f))
+                       (count (if t (table-ref t targ-lbl 0) 0)))
+                  (add-branch-edge-with-count from targ-bbs targ-lbl count)))
+
+              (define (add-branch-edge-with-count from targ-bbs targ-lbl count)
+                (let ((info (table-ref bbs-tbl targ-bbs)))
+                  (add-edge
+                   from
+                   ":s"
+                   (bb-id targ-lbl (cdr info))
+                   (if (> count 0) (if (>= count 100) 8 4) 1)
+                   (if (> count 0) (number->string count) #f))))
+
+              (define (add-branch-edges from ref)
+                (cond ((not ref)
+                       ;; general GVM operand (register, stack, etc)
+                       ;; add all branches that were observed
+                       (for-each
+                        (lambda (targ-bbs-and-table)
+                          (let ((targ-bbs (car targ-bbs-and-table)))
+                            (for-each
+                             (lambda (targ-lbl-and-count)
+                               (let ((targ-lbl (car targ-lbl-and-count))
+                                     (count (cdr targ-lbl-and-count)))
+                                 (add-branch-edge-with-count from targ-bbs targ-lbl count)))
+                             (table->list (cdr targ-bbs-and-table)))))
+                        (table->list branch-counters)))
+                      ((pair? ref)
+                       ;; a label outside of this bbs
+                       (add-branch-edge from (proc-obj-code (car ref)) (cdr ref)))
+                      (else
+                       ;; a label in this bbs
+                       (add-branch-edge from bbs ref))))
+
+              (define (add-ref-edge from side ref)
+                (add-edge from side (target-id ref) 0 #f))
 
               (dot-digraph-gen-row
                (dot-digraph-gen-col
@@ -3719,37 +3759,37 @@
                               (code
                                (cdr code)))
                     (if (pair? code)
-                        (let ((x (car code)))
-                          (if (reference? x)
-                              (let ((jump?
-                                     (and (pair? before)
-                                          (equal? (car before) ""))))
-                                (if last-instr?
-                                    (let ((ref-id (gen-port)))
-                                      (set! nb-ports (+ nb-ports 1))
-                                      (add-ref ref-id
-                                               ":s"
-                                               (target-id x)
-                                               (not jump?))
-                                      `(,@(dot-digraph-gen-col
-                                           #f
-                                           "left"
-                                           (reverse before))
-                                        ,@(dot-digraph-gen-col
-                                           ref-id
-                                           "left"
-                                           `(,(dot-digraph-gen-html-escape x)))
-                                        ,@(loop1 '()
-                                                 (cdr code))))
-                                    (begin
-                                      (add-ref line-id
-                                               ":w"
-                                               (target-id x)
-                                               (not jump?))
-                                      (loop1 (cons
-                                              (dot-digraph-gen-html-escape x)
-                                              before)
-                                             (cdr code)))))
+                        (let* ((x
+                                (car code))
+                               (branch-destination?
+                                (and last-instr?
+                                     (pair? before)
+                                     (equal? (car before) "")))
+                               (ref
+                                (reference? x)))
+                          (if (or branch-destination? ref)
+                              (if last-instr? ;; should arrow exit south?
+                                  (let ((ref-id (gen-port)))
+                                    (set! nb-ports (+ nb-ports 1))
+                                    (if branch-destination?
+                                        (add-branch-edges ref-id ref)
+                                        (add-ref-edge ref-id ":s" ref))
+                                    `(,@(dot-digraph-gen-col
+                                         #f
+                                         "left"
+                                         (reverse before))
+                                      ,@(dot-digraph-gen-col
+                                         ref-id
+                                         "left"
+                                         `(,(dot-digraph-gen-html-escape x)))
+                                      ,@(loop1 '()
+                                               (cdr code))))
+                                  (begin
+                                    (add-ref-edge line-id ":w" ref)
+                                    (loop1 (cons
+                                            (dot-digraph-gen-html-escape x)
+                                            before)
+                                           (cdr code))))
                               (loop1 (cons
                                       (dot-digraph-gen-html-escape x)
                                       before)
@@ -3902,8 +3942,10 @@
 
       (let loop1 ((i 0) (lst rprocs))
         (if (pair? lst)
-            (let ((proc (car lst)))
-              (table-set! proc-tbl (proc-repr proc) (proc-id proc i))
+            (let* ((proc (car lst))
+                   (info (cons proc i)))
+              (table-set! bbs-tbl (proc-obj-code proc) info)
+              (table-set! proc-tbl (proc-repr proc) info)
               (loop1 (+ i 1) (cdr lst)))))
 
       (let loop2 ((i 0) (lst rprocs))
@@ -3956,7 +3998,8 @@
                    (dot-digraph-gen-edge
                     (gen-label referrer)
                     (gen-label var)
-                    (not jump?))))))
+                    (if jump? 1 0) ;; solid or dotted line
+                    #f))))) ;; no label
           (sort-list (map var-name (varset->list dependencies))
                      (lambda (x y)
                        (string<? (symbol->string x)
@@ -4110,11 +4153,18 @@
     ,@(dot-digraph-edges dd)
     "}\n"))
 
-(define (dot-digraph-gen-edge from to dotted?)
+(define (dot-digraph-gen-edge from to width label)
   `("  " ,from " -> " ,to
-    ,(if dotted?
-         " [style = dotted]"
-         "")
+    ,@(if (and (= width 1) (not label))
+          '()
+          `(" ["
+            ,@(if label `("headlabel=\"" ,label "\" labelfontsize=" ,(number->string (* 4 (max 3 width)))) '())
+            ,@(if (= width 1)
+                  '()
+                  (if (< width 1)
+                      `(" style=dotted")
+                      `(" style=\"setlinewidth(" ,(number->string width) ")\"")))
+            "]"))
     ";\n"))
 
 (define (dot-digraph-gen-node id label)
@@ -4473,10 +4523,10 @@
        " fs="
        ,(number->string (frame-size (gvm-instr-frame gvm-instr)))
        " "
-       "" ;; tag as a direct jump
+       "" ;; tag as a branch destination
        ,(format-gvm-lbl (ifjump-true gvm-instr))
        " else "
-       "" ;; tag as a direct jump
+       "" ;; tag as a branch destination
        ,(format-gvm-lbl (ifjump-false gvm-instr))))
 
     ((switch)
@@ -4495,7 +4545,7 @@
                      (next (cdr cases)))
                  `(,(format-gvm-obj (switch-case-obj c) #f)
                    " => "
-                   "" ;; tag as a direct jump
+                   "" ;; tag as a branch destination
                    ,(format-gvm-lbl (switch-case-lbl c))
                    ,@(if (null? next)
                          '()
@@ -4503,21 +4553,18 @@
                            ,@(loop next)))))
                '()))
        ") "
-       "" ;; tag as a direct jump
+       "" ;; tag as a branch destination
        ,(format-gvm-lbl (switch-default gvm-instr))))
 
     ((jump)
      `("  "
        ,(if (jump-poll? gvm-instr)
-            "jump/poll"
-            "jump")
-       ,(if (jump-safe? gvm-instr)
-            "/safe"
-            "")
+            (if (jump-safe? gvm-instr) "jump/poll/safe" "jump/poll")
+            (if (jump-safe? gvm-instr) "jump/safe" "jump"))
        " fs="
        ,(number->string (frame-size (gvm-instr-frame gvm-instr)))
        " "
-       "" ;; tag as a direct jump
+       "" ;; tag as a branch destination
        ,(format-gvm-opnd (jump-opnd gvm-instr))
        ,@(if (jump-ret gvm-instr)
              `(" "
@@ -4830,21 +4877,30 @@
 ;; GVM interpret
 ;; -----------------------------------------
 
-;; jump counter
-(define (increment-jump-counter instr target-bbs target-lbl)
-  (let* ((comment (gvm-instr-comment instr))
-         (table (or (comment-get comment 'jump-counter)
-                    '()))
-         (key (cons target-bbs target-lbl))
-         (entry (assoc key table)))
-    (if entry
-        (set-cdr! entry (+ (cdr entry) 1))
-        (set! table (cons (cons key 1) table)))
-    (comment-put! comment 'jump-counter table)))
+;; Branch counters
 
-(define (get-jump-counter jump-instr)
-  (or (comment-get (gvm-instr-comment instr) 'jump-counter)
-      '()))
+(define (increment-branch-counter branch-instr target-bbs target-lbl)
+  (let* ((table1
+          (get-branch-counters branch-instr))
+         (table2
+          (or (table-ref table1 target-bbs #f)
+              (let ((t (make-table)))
+                (table-set! table1 target-bbs t)
+                t))))
+    (table-set!
+     table2
+     target-lbl
+     (+ 1 (table-ref table2 target-lbl 0)))))
+
+(define (get-branch-counters branch-instr)
+  (let* ((comment
+          (gvm-instr-comment branch-instr))
+         (table
+          (or (comment-get comment 'branch-counter)
+              (let ((t (make-table 'test: eq?)))
+                (comment-put! comment 'branch-counter t)
+                t))))
+    table))
 
 ;; Object model
 
@@ -5113,7 +5169,7 @@
            (args-loc (get-args-loc params-info))
            (args-values (map get-value args-loc))
            (expect-jump-to-closure (if clo #t #f)))
-      (increment-jump-counter instr target-bbs lbl-num)
+      (increment-branch-counter instr target-bbs lbl-num)
       (stack-exit-frame! stack from-bb)
       (if ret (set-return-label ret-loc ret))
       (if (eq? (label-kind target-label) 'entry)
