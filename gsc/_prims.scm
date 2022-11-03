@@ -1705,24 +1705,24 @@
   (lambda (proc proc-name)
     (let ((spec (get-prim-info name)))
       (lambda (env call)
-        (cons spec (cdr call))))))
+        (make-call spec (call-args call))))))
 
 (define (spec-u name) ;; Unsafe specialization
   (lambda (proc proc-name)
     (let ((spec (get-prim-info name)))
       (lambda (env call)
         (if (not (safe? env))
-            (cons spec (cdr call))
+            (make-call spec (call-args call))
             call)))))
 
 (define (spec-nargs . names) ;; Argument count specialization
   (lambda (proc proc-name)
     (let ((specs (map (lambda (n) (and n (get-prim-info n))) names)))
       (lambda (env call)
-        (let* ((args (cdr call))
+        (let* ((args (call-args call))
                (nargs (length args)))
           (if (< nargs (length specs))
-              (cons (list-ref specs nargs) args)
+              (make-call (list-ref specs nargs) args)
               call))))))
 
 (define (spec-arith fix-name . flo-name-and-unsafe-name) ;; Arithmetic specialization
@@ -1735,20 +1735,20 @@
               (cadr flo-name-and-unsafe-name))))
     (lambda (proc proc-name)
       (let ((fix-spec
-             (if fix-name (get-prim-info fix-name) proc))
+             (and fix-name (get-prim-info fix-name)))
             (flo-spec
-             (if flo-name (get-prim-info flo-name) proc))
+             (and flo-name (get-prim-info flo-name)))
             (unsafe-spec
-             (if unsafe-name (get-prim-info unsafe-name) proc)))
+             (and unsafe-name (get-prim-info unsafe-name))))
         (lambda (env call)
-          (let* ((args (cdr call))
+          (let* ((args (call-args call))
                  (arith (arith-implementation proc-name env)))
-            (cond ((and (not (safe? env)) (not (eq? unsafe-spec proc)))
-                   (cons unsafe-spec args))
-                  ((eq? arith fixnum-sym)
-                   (cons fix-spec args))
-                  ((eq? arith flonum-sym)
-                   (cons flo-spec args))
+            (cond ((and unsafe-spec (not (safe? env)))
+                   (make-call unsafe-spec args))
+                  ((and fix-spec (eq? arith fixnum-sym))
+                   (make-call fix-spec args))
+                  ((and flo-spec (eq? arith flonum-sym))
+                   (make-call flo-spec args))
                   (else
                    call))))))))
 
@@ -1758,18 +1758,18 @@
            (get-prim-info fix-name)))
       (lambda (env call)
         (define tctx (make-tctx)) ;; TODO store in target
-        (let* ((args (cdr call))
+        (let* ((args (call-args call))
                (arith (arith-implementation proc-name env)))
           (if (eq? arith fixnum-sym)
-              (cons fix-spec args)
+              (make-call fix-spec args)
               (let* ((type-infer
                       (proc-obj-type-infer proc))
                      (result-type
                       (and type-infer
                            (type-infer tctx
-                                       (map specialization-arg-type args)))))
+                                       (map make-call-arg args)))))
                 (if (type-included? tctx result-type type-fixnum)
-                    (cons fix-spec args)
+                    (make-call fix-spec args)
                     call))))))))
 
 (define (spec-s-eqv?) ;; Safe specialization for eqv? and ##eqv?
@@ -1777,23 +1777,21 @@
     (let ((spec (get-prim-info "##eq?")))
       (lambda (env call)
         ;; TODO: improve to allow specializing (eqv? x "foo")
-        (let ((args (cdr call)))
-          (if (and (= (length args) 2)
-                   (or (eq? (arith-implementation proc-name env) fixnum-sym)
-                       (eq-testable? (specialization-arg-type (car args)))
-                       (eq-testable? (specialization-arg-type (cadr args)))))
-              (cons spec args)
+        (let ((args (call-args call)))
+          (if (or (eq? (arith-implementation proc-name env) fixnum-sym)
+                  (eq-testable? (call-arg-val (car args)))
+                  (eq-testable? (call-arg-val (cadr args))))
+              (make-call spec args)
               call))))))
 
 (define (spec-s-equal?) ;; Safe specialization for equal? and ##equal?
   (lambda (proc proc-name)
     (let ((spec (get-prim-info "##eq?")))
       (lambda (env call)
-        (let ((args (cdr call)))
-          (if (and (= (length args) 2)
-                   (or (eq-testable? (specialization-arg-type (car args)))
-                       (eq-testable? (specialization-arg-type (cadr args)))))
-              (cons spec args)
+        (let ((args (call-args call)))
+          (if (or (eq-testable? (call-arg-val (car args)))
+                  (eq-testable? (call-arg-val (cadr args))))
+              (make-call spec args)
               call))))))
 
 (define (eq-testable? type)
@@ -3757,17 +3755,14 @@
                     (gen-temp-vars source args)))
                (gen-prc source env
                  vars
-                 (let* ((generic-call
-                         (lambda ()
-                           (generate-call vars #f))) ;; handle other possibly valid cases
-                        (dead-end-call
-                         (lambda ()
-                           (generate-call vars #t)))) ;; handle failure
+                 (let ((generic-call
+                        (lambda ()
+                          (generate-call vars #f)))) ;; handle other possibly valid cases
                    (gen-case source env
                      vars
                      check-run-time-binding
                      generic-call
-                     dead-end-call))))))))
+                     generic-call))))))))
 
   (define (make-prim-generator prim)
     (lambda (source env vars out-of-line fail)
@@ -3994,7 +3989,7 @@
                                     (new-cst source env
                                       0)))
                             (fold-quotient q-var (cdr rest-vars))
-                            (fail)))
+                            (out-of-line)))
                         (list (gen-call-prim-notsafe source env
                                 **fxquotient-sym
                                 (list (new-ref source env
