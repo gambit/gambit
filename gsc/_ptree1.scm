@@ -366,11 +366,11 @@
                  (make-specialization-call proc args))
                 (spec-call
                  (specialize-call call env)))
-           (car spec-call)))))
+           (call-proc spec-call)))))
 
 (define (specialize-call call env)
-  (let ((proc (car call))
-        (args (cdr call)))
+  (let ((proc (call-proc call))
+        (args (call-args call)))
     (if (not (nb-args-conforms? (length args)
                                 (proc-obj-call-pat proc)))
         #f ;; no further specialization possible
@@ -384,19 +384,13 @@
   (pattern-member? n call-pat))
 
 (define (make-specialization-call proc args)
-  (cons proc (map ptree->specialization-arg args)))
+  (make-call proc (map ptree->specialization-call-arg args)))
 
-(define (ptree->specialization-arg ptree)
-  (make-specialization-arg
+(define (ptree->specialization-call-arg ptree)
+  (make-call-arg
    (if (cst? ptree)
        (make-type-singleton (cst-val ptree))
        type-top)))
-
-(define (make-specialization-arg type)
-  (list type))
-
-(define (specialization-arg-type specialization-arg)
-  (car specialization-arg))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ;;

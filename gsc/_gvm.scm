@@ -281,6 +281,31 @@
 (define (type-pot-fut? type)
   (pair? type))
 
+;; for representing procedure calls for specialization
+
+(define (make-call proc args) (cons proc args))
+(define (call-proc call) (car call))
+(define (call-args call) (cdr call))
+
+(define (make-call-arg val) (list val))
+(define (call-arg-val x) (car x))
+
+(define (fold-call-args old-args new-args init proc)
+
+  (define (fold-args n-args o-args o-args-pos)
+    (if (pair? n-args)
+        (let ((n-arg (car n-args)))
+          (proc n-arg
+                (if (and (pair? o-args) (eq? (car o-args) n-arg))
+                    o-args-pos ;; optimize common case
+                    (pos-in-list n-arg old-args))
+                (fold-args (cdr n-args)
+                           (if (pair? o-args) (cdr o-args) o-args)
+                           (+ o-args-pos 1))))
+        init))
+
+  (fold-args new-args old-args 0))
+
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ;;
 ;; Basic block set manipulation:
@@ -2476,7 +2501,7 @@
                               (opnd-type opnd types-before))
                             opnds))
                       (call
-                       (cons prim (map make-specialization-arg type-opnds)))
+                       (make-call prim (map make-call-arg type-opnds)))
                       (spec-call
                        (let* ((instr-comment (gvm-instr-comment gvm-instr))
                               (node (comment-get instr-comment 'node))

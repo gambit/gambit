@@ -185,185 +185,244 @@
         ptree)))
 
 (define (epc-app ptree)
+
+  (define (spec-call-with-vars call spec-call source env all-vars dead-end?)
+    (let* ((vars-vect
+            (list->vector all-vars))
+           (args
+            (fold-call-args
+             (call-args call)
+             (call-args spec-call)
+             '()
+             (lambda (arg index tail)
+               (cons
+                (if index
+                    (let ((var (vector-ref vars-vect index)))
+                      (new-ref source env
+                        var))
+                    (new-cst source env
+                      arg))
+                tail))))
+           (call-ptree
+            (gen-call-maybe-dead-end source env
+              (new-cst source env
+                (call-proc spec-call))
+              args
+              dead-end?)))
+      call-ptree))
+
+  (define (spec-call-with-args call spec-call source env all-args dead-end?)
+    (let* ((all-args-vect
+            (list->vector all-args))
+           (args
+            (fold-call-args
+             (call-args call)
+             (call-args spec-call)
+             '()
+             (lambda (arg index tail)
+               (cons
+                (if index
+                    (let ((arg-ptree (vector-ref all-args-vect index)))
+                      (vector-set! all-args-vect index #f)
+                      arg-ptree)
+                    (new-cst source env
+                      arg))
+                tail))))
+           (call-ptree
+            (gen-call-maybe-dead-end source env
+              (new-cst source env
+                (call-proc spec-call))
+              args
+              dead-end?)))
+      (let loop ((index (- (vector-length all-args-vect) 1))
+                 (inner call-ptree))
+        (if (>= index 0)
+            (loop (- index 1)
+                  (let ((arg (vector-ref all-args-vect index)))
+                    (if arg
+                        (new-seq source env
+                          arg
+                          inner)
+                        inner)))
+            inner))))
+
+  (define (replace-oper ptree new-oper args)
+    (let ((old-oper (app-oper ptree)))
+      (if (not (eq? old-oper new-oper))
+          (delete-ptree old-oper)))
+    (node-children-set! ptree
+      (cons (epc new-oper)
+            args))
+    ptree)
+
   (let* ((oper
           (app-oper ptree))
          (args
           (map epc (app-args ptree)))
-         (new-oper
-          (cond ((ref? oper)
-                 (let ((var (ref-var oper)))
-                   (if (global? var)
-                     (let* ((name
-                             (var-name var))
-                            (proc
-                             (target.prim-info name))
-                            (call
-                             (make-specialization-call proc args))
-                            (spec-call
-                             (specialize-call call (node-env oper)))
-                            (spec
-                             (car spec-call))
-                            (source
-                             (node-source ptree))
-                            (env
-                             (node-env ptree)))
+         (source
+          (node-source ptree))
+         (env
+          (node-env ptree)))
 
-                       (define (generate-spec-call vars dead-end?)
-                         (gen-call-maybe-dead-end source env
-                           (new-cst source env
-                             spec)
-                           (gen-var-refs source env vars)
-                           dead-end?))
-
-                       (define (generate-original-call vars dead-end?)
-                         (gen-call-maybe-dead-end source env
-                           (new-ref
-                            (node-source oper)
-                            (remove-std-ext-rt-bindings (node-env oper))
-                            var)
-                           (gen-var-refs source env vars)
-                           dead-end?))
-
-                       (define (generate-run-time-binding-test gen-body)
-                         (let ((vars (gen-temp-vars source args)))
-                           (gen-prc source env
-                             vars
-                             (new-tst source env
-                               (gen-eq-proc source env
-                                 (new-ref
-                                   (node-source oper)
-                                   (node-env oper)
-                                   var)
-                                 proc)
-                               (gen-body vars #f)
-                               (generate-original-call vars #f)))))
-
-                       (if (and spec
-                                (inline-primitive? name env)
-                                (or (not (eq? spec proc))
-                                    ((proc-obj-inlinable? spec) env)
-                                    ((proc-obj-expandable? spec) env)))
-                         (let* ((std?
-                                 ;; true iff it is OK to assume that the
-                                 ;; global variable "name" is bound to its
-                                 ;; predefined procedure
-                                 (standard-proc-obj proc
-                                                    name
-                                                    (node-env oper)))
-                                (rtb?
-                                 ;; true iff the binding of the global
-                                 ;; variable "name" should be checked at
-                                 ;; run time
-                                 (and (not std?)
-                                      (run-time-binding? name
-                                                         (node-env oper))))
-                                (use-original-call?
-                                 ;; true iff the original call should be
-                                 ;; used for the out-of-line case (this
-                                 ;; makes it possible to share the code
-                                 ;; generated for each branch)
-                                 rtb?)
-                                (new-oper
-                                 (if (not ((proc-obj-expandable? spec) env))
-
-                                     ;; the specialized procedure does not
-                                     ;; have an expansion, so just call
-                                     ;; the specialized procedure
-
-                                     (cond (std?
-                                            (new-cst source env
-                                              spec))
-                                           (rtb?
-                                            (generate-run-time-binding-test
-                                             generate-spec-call))
-                                           (else
-                                            #f))
-
-                                     ;; the specialized procedure has an
-                                     ;; expansion so use it if "name" has
-                                     ;; a standard binding or a run time
-                                     ;; binding declaration
-
-                                     (and (or std?
-                                              rtb?)
-                                        (let ((x
-                                               ((proc-obj-expand spec)
-                                                ptree
-                                                oper
-                                                args
-                                                (if use-original-call?
-                                                  generate-original-call
-                                                  generate-spec-call)
-                                                (and (and rtb?
-                                                          use-original-call?)
-                                                     (lambda ()
-                                                       (gen-eq-proc source env
-                                                         (new-ref
-                                                           (node-source oper)
-                                                           (node-env oper)
-                                                           var)
-                                                         proc))))))
-                                          (if x
-                                            (if (and rtb?
-                                                     (not use-original-call?))
-                                              (generate-run-time-binding-test
-                                               (lambda (vars dead-end?)
-                                                 (gen-call-maybe-dead-end
-                                                  source
-                                                  env
-                                                  x
-                                                  (gen-var-refs source env vars)
-                                                  dead-end?)))
-                                              x)
-                                            (and std?
-                                                 (new-cst source env
-                                                   spec))))))))
-                           (if new-oper
-                               (begin
-                                 (delete-ptree oper)
-                                 (epc new-oper))
-                               (epc oper)))
-                         (epc oper)))
-                     (epc oper))))
-
-                ((and (cst? oper)
-                      (proc-obj? (cst-val oper)))
-                 (let* ((proc
-                         (cst-val oper))
+    (cond ((ref? oper)
+           (let ((var (ref-var oper)))
+             (if (not (global? var))
+                 (replace-oper ptree oper args)
+                 (let* ((name
+                         (var-name var))
+                        (proc
+                         (target.prim-info name))
                         (call
+                         (and proc
+                              (inline-primitive? name env)
+                              (make-specialization-call proc args)))
+                        (spec-call
+                         (and call
+                              (specialize-call call env)))
+                        (spec
+                         (and spec-call
+                              (call-proc spec-call))))
+
+                   (define (generate-spec-call vars dead-end?)
+                     (spec-call-with-vars
+                      call
+                      spec-call
+                      source
+                      env
+                      vars
+                      dead-end?))
+
+                   (define (generate-original-call vars dead-end?)
+                     (gen-call-maybe-dead-end source env
+                       (new-ref source (remove-std-ext-rt-bindings env)
+                         var)
+                       (gen-var-refs source env vars)
+                       dead-end?))
+
+                   (define (generate-run-time-binding-test gen-body)
+                     (let ((vars (gen-temp-vars source args)))
+                       (gen-prc source env
+                         vars
+                         (new-tst source env
+                           (gen-eq-proc source env
+                             (new-ref source env
+                               var)
+                             proc)
+                           (gen-body vars #f)
+                           (generate-original-call vars #f)))))
+
+                   (if (and spec
+                            (or (not (eq? spec proc))
+                                ((proc-obj-inlinable? spec) env)
+                                ((proc-obj-expandable? spec) env)))
+                       (let* ((std?
+                               ;; true iff it is OK to assume that the
+                               ;; global variable "name" is bound to its
+                               ;; predefined procedure
+                               (standard-proc-obj proc name env))
+                              (rtb?
+                               ;; true iff the binding of the global
+                               ;; variable "name" should be checked at
+                               ;; run time
+                               (and (not std?)
+                                    (run-time-binding? name env)))
+                              (use-original-call?
+                               ;; true iff the original call should be
+                               ;; used for the out-of-line case (this
+                               ;; makes it possible to share the code
+                               ;; generated for each branch)
+                               rtb?))
+
+                         (if (not ((proc-obj-expandable? spec) env))
+
+                             ;; the specialized procedure does not
+                             ;; have an expansion, so just call
+                             ;; the specialized procedure
+
+                             (cond (std?
+                                    (delete-ptree oper)
+                                    (spec-call-with-args
+                                     call
+                                     spec-call
+                                     source
+                                     env
+                                     args
+                                     #f))
+                                   (rtb?
+                                    (replace-oper
+                                     ptree
+                                     (generate-run-time-binding-test
+                                      generate-spec-call)
+                                     args))
+                                   (else
+                                    (replace-oper ptree oper args)))
+
+                             ;; the specialized procedure has an
+                             ;; expansion so use it if "name" has
+                             ;; a standard binding or a run time
+                             ;; binding declaration
+
+                             (if (or std?
+                                     rtb?)
+
+                                 (replace-oper
+                                  ptree
+                                  ((proc-obj-expand spec)
+                                   ptree
+                                   oper
+                                   args
+                                   (if use-original-call?
+                                       generate-original-call
+                                       generate-spec-call)
+                                   (and rtb?
+                                        use-original-call?
+                                        (lambda ()
+                                          (gen-eq-proc source env
+                                            (new-ref source env
+                                              var)
+                                            proc))))
+                                  args)
+
+                                 (replace-oper ptree oper args))))
+
+                       (replace-oper ptree oper args))))))
+
+
+          ((cst? oper)
+           (let ((proc
+                  (cst-val oper)))
+             (if (not (proc-obj? proc))
+                 (replace-oper ptree oper args)
+                 (let* ((call
                          (make-specialization-call proc args))
                         (spec-call
-                         (specialize-call call (node-env oper)))
+                         (specialize-call call env))
                         (spec
-                         (car spec-call))
-                        (source
-                         (node-source ptree))
-                        (env
-                         (node-env ptree))
-                        (x
-                         (and spec
-                              (inline-primitive? (proc-obj-name spec) env)
-                              ((proc-obj-expandable? spec) env)
-                              ((proc-obj-expand spec)
-                               ptree
-                               oper
-                               args
-                               (lambda (vars dead-end?)
-                                 (gen-call-maybe-dead-end source env
-                                   (new-cst source env
-                                     spec)
-                                   (gen-var-refs source env vars)))
-                               #f))))
-                   (epc (or x oper))))
+                         (and spec-call
+                              (call-proc spec-call))))
+                   (replace-oper
+                    ptree
+                    (if (and spec
+                             (inline-primitive? (proc-obj-name spec) env)
+                             ((proc-obj-expandable? spec) env))
+                        ((proc-obj-expand spec)
+                         ptree
+                         oper
+                         args
+                         (lambda (vars dead-end?)
+                           (spec-call-with-vars
+                            call
+                            spec-call
+                            source
+                            env
+                            vars
+                            dead-end?))
+                         #f)
+                        oper)
+                    args)))))
 
-                (else
-                 (epc oper)))))
-
-    (node-children-set! ptree
-      (cons new-oper
-            args))
-
-    ptree))
+          (else
+           (replace-oper ptree oper args)))))
 
 (define (gen-prc source env params body)
   (new-prc source env #f #f params '() #f #f body))
