@@ -4830,6 +4830,22 @@
 ;; GVM interpret
 ;; -----------------------------------------
 
+;; jump counter
+(define (increment-jump-counter instr target-bbs target-lbl)
+  (let* ((comment (gvm-instr-comment instr))
+         (table (or (comment-get comment 'jump-counter)
+                    '()))
+         (key (cons target-bbs target-lbl))
+         (entry (assoc key table)))
+    (if entry
+        (set-cdr! entry (+ (cdr entry) 1))
+        (set! table (cons (cons key 1) table)))
+    (comment-put! comment 'jump-counter table)))
+
+(define (get-jump-counter jump-instr)
+  (or (comment-get (gvm-instr-comment instr) 'jump-counter)
+      '()))
+
 ;; Object model
 
 (define-type First-Class-Label
@@ -5064,6 +5080,7 @@
     ;; TODO opts is ignored
     ;; TODO keys are ignored and they default values are simply pluged-in
     (let* ((closed? (if clo #t #f))
+           (keys (or keys '()))
            (args (append args (map cdr keys))) ;; TODO: temporary hack
            (params-info (get-label-parameters-info nparams closed?))
            (args-loc (get-args-loc params-info))
@@ -5087,7 +5104,7 @@
     (if closed? (interpret-write (get-closure-loc params-info) clo))
     (for-each interpret-write args-loc args-with-rest)))
 
-  (define (jump-to target-bbs lbl-num from-bb nargs ret clo)
+  (define (jump-to instr target-bbs lbl-num from-bb nargs ret clo)
     (let* ((nargs (or nargs 0))
            (target-bb (lbl-num->bb lbl-num target-bbs))
            (target-label (bb-label-instr target-bb))
@@ -5096,6 +5113,7 @@
            (args-loc (get-args-loc params-info))
            (args-values (map get-value args-loc))
            (expect-jump-to-closure (if clo #t #f)))
+      (increment-jump-counter instr target-bbs lbl-num)
       (stack-exit-frame! stack from-bb)
       (if ret (set-return-label ret-loc ret))
       (if (eq? (label-kind target-label) 'entry)
@@ -5111,11 +5129,11 @@
         (interpret-debug-ln "=========== JUMP OUT ==========="))
       (bb-interpret target-bbs target-bb env stack registers)))
 
-  (define (jump-to-entry bbs from-bb nargs ret)
-    (jump-to bbs (bbs-entry-lbl-num bbs) from-bb nargs ret #f))
+  (define (jump-to-entry instr bbs from-bb nargs ret)
+    (jump-to instr bbs (bbs-entry-lbl-num bbs) from-bb nargs ret #f))
 
-  (define (jump-to-no-args bbs lbl-num from-bb ret)
-    (jump-to bbs lbl-num from-bb 0 ret #f))
+  (define (jump-to-no-args instr bbs lbl-num from-bb ret)
+    (jump-to instr bbs lbl-num from-bb 0 ret #f))
 
   (define (gvm-proc-obj-primitive? obj)
     (and (proc-obj? obj) (proc-obj-primitive? obj) (not (proc-obj-code obj))))
@@ -5148,7 +5166,7 @@
       (interpret-write target value)))
 
   ;; CALL HELPERS
-  (define (call-proc-obj-interpret proc nargs ret)
+  (define (call-proc-obj-interpret instr proc nargs ret)
     (if (gvm-proc-obj-primitive? proc)
       ;; primitive
       (let* ((params-info (get-jump-parameters-info nargs))
@@ -5156,13 +5174,13 @@
              (return-loc (get-ret-loc params-info))
              (result (exec-prim (proc-obj-name proc) args)))
         (interpret-write (get-proc-result-loc) result)
-        (if ret (jump-to-no-args bbs ret bb ret)))
+        (if ret (jump-to-no-args instr bbs ret bb ret)))
       ;; others
       (begin
         (interpret-debug "=========== JUMP IN ")
         (interpret-debug (proc-obj-name proc))
         (interpret-debug-ln " ===========")
-        (jump-to-entry (proc-obj-code proc) bb nargs ret))))
+        (jump-to-entry instr (proc-obj-code proc) bb nargs ret))))
 
   ;; JUMP
   (define (jump-interpret instr)
@@ -5170,23 +5188,23 @@
           (ret (jump-ret instr))
           (nargs (jump-nb-args instr)))
       (if (and (lbl? opnd) (not nargs))
-          (jump-to-no-args bbs (lbl-num opnd) bb ret) ;; static jump
+          (jump-to-no-args instr bbs (lbl-num opnd) bb ret) ;; static jump
           (let ((val (get-value opnd))) ;; call
             (cond
               ((eq? val 'exit-return-address)
                 (interpret-debug-ln '***GVM-Interpreter-END)
                 #f)
               ((proc-obj? val)
-                (call-proc-obj-interpret val nargs ret))
+                (call-proc-obj-interpret instr val nargs ret))
               ((First-Class-Label? val)
                 (let ((lbl-bbs (First-Class-Label-bbs val))
                       (lbl-id (First-Class-Label-id val)))
-                  (jump-to lbl-bbs lbl-id bb nargs ret #f)))
+                  (jump-to instr lbl-bbs lbl-id bb nargs ret #f)))
               ((Closure? val)
                 (let* ((clo-lbl (Closure-ref val 0))
                        (lbl-bbs (First-Class-Label-bbs clo-lbl))
                        (lbl-id (First-Class-Label-id clo-lbl)))
-                  (jump-to lbl-bbs lbl-id bb nargs ret val)))
+                  (jump-to instr lbl-bbs lbl-id bb nargs ret val)))
               (else
                 (error "unknown JUMP to" val)))))))
 
@@ -5198,8 +5216,8 @@
       (if (gvm-proc-obj-primitive? test)
         (let* ((result (exec-prim (proc-obj-name test) opnds-values)))
           (if result
-            (jump-to-no-args bbs (ifjump-true instr) bb #f)
-            (jump-to-no-args bbs (ifjump-false instr) bb #f)))
+            (jump-to-no-args instr bbs (ifjump-true instr) bb #f)
+            (jump-to-no-args instr bbs (ifjump-false instr) bb #f)))
         (error "ifjump test is not a primitive"))))
 
   ;; APPLY
