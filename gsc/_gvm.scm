@@ -5137,7 +5137,7 @@
     ;; TODO keys are ignored and they default values are simply pluged-in
     (let* ((closed? (if clo #t #f))
            (keys (or keys '()))
-           (args (append args (map cdr keys))) ;; TODO: temporary hack
+           (args (append args (map obj-val (map cdr keys)))) ;; TODO: temporary hack
            (params-info (get-label-parameters-info nparams closed?))
            (args-loc (get-args-loc params-info))
            (nargs (length args))
