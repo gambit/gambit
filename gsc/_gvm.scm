@@ -437,6 +437,7 @@
 (define (gvm-instr-types gvm-instr)   (vector-ref gvm-instr 2))
 (define (gvm-instr-types-set! gvm-instr x) (vector-set! gvm-instr 2 x))
 (define (gvm-instr-comment gvm-instr) (vector-ref gvm-instr 3))
+(define (gvm-instr-comment-set! gvm-instr x) (vector-set! gvm-instr 3 x))
 
 (define (gvm-instr-types-set!-returning-instr gvm-instr x)
   (gvm-instr-types-set! gvm-instr x)
@@ -534,6 +535,12 @@
 
 (define (comment-put! comment name val)
   (set-cdr! comment (cons (cons name val) (cdr comment))))
+
+(define (comment-add! gvm-instr name val)
+  (gvm-instr-comment-set!
+   gvm-instr
+   (cons 'comment
+         (cons (cons name val) (cdr (gvm-instr-comment gvm-instr))))))
 
 (define (comment-get comment name)
   (and comment
@@ -2061,13 +2068,13 @@
   (bbs-for-each-bb
    (lambda (bb)
      (let ((label (bb-label-instr bb)))
-       (comment-put! (gvm-instr-comment label) 'doms all-lbls)))
+       (comment-add! label 'doms all-lbls)))
    bbs)
 
   (let* ((entry-lbl (bbs-entry-lbl-num bbs))
          (bb (lbl-num->bb entry-lbl bbs))
          (label (bb-label-instr bb)))
-    (comment-put! (gvm-instr-comment label) 'doms (list entry-lbl)))
+    (comment-add! label 'doms (list entry-lbl)))
 
   (let loop ()
     (define changed? #f)
@@ -2092,7 +2099,7 @@
                                          precedents))))
              (if (not (equal? old new))
                  (begin
-                   (comment-put! (gvm-instr-comment label) 'doms new)
+                   (comment-add! label 'doms new)
                    (set! changed? #t))))))
      bbs)
     (if changed? (loop)))
@@ -2107,8 +2114,8 @@
                    (gvm-instr-comment label)
                    'doms))))
        (if (pair? doms)
-           (comment-put!
-            (gvm-instr-comment label)
+           (comment-add!
+            label
             'cfg-bb-info
             (list (cons 'info (apply string-append doms)))))))
    bbs))
@@ -2790,9 +2797,9 @@
             (make-bb (walk-instr (bb-label-instr bb) types-before)
                      new-bbs))
 
-          (let ((instr-comment (gvm-instr-comment (bb-label-instr new-bb))))
-            (comment-put!
-             instr-comment
+          (let ((label-instr (bb-label-instr new-bb)))
+            (comment-add!
+             label-instr
              'cfg-bb-info
              (list
                (cons 'info
@@ -2801,10 +2808,10 @@
                  ;;(object->string
                  ;;(list orig-lbl '-> new-lbl 'cost= cost 'path= (map car (cdr path))))
                    )))
-            (comment-put!
-              instr-comment
-              'orig-lbl
-              orig-lbl))
+            (comment-add!
+             label-instr
+             'orig-lbl
+             orig-lbl))
 
           (let loop ((instrs
                       (bb-non-branch-instrs bb))
@@ -4893,14 +4900,10 @@
      (+ 1 (table-ref table2 target-lbl 0)))))
 
 (define (get-branch-counters branch-instr)
-  (let* ((comment
-          (gvm-instr-comment branch-instr))
-         (table
-          (or (comment-get comment 'branch-counter)
-              (let ((t (make-table 'test: eq?)))
-                (comment-put! comment 'branch-counter t)
-                t))))
-    table))
+  (or (comment-get (gvm-instr-comment branch-instr) 'branch-counter)
+      (let ((t (make-table 'test: eq?)))
+        (comment-add! branch-instr 'branch-counter t)
+        t)))
 
 ;; Object model
 
