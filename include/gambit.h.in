@@ -5185,11 +5185,7 @@ goto *___LABEL_HOST_LABEL_GET(___pc);
 #define ___END_SW \
 ___jumpext:
 
-#define ___JUMP(dest) \
-{___pc=dest; \
- if (___EXPECT_TRUE(___LABEL_HOST_GET(___pc) == ___HOST_PROC)) \
-   goto *___LABEL_HOST_LABEL_GET(___pc); \
- goto ___jumpext;}
+#define ___JUMP(dest)___JUMPFAST(dest)
 
 #else
 
@@ -5204,6 +5200,13 @@ ___jumpext:
 #endif
 
 #define ___JUMPEXT(dest){___pc=dest;goto ___jumpext;}
+
+#define ___JUMPFAST(dest) \
+{___pc=dest; \
+ if (___EXPECT_FALSE(___LABEL_HOST_GET(___pc) != ___HOST_PROC)) \
+   goto ___jumpext; \
+ goto *___LABEL_HOST_LABEL_GET(___pc); \
+}
 
 #else
 
@@ -5228,6 +5231,7 @@ switch((___pc-=___start)/(___LABEL_SIZE*___WS)) \
 
 #define ___JUMP(dest){___pc=dest;goto ___jump;}
 #define ___JUMPEXT(dest){___pc=dest;goto ___jumpext;}
+#define ___JUMPFAST(dest)___JUMP(dest)
 
 #endif
 
@@ -6332,6 +6336,7 @@ switch (na) \
 {nargs ___SELF=val; \
 ___JUMPEXT(___LABEL_ENTRY_GET(___SELF))}
 #define ___JUMPPRM(nargs,val){nargs ___JUMP(val)}
+#define ___JUMPRET(val)___JUMPFAST(val)
 
 #define ___JUMPNOTSAFE(nargs,val) \
 {nargs ___SELF=val; \

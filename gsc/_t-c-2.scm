@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-2.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -214,8 +214,7 @@
              (list "CFUN_OOL" c-name)))))
 
     (targ-emit
-      (list "JUMPPRM"
-            '("NOTHING")
+      (list "JUMPRET"
             (targ-opnd return-addr-reg)))
 
 ;;    (targ-repr-exit-block! #f)
@@ -231,8 +230,7 @@
 ;;    (targ-repr-exit-block! #f)
 
     (targ-emit
-      (list "JUMPPRM"
-            '("NOTHING")
+      (list "JUMPRET"
             (targ-opnd (make-stk fs))))
 
 ;;    (targ-repr-end-block!)
@@ -1356,13 +1354,14 @@
               (else
 ;;               (targ-repr-exit-block! #f)
                (targ-emit
-                 (list (if nb-args
-                         (begin
-                           (targ-wr-reg (+ (targ-nb-arg-regs) 1))
-                           (if safe? "JUMPGENSAFE" "JUMPGENNOTSAFE"))
-                         "JUMPPRM")
-                       (if nb-args set-nargs '("NOTHING"))
-                       (targ-opnd opnd)))))
+                (if nb-args
+                    (begin
+                      (targ-wr-reg (+ (targ-nb-arg-regs) 1))
+                      (list (if safe? "JUMPGENSAFE" "JUMPGENNOTSAFE")
+                            set-nargs
+                            (targ-opnd opnd)))
+                    (list "JUMPRET"
+                          (targ-opnd opnd))))))
 
 ;;        (targ-repr-end-block!)
 ))))
