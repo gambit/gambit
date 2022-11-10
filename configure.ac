@@ -2366,6 +2366,7 @@ if test "$C_COMP_GNUC" = yes; then
   AC_CHECK_C_COMPILER_OPT(-fomit-frame-pointer,DASH_fomit_frame_pointer)
   AC_CHECK_C_COMPILER_OPT(-fno-ipa-ra, DASH_fno_ipa_ra)
   AC_CHECK_C_COMPILER_OPT(-foptimize-sibling-calls,DASH_foptimize_sibling_calls)
+  AC_CHECK_C_COMPILER_OPT(-fno-gcse,DASH_no_gcse)
 
   # machine architecture option:
   if test "$ENABLE_MARCH" != "" -a "$ENABLE_MARCH" != "no_enable_march"; then
@@ -2373,6 +2374,9 @@ if test "$C_COMP_GNUC" = yes; then
   fi
 
   FLAGS_OPT_LO="$DASH_O1"
+  if test "$DASH_O2" != "" -a "$DASH_no_gcse" != ""; then
+    FLAGS_OPT_LO="$DASH_O2 $DASH_no_gcse"
+  fi
 
   if test "$DASH_O3" != ""; then
     FLAGS_OPT_HI="$DASH_O3"
