@@ -1,6 +1,6 @@
 # Configure template for Gambit system.
 
-# Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 # Process this file with autoconf to produce a configure script.
 
@@ -2320,6 +2320,7 @@ if test "$C_COMP_GNUC" = yes; then
     DASH_mieee_with_inexact=""
     DASH_mpc64=""
     DASH_fno_ipa_ra=""
+    DASH_fno_gcse=""
 
   else
 
@@ -2333,6 +2334,7 @@ if test "$C_COMP_GNUC" = yes; then
     AC_CHECK_C_COMPILER_OPT(-mieee,DASH_mieee)
     AC_CHECK_C_COMPILER_OPT(-mieee-with-inexact,DASH_mieee_with_inexact)
     AC_CHECK_C_COMPILER_OPT(-mpc64,DASH_mpc64)
+    AC_CHECK_C_COMPILER_OPT(-fno-gcse,DASH_fno_gcse)
   fi
 
   # preprocessor options:
@@ -2366,7 +2368,6 @@ if test "$C_COMP_GNUC" = yes; then
   AC_CHECK_C_COMPILER_OPT(-fomit-frame-pointer,DASH_fomit_frame_pointer)
   AC_CHECK_C_COMPILER_OPT(-fno-ipa-ra, DASH_fno_ipa_ra)
   AC_CHECK_C_COMPILER_OPT(-foptimize-sibling-calls,DASH_foptimize_sibling_calls)
-  AC_CHECK_C_COMPILER_OPT(-fno-gcse,DASH_no_gcse)
 
   # machine architecture option:
   if test "$ENABLE_MARCH" != "" -a "$ENABLE_MARCH" != "no_enable_march"; then
@@ -2374,8 +2375,8 @@ if test "$C_COMP_GNUC" = yes; then
   fi
 
   FLAGS_OPT_LO="$DASH_O1"
-  if test "$DASH_O2" != "" -a "$DASH_no_gcse" != ""; then
-    FLAGS_OPT_LO="$DASH_O2 $DASH_no_gcse"
+  if test "$DASH_O2" != "" -a "$DASH_fno_gcse" != ""; then
+    FLAGS_OPT_LO="$DASH_O2 $DASH_fno_gcse"
   fi
 
   if test "$DASH_O3" != ""; then

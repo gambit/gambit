@@ -1373,6 +1373,18 @@
 
 #endif
 
+#ifdef ___INLINE_JUMPS
+#ifdef ___DONT_INLINE_JUMPS
+#error "Define either ___INLINE_JUMPS or ___DONT_INLINE_JUMPS"
+#endif
+#else
+#ifndef ___DONT_INLINE_JUMPS
+#if __llvm__ || __clang__
+#define ___DONT_INLINE_JUMPS
+#endif
+#endif
+#endif
+
 /*
  * Allow multiple Gambit VM instances or not?
  */
@@ -6336,7 +6348,11 @@ switch (na) \
 {nargs ___SELF=val; \
 ___JUMPEXT(___LABEL_ENTRY_GET(___SELF))}
 #define ___JUMPPRM(nargs,val){nargs ___JUMP(val)}
+#ifdef ___DONT_INLINE_JUMPS
+#define ___JUMPRET(val)___JUMP(val)
+#else
 #define ___JUMPRET(val)___JUMPFAST(val)
+#endif
 
 #define ___JUMPNOTSAFE(nargs,val) \
 {nargs ___SELF=val; \
