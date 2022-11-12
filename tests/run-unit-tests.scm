@@ -9,12 +9,14 @@
 ;;;----------------------------------------------------------------------------
 
 (define cleanup? #t)
+(define show-coverage? #f)
 
 (define nb-good 0)
 (define nb-fail 0)
 (define nb-other 0)
 (define nb-total 0)
 (define start 0)
+(define tested-procedures '())
 
 (define (num->string num w d) ; w = total width, d = decimals
   (let ((n (floor (inexact->exact (round (* (abs num) (expt 10 d)))))))
@@ -218,6 +220,13 @@
       (substring file (string-length default-dir) (string-length file))
       file))
 
+(define (append-set s1 s2)
+  (fold (lambda (a b)
+          (if (member a b)
+            b
+            (cons a b)))
+        s1 s2))
+
 (define (test file target)
   (for-each
 
@@ -230,6 +239,11 @@
             (status (car result))
             (status-hi (quotient status 256))
             (status-lo (modulo status 256)))
+       (let* ((output-string (cdr result))
+              (output (with-input-from-string output-string (lambda () (read)))))
+         (if (pair? output)
+           (set! tested-procedures (append-set tested-procedures (cadr output)))
+           #;(print "*** WARNING: " (trim-filename file) " UNEXPECTED OUTPUT: " output-string "\n")))
        (if (= 0 status)
            (set! nb-good (+ nb-good 1))
            (begin
@@ -267,6 +281,8 @@
   (if (= nb-good nb-total)
       (begin
         (print "PASSED ALL " nb-total " UNIT TESTS\n")
+        (if show-coverage?
+          (println (object->string (sort-list tested-procedures (lambda (a b) (string-ci<? (symbol->string a) (symbol->string b)))))))
         (exit 0))
       (begin
         (print "FAILED " nb-fail " UNIT TESTS OUT OF " nb-total " (" (num->string (* 100. (/ nb-fail nb-total)) 0 1) "%)\n")
@@ -321,6 +337,8 @@
         (let ((word (substring (car args) 1 (string-length (car args)))))
           (cond ((equal? word "stress")
                  (set! stress? #t))
+                ((equal? word "coverage")
+                 (set! show-coverage? #t))
                 ((member word '("C" "js" "python" "ruby" "php" "go" "java"))
                  (set! targets
                        (cons (string->symbol word)

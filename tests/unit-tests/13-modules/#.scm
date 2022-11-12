@@ -17,12 +17,36 @@
                              calls))))
            namespaces)))
 
+(define ##output-port (open-string))
+
+(define (call-with-output-string-port port thunk)
+  (include "~~lib/_repl#.scm")
+  (implement-type-repl-channel)
+  (let* ((repl-channel (##thread-repl-channel-get! (current-thread)))
+         (old-output-port (macro-repl-channel-output-port repl-channel)))
+    (macro-repl-channel-output-port-set! repl-channel port)
+    (parameterize
+      ((current-output-port port))
+      (let ((result (thunk)))
+        (macro-repl-channel-output-port-set! repl-channel old-output-port)
+        (cons result (get-output-string port))))))
+
+
 (define (capture-behavior thunk)
-  (with-exception-catcher
-   (lambda (e) e)
-   thunk))
+  (call-with-output-string-port
+    ##output-port
+    (lambda ()
+      (with-exception-catcher
+        (lambda (e) e)
+        thunk))))
 
 (define (compare-behavior namespaces calls . behaviors)
+
+  (define (behaviour->string obj)
+    (let ((str (object->string obj)))
+      (if (> (string-length str) 256)
+        (string-append (substring str 0 256) "...\"")
+        str)))
 
   (define (compare namespace1 namespace2 behavior1 behavior2)
     (for-each (lambda (call behavior1 behavior2)
@@ -38,9 +62,9 @@
                                `(namespace (,namespace2)))
                            `(##import ,namespace2)))
                       " returned "
-                      (object->string behavior2)
+                      (behaviour->string behavior2)
                       " but expected "
-                      (object->string behavior1)))))
+                      (behaviour->string behavior1)))))
               calls
               behavior1
               behavior2))

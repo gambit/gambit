@@ -10,6 +10,11 @@
 
 (define ##failed-check? #f)
 
+(define ##failed-messages '())
+
+(define (##push-fail-message msg)
+  (set! ##failed-messages (cons msg ##failed-messages)))
+
 ;; at exit, verify if any checks failed
 (let ((##exit-old ##exit))
   (set! ##exit
@@ -17,6 +22,8 @@
           (if (pair? rest)
               (##exit-old (car rest))
               (begin
+                (let ((output (fold (lambda (a b) (string-append a "\n" b)) "" ##failed-messages)))
+                  (##write (list output ##tested-procedures) ##stdout-port))
                 (##exit-cleanup)
                 (##exit-with-err-code-no-cleanup
                  (if ##failed-check? 2 1)))))))
@@ -24,7 +31,7 @@
 (define ##failed-check-absent '$$fake-absent-object$$)
 
 (define (##failed-check msg #!optional (actual-result ##failed-check-absent))
-  (println
+  (##push-fail-message
    (call-with-output-string
     ""
     (lambda (port)
@@ -65,13 +72,15 @@
           (##not (##number? n2))
           (##< tolerance (##magnitude (##- n1 n2))))
       (##failed-check msg n1)))
-                  
+
 (##define-macro (##setup-check)
 
   (eval '(##begin
 
            (define ##enable-checks?
              (make-parameter #t))
+
+           (define ##tested-procedures '())
 
            (define (##expand-check-relation src positive? relation)
              (##deconstruct-call
@@ -127,6 +136,15 @@
              (if (not (##enable-checks?))
                  '(##begin)
                  (let ((form (##source-strip src)))
+                   (let ((param1 (##source-strip (cadr form))))
+                     (if (pair? param1)
+                       (let ((proc-name (##source-strip (car param1))))
+                         (if (and (not (member proc-name ##tested-procedures))
+                                  (symbol? proc-name)
+                                  (not (string-prefix? "##" (symbol->string proc-name)))
+                                  (procedure? (##global-var-ref (##make-global-var proc-name))))
+                           (set! ##tested-procedures (cons proc-name ##tested-procedures))))))
+
                    (case (##source-strip (car form))
 
                      ((check-equal?)
