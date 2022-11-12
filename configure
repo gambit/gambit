@@ -889,8 +889,6 @@ DASH_fPIC
 DASH_freschedule_modulo_scheduled_loops
 DASH_fmodulo_sched
 DASH_march
-DASH_foptimize_sibling_calls
-DASH_fno_ipa_ra
 DASH_fomit_frame_pointer
 DASH_ftrapv
 DASH_fwrapv
@@ -913,12 +911,57 @@ DASH_Wno_unused
 DASH_W
 DASH_Wall
 DASH_no_cpp_precomp
-DASH_fno_gcse
 DASH_mpc64
 DASH_mieee_with_inexact
 DASH_mieee
+DASH_fvect_cost_model_very_cheap
+DASH_ftree_vrp
+DASH_ftree_tail_merge
+DASH_ftree_switch_conversion
+DASH_ftree_slp_vectorize
+DASH_ftree_pre
+DASH_ftree_loop_vectorize
+DASH_ftree_loop_distribute_patterns
+DASH_fstore_merging
+DASH_frerun_cse_after_loop
+DASH_freorder_functions
+DASH_freorder_blocks_and_partition
+DASH_freorder_blocks_algorithm_stc
+DASH_fpeephole2
+DASH_fpartial_inlining
+DASH_foptimize_strlen
+DASH_foptimize_sibling_calls
+DASH_flra_remat
+DASH_fisolate_erroneous_paths_dereference
+DASH_fipa_vrp
+DASH_fipa_sra
+DASH_fno_ipa_ra
+DASH_fipa_ra
+DASH_fipa_icf_variables
+DASH_fipa_icf_functions
+DASH_fipa_icf
+DASH_fipa_cp
+DASH_fipa_bit_cp
+DASH_finline_small_functions
+DASH_finline_functions
+DASH_findirect_inlining
+DASH_fhoist_adjacent_loads
+DASH_fno_gcse
+DASH_fgcse
+DASH_fexpensive_optimizations
+DASH_fdevirtualize_speculatively
+DASH_fdevirtualize
+DASH_fcse_follow_jumps
+DASH_fcrossjumping
+DASH_fcode_hoisting
+DASH_fcaller_saves
+DASH_falign_loops
+DASH_falign_labels
+DASH_falign_jumps
+DASH_falign_functions
 DASH_fno_keep_inline_dllexport
 DASH_fno_move_loop_invariants
+DASH_fmove_loop_invariants
 DASH_fschedule_insns2
 CONF_HAVE_CONDITION_VARIABLE
 CONF_THREAD_LOCAL_STORAGE_CLASS
@@ -10300,14 +10343,59 @@ if test "$C_COMP_GNUC" = yes; then
 
     # clang does not support these options:
     DASH_fschedule_insns2=""
+    DASH_fmove_loop_invariants=""
     DASH_fno_move_loop_invariants=""
     DASH_fno_keep_inline_dllexport=""
     #DASH_fpermissive=""
+    DASH_falign_functions=""
+    DASH_falign_jumps=""
+    DASH_falign_labels=""
+    DASH_falign_loops=""
+    DASH_fcaller_saves=""
+    DASH_fcode_hoisting=""
+    DASH_fcrossjumping=""
+    DASH_fcse_follow_jumps=""
+    DASH_fdevirtualize=""
+    DASH_fdevirtualize_speculatively=""
+    DASH_fexpensive_optimizations=""
+    DASH_fgcse=""
+    DASH_fno_gcse=""
+    DASH_fhoist_adjacent_loads=""
+    DASH_findirect_inlining=""
+    DASH_finline_functions=""
+    DASH_finline_small_functions=""
+    DASH_fipa_bit_cp=""
+    DASH_fipa_cp=""
+    DASH_fipa_icf=""
+    DASH_fipa_icf_functions=""
+    DASH_fipa_icf_variables=""
+    DASH_fipa_ra=""
+    DASH_fno_ipa_ra=""
+    DASH_fipa_sra=""
+    DASH_fipa_vrp=""
+    DASH_fisolate_erroneous_paths_dereference=""
+    DASH_flra_remat=""
+    DASH_foptimize_sibling_calls=""
+    DASH_foptimize_strlen=""
+    DASH_fpartial_inlining=""
+    DASH_fpeephole2=""
+    DASH_freorder_blocks_algorithm_stc=""
+    DASH_freorder_blocks_and_partition=""
+    DASH_freorder_functions=""
+    DASH_frerun_cse_after_loop=""
+    DASH_fstore_merging=""
+    DASH_ftree_loop_distribute_patterns=""
+    DASH_ftree_loop_vectorize=""
+    DASH_ftree_pre=""
+    DASH_ftree_slp_vectorize=""
+    DASH_ftree_switch_conversion=""
+    DASH_ftree_tail_merge=""
+    DASH_ftree_vrp=""
+    DASH_fvect_cost_model_very_cheap=""
+
     DASH_mieee=""
     DASH_mieee_with_inexact=""
     DASH_mpc64=""
-    DASH_fno_ipa_ra=""
-    DASH_fno_gcse=""
 
   else
 
@@ -10353,6 +10441,49 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fschedule_insns2" >&5
 $as_echo "$ac_cv_DASH_fschedule_insns2" >&6; }
 DASH_fschedule_insns2="$ac_cv_DASH_fschedule_insns2"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fmove-loop-invariants" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -fmove-loop-invariants... " >&6; }
+if ${ac_cv_DASH_fmove_loop_invariants+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fmove-loop-invariants"
+CXXFLAGS="-fmove-loop-invariants"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_fmove_loop_invariants=" -fmove-loop-invariants"
+else
+  ac_cv_DASH_fmove_loop_invariants=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fmove_loop_invariants" >&5
+$as_echo "$ac_cv_DASH_fmove_loop_invariants" >&6; }
+DASH_fmove_loop_invariants="$ac_cv_DASH_fmove_loop_invariants"
 
 
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fno-move-loop-invariants" >&5
@@ -10442,6 +10573,1941 @@ DASH_fno_keep_inline_dllexport="$ac_cv_DASH_fno_keep_inline_dllexport"
 
 
     #AC_CHECK_C_COMPILER_OPT(-fpermissive,DASH_fpermissive)
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -falign-functions" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -falign-functions... " >&6; }
+if ${ac_cv_DASH_falign_functions+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-falign-functions"
+CXXFLAGS="-falign-functions"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_falign_functions=" -falign-functions"
+else
+  ac_cv_DASH_falign_functions=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_falign_functions" >&5
+$as_echo "$ac_cv_DASH_falign_functions" >&6; }
+DASH_falign_functions="$ac_cv_DASH_falign_functions"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -falign-jumps" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -falign-jumps... " >&6; }
+if ${ac_cv_DASH_falign_jumps+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-falign-jumps"
+CXXFLAGS="-falign-jumps"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_falign_jumps=" -falign-jumps"
+else
+  ac_cv_DASH_falign_jumps=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_falign_jumps" >&5
+$as_echo "$ac_cv_DASH_falign_jumps" >&6; }
+DASH_falign_jumps="$ac_cv_DASH_falign_jumps"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -falign-labels" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -falign-labels... " >&6; }
+if ${ac_cv_DASH_falign_labels+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-falign-labels"
+CXXFLAGS="-falign-labels"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_falign_labels=" -falign-labels"
+else
+  ac_cv_DASH_falign_labels=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_falign_labels" >&5
+$as_echo "$ac_cv_DASH_falign_labels" >&6; }
+DASH_falign_labels="$ac_cv_DASH_falign_labels"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -falign-loops" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -falign-loops... " >&6; }
+if ${ac_cv_DASH_falign_loops+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-falign-loops"
+CXXFLAGS="-falign-loops"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_falign_loops=" -falign-loops"
+else
+  ac_cv_DASH_falign_loops=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_falign_loops" >&5
+$as_echo "$ac_cv_DASH_falign_loops" >&6; }
+DASH_falign_loops="$ac_cv_DASH_falign_loops"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fcaller-saves" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -fcaller-saves... " >&6; }
+if ${ac_cv_DASH_fcaller_saves+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fcaller-saves"
+CXXFLAGS="-fcaller-saves"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_fcaller_saves=" -fcaller-saves"
+else
+  ac_cv_DASH_fcaller_saves=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fcaller_saves" >&5
+$as_echo "$ac_cv_DASH_fcaller_saves" >&6; }
+DASH_fcaller_saves="$ac_cv_DASH_fcaller_saves"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fcode-hoisting" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -fcode-hoisting... " >&6; }
+if ${ac_cv_DASH_fcode_hoisting+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fcode-hoisting"
+CXXFLAGS="-fcode-hoisting"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_fcode_hoisting=" -fcode-hoisting"
+else
+  ac_cv_DASH_fcode_hoisting=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fcode_hoisting" >&5
+$as_echo "$ac_cv_DASH_fcode_hoisting" >&6; }
+DASH_fcode_hoisting="$ac_cv_DASH_fcode_hoisting"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fcrossjumping" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -fcrossjumping... " >&6; }
+if ${ac_cv_DASH_fcrossjumping+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fcrossjumping"
+CXXFLAGS="-fcrossjumping"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_fcrossjumping=" -fcrossjumping"
+else
+  ac_cv_DASH_fcrossjumping=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fcrossjumping" >&5
+$as_echo "$ac_cv_DASH_fcrossjumping" >&6; }
+DASH_fcrossjumping="$ac_cv_DASH_fcrossjumping"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fcse-follow-jumps" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -fcse-follow-jumps... " >&6; }
+if ${ac_cv_DASH_fcse_follow_jumps+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fcse-follow-jumps"
+CXXFLAGS="-fcse-follow-jumps"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_fcse_follow_jumps=" -fcse-follow-jumps"
+else
+  ac_cv_DASH_fcse_follow_jumps=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fcse_follow_jumps" >&5
+$as_echo "$ac_cv_DASH_fcse_follow_jumps" >&6; }
+DASH_fcse_follow_jumps="$ac_cv_DASH_fcse_follow_jumps"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fdevirtualize" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -fdevirtualize... " >&6; }
+if ${ac_cv_DASH_fdevirtualize+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fdevirtualize"
+CXXFLAGS="-fdevirtualize"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_fdevirtualize=" -fdevirtualize"
+else
+  ac_cv_DASH_fdevirtualize=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fdevirtualize" >&5
+$as_echo "$ac_cv_DASH_fdevirtualize" >&6; }
+DASH_fdevirtualize="$ac_cv_DASH_fdevirtualize"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fdevirtualize-speculatively" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -fdevirtualize-speculatively... " >&6; }
+if ${ac_cv_DASH_fdevirtualize_speculatively+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fdevirtualize-speculatively"
+CXXFLAGS="-fdevirtualize-speculatively"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_fdevirtualize_speculatively=" -fdevirtualize-speculatively"
+else
+  ac_cv_DASH_fdevirtualize_speculatively=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fdevirtualize_speculatively" >&5
+$as_echo "$ac_cv_DASH_fdevirtualize_speculatively" >&6; }
+DASH_fdevirtualize_speculatively="$ac_cv_DASH_fdevirtualize_speculatively"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fexpensive-optimizations" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -fexpensive-optimizations... " >&6; }
+if ${ac_cv_DASH_fexpensive_optimizations+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fexpensive-optimizations"
+CXXFLAGS="-fexpensive-optimizations"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_fexpensive_optimizations=" -fexpensive-optimizations"
+else
+  ac_cv_DASH_fexpensive_optimizations=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fexpensive_optimizations" >&5
+$as_echo "$ac_cv_DASH_fexpensive_optimizations" >&6; }
+DASH_fexpensive_optimizations="$ac_cv_DASH_fexpensive_optimizations"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fgcse" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -fgcse... " >&6; }
+if ${ac_cv_DASH_fgcse+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fgcse"
+CXXFLAGS="-fgcse"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_fgcse=" -fgcse"
+else
+  ac_cv_DASH_fgcse=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fgcse" >&5
+$as_echo "$ac_cv_DASH_fgcse" >&6; }
+DASH_fgcse="$ac_cv_DASH_fgcse"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fno_gcse" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -fno_gcse... " >&6; }
+if ${ac_cv_DASH_fno_gcse+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fno_gcse"
+CXXFLAGS="-fno_gcse"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_fno_gcse=" -fno_gcse"
+else
+  ac_cv_DASH_fno_gcse=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fno_gcse" >&5
+$as_echo "$ac_cv_DASH_fno_gcse" >&6; }
+DASH_fno_gcse="$ac_cv_DASH_fno_gcse"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fhoist-adjacent-loads" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -fhoist-adjacent-loads... " >&6; }
+if ${ac_cv_DASH_fhoist_adjacent_loads+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fhoist-adjacent-loads"
+CXXFLAGS="-fhoist-adjacent-loads"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_fhoist_adjacent_loads=" -fhoist-adjacent-loads"
+else
+  ac_cv_DASH_fhoist_adjacent_loads=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fhoist_adjacent_loads" >&5
+$as_echo "$ac_cv_DASH_fhoist_adjacent_loads" >&6; }
+DASH_fhoist_adjacent_loads="$ac_cv_DASH_fhoist_adjacent_loads"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -findirect-inlining" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -findirect-inlining... " >&6; }
+if ${ac_cv_DASH_findirect_inlining+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-findirect-inlining"
+CXXFLAGS="-findirect-inlining"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_findirect_inlining=" -findirect-inlining"
+else
+  ac_cv_DASH_findirect_inlining=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_findirect_inlining" >&5
+$as_echo "$ac_cv_DASH_findirect_inlining" >&6; }
+DASH_findirect_inlining="$ac_cv_DASH_findirect_inlining"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -finline-functions" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -finline-functions... " >&6; }
+if ${ac_cv_DASH_finline_functions+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-finline-functions"
+CXXFLAGS="-finline-functions"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_finline_functions=" -finline-functions"
+else
+  ac_cv_DASH_finline_functions=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_finline_functions" >&5
+$as_echo "$ac_cv_DASH_finline_functions" >&6; }
+DASH_finline_functions="$ac_cv_DASH_finline_functions"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -finline-small-functions" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -finline-small-functions... " >&6; }
+if ${ac_cv_DASH_finline_small_functions+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-finline-small-functions"
+CXXFLAGS="-finline-small-functions"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_finline_small_functions=" -finline-small-functions"
+else
+  ac_cv_DASH_finline_small_functions=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_finline_small_functions" >&5
+$as_echo "$ac_cv_DASH_finline_small_functions" >&6; }
+DASH_finline_small_functions="$ac_cv_DASH_finline_small_functions"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fipa-bit-cp" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -fipa-bit-cp... " >&6; }
+if ${ac_cv_DASH_fipa_bit_cp+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fipa-bit-cp"
+CXXFLAGS="-fipa-bit-cp"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_fipa_bit_cp=" -fipa-bit-cp"
+else
+  ac_cv_DASH_fipa_bit_cp=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fipa_bit_cp" >&5
+$as_echo "$ac_cv_DASH_fipa_bit_cp" >&6; }
+DASH_fipa_bit_cp="$ac_cv_DASH_fipa_bit_cp"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fipa-cp" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -fipa-cp... " >&6; }
+if ${ac_cv_DASH_fipa_cp+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fipa-cp"
+CXXFLAGS="-fipa-cp"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_fipa_cp=" -fipa-cp"
+else
+  ac_cv_DASH_fipa_cp=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fipa_cp" >&5
+$as_echo "$ac_cv_DASH_fipa_cp" >&6; }
+DASH_fipa_cp="$ac_cv_DASH_fipa_cp"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fipa-icf" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -fipa-icf... " >&6; }
+if ${ac_cv_DASH_fipa_icf+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fipa-icf"
+CXXFLAGS="-fipa-icf"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_fipa_icf=" -fipa-icf"
+else
+  ac_cv_DASH_fipa_icf=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fipa_icf" >&5
+$as_echo "$ac_cv_DASH_fipa_icf" >&6; }
+DASH_fipa_icf="$ac_cv_DASH_fipa_icf"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fipa-icf-functions" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -fipa-icf-functions... " >&6; }
+if ${ac_cv_DASH_fipa_icf_functions+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fipa-icf-functions"
+CXXFLAGS="-fipa-icf-functions"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_fipa_icf_functions=" -fipa-icf-functions"
+else
+  ac_cv_DASH_fipa_icf_functions=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fipa_icf_functions" >&5
+$as_echo "$ac_cv_DASH_fipa_icf_functions" >&6; }
+DASH_fipa_icf_functions="$ac_cv_DASH_fipa_icf_functions"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fipa-icf-variables" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -fipa-icf-variables... " >&6; }
+if ${ac_cv_DASH_fipa_icf_variables+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fipa-icf-variables"
+CXXFLAGS="-fipa-icf-variables"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_fipa_icf_variables=" -fipa-icf-variables"
+else
+  ac_cv_DASH_fipa_icf_variables=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fipa_icf_variables" >&5
+$as_echo "$ac_cv_DASH_fipa_icf_variables" >&6; }
+DASH_fipa_icf_variables="$ac_cv_DASH_fipa_icf_variables"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fipa-ra" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -fipa-ra... " >&6; }
+if ${ac_cv_DASH_fipa_ra+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fipa-ra"
+CXXFLAGS="-fipa-ra"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_fipa_ra=" -fipa-ra"
+else
+  ac_cv_DASH_fipa_ra=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fipa_ra" >&5
+$as_echo "$ac_cv_DASH_fipa_ra" >&6; }
+DASH_fipa_ra="$ac_cv_DASH_fipa_ra"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fno-ipa-ra" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -fno-ipa-ra... " >&6; }
+if ${ac_cv_DASH_fno_ipa_ra+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fno-ipa-ra"
+CXXFLAGS="-fno-ipa-ra"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_fno_ipa_ra=" -fno-ipa-ra"
+else
+  ac_cv_DASH_fno_ipa_ra=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fno_ipa_ra" >&5
+$as_echo "$ac_cv_DASH_fno_ipa_ra" >&6; }
+DASH_fno_ipa_ra="$ac_cv_DASH_fno_ipa_ra"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fipa-sra" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -fipa-sra... " >&6; }
+if ${ac_cv_DASH_fipa_sra+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fipa-sra"
+CXXFLAGS="-fipa-sra"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_fipa_sra=" -fipa-sra"
+else
+  ac_cv_DASH_fipa_sra=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fipa_sra" >&5
+$as_echo "$ac_cv_DASH_fipa_sra" >&6; }
+DASH_fipa_sra="$ac_cv_DASH_fipa_sra"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fipa-vrp" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -fipa-vrp... " >&6; }
+if ${ac_cv_DASH_fipa_vrp+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fipa-vrp"
+CXXFLAGS="-fipa-vrp"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_fipa_vrp=" -fipa-vrp"
+else
+  ac_cv_DASH_fipa_vrp=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fipa_vrp" >&5
+$as_echo "$ac_cv_DASH_fipa_vrp" >&6; }
+DASH_fipa_vrp="$ac_cv_DASH_fipa_vrp"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fisolate-erroneous-paths-dereference" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -fisolate-erroneous-paths-dereference... " >&6; }
+if ${ac_cv_DASH_fisolate_erroneous_paths_dereference+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fisolate-erroneous-paths-dereference"
+CXXFLAGS="-fisolate-erroneous-paths-dereference"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_fisolate_erroneous_paths_dereference=" -fisolate-erroneous-paths-dereference"
+else
+  ac_cv_DASH_fisolate_erroneous_paths_dereference=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fisolate_erroneous_paths_dereference" >&5
+$as_echo "$ac_cv_DASH_fisolate_erroneous_paths_dereference" >&6; }
+DASH_fisolate_erroneous_paths_dereference="$ac_cv_DASH_fisolate_erroneous_paths_dereference"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -flra-remat" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -flra-remat... " >&6; }
+if ${ac_cv_DASH_flra_remat+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-flra-remat"
+CXXFLAGS="-flra-remat"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_flra_remat=" -flra-remat"
+else
+  ac_cv_DASH_flra_remat=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_flra_remat" >&5
+$as_echo "$ac_cv_DASH_flra_remat" >&6; }
+DASH_flra_remat="$ac_cv_DASH_flra_remat"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -foptimize-sibling-calls" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -foptimize-sibling-calls... " >&6; }
+if ${ac_cv_DASH_foptimize_sibling_calls+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-foptimize-sibling-calls"
+CXXFLAGS="-foptimize-sibling-calls"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_foptimize_sibling_calls=" -foptimize-sibling-calls"
+else
+  ac_cv_DASH_foptimize_sibling_calls=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_foptimize_sibling_calls" >&5
+$as_echo "$ac_cv_DASH_foptimize_sibling_calls" >&6; }
+DASH_foptimize_sibling_calls="$ac_cv_DASH_foptimize_sibling_calls"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -foptimize-strlen" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -foptimize-strlen... " >&6; }
+if ${ac_cv_DASH_foptimize_strlen+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-foptimize-strlen"
+CXXFLAGS="-foptimize-strlen"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_foptimize_strlen=" -foptimize-strlen"
+else
+  ac_cv_DASH_foptimize_strlen=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_foptimize_strlen" >&5
+$as_echo "$ac_cv_DASH_foptimize_strlen" >&6; }
+DASH_foptimize_strlen="$ac_cv_DASH_foptimize_strlen"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fpartial-inlining" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -fpartial-inlining... " >&6; }
+if ${ac_cv_DASH_fpartial_inlining+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fpartial-inlining"
+CXXFLAGS="-fpartial-inlining"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_fpartial_inlining=" -fpartial-inlining"
+else
+  ac_cv_DASH_fpartial_inlining=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fpartial_inlining" >&5
+$as_echo "$ac_cv_DASH_fpartial_inlining" >&6; }
+DASH_fpartial_inlining="$ac_cv_DASH_fpartial_inlining"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fpeephole2" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -fpeephole2... " >&6; }
+if ${ac_cv_DASH_fpeephole2+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fpeephole2"
+CXXFLAGS="-fpeephole2"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_fpeephole2=" -fpeephole2"
+else
+  ac_cv_DASH_fpeephole2=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fpeephole2" >&5
+$as_echo "$ac_cv_DASH_fpeephole2" >&6; }
+DASH_fpeephole2="$ac_cv_DASH_fpeephole2"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -freorder-blocks-algorithm=stc" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -freorder-blocks-algorithm=stc... " >&6; }
+if ${ac_cv_DASH_freorder_blocks_algorithm_stc+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-freorder-blocks-algorithm=stc"
+CXXFLAGS="-freorder-blocks-algorithm=stc"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_freorder_blocks_algorithm_stc=" -freorder-blocks-algorithm=stc"
+else
+  ac_cv_DASH_freorder_blocks_algorithm_stc=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_freorder_blocks_algorithm_stc" >&5
+$as_echo "$ac_cv_DASH_freorder_blocks_algorithm_stc" >&6; }
+DASH_freorder_blocks_algorithm_stc="$ac_cv_DASH_freorder_blocks_algorithm_stc"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -freorder-blocks-and-partition" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -freorder-blocks-and-partition... " >&6; }
+if ${ac_cv_DASH_freorder_blocks_and_partition+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-freorder-blocks-and-partition"
+CXXFLAGS="-freorder-blocks-and-partition"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_freorder_blocks_and_partition=" -freorder-blocks-and-partition"
+else
+  ac_cv_DASH_freorder_blocks_and_partition=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_freorder_blocks_and_partition" >&5
+$as_echo "$ac_cv_DASH_freorder_blocks_and_partition" >&6; }
+DASH_freorder_blocks_and_partition="$ac_cv_DASH_freorder_blocks_and_partition"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -freorder-functions" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -freorder-functions... " >&6; }
+if ${ac_cv_DASH_freorder_functions+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-freorder-functions"
+CXXFLAGS="-freorder-functions"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_freorder_functions=" -freorder-functions"
+else
+  ac_cv_DASH_freorder_functions=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_freorder_functions" >&5
+$as_echo "$ac_cv_DASH_freorder_functions" >&6; }
+DASH_freorder_functions="$ac_cv_DASH_freorder_functions"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -frerun-cse-after-loop" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -frerun-cse-after-loop... " >&6; }
+if ${ac_cv_DASH_frerun_cse_after_loop+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-frerun-cse-after-loop"
+CXXFLAGS="-frerun-cse-after-loop"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_frerun_cse_after_loop=" -frerun-cse-after-loop"
+else
+  ac_cv_DASH_frerun_cse_after_loop=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_frerun_cse_after_loop" >&5
+$as_echo "$ac_cv_DASH_frerun_cse_after_loop" >&6; }
+DASH_frerun_cse_after_loop="$ac_cv_DASH_frerun_cse_after_loop"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fstore-merging" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -fstore-merging... " >&6; }
+if ${ac_cv_DASH_fstore_merging+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fstore-merging"
+CXXFLAGS="-fstore-merging"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_fstore_merging=" -fstore-merging"
+else
+  ac_cv_DASH_fstore_merging=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fstore_merging" >&5
+$as_echo "$ac_cv_DASH_fstore_merging" >&6; }
+DASH_fstore_merging="$ac_cv_DASH_fstore_merging"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -ftree-loop-distribute-patterns" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -ftree-loop-distribute-patterns... " >&6; }
+if ${ac_cv_DASH_ftree_loop_distribute_patterns+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-ftree-loop-distribute-patterns"
+CXXFLAGS="-ftree-loop-distribute-patterns"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_ftree_loop_distribute_patterns=" -ftree-loop-distribute-patterns"
+else
+  ac_cv_DASH_ftree_loop_distribute_patterns=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_ftree_loop_distribute_patterns" >&5
+$as_echo "$ac_cv_DASH_ftree_loop_distribute_patterns" >&6; }
+DASH_ftree_loop_distribute_patterns="$ac_cv_DASH_ftree_loop_distribute_patterns"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -ftree-loop-vectorize" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -ftree-loop-vectorize... " >&6; }
+if ${ac_cv_DASH_ftree_loop_vectorize+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-ftree-loop-vectorize"
+CXXFLAGS="-ftree-loop-vectorize"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_ftree_loop_vectorize=" -ftree-loop-vectorize"
+else
+  ac_cv_DASH_ftree_loop_vectorize=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_ftree_loop_vectorize" >&5
+$as_echo "$ac_cv_DASH_ftree_loop_vectorize" >&6; }
+DASH_ftree_loop_vectorize="$ac_cv_DASH_ftree_loop_vectorize"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -ftree-pre" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -ftree-pre... " >&6; }
+if ${ac_cv_DASH_ftree_pre+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-ftree-pre"
+CXXFLAGS="-ftree-pre"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_ftree_pre=" -ftree-pre"
+else
+  ac_cv_DASH_ftree_pre=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_ftree_pre" >&5
+$as_echo "$ac_cv_DASH_ftree_pre" >&6; }
+DASH_ftree_pre="$ac_cv_DASH_ftree_pre"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -ftree-slp-vectorize" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -ftree-slp-vectorize... " >&6; }
+if ${ac_cv_DASH_ftree_slp_vectorize+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-ftree-slp-vectorize"
+CXXFLAGS="-ftree-slp-vectorize"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_ftree_slp_vectorize=" -ftree-slp-vectorize"
+else
+  ac_cv_DASH_ftree_slp_vectorize=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_ftree_slp_vectorize" >&5
+$as_echo "$ac_cv_DASH_ftree_slp_vectorize" >&6; }
+DASH_ftree_slp_vectorize="$ac_cv_DASH_ftree_slp_vectorize"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -ftree-switch-conversion" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -ftree-switch-conversion... " >&6; }
+if ${ac_cv_DASH_ftree_switch_conversion+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-ftree-switch-conversion"
+CXXFLAGS="-ftree-switch-conversion"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_ftree_switch_conversion=" -ftree-switch-conversion"
+else
+  ac_cv_DASH_ftree_switch_conversion=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_ftree_switch_conversion" >&5
+$as_echo "$ac_cv_DASH_ftree_switch_conversion" >&6; }
+DASH_ftree_switch_conversion="$ac_cv_DASH_ftree_switch_conversion"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -ftree-tail-merge" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -ftree-tail-merge... " >&6; }
+if ${ac_cv_DASH_ftree_tail_merge+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-ftree-tail-merge"
+CXXFLAGS="-ftree-tail-merge"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_ftree_tail_merge=" -ftree-tail-merge"
+else
+  ac_cv_DASH_ftree_tail_merge=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_ftree_tail_merge" >&5
+$as_echo "$ac_cv_DASH_ftree_tail_merge" >&6; }
+DASH_ftree_tail_merge="$ac_cv_DASH_ftree_tail_merge"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -ftree-vrp" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -ftree-vrp... " >&6; }
+if ${ac_cv_DASH_ftree_vrp+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-ftree-vrp"
+CXXFLAGS="-ftree-vrp"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_ftree_vrp=" -ftree-vrp"
+else
+  ac_cv_DASH_ftree_vrp=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_ftree_vrp" >&5
+$as_echo "$ac_cv_DASH_ftree_vrp" >&6; }
+DASH_ftree_vrp="$ac_cv_DASH_ftree_vrp"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fvect-cost-model=very-cheap" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -fvect-cost-model=very-cheap... " >&6; }
+if ${ac_cv_DASH_fvect_cost_model_very_cheap+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-fvect-cost-model=very-cheap"
+CXXFLAGS="-fvect-cost-model=very-cheap"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_fvect_cost_model_very_cheap=" -fvect-cost-model=very-cheap"
+else
+  ac_cv_DASH_fvect_cost_model_very_cheap=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fvect_cost_model_very_cheap" >&5
+$as_echo "$ac_cv_DASH_fvect_cost_model_very_cheap" >&6; }
+DASH_fvect_cost_model_very_cheap="$ac_cv_DASH_fvect_cost_model_very_cheap"
+
+
 
     # machine specific options:
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -mieee" >&5
@@ -10572,48 +12638,6 @@ fi
 $as_echo "$ac_cv_DASH_mpc64" >&6; }
 DASH_mpc64="$ac_cv_DASH_mpc64"
 
-
-    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fno-gcse" >&5
-$as_echo_n "checking whether $C_COMPILER accepts -fno-gcse... " >&6; }
-if ${ac_cv_DASH_fno_gcse+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-
-rm -f conftest.$ac_ext
-cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-int
-main ()
-{
-  return 0;
-}
-_ACEOF
-ac_test_CFLAGS=${CFLAGS+set}
-ac_test_CXXFLAGS=${CXXFLAGS+set}
-ac_save_CFLAGS=$CFLAGS
-ac_save_CXXFLAGS=$CXXFLAGS
-CFLAGS="-fno-gcse"
-CXXFLAGS="-fno-gcse"
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; then
-  ac_cv_DASH_fno_gcse=" -fno-gcse"
-else
-  ac_cv_DASH_fno_gcse=""
-fi
-if test "$ac_test_CFLAGS" = set; then
-  CFLAGS=$ac_save_CFLAGS
-fi
-if test "$ac_test_CXXFLAGS" = set; then
-  CXXFLAGS=$ac_save_CXXFLAGS
-fi
-
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fno_gcse" >&5
-$as_echo "$ac_cv_DASH_fno_gcse" >&6; }
-DASH_fno_gcse="$ac_cv_DASH_fno_gcse"
 
 
   fi
@@ -11571,92 +13595,6 @@ $as_echo "$ac_cv_DASH_fomit_frame_pointer" >&6; }
 DASH_fomit_frame_pointer="$ac_cv_DASH_fomit_frame_pointer"
 
 
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -fno-ipa-ra" >&5
-$as_echo_n "checking whether $C_COMPILER accepts -fno-ipa-ra... " >&6; }
-if ${ac_cv_DASH_fno_ipa_ra+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-
-rm -f conftest.$ac_ext
-cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-int
-main ()
-{
-  return 0;
-}
-_ACEOF
-ac_test_CFLAGS=${CFLAGS+set}
-ac_test_CXXFLAGS=${CXXFLAGS+set}
-ac_save_CFLAGS=$CFLAGS
-ac_save_CXXFLAGS=$CXXFLAGS
-CFLAGS="-fno-ipa-ra"
-CXXFLAGS="-fno-ipa-ra"
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; then
-  ac_cv_DASH_fno_ipa_ra=" -fno-ipa-ra"
-else
-  ac_cv_DASH_fno_ipa_ra=""
-fi
-if test "$ac_test_CFLAGS" = set; then
-  CFLAGS=$ac_save_CFLAGS
-fi
-if test "$ac_test_CXXFLAGS" = set; then
-  CXXFLAGS=$ac_save_CXXFLAGS
-fi
-
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fno_ipa_ra" >&5
-$as_echo "$ac_cv_DASH_fno_ipa_ra" >&6; }
-DASH_fno_ipa_ra="$ac_cv_DASH_fno_ipa_ra"
-
-
-  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -foptimize-sibling-calls" >&5
-$as_echo_n "checking whether $C_COMPILER accepts -foptimize-sibling-calls... " >&6; }
-if ${ac_cv_DASH_foptimize_sibling_calls+:} false; then :
-  $as_echo_n "(cached) " >&6
-else
-
-rm -f conftest.$ac_ext
-cat >conftest.$ac_ext <<_ACEOF
-#line $LINENO "configure"
-int
-main ()
-{
-  return 0;
-}
-_ACEOF
-ac_test_CFLAGS=${CFLAGS+set}
-ac_test_CXXFLAGS=${CXXFLAGS+set}
-ac_save_CFLAGS=$CFLAGS
-ac_save_CXXFLAGS=$CXXFLAGS
-CFLAGS="-foptimize-sibling-calls"
-CXXFLAGS="-foptimize-sibling-calls"
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; then
-  ac_cv_DASH_foptimize_sibling_calls=" -foptimize-sibling-calls"
-else
-  ac_cv_DASH_foptimize_sibling_calls=""
-fi
-if test "$ac_test_CFLAGS" = set; then
-  CFLAGS=$ac_save_CFLAGS
-fi
-if test "$ac_test_CXXFLAGS" = set; then
-  CXXFLAGS=$ac_save_CXXFLAGS
-fi
-
-fi
-{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_foptimize_sibling_calls" >&5
-$as_echo "$ac_cv_DASH_foptimize_sibling_calls" >&6; }
-DASH_foptimize_sibling_calls="$ac_cv_DASH_foptimize_sibling_calls"
-
-
 
   # machine architecture option:
   if test "$ENABLE_MARCH" != "" -a "$ENABLE_MARCH" != "no_enable_march"; then
@@ -11706,9 +13644,6 @@ DASH_march="$ac_cv_DASH_march"
   fi
 
   FLAGS_OPT_LO="$DASH_O1"
-  if test "$DASH_O2" != "" -a "$DASH_fno_gcse" != ""; then
-    FLAGS_OPT_LO="$DASH_O2 $DASH_fno_gcse"
-  fi
 
   if test "$DASH_O3" != ""; then
     FLAGS_OPT_HI="$DASH_O3"
@@ -11721,6 +13656,50 @@ DASH_march="$ac_cv_DASH_march"
   fi
 
   FLAGS_OPT="$FLAGS_OPT_LO"
+
+  FLAGS_OPT="$FLAGS_OPT$DASH_falign_functions"
+  FLAGS_OPT="$FLAGS_OPT$DASH_falign_jumps"
+  FLAGS_OPT="$FLAGS_OPT$DASH_falign_labels"
+  FLAGS_OPT="$FLAGS_OPT$DASH_falign_loops"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fcaller_saves"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fcode_hoisting"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fcrossjumping"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fcse_follow_jumps"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fdevirtualize"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fdevirtualize_speculatively"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fexpensive_optimizations"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fno_gcse"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fhoist_adjacent_loads"
+  FLAGS_OPT="$FLAGS_OPT$DASH_findirect_inlining"
+  FLAGS_OPT="$FLAGS_OPT$DASH_finline_functions"
+  FLAGS_OPT="$FLAGS_OPT$DASH_finline_small_functions"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fipa_bit_cp"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fipa_cp"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fipa_icf"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fipa_icf_functions"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fipa_icf_variables"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fipa_sra"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fipa_vrp"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fisolate_erroneous_paths_dereference"
+  FLAGS_OPT="$FLAGS_OPT$DASH_flra_remat"
+  FLAGS_OPT="$FLAGS_OPT$DASH_foptimize_sibling_calls"
+  FLAGS_OPT="$FLAGS_OPT$DASH_foptimize_strlen"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fpartial_inlining"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fpeephole2"
+  FLAGS_OPT="$FLAGS_OPT$DASH_freorder_blocks_algorithm_stc"
+  FLAGS_OPT="$FLAGS_OPT$DASH_freorder_blocks_and_partition"
+  FLAGS_OPT="$FLAGS_OPT$DASH_freorder_functions"
+  FLAGS_OPT="$FLAGS_OPT$DASH_frerun_cse_after_loop"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fstore_merging"
+  FLAGS_OPT="$FLAGS_OPT$DASH_ftree_loop_distribute_patterns"
+  FLAGS_OPT="$FLAGS_OPT$DASH_ftree_loop_vectorize"
+  FLAGS_OPT="$FLAGS_OPT$DASH_ftree_pre"
+  FLAGS_OPT="$FLAGS_OPT$DASH_ftree_slp_vectorize"
+  FLAGS_OPT="$FLAGS_OPT$DASH_ftree_switch_conversion"
+  FLAGS_OPT="$FLAGS_OPT$DASH_ftree_tail_merge"
+  FLAGS_OPT="$FLAGS_OPT$DASH_ftree_vrp"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fvect_cost_model_very_cheap"
+
   FLAGS_OPT_RTS="$FLAGS_OPT_HI"
 
   case "$ENABLE_C_OPT" in
@@ -12273,7 +14252,6 @@ DASH_shared="$ac_cv_DASH_shared"
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_math_errno"
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fschedule_insns2"
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_keep_inline_dllexport"
-  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_foptimize_sibling_calls"
 
 #  if test "$ENABLE_CPLUSPLUS" = yes; then
 #    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fpermissive"
@@ -12304,10 +14282,14 @@ DASH_shared="$ac_cv_DASH_shared"
 
   if test "$GNU_GCC_IPA_RA_POSSIBLE_BUG" = yes; then
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_ipa_ra"
+  else
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fipa_ra"
   fi
 
   if test "$GNU_GCC_MOVE_LOOP_INVARIANTS_POSSIBLE_BUG" = yes; then
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_move_loop_invariants"
+  else
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fmove_loop_invariants"
   fi
 
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_march"

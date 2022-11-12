@@ -2313,28 +2313,119 @@ if test "$C_COMP_GNUC" = yes; then
 
     # clang does not support these options:
     DASH_fschedule_insns2=""
+    DASH_fmove_loop_invariants=""
     DASH_fno_move_loop_invariants=""
     DASH_fno_keep_inline_dllexport=""
     #DASH_fpermissive=""
+    DASH_falign_functions=""
+    DASH_falign_jumps=""
+    DASH_falign_labels=""
+    DASH_falign_loops=""
+    DASH_fcaller_saves=""
+    DASH_fcode_hoisting=""
+    DASH_fcrossjumping=""
+    DASH_fcse_follow_jumps=""
+    DASH_fdevirtualize=""
+    DASH_fdevirtualize_speculatively=""
+    DASH_fexpensive_optimizations=""
+    DASH_fgcse=""
+    DASH_fno_gcse=""
+    DASH_fhoist_adjacent_loads=""
+    DASH_findirect_inlining=""
+    DASH_finline_functions=""
+    DASH_finline_small_functions=""
+    DASH_fipa_bit_cp=""
+    DASH_fipa_cp=""
+    DASH_fipa_icf=""
+    DASH_fipa_icf_functions=""
+    DASH_fipa_icf_variables=""
+    DASH_fipa_ra=""
+    DASH_fno_ipa_ra=""
+    DASH_fipa_sra=""
+    DASH_fipa_vrp=""
+    DASH_fisolate_erroneous_paths_dereference=""
+    DASH_flra_remat=""
+    DASH_foptimize_sibling_calls=""
+    DASH_foptimize_strlen=""
+    DASH_fpartial_inlining=""
+    DASH_fpeephole2=""
+    DASH_freorder_blocks_algorithm_stc=""
+    DASH_freorder_blocks_and_partition=""
+    DASH_freorder_functions=""
+    DASH_frerun_cse_after_loop=""
+    DASH_fstore_merging=""
+    DASH_ftree_loop_distribute_patterns=""
+    DASH_ftree_loop_vectorize=""
+    DASH_ftree_pre=""
+    DASH_ftree_slp_vectorize=""
+    DASH_ftree_switch_conversion=""
+    DASH_ftree_tail_merge=""
+    DASH_ftree_vrp=""
+    DASH_fvect_cost_model_very_cheap=""
+
     DASH_mieee=""
     DASH_mieee_with_inexact=""
     DASH_mpc64=""
-    DASH_fno_ipa_ra=""
-    DASH_fno_gcse=""
 
   else
 
     # optimization options:
     AC_CHECK_C_COMPILER_OPT(-fschedule-insns2,DASH_fschedule_insns2)
+    AC_CHECK_C_COMPILER_OPT(-fmove-loop-invariants,DASH_fmove_loop_invariants)
     AC_CHECK_C_COMPILER_OPT(-fno-move-loop-invariants,DASH_fno_move_loop_invariants)
     AC_CHECK_C_COMPILER_OPT(-fno-keep-inline-dllexport,DASH_fno_keep_inline_dllexport)
     #AC_CHECK_C_COMPILER_OPT(-fpermissive,DASH_fpermissive)
+    AC_CHECK_C_COMPILER_OPT(-falign-functions,DASH_falign_functions)
+    AC_CHECK_C_COMPILER_OPT(-falign-jumps,DASH_falign_jumps)
+    AC_CHECK_C_COMPILER_OPT(-falign-labels,DASH_falign_labels)
+    AC_CHECK_C_COMPILER_OPT(-falign-loops,DASH_falign_loops)
+    AC_CHECK_C_COMPILER_OPT(-fcaller-saves,DASH_fcaller_saves)
+    AC_CHECK_C_COMPILER_OPT(-fcode-hoisting,DASH_fcode_hoisting)
+    AC_CHECK_C_COMPILER_OPT(-fcrossjumping,DASH_fcrossjumping)
+    AC_CHECK_C_COMPILER_OPT(-fcse-follow-jumps,DASH_fcse_follow_jumps)
+    AC_CHECK_C_COMPILER_OPT(-fdevirtualize,DASH_fdevirtualize)
+    AC_CHECK_C_COMPILER_OPT(-fdevirtualize-speculatively,DASH_fdevirtualize_speculatively)
+    AC_CHECK_C_COMPILER_OPT(-fexpensive-optimizations,DASH_fexpensive_optimizations)
+    AC_CHECK_C_COMPILER_OPT(-fgcse,DASH_fgcse)
+    AC_CHECK_C_COMPILER_OPT(-fno_gcse,DASH_fno_gcse)
+    AC_CHECK_C_COMPILER_OPT(-fhoist-adjacent-loads,DASH_fhoist_adjacent_loads)
+    AC_CHECK_C_COMPILER_OPT(-findirect-inlining,DASH_findirect_inlining)
+    AC_CHECK_C_COMPILER_OPT(-finline-functions,DASH_finline_functions)
+    AC_CHECK_C_COMPILER_OPT(-finline-small-functions,DASH_finline_small_functions)
+    AC_CHECK_C_COMPILER_OPT(-fipa-bit-cp,DASH_fipa_bit_cp)
+    AC_CHECK_C_COMPILER_OPT(-fipa-cp,DASH_fipa_cp)
+    AC_CHECK_C_COMPILER_OPT(-fipa-icf,DASH_fipa_icf)
+    AC_CHECK_C_COMPILER_OPT(-fipa-icf-functions,DASH_fipa_icf_functions)
+    AC_CHECK_C_COMPILER_OPT(-fipa-icf-variables,DASH_fipa_icf_variables)
+    AC_CHECK_C_COMPILER_OPT(-fipa-ra,DASH_fipa_ra)
+    AC_CHECK_C_COMPILER_OPT(-fno-ipa-ra,DASH_fno_ipa_ra)
+    AC_CHECK_C_COMPILER_OPT(-fipa-sra,DASH_fipa_sra)
+    AC_CHECK_C_COMPILER_OPT(-fipa-vrp,DASH_fipa_vrp)
+    AC_CHECK_C_COMPILER_OPT(-fisolate-erroneous-paths-dereference,DASH_fisolate_erroneous_paths_dereference)
+    AC_CHECK_C_COMPILER_OPT(-flra-remat,DASH_flra_remat)
+    AC_CHECK_C_COMPILER_OPT(-foptimize-sibling-calls,DASH_foptimize_sibling_calls)
+    AC_CHECK_C_COMPILER_OPT(-foptimize-strlen,DASH_foptimize_strlen)
+    AC_CHECK_C_COMPILER_OPT(-fpartial-inlining,DASH_fpartial_inlining)
+    AC_CHECK_C_COMPILER_OPT(-fpeephole2,DASH_fpeephole2)
+    AC_CHECK_C_COMPILER_OPT(-freorder-blocks-algorithm=stc,DASH_freorder_blocks_algorithm_stc)
+    AC_CHECK_C_COMPILER_OPT(-freorder-blocks-and-partition,DASH_freorder_blocks_and_partition)
+    AC_CHECK_C_COMPILER_OPT(-freorder-functions,DASH_freorder_functions)
+    AC_CHECK_C_COMPILER_OPT(-frerun-cse-after-loop,DASH_frerun_cse_after_loop)
+    AC_CHECK_C_COMPILER_OPT(-fstore-merging,DASH_fstore_merging)
+    AC_CHECK_C_COMPILER_OPT(-ftree-loop-distribute-patterns,DASH_ftree_loop_distribute_patterns)
+    AC_CHECK_C_COMPILER_OPT(-ftree-loop-vectorize,DASH_ftree_loop_vectorize)
+    AC_CHECK_C_COMPILER_OPT(-ftree-pre,DASH_ftree_pre)
+    AC_CHECK_C_COMPILER_OPT(-ftree-slp-vectorize,DASH_ftree_slp_vectorize)
+    AC_CHECK_C_COMPILER_OPT(-ftree-switch-conversion,DASH_ftree_switch_conversion)
+    AC_CHECK_C_COMPILER_OPT(-ftree-tail-merge,DASH_ftree_tail_merge)
+    AC_CHECK_C_COMPILER_OPT(-ftree-vrp,DASH_ftree_vrp)
+    AC_CHECK_C_COMPILER_OPT(-fvect-cost-model=very-cheap,DASH_fvect_cost_model_very_cheap)
 
     # machine specific options:
     AC_CHECK_C_COMPILER_OPT(-mieee,DASH_mieee)
     AC_CHECK_C_COMPILER_OPT(-mieee-with-inexact,DASH_mieee_with_inexact)
     AC_CHECK_C_COMPILER_OPT(-mpc64,DASH_mpc64)
-    AC_CHECK_C_COMPILER_OPT(-fno-gcse,DASH_fno_gcse)
+
   fi
 
   # preprocessor options:
@@ -2366,8 +2457,6 @@ if test "$C_COMP_GNUC" = yes; then
   AC_CHECK_C_COMPILER_OPT(-fwrapv,DASH_fwrapv)
   AC_CHECK_C_COMPILER_OPT(-ftrapv,DASH_ftrapv)
   AC_CHECK_C_COMPILER_OPT(-fomit-frame-pointer,DASH_fomit_frame_pointer)
-  AC_CHECK_C_COMPILER_OPT(-fno-ipa-ra, DASH_fno_ipa_ra)
-  AC_CHECK_C_COMPILER_OPT(-foptimize-sibling-calls,DASH_foptimize_sibling_calls)
 
   # machine architecture option:
   if test "$ENABLE_MARCH" != "" -a "$ENABLE_MARCH" != "no_enable_march"; then
@@ -2375,9 +2464,6 @@ if test "$C_COMP_GNUC" = yes; then
   fi
 
   FLAGS_OPT_LO="$DASH_O1"
-  if test "$DASH_O2" != "" -a "$DASH_fno_gcse" != ""; then
-    FLAGS_OPT_LO="$DASH_O2 $DASH_fno_gcse"
-  fi
 
   if test "$DASH_O3" != ""; then
     FLAGS_OPT_HI="$DASH_O3"
@@ -2390,6 +2476,50 @@ if test "$C_COMP_GNUC" = yes; then
   fi
 
   FLAGS_OPT="$FLAGS_OPT_LO"
+
+  FLAGS_OPT="$FLAGS_OPT$DASH_falign_functions"
+  FLAGS_OPT="$FLAGS_OPT$DASH_falign_jumps"
+  FLAGS_OPT="$FLAGS_OPT$DASH_falign_labels"
+  FLAGS_OPT="$FLAGS_OPT$DASH_falign_loops"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fcaller_saves"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fcode_hoisting"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fcrossjumping"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fcse_follow_jumps"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fdevirtualize"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fdevirtualize_speculatively"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fexpensive_optimizations"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fno_gcse"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fhoist_adjacent_loads"
+  FLAGS_OPT="$FLAGS_OPT$DASH_findirect_inlining"
+  FLAGS_OPT="$FLAGS_OPT$DASH_finline_functions"
+  FLAGS_OPT="$FLAGS_OPT$DASH_finline_small_functions"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fipa_bit_cp"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fipa_cp"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fipa_icf"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fipa_icf_functions"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fipa_icf_variables"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fipa_sra"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fipa_vrp"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fisolate_erroneous_paths_dereference"
+  FLAGS_OPT="$FLAGS_OPT$DASH_flra_remat"
+  FLAGS_OPT="$FLAGS_OPT$DASH_foptimize_sibling_calls"
+  FLAGS_OPT="$FLAGS_OPT$DASH_foptimize_strlen"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fpartial_inlining"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fpeephole2"
+  FLAGS_OPT="$FLAGS_OPT$DASH_freorder_blocks_algorithm_stc"
+  FLAGS_OPT="$FLAGS_OPT$DASH_freorder_blocks_and_partition"
+  FLAGS_OPT="$FLAGS_OPT$DASH_freorder_functions"
+  FLAGS_OPT="$FLAGS_OPT$DASH_frerun_cse_after_loop"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fstore_merging"
+  FLAGS_OPT="$FLAGS_OPT$DASH_ftree_loop_distribute_patterns"
+  FLAGS_OPT="$FLAGS_OPT$DASH_ftree_loop_vectorize"
+  FLAGS_OPT="$FLAGS_OPT$DASH_ftree_pre"
+  FLAGS_OPT="$FLAGS_OPT$DASH_ftree_slp_vectorize"
+  FLAGS_OPT="$FLAGS_OPT$DASH_ftree_switch_conversion"
+  FLAGS_OPT="$FLAGS_OPT$DASH_ftree_tail_merge"
+  FLAGS_OPT="$FLAGS_OPT$DASH_ftree_vrp"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fvect_cost_model_very_cheap"
+
   FLAGS_OPT_RTS="$FLAGS_OPT_HI"
 
   case "$ENABLE_C_OPT" in
@@ -2522,7 +2652,6 @@ if test "$C_COMP_GNUC" = yes; then
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_math_errno"
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fschedule_insns2"
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_keep_inline_dllexport"
-  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_foptimize_sibling_calls"
 
 #  if test "$ENABLE_CPLUSPLUS" = yes; then
 #    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fpermissive"
@@ -2553,10 +2682,14 @@ if test "$C_COMP_GNUC" = yes; then
 
   if test "$GNU_GCC_IPA_RA_POSSIBLE_BUG" = yes; then
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_ipa_ra"
+  else
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fipa_ra"
   fi
 
   if test "$GNU_GCC_MOVE_LOOP_INVARIANTS_POSSIBLE_BUG" = yes; then
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_move_loop_invariants"
+  else
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fmove_loop_invariants"
   fi
 
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_march"
