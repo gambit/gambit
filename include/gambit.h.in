@@ -5179,14 +5179,13 @@ ___EXT(___register_host_entry) (___PSP ___start, ___MODULE_NAME, __FILE__, __LIN
 #define ___DEF_HLBL(id)&&id,
 #define ___END_HLBL \
 0}; \
-___pc=___ps->pc; \
+___pc=___ps->pc; ___R_ALL ___start=___MLBL(___HOST_LBL0); \
 if (___EXPECT_FALSE(___pc == ___FIX(0))) { \
   ___ps->pc = ___CAST(___WORD,___hlbltbl); \
   return; \
 }
 
 #define ___BEGIN_SW \
-___R_ALL ___start=___MLBL(___HOST_LBL0); \
 ___REGISTER_HOST_ENTRY \
 goto *___LABEL_HOST_LABEL_GET(___pc);
 
@@ -5227,10 +5226,9 @@ ___jumpext:
 #define ___BEGIN_HLBL
 #define ___DEF_HLBL_INTRO
 #define ___DEF_HLBL(id)
-#define ___END_HLBL
+#define ___END_HLBL ___pc=___ps->pc; ___R_ALL ___start=___MLBL(___HOST_LBL0);
 
 #define ___BEGIN_SW \
-___R_ALL ___start=___MLBL(___HOST_LBL0); ___pc=___ps->pc; \
 ___REGISTER_HOST_ENTRY \
 ___jump: \
 switch((___pc-=___start)/(___LABEL_SIZE*___WS)) \
