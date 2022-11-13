@@ -5136,11 +5136,57 @@
     (if ret (interpret-write loc (make-First-Class-Label bbs ret))))
 
   (define (align-args! args nparams keys opts rest? clo)
-    ;; TODO opts is ignored
-    ;; TODO keys are ignored and they default values are simply pluged-in
     (let* ((closed? (if clo #t #f))
-           (keys (or keys '()))
-           (args (append args (map obj-val (map cdr keys)))) ;; TODO: temporary hack
+           (nargs (length args))
+           (opts-len (length opts))
+           (min-args (if rest? (- nparams 1) nparams))
+           (max-args (if rest? +inf.0 (+ nparams (length keys) (length opts)))))
+      (if (< nargs min-args)
+          (error "missing of arguments"))
+      (let* ((nskipped-opts (max 0 (- opts-len (- nargs min-args))))
+             (args-w/-opts (append args (map get-value (list-tail opts nskipped-opts))))
+             (remaining-args (list-tail args (+ min-args nskipped-opts)))
+             (key-args
+              (if keys
+                (let loop ((remaining-args remaining-args))
+                  (if (and (pair? remaining-args)
+                           (pair? (cdr remaining-args))
+                           (keyword? (car remaining-args)))
+                      (cons (cons (car remaining-args) (cadr remaining-args))
+                            (loop (cddr remaining-args)))
+                      '()))
+                '()))
+             (rest-args
+               (list-tail
+                 remaining-args
+                 (* 2 (length key-args))))
+             (args-w/-keys
+               (if keys
+                 (append
+                   args-w/-opts
+                   (map
+                     (lambda (pair)
+                       (let ((key (car pair))
+                             (default (cdr pair))
+                             (found (assq key-args key)))
+                           (if found (cdr found) default)))
+                      keys))
+                 args-w/-opts)))
+        ;; TODO:
+        ;;  test all keys in key-args are in keys
+        ;;  check if rest? otherwise rest-args must be empty
+
+
+
+
+               (if keys
+                 ...
+                 '()))
+             (args-w/-keys (if keys (append args-w/-opts key-args) args-w/-opts)))
+
+
+
+
            (params-info (get-label-parameters-info nparams closed?))
            (args-loc (get-args-loc params-info))
            (nargs (length args))
