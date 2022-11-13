@@ -1194,7 +1194,7 @@
 #ifndef ___SINGLE_HOST_ENFORCE
 /* downgrade to multiple C host procedures when code is very big */
 #ifdef ___LBLCOUNT
-#if ___LBLCOUNT >= 10000
+#if ___LBLCOUNT >= 30000
 #undef ___SINGLE_HOST
 #define ___MULTIPLE_HOSTS
 #endif
