@@ -1607,14 +1607,37 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 (define (%%indexer-generic base lower-bounds increments)
   (let ((result
-         (lambda multi-index
-           (do ((multi-index  multi-index  (cdr multi-index))
-                (lower-bounds lower-bounds (cdr lower-bounds))
-                (increments   increments   (cdr increments))
-                (result       base         (+ result (* (car increments)
-                                                        (- (car multi-index)
-                                                           (car lower-bounds))))))
-               ((null? multi-index) result)))))
+         (if (%%every (lambda (x) (eqv? x 0)) lower-bounds)
+             (lambda multi-index
+               (let loop ((result base)
+                          (indices multi-index)
+                          (increments increments))
+                 (if (null? indices)
+                     (if (null? increments)
+                         result
+                         (apply error "Wrong number of arguments passed to procedure " multi-index))
+                     (if (null? increments)
+                         (apply error "Wrong number of arguments passed to procedure " multi-index)
+                         (loop (+ result (* (car increments) (car indices)))
+                               (cdr indices)
+                               (cdr increments))))))
+             (lambda multi-index
+               (let loop ((result base)
+                          (indices multi-index)
+                          (lower-bounds lower-bounds)
+                          (increments increments))
+                 (if (null? indices)
+                     (if (null? increments)
+                         result
+                         (apply error "Wrong number of arguments passed to procedure " multi-index))
+                     (if (null? increments)
+                         (apply error "Wrong number of arguments passed to procedure " multi-index)
+                         (loop (+ result (* (car increments)
+                                            (- (car indices)
+                                               (car lower-bounds))))
+                               (cdr indices)
+                               (cdr lower-bounds)
+                               (cdr increments)))))))))
     result))
 
 

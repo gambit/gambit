@@ -4598,6 +4598,90 @@ OTHER DEALINGS IN THE SOFTWARE.
     (test (apply array-set! 2 42 (make-list d 0))
           "array-set!: The first argument is not a mutable array: ")))
 
+(specialized-array-default-safe? #f)
+
+(define A-ref
+  (array-copy
+   (make-array (make-interval '#(10 10))
+               (lambda (i j) (if (= i j) 1 0)))))
+
+(do ((i 1 (+ i 1)))
+    ((= i 6))
+  (test (apply array-ref 1 (make-list i 0))
+        "array-ref: The first argument is not an array: "))
+
+(test (array-ref A-ref 1)
+      "Wrong number of arguments passed to procedure ")
+
+#|
+   For unsafe arrays, this error will not be caught, and could crash the program.
+|#
+#;
+(test (array-ref A-ref 1 1001)
+      "array-getter: domain does not contain multi-index: ")
+
+(test (array-ref A-ref 4 4)
+      1)
+
+(test (array-ref A-ref 4 5)
+      0)
+
+(do ((d 0 (+ d 1)))
+    ((= d 6))
+  (let ((A (make-specialized-array (make-interval (make-vector d 1)) generic-storage-class 42)))
+    (test (apply array-ref A (make-list d 0))
+          42)
+    (test (apply array-ref 2 (make-list d 0))
+          (if (zero? d)
+              "array-ref: The argument is not an array: "
+              "array-ref: The first argument is not an array: "))))
+
+(test (array-ref (make-specialized-array (make-interval '#(0 0)) generic-storage-class 42) 0 0)
+      "array-getter: Array domain is empty: ")
+
+(test (array-set! (make-specialized-array (make-interval '#(0 0)) generic-storage-class 42) 42 0 0)
+      "array-setter: Array domain is empty: ")
+
+(define B-set!
+  (array-copy
+   (make-array (make-interval '#(10 10))
+               (lambda (i j) (if (= i j) 1 0)))
+   u1-storage-class))
+
+(test (array-set! 1 1 1)
+      "array-set!: The first argument is not a mutable array: ")
+
+(test (array-set! B-set!)
+      "Wrong number of arguments passed to procedure ")
+
+(test (array-set! B-set! 2)
+      "Wrong number of arguments passed to procedure ")
+
+(test (array-set! B-set! 2 1)
+      "Wrong number of arguments passed to procedure ")
+
+#|
+   For unsafe arrays, this error will not be caught, and could crash the program.
+|#
+#;
+(test (array-set! B-set! 2 1 1)
+      "array-setter: value cannot be stored in body: ")
+
+(array-set! B-set! 1 1 2)
+(array-set! B-set! 0 2 2)
+(array-display B-set!)
+
+(do ((d 0 (+ d 1)))
+    ((= d 6))
+  (let ((A (make-specialized-array (make-interval (make-vector d 1)) generic-storage-class 10)))
+    (apply array-set! A 42 (make-list d 0))
+    (test (apply array-ref A (make-list d 0))
+          42)
+    (test (apply array-set! 2 42 (make-list d 0))
+          "array-set!: The first argument is not a mutable array: ")))
+
+
+
 
 (pp "specialized-array-reshape tests")
 
@@ -6446,5 +6530,18 @@ that computes the componentwise products when we need them, the times are
 (generations glider 5)
 
 #;(pp (reverse %%test-moves))
+
+;;; Unit tests
+
+(let ((A (make-specialized-array (make-interval '#(5 5 5 5 5) '#(8 8 8 8 8))))
+      (B (make-specialized-array (make-interval '#(5 5 5 5 5)))))
+  (test (array-ref A 0 0)
+        "Wrong number of arguments passed to procedure ")
+  (test (array-set! A 2 0 0)
+        "Wrong number of arguments passed to procedure ")
+  (test (array-ref B 0 0)
+        "Wrong number of arguments passed to procedure ")
+  (test (array-set! B 2 0 0)
+        "Wrong number of arguments passed to procedure "))
 
 (for-each display (list "Failed " failed-tests " out of " total-tests " total tests.\n"))
