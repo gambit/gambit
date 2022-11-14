@@ -243,7 +243,7 @@
               (output (with-input-from-string output-string (lambda () (read)))))
          (if (pair? output)
            (set! tested-procedures (append-set tested-procedures (cadr output)))
-           #;(print "*** WARNING: " (trim-filename file) " UNEXPECTED OUTPUT: " output-string "\n")))
+           #;(println "\n*** WARNING: " (trim-filename file) " UNEXPECTED OUTPUT: " output-string)))
        (if (= 0 status)
            (set! nb-good (+ nb-good 1))
            (begin
