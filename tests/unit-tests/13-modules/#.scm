@@ -42,7 +42,7 @@
 
 (define (compare-behavior namespaces calls . behaviors)
 
-  (define (behaviour->string obj)
+  (define (behavior->string obj)
     (let ((str (object->string obj)))
       (if (> (string-length str) 256)
         (string-append (substring str 0 256) "...\"")
@@ -62,7 +62,7 @@
                                `(namespace (,namespace2)))
                            `(##import ,namespace2)))
                       " returned "
-                      (behaviour->string behavior2)
+                      (behavior->string behavior2)
                       " but expected "
                       (behaviour->string behavior1)))))
               calls
