@@ -17,9 +17,9 @@
                              calls))))
            namespaces)))
 
-(define ##output-port (open-string))
+(define ##output-string-port (open-string))
 
-(define (call-with-output-string-port port thunk)
+(define (call-with-output-port port thunk)
   (include "~~lib/_repl#.scm")
   (implement-type-repl-channel)
   (let* ((repl-channel (##thread-repl-channel-get! (current-thread)))
@@ -27,18 +27,20 @@
     (macro-repl-channel-output-port-set! repl-channel port)
     (parameterize
       ((current-output-port port))
-      (let ((result (thunk)))
+      (let ((result (thunk port)))
         (macro-repl-channel-output-port-set! repl-channel old-output-port)
-        (cons result (get-output-string port))))))
+        result))))
 
 
 (define (capture-behavior thunk)
-  (call-with-output-string-port
-    ##output-port
-    (lambda ()
+  (call-with-output-port
+    ##output-string-port
+    (lambda (port)
       (with-exception-catcher
         (lambda (e) e)
-        thunk))))
+        (lambda ()
+          (let ((result (thunk)))
+            (cons result (get-output-string port))))))))
 
 (define (compare-behavior namespaces calls . behaviors)
 
