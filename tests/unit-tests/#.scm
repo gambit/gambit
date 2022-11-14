@@ -10,11 +10,6 @@
 
 (define ##failed-check? #f)
 
-(define ##failed-messages '())
-
-(define (##push-fail-message msg)
-  (set! ##failed-messages (cons msg ##failed-messages)))
-
 ;; at exit, verify if any checks failed
 (let ((##exit-old ##exit))
   (set! ##exit
@@ -22,8 +17,7 @@
           (if (pair? rest)
               (##exit-old (car rest))
               (begin
-                (let ((output (fold (lambda (a b) (string-append a "\n" b)) "" ##failed-messages)))
-                  (##write (list output ##tested-procedures) ##stdout-port))
+                (##write (cons '%GAMBIT-COVERAGE% ##tested-procedures) ##stdout-port)
                 (##exit-cleanup)
                 (##exit-with-err-code-no-cleanup
                  (if ##failed-check? 2 1)))))))
@@ -31,7 +25,7 @@
 (define ##failed-check-absent '$$fake-absent-object$$)
 
 (define (##failed-check msg #!optional (actual-result ##failed-check-absent))
-  (##push-fail-message
+  (##println
    (call-with-output-string
     ""
     (lambda (port)

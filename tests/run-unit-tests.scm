@@ -227,6 +227,12 @@
             (cons a b)))
         s1 s2))
 
+(define (get-coverage str)
+  (let ((coverage-loc (##string-contains str "(%GAMBIT-COVERAGE%")))
+    (and coverage-loc
+         (let ((coverage (with-input-from-string (substring str coverage-loc (string-length str)) read)))
+           (and (pair? coverage) (cdr coverage))))))
+
 (define (test file target)
   (for-each
 
@@ -240,10 +246,9 @@
             (status-hi (quotient status 256))
             (status-lo (modulo status 256)))
        (let* ((output-string (cdr result))
-              (output (with-input-from-string output-string (lambda () (read)))))
-         (if (pair? output)
-           (set! tested-procedures (append-set tested-procedures (cadr output)))
-           #;(println "\n*** WARNING: " (trim-filename file) " UNEXPECTED OUTPUT: " output-string)))
+              (coverage (get-coverage output-string)))
+         (and (pair? coverage)
+              (set! tested-procedures (append-set tested-procedures coverage))))
        (if (= 0 status)
            (set! nb-good (+ nb-good 1))
            (begin
