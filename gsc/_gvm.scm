@@ -4886,6 +4886,9 @@
 
 ;; Branch counters
 
+(define (mark-exit-jump branch-instr)
+  (comment-add! branch-instr 'exit-jump #t))
+
 (define (increment-branch-counter branch-instr target-bbs target-lbl)
   (let* ((table1
           (get-branch-counters branch-instr))
@@ -5299,6 +5302,7 @@
           (let ((val (get-value opnd))) ;; call
             (cond
               ((eq? val 'exit-return-address)
+                (mark-exit-jump instr)
                 (interpret-debug-ln '***GVM-Interpreter-END)
                 #f)
               ((proc-obj? val)
