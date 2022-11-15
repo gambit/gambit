@@ -5136,78 +5136,80 @@
     (if ret (interpret-write loc (make-First-Class-Label bbs ret))))
 
   (define (align-args! args nparams keys opts rest? clo)
+    (define empty (list 'empty))
+    (define remaining-args args)
+    (define actual-params (make-vector nparams empty))
+    (define n-opts-arguments (length opts))
+    (define n-keys-arguments (length keys))
+    (define n-positional-args (- nparams
+                                n-opts-arguments
+                                n-keys-arguments
+                                (if rest? 1 0)))
+
+    (define n-stored 0)
+    (define (store a)
+      (if (= n-stored (vector-length actual-params)) (error "wrong number of arguments"))
+      (vector-set! actual-params n-stored a)
+      (set! n-stored (+ n-stored 1)))
+
+    (define (peek) (if (null? remaining-args) empty (car remaining-args)))
+    (define (peek2)
+      (cond
+        ((null? remaining-args) empty)
+        ((null? (cdr remaining-args)) empty)
+        (else (cadr remaining-args))))
+    (define (pop)
+      (let ((v (peek)))
+        (set! remaining-args (cdr remaining-args))
+        v))
+    (define (consume) (store (pop)))
+    (define (empty?) (eq? (peek) empty))
+    (define (empty2?) (eq? (peek2) empty))
+
+    ;; positional arguments
+    (let loop ()
+      (if (< n-stored n-positional-args)
+          (begin
+            (if (empty?) (error "missing argument") (consume))
+            (loop))))
+
+    ;; optional arguments
+    (for-each
+      (lambda (opt) (if (empty?) (store (get-value opt)) (consume)))
+      opts)
+
+
+    ;; key arguments
+    (if keys
+      (let ((keyargs
+              (let loop ()
+                (if (and (keyword? (peek)) (not (empty2?)))
+                  (let ((key (pop)) (value (pop)))
+                    (if (assq key keys)
+                        (cons (cons key value) (loop))
+                        (error "unknown keyword argument")))
+                  '()))))
+        (for-each
+          (lambda (pair)
+            (let* ((key (car pair))
+                   (value (cdr pair))
+                   (provided (assq key keyargs)))
+              (if provided (store (cdr provided)) (store (get-value value)))))
+          keys)))
+
+    ;; store rest
+    (cond
+      (rest?
+        (store (list-copy remaining-args)))
+      ((not (null? remaining-args))
+        (error "wrong number of arguments")))
+
+    ;; write args on stack/regs
     (let* ((closed? (if clo #t #f))
-           (nargs (length args))
-           (opts-len (length opts))
-           (min-args (if rest? (- nparams 1) nparams))
-           (max-args (if rest? +inf.0 (+ nparams (length keys) (length opts)))))
-      (if (< nargs min-args)
-          (error "missing of arguments"))
-      (let* ((nskipped-opts (max 0 (- opts-len (- nargs min-args))))
-             (args-w/-opts (append args (map get-value (list-tail opts nskipped-opts))))
-             (remaining-args (list-tail args (+ min-args nskipped-opts)))
-             (key-args
-              (if keys
-                (let loop ((remaining-args remaining-args))
-                  (if (and (pair? remaining-args)
-                           (pair? (cdr remaining-args))
-                           (keyword? (car remaining-args)))
-                      (cons (cons (car remaining-args) (cadr remaining-args))
-                            (loop (cddr remaining-args)))
-                      '()))
-                '()))
-             (rest-args
-               (list-tail
-                 remaining-args
-                 (* 2 (length key-args))))
-             (args-w/-keys
-               (if keys
-                 (append
-                   args-w/-opts
-                   (map
-                     (lambda (pair)
-                       (let ((key (car pair))
-                             (default (cdr pair))
-                             (found (assq key-args key)))
-                           (if found (cdr found) default)))
-                      keys))
-                 args-w/-opts)))
-        ;; TODO:
-        ;;  test all keys in key-args are in keys
-        ;;  check if rest? otherwise rest-args must be empty
-
-
-
-
-               (if keys
-                 ...
-                 '()))
-             (args-w/-keys (if keys (append args-w/-opts key-args) args-w/-opts)))
-
-
-
-
            (params-info (get-label-parameters-info nparams closed?))
-           (args-loc (get-args-loc params-info))
-           (nargs (length args))
-           (nparams-without-rest (if rest? (- nparams 1) nparams))
-           (args-with-rest
-             (cond
-               ((< nargs nparams-without-rest)
-                (error "missing arguments"))
-               (rest?
-                  (let ((rest-arg (list-tail args nparams-without-rest)))
-                    (append (map ;;sublist
-                              (lambda (x y) x)
-                              args
-                              (iota nparams-without-rest))
-                            (list rest-arg))))
-               ((= nargs nparams)
-                 args)
-               (else
-                 (error "too many arguments")))))
-    (if closed? (interpret-write (get-closure-loc params-info) clo))
-    (for-each interpret-write args-loc args-with-rest)))
+           (args-loc (get-args-loc params-info)))
+      (if closed? (interpret-write (get-closure-loc params-info) clo))
+      (for-each interpret-write args-loc (vector->list actual-params))))
 
   (define (jump-to instr target-bbs lbl-num from-bb nargs ret clo)
     (let* ((nargs (or nargs 0))
