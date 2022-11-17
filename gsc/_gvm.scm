@@ -11,6 +11,10 @@
 (include-adt "_ptreeadt.scm")
 (include-adt "_sourceadt.scm")
 
+(define (pprint val)
+  (##namespace ("" pp))
+  (pp val))
+
 ;;;----------------------------------------------------------------------------
 ;;
 ;; Gambit virtual machine abstraction module:
@@ -2252,7 +2256,7 @@
 
                 #;
                 (if looping?
-                    (pp `(********************looping ,looping?)))
+                    (pprint `(********************looping ,looping?)))
 
                 (table-set! all-versions-tbl types-before new-lbl)
 
@@ -2332,7 +2336,7 @@
                               (cdr p)))
 
                         (if debug-bbv?
-                            (pp (list (list 'in in) (list 'out out))))
+                            (pprint (list (list 'in in) (list 'out out))))
 
                         (let* ((versions-to-merge
                                 (map (lambda (i) (vector-ref types-lbl-vect i))
@@ -2358,7 +2362,7 @@
                                (if (not (= lbl new-lbl2))
                                    (begin
                                      (if debug-bbv?
-                                         (pp (list 'adding lbl '--> new-lbl2)))
+                                         (pprint (list 'adding lbl '--> new-lbl2)))
                                      (table-set! lbl-mapping lbl new-lbl2)))))
                            versions-to-merge)
 
@@ -2391,7 +2395,7 @@
                 new-lbl))))
 
       (define (walk-bb bb types-before cost path orig-lbl new-lbl)
-;;        (pp `(walk-bb ,(bb-lbl-num bb) ,types-before ,cost ,path ,new-lbl))
+;;        (pprint `(walk-bb ,(bb-lbl-num bb) ,types-before ,cost ,path ,new-lbl))
 
         (let ((new-bb #f))
 
@@ -2447,7 +2451,7 @@
 
               ((label)
                (set! cost (- cost instr-cost)) ;; undo cost for labels
-;;               (pp '****label)
+;;               (pprint '****label)
                (let ((new-instr
                       (case (label-kind gvm-instr)
 
@@ -2493,7 +2497,7 @@
                  new-instr))
 
               ((apply)
-;;               (pp '****apply)
+;;               (pprint '****apply)
                (let* ((prim
                        (apply-prim gvm-instr))
 #;
@@ -2545,7 +2549,7 @@
                  new-instr))
 
               ((copy)
-;;               (pp '****copy)
+;;               (pprint '****copy)
                (let* ((opnd
                        (walk-opnd (copy-opnd gvm-instr)))
                       (loc
@@ -2570,7 +2574,7 @@
                  new-instr))
 
               ((close)
-;;               (pp '****close) (exit 1)
+;;               (pprint '****close) (exit 1)
                (let loop1 ((lst (close-parms gvm-instr))
                            (types-after types-after))
                  (if (pair? lst)
@@ -2640,7 +2644,7 @@
                              new-instr))))))
 
               ((ifjump)
-;;               (pp '****ifjump)
+;;               (pprint '****ifjump)
                (let* ((test
                        (ifjump-test gvm-instr))
                       (opnds
@@ -2735,20 +2739,20 @@
                  new-instr))
 
               ((switch)
-;;               (pp '****switch) (exit 1)
+;;               (pprint '****switch) (exit 1)
                (let ((opnd (walk-opnd (switch-opnd gvm-instr))))
                  '(for-each (lambda (c) (scan-obj (switch-case-obj c)))
                             (switch-cases gvm-instr))
                  types-after))
 
               ((jump)
-;;               (pp '****jump)
+;;               (pprint '****jump)
                (let* ((opnd
                        (jump-opnd gvm-instr))
                       (ret
                        (jump-ret gvm-instr))
 #;(_                (if (and opnd (lbl? opnd) ret)
-                      (begin (pp '*********error)(exit 1))))
+                      (begin (pprint '*********error)(exit 1))))
 
                       (new-instr
                        (make-jump
@@ -2870,7 +2874,7 @@
                  (if x
                      (begin
                        (if debug-bbv?
-                           (pp (list lbl '--> x)))
+                           (pprint (list lbl '--> x)))
                        (replacement-lbl-num x))
                      lbl)))
 
@@ -2911,7 +2915,7 @@
 
     (bbs-for-each-bb bb-init! bbs))
 
-  (define (bbs-iterate! bbs iteration-count) (pp `(***********iteration-count= ,iteration-count))
+  (define (bbs-iterate! bbs iteration-count) (pprint `(***********iteration-count= ,iteration-count))
     (let ((visited (make-stretchable-vector 0))
           (changed? #f))
 
@@ -2928,7 +2932,7 @@
                               (lambda (type1 type2)
                                 (type-union tctx type1 type2 widen?)))))
 
-          (pp `(----------------------reach
+          (pprint `(----------------------reach
                 ,lbl
                 ,types
                 ,bb-types
@@ -2995,7 +2999,7 @@
               ((copy)
                (let* ((opnd (scan-opnd (copy-opnd gvm-instr)))
                       (loc (scan-opnd (copy-loc gvm-instr))))
-                 (pp (list 'xxxxxxxxx (format-gvm-opnd loc) (format-gvm-opnd opnd)))
+                 (pprint (list 'xxxxxxxxx (format-gvm-opnd loc) (format-gvm-opnd opnd)))
                  (if (locenv-loc? loc)
                      (let ((dst-loc
                             (gvm-loc->locenv-index after loc)))
@@ -3048,7 +3052,7 @@
                        (define (narrow where opnd-types)
                          (and opnd-types
                               (let ((x (locenv-update after opnds opnd-types)))
-                                (pp `(=========== ,where ,x))
+                                (pprint `(=========== ,where ,x))
                                 x)))
                        (let* ((true (narrow 't (car result)))
                               (false (narrow 'f (cdr result))))
@@ -3071,19 +3075,19 @@
                  (if (lbl? opnd)
                      (reach (lbl-num opnd) after))
                  after))))))
-  (gvm-instr-types-set! gvm-instr xxx) (pp xxx)
+  (gvm-instr-types-set! gvm-instr xxx) (pprint xxx)
   xxx))
 
-        (pp `(bb-analyze! ,(bb-lbl-num bb)))
+        (pprint `(bb-analyze! ,(bb-lbl-num bb)))
 
         (let loop ((lst (bb-non-branch-instrs bb))
                    (types (gvm-instr-types (bb-label-instr bb))))
-          (pp `(types= ,types))
+          (pprint `(types= ,types))
           (if (pair? lst)
               (loop (cdr lst) (instr-analyze! (car lst) types))
               (instr-analyze! (bb-branch-instr bb) types))))
 
-      (pp iteration-count)
+      (pprint iteration-count)
       (bb-analyze! (lbl-num->bb (bbs-entry-lbl-num bbs) bbs))
 
       (if changed?
@@ -4755,7 +4759,7 @@
                          (var-lexical-level x))
                       (let ()
                         (##namespace ("" pp));****************
-                        (pp (list
+                        (pprint (list
                              'closure-vars: (map var-name closure-vars)
                              'stack-slots: (map car stack-slots)
                              'source: (source->expression (node-source node))
@@ -4921,9 +4925,9 @@
   (make-table))
 
 (define (pp-primitive-call-counter)
-  (pp '***primitive-call-counter)
+  (pprint '***primitive-call-counter)
   (table-for-each
-    (lambda a (pp a))
+    (lambda a (pprint a))
     primitive-call-counter))
 
 (define (make-gvm-primitives)
@@ -4999,7 +5003,7 @@
 (define (register-set! registers n val)
   (stretchable-vector-set! registers n val))
 
-(define interpreter-trace? #f)
+(define interpreter-trace? #t)
 
 (define (interpret-debug-ln msg)
   (if interpreter-trace? (println msg)))
@@ -5008,7 +5012,7 @@
   (if interpreter-trace? (display msg)))
 
 (define (gvm-interpret module-procs)
-  (pp '***GVM-Interpreter)
+  (pprint '***GVM-Interpreter)
 
   (init-gvm-primitives)
 
@@ -5143,7 +5147,7 @@
     (define remaining-args args)
     (define actual-params (make-vector nparams empty))
     (define n-opts-arguments (length opts))
-    (define n-keys-arguments (length keys))
+    (define n-keys-arguments (if keys (length keys) 0))
     (define n-positional-args (- nparams
                                 n-opts-arguments
                                 n-keys-arguments

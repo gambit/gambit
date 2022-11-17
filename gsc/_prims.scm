@@ -7223,9 +7223,11 @@
                  (list (make-type-fixnum -3 2)
                        (make-type-fixnum -3 2)))) ;; = (make-type-fixnum -6 4)
 
+#;
   (pp (infer-fx+ tctx
                  (list (make-type-singleton 4)
                        (make-type-singleton 4))))
+#;
   (pp (infer-fl+ tctx
                  (list (make-type-singleton 1.5)
                        (make-type-singleton 2.3))))
@@ -7237,7 +7239,7 @@
   (pp (infer-fx*? tctx
                   (list (make-type-fixnum-bounded tctx 1 2)
                         (make-type-fixnum-bounded tctx -2 -2)))) ;; = (make-type-fixnum-or-false)
-
+#;
   (pp (infer-dv tctx
                 (list (make-type-singleton '#\5))))
 #;
@@ -9410,7 +9412,8 @@
                                  type-false-bit))
                            (not (and (>= r (car result-range))
                                      (<= r (cdr result-range))))))
-                  (begin
+                  (let ()
+                    (##namespace ("" pp))
                     (pp `((,name ,n) => ,r which is not in ,result))
                     (exit)))))
           lst))))))
@@ -9441,7 +9444,8 @@
                                     type-false-bit))
                               (not (and (>= r (car result-range))
                                         (<= r (cdr result-range))))))
-                     (begin
+                     (let ()
+                       (##namespace ("" pp))
                        (pp `((,name ,n1 ,n2) => ,r which is not in ,result))
                        (exit)))))
              list2))
