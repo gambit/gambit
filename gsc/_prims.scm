@@ -9223,6 +9223,7 @@
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (define (make-tctx)
+  (declare (generic))
 
   (define tag-bits 2)
 
