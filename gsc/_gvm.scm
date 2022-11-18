@@ -5003,7 +5003,7 @@
 (define (register-set! registers n val)
   (stretchable-vector-set! registers n val))
 
-(define interpreter-trace? #t)
+(define interpreter-trace? #f)
 
 (define (interpret-debug-ln msg)
   (if interpreter-trace? (println msg)))
