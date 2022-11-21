@@ -76,6 +76,18 @@
 
            (define ##tested-procedures '())
 
+           (define (##proc? name)
+             (##procedure? (##global-var-ref (##make-global-var name))))
+
+           (define (##record-tested-procedures! expr)
+             (let* ((expr-code (##desourcify expr))
+                    (procname (and (pair? expr-code)
+                                   (car expr-code))))
+               (if (and (symbol? procname)
+                        (not (memq procname ##tested-procedures))
+                        (##proc? procname))
+                 (set! ##tested-procedures (cons procname ##tested-procedures)))))
+
            (define (##expand-check-relation src positive? relation)
              (##deconstruct-call
               src
@@ -92,6 +104,7 @@
 
            (define (##expand-check-rel src positive? relation expr1 expr2)
              (let ((report (##failed-check-gen src '$actual-result$)))
+               (##record-tested-procedures! expr1)
                `(let (($actual-result$ ,(##sourcify expr1 src))
                       ($expected-result$ ,(##sourcify expr2 src)))
                   (if (,relation $actual-result$ $expected-result$)
@@ -104,6 +117,7 @@
               -3
               (lambda (expr1 expr2 #!optional (tolerance 'epsilon) comment)
                 (let ((msg (##failed-check-msg src)))
+                  (##record-tested-procedures! expr1)
                   (##sourcify
                    (list (##sourcify '##check-=-proc src)
                          (##sourcify expr1 src)
@@ -126,24 +140,11 @@
                          (##sourcify tail-exn? src))
                    src)))))
 
-           (define (##record-tested-procedures! form)
-             (let ((param1 (##source-strip (cadr form))))
-               (if (pair? param1)
-                 (let ((proc-name (##source-strip (car param1))))
-                   (if (and (not (member proc-name ##tested-procedures))
-                            (symbol? proc-name)
-                            (not (string-prefix? "##" (symbol->string proc-name)))
-                            (procedure? (##global-var-ref (##make-global-var proc-name))))
-                     (set! ##tested-procedures (cons proc-name ##tested-procedures)))))))
-
            (define (##expand-check src)
              (if (not (##enable-checks?))
                  '(##begin)
                  (let ((form (##source-strip src)))
-                   (##record-tested-procedures! form)
-
                    (case (##source-strip (car form))
-
                      ((check-equal?)
                       (##expand-check-relation src #t '##equal?))
                      ((check-not-equal?)
