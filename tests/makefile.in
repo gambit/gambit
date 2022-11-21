@@ -184,7 +184,7 @@ test11:
 	@echo "------------ TEST 11 (run unit tests)"
 	$(MAKE) ut
 
-coverage:
+utcoverage:
 	@SETDLPATH@ $(rootfromhere)/gsi/gsi@exe@ -:tl,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f ./run-unit-tests.scm -coverage
 
 ut ut-C:

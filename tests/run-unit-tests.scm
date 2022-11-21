@@ -16,7 +16,7 @@
 (define nb-other 0)
 (define nb-total 0)
 (define start 0)
-(define tested-procedures '())
+(define tested-procedures (make-table test: eq?))
 
 (define (num->string num w d) ; w = total width, d = decimals
   (let ((n (floor (inexact->exact (round (* (abs num) (expt 10 d)))))))
@@ -248,7 +248,9 @@
        (let* ((output-string (cdr result))
               (coverage (get-coverage output-string)))
          (and (pair? coverage)
-              (set! tested-procedures (append-set tested-procedures coverage))))
+              (for-each (lambda (procname)
+                          (table-set! tested-procedures procname (cons (trim-filename file) (table-ref tested-procedures procname '()))))
+                        coverage)))
        (if (= 0 status)
            (set! nb-good (+ nb-good 1))
            (begin
@@ -287,7 +289,7 @@
       (begin
         (print "PASSED ALL " nb-total " UNIT TESTS\n")
         (if show-coverage?
-          (println (object->string (sort-list tested-procedures (lambda (a b) (string-ci<? (symbol->string a) (symbol->string b)))))))
+          (pretty-print (sort-list (table->list tested-procedures) (lambda (a b) (string-ci<? (symbol->string (car a)) (symbol->string (car b)))))))
         (exit 0))
       (begin
         (print "FAILED " nb-fail " UNIT TESTS OUT OF " nb-total " (" (num->string (* 100. (/ nb-fail nb-total)) 0 1) "%)\n")
