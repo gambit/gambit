@@ -44,12 +44,6 @@
 
 (define (compare-behavior namespaces calls . behaviors)
 
-  (define (behavior->string obj)
-    (let ((str (object->string obj)))
-      (if (> (string-length str) 256)
-        (string-append (substring str 0 256) "...\"")
-        str)))
-
   (define (compare namespace1 namespace2 behavior1 behavior2)
     (for-each (lambda (call behavior1 behavior2)
                 (if (not (equal? behavior1 behavior2))
@@ -64,9 +58,9 @@
                                `(namespace (,namespace2)))
                            `(##import ,namespace2)))
                       " returned "
-                      (behavior->string behavior2)
+                      (object->string behavior2 256)
                       " but expected "
-                      (behaviour->string behavior1)))))
+                      (object->string behavior1 256)))))
               calls
               behavior1
               behavior2))
