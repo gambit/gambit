@@ -785,6 +785,23 @@
             #f   ;; linker-name
             #f)) ;; quiet?
 
+  (define (handle-script-callback mod mod-info)
+    (let* ((module-descr
+            (macro-module-module-descr mod))
+           (meta-info
+            (macro-module-descr-meta-info module-descr))
+           (x
+            (##assq 'script-line meta-info)))
+      (if x
+          (let ((y (##cdr x)))
+            (script-callback (if (##pair? y) (##car y) y)
+                             (and mod-info
+                                  (##vector-ref mod-info 3)))))))
+
+  (define (load-module-handling-script-callback mod mod-info)
+    (handle-script-callback mod mod-info)
+    (##load-module (macro-module-module-ref mod)))
+
   (let ((modref (##parse-module-ref module-or-file)))
     (if (##not modref)
 
@@ -797,7 +814,7 @@
           (if mod
 
               ;; module is in the registered module table, so load it
-              (##load-module (macro-module-module-ref mod))
+              (load-module-handling-script-callback mod #f)
 
               (let ((mod-info (##search-or-else-install-module modref)))
                 (if mod-info
@@ -805,21 +822,9 @@
                     ;; module was found somewhere in the module search order
                     ;; or in the initial current directory, so load it from
                     ;; the filesystem
-                    (let* ((mod
-                            (##get-module-from-file module-ref
-                                                    modref
-                                                    mod-info))
-                           (module-descr
-                            (macro-module-module-descr mod))
-                           (meta-info
-                            (macro-module-descr-meta-info module-descr))
-                           (x
-                            (##assq 'script-line meta-info)))
-                      (if x
-                          (let ((y (##cdr x)))
-                            (script-callback (if (##pair? y) (##car y) y)
-                                             (##vector-ref mod-info 3))))
-                      (##load-module (macro-module-module-ref mod)))
+                    (load-module-handling-script-callback
+                     (##get-module-from-file module-ref modref mod-info)
+                     mod-info)
 
                     ;; last resort is to load a file
                     (load-file))))))))

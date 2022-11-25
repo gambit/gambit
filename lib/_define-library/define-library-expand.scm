@@ -131,7 +131,7 @@
   (let* ((rt
           (##readtable-copy-shallow (##current-readtable)))
          (re
-          (##make-readenv port rt ##wrap-datum ##unwrap-datum #f '() #f))
+          (##make-readenv port rt ##wrap-datum ##unwrap-datum #t '() #f))
          (first
           (##read-datum-or-eof re)))
     (close-input-port port)
@@ -149,7 +149,8 @@
       (parse-define-library src import-name module-root modref-path))))
 
 (define (read-libdef-scm name reference-src import-name port)
-  (parse-define-library (read-first port) import-name #f #f))
+  (let ((src (read-first port)))
+    (parse-define-library src import-name #f #f)))
 
 (define library-kinds
   (list

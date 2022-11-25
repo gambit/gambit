@@ -1,3 +1,5 @@
+#!/usr/bin/env gsi-script
+
 (import (srfi 231))
 
 (define (palindrome? s) ;;; is the string s a palindrome, ignoring case
