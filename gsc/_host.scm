@@ -756,6 +756,7 @@
     (open-output-file path)))
 
 (define (pp-expression expr port)
+  (##namespace ("" pp))
   (pp expr port))
 
 (define (write-returning-len obj port)
