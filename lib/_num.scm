@@ -11474,9 +11474,11 @@ end-of-code
            (macro-exact-int-dispatch-no-error y ;; x = fixnum
              (macro-make-qr (##fxquotient x y) ;; note: y can't be -1
                             (##fxremainder x y))
-             (if (##fx< 1 (##bignum.adigit-length y))
-                 ;; y has at least two adigits, so
+             (if (##fx< 3 (##bignum.adigit-length y))
+                 ;; y has at least four adigits, so
                  ;; (abs y) > (abs x)
+                 ;; In the universal backend, (abs ##min-fixnum) is
+                 ;; a bignum with three adigits.
                  (macro-make-qr 0 x)
                  (big-quotient x y)))
 
