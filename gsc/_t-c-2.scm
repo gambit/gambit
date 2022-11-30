@@ -3870,6 +3870,8 @@
 (targ-op "##primitive-trylock!" (targ-ifjump-simp-u #f "PRIMITIVETRYLOCK"))
 (targ-op "##primitive-unlock!"  (targ-apply-simp-u #f #t 0 "PRIMITIVEUNLOCK"))
 
+(targ-op "##cpu-cycle-count"    (targ-apply-simp-s #f #f #f "CPUCYCLECOUNT"))
+
 (targ-op "##object-before?"   (targ-ifjump-simp-s #f "OBJECTBEFOREP"))
 
 (targ-op "##peek-char0?"

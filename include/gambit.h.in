@@ -1906,6 +1906,17 @@
 #undef ___USE_builtin_clrsb
 #endif
 
+#if __has_builtin(__builtin_readcyclecounter)
+#undef ___USE___builtin_readcyclecounter
+#define ___USE___builtin_readcyclecounter
+#endif
+
+#if __has_builtin(__builtin_ia32_rdtsc)
+#undef ___USE___builtin_ia32_rdtsc
+#define ___USE___builtin_ia32_rdtsc
+#endif
+
+
 /*---------------------------------------------------------------------------*/
 
 /*
@@ -3472,6 +3483,16 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___FIXWRAPLSHRP(x,y)((y)>=___FIX(0)?___FIXWRAPLSHR(x,(y)<=___FIX(___FIX_WIDTH)?(y):___FIX(___FIX_WIDTH)):___FAL)
 #define ___FIXTOCHR(x)(((x)&~___TMASK)+___tSPECIAL)
 #define ___FIXFROMCHR(x)((x)&~___TMASK)
+
+#ifdef ___USE___builtin_readcyclecounter
+#define ___CPUCYCLECOUNT ___FIX(___CAST(___WORD,__builtin_readcyclecounter ()))
+#else
+#ifdef ___USE___builtin_ia32_rdtsc
+#define ___CPUCYCLECOUNT ___FIX(___CAST(___WORD,__builtin_ia32_rdtsc ()))
+#else
+#define ___CPUCYCLECOUNT ___FIX(0)
+#endif
+#endif
 
 /*
  * The following definitions must match the structure of ports defined

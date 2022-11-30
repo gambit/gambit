@@ -2222,6 +2222,9 @@ end-of-code
    instruction-cache
    level))
 
+(define-prim (##cpu-cycle-count)
+  0)
+
 (define-prim (##core-count)
   (##declare (not interrupts-enabled))
   (##c-code

@@ -1625,6 +1625,8 @@
 ("##primitive-trylock!"               (3)   #t ()    0    #f      extended)
 ("##primitive-unlock!"                (3)   #t ()    0    #f      extended)
 
+("##cpu-cycle-count"                  (0)   #t ()    0    fixnum  extended)
+
 ;; miscellaneous
 
 ("eq?"                                (2)   #f 0     0    boolean ieee)
