@@ -822,6 +822,8 @@ def @os_device_from_basic_console@():
 
 (define (##get-parallelism-level) 1)
 (define (##cpu-count) 1)
+(define (##cpu-cycle-count-start) 0)
+(define (##cpu-cycle-count-end)   0)
 (define (##current-vm-resize vm n) #f)
 
 (define (##get-standard-level) 0)

@@ -4759,7 +4759,9 @@
 
 (define-prim (##exec-stats thunk)
   (let* ((at-start (##process-statistics))
+         (cpu-cycles-at-start (##cpu-cycle-count-start))
          (result (thunk))
+         (cpu-cycles-at-end (##cpu-cycle-count-end))
          (at-end (##process-statistics))
          (user-time
           (##fl- (##f64vector-ref at-end 0)
@@ -4798,7 +4800,9 @@
                   (##fl+ (if (##interp-procedure? thunk)
                              (##f64vector-ref at-end 8) ;; thunk call frame space
                              (macro-inexact-+0))
-                         (##f64vector-ref at-end 9)))))) ;; at-end structure space
+                         (##f64vector-ref at-end 9))))) ;; at-end structure space
+         (cpu-cycles
+          (##fxmax 0 (##fx- cpu-cycles-at-end cpu-cycles-at-start))))
 
     (##list (##cons 'result          result)
             (##cons 'user-time       user-time)
@@ -4810,7 +4814,8 @@
             (##cons 'nb-gcs          nb-gcs)
             (##cons 'minflt          minflt)
             (##cons 'majflt          majflt)
-            (##cons 'bytes-allocated bytes-allocated))))
+            (##cons 'bytes-allocated bytes-allocated)
+            (##cons 'cpu-cycles      cpu-cycles))))
 
 (define-prim (##time-thunk
               thunk
@@ -4843,7 +4848,9 @@
                (stats (##cdr stats))
                (majflt (##cdar stats))
                (stats (##cdr stats))
-               (bytes-allocated (##cdar stats)))
+               (bytes-allocated (##cdar stats))
+               (stats (##cdr stats))
+               (cpu-cycles (##cdar stats)))
 
           (define (secs x)
             (let* ((precision 1000000)
@@ -4906,7 +4913,12 @@
             (##newline port)
 
             (pluralize majflt " major fault")
-            (##newline port))
+            (##newline port)
+
+            (if (##> cpu-cycles 0)
+                (begin
+                  (pluralize cpu-cycles " cpu cycle")
+                  (##newline port))))
 
           (print-stats p)
 

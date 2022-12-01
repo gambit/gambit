@@ -1890,6 +1890,20 @@
 #endif
 #endif
 
+#ifdef ___CPU_x86
+#if __has_builtin(__builtin_ia32_rdtscp)
+#undef ___USE___builtin_ia32_rdtscp
+#define ___USE___builtin_ia32_rdtscp
+#endif
+#endif
+
+#ifdef ___CPU_x86
+#if __has_builtin(__builtin_readcyclecounter)
+#undef ___USE___builtin_readcyclecounter
+#define ___USE___builtin_readcyclecounter
+#endif
+#endif
+
 #ifdef ___DONT_USE_builtin_op_overflow
 #undef ___USE_builtin_op_overflow
 #endif
@@ -1906,14 +1920,12 @@
 #undef ___USE_builtin_clrsb
 #endif
 
-#if __has_builtin(__builtin_readcyclecounter)
-#undef ___USE___builtin_readcyclecounter
-#define ___USE___builtin_readcyclecounter
+#ifdef ___DONT_USE___builtin_ia32_rdtscp
+#undef ___USE___builtin_ia32_rdtscp
 #endif
 
-#if __has_builtin(__builtin_ia32_rdtsc)
-#undef ___USE___builtin_ia32_rdtsc
-#define ___USE___builtin_ia32_rdtsc
+#ifdef ___DONT_USE___builtin_readcyclecounter
+#undef ___USE___builtin_readcyclecounter
 #endif
 
 
@@ -3484,14 +3496,59 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___FIXTOCHR(x)(((x)&~___TMASK)+___tSPECIAL)
 #define ___FIXFROMCHR(x)((x)&~___TMASK)
 
-#ifdef ___USE___builtin_readcyclecounter
-#define ___CPUCYCLECOUNT ___FIX(___CAST(___WORD,__builtin_readcyclecounter ()))
+#ifndef ___GET_CPUCYCLECOUNT
+#ifdef ___USE___builtin_ia32_rdtscp
+#ifdef __GNUC__
+
+#if ___WORD_WIDTH == 64
+
+#define ___GET_CPUCYCLECOUNT ___FIX(___s64_temp)
+#define ___CPUCYCLECOUNTSTART \
+__asm__ __volatile__ ("cpuid\n\trdtsc\n\tshl $32,%%rdx\n\tor %%rdx,%%rax\n\tmov %%rax,%0\n":"=r"(___s64_temp)::"%rax","%rbx","%rcx","%rdx");
+#define ___CPUCYCLECOUNTEND \
+__asm__ __volatile__ ("rdtscp\n\tshl $32,%%rdx\n\tor %%rdx,%%rax\n\tmov %%rax,%0\n\tcpuid\n":"=r"(___s64_temp)::"%rax","%rbx","%rcx","%rdx");
+
 #else
-#ifdef ___USE___builtin_ia32_rdtsc
-#define ___CPUCYCLECOUNT ___FIX(___CAST(___WORD,__builtin_ia32_rdtsc ()))
-#else
-#define ___CPUCYCLECOUNT ___FIX(0)
+
+#define ___GET_CPUCYCLECOUNT ___FIX(___s32_temp)
+#define ___CPUCYCLECOUNTSTART \
+__asm__ __volatile__ ("cpuid\n\trdtsc\n\tmov %%eax,%0\n":"=r"(___s32_temp)::"%eax","%ebx","%ecx","%edx");
+#define ___CPUCYCLECOUNTEND \
+__asm__ __volatile__ ("rdtscp\n\tmov %%eax,%0\n\tcpuid\n":"=r"(___s32_temp)::"%eax","%ebx","%ecx","%edx");
+
 #endif
+
+#endif
+#endif
+#endif
+
+#ifndef ___GET_CPUCYCLECOUNT
+#ifdef ___USE___builtin_readcyclecounter
+
+#if ___WORD_WIDTH == 64
+
+#define ___GET_CPUCYCLECOUNT ___FIX(___s64_temp)
+#define ___CPUCYCLECOUNTSTART ___s64_temp = __builtin_readcyclecounter ();
+#define ___CPUCYCLECOUNTEND ___s64_temp = __builtin_readcyclecounter ();
+
+#else
+
+#define ___GET_CPUCYCLECOUNT ___FIX(___s32_temp)
+#define ___CPUCYCLECOUNTSTART ___s32_temp = __builtin_readcyclecounter ();
+#define ___CPUCYCLECOUNTEND ___s32_temp = __builtin_readcyclecounter ();
+
+#endif
+
+#endif
+
+#endif
+
+#ifndef ___GET_CPUCYCLECOUNT
+
+#define ___GET_CPUCYCLECOUNT ___FIX(0)
+#define ___CPUCYCLECOUNTSTART
+#define ___CPUCYCLECOUNTEND
+
 #endif
 
 /*

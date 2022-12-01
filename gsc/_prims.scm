@@ -1625,7 +1625,8 @@
 ("##primitive-trylock!"               (3)   #t ()    0    #f      extended)
 ("##primitive-unlock!"                (3)   #t ()    0    #f      extended)
 
-("##cpu-cycle-count"                  (0)   #t ()    0    fixnum  extended)
+("##cpu-cycle-count-start"            (0)   #t ()    0    fixnum  extended)
+("##cpu-cycle-count-end"              (0)   #t ()    0    fixnum  extended)
 
 ;; miscellaneous
 

@@ -2847,6 +2847,21 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+(define (targ-apply-cpu-cycle-count start?)
+  (lambda (prim)
+    (proc-obj-inlinable?-set! prim (lambda (env) #t))
+    (proc-obj-inline-set!
+      prim
+      (lambda (opnds loc sn)
+        (targ-emit (list (if start?
+                             "CPUCYCLECOUNTSTART"
+                             "CPUCYCLECOUNTEND")))
+        (if loc
+            (targ-emit
+             (targ-loc loc '("GET_CPUCYCLECOUNT"))))))))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 (define (targ-ifjump-simp-s flo? name)
   (targ-ifjump-simp #t flo? name))
 
@@ -3870,7 +3885,8 @@
 (targ-op "##primitive-trylock!" (targ-ifjump-simp-u #f "PRIMITIVETRYLOCK"))
 (targ-op "##primitive-unlock!"  (targ-apply-simp-u #f #t 0 "PRIMITIVEUNLOCK"))
 
-(targ-op "##cpu-cycle-count"    (targ-apply-simp-s #f #f #f "CPUCYCLECOUNT"))
+(targ-op "##cpu-cycle-count-start" (targ-apply-cpu-cycle-count #t))
+(targ-op "##cpu-cycle-count-end"   (targ-apply-cpu-cycle-count #f))
 
 (targ-op "##object-before?"   (targ-ifjump-simp-s #f "OBJECTBEFOREP"))
 
