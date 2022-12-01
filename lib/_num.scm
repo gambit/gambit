@@ -11435,13 +11435,15 @@ end-of-code
   (define (big-quotient x y)
     (let* ((x-negative? (##negative? x))
            (abs-x (if x-negative?
-                      (##negate x)
+                      (begin
+                        ;; (##negate ##min-fixnum) always returns the same bignum!
+                        ;; So don't have ##bignum.div overwrite it!
+                        (set! keep-dividend? (##eqv? x ##min-fixnum))
+                        (##negate x))
                       x))
            (y-negative? (##negative? y))
            (abs-y (if y-negative?
-                      (begin
-                        (set! keep-dividend? #f)
-                        (##negate y))
+                      (##negate y)
                       y)))
       (if (##< abs-x abs-y)
           (macro-make-qr 0 x)
