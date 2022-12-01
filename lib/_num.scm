@@ -10,12 +10,17 @@
 (macro-case-target
  ((C)
   (c-declare "#include \"mem.h\"")
+  (##define-macro (macro-min-bignum-adigits) 1)
   (##define-macro (use-fast-bignum-algorithms) #t))
 
  ((js)
+  (##define-macro (macro-min-bignum-adigits) 3)
+  ;; Set this to minimize code size, but js is fast enough to benefit
+  ;; from fast bignum algorithms.
   (##define-macro (use-fast-bignum-algorithms) #f))
 
  (else
+  (##define-macro (macro-min-bignum-adigits) 3)
   (##define-macro (use-fast-bignum-algorithms) #f)))
 
 (define-prim (##use-fast-bignum-algorithms?)
@@ -11476,11 +11481,9 @@ end-of-code
            (macro-exact-int-dispatch-no-error y ;; x = fixnum
              (macro-make-qr (##fxquotient x y) ;; note: y can't be -1
                             (##fxremainder x y))
-             (if (##fx< 3 (##bignum.adigit-length y))
-                 ;; y has at least four adigits, so
+             (if (##fx< (macro-min-bignum-adigits) (##bignum.adigit-length y))
+                 ;; y has at least enough adigits, so
                  ;; (abs y) > (abs x)
-                 ;; In the universal backend, (abs ##min-fixnum) is
-                 ;; a bignum with three adigits.
                  (macro-make-qr 0 x)
                  (big-quotient x y)))
 
