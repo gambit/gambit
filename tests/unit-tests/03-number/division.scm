@@ -50,7 +50,7 @@
                            big-arguments))
                     big-arguments)))
        (positive-arguments
-        (append really-big-arguments (iota 8 1)))
+        (append big-arguments really-big-arguments (iota 8 1)))
        (nonzero-arguments
         (append positive-arguments
                 (map - positive-arguments)))
