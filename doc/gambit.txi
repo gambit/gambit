@@ -7064,6 +7064,7 @@ lib2 compiled to other
 * Fixnum specific operations::           Operations on fixnums
 * Flonum specific operations::           Operations on flonums
 * Pseudo random numbers::                Pseudo random numbers
+* Division::                             Division
 @end menu
 
 @node Extensions to numeric procedures, IEEE floating point arithmetic, Numbers, Numbers
@@ -7916,7 +7917,7 @@ For example:
 @deffn procedure fltanh @var{x}
 @end deffn
 
-@node Pseudo random numbers, , Flonum specific operations, Numbers
+@node Pseudo random numbers, Division, Flonum specific operations, Numbers
 @subsection Pseudo random numbers
 
 The procedures and variables defined in this section are compatible
@@ -8187,6 +8188,48 @@ For example:
 #f64(.013863292728449427 .33449296573515447 .8162050798467028)
 @end smallexample
 
+@end deffn
+
+@node Division, , Pseudo random numbers, Numbers
+@subsection Division
+
+Division procedures in SRFI 141 that are not in R7RS.
+
+
+@deffn procedure balanced-quotient @var{n1} @var{n2}
+@end deffn
+
+@deffn procedure balanced-remainder @var{n1} @var{n2}
+@end deffn
+
+@deffn procedure balanced/ @var{n1} @var{n2}
+@end deffn
+
+@deffn procedure ceiling-quotient @var{n1} @var{n2}
+@end deffn
+
+@deffn procedure ceiling-remainder @var{n1} @var{n2}
+@end deffn
+
+@deffn procedure ceiling/ @var{n1} @var{n2}
+@end deffn
+
+@deffn procedure euclidean-quotient @var{n1} @var{n2}
+@end deffn
+
+@deffn procedure euclidean-remainder @var{n1} @var{n2}
+@end deffn
+
+@deffn procedure euclidean/ @var{n1} @var{n2}
+@end deffn
+
+@deffn procedure round-quotient @var{n1} @var{n2}
+@end deffn
+
+@deffn procedure round-remainder @var{n1} @var{n2}
+@end deffn
+
+@deffn procedure round/ @var{n1} @var{n2}
 @end deffn
 
 @node Booleans, Pairs and lists, Numbers, Built-in data types

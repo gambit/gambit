@@ -59,6 +59,9 @@ apropos
 arithmetic-shift
 asinh
 atanh
+balanced-quotient
+balanced-remainder
+balanced/
 bit-count
 bit-field
 bit-field-any?
@@ -103,6 +106,9 @@ call-with-output-u8vector
 call-with-output-vector
 call/cc
 car+cdr
+ceiling-quotient
+ceiling-remainder
+ceiling/
 cfun-conversion-exception-arguments
 cfun-conversion-exception-code
 cfun-conversion-exception-message
@@ -183,6 +189,9 @@ error
 error-exception-message
 error-exception-parameters
 error-exception?
+euclidean-quotient
+euclidean-remainder
+euclidean/
 every-bit-set?
 executable-path
 expression-parsing-exception-kind
@@ -644,6 +653,9 @@ repl-result-history-max-length-set!
 repl-result-history-ref
 replace-bit-field
 reverse!
+round-quotient
+round-remainder
+round/
 rpc-remote-error-exception-arguments
 rpc-remote-error-exception-message
 rpc-remote-error-exception-procedure

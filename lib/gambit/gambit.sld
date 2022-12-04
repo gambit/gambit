@@ -267,6 +267,9 @@ unless
 when
 
 ;; procedures
+balanced-quotient
+balanced-remainder
+balanced/
 binary-port?
 boolean=?
 bytevector
@@ -278,6 +281,9 @@ bytevector-u8-ref
 bytevector-u8-set!
 bytevector?
 call-with-port
+ceiling-quotient
+ceiling-remainder
+ceiling/
 char-foldcase
 close-port
 command-line
@@ -291,6 +297,9 @@ eof-object
 error-object-irritants
 error-object-message
 error-object?
+euclidean-quotient
+euclidean-remainder
+euclidean/
 exact
 exact-integer-sqrt
 exact-integer?
@@ -333,6 +342,9 @@ read-error?
 read-line
 read-string
 read-u8
+round-quotient
+round-remainder
+round/
 square
 string->utf8
 string->vector

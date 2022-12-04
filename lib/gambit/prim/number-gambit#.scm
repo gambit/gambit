@@ -17,6 +17,9 @@ any-bits-set?
 arithmetic-shift
 asinh
 atanh
+balanced-quotient
+balanced-remainder
+balanced/
 bit-count
 bit-field
 bit-field-any?
@@ -48,12 +51,18 @@ bitwise-orc1
 bitwise-orc2
 bitwise-unfold
 bitwise-xor
+ceiling-quotient
+ceiling-remainder
+ceiling/
 clear-bit-field
 conjugate
 copy-bit
 copy-bit-field
 cosh
 (default-random-source unimplemented#default-random-source)
+euclidean-quotient
+euclidean-remainder
+euclidean/
 every-bit-set?
 extract-bit-field
 first-set-bit
@@ -77,6 +86,9 @@ make-bitwise-generator
 (random-source? unimplemented#random-source?)
 (random-u8vector unimplemented#random-u8vector)
 replace-bit-field
+round-quotient
+round-remainder
+round/
 sinh
 tanh
 test-bit-field?
