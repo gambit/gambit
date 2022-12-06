@@ -26,7 +26,7 @@
                                         (check-tail-exn type-exception? (lambda () (,name ,x 1.)))
                                         (check-tail-exn type-exception? (lambda () (,name 1 ,x)))
                                         (check-tail-exn type-exception? (lambda () (,name 1. ,x)))))
-                                    '('a 1/2 2.5))))
+                                    '('a 1/2 2.5 1+0.0i))))
                       all-names)))
          (result (cons 'begin error-tests)))
     result))
@@ -35,7 +35,8 @@
 
 (for-each (lambda (operation)
             (check-tail-exn divide-by-zero-exception? (lambda () (operation 1 0)))
-            (check-tail-exn divide-by-zero-exception? (lambda () (operation 1 0.))))
+            (check-tail-exn divide-by-zero-exception? (lambda () (operation 1 0.)))
+            (check-tail-exn divide-by-zero-exception? (lambda () (operation 0 0.))))
           (list truncate/ floor/ ceiling/ round/ euclidean/ balanced/))
 
 ;; exact tests
@@ -171,4 +172,12 @@
                                               (check-= exact-rem inexact-rem 0))))))
                                     nonzero-arguments))
                         all-arguments))
+            operations)
+  (for-each (lambda (operation)
+              ;; Check that we special case an exact zero dividend.
+              (check-equal? (call-with-values
+                                (lambda ()
+                                  (operation 0 1.))
+                              list)
+                            '(0 0)))
             operations))

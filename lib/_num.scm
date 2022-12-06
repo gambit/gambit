@@ -1684,7 +1684,11 @@
 
     (macro-number-dispatch x (type-error-on-x) ;; y = flonum
       (if (macro-flonum-int? y)
-          (inexact-case x y)
+          (if (and (macro-special-case-exact-zero?)
+                   (##fxzero? x)
+                   (##not (##flzero? y)))
+              (return 0 0)
+              (inexact-case x y))
           (type-error-on-y))
       (if (macro-flonum-int? y)
           (inexact-case x y)
@@ -1703,7 +1707,11 @@
 
     (if (macro-cpxnum-int? y) ;; y = cpxnum
         (macro-number-dispatch x (type-error-on-x)
-          (inexact-case x y)
+          (if (and (macro-special-case-exact-zero?)
+                   (##fxzero? x)
+                   (##not (##zero? y)))
+              (return 0 0)
+              (inexact-case x y))
           (inexact-case x y)
           (type-error-on-x)
           (if (macro-flonum-int? x)
