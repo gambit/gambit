@@ -6394,7 +6394,7 @@
                          ((not (cdr x))
                           (make-type-singleton #t))
                          (else
-                          #f))))))))))
+                          type-boolean))))))))))
 
 (define (def-type-narrow name narrow)
   (type-narrow-set! name narrow)
@@ -7031,7 +7031,7 @@
 (def-type-infer "fxeqv"   (infer-fxeqv))
 (def-type-infer "fxnot"   (infer-fxnot))
 
-(def-type-narrow "fx="  #f)
+(def-type-narrow "fx="  (type-narrow-fold type-narrow-fx=))
 (def-type-narrow "fx<"  (type-narrow-fold type-narrow-fx<))
 (def-type-narrow "fx<=" (type-narrow-fold type-narrow-fx<=))
 (def-type-narrow "fx>"  (type-narrow-fold type-narrow-fx>))
@@ -9044,6 +9044,36 @@
                                                      arg2-false)
                                                  (+ i 1)
                                                  (cdr lst)))))))))))))))))
+
+(define (type-narrow-fx= tctx type1 type2)
+  (declare (generic))
+
+  (define (pairwise-equal? . args)
+    (define (pairwise-equal?-aux args)
+      (cond
+        ((or (null? args)
+             (null? (cdr args)))
+           #t)
+        (else
+          (and (equal? (car args) (cadr args))
+               (pairwise-equal? (cdr args))))))
+    (pairwise-equal?-aux args))
+
+  (let* ((f1 (type-motley-force tctx type1))
+         (lo1 (type-fixnum-lo f1))
+         (hi1 (type-fixnum-hi f1))
+         (f2 (type-motley-force tctx type2))
+         (lo2 (type-fixnum-lo f2))
+         (hi2 (type-fixnum-hi f2)))
+    (cond
+      ((pairwise-equal? lo1 lo2 hi1 hi2) ;; equal singletons
+        (cons (list type1 type2) #f)) ;; always equal
+      ((or (type-fixnum-< hi1 lo2)
+           (type-fixnum-< hi2 lo1))
+        (cons #f (list type1 type2))) ;; never equal
+      (else
+        (cons (list type1 type2)
+              (list type1 type2))))))
 
 (define (type-narrow-fx< tctx type1 type2)
 
