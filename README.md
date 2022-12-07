@@ -124,6 +124,8 @@ $100 CAD (about $80 USD and 75 euros at time of writing).
 
 132: [Sort Libraries](https://srfi.schemers.org/srfi-132/srfi-132.html)
 
+141: [Integer Division](https://srfi.schemers.org/srfi-141/srfi-141.html)
+
 151: [Bitwise Operations](https://srfi.schemers.org/srfi-151/srfi-151.html)
 
 158: [Generators and Accumulators](https://srfi.schemers.org/srfi-158/srfi-158.html)
