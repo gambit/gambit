@@ -76,17 +76,46 @@
 
            (define ##tested-procedures '())
 
-           (define (##proc? name)
-             (##procedure? (##global-var-ref (##make-global-var name))))
+           ;; record call in forms such as lambda, let, let*, ...
+           (define (##record-binding-form! src form)
+             (##deconstruct-call
+              src
+              -3
+              (lambda (bindings expr1 #!rest rest)
+                (for-each
+                  (lambda (expr)
+                    (##recording-tested-procedures! (##sourcify expr src)))
+                  (cons expr1 rest)))))
 
-           (define (##record-tested-procedures! expr)
-             (let* ((expr-code (##desourcify expr))
-                    (procname (and (pair? expr-code)
-                                   (car expr-code))))
-               (if (and (symbol? procname)
-                        (not (memq procname ##tested-procedures))
-                        (##proc? procname))
-                 (set! ##tested-procedures (cons procname ##tested-procedures)))))
+           ;; record call in the thunk of call-with-values
+           (define (##record-call-with-values src)
+             (##deconstruct-call
+              src
+              3
+              (lambda (thunk proc)
+                (##recording-tested-procedures! (##sourcify thunk src)))))
+
+           (define (##record-procedure-call! src form-name)
+             (let ((proc (##global-var-ref (##make-global-var form-name))))
+               (and (##procedure? proc)
+                    (let ((ret (##decompile proc)))
+                      (if (and (eq? ret proc) ;; procedure is primitive
+                               (not (memq form-name ##tested-procedures)))
+                        (set! ##tested-procedures (cons form-name ##tested-procedures))
+                        (##recording-tested-procedures! (##sourcify ret src)))))))
+
+           (define (##recording-tested-procedures! src)
+             (let* ((form (##source-strip src))
+                    (form-name (and (pair? form)
+                                    (##source-strip (car form)))))
+               (if (symbol? form-name)
+                 (case (##source-strip (car form))
+                   ((lambda let let* letrec letrec* let-values parameterize)
+                    (##record-binding-form! src form-name))
+                   ((call-with-values)
+                    (##record-call-with-values src))
+                   (else
+                    (##record-procedure-call! src form-name))))))
 
            (define (##expand-check-relation src positive? relation)
              (##deconstruct-call
@@ -103,8 +132,8 @@
                 (##expand-check-rel src positive? relation expr1 val))))
 
            (define (##expand-check-rel src positive? relation expr1 expr2)
+             (##recording-tested-procedures! expr1)
              (let ((report (##failed-check-gen src '$actual-result$)))
-               (##record-tested-procedures! expr1)
                `(let (($actual-result$ ,(##sourcify expr1 src))
                       ($expected-result$ ,(##sourcify expr2 src)))
                   (if (,relation $actual-result$ $expected-result$)
@@ -117,7 +146,7 @@
               -3
               (lambda (expr1 expr2 #!optional (tolerance 'epsilon) comment)
                 (let ((msg (##failed-check-msg src)))
-                  (##record-tested-procedures! expr1)
+                  (##recording-tested-procedures! expr1)
                   (##sourcify
                    (list (##sourcify '##check-=-proc src)
                          (##sourcify expr1 src)
@@ -131,6 +160,7 @@
               src
               -3
               (lambda (exn? thunk #!optional comment)
+                (##recording-tested-procedures! thunk)
                 (let ((msg (##failed-check-msg src)))
                   (##sourcify
                    (list (##sourcify '##check-exn-proc src)
