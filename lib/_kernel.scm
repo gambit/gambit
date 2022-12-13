@@ -5105,38 +5105,28 @@ end-of-code
 
 ;;; Version information.
 
-(define-prim (##system-version)
+(define-prim&proc (system-version)
 
   (##define-macro (comp-version)
     (c#compiler-version))
 
   (comp-version))
 
-(define-prim (system-version)
-  (##system-version))
-
 (define ##os-system-version-string-saved
   (let ()
 
-    (##define-macro (comp-version-string)
-      (c#compiler-version-string))
+    (##define-macro (comp-system-version-string)
+      (system-version-string))
 
     (macro-case-target
      ((C)
       (or ((c-lambda () char-string "___return(___STAMP_VERSION);"))
-          (comp-version-string)))
+          (comp-system-version-string)))
      (else
-      (comp-version-string)))))
+      (comp-system-version-string)))))
 
-(define-prim (##system-version-string)
+(define-prim&proc (system-version-string)
   ##os-system-version-string-saved)
-
-(define-prim (system-version-string)
-  (##system-version-string))
-
-(macro-case-target
-
- ((C)
 
 (define ##os-system-type-saved
   (let ()
@@ -5147,44 +5137,65 @@ end-of-code
           (##cons (##make-interned-symbol (##car lst))
                   (str-list->sym-list (##cdr lst)))))
 
-    (str-list->sym-list
-     ((c-lambda ()
-                nonnull-char-string-list
-       "___os_system_type")))))
+    (macro-case-target
+     ((C)
+      (str-list->sym-list
+       ((c-lambda ()
+                  nonnull-char-string-list
+          "___os_system_type"))))
+     (else
+      '(unknown system type)))))
 
-(define-prim (system-type)
+(define-prim&proc (system-type)
   ##os-system-type-saved)
 
 (define ##os-system-type-string-saved
-  ((c-lambda ()
-             nonnull-char-string
-    "___os_system_type_string")))
+  (macro-case-target
+   ((C)
+    ((c-lambda ()
+               nonnull-char-string
+      "___os_system_type_string")))
+   (else
+    "unknown-system-type")))
 
-(define-prim (system-type-string)
+(define-prim&proc (system-type-string)
   ##os-system-type-string-saved)
 
 (define ##os-configure-command-string-saved
-  ((c-lambda ()
-             nonnull-char-string
-    "___os_configure_command_string")))
+  (let ()
 
-(define-prim (configure-command-string)
+    (##define-macro (comp-configure-command-string)
+      (configure-command-string))
+
+    (macro-case-target
+     ((C)
+      ((c-lambda ()
+                 nonnull-char-string
+        "___os_configure_command_string")))
+     (else
+      (comp-configure-command-string)))))
+
+(define-prim&proc (configure-command-string)
   ##os-configure-command-string-saved)
 
 (define ##system-stamp-saved
-  ((c-lambda ()
-             unsigned-int64
-    "___return(___U64_add_U64_U64
-                 (___U64_mul_UM32_UM32 (___STAMP_YMD, 1000000),
-                  ___U64_from_UM32 (___STAMP_HMS)));")))
+  (let ()
 
-(define-prim (##system-stamp)
+    (##define-macro (comp-system-stamp)
+      (system-stamp))
+
+    (macro-case-target
+     ((C)
+      ((c-lambda ()
+                 unsigned-int64
+        "___return(___U64_add_U64_U64
+                   (___U64_mul_UM32_UM32 (___STAMP_YMD, 1000000),
+                    ___U64_from_UM32 (___STAMP_HMS)));")))
+     (else
+      (comp-system-stamp)))))
+
+(define-prim&proc (system-stamp)
   ##system-stamp-saved)
-
-(define-prim (system-stamp)
-  (##system-stamp))
-
-))
 
 ;;;----------------------------------------------------------------------------
 

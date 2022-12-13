@@ -816,9 +816,6 @@ def @os_device_from_basic_console@():
 
 (define ##os-bat-extension-string-saved "")
 (define ##os-exe-extension-string-saved "")
-(define ##os-configure-command-string-saved "./configure")
-(define ##os-system-type-string-saved "unknown-system-type")
-(define (##system-stamp) 20200101213000)
 
 (define (##get-parallelism-level) 1)
 (define (##cpu-count) 1)
