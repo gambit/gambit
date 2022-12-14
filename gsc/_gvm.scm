@@ -2143,6 +2143,12 @@
   (define versions (make-table))
   (define lbl-mapping (make-table))
 
+  (define (replacement-lbl-num lbl)
+    (let ((x (table-ref lbl-mapping lbl #f)))
+      (if x
+          (replacement-lbl-num x)
+          lbl)))
+
   (define (generic-frame-types frame)
     (let ((nb-regs (length (frame-regs frame)))
           (nb-slots (length (frame-slots frame)))
@@ -2215,6 +2221,52 @@
       (if env (version-limit env) 0)))
 
   (define (walk-bbs bbs)
+    (define reachable-table (make-table))
+    (define (reachability-set! lbl r) (table-set! reachable-table lbl r))
+    (define (reachable? lbl) (table-ref reachable-table lbl #f))
+
+    (define (update-reachability!)
+      (define (find-destinations bb)
+        (let* ((branch (bb-branch-instr bb)))
+          (case (gvm-instr-kind branch)
+            ((ifjump)
+              (let ((true (ifjump-true branch))
+                    (false (ifjump-false branch)))
+                (list (replacement-lbl-num true)
+                             (replacement-lbl-num false))))
+            ((jump)
+              (let ((opnd (jump-opnd branch))
+                    (ret (jump-ret branch)))
+                (append
+                  (if (lbl? opnd)
+                      (list (replacement-lbl-num (lbl-num opnd)))
+                      '())
+                  (if ret
+                      (list (replacement-lbl-num ret))
+                      '()))))
+            (else
+              (error 'update-reachability! "unsupported branch type")))))
+
+      (set! reachable-table (make-table))
+      (let* ((entry-bb (lbl-num->bb lbl bbs))
+             (entry-label (bb-label-instr entry-bb))
+             (bb-versions (table-ref versions entry-label #f)))
+        (if bb-versions
+            (let* ((all-types (vector-ref bb-versions 0))
+                   (starting-types (caar all-types))
+                   (starting-label (cdar all-types))))
+          (let visit ((lbl (lbl-num->bb starting-label bbs)))
+            (if (not (reachable? lbl)) ;; visited?
+              (begin
+                (reachability-set! lbl #t)
+                (let* ((bb (lbl-num->bb lbl bbs)))
+                  (if bb
+                      (let loop ((dests (find-destinations bb)))
+                        (if (pair? dest)
+                            (begin
+                              (visit (car dest)
+                              (loop (cdr dests))))))))))))))
+
     (let ()
 
       (define (reach lbl bbvctx)
@@ -2868,16 +2920,6 @@
 
           (bbs-for-each-bb
            (lambda (bb)
-
-             (define (replacement-lbl-num lbl)
-               (let ((x (table-ref lbl-mapping lbl #f)))
-                 (if x
-                     (begin
-                       (if debug-bbv?
-                           (pprint (list lbl '--> x)))
-                       (replacement-lbl-num x))
-                     lbl)))
-
              (bb-clone-replacing-lbls
               bb
               new-bbs
