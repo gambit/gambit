@@ -2225,7 +2225,22 @@
     (define (reachability-set! lbl r) (table-set! reachable-table lbl r))
     (define (reachable? lbl) (table-ref reachable-table lbl #f))
 
+    (define (all-reachables-exist?)
+        (let loop ((reachable-blocks (map car (table->list reachable-table))))
+        (cond
+            ((null? reachable-blocks) #t)
+            ((lbl-num->bb (car reachable-blocks)  bbs) (loop (cdr reachable-blocks)))
+            (else
+              (display (list 'reachable-does-not-exist (car reachable-blocks)))(newline)
+              #f))))
+
     (define (update-reachability!)
+      (define (reachability-trace)
+        (write (list 'REACHABLES= (table-length reachable-table)))(newline)
+        (table-for-each
+        (lambda (lbl reachable) (display lbl) (display #\space))
+        reachable-table)(newline))
+
       (define (find-destinations bb)
         (let* ((branch (bb-branch-instr bb)))
           (case (gvm-instr-kind branch)
@@ -2247,38 +2262,30 @@
             (else
               (error 'update-reachability! "unsupported branch type")))))
 
+      (write (list 'UPDATING-REACHABILITY))(newline)
       (set! reachable-table (make-table))
-      (let* ((entry-bb (lbl-num->bb lbl bbs))
-             (entry-label (bb-label-instr entry-bb))
-             (bb-versions (table-ref versions entry-label #f)))
+      (let* ((entry-lbl (bbs-entry-lbl-num bbs))
+             (bb-versions (table-ref versions entry-lbl #f)))
         (if bb-versions
             (let* ((all-types (vector-ref bb-versions 0))
                    (starting-types (caar all-types))
-                   (starting-label (cdar all-types))))
-          (let visit ((lbl (lbl-num->bb starting-label bbs)))
-            (if (not (reachable? lbl)) ;; visited?
+                   (starting-label (cdar all-types)))
+          (let visit ((lbl starting-label))
+            (if (not (reachable? lbl)) ;; not visited
               (begin
                 (reachability-set! lbl #t)
                 (let* ((bb (lbl-num->bb lbl bbs)))
                   (if bb
                       (let loop ((dests (find-destinations bb)))
-                        (if (pair? dest)
+                        (if (pair? dests)
                             (begin
-                              (visit (car dest)
-                              (loop (cdr dests))))))))))))))
+                              (visit (car dests))
+                              (loop (cdr dests)))))))))))))
+                            (reachability-trace))
 
     (let ()
 
       (define (reach lbl bbvctx)
-#;
-        (let ((nbv (table-ref nb-versions lbl 0)))
-          (table-set! nb-versions lbl (+ nbv 1))
-          (if (>= nbv 10)
-              (set! types-before
-                (make-locenv (vector-ref (vector-ref types-before 0) 0)
-                             (vector-ref (vector-ref types-before 0) 1)
-                             (vector-ref (vector-ref types-before 0) 2)
-                             type-top))))
         (let* ((types-before (bbvctx-types bbvctx))
                (cost (bbvctx-cost bbvctx))
                (path (bbvctx-path bbvctx))
@@ -2294,10 +2301,12 @@
                                   bb-versions)))
                (do-later (lambda () #f))
                (types-lbl-alist (vector-ref bb-versions 0))
-               (all-versions-tbl (vector-ref bb-versions 1)))
+               (all-versions-tbl (vector-ref bb-versions 1))
+               (reachable-version
+                 (let ((v (table-ref all-versions-tbl types-before #f)))
+                   (if (and v (reachable? v)) v #f))))
 
-          (or (table-ref all-versions-tbl types-before #f)
-
+          (or reachable-version
               (let* ((bb (lbl-num->bb lbl bbs))
                      (new-lbl (bbs-new-lbl! new-bbs))
                      (step-num (begin (set! step-count (+ 1 step-count)) step-count))
@@ -2306,9 +2315,8 @@
                       (cons (cons types-before new-lbl)
                             types-lbl-alist)))
 
-                #;
-                (if looping?
-                    (pprint `(********************looping ,looping?)))
+                ;; make the new-lbl reachable. It may still be made unreachable if there is a merge
+                (reachability-set! new-lbl #t)
 
                 (table-set! all-versions-tbl types-before new-lbl)
 
@@ -2400,11 +2408,10 @@
                                 (types-merge-multi
                                  (map car versions-to-merge)
                                  #t))
-                               (merging-latest-version?
-                                (member 0 in)) ;; merging latest version?
+                               (merging-to-existing-version?
+                                (table-ref all-versions-tbl merged-types #f))
                                (new-lbl2
-                                (if merging-latest-version?
-                                    new-lbl
+                                (or (table-ref all-versions-tbl merged-types #f)
                                     (bbs-new-lbl! new-bbs))))
 
                           (for-each
@@ -2426,17 +2433,18 @@
                            (cons (cons merged-types new-lbl2)
                                  versions-to-keep))
 
-                          (write (list 'MERGED-TYPES= merged-types))(newline)
-                          (if merging-latest-version?
-                              (set! types-before merged-types)
-                              (begin
-                                (print "\n[STEP " step-num "      #" lbl " ==> #" new-lbl "]\n")
-                                (walk-bb bb merged-types cost path lbl new-lbl2)))))))
+                          (set! types-before merged-types)
+                          (set! new-lbl new-lbl2)
+
+                          (update-reachability!)
+
+                          (write (list 'MERGED-TYPES= merged-types))(newline)))))
 
                 (if debug-bbv?
                     (print "\n[step " step-num "      #" lbl " ==> #" new-lbl "]\n"))
 
-                (walk-bb bb types-before cost path lbl new-lbl)
+                ;; the new-lbl could now be unreachable if there was a merge
+                (if (reachable? new-lbl) (walk-bb bb types-before cost path lbl new-lbl))
 
                 (if debug-bbv?
                     (begin
@@ -2552,11 +2560,6 @@
 ;;               (pprint '****apply)
                (let* ((prim
                        (apply-prim gvm-instr))
-#;
-                      (prim
-                       (if (equal? (proc-obj-name prim) "##fx-?")
-                           ((target-prim-info target) (string->canonical-symbol "##fx-"))
-                           prim))
                       (opnds
                        (map walk-opnd (apply-opnds gvm-instr)))
                       (type-opnds
@@ -2703,11 +2706,6 @@
                        (map walk-opnd (ifjump-opnds gvm-instr)))
                       (type-narrow
                        (proc-obj-type-narrow test))
-#;
-                      (type-narrow
-                       (if (equal? (proc-obj-name test) "##fixnum?")
-                           (lambda (tctx args) (cons args #f))
-                           type-narrow))
                       (result-types
                        (and type-narrow
                             (type-narrow
@@ -2803,9 +2801,6 @@
                        (jump-opnd gvm-instr))
                       (ret
                        (jump-ret gvm-instr))
-#;(_                (if (and opnd (lbl? opnd) ret)
-                      (begin (pprint '*********error)(exit 1))))
-
                       (new-instr
                        (make-jump
                         (if (lbl? opnd)
@@ -2892,11 +2887,12 @@
              (types-before
               (generic-frame-types (gvm-instr-frame entry-label))))
 
-        (bbs-entry-lbl-num-set! new-bbs
-                                (reach entry-lbl
-                                       (make-bbvctx types-before 0 '())))
-
-        )))
+        (let loop ()
+            (bbs-entry-lbl-num-set! new-bbs (reach entry-lbl (make-bbvctx types-before 0 '())))
+            (if (not (all-reachables-exist?))
+                (begin
+                    (display (list 'FIX-POINT-NOT-REACHED 'some-reachable-blocks-not-created)) (newline)
+                    (loop)))))))
 
 ;;  (write-bbs bbs (current-output-port))
 
