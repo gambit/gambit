@@ -2130,7 +2130,7 @@
 ;; Type analysis:
 ;; -------------
 
-(define debug-bbv? #f)
+(define debug-bbv? #t)
 
 (define instr-cost 1)
 (define call-cost 100)
@@ -2225,7 +2225,7 @@
 
     (define work-queue (queue-empty))
 
-    (define merged? #f)
+    (define update-reachability-required? #f)
 
     (define reachable-table (make-table))
     (define (reachability-set! lbl r) (table-set! reachable-table lbl r))
@@ -2294,9 +2294,35 @@
                                   (begin
                                   (visit (car dests))
                                   (loop (cdr dests)))))))))))))
-                                  (reachability-trace))
+                                  (reachability-trace)
 
-    (let ()
+      ;; remove unreachable versions from live versions of all blocks
+      (bbs-for-each-bb
+        (lambda (bb)
+          (let ((orig-lbl (bb-lbl-num bb))
+                (bb-versions (table-ref versions (bb-lbl-num bb) #f)))
+            (if bb-versions
+                (begin
+                  ;; remove unreachable versions from live bb versions
+                  (vector-set!
+                    bb-versions
+                    0
+                    (filter
+                      (lambda (types-lbl) (reachable? (cdr types-lbl)))
+                    (vector-ref bb-versions 0)))
+                  ;; add back newly reachable versions to be processed
+                  (for-each
+                    (lambda (types-lbl)
+                      (let ((types (car types-lbl))
+                            (lbl (replacement-lbl-num (cdr types-lbl))))
+                        (if (not (lbl-num->bb lbl new-bbs))
+                            (queue-put!
+                              work-queue
+                              (lambda ()
+                                (if (reachable? lbl) ;; only process this block if it is reachable
+                                    (walk-bb bb types 0 '() orig-lbl lbl))))))) ;; TODO cost and path?
+                    (vector-ref bb-versions 0))))))
+        bbs))
 
       (define (reach lbl bbvctx)
         (let* ((types-before (bbvctx-types bbvctx))
@@ -2312,16 +2338,19 @@
                                        (vector '() (make-table))))
                                   (table-set! versions lbl bb-versions)
                                   bb-versions)))
-               (do-later (lambda () #f))
                (types-lbl-alist (vector-ref bb-versions 0))
                (all-versions-tbl (vector-ref bb-versions 1))
-               (reachable-version
-                 (let ((v (table-ref all-versions-tbl types-before #f)))
-                   (if (and v (reachable? v)) v #f))))
+               (old-existing-version (table-ref all-versions-tbl types-before #f))
+               (existing-version (and old-existing-version
+                                      (replacement-lbl-num old-existing-version)))
+               (existing-version-is-live?
+                 (and existing-version
+                      (memq existing-version (map cdr types-lbl-alist)))))
 
-          (or reachable-version
+          (if existing-version-is-live?
+              existing-version
               (let* ((bb (lbl-num->bb lbl bbs))
-                     (new-lbl (bbs-new-lbl! new-bbs))
+                     (new-lbl (or existing-version (bbs-new-lbl! new-bbs)))
                      (step-num (begin (set! step-count (+ 1 step-count)) step-count))
                      (looping? (assoc lbl path))
                      (new-types-lbl-alist
@@ -2449,20 +2478,24 @@
 
                           (write (list 'MERGED-TYPES= merged-types))(newline)
                         
-                          (set! merged? #t)))))
+                          (set! update-reachability-required? #t)))))
 
                 (if debug-bbv?
                     (print "\n[step " step-num "      #" lbl " ==> #" new-lbl "]\n"))
 
-                ;; the new-lbl could now be unreachable if there was a merge
                 (queue-put!
                   work-queue
-                  (lambda () (walk-bb bb types-before cost path lbl new-lbl)))
+                  (lambda ()
+                    (if (reachable? new-lbl) ;; only process this block if it is reachable
+                        (walk-bb bb types-before cost path lbl new-lbl))))
 
                 (if debug-bbv?
                     (begin
                       (print "\nstep " step-num "      #" lbl " ==>\n")
-                      (write-bb (lbl-num->bb new-lbl new-bbs) (current-output-port))
+                      (let ((bb (lbl-num->bb new-lbl new-bbs)))
+                        (if bb
+                          (write-bb (lbl-num->bb new-lbl new-bbs) (current-output-port))
+                          (write (list 'bb-generation-pending new-lbl))))
                       (print "\n")))
 
                 new-lbl))))
@@ -2906,10 +2939,10 @@
         (let loop ()
           (if (not (queue-empty? work-queue))
               (begin
-                (if merged? (update-reachability!))
-                (set! merged? #f)
+                (if update-reachability-required? (update-reachability!))
+                (set! update-reachability-required? #f)
                 ((queue-get! work-queue))
-                (loop)))))))
+                (loop))))))
 
 ;;  (write-bbs bbs (current-output-port))
 
