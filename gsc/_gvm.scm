@@ -2130,7 +2130,7 @@
 ;; Type analysis:
 ;; -------------
 
-(define debug-bbv? #t)
+(define debug-bbv? #f)
 
 (define instr-cost 1)
 (define call-cost 100)
@@ -2261,7 +2261,7 @@
                   (let ((true (ifjump-true branch))
                         (false (ifjump-false branch)))
                     (list (replacement-lbl-num true)
-                                (replacement-lbl-num false))))
+                          (replacement-lbl-num false))))
                 ((jump)
                   (let ((opnd (jump-opnd branch))
                         (ret (jump-ret branch)))
@@ -2288,13 +2288,14 @@
                   (begin
                       (reachability-set! lbl #t)
                       (let* ((bb (lbl-num->bb lbl new-bbs)))
-                      (if bb
-                          (let loop ((dests (find-destinations bb)))
-                              (if (pair? dests)
-                                  (begin
-                                  (visit (car dests))
-                                  (loop (cdr dests)))))))))))))
-                                  (reachability-trace)
+                        (if bb
+                            (let loop ((dests (find-destinations bb)))
+                                ;;(write (list 'reachability lbl '-> dests))(newline)
+                                (if (pair? dests)
+                                    (begin
+                                    (visit (car dests))
+                                    (loop (cdr dests)))))))))))))
+      (if debug-bbv? (reachability-trace))
 
       ;; remove unreachable versions from live versions of all blocks
       (bbs-for-each-bb
@@ -2323,6 +2324,18 @@
                                     (walk-bb bb types 0 '() orig-lbl lbl))))))) ;; TODO cost and path?
                     (vector-ref bb-versions 0))))))
         bbs))
+
+      (define (bbs-cleanup bbs)
+        ;; remove unreachable bb
+        ;; required to avoid having uninitialized bb in the bbs
+        (bbs-for-each-bb
+          (lambda (bb)
+            (let ((lbl (bb-lbl-num bb)))
+              (if (not (reachable? lbl))
+                  (begin
+                    ;;(write (list 'deleting-unreachable lbl))(newline)
+                    (bbs-bb-remove! bbs lbl)))))
+          bbs))
 
       (define (reach lbl bbvctx)
         (let* ((types-before (bbvctx-types bbvctx))
@@ -2939,10 +2952,11 @@
         (let loop ()
           (if (not (queue-empty? work-queue))
               (begin
-                (if update-reachability-required? (update-reachability!))
                 (set! update-reachability-required? #f)
                 ((queue-get! work-queue))
-                (loop))))))
+                (if update-reachability-required? (update-reachability!))
+                (loop)))))
+      (bbs-cleanup new-bbs))
 
 ;;  (write-bbs bbs (current-output-port))
 
