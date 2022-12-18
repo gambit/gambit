@@ -249,28 +249,28 @@
 
 ;;; Debug settings.
 
-(##define-macro (macro-debug-settings-level-mask)          15)
+(##define-macro (macro-debug-settings-level-mask)          (* 15 (expt 2 0)))
 (##define-macro (macro-debug-settings-level-shift)         0)
 
-(##define-macro (macro-debug-settings-uncaught-mask)       16)
+(##define-macro (macro-debug-settings-uncaught-mask)       (* 1 (expt 2 4)))
 (##define-macro (macro-debug-settings-uncaught-primordial) 0)
 (##define-macro (macro-debug-settings-uncaught-all)        1)
 (##define-macro (macro-debug-settings-uncaught-shift)      4)
 
-(##define-macro (macro-debug-settings-error-mask)          96)
+(##define-macro (macro-debug-settings-error-mask)          (* 3 (expt 2 5)))
 (##define-macro (macro-debug-settings-error-repl)          0)
 (##define-macro (macro-debug-settings-error-single-step)   1)
 (##define-macro (macro-debug-settings-error-quit)          2)
 (##define-macro (macro-debug-settings-error-shift)         5)
 
-(##define-macro (macro-debug-settings-repl-mask)           896)
+(##define-macro (macro-debug-settings-repl-mask)           (* 7 (expt 2 7)))
 (##define-macro (macro-debug-settings-repl-console)        0)
 (##define-macro (macro-debug-settings-repl-stdio)          1)
 (##define-macro (macro-debug-settings-repl-stdio-and-err)  2)
 (##define-macro (macro-debug-settings-repl-client)         3)
 (##define-macro (macro-debug-settings-repl-shift)          7)
 
-(##define-macro (macro-debug-settings-user-intr-mask)      3072)
+(##define-macro (macro-debug-settings-user-intr-mask)      (* 3 (expt 2 10)))
 (##define-macro (macro-debug-settings-user-intr-repl)      0)
 (##define-macro (macro-debug-settings-user-intr-defer)     1)
 (##define-macro (macro-debug-settings-user-intr-quit)      2)

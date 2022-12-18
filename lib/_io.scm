@@ -1046,17 +1046,22 @@
             (else
              (error-improper-list))))))
 
-(##define-macro (macro-stream-options-output-shift) 32768)
+(##define-macro (macro-stream-options-output-shift) 15)
+(##define-macro (macro-stream-options-input-mask) 32767)
 
 (define-prim (##psettings->roptions psettings default-options)
   (##psettings-options->options
    (macro-psettings-roptions psettings)
-   (##fxmodulo default-options (macro-stream-options-output-shift))))
+   (##fxand
+    default-options
+    (macro-stream-options-input-mask))))
 
 (define-prim (##psettings->woptions psettings default-options)
   (##psettings-options->options
    (macro-psettings-woptions psettings)
-   (##fxquotient default-options (macro-stream-options-output-shift))))
+   (##fxwraplogical-shift-right
+    default-options
+    (macro-stream-options-output-shift))))
 
 (define-prim (##psettings->input-readtable psettings)
   (or (macro-psettings-options-readtable
@@ -1081,45 +1086,52 @@
          (macro-psettings-options-char-encoding-errors options)))
     (##fx+
      (##fx+
-      (##fx* (macro-char-encoding-shift)
-             (if (##fx= char-encoding (macro-default-char-encoding))
-                 (##fxmodulo
-                  (##fxquotient default-options
-                                (macro-char-encoding-shift))
-                  (macro-char-encoding-range))
-                 char-encoding))
-      (##fx* (macro-char-encoding-errors-shift)
-             (if (##fx= char-encoding-errors (macro-default-char-encoding-errors))
-                 (##fxmodulo
-                  (##fxquotient default-options
-                                (macro-char-encoding-errors-shift))
-                  (macro-char-encoding-errors-range))
-                 char-encoding-errors))
+      (##fxarithmetic-shift-left
+       (if (##fx= char-encoding (macro-default-char-encoding))
+           (##fxarithmetic-shift-right
+            (##fxand
+             default-options
+             (macro-char-encoding-mask))
+            (macro-char-encoding-shift))
+           char-encoding)
+       (macro-char-encoding-shift))
+      (##fxarithmetic-shift-left
+       (if (##fx= char-encoding-errors (macro-default-char-encoding-errors))
+           (##fxarithmetic-shift-right
+            (##fxand
+             default-options
+             (macro-char-encoding-errors-mask))
+            (macro-char-encoding-errors-shift))
+           char-encoding-errors)
+       (macro-char-encoding-errors-shift))
       (##fx+
        (##fx+
-        (##fx* (macro-eol-encoding-shift)
-               (if (##fx= eol-encoding (macro-default-eol-encoding))
-                   (##fxmodulo
-                    (##fxquotient default-options
-                                  (macro-eol-encoding-shift))
-                    (macro-eol-encoding-range))
-                   eol-encoding))
+        (##fxarithmetic-shift-left
+         (if (##fx= eol-encoding (macro-default-eol-encoding))
+             (##fxarithmetic-shift-right
+              (##fxand
+               default-options
+               (macro-eol-encoding-mask))
+              (macro-eol-encoding-shift))
+             eol-encoding)
+         (macro-eol-encoding-shift))
         (##fx+
-         (##fx* (macro-open-state-shift)
-                (##fxmodulo
-                 (##fxquotient default-options
-                               (macro-open-state-shift))
-                 (macro-open-state-range)))
+         (##fxand
+          default-options
+          (macro-open-state-mask))
          (##fx+
-          (##fx* (macro-permanent-close-shift)
-                 permanent-close)
-          (##fx* (macro-buffering-shift)
-                 (if (##fx= buffering (macro-default-buffering))
-                     (##fxmodulo
-                      (##fxquotient default-options
-                                    (macro-buffering-shift))
-                      (macro-buffering-range))
-                     buffering))))))))))
+          (##fxarithmetic-shift-left
+           permanent-close
+           (macro-permanent-close-shift))
+          (##fxarithmetic-shift-left
+           (if (##fx= buffering (macro-default-buffering))
+               (##fxarithmetic-shift-right
+                (##fxand
+                 default-options
+                 (macro-buffering-mask))
+                (macro-buffering-shift))
+               buffering)
+           (macro-buffering-shift))))))))))
 
 (define-prim (##psettings->device-flags psettings)
   (let ((direction
@@ -1131,30 +1143,34 @@
         (truncate
          (macro-psettings-truncate psettings)))
     (##fx+
-     (##fx* (macro-direction-shift)
-            direction)
+     (##fxarithmetic-shift-left
+      direction
+      (macro-direction-shift))
      (##fx+
-      (##fx* (macro-append-shift)
-             (if (##not (##fx= append (macro-default-append)))
-                 append
-                 (macro-no-append)))
+      (##fxarithmetic-shift-left
+       (if (##not (##fx= append (macro-default-append)))
+           append
+           (macro-no-append))
+       (macro-append-shift))
       (##fx+
-       (##fx* (macro-create-shift)
-              (cond ((##not (##fx= create (macro-default-create)))
-                     create)
-                    ((##fx= direction (macro-direction-out))
-                     (macro-maybe-create))
-                    (else
-                     (macro-no-create))))
-       (##fx* (macro-truncate-shift)
-              (cond ((##not (##fx= truncate (macro-default-truncate)))
-                     truncate)
-                    ((##fx= direction (macro-direction-out))
-                     (if (##fx= append (macro-append))
-                         (macro-no-truncate)
-                         (macro-truncate)))
-                    (else
-                     (macro-no-truncate)))))))))
+       (##fxarithmetic-shift-left
+        (cond ((##not (##fx= create (macro-default-create)))
+               create)
+              ((##fx= direction (macro-direction-out))
+               (macro-maybe-create))
+              (else
+               (macro-no-create)))
+        (macro-create-shift))
+       (##fxarithmetic-shift-left
+        (cond ((##not (##fx= truncate (macro-default-truncate)))
+               truncate)
+              ((##fx= direction (macro-direction-out))
+               (if (##fx= append (macro-append))
+                   (macro-no-truncate)
+                   (macro-truncate)))
+              (else
+               (macro-no-truncate)))
+        (macro-truncate-shift)))))))
 
 (define-prim (##psettings->permissions psettings default-permissions)
   (let ((permissions (macro-psettings-permissions psettings)))
@@ -3282,12 +3298,14 @@
   (##psettings-options->options
    options
    (##fx+
-    (##fx* (macro-open-state-shift)
-           (if (##fx= kind (macro-none-kind))
-               (macro-open-state-closed)
-               (macro-open-state-open)))
-    (##fx* (macro-buffering-shift)
-           buffering))))
+    (##fxarithmetic-shift-left
+     (if (##fx= kind (macro-none-kind))
+         (macro-open-state-closed)
+         (macro-open-state-open))
+     (macro-open-state-shift))
+    (##fxarithmetic-shift-left
+     buffering
+     (macro-buffering-shift)))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -6690,8 +6708,9 @@
               (macro-port-woptions port))
              (woptions
               (##psettings->woptions psettings
-                                     (##fx* old-woptions
-                                            (macro-stream-options-output-shift)))))
+                                     (##fxarithmetic-shift-left
+                                      old-woptions
+                                      (macro-stream-options-output-shift)))))
         (let ((code
                (and (macro-output-port? port)
                     (##not (##fx= woptions old-woptions))
@@ -6716,8 +6735,9 @@
                           (##options-set!
                            port
                            (##fx+ roptions
-                                  (##fx* woptions
-                                         (macro-stream-options-output-shift)))))))
+                                  (##fxarithmetic-shift-left
+                                   woptions
+                                   (macro-stream-options-output-shift)))))))
                 (if (##fixnum? result)
                     (begin
                       (macro-port-mutex-unlock! port)
