@@ -2146,9 +2146,9 @@
 
   (define (replacement-lbl-num lbl)
     (let ((x (table-ref lbl-mapping lbl #f)))
-      (if x
-          (replacement-lbl-num x)
-          lbl)))
+      (if (or (not x) (= x lbl))
+          lbl
+          (replacement-lbl-num x))))
 
   (define (generic-frame-types frame)
     (let ((nb-regs (length (frame-regs frame)))
@@ -2253,9 +2253,7 @@
       (define (find-destinations bb)
         (let* ((branch (bb-branch-instr bb)))
           (if (null? branch)
-              (begin
-                (step)
-                (error 'update-reachability! "uninitialized bb" bb))
+              (error 'update-reachability! "uninitialized bb" bb)
               (case (gvm-instr-kind branch)
                 ((ifjump)
                   (let ((true (ifjump-true branch))
@@ -2293,8 +2291,8 @@
                                 ;;(write (list 'reachability lbl '-> dests))(newline)
                                 (if (pair? dests)
                                     (begin
-                                    (visit (car dests))
-                                    (loop (cdr dests)))))))))))))
+                                      (visit (car dests))
+                                      (loop (cdr dests)))))))))))))
       (if debug-bbv? (reachability-trace))
 
       ;; remove unreachable versions from live versions of all blocks
@@ -2464,18 +2462,15 @@
                                  (map car versions-to-merge)
                                  #t))
                                (new-lbl2
-                                (or (table-ref all-versions-tbl merged-types #f)
+                                (or (replacement-lbl-num (table-ref all-versions-tbl merged-types #f))
                                     (bbs-new-lbl! new-bbs))))
 
                           (for-each
                            (lambda (types-lbl)
                              (let ((types (car types-lbl))
                                    (lbl (cdr types-lbl)))
-                               (if (not (= lbl new-lbl2))
-                                   (begin
-                                     (if debug-bbv?
-                                         (pprint (list 'adding lbl '--> new-lbl2)))
-                                     (table-set! lbl-mapping lbl new-lbl2)))))
+                                (if debug-bbv? (pprint (list 'adding lbl '--> new-lbl2)))
+                                (table-set! lbl-mapping lbl new-lbl2)))
                            versions-to-merge)
 
                           (table-set! all-versions-tbl merged-types new-lbl2)
