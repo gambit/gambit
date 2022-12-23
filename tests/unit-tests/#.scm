@@ -14,10 +14,11 @@
 (let ((##exit-old ##exit))
   (set! ##exit
         (lambda rest
-          (if (pair? rest)
+          (if (##pair? rest)
               (##exit-old (car rest))
               (begin
-                (##write (cons '%GAMBIT-COVERAGE% ##tested-procedures) ##stdout-port)
+                (when ##enable-trace?
+                  (##write (cons '%GAMBIT-COVERAGE% (##table->list ##procedures-called)) ##stdout-port))
                 (##exit-cleanup)
                 (##exit-with-err-code-no-cleanup
                  (if ##failed-check? 2 1)))))))
@@ -68,54 +69,10 @@
       (##failed-check msg n1)))
 
 (##define-macro (##setup-check)
-
   (eval '(##begin
 
            (define ##enable-checks?
              (make-parameter #t))
-
-           (define ##tested-procedures '())
-
-           ;; record call in forms such as lambda, let, let*, ...
-           (define (##record-binding-form! src form)
-             (##deconstruct-call
-              src
-              -3
-              (lambda (bindings expr1 #!rest rest)
-                (for-each
-                  (lambda (expr)
-                    (##recording-tested-procedures! (##sourcify expr src)))
-                  (cons expr1 rest)))))
-
-           ;; record call in the thunk of call-with-values
-           (define (##record-call-with-values src)
-             (##deconstruct-call
-              src
-              3
-              (lambda (thunk proc)
-                (##recording-tested-procedures! (##sourcify thunk src)))))
-
-           (define (##record-procedure-call! src form-name)
-             (let ((proc (##global-var-ref (##make-global-var form-name))))
-               (and (##procedure? proc)
-                    (let ((ret (##decompile proc)))
-                      (if (and (eq? ret proc) ;; procedure is primitive
-                               (not (memq form-name ##tested-procedures)))
-                        (set! ##tested-procedures (cons form-name ##tested-procedures))
-                        (##recording-tested-procedures! (##sourcify ret src)))))))
-
-           (define (##recording-tested-procedures! src)
-             (let* ((form (##source-strip src))
-                    (form-name (and (pair? form)
-                                    (##source-strip (car form)))))
-               (if (symbol? form-name)
-                 (case (##source-strip (car form))
-                   ((lambda let let* letrec letrec* let-values parameterize)
-                    (##record-binding-form! src form-name))
-                   ((call-with-values)
-                    (##record-call-with-values src))
-                   (else
-                    (##record-procedure-call! src form-name))))))
 
            (define (##expand-check-relation src positive? relation)
              (##deconstruct-call
@@ -132,7 +89,6 @@
                 (##expand-check-rel src positive? relation expr1 val))))
 
            (define (##expand-check-rel src positive? relation expr1 expr2)
-             (##recording-tested-procedures! expr1)
              (let ((report (##failed-check-gen src '$actual-result$)))
                `(let (($actual-result$ ,(##sourcify expr1 src))
                       ($expected-result$ ,(##sourcify expr2 src)))
@@ -146,7 +102,6 @@
               -3
               (lambda (expr1 expr2 #!optional (tolerance 'epsilon) comment)
                 (let ((msg (##failed-check-msg src)))
-                  (##recording-tested-procedures! expr1)
                   (##sourcify
                    (list (##sourcify '##check-=-proc src)
                          (##sourcify expr1 src)
@@ -160,7 +115,6 @@
               src
               -3
               (lambda (exn? thunk #!optional comment)
-                (##recording-tested-procedures! thunk)
                 (let ((msg (##failed-check-msg src)))
                   (##sourcify
                    (list (##sourcify '##check-exn-proc src)
@@ -257,5 +211,48 @@
          (exit 0)
          (raise e)))
    thunk))
+
+
+(define ##procedures-called (make-table))
+(define ##procedures-called-mutex (make-mutex))
+
+(define-macro (##setup-trace)
+  (eval '(define ##enable-trace?
+           (let ((ret (##global-var-ref (##make-global-var '##enable-trace?))))
+             (and (not (##unbound? ret))
+                  (##boolean? ret)
+                  ret))))
+
+  (if (not ##enable-trace?)
+    '(##begin)
+    '(let* ((stepper (##current-stepper))
+            (stepper-copy (vector-copy stepper)))
+       (vector-set!
+         stepper
+         1 ;; index of call handler in stepper
+         (parameterize ((##current-stepper stepper-copy))
+
+           ;; need to create this call handler in the context of a new
+           ;; stepper so that the calls it executes will not invoke the call handler
+
+           (eval '(let ((primitive-namespace? (lambda (proc-name)
+                                                (##string-prefix? "##" (##symbol->string proc-name))))
+                        (symbol->primitive (lambda (proc-name)
+                                             (##global-var-primitive-ref (##make-global-var proc-name)))))
+
+                    (lambda (leapable? $code rte execute-body . other)
+                      (let* ((proc (car other))
+                             (proc-name (##procedure-friendly-name proc))) ;; procedure being called
+                        (when (and (symbol? proc-name)
+                                   (not (primitive-namespace? proc-name))
+                                   (eq? proc (symbol->primitive proc-name)))
+                          (mutex-lock! ##procedures-called-mutex)
+                          (table-set! ##procedures-called
+                                      proc-name
+                                      (+ 1 (table-ref ##procedures-called proc-name 0)))
+                          (mutex-unlock! ##procedures-called-mutex))
+                        (apply execute-body (cons $code (cons rte other))))))))))))
+
+(##setup-trace)
 
 ;;;============================================================================

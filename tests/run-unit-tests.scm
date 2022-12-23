@@ -16,7 +16,33 @@
 (define nb-other 0)
 (define nb-total 0)
 (define start 0)
-(define tested-procedures (make-table test: eq?))
+
+;;; The keys are the procedure name.
+;;; The values are a list of vector containing the filename
+;;; and the number of time the procedure is called in the
+;;; unit-test.
+;;;
+;;; ((* #("13-modules/prim_number.scm" 4)
+;;;     #("03-number/expt.scm" 2)
+;;;     #("03-number/complex_arith.scm" 10)
+;;;     #("03-number/chudnovsky.scm" 7777)
+;;;     #("03-number/atanh.scm" 6)
+;;;     #("03-number/atan.scm" 12)
+;;;     #("03-number/asinh.scm" 6)
+;;;     #("03-number/asin.scm" 14)
+;;;     #("03-number/acosh.scm" 8)
+;;;     #("03-number/acos.scm" 14)
+;;;     #("03-number/_num.scm" 8493)
+;;;     #("01-fixnum/fxwrapsquare.scm" 8))
+;;;  (+ #("13-modules/prim_table.scm" 2)
+;;;     #("13-modules/prim_number.scm" 14)
+;;;     #("11-network/udp_timeout.scm" 30)
+;;;     #("10-tables/table-for-each.scm" 144)
+;;;     #("10-tables/basic.scm" 8)
+;;;     #("09-io/vect_port.scm" 100000)
+;;; ...))
+;;;
+(define procedures-called (make-table test: eq?))
 
 (define (num->string num w d) ; w = total width, d = decimals
   (let ((n (floor (inexact->exact (round (* (abs num) (expt 10 d)))))))
@@ -184,12 +210,13 @@
               (delete-file "dbg-script")
               result)))
 
-      (case target
-        ((C)
-         (run "../gsi/gsi" "-:debug-settings=-,io-settings=lu,~~=.." "-f" file))
-        (else
-         (let ((gsi (string-append "../gsi/gsi-" (symbol->string target))))
-           (run gsi "-f" file))))))
+      (let ((def-enable-trace (object->string `(define ##enable-trace? ,show-coverage?))))
+        (case target
+          ((C)
+           (run "../gsi/gsi" "-:debug-settings=-,io-settings=lu,~~=.." "-e" def-enable-trace "-f" file))
+          (else
+           (let ((gsi (string-append "../gsi/gsi-" (symbol->string target))))
+             (run gsi "-e" def-enable-trace "-f" file)))))))
 
 (define (test-using-mode file mode target)
   (cond ((member mode '(gsi gsi-dbg))
@@ -246,10 +273,14 @@
             (status-hi (quotient status 256))
             (status-lo (modulo status 256)))
        (let* ((output-string (cdr result))
-              (coverage (get-coverage output-string)))
+              (coverage (and (string? output-string) (get-coverage output-string))))
          (and (pair? coverage)
-              (for-each (lambda (procname)
-                          (table-set! tested-procedures procname (cons (trim-filename file) (table-ref tested-procedures procname '()))))
+              (for-each (lambda (procname-freq)
+                          (let ((procname (car procname-freq))
+                                (freq (cdr procname-freq)))
+                            (table-set! procedures-called procname
+                                        (cons (vector (trim-filename file) freq)
+                                              (table-ref procedures-called procname '())))))
                         coverage)))
        (if (= 0 status)
            (set! nb-good (+ nb-good 1))
@@ -289,7 +320,7 @@
       (begin
         (print "PASSED ALL " nb-total " UNIT TESTS\n")
         (if show-coverage?
-          (pretty-print (sort-list (table->list tested-procedures) (lambda (a b) (string-ci<? (symbol->string (car a)) (symbol->string (car b)))))))
+          (pretty-print (sort-list (table->list procedures-called) (lambda (a b) (string-ci<? (symbol->string (car a)) (symbol->string (car b)))))))
         (exit 0))
       (begin
         (print "FAILED " nb-fail " UNIT TESTS OUT OF " nb-total " (" (num->string (* 100. (/ nb-fail nb-total)) 0 1) "%)\n")
