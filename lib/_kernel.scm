@@ -2,7 +2,7 @@
 
 ;;; File: "_kernel.scm"
 
-;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -4523,6 +4523,11 @@ end-of-code
 ;;;----------------------------------------------------------------------------
 
 ;;; Filesystem path manipulation.
+
+(define-prim ##os-path-tempdir
+  (c-lambda ()
+            scheme-object
+   "___os_path_tempdir"))
 
 (define-prim ##os-path-homedir
   (c-lambda ()

@@ -2,7 +2,7 @@
 
 ;;; File: "test.scm"
 
-;;; Copyright (c) 2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2022-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -23,12 +23,14 @@
     ((my-check ec => desired-result)
      (test-assert (my-equal? desired-result ec)))))
 
+(define temp-dir (create-temporary-directory))
+
 (define (my-open-output-file path)
-  (let ((new-path (string-append path "-srfi-42.tmp")))
+  (let ((new-path (path-expand (string-append path "-srfi-42.tmp") temp-dir)))
     (open-output-file new-path)))
 
 (define (my-call-with-input-file path thunk)
-  (let ((new-path (string-append path "-srfi-42.tmp")))
+  (let ((new-path (path-expand (string-append path "-srfi-42.tmp") temp-dir)))
     (let ((result (call-with-input-file new-path thunk)))
       (delete-file new-path)
       result)))
@@ -683,3 +685,5 @@
   (newline) )
 
 ;;;=========================================================================
+
+(delete-file-or-directory temp-dir #t)

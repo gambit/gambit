@@ -2,7 +2,7 @@
 
 ;;; File: "_nonstd.scm"
 
-;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -3016,9 +3016,9 @@
 ;;; Filesystem operations.
 
 (define-prim (##create-temporary-directory
-              path-or-settings
               #!optional
-              (raise-os-exception? #t))
+              (path-or-settings (macro-absent-obj))
+              (raise-os-exception? (macro-absent-obj)))
 
   (define (fail)
     (##fail-check-string-or-settings 1 create-temporary-directory path-or-settings))
@@ -3027,7 +3027,9 @@
    (macro-direction-inout)
    '(path:
      permissions:)
-   (cond ((##string? path-or-settings)
+   (cond ((##eq? path-or-settings (macro-absent-obj))
+          '())
+         ((##string? path-or-settings)
           (##list 'path: path-or-settings))
          (else
           path-or-settings))
@@ -3035,14 +3037,23 @@
    (lambda (psettings)
      (let ((path
             (macro-psettings-path psettings)))
-       (if (##not (##string? path))
+       (if (##not (or (##not path) (##string? path)))
            (fail)
-           (let ((pid (##os-getpid))
-                 (permissions (##psettings->permissions psettings #o777)))
+           (let* ((prefix
+                   (or path
+                       (##path-expand
+                        (##string-append
+                         (##path-strip-directory (##executable-path))
+                         "-temp")
+                        (##os-path-tempdir))))
+                  (pid
+                   (##os-getpid))
+                  (permissions
+                   (##psettings->permissions psettings #o777)))
              (let loop ((i 0))
                (let* ((resolved-path
                        (##path-resolve
-                        (##string-append path
+                        (##string-append prefix
                                          (##number->string pid)
                                          (if (##fx= i 0)
                                              ""
@@ -3057,7 +3068,9 @@
                              code))
                      resolved-path)))))))))
 
-(define-prim (create-temporary-directory path-or-settings)
+(define-prim (create-temporary-directory
+              #!optional
+              (path-or-settings (macro-absent-obj)))
   (macro-force-vars (path-or-settings)
     (##create-temporary-directory path-or-settings)))
 
@@ -3065,7 +3078,7 @@
               prim
               path-or-settings
               #!optional
-              (raise-os-exception? #t))
+              (raise-os-exception? (macro-absent-obj)))
 
   (define (fail)
     (##fail-check-string-or-settings 1 prim path-or-settings))
@@ -3105,7 +3118,7 @@
 (define-prim (##create-directory
               path-or-settings
               #!optional
-              (raise-os-exception? #t))
+              (raise-os-exception? (macro-absent-obj)))
   (##create-directory-or-fifo
    create-directory
    path-or-settings

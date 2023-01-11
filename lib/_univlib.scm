@@ -2,7 +2,7 @@
 
 ;;; File: "_univlib.scm"
 
-;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -619,6 +619,7 @@ import stat
 import time
 import errno
 import getpass
+import tempfile
 import functools
 
 def @os_encode_error@(exn):
@@ -1391,6 +1392,26 @@ def @os_shell_command@(cmd):
     (println "unimplemented ##os-shell-command called with cmd=")
     (println cmd)
     0)))
+
+;;;----------------------------------------------------------------------------
+
+;;; Temporary directory.
+
+(define (##os-path-tempdir)
+  (##declare (not interrupts-enabled))
+  (cond-expand
+
+   ((compilation-target js)
+    (##inline-host-expression
+     "@host2scm@(@os_nodejs@ ? os.tmpdir() : '/tmp')"))
+
+   ((compilation-target python)
+    (##inline-host-expression
+     "@host2scm@(tempfile.gettempdir())"))
+
+   (else
+    (println "unimplemented ##os-path-tempdir called")
+    "/tmp")))
 
 ;;;----------------------------------------------------------------------------
 
