@@ -246,24 +246,24 @@ jobs:
 
     - name: Build and Test with C compiler
       run: |
-        export CC=gcc-9
-        export CXX=g++-9
+        export CC=gcc-11
+        export CXX=g++-11
         export PROCS=`sysctl -n hw.physicalcpu`
         ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms && make clean && make -j$PROCS core && make check
 
     - name: Build and Test with C++ compiler
       if: github.event_name == 'push'
       run: |
-        export CC=gcc-9
-        export CXX=g++-9
+        export CC=gcc-11
+        export CXX=g++-11
         export PROCS=`sysctl -n hw.physicalcpu`
         ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms --enable-cplusplus && make clean && make -j$PROCS core && make check
 
     - name: Build and Test with C compiler and --enable-ansi-c
       if: github.event_name == 'push'
       run: |
-        export CC=gcc-9
-        export CXX=g++-9
+        export CC=gcc-11
+        export CXX=g++-11
         export PROCS=`sysctl -n hw.physicalcpu`
         ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-ansi-c && make clean && make -j$PROCS core && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
 
@@ -271,8 +271,8 @@ jobs:
       if: github.event_name == 'push'
       run: |
         mkdir dist
-        export CC=gcc-9
-        export CXX=g++-9
+        export CC=gcc-11
+        export CXX=g++-11
         ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist && make clean && make -j`sysctl -n hw.physicalcpu` core && make modules && make install
         cd dist/
         tar -cvzf ../gambit-macos-x86_64.tgz ./
@@ -289,8 +289,8 @@ jobs:
       if: github.event_name == 'push'
       run: |
         mkdir dist-mt
-        export CC=gcc-9
-        export CXX=g++-9
+        export CC=gcc-11
+        export CXX=g++-11
         ./configure --enable-single-host --enable-multiple-threaded-vms --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist-mt && make clean && make -j`sysctl -n hw.physicalcpu` core && make modules && make install
         cd dist-mt/
         tar -cvzf ../gambit-macos-x86_64-mt.tgz ./
