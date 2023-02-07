@@ -443,11 +443,27 @@
 #endif
 #endif
 
+#ifndef ___CPU_s390
+
+#ifdef __s390__
+#define ___CPU_s390
+#else
+#ifdef __s390x__
+#define ___CPU_s390
+#else
+#ifdef __zarch__
+#define ___CPU_s390
+#endif
+#endif
+#endif
+
+#endif
+
 /*
  * Determine the byte order endianness based on the processor type.
- * We assume that all processors are little-endian, except the sparc and
- * m68k.  The PowerPC, MIPS, ARM and Itanium can be either big-endian or
- * little-endian so extra tests are needed.
+ * We assume that all processors are little-endian, except the sparc,
+ * m68k, and s390.  The PowerPC, MIPS, ARM and Itanium can be either
+ * big-endian or little-endian so extra tests are needed.
  */
 
 #ifndef ___BIG_ENDIAN
@@ -481,6 +497,10 @@
 #endif
 
 #ifdef ___CPU_sparc
+#define ___BIG_ENDIAN
+#endif
+
+#ifdef ___CPU_s390
 #define ___BIG_ENDIAN
 #endif
 
