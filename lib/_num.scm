@@ -6613,18 +6613,53 @@ for a discussion of branch cuts.
                                   (mapper    procedure)
                                   (successor procedure)
                                   (seed      object))
-  ;; A quadratic algorithm
-  ;; If people complain I guess we can make a linear algorithm
-  (let loop ((result 0)
-             (state seed)
-             (2^i 1))
+
+  (define (fixnum-overflow)
+    (##raise-fixnum-overflow-exception bitwise-unfold stop? mapper successor seed))
+
+  (let loop ((indices '())      ;; indices of 1 bits in result, in decreasing order
+             (index 0)          ;; a bignum here is OK as long as no entries of indices are bignums
+             (state seed))
     (if (stop? state)
-        result
+        (if (or (null? indices)
+                (< (car indices)            ;; largest index
+                   (fx- ##fixnum-width 1))) ;; (expt 2 (- ##fixnum-width 1)) is not a fixnum
+            ;; result is a fixnum
+            (let inner ((result 0)
+                        (indices indices))
+              (if (null? indices)
+                  result
+                  (inner (fxior result
+                                (fxarithmetic-shift-left 1 (car indices)))
+                         (cdr indices))))
+            ;; result is a bignum
+            (macro-if-bignum
+             (let* ((needed-bits
+                     (+ (car indices)
+                        ##bignum.adigit-width
+                        -1))
+                    (result
+                     (if (fixnum? needed-bits)
+                         ;; ##bignum.make requires a fixnum argument, and so does
+                         ;; ##bignum.adigit-div.
+                         (##bignum.make (##bignum.adigit-div needed-bits) #f #f)
+                         ;; can't make a bignum this big.
+                         (##raise-heap-overflow-exception))))
+               (for-each (lambda (index)
+                           (let ((mdigit-index  (##bignum.mdigit-div index))
+                                 (mdigit-offset (##bignum.mdigit-mod index)))
+                             (##bignum.mdigit-set! result
+                                                   mdigit-index
+                                                   (fxior (##bignum.mdigit-ref result mdigit-index)
+                                                          (fxarithmetic-shift-left 1 mdigit-offset)))))
+                         indices)
+               (##bignum.normalize! result))
+             (fixnum-overflow)))
         (loop (if (mapper state)
-                  (##bitwise-ior2 result 2^i)
-                  result)
-              (successor state)
-              (##arithmetic-shift 2^i 1)))))
+                  (cons index indices)
+                  indices)
+              (+ index 1)
+              (successor state)))))
 
 ;;;---------------------------------------------------------------------------
 ;;; make-bitwise-generator
