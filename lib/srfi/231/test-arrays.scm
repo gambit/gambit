@@ -1834,8 +1834,8 @@ OTHER DEALINGS IN THE SOFTWARE.
         ;; copy to non-adjacent elements of destination, no checking needed
         (test (%%move-array-elements (array-reverse specialized-destination) specialized-source "test: ")
               (if (array-packed? (array-reverse specialized-destination))
-                  "In order, no checks needed"
-                  "Out of order, no checks needed"))
+                  "No checks needed"
+                  "No checks needed"))
         (test (myarray= specialized-source (array-reverse specialized-destination))
               #t)
         ))))
@@ -1918,9 +1918,9 @@ OTHER DEALINGS IN THE SOFTWARE.
                                              (else
                                               "In order, checks needed"))
                                        (cond ((%%every destination-checker (cdr (assq source-storage-class extreme-values-alist)))
-                                              "Out of order, no checks needed")
+                                              "No checks needed")
                                              (else
-                                              "Out of order, checks needed")))
+                                              "Checks needed")))
                                    %%move-result)
                            (myarray= destination
                                      source
@@ -4921,7 +4921,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
   (define (skip-to-end-of-line port)
     (let loop ((ch (read-char port)))
-      (if (not (eq? ch #\newline))
+      (if (not (eqv? ch #\newline))
           (loop (read-char port)))))
 
   (define (white-space? ch)
@@ -4932,7 +4932,7 @@ OTHER DEALINGS IN THE SOFTWARE.
   (define (skip-white-space port)
     (let ((ch (peek-char port)))
       (cond ((white-space? ch) (read-char port) (skip-white-space port))
-            ((eq? ch #\#) (skip-to-end-of-line port)(skip-white-space port))
+            ((eqv? ch #\#) (skip-to-end-of-line port)(skip-white-space port))
             (else #f))))
 
   (call-with-input-file
@@ -6533,6 +6533,8 @@ that computes the componentwise products when we need them, the times are
 
 ;;; Unit tests
 
+(pp 'unit-tests)
+
 (let ((A (make-specialized-array (make-interval '#(5 5 5 5 5) '#(8 8 8 8 8))))
       (B (make-specialized-array (make-interval '#(5 5 5 5 5)))))
   (test (array-ref A 0 0)
@@ -6543,5 +6545,262 @@ that computes the componentwise products when we need them, the times are
         "Wrong number of arguments passed to procedure ")
   (test (array-set! B 2 0 0)
         "Wrong number of arguments passed to procedure "))
+
+(pp "Test interactions of continuations and array-{copy|append|stack|decurry|block}")
+
+(pp 'array-copy)
+
+(let* ((cont #f)
+       (call-cont #t)
+       (domain (make-interval '#(2 2)))
+       (A_ (lambda (i j)
+             (call-with-current-continuation
+              (lambda (c)
+                (if (= i j 0)
+                    (set! cont c))
+                1))))
+       (A (make-array domain A_))
+       (array-list '()))
+  (set! array-list (cons (array-copy A) array-list))
+  (if call-cont
+      (begin
+        (set! call-cont #f)
+        (cont 4)))
+  (for-each (lambda (result truth)
+              (test (array->list* result)
+                    truth))
+            array-list
+            '(((4 1) (1 1))
+              ((1 1) (1 1)))))
+
+(pp 'array-append)
+
+(let* ((cont #f)
+       (call-cont #t)
+       (domain (make-interval '#(2 2)))
+       (B (list*->array 2 '((1 2) (3 4))))
+       (A_ (lambda (i j)
+             (call-with-current-continuation
+              (lambda (c)
+                (if (= i j 0)
+                    (set! cont c))
+                1))))
+       (A (make-array domain A_))
+       (array-list '()))
+  (set! array-list (cons (array-append 1 (list A B)) array-list))
+  (if call-cont
+      (begin
+        (set! call-cont #f)
+        (cont 4)))
+  (for-each (lambda (result truth)
+              (test (array->list* result)
+                    truth))
+            array-list
+            '(((4 1 1 2) (1 1 3 4))
+              ((1 1 1 2) (1 1 3 4)))))
+
+(pp 'array-stack)
+
+(let* ((cont #f)
+       (call-cont #t)
+       (domain (make-interval '#(2 2)))
+       (B (list*->array 2 '((1 2) (3 4))))
+       (A_ (lambda (i j)
+             (call-with-current-continuation
+              (lambda (c)
+                (if (= i j 0)
+                    (set! cont c))
+                1))))
+       (A (make-array domain A_))
+       (array-list '()))
+  (set! array-list (cons (array-stack 1 (list A B)) array-list))
+  (if call-cont
+      (begin
+        (set! call-cont #f)
+        (cont 4)))
+  (for-each (lambda (result truth)
+              (test (array->list* result)
+                    truth))
+            array-list
+            '((((4 1) (1 2)) ((1 1) (3 4)))
+              (((1 1) (1 2)) ((1 1) (3 4))))))
+
+(pp 'array-block)
+
+(let* ((cont #f)
+       (call-cont #t)
+       (domain (make-interval '#(2 2)))
+       (B (list*->array 2 '((1 2) (3 4))))
+       (A_ (lambda (i j)
+             (call-with-current-continuation
+              (lambda (c)
+                (if (= i j 0)
+                    (set! cont c))
+                1))))
+       (A (make-array domain A_))
+       (C (list*->array 2 (list (list A B))))
+       (array-list '()))
+  (set! array-list (cons (array-block C) array-list))
+  (if call-cont
+      (begin
+        (set! call-cont #f)
+        (cont 4)))
+  (for-each (lambda (result truth)
+              (test (array->list* result)
+                    truth))
+            array-list
+            '(((4 1 1 2) (1 1 3 4))
+              ((1 1 1 2) (1 1 3 4)))))
+
+(pp 'array-decurry)
+
+(let* ((cont #f)
+       (call-cont #t)
+       (domain (make-interval '#(2 2)))
+       (B (list*->array 2 '((1 2) (3 4))))
+       (A_ (lambda (i j)
+             (call-with-current-continuation
+              (lambda (c)
+                (if (= i j 0)
+                    (set! cont c))
+                1))))
+       (A (make-array domain A_))
+       (C (list*->array 1 (list A B)))
+       (array-list '()))
+  (set! array-list (cons (array-decurry C) array-list))
+  (if call-cont
+      (begin
+        (set! call-cont #f)
+        (cont 4)))
+  (for-each (lambda (result truth)
+              (test (array->list* result)
+                    truth))
+            array-list
+            '((((4 1) (1 1)) ((1 2) (3 4)))
+              (((1 1) (1 1)) ((1 2) (3 4))))))
+
+(pp "Test that the corresponding ! procedures don't crash when dealing with continuations.")
+
+(pp 'array-copy!)
+
+(let* ((cont #f)
+       (call-cont #t)
+       (domain (make-interval '#(2 2)))
+       (A_ (lambda (i j)
+             (call-with-current-continuation
+              (lambda (c)
+                (if (= i j 0)
+                    (set! cont c))
+                1))))
+       (A (make-array domain A_))
+       (array-list '()))
+  (set! array-list (cons (array-copy! A) array-list))
+  (if call-cont
+      (begin
+        (set! call-cont #f)
+        (cont 4))))
+
+(pp 'array-append!)
+
+(let* ((cont #f)
+       (call-cont #t)
+       (domain (make-interval '#(2 2)))
+       (B (list*->array 2 '((1 2) (3 4))))
+       (A_ (lambda (i j)
+             (call-with-current-continuation
+              (lambda (c)
+                (if (= i j 0)
+                    (set! cont c))
+                1))))
+       (A (make-array domain A_))
+       (array-list '()))
+  (set! array-list (cons (array-append 1 (list A B)) array-list))
+  (if call-cont
+      (begin
+        (set! call-cont #f)
+        (cont 4))))
+
+(pp 'array-stack!)
+
+(let* ((cont #f)
+       (call-cont #t)
+       (domain (make-interval '#(2 2)))
+       (B (list*->array 2 '((1 2) (3 4))))
+       (A_ (lambda (i j)
+             (call-with-current-continuation
+              (lambda (c)
+                (if (= i j 0)
+                    (set! cont c))
+                1))))
+       (A (make-array domain A_))
+       (array-list '()))
+  (set! array-list (cons (array-stack! 1 (list A B)) array-list))
+  (if call-cont
+      (begin
+        (set! call-cont #f)
+        (cont 4))))
+
+(pp 'array-block!)
+
+(let* ((cont #f)
+       (call-cont #t)
+       (domain (make-interval '#(2 2)))
+       (B (list*->array 2 '((1 2) (3 4))))
+       (A_ (lambda (i j)
+             (call-with-current-continuation
+              (lambda (c)
+                (if (= i j 0)
+                    (set! cont c))
+                1))))
+       (A (make-array domain A_))
+       (C (list*->array 2 (list (list A B))))
+       (array-list '()))
+  (set! array-list (cons (array-block! C) array-list))
+  (if call-cont
+      (begin
+        (set! call-cont #f)
+        (cont 4))))
+
+(pp 'array-decurry!)
+
+(let* ((cont #f)
+       (call-cont #t)
+       (domain (make-interval '#(2 2)))
+       (B (list*->array 2 '((1 2) (3 4))))
+       (A_ (lambda (i j)
+             (call-with-current-continuation
+              (lambda (c)
+                (if (= i j 0)
+                    (set! cont c))
+                1))))
+       (A (make-array domain A_))
+       (C (list*->array 1 (list A B)))
+       (array-list '()))
+  (set! array-list (cons (array-decurry! C) array-list))
+  (if call-cont
+      (begin
+        (set! call-cont #f)
+        (cont 4))))
+
+(pp 'array-assign!)
+
+(let* ((cont #f)
+       (call-cont #t)
+       (domain (make-interval '#(2 2)))
+       (B (list*->array 2 '((1 2) (3 4))))
+       (A_ (lambda (i j)
+             (call-with-current-continuation
+              (lambda (c)
+                (if (= i j 0)
+                    (set! cont c))
+                1))))
+       (A (make-array domain A_)))
+  (array-assign! B A)
+  (if call-cont
+      (begin
+        (set! call-cont #f)
+        (cont 4))))
+
+
 
 (for-each display (list "Failed " failed-tests " out of " total-tests " total tests.\n"))

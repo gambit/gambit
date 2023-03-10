@@ -2417,9 +2417,9 @@ OTHER DEALINGS IN THE SOFTWARE.
   ;; If destination is a specialized array
   ;; then
   ;;   If its elements are in order
+  ;;      and the source is a specialized array
   ;;   then
-  ;;      If the source is a specialized array
-  ;;         with the same storage class
+  ;;      If the source has the same storage class
   ;;         for which a copier exists
   ;;         and whose elements are also in order
   ;;      then
@@ -2434,8 +2434,6 @@ OTHER DEALINGS IN THE SOFTWARE.
   ;;            storing the source elements after testing they're OK
   ;;            for the destination
   ;;   else
-  ;;     we now require that the domains of destination and source are
-  ;;     the same.
   ;;     If no checks are needed
   ;;     then
   ;;        Copy elements from the source to destination, without checks.
@@ -2443,7 +2441,6 @@ OTHER DEALINGS IN THE SOFTWARE.
   ;;        Copy elements from the source to destination, checking whether
   ;;        they're OK
   ;; else
-  ;;    We require the domains of destination and source to be the same.
   ;;    Copy elements of source to destination
 
   ;; We check the whether the elements of the destination are in order to save
@@ -2473,10 +2470,10 @@ OTHER DEALINGS IN THE SOFTWARE.
         ((%%interval-empty? (%%array-domain source))
          "Empty arrays")
         ((specialized-array? destination)
-         (if (%%array-packed? destination)
+         (if (and (%%array-packed? destination)
+                  (specialized-array? source))
              ;; Maybe we can do a block copy
-             (if (and (specialized-array? source)
-                      (eq? (%%array-storage-class destination)
+             (if (and (eq? (%%array-storage-class destination)
                            (%%array-storage-class source))
                       ;; does a copier for this storage-class exist?
                       (storage-class-copier (%%array-storage-class destination))
@@ -2506,7 +2503,8 @@ OTHER DEALINGS IN THE SOFTWARE.
                                  source-start
                                  source-end)))
                    "Block copy")
-                 ;;  we can step through the elements of destination in order.
+                 ;; We can step through the elements of destination in order,
+                 ;; and the getter of the source doesn't capture any continuations.
                  (let* ((domain
                          (%%array-domain source))
                         (getter
@@ -2678,7 +2676,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                                            destination source (append multi-index (list item)))))))))
                              domain))
                           "In order, checks needed"))))
-             ;; the elements of destination are not in order.
+             ;; Either the elements of destination are not in order, or source is not a specialized array.
              (let* ((setter
                      (%%array-setter destination))
                     (getter
@@ -2689,7 +2687,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                      (storage-class-checker destination-storage-class))
                     (domain
                      (%%array-domain destination)))
-               (cond ((and (specialized-array? source) ;; redundant after new check at top, but leave it for now
+               (cond ((and (specialized-array? source)
                            (let ((compatibility-list
                                   (assq (%%array-storage-class source)
                                         %%storage-class-compatibility-alist)))
@@ -2713,7 +2711,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                           (lambda multi-index
                             (apply setter (apply getter multi-index) multi-index))))
                        domain)
-                      "Out of order, no checks needed")
+                      "No checks needed")
                      (else
                       ;; checks needed
                       (%%interval-for-each
@@ -2780,7 +2778,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                                     "Not all elements of the source can be stored in destination: ")
                                    destination source (append multi-index (list item))))))))
                        domain)
-                      "Out of order, checks needed")))))
+                      "Checks needed")))))
         (else
          ;; destination is not a specialized array, so checks,
          ;; if any, are built into the setter.
