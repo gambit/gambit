@@ -2681,12 +2681,13 @@ OTHER DEALINGS IN THE SOFTWARE.
                      (%%array-domain destination)))
                (cond ((or (eq? destination-storage-class generic-storage-class)
                           (and (specialized-array? source)
-                               (let ((compatibility-list
-                                      (assq (%%array-storage-class source)
-                                            %%storage-class-compatibility-alist)))
-                                 (and compatibility-list
-                                      (memq destination-storage-class
-                                            compatibility-list)))))
+                               (or (eq? (%%array-storage-class source) destination-storage-class)
+                                   (let ((compatibility-list
+                                          (assq (%%array-storage-class source)
+                                                %%storage-class-compatibility-alist)))
+                                     (and compatibility-list
+                                          (memq destination-storage-class
+                                                compatibility-list))))))
                       ;; no checks needed
                       (%%interval-for-each
                        (case (%%interval-dimension domain)
