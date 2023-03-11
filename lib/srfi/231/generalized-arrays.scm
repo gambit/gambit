@@ -2342,13 +2342,18 @@ OTHER DEALINGS IN THE SOFTWARE.
                  safe?)))))
 
 (define %%storage-class-compatibility-alist
+
   ;; An a-list of compatible storage-classes;
   ;; in each list, members of the first storage class can be
   ;; stored without error in all storage classes in the list.
+
+  ;; We're going to test separately for generic-storage-class,
+  ;; so we can deal gracefully with storing data from
+  ;; a user-defined storage-class to generic-storage-class
+  ;; without running the checker for generic-storage-class
+  ;; (which always returns #t)
   (list
-   (list generic-storage-class)
    (list u1-storage-class
-         generic-storage-class
          u8-storage-class
          u16-storage-class
          u32-storage-class
@@ -2358,7 +2363,6 @@ OTHER DEALINGS IN THE SOFTWARE.
          s32-storage-class
          s64-storage-class)
    (list u8-storage-class
-         generic-storage-class
          u16-storage-class
          u32-storage-class
          u64-storage-class
@@ -2366,45 +2370,33 @@ OTHER DEALINGS IN THE SOFTWARE.
          s32-storage-class
          s64-storage-class)
    (list u16-storage-class
-         generic-storage-class
          u32-storage-class
          u64-storage-class
          s32-storage-class
          s64-storage-class)
    (list u32-storage-class
-         generic-storage-class
          u64-storage-class
          s64-storage-class)
-   (list u64-storage-class
-         generic-storage-class)
+   (list u64-storage-class)
    (list s8-storage-class
-         generic-storage-class
          s16-storage-class
          s32-storage-class
          s64-storage-class)
    (list s16-storage-class
-         generic-storage-class
          s32-storage-class
          s64-storage-class)
    (list s32-storage-class
-         generic-storage-class
          s64-storage-class)
-   (list s64-storage-class
-         generic-storage-class)
+   (list s64-storage-class)
    (list f32-storage-class
-         generic-storage-class
          f64-storage-class)
    (list f64-storage-class    ;; the checker for these classes are the same, no point in checking
-         f32-storage-class    ;; going from f64-storage-class to f32-storage-class
-         generic-storage-class)
-   (list char-storage-class
-         generic-storage-class)
+         f32-storage-class)   ;; going from f64-storage-class to f32-storage-class
+   (list char-storage-class)
    (list c64-storage-class
-         generic-storage-class
          c128-storage-class)
    (list c128-storage-class   ;; the checker for these classes are the same, no point in checking
-         c64-storage-class    ;; going from c128-storage-class to c64-storage-class
-         generic-storage-class)))
+         c64-storage-class))) ;; going from c128-storage-class to c64-storage-class
 
 ;;; We consolidate all moving of array elements to the following procedure.
 
@@ -2687,13 +2679,14 @@ OTHER DEALINGS IN THE SOFTWARE.
                      (storage-class-checker destination-storage-class))
                     (domain
                      (%%array-domain destination)))
-               (cond ((and (specialized-array? source)
-                           (let ((compatibility-list
-                                  (assq (%%array-storage-class source)
-                                        %%storage-class-compatibility-alist)))
-                             (and compatibility-list
-                                  (memq destination-storage-class
-                                        compatibility-list))))
+               (cond ((or (eq? destination-storage-class generic-storage-class)
+                          (and (specialized-array? source)
+                               (let ((compatibility-list
+                                      (assq (%%array-storage-class source)
+                                            %%storage-class-compatibility-alist)))
+                                 (and compatibility-list
+                                      (memq destination-storage-class
+                                            compatibility-list)))))
                       ;; no checks needed
                       (%%interval-for-each
                        (case (%%interval-dimension domain)
