@@ -780,6 +780,7 @@ OTHER DEALINGS IN THE SOFTWARE.
         (list  s16-storage-class  's16-storage-class 's16vector make-s16vector)
         (list  s32-storage-class  's32-storage-class 's32vector make-s32vector)
         (list  s64-storage-class  's64-storage-class 's64vector make-s64vector)
+        (list  f16-storage-class  'f16-storage-class 'u16vector make-u16vector)
         (list  f32-storage-class  'f32-storage-class 'f32vector make-f32vector)
         (list  f64-storage-class  'f64-storage-class 'f64vector make-f64vector)
         (list char-storage-class 'char-storage-class 'string    make-string)
@@ -791,7 +792,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 (define uniform-storage-classes
   (list u8-storage-class u16-storage-class u32-storage-class u64-storage-class
         s8-storage-class s16-storage-class s32-storage-class s64-storage-class
-        f32-storage-class f64-storage-class
+        f16-storage-class f32-storage-class f64-storage-class
         char-storage-class
         c64-storage-class c128-storage-class))
 
@@ -1113,6 +1114,7 @@ OTHER DEALINGS IN THE SOFTWARE.
         (list     s16-storage-class  0 -300 300)
         (list     s32-storage-class  0 -70000 70000)
         (list     s64-storage-class  0 -1000000000 1000000000)
+        (list     f16-storage-class  0. 1.)
         (list     f32-storage-class  0. 1.)
         (list     f64-storage-class  0. 1.)
         (list     c64-storage-class  0.+0.i 1.+1.i)
@@ -1148,6 +1150,7 @@ OTHER DEALINGS IN THE SOFTWARE.
         (list     s16-storage-class (make-s16vector 10) (make-u16vector 10))
         (list     s32-storage-class (make-s32vector 10) (make-u16vector 10))
         (list     s64-storage-class (make-s64vector 10) (make-u16vector 10))
+        (list     f16-storage-class (make-u16vector 10) (make-s16vector 10))
         (list     f32-storage-class (make-f32vector 10) (make-u16vector 10))
         (list     f64-storage-class (make-f64vector 10) (make-u16vector 10))
         (list     c64-storage-class (make-f32vector 10) (make-u16vector 10) (make-f32vector 5))
@@ -1488,6 +1491,8 @@ OTHER DEALINGS IN THE SOFTWARE.
            (list u64-storage-class
                  (lambda args (random (expt 2 64))))
            ;; float
+           (list f16-storage-class
+                 (lambda args (test-random-real)))
            (list f32-storage-class
                  (lambda args (test-random-real)))
            (list f64-storage-class
@@ -1852,6 +1857,7 @@ OTHER DEALINGS IN THE SOFTWARE.
    (list s32-storage-class (- (expt 2 (- 32 1))) (- (expt 2 (- 32 1)) 1))
    (list s64-storage-class (- (expt 2 (- 64 1))) (- (expt 2 (- 64 1)) 1))
    (list generic-storage-class    'a)
+   (list f16-storage-class       1.0)
    (list f32-storage-class       1.0)
    (list f64-storage-class       1.0)
    (list char-storage-class (integer->char ##max-char))
@@ -1902,7 +1908,10 @@ OTHER DEALINGS IN THE SOFTWARE.
                   (array-reverse destination)
                   destination))
              (destination-checker
-              (storage-class-checker destination-storage-class)))
+              (storage-class-checker destination-storage-class))
+             (sloppy-compare
+              (lambda (x y)      ;; loss of precision in conversion to smaller float format
+                (< (magnitude (- x y)) 1e-3))))
         (if (array-every destination-checker source)
             (begin
               (test (let ((%%move-result
@@ -1927,9 +1936,12 @@ OTHER DEALINGS IN THE SOFTWARE.
                                      (if (or (and (eq? source-storage-class c128-storage-class)
                                                   (eq? destination-storage-class c64-storage-class))
                                              (and (eq? source-storage-class f64-storage-class)
-                                                  (eq? destination-storage-class f32-storage-class)))
-                                         (lambda (x y)
-                                           (< (magnitude (- x y)) 1e-5))
+                                                  (eq? destination-storage-class f32-storage-class))
+                                             (and (eq? source-storage-class f64-storage-class)
+                                                  (eq? destination-storage-class f16-storage-class))
+                                             (and (eq? source-storage-class f32-storage-class)
+                                                  (eq? destination-storage-class f16-storage-class)))
+                                         sloppy-compare
                                          equal?))))
                     #t)
               (test (let ((%%move-result
@@ -1941,31 +1953,40 @@ OTHER DEALINGS IN THE SOFTWARE.
                                      (if (or (and (eq? source-storage-class c128-storage-class)
                                                   (eq? destination-storage-class c64-storage-class))
                                              (and (eq? source-storage-class f64-storage-class)
-                                                  (eq? destination-storage-class f32-storage-class)))
-                                         (lambda (x y)
-                                           (< (magnitude (- x y)) 1e-5))
+                                                  (eq? destination-storage-class f32-storage-class))
+                                             (and (eq? source-storage-class f64-storage-class)
+                                                  (eq? destination-storage-class f16-storage-class))
+                                             (and (eq? source-storage-class f32-storage-class)
+                                                  (eq? destination-storage-class f16-storage-class)))
+                                         sloppy-compare
                                          equal?))))
                     #t)
               (test (let ((ignore (array-assign! destination generalized-source)))
                       (myarray= destination
                                 generalized-source
                                 (if (or (and (eq? source-storage-class c128-storage-class)
-                                             (eq? destination-storage-class c64-storage-class))
-                                        (and (eq? source-storage-class f64-storage-class)
-                                             (eq? destination-storage-class f32-storage-class)))
-                                    (lambda (x y)
-                                      (< (magnitude (- x y)) 1e-5))
+                                                  (eq? destination-storage-class c64-storage-class))
+                                             (and (eq? source-storage-class f64-storage-class)
+                                                  (eq? destination-storage-class f32-storage-class))
+                                             (and (eq? source-storage-class f64-storage-class)
+                                                  (eq? destination-storage-class f16-storage-class))
+                                             (and (eq? source-storage-class f32-storage-class)
+                                                  (eq? destination-storage-class f16-storage-class)))
+                                    sloppy-compare
                                     equal?)))
                     #t)
               (test (let ((ignore (array-assign! generalized-destination generalized-source)))
                       (myarray= generalized-destination
                                  generalized-source
                                  (if (or (and (eq? source-storage-class c128-storage-class)
-                                              (eq? destination-storage-class c64-storage-class))
-                                         (and (eq? source-storage-class f64-storage-class)
-                                              (eq? destination-storage-class f32-storage-class)))
-                                     (lambda (x y)
-                                       (< (magnitude (- x y)) 1e-5))
+                                                  (eq? destination-storage-class c64-storage-class))
+                                             (and (eq? source-storage-class f64-storage-class)
+                                                  (eq? destination-storage-class f32-storage-class))
+                                             (and (eq? source-storage-class f64-storage-class)
+                                                  (eq? destination-storage-class f16-storage-class))
+                                             (and (eq? source-storage-class f32-storage-class)
+                                                  (eq? destination-storage-class f16-storage-class)))
+                                     sloppy-compare
                                      equal?)))
                      #t))
             (test (array-assign! destination source)
@@ -2576,6 +2597,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                               (list s16-storage-class     (lambda indices (random (- (expt 2 15)) (expt 2 15))))
                               (list s32-storage-class     (lambda indices (random (- (expt 2 31)) (expt 2 31))))
                               (list s64-storage-class     (lambda indices (random (- (expt 2 63)) (expt 2 63))))
+                              (list f16-storage-class     (lambda indices (test-random-real)))
                               (list f32-storage-class     (lambda indices (test-random-real)))
                               (list f64-storage-class     (lambda indices (test-random-real)))
                               (list char-storage-class    (lambda indices (random-char)))
@@ -2649,6 +2671,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                               (list s16-storage-class     (lambda indices (random (- (expt 2 15)) (expt 2 15))))
                               (list s32-storage-class     (lambda indices (random (- (expt 2 31)) (expt 2 31))))
                               (list s64-storage-class     (lambda indices (random (- (expt 2 63)) (expt 2 63))))
+                              (list f16-storage-class     (lambda indices (test-random-real)))
                               (list f32-storage-class     (lambda indices (test-random-real)))
                               (list f64-storage-class     (lambda indices (test-random-real)))
                               (list char-storage-class    (lambda indices (random-char)))
@@ -2867,6 +2890,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                               (list s16-storage-class     (lambda indices (random (- (expt 2 15)) (expt 2 15))))
                               (list s32-storage-class     (lambda indices (random (- (expt 2 31)) (expt 2 31))))
                               (list s64-storage-class     (lambda indices (random (- (expt 2 63)) (expt 2 63))))
+                              (list f16-storage-class     (lambda indices (test-random-real)))
                               (list f32-storage-class     (lambda indices (test-random-real)))
                               (list f64-storage-class     (lambda indices (test-random-real)))
                               (list char-storage-class    (lambda indices (random-char)))
@@ -4331,6 +4355,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                               (list s16-storage-class     (lambda indices (random (- (expt 2 15)) (expt 2 15))) `(a ,(expt 2 16)))
                               (list s32-storage-class     (lambda indices (random (- (expt 2 31)) (expt 2 31))) `(a ,(expt 2 32)))
                               (list s64-storage-class     (lambda indices (random (- (expt 2 63)) (expt 2 63))) `(a ,(expt 2 64)))
+                              (list f16-storage-class     (lambda indices (test-random-real)) `(a 1))
                               (list f32-storage-class     (lambda indices (test-random-real)) `(a 1))
                               (list f64-storage-class     (lambda indices (test-random-real)) `(a 1))
                               (list char-storage-class    (lambda indices (random-char)) `(a 1))
@@ -4437,6 +4462,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                               (list s16-storage-class     (lambda indices (random (- (expt 2 15)) (expt 2 15))))
                               (list s32-storage-class     (lambda indices (random (- (expt 2 31)) (expt 2 31))))
                               (list s64-storage-class     (lambda indices (random (- (expt 2 63)) (expt 2 63))))
+                              (list f16-storage-class     (lambda indices (test-random-real)))
                               (list f32-storage-class     (lambda indices (test-random-real)))
                               (list f64-storage-class     (lambda indices (test-random-real)))
                               (list char-storage-class    (lambda indices (random-char)))
@@ -6561,7 +6587,8 @@ that computes the componentwise products when we need them, the times are
                 1))))
        (A (make-array domain A_))
        (array-list '()))
-  (set! array-list (cons (array-copy A) array-list))
+  (let ((temp (array-copy A)))
+    (set! array-list (cons temp array-list)))
   (if call-cont
       (begin
         (set! call-cont #f)
@@ -6587,7 +6614,8 @@ that computes the componentwise products when we need them, the times are
                 1))))
        (A (make-array domain A_))
        (array-list '()))
-  (set! array-list (cons (array-append 1 (list A B)) array-list))
+  (let ((temp (array-append 1 (list A B))))
+    (set! array-list (cons temp array-list)))
   (if call-cont
       (begin
         (set! call-cont #f)
@@ -6613,7 +6641,8 @@ that computes the componentwise products when we need them, the times are
                 1))))
        (A (make-array domain A_))
        (array-list '()))
-  (set! array-list (cons (array-stack 1 (list A B)) array-list))
+  (let ((temp (array-stack 1 (list A B))))
+    (set! array-list (cons temp array-list)))
   (if call-cont
       (begin
         (set! call-cont #f)
@@ -6640,7 +6669,8 @@ that computes the componentwise products when we need them, the times are
        (A (make-array domain A_))
        (C (list*->array 2 (list (list A B))))
        (array-list '()))
-  (set! array-list (cons (array-block C) array-list))
+  (let ((temp (array-block C)))
+    (set! array-list (cons temp array-list)))
   (if call-cont
       (begin
         (set! call-cont #f)
@@ -6667,7 +6697,8 @@ that computes the componentwise products when we need them, the times are
        (A (make-array domain A_))
        (C (list*->array 1 (list A B)))
        (array-list '()))
-  (set! array-list (cons (array-decurry C) array-list))
+  (let ((temp (array-decurry C)))
+    (set! array-list (cons temp array-list)))
   (if call-cont
       (begin
         (set! call-cont #f)
@@ -6694,7 +6725,8 @@ that computes the componentwise products when we need them, the times are
                 1))))
        (A (make-array domain A_))
        (array-list '()))
-  (set! array-list (cons (array-copy! A) array-list))
+  (let ((temp (array-copy! A)))
+    (set! array-list (cons temp array-list)))
   (if call-cont
       (begin
         (set! call-cont #f)
@@ -6714,7 +6746,8 @@ that computes the componentwise products when we need them, the times are
                 1))))
        (A (make-array domain A_))
        (array-list '()))
-  (set! array-list (cons (array-append 1 (list A B)) array-list))
+  (let ((temp (array-append! 1 (list A B))))
+    (set! array-list (cons temp array-list)))
   (if call-cont
       (begin
         (set! call-cont #f)
@@ -6734,7 +6767,8 @@ that computes the componentwise products when we need them, the times are
                 1))))
        (A (make-array domain A_))
        (array-list '()))
-  (set! array-list (cons (array-stack! 1 (list A B)) array-list))
+  (let ((temp (array-stack! 1 (list A B))))
+    (set! array-list (cons temp array-list)))
   (if call-cont
       (begin
         (set! call-cont #f)
@@ -6755,7 +6789,8 @@ that computes the componentwise products when we need them, the times are
        (A (make-array domain A_))
        (C (list*->array 2 (list (list A B))))
        (array-list '()))
-  (set! array-list (cons (array-block! C) array-list))
+  (let ((temp (array-block! C)))
+    (set! array-list (cons temp array-list)))
   (if call-cont
       (begin
         (set! call-cont #f)
@@ -6776,7 +6811,8 @@ that computes the componentwise products when we need them, the times are
        (A (make-array domain A_))
        (C (list*->array 1 (list A B)))
        (array-list '()))
-  (set! array-list (cons (array-decurry! C) array-list))
+  (let ((temp (array-decurry! C)))
+    (set! array-list (cons temp array-list)))
   (if call-cont
       (begin
         (set! call-cont #f)
