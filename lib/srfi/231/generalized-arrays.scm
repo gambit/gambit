@@ -4689,7 +4689,7 @@ OTHER DEALINGS IN THE SOFTWARE.
          (%%move-array-elements destination
                                 source
                                 "array-assign!: ")
-         destination)))
+         (void))))
 
 (define (%%array-inner-product A f g B)
   ;; Copy the curried arrays for efficiency.
