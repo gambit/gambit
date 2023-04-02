@@ -1474,38 +1474,40 @@ OTHER DEALINGS IN THE SOFTWARE.
     ;; (pp result)
     result))
 
-(macro-make-representation->double f16 10 5 15)
-(macro-make-double->representation f16 10 5 15)
-
 (define f16-storage-class
-  (make-storage-class
-   ;; getter
-   (lambda (body i)
-     (f16->double (u16vector-ref body i)))
-   ;; setter
-   (lambda (body i obj)
-     (u16vector-set! body i (double->f16 obj)) (void))
-   ;; checker
-   (lambda (obj)
-     (flonum? obj))
-   ;; maker
-   (lambda (n val)
-     (make-u16vector n (double->f16 val)))
-   ;; copier
-   u16vector-copy!
-   ;; length
-   (lambda (body)
-     (u16vector-length body))
-   ;; default
-   0.
-   ;; data?
-   (lambda (data)
-     (u16vector? data))
-   ;; data->body
-   (lambda (data)
-     (if (u16vector? data)
-         data
-         (error "Expecting a u16vector passed to (storage-class-data->body f16-storage-class): " data)))))
+  (let ()
+
+    (macro-make-representation->double f16 10 5 15)
+    (macro-make-double->representation f16 10 5 15)
+
+    (make-storage-class
+     ;; getter
+     (lambda (body i)
+       (f16->double (u16vector-ref body i)))
+     ;; setter
+     (lambda (body i obj)
+       (u16vector-set! body i (double->f16 obj)) (void))
+     ;; checker
+     (lambda (obj)
+       (flonum? obj))
+     ;; maker
+     (lambda (n val)
+       (make-u16vector n (double->f16 val)))
+     ;; copier
+     u16vector-copy!
+     ;; length
+     (lambda (body)
+       (u16vector-length body))
+     ;; default
+     0.
+     ;; data?
+     (lambda (data)
+       (u16vector? data))
+     ;; data->body
+     (lambda (data)
+       (if (u16vector? data)
+           data
+           (error "Expecting a u16vector passed to (storage-class-data->body f16-storage-class): " data))))))
 
 #|
 
