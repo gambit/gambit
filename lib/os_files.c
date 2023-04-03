@@ -1062,7 +1062,8 @@ ___SCMOBJ ___os_path_tempdir ___PVOID
       else
         ___release_scmobj (result);
 
-      ___FREE_MEM(cstr);
+      if (cstr != tempdir_default)
+        ___FREE_MEM(cstr);
     }
 
   return result;
