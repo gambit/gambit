@@ -2258,17 +2258,16 @@
                 ((ifjump)
                   (let ((true (ifjump-true branch))
                         (false (ifjump-false branch)))
-                    (list (replacement-lbl-num true)
-                          (replacement-lbl-num false))))
+                    (list true false)))
                 ((jump)
                   (let ((opnd (jump-opnd branch))
                         (ret (jump-ret branch)))
                     (append
                       (if (lbl? opnd)
-                          (list (replacement-lbl-num (lbl-num opnd)))
+                          (list (lbl-num opnd))
                           '())
                       (if ret
-                          (list (replacement-lbl-num ret))
+                          (list ret)
                           '()))))
                 (else
                   (error 'update-reachability! "unsupported branch type"))))))
@@ -2305,7 +2304,7 @@
           (bb-non-branch-instrs bb))))
 
       (define (find-references bb)
-        (append (find-destinations bb) (find-labels bb)))
+        (map replacement-lbl-num (append (find-destinations bb) (find-labels bb))))
 
       (write (list 'UPDATING-REACHABILITY))(newline)
       (set! reachable-table (make-table))
