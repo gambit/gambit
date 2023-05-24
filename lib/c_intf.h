@@ -1,6 +1,6 @@
 /* File: "c_intf.h" */
 
-/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___C_INTF_H
 #define ___C_INTF_H
@@ -77,6 +77,7 @@ extern ___SCMOBJ err_code_from_char_encoding
 #define ___UNICODE_BACKSPACE   8
 #define ___UNICODE_TAB         9
 #define ___UNICODE_LINEFEED    10
+#define ___UNICODE_VTAB        11
 #define ___UNICODE_RETURN      13
 #define ___UNICODE_ESCAPE      27
 #define ___UNICODE_SPACE       32

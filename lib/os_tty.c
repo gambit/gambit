@@ -1,6 +1,6 @@
 /* File: "os_tty.c" */
 
-/* Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -3251,7 +3251,7 @@ ___U8 *text_arg;)
 #else
 
         {
-          ___C c = ___UNICODE_BELL;
+          ___C c = TERMINAL_CTRL - op;
           e = lineeditor_output (d, &c, 1);
         }
 
@@ -3302,7 +3302,7 @@ ___U8 *text_arg;)
 #else
 
         {
-          ___C c = ___UNICODE_BACKSPACE;
+          ___C c = TERMINAL_CTRL - op;
           e = lineeditor_output (d, &c, 1);
         }
 
@@ -3320,13 +3320,15 @@ ___U8 *text_arg;)
       }
 
     case TERMINAL_CTRL - ___UNICODE_LINEFEED:
+    case TERMINAL_CTRL - ___UNICODE_VTAB:
       {
         if (d->terminal_row < d->terminal_nb_rows-1)
           d->terminal_row++;
         else
           d->current.line_start -= d->terminal_nb_cols;
 
-        if (d->linefeed_moves_to_left_margin || !d->output_raw)
+        if ((op == TERMINAL_CTRL - ___UNICODE_LINEFEED &&
+             d->linefeed_moves_to_left_margin) || !d->output_raw)
           d->terminal_col = 0;
 
         d->terminal_cursor = d->terminal_row * d->terminal_nb_cols +
@@ -3389,7 +3391,7 @@ ___U8 *text_arg;)
 #else
 
         {
-          ___C c = ___UNICODE_LINEFEED;
+          ___C c = TERMINAL_CTRL - op;
           e = lineeditor_output (d, &c, 1);
         }
 
@@ -3425,7 +3427,7 @@ ___U8 *text_arg;)
 #else
 
         {
-          ___C c = ___UNICODE_RETURN;
+          ___C c = TERMINAL_CTRL - op;
           e = lineeditor_output (d, &c, 1);
         }
 
