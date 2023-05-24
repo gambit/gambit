@@ -6,7 +6,9 @@
 
 (##declare
   (standard-bindings)
-  (fixnum)
+  ;(fixnum)
+  (safe)
+  (debug)
 )
 
 (##define-macro (include-adt filename)

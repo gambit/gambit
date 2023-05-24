@@ -2273,6 +2273,40 @@
                 (else
                   (error 'update-reachability! "unsupported branch type"))))))
 
+      (define (find-labels bb)
+        (define (scan opnd)
+          (cond ((not opnd) '())
+                ((lbl? opnd) (list (lbl-num opnd)))
+                ((clo? opnd) (scan (clo-base opnd)))
+                (else '())))
+
+        (define (scan* . opnds)
+          (apply append
+            (map
+              (lambda (o) (if (list? o) (apply scan* o) (scan o)))
+              opnds)))
+
+        (apply append (map
+          (lambda (instr)
+            (case (gvm-instr-kind instr)
+              ((apply)
+                (scan* (apply-opnds instr) (or (apply-loc instr) '())))
+              ((copy)
+                (scan* (copy-opnd instr) (copy-loc instr)))
+              ((close)
+                (apply append (map
+                  (lambda (parm)
+                    (append
+                      (list (closure-parms-lbl parm))
+                      (scan (closure-parms-loc parm))
+                      (scan* (closure-parms-opnds parm))))
+                  (close-parms instr))))
+              (else (error 'update-reachability! "unsupported non-branch type"))))
+          (bb-non-branch-instrs bb))))
+
+      (define (find-references bb)
+        (append (find-destinations bb) (find-labels bb)))
+
       (write (list 'UPDATING-REACHABILITY))(newline)
       (set! reachable-table (make-table))
       (let* ((entry-lbl (bbs-entry-lbl-num bbs))
@@ -2283,16 +2317,9 @@
                    (starting-label (cdar all-types)))
               (let visit ((lbl starting-label))
                   (if (not (reachable? lbl)) ;; not visited
-                  (begin
-                      (reachability-set! lbl #t)
                       (let* ((bb (lbl-num->bb lbl new-bbs)))
-                        (if bb
-                            (let loop ((dests (find-destinations bb)))
-                                ;;(write (list 'reachability lbl '-> dests))(newline)
-                                (if (pair? dests)
-                                    (begin
-                                      (visit (car dests))
-                                      (loop (cdr dests)))))))))))))
+                        (reachability-set! lbl #t)
+                        (if bb (for-each visit (find-references bb)))))))))
       (if debug-bbv? (reachability-trace))
 
       ;; remove unreachable versions from live versions of all blocks
@@ -2717,7 +2744,7 @@
                                           (closure-parms-opnds parms)))
                                     (types-entry
                                      (let loop ((opnds opnds)
-                                                (i 1reach)
+                                                (i 1)
                                                 (types-entry
                                                  (generic-frame-types
                                                   (gvm-instr-frame entry-label))))
@@ -4864,7 +4891,7 @@
 (define (register-set! registers n val)
   (stretchable-vector-set! registers n val))
 
-(define interpreter-trace? #f)
+(define interpreter-trace? #t)
 
 (define (interpret-debug-ln msg)
   (if interpreter-trace? (println msg)))
