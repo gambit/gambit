@@ -2122,7 +2122,7 @@
            (comment-add!
             label
             'cfg-bb-info
-            (list (cons 'info (apply string-append doms)))))))
+            (list (cons 'info (string-concatenate doms)))))))
    bbs))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -4147,7 +4147,7 @@
     ">"))
 
 (define (dot-digraph-gen-html-escape str)
-  (apply string-append
+  (string-concatenate
          (map (lambda (c)
                 (cond ((char=? c #\<) "&lt;")
                       ((char=? c #\>) "&gt;")
@@ -4179,7 +4179,7 @@
         (begin (display "        " port) (spaces (- n 8)))
         (begin (display " " port) (spaces (- n 1))))))
 
-  (let ((str (apply string-append
+  (let ((str (string-concatenate
                     (apply format-gvm-instr-code (cons gvm-instr bb)))))
     (display str port)
     (spaces (- 43 (string-length str)))
@@ -4196,7 +4196,7 @@
             (display y port)))))))
 
 (define (write-gvm-instr-frame gvm-instr port)
-  (display (apply string-append (format-gvm-instr-frame gvm-instr))
+  (display (string-concatenate (format-gvm-instr-frame gvm-instr))
            port))
 
 (define (format-gvm-instr-frame gvm-instr)
