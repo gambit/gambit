@@ -2230,17 +2230,35 @@
     (define update-reachability-required? #f)
 
     (define reachable-table (make-table))
-    (define (reachability-set! lbl r) (table-set! reachable-table lbl r))
+    (define (reachability-set! lbl r)
+      (table-set! reachable-table lbl r))
+
     (define (reachable? lbl) (table-ref reachable-table lbl #f))
 
     (define (all-reachables-exist?)
       (let ((missing-reachables (filter (lambda (l) (not (lbl-num->bb l new-bbs)))
                                         (map car (table->list reachable-table)))))
-        (if (null? missing-reachables)
-            #t
-            (begin
-              (display (list 'reachable-does-not-exist missing-reachables))(newline)
-              #f))))
+
+        (define (intersect l1 l2)
+          (if (null? l2)
+            '()
+            (if (memq (car l2) l1)
+                (cons (car l2) (intersect l1 (cdr l2)))
+                (intersect l1 (cdr l2)))))
+
+        (if (not (null? missing-reachables))
+          (begin (display (list 'reachables-do-not-exist missing-reachables))(newline)))
+
+        (bbs-for-each-bb
+          (lambda (bb)
+            (let ((missings (intersect (bb-references bb) missing-reachables)))
+              (for-each
+                (lambda (miss)
+                  (display (list (bb-lbl-num bb) '-> miss))(newline))
+                missings)))
+          new-bbs)
+
+        (null? missing-reachables)))
 
     (define (update-reachability!)
       ;(write (list 'UPDATING-REACHABILITY))(newline)
@@ -2264,9 +2282,8 @@
                       (let* ((bb (lbl-num->bb lbl new-bbs)))
                         (reachability-set! lbl #t)
                         (if bb
-                          (for-each
-                            visit
-                            (map replacement-lbl-num (bb-references bb))))))))))
+                          (let ((refs (map replacement-lbl-num (bb-references bb))))
+                            (for-each visit refs)))))))))
 
       ;; remove unreachable versions from live versions of all blocks
       (bbs-for-each-bb
@@ -2281,7 +2298,7 @@
                     0
                     (filter
                       (lambda (types-lbl) (reachable? (cdr types-lbl)))
-                    (vector-ref bb-versions 0)))
+                      (vector-ref bb-versions 0)))
                   ;; add back newly reachable versions to be processed
                   (for-each
                     (lambda (types-lbl)
@@ -2290,9 +2307,7 @@
                         (if (not (lbl-num->bb lbl new-bbs))
                             (queue-put!
                               work-queue
-                              (lambda ()
-                                (if (reachable? lbl) ;; only process this block if it is reachable
-                                    (walk-bb bb types 0 '() orig-lbl lbl))))))) ;; TODO cost and path?
+                              (lambda () (if (reachable? lbl) (walk-bb bb types 0 '() orig-lbl lbl))))))) ;; TODO cost and path?
                     (vector-ref bb-versions 0))))))
         bbs))
 
@@ -2795,7 +2810,6 @@
                                         (gvm-instr-frame gvm-instr)
                                         (gvm-instr-comment gvm-instr))
                                        (error)))))
-
                            (make-ifjump
                             test
                             opnds
@@ -2924,6 +2938,7 @@
                 ((queue-get! work-queue))
                 (if update-reachability-required? (update-reachability!))
                 (loop)))))
+              
       (let ((result (bbs-cleanup new-bbs)))
         (all-reachables-exist?)
         result))
