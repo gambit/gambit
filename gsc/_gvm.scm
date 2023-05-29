@@ -737,7 +737,9 @@
     (bb-add-reference! bb lbl))
 
   (define (direct-branch lbl)
-    (bb-add-precedent! (get-bb (reference lbl)) (bb-lbl-num bb)))
+    ;; while building the versionned CFG, some blocks may not exist yet/anymore
+    (let ((prec (get-bb (reference lbl))))
+      (if prec (bb-add-precedent! prec (bb-lbl-num bb)))))
 
   (define (scan-opnd gvm-opnd)
     (cond ((not gvm-opnd))
@@ -2232,82 +2234,25 @@
     (define (reachable? lbl) (table-ref reachable-table lbl #f))
 
     (define (all-reachables-exist?)
-        (let loop ((reachable-blocks (map car (table->list reachable-table))))
-        (cond
-            ((null? reachable-blocks) #t)
-            ((lbl-num->bb (car reachable-blocks) new-bbs) (loop (cdr reachable-blocks)))
-            (else
-              (display (list 'reachable-does-not-exist (car reachable-blocks)))(newline)
+      (let ((missing-reachables (filter (lambda (l) (not (lbl-num->bb l new-bbs)))
+                                        (map car (table->list reachable-table)))))
+        (if (null? missing-reachables)
+            #t
+            (begin
+              (display (list 'reachable-does-not-exist missing-reachables))(newline)
               #f))))
 
     (define (update-reachability!)
-      (define (reachability-trace)
-        (write (list 'REACHABLES= (table-length reachable-table)))(newline)
-        (table-for-each
-        (lambda (lbl reachable) (display lbl)
-                                (display #\space)
-                                (display (not (not (lbl-num->bb lbl new-bbs))))
-                                (display #\space))
-        reachable-table)(newline))
+      ;(write (list 'UPDATING-REACHABILITY))(newline)
 
-      (define (find-destinations bb)
-        (let* ((branch (bb-branch-instr bb)))
-          (if (null? branch)
-              (error 'update-reachability! "uninitialized bb" bb)
-              (case (gvm-instr-kind branch)
-                ((ifjump)
-                  (let ((true (ifjump-true branch))
-                        (false (ifjump-false branch)))
-                    (list true false)))
-                ((jump)
-                  (let ((opnd (jump-opnd branch))
-                        (ret (jump-ret branch)))
-                    (append
-                      (if (lbl? opnd)
-                          (list (lbl-num opnd))
-                          '())
-                      (if ret
-                          (list ret)
-                          '()))))
-                (else
-                  (error 'update-reachability! "unsupported branch type"))))))
+      ;; recompute basic block references
+      (bbs-determine-refs! bbs)
+      (bbs-determine-refs! new-bbs)
 
-      (define (find-labels bb)
-        (define (scan opnd)
-          (cond ((not opnd) '())
-                ((lbl? opnd) (list (lbl-num opnd)))
-                ((clo? opnd) (scan (clo-base opnd)))
-                (else '())))
-
-        (define (scan* . opnds)
-          (apply append
-            (map
-              (lambda (o) (if (list? o) (apply scan* o) (scan o)))
-              opnds)))
-
-        (apply append (map
-          (lambda (instr)
-            (case (gvm-instr-kind instr)
-              ((apply)
-                (scan* (apply-opnds instr) (or (apply-loc instr) '())))
-              ((copy)
-                (scan* (copy-opnd instr) (copy-loc instr)))
-              ((close)
-                (apply append (map
-                  (lambda (parm)
-                    (append
-                      (list (closure-parms-lbl parm))
-                      (scan (closure-parms-loc parm))
-                      (scan* (closure-parms-opnds parm))))
-                  (close-parms instr))))
-              (else (error 'update-reachability! "unsupported non-branch type"))))
-          (bb-non-branch-instrs bb))))
-
-      (define (find-references bb)
-        (map replacement-lbl-num (append (find-destinations bb) (find-labels bb))))
-
-      (write (list 'UPDATING-REACHABILITY))(newline)
+      ;; reinitialize reachable blocks
       (set! reachable-table (make-table))
+
+      ;; DFS through CFG references
       (let* ((entry-lbl (bbs-entry-lbl-num bbs))
              (bb-versions (table-ref versions entry-lbl #f)))
         (if bb-versions
@@ -2318,8 +2263,10 @@
                   (if (not (reachable? lbl)) ;; not visited
                       (let* ((bb (lbl-num->bb lbl new-bbs)))
                         (reachability-set! lbl #t)
-                        (if bb (for-each visit (find-references bb)))))))))
-      (if debug-bbv? (reachability-trace))
+                        (if bb
+                          (for-each
+                            visit
+                            (map replacement-lbl-num (bb-references bb))))))))))
 
       ;; remove unreachable versions from live versions of all blocks
       (bbs-for-each-bb
@@ -2510,7 +2457,7 @@
                           (set! types-before merged-types)
                           (set! new-lbl new-lbl2)
 
-                          (write (list 'MERGED-TYPES= merged-types))(newline)
+                          ;(write (list 'MERGED-TYPES= merged-types))(newline)
                         
                           (set! update-reachability-required? #t)))))
 
@@ -2977,7 +2924,9 @@
                 ((queue-get! work-queue))
                 (if update-reachability-required? (update-reachability!))
                 (loop)))))
-      (bbs-cleanup new-bbs))
+      (let ((result (bbs-cleanup new-bbs)))
+        (all-reachables-exist?)
+        result))
 
 ;;  (write-bbs bbs (current-output-port))
 
