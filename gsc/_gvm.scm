@@ -738,7 +738,7 @@
 
   (define (direct-branch lbl)
     ;; while building the versionned CFG, some blocks may not exist yet/anymore
-    (let ((prec (get-bb (reference lbl))))
+    (let* ((prec (get-bb (reference lbl))))
       (if prec (bb-add-precedent! prec (bb-lbl-num bb)))))
 
   (define (scan-opnd gvm-opnd)
@@ -2257,14 +2257,16 @@
                   (display (list (bb-lbl-num bb) '-> miss))(newline))
                 missings)))
           new-bbs)
-
-        (null? missing-reachables)))
+        ;(if (pair? missing-reachables) (step))
+        (if (pair? missing-reachables)
+          (error "all-reachables-exist?" "no"))))
 
     (define (update-reachability!)
       ;(write (list 'UPDATING-REACHABILITY))(newline)
 
       ;; recompute basic block references
-      (bbs-determine-refs! bbs)
+      ;(bbs-determine-refs! bbs)
+
       (bbs-determine-refs! new-bbs)
 
       ;; reinitialize reachable blocks
@@ -2311,19 +2313,21 @@
                     (vector-ref bb-versions 0))))))
         bbs))
 
-      (define (bbs-cleanup bbs)
+      (define (bbs-cleanup)
         ;; remove unreachable bb
         ;; required to avoid having uninitialized bb in the bbs
+        (update-reachability!)
         (bbs-for-each-bb
           (lambda (bb)
             (let ((lbl (bb-lbl-num bb)))
               (if (not (reachable? lbl))
                   (begin
                     ;;(write (list 'deleting-unreachable lbl))(newline)
-                    (bbs-bb-remove! bbs lbl)))))
-          bbs))
+                    (bbs-bb-remove! new-bbs lbl)))))
+          new-bbs))
 
       (define (reach lbl bbvctx)
+
         (let* ((types-before (bbvctx-types bbvctx))
                (cost (bbvctx-cost bbvctx))
                (path (bbvctx-path bbvctx))
@@ -2498,7 +2502,6 @@
 
       (define (walk-bb bb types-before cost path orig-lbl new-lbl)
         ;;(pprint `(walk-bb ,(bb-lbl-num bb) ,types-before ,cost ,path ,new-lbl))
-
         (let ((new-bb #f))
 
           (define show #t)
@@ -2936,12 +2939,11 @@
               (begin
                 (set! update-reachability-required? #f)
                 ((queue-get! work-queue))
-                (if update-reachability-required? (update-reachability!))
+                (if update-reachability-required? (bbs-cleanup))
                 (loop)))))
               
-      (let ((result (bbs-cleanup new-bbs)))
-        (all-reachables-exist?)
-        result))
+        (bbs-cleanup)
+        (all-reachables-exist?))
 
 ;;  (write-bbs bbs (current-output-port))
 
