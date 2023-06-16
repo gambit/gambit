@@ -249,6 +249,57 @@
               (c-intf (vector-ref v2 2))
               (parsed-program (normalize-program lst)))
 
+         (define (lset-minus a b)
+           (filter (lambda (x)
+                     (not (member x b)))
+                   a))
+
+         (let* ((origins (env-var-origins-ref env))
+                (name->ref-alist (map (lambda (var) (cons
+                                                (var-name var)
+                                                (var-refs var)))
+                                      (env-vars-ref env)))
+                (definitions (filter (lambda (d)
+                                       (eq? (vector-ref d 0) def-tag))
+                                     lst))
+                (defined-names (map var-name (map def-var definitions)))
+                (used-names (map var-name (env-vars-ref env)))
+                ;; the variable names that come from a (##namespace ("..."))
+                ;; clause.
+                (univ-names (filter (lambda (name)
+                                      (let ((pair (assoc name origins)))
+                                        (and pair
+                                             (or (not (cdr pair))
+                                                 (null? (cddr pair))))))
+                                    used-names)))
+
+           (define (map-filter f lst)
+             (if (pair? lst)
+                 (let ((val (f (car lst))))
+                   (if val
+                       (cons val (map-filter f (cdr lst)))
+                       (map-filter f (cdr lst))))
+                 lst))
+
+           (for-each
+            (lambda (name)
+
+              (let ((name-and-refs (assoc name name->ref-alist)))
+                (if name-and-refs
+                    (let ((refs (map-filter (lambda (x) (and (pair? x)
+                                                        (car x)))
+                                            (vector->list (cdr name-and-refs)))))
+                      (for-each
+                       (lambda (ref)
+                         (compiler-user-warning
+                          (source-locat (node-source ref))
+                          (string-append
+                           "missing definition for `"
+                           (symbol->string (car name-and-refs))
+                           "`")))
+                       refs)))))
+            (lset-minus univ-names defined-names)))
+
          (inner parsed-program
                 env
                 root
