@@ -58,7 +58,23 @@
 
 (define make-global-environment #f)
 (set! make-global-environment
-      (lambda () (env-frame #f '())))
+  (lambda ()
+    (vector
+     ;; cell containing variables in this frame and an association between each
+     ;; symbol and it's namespace
+     (cons '() #f)
+     ;; macro definitions
+     '()
+     ;; declarations
+     '()
+     ;; namespace
+     '()
+     ;; parent env
+     #f
+     ;; externals. This field is only used in the global environment, but many
+     ;; functional setter functions assume `make-global-environment` and
+     ;; `env-frame` return the same shape of object.
+     (make-table))))
 
 (define (env-frame env vars)
   (vector
@@ -76,7 +92,7 @@
    ;; externals. This field is only used in the global environment, but many
    ;; functional setter functions assume `make-global-environment` and
    ;; `env-frame` return the same shape of object.
-   (make-table)))
+   (if env (env-externals-ref env) (make-table))))
 
 (define (env-new-var! env name source)
   (let* ((glob (not (env-parent-ref env)))
@@ -149,7 +165,7 @@
                (space (car x))
                (aliases (cdr x)))
           (if (null? aliases)
-              (cons (make-full-name space name) #f)
+              (cons (make-full-name space name) x)
               (let ((a (assq name aliases)))
                 (if a
                     (cons (make-full-name space (cdr a))
