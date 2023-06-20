@@ -64,7 +64,7 @@
   (vector
    ;; cell containing variables in this frame and an association between each
    ;; symbol and it's namespace
-   (cons vars (cons '() #f))
+   (cons vars #f)
    ;; macro definitions
    '()
    ;; declarations
@@ -72,7 +72,11 @@
    ;; namespace
    '()
    ;; parent env
-   env))
+   env
+   ;; externals. This field is only used in the global environment, but many
+   ;; functional setter functions assume `make-global-environment` and
+   ;; `env-frame` return the same shape of object.
+   (make-table)))
 
 (define (env-new-var! env name source)
   (let* ((glob (not (env-parent-ref env)))
@@ -91,7 +95,8 @@
           macro
           (env-decl-ref env)
           (env-namespace-ref env)
-          (env-parent-ref env)))
+          (env-parent-ref env)
+          (env-externals-ref env)))
 
 (define (env-declare env d)
   (env-decl-set env (cons d (env-decl-ref env))))
@@ -101,7 +106,8 @@
           (env-macros-ref env)
           decl
           (env-namespace-ref env)
-          (env-parent-ref env)))
+          (env-parent-ref env)
+          (env-externals-ref env)))
 
 (define (env-namespace env n)
   (env-namespace-set env (cons n (env-namespace-ref env))))
@@ -111,16 +117,16 @@
           (env-macros-ref env)
           (env-decl-ref env)
           namespace
-          (env-parent-ref env)))
+          (env-parent-ref env)
+          (env-externals-ref env)))
 
-(define (env-var-origins-ref env)       (cadr (vector-ref env 0)))
-(define (env-var-origins-set! env ors)  (set-car! (cdr (vector-ref env 0)) ors))
 (define (env-vars-ref env)              (car (vector-ref env 0)))
 (define (env-vars-set! env vars)        (set-car! (vector-ref env 0) vars))
 (define (env-macros-ref env)            (vector-ref env 1))
 (define (env-decl-ref env)              (vector-ref env 2))
 (define (env-namespace-ref env)         (vector-ref env 3))
 (define (env-parent-ref env)            (vector-ref env 4))
+(define (env-externals-ref env)         (vector-ref env 5))
 
 (define (env-namespace-lookup env name)
   (let loop ((lst (env-namespace-ref env)))
@@ -153,24 +159,17 @@
 
 
 (define (env-lookup env name stop-at-first-frame? proc)
-
-  (define (assoc-set! al k v)
-    (let ((cell (assoc k al)))
-      (if cell
-          (begin
-            (set-cdr! cell v)
-            al)
-          (cons (cons k v) al))))
-
   (define (search env name full?)
     (if full?
         (search* env name #t)
         (let ((full-name-and-ns (env-namespace-lookup-both env name)))
           (if full-name-and-ns
-              (begin
-                (env-var-origins-set! env (assoc-set! (env-var-origins-ref env)
-                                                      (car full-name-and-ns)
-                                                      (cdr full-name-and-ns)))
+              (let ((full-name (car full-name-and-ns))
+                    (ns (cdr full-name-and-ns))
+                    (ext (env-externals-ref env)))
+                (table-set! ext
+                            full-name
+                            ns)
                 (search* env (car full-name-and-ns) #t))
               (search* env name #f)))))
 

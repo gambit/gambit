@@ -248,29 +248,27 @@
               (env (vector-ref v2 1))
               (c-intf (vector-ref v2 2))
               (parsed-program (normalize-program lst)))
-
          (define (lset-minus a b)
-           (filter (lambda (x)
+           (keep (lambda (x)
                      (not (member x b)))
                    a))
 
-         (let* ((origins (env-var-origins-ref env))
+         (let* ((externals (env-externals-ref env))
                 (name->ref-alist (map (lambda (var) (cons
                                                 (var-name var)
                                                 (var-refs var)))
                                       (env-vars-ref env)))
-                (definitions (filter (lambda (d)
-                                       (eq? (vector-ref d 0) def-tag))
-                                     lst))
+                (definitions (keep (lambda (d)
+                                     (eq? (vector-ref d 0) def-tag))
+                                   lst))
                 (defined-names (map var-name (map def-var definitions)))
                 (used-names (map var-name (env-vars-ref env)))
                 ;; the variable names that come from a (##namespace ("..."))
                 ;; clause.
-                (univ-names (filter (lambda (name)
-                                      (let ((pair (assoc name origins)))
-                                        (and pair
-                                             (or (not (cdr pair))
-                                                 (null? (cddr pair))))))
+                (univ-names (keep (lambda (name)
+                                      (let ((ns (table-ref externals name #f)))
+                                        (or (not ns)
+                                            (null? (cdr ns)))))
                                     used-names)))
 
            (define (map-filter f lst)
@@ -294,9 +292,10 @@
                          (compiler-user-warning
                           (source-locat (node-source ref))
                           (string-append
-                           "missing definition for `"
+                           "\""
                            (symbol->string (car name-and-refs))
-                           "`")))
+                           "\""
+                           " is not defined")))
                        refs)))))
             (lset-minus univ-names defined-names)))
 
