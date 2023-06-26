@@ -59,22 +59,7 @@
 (define make-global-environment #f)
 (set! make-global-environment
   (lambda ()
-    (vector
-     ;; cell containing variables in this frame and an association between each
-     ;; symbol and it's namespace
-     (cons '() #f)
-     ;; macro definitions
-     '()
-     ;; declarations
-     '()
-     ;; namespace
-     '()
-     ;; parent env
-     #f
-     ;; externals. This field is only used in the global environment, but many
-     ;; functional setter functions assume `make-global-environment` and
-     ;; `env-frame` return the same shape of object.
-     (make-table))))
+    (env-frame #f '())))
 
 (define (env-frame env vars)
   (vector
