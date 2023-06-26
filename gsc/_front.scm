@@ -248,10 +248,6 @@
               (env (vector-ref v2 1))
               (c-intf (vector-ref v2 2))
               (parsed-program (normalize-program lst)))
-         (define (lset-minus a b)
-           (keep (lambda (x)
-                     (not (member x b)))
-                   a))
 
          (let* ((externals (env-externals-ref env))
                 (name->ref-alist (map (lambda (var) (cons
@@ -267,10 +263,10 @@
                 ;; clause.
                 (univ-names (keep (lambda (name)
                                       (let ((ns (table-ref externals name #f)))
-                                        (or (not ns)
-                                            (null? (cdr ns)))))
+                                        (and ns
+                                             (null? (cdr ns)))))
                                     used-names))
-                (undefined-names (lset-minus univ-names defined-names)))
+                (undefined-names (lset-difference univ-names defined-names)))
 
            (define (map-filter f lst)
              (if (pair? lst)
