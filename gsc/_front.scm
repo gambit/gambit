@@ -249,6 +249,66 @@
               (c-intf (vector-ref v2 2))
               (parsed-program (normalize-program lst)))
 
+         (let* ((externals (env-externals-ref env))
+                (name->ref-alist (map (lambda (var) (cons
+                                                (var-name var)
+                                                (var-refs var)))
+                                      (env-vars-ref env)))
+                (definitions (keep (lambda (d)
+                                     (eq? (vector-ref d 0) def-tag))
+                                   lst))
+                (defined-names (map var-name (map def-var definitions)))
+                (used-names (map var-name (env-vars-ref env)))
+                ;; the variable names that come from a (##namespace ("..."))
+                ;; clause.
+                (univ-names (keep (lambda (name)
+                                      (let ((ns (table-ref externals name #f)))
+                                        (and ns
+                                             (null? (cdr ns)))))
+                                    used-names))
+                (undefined-names (lset-difference univ-names defined-names)))
+
+           (define (map-filter f lst)
+             (if (pair? lst)
+                 (let ((val (f (car lst))))
+                   (if val
+                       (cons val (map-filter f (cdr lst)))
+                       (map-filter f (cdr lst))))
+                 lst))
+
+           (let ((namespace-to-undefined-names
+                  (let ((table (make-table)))
+                    (let lp ((undefined-names undefined-names))
+                      (if (pair? undefined-names)
+                          (let* ((name (car undefined-names))
+                                 (its-namespace (table-ref externals name #f)))
+                            (table-set! table
+                                        its-namespace
+                                        (cons name (table-ref table its-namespace '())))
+                            (lp (cdr undefined-names)))
+                          table)))))
+             (for-each
+              (lambda (ns-and-names)
+                (for-each
+                 (lambda (name)
+                   (let* ((name-and-refs (assoc name name->ref-alist)))
+                     (if name-and-refs
+                         (let ((refs (map-filter (lambda (x) (and (pair? x)
+                                                             (car x)))
+                                                 (vector->list (cdr name-and-refs)))))
+                           (for-each
+                            (lambda (ref)
+                              (compiler-user-warning
+                               (source-locat (node-source ref))
+                               (string-append
+                                "\""
+                                (symbol->string name)
+                                "\""
+                                " is not defined")))
+                            refs)))))
+                 (cdr ns-and-names)))
+              (table->list namespace-to-undefined-names))))
+
          (inner parsed-program
                 env
                 root

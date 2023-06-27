@@ -1001,5 +1001,10 @@
 
   (list->string (map byte->char (uint32vect->bytes uint32vect))))
 
+(define (lset-difference a b)
+  (keep (lambda (x)
+          (not (member x b)))
+        a))
+
 ;;;============================================================================
 )
