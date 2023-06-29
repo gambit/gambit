@@ -296,16 +296,14 @@
                          (let ((refs (map-filter (lambda (x) (and (pair? x)
                                                              (car x)))
                                                  (vector->list (cdr name-and-refs)))))
-                           (for-each
-                            (lambda (ref)
-                              (compiler-user-warning
-                               (source-locat (node-source ref))
+                           (if (pair? refs)
+                               (compiler-user-warning
+                               (source-locat (node-source (car refs)))
                                (string-append
                                 "\""
                                 (symbol->string name)
                                 "\""
-                                " is not defined")))
-                            refs)))))
+                                " is not defined")))))))
                  (cdr ns-and-names)))
               (table->list namespace-to-undefined-names))))
 
