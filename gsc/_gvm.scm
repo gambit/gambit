@@ -2316,15 +2316,27 @@
       (define (bbs-cleanup)
         ;; remove unreachable bb
         ;; required to avoid having uninitialized bb in the bbs
+        (write (list 'GC-REACHABILITY))(newline)
         (update-reachability!)
         (bbs-for-each-bb
           (lambda (bb)
             (let ((lbl (bb-lbl-num bb)))
-              (if (not (reachable? lbl))
-                  (begin
-                    ;;(write (list 'deleting-unreachable lbl))(newline)
-                    (bbs-bb-remove! new-bbs lbl)))))
-          new-bbs))
+              (if (not (reachable? lbl)) (bbs-bb-remove! new-bbs lbl))))
+          new-bbs)
+        
+        (bbs-for-each-bb
+          (lambda (bb)
+            (let* ((lbl (bb-lbl-num bb))
+                   (bb-versions (table-ref versions lbl #f)))
+              (if bb-versions
+                  (let* ((types-lbl-alist (vector-ref bb-versions 0))
+                         (reachable-versions
+                           (filter
+                             (lambda (p) (reachable? (replacement-lbl-num (cdr p))))
+                             types-lbl-alist)))
+                    ;; remove unreachable versions from bb
+                    (vector-set! bb-versions 0 reachable-versions)))))
+        bbs))
 
       (define (reach lbl bbvctx)
 
@@ -2942,7 +2954,7 @@
                 (if update-reachability-required? (bbs-cleanup))
                 (loop)))))
               
-        (bbs-cleanup)
+        ;(bbs-cleanup)
         (all-reachables-exist?))
 
 ;;  (write-bbs bbs (current-output-port))
