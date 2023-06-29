@@ -9050,13 +9050,9 @@
 
   (define (pairwise-equal? . args)
     (define (pairwise-equal?-aux args)
-      (cond
-        ((or (null? args)
-             (null? (cdr args)))
-           #t)
-        (else
-          (and (equal? (car args) (cadr args))
-               (pairwise-equal? (cdr args))))))
+      (if (or (null? args) (null? (cdr args)))
+        #t
+        (and (equal? (car args) (cadr args)) (pairwise-equal?-aux (cdr args)))))
     (pairwise-equal?-aux args))
 
   (let* ((f1 (type-motley-force tctx type1))
@@ -9064,16 +9060,18 @@
          (hi1 (type-fixnum-hi f1))
          (f2 (type-motley-force tctx type2))
          (lo2 (type-fixnum-lo f2))
-         (hi2 (type-fixnum-hi f2)))
-    (cond
-      ((pairwise-equal? lo1 lo2 hi1 hi2) ;; equal singletons
-        (cons (list type1 type2) #f)) ;; always equal
-      ((or (type-fixnum-< hi1 lo2)
-           (type-fixnum-< hi2 lo1))
-        (cons #f (list type1 type2))) ;; never equal
-      (else
-        (cons (list type1 type2)
-              (list type1 type2))))))
+         (hi2 (type-fixnum-hi f2))
+         (result
+          (cond
+            ((pairwise-equal? lo1 lo2 hi1 hi2) ;; equal singletons
+              (cons (list type1 type2) #f)) ;; always equal
+            ((or (type-fixnum-< hi1 lo2)
+                (type-fixnum-< hi2 lo1))
+              (cons #f (list type1 type2))) ;; never equal
+            (else
+              (cons (list type1 type2)
+                    (list type1 type2))))))
+    result))
 
 (define (type-narrow-fx< tctx type1 type2)
 
