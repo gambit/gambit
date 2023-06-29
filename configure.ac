@@ -1764,9 +1764,11 @@ else
 
        mingw* | msys*)
 
-               # add Windows libraries needed by MinGW
+               # The following redefinition of PATH_SEP is dubious on
+               # mingw/msys (see issue #828).
+               #PATH_SEP="\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"
 
-               PATH_SEP="\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"
+               # add Windows libraries needed by MinGW
 
                LIBS="$LIBS -lws2_32"
 
