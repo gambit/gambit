@@ -291,7 +291,7 @@
   (define (unsupported cctx src)
     (##raise-expression-parsing-exception
      'ill-formed-expression
-     src))
+     (##sourcify src (##make-source #f #f))))
 
   (define cctx
     (make-conversion-ctx
@@ -357,7 +357,7 @@
   (define (unsupported cctx src)
     (##raise-expression-parsing-exception
      'ill-formed-expression
-     src))
+     (##sourcify src (##make-source #f #f))))
 
   (define cctx
     (make-conversion-ctx
@@ -426,14 +426,13 @@
                (else
                 (unsupported cctx src)))))))
 
-  ;; Unsupported in Python
-  (define (convert-procedure cctx ast-src params return-type stmts-src) #!void)
-  (define (statement cctx ast-src) #!void)
+  (define (convert-procedure cctx ast-src params return-type stmts-src)
+    (unsupported cctx ast-src))
 
   (define (unsupported cctx src)
     (##raise-expression-parsing-exception
      'ill-formed-expression
-     src))
+     (##sourcify src (##make-source #f #f))))
 
   (define cctx
     (make-conversion-ctx
