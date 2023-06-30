@@ -113,7 +113,7 @@ integer->char
 ;; T |   :   : T :    0   |    0   : 0 :   :   |   T    :   :   : T |
 ;; U | 0 :   :   :    0   |    0   :   :   : U |   U    :   : U :   |
 
-(macro-define-syntax macro-define-unicode-tables
+(##define-syntax macro-define-unicode-tables
   (lambda (src)
 
     (define support-title-case?        #t)
