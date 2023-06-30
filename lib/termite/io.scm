@@ -3,7 +3,7 @@
 ;; Reaceiving/Sending message.
 
 ;; incorrect, because it doesn't handle exception messages
-;; (define ? (let () (##namespace ("")) thread-receive))
+;; (define ? (let () (##namespace ("" thread-receive)) thread-receive))
 
 ;; * Retrieve the first message from the mailbox of the current
 ;; process.  If no message is available, the process will block until
@@ -20,7 +20,7 @@
   ((timeout)
    (recv
      (msg msg)
-     (after timeout ((let () (##namespace ("")) thread-receive) 0))))
+     (after timeout ((let () (##namespace ("" thread-receive)) thread-receive) 0))))
 
   ((timeout default)
    (recv
@@ -29,14 +29,14 @@
 
 
 ;; benchmark to see if faster...
-;; (define (? #!optional (timeout +inf.0) (default (lambda ((let () (##namespace ("")) thread-receive) 0))))
+;; (define (? #!optional (timeout +inf.0) (default (lambda ((let () (##namespace ("" thread-receive)) thread-receive) 0))))
 ;;   (with-exception-catcher
 ;;    (lambda (exception)
 ;;      (if (mailbox-receive-timeout-exception? exception)
 ;;          (default)
 ;;          (raise exception)))
 ;;    (lambda ()
-;;      ((let () (##namespace ("")) thread-receive) timeout))))
+;;      ((let () (##namespace ("" thread-receive)) thread-receive) timeout))))
 
 
 ;; * Retrieve the first message from the mailbox of the current
@@ -56,7 +56,7 @@
   ((timeout)
    (recv
      (msg (where (pred? msg)) msg)
-     (after timeout ((let () (##namespace ("")) thread-receive) 0))))
+     (after timeout ((let () (##namespace ("" thread-receive)) thread-receive) 0))))
 
   ((timeout default)
    (recv

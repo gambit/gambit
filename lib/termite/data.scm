@@ -6,8 +6,8 @@
   (string->symbol
     (string-append
       (symbol->string
-        ((let () (##namespace ("")) thread-name)
-          ((let () (##namespace ("")) current-thread))))
+        ((let () (##namespace ("" thread-name)) thread-name)
+          ((let () (##namespace ("" current-thread)) current-thread))))
       "-"
       (symbol->string type))))
 

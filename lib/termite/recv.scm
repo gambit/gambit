@@ -22,17 +22,17 @@
           `(let ((,timeout ,init))
              (with-exception-catcher
                (lambda (,e)
-                 (if ((let () (##namespace ("")) mailbox-receive-timeout-exception?) ,e)
+                 (if ((let () (##namespace ("" mailbox-receive-timeout-exception?)) mailbox-receive-timeout-exception?) ,e)
                    (begin
-                     ((let () (##namespace ("")) thread-mailbox-rewind))
+                     ((let () (##namespace ("" thread-mailbox-rewind)) thread-mailbox-rewind))
                      ,@on-timeout)
                    (raise ,e)))
                (lambda ()
-                 (let ,loop ((,msg ((let () (##namespace ("")) thread-mailbox-next) ,timeout)))
+                 (let ,loop ((,msg ((let () (##namespace ("" thread-mailbox-next)) thread-mailbox-next) ,timeout)))
                    (match/action
-                     ((let () (##namespace ("")) thread-mailbox-extract-and-rewind))
+                     ((let () (##namespace ("" thread-mailbox-extract-and-rewind)) thread-mailbox-extract-and-rewind))
                      (,loop
-                       ((let () (##namespace ("")) thread-mailbox-next) ,timeout))
+                       ((let () (##namespace ("" thread-mailbox-next)) thread-mailbox-next) ,timeout))
                      ,msg
                      ;; extra clause to handle system events
                      (event
@@ -42,14 +42,14 @@
                      ,@clauses))))))
 
         ;; RECV code when there is no timeout
-        `(let ,loop ((,msg ((let () (##namespace ("")) thread-mailbox-next))))
+        `(let ,loop ((,msg ((let () (##namespace ("" thread-mailbox-next)) thread-mailbox-next))))
            (##import termite/match)
            (match/action
-             (let ((result ((let () (##namespace ("")) thread-mailbox-extract-and-rewind))))
+             (let ((result ((let () (##namespace ("" thread-mailbox-extract-and-rewind)) thread-mailbox-extract-and-rewind))))
                ;(display ,msg) (newline)
                result)
              (,loop
-               ((let () (##namespace ("")) thread-mailbox-next)))
+               ((let () (##namespace ("" thread-mailbox-next)) thread-mailbox-next)))
              ,msg
              ;; extra clause to handle system events
              (event

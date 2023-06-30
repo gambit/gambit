@@ -24,7 +24,7 @@
 
 (define current-node (lambda () (error "uninitialized node")))
 
-(define *global-mutex* ((let () (##namespace ("")) make-mutex) "global termite mutex"))
+(define *global-mutex* ((let () (##namespace ("" make-mutex)) make-mutex) "global termite mutex"))
 
 ;; translation tables for "published" PIDs
 (define *foreign->local* (make-table weak-values: #t))
@@ -39,7 +39,7 @@
 
 ;; TODO Improve this
 (define (formatted-current-time)
-  (let* ((port ((let () (##namespace ("")) open-process) "date"))
+  (let* ((port ((let () (##namespace ("" open-process)) open-process) "date"))
      (time (read-line port)))
   (close-port port)
   time))
@@ -47,9 +47,9 @@
 ;; ----------------------------------------------------------------------------
 ;; Datatypes
 
-(define (process? obj) ((let () (##namespace ("")) thread?) obj))
-(define (process-links pid) ((let () (##namespace ("")) thread-specific) pid))
-(define (process-links-set! pid obj) ((let () (##namespace ("")) thread-specific-set!) pid obj))
+(define (process? obj) ((let () (##namespace ("" thread?)) thread?) obj))
+(define (process-links pid) ((let () (##namespace ("" thread-specific)) thread-specific) pid))
+(define (process-links-set! pid obj) ((let () (##namespace ("" thread-specific-set!)) thread-specific-set!) pid obj))
 
 ;; universal pid
 (define-type upid
@@ -134,9 +134,9 @@
 (define (! to msg)
   (cond
   ((process? to)
-   ((let () (##namespace ("")) thread-send) to msg))
+   ((let () (##namespace ("" thread-send)) thread-send) to msg))
   ((upid? to)
-   ((let () (##namespace ("")) thread-send) dispatcher (list 'relay to msg)))
+   ((let () (##namespace ("" thread-send)) thread-send) dispatcher (list 'relay to msg)))
   (else
     (error "invalid-message-destination" to))))
 
@@ -195,7 +195,7 @@
 (define (spawn-output-port port #!optional (serialize? #f))
   (output-port-readtable-set!
   port
-  ((let () (##namespace ("")) readtable-sharing-allowed?-set)
+  ((let () (##namespace ("" readtable-sharing-allowed?-set)) readtable-sharing-allowed?-set)
     (output-port-readtable port)
     serialize?))
 
@@ -215,7 +215,7 @@
 (define (spawn-input-port port #!optional (serialize? #f))
   (input-port-readtable-set!
   port
-  ((let () (##namespace ("")) readtable-sharing-allowed?-set)
+  ((let () (##namespace ("" readtable-sharing-allowed?-set)) readtable-sharing-allowed?-set)
     (input-port-readtable port)
     serialize?))
 
@@ -244,30 +244,30 @@
 
 ;; Convert a 'pid'
 (define (pid->upid obj)
-  ((let () (##namespace ("")) mutex-lock!) *global-mutex*)
+  ((let () (##namespace ("" mutex-lock!)) mutex-lock!) *global-mutex*)
   (cond
   ((table-ref *local->foreign* obj #f)
    => (lambda (x)
-      ((let () (##namespace ("")) mutex-unlock!) *global-mutex*)
+      ((let () (##namespace ("" mutex-unlock!)) mutex-unlock!) *global-mutex*)
       x))
   (else
     (let ((upid (make-upid (make-uuid) (current-node))))
       (table-set! *local->foreign* obj upid)
       (table-set! *foreign->local* upid obj)
-      ((let () (##namespace ("")) mutex-unlock!) *global-mutex*)
+      ((let () (##namespace ("" mutex-unlock!)) mutex-unlock!) *global-mutex*)
       upid))))
 
 (define (tag->utag obj)
-  ((let () (##namespace ("")) mutex-lock!) *global-mutex*)
+  ((let () (##namespace ("" mutex-lock!)) mutex-lock!) *global-mutex*)
   (cond
   ((tag-uuid obj)
-   ((let () (##namespace ("")) mutex-unlock!) *global-mutex*)
+   ((let () (##namespace ("" mutex-unlock!)) mutex-unlock!) *global-mutex*)
    obj)
   (else
     (let ((uuid (make-uuid)))
     (tag-uuid-set! obj uuid)
     (table-set! *uuid->tag* uuid obj)
-    ((let () (##namespace ("")) mutex-unlock!) *global-mutex*)
+    ((let () (##namespace ("" mutex-unlock!)) mutex-unlock!) *global-mutex*)
     obj))))
 
 ;; Some debuging info
@@ -443,7 +443,7 @@
           (begin
           (error "deserialization error"
                (list len: len n: n)))
-          (let ((obj ((let () (##namespace ("")) u8vector->object) serialized-obj deserialize-hook)))
+          (let ((obj ((let () (##namespace ("" u8vector->object)) u8vector->object) serialized-obj deserialize-hook)))
           (if (vector? obj)
             (vector->list obj)
             obj))))))))
@@ -481,9 +481,8 @@
 ;; a tcp server listens on a certain port for new tcp connection
 ;; requests, and call ON-CONNECT to deal with those new connections.
 (define (start-tcp-server node on-connect)
-  (##namespace ("" open-tcp-server tcp-server-socket-info socket-info-port-number))
   (let ((tcp-server-port
-         (open-tcp-server
+         ((let () (##namespace ("" open-tcp-server)) open-tcp-server)
           (list
            local-address:     (node-host node)
            local-port-number: (node-port node)
@@ -499,8 +498,8 @@
                    "localhost"
                    (node-host node))
                (if (= 0 (node-port node))
-                   (socket-info-port-number
-                    (tcp-server-socket-info tcp-server-port))
+                   ((let () (##namespace ("" socket-info-port-number)) socket-info-port-number)
+                    ((let () (##namespace ("" tcp-server-socket-info)) tcp-server-socket-info) tcp-server-port))
                    (node-port node)))))
 
 
@@ -518,7 +517,7 @@
           (shutdown!))
 
         (lambda ()
-          (let ((socket ((let () (##namespace ("")) open-tcp-client)
+          (let ((socket ((let () (##namespace ("" open-tcp-client)) open-tcp-client)
                           (list address:     (node-host node)
                                 port-number: (node-port node)
                                 coalesce:    #f))))
@@ -718,7 +717,7 @@
 
 ;; Task moves away, lose identity
 (define (migrate-task node)
-  ((let () (##namespace ("")) call/cc)
+  ((let () (##namespace ("" call/cc)) call/cc)
   (lambda (k)
     (remote-spawn node (lambda () (k #t)))
     (halt!))))
@@ -729,7 +728,7 @@
   (let loop ()
     (! pid (?))
     (loop)))
-  ((let () (##namespace ("")) call/cc)
+  ((let () (##namespace ("" call/cc)) call/cc)
   (lambda (k)
     (proxy
     (remote-spawn-link node (lambda () (k #t)))))))

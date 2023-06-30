@@ -4,9 +4,9 @@
 ;; Version 4 UUID, see section 4.4
 
 (define random-integer-65536
-  (let* ((rs ((let () (##namespace ("")) make-random-source)))
-         (ri ((let () (##namespace ("")) random-source-make-integers) rs)))
-    ((let () (##namespace ("")) random-source-randomize!) rs)
+  (let* ((rs ((let () (##namespace ("" make-random-source)) make-random-source)))
+         (ri ((let () (##namespace ("" random-source-make-integers)) random-source-make-integers) rs)))
+    ((let () (##namespace ("" random-source-randomize!)) random-source-randomize!) rs)
       (lambda ()
         (ri 65536))))
 
