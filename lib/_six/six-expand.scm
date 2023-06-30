@@ -652,7 +652,7 @@
                         (loop (cddr args-src) (cons (string-append
                                                       (keyword->string (car args-src))
                                                       "="
-                                                      (cvt (cadr args-srcs)))
+                                                      (cvt (cadr args-src)))
                                                     args))
                         (loop (cdr args-src) (cons (cvt (car args-src)) args)))
                     (let ((res (list (infix fn-src 0 inner-op)
