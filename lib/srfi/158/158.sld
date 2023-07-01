@@ -9,7 +9,6 @@
 ;;; SRFI 158, Generators and Accumulators
 
 (define-library (srfi 158)
-  (namespace "")
   (export
     every-eof-obj?-and-generate 
     generator
@@ -62,6 +61,7 @@
     list-accumulator
     reverse-list-accumulator
     vector-accumulator
+    vector-accumulator!
     reverse-vector-accumulator
     bytevector-accumulator
     bytevector-accumulator!
