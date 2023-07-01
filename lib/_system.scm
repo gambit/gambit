@@ -2286,6 +2286,7 @@
   (define (check-test arg-num)
     (if (##eq? test (macro-absent-obj))
       (checks-done ##equal?
+                   (lambda (key) 0)
                    arg-num)
       (let ((arg-num (##fx+ arg-num 2)))
         (macro-check-procedure
@@ -2300,13 +2301,15 @@
                      min-load: min-load
                      max-load: max-load)
          (checks-done test
+                      hash
                       arg-num)))))
 
-  (define (checks-done test-fn arg-num)
+  (define (checks-done test-fn hash-fn arg-num)
     (macro-make-table (if (or (##eq? test-fn eq?)
                               (##eq? test-fn ##eq?))
                           #f
                           test-fn)
+                      hash-fn
                       init
                       ;; weak-keys/values are extended booleans
                       (##univ-table-make-hashtable (##not (##not weak-keys))

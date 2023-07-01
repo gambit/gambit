@@ -2,7 +2,7 @@
 
 ;;; File: "_system#.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -73,6 +73,7 @@
   prefix: macro-
 
   (test      unprintable:)
+  (hash      unprintable:)
   (init      unprintable:)
   (hashtable unprintable:)
   (flags     unprintable:)
