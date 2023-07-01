@@ -11,7 +11,17 @@
 
 (##supply-module srfi/41)
 
+(##namespace ("srfi/41#"))                ;; in srfi/41#
+;;(##include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
+(##include "~~lib/gambit#.scm")           ;; for define, declare, etc
 (##include "~~lib/_gambit#.scm")          ;; for macro-check-string,
+                                          ;; macro-absent-obj, etc
+
+(##include "41#.scm")
+
+(declare (extended-bindings)) ;; ##fx+ is bound to fixnum addition, etc
+;;(declare (not safe))          ;; claim code has no type errors
+(declare (block))             ;; claim no global is assigned
 
 ;=========================================================================
 ; PRIMITIVES
@@ -57,7 +67,7 @@
 (define-syntax stream-lazy
   (syntax-rules ()
     ((stream-lazy expr)
-     (make-stream
+     (srfi/41#make-stream
        (cons 'lazy (lambda () expr))))))
 
 (define (stream-eager expr)
@@ -106,8 +116,8 @@
 (define-syntax stream-cons
   (syntax-rules ()
     ((stream-cons obj strm)
-     (stream-eager (make-stream-pair* (stream-delay obj)
-                                      (stream-lazy strm))))))
+     (stream-eager (srfi/41#make-stream-pair* (stream-delay obj)
+                                              (stream-lazy strm))))))
 
 (define-procedure
   (stream-car (strm stream))
