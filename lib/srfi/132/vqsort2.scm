@@ -62,14 +62,20 @@
 ;;;   every single one that you can. Choice A limits the potential badness, 
 ;;;   so that is what we do.
 
-(define (vector-quick-sort! < v #!optional (start 0) (end (vector-length v)))
-      (%quick-sort! < v start end))
+(define (vector-quick-sort! < v . maybe-start+end)
+  (call-with-values
+      (lambda () (vector-start+end v maybe-start+end))
+    (lambda (start end)
+      (%quick-sort! < v start end))))
 
-(define (vector-quick-sort < v #!optional (start 0) (end (vector-length v)))
-    (let* ((ans (make-vector (- end start))))
-        (subvector-move! v start end ans start)
-        (%quick-sort! < ans 0 (- end start))
-        ans))
+(define (vector-quick-sort < v . maybe-start+end)
+  (call-with-values
+      (lambda () (vector-start+end v maybe-start+end))
+    (lambda (start end)
+      (let ((ans (make-vector (- end start))))
+	(vector-portion-copy! ans v start end)
+	(%quick-sort! < ans 0 (- end start))
+	ans))))
 
 ;;; %QUICK-SORT is not exported.
 ;;; Preconditions:

@@ -75,13 +75,20 @@
 ;;;   every single one that you can. Choice A limits the potential badness, 
 ;;;   so that is what we do.
 
+(define (vector-quick-sort3! c v . maybe-start+end)
+  (call-with-values
+      (lambda () (vector-start+end v maybe-start+end))
+    (lambda (start end)
+      (%quick-sort3! c v start end))))
 
-(##include "visort.scm")
-
-(define (vector-quick-sort3 c v #!optional (start 0) (end (vector-length v)))
-    (let ((ans (subvector v start end)))
-     	 (%quick-sort3! c ans 0 (- end start))
-	     ans))
+(define (vector-quick-sort3 c v . maybe-start+end)
+  (call-with-values
+      (lambda () (vector-start+end v maybe-start+end))
+    (lambda (start end)
+      (let ((ans (make-vector (- end start))))
+	(vector-portion-copy! ans v start end)
+	(%quick-sort3! c ans 0 (- end start))
+	ans))))
 
 ;;; %QUICK-SORT3! is not exported.
 ;;; Preconditions:
@@ -97,7 +104,7 @@
 ;;; sort routine, just kill that branch of the IF and change the recursion
 ;;; test to (< 1 (- r l)) -- the code is set up to work that way.
 
-(define (%quick-sort3! c v #!optional (start 0) (end (vector-length v)))
+(define (%quick-sort3! c v start end)
   (define (swap l r n)			; Little utility -- swap the N 
     (if (> n 0)
 	(let ((x (vector-ref v l))	; outer pairs of the range [l,r).

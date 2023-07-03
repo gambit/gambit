@@ -40,10 +40,11 @@
 ;;;   elements;
 ;;; - Needs no more than 1024 stack frames.
 
+#;
 ;;; Simplest version. 
 ;;; - Always allocates a fresh list / never shares storage.
 ;;; - Needs N stack frames, if answer is length N.
-(define (%list-delete-neighbor-dups = lis)
+(define (list-delete-neighbor-dups = lis)
   (if (pair? lis)
       (let ((x0 (car lis)))
 	(cons x0 (let recur ((x0 x0) (xs (cdr lis)))
@@ -59,7 +60,7 @@
 ;;; This version tries to use cons cells from input by sharing longest
 ;;; common tail between input & output. Still needs N stack frames, for ans
 ;;; of length N.
-(define (%%list-delete-neighbor-dups = lis)
+(define (list-delete-neighbor-dups = lis)
   (if (pair? lis)
       (let* ((x0 (car lis))
 	     (xs (cdr lis))
@@ -82,7 +83,7 @@
 ;;; This code runs in constant list space, constant stack, and also
 ;;; does only the minimum SET-CDR!'s necessary.
 
-(define (%list-delete-neighbor-dups! = lis)
+(define (list-delete-neighbor-dups! = lis)
   (if (pair? lis)
       (let lp1 ((prev lis) (prev-elt (car lis)) (lis (cdr lis)))
 	(if (pair? lis)
@@ -107,7 +108,10 @@
   lis)
 
 
-(define (%vector-delete-neighbor-dups elt= v #!optional (start 0) (end (vector-length v)))
+(define (vector-delete-neighbor-dups elt= v . maybe-start+end)
+  (call-with-values
+   (lambda () (vector-start+end v maybe-start+end))
+   (lambda (start end)
      (if (< start end)
 	 (let* ((x (vector-ref v start))
 		(ans (let recur ((x x) (i start) (j 1))
@@ -122,12 +126,16 @@
 			   (make-vector j)))))
 	   (vector-set! ans 0 x)
 	   ans)
-	 '#()))
+	 '#()))))
 
 
 ;;; Packs the surviving elements to the left, in range [start,end'),
 ;;; and returns END'.
-(define (%vector-delete-neighbor-dups! elt= v #!optional (start 0) (end (vector-length v)))
+(define (vector-delete-neighbor-dups! elt= v . maybe-start+end)
+  (call-with-values
+   (lambda () (vector-start+end v maybe-start+end))
+   (lambda (start end)
+
      (if (>= start end)
 	 end
 	 ;; To eliminate unnecessary copying (read elt i then write the value 
@@ -153,7 +161,7 @@
 				     (lp3 k+1)
 				     (let ((j+1 (+ j 1)))
 				       (vector-set! v j+1 vk)
-				       (lp2 j+1 vk k+1))))))))))))))
+				       (lp2 j+1 vk k+1))))))))))))))))
 		    
 ;;; Copyright
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

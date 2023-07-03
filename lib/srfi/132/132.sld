@@ -2,8 +2,7 @@
 
 ;;; File: "132.sld"
 
-;;; Copyright (c) 2018-2019 by Antoine Doucet, All Rights Reserved.
-;;; Copyright (c) 2018-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2018-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
