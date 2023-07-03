@@ -429,6 +429,14 @@
   (newline)
   (compiler-abort))
 
+(define (compiler-user-warning-category cat loc msg . args)
+  (if (compiler-warning-enabled? cat)
+      (begin
+        (display "*** WARNING") (locat-show " IN " loc) (display " -- ")
+        (display msg)
+        (for-each (lambda (x) (display " ") (write x)) args)
+        (newline))))
+
 (define (compiler-user-warning loc msg . args)
   (if warnings-requested?
     (begin
@@ -1005,6 +1013,9 @@
   (keep (lambda (x)
           (not (member x b)))
         a))
+
+(define (lset-union a b)
+  (append (lset-difference a b) b))
 
 ;;;============================================================================
 )

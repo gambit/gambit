@@ -5,6 +5,7 @@
 ;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
+(include "_warn.scm")
 
 (include-adt "_envadt.scm")
 (include-adt "_gvmadt.scm")
@@ -36,6 +37,8 @@
 ;; (cf "tak" '((debug)) #f)       -- generate code with debugging info
 ;; (cf "tak" '((expansion)) #f)   -- show code after source-to-source transf.
 ;; (cf "tak" '((asm) (stats)) #f) -- various back-end options
+
+(define-warning-option 'undefined-refs)
 
 (define cf #f)
 
@@ -89,6 +92,25 @@
                      ((warnings)
                       (set! compiler-option-warnings           #t)
                       #t)
+                     ((warn nowarn)
+                      (let* ((the-warnings-str (cadr opt))
+                             (the-warnings-strs (##string-split-at-char the-warnings-str #\,))
+                             (the-warnings-strs-filtered
+                              (keep (lambda (str)
+                                      (not (= 0 (string-length str))))
+                                    the-warnings-strs))
+                             (the-warnings-syms (map string->symbol the-warnings-strs-filtered)))
+                        (for-each
+                         (lambda (wsym)
+                           (unless (valid-warning-option? wsym)
+                             (compiler-error
+                              "Invalid warning:" wsym)))
+                         the-warnings-syms)
+
+                        (if (eq? (car opt) 'warn)
+                            (set! compiler-option-warn (lset-union compiler-option-warn the-warnings-syms))
+                            (set! compiler-option-nowarn (lset-union compiler-option-nowarn the-warnings-syms)))
+                        #t))
                      ((verbose)
                       (set! compiler-option-verbose            #t)
                       #t)
@@ -150,6 +172,8 @@
 
 (define (reset-options)
   (set! compiler-option-warnings           #f)
+  (set! compiler-option-warn              '())
+  (set! compiler-option-nowarn            '())
   (set! compiler-option-verbose            #f)
   (set! compiler-option-report             #f)
   (set! compiler-option-expansion          #f)
@@ -163,6 +187,8 @@
   (set! compiler-option-track-scheme       #f))
 
 (define compiler-option-warnings           #f)
+(define compiler-option-warn              '())
+(define compiler-option-nowarn            '())
 (define compiler-option-verbose            #f)
 (define compiler-option-report             #f)
 (define compiler-option-expansion          #f)
@@ -176,6 +202,11 @@
 (define compiler-option-track-scheme       #f)
 
 (define ##compilation-options '())
+
+(define (compiler-warning-enabled? wsym)
+  (and compiler-option-warnings
+       (not (member wsym compiler-option-nowarn))
+       (member wsym compiler-option-warn)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -297,13 +328,14 @@
                                                              (car x)))
                                                  (vector->list (cdr name-and-refs)))))
                            (if (pair? refs)
-                               (compiler-user-warning
-                               (source-locat (node-source (car refs)))
-                               (string-append
-                                "\""
-                                (symbol->string name)
-                                "\""
-                                " is not defined")))))))
+                               (compiler-user-warning-category
+                                'undefined-refs
+                                (source-locat (node-source (car refs)))
+                                (string-append
+                                 "\""
+                                 (symbol->string name)
+                                 "\""
+                                 " is not defined")))))))
                  (cdr ns-and-names)))
               (table->list namespace-to-undefined-names))))
 

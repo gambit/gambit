@@ -66,13 +66,15 @@ Debug information options
     -track-scheme          Emit '#line' directives referring to Scheme code
 
 Auxiliary information options
-    -gvm             Write GVM intermediate representation to file.gvm
-    -cfg             Write GVM control flow graph to file.cfg
-    -dg              Write variable/procedure dependency graph to file.dg
-    -expansion       Show source code after code transformations
-    -report          Show global variable usage report
-    -verbose         Show trace of compiler activity
-    -warnings        Show warnings
+    -gvm                   Write GVM intermediate representation to file.gvm
+    -cfg                   Write GVM control flow graph to file.cfg
+    -dg                    Write variable/procedure dependency graph to file.dg
+    -expansion             Show source code after code transformations
+    -report                Show global variable usage report
+    -verbose               Show trace of compiler activity
+    -warnings              Activate warning reporting
+    -warn 'x,y,...'        Show specified warnings
+    -nowarn 'x,y,...'      Do not show specified warnings
 
 Interpreter options
     -i               Process rest of command line like the interpreter
@@ -991,7 +993,8 @@ usage-end
                          '((target symbol)
                            (c) (dynamic) (exe) (obj) (link) (flat)
                            (compactness fixnum)
-                           (warnings) (verbose) (report)
+                           (warnings) (warn string) (nowarn string)
+                           (verbose) (report)
                            (expansion) (gvm) (cfg) (dg) (asm) (keep-temp)
 ;;TODO: enable and document when compiler supports these options
 ;;                           (type-checking) (no-type-checking)
