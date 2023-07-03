@@ -13,6 +13,21 @@
 
 ;;;----------------------------------------------------------------------------
 
+;;;; Warnings
+
+;;;----------------------------------------------------------------------------
+
+
+(define valid-warning-categories '())
+
+(define (valid-warning-category? opt)
+  (not (not (member opt valid-warning-categories))))
+
+(define (define-warning-category opt)
+  (set! valid-warning-categories (cons opt valid-warning-categories)))
+
+;;;----------------------------------------------------------------------------
+
 ;;;; Environment manipulation and declaration handling module
 
 ;;;----------------------------------------------------------------------------

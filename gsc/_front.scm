@@ -5,7 +5,6 @@
 ;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
-(include "_warn.scm")
 
 (include-adt "_envadt.scm")
 (include-adt "_gvmadt.scm")
@@ -38,7 +37,8 @@
 ;; (cf "tak" '((expansion)) #f)   -- show code after source-to-source transf.
 ;; (cf "tak" '((asm) (stats)) #f) -- various back-end options
 
-(define-warning-option 'undefined-refs)
+(define-warning-category 'undefined-references)
+(define-warning-category 'nontail-calls)
 
 (define cf #f)
 
@@ -102,7 +102,7 @@
                              (the-warnings-syms (map string->symbol the-warnings-strs-filtered)))
                         (for-each
                          (lambda (wsym)
-                           (unless (valid-warning-option? wsym)
+                           (unless (valid-warning-category? wsym)
                              (compiler-error
                               "Invalid warning:" wsym)))
                          the-warnings-syms)
@@ -329,7 +329,7 @@
                                                  (vector->list (cdr name-and-refs)))))
                            (if (pair? refs)
                                (compiler-user-warning-category
-                                'undefined-refs
+                                'undefined-references
                                 (source-locat (node-source (car refs)))
                                 (string-append
                                  "\""
@@ -3666,7 +3666,8 @@
                               (if (and (not (intrs-enabled? (node-env node)))
                                        (not (reason-tail? reason2))
                                        (warnings? (node-env node)))
-                                (compiler-user-warning
+                                (compiler-user-warning-category
+                                 'nontail-calls
                                  (source-locat (node-source node))
                                  "Nontail call with interrupts disabled"))
 

@@ -87,6 +87,10 @@ Global options
     -v               Show version information
     -h, -help        Show this help
 
+Warnings
+    undefined-references   Report references that are not either defined in the file, or declared in a (namespace ("X" <name>)) declaration
+    nontail-calls          Report nontail calls when interrupts are disabled
+
 usage-end
 )
 
