@@ -2316,7 +2316,7 @@
       (define (bbs-cleanup)
         ;; remove unreachable bb
         ;; required to avoid having uninitialized bb in the bbs
-        (write (list 'GC-REACHABILITY))(newline)
+        ;;(write (list 'GC-REACHABILITY))(newline)
         (update-reachability!)
         (bbs-for-each-bb
           (lambda (bb)
