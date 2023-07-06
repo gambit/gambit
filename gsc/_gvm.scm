@@ -5312,6 +5312,10 @@
       (if (not (and (typecheck-fixnum) (typecheck-generic)))
           (throw-error)))
 
+    (define (throw-error slot-kind slot-num value expected)
+      (error "GVM type error:" slot-kind slot-num value expected)
+  )
+
     (let* ((types (gvm-instr-types instr))
            (type-locs (vector-ref types 0))
            (n-registers (vector-ref type-locs 0))
@@ -5319,17 +5323,21 @@
            (n-free (vector-ref type-locs 2)))
       (for-each
         (lambda (reg index)
-          (typecheck  (lambda () (error "GVM-typecheck: in bb " (bb-lbl-num bb) " register " reg " cannot be: " (register-ref registers reg)))
-                      (register-ref registers reg)
-                      (vector-ref types index)))
+          (let ((value (register-ref registers reg))
+                (expected (vector-ref types index)))
+            (typecheck  (lambda () (throw-error "register" reg value expected))
+                        value
+                        expected)))
         (iota n-registers)
         (iota n-registers (+ locenv-start-regs 1) 2))
 
       (for-each
         (lambda (slot index)
-          (typecheck  (lambda () (error "GVM-typecheck: in bb " (bb-lbl-num bb) " slot " slot " cannot be: " (stack-ref stack (bb-entry-frame-size bb) slot)))
-                      (stack-ref stack (bb-entry-frame-size bb) slot)
-                      (vector-ref types index)))
+          (let ((value (stack-ref stack (bb-entry-frame-size bb) slot))
+                (expected (vector-ref types index)))
+            (typecheck  (lambda () (throw-error "slot" slot value expected))
+                        value
+                        expected)))
         (iota n-slots 1)
         (iota n-slots (+ locenv-start-regs (* 2 n-registers) 1) 2))))
 
