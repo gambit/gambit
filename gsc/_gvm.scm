@@ -5293,17 +5293,12 @@
       (define (typecheck-generic)
         (define (allowed? bit) (not (zero? (bitwise-and bit motley-bits))))
         (define motley-bits (type-motley-bitset motley-type))
-        (define is-other-type (not (fixnum? value)))
         (let loop ((bit-checker-pair bits-to-checker))
           (if (null? bit-checker-pair)
-              (not (and is-other-type (not (allowed? type-other-bit))))
-              (let ((bit (caar bit-checker-pair))
-                    (checker (cdar bit-checker-pair)))
-                (if (checker value)
-                    (begin
-                      (set! is-other-type #f)
-                      (if (allowed? bit) #t (loop (cdr bit-checker-pair))))
-                    (loop (cdr bit-checker-pair)))))))
+              (or (fixnum? value) (allowed? type-other-bit)) ;; at this point all tracked types have been tested
+              (if ((cdar bit-checker-pair) value)
+                  (allowed? (caar bit-checker-pair))
+                  (loop (cdr bit-checker-pair))))))
 
       (define (typecheck-fixnum)
         (define lo (type-fixnum-lo motley-type))
@@ -5315,7 +5310,7 @@
         (or (not (fixnum? value)) (and (over-lo? value) (below-hi? value))))
 
       (if (not (or (typecheck-fixnum) (typecheck-generic)))
-          (error "assert-types" "ADD BETTER ERROR MESSAGE: you have access to bb")))
+          (error "GVM-typecheker" "ADD BETTER ERROR MESSAGE: you have access to bb")))
 
     (let* ((types (gvm-instr-types instr))
            (type-locs (vector-ref types 0))
