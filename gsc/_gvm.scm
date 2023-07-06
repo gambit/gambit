@@ -5313,8 +5313,8 @@
           (throw-error)))
 
     (define (throw-error slot-kind slot-num value expected)
-      (error "GVM type error:" slot-kind slot-num value expected)
-  )
+      (step)
+      (error "GVM type error: in bb" (bb-lbl-num bb) slot-kind slot-num value expected))
 
     (let* ((types (gvm-instr-types instr))
            (type-locs (vector-ref types 0))
@@ -5343,7 +5343,6 @@
 
   (define (instr-interpret instr)
     (print-interpreter-trace instr)
-    (assert-types instr)
     (case (gvm-instr-kind instr)
       ((apply)
        (apply-interpret instr))
@@ -5358,7 +5357,8 @@
       ((jump)
        (jump-interpret instr))
       (else
-        (error "unknown instruction" (gvm-instr-kind instr)))))
+        (error "unknown instruction" (gvm-instr-kind instr))))
+    (assert-types instr))
 
   (let* ((instructions (bb-non-branch-instrs bb))
          (branch (bb-branch-instr bb)))
