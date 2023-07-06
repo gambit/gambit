@@ -5287,7 +5287,7 @@
         (cons type-box-bit       box?)
         (cons type-promise-bit   promise?)))
 
-    (define (typecheck value expected-type)
+    (define (typecheck throw-error value expected-type)
       (define motley-type (type-motley-force tctx expected-type))
     
       (define (typecheck-generic)
@@ -5309,8 +5309,8 @@
 
         (or (not (fixnum? value)) (and (over-lo? value) (below-hi? value))))
 
-      (if (not (or (typecheck-fixnum) (typecheck-generic)))
-          (error "GVM-typecheker" "ADD BETTER ERROR MESSAGE: you have access to bb")))
+      (if (not (and (typecheck-fixnum) (typecheck-generic)))
+          (throw-error)))
 
     (let* ((types (gvm-instr-types instr))
            (type-locs (vector-ref types 0))
@@ -5319,14 +5319,16 @@
            (n-free (vector-ref type-locs 2)))
       (for-each
         (lambda (reg index)
-          (typecheck (register-ref registers reg)
+          (typecheck  (lambda () (error "GVM-typecheck: in bb " (bb-lbl-num bb) " register " reg " cannot be: " (register-ref registers reg)))
+                      (register-ref registers reg)
                       (vector-ref types index)))
         (iota n-registers)
         (iota n-registers (+ locenv-start-regs 1) 2))
 
       (for-each
         (lambda (slot index)
-          (typecheck (stack-ref stack (bb-entry-frame-size bb) slot)
+          (typecheck  (lambda () (error "GVM-typecheck: in bb " (bb-lbl-num bb) " slot " slot " cannot be: " (stack-ref stack (bb-entry-frame-size bb) slot)))
+                      (stack-ref stack (bb-entry-frame-size bb) slot)
                       (vector-ref types index)))
         (iota n-slots 1)
         (iota n-slots (+ locenv-start-regs (* 2 n-registers) 1) 2))))
