@@ -1,337 +1,613 @@
-/* File: "config.h.in" */
+/* include/config.h.in.  Generated from configure.ac by autoheader.  */
 
-/*
- * Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
- */
-
-#ifndef CONFIG_H
-#define CONFIG_H
-
-/*---------------------------------------------------------------------------*/
-
-/*
- * These definitions are used by the "gambit.h" header file.
- */
-
-/* Define as 1 if you want to compile for debugging.  */
-#undef ___DEBUG
-
-/* Define as 1 if you want to generate a debugging log file.  */
-#undef ___DEBUG_LOG
-
-/* Define as 1 if you want to generate a C backtrace when a program crashes.  */
-#undef ___DEBUG_C_BACKTRACE
-
-/* Define as 1 if you want to compile for debugging the control flow history.  */
-#undef ___DEBUG_CTRL_FLOW_HISTORY
-
-/* Define as 1 if you want to compile for debugging the host changes.  */
-#undef ___DEBUG_HOST_CHANGES
-
-/* Define as 1 if you want to generate a log of the memory allocations. */
-#undef ___DEBUG_ALLOC_MEM
-
-/* Define as 1 if you want to compile for debugging the garbage collector.  */
-#undef ___DEBUG_GARBAGE_COLLECT
-
-/* Define as 1 if you want to compile with profiling.  */
-#undef ___PROFILE
-
-/* Define as 1 if you want to compile each Scheme file into one C function.  */
-#undef ___SINGLE_HOST
-
-/* Define as 1 if you want to mix the execution of C and machine code.  */
-#undef ___SUPPORT_LOWLEVEL_EXEC
-
-/* Define as 1 if you want trampoline jumps to be inlined.  */
-#undef ___INLINE_JUMPS
-
-/* Define as 1 if you trust the C compiler does TCO properly */
-#undef ___TRUST_C_TCO
-
-/* Define as 1 if you want to compile as a shared library.  */
-#undef ___SHARED
-
-/* Define as 1 if dynamically loaded code should not be unloaded.  */
-#undef ___DONT_UNLOAD_DYN_CODE
-
-/* Define as 1 if thread local storage variables can be referenced from dynamically loaded code */
-#undef ___DYNAMIC_TLS
-
-/* Define as 1 if C library functions can be called from dynamically loaded code */
-#undef ___CAN_IMPORT_CLIB_DYNAMICALLY
-
-/* Define as 1 if C library setjmp function can be called from dynamically loaded code */
-#undef ___CAN_IMPORT_SETJMP_DYNAMICALLY
-
-/* Define as 1 if Gambit RTS functions can be called from dynamically loaded code */
-#undef ___CAN_IMPORT_DYNAMICALLY
-
-/*---------------------------------------------------------------------------*/
-
-/* Determine which header files are available. */
-
-#ifndef _GNU_SOURCE
-#undef _GNU_SOURCE
-#endif
-
-#undef HAVE_ERRNO_H
-#undef HAVE_UNISTD_H
-#undef HAVE_PWD_H
-#undef HAVE_DIRENT_H
-#undef HAVE_DLFCN_H
-#undef HAVE_DL_H
-#undef HAVE_SYS_DXE_H
-#undef HAVE_MACH_O_DYLD_H
-#undef HAVE_MACH_MACH_TIME_H
-#undef HAVE_SYS_TYPES_H
-#undef HAVE_SYS_TIME_H
-#undef HAVE_SYS_TIMES_H
-#undef HAVE_SYS_TIMEB_H
-#undef HAVE_SYS_TIMERS_H
-#undef HAVE_TIME_H
-#undef HAVE_SYS_RESOURCE_H
-#undef HAVE_SYS_STAT_H
-#undef HAVE_SYS_WAIT_H
-#undef HAVE_SYS_MMAN_H
-#undef HAVE_SYSLOG_H
-#undef HAVE_EXECINFO_H
-#undef HAVE_STAT_H
-#undef HAVE_SIGNAL_H
-#undef HAVE_NETDB_H
-#undef HAVE_GRP_H
-#undef HAVE_EMSCRIPTEN_H
-#undef HAVE_WINDOWS_H
-#undef HAVE_IO_H
-#undef HAVE_TCHAR_H
-#undef HAVE_FLOAT_H
-#undef HAVE_FPU_CONTROL_H
-#undef HAVE_OS2_H
-#undef HAVE_DOS_H
-#undef HAVE_DIRECT_H
-#undef HAVE_RETRACE_H
-#undef HAVE_FILES_H
-#undef HAVE_FINDER_H
-#undef HAVE_ERRORS_H
-#undef HAVE_FOLDERS_H
-#undef HAVE_OSUTILS_H
-#undef HAVE_POWER_H
-#undef HAVE_CODEFRAGMENTS_H
-#undef HAVE_SIOUX_H
-#undef HAVE_MAC_GUI_H
-#undef HAVE_UNIX_H
-#undef HAVE_WDEFWIN_H
-#undef HAVE_TFORK_H
-#undef HAVE_CURSES_H
-#undef HAVE_NCURSES_H
-#undef HAVE_NETINET_IN_H
+/* Define to 1 if you have the <arpa/inet.h> header file. */
 #undef HAVE_ARPA_INET_H
-#undef HAVE_TERMIOS_H
-#undef HAVE_TERM_H
-#undef HAVE_PTY_H
-#undef HAVE_STROPTS_H
-#undef HAVE_LIBUTIL_H
-#undef HAVE_UTIL_H
-#undef HAVE_SYS_FPU_H
-#undef HAVE_FENV_H
-#undef HAVE_FCNTL_H
-#undef HAVE_SYS_IOCTL_H
-#undef HAVE_SYS_SOCKET_H
-#undef HAVE_STDIO_H
-#undef HAVE_STDLIB_H
-#undef HAVE_STRING_H
-#undef HAVE_STRINGS_H
-#undef HAVE_MEMORY_H
-#undef HAVE_SYS_SYSCTL_H
-#undef HAVE_SYS_SYSCALL_H
-#undef HAVE_LINUX_FS_H
-#undef HAVE_CRT_EXTERNS_H
-#undef HAVE_WS2TCPIP_H
-#undef HAVE_TARGETCONDITIONALS_H
+
+/* Define to 1 if you have the <AvailabilityMacros.h> header file. */
 #undef HAVE_AVAILABILITYMACROS_H
-#undef HAVE_POLL_H
 
-/*---------------------------------------------------------------------------*/
-
-/* Determine which library functions are available. */
-
-#undef HAVE_OPEN
-#undef HAVE_OPENAT
-#undef HAVE_PIPE
-#undef HAVE_SOCKETPAIR
-#undef HAVE_CHDIR
-#undef HAVE_EXECVP
-#undef HAVE_GETENV
-#undef HAVE_GETGRNAM
-#undef HAVE_GETPID
-#undef HAVE_GETPPID
-#undef HAVE_GETPWNAM
-#undef HAVE_IOCTL
-#undef HAVE_READLINK
-#undef HAVE_READLINKAT
-#undef HAVE_LINK
-#undef HAVE_LINKAT
-#undef HAVE_MKDIR
-#undef HAVE_MKDIRAT
-#undef HAVE_MKFIFO
-#undef HAVE_MKFIFOAT
-#undef HAVE_OPENDIR
-#undef HAVE_FDOPENDIR
-#undef HAVE_RMDIR
-#undef HAVE_SOCKET
-#undef HAVE_UTIMES
-#undef HAVE_STAT
-#undef HAVE_STAT64
-#undef HAVE_FSTATAT
-#undef HAVE_STRERROR
-#undef HAVE_SYMLINK
-#undef HAVE_SYMLINKAT
-#undef HAVE_SYSCONF
-#undef HAVE_SYSCTL
-#undef HAVE_SYSCTLBYNAME
-#undef HAVE_SYSLOG
+/* Define to 1 if you have the `backtrace_symbols_fd' function. */
 #undef HAVE_BACKTRACE_SYMBOLS_FD
-#undef HAVE_UNLINK
-#undef HAVE_UNLINKAT
-#undef HAVE_WAITPID
-#undef HAVE_MMAP
-#undef HAVE_FCNTL
-#undef HAVE_GETCWD
 
-#undef HAVE_TCGETSETATTR
+/* Define to 1 if you have the `chdir' function. */
+#undef HAVE_CHDIR
 
-#undef HAVE_SIGACTION
-#undef HAVE_SIGNAL
-#undef HAVE_SIGEMPTYSET
-#undef HAVE_SIGADDSET
-#undef HAVE_SIGPROCMASK
-
-/* Define one of these to support timekeeping (timeouts, current-time, etc): */
-#undef HAVE_EMSCRIPTEN_GET_NOW
-#undef HAVE_CLOCK_GETTIME
-#undef HAVE_MACH_ABSOLUTE_TIME
-#undef HAVE_GETCLOCK
-#undef HAVE_GETSYSTEMTIMEASFILETIME
-#undef HAVE_TIMEBEGINPERIOD
-#undef HAVE_GETTIMEOFDAY
-#undef HAVE_FTIME
-#undef HAVE_TIME
-
-#undef HAVE_NANOSLEEP
-#undef HAVE_Sleep
-#undef HAVE_SLEEP
-
-#undef HAVE_GETPROCESSTIMES
-#undef HAVE_GETRUSAGE
-#undef HAVE_TIMES
+/* Define to 1 if you have the `clock' function. */
 #undef HAVE_CLOCK
-#undef HAVE_DOSQUERYSYSINFO
 
-/* Define one of these to support preemptive Scheme thread scheduling: */
-#undef HAVE_SETITIMER
-#undef HAVE_DOS_SETVECT
-#undef HAVE_DOSSTARTTIMER
-#undef HAVE_VINSTALL
-#undef HAVE_CREATETHREAD
+/* Define to 1 if you have the `clock_gettime' function. */
+#undef HAVE_CLOCK_GETTIME
 
-/* Define one of these to support dynamically loadable object files: */
-#undef HAVE_SHL_LOAD
-#undef HAVE_LOADLIBRARY
-#undef HAVE_DOSLOADMODULE
-#undef HAVE_DXE_LOAD
-#undef HAVE_GETDISKFRAGMENT
-#undef HAVE_NSLINKMODULE
-#undef HAVE__NSGETEXECUTABLEPATH
+/* Define to 1 if you have the <crt_externs.h> header file. */
+#undef HAVE_CRT_EXTERNS_H
+
+/* Define to 1 if you have the `ctermid' function. */
+#undef HAVE_CTERMID
+
+/* Define to 1 if you have the <curses.h> header file. */
+#undef HAVE_CURSES_H
+
+/* Define to 1 if you have the <direct.h> header file. */
+#undef HAVE_DIRECT_H
+
+/* Define to 1 if you have the <dirent.h> header file. */
+#undef HAVE_DIRENT_H
+
+/* Define to 1 if you have the <dlfcn.h> header file. */
+#undef HAVE_DLFCN_H
+
+/* Define to 1 if you have the `dlopen' function. */
 #undef HAVE_DLOPEN
 
-#undef HAVE_GETHOSTNAME
-#undef HAVE_INET_PTON
+/* Define to 1 if you have the <dl.h> header file. */
+#undef HAVE_DL_H
+
+/* Define to 1 if you have the `DosLoadModule' function. */
+#undef HAVE_DOSLOADMODULE
+
+/* Define to 1 if you have the `DosQuerySysInfo' function. */
+#undef HAVE_DOSQUERYSYSINFO
+
+/* Define to 1 if you have the `DosStartTimer' function. */
+#undef HAVE_DOSSTARTTIMER
+
+/* Define to 1 if you have the <dos.h> header file. */
+#undef HAVE_DOS_H
+
+/* Define to 1 if you have the `dos_setvect' function. */
+#undef HAVE_DOS_SETVECT
+
+/* Define to 1 if you have the `dxe_load' function. */
+#undef HAVE_DXE_LOAD
+
+/* Defined when environ is available */
+#undef HAVE_ENVIRON
+
+/* Define to 1 if you have the <errno.h> header file. */
+#undef HAVE_ERRNO_H
+
+/* Define to 1 if you have the <execinfo.h> header file. */
+#undef HAVE_EXECINFO_H
+
+/* Define to 1 if you have the `execvp' function. */
+#undef HAVE_EXECVP
+
+/* Define to 1 if you have the `fcntl' function. */
+#undef HAVE_FCNTL
+
+/* Define to 1 if you have the <fcntl.h> header file. */
+#undef HAVE_FCNTL_H
+
+/* Define to 1 if you have the `fdopendir' function. */
+#undef HAVE_FDOPENDIR
+
+/* Define to 1 if you have the <fenv.h> header file. */
+#undef HAVE_FENV_H
+
+/* Define to 1 if you have the <float.h> header file. */
+#undef HAVE_FLOAT_H
+
+/* Define to 1 if you have the <fpu_control.h> header file. */
+#undef HAVE_FPU_CONTROL_H
+
+/* Define to 1 if you have the `fstatat' function. */
+#undef HAVE_FSTATAT
+
+/* Define to 1 if you have the `ftime' function. */
+#undef HAVE_FTIME
+
+/* Define to 1 if you have the `getaddrinfo' function. */
 #undef HAVE_GETADDRINFO
-#undef HAVE_GETHOSTBYNAME
+
+/* Define to 1 if you have the `getclock' function. */
+#undef HAVE_GETCLOCK
+
+/* Define to 1 if you have the `getcwd' function. */
+#undef HAVE_GETCWD
+
+/* Define to 1 if you have the `GetDiskFragment' function. */
+#undef HAVE_GETDISKFRAGMENT
+
+/* Define to 1 if you have the `getenv' function. */
+#undef HAVE_GETENV
+
+/* Define to 1 if you have the `getgrnam' function. */
+#undef HAVE_GETGRNAM
+
+/* Define to 1 if you have the `gethostbyaddr' function. */
 #undef HAVE_GETHOSTBYADDR
-#undef HAVE_GETSERVBYNAME
-#undef HAVE_GETSERVBYPORT
-#undef HAVE_GETPROTOBYNAME
-#undef HAVE_GETPROTOBYNUMBER
+
+/* Define to 1 if you have the `gethostbyname' function. */
+#undef HAVE_GETHOSTBYNAME
+
+/* Define to 1 if you have the `gethostname' function. */
+#undef HAVE_GETHOSTNAME
+
+/* Define to 1 if you have the `getnetbyname' function. */
 #undef HAVE_GETNETBYNAME
 
-/* Define one of these to support nonblocking I/O: */
-#undef HAVE_SELECT
-#undef HAVE_POLL
-#undef HAVE_PPOLL
-#undef HAVE_MSGWAITFORMULTIPLEOBJECTS
+/* Define to 1 if you have the `getpid' function. */
+#undef HAVE_GETPID
 
-#undef HAVE_TGETSTR
-#undef HAVE_TIGETSTR
+/* Define to 1 if you have the `getppid' function. */
+#undef HAVE_GETPPID
 
-#undef HAVE_OPENPTY
+/* Define to 1 if you have the `getprotobyname' function. */
+#undef HAVE_GETPROTOBYNAME
+
+/* Define to 1 if you have the `getprotobynumber' function. */
+#undef HAVE_GETPROTOBYNUMBER
+
+/* Define to 1 if you have the `getpt' function. */
 #undef HAVE_GETPT
-#undef HAVE_PTSNAME
-#undef HAVE_CTERMID
-#undef HAVE_ISASTREAM
 
-#undef HAVE_HSTRERROR
+/* Define to 1 if you have the `getpwnam' function. */
+#undef HAVE_GETPWNAM
 
-#undef HAVE_SNPRINTF
+/* Define to 1 if you have the `getrusage' function. */
+#undef HAVE_GETRUSAGE
 
+/* Define to 1 if you have the `getservbyname' function. */
+#undef HAVE_GETSERVBYNAME
+
+/* Define to 1 if you have the `getservbyport' function. */
+#undef HAVE_GETSERVBYPORT
+
+/* Define to 1 if you have the `gettimeofday' function. */
+#undef HAVE_GETTIMEOFDAY
+
+/* Define to 1 if you have the `get_fpc_csr' function. */
 #undef HAVE_GET_FPC_CSR
 
-#undef HAVE_ENVIRON
-#undef HAVE__NSGETENVIRON
-#undef HAVE_REMOVE
-#undef HAVE_RENAME
-#undef HAVE_RENAMEAT
-#undef HAVE_RENAMEAT2
-#undef HAVE_RENAMEATX_NP
+/* Define to 1 if you have the <grp.h> header file. */
+#undef HAVE_GRP_H
 
+/* Define to 1 if you have the `hstrerror' function. */
+#undef HAVE_HSTRERROR
+
+/* Define to 1 if you have the `inet_pton' function. */
+#undef HAVE_INET_PTON
+
+/* Define to 1 if you have the <inttypes.h> header file. */
+#undef HAVE_INTTYPES_H
+
+/* Define to 1 if you have the `ioctl' function. */
+#undef HAVE_IOCTL
+
+/* Define to 1 if you have the `isastream' function. */
+#undef HAVE_ISASTREAM
+
+/* Define to 1 if you have the <libutil.h> header file. */
+#undef HAVE_LIBUTIL_H
+
+/* Define to 1 if you have the `link' function. */
+#undef HAVE_LINK
+
+/* Define to 1 if you have the `linkat' function. */
+#undef HAVE_LINKAT
+
+/* Define to 1 if you have the <linux/fs.h> header file. */
+#undef HAVE_LINUX_FS_H
+
+/* Define to 1 if you have the `mach_absolute_time' function. */
+#undef HAVE_MACH_ABSOLUTE_TIME
+
+/* Define to 1 if you have the <mach/mach_time.h> header file. */
+#undef HAVE_MACH_MACH_TIME_H
+
+/* Define to 1 if you have the <mach-o/dyld.h> header file. */
+#undef HAVE_MACH_O_DYLD_H
+
+/* Define to 1 if you have the <memory.h> header file. */
+#undef HAVE_MEMORY_H
+
+/* Define to 1 if you have the `mkdir' function. */
+#undef HAVE_MKDIR
+
+/* Define to 1 if you have the `mkdirat' function. */
+#undef HAVE_MKDIRAT
+
+/* Define to 1 if you have the `mkfifo' function. */
+#undef HAVE_MKFIFO
+
+/* Define to 1 if you have the `mkfifoat' function. */
+#undef HAVE_MKFIFOAT
+
+/* Define to 1 if you have the `mmap' function. */
+#undef HAVE_MMAP
+
+/* Define to 1 if you have the `nanosleep' function. */
+#undef HAVE_NANOSLEEP
+
+/* Define to 1 if you have the <ncurses.h> header file. */
+#undef HAVE_NCURSES_H
+
+/* Define to 1 if you have the <netdb.h> header file. */
+#undef HAVE_NETDB_H
+
+/* Define to 1 if you have the <netinet/in.h> header file. */
+#undef HAVE_NETINET_IN_H
+
+/* Define to 1 if you have the `NSLinkModule' function. */
+#undef HAVE_NSLINKMODULE
+
+/* Define to 1 if you have the `open' function. */
+#undef HAVE_OPEN
+
+/* Define to 1 if you have the `openat' function. */
+#undef HAVE_OPENAT
+
+/* Define to 1 if you have the `opendir' function. */
+#undef HAVE_OPENDIR
+
+/* Define to 1 if you have the `openpty' function. */
+#undef HAVE_OPENPTY
+
+/* Define to 1 if you have the <os2.h> header file. */
+#undef HAVE_OS2_H
+
+/* Define to 1 if you have the `pipe' function. */
+#undef HAVE_PIPE
+
+/* Define to 1 if you have the `poll' function. */
+#undef HAVE_POLL
+
+/* Define to 1 if you have the <poll.h> header file. */
+#undef HAVE_POLL_H
+
+/* Define to 1 if you have the `ppoll' function. */
+#undef HAVE_PPOLL
+
+/* Define if pthread_setaffinity_np is supported */
 #undef HAVE_PTHREAD_SETAFFINITY_NP
 
-/* Determine which types are available */
+/* Define to 1 if you have the `ptsname' function. */
+#undef HAVE_PTSNAME
 
+/* Define to 1 if you have the <pty.h> header file. */
+#undef HAVE_PTY_H
+
+/* Define to 1 if you have the <pwd.h> header file. */
+#undef HAVE_PWD_H
+
+/* Define to 1 if you have the `readlink' function. */
+#undef HAVE_READLINK
+
+/* Define to 1 if you have the `readlinkat' function. */
+#undef HAVE_READLINKAT
+
+/* Define to 1 if you have the `remove' function. */
+#undef HAVE_REMOVE
+
+/* Define to 1 if you have the `rename' function. */
+#undef HAVE_RENAME
+
+/* Define to 1 if you have the `renameat' function. */
+#undef HAVE_RENAMEAT
+
+/* Define to 1 if you have the `renameat2' function. */
+#undef HAVE_RENAMEAT2
+
+/* Define to 1 if you have the `renameatx_np' function. */
+#undef HAVE_RENAMEATX_NP
+
+/* Define to 1 if you have the `rmdir' function. */
+#undef HAVE_RMDIR
+
+/* Define to 1 if you have the `select' function. */
+#undef HAVE_SELECT
+
+/* Define to 1 if you have the `setitimer' function. */
+#undef HAVE_SETITIMER
+
+/* Define to 1 if you have the `shl_load' function. */
+#undef HAVE_SHL_LOAD
+
+/* Defined when sigaction is available */
+#undef HAVE_SIGACTION
+
+/* Defined when sigaddset is available */
+#undef HAVE_SIGADDSET
+
+/* Defined when sigemptyset is available */
+#undef HAVE_SIGEMPTYSET
+
+/* Defined when signal is available */
+#undef HAVE_SIGNAL
+
+/* Define to 1 if you have the <signal.h> header file. */
+#undef HAVE_SIGNAL_H
+
+/* Defined when sigprocmask is available */
+#undef HAVE_SIGPROCMASK
+
+/* Define to 1 if you have the `sleep' function. */
+#undef HAVE_SLEEP
+
+/* Define to 1 if you have the `snprintf' function. */
+#undef HAVE_SNPRINTF
+
+/* Define to 1 if you have the `socket' function. */
+#undef HAVE_SOCKET
+
+/* Define to 1 if you have the `socketpair' function. */
+#undef HAVE_SOCKETPAIR
+
+/* Define to 1 if you have the `stat' function. */
+#undef HAVE_STAT
+
+/* Define to 1 if you have the `stat64' function. */
+#undef HAVE_STAT64
+
+/* Define to 1 if you have the <stat.h> header file. */
+#undef HAVE_STAT_H
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdio.h> header file. */
+#undef HAVE_STDIO_H
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+#undef HAVE_STDLIB_H
+
+/* Define to 1 if you have the `strerror' function. */
+#undef HAVE_STRERROR
+
+/* Define to 1 if you have the <strings.h> header file. */
+#undef HAVE_STRINGS_H
+
+/* Define to 1 if you have the <string.h> header file. */
+#undef HAVE_STRING_H
+
+/* Define to 1 if you have the <stropts.h> header file. */
+#undef HAVE_STROPTS_H
+
+/* Defined when struct stat64 is available */
 #undef HAVE_STRUCT_STAT64
 
-/* Define appropriately if sys/types.h does not define socklen_t.  */
-#undef socklen_t
+/* Define to 1 if you have the `symlink' function. */
+#undef HAVE_SYMLINK
 
-/*
- * Define appropriately as the prefix and suffix added to function
- * names by the C compiler.
- */
-#undef ___IMPORTED_ID_PREFIX
-#undef ___IMPORTED_ID_SUFFIX
+/* Define to 1 if you have the `symlinkat' function. */
+#undef HAVE_SYMLINKAT
 
-/* Define as 1 if you want to enable OpenSSL support */
-#undef USE_OPENSSL
+/* Define to 1 if you have the `sysconf' function. */
+#undef HAVE_SYSCONF
 
-/* Define as 1 if you want to enable poll support */
-#undef USE_POLL_FOR_SELECT
+/* Define to 1 if you have the `sysctl' function. */
+#undef HAVE_SYSCTL
 
-/* Define as 1 if you want to enable high-resolution timing */
+/* Define to 1 if you have the `sysctlbyname' function. */
+#undef HAVE_SYSCTLBYNAME
+
+/* Define to 1 if you have the `syslog' function. */
+#undef HAVE_SYSLOG
+
+/* Define to 1 if you have the <syslog.h> header file. */
+#undef HAVE_SYSLOG_H
+
+/* Define to 1 if you have the <sys/dxe.h> header file. */
+#undef HAVE_SYS_DXE_H
+
+/* Define to 1 if you have the <sys/fpu.h> header file. */
+#undef HAVE_SYS_FPU_H
+
+/* Define to 1 if you have the <sys/ioctl.h> header file. */
+#undef HAVE_SYS_IOCTL_H
+
+/* Define to 1 if you have the <sys/mman.h> header file. */
+#undef HAVE_SYS_MMAN_H
+
+/* Define to 1 if you have the <sys/resource.h> header file. */
+#undef HAVE_SYS_RESOURCE_H
+
+/* Define to 1 if you have the <sys/socket.h> header file. */
+#undef HAVE_SYS_SOCKET_H
+
+/* Define to 1 if you have the <sys/stat.h> header file. */
+#undef HAVE_SYS_STAT_H
+
+/* Define to 1 if you have the <sys/syscall.h> header file. */
+#undef HAVE_SYS_SYSCALL_H
+
+/* Define to 1 if you have the <sys/sysctl.h> header file. */
+#undef HAVE_SYS_SYSCTL_H
+
+/* Define to 1 if you have the <sys/timeb.h> header file. */
+#undef HAVE_SYS_TIMEB_H
+
+/* Define to 1 if you have the <sys/timers.h> header file. */
+#undef HAVE_SYS_TIMERS_H
+
+/* Define to 1 if you have the <sys/times.h> header file. */
+#undef HAVE_SYS_TIMES_H
+
+/* Define to 1 if you have the <sys/time.h> header file. */
+#undef HAVE_SYS_TIME_H
+
+/* Define to 1 if you have the <sys/types.h> header file. */
+#undef HAVE_SYS_TYPES_H
+
+/* Define to 1 if you have the <sys/wait.h> header file. */
+#undef HAVE_SYS_WAIT_H
+
+/* Define to 1 if you have the <TargetConditionals.h> header file. */
+#undef HAVE_TARGETCONDITIONALS_H
+
+/* Defined when tcgetattr and tcsetattr are available */
+#undef HAVE_TCGETSETATTR
+
+/* Define to 1 if you have the <termios.h> header file. */
+#undef HAVE_TERMIOS_H
+
+/* Define to 1 if you have the <tfork.h> header file. */
+#undef HAVE_TFORK_H
+
+/* Define to 1 if you have the `time' function. */
+#undef HAVE_TIME
+
+/* Define to 1 if you have the `times' function. */
+#undef HAVE_TIMES
+
+/* Define to 1 if you have the <time.h> header file. */
+#undef HAVE_TIME_H
+
+/* Define to 1 if you have the <unistd.h> header file. */
+#undef HAVE_UNISTD_H
+
+/* Define to 1 if you have the `unlink' function. */
+#undef HAVE_UNLINK
+
+/* Define to 1 if you have the `unlinkat' function. */
+#undef HAVE_UNLINKAT
+
+/* Define to 1 if you have the <util.h> header file. */
+#undef HAVE_UTIL_H
+
+/* Define to 1 if you have the `utimes' function. */
+#undef HAVE_UTIMES
+
+/* Define to 1 if you have the `VInstall' function. */
+#undef HAVE_VINSTALL
+
+/* Define to 1 if you have the `waitpid' function. */
+#undef HAVE_WAITPID
+
+/* Define to 1 if you have the <wdefwin.h> header file. */
+#undef HAVE_WDEFWIN_H
+
+/* Define to 1 if you have the <ws2tcpip.h> header file. */
+#undef HAVE_WS2TCPIP_H
+
+/* Defined when _NSGetEnviron is available */
+#undef HAVE__NSGETENVIRON
+
+/* Define to 1 if you have the `_NSGetExecutablePath' function. */
+#undef HAVE__NSGETEXECUTABLEPATH
+
+/* Define to the address where bug reports for this package should be sent. */
+#undef PACKAGE_BUGREPORT
+
+/* Define to the full name of this package. */
+#undef PACKAGE_NAME
+
+/* Define to the full name and version of this package. */
+#undef PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+#undef PACKAGE_TARNAME
+
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
+
+/* Define to the version of this package. */
+#undef PACKAGE_VERSION
+
+/* The size of `long', as computed by sizeof. */
+#undef SIZEOF_LONG
+
+/* The size of `void*', as computed by sizeof. */
+#undef SIZEOF_VOIDP
+
+/* Define to 1 if you have the ANSI C header files. */
+#undef STDC_HEADERS
+
+/* Enable high-resolution timing */
 #undef USE_HIGH_RES_TIMING
 
-/* Define as 1 if you want to force using ITIMER_REAL for itimer */
+/* Force using ITIMER_REAL */
 #undef USE_ITIMER_REAL
 
-/* Define as 1 to select a filesystem path encoding */
-#undef ___PATH_ENCODING_UTF8
-#undef ___PATH_ENCODING_LATIN1
-#undef ___PATH_ENCODING_UCS2
-#undef ___PATH_ENCODING_UCS4
-#undef ___PATH_ENCODING_WCHAR
-#undef ___PATH_ENCODING_NATIVE
+/* Enable SSL support using OpenSSL */
+#undef USE_OPENSSL
 
-/*
- * Define as a UCS_2 array initialization containing the default
- * runtime options, e.g. #define ___DEFAULT_RUNTIME_OPTIONS {'d','2','\0'}
- */
-#undef ___DEFAULT_RUNTIME_OPTIONS
+/* Enable use of poll instead of select */
+#undef USE_POLL_FOR_SELECT
 
-/*
- * Define as a UCS_2 array initialization containing the default
- * compile options
- */
+/* Define to 1 if the X Window System is missing or not being used. */
+#undef X_DISPLAY_MISSING
+
+/* Use GNU features when available */
+#undef _GNU_SOURCE
+
+/* Enable direct calls to C library in dynamically loaded modules */
+#undef ___CAN_IMPORT_CLIB_DYNAMICALLY
+
+/* Enable direct calls to setjmp in dynamically loaded modules */
+#undef ___CAN_IMPORT_SETJMP_DYNAMICALLY
+
+/* Enable debugging */
+#undef ___DEBUG
+
+/* Enable debugging the memory allocations */
+#undef ___DEBUG_ALLOC_MEM
+
+/* Enable debugging of control flow history */
+#undef ___DEBUG_CTRL_FLOW_HISTORY
+
+/* Enable generation of debugging log file */
+#undef ___DEBUG_C_BACKTRACE
+
+/* Enable debugging of garbage collect */
+#undef ___DEBUG_GARBAGE_COLLECT
+
+/* Enable debugging of host changes */
+#undef ___DEBUG_HOST_CHANGES
+
+/* Enable generation of debugging log file */
+#undef ___DEBUG_LOG
+
+/* Select default compile options */
 #undef ___DEFAULT_COMPILE_OPTIONS
 
-/*---------------------------------------------------------------------------*/
+/* Select default runtime options */
+#undef ___DEFAULT_RUNTIME_OPTIONS
 
-#endif
+/* Disable unloading of dynamically loaded code */
+#undef ___DONT_UNLOAD_DYN_CODE
+
+/* Enable dynamic linking of TLS */
+#undef ___DYNAMIC_TLS
+
+/* Enable GUIDE */
+#undef ___GUIDE
+
+/* Enable inlining of jumps */
+#undef ___INLINE_JUMPS
+
+/* Select LATIN-1 for path encoding */
+#undef ___PATH_ENCODING_LATIN1
+
+/* Select NATIVE for path encoding */
+#undef ___PATH_ENCODING_NATIVE
+
+/* Select UCS-2 for path encoding */
+#undef ___PATH_ENCODING_UCS2
+
+/* Select UCS-4 for path encoding */
+#undef ___PATH_ENCODING_UCS4
+
+/* Select UTF-8 for path encoding */
+#undef ___PATH_ENCODING_UTF8
+
+/* Select WCHAR for path encoding */
+#undef ___PATH_ENCODING_WCHAR
+
+/* Enable profiling */
+#undef ___PROFILE
+
+/* Enable shared libraries */
+#undef ___SHARED
+
+/* Enable single host mode */
+#undef ___SINGLE_HOST
+
+/* Enable lowlevel code execution */
+#undef ___SUPPORT_LOWLEVEL_EXEC
+
+/* Trust C compiler does TCO properly */
+#undef ___TRUST_C_TCO
+
+/* C type for socklen_t */
+#undef socklen_t
