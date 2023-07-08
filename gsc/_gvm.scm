@@ -4893,6 +4893,8 @@
     (pp-primitive-call-counter)))
 
 (define (bb-interpret bbs bb env stack registers)
+  (define tctx (make-tctx))
+
   (define (get-value opnd)
     (cond
       ((reg? opnd)
@@ -5250,6 +5252,95 @@
     (if interpreter-trace? (write-gvm-instr instr (current-output-port)))
     (interpret-debug "\n\n"))
 
+  (define (assert-types instr)
+    (define (is-value? x) (lambda (y) (eq? x y)))
+
+    (define bits-to-checker
+      (list
+        (cons type-false-bit     (is-value? #f))
+        (cons type-true-bit      (is-value? #t))
+        (cons type-null-bit      null?)
+        (cons type-void-bit      ##void-constant?)
+        (cons type-eof-bit       eof-object?)
+        (cons type-absent-bit    absent-object?)
+        (cons type-bignum-bit    ##bignum?)
+        (cons type-ratnum-bit    ##ratnum?)
+        (cons type-flonum-bit    flonum?)
+        (cons type-cpxnum-bit    ##cpxnum?)
+        (cons type-char-bit      char?)
+        (cons type-symbol-bit    symbol?)
+        (cons type-keyword-bit   keyword?)
+        (cons type-string-bit    string?)
+        (cons type-vector-bit    vector?)
+        (cons type-u8vector-bit  u8vector?)
+        (cons type-s8vector-bit  s8vector?)
+        (cons type-u16vector-bit u16vector?)
+        (cons type-s16vector-bit s16vector?)
+        (cons type-u32vector-bit u32vector?)
+        (cons type-s32vector-bit s32vector?)
+        (cons type-u64vector-bit u64vector?)
+        (cons type-s64vector-bit s64vector?)
+        (cons type-f32vector-bit f32vector?)
+        (cons type-f64vector-bit f64vector?)
+        (cons type-pair-bit      pair?)
+        (cons type-procedure-bit procedure?)
+        (cons type-box-bit       box?)
+        (cons type-promise-bit   promise?)))
+
+    (define (typecheck throw-error value expected-type)
+      (define motley-type (type-motley-force tctx expected-type))
+    
+      (define (typecheck-generic)
+        (define (allowed? bit) (not (zero? (bitwise-and bit motley-bits))))
+        (define motley-bits (type-motley-bitset motley-type))
+        (let loop ((bit-checker-pair bits-to-checker))
+          (if (null? bit-checker-pair)
+              (or (fixnum? value) (allowed? type-other-bit)) ;; at this point all tracked types have been tested
+              (if ((cdar bit-checker-pair) value)
+                  (allowed? (caar bit-checker-pair))
+                  (loop (cdr bit-checker-pair))))))
+
+      (define (typecheck-fixnum)
+        (define lo (type-fixnum-lo motley-type))
+        (define hi (type-fixnum-hi motley-type))
+
+        (define (over-lo? value) (or (not (fixnum? lo)) (>= value lo)))
+        (define (below-hi? value) (or (not (fixnum? hi)) (<= value hi)))
+
+        (or (not (fixnum? value)) (and (over-lo? value) (below-hi? value))))
+
+      (if (not (and (typecheck-fixnum) (typecheck-generic)))
+          (throw-error)))
+
+    (define (throw-error slot-kind slot-num value expected)
+      (step)
+      (error "GVM type error: in bb" (bb-lbl-num bb) slot-kind slot-num value expected))
+
+    (let* ((types (gvm-instr-types instr))
+           (type-locs (vector-ref types 0))
+           (n-registers (vector-ref type-locs 0))
+           (n-slots (vector-ref type-locs 1))
+           (n-free (vector-ref type-locs 2)))
+      (for-each
+        (lambda (reg index)
+          (let ((value (register-ref registers reg))
+                (expected (vector-ref types index)))
+            (typecheck  (lambda () (throw-error "register" reg value expected))
+                        value
+                        expected)))
+        (iota n-registers)
+        (iota n-registers (+ locenv-start-regs 1) 2))
+
+      (for-each
+        (lambda (slot index)
+          (let ((value (stack-ref stack (bb-entry-frame-size bb) slot))
+                (expected (vector-ref types index)))
+            (typecheck  (lambda () (throw-error "slot" slot value expected))
+                        value
+                        expected)))
+        (iota n-slots 1)
+        (iota n-slots (+ locenv-start-regs (* 2 n-registers) 1) 2))))
+
   (define (instr-interpret instr)
     (if interpreter-trace? (print-interpreter-trace instr))
     (case (gvm-instr-kind instr)
@@ -5266,7 +5357,8 @@
       ((jump)
        (jump-interpret instr))
       (else
-        (error "unknown instruction" (gvm-instr-kind instr)))))
+        (error "unknown instruction" (gvm-instr-kind instr))))
+    (assert-types instr))
 
   (let* ((instructions (bb-non-branch-instrs bb))
          (branch (bb-branch-instr bb)))
