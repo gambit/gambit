@@ -4868,7 +4868,7 @@
 (define (register-set! registers n val)
   (stretchable-vector-set! registers n val))
 
-(define interpreter-trace? #t)
+(define interpreter-trace? #f)
 
 (define (interpret-debug-ln msg)
   (if interpreter-trace? (println msg)))
@@ -5251,7 +5251,7 @@
     (interpret-debug "\n\n"))
 
   (define (instr-interpret instr)
-    (print-interpreter-trace instr)
+    (if interpreter-trace? (print-interpreter-trace instr))
     (case (gvm-instr-kind instr)
       ((apply)
        (apply-interpret instr))
