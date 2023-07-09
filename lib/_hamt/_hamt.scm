@@ -69,7 +69,10 @@
 ;;;
 ;;;  (hamt? obj)                    return #t iff obj is a HAMT
 ;;;
-;;;  (make-hamt)                    return an empty HAMT
+;;;  (make-hamt [test: test] [hash: hash])  return an empty HAMT that tests
+;;;                                 key equality with the test procedure and
+;;;                                 hashes keys with the hash procedure
+;;;                                 (test defaults to equal?)
 ;;;
 ;;;  (hamt-length hamt)             return the number of keys in hamt
 ;;;
@@ -108,10 +111,13 @@
 ;;;  (hamt->list hamt)              return an association list representation
 ;;;                                 of hamt (same order as left to right scan)
 ;;;
-;;;  (list->hamt alist)             return a HAMT with the associations taken
-;;;                                 from the association list alist (the
-;;;                                 earliest occurrence of a key has precedence
-;;;                                 over any subsequent ones)
+;;;  (list->hamt alist [test: test] [hash: hash])  return a HAMT with the
+;;;                                 associations taken from the association
+;;;                                 list alist (the earliest occurrence of a
+;;;                                 key has precedence over any subsequent ones)
+;;;                                 the returned HAMT tests key equality with
+;;;                                 the test procedure and hashes keys with
+;;;                                 the hash procedure (test defaults to equal?)
 ;;;
 ;;;  (hamt-empty? hamt)             return #t iff the hamt is empty
 ;;;
