@@ -2,7 +2,7 @@
 
 ;;; File: "test.scm"
 
-;;; Copyright (c) 2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2020-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -27,8 +27,8 @@
         `(_test-equal ,expected (_test-msg (lambda () ,expr)))
         src)))))
 
-
-
+(define _test#call-thunk ;; redefined here to make location the same wether _test module is interpreted or compiled
+  (let () (declare (not inline)) (lambda (thunk) (##first-argument (thunk)))))
 
 
 
@@ -135,13 +135,13 @@
 (test-test-msg "\"test.scm\"@136.16: FAILED (test-error string? 42) GOT 42\n"
                (test-error string? 42))
 
-(test-test-msg "\"test.scm\"@139.16: FAILED (test-error string? (raise 'exception)) GOT *** ERROR IN _test#call-thunk -- This object was raised: exception\n"
+(test-test-msg "\"test.scm\"@139.16: FAILED (test-error string? (raise 'exception)) GOT *** ERROR IN _test#call-thunk, \"test.scm\"@31.68 -- This object was raised: exception\n"
                (test-error string? (raise 'exception)))
 
 (test-test-msg "\"test.scm\"@142.16: FAILED test-error-fail GOT 42\n"
                (test-error "test-error-fail" #t 42))
 
-(test-test-msg "\"test.scm\"@145.16: FAILED test-error-fail GOT *** ERROR IN _test#call-thunk -- This object was raised: exception\n"
+(test-test-msg "\"test.scm\"@145.16: FAILED test-error-fail GOT *** ERROR IN _test#call-thunk, \"test.scm\"@31.68 -- This object was raised: exception\n"
                (test-error "test-error-fail" string? (raise 'exception)))
 
 
@@ -164,13 +164,13 @@
 (test-test-msg "\"test.scm\"@165.16: FAILED (test-error-tail string? 42) GOT 42\n"
                (test-error-tail string? 42))
 
-(test-test-msg "\"test.scm\"@168.16: FAILED (test-error-tail string? (raise 'exception)) GOT *** ERROR IN _test#call-thunk -- This object was raised: exception\n"
+(test-test-msg "\"test.scm\"@168.16: FAILED (test-error-tail string? (raise 'exception)) GOT *** ERROR IN _test#call-thunk, \"test.scm\"@31.68 -- This object was raised: exception\n"
                (test-error-tail string? (raise 'exception)))
 
 (test-test-msg "\"test.scm\"@171.16: FAILED test-error-tail-fail GOT 42\n"
                (test-error-tail "test-error-tail-fail" #t 42))
 
-(test-test-msg "\"test.scm\"@174.16: FAILED test-error-tail-fail GOT *** ERROR IN _test#call-thunk -- This object was raised: exception\n"
+(test-test-msg "\"test.scm\"@174.16: FAILED test-error-tail-fail GOT *** ERROR IN _test#call-thunk, \"test.scm\"@31.68 -- This object was raised: exception\n"
                (test-error-tail "test-error-tail-fail" string? (raise 'exception)))
 
 (test-test-msg "\"test.scm\"@177.16: FAILED (test-error-tail (+ 1 (raise 'exception))) GOT (nontail-exception-raised-in #<procedure #2>)\n"

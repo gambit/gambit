@@ -2,7 +2,7 @@
 
 ;;; File: "_test.scm"
 
-;;; Copyright (c) 2013-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2013-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -112,7 +112,9 @@
   (if (not test-all?)
       (##exit)))
 
-(define call-thunk
+(define call-thunk #f)
+
+(set! call-thunk ;; call-thunk is modified in test/test.scm
   (let ()
 
     (declare (not inline)) ;; don't inline call-thunk so that continuation's
