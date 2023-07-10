@@ -4868,7 +4868,7 @@
 (define (register-set! registers n val)
   (stretchable-vector-set! registers n val))
 
-(define interpreter-trace? #f)
+(define interpreter-trace? #t)
 
 (define (interpret-debug-ln msg)
   (if interpreter-trace? (println msg)))
@@ -5361,7 +5361,7 @@
         (iota n-slots (+ locenv-start-regs (* 2 n-registers) 1) 2))))
 
   (define (instr-interpret instr)
-    (if interpreter-trace? (print-interpreter-trace instr))
+    (print-interpreter-trace instr)
     (case (gvm-instr-kind instr)
       ((apply)
        (apply-interpret instr))
@@ -5378,8 +5378,10 @@
       (else
         (error "unknown instruction" (gvm-instr-kind instr)))))
 
-  (let* ((instructions (bb-non-branch-instrs bb))
+  (let* ((label (bb-label-instr bb))
+         (instructions (bb-non-branch-instrs bb))
          (branch (bb-branch-instr bb)))
-    (assert-types (bb-label-instr bb))
+    (print-interpreter-trace label)
+    (assert-types label)
     (for-each instr-interpret instructions)
     (instr-interpret branch)))
