@@ -429,21 +429,11 @@
   (newline)
   (compiler-abort))
 
-(define (compiler-user-warning-category cat loc msg . args)
-  (if (compiler-warning-enabled? cat)
-      (begin
-        (display "*** WARNING") (locat-show " IN " loc) (display " -- ")
-        (display msg)
-        (for-each (lambda (x) (display " ") (write x)) args)
-        (newline))))
-
 (define (compiler-user-warning loc msg . args)
-  (if warnings-requested?
-    (begin
-      (display "*** WARNING") (locat-show " IN " loc) (display " -- ")
-      (display msg)
-      (for-each (lambda (x) (display " ") (write x)) args)
-      (newline))))
+  (display "*** WARNING") (locat-show " IN " loc) (display " -- ")
+  (display msg)
+  (for-each (lambda (x) (display " ") (write x)) args)
+  (newline))
 
 (define (compiler-internal-error msg . args)
   (display "*** ERROR -- Compiler internal error detected") (newline)
@@ -461,9 +451,6 @@
 
 (define (compiler-abort)
   (throw-to-exception-handler #f))
-
-(define warnings-requested? #f)
-(set! warnings-requested? #t)
 
 ;;;----------------------------------------------------------------------------
 ;;
@@ -1017,5 +1004,17 @@
 (define (lset-union a b)
   (append (lset-difference a b) b))
 
+(define (string-right-pad str desired-length)
+  (define (repeat* thing n tail)
+    (if (<= n 0)
+        tail
+        (repeat* thing (- n 1) (cons thing tail))))
+  (string-append str (apply string (repeat* #\ (max 0
+                                                    (- desired-length
+                                                       (string-length str)))
+                                            '()))))
+
 ;;;============================================================================
 )
+
+

@@ -18,13 +18,34 @@
 ;;;----------------------------------------------------------------------------
 
 
-(define valid-warning-categories '())
+(define valid-warning-decls '())
 
-(define (valid-warning-category? opt)
-  (not (not (member opt valid-warning-categories))))
+(define warning-descriptions '())
 
-(define (define-warning-category opt)
-  (set! valid-warning-categories (cons opt valid-warning-categories)))
+(define (valid-warning-decl? opt)
+  (not (not (assq opt valid-warning-decls))))
+
+(define (define-warning-decl opt description)
+  (if (null? (cdr opt))
+      (define-namable-boolean-decl (car opt)))
+  (set! valid-warning-decls (cons opt valid-warning-decls))
+  (set! warning-descriptions (cons description warning-descriptions)))
+
+
+;; generate the section for the warnings in the #
+(define (warning-help)
+  (define str-flags (map (lambda (decl) (string-append "-" (string-concatenate (map symbol->string decl) " ")))
+                         valid-warning-decls))
+  (define max-flag-size (apply max (map string-length str-flags)))
+  (define len (+ 4 max-flag-size))
+  (define padded-str-flags
+    (map (lambda (flag) (string-right-pad flag len)) str-flags))
+  (define big-block (string-concatenate
+                     (map (lambda (flag-pad descr)
+                            (string-append "    " flag-pad descr "\n"))
+                          padded-str-flags warning-descriptions)))
+
+  (string-append "Warnings\n" big-block))
 
 ;;;----------------------------------------------------------------------------
 

@@ -580,8 +580,8 @@
 (define (add-not-safe env)
   (env-declare env (list safe-sym #f)))
 
-(define (warnings? env) ; true iff warnings are not suppressed
-  (declaration-value warnings-sym #f #t env))
+(define (warning-enabled? name env) ; true iff the warning category is enabled
+  (declaration-value name #f #t env))
 
 (define (intrs-enabled? env) ; true iff interrupt checks should be generated
   (declaration-value interrupts-enabled-sym #f #t env))
@@ -915,7 +915,7 @@
          (for-each
           (lambda (def)
             (let ((env (node-env def)))
-              (if (warnings? env)
+              (if (warning-enabled? 'warn-standardly-bound env)
                   (let ((name (var-name var)))
                     (if (standard-proc-obj (target.prim-info name) name env)
                         (compiler-user-warning

@@ -9,6 +9,14 @@
 (##define-macro (macro-initialization-file)
   ".gambini")
 
+
+(define-warning-decl '(warn-undefined-references)
+  "Report references that are not either defined in the file, or declared in a (namespace (\"X\" <name>)) declaration")
+(define-warning-decl '(warn-standardly-bound)
+  "Report when standardly bound variables are redefined")
+(define-warning-decl '(warn-nontail-calls)
+  "Report nontail calls when interrupts are disabled")
+
 (define (##main-gsi/gsc)
 
   ;; In the usages "^" stands for the program name.
@@ -72,9 +80,8 @@ Auxiliary information options
     -expansion             Show source code after code transformations
     -report                Show global variable usage report
     -verbose               Show trace of compiler activity
-    -warnings              Activate warning reporting
-    -warn 'x,y,...'        Show specified warnings
-    -nowarn 'x,y,...'      Do not show specified warnings
+    -warnings              Activate all reporting of all warnings
+    -nowarnings            Disable reporting of all warnings
 
 Interpreter options
     -i               Process rest of command line like the interpreter
@@ -87,9 +94,6 @@ Global options
     -v               Show version information
     -h, -help        Show this help
 
-Warnings
-    undefined-references   Report references that are not either defined in the file, or declared in a (namespace ("X" <name>)) declaration
-    nontail-calls          Report nontail calls when interrupts are disabled
 
 usage-end
 )
@@ -976,7 +980,7 @@ usage-end
                      (##assq 'help main-options)
                      (##assq '-help main-options))
                  (write-usage-to-port
-                  (if (interpreter-or #f) gsi-usage gsc-usage)
+                  (if (interpreter-or #f) gsi-usage (string-append gsc-usage (warning-help)))
                   cmd-name
                   ##stdout-port)
                  (##exit))
@@ -997,7 +1001,7 @@ usage-end
                          '((target symbol)
                            (c) (dynamic) (exe) (obj) (link) (flat)
                            (compactness fixnum)
-                           (warnings) (warn string) (nowarn string)
+                           (warnings) (nowarnings)
                            (verbose) (report)
                            (expansion) (gvm) (cfg) (dg) (asm) (keep-temp)
 ;;TODO: enable and document when compiler supports these options
@@ -1013,7 +1017,9 @@ usage-end
                            (ld-options-prelude string)
                            (ld-options string)
                            (pkg-config string)
-                           (pkg-config-path string))))
+                           (pkg-config-path string)))
+                        (common-compiler-options
+                         (##append valid-warning-decls common-compiler-options)))
 
                    ;; parse command line to try to find the -target option
                    (split-command-line
