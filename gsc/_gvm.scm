@@ -5144,7 +5144,8 @@
                       (get-value opnd)
                       'empty-stack-slot)) ;; #f opnd means allocation of a slot
            (target (copy-loc instr)))
-      (interpret-write target value)))
+      (interpret-write target value)
+      (assert-types instr)))
 
   ;; CALL HELPERS
   (define (call-proc-obj-interpret instr proc nargs ret)
@@ -5209,7 +5210,8 @@
            (opnds-values (map get-value opnds))
            (loc (apply-loc instr))
            (result (exec-prim (proc-obj-name prim) opnds-values)))
-      (if loc (interpret-write loc result))))
+      (if loc (interpret-write loc result))
+      (assert-types instr)))
 
   ;; CLOSE
   (define (close-interpret instr)
@@ -5231,7 +5233,8 @@
                      (cons (make-First-Class-Label bbs lbl)
                            (map get-value opnds)))))
           (Closure-slots-set! c slots)))
-        parms closures)))
+        parms closures)
+    (assert-types instr)))
 
 
   ;; SWITCH
@@ -5313,31 +5316,47 @@
           (throw-error)))
 
     (define (throw-error slot-kind slot-num value expected)
-      (step)
+      ;(step)
       (error "GVM type error: in bb" (bb-lbl-num bb) slot-kind slot-num value expected))
 
     (let* ((types (gvm-instr-types instr))
            (type-locs (vector-ref types 0))
            (n-registers (vector-ref type-locs 0))
            (n-slots (vector-ref type-locs 1))
-           (n-free (vector-ref type-locs 2)))
+           (n-free (vector-ref type-locs 2))
+           (frame (gvm-instr-frame instr))
+           (regs (frame-regs frame))
+           (slots (frame-slots frame)))
+
+      (define (live? var)
+        (let ((live (frame-live frame)))
+          (or (varset-member? var live)
+              (and (eq? var closure-env-var)
+                  (varset-intersects?
+                    live
+                    (list->varset (frame-closed frame)))))))
+
       (for-each
         (lambda (reg index)
-          (let ((value (register-ref registers reg))
-                (expected (vector-ref types index)))
-            (typecheck  (lambda () (throw-error "register" reg value expected))
-                        value
-                        expected)))
+          (if (live? (list-ref regs reg))
+              (let ((value (register-ref registers reg))
+                    (expected (vector-ref types index)))
+                (typecheck  (lambda () (throw-error "register" reg value expected))
+                            value
+                            expected))
+              (if interpreter-trace? (pprint (list 'not-lives-reg reg (list-ref regs reg))))))
         (iota n-registers)
         (iota n-registers (+ locenv-start-regs 1) 2))
 
       (for-each
         (lambda (slot index)
-          (let ((value (stack-ref stack (bb-entry-frame-size bb) slot))
-                (expected (vector-ref types index)))
-            (typecheck  (lambda () (throw-error "slot" slot value expected))
-                        value
-                        expected)))
+          (if (live? (list-ref slots (- slot 1)))
+              (let ((value (stack-ref stack (bb-entry-frame-size bb) slot))
+                    (expected (vector-ref types index)))
+                (typecheck  (lambda () (throw-error "slot" slot value expected))
+                            value
+                            expected))
+              (if interpreter-trace? (pprint (list 'not-lives-frame slot (list-ref slots (- slot 1)))))))
         (iota n-slots 1)
         (iota n-slots (+ locenv-start-regs (* 2 n-registers) 1) 2))))
 
@@ -5357,10 +5376,10 @@
       ((jump)
        (jump-interpret instr))
       (else
-        (error "unknown instruction" (gvm-instr-kind instr))))
-    (assert-types instr))
+        (error "unknown instruction" (gvm-instr-kind instr)))))
 
   (let* ((instructions (bb-non-branch-instrs bb))
          (branch (bb-branch-instr bb)))
+    (assert-types (bb-label-instr bb))
     (for-each instr-interpret instructions)
     (instr-interpret branch)))
