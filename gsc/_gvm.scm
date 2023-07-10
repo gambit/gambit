@@ -5274,6 +5274,7 @@
         (cons type-symbol-bit    symbol?)
         (cons type-keyword-bit   keyword?)
         (cons type-string-bit    string?)
+        (cons type-procedure-bit Closure?)
         (cons type-vector-bit    vector?)
         (cons type-u8vector-bit  u8vector?)
         (cons type-s8vector-bit  s8vector?)
@@ -5286,7 +5287,6 @@
         (cons type-f32vector-bit f32vector?)
         (cons type-f64vector-bit f64vector?)
         (cons type-pair-bit      pair?)
-        (cons type-procedure-bit procedure?)
         (cons type-box-bit       box?)
         (cons type-promise-bit   promise?)))
 
