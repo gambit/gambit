@@ -310,14 +310,15 @@
                                                              (car x)))
                                                  (vector->list (cdr name-and-refs)))))
                            (if (pair? refs)
-                               (if (warning-enabled? 'warn-undefined-references env)
-                                (compiler-user-warning
-                                 (source-locat (node-source (car refs)))
-                                 (string-append
-                                  "\""
-                                  (symbol->string name)
-                                  "\""
-                                  " is not defined"))))))))
+                               (let ((env (node-env (car refs))))
+                                 (if (warning-enabled? 'warn-undefined-references env)
+                                     (compiler-user-warning
+                                      (source-locat (node-source (car refs)))
+                                      (string-append
+                                       "\""
+                                       (symbol->string name)
+                                       "\""
+                                       " is not defined")))))))))
                  (cdr ns-and-names)))
               (table->list namespace-to-undefined-names))))
 
