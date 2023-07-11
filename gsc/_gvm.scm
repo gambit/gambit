@@ -808,7 +808,7 @@
 ;; is always the entry point.
 
 (define (bbs-purify bbs)
-
+  (define optim? #t)
   (define (purify-step bbs0)
     (let* ((bbs1 (bbs-remove-jump-cascades bbs0))
            (bbs2 (bbs-remove-dead-code bbs1))
@@ -816,14 +816,14 @@
            (bbs4 (bbs-remove-useless-jumps bbs3)))
       (cons bbs2 bbs4)))
 
-  (let loop ((bbs0 (bbs-type-specialize (cdr (purify-step bbs)))))
-    ;;(bbs-determine-refs! bbs0) (bbs-order bbs0) #;
+  (let loop ((bbs0 (bbs-type-specialize (if (not optim?) bbs (cdr (purify-step bbs))))))
+    (if (not optim?) (begin (bbs-determine-refs! bbs0) (bbs-order bbs0))
     (let* ((bbs1-bbs2 (purify-step bbs0))
            (bbs1 (car bbs1-bbs2))
            (bbs2 (cdr bbs1-bbs2)))
       (if (not (eq? bbs1 bbs2)) ;; iterate until code does not change
           (loop bbs2)
-          (bbs-order bbs2)))))
+          (bbs-order bbs2))))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -2257,7 +2257,6 @@
                   (display (list (bb-lbl-num bb) '-> miss))(newline))
                 missings)))
           new-bbs)
-        ;(if (pair? missing-reachables) (step))
         (if (pair? missing-reachables)
           (error "all-reachables-exist?" "no"))))
 
@@ -2316,7 +2315,7 @@
       (define (bbs-cleanup)
         ;; remove unreachable bb
         ;; required to avoid having uninitialized bb in the bbs
-        ;;(write (list 'GC-REACHABILITY))(newline)
+        ;; (write (list 'GC-REACHABILITY))(newline)
         (update-reachability!)
         (bbs-for-each-bb
           (lambda (bb)
@@ -2339,7 +2338,6 @@
         bbs))
 
       (define (reach lbl bbvctx)
-
         (let* ((types-before (bbvctx-types bbvctx))
                (cost (bbvctx-cost bbvctx))
                (path (bbvctx-path bbvctx))
@@ -2360,7 +2358,7 @@
                                       (replacement-lbl-num old-existing-version)))
                (existing-version-is-live?
                  (and existing-version
-                      (memq existing-version (map cdr types-lbl-alist)))))
+                      (memv existing-version (map cdr types-lbl-alist)))))
 
           (if existing-version-is-live?
               existing-version
@@ -2372,12 +2370,16 @@
                       (cons (cons types-before new-lbl)
                             types-lbl-alist)))
 
+                
+
                 ;; make the new-lbl reachable. It may still be made unreachable if there is a merge
                 (reachability-set! new-lbl #t)
 
                 (table-set! all-versions-tbl types-before new-lbl)
 
                 (vector-set! bb-versions 0 new-types-lbl-alist)
+
+                
 
                 (if (> (length new-types-lbl-alist)
                        (max 1 (bb-version-limit bb)))
@@ -2485,8 +2487,10 @@
                            (cons (cons merged-types new-lbl2)
                                  versions-to-keep))
 
-                          (set! types-before merged-types)
-                          (set! new-lbl new-lbl2)
+                          (if (memq 0 in) ;; Only update label and types if the original version was merged!!!!!!
+                              (begin
+                                (set! types-before merged-types)
+                                (set! new-lbl new-lbl2)))
 
                           ;(write (list 'MERGED-TYPES= merged-types))(newline)
                         
@@ -4868,7 +4872,7 @@
 (define (register-set! registers n val)
   (stretchable-vector-set! registers n val))
 
-(define interpreter-trace? #t)
+(define interpreter-trace? #f)
 
 (define (interpret-debug-ln msg)
   (if interpreter-trace? (println msg)))
