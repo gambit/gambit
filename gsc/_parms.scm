@@ -125,6 +125,7 @@
 (define safe-sym               (string->canonical-symbol "safe"))
 
 (define warnings-sym           (string->canonical-symbol "warnings"))
+(define nowarnings-sym         (string->canonical-symbol "nowarnings"))
 
 (define interrupts-enabled-sym (string->canonical-symbol "interrupts-enabled"))
 (define poll-on-return-sym     (string->canonical-symbol "poll-on-return"))

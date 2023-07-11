@@ -506,6 +506,7 @@
 (define-boolean-decl safe-sym)
 
 (define-boolean-decl warnings-sym)
+(define-boolean-decl nowarnings-sym)
 
 (define-boolean-decl interrupts-enabled-sym)
 (define-boolean-decl poll-on-return-sym)
@@ -581,7 +582,19 @@
   (env-declare env (list safe-sym #f)))
 
 (define (warning-enabled? name env) ; true iff the warning category is enabled
-  (declaration-value name #f #t env))
+  (define decls (env-decl-ref env))
+  (let loop ((decls decls))
+    (if (pair? decls)
+        (cond
+         ((eq? (caar decls) name)
+          (cadar decls))
+         ((eq? (caar decls) 'warnings)
+          (cadar decls))
+         ((eq? (caar decls) 'nowarnings)
+          (not (cadar decls)))
+         (else
+          (loop (cdr decls))))
+        #f)))
 
 (define (intrs-enabled? env) ; true iff interrupt checks should be generated
   (declaration-value interrupts-enabled-sym #f #t env))

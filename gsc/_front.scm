@@ -128,7 +128,9 @@
                       #t) ;; these options are innocuous
                      (else
                       ;; OK if the option is a target specific option
-                      (assq (car opt) target-specific-options))))))
+                      (or
+                       (assq (car opt) valid-warning-decls)
+                       (assq (car opt) target-specific-options)))))))
 
          (if (not handled?)
              (set! rev-unhandled-opts
@@ -227,12 +229,25 @@
        (**in-new-compilation-ctx
         (cadr (assq 'target opts))
         (lambda ()
+          (define ge (make-global-environment))
+          (define initial-decl
+            (let loop ((opts opts)
+                       (decl '()))
+              (if (pair? opts)
+                  (if (or (assq (caar opts) valid-warning-decls)
+                       (eq? (caar opts) 'warnings)
+                       (eq? (caar opts) 'nowarnings))
+                      (loop (cdr opts)
+                            (cons (list (caar opts) #t) decl))
+                      (loop (cdr opts) decl))
+                  decl)))
+
           (if script-line
               (**compilation-meta-info-add! 'script-line script-line))
           (**compilation-module-ref-set! module-ref)
           (parse-program
            program
-           (make-global-environment)
+           (env-decl-set ge initial-decl)
            module-ref
            vector))))
      (lambda (v2 comp-ctx)
