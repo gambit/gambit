@@ -2578,6 +2578,14 @@
                   (else
                    type-top)))
 
+          (define (opnd-constantify opnd types-before)
+            (if (locenv-loc? opnd)
+                (let ((type (opnd-type opnd types-before)))
+                  (if (type-singleton? type)
+                      (make-obj (type-singleton-val type))
+                      opnd))
+                opnd))
+
           (let ((types-after
                  (resized-frame-types
                   (gvm-instr-frame gvm-instr)
@@ -2644,8 +2652,10 @@
                        (map (lambda (opnd)
                               (opnd-type opnd types-before))
                             opnds))
+                      (args
+                       (map make-call-arg type-opnds))
                       (call
-                       (make-call prim (map make-call-arg type-opnds)))
+                       (make-call prim args))
                       (spec-call
                        (let* ((instr-comment (gvm-instr-comment gvm-instr))
                               (node (comment-get instr-comment 'node))
@@ -2654,30 +2664,50 @@
                              (specialize-call call env)
                              call)))
                       (prim2
-                       (car spec-call))
+                       (call-proc spec-call))
+                      (args2
+                       (call-args spec-call))
                       (loc
                        (walk-loc (apply-loc gvm-instr)))
+                      (type-infer
+                       (proc-obj-type-infer prim2))
+                      (dst-type
+                       (if type-infer
+                           (type-infer tctx type-opnds)
+                           type-top))
                       (types-after
                        (if (locenv-loc? loc)
-                           (let* ((type-infer
-                                   (proc-obj-type-infer prim2))
-                                  (dst-loc
-                                   (gvm-loc->locenv-index types-after loc))
-                                  (dst-type
-                                   (if type-infer
-                                       (type-infer tctx type-opnds)
-                                       type-top)))
+                           (let ((dst-loc
+                                  (gvm-loc->locenv-index types-after loc)))
                              (locenv-set types-after ;; change type of dst-loc
                                          dst-loc
                                          dst-type))
                            types-after)) ;; no change
                       (new-instr
-                       (make-apply
-                        prim2
-                        opnds
-                        loc
-                        (gvm-instr-frame gvm-instr)
-                        (gvm-instr-comment gvm-instr))))
+                       (if (and (not (proc-obj-side-effects? prim2))
+                                (type-singleton? dst-type))
+                           (make-copy
+                            (make-obj (type-singleton-val dst-type))
+                            loc
+                            (gvm-instr-frame gvm-instr)
+                            (gvm-instr-comment gvm-instr))
+                           (let ((opnds2
+                                  (map (lambda (arg)
+                                         (let ((arg-type (call-arg-val arg)))
+                                           (if (type-singleton? arg-type)
+                                               (make-obj (type-singleton-val arg-type))
+                                               (let ((i (pos-in-list arg args)))
+                                                 (if i
+                                                     (list-ref opnds i)
+                                                     (compiler-internal-error
+                                                      "bbs-type-specialize*, can't find operand"))))))
+                                       args2)))
+                             (make-apply
+                              prim2
+                              opnds2
+                              loc
+                              (gvm-instr-frame gvm-instr)
+                              (gvm-instr-comment gvm-instr))))))
                  (gvm-instr-types-set! new-instr types-after)
                  new-instr))
 
@@ -2699,7 +2729,7 @@
                            types-after)) ;; no change
                       (new-instr
                        (make-copy
-                        opnd
+                        (opnd-constantify opnd types-before)
                         loc
                         (gvm-instr-frame gvm-instr)
                         (gvm-instr-comment gvm-instr))))
