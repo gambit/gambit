@@ -1001,9 +1001,6 @@
           (not (member x b)))
         a))
 
-(define (lset-union a b)
-  (append (lset-difference a b) b))
-
 (define (string-right-pad str desired-length)
   (define (repeat* thing n tail)
     (if (<= n 0)
