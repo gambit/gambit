@@ -146,6 +146,9 @@
         0
         type-top)))
 
+(define (types-keep-topmost-slots types topmost-slots)
+  (locenv-keep-topmost-slots types topmost-slots type-top))
+
 (define (frame-live? var frame)
   (let ((live (frame-live frame)))
     (if (eq? var closure-env-var)
@@ -2538,13 +2541,18 @@
         (let ((new-bb #f))
 
           (define show #t)
-          (define (reach* lbl bbvctx)
+          (define (reach* lbl types-after cost path)
             (if (and debug-bbv? show)
                 (begin
                   (write-bb new-bb (current-output-port))
                   (print "...\n")
                   (set! show #f)))
-            (reach lbl bbvctx))
+            (reach lbl
+                   (make-bbvctx
+                    (let ((dest-fs (bb-entry-frame-size (lbl-num->bb lbl bbs))))
+                      (types-keep-topmost-slots types-after dest-fs))
+                    cost
+                    path)))
 
         (define (walk-opnd gvm-opnd)
           (and gvm-opnd
@@ -2556,10 +2564,8 @@
                           (label
                            (bb-label-instr bb))
                           (types-bef
-                           (generic-frame-types (gvm-instr-frame label)))
-                          (bbvctx
-                           (make-bbvctx types-bef cost path)))
-                     (make-lbl (reach* lbl bbvctx)))
+                           (generic-frame-types (gvm-instr-frame label))))
+                     (make-lbl (reach* lbl types-bef cost path)))
                    gvm-opnd)))
 
         (define (walk-loc gvm-opnd)
@@ -2794,8 +2800,7 @@
                                            types-entry))))
                                (make-closure-parms
                                 (closure-parms-loc parms)
-                                (reach* lbl
-                                        (make-bbvctx types-entry 0 '()))
+                                (reach* lbl types-entry 0 '())
                                 opnds))
                              rev-parms))
                            (let ((new-instr
@@ -2835,19 +2840,17 @@
                                     (true-lbl
                                      (and true-types
                                           (reach* (ifjump-true gvm-instr)
-                                                  (make-bbvctx
-                                                   true-types
-                                                   cost
-                                                   path))))
+                                                  true-types
+                                                  cost
+                                                  path)))
                                     (false-types
                                      (narrow (cdr result-types)))
                                     (false-lbl
                                      (and false-types
                                           (reach* (ifjump-false gvm-instr)
-                                                  (make-bbvctx
-                                                   false-types
-                                                   cost
-                                                   path)))))
+                                                  false-types
+                                                  cost
+                                                  path))))
                                (if true-lbl
                                    (if false-lbl
                                        (make-ifjump
@@ -2880,15 +2883,13 @@
                             test
                             opnds
                             (reach* (ifjump-true gvm-instr)
-                                    (make-bbvctx
-                                     types-after
-                                     cost
-                                     path))
+                                    types-after
+                                    cost
+                                    path)
                             (reach* (ifjump-false gvm-instr)
-                                    (make-bbvctx
-                                     types-after
-                                     cost
-                                     path))
+                                    types-after
+                                    cost
+                                    path)
                             (ifjump-poll? gvm-instr)
                             (gvm-instr-frame gvm-instr)
                             (gvm-instr-comment gvm-instr)))))
@@ -2912,10 +2913,9 @@
                        (make-jump
                         (if (lbl? opnd)
                             (make-lbl (reach* (lbl-num opnd)
-                                              (make-bbvctx
-                                               types-after
-                                               cost
-                                               path)))
+                                              types-after
+                                              cost
+                                              path))
                             (walk-opnd opnd))
                         (and ret
                              (let* ((result-loc
@@ -2932,10 +2932,9 @@
                                                  result-loc
                                                  type-top)))
                                (reach* ret
-                                       (make-bbvctx
-                                        types-return
-                                        (+ (- cost instr-cost) call-cost)
-                                        path)))) ;;;;;;;;;TODO
+                                       types-return
+                                       (+ (- cost instr-cost) call-cost)
+                                       path))) ;;;;;;;;;TODO
                         (jump-nb-args gvm-instr)
                         (jump-poll? gvm-instr)
                         (if (type-motley-included?
@@ -3091,6 +3090,17 @@
          (locenv (make-vector len 0)))
     (vector-set! locenv 0 lengths)
     locenv))
+
+(define (locenv-keep-topmost-slots locenv topmost-slots init)
+  (let* ((lengths (vector-ref locenv 0))
+         (nb-regs (vector-ref lengths 0))
+         (nb-slots (vector-ref lengths 1))
+         (nb-closed (vector-ref lengths 2))
+         (slot-shift (- topmost-slots nb-slots)))
+    (locenv-resize-from-lengths locenv
+                                (vector nb-regs topmost-slots nb-closed)
+                                slot-shift
+                                init)))
 
 (define (locenv-resize locenv nb-regs nb-slots nb-closed slot-shift init)
   (let ((lengths (vector-ref locenv 0)))
