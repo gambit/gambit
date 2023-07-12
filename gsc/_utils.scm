@@ -1001,16 +1001,6 @@
           (not (member x b)))
         a))
 
-(define (string-right-pad str desired-length)
-  (define (repeat* thing n tail)
-    (if (<= n 0)
-        tail
-        (repeat* thing (- n 1) (cons thing tail))))
-  (string-append str (apply string (repeat* #\ (max 0
-                                                    (- desired-length
-                                                       (string-length str)))
-                                            '()))))
-
 ;;;============================================================================
 )
 

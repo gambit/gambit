@@ -226,7 +226,6 @@
        (**in-new-compilation-ctx
         (cadr (assq 'target opts))
         (lambda ()
-          (define ge (make-global-environment))
           (define initial-decl
             (let loop ((opts opts)
                        (decl '()))
@@ -249,7 +248,9 @@
           (**compilation-module-ref-set! module-ref)
           (parse-program
            program
-           (env-decl-set ge initial-decl)
+           (env-decl-set
+            (make-global-environment)
+            initial-decl)
            module-ref
            vector))))
      (lambda (v2 comp-ctx)
@@ -3646,7 +3647,9 @@
 
                               (if (and (not (intrs-enabled? (node-env node)))
                                        (not (reason-tail? reason2))
-                                       (warning-enabled? (node-env node) 'warn-nontail-calls))
+                                       (warning-enabled?
+                                        (node-env node)
+                                        'warn-nontail-calls-with-interrupts-disabled))
                                 (compiler-user-warning
                                  (source-locat (node-source node))
                                  "Nontail call with interrupts disabled"))

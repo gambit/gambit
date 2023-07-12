@@ -10,12 +10,9 @@
   ".gambini")
 
 
-(define-warning-decl '(warn-undefined-references)
-  "Report references that are not either defined in the file, or declared in a (namespace (\"X\" <name>)) declaration")
-(define-warning-decl '(warn-standardly-bound)
-  "Report when standardly bound variables are redefined")
-(define-warning-decl '(warn-nontail-calls)
-  "Report nontail calls when interrupts are disabled")
+(define-warning-decl '(warn-undefined-references))
+(define-warning-decl '(warn-standardly-bound))
+(define-warning-decl '(warn-nontail-calls-with-interrupts-disabled))
 
 (define (##main-gsi/gsc)
 
@@ -94,6 +91,11 @@ Global options
     -v               Show version information
     -h, -help        Show this help
 
+Warnings
+    -warn-undefined-references                    Report references that are not either defined in the file, or declared in a (namespace (X <name>)) declaration
+    usage-end
+    -warn-standardly-bound                        Report when standardly bound variables are redefined
+    -warn-nontail-calls-with-interrupts-disabled  Report nontail calls when interrupts are disabled
 
 usage-end
 )
@@ -980,7 +982,7 @@ usage-end
                      (##assq 'help main-options)
                      (##assq '-help main-options))
                  (write-usage-to-port
-                  (if (interpreter-or #f) gsi-usage (string-append gsc-usage (warning-help)))
+                  (if (interpreter-or #f) gsi-usage gsc-usage)
                   cmd-name
                   ##stdout-port)
                  (##exit))

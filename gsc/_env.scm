@@ -20,30 +20,10 @@
 
 (define allowed-warning-decls '())
 
-(define warning-descriptions '())
-
-(define (define-warning-decl opt description)
+(define (define-warning-decl opt)
   (if (null? (cdr opt))
       (define-namable-boolean-decl (car opt)))
-  (set! allowed-warning-decls (cons opt allowed-warning-decls))
-  (set! warning-descriptions (cons description warning-descriptions)))
-
-
-;; generate the section for the warnings in the #
-(define (warning-help)
-  (let* ((str-flags (map (lambda (decl) (string-append "-" (string-concatenate (map symbol->string decl) " ")))
-                         allowed-warning-decls))
-         (max-flag-size (apply max (map string-length str-flags)))
-         (len (+ 4 max-flag-size))
-         (padded-str-flags
-          (map (lambda (flag) (string-right-pad flag len)) str-flags))
-         (big-block
-          (string-concatenate
-           (map (lambda (flag-pad descr)
-                  (string-append "    " flag-pad descr "\n"))
-                padded-str-flags warning-descriptions))))
-
-    (string-append "Warnings\n" big-block "\n")))
+  (set! allowed-warning-decls (cons opt allowed-warning-decls)))
 
 ;;;----------------------------------------------------------------------------
 
