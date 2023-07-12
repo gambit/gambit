@@ -1019,7 +1019,7 @@ usage-end
                            (pkg-config string)
                            (pkg-config-path string)))
                         (common-compiler-options
-                         (##append valid-warning-decls common-compiler-options)))
+                         (##append allowed-warning-decls common-compiler-options)))
 
                    ;; parse command line to try to find the -target option
                    (split-command-line

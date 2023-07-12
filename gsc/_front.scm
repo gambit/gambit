@@ -84,8 +84,7 @@
                    (case (car opt)
                      ((target)
                       #t) ;; target option handled previously
-                     ((warnings)
-                      (set! compiler-option-warnings           #t)
+                     ((warnings nowarnings)
                       #t)
                      ((verbose)
                       (set! compiler-option-verbose            #t)
@@ -129,7 +128,7 @@
                      (else
                       ;; OK if the option is a target specific option
                       (or
-                       (assq (car opt) valid-warning-decls)
+                       (assq (car opt) allowed-warning-decls)
                        (assq (car opt) target-specific-options)))))))
 
          (if (not handled?)
@@ -149,7 +148,6 @@
     (reverse rev-unhandled-opts)))
 
 (define (reset-options)
-  (set! compiler-option-warnings           #f)
   (set! compiler-option-verbose            #f)
   (set! compiler-option-report             #f)
   (set! compiler-option-expansion          #f)
@@ -162,7 +160,6 @@
   (set! compiler-option-debug-environments #f)
   (set! compiler-option-track-scheme       #f))
 
-(define compiler-option-warnings           #f)
 (define compiler-option-verbose            #f)
 (define compiler-option-report             #f)
 (define compiler-option-expansion          #f)
@@ -234,12 +231,17 @@
             (let loop ((opts opts)
                        (decl '()))
               (if (pair? opts)
-                  (if (or (assq (caar opts) valid-warning-decls)
-                       (eq? (caar opts) 'warnings)
-                       (eq? (caar opts) 'nowarnings))
-                      (loop (cdr opts)
-                            (cons (list (caar opts) #t) decl))
-                      (loop (cdr opts) decl))
+                  (cond ((assq (caar opts) allowed-warning-decls)
+                         (loop (cdr opts)
+                               (cons (list (caar opts) #t) decl)))
+                        ((eq? (caar opts) 'warnings)
+                         (loop (cdr opts)
+                               (cons (list 'warnings #t) decl)))
+                        ((eq? (caar opts) 'nowarnings)
+                         (loop (cdr opts)
+                               (cons (list 'warnings #f) decl)))
+                        (else
+                         (loop (cdr opts) decl)))
                   decl)))
 
           (if script-line
