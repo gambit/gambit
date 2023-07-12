@@ -1767,7 +1767,7 @@
                      (result-type
                       (and type-infer
                            (type-infer tctx
-                                       (map make-call-arg args)))))
+                                       (map call-arg-val args)))))
                 (if (type-included? tctx result-type type-fixnum)
                     (make-call fix-spec args)
                     call))))))))
