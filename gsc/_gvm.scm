@@ -2139,6 +2139,29 @@
 
 (define (bbs-type-specialize bbs)
 
+  (define (any-bb-has-version-limit-above-0?)
+    (let ((has-version-limit-above-0? #f))
+
+      (bbs-for-each-bb
+       (lambda (bb)
+         (if (> (bb-version-limit bb) 0)
+             (set! has-version-limit-above-0? #t)))
+       bbs)
+
+      has-version-limit-above-0?))
+
+  (if (any-bb-has-version-limit-above-0?)
+      (bbs-type-specialize* bbs) ;; create a specialized bbs
+      bbs)) ;; leave bbs intact
+
+(define (bb-version-limit bb)
+  (let* ((instr-comment (gvm-instr-comment (bb-label-instr bb)))
+         (node (comment-get instr-comment 'node))
+         (env (node-env node)))
+    (if env (version-limit env) 0)))
+
+(define (bbs-type-specialize* bbs)
+
   (define tctx (make-tctx))
 
   (define new-bbs (make-bbs))
@@ -2216,12 +2239,6 @@
   (define (bbvctx-types bbvctx) (vector-ref bbvctx 0))
   (define (bbvctx-cost bbvctx) (vector-ref bbvctx 1))
   (define (bbvctx-path bbvctx) (vector-ref bbvctx 2))
-
-  (define (bb-version-limit bb)
-    (let* ((instr-comment (gvm-instr-comment (bb-label-instr bb)))
-           (node (comment-get instr-comment 'node))
-           (env (node-env node)))
-      (if env (version-limit env) 0)))
 
   (define (walk-bbs bbs)
 
@@ -2961,36 +2978,20 @@
         ;(bbs-cleanup)
         (all-reachables-exist?))
 
-;;  (write-bbs bbs (current-output-port))
-
-  (let ((specialize? #f))
+  (define (finalize)
 
     (bbs-for-each-bb
      (lambda (bb)
-       (if (> (bb-version-limit bb) 0)
-           (set! specialize? #t)))
-     bbs)
+       (bb-clone-replacing-lbls bb new-bbs replacement-lbl-num #f))
+     new-bbs)
 
-    (if (not specialize?)
+    new-bbs)
 
-        bbs
+;;  (write-bbs bbs (current-output-port))
 
-        (begin
+  (walk-bbs bbs)
 
-          (walk-bbs bbs)
-
-;;          (write-bbs new-bbs (current-output-port))
-
-          (bbs-for-each-bb
-           (lambda (bb)
-             (bb-clone-replacing-lbls
-              bb
-              new-bbs
-              replacement-lbl-num
-              #f))
-           new-bbs)
-
-          new-bbs))))
+  (finalize))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ;;
