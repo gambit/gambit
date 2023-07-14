@@ -2563,6 +2563,21 @@
                     cost
                     path)))
 
+        (define (reach-ret* lbl types-after cost path)
+            (if (and debug-bbv? show)
+                (begin
+                  (write-bb new-bb (current-output-port))
+                  (print "...\n")
+                  (set! show #f)))
+            (reach lbl
+                   (make-bbvctx
+                    (let* ((bb (lbl-num->bb lbl bbs))
+                           (label (bb-label-instr bb))
+                           (frame (gvm-instr-frame label)))
+                      (types-truncate types-after frame))
+                    cost
+                    path)))
+
         (define (walk-opnd gvm-opnd)
           (and gvm-opnd
                (if (lbl? gvm-opnd)
@@ -2940,7 +2955,7 @@
                                      (locenv-set types-after*
                                                  result-loc
                                                  type-top)))
-                               (reach* ret
+                               (reach-ret* ret
                                        types-return
                                        (+ (- cost instr-cost) call-cost)
                                        path))) ;;;;;;;;;TODO
@@ -4930,23 +4945,53 @@
 (define (interpret-debug msg)
   (if interpreter-trace? (display msg)))
 
+(define interpreter-trace-size 5)
+
+(define (init-interpreter-trace)
+  (make-vector interpreter-trace-size #f))
+
+(define interpreter-instr-counter 0)
+(define (increment-interpreter-instr-counter)
+  (define step 10000)
+  (if (zero? (modulo interpreter-instr-counter step))
+      (pp (list 'GVM-INTERPRETER-INSTR-COUNT: interpreter-instr-counter))
+  (set! interpreter-instr-counter (+ interpreter-instr-counter 1))))
+
+(define (trace-add! trace bbs bb)
+  (for-each
+    (lambda (i) (vector-set! trace i (vector-ref trace (- i 1))))
+    (iota (- interpreter-trace-size 1) (- interpreter-trace-size 1) -1))
+  (vector-set! trace 0 (cons bbs bb)))
+
+(define (pp-trace trace)
+  (let ((current-bb (cdr (vector-ref trace 0)))
+        (last-bb (cdr (vector-ref trace 1)))
+        (trace-lbls (map (lambda (x) (bb-lbl-num (cdr x))) (vector->list trace))))
+  (pp '===================LAST-BB)
+  (write-bb last-bb (current-output-port))(newline)
+  (pp '===================CURRENT-BB)
+  (write-bb current-bb (current-output-port))(newline)
+  (pp (list 'TRACE: trace-lbls))))
+
 (define (gvm-interpret module-procs)
-  (pprint '***GVM-Interpreter)
+  (with-exception-catcher
+    (lambda (e) (display-exception e))
+    (lambda ()
+      (pprint '***GVM-Interpreter)
+      (init-gvm-primitives)
+      (let* ((global-env (make-global-env))
+             (stack (make-stack))
+             (registers (make-registers))
+             (main-proc (car module-procs))
+             (main-bbs (proc-obj-code main-proc))
+             (entry-lbl-num (bbs-entry-lbl-num main-bbs))
+            (trace (init-interpreter-trace)))
+        ;; dummy empty return adress
+        (register-set! registers 0 'exit-return-address)
+        (bb-interpret main-bbs (lbl-num->bb entry-lbl-num main-bbs) global-env stack registers trace)
+        (pp-primitive-call-counter)))))
 
-  (init-gvm-primitives)
-
-  (let* ((global-env (make-global-env))
-         (stack (make-stack))
-         (registers (make-registers))
-         (main-proc (car module-procs))
-         (main-bbs (proc-obj-code main-proc))
-         (entry-lbl-num (bbs-entry-lbl-num main-bbs)))
-    ;; dummy empty return adress
-    (register-set! registers 0 'exit-return-address)
-    (bb-interpret main-bbs (lbl-num->bb entry-lbl-num main-bbs) global-env stack registers)
-    (pp-primitive-call-counter)))
-
-(define (bb-interpret bbs bb env stack registers)
+(define (bb-interpret bbs bb env stack registers trace)
   (define tctx (make-tctx))
 
   (define (get-value opnd)
@@ -5162,7 +5207,7 @@
           (align-args! args-values nparams keys opts has-rest clo)))
       (if (eq? (label-kind target-label) 'return)
         (interpret-debug-ln "=========== JUMP OUT ==========="))
-      (bb-interpret target-bbs target-bb env stack registers)))
+      (bb-interpret target-bbs target-bb env stack registers trace)))
 
   (define (jump-to-entry instr bbs from-bb nargs ret)
     (jump-to instr bbs (bbs-entry-lbl-num bbs) from-bb nargs ret #f))
@@ -5370,8 +5415,9 @@
           (throw-error)))
 
     (define (throw-error slot-kind slot-num value expected)
-      ;(step)
-      (error "GVM type error: in bb" (bb-lbl-num bb) slot-kind slot-num value expected))
+      (pp-trace trace)
+      (step)
+      (error "GVM type error: in bb" (bb-lbl-num bb) slot-kind slot-num "has value" value "but expected type" expected))
 
     (let* ((types (gvm-instr-types instr))
            (type-locs (vector-ref types 0))
@@ -5415,6 +5461,7 @@
         (iota n-slots (+ locenv-start-regs (* 2 n-registers) 1) 2))))
 
   (define (instr-interpret instr)
+    (increment-interpreter-instr-counter)
     (print-interpreter-trace instr)
     (case (gvm-instr-kind instr)
       ((apply)
@@ -5435,6 +5482,7 @@
   (let* ((label (bb-label-instr bb))
          (instructions (bb-non-branch-instrs bb))
          (branch (bb-branch-instr bb)))
+    (trace-add! trace bbs bb)
     (print-interpreter-trace label)
     (assert-types label)
     (for-each instr-interpret instructions)
