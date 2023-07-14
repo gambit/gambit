@@ -2357,6 +2357,14 @@
                     (vector-set! bb-versions 0 reachable-versions)))))
         bbs))
 
+      (define version-types-table (make-table))
+
+      (define (get-version-types lbl)
+        (table-ref version-types-table lbl))
+
+      (define (set-version-types! lbl types)
+        (table-set! version-types-table lbl types))
+
       (define (reach lbl bbvctx)
         (let* ((types-before (bbvctx-types bbvctx))
                (cost (bbvctx-cost bbvctx))
@@ -2365,7 +2373,6 @@
                (label (bb-label-instr bb))
                (frame (gvm-instr-frame label))
                (types-before (resized-frame-types frame types-before))
-               (key (list lbl types-before))
                (bb-versions (or (table-ref versions lbl #f)
                                 (let ((bb-versions
                                        (vector '() (make-table))))
@@ -2376,6 +2383,7 @@
                (old-existing-version (table-ref all-versions-tbl types-before #f))
                (existing-version (and old-existing-version
                                       (replacement-lbl-num old-existing-version)))
+               (types-for-version (if existing-version (get-version-types existing-version) types-before))
                (existing-version-is-live?
                  (and existing-version
                       (memv existing-version (map cdr types-lbl-alist)))))
@@ -2387,19 +2395,18 @@
                      (step-num (begin (set! step-count (+ 1 step-count)) step-count))
                      (looping? (assoc lbl path))
                      (new-types-lbl-alist
-                      (cons (cons types-before new-lbl)
+                      (cons (cons types-for-version new-lbl)
                             types-lbl-alist)))
 
-                
+                (set-version-types! new-lbl types-for-version)
 
                 ;; make the new-lbl reachable. It may still be made unreachable if there is a merge
                 (reachability-set! new-lbl #t)
 
-                (table-set! all-versions-tbl types-before new-lbl)
+                (table-set! all-versions-tbl types-for-version new-lbl)
 
                 (vector-set! bb-versions 0 new-types-lbl-alist)
 
-                
 
                 (if (> (length new-types-lbl-alist)
                        (max 1 (bb-version-limit bb)))
@@ -2491,6 +2498,8 @@
                                 (or (replacement-lbl-num (table-ref all-versions-tbl merged-types #f))
                                     (bbs-new-lbl! new-bbs))))
 
+                          (set-version-types! new-lbl2 merged-types)
+
                           (for-each
                            (lambda (types-lbl)
                              (let ((types (car types-lbl))
@@ -2509,7 +2518,7 @@
 
                           (if (memq 0 in) ;; Only update label and types if the original version was merged!!!!!!
                               (begin
-                                (set! types-before merged-types)
+                                (set! types-for-version merged-types)
                                 (set! new-lbl new-lbl2)))
 
                           ;(write (list 'MERGED-TYPES= merged-types))(newline)
@@ -2523,7 +2532,7 @@
                   work-queue
                   (lambda ()
                     (if (reachable? new-lbl) ;; only process this block if it is reachable
-                        (walk-bb bb types-before cost path lbl new-lbl))))
+                        (walk-bb bb types-for-version cost path lbl new-lbl))))
 
                 (if debug-bbv?
                     (begin
