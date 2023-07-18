@@ -4958,6 +4958,7 @@
   (make-vector interpreter-trace-size #f))
 
 (define interpreter-instr-counter 0)
+(set! interpreter-instr-counter 0)
 (define (increment-interpreter-instr-counter)
   (define step 10000)
   (if (zero? (modulo interpreter-instr-counter step))
