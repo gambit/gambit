@@ -2386,7 +2386,7 @@
                (types-for-version (if existing-version (get-version-types existing-version) types-before))
                (existing-version-is-live?
                  (and existing-version
-                      (memv existing-version (map cdr types-lbl-alist)))))
+                      (memq existing-version (map cdr types-lbl-alist)))))
 
           (if existing-version-is-live?
               existing-version
@@ -2399,9 +2399,6 @@
                             types-lbl-alist)))
 
                 (set-version-types! new-lbl types-for-version)
-
-                ;; make the new-lbl reachable. It may still be made unreachable if there is a merge
-                (reachability-set! new-lbl #t)
 
                 (table-set! all-versions-tbl types-for-version new-lbl)
 
@@ -2521,12 +2518,22 @@
                                 (set! types-for-version merged-types)
                                 (set! new-lbl new-lbl2)))
 
+                          ;; schedule GC if a pre-exisintg version was deleted
+                          (let loop ((versions versions-to-merge))
+                            (if (pair? versions)
+                                (let ((version (car versions)))
+                                    (if (not (or (type-eqv? version merged-types) ;; check if the version was preserved by the merge
+                                                 (type-eqv? version types-for-version))) ;; check if the version was the newly entering version
+                                        (set! update-reachability-required? #t)
+                                        (loop (cdr versions))))))
+
                           ;(write (list 'MERGED-TYPES= merged-types))(newline)
-                        
-                          (set! update-reachability-required? #t)))))
+                          ))))
 
                 (if debug-bbv?
                     (print "\n[step " step-num "      #" lbl " ==> #" new-lbl "]\n"))
+
+                (reachability-set! new-lbl #t)
 
                 (queue-put!
                   work-queue

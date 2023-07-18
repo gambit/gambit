@@ -8032,6 +8032,11 @@
 (define (type-eqv? type1 type2) ;; is type1 equal to type2?
   (equal? type1 type2))
 
+(define (type-memv? type types)
+  (if (null? types)
+      #f
+      (or (type-eqv? type (car types)) (types-memv type (cdr types)))))
+
 (define (type-included? tctx type1 type2) ;; is type1 included in type2?
   (type-motley-included?
    (type-motley-force tctx type1)
