@@ -7603,14 +7603,6 @@
                     '>=
                     '<=))
 
-(define type-number
-  (make-type-motley (+ type-bignum-bit
-                       type-ratnum-bit
-                       type-flonum-bit
-                       type-cpxnum-bit)
-                    '>=
-                    '<=))
-
 (define type-real
   (make-type-motley (+ type-bignum-bit
                        type-ratnum-bit
