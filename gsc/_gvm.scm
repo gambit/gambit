@@ -2193,33 +2193,6 @@
      0
      type-top))
 
-  (define (type-distance tctx type1 type2)
-    (let* ((t1 (type-motley-force tctx type1))
-           (t2 (type-motley-force tctx type2)))
-      (let* ((bitset1 (type-motley-bitset t1))
-             (bitset2 (type-motley-bitset t2))
-             (bs1
-              (+ (bitwise-and bitset1 (- (expt 2 30) 1))
-                 (if (type-motley-included? t1 type-fixnum)
-                     (expt 2 30)
-                     0)))
-             (bs2
-              (+ (bitwise-and bitset2 (- (expt 2 30) 1))
-                 (if (type-motley-included? t2 type-fixnum)
-                     (expt 2 30)
-                     0))))
-        (bit-count (bitwise-eqv bs1 bs2)))))
-
-  (define (types-distance tctx types1 types2)
-    (let ((len (vector-length types1)))
-      (let loop ((i locenv-start-regs) (d 0))
-        (if (< i len)
-            (let* ((type1 (vector-ref types1 (+ i 1)))
-                   (type2 (vector-ref types2 (+ i 1))))
-              (loop (+ i locenv-entry-size)
-                    (+ d (type-distance tctx type1 type2))))
-            d))))
-
   (define (types-merge2 types1 types2 widen?)
     (locenv-merge types1
                   types2
@@ -2386,7 +2359,7 @@
                (types-for-version (if existing-version (get-version-types existing-version) types-before))
                (existing-version-is-live?
                  (and existing-version
-                      (memq existing-version (map cdr types-lbl-alist)))))
+                      (memv existing-version (map cdr types-lbl-alist)))))
 
           (if existing-version-is-live?
               existing-version
@@ -2396,7 +2369,8 @@
                      (looping? (assoc lbl path))
                      (new-types-lbl-alist
                       (cons (cons types-for-version new-lbl)
-                            types-lbl-alist)))
+                            types-lbl-alist))
+                     (versions-merged #f))
 
                 (set-version-types! new-lbl types-for-version)
 
@@ -2410,125 +2384,62 @@
 
                     (let* ((types-lbl-vect
                             (list->vector new-types-lbl-alist))
-                           (n
-                            (vector-length types-lbl-vect))
-                           (min-dist
-                            99999999)
-                           (min-dist-pair
-                            #f)
-                           (dist-matrix
-                            (make-vector n)))
+                           (in-out
+                            (find-merge-candidates tctx types-lbl-vect))
+                           (in
+                            (car in-out))
+                           (out
+                            (cdr in-out))
+                           (versions-to-merge
+                            (map (lambda (i) (vector-ref types-lbl-vect i))
+                                 in))
+                           (versions-to-keep
+                            (map (lambda (i) (vector-ref types-lbl-vect i))
+                                 out))
+                           (merged-types
+                            (types-merge-multi
+                             (map car versions-to-merge)
+                             #t))
+                           (new-lbl2
+                            (or (replacement-lbl-num (table-ref all-versions-tbl merged-types #f))
+                                (bbs-new-lbl! new-bbs))))
 
-                      (define (get-distance i j)
-                        (if (= i j)
-                            0
-                            (vector-ref
-                             (vector-ref dist-matrix
-                                         (max i j))
-                             (min i j))))
+                      (set-version-types! new-lbl2 merged-types)
 
-                      (define (partition-distance i d)
-                        (let loop ((j 0) (in '()) (out '()))
-                          (if (< j n)
-                              (if (= i j)
-                                  (loop (+ j 1)
-                                        (cons j in)
-                                        out)
-                                  (if (= (get-distance i j) d)
-                                      (loop (+ j 1)
-                                            (cons j in)
-                                            out)
-                                      (loop (+ j 1)
-                                            in
-                                            (cons j out))))
-                              (cons in out))))
+                      (for-each
+                       (lambda (types-lbl)
+                         (let ((types (car types-lbl))
+                               (lbl (cdr types-lbl)))
+                           (if debug-bbv? (pprint (list 'adding lbl '--> new-lbl2)))
+                           (table-set! lbl-mapping lbl new-lbl2)))
+                       versions-to-merge)
 
-                      (let loop1 ((i 0))
-                        (if (< i n)
-                            (let ((row (make-vector i)))
-                              (vector-set! dist-matrix i row)
-                              (let loop2 ((j 0))
-                                (if (< j i)
-                                    (let ((d (types-distance
-                                              tctx
-                                              (car (vector-ref
-                                                    types-lbl-vect
-                                                    i))
-                                              (car (vector-ref
-                                                    types-lbl-vect
-                                                    j)))))
-                                      (vector-set! row j d)
-                                      (if (< d min-dist)
-                                          (begin
-                                            (set! min-dist d)
-                                            (set! min-dist-pair (cons i j))))
-                                      (loop2 (+ j 1)))
-                                    (loop1 (+ i 1)))))))
+                      (set! versions-merged versions-to-merge)
 
-                      (let* ((i1 (car min-dist-pair))
-                             (i2 (cdr min-dist-pair))
-                             (p1 (partition-distance i1 min-dist))
-                             (p2 (partition-distance i2 min-dist))
-                             (p
-                              (if (> (length (car p1)) (length (car p2)))
-                                  p1
-                                  p2))
-                             (in
-                              (car p))
-                             (out
-                              (cdr p)))
+                      (table-set! all-versions-tbl merged-types new-lbl2)
 
-                        (if debug-bbv?
-                            (pprint (list (list 'in in) (list 'out out))))
+                      (vector-set!
+                       bb-versions
+                       0
+                       (cons (cons merged-types new-lbl2)
+                             versions-to-keep))
 
-                        (let* ((versions-to-merge
-                                (map (lambda (i) (vector-ref types-lbl-vect i))
-                                     in))
-                               (versions-to-keep
-                                (map (lambda (i) (vector-ref types-lbl-vect i))
-                                     out))
-                               (merged-types
-                                (types-merge-multi
-                                 (map car versions-to-merge)
-                                 #t))
-                               (new-lbl2
-                                (or (replacement-lbl-num (table-ref all-versions-tbl merged-types #f))
-                                    (bbs-new-lbl! new-bbs))))
+                      (if (memv 0 in) ;; Only update label and types if the original version was merged!!!!!!
+                          (begin
+                            (set! types-for-version merged-types)
+                            (set! new-lbl new-lbl2)))
 
-                          (set-version-types! new-lbl2 merged-types)
+                      ;; schedule GC if a pre-exisintg version was deleted
+                      (let loop ((versions versions-to-merge))
+                        (if (pair? versions)
+                            (let ((version (car versions)))
+                              (if (not (or (type-eqv? version merged-types) ;; check if the version was preserved by the merge
+                                           (type-eqv? version types-for-version))) ;; check if the version was the newly entering version
+                                  (set! update-reachability-required? #t)
+                                  (loop (cdr versions))))))
 
-                          (for-each
-                           (lambda (types-lbl)
-                             (let ((types (car types-lbl))
-                                   (lbl (cdr types-lbl)))
-                                (if debug-bbv? (pprint (list 'adding lbl '--> new-lbl2)))
-                                (table-set! lbl-mapping lbl new-lbl2)))
-                           versions-to-merge)
-
-                          (table-set! all-versions-tbl merged-types new-lbl2)
-
-                          (vector-set!
-                           bb-versions
-                           0
-                           (cons (cons merged-types new-lbl2)
-                                 versions-to-keep))
-
-                          (if (memq 0 in) ;; Only update label and types if the original version was merged!!!!!!
-                              (begin
-                                (set! types-for-version merged-types)
-                                (set! new-lbl new-lbl2)))
-
-                          ;; schedule GC if a pre-exisintg version was deleted
-                          (let loop ((versions versions-to-merge))
-                            (if (pair? versions)
-                                (let ((version (car versions)))
-                                    (if (not (or (type-eqv? version merged-types) ;; check if the version was preserved by the merge
-                                                 (type-eqv? version types-for-version))) ;; check if the version was the newly entering version
-                                        (set! update-reachability-required? #t)
-                                        (loop (cdr versions))))))
-
-                          ;(write (list 'MERGED-TYPES= merged-types))(newline)
-                          ))))
+                      ;(write (list 'MERGED-TYPES= merged-types))(newline)
+                      ))
 
                 (if debug-bbv?
                     (print "\n[step " step-num "      #" lbl " ==> #" new-lbl "]\n"))
@@ -2549,6 +2460,36 @@
                           (write-bb (lbl-num->bb new-lbl new-bbs) (current-output-port))
                           (write (list 'bb-generation-pending new-lbl))))
                       (print "\n")))
+
+                (if 'debug-bbv? ;; show new set of versions
+                    (let* ((instr-comment (gvm-instr-comment label))
+                           (node (comment-get instr-comment 'node))
+                           (expr (and node (parse-tree->expression node))))
+                      (if (and (pair? expr) (eq? 'lambda (car expr)))
+                          (let ((source-code (object->string expr 75)))
+                            (println "----------------------------------------")
+                            (println "#" (bb-lbl-num bb) " ")
+                            (println source-code)
+                            (println "after a request for this version:")
+                            (print "  ")
+                            (write-frame frame types-before (current-output-port))
+                            (newline)
+                            (if versions-merged
+                                (begin
+                                  (println "these versions were merged:")
+                                  (for-each
+                                   (lambda (version)
+                                     (print "  ")
+                                     (write-frame frame (car version) (current-output-port))
+                                     (newline))
+                                   versions-merged)))
+                            (println "the set of versions is now:")
+                            (for-each
+                             (lambda (version)
+                               (print "  ")
+                               (write-frame frame (car version) (current-output-port))
+                               (newline))
+                             (vector-ref bb-versions 0))))))
 
                 new-lbl))))
 
@@ -3052,6 +2993,108 @@
   (walk-bbs bbs)
 
   (finalize))
+
+(define (find-merge-candidates tctx types-lbl-vect)
+
+  (define (type-distance tctx type1 type2)
+    (let* ((t1 (type-motley-force tctx type1))
+           (t2 (type-motley-force tctx type2)))
+      (let* ((bitset1 (type-motley-bitset t1))
+             (bitset2 (type-motley-bitset t2))
+             (bs1
+              (+ (bitwise-and bitset1 (- (expt 2 30) 1))
+                 (if (type-motley-included? t1 type-fixnum)
+                     (expt 2 30)
+                     0)))
+             (bs2
+              (+ (bitwise-and bitset2 (- (expt 2 30) 1))
+                 (if (type-motley-included? t2 type-fixnum)
+                     (expt 2 30)
+                     0))))
+        (bit-count (bitwise-eqv bs1 bs2)))))
+
+  (define (types-distance tctx types1 types2)
+    (let ((len (vector-length types1)))
+      (let loop ((i locenv-start-regs) (d 0))
+        (if (< i len)
+            (let* ((type1 (vector-ref types1 (+ i 1)))
+                   (type2 (vector-ref types2 (+ i 1))))
+              (loop (+ i locenv-entry-size)
+                    (+ d (type-distance tctx type1 type2))))
+            d))))
+
+  (let* ((n
+          (vector-length types-lbl-vect))
+         (min-dist
+          99999999)
+         (min-dist-pair
+          #f)
+         (dist-matrix
+          (make-vector n)))
+
+    (define (get-distance i j)
+      (if (= i j)
+          0
+          (vector-ref
+           (vector-ref dist-matrix
+                       (max i j))
+           (min i j))))
+
+    (define (partition-distance i d)
+      (let loop ((j 0) (in '()) (out '()))
+        (if (< j n)
+            (if (= i j)
+                (loop (+ j 1)
+                      (cons j in)
+                      out)
+                (if (= (get-distance i j) d)
+                    (loop (+ j 1)
+                          (cons j in)
+                          out)
+                    (loop (+ j 1)
+                          in
+                          (cons j out))))
+            (cons in out))))
+
+    (let loop1 ((i 0))
+      (if (< i n)
+          (let ((row (make-vector i)))
+            (vector-set! dist-matrix i row)
+            (let loop2 ((j 0))
+              (if (< j i)
+                  (let ((d (types-distance
+                            tctx
+                            (car (vector-ref
+                                  types-lbl-vect
+                                  i))
+                            (car (vector-ref
+                                  types-lbl-vect
+                                  j)))))
+                    (vector-set! row j d)
+                    (if (< d min-dist)
+                        (begin
+                          (set! min-dist d)
+                          (set! min-dist-pair (cons i j))))
+                    (loop2 (+ j 1)))
+                  (loop1 (+ i 1)))))))
+
+    (let* ((i1 (car min-dist-pair))
+           (i2 (cdr min-dist-pair))
+           (p1 (partition-distance i1 min-dist))
+           (p2 (partition-distance i2 min-dist))
+           (p
+            (if (> (length (car p1)) (length (car p2)))
+                p1
+                p2))
+           (in
+            (car p))
+           (out
+            (cdr p)))
+
+      (if debug-bbv?
+          (pprint (list (list 'in in) (list 'out out))))
+
+      (cons in out))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ;;
@@ -4256,98 +4299,97 @@
 (define (format-gvm-instr-frame gvm-instr)
   (let ((frame (gvm-instr-frame gvm-instr))
         (types (gvm-instr-types gvm-instr)))
+    (format-frame frame types)))
 
-    (define (format-type-gvm-loc gvm-loc)
-      (if types
-          (let ((type
-                 (locenv-ref types (gvm-loc->locenv-index types gvm-loc))))
-            (if (type-eqv? type type-top)
-                '("")
-                `("|" ,@(format-type type))))
-          '("")))
+(define (write-frame frame types port)
+  (display (string-concatenate (format-frame frame types))
+           port))
 
-    (define (format-var var)
-      (cond ((eq? var closure-env-var)
-             (let ((closed (frame-closed frame)))
-               (let loop ((i (length closed))
-                          (lst (reverse closed))
-                          (sep `())
-                          (result `(")")))
-                 (if (pair? lst)
-                     (loop (- i 1)
-                           (cdr lst)
-                           `(" ")
-                           (let* ((var (car lst))
-                                  (type (format-type-gvm-loc (make-clo #f i))))
-                             `(,(symbol->string (var-name (car lst)))
-                               ,@type
-                               ,@sep
-                               ,@result)))
-                     `("(" ,@result)))))
-            ((eq? var ret-var)
-             `("#ret"))
-            ((var-temp? var)
-             `("#"))
-            (else
-             `(,(symbol->string (var-name var))))))
+(define (format-frame frame types)
 
-    (define (live? var)
-      (let ((live (frame-live frame)))
-        (or (varset-member? var live)
-            (and (eq? var closure-env-var)
-                 (varset-intersects?
-                  live
-                  (list->varset (frame-closed frame)))))))
+  (define (format-type-gvm-loc gvm-loc)
+    (if types
+        (let ((type
+               (locenv-ref types (gvm-loc->locenv-index types gvm-loc))))
+          (if (type-eqv? type type-top)
+              '("")
+              `("|" ,@(format-type type))))
+        '("")))
 
-    (let ((regs (frame-regs frame)))
-      (let loop1 ((i (- (length regs) 1))
-                  (lst (reverse regs))
-                  (sep `())
-                  (result `()))
-        (if (pair? lst)
-            (let ((var (car lst)))
-              (if (live? var) ;; only include live registers
-                  (loop1 (- i 1)
+  (define (format-var var)
+    (cond ((eq? var closure-env-var)
+           (let ((closed (frame-closed frame)))
+             (let loop ((i (length closed))
+                        (lst (reverse closed))
+                        (sep `())
+                        (result `(")")))
+               (if (pair? lst)
+                   (loop (- i 1)
                          (cdr lst)
                          `(" ")
-                         (let* ((reg (make-reg i))
-                                (info (if var
-                                          `("=" ,@(format-var var))
-                                          `()))
-                                (type (if var
-                                          (format-type-gvm-loc reg)
-                                          `())))
-                           `(,(format-gvm-opnd reg)
-                             ,@info
+                         (let* ((var (car lst))
+                                (type (format-type-gvm-loc (make-clo #f i))))
+                           `(,(symbol->string (var-name (car lst)))
                              ,@type
                              ,@sep
                              ,@result)))
-                  (loop1 (- i 1)
+                   `("(" ,@result)))))
+          ((eq? var ret-var)
+           `("#ret"))
+          ((var-temp? var)
+           `("#"))
+          (else
+           `(,(symbol->string (var-name var))))))
+
+  (let ((regs (frame-regs frame)))
+    (let loop1 ((i (- (length regs) 1))
+                (lst (reverse regs))
+                (sep `())
+                (result `()))
+      (if (pair? lst)
+          (let ((var (car lst)))
+            (if (frame-live? var frame) ;; only include live registers
+                (loop1 (- i 1)
+                       (cdr lst)
+                       `(" ")
+                       (let* ((reg (make-reg i))
+                              (info (if var
+                                        `("=" ,@(format-var var))
+                                        `()))
+                              (type (if var
+                                        (format-type-gvm-loc reg)
+                                        `())))
+                         `(,(format-gvm-opnd reg)
+                           ,@info
+                           ,@type
+                           ,@sep
+                           ,@result)))
+                (loop1 (- i 1)
+                       (cdr lst)
+                       sep
+                       result)))
+          (let ((slots (frame-slots frame)))
+            (let loop2 ((i (length slots))
+                        (lst slots)
+                        (sep `())
+                        (result `("]" ,@sep ,@result)))
+              (if (pair? lst)
+                  (loop2 (- i 1)
                          (cdr lst)
-                         sep
-                         result)))
-            (let ((slots (frame-slots frame)))
-              (let loop2 ((i (length slots))
-                          (lst slots)
-                          (sep `())
-                          (result `("]" ,@sep ,@result)))
-                (if (pair? lst)
-                    (loop2 (- i 1)
-                           (cdr lst)
-                           `(" ")
-                           (let ((var (car lst)))
-                             (if (live? var)
-                                 (let* ((stk (make-stk i))
-                                        (info (format-var var))
-                                        (type (format-type-gvm-loc stk)))
-                                   `(,@info
-                                     ,@type
-                                     ,@sep
-                                     ,@result))
-                                 `("."
+                         `(" ")
+                         (let ((var (car lst)))
+                           (if (frame-live? var frame)
+                               (let* ((stk (make-stk i))
+                                      (info (format-var var))
+                                      (type (format-type-gvm-loc stk)))
+                                 `(,@info
+                                   ,@type
                                    ,@sep
-                                   ,@result))))
-                    `("[" ,@result)))))))))
+                                   ,@result))
+                               `("."
+                                 ,@sep
+                                 ,@result))))
+                  `("[" ,@result))))))))
 
 (define (format-gvm-instr-code gvm-instr . bb)
 
@@ -5436,17 +5478,9 @@
            (regs (frame-regs frame))
            (slots (frame-slots frame)))
 
-      (define (live? var)
-        (let ((live (frame-live frame)))
-          (or (varset-member? var live)
-              (and (eq? var closure-env-var)
-                  (varset-intersects?
-                    live
-                    (list->varset (frame-closed frame)))))))
-
       (for-each
         (lambda (reg index)
-          (if (live? (list-ref regs reg))
+          (if (frame-live? (list-ref regs reg) frame)
               (let ((value (register-ref registers reg))
                     (expected (vector-ref types index)))
                 (typecheck  (lambda () (throw-error "register" reg value expected))
@@ -5458,7 +5492,7 @@
 
       (for-each
         (lambda (slot index)
-          (if (live? (list-ref slots (- slot 1)))
+          (if (frame-live? (list-ref slots (- slot 1)) frame)
               (let ((value (stack-ref stack (bb-entry-frame-size bb) slot))
                     (expected (vector-ref types index)))
                 (typecheck  (lambda () (throw-error "slot" slot value expected))
