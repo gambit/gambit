@@ -7182,6 +7182,76 @@
 
 (def-type-infer "box" #f)
 
+(def-type-infer "+"
+  (lambda (tctx args)
+    (case (length args)
+      ((0)
+       (make-type-singleton 0))
+      ((1)
+       (car args))
+      (else
+       (let loop ((args (cdr args)) (accum (car args)))
+         (if (pair? args)
+             (loop (cdr args)
+                   (let ((arg (car args)))
+                     (cond ((type-eqv? accum (make-type-singleton 0))
+                            arg)
+                           ((type-eqv? arg (make-type-singleton 0))
+                            accum)
+                           ((and (type-included? tctx accum type-fixnum)
+                                 (type-included? tctx arg type-fixnum))
+                            (type-fixnum-overflow-normalize-bignum
+                             tctx
+                             (type-infer-fixnum2 tctx type-infer-common-fx+ accum arg)))
+                           ((and (type-included? tctx accum type-flonum)
+                                 (type-included? tctx arg type-flonum))
+                            type-flonum)
+                           ((and (type-included? tctx accum type-exact-integer)
+                                 (type-included? tctx arg type-exact-integer))
+                            type-exact-integer)
+                           ((and (type-included? tctx accum type-exact-rational)
+                                 (type-included? tctx arg type-exact-rational))
+                            type-exact-rational)
+                           ((and (type-included? tctx accum type-real)
+                                 (type-included? tctx arg type-real))
+                            type-exact-real)
+                           (else
+                            type-number))))
+             accum))))))
+
+(def-type-infer "-"
+  (lambda (tctx args)
+    (let ((args
+           (if (= (length args) 1)
+               (cons (make-type-singleton 0) args)
+               args)))
+       (let loop ((args (cdr args)) (accum (car args)))
+         (if (pair? args)
+             (loop (cdr args)
+                   (let ((arg (car args)))
+                     (cond ((type-eqv? arg (make-type-singleton 0))
+                            accum)
+                           ((and (type-included? tctx accum type-fixnum)
+                                 (type-included? tctx arg type-fixnum))
+                            (type-fixnum-overflow-normalize-bignum
+                             tctx
+                             (type-infer-fixnum2 tctx type-infer-common-fx+ accum arg)))
+                           ((and (type-included? tctx accum type-flonum)
+                                 (type-included? tctx arg type-flonum))
+                            type-flonum)
+                           ((and (type-included? tctx accum type-exact-integer)
+                                 (type-included? tctx arg type-exact-integer))
+                            type-exact-integer)
+                           ((and (type-included? tctx accum type-exact-rational)
+                                 (type-included? tctx arg type-exact-rational))
+                            type-exact-rational)
+                           ((and (type-included? tctx accum type-real)
+                                 (type-included? tctx arg type-real))
+                            type-exact-real)
+                           (else
+                            type-number))))
+             accum)))))
+
 )
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -7457,6 +7527,24 @@
              (type-fixnum-normalize-hi tctx hi)
              '<=)))))
 
+(define (type-fixnum-overflow-normalize-bignum tctx type)
+  (let* ((type (type-motley-force tctx type))
+         (lo (type-fixnum-lo type))
+         (hi (type-fixnum-hi type)))
+    (if (and lo hi)
+        (type-motley-normalize tctx type)
+        (type-union
+         tctx
+         (make-type-motley-non-fixnum type-bignum-bit)
+         (make-type-fixnum
+          (if lo
+              (type-fixnum-normalize-lo tctx lo)
+              '>=)
+          (if hi
+              (type-fixnum-normalize-hi tctx hi)
+              '<=))
+         #f))))
+
 ;;; builtin types
 
 (define type-bignum    (make-type-motley-non-fixnum type-bignum-bit))
@@ -7504,6 +7592,40 @@
                        type-symbol-bit
                        type-keyword-bit
                        type-procedure-bit)
+                    '>=
+                    '<=))
+
+(define type-number
+  (make-type-motley (+ type-bignum-bit
+                       type-ratnum-bit
+                       type-flonum-bit
+                       type-cpxnum-bit)
+                    '>=
+                    '<=))
+
+(define type-number
+  (make-type-motley (+ type-bignum-bit
+                       type-ratnum-bit
+                       type-flonum-bit
+                       type-cpxnum-bit)
+                    '>=
+                    '<=))
+
+(define type-real
+  (make-type-motley (+ type-bignum-bit
+                       type-ratnum-bit
+                       type-flonum-bit)
+                    '>=
+                    '<=))
+
+(define type-exact-rational
+  (make-type-motley (+ type-bignum-bit
+                       type-ratnum-bit)
+                    '>=
+                    '<=))
+
+(define type-exact-integer
+  (make-type-motley type-bignum-bit
                     '>=
                     '<=))
 
@@ -9243,7 +9365,11 @@
      (make-type-fixnum 0 65535))
     ((s16)
      (make-type-fixnum -32768 32767))
-    ((list number integer real port
+    ((number)
+     type-number)
+    ((integer real)
+     type-real)
+    ((list port
            s8vector u8vector s16vector u16vector
            s32 s32vector u32 u32vector s64 s64vector u64 u64vector
            f32vector f64vector
