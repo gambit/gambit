@@ -2488,34 +2488,32 @@
                       (print "\n")))
 
                 (if 'debug-bbv? ;; show new set of versions
-                    (let* ((instr-comment (gvm-instr-comment label))
-                           (node (comment-get instr-comment 'node))
-                           (expr (and node (parse-tree->expression node))))
-                      (if (and (pair? expr) (eq? 'lambda (car expr)))
-                          (let ((source-code (object->string expr 75)))
-                            (println "----------------------------------------")
-                            (println "#" (bb-lbl-num bb) " ")
-                            (println source-code)
-                            (println "after a request for this version:")
-                            (print "  ")
-                            (write-frame frame types-before (current-output-port))
-                            (newline)
-                            (if versions-merged
-                                (begin
-                                  (println "these versions were merged:")
-                                  (for-each
-                                   (lambda (version)
-                                     (print "  ")
-                                     (write-frame frame (car version) (current-output-port))
-                                     (newline))
-                                   versions-merged)))
-                            (println "the set of versions is now:")
-                            (for-each
-                             (lambda (version)
-                               (print "  ")
-                               (write-frame frame (car version) (current-output-port))
-                               (newline))
-                             (vector-ref bb-versions 0))))))
+                    (let ((source-code (debug-this-bb? bb)))
+                      (and source-code
+                           (let ()
+                             (println "----------------------------------------")
+                             (println "#" (bb-lbl-num bb) " ")
+                             (println source-code)
+                             (println "after a request for this version:")
+                             (print "  ")
+                             (write-frame frame types-before (current-output-port))
+                             (newline)
+                             (if versions-merged
+                                 (begin
+                                   (println "these versions were merged:")
+                                   (for-each
+                                    (lambda (version)
+                                      (print "  ")
+                                      (write-frame frame (car version) (current-output-port))
+                                      (newline))
+                                    versions-merged)))
+                             (println "the set of versions is now:")
+                             (for-each
+                              (lambda (version)
+                                (print "  ")
+                                (write-frame frame (car version) (current-output-port))
+                                (newline))
+                              (vector-ref bb-versions 0))))))
 
                 new-lbl))))
 
@@ -3019,6 +3017,26 @@
   (walk-bbs bbs)
 
   (finalize))
+
+(define (debug-this-bb? bb)
+  (let ((label (bb-label-instr bb))
+        (lbl (bb-lbl-num bb)))
+
+    (and (= 39 lbl)
+         (let* ((instr-comment (gvm-instr-comment label))
+                (node (comment-get instr-comment 'node))
+                (expr (and node (parse-tree->expression node))))
+           (and (pair? expr)
+                (eq? 'lambda (car expr))
+                (object->string expr 75))))
+
+    #;
+    (let* ((instr-comment (gvm-instr-comment label))
+           (node (comment-get instr-comment 'node))
+           (expr (and node (parse-tree->expression node))))
+      (and (pair? expr)
+           (eq? 'lambda (car expr))
+           (object->string expr 75)))))
 
 (define (find-merge-candidates tctx types-lbl-vect)
 
@@ -5034,12 +5052,12 @@
   (make-vector interpreter-trace-size #f))
 
 (define interpreter-instr-counter 0)
-(set! interpreter-instr-counter 0)
+
 (define (increment-interpreter-instr-counter)
   (define step 10000)
   (if (zero? (modulo interpreter-instr-counter step))
-      (pp (list 'GVM-INTERPRETER-INSTR-COUNT: interpreter-instr-counter))
-  (set! interpreter-instr-counter (+ interpreter-instr-counter 1))))
+      (pp (list 'GVM-INTERPRETER-INSTR-COUNT: interpreter-instr-counter)))
+  (set! interpreter-instr-counter (+ interpreter-instr-counter 1)))
 
 (define (trace-add! trace bbs bb)
   (for-each
