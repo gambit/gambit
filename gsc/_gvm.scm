@@ -2185,13 +2185,39 @@
       (make-locenv nb-regs nb-slots nb-closed type-top)))
 
   (define (resized-frame-types frame types)
-    (locenv-resize
-     types
-     (length (frame-regs frame))
-     (length (frame-slots frame))
-     (length (frame-closed frame))
-     0
-     type-top))
+    (let* ((regs (frame-regs frame))
+           (nb-regs (length regs))
+           (slots (frame-slots frame))
+           (nb-slots (length slots))
+           (nb-closed
+            (if (frame-live? closure-env-var frame)
+                (length (frame-closed frame))
+                0))
+           (new-types
+            (locenv-resize-from-lengths
+             types
+             (vector nb-regs nb-slots nb-closed)
+             0
+             type-top)))
+
+      (define (remove-if-not-live! var gvm-loc)
+        (if (not (frame-live? var frame))
+            (let ((dst-loc (gvm-loc->locenv-index new-types gvm-loc)))
+              (locenv-set! new-types dst-loc type-top))))
+
+      (let loop1 ((i 1) (slots slots))
+        (if (pair? slots)
+            (begin
+              (remove-if-not-live! (car slots) (make-stk i))
+              (loop1 (+ i 1) (cdr slots)))))
+
+      (let loop2 ((i 0) (regs regs))
+        (if (pair? regs)
+            (begin
+              (remove-if-not-live! (car regs) (make-reg i))
+              (loop2 (+ i 1) (cdr regs)))))
+
+      new-types))
 
   (define (types-merge2 types1 types2 widen?)
     (locenv-merge types1
@@ -3427,6 +3453,14 @@
         (locenv-ec-detach! new-locenv loc)
         (vector-set! new-locenv (+ loc 1) val)
         new-locenv)))
+
+(define (locenv-set! locenv loc val)
+
+  ;; This procedure stores val in the location loc after removing it
+  ;; from its current equivalence class. The locenv is mutated.
+
+  (locenv-ec-detach! locenv loc)
+  (vector-set! locenv (+ loc 1) val))
 
 (define (locenv-update locenv opnds vals)
 
