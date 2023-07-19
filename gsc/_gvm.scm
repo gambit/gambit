@@ -2184,7 +2184,7 @@
           (nb-closed (length (frame-closed frame))))
       (make-locenv nb-regs nb-slots nb-closed type-top)))
 
-  (define (resized-frame-types frame types)
+  (define (resized-frame-types-remove-dead frame types)
     (let* ((regs (frame-regs frame))
            (nb-regs (length regs))
            (slots (frame-slots frame))
@@ -2218,6 +2218,15 @@
               (loop2 (+ i 1) (cdr regs)))))
 
       new-types))
+
+  (define (resized-frame-types frame types)
+    (locenv-resize
+     types
+     (length (frame-regs frame))
+     (length (frame-slots frame))
+     (length (frame-closed frame))
+     0
+     type-top))
 
   (define (types-merge2 types1 types2 widen?)
     (locenv-merge types1
@@ -2371,7 +2380,7 @@
                (bb (lbl-num->bb lbl bbs))
                (label (bb-label-instr bb))
                (frame (gvm-instr-frame label))
-               (types-before (resized-frame-types frame types-before))
+               (types-before (resized-frame-types-remove-dead frame types-before))
                (bb-versions (or (table-ref versions lbl #f)
                                 (let ((bb-versions
                                        (vector '() (make-table))))
@@ -3022,12 +3031,11 @@
   (let ((label (bb-label-instr bb))
         (lbl (bb-lbl-num bb)))
 
-    (and (= 39 lbl)
+    (and #f ;(= 39 lbl)
          (let* ((instr-comment (gvm-instr-comment label))
                 (node (comment-get instr-comment 'node))
                 (expr (and node (parse-tree->expression node))))
-           (and (pair? expr)
-                (eq? 'lambda (car expr))
+           (and expr
                 (object->string expr 75))))
 
     #;
