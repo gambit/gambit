@@ -2208,7 +2208,7 @@
       (let loop1 ((i 1) (slots slots))
         (if (pair? slots)
             (begin
-              (remove-if-not-live! (car slots) (make-stk i))
+              (remove-if-not-live! (car slots) (make-stk (+ (- nb-slots i) 1)))
               (loop1 (+ i 1) (cdr slots)))))
 
       (let loop2 ((i 0) (regs regs))
@@ -2598,7 +2598,7 @@
                 opnd))
 
           (let ((types-after
-                 (resized-frame-types
+                 (resized-frame-types-remove-dead
                   (gvm-instr-frame gvm-instr)
                   types-before)))
 
