@@ -7214,7 +7214,7 @@
                             type-exact-rational)
                            ((and (type-included? tctx accum type-real)
                                  (type-included? tctx arg type-real))
-                            type-exact-real)
+                            type-exact-rational)
                            (else
                             type-number))))
              accum))))))
@@ -7247,7 +7247,7 @@
                             type-exact-rational)
                            ((and (type-included? tctx accum type-real)
                                  (type-included? tctx arg type-real))
-                            type-exact-real)
+                            type-exact-rational)
                            (else
                             type-number))))
              accum)))))
@@ -7645,14 +7645,6 @@
                        type-symbol-bit
                        type-keyword-bit
                        type-procedure-bit)
-                    '>=
-                    '<=))
-
-(define type-number
-  (make-type-motley (+ type-bignum-bit
-                       type-ratnum-bit
-                       type-flonum-bit
-                       type-cpxnum-bit)
                     '>=
                     '<=))
 
@@ -8207,10 +8199,10 @@
 (define (type-eqv? type1 type2) ;; is type1 equal to type2?
   (equal? type1 type2))
 
-(define (type-memv? type types)
+(define (type-memv type types)
   (if (null? types)
       #f
-      (or (type-eqv? type (car types)) (types-memv type (cdr types)))))
+      (or (type-eqv? type (car types)) (type-memv type (cdr types)))))
 
 (define (type-included? tctx type1 type2) ;; is type1 included in type2?
   (type-motley-included?
