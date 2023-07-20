@@ -7392,6 +7392,39 @@
 (define type-promise-bit    268435456) ;; (expt 2 28)
 (define type-other-bit     -536870912) ;; (- (expt 2 29))
 
+(define all-motley-bits
+  (list
+    type-false-bit    
+    type-true-bit     
+    type-null-bit     
+    type-void-bit     
+    type-eof-bit      
+    type-absent-bit   
+    type-bignum-bit   
+    type-ratnum-bit   
+    type-flonum-bit   
+    type-cpxnum-bit   
+    type-char-bit     
+    type-symbol-bit   
+    type-keyword-bit  
+    type-string-bit   
+    type-vector-bit   
+    type-u8vector-bit 
+    type-s8vector-bit 
+    type-u16vector-bit
+    type-s16vector-bit
+    type-u32vector-bit
+    type-s32vector-bit
+    type-u64vector-bit
+    type-s64vector-bit
+    type-f32vector-bit
+    type-f64vector-bit
+    type-pair-bit     
+    type-procedure-bit
+    type-box-bit      
+    type-promise-bit  
+    type-other-bit))
+
 (define type-top-bitset -1) ;; sum of all type-XXX-bit
 (define type-bot-bitset  0) ;; no bits on
 
@@ -7544,6 +7577,26 @@
               (type-fixnum-normalize-hi tctx hi)
               '<=))
          #f))))
+
+(define (type-fixnum-range tctx type)
+  (let ((lo (type-fixnum-lo type))
+        (hi (type-fixnum-hi type)))
+    (let ((lo (cond ((eq? lo '>=) (tctx-smallest-min-fixnum tctx))
+                    ((eq? lo '>)  (+ (tctx-smallest-min-fixnum tctx) 1))
+                    (else         lo)))
+          (hi (cond ((eq? hi '<=) (tctx-smallest-max-fixnum tctx))
+                    ((eq? hi '<)  (- (tctx-smallest-max-fixnum tctx) 1))
+                    (else         hi))))
+      (cons lo hi))))
+
+(define (for-each-motley-bit tctx fun type #!optional fixnum-marker)
+  (let ((range (type-fixnum-range tctx type))
+        (bits (type-motley-bitset type)))
+    (if (and fixnum-marker (<= (car range) (cdr range))) (fun fixnum-marker))
+    (for-each
+      (lambda (bit)
+        (if (not (zero? (bitwise-and bit bits))) (fun bit)))
+      all-motley-bits)))
 
 ;;; builtin types
 
@@ -9534,17 +9587,6 @@
       tctx
       (lambda (type2)
         (proc type1 type2))))))
-
-(define (type-fixnum-range tctx type)
-  (let ((lo (type-fixnum-lo type))
-        (hi (type-fixnum-hi type)))
-    (let ((lo (cond ((eq? lo '>=) (tctx-smallest-min-fixnum tctx))
-                    ((eq? lo '>)  (+ (tctx-smallest-min-fixnum tctx) 1))
-                    (else         lo)))
-          (hi (cond ((eq? hi '<=) (tctx-smallest-max-fixnum tctx))
-                    ((eq? hi '<)  (- (tctx-smallest-max-fixnum tctx) 1))
-                    (else         hi))))
-      (cons lo hi))))
 
 (define (type-fixnum->list tctx type)
   (let ((range (type-fixnum-range tctx type)))

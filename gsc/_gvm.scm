@@ -3046,25 +3046,91 @@
            (eq? 'lambda (car expr))
            (object->string expr 75)))))
 
+;; Linear distance
+(define (linear-type-distance tctx type1 type2)
+  (let* ((t1 (type-motley-force tctx type1))
+          (t2 (type-motley-force tctx type2)))
+    (let* ((bitset1 (type-motley-bitset t1))
+            (bitset2 (type-motley-bitset t2))
+            (bs1
+            (+ (bitwise-and bitset1 (- (expt 2 30) 1))
+                (if (type-motley-included? t1 type-fixnum)
+                    (expt 2 30)
+                    0)))
+            (bs2
+            (+ (bitwise-and bitset2 (- (expt 2 30) 1))
+                (if (type-motley-included? t2 type-fixnum)
+                    (expt 2 30)
+                    0))))
+      (bit-count (bitwise-eqv bs1 bs2)))))
+
+;; Entropy-based distance
+(define (entropy-difference tctx type1 type2)
+  (define type-fixnum-marker (gensym))
+
+  (define weigths
+    (list
+      (cons type-fixnum-marker 1)
+      (cons type-false-bit     1)
+      (cons type-true-bit      1)
+      (cons type-null-bit      1)
+      (cons type-void-bit      1)
+      (cons type-eof-bit       1)
+      (cons type-absent-bit    1)
+      (cons type-bignum-bit    1)
+      (cons type-ratnum-bit    1)
+      (cons type-flonum-bit    1)
+      (cons type-cpxnum-bit    1)
+      (cons type-char-bit      1)
+      (cons type-symbol-bit    1)
+      (cons type-keyword-bit   1)
+      (cons type-string-bit    1)
+      (cons type-procedure-bit 1)
+      (cons type-vector-bit    1)
+      (cons type-u8vector-bit  1)
+      (cons type-s8vector-bit  1)
+      (cons type-u16vector-bit 1)
+      (cons type-s16vector-bit 1)
+      (cons type-u32vector-bit 1)
+      (cons type-s32vector-bit 1)
+      (cons type-u64vector-bit 1)
+      (cons type-s64vector-bit 1)
+      (cons type-f32vector-bit 1)
+      (cons type-f64vector-bit 1)
+      (cons type-pair-bit      1)
+      (cons type-box-bit       1)
+      (cons type-promise-bit   1)
+      (cons type-other-bit     1)))
+  (define (get-weigth t) (cdr (assv t weigths)))
+
+  (define (entropy type)
+    (define sum 0)
+    (define entropy 0)
+    (for-each-motley-bit tctx (lambda (_) (set! sum (+ sum 1))) type type-fixnum-marker)
+    (for-each-motley-bit
+      tctx
+      (lambda (b)
+        (let ((w (/ (get-weigth b) sum)))
+          (set! entropy (- entropy (* w (log w 2))))))
+      type
+      type-fixnum-marker)
+    entropy)
+
+  (let* ((t1 (type-motley-force tctx type1))
+          (t2 (type-motley-force tctx type2))
+          (merged (type-union tctx t1 t2 #f))
+          (merged-entropy (entropy merged)))
+    (max (- merged-entropy (entropy t1)) (- merged-entropy (entropy t2)))))
+
+
+(define bbv-merge-strategy 'entropy)
+(define type-distance
+  (case bbv-merge-strategy
+    ('entropy entropy-difference)
+    ('linear linear-type-distance)
+    (else linear-type-distance)))
+
 (define (find-merge-candidates tctx types-lbl-vect)
-
-  (define (type-distance tctx type1 type2)
-    (let* ((t1 (type-motley-force tctx type1))
-           (t2 (type-motley-force tctx type2)))
-      (let* ((bitset1 (type-motley-bitset t1))
-             (bitset2 (type-motley-bitset t2))
-             (bs1
-              (+ (bitwise-and bitset1 (- (expt 2 30) 1))
-                 (if (type-motley-included? t1 type-fixnum)
-                     (expt 2 30)
-                     0)))
-             (bs2
-              (+ (bitwise-and bitset2 (- (expt 2 30) 1))
-                 (if (type-motley-included? t2 type-fixnum)
-                     (expt 2 30)
-                     0))))
-        (bit-count (bitwise-eqv bs1 bs2)))))
-
   (define (types-distance tctx types1 types2)
     (let ((len (vector-length types1)))
       (let loop ((i locenv-start-regs) (d 0))
