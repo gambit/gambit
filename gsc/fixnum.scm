@@ -471,7 +471,7 @@ var-name
 add-not-inline-primitives
 add-not-safe
 add-proper-tail-calls
-app->specialized-proc2
+app->specialized-proc
 app-args
 app-oper
 bindable-var?
@@ -558,7 +558,7 @@ safe?
 scheme-dialect
 self-evaluating?
 set-val
-specialize-app2
+specialize-app
 specialize-proc
 standard-proc-obj
 standard-procedure?
