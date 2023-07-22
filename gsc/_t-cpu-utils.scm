@@ -5,6 +5,8 @@
 ;;; Copyright (c) 2018 by Laurent Huberdeau, All Rights Reserved.
 ;;; Copyright (c) 2019 by Abdelhakim Qbaich, All Rights Reserved.
 
+(include "fixnum.scm")
+
 ;;-----------------------------------------------------------------------------
 
 (define (safe-car pair) ; XXX

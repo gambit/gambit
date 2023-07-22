@@ -574,12 +574,12 @@
 
 ;; ***** Primitives - Basic primitives (##Identity and ##not)
 
-(define ##identity-primitive
+(define **identity-primitive
   (const-nargs-prim 1 0 any-opnds
     (lambda (cgc result-action args arg1)
       (am-return-opnd cgc result-action arg1))))
 
-(define ##not-primitive
+(define **not-primitive
   (const-nargs-prim 1 0 '((reg mem))
     (lambda (cgc result-action args arg1)
       (am-if-eq cgc arg1 (make-obj-opnd #f)
@@ -588,17 +588,17 @@
         #f
         (get-word-width-bits cgc)))))
 
-(define ##void-primitive
+(define **void-primitive
   (const-nargs-prim 0 0 '(())
     (lambda (cgc result-action args)
       (am-return-const cgc result-action #!void))))
 
-(define ##eof-object-primitive
+(define **eof-object-primitive
   (const-nargs-prim 0 0 '(())
     (lambda (cgc result-action args)
       (am-return-const cgc result-action #!eof))))
 
-(define ##eof-object?-primitive
+(define **eof-object?-primitive
   (const-nargs-prim 1 0 (list (lambda (_) #t))
     (lambda (cgc result-action args arg1)
       (am-if-eq cgc arg1 (make-obj-opnd #!eof)
@@ -607,7 +607,7 @@
         #f
         (get-word-width-bits cgc)))))
 
-(define ##null?-primitive
+(define **null?-primitive
   (const-nargs-prim 1 0 (list (lambda (_) #t))
     (lambda (cgc result-action args arg1)
       (am-if-eq cgc arg1 (make-obj-opnd '())
@@ -616,7 +616,7 @@
         #f
         (get-word-width-bits cgc)))))
 
-(define ##eq?-primitive
+(define **eq?-primitive
   (const-nargs-prim 2 0 '((reg)) ; XXX
     (lambda (cgc result-action args arg1 arg2)
       (am-if-eq cgc arg1 arg2
@@ -625,7 +625,7 @@
         #f
         (get-word-width-bits cgc)))))
 
-(define ##fxzero?-primitive
+(define **fxzero?-primitive
   (const-nargs-prim 1 0 '((reg mem)) ; XXX
     (lambda (cgc result-action args arg1)
       (am-if-eq cgc arg1 (make-obj-opnd 0)

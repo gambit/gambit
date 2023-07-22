@@ -5,6 +5,8 @@
 ;;; Copyright (c) 2018 by Laurent Huberdeau, All Rights Reserved.
 ;;; Copyright (c) 2019 by Abdelhakim Qbaich, All Rights Reserved.
 
+(include "fixnum.scm")
+
 ;;-----------------------------------------------------------------------------
 
 ;; Type tags are located in the lower 2 bits of an object.
