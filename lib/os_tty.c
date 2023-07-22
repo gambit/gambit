@@ -278,6 +278,8 @@ ___device_tty *self;)
   if ((d->initial_flags = fcntl (fd, F_GETFL, 0)) < 0)
     return err_code_from_errno ();
 
+  d->initial_flags &= ~O_NONBLOCK; // force returning to blocking mode
+
 #endif
 
 #ifdef USE_WIN32
@@ -579,7 +581,7 @@ ___BOOL undo;)
 
     if (!undo)
       {
-        new_flags = new_flags | O_NONBLOCK;
+        new_flags |= O_NONBLOCK;  // make nonblocking
       }
 
     if (fcntl (fd, F_SETFL, new_flags) < 0)
