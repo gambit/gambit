@@ -2,7 +2,7 @@
 
 ;;; File: "_front.scm"
 
-;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -680,6 +680,12 @@
 (define (generate-report env)
   (let ((vars (sort-variables (env-global-variables env))))
 
+    (define (topmost-parent ptree)
+      (let ((parent (node-parent ptree)))
+        (if parent
+            (topmost-parent parent)
+            ptree)))
+
     (define (report title pred? vars wrote-something?)
       (if (pair? vars)
         (let ((var (car vars)))
@@ -692,16 +698,23 @@
                   (newline)))
               (let loop1 ((l (ptset->list (var-refs var))) (r? #f) (c? #f))
                 (if (pair? l)
-                  (let* ((x (car l))
-                         (y (node-parent x)))
-                    (if (and y (app? y) (eq? x (app-oper y)))
-                      (loop1 (cdr l) r? #t)
-                      (loop1 (cdr l) #t c?)))
+                  (let ((ptree (car l)))
+                    (if (not (core? (node-env (topmost-parent ptree))))
+                      (loop1 (cdr l) r? c?)
+                      (let ((parent (node-parent ptree)))
+                        (if (and parent
+                                 (app? parent)
+                                 (eq? ptree (app-oper parent)))
+                          (loop1 (cdr l) r? #t)
+                          (loop1 (cdr l) #t c?)))))
                   (let loop2 ((l (ptset->list (var-sets var))) (d? #f) (a? #f))
                     (if (pair? l)
-                      (if (set? (car l))
-                        (loop2 (cdr l) d? #t)
-                        (loop2 (cdr l) #t a?))
+                      (let ((ptree (car l)))
+                        (if (not (core? (node-env (topmost-parent ptree))))
+                            (loop2 (cdr l) d? a?)
+                            (if (set? ptree)
+                                (loop2 (cdr l) #t a?)
+                                (loop2 (cdr l) d? #t))))
                       (begin
                         (display "  [")
                         (if d? (display "D") (display " "))
