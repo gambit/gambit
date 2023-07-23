@@ -335,8 +335,15 @@ dist-pre dist-devel-pre:
 	@echo "  Copying distribution files:"
 	@for file in $(DISTFILES); do \
 	  echo "    $(herefromroot)/$$file"; \
-	  ln $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot) 2> /dev/null \
-	    || cp -p $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot); \
+	  dir=""; \
+	  while [ "$${file#*/}" != "$${file}" ]; do \
+	    temp="$${file#*/}"; \
+	    dir="$$dir$${file%$$temp}"; \
+	    mkdir $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot)/$$dir; \
+	    file="$$temp"; \
+	  done; \
+	  ln $(srcdirpfx)$$dir$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot)/$$dir 2> /dev/null \
+	    || cp -p $(srcdirpfx)$$dir$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot)/$$dir; \
 	done
 
 dist-post dist-devel-post:
