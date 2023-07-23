@@ -320,6 +320,7 @@ change-version: deselect-gen-for-commit
 	    touch doc/gambit.txi; \
 	    cd tests; @SETDLPATH@ ../gsc/gsc@exe@ -:~~bin=../bin,~~lib=../lib,~~include=../include -f -warnings -c -nb-gvm-regs 5 -nb-arg-regs 3 mix.scm; mv mix.c test5.ok; cd ..; \
 	    if $(MAKE) bootclean && $(MAKE) -j && $(MAKE) check && $(MAKE) doc && $(MAKE) select-gen-for-commit; then \
+	      (cd include; $(MAKE) RELEASE_VERSION=$(NEW_VERSION) stamp-release); \
 	      if test "$(RC)" = "$(GIT)"; then \
 	        $(GIT) commit -a -m "[RUNTIME CHANGES NEEDED FOR $(NEW_VERSION)] Changed version of runtime using misc/changev"; \
 	      else \
