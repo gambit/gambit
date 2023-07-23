@@ -112,9 +112,7 @@
   (if (not test-all?)
       (##exit)))
 
-(define call-thunk #f)
-
-(set! call-thunk ;; call-thunk is modified in test/test.scm
+(define call-thunk
   (let ()
 
     (declare (not inline)) ;; don't inline call-thunk so that continuation's
@@ -123,6 +121,9 @@
     (lambda (thunk)
       ;; make sure continuation of thunk has call-thunk as creator
       (##first-argument (thunk)))))
+
+(define (call-thunk-set! x)
+  (set! call-thunk x)) ;; call-thunk is modified in test/test.scm
 
 (define (%test-predicate test-name
                          expression-thunk
