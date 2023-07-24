@@ -2462,7 +2462,12 @@
                       (if (memv 0 in) ;; Only update label and types if the original version was merged!!!!!!
                           (begin
                             (set! types-for-version merged-types)
-                            (set! new-lbl new-lbl2)))
+                            (set! new-lbl new-lbl2))
+                          (queue-put! ;; schedule walk of the bb created by merge
+                            work-queue
+                            (lambda ()
+                              (if (reachable? new-lbl2)
+                                  (walk-bb bb merged-types cost path lbl new-lbl2)))))
 
                       ;; schedule GC if a pre-exisintg version was deleted
                       (let loop ((versions versions-to-merge))
