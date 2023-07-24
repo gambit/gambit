@@ -6084,6 +6084,7 @@
 (def-simp "fixnum->flonum"   (constant-folder-flo exact->inexact fix32?))
 
 (let ()
+  (declare (generic))
   (define (nonneg-fix32? x) (and (fix32? x) (>= x 0)))
   (define (shift-left n shift) (arithmetic-shift n shift))
   (define (shift-left? n shift) (and (>= shift 0) (shift-left n shift)))
