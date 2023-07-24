@@ -993,7 +993,7 @@ usage-end
                            (c) (dynamic) (exe) (obj) (link) (flat)
                            (compactness fixnum)
                            (warnings) (verbose) (report)
-                           (expansion) (gvm) (cfg) (gvm-interpret) (dg) (asm) (keep-temp)
+                           (expansion) (gvm) (cfg) (dg) (asm) (keep-temp)
 ;;TODO: enable and document when compiler supports these options
 ;;                           (type-checking) (no-type-checking)
 ;;                           (auto-forcing) (no-auto-forcing)
@@ -1007,7 +1007,9 @@ usage-end
                            (ld-options-prelude string)
                            (ld-options string)
                            (pkg-config string)
-                           (pkg-config-path string))))
+                           (pkg-config-path string)
+                           ;; bbv options
+                           (gvm-interpret) (bbv-merge-strategy symbol))))
 
                    ;; parse command line to try to find the -target option
                    (split-command-line

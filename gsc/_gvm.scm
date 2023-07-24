@@ -3122,13 +3122,18 @@
           (merged-entropy (entropy merged)))
     (max (- merged-entropy (entropy t1)) (- merged-entropy (entropy t2)))))
 
+(define type-distance #f)
 
-(define bbv-merge-strategy 'entropy)
-(define type-distance
-  (case bbv-merge-strategy
-    ('entropy entropy-difference)
-    ('linear linear-type-distance)
-    (else linear-type-distance)))
+(define (set-bbv-merge-strategy! opt)
+  (let ((distance-function
+          (case opt
+              ('entropy entropy-difference)
+              ('linear linear-type-distance)
+              ((#f) linear-type-distance)
+              (else
+                (error "unknown bbv-merge-strategy strategy" compiler-options-bbv-merge-strategy)))))
+    (pp (list 'using-merge-strategy distance-function))
+    (set! type-distance distance-function)))
 
 (define (find-merge-candidates tctx types-lbl-vect)
   (define (types-distance tctx types1 types2)

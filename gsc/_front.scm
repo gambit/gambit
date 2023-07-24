@@ -104,6 +104,9 @@
                      ((cfg)
                       (set! compiler-option-cfg                #t)
                       #t)
+                     ((bbv-merge-strategy)
+                      (set! compiler-options-bbv-merge-strategy (cadr opt))
+                      #t)
                      ((gvm-interpret)
                       (set! compiler-option-gvm-interpret      #t)
                       #t)
@@ -129,7 +132,8 @@
                          check force keep-temp
                          o l module-ref linker-name prelude postlude
                          cc cc-options ld-options-prelude ld-options
-                         pkg-config pkg-config-path asm sequence-number)
+                         pkg-config pkg-config-path asm sequence-number
+                         bbv-merge-strategy)
                       #t) ;; these options are innocuous
                      (else
                       ;; OK if the option is a target specific option
@@ -159,6 +163,7 @@
   (set! compiler-option-gvm                #f)
   (set! compiler-option-cfg                #f)
   (set! compiler-option-gvm-interpret      #f)
+  (set! compiler-options-bbv-merge-strategy #f)
   (set! compiler-option-dg                 #f)
   (set! compiler-option-debug              #f)
   (set! compiler-option-debug-location     #f)
@@ -173,6 +178,7 @@
 (define compiler-option-gvm                #f)
 (define compiler-option-cfg                #f)
 (define compiler-option-gvm-interpret      #f)
+(define compiler-options-bbv-merge-strategy #f)
 (define compiler-option-dg                 #f)
 (define compiler-option-debug              #f)
 (define compiler-option-debug-location     #f)
@@ -333,6 +339,9 @@
 
                (if compiler-option-dg
                    (set! dependency-graph (make-table 'test: eq?)))
+
+               (let ((opt (assq 'bbv-merge-strategy opts)))
+                 (set-bbv-merge-strategy! (and opt (cadr opt))))
 
                (let* ((meta-info
                        (**meta-info->alist
