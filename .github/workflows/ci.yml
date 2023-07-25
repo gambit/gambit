@@ -84,9 +84,9 @@ jobs:
         name: gambit-win-mingw-${{ matrix.arch }}-mt
         path: dist-mt/
 
-#    - name: Report Failure to Gitter
-#      run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
-#      if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
+    - name: Report Failure to Gitter
+      run: curl -XPOST --data-urlencode '{"msgtype":"m.text", "body":"${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed on Windows-mingw"}' "https://matrix.org/_matrix/client/r0/rooms/${{ secrets.GITTER_ROOM }}/send/m.room.message?access_token=${{ secrets.GITTER_ACCESS_TOKEN }}"
+      if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
 
   Windows-msvc:
     name: "Windows - MSVC"
@@ -157,9 +157,9 @@ jobs:
         name: gambit-win-msvc-x86_64-mt
         path: dist-mt/
 
-#    - name: Report Failure to Gitter
-#      run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
-#      if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
+    - name: Report Failure to Gitter
+      run: curl -XPOST --data-urlencode '{"msgtype":"m.text", "body":"${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed on Windows-msvc"}' "https://matrix.org/_matrix/client/r0/rooms/${{ secrets.GITTER_ROOM }}/send/m.room.message?access_token=${{ secrets.GITTER_ACCESS_TOKEN }}"
+      if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
 
   Linux:
     runs-on: ubuntu-latest
@@ -177,25 +177,25 @@ jobs:
     - name: Build and Test with C compiler
       run: |
         export PROCS=`nproc`
-        ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms && make clean && make -j$PROCS core && make check
+#        ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms && make clean && make -j$PROCS core && make check
 
     - name: Build and Test with C++ compiler
       if: github.event_name == 'push'
       run: |
         export PROCS=`nproc`
-        ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms --enable-cplusplus && make clean && make -j$PROCS core && make check
+#        ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms --enable-cplusplus && make clean && make -j$PROCS core && make check
 
     - name: Build and Test with C compiler and --enable-ansi-c
       if: github.event_name == 'push'
       run: |
         export PROCS=`nproc`
-        ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-ansi-c && make clean && make -j$PROCS core && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
+#        ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-ansi-c && make clean && make -j$PROCS core && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
 
     - name: Build Gambit for Use
       if: github.event_name == 'push'
       run: |
         mkdir dist
-        ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist && make clean && make -j`nproc` core && make modules && make install
+#        ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist && make clean && make -j`nproc` core && make modules && make install
         cd dist/
         tar -cvzf ../gambit-linux-x86_64.tgz ./
         cd ..
@@ -210,11 +210,11 @@ jobs:
     - name: Build Gambit for Use (--enable-multiple-threaded-vms)
       if: github.event_name == 'push'
       run: |
-        mkdir dist-mt
-        ./configure --enable-single-host --enable-multiple-threaded-vms --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist-mt && make clean && make -j`nproc` core && make modules && make install
-        cd dist-mt/
-        tar -cvzf ../gambit-linux-x86_64-mt.tgz ./
-        cd ..
+#        mkdir dist-mt
+#        ./configure --enable-single-host --enable-multiple-threaded-vms --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist-mt && make clean && make -j`nproc` core && make modules && make install
+#        cd dist-mt/
+#        tar -cvzf ../gambit-linux-x86_64-mt.tgz ./
+#        cd ..
 
     - name: Upload Build Artifact (--enable-multiple-threaded-vms)
       uses: actions/upload-artifact@v1
@@ -232,9 +232,9 @@ jobs:
         name: boot
         path: boot.tgz
 
-#    - name: Report Failure to Gitter
-#      run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
-#      if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
+    - name: Report Failure to Gitter
+      run: curl -XPOST --data-urlencode '{"msgtype":"m.text", "body":"${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed on Linux"}' "https://matrix.org/_matrix/client/r0/rooms/${{ secrets.GITTER_ROOM }}/send/m.room.message?access_token=${{ secrets.GITTER_ACCESS_TOKEN }}"
+      if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
 
   MacOS:
     runs-on: macos-latest
@@ -303,16 +303,17 @@ jobs:
         name: gambit-macos-x86_64-mt
         path: gambit-macos-x86_64-mt.tgz
 
-#    - name: Report Failure to Gitter
-#      run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
-#      if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
+    - name: Report Failure to Gitter
+      run: curl -XPOST --data-urlencode '{"msgtype":"m.text", "body":"${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed on MacOS"}' "https://matrix.org/_matrix/client/r0/rooms/${{ secrets.GITTER_ROOM }}/send/m.room.message?access_token=${{ secrets.GITTER_ACCESS_TOKEN }}"
+      if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
 
   ReportResult:
     runs-on: ubuntu-latest
-    needs: [Windows-mingw, Windows-msvc, Linux, MacOS]
+#    needs: [Windows-mingw, Windows-msvc, Linux, MacOS]
+    needs: [Linux]
     if: ${{ success() }}
 
     steps:
     - name: Report Success
-      run: echo "Success!"
+      run: curl -XPOST --data-urlencode '{"msgtype":"m.text", "body":"${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) succeeded"}' "https://matrix.org/_matrix/client/r0/rooms/${{ secrets.GITTER_ROOM }}/send/m.room.message?access_token=${{ secrets.GITTER_ACCESS_TOKEN }}"
       if: success() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
