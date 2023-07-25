@@ -2733,16 +2733,19 @@
                        (walk-opnd (copy-opnd gvm-instr)))
                       (loc
                        (walk-loc (copy-loc gvm-instr)))
+                      (types-before (resized-frame-types (gvm-instr-frame gvm-instr) types-before))
                       (types-after
-                       (if (locenv-loc? loc)
-                           (let ((dst-loc
-                                  (gvm-loc->locenv-index types-after loc)))
-                             (if (locenv-loc? opnd)
-                                 (let ((src-loc
-                                        (gvm-loc->locenv-index types-after opnd)))
-                                   (locenv-copy types-after dst-loc src-loc))
-                                 (locenv-set types-after dst-loc (opnd-type opnd types-before))))
-                           types-after)) ;; no change
+                        (resized-frame-types-remove-dead
+                          (gvm-instr-frame gvm-instr)
+                          (if (locenv-loc? loc)
+                              (let ((dst-loc
+                                      (gvm-loc->locenv-index types-before loc)))
+                                (if (locenv-loc? opnd)
+                                    (let ((src-loc
+                                            (gvm-loc->locenv-index types-before opnd)))
+                                      (locenv-copy types-before dst-loc src-loc))
+                                    (locenv-set types-before dst-loc (opnd-type opnd types-before))))
+                              types-before))) ;; no change
                       (new-instr
                        (make-copy
                         (opnd-constantify opnd types-before)
