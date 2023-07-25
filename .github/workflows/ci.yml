@@ -312,7 +312,7 @@ jobs:
     needs: [Windows-mingw, Windows-msvc, Linux, MacOS]
     if: ${{ success() }}
 
-#    steps:
-#    - name: Report Success to Gitter
-#      run: curl --data-urlencode "message=CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) passed" ${{ secrets.GITTER_URL }}
-#      if: success() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
+    steps:
+    - name: Report Success
+      run: echo "Success!"
+      if: success() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
