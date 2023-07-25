@@ -3128,28 +3128,35 @@
     (max (- merged-entropy (entropy t1)) (- merged-entropy (entropy t2)))))
 
 (define type-distance #f)
+(define type-norm #f)
+
+(define (norm1 points) (apply + points))
+(define (norm2 points) (sqrt (norm1 (map (lambda (x) (* x x) points)))))
+(define (norm-inf points) (apply max points))
 
 (define (set-bbv-merge-strategy! opt)
-  (let ((distance-function
-          (case opt
-              ('entropy entropy-difference)
-              ('linear linear-type-distance)
-              ((#f) linear-type-distance)
-              (else
-                (error "unknown bbv-merge-strategy strategy" compiler-options-bbv-merge-strategy)))))
-    (pp (list 'using-merge-strategy distance-function))
-    (set! type-distance distance-function)))
+  (case opt
+    ('entropy
+      (set! type-norm norm-inf)
+      (set! type-distance entropy-difference))
+    ('linear
+      (set! type-norm norm1)
+      (set! type-distance linear-type-distance))
+    ((#f)
+      (set! type-norm norm1)
+      (set! type-distance linear-type-distance))
+    (else
+      (error "unknown bbv-merge-strategy strategy" opt))))
 
 (define (find-merge-candidates tctx types-lbl-vect)
   (define (types-distance tctx types1 types2)
     (let ((len (vector-length types1)))
-      (let loop ((i locenv-start-regs) (d 0))
+      (let loop ((i locenv-start-regs) (acc '()))
         (if (< i len)
             (let* ((type1 (vector-ref types1 (+ i 1)))
                    (type2 (vector-ref types2 (+ i 1))))
-              (loop (+ i locenv-entry-size)
-                    (+ d (type-distance tctx type1 type2))))
-            d))))
+              (loop (+ i locenv-entry-size) (cons (type-distance tctx type1 type2) acc)))
+            (type-norm acc)))))
 
   (let* ((n
           (vector-length types-lbl-vect))
