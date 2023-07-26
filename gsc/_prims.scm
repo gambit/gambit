@@ -7854,6 +7854,9 @@
                  (neg lst)
                  (pos lst)))
 
+           (define (display-top-for-bitset?)
+              (if (and (not show-pos?) (= bitset type-top-bitset)) (add '("~^"))))
+
            (element '("()") type-null-bit)
            (element '("vd") type-void-bit)
            (element '("ef") type-eof-bit)
@@ -7877,7 +7880,8 @@
              (cond ((and (eqv? lo 0) (eqv? hi -1))
                     (neg '("fx")))
                    ((and (eq? lo '>=) (eq? hi '<=))
-                    (pos '("fx")))
+                    (pos '("fx"))
+                    (display-top-for-bitset?))
                    (else
                     (add `(,(cond ((eq? lo '>=) ">=")
                                   ((eq? lo '>)  ">")
@@ -7885,7 +7889,8 @@
                            ".."
                            ,(cond ((eq? hi '<=) "<=")
                                   ((eq? hi '<)  "<")
-                                  (else         (number->string hi))))))))
+                                  (else         (number->string hi)))))
+                    (display-top-for-bitset?))))
 
            (element '("bn")   type-bignum-bit)
            (element '("rn")   type-ratnum-bit)

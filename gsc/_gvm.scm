@@ -2396,6 +2396,8 @@
                  (and existing-version
                       (memv existing-version (map cdr types-lbl-alist)))))
 
+          (define debug-merged-types #f)
+
           (if existing-version-is-live?
               existing-version
               (let* ((bb (lbl-num->bb lbl bbs))
@@ -2438,6 +2440,8 @@
                            (new-lbl2
                             (or (replacement-lbl-num (table-ref all-versions-tbl merged-types #f))
                                 (bbs-new-lbl! new-bbs))))
+
+                      (set! debug-merged-types merged-types)
 
                       (set-version-types! new-lbl2 merged-types)
 
@@ -2512,6 +2516,13 @@
                              (print "  ")
                              (write-frame frame types-before (current-output-port))
                              (newline)
+                             (println "when the set of versions is:")
+                              (for-each
+                               (lambda (version)
+                                 (print "  ")
+                                 (write-frame frame (car version) (current-output-port))
+                                 (newline))
+                               types-lbl-alist)
                              (if versions-merged
                                  (begin
                                    (println "these versions were merged:")
@@ -2520,7 +2531,14 @@
                                       (print "  ")
                                       (write-frame frame (car version) (current-output-port))
                                       (newline))
-                                    versions-merged)))
+                                    versions-merged)
+                                    (print "  due to being at distance ")
+                                    (print (types-distance tctx (caar versions-merged) (caadr versions-merged)))
+                                    (newline)
+                                  (println "to:")
+                                  (print "  ")
+                                  (write-frame frame debug-merged-types (current-output-port))
+                                  (newline)))
                              (println "the set of versions is now:")
                              (for-each
                               (lambda (version)
@@ -3039,7 +3057,7 @@
   (let ((label (bb-label-instr bb))
         (lbl (bb-lbl-num bb)))
 
-    (and #f ;(= 39 lbl)
+    (and #f ;(= 34 lbl)
          (let* ((instr-comment (gvm-instr-comment label))
                 (node (comment-get instr-comment 'node))
                 (expr (and node (parse-tree->expression node))))
@@ -3076,65 +3094,26 @@
 (define (entropy-difference tctx type1 type2)
   (define type-fixnum-marker (gensym))
 
-  (define weigths
-    (list
-      (cons type-fixnum-marker 1)
-      (cons type-false-bit     1)
-      (cons type-true-bit      1)
-      (cons type-null-bit      1)
-      (cons type-void-bit      1)
-      (cons type-eof-bit       1)
-      (cons type-absent-bit    1)
-      (cons type-bignum-bit    1)
-      (cons type-ratnum-bit    1)
-      (cons type-flonum-bit    1)
-      (cons type-cpxnum-bit    1)
-      (cons type-char-bit      1)
-      (cons type-symbol-bit    1)
-      (cons type-keyword-bit   1)
-      (cons type-string-bit    1)
-      (cons type-procedure-bit 1)
-      (cons type-vector-bit    1)
-      (cons type-u8vector-bit  1)
-      (cons type-s8vector-bit  1)
-      (cons type-u16vector-bit 1)
-      (cons type-s16vector-bit 1)
-      (cons type-u32vector-bit 1)
-      (cons type-s32vector-bit 1)
-      (cons type-u64vector-bit 1)
-      (cons type-s64vector-bit 1)
-      (cons type-f32vector-bit 1)
-      (cons type-f64vector-bit 1)
-      (cons type-pair-bit      1)
-      (cons type-box-bit       1)
-      (cons type-promise-bit   1)
-      (cons type-other-bit     1)))
-  (define (get-weigth t) (cdr (assv t weigths)))
+  (define (types-count type)
+    (define count 0)
+    (for-each-motley-bit tctx (lambda (_) (set! count (+ count 1))) type #t)
+    count)
 
-  (define (entropy type)
-    (define sum 0)
-    (define entropy 0)
-    (for-each-motley-bit tctx (lambda (_) (set! sum (+ sum 1))) type type-fixnum-marker)
-    (for-each-motley-bit
-      tctx
-      (lambda (b)
-        (let ((w (/ (get-weigth b) sum)))
-          (set! entropy (- entropy (* w (log w 2))))))
-      type
-      type-fixnum-marker)
-    entropy)
+  (define (geometric n) (- 2 (expt 1/2 (- n 1))))
+
+  (define (geomtetric-difference type supertype)
+    (- (geometric (types-count supertype)) (geometric (types-count type))))
 
   (let* ((t1 (type-motley-force tctx type1))
-          (t2 (type-motley-force tctx type2))
-          (merged (type-union tctx t1 t2 #f))
-          (merged-entropy (entropy merged)))
-    (max (- merged-entropy (entropy t1)) (- merged-entropy (entropy t2)))))
+         (t2 (type-motley-force tctx type2))
+         (merged (type-union tctx t1 t2 #f)))
+    (norm2 (list (geomtetric-difference t1 merged) (geomtetric-difference t2 merged)))))
 
 (define type-distance #f)
 (define type-norm #f)
 
 (define (norm1 points) (apply + points))
-(define (norm2 points) (sqrt (norm1 (map (lambda (x) (* x x) points)))))
+(define (norm2 points) (sqrt (norm1 (map (lambda (x) (* x x)) points))))
 (define (norm-inf points) (apply max points))
 
 (define (set-bbv-merge-strategy! opt)
@@ -3151,8 +3130,7 @@
     (else
       (error "unknown bbv-merge-strategy strategy" opt))))
 
-(define (find-merge-candidates tctx types-lbl-vect)
-  (define (types-distance tctx types1 types2)
+(define (types-distance tctx types1 types2)
     (let ((len (vector-length types1)))
       (let loop ((i locenv-start-regs) (acc '()))
         (if (< i len)
@@ -3161,6 +3139,7 @@
               (loop (+ i locenv-entry-size) (cons (type-distance tctx type1 type2) acc)))
             (type-norm acc)))))
 
+(define (find-merge-candidates tctx types-lbl-vect)
   (let* ((n
           (vector-length types-lbl-vect))
          (min-dist
