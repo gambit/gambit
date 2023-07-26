@@ -334,6 +334,8 @@ stamp-release:
 	if [ -n "$$version" ]; then \
 	    echo "___STAMP_RELEASE_VERSION changed to $$version"; \
 	    eval `date -u '+ymd=%Y%m%d hms=%H%M%S'`; \
+	    ymd="$$(expr 0 + $$ymd)"; \
+	    hms="$$(expr 0 + $$hms)"; \
 	    { \
 	        echo "/*" && \
 	        echo " * Time stamp of latest release or \"make dist\".  The stamps can be" && \

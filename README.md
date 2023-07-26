@@ -82,6 +82,8 @@ $100 CAD (about $80 USD and 75 euros at time of writing).
 
 18: [Multithreading support](https://srfi.schemers.org/srfi-18/srfi-18.html) (builtin)
 
+19: [Time Data Types and Procedures](https://srfi.schemers.org/srfi-19/srfi-19.html)
+
 21: [Real-time multithreading support](https://srfi.schemers.org/srfi-21/srfi-21.html) (builtin)
 
 22: [Running Scheme Scripts on Unix](https://srfi.schemers.org/srfi-22/srfi-22.html) (builtin)

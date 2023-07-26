@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_host.c", produced by Gambit v4.9.4
+; File: "_host.c", produced by Gambit v4.9.5
 (
-409004
+409005
 (C)
 "_host"
 ("_host")
@@ -353,7 +353,7 @@
 ) #|*/"*/"meta-info|#
 )
 #else
-#define ___VERSION 409004
+#define ___VERSION 409005
 #define ___MODULE_NAME "_host"
 #define ___LINKER_ID ___LNK___host
 #define ___MH_PROC ___H___host
@@ -2017,7 +2017,7 @@ ___DEF_GLBL(___L___host_23_)
    ___SET_GLO(81,___G_c_23_read_2d_datum_2d_or_2d_eof,___FAL)
    ___SET_GLO(1,___G_c_23__2a__2a_compilation_2d_ctx,___GLO__23__23_compilation_2d_ctx)
    ___SET_R1(___VOID)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -2096,7 +2096,7 @@ ___DEF_SLBL(0,___L0_c_23_keyword_2d_object_3f_)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_c_23_keyword_2d_object_3f_)
    ___SET_R1(___BOOLEAN(___KEYWORDP(___R1)))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -2121,7 +2121,7 @@ ___DEF_SLBL(0,___L0_c_23_keyword_2d_object_2d_interned_3f_)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_c_23_keyword_2d_object_2d_interned_3f_)
    ___SET_R1(___KEYWORDINTERNEDP(___R1))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -2146,7 +2146,7 @@ ___DEF_SLBL(0,___L0_c_23_false_2d_object_3f_)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_c_23_false_2d_object_3f_)
    ___SET_R1(___BOOLEAN(___EQP(___R1,___FAL)))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -2171,7 +2171,7 @@ ___DEF_SLBL(0,___L0_c_23_absent_2d_object_3f_)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_c_23_absent_2d_object_3f_)
    ___SET_R1(___BOOLEAN(___EQP(___R1,___ABSENT)))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -2196,7 +2196,7 @@ ___DEF_SLBL(0,___L0_c_23_unused_2d_object_3f_)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_c_23_unused_2d_object_3f_)
    ___SET_R1(___BOOLEAN(___EQP(___R1,___UNUSED)))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -2221,7 +2221,7 @@ ___DEF_SLBL(0,___L0_c_23_deleted_2d_object_3f_)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_c_23_deleted_2d_object_3f_)
    ___SET_R1(___BOOLEAN(___EQP(___R1,___DELETED)))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -2246,7 +2246,7 @@ ___DEF_SLBL(0,___L0_c_23_void_2d_object_3f_)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_c_23_void_2d_object_3f_)
    ___SET_R1(___BOOLEAN(___EQP(___R1,___VOID)))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -2271,7 +2271,7 @@ ___DEF_SLBL(0,___L0_c_23_unbound1_2d_object_3f_)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_c_23_unbound1_2d_object_3f_)
    ___SET_R1(___BOOLEAN(___EQP(___R1,___UNB1)))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -2296,7 +2296,7 @@ ___DEF_SLBL(0,___L0_c_23_unbound2_2d_object_3f_)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_c_23_unbound2_2d_object_3f_)
    ___SET_R1(___BOOLEAN(___EQP(___R1,___UNB2)))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -2321,7 +2321,7 @@ ___DEF_SLBL(0,___L0_c_23_end_2d_of_2d_file_2d_object_3f_)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_c_23_end_2d_of_2d_file_2d_object_3f_)
    ___SET_R1(___BOOLEAN(___EQP(___R1,___EOF)))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -2346,7 +2346,7 @@ ___DEF_SLBL(0,___L0_c_23_optional_2d_object_3f_)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_c_23_optional_2d_object_3f_)
    ___SET_R1(___BOOLEAN(___EQP(___R1,___OPTIONAL)))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -2371,7 +2371,7 @@ ___DEF_SLBL(0,___L0_c_23_key_2d_object_3f_)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_c_23_key_2d_object_3f_)
    ___SET_R1(___BOOLEAN(___EQP(___R1,___KEYOBJ)))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -2396,7 +2396,7 @@ ___DEF_SLBL(0,___L0_c_23_rest_2d_object_3f_)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_c_23_rest_2d_object_3f_)
    ___SET_R1(___BOOLEAN(___EQP(___R1,___REST)))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -2421,7 +2421,7 @@ ___DEF_SLBL(0,___L0_c_23_symbol_2d_object_3f_)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_c_23_symbol_2d_object_3f_)
    ___SET_R1(___BOOLEAN(___SYMBOLP(___R1)))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -2446,7 +2446,7 @@ ___DEF_SLBL(0,___L0_c_23_symbol_2d_object_2d_interned_3f_)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_c_23_symbol_2d_object_2d_interned_3f_)
    ___SET_R1(___SYMBOLINTERNEDP(___R1))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -2471,7 +2471,7 @@ ___DEF_SLBL(0,___L0_c_23_box_2d_object_3f_)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_c_23_box_2d_object_3f_)
    ___SET_R1(___BOOLEAN(___BOXP(___R1)))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -2499,7 +2499,7 @@ ___DEF_GLBL(___L_c_23_box_2d_object)
    ___SET_R1(___BOX(___R1))
    ___CHECK_HEAP(1,4096)
 ___DEF_SLBL(1,___L1_c_23_box_2d_object)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -2524,7 +2524,7 @@ ___DEF_SLBL(0,___L0_c_23_unbox_2d_object)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_c_23_unbox_2d_object)
    ___SET_R1(___UNBOX(___R1))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -2549,7 +2549,7 @@ ___DEF_SLBL(0,___L0_c_23_set_2d_box_2d_object_21_)
    ___WRONG_NARGS(0,2,0,0)
 ___DEF_GLBL(___L_c_23_set_2d_box_2d_object_21_)
    ___SETBOX(___R1,___R2)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -2574,7 +2574,7 @@ ___DEF_SLBL(0,___L0_c_23_structure_2d_object_3f_)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_c_23_structure_2d_object_3f_)
    ___SET_R1(___BOOLEAN(___STRUCTUREP(___R1)))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -2653,11 +2653,11 @@ ___DEF_SLBL(3,___L3_c_23_open_2d_input_2d_file_2a_)
    ___END_IF
    ___SET_R1(___STK(-6))
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___DEF_GLBL(___L4_c_23_open_2d_input_2d_file_2a_)
    ___SET_R1(___FAL)
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___END_P_SW
 ___END_P_COD
 
@@ -2877,7 +2877,7 @@ ___DEF_SLBL(3,___L3_c_23_write_2d_returning_2d_len)
 ___DEF_SLBL(4,___L4_c_23_write_2d_returning_2d_len)
    ___SET_R1(___STRINGLENGTH(___STK(-5)))
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___DEF_SLBL(5,___L5_c_23_write_2d_returning_2d_len)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(5,0,0,0)
@@ -2937,7 +2937,7 @@ ___DEF_SLBL(3,___L3_c_23_display_2d_returning_2d_len)
 ___DEF_SLBL(4,___L4_c_23_display_2d_returning_2d_len)
    ___SET_R1(___STRINGLENGTH(___STK(-5)))
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___DEF_SLBL(5,___L5_c_23_display_2d_returning_2d_len)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(5,0,0,0)
@@ -2996,7 +2996,7 @@ ___DEF_SLBL(2,___L2_c_23_write_2d_word)
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23_write_2d_char2)
 ___DEF_GLBL(___L4_c_23_write_2d_word)
    ___SET_R1(___R3)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___DEF_GLBL(___L5_c_23_write_2d_word)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
@@ -3029,7 +3029,7 @@ ___DEF_SLBL(0,___L0_c_23_character_2d__3e_unicode)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_c_23_character_2d__3e_unicode)
    ___SET_R1(___FIXFROMCHR(___R1))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -3054,7 +3054,7 @@ ___DEF_SLBL(0,___L0_c_23_unicode_2d__3e_character)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_c_23_unicode_2d__3e_character)
    ___SET_R1(___FIXTOCHR(___R1))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -3105,11 +3105,11 @@ ___DEF_GLBL(___L4_c_23_in_2d_char_2d_range_3f_)
    ___SET_F64(___F64V2,___F64UNBOX(___STK(0)))
    ___SET_R1(___BOOLEAN(___F64LE(___F64V1,___F64V2)))
    ___ADJFP(-1)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___DEF_GLBL(___L5_c_23_in_2d_char_2d_range_3f_)
    ___SET_R1(___BOOLEAN(___FIXLE(___R1,___STK(0))))
    ___ADJFP(-1)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -3168,7 +3168,7 @@ ___DEF_GLBL(___L5_c_23_in_2d_integer_2d_range_3f_)
    ___SET_R1(___BOOLEAN(___FIXLT(___R3,___R1)))
 ___DEF_GLBL(___L6_c_23_in_2d_integer_2d_range_3f_)
    ___SET_R1(___BOOLEAN(___FALSEP(___R1)))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___DEF_SLBL(1,___L1_c_23_in_2d_integer_2d_range_3f_)
    ___IF(___NOTFALSEP(___R1))
    ___GOTO(___L9_c_23_in_2d_integer_2d_range_3f_)
@@ -3207,7 +3207,7 @@ ___DEF_GLBL(___L9_c_23_in_2d_integer_2d_range_3f_)
    ___ADJFP(-8)
 ___DEF_GLBL(___L10_c_23_in_2d_integer_2d_range_3f_)
    ___SET_R1(___FAL)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___DEF_GLBL(___L11_c_23_in_2d_integer_2d_range_3f_)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
@@ -3265,7 +3265,7 @@ ___DEF_SLBL(0,___L0_c_23_scheme_2d_global_2d_var)
    ___IF_NARGS_EQ(1,___NOTHING)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_c_23_scheme_2d_global_2d_var)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -3431,7 +3431,7 @@ ___DEF_GLBL(___L3_c_23_make_2d_u8vect)
    ___SET_R1(___GET_SMALL_ALLOC)
    ___CHECK_HEAP(2,4096)
 ___DEF_SLBL(2,___L2_c_23_make_2d_u8vect)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -3469,7 +3469,7 @@ ___DEF_GLBL(___L3_c_23_make_2d_s8vect)
    ___SET_R1(___GET_SMALL_ALLOC)
    ___CHECK_HEAP(2,4096)
 ___DEF_SLBL(2,___L2_c_23_make_2d_s8vect)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -3507,7 +3507,7 @@ ___DEF_GLBL(___L3_c_23_make_2d_u16vect)
    ___SET_R1(___GET_SMALL_ALLOC)
    ___CHECK_HEAP(2,4096)
 ___DEF_SLBL(2,___L2_c_23_make_2d_u16vect)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -3545,7 +3545,7 @@ ___DEF_GLBL(___L3_c_23_make_2d_s16vect)
    ___SET_R1(___GET_SMALL_ALLOC)
    ___CHECK_HEAP(2,4096)
 ___DEF_SLBL(2,___L2_c_23_make_2d_s16vect)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -3695,7 +3695,7 @@ ___DEF_GLBL(___L3_c_23_make_2d_f32vect)
    ___SET_R1(___GET_SMALL_ALLOC)
    ___CHECK_HEAP(2,4096)
 ___DEF_SLBL(2,___L2_c_23_make_2d_f32vect)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -3733,7 +3733,7 @@ ___DEF_GLBL(___L3_c_23_make_2d_f64vect)
    ___SET_R1(___GET_SMALL_ALLOC)
    ___CHECK_HEAP(2,4096)
 ___DEF_SLBL(2,___L2_c_23_make_2d_f64vect)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -3761,10 +3761,10 @@ ___DEF_GLBL(___L_c_23_vector_2d_object_3f_)
    ___GOTO(___L1_c_23_vector_2d_object_3f_)
    ___END_IF
    ___SET_R1(___TRU)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___DEF_GLBL(___L1_c_23_vector_2d_object_3f_)
    ___SET_R1(___FAL)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -3789,7 +3789,7 @@ ___DEF_SLBL(0,___L0_c_23__2a__2a_comply_2d_to_2d_standard_2d_scheme_3f_)
    ___WRONG_NARGS(0,0,0,0)
 ___DEF_GLBL(___L_c_23__2a__2a_comply_2d_to_2d_standard_2d_scheme_3f_)
    ___SET_R1(___FAL)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -3814,7 +3814,7 @@ ___DEF_SLBL(0,___L0_c_23__2a__2a_subtype_2d_set_21_)
    ___WRONG_NARGS(0,2,0,0)
 ___DEF_GLBL(___L_c_23__2a__2a_subtype_2d_set_21_)
    ___SUBTYPESET(___R1,___R2)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -3839,7 +3839,7 @@ ___DEF_SLBL(0,___L0_c_23_max_2d_lines)
    ___WRONG_NARGS(0,0,0,0)
 ___DEF_GLBL(___L_c_23_max_2d_lines)
    ___SET_R1(___FIX(65536L))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -3864,7 +3864,7 @@ ___DEF_SLBL(0,___L0_c_23_max_2d_fixnum32_2d_div_2d_max_2d_lines)
    ___WRONG_NARGS(0,0,0,0)
 ___DEF_GLBL(___L_c_23_max_2d_fixnum32_2d_div_2d_max_2d_lines)
    ___SET_R1(___FIX(8191L))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -3889,7 +3889,7 @@ ___DEF_SLBL(0,___L0_c_23_subtype_2d_structure)
    ___WRONG_NARGS(0,0,0,0)
 ___DEF_GLBL(___L_c_23_subtype_2d_structure)
    ___SET_R1(___FIX(4L))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -3914,7 +3914,7 @@ ___DEF_SLBL(0,___L0_c_23_symbol_2d_object_2d_hash)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_c_23_symbol_2d_object_2d_hash)
    ___SET_R1(___SYMBOLHASH(___R1))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -3939,7 +3939,7 @@ ___DEF_SLBL(0,___L0_c_23_keyword_2d_object_2d_hash)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_c_23_keyword_2d_object_2d_hash)
    ___SET_R1(___KEYWORDHASH(___R1))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -4234,7 +4234,7 @@ ___DEF_SLBL(0,___L0_c_23__2a__2a_macro_2d_compilation_2d_ctx_2d_supply_2d_module
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_c_23__2a__2a_macro_2d_compilation_2d_ctx_2d_supply_2d_modules)
    ___SET_R1(___VECTORREF(___R1,___FIX(0L)))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -4259,7 +4259,7 @@ ___DEF_SLBL(0,___L0_c_23__2a__2a_macro_2d_compilation_2d_ctx_2d_supply_2d_module
    ___WRONG_NARGS(0,2,0,0)
 ___DEF_GLBL(___L_c_23__2a__2a_macro_2d_compilation_2d_ctx_2d_supply_2d_modules_2d_set_21_)
    ___VECTORSET(___R1,___FIX(0L),___R2)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -4284,7 +4284,7 @@ ___DEF_SLBL(0,___L0_c_23__2a__2a_macro_2d_compilation_2d_ctx_2d_demand_2d_module
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_c_23__2a__2a_macro_2d_compilation_2d_ctx_2d_demand_2d_modules)
    ___SET_R1(___VECTORREF(___R1,___FIX(1L)))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -4309,7 +4309,7 @@ ___DEF_SLBL(0,___L0_c_23__2a__2a_macro_2d_compilation_2d_ctx_2d_demand_2d_module
    ___WRONG_NARGS(0,2,0,0)
 ___DEF_GLBL(___L_c_23__2a__2a_macro_2d_compilation_2d_ctx_2d_demand_2d_modules_2d_set_21_)
    ___VECTORSET(___R1,___FIX(1L),___R2)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -4334,7 +4334,7 @@ ___DEF_SLBL(0,___L0_c_23__2a__2a_macro_2d_compilation_2d_ctx_2d_meta_2d_info)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_c_23__2a__2a_macro_2d_compilation_2d_ctx_2d_meta_2d_info)
    ___SET_R1(___VECTORREF(___R1,___FIX(2L)))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -4359,7 +4359,7 @@ ___DEF_SLBL(0,___L0_c_23__2a__2a_macro_2d_compilation_2d_ctx_2d_meta_2d_info_2d_
    ___WRONG_NARGS(0,2,0,0)
 ___DEF_GLBL(___L_c_23__2a__2a_macro_2d_compilation_2d_ctx_2d_meta_2d_info_2d_set_21_)
    ___VECTORSET(___R1,___FIX(2L),___R2)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -4411,7 +4411,7 @@ ___DEF_SLBL(0,___L0_c_23__2a__2a_macro_2d_compilation_2d_ctx_2d_module_2d_ref)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_c_23__2a__2a_macro_2d_compilation_2d_ctx_2d_module_2d_ref)
    ___SET_R1(___VECTORREF(___R1,___FIX(3L)))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -4436,7 +4436,7 @@ ___DEF_SLBL(0,___L0_c_23__2a__2a_macro_2d_compilation_2d_ctx_2d_module_2d_ref_2d
    ___WRONG_NARGS(0,2,0,0)
 ___DEF_GLBL(___L_c_23__2a__2a_macro_2d_compilation_2d_ctx_2d_module_2d_ref_2d_set_21_)
    ___VECTORSET(___R1,___FIX(3L),___R2)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -4461,7 +4461,7 @@ ___DEF_SLBL(0,___L0_c_23__2a__2a_macro_2d_compilation_2d_ctx_2d_module_2d_aliase
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_c_23__2a__2a_macro_2d_compilation_2d_ctx_2d_module_2d_aliases)
    ___SET_R1(___VECTORREF(___R1,___FIX(4L)))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -4486,7 +4486,7 @@ ___DEF_SLBL(0,___L0_c_23__2a__2a_macro_2d_compilation_2d_ctx_2d_module_2d_aliase
    ___WRONG_NARGS(0,2,0,0)
 ___DEF_GLBL(___L_c_23__2a__2a_macro_2d_compilation_2d_ctx_2d_module_2d_aliases_2d_set_21_)
    ___VECTORSET(___R1,___FIX(4L),___R2)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -4511,7 +4511,7 @@ ___DEF_SLBL(0,___L0_c_23__2a__2a_macro_2d_compilation_2d_ctx_2d_target)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_c_23__2a__2a_macro_2d_compilation_2d_ctx_2d_target)
    ___SET_R1(___VECTORREF(___R1,___FIX(5L)))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -4536,7 +4536,7 @@ ___DEF_SLBL(0,___L0_c_23__2a__2a_macro_2d_compilation_2d_ctx_2d_target_2d_set_21
    ___WRONG_NARGS(0,2,0,0)
 ___DEF_GLBL(___L_c_23__2a__2a_macro_2d_compilation_2d_ctx_2d_target_2d_set_21_)
    ___VECTORSET(___R1,___FIX(5L),___R2)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -4561,7 +4561,7 @@ ___DEF_SLBL(0,___L0_c_23__2a__2a_macro_2d_compilation_2d_ctx_2d_extra_2d_info)
    ___WRONG_NARGS(0,1,0,0)
 ___DEF_GLBL(___L_c_23__2a__2a_macro_2d_compilation_2d_ctx_2d_extra_2d_info)
    ___SET_R1(___VECTORREF(___R1,___FIX(6L)))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -4586,7 +4586,7 @@ ___DEF_SLBL(0,___L0_c_23__2a__2a_macro_2d_compilation_2d_ctx_2d_extra_2d_info_2d
    ___WRONG_NARGS(0,2,0,0)
 ___DEF_GLBL(___L_c_23__2a__2a_macro_2d_compilation_2d_ctx_2d_extra_2d_info_2d_set_21_)
    ___VECTORSET(___R1,___FIX(6L),___R2)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 

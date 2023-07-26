@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gsilib.c", produced by Gambit v4.9.4
+; File: "_gsilib.c", produced by Gambit v4.9.5
 (
-409004
+409005
 (C)
 "_gsilib"
 ("_gsilib")
@@ -24,7 +24,7 @@
 ) #|*/"*/"meta-info|#
 )
 #else
-#define ___VERSION 409004
+#define ___VERSION 409005
 #define ___MODULE_NAME "_gsilib"
 #define ___LINKER_ID ___LNK___gsilib
 #define ___MH_PROC ___H___gsilib
@@ -114,7 +114,7 @@ ___DEF_SLBL(0,___L0___gsilib_23_)
    ___WRONG_NARGS(0,0,0,0)
 ___DEF_GLBL(___L___gsilib_23_)
    ___SET_R1(___FAL)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 

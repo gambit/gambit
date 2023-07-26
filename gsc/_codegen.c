@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_codegen.c", produced by Gambit v4.9.4
+; File: "_codegen.c", produced by Gambit v4.9.5
 (
-409004
+409005
 (C)
 "_codegen"
 ("_codegen")
@@ -159,7 +159,7 @@
 ) #|*/"*/"meta-info|#
 )
 #else
-#define ___VERSION 409004
+#define ___VERSION 409005
 #define ___MODULE_NAME "_codegen"
 #define ___LINKER_ID ___LNK___codegen
 #define ___MH_PROC ___H___codegen
@@ -1180,7 +1180,7 @@ ___DEF_SLBL(0,___L0___codegen_23_)
 ___DEF_GLBL(___L___codegen_23_)
    ___SET_GLO(40,___G___codegen_23_codegen_2d_fixup_2d_handlers,___CNS(0))
    ___SET_R1(___VOID)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -1375,7 +1375,7 @@ ___DEF_SLBL(26,___L26___codegen_23_make_2d_codegen_2d_context)
 ___DEF_SLBL(27,___L27___codegen_23_make_2d_codegen_2d_context)
    ___SET_R1(___STK(-6))
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___END_P_SW
 ___END_P_COD
 
@@ -3255,10 +3255,10 @@ ___DEF_SLBL(4,___L4___codegen_23_codegen_2d_context_2d_fixup_2d_obj_2d_register_
 ___DEF_SLBL(5,___L5___codegen_23_codegen_2d_context_2d_fixup_2d_obj_2d_register_21_)
    ___SET_R1(___STK(-4))
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___DEF_GLBL(___L6___codegen_23_codegen_2d_context_2d_fixup_2d_obj_2d_register_21_)
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___END_P_SW
 ___END_P_COD
 
@@ -3330,7 +3330,7 @@ ___DEF_SLBL(7,___L7___codegen_23_codegen_2d_context_2d_fixup_2d_objs_2d__3e_vect
 ___DEF_SLBL(8,___L8___codegen_23_codegen_2d_context_2d_fixup_2d_objs_2d__3e_vector)
    ___SET_R1(___STK(-5))
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___DEF_SLBL(9,___L9___codegen_23_codegen_2d_context_2d_fixup_2d_objs_2d__3e_vector)
    ___IF_NARGS_EQ(1,___NOTHING)
    ___WRONG_NARGS(9,1,0,0)
@@ -3477,7 +3477,7 @@ ___DEF_SLBL(12,___L12___codegen_23_codegen_2d_fixup_2d_generic_21_)
 ___DEF_GLBL(___L15___codegen_23_codegen_2d_fixup_2d_generic_21_)
    ___SET_R1(___VOID)
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___DEF_SLBL(13,___L13___codegen_23_codegen_2d_fixup_2d_generic_21_)
    ___IF_NARGS_EQ(2,___NOTHING)
    ___WRONG_NARGS(13,2,0,0)
@@ -3704,7 +3704,7 @@ ___DEF_SLBL(11,___L11___codegen_23_codegen_2d_fixup_2d_lbl_2d_late_21_)
 ___DEF_GLBL(___L14___codegen_23_codegen_2d_fixup_2d_lbl_2d_late_21_)
    ___SET_R1(___FIX(0L))
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___END_P_SW
 ___END_P_COD
 
