@@ -2415,7 +2415,6 @@
 
                 (vector-set! bb-versions 0 new-types-lbl-alist)
 
-
                 (if (> (length new-types-lbl-alist)
                        (max 1 (bb-version-limit bb)))
 
@@ -3057,7 +3056,7 @@
   (let ((label (bb-label-instr bb))
         (lbl (bb-lbl-num bb)))
 
-    (and #f ;(= 34 lbl)
+    (and #f (= 34 lbl)
          (let* ((instr-comment (gvm-instr-comment label))
                 (node (comment-get instr-comment 'node))
                 (expr (and node (parse-tree->expression node))))
@@ -3099,15 +3098,17 @@
     (for-each-motley-bit tctx (lambda (_) (set! count (+ count 1))) type #t)
     count)
 
-  (define (geometric n) (- 2 (expt 1/2 (- n 1))))
+  (define (geometric n) 
+    (define r 1/10)
+    (/ (- 1 (expt r n)) (- 1 r)))
 
-  (define (geomtetric-difference type supertype)
+  (define (geometric-difference type supertype)
     (- (geometric (types-count supertype)) (geometric (types-count type))))
 
   (let* ((t1 (type-motley-force tctx type1))
          (t2 (type-motley-force tctx type2))
          (merged (type-union tctx t1 t2 #f)))
-    (norm2 (list (geomtetric-difference t1 merged) (geomtetric-difference t2 merged)))))
+    (norm1 (list (geometric-difference t1 merged) (geometric-difference t2 merged)))))
 
 (define type-distance #f)
 (define type-norm #f)
@@ -3119,7 +3120,7 @@
 (define (set-bbv-merge-strategy! opt)
   (case opt
     ('entropy
-      (set! type-norm norm-inf)
+      (set! type-norm norm1)
       (set! type-distance entropy-difference))
     ('linear
       (set! type-norm norm1)
@@ -3173,6 +3174,7 @@
                           (cons j out))))
             (cons in out))))
 
+    ;(pp '=========================)
     (let loop1 ((i 0))
       (if (< i n)
           (let ((row (make-vector i)))
@@ -3187,6 +3189,9 @@
                             (car (vector-ref
                                   types-lbl-vect
                                   j)))))
+                    ;(pp (car (vector-ref types-lbl-vect i)))
+                    ;(pp (car (vector-ref types-lbl-vect j)))
+                    ;(pp d)
                     (vector-set! row j d)
                     (if (< d min-dist)
                         (begin

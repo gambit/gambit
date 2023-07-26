@@ -7877,7 +7877,7 @@
 
            (let ((lo (type-fixnum-lo type))
                  (hi (type-fixnum-hi type)))
-             (cond ((and (eqv? lo 0) (eqv? hi -1))
+             (cond ((and (number? lo) (number? hi) (< hi lo))
                     (neg '("fx")))
                    ((and (eq? lo '>=) (eq? hi '<=))
                     (pos '("fx"))
