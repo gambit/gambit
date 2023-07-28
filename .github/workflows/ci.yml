@@ -9,7 +9,8 @@ on:
       - master
 
 jobs:
-  docker-build:
+  Docker:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: docker/metadata-action@v3
@@ -21,7 +22,7 @@ jobs:
           push: false
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
-          cache: true
+          cache: false
           cache-repository: ghcr.io/${{ github.repository }}/cache
 
   Windows-mingw:
