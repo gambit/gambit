@@ -2532,7 +2532,7 @@
                                       (newline))
                                     versions-merged)
                                     (print "  due to being at distance ")
-                                    (print (types-distance tctx (caar versions-merged) (caadr versions-merged)))
+                                    (print (exact->inexact (types-distance tctx (caar versions-merged) (caadr versions-merged))))
                                     (newline)
                                   (println "to:")
                                   (print "  ")
@@ -3056,7 +3056,7 @@
   (let ((label (bb-label-instr bb))
         (lbl (bb-lbl-num bb)))
 
-    (and #f (= 34 lbl)
+    (and (= 34 lbl)
          (let* ((instr-comment (gvm-instr-comment label))
                 (node (comment-get instr-comment 'node))
                 (expr (and node (parse-tree->expression node))))
@@ -3089,134 +3089,134 @@
                     0))))
       (bit-count (bitwise-eqv bs1 bs2)))))
 
+(define (types-count tctx type)
+  (define count 0)
+  (for-each-motley-bit tctx (lambda (_) (set! count (+ count 1))) (type-motley-force tctx type) #t)
+  count)
+
 ;; Entropy-based distance
 (define (entropy-difference tctx type1 type2)
   (define type-fixnum-marker (gensym))
-
-  (define (types-count type)
-    (define count 0)
-    (for-each-motley-bit tctx (lambda (_) (set! count (+ count 1))) type #t)
-    count)
 
   (define (geometric n) 
     (define r 1/10)
     (/ (- 1 (expt r n)) (- 1 r)))
 
   (define (geometric-difference type supertype)
-    (- (geometric (types-count supertype)) (geometric (types-count type))))
+    (- (geometric (types-count tctx supertype)) (geometric (types-count tctx type))))
 
   (let* ((t1 (type-motley-force tctx type1))
          (t2 (type-motley-force tctx type2))
          (merged (type-union tctx t1 t2 #f)))
     (norm1 (list (geometric-difference t1 merged) (geometric-difference t2 merged)))))
 
-(define type-distance #f)
-(define type-norm #f)
+;; Sametypes strategy
+(define (types-distance-sametypes tctx types1 types2)
+  ;; sametypes chooses to merge 
+  (define (compute-score types)
+    (define (score type)
+      (if (type-included? tctx type type-fixnum)
+        1.001 ;; slightly favor fixnums
+        (expt 1/10 (- (types-count tctx type) 1))))
+
+    (define score-by-type '())
+
+    (define (get-type-cell type)
+      (let loop ((lst score-by-type))
+        (cond
+          ((null? lst)
+            (set! score-by-type (cons (cons type 0) score-by-type))
+            (car score-by-type))
+          ((type-eqv? (caar lst) type)
+            (car lst))
+          (else
+            (loop (cdr lst))))))
+
+    (define (increment-score type)
+      (let ((cell (get-type-cell type)))
+        (set-cdr! cell (+ (cdr cell) (score type)))))
+    
+    (let ((len (vector-length types)))
+      (let loop ((i locenv-start-regs))
+        (if (< i len)
+            (let* ((type (vector-ref types (+ i 1))))
+              (increment-score type)
+              (loop (+ i locenv-entry-size)))))
+      (apply max (map cdr score-by-type))))
+      
+  ;; highscore means higher distance
+  ;; the versions with two lowest score are merged
+  ;; break ties with entropy strategy
+  (let ((entropy (types-distance-entropy tctx types1 types2)))
+    ;; merge these if they are nearly the same otherwise keep valuable versions
+    (if (> entropy 0)
+        (+ (* 100 (+ (compute-score types1) (compute-score types2)))
+           (types-distance-entropy tctx types1 types2))
+        0)))
 
 (define (norm1 points) (apply + points))
 (define (norm2 points) (sqrt (norm1 (map (lambda (x) (* x x)) points))))
 (define (norm-inf points) (apply max points))
 
-(define (set-bbv-merge-strategy! opt)
-  (case opt
-    ('entropy
-      (set! type-norm norm1)
-      (set! type-distance entropy-difference))
-    ('linear
-      (set! type-norm norm1)
-      (set! type-distance linear-type-distance))
-    ((#f)
-      (set! type-norm norm1)
-      (set! type-distance linear-type-distance))
-    (else
-      (error "unknown bbv-merge-strategy strategy" opt))))
+(define (make-types-distance-with-norm type-norm type-distance tctx types1 types2)
+  (let ((len (vector-length types1)))
+    (let loop ((i locenv-start-regs) (acc '()))
+      (if (< i len)
+          (let* ((type1 (vector-ref types1 (+ i 1)))
+                  (type2 (vector-ref types2 (+ i 1))))
+            (loop (+ i locenv-entry-size) (cons (type-distance tctx type1 type2) acc)))
+          (type-norm acc)))))
 
-(define (types-distance tctx types1 types2)
-    (let ((len (vector-length types1)))
-      (let loop ((i locenv-start-regs) (acc '()))
-        (if (< i len)
-            (let* ((type1 (vector-ref types1 (+ i 1)))
-                   (type2 (vector-ref types2 (+ i 1))))
-              (loop (+ i locenv-entry-size) (cons (type-distance tctx type1 type2) acc)))
-            (type-norm acc)))))
+(define (types-distance-entropy tctx types1 types2) (make-types-distance-with-norm norm1 entropy-difference tctx types1 types2))
+(define (types-distance-linear tctx types1 types2) (make-types-distance-with-norm norm1 linear-type-distance tctx types1 types2))
+
+(define types-distance #f)
+
+(define (set-bbv-merge-strategy! opt)
+  (set! types-distance
+    (case opt
+      ((entropy) types-distance-entropy)
+      ((sametypes) types-distance-sametypes)
+      ((linear #f) types-distance-linear)
+      (else (error "unknown bbv-merge-strategy strategy" opt)))))
 
 (define (find-merge-candidates tctx types-lbl-vect)
-  (let* ((n
-          (vector-length types-lbl-vect))
-         (min-dist
-          99999999)
-         (min-dist-pair
-          #f)
-         (dist-matrix
-          (make-vector n)))
+  (let* ((n (vector-length types-lbl-vect))
+         (min-dist 99999999)
+         (min-dist-pair #f)
+         (dist-matrix (make-vector n)))
 
     (define (get-distance i j)
-      (if (= i j)
-          0
-          (vector-ref
-           (vector-ref dist-matrix
-                       (max i j))
-           (min i j))))
+      (vector-ref
+        (vector-ref dist-matrix (max i j))
+        (min i j)))
 
     (define (partition-distance i d)
-      (let loop ((j 0) (in '()) (out '()))
-        (if (< j n)
-            (if (= i j)
-                (loop (+ j 1)
-                      (cons j in)
-                      out)
-                (if (= (get-distance i j) d)
-                    (loop (+ j 1)
-                          (cons j in)
-                          out)
-                    (loop (+ j 1)
-                          in
-                          (cons j out))))
-            (cons in out))))
+      (let loop ((j 0) (in (list i)) (out '()))
+        (cond
+          ((= j n) (cons in out))
+          ((= i j) (loop (+ j 1) in out))
+          ((<= (apply max (map (lambda (i) (get-distance i j)) in)) d) (loop (+ j 1) (cons j in) out))
+          (else (loop (+ j 1) in (cons j out))))))
 
-    ;(pp '=========================)
-    (let loop1 ((i 0))
-      (if (< i n)
-          (let ((row (make-vector i)))
-            (vector-set! dist-matrix i row)
-            (let loop2 ((j 0))
-              (if (< j i)
-                  (let ((d (types-distance
+    (for-each
+      (lambda (i)
+        (let ((row (make-vector (+ i 1) 0)))
+          (vector-set! dist-matrix i row)
+          (for-each
+            (lambda (j)
+              (let ((d (exact->inexact (types-distance
                             tctx
-                            (car (vector-ref
-                                  types-lbl-vect
-                                  i))
-                            (car (vector-ref
-                                  types-lbl-vect
-                                  j)))))
-                    ;(pp (car (vector-ref types-lbl-vect i)))
-                    ;(pp (car (vector-ref types-lbl-vect j)))
-                    ;(pp d)
+                            (car (vector-ref types-lbl-vect i))
+                            (car (vector-ref types-lbl-vect j))))))
                     (vector-set! row j d)
-                    (if (< d min-dist)
-                        (begin
+                    (when (< d min-dist)
                           (set! min-dist d)
-                          (set! min-dist-pair (cons i j))))
-                    (loop2 (+ j 1)))
-                  (loop1 (+ i 1)))))))
+                          (set! min-dist-pair (cons i j)))))
+            (iota i))))
+      (iota n))
 
-    (let* ((i1 (car min-dist-pair))
-           (i2 (cdr min-dist-pair))
-           (p1 (partition-distance i1 min-dist))
-           (p2 (partition-distance i2 min-dist))
-           (p
-            (if (> (length (car p1)) (length (car p2)))
-                p1
-                p2))
-           (in
-            (car p))
-           (out
-            (cdr p)))
-
-      (if debug-bbv?
-          (pprint (list (list 'in in) (list 'out out))))
-
-      (cons in out))))
+    (partition-distance (car min-dist-pair) min-dist)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ;;
