@@ -1,4 +1,4 @@
-FROM gcc:latest as builder
+FROM gcc:latest
 
 ARG ENABLE_SINGLE_HOST="--enable-single-host"
 ARG ENABLE_MARCH="--enable-march=native"
