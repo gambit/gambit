@@ -12,7 +12,6 @@ COPY . .
 RUN ./configure $ENABLE_SINGLE_HOST $ENABLE_MARCH $ENABLE_DCLIB
 RUN make -j${NPROC}
 RUN make check
-RUN make modules
 RUN make doc
 RUN make install
 RUN make clean
