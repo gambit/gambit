@@ -914,6 +914,7 @@ DASH_no_cpp_precomp
 DASH_mpc64
 DASH_mieee_with_inexact
 DASH_mieee
+DASH_foptimize_sibling_calls
 DASH_fno_gcse
 DASH_fgcse
 DASH_fno_move_loop_invariants
@@ -10315,6 +10316,7 @@ if test "$C_COMP_GNUC" = yes; then
     DASH_fno_move_loop_invariants=""
     DASH_fgcse=""
     DASH_fno_gcse=""
+    DASH_foptimize_sibling_calls=""
 
     DASH_mieee=""
     DASH_mieee_with_inexact=""
@@ -10710,6 +10712,49 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_fno_gcse" >&5
 $as_echo "$ac_cv_DASH_fno_gcse" >&6; }
 DASH_fno_gcse="$ac_cv_DASH_fno_gcse"
+
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -foptimize-sibling-calls" >&5
+$as_echo_n "checking whether $C_COMPILER accepts -foptimize-sibling-calls... " >&6; }
+if ${ac_cv_DASH_foptimize_sibling_calls+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="-foptimize-sibling-calls"
+CXXFLAGS="-foptimize-sibling-calls"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_foptimize_sibling_calls=" -foptimize-sibling-calls"
+else
+  ac_cv_DASH_foptimize_sibling_calls=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_foptimize_sibling_calls" >&5
+$as_echo "$ac_cv_DASH_foptimize_sibling_calls" >&6; }
+DASH_foptimize_sibling_calls="$ac_cv_DASH_foptimize_sibling_calls"
 
 
 
@@ -12427,6 +12472,8 @@ DASH_shared="$ac_cv_DASH_shared"
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fmodulo_sched"
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_freschedule_modulo_scheduled_loops"
   fi
+
+   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_foptimize_sibling_calls"
 
   if test "$OMIT_FRAME_POINTER_POSSIBLE_BUG" != yes; then
     case "$target_os" in
@@ -17568,6 +17615,47 @@ $as_echo "$as_me:
 #**************************************************************************
 #])
 #  fi
+
+  if test "$C_COMP_LLVM" != yes -a "x$DASH_foptimize_sibling_calls" != "x" -a "$ENABLE_TRUST_C_TCO" != yes; then
+
+    { $as_echo "$as_me:${as_lineno-$LINENO}:
+**************************************************************************
+***                                                                    ***
+*** The GNU GCC compiler that is being used supports the command line  ***
+*** option \"-foptimize-sibling-calls\" so it probably supports TCO      ***
+*** sufficiently well to allow the use of the \"--enable-trust-c-tco\"   ***
+*** configure option, which was not specified to the configure script. ***
+*** The Gambit system will compile correctly but the executables may   ***
+*** run slower than when \"--enable-trust-c-tco\" is specified.  One way ***
+*** to check if \"--enable-trust-c-tco\" works is to try that option and ***
+*** then see if there is a segmentation violation (stack overflow)     ***
+*** when the system is built with a \"make\".  If the build completes    ***
+*** without error, specifically the last phase of the \"make\" that      ***
+*** builds the modules, then it is very likely that C TCO can be       ***
+*** trusted.                                                           ***
+***                                                                    ***
+**************************************************************************
+" >&5
+$as_echo "$as_me:
+**************************************************************************
+***                                                                    ***
+*** The GNU GCC compiler that is being used supports the command line  ***
+*** option \"-foptimize-sibling-calls\" so it probably supports TCO      ***
+*** sufficiently well to allow the use of the \"--enable-trust-c-tco\"   ***
+*** configure option, which was not specified to the configure script. ***
+*** The Gambit system will compile correctly but the executables may   ***
+*** run slower than when \"--enable-trust-c-tco\" is specified.  One way ***
+*** to check if \"--enable-trust-c-tco\" works is to try that option and ***
+*** then see if there is a segmentation violation (stack overflow)     ***
+*** when the system is built with a \"make\".  If the build completes    ***
+*** without error, specifically the last phase of the \"make\" that      ***
+*** builds the modules, then it is very likely that C TCO can be       ***
+*** trusted.                                                           ***
+***                                                                    ***
+**************************************************************************
+" >&6;}
+  fi
+
 
 fi
 

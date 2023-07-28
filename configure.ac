@@ -1,6 +1,6 @@
 # Configure template for Gambit system.
 
-# Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 # Process this file with autoconf to produce a configure script.
 
@@ -2325,6 +2325,7 @@ if test "$C_COMP_GNUC" = yes; then
     DASH_fno_move_loop_invariants=""
     DASH_fgcse=""
     DASH_fno_gcse=""
+    DASH_foptimize_sibling_calls=""
 
     DASH_mieee=""
     DASH_mieee_with_inexact=""
@@ -2344,6 +2345,7 @@ if test "$C_COMP_GNUC" = yes; then
     AC_CHECK_C_COMPILER_OPT(-fno-move-loop-invariants,DASH_fno_move_loop_invariants)
     AC_CHECK_C_COMPILER_OPT(-fgcse,DASH_fgcse)
     AC_CHECK_C_COMPILER_OPT(-fno-gcse,DASH_fno_gcse)
+    AC_CHECK_C_COMPILER_OPT(-foptimize-sibling-calls,DASH_foptimize_sibling_calls)
 
     # machine specific options:
     AC_CHECK_C_COMPILER_OPT(-mieee,DASH_mieee)
@@ -2547,6 +2549,8 @@ if test "$C_COMP_GNUC" = yes; then
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fmodulo_sched"
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_freschedule_modulo_scheduled_loops"
   fi
+
+   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_foptimize_sibling_calls"
 
   if test "$OMIT_FRAME_POINTER_POSSIBLE_BUG" != yes; then
     case "$target_os" in
@@ -3994,6 +3998,29 @@ if test "$C_COMP_GNUC" = yes; then
 #**************************************************************************
 #])
 #  fi
+
+  if test "$C_COMP_LLVM" != yes -a "x$DASH_foptimize_sibling_calls" != "x" -a "$ENABLE_TRUST_C_TCO" != yes; then
+
+    AC_MSG_NOTICE([
+**************************************************************************
+***                                                                    ***
+*** The GNU GCC compiler that is being used supports the command line  ***
+*** option "-foptimize-sibling-calls" so it probably supports TCO      ***
+*** sufficiently well to allow the use of the "--enable-trust-c-tco"   ***
+*** configure option, which was not specified to the configure script. ***
+*** The Gambit system will compile correctly but the executables may   ***
+*** run slower than when "--enable-trust-c-tco" is specified.  One way ***
+*** to check if "--enable-trust-c-tco" works is to try that option and ***
+*** then see if there is a segmentation violation (stack overflow)     ***
+*** when the system is built with a "make".  If the build completes    ***
+*** without error, specifically the last phase of the "make" that      ***
+*** builds the modules, then it is very likely that C TCO can be       ***
+*** trusted.                                                           ***
+***                                                                    ***
+**************************************************************************
+])
+  fi
+
 
 fi
 
