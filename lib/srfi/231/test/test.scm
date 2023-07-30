@@ -6506,13 +6506,13 @@ OTHER DEALINGS IN THE SOFTWARE.
 (let ((A (make-specialized-array (make-interval '#(5 5 5 5 5) '#(8 8 8 8 8))))
       (B (make-specialized-array (make-interval '#(5 5 5 5 5)))))
   (test (array-ref A 0 0)
-        "Wrong number of arguments passed to procedure ")
+        "array-getter: multi-index is not the correct dimension: ")
   (test (array-set! A 2 0 0)
-        "Wrong number of arguments passed to procedure ")
+        "array-setter: multi-index is not the correct dimension: ")
   (test (array-ref B 0 0)
-        "Wrong number of arguments passed to procedure ")
+        "array-getter: multi-index is not the correct dimension: ")
   (test (array-set! B 2 0 0)
-        "Wrong number of arguments passed to procedure "))
+        "array-setter: multi-index is not the correct dimension: "))
 
 (pp "Test interactions of continuations and array-{copy|append|stack|decurry|block}")
 

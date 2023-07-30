@@ -2112,7 +2112,7 @@ OTHER DEALINGS IN THE SOFTWARE.
     (let ((getter
            (cond ((%%interval-empty? domain)
                   (%%empty-getter domain))
-                 (safe?
+                 (#t; safe?                    ;; All array getters and setters check their arguments
                   (case (%%interval-dimension domain)
                     ((0)  (lambda ()
                             (storage-class-getter body (indexer))))
@@ -2175,7 +2175,7 @@ OTHER DEALINGS IN THE SOFTWARE.
            (and mutable?
                 (cond ((%%interval-empty? domain)
                        (%%empty-setter domain))
-                      (safe?
+                      (#t; safe?                    ;; All array getters and setters check their arguments
                        (case (%%interval-dimension domain)
                          ((0)  (lambda (value)
                                  (cond ((not (checker value))
