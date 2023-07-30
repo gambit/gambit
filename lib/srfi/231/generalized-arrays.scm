@@ -710,31 +710,39 @@ OTHER DEALINGS IN THE SOFTWARE.
   (and (<= (%%interval-lower-bound interval 0) i) (< i (%%interval-upper-bound interval 0))))
 
 (define (%%interval-contains-multi-index?-2 interval i j)
-  (and (<= (%%interval-lower-bound interval 0) i) (< i (%%interval-upper-bound interval 0))
-       (<= (%%interval-lower-bound interval 1) j) (< j (%%interval-upper-bound interval 1))))
+     (let ((lowers (%%interval-lower-bounds interval))
+           (uppers (%%interval-upper-bounds interval)))
+       (and (<= (vector-ref lowers 0) i) (< i (vector-ref uppers 0))
+            (<= (vector-ref lowers 1) j) (< j (vector-ref uppers 1)))))
 
 (define (%%interval-contains-multi-index?-3 interval i j k)
-  (and (<= (%%interval-lower-bound interval 0) i) (< i (%%interval-upper-bound interval 0))
-       (<= (%%interval-lower-bound interval 1) j) (< j (%%interval-upper-bound interval 1))
-       (<= (%%interval-lower-bound interval 2) k) (< k (%%interval-upper-bound interval 2))))
+  (let ((lowers (%%interval-lower-bounds interval))
+        (uppers (%%interval-upper-bounds interval)))
+    (and (<= (vector-ref lowers 0) i) (< i (vector-ref uppers 0))
+         (<= (vector-ref lowers 1) j) (< j (vector-ref uppers 1))
+         (<= (vector-ref lowers 2) k) (< k (vector-ref uppers 2)))))
 
 (define (%%interval-contains-multi-index?-4 interval i j k l)
-  (and (<= (%%interval-lower-bound interval 0) i) (< i (%%interval-upper-bound interval 0))
-       (<= (%%interval-lower-bound interval 1) j) (< j (%%interval-upper-bound interval 1))
-       (<= (%%interval-lower-bound interval 2) k) (< k (%%interval-upper-bound interval 2))
-       (<= (%%interval-lower-bound interval 3) l) (< l (%%interval-upper-bound interval 3))))
+  (let ((lowers (%%interval-lower-bounds interval))
+        (uppers (%%interval-upper-bounds interval)))
+    (and (<= (vector-ref lowers 0) i) (< i (vector-ref uppers 0))
+         (<= (vector-ref lowers 1) j) (< j (vector-ref uppers 1))
+         (<= (vector-ref lowers 2) k) (< k (vector-ref uppers 2))
+         (<= (vector-ref lowers 3) l) (< l (vector-ref uppers 3)))))
 
 (declare (not inline))
 
 (define (%%interval-contains-multi-index?-general interval multi-index)
-  (let loop ((i 0)
-             (multi-index multi-index))
-    (or (null? multi-index)
-        (let ((component (car multi-index)))
-          (and (<= (%%interval-lower-bound interval i) component)
-               (< component (%%interval-upper-bound interval i))
-               (loop (fx+ i 1)
-                     (cdr multi-index)))))))
+  (let ((lowers (%%interval-lower-bounds interval))
+        (uppers (%%interval-upper-bounds interval)))
+    (let loop ((i 0)
+               (multi-index multi-index))
+      (or (null? multi-index)
+          (let ((component (car multi-index)))
+            (and (<= (vector-ref lowers i) component)
+                 (< component (vector-ref uppers i))
+                 (loop (fx+ i 1)
+                       (cdr multi-index))))))))
 
 (define (interval-contains-multi-index? interval #!rest multi-index)
 
@@ -1255,12 +1263,12 @@ OTHER DEALINGS IN THE SOFTWARE.
            (bodyv (vector-ref v  1)))
        (u16vector-set! bodyv index (fxior (fxarithmetic-shift-left val shift)
                                           (fxand (u16vector-ref bodyv index)
-                                                 (fxnot  (fxarithmetic-shift-left 1 shift)))))
+                                                 (fxnot (fxarithmetic-shift-left 1 shift)))))
        (void)))
    ;; checker
    (lambda (val)
      (and (fixnum? val)
-          (eq? 0 (fxand -2 val))))
+          (eqv? 0 (fxand -2 val))))
    ;; maker
    (lambda (size initializer)
      (let ((u16-size (fxarithmetic-shift-right (+ size 15) 4)))
@@ -2109,6 +2117,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                     ((0)  (lambda ()
                             (storage-class-getter body (indexer))))
                     ((1)  (lambda (i)
+                            (declare (inlining-limit 10000))
                             (cond ((not (exact-integer? i))
                                    (error "array-getter: multi-index component is not an exact integer: " i))
                                   ((not (%%interval-contains-multi-index?-1 domain i))
@@ -2116,6 +2125,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                                   (else
                                    (storage-class-getter body (indexer i))))))
                     ((2)  (lambda (i j)
+                            (declare (inlining-limit 10000))
                             (cond ((not (and (exact-integer? i)
                                              (exact-integer? j)))
                                    (error "array-getter: multi-index component is not an exact integer: " i j))
@@ -2124,6 +2134,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                                   (else
                                    (storage-class-getter body (indexer i j))))))
                     ((3)  (lambda (i j k)
+                            (declare (inlining-limit 10000))
                             (cond ((not (and (exact-integer? i)
                                              (exact-integer? j)
                                              (exact-integer? k)))
@@ -2133,6 +2144,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                                   (else
                                    (storage-class-getter body (indexer i j k))))))
                     ((4)  (lambda (i j k l)
+                            (declare (inlining-limit 10000))
                             (cond ((not (and (exact-integer? i)
                                              (exact-integer? j)
                                              (exact-integer? k)
@@ -2171,6 +2183,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                                        (else
                                         (storage-class-setter body (indexer) value)))))
                          ((1)  (lambda (value i)
+                                 (declare (inlining-limit 10000))
                                  (cond ((not (exact-integer? i))
                                         (error "array-setter: multi-index component is not an exact integer: " i))
                                        ((not (%%interval-contains-multi-index?-1 domain i))
@@ -2180,6 +2193,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                                        (else
                                         (storage-class-setter body (indexer i) value)))))
                          ((2)  (lambda (value i j)
+                                 (declare (inlining-limit 10000))
                                  (cond ((not (and (exact-integer? i)
                                                   (exact-integer? j)))
                                         (error "array-setter: multi-index component is not an exact integer: " i j))
@@ -2190,6 +2204,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                                        (else
                                         (storage-class-setter body (indexer i j) value)))))
                          ((3)  (lambda (value i j k)
+                                 (declare (inlining-limit 10000))
                                  (cond ((not (and (exact-integer? i)
                                                   (exact-integer? j)
                                                   (exact-integer? k)))
@@ -2201,6 +2216,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                                        (else
                                         (storage-class-setter body (indexer i j k) value)))))
                          ((4)  (lambda (value i j k l)
+                                 (declare (inlining-limit 10000))
                                  (cond ((not (and (exact-integer? i)
                                                   (exact-integer? j)
                                                   (exact-integer? k)
@@ -3742,16 +3758,16 @@ OTHER DEALINGS IN THE SOFTWARE.
                                   (vector-ref %%vector-of-trues dim)
                                   (make-vector dim #t)))))))
    ((array flip?)
-    (cond  ((not (array? array))
-            (error "array-reverse: The first argument is not an array: " array flip?))
-           ((not (and (vector? flip?)
-                      (%%vector-every (lambda (x) (boolean? x)) flip?)))
-            (error "array-reverse: The second argument is not a vector of booleans: " array flip?))
-           ((not (fx= (%%array-dimension array)
-                      (vector-length flip?)))
-            (error "array-reverse: The dimension of the first argument (an array) does not equal the dimension of the second argument (a vector of booleans): " array flip?))
-           (else
-            (%%array-reverse array flip?))))))
+    (cond ((not (array? array))
+           (error "array-reverse: The first argument is not an array: " array flip?))
+          ((not (and (vector? flip?)
+                     (%%vector-every (lambda (x) (boolean? x)) flip?)))
+           (error "array-reverse: The second argument is not a vector of booleans: " array flip?))
+          ((not (fx= (%%array-dimension array)
+                     (vector-length flip?)))
+           (error "array-reverse: The dimension of the first argument (an array) does not equal the dimension of the second argument (a vector of booleans): " array flip?))
+          (else
+           (%%array-reverse array flip?))))))
 
 (define-macro (macro-generate-sample)
 
@@ -5034,7 +5050,7 @@ OTHER DEALINGS IN THE SOFTWARE.
         (else
          (let* ((A                (%%array-translate     ;; make lower-bounds zero
                                    (array-copy A-arg)  ;; evaluate all (array) elements of A-arg
-                                   (vector-map (lambda (x) (- x))  (%%interval-lower-bounds (%%array-domain A-arg)))))
+                                   (vector-map (lambda (x) (- x)) (%%interval-lower-bounds (%%array-domain A-arg)))))
                 (A_D              (%%array-domain A))
                 (A_dim            (%%interval-dimension A_D))
                 (ks               (list->vector (iota A_dim))))
