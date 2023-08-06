@@ -3442,8 +3442,11 @@ for a discussion of branch cuts.
           ((##< x -1)
            (macro-if-cpxnum
             (##make-rectangular
-             (##fl/ (##fllog1p (##exact->inexact (##/ (##* 4 x)
-                                                      (##square (##- x 1)))))
+             (##fl/ (##fllog1p (##exact->inexact
+                                (if (##= x (##- x 1))
+                                    (##/ 4 x)
+                                    (##/ (##* 4 x)
+                                         (##square (##- x 1))))))
                     (macro-inexact-+4))
              (macro-inexact-+pi/2))
             (range-error)))
