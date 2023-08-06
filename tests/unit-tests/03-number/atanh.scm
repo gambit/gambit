@@ -4,6 +4,11 @@
 
 (check-eqv? (atanh 0) 0)
 
+;;; Check exact vs inexact
+
+(check-= (atanh 1/2) (atanh 0.5))
+(check-= (atanh 2) (atanh 2.))
+
 ;;; Test branch cuts
 
 (check-= (atanh 2)      (test-atanh 2))
