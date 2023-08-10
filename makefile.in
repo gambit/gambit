@@ -110,7 +110,7 @@ core:
 
 core-pre: gsc-boot@exe@
 	$(MAKE) stamp
-	@if echo "MAKEFLAGS: $(MAKEFLAGS)" | fgrep -e "--jobserver-fds="; then \
+	@if echo "MAKEFLAGS: $(MAKEFLAGS)" | fgrep -e "--jobserver-" > /dev/null; then \
 	  $(MAKE) phases; \
 	fi
 
