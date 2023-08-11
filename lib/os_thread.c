@@ -601,6 +601,7 @@ ___processor_state ___ps;)
 {
   int id = ___PROCESSOR_ID(___ps, ___VMSTATE_FROM_PSTATE(___ps));
   int cpu_count = ___cpu_count (-1);
+  int cpu_id = (id + ___thread_mod.processor0_cpu_id) % cpu_count;
 
 #ifdef ___USE_POSIX_THREAD_SYSTEM
 
@@ -610,7 +611,7 @@ ___processor_state ___ps;)
     mach_port_t mach_thread = pthread_mach_thread_np (pthread_self ());
     int affinity[1];
 
-    affinity[0] = 1 << id;
+    affinity[0] = 1 << cpu_id;
 
     thread_policy_set (mach_thread, THREAD_AFFINITY_POLICY, (thread_policy_t)&affinity, 1);
   }
@@ -623,7 +624,7 @@ ___processor_state ___ps;)
     cpu_set_t cpuset;
 
     CPU_ZERO(&cpuset);
-    CPU_SET(id, &cpuset);
+    CPU_SET(cpu_id, &cpuset);
 
     pthread_setaffinity_np (pthread_self (),
                             sizeof (cpu_set_t),
@@ -668,12 +669,12 @@ ___processor_state ___ps;)
 
   {
     cpu_set_t cpuset;
-    int i;
+    int cpu_id;
 
     CPU_ZERO(&cpuset);
 
-    for (i=0; i<CPU_SETSIZE; i++) {
-      CPU_SET(i, &cpuset);
+    for (cpu_id=0; cpu_id<CPU_SETSIZE; cpu_id++) {
+      CPU_SET(cpu_id, &cpuset);
     }
 
     pthread_setaffinity_np (pthread_self (),
