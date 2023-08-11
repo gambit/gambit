@@ -1,6 +1,6 @@
 /* File: "os_thread.h" */
 
-/* Copyright (c) 2013-2017 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 2013-2023 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_THREAD_H
 #define ___OS_THREAD_H
@@ -60,6 +60,14 @@ extern ___thread_module ___thread_mod;
 
 /*---------------------------------------------------------------------------*/
 
+
+extern void ___thread_affinity_set
+   ___P((___processor_state ___ps),
+        ());
+
+extern void ___thread_affinity_reset
+   ___P((___processor_state ___ps),
+        ());
 
 extern void ___thread_set_pstate
    ___P((___processor_state ___ps),
