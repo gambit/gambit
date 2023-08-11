@@ -209,23 +209,18 @@ kern_return_t thread_policy_set(thread_t thread,
 #endif
 
 
-void ___thread_set_pstate
+void ___thread_affinity_set
    ___P((___processor_state ___ps),
         (___ps)
 ___processor_state ___ps;)
 {
-#ifdef ___SUPPORT_PSTATE_BIND
-  ___ps->pstate_binding = ___ps;
-#endif
-
-  ___SET_REAL_PSTATE(___ps);
+  int id = ___PROCESSOR_ID(___ps, ___VMSTATE_FROM_PSTATE(___ps));
 
 #ifdef ___USE_POSIX_THREAD_SYSTEM
 
 #ifdef ___USE_THREAD_POLICY_SET
 
   {
-    int id = ___PROCESSOR_ID(___ps, ___VMSTATE_FROM_PSTATE(___ps));
     mach_port_t mach_thread = pthread_mach_thread_np (pthread_self ());
     int affinity[1];
 
@@ -239,7 +234,6 @@ ___processor_state ___ps;)
 #ifdef HAVE_PTHREAD_SETAFFINITY_NP
 
   {
-    int id = ___PROCESSOR_ID(___ps, ___VMSTATE_FROM_PSTATE(___ps));
     cpu_set_t cpuset;
 
     CPU_ZERO(&cpuset);
@@ -258,13 +252,73 @@ ___processor_state ___ps;)
 
 #ifdef ___USE_WIN32_THREAD_SYSTEM
 
-  {
-    int id = ___PROCESSOR_ID(___ps, ___VMSTATE_FROM_PSTATE(___ps));
+  SetThreadAffinityMask (GetCurrentThread (), ___CAST(DWORD,1)<<id);
 
-    SetThreadAffinityMask (GetCurrentThread (), ___CAST(DWORD,1)<<id);
+#endif
+}
+
+
+void ___thread_affinity_reset
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+#ifdef ___USE_POSIX_THREAD_SYSTEM
+
+#ifdef ___USE_THREAD_POLICY_SET
+
+  {
+    mach_port_t mach_thread = pthread_mach_thread_np (pthread_self ());
+    int affinity[1];
+
+    thread_policy_set (mach_thread, THREAD_AFFINITY_POLICY, (thread_policy_t)&affinity, 0);
+  }
+
+#else
+
+#ifdef HAVE_PTHREAD_SETAFFINITY_NP
+
+  {
+    cpu_set_t cpuset;
+    int i;
+
+    CPU_ZERO(&cpuset);
+
+    for (i=0; i<CPU_SETSIZE; i++) {
+      CPU_SET(i, &cpuset);
+    }
+
+    pthread_setaffinity_np (pthread_self (),
+                            sizeof (cpu_set_t),
+                            &cpuset); /* ignore error */
   }
 
 #endif
+
+#endif
+
+#endif
+
+#ifdef ___USE_WIN32_THREAD_SYSTEM
+
+  SetThreadAffinityMask (GetCurrentThread (), ___CAST(DWORD,-1));
+
+#endif
+}
+
+
+void ___thread_set_pstate
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+#ifdef ___SUPPORT_PSTATE_BIND
+  ___ps->pstate_binding = ___ps;
+#endif
+
+  ___SET_REAL_PSTATE(___ps);
+
+  ___thread_affinity_set (___ps);
 }
 
 
