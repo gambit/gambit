@@ -1,6 +1,6 @@
 /* File: "os_thread.c" */
 
-/* Copyright (c) 2013-2021 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 2013-2023 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements thread-related services.
@@ -10,6 +10,7 @@
 #define ___VERSION 409005
 #include "gambit.h"
 
+#include "os_setup.h"
 #include "os_base.h"
 #include "os_thread.h"
 
@@ -19,8 +20,404 @@
 
 ___thread_module ___thread_mod =
 {
-  0
+  0,
+  -1,   /* cpu id of main OS thread */
+  1, 0, /* cpu count for: performant and efficient cpus */
+  1     /* core count */
 };
+
+
+/*---------------------------------------------------------------------------*/
+
+/* CPU information. */
+
+void ___get_cpu_count ___PVOID
+{
+  /* determine cpu counts for performant and efficiency cpus */
+
+#ifdef USE_sysconf
+
+#ifdef _SC_NPROCESSORS_ONLN
+#define OP_SC_NPROCESSORS _SC_NPROCESSORS_ONLN
+#else
+#ifdef _SC_NPROCESSORS_CONF
+#define OP_SC_NPROCESSORS _SC_NPROCESSORS_CONF
+#endif
+#endif
+
+#endif
+
+#ifdef OP_SC_NPROCESSORS
+
+  ___thread_mod.cpu_count[0] = sysconf (OP_SC_NPROCESSORS);
+
+#else
+
+#ifdef USE_sysctl
+
+#ifdef USE_sysctlbyname
+
+  ___S32 n;
+  size_t s = sizeof (n);
+
+  if (sysctlbyname ("hw.perflevel0.logicalcpu", &n, &s, NULL, 0) == 0) {
+    ___thread_mod.cpu_count[0] = n;
+    if (sysctlbyname ("hw.perflevel1.logicalcpu", &n, &s, NULL, 0) == 0) {
+      ___thread_mod.cpu_count[1] = n;
+    }
+  } else {
+
+#else
+
+#ifdef CTL_HW
+#ifdef HW_AVAILCPU
+#define OP_NB_CPU HW_AVAILCPU
+#else
+#ifdef HW_NCPU
+#define OP_NB_CPU HW_NCPU
+#endif
+#endif
+#endif
+
+#ifdef OP_NB_CPU
+
+  size_t n = 0;
+  size_t sizeof_n = sizeof(n);
+  int mib[2];
+
+  mib[0] = CTL_HW;
+  mib[1] = OP_NB_CPU;
+
+  if (sysctl (mib, 2, &n, &sizeof_n, NULL, 0) == 0) {
+    ___thread_mod.cpu_count[0] = n;
+  }
+
+#endif
+
+#endif
+
+#ifdef USE_sysctlbyname
+  }
+#endif
+
+#endif
+
+#endif
+
+#ifdef USE_GetSystemInfo
+
+  {
+    SYSTEM_INFO si;
+
+    GetSystemInfo (&si);
+
+    ___thread_mod.cpu_count[0] = si.dwNumberOfProcessors;
+  }
+
+#endif
+}
+
+void ___get_core_count ___PVOID
+{
+  /* determine core count */
+
+  /* default to the cpu count if there's no way to get the core count */
+
+  ___thread_mod.core_count = ___thread_mod.cpu_count[0] +
+                             ___thread_mod.cpu_count[1];
+
+#ifdef USE_sysctlbyname
+
+  {
+    ___S32 n;
+    size_t s = sizeof (n);
+
+    if (sysctlbyname ("machdep.cpu.core_count", &n, &s, NULL, 0) == 0)
+      ___thread_mod.core_count = n;
+  }
+
+#endif
+}
+
+
+int ___get_processor0_cpu_id ___PVOID
+{
+  /* determine cpu id of processor 0 */
+
+  int cpu_id = -1;
+
+#ifdef USE_sched_getcpu
+
+  cpu_id = sched_getcpu ();
+
+#else
+
+#ifdef ___CPU_x86
+#ifdef __GNUC__
+
+  {
+    ___U32 a, b, c, d;
+
+    __asm__ __volatile__ ("cpuid\n\t"
+                          : "=a" (a), "=b" (b), "=c" (c), "=d" (d)
+                          : "0" (1), "2" (0));
+
+    if ((d & (1 << 9)) != 0) { /* have APIC on chip? */
+      cpu_id = b >> 24;
+    }
+  }
+
+#endif
+#endif
+
+#endif
+
+  if (cpu_id < 0) {
+    /*
+     * When the cpu id can't be determined, the process id is used to
+     * generate a somewhat random fake cpu id that has the virtue of
+     * being different from recently created other Gambit processes
+     * (to avoid having the thread affinity map the main OS thread of
+     * these processes to the same cpu).
+     */
+    cpu_id = ___INT(___os_getpid ());
+  }
+
+  /* make sure the cpu id is within bounds */
+
+  cpu_id = cpu_id % (___thread_mod.cpu_count[0] + ___thread_mod.cpu_count[1]);
+
+  return cpu_id;
+}
+
+
+void ___get_cpu_info ___PVOID
+{
+  if (___thread_mod.processor0_cpu_id >= 0) return;
+
+  ___get_cpu_count ();
+
+  ___get_core_count ();
+
+  ___thread_mod.processor0_cpu_id = ___get_processor0_cpu_id ();
+}
+
+
+int ___cpu_count
+   ___P((int level),
+        (level)
+int level;)
+{
+  int cpu_count;
+
+  ___get_cpu_info ();
+
+  if (level >= 0 && level <= 1) {
+    cpu_count = ___thread_mod.cpu_count[level];
+  } else {
+    cpu_count = ___thread_mod.cpu_count[0] + ___thread_mod.cpu_count[1];
+  }
+
+  return cpu_count;
+}
+
+
+int ___cpu_cache_size
+   ___P((___BOOL instruction_cache,
+         int level),
+        (instruction_cache,
+         level)
+___BOOL instruction_cache;
+int level;)
+{
+  int cache_size = 0;
+
+#ifdef USE_sysconf
+
+  {
+
+  static struct { int name; int level; int kind; } sysconf_info[] = {
+
+#ifdef _SC_LEVEL1_DCACHE_SIZE
+    { _SC_LEVEL1_DCACHE_SIZE, 1, 1 },
+#endif
+#ifdef _SC_LEVEL1_ICACHE_SIZE
+    { _SC_LEVEL1_ICACHE_SIZE, 1, 2 },
+#endif
+#ifdef _SC_LEVEL1_CACHE_SIZE
+    { _SC_LEVEL1_CACHE_SIZE,  1, 3 },
+#endif
+
+#ifdef _SC_LEVEL2_DCACHE_SIZE
+    { _SC_LEVEL2_DCACHE_SIZE, 2, 1 },
+#endif
+#ifdef _SC_LEVEL2_ICACHE_SIZE
+    { _SC_LEVEL2_ICACHE_SIZE, 2, 2 },
+#endif
+#ifdef _SC_LEVEL2_CACHE_SIZE
+    { _SC_LEVEL2_CACHE_SIZE,  2, 3 },
+#endif
+
+#ifdef _SC_LEVEL3_DCACHE_SIZE
+    { _SC_LEVEL3_DCACHE_SIZE, 3, 1 },
+#endif
+#ifdef _SC_LEVEL3_ICACHE_SIZE
+    { _SC_LEVEL3_ICACHE_SIZE, 3, 2 },
+#endif
+#ifdef _SC_LEVEL3_CACHE_SIZE
+    { _SC_LEVEL3_CACHE_SIZE,  3, 3 },
+#endif
+
+#ifdef _SC_LEVEL4_DCACHE_SIZE
+    { _SC_LEVEL4_DCACHE_SIZE, 4, 1 },
+#endif
+#ifdef _SC_LEVEL4_ICACHE_SIZE
+    { _SC_LEVEL4_ICACHE_SIZE, 4, 2 },
+#endif
+#ifdef _SC_LEVEL4_CACHE_SIZE
+    { _SC_LEVEL4_CACHE_SIZE,  4, 3 },
+#endif
+
+      { 0, 0, 0 }
+  };
+
+  int i = 0;
+
+  while (sysconf_info[i].kind != 0) {
+
+    if ((level == 0 || level == sysconf_info[i].level) &&
+        (sysconf_info[i].kind & (1<<instruction_cache))) {
+
+      int size = sysconf (sysconf_info[i].name);
+
+      if (level != 0) {
+        cache_size = size;
+        break;
+      }
+
+      if (size > cache_size) {
+        cache_size = size;
+      }
+    }
+
+    i++;
+  }
+
+  if (cache_size != 0) {
+    return cache_size;
+  }
+
+  }
+
+#endif
+
+#ifdef USE_sysctl
+
+#ifdef CTL_HW
+
+  {
+
+  static struct { int name; int level; int kind; } sysctl_info[] = {
+
+#ifdef HW_L1DCACHESIZE
+    { HW_L1DCACHESIZE, 1, 1 },
+#endif
+#ifdef HW_L1ICACHESIZE
+    { HW_L1ICACHESIZE, 1, 2 },
+#endif
+#ifdef HW_L1CACHESIZE
+    { HW_L1CACHESIZE,  1, 3 },
+#endif
+
+#ifdef HW_L2DCACHESIZE
+    { HW_L2DCACHESIZE, 2, 1 },
+#endif
+#ifdef HW_L2ICACHESIZE
+    { HW_L2ICACHESIZE, 2, 2 },
+#endif
+#ifdef HW_L2CACHESIZE
+    { HW_L2CACHESIZE,  2, 3 },
+#endif
+
+#ifdef HW_L3DCACHESIZE
+    { HW_L3DCACHESIZE, 3, 1 },
+#endif
+#ifdef HW_L3ICACHESIZE
+    { HW_L3ICACHESIZE, 3, 2 },
+#endif
+#ifdef HW_L3CACHESIZE
+    { HW_L3CACHESIZE,  3, 3 },
+#endif
+
+#ifdef HW_L4DCACHESIZE
+    { HW_L4DCACHESIZE, 4, 1 },
+#endif
+#ifdef HW_L4ICACHESIZE
+    { HW_L4ICACHESIZE, 4, 2 },
+#endif
+#ifdef HW_L4CACHESIZE
+    { HW_L4CACHESIZE,  4, 3 },
+#endif
+
+      { 0, 0, 0 }
+  };
+
+  int i = 0;
+
+  while (sysctl_info[i].kind != 0) {
+
+    if ((level == 0 || level == sysctl_info[i].level) &&
+        (sysctl_info[i].kind & (1<<instruction_cache))) {
+
+      size_t size = 0;
+      size_t sizeof_size = sizeof(size);
+      int mib[2];
+
+      mib[0] = CTL_HW;
+      mib[1] = sysctl_info[i].name;
+
+      if (sysctl (mib, 2, &size, &sizeof_size, NULL, 0) == 0) {
+
+        if (level != 0) {
+          cache_size = size;
+          break;
+        }
+
+        if (size > cache_size) {
+          cache_size = size;
+        }
+      }
+    }
+
+    i++;
+  }
+
+  if (cache_size != 0) {
+    return cache_size;
+  }
+
+  }
+
+#endif
+
+#endif
+
+#ifdef USE_WIN32
+
+  /* TODO: use GetLogicalProcessorInformation */
+
+#endif
+
+  return cache_size;
+}
+
+
+int ___core_count ___PVOID
+{
+  ___get_cpu_info ();
+
+  return ___thread_mod.core_count;
+}
 
 
 /*---------------------------------------------------------------------------*/
@@ -197,34 +594,23 @@ void ___thread_exit ___PVOID
 }
 
 
-#ifdef ___USE_THREAD_POLICY_SET
-
-#include <mach/thread_act.h>
-
-kern_return_t thread_policy_set(thread_t thread,
-                                thread_policy_flavor_t flavor,
-                                thread_policy_t policy_info,
-                                mach_msg_type_number_t count);
-
-#endif
-
-
 void ___thread_affinity_set
    ___P((___processor_state ___ps),
         (___ps)
 ___processor_state ___ps;)
 {
   int id = ___PROCESSOR_ID(___ps, ___VMSTATE_FROM_PSTATE(___ps));
+  int cpu_count = ___cpu_count (-1);
 
 #ifdef ___USE_POSIX_THREAD_SYSTEM
 
-#ifdef ___USE_THREAD_POLICY_SET
+#ifdef USE_thread_policy_set
 
   {
     mach_port_t mach_thread = pthread_mach_thread_np (pthread_self ());
     int affinity[1];
 
-    affinity[0] = id;
+    affinity[0] = 1 << id;
 
     thread_policy_set (mach_thread, THREAD_AFFINITY_POLICY, (thread_policy_t)&affinity, 1);
   }
@@ -265,13 +651,15 @@ ___processor_state ___ps;)
 {
 #ifdef ___USE_POSIX_THREAD_SYSTEM
 
-#ifdef ___USE_THREAD_POLICY_SET
+#ifdef USE_thread_policy_set
 
   {
     mach_port_t mach_thread = pthread_mach_thread_np (pthread_self ());
     int affinity[1];
 
-    thread_policy_set (mach_thread, THREAD_AFFINITY_POLICY, (thread_policy_t)&affinity, 0);
+    affinity[0] = -1;
+
+    thread_policy_set (mach_thread, THREAD_AFFINITY_POLICY, (thread_policy_t)&affinity, 1);
   }
 
 #else
@@ -583,6 +971,8 @@ ___SCMOBJ ___setup_thread_module ___PVOID
 
   if (___thread_mod.refcount == 0)
     {
+      ___get_cpu_info ();
+
 #ifdef ___USE_emulated_sync
 
       err = hash_mutex_init (___thread_mod.hash_mutex,
