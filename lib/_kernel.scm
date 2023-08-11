@@ -15,6 +15,7 @@
 #include "os.h"
 #include "os_setup.h"
 #include "os_base.h"
+#include "os_thread.h"
 #include "os_time.h"
 #include "os_files.h"
 #include "os_dyn.h"
@@ -2206,10 +2207,11 @@ end-of-code
 
 ;;; CPU information.
 
-(define-prim (##cpu-count)
+(define-prim (##cpu-count #!optional (level -1))
   (##declare (not interrupts-enabled))
   (##c-code
-   "___RESULT = ___FIX(___cpu_count ());"))
+   "___RESULT = ___FIX(___cpu_count (___INT(___ARG1)));"
+   level))
 
 (define-prim (##cpu-cache-size
               #!optional

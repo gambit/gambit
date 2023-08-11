@@ -7322,6 +7322,18 @@ fi
 
 done
 
+  for ac_header in mach/thread_act.h
+do :
+  ac_fn_cxx_check_header_mongrel "$LINENO" "mach/thread_act.h" "ac_cv_header_mach_thread_act_h" "$ac_includes_default"
+if test "x$ac_cv_header_mach_thread_act_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_MACH_THREAD_ACT_H 1
+_ACEOF
+
+fi
+
+done
+
   for ac_header in sys/types.h
 do :
   ac_fn_cxx_check_header_mongrel "$LINENO" "sys/types.h" "ac_cv_header_sys_types_h" "$ac_includes_default"
@@ -7823,6 +7835,18 @@ do :
 if test "x$ac_cv_header_poll_h" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_POLL_H 1
+_ACEOF
+
+fi
+
+done
+
+  for ac_header in sched.h
+do :
+  ac_fn_cxx_check_header_mongrel "$LINENO" "sched.h" "ac_cv_header_sched_h" "$ac_includes_default"
+if test "x$ac_cv_header_sched_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_SCHED_H 1
 _ACEOF
 
 fi
@@ -9922,6 +9946,18 @@ do :
 if test "x$ac_cv_func_snprintf" = xyes; then :
   cat >>confdefs.h <<_ACEOF
 #define HAVE_SNPRINTF 1
+_ACEOF
+
+fi
+done
+
+
+  for ac_func in sched_getcpu
+do :
+  ac_fn_cxx_check_func "$LINENO" "sched_getcpu" "ac_cv_func_sched_getcpu"
+if test "x$ac_cv_func_sched_getcpu" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_SCHED_GETCPU 1
 _ACEOF
 
 fi

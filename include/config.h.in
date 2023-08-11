@@ -1,7 +1,7 @@
 /* File: "config.h.in" */
 
 /*
- * Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+ * Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
  */
 
 #ifndef CONFIG_H
@@ -84,6 +84,7 @@
 #undef HAVE_SYS_DXE_H
 #undef HAVE_MACH_O_DYLD_H
 #undef HAVE_MACH_MACH_TIME_H
+#undef HAVE_MACH_THREAD_ACT_H
 #undef HAVE_SYS_TYPES_H
 #undef HAVE_SYS_TIME_H
 #undef HAVE_SYS_TIMES_H
@@ -150,6 +151,7 @@
 #undef HAVE_TARGETCONDITIONALS_H
 #undef HAVE_AVAILABILITYMACROS_H
 #undef HAVE_POLL_H
+#undef HAVE_SCHED_H
 
 /*---------------------------------------------------------------------------*/
 
@@ -285,6 +287,8 @@
 #undef HAVE_RENAMEATX_NP
 
 #undef HAVE_PTHREAD_SETAFFINITY_NP
+
+#undef HAVE_SCHED_GETCPU
 
 /* Determine which types are available */
 

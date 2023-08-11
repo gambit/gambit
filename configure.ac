@@ -1636,6 +1636,7 @@ else
   AC_CHECK_HEADERS(sys/dxe.h)
   AC_CHECK_HEADERS(mach-o/dyld.h)
   AC_CHECK_HEADERS(mach/mach_time.h)
+  AC_CHECK_HEADERS(mach/thread_act.h)
   AC_CHECK_HEADERS(sys/types.h)
   AC_CHECK_HEADERS(sys/time.h)
   AC_CHECK_HEADERS(sys/times.h)
@@ -1692,6 +1693,7 @@ else
   AC_CHECK_HEADERS(TargetConditionals.h)
   AC_CHECK_HEADERS(AvailabilityMacros.h)
   AC_CHECK_HEADERS(poll.h)
+  AC_CHECK_HEADERS(sched.h)
 
   AC_CHECK_COMMON
 
@@ -2028,6 +2030,8 @@ else
   AC_CHECK_FUNCS(hstrerror)
 
   AC_CHECK_FUNCS(snprintf)
+
+  AC_CHECK_FUNCS(sched_getcpu)
 
   case "$target_os" in
     # the OpenBSD test is always lowercase

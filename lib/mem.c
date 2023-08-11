@@ -1,6 +1,6 @@
 /* File: "mem.c" */
 
-/* Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.  */
+/* Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.  */
 
 #define ___INCLUDED_FROM_MEM
 #define ___VERSION 409005
@@ -8,6 +8,7 @@
 
 #include "os_setup.h"
 #include "os_base.h"
+#include "os_thread.h"
 #include "os_time.h"
 #include "setup.h"
 #include "mem.h"

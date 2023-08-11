@@ -1,6 +1,6 @@
 /* File: "main.c" */
 
-/* Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved. */
 
 /* This is the driver of the Gambit system */
 
@@ -10,6 +10,7 @@
 
 #include "os_setup.h"
 #include "os_base.h"
+#include "os_thread.h"
 #include "os_shell.h"
 #include "setup.h"
 
@@ -416,7 +417,7 @@ ___mod_or_lnk (*linker)();)
   parallelism_level = 1;
 #else
   {
-    int count = ___cpu_count ();
+    int count = ___cpu_count (-1);
     if (count < 1) count = 1;
     parallelism_level = ___CEILING_DIV(count*50,100); /* default = 50% */
   }
@@ -759,7 +760,7 @@ ___mod_or_lnk (*linker)();)
                     if (*arg == '%')
                       {
 #ifndef ___SINGLE_THREADED_VMS
-                        int count = ___cpu_count ();
+                        int count = ___cpu_count (-1);
                         if (argval > 100)
                           argval = 100;
                         parallelism_level = ___CEILING_DIV(count*argval,100);
