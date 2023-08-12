@@ -35,24 +35,6 @@ void ___get_cpu_count ___PVOID
 {
   /* determine cpu counts for performant and efficiency cpus */
 
-#ifdef USE_sysconf
-
-#ifdef _SC_NPROCESSORS_ONLN
-#define OP_SC_NPROCESSORS _SC_NPROCESSORS_ONLN
-#else
-#ifdef _SC_NPROCESSORS_CONF
-#define OP_SC_NPROCESSORS _SC_NPROCESSORS_CONF
-#endif
-#endif
-
-#endif
-
-#ifdef OP_SC_NPROCESSORS
-
-  ___thread_mod.cpu_count[0] = sysconf (OP_SC_NPROCESSORS);
-
-#else
-
 #ifdef USE_sysctl
 
 #ifdef USE_sysctlbyname
@@ -67,7 +49,7 @@ void ___get_cpu_count ___PVOID
     }
   } else {
 
-#else
+#endif
 
 #ifdef CTL_HW
 #ifdef HW_AVAILCPU
@@ -94,11 +76,27 @@ void ___get_cpu_count ___PVOID
 
 #endif
 
-#endif
-
 #ifdef USE_sysctlbyname
   }
 #endif
+
+#else
+
+#ifdef USE_sysconf
+
+#ifdef _SC_NPROCESSORS_ONLN
+#define OP_SC_NPROCESSORS _SC_NPROCESSORS_ONLN
+#else
+#ifdef _SC_NPROCESSORS_CONF
+#define OP_SC_NPROCESSORS _SC_NPROCESSORS_CONF
+#endif
+#endif
+
+#endif
+
+#ifdef OP_SC_NPROCESSORS
+
+  ___thread_mod.cpu_count[0] = sysconf (OP_SC_NPROCESSORS);
 
 #endif
 
