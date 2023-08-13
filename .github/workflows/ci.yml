@@ -9,6 +9,22 @@ on:
       - master
 
 jobs:
+  Docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: docker/metadata-action@v3
+        id: metadata
+        with:
+          images: ghcr.io/${{ github.repository }}
+      - uses: int128/kaniko-action@v1
+        with:
+          push: false
+          tags: ${{ steps.metadata.outputs.tags }}
+          labels: ${{ steps.metadata.outputs.labels }}
+          cache: false
+          cache-repository: ghcr.io/${{ github.repository }}/cache
+
   Windows-mingw:
     name: "Windows - ${{ matrix.msystem }}"
     runs-on: windows-latest
