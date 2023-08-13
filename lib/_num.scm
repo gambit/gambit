@@ -2,8 +2,8 @@
 
 ;;; File: "_num.scm"
 
-;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
-;;; Copyright (c) 2004-2022 by Brad Lucier, All Rights Reserved.
+;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2004-2023 by Brad Lucier, All Rights Reserved.
 
 ;;;============================================================================
 
