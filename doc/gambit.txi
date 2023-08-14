@@ -2122,10 +2122,10 @@ Set stderr settings.
 @item @code{@b{terminal-settings=}}@r{[}@var{IO}...@r{]} or the shorthand @code{@b{t}}@r{[}@var{IO}...@r{]}
 Set terminal I/O settings.
 
-@item @code{@b{search=}}@r{[}@var{DIR}@r{]}
+@item @code{@b{search}}@r{[}@code{@b{=}}@var{DIR}@r{]}
 Set or reset module search order.
 
-@item @code{@b{whitelist=}}@r{[}@var{SOURCE}@r{]}
+@item @code{@b{whitelist}}@r{[}@code{@b{=}}@var{SOURCE}@r{]}
 Set or reset the whitelist of trusted sources for automatic
 installation of hosted modules.
 
@@ -2370,20 +2370,20 @@ Enable line-editing (applies to terminals only).
 Disable line-editing (applies to terminals only).
 @end table
 
-@opindex -:search=@r{[}@var{DIR}@r{]}
-The @code{@b{search=}}@r{[}@var{DIR}@r{]} option adds @var{DIR} to the
-head of the list of module search order directories, unless @var{DIR}
-is empty, in which case it is set to the empty list.  The initial
+@opindex -:search@r{[}@code{@b{=}}@var{DIR}@r{]}
+The @code{@b{search}}@r{[}@code{@b{=}}@var{DIR}@r{]} option adds @var{DIR} to the
+tail of the list of module search order directories, unless the @code{@b{=}}@var{DIR}
+part is absent, in which case it is set to the empty list.  The initial
 setting of the list of module search order directories is @code{~~lib}
 followed by @code{~~userlib}.
 
-@opindex -:whitelist=@r{[}@var{SOURCE}@r{]}
+@opindex -:whitelist@r{[}@code{@b{=}}@var{SOURCE}@r{]}
 When a hosted module can't be found in the directories on the list of
 module search order directories it will be automatically installed if
 it is from a source on the whitelist of trusted sources, which
 initially contains only @code{github.com/gambit}.  The
-@code{@b{whitelist=}}@r{[}@var{SOURCE}@r{]} option adds @var{SOURCE}
-to the whitelist, unless @var{SOURCE} is empty in which case the
+@code{@b{whitelist}}@r{[}@code{@b{=}}@var{SOURCE}@r{]} option adds @var{SOURCE}
+to the whitelist, unless the @code{@b{=}}@var{SOURCE} part is absent in which case the
 whitelist will be set to the empty list (no source is trusted).
 
 @opindex -:ask-install=@var{WHEN}
@@ -6857,12 +6857,12 @@ $ @b{gsi github.com/feeley/roman/test   @r{@i{# the test module was also install
 *** all tests passed out of a total of 19 tests
 @end smallexample
 
-The use of the runtime option @code{-:whitelist=} (with no @var{SOURCE})
+The use of the runtime option @code{-:whitelist} (with no @code{=}@var{SOURCE})
 will disable the automatic installation of modules, even from
 @code{github.com/gambit}.  For example:
 
 @smallexample
-$ @b{gsi -:whitelist= github.com/gambit/hello/demo}
+$ @b{gsi -:whitelist github.com/gambit/hello/demo}
 *** ERROR IN ##main -- No such file or directory
 (load "github.com/gambit/hello/demo")
 @end smallexample
