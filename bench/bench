@@ -221,7 +221,7 @@ gambit_exec ()
 
   else
 
-    if command -v per
+    if command -v perf
     then
       perf stat $GAMBIT_INT "./$1.o1"
     else
@@ -253,12 +253,7 @@ ribbit_comp ()
 
 ribbit_exec ()
 {
-    if command -v perf
-    then
-      perf stat "./$1"
-    else
-      /usr/bin/time "./$1"
-    fi
+    /usr/bin/time "./$1"
 }
 
 ribbit_int_comp ()

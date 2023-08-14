@@ -1,7 +1,7 @@
 ;INSERTCODE
 ;------------------------------------------------------------------------------
 
-(define (time x) x) ;; noop until ribbit has a way of mesuring time
+(define (time x) x) ;; noop until ribbit has a way of measuring time
 
 (define (run-bench name count ok? run)
   (letrec ((loop 
