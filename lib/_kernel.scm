@@ -2153,20 +2153,22 @@ end-of-code
             void
     "___set_gambitdir_map (___arg1);"))
 
-(define-prim ##get-module-search-order
-  (c-lambda ()
-            nonnull-UCS-2-string-list
-    "___return(___get_module_search_order ());"))
+(define-prim (##get-module-search-order)
+  (or ((c-lambda ()
+                 nonnull-UCS-2-string-list
+        "___return(___get_module_search_order ());"))
+      '()))
 
 (define-prim ##set-module-search-order!
   (c-lambda (nonnull-UCS-2-string-list)
             void
     "___set_module_search_order (___arg1);"))
 
-(define-prim ##get-module-whitelist
-  (c-lambda ()
-            nonnull-UCS-2-string-list
-    "___return(___get_module_whitelist ());"))
+(define-prim (##get-module-whitelist)
+  (or ((c-lambda ()
+                 nonnull-UCS-2-string-list
+        "___return(___get_module_whitelist ());"))
+      '()))
 
 (define-prim ##set-module-whitelist!
   (c-lambda (nonnull-UCS-2-string-list)
