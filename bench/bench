@@ -9,7 +9,8 @@
 # The following have contributed to this benchmark suite:
 #
 #   Harvey Stein (abel@netvision.net.il)
-
+#   Mathis Laroche (mathis.laroche@umontreal.ca)
+#
 # -----------------------------------------------------------------------------
 
 error ()
@@ -23,6 +24,8 @@ language implementations to use, i.e.:
 
   gambit           for Gambit-C compiler.
   gambit-int       for Gambit-C interpreter.
+  ribbit           for Ribbit compiler.
+  ribbit-int       for Ribbit interpreter.
   bigloo           for Bigloo compiler.
   bigloo-int       for Bigloo interpreter.
   chicken          for Chicken compiler.
@@ -93,6 +96,9 @@ setting is the benchmarking setting.  The possible values are:
 
 GAMBIT_COMP=${GAMBIT_COMP:-"../../../gsc/gsc -:~~=../../.."}
 GAMBIT_INT=${GAMBIT_INT:-"../../../gsi/gsi -:m10000,d-,~~=../../.."}
+
+RIBBIT_COMP=${RIBBIT_COMP:-rsc}
+RIBBIT_INT=${RIBBIT_INT:-rsi}
 
 CPU_LIMIT=${CPU_LIMIT:-"300"}
 
@@ -196,7 +202,7 @@ gambit_comp ()
     {
       echo $GAMBIT_COMP $COMPOPTS -exe -o $1.exe $1.scm
     } | /usr/bin/time sh
-    strip $1.exe
+    strip "$1.exe"
 
   fi
 }
@@ -208,18 +214,18 @@ gambit_exec ()
 
     if command -v perf
     then
-      perf stat ./$1.exe -:m10000,d-,~~=../../..
+      perf stat "./$1.exe" -:m10000,d-,~~=../../..
     else
-      /usr/bin/time ./$1.exe -:m10000,d-,~~=../../..
+      /usr/bin/time "./$1.exe" -:m10000,d-,~~=../../..
     fi
 
   else
 
-    if command -v perf
+    if command -v per
     then
-      perf stat $GAMBIT_INT ./$1.o1
+      perf stat $GAMBIT_INT "./$1.o1"
     else
-      /usr/bin/time $GAMBIT_INT ./$1.o1
+      /usr/bin/time $GAMBIT_INT "./$1.o1"
     fi
 
   fi
@@ -233,6 +239,37 @@ gambit_int_comp ()
 gambit_int_exec ()
 {
   printf "$REPLCOMMANDS" "$1" | $GAMBIT_INT
+}
+
+# -----------------------------------------------------------------------------
+# Definitions specific to ribbit
+
+ribbit_comp ()
+{
+    {
+      echo $RIBBIT_COMP $COMPOPTS -x $1 -o $1.out $1.scm
+    } | /usr/bin/time sh
+}
+
+ribbit_exec ()
+{
+    if command -v perf
+    then
+      perf stat "./$1"
+    else
+      /usr/bin/time "./$1"
+    fi
+}
+
+ribbit_int_comp ()
+{
+  :
+}
+
+ribbit_int_exec ()
+{
+    EVAL="$(printf "$REPLCOMMANDS" "$1")"
+    $RIBBIT_INT -e "$EVAL"
 }
 
 # -----------------------------------------------------------------------------
@@ -694,6 +731,30 @@ gambit-int) NAME='Gambit-C-int'
                 REPLCOMMANDS="(load \"%s.scm\")"
                 ;;
             esac
+            ;;
+
+    ribbit) NAME='Ribbit'
+            COMP=ribbit_comp
+            COMPOPTS="$options -l r4rs"
+            EXEC=ribbit_exec
+            iterfile=num-iters.scm
+            extension=".scm"
+            INSERTCODE="(define-macro (if-fixflo yes no) no)"
+            PREFIXCODE="; %s %s"
+            SUFFIXCODE="; %s %s"
+            REPLCOMMANDS=""
+            ;;
+
+ribbit-int) NAME='Ribbit-int'
+            COMP=ribbit_int_comp
+            COMPOPTS=""
+            EXEC=ribbit_int_exec
+            iterfile=num-iters-int.scm
+            extension=".scm"
+            INSERTCODE=""
+            PREFIXCODE="; %s %s"
+            SUFFIXCODE="; %s %s"
+            REPLCOMMANDS="(load \"%s.scm\")"
             ;;
 
     bigloo) NAME='Bigloo'
