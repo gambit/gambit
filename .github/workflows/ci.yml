@@ -30,8 +30,9 @@ jobs:
         fetch-depth: 0 # Checkout history and tags
 
     - name: Setup tmate session
-      if: ${{ failure() }}
       uses: mxschmitt/action-tmate@v3
+      with:
+        detached: true
 
     - name: Install MSYS2
       uses: msys2/setup-msys2@v2
