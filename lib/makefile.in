@@ -514,7 +514,9 @@ bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-
 modules-recursive: $(SUBDIRS1)
 	@$(MAKE) univ-libs $(SUBDIRS2)
 
-$(SUBDIRS):
+fake_target:
+
+$(SUBDIRS): fake_target
 	@(cd $@ && $(MAKE) modules) || exit 1
 
 core: core-post
