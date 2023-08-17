@@ -1,6 +1,6 @@
 # common makefile for gambit modules, to be included by specific makefile
 
-# Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 # The specific makefile must contain:
 #
@@ -310,7 +310,7 @@ mostlyclean-post mostlyclean-post-nonrec:
 clean-pre: mostlyclean-pre
 
 clean-post clean-post-nonrec: mostlyclean-post-nonrec
-	rm -rf *@gambit*
+	@rm -rf *@gambit*
 
 distclean-pre: clean-pre
 
@@ -348,13 +348,20 @@ dist-pre dist-devel-pre:
 
 dist-post dist-devel-post:
 
-core-recursive bootstrap-recursive modules-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+core-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
 	    target=`echo $@ | sed 's/-recursive//'`; \
 	    (cd $$subdir && $(MAKE) $$target) || exit 1; \
 	  done \
 	fi
+
+modules-recursive: $(SUBDIRS)
+
+fake_target:
+
+$(SUBDIRS): fake_target
+	@(cd $@ && $(MAKE) modules) || exit 1
 
 core: core-post
 
