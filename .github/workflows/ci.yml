@@ -37,6 +37,7 @@ jobs:
 
     - name: Build
       run: |
+        export WANT_AUTOCONF=2.69
         ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms
         echo "#undef HAVE_CLOCK_GETTIME" >> include/config.h
         make clean
@@ -51,6 +52,7 @@ jobs:
       if: github.event_name == 'push'
       run: |
         mkdir dist
+        export WANT_AUTOCONF=2.69
         ./configure --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist
         echo "#undef HAVE_CLOCK_GETTIME" >> include/config.h
         make clean
@@ -69,6 +71,7 @@ jobs:
       if: github.event_name == 'push'
       run: |
         mkdir dist-mt
+        export WANT_AUTOCONF=2.69
         ./configure --enable-multiple-threaded-vms --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist-mt
         echo "#undef HAVE_CLOCK_GETTIME" >> include/config.h
         make clean
@@ -85,7 +88,7 @@ jobs:
 
     - name: Debug with tmate on failure
       run: |
-        tmate -F -k ${{ secrets.TMATE_API_KEY }} -n ${{ secrets.TMATE_SESSION_PREFIX }}-${{ matrix.msystem }} > /dev/null 2>&1
+        : tmate -F -k ${{ secrets.TMATE_API_KEY }} -n ${{ secrets.TMATE_SESSION_PREFIX }}-${{ matrix.msystem }} > /dev/null 2>&1
       if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
 
     - name: Report Failure to Gitter
@@ -116,7 +119,7 @@ jobs:
       shell: cmd
       run: |
         set PATH=%RUNNER_TEMP%\msys\msys64\usr\bin;%PATH%
-        msys2 -c "./configure --enable-c-opt=-Od --enable-c-opt-rts=-Od --enable-debug --enable-debug-c-backtrace CC='cl' && make clean && make -j%NUMBER_OF_PROCESSORS% core"
+        msys2 -c "export WANT_AUTOCONF=2.69;./configure --enable-c-opt=-Od --enable-c-opt-rts=-Od --enable-debug --enable-debug-c-backtrace CC='cl' && make clean && make -j%NUMBER_OF_PROCESSORS% core"
 
     - name: Test
       shell: cmd
@@ -138,7 +141,7 @@ jobs:
       if: github.event_name == 'push'
       run: |
         mkdir dist
-        msys2 -c "./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist CC='cl' && make clean && make -j%NUMBER_OF_PROCESSORS% core && make modules && make install"
+        msys2 -c "export WANT_AUTOCONF=2.69;./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist CC='cl' && make clean && make -j%NUMBER_OF_PROCESSORS% core && make modules && make install"
 
     - name: Upload Build Artifact
       uses: actions/upload-artifact@v1
@@ -152,7 +155,7 @@ jobs:
       if: github.event_name == 'push'
       run: |
         mkdir dist-mt
-        msys2 -c "./configure --enable-single-host --enable-multiple-threaded-vms --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist-mt CC='cl' && make clean && make -j%NUMBER_OF_PROCESSORS% core && make modules && make install"
+        msys2 -c "export WANT_AUTOCONF=2.69;./configure --enable-single-host --enable-multiple-threaded-vms --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist-mt CC='cl' && make clean && make -j%NUMBER_OF_PROCESSORS% core && make modules && make install"
 
     - name: Upload Build Artifact (--enable-multiple-threaded-vms)
       uses: actions/upload-artifact@v1
@@ -163,7 +166,7 @@ jobs:
 
     - name: Debug with tmate on failure
       run: |
-        msys2 -c "tmate -F -k ${{ secrets.TMATE_API_KEY }} -n ${{ secrets.TMATE_SESSION_PREFIX }}-MSVC > /dev/null 2>&1"
+        msys2 -c ": tmate -F -k ${{ secrets.TMATE_API_KEY }} -n ${{ secrets.TMATE_SESSION_PREFIX }}-MSVC > /dev/null 2>&1"
       if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
 
     - name: Report Failure to Gitter
@@ -186,24 +189,28 @@ jobs:
     - name: Build and Test with C compiler
       run: |
         export PROCS=`nproc`
+        export WANT_AUTOCONF=2.69
         ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms && make clean && make -j$PROCS core && make check
 
     - name: Build and Test with C++ compiler
       if: github.event_name == 'push'
       run: |
         export PROCS=`nproc`
+        export WANT_AUTOCONF=2.69
         ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms --enable-cplusplus && make clean && make -j$PROCS core && make check
 
     - name: Build and Test with C compiler and --enable-ansi-c
       if: github.event_name == 'push'
       run: |
         export PROCS=`nproc`
+        export WANT_AUTOCONF=2.69
         ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-ansi-c && make clean && make -j$PROCS core && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
 
     - name: Build Gambit for Use
       if: github.event_name == 'push'
       run: |
         mkdir dist
+        export WANT_AUTOCONF=2.69
         ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist && make clean && make -j`nproc` core && make modules && make install
         cd dist/
         tar -cvzf ../gambit-linux-x86_64.tgz ./
@@ -220,6 +227,7 @@ jobs:
       if: github.event_name == 'push'
       run: |
         mkdir dist-mt
+        export WANT_AUTOCONF=2.69
         ./configure --enable-single-host --enable-multiple-threaded-vms --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist-mt && make clean && make -j`nproc` core && make modules && make install
         cd dist-mt/
         tar -cvzf ../gambit-linux-x86_64-mt.tgz ./
@@ -244,7 +252,7 @@ jobs:
     - name: Debug with tmate on failure
       run: |
         sudo apt-get install tmate
-        tmate -F -k ${{ secrets.TMATE_API_KEY }} -n ${{ secrets.TMATE_SESSION_PREFIX }}-linux > /dev/null 2>&1
+        : tmate -F -k ${{ secrets.TMATE_API_KEY }} -n ${{ secrets.TMATE_SESSION_PREFIX }}-linux > /dev/null 2>&1
       if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
 
     - name: Report Failure to Gitter
@@ -264,6 +272,7 @@ jobs:
         export CC=gcc-11
         export CXX=g++-11
         export PROCS=`sysctl -n hw.physicalcpu`
+        export WANT_AUTOCONF=2.69
         ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms && make clean && make -j$PROCS core && make check
 
     - name: Build and Test with C++ compiler
@@ -272,6 +281,7 @@ jobs:
         export CC=gcc-11
         export CXX=g++-11
         export PROCS=`sysctl -n hw.physicalcpu`
+        export WANT_AUTOCONF=2.69
         ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms --enable-cplusplus && make clean && make -j$PROCS core && make check
 
     - name: Build and Test with C compiler and --enable-ansi-c
@@ -280,6 +290,7 @@ jobs:
         export CC=gcc-11
         export CXX=g++-11
         export PROCS=`sysctl -n hw.physicalcpu`
+        export WANT_AUTOCONF=2.69
         ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-ansi-c && make clean && make -j$PROCS core && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
 
     - name: Build Gambit for Use
@@ -288,6 +299,7 @@ jobs:
         mkdir dist
         export CC=gcc-11
         export CXX=g++-11
+        export WANT_AUTOCONF=2.69
         ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist && make clean && make -j`sysctl -n hw.physicalcpu` core && make modules && make install
         cd dist/
         tar -cvzf ../gambit-macos-x86_64.tgz ./
@@ -306,6 +318,7 @@ jobs:
         mkdir dist-mt
         export CC=gcc-11
         export CXX=g++-11
+        export WANT_AUTOCONF=2.69
         ./configure --enable-single-host --enable-multiple-threaded-vms --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist-mt && make clean && make -j`sysctl -n hw.physicalcpu` core && make modules && make install
         cd dist-mt/
         tar -cvzf ../gambit-macos-x86_64-mt.tgz ./
@@ -321,7 +334,7 @@ jobs:
     - name: Debug with tmate on failure
       run: |
         brew install tmate
-        tmate -F -k ${{ secrets.TMATE_API_KEY }} -n ${{ secrets.TMATE_SESSION_PREFIX }}-macos > /dev/null 2>&1
+        : tmate -F -k ${{ secrets.TMATE_API_KEY }} -n ${{ secrets.TMATE_SESSION_PREFIX }}-macos > /dev/null 2>&1
       if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
 
     - name: Report Failure to Gitter
