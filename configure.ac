@@ -72,6 +72,11 @@ RTLIB_COND_EXPAND_FEATURES=""
 userlibdir="~/.gambit_userlib"
 instlibdir="~~userlib"
 
+# use the octal code \\176 instead of ~ to avoid a mingw bug on Windows
+
+userlibdir="`echo $userlibdir | sed -e s/~/\\\\\\\\176/g`"
+instlibdir="`echo $instlibdir | sed -e s/~/\\\\\\\\176/g`"
+
 ###############################################################################
 #
 # To accumulate flags to propagate to bootstrap configure script.
