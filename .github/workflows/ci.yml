@@ -7,10 +7,9 @@ on:
   push:
     branches:
       - master
-
 jobs:
-  Windows-mingw:
-    name: "Windows - ${{ matrix.msystem }}"
+  windows-mingw:
+    name: "windows - ${{ matrix.msystem }}"
     runs-on: windows-latest
     strategy:
       matrix:
@@ -29,17 +28,11 @@ jobs:
       with:
         fetch-depth: 0 # Checkout history and tags
 
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
-      with:
-        detached: true
-        limit-access-to-actor: true
-
     - name: Install MSYS2
       uses: msys2/setup-msys2@v2
       with:
         update: true
-        install: "autoconf git make tar texinfo mingw-w64-${{ matrix.arch }}-gcc mingw-w64-${{ matrix.arch }}-make mingw-w64-${{ matrix.arch }}-libwinpthread-git"
+        install: "autoconf git make tar texinfo mingw-w64-${{ matrix.arch }}-gcc mingw-w64-${{ matrix.arch }}-make mingw-w64-${{ matrix.arch }}-libwinpthread-git tmate"
         msystem: ${{ matrix.msystem }}
 
     - name: Build
@@ -90,12 +83,17 @@ jobs:
         name: gambit-win-mingw-${{ matrix.arch }}-mt
         path: dist-mt/
 
+    - name: Debug with tmate on failure
+      run: |
+        tmate -F -k ${{ secrets.TMATE_API_KEY }} -n ${{ secrets.TMATE_SESSION_PREFIX }}-${{ matrix.msystem }} > /dev/null 2>&1
+      if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
+
     - name: Report Failure to Gitter
       run: curl -XPOST -d '{"msgtype":"m.text", "body":"CI build of ${{ github.sha }} failed on ${{ github.job }} (https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"}' "https://matrix.org/_matrix/client/r0/rooms/${{ secrets.GITTER_ROOM }}/send/m.room.message?access_token=${{ secrets.GITTER_ACCESS_TOKEN }}"
       if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
 
-  Windows-msvc:
-    name: "Windows - MSVC"
+  windows-msvc:
+    name: "windows - MSVC"
     runs-on: windows-latest
 
     steps:
@@ -110,7 +108,7 @@ jobs:
       uses: msys2/setup-msys2@v2
       with:
         update: true
-        install: "autoconf make patch tar texinfo"
+        install: "autoconf make patch tar texinfo tmate"
         path-type: inherit
         msystem: MSYS
 
@@ -163,11 +161,16 @@ jobs:
         name: gambit-win-msvc-x86_64-mt
         path: dist-mt/
 
+    - name: Debug with tmate on failure
+      run: |
+        msys2 -c "tmate -F -k ${{ secrets.TMATE_API_KEY }} -n ${{ secrets.TMATE_SESSION_PREFIX }}-MSVC > /dev/null 2>&1"
+      if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
+
     - name: Report Failure to Gitter
       run: curl -XPOST -d '{"msgtype":"m.text", "body":"CI build of ${{ github.sha }} failed on ${{ github.job }} (https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"}' "https://matrix.org/_matrix/client/r0/rooms/${{ secrets.GITTER_ROOM }}/send/m.room.message?access_token=${{ secrets.GITTER_ACCESS_TOKEN }}"
       if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
 
-  Linux:
+  linux:
     runs-on: ubuntu-latest
 
     steps:
@@ -238,11 +241,17 @@ jobs:
         name: boot
         path: boot.tgz
 
+    - name: Debug with tmate on failure
+      run: |
+        sudo apt-get install tmate
+        tmate -F -k ${{ secrets.TMATE_API_KEY }} -n ${{ secrets.TMATE_SESSION_PREFIX }}-linux > /dev/null 2>&1
+      if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
+
     - name: Report Failure to Gitter
       run: curl -XPOST -d '{"msgtype":"m.text", "body":"CI build of ${{ github.sha }} failed on ${{ github.job }} (https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"}' "https://matrix.org/_matrix/client/r0/rooms/${{ secrets.GITTER_ROOM }}/send/m.room.message?access_token=${{ secrets.GITTER_ACCESS_TOKEN }}"
       if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
 
-  MacOS:
+  macos:
     runs-on: macos-latest
 
     steps:
@@ -309,13 +318,19 @@ jobs:
         name: gambit-macos-x86_64-mt
         path: gambit-macos-x86_64-mt.tgz
 
+    - name: Debug with tmate on failure
+      run: |
+        brew install tmate
+        tmate -F -k ${{ secrets.TMATE_API_KEY }} -n ${{ secrets.TMATE_SESSION_PREFIX }}-macos > /dev/null 2>&1
+      if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
+
     - name: Report Failure to Gitter
       run: curl -XPOST -d '{"msgtype":"m.text", "body":"CI build of ${{ github.sha }} failed on ${{ github.job }} (https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"}' "https://matrix.org/_matrix/client/r0/rooms/${{ secrets.GITTER_ROOM }}/send/m.room.message?access_token=${{ secrets.GITTER_ACCESS_TOKEN }}"
       if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
 
   ReportResult:
     runs-on: ubuntu-latest
-    needs: [Windows-mingw, Windows-msvc, Linux, MacOS]
+    needs: [windows-mingw, windows-msvc, linux, macos]
     if: ${{ success() }}
 
     steps:
