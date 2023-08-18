@@ -181,7 +181,8 @@ jobs:
     - name: Install Dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install texinfo
+        sudo apt-get install texinfo autoconf2.69
+        sudo ln -s -f `which autoconf2.69` `which autoconf`
 
     - name: Build and Test with C compiler
       run: |
