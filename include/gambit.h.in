@@ -8670,7 +8670,7 @@ void *___x;) \
 #define ___BEGIN_CFUN_DEF(cproc) \
 ___HIDDEN void cproc ___P((___processor_state ___ps), () \
 ___processor_state ___ps;) {
-#define ___END_CFUN_DEF }
+#define ___END_CFUN_DEF ___ps->temp1 = ___FIX(___NO_ERR); }
 
 #define ___R_ALL_INL ___CFUN_SELECT(___R_ALL,)
 #define ___W_ALL_INL ___CFUN_SELECT(___W_ALL,)
@@ -8686,8 +8686,7 @@ ___CFUN_SELECT(___BEGIN_CFUN_CTX,___BEGIN_CFUN_DEF(cproc)) \
 ___SCMOBJ ___err=___FIX(___NO_ERR); \
 ___SCMOBJ ___errdata=___FAL; \
 ___SCMOBJ ___errhandler=___FAL; \
-decl; \
-___CFUN_SELECT(,___ps->temp1=___FIX(___NO_ERR);)
+decl;
 #define ___END_CFUN \
 ___CFUN_SELECT(___END_CFUN_CTX,___END_CFUN_DEF)
 
