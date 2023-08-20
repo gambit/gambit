@@ -3032,11 +3032,9 @@ for a discussion of branch cuts.
         (if (##negative? (macro-ratnum-numerator x))
             (negative-log)
             (exact-log x))
-        (if (or (##flnan? x)
-                (##not (##flnegative?
-                        (##flcopysign (macro-inexact-+1) x))))
-            (##fllog x)
-            (negative-log))
+        (if (##flnegative? x)  ;; false also for NaN, -0.
+            (negative-log)
+            (##fllog x))
         (##make-rectangular (complex-log-magnitude x) (##angle x)))
       (##log2 x y)))
 

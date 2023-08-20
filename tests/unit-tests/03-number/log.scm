@@ -33,7 +33,27 @@
 (check-eqv? (log 1/2 2) -1)
 (check-eqv? (log 2 8) 1/3)
 
-;;; C99 tests
+;;; C99 real tests
+;;; https://en.cppreference.com/w/cpp/numeric/math/log
+
+;;; If the argument is ±0, -∞ is returned and FE_DIVBYZERO is raised.
+(check-eqv? (log +0.) -inf.0)
+(check-eqv? (log -0.) -inf.0)
+
+;;; If the argument is 1, +0 is returned
+(check-eqv? (log +1.0) 0.)
+
+;;; If the argument is negative, NaN is returned and FE_INVALID is raised.
+;;; This is true for fllog, not log
+
+;;; If the argument is +∞, +∞ is returned
+(check-eqv? (log +inf.0) +inf.0)
+
+;;; If the argument is NaN, NaN is returned
+(check-true (nan? (log +nan.0)))
+
+;;; C99 complex tests
+;;; https://en.cppreference.com/w/cpp/numeric/complex/log
 
 ;;; If z is -0+0i, the result is -∞+πi and FE_DIVBYZERO is raised
 (check-eqv? (log -0.+0.i) (make-rectangular -inf.0 (macro-inexact-+pi)))
