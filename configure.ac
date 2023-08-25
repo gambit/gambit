@@ -488,19 +488,28 @@ AC_ARG_ENABLE(feedback2,
 ###############################################################################
 #
 # Check if a single C function should be generated for all the Scheme
-# functions in a file.  This makes the executable much faster but the
+# procedures in a file.  This makes the executable much faster but the
 # compilation will be much longer and take much more memory.
+# By default there is a limit to the number of control points in a
+# file for single host mode to be used.  The limit is configurable.
 
 AC_ARG_ENABLE(single-host,
-              AS_HELP_STRING([--enable-single-host],
-                             [compile each Scheme module as a single C function (default is NO)]),
+              AS_HELP_STRING([--enable-single-host@<:@=N@:>@],
+                             [compile each Scheme module as a single C function (by default each Scheme procedure is compiled to a C function, otherwise N, which defaults to 30000, is the maximum number of control points in the module to use single host mode and the special case N=0 avoids a limit)]),
               ENABLE_SINGLE_HOST=$enableval,
               ENABLE_SINGLE_HOST=no)
 
-if test "$ENABLE_SINGLE_HOST" = yes; then
+CONF_SINGLE_HOST_LIMIT="30000"
+
+if test "$ENABLE_SINGLE_HOST" != no; then
   AC_DEFINE([___SINGLE_HOST],[],[Enable single host mode])
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___SINGLE_HOST"
+  if test "$ENABLE_SINGLE_HOST" != yes; then
+    CONF_SINGLE_HOST_LIMIT="$enableval"
+  fi
 fi
+
+AC_SUBST(CONF_SINGLE_HOST_LIMIT)
 
 ###############################################################################
 #

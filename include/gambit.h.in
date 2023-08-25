@@ -1211,17 +1211,15 @@
 #ifdef ___MULTIPLE_HOSTS
 #error "Define either ___SINGLE_HOST or ___MULTIPLE_HOSTS"
 #endif
-#ifndef ___SINGLE_HOST_ENFORCE
 /* downgrade to multiple C host procedures when code is very big */
 #ifdef ___LBLCOUNT
-#ifndef ___SINGLE_HOST_LBLCOUNT_LIMIT
-#define ___SINGLE_HOST_LBLCOUNT_LIMIT 30000
+#ifndef ___SINGLE_HOST_LIMIT
+#define ___SINGLE_HOST_LIMIT @CONF_SINGLE_HOST_LIMIT@
 #endif
-#if ___LBLCOUNT >= ___SINGLE_HOST_LBLCOUNT_LIMIT
+#if ___SINGLE_HOST_LIMIT > 0 && ___LBLCOUNT > ___SINGLE_HOST_LIMIT
 #undef ___SINGLE_HOST
 #undef ___MULTIPLE_HOSTS
 #define ___MULTIPLE_HOSTS
-#endif
 #endif
 #endif
 #else

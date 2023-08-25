@@ -191,7 +191,10 @@ with the combination of --enable-shared and
 
 The configure options which are specific to the Gambit system are:
 
-  --enable-single-host    compile each Scheme module as a single C function
+  --enable-single-host[=N]
+                          compile each Scheme module as a single C function
+                          when it has at most N control points (N defaults
+                          to 30000, use N=0 to avoid a limit)
   --enable-c-opt[=level]  use higher C optimization level
   --enable-trust-c-tco    trust C compiler does TCO properly (default is NO)
   --enable-gcc-opts       use expensive GCC optimizations
