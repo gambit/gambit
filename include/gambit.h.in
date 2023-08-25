@@ -1,7 +1,7 @@
 /* File: "gambit.h" */
 
 /*
- * Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
+ * Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
  */
 
 #ifndef ___GAMBIT_H
@@ -1214,8 +1214,12 @@
 #ifndef ___SINGLE_HOST_ENFORCE
 /* downgrade to multiple C host procedures when code is very big */
 #ifdef ___LBLCOUNT
-#if ___LBLCOUNT >= 30000
+#ifndef ___SINGLE_HOST_LBLCOUNT_LIMIT
+#define ___SINGLE_HOST_LBLCOUNT_LIMIT 30000
+#endif
+#if ___LBLCOUNT >= ___SINGLE_HOST_LBLCOUNT_LIMIT
 #undef ___SINGLE_HOST
+#undef ___MULTIPLE_HOSTS
 #define ___MULTIPLE_HOSTS
 #endif
 #endif
