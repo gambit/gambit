@@ -1446,12 +1446,12 @@
  * running in a given VM instance.
  */
 
-#ifdef ___SINGLE_THREADED_VMS
 #ifndef ___MAX_PROCESSORS
+#ifdef ___SINGLE_THREADED_VMS
 #define ___MAX_PROCESSORS 1
-#endif
 #else
 #define ___MAX_PROCESSORS @CONF_MAX_PROCESSORS@
+#endif
 #endif
 
 /*
