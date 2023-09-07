@@ -3856,7 +3856,7 @@ githooks/makefile \
 )
 AC_OUTPUT
 
-if test "$ENABLE_MARCH" == "no_enable_march"; then
+if test "$ENABLE_MARCH" = "no_enable_march"; then
   AC_MSG_NOTICE([
 **************************************************************************
 ***                                                                    ***
