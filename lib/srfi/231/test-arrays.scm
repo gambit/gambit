@@ -169,7 +169,7 @@ OTHER DEALINGS IN THE SOFTWARE.
       (test-random-integer (+ a 1))))
 
 (define (random-char)
-  (let ((n (random-inclusive ##max-char)))
+  (let ((n (random-inclusive (##max-char-code))))
     (if (or (fx< n #xd800)
             (fx< #xdfff n))
         (integer->char n)
@@ -1860,7 +1860,7 @@ OTHER DEALINGS IN THE SOFTWARE.
    (list f16-storage-class       1.0)
    (list f32-storage-class       1.0)
    (list f64-storage-class       1.0)
-   (list char-storage-class (integer->char ##max-char))
+   (list char-storage-class (integer->char (##max-char-code)))
    (list c64-storage-class  1.0+1.0i)
    (list c128-storage-class 1.0+1.0i)))
 

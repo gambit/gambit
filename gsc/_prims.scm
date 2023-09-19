@@ -721,6 +721,7 @@
 ("##char?"                            (1)   #f ()    0    boolean extended)
 ("integer->char"                      (1)   #f 0     0    char    ieee)
 ("##integer->char"                    (1)   #f ()    0    char    extended)
+("##max-char-code"                    (0)   #f ()    0    fixnum  extended)
 
 ("char-foldcase"                      (1)   #f 0     0    char    r7rs)
 ("##char-foldcase"                    (1)   #f ()    0    char    extended)

@@ -2,13 +2,15 @@
 
 ;;; File: "14.sld"
 
-;;; Copyright (c) 2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2021-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
 ;;; SRFI 14, Character-set Library
 
 (define-library (srfi 14)
+
+  (namespace "")
 
   (export
 

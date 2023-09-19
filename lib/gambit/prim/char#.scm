@@ -2,7 +2,7 @@
 
 ;;; File: "char#.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -10,5 +10,6 @@
 
 (##include "char-r4rs#.scm")
 (##include "char-r7rs#.scm")
+(##include "char-gambit#.scm")
 
 ;;;============================================================================

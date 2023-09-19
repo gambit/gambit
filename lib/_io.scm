@@ -2,7 +2,7 @@
 
 ;;; File: "_io.scm"
 
-;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -4876,7 +4876,7 @@
               obj
               max-length
               #!optional
-              (char-encoding-limit (macro-absent-obj)))
+              (max-unescaped-char (macro-absent-obj)))
   (let* ((port
           (##open-output-string))
          (we
@@ -4891,15 +4891,15 @@
            0
            0
            max-length
-           (cond ((##char? char-encoding-limit)
-                  char-encoding-limit)
-                 ((macro-output-port? char-encoding-limit)
+           (cond ((##char? max-unescaped-char)
+                  max-unescaped-char)
+                 ((macro-output-port? max-unescaped-char)
                   (macro-max-unescaped-char
-                   (macro-port-woptions char-encoding-limit)))
-                 ((macro-readtable? char-encoding-limit)
-                  (macro-readtable-max-unescaped-char char-encoding-limit))
+                   (macro-port-woptions max-unescaped-char)))
+                 ((macro-readtable? max-unescaped-char)
+                  (macro-readtable-max-unescaped-char max-unescaped-char))
                  (else
-                  (##integer->char ##max-char))))))
+                  (##integer->char (##max-char-code)))))))
     (##wr we obj)
     (##get-output-string port)))
 
@@ -4907,7 +4907,7 @@
               obj
               max-length
               #!optional
-              (char-encoding-limit (macro-absent-obj))
+              (max-unescaped-char (macro-absent-obj))
               (min-length 0)
               (actual-obj obj))
   (let* ((ml
@@ -4916,7 +4916,7 @@
           (##object->string
            obj
            (##fx+ ml 1)
-           char-encoding-limit)))
+           max-unescaped-char)))
     (if (##fx<= (##string-length str) ml)
         str
         (let* ((sn
@@ -4937,7 +4937,7 @@
               obj
               #!optional
               (max-length ##max-fixnum)
-              (char-encoding-limit (macro-absent-obj)))
+              (max-unescaped-char (macro-absent-obj)))
   (if (##fx< 0 max-length)
       (let ((str
              (##object->truncated-string
@@ -4945,7 +4945,7 @@
               (if (##fx< max-length ##max-fixnum)
                   (##fx+ max-length 1)
                   ##max-fixnum)
-              char-encoding-limit)))
+              max-unescaped-char)))
         (##string->limited-string str max-length))
       (##string)))
 
@@ -12341,7 +12341,7 @@
 (##define-macro (UCS-4->character . args) `(##integer->char ,@args))
 (##define-macro (character->UCS-4 . args) `(##char->integer ,@args))
 (##define-macro (in-char-range? n)
-  `(and (##not (##< ##max-char ,n))
+  `(and (##not (##< (##max-char-code) ,n))
         (or (##fx< ,n #xd800)
             (##fx< #xdfff ,n))))
 
@@ -13106,9 +13106,9 @@
                    (lambda (next-digit)
                      (macro-read-next-char-or-eof re) ;; skip "next"
                      (loop (+ i 1)
-                           (if (< n ##max-char)
-                               (+ (* n 16) next-digit)
-                               n))))
+                           (if (< (##max-char-code) n)
+                               n
+                               (+ (* n 16) next-digit)))))
                   (else
                    (if (or (not nb-digits)
                            (and (= nb-digits ##max-fixnum)
@@ -13352,9 +13352,9 @@
                                      =>
                                      (lambda (next-digit)
                                        (loop (+ i 1)
-                                             (if (< n ##max-char)
-                                                 (+ (* n 16) next-digit)
-                                                 n))))
+                                             (if (< (##max-char-code) n)
+                                                 n
+                                                 (+ (* n 16) next-digit)))))
                                     (else
                                      #f)))))
 

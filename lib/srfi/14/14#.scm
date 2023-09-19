@@ -2,13 +2,13 @@
 
 ;;; File: "14#.scm"
 
-;;; Copyright (c) 2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2021-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
 ;;; SRFI 14, Character-set Library
 
-(##namespace ("srfi/14#"
+(##namespace (""
 
 char-set? char-set= char-set<=
 

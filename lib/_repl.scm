@@ -2,7 +2,7 @@
 
 ;;; File: "_repl.scm"
 
-;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -4057,18 +4057,18 @@
             (display-known-exception exc)))
       (display-known-exception exc)))
 
-(define-prim (##value->string val expr max-length char-encoding-limit)
+(define-prim (##value->string val expr max-length max-unescaped-char)
   (if ##values-with-sn?
       (##object->string-with-sn
        expr
        max-length
-       char-encoding-limit
+       max-unescaped-char
        3 ;; at least "..."
        val)
       (##object->string
        expr
        max-length
-       char-encoding-limit)))
+       max-unescaped-char)))
 
 (define-prim (##exception-procedure-and-arguments exc)
 

@@ -285,6 +285,8 @@ $(MODULES_O) $(NORMAL_O): $(srcdirpfx)$(rootfromhere)/include/gambit.h
 _kernel@obj@: _kernel.c $(srcdirpfx)$(rootfromhere)/include/stamp.h os.h os_setup.h os_base.h os_time.h os_shell.h os_files.h os_dyn.h os_tty.h os_io.h setup.h mem.h c_intf.h
 	@BUILD_OBJ@ -D___LIBRARY
 
+_system.c: gambit/char/char\#.scm gambit/char/CaseFolding.txt gambit/char/PropList.txt gambit/char/SpecialCasing.txt gambit/char/UnicodeData.txt
+
 _system@obj@: _system.c
 	@BUILD_OBJ@ -D___LIBRARY
 

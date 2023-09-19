@@ -1,41 +1,14 @@
 ;;;============================================================================
 
-;;; File: "char.sld"
+;;; File: "char-gambit#.scm"
 
-;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
-;;; Character operations.
+;;; Character operations added by Gambit.
 
-(define-library (char)
-
-  (namespace "")
-
-  (export
-
-char->integer
-char-alphabetic?
-char-ci<=?
-char-ci<?
-char-ci=?
-char-ci>=?
-char-ci>?
-char-downcase
-char-foldcase
-char-lower-case?
-char-numeric?
-char-upcase
-char-upper-case?
-char-whitespace?
-char<=?
-char<?
-char=?
-char>=?
-char>?
-char?
-digit-value
-integer->char
+(##namespace ("##"
 
 ->char-set
 char-set
@@ -85,23 +58,23 @@ string->char-set!
 ucs-range->char-set
 ucs-range->char-set!
 
-char-set:ascii
-char-set:blank
-char-set:digit
-char-set:empty
-char-set:full
-char-set:graphic
-char-set:hex-digit
-char-set:iso-control
-char-set:letter
-char-set:letter+digit
-char-set:lower-case
-char-set:printing
-char-set:punctuation
-char-set:symbol
-char-set:title-case
-char-set:upper-case
-char-set:whitespace
+(char-set:ascii unimplemented#char-set:ascii)
+(char-set:blank unimplemented#char-set:blank)
+(char-set:digit unimplemented#char-set:digit)
+(char-set:empty unimplemented#char-set:empty)
+(char-set:full unimplemented#char-set:full)
+(char-set:graphic unimplemented#char-set:graphic)
+(char-set:hex-digit unimplemented#char-set:hex-digit)
+(char-set:iso-control unimplemented#char-set:iso-control)
+(char-set:letter unimplemented#char-set:letter)
+(char-set:letter+digit unimplemented#char-set:letter+digit)
+(char-set:lower-case unimplemented#char-set:lower-case)
+(char-set:printing unimplemented#char-set:printing)
+(char-set:punctuation unimplemented#char-set:punctuation)
+(char-set:symbol unimplemented#char-set:symbol)
+(char-set:title-case unimplemented#char-set:title-case)
+(char-set:upper-case unimplemented#char-set:upper-case)
+(char-set:whitespace unimplemented#char-set:whitespace)
 
 ))
 

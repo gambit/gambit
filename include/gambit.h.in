@@ -3517,6 +3517,7 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___FIXWRAPLSHRP(x,y)((y)>=___FIX(0)?___FIXWRAPLSHR(x,(y)<=___FIX(___FIX_WIDTH)?(y):___FIX(___FIX_WIDTH)):___FAL)
 #define ___FIXTOCHR(x)(((x)&~___TMASK)+___tSPECIAL)
 #define ___FIXFROMCHR(x)((x)&~___TMASK)
+#define ___MAXCHARCODE ___FIX(___MAX_CHR)
 
 #ifndef ___GET_CPUCYCLECOUNT
 #ifdef ___USE___builtin_ia32_rdtscp

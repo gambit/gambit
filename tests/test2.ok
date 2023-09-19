@@ -961,47 +961,47 @@
 (char-alphabetic? #\A) => #t
 (char-alphabetic? #\0) => #f
 (char-alphabetic? #\newline) => #f
-;;; (Argument 1) CHARACTER expected: (char-alphabetic? 123)
+;;; (Argument 1, char) CHARACTER expected: (char-alphabetic? 123)
 (char-numeric? #\a) => #f
 (char-numeric? #\A) => #f
 (char-numeric? #\0) => #t
 (char-numeric? #\newline) => #f
-;;; (Argument 1) CHARACTER expected: (char-numeric? 123)
+;;; (Argument 1, char) CHARACTER expected: (char-numeric? 123)
 (char-whitespace? #\a) => #f
 (char-whitespace? #\A) => #f
 (char-whitespace? #\0) => #f
 (char-whitespace? #\newline) => #t
-;;; (Argument 1) CHARACTER expected: (char-whitespace? 123)
+;;; (Argument 1, char) CHARACTER expected: (char-whitespace? 123)
 (char-upper-case? #\a) => #f
 (char-upper-case? #\A) => #t
 (char-upper-case? #\0) => #f
 (char-upper-case? #\newline) => #f
-;;; (Argument 1) CHARACTER expected: (char-upper-case? 123)
+;;; (Argument 1, char) CHARACTER expected: (char-upper-case? 123)
 (char-lower-case? #\a) => #t
 (char-lower-case? #\A) => #f
 (char-lower-case? #\0) => #f
 (char-lower-case? #\newline) => #f
-;;; (Argument 1) CHARACTER expected: (char-lower-case? 123)
+;;; (Argument 1, char) CHARACTER expected: (char-lower-case? 123)
 (char->integer #\A) => 65
-;;; (Argument 1) CHARACTER expected: (char->integer 123)
+;;; (Argument 1, char) CHARACTER expected: (char->integer 123)
 (integer->char 123) => #\{
-;;; (Argument 1) Out of range: (integer->char -1)
-;;; (Argument 1) Out of range: (integer->char 1114112)
-;;; (Argument 1) Out of range: (integer->char 55296)
-;;; (Argument 1) Exact INTEGER expected: (integer->char 123.)
-;;; (Argument 1) Exact INTEGER expected: (integer->char #\A)
+;;; (Argument 1, n) Out of range: (integer->char -1)
+;;; (Argument 1, n) Out of range: (integer->char 1114112)
+;;; (Argument 1, n) Out of range: (integer->char 55296)
+;;; (Argument 1, n) Exact INTEGER expected: (integer->char 123.)
+;;; (Argument 1, n) Exact INTEGER expected: (integer->char #\A)
 (char-upcase #\a) => #\A
 (char-upcase #\A) => #\A
 (char-upcase #\@) => #\@
-;;; (Argument 1) CHARACTER expected: (char-upcase 123)
-;;; (Argument 1) CHARACTER expected: (char-upcase 'a)
-;;; (Argument 1) CHARACTER expected: (char-upcase "a")
+;;; (Argument 1, char) CHARACTER expected: (char-upcase 123)
+;;; (Argument 1, char) CHARACTER expected: (char-upcase 'a)
+;;; (Argument 1, char) CHARACTER expected: (char-upcase "a")
 (char-downcase #\a) => #\a
 (char-downcase #\A) => #\a
 (char-downcase #\@) => #\@
-;;; (Argument 1) CHARACTER expected: (char-downcase 123)
-;;; (Argument 1) CHARACTER expected: (char-downcase 'a)
-;;; (Argument 1) CHARACTER expected: (char-downcase "a")
+;;; (Argument 1, char) CHARACTER expected: (char-downcase 123)
+;;; (Argument 1, char) CHARACTER expected: (char-downcase 'a)
+;;; (Argument 1, char) CHARACTER expected: (char-downcase "a")
 (make-string 0) => ""
 ;;; CALL EXPRESSION ("???") IS WRONG: (make-string 536870911)
 ;;; (Argument 1, k) Out of range: (make-string 12345678901234567890)

@@ -3393,6 +3393,7 @@
 (targ-op "##fx<="        (targ-ifjump-fold-u #f "FIXLE"))
 (targ-op "##fx>="        (targ-ifjump-fold-u #f "FIXGE"))
 
+(targ-op "##max-char-code"  (targ-apply-simp-s #f #f #f "MAXCHARCODE"))
 (targ-op "##integer->char"  (targ-apply-simp-u #f #f #f "FIXTOCHR"))
 (targ-op "##char->integer"  (targ-apply-simp-u #f #f #f "FIXFROMCHR"))
 (targ-op "##flonum->fixnum" (targ-apply-simp-u #t #f #f "F64TOFIX"))

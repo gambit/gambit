@@ -2,7 +2,7 @@
 
 ;;; File: "char#.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -33,6 +33,72 @@ char?
 digit-value
 integer->char
 
+->char-set
+char-set
+char-set->list
+char-set->string
+char-set-adjoin
+char-set-adjoin!
+char-set-any
+char-set-complement
+char-set-complement!
+char-set-contains?
+char-set-copy
+char-set-count
+char-set-cursor
+char-set-cursor-next
+char-set-delete
+char-set-delete!
+char-set-diff+intersection
+char-set-diff+intersection!
+char-set-difference
+char-set-difference!
+char-set-every
+char-set-filter
+char-set-filter!
+char-set-fold
+char-set-for-each
+char-set-hash
+char-set-intersection
+char-set-intersection!
+char-set-map
+char-set-ref
+char-set-size
+char-set-unfold
+char-set-unfold!
+char-set-union
+char-set-union!
+char-set-xor
+char-set-xor!
+char-set<=
+char-set=
+char-set?
+end-of-char-set?
+list->char-set
+list->char-set!
+string->char-set
+string->char-set!
+ucs-range->char-set
+ucs-range->char-set!
+
+char-set:ascii
+char-set:blank
+char-set:digit
+char-set:empty
+char-set:full
+char-set:graphic
+char-set:hex-digit
+char-set:iso-control
+char-set:letter
+char-set:letter+digit
+char-set:lower-case
+char-set:printing
+char-set:punctuation
+char-set:symbol
+char-set:title-case
+char-set:upper-case
+char-set:whitespace
+
 ))
 
 ;;;----------------------------------------------------------------------------
@@ -58,7 +124,7 @@ integer->char
 ;; Lowercase  = Ll + Other_Lowercase
 ;; Uppercase  = Lu + Other_Uppercase
 ;;
-;; UnicodeData.txt defines Ll, Lu, Lt, Lm, Lo, Nl
+;; UnicodeData.txt defines Ll, Lu, Lt, Lm, Lo, Nl, etc
 ;;
 ;; PropList.txt defines Other_Alphabetic, Other_Lowercase, Other_Uppercase,
 ;; and White_Space
@@ -113,14 +179,14 @@ integer->char
 ;; T |   :   : T :    0   |    0   : 0 :   :   |   T    :   :   : T |
 ;; U | 0 :   :   :    0   |    0   :   :   : U |   U    :   : U :   |
 
-(##define-syntax macro-define-unicode-tables
+(macro-define-syntax macro-define-macros-from-unicode-files
   (lambda (src)
 
     (define support-title-case?        #t)
     (define support-full-case-folding? #t)
 
-    (define max-char (or (##deconstruct-call src 2 ##desourcify)
-                         ##max-char))
+    (define max-char-code (or (##deconstruct-call src 2 ##desourcify)
+                              (##max-char-code)))
 
     (define this-dir (path-directory (##source-path src)))
 
@@ -129,15 +195,93 @@ integer->char
     (define CaseFolding-path   (path-expand "CaseFolding.txt"   this-dir))
     (define SpecialCasing-path (path-expand "SpecialCasing.txt" this-dir))
 
-    (define digit-class-end        10)
-    (define no-class               digit-class-end)
-    (define whitespace-class       (+ 1 no-class))
-    (define alphabetic-class-start (+ 1 whitespace-class))
+    (define whitespace-class-start 0)
+    (define whitespace-class-end   (+ 1 whitespace-class-start))
+
+    (define no-class whitespace-class-end)
+
+    (define punctuation-categories
+      '(
+        Pc ;; Punctuation, connector
+        Pd ;; Punctuation, dash
+        Ps ;; Punctuation, open
+        Pe ;; Punctuation, close
+        Pi ;; Punctuation, initial quote (may behave like Ps or Pe depending on usage)
+        Pf ;; Punctuation, final quote (may behave like Ps or Pe depending on usage)
+        Po ;; Punctuation, other
+       ))
+
+    (define symbol-categories
+      '(
+        Sm ;; Symbol, math
+        Sc ;; Symbol, currency
+        Sk ;; Symbol, modifier
+        So ;; Symbol, other
+       ))
+
+    (define notable-categories
+      (append punctuation-categories
+              symbol-categories))
+
+    (define separator-categories
+      '(
+        Zs ;; Separator, space
+        Zl ;; Separator, line
+        Zp ;; Separator, paragraph
+       ))
+
+    (define control-categories
+      '(
+        Cc ;; Other, control
+        Cf ;; Other, format
+        Cs ;; Other, surrogate
+        Co ;; Other, privateuse
+        Cn ;; Other, not assigned (including noncharacters)
+       ))
+
+    (define not-notable-categories
+      '(
+        ;; Lu ;; Letter, uppercase
+        ;; Ll ;; Letter, lowercase
+        ;; Lt ;; Letter, titlecase
+        ;; Lm ;; Letter, modifier
+        ;; Lo ;; Letter, other
+        ;; Mn ;; Mark, nonspacing
+        ;; Mc ;; Mark, spacing combining
+        ;; Me ;; Mark, enclosing
+        ;; Nd ;; Number, decimal digit
+        ;; Nl ;; Number, letter
+        ;; No ;; Number, other
+       ))
+
+    (define notable-categories-table
+      (let ((i (+ 1 no-class))
+            (notable-categories-table (make-table)))
+        (for-each (lambda (cls)
+                    (table-set! notable-categories-table cls i)
+                    (set! i (+ i 1)))
+                  notable-categories)
+        notable-categories-table))
+
+    (define punctuation-class-start (table-ref notable-categories-table 'Pc))
+    (define punctuation-class-end   (+ 1 (table-ref notable-categories-table 'Po)))
+
+    (define symbol-class-start (table-ref notable-categories-table 'Sm))
+    (define symbol-class-end   (+ 1 (table-ref notable-categories-table 'So)))
+
+    (define digit-class-start symbol-class-end)
+    (define digit-class-end   (+ 10 digit-class-start))
+
+    (define alphabetic-class-start digit-class-end)
 
     (define other-class-start    #f)
+    (define other-class-end      #f)
     (define upper-class-start    #f)
+    (define upper-class-end      #f)
     (define title-class-start    #f)
+    (define title-class-end      #f)
     (define lower-class-start    #f)
+    (define lower-class-end      #f)
     (define alphabetic-class-end #f)
 
     (define other-dist-table (make-table))
@@ -149,6 +293,41 @@ integer->char
     (define unicode-titlecase-dist #f)
     (define unicode-downcase-dist  #f)
     (define unicode-foldcase-dist  #f)
+
+    ;; char-set representation as an ordered vector of the in-out boundaries
+
+    (define (char-set-begin)
+      (vector (list -1)))
+
+    (define (char-set-add! cs code)
+      ;; assumes that char-set-add! will be called with monotonically
+      ;; increasing values of code and never a code in the range #xd800..#xdfff
+      (let* ((boundaries (vector-ref cs 0))
+             (last (car boundaries))
+             (next (+ 1 code))
+             (next (if (and (>= next #xd800) (< next #xe000)) #xe000 next)))
+        (if (= code last)
+            (set-car! boundaries next)
+            (vector-set! cs 0 (cons next (cons code boundaries))))))
+
+    (define (char-set-end cs)
+      (cdr (reverse (vector-ref cs 0))))
+
+    (define char-set:lower-case   (char-set-begin))
+    (define char-set:upper-case   (char-set-begin))
+    (define char-set:title-case   (char-set-begin))
+    (define char-set:letter       (char-set-begin))
+    (define char-set:digit        (char-set-begin))
+    (define char-set:letter+digit (char-set-begin))
+    (define char-set:graphic      (char-set-begin))
+    (define char-set:printing     (char-set-begin))
+    (define char-set:whitespace   (char-set-begin))
+    (define char-set:iso-control  (char-set-begin))
+    (define char-set:punctuation  (char-set-begin))
+    (define char-set:symbol       (char-set-begin))
+    (define char-set:hex-digit    (char-set-begin))
+    (define char-set:blank        (char-set-begin))
+    (define char-set:ascii        (char-set-begin))
 
     ;; add any deviations from the Unicode spec here
 
@@ -322,10 +501,10 @@ integer->char
                 (read-all port read-line))))))
 
     (define (make-simple-full)
-      (let ((simple-table (make-vector (+ max-char 1)))
-            (full-table (make-vector (+ max-char 1) #f)))
+      (let ((simple-table (make-vector (+ 1 max-char-code)))
+            (full-table (make-vector (+ 1 max-char-code) #f)))
         (let loop ((i 0))
-          (if (<= i max-char)
+          (if (<= i max-char-code)
               (begin
                 (vector-set! simple-table i i)
                 (loop (+ i 1)))))
@@ -359,7 +538,7 @@ integer->char
          (lambda (entry)
            (let ((code   (hex (vector-ref entry 0) #f))
                  (status (vector-ref entry 1)))
-             (cond ((> code max-char))
+             (cond ((> code max-char-code))
                    ((member status '("C" "S"))
                     (let ((mapping (hex (vector-ref entry 2) #f)))
                       (vector-set! (car case-folding) code mapping)))
@@ -371,11 +550,11 @@ integer->char
         case-folding))
 
     (define props
-      (let ((props-table (make-vector (+ max-char 1) '())))
+      (let ((props-table (make-vector (+ 1 max-char-code) '())))
         (for-each
          (lambda (x)
-           (let* ((code-lo  (min (+ max-char 1) (hex (vector-ref x 0) #f)))
-                  (code-hi  (min max-char (hex (vector-ref x 1) #f)))
+           (let* ((code-lo  (min (+ 1 max-char-code) (hex (vector-ref x 0) #f)))
+                  (code-hi  (min max-char-code (hex (vector-ref x 1) #f)))
                   (property (vector-ref x 2)))
              (if (<= code-lo code-hi)
                  (let loop ((code code-lo))
@@ -413,12 +592,12 @@ integer->char
 
     (define (create-unicode-full-casing-info alist)
       (let ((has-full
-             (make-vector (+ max-char 1) #f))
+             (make-vector (+ 1 max-char-code) #f))
             (alist
              (apply
               append
               (map (lambda (x)
-                     (if (member #f (map (lambda (c) (<= c max-char)) x))
+                     (if (member #f (map (lambda (c) (<= c max-char-code)) x))
                          '()
                          (list x)))
                    alist))))
@@ -623,6 +802,7 @@ integer->char
     (define range-start #f)
 
     (define (process-data entry encode)
+
       (let* ((code                       (hex (vector-ref entry 0) #f))
              (entry                      (substitute entry code))
              (Name                       (vector-ref entry 1))
@@ -660,13 +840,15 @@ integer->char
                        0)))))
 
         (define (setup code)
-          (if (<= code max-char)
-              (let* ((uppercase?
+          (if (<= code max-char-code)
+              (let* ((prop
+                      (vector-ref props code))
+                     (uppercase?
                       (or (eq? General_Category 'Lu)
-                          (member "Other_Uppercase" (vector-ref props code))))
+                          (member "Other_Uppercase" prop)))
                      (lowercase?
                       (or (eq? General_Category 'Ll)
-                          (member "Other_Lowercase" (vector-ref props code))))
+                          (member "Other_Lowercase" prop)))
                      (titlecase?
                       (and support-title-case?
                            (eq? General_Category 'Lt)))
@@ -675,9 +857,62 @@ integer->char
                           lowercase?
                           titlecase?
                           (memq General_Category '(Lm Lo Nl))
-                          (member "Other_Alphabetic" (vector-ref props code))))
+                          (member "Other_Alphabetic" prop)))
                      (whitespace?
-                      (member "White_Space" (vector-ref props code))))
+                      (member "White_Space" prop)))
+
+                ;; This is the definition of each Scheme character set:
+
+                (if (not encode)
+                    (begin
+
+                      (cond (whitespace?
+                             (char-set-add! char-set:whitespace code))
+
+                            (alphabetic?
+                             (cond (lowercase?
+                                    (char-set-add! char-set:lower-case code))
+                                   (uppercase?
+                                    (char-set-add! char-set:upper-case code))
+                                   (titlecase?
+                                    (char-set-add! char-set:title-case code)))
+                             (char-set-add! char-set:letter code)
+                             (char-set-add! char-set:letter+digit code))
+
+                            ((eq? General_Category 'Nd)
+                             (char-set-add! char-set:digit code)
+                             (char-set-add! char-set:letter+digit code)))
+
+                      (if (memq General_Category punctuation-categories)
+                          (char-set-add! char-set:punctuation code))
+
+                      (if (memq General_Category symbol-categories)
+                          (char-set-add! char-set:symbol code))
+
+                      (if (or (eq? General_Category 'Zs)
+                              (= code 9)) ;; tab
+                          (char-set-add! char-set:blank code))
+
+                      (if (not (memq General_Category control-categories))
+                          (begin
+                            (char-set-add! char-set:printing code)
+                            (if (not whitespace?)
+                                (char-set-add! char-set:graphic code)))
+                          (if whitespace?
+                              (char-set-add! char-set:printing code)))
+
+                      (if (or (<= code #x1f)
+                              (and (>= code #x7f) (<= code #x9f)))
+                          (char-set-add! char-set:iso-control code))
+
+                      (if (or (and (>= code #x30) (<= code #x39))
+                              (and (>= code #x41) (<= code #x46))
+                              (and (>= code #x61) (<= code #x66)))
+                          (char-set-add! char-set:hex-digit code))
+
+                      (if (<= code #x7f)
+                          (char-set-add! char-set:ascii code))))
+
                 (cond (alphabetic?
                        (let* ((upper (hex Simple_Uppercase_Mapping code))
                               (lower (hex Simple_Lowercase_Mapping code))
@@ -716,12 +951,17 @@ integer->char
                       ((not encode))
                       ((not (equal? Numeric_Value_Decimal ""))
                        ;; (eq? General_Category 'Nd)
-                       (enc code (modulo (string->number Numeric_Value_Decimal)
-                                         digit-class-end)))
+                       (enc code
+                            (+ digit-class-start
+                               (modulo (string->number Numeric_Value_Decimal)
+                                       10))))
                       (whitespace?
-                       (enc code whitespace-class))
+                       (enc code whitespace-class-start))
                       (else
-                       (enc code no-class))))))
+                       (enc code
+                            (table-ref notable-categories-table
+                                       General_Category
+                                       no-class)))))))
 
         (cond ((suffix=? Name ", First>")
                (set! range-start code))
@@ -747,14 +987,35 @@ integer->char
       (for-each (lambda (entry) (process-data entry #f)) UnicodeData)
 
       (set! other-class-start    alphabetic-class-start)
-      (set! upper-class-start    (+ other-class-start
+      (set! other-class-end      (+ other-class-start
                                     (table-length other-dist-table)))
-      (set! title-class-start    (+ upper-class-start
+      (set! upper-class-start    other-class-end)
+      (set! upper-class-end      (+ upper-class-start
                                     (table-length upper-dist-table)))
-      (set! lower-class-start    (+ title-class-start
+      (set! title-class-start    upper-class-end)
+      (set! title-class-end      (+ title-class-start
                                     (table-length title-dist-table)))
-      (set! alphabetic-class-end (+ lower-class-start
+      (set! lower-class-start    title-class-end)
+      (set! lower-class-end      (+ lower-class-start
                                     (table-length lower-dist-table)))
+      (set! alphabetic-class-end lower-class-end)
+
+      (set! char-set:lower-case   (char-set-end char-set:lower-case))
+      (set! char-set:upper-case   (char-set-end char-set:upper-case))
+      (set! char-set:title-case   (char-set-end char-set:title-case))
+      (set! char-set:letter       (char-set-end char-set:letter))
+      (set! char-set:digit        (char-set-end char-set:digit))
+      (set! char-set:letter+digit (char-set-end char-set:letter+digit))
+      (set! char-set:graphic      (char-set-end char-set:graphic))
+      (set! char-set:printing     (char-set-end char-set:printing))
+      (set! char-set:whitespace   (char-set-end char-set:whitespace))
+      (set! char-set:iso-control  (char-set-end char-set:iso-control))
+      (set! char-set:punctuation  (char-set-end char-set:punctuation))
+      (set! char-set:symbol       (char-set-end char-set:symbol))
+      (set! char-set:hex-digit    (char-set-end char-set:hex-digit))
+      (set! char-set:blank        (char-set-end char-set:blank))
+      (set! char-set:ascii        (char-set-end char-set:ascii))
+
 
       '
       (pp (list (list 'other-class-start other-class-start)
@@ -778,12 +1039,12 @@ integer->char
 
         (determine-casing-distances UnicodeData)
 
-        (let ((table (make-vector (+ max-char 1) no-class)))
+        (let ((table (make-vector (+ 1 max-char-code) no-class)))
 
           (for-each (lambda (entry) (process-data entry table)) UnicodeData)
 
           (let ((hi-limit
-                 (let loop ((i max-char))
+                 (let loop ((i max-char-code))
                    (if (= (vector-ref table i) no-class)
                        (loop (- i 1))
                        i))))
@@ -1001,9 +1262,126 @@ integer->char
                                      unicode-full-titlecase-info)
             '()))
 
+      (define (gen-class-range-test lo hi)
+        (cond ((<= hi lo)
+               #f)
+              ((= lo 0)
+               `(##fx< class ,hi))
+              ((= hi alphabetic-class-end)
+               `(##fx>= class ,lo))
+              ((= lo (- hi 1))
+               `(##fx= class ,lo))
+              (else
+               `(and (##fx>= class ,lo)
+                     (##fx< class ,hi)))))
+
+      (define (gen-char-set-definition name boundaries complement? lo hi)
+
+        ;; prevent char-set boundaries that start with 0
+        (if (and (pair? boundaries)
+                 (eqv? 0 (car boundaries)))
+            (begin
+              (set! boundaries (cdr boundaries))
+              (set! complement? (not complement?))
+              (set! lo 0)
+              (set! hi 0)))
+
+        `(define ,(sym '|##| name)
+           (macro-make-constant-char-set
+            ,(list->u32vector boundaries)
+            ,(+ (* (+ (* hi 256) lo) 2) (if complement? 1 0)))))
+
+      (define (char-set-definitions)
+        (list
+         (gen-char-set-definition 'char-set:lower-case
+                                  char-set:lower-case
+                                  #f
+                                  lower-class-start
+                                  lower-class-end)
+         (gen-char-set-definition 'char-set:upper-case
+                                  char-set:upper-case
+                                  #f
+                                  upper-class-start
+                                  upper-class-end)
+         (gen-char-set-definition 'char-set:title-case
+                                  char-set:title-case
+                                  #f
+                                  title-class-start
+                                  title-class-end)
+         (gen-char-set-definition 'char-set:letter
+                                  char-set:letter
+                                  #f
+                                  alphabetic-class-start
+                                  alphabetic-class-end)
+         (gen-char-set-definition 'char-set:digit
+                                  char-set:digit
+                                  #f
+                                  digit-class-start
+                                  digit-class-end)
+         (gen-char-set-definition 'char-set:letter+digit
+                                  char-set:letter+digit
+                                  #f
+                                  digit-class-start
+                                  alphabetic-class-end)
+         (gen-char-set-definition 'char-set:graphic
+                                  char-set:graphic
+                                  #f
+                                  0
+                                  0)
+         (gen-char-set-definition 'char-set:printing
+                                  char-set:printing
+                                  #f
+                                  0
+                                  0)
+         (gen-char-set-definition 'char-set:whitespace
+                                  char-set:whitespace
+                                  #f
+                                  whitespace-class-start
+                                  whitespace-class-end)
+         (gen-char-set-definition 'char-set:iso-control
+                                  char-set:iso-control
+                                  #f
+                                  0
+                                  0)
+         (gen-char-set-definition 'char-set:punctuation
+                                  char-set:punctuation
+                                  #f
+                                  punctuation-class-start
+                                  punctuation-class-end)
+         (gen-char-set-definition 'char-set:symbol
+                                  char-set:symbol
+                                  #f
+                                  symbol-class-start
+                                  symbol-class-end)
+         (gen-char-set-definition 'char-set:hex-digit
+                                  char-set:hex-digit
+                                  #f
+                                  0
+                                  0)
+         (gen-char-set-definition 'char-set:blank
+                                  char-set:blank
+                                  #f
+                                  0
+                                  0)
+         (gen-char-set-definition 'char-set:ascii
+                                  char-set:ascii
+                                  #f
+                                  0
+                                  0)
+         (gen-char-set-definition 'char-set:empty
+                                  '()
+                                  #f
+                                  1
+                                  1)
+         (gen-char-set-definition 'char-set:full
+                                  '()
+                                  #t
+                                  1
+                                  1)))
+
       `(begin
 
-         (define-macro (macro-implement-unicode-tables)
+         (define-macro (macro-define-unicode-tables)
            `(begin
 
               (define ##unicode-class
@@ -1011,23 +1389,58 @@ integer->char
 
               ,@',(reverse extra-unicode-tables-definitions)))
 
-         (define-macro (macro-alphabetic-class-start)
-           ,alphabetic-class-start)
+         (define-macro (macro-define-standard-char-sets)
+           `(begin
+              ,@',(char-set-definitions)))
 
-         (define-macro (macro-digit-class-end)
-           ,digit-class-end)
+         (define-macro (macro-whitespace-class-start)
+           ,whitespace-class-start)
+
+         (define-macro (macro-whitespace-class-end)
+           ,whitespace-class-end)
 
          (define-macro (macro-no-class)
            ,no-class)
 
-         (define-macro (macro-whitespace-class)
-           ,whitespace-class)
+         (define-macro (macro-punctuation-class-start)
+           ,(table-ref notable-categories-table (car punctuation-categories)))
 
-         (define-macro (macro-other-class-start)    ,other-class-start)
-         (define-macro (macro-upper-class-start)    ,upper-class-start)
-         (define-macro (macro-title-class-start)    ,title-class-start)
-         (define-macro (macro-lower-class-start)    ,lower-class-start)
-         (define-macro (macro-alphabetic-class-end) ,alphabetic-class-end)
+         ,@(map (lambda (c)
+                  `(define-macro (,(sym 'macro- c '-class))
+                     ,(table-ref notable-categories-table c)))
+                punctuation-categories)
+
+         (define-macro (macro-punctuation-class-end)
+           ,(+ 1 (table-ref notable-categories-table (last punctuation-categories))))
+
+         (define-macro (macro-symbol-class-start)
+           ,(table-ref notable-categories-table (car symbol-categories)))
+
+         ,@(map (lambda (c)
+                  `(define-macro (,(sym 'macro- c '-class))
+                     ,(table-ref notable-categories-table c)))
+                symbol-categories)
+
+         (define-macro (macro-symbol-class-end)
+           ,(+ 1 (table-ref notable-categories-table (last symbol-categories))))
+
+         (define-macro (macro-digit-class-start) ,digit-class-start)
+         (define-macro (macro-digit-class-end)   ,digit-class-end)
+
+         (define-macro (macro-alphabetic-class-start)
+           ,alphabetic-class-start)
+
+         (define-macro (macro-other-class-start) ,other-class-start)
+         (define-macro (macro-other-class-end)   ,other-class-end)
+         (define-macro (macro-upper-class-start) ,upper-class-start)
+         (define-macro (macro-upper-class-end)   ,upper-class-end)
+         (define-macro (macro-title-class-start) ,title-class-start)
+         (define-macro (macro-title-class-end)   ,title-class-end)
+         (define-macro (macro-lower-class-start) ,lower-class-start)
+         (define-macro (macro-lower-class-end)   ,lower-class-end)
+
+         (define-macro (macro-alphabetic-class-end)
+           ,alphabetic-class-end)
 
          ,@upcase-definitions
          ,@downcase-definitions
@@ -1077,58 +1490,51 @@ integer->char
            `(macro-let-char-class-with-default
              ,c c code class
              #f
-             (##fx< class (macro-digit-class-end))))
+             ,',(gen-class-range-test digit-class-start
+                                      digit-class-end)))
 
          (define-macro (macro-char-whitespace? c)
            `(macro-let-char-class-with-default
              ,c c code class
              #f
-             (##fx= class (macro-whitespace-class))))
+             ,',(gen-class-range-test whitespace-class-start
+                                      whitespace-class-end)))
 
          (define-macro (macro-char-alphabetic? c)
-           ,(if (= alphabetic-class-start alphabetic-class-end)
-                `#f
-                ``(macro-let-char-class-with-default
-                   ,c c code class
-                   #f
-                   (##fx>= class (macro-alphabetic-class-start)))))
+           `(macro-let-char-class-with-default
+             ,c c code class
+             #f
+             ,',(gen-class-range-test alphabetic-class-start
+                                      alphabetic-class-end)))
 
          (define-macro (macro-char-lower-case? c)
-           ,(if (= lower-class-start alphabetic-class-end)
-                `#f
-                ``(macro-let-char-class-with-default
-                   ,c c code class
-                   #f
-                   (##fx>= class (macro-lower-class-start)))))
+           `(macro-let-char-class-with-default
+             ,c c code class
+             #f
+             ,',(gen-class-range-test lower-class-start
+                                      lower-class-end)))
 
          (define-macro (macro-char-upper-case? c)
-           ,(if (= upper-class-start title-class-start)
-                `#f
-                ``(macro-let-char-class-with-default
-                   ,c c code class
-                   #f
-                   ,',(if (= upper-class-start (- title-class-start 1))
-                          `(##fx= class (macro-upper-class-start))
-                          `(and (##fx>= class (macro-upper-class-start))
-                                (##fx< class (macro-title-class-start)))))))
+           `(macro-let-char-class-with-default
+             ,c c code class
+             #f
+             ,',(gen-class-range-test upper-class-start
+                                      upper-class-end)))
 
          (define-macro (macro-char-title-case? c)
-           ,(if (= title-class-start lower-class-start)
-                `#f
-                ``(macro-let-char-class-with-default
-                   ,c c code class
-                   #f
-                   ,',(if (= title-class-start (- lower-class-start 1))
-                          `(##fx= class (macro-title-class-start))
-                          `(and (##fx>= class (macro-title-class-start))
-                                (##fx< class (macro-lower-class-start)))))))
+           `(macro-let-char-class-with-default
+             ,c c code class
+             #f
+             ,',(gen-class-range-test title-class-start
+                                      title-class-end)))
 
          (define-macro (macro-digit-value c)
            `(macro-let-char-class-with-default
              ,c c code class
              #f
-             (if (##fx< class (macro-digit-class-end))
-                 class
+             (if ,',(gen-class-range-test digit-class-start
+                                          digit-class-end)
+                 (##fx- class (macro-digit-class-start))
                  #f)))
 
          (define-macro (macro-string-cmp str1 str2 start1 end1 start2 end2)
@@ -1348,6 +1754,49 @@ integer->char
 
               (loop-simp-simp start1 start2)))))))
 
-(macro-define-unicode-tables #f)
+(macro-define-macros-from-unicode-files #f)
+
+;;; Representation of character sets.
+
+;; A char-set has two fields:
+;;
+;; - boundaries        A u32vector containing the in-out boundaries of the set,
+;;                     which is an ordered sequence of all the character codes
+;;                     for which the inclusion in the set is different from the
+;;                     valid code point immediately preceding it. The sequence
+;;                     is constrained to never start with the character
+;;                     code 0 and to never contain the code #xd800 (this
+;;                     is to guarantee uniqueness of the representation).
+;;
+;; - hi-lo-complement  Fixnum that combines an 8 bit hi field (bits 9 to 16)
+;;                     an 8 bit lo field (bits 1 to 8),
+;;                     and a 1 bit complement field (bit 0, the lowest bit).
+;;                     The complement field indicates whether the set is
+;;                     complemented (1) or not (0).
+;;                     When lo=hi=0, only the boundaries field is relevant.
+;;                     Otherwise, the hi and lo fields are an alternate
+;;                     representation of the char-set that is redundant with
+;;                     the boundaries field but quicker to access for
+;;                     membership testing. The range lo..hi-1 are the
+;;                     values of (u8vector-ref ##unicode-class code)
+;;                     indicating membership in the (non-complemented)
+;;                     char-set.
+
+(define-type char-set
+  id: E15F8CD7-7FF3-4C21-82B9-4355062C112F
+  type-exhibitor: macro-type-char-set
+  constructor: macro-make-char-set
+  constant-constructor: macro-make-constant-char-set
+  implementer: implement-type-char-set
+  macros:
+  prefix: macro-
+  opaque:
+
+  (boundaries       unprintable: read-write:)
+  (hi-lo-complement unprintable: read-write:)
+)
+
+(define-check-type char-set (macro-type-char-set)
+  macro-char-set?)
 
 ;;;============================================================================

@@ -813,7 +813,6 @@ def @os_device_from_basic_console@():
 (define ##fixnum-width-neg           -30)
 (define ##bignum.adigit-width         14)
 (define ##bignum.mdigit-width         14)
-(define ##max-char              #x10ffff)
 
 (define ##os-bat-extension-string-saved "")
 (define ##os-exe-extension-string-saved "")

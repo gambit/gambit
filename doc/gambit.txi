@@ -5501,6 +5501,147 @@ The procedures in this section are not yet documented.
 @deffnx procedure list-sort! @var{proc} @var{list}
 @end deffn
 
+@deffn procedure char-set? @var{object}
+@end deffn
+
+@deffn procedure char-set= @var{char-set} @dots{}
+@end deffn
+
+@deffn procedure char-set<= @var{char-set} @dots{}
+@end deffn
+
+@deffn procedure char-set-hash @var{char-set} @rm{[}@var{bound}@rm{]}
+@end deffn
+
+@deffn procedure char-set-cursor @var{char-set}
+@end deffn
+
+@deffn procedure char-set-ref @var{char-set} @var{cursor}
+@end deffn
+
+@deffn procedure char-set-cursor-next @var{char-set} @var{cursor}
+@end deffn
+
+@deffn procedure end-of-char-set? @var{cursor}
+@end deffn
+
+@deffn procedure char-set-fold @var{kons} @var{knil} @var{char-set}
+@end deffn
+
+@deffn procedure char-set-unfold @var{p} @var{f} @var{g} @var{seed} @r{[}@var{base-cs}@r{]}
+@end deffn
+
+@deffn procedure char-set-unfold! @var{p} @var{f} @var{g} @var{seed} @var{base-cs}
+@end deffn
+
+@deffn procedure char-set-for-each @var{proc} @var{char-set}
+@end deffn
+
+@deffn procedure char-set-map @var{proc} @var{char-set}
+@end deffn
+
+@deffn procedure char-set-copy @var{char-set}
+@end deffn
+
+@deffn procedure char-set @var{char} @dots{}
+@end deffn
+
+@deffn procedure list->char-set @var{char-list} @r{[}@var{base-cs}@r{]}
+@end deffn
+
+@deffn procedure list->char-set! @var{char-list} @var{base-cs}
+@end deffn
+
+@deffn procedure string->char-set @var{string} @r{[}@var{base-cs}@r{]}
+@end deffn
+
+@deffn procedure string->char-set! @var{string} @var{base-cs}
+@end deffn
+
+@deffn procedure char-set-filter @var{pred} @var{char-set} @r{[}@var{base-cs}@r{]}
+@end deffn
+
+@deffn procedure char-set-filter! @var{pred} @var{char-set} @var{base-cs}
+@end deffn
+
+@deffn procedure ucs-range->char-set @var{lower} @var{upper} @rm{[}@var{error?} @rm{[}@var{base-cs}@rm{]}@rm{]}
+@end deffn
+
+@deffn procedure ucs-range->char-set! @var{lower} @var{upper} @var{error?} @var{base-cs}
+@end deffn
+
+@deffn procedure ->char-set @var{x}
+@end deffn
+
+@deffn procedure char-set-size @var{char-set}
+@end deffn
+
+@deffn procedure char-set-count @var{pred} @var{char-set}
+@end deffn
+
+@deffn procedure char-set->list @var{char-set}
+@end deffn
+
+@deffn procedure char-set->string @var{char-set}
+@end deffn
+
+@deffn procedure char-set-contains? @var{char-set} @var{char}
+@end deffn
+
+@deffn procedure char-set-every @var{pred} @var{char-set}
+@end deffn
+
+@deffn procedure char-set-any @var{pred} @var{char-set}
+@end deffn
+
+@deffn procedure char-set-adjoin @var{char-set} @var{char} @dots{}
+@end deffn
+
+@deffn procedure char-set-delete @var{char-set} @var{char} @dots{}
+@end deffn
+
+@deffn procedure char-set-adjoin! @var{char-set} @var{char} @dots{}
+@end deffn
+
+@deffn procedure char-set-delete! @var{char-set} @var{char} @dots{}
+@end deffn
+
+@deffn procedure char-set-complement @var{char-set}
+@end deffn
+
+@deffn procedure char-set-complement! @var{char-set}
+@end deffn
+
+@deffn procedure char-set-union @var{char-set} @dots{}
+@end deffn
+
+@deffn procedure char-set-intersection @var{char-set} @dots{}
+@end deffn
+
+@deffn procedure char-set-difference @var{char-set1} @var{char-set2} @dots{}
+@end deffn
+
+@deffn procedure char-set-xor @var{char-set} @dots{}
+@end deffn
+
+@deffn procedure char-set-diff+intersection @var{char-set1} @var{char-set2} @dots{}
+@end deffn
+
+@deffn procedure char-set-union! @var{char-set1} @var{char-set2} @dots{}
+@end deffn
+
+@deffn procedure char-set-intersection! @var{char-set1} @var{char-set2} @dots{}
+@end deffn
+
+@deffn procedure char-set-difference! @var{char-set1} @var{char-set2} @dots{}
+@end deffn
+
+@deffn procedure char-set-xor! @var{char-set1} @var{char-set2} @dots{}
+@end deffn
+
+@deffn procedure char-set-diff+intersection! @var{char-set1} @var{char-set2} @dots{}
+@end deffn
+
 @deffn procedure finite? @var{x}
 @deffnx procedure infinite? @var{x}
 @deffnx procedure nan? @var{x}

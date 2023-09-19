@@ -4304,9 +4304,6 @@ end-of-code
 (define ##err-code-unimplemented
   (##c-code "___RESULT = ___FIX(___UNIMPL_ERR);"))
 
-(define ##max-char
-  (##c-code "___RESULT = ___FIX(___MAX_CHR);"))
-
 (define ##min-fixnum
   (##c-code "___RESULT = ___FIX(___MIN_FIX);"))
 
