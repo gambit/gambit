@@ -3692,7 +3692,9 @@
                 (begin
                   (##write-string ", " port)
                   (##write (##cdr arg-id) port)))
-            (##write-string ") " port)))))
+            (##write-string ") " port))
+          (begin
+            (##write-string "(Return value) " port)))))
 
   (define-prim (display-known-exception exc)
 
@@ -3987,7 +3989,7 @@
                    (##write-string "Instance of " port)
                    (##write type-id port))
                  (let ((x
-                        (##assq (macro-type-exception-type-id exc)
+                        (##assq type-id
                                 ##type-exception-names)))
                    (##write-string (if x (##cdr x) "Unknown type") port))))
            (##write-string " expected" port)
