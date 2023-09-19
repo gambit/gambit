@@ -186,7 +186,7 @@ char-set:whitespace
     (define support-full-case-folding? #t)
 
     (define max-char-code (or (##deconstruct-call src 2 ##desourcify)
-                              (##max-char-code)))
+                              #x10ffff #;(##max-char-code))) ;; TODO: after bootstrap replace with (##max-char-code)
 
     (define this-dir (path-directory (##source-path src)))
 
