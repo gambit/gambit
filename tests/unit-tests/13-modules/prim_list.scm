@@ -122,6 +122,7 @@
 (let ((x (list 1 2 3 4))) (append-reverse x 5))
 (let ((x (list 1 2 3 4))) (append-reverse! x 5))
 (take '(1 2 3 4) 2)
+(call-with-values (lambda () (split-at '(1 2 3 4) 1)) (lambda (a b) (list a b)))
 (xcons 1 2)
 
 (first '(1 2 3 4 5 6 7 8 9 10 11))

@@ -2,7 +2,7 @@
 
 ;;; File: "list.sld"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -100,6 +100,7 @@ proper-list?
 remove
 remq
 reverse!
+split-at
 take
 xcons
 

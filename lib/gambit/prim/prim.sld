@@ -605,6 +605,7 @@ proper-list?
 remove
 remq
 reverse!
+split-at
 take
 xcons
 
