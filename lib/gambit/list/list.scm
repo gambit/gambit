@@ -1863,6 +1863,103 @@
                     (loop list2 (car lists) (cdr lists) (fx+ arg-num 1))
                     #t)))))))
 
+(define-primitive (any (pred   procedure)
+                       (clist1 proper-or-circular-list)
+                       (clists proper-or-circular-list) ...)
+
+  (define (any-1 clist1)
+    (and (pair? clist1)
+         (let loop ((x clist1))
+           (let ((rest (cdr x)))
+             (if (pair? rest)
+                 (or (pred (car x))
+                     (loop rest))
+                 (pred (car x)))))))
+
+  (define (any-n clist1-clists)
+    (let ((rests (primitive (cdrs clist1-clists))))
+      (and (pair? rests)
+           (let loop ((x clist1-clists) (rests rests))
+             (let* ((args (primitive (cars x '())))
+                    (next-rests (primitive (cdrs rests))))
+               (if (pair? next-rests)
+                   (or (apply pred args)
+                       (loop rests next-rests))
+                   (apply pred args)))))))
+
+  (if (null? clists)
+      (any-1 clist1)
+      (any-n (cons clist1 clists))))
+
+(define-procedure (any (pred   procedure)
+                       (clist1 proper-or-circular-list)
+                       (clists proper-or-circular-list) ...)
+
+  (define (any-1 clst1)
+    (macro-force-vars (clst1)
+      (if (pair? clst1)
+          (let loop ((x clst1))
+            (let ((rest (cdr x)))
+              (macro-force-vars (rest)
+                (if (pair? rest)
+                    (let ((result (pred (car x))))
+                      (macro-force-vars (result)
+                        (or result
+                            (loop rest))))
+                    (macro-check-proper-list-null* rest clist1 '(2 . clist1) ((%procedure%) pred clist1)
+                      (pred (car x)))))))
+          (macro-check-proper-list-null* clst1 clist1 '(2 . clist1) ((%procedure%) pred clist1)
+            #f))))
+
+  (define (any-n clist1-clists)
+
+    (define (any-n* x rests)
+      (let* ((args (primitive (cars x '())))
+             (next-rests (primitive (cdrs rests))))
+        (if (pair? next-rests)
+            (let ((result (apply pred args)))
+              (macro-force-vars (result)
+                (or result
+                    (any-n* rests next-rests))))
+            (macro-if-checks
+             (if next-rests
+                 (if (fx< next-rests 0)
+                     (primitive (raise-length-mismatch-exception
+                                 (argument-id (fx- 1 next-rests))
+                                 '()
+                                 (%procedure%)
+                                 pred
+                                 clist1-clists))
+                     (macro-fail-check-proper-list
+                      (argument-id (fx+ 1 next-rests))
+                      ((%procedure%) pred . clist1-clists)))
+                 (apply pred args))
+             (apply pred args)))))
+
+    (let ((rests (primitive (cdrs clist1-clists))))
+      (and rests
+           (macro-if-checks
+            (if (fixnum? rests)
+                (if (fx< rests 0)
+                    (primitive (raise-length-mismatch-exception
+                                (argument-id (fx- 1 rests))
+                                '()
+                                (%procedure%)
+                                pred
+                                clist1-clists))
+                    (macro-fail-check-list
+                     (argument-id (fx+ 1 rests))
+                     ((%procedure%) pred . clist1-clists)))
+                (any-n* clist1-clists rests))
+            (any-n* clist1-clists rests)))))
+
+  (define (argument-id i)
+    (if (fx= i 2) '(2 . clist1) i))
+
+  (if (null? clists)
+      (any-1 clist1)
+      (any-n (cons clist1 clists))))
+
 #|
 
 ;; TODO:

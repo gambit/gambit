@@ -77,6 +77,7 @@ list-set!
 
 ;; gambit
 
+any
 append-reverse
 append-reverse!
 circular-list

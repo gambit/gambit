@@ -93,6 +93,7 @@
 
 ;; Gambit
 
+(any odd? '()) (any odd? '(2 4)) (any odd? '(1 2)) (any odd? '(2 1)) (any < '(5 5 5) '(4 7 9) '(1 6 13))
 (call-with-values (lambda () (car+cdr '(1 2 3))) (lambda (a b) (list a b)))
 (list-ref (circular-list 1) 10) (list-ref (circular-list 1 2) 10) (list-ref (circular-list 1 2 3) 10)
 (circular-list? '(1 2 3)) (circular-list? (circular-list 1 2 3))

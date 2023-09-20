@@ -5501,6 +5501,9 @@ The procedures in this section are not yet documented.
 @deffnx procedure list-sort! @var{proc} @var{list}
 @end deffn
 
+@deffn procedure any @var{pred} @var{clist1} @var{clist2} @dots{}
+@end deffn
+
 @deffn procedure char-set? @var{object}
 @end deffn
 

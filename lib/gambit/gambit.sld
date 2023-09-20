@@ -414,6 +414,7 @@ address-info-socket-type
 address-info?
 address-infos
 all-bits-set?
+any
 any-bit-set?
 any-bits-set?
 append-reverse

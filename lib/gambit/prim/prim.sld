@@ -2,7 +2,7 @@
 
 ;;; File: "prim.sld"
 
-;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -582,6 +582,7 @@ list-set!
 
 ;; gambit
 
+any
 append-reverse
 append-reverse!
 circular-list

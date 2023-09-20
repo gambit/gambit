@@ -2,7 +2,7 @@
 
 ;;; File: "list-gambit#.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -10,6 +10,7 @@
 
 (##namespace ("##"
 
+any
 append-reverse
 append-reverse!
 circular-list
