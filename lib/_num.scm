@@ -12028,7 +12028,7 @@ end-of-code
             (##arithmetic-shift (##arithmetic-shift (##+ num 1) -2) 1))
         ;; here the ratnum cannot have fractional part = 1/2
         (##floor
-         (macro-ratnum-make      ;; the result is already normalized
+         (##ratnum.normalize
           (##+ (##arithmetic-shift num 1) den)
           (##arithmetic-shift den 1))))))
 
