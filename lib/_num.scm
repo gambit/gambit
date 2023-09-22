@@ -2485,6 +2485,8 @@
     x
     (let ((num (macro-ratnum-numerator x))
           (den (macro-ratnum-denominator x)))
+      ;; Here we allow x to not be normalized,
+      ;; but assume den is positive.
       (if (##negative? num)
           (##quotient (##- num (##- den 1)) den)
           (##quotient num den)))
@@ -12027,8 +12029,10 @@ end-of-code
             (##arithmetic-shift (##+ num (if (##positive? num) 1 -1)) -1)
             (##arithmetic-shift (##arithmetic-shift (##+ num 1) -2) 1))
         ;; here the ratnum cannot have fractional part = 1/2
+        ;; The ratnum we make here may not be normalized, but
+        ;; ##floor still handles it correctly.
         (##floor
-         (##ratnum.normalize
+         (macro-ratnum-make
           (##+ (##arithmetic-shift num 1) den)
           (##arithmetic-shift den 1))))))
 
