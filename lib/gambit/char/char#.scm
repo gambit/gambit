@@ -219,9 +219,11 @@ char-set:whitespace
         So ;; Symbol, other
        ))
 
+    ;; Symbols are not a notable category because they are not
+    ;; disjoint from other classes, for example some are letters.
+
     (define notable-categories
-      (append punctuation-categories
-              symbol-categories))
+      punctuation-categories)
 
     (define separator-categories
       '(
@@ -266,10 +268,7 @@ char-set:whitespace
     (define punctuation-class-start (table-ref notable-categories-table 'Pc))
     (define punctuation-class-end   (+ 1 (table-ref notable-categories-table 'Po)))
 
-    (define symbol-class-start (table-ref notable-categories-table 'Sm))
-    (define symbol-class-end   (+ 1 (table-ref notable-categories-table 'So)))
-
-    (define digit-class-start symbol-class-end)
+    (define digit-class-start punctuation-class-end)
     (define digit-class-end   (+ 10 digit-class-start))
 
     (define alphabetic-class-start digit-class-end)
@@ -1148,10 +1147,15 @@ char-set:whitespace
 
             (define-macro (,(sym 'macro- name '-dist-simple) class)
               ,(if (null? mapping-lengths)
-                   ``(,',(sym 'macro- name '-dist) class)
-                   ``(##fxarithmetic-shift-right
-                      (,',(sym 'macro- name '-dist) class)
-                      1)))
+                   ``(,',(sym 'macro- name '-dist) ,class)
+                   (if (eq? name 'foldcase)
+                       ``(let ((dist (,',(sym 'macro- name '-dist) ,class)))
+                           (if (##fxeven? dist)
+                               (##fxarithmetic-shift-right dist 1)
+                               0))
+                       ``(##fxarithmetic-shift-right
+                          (,',(sym 'macro- name '-dist) ,class)
+                          1))))
 
             (define-macro (,(sym 'macro-char- name) c)
               `(macro-let-char-class-with-default
@@ -1351,8 +1355,8 @@ char-set:whitespace
          (gen-char-set-definition 'char-set:symbol
                                   char-set:symbol
                                   #f
-                                  symbol-class-start
-                                  symbol-class-end)
+                                  0
+                                  0)
          (gen-char-set-definition 'char-set:hex-digit
                                   char-set:hex-digit
                                   #f
@@ -1412,17 +1416,6 @@ char-set:whitespace
 
          (define-macro (macro-punctuation-class-end)
            ,(+ 1 (table-ref notable-categories-table (last punctuation-categories))))
-
-         (define-macro (macro-symbol-class-start)
-           ,(table-ref notable-categories-table (car symbol-categories)))
-
-         ,@(map (lambda (c)
-                  `(define-macro (,(sym 'macro- c '-class))
-                     ,(table-ref notable-categories-table c)))
-                symbol-categories)
-
-         (define-macro (macro-symbol-class-end)
-           ,(+ 1 (table-ref notable-categories-table (last symbol-categories))))
 
          (define-macro (macro-digit-class-start) ,digit-class-start)
          (define-macro (macro-digit-class-end)   ,digit-class-end)
