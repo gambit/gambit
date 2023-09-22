@@ -88,6 +88,28 @@ If either x is NaN or y is NaN, NaN is returned
 (check-eq? (isnan? (atan +nan.0 1.)) #t)
 (check-eq? (isnan? (atan 1. +nan.0)) #t)
 
+;;; R7RS tests
+
+(check-eqv? (atan  0   1 )  0)
+(check-eqv? (atan +0.  1 ) +0.)
+(check-eqv? (atan -0.  1 ) -0.)
+(check-=    (atan  1   1 ) (macro-inexact-+pi/4))
+(check-=    (atan  1   0 ) (macro-inexact-+pi/2))
+(check-=    (atan  1  -1 ) (macro-inexact-+3pi/4))
+(check-=    (atan  0  -1 ) (macro-inexact-+pi))
+(check-=    (atan +0. -1 ) (macro-inexact-+pi))
+(check-=    (atan -0. -1 ) (macro-inexact--pi))
+(check-=    (atan -1  -1 ) (macro-inexact--3pi/4))
+(check-=    (atan -1   0 ) (macro-inexact--pi/2))
+(check-=    (atan -1   1 ) (macro-inexact--pi/4))
+(check-eqv? (atan  0   0 )  0) ;; undefined in R7RS
+(check-eqv? (atan +0. +0.) +0.)
+(check-eqv? (atan -0. +0.) -0.)
+(check-=    (atan +0. -0.) (macro-inexact-+pi))
+(check-=    (atan -0. -0.) (macro-inexact--pi))
+(check-=    (atan +0.  0 ) (macro-inexact-+pi/2))
+(check-=    (atan -0.  0 ) (macro-inexact--pi/2))
+
 ;;; Test exceptions
 
 (check-tail-exn type-exception? (lambda () (atan 'a)))

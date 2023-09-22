@@ -3034,9 +3034,11 @@ for a discussion of branch cuts.
         (if (##negative? (macro-ratnum-numerator x))
             (negative-log)
             (exact-log x))
-        (if (##flnegative? x)  ;; false also for NaN, -0.
-            (negative-log)
-            (##fllog x))
+        (if (or (##flnan? x)         ;; this treatment matches R7RS and SBCL
+                (##not (##flnegative?
+                        (##flcopysign (macro-inexact-+1) x))))
+            (##fllog x)
+            (negative-log))
         (##make-rectangular (complex-log-magnitude x) (##angle x)))
       (##log2 x y)))
 
@@ -3257,6 +3259,7 @@ for a discussion of branch cuts.
   (cond ((or (and (##flonum? x) (##flnan? x))
              (and (##flonum? y) (##flnan? y)))
          (macro-inexact-+nan))
+        ;; No NaNs
         ((##eqv? 0 y)
          (if (##exact? x)
              (if (##negative? x)
@@ -3265,6 +3268,10 @@ for a discussion of branch cuts.
              (if (##negative? (##flcopysign (macro-inexact-+1) x))
                  (macro-inexact-+pi)
                  (macro-inexact-+0))))
+        ;; y is not exact zero
+        ((eqv? x 0)                  ;; match R7RS
+         (##flcopysign (macro-inexact-+pi/2) (##exact->inexact y)))
+        ;; neither x nor y is exact zero
         ((and (##not (##finite? x))
               (##not (##finite? y)))
          (if (##positive? x)
