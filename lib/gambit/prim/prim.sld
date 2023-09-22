@@ -601,6 +601,7 @@ list-set
 list-sort
 list-sort!
 list-tabulate
+partition
 proper-list?
 remove
 remq

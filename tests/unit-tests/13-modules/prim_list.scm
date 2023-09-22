@@ -115,6 +115,7 @@
 (list-tabulate 5 list)
 (not-pair? '()) (not-pair? '(1 2 3))
 (null-list? '()) (null-list? '(1 2 3))
+(call-with-values (lambda () (partition odd? '(1 2 3 4 5))) (lambda (a b) (list a b)))
 (proper-list? '()) (proper-list? '(1 2 3)) (proper-list? '(1 2 . 3))
 (remove odd? '(1 2 3 4))
 (remq 'b '(a b c))
