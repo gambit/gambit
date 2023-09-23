@@ -38,7 +38,8 @@
 
 ;;; If the argument is ±0, -∞ is returned and FE_DIVBYZERO is raised.
 (check-eqv? (log +0.) -inf.0)
-;;; (check-eqv? (log -0.) -inf.0) GOT -inf.0+3.141592653589793i, match R7RS and SBCL
+;;; (check-eqv? (log -0.) -inf.0)    ;; C99
+(check-= (log -0.) -inf.0+3.141592653589793i) ;; R7RS
 
 ;;; If the argument is 1, +0 is returned
 (check-eqv? (log +1.0) 0.)

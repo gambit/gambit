@@ -3270,7 +3270,7 @@ for a discussion of branch cuts.
                  (macro-inexact-+0))))
         ;; y is not exact zero
         ((eqv? x 0)                  ;; match R7RS
-         (cond ((##zero? y) ;; necessarily inexact 0
+         (cond ((##flonum? y)
                 (##flcopysign (macro-inexact-+pi/2) y))
                ((##negative? y)
                 (macro-inexact--pi/2))
