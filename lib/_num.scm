@@ -3277,12 +3277,8 @@ for a discussion of branch cuts.
                (else
                 (macro-inexact-+pi/2))))
         ;; neither x nor y is exact zero
-        ((and (##not (##finite? x))
-              (##not (##finite? y)))
-         (if (##positive? x)
-             (##flcopysign (macro-inexact-+pi/4) y)
-             (##flcopysign (macro-inexact-+3pi/4) y)))
-        (else
+        ((and (##finite? x)
+              (##finite? y))
          (let ((inexact-x (##exact->inexact x))
                (inexact-y (##exact->inexact y)))
            (if (and (or (##flonum? x)
@@ -3302,7 +3298,32 @@ for a discussion of branch cuts.
                                                  (##integer-length (##numerator   max-arg))))))
                  ;; now the largest argument will be about 1.
                  (##flatan (##exact->inexact (##* normalizer exact-y))
-                           (##exact->inexact (##* normalizer exact-x)))))))))
+                           (##exact->inexact (##* normalizer exact-x)))))))
+        ((and (##not (##finite? x))
+              (##not (##finite? y)))
+         (if (##positive? x)
+             (##flcopysign (macro-inexact-+pi/4) y)
+             (##flcopysign (macro-inexact-+3pi/4) y)))
+        ;; only one of x or y is not finite
+        ((##finite? x)
+         ;; y is infinite
+         (##flcopysign (macro-inexact-+pi/2) y))
+        ;; x is infinite
+        ((##flpositive? x)
+         (cond ((##flonum? y)
+                (##flcopysign (macro-inexact-+0) y))
+               ((##negative? y)
+                (macro-inexact--0))
+               (else
+                (macro-inexact-+0))))
+        ;; x is -inf.0
+        ((##flonum? y)
+         (##flcopysign (macro-inexact-+pi) y))
+        ;; y is exact
+        (else
+         (if (##negative? y)
+             (macro-inexact--pi)
+             (macro-inexact-+pi)))))
 
 (define-prim (atan x #!optional (y (macro-absent-obj)))
   (macro-force-vars (x)
