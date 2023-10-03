@@ -13,6 +13,10 @@
 (check-= (atan +0.+2i) (test-atan 0.+2i))
 (check-= (atan -0.+2i) (test-atan -0.+2i))
 
+;;; Test for a previous bug
+
+(check-eqv? (atan +inf.0 (expt 3 100000)) (macro-inexact-+pi/2))
+
 ;;; Test for accuracy near 0
 
 (check-eqv? (atan 1e-30+1e-40i) 1e-30+1e-40i)
