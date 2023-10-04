@@ -5154,6 +5154,8 @@
   (pp (list 'TRACE: trace-lbls))))
 
 (define (gvm-interpret module-procs)
+  (define (with-exception-catcher _ f) (f))
+
   (with-exception-catcher
     (lambda (e) (display-exception e))
     (lambda ()
@@ -5599,38 +5601,39 @@
       (step)
       (error "GVM type error: in bb" (bb-lbl-num bb) slot-kind slot-num "has value" value "but expected type" expected))
 
-    (let* ((types (gvm-instr-types instr))
-           (type-locs (vector-ref types 0))
-           (n-registers (vector-ref type-locs 0))
-           (n-slots (vector-ref type-locs 1))
-           (n-free (vector-ref type-locs 2))
-           (frame (gvm-instr-frame instr))
-           (regs (frame-regs frame))
-           (slots (frame-slots frame)))
+    (let ((types (gvm-instr-types instr)))
+      (if types ;; nothing to do if no types, happens when version limit is at 0
+          (let* ((type-locs (vector-ref types 0))
+                (n-registers (vector-ref type-locs 0))
+                (n-slots (vector-ref type-locs 1))
+                (n-free (vector-ref type-locs 2))
+                (frame (gvm-instr-frame instr))
+                (regs (frame-regs frame))
+                (slots (frame-slots frame)))
 
-      (for-each
-        (lambda (reg index)
-          (if (frame-live? (list-ref regs reg) frame)
-              (let ((value (register-ref registers reg))
-                    (expected (vector-ref types index)))
-                (typecheck  (lambda () (throw-error "register" reg value expected))
-                            value
-                            expected))
-              (if interpreter-trace? (pprint (list 'not-lives-reg reg (list-ref regs reg))))))
-        (iota n-registers)
-        (iota n-registers (+ locenv-start-regs 1) 2))
+            (for-each
+              (lambda (reg index)
+                (if (frame-live? (list-ref regs reg) frame)
+                    (let ((value (register-ref registers reg))
+                          (expected (vector-ref types index)))
+                      (typecheck  (lambda () (throw-error "register" reg value expected))
+                                  value
+                                  expected))
+                    (if interpreter-trace? (pprint (list 'not-lives-reg reg (list-ref regs reg))))))
+              (iota n-registers)
+              (iota n-registers (+ locenv-start-regs 1) 2))
 
-      (for-each
-        (lambda (slot index)
-          (if (frame-live? (list-ref slots (- slot 1)) frame)
-              (let ((value (stack-ref stack (bb-entry-frame-size bb) slot))
-                    (expected (vector-ref types index)))
-                (typecheck  (lambda () (throw-error "slot" slot value expected))
-                            value
-                            expected))
-              (if interpreter-trace? (pprint (list 'not-lives-frame slot (list-ref slots (- slot 1)))))))
-        (iota n-slots 1)
-        (iota n-slots (+ locenv-start-regs (* 2 n-registers) 1) 2))))
+            (for-each
+              (lambda (slot index)
+                (if (frame-live? (list-ref slots (- slot 1)) frame)
+                    (let ((value (stack-ref stack (bb-entry-frame-size bb) slot))
+                          (expected (vector-ref types index)))
+                      (typecheck  (lambda () (throw-error "slot" slot value expected))
+                                  value
+                                  expected))
+                    (if interpreter-trace? (pprint (list 'not-lives-frame slot (list-ref slots (- slot 1)))))))
+              (iota n-slots 1)
+              (iota n-slots (+ locenv-start-regs (* 2 n-registers) 1) 2))))))
 
   (define (instr-interpret instr)
     (increment-interpreter-instr-counter)
