@@ -367,6 +367,8 @@
   (stretchable-vector-set! (bbs-basic-blocks bbs) lbl #f))
 
 (define (bbs-new-lbl! bbs)
+  ;; NOTE: its very important that lbl remain increasing, as this is used to
+  ;; compare the age of blocks in merges
   (let ((n (bbs-next-lbl-num bbs)))
     (bbs-next-lbl-num-set! bbs (+ n 1))
     n))
@@ -2426,12 +2428,16 @@
                             (car in-out))
                            (out
                             (cdr in-out))
-                           (versions-to-merge
-                            (map (lambda (i) (vector-ref types-lbl-vect i))
-                                 in))
+                           (versions-to-merge ;; must be ordered by lbl (age of the version)
+                                              ;; so type-union knowns the direction of loops
+                            (list-sort
+                              (lambda (v1 v2) (< (cdr v1) (cdr v2)))
+                              (map (lambda (i) (vector-ref types-lbl-vect i))
+                                  in)))
                            (versions-to-keep
                             (map (lambda (i) (vector-ref types-lbl-vect i))
                                  out))
+                           (_ (pp (map cdr versions-to-merge)))
                            (merged-types
                             (types-merge-multi
                              (map car versions-to-merge)
@@ -2504,7 +2510,7 @@
                           (write (list 'bb-generation-pending new-lbl))))
                       (print "\n")))
 
-                (if 'debug-bbv? ;; show new set of versions
+                (if debug-bbv? ;; show new set of versions
                     (let ((source-code (debug-this-bb? bb)))
                       (and source-code
                            (let ()
