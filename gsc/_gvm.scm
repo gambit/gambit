@@ -2437,7 +2437,6 @@
                            (versions-to-keep
                             (map (lambda (i) (vector-ref types-lbl-vect i))
                                  out))
-                           (_ (pp (map cdr versions-to-merge)))
                            (merged-types
                             (types-merge-multi
                              (map car versions-to-merge)
