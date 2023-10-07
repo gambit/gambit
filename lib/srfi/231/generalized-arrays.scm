@@ -2714,29 +2714,27 @@ OTHER DEALINGS IN THE SOFTWARE.
                       (storage-class-copier (%%array-storage-class destination))
                       (%%array-packed? source))
                  ;; do a block copy
-                 (begin
-                   (if (not (%%interval-empty? (%%array-domain source)))
-                       (let* ((source-indexer
-                               (%%array-indexer source))
-                              (destination-indexer
-                               (%%array-indexer destination))
-                              (copier
-                               (storage-class-copier (%%array-storage-class source)))
-                              (initial-destination-index
-                               (%%interval-lower-bounds->list (%%array-domain destination)))
-                              (destination-start
-                               (apply destination-indexer initial-destination-index))
-                              (initial-source-index
-                               (%%interval-lower-bounds->list (%%array-domain source)))
-                              (source-start
-                               (apply source-indexer initial-source-index))
-                              (source-end
-                               (fx+ source-start (%%interval-volume (%%array-domain source)))))
-                         (copier (%%array-body destination)
-                                 destination-start
-                                 (%%array-body source)
-                                 source-start
-                                 source-end)))
+                 (let* ((source-indexer
+                         (%%array-indexer source))
+                        (destination-indexer
+                         (%%array-indexer destination))
+                        (copier
+                         (storage-class-copier (%%array-storage-class source)))
+                        (initial-destination-index
+                         (%%interval-lower-bounds->list (%%array-domain destination)))
+                        (destination-start
+                         (apply destination-indexer initial-destination-index))
+                        (initial-source-index
+                         (%%interval-lower-bounds->list (%%array-domain source)))
+                        (source-start
+                         (apply source-indexer initial-source-index))
+                        (source-end
+                         (fx+ source-start (%%interval-volume (%%array-domain source)))))
+                   (copier (%%array-body destination)
+                           destination-start
+                           (%%array-body source)
+                           source-start
+                           source-end)
                    "Block copy")
                  ;; We can step through the elements of destination in order,
                  ;; and the getter of the source doesn't capture any continuations.

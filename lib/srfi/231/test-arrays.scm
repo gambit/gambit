@@ -274,6 +274,9 @@ OTHER DEALINGS IN THE SOFTWARE.
 (test (make-interval '#(-1))
       "make-interval: The argument is not a vector of nonnegative exact integers: ")
 
+(test (make-interval '#(1) '#(0))
+      "make-interval: Each lower-bound must be no greater than the associated upper-bound: ")
+
 
 (pp "interval result tests")
 
@@ -569,6 +572,20 @@ OTHER DEALINGS IN THE SOFTWARE.
           (and (%%every (lambda (x) (>= (car x) (cdr x))) (map cons lower1 lower2))
                (%%every (lambda (x) (<= (car x) (cdr x))) (map cons upper1 upper2))))))
 
+(pp "interval-empty? tests")
+
+(test (interval-empty? 'a)
+      "interval-empty?: The argument is not an interval: ")
+
+(test (interval-empty? (make-interval '#(1) '#(1)))
+      #t)
+
+(test (interval-empty? (make-interval '#(1) '#(2)))
+      #f)
+
+(test (interval-empty? (make-interval '#()))
+      #f)
+
 (next-test-random-source-state!)
 
 (pp "interval-contains-multi-index?  error tests")
@@ -661,7 +678,13 @@ OTHER DEALINGS IN THE SOFTWARE.
 (test (interval-fold-right 1 values 3 (make-interval '#(2 2)))
       "interval-fold-right: The first argument is not a procedure: ")
 
-;;; We'll rely on tests for array-fold[lr] to test interval-fold[lr]
+;;; We'll mainly rely on tests for array-fold[lr] to test interval-fold[lr]
+
+(test (interval-fold-left identity + 0 (make-interval '#(5)))
+      10)
+
+(test (interval-fold-right identity + 0 (make-interval '#(5)))
+      10)
 
 (pp "interval-dilate error tests")
 
@@ -1039,12 +1062,11 @@ OTHER DEALINGS IN THE SOFTWARE.
 (test (make-specialized-array  'a)
       "make-specialized-array: The first argument is not an interval: ")
 
-(test (make-specialized-array (make-interval '#(0) '#(10)) 'a 1)
+(test (make-specialized-array (make-interval '#(0) '#(10)) 'a)
       "make-specialized-array: The second argument is not a storage-class: ")
 
 (test (make-specialized-array (make-interval '#(0) '#(10)) u16-storage-class 'a)
       "make-specialized-array: The third argument cannot be manipulated by the second (a storage class): ")
-
 
 (test (make-specialized-array (make-interval '#(0) '#(10)) generic-storage-class 'a 'a)
       "make-specialized-array: The fourth argument is not a boolean: ")
@@ -1100,6 +1122,12 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 (test (make-specialized-array-from-data 'a)
       "make-specialized-array-from-data: The first argument is not compatible with the storage class: ")
+
+;;; FIXME: When I figure out how to make immutable data in the interpreter, I'll get this test to work.
+
+#;
+(test (make-specialized-array-from-data "123" char-storage-class #t)
+      "make-specialized-array-from-data: Cannot make mutable array from immutable data: ")
 
 (let ((test-values
        (list ;;       storae-class   default other data
@@ -1510,6 +1538,21 @@ OTHER DEALINGS IN THE SOFTWARE.
     (lambda ()
       (vector-ref storage-classes (random n)))))
 
+(pp "array-empty? tests")
+
+(test (array-empty? 'a)
+      "array-empty?: The argument is not an array: ")
+
+(test (array-empty? (make-array (make-interval '#(1) '#(1)) list))
+      #t)
+
+(test (array-empty? (make-array (make-interval '#(1) '#(2)) list))
+      #f)
+
+(test (array-empty? (make-array (make-interval '#()) list))
+      #f)
+
+
 (pp "array-packed? tests")
 
 ;; We'll use specialized arrays with u1-storage-class---we never
@@ -1801,7 +1844,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 
 
-(do ((d 1 (fx+ d 1)))
+(do ((d 0 (fx+ d 1)))
     ((= d 6))
   (let* ((uppers-list
           (iota d 2))
@@ -1836,10 +1879,12 @@ OTHER DEALINGS IN THE SOFTWARE.
                   "Block copy"))
         (test (myarray= specialized-source specialized-destination)
               #t)
-        ;; copy to non-adjacent elements of destination, no checking needed
+        ;; copy to (perhaps) non-adjacent elements of destination, no checking needed
         (test (%%move-array-elements (array-reverse specialized-destination) specialized-source "test: ")
               (if (array-packed? (array-reverse specialized-destination))
-                  "No checks needed"
+                  (if (storage-class-copier storage-class)
+                      "Block copy"
+                      "In order, no checks needed")
                   "No checks needed"))
         (test (myarray= specialized-source (array-reverse specialized-destination))
               #t)
@@ -1866,7 +1911,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 (next-test-random-source-state!)
 
-(do ((d 1 (fx+ d 1)))
+(do ((d 0 (fx+ d 1)))
     ((= d 6))
   (let* ((uppers-list
           (iota d 2))
@@ -4535,7 +4580,7 @@ OTHER DEALINGS IN THE SOFTWARE.
     ((= i random-tests))
   (let* ((arrays
           (map (lambda (ignore)
-                 (make-array (random-interval 0 5) list))
+                 (make-array (random-interval 0 6) list))
                (make-list 2))))
     (myarray= (apply array-outer-product append arrays)
                     (make-array (apply my-interval-cartesian-product (map array-domain arrays))
@@ -4573,6 +4618,29 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 (test (array-ref A-ref 4 5)
       0)
+
+(let ((A (array-copy (make-array (make-interval '#(1 1 1 1 1 1)) list)))
+      (B (array-copy (make-array (make-interval '#(-1 -1 -1 -1 -1 -1)
+                                                '#( 1  1  1  1  1  1))
+                                 list))))
+  ;; We copied A and B so they would have the default error checking.
+  (test (array-ref A 0)
+        "array-getter: multi-index is not the correct dimension: ")
+  (test (array-ref B 0)
+        "array-getter: multi-index is not the correct dimension: ")
+  (test (array-ref A 0 0 0 0 0 0 0)
+        "array-getter: multi-index is not the correct dimension: ")
+  (test (array-ref B 0 0 0 0 0 0 0)
+        "array-getter: multi-index is not the correct dimension: " )
+  (test (array-set! A 0 0)
+        "array-setter: multi-index is not the correct dimension: ")
+  (test (array-set! B 0 0)
+        "array-setter: multi-index is not the correct dimension: ")
+  (test (array-set! A 0 0 0 0 0 0 0 0)
+        "array-setter: multi-index is not the correct dimension: ")
+  (test (array-set! B 0 0 0 0 0 0 0 0)
+        "array-setter: multi-index is not the correct dimension: " ))
+
 
 (do ((d 0 (+ d 1)))
     ((= d 6))
@@ -6564,13 +6632,13 @@ that computes the componentwise products when we need them, the times are
 (let ((A (make-specialized-array (make-interval '#(5 5 5 5 5) '#(8 8 8 8 8))))
       (B (make-specialized-array (make-interval '#(5 5 5 5 5)))))
   (test (array-ref A 0 0)
-        "Wrong number of arguments passed to procedure ")
+        "array-getter: multi-index is not the correct dimension: ")
   (test (array-set! A 2 0 0)
-        "Wrong number of arguments passed to procedure ")
+        "array-setter: multi-index is not the correct dimension: ")
   (test (array-ref B 0 0)
-        "Wrong number of arguments passed to procedure ")
+        "array-getter: multi-index is not the correct dimension: ")
   (test (array-set! B 2 0 0)
-        "Wrong number of arguments passed to procedure "))
+        "array-setter: multi-index is not the correct dimension: "))
 
 (pp "Test interactions of continuations and array-{copy|append|stack|decurry|block}")
 
