@@ -2138,6 +2138,7 @@
 ;; -------------
 
 (define debug-bbv? #f)
+(define track-version-history? #t)
 
 (define instr-cost 1)
 (define call-cost 100)
@@ -2166,6 +2167,8 @@
     (if env (version-limit env) 0)))
 
 (define (bbs-type-specialize* bbs)
+
+  (define column-sep "\x23b9;") ;; for display of history of versions
 
   (define tctx (make-tctx))
 
@@ -2322,14 +2325,19 @@
           (let ((orig-lbl (bb-lbl-num bb))
                 (bb-versions (table-ref versions (bb-lbl-num bb) #f)))
             (if bb-versions
-                (begin
+                (let ((changed? #f))
                   ;; remove unreachable versions from live bb versions
                   (vector-set!
                     bb-versions
                     0
                     (filter
-                      (lambda (types-lbl) (reachable? (cdr types-lbl)))
-                      (vector-ref bb-versions 0)))
+                     (lambda (types-lbl)
+                       (let ((r (reachable? (cdr types-lbl))))
+                         (if (not r) (set! changed? #t))
+                         r))
+                     (vector-ref bb-versions 0)))
+                  (if changed?
+                      (track-version-history orig-lbl 'gc)) ;; track history of versions
                   ;; add back newly reachable versions to be processed
                   (for-each
                     (lambda (types-lbl)
@@ -2375,6 +2383,46 @@
       (define (set-version-types! lbl types)
         (table-set! version-types-table lbl types))
 
+      (define (track-version-history lbl operation) ;; track history of versions
+        (if track-version-history?
+            (let* ((bb (lbl-num->bb lbl bbs))
+                   (label (bb-label-instr bb))
+                   (frame (gvm-instr-frame label))
+                   (bb-versions (table-ref versions lbl))
+                   (types-lbl-alist (vector-ref bb-versions 0))
+                   (text-grid (vector-ref bb-versions 2))
+                   (version-index-tbl (vector-ref bb-versions 3))
+                   (options '(brief))
+                   (col (text-grid-cols text-grid)))
+
+              (if (memq operation '(add merge))
+                  (let* ((newest-types-lbl (car types-lbl-alist))
+                         (types (car newest-types-lbl))
+                         (new-lbl (cdr newest-types-lbl)))
+                    (or (table-ref version-index-tbl new-lbl #f)
+                        (let ((index (table-length version-index-tbl)))
+                          (table-set! version-index-tbl new-lbl index)
+                          index))))
+
+              (text-grid-line-set!
+               text-grid
+               0
+               col
+               (cons column-sep
+                     (if (eq? operation 'gc) (list "G" "C") '())))
+
+              (let ((header (cons column-sep (format-frame frame #f 'header options))))
+                (text-grid-line-set! text-grid 1 col header))
+
+              (for-each
+               (lambda (types-lbl)
+                 (let* ((types (car types-lbl))
+                        (version-lbl (cdr types-lbl))
+                        (i (table-ref version-index-tbl version-lbl))
+                        (typs (format-frame frame types 'types options)))
+                   (text-grid-line-set! text-grid (+ i 2) (+ col 1) typs)))
+               types-lbl-alist))))
+
       (define (reach lbl bbvctx)
         (let* ((types-before (bbvctx-types bbvctx))
                (cost (bbvctx-cost bbvctx))
@@ -2385,7 +2433,13 @@
                (types-before (resized-frame-types-remove-dead frame types-before))
                (bb-versions (or (table-ref versions lbl #f)
                                 (let ((bb-versions
-                                       (vector '() (make-table))))
+                                       (if track-version-history?
+                                           (vector '()
+                                                   (make-table)
+                                                   (make-text-grid)
+                                                   (make-table))
+                                           (vector '()
+                                                   (make-table)))))
                                   (table-set! versions lbl bb-versions)
                                   bb-versions)))
                (types-lbl-alist (vector-ref bb-versions 0))
@@ -2416,6 +2470,8 @@
                 (table-set! all-versions-tbl types-for-version new-lbl)
 
                 (vector-set! bb-versions 0 new-types-lbl-alist)
+
+                (track-version-history lbl 'add) ;; track history of versions
 
                 (if (> (length new-types-lbl-alist)
                        (max 1 (bb-version-limit bb)))
@@ -2466,6 +2522,8 @@
                        0
                        (cons (cons merged-types new-lbl2)
                              versions-to-keep))
+
+                      (track-version-history lbl 'merge) ;; track history of versions
 
                       (if (memv 0 in) ;; Only update label and types if the original version was merged!!!!!!
                           (begin
@@ -3054,6 +3112,31 @@
 ;;  (write-bbs bbs (current-output-port))
 
   (walk-bbs bbs)
+
+  (if track-version-history?
+      (bbs-for-each-bb
+       (lambda (bb)
+         (let* ((port (current-output-port))
+                (lbl (bb-lbl-num bb))
+                (bb-versions (table-ref versions lbl #f)))
+           (if bb-versions
+               (let ((text-grid (vector-ref bb-versions 2)))
+                 (display "-------------------------------------------------------------------------------\n" port)
+                 (let loop1 ((col 0))
+                   (if (< col (text-grid-cols text-grid))
+                       (let ((x (text-grid-ref text-grid 0 col)))
+                         (if (equal? x column-sep)
+                             (let loop2 ((row 1))
+                               (if (< row (text-grid-rows text-grid))
+                                   (begin
+                                     (text-grid-set! text-grid row col x)
+                                     (loop2 (+ row 1))))))
+                         (loop1 (+ col 1)))))
+                 (text-grid-display text-grid port)
+                 (newline port)
+                 (write-bb bb port)
+                 (newline port)))))
+       bbs))
 
   (finalize))
 
@@ -4380,12 +4463,12 @@
 
 (define (dot-digraph-gen-html-escape str)
   (string-concatenate
-         (map (lambda (c)
-                (cond ((char=? c #\<) "&lt;")
-                      ((char=? c #\>) "&gt;")
-                      ((char=? c #\&) "&amp;")
-                      (else           (string c))))
-              (string->list str))))
+   (map (lambda (c)
+          (cond ((char=? c #\<) "&lt;")
+                ((char=? c #\>) "&gt;")
+                ((char=? c #\&) "&amp;")
+                (else           (string c))))
+        (string->list str))))
 
 (define (dot-digraph-write dd port)
   (for-each
@@ -4411,8 +4494,8 @@
         (begin (display "        " port) (spaces (- n 8)))
         (begin (display " " port) (spaces (- n 1))))))
 
-  (let ((str (string-concatenate
-                    (apply format-gvm-instr-code (cons gvm-instr bb)))))
+  (let ((str (format-concatenate
+              (apply format-gvm-instr-code (cons gvm-instr bb)))))
     (display str port)
     (spaces (- 43 (string-length str)))
     (display " " port)
@@ -4428,19 +4511,19 @@
             (display y port)))))))
 
 (define (write-gvm-instr-frame gvm-instr port)
-  (display (string-concatenate (format-gvm-instr-frame gvm-instr))
+  (display (format-concatenate (format-gvm-instr-frame gvm-instr))
            port))
 
 (define (format-gvm-instr-frame gvm-instr)
   (let ((frame (gvm-instr-frame gvm-instr))
         (types (gvm-instr-types gvm-instr)))
-    (format-frame frame types)))
+    (format-frame frame types 'combined '())))
 
 (define (write-frame frame types port)
-  (display (string-concatenate (format-frame frame types))
+  (display (format-concatenate (format-frame frame types 'combined '()))
            port))
 
-(define (format-frame frame types)
+(define (format-frame-old frame types)
 
   (define (format-type-gvm-loc gvm-loc)
     (if types
@@ -4525,6 +4608,247 @@
                                  ,@sep
                                  ,@result))))
                   `("[" ,@result))))))))
+
+(define (format-frame frame types style options)
+
+  (define (format-type-gvm-loc gvm-loc)
+    (and types
+         (let ((type
+                (locenv-ref types (gvm-loc->locenv-index types gvm-loc))))
+           (if (and (not (eq? style 'types)) (type-eqv? type type-top))
+               #f ;; don't show universal type
+               (format-type type)))))
+
+  (define brief? (memq 'brief options))
+
+  (define (uninteresting? var)
+    (eq? var ret-var))
+
+  (define (format-var var prefix suffix)
+
+    (define (format-var-name var)
+      (symbol->string (var-name var)))
+
+    (cond ((eq? var closure-env-var)
+           (let ((closed (frame-closed frame)))
+             (let loop ((i (length closed))
+                        (lst (reverse closed))
+                        (sep `())
+                        (result `(,(if (eq? style 'types) "" ")"))))
+               (if (pair? lst)
+                   (loop (- i 1)
+                         (cdr lst)
+                         `(" ")
+                         (let ((var (car lst)))
+                           (if (eq? style 'header)
+                               `(,(format-var-name var)
+                                 ,@sep
+                                 ,@result)
+                               (let ((type
+                                      (format-type-gvm-loc (make-clo #f i))))
+                                 (if (eq? style 'types)
+                                     `(,(or type '())
+                                       ,@sep
+                                       ,@result)
+                                     `(,(format-var-name var)
+                                       ,@(or type '())
+                                       ,@type
+                                       ,@sep
+                                       ,@result))))))
+                   (if (eq? style 'types)
+                       `(,suffix
+                         ""
+                         ,@result)
+                       `(,prefix
+                         "("
+                         ,@result))))))
+          ((eq? style 'types)
+           `(,suffix))
+          ((eq? var ret-var)
+           `((,@prefix ,(if brief? "#" "#ret") ,@suffix)))
+          ((var-temp? var)
+           `((,@prefix "#" ,@suffix)))
+          (else
+           `((,@prefix ,(format-var-name var) ,@suffix)))))
+
+  (let ((regs (frame-regs frame)))
+    (let loop1 ((i (- (length regs) 1))
+                (lst (reverse regs))
+                (sep `())
+                (result `()))
+      (if (pair? lst)
+          (let ((var (car lst)))
+            (if (and (frame-live? var frame) ;; only include live registers
+                     (not (and brief? (uninteresting? var))))
+                (loop1 (- i 1)
+                       (cdr lst)
+                       `(" ")
+                       (let ((reg (make-reg i)))
+                         (if (eq? style 'header)
+                             `(,@(format-var
+                                  var
+                                  `(,(format-gvm-opnd reg)
+                                    "=")
+                                  `())
+                               ,@sep
+                               ,@result)
+                             (let ((type
+                                    (format-type-gvm-loc reg)))
+                               `(,@(if (eq? style 'types)
+                                       (format-var
+                                        var
+                                        `()
+                                        (or type `()))
+                                       (format-var
+                                        var
+                                        `(,(format-gvm-opnd reg)
+                                          "=")
+                                        (if type `("|" ,@type) `())))
+                                 ,@sep
+                                 ,@result)))))
+                (loop1 (- i 1)
+                       (cdr lst)
+                       sep
+                       result)))
+          (let ((slots (frame-slots frame)))
+            (let loop2 ((i (length slots))
+                        (lst slots)
+                        (sep `())
+                        (result `(,(if (eq? style 'types) "" "]")
+                                  ,@sep
+                                  ,@result)))
+              (if (pair? lst)
+                  (let* ((var
+                          (car lst))
+                         (live?
+                          (frame-live? var frame)))
+                    (if (eq? style 'header)
+                        (if live?
+                            (loop2 (- i 1)
+                                   (cdr lst)
+                                   `(" ")
+                                   `(,@(format-var var `() `())
+                                     ,@sep
+                                     ,@result))
+                            (if (and (null? sep) brief?)
+                                (loop2 (- i 1)
+                                       (cdr lst)
+                                       sep
+                                       result)
+                                (loop2 (- i 1)
+                                       (cdr lst)
+                                       `(" ")
+                                       `("."
+                                         ,@sep
+                                         ,@result))))
+                        (let* ((stk (make-stk i))
+                               (type (and live?
+                                          (format-type-gvm-loc stk))))
+                          (if live?
+                              (loop2 (- i 1)
+                                     (cdr lst)
+                                     `(" ")
+                                     `(,@(format-var
+                                          var
+                                          `()
+                                          (if type
+                                              (if (eq? style 'types)
+                                                  type
+                                                  `("|" ,@type))
+                                              `()))
+                                       ,@sep
+                                       ,@result))
+                              (if (and (null? sep) brief?)
+                                  (loop2 (- i 1)
+                                         (cdr lst)
+                                         sep
+                                         result)
+                                  (loop2 (- i 1)
+                                         (cdr lst)
+                                         `(" ")
+                                         `(,(if (eq? style 'types) "" ".")
+                                           ,@sep
+                                           ,@result)))))))
+                  `(,(if (eq? style 'types) "" "[") ,@result))))))))
+
+(define (make-text-grid)
+  (vector 0 0 (make-stretchable-vector #f)))
+
+(define (text-grid-rows text-grid)
+  (vector-ref text-grid 0))
+
+(define (text-grid-cols text-grid)
+  (vector-ref text-grid 1))
+
+(define (text-grid-row text-grid row)
+  (let ((sv (vector-ref text-grid 2)))
+    (or (stretchable-vector-ref sv row)
+        (let ((sv2 (make-stretchable-vector "")))
+          (stretchable-vector-set! sv row sv2)
+          sv2))))
+
+(define (text-grid-ref text-grid row col)
+  (let ((sv (text-grid-row text-grid row)))
+    (stretchable-vector-ref sv col)))
+
+(define (text-grid-set! text-grid row col text)
+  (if (>= row (vector-ref text-grid 0))
+      (vector-set! text-grid 0 (+ row 1)))
+  (if (>= col (vector-ref text-grid 1))
+      (vector-set! text-grid 1 (+ col 1)))
+  (let ((sv (text-grid-row text-grid row)))
+    (stretchable-vector-set! sv col text)))
+
+(define (text-grid-line-set! text-grid row col lst)
+  (let loop ((lst lst) (col col))
+    (if (pair? lst)
+        (begin
+          (text-grid-set! text-grid row col (car lst))
+          (loop (cdr lst) (+ col 1))))))
+
+(define (format-concatenate text-or-list)
+
+  (define (flatten x rest)
+    (cond ((pair? x)
+           (flatten (car x) (flatten (cdr x) rest)))
+          ((null? x)
+           rest)
+          (else
+           (cons x rest))))
+
+  (string-concatenate (flatten text-or-list '())))
+
+(define (text-grid-display text-grid port)
+
+  (define (get row col)
+    (format-concatenate (text-grid-ref text-grid row col)))
+
+  (let* ((rows (vector-ref text-grid 0))
+         (cols (vector-ref text-grid 1))
+         (widths
+          (let loop1 ((col (- cols 1)) (widths '()))
+            (if (>= col 0)
+                (let loop2 ((row 0) (width 0))
+                  (if (< row rows)
+                      (loop2 (+ row 1)
+                             (max width
+                                  (string-length (get row col))))
+                      (loop1 (- col 1)
+                             (cons width widths))))
+                widths))))
+    (let loop3 ((row 0))
+      (if (< row rows)
+          (let loop4 ((col 0) (widths widths))
+            (if (< col cols)
+                (let* ((text (get row col))
+                       (width (car widths))
+                       (pad (- width (string-length text))))
+                  (display text port)
+                  (display (make-string pad #\space) port)
+                  (loop4 (+ col 1) (cdr widths)))
+                (begin
+                  (newline port)
+                  (loop3 (+ row 1)))))))))
 
 (define (format-gvm-instr-code gvm-instr . bb)
 

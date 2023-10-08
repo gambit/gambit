@@ -7819,7 +7819,7 @@
 
 (define (format-type type)
   (cond ((type-top? type)
-         '("^"))
+         '("T"))
         ((type-bot? type)
          '("_"))
         ((type-singleton? type)
