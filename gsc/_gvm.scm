@@ -2294,7 +2294,7 @@
         (if (pair? missing-reachables)
           (error "all-reachables-exist?" "no"))))
 
-    (define (update-reachability!)
+    (define (update-reachability! cause-lbl)
       ;(write (list 'UPDATING-REACHABILITY))(newline)
 
       ;; recompute basic block references
@@ -2338,7 +2338,9 @@
                          r))
                      (vector-ref bb-versions 0)))
                   (if changed?
-                      (track-version-history orig-lbl 'gc "")) ;; track history of versions
+                      (let ((info
+                             (string-append " " (format-gvm-lbl cause-lbl))))
+                        (track-version-history orig-lbl 'gc info))) ;; track history of versions
                   ;; add back newly reachable versions to be processed
                   (for-each
                     (lambda (types-lbl)
@@ -2351,11 +2353,11 @@
                     (vector-ref bb-versions 0))))))
         bbs))
 
-      (define (bbs-cleanup)
+      (define (bbs-cleanup cause-lbl)
         ;; remove unreachable bb
         ;; required to avoid having uninitialized bb in the bbs
         ;; (write (list 'GC-REACHABILITY))(newline)
-        (update-reachability!)
+        (update-reachability! cause-lbl)
         (bbs-for-each-bb
           (lambda (bb)
             (let ((lbl (bb-lbl-num bb)))
@@ -2498,7 +2500,8 @@
                      (new-types-lbl-alist
                       (cons (cons types-for-version new-lbl)
                             types-lbl-alist))
-                     (versions-merged #f))
+                     (versions-merged #f)
+                     (cause-lbl new-lbl))
 
                 (set-version-types! new-lbl types-for-version)
 
@@ -2576,7 +2579,8 @@
                             (let ((version (car versions)))
                               (if (not (or (type-eqv? version merged-types) ;; check if the version was preserved by the merge
                                            (type-eqv? version types-for-version))) ;; check if the version was the newly entering version
-                                  (set! update-reachability-required? #t)
+                                  (or update-reachability-required?
+                                      (set! update-reachability-required? cause-lbl))
                                   (loop (cdr versions))))))
 
                       ;(write (list 'MERGED-TYPES= merged-types))(newline)
@@ -3129,7 +3133,8 @@
               (begin
                 (set! update-reachability-required? #f)
                 ((queue-get! work-queue))
-                (if update-reachability-required? (bbs-cleanup))
+                (if update-reachability-required?
+                    (bbs-cleanup update-reachability-required?))
                 (loop)))))
               
         ;(bbs-cleanup)
