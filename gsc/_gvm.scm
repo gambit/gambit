@@ -2168,7 +2168,8 @@
 
 (define (bbs-type-specialize* bbs)
 
-  (define column-sep "\x23b9;") ;; for display of history of versions
+;;  (define column-sep "\x23b9;") ;; for display of history of versions
+  (define column-sep ":") ;; for display of history of versions
 
   (define tctx (make-tctx))
 
@@ -2337,7 +2338,7 @@
                          r))
                      (vector-ref bb-versions 0)))
                   (if changed?
-                      (track-version-history orig-lbl 'gc)) ;; track history of versions
+                      (track-version-history orig-lbl 'gc "")) ;; track history of versions
                   ;; add back newly reachable versions to be processed
                   (for-each
                     (lambda (types-lbl)
@@ -2383,7 +2384,7 @@
       (define (set-version-types! lbl types)
         (table-set! version-types-table lbl types))
 
-      (define (track-version-history lbl operation) ;; track history of versions
+      (define (track-version-history lbl operation gc-info) ;; track history of versions
         (if track-version-history?
             (let* ((bb (lbl-num->bb lbl bbs))
                    (label (bb-label-instr bb))
@@ -2393,7 +2394,7 @@
                    (text-grid (vector-ref bb-versions 2))
                    (version-index-tbl (vector-ref bb-versions 3))
                    (options '(brief))
-                   (col (text-grid-cols text-grid)))
+                   (col (max 1 (text-grid-cols text-grid))))
 
               (if (memq operation '(add merge))
                   (let* ((newest-types-lbl (car types-lbl-alist))
@@ -2402,17 +2403,51 @@
                     (or (table-ref version-index-tbl new-lbl #f)
                         (let ((index (table-length version-index-tbl)))
                           (table-set! version-index-tbl new-lbl index)
+                          (text-grid-set! text-grid
+                           (+ index 2)
+                           0
+                           (format-gvm-lbl new-lbl))
                           index))))
 
-              (text-grid-line-set!
-               text-grid
-               0
-               col
-               (cons column-sep
-                     (if (eq? operation 'gc) (list "G" "C") '())))
+              (let ((header (format-frame frame #f 'header options)))
 
-              (let ((header (cons column-sep (format-frame frame #f 'header options))))
-                (text-grid-line-set! text-grid 1 col header))
+                (text-grid-set!
+                 text-grid
+                 0
+                 col
+                 column-sep)
+
+                (case operation
+                  ((add)
+                   (text-grid-set!
+                    text-grid
+                    0
+                    (+ col 1)
+                    (list 'span (length header) "ADD")))
+                  ((merge)
+                   (text-grid-set!
+                    text-grid
+                    0
+                    (+ col 1)
+                    (list 'span (length header) "MERGE")))
+                  ((gc)
+                   (text-grid-set!
+                    text-grid
+                    0
+                    (+ col 1)
+                    (list 'span (length header) "GC" gc-info))))
+
+                (text-grid-set!
+                 text-grid
+                 1
+                 col
+                 column-sep)
+
+                (text-grid-line-set!
+                 text-grid
+                 1
+                 (+ col 1)
+                 header))
 
               (for-each
                (lambda (types-lbl)
@@ -2471,7 +2506,7 @@
 
                 (vector-set! bb-versions 0 new-types-lbl-alist)
 
-                (track-version-history lbl 'add) ;; track history of versions
+                (track-version-history lbl 'add #f) ;; track history of versions
 
                 (if (> (length new-types-lbl-alist)
                        (max 1 (bb-version-limit bb)))
@@ -2523,7 +2558,7 @@
                        (cons (cons merged-types new-lbl2)
                              versions-to-keep))
 
-                      (track-version-history lbl 'merge) ;; track history of versions
+                      (track-version-history lbl 'merge #f) ;; track history of versions
 
                       (if (memv 0 in) ;; Only update label and types if the original version was merged!!!!!!
                           (begin
@@ -3122,6 +3157,7 @@
            (if bb-versions
                (let ((text-grid (vector-ref bb-versions 2)))
                  (display "-------------------------------------------------------------------------------\n" port)
+                 (text-grid-set! text-grid 0 (text-grid-cols text-grid) column-sep)
                  (let loop1 ((col 0))
                    (if (< col (text-grid-cols text-grid))
                        (let ((x (text-grid-ref text-grid 0 col)))
@@ -4810,7 +4846,9 @@
 
   (define (flatten x rest)
     (cond ((pair? x)
-           (flatten (car x) (flatten (cdr x) rest)))
+           (if (eq? (car x) 'span) (begin (pp (cadr x))
+               (flatten (cddr x) rest))
+               (flatten (car x) (flatten (cdr x) rest))))
           ((null? x)
            rest)
           (else
@@ -4823,32 +4861,85 @@
   (define (get row col)
     (format-concatenate (text-grid-ref text-grid row col)))
 
-  (let* ((rows (vector-ref text-grid 0))
-         (cols (vector-ref text-grid 1))
-         (widths
-          (let loop1 ((col (- cols 1)) (widths '()))
-            (if (>= col 0)
-                (let loop2 ((row 0) (width 0))
-                  (if (< row rows)
+  (define (output text width port)
+    (let ((pad (- width (string-length text))))
+      (display text port)
+      (display (make-string pad #\space) port)))
+
+  (let* ((start (make-stretchable-vector '()))
+         (rows (vector-ref text-grid 0))
+         (cols (vector-ref text-grid 1)))
+    (let loop1 ((col (- cols 1)) (widths '()))
+      (if (>= col 0)
+          (let loop2 ((row 0) (width 0))
+            (if (< row rows)
+                (let ((cell (text-grid-ref text-grid row col)))
+                  (if (and (pair? cell) (eq? (car cell) 'span))
+                      (let* ((span
+                              (cadr cell))
+                             (text
+                              (format-concatenate (cddr cell)))
+                             (last-col
+                              (+ col (- span 1))))
+                        (stretchable-vector-set!
+                         start
+                         last-col
+                         (cons (cons col (string-length text))
+                               (stretchable-vector-ref start last-col)))
+                        (loop2 (+ row 1)
+                               width))
                       (loop2 (+ row 1)
                              (max width
-                                  (string-length (get row col))))
-                      (loop1 (- col 1)
-                             (cons width widths))))
-                widths))))
-    (let loop3 ((row 0))
+                                  (string-length
+                                   (format-concatenate cell))))))
+                (loop1 (- col 1)
+                       (cons width widths))))
+          (let loop3 ((col 0) (pos 0) (widths widths))
+            (if (pair? widths)
+                (let* ((width (car widths))
+                       (end (+ pos width))
+                       (spans (stretchable-vector-ref start col)))
+                  (stretchable-vector-set! start col pos)
+                  (for-each
+                   (lambda (col-width)
+                     (let ((span-col (car col-width))
+                           (span-width (cdr col-width)))
+                       (set! end
+                         (max end
+                              (+ (stretchable-vector-ref start span-col)
+                                 span-width)))))
+                   spans)
+                  (loop3 (+ col 1)
+                         end
+                         (cdr widths)))
+                (stretchable-vector-set! start col pos)))))
+    (let loop4 ((row 0))
       (if (< row rows)
-          (let loop4 ((col 0) (widths widths))
+          (let loop5 ((col 0))
             (if (< col cols)
-                (let* ((text (get row col))
-                       (width (car widths))
-                       (pad (- width (string-length text))))
-                  (display text port)
-                  (display (make-string pad #\space) port)
-                  (loop4 (+ col 1) (cdr widths)))
+                (let ((cell (text-grid-ref text-grid row col)))
+                  (if (and (pair? cell) (eq? (car cell) 'span))
+                      (let* ((span
+                              (cadr cell))
+                             (text
+                              (format-concatenate (cddr cell)))
+                             (width
+                              (- (stretchable-vector-ref start (+ col span))
+                                 (stretchable-vector-ref start col))))
+                        (output text width port)
+                        (loop5 (+ col span)))
+                      (let* ((span
+                              1)
+                             (text
+                              (format-concatenate cell))
+                             (width
+                              (- (stretchable-vector-ref start (+ col span))
+                                 (stretchable-vector-ref start col))))
+                        (output text width port)
+                        (loop5 (+ col span)))))
                 (begin
                   (newline port)
-                  (loop3 (+ row 1)))))))))
+                  (loop4 (+ row 1)))))))))
 
 (define (format-gvm-instr-code gvm-instr . bb)
 
