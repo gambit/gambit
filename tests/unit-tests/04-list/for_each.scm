@@ -1,4 +1,5 @@
 (include "#.scm")
+(##excluded-procedures-set! '(void cons list type-exception? with-exception-handler wrong-number-of-arguments-exception?))
 
 (define bool #f)
 

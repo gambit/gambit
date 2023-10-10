@@ -9,6 +9,7 @@
 ;;;----------------------------------------------------------------------------
 
 (define cleanup? #t)
+(define show-analyse? #f)
 (define show-coverage? #f)
 
 (define nb-good 0)
@@ -43,6 +44,7 @@
 ;;; ...))
 ;;;
 (define procedures-called (make-table test: eq?))
+(define procedures-tested (make-table test: eq?))
 
 (define (num->string num w d) ; w = total width, d = decimals
   (let ((n (floor (inexact->exact (round (* (abs num) (expt 10 d)))))))
@@ -210,10 +212,11 @@
               (delete-file "dbg-script")
               result)))
 
-      (let ((def-enable-trace (object->string `(define ##enable-trace? ,show-coverage?))))
+      (let ((def-enable-trace (object->string `(define ##enable-trace? ,show-coverage?)))
+            (def-enable-syntactic-check (object->string `(define ##enable-syntactic-check? ,show-analyse?))))
         (case target
           ((C)
-           (run "../gsi/gsi" "-:debug-settings=-,io-settings=lu,~~=.." "-e" def-enable-trace "-f" file))
+           (run "../gsi/gsi" "-:debug-settings=-,io-settings=lu,~~=.." "-f" "-e" def-enable-trace "-e" def-enable-syntactic-check file))
           (else
            (let ((gsi (string-append "../gsi/gsi-" (symbol->string target))))
              (run gsi "-e" def-enable-trace "-f" file)))))))
@@ -254,6 +257,12 @@
             (cons a b)))
         s1 s2))
 
+(define (get-analyse str)
+  (let ((analyse-loc (##string-contains str "(%GAMBIT-ANALYSE%")))
+    (and analyse-loc
+         (let ((analyse (with-input-from-string (substring str analyse-loc (string-length str)) read)))
+           (and (pair? analyse) (cdr analyse))))))
+
 (define (get-coverage str)
   (let ((coverage-loc (##string-contains str "(%GAMBIT-COVERAGE%")))
     (and coverage-loc
@@ -273,7 +282,15 @@
             (status-hi (quotient status 256))
             (status-lo (modulo status 256)))
        (let* ((output-string (cdr result))
+              (analyse (and (string? output-string) (get-analyse output-string)))
               (coverage (and (string? output-string) (get-coverage output-string))))
+         (and (pair? analyse)
+              (for-each (lambda (procname)
+                          (table-set! procedures-tested procname
+                                      (cons (trim-filename file)
+                                            (table-ref procedures-tested procname '()))))
+                        analyse))
+
          (and (pair? coverage)
               (for-each (lambda (procname-freq)
                           (let ((procname (car procname-freq))
@@ -321,6 +338,8 @@
         (print "PASSED ALL " nb-total " UNIT TESTS\n")
         (if show-coverage?
           (pretty-print (sort-list (table->list procedures-called) (lambda (a b) (string-ci<? (symbol->string (car a)) (symbol->string (car b)))))))
+        (if show-analyse?
+          (pretty-print (sort-list (table->list procedures-tested) (lambda (a b) (string-ci<? (symbol->string (car a)) (symbol->string (car b)))))))
         (exit 0))
       (begin
         (print "FAILED " nb-fail " UNIT TESTS OUT OF " nb-total " (" (num->string (* 100. (/ nb-fail nb-total)) 0 1) "%)\n")
@@ -375,6 +394,8 @@
         (let ((word (substring (car args) 1 (string-length (car args)))))
           (cond ((equal? word "stress")
                  (set! stress? #t))
+                ((equal? word "analyse")
+                 (set! show-analyse? #t))
                 ((equal? word "coverage")
                  (set! show-coverage? #t))
                 ((member word '("C" "js" "python" "ruby" "php" "go" "java"))
