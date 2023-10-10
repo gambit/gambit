@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_t-cpu.c", produced by Gambit v4.9.4
+; File: "_t-cpu.c", produced by Gambit v4.9.5
 (
-409004
+409005
 (C)
 "_t-cpu"
 ("_t-cpu")
@@ -97,7 +97,7 @@
 ) #|*/"*/"meta-info|#
 )
 #else
-#define ___VERSION 409004
+#define ___VERSION 409005
 #define ___MODULE_NAME "_t-cpu"
 #define ___LINKER_ID ___LNK___t_2d_cpu
 #define ___MH_PROC ___H___t_2d_cpu
@@ -651,7 +651,7 @@ ___DEF_SLBL(5,___L5___t_2d_cpu_23_)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),32,___G_c_23_prim_2d_proc_2d_add_21_)
 ___DEF_GLBL(___L18___t_2d_cpu_23_)
    ___SET_R1(___VOID)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___DEF_SLBL(6,___L6___t_2d_cpu_23_)
    ___SET_GLO(10,___G_c_23_cpu_2d_prim_2d_proc_2d_table,___STK(-6))
    ___SET_R0(___LBL(7))
@@ -940,7 +940,7 @@ ___DEF_SLBL(5,___L5_c_23_cpu_2d_make_2d_target)
 ___DEF_SLBL(6,___L6_c_23_cpu_2d_make_2d_target)
    ___SET_R1(___STK(-4))
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___DEF_SLBL(7,___L7_c_23_cpu_2d_make_2d_target)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(7,0,0,0)
@@ -950,7 +950,7 @@ ___DEF_SLBL(8,___L8_c_23_cpu_2d_make_2d_target)
    ___WRONG_NARGS(8,1,0,0)
 ___DEF_GLBL(___L45_c_23_cpu_2d_make_2d_target)
    ___SET_R1(___FAL)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___DEF_SLBL(9,___L9_c_23_cpu_2d_make_2d_target)
    ___IF_NARGS_EQ(3,___NOTHING)
    ___WRONG_NARGS(9,3,0,0)
@@ -1041,7 +1041,7 @@ ___DEF_SLBL(24,___L24_c_23_cpu_2d_make_2d_target)
 ___DEF_SLBL(25,___L25_c_23_cpu_2d_make_2d_target)
    ___SET_R1(___FAL)
    ___ADJFP(-4)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___DEF_SLBL(26,___L26_c_23_cpu_2d_make_2d_target)
    ___IF_NARGS_EQ(2,___NOTHING)
    ___WRONG_NARGS(26,2,0,0)
@@ -1116,13 +1116,13 @@ ___DEF_SLBL(41,___L41_c_23_cpu_2d_make_2d_target)
    ___IF_NARGS_EQ(1,___NOTHING)
    ___WRONG_NARGS(41,1,0,0)
    ___SET_R1(___SYM_bignum)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___DEF_SLBL(42,___L42_c_23_cpu_2d_make_2d_target)
    ___IF_NARGS_EQ(5,___NOTHING)
    ___WRONG_NARGS(42,5,0,0)
    ___SET_R1(___FAL)
    ___ADJFP(-2)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___DEF_SLBL(43,___L43_c_23_cpu_2d_make_2d_target)
    ___IF_NARGS_EQ(5,___NOTHING)
    ___WRONG_NARGS(43,5,0,0)
@@ -1230,12 +1230,12 @@ ___DEF_SLBL(8,___L8_c_23_cpu_2d_dump)
    ___CHECK_HEAP(9,4096)
 ___DEF_SLBL(9,___L9_c_23_cpu_2d_dump)
    ___ADJFP(-4)
-   ___JUMPPRM(___NOTHING,___STK(4))
+   ___JUMPRET(___STK(4))
 ___DEF_SLBL(10,___L10_c_23_cpu_2d_dump)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(10,0,0,0)
    ___SET_R1(___CLO(___R4,1))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 

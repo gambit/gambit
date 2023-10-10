@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_riscv.c", produced by Gambit v4.9.4
+; File: "_riscv.c", produced by Gambit v4.9.5
 (
-409004
+409005
 (C)
 "_riscv"
 ("_riscv")
@@ -312,7 +312,7 @@
 ) #|*/"*/"meta-info|#
 )
 #else
-#define ___VERSION 409004
+#define ___VERSION 409005
 #define ___MODULE_NAME "_riscv"
 #define ___LINKER_ID ___LNK___riscv
 #define ___MH_PROC ___H___riscv
@@ -2868,7 +2868,7 @@ ___DEF_SLBL(0,___L0___riscv_23_)
    ___WRONG_NARGS(0,0,0,0)
 ___DEF_GLBL(___L___riscv_23_)
    ___SET_R1(___VOID)
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
 
@@ -3001,11 +3001,11 @@ ___DEF_SLBL(2,___L2___riscv_23_riscv_2d_word_2d_width)
    ___END_IF
    ___SET_R1(___FIX(64L))
    ___ADJFP(-4)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___DEF_GLBL(___L3___riscv_23_riscv_2d_word_2d_width)
    ___SET_R1(___FIX(32L))
    ___ADJFP(-4)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___END_P_SW
 ___END_P_COD
 
@@ -3128,7 +3128,7 @@ ___DEF_SLBL(6,___L6___riscv_23_riscv_2d_imm_2d_int_3f_)
    ___JUMPGLONOTSAFE(___SET_NARGS(1),159,___G_number_3f_)
 ___DEF_GLBL(___L7___riscv_23_riscv_2d_imm_2d_int_3f_)
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___END_P_SW
 ___END_P_COD
 
@@ -3278,7 +3278,7 @@ ___DEF_SLBL(6,___L6___riscv_23_riscv_2d_imm_2d_lbl_3f_)
    ___JUMPGLONOTSAFE(___SET_NARGS(1),167,___G_vector_3f_)
 ___DEF_GLBL(___L7___riscv_23_riscv_2d_imm_2d_lbl_3f_)
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___END_P_SW
 ___END_P_COD
 
@@ -3757,7 +3757,7 @@ ___DEF_SLBL(19,___L19___riscv_23_riscv_2d_listing)
 ___DEF_GLBL(___L25___riscv_23_riscv_2d_listing)
    ___SET_R1(___STK(-6))
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___END_P_SW
 ___END_P_COD
 
@@ -3821,7 +3821,7 @@ ___DEF_SLBL(6,___L6___riscv_23_riscv_2d_label)
 ___DEF_GLBL(___L7___riscv_23_riscv_2d_label)
    ___SET_R1(___VOID)
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___END_P_SW
 ___END_P_COD
 
@@ -4359,7 +4359,7 @@ ___DEF_GLBL(___L38___riscv_23_riscv_2d_data_2d_elems)
 ___DEF_GLBL(___L39___riscv_23_riscv_2d_data_2d_elems)
    ___SET_R1(___VOID)
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(2))
+   ___JUMPRET(___STK(2))
 ___END_P_SW
 ___END_P_COD
 
@@ -4704,7 +4704,7 @@ ___DEF_SLBL(39,___L39___riscv_23_riscv_2d_li)
 ___DEF_GLBL(___L55___riscv_23_riscv_2d_li)
    ___SET_R1(___VOID)
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___DEF_GLBL(___L56___riscv_23_riscv_2d_li)
    ___SET_R1(___STK(-3))
    ___SET_R0(___LBL(40))
@@ -6677,7 +6677,7 @@ ___DEF_SLBL(18,___L18___riscv_23_riscv_2d_type_2d_r)
 ___DEF_GLBL(___L24___riscv_23_riscv_2d_type_2d_r)
    ___SET_R1(___VOID)
    ___ADJFP(-12)
-   ___JUMPPRM(___NOTHING,___STK(5))
+   ___JUMPRET(___STK(5))
 ___DEF_GLBL(___L25___riscv_23_riscv_2d_type_2d_r)
    ___SET_R1(___SUB(73))
    ___SET_R0(___LBL(6))
@@ -6748,7 +6748,7 @@ ___DEF_SLBL(4,___L4___riscv_23_riscv_2d_jalr)
 ___DEF_GLBL(___L5___riscv_23_riscv_2d_jalr)
    ___SET_R1(___VOID)
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(2))
+   ___JUMPRET(___STK(2))
 ___END_P_SW
 ___END_P_COD
 
@@ -8429,7 +8429,7 @@ ___DEF_SLBL(60,___L60___riscv_23_riscv_2d_type_2d_i)
 ___DEF_GLBL(___L85___riscv_23_riscv_2d_type_2d_i)
    ___SET_R1(___STK(-6))
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___DEF_GLBL(___L86___riscv_23_riscv_2d_type_2d_i)
    ___SET_R1(___FIX(63L))
    ___GOTO(___L77___riscv_23_riscv_2d_type_2d_i)
@@ -8446,7 +8446,7 @@ ___DEF_GLBL(___L88___riscv_23_riscv_2d_type_2d_i)
 ___DEF_GLBL(___L89___riscv_23_riscv_2d_type_2d_i)
    ___SET_R1(___VOID)
    ___ADJFP(-12)
-   ___JUMPPRM(___NOTHING,___STK(4))
+   ___JUMPRET(___STK(4))
 ___DEF_GLBL(___L90___riscv_23_riscv_2d_type_2d_i)
    ___SET_R1(___STK(-5))
    ___SET_R2(___FIX(27L))
@@ -8861,7 +8861,7 @@ ___DEF_SLBL(24,___L24___riscv_23_riscv_2d_type_2d_s)
 ___DEF_GLBL(___L27___riscv_23_riscv_2d_type_2d_s)
    ___SET_R1(___VOID)
    ___ADJFP(-12)
-   ___JUMPPRM(___NOTHING,___STK(4))
+   ___JUMPRET(___STK(4))
 ___DEF_GLBL(___L28___riscv_23_riscv_2d_type_2d_s)
    ___SET_R1(___SUB(112))
    ___SET_R0(___LBL(11))
@@ -9301,7 +9301,7 @@ ___DEF_SLBL(24,___L24___riscv_23_riscv_2d_type_2d_b)
 ___DEF_GLBL(___L45___riscv_23_riscv_2d_type_2d_b)
    ___SET_R1(___VOID)
    ___ADJFP(-12)
-   ___JUMPPRM(___NOTHING,___STK(4))
+   ___JUMPRET(___STK(4))
 ___DEF_GLBL(___L46___riscv_23_riscv_2d_type_2d_b)
    ___SET_STK(-4,___LBL(37))
    ___SET_STK(-3,___ALLOC_CLO(6UL))
@@ -9387,7 +9387,7 @@ ___DEF_SLBL(37,___L37___riscv_23_riscv_2d_type_2d_b)
    ___IF_NARGS_EQ(2,___NOTHING)
    ___WRONG_NARGS(37,2,0,0)
    ___SET_R1(___FIX(4L))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___DEF_GLBL(___L48___riscv_23_riscv_2d_type_2d_b)
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(38))
@@ -9467,7 +9467,7 @@ ___DEF_SLBL(4,___L4___riscv_23_riscv_2d_lui)
 ___DEF_GLBL(___L5___riscv_23_riscv_2d_lui)
    ___SET_R1(___VOID)
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___END_P_SW
 ___END_P_COD
 
@@ -9529,7 +9529,7 @@ ___DEF_SLBL(4,___L4___riscv_23_riscv_2d_auipc)
 ___DEF_GLBL(___L5___riscv_23_riscv_2d_auipc)
    ___SET_R1(___VOID)
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___END_P_SW
 ___END_P_COD
 
@@ -9711,7 +9711,7 @@ ___DEF_SLBL(4,___L4___riscv_23_riscv_2d_jal)
 ___DEF_GLBL(___L5___riscv_23_riscv_2d_jal)
    ___SET_R1(___VOID)
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___END_P_SW
 ___END_P_COD
 
@@ -9963,7 +9963,7 @@ ___DEF_SLBL(32,___L32___riscv_23_riscv_2d_type_2d_j)
    ___IF_NARGS_EQ(2,___NOTHING)
    ___WRONG_NARGS(32,2,0,0)
    ___SET_R1(___FIX(4L))
-   ___JUMPPRM(___NOTHING,___R0)
+   ___JUMPRET(___R0)
 ___DEF_GLBL(___L42___riscv_23_riscv_2d_type_2d_j)
    ___SET_R1(___STK(-4))
    ___SET_R0(___LBL(33))
@@ -10204,7 +10204,7 @@ ___DEF_SLBL(23,___L23___riscv_23_riscv_2d_fence)
 ___DEF_GLBL(___L35___riscv_23_riscv_2d_fence)
    ___SET_R1(___VOID)
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___DEF_GLBL(___L36___riscv_23_riscv_2d_fence)
    ___SET_R0(___LBL(8))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),157,___G_not)
@@ -10264,7 +10264,7 @@ ___DEF_SLBL(4,___L4___riscv_23_riscv_2d_fence_2e_i)
 ___DEF_GLBL(___L5___riscv_23_riscv_2d_fence_2e_i)
    ___SET_R1(___VOID)
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___END_P_SW
 ___END_P_COD
 
@@ -10318,7 +10318,7 @@ ___DEF_SLBL(4,___L4___riscv_23_riscv_2d_ecall)
 ___DEF_GLBL(___L5___riscv_23_riscv_2d_ecall)
    ___SET_R1(___VOID)
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___END_P_SW
 ___END_P_COD
 
@@ -10372,7 +10372,7 @@ ___DEF_SLBL(4,___L4___riscv_23_riscv_2d_ebreak)
 ___DEF_GLBL(___L5___riscv_23_riscv_2d_ebreak)
    ___SET_R1(___VOID)
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___END_P_SW
 ___END_P_COD
 

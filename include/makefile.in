@@ -1,6 +1,6 @@
 # makefile for Gambit include directory.
 
-# Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 herefromroot = include
 rootfromhere = ..
@@ -327,6 +327,39 @@ stamp:
 	else \
 	    echo "Gambit is not being built from a Git clone. Creating empty stamp.h." && \
 	    echo > stamp.h; \
+	fi
+
+stamp-release:
+	@version="$(RELEASE_VERSION)"; \
+	if [ -n "$$version" ]; then \
+	    echo "___STAMP_RELEASE_VERSION changed to $$version"; \
+	    eval `date -u '+ymd=%Y%m%d hms=%H%M%S'`; \
+	    ymd="$$(expr 0 + $$ymd)"; \
+	    hms="$$(expr 0 + $$hms)"; \
+	    { \
+	        echo "/*" && \
+	        echo " * Time stamp of latest release or \"make dist\".  The stamps can be" && \
+	        echo " * overridden by defining the symbols on the C compiler command line," && \
+	        echo " * which is useful when the information reported by the Gambit runtime" && \
+	        echo " * system needs to be a specific time rather than the build time or" && \
+	        echo " * the release time." && \
+	        echo " */" && \
+	        echo "" && \
+	        echo "#ifndef ___STAMP_RELEASE_VERSION" && \
+	        echo "#define ___STAMP_RELEASE_VERSION \"$$version\"" && \
+	        echo "#endif" && \
+	        echo "" && \
+	        echo "#ifndef ___STAMP_RELEASE_YMD" && \
+	        echo "#define ___STAMP_RELEASE_YMD $$ymd" && \
+	        echo "#endif" && \
+	        echo "" && \
+	        echo "#ifndef ___STAMP_RELEASE_HMS" && \
+	        echo "#define ___STAMP_RELEASE_HMS $$hms" && \
+	        echo "#endif"; \
+	    } > stamp-release.h.new && \
+	    mv -f stamp-release.h.new stamp-release.h; \
+	else \
+	    echo "RELEASE_VERSION environment variable must be set."; \
 	fi
 
 makefile: makefile.in $(rootfromhere)/config.status

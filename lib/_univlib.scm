@@ -2,7 +2,7 @@
 
 ;;; File: "_univlib.scm"
 
-;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -619,6 +619,7 @@ import stat
 import time
 import errno
 import getpass
+import tempfile
 import functools
 
 def @os_encode_error@(exn):
@@ -812,16 +813,14 @@ def @os_device_from_basic_console@():
 (define ##fixnum-width-neg           -30)
 (define ##bignum.adigit-width         14)
 (define ##bignum.mdigit-width         14)
-(define ##max-char              #x10ffff)
 
 (define ##os-bat-extension-string-saved "")
 (define ##os-exe-extension-string-saved "")
-(define ##os-configure-command-string-saved "./configure")
-(define ##os-system-type-string-saved "unknown-system-type")
-(define (##system-stamp) 20200101213000)
 
 (define (##get-parallelism-level) 1)
 (define (##cpu-count) 1)
+(define (##cpu-cycle-count-start) 0)
+(define (##cpu-cycle-count-end)   0)
 (define (##current-vm-resize vm n) #f)
 
 (define (##get-standard-level) 0)
@@ -1392,6 +1391,26 @@ def @os_shell_command@(cmd):
     (println "unimplemented ##os-shell-command called with cmd=")
     (println cmd)
     0)))
+
+;;;----------------------------------------------------------------------------
+
+;;; Temporary directory.
+
+(define (##os-path-tempdir)
+  (##declare (not interrupts-enabled))
+  (cond-expand
+
+   ((compilation-target js)
+    (##inline-host-expression
+     "@host2scm@(@os_nodejs@ ? os.tmpdir() : '/tmp')"))
+
+   ((compilation-target python)
+    (##inline-host-expression
+     "@host2scm@(tempfile.gettempdir())"))
+
+   (else
+    (println "unimplemented ##os-path-tempdir called")
+    "/tmp")))
 
 ;;;----------------------------------------------------------------------------
 

@@ -36,7 +36,6 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; A LET* form that handles multiple values. Move this into the two clients
 ;;; if you don't have a module system handy to restrict its visibility...
-
 (define-syntax mlet ; Multiple-value LET*
   (syntax-rules ()
     ((mlet ((() exp) rest ...) body ...)

@@ -1,6 +1,6 @@
 /* File: "os_setup.h" */
 
-/* Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_SETUP_H
 #define ___OS_SETUP_H
@@ -92,18 +92,6 @@ extern DIR *___opendir_no_EINTR
 /* Interrupt handling. */
 
 extern void ___cleanup_all_interrupt_handling ___PVOID;
-
-
-/* CPU information. */
-
-extern int ___cpu_count ___PVOID;
-
-extern int ___cpu_cache_size
-   ___P((___BOOL instruction_cache,
-         int level),
-        ());
-
-extern int ___core_count ___PVOID;
 
 
 /* Virtual memory statistics. */

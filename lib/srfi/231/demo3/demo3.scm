@@ -1,3 +1,5 @@
+#!/usr/bin/env gsi-script
+
 (import (srfi 231))
 
 ;; This demo implements some naive matrix algorithms, including

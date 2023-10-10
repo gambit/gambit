@@ -38,6 +38,15 @@ OTHER DEALINGS IN THE SOFTWARE.
          (mostly-fixnum)
          (not safe))
 
+;;; VOID: Since the results returned by <whatever>vector-set! is not defined,
+;;; and Gambit returns the vector itself when code is compiled with
+;;; (declare (standard-bindings) (not safe)),
+;;; we follow all setters with the nonstandard procedure (void).
+;;; If your Scheme doesn't have (void) you can
+;;; (define (void) (if #f #f))
+;;; This doesn't work on Racket, which disallows one-armed if's, but Racket
+;;; already defines (void).
+
 ;;; INLINING: Gambit's inlining directives are a bit of a coarse tool.
 ;;; So what I've decided to do is not inline by default, and inline
 ;;; small accessors, etc., by hand.  Let's hope I catch them all.
@@ -701,31 +710,39 @@ OTHER DEALINGS IN THE SOFTWARE.
   (and (<= (%%interval-lower-bound interval 0) i) (< i (%%interval-upper-bound interval 0))))
 
 (define (%%interval-contains-multi-index?-2 interval i j)
-  (and (<= (%%interval-lower-bound interval 0) i) (< i (%%interval-upper-bound interval 0))
-       (<= (%%interval-lower-bound interval 1) j) (< j (%%interval-upper-bound interval 1))))
+     (let ((lowers (%%interval-lower-bounds interval))
+           (uppers (%%interval-upper-bounds interval)))
+       (and (<= (vector-ref lowers 0) i) (< i (vector-ref uppers 0))
+            (<= (vector-ref lowers 1) j) (< j (vector-ref uppers 1)))))
 
 (define (%%interval-contains-multi-index?-3 interval i j k)
-  (and (<= (%%interval-lower-bound interval 0) i) (< i (%%interval-upper-bound interval 0))
-       (<= (%%interval-lower-bound interval 1) j) (< j (%%interval-upper-bound interval 1))
-       (<= (%%interval-lower-bound interval 2) k) (< k (%%interval-upper-bound interval 2))))
+  (let ((lowers (%%interval-lower-bounds interval))
+        (uppers (%%interval-upper-bounds interval)))
+    (and (<= (vector-ref lowers 0) i) (< i (vector-ref uppers 0))
+         (<= (vector-ref lowers 1) j) (< j (vector-ref uppers 1))
+         (<= (vector-ref lowers 2) k) (< k (vector-ref uppers 2)))))
 
 (define (%%interval-contains-multi-index?-4 interval i j k l)
-  (and (<= (%%interval-lower-bound interval 0) i) (< i (%%interval-upper-bound interval 0))
-       (<= (%%interval-lower-bound interval 1) j) (< j (%%interval-upper-bound interval 1))
-       (<= (%%interval-lower-bound interval 2) k) (< k (%%interval-upper-bound interval 2))
-       (<= (%%interval-lower-bound interval 3) l) (< l (%%interval-upper-bound interval 3))))
+  (let ((lowers (%%interval-lower-bounds interval))
+        (uppers (%%interval-upper-bounds interval)))
+    (and (<= (vector-ref lowers 0) i) (< i (vector-ref uppers 0))
+         (<= (vector-ref lowers 1) j) (< j (vector-ref uppers 1))
+         (<= (vector-ref lowers 2) k) (< k (vector-ref uppers 2))
+         (<= (vector-ref lowers 3) l) (< l (vector-ref uppers 3)))))
 
 (declare (not inline))
 
 (define (%%interval-contains-multi-index?-general interval multi-index)
-  (let loop ((i 0)
-             (multi-index multi-index))
-    (or (null? multi-index)
-        (let ((component (car multi-index)))
-          (and (<= (%%interval-lower-bound interval i) component)
-               (< component (%%interval-upper-bound interval i))
-               (loop (fx+ i 1)
-                     (cdr multi-index)))))))
+  (let ((lowers (%%interval-lower-bounds interval))
+        (uppers (%%interval-upper-bounds interval)))
+    (let loop ((i 0)
+               (multi-index multi-index))
+      (or (null? multi-index)
+          (let ((component (car multi-index)))
+            (and (<= (vector-ref lowers i) component)
+                 (< component (vector-ref uppers i))
+                 (loop (fx+ i 1)
+                       (cdr multi-index))))))))
 
 (define (interval-contains-multi-index? interval #!rest multi-index)
 
@@ -1140,7 +1157,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                       (,ref v i))
                     ;; setter
                     (lambda (v i val)
-                      (,set! v i val))
+                      (,set! v i val) (void))
                     ;; checker
                     ,checker           ;; already expanded
                     ;; maker
@@ -1224,11 +1241,6 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 (make-standard-storage-classes)
 
-;;; This sample implementation does not implement the following.
-
-(define f16-storage-class #f)
-(define f8-storage-class #f)
-
 ;;; for bit-arrays, body is a vector, the first element of which is the actual number of elements,
 ;;; the second element of which is a u16vector that contains the bit string
 
@@ -1251,11 +1263,12 @@ OTHER DEALINGS IN THE SOFTWARE.
            (bodyv (vector-ref v  1)))
        (u16vector-set! bodyv index (fxior (fxarithmetic-shift-left val shift)
                                           (fxand (u16vector-ref bodyv index)
-                                                 (fxnot  (fxarithmetic-shift-left 1 shift)))))))
+                                                 (fxnot (fxarithmetic-shift-left 1 shift)))))
+       (void)))
    ;; checker
    (lambda (val)
      (and (fixnum? val)
-          (eq? 0 (fxand -2 val))))
+          (eqv? 0 (fxand -2 val))))
    ;; maker
    (lambda (size initializer)
      (let ((u16-size (fxarithmetic-shift-right (+ size 15) 4)))
@@ -1297,7 +1310,8 @@ OTHER DEALINGS IN THE SOFTWARE.
             ;; setter
             (lambda (body i obj)
               (,(symbol-concatenate floating-point-prefix 'vector-set!) body (fx* 2 i)         (real-part obj))
-              (,(symbol-concatenate floating-point-prefix 'vector-set!) body (fx+ (fx* 2 i) 1) (imag-part obj)))
+              (,(symbol-concatenate floating-point-prefix 'vector-set!) body (fx+ (fx* 2 i) 1) (imag-part obj))
+              (void))
             ;; checker
             (lambda (obj)
               (and (complex? obj)
@@ -1348,6 +1362,221 @@ OTHER DEALINGS IN THE SOFTWARE.
     result))
 
 (make-complex-storage-classes)
+
+;;; And now we define a small float storage class:
+
+;;; Since there is no native f16 in most schemes, we represent an f16 object
+;;; with an integer between 0 (inclusive) and 65536 (exclusive), with the
+;;; body of f16-storage-class represented by a u16vector.  We assume that
+;;; integers in this range are fixnums.
+
+;;; It takes noticeable computations and boxing a double to extract the
+;;; object represented by an element of an f16-storage-class array, and
+;;; even more computations to take a double object and convert it to the
+;;; representation of its f16 rounded value.  So I may add "hidden" entries
+;;; to f16-storage-class to extract and insert the representation of an
+;;; f16 value directly, instead of converting to a double and back.
+
+(define-macro (macro-make-representation->double name mantissa-width exponent-width exponent-bias)
+
+  (define (append-symbols . args)
+    (string->symbol
+     (apply string-append (map (lambda (arg)
+                                 (cond ((symbol? arg) (symbol->string arg))
+                                       ((number? arg) (number->string arg))
+                                       ((string? arg) arg)
+                                       (else
+                                        (apply error "append-symbols: unknown argument: " arg))))
+                               args))))
+
+  (let* ((exponent-mask (- (fxarithmetic-shift-left 1 exponent-width) 1))
+         (mantissa-mask (- (fxarithmetic-shift-left 1 mantissa-width) 1))
+         (2^mantissa-width (fxarithmetic-shift-left 1 mantissa-width))
+         (result
+          `(define (,(append-symbols name '->double) x)
+             (let ((e (fxand ,exponent-mask (fxarithmetic-shift-right x ,mantissa-width)))
+                   (m (fxand ,mantissa-mask x))
+                   (s (fxarithmetic-shift-right x ,(+ mantissa-width exponent-width))))
+               (cond ((fx= e ,exponent-mask)
+                      (if (fxzero? m)
+                          (if (fxzero? s) +inf.0 -inf.0)
+                          +nan.0))
+                     ((fx> e 0)
+                      (let* ((abs-numerator (fx+ ,2^mantissa-width m))
+                             (numerator (if (fxzero? s) abs-numerator (fx- abs-numerator))))
+                        (flscalbn (fl* (fixnum->flonum numerator) ,(fl/ (fixnum->flonum 2^mantissa-width))) (fx- e ,exponent-bias))))
+                     ((fxzero? m)
+                      (if (fxzero? s) +0. -0.))
+                     (else
+                      (let* ((abs-numerator m)
+                             (numerator (if (fxzero? s) abs-numerator (fx- abs-numerator))))
+                        (flscalbn (fl* (fixnum->flonum numerator) ,(fl/ (fixnum->flonum 2^mantissa-width))) ,(fx- 1 exponent-bias)))))))))
+    ;; (pp result)
+    result))
+
+(define-macro (macro-make-double->representation name mantissa-width exponent-width exponent-bias)
+
+  (define (append-symbols . args)
+    (string->symbol
+     (apply string-append (map (lambda (arg)
+                                 (cond ((symbol? arg) (symbol->string arg))
+                                       ((number? arg) (number->string arg))
+                                       ((string? arg) arg)
+                                       (else
+                                        (apply error "append-symbols: unknown argument: " arg))))
+                               args))))
+
+  (let* ((exponent-mask (- (fxarithmetic-shift-left 1 exponent-width) 1))
+         (mantissa-mask (- (fxarithmetic-shift-left 1 mantissa-width) 1))
+         (2^mantissa-width (fxarithmetic-shift-left 1 mantissa-width))
+         (result
+          `(define (,(append-symbols 'double-> name) x)
+
+             (declare (inline))
+
+             (define (construct-representation sign-bit biased-exponent mantissa)
+               (fxior (fxarithmetic-shift-left sign-bit ,(+ exponent-width mantissa-width))
+                      (fxior (fxarithmetic-shift-left biased-exponent ,mantissa-width)
+                             mantissa)))
+
+             (let ((sign-bit
+                    (if (flnegative? (##flcopysign 1. x)) 1 0)))
+               (cond ((not (flfinite? x))
+                      (if (flnan? x)
+                          (construct-representation sign-bit ,exponent-mask ,mantissa-mask)
+                          ;; an infinity
+                          (construct-representation sign-bit ,exponent-mask 0)))
+                     ((flzero? x)
+                      ;; a zero
+                      (construct-representation sign-bit 0 0))
+                     (else
+                      ;; finite
+                      (let ((exponent (flilogb x)))
+                        (cond ((fx<=  ,(- exponent-mask exponent-bias) exponent)
+                               ;; infinity, because the exponent is too large
+                               (construct-representation sign-bit ,exponent-mask 0))
+                              ((fx< ,(fx- exponent-bias) exponent)
+                               ;; probably normal, finite in representation, unless overflow
+                               (let ((possible-mantissa
+                                      (##flonum->fixnum (flround (flscalbn (flabs x) (fx- ,mantissa-width exponent))))))
+                                 (if (fx< possible-mantissa ,(fx* 2 2^mantissa-width))
+                                     ;; no overflow
+                                     (construct-representation sign-bit
+                                                               (fx+ exponent ,exponent-bias)
+                                                               (fxand possible-mantissa ,mantissa-mask))
+                                     ;; overflow
+                                     (if (fx= exponent ,exponent-bias)
+                                         ;; maximum finite exponent, overflow to infinity
+                                         (construct-representation sign-bit ,exponent-mask 0)
+                                         ;; increase exponent by 1, mantissa is zero, no double rounding
+                                         (construct-representation sign-bit (fx+ exponent ,(fx+ exponent-bias 1)) 0)))))
+                              (else
+                               ;; usally subnormal
+                               (let ((possible-mantissa
+                                      (##flonum->fixnum (flround (flscalbn (flabs x) ,(fx+ exponent-bias mantissa-width -1))))))
+                                 (if (fx< possible-mantissa ,2^mantissa-width)
+                                     ;; doesn't overflow to normal
+                                     (construct-representation sign-bit 0 possible-mantissa)
+                                     ;; overflow to smallest normal
+                                     (construct-representation sign-bit 1 0))))))))))))
+    ;; (pp result)
+    result))
+
+(define f16-storage-class
+  (let ()
+
+    (macro-make-representation->double f16 10 5 15)
+    (macro-make-double->representation f16 10 5 15)
+
+    (make-storage-class
+     ;; getter
+     (lambda (body i)
+       (f16->double (u16vector-ref body i)))
+     ;; setter
+     (lambda (body i obj)
+       (u16vector-set! body i (double->f16 obj)) (void))
+     ;; checker
+     (lambda (obj)
+       (flonum? obj))
+     ;; maker
+     (lambda (n val)
+       (make-u16vector n (double->f16 val)))
+     ;; copier
+     u16vector-copy!
+     ;; length
+     (lambda (body)
+       (u16vector-length body))
+     ;; default
+     0.
+     ;; data?
+     (lambda (data)
+       (u16vector? data))
+     ;; data->body
+     (lambda (data)
+       (if (u16vector? data)
+           data
+           (error "Expecting a u16vector passed to (storage-class-data->body f16-storage-class): " data))))))
+
+#|
+
+;;; The test code for the conversion routines:
+
+(define (test)
+
+  (declare (inlining-limit 0))
+
+  (define (compose-f16 sign exponent mantissa)
+    (bitwise-ior (arithmetic-shift sign 15)
+                 (arithmetic-shift exponent 10)
+                 mantissa))
+
+  (define-macro (check i expr)
+    `(if (not (= ,i ,expr))
+         (begin
+           (pp (list ,i , expr ',expr))
+           (error "crap"))))
+
+  ;; The general strategy is: for the representation of each finite f16 number,
+  ;; 1.  Compute the double (x) associated with that representation, the one before (previous-x)
+  ;;     and the one after (next-x).
+  ;; 2.  Choose a random double strictly between the halfway point between x and each of next-x
+  ;;     and previous-x, and see that it rounds to the f16 representation of x.  (It's strict
+  ;;     for f16, double, and the reference implementation of SRFI 27.)
+  ;; 3.  If the representation is even, check that the double exactly between s and next-x, and
+  ;;     x and previous x rounds to x.  (Round to even rule.)
+  ;; Some care must be taken for the representation of the largest normal f16 number and the representation of 0.
+
+  (do ((i 1 (fx+ i 1)))                  ;; representation of smallest positive number
+      ((fx= i (compose-f16 0 30 1023)))  ;; representation of largest finite number
+    (let* ((x (f16->double i))
+           (next-x (f16->double (+ i 1)))
+           (previous-x (f16->double (- i 1))))
+      (check i (double->f16 (+ x (* 0.5 (random-real) (- next-x x)))))
+      (check i (double->f16 (+ x (* 0.5 (random-real) (- previous-x x)))))
+      (if (even? i)
+          (begin
+            (check i (double->f16 (+ x (* 0.5 (- next-x x)))))
+            (check i (double->f16 (+ x (* 0.5 (- previous-x x)))))))))
+  ;; i = 0
+  (let* ((i 0)
+         (x (f16->double i))
+         (next-x (f16->double (+ i 1)))) ;; no previous-x
+    (check i (double->f16 (+ x (* 0.5 (random-real) (- next-x x)))))
+    (check i (double->f16 (+ x (* 0.5 (- next-x x))))))
+  ;; largest normal
+  (let* ((i (compose-f16 0 30 1023))
+         (x (f16->double i))
+         (previous-x (f16->double (- i 1)))) ;; no next-x
+    (check i (double->f16 (+ x (* 0.5 (random-real) (- previous-x x)))))
+    (check i (double->f16 (+ x (* 0.5 (random-real) (- x previous-x))))) ;; if next-x were finite, this would be the same
+    (check (+ i 1) (double->f16 (+ x (* 0.5 (- x previous-x))))))        ;; check that 1/2 the difference rounds up to +inf.0
+  )
+
+|#
+
+;;; This sample implementation does not implement the following.
+
+(define f8-storage-class #f)
 
 ;;;
 ;;; Conceptually, an indexer is itself a 1-1 array that maps one interval to another; thus, it is
@@ -1607,14 +1836,37 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 (define (%%indexer-generic base lower-bounds increments)
   (let ((result
-         (lambda multi-index
-           (do ((multi-index  multi-index  (cdr multi-index))
-                (lower-bounds lower-bounds (cdr lower-bounds))
-                (increments   increments   (cdr increments))
-                (result       base         (+ result (* (car increments)
-                                                        (- (car multi-index)
-                                                           (car lower-bounds))))))
-               ((null? multi-index) result)))))
+         (if (%%every (lambda (x) (eqv? x 0)) lower-bounds)
+             (lambda multi-index
+               (let loop ((result base)
+                          (indices multi-index)
+                          (increments increments))
+                 (if (null? indices)
+                     (if (null? increments)
+                         result
+                         (apply error "Wrong number of arguments passed to procedure " multi-index))
+                     (if (null? increments)
+                         (apply error "Wrong number of arguments passed to procedure " multi-index)
+                         (loop (+ result (* (car increments) (car indices)))
+                               (cdr indices)
+                               (cdr increments))))))
+             (lambda multi-index
+               (let loop ((result base)
+                          (indices multi-index)
+                          (lower-bounds lower-bounds)
+                          (increments increments))
+                 (if (null? indices)
+                     (if (null? increments)
+                         result
+                         (apply error "Wrong number of arguments passed to procedure " multi-index))
+                     (if (null? increments)
+                         (apply error "Wrong number of arguments passed to procedure " multi-index)
+                         (loop (+ result (* (car increments)
+                                            (- (car indices)
+                                               (car lower-bounds))))
+                               (cdr indices)
+                               (cdr lower-bounds)
+                               (cdr increments)))))))))
     result))
 
 
@@ -1848,6 +2100,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                     '(generic s8       u8       s16       u16       s32       u32       s64       u64       f32       f64       char)
                     '(vector  s8vector u8vector s16vector u16vector s32vector u32vector s64vector u64vector f32vector f64vector string))
              (else
+              ;; There are conversion routines required for getters and setters of other standard storage classes.
               ,expr)))
 
     (define-macro (expand-getters expr)
@@ -1859,11 +2112,12 @@ OTHER DEALINGS IN THE SOFTWARE.
     (let ((getter
            (cond ((%%interval-empty? domain)
                   (%%empty-getter domain))
-                 (safe?
+                 (#t; safe?                    ;; All array getters and setters check their arguments
                   (case (%%interval-dimension domain)
                     ((0)  (lambda ()
                             (storage-class-getter body (indexer))))
                     ((1)  (lambda (i)
+                            (declare (inlining-limit 10000))
                             (cond ((not (exact-integer? i))
                                    (error "array-getter: multi-index component is not an exact integer: " i))
                                   ((not (%%interval-contains-multi-index?-1 domain i))
@@ -1871,6 +2125,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                                   (else
                                    (storage-class-getter body (indexer i))))))
                     ((2)  (lambda (i j)
+                            (declare (inlining-limit 10000))
                             (cond ((not (and (exact-integer? i)
                                              (exact-integer? j)))
                                    (error "array-getter: multi-index component is not an exact integer: " i j))
@@ -1879,6 +2134,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                                   (else
                                    (storage-class-getter body (indexer i j))))))
                     ((3)  (lambda (i j k)
+                            (declare (inlining-limit 10000))
                             (cond ((not (and (exact-integer? i)
                                              (exact-integer? j)
                                              (exact-integer? k)))
@@ -1888,6 +2144,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                                   (else
                                    (storage-class-getter body (indexer i j k))))))
                     ((4)  (lambda (i j k l)
+                            (declare (inlining-limit 10000))
                             (cond ((not (and (exact-integer? i)
                                              (exact-integer? j)
                                              (exact-integer? k)
@@ -1918,7 +2175,7 @@ OTHER DEALINGS IN THE SOFTWARE.
            (and mutable?
                 (cond ((%%interval-empty? domain)
                        (%%empty-setter domain))
-                      (safe?
+                      (#t; safe?                    ;; All array getters and setters check their arguments
                        (case (%%interval-dimension domain)
                          ((0)  (lambda (value)
                                  (cond ((not (checker value))
@@ -1926,6 +2183,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                                        (else
                                         (storage-class-setter body (indexer) value)))))
                          ((1)  (lambda (value i)
+                                 (declare (inlining-limit 10000))
                                  (cond ((not (exact-integer? i))
                                         (error "array-setter: multi-index component is not an exact integer: " i))
                                        ((not (%%interval-contains-multi-index?-1 domain i))
@@ -1935,6 +2193,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                                        (else
                                         (storage-class-setter body (indexer i) value)))))
                          ((2)  (lambda (value i j)
+                                 (declare (inlining-limit 10000))
                                  (cond ((not (and (exact-integer? i)
                                                   (exact-integer? j)))
                                         (error "array-setter: multi-index component is not an exact integer: " i j))
@@ -1945,6 +2204,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                                        (else
                                         (storage-class-setter body (indexer i j) value)))))
                          ((3)  (lambda (value i j k)
+                                 (declare (inlining-limit 10000))
                                  (cond ((not (and (exact-integer? i)
                                                   (exact-integer? j)
                                                   (exact-integer? k)))
@@ -1956,6 +2216,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                                        (else
                                         (storage-class-setter body (indexer i j k) value)))))
                          ((4)  (lambda (value i j k l)
+                                 (declare (inlining-limit 10000))
                                  (cond ((not (and (exact-integer? i)
                                                   (exact-integer? j)
                                                   (exact-integer? k)
@@ -1980,12 +2241,12 @@ OTHER DEALINGS IN THE SOFTWARE.
                                         (storage-class-setter body (apply indexer multi-index) value)))))))
                       (else
                        (case (%%interval-dimension domain)
-                         ((0)  (expand-setters (lambda (value)               (storage-class-setter body (indexer)                   value))))
-                         ((1)  (expand-setters (lambda (value i)             (storage-class-setter body (indexer i)                 value))))
-                         ((2)  (expand-setters (lambda (value i j)           (storage-class-setter body (indexer i j)               value))))
-                         ((3)  (expand-setters (lambda (value i j k)         (storage-class-setter body (indexer i j k)             value))))
-                         ((4)  (expand-setters (lambda (value i j k l)       (storage-class-setter body (indexer i j k l)           value))))
-                         (else (expand-setters (lambda (value . multi-index) (storage-class-setter body (apply indexer multi-index) value))))))))))
+                         ((0)  (expand-setters (lambda (value)               (storage-class-setter body (indexer)                   value) (void))))
+                         ((1)  (expand-setters (lambda (value i)             (storage-class-setter body (indexer i)                 value) (void))))
+                         ((2)  (expand-setters (lambda (value i j)           (storage-class-setter body (indexer i j)               value) (void))))
+                         ((3)  (expand-setters (lambda (value i j k)         (storage-class-setter body (indexer i j k)             value) (void))))
+                         ((4)  (expand-setters (lambda (value i j k l)       (storage-class-setter body (indexer i j k l)           value) (void))))
+                         (else (expand-setters (lambda (value . multi-index) (storage-class-setter body (apply indexer multi-index) value) (void))))))))))
       (make-%%array domain
                     getter
                     setter
@@ -2319,13 +2580,18 @@ OTHER DEALINGS IN THE SOFTWARE.
                  safe?)))))
 
 (define %%storage-class-compatibility-alist
+
   ;; An a-list of compatible storage-classes;
   ;; in each list, members of the first storage class can be
   ;; stored without error in all storage classes in the list.
+
+  ;; We're going to test separately for generic-storage-class,
+  ;; so we can deal gracefully with storing data from
+  ;; a user-defined storage-class to generic-storage-class
+  ;; without running the checker for generic-storage-class
+  ;; (which always returns #t)
   (list
-   (list generic-storage-class)
    (list u1-storage-class
-         generic-storage-class
          u8-storage-class
          u16-storage-class
          u32-storage-class
@@ -2335,7 +2601,6 @@ OTHER DEALINGS IN THE SOFTWARE.
          s32-storage-class
          s64-storage-class)
    (list u8-storage-class
-         generic-storage-class
          u16-storage-class
          u32-storage-class
          u64-storage-class
@@ -2343,45 +2608,38 @@ OTHER DEALINGS IN THE SOFTWARE.
          s32-storage-class
          s64-storage-class)
    (list u16-storage-class
-         generic-storage-class
          u32-storage-class
          u64-storage-class
          s32-storage-class
          s64-storage-class)
    (list u32-storage-class
-         generic-storage-class
          u64-storage-class
          s64-storage-class)
-   (list u64-storage-class
-         generic-storage-class)
+   (list u64-storage-class)
    (list s8-storage-class
-         generic-storage-class
          s16-storage-class
          s32-storage-class
          s64-storage-class)
    (list s16-storage-class
-         generic-storage-class
          s32-storage-class
          s64-storage-class)
    (list s32-storage-class
-         generic-storage-class
          s64-storage-class)
-   (list s64-storage-class
-         generic-storage-class)
-   (list f32-storage-class
-         generic-storage-class
+   (list s64-storage-class)
+   (list f16-storage-class
+         f32-storage-class
          f64-storage-class)
-   (list f64-storage-class    ;; the checker for these classes are the same, no point in checking
-         f32-storage-class    ;; going from f64-storage-class to f32-storage-class
-         generic-storage-class)
-   (list char-storage-class
-         generic-storage-class)
+   (list f32-storage-class    ;; the checkers for these classes are the same, no point in checking
+         f64-storage-class    ;; going from f32-storage-class to f16-storage-class
+         f16-storage-class)
+   (list f64-storage-class    ;; the checkers for these classes are the same, no point in checking
+         f32-storage-class    ;; going from f64-storage-class to f32-storage-class or f16-storage-class
+         f16-storage-class)
+   (list char-storage-class)
    (list c64-storage-class
-         generic-storage-class
          c128-storage-class)
    (list c128-storage-class   ;; the checker for these classes are the same, no point in checking
-         c64-storage-class    ;; going from c128-storage-class to c64-storage-class
-         generic-storage-class)))
+         c64-storage-class))) ;; going from c128-storage-class to c64-storage-class
 
 ;;; We consolidate all moving of array elements to the following procedure.
 
@@ -2394,9 +2652,9 @@ OTHER DEALINGS IN THE SOFTWARE.
   ;; If destination is a specialized array
   ;; then
   ;;   If its elements are in order
+  ;;      and the source is a specialized array
   ;;   then
-  ;;      If the source is a specialized array
-  ;;         with the same storage class
+  ;;      If the source has the same storage class
   ;;         for which a copier exists
   ;;         and whose elements are also in order
   ;;      then
@@ -2411,8 +2669,6 @@ OTHER DEALINGS IN THE SOFTWARE.
   ;;            storing the source elements after testing they're OK
   ;;            for the destination
   ;;   else
-  ;;     we now require that the domains of destination and source are
-  ;;     the same.
   ;;     If no checks are needed
   ;;     then
   ;;        Copy elements from the source to destination, without checks.
@@ -2420,7 +2676,6 @@ OTHER DEALINGS IN THE SOFTWARE.
   ;;        Copy elements from the source to destination, checking whether
   ;;        they're OK
   ;; else
-  ;;    We require the domains of destination and source to be the same.
   ;;    Copy elements of source to destination
 
   ;; We check the whether the elements of the destination are in order to save
@@ -2450,40 +2705,39 @@ OTHER DEALINGS IN THE SOFTWARE.
         ((%%interval-empty? (%%array-domain source))
          "Empty arrays")
         ((specialized-array? destination)
-         (if (%%array-packed? destination)
+         (if (and (%%array-packed? destination)
+                  (specialized-array? source))
              ;; Maybe we can do a block copy
-             (if (and (specialized-array? source)
-                      (eq? (%%array-storage-class destination)
+             (if (and (eq? (%%array-storage-class destination)
                            (%%array-storage-class source))
                       ;; does a copier for this storage-class exist?
                       (storage-class-copier (%%array-storage-class destination))
                       (%%array-packed? source))
                  ;; do a block copy
-                 (begin
-                   (if (not (%%interval-empty? (%%array-domain source)))
-                       (let* ((source-indexer
-                               (%%array-indexer source))
-                              (destination-indexer
-                               (%%array-indexer destination))
-                              (copier
-                               (storage-class-copier (%%array-storage-class source)))
-                              (initial-destination-index
-                               (%%interval-lower-bounds->list (%%array-domain destination)))
-                              (destination-start
-                               (apply destination-indexer initial-destination-index))
-                              (initial-source-index
-                               (%%interval-lower-bounds->list (%%array-domain source)))
-                              (source-start
-                               (apply source-indexer initial-source-index))
-                              (source-end
-                               (fx+ source-start (%%interval-volume (%%array-domain source)))))
-                         (copier (%%array-body destination)
-                                 destination-start
-                                 (%%array-body source)
-                                 source-start
-                                 source-end)))
+                 (let* ((source-indexer
+                         (%%array-indexer source))
+                        (destination-indexer
+                         (%%array-indexer destination))
+                        (copier
+                         (storage-class-copier (%%array-storage-class source)))
+                        (initial-destination-index
+                         (%%interval-lower-bounds->list (%%array-domain destination)))
+                        (destination-start
+                         (apply destination-indexer initial-destination-index))
+                        (initial-source-index
+                         (%%interval-lower-bounds->list (%%array-domain source)))
+                        (source-start
+                         (apply source-indexer initial-source-index))
+                        (source-end
+                         (fx+ source-start (%%interval-volume (%%array-domain source)))))
+                   (copier (%%array-body destination)
+                           destination-start
+                           (%%array-body source)
+                           source-start
+                           source-end)
                    "Block copy")
-                 ;;  we can step through the elements of destination in order.
+                 ;; We can step through the elements of destination in order,
+                 ;; and the getter of the source doesn't capture any continuations.
                  (let* ((domain
                          (%%array-domain source))
                         (getter
@@ -2524,15 +2778,14 @@ OTHER DEALINGS IN THE SOFTWARE.
                                          (set! index (fx+ index 1))))))
                              domain))
                           "In order, no checks needed, generic-storage-class")
-                         ((and (specialized-array? source)
-                               (or (eq? (%%array-storage-class source)
-                                        destination-storage-class)
-                                   (let ((compatibility-list
-                                          (assq (%%array-storage-class source)
-                                                %%storage-class-compatibility-alist)))
-                                     (and compatibility-list
-                                          (memq destination-storage-class
-                                                compatibility-list)))))
+                         ((or (eq? (%%array-storage-class source)
+                                   destination-storage-class)
+                              (let ((compatibility-list
+                                     (assq (%%array-storage-class source)
+                                           %%storage-class-compatibility-alist)))
+                                (and compatibility-list
+                                     (memq destination-storage-class
+                                           compatibility-list))))
                           ;; No checks needed
                           (let ((setter (storage-class-setter destination-storage-class))
                                 (body (%%array-body destination)))
@@ -2655,7 +2908,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                                            destination source (append multi-index (list item)))))))))
                              domain))
                           "In order, checks needed"))))
-             ;; the elements of destination are not in order.
+             ;; Either the elements of destination are not in order, or source is not a specialized array.
              (let* ((setter
                      (%%array-setter destination))
                     (getter
@@ -2666,13 +2919,15 @@ OTHER DEALINGS IN THE SOFTWARE.
                      (storage-class-checker destination-storage-class))
                     (domain
                      (%%array-domain destination)))
-               (cond ((and (specialized-array? source) ;; redundant after new check at top, but leave it for now
-                           (let ((compatibility-list
-                                  (assq (%%array-storage-class source)
-                                        %%storage-class-compatibility-alist)))
-                             (and compatibility-list
-                                  (memq destination-storage-class
-                                        compatibility-list))))
+               (cond ((or (eq? destination-storage-class generic-storage-class)
+                          (and (specialized-array? source)
+                               (or (eq? (%%array-storage-class source) destination-storage-class)
+                                   (let ((compatibility-list
+                                          (assq (%%array-storage-class source)
+                                                %%storage-class-compatibility-alist)))
+                                     (and compatibility-list
+                                          (memq destination-storage-class
+                                                compatibility-list))))))
                       ;; no checks needed
                       (%%interval-for-each
                        (case (%%interval-dimension domain)
@@ -2690,7 +2945,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                           (lambda multi-index
                             (apply setter (apply getter multi-index) multi-index))))
                        domain)
-                      "Out of order, no checks needed")
+                      "No checks needed")
                      (else
                       ;; checks needed
                       (%%interval-for-each
@@ -2757,7 +3012,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                                     "Not all elements of the source can be stored in destination: ")
                                    destination source (append multi-index (list item))))))))
                        domain)
-                      "Out of order, checks needed")))))
+                      "Checks needed")))))
         (else
          ;; destination is not a specialized array, so checks,
          ;; if any, are built into the setter.
@@ -3501,16 +3756,16 @@ OTHER DEALINGS IN THE SOFTWARE.
                                   (vector-ref %%vector-of-trues dim)
                                   (make-vector dim #t)))))))
    ((array flip?)
-    (cond  ((not (array? array))
-            (error "array-reverse: The first argument is not an array: " array flip?))
-           ((not (and (vector? flip?)
-                      (%%vector-every (lambda (x) (boolean? x)) flip?)))
-            (error "array-reverse: The second argument is not a vector of booleans: " array flip?))
-           ((not (fx= (%%array-dimension array)
-                      (vector-length flip?)))
-            (error "array-reverse: The dimension of the first argument (an array) does not equal the dimension of the second argument (a vector of booleans): " array flip?))
-           (else
-            (%%array-reverse array flip?))))))
+    (cond ((not (array? array))
+           (error "array-reverse: The first argument is not an array: " array flip?))
+          ((not (and (vector? flip?)
+                     (%%vector-every (lambda (x) (boolean? x)) flip?)))
+           (error "array-reverse: The second argument is not a vector of booleans: " array flip?))
+          ((not (fx= (%%array-dimension array)
+                     (vector-length flip?)))
+           (error "array-reverse: The dimension of the first argument (an array) does not equal the dimension of the second argument (a vector of booleans): " array flip?))
+          (else
+           (%%array-reverse array flip?))))))
 
 (define-macro (macro-generate-sample)
 
@@ -4450,7 +4705,7 @@ OTHER DEALINGS IN THE SOFTWARE.
          (%%move-array-elements destination
                                 source
                                 "array-assign!: ")
-         destination)))
+         (void))))
 
 (define (%%array-inner-product A f g B)
   ;; Copy the curried arrays for efficiency.
@@ -4793,7 +5048,7 @@ OTHER DEALINGS IN THE SOFTWARE.
         (else
          (let* ((A                (%%array-translate     ;; make lower-bounds zero
                                    (array-copy A-arg)  ;; evaluate all (array) elements of A-arg
-                                   (vector-map (lambda (x) (- x))  (%%interval-lower-bounds (%%array-domain A-arg)))))
+                                   (vector-map (lambda (x) (- x)) (%%interval-lower-bounds (%%array-domain A-arg)))))
                 (A_D              (%%array-domain A))
                 (A_dim            (%%interval-dimension A_D))
                 (ks               (list->vector (iota A_dim))))

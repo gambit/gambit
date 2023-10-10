@@ -91,7 +91,7 @@
                                 (let ((rest (cdr x)))
                                   (macro-force-vars (rest)
                                                     (loop rest (cons arg rev-args))))
-                                (##fail-check-string-list 1 git-command args proc d i?))))
+                                (##fail-check-string-list 1 git-command args proc repo i?))))
           (macro-check-procedure
             proc
             2

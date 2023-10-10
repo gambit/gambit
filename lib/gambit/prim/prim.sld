@@ -2,7 +2,7 @@
 
 ;;; File: "prim.sld"
 
-;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -77,6 +77,56 @@ integer->char
 
 char-foldcase
 digit-value
+
+;; gambit
+
+->char-set
+char-set
+char-set->list
+char-set->string
+char-set-adjoin
+char-set-adjoin!
+char-set-any
+char-set-complement
+char-set-complement!
+char-set-contains?
+char-set-copy
+char-set-count
+char-set-cursor
+char-set-cursor-next
+char-set-delete
+char-set-delete!
+char-set-diff+intersection
+char-set-diff+intersection!
+char-set-difference
+char-set-difference!
+char-set-every
+char-set-filter
+char-set-filter!
+char-set-fold
+char-set-for-each
+char-set-hash
+char-set-intersection
+char-set-intersection!
+char-set-map
+char-set-ref
+char-set-size
+char-set-unfold
+char-set-unfold!
+char-set-union
+char-set-union!
+char-set-xor
+char-set-xor!
+char-set<=
+char-set=
+char-set?
+end-of-char-set?
+list->char-set
+list->char-set!
+string->char-set
+string->char-set!
+ucs-range->char-set
+ucs-range->char-set!
 
 ;;; exception.sld
 
@@ -532,6 +582,7 @@ list-set!
 
 ;; gambit
 
+any
 append-reverse
 append-reverse!
 circular-list
@@ -550,10 +601,12 @@ list-set
 list-sort
 list-sort!
 list-tabulate
+partition
 proper-list?
 remove
 remq
 reverse!
+split-at
 take
 xcons
 
@@ -762,6 +815,9 @@ any-bits-set?
 arithmetic-shift
 asinh
 atanh
+balanced-quotient
+balanced-remainder
+balanced/
 bit-count
 bit-field
 bit-field-any?
@@ -793,12 +849,18 @@ bitwise-orc1
 bitwise-orc2
 bitwise-unfold
 bitwise-xor
+ceiling-quotient
+ceiling-remainder
+ceiling/
 clear-bit-field
 conjugate
 copy-bit
 copy-bit-field
 cosh
 ;;UNIMPLEMENTED default-random-source
+euclidean-quotient
+euclidean-remainder
+euclidean/
 every-bit-set?
 extract-bit-field
 first-set-bit
@@ -822,6 +884,9 @@ make-bitwise-generator
 ;;UNIMPLEMENTED random-source?
 ;;UNIMPLEMENTED random-u8vector
 replace-bit-field
+round-quotient
+round-remainder
+round/
 sinh
 tanh
 test-bit-field?

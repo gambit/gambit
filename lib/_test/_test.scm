@@ -2,7 +2,7 @@
 
 ;;; File: "_test.scm"
 
-;;; Copyright (c) 2013-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2013-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -121,6 +121,9 @@
     (lambda (thunk)
       ;; make sure continuation of thunk has call-thunk as creator
       (##first-argument (thunk)))))
+
+(define (call-thunk-set! x)
+  (set! call-thunk x)) ;; call-thunk is modified in test/test.scm
 
 (define (%test-predicate test-name
                          expression-thunk

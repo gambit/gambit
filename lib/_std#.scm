@@ -2,7 +2,7 @@
 
 ;;; File: "_std#.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -341,7 +341,9 @@
     (define prim-vect              (sym "##" name))
     (define prim-vect-length       (sym "##" name '-length))
     (define prim-vect-ref          (sym "##" name '-ref))
+    (define prim-vect-ref-fixnum   (sym "##" name '-ref-fixnum))
     (define prim-vect-set!         (sym "##" name '-set!))
+    (define prim-vect-set!-fixnum  (sym "##" name '-set!-fixnum))
     (define prim-vect-set          (sym "##" name '-set))
     (define prim-vect-set-small    (sym "##" name '-set-small))
     (define prim-vect->list        (sym "##" name '->list))
@@ -369,7 +371,9 @@
     (define vect                   (sym name))
     (define vect-length            (sym name '-length))
     (define vect-ref               (sym name '-ref))
+    (define vect-ref-fixnum        (sym name '-ref-fixnum))
     (define vect-set!              (sym name '-set!))
+    (define vect-set!-fixnum       (sym name '-set!-fixnum))
     (define vect-set               (sym name '-set))
     (define vect-set-small         (sym name '-set-small))
     (define vect->list             (sym name '->list))
@@ -506,6 +510,11 @@
                                       (,prim-vect-length ,name))))
                  (,prim-vect-ref ,name k))))
 
+       ,@(if (memq name '(u32vector s32vector u64vector s64vector))
+             `((define-primitive (,vect-ref-fixnum ,name k)
+                 (,prim-vect-ref ,name k)))
+             `())
+
        (define-primitive (,vect-set! ,name k ,elem-name))
 
        ,@(if (memq name '(values))
@@ -518,6 +527,11 @@
                                   (,elem-name ,elem-type))
                  (,prim-vect-set! ,name k ,elem-name)
                  (void))))
+
+       ,@(if (memq name '(u32vector s32vector u64vector s64vector))
+             `((define-primitive (,vect-set!-fixnum ,name k ,elem-name)
+                 (,prim-vect-set! ,name k ,elem-name)))
+             `())
 
        (define-primitive (,vect-set ,name k val)
          (let ((result (,prim-vect-copy ,name)))

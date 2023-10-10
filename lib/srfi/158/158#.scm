@@ -61,6 +61,7 @@
     list-accumulator
     reverse-list-accumulator
     vector-accumulator
+    vector-accumulator!
     reverse-vector-accumulator
     bytevector-accumulator
     bytevector-accumulator!

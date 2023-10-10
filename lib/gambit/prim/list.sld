@@ -2,7 +2,7 @@
 
 ;;; File: "list.sld"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -77,6 +77,7 @@ list-set!
 
 ;; gambit
 
+any
 append-reverse
 append-reverse!
 circular-list
@@ -95,10 +96,12 @@ list-set
 list-sort
 list-sort!
 list-tabulate
+partition
 proper-list?
 remove
 remq
 reverse!
+split-at
 take
 xcons
 

@@ -2,7 +2,7 @@
 
 ;;; File: "_front.scm"
 
-;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -248,6 +248,64 @@
               (env (vector-ref v2 1))
               (c-intf (vector-ref v2 2))
               (parsed-program (normalize-program lst)))
+
+         (let* ((externals (env-externals-ref env))
+                (name->ref-alist (map (lambda (var) (cons
+                                                (var-name var)
+                                                (var-refs var)))
+                                      (env-vars-ref env)))
+                (definitions (keep (lambda (d)
+                                     (eq? (vector-ref d 0) def-tag))
+                                   lst))
+                (defined-names (map var-name (map def-var definitions)))
+                (used-names (map var-name (env-vars-ref env)))
+                ;; the variable names that come from a (##namespace ("..."))
+                ;; clause.
+                (univ-names (keep (lambda (name)
+                                      (let ((ns (table-ref externals name #f)))
+                                        (and ns
+                                             (null? (cdr ns)))))
+                                    used-names))
+                (undefined-names (lset-difference univ-names defined-names)))
+
+           (define (map-filter f lst)
+             (if (pair? lst)
+                 (let ((val (f (car lst))))
+                   (if val
+                       (cons val (map-filter f (cdr lst)))
+                       (map-filter f (cdr lst))))
+                 lst))
+
+           (let ((namespace-to-undefined-names
+                  (let ((table (make-table)))
+                    (let lp ((undefined-names undefined-names))
+                      (if (pair? undefined-names)
+                          (let* ((name (car undefined-names))
+                                 (its-namespace (table-ref externals name #f)))
+                            (table-set! table
+                                        its-namespace
+                                        (cons name (table-ref table its-namespace '())))
+                            (lp (cdr undefined-names)))
+                          table)))))
+             (for-each
+              (lambda (ns-and-names)
+                (for-each
+                 (lambda (name)
+                   (let* ((name-and-refs (assoc name name->ref-alist)))
+                     (if name-and-refs
+                         (let ((refs (map-filter (lambda (x) (and (pair? x)
+                                                             (car x)))
+                                                 (vector->list (cdr name-and-refs)))))
+                           (if (pair? refs)
+                               (compiler-user-warning
+                               (source-locat (node-source (car refs)))
+                               (string-append
+                                "\""
+                                (symbol->string name)
+                                "\""
+                                " is not defined")))))))
+                 (cdr ns-and-names)))
+              (table->list namespace-to-undefined-names))))
 
          (inner parsed-program
                 env
@@ -622,6 +680,12 @@
 (define (generate-report env)
   (let ((vars (sort-variables (env-global-variables env))))
 
+    (define (topmost-parent ptree)
+      (let ((parent (node-parent ptree)))
+        (if parent
+            (topmost-parent parent)
+            ptree)))
+
     (define (report title pred? vars wrote-something?)
       (if (pair? vars)
         (let ((var (car vars)))
@@ -634,16 +698,23 @@
                   (newline)))
               (let loop1 ((l (ptset->list (var-refs var))) (r? #f) (c? #f))
                 (if (pair? l)
-                  (let* ((x (car l))
-                         (y (node-parent x)))
-                    (if (and y (app? y) (eq? x (app-oper y)))
-                      (loop1 (cdr l) r? #t)
-                      (loop1 (cdr l) #t c?)))
+                  (let ((ptree (car l)))
+                    (if (not (core? (node-env (topmost-parent ptree))))
+                      (loop1 (cdr l) r? c?)
+                      (let ((parent (node-parent ptree)))
+                        (if (and parent
+                                 (app? parent)
+                                 (eq? ptree (app-oper parent)))
+                          (loop1 (cdr l) r? #t)
+                          (loop1 (cdr l) #t c?)))))
                   (let loop2 ((l (ptset->list (var-sets var))) (d? #f) (a? #f))
                     (if (pair? l)
-                      (if (set? (car l))
-                        (loop2 (cdr l) d? #t)
-                        (loop2 (cdr l) #t a?))
+                      (let ((ptree (car l)))
+                        (if (not (core? (node-env (topmost-parent ptree))))
+                            (loop2 (cdr l) d? a?)
+                            (if (set? ptree)
+                                (loop2 (cdr l) #t a?)
+                                (loop2 (cdr l) d? #t))))
                       (begin
                         (display "  [")
                         (if d? (display "D") (display " "))

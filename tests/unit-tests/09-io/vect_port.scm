@@ -9,7 +9,7 @@
 
 (define (gen-char i mod)
   (integer->char
-   (min ##max-char
+   (min (##max-char-code)
         (vector-ref
          '#(#x0000 #x007F
             #x0080 #x07FF

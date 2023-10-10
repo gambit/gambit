@@ -1,10 +1,10 @@
 # Configure template for Gambit system.
 
-# Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT(Gambit,v4.9.4,gambit@iro.umontreal.ca,gambit-v4_9_4)
+AC_INIT(Gambit,v4.9.5,gambit@iro.umontreal.ca,gambit-v4_9_5)
 
 AC_CONFIG_HEADERS(include/config.h)
 
@@ -71,6 +71,11 @@ RTLIB_COND_EXPAND_FEATURES=""
 
 userlibdir="~/.gambit_userlib"
 instlibdir="~~userlib"
+
+# use the octal code \\176 instead of ~ to avoid a mingw bug on Windows
+
+userlibdir="`echo $userlibdir | sed -e s/~/\\\\\\\\176/g`"
+instlibdir="`echo $instlibdir | sed -e s/~/\\\\\\\\176/g`"
 
 ###############################################################################
 #
@@ -483,19 +488,28 @@ AC_ARG_ENABLE(feedback2,
 ###############################################################################
 #
 # Check if a single C function should be generated for all the Scheme
-# functions in a file.  This makes the executable much faster but the
+# procedures in a file.  This makes the executable much faster but the
 # compilation will be much longer and take much more memory.
+# By default there is a limit to the number of control points in a
+# file for single host mode to be used.  The limit is configurable.
 
 AC_ARG_ENABLE(single-host,
-              AS_HELP_STRING([--enable-single-host],
-                             [compile each Scheme module as a single C function (default is NO)]),
+              AS_HELP_STRING([--enable-single-host@<:@=N@:>@],
+                             [compile each Scheme module as a single C function (by default each Scheme procedure is compiled to a C function, otherwise N, which defaults to 30000, is the maximum number of control points in the module to use single host mode and the special case N=0 avoids a limit)]),
               ENABLE_SINGLE_HOST=$enableval,
               ENABLE_SINGLE_HOST=no)
 
-if test "$ENABLE_SINGLE_HOST" = yes; then
+CONF_SINGLE_HOST_LIMIT="30000"
+
+if test "$ENABLE_SINGLE_HOST" != no; then
   AC_DEFINE([___SINGLE_HOST],[],[Enable single host mode])
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___SINGLE_HOST"
+  if test "$ENABLE_SINGLE_HOST" != yes; then
+    CONF_SINGLE_HOST_LIMIT="$enableval"
+  fi
 fi
+
+AC_SUBST(CONF_SINGLE_HOST_LIMIT)
 
 ###############################################################################
 #
@@ -1636,6 +1650,7 @@ else
   AC_CHECK_HEADERS(sys/dxe.h)
   AC_CHECK_HEADERS(mach-o/dyld.h)
   AC_CHECK_HEADERS(mach/mach_time.h)
+  AC_CHECK_HEADERS(mach/thread_act.h)
   AC_CHECK_HEADERS(sys/types.h)
   AC_CHECK_HEADERS(sys/time.h)
   AC_CHECK_HEADERS(sys/times.h)
@@ -1692,6 +1707,7 @@ else
   AC_CHECK_HEADERS(TargetConditionals.h)
   AC_CHECK_HEADERS(AvailabilityMacros.h)
   AC_CHECK_HEADERS(poll.h)
+  AC_CHECK_HEADERS(sched.h)
 
   AC_CHECK_COMMON
 
@@ -1764,9 +1780,11 @@ else
 
        mingw* | msys*)
 
-               # add Windows libraries needed by MinGW
+               # The following redefinition of PATH_SEP is dubious on
+               # mingw/msys (see issue #828).
+               #PATH_SEP="\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"
 
-               PATH_SEP="\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\"
+               # add Windows libraries needed by MinGW
 
                LIBS="$LIBS -lws2_32"
 
@@ -2027,6 +2045,8 @@ else
 
   AC_CHECK_FUNCS(snprintf)
 
+  AC_CHECK_FUNCS(sched_getcpu)
+
   case "$target_os" in
     # the OpenBSD test is always lowercase
     openbsd*)
@@ -2234,8 +2254,11 @@ if test "$ENABLE_OPENSSL" = yes; then
 
   case "$target_os" in
     darwin*) # macOS ships an old version of the OpenSSL library, so it should
-             # be installed with "brew install openssl"
-             OPENSSL_DIR="/usr/local/opt/openssl@1.1"
+             # be installed with "brew install openssl" or another means and
+             # set the OPENSSL_DIR environment variable to prefix where installed.
+             if test "${OPENSSL_DIR+set}" != set; then
+               OPENSSL_DIR="/usr/local/opt/openssl@1.1"
+             fi
              if test "$ENABLE_OPENSSL_STATIC_LINK" = yes; then
                LIBS="$LIBS $OPENSSL_DIR/lib/libssl.a $OPENSSL_DIR/lib/libcrypto.a"
              else
@@ -2313,28 +2336,43 @@ if test "$C_COMP_GNUC" = yes; then
 
     # clang does not support these options:
     DASH_fschedule_insns2=""
-    DASH_fno_move_loop_invariants=""
     DASH_fno_keep_inline_dllexport=""
     #DASH_fpermissive=""
+
+    DASH_fexpensive_optimizations=""
+    DASH_fipa_ra=""
+    DASH_fno_ipa_ra=""
+    DASH_fmove_loop_invariants=""
+    DASH_fno_move_loop_invariants=""
+    DASH_fgcse=""
+    DASH_fno_gcse=""
+    DASH_foptimize_sibling_calls=""
+
     DASH_mieee=""
     DASH_mieee_with_inexact=""
     DASH_mpc64=""
-    DASH_fno_ipa_ra=""
-    DASH_fno_gcse=""
 
   else
 
     # optimization options:
     AC_CHECK_C_COMPILER_OPT(-fschedule-insns2,DASH_fschedule_insns2)
-    AC_CHECK_C_COMPILER_OPT(-fno-move-loop-invariants,DASH_fno_move_loop_invariants)
     AC_CHECK_C_COMPILER_OPT(-fno-keep-inline-dllexport,DASH_fno_keep_inline_dllexport)
     #AC_CHECK_C_COMPILER_OPT(-fpermissive,DASH_fpermissive)
+
+    AC_CHECK_C_COMPILER_OPT(-fexpensive-optimizations,DASH_fexpensive_optimizations)
+    AC_CHECK_C_COMPILER_OPT(-fipa-ra,DASH_fipa_ra)
+    AC_CHECK_C_COMPILER_OPT(-fno-ipa-ra,DASH_fno_ipa_ra)
+    AC_CHECK_C_COMPILER_OPT(-fmove-loop-invariants,DASH_fmove_loop_invariants)
+    AC_CHECK_C_COMPILER_OPT(-fno-move-loop-invariants,DASH_fno_move_loop_invariants)
+    AC_CHECK_C_COMPILER_OPT(-fgcse,DASH_fgcse)
+    AC_CHECK_C_COMPILER_OPT(-fno-gcse,DASH_fno_gcse)
+    AC_CHECK_C_COMPILER_OPT(-foptimize-sibling-calls,DASH_foptimize_sibling_calls)
 
     # machine specific options:
     AC_CHECK_C_COMPILER_OPT(-mieee,DASH_mieee)
     AC_CHECK_C_COMPILER_OPT(-mieee-with-inexact,DASH_mieee_with_inexact)
     AC_CHECK_C_COMPILER_OPT(-mpc64,DASH_mpc64)
-    AC_CHECK_C_COMPILER_OPT(-fno-gcse,DASH_fno_gcse)
+
   fi
 
   # preprocessor options:
@@ -2366,8 +2404,6 @@ if test "$C_COMP_GNUC" = yes; then
   AC_CHECK_C_COMPILER_OPT(-fwrapv,DASH_fwrapv)
   AC_CHECK_C_COMPILER_OPT(-ftrapv,DASH_ftrapv)
   AC_CHECK_C_COMPILER_OPT(-fomit-frame-pointer,DASH_fomit_frame_pointer)
-  AC_CHECK_C_COMPILER_OPT(-fno-ipa-ra, DASH_fno_ipa_ra)
-  AC_CHECK_C_COMPILER_OPT(-foptimize-sibling-calls,DASH_foptimize_sibling_calls)
 
   # machine architecture option:
   if test "$ENABLE_MARCH" != "" -a "$ENABLE_MARCH" != "no_enable_march"; then
@@ -2375,9 +2411,6 @@ if test "$C_COMP_GNUC" = yes; then
   fi
 
   FLAGS_OPT_LO="$DASH_O1"
-  if test "$DASH_O2" != "" -a "$DASH_fno_gcse" != ""; then
-    FLAGS_OPT_LO="$DASH_O2 $DASH_fno_gcse"
-  fi
 
   if test "$DASH_O3" != ""; then
     FLAGS_OPT_HI="$DASH_O3"
@@ -2390,6 +2423,9 @@ if test "$C_COMP_GNUC" = yes; then
   fi
 
   FLAGS_OPT="$FLAGS_OPT_LO"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fexpensive_optimizations"
+  FLAGS_OPT="$FLAGS_OPT$DASH_fno_gcse"
+
   FLAGS_OPT_RTS="$FLAGS_OPT_HI"
 
   case "$ENABLE_C_OPT" in
@@ -2522,7 +2558,6 @@ if test "$C_COMP_GNUC" = yes; then
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_math_errno"
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fschedule_insns2"
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_keep_inline_dllexport"
-  FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_foptimize_sibling_calls"
 
 #  if test "$ENABLE_CPLUSPLUS" = yes; then
 #    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fpermissive"
@@ -2535,6 +2570,8 @@ if test "$C_COMP_GNUC" = yes; then
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fmodulo_sched"
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_freschedule_modulo_scheduled_loops"
   fi
+
+   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_foptimize_sibling_calls"
 
   if test "$OMIT_FRAME_POINTER_POSSIBLE_BUG" != yes; then
     case "$target_os" in
@@ -2553,10 +2590,14 @@ if test "$C_COMP_GNUC" = yes; then
 
   if test "$GNU_GCC_IPA_RA_POSSIBLE_BUG" = yes; then
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_ipa_ra"
+  else
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fipa_ra"
   fi
 
   if test "$GNU_GCC_MOVE_LOOP_INVARIANTS_POSSIBLE_BUG" = yes; then
     FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fno_move_loop_invariants"
+  else
+    FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_fmove_loop_invariants"
   fi
 
   FLAGS_OBJ_DYN="$FLAGS_OBJ_DYN$DASH_march"
@@ -3815,7 +3856,7 @@ githooks/makefile \
 )
 AC_OUTPUT
 
-if test "$ENABLE_MARCH" == "no_enable_march"; then
+if test "$ENABLE_MARCH" = "no_enable_march"; then
   AC_MSG_NOTICE([
 **************************************************************************
 ***                                                                    ***
@@ -3978,6 +4019,29 @@ if test "$C_COMP_GNUC" = yes; then
 #**************************************************************************
 #])
 #  fi
+
+  if test "$C_COMP_LLVM" != yes -a "x$DASH_foptimize_sibling_calls" != "x" -a "$ENABLE_TRUST_C_TCO" != yes; then
+
+    AC_MSG_NOTICE([
+**************************************************************************
+***                                                                    ***
+*** The GNU GCC compiler that is being used supports the command line  ***
+*** option "-foptimize-sibling-calls" so it probably supports TCO      ***
+*** sufficiently well to allow the use of the "--enable-trust-c-tco"   ***
+*** configure option, which was not specified to the configure script. ***
+*** The Gambit system will compile correctly but the executables may   ***
+*** run slower than when "--enable-trust-c-tco" is specified.  One way ***
+*** to check if "--enable-trust-c-tco" works is to try that option and ***
+*** then see if there is a segmentation violation (stack overflow)     ***
+*** when the system is built with a "make".  If the build completes    ***
+*** without error, specifically the last phase of the "make" that      ***
+*** builds the modules, then it is very likely that C TCO can be       ***
+*** trusted.                                                           ***
+***                                                                    ***
+**************************************************************************
+])
+  fi
+
 
 fi
 

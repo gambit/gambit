@@ -1,6 +1,6 @@
 /* File: "os_files.h" */
 
-/* Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_FILES_H
 #define ___OS_FILES_H
@@ -263,6 +263,8 @@ int stat_long_path
         ());
 
 #endif
+
+extern ___SCMOBJ ___os_path_tempdir ___PVOID;
 
 extern ___SCMOBJ ___os_path_homedir ___PVOID;
 

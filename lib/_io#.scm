@@ -2,7 +2,7 @@
 
 ;;; File: "_io#.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -817,36 +817,37 @@
 
 (##define-macro (macro-default-readtable) #f)
 
-(##define-macro (macro-char-encoding-shift)                     1)
-(##define-macro (macro-char-encoding-range)                     32)
-(##define-macro (macro-default-char-encoding)                   0)
-(##define-macro (macro-char-encoding-ASCII)                     1)
-(##define-macro (macro-char-encoding-ISO-8859-1)                2)
-(##define-macro (macro-char-encoding-UTF-8)                     3)
-(##define-macro (macro-char-encoding-UTF-16)                    4)
-(##define-macro (macro-char-encoding-UTF-16BE)                  5)
-(##define-macro (macro-char-encoding-UTF-16LE)                  6)
-(##define-macro (macro-char-encoding-UTF-fallback-ASCII)        7)
-(##define-macro (macro-char-encoding-UTF-fallback-ISO-8859-1)   8)
-(##define-macro (macro-char-encoding-UTF-fallback-UTF-8)        9)
-(##define-macro (macro-char-encoding-UTF-fallback-UTF-16)       10)
-(##define-macro (macro-char-encoding-UTF-fallback-UTF-16BE)     11)
-(##define-macro (macro-char-encoding-UTF-fallback-UTF-16LE)     12)
-(##define-macro (macro-char-encoding-UCS-2)                     13)
-(##define-macro (macro-char-encoding-UCS-2BE)                   14)
-(##define-macro (macro-char-encoding-UCS-2LE)                   15)
-(##define-macro (macro-char-encoding-UCS-4)                     16)
-(##define-macro (macro-char-encoding-UCS-4BE)                   17)
-(##define-macro (macro-char-encoding-UCS-4LE)                   18)
-(##define-macro (macro-char-encoding-wchar)                     19)
-(##define-macro (macro-char-encoding-native)                    20)
+(##define-macro (macro-char-encoding-shift)                  0)
+(##define-macro (macro-char-encoding-mask)                   (* 31 (expt 2 0)))
+(##define-macro (macro-default-char-encoding)                0)
+(##define-macro (macro-char-encoding-ASCII)                  1)
+(##define-macro (macro-char-encoding-ISO-8859-1)             2)
+(##define-macro (macro-char-encoding-UTF-8)                  3)
+(##define-macro (macro-char-encoding-UTF-16)                 4)
+(##define-macro (macro-char-encoding-UTF-16BE)               5)
+(##define-macro (macro-char-encoding-UTF-16LE)               6)
+(##define-macro (macro-char-encoding-UTF-fallback-ASCII)     7)
+(##define-macro (macro-char-encoding-UTF-fallback-ISO-8859-1)8)
+(##define-macro (macro-char-encoding-UTF-fallback-UTF-8)     9)
+(##define-macro (macro-char-encoding-UTF-fallback-UTF-16)    10)
+(##define-macro (macro-char-encoding-UTF-fallback-UTF-16BE)  11)
+(##define-macro (macro-char-encoding-UTF-fallback-UTF-16LE)  12)
+(##define-macro (macro-char-encoding-UCS-2)                  13)
+(##define-macro (macro-char-encoding-UCS-2BE)                14)
+(##define-macro (macro-char-encoding-UCS-2LE)                15)
+(##define-macro (macro-char-encoding-UCS-4)                  16)
+(##define-macro (macro-char-encoding-UCS-4BE)                17)
+(##define-macro (macro-char-encoding-UCS-4LE)                18)
+(##define-macro (macro-char-encoding-wchar)                  19)
+(##define-macro (macro-char-encoding-native)                 20)
 
 (##define-macro (macro-char-encoding-UTF)
   `(macro-char-encoding-UTF-fallback-UTF-8))
 
 (##define-macro (macro-max-unescaped-char options)
-  `(let ((e (##fxmodulo (##fxquotient ,options (macro-char-encoding-shift))
-                        (macro-char-encoding-range))))
+  `(let ((e (##fxarithmetic-shift-right
+             (##fxand ,options (macro-char-encoding-mask))
+             (macro-char-encoding-shift))))
      (cond ((##fx<= e (macro-char-encoding-ISO-8859-1))
             (if (##fx= e (macro-char-encoding-ISO-8859-1))
                 (##integer->char #xff)
@@ -857,21 +858,21 @@
            (else
             (##integer->char #x10ffff)))))
 
-(##define-macro (macro-char-encoding-errors-shift)   32)
-(##define-macro (macro-char-encoding-errors-range)   4)
+(##define-macro (macro-char-encoding-errors-shift)   5)
+(##define-macro (macro-char-encoding-errors-mask)    (* 3 (expt 2 5)))
 (##define-macro (macro-default-char-encoding-errors) 0)
 (##define-macro (macro-char-encoding-errors-on)      1)
 (##define-macro (macro-char-encoding-errors-off)     2)
 
-(##define-macro (macro-eol-encoding-shift)   128)
-(##define-macro (macro-eol-encoding-range)   4)
+(##define-macro (macro-eol-encoding-shift)   7)
+(##define-macro (macro-eol-encoding-mask)    (* 3 (expt 2 7)))
 (##define-macro (macro-default-eol-encoding) 0)
 (##define-macro (macro-eol-encoding-lf)      1)
 (##define-macro (macro-eol-encoding-cr)      2)
 (##define-macro (macro-eol-encoding-crlf)    3)
 
-(##define-macro (macro-buffering-shift)   512)
-(##define-macro (macro-buffering-range)   4)
+(##define-macro (macro-buffering-shift)   9)
+(##define-macro (macro-buffering-mask)    (* 3 (expt 2 9)))
 (##define-macro (macro-default-buffering) 0)
 (##define-macro (macro-no-buffering)      1)
 (##define-macro (macro-line-buffering)    2)
@@ -883,14 +884,14 @@
 (##define-macro (macro-fully-buffered? options)
   `(##not (##fx< (##fxand ,options 2047) 1536)))
 
-(##define-macro (macro-decode-state-shift)  2048)
-(##define-macro (macro-decode-state-range)  4)
+(##define-macro (macro-decode-state-shift)  11)
+(##define-macro (macro-decode-state-mask)   (* 3 (expt 2 11)))
 (##define-macro (macro-decode-state-none)   0)
 (##define-macro (macro-decode-state-lf)     1)
 (##define-macro (macro-decode-state-cr)     2)
 
-(##define-macro (macro-open-state-shift)  8192)
-(##define-macro (macro-open-state-range)  2)
+(##define-macro (macro-open-state-shift)  13)
+(##define-macro (macro-open-state-mask)   (* 1 (expt 2 13)))
 (##define-macro (macro-open-state-open)   0)
 (##define-macro (macro-open-state-closed) 1)
 
@@ -903,15 +904,15 @@
 (##define-macro (macro-unclose! options)
   `(##fxand ,options -8193))
 
-(##define-macro (macro-permanent-close-shift)  16384)
-(##define-macro (macro-permanent-close-range)  2)
+(##define-macro (macro-permanent-close-shift)  14)
+(##define-macro (macro-permanent-close-mask)   (* 1 (expt 2 14)))
 (##define-macro (macro-permanent-close-no)     0)
 (##define-macro (macro-permanent-close-yes)    1)
 
 (##define-macro (macro-perm-close? options)
   `(##not (##fx= (##fxand ,options 16384) 0)))
 
-(##define-macro (macro-direction-shift) 16)
+(##define-macro (macro-direction-shift) 4)
 (##define-macro (macro-direction-in)    1)
 (##define-macro (macro-direction-out)   2)
 (##define-macro (macro-direction-inout) 3)
@@ -926,18 +927,18 @@
 
 (##define-macro (macro-default-directory) #f)
 
-(##define-macro (macro-append-shift)   8)
+(##define-macro (macro-append-shift)   3)
 (##define-macro (macro-no-append)      0)
 (##define-macro (macro-append)         1)
 (##define-macro (macro-default-append) 2)
 
-(##define-macro (macro-create-shift)   2)
+(##define-macro (macro-create-shift)   1)
 (##define-macro (macro-no-create)      0)
 (##define-macro (macro-maybe-create)   1)
 (##define-macro (macro-create)         2)
 (##define-macro (macro-default-create) 3)
 
-(##define-macro (macro-truncate-shift)   1)
+(##define-macro (macro-truncate-shift)   0)
 (##define-macro (macro-no-truncate)      0)
 (##define-macro (macro-truncate)         1)
 (##define-macro (macro-default-truncate) 2)

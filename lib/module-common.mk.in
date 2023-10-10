@@ -1,6 +1,6 @@
 # common makefile for gambit modules, to be included by specific makefile
 
-# Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 # The specific makefile must contain:
 #
@@ -224,7 +224,7 @@ modules-pre:
 	    fi; \
 	    if test "$$need_to_build_module" = "yes"; then \
 	      echo ">>>> building module $$modref for $$target"; \
-	      @SETDLPATH@ $(rootfromhere)/gsc/gsc@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -e "(let ((x (##build-module \"$$mod_dir$$main_mod\" (quote $$target) (quote ((module-ref $$modref)))))) (if (not x) (begin (println \"*** module failed to build\") (exit 1))))"; \
+	      @SETDLPATH@ $(rootfromhere)/gsc/gsc@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f -e "(let ((x (##build-module \"$$mod_dir$$main_mod\" (quote $$target) (quote ((module-ref $$modref)(warnings)))))) (if (not x) (begin (println \"*** module failed to build\") (exit 1))))"; \
 	    else \
 	      echo ">>>> no need to build module $$modref for $$target"; \
 	    fi; \
@@ -310,7 +310,7 @@ mostlyclean-post mostlyclean-post-nonrec:
 clean-pre: mostlyclean-pre
 
 clean-post clean-post-nonrec: mostlyclean-post-nonrec
-	rm -rf *@gambit*
+	@rm -rf *@gambit*
 
 distclean-pre: clean-pre
 
@@ -335,19 +335,33 @@ dist-pre dist-devel-pre:
 	@echo "  Copying distribution files:"
 	@for file in $(DISTFILES); do \
 	  echo "    $(herefromroot)/$$file"; \
-	  ln $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot) 2> /dev/null \
-	    || cp -p $(srcdirpfx)$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot); \
+	  dir=""; \
+	  while [ "$${file#*/}" != "$${file}" ]; do \
+	    temp="$${file#*/}"; \
+	    dir="$$dir$${file%$$temp}"; \
+	    mkdir $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot)/$$dir; \
+	    file="$$temp"; \
+	  done; \
+	  ln $(srcdirpfx)$$dir$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot)/$$dir 2> /dev/null \
+	    || cp -p $(srcdirpfx)$$dir$$file $(rootfromhere)/$(PACKAGE_TARNAME)/$(herefromroot)/$$dir; \
 	done
 
 dist-post dist-devel-post:
 
-core-recursive bootstrap-recursive modules-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
+core-recursive bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-recursive deselect-gen-for-commit-recursive mostlyclean-recursive clean-recursive distclean-recursive bootclean-recursive realclean-recursive rc-setup-recursive dist-recursive dist-devel-recursive:
 	@if test -n "$(SUBDIRS)"; then \
 	  for subdir in ""$(SUBDIRS); do \
 	    target=`echo $@ | sed 's/-recursive//'`; \
 	    (cd $$subdir && $(MAKE) $$target) || exit 1; \
 	  done \
 	fi
+
+modules-recursive: $(SUBDIRS)
+
+fake_target:
+
+$(SUBDIRS): fake_target
+	@(cd $@ && $(MAKE) modules) || exit 1
 
 core: core-post
 

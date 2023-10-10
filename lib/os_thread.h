@@ -1,6 +1,6 @@
 /* File: "os_thread.h" */
 
-/* Copyright (c) 2013-2017 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 2013-2023 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_THREAD_H
 #define ___OS_THREAD_H
@@ -19,6 +19,10 @@ typedef struct ___thread_module_struct
   {
     int refcount;
 
+    int processor0_cpu_id;  /* cpu id of processor 0 */
+    int cpu_count[2];       /* cpu count for: performant and efficient cpus */
+    int core_count;         /* core count */
+
 #ifdef ___USE_emulated_sync
     DECLARE_HASH_MUTEX(hash_mutex,HASH_MUTEX_SIZE);
 #endif
@@ -27,26 +31,26 @@ typedef struct ___thread_module_struct
 
 #ifdef ___USE_POSIX_THREAD_SYSTEM
 
-  pthread_key_t tls_ptr_key;
+    pthread_key_t tls_ptr_key;
 
 #endif
 
 #ifdef ___USE_WIN32_THREAD_SYSTEM
 
-  DWORD tls_ptr_index;
+    DWORD tls_ptr_index;
 
 #endif
 
 #ifndef ___USE_POSIX_THREAD_SYSTEM
 #ifndef ___USE_WIN32_THREAD_SYSTEM
 
-  /*
-   * This fallback only works when there is a single thread.
-   * However, this should be the case if none of the supported thread
-   * systems is being used.
-   */
+    /*
+     * This fallback only works when there is a single thread.
+     * However, this should be the case if none of the supported thread
+     * systems is being used.
+     */
 
-  void *tls_ptr;
+    void *tls_ptr;
 
 #endif
 #endif
@@ -60,6 +64,28 @@ extern ___thread_module ___thread_mod;
 
 /*---------------------------------------------------------------------------*/
 
+/* CPU information. */
+
+extern int ___cpu_count
+   ___P((int level),
+        ());
+
+extern int ___cpu_cache_size
+   ___P((___BOOL instruction_cache,
+         int level),
+        ());
+
+extern int ___core_count ___PVOID;
+
+/* Thread affinity */
+
+extern void ___thread_affinity_set
+   ___P((___processor_state ___ps),
+        ());
+
+extern void ___thread_affinity_reset
+   ___P((___processor_state ___ps),
+        ());
 
 extern void ___thread_set_pstate
    ___P((___processor_state ___ps),

@@ -2,7 +2,7 @@
 
 ;;; File: "gambit.sld"
 
-;;; Copyright (c) 2005-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2005-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -267,6 +267,9 @@ unless
 when
 
 ;; procedures
+balanced-quotient
+balanced-remainder
+balanced/
 binary-port?
 boolean=?
 bytevector
@@ -278,6 +281,9 @@ bytevector-u8-ref
 bytevector-u8-set!
 bytevector?
 call-with-port
+ceiling-quotient
+ceiling-remainder
+ceiling/
 char-foldcase
 close-port
 command-line
@@ -291,6 +297,9 @@ eof-object
 error-object-irritants
 error-object-message
 error-object?
+euclidean-quotient
+euclidean-remainder
+euclidean/
 exact
 exact-integer-sqrt
 exact-integer?
@@ -333,6 +342,9 @@ read-error?
 read-line
 read-string
 read-u8
+round-quotient
+round-remainder
+round/
 square
 string->utf8
 string->vector
@@ -391,6 +403,7 @@ syntax-case
 default-random-source
 
 ;; procedures
+->char-set
 abandoned-mutex-exception?
 abort
 acosh
@@ -401,6 +414,7 @@ address-info-socket-type
 address-info?
 address-infos
 all-bits-set?
+any
 any-bit-set?
 any-bits-set?
 append-reverse
@@ -458,6 +472,45 @@ cfun-conversion-exception-code
 cfun-conversion-exception-message
 cfun-conversion-exception-procedure
 cfun-conversion-exception?
+char-set
+char-set->list
+char-set->string
+char-set-adjoin
+char-set-adjoin!
+char-set-any
+char-set-complement
+char-set-complement!
+char-set-contains?
+char-set-copy
+char-set-count
+char-set-cursor
+char-set-cursor-next
+char-set-delete
+char-set-delete!
+char-set-diff+intersection
+char-set-diff+intersection!
+char-set-difference
+char-set-difference!
+char-set-every
+char-set-filter
+char-set-filter!
+char-set-fold
+char-set-for-each
+char-set-hash
+char-set-intersection
+char-set-intersection!
+char-set-map
+char-set-ref
+char-set-size
+char-set-unfold
+char-set-unfold!
+char-set-union
+char-set-union!
+char-set-xor
+char-set-xor!
+char-set<=
+char-set=
+char-set?
 circular-list
 circular-list?
 clear-bit-field
@@ -525,6 +578,7 @@ divide-by-zero-exception?
 dotted-list?
 drop
 eighth
+end-of-char-set?
 eq?-hash
 equal?-hash
 eqv?-hash
@@ -533,12 +587,12 @@ error
 error-exception-message
 error-exception-parameters
 error-exception?
+every-bit-set?
 executable-path
 expression-parsing-exception-kind
 expression-parsing-exception-parameters
 expression-parsing-exception-source
 expression-parsing-exception?
-every-bit-set?
 extract-bit-field
 f32vector
 f32vector->list
@@ -781,6 +835,8 @@ length-mismatch-exception?
 link-flat
 link-incremental
 list->bits
+list->char-set
+list->char-set!
 list->f32vector
 list->f64vector
 list->s16vector
@@ -1182,6 +1238,8 @@ started-thread-exception-procedure
 started-thread-exception?
 step
 step-level-set!
+string->char-set
+string->char-set!
 string->keyword
 string->uninterned-keyword
 string->uninterned-symbol
@@ -1390,6 +1448,8 @@ u8vector-set
 u8vector-set!
 u8vector-shrink!
 u8vector?
+ucs-range->char-set
+ucs-range->char-set!
 udp-destination-set!
 udp-local-socket-info
 udp-read-subu8vector

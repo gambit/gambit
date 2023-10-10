@@ -3,11 +3,11 @@
 ;; process manipulation primitives
 
 ;; * Get the pid of the current process.
-(define self (let () (##namespace ("")) current-thread))
+(define self (let () (##namespace ("" current-thread)) current-thread))
 
 ;; Base exception handler for Termite processes.
 (define (base-exception-handler e)
-  ((let () (##namespace ("")) continuation-capture)
+  ((let () (##namespace ("" continuation-capture)) continuation-capture)
     (lambda (k)
       (let ((log-crash
               (lambda (e)
@@ -16,7 +16,7 @@
                   (list
                     (call-with-output-string ""
                       (lambda (port)
-                        ((let () (##namespace ("")) display-exception-in-context) e k port))))))))
+                        ((let () (##namespace ("" display-exception-in-context)) display-exception-in-context) e k port))))))))
         (cond
           ;; Propagated Termite exception?
           ((termite-exception? e)
@@ -38,15 +38,15 @@
 
 ;; * Start a new process executing the code in 'thunk'.
 (define (spawn thunk #!key (links '()) (name 'anonymous))
-  (let ((t ((let () (##namespace ("")) make-thread)
+  (let ((t ((let () (##namespace ("" make-thread)) make-thread)
        (lambda ()
          (with-exception-handler
          base-exception-handler
          thunk)
          (shutdown!))
              name)))
-  ((let () (##namespace ("")) thread-specific-set!) t links)
-  ((let () (##namespace ("")) thread-start!) t)
+  ((let () (##namespace ("" thread-specific-set!)) thread-specific-set!) t links)
+  ((let () (##namespace ("" thread-start!)) thread-start!) t)
   t))
 
 
@@ -91,13 +91,13 @@
 ;; this is *not* nice: it wont propagate the exit message to the other
 ;; processes
 (define (halt!)
-  ((let () (##namespace ("")) thread-terminate!) ((let () (##namespace ("")) current-thread))))
+  ((let () (##namespace ("" thread-terminate!)) thread-terminate!) ((let () (##namespace ("" current-thread)) current-thread))))
 
 
 ;; * Forcefully terminate a local process.  Warning: it only works on
 ;; local processes!  This should be used with caution.
 (define (terminate! victim)
-  ((let () (##namespace ("")) thread-terminate!) victim)
+  ((let () (##namespace ("" thread-terminate!)) thread-terminate!) victim)
   (for-each
   (lambda (link)
     (! link (make-termite-exception victim 'terminated #f)))
@@ -121,7 +121,7 @@
   (lambda (e)
     (void))
   (lambda ()
-    ((let () (##namespace ("")) thread-join!) pid)
+    ((let () (##namespace ("" thread-join!)) thread-join!) pid)
     (void))))
 
 
@@ -130,8 +130,8 @@
 (define (%alive? pid)
   (with-exception-catcher
   (lambda (e)
-    ((let () (##namespace ("")) join-timeout-exception?) e))
+    ((let () (##namespace ("" join-timeout-exception?)) join-timeout-exception?) e))
   (lambda ()
-    ((let () (##namespace ("")) thread-join!) pid 0)
+    ((let () (##namespace ("" thread-join!)) thread-join!) pid 0)
     #f)))
 

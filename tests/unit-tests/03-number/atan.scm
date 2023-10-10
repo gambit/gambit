@@ -13,6 +13,10 @@
 (check-= (atan +0.+2i) (test-atan 0.+2i))
 (check-= (atan -0.+2i) (test-atan -0.+2i))
 
+;;; Test for a previous bug
+
+(check-eqv? (atan +inf.0 (expt 3 100000)) (macro-inexact-+pi/2))
+
 ;;; Test for accuracy near 0
 
 (check-eqv? (atan 1e-30+1e-40i) 1e-30+1e-40i)
@@ -87,6 +91,28 @@ If either x is NaN or y is NaN, NaN is returned
 
 (check-eq? (isnan? (atan +nan.0 1.)) #t)
 (check-eq? (isnan? (atan 1. +nan.0)) #t)
+
+;;; R7RS tests
+
+(check-eqv? (atan  0   1 )  0)
+(check-eqv? (atan +0.  1 ) +0.)
+(check-eqv? (atan -0.  1 ) -0.)
+(check-=    (atan  1   1 ) (macro-inexact-+pi/4))
+(check-=    (atan  1   0 ) (macro-inexact-+pi/2))
+(check-=    (atan  1  -1 ) (macro-inexact-+3pi/4))
+(check-=    (atan  0  -1 ) (macro-inexact-+pi))
+(check-=    (atan +0. -1 ) (macro-inexact-+pi))
+(check-=    (atan -0. -1 ) (macro-inexact--pi))
+(check-=    (atan -1  -1 ) (macro-inexact--3pi/4))
+(check-=    (atan -1   0 ) (macro-inexact--pi/2))
+(check-=    (atan -1   1 ) (macro-inexact--pi/4))
+(check-eqv? (atan  0   0 )  0) ;; undefined in R7RS
+(check-eqv? (atan +0. +0.) +0.)
+(check-eqv? (atan -0. +0.) -0.)
+(check-=    (atan +0. -0.) (macro-inexact-+pi))
+(check-=    (atan -0. -0.) (macro-inexact--pi))
+(check-=    (atan +0.  0 ) (macro-inexact-+pi/2))
+(check-=    (atan -0.  0 ) (macro-inexact--pi/2))
 
 ;;; Test exceptions
 

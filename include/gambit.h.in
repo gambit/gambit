@@ -1,18 +1,18 @@
 /* File: "gambit.h" */
 
 /*
- * Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
+ * Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
  */
 
 #ifndef ___GAMBIT_H
 #define ___GAMBIT_H
 
 #ifndef ___VERSION
-#define ___VERSION 409004
+#define ___VERSION 409005
 #endif
 
-#if ___VERSION != 409004
-#include "gambit-not409004.h"
+#if ___VERSION != 409005
+#include "gambit-not409005.h"
 #else
 
 #ifdef HAVE_CONFIG_H
@@ -443,11 +443,27 @@
 #endif
 #endif
 
+#ifndef ___CPU_s390
+
+#ifdef __s390__
+#define ___CPU_s390
+#else
+#ifdef __s390x__
+#define ___CPU_s390
+#else
+#ifdef __zarch__
+#define ___CPU_s390
+#endif
+#endif
+#endif
+
+#endif
+
 /*
  * Determine the byte order endianness based on the processor type.
- * We assume that all processors are little-endian, except the sparc and
- * m68k.  The PowerPC, MIPS, ARM and Itanium can be either big-endian or
- * little-endian so extra tests are needed.
+ * We assume that all processors are little-endian, except the sparc,
+ * m68k, and s390.  The PowerPC, MIPS, ARM and Itanium can be either
+ * big-endian or little-endian so extra tests are needed.
  */
 
 #ifndef ___BIG_ENDIAN
@@ -481,6 +497,10 @@
 #endif
 
 #ifdef ___CPU_sparc
+#define ___BIG_ENDIAN
+#endif
+
+#ifdef ___CPU_s390
 #define ___BIG_ENDIAN
 #endif
 
@@ -1191,13 +1211,15 @@
 #ifdef ___MULTIPLE_HOSTS
 #error "Define either ___SINGLE_HOST or ___MULTIPLE_HOSTS"
 #endif
-#ifndef ___SINGLE_HOST_ENFORCE
 /* downgrade to multiple C host procedures when code is very big */
 #ifdef ___LBLCOUNT
-#if ___LBLCOUNT >= 10000
-#undef ___SINGLE_HOST
-#define ___MULTIPLE_HOSTS
+#ifndef ___SINGLE_HOST_LIMIT
+#define ___SINGLE_HOST_LIMIT @CONF_SINGLE_HOST_LIMIT@
 #endif
+#if ___SINGLE_HOST_LIMIT > 0 && ___LBLCOUNT > ___SINGLE_HOST_LIMIT
+#undef ___SINGLE_HOST
+#undef ___MULTIPLE_HOSTS
+#define ___MULTIPLE_HOSTS
 #endif
 #endif
 #else
@@ -1424,12 +1446,12 @@
  * running in a given VM instance.
  */
 
-#ifdef ___SINGLE_THREADED_VMS
 #ifndef ___MAX_PROCESSORS
+#ifdef ___SINGLE_THREADED_VMS
 #define ___MAX_PROCESSORS 1
-#endif
 #else
 #define ___MAX_PROCESSORS @CONF_MAX_PROCESSORS@
+#endif
 #endif
 
 /*
@@ -1890,6 +1912,20 @@
 #endif
 #endif
 
+#ifdef ___CPU_x86
+#if __has_builtin(__builtin_ia32_rdtscp)
+#undef ___USE___builtin_ia32_rdtscp
+#define ___USE___builtin_ia32_rdtscp
+#endif
+#endif
+
+#ifdef ___CPU_x86
+#if __has_builtin(__builtin_readcyclecounter)
+#undef ___USE___builtin_readcyclecounter
+#define ___USE___builtin_readcyclecounter
+#endif
+#endif
+
 #ifdef ___DONT_USE_builtin_op_overflow
 #undef ___USE_builtin_op_overflow
 #endif
@@ -1905,6 +1941,15 @@
 #ifdef ___DONT_USE_builtin_clrsb
 #undef ___USE_builtin_clrsb
 #endif
+
+#ifdef ___DONT_USE___builtin_ia32_rdtscp
+#undef ___USE___builtin_ia32_rdtscp
+#endif
+
+#ifdef ___DONT_USE___builtin_readcyclecounter
+#undef ___USE___builtin_readcyclecounter
+#endif
+
 
 /*---------------------------------------------------------------------------*/
 
@@ -3472,6 +3517,62 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___FIXWRAPLSHRP(x,y)((y)>=___FIX(0)?___FIXWRAPLSHR(x,(y)<=___FIX(___FIX_WIDTH)?(y):___FIX(___FIX_WIDTH)):___FAL)
 #define ___FIXTOCHR(x)(((x)&~___TMASK)+___tSPECIAL)
 #define ___FIXFROMCHR(x)((x)&~___TMASK)
+#define ___MAXCHARCODE ___FIX(___MAX_CHR)
+
+#ifndef ___GET_CPUCYCLECOUNT
+#ifdef ___USE___builtin_ia32_rdtscp
+#ifdef __GNUC__
+
+#if ___WORD_WIDTH == 64
+
+#define ___GET_CPUCYCLECOUNT ___FIX(___s64_temp)
+#define ___CPUCYCLECOUNTSTART \
+__asm__ __volatile__ ("cpuid\n\trdtsc\n\tshl $32,%%rdx\n\tor %%rdx,%%rax\n\tmov %%rax,%0\n":"=r"(___s64_temp)::"%rax","%rbx","%rcx","%rdx");
+#define ___CPUCYCLECOUNTEND \
+__asm__ __volatile__ ("rdtscp\n\tshl $32,%%rdx\n\tor %%rdx,%%rax\n\tmov %%rax,%0\n\tcpuid\n":"=r"(___s64_temp)::"%rax","%rbx","%rcx","%rdx");
+
+#else
+
+#define ___GET_CPUCYCLECOUNT ___FIX(___s32_temp)
+#define ___CPUCYCLECOUNTSTART \
+__asm__ __volatile__ ("cpuid\n\trdtsc\n\tmov %%eax,%0\n":"=r"(___s32_temp)::"%eax","%ebx","%ecx","%edx");
+#define ___CPUCYCLECOUNTEND \
+__asm__ __volatile__ ("rdtscp\n\tmov %%eax,%0\n\tcpuid\n":"=r"(___s32_temp)::"%eax","%ebx","%ecx","%edx");
+
+#endif
+
+#endif
+#endif
+#endif
+
+#ifndef ___GET_CPUCYCLECOUNT
+#ifdef ___USE___builtin_readcyclecounter
+
+#if ___WORD_WIDTH == 64
+
+#define ___GET_CPUCYCLECOUNT ___FIX(___s64_temp)
+#define ___CPUCYCLECOUNTSTART ___s64_temp = __builtin_readcyclecounter ();
+#define ___CPUCYCLECOUNTEND ___s64_temp = __builtin_readcyclecounter ();
+
+#else
+
+#define ___GET_CPUCYCLECOUNT ___FIX(___s32_temp)
+#define ___CPUCYCLECOUNTSTART ___s32_temp = __builtin_readcyclecounter ();
+#define ___CPUCYCLECOUNTEND ___s32_temp = __builtin_readcyclecounter ();
+
+#endif
+
+#endif
+
+#endif
+
+#ifndef ___GET_CPUCYCLECOUNT
+
+#define ___GET_CPUCYCLECOUNT ___FIX(0)
+#define ___CPUCYCLECOUNTSTART
+#define ___CPUCYCLECOUNTEND
+
+#endif
 
 /*
  * The following definitions must match the structure of ports defined
@@ -4149,8 +4250,12 @@ ___VECTUPDATESMALL(___BODY_AS(v,___tSUBTYPED),___INT(i),___INT(val),___U16VECTOR
 #define ___S32VECTORLENGTH(v)___FIX(___S32VECTORSIZE(v))
 #define ___S32VECTORREF(v,i) \
 ___S32BOX(___FETCH_S32(___BODY_AS(v,___tSUBTYPED),(i)>>___TB))
+#define ___S32VECTORREFFIX(v,i) \
+___FIX(___FETCH_S32(___BODY_AS(v,___tSUBTYPED),(i)>>___TB))
 #define ___S32VECTORSET(v,i,val) \
 ___STORE_S32(___BODY_AS(v,___tSUBTYPED),(i)>>___TB,___S32UNBOX(val));
+#define ___S32VECTORSETFIX(v,i,val) \
+___STORE_S32(___BODY_AS(v,___tSUBTYPED),(i)>>___TB,___INT(val));
 #define ___S32VECTORSHRINK(v,i)___temp=v;___SUBTYPED_HEADER_SET(___temp,(___SUBTYPED_HEADER(___temp)&~___LMASK)+((i)<<(___LF-___TB+2)));
 
 #define ___MAKES32VECTORSMALL1(size) \
@@ -4176,8 +4281,12 @@ ___VECTUPDATESMALL(___BODY_AS(v,___tSUBTYPED),___INT(i),___S32UNBOX(val),___S32V
 #define ___U32VECTORLENGTH(v)___FIX(___U32VECTORSIZE(v))
 #define ___U32VECTORREF(v,i) \
 ___U32BOX(___FETCH_U32(___BODY_AS(v,___tSUBTYPED),(i)>>___TB))
+#define ___U32VECTORREFFIX(v,i) \
+___FIX(___FETCH_U32(___BODY_AS(v,___tSUBTYPED),(i)>>___TB))
 #define ___U32VECTORSET(v,i,val) \
 ___STORE_U32(___BODY_AS(v,___tSUBTYPED),(i)>>___TB,___U32UNBOX(val));
+#define ___U32VECTORSETFIX(v,i,val) \
+___STORE_U32(___BODY_AS(v,___tSUBTYPED),(i)>>___TB,___INT(val));
 #define ___U32VECTORSHRINK(v,i)___temp=v;___SUBTYPED_HEADER_SET(___temp,(___SUBTYPED_HEADER(___temp)&~___LMASK)+((i)<<(___LF-___TB+2)));
 
 #define ___MAKEU32VECTORSMALL1(size) \
@@ -4203,8 +4312,12 @@ ___VECTUPDATESMALL(___BODY_AS(v,___tSUBTYPED),___INT(i),___U32UNBOX(val),___U32V
 #define ___S64VECTORLENGTH(v)___FIX(___S64VECTORSIZE(v))
 #define ___S64VECTORREF(v,i) \
 ___S64BOX(___FETCH_S64(___BODY_AS(v,___tSUBTYPED),(i)>>___TB))
+#define ___S64VECTORREFFIX(v,i) \
+___FIX(___FETCH_S64(___BODY_AS(v,___tSUBTYPED),(i)>>___TB))
 #define ___S64VECTORSET(v,i,val) \
 ___STORE_S64(___BODY_AS(v,___tSUBTYPED),(i)>>___TB,___S64UNBOX(val));
+#define ___S64VECTORSETFIX(v,i,val) \
+___STORE_S64(___BODY_AS(v,___tSUBTYPED),(i)>>___TB,___INT(val));
 #define ___S64VECTORSHRINK(v,i)___temp=v;___SUBTYPED_HEADER_SET(___temp,(___SUBTYPED_HEADER(___temp)&~___LMASK)+((i)<<(___LF-___TB+3)));
 
 #define ___MAKES64VECTORSMALL1(size) \
@@ -4230,8 +4343,12 @@ ___VECTUPDATESMALL(___BODY_AS(v,___tSUBTYPED),___INT(i),___S64UNBOX(val),___S64V
 #define ___U64VECTORLENGTH(v)___FIX(___U64VECTORSIZE(v))
 #define ___U64VECTORREF(v,i) \
 ___U64BOX(___FETCH_U64(___BODY_AS(v,___tSUBTYPED),(i)>>___TB))
+#define ___U64VECTORREFFIX(v,i) \
+___FIX(___FETCH_U64(___BODY_AS(v,___tSUBTYPED),(i)>>___TB))
 #define ___U64VECTORSET(v,i,val) \
 ___STORE_U64(___BODY_AS(v,___tSUBTYPED),(i)>>___TB,___U64UNBOX(val));
+#define ___U64VECTORSETFIX(v,i,val) \
+___STORE_U64(___BODY_AS(v,___tSUBTYPED),(i)>>___TB,___INT(val));
 #define ___U64VECTORSHRINK(v,i)___temp=v;___SUBTYPED_HEADER_SET(___temp,(___SUBTYPED_HEADER(___temp)&~___LMASK)+((i)<<(___LF-___TB+3)));
 
 #define ___MAKEU64VECTORSMALL1(size) \
@@ -5179,14 +5296,13 @@ ___EXT(___register_host_entry) (___PSP ___start, ___MODULE_NAME, __FILE__, __LIN
 #define ___DEF_HLBL(id)&&id,
 #define ___END_HLBL \
 0}; \
-___pc=___ps->pc; \
+___pc=___ps->pc; ___R_ALL ___start=___MLBL(___HOST_LBL0); \
 if (___EXPECT_FALSE(___pc == ___FIX(0))) { \
   ___ps->pc = ___CAST(___WORD,___hlbltbl); \
   return; \
 }
 
 #define ___BEGIN_SW \
-___R_ALL ___start=___MLBL(___HOST_LBL0); \
 ___REGISTER_HOST_ENTRY \
 goto *___LABEL_HOST_LABEL_GET(___pc);
 
@@ -5227,10 +5343,9 @@ ___jumpext:
 #define ___BEGIN_HLBL
 #define ___DEF_HLBL_INTRO
 #define ___DEF_HLBL(id)
-#define ___END_HLBL
+#define ___END_HLBL ___pc=___ps->pc; ___R_ALL ___start=___MLBL(___HOST_LBL0);
 
 #define ___BEGIN_SW \
-___R_ALL ___start=___MLBL(___HOST_LBL0); ___pc=___ps->pc; \
 ___REGISTER_HOST_ENTRY \
 ___jump: \
 switch((___pc-=___start)/(___LABEL_SIZE*___WS)) \
@@ -8574,7 +8689,7 @@ void *___x;) \
 #define ___BEGIN_CFUN_DEF(cproc) \
 ___HIDDEN void cproc ___P((___processor_state ___ps), () \
 ___processor_state ___ps;) {
-#define ___END_CFUN_DEF }
+#define ___END_CFUN_DEF ___ps->temp1 = ___FIX(___NO_ERR); }
 
 #define ___R_ALL_INL ___CFUN_SELECT(___R_ALL,)
 #define ___W_ALL_INL ___CFUN_SELECT(___W_ALL,)
@@ -8590,8 +8705,7 @@ ___CFUN_SELECT(___BEGIN_CFUN_CTX,___BEGIN_CFUN_DEF(cproc)) \
 ___SCMOBJ ___err=___FIX(___NO_ERR); \
 ___SCMOBJ ___errdata=___FAL; \
 ___SCMOBJ ___errhandler=___FAL; \
-decl; \
-___CFUN_SELECT(,___ps->temp1=___FIX(___NO_ERR);)
+decl;
 #define ___END_CFUN \
 ___CFUN_SELECT(___END_CFUN_CTX,___END_CFUN_DEF)
 

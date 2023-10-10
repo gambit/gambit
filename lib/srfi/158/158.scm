@@ -13,9 +13,19 @@
 
 (##supply-module srfi/158)
 
-(##include "~~lib/_gambit#.scm")
+(##namespace ("srfi/158#"))               ;; in srfi/158#
+;;(##include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
+(##include "~~lib/gambit#.scm")           ;; for define, declare, etc
+(##include "~~lib/_gambit#.scm")          ;; for macro-check-string,
+                                          ;; macro-absent-obj, etc
 
-;;============================================================================
+(##include "158#.scm")
+
+(declare (extended-bindings)) ;; ##fx+ is bound to fixnum addition, etc
+;;(declare (not safe))          ;; claim code has no type errors
+(declare (block))             ;; claim no global is assigned
+
+;;;============================================================================
 
 (define-macro
   (macro-check-procedures lst arg-id call rest)
@@ -404,7 +414,7 @@
           (else
            (apply
              gmerge <
-             (let loop ((gens (cons genleft gens))
+             (let loop ((gens (cons gen gens))
                         (gs '()))
                (cond ((null? gens)
                       (reverse gs))
@@ -570,7 +580,7 @@
                 ((and (not (eof-object? val))
                       (pred val))
                  (loop))
-                (else (set found #t) val))))))
+                (else (set! found #t) val))))))
 
 ;;============================================================================
 ;; gtake-while

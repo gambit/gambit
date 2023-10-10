@@ -1,6 +1,6 @@
 /* File: "os_io.c" */
 
-/* Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -8,7 +8,7 @@
  */
 
 #define ___INCLUDED_FROM_OS_IO
-#define ___VERSION 409004
+#define ___VERSION 409005
 #include "gambit.h"
 
 #include "os_setup.h"
@@ -9127,6 +9127,8 @@ int options;)
           /* child process */
 
           ___cleanup_all_interrupt_handling ();
+
+          ___thread_affinity_reset (___PSTATE);
 
           if (options & (STDIN_REDIR | STDOUT_REDIR | STDERR_REDIR))
             {

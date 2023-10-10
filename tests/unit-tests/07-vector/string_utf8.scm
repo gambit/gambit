@@ -14,12 +14,12 @@
 (check-equal? (string->utf8 "\xbf;") '#u8(#xC2 #xBF))
 (check-equal? (string->utf8 "\xff;") '#u8(#xC3 #xBF))
 
-(define-macro (if-max-char-greater-than n code-as-string)
-  (if (> ##max-char n)
+(define-macro (if-max-char-code-greater-than n code-as-string)
+  (if (> (##max-char-code) n)
       `(begin ,@(with-input-from-string code-as-string read-all))
       `(begin)))
 
-(if-max-char-greater-than 255 #<<end-of-at-least-2-byte-chars
+(if-max-char-code-greater-than 255 #<<end-of-at-least-2-byte-chars
 (check-equal? (string->utf8 "\x7c0;") '#u8(#xDF #x80))
 (check-equal? (string->utf8 "\x7ff;") '#u8(#xDF #xBF))
 (check-equal? (string->utf8 "\x800;") '#u8(#xE0 #xA0 #x80))
@@ -40,7 +40,7 @@
 end-of-at-least-2-byte-chars
 )
 
-(if-max-char-greater-than 65535 #<<end-of-4-byte-chars
+(if-max-char-code-greater-than 65535 #<<end-of-4-byte-chars
 (check-equal? (string->utf8 "\x10000;") '#u8(#xF0 #x90 #x80 #x80))
 (check-equal? (string->utf8 "\x1003f;") '#u8(#xF0 #x90 #x80 #xBF))
 (check-equal? (string->utf8 "\x10fc0;") '#u8(#xF0 #x90 #xBF #x80))

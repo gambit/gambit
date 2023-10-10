@@ -2,7 +2,7 @@
 
 ;;; File: "_repl.scm"
 
-;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -3692,7 +3692,9 @@
                 (begin
                   (##write-string ", " port)
                   (##write (##cdr arg-id) port)))
-            (##write-string ") " port)))))
+            (##write-string ") " port))
+          (begin
+            (##write-string "(Return value) " port)))))
 
   (define-prim (display-known-exception exc)
 
@@ -3987,7 +3989,7 @@
                    (##write-string "Instance of " port)
                    (##write type-id port))
                  (let ((x
-                        (##assq (macro-type-exception-type-id exc)
+                        (##assq type-id
                                 ##type-exception-names)))
                    (##write-string (if x (##cdr x) "Unknown type") port))))
            (##write-string " expected" port)
@@ -4057,18 +4059,18 @@
             (display-known-exception exc)))
       (display-known-exception exc)))
 
-(define-prim (##value->string val expr max-length char-encoding-limit)
+(define-prim (##value->string val expr max-length max-unescaped-char)
   (if ##values-with-sn?
       (##object->string-with-sn
        expr
        max-length
-       char-encoding-limit
+       max-unescaped-char
        3 ;; at least "..."
        val)
       (##object->string
        expr
        max-length
-       char-encoding-limit)))
+       max-unescaped-char)))
 
 (define-prim (##exception-procedure-and-arguments exc)
 
@@ -4759,7 +4761,9 @@
 
 (define-prim (##exec-stats thunk)
   (let* ((at-start (##process-statistics))
+         (cpu-cycles-at-start (##cpu-cycle-count-start))
          (result (thunk))
+         (cpu-cycles-at-end (##cpu-cycle-count-end))
          (at-end (##process-statistics))
          (user-time
           (##fl- (##f64vector-ref at-end 0)
@@ -4798,7 +4802,9 @@
                   (##fl+ (if (##interp-procedure? thunk)
                              (##f64vector-ref at-end 8) ;; thunk call frame space
                              (macro-inexact-+0))
-                         (##f64vector-ref at-end 9)))))) ;; at-end structure space
+                         (##f64vector-ref at-end 9))))) ;; at-end structure space
+         (cpu-cycles
+          (##fxmax 0 (##fx- cpu-cycles-at-end cpu-cycles-at-start))))
 
     (##list (##cons 'result          result)
             (##cons 'user-time       user-time)
@@ -4810,7 +4816,8 @@
             (##cons 'nb-gcs          nb-gcs)
             (##cons 'minflt          minflt)
             (##cons 'majflt          majflt)
-            (##cons 'bytes-allocated bytes-allocated))))
+            (##cons 'bytes-allocated bytes-allocated)
+            (##cons 'cpu-cycles      cpu-cycles))))
 
 (define-prim (##time-thunk
               thunk
@@ -4843,7 +4850,9 @@
                (stats (##cdr stats))
                (majflt (##cdar stats))
                (stats (##cdr stats))
-               (bytes-allocated (##cdar stats)))
+               (bytes-allocated (##cdar stats))
+               (stats (##cdr stats))
+               (cpu-cycles (##cdar stats)))
 
           (define (secs x)
             (let* ((precision 1000000)
@@ -4906,7 +4915,12 @@
             (##newline port)
 
             (pluralize majflt " major fault")
-            (##newline port))
+            (##newline port)
+
+            (if (##> cpu-cycles 0)
+                (begin
+                  (pluralize cpu-cycles " cpu cycle")
+                  (##newline port))))
 
           (print-stats p)
 

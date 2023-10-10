@@ -1,6 +1,6 @@
 /* File: "os.h" */
 
-/* Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_H
 #define ___OS_H
@@ -203,6 +203,12 @@
 #define USE_tcgetsetattr
 #endif
 
+#ifdef HAVE_MACH_THREAD_ACT_H
+#if 0
+/* TODO: thread_policy_set seems to have no effect on macOS... find out why */
+#define USE_thread_policy_set
+#endif
+#endif
 
 /* Operating-system specific features we require */
 
@@ -337,6 +343,10 @@
 
 #ifdef HAVE_FCNTL
 #define USE_fcntl
+#endif
+
+#ifdef HAVE_SCHED_GETCPU
+#define USE_sched_getcpu
 #endif
 
 #if 0
@@ -1029,6 +1039,11 @@ ___END_C_LINKAGE
 #define INCLUDE_mach_mach_time_h
 #endif
 
+#ifdef USE_thread_policy_set
+#undef INCLUDE_mach_thread_act_h
+#define INCLUDE_mach_thread_act_h
+#endif
+
 #ifdef USE_getclock
 #undef INCLUDE_sys_timers_h
 #define INCLUDE_sys_timers_h
@@ -1349,6 +1364,11 @@ ___END_C_LINKAGE
 #define INCLUDE_linux_fs_h
 #endif
 
+#ifdef USE_sched_getcpu
+#undef INCLUDE_sched_h
+#define INCLUDE_sched_h
+#endif
+
 
 /*---------------------------------------------------------------------------*/
 
@@ -1441,6 +1461,16 @@ ___END_C_LINKAGE
 #ifdef INCLUDE_mach_mach_time_h
 #ifdef HAVE_MACH_MACH_TIME_H
 #include <mach/mach_time.h>
+#endif
+#endif
+
+#ifdef INCLUDE_mach_thread_act_h
+#ifdef HAVE_MACH_THREAD_ACT_H
+#include <mach/thread_act.h>
+kern_return_t thread_policy_set(thread_t thread,
+                                thread_policy_flavor_t flavor,
+                                thread_policy_t policy_info,
+                                mach_msg_type_number_t count);
 #endif
 #endif
 
@@ -1880,6 +1910,10 @@ typedef unsigned int fpu_control_t __attribute__ ((__mode__ (__HI__)));
 
 #ifdef INCLUDE_openssl_err_h
 #include <openssl/err.h>
+#endif
+
+#ifdef INCLUDE_sched_h
+#include <sched.h>
 #endif
 
 /*

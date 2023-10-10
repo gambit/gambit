@@ -89,7 +89,7 @@
 
      (|six.x\|\|y|  12 0 2 "||")
 
-;;     (six.x?y:z     13 1) ;; note: RL associative
+     (six.x?y:z     13 1 3 "?" ":") ;; note: RL associative
 
      (six.x=y       14 1 2 "=") ;; note: RL associative
      (six.x+=y      14 1 2 "+=")
@@ -176,7 +176,7 @@
 
      (|six.x\|\|y|  15 0 2 "||")
 
-;;     (six.x?y:z     17 1) ;; note: RL associative
+     (six.x?y:z     17 1 3 "?" ":") ;; note: RL associative
 
      (six.x=y       18 1 2 "=") ;; note: RL associative
      (six.x+=y      18 1 2 "+=")
@@ -291,7 +291,7 @@
   (define (unsupported cctx src)
     (##raise-expression-parsing-exception
      'ill-formed-expression
-     src))
+     (##sourcify src (##make-source #f #f))))
 
   (define cctx
     (make-conversion-ctx
@@ -357,7 +357,7 @@
   (define (unsupported cctx src)
     (##raise-expression-parsing-exception
      'ill-formed-expression
-     src))
+     (##sourcify src (##make-source #f #f))))
 
   (define cctx
     (make-conversion-ctx
@@ -426,14 +426,13 @@
                (else
                 (unsupported cctx src)))))))
 
-  ;; Unsupported in Python
-  (define (convert-procedure cctx ast-src params return-type stmts-src) #!void)
-  (define (statement cctx ast-src) #!void)
+  (define (convert-procedure cctx ast-src params return-type stmts-src)
+    (unsupported cctx ast-src))
 
   (define (unsupported cctx src)
     (##raise-expression-parsing-exception
      'ill-formed-expression
-     src))
+     (##sourcify src (##make-source #f #f))))
 
   (define cctx
     (make-conversion-ctx
@@ -565,10 +564,15 @@
                                     (let ((lhs (infix (car rest) 0 inner-op)))
                                       (list "set_global('" lhs "', " (infix (cadr rest) 1 inner-op) ")"))
                                     (list (infix (car rest) 0 inner-op)
-                                        target-op
-                                        (infix (cadr rest) 1 inner-op))))
+                                          target-op
+                                          (infix (cadr rest) 1 inner-op))))
                                 ((3)
-                                 ...) ;; TODO: ternary operator
+                                 (let ((target-op2 (caddr x)))
+                                   (list (infix (car rest) 0 inner-op)
+                                         target-op
+                                         (cvt (cadr rest))
+                                         target-op2
+                                         (infix (caddr rest) 1 inner-op))))
                                 (else
                                  (unsupported ast)))))))
                   (if (parens-optional? pos inner-op outer-op)
@@ -652,7 +656,7 @@
                         (loop (cddr args-src) (cons (string-append
                                                       (keyword->string (car args-src))
                                                       "="
-                                                      (cvt (cadr args-srcs)))
+                                                      (cvt (cadr args-src)))
                                                     args))
                         (loop (cdr args-src) (cons (cvt (car args-src)) args)))
                     (let ((res (list (infix fn-src 0 inner-op)

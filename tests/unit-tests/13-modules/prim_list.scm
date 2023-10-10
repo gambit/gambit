@@ -93,6 +93,7 @@
 
 ;; Gambit
 
+(any odd? '()) (any odd? '(2 4)) (any odd? '(1 2)) (any odd? '(2 1)) (any < '(5 5 5) '(4 7 9) '(1 6 13))
 (call-with-values (lambda () (car+cdr '(1 2 3))) (lambda (a b) (list a b)))
 (list-ref (circular-list 1) 10) (list-ref (circular-list 1 2) 10) (list-ref (circular-list 1 2 3) 10)
 (circular-list? '(1 2 3)) (circular-list? (circular-list 1 2 3))
@@ -114,6 +115,7 @@
 (list-tabulate 5 list)
 (not-pair? '()) (not-pair? '(1 2 3))
 (null-list? '()) (null-list? '(1 2 3))
+(call-with-values (lambda () (partition odd? '(1 2 3 4 5))) (lambda (a b) (list a b)))
 (proper-list? '()) (proper-list? '(1 2 3)) (proper-list? '(1 2 . 3))
 (remove odd? '(1 2 3 4))
 (remq 'b '(a b c))
@@ -121,6 +123,7 @@
 (let ((x (list 1 2 3 4))) (append-reverse x 5))
 (let ((x (list 1 2 3 4))) (append-reverse! x 5))
 (take '(1 2 3 4) 2)
+(call-with-values (lambda () (split-at '(1 2 3 4) 1)) (lambda (a b) (list a b)))
 (xcons 1 2)
 
 (first '(1 2 3 4 5 6 7 8 9 10 11))

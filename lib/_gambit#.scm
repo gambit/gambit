@@ -173,7 +173,7 @@
        (##source-strip (car (##source-strip src)))))
 
     (define (proc sym)
-      `(##let () (##namespace ("")) ,sym))
+      `(##let () (##namespace ("" ,sym)) ,sym))
 
     (##deconstruct-call
      src

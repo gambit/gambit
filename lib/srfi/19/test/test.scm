@@ -2,7 +2,7 @@
 
 ;;; File: "test.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -11,13 +11,22 @@
 (import (srfi 19))
 (import (_test))
 
-(println (date->string (current-date)))
+;; basic tests:
+
+(test-assert (time? (current-time)))
+
+(define today (current-date))
+
+(test-assert (date? today))
+(test-assert (string? (date->string today)))
 
 ;;;============================================================================
 
 ;; The rest of this file is the file srfi-19-test-suite.scm found at
 ;;
 ;; https://github.com/srfi-explorations/final-srfis/tree/master/010/srfi-19
+;;
+;; with minor bugfixes and changes to interface to Gambit's _test module.
 
 ;;;============================================================================
 
@@ -40,12 +49,15 @@
     result))
 
 (define (run-s19-tests . verbose)
-  (let ((runs 0) (goods 0) (bads 0) (verbose (if (cdr verbose) (cdr verbose) #f)))
+  (let ((runs 0) (goods 0) (bads 0) (verbose (if (pair? verbose) (car verbose) #f)))
     (for-each (lambda (pr)
                 (set! runs (+ runs 1))
-                (if (run-s19-test (car pr) (cdr pr) verbose)
-                    (set! goods (+ goods 1))
-                    (set! bads (+ bads 1))))
+                ;; interface to Gambit's _test module
+                (let ((test-result (run-s19-test (car pr) (cdr pr) verbose)))
+                  (test-assert test-result)
+                  (if test-result
+                      (set! goods (+ goods 1))
+                      (set! bads (+ bads 1)))))
               s19-tests)
     (if verbose
         (begin
@@ -228,5 +240,7 @@
        (time=? ct-utc (date->time-utc cd))
        (time=? ct-tai (date->time-tai cd))))))
 
+;; interface to Gambit's _test module
+(run-s19-tests) #;
 (begin (newline) (run-s19-tests #t))
 

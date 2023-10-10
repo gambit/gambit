@@ -2,7 +2,7 @@
 
 ;;; File: "test10.scm"
 
-;;; Copyright (c) 2008-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2008-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -87,7 +87,7 @@ default-random-source
           (patlen (string-length pattern)))
       (let loop ((i (- len 1)) (j len) (parts '()))
         (if (< i 0)
-            (apply string-append (cons (substring str 0 j) parts))
+            (string-concatenate (cons (substring str 0 j) parts))
             (if (and (>= (- j i) patlen)
                      (string=? (substring str i (+ i patlen)) pattern))
                 (loop (- i 1)
@@ -104,32 +104,6 @@ default-random-source
           ((keep? (car lst)) (cons (car lst) (keep keep? (cdr lst))))
           (else              (keep keep? (cdr lst)))))
 
-  (define (list-sort lst <?)
-
-    (define (mergesort lst)
-
-      (define (merge lst1 lst2)
-        (cond ((null? lst1) lst2)
-              ((null? lst2) lst1)
-              (else
-               (let ((e1 (car lst1)) (e2 (car lst2)))
-                 (if (<? e1 e2)
-                     (cons e1 (merge (cdr lst1) lst2))
-                     (cons e2 (merge lst1 (cdr lst2))))))))
-
-      (define (split lst)
-        (if (or (null? lst) (null? (cdr lst)))
-            lst
-            (cons (car lst) (split (cddr lst)))))
-
-      (if (or (null? lst) (null? (cdr lst)))
-          lst
-          (let* ((lst1 (mergesort (split lst)))
-                 (lst2 (mergesort (split (cdr lst)))))
-            (merge lst1 lst2))))
-
-    (mergesort lst))
-
   (define (extract-macros cte)
     (cond ((##cte-top? cte)
            '())
@@ -145,13 +119,13 @@ default-random-source
   (define (get-rtlib-mapping filename)
 
     (define (symbol-table->list st)
-      (apply append
-             (map (lambda (s)
-                    (let loop ((s s) (lst '()))
-                      (if (symbol? s)
-                          (loop (##vector-ref s 2) (cons s lst))
-                          (reverse lst))))
-                  (vector->list st))))
+      (concatenate
+       (map (lambda (s)
+              (let loop ((s s) (lst '()))
+                (if (symbol? s)
+                    (loop (##vector-ref s 2) (cons s lst))
+                    (reverse lst))))
+            (vector->list st))))
 
     (define (hidden-id? id)
       (let ((str (symbol->string id)))
@@ -169,8 +143,8 @@ default-random-source
 
     (define (sort-symbols lst)
       (list-sort
-       lst
-       (lambda (x y) (string<? (symbol->string x) (symbol->string y)))))
+       (lambda (x y) (string<? (symbol->string x) (symbol->string y)))
+       lst))
 
     (let* ((public-procedures
             (keep public-procedure?
@@ -211,8 +185,7 @@ default-random-source
                      (loop (cdr exprs)
                            (append
                             mapping
-                            (apply
-                             append
+                            (concatenate
                              (map (lambda (clause)
                                     (let ((ns (car clause)))
 

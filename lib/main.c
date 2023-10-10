@@ -1,15 +1,16 @@
 /* File: "main.c" */
 
-/* Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved. */
 
 /* This is the driver of the Gambit system */
 
 #define ___INCLUDED_FROM_MAIN
-#define ___VERSION 409004
+#define ___VERSION 409005
 #include "gambit.h"
 
 #include "os_setup.h"
 #include "os_base.h"
+#include "os_thread.h"
 #include "os_shell.h"
 #include "setup.h"
 
@@ -70,8 +71,8 @@ int debug_settings;)
         "                                (defaults to 127.0.0.1:44555)\n"
         "  ~~NAME=DIR         override Gambit installation directory ~~NAME where NAME\n"
         "                     can be the special \"bin\" and \"lib\", or empty, or any id\n"
-        "  search=[DIR]       add directory to module search order (or reset it)\n"
-        "  whitelist=[SOURCE] add source to module auto-install whitelist (or reset it)\n"
+        "  search[=DIR]       add directory to module search order (or reset it)\n"
+        "  whitelist[=SOURCE] add source to module auto-install whitelist (or reset it)\n"
         "  ask-install=WHEN   when an uninstalled module is not on the whitelist, ask\n"
         "                     user if it should be installed, where WHEN is one of\n"
         "                      never     never ask, i.e. don't install\n"
@@ -209,6 +210,82 @@ ___UCS_2STRING *start;)
     }
 
   return result;
+}
+
+
+___HIDDEN ___UCS_2STRING string_equal
+   ___P((___UCS_2STRING str1,
+         ___UCS_2STRING str2),
+        (str1,
+         str2)
+___UCS_2STRING str1;
+___UCS_2STRING str2;)
+{
+  ___UCS_2 c;
+
+  while ((c = *str1) != '\0' && (c != ',' || str1[1] == ','))
+    {
+      str1++;
+      if (c == ',')
+        str1++;
+      if (c != *str2++) return 0;
+    }
+
+  if (*str2 == '\0')
+    return str1;
+  else
+    return 0;
+}
+
+
+___HIDDEN ___BOOL move_if_existing
+   ___P((___UCS_2STRING *start,
+         ___UCS_2STRING *strvec,
+         int pos),
+        (start,
+         strvec,
+         pos)
+___UCS_2STRING *start;
+___UCS_2STRING *strvec;
+int pos;)
+{
+  if (strvec != 0)
+    {
+      int i;
+      int n = 0;
+
+      while (strvec[n] != 0) n++;
+
+      for (i=0; i<n; i++)
+        {
+          ___UCS_2STRING str2 = strvec[i];
+          ___UCS_2STRING str1 = string_equal (*start, str2);
+          if (str1)
+            {
+              if (pos < i)
+                {
+                  while (pos < i)
+                    {
+                      strvec[i] = strvec[i-1];
+                      i--;
+                    }
+                }
+              else
+                {
+                  while (i < pos)
+                    {
+                      strvec[i] = strvec[i+1];
+                      i++;
+                    }
+                }
+              strvec[pos] = str2;
+              *start = str1;
+              return 1;
+            }
+        }
+    }
+
+  return 0;
 }
 
 
@@ -416,7 +493,7 @@ ___mod_or_lnk (*linker)();)
   parallelism_level = 1;
 #else
   {
-    int count = ___cpu_count ();
+    int count = ___cpu_count (-1);
     if (count < 1) count = 1;
     parallelism_level = ___CEILING_DIV(count*50,100); /* default = 50% */
   }
@@ -585,16 +662,10 @@ ___mod_or_lnk (*linker)();)
                   else if (starts_with (s, "search"))
                     {
                       ___UCS_2STRING dir;
+                      int pos = module_search_order_len;
 
-                      if (*arg == '\0' || (*arg == ',' && arg[1] != ','))
+                      if (!move_if_existing (&arg, module_search_order, pos?pos-1:0))
                         {
-                          free_strvec (&module_search_order,
-                                       &module_search_order_len);
-                        }
-                      else
-                        {
-                          int pos = 0;
-
                           if (!extend_strvec (&module_search_order, pos, 1, module_search_order != 0))
                             {
                               e = ___FIX(___HEAP_OVERFLOW_ERR);
@@ -617,16 +688,10 @@ ___mod_or_lnk (*linker)();)
                   else if (starts_with (s, "whitelist"))
                     {
                       ___UCS_2STRING src;
+                      int pos = module_whitelist_len;
 
-                      if (*arg == '\0' || (*arg == ',' && arg[1] != ','))
+                      if (!move_if_existing (&arg, module_whitelist, pos?pos-1:0))
                         {
-                          free_strvec (&module_whitelist,
-                                       &module_whitelist_len);
-                        }
-                      else
-                        {
-                          int pos = module_whitelist_len;
-
                           if (!extend_strvec (&module_whitelist, pos, 1, module_whitelist != 0))
                             {
                               e = ___FIX(___HEAP_OVERFLOW_ERR);
@@ -670,6 +735,18 @@ ___mod_or_lnk (*linker)();)
                         }
                       continue;
                     }
+                }
+              else if (option_equal (s, "search"))
+                {
+                  free_strvec (&module_search_order,
+                               &module_search_order_len);
+                  continue;
+                }
+              else if (option_equal (s, "whitelist"))
+                {
+                  free_strvec (&module_whitelist,
+                               &module_whitelist_len);
+                  continue;
                 }
               else if (option_equal (s, "debug"))
                 goto debug_option;
@@ -759,7 +836,7 @@ ___mod_or_lnk (*linker)();)
                     if (*arg == '%')
                       {
 #ifndef ___SINGLE_THREADED_VMS
-                        int count = ___cpu_count ();
+                        int count = ___cpu_count (-1);
                         if (argval > 100)
                           argval = 100;
                         parallelism_level = ___CEILING_DIV(count*argval,100);

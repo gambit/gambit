@@ -2,7 +2,7 @@
 
 ;;; File: "_host.scm"
 
-;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -782,7 +782,9 @@
 
 (define (in-char-range? n)
   (##declare (generic)) ; in case n is a bignum
-  (<= n ##max-char))
+  (and (not (< #x10ffff n)) ;; TODO: after bootstrap replace with (##max-char-code)
+        (or (< n #xd800)
+            (< #xdfff n))))
 
 (define (in-integer-range? n lo hi)
   (##declare (generic)) ; in case n is a bignum

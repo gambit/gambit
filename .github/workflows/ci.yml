@@ -7,10 +7,9 @@ on:
   push:
     branches:
       - master
-
 jobs:
-  Windows-mingw:
-    name: "Windows - ${{ matrix.msystem }}"
+  windows-mingw:
+    name: "windows - ${{ matrix.msystem }}"
     runs-on: windows-latest
     strategy:
       matrix:
@@ -25,7 +24,7 @@ jobs:
         shell: msys2 {0}
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0 # Checkout history and tags
 
@@ -33,7 +32,7 @@ jobs:
       uses: msys2/setup-msys2@v2
       with:
         update: true
-        install: "autoconf git make tar texinfo mingw-w64-${{ matrix.arch }}-gcc mingw-w64-${{ matrix.arch }}-make mingw-w64-${{ matrix.arch }}-libwinpthread-git"
+        install: "autoconf git make tar texinfo mingw-w64-${{ matrix.arch }}-gcc mingw-w64-${{ matrix.arch }}-make mingw-w64-${{ matrix.arch }}-libwinpthread-git tmate"
         msystem: ${{ matrix.msystem }}
 
     - name: Build
@@ -84,16 +83,17 @@ jobs:
         name: gambit-win-mingw-${{ matrix.arch }}-mt
         path: dist-mt/
 
-    - name: Report Failure to Gitter
-      run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
+    - name: Debug with tmate on failure
+      run: |
+        : tmate -F -k ${{ secrets.TMATE_API_KEY }} -n ${{ secrets.TMATE_SESSION_PREFIX }}-${{ matrix.msystem }} > /dev/null 2>&1
       if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
 
-  Windows-msvc:
-    name: "Windows - MSVC"
+  windows-msvc:
+    name: "windows - MSVC"
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0 # Checkout history and tags
 
@@ -104,7 +104,7 @@ jobs:
       uses: msys2/setup-msys2@v2
       with:
         update: true
-        install: "autoconf make patch tar texinfo"
+        install: "autoconf make patch tar texinfo tmate"
         path-type: inherit
         msystem: MSYS
 
@@ -157,22 +157,24 @@ jobs:
         name: gambit-win-msvc-x86_64-mt
         path: dist-mt/
 
-    - name: Report Failure to Gitter
-      run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
+    - name: Debug with tmate on failure
+      run: |
+        msys2 -c ": tmate -F -k ${{ secrets.TMATE_API_KEY }} -n ${{ secrets.TMATE_SESSION_PREFIX }}-MSVC > /dev/null 2>&1"
       if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
 
-  Linux:
+  linux:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0 # Checkout history and tags
 
     - name: Install Dependencies
       run: |
         sudo apt-get update
-        sudo apt-get install texinfo
+        sudo apt-get install texinfo autoconf2.69
+        sudo ln -s -f `which autoconf2.69` `which autoconf`
 
     - name: Build and Test with C compiler
       run: |
@@ -232,38 +234,40 @@ jobs:
         name: boot
         path: boot.tgz
 
-    - name: Report Failure to Gitter
-      run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
+    - name: Debug with tmate on failure
+      run: |
+        sudo apt-get install tmate
+        tmate -F -k ${{ secrets.TMATE_API_KEY }} -n ${{ secrets.TMATE_SESSION_PREFIX }}-linux > /dev/null 2>&1
       if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
 
-  MacOS:
+  macos:
     runs-on: macos-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0 # Checkout history and tags
 
     - name: Build and Test with C compiler
       run: |
-        export CC=gcc-9
-        export CXX=g++-9
+        export CC=gcc-11
+        export CXX=g++-11
         export PROCS=`sysctl -n hw.physicalcpu`
         ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms && make clean && make -j$PROCS core && make check
 
     - name: Build and Test with C++ compiler
       if: github.event_name == 'push'
       run: |
-        export CC=gcc-9
-        export CXX=g++-9
+        export CC=gcc-11
+        export CXX=g++-11
         export PROCS=`sysctl -n hw.physicalcpu`
         ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-debug --enable-debug-c-backtrace --enable-multiple-threaded-vms --enable-cplusplus && make clean && make -j$PROCS core && make check
 
     - name: Build and Test with C compiler and --enable-ansi-c
       if: github.event_name == 'push'
       run: |
-        export CC=gcc-9
-        export CXX=g++-9
+        export CC=gcc-11
+        export CXX=g++-11
         export PROCS=`sysctl -n hw.physicalcpu`
         ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-ansi-c && make clean && make -j$PROCS core && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
 
@@ -271,8 +275,8 @@ jobs:
       if: github.event_name == 'push'
       run: |
         mkdir dist
-        export CC=gcc-9
-        export CXX=g++-9
+        export CC=gcc-11
+        export CXX=g++-11
         ./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist && make clean && make -j`sysctl -n hw.physicalcpu` core && make modules && make install
         cd dist/
         tar -cvzf ../gambit-macos-x86_64.tgz ./
@@ -289,8 +293,8 @@ jobs:
       if: github.event_name == 'push'
       run: |
         mkdir dist-mt
-        export CC=gcc-9
-        export CXX=g++-9
+        export CC=gcc-11
+        export CXX=g++-11
         ./configure --enable-single-host --enable-multiple-threaded-vms --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist-mt && make clean && make -j`sysctl -n hw.physicalcpu` core && make modules && make install
         cd dist-mt/
         tar -cvzf ../gambit-macos-x86_64-mt.tgz ./
@@ -303,16 +307,18 @@ jobs:
         name: gambit-macos-x86_64-mt
         path: gambit-macos-x86_64-mt.tgz
 
-    - name: Report Failure to Gitter
-      run: curl --data-urlencode "message=${{ github.job }} build of CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) failed" -d level=error ${{ secrets.GITTER_URL }}
+    - name: Debug with tmate on failure
+      run: |
+        brew install tmate
+        : tmate -F -k ${{ secrets.TMATE_API_KEY }} -n ${{ secrets.TMATE_SESSION_PREFIX }}-macos > /dev/null 2>&1
       if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
 
   ReportResult:
     runs-on: ubuntu-latest
-    needs: [Windows-mingw, Windows-msvc, Linux, MacOS]
+    needs: [windows-mingw, windows-msvc, linux, macos]
     if: ${{ success() }}
 
     steps:
-    - name: Report Success to Gitter
-      run: curl --data-urlencode "message=CI run [$GITHUB_RUN_ID](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID) passed" ${{ secrets.GITTER_URL }}
-      if: success() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
+    - name: Report Success
+      run: curl -XPOST -d '{"msgtype":"m.text", "body":"https://github.com/${{ github.repository }}/commit/${{ github.sha }}"}' "https://matrix.org/_matrix/client/r0/rooms/${{ secrets.GITTER_ROOM }}/send/m.room.message?access_token=${{ secrets.GITTER_ACCESS_TOKEN }}"
+      if: success() && github.event_name == 'push'

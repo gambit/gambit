@@ -285,6 +285,8 @@ $(MODULES_O) $(NORMAL_O): $(srcdirpfx)$(rootfromhere)/include/gambit.h
 _kernel@obj@: _kernel.c $(srcdirpfx)$(rootfromhere)/include/stamp.h os.h os_setup.h os_base.h os_time.h os_shell.h os_files.h os_dyn.h os_tty.h os_io.h setup.h mem.h c_intf.h
 	@BUILD_OBJ@ -D___LIBRARY
 
+_system.c: gambit/char/char\#.scm gambit/char/CaseFolding.txt gambit/char/PropList.txt gambit/char/SpecialCasing.txt gambit/char/UnicodeData.txt
+
 _system@obj@: _system.c
 	@BUILD_OBJ@ -D___LIBRARY
 
@@ -293,7 +295,7 @@ _num.c: gambit/random/random.scm gambit/random/random\#.scm
 _num@obj@: _num.c mem.h
 	@BUILD_OBJ@ -D___LIBRARY
 
-_std.c: gambit/boolean/boolean.scm gambit/boolean/boolean\#.scm gambit/symkey/symkey.scm gambit/symkey/symkey\#.scm gambit/char/char.scm gambit/char/char\#.scm gambit/list/list.scm gambit/list/list\#.scm gambit/vector/vector.scm gambit/vector/vector\#.scm gambit/string/string.scm gambit/string/string\#.scm gambit/procedure/procedure.scm gambit/procedure/procedure\#.scm gambit/promise/promise.scm gambit/promise/promise\#.scm gambit/parameter/parameter.scm gambit/parameter/parameter\#.scm
+_std.c: gambit/boolean/boolean.scm gambit/boolean/boolean\#.scm gambit/symkey/symkey.scm gambit/symkey/symkey\#.scm gambit/list/list.scm gambit/list/list\#.scm gambit/vector/vector.scm gambit/vector/vector\#.scm gambit/string/string.scm gambit/string/string\#.scm gambit/procedure/procedure.scm gambit/procedure/procedure\#.scm gambit/promise/promise.scm gambit/promise/promise\#.scm gambit/parameter/parameter.scm gambit/parameter/parameter\#.scm gambit/char/char.scm gambit/char/char\#.scm gambit/char/CaseFolding.txt gambit/char/PropList.txt gambit/char/SpecialCasing.txt gambit/char/UnicodeData.txt
 _std@obj@: _std.c os.h
 	@BUILD_OBJ@ -D___LIBRARY
 
@@ -514,7 +516,9 @@ bootstrap-recursive install-recursive uninstall-recursive select-gen-for-commit-
 modules-recursive: $(SUBDIRS1)
 	@$(MAKE) univ-libs $(SUBDIRS2)
 
-$(SUBDIRS):
+fake_target:
+
+$(SUBDIRS): fake_target
 	@(cd $@ && $(MAKE) modules) || exit 1
 
 core: core-post

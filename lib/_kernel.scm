@@ -2,7 +2,7 @@
 
 ;;; File: "_kernel.scm"
 
-;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -15,6 +15,7 @@
 #include "os.h"
 #include "os_setup.h"
 #include "os_base.h"
+#include "os_thread.h"
 #include "os_time.h"
 #include "os_files.h"
 #include "os_dyn.h"
@@ -2152,20 +2153,22 @@ end-of-code
             void
     "___set_gambitdir_map (___arg1);"))
 
-(define-prim ##get-module-search-order
-  (c-lambda ()
-            nonnull-UCS-2-string-list
-    "___return(___get_module_search_order ());"))
+(define-prim (##get-module-search-order)
+  (or ((c-lambda ()
+                 nonnull-UCS-2-string-list
+        "___return(___get_module_search_order ());"))
+      '()))
 
 (define-prim ##set-module-search-order!
   (c-lambda (nonnull-UCS-2-string-list)
             void
     "___set_module_search_order (___arg1);"))
 
-(define-prim ##get-module-whitelist
-  (c-lambda ()
-            nonnull-UCS-2-string-list
-    "___return(___get_module_whitelist ());"))
+(define-prim (##get-module-whitelist)
+  (or ((c-lambda ()
+                 nonnull-UCS-2-string-list
+        "___return(___get_module_whitelist ());"))
+      '()))
 
 (define-prim ##set-module-whitelist!
   (c-lambda (nonnull-UCS-2-string-list)
@@ -2206,10 +2209,11 @@ end-of-code
 
 ;;; CPU information.
 
-(define-prim (##cpu-count)
+(define-prim (##cpu-count #!optional (level -1))
   (##declare (not interrupts-enabled))
   (##c-code
-   "___RESULT = ___FIX(___cpu_count ());"))
+   "___RESULT = ___FIX(___cpu_count (___INT(___ARG1)));"
+   level))
 
 (define-prim (##cpu-cache-size
               #!optional
@@ -2221,6 +2225,9 @@ end-of-code
        ___FIX(___cpu_cache_size (!___FALSEP(___ARG1), ___INT(___ARG2)));"
    instruction-cache
    level))
+
+(define-prim (##cpu-cycle-count-start) 0)
+(define-prim (##cpu-cycle-count-end)   0)
 
 (define-prim (##core-count)
   (##declare (not interrupts-enabled))
@@ -4297,9 +4304,6 @@ end-of-code
 (define ##err-code-unimplemented
   (##c-code "___RESULT = ___FIX(___UNIMPL_ERR);"))
 
-(define ##max-char
-  (##c-code "___RESULT = ___FIX(___MAX_CHR);"))
-
 (define ##min-fixnum
   (##c-code "___RESULT = ___FIX(___MIN_FIX);"))
 
@@ -4520,6 +4524,11 @@ end-of-code
 ;;;----------------------------------------------------------------------------
 
 ;;; Filesystem path manipulation.
+
+(define-prim ##os-path-tempdir
+  (c-lambda ()
+            scheme-object
+   "___os_path_tempdir"))
 
 (define-prim ##os-path-homedir
   (c-lambda ()
@@ -5102,38 +5111,28 @@ end-of-code
 
 ;;; Version information.
 
-(define-prim (##system-version)
+(define-prim&proc (system-version)
 
   (##define-macro (comp-version)
     (c#compiler-version))
 
   (comp-version))
 
-(define-prim (system-version)
-  (##system-version))
-
 (define ##os-system-version-string-saved
   (let ()
 
-    (##define-macro (comp-version-string)
-      (c#compiler-version-string))
+    (##define-macro (comp-system-version-string)
+      (system-version-string))
 
     (macro-case-target
      ((C)
       (or ((c-lambda () char-string "___return(___STAMP_VERSION);"))
-          (comp-version-string)))
+          (comp-system-version-string)))
      (else
-      (comp-version-string)))))
+      (comp-system-version-string)))))
 
-(define-prim (##system-version-string)
+(define-prim&proc (system-version-string)
   ##os-system-version-string-saved)
-
-(define-prim (system-version-string)
-  (##system-version-string))
-
-(macro-case-target
-
- ((C)
 
 (define ##os-system-type-saved
   (let ()
@@ -5144,44 +5143,65 @@ end-of-code
           (##cons (##make-interned-symbol (##car lst))
                   (str-list->sym-list (##cdr lst)))))
 
-    (str-list->sym-list
-     ((c-lambda ()
-                nonnull-char-string-list
-       "___os_system_type")))))
+    (macro-case-target
+     ((C)
+      (str-list->sym-list
+       ((c-lambda ()
+                  nonnull-char-string-list
+          "___os_system_type"))))
+     (else
+      '(unknown system type)))))
 
-(define-prim (system-type)
+(define-prim&proc (system-type)
   ##os-system-type-saved)
 
 (define ##os-system-type-string-saved
-  ((c-lambda ()
-             nonnull-char-string
-    "___os_system_type_string")))
+  (macro-case-target
+   ((C)
+    ((c-lambda ()
+               nonnull-char-string
+      "___os_system_type_string")))
+   (else
+    "unknown-system-type")))
 
-(define-prim (system-type-string)
+(define-prim&proc (system-type-string)
   ##os-system-type-string-saved)
 
 (define ##os-configure-command-string-saved
-  ((c-lambda ()
-             nonnull-char-string
-    "___os_configure_command_string")))
+  (let ()
 
-(define-prim (configure-command-string)
+    (##define-macro (comp-configure-command-string)
+      (configure-command-string))
+
+    (macro-case-target
+     ((C)
+      ((c-lambda ()
+                 nonnull-char-string
+        "___os_configure_command_string")))
+     (else
+      (comp-configure-command-string)))))
+
+(define-prim&proc (configure-command-string)
   ##os-configure-command-string-saved)
 
 (define ##system-stamp-saved
-  ((c-lambda ()
-             unsigned-int64
-    "___return(___U64_add_U64_U64
-                 (___U64_mul_UM32_UM32 (___STAMP_YMD, 1000000),
-                  ___U64_from_UM32 (___STAMP_HMS)));")))
+  (let ()
 
-(define-prim (##system-stamp)
+    (##define-macro (comp-system-stamp)
+      (system-stamp))
+
+    (macro-case-target
+     ((C)
+      ((c-lambda ()
+                 unsigned-int64
+        "___return(___U64_add_U64_U64
+                   (___U64_mul_UM32_UM32 (___STAMP_YMD, 1000000),
+                    ___U64_from_UM32 (___STAMP_HMS)));")))
+     (else
+      (comp-system-stamp)))))
+
+(define-prim&proc (system-stamp)
   ##system-stamp-saved)
-
-(define-prim (system-stamp)
-  (##system-stamp))
-
-))
 
 ;;;----------------------------------------------------------------------------
 

@@ -4,6 +4,11 @@
 
 (check-eqv? (atanh 0) 0)
 
+;;; Check exact vs inexact
+
+(check-= (atanh 1/2) (atanh 0.5))
+(check-= (atanh 2) (atanh 2.))
+
 ;;; Test branch cuts
 
 (check-= (atanh 2)      (test-atanh 2))
@@ -12,6 +17,10 @@
 (check-= (atanh -2)     (test-atanh -2))
 (check-= (atanh -2+0.i) (test-atanh -2+0.i))
 (check-= (atanh -2-0.i) (test-atanh -2-0.i))
+
+;;; Test for accuracy for large real x
+
+(check-eqv? (atanh +inf.0) (make-rectangular +0. (macro-inexact--pi/2)))
 
 ;;; Test for accuracy near 0
 

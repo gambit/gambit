@@ -2,11 +2,13 @@
 
 ;;; File: "_system.scm"
 
-;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
 ;;; System procedures
+
+(##include "~~lib/gambit/char/char.scm") ;; for char-set equality and hashing
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -451,8 +453,12 @@
                               obj1
                               obj2
                               ,@params)))))
-                 ((##structure? obj1)
+                 ((macro-char-set? obj1)
                   (profile! 9)
+                  (and (macro-char-set? obj2)
+                       (##char-set= obj1 obj2)))
+                 ((##structure? obj1)
+                  (profile! 10)
                   (if (##not (##structure? obj2))
                       (false)
                       (let ((type (##structure-type obj1)))
@@ -486,7 +492,7 @@
                                           len
                                           ,@params)))))))))
                  ((##box? obj1)
-                  (profile! 10)
+                  (profile! 11)
                   (if (##not (##box? obj2))
                       (false)
                       ,(if custom-recursion-handler
@@ -502,73 +508,73 @@
                               (##unbox obj2)
                               ,@params)))))
                  ((##string? obj1)
-                  (profile! 11)
+                  (profile! 12)
                   (if (and (##string? obj2)
                            (##string-equal? obj1 obj2))
                       (true)
                       (false)))
                  ((##u8vector? obj1)
-                  (profile! 12)
+                  (profile! 13)
                   (if (and (##u8vector? obj2)
                            (##u8vector-equal? obj1 obj2))
                       (true)
                       (false)))
                  ((macro-if-s8vector (##s8vector? obj1) #f)
-                  (profile! 13)
+                  (profile! 14)
                   (if (and (##s8vector? obj2)
                            (##s8vector-equal? obj1 obj2))
                       (true)
                       (false)))
                  ((macro-if-u16vector (##u16vector? obj1) #f)
-                  (profile! 14)
+                  (profile! 15)
                   (if (and (##u16vector? obj2)
                            (##u16vector-equal? obj1 obj2))
                       (true)
                       (false)))
                  ((macro-if-s16vector (##s16vector? obj1) #f)
-                  (profile! 15)
+                  (profile! 16)
                   (if (and (##s16vector? obj2)
                            (##s16vector-equal? obj1 obj2))
                       (true)
                       (false)))
                  ((macro-if-u32vector (##u32vector? obj1) #f)
-                  (profile! 16)
+                  (profile! 17)
                   (if (and (##u32vector? obj2)
                            (##u32vector-equal? obj1 obj2))
                       (true)
                       (false)))
                  ((macro-if-s32vector (##s32vector? obj1) #f)
-                  (profile! 17)
+                  (profile! 18)
                   (if (and (##s32vector? obj2)
                            (##s32vector-equal? obj1 obj2))
                       (true)
                       (false)))
                  ((macro-if-u64vector (##u64vector? obj1) #f)
-                  (profile! 18)
+                  (profile! 19)
                   (if (and (##u64vector? obj2)
                            (##u64vector-equal? obj1 obj2))
                       (true)
                       (false)))
                  ((macro-if-s64vector (##s64vector? obj1) #f)
-                  (profile! 19)
+                  (profile! 20)
                   (if (and (##s64vector? obj2)
                            (##s64vector-equal? obj1 obj2))
                       (true)
                       (false)))
                  ((macro-if-f32vector (##f32vector? obj1) #f)
-                  (profile! 20)
+                  (profile! 21)
                   (if (and (##f32vector? obj2)
                            (##f32vector-equal? obj1 obj2))
                       (true)
                       (false)))
                  ((##f64vector? obj1)
-                  (profile! 21)
+                  (profile! 22)
                   (if (and (##f64vector? obj2)
                            (##f64vector-equal? obj1 obj2))
                       (true)
                       (false)))
                  (else
-                  (profile! 22)
+                  (profile! 23)
                   (false)))))))
 
 (macro-case-target
@@ -1036,6 +1042,8 @@
                          h
                          (hb h
                              (##fx- b (##fx* b1 len))))))))
+            ((macro-char-set? obj)
+             (##char-set-hash obj))
             ((##structure? obj)
              (let* ((type
                      (##structure-type obj))
@@ -2286,6 +2294,7 @@
   (define (check-test arg-num)
     (if (##eq? test (macro-absent-obj))
       (checks-done ##equal?
+                   (lambda (key) 0)
                    arg-num)
       (let ((arg-num (##fx+ arg-num 2)))
         (macro-check-procedure
@@ -2300,13 +2309,15 @@
                      min-load: min-load
                      max-load: max-load)
          (checks-done test
+                      hash
                       arg-num)))))
 
-  (define (checks-done test-fn arg-num)
+  (define (checks-done test-fn hash-fn arg-num)
     (macro-make-table (if (or (##eq? test-fn eq?)
                               (##eq? test-fn ##eq?))
                           #f
                           test-fn)
+                      hash-fn
                       init
                       ;; weak-keys/values are extended booleans
                       (##univ-table-make-hashtable (##not (##not weak-keys))
@@ -2674,7 +2685,6 @@
 
 ;;; imports:
 ;;; from _kernel.scm
-;;;    ##max-char
 ;;;    ##max-fixnum
 ;;;    (##global-var? ...)
 ;;;    (##type-id ...)
@@ -2701,6 +2711,7 @@
 ;;;    (##ieee754-64->flonum ...)
 ;;;    (##integer-length ...)
 ;;; from _std.scm
+;;;    (##max-char-code)
 ;;;    (##fail-check-u8vector ...)
 ;;;    (##fifo->u8vector ...)
 ;;;    (##subvector-move! ...)
@@ -2954,8 +2965,8 @@
 (##define-macro (max-fixnum)
   `##max-fixnum)
 
-(##define-macro (max-char)
-  `##max-char)
+(##define-macro (max-char-code)
+  `(##max-char-code))
 
 (##define-macro (make-table . args)
   `(##make-table-aux 0 #f #f #f ##eq?))
@@ -3652,7 +3663,7 @@
       (let loop ((i 0))
         (if (fx< i len)
             (let ((n (deserialize-nonneg-fixnum! 0 0)))
-              (if (fx<= n (max-char))
+              (if (fx<= n (max-char-code))
                   (begin
                     (string-set! obj i (integer->char n))
                     (loop (fx+ i 1)))
@@ -3834,7 +3845,7 @@
                  ((fx>= x (character-tag))
                   (cond ((fx= x (character-tag))
                          (let ((n (deserialize-nonneg-fixnum! 0 0)))
-                           (if (fx<= n (max-char))
+                           (if (fx<= n (max-char-code))
                                (integer->char n)
                                (err))))
 

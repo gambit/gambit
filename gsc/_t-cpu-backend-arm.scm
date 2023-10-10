@@ -430,7 +430,7 @@
 
 ;; Primitives
 
-(define arm-prim-##fixnum?
+(define arm-prim-**fixnum?
   (const-nargs-prim 1 1 '((reg))
     (lambda (cgc result-action args arg1 temp1)
       (am-mov cgc temp1 (int-opnd type-tag-mask))
@@ -441,7 +441,7 @@
         true-opnd:  (int-opnd (imm-encode #t))
         false-opnd: (int-opnd (imm-encode #f))))))
 
-(define arm-prim-##pair?
+(define arm-prim-**pair?
   (const-nargs-prim 1 2 '((reg mem))
     (lambda (cgc result-action args arg1 temp1 temp2)
       (am-mov cgc temp1 (int-opnd type-tag-mask))
@@ -454,7 +454,7 @@
         true-opnd:  (int-opnd (imm-encode #t))
         false-opnd: (int-opnd (imm-encode #f))))))
 
-(define arm-prim-##special?
+(define arm-prim-**special?
   (const-nargs-prim 1 2 '((reg mem))
     (lambda (cgc result-action args arg1 temp1 temp2)
       (am-mov cgc temp1 (int-opnd type-tag-mask))
@@ -468,7 +468,7 @@
         true-opnd:  (int-opnd (imm-encode #t))
         false-opnd: (int-opnd (imm-encode #f))))))
 
-(define arm-prim-##mem-allocated?
+(define arm-prim-**mem-allocated?
   (const-nargs-prim 1 1 '((reg mem))
     (lambda (cgc result-action args arg1 temp1)
       (am-mov cgc temp1 (int-opnd (bitwise-and (type-tag 'subtyped) (type-tag 'pair))))
@@ -479,7 +479,7 @@
         true-opnd:  (int-opnd (imm-encode #t))
         false-opnd: (int-opnd (imm-encode #f))))))
 
-(define arm-prim-##char?
+(define arm-prim-**char?
   (const-nargs-prim 1 2 '((reg mem))
     (lambda (cgc result-action args arg1 temp1 temp2)
       (let ((test-int
@@ -495,7 +495,7 @@
           true-opnd:  (int-opnd (imm-encode #t))
           false-opnd: (int-opnd (imm-encode #f)))))))
 
-(define (arm-prim-##boolean-or? desc)
+(define (arm-prim-**boolean-or? desc)
   (const-nargs-prim 1 2 any-opnds
     (lambda (cgc result-action args arg1 tmp1 tmp2)
       (let ((test-int (+ ((imm-encoder desc)) (- type-tag-mask (desc-type-tag desc)))))
@@ -508,7 +508,7 @@
           #f
           (get-word-width-bits cgc))))))
 
-(define arm-prim-##subtyped?
+(define arm-prim-**subtyped?
   (const-nargs-prim 1 2 '((reg mem))
     (lambda (cgc result-action args arg1 tmp1 tmp2)
       (am-mov cgc tmp1 (int-opnd type-tag-mask))
@@ -521,7 +521,7 @@
         true-opnd:  (int-opnd (imm-encode #t))
         false-opnd: (int-opnd (imm-encode #f))))))
 
-(define (arm-prim-##subtype? subtype-desc) ; XXX
+(define (arm-prim-**subtype? subtype-desc) ; XXX
   (const-nargs-prim 1 2 '((reg mem))
     (lambda (cgc result-action args arg1 tmp1 tmp2)
       (let ((width (get-word-width-bits cgc)))
@@ -551,7 +551,7 @@
           true-opnd:  (int-opnd (imm-encode #f))
           false-opnd: (int-opnd (imm-encode #t)))))))
 
-(define arm-prim-##fx+
+(define arm-prim-**fx+
   (foldl-prim
     (lambda (cgc accum opnd) (am-add cgc accum accum opnd))
     allowed-opnds: '(reg mem int)
@@ -561,7 +561,7 @@
     reduce-1: am-mov
     commutative: #t))
 
-(define arm-prim-##fx+?
+(define arm-prim-**fx+?
   (lambda (cgc result-action args)
     (with-result-opnd cgc result-action args
       allowed-opnds: '(reg)
@@ -574,7 +574,7 @@
           true-opnd: result-reg
           false-opnd: (int-opnd (imm-encode #f)))))))
 
-(define arm-prim-##fx-
+(define arm-prim-**fx-
   (foldl-prim
     (lambda (cgc accum opnd) (am-sub cgc accum accum opnd))
     allowed-opnds: '(reg mem int)
@@ -583,7 +583,7 @@
     reduce-1: (lambda (cgc dst opnd) (am-sub cgc dst (int-opnd 0) opnd))
     commutative: #f))
 
-(define arm-prim-##fx-?
+(define arm-prim-**fx-?
   (lambda (cgc result-action args)
     (with-result-opnd cgc result-action args
       allowed-opnds: '(reg)
@@ -609,13 +609,13 @@
     allowed-opnds1: '(reg)
     allowed-opnds2: '(reg int)))
 
-(define arm-prim-##fx<  (arm-compare-prim (condition-greater #t #t)))
-(define arm-prim-##fx<= (arm-compare-prim (condition-greater #f #t)))
-(define arm-prim-##fx>  (arm-compare-prim (condition-lesser #t #t)))
-(define arm-prim-##fx>= (arm-compare-prim (condition-lesser #f #t)))
-(define arm-prim-##fx=  (arm-compare-prim condition-not-equal))
+(define arm-prim-**fx<  (arm-compare-prim (condition-greater #t #t)))
+(define arm-prim-**fx<= (arm-compare-prim (condition-greater #f #t)))
+(define arm-prim-**fx>  (arm-compare-prim (condition-lesser #t #t)))
+(define arm-prim-**fx>= (arm-compare-prim (condition-lesser #f #t)))
+(define arm-prim-**fx=  (arm-compare-prim condition-not-equal))
 
-(define (arm-prim-##fxparity? parity)
+(define (arm-prim-**fxparity? parity)
   (const-nargs-prim 1 1 '((reg))
     (lambda (cgc result-action args arg1 temp1)
       (am-mov cgc temp1 (int-opnd (imm-encode 1)))
@@ -626,7 +626,7 @@
         true-opnd:  (int-opnd (imm-encode #t))
         false-opnd: (int-opnd (imm-encode #f))))))
 
-(define (arm-prim-##fxsign? sign)
+(define (arm-prim-**fxsign? sign)
   (const-nargs-prim 1 1 '((reg))
     (lambda (cgc result-action args arg1 tmp1)
       (am-mov cgc tmp1 (int-opnd 0))
@@ -637,7 +637,7 @@
         true-opnd:  (int-opnd (imm-encode #t))
         false-opnd: (int-opnd (imm-encode #f))))))
 
-(define arm-prim-##cons
+(define arm-prim-**cons
   (lambda (cgc result-action args)
     (with-result-opnd cgc result-action args
       allowed-opnds: '(reg)
@@ -732,7 +732,7 @@
               (am-mov cgc (mem-opnd result-reg 0-offset) new-val-opnd))))
         (am-return-const cgc result-action (void))))))
 
-(define (arm-prim-##vector-length #!optional (width #f))
+(define (arm-prim-**vector-length #!optional (width #f))
   (const-nargs-prim 1 0 '((reg))
     (lambda (cgc result-action args obj-reg)
       (let* ((width (if width width (get-word-width cgc)))
@@ -749,68 +749,68 @@
 
 (define arm-primitive-table
   (let ((table (make-table test: equal?)))
-    (table-set! table '##identity       (make-prim-obj ##identity-primitive    1 #t #t))
-    (table-set! table '##not            (make-prim-obj ##not-primitive         1 #t #t #t))
-    (table-set! table '##void           (make-prim-obj ##void-primitive        0 #t #t))
-    (table-set! table '##eof-object     (make-prim-obj ##eof-object-primitive  0 #t #t))
-    (table-set! table '##eof-object?    (make-prim-obj ##eof-object?-primitive 1 #t #t #t))
-    (table-set! table '##eq?            (make-prim-obj ##eq?-primitive         2 #t #t #t))
-    (table-set! table '##null?          (make-prim-obj ##null?-primitive       1 #t #f #t))
-    (table-set! table '##fxzero?        (make-prim-obj ##fxzero?-primitive     1 #t #t #t))
+    (table-set! table '##identity       (make-prim-obj **identity-primitive    1 #t #t))
+    (table-set! table '##not            (make-prim-obj **not-primitive         1 #t #t #t))
+    (table-set! table '##void           (make-prim-obj **void-primitive        0 #t #t))
+    (table-set! table '##eof-object     (make-prim-obj **eof-object-primitive  0 #t #t))
+    (table-set! table '##eof-object?    (make-prim-obj **eof-object?-primitive 1 #t #t #t))
+    (table-set! table '##eq?            (make-prim-obj **eq?-primitive         2 #t #t #t))
+    (table-set! table '##null?          (make-prim-obj **null?-primitive       1 #t #f #t))
+    (table-set! table '##fxzero?        (make-prim-obj **fxzero?-primitive     1 #t #t #t))
 
-    (table-set! table '##fixnum?        (make-prim-obj arm-prim-##fixnum?        1 #t #t #t))
-    (table-set! table '##special?       (make-prim-obj arm-prim-##special?       1 #t #t #t))
-    (table-set! table '##pair?          (make-prim-obj arm-prim-##pair?          1 #t #t #t))
-    (table-set! table '##mem-allocated? (make-prim-obj arm-prim-##mem-allocated? 1 #t #t #t))
-    (table-set! table '##char?          (make-prim-obj arm-prim-##char?          1 #t #t #t))
+    (table-set! table '##fixnum?        (make-prim-obj arm-prim-**fixnum?        1 #t #t #t))
+    (table-set! table '##special?       (make-prim-obj arm-prim-**special?       1 #t #t #t))
+    (table-set! table '##pair?          (make-prim-obj arm-prim-**pair?          1 #t #t #t))
+    (table-set! table '##mem-allocated? (make-prim-obj arm-prim-**mem-allocated? 1 #t #t #t))
+    (table-set! table '##char?          (make-prim-obj arm-prim-**char?          1 #t #t #t))
 
-    (table-set! table '##boolean?       (make-prim-obj (arm-prim-##boolean-or? tru-desc)  1 #t #t #t))
-    (table-set! table '##false-or-null? (make-prim-obj (arm-prim-##boolean-or? nul-desc)  1 #t #t #t))
-    (table-set! table '##false-or-void? (make-prim-obj (arm-prim-##boolean-or? void-desc) 1 #t #t #t))
+    (table-set! table '##boolean?       (make-prim-obj (arm-prim-**boolean-or? tru-desc)  1 #t #t #t))
+    (table-set! table '##false-or-null? (make-prim-obj (arm-prim-**boolean-or? nul-desc)  1 #t #t #t))
+    (table-set! table '##false-or-void? (make-prim-obj (arm-prim-**boolean-or? void-desc) 1 #t #t #t))
 
-    (table-set! table '##subtyped?     (make-prim-obj arm-prim-##subtyped? 1 #t #t #t))
-    (table-set! table '##vector?       (make-prim-obj (arm-prim-##subtype? vector-desc)       1 #t #t #t))
-    (table-set! table '##ratnum?       (make-prim-obj (arm-prim-##subtype? ratnum-desc)       1 #t #t #t))
-    (table-set! table '##cpxnum?       (make-prim-obj (arm-prim-##subtype? cpxnum-desc)       1 #t #t #t))
-    (table-set! table '##structure?    (make-prim-obj (arm-prim-##subtype? structure-desc)    1 #t #t #t))
-    (table-set! table '##meroon?       (make-prim-obj (arm-prim-##subtype? meroon-desc)       1 #t #t #t))
-    (table-set! table '##jazz?         (make-prim-obj (arm-prim-##subtype? jazz-desc)         1 #t #t #t))
-    (table-set! table '##symbol?       (make-prim-obj (arm-prim-##subtype? symbol-desc)       1 #t #t #t))
-    (table-set! table '##keyword?      (make-prim-obj (arm-prim-##subtype? keyword-desc)      1 #t #t #t))
-    (table-set! table '##frame?        (make-prim-obj (arm-prim-##subtype? frame-desc)        1 #t #t #t))
-    (table-set! table '##continuation? (make-prim-obj (arm-prim-##subtype? continuation-desc) 1 #t #t #t))
-    (table-set! table '##promise?      (make-prim-obj (arm-prim-##subtype? promise-desc)      1 #t #t #t))
-    (table-set! table '##procedure?    (make-prim-obj (arm-prim-##subtype? procedure-desc)    1 #t #t #t))
-    (table-set! table '##return?       (make-prim-obj (arm-prim-##subtype? return-desc)       1 #t #t #t))
-    (table-set! table '##foreign?      (make-prim-obj (arm-prim-##subtype? foreign-desc)      1 #t #t #t))
-    (table-set! table '##string?       (make-prim-obj (arm-prim-##subtype? string-desc)       1 #t #t #t))
-    (table-set! table '##s8vector?     (make-prim-obj (arm-prim-##subtype? s8vector-desc)     1 #t #t #t))
-    (table-set! table '##u8vector?     (make-prim-obj (arm-prim-##subtype? u8vector-desc)     1 #t #t #t))
-    (table-set! table '##s16vector?    (make-prim-obj (arm-prim-##subtype? s16vector-desc)    1 #t #t #t))
-    (table-set! table '##u16vector?    (make-prim-obj (arm-prim-##subtype? u16vector-desc)    1 #t #t #t))
-    (table-set! table '##s32vector?    (make-prim-obj (arm-prim-##subtype? s32vector-desc)    1 #t #t #t))
-    (table-set! table '##u32vector?    (make-prim-obj (arm-prim-##subtype? u32vector-desc)    1 #t #t #t))
-    (table-set! table '##f32vector?    (make-prim-obj (arm-prim-##subtype? f32vector-desc)    1 #t #t #t))
-    (table-set! table '##s64vector?    (make-prim-obj (arm-prim-##subtype? s64vector-desc)    1 #t #t #t))
-    (table-set! table '##u64vector?    (make-prim-obj (arm-prim-##subtype? u64vector-desc)    1 #t #t #t))
-    (table-set! table '##f64vector?    (make-prim-obj (arm-prim-##subtype? f64vector-desc)    1 #t #t #t))
-    (table-set! table '##flonum?       (make-prim-obj (arm-prim-##subtype? flonum-desc)       1 #t #t #t))
-    (table-set! table '##bignum?       (make-prim-obj (arm-prim-##subtype? bignum-desc)       1 #t #t #t))
+    (table-set! table '##subtyped?     (make-prim-obj arm-prim-**subtyped? 1 #t #t #t))
+    (table-set! table '##vector?       (make-prim-obj (arm-prim-**subtype? vector-desc)       1 #t #t #t))
+    (table-set! table '##ratnum?       (make-prim-obj (arm-prim-**subtype? ratnum-desc)       1 #t #t #t))
+    (table-set! table '##cpxnum?       (make-prim-obj (arm-prim-**subtype? cpxnum-desc)       1 #t #t #t))
+    (table-set! table '##structure?    (make-prim-obj (arm-prim-**subtype? structure-desc)    1 #t #t #t))
+    (table-set! table '##meroon?       (make-prim-obj (arm-prim-**subtype? meroon-desc)       1 #t #t #t))
+    (table-set! table '##jazz?         (make-prim-obj (arm-prim-**subtype? jazz-desc)         1 #t #t #t))
+    (table-set! table '##symbol?       (make-prim-obj (arm-prim-**subtype? symbol-desc)       1 #t #t #t))
+    (table-set! table '##keyword?      (make-prim-obj (arm-prim-**subtype? keyword-desc)      1 #t #t #t))
+    (table-set! table '##frame?        (make-prim-obj (arm-prim-**subtype? frame-desc)        1 #t #t #t))
+    (table-set! table '##continuation? (make-prim-obj (arm-prim-**subtype? continuation-desc) 1 #t #t #t))
+    (table-set! table '##promise?      (make-prim-obj (arm-prim-**subtype? promise-desc)      1 #t #t #t))
+    (table-set! table '##procedure?    (make-prim-obj (arm-prim-**subtype? procedure-desc)    1 #t #t #t))
+    (table-set! table '##return?       (make-prim-obj (arm-prim-**subtype? return-desc)       1 #t #t #t))
+    (table-set! table '##foreign?      (make-prim-obj (arm-prim-**subtype? foreign-desc)      1 #t #t #t))
+    (table-set! table '##string?       (make-prim-obj (arm-prim-**subtype? string-desc)       1 #t #t #t))
+    (table-set! table '##s8vector?     (make-prim-obj (arm-prim-**subtype? s8vector-desc)     1 #t #t #t))
+    (table-set! table '##u8vector?     (make-prim-obj (arm-prim-**subtype? u8vector-desc)     1 #t #t #t))
+    (table-set! table '##s16vector?    (make-prim-obj (arm-prim-**subtype? s16vector-desc)    1 #t #t #t))
+    (table-set! table '##u16vector?    (make-prim-obj (arm-prim-**subtype? u16vector-desc)    1 #t #t #t))
+    (table-set! table '##s32vector?    (make-prim-obj (arm-prim-**subtype? s32vector-desc)    1 #t #t #t))
+    (table-set! table '##u32vector?    (make-prim-obj (arm-prim-**subtype? u32vector-desc)    1 #t #t #t))
+    (table-set! table '##f32vector?    (make-prim-obj (arm-prim-**subtype? f32vector-desc)    1 #t #t #t))
+    (table-set! table '##s64vector?    (make-prim-obj (arm-prim-**subtype? s64vector-desc)    1 #t #t #t))
+    (table-set! table '##u64vector?    (make-prim-obj (arm-prim-**subtype? u64vector-desc)    1 #t #t #t))
+    (table-set! table '##f64vector?    (make-prim-obj (arm-prim-**subtype? f64vector-desc)    1 #t #t #t))
+    (table-set! table '##flonum?       (make-prim-obj (arm-prim-**subtype? flonum-desc)       1 #t #t #t))
+    (table-set! table '##bignum?       (make-prim-obj (arm-prim-**subtype? bignum-desc)       1 #t #t #t))
 
-    (table-set! table '##fx+            (make-prim-obj arm-prim-##fx+  2 #t #f))
-    (table-set! table '##fx+?           (make-prim-obj arm-prim-##fx+? 2 #t #t #t))
-    (table-set! table '##fx-            (make-prim-obj arm-prim-##fx-  2 #t #f))
-    (table-set! table '##fx-?           (make-prim-obj arm-prim-##fx-? 2 #t #t #t))
-    (table-set! table '##fx<            (make-prim-obj arm-prim-##fx<  2 #t #t))
-    (table-set! table '##fx<=           (make-prim-obj arm-prim-##fx<= 2 #t #t))
-    (table-set! table '##fx>            (make-prim-obj arm-prim-##fx>  2 #t #t))
-    (table-set! table '##fx>=           (make-prim-obj arm-prim-##fx>= 2 #t #t))
-    (table-set! table '##fx=            (make-prim-obj arm-prim-##fx=  2 #t #t))
+    (table-set! table '##fx+            (make-prim-obj arm-prim-**fx+  2 #t #f))
+    (table-set! table '##fx+?           (make-prim-obj arm-prim-**fx+? 2 #t #t #t))
+    (table-set! table '##fx-            (make-prim-obj arm-prim-**fx-  2 #t #f))
+    (table-set! table '##fx-?           (make-prim-obj arm-prim-**fx-? 2 #t #t #t))
+    (table-set! table '##fx<            (make-prim-obj arm-prim-**fx<  2 #t #t))
+    (table-set! table '##fx<=           (make-prim-obj arm-prim-**fx<= 2 #t #t))
+    (table-set! table '##fx>            (make-prim-obj arm-prim-**fx>  2 #t #t))
+    (table-set! table '##fx>=           (make-prim-obj arm-prim-**fx>= 2 #t #t))
+    (table-set! table '##fx=            (make-prim-obj arm-prim-**fx=  2 #t #t))
 
-    (table-set! table '##fxeven?        (make-prim-obj (arm-prim-##fxparity? 'even)    1 #t #t))
-    (table-set! table '##fxodd?         (make-prim-obj (arm-prim-##fxparity? 'odd)     1 #t #t))
-    (table-set! table '##fxnegative?    (make-prim-obj (arm-prim-##fxsign? 'negative)  1 #t #t))
-    (table-set! table '##fxpositive?    (make-prim-obj (arm-prim-##fxsign? 'positive)  1 #t #t))
+    (table-set! table '##fxeven?        (make-prim-obj (arm-prim-**fxparity? 'even)    1 #t #t))
+    (table-set! table '##fxodd?         (make-prim-obj (arm-prim-**fxparity? 'odd)     1 #t #t))
+    (table-set! table '##fxnegative?    (make-prim-obj (arm-prim-**fxsign? 'negative)  1 #t #t))
+    (table-set! table '##fxpositive?    (make-prim-obj (arm-prim-**fxsign? 'positive)  1 #t #t))
 
     (table-set! table '##car            (make-prim-obj (object-read-prim pair-desc '(a)) 1 #t #f))
     (table-set! table '##cdr            (make-prim-obj (object-read-prim pair-desc '(d)) 1 #t #f))
@@ -849,11 +849,11 @@
     (table-set! table '##set-car!       (make-prim-obj (object-set-prim pair-desc 2) 2 #t #f))
     (table-set! table '##set-cdr!       (make-prim-obj (object-set-prim pair-desc 1) 2 #t #f))
 
-    (table-set! table '##cons           (make-prim-obj arm-prim-##cons 2 #t #f))
+    (table-set! table '##cons           (make-prim-obj arm-prim-**cons 2 #t #f))
 
     (table-set! table '##vector-ref     (make-prim-obj (arm-object-dyn-read-prim vector-desc) 2 #t #t))
     (table-set! table '##vector-set!    (make-prim-obj (arm-object-dyn-set-prim vector-desc) 3 #t #f))
-    (table-set! table '##vector-length  (make-prim-obj (arm-prim-##vector-length #f) 1 #t #t))
+    (table-set! table '##vector-length  (make-prim-obj (arm-prim-**vector-length #f) 1 #t #t))
 
     table))
 

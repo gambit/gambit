@@ -1,3 +1,5 @@
+#!/usr/bin/env gsi-script
+
 (import (srfi 231))
 
 ;; This demo contains a naive implementation of John Conway's Game of Life:

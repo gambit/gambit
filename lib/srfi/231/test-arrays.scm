@@ -169,7 +169,7 @@ OTHER DEALINGS IN THE SOFTWARE.
       (test-random-integer (+ a 1))))
 
 (define (random-char)
-  (let ((n (random-inclusive ##max-char)))
+  (let ((n (random-inclusive (##max-char-code))))
     (if (or (fx< n #xd800)
             (fx< #xdfff n))
         (integer->char n)
@@ -273,6 +273,9 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 (test (make-interval '#(-1))
       "make-interval: The argument is not a vector of nonnegative exact integers: ")
+
+(test (make-interval '#(1) '#(0))
+      "make-interval: Each lower-bound must be no greater than the associated upper-bound: ")
 
 
 (pp "interval result tests")
@@ -569,6 +572,20 @@ OTHER DEALINGS IN THE SOFTWARE.
           (and (%%every (lambda (x) (>= (car x) (cdr x))) (map cons lower1 lower2))
                (%%every (lambda (x) (<= (car x) (cdr x))) (map cons upper1 upper2))))))
 
+(pp "interval-empty? tests")
+
+(test (interval-empty? 'a)
+      "interval-empty?: The argument is not an interval: ")
+
+(test (interval-empty? (make-interval '#(1) '#(1)))
+      #t)
+
+(test (interval-empty? (make-interval '#(1) '#(2)))
+      #f)
+
+(test (interval-empty? (make-interval '#()))
+      #f)
+
 (next-test-random-source-state!)
 
 (pp "interval-contains-multi-index?  error tests")
@@ -661,7 +678,13 @@ OTHER DEALINGS IN THE SOFTWARE.
 (test (interval-fold-right 1 values 3 (make-interval '#(2 2)))
       "interval-fold-right: The first argument is not a procedure: ")
 
-;;; We'll rely on tests for array-fold[lr] to test interval-fold[lr]
+;;; We'll mainly rely on tests for array-fold[lr] to test interval-fold[lr]
+
+(test (interval-fold-left identity + 0 (make-interval '#(5)))
+      10)
+
+(test (interval-fold-right identity + 0 (make-interval '#(5)))
+      10)
 
 (pp "interval-dilate error tests")
 
@@ -780,6 +803,7 @@ OTHER DEALINGS IN THE SOFTWARE.
         (list  s16-storage-class  's16-storage-class 's16vector make-s16vector)
         (list  s32-storage-class  's32-storage-class 's32vector make-s32vector)
         (list  s64-storage-class  's64-storage-class 's64vector make-s64vector)
+        (list  f16-storage-class  'f16-storage-class 'u16vector make-u16vector)
         (list  f32-storage-class  'f32-storage-class 'f32vector make-f32vector)
         (list  f64-storage-class  'f64-storage-class 'f64vector make-f64vector)
         (list char-storage-class 'char-storage-class 'string    make-string)
@@ -791,7 +815,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 (define uniform-storage-classes
   (list u8-storage-class u16-storage-class u32-storage-class u64-storage-class
         s8-storage-class s16-storage-class s32-storage-class s64-storage-class
-        f32-storage-class f64-storage-class
+        f16-storage-class f32-storage-class f64-storage-class
         char-storage-class
         c64-storage-class c128-storage-class))
 
@@ -1038,12 +1062,11 @@ OTHER DEALINGS IN THE SOFTWARE.
 (test (make-specialized-array  'a)
       "make-specialized-array: The first argument is not an interval: ")
 
-(test (make-specialized-array (make-interval '#(0) '#(10)) 'a 1)
+(test (make-specialized-array (make-interval '#(0) '#(10)) 'a)
       "make-specialized-array: The second argument is not a storage-class: ")
 
 (test (make-specialized-array (make-interval '#(0) '#(10)) u16-storage-class 'a)
       "make-specialized-array: The third argument cannot be manipulated by the second (a storage class): ")
-
 
 (test (make-specialized-array (make-interval '#(0) '#(10)) generic-storage-class 'a 'a)
       "make-specialized-array: The fourth argument is not a boolean: ")
@@ -1100,6 +1123,12 @@ OTHER DEALINGS IN THE SOFTWARE.
 (test (make-specialized-array-from-data 'a)
       "make-specialized-array-from-data: The first argument is not compatible with the storage class: ")
 
+;;; FIXME: When I figure out how to make immutable data in the interpreter, I'll get this test to work.
+
+#;
+(test (make-specialized-array-from-data "123" char-storage-class #t)
+      "make-specialized-array-from-data: Cannot make mutable array from immutable data: ")
+
 (let ((test-values
        (list ;;       storae-class   default other data
         (list generic-storage-class  #f 'a 1 #\c)
@@ -1113,6 +1142,7 @@ OTHER DEALINGS IN THE SOFTWARE.
         (list     s16-storage-class  0 -300 300)
         (list     s32-storage-class  0 -70000 70000)
         (list     s64-storage-class  0 -1000000000 1000000000)
+        (list     f16-storage-class  0. 1.)
         (list     f32-storage-class  0. 1.)
         (list     f64-storage-class  0. 1.)
         (list     c64-storage-class  0.+0.i 1.+1.i)
@@ -1148,6 +1178,7 @@ OTHER DEALINGS IN THE SOFTWARE.
         (list     s16-storage-class (make-s16vector 10) (make-u16vector 10))
         (list     s32-storage-class (make-s32vector 10) (make-u16vector 10))
         (list     s64-storage-class (make-s64vector 10) (make-u16vector 10))
+        (list     f16-storage-class (make-u16vector 10) (make-s16vector 10))
         (list     f32-storage-class (make-f32vector 10) (make-u16vector 10))
         (list     f64-storage-class (make-f64vector 10) (make-u16vector 10))
         (list     c64-storage-class (make-f32vector 10) (make-u16vector 10) (make-f32vector 5))
@@ -1488,6 +1519,8 @@ OTHER DEALINGS IN THE SOFTWARE.
            (list u64-storage-class
                  (lambda args (random (expt 2 64))))
            ;; float
+           (list f16-storage-class
+                 (lambda args (test-random-real)))
            (list f32-storage-class
                  (lambda args (test-random-real)))
            (list f64-storage-class
@@ -1504,6 +1537,21 @@ OTHER DEALINGS IN THE SOFTWARE.
           (vector-length storage-classes)))
     (lambda ()
       (vector-ref storage-classes (random n)))))
+
+(pp "array-empty? tests")
+
+(test (array-empty? 'a)
+      "array-empty?: The argument is not an array: ")
+
+(test (array-empty? (make-array (make-interval '#(1) '#(1)) list))
+      #t)
+
+(test (array-empty? (make-array (make-interval '#(1) '#(2)) list))
+      #f)
+
+(test (array-empty? (make-array (make-interval '#()) list))
+      #f)
+
 
 (pp "array-packed? tests")
 
@@ -1796,7 +1844,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 
 
-(do ((d 1 (fx+ d 1)))
+(do ((d 0 (fx+ d 1)))
     ((= d 6))
   (let* ((uppers-list
           (iota d 2))
@@ -1831,11 +1879,13 @@ OTHER DEALINGS IN THE SOFTWARE.
                   "Block copy"))
         (test (myarray= specialized-source specialized-destination)
               #t)
-        ;; copy to non-adjacent elements of destination, no checking needed
+        ;; copy to (perhaps) non-adjacent elements of destination, no checking needed
         (test (%%move-array-elements (array-reverse specialized-destination) specialized-source "test: ")
               (if (array-packed? (array-reverse specialized-destination))
-                  "In order, no checks needed"
-                  "Out of order, no checks needed"))
+                  (if (storage-class-copier storage-class)
+                      "Block copy"
+                      "In order, no checks needed")
+                  "No checks needed"))
         (test (myarray= specialized-source (array-reverse specialized-destination))
               #t)
         ))))
@@ -1852,15 +1902,16 @@ OTHER DEALINGS IN THE SOFTWARE.
    (list s32-storage-class (- (expt 2 (- 32 1))) (- (expt 2 (- 32 1)) 1))
    (list s64-storage-class (- (expt 2 (- 64 1))) (- (expt 2 (- 64 1)) 1))
    (list generic-storage-class    'a)
+   (list f16-storage-class       1.0)
    (list f32-storage-class       1.0)
    (list f64-storage-class       1.0)
-   (list char-storage-class (integer->char ##max-char))
+   (list char-storage-class (integer->char (##max-char-code)))
    (list c64-storage-class  1.0+1.0i)
    (list c128-storage-class 1.0+1.0i)))
 
 (next-test-random-source-state!)
 
-(do ((d 1 (fx+ d 1)))
+(do ((d 0 (fx+ d 1)))
     ((= d 6))
   (let* ((uppers-list
           (iota d 2))
@@ -1902,7 +1953,10 @@ OTHER DEALINGS IN THE SOFTWARE.
                   (array-reverse destination)
                   destination))
              (destination-checker
-              (storage-class-checker destination-storage-class)))
+              (storage-class-checker destination-storage-class))
+             (sloppy-compare
+              (lambda (x y)      ;; loss of precision in conversion to smaller float format
+                (< (magnitude (- x y)) 1e-3))))
         (if (array-every destination-checker source)
             (begin
               (test (let ((%%move-result
@@ -1918,18 +1972,21 @@ OTHER DEALINGS IN THE SOFTWARE.
                                              (else
                                               "In order, checks needed"))
                                        (cond ((%%every destination-checker (cdr (assq source-storage-class extreme-values-alist)))
-                                              "Out of order, no checks needed")
+                                              "No checks needed")
                                              (else
-                                              "Out of order, checks needed")))
+                                              "Checks needed")))
                                    %%move-result)
                            (myarray= destination
                                      source
                                      (if (or (and (eq? source-storage-class c128-storage-class)
                                                   (eq? destination-storage-class c64-storage-class))
                                              (and (eq? source-storage-class f64-storage-class)
-                                                  (eq? destination-storage-class f32-storage-class)))
-                                         (lambda (x y)
-                                           (< (magnitude (- x y)) 1e-5))
+                                                  (eq? destination-storage-class f32-storage-class))
+                                             (and (eq? source-storage-class f64-storage-class)
+                                                  (eq? destination-storage-class f16-storage-class))
+                                             (and (eq? source-storage-class f32-storage-class)
+                                                  (eq? destination-storage-class f16-storage-class)))
+                                         sloppy-compare
                                          equal?))))
                     #t)
               (test (let ((%%move-result
@@ -1941,31 +1998,40 @@ OTHER DEALINGS IN THE SOFTWARE.
                                      (if (or (and (eq? source-storage-class c128-storage-class)
                                                   (eq? destination-storage-class c64-storage-class))
                                              (and (eq? source-storage-class f64-storage-class)
-                                                  (eq? destination-storage-class f32-storage-class)))
-                                         (lambda (x y)
-                                           (< (magnitude (- x y)) 1e-5))
+                                                  (eq? destination-storage-class f32-storage-class))
+                                             (and (eq? source-storage-class f64-storage-class)
+                                                  (eq? destination-storage-class f16-storage-class))
+                                             (and (eq? source-storage-class f32-storage-class)
+                                                  (eq? destination-storage-class f16-storage-class)))
+                                         sloppy-compare
                                          equal?))))
                     #t)
               (test (let ((ignore (array-assign! destination generalized-source)))
                       (myarray= destination
                                 generalized-source
                                 (if (or (and (eq? source-storage-class c128-storage-class)
-                                             (eq? destination-storage-class c64-storage-class))
-                                        (and (eq? source-storage-class f64-storage-class)
-                                             (eq? destination-storage-class f32-storage-class)))
-                                    (lambda (x y)
-                                      (< (magnitude (- x y)) 1e-5))
+                                                  (eq? destination-storage-class c64-storage-class))
+                                             (and (eq? source-storage-class f64-storage-class)
+                                                  (eq? destination-storage-class f32-storage-class))
+                                             (and (eq? source-storage-class f64-storage-class)
+                                                  (eq? destination-storage-class f16-storage-class))
+                                             (and (eq? source-storage-class f32-storage-class)
+                                                  (eq? destination-storage-class f16-storage-class)))
+                                    sloppy-compare
                                     equal?)))
                     #t)
               (test (let ((ignore (array-assign! generalized-destination generalized-source)))
                       (myarray= generalized-destination
                                  generalized-source
                                  (if (or (and (eq? source-storage-class c128-storage-class)
-                                              (eq? destination-storage-class c64-storage-class))
-                                         (and (eq? source-storage-class f64-storage-class)
-                                              (eq? destination-storage-class f32-storage-class)))
-                                     (lambda (x y)
-                                       (< (magnitude (- x y)) 1e-5))
+                                                  (eq? destination-storage-class c64-storage-class))
+                                             (and (eq? source-storage-class f64-storage-class)
+                                                  (eq? destination-storage-class f32-storage-class))
+                                             (and (eq? source-storage-class f64-storage-class)
+                                                  (eq? destination-storage-class f16-storage-class))
+                                             (and (eq? source-storage-class f32-storage-class)
+                                                  (eq? destination-storage-class f16-storage-class)))
+                                     sloppy-compare
                                      equal?)))
                      #t))
             (test (array-assign! destination source)
@@ -2576,6 +2642,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                               (list s16-storage-class     (lambda indices (random (- (expt 2 15)) (expt 2 15))))
                               (list s32-storage-class     (lambda indices (random (- (expt 2 31)) (expt 2 31))))
                               (list s64-storage-class     (lambda indices (random (- (expt 2 63)) (expt 2 63))))
+                              (list f16-storage-class     (lambda indices (test-random-real)))
                               (list f32-storage-class     (lambda indices (test-random-real)))
                               (list f64-storage-class     (lambda indices (test-random-real)))
                               (list char-storage-class    (lambda indices (random-char)))
@@ -2649,6 +2716,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                               (list s16-storage-class     (lambda indices (random (- (expt 2 15)) (expt 2 15))))
                               (list s32-storage-class     (lambda indices (random (- (expt 2 31)) (expt 2 31))))
                               (list s64-storage-class     (lambda indices (random (- (expt 2 63)) (expt 2 63))))
+                              (list f16-storage-class     (lambda indices (test-random-real)))
                               (list f32-storage-class     (lambda indices (test-random-real)))
                               (list f64-storage-class     (lambda indices (test-random-real)))
                               (list char-storage-class    (lambda indices (random-char)))
@@ -2867,6 +2935,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                               (list s16-storage-class     (lambda indices (random (- (expt 2 15)) (expt 2 15))))
                               (list s32-storage-class     (lambda indices (random (- (expt 2 31)) (expt 2 31))))
                               (list s64-storage-class     (lambda indices (random (- (expt 2 63)) (expt 2 63))))
+                              (list f16-storage-class     (lambda indices (test-random-real)))
                               (list f32-storage-class     (lambda indices (test-random-real)))
                               (list f64-storage-class     (lambda indices (test-random-real)))
                               (list char-storage-class    (lambda indices (random-char)))
@@ -4331,6 +4400,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                               (list s16-storage-class     (lambda indices (random (- (expt 2 15)) (expt 2 15))) `(a ,(expt 2 16)))
                               (list s32-storage-class     (lambda indices (random (- (expt 2 31)) (expt 2 31))) `(a ,(expt 2 32)))
                               (list s64-storage-class     (lambda indices (random (- (expt 2 63)) (expt 2 63))) `(a ,(expt 2 64)))
+                              (list f16-storage-class     (lambda indices (test-random-real)) `(a 1))
                               (list f32-storage-class     (lambda indices (test-random-real)) `(a 1))
                               (list f64-storage-class     (lambda indices (test-random-real)) `(a 1))
                               (list char-storage-class    (lambda indices (random-char)) `(a 1))
@@ -4437,6 +4507,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                               (list s16-storage-class     (lambda indices (random (- (expt 2 15)) (expt 2 15))))
                               (list s32-storage-class     (lambda indices (random (- (expt 2 31)) (expt 2 31))))
                               (list s64-storage-class     (lambda indices (random (- (expt 2 63)) (expt 2 63))))
+                              (list f16-storage-class     (lambda indices (test-random-real)))
                               (list f32-storage-class     (lambda indices (test-random-real)))
                               (list f64-storage-class     (lambda indices (test-random-real)))
                               (list char-storage-class    (lambda indices (random-char)))
@@ -4509,7 +4580,7 @@ OTHER DEALINGS IN THE SOFTWARE.
     ((= i random-tests))
   (let* ((arrays
           (map (lambda (ignore)
-                 (make-array (random-interval 0 5) list))
+                 (make-array (random-interval 0 6) list))
                (make-list 2))))
     (myarray= (apply array-outer-product append arrays)
                     (make-array (apply my-interval-cartesian-product (map array-domain arrays))
@@ -4547,6 +4618,29 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 (test (array-ref A-ref 4 5)
       0)
+
+(let ((A (array-copy (make-array (make-interval '#(1 1 1 1 1 1)) list)))
+      (B (array-copy (make-array (make-interval '#(-1 -1 -1 -1 -1 -1)
+                                                '#( 1  1  1  1  1  1))
+                                 list))))
+  ;; We copied A and B so they would have the default error checking.
+  (test (array-ref A 0)
+        "array-getter: multi-index is not the correct dimension: ")
+  (test (array-ref B 0)
+        "array-getter: multi-index is not the correct dimension: ")
+  (test (array-ref A 0 0 0 0 0 0 0)
+        "array-getter: multi-index is not the correct dimension: ")
+  (test (array-ref B 0 0 0 0 0 0 0)
+        "array-getter: multi-index is not the correct dimension: " )
+  (test (array-set! A 0 0)
+        "array-setter: multi-index is not the correct dimension: ")
+  (test (array-set! B 0 0)
+        "array-setter: multi-index is not the correct dimension: ")
+  (test (array-set! A 0 0 0 0 0 0 0 0)
+        "array-setter: multi-index is not the correct dimension: ")
+  (test (array-set! B 0 0 0 0 0 0 0 0)
+        "array-setter: multi-index is not the correct dimension: " ))
+
 
 (do ((d 0 (+ d 1)))
     ((= d 6))
@@ -4597,6 +4691,90 @@ OTHER DEALINGS IN THE SOFTWARE.
           42)
     (test (apply array-set! 2 42 (make-list d 0))
           "array-set!: The first argument is not a mutable array: ")))
+
+(specialized-array-default-safe? #f)
+
+(define A-ref
+  (array-copy
+   (make-array (make-interval '#(10 10))
+               (lambda (i j) (if (= i j) 1 0)))))
+
+(do ((i 1 (+ i 1)))
+    ((= i 6))
+  (test (apply array-ref 1 (make-list i 0))
+        "array-ref: The first argument is not an array: "))
+
+(test (array-ref A-ref 1)
+      "Wrong number of arguments passed to procedure ")
+
+#|
+   For unsafe arrays, this error will not be caught, and could crash the program.
+|#
+#;
+(test (array-ref A-ref 1 1001)
+      "array-getter: domain does not contain multi-index: ")
+
+(test (array-ref A-ref 4 4)
+      1)
+
+(test (array-ref A-ref 4 5)
+      0)
+
+(do ((d 0 (+ d 1)))
+    ((= d 6))
+  (let ((A (make-specialized-array (make-interval (make-vector d 1)) generic-storage-class 42)))
+    (test (apply array-ref A (make-list d 0))
+          42)
+    (test (apply array-ref 2 (make-list d 0))
+          (if (zero? d)
+              "array-ref: The argument is not an array: "
+              "array-ref: The first argument is not an array: "))))
+
+(test (array-ref (make-specialized-array (make-interval '#(0 0)) generic-storage-class 42) 0 0)
+      "array-getter: Array domain is empty: ")
+
+(test (array-set! (make-specialized-array (make-interval '#(0 0)) generic-storage-class 42) 42 0 0)
+      "array-setter: Array domain is empty: ")
+
+(define B-set!
+  (array-copy
+   (make-array (make-interval '#(10 10))
+               (lambda (i j) (if (= i j) 1 0)))
+   u1-storage-class))
+
+(test (array-set! 1 1 1)
+      "array-set!: The first argument is not a mutable array: ")
+
+(test (array-set! B-set!)
+      "Wrong number of arguments passed to procedure ")
+
+(test (array-set! B-set! 2)
+      "Wrong number of arguments passed to procedure ")
+
+(test (array-set! B-set! 2 1)
+      "Wrong number of arguments passed to procedure ")
+
+#|
+   For unsafe arrays, this error will not be caught, and could crash the program.
+|#
+#;
+(test (array-set! B-set! 2 1 1)
+      "array-setter: value cannot be stored in body: ")
+
+(array-set! B-set! 1 1 2)
+(array-set! B-set! 0 2 2)
+(array-display B-set!)
+
+(do ((d 0 (+ d 1)))
+    ((= d 6))
+  (let ((A (make-specialized-array (make-interval (make-vector d 1)) generic-storage-class 10)))
+    (apply array-set! A 42 (make-list d 0))
+    (test (apply array-ref A (make-list d 0))
+          42)
+    (test (apply array-set! 2 42 (make-list d 0))
+          "array-set!: The first argument is not a mutable array: ")))
+
+
 
 
 (pp "specialized-array-reshape tests")
@@ -4837,7 +5015,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
   (define (skip-to-end-of-line port)
     (let loop ((ch (read-char port)))
-      (if (not (eq? ch #\newline))
+      (if (not (eqv? ch #\newline))
           (loop (read-char port)))))
 
   (define (white-space? ch)
@@ -4848,7 +5026,7 @@ OTHER DEALINGS IN THE SOFTWARE.
   (define (skip-white-space port)
     (let ((ch (peek-char port)))
       (cond ((white-space? ch) (read-char port) (skip-white-space port))
-            ((eq? ch #\#) (skip-to-end-of-line port)(skip-white-space port))
+            ((eqv? ch #\#) (skip-to-end-of-line port)(skip-white-space port))
             (else #f))))
 
   (call-with-input-file
@@ -6446,5 +6624,287 @@ that computes the componentwise products when we need them, the times are
 (generations glider 5)
 
 #;(pp (reverse %%test-moves))
+
+;;; Unit tests
+
+(pp 'unit-tests)
+
+(let ((A (make-specialized-array (make-interval '#(5 5 5 5 5) '#(8 8 8 8 8))))
+      (B (make-specialized-array (make-interval '#(5 5 5 5 5)))))
+  (test (array-ref A 0 0)
+        "array-getter: multi-index is not the correct dimension: ")
+  (test (array-set! A 2 0 0)
+        "array-setter: multi-index is not the correct dimension: ")
+  (test (array-ref B 0 0)
+        "array-getter: multi-index is not the correct dimension: ")
+  (test (array-set! B 2 0 0)
+        "array-setter: multi-index is not the correct dimension: "))
+
+(pp "Test interactions of continuations and array-{copy|append|stack|decurry|block}")
+
+(pp 'array-copy)
+
+(let* ((cont #f)
+       (call-cont #t)
+       (domain (make-interval '#(2 2)))
+       (A_ (lambda (i j)
+             (call-with-current-continuation
+              (lambda (c)
+                (if (= i j 0)
+                    (set! cont c))
+                1))))
+       (A (make-array domain A_))
+       (array-list '()))
+  (let ((temp (array-copy A)))
+    (set! array-list (cons temp array-list)))
+  (if call-cont
+      (begin
+        (set! call-cont #f)
+        (cont 4)))
+  (for-each (lambda (result truth)
+              (test (array->list* result)
+                    truth))
+            array-list
+            '(((4 1) (1 1))
+              ((1 1) (1 1)))))
+
+(pp 'array-append)
+
+(let* ((cont #f)
+       (call-cont #t)
+       (domain (make-interval '#(2 2)))
+       (B (list*->array 2 '((1 2) (3 4))))
+       (A_ (lambda (i j)
+             (call-with-current-continuation
+              (lambda (c)
+                (if (= i j 0)
+                    (set! cont c))
+                1))))
+       (A (make-array domain A_))
+       (array-list '()))
+  (let ((temp (array-append 1 (list A B))))
+    (set! array-list (cons temp array-list)))
+  (if call-cont
+      (begin
+        (set! call-cont #f)
+        (cont 4)))
+  (for-each (lambda (result truth)
+              (test (array->list* result)
+                    truth))
+            array-list
+            '(((4 1 1 2) (1 1 3 4))
+              ((1 1 1 2) (1 1 3 4)))))
+
+(pp 'array-stack)
+
+(let* ((cont #f)
+       (call-cont #t)
+       (domain (make-interval '#(2 2)))
+       (B (list*->array 2 '((1 2) (3 4))))
+       (A_ (lambda (i j)
+             (call-with-current-continuation
+              (lambda (c)
+                (if (= i j 0)
+                    (set! cont c))
+                1))))
+       (A (make-array domain A_))
+       (array-list '()))
+  (let ((temp (array-stack 1 (list A B))))
+    (set! array-list (cons temp array-list)))
+  (if call-cont
+      (begin
+        (set! call-cont #f)
+        (cont 4)))
+  (for-each (lambda (result truth)
+              (test (array->list* result)
+                    truth))
+            array-list
+            '((((4 1) (1 2)) ((1 1) (3 4)))
+              (((1 1) (1 2)) ((1 1) (3 4))))))
+
+(pp 'array-block)
+
+(let* ((cont #f)
+       (call-cont #t)
+       (domain (make-interval '#(2 2)))
+       (B (list*->array 2 '((1 2) (3 4))))
+       (A_ (lambda (i j)
+             (call-with-current-continuation
+              (lambda (c)
+                (if (= i j 0)
+                    (set! cont c))
+                1))))
+       (A (make-array domain A_))
+       (C (list*->array 2 (list (list A B))))
+       (array-list '()))
+  (let ((temp (array-block C)))
+    (set! array-list (cons temp array-list)))
+  (if call-cont
+      (begin
+        (set! call-cont #f)
+        (cont 4)))
+  (for-each (lambda (result truth)
+              (test (array->list* result)
+                    truth))
+            array-list
+            '(((4 1 1 2) (1 1 3 4))
+              ((1 1 1 2) (1 1 3 4)))))
+
+(pp 'array-decurry)
+
+(let* ((cont #f)
+       (call-cont #t)
+       (domain (make-interval '#(2 2)))
+       (B (list*->array 2 '((1 2) (3 4))))
+       (A_ (lambda (i j)
+             (call-with-current-continuation
+              (lambda (c)
+                (if (= i j 0)
+                    (set! cont c))
+                1))))
+       (A (make-array domain A_))
+       (C (list*->array 1 (list A B)))
+       (array-list '()))
+  (let ((temp (array-decurry C)))
+    (set! array-list (cons temp array-list)))
+  (if call-cont
+      (begin
+        (set! call-cont #f)
+        (cont 4)))
+  (for-each (lambda (result truth)
+              (test (array->list* result)
+                    truth))
+            array-list
+            '((((4 1) (1 1)) ((1 2) (3 4)))
+              (((1 1) (1 1)) ((1 2) (3 4))))))
+
+(pp "Test that the corresponding ! procedures don't crash when dealing with continuations.")
+
+(pp 'array-copy!)
+
+(let* ((cont #f)
+       (call-cont #t)
+       (domain (make-interval '#(2 2)))
+       (A_ (lambda (i j)
+             (call-with-current-continuation
+              (lambda (c)
+                (if (= i j 0)
+                    (set! cont c))
+                1))))
+       (A (make-array domain A_))
+       (array-list '()))
+  (let ((temp (array-copy! A)))
+    (set! array-list (cons temp array-list)))
+  (if call-cont
+      (begin
+        (set! call-cont #f)
+        (cont 4))))
+
+(pp 'array-append!)
+
+(let* ((cont #f)
+       (call-cont #t)
+       (domain (make-interval '#(2 2)))
+       (B (list*->array 2 '((1 2) (3 4))))
+       (A_ (lambda (i j)
+             (call-with-current-continuation
+              (lambda (c)
+                (if (= i j 0)
+                    (set! cont c))
+                1))))
+       (A (make-array domain A_))
+       (array-list '()))
+  (let ((temp (array-append! 1 (list A B))))
+    (set! array-list (cons temp array-list)))
+  (if call-cont
+      (begin
+        (set! call-cont #f)
+        (cont 4))))
+
+(pp 'array-stack!)
+
+(let* ((cont #f)
+       (call-cont #t)
+       (domain (make-interval '#(2 2)))
+       (B (list*->array 2 '((1 2) (3 4))))
+       (A_ (lambda (i j)
+             (call-with-current-continuation
+              (lambda (c)
+                (if (= i j 0)
+                    (set! cont c))
+                1))))
+       (A (make-array domain A_))
+       (array-list '()))
+  (let ((temp (array-stack! 1 (list A B))))
+    (set! array-list (cons temp array-list)))
+  (if call-cont
+      (begin
+        (set! call-cont #f)
+        (cont 4))))
+
+(pp 'array-block!)
+
+(let* ((cont #f)
+       (call-cont #t)
+       (domain (make-interval '#(2 2)))
+       (B (list*->array 2 '((1 2) (3 4))))
+       (A_ (lambda (i j)
+             (call-with-current-continuation
+              (lambda (c)
+                (if (= i j 0)
+                    (set! cont c))
+                1))))
+       (A (make-array domain A_))
+       (C (list*->array 2 (list (list A B))))
+       (array-list '()))
+  (let ((temp (array-block! C)))
+    (set! array-list (cons temp array-list)))
+  (if call-cont
+      (begin
+        (set! call-cont #f)
+        (cont 4))))
+
+(pp 'array-decurry!)
+
+(let* ((cont #f)
+       (call-cont #t)
+       (domain (make-interval '#(2 2)))
+       (B (list*->array 2 '((1 2) (3 4))))
+       (A_ (lambda (i j)
+             (call-with-current-continuation
+              (lambda (c)
+                (if (= i j 0)
+                    (set! cont c))
+                1))))
+       (A (make-array domain A_))
+       (C (list*->array 1 (list A B)))
+       (array-list '()))
+  (let ((temp (array-decurry! C)))
+    (set! array-list (cons temp array-list)))
+  (if call-cont
+      (begin
+        (set! call-cont #f)
+        (cont 4))))
+
+(pp 'array-assign!)
+
+(let* ((cont #f)
+       (call-cont #t)
+       (domain (make-interval '#(2 2)))
+       (B (list*->array 2 '((1 2) (3 4))))
+       (A_ (lambda (i j)
+             (call-with-current-continuation
+              (lambda (c)
+                (if (= i j 0)
+                    (set! cont c))
+                1))))
+       (A (make-array domain A_)))
+  (array-assign! B A)
+  (if call-cont
+      (begin
+        (set! call-cont #f)
+        (cont 4))))
+
+
 
 (for-each display (list "Failed " failed-tests " out of " total-tests " total tests.\n"))

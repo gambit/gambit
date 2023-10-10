@@ -63,14 +63,20 @@
       (restore-heap! i start))))
 
 ;;; Here are the two exported interfaces.
-(define (vector-heap-sort! elt< v #!optional (start 0) (end (vector-length v)))
-    (really-vector-heap-sort! elt< v start end))
 
+(define (vector-heap-sort! elt< v . maybe-start+end)
+  (call-with-values
+   (lambda () (vector-start+end v maybe-start+end))
+   (lambda (start end)
+     (really-vector-heap-sort! elt< v start end))))
 
-(define (vector-heap-sort elt< v #!optional (start 0) (end (vector-length v)))
+(define (vector-heap-sort elt< v . maybe-start+end)
+  (call-with-values
+   (lambda () (vector-start+end v maybe-start+end))
+   (lambda (start end)
      (let ((ans (vector-portion-copy v start end)))
        (really-vector-heap-sort! elt< ans 0 (- end start))
-       ans))
+       ans))))
 
 ;;; Notes on porting
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

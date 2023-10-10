@@ -139,6 +139,21 @@
 
     (force-output)))
 
+(define inst-dirs "")
+
+(for-each
+ (lambda (inst-dir)
+   (let ((dir
+          (if (equal? inst-dir "")
+              (##os-path-gambitdir)
+              (##os-path-gambitdir-map-lookup inst-dir))))
+     (if dir
+         (set! inst-dirs (string-append inst-dirs ",~~" inst-dir "=" dir)))))
+ '("" "bin" "doc" "include" "info" "lib" "userlib" "instlib" "share"))
+
+(define (add-inst-dirs str)
+  (string-append str inst-dirs))
+
 (define (run path . args)
   (let* ((port
           (open-process (list path: path
@@ -180,7 +195,7 @@
               (lambda ()
                 (print "settings set auto-confirm 1\n"
                        "command script import clean_exit.py\n"
-                       "run -:debug-settings=-,io-settings=lu,~~=.. -f " file "\n"
+                       "run " (add-inst-dirs "-:debug-settings=-,io-settings=lu") " -f " file "\n"
                        "clean_exit\n"
                        "frame variable\n"
                        "thread backtrace all\n"
@@ -197,7 +212,7 @@
                 "dbg-script"
               (lambda ()
                 (print "set $_exitcode = -1\n"
-                       "run -:debug-settings=-,io-settings=lu,~~=.. -f " file "\n"
+                       "run " (add-inst-dirs "-:debug-settings=-,io-settings=lu") " -f " file "\n"
                        "if $_exitcode != -1\n"
                        "  quit $_exitcode\n"
                        "end\n"
@@ -212,14 +227,14 @@
               (delete-file "dbg-script")
               result)))
 
-      (let ((def-enable-trace (object->string `(define ##enable-trace? ,show-coverage?)))
-            (def-enable-syntactic-check (object->string `(define ##enable-syntactic-check? ,show-analyse?))))
-        (case target
-          ((C)
-           (run "../gsi/gsi" "-:debug-settings=-,io-settings=lu,~~=.." "-f" "-e" def-enable-trace "-e" def-enable-syntactic-check file))
-          (else
-           (let ((gsi (string-append "../gsi/gsi-" (symbol->string target))))
-             (run gsi "-e" def-enable-trace "-f" file)))))))
+      (case target
+        ((C)
+         (let ((def-enable-trace (object->string `(define ##enable-trace? ,show-coverage?)))
+               (def-enable-syntactic-check (object->string `(define ##enable-syntactic-check? ,show-analyse?))))
+           (run "../gsi/gsi" (add-inst-dirs "-:debug-settings=-,io-settings=lu") "-f" "-e" def-enable-trace "-e" def-enable-syntactic-check file)))
+        (else
+         (let ((gsi (string-append "../gsi/gsi-" (symbol->string target))))
+           (run gsi "-f" file))))))
 
 (define (test-using-mode file mode target)
   (cond ((member mode '(gsi gsi-dbg))
@@ -228,7 +243,7 @@
          (case target
            ((C)
             (let* ((filename "_test.o1")
-                   (result (run "../gsc/gsc" "-:debug-settings=-,io-settings=lu,~~=.." "-f" "-o" filename file)))
+                   (result (run "../gsc/gsc" (add-inst-dirs "-:debug-settings=-,io-settings=lu") "-f" "-o" filename file)))
               (if (= 0 (car result))
                   (let ((result (run-gsi-under-debugger filename (eq? mode 'gsc-dbg) target)))
                     (if cleanup? (delete-file filename))
@@ -236,7 +251,7 @@
                   result)))
            (else
             (let* ((filename "_test.bat")
-                   (result (run "../gsc/gsc" "-:debug-settings=-,io-settings=lu,~~=.." "-warnings" "-target" (symbol->string target) "-exe" "-postlude" "(##exit)" "-o" filename file)))
+                   (result (run "../gsc/gsc" (add-inst-dirs "-:debug-settings=-,io-settings=lu") "-warnings" "-target" (symbol->string target) "-exe" "-postlude" "(##exit)" "-o" filename file)))
               (if (= 0 (car result))
                   (let ((result (run (path-expand filename))))
                     (if cleanup? (delete-file filename))

@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-2.scm"
 
-;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -2847,6 +2847,21 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+(define (targ-apply-cpu-cycle-count start?)
+  (lambda (prim)
+    (proc-obj-inlinable?-set! prim (lambda (env) #t))
+    (proc-obj-inline-set!
+      prim
+      (lambda (opnds loc sn)
+        (targ-emit (list (if start?
+                             "CPUCYCLECOUNTSTART"
+                             "CPUCYCLECOUNTEND")))
+        (if loc
+            (targ-emit
+             (targ-loc loc '("GET_CPUCYCLECOUNT"))))))))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 (define (targ-ifjump-simp-s flo? name)
   (targ-ifjump-simp #t flo? name))
 
@@ -3378,6 +3393,7 @@
 (targ-op "##fx<="        (targ-ifjump-fold-u #f "FIXLE"))
 (targ-op "##fx>="        (targ-ifjump-fold-u #f "FIXGE"))
 
+(targ-op "##max-char-code"  (targ-apply-simp-s #f #f #f "MAXCHARCODE"))
 (targ-op "##integer->char"  (targ-apply-simp-u #f #f #f "FIXTOCHR"))
 (targ-op "##char->integer"  (targ-apply-simp-u #f #f #f "FIXFROMCHR"))
 (targ-op "##flonum->fixnum" (targ-apply-simp-u #t #f #f "F64TOFIX"))
@@ -3662,7 +3678,9 @@
 (targ-op "##s32vector-delete-small" (targ-apply-small-alloc-u 's32vector "S32VECTORDELETESMALL"))
 (targ-op "##s32vector-length" (targ-apply-simp-u #f #f #f "S32VECTORLENGTH"))
 (targ-op "##s32vector-ref"    (targ-apply-simpbig-u "S32VECTORREF"))
+(targ-op "##s32vector-ref-fixnum"   (targ-apply-simp-u #f #f #f "S32VECTORREFFIX"))
 (targ-op "##s32vector-set!"   (targ-apply-simp-u #f #t #f "S32VECTORSET"))
+(targ-op "##s32vector-set!-fixnum"  (targ-apply-simp-u #f #t #f "S32VECTORSETFIX"))
 (targ-op "##s32vector-shrink!"(targ-apply-simp-u #f #t #f "S32VECTORSHRINK"))
 
 (targ-op "##u32vector"        (targ-apply-vector-u 'u32vector))
@@ -3674,7 +3692,9 @@
 (targ-op "##u32vector-delete-small" (targ-apply-small-alloc-u 'u32vector "U32VECTORDELETESMALL"))
 (targ-op "##u32vector-length" (targ-apply-simp-u #f #f #f "U32VECTORLENGTH"))
 (targ-op "##u32vector-ref"    (targ-apply-simpbig-u "U32VECTORREF"))
-(targ-op "##u32vector-set!"   (targ-apply-simp-u #f #t #f "U32VECTORSET"))
+(targ-op "##u32vector-ref-fixnum"   (targ-apply-simp-u #f #f #f "U32VECTORREFFIX"))
+(targ-op "##u32vector-set!"         (targ-apply-simp-u #f #t #f "U32VECTORSET"))
+(targ-op "##u32vector-set!-fixnum"  (targ-apply-simp-u #f #t #f "U32VECTORSETFIX"))
 (targ-op "##u32vector-shrink!"(targ-apply-simp-u #f #t #f "U32VECTORSHRINK"))
 
 (targ-op "##s64vector"        (targ-apply-vector-u 's64vector))
@@ -3686,7 +3706,9 @@
 (targ-op "##s64vector-delete-small" (targ-apply-small-alloc-u 's64vector "S64VECTORDELETESMALL"))
 (targ-op "##s64vector-length" (targ-apply-simp-u #f #f #f "S64VECTORLENGTH"))
 (targ-op "##s64vector-ref"    (targ-apply-simpbig-u "S64VECTORREF"))
-(targ-op "##s64vector-set!"   (targ-apply-simp-u #f #t #f "S64VECTORSET"))
+(targ-op "##s64vector-ref-fixnum" (targ-apply-simp-u #f #f #f "S64VECTORREFFIX"))
+(targ-op "##s64vector-set!"         (targ-apply-simp-u #f #t #f "S64VECTORSET"))
+(targ-op "##s64vector-set!-fixnum"  (targ-apply-simp-u #f #t #f "S64VECTORSETFIX"))
 (targ-op "##s64vector-shrink!"(targ-apply-simp-u #f #t #f "S64VECTORSHRINK"))
 
 (targ-op "##u64vector"        (targ-apply-vector-u 'u64vector))
@@ -3698,7 +3720,9 @@
 (targ-op "##u64vector-delete-small" (targ-apply-small-alloc-u 'u64vector "U64VECTORDELETESMALL"))
 (targ-op "##u64vector-length" (targ-apply-simp-u #f #f #f "U64VECTORLENGTH"))
 (targ-op "##u64vector-ref"    (targ-apply-simpbig-u "U64VECTORREF"))
-(targ-op "##u64vector-set!"   (targ-apply-simp-u #f #t #f "U64VECTORSET"))
+(targ-op "##u64vector-ref-fixnum" (targ-apply-simp-u #f #f #f "U64VECTORREFFIX"))
+(targ-op "##u64vector-set!"         (targ-apply-simp-u #f #t #f "U64VECTORSET"))
+(targ-op "##u64vector-set!-fixnum"  (targ-apply-simp-u #f #t #f "U64VECTORSETFIX"))
 (targ-op "##u64vector-shrink!"(targ-apply-simp-u #f #t #f "U64VECTORSHRINK"))
 
 (targ-op "##f32vector"        (targ-apply-vector-u 'f32vector))
@@ -3869,6 +3893,9 @@
 (targ-op "##primitive-lock!"    (targ-apply-simp-u #f #t 0 "PRIMITIVELOCK"))
 (targ-op "##primitive-trylock!" (targ-ifjump-simp-u #f "PRIMITIVETRYLOCK"))
 (targ-op "##primitive-unlock!"  (targ-apply-simp-u #f #t 0 "PRIMITIVEUNLOCK"))
+
+(targ-op "##cpu-cycle-count-start" (targ-apply-cpu-cycle-count #t))
+(targ-op "##cpu-cycle-count-end"   (targ-apply-cpu-cycle-count #f))
 
 (targ-op "##object-before?"   (targ-ifjump-simp-s #f "OBJECTBEFOREP"))
 

@@ -10,7 +10,6 @@
 ;;; SRFI 41, Streams.
 
 (define-library (srfi 41)
-  (namespace "")
   (export
     stream-lazy
     stream-eager
@@ -58,6 +57,6 @@
     stream-unfolds
     stream-zip)
 
-(include "41.scm"))
+  (include "41.scm"))
 
 ;;;============================================================================

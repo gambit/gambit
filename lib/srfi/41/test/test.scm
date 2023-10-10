@@ -28,8 +28,8 @@
 
 (define-macro (is-eager-n? n strm)
    (if (= n 0)
-       `(stream-promise (stream-car* (stream-force ,strm)))
-       `(is-eager-n? ,(- n 1) (stream-cdr ,strm))))
+       `(srfi/41#stream-promise (srfi/41#stream-car* (stream-force ,strm)))
+       `(is-eager-n? ,(- n 1) (srfi/41#stream-cdr ,strm))))
 
 (define-macro (is-eager? n strm)
   `(equal? 'eager

@@ -2,7 +2,7 @@
 
 ;;; File: "test.scm"
 
-;;; Copyright (c) 2014-2021 by Marc Feeley and Frédéric Hamel, All Rights Reserved.
+;;; Copyright (c) 2014-2023 by Marc Feeley and Frédéric Hamel, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -48,8 +48,7 @@
      (delete-file-or-directory path #t))))
 
 (define (create-common-files)
-  (let* ((rootdir (path-directory (this-source-file)))
-         (test-dir (create-temporary-directory (path-expand "tests" rootdir)))
+  (let* ((test-dir (create-temporary-directory))
          (lib-dir (path-expand "lib" test-dir)))
     (create-files-in-dir
       lib-dir

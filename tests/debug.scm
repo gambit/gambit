@@ -137,21 +137,29 @@
   (define (check-label x)
     (let* ((subproc (subprocedure cprc (vector-ref x 0)))
            (vars (accessible-vars subproc)))
-      (let ((old-rt (output-port-readtable (current-output-port))))
-        (output-port-readtable-set!
-         (current-output-port)
-         (readtable-sharing-allowed?-set old-rt 'serialize))
-        (write subproc)
-        (output-port-readtable-set!
-         (current-output-port)
-         old-rt))
+
+      (define (write-serialize obj)
+        (let ((old-rt (output-port-readtable (current-output-port))))
+          (output-port-readtable-set!
+           (current-output-port)
+           (readtable-sharing-allowed?-set old-rt 'serialize))
+          (write obj)
+          (output-port-readtable-set!
+           (current-output-port)
+           old-rt)))
+
+      (define (check-accessible var)
+        (if (not (memq var vars))
+            (begin
+              (write-serialize subproc)
+              (display ": ")
+              (write var)
+              (display " is not accessible ")
+              (write (sort-symbols vars))
+              (newline))))
+
       (if (not (procedure? subproc))
-        (begin
-          (display " : ")
-          (write (sort-symbols vars))
-          (if (not (and (memq '$code vars) (memq 'rte vars)))
-            (display " ERROR"))))
-      (newline)))
+          (for-each check-accessible '($code rte)))))
 
   (let ((info (##subprocedure-parent-info cprc)))
     (if (not info)
@@ -160,8 +168,7 @@
         (display " : ")
         (display "*** no procedure info")
         (newline))
-      (for-each check-label (vector->list (##vector-ref info 0))))
-    (newline)))
+      (for-each check-label (vector->list (##vector-ref info 0))))))
 
 (define (accessible-vars proc)
   (##subprocedure-locals proc))

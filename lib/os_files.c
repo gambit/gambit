@@ -1,6 +1,6 @@
 /* File: "os_files.c" */
 
-/* Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -8,7 +8,7 @@
  */
 
 #define ___INCLUDED_FROM_OS_FILES
-#define ___VERSION 409004
+#define ___VERSION 409005
 #include "gambit.h"
 
 #include "os_setup.h"
@@ -1021,6 +1021,53 @@ ___BOOL follow;)
 /*---------------------------------------------------------------------------*/
 
 /* Filesystem path expansion. */
+
+
+___SCMOBJ ___os_path_tempdir ___PVOID
+{
+  ___SCMOBJ e;
+  ___SCMOBJ result;
+  ___UCS_2STRING cstr;
+
+#ifdef USE_WIN32
+
+#define TEMPDIR_ENV_VAR { 'T', 'E', 'M', 'P', '\0' }
+#define TEMPDIR_DEFAULT { 'C', ':', '\\', 'T', 'E', 'M', 'P', '\0' }
+
+#else
+
+#define TEMPDIR_ENV_VAR { 'T', 'M', 'P', 'D', 'I', 'R', '\0' }
+#define TEMPDIR_DEFAULT { '/', 't', 'm', 'p', '\0' }
+
+#endif
+
+  static ___UCS_2 cvar[] = TEMPDIR_ENV_VAR;
+  static ___UCS_2 tempdir_default[] = TEMPDIR_DEFAULT;
+
+  if ((e = ___getenv_UCS_2 (cvar, &cstr)) != ___FIX(___NO_ERR))
+    result = e;
+  else
+    {
+      if (cstr == 0) cstr = tempdir_default;
+
+      CANONICALIZE_PATH(___UCS_2STRING, cstr);
+
+      if ((e = ___UCS_2STRING_to_SCMOBJ
+                  (___PSTATE,
+                   cstr,
+                   &result,
+                   ___RETURN_POS))
+          != ___FIX(___NO_ERR))
+        result = e;
+      else
+        ___release_scmobj (result);
+
+      if (cstr != tempdir_default)
+        ___FREE_MEM(cstr);
+    }
+
+  return result;
+}
 
 
 ___SCMOBJ ___os_path_homedir ___PVOID

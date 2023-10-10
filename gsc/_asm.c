@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_asm.c", produced by Gambit v4.9.4
+; File: "_asm.c", produced by Gambit v4.9.5
 (
-409004
+409005
 (C)
 "_asm"
 ("_asm")
@@ -212,7 +212,7 @@
 ) #|*/"*/"meta-info|#
 )
 #else
-#define ___VERSION 409004
+#define ___VERSION 409005
 #define ___MODULE_NAME "_asm"
 #define ___LINKER_ID ___LNK___asm
 #define ___MH_PROC ___H___asm
@@ -1873,7 +1873,7 @@ ___DEF_SLBL(7,___L7___asm_23_)
    ___SET_GLO(29,___G___asm_23_asm_2d_inexact_2d__2b_0,___R1)
    ___SET_R1(___VOID)
    ___ADJFP(-4)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___END_P_SW
 ___END_P_COD
 
@@ -1974,7 +1974,7 @@ ___DEF_SLBL(4,___L4___asm_23_asm_2d_init_2d_code_2d_block)
 ___DEF_SLBL(5,___L5___asm_23_asm_2d_init_2d_code_2d_block)
    ___SET_R1(___STK(-6))
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___END_P_SW
 ___END_P_COD
 
@@ -2052,7 +2052,7 @@ ___DEF_SLBL(7,___L7___asm_23_asm_2d_copy_2d_code_2d_block)
 ___DEF_SLBL(8,___L8___asm_23_asm_2d_copy_2d_code_2d_block)
    ___SET_R1(___STK(-5))
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___END_P_SW
 ___END_P_COD
 
@@ -2676,7 +2676,7 @@ ___DEF_SLBL(3,___L3___asm_23_asm_2d_int_2d_be)
 ___DEF_SLBL(4,___L4___asm_23_asm_2d_int_2d_be)
    ___SET_R1(___STK(-5))
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___DEF_GLBL(___L10___asm_23_asm_2d_int_2d_be)
    ___SET_R1(___STK(-4))
    ___SET_R2(___FIX(16L))
@@ -2782,7 +2782,7 @@ ___DEF_SLBL(3,___L3___asm_23_asm_2d_int_2d_le)
 ___DEF_SLBL(4,___L4___asm_23_asm_2d_int_2d_le)
    ___SET_R1(___STK(-5))
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___DEF_GLBL(___L10___asm_23_asm_2d_int_2d_le)
    ___SET_R1(___STK(-4))
    ___SET_R2(___FIX(16L))
@@ -3138,7 +3138,7 @@ ___DEF_SLBL(6,___L6___asm_23_asm_2d_label_3f_)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),78,___G_eq_3f_)
 ___DEF_GLBL(___L7___asm_23_asm_2d_label_3f_)
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___END_P_SW
 ___END_P_COD
 
@@ -3329,7 +3329,7 @@ ___DEF_SLBL(9,___L9___asm_23_asm_2d_label_2d_name)
 ___DEF_GLBL(___L12___asm_23_asm_2d_label_2d_name)
    ___SET_R1(___STK(-6))
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___END_P_SW
 ___END_P_COD
 
@@ -3384,7 +3384,7 @@ ___DEF_SLBL(4,___L4___asm_23_asm_2d_label_2d_pos)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),70,___G_c_23_compiler_2d_internal_2d_error)
 ___DEF_GLBL(___L5___asm_23_asm_2d_label_2d_pos)
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___END_P_SW
 ___END_P_COD
 
@@ -3602,7 +3602,7 @@ ___DEF_SLBL(26,___L26___asm_23_asm_2d_align)
 ___DEF_GLBL(___L33___asm_23_asm_2d_align)
    ___SET_R1(___VOID)
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___DEF_SLBL(27,___L27___asm_23_asm_2d_align)
    ___IF_NARGS_EQ(2,___NOTHING)
    ___WRONG_NARGS(27,2,0,0)
@@ -3835,7 +3835,7 @@ ___DEF_SLBL(25,___L25___asm_23_asm_2d_origin)
 ___DEF_GLBL(___L30___asm_23_asm_2d_origin)
    ___SET_R1(___VOID)
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___DEF_SLBL(26,___L26___asm_23_asm_2d_origin)
    ___IF_NARGS_EQ(1,___NOTHING)
    ___WRONG_NARGS(26,1,0,0)
@@ -4012,7 +4012,7 @@ ___DEF_SLBL(9,___L9___asm_23_asm_2d_separated_2d_list)
 ___DEF_GLBL(___L10___asm_23_asm_2d_separated_2d_list)
    ___SET_R1(___STK(-6))
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___END_P_SW
 ___END_P_COD
 
@@ -4341,7 +4341,7 @@ ___DEF_SLBL(35,___L35___asm_23_asm_2d_display_2d_listing)
    ___JUMPGLONOTSAFE(___SET_NARGS(1),74,___G_cdr)
 ___DEF_GLBL(___L87___asm_23_asm_2d_display_2d_listing)
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___DEF_GLBL(___L88___asm_23_asm_2d_display_2d_listing)
    ___SET_R1(___STK(-5))
    ___SET_R2(___FIX(16L))
@@ -4376,7 +4376,7 @@ ___DEF_SLBL(40,___L40___asm_23_asm_2d_display_2d_listing)
 ___DEF_GLBL(___L89___asm_23_asm_2d_display_2d_listing)
    ___SET_R1(___VOID)
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___DEF_GLBL(___L90___asm_23_asm_2d_display_2d_listing)
    ___SET_R1(___FIX(9L))
    ___SET_R0(___LBL(41))
@@ -5233,7 +5233,7 @@ ___DEF_SLBL(79,___L79___asm_23_asm_2d_assemble)
 ___DEF_GLBL(___L137___asm_23_asm_2d_assemble)
    ___SET_R1(___VOID)
    ___ADJFP(-12)
-   ___JUMPPRM(___NOTHING,___STK(3))
+   ___JUMPRET(___STK(3))
 ___DEF_SLBL(80,___L80___asm_23_asm_2d_assemble)
    ___SET_STK(-5,___STK(-7))
    ___SET_STK(-7,___STK(-6))
@@ -5623,7 +5623,7 @@ ___DEF_SLBL(19,___L19___asm_23_asm_2d_assemble_2d_to_2d_file)
 ___DEF_GLBL(___L22___asm_23_asm_2d_assemble_2d_to_2d_file)
    ___SET_R1(___VOID)
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___END_P_SW
 ___END_P_COD
 
@@ -5781,7 +5781,7 @@ ___DEF_SLBL(20,___L20___asm_23_asm_2d_assemble_2d_to_2d_u8vector)
 ___DEF_GLBL(___L24___asm_23_asm_2d_assemble_2d_to_2d_u8vector)
    ___SET_R1(___STK(-6))
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___END_P_SW
 ___END_P_COD
 
@@ -5825,7 +5825,7 @@ ___DEF_SLBL(2,___L2___asm_23_asm_2d_make_2d_stream)
 ___DEF_SLBL(3,___L3___asm_23_asm_2d_make_2d_stream)
    ___SET_R1(___STK(-6))
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___END_P_SW
 ___END_P_COD
 
@@ -5935,7 +5935,7 @@ ___DEF_SLBL(3,___L3___asm_23_asm_2d_signed8_3f_)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),67,___G__3c__3d_)
 ___DEF_GLBL(___L4___asm_23_asm_2d_signed8_3f_)
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___END_P_SW
 ___END_P_COD
 
@@ -5984,7 +5984,7 @@ ___DEF_SLBL(3,___L3___asm_23_asm_2d_signed16_3f_)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),67,___G__3c__3d_)
 ___DEF_GLBL(___L4___asm_23_asm_2d_signed16_3f_)
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___END_P_SW
 ___END_P_COD
 
@@ -6033,7 +6033,7 @@ ___DEF_SLBL(3,___L3___asm_23_asm_2d_signed32_3f_)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),67,___G__3c__3d_)
 ___DEF_GLBL(___L4___asm_23_asm_2d_signed32_3f_)
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___END_P_SW
 ___END_P_COD
 
@@ -6798,7 +6798,7 @@ ___DEF_SLBL(8,___L8___asm_23_asm_2d_float_2d__3e_inexact_2d_exponential_2d_forma
 ___DEF_GLBL(___L56___asm_23_asm_2d_float_2d__3e_inexact_2d_exponential_2d_format)
    ___SET_R1(___STK(-6))
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___DEF_GLBL(___L57___asm_23_asm_2d_float_2d__3e_inexact_2d_exponential_2d_format)
    ___SET_R2(___STK(-6))
    ___SET_R1(___STK(-5))
@@ -6930,7 +6930,7 @@ ___DEF_GLBL(___L61___asm_23_asm_2d_float_2d__3e_inexact_2d_exponential_2d_format
 ___DEF_GLBL(___L62___asm_23_asm_2d_float_2d__3e_inexact_2d_exponential_2d_format)
    ___SET_R1(___STK(-5))
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(2))
+   ___JUMPRET(___STK(2))
 ___DEF_GLBL(___L63___asm_23_asm_2d_float_2d__3e_inexact_2d_exponential_2d_format)
    ___SET_R2(___STK(-8))
    ___SET_R1(___STK(-6))
@@ -6992,7 +6992,7 @@ ___DEF_SLBL(34,___L34___asm_23_asm_2d_float_2d__3e_inexact_2d_exponential_2d_for
 ___DEF_SLBL(35,___L35___asm_23_asm_2d_float_2d__3e_inexact_2d_exponential_2d_format)
    ___SET_R1(___STK(-6))
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___DEF_GLBL(___L65___asm_23_asm_2d_float_2d__3e_inexact_2d_exponential_2d_format)
    ___SET_STK(-4,___STK(-7))
    ___SET_STK(-7,___STK(-6))
@@ -7245,7 +7245,7 @@ ___DEF_SLBL(13,___L13___asm_23_asm_2d_float_2d__3e_exact_2d_exponential_2d_forma
 ___DEF_SLBL(14,___L14___asm_23_asm_2d_float_2d__3e_exact_2d_exponential_2d_format)
    ___SET_R1(___STK(-6))
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___DEF_GLBL(___L26___asm_23_asm_2d_float_2d__3e_exact_2d_exponential_2d_format)
    ___SET_R2(___STK(-5))
    ___SET_R1(___FIX(2L))
@@ -7423,7 +7423,7 @@ ___DEF_SLBL(12,___L12___asm_23_asm_2d_float_2d__3e_bits)
 ___DEF_GLBL(___L24___asm_23_asm_2d_float_2d__3e_bits)
    ___SET_R1(___STK(-3))
    ___ADJFP(-8)
-   ___JUMPPRM(___NOTHING,___STK(1))
+   ___JUMPRET(___STK(1))
 ___DEF_GLBL(___L25___asm_23_asm_2d_float_2d__3e_bits)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-7))
