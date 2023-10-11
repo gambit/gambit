@@ -5578,6 +5578,19 @@
   (write-bb current-bb (current-output-port))(newline)
   (pp (list 'TRACE: trace-lbls))))
 
+(define (get-total-number-of-instructions module-procs)
+  (define count 0)
+  (for-each
+    (lambda (proc)
+      (bbs-for-each-bb
+        (lambda (bb)
+          (set! count (+ count
+                        2 ;; lbl and branch
+                        (length (bb-non-branch-instrs bb)))))
+        (proc-obj-code proc)))
+    module-procs)
+  count)
+
 (define (gvm-interpret module-procs)
   (define (with-exception-catcher _ f) (f))
 
@@ -5592,11 +5605,12 @@
              (main-proc (car module-procs))
              (main-bbs (proc-obj-code main-proc))
              (entry-lbl-num (bbs-entry-lbl-num main-bbs))
-            (trace (init-interpreter-trace)))
+             (trace (init-interpreter-trace)))
         ;; dummy empty return adress
         (register-set! registers 0 'exit-return-address)
         (bb-interpret main-bbs (lbl-num->bb entry-lbl-num main-bbs) global-env stack registers trace)
-        (pp-primitive-call-counter)))))
+        (pp-primitive-call-counter)
+        (pprint (list 'total-gvm-instructions (get-total-number-of-instructions module-procs)))))))
 
 (define (bb-interpret bbs bb env stack registers trace)
   (define tctx (make-tctx))
