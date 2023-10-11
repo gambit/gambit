@@ -4076,7 +4076,12 @@
           (define (format-length lst)
             (let loop ((lst lst) (len 0))
               (if (pair? lst)
-                  (loop (cdr lst) (+ len (string-length (car lst))))
+                  (loop (cdr lst)
+                        (+ len
+                           (let ((x (car lst)))
+                             (if (pair? x)
+                                 (format-length x)
+                                 (string-length x)))))
                   len)))
 
           (define (max-format-length lst)
