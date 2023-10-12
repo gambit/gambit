@@ -430,12 +430,10 @@
   (compiler-abort))
 
 (define (compiler-user-warning loc msg . args)
-  (if warnings-requested?
-    (begin
-      (display "*** WARNING") (locat-show " IN " loc) (display " -- ")
-      (display msg)
-      (for-each (lambda (x) (display " ") (write x)) args)
-      (newline))))
+  (display "*** WARNING") (locat-show " IN " loc) (display " -- ")
+  (display msg)
+  (for-each (lambda (x) (display " ") (write x)) args)
+  (newline))
 
 (define (compiler-internal-error msg . args)
   (display "*** ERROR -- Compiler internal error detected") (newline)
@@ -453,9 +451,6 @@
 
 (define (compiler-abort)
   (throw-to-exception-handler #f))
-
-(define warnings-requested? #f)
-(set! warnings-requested? #t)
 
 ;;;----------------------------------------------------------------------------
 ;;
@@ -1008,3 +1003,5 @@
 
 ;;;============================================================================
 )
+
+

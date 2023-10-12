@@ -9,6 +9,11 @@
 (##define-macro (macro-initialization-file)
   ".gambini")
 
+
+(define-warning-decl '(warn-undefined-references))
+(define-warning-decl '(warn-standardly-bound))
+(define-warning-decl '(warn-nontail-calls-with-interrupts-disabled))
+
 (define (##main-gsi/gsc)
 
   ;; In the usages "^" stands for the program name.
@@ -66,13 +71,14 @@ Debug information options
     -track-scheme          Emit '#line' directives referring to Scheme code
 
 Auxiliary information options
-    -gvm             Write GVM intermediate representation to file.gvm
-    -cfg             Write GVM control flow graph to file.cfg
-    -dg              Write variable/procedure dependency graph to file.dg
-    -expansion       Show source code after code transformations
-    -report          Show global variable usage report
-    -verbose         Show trace of compiler activity
-    -warnings        Show warnings
+    -gvm                   Write GVM intermediate representation to file.gvm
+    -cfg                   Write GVM control flow graph to file.cfg
+    -dg                    Write variable/procedure dependency graph to file.dg
+    -expansion             Show source code after code transformations
+    -report                Show global variable usage report
+    -verbose               Show trace of compiler activity
+    -warnings              Activate all reporting of all warnings
+    -nowarnings            Disable reporting of all warnings
 
 Interpreter options
     -i               Process rest of command line like the interpreter
@@ -84,6 +90,12 @@ Global options
     -f               Do not process '.gambini' initialization files
     -v               Show version information
     -h, -help        Show this help
+
+Warnings
+    -warn-undefined-references                    Report references that are not either defined in the file, or declared in a (namespace (X <name>)) declaration
+    usage-end
+    -warn-standardly-bound                        Report when standardly bound variables are redefined
+    -warn-nontail-calls-with-interrupts-disabled  Report nontail calls when interrupts are disabled
 
 usage-end
 )
@@ -991,7 +1003,8 @@ usage-end
                          '((target symbol)
                            (c) (dynamic) (exe) (obj) (link) (flat)
                            (compactness fixnum)
-                           (warnings) (verbose) (report)
+                           (warnings) (nowarnings)
+                           (verbose) (report)
                            (expansion) (gvm) (cfg) (dg) (asm) (keep-temp)
 ;;TODO: enable and document when compiler supports these options
 ;;                           (type-checking) (no-type-checking)
@@ -1006,7 +1019,9 @@ usage-end
                            (ld-options-prelude string)
                            (ld-options string)
                            (pkg-config string)
-                           (pkg-config-path string))))
+                           (pkg-config-path string)))
+                        (common-compiler-options
+                         (##append allowed-warning-decls common-compiler-options)))
 
                    ;; parse command line to try to find the -target option
                    (split-command-line

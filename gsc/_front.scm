@@ -55,8 +55,6 @@
                       (cadr t)
                       (default-target)))))))
 
-         (set! warnings-requested? compiler-option-warnings)
-
          (let* ((info-port
                  (if compiler-option-verbose
                      (current-output-port)
@@ -86,8 +84,7 @@
                    (case (car opt)
                      ((target)
                       #t) ;; target option handled previously
-                     ((warnings)
-                      (set! compiler-option-warnings           #t)
+                     ((warnings nowarnings)
                       #t)
                      ((verbose)
                       (set! compiler-option-verbose            #t)
@@ -130,7 +127,9 @@
                       #t) ;; these options are innocuous
                      (else
                       ;; OK if the option is a target specific option
-                      (assq (car opt) target-specific-options))))))
+                      (or
+                       (assq (car opt) allowed-warning-decls)
+                       (assq (car opt) target-specific-options)))))))
 
          (if (not handled?)
              (set! rev-unhandled-opts
@@ -149,7 +148,6 @@
     (reverse rev-unhandled-opts)))
 
 (define (reset-options)
-  (set! compiler-option-warnings           #f)
   (set! compiler-option-verbose            #f)
   (set! compiler-option-report             #f)
   (set! compiler-option-expansion          #f)
@@ -162,7 +160,6 @@
   (set! compiler-option-debug-environments #f)
   (set! compiler-option-track-scheme       #f))
 
-(define compiler-option-warnings           #f)
 (define compiler-option-verbose            #f)
 (define compiler-option-report             #f)
 (define compiler-option-expansion          #f)
@@ -229,12 +226,31 @@
        (**in-new-compilation-ctx
         (cadr (assq 'target opts))
         (lambda ()
+          (define initial-decl
+            (let loop ((opts opts)
+                       (decl '()))
+              (if (pair? opts)
+                  (cond ((assq (caar opts) allowed-warning-decls)
+                         (loop (cdr opts)
+                               (cons (list (caar opts) #t) decl)))
+                        ((eq? (caar opts) 'warnings)
+                         (loop (cdr opts)
+                               (cons (list 'warnings #t) decl)))
+                        ((eq? (caar opts) 'nowarnings)
+                         (loop (cdr opts)
+                               (cons (list 'warnings #f) decl)))
+                        (else
+                         (loop (cdr opts) decl)))
+                  decl)))
+
           (if script-line
               (**compilation-meta-info-add! 'script-line script-line))
           (**compilation-module-ref-set! module-ref)
           (parse-program
            program
-           (make-global-environment)
+           (env-decl-set
+            (make-global-environment)
+            initial-decl)
            module-ref
            vector))))
      (lambda (v2 comp-ctx)
@@ -297,13 +313,15 @@
                                                              (car x)))
                                                  (vector->list (cdr name-and-refs)))))
                            (if (pair? refs)
-                               (compiler-user-warning
-                               (source-locat (node-source (car refs)))
-                               (string-append
-                                "\""
-                                (symbol->string name)
-                                "\""
-                                " is not defined")))))))
+                               (let ((env (node-env (car refs))))
+                                 (if (warning-enabled? 'warn-undefined-references env)
+                                     (compiler-user-warning
+                                      (source-locat (node-source (car refs)))
+                                      (string-append
+                                       "\""
+                                       (symbol->string name)
+                                       "\""
+                                       " is not defined")))))))))
                  (cdr ns-and-names)))
               (table->list namespace-to-undefined-names))))
 
@@ -354,8 +372,6 @@
          opts
          output-filename-gen
          info-port)
-
-  (set! warnings-requested? compiler-option-warnings)
 
   (let ((result-thunk
          (with-exception-handling
@@ -473,8 +489,6 @@
 
     (if (not opts)
         (set! opts (list (list 'target (c#default-target)))))
-
-    (set! warnings-requested? compiler-option-warnings)
 
     (let ((result-thunk
            (with-exception-handling
@@ -3646,7 +3660,9 @@
 
                               (if (and (not (intrs-enabled? (node-env node)))
                                        (not (reason-tail? reason2))
-                                       (warnings? (node-env node)))
+                                       (warning-enabled?
+                                        (node-env node)
+                                        'warn-nontail-calls-with-interrupts-disabled))
                                 (compiler-user-warning
                                  (source-locat (node-source node))
                                  "Nontail call with interrupts disabled"))

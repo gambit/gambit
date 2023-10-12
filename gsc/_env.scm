@@ -13,6 +13,20 @@
 
 ;;;----------------------------------------------------------------------------
 
+;;;; Warnings
+
+;;;----------------------------------------------------------------------------
+
+
+(define allowed-warning-decls '())
+
+(define (define-warning-decl opt)
+  (if (null? (cdr opt))
+      (define-namable-boolean-decl (car opt)))
+  (set! allowed-warning-decls (cons opt allowed-warning-decls)))
+
+;;;----------------------------------------------------------------------------
+
 ;;;; Environment manipulation and declaration handling module
 
 ;;;----------------------------------------------------------------------------
