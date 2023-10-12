@@ -4514,7 +4514,7 @@
                 ((char=? c #\>) "&gt;")
                 ((char=? c #\&) "&amp;")
                 (else           (string c))))
-        (string->list str))))
+        (string->list (format-concatenate str)))))
 
 (define (dot-digraph-write dd port)
   (for-each
@@ -5590,7 +5590,8 @@
       (bbs-for-each-bb
         (lambda (bb)
           (set! count (+ count
-                        2 ;; lbl and branch
+                        1 ;; branch
+                        (if (eq? (label-kind (bb-label-instr bb)) 'entry) 1 0) ;; only entry require computation
                         (length (bb-non-branch-instrs bb)))))
         (proc-obj-code proc)))
     module-procs)
