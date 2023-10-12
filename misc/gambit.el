@@ -7,6 +7,10 @@
 ;;          Mike Sperber <sperber@informatik.uni-tuebingen.de>
 ;; Keywords: processes, lisp
 
+;; Updated in 2021 by Pierre Rouleau <prouleau001@gmail.com>
+;;         - Fixed all byte-compiler warnings
+;;         - User overridable parameters are now customizable.
+
 ;; To use this package, make sure this file is accessible from your
 ;; load-path and that the following lines are in your ".emacs" file:
 ;;
@@ -43,13 +47,35 @@
 
 ;; User overridable parameters.
 
-(defvar scheme-program-name "gsi -:d-")
+(defgroup gambit nil
+  "Gambit user overridable parameters."
+  :group 'scheme)
 
-(defvar gambit-repl-command-prefix "\C-c"
-  "Emacs keybinding prefix for Gambit REPL's commands.")
+(defcustom gambit-scheme-program-name "gsi -:d-"
+  "Gambit REPL command line string."
+  :group 'gambit
+  :type 'string)
 
-(defvar gambit-highlight-color "gold"
-  "Color of the overlay for highlighting Scheme expressions.")
+(defvar scheme-program-name gambit-scheme-program-name)
+
+(defcustom gambit-repl-command-prefix "\C-c"
+  "Emacs keybinding prefix for Gambit REPL's commands."
+  :group 'gambit
+  :type 'string)
+
+
+;; TODO: Update the code to support a customizable face similar
+;;       to something like this:
+;; (defface gambit-highlight-face
+;;   '((((background light)) :background "gold")
+;;     (((background dark)) :background "gold"))
+;;   "Face of the overlay for highlighting Scheme Expressions."
+;;   :group 'gambit)
+
+(defcustom gambit-highlight-color "gold"
+  "Color of the overlay for highlighting Scheme expressions."
+  :group 'gambit
+  :type 'string)
 
 (defvar gambit-highlight-face
   (let ((face 'gambit-highlight-face))
@@ -58,15 +84,17 @@
           (make-face face)
           (if (x-display-color-p)
               (set-face-background face gambit-highlight-color)
-              (progn
-                ;(make-face-bold face)
-                (set-face-underline-p face t))))
-        (error (setq face nil)))
+            (progn
+              ;; (make-face-bold face)
+              (set-face-underline face t))))
+      (error (setq face nil)))
     face)
   "Face of overlay for highlighting Scheme expressions.")
 
-(defvar gambit-new-window-height 6
-  "Height of a window opened to highlight a Scheme expression.")
+(defcustom gambit-new-window-height 6
+  "Height of a window opened to highlight a Scheme expression."
+  :group 'gambit
+  :type 'integer)
 
 (defvar gambit-move-to-highlighted (not gambit-highlight-face)
   "Flag to move to window opened to highlight a Scheme expression.")
@@ -80,6 +108,7 @@
 (require 'cmuscheme)
 
 ;;;----------------------------------------------------------------------------
+(defvar calculate-lisp-indent-last-sexp) ; forward declare, prevent warning
 
 (defun gambit-indent-function (indent-point state)
   (let ((normal-indent (current-column)))
@@ -116,18 +145,7 @@
                (lisp-indent-specform method state
                                      indent-point normal-indent))
               (method
-                (funcall method state indent-point normal-indent)))))))
-
-(defun gambit-indent-method (function)
-  (let ((method nil)
-        (alist gambit-indent-regexp-alist))
-    (while (and (not method) (not (null alist)))
-      (let* ((regexp (car alist))
-             (x (string-match (car regexp) function)))
-        (if x
-            (setq method (cdr regexp)))
-        (setq alist (cdr alist))))
-    method))
+               (funcall method state indent-point normal-indent)))))))
 
 (defvar gambit-indent-regexp-alist
   '(
@@ -155,6 +173,17 @@
     ("macro-check-elem"        . defun)
    ))
 
+(defun gambit-indent-method (function)
+  (let ((method nil)
+        (alist gambit-indent-regexp-alist))
+    (while (and (not method) (not (null alist)))
+      (let* ((regexp (car alist))
+             (x (string-match (car regexp) function)))
+        (if x
+            (setq method (cdr regexp)))
+        (setq alist (cdr alist))))
+    method))
+
 ;;;----------------------------------------------------------------------------
 
 ;; Portable functions for FSF Emacs and Xemacs.
@@ -162,7 +191,7 @@
 (defun window-top-edge (window)
   (if (fboundp 'window-edges)
       (car (cdr (window-edges window)))
-      (car (cdr (window-pixel-edges window)))))
+    (car (cdr (window-pixel-edges window)))))
 
 ;; Xemacs calls its overlays "extents", so we have to use them to emulate
 ;; overlays on Xemacs.  Some versions of Xemacs have the portability package
@@ -177,15 +206,31 @@
 
 (if (not (fboundp 'make-overlay))
     (defun make-overlay (start end)
+      (declare-function make-extent "extent.c")
       (make-extent start end)))
 
 (if (not (fboundp 'overlay-put))
     (defun overlay-put (overlay prop val)
+      (declare-function set-extent-property "extent.c")
       (set-extent-property overlay prop val)))
 
 (if (not (fboundp 'move-overlay))
     (defun move-overlay (overlay start end buffer)
+      (declare-function set-extent-endpoints "extent.c")
       (set-extent-endpoints overlay start end buffer)))
+
+;;;----------------------------------------------------------------------------
+
+;; Buffer local variables of the Gambit inferior process(es).
+
+(defvar gambit-input-line-count nil
+  "Line number as seen by the Gambit process.")
+
+(defvar gambit-input-line-marker-alist nil
+  "Alist of line numbers of input blocks and markers.")
+
+(defvar gambit-last-output-marker nil
+  "Points to the last character output by the Gambit process.")
 
 ;;;----------------------------------------------------------------------------
 
@@ -263,19 +308,6 @@
 
 ;;;----------------------------------------------------------------------------
 
-;; Buffer local variables of the Gambit inferior process(es).
-
-(defvar gambit-input-line-count nil
-  "Line number as seen by the Gambit process.")
-
-(defvar gambit-input-line-marker-alist nil
-  "Alist of line numbers of input blocks and markers.")
-
-(defvar gambit-last-output-marker nil
-  "Points to the last character output by the Gambit process.")
-
-;;;----------------------------------------------------------------------------
-
 ;; Utilities
 
 (defun gambit-string-count-lines (str)
@@ -327,6 +359,9 @@
   (interactive)
   (scheme-send-string "#||#,+;"))
 
+
+(defvar gambit-popups nil)
+
 (defun gambit-kill-last-popup ()
   (interactive)
   (let ((windows gambit-popups))
@@ -351,8 +386,6 @@
          (cons (car popups) (gambit-gc-popups (cdr popups))))
         (t
          (gambit-gc-popups (cdr popups)))))
-
-(defvar gambit-popups nil)
 
 ;;;----------------------------------------------------------------------------
 
@@ -386,8 +419,7 @@
            (initially-selected-window
             (selected-window)))
       (if (not (null windows))
-          (save-excursion
-            (set-buffer buffer)
+          (with-current-buffer buffer
             (select-window (car windows))
             (goto-char output-marker)
             (if (not (pos-visible-in-window-p))
@@ -395,6 +427,11 @@
             (select-window initially-selected-window))))
     (if locat
         (gambit-highlight-location locat))))
+
+(defvar gambit-location-regexp-alist
+  '(("\\(\\\"\\(\\\\\\\\\\|\\\\\"\\|[^\\\"\n]\\)+\\\"\\)@\\([0-9]+\\)\\.\\([0-9]+\\)[^0-9]" 1 3 4)
+    ("\\((console)\\)@\\([0-9]+\\)\\.\\([0-9]+\\)[^0-9]" 1 2 3)
+    ("\\((stdin)\\)@\\([0-9]+\\)\\.\\([0-9]+\\)[^0-9]" 1 2 3)))
 
 (defun gambit-extract-location (str)
   (let ((location nil)
@@ -418,11 +455,6 @@
               (setq location (list (read name) (read line) (read column)))))
         (setq alist (cdr alist))))
     location))
-
-(defvar gambit-location-regexp-alist
-  '(("\\(\\\"\\(\\\\\\\\\\|\\\\\"\\|[^\\\"\n]\\)+\\\"\\)@\\([0-9]+\\)\\.\\([0-9]+\\)[^0-9]" 1 3 4)
-    ("\\((console)\\)@\\([0-9]+\\)\\.\\([0-9]+\\)[^0-9]" 1 2 3)
-    ("\\((stdin)\\)@\\([0-9]+\\)\\.\\([0-9]+\\)[^0-9]" 1 2 3)))
 
 (defun gambit-closest-non-following (line alist)
   (let ((closest nil))
@@ -462,10 +494,10 @@
              (if buffer
                  (gambit-highlight-expression
                   buffer
-                  (save-excursion
-                    (set-buffer buffer)
-                    (goto-line line)
-                    (forward-char (- column 1))
+                  (with-current-buffer buffer
+                    (goto-char 1)
+                    (forward-line (1- line))
+                    (forward-char (1- column))
                     (point)))))))))
 
 (defun gambit-highlight-expression (location-buffer pos)
@@ -473,7 +505,7 @@
 "Highlight the expression at a specific location in a buffer.
 
 The location buffer is the one that contains the location to
-highlight and "pos" points to the first character of the
+highlight and \"pos\" points to the first character of the
 expression in the buffer.  If the location buffer is not visible
 then we must display it in a window.  We also have to make sure
 the highlighted expression is visible, which may require the
@@ -526,8 +558,7 @@ enlarge the window if it is too small."
 
     ; Highlight the expression in the location buffer.
 
-    (save-excursion
-      (set-buffer (window-buffer (selected-window)))
+    (with-current-buffer (window-buffer (selected-window))
       (goto-char pos)
       (if (not (pos-visible-in-window-p))
           (recenter (- (/ (window-height) 2) 1)))
