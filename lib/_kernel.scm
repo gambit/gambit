@@ -2360,12 +2360,18 @@ k = ___ps->saved[0];
 fill = ___ps->saved[1];
 ___ps->saved[0] = ___VOID;
 ___ps->saved[1] = ___VOID;
+if (fill == ___ABSENT)
+  fill = ___FIX(0);
 if (!___FIXNUMP(result))
   {
-    if (fill == ___ABSENT)
-      fill = ___FIX(0);
+#ifdef ___USE_SCHEME_VECTOR_OPS
     for (i=0; i<n; i++)
       ___VECTORSET(result,___FIX(i),fill)
+#else
+    ___SCMOBJ *body = ___CAST(___SCMOBJ*, ___BODY_AS(result,___tSUBTYPED));
+    for (i=0; i<n; i++)
+      body[i] = fill;
+#endif
   }
 ___RESULT = result;
 ___PUSH_ARGS2(k,fill);
@@ -2436,8 +2442,15 @@ ___ps->saved[0] = ___VOID;
 ___ps->saved[1] = ___VOID;
 if (!___FIXNUMP(result) && fill != ___ABSENT)
   {
+#ifdef ___USE_SCHEME_VECTOR_OPS
     for (i=0; i<n; i++)
-      ___STRINGSET(result,___FIX(i),fill);
+      ___STRINGSET(result,___FIX(i),fill)
+#else
+    ___C f = ___INT(fill);
+    ___C *body = ___CAST(___C*, ___BODY_AS(result,___tSUBTYPED));
+    for (i=0; i<n; i++)
+      body[i] = f;
+#endif
   }
 ___RESULT = result;
 ___PUSH_ARGS2(k,fill);
@@ -2508,8 +2521,15 @@ ___ps->saved[0] = ___VOID;
 ___ps->saved[1] = ___VOID;
 if (!___FIXNUMP(result) && fill != ___ABSENT)
   {
+#ifdef ___USE_SCHEME_VECTOR_OPS
     for (i=0; i<n; i++)
-      ___U8VECTORSET(result,___FIX(i),fill);
+      ___U8VECTORSET(result,___FIX(i),fill)
+#else
+    ___U8 f = ___INT(fill);
+    ___U8 *body = ___CAST(___U8*, ___BODY_AS(result,___tSUBTYPED));
+    for (i=0; i<n; i++)
+      body[i] = f;
+#endif
   }
 ___RESULT = result;
 ___PUSH_ARGS2(k,fill);
@@ -2581,8 +2601,15 @@ ___ps->saved[0] = ___VOID;
 ___ps->saved[1] = ___VOID;
 if (!___FIXNUMP(result) && fill != ___ABSENT)
   {
+#ifdef ___USE_SCHEME_VECTOR_OPS
     for (i=0; i<n; i++)
-      ___S8VECTORSET(result,___FIX(i),fill);
+      ___S8VECTORSET(result,___FIX(i),fill)
+#else
+    ___S8 f = ___INT(fill);
+    ___S8 *body = ___CAST(___S8*, ___BODY_AS(result,___tSUBTYPED));
+    for (i=0; i<n; i++)
+      body[i] = f;
+#endif
   }
 ___RESULT = result;
 ___PUSH_ARGS2(k,fill);
@@ -2654,8 +2681,15 @@ ___ps->saved[0] = ___VOID;
 ___ps->saved[1] = ___VOID;
 if (!___FIXNUMP(result) && fill != ___ABSENT)
   {
+#ifdef ___USE_SCHEME_VECTOR_OPS
     for (i=0; i<n; i++)
-      ___U16VECTORSET(result,___FIX(i),fill);
+      ___U16VECTORSET(result,___FIX(i),fill)
+#else
+    ___U16 f = ___INT(fill);
+    ___U16 *body = ___CAST(___U16*, ___BODY_AS(result,___tSUBTYPED));
+    for (i=0; i<n; i++)
+      body[i] = f;
+#endif
   }
 ___RESULT = result;
 ___PUSH_ARGS2(k,fill);
@@ -2727,8 +2761,15 @@ ___ps->saved[0] = ___VOID;
 ___ps->saved[1] = ___VOID;
 if (!___FIXNUMP(result) && fill != ___ABSENT)
   {
+#ifdef ___USE_SCHEME_VECTOR_OPS
     for (i=0; i<n; i++)
-      ___S16VECTORSET(result,___FIX(i),fill);
+      ___S16VECTORSET(result,___FIX(i),fill)
+#else
+    ___S16 f = ___INT(fill);
+    ___S16 *body = ___CAST(___S16*, ___BODY_AS(result,___tSUBTYPED));
+    for (i=0; i<n; i++)
+      body[i] = f;
+#endif
   }
 ___RESULT = result;
 ___PUSH_ARGS2(k,fill);
@@ -2800,8 +2841,15 @@ ___ps->saved[0] = ___VOID;
 ___ps->saved[1] = ___VOID;
 if (!___FIXNUMP(result) && fill != ___ABSENT)
   {
+#ifdef ___USE_SCHEME_VECTOR_OPS
     for (i=0; i<n; i++)
-      ___U32VECTORSET(result,___FIX(i),fill);
+      ___U32VECTORSET(result,___FIX(i),fill)
+#else
+    ___U32 f = ___U32UNBOX(fill);
+    ___U32 *body = ___CAST(___U32*, ___BODY_AS(result,___tSUBTYPED));
+    for (i=0; i<n; i++)
+      body[i] = f;
+#endif
   }
 ___RESULT = result;
 ___PUSH_ARGS2(k,fill);
@@ -2873,8 +2921,15 @@ ___ps->saved[0] = ___VOID;
 ___ps->saved[1] = ___VOID;
 if (!___FIXNUMP(result) && fill != ___ABSENT)
   {
+#ifdef ___USE_SCHEME_VECTOR_OPS
     for (i=0; i<n; i++)
-      ___S32VECTORSET(result,___FIX(i),fill);
+      ___S32VECTORSET(result,___FIX(i),fill)
+#else
+    ___S32 f = ___S32UNBOX(fill);
+    ___S32 *body = ___CAST(___S32*, ___BODY_AS(result,___tSUBTYPED));
+    for (i=0; i<n; i++)
+      body[i] = f;
+#endif
   }
 ___RESULT = result;
 ___PUSH_ARGS2(k,fill);
@@ -2955,8 +3010,15 @@ ___ps->saved[0] = ___VOID;
 ___ps->saved[1] = ___VOID;
 if (!___FIXNUMP(result) && fill != ___ABSENT)
   {
+#ifdef ___USE_SCHEME_VECTOR_OPS
     for (i=0; i<n; i++)
-      ___U64VECTORSET(result,___FIX(i),fill);
+      ___U64VECTORSET(result,___FIX(i),fill)
+#else
+    ___U64 f = ___U64UNBOX(fill);
+    ___U64 *body = ___CAST(___U64*, ___BODY_AS(result,___tSUBTYPED));
+    for (i=0; i<n; i++)
+      body[i] = f;
+#endif
   }
 ___RESULT = result;
 ___PUSH_ARGS2(k,fill);
@@ -3037,8 +3099,15 @@ ___ps->saved[0] = ___VOID;
 ___ps->saved[1] = ___VOID;
 if (!___FIXNUMP(result) && fill != ___ABSENT)
   {
+#ifdef ___USE_SCHEME_VECTOR_OPS
     for (i=0; i<n; i++)
-      ___S64VECTORSET(result,___FIX(i),fill);
+      ___S64VECTORSET(result,___FIX(i),fill)
+#else
+    ___S64 f = ___S64UNBOX(fill);
+    ___S64 *body = ___CAST(___S64*, ___BODY_AS(result,___tSUBTYPED));
+    for (i=0; i<n; i++)
+      body[i] = f;
+#endif
   }
 ___RESULT = result;
 ___PUSH_ARGS2(k,fill);
@@ -3110,9 +3179,15 @@ ___ps->saved[0] = ___VOID;
 ___ps->saved[1] = ___VOID;
 if (!___FIXNUMP(result) && fill != ___ABSENT)
   {
-    ___F64 fill_f64 = ___F64UNBOX(fill);
+    ___F32 f = ___F64UNBOX(fill);
+#ifdef ___USE_SCHEME_VECTOR_OPS
     for (i=0; i<n; i++)
-      ___F32VECTORSET(result,___FIX(i),fill_f64);
+      ___F32VECTORSET(result,___FIX(i),f)
+#else
+    ___F32 *body = ___CAST(___F32*, ___BODY_AS(result,___tSUBTYPED));
+    for (i=0; i<n; i++)
+      body[i] = f;
+#endif
   }
 ___RESULT = result;
 ___PUSH_ARGS2(k,fill);
@@ -3192,9 +3267,15 @@ ___ps->saved[0] = ___VOID;
 ___ps->saved[1] = ___VOID;
 if (!___FIXNUMP(result) && fill != ___ABSENT)
   {
-    ___F64 fill_f64 = ___F64UNBOX(fill);
+    ___F64 f = ___F64UNBOX(fill);
+#ifdef ___USE_SCHEME_VECTOR_OPS
     for (i=0; i<n; i++)
-      ___F64VECTORSET(result,___FIX(i),fill_f64);
+      ___F64VECTORSET(result,___FIX(i),f)
+#else
+    ___F64 *body = ___CAST(___F64*, ___BODY_AS(result,___tSUBTYPED));
+    for (i=0; i<n; i++)
+      body[i] = f;
+#endif
   }
 ___RESULT = result;
 ___PUSH_ARGS2(k,fill);
