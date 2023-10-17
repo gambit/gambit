@@ -2,7 +2,7 @@
 
 ;;; File: "main.scm"
 
-;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
@@ -480,7 +480,7 @@ usage-end
 
                       (define (exit-abnormally)
                         (cleanup)
-                        (##exit-abruptly))
+                        (##exit 1)) ;; exit with error termination status
 
                       (define (handling file)
                         (if (##fx< 1 nb-output-files)
