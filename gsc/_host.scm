@@ -815,8 +815,39 @@
 (define (format-filepos path filepos pinpoint?)
   (##format-filepos path filepos pinpoint?))
 
+;; TODO: remove after bootstrap
+(define (**make-locat container start-position end-position)
+  (if end-position
+      (vector container start-position end-position)
+      (vector container start-position)))
+
+;; TODO: remove after bootstrap
+(define (**locat-start-position locat)
+  (let ((container (vector-ref locat 0)))
+    (if (##source? container)
+        (**locat-start-position (source-locat container))
+        (vector-ref locat 1))))
+
+;; TODO: remove after bootstrap
+(define (**locat-end-position locat)
+  (let ((container (vector-ref locat 0)))
+    (if (##source? container)
+        (**locat-end-position (source-locat container))
+        (and (= (vector-length locat) 3)
+             (vector-ref locat 2)))))
+
 (define (**display-message-with-locat gen-message locat kind proc port)
-  (##display-message-with-locat gen-message locat kind proc port))
+  (let ((dmwl
+         (##global-var-ref
+          (##make-global-var '##display-message-with-locat))))
+    (if (##unbound? dmwl) ;; TODO: remove after bootstrap
+        (begin
+          (display "*** " port)
+          (display kind port)
+          (locat-show " IN " locat port)
+          (display " -- " port)
+          (gen-message port))
+        (dmwl gen-message locat kind proc port))))
 
 ;; The path functions are already defined by Gambit
 ;;(define path-expand path-expand)

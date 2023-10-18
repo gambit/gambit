@@ -164,7 +164,7 @@
   (if loc
 
       (let ((filename (##container->path (##locat-container loc)))
-            (filepos (##locat-start-position loc)))
+            (filepos (**locat-start-position loc)))
         (if (string? filename) ; file?
             (let ((str (format-filepos filename filepos #t)))
               (if str
@@ -196,7 +196,7 @@
       (let* ((container (##locat-container loc))
              (path (##container->path container)))
         (if path
-            (let* ((position (##locat-start-position loc))
+            (let* ((position (**locat-start-position loc))
                    (filepos (##position->filepos position))
                    (line (+ (**filepos-line filepos) 1)))
               (cons path line))
@@ -392,7 +392,7 @@
         (##current-readtable)
         (lambda (re x)
           (make-source x
-                       (##make-locat (##port-name (macro-readenv-port re))
+                       (**make-locat (##port-name (macro-readenv-port re))
                                      (##filepos->position
                                       (macro-readenv-filepos re))
                                      (##filepos->position
@@ -427,7 +427,7 @@
          (if (source? x)
              x
              (let ((locat
-                    (##make-locat container
+                    (**make-locat container
                                   (##filepos->position
                                    (macro-readenv-filepos re))
                                   (##filepos->position

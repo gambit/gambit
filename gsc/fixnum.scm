@@ -26,6 +26,8 @@
 **comply-to-standard-scheme?
 **display-message-with-locat
 **in-new-compilation-ctx
+**locat-start-position ;; TODO: remove after bootstrap
+**locat-end-position ;; TODO: remove after bootstrap
 **macro-compilation-ctx-demand-modules
 **macro-compilation-ctx-meta-info
 **macro-compilation-ctx-supply-modules
@@ -34,6 +36,7 @@
 **macro-descr-expander
 **macro-descr-size
 **main-readtable ;; variable
+**make-locat ;; TODO: remove after bootstrap
 **make-macro-descr
 **meta-info->alist
 absent-object
