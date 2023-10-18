@@ -2,7 +2,7 @@
 
 ;;; File: "VM.scm"
 
-;;; Copyright (c) 2020-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2020-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -137,11 +137,11 @@ VM.prototype.completions = function (thread_scm, input, cursor) {
   return completions;
 };
 
-VM.prototype.pinpoint = function (container, line0, col0) {
+VM.prototype.pinpoint = function (container, start_line0, start_col0, end_line0, end_col0) {
 
   var vm = this;
 
-  if (vm.ui) vm.ui.pinpoint(container, line0, col0);
+  return vm.ui && vm.ui.pinpoint(container, start_line0, start_col0, end_line0, end_col0);
 };
 
 main_vm = new VM();
@@ -236,29 +236,50 @@ EOF
 
 (##pinpoint-locat-hook-set!
  (lambda (locat)
-   (let* ((container (##locat-container locat))
-          (filepos (##position->filepos (##locat-position locat)))
-          (line0 (##filepos-line filepos))
-          (col0 (##filepos-col filepos)))
-     (##os-pinpoint container line0 col0))))
+   (let* ((container
+           (##locat-container locat))
+          (start-filepos
+           (##position->filepos
+            (##locat-start-position locat)))
+          (end-filepos
+           (##position->filepos
+            (or (##locat-end-position locat)
+                (let ((line (##filepos-line start-filepos))
+                      (col (##filepos-col start-filepos)))
+                  (##filepos->position
+                   (##make-filepos line (##fx+ col 1) 0))))))
+          (start-line0
+           (##filepos-line start-filepos))
+          (start-col0
+           (##filepos-col start-filepos))
+          (end-line0
+           (##filepos-line end-filepos))
+          (end-col0
+           (##filepos-col end-filepos)))
+     (or (##os-pinpoint container start-line0 start-col0 end-line0 end-col0)
+         (##default-pinpoint-locat locat)))))
 
-(define (##os-pinpoint container line0 col0)
+(define (##os-pinpoint container start-line0 start-col0 end-line0 end-col0)
   (##inline-host-declaration "
 
-@os_pinpoint@ = function (vm, container_scm, line0_scm, col0_scm) {
+@os_pinpoint@ = function (vm, container_scm, start_line0_scm, start_col0_scm, end_line0_scm, end_col0_scm) {
 
-  var line0 = @scm2host@(line0_scm);
-  var col0 = @scm2host@(col0_scm);
+  var start_line0 = @scm2host@(start_line0_scm);
+  var start_col0 = @scm2host@(start_col0_scm);
+  var end_line0 = @scm2host@(end_line0_scm);
+  var end_col0 = @scm2host@(end_col0_scm);
 
-  return @host2foreign@(vm.pinpoint(container_scm, line0, col0));
+  return @host2foreign@(vm.pinpoint(container_scm, start_line0, start_col0, end_line0, end_col0));
 };
 
 ")
   (##inline-host-expression
-   "@os_pinpoint@(main_vm,@1@,@2@,@3@)"
+   "@os_pinpoint@(main_vm,@1@,@2@,@3@,@4@,@5@)"
    container
-   line0
-   col0))
+   start-line0
+   start-col0
+   end-line0
+   end-col0))
 
 ;; Enable web console.
 

@@ -1,6 +1,6 @@
 /* File: "os_shell.c" */
 
-/* Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -800,6 +800,76 @@ ___SCMOBJ ___os_environ ___PVOID
 #endif
 
   return result;
+}
+
+
+int ___strcmp_UCS_2
+   ___P((___UCS_2STRING str1,
+         ___UCS_2STRING str2),
+        (str1,
+         str2)
+___UCS_2STRING str1;
+___UCS_2STRING str2;)
+{
+  while (*str1 != '\0')
+    {
+      if (*str1 < *str2)
+        return -1;
+      else if (*str1 > *str2)
+        return -1;
+      else
+        {
+          str1++;
+          str2++;
+        }
+    }
+
+  return *str2 != '\0'; /* 0 is both strings are equal,
+                           1 if str1 is a prefix of str2 */
+}
+
+
+___BOOL ___env_var_equal_UCS_2
+   ___P((___UCS_2STRING name,
+         ___UCS_2STRING value),
+        (name,
+         value)
+___UCS_2STRING name;
+___UCS_2STRING value;)
+{
+  ___UCS_2STRING cvalue;
+
+  if (___getenv_UCS_2 (name, &cvalue) == ___FIX(___NO_ERR))
+    {
+      if (cvalue != 0)
+        {
+          ___BOOL result = ___strcmp_UCS_2 (cvalue, value) == 0;
+          ___FREE_MEM(cvalue);
+          return result;
+        }
+    }
+
+  return 0;
+}
+
+
+___BOOL ___env_var_defined_UCS_2
+   ___P((___UCS_2STRING name),
+        (name)
+___UCS_2STRING name;)
+{
+  ___UCS_2STRING cvalue;
+
+  if (___getenv_UCS_2 (name, &cvalue) == ___FIX(___NO_ERR))
+    {
+      if (cvalue != 0)
+        {
+          ___FREE_MEM(cvalue);
+          return 1;
+        }
+    }
+
+  return 0;
 }
 
 

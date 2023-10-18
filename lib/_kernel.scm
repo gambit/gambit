@@ -4871,6 +4871,12 @@ end-of-code
             scheme-object
    "___os_device_tty_text_attributes_set"))
 
+(define-prim ##os-device-tty-capability
+  (c-lambda (scheme-object
+             scheme-object)
+            scheme-object
+   "___os_device_tty_capability"))
+
 (define-prim ##os-device-tty-history
   (c-lambda (scheme-object)
             scheme-object

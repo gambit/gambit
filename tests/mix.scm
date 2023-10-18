@@ -1,6 +1,6 @@
 ; File: "mix.scm"
 
-; Copyright (c) 1998-2017 by Marc Feeley, All Rights Reserved.
+; Copyright (c) 1998-2023 by Marc Feeley, All Rights Reserved.
 
 (##declare
   (standard-bindings)
@@ -640,8 +640,10 @@
          (write (thunk))
          (show2 " on " thunk))))))
 
-(##define-macro (test form expect)
-  `(test-form (lambda () ,form) ',expect))
+(define-syntax test
+  (syntax-rules ()
+    ((_ form expect)
+     (test-form (lambda () form) 'expect))))
 
 (define (test-form thunk expect)
   (##gc)
@@ -650,10 +652,12 @@
     (write (list 'expected expect)))
   (newline))
 
-(##define-macro (err form)
-  `(let ()
-     (##declare (safe) (generic))
-     (err-form (lambda () ,form))))
+(define-syntax err
+  (syntax-rules ()
+    ((_ form)
+     (let ()
+       (declare (safe) (generic))
+       (err-form (lambda () form))))))
 
 (define (err-form thunk)
   (test-form
@@ -679,6 +683,7 @@
    (if (heap-overflow-exception? exc)
        #f
        (##exception->locat exc cont))
+   #t
    port)
   (##write-string " -- " port)
   (##display-exception exc port))

@@ -717,16 +717,22 @@
            (locat p)))))
 
 (define-prim (##code-locat $code)
-  (let ((locat-or-position (macro-code-locat $code)))
-    (if (or (##locat? locat-or-position) (##not locat-or-position))
-        locat-or-position
+  (let ((locat-or-positions (macro-code-locat $code)))
+    (if (or (##locat? locat-or-positions) (##not locat-or-positions))
+        locat-or-positions
         (let loop ((parent (macro-code-parent $code)))
           (if (macro-code-root-parent? parent)
               #f
-              (let ((locat-or-position-parent (macro-code-locat parent)))
-                (if (##locat? locat-or-position-parent)
-                    (##make-locat (##locat-container locat-or-position-parent)
-                                  locat-or-position)
+              (let ((locat-or-positions-parent (macro-code-locat parent)))
+                (if (##locat? locat-or-positions-parent)
+                    (let ((container (##locat-container locat-or-positions-parent)))
+                      (if (##pair? locat-or-positions)
+                          (##make-locat container
+                                        (##car locat-or-positions)
+                                        (##cdr locat-or-positions))
+                          (##make-locat container
+                                        locat-or-positions
+                                        #f)))
                     (loop (macro-code-parent parent)))))))))
 
 (define-prim (##code-root-parent $code)
@@ -1097,7 +1103,7 @@
 ,N+  | ,N-      : Move forward/backward by N continuation frames (N>=0)
 ,+   | ,-       : Like ,1+ and ,1-
 ,++  | ,--      : Like ,N+ and ,N- with N = nb. of frames at head of backtrace
-,y              : Display one-line summary of current frame
+,y              : Display current frame
 ,i              : Display procedure attached to current frame
 ,b   | ,(b X)   : Display backtrace of current continuation or X (cont/thread)
 ,be  | ,(be X)  : Like ,b and ,(b X) but also display environment
@@ -1132,71 +1138,102 @@
 (define-prim (##frame-locat-display?-set! x)
   (set! ##frame-locat-display? x))
 
+(define ##frame-locat-highlight? #f)
+
+(define-prim (##frame-locat-highlight?-set! x)
+  (set! ##frame-locat-highlight? x))
+
 (define ##frame-call-display? #t)
 
 (define-prim (##frame-call-display?-set! x)
   (set! ##frame-call-display? x))
 
-(define-prim (##cmd-b cont port depth display-env?)
+(define-prim (##cmd-b cont port depth detail-level)
   (##display-continuation-backtrace
    cont
    port
-   display-env?
-   #f
-   ##backtrace-default-max-head
-   ##backtrace-default-max-tail
+   (##fxmax detail-level (##repl-backtrace-detail-level))
+   (##repl-backtrace-highlight-source-level)
    depth))
 
 (define-prim (##display-continuation-backtrace
               cont
-              port
-              display-env?
-              all-frames?
-              max-head
-              max-tail
-              depth)
-  (let loop ((i 0)
-             (j (##fx- (##continuation-count-frames cont all-frames?) 1))
-             (cont (##continuation-first-frame cont all-frames?)))
-    (and cont
-         (begin
-           (cond ((or (##fx< i max-head) (##fx< j max-tail)
-                      (and (##fx= i max-head) (##fx= j max-tail)))
-                  (##display-continuation-frame
-                   cont
-                   port
-                   display-env?
-                   #f
-                   (##fx+ depth i)))
-                 ((##fx= i max-head)
-                  (##write-string "..." port)
-                  (##newline port)))
-           (loop (##fx+ i 1)
-                 (##fx- j 1)
-                 (##continuation-next-frame cont all-frames?))))))
+              #!optional
+              (port (##current-output-port))
+              (detail-level (##fxmax 1 (##repl-backtrace-detail-level)))
+              (highlight-source-level (##repl-backtrace-highlight-source-level))
+              (depth 0)
+              (max-head ##backtrace-default-max-head)
+              (max-tail ##backtrace-default-max-tail)
+              (line-numbers? ##highlight-source-default-line-numbers?)
+              (context-inner ##highlight-source-default-context-inner)
+              (context-outer ##highlight-source-default-context-outer))
+
+  ;; detail-level indicates the level of detail of the backtrace:
+  ;;  1 - display a backtrace without environment
+  ;;  2 - display a backtrace with lexical environment only
+  ;;  3 - display a backtrace with lexical and dynamic environments
+  ;;  4 - same as 1 but includes all frames
+  ;;  5 - same as 2 but includes all frames
+  ;;  6 - same as 3 but includes all frames
+
+  (let* ((all-frames? (##fx>= detail-level 4))
+         (detail-level (if all-frames? (##fx- detail-level 3) detail-level)))
+    (let loop ((i 0)
+               (j (##fx- (##continuation-count-frames cont all-frames?) 1))
+               (cont (##continuation-first-frame cont all-frames?)))
+      (and cont
+           (begin
+             (cond ((or (##fx< i max-head) (##fx< j max-tail)
+                        (and (##fx= i max-head) (##fx= j max-tail)))
+                    (##display-continuation-frame
+                     cont
+                     port
+                     (##fx= i 0)
+                     detail-level
+                     highlight-source-level
+                     (##fx+ depth i)
+                     max-head
+                     max-tail
+                     line-numbers?
+                     context-inner
+                     context-outer))
+                   ((##fx= i max-head)
+                    (##write-string "..." port)
+                    (##newline port)))
+             (loop (##fx+ i 1)
+                   (##fx- j 1)
+                   (##continuation-next-frame cont all-frames?)))))))
 
 (define-prim (display-continuation-backtrace
               cont
               #!optional
               (port (macro-absent-obj))
-              (display-env? (macro-absent-obj))
-              (all-frames? (macro-absent-obj))
+              (detail-level (macro-absent-obj))
+              (highlight-source-level (macro-absent-obj))
+              (depth (macro-absent-obj))
               (max-head (macro-absent-obj))
               (max-tail (macro-absent-obj))
-              (depth (macro-absent-obj)))
-  (macro-force-vars (cont port all-frames? display-env? max-head max-tail depth)
+              (line-numbers? (macro-absent-obj))
+              (context-inner (macro-absent-obj))
+              (context-outer (macro-absent-obj)))
+  (macro-force-vars (cont port all-frames? detail-level highlight-source-level depth max-head max-tail line-numbers? context-inner context-outer)
     (let ((p
            (if (##eq? port (macro-absent-obj))
                (macro-current-output-port)
                port))
-          (de
-           (if (##eq? display-env? (macro-absent-obj))
-               #f
-               display-env?))
-          (af
-           (if (##eq? all-frames? (macro-absent-obj))
-               #f
-               all-frames?))
+          (dl
+           (if (##eq? detail-level (macro-absent-obj))
+               (##fxmax 1 (##repl-backtrace-detail-level))
+               detail-level))
+          (hsl
+           (if (##eq? highlight-source-level (macro-absent-obj))
+               (##repl-backtrace-highlight-source-level)
+               highlight-source-level))
+          (d
+           (if (##eq? depth (macro-absent-obj))
+               0
+               depth))
           (mh
            (if (##eq? max-head (macro-absent-obj))
                ##backtrace-default-max-head
@@ -1205,33 +1242,327 @@
            (if (##eq? max-tail (macro-absent-obj))
                ##backtrace-default-max-tail
                max-tail))
-          (d
-           (if (##eq? depth (macro-absent-obj))
-               0
-               depth)))
-      (macro-check-continuation cont 1 (display-continuation-backtrace cont port display-env? all-frames? max-head max-tail depth)
-        (macro-check-character-output-port p 2 (display-continuation-backtrace cont port display-env? all-frames? max-head max-tail depth)
-          (macro-check-fixnum mh 5 (display-continuation-backtrace cont port display-env? all-frames? max-head max-tail depth)
-            (macro-check-fixnum mt 6 (display-continuation-backtrace cont port display-env? all-frames? max-head max-tail depth)
-              (macro-check-fixnum d 7 (display-continuation-backtrace cont port display-env? all-frames? max-head max-tail depth)
-                (##display-continuation-backtrace cont p de af mh mt d)))))))))
+          (ln?
+           (if (##eq? line-numbers? (macro-absent-obj))
+               #t
+               line-numbers?))
+          (ci
+           (if (##eq? context-inner (macro-absent-obj))
+               ##highlight-source-default-context-inner
+               context-inner))
+          (co
+           (if (##eq? context-outer (macro-absent-obj))
+               ##highlight-source-default-context-outer
+               context-outer)))
+      (macro-check-continuation cont 1 (display-continuation-backtrace cont port detail-level highlight-source-level depth max-head max-tail line-numbers? context-inner context-outer)
+        (macro-check-character-output-port p 2 (display-continuation-backtrace cont port detail-level highlight-source-level depth max-head max-tail line-numbers? context-inner context-outer)
+          (macro-check-fixnum dl 3 (display-continuation-backtrace cont port detail-level highlight-source-level depth max-head max-tail line-numbers? context-inner context-outer)
+            (macro-check-fixnum hsl 4 (display-continuation-backtrace cont port detail-level highlight-source-level depth max-head max-tail line-numbers? context-inner context-outer)
+              (macro-check-fixnum d 5 (display-continuation-backtrace cont port detail-level highlight-source-level depth max-head max-tail line-numbers? context-inner context-outer)
+                (macro-check-fixnum mh 6 (display-continuation-backtrace cont port detail-level highlight-source-level depth max-head max-tail line-numbers? context-inner context-outer)
+                  (macro-check-fixnum mt 7 (display-continuation-backtrace cont port detail-level highlight-source-level depth max-head max-tail line-numbers? context-inner context-outer)
+                    (macro-check-fixnum co 9 (display-continuation-backtrace cont port detail-level highlight-source-level depth max-head max-tail line-numbers? context-inner context-outer)
+                      (macro-check-fixnum ci 10 (display-continuation-backtrace cont port detail-level highlight-source-level depth max-head max-tail line-numbers? context-inner context-outer)
+                        (##display-continuation-backtrace cont p dl hsl d mh mt ln? ci co)))))))))))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(define-prim (##cmd-y cont port pinpoint? depth)
+(define ##highlight-source-default-line-numbers? #t)
+
+(define-prim (##highlight-source-default-line-numbers?-set! x)
+  (set! ##highlight-source-default-line-numbers? x))
+
+(define ##highlight-source-default-context-inner 2)
+
+(define-prim (##highlight-source-default-context-inner-set! x)
+  (set! ##highlight-source-default-context-inner x))
+
+(define ##highlight-source-default-context-outer 2)
+
+(define-prim (##highlight-source-default-context-outer-set! x)
+  (set! ##highlight-source-default-context-outer x))
+
+(define-prim (##highlight-source-setup locat)
+  (and locat
+       (let* ((container
+               (##locat-container locat))
+              (path
+               (##container->path container)))
+         (and path
+              (##with-exception-handler
+                  (lambda (exn)
+                    #f)
+                (lambda ()
+                  (##open-input-file path)))))))
+
+(define-prim (##highlight-source
+              locat
+              #!optional
+              (source-port #f)
+              (line-numbers? ##highlight-source-default-line-numbers?)
+              (context-inner ##highlight-source-default-context-inner)
+              (context-outer ##highlight-source-default-context-outer)
+              (port (##repl-output-port))
+              (ansi-coloring?
+               (and (##tty? port)
+                    (##tty-capability port (macro-tty-cap-setab)))))
+  (and locat
+       (let* ((container
+               (##locat-container locat))
+              (path
+               (##container->path container)))
+         (and path
+              (let* ((start-filepos
+                      (##position->filepos
+                       (##locat-start-position locat)))
+                     (end-filepos
+                      (##position->filepos
+                       (or (##locat-end-position locat)
+                           (let ((line (##filepos-line start-filepos))
+                                 (col (##filepos-col start-filepos)))
+                             (##filepos->position
+                              (##make-filepos line (##fx+ col 1) 0)))))))
+                (##highlight-source-aux
+                 locat
+                 source-port
+                 start-filepos
+                 end-filepos
+                 line-numbers?
+                 context-inner
+                 context-outer
+                 port
+                 ansi-coloring?))))))
+
+(define-prim (##highlight-source-aux
+              locat
+              source-port
+              start-filepos
+              end-filepos
+              line-numbers?
+              context-inner
+              context-outer
+              port
+              ansi-coloring?)
+
+  (define spaces "        ")
+
+  (define supports-unicode-BMP?
+    (##fx<= #xffff (##output-port-max-char-code port)))
+
+  (define overline
+    (if supports-unicode-BMP?
+        "\x2594;\x2594;\x2594;\x2594;\x2594;\x2594;\x2594;\x2594;"
+        "--------"))
+
+  (define line-number-sep
+    (if supports-unicode-BMP?
+        "\x2503;"
+        "|"))
+
+  (define corner-sep
+    (if supports-unicode-BMP?
+        "\x250f;"
+        "+"))
+
+  (define header-line
+    (if supports-unicode-BMP?
+        "\x2501;\x2501;\x2501;\x2501;\x2501;\x2501;\x2501;\x2501;"
+        "--------"))
+
+  (define ellipsis
+    (if supports-unicode-BMP?
+        "\x22ef;"
+        "..."))
+
+  (define start-line (##filepos-line start-filepos))
+  (define start-col  (##filepos-col  start-filepos))
+  (define end-line   (##filepos-line end-filepos))
+  (define end-col    (##filepos-col  end-filepos))
+
+  (define prefix-width
+    (##fx- (##output-port-column port) 1))
+
+  (define line-number-width
+    (if line-numbers?
+        (##fxmax
+         prefix-width
+         (##string-length (##number->string (##fx+ end-line context-outer) 10)))
+        0))
+
+  (define first-col
+    (if line-numbers?
+        (##fx+ (##string-length line-number-sep) ;; account for line-number-sep
+               line-number-width)
+        0))
+
+  (define (repeat-char n template)
+    (let ((len (##string-length template)))
+      (let loop ((i n))
+        (if (##fx< 0 i)
+            (let ((x (##fxmin len i)))
+              (##write-substring template 0 x port)
+              (loop (##fx- i x)))))))
+
+  (define use-tty-text-attr?
+    (and ansi-coloring? (##tty? port)))
+
+  (define (style dim? highlight?)
+    (if use-tty-text-attr?
+        (##tty-text-attributes-set!
+         port
+         -1 ;; don't change input
+         (if highlight?
+             (if dim?
+                 (macro-tty-text-attr bold bright-black yellow)
+                 (macro-tty-text-attr bold #f yellow))
+             (if dim?
+                 (macro-tty-text-attr normal bright-black #f)
+                 (macro-tty-text-attr normal #f #f))))))
+
+  (define (add-line i line)
+
+    (if line-numbers?
+        (begin
+          (style #t #f) ;; dim text
+          (if line
+              (let ((num-str (##number->string (##fx+ i 1) 10)))
+                (repeat-char (##fx- line-number-width
+                                    (##string-length num-str))
+                             spaces)
+                (##write-string num-str port))
+              (repeat-char line-number-width
+                           spaces))
+          (##write-string line-number-sep port)))
+
+    (let ((str (or line ellipsis)))
+      (if (and (##fx>= i start-line) (##fx<= i end-line))
+          (let* ((len (##string-length str))
+                 (col1 (if (##fx= i start-line) (##fxmin start-col len) 0))
+                 (col2 (if (##fx= i end-line) (##fxmin end-col len) len)))
+            (if use-tty-text-attr?
+                (begin
+                  (if (##fx> col1 0)
+                      (begin
+                        (if line-numbers?
+                            (style #f #f)) ;; back to normal
+                        (##write-substring str 0 col1 port)))
+                  (style (##not line) #t) ;; highlight, possibly dim ellipsis
+                  (##write-substring str col1 col2 port)
+                  (if (and (##fx= col2 len)
+                           (or (##fx< i end-line)
+                               (##not (##fx= start-line end-line))))
+                      (repeat-char (##fx-
+                                    (##fx- (##output-port-width port) 1)
+                                    (##fx+ len first-col))
+                                   spaces))
+                  (style #f #f) ;; back to normal
+                  (##write-substring str col2 len port))
+                (begin
+                  (##write-string str port)
+                  (if (and line (##fx< col1 col2))
+                      (begin
+                        (##newline port)
+                        (if line-numbers?
+                            (begin
+                              (repeat-char line-number-width spaces)
+                              (##write-string line-number-sep port))
+                            (repeat-char first-col spaces))
+                        (repeat-char col1 spaces)
+                        (repeat-char (##fx- col2 col1) overline))))))
+          (begin
+            (if line-numbers?
+                (style (##not line) #f)) ;; no highlight, possibly dim ellipsis
+            (##write-string str port)
+            (if line-numbers?
+                (style #f #f))))) ;; back to normal
+
+    (##newline port))
+
+  (let ((source-port
+         (or source-port
+             (##highlight-source-setup locat))))
+    (if source-port
+        (let* ((container
+                (##locat-container locat))
+               (path
+                (##container->path container))
+               (normalized-path
+                (##repl-path-normalize path))
+               (padding
+                (##fx- (##fx- (##output-port-width port) first-col)
+                       (##fx+ 3 (##string-length normalized-path))))
+               (padding/2
+                (##fxquotient padding 2)))
+          (repeat-char (##fx- line-number-width prefix-width) spaces)
+          (style #t #f) ;; dim text
+          (##write-string corner-sep port)
+          (repeat-char (##fxmax padding/2 5) header-line)
+          (style #f #f) ;; normal text
+          (repeat-char 1 spaces)
+          (##write-string normalized-path port)
+          (repeat-char 1 spaces)
+          (style #t #f) ;; dim text
+          (repeat-char (##fxmax (##fx- padding padding/2) 5) header-line)
+          (style #f #f) ;; normal text
+          (##newline port)
+          (let loop ((i 0))
+            (let ((line (##read-line source-port))
+                  (from-end (##fx- i end-line)))
+              (if (and (##fx< from-end context-outer)
+                       (##not (##eof-object? line)))
+                  (let ((from-start (##fx- i start-line)))
+                    (cond ((##fx< from-start (##fx- context-outer)))
+                          ((and (##fx> context-outer 0)
+                                (##fx> i 0)
+                                (##fx= from-start (##fx- context-outer)))
+                           (add-line i #f))
+                          ((or (##fx= (##fx- end-line start-line)
+                                  (##fx* 2 (##fx+ context-inner 1)))
+                               (##fx>= from-end (##fx- context-inner))
+                               (##fx<= from-start context-inner))
+                           (add-line i line))
+                          ((##fx= from-start (##fx+ context-inner 1))
+                           (add-line i #f)))
+                    (loop (##fx+ i 1)))
+                  (if (##not (##eof-object? line))
+                      (add-line i
+                                (and (or (##fx= context-outer 0)
+                                         (##eof-object? (##read-line source-port)))
+                                     line))))))))))
+
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+(define-prim (##cmd-y cont port depth)
   (##display-continuation-frame
    cont
    port
-   #f
-   pinpoint?
-   depth))
+   #t ;; pinpoint?
+   0 ;; detail-level
+   (##repl-backtrace-highlight-source-level)
+   depth
+   ##backtrace-default-max-head
+   ##backtrace-default-max-tail
+   ##highlight-source-default-line-numbers?
+   ##highlight-source-default-context-inner
+   ##highlight-source-default-context-outer))
 
 (define-prim (##display-continuation-frame
               cont
               port
-              display-env?
               pinpoint?
-              depth)
+              detail-level
+              highlight-source-level
+              depth
+              max-head
+              max-tail
+              line-numbers?
+              context-inner
+              context-outer)
+
+  (define depth-width    5)
+  (define creator-width 24)
+  (define locat-width   29)
+  (define call-width    21)
 
   (define (tab col)
     (let* ((current (##output-port-column port))
@@ -1239,76 +1570,95 @@
       (##display-spaces (##fxmax n 1) port)))
 
   (and cont
-       (let ((port-width (##output-port-width port)))
+       (let* ((port-width
+               (##output-port-width port))
+              (locat
+               (##continuation-locat cont))
+              (source-port
+               (and (##fx>= highlight-source-level 2)
+                    (##highlight-source-setup locat))))
 
-         (define depth-width    4)
-         (define creator-width 24)
-         (define locat-width   24)
-         (define call-width    27)
+         (##write-string "[" port)
+         (##write depth port)
+         (##write-string "]" port)
 
-         (let* ((extra
-                 (##fxmax
-                  0
-                  (##fxquotient
-                   (##fx- port-width
-                          (##fx+
-                           depth-width
-                           creator-width
-                           locat-width
-                           call-width))
-                   3)))
-                (col3
-                 (##fx+ depth-width
-                        creator-width
-                        extra))
-                (col4
-                 (##fx+ col3
-                        locat-width
-                        extra))
-                (locat-display?
-                 ##frame-locat-display?)
-                (call-display?
-                 ##frame-call-display?))
-           (##write depth port)
-           (tab depth-width)
-           (let ((creator (##continuation-creator cont)))
-             (if creator
-                 (##write (##procedure-friendly-name creator) port)
-                 (##write-string "(interaction)" port)))
-           (if locat-display?
-               (begin
-                 (tab col3)
-                 (let ((locat (##continuation-locat cont)))
-                   (##display-locat locat pinpoint? port))))
-           (if call-display?
-               (let ((call
-                      (if (##interp-continuation? cont)
-                          (let* (($code (##interp-continuation-code cont))
-                                 (cprc (macro-code-cprc $code)))
-                            (if (##eq? cprc ##interp-procedure-wrapper)
-                                #f
-                                (##decomp $code)))
-                          (let* ((ret (##continuation-ret cont))
-                                 (call (##decompile ret)))
-                            (if (##eq? call ret)
-                                #f
-                                call)))))
-                 (if call
-                     (begin
-                       (tab (if locat-display? col4 col3))
-                       (##write-string
-                        (##object->string
-                         call
-                         (##fx- port-width
-                                (##output-port-column port))
-                         port)
-                        port)))))
-           (##newline port)
-           (##display-continuation-env
-            cont
-            port
-            (##fx+ 4 depth-width)
-            display-env?)))))
+         (if source-port
+
+             (##highlight-source
+              locat
+              source-port
+              line-numbers?
+              context-inner
+              context-outer
+              port)
+
+             (let* ((extra
+                     (##fxmax
+                      0
+                      (##fxquotient
+                       (##fx- port-width
+                              (##fx+
+                               depth-width
+                               creator-width
+                               locat-width
+                               call-width))
+                       3)))
+                    (col3
+                     (##fx+ depth-width
+                            creator-width
+                            extra))
+                    (col4
+                     (##fx+ col3
+                            locat-width
+                            extra))
+                    (locat-display?
+                     ##frame-locat-display?)
+                    (call-display?
+                     ##frame-call-display?))
+
+               (tab depth-width)
+
+               (let ((creator (##continuation-creator cont)))
+                 (if creator
+                     (##write (##procedure-friendly-name creator) port)
+                     (##write-string "(interaction)" port)))
+
+               (if locat-display?
+                   (begin
+                     (tab col3)
+                     (##display-locat locat pinpoint? port)))
+
+               (if call-display?
+                   (let ((call
+                          (if (##interp-continuation? cont)
+                              (let* (($code (##interp-continuation-code cont))
+                                     (cprc (macro-code-cprc $code)))
+                                (if (##eq? cprc ##interp-procedure-wrapper)
+                                    #f
+                                    (##decomp $code)))
+                              (let* ((ret (##continuation-ret cont))
+                                     (call (##decompile ret)))
+                                (if (##eq? call ret)
+                                    #f
+                                    call)))))
+                     (if call
+                         (begin
+                           (tab (if locat-display? col4 col3))
+                           (##write-string
+                            (##object->string
+                             call
+                             (##fx- port-width
+                                    (##output-port-column port))
+                             port)
+                            port)))))
+
+               (##newline port)))
+
+         (##display-continuation-env
+          cont
+          port
+          (##fx+ 4 depth-width)
+          detail-level))))
 
 (define-prim (##display-spaces n port)
   (if (##fx< 0 n)
@@ -1318,22 +1668,38 @@
         n)))
 
 (define-prim (##display-locat locat pinpoint? port)
-  (if locat ;; locat is #f if location unknown
-      (let* ((pinpoint? (and pinpoint? (##not (##pinpoint-locat locat))))
-             (container (##locat-container locat))
-             (path (##container->path container)))
-        (if path
-            (##write (##repl-path-normalize path) port)
-            (##write-string (##container->id container) port))
-        (let* ((filepos (##position->filepos (##locat-position locat)))
-               (line (##fx+ (##filepos-line filepos) 1))
-               (col (##fx+ (##filepos-col filepos) 1)))
-          (##write-string "@" port)
-          (##write line port)
-          (##write-string (if pinpoint? "." ":") port)
-          (##write col port)))))
+  (and locat ;; locat is #f if location unknown
+       (let* ((pinpointed-locat? (and pinpoint? (##pinpoint-locat locat)))
+              (container (##locat-container locat))
+              (path (##container->path container)))
+         (if path
+             (##write (##repl-path-normalize path) port)
+             (##write-string (##container->id container) port))
+         (##write-string "@" port)
+         (let ((start-position (##locat-start-position locat))
+               (end-position (##locat-end-position locat)))
+           (##display-filepos (##position->filepos start-position)
+                              (and pinpoint? (##not pinpointed-locat?))
+                              port)
+           (if end-position
+               (begin
+                 (##write-string "-" port)
+                 (##display-filepos (##position->filepos end-position)
+                                    (and pinpoint? (##not pinpointed-locat?))
+                                    port))))
+         pinpointed-locat?))) ;; return boolean indicating if location was pinpointed
 
-(define ##pinpoint-locat-hook #f)
+(define-prim (##display-filepos filepos pinpoint? port)
+  (let* ((line (##fx+ (##filepos-line filepos) 1))
+         (col (##fx+ (##filepos-col filepos) 1)))
+    (##write line port)
+    (##write-string (if pinpoint? "." ":") port)
+    (##write col port)))
+
+(define-prim (##default-pinpoint-locat locat)
+  #f)
+
+(define ##pinpoint-locat-hook ##default-pinpoint-locat)
 
 (define-prim (##pinpoint-locat-hook-set! x)
   (set! ##pinpoint-locat-hook x))
@@ -1547,25 +1913,18 @@
           (macro-check-fixnum i 3 (display-continuation-dynamic-environment cont p i)
             (##display-continuation-dynamic-environment cont p i)))))))
 
-(define ##display-dynamic-environment?
-  (##make-parameter #f))
-
-(define display-dynamic-environment?
-  ##display-dynamic-environment?)
-
-(define-prim (##display-continuation-env cont port indent display-env?)
-  (if display-env?
+(define-prim (##display-continuation-env cont port indent detail-level)
+  (if (##fx>= detail-level 2)
       (let ((c (##continuation-first-frame cont #f)))
         (if c
             (##display-continuation-environment c port indent))
-        (if (or (##eq? display-env? 'dynamic)
-                (##display-dynamic-environment?))
+        (if (##fx>= detail-level 3)
             (##display-continuation-dynamic-environment cont port indent)))))
 
-(define-prim (##cmd-e proc-or-cont port display-env?)
+(define-prim (##cmd-e proc-or-cont port detail-level)
   (and proc-or-cont
        (if (##continuation? proc-or-cont)
-           (##display-continuation-env proc-or-cont port 0 display-env?)
+           (##display-continuation-env proc-or-cont port 0 detail-level)
            (##display-procedure-environment proc-or-cont port 0))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -2093,16 +2452,25 @@
 
 (##current-stepper (macro-make-stepper ##default-step-handlers))
 
-(define ##repl-display-environment?
-  (##make-parameter #f))
+(define ##repl-backtrace-detail-level
+  (##make-parameter
+   0 ;; default is no backtrace
+   (lambda (val)
+     (macro-check-fixnum val 1 (##repl-backtrace-detail-level val)
+       val))))
 
-(define repl-display-environment?
-  ##repl-display-environment?)
+(define repl-backtrace-detail-level
+  ##repl-backtrace-detail-level)
 
-(define-prim (display-environment-set! display?)
-  ;; DEPRECATED
-  (##repl-display-environment? (if display? #t #f))
-  (##void))
+(define ##repl-backtrace-highlight-source-level
+  (##make-parameter
+   1 ;; default is highlight source on errors, but not in backtrace frames
+   (lambda (val)
+     (macro-check-fixnum val 1 (##repl-backtrace-highlight-source-level val)
+       val))))
+
+(define repl-backtrace-highlight-source-level
+  ##repl-backtrace-highlight-source-level)
 
 (define-prim (##step-handler leapable? $code rte execute-body . other)
   (##declare (not interrupts-enabled) (environment-map))
@@ -2131,6 +2499,7 @@
       "STOPPED"
       (##extract-container $code rte)
       (##code-locat $code)
+      #t
       port)
      (##newline port)
      #f)))
@@ -2585,12 +2954,13 @@
   (let ((output-port (macro-repl-channel-output-port channel)))
     (##exit-with-exception-on-exception
      (lambda ()
-       (if (##fx< 0 level)
-           (##write level output-port))
        (if (##fx< 0 depth)
            (begin
-             (##write-string "\\" output-port)
-             (##write depth output-port)))
+             (##write-string "[" output-port)
+             (##write depth output-port)
+             (##write-string "]" output-port)))
+       (if (##fx< 0 level)
+           (##write level output-port))
        (##write-string prompt output-port)
        (##force-output output-port))))
 
@@ -2636,10 +3006,11 @@
        (writer port)))))
 
 (define-prim (##repl-channel-ports-display-continuation channel cont depth)
-  (if (##repl-display-environment?)
-      (##repl-channel-display-multiline-message
-       (lambda (port)
-         (##cmd-e cont port #t)))))
+  (let ((detail-level (##repl-backtrace-detail-level)))
+    (if (##fx>= detail-level 1)
+        (##repl-channel-display-multiline-message
+         (lambda (port)
+           (##cmd-e cont port detail-level))))))
 
 (define-prim (##repl-channel-ports-pinpoint-continuation channel cont)
   #f)
@@ -2745,40 +3116,13 @@
    (lambda (first port)
 
      (##define-macro (attrs kind)
-
-       (define style-normal    0)
-       (define style-bold      1)
-       (define style-underline 2)
-       (define style-reverse   4)
-
-       (define color-black          0)
-       (define color-red            1)
-       (define color-green          2)
-       (define color-yellow         3)
-       (define color-blue           4)
-       (define color-magenta        5)
-       (define color-cyan           6)
-       (define color-white          7)
-       (define color-bright-black   8)
-       (define color-bright-red     9)
-       (define color-bright-green   10)
-       (define color-bright-yellow  11)
-       (define color-bright-blue    12)
-       (define color-bright-magenta 13)
-       (define color-bright-cyan    14)
-       (define color-bright-white   15)
-       (define default-color        256)
-
-       (define (make-text-attr style fg bg)
-         (+ (* style 262144) fg (* bg 512)))
-
        (case kind
          ((banner)
-          (make-text-attr style-bold   color-bright-black color-bright-cyan))
+          `(macro-tty-text-attr bold   bright-black bright-cyan))
          ((input)
-          (make-text-attr style-bold   default-color default-color))
+          `(macro-tty-text-attr bold   default      default))
          (else
-          (make-text-attr style-normal default-color default-color))))
+          `(macro-tty-text-attr normal default      default))))
 
      (if (##tty? port)
          (##tty-text-attributes-set! port (attrs input) (attrs banner)))
@@ -2851,15 +3195,13 @@
             (lambda (port)
               (##cmd-y cont
                        port
-                       #t
                        (macro-repl-context-depth repl-context)))))
        (##repl-context-display-continuation repl-context)))))
 
 (define-prim (##repl-context-restart repl-context)
   (##repl-context-restart-exec
    repl-context
-   (lambda ()
-     (##repl-context-display-continuation repl-context))))
+   ##void))
 
 (define-prim (##repl-context-restart-exec repl-context thunk)
   (##continuation-graft ;; get rid of any useless continuation frames
@@ -3125,22 +3467,22 @@
   (##repl-context-prompt repl-context))
 
 (define-prim (##repl-cmd-b repl-context)
-  (##repl-cmd-b-be-bed #f repl-context))
+  (##repl-cmd-b-be-bed 1 repl-context))
 
 (define-prim (##repl-cmd-be repl-context)
-  (##repl-cmd-b-be-bed #t repl-context))
+  (##repl-cmd-b-be-bed 2 repl-context))
 
 (define-prim (##repl-cmd-bed repl-context)
-  (##repl-cmd-b-be-bed 'dynamic repl-context))
+  (##repl-cmd-b-be-bed 3 repl-context))
 
-(define-prim (##repl-cmd-b-be-bed display-env? repl-context)
+(define-prim (##repl-cmd-b-be-bed detail-level repl-context)
   (##repl-channel-display-multiline-message
    (lambda (port)
      (##cmd-b (##repl-first-interesting
                (macro-repl-context-cont repl-context))
               port
               (macro-repl-context-depth repl-context)
-              display-env?)))
+              detail-level)))
   (##repl-context-prompt repl-context))
 
 (define-prim (##repl-cmd-i repl-context)
@@ -3157,22 +3499,21 @@
      (##cmd-y (##repl-first-interesting
                (macro-repl-context-cont repl-context))
               port
-              #t
               (macro-repl-context-depth repl-context))))
   (##repl-context-prompt repl-context))
 
 (define-prim (##repl-cmd-e repl-context)
-  (##repl-cmd-e-ed #t repl-context))
+  (##repl-cmd-e-ed 1 repl-context))
 
 (define-prim (##repl-cmd-ed repl-context)
-  (##repl-cmd-e-ed 'dynamic repl-context))
+  (##repl-cmd-e-ed 2 repl-context))
 
-(define-prim (##repl-cmd-e-ed display-env? repl-context)
+(define-prim (##repl-cmd-e-ed detail-level repl-context)
   (##repl-channel-display-multiline-message
    (lambda (port)
      (##cmd-e (macro-repl-context-cont repl-context)
               port
-              display-env?)))
+              detail-level)))
   (##repl-context-prompt repl-context))
 
 (define-prim (##repl-cmd-c repl-context)
@@ -3299,18 +3640,14 @@
                           (##eq? cmd 'ed))
                       (##cmd-e proc-or-cont
                                port
-                               (if (##eq? cmd 'ed)
-                                   'dynamic
-                                   #t))
+                               (if (##eq? cmd 'ed) 3 2))
                       (let ((cont
                              (##repl-first-interesting
                               proc-or-cont)))
                         (##cmd-b cont
                                  port
                                  depth
-                                 (if (##eq? cmd 'bed)
-                                     'dynamic
-                                     (##eq? cmd 'be)))))))
+                                 (if (##eq? cmd 'bed) 3 2))))))
                (##repl-channel-acquire-ownership!)
                (##repl-context-prompt repl-context))))
 
@@ -3468,24 +3805,16 @@
            (let ((quit? (##fx= (macro-debug-settings-error settings)
                                (macro-debug-settings-error-quit)))
                  (level (macro-debug-settings-level settings)))
-             (if quit?
-                 (begin
-                   (if (##fx>= level 1)
-                       (begin
-                         (##display-exception-in-context exc first port)
-                         (if (##fx>= level 2) ;; display backtrace?
-                             (##display-continuation-backtrace
-                              first ;; cont
-                              port ;; port
-                              (##fx>= level 3) ;; display-env?
-                              #f ;; all-frames?
-                              ##backtrace-default-max-head ;; max-head
-                              ##backtrace-default-max-tail ;; max-tail
-                              0)))) ;; depth
-                   (##exit-with-exception exc))
-                 (begin
-                   (##display-exception-in-context exc first port)
-                   #f))))
+             (if (or (##not quit?)
+                     (##fx>= level 1))
+                 (##display-exception-in-context
+                  exc
+                  first
+                  port
+                  (##fxmax (##fxmin (##fx- level 1) 3)
+                           (##repl-backtrace-detail-level))))
+             (and quit?
+                  (##exit-with-exception exc))))
          exc
          #f
          #t))))
@@ -3513,6 +3842,7 @@
          "INTERRUPTED"
          (##continuation-creator first)
          (##continuation-locat first)
+         #t
          port)
         (##newline port)
         (if quit?
@@ -3574,27 +3904,134 @@
         (else
          (##continuation-locat cont))))
 
-(define-prim (##display-situation kind proc locat port)
-  (##write-string "*** " port)
-  (##write-string kind port)
+(define-prim (##display-situation kind proc locat pinpoint? port)
+  (##write-string "***" port)
+  (if kind
+      (begin
+        (##write-string " " port)
+        (##write-string kind port)))
   (if (or proc locat)
       (##write-string " IN " port))
   (if proc
       (##write (##procedure-friendly-name proc) port))
-  (if locat
-      (begin
-        (if proc
-            (##write-string ", " port))
-        (##display-locat locat #t port))))
+  (and locat
+       (begin
+         (if proc
+             (##write-string ", " port))
+         (##display-locat locat pinpoint? port))))
 
-(define-prim (##display-exception-in-context exc cont port)
-  (##display-situation
-   (##exception->kind exc)
-   (##exception->procedure exc cont)
-   (##exception->locat exc cont)
-   port)
-  (##write-string " -- " port)
-  (##display-exception exc port))
+(define-prim (##display-exception-in-context
+              exc
+              cont
+              #!optional
+              (port (##current-output-port))
+              (detail-level (##repl-backtrace-detail-level))
+              (highlight-source-level (##repl-backtrace-highlight-source-level))
+              (depth 0)
+              (max-head ##backtrace-default-max-head)
+              (max-tail ##backtrace-default-max-tail)
+              (line-numbers? ##highlight-source-default-line-numbers?)
+              (context-inner ##highlight-source-default-context-inner)
+              (context-outer ##highlight-source-default-context-outer))
+
+  ;; detail-level indicates the level of detail of the context:
+  ;;  0 - don't generate a backtrace (display the source code if allowed
+  ;;      otherwise display file name and line/column in first line of message)
+  ;; >0 - see detail-level comment in ##display-continuation-backtrace
+
+  (let* ((locat
+          (##exception->locat exc cont))
+         (pinpointed-locat?
+          (##pinpoint-locat locat)) ;; try to pinpoint locat with IDE
+         (need-display-locat?
+          (or (##fx<= detail-level 0)
+              (##fx= highlight-source-level 1)
+              (##not (##equal? locat (##continuation-locat cont)))))
+         (source-port
+          (and need-display-locat?
+               (##fx>= highlight-source-level 1)
+               (##not pinpointed-locat?)
+               (##highlight-source-setup locat))))
+
+    (##display-situation
+     (##exception->kind exc)
+     (##exception->procedure exc cont)
+     (and need-display-locat?
+          (##not source-port)
+          (##fx<= detail-level 0)
+          locat)
+     (##not pinpointed-locat?)
+     port)
+
+    (##write-string " -- " port)
+
+    (##display-exception exc port)
+
+    (if source-port ;; highlight source?
+        (##highlight-source
+         locat
+         source-port
+         line-numbers?
+         context-inner
+         context-outer
+         port))
+
+    (if (##fx> detail-level 0) ;; generate a backtrace?
+        (##display-continuation-backtrace
+         cont
+         port
+         detail-level
+         highlight-source-level
+         depth
+         max-head
+         max-tail
+         line-numbers?
+         context-inner
+         context-outer))
+
+    (##void)))
+
+(define-prim (##display-message-with-locat
+              gen-message
+              locat
+              #!optional
+              (kind #f)
+              (proc #f)
+              (port (##current-output-port))
+              (highlight-source-level (##repl-backtrace-highlight-source-level))
+              (line-numbers? ##highlight-source-default-line-numbers?)
+              (context-inner ##highlight-source-default-context-inner)
+              (context-outer ##highlight-source-default-context-outer))
+  (let* ((pinpointed-locat?
+          (##pinpoint-locat locat)) ;; try to pinpoint locat with IDE
+         (source-port
+          (and (##fx>= highlight-source-level 1)
+               (##not pinpointed-locat?)
+               (##highlight-source-setup locat))))
+
+    (##display-situation
+     kind
+     proc
+     (and (##not source-port) locat)
+     (##not pinpointed-locat?)
+     port)
+
+    (if (or kind proc (and (##not source-port) locat))
+        (##write-string " -- " port)
+        (##write-string " " port))
+
+    (gen-message port)
+
+    (if source-port ;; highlight source?
+        (##highlight-source
+         locat
+         source-port
+         line-numbers?
+         context-inner
+         context-outer
+         port))
+
+    (##void)))
 
 (define-prim (display-exception-in-context
               exc
@@ -4751,13 +5188,15 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-runtime-macro (time
-                       expr
-                       #!optional
-                       (port (macro-absent-obj)))
-  (if (eq? port (macro-absent-obj))
-      `(##time-thunk (lambda () ,expr) ',expr)
-      `(##time-thunk (lambda () ,expr) ',expr ,port)))
+(define-runtime-syntax time
+  (lambda (src)
+    (##deconstruct-call
+     src
+     -1
+     (lambda (expr . rest)
+       (##expand-source-template
+        src
+        `(##time-thunk (##lambda () ,expr) ',expr ,@rest))))))
 
 (define-prim (##exec-stats thunk)
   (let* ((at-start (##process-statistics))

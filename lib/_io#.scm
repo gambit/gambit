@@ -2,7 +2,7 @@
 
 ;;; File: "_io#.scm"
 
-;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -463,6 +463,68 @@
 (##define-macro (macro-tty-port? obj)
   `(##port-of-kind? ,obj (macro-tty-kind)))
 
+(##define-macro (macro-tty-text-attr style fg bg)
+
+  (define (color-sym->code sym)
+    (cdr (assoc sym
+                '((black          . 0)
+                  (red            . 1)
+                  (green          . 2)
+                  (yellow         . 3)
+                  (blue           . 4)
+                  (magenta        . 5)
+                  (cyan           . 6)
+                  (white          . 7)
+                  (bright-black   . 8)
+                  (bright-red     . 9)
+                  (bright-green   . 10)
+                  (bright-yellow  . 11)
+                  (bright-blue    . 12)
+                  (bright-magenta . 13)
+                  (bright-cyan    . 14)
+                  (bright-white   . 15)
+                  (default        . 256)
+                  (#f             . 256)))))
+
+  (define (style-sym->code sym)
+    (cdr (assoc sym
+                '((normal    . 0)
+                  (bold      . 1)
+                  (underline . 2)
+                  (reverse   . 4)))))
+
+  (+ (* 262144
+        (if (pair? style)
+            (apply bitwise-or (map style-sym->code style))
+            (style-sym->code style)))
+     (* 512
+        (color-sym->code bg))
+     (color-sym->code fg)))
+
+(##define-macro (macro-tty-cap-home)       0)
+(##define-macro (macro-tty-cap-clear)      1)
+(##define-macro (macro-tty-cap-cuu1)       2)
+(##define-macro (macro-tty-cap-cud1)       3)
+(##define-macro (macro-tty-cap-cuu)        4)
+(##define-macro (macro-tty-cap-cud)        5)
+(##define-macro (macro-tty-cap-cuf)        6)
+(##define-macro (macro-tty-cap-cub)        7)
+(##define-macro (macro-tty-cap-cup)        8)
+(##define-macro (macro-tty-cap-sgr0)       9)
+(##define-macro (macro-tty-cap-bold)       10)
+(##define-macro (macro-tty-cap-smul)       11)
+(##define-macro (macro-tty-cap-rev)        12)
+(##define-macro (macro-tty-cap-setaf)      13)
+(##define-macro (macro-tty-cap-setab)      14)
+(##define-macro (macro-tty-cap-ed)         15)
+(##define-macro (macro-tty-cap-el)         16)
+(##define-macro (macro-tty-cap-el1)        17)
+(##define-macro (macro-tty-cap-window-op0) 18)
+(##define-macro (macro-tty-cap-window-op1) 19)
+(##define-macro (macro-tty-cap-window-op2) 20)
+(##define-macro (macro-tty-cap-window-op3) 21)
+(##define-macro (macro-tty-cap-last)       21)
+
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 ;;; Representation of process device ports.
@@ -843,20 +905,6 @@
 
 (##define-macro (macro-char-encoding-UTF)
   `(macro-char-encoding-UTF-fallback-UTF-8))
-
-(##define-macro (macro-max-unescaped-char options)
-  `(let ((e (##fxarithmetic-shift-right
-             (##fxand ,options (macro-char-encoding-mask))
-             (macro-char-encoding-shift))))
-     (cond ((##fx<= e (macro-char-encoding-ISO-8859-1))
-            (if (##fx= e (macro-char-encoding-ISO-8859-1))
-                (##integer->char #xff)
-                (##integer->char #x7f)))
-           ((and (##fx>= e (macro-char-encoding-UCS-2))
-                 (##fx<= e (macro-char-encoding-UCS-2LE)))
-            (##integer->char #xffff))
-           (else
-            (##integer->char #x10ffff)))))
 
 (##define-macro (macro-char-encoding-errors-shift)   5)
 (##define-macro (macro-char-encoding-errors-mask)    (* 3 (expt 2 5)))

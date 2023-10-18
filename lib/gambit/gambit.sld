@@ -567,8 +567,6 @@ directory-files
 display-continuation-backtrace
 display-continuation-dynamic-environment
 display-continuation-environment
-display-dynamic-environment?
-display-environment-set!
 display-exception
 display-exception-in-context
 display-procedure-environment
@@ -1041,7 +1039,8 @@ real-time
 remove
 remq
 rename-file
-repl-display-environment?
+repl-backtrace-detail-level
+repl-backtrace-highlight-source-level
 repl-error-port
 repl-input-port
 repl-output-port

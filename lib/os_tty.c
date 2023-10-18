@@ -805,38 +805,18 @@ ___device_tty *self;)
 }
 
 
-___HIDDEN ___BOOL env_var_defined_UCS_2
-   ___P((___UCS_2 *name),
-        (name)
-___UCS_2 *name;)
-{
-  ___UCS_2STRING cvalue;
-
-  if (___getenv_UCS_2 (name, &cvalue) == ___FIX(___NO_ERR))
-    {
-      if (cvalue != 0)
-        {
-          ___FREE_MEM(cvalue);
-          return 1;
-        }
-    }
-
-  return 0;
-}
-
-
 ___HIDDEN ___BOOL lineeditor_under_emacs ___PVOID
 {
 #ifdef USE_OLD_INSIDE_EMACS_DETECTION
   {
     static ___UCS_2 emacs_env_name_old[] = { 'E', 'M', 'A', 'C', 'S', '\0' };
-    if (env_var_defined_UCS_2 (emacs_env_name_old)) return 1;
+    if (___env_var_defined_UCS_2 (emacs_env_name_old)) return 1;
   }
 #endif
 
   {
     static ___UCS_2 emacs_env_name_new[] = { 'I', 'N', 'S', 'I', 'D', 'E', '_', 'E', 'M', 'A', 'C', 'S', '\0' };
-    if (env_var_defined_UCS_2 (emacs_env_name_new)) return 1;
+    if (___env_var_defined_UCS_2 (emacs_env_name_new)) return 1;
   }
 
   return 0;
@@ -1621,6 +1601,7 @@ ___HIDDEN lineeditor_defseq lineeditor_defseq_common[] =
   ,{ "\010",     LINEEDITOR_EV_BACK                             }
   ,{ "\010",     LINEEDITOR_EV_BACK_SEXPR     | WITH_ESC_PREFIX }
   ,{ "\011",     LINEEDITOR_EV_TAB                              }
+  ,{ "\004",     LINEEDITOR_EV_DELETE                           }
 };
 
 
@@ -1664,7 +1645,6 @@ ___HIDDEN lineeditor_defseq lineeditor_defseq_emacs[] =
   ,{ "B",        LINEEDITOR_EV_LEFT_WORD       | WITH_ESC_PREFIX }
 
   ,{ "\001",     LINEEDITOR_EV_HOME                              }
-  ,{ "\004",     LINEEDITOR_EV_DELETE                            }
   ,{ "\005",     LINEEDITOR_EV_END                               }
   ,{ "\004",     LINEEDITOR_EV_DELETE_SEXPR    | WITH_ESC_PREFIX }
   ,{ "d",        LINEEDITOR_EV_DELETE_WORD     | WITH_ESC_PREFIX }
@@ -5092,7 +5072,7 @@ ___BOOL emacs_bindings;)
   ___device_tty *d = self;
   ___SCMOBJ e;
 
-  /* default values appropriate for "xterm": */
+  /* default values appropriate for "dumb" and "xterm": */
 
   int rows = 24;
   int cols = TERMINAL_NB_COLS_UNLIMITED;
@@ -5100,13 +5080,15 @@ ___BOOL emacs_bindings;)
   ___BOOL has_auto_right_margin = 1;
   ___BOOL has_eat_newline_glitch = 1;
 
+  ___BOOL dumb = terminal_type != NULL && strcmp (terminal_type, "dumb") == 0;
+
 #ifdef USE_CURSES
 
   int i;
 
 #ifdef USE_TERMCAP_OR_TERMINFO
 
-  if (terminal_type != NULL)
+  if (terminal_type != NULL && !dumb)
     {
 #ifdef USE_TERMCAP
 
@@ -5154,92 +5136,95 @@ ___BOOL emacs_bindings;)
         }
     }
 
-  for (i=0; i<LINEEDITOR_CAP_LAST+1; i++)
+  if (!dumb)
     {
-      char *seq;
+      for (i=0; i<LINEEDITOR_CAP_LAST+1; i++)
+        {
+          char *seq;
 
 #ifdef USE_TERMCAP_OR_TERMINFO
 
-      if (terminal_type != NULL)
-        {
+          if (terminal_type == NULL)
+            seq = lineeditor_dcap_table[i].xterm_cap;
+          else
+            {
 #ifdef USE_TERMCAP
 
-          seq = tgetstr (lineeditor_dcap_table[i].cap, NULL);
+              seq = tgetstr (lineeditor_dcap_table[i].cap, NULL);
 
 #else
 
-          seq = tigetstr (lineeditor_dcap_table[i].cap);
+              seq = tigetstr (lineeditor_dcap_table[i].cap);
 
 #endif
-        }
-      else
-        seq = lineeditor_dcap_table[i].xterm_cap;
-
-#else
-
-      seq = lineeditor_dcap_table[i].cap;
-
-#endif
-
-      if (seq != (char*)-1 && seq != NULL)
-        {
-#ifdef ___DEBUG_TTY
-
-          int j = -1;
-
-          ___printf ("cap %d = ", i);
-
-          while (seq[++j] != '\0')
-            if (seq[j] < ' ')
-              ___printf ("\\%03o", seq[j]);
-            else
-              ___printf ("%c", seq[j]);
-
-          ___printf ("\n");
-
-#endif
-
-          /*
-           * Reject any sequence that includes a linefeed if the
-           * terminal driver automatically adds a carriage return.
-           */
-
-          if (d->linefeed_moves_to_left_margin)
-            {
-              char *p = seq;
-              while (*p != '\0')
-                if (*p != ___UNICODE_LINEFEED)
-                  p++;
-                else
-                  break;
-              if (*p != '\0')
-                seq = NULL;
             }
 
-          /*
-           * Keep a copy of the sequence.
-           */
+#else
 
-          if (seq != NULL)
+          seq = lineeditor_dcap_table[i].cap;
+
+#endif
+
+          if (seq != (char*)-1 && seq != NULL)
             {
-              char *p;
-              int len = 0;
-              while (seq[len] != '\0')
-                len++;
-              p = ___CAST(char*,___ALLOC_MEM(len+1));
-              if (p != NULL)
+#ifdef ___DEBUG_TTY
+
+              int j = -1;
+
+              ___printf ("cap %d = ", i);
+
+              while (seq[++j] != '\0')
+                if (seq[j] < ' ')
+                  ___printf ("\\%03o", seq[j]);
+                else
+                  ___printf ("%c", seq[j]);
+
+              ___printf ("\n");
+
+#endif
+
+              /*
+               * Reject any sequence that includes a linefeed if the
+               * terminal driver automatically adds a carriage return.
+               */
+
+              if (d->linefeed_moves_to_left_margin)
                 {
-                  p[len] = '\0';
-                  while (len-- > 0)
-                    p[len] = seq[len];
+                  char *p = seq;
+                  while (*p != '\0')
+                    if (*p != ___UNICODE_LINEFEED)
+                      p++;
+                    else
+                      break;
+                  if (*p != '\0')
+                    seq = NULL;
                 }
-              d->capability[i] = p;
+
+              /*
+               * Keep a copy of the sequence.
+               */
+
+              if (seq != NULL)
+                {
+                  char *p;
+                  int len = 0;
+                  while (seq[len] != '\0')
+                    len++;
+                  p = ___CAST(char*,___ALLOC_MEM(len+1));
+                  if (p != NULL)
+                    {
+                      p[len] = '\0';
+                      while (len-- > 0)
+                        p[len] = seq[len];
+                    }
+                  d->capability[i] = p;
+                }
+              else
+                d->capability[i] = NULL;
             }
           else
             d->capability[i] = NULL;
         }
-      else
-        d->capability[i] = NULL;
     }
 
 #endif
@@ -5258,8 +5243,8 @@ ___BOOL emacs_bindings;)
 #else
               1,
 #endif
-              emacs_bindings,
-              terminal_type == NULL))
+              !dumb && emacs_bindings,
+              !dumb))
       != ___FIX(___NO_ERR))
     return e;
 
@@ -5298,12 +5283,9 @@ ___HIDDEN ___SCMOBJ ___device_tty_default_options_virt
 
 
 ___HIDDEN ___SCMOBJ lineeditor_setup
-   ___P((___device_tty *self,
-         int plain),
-        (self,
-         plain)
-___device_tty *self;
-int plain;)
+   ___P((___device_tty *self),
+        (self)
+___device_tty *self;)
 {
   ___device_tty *d = self;
   ___SCMOBJ e;
@@ -5311,7 +5293,8 @@ int plain;)
   ___SCMOBJ default_options =
     ___INT(___device_tty_default_options_virt (&d->base));
 
-  if (plain || d->stage == TTY_STAGE_NOT_OPENED)
+  if (___device_kind (&d->base.base) == ___TTY_DEVICE_KIND ||
+      d->stage == TTY_STAGE_NOT_OPENED)
     {
       /* Console */
 
@@ -5336,13 +5319,13 @@ int plain;)
 
   if (lineeditor_under_emacs ())
     d->input_echo = 0;
+
 #if defined(USE_POSIX) || defined(USE_WIN32) || defined(USE_tcgetsetattr)
-  else
-    {
-      if (___TERMINAL_LINE_EDITING(___GSTATE->setup_params.io_settings[___IO_SETTINGS_TERMINAL]) !=
-          ___TERMINAL_LINE_EDITING_OFF)
-        d->lineeditor_mode = LINEEDITOR_MODE_SCHEME;
-    }
+
+  if (___TERMINAL_LINE_EDITING(___GSTATE->setup_params.io_settings[___IO_SETTINGS_TERMINAL]) !=
+      ___TERMINAL_LINE_EDITING_OFF)
+    d->lineeditor_mode = LINEEDITOR_MODE_SCHEME;
+
 #endif
 
   /* for terminal emulation */
@@ -5458,9 +5441,12 @@ int plain;)
                   if ((e = lineeditor_history_begin_edit (d, h))
                       == ___FIX(___NO_ERR))
                     {
+                      char *terminal_type = "dumb"; /* default to "dumb" */
+                      if (___device_kind (&d->base.base) == ___TTY_DEVICE_KIND)
+                        terminal_type = ___getenv ("TERM");
                       if ((e = lineeditor_set_terminal_type
                                  (d,
-                                  NULL,
+                                  terminal_type,
                                   DEFAULT_EMACS_BINDINGS))
                           == ___FIX(___NO_ERR))
                         {
@@ -8135,19 +8121,16 @@ ___HIDDEN ___device_tty_vtbl ___device_tty_table =
 
 
 ___HIDDEN ___SCMOBJ ___device_tty_setup
-   ___P((___device_tty *self,
-         int plain),
-        (self,
-         plain)
-___device_tty *self;
-int plain;)
+   ___P((___device_tty *self),
+        (self)
+___device_tty *self;)
 {
   ___device_tty *d = self;
   ___SCMOBJ e = ___FIX(___NO_ERR);
 
 #ifdef USE_LINEEDITOR
 
-  e = lineeditor_setup (d, plain);
+  e = lineeditor_setup (d);
 
 #endif
 
@@ -8228,7 +8211,7 @@ int direction;)
 
   *dev = d;
 
-  if ((e = ___device_tty_setup (d, 1)) != ___FIX(___NO_ERR))
+  if ((e = ___device_tty_setup (d)) != ___FIX(___NO_ERR))
     {
       ___FREE_MEM(d);
       return e;
@@ -8266,9 +8249,6 @@ int direction;)
 {
   ___device_tty *d;
   ___SCMOBJ e;
-  int plain = (fd == STDIN_FILENO) ||
-              (fd == STDOUT_FILENO) ||
-              (fd == STDERR_FILENO);
 
 #ifdef USE_FDSET_RESIZING
 
@@ -8290,7 +8270,7 @@ int direction;)
 
   *dev = d;
 
-  if ((e = ___device_tty_setup (d, plain)) != ___FIX(___NO_ERR))
+  if ((e = ___device_tty_setup (d)) != ___FIX(___NO_ERR))
     {
       ___FREE_MEM(d);
       return e;
@@ -8337,7 +8317,7 @@ int direction;)
 
   *dev = d;
 
-  if ((e = ___device_tty_setup (d, 0)) != ___FIX(___NO_ERR))
+  if ((e = ___device_tty_setup (d)) != ___FIX(___NO_ERR))
     {
       ___FREE_MEM(d);
       return e;
@@ -8463,10 +8443,40 @@ ___SCMOBJ output;)
   ___device_tty *d =
     ___CAST(___device_tty*,___FIELD(dev,___FOREIGN_PTR));
 
-  d->input_attrs = ___INT(input);
-  d->output_attrs = ___INT(output);
+  int input_attrs = ___INT(input);
+  int output_attrs = ___INT(output);
+
+  if (input_attrs >= 0) d->input_attrs = input_attrs;
+  if (output_attrs >= 0) d->output_attrs = output_attrs;
 
   return ___VOID;
+}
+
+
+___SCMOBJ ___os_device_tty_capability
+   ___P((___SCMOBJ dev,
+         ___SCMOBJ capability),
+        (dev,
+         capability)
+___SCMOBJ dev;
+___SCMOBJ capability;)
+{
+  ___device_tty *d =
+    ___CAST(___device_tty*,___FIELD(dev,___FOREIGN_PTR));
+  ___SCMOBJ result = ___FAL;
+  ___SCMOBJ x;
+  int cap = ___INT(capability);
+
+  if (cap >= 0 &&
+      cap <= LINEEDITOR_CAP_LAST &&
+      (result = ___CHARSTRING_to_SCMOBJ (___PSTATE,
+                                         d->capability[cap],
+                                         &x,
+                                         ___RETURN_POS))
+      == ___FIX(___NO_ERR))
+    result = ___release_scmobj (x);
+
+  return result;
 }
 
 

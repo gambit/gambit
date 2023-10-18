@@ -2,7 +2,7 @@
 
 ; File: "_guide.scm", Time-stamp: <2007-04-04 11:33:22 feeley>
 
-; Copyright (c) 1994-2007 by Marc Feeley, All Rights Reserved.
+; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 ;==============================================================================
 
@@ -180,7 +180,7 @@ end-of-c-declare
   (and cont
        (let ((locat (##continuation-locat cont)))
          (and locat
-              (let* ((filepos (##position->filepos (##locat-position locat)))
+              (let* ((filepos (##position->filepos (##locat-start-position locat)))
                      (line (##fixnum.+ (##filepos-line filepos) 1))
                      (col (##fixnum.+ (##filepos-col filepos) 1))
                      (container (##locat-container locat))

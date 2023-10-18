@@ -1,6 +1,6 @@
 /* File: "os_tty.h" */
 
-/* Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_TTY_H
 #define ___OS_TTY_H
@@ -471,6 +471,11 @@ extern ___SCMOBJ ___os_device_tty_text_attributes_set
    ___P((___SCMOBJ dev,
          ___SCMOBJ input,
          ___SCMOBJ output),
+        ());
+
+extern ___SCMOBJ ___os_device_tty_capability
+   ___P((___SCMOBJ dev,
+         ___SCMOBJ capability),
         ());
 
 extern ___SCMOBJ ___os_device_tty_history

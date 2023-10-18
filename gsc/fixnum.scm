@@ -24,6 +24,7 @@
 **compilation-meta-info-add!
 **compilation-module-ref-set!
 **comply-to-standard-scheme?
+**display-message-with-locat
 **in-new-compilation-ctx
 **macro-compilation-ctx-demand-modules
 **macro-compilation-ctx-meta-info

@@ -4226,7 +4226,7 @@
        0
        limit
        (or (macro-readtable-max-unescaped-char rt)
-           (macro-max-unescaped-char (macro-port-woptions port)))))
+           (##integer->char (##output-port-max-char-code port)))))
 
     (let* ((mt2
             (and mt1
@@ -4872,6 +4872,28 @@
     (macro-check-character-output-port port 1 (output-port-width port)
       (##output-port-width port))))
 
+(define-prim (##input-port-max-char-code port)
+  (##options->max-char-code (macro-port-roptions port)))
+
+(define-prim (##output-port-max-char-code port)
+  (##options->max-char-code (macro-port-woptions port)))
+
+(define-prim (##options->max-char-code options)
+  (let ((e
+         (##fxarithmetic-shift-right
+          (##fxand options (macro-char-encoding-mask))
+          (macro-char-encoding-shift))))
+    (cond ((or (##fx<= e (macro-char-encoding-ISO-8859-1))
+               (##fx= e (macro-char-encoding-native)))
+           (if (##fx= e (macro-char-encoding-ASCII))
+               #x7f
+               #xff))
+          ((and (##fx>= e (macro-char-encoding-UCS-2))
+                (##fx<= e (macro-char-encoding-UCS-2LE)))
+           #xffff)
+          (else
+           #x10ffff))))
+
 (define-prim (##object->truncated-string
               obj
               max-length
@@ -4894,8 +4916,8 @@
            (cond ((##char? max-unescaped-char)
                   max-unescaped-char)
                  ((macro-output-port? max-unescaped-char)
-                  (macro-max-unescaped-char
-                   (macro-port-woptions max-unescaped-char)))
+                  (##integer->char
+                   (##output-port-max-char-code max-unescaped-char)))
                  ((macro-readtable? max-unescaped-char)
                   (macro-readtable-max-unescaped-char max-unescaped-char))
                  (else
@@ -6849,16 +6871,19 @@
       (macro-check-fixnum-range
         input
         2
-        0
+        -1
         #x800
         (tty-text-attributes-set! port input output)
         (macro-check-fixnum-range
           output
           3
-          0
+          -1
           #x800
           (tty-text-attributes-set! port input output)
           (##tty-text-attributes-set! port input output))))))
+
+(define-prim (##tty-capability port capability)
+  (##os-device-tty-capability (##port-device port) capability))
 
 (define-prim (##tty-history port)
   (let ((result (##os-device-tty-history (##port-device port))))

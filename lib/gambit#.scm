@@ -2,7 +2,7 @@
 
 ;;; File: "gambit#.scm"
 
-;;; Copyright (c) 2005-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2005-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -211,8 +211,6 @@ directory-files
 display-continuation-backtrace
 display-continuation-dynamic-environment
 display-continuation-environment
-display-dynamic-environment?
-display-environment-set!
 display-exception
 display-exception-in-context
 display-procedure-environment
@@ -689,7 +687,8 @@ real-time
 remove
 remq
 rename-file
-repl-display-environment?
+repl-backtrace-detail-level
+repl-backtrace-highlight-source-level
 repl-error-port
 repl-input-port
 repl-output-port

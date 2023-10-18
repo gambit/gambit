@@ -256,6 +256,13 @@
 (define (format-filepos path filepos pinpoint?)
   #f)
 
+(define (**display-message-with-locat gen-message locat kind proc port)
+  (display "*** " port)
+  (display kind port)
+  (locat-show " IN " locat port)
+  (display " -- " port)
+  (gen-message port))
+
 ;; The following functions define an interface to the file system's
 ;; naming conventions.  The current implementation is suitable for UNIX.
 ;;
@@ -807,6 +814,9 @@
 
 (define (format-filepos path filepos pinpoint?)
   (##format-filepos path filepos pinpoint?))
+
+(define (**display-message-with-locat gen-message locat kind proc port)
+  (##display-message-with-locat gen-message locat kind proc port))
 
 ;; The path functions are already defined by Gambit
 ;;(define path-expand path-expand)

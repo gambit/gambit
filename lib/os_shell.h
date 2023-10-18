@@ -1,6 +1,6 @@
 /* File: "os_shell.h" */
 
-/* Copyright (c) 1994-2016 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_SHELL_H
 #define ___OS_SHELL_H
@@ -114,6 +114,20 @@ extern ___SCMOBJ ___os_setenv
         ());
 
 extern ___SCMOBJ ___os_environ ___PVOID;
+
+extern int ___strcmp_UCS_2
+   ___P((___UCS_2STRING str1,
+         ___UCS_2STRING str2),
+        ());
+
+extern ___BOOL ___env_var_equal_UCS_2
+   ___P((___UCS_2STRING name,
+         ___UCS_2STRING value),
+        ());
+
+extern ___BOOL ___env_var_defined_UCS_2
+   ___P((___UCS_2STRING name),
+        ());
 
 
 /*---------------------------------------------------------------------------*/

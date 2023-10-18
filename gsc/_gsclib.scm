@@ -2,7 +2,7 @@
 
 ;;; File: "_gsclib.scm"
 
-;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 (include "generic.scm")
 
@@ -74,7 +74,7 @@
                       expression
                       (##make-source
                        expression
-                       (##make-locat (##path->container filename) 0))))))
+                       (##make-locat (##path->container filename) 0 #f))))))
         (cond ((##not (or (##null? opts)
                           (##pair? opts)))
                (error "list expected for options: parameter")) ;;;;;;;
@@ -230,7 +230,7 @@
                       expression
                       (##make-source
                        expression
-                       (##make-locat (##path->container filename) 0))))))
+                       (##make-locat (##path->container filename) 0 #f))))))
         (cond ((##not (or (##null? opts)
                           (##pair? opts)))
                (error "list expected for options: parameter")) ;;;;;;;

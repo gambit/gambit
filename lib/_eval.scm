@@ -70,10 +70,24 @@
 (define ##source2-marker '#(source2))
 
 (define (##make-source code locat)
-  (##vector ##source1-marker
-            code
-            (if locat (##locat-container locat) #f)
-            (if locat (##locat-position locat) #f)))
+  (if locat
+      (let ((container (##locat-container locat))
+            (start-position (##locat-start-position locat))
+            (end-position (##locat-end-position locat)))
+        (if end-position
+            (##vector ##source1-marker
+                      code
+                      container
+                      start-position
+                      end-position)
+            (##vector ##source1-marker
+                      code
+                      container
+                      start-position)))
+      (##vector ##source1-marker
+                code
+                #f
+                #f)))
 
 (define (##sourcify x src)
   (if (##source? x)
@@ -275,8 +289,13 @@
 (define (##source-locat src)
   (let ((container (##vector-ref src 2)))
     (if container
-        (##make-locat container
-                      (##vector-ref src 3))
+        (if (##fx>= (##vector-length src) 5)
+            (##make-locat container
+                          (##vector-ref src 3)
+                          (##vector-ref src 4))
+            (##make-locat container
+                          (##vector-ref src 3)
+                          #f))
         #f)))
 
 (define (##source-path src)
@@ -359,10 +378,11 @@
 ;;;----------------------------------------------------------------------------
 
 ;; A "locat" object represents a source code location.  The location
-;; is a 2 element vector composed of the container of the source code
-;; (a file, a text editor window, etc) and a position within that
+;; is a 2 or 3 element vector composed of the container of the source code
+;; (a file, a text editor window, etc) and one or two positions within that
 ;; container (a character offset, a line/column index, a text
-;; bookmark, an expression, etc).
+;; bookmark, an expression, etc). When there are two positions they
+;; are the start and end positions of the source code location.
 ;;
 ;; Source code location containers and positions can be encoded with
 ;; any concrete type, except that positions cannot be pairs.  The
@@ -385,10 +405,20 @@
                c))))
     (##make-locat container
                   (##filepos->position
-                   (macro-readenv-filepos re)))))
+                   (macro-readenv-filepos re))
+                  (and ##locat-with-end-position?
+                       (##filepos->position
+                        (##readenv-current-filepos re))))))
 
-(define-prim (##make-locat container position)
-  (##vector container position))
+(define ##locat-with-end-position? #t)
+
+(define-prim (##locat-with-end-position?-set! x)
+  (set! ##locat-with-end-position? x))
+
+(define-prim (##make-locat container start-position end-position)
+  (if end-position
+      (##vector container start-position end-position)
+      (##vector container start-position)))
 
 (define-prim (##locat? x)
   (##vector? x))
@@ -399,11 +429,18 @@
         (##locat-container (##source-locat container))
         container)))
 
-(define-prim (##locat-position locat)
+(define-prim (##locat-start-position locat)
   (let ((container (##vector-ref locat 0)))
     (if (##source? container)
-        (##locat-position (##source-locat container))
+        (##locat-start-position (##source-locat container))
         (##vector-ref locat 1))))
+
+(define-prim (##locat-end-position locat)
+  (let ((container (##vector-ref locat 0)))
+    (if (##source? container)
+        (##locat-end-position (##source-locat container))
+        (and (##fx= (##vector-length locat) 3)
+             (##vector-ref locat 2)))))
 
 (define-prim (##port-name->container port-name)
   ;; port-name is an arbitrary object and result is an arbitrary object
@@ -414,7 +451,7 @@
 (define ##path->container-hook #f)
 
 (define-prim (##path->container-hook-set! x)
-  (set! ##path->container-hook #f))
+  (set! ##path->container-hook x))
 
 (define-prim (##path->container path)
   ;; path is a string and result is an arbitrary object
@@ -1103,7 +1140,7 @@
         (##car lst)
         (##make-source
          (##cons '##begin lst)
-         src))))
+         (##source-locat src)))))
 
 (define (##read-all-as-a-begin-expr-from-path
          path
@@ -1111,10 +1148,12 @@
          (readtable (##current-readtable))
          (wrap ##wrap-datum)
          (unwrap ##unwrap-datum)
-         (case-conversion? '()))
+         (case-conversion? '())
+         (raise-exception? #t))
 
   (define (fail)
-    (##fail-check-string 1 open-input-file path))
+    (and raise-exception?
+         (##fail-check-string 1 open-input-file path)))
 
   (##make-input-path-psettings
    (##list 'path: path
@@ -1130,7 +1169,8 @@
             readtable
             wrap
             unwrap
-            case-conversion?))))))
+            case-conversion?
+            raise-exception?))))))
 
 (define (##read-all-as-a-begin-expr-from-psettings
          psettings
@@ -1139,10 +1179,12 @@
          (readtable (##current-readtable))
          (wrap ##wrap-datum)
          (unwrap ##unwrap-datum)
-         (case-conversion? '()))
+         (case-conversion? '())
+         (raise-exception? #t))
 
   (define (fail)
-    (##fail-check-string-or-settings '(1 . path-or-settings) open-input-file path-or-settings))
+    (and raise-exception?
+         (##fail-check-string-or-settings '(1 . path-or-settings) open-input-file path-or-settings)))
 
   (let ((path (macro-psettings-path psettings)))
     (if (##not path)
@@ -1153,23 +1195,23 @@
          (lambda (port resolved-path)
            (if (##fixnum? port)
                port
-               (let* ((extension
-                       (##path-extension path))
-                      (start-syntax
-                       (let ((x (##assoc extension ##scheme-file-extensions)))
-                         (if x
-                             (##cdr x)
-                             (macro-readtable-start-syntax readtable)))))
-                 (##read-all-as-a-begin-expr-from-port
-                  port
-                  readtable
-                  wrap
-                  unwrap
-                  start-syntax
-                  #t
-                  case-conversion?))))
+               (##read-all-as-a-begin-expr-from-port
+                port
+                readtable
+                wrap
+                unwrap
+                (or (##path->start-syntax path)
+                    (macro-readtable-start-syntax readtable))
+                #t
+                case-conversion?
+                raise-exception?)))
          open-input-file
          path-or-settings))))
+
+(define (##path->start-syntax path)
+  (let ((x (##assoc (##path-extension path) ##scheme-file-extensions)))
+    (and x
+         (##cdr x))))
 
 (define (##read-all-as-a-begin-expr-from-port
          port
@@ -1179,12 +1221,14 @@
          (unwrap ##unwrap-datum)
          (start-syntax '()) ;; default to readtable start syntax
          (close-port? #t)
-         (case-conversion? '())) ;; default to readtable case conversion
+         (case-conversion? '()) ;; default to readtable case conversion
+         (raise-exception? #t))
   (##with-exception-catcher
    (lambda (exc)
      (if close-port?
          (##close-input-port port))
-     (macro-raise exc))
+     (and raise-exception?
+          (macro-raise exc)))
    (lambda ()
      (let ((rt
             (##readtable-copy-shallow readtable)))
@@ -1226,7 +1270,8 @@
          (wrap ##wrap-datum)
          (unwrap ##unwrap-datum)
          (start-syntax '()) ;; default to readtable start syntax
-         (case-conversion? '())) ;; default to readtable case conversion
+         (case-conversion? '()) ;; default to readtable case conversion
+         (raise-exception? #t))
   (##call-with-input-string
    content
    (lambda (port)
@@ -1242,7 +1287,8 @@
       wrap
       unwrap
       start-syntax
-      case-conversion?))))
+      case-conversion?
+      raise-exception?))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1321,12 +1367,20 @@
       (if (##locat? locat)
           (let ((new-container (##locat-container locat)))
             (if (##eq? container new-container)
-                (convert2! container (##locat-position locat) code)
-                (convert2! new-container locat code)))
+                (convert2! container
+                           (let ((start-position (##locat-start-position locat))
+                                 (end-position (##locat-end-position locat)))
+                             (if end-position
+                                 (##cons start-position end-position)
+                                 start-position))
+                           code)
+                (convert2! new-container
+                           locat
+                           code)))
           (convert2! container #f code))))
 
-  (define (convert2! container locat-or-position code)
-    (macro-code-locat-set! code locat-or-position)
+  (define (convert2! container locat-or-positions code)
+    (macro-code-locat-set! code locat-or-positions)
     (let ((n (macro-code-length code)))
       (let loop ((i 0))
         (if (##fx< i n)

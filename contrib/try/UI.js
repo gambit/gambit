@@ -2,7 +2,7 @@
 
 // File: "UI.js"
 
-// Copyright (c) 2020-2022 by Marc Feeley, All Rights Reserved.
+// Copyright (c) 2020-2023 by Marc Feeley, All Rights Reserved.
 
 //=============================================================================
 
@@ -1423,7 +1423,7 @@ UI.prototype.clear_highlighting = function () {
   ui.editor_mux.clear_highlighting();
 };
 
-UI.prototype.pinpoint = function (container_scm, line0, col0) {
+UI.prototype.pinpoint = function (container_scm, start_line0, start_col0, end_line0, end_col0) {
 
   var ui = this;
 
@@ -1442,7 +1442,7 @@ UI.prototype.pinpoint = function (container_scm, line0, col0) {
 
       if (ui.file_exists(path)) {
         var editor = ui.edit_file(path, true);
-        return editor.pinpoint(line0, col0);
+        return editor.pinpoint(start_line0, start_col0, end_line0, end_col0);
       }
 
     } else if (container_scm instanceof _ScmSymbol) {
@@ -1458,7 +1458,7 @@ UI.prototype.pinpoint = function (container_scm, line0, col0) {
 
       if (index >= 0) {
         var dev = channels[index];
-        return dev.pinpoint(line0, col0);
+        return dev.pinpoint(start_line0, start_col0, end_line0, end_col0);
       }
 
     }
@@ -2473,17 +2473,14 @@ Device_console.prototype.clear_highlighting = function () {
   dev.cons.cm.clear_highlighting();
 };
 
-Device_console.prototype.pinpoint = function (line0, col0) {
+Device_console.prototype.pinpoint = function (start_line0, start_col0, end_line0, end_col0) {
 
   var dev = this;
 
-  var start = dev.cons.convert_position(CodeMirror.Pos(line0, col0));
+  var start = dev.cons.convert_position(CodeMirror.Pos(start_line0, start_col0));
+  var end = dev.cons.convert_position(CodeMirror.Pos(end_line0, end_col0));
 
-  if (start === null) return false;
-
-  var end = dev.cons.cm.forward_sexpr(start);
-
-  if (!end) return false;
+  if (!start || !end) return false;
 
   return dev.cons.cm.set_highlighting(start, end);
 };
@@ -3379,14 +3376,14 @@ Editor.prototype.clear_highlighting = function () {
   editor.cm.clear_highlighting();
 };
 
-Editor.prototype.pinpoint = function (line0, col0) {
+Editor.prototype.pinpoint = function (start_line0, start_col0, end_line0, end_col0) {
 
   var editor = this;
 
-  var start = CodeMirror.Pos(line0, col0);
-  var end = editor.cm.forward_sexpr(start);
+  var start = CodeMirror.Pos(start_line0, start_col0);
+  var end = CodeMirror.Pos(end_line0, end_col0);
 
-  if (!end) return false;
+  if (!start || !end) return false;
 
   editor.cm.setSelection(end);
 

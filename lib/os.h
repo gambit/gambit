@@ -829,10 +829,12 @@
 
 #ifdef HAVE_TGETSTR
 #define USE_TERMCAP
+#define USE_TERMCAP_OR_TERMINFO
 #define USE_CURSES
 #else
 #ifdef HAVE_TIGETSTR
 #define USE_TERMINFO
+#define USE_TERMCAP_OR_TERMINFO
 #define USE_CURSES
 #endif
 #endif
@@ -1345,6 +1347,8 @@ ___END_C_LINKAGE
 #ifdef USE_TERMINFO
 #undef INCLUDE_curses_h
 #define INCLUDE_curses_h
+#undef INCLUDE_term_h
+#define INCLUDE_term_h
 #endif
 
 #ifdef USE_poll

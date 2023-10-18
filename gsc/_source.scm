@@ -2,7 +2,7 @@
 
 ;;; File: "_source.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -160,43 +160,43 @@
 (define (expr->locat expr source)
   (vector source expr))
 
-(define (locat-show prefix loc)
+(define (locat-show prefix loc port)
   (if loc
 
       (let ((filename (##container->path (##locat-container loc)))
-            (filepos (##locat-position loc)))
+            (filepos (##locat-start-position loc)))
         (if (string? filename) ; file?
             (let ((str (format-filepos filename filepos #t)))
               (if str
                   (begin
-                    (display prefix)
-                    (display str))
+                    (display prefix port)
+                    (display str port))
                   (let ((line (+ (**filepos-line filepos) 1))
                         (col (+ (**filepos-col filepos) 1))
                         (filename*
                          (if (string? filename)
                              (path-expand filename)
                              filename)))
-                    (display prefix)
-                    (write filename*)
-                    (display "@")
-                    (display line)
-                    (display ".")
-                    (display col))))
+                    (display prefix port)
+                    (write filename* port)
+                    (display "@" port)
+                    (display line port)
+                    (display "." port)
+                    (display col port))))
             (let ((source (vector-ref loc 0))
                   (expr (vector-ref loc 1)))
-              (display prefix)
-              (display "EXPRESSION ")
-              (write expr)
+              (display prefix port)
+              (display "EXPRESSION " port)
+              (write expr port)
               (if source
-                  (locat-show " " (source-locat source))))))))
+                  (locat-show " " (source-locat source) port)))))))
 
 (define (locat-filename-and-line loc)
   (if loc
       (let* ((container (##locat-container loc))
              (path (##container->path container)))
         (if path
-            (let* ((position (##locat-position loc))
+            (let* ((position (##locat-start-position loc))
                    (filepos (##position->filepos position))
                    (line (+ (**filepos-line filepos) 1)))
               (cons path line))
@@ -393,7 +393,10 @@
         (lambda (re x)
           (make-source x
                        (##make-locat (##port-name (macro-readenv-port re))
-                                     (macro-readenv-filepos re))))
+                                     (##filepos->position
+                                      (macro-readenv-filepos re))
+                                     (##filepos->position
+                                      (##readenv-current-filepos re)))))
         (lambda (re x)
           (source-code x))
         #f
@@ -426,7 +429,9 @@
              (let ((locat
                     (##make-locat container
                                   (##filepos->position
-                                   (macro-readenv-filepos re)))))
+                                   (macro-readenv-filepos re))
+                                  (##filepos->position
+                                   (##readenv-current-filepos re)))))
                (make-source x locat))))
        (lambda (re x)
          (source-code x)))))
@@ -1406,7 +1411,7 @@
 (define (expr->locat expr source)
   (vector source expr));;;;;;;;;;;;;;;;;;;;;;
 
-(define (locat-show prefix loc)
+(define (locat-show prefix loc port)
   (if loc
 
     (if (string? (vector-ref loc 0)) ; file?
@@ -1415,29 +1420,29 @@
              (str (format-filepos filename filepos #t)))
         (if str
           (begin
-            (display prefix)
-            (display str))
+            (display prefix port)
+            (display str port))
           (let ((line (+ (**filepos-line filepos) 1))
                 (col (+ (**filepos-col filepos) 1))
                 (filename*
                  (if (string? filename)
                    (path-expand filename)
                    filename)))
-            (display prefix)
-            (write filename*)
-            (display "@")
-            (display line)
-            (display ".")
-            (display col))))
+            (display prefix port)
+            (write filename* port)
+            (display "@" port)
+            (display line port)
+            (display "." port)
+            (display col port))))
       (let ((source (vector-ref loc 0))
             (expr (vector-ref loc 1)))
-       (display prefix)
-       (display "EXPRESSION ")
-       (write expr)
+       (display prefix port)
+       (display "EXPRESSION " port)
+       (write expr port)
        (if source
-         (locat-show " " (source-locat source)))))
+         (locat-show " " (source-locat source) port))))
 
-    (display "UNKNOWN LOCATION")))
+    (display "UNKNOWN LOCATION" port)))
 
 (define (locat-filename-and-line loc)
   (if loc

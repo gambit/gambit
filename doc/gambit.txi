@@ -2493,13 +2493,14 @@ calls lead to an error.  A backtrace that lists the chain of active
 continuation frames in the REPL's continuation can be obtained with
 the @samp{,b} command.  The frames are numbered from 0, that is frame
 0 is the most recent frame of the continuation where execution
-stopped, frame 1 is the parent frame of frame 0, and so on.  It is
+stopped, frame 1 is the parent frame of frame 0, and so on.
+The frame number is shown in square brackets at the beginning of the line.  It is
 also possible to move the REPL to a specific parent continuation
 (i.e. a specific frame of the continuation where execution stopped)
 with the @samp{,@var{N}}, @samp{,@var{N}+}, @samp{,@var{N}-},
 @samp{,+}, @samp{,-}, @samp{,++}, and @samp{,--} commands.  When the
 frame number of the frame being examined is not zero, it is shown in
-the prompt after the nesting level, for example @samp{1\5>} is the
+the prompt before the nesting level, for example @samp{[5]1>} is the
 prompt when the REPL nesting level is 1 and the frame number is 5.
 
 Expressions entered at a nested REPL are evaluated in the environment
@@ -2803,36 +2804,36 @@ Gambit @value{VERSION}
 1> @b{,e}
 x = 'hello
 1> @b{,b}
-0  invsqr                    (console)@@1:25          (expt x 2)
-1  #<procedure #4>           (console)@@6:17          (fn (car in))
-2  #<procedure #4>           (console)@@6:31          (mm (cdr in))
-3  #<procedure #4>           (console)@@6:31          (mm (cdr in))
-4  (interaction)             (console)@@8:1           (mymap invsqr '(5 2 hel...
+[0] invsqr                    (console)@@1:25          (expt x 2)
+[1] #<procedure #4>           (console)@@6:17          (fn (car in))
+[2] #<procedure #4>           (console)@@6:31          (mm (cdr in))
+[3] #<procedure #4>           (console)@@6:31          (mm (cdr in))
+[4] (interaction)             (console)@@8:1           (mymap invsqr '(5 2 hel...
 1> @b{,+}
-1  #<procedure #4>           (console)@@6.17          (fn (car in))
-1\1> @b{(pp #4)}
+[1] #<procedure #4>           (console)@@6.17          (fn (car in))
+[1]1> @b{(pp #4)}
 (lambda (in) (if (null? in) '() (cons (fn (car in)) (mm (cdr in)))))
-1\1> @b{,e}
+[1]1> @b{,e}
 in = '(hello 9 1)
 mm = (lambda (in) (if (null? in) '() (cons (fn (car in)) (mm (cdr in)))))
 fn = invsqr
 lst = '(5 2 hello 9 1)
-1\1> @b{,(e mm)}
+[1]1> @b{,(e mm)}
 mm = (lambda (in) (if (null? in) '() (cons (fn (car in)) (mm (cdr in)))))
 fn = invsqr
 lst = '(5 2 hello 9 1)
-1\1> @b{fn}
+[1]1> @b{fn}
 #<procedure #2 invsqr>
-1\1> @b{(pp fn)}
+[1]1> @b{(pp fn)}
 (lambda (x) (/ 1 (expt x 2)))
-1\1> @b{,+}
-2  #<procedure #4>           (console)@@6.31          (mm (cdr in))
-1\2> @b{,e}
+[1]1> @b{,+}
+[2] #<procedure #4>           (console)@@6.31          (mm (cdr in))
+[2]1> @b{,e}
 in = '(2 hello 9 1)
 mm = (lambda (in) (if (null? in) '() (cons (fn (car in)) (mm (cdr in)))))
 fn = invsqr
 lst = '(5 2 hello 9 1)
-1\2> @b{,(c (list 3 4 5))}
+[2]1> @b{,(c (list 3 4 5))}
 (1/25 1/4 3 4 5)
 > @b{,q}
 @end smallexample
@@ -3187,10 +3188,10 @@ For example:
 > @b{(f 5)}
 *** STOPPED IN double, (console)@@1.21
 1> @b{,b}
-0  double                    (console)@@1:21          +
-1  triple                    (console)@@2:31          (double y)
-2  f                         (console)@@3:18          (triple z)
-3  (interaction)             (console)@@6:1           (f 5)
+[0] double                    (console)@@1:21          +
+[1] triple                    (console)@@2:31          (double y)
+[2] f                         (console)@@3:18          (triple z)
+[3] (interaction)             (console)@@6:1           (f 5)
 1> @b{,e}
 x = 5
 1> @b{,c}
@@ -3238,54 +3239,50 @@ For example:
 > @b{(let loop ((i 1)) (if (< i 10) (loop (* i 2)) oops))}
 *** ERROR IN #<procedure #2>, (console)@@2.47 -- Unbound variable: oops
 1> @b{,b}
-0  #<procedure #2>           (console)@@2:47          oops
-1  (interaction)             (console)@@2:1           ((letrec ((loop (lambda...
+[0] #<procedure #2>           (console)@@2:47          oops
+[1] (interaction)             (console)@@2:1           ((letrec ((loop (lambda...
 1> @b{,t}
 > @b{(generate-proper-tail-calls #f)}
 > @b{(let loop ((i 1)) (if (< i 10) (loop (* i 2)) oops))}
 *** ERROR IN #<procedure #3>, (console)@@6.47 -- Unbound variable: oops
 1> @b{,b}
-0  #<procedure #3>           (console)@@6:47          oops
-1  #<procedure #3>           (console)@@6:32          (loop (* i 2))
-2  #<procedure #3>           (console)@@6:32          (loop (* i 2))
-3  #<procedure #3>           (console)@@6:32          (loop (* i 2))
-4  #<procedure #3>           (console)@@6:32          (loop (* i 2))
-5  (interaction)             (console)@@6:1           ((letrec ((loop (lambda...
+[0] #<procedure #3>           (console)@@6:47          oops
+[1] #<procedure #3>           (console)@@6:32          (loop (* i 2))
+[2] #<procedure #3>           (console)@@6:32          (loop (* i 2))
+[3] #<procedure #3>           (console)@@6:32          (loop (* i 2))
+[4] #<procedure #3>           (console)@@6:32          (loop (* i 2))
+[5] (interaction)             (console)@@6:1           ((letrec ((loop (lambda...
 
 @end smallexample
 
 @end deffn
 
-@deffn procedure display-environment-set! @var{display?}
+@deffn procedure repl-backtrace-detail-level @var{level}
 
-[Note: this procedure is DEPRECATED and will be removed
-in a future version of Gambit.  Use the parameter object
-@code{repl-display-environment?} instead.]
-
-This procedure sets a flag that controls the automatic display of the
-environment by the REPL.  If @var{display?} is true, the environment
-is displayed by the REPL before the prompt.  The default setting is
-not to display the environment.
-
-@end deffn
-
-@deffn procedure repl-display-environment? @var{display?}
-
-The parameter object @code{repl-display-environment?} is bound to a
-boolean value that controls the automatic display of the environment
-by the REPL.  If @var{display?} is true, the environment is displayed
-by the REPL before the prompt.  This is particularly useful in
-single-stepping mode.  The default setting is not to display the
-environment.
+The parameter object @code{repl-backtrace-detail-level} is bound to an
+exact integer that controls the amount of backtrace detail that
+is displayed when an exception is caught by the REPL.  At a
+@var{level} of 0, no backtrace is displayed.  At a
+@var{level} of 1, a backtrace is displayed with no environment information.
+At a @var{level} of 2, a backtrace with the lexical environment is displayed.
+At a @var{level} of 3, a backtrace with the lexical and dynamic
+environments is displayed.
+The initial value of the parameter object @code{repl-backtrace-detail-level}
+is 0.
 
 @end deffn
 
-@deffn procedure display-dynamic-environment? @var{display?}
+@deffn procedure repl-backtrace-highlight-source-level @var{level}
 
-The parameter object @code{display-dynamic-environment?} is bound to a
-boolean value that controls wether the dynamic environment is
-displayed when the environment is displayed.  The default setting is
-not to display the dynamic environment.
+The parameter object @code{repl-backtrace-highlight-source-level} is bound to an
+exact integer that controls when to pinpoint source code locations
+by displaying the relevant part of the source code with the location
+highlighted.  At a @var{level} of 0, no source highlighting is used.
+At a @var{level} of 1, source highlighting is done when an exception
+is caught by the REPL, but it is not used in the frames of a backtrace.
+At a @var{level} of 2, source highlighting is done in all situations.
+The initial value of the parameter object @code{repl-backtrace-highlight-source-level}
+is 1.
 
 @end deffn
 
@@ -5061,7 +5058,7 @@ error
 @deffnx procedure display-continuation-dynamic-environment @var{cont} @r{[}@var{port}@r{]}
 @end deffn
 
-@deffn procedure display-continuation-backtrace @var{cont} @r{[}@var{port} @r{[}@var{display-env?} @r{[}@var{all-frames?} @r{[}@var{max-head} @r{[}@var{max-tail} @r{[}@var{depth}@r{]}@r{]}@r{]}@r{]}@r{]}@r{]}
+@deffn procedure display-continuation-backtrace @var{cont} @r{[}@var{port} @r{[}@var{detail-level} @r{[}@var{highlight-source-level} @r{[}@var{depth} @r{[}@var{max-head} @r{[}@var{max-tail} @r{[}@var{line-numbers?} @r{[}@var{context-inner} @r{[}@var{context-outer}@r{]}@r{]}@r{]}@r{]}@r{]}@r{]}@r{]}@r{]}@r{]}
 
 The procedure @code{display-continuation-backtrace} displays the
 frames of the continuation corresponding to the continuation object
@@ -5069,21 +5066,38 @@ frames of the continuation corresponding to the continuation object
 defaults to the current output-port.  The frames are displayed in the
 same format as the REPL's @samp{,b} command.
 
-The parameter @var{display-env?}, which defaults to @code{#f}, controls
-if the frames are displayed with its environment (the variables
-accessible and their bindings).
+The parameter @var{detail-level}, which defaults to the value of the
+parameter object @code{repl-backtrace-detail-level} or @code{1}
+whichever is larger, controls the amount of backtrace detail that is
+displayed.  At a @var{level} of 1, a backtrace is displayed with no
+environment information.  At a @var{level} of 2, a backtrace with the
+lexical environment is displayed.  At a @var{level} of 3, a backtrace
+with the lexical and dynamic environments is displayed.
+At a @var{level} of 4, 5, or 6, the same format is used as @var{level}-3
+but the backtrace includes frames that are normally hidden.
 
-The parameter @var{all-frames?}, which defaults to @code{#f}, controls
-which frames are displayed.  Some frames of ancillary importance, such
-as internal frames created by the interpreter, are not displayed when
-@var{all-frames?} is @code{#f}.  Otherwise all frames are displayed.
+The parameter @var{highlight-source-level}, which defaults to the
+value of the parameter object
+@code{repl-backtrace-highlight-source-level}, controls when to
+pinpoint source code locations by displaying the relevant part of the
+source code with the location highlighted.  At a @var{level} of 0 or
+1, no source highlighting is used.  At a @var{level} of 2, source
+highlighting is done on each frame of the backtrace.
+
+The parameter @var{depth}, which defaults to 0, causes the frame numbers
+to be offset by that value.
 
 The parameters @var{max-head} and @var{max-tail}, which default to 10
 and 4 respectively, control how many frames are displayed at the head
 and tail of the continuation.
 
-The parameter @var{depth}, which defaults to 0, causes the frame numbers
-to be offset by that value.
+The parameter @var{line-numbers?}, which defaults to @code{#t}, controls
+the printing of line numbers when source code highlighting.
+
+The parameters @var{context-inner} and @var{context-outer}, which
+default to 2 and 2 respectively, control how many lines of source code
+to include inside the highlighted section and outside the highlighted
+section when source code highlighting.
 
 For example:
 
@@ -5098,48 +5112,42 @@ For example:
 > @b{(fib 10)}
 89
 > @b{(display-continuation-backtrace x)}
-0  fib             (console)@@7:12     (fib (- n 2))
-1  fib             (console)@@7:12     (fib (- n 2))
-2  fib             (console)@@7:12     (fib (- n 2))
-3  fib             (console)@@7:12     (fib (- n 2))
-4  fib             (console)@@7:12     (fib (- n 2))
-5  (interaction)   (console)@@8:1      (fib 10)
+[0] fib            (stdin)@@7.12-7.25   (fib (- n 2))
+[1] fib            (stdin)@@7:12-7:25   (fib (- n 2))
+[2] fib            (stdin)@@7:12-7:25   (fib (- n 2))
+[3] fib            (stdin)@@7:12-7:25   (fib (- n 2))
+[4] fib            (stdin)@@7:12-7:25   (fib (- n 2))
+[5] (interaction)  (stdin)@@8:1-8:9     (fib 10)
 #f
-> @b{(display-continuation-backtrace x (current-output-port) #f #t)}
-0  fib             (console)@@7:12     (fib (- n 2))
-1  fib             (console)@@6:9      (+ (fib (- n 1)) (fib (- ...
-2  fib             (console)@@7:12     (fib (- n 2))
-3  fib             (console)@@6:9      (+ (fib (- n 1)) (fib (- ...
-4  fib             (console)@@7:12     (fib (- n 2))
-5  fib             (console)@@6:9      (+ (fib (- n 1)) (fib (- ...
-6  fib             (console)@@7:12     (fib (- n 2))
-7  fib             (console)@@6:9      (+ (fib (- n 1)) (fib (- ...
-8  fib             (console)@@7:12     (fib (- n 2))
-9  fib             (console)@@6:9      (+ (fib (- n 1)) (fib (- ...
+> @b{(display-continuation-backtrace x (current-output-port) 2)}
+[0] fib            (stdin)@@7.12-7.25   (fib (- n 2))
+         n = 2
+[1] fib            (stdin)@@7:12-7:25   (fib (- n 2))
+         n = 4
+[2] fib            (stdin)@@7:12-7:25   (fib (- n 2))
+         n = 6
+[3] fib            (stdin)@@7:12-7:25   (fib (- n 2))
+         n = 8
+[4] fib            (stdin)@@7:12-7:25   (fib (- n 2))
+         n = 10
+[5] (interaction)  (stdin)@@8:1-8:9     (fib 10)
+#f
+> @b{(display-continuation-backtrace x (current-output-port) 4)}
+[0] fib            (stdin)@@7.12-7.25   (fib (- n 2))
+[1] fib            (stdin)@@6:9-7:26    (+ (fib (- n 1...
+[2] fib            (stdin)@@7:12-7:25   (fib (- n 2))
+[3] fib            (stdin)@@6:9-7:26    (+ (fib (- n 1...
+[4] fib            (stdin)@@7:12-7:25   (fib (- n 2))
+[5] fib            (stdin)@@6:9-7:26    (+ (fib (- n 1...
+[6] fib            (stdin)@@7:12-7:25   (fib (- n 2))
+[7] fib            (stdin)@@6:9-7:26    (+ (fib (- n 1...
+[8] fib            (stdin)@@7:12-7:25   (fib (- n 2))
+[9] fib            (stdin)@@6:9-7:26    (+ (fib (- n 1...
 ...
-13 ##with-no-result-expected-toplevel
-14 ##repl-debug
-15 ##repl-debug-main
-16 ##kernel-handlers
-#f
-> @b{(display-continuation-backtrace x (current-output-port) #t #f)}
-0  fib             (console)@@7:12     (fib (- n 2))
-        n = 2
-1  fib             (console)@@7:12     (fib (- n 2))
-        n = 4
-2  fib             (console)@@7:12     (fib (- n 2))
-        n = 6
-3  fib             (console)@@7:12     (fib (- n 2))
-        n = 8
-4  fib             (console)@@7:12     (fib (- n 2))
-        n = 10
-5  (interaction)   (console)@@8:1      (fib 10)
-#f
-> @b{(display-continuation-backtrace x (current-output-port) #f #f 2 1 100)}
-100 fib            (console)@@7:12     (fib (- n 2))
-101 fib            (console)@@7:12     (fib (- n 2))
-...
-105 (interaction)  (console)@@8:1      (fib 10)
+[12] ##dynamic-env-bind
+[13] ##with-no-result-expected-toplevel
+[14] ##repl-debug-main
+[15] ##kernel-handlers
 #f
 @end smallexample
 

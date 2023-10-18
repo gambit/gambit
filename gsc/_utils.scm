@@ -416,39 +416,65 @@
 ;; -------------------------
 
 (define (compiler-error msg . args)
-  (display "*** ERROR -- ")
-  (display msg)
-  (for-each (lambda (x) (display " ") (write x)) args)
-  (newline)
+  (**display-message-with-locat
+   (lambda (port)
+     (display msg port)
+     (for-each (lambda (x) (display " " port) (write x port)) args)
+     (newline port))
+   #f
+   "ERROR"
+   #f
+   (current-output-port))
   (compiler-abort))
 
 (define (compiler-user-error loc msg . args)
-  (display "*** ERROR") (locat-show " IN " loc) (display " -- ")
-  (display msg)
-  (for-each (lambda (x) (display " ") (write x)) args)
-  (newline)
+  (**display-message-with-locat
+   (lambda (port)
+     (display msg port)
+     (for-each (lambda (x) (display " " port) (write x port)) args)
+     (newline port))
+   loc
+   "ERROR"
+   #f
+   (current-output-port))
   (compiler-abort))
 
 (define (compiler-user-warning loc msg . args)
   (if warnings-requested?
-    (begin
-      (display "*** WARNING") (locat-show " IN " loc) (display " -- ")
-      (display msg)
-      (for-each (lambda (x) (display " ") (write x)) args)
-      (newline))))
+      (**display-message-with-locat
+       (lambda (port)
+         (display msg port)
+         (for-each (lambda (x) (display " " port) (write x port)) args)
+         (newline port))
+       loc
+       "WARNING"
+       #f
+       (current-output-port))))
 
 (define (compiler-internal-error msg . args)
-  (display "*** ERROR -- Compiler internal error detected") (newline)
-  (display "*** in procedure ") (display msg)
-  (for-each (lambda (x) (display " ") (write x)) args)
-  (newline)
+  (**display-message-with-locat
+   (lambda (port)
+     (display "Compiler internal error detected" port) (newline port)
+     (display "*** in procedure " port) (display msg port)
+     (for-each (lambda (x) (display " " port) (write x port)) args)
+     (newline port))
+   #f
+   "ERROR"
+   #f
+   (current-output-port))
   (compiler-abort))
 
 (define (compiler-limitation-error msg . args)
-  (display "*** ERROR -- Compiler limit reached") (newline)
-  (display "*** ") (display msg)
-  (for-each (lambda (x) (display " ") (write x)) args)
-  (newline)
+  (**display-message-with-locat
+   (lambda (port)
+     (display "Compiler limit reached" port) (newline port)
+     (display "*** " port) (display msg port)
+     (for-each (lambda (x) (display " " port) (write x port)) args)
+     (newline port))
+   #f
+   "ERROR"
+   #f
+   (current-output-port))
   (compiler-abort))
 
 (define (compiler-abort)
