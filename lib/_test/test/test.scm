@@ -30,7 +30,7 @@
 (define _test#call-thunk ;; redefined here to make location the same wether _test module is interpreted or compiled
   (let () (declare (not inline)) (lambda (thunk) (##first-argument (thunk)))))
 
-
+(repl-backtrace-highlight-source-level 0)
 
 
 (test-assert (< 1 2))
@@ -39,13 +39,13 @@
 
 (test-assert (member 'b '(a b c)))
 
-(test-test-msg "\"test.scm\"@43.16: FAILED (test-assert (< 2 1)) GOT #f\n"
+(test-test-msg "\"test.scm\"@43.16-43.37: FAILED (test-assert (< 2 1)) GOT #f\n"
                (test-assert (< 2 1)))
 
-(test-test-msg "\"test.scm\"@46.16: FAILED test-assert-fail GOT #f\n"
+(test-test-msg "\"test.scm\"@46.16-46.56: FAILED test-assert-fail GOT #f\n"
                (test-assert "test-assert-fail" (< 2 1)))
 
-(test-test-msg "\"test.scm\"@49.16: FAILED (test-assert (raise 'exception)) GOT *** ERROR IN ##dynamic-env-bind -- This object was raised: exception\n"
+(test-test-msg "\"test.scm\"@49.16-49.48: FAILED (test-assert (raise 'exception)) GOT *** ERROR IN ##dynamic-env-bind -- This object was raised: exception\n"
                (test-assert (raise 'exception)))
 
 
@@ -53,16 +53,16 @@
 
 (test-equal "testing that \"abc\" is equal? to \"abc\"" "abc" "abc")
 
-(test-test-msg "\"test.scm\"@57.16: FAILED (test-equal \"abc\" \"ab_\") GOT \"ab_\"\n"
+(test-test-msg "\"test.scm\"@57.16-57.40: FAILED (test-equal \"abc\" \"ab_\") GOT \"ab_\"\n"
                (test-equal "abc" "ab_"))
 
-(test-test-msg "\"test.scm\"@60.16: FAILED test-equal-fail GOT \"ab_\"\n"
+(test-test-msg "\"test.scm\"@60.16-60.58: FAILED test-equal-fail GOT \"ab_\"\n"
                (test-equal "test-equal-fail" "abc" "ab_"))
 
-(test-test-msg "\"test.scm\"@63.16: FAILED (test-equal (raise 'exception) \"abc\") GOT *** ERROR IN ##dynamic-env-bind -- This object was raised: exception\n"
+(test-test-msg "\"test.scm\"@63.16-63.53: FAILED (test-equal (raise 'exception) \"abc\") GOT *** ERROR IN ##dynamic-env-bind -- This object was raised: exception\n"
                (test-equal (raise 'exception) "abc"))
 
-(test-test-msg "\"test.scm\"@66.16: FAILED (test-equal \"abc\" (raise 'exception)) GOT *** ERROR IN ##dynamic-env-bind -- This object was raised: exception\n"
+(test-test-msg "\"test.scm\"@66.16-66.53: FAILED (test-equal \"abc\" (raise 'exception)) GOT *** ERROR IN ##dynamic-env-bind -- This object was raised: exception\n"
                (test-equal "abc" (raise 'exception)))
 
 
@@ -70,13 +70,13 @@
 
 (test-eqv "testing that 42 is eqv? to 42" 42 42)
 
-(test-test-msg "\"test.scm\"@74.16: FAILED (test-eqv 42 13) GOT 13\n"
+(test-test-msg "\"test.scm\"@74.16-74.32: FAILED (test-eqv 42 13) GOT 13\n"
                (test-eqv 42 13))
 
-(test-test-msg "\"test.scm\"@77.16: FAILED test-eqv-fail GOT 13\n"
+(test-test-msg "\"test.scm\"@77.16-77.48: FAILED test-eqv-fail GOT 13\n"
                (test-eqv "test-eqv-fail" 42 13))
 
-(test-test-msg "\"test.scm\"@80.16: FAILED (test-eqv 42 (raise 'exception)) GOT *** ERROR IN ##dynamic-env-bind -- This object was raised: exception\n"
+(test-test-msg "\"test.scm\"@80.16-80.48: FAILED (test-eqv 42 (raise 'exception)) GOT *** ERROR IN ##dynamic-env-bind -- This object was raised: exception\n"
                (test-eqv 42 (raise 'exception)))
 
 
@@ -84,16 +84,16 @@
 
 (test-eq "testing that 'a is eq? to 'a" 'a 'a)
 
-(test-test-msg "\"test.scm\"@88.16: FAILED (test-eq 'a 'b) GOT b\n"
+(test-test-msg "\"test.scm\"@88.16-88.31: FAILED (test-eq 'a 'b) GOT b\n"
                (test-eq 'a 'b))
 
-(test-test-msg "\"test.scm\"@91.16: FAILED test-eq-fail GOT b\n"
+(test-test-msg "\"test.scm\"@91.16-91.46: FAILED test-eq-fail GOT b\n"
                (test-eq "test-eq-fail" 'a 'b))
 
-(test-test-msg "\"test.scm\"@94.16: FAILED (test-eq (raise 'exception) 'a) GOT *** ERROR IN ##dynamic-env-bind -- This object was raised: exception\n"
+(test-test-msg "\"test.scm\"@94.16-94.47: FAILED (test-eq (raise 'exception) 'a) GOT *** ERROR IN ##dynamic-env-bind -- This object was raised: exception\n"
                (test-eq (raise 'exception) 'a))
 
-(test-test-msg "\"test.scm\"@97.16: FAILED (test-eq 'a (raise 'exception)) GOT *** ERROR IN ##dynamic-env-bind -- This object was raised: exception\n"
+(test-test-msg "\"test.scm\"@97.16-97.47: FAILED (test-eq 'a (raise 'exception)) GOT *** ERROR IN ##dynamic-env-bind -- This object was raised: exception\n"
                (test-eq 'a (raise 'exception)))
 
 
@@ -103,16 +103,16 @@
 
 (test-approximate "testing that 1.5 is equal to 1.5" 1.5 1.4995 0.001)
 
-(test-test-msg "\"test.scm\"@107.16: FAILED (test-approximate 1.5 2.5 .001) GOT 2.5\n"
+(test-test-msg "\"test.scm\"@107.16-107.48: FAILED (test-approximate 1.5 2.5 .001) GOT 2.5\n"
                (test-approximate 1.5 2.5 0.001))
 
-(test-test-msg "\"test.scm\"@110.16: FAILED test-approximate-fail GOT 2.5\n"
+(test-test-msg "\"test.scm\"@110.16-110.72: FAILED test-approximate-fail GOT 2.5\n"
                (test-approximate "test-approximate-fail" 1.5 2.5 0.001))
 
-(test-test-msg "\"test.scm\"@113.16: FAILED (test-approximate (raise 'exception) 1.5 .001) GOT *** ERROR IN ##dynamic-env-bind -- This object was raised: exception\n"
+(test-test-msg "\"test.scm\"@113.16-113.63: FAILED (test-approximate (raise 'exception) 1.5 .001) GOT *** ERROR IN ##dynamic-env-bind -- This object was raised: exception\n"
                (test-approximate (raise 'exception) 1.5 0.001))
 
-(test-test-msg "\"test.scm\"@116.16: FAILED (test-approximate 1.5 (raise 'exception) .001) GOT *** ERROR IN ##dynamic-env-bind -- This object was raised: exception\n"
+(test-test-msg "\"test.scm\"@116.16-116.63: FAILED (test-approximate 1.5 (raise 'exception) .001) GOT *** ERROR IN ##dynamic-env-bind -- This object was raised: exception\n"
                (test-approximate 1.5 (raise 'exception) 0.001))
 
 
@@ -126,22 +126,22 @@
 
 (test-error "testing that evaluation raises a symbol" symbol? (+ 1 (raise 'exception)))
 
-(test-test-msg "\"test.scm\"@130.16: FAILED (test-error 42) GOT 42\n"
+(test-test-msg "\"test.scm\"@130.16-130.31: FAILED (test-error 42) GOT 42\n"
                (test-error 42))
 
-(test-test-msg "\"test.scm\"@133.16: FAILED (test-error #t 42) GOT 42\n"
+(test-test-msg "\"test.scm\"@133.16-133.34: FAILED (test-error #t 42) GOT 42\n"
                (test-error #t 42))
 
-(test-test-msg "\"test.scm\"@136.16: FAILED (test-error string? 42) GOT 42\n"
+(test-test-msg "\"test.scm\"@136.16-136.39: FAILED (test-error string? 42) GOT 42\n"
                (test-error string? 42))
 
-(test-test-msg "\"test.scm\"@139.16: FAILED (test-error string? (raise 'exception)) GOT *** ERROR IN _test#call-thunk, \"test.scm\"@31.68 -- This object was raised: exception\n"
+(test-test-msg "\"test.scm\"@139.16-139.55: FAILED (test-error string? (raise 'exception)) GOT *** ERROR IN _test#call-thunk, \"test.scm\"@31.68-31.75 -- This object was raised: exception\n"
                (test-error string? (raise 'exception)))
 
-(test-test-msg "\"test.scm\"@142.16: FAILED test-error-fail GOT 42\n"
+(test-test-msg "\"test.scm\"@142.16-142.52: FAILED test-error-fail GOT 42\n"
                (test-error "test-error-fail" #t 42))
 
-(test-test-msg "\"test.scm\"@145.16: FAILED test-error-fail GOT *** ERROR IN _test#call-thunk, \"test.scm\"@31.68 -- This object was raised: exception\n"
+(test-test-msg "\"test.scm\"@145.16-145.73: FAILED test-error-fail GOT *** ERROR IN _test#call-thunk, \"test.scm\"@31.68-31.75 -- This object was raised: exception\n"
                (test-error "test-error-fail" string? (raise 'exception)))
 
 
@@ -155,37 +155,37 @@
 
 (test-error-tail "testing that evaluation raises a symbol in tail position" symbol? (raise 'exception))
 
-(test-test-msg "\"test.scm\"@159.16: FAILED (test-error-tail 42) GOT 42\n"
+(test-test-msg "\"test.scm\"@159.16-159.36: FAILED (test-error-tail 42) GOT 42\n"
                (test-error-tail 42))
 
-(test-test-msg "\"test.scm\"@162.16: FAILED (test-error-tail #t 42) GOT 42\n"
+(test-test-msg "\"test.scm\"@162.16-162.39: FAILED (test-error-tail #t 42) GOT 42\n"
                (test-error-tail #t 42))
 
-(test-test-msg "\"test.scm\"@165.16: FAILED (test-error-tail string? 42) GOT 42\n"
+(test-test-msg "\"test.scm\"@165.16-165.44: FAILED (test-error-tail string? 42) GOT 42\n"
                (test-error-tail string? 42))
 
-(test-test-msg "\"test.scm\"@168.16: FAILED (test-error-tail string? (raise 'exception)) GOT *** ERROR IN _test#call-thunk, \"test.scm\"@31.68 -- This object was raised: exception\n"
+(test-test-msg "\"test.scm\"@168.16-168.60: FAILED (test-error-tail string? (raise 'exception)) GOT *** ERROR IN _test#call-thunk, \"test.scm\"@31.68-31.75 -- This object was raised: exception\n"
                (test-error-tail string? (raise 'exception)))
 
-(test-test-msg "\"test.scm\"@171.16: FAILED test-error-tail-fail GOT 42\n"
+(test-test-msg "\"test.scm\"@171.16-171.62: FAILED test-error-tail-fail GOT 42\n"
                (test-error-tail "test-error-tail-fail" #t 42))
 
-(test-test-msg "\"test.scm\"@174.16: FAILED test-error-tail-fail GOT *** ERROR IN _test#call-thunk, \"test.scm\"@31.68 -- This object was raised: exception\n"
+(test-test-msg "\"test.scm\"@174.16-174.83: FAILED test-error-tail-fail GOT *** ERROR IN _test#call-thunk, \"test.scm\"@31.68-31.75 -- This object was raised: exception\n"
                (test-error-tail "test-error-tail-fail" string? (raise 'exception)))
 
-(test-test-msg "\"test.scm\"@177.16: FAILED (test-error-tail (+ 1 (raise 'exception))) GOT (nontail-exception-raised-in #<procedure #2>)\n"
+(test-test-msg "\"test.scm\"@177.16-177.58: FAILED (test-error-tail (+ 1 (raise 'exception))) GOT (nontail-exception-raised-in #<procedure #2>)\n"
                (test-error-tail (+ 1 (raise 'exception))))
 
-(test-test-msg "\"test.scm\"@180.16: FAILED (test-error-tail #t (+ 1 (raise 'exception))) GOT (nontail-exception-raised-in #<procedure #3>)\n"
+(test-test-msg "\"test.scm\"@180.16-180.61: FAILED (test-error-tail #t (+ 1 (raise 'exception))) GOT (nontail-exception-raised-in #<procedure #3>)\n"
                (test-error-tail #t (+ 1 (raise 'exception))))
 
-(test-test-msg "\"test.scm\"@183.16: FAILED (test-error-tail symbol? (+ 1 (raise 'exception))) GOT (nontail-exception-raised-in #<procedure #4>)\n"
+(test-test-msg "\"test.scm\"@183.16-183.66: FAILED (test-error-tail symbol? (+ 1 (raise 'exception))) GOT (nontail-exception-raised-in #<procedure #4>)\n"
                (test-error-tail symbol? (+ 1 (raise 'exception))))
 
-(test-test-msg "\"test.scm\"@186.16: FAILED testing that evaluation raises an exception in tail position GOT (nontail-exception-raised-in #<procedure #5>)\n"
+(test-test-msg "\"test.scm\"@186.16-186.124: FAILED testing that evaluation raises an exception in tail position GOT (nontail-exception-raised-in #<procedure #5>)\n"
                (test-error-tail "testing that evaluation raises an exception in tail position" #t (+ 1 (raise 'exception))))
 
-(test-test-msg "\"test.scm\"@189.16: FAILED testing that evaluation raises a symbol in tail position GOT (nontail-exception-raised-in #<procedure #6>)\n"
+(test-test-msg "\"test.scm\"@189.16-189.125: FAILED testing that evaluation raises a symbol in tail position GOT (nontail-exception-raised-in #<procedure #6>)\n"
                (test-error-tail "testing that evaluation raises a symbol in tail position" symbol? (+ 1 (raise 'exception))))
 
 (test-test-msg "testing test1\n"
@@ -216,7 +216,7 @@
 
 (test-error (test-end))
 
-(test-test-msg "testing test8\n\"test.scm\"@222.18: FAILED (test-equal \"\" (test-end \"other\")) GOT *** ERROR IN ##dynamic-env-bind -- test-end with unmatched suite-name, should be \"test8\"\n"
+(test-test-msg "testing test8\n\"test.scm\"@222.18-222.52: FAILED (test-equal \"\" (test-end \"other\")) GOT *** ERROR IN ##dynamic-env-bind -- test-end with unmatched suite-name, should be \"test8\"\n"
                (begin
                  (test-begin "test8")
                  (test-equal "" (test-end "other"))))
