@@ -178,7 +178,9 @@ test-modules-all-pre:
 
 test-modules: test-modules-pre
 	@for subdir in $(SUBDIRS); do \
-	  (cd $$subdir && $(MAKE) test-modules); \
+	  if ! (cd $$subdir && $(MAKE) test-modules); then \
+	    break; \
+	  fi; \
 	done
 
 test-modules-pre:
@@ -188,8 +190,11 @@ test-modules-pre:
 	if test -e "$(libfromhere)/$$modref.sld" -o -e "$(libfromhere)/$$modref.scm" -o -e "$(libfromhere)/$$modref/$${modref##*/}.sld" -o -e "$(libfromhere)/$$modref/$${modref##*/}.scm"; then \
 	  if test -d "test"; then \
 	    echo "*** testing $$modref"; \
-	    @SETDLPATH@ $(rootfromhere)/gsi/gsi@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include \
-	        -f -e '(current-directory "$(rootfromhere)")' $$modref/test; \
+	    if ! @SETDLPATH@ $(rootfromhere)/gsi/gsi@exe@ -:~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include \
+	        -f -e '(current-directory "$(rootfromhere)")' $$modref/test ; then \
+	        echo "*** test of $$modref FAILED"; \
+	        exit 1; \
+	    fi; \
 	  else \
 	    echo "*** not testing $$modref (lib/$$modref/test/test.scm missing)"; \
 	  fi; \
