@@ -4873,10 +4873,14 @@
       (##output-port-width port))))
 
 (define-prim (##input-port-max-char-code port)
-  (##options->max-char-code (macro-port-roptions port)))
+  (if (macro-byte-port? port)
+      (##options->max-char-code (macro-port-roptions port))
+      (##max-char-code)))
 
 (define-prim (##output-port-max-char-code port)
-  (##options->max-char-code (macro-port-woptions port)))
+  (if (macro-byte-port? port)
+      (##options->max-char-code (macro-port-woptions port)))
+      (##max-char-code))
 
 (define-prim (##options->max-char-code options)
   (let ((e
