@@ -75,7 +75,7 @@
 
     (test-equal "hello!\n"
                 (gsi (string-concatenate
-                       (list "-:debug=-,search="
+                       (list "-:debug=-,search"
                              (search lib-dir)
                              (search dir)
                              (search (path-expand "~~lib")))
@@ -102,7 +102,7 @@
           "      (display \"[A] main\\n\"))))\n"))))
     (test-equal "[A] main\n"
                 (gsi (string-concatenate
-                       (list "-:debug=-,search="
+                       (list "-:debug=-,search"
                              (search lib-dir)
                              (search userlib-dir)
                              (search (path-expand "~~lib")))
@@ -162,7 +162,7 @@
 
     (test-equal "[A/B1] main\n[A/B2] main\n[A/C] main\n[A] main\n"
                 (gsi (string-concatenate
-                       (list "-:debug=-,search="
+                       (list "-:debug=-,search"
                              (search lib-dir)
                              (search userlib-dir)
                              (search (path-expand "~~lib")))
@@ -216,7 +216,7 @@
 
     (test-equal "[A/B1] main\n[A/B2] main\n[A/C] main\n"
                 (gsi (string-concatenate
-                       (list "-:debug=-,search="
+                       (list "-:debug=-,search"
                              (search lib-dir)
                              (search userlib-dir)
                              (search (path-expand "~~lib")))
