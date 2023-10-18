@@ -13,5 +13,6 @@
 *.fdd binary
 *.nsi.in binary
 *.windows.in binary
+_*.c linguist-generated
 tests/test*.ok -text
 tests/error.scm -text
