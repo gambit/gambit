@@ -2237,6 +2237,30 @@ At level 3 and above variable bindings are displayed in the backtrace.
 At level 5 and above garbage collection reports are displayed during
 program execution.
 
+@anchor{bLEVEL}
+@item @code{@b{b}}@var{LEVEL}
+@opindex -:debug=b@var{LEVEL}
+@opindex -:db@var{LEVEL}
+The value of the @code{repl-backtrace-detail-level} parameter object
+is set to @var{LEVEL}, a digit from 0 to 9.  This controls the amount
+of backtrace detail that is displayed when an exception is caught by
+the REPL
+(@pxref{repl-backtrace-detail-level,,@code{repl-backtrace-detail-level}}).
+By default the @code{repl-backtrace-detail-level} parameter object has
+a value of 0 (no backtrace).
+
+@anchor{hLEVEL}
+@item @code{@b{h}}@var{LEVEL}
+@opindex -:debug=h@var{LEVEL}
+@opindex -:dh@var{LEVEL}
+The value of the @code{repl-highlight-source-level} parameter object
+is set to @var{LEVEL}, a digit from 0 to 9.  This controls when to
+pinpoint source code locations by displaying the relevant part of the
+source code with the location highlighted
+(@pxref{repl-backtrace-detail-level,,@code{repl-highlight-source-level}}).
+By default the @code{repl-highlight-source-level} parameter object has
+a value of 1 (only highlight source for exceptions caught by the REPL).
+
 @item @code{@b{c}}
 @opindex -:debug=c
 @opindex -:dc
@@ -3257,32 +3281,36 @@ For example:
 
 @end deffn
 
-@deffn procedure repl-backtrace-detail-level @var{level}
+@anchor{repl-backtrace-detail-level}
+@deffn procedure repl-backtrace-detail-level @r{[}@var{level}@r{]}
 
 The parameter object @code{repl-backtrace-detail-level} is bound to an
-exact integer that controls the amount of backtrace detail that
-is displayed when an exception is caught by the REPL.  At a
-@var{level} of 0, no backtrace is displayed.  At a
-@var{level} of 1, a backtrace is displayed with no environment information.
-At a @var{level} of 2, a backtrace with the lexical environment is displayed.
-At a @var{level} of 3, a backtrace with the lexical and dynamic
-environments is displayed.
-The initial value of the parameter object @code{repl-backtrace-detail-level}
-is 0.
-
+exact integer that controls the amount of backtrace detail that is
+displayed when an exception is caught by the REPL.  At a @var{level}
+of 0, no backtrace is displayed.  At a @var{level} of 1, a backtrace
+is displayed with no environment information.  At a @var{level} of 2,
+a backtrace with the lexical environment is displayed.  At a
+@var{level} of 3, a backtrace with the lexical and dynamic
+environments is displayed.  At a @var{level} of 4, 5, or 6, the same
+format is used as a @var{level} of 1, 2, or 3 respectively but the
+backtrace includes frames that are normally hidden.  The initial value
+of the parameter object @code{repl-backtrace-detail-level} is 0 unless
+overridden by the runtime options
+(@pxref{bLEVEL,,@code{-:db@var{LEVEL}}}).
 @end deffn
 
-@deffn procedure repl-backtrace-highlight-source-level @var{level}
+@anchor{repl-highlight-source-level}
+@deffn procedure repl-highlight-source-level @r{[}@var{level}@r{]}
 
-The parameter object @code{repl-backtrace-highlight-source-level} is bound to an
+The parameter object @code{repl-highlight-source-level} is bound to an
 exact integer that controls when to pinpoint source code locations
 by displaying the relevant part of the source code with the location
 highlighted.  At a @var{level} of 0, no source highlighting is used.
 At a @var{level} of 1, source highlighting is done when an exception
 is caught by the REPL, but it is not used in the frames of a backtrace.
 At a @var{level} of 2, source highlighting is done in all situations.
-The initial value of the parameter object @code{repl-backtrace-highlight-source-level}
-is 1.
+The initial value of the parameter object @code{repl-highlight-source-level}
+is 1 unless overridden by the runtime options (@pxref{hLEVEL,,@code{-:dh@var{LEVEL}}}).
 
 @end deffn
 
@@ -5069,20 +5097,15 @@ same format as the REPL's @samp{,b} command.
 The parameter @var{detail-level}, which defaults to the value of the
 parameter object @code{repl-backtrace-detail-level} or @code{1}
 whichever is larger, controls the amount of backtrace detail that is
-displayed.  At a @var{level} of 1, a backtrace is displayed with no
-environment information.  At a @var{level} of 2, a backtrace with the
-lexical environment is displayed.  At a @var{level} of 3, a backtrace
-with the lexical and dynamic environments is displayed.
-At a @var{level} of 4, 5, or 6, the same format is used as @var{level}-3
-but the backtrace includes frames that are normally hidden.
+displayed
+(@pxref{repl-backtrace-detail-level,,@code{repl-backtrace-detail-level}}).
 
 The parameter @var{highlight-source-level}, which defaults to the
 value of the parameter object
-@code{repl-backtrace-highlight-source-level}, controls when to
+@code{repl-highlight-source-level}, controls when to
 pinpoint source code locations by displaying the relevant part of the
-source code with the location highlighted.  At a @var{level} of 0 or
-1, no source highlighting is used.  At a @var{level} of 2, source
-highlighting is done on each frame of the backtrace.
+source code with the location highlighted
+(@pxref{repl-highlight-source-level,,@code{repl-highlight-source-level}}).
 
 The parameter @var{depth}, which defaults to 0, causes the frame numbers
 to be offset by that value.

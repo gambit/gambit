@@ -276,6 +276,16 @@
 (##define-macro (macro-debug-settings-user-intr-quit)      2)
 (##define-macro (macro-debug-settings-user-intr-shift)     10)
 
+(##define-macro (macro-debug-settings-backtrace-detail-level-mask)
+  (* 15 (expt 2 12)))
+(##define-macro (macro-debug-settings-backtrace-detail-level-shift)
+  12)
+
+(##define-macro (macro-debug-settings-highlight-source-level-mask)
+  (* 15 (expt 2 16)))
+(##define-macro (macro-debug-settings-highlight-source-level-shift)
+  16)
+
 (##define-macro (macro-debug-settings-level settings)
   `(##fxwraplogical-shift-right
     (##fxand ,settings

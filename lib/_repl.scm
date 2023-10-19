@@ -1153,7 +1153,7 @@
    cont
    port
    (##fxmax detail-level (##repl-backtrace-detail-level))
-   (##repl-backtrace-highlight-source-level)
+   (##repl-highlight-source-level)
    depth))
 
 (define-prim (##display-continuation-backtrace
@@ -1161,7 +1161,7 @@
               #!optional
               (port (##current-output-port))
               (detail-level (##fxmax 1 (##repl-backtrace-detail-level)))
-              (highlight-source-level (##repl-backtrace-highlight-source-level))
+              (highlight-source-level (##repl-highlight-source-level))
               (depth 0)
               (max-head ##backtrace-default-max-head)
               (max-tail ##backtrace-default-max-tail)
@@ -1228,7 +1228,7 @@
                detail-level))
           (hsl
            (if (##eq? highlight-source-level (macro-absent-obj))
-               (##repl-backtrace-highlight-source-level)
+               (##repl-highlight-source-level)
                highlight-source-level))
           (d
            (if (##eq? depth (macro-absent-obj))
@@ -1538,7 +1538,7 @@
    port
    #t ;; pinpoint?
    0 ;; detail-level
-   (##repl-backtrace-highlight-source-level)
+   (##repl-highlight-source-level)
    depth
    ##backtrace-default-max-head
    ##backtrace-default-max-tail
@@ -2454,7 +2454,11 @@
 
 (define ##repl-backtrace-detail-level
   (##make-parameter
-   0 ;; default is no backtrace
+   (##fxwraplogical-shift-right
+    (##fxand
+     (##set-debug-settings! 0 0)
+     (macro-debug-settings-backtrace-detail-level-mask))
+    (macro-debug-settings-backtrace-detail-level-shift))
    (lambda (val)
      (macro-check-fixnum val 1 (##repl-backtrace-detail-level val)
        val))))
@@ -2462,15 +2466,19 @@
 (define repl-backtrace-detail-level
   ##repl-backtrace-detail-level)
 
-(define ##repl-backtrace-highlight-source-level
+(define ##repl-highlight-source-level
   (##make-parameter
-   1 ;; default is highlight source on errors, but not in backtrace frames
+   (##fxwraplogical-shift-right
+    (##fxand
+     (##set-debug-settings! 0 0)
+     (macro-debug-settings-highlight-source-level-mask))
+    (macro-debug-settings-highlight-source-level-shift))
    (lambda (val)
-     (macro-check-fixnum val 1 (##repl-backtrace-highlight-source-level val)
+     (macro-check-fixnum val 1 (##repl-highlight-source-level val)
        val))))
 
-(define repl-backtrace-highlight-source-level
-  ##repl-backtrace-highlight-source-level)
+(define repl-highlight-source-level
+  ##repl-highlight-source-level)
 
 (define-prim (##step-handler leapable? $code rte execute-body . other)
   (##declare (not interrupts-enabled) (environment-map))
@@ -3807,12 +3815,7 @@
                  (level (macro-debug-settings-level settings)))
              (if (or (##not quit?)
                      (##fx>= level 1))
-                 (##display-exception-in-context
-                  exc
-                  first
-                  port
-                  (##fxmax (##fxmin (##fx- level 1) 3)
-                           (##repl-backtrace-detail-level))))
+                 (##display-exception-in-context exc first port))
              (and quit?
                   (##exit-with-exception exc))))
          exc
@@ -3926,7 +3929,7 @@
               #!optional
               (port (##current-output-port))
               (detail-level (##repl-backtrace-detail-level))
-              (highlight-source-level (##repl-backtrace-highlight-source-level))
+              (highlight-source-level (##repl-highlight-source-level))
               (depth 0)
               (max-head ##backtrace-default-max-head)
               (max-tail ##backtrace-default-max-tail)
@@ -3998,7 +4001,7 @@
               (kind #f)
               (proc #f)
               (port (##current-output-port))
-              (highlight-source-level (##repl-backtrace-highlight-source-level))
+              (highlight-source-level (##repl-highlight-source-level))
               (line-numbers? ##highlight-source-default-line-numbers?)
               (context-inner ##highlight-source-default-context-inner)
               (context-outer ##highlight-source-default-context-outer))

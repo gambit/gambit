@@ -31,7 +31,7 @@
 
 (define _test#call-thunk ;; redefined here to make location the same whether _test module is interpreted or compiled
   (let () (declare (not inline)) (lambda (thunk) (##first-argument (thunk)))))
-(repl-backtrace-highlight-source-level 0)
+(repl-highlight-source-level 0)
 
 (test-assert (< 1 2))
 

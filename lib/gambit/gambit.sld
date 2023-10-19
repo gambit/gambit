@@ -1040,7 +1040,7 @@ remove
 remq
 rename-file
 repl-backtrace-detail-level
-repl-backtrace-highlight-source-level
+repl-highlight-source-level
 repl-error-port
 repl-input-port
 repl-output-port

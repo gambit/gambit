@@ -57,7 +57,9 @@ int debug_settings;)
         "                                single-step mode|quit with error status)\n"
         "                      R|D|Q     user interrupt handling (create a new REPL|\n"
         "                                defer handling|quit with error status)\n"
-        "                      0..9      verbosity level\n"
+        "                      0..9      verbosity level (0 = quiet)\n"
+        "                      b0..b9    backtrace detail level (0 = none)\n"
+        "                      h0..h9    source highlighting level (0 = none)\n"
         "                      c         use console as REPL interaction channel\n"
         "                      -         use stdin/out as REPL interaction channel\n"
         "                      +         use stdin/out/err as REPL interaction channel\n"
@@ -895,93 +897,131 @@ ___mod_or_lnk (*linker)();)
                       else
                         switch (*arg++)
                           {
-                          case 'p': debug_settings =
-                                      (debug_settings
-                                       & ~___DEBUG_SETTINGS_UNCAUGHT_MASK)
-                                      | (___DEBUG_SETTINGS_UNCAUGHT_PRIMORDIAL
-                                         << ___DEBUG_SETTINGS_UNCAUGHT_SHIFT);
-                                    break;
-                          case 'a': debug_settings =
-                                      (debug_settings
-                                       & ~___DEBUG_SETTINGS_UNCAUGHT_MASK)
-                                      | (___DEBUG_SETTINGS_UNCAUGHT_ALL
-                                         << ___DEBUG_SETTINGS_UNCAUGHT_SHIFT);
-                                    break;
-                          case 'r': debug_settings =
-                                      (debug_settings
-                                       & ~___DEBUG_SETTINGS_ERROR_MASK)
-                                      | (___DEBUG_SETTINGS_ERROR_REPL
-                                         << ___DEBUG_SETTINGS_ERROR_SHIFT);
-                                    break;
-                          case 's': debug_settings =
-                                      (debug_settings
-                                       & ~___DEBUG_SETTINGS_ERROR_MASK)
-                                      | (___DEBUG_SETTINGS_ERROR_SINGLE_STEP
-                                         << ___DEBUG_SETTINGS_ERROR_SHIFT);
-                                    break;
-                          case 'q': debug_settings =
-                                      (debug_settings
-                                       & ~___DEBUG_SETTINGS_ERROR_MASK)
-                                      | (___DEBUG_SETTINGS_ERROR_QUIT
-                                         << ___DEBUG_SETTINGS_ERROR_SHIFT);
-                                    break;
-                          case 'R': debug_settings =
-                                      (debug_settings
-                                       & ~___DEBUG_SETTINGS_USER_INTR_MASK)
-                                      | (___DEBUG_SETTINGS_USER_INTR_REPL
-                                         << ___DEBUG_SETTINGS_USER_INTR_SHIFT);
-                                    break;
-                          case 'D': debug_settings =
-                                      (debug_settings
-                                       & ~___DEBUG_SETTINGS_USER_INTR_MASK)
-                                      | (___DEBUG_SETTINGS_USER_INTR_DEFER
-                                         << ___DEBUG_SETTINGS_USER_INTR_SHIFT);
-                                    break;
-                          case 'Q': debug_settings =
-                                      (debug_settings
-                                       & ~___DEBUG_SETTINGS_USER_INTR_MASK)
-                                      | (___DEBUG_SETTINGS_USER_INTR_QUIT
-                                         << ___DEBUG_SETTINGS_USER_INTR_SHIFT);
-                                    break;
-                          case 'c': debug_settings =
-                                      (debug_settings
-                                       & ~___DEBUG_SETTINGS_REPL_MASK)
-                                      | (___DEBUG_SETTINGS_REPL_CONSOLE
-                                         << ___DEBUG_SETTINGS_REPL_SHIFT);
-                                    break;
-                          case '-': debug_settings =
-                                      (debug_settings
-                                       & ~___DEBUG_SETTINGS_REPL_MASK)
-                                      | (___DEBUG_SETTINGS_REPL_STDIO
-                                         << ___DEBUG_SETTINGS_REPL_SHIFT);
-                                    break;
-                          case '+': debug_settings =
-                                      (debug_settings
-                                       & ~___DEBUG_SETTINGS_REPL_MASK)
-                                      | (___DEBUG_SETTINGS_REPL_STDIO_AND_ERR
-                                         << ___DEBUG_SETTINGS_REPL_SHIFT);
-                                    break;
-                          case '@': debug_settings =
-                                      (debug_settings
-                                       & ~___DEBUG_SETTINGS_REPL_MASK)
-                                      | (___DEBUG_SETTINGS_REPL_CLIENT
-                                         << ___DEBUG_SETTINGS_REPL_SHIFT);
-                                    ___free_UCS_2STRING (repl_client_addr);
-                                    repl_client_addr = extract_addr (&arg);
-                                    if (repl_client_addr == 0)
-                                      {
-                                        e = ___FIX(___HEAP_OVERFLOW_ERR);
-                                        goto after_setup;
-                                      }
-                                    break;
-                          case '$': ___free_UCS_2STRING (repl_server_addr);
-                                    repl_server_addr = extract_addr (&arg);
-                                    if (repl_server_addr == 0)
-                                      {
-                                        e = ___FIX(___HEAP_OVERFLOW_ERR);
-                                        goto after_setup;
-                                      }
-                                    break;
+                          case 'p':
+                            debug_settings =
+                              (debug_settings
+                               & ~___DEBUG_SETTINGS_UNCAUGHT_MASK)
+                              | (___DEBUG_SETTINGS_UNCAUGHT_PRIMORDIAL
+                                 << ___DEBUG_SETTINGS_UNCAUGHT_SHIFT);
+                            break;
+                          case 'a':
+                            debug_settings =
+                              (debug_settings
+                               & ~___DEBUG_SETTINGS_UNCAUGHT_MASK)
+                              | (___DEBUG_SETTINGS_UNCAUGHT_ALL
+                                 << ___DEBUG_SETTINGS_UNCAUGHT_SHIFT);
+                            break;
+                          case 'r':
+                            debug_settings =
+                              (debug_settings
+                               & ~___DEBUG_SETTINGS_ERROR_MASK)
+                              | (___DEBUG_SETTINGS_ERROR_REPL
+                                 << ___DEBUG_SETTINGS_ERROR_SHIFT);
+                            break;
+                          case 's':
+                            debug_settings =
+                              (debug_settings
+                               & ~___DEBUG_SETTINGS_ERROR_MASK)
+                              | (___DEBUG_SETTINGS_ERROR_SINGLE_STEP
+                                 << ___DEBUG_SETTINGS_ERROR_SHIFT);
+                            break;
+                          case 'q':
+                            debug_settings =
+                              (debug_settings
+                               & ~___DEBUG_SETTINGS_ERROR_MASK)
+                              | (___DEBUG_SETTINGS_ERROR_QUIT
+                                 << ___DEBUG_SETTINGS_ERROR_SHIFT);
+                            break;
+                          case 'R':
+                            debug_settings =
+                              (debug_settings
+                               & ~___DEBUG_SETTINGS_USER_INTR_MASK)
+                              | (___DEBUG_SETTINGS_USER_INTR_REPL
+                                 << ___DEBUG_SETTINGS_USER_INTR_SHIFT);
+                            break;
+                          case 'D':
+                            debug_settings =
+                              (debug_settings
+                               & ~___DEBUG_SETTINGS_USER_INTR_MASK)
+                              | (___DEBUG_SETTINGS_USER_INTR_DEFER
+                                 << ___DEBUG_SETTINGS_USER_INTR_SHIFT);
+                            break;
+                          case 'Q':
+                            debug_settings =
+                              (debug_settings
+                               & ~___DEBUG_SETTINGS_USER_INTR_MASK)
+                              | (___DEBUG_SETTINGS_USER_INTR_QUIT
+                                 << ___DEBUG_SETTINGS_USER_INTR_SHIFT);
+                            break;
+                          case 'b':
+                          case 'h':
+                            if (!is_digit (*arg))
+                              {
+                                e = usage_err (debug_settings);
+                                goto after_setup;
+                              }
+                            if (arg[-1] == 'b')
+                              {
+                                debug_settings =
+                                  (debug_settings
+                                   & ~___DEBUG_SETTINGS_BACKTRACE_DETAIL_LEVEL_MASK)
+                                  | ((*arg - '0')
+                                     << ___DEBUG_SETTINGS_BACKTRACE_DETAIL_LEVEL_SHIFT);
+                              }
+                            else
+                              {
+                                debug_settings =
+                                  (debug_settings
+                                   & ~___DEBUG_SETTINGS_HIGHLIGHT_SOURCE_LEVEL_MASK)
+                                  | ((*arg - '0')
+                                     << ___DEBUG_SETTINGS_HIGHLIGHT_SOURCE_LEVEL_SHIFT);
+                              }
+                            arg++;
+                            break;
+                          case 'c':
+                            debug_settings =
+                              (debug_settings
+                               & ~___DEBUG_SETTINGS_REPL_MASK)
+                              | (___DEBUG_SETTINGS_REPL_CONSOLE
+                                 << ___DEBUG_SETTINGS_REPL_SHIFT);
+                            break;
+                          case '-':
+                            debug_settings =
+                              (debug_settings
+                               & ~___DEBUG_SETTINGS_REPL_MASK)
+                              | (___DEBUG_SETTINGS_REPL_STDIO
+                                 << ___DEBUG_SETTINGS_REPL_SHIFT);
+                            break;
+                          case '+':
+                            debug_settings =
+                              (debug_settings
+                               & ~___DEBUG_SETTINGS_REPL_MASK)
+                              | (___DEBUG_SETTINGS_REPL_STDIO_AND_ERR
+                                 << ___DEBUG_SETTINGS_REPL_SHIFT);
+                            break;
+                          case '@':
+                            debug_settings =
+                              (debug_settings
+                               & ~___DEBUG_SETTINGS_REPL_MASK)
+                              | (___DEBUG_SETTINGS_REPL_CLIENT
+                                 << ___DEBUG_SETTINGS_REPL_SHIFT);
+                            ___free_UCS_2STRING (repl_client_addr);
+                            repl_client_addr = extract_addr (&arg);
+                            if (repl_client_addr == 0)
+                              {
+                                e = ___FIX(___HEAP_OVERFLOW_ERR);
+                                goto after_setup;
+                              }
+                            break;
+                          case '$':
+                            ___free_UCS_2STRING (repl_server_addr);
+                            repl_server_addr = extract_addr (&arg);
+                            if (repl_server_addr == 0)
+                              {
+                                e = ___FIX(___HEAP_OVERFLOW_ERR);
+                                goto after_setup;
+                              }
+                            break;
                           default:
                             e = usage_err (debug_settings);
                             goto after_setup;
