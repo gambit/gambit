@@ -499,7 +499,7 @@ char-set:whitespace
               (lambda (port)
                 (read-all port read-line))))))
 
-    (define (make-simple-full)
+    (define (make-case-folding)
       (let ((simple-table (make-vector (+ 1 max-char-code)))
             (full-table (make-vector (+ 1 max-char-code) #f)))
         (let loop ((i 0))
@@ -507,7 +507,10 @@ char-set:whitespace
               (begin
                 (vector-set! simple-table i i)
                 (loop (+ i 1)))))
-        (cons simple-table full-table)))
+        (vector simple-table full-table)))
+
+    (define (simple-casing v) (vector-ref v 0))
+    (define (full-casing v)   (vector-ref v 1))
 
     (define (get-CaseFolding)
       (apply
@@ -532,7 +535,7 @@ char-set:whitespace
                 (read-all port read-line))))))
 
     (define case-folding
-      (let ((case-folding (make-simple-full)))
+      (let ((case-folding (make-case-folding)))
         (for-each
          (lambda (entry)
            (let ((code   (hex (vector-ref entry 0) #f))
@@ -540,11 +543,11 @@ char-set:whitespace
              (cond ((> code max-char-code))
                    ((member status '("C" "S"))
                     (let ((mapping (hex (vector-ref entry 2) #f)))
-                      (vector-set! (car case-folding) code mapping)))
+                      (vector-set! (simple-casing case-folding) code mapping)))
                    ((and support-full-case-folding?
                          (equal? status "F"))
                     (let ((mapping (hex-list (vector-ref entry 2))))
-                      (vector-set! (cdr case-folding) code mapping))))))
+                      (vector-set! (full-casing case-folding) code mapping))))))
          (get-CaseFolding))
         case-folding))
 
@@ -715,15 +718,16 @@ char-set:whitespace
 
     (define unicode-full-foldcase-info
       (create-unicode-full-casing-info
-       (let loop ((i (- (vector-length (cdr case-folding)) 1))
-                  (alist '()))
-         (if (>= i 0)
-             (loop (- i 1)
-                   (let ((x (vector-ref (cdr case-folding) i)))
-                     (if x
-                         (cons (cons i x) alist)
-                         alist)))
-             alist))))
+       (let ((vect (full-casing case-folding)))
+         (let loop ((i (- (vector-length vect) 1))
+                    (alist '()))
+           (if (>= i 0)
+               (loop (- i 1)
+                     (let ((x (vector-ref vect i)))
+                       (if x
+                           (cons (cons i x) alist)
+                           alist)))
+               alist)))))
 
     (define (get-SpecialCasing)
       (apply
@@ -789,11 +793,11 @@ char-set:whitespace
          (get-SpecialCasing))
         special-casing))
 
-    (define unicode-full-downcase-info
-      (create-unicode-full-casing-info (vector-ref special-casing 1)))
-
     (define unicode-full-upcase-info
       (create-unicode-full-casing-info (vector-ref special-casing 0)))
+
+    (define unicode-full-downcase-info
+      (create-unicode-full-casing-info (vector-ref special-casing 1)))
 
     (define unicode-full-titlecase-info
       (create-unicode-full-casing-info (vector-ref special-casing 2)))
@@ -913,27 +917,36 @@ char-set:whitespace
                           (char-set-add! char-set:ascii code))))
 
                 (cond (alphabetic?
-                       (let* ((upper (hex Simple_Uppercase_Mapping code))
-                              (lower (hex Simple_Lowercase_Mapping code))
-                              (title (if support-title-case?
-                                         (hex Simple_Titlecase_Mapping upper)
-                                         code))
-                              (upper-dist (compute-dist
-                                           code
-                                           upper
-                                           unicode-full-upcase-info))
-                              (lower-dist (compute-dist
-                                           code
-                                           lower
-                                           unicode-full-downcase-info))
-                              (title-dist (compute-dist
-                                           code
-                                           title
-                                           unicode-full-titlecase-info))
-                              (fold-dist (compute-dist
-                                          code
-                                          (vector-ref (car case-folding) code)
-                                          unicode-full-foldcase-info))
+                       (let* ((upper
+                               (hex Simple_Uppercase_Mapping code))
+                              (lower
+                               (hex Simple_Lowercase_Mapping code))
+                              (title
+                               (if support-title-case?
+                                   (hex Simple_Titlecase_Mapping upper)
+                                   code))
+                              (simple
+                               (vector-ref (simple-casing case-folding) code))
+                              (upper-dist
+                               (compute-dist
+                                code
+                                upper
+                                unicode-full-upcase-info))
+                              (lower-dist
+                               (compute-dist
+                                code
+                                lower
+                                unicode-full-downcase-info))
+                              (title-dist
+                               (compute-dist
+                                code
+                                title
+                                unicode-full-titlecase-info))
+                              (fold-dist
+                               (compute-dist
+                                code
+                                simple
+                                unicode-full-foldcase-info))
                               (dists
                                (vector upper-dist
                                        lower-dist
@@ -1148,14 +1161,9 @@ char-set:whitespace
             (define-macro (,(sym 'macro- name '-dist-simple) class)
               ,(if (null? mapping-lengths)
                    ``(,',(sym 'macro- name '-dist) ,class)
-                   (if (eq? name 'foldcase)
-                       ``(let ((dist (,',(sym 'macro- name '-dist) ,class)))
-                           (if (##fxeven? dist)
-                               (##fxarithmetic-shift-right dist 1)
-                               0))
-                       ``(##fxarithmetic-shift-right
-                          (,',(sym 'macro- name '-dist) ,class)
-                          1))))
+                   ``(##fxarithmetic-shift-right
+                      (,',(sym 'macro- name '-dist) ,class)
+                      1)))
 
             (define-macro (,(sym 'macro-char- name) c)
               `(macro-let-char-class-with-default
