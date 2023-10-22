@@ -2369,8 +2369,16 @@ if (!___FIXNUMP(result))
       ___VECTORSET(result,___FIX(i),fill)
 #else
     ___SCMOBJ *body = ___CAST(___SCMOBJ*, ___BODY_AS(result,___tSUBTYPED));
-    for (i=0; i<n; i++)
-      body[i] = fill;
+    if (fill == 0)
+      {
+        /* it is usually faster to zero out an array with memset */
+        memset(body, 0, n * sizeof (___SCMOBJ));
+      }
+    else
+      {
+        for (i=0; i<n; i++)
+          body[i] = fill;
+      }
 #endif
   }
 ___RESULT = result;
@@ -2448,8 +2456,16 @@ if (!___FIXNUMP(result) && fill != ___ABSENT)
 #else
     ___C f = ___INT(fill);
     ___C *body = ___CAST(___C*, ___BODY_AS(result,___tSUBTYPED));
-    for (i=0; i<n; i++)
-      body[i] = f;
+    if (f == 0)
+      {
+        /* it is usually faster to zero out an array with memset */
+        memset(body, 0, n * sizeof (___C));
+      }
+    else
+      {
+        for (i=0; i<n; i++)
+          body[i] = f;
+      }
 #endif
   }
 ___RESULT = result;
@@ -2527,8 +2543,16 @@ if (!___FIXNUMP(result) && fill != ___ABSENT)
 #else
     ___U8 f = ___INT(fill);
     ___U8 *body = ___CAST(___U8*, ___BODY_AS(result,___tSUBTYPED));
-    for (i=0; i<n; i++)
-      body[i] = f;
+    if (f == 0)
+      {
+        /* it is usually faster to zero out an array with memset */
+        memset(body, 0, n * sizeof (___U8));
+      }
+    else
+      {
+        for (i=0; i<n; i++)
+          body[i] = f;
+      }
 #endif
   }
 ___RESULT = result;
@@ -2607,8 +2631,16 @@ if (!___FIXNUMP(result) && fill != ___ABSENT)
 #else
     ___S8 f = ___INT(fill);
     ___S8 *body = ___CAST(___S8*, ___BODY_AS(result,___tSUBTYPED));
-    for (i=0; i<n; i++)
-      body[i] = f;
+    if (f == 0)
+      {
+        /* it is usually faster to zero out an array with memset */
+        memset(body, 0, n * sizeof (___S8));
+      }
+    else
+      {
+        for (i=0; i<n; i++)
+          body[i] = f;
+      }
 #endif
   }
 ___RESULT = result;
@@ -2687,8 +2719,16 @@ if (!___FIXNUMP(result) && fill != ___ABSENT)
 #else
     ___U16 f = ___INT(fill);
     ___U16 *body = ___CAST(___U16*, ___BODY_AS(result,___tSUBTYPED));
-    for (i=0; i<n; i++)
-      body[i] = f;
+    if (f == 0)
+      {
+        /* it is usually faster to zero out an array with memset */
+        memset(body, 0, n * sizeof (___U16));
+      }
+    else
+      {
+        for (i=0; i<n; i++)
+          body[i] = f;
+      }
 #endif
   }
 ___RESULT = result;
@@ -2767,8 +2807,16 @@ if (!___FIXNUMP(result) && fill != ___ABSENT)
 #else
     ___S16 f = ___INT(fill);
     ___S16 *body = ___CAST(___S16*, ___BODY_AS(result,___tSUBTYPED));
-    for (i=0; i<n; i++)
-      body[i] = f;
+    if (f == 0)
+      {
+        /* it is usually faster to zero out an array with memset */
+        memset(body, 0, n * sizeof (___S16));
+      }
+    else
+      {
+        for (i=0; i<n; i++)
+          body[i] = f;
+      }
 #endif
   }
 ___RESULT = result;
@@ -2847,8 +2895,16 @@ if (!___FIXNUMP(result) && fill != ___ABSENT)
 #else
     ___U32 f = ___U32UNBOX(fill);
     ___U32 *body = ___CAST(___U32*, ___BODY_AS(result,___tSUBTYPED));
-    for (i=0; i<n; i++)
-      body[i] = f;
+    if (f == 0)
+      {
+        /* it is usually faster to zero out an array with memset */
+        memset(body, 0, n * sizeof (___U32));
+      }
+    else
+      {
+        for (i=0; i<n; i++)
+          body[i] = f;
+      }
 #endif
   }
 ___RESULT = result;
@@ -2927,8 +2983,16 @@ if (!___FIXNUMP(result) && fill != ___ABSENT)
 #else
     ___S32 f = ___S32UNBOX(fill);
     ___S32 *body = ___CAST(___S32*, ___BODY_AS(result,___tSUBTYPED));
-    for (i=0; i<n; i++)
-      body[i] = f;
+    if (f == 0)
+      {
+        /* it is usually faster to zero out an array with memset */
+        memset(body, 0, n * sizeof (___S32));
+      }
+    else
+      {
+        for (i=0; i<n; i++)
+          body[i] = f;
+      }
 #endif
   }
 ___RESULT = result;
@@ -3016,8 +3080,16 @@ if (!___FIXNUMP(result) && fill != ___ABSENT)
 #else
     ___U64 f = ___U64UNBOX(fill);
     ___U64 *body = ___CAST(___U64*, ___BODY_AS(result,___tSUBTYPED));
-    for (i=0; i<n; i++)
-      body[i] = f;
+    if (f == 0)
+      {
+        /* it is usually faster to zero out an array with memset */
+        memset(body, 0, n * sizeof (___U64));
+      }
+    else
+      {
+        for (i=0; i<n; i++)
+          body[i] = f;
+      }
 #endif
   }
 ___RESULT = result;
@@ -3105,8 +3177,16 @@ if (!___FIXNUMP(result) && fill != ___ABSENT)
 #else
     ___S64 f = ___S64UNBOX(fill);
     ___S64 *body = ___CAST(___S64*, ___BODY_AS(result,___tSUBTYPED));
-    for (i=0; i<n; i++)
-      body[i] = f;
+    if (f == 0)
+      {
+        /* it is usually faster to zero out an array with memset */
+        memset(body, 0, n * sizeof (___S64));
+      }
+    else
+      {
+        for (i=0; i<n; i++)
+          body[i] = f;
+      }
 #endif
   }
 ___RESULT = result;
@@ -3185,8 +3265,16 @@ if (!___FIXNUMP(result) && fill != ___ABSENT)
       ___F32VECTORSET(result,___FIX(i),f)
 #else
     ___F32 *body = ___CAST(___F32*, ___BODY_AS(result,___tSUBTYPED));
-    for (i=0; i<n; i++)
-      body[i] = f;
+    if (f == 0.0 && ___copysign (1.0, f) > 0.0) /* detect positive 0 */
+      {
+        /* it is usually faster to zero out an array with memset */
+        memset(body, 0, n * sizeof (___F32));
+      }
+    else
+      {
+        for (i=0; i<n; i++)
+          body[i] = f;
+      }
 #endif
   }
 ___RESULT = result;
@@ -3273,8 +3361,16 @@ if (!___FIXNUMP(result) && fill != ___ABSENT)
       ___F64VECTORSET(result,___FIX(i),f)
 #else
     ___F64 *body = ___CAST(___F64*, ___BODY_AS(result,___tSUBTYPED));
-    for (i=0; i<n; i++)
-      body[i] = f;
+    if (f == 0.0 && ___copysign (1.0, f) > 0.0) /* detect positive 0 */
+      {
+        /* it is usually faster to zero out an array with memset */
+        memset(body, 0, n * sizeof (___F64));
+      }
+    else
+      {
+        for (i=0; i<n; i++)
+          body[i] = f;
+      }
 #endif
   }
 ___RESULT = result;
