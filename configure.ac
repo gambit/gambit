@@ -150,7 +150,7 @@ C_PREPROC=$CPP
 
 if test "$ENABLE_CPLUSPLUS" = yes; then
 
-  AC_LANG(C++)
+  #AC_LANG(C++)
   AC_PROG_CXX
   AC_PROG_CXXCPP
   C_COMPILER=$CXX
