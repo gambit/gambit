@@ -3959,10 +3959,12 @@
     (##display-situation
      (##exception->kind exc)
      (##exception->procedure exc cont)
-     (and need-display-locat?
-          (##not source-port)
-          (##fx<= detail-level 0)
-          locat)
+     (if #t ;; force location information
+         locat
+         (and need-display-locat?
+              (##not source-port)
+              (##fx<= detail-level 0)
+              locat))
      (##not pinpointed-locat?)
      port)
 
