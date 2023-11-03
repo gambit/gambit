@@ -2501,20 +2501,10 @@
                       (cons (cons types-for-version new-lbl)
                             types-lbl-alist))
                      (versions-merged #f)
-                     (cause-lbl new-lbl))
-
-                (set-version-types! new-lbl types-for-version)
-
-                (table-set! all-versions-tbl types-for-version new-lbl)
-
-                (vector-set! bb-versions 0 new-types-lbl-alist)
-
-                (track-version-history lbl 'add #f) ;; track history of versions
-
-                (if (> (length new-types-lbl-alist)
-                       (max 1 (bb-version-limit bb)))
-
-                    (let* ((types-lbl-vect
+                     (cause-lbl new-lbl)
+                     (merge (lambda ()
+                       (let* ((new-types-lbl-alist (vector-ref (table-ref versions lbl) 0))
+                         (types-lbl-vect
                             (list->vector new-types-lbl-alist))
                            (in-out
                             (find-merge-candidates tctx types-lbl-vect))
@@ -2563,33 +2553,32 @@
 
                       (track-version-history lbl 'merge #f) ;; track history of versions
 
-                      (if (memv 0 in) ;; Only update label and types if the original version was merged!!!!!!
-                          (begin
-                            (set! types-for-version merged-types)
-                            (set! new-lbl new-lbl2))
+                      (if (memv 0 out) ;; Only update label and types if the original version was merged!!!!!!
                           (queue-put! ;; schedule walk of the bb created by merge
                             work-queue
                             (lambda ()
                               (if (reachable? new-lbl2)
                                   (walk-bb bb merged-types cost path lbl new-lbl2)))))
 
-                      ;; schedule GC if a pre-exisintg version was deleted
-                      (let loop ((versions versions-to-merge))
-                        (if (pair? versions)
-                            (let ((version (car versions)))
-                              (if (not (or (type-eqv? version merged-types) ;; check if the version was preserved by the merge
-                                           (type-eqv? version types-for-version))) ;; check if the version was the newly entering version
-                                  (or update-reachability-required?
-                                      (set! update-reachability-required? cause-lbl))
-                                  (loop (cdr versions))))))
+                      ;; schedule GC
+                      (set! update-reachability-required? cause-lbl)))))
 
-                      ;(write (list 'MERGED-TYPES= merged-types))(newline)
-                      ))
+                (set-version-types! new-lbl types-for-version)
 
-                (if debug-bbv?
-                    (print "\n[step " step-num "      #" lbl " ==> #" new-lbl "]\n"))
+                (table-set! all-versions-tbl types-for-version new-lbl)
 
-                (reachability-set! new-lbl #t)
+                (vector-set! bb-versions 0 new-types-lbl-alist)
+
+                (track-version-history lbl 'add #f) ;; track history of versions
+
+                (if (> (length new-types-lbl-alist)
+                       (max 1 (bb-version-limit bb)))
+                    (queue-put!
+                      work-queue
+                      (lambda ()
+                        (if (> (length (vector-ref (table-ref versions lbl) 0))
+                               (max 1 (bb-version-limit bb)))
+                          (merge)))))
 
                 (queue-put!
                   work-queue
@@ -2597,56 +2586,7 @@
                     (if (reachable? new-lbl) ;; only process this block if it is reachable
                         (walk-bb bb types-for-version cost path lbl new-lbl))))
 
-                (if debug-bbv?
-                    (begin
-                      (print "\nstep " step-num "      #" lbl " ==>\n")
-                      (let ((bb (lbl-num->bb new-lbl new-bbs)))
-                        (if bb
-                          (write-bb (lbl-num->bb new-lbl new-bbs) (current-output-port))
-                          (write (list 'bb-generation-pending new-lbl))))
-                      (print "\n")))
-
-                (if debug-bbv? ;; show new set of versions
-                    (let ((source-code (debug-this-bb? bb)))
-                      (and source-code
-                           (let ()
-                             (println "----------------------------------------")
-                             (println "#" (bb-lbl-num bb) " ")
-                             (println source-code)
-                             (println "after a request for this version:")
-                             (print "  ")
-                             (write-frame frame types-before (current-output-port))
-                             (newline)
-                             (println "when the set of versions is:")
-                              (for-each
-                               (lambda (version)
-                                 (print "  ")
-                                 (write-frame frame (car version) (current-output-port))
-                                 (newline))
-                               types-lbl-alist)
-                             (if versions-merged
-                                 (begin
-                                   (println "these versions were merged:")
-                                   (for-each
-                                    (lambda (version)
-                                      (print "  ")
-                                      (write-frame frame (car version) (current-output-port))
-                                      (newline))
-                                    versions-merged)
-                                    (print "  due to being at distance ")
-                                    (print (exact->inexact (types-distance tctx (caar versions-merged) (caadr versions-merged))))
-                                    (newline)
-                                  (println "to:")
-                                  (print "  ")
-                                  (write-frame frame debug-merged-types (current-output-port))
-                                  (newline)))
-                             (println "the set of versions is now:")
-                             (for-each
-                              (lambda (version)
-                                (print "  ")
-                                (write-frame frame (car version) (current-output-port))
-                                (newline))
-                              (vector-ref bb-versions 0))))))
+                (reachability-set! new-lbl #t)
 
                 new-lbl))))
 
