@@ -7923,6 +7923,8 @@
 
 ;;; union of types
 
+(define use-directional-widening? #f)
+
 (define (type-motley-union tctx type1 type2 widen?)
 
   (declare (generic))
@@ -7974,7 +7976,7 @@
                    tctx
                    (if (< lo2 lo1)
                        (widen-lo lo2)
-                       lo1))))))
+                       (if use-directional-widening? lo1 (widen-lo lo1))))))))
      (cond ((or (not hi1) (not hi2))         #f)
            ((or (eq? hi1 '<=) (eq? hi2 '<=)) '<=)
            ((or (eq? hi1 '<)  (eq? hi2 '<))  '<)
@@ -7987,7 +7989,7 @@
                    tctx
                    (if (> hi2 hi1)
                        (widen-hi hi2)
-                       hi1)))))))))
+                       (if use-directional-widening? hi1 (widen-hi hi1)))))))))))
 
 (define (type-union tctx type1 type2 widen?)
   (cond ((type-bot? type1)
