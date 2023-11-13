@@ -4863,15 +4863,15 @@
               fixnum-check
               (new-conj source env
                 (gen-call-prim-notsafe source env
-                  **fx<=-sym
-                  (list lo
-                        (new-ref source env
-                          var)))
-                (gen-call-prim-notsafe source env
                   (if incl? **fx<=-sym **fx<-sym)
                   (list (new-ref source env
                           var)
-                        hi))))))
+                        hi))
+                (gen-call-prim-notsafe source env
+                  **fx<=-sym
+                  (list lo
+                        (new-ref source env
+                          var)))))))
       interval-check))
 
   (define (gen-fixnum-nonneg-check source env var)
