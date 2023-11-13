@@ -792,6 +792,7 @@
     (set! live-definition-queue '())
     (set! proc-queue '())
     (set! known-procs '())
+    (set! all-procs '())
 
     (restore-context
      (make-context 0 '() (list ret-var) '() (entry-poll) #f))
@@ -820,6 +821,7 @@
                       proc
                       (call-pattern val))
                      (add-constant-var var (make-obj proc))
+                     (set! all-procs (cons proc all-procs))
                      (set! const-procs (cons proc const-procs))))))))
      program)
 
@@ -846,6 +848,7 @@
                    #f)))   ;; standard
             (add-constant-var var (make-obj proc))
             (set-car! lst proc)
+            (set! all-procs (cons proc all-procs))
             (set! const-procs (cons proc const-procs))
             (loop1 (cdr lst)))))
 
@@ -927,22 +930,25 @@
 
       (proc-obj-code-set! main-proc *bbs*)
 
-      (set! *bb* '())
-      (set! *bbs* '())
-      (set! *proc* '())
-      (set! *global-env* '())
+      (let ((procs-to-purify
+             (cons main-proc
+                   (reverse
+                    (keep proc-obj-code all-procs)))))
 
-      (set! definition-table '())
-      (set! live-definition-queue '())
-      (set! proc-queue '())
-      (set! known-procs '())
+        (set! *bb* '())
+        (set! *bbs* '())
+        (set! *proc* '())
+        (set! *global-env* '())
 
-      (clear-context)
+        (set! definition-table '())
+        (set! live-definition-queue '())
+        (set! proc-queue '())
+        (set! known-procs '())
+        (set! all-procs '())
 
-      (purify-procs
-       (cons main-proc
-             (reverse
-              (keep proc-obj-code const-procs)))))))
+        (clear-context)
+
+        (purify-procs procs-to-purify)))))
 
 (define *bb* '())
 (define *bbs* '())
@@ -954,6 +960,7 @@
 (define live-definition-queue '())
 (define proc-queue '())
 (define known-procs '())
+(define all-procs '())
 
 (define trace-indentation '())
 
@@ -1119,6 +1126,7 @@
                         (proc-obj-call-pat-set!
                          proc
                          (call-pattern val))
+                        (set! all-procs (cons proc all-procs))
                         proc)))
                  (bbs
                   (make-bbs)))
