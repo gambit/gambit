@@ -195,6 +195,13 @@ The configure options which are specific to the Gambit system are:
                           compile each Scheme module as a single C function
                           when it has at most N control points (N defaults
                           to 30000, use N=0 to avoid a limit)
+  --enable-optimized-module-limit=N
+                          set the maximal size of a module to use the normal C
+                          compilation optimization level (N is the number of
+                          control points in the module beyond which the
+                          optimization level is lowered; N=0 deactivates the
+                          lowering of the optimization level; N=20000 is the
+                          default)
   --enable-c-opt[=level]  use higher C optimization level
   --enable-trust-c-tco    trust C compiler does TCO properly (default is NO)
   --enable-gcc-opts       use expensive GCC optimizations

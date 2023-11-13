@@ -1207,24 +1207,40 @@
  * procedures (default) per Scheme module?
  */
 
+#ifndef ___SINGLE_HOST_LIMIT
+#define ___SINGLE_HOST_LIMIT @CONF_SINGLE_HOST_LIMIT@
+#endif
+
+#ifndef ___OPTIMIZED_MODULE_LIMIT
+#define ___OPTIMIZED_MODULE_LIMIT @CONF_OPTIMIZED_MODULE_LIMIT@
+#endif
+
 #ifdef ___SINGLE_HOST
 #ifdef ___MULTIPLE_HOSTS
 #error "Define either ___SINGLE_HOST or ___MULTIPLE_HOSTS"
 #endif
-/* downgrade to multiple C host procedures when code is very big */
-#ifdef ___LBLCOUNT
-#ifndef ___SINGLE_HOST_LIMIT
-#define ___SINGLE_HOST_LIMIT @CONF_SINGLE_HOST_LIMIT@
-#endif
-#if ___SINGLE_HOST_LIMIT > 0 && ___LBLCOUNT > ___SINGLE_HOST_LIMIT
+/* downgrade to multiple C host procedures when single-host limit is exceeded */
+#if defined(___LBLCOUNT) && ___SINGLE_HOST_LIMIT > 0 && ___LBLCOUNT > ___SINGLE_HOST_LIMIT
 #undef ___SINGLE_HOST
 #undef ___MULTIPLE_HOSTS
 #define ___MULTIPLE_HOSTS
 #endif
-#endif
 #else
 #ifndef ___MULTIPLE_HOSTS
 #define ___MULTIPLE_HOSTS
+#endif
+#endif
+
+#ifndef ___GNUC_HOST_FUNCTION_ATTRIBUTES
+#if !__clang__ && ___GNUC_VERSION >= 400000
+/* downgrade optimization level when optimized-module limit is exceeded */
+#if defined(___LBLCOUNT) && ___OPTIMIZED_MODULE_LIMIT > 0 && ___LBLCOUNT > ___OPTIMIZED_MODULE_LIMIT
+#define ___GNUC_HOST_FUNCTION_ATTRIBUTES @CONF_GNUC_HOST_FUNCTION_ATTRIBUTES_UNOPTIMIZED_MODULE@
+#else
+#define ___GNUC_HOST_FUNCTION_ATTRIBUTES @CONF_GNUC_HOST_FUNCTION_ATTRIBUTES_OPTIMIZED_MODULE@
+#endif
+#else
+#define ___GNUC_HOST_FUNCTION_ATTRIBUTES
 #endif
 #endif
 
@@ -5193,7 +5209,7 @@ ___SET_R0(___ps->handler_break)
 #define ___W_ALL ___SM(___MW_ALL,___PW_ALL)
 
 #define ___BEGIN_COD \
-___HIDDEN void ___HOST_PROC ___P((___processor_state ___ps),(___ps) \
+___HIDDEN void ___GNUC_HOST_FUNCTION_ATTRIBUTES ___HOST_PROC ___P((___processor_state ___ps),(___ps) \
 ___processor_state ___ps;) { \
 ___WORD ___pc; { ___WORD ___start, ___temp; \
 ___S32 ___s32_temp; /*******************/ \

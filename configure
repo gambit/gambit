@@ -941,6 +941,9 @@ CONF_VOIDSTAR_WIDTH
 EGREP
 GREP
 CONF_MAX_CHR
+CONF_GNUC_HOST_FUNCTION_ATTRIBUTES_OPTIMIZED_MODULE
+CONF_GNUC_HOST_FUNCTION_ATTRIBUTES_UNOPTIMIZED_MODULE
+CONF_OPTIMIZED_MODULE_LIMIT
 CONF_SINGLE_HOST_LIMIT
 CONF_ACTIVITY_LOG
 ENABLE_GUIDE
@@ -1044,6 +1047,7 @@ enable_coverage
 enable_feedback1
 enable_feedback2
 enable_single_host
+enable_optimized_module_limit
 enable_lowlevel_exec
 enable_inline_jumps
 enable_trust_c_tco
@@ -1778,6 +1782,13 @@ Optional Features:
                           the maximum number of control points in the module
                           to use single host mode and the special case N=0
                           avoids a limit)
+  --enable-optimized-module-limit=N
+                          set the maximal size of a module to use the normal C
+                          compilation optimization level (N is the number of
+                          control points in the module beyond which the
+                          optimization level is lowered; N=0 deactivates the
+                          lowering of the optimization level; N=20000 is the
+                          default)
   --enable-lowlevel-exec  build system so C and machine code can be mixed
                           (default is NO)
   --enable-inline-jumps   generate inline code for jumps (default is NO)
@@ -5111,6 +5122,27 @@ $as_echo "#define ___SINGLE_HOST /**/" >>confdefs.h
     CONF_SINGLE_HOST_LIMIT="$enableval"
   fi
 fi
+
+
+
+###############################################################################
+#
+# Determine the largest size of a module where the normal C compilation
+# optimization level will be used. Beyond that limit the optimization level
+# is lowered to keep the compilation time reasonable for large modules.
+# A setting of 0 deactivates the lowering of the optimization level.
+
+# Check whether --enable-optimized-module-limit was given.
+if test "${enable_optimized_module_limit+set}" = set; then :
+  enableval=$enable_optimized_module_limit; ENABLE_OPTIMIZED_MODULE_LIMIT=$enableval
+else
+  ENABLE_OPTIMIZED_MODULE_LIMIT=20000
+fi
+
+
+CONF_OPTIMIZED_MODULE_LIMIT="$ENABLE_OPTIMIZED_MODULE_LIMIT"
+
+
 
 
 
@@ -10943,6 +10975,11 @@ DASH_mpc64="$ac_cv_DASH_mpc64"
 
 
 
+  fi
+
+  if test "$DASH_fexpensive_optimizations" != ""; then
+    # turn off expensive optimizations when module is beyond normal limit
+    CONF_GNUC_HOST_FUNCTION_ATTRIBUTES_UNOPTIMIZED_MODULE="__attribute__ ((optimize (\"no-expensive-optimizations\")))"
   fi
 
   # preprocessor options:
