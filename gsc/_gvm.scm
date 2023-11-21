@@ -2138,7 +2138,7 @@
 ;; -------------
 
 (define debug-bbv? #f)
-(define track-version-history? #t)
+(define track-version-history? #f)
 
 (define instr-cost 1)
 (define call-cost 100)
@@ -4019,7 +4019,7 @@
                   (loop (cdr lst)
                         (+ len
                            (let ((x (car lst)))
-                             (if (pair? x)
+                             (if (list? x)
                                  (format-length x)
                                  (string-length x)))))
                   len)))
@@ -5438,6 +5438,16 @@
                        0)))
                 (apply scheme-proc args))))))
       (make-prim-proc-table))
+    (table-set!
+      registered-primitives-table
+      "##dead-end"
+      (lambda ()
+        (error "Interpreter reached ##dead-end")))
+    (table-set!
+      registered-primitives-table
+      "##apply"
+      (lambda (proc args)
+        (error "Interpreter reached ##apply")))
     registered-primitives-table))
 
 (define gvm-primitives #f) ;; init on first execution
@@ -5456,40 +5466,58 @@
     (table-for-each
       (lambda (name proc-obj) (table-set! env (symbol->string name) proc-obj))
       (make-prim-proc-table))
-      env))
+    (table-set! env "##dead-end" error)
+    env))
 (define (global-ref env name) (table-ref env name))
 (define (global-set! env name value) (table-set! env name value))
 
-(define (make-stack) (vector (make-stretchable-vector 0) 0))
-(define (stack-pointer stack) (vector-ref stack 1))
-(define (stack-pointer-set! stack sp) (vector-set! stack 1 sp))
+(define (make-stack) (vector (make-stretchable-vector 0) 0 0))
 (define (stack-stack stack) (vector-ref stack 0))
-(define (frame-index->stack-index i s fs) (+ i (- (stack-pointer s) 1 fs)))
-(define (stack-ref stack fs index)
+
+(define (stack-base-pointer stack) (vector-ref stack 1))
+(define (stack-base-pointer-set! stack bp) (vector-set! stack 1 bp))
+
+(define (stack-stack-pointer stack) (vector-ref stack 2))
+(define (stack-stack-pointer-set! stack sp) (vector-set! stack 2 sp))
+
+(define (frame-index->stack-index stack i) (+ (stack-base-pointer stack) i -1))
+
+(define (stack-ref stack index)
   (stretchable-vector-ref
     (stack-stack stack)
-    (frame-index->stack-index index stack fs)))
-(define (stack-set! stack fs index val)
+    (frame-index->stack-index stack index)))
+
+(define (stack-set! stack index val)
   (stretchable-vector-set!
     (stack-stack stack)
-    (frame-index->stack-index index stack fs)
+    (frame-index->stack-index stack index)
     val))
+
+(define (stack-pop stack)
+  (let ((result (stretchable-vector-ref (stack-stack stack) (- (stack-stack-pointer stack) 1))))
+    (stack-stack-pointer-set! stack (- (stack-stack-pointer stack) 1))
+    result))
+
 (define (stack-exit-frame! stack bb)
-  (let* ((enter-fs (bb-entry-frame-size bb))
-         (exit-fs (bb-exit-frame-size bb)))
-    (stack-pointer-set!
+  (stack-stack-pointer-set!
+    stack
+    (+ (stack-base-pointer stack) (bb-exit-frame-size bb))))
+
+(define (stack-enter-frame! stack bb)
+    (stack-base-pointer-set!
       stack
-      (+ (stack-pointer stack) (- exit-fs enter-fs)))))
+      (- (stack-stack-pointer stack) (bb-entry-frame-size bb))))
 
 (define (make-registers) (make-stretchable-vector 0))
 (define (register-ref registers n) (stretchable-vector-ref registers n))
 (define (register-set! registers n val)
   (stretchable-vector-set! registers n val))
 
-(define interpreter-trace? #f)
+(define interpreter-trace? #t)
 
 (define (interpret-debug-ln msg)
-  (if interpreter-trace? (println msg)))
+  (interpret-debug msg)
+  (interpret-debug "\n"))
 
 (define (interpret-debug msg)
   (if interpreter-trace? (display msg)))
@@ -5561,29 +5589,32 @@
 (define (bb-interpret bbs bb env stack registers trace)
   (define tctx (make-tctx))
 
-  (define (get-value opnd)
-    (cond
-      ((reg? opnd)
-        (register-ref registers (reg-num opnd)))
-      ((stk? opnd)
-        (let ((fs (bb-entry-frame-size bb)))
-          (stack-ref stack fs (stk-num opnd))))
-      ((glo? opnd)
-        (global-ref env (glo-name opnd)))
-      ((clo? opnd)
-        (let ((clo (get-value (clo-base opnd))))
-          (Closure-ref clo (clo-index opnd))))
-      ((lbl? opnd)
-        (make-First-Class-Label bbs (lbl-num opnd)))
-      ((obj? opnd)
-        (let ((val (obj-val opnd)))
-          (cond
-            ((proc-obj? val)
-              val)
-            (else
-              (obj-val opnd)))))
-      (else
-        (error "unknown value to copy" opnd))))
+  (define (get-value opnd #!key (debug #f))
+    (let ((value (cond
+                  ((reg? opnd)
+                    (register-ref registers (reg-num opnd)))
+                  ((stk? opnd)
+                    (let ((fs (bb-entry-frame-size bb)))
+                      (stack-ref stack (stk-num opnd))))
+                  ((glo? opnd)
+                    (global-ref env (glo-name opnd)))
+                  ((clo? opnd)
+                    (let ((clo (get-value (clo-base opnd) debug: debug)))
+                      (Closure-ref clo (clo-index opnd))))
+                  ((lbl? opnd)
+                    (make-First-Class-Label bbs (lbl-num opnd)))
+                  ((obj? opnd)
+                    (let ((val (obj-val opnd)))
+                      (cond
+                        ((proc-obj? val)
+                          val)
+                        (else
+                          (obj-val opnd)))))
+                  (else
+                    (error "unknown value to copy" opnd)))))
+      (if (and (not debug) (eq? value 'empty-stack-slot))
+          (error "read from empty stack slot")
+          value)))
 
   ;; HELPERS
   (define (pp-gvm-obj o)
@@ -5591,6 +5622,11 @@
       (display "<") (display tag)
       (for-each (lambda (n) (display " ") (display n)) names)
       (display ">\n"))
+
+    (define (object->string-safe obj)
+      (let ((output-port (open-output-string)))
+        (display obj output-port)
+        (get-output-string output-port)))
 
     (cond
       ((proc-obj? o)
@@ -5605,14 +5641,16 @@
       ((eq? o 'empty-stack-slot)
         (display ".\n"))
       (else
-        (display o) (display "\n"))))
-
+        (let ((s (object->string-safe o)))
+          (display (if (> (string-length s) 80)
+                       (string-append (substring s 0 80) "...")
+                       s))
+          (display "\n")))))
 
   (define (debug-stk)
     (if interpreter-trace?
-      (let* ((sp (stack-pointer stack))
-             (fs (bb-entry-frame-size bb))
-             (frame-bottom (frame-index->stack-index 0 stack fs))
+      (let* ((fs (bb-entry-frame-size bb))
+             (frame-bottom (frame-index->stack-index stack 0))
              (len (stretchable-vector-length (stack-stack stack))))
         (for-each
           (lambda (i)
@@ -5718,7 +5756,6 @@
       (lambda (opt) (if (empty?) (store (get-value opt)) (consume)))
       opts)
 
-
     ;; key arguments
     (if keys
       (let ((keyargs
@@ -5751,17 +5788,25 @@
       (if closed? (interpret-write (get-closure-loc params-info) clo))
       (for-each interpret-write args-loc (vector->list actual-params))))
 
+  (define (extract-args nargs)
+    (let* ((backend-nb-arg-registers 3) ;; TODO: get from backend
+           (nb-arg-registers (min nargs backend-nb-arg-registers))
+           (nb-arg-frames (- nargs nb-arg-registers)))
+      (append
+        (reverse (map (lambda (_) (stack-pop stack)) (iota nb-arg-frames)))
+        (map (lambda (i) (register-ref registers i)) (iota nb-arg-registers 1)))))
+
   (define (jump-to instr target-bbs lbl-num from-bb nargs ret clo)
+    (increment-branch-counter instr target-bbs lbl-num)
+    (stack-exit-frame! stack from-bb)
     (let* ((nargs (or nargs 0))
            (target-bb (lbl-num->bb lbl-num target-bbs))
            (target-label (bb-label-instr target-bb))
            (params-info (get-jump-parameters-info nargs))
            (ret-loc (get-ret-loc params-info))
            (args-loc (get-args-loc params-info))
-           (args-values (map get-value args-loc))
+           (args-values (extract-args nargs))
            (expect-jump-to-closure (if clo #t #f)))
-      (increment-branch-counter instr target-bbs lbl-num)
-      (stack-exit-frame! stack from-bb)
       (if ret (set-return-label ret-loc ret))
       (if (eq? (label-kind target-label) 'entry)
         (let ((nparams (label-entry-nb-parms target-label))
@@ -5794,7 +5839,7 @@
         (register-set! registers (reg-num target) value))
       ((stk? target)
         (let ((fs (bb-entry-frame-size bb)))
-          (stack-set! stack fs (stk-num target) value)))
+          (stack-set! stack (stk-num target) value)))
       ((glo? target)
         (global-set! env (glo-name target) value))
       ((clo? target)
@@ -5830,6 +5875,10 @@
         (interpret-debug-ln " ===========")
         (jump-to-entry instr (proc-obj-code proc) bb nargs ret))))
 
+  (define (is-##apply? proc)
+    (and (gvm-proc-obj-primitive? proc)
+         (string=? (proc-obj-name proc) "##apply")))
+
   ;; JUMP
   (define (jump-interpret instr)
     (let ((opnd (jump-opnd instr))
@@ -5843,6 +5892,15 @@
                 (mark-exit-jump instr)
                 (interpret-debug-ln '***GVM-Interpreter-END)
                 #f)
+              ((is-##apply? val)
+                (let* ((proc (register-ref registers 1))
+                       (args (register-ref registers 2)))
+                  (align-args-on-stack args)
+                  (cond
+                    ((proc-obj? proc)
+                      (call-proc-obj-interpret instr proc (length args) ret))
+                    (else
+                      (error "##apply case not implemened")))))
               ((proc-obj? val)
                 (call-proc-obj-interpret instr val nargs ret))
               ((First-Class-Label? val)
@@ -6011,7 +6069,7 @@
             (for-each
               (lambda (slot index)
                 (if (frame-live? (list-ref slots (- slot 1)) frame)
-                    (let ((value (stack-ref stack (bb-entry-frame-size bb) slot))
+                    (let ((value (stack-ref stack slot))
                           (expected (vector-ref types index)))
                       (typecheck  (lambda () (throw-error "slot" slot value expected))
                                   value
@@ -6023,6 +6081,7 @@
   (define (instr-interpret instr)
     (increment-interpreter-instr-counter)
     (print-interpreter-trace instr)
+    ;(step)
     (case (gvm-instr-kind instr)
       ((apply)
        (apply-interpret instr))
@@ -6042,6 +6101,7 @@
   (let* ((label (bb-label-instr bb))
          (instructions (bb-non-branch-instrs bb))
          (branch (bb-branch-instr bb)))
+    (stack-enter-frame! stack bb)
     (trace-add! trace bbs bb)
     (print-interpreter-trace label)
     (assert-types label)
