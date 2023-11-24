@@ -5421,9 +5421,6 @@
   (let ((nargs (apply max 0 (filter number? (map car parameters-info))))) ;; params start at 1
     (map (lambda (i) (cdr (assq i parameters-info))) (iota nargs 1))))
 
-(define (get-ret-loc params-info)
-  (cdr (assq 'return params-info)))
-
 (define (get-closure-loc params-info)
   (cdr (assq 'closure-env params-info)))
 
@@ -5548,6 +5545,8 @@
 ;; NEW INTERPRET
 
 (define backend-nb-arg-registers 3) ;; TODO: get from backend
+(define backend-return-label-location 0) ;; register 0
+(define backend-return-result-location 8) ;; register 1
 
 (define (gvm-interpret module-procs)
   ;; comment/uncomment to stop execution or not when an error happens in the GVM interpreter
@@ -5614,8 +5613,7 @@
          (instr-index (InterpreterState-instr-index state)))
     (cond
       ((< instr-index (length instructions)) (list-ref instructions instr-index))
-      ((= instr-index (length instructions)) (bb-branch-instr bb))
-      (else (error "InterpreterState-step: instruction out of bound")))))
+      (else (bb-branch-instr bb)))))
 
 (define (InterpreterState-step state)
   (let* ((instr (InterpreterState-current-instruction state)))
@@ -5702,12 +5700,22 @@
             nargs
             ret
             #f)))
+      ((Closure? target)
+        (let* ((clo-lbl (Closure-ref target 0))
+               (lbl-bbs (Label-bbs clo-lbl))
+               (lbl-id (Label-id clo-lbl)))
+        (InterpreterState-transition-to-bb
+            state
+            current-bbs
+            (lbl-num->bb lbl-id lbl-bbs)
+            nargs
+            ret
+            target)))
       ((gvm-proc-obj-primitive? target)
         (let* ((params-info (get-jump-parameters-info nargs))
                (opnds (get-args-loc params-info))
-               (return-loc (get-ret-loc params-info))
                (result (InterpreterState-execute-call-primitive state (proc-obj-name target) opnds)))
-          (RTE-set! return-loc result)
+          (RTE-set! backend-return-result-location result)
           (InterpreterState-transition-to-bb
             state
             current-bbs
@@ -5725,7 +5733,7 @@
             nargs
             ret
             #f)))
-      (else (error "InterpreterState-transition" "NotImplemented")))))
+      (else (error "InterpreterState-transition" "NotImplemented") #f))))
 
 (define (InterpreterState-align-args state nargs nparams keys opts rest? clo)
   (define rte (InterpreterState-rte state))
@@ -5804,7 +5812,7 @@
   (let* ((closed? (if clo #t #f))
          (params-info (get-label-parameters-info nparams closed?))
          (args-loc (get-args-loc params-info)))
-    (if closed? (RTE-set! (get-closure-loc params-info) clo))
+    (if closed? (RTE-set! rte (get-closure-loc params-info) clo))
     (for-each (lambda (loc a) (RTE-set! rte loc a)) args-loc (vector->list actual-params))))
 
 (define (InterpreterState-transition-to-bb state target-bbs target-bb nargs ret clo)
@@ -5823,9 +5831,7 @@
           (label-entry-opts target-label)
           (label-entry-rest? target-label)
           clo))
-    (if ret
-      (let ((ret-loc (get-ret-loc (get-jump-parameters-info nargs))))
-        (RTE-set! rte ret-loc (make-Label current-bbs ret))))
+    (if ret (RTE-set! rte backend-return-label-location (make-Label current-bbs ret)))
     (Stack-frame-enter! stack (bb-entry-frame-size target-bb))
     (InterpreterState-bbs-set! state target-bbs)
     (InterpreterState-bb-set! state target-bb)
@@ -5867,6 +5873,8 @@
       (display ".\n"))
     ((symbol? o)
       (println "'" o))
+    ((string? o)
+      (println "\"" o "\""))
     (else
       (let ((s (object->string-safe o)))
         (display (if (> (string-length s) 80)
