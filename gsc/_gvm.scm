@@ -5706,7 +5706,7 @@
                (lbl-id (Label-id clo-lbl)))
         (InterpreterState-transition-to-bb
             state
-            current-bbs
+            lbl-bbs
             (lbl-num->bb lbl-id lbl-bbs)
             nargs
             ret
@@ -5952,16 +5952,18 @@
 
 (define (RTE-args-ref rte nargs i)
   (let* ((nb-arg-registers (min nargs backend-nb-arg-registers))
-         (nb-arg-frames (- nargs nb-arg-registers)))
+         (nb-arg-frames (- nargs nb-arg-registers))
+         (stack (RTE-stack rte)))
     (if (< i nb-arg-frames)
-        (Stack-ref (RTE-stack rte) (- (+ (Stack-stack-pointer s) i) nb-arg-frames))
+        (Stack-ref stack (- (+ (Stack-stack-pointer stack) i) nb-arg-frames))
         (RTE-registers-ref rte (- i nb-arg-frames -1)))))
   
 (define (RTE-param-set! rte nparams i param)
   (let* ((nb-param-registers (min nparams backend-nb-arg-registers))
-         (nb-param-frames (- nparams nb-arg-registers)))
+         (nb-param-frames (- nparams nb-arg-registers))
+         (stack (RTE-stack rte)))
     (if (< i nb-param-frames)
-        (Stack-set! (RTE-stack rte) (- (+ (Stack-stack-pointer s) i) nb-param-frames) param)
+        (Stack-set! stack (- (+ (Stack-stack-pointer stack) i) nb-param-frames) param)
         (RTE-registers-set! rte (- i nb-param-frames) param -1))))
 
 (define (RTE-set! rte target value)
