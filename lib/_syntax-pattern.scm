@@ -117,7 +117,7 @@
             (else
              (let ((x (assq sym pattern-vars)))
                (if x
-                   (error "duplicate pattern variable")
+                   (error "duplicate pattern variable: " sym pattern-vars)
                    (let ((index (length pattern-vars)))
                      (cont (vector (syn#pattern-var)) ;; TODO: replace with '#(0) to allow sharing?
                            (cons (cons sym (cons index rank))
