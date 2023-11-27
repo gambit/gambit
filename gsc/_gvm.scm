@@ -5373,10 +5373,10 @@
 
 ;; Branch counters
 
-(define (mark-exit-jump branch-instr)
-  (comment-add! branch-instr 'exit-jump #t))
+(define (mark-exit-jump state)
+  (comment-add! (InterpreterState-current-instruction state) 'exit-jump #t))
 
-(define (increment-branch-counter branch-instr target-bbs target-lbl)
+(define (increment-branch-counter branch-instr target-bbs target-bb)
   (let* ((table1
           (get-branch-counters branch-instr))
          (table2
@@ -5386,8 +5386,8 @@
                 t))))
     (table-set!
      table2
-     target-lbl
-     (+ 1 (table-ref table2 target-lbl 0)))))
+     (bb-lbl-num target-bb)
+     (+ 1 (table-ref table2 (bb-lbl-num target-bb) 0)))))
 
 (define (get-branch-counters branch-instr)
   (or (comment-get (gvm-instr-comment branch-instr) 'branch-counter)
@@ -5416,7 +5416,6 @@
 (define (get-jump-parameters-info nargs)
   (pcontext-map ((target-jump-info target) nargs)))
 
-
 (define (get-args-loc parameters-info)
   (let ((nargs (apply max 0 (filter number? (map car parameters-info))))) ;; params start at 1
     (map (lambda (i) (cdr (assq i parameters-info))) (iota nargs 1))))
@@ -5427,22 +5426,12 @@
 (define (gvm-proc-obj-primitive? obj)
     (and (proc-obj? obj) (proc-obj-primitive? obj) (not (proc-obj-code obj))))
 
-(define (print-interpreter-trace instr)
-  (interpret-debug "Registers:\n")
-  (debug-reg registers)
-  (interpret-debug "Stack:\n")
-  (debug-stk stack bb)
-  (interpret-debug "\n")
-  (interpret-debug "Executing in #")
-  (interpret-debug (bb-lbl-num bb))
-  (interpret-debug " - ")
-  (interpret-debug (gvm-instr-kind instr))
-  (interpret-debug ":\n")
-  (if interpreter-trace? (write-gvm-instr instr (current-output-port)))
-  (interpret-debug "\n\n"))
+;; NEW INTERPRET
 
-(define (assert-types instr)
+(define (assert-types state)
   (define tctx (make-tctx))
+  (define rte (InterpreterState-rte state))
+  (define instr (InterpreterState-current-instruction state))
   (define (is-value? x) (lambda (y) (eq? x y)))
 
   (define bits-to-checker
@@ -5518,31 +5507,24 @@
           (for-each
             (lambda (reg index)
               (if (frame-live? (list-ref regs reg) frame)
-                  (let ((value (register-ref registers reg))
+                  (let ((value (RTE-registers-ref rte reg))
                         (expected (vector-ref types index)))
                     (typecheck  (lambda () (throw-error "register" reg value expected))
                                 value
-                                expected))
-                  (if interpreter-trace? (pprint (list 'not-lives-reg reg (list-ref regs reg))))))
+                                expected))))
             (iota n-registers)
             (iota n-registers (+ locenv-start-regs 1) 2))
 
           (for-each
             (lambda (slot index)
               (if (frame-live? (list-ref slots (- slot 1)) frame)
-                  (let ((value (stack-ref stack slot))
+                  (let ((value (RTE-frame-ref rte slot))
                         (expected (vector-ref types index)))
                     (typecheck  (lambda () (throw-error "slot" slot value expected))
                                 value
-                                expected))
-                  (if interpreter-trace? (pprint (list 'not-lives-frame slot (list-ref slots (- slot 1)))))))
+                                expected))))
             (iota n-slots 1)
             (iota n-slots (+ locenv-start-regs (* 2 n-registers) 1) 2))))))
-
-
-
-
-;; NEW INTERPRET
 
 (define backend-nb-arg-registers 3) ;; TODO: get from backend
 (define backend-return-label-location 0) ;; register 0
@@ -5557,12 +5539,15 @@
     (lambda ()
       (pprint '***GVM-Interpreter)
       (let ((state (init-interpreter-state module-procs)))
-        (let loop ()
-          (when (not (InterpreterState-done? state))
-            (InterpreterState-debug-log state)
-            (InterpreterState-step state)
-            (loop)))
+        (InterpreterState-execution-loop state)
         (InterpreterState-primitive-counter-trace state)))))
+
+(define (InterpreterState-execution-loop state)
+  (let loop ()
+    (when (not (InterpreterState-done? state))
+      (InterpreterState-debug-log state)
+      (InterpreterState-step state)
+      (loop))))
 
 (define-type InterpreterState
   ;; execution state
@@ -5576,6 +5561,8 @@
   primitive-counter)
 
 (define exit-return-address (gensym 'exit-return-address))
+(define interpreter-return-address (gensym 'interpreter-return-address))
+
 (define empty-stack-slot (gensym 'empty-stack-slot))
 (define interpreter-debug-trace? #t)
 
@@ -5616,6 +5603,7 @@
       (else (bb-branch-instr bb)))))
 
 (define (InterpreterState-step state)
+  (assert-types state)
   (let* ((instr (InterpreterState-current-instruction state)))
     (InterpreterState-instr-index-increment! state)
     (InterpreterState-execute-instr state instr)))
@@ -5690,7 +5678,10 @@
   (let ((current-bbs (InterpreterState-bbs state)))
     (cond
       ((eq? target exit-return-address)
+        (mark-exit-jump state)
         (InterpreterState-done?-set! state #t))
+      ((eq? target interpreter-return-address)
+        (InterpreterState-done?-set! state #t)) ;; stop execution and yield back to the interpreter
       ((Label? target)
         (let ((target-bbs (Label-bbs target)))
           (InterpreterState-transition-to-bb
@@ -5712,10 +5703,11 @@
             ret
             target)))
       ((gvm-proc-obj-primitive? target)
-        (let* ((params-info (get-jump-parameters-info nargs))
+        (let* ((rte (InterpreterState-rte state))
+               (params-info (get-jump-parameters-info nargs))
                (opnds (get-args-loc params-info))
                (result (InterpreterState-execute-call-primitive state (proc-obj-name target) opnds)))
-          (RTE-set! backend-return-result-location result)
+          (RTE-set! rte backend-return-result-location result)
           (InterpreterState-transition-to-bb
             state
             current-bbs
@@ -5821,6 +5813,7 @@
          (current-bbs (InterpreterState-bbs state))
          (current-bb (InterpreterState-bb state))
          (target-label (bb-label-instr target-bb)))
+    (increment-branch-counter (InterpreterState-current-instruction state) target-bbs target-bb)
     (Stack-frame-exit! stack (bb-exit-frame-size current-bb))
     (if (eq? (label-kind target-label) 'entry)
         (InterpreterState-align-args
@@ -5831,7 +5824,7 @@
           (label-entry-opts target-label)
           (label-entry-rest? target-label)
           clo))
-    (if ret (RTE-set! rte backend-return-label-location (make-Label current-bbs ret)))
+    (if ret (RTE-set! rte backend-return-label-location (make-Label-or-signal state ret)))
     (Stack-frame-enter! stack (bb-entry-frame-size target-bb))
     (InterpreterState-bbs-set! state target-bbs)
     (InterpreterState-bb-set! state target-bb)
@@ -5932,7 +5925,31 @@
     (table-set!
       primitives-table
       "##apply"
-      (lambda (state args) (error "##apply case not implemened")))
+      (lambda (state args)
+        (let* ((fs (bb-exit-frame-size (InterpreterState-bb state)))
+               (rte (InterpreterState-rte state))
+               (stack (RTE-stack rte))
+               (proc (car args))
+               (proc-args (cadr args))
+               (n-proc-args (length proc-args)))
+          ;; create a dummy frame for arguments
+          (Stack-frame-exit! stack fs)
+          (Stack-frame-enter! stack 0)
+          ;; add arguments in the frame
+          (for-each 
+            (lambda (i arg) (RTE-frame-set! rte i arg))
+            (iota n-proc-args 1)
+            proc-args)
+          ;; prepare the frame for the callee
+          (Stack-frame-exit! stack n-proc-args)
+          (InterpreterState-transition state proc n-proc-args interpreter-return-address)
+          ;; execute the procedure
+          (InterpreterState-execution-loop state)
+          ;; exit the argument dummy frame
+          (Stack-frame-exit! stack 0)
+          (Stack-frame-enter! stack fs)
+          ;; return result
+          (RTE-ref rte backend-return-result-location))))
     primitives-table))
 
 (define (init-RTE)
@@ -6007,6 +6024,11 @@
 (define-type Label
   bbs
   id)
+
+(define (make-Label-or-signal state ret)
+  (if (eq? ret interpreter-return-address)
+      ret
+      (make-Label (InterpreterState-bbs state) ret)))
 
 (define-type Closure
   slots) ;; slot 0 is label so ##closure-ref works
