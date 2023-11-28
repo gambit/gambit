@@ -5428,10 +5428,10 @@
 
 ;; NEW INTERPRET
 
-(define (assert-types state)
+(define (assert-types state instr)
   (define tctx (make-tctx))
   (define rte (InterpreterState-rte state))
-  (define instr (InterpreterState-current-instruction state))
+  (define bb (InterpreterState-bb state))
   (define (is-value? x) (lambda (y) (eq? x y)))
 
   (define bits-to-checker
@@ -5564,7 +5564,7 @@
 (define interpreter-return-address (gensym 'interpreter-return-address))
 
 (define empty-stack-slot (gensym 'empty-stack-slot))
-(define interpreter-debug-trace? #t)
+(define interpreter-debug-trace? #f)
 
 (define (InterpreterState-instr-index-increment! state)
   (InterpreterState-instr-index-set! state (+ (InterpreterState-instr-index state) 1)))
@@ -5603,7 +5603,6 @@
       (else (bb-branch-instr bb)))))
 
 (define (InterpreterState-step state)
-  (assert-types state)
   (let* ((instr (InterpreterState-current-instruction state)))
     (InterpreterState-instr-index-increment! state)
     (InterpreterState-execute-instr state instr)))
@@ -5611,15 +5610,18 @@
 (define (InterpreterState-execute-instr state instr)
   (case (gvm-instr-kind instr)
       ((apply)
-       (InterpreterState-execute-apply state instr))
+        (InterpreterState-execute-apply state instr)
+        (assert-types state instr))
       ((copy)
-       (InterpreterState-execute-copy state instr))
+        (InterpreterState-execute-copy state instr)
+        (assert-types state instr))
       ((close)
-       (InterpreterState-execute-close state instr))
+        (InterpreterState-execute-close state instr)
+        (assert-types state instr))
       ((ifjump)
-       (InterpreterState-execute-ifjump state instr))
+        (InterpreterState-execute-ifjump state instr))
       ((jump)
-       (InterpreterState-execute-jump state instr))
+        (InterpreterState-execute-jump state instr))
       (else
         (error "unknown instruction" (gvm-instr-kind instr)))))
 
@@ -5882,6 +5884,7 @@
         (bb (InterpreterState-bb state))
         (entry-fs (bb-entry-frame-size bb))
         (exit-fs (bb-exit-frame-size bb)))
+      (println "In basic block #" (bb-lbl-num bb))
       (println "Registers:")
       (for-each
         (lambda (i)
