@@ -5953,6 +5953,11 @@
           (Stack-frame-enter! stack fs)
           ;; return result
           (RTE-ref rte backend-return-result-location))))
+    (table-set!
+      primitives-table
+      "##first-argument"
+      (lambda (state args)
+        (if (null? (cdr args)) (car args) (cadr args))))
     primitives-table))
 
 (define (init-RTE)
