@@ -5561,7 +5561,6 @@
   primitive-counter)
 
 (define exit-return-address (gensym 'exit-return-address))
-(define interpreter-return-address (gensym 'interpreter-return-address))
 
 (define empty-stack-slot (gensym 'empty-stack-slot))
 (define interpreter-debug-trace? #f)
@@ -5632,19 +5631,24 @@
          (target (copy-loc instr)))
     (RTE-set! rte target value)))
 
-(define (InterpreterState-execute-call-primitive state name opnds)
+(define (InterpreterState-execute-call-primitive state name opnds cont)
   (let* ((rte (InterpreterState-rte state))
          (prim (RTE-primitive-ref rte name))
          (args (map (lambda (opnd) (RTE-ref rte opnd)) opnds)))
-    (prim state args)))
+    (prim state args cont)))
 
 (define (InterpreterState-execute-apply state instr)
   (let* ((rte (InterpreterState-rte state))
          (prim (apply-prim instr))
          (opnds (apply-opnds instr))
-         (loc (apply-loc instr))
-         (result (InterpreterState-execute-call-primitive state (proc-obj-name prim) opnds)))
-  (if loc (RTE-set! rte loc result))))
+         (loc (apply-loc instr)))
+    (InterpreterState-execute-call-primitive
+      state
+      (proc-obj-name prim)
+      opnds
+      (if loc
+          (lambda (result) (RTE-set! rte loc result))
+          (lambda (result) #f))))) ;; do nothing with the result  
 
 (define (InterpreterState-execute-close state instr)
   (let* ((rte (InterpreterState-rte state))
@@ -5682,8 +5686,8 @@
       ((eq? target exit-return-address)
         (mark-exit-jump state)
         (InterpreterState-done?-set! state #t))
-      ((eq? target interpreter-return-address)
-        (InterpreterState-done?-set! state #t)) ;; stop execution and yield back to the interpreter
+      ((HostContinuation? target)
+        (HostContinuation-call target))
       ((Label? target)
         (let ((target-bbs (Label-bbs target)))
           (InterpreterState-transition-to-bb
@@ -5707,16 +5711,20 @@
       ((gvm-proc-obj-primitive? target)
         (let* ((rte (InterpreterState-rte state))
                (params-info (get-jump-parameters-info nargs))
-               (opnds (get-args-loc params-info))
-               (result (InterpreterState-execute-call-primitive state (proc-obj-name target) opnds)))
-          (RTE-set! rte backend-return-result-location result)
-          (InterpreterState-transition-to-bb
+               (opnds (get-args-loc params-info)))
+          (InterpreterState-execute-call-primitive
             state
-            current-bbs
-            (lbl-num->bb ret current-bbs)
-            0
-            ret
-            #f)))
+            (proc-obj-name target)
+            opnds
+            (lambda (result) 
+              (RTE-set! rte backend-return-result-location result)
+              (InterpreterState-transition-to-bb
+                state
+                current-bbs
+                (lbl-num->bb ret current-bbs)
+                0
+                ret
+                #f)))))
       ((proc-obj? target)
         (let* ((target-bbs (proc-obj-code target))
                (target-entry-lbl (bbs-entry-lbl-num target-bbs)))
@@ -5826,7 +5834,7 @@
           (label-entry-opts target-label)
           (label-entry-rest? target-label)
           clo))
-    (if ret (RTE-set! rte backend-return-label-location (make-Label-or-signal state ret)))
+    (if ret (RTE-set! rte backend-return-label-location (make-Label current-bbs ret)))
     (Stack-frame-enter! stack (bb-entry-frame-size target-bb))
     (InterpreterState-bbs-set! state target-bbs)
     (InterpreterState-bb-set! state target-bb)
@@ -5834,14 +5842,17 @@
 
 (define (InterpreterState-execute-ifjump state instr)
   (let* ((test (ifjump-test instr))
-         (opnds (ifjump-opnds instr))
-         (result (InterpreterState-execute-call-primitive state (proc-obj-name test) opnds)))
-    (cond ((not (gvm-proc-obj-primitive? test))
-            (error "ifjump test is not a primitive"))
-          ((InterpreterState-execute-call-primitive state (proc-obj-name test) opnds)
-            (InterpreterState-transition state (make-Label (InterpreterState-bbs state) (ifjump-true instr)) 0 #f))
-          (else
-            (InterpreterState-transition state (make-Label (InterpreterState-bbs state) (ifjump-false instr)) 0 #f)))))
+         (opnds (ifjump-opnds instr)))
+    (if (gvm-proc-obj-primitive? test)
+        (InterpreterState-execute-call-primitive
+          state
+          (proc-obj-name test)
+          opnds
+          (lambda (result)
+            (if result
+                (InterpreterState-transition state (make-Label (InterpreterState-bbs state) (ifjump-true instr)) 0 #f)
+                (InterpreterState-transition state (make-Label (InterpreterState-bbs state) (ifjump-false instr)) 0 #f))))
+        (error "ifjump test is not a primitive"))))
 
 (define (pp-gvm-obj o)
   (define (pp-with-tag tag . names)
@@ -5917,18 +5928,19 @@
         (let ((scheme-proc (with-exception-handler (lambda (exc) #f) (lambda () (eval name)))))
           (if scheme-proc
             (table-set! primitives-table (symbol->string name)
-              (lambda (state args)
+              (lambda (state args cont)
                 (InterpreterState-primitive-counter-increment state name)
-                (apply scheme-proc args))))))
+                (cont (apply scheme-proc args)))))))
       (make-prim-proc-table))
     (table-set!
       primitives-table
       "##dead-end"
-      (lambda (state args) (error "Interpreter reached ##dead-end")))
+      (lambda (state args cont) (error "Interpreter reached ##dead-end")))
     (table-set!
       primitives-table
       "##apply"
-      (lambda (state args)
+      (lambda (state args cont)
+        ;; TODO use cont and put a continuation on the stack
         (let* ((fs (bb-exit-frame-size (InterpreterState-bb state)))
                (rte (InterpreterState-rte state))
                (stack (RTE-stack rte))
@@ -5945,19 +5957,22 @@
             proc-args)
           ;; prepare the frame for the callee
           (Stack-frame-exit! stack n-proc-args)
-          (InterpreterState-transition state proc n-proc-args interpreter-return-address)
-          ;; execute the procedure
-          (InterpreterState-execution-loop state)
-          ;; exit the argument dummy frame
-          (Stack-frame-exit! stack 0)
-          (Stack-frame-enter! stack fs)
-          ;; return result
-          (RTE-ref rte backend-return-result-location))))
+          (InterpreterState-transition
+            state
+            proc
+            n-proc-args
+            (make-HostContinuation
+              (lambda ()
+                ;; exit the argument dummy frame
+                (Stack-frame-exit! stack 0)
+                (Stack-frame-enter! stack fs)
+                ;; return result
+                (cont (RTE-ref rte backend-return-result-location))))))))
     (table-set!
       primitives-table
       "##first-argument"
-      (lambda (state args)
-        (if (null? (cdr args)) (car args) (cadr args))))
+      (lambda (state args cont)
+        (cont (if (null? (cdr args)) (car args) (cadr args)))))
     primitives-table))
 
 (define (init-RTE)
@@ -6030,13 +6045,19 @@
 ;; Object model
 
 (define-type Label
+  constructor: %make-Label
   bbs
   id)
 
-(define (make-Label-or-signal state ret)
-  (if (eq? ret interpreter-return-address)
+(define-type HostContinuation
+  cont)
+
+(define (HostContinuation-call hc) ((HostContinuation-cont hc)))
+
+(define (make-Label bbs ret)
+  (if (HostContinuation? ret)
       ret
-      (make-Label (InterpreterState-bbs state) ret)))
+      (%make-Label bbs ret)))
 
 (define-type Closure
   slots) ;; slot 0 is label so ##closure-ref works
