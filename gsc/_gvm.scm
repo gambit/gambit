@@ -5627,7 +5627,7 @@
 (define (InterpreterState-execute-copy state instr)
   (let* ((rte (InterpreterState-rte state))
          (opnd (copy-opnd instr))
-         (value (if opnd (RTE-ref rte opnd) empty-stack-slot)) ;; #f opnd means allocation of a slot
+         (value (if opnd (InterpreterState-ref state opnd) empty-stack-slot)) ;; #f opnd means allocation of a slot
          (target (copy-loc instr)))
     (RTE-set! rte target value)))
 
@@ -5674,10 +5674,7 @@
          (opnd (jump-opnd instr))
          (ret (jump-ret instr))
          (nargs (jump-nb-args instr))
-         (target
-           (if (lbl? opnd)
-             (make-Label (InterpreterState-bbs state) (lbl-num opnd))
-             (RTE-ref rte opnd))))
+         (target (InterpreterState-ref state opnd)))
     (InterpreterState-transition state target nargs ret)))
 
 (define (InterpreterState-transition state target nargs ret)
@@ -5716,14 +5713,14 @@
             state
             (proc-obj-name target)
             opnds
-            (lambda (result) 
+            (lambda (result)
               (RTE-set! rte backend-return-result-location result)
-              (InterpreterState-transition-to-bb
+              (InterpreterState-transition
                 state
-                current-bbs
-                (lbl-num->bb ret current-bbs)
+                (if ret
+                    (make-Label current-bbs ret)
+                    (InterpreterState-ref state backend-return-label-location))
                 0
-                ret
                 #f)))))
       ((proc-obj? target)
         (let* ((target-bbs (proc-obj-code target))
@@ -5891,10 +5888,14 @@
 (define (InterpreterState-debug-log state)
   (when interpreter-debug-trace?
     (let* ((rte (InterpreterState-rte state))
-        (registers (RTE-registers rte))
-        (bb (InterpreterState-bb state))
-        (entry-fs (bb-entry-frame-size bb))
-        (exit-fs (bb-exit-frame-size bb)))
+           (registers (RTE-registers rte))
+           (bb (InterpreterState-bb state))
+           (entry-fs (bb-entry-frame-size bb))
+           (exit-fs (bb-exit-frame-size bb))
+           (instr (InterpreterState-current-instruction state))
+           (nargs (if (eq? (gvm-instr-kind instr) 'jump)
+                      (or (jump-nb-args instr) 0)
+                      0)))
       (println "In basic block #" (bb-lbl-num bb))
       (println "Registers:")
       (for-each
@@ -5908,11 +5909,16 @@
         (lambda (i) 
           (print i ": " )
           (pp-gvm-obj (RTE-frame-ref rte i)))
-        (iota (max entry-fs exit-fs) 1))
+        (iota (+ nargs (max entry-fs exit-fs)) 1))
       (println "Instruction:")
       (write-gvm-instr (InterpreterState-current-instruction state) (current-output-port))
       (println)
       (println "---"))))
+
+(define (InterpreterState-ref state target)
+  (if (lbl? target)
+    (make-Label (InterpreterState-bbs state) (lbl-num target))
+    (RTE-ref (InterpreterState-rte state) target)))
 
 (define-type RTE
   ;; run time environment
@@ -5940,34 +5946,90 @@
       primitives-table
       "##apply"
       (lambda (state args cont)
-        ;; TODO use cont and put a continuation on the stack
         (let* ((fs (bb-exit-frame-size (InterpreterState-bb state)))
                (rte (InterpreterState-rte state))
                (stack (RTE-stack rte))
                (proc (car args))
                (proc-args (cadr args))
-               (n-proc-args (length proc-args)))
+               (nargs (length proc-args)))
+          (define r0 (RTE-ref rte backend-return-label-location))
+
           ;; create a dummy frame for arguments
           (Stack-frame-exit! stack fs)
           (Stack-frame-enter! stack 0)
           ;; add arguments in the frame
           (for-each 
-            (lambda (i arg) (RTE-frame-set! rte i arg))
-            (iota n-proc-args 1)
+            (lambda (i arg) (RTE-param-set! rte nargs i arg))
+            (iota nargs)
             proc-args)
           ;; prepare the frame for the callee
-          (Stack-frame-exit! stack n-proc-args)
+          (Stack-frame-exit! stack nargs)
           (InterpreterState-transition
             state
             proc
-            n-proc-args
+            nargs
             (make-HostContinuation
               (lambda ()
                 ;; exit the argument dummy frame
                 (Stack-frame-exit! stack 0)
                 (Stack-frame-enter! stack fs)
                 ;; return result
+                (RTE-set! rte backend-return-label-location r0)
                 (cont (RTE-ref rte backend-return-result-location))))))))
+    (table-set!
+      primitives-table
+      "##map"
+      (lambda (state proc-and-args cont)
+        (let* ((fs (bb-exit-frame-size (InterpreterState-bb state)))
+               (rte (InterpreterState-rte state))
+               (stack (RTE-stack rte))
+               (proc (car proc-and-args))
+               (arg-lists (cdr proc-and-args))
+               (nargs (length arg-lists)))
+          (define r0 (RTE-ref rte backend-return-label-location))
+
+          (define acc '())
+          (define (return)
+            ;; exit the argument dummy frame
+            (Stack-frame-exit! stack 0)
+            (Stack-frame-enter! stack fs)
+            (RTE-set! rte backend-return-label-location r0)
+            (cont (reverse acc)))
+
+          (define (next-args!)
+            (let ((tails (##cdrs arg-lists)))
+              (and tails
+                   (let ((heads (##cars arg-lists '())))
+                     (set! arg-lists tails)
+                     heads))))
+
+          (define (loop)
+            (let ((args (next-args!)))
+              (if args
+                  (begin
+                    ;; add arguments in the frame
+                    (for-each 
+                      (lambda (i arg) (RTE-param-set! rte nargs i arg))
+                      (iota nargs)
+                      args)
+                    ;; prepare the frame for the callee
+                    (Stack-frame-exit! stack nargs)
+                    ;; call
+                    (InterpreterState-transition
+                      state
+                      proc
+                      nargs
+                      (make-HostContinuation
+                        (lambda ()
+                          ;; store result
+                          (set! acc (cons (RTE-ref rte backend-return-result-location) acc))
+                          ;; continue map iteration
+                          (loop)))))
+                  (return))))
+          ;; create a dummy frame for arguments
+          (Stack-frame-exit! stack fs)
+          (Stack-frame-enter! stack 0)
+          (loop))))
     (table-set!
       primitives-table
       "##first-argument"
@@ -6000,11 +6062,11 @@
   
 (define (RTE-param-set! rte nparams i param)
   (let* ((nb-param-registers (min nparams backend-nb-arg-registers))
-         (nb-param-frames (- nparams nb-arg-registers))
+         (nb-param-frames (- nparams nb-param-registers))
          (stack (RTE-stack rte)))
     (if (< i nb-param-frames)
-        (Stack-set! stack (- (+ (Stack-stack-pointer stack) i) nb-param-frames) param)
-        (RTE-registers-set! rte (- i nb-param-frames) param -1))))
+        (Stack-set! stack (+ (Stack-stack-pointer stack) i) param)
+        (RTE-registers-set! rte (- i nb-param-frames -1) param))))
 
 (define (RTE-set! rte target value)
   (cond
