@@ -7252,6 +7252,20 @@
                             type-number))))
              accum)))))
 
+(if use-length-bound?
+(def-type-infer "string-length"
+  (lambda (tctx args)
+    (let ((length-bound (make-length-bound #f 0)))
+      (make-type-fixnum length-bound length-bound))))
+)
+
+(if use-length-bound?
+(def-type-infer "vector-length"
+  (lambda (tctx args)
+    (let ((length-bound (make-length-bound #f 0)))
+      (make-type-fixnum length-bound length-bound))))
+)
+
 )
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -7455,6 +7469,42 @@
 
 ;;; fixnum type
 
+(define use-length-bound? #t)
+
+(define (make-length-bound object offset)
+  (vector object offset))
+
+(define (make-length-bound-or-overflow object offset)
+  (declare (generic))
+  (if (> offset 0)
+      #f
+      (make-length-bound object offset)))
+
+(define (length-bound? x)
+  (vector? x))
+
+(define (length-bound-object x)
+  (vector-ref x 0))
+
+(define (length-bound-offset x)
+  (vector-ref x 1))
+
+(define (length-bound-same-object? x y) ;; TODO: check if equal? is the right predicate...
+  (equal? (length-bound-object x) (length-bound-object y)))
+
+(define (normalize-lo-length-bound x)
+  (if (length-bound-object? x)
+      (length-bound-offset x)
+      x))
+
+(define (normalize-hi-length-bound x)
+  (declare (generic))
+  (if (length-bound-object? x)
+      (if (< (length-bound-offset x) 0)
+          '<
+          '<=)
+      x))
+
 (define (make-type-fixnum lo hi)
   (make-type-motley type-bot-bitset lo hi))
 
@@ -7468,27 +7518,35 @@
   (make-type-fixnum-or-false '>= '<=))
 
 (define (make-type-fixnum-bounded tctx lo hi)
-  ;; lo is either an exact integer or '>= or '> or #f
-  ;; hi is either an exact integer or '<= or '< or #f
+  (declare (generic))
+  ;; lo is either an exact integer or '>= or '> or #f or a length-bound
+  ;; hi is either an exact integer or '<= or '< or #f or a length-bound
   (make-type-fixnum
    (type-fixnum-bound-lo tctx lo)
    (type-fixnum-bound-hi tctx hi)))
 
 (define (type-fixnum-bound-lo tctx lo)
-  ;; lo is either an exact integer or '>= or '> or #f
-  (let ((min-fixnum (tctx-smallest-min-fixnum tctx)))
-    (if (and (exact-integer? lo) (< lo min-fixnum))
-        #f
-        lo)))
+  (declare (generic))
+  ;; lo is either an exact integer or '>= or '> or #f or a length-bound
+  (if (or (and (exact-integer? lo)
+               (< lo (tctx-smallest-min-fixnum tctx)))
+          (and (length-bound? lo)
+               (< (length-bound-offset lo) (tctx-smallest-min-fixnum tctx))))
+      #f
+      lo))
 
 (define (type-fixnum-bound-hi tctx hi)
-  ;; hi is either an exact integer or '<= or '< or #f
-  (let ((max-fixnum (tctx-smallest-max-fixnum tctx)))
-    (if (and (exact-integer? hi) (> hi max-fixnum))
-        #f
-        hi)))
+  (declare (generic))
+  ;; hi is either an exact integer or '<= or '< or #f or a length-bound
+  (if (or (and (exact-integer? hi)
+               (> hi (tctx-smallest-max-fixnum tctx)))
+          (and (length-bound? hi)
+               (> (length-bound-offset hi) 0)))
+      #f
+      hi))
 
 (define (type-motley-normalize tctx type)
+  (declare (generic))
   (let ((bitset (type-motley-bitset type))
         (lo (type-fixnum-lo type))
         (hi (type-fixnum-hi type)))
@@ -7513,19 +7571,31 @@
         (make-type-motley-with-fixnum-range))))
 
 (define (type-fixnum-normalize-lo tctx lo)
-  ;; lo is either an exact integer or '>= or '> or #f
+  (declare (generic))
+  ;; lo is either an exact integer or '>= or '> or #f or a length-bound
   (let ((min-fixnum (tctx-smallest-min-fixnum tctx))
         (max-fixnum (tctx-smallest-max-fixnum tctx)))
-    (cond ((not (exact-integer? lo)) lo)
+    (cond ((length-bound? lo)
+           (let ((offset (length-bound-offset lo)))
+             (cond ((> offset 0)                0)
+                   ((> offset (+ min-fixnum 1)) lo)
+                   (else                        '>))))
+          ((not (exact-integer? lo)) lo)
           ((<= lo min-fixnum)        '>=)
           ((= lo (+ min-fixnum 1))   '>)
           (else                      (min lo (- max-fixnum 2))))))
 
 (define (type-fixnum-normalize-hi tctx hi)
-  ;; hi is either an exact integer or '<= or '< or #f
+  (declare (generic))
+  ;; hi is either an exact integer or '<= or '< or #f or a length-bound
   (let ((min-fixnum (tctx-smallest-min-fixnum tctx))
         (max-fixnum (tctx-smallest-max-fixnum tctx)))
-    (cond ((not (exact-integer? hi)) hi)
+    (cond ((length-bound? hi)
+           (let ((offset (length-bound-offset hi)))
+             (cond ((> offset 0)                '<=)
+                   ((> offset (+ min-fixnum 1)) hi)
+                   (else                        0))))
+          ((not (exact-integer? hi)) hi)
           ((>= hi max-fixnum)        '<=)
           ((= hi (- max-fixnum 1))   '<)
           (else                      (max hi (+ min-fixnum 2))))))
@@ -7579,6 +7649,7 @@
          #f))))
 
 (define (type-fixnum-range tctx type)
+  (declare (generic))
   (let ((lo (type-fixnum-lo type))
         (hi (type-fixnum-hi type)))
     (let ((lo (cond ((eq? lo '>=) (tctx-smallest-min-fixnum tctx))
@@ -7818,10 +7889,14 @@
 ;;; formatting of types (used by _gvm.scm)
 
 (define (format-type type)
+
+  (define top "T")
+  (define bot "_")
+
   (cond ((type-top? type)
-         '("T"))
+         (list top))
         ((type-bot? type)
-         '("_"))
+         (list bot))
         ((type-singleton? type)
          (list (format-gvm-obj (type-singleton-val type) #t)))
         ((type-motley? type)
@@ -7855,7 +7930,18 @@
                  (pos lst)))
 
            (define (display-top-for-bitset?)
-              (if (and (not show-pos?) (= bitset type-top-bitset)) (add '("~^"))))
+              (if (and (not show-pos?) (= bitset type-top-bitset)) (add (list "~" top))))
+
+           (define (format-length-bound bound)
+             (let ((offset (length-bound-offset bound)))
+               (string-concatenate
+                (cons "\x27e6;v\x27e7;"
+                      (cond ((= offset 0)
+                             '())
+                            ((< offset 0)
+                             (list (number->string offset)))
+                            (else
+                             (list "+" (number->string offset))))))))
 
            (element '("()") type-null-bit)
            (element '("vd") type-void-bit)
@@ -7882,14 +7968,34 @@
                    ((and (eq? lo '>=) (eq? hi '<=))
                     (pos '("fx"))
                     (display-top-for-bitset?))
+                   ((and (length-bound? lo)
+                         (length-bound? hi)
+                         (length-bound-same-object? lo hi))
+                    (if (= (length-bound-offset lo)
+                           (length-bound-offset hi))
+                        (add `(,(format-length-bound lo)))
+                        (add `(,(format-length-bound lo)
+                               ".."
+                               ,(format-length-bound hi))))
+                    (display-top-for-bitset?))
                    (else
-                    (add `(,(cond ((eq? lo '>=) ">=")
-                                  ((eq? lo '>)  ">")
-                                  (else         (number->string lo)))
+                    (add `(,(cond ((eq? lo '>=)
+                                   ">=")
+                                  ((eq? lo '>)
+                                   ">")
+                                  ((length-bound? lo)
+                                   (format-length-bound lo))
+                                  (else
+                                   (number->string lo)))
                            ".."
-                           ,(cond ((eq? hi '<=) "<=")
-                                  ((eq? hi '<)  "<")
-                                  (else         (number->string hi)))))
+                           ,(cond ((eq? hi '<=)
+                                   "<=")
+                                  ((eq? hi '<)
+                                   "<")
+                                  ((length-bound? hi)
+                                   (format-length-bound hi))
+                                  (else
+                                   (number->string hi)))))
                     (display-top-for-bitset?))))
 
            (element '("bn")   type-bignum-bit)
@@ -7923,8 +8029,6 @@
 
 ;;; union of types
 
-(define use-directional-widening? #f)
-
 (define (type-motley-union tctx type1 type2 widen?)
 
   (declare (generic))
@@ -7957,39 +8061,80 @@
         (widen-up n)
         (- (widen-down (- n)))))
 
-  (let ((lo1 (type-fixnum-lo type1))
-        (hi1 (type-fixnum-hi type1))
-        (lo2 (type-fixnum-lo type2))
-        (hi2 (type-fixnum-hi type2)))
+  (define (union-lo lo1 lo2)
+    (if (= lo1 lo2)
+        lo1
+        (let ((lo (min lo1 lo2)))
+          (if (or (not widen?) (= lo 0))
+              lo
+              (type-fixnum-normalize-lo
+               tctx
+               (if (< lo2 lo1)
+                   (widen-lo lo2)
+                   lo1))))))
+
+  (define (union-hi hi1 hi2)
+    (if (= hi1 hi2)
+        hi1
+        (let ((hi (max hi1 hi2)))
+          (if (or (not widen?) (= hi 0))
+              hi
+              (if (> hi2 hi1)
+                  (widen-hi hi2)
+                  hi1)))))
+
+  (let* ((lo1 (type-fixnum-lo type1))
+         (hi1 (type-fixnum-hi type1))
+         (lo2 (type-fixnum-lo type2))
+         (hi2 (type-fixnum-hi type2)))
     (make-type-motley
      (bitwise-ior (type-motley-bitset type1)
                   (type-motley-bitset type2))
      (cond ((or (not lo1) (not lo2))         #f)
            ((or (eq? lo1 '>=) (eq? lo2 '>=)) '>=)
            ((or (eq? lo1 '>)  (eq? lo2 '>))  '>)
-           ((= lo1 lo2)                      lo1)
+           ((length-bound? lo1)
+            (type-fixnum-normalize-lo
+             tctx
+             (if (length-bound? lo2)
+                 (if (length-bound-same-object? lo1 lo2)
+                     (make-length-bound
+                      (length-bound-object lo1)
+                      (union-lo (length-bound-offset lo1)
+                                (length-bound-offset lo2)))
+                     (union-lo (length-bound-offset lo1)
+                               (length-bound-offset lo2)))
+                 (union-lo (length-bound-offset lo1)
+                           lo2))))
+           ((length-bound? lo2)
+            (type-fixnum-normalize-lo
+             tctx
+             (union-lo lo1
+                       (length-bound-offset lo2))))
            (else
-            (let ((lo (min lo1 lo2)))
-              (if (or (not widen?) (= lo 0))
-                  lo
-                  (type-fixnum-normalize-lo
-                   tctx
-                   (if (< lo2 lo1)
-                       (widen-lo lo2)
-                       (if use-directional-widening? lo1 (widen-lo lo1))))))))
+            (type-fixnum-normalize-lo
+             tctx
+             (union-lo lo1 lo2))))
      (cond ((or (not hi1) (not hi2))         #f)
            ((or (eq? hi1 '<=) (eq? hi2 '<=)) '<=)
            ((or (eq? hi1 '<)  (eq? hi2 '<))  '<)
-           ((= hi1 hi2)                      hi1)
+           ((length-bound? hi1)
+            (type-fixnum-normalize-hi
+             tctx
+             (if (length-bound? hi2)
+                 (if (length-bound-same-object? hi1 hi2)
+                     (make-length-bound
+                      (length-bound-object hi1)
+                      (union-hi (length-bound-offset hi1)
+                                (length-bound-offset hi2)))
+                     '<)
+                 '<)))
+           ((length-bound? hi2)
+            '<)
            (else
-            (let ((hi (max hi1 hi2)))
-              (if (or (not widen?) (= hi 0))
-                  hi
-                  (type-fixnum-normalize-hi
-                   tctx
-                   (if (> hi2 hi1)
-                       (widen-hi hi2)
-                       (if use-directional-widening? hi1 (widen-hi hi1)))))))))))
+            (type-fixnum-normalize-hi
+             tctx
+             (union-hi hi1 hi2)))))))
 
 (define (type-union tctx type1 type2 widen?)
   (cond ((type-bot? type1)
@@ -8012,6 +8157,10 @@
          (hi1 (type-fixnum-hi type1))
          (lo2 (type-fixnum-lo type2))
          (hi2 (type-fixnum-hi type2))
+         (lo1 (if (length-bound? lo1) '>= lo1)) ;; TODO: remove and integrate in logic below!
+         (hi1 (if (length-bound? hi1) '<= hi1))
+         (lo2 (if (length-bound? lo2) '>= lo2))
+         (hi2 (if (length-bound? hi2) '<= hi2))
          (lo ;; max of lo1 and lo2
           (cond ((not lo1)     lo2)
                 ((not lo2)     lo1)
@@ -8055,10 +8204,14 @@
            (type-motley-force tctx type2))))))
 
 (define (type-motley-difference type1 type2)
-  (let ((lo1 (type-fixnum-lo type1))
-        (hi1 (type-fixnum-hi type1))
-        (lo2 (type-fixnum-lo type2))
-        (hi2 (type-fixnum-hi type2)))
+  (let* ((lo1 (type-fixnum-lo type1))
+         (hi1 (type-fixnum-hi type1))
+         (lo2 (type-fixnum-lo type2))
+         (hi2 (type-fixnum-hi type2))
+         (lo1 (if (length-bound? lo1) '>= lo1)) ;; TODO: remove and integrate in logic below!
+         (hi1 (if (length-bound? hi1) '<= hi1))
+         (lo2 (if (length-bound? lo2) '>= lo2))
+         (hi2 (if (length-bound? hi2) '<= hi2)))
 
     (define (fixnum-range lo hi)
       (make-type-motley
@@ -8100,38 +8253,68 @@
            (type-motley-force tctx type2))))))
 
 (define (type-fixnum-lo->= lo1 lo2) ;; compare lo limits of fixnum range
+  (declare (generic))
   (cond ((not lo2)     #t)
         ((not lo1)     #f)
         ((eq? lo2 '>=) #t)
         ((eq? lo1 '>=) #f)
-        ((eq? lo1 '>)  #t)
-        ((eq? lo2 '>)  #f)
-        (else          (>= lo1 lo2))))
+        ((eq? lo2 '>)  #t)
+        ((eq? lo1 '>)  #f)
+        ((length-bound? lo2)
+         (if (length-bound? lo1)
+             (if (length-bound-same-object? lo1 lo2)
+                 (>= (length-bound-offset lo1) (length-bound-offset lo2))
+                 #f)
+             (>= lo1 (length-bound-offset lo2))))
+        ((length-bound? lo1)
+         #f)
+        (else
+         (>= lo1 lo2))))
 
 (define (type-fixnum-hi-<= hi1 hi2) ;; compare hi limits of fixnum range
+  (declare (generic))
   (cond ((not hi2)     #t)
         ((not hi1)     #f)
         ((eq? hi2 '<=) #t)
         ((eq? hi1 '<=) #f)
-        ((eq? hi2 '<)  #t)
+        ((eq? hi2 '<)  (or (not (length-bound? hi1))
+                           (< (length-bound-offset hi1) 0)))
         ((eq? hi1 '<)  #f)
-        (else          (<= hi1 hi2))))
+        ((length-bound? hi2)
+         (if (length-bound? hi1)
+             (if (length-bound-same-object? hi1 hi2)
+                 (<= (length-bound-offset hi1) (length-bound-offset hi2))
+                 #f)
+             #f))
+        ((length-bound? hi1)
+         #f)
+        (else
+         (<= hi1 hi2))))
 
 (define (type-fixnum-<=-num lohi num)
+  (declare (generic))
   (cond ((eq? lohi '>=) #t)
         ((eq? lohi '>)  #t)
         ((eq? lohi '<)  #f)
         ((eq? lohi '<=) #f)
-        (else           (<= lohi num))))
+        ((length-bound? lohi)
+         #f)
+        (else
+         (<= lohi num))))
 
 (define (type-fixnum->=-num lohi num)
+  (declare (generic))
   (cond ((eq? lohi '>=) #f)
         ((eq? lohi '>)  #f)
         ((eq? lohi '<)  #t)
         ((eq? lohi '<=) #t)
-        (else           (>= lohi num))))
+        ((length-bound? lohi)
+         (>= (length-bound-offset lohi) num))
+        (else
+         (>= lohi num))))
 
 (define (type-fixnum-<= lohi1 lohi2)
+  (declare (generic))
   (cond ((eq? lohi1 '>=)
          #t)
         ((eq? lohi1 '>)
@@ -8140,7 +8323,17 @@
          (cond ((eq? lohi2 '>=)        #f)
                ((eq? lohi2 '>)         #f)
                ((exact-integer? lohi2) (<= lohi1 lohi2))
+               ((length-bound? lohi2)  (<= lohi1 (length-bound-offset lohi2)))
                (else                   #t)))
+        ((length-bound? lohi1)
+         (cond ((eq? lohi2 '>=)        #f)
+               ((eq? lohi2 '>)         #f)
+               ((exact-integer? lohi2) (<= (length-bound-offset lohi1) lohi2))
+               ((length-bound? lohi2)  (and (length-bound-same-object? lohi1 lohi2)
+                                            (<= (length-bound-offset lohi1)
+                                                (length-bound-offset lohi2))))
+               ((eq? lohi2 '<)         (<= (length-bound-offset lohi1) -1))
+               (else                   (<= (length-bound-offset lohi1) 0))))
         ((eq? lohi1 '<)
          (or (eq? lohi2 '<)
              (eq? lohi2 '<=)))
@@ -8150,6 +8343,7 @@
          (error "(type-fixnum-<= lohi1 lohi2)"))))
 
 (define (type-fixnum-< lohi1 lohi2)
+  (declare (generic))
   (cond ((eq? lohi1 '>=)
          (not (eq? lohi2 '>=)))
         ((eq? lohi1 '>)
@@ -8159,13 +8353,92 @@
          (cond ((eq? lohi2 '>=)        #f)
                ((eq? lohi2 '>)         #f)
                ((exact-integer? lohi2) (< lohi1 lohi2))
+               ((length-bound? lohi2)  (< lohi1 (length-bound-offset lohi2)))
                (else                   #t)))
+        ((length-bound? lohi1)
+         (cond ((eq? lohi2 '>=)        #f)
+               ((eq? lohi2 '>)         #f)
+               ((exact-integer? lohi2) (< (length-bound-offset lohi1) lohi2))
+               ((length-bound? lohi2)  (and (length-bound-same-object? lohi1 lohi2)
+                                            (< (length-bound-offset lohi1)
+                                               (length-bound-offset lohi2))))
+               ((eq? lohi2 '<)         (< (length-bound-offset lohi1) -1))
+               (else                   (< (length-bound-offset lohi1) 0))))
         ((eq? lohi1 '<)
          (eq? lohi2 '<=))
         ((eq? lohi1 '<=)
          #f)
         (else
          (error "(type-fixnum-< lohi1 lohi2)"))))
+
+(define (type-fixnum-lo-< lo1 lo2)
+  (declare (generic))
+  (cond ((eq? lo1 '>=)
+         (not (eq? lo2 '>=)))
+        ((eq? lo1 '>)
+         (not (or (eq? lo2 '>=)
+                  (eq? lo2 '>))))
+        ((eq? lo2 '>=)
+         #f)
+        ((eq? lo2 '>)
+         #f)
+        ((exact-integer? lo1)
+         (if (exact-integer? lo2)
+             (< lo1 lo2)
+             (if (< lo1 (length-bound-offset lo2))
+                 #t
+                 'maybe)))
+        (else ;; (length-bound? lo1)
+         (if (exact-integer? lo2)
+             (if (< (length-bound-offset lo1) lo2)
+                 'maybe
+                 #f)
+             (if (length-bound-same-object? lo1 lo2)
+                 (< (length-bound-offset lo1)
+                    (length-bound-offset lo2))
+                 'maybe)))))
+
+(define (type-fixnum-hi-< hi1 hi2)
+  (declare (generic))
+  (cond ((eq? hi1 '<=)
+         (if (length-bound? hi2)
+             (if (< (length-bound-offset hi2) 0)
+                 #f
+                 'maybe)
+             #f))
+        ((eq? hi1 '<)
+         (if (length-bound? hi2)
+             (if (< (length-bound-offset hi2) -1)
+                 #f
+                 'maybe)
+             (eq? hi2 '<=)))
+        ((eq? hi2 '<=)
+         (if (length-bound? hi1)
+             (if (< (length-bound-offset hi1) 0)
+                 #t
+                 'maybe)
+             #t))
+        ((eq? hi2 '<)
+         (if (length-bound? hi1)
+             (if (< (length-bound-offset hi1) -1)
+                 #t
+                 'maybe)
+             #t))
+        ((exact-integer? hi1)
+         (if (exact-integer? hi2)
+             (< hi1 hi2)
+             (if (< hi1 (length-bound-offset hi2))
+                 #t
+                 'maybe)))
+        (else ;; (length-bound? hi1)
+         (if (exact-integer? hi2)
+             (if (< (length-bound-offset hi1) hi2)
+                 'maybe
+                 #f)
+             (if (length-bound-same-object? hi1 hi2)
+                 (< (length-bound-offset hi1)
+                    (length-bound-offset hi2))
+                 'maybe)))))
 
 (define (type-fixnum->= lohi1 lohi2)
   (not (type-fixnum-< lohi1 lohi2)))
@@ -8175,33 +8448,66 @@
 
 (define (type-fixnum-inc-lo lo)
   (declare (generic))
-  (if (or (eq? lo '>=) (eq? lo '>))
-      '>
-      (+ lo 1)))
+  (cond ((or (eq? lo '>=) (eq? lo '>))
+         '>)
+        ((length-bound? lo)
+         (let ((offset (+ (length-bound-offset lo) 1)))
+           (if (> offset 0)
+               offset
+               (make-length-bound (length-bound-object lo) offset))))
+        (else
+         (+ lo 1))))
 
 (define (type-fixnum-dec-lo lo)
   (declare (generic))
-  (if (or (eq? lo '>=) (eq? lo '>))
-      '>=
-      (- lo 1)))
+  (cond ((or (eq? lo '>=) (eq? lo '>))
+         '>=)
+        ((length-bound? lo)
+         (let ((offset (- (length-bound-offset lo) 1)))
+           ;; offset must be negative
+           (make-length-bound (length-bound-object lo) offset)))
+        (else
+         (- lo 1))))
 
 (define (type-fixnum-inc-hi hi)
   (declare (generic))
-  (if (or (eq? hi '<=) (eq? hi '<))
-      '<=
-      (+ hi 1)))
+  (cond ((or (eq? hi '<=) (eq? hi '<))
+         '<=)
+        ((length-bound? hi)
+         (let ((offset (+ (length-bound-offset hi) 1)))
+           (if (> offset 0)
+               '<=
+               (make-length-bound (length-bound-object hi) offset))))
+        (else
+         (+ hi 1))))
 
 (define (type-fixnum-dec-hi hi)
   (declare (generic))
-  (if (or (eq? hi '<=) (eq? hi '<))
-      '<
-      (- hi 1)))
+  (cond ((or (eq? hi '<=) (eq? hi '<))
+         '<)
+        ((length-bound? hi)
+         (let ((offset (- (length-bound-offset hi) 1)))
+           (if (> offset 0)
+               offset
+               (make-length-bound (length-bound-object hi) offset))))
+        (else
+         (- hi 1))))
 
 (define (type-fixnum-min-hi x y)
-  (if (type-fixnum-< x y) x y))
+;;(let ((r
+  (case (type-fixnum-hi-< x y)
+    ((#t) x)
+    ((#f) y)
+    (else (if (exact-integer? y) y x))))
+;;) (pp (list 'type-fixnum-min-hi (list x y) '=> r)) r))
 
 (define (type-fixnum-max-lo x y)
-  (if (type-fixnum-< x y) y x))
+;;(let ((r
+  (case (type-fixnum-lo-< x y)
+    ((#t) y)
+    ((#f) x)
+    (else (if (exact-integer? y) y x))))
+;;) (pp (list 'type-fixnum-max-lo (list x y) '=> r)) r))
 
 (define (type-eqv? type1 type2) ;; is type1 equal to type2?
   (equal? type1 type2))
@@ -8266,36 +8572,61 @@
   (define (>=? x val) (type-fixnum->=-num x val))
   (define (=? x val) (eqv? x val))
 
-  (define (abstract-fx+ x y)
+  (define (abstract-length-bound-fx+ x y lo?)
+    (cond ((exact-integer? y)
+           (make-length-bound-or-overflow (length-bound-object x)
+                                          (+ (length-bound-offset x) y)))
+          ((length-bound? y)
+           (if lo?
+               (+ (length-bound-offset x) (length-bound-offset y))
+               #f))
+          (else
+           #f)))
 
-    (define (abstract-fx+-non-num x y) ;; x is non numeric, y can be numeric
-      (cond ((eq? x '>=)  ;; x >= smallest_min_fixnum
-             (cond ((>=? y 1)  '>)     ;; result >= smallest_min_fixnum + 1
-                   ((=? y 0)   '>=)    ;; result >= smallest_min_fixnum
-                   (else       #f)))   ;; overflow
-            ((eq? x '>)   ;; x >= smallest_min_fixnum + 1
-             (cond ((>=? y 0)  '>)     ;; result >= smallest_min_fixnum + 1
-                   ((=? y -1)  '>=)    ;; result >= smallest_min_fixnum
-                   (else       #f)))   ;; overflow
-            ((eq? x '<)  ;; x <= smallest_max_fixnum - 1
-             (cond ((<=? y 0)  '<)     ;; result <= smallest_max_fixnum - 1
-                   ((=? y 1)   '<=)    ;; result <= smallest_max_fixnum
-                   (else       #f)))   ;; overflow
-            (else ;; (eq? x '<=) ;; x <= smallest_max_fixnum
-             (cond ((<=? y -1) '<)     ;; result <= smallest_max_fixnum - 1
-                   ((=? y 0)   '<=)    ;; result <= smallest_max_fixnum
-                   (else       #f))))) ;; overflow
+  (define (abstract-lo-fx+ x y)
+
+    (define (abstract-lo-fx+-non-num x y) ;; x is non numeric, y can be numeric
+      (cond ((length-bound? x)
+             (abstract-length-bound-fx+ x y #t))
+            ((eq? x '>=)  ;; x >= smallest_min_fixnum
+             (cond ((>=? y 1)  '>)      ;; result >= smallest_min_fixnum + 1
+                   ((=? y 0)   '>=)     ;; result >= smallest_min_fixnum
+                   (else       #f)))    ;; overflow
+            (else ;; (eq? x '>)   ;; x >= smallest_min_fixnum + 1
+             (cond ((>=? y 0)  '>)      ;; result >= smallest_min_fixnum + 1
+                   ((=? y -1)  '>=)     ;; result >= smallest_min_fixnum
+                   (else       #f)))))  ;; overflow
 
     (if (exact-integer? x)
         (if (exact-integer? y)
             (+ x y)
-            (abstract-fx+-non-num y x))
-        (abstract-fx+-non-num x y)))
+            (abstract-lo-fx+-non-num y x))
+        (abstract-lo-fx+-non-num x y)))
+
+  (define (abstract-hi-fx+ x y)
+
+    (define (abstract-hi-fx+-non-num x y) ;; x is non numeric, y can be numeric
+      (cond ((length-bound? x)
+             (abstract-length-bound-fx+ x y #f))
+            ((eq? x '<)   ;; x <= smallest_max_fixnum - 1
+             (cond ((<=? y 0)  '<)      ;; result <= smallest_max_fixnum - 1
+                   ((=? y 1)   '<=)     ;; result <= smallest_max_fixnum
+                   (else       #f)))    ;; overflow
+            (else ;; (eq? x '<=)  ;; x <= smallest_max_fixnum
+             (cond ((<=? y -1) '<)      ;; result <= smallest_max_fixnum - 1
+                   ((=? y 0)   '<=)     ;; result <= smallest_max_fixnum
+                   (else       #f)))))  ;; overflow
+
+    (if (exact-integer? x)
+        (if (exact-integer? y)
+            (+ x y)
+            (abstract-hi-fx+-non-num y x))
+        (abstract-hi-fx+-non-num x y)))
 
   (make-type-fixnum-bounded
    tctx
-   (abstract-fx+ lo1 lo2)
-   (abstract-fx+ hi1 hi2)))
+   (abstract-lo-fx+ lo1 lo2)
+   (abstract-hi-fx+ hi1 hi2)))
 
 (define (type-infer-common-fx- tctx lo1 hi1 lo2 hi2)
 
@@ -8305,8 +8636,17 @@
   (define (>=? x val) (type-fixnum->=-num x val))
   (define (=? x val) (eqv? x val))
 
-  (define (abstract-fx- x y) ;; x and y are lo or hi limits of a fixnum range
-    (cond ((eq? x '>=)  ;; x >= smallest_min_fixnum
+  (define (abstract-lo-fx- x y) ;; x is a lo limit and y is a hi limit
+    (cond ((length-bound? x)
+           (if (exact-integer? y)
+               (make-length-bound-or-overflow (length-bound-object x)
+                                              (- (length-bound-offset x) y))
+               '>=))
+          ((length-bound? y)
+           (if (< (length-bound-offset y) 0)
+               #f ;; overflow
+               '>=))
+          ((eq? x '>=)  ;; x >= smallest_min_fixnum
            (cond ((<=? y -1)       '>)   ;; result >= smallest_min_fixnum + 1
                  ((=? y 0)         '>=)  ;; result >= smallest_min_fixnum
                  (else             #f))) ;; overflow
@@ -8314,6 +8654,28 @@
            (cond ((<=? y 0)        '>)   ;; result >= smallest_min_fixnum + 1
                  ((=? y 1)         '>=)  ;; result >= smallest_min_fixnum
                  (else             #f))) ;; overflow
+          (else         ;; x is a specific number
+           (cond ((eq? y '<)
+                  (cond ((>= x -1) '>)    ;; result >= smallest_min_fixnum + 1
+                        ((= x -2)  '>=)   ;; result >= smallest_min_fixnum
+                        (else      #f)))  ;; overflow
+                 ((eq? y '<=)
+                  (cond ((>= x 0)  '>)    ;; result >= smallest_min_fixnum + 1
+                        ((= x -1)  '>=)   ;; result >= smallest_min_fixnum
+                        (else      #f)))  ;; overflow
+                 (else
+                  (- x y))))))
+
+  (define (abstract-hi-fx- x y) ;; x is a hi limit and y is a low limit
+    (cond ((length-bound? x)
+           (if (exact-integer? y)
+               (make-length-bound-or-overflow (length-bound-object x)
+                                              (- (length-bound-offset x) y))
+               '<=))
+          ((length-bound? y)
+           (if (< (length-bound-offset y) 0)
+               #f ;; overflow
+               '<=))
           ((eq? x '<)   ;; x <= smallest_max_fixnum - 1
            (cond ((>=? y 0)        '<)   ;; result <= smallest_max_fixnum - 1
                  ((=? y -1)        '<=)  ;; result <= smallest_max_fixnum
@@ -8331,21 +8693,13 @@
                   (cond ((<= x -1) '<)    ;; result <= smallest_max_fixnum - 1
                         ((= x 0)   '<=)   ;; result <= smallest_max_fixnum
                         (else      #f)))  ;; overflow
-                 ((eq? y '<)
-                  (cond ((>= x -1) '>)    ;; result >= smallest_min_fixnum + 1
-                        ((= x -2)  '>=)   ;; result >= smallest_min_fixnum
-                        (else      #f)))  ;; overflow
-                 ((eq? y '<=)
-                  (cond ((>= x 0)  '>)    ;; result >= smallest_min_fixnum + 1
-                        ((= x -1)  '>=)   ;; result >= smallest_min_fixnum
-                        (else      #f)))  ;; overflow
                  (else
                   (- x y))))))
 
   (make-type-fixnum-bounded
    tctx
-   (abstract-fx- lo1 hi2)
-   (abstract-fx- hi1 lo2)))
+   (abstract-lo-fx- lo1 hi2)
+   (abstract-hi-fx- hi1 lo2)))
 
 (define (type-infer-common-fx* tctx lo1 hi1 lo2 hi2)
 
@@ -9252,6 +9606,20 @@
                     (list type1 type2))))))
     result))
 
+(define (type-fixnum-empty? lo hi)
+  ;;(type-fixnum-< hi lo)
+  (cond ((or (eq? lo '>=)
+             (eq? lo '>)
+             (eq? hi '<)
+             (eq? hi '<=))
+         #f)
+        ((exact-integer? lo)
+         (if (exact-integer? hi)
+             (> lo hi)
+             #f))
+        (else
+         #f)))
+
 (define (type-narrow-fx< tctx type1 type2)
 
   ;; if x<y
@@ -9282,12 +9650,14 @@
              (false-hi1 hi1)
              (false-lo2 lo2)
              (false-hi2 (type-fixnum-min-hi hi2 hi1)))
-        (cond ((or (type-fixnum-< true-hi1 true-lo1) ;; true case impossible?
-                   (type-fixnum-< true-hi2 true-lo2))
+        (cond ((or (type-fixnum-empty? true-lo1 true-hi1)
+                   (type-fixnum-empty? true-lo2 true-hi2))
+               ;; true case impossible
                (cons #f
                      (list type1 type2)))
-              ((or (type-fixnum-< false-hi1 false-lo1) ;; false case impossible?
-                   (type-fixnum-< false-hi2 false-lo2))
+              ((or (type-fixnum-empty? false-lo1 false-hi1)
+                   (type-fixnum-empty? false-lo2 false-hi2))
+               ;; false case impossible
                (cons (list type1 type2)
                      #f))
               (else
