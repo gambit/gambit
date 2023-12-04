@@ -1589,6 +1589,8 @@
     (saved-obj0              ,word-width)
     (saved-obj1              ,word-width)
     (saved-obj2              ,word-width)
+    (type-cache0             ,word-width)
+    (type-cache1             ,word-width)
     (handler_sfun_conv_error ,word-width)
     (handler_cfun_conv_error ,word-width)
     (handler_stack_limit     ,word-width)
