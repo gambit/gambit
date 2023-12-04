@@ -8157,10 +8157,6 @@
          (hi1 (type-fixnum-hi type1))
          (lo2 (type-fixnum-lo type2))
          (hi2 (type-fixnum-hi type2))
-         (lo1 (if (length-bound? lo1) '>= lo1)) ;; TODO: remove and integrate in logic below!
-         (hi1 (if (length-bound? hi1) '<= hi1))
-         (lo2 (if (length-bound? lo2) '>= lo2))
-         (hi2 (if (length-bound? hi2) '<= hi2))
          (lo ;; max of lo1 and lo2
           (cond ((not lo1)     lo2)
                 ((not lo2)     lo1)
@@ -8168,7 +8164,21 @@
                 ((eq? lo2 '>=) lo1)
                 ((eq? lo1 '>)  lo2)
                 ((eq? lo2 '>)  lo1)
-                (else          (max lo1 lo2))))
+                ((length-bound? lo1)
+                 (if (length-bound? lo2)
+                     (if (length-bound-same-object? lo1 lo2)
+                         (make-length-bound (length-bound-object lo1)
+                                            (max (length-bound-offset lo1)
+                                                 (length-bound-offset lo2)))
+                         (max (length-bound-offset lo1)
+                              (length-bound-offset lo2)))
+                     (max (length-bound-offset lo1)
+                          lo2)))
+                ((length-bound? lo2)
+                 (max lo1
+                      (length-bound-offset lo2)))
+                (else
+                 (max lo1 lo2))))
          (hi ;; min of hi1 and hi2
           (cond ((not hi1)     hi2)
                 ((not hi2)     hi1)
@@ -8176,7 +8186,21 @@
                 ((eq? hi2 '<=) hi1)
                 ((eq? hi1 '<)  hi2)
                 ((eq? hi2 '<)  hi1)
-                (else          (min hi1 hi2))))
+                ((length-bound? hi1)
+                 (if (length-bound? hi2)
+                     (if (length-bound-same-object? hi1 hi2)
+                         (make-length-bound (length-bound-object hi1)
+                                            (min (length-bound-offset hi1)
+                                                 (length-bound-offset hi2)))
+                         (if (and (= 0 (length-bound-offset hi1))
+                                  (= 0 (length-bound-offset hi2)))
+                             '<=
+                             '<))
+                     hi2))
+                ((length-bound? hi2)
+                 hi1)
+                (else
+                 (min hi1 hi2))))
          (empty-range?
           (and (exact-integer? lo)
                (exact-integer? hi)
