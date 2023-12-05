@@ -5428,6 +5428,29 @@
 
 ;; NEW INTERPRET
 
+(define (get-expected-type-at-register types reg)
+  (let* ((type-locs (vector-ref types 0))
+         (n-registers (vector-ref type-locs 0)))
+    (if (< reg n-registers)
+        (vector-ref types (+ (* reg 2) (+ locenv-start-regs 1)))
+        (error "the following register is not live but is being checked" reg))))
+
+(define (get-expected-type-at-frame types slot)
+    (let* ((type-locs (vector-ref types 0))
+           (n-registers (vector-ref type-locs 0))
+           (n-slots (vector-ref type-locs 1)))
+  (if (<= slot n-slots)
+      (vector-ref types (+ (* (- slot 1) 2) (+ locenv-start-regs (* 2 n-registers) 1)))
+      (error "the following frame slot is not live but is being checked" reg))))
+
+(define (get-expected-type-at types loc)
+  (cond
+    ((reg? loc) 
+      (get-expected-type-at-register types (reg-num loc)))
+    ((stk? loc)
+      (get-expected-type-at-frame types (stk-num loc)))
+    (else (error "cannot get expected type from" loc))))
+
 (define (assert-types state instr)
   (define tctx (make-tctx))
   (define rte (InterpreterState-rte state))
@@ -5483,8 +5506,33 @@
       (define lo (type-fixnum-lo motley-type))
       (define hi (type-fixnum-hi motley-type))
 
-      (define (over-lo? value) (or (not (fixnum? lo)) (>= value lo)))
-      (define (below-hi? value) (or (not (fixnum? hi)) (<= value hi)))
+      (define (get-actual-length length-bound)
+        (InterpreterState-length-of state (length-bound-object length-bound)))
+
+      (define (actual-length-compare comp value length-bound)
+        (let ((actual-length (get-actual-length length-bound))
+              (offset (length-bound-offset length-bound)))
+          (if actual-length
+            (comp value (- actual-length offset))
+            #t))) ;; object not longer live?
+
+      (define (actual-length<= value length-bound)
+        (actual-length-compare <= value length-bound))
+
+      (define (actual-length>= value length-bound)
+        (actual-length-compare >= value length-bound))
+
+      (define (over-lo? value)
+        (cond
+          ((length-bound? lo) (actual-length>= value lo))
+          ((fixnum? lo) (>= value lo))
+          (else #t))) ;; ignore other cases
+
+      (define (below-hi? value)
+        (cond
+          ((length-bound? hi) (actual-length<= value hi))
+          ((fixnum? hi) (<= value hi))
+          (else #t))) ;; ignore other cases
 
       (or (not (fixnum? value)) (and (over-lo? value) (below-hi? value))))
 
@@ -5497,12 +5545,12 @@
   (let ((types (gvm-instr-types instr)))
     (if types ;; nothing to do if no types, happens when version limit is at 0
         (let* ((type-locs (vector-ref types 0))
-              (n-registers (vector-ref type-locs 0))
-              (n-slots (vector-ref type-locs 1))
-              (n-free (vector-ref type-locs 2))
-              (frame (gvm-instr-frame instr))
-              (regs (frame-regs frame))
-              (slots (frame-slots frame)))
+               (n-registers (vector-ref type-locs 0))
+               (n-slots (vector-ref type-locs 1))
+               (n-free (vector-ref type-locs 2))
+               (frame (gvm-instr-frame instr))
+               (regs (frame-regs frame))
+               (slots (frame-slots frame)))
 
           (for-each
             (lambda (reg index)
@@ -5558,15 +5606,19 @@
   instr-index
   done?
   ;; traces
-  primitive-counter)
+  primitive-counter
+  length-bounds)
 
 (define exit-return-address (gensym 'exit-return-address))
 
 (define empty-stack-slot (gensym 'empty-stack-slot))
 (define interpreter-debug-trace? #f)
 
-(define (InterpreterState-instr-index-increment! state)
-  (InterpreterState-instr-index-set! state (+ (InterpreterState-instr-index state) 1)))
+(define (InterpreterState-instr-index-increment! state last-instr)
+  ;; increment index if instruction is not a jump
+  ;; jump instruction reset index to 0 instead
+  (or (memq (gvm-instr-kind last-instr) '(jump ifjump))
+      (InterpreterState-instr-index-set! state (+ (InterpreterState-instr-index state) 1))))
 
 (define (init-interpreter-state module-procs)
   (let* ((main-proc (car module-procs))
@@ -5580,9 +5632,25 @@
             (lbl-num->bb entry-lbl-num main-bbs)  ;; bb
             0                                     ;; instr index
             #f                                    ;; done
-            (make-table))))                       ;; primitive counter
+            (make-table)                          ;; primitive counter
+            (make-table                           ;; length-bounds
+              test: length-bound-object-equal?
+              ;;weak-values: #t
+            ))))             
     (RTE-registers-set! (InterpreterState-rte state) 0 exit-return-address)
     state))
+
+(define (InterpreterState-length-bounds-register! state representative vector-like)
+  (table-set! (InterpreterState-length-bounds state) representative vector-like))
+
+(define (InterpreterState-length-of state representative)
+  (define (generic-length obj)
+    (cond
+      ((vector? obj) (vector-length obj))
+      ((string? obj) (string-length obj))
+      ((u8vector? obj) (u8vector-length obj))))
+  (let ((vector-like (table-ref (InterpreterState-length-bounds state) representative #f)))
+    (and vector-like (generic-length vector-like))))
 
 (define (InterpreterState-primitive-counter-increment state name)
   (let ((table (InterpreterState-primitive-counter state)))
@@ -5603,8 +5671,8 @@
 
 (define (InterpreterState-step state)
   (let* ((instr (InterpreterState-current-instruction state)))
-    (InterpreterState-instr-index-increment! state)
-    (InterpreterState-execute-instr state instr)))
+    (InterpreterState-execute-instr state instr)
+    (InterpreterState-instr-index-increment! state instr)))
 
 (define (InterpreterState-execute-instr state instr)
   (case (gvm-instr-kind instr)
@@ -5927,115 +5995,151 @@
   global-env
   primitives)
 
+(define (add-default-primitive-to-primitives-table! primitives-table)
+  (define (try-eval sexp) (with-exception-handler (lambda (exc) #f) (lambda () (eval sexp))))
+
+  (table-for-each
+    (lambda (name proc-obj)
+      (let* ((name-string (symbol->string name))
+             (scheme-proc (try-eval name)))
+        (if (and scheme-proc
+                 (not (table-ref primitives-table name-string #f))) ;; check if custom implementation exists
+            (table-set! primitives-table name-string
+              (lambda (state args cont) (cont (apply scheme-proc args)))))))
+    (make-prim-proc-table)))
+
+(define (add-primitive-counter-to-primitives-table! primitives-table)
+  (table-for-each
+    (lambda (name primitive)
+      (table-set! primitives-table name
+        (lambda (state args cont)
+          (InterpreterState-primitive-counter-increment state (string->symbol name))
+          (primitive state args cont))))
+    (table-copy primitives-table)))
+
 (define (make-gvm-primitives)
-  (let ((primitives-table (make-table)))
-    (table-for-each
-      (lambda (name proc-obj)
-        (let ((scheme-proc (with-exception-handler (lambda (exc) #f) (lambda () (eval name)))))
-          (if scheme-proc
-            (table-set! primitives-table (symbol->string name)
-              (lambda (state args cont)
-                (InterpreterState-primitive-counter-increment state name)
-                (cont (apply scheme-proc args)))))))
-      (make-prim-proc-table))
-    (table-set!
-      primitives-table
-      "##dead-end"
-      (lambda (state args cont) (error "Interpreter reached ##dead-end")))
-    (table-set!
-      primitives-table
-      "##apply"
-      (lambda (state args cont)
-        (let* ((fs (bb-exit-frame-size (InterpreterState-bb state)))
-               (rte (InterpreterState-rte state))
-               (stack (RTE-stack rte))
-               (proc (car args))
-               (proc-args (cadr args))
-               (nargs (length proc-args)))
-          (define r0 (RTE-ref rte backend-return-label-location))
+  (define primitives-table (make-table))
+  (define (register! name proc) (table-set! primitives-table name proc))
 
-          ;; create a dummy frame for arguments
-          (Stack-frame-exit! stack fs)
-          (Stack-frame-enter! stack 0)
-          ;; add arguments in the frame
-          (for-each 
-            (lambda (i arg) (RTE-param-set! rte nargs i arg))
-            (iota nargs)
-            proc-args)
-          ;; prepare the frame for the callee
-          (Stack-frame-exit! stack nargs)
-          (InterpreterState-transition
-            state
-            proc
-            nargs
-            (make-HostContinuation
-              (lambda ()
-                ;; exit the argument dummy frame
-                (Stack-frame-exit! stack 0)
-                (Stack-frame-enter! stack fs)
-                ;; return result
-                (RTE-set! rte backend-return-label-location r0)
-                (cont (RTE-ref rte backend-return-result-location))))))))
-    (table-set!
-      primitives-table
-      "##map"
-      (lambda (state proc-and-args cont)
-        (let* ((fs (bb-exit-frame-size (InterpreterState-bb state)))
-               (rte (InterpreterState-rte state))
-               (stack (RTE-stack rte))
-               (proc (car proc-and-args))
-               (arg-lists (cdr proc-and-args))
-               (nargs (length arg-lists)))
-          (define r0 (RTE-ref rte backend-return-label-location))
+  (register!
+    "##dead-end"
+    (lambda (state args cont) (error "Interpreter reached ##dead-end")))
 
-          (define acc '())
-          (define (return)
-            ;; exit the argument dummy frame
-            (Stack-frame-exit! stack 0)
-            (Stack-frame-enter! stack fs)
-            (RTE-set! rte backend-return-label-location r0)
-            (cont (reverse acc)))
+  (register!
+    "##apply"
+    (lambda (state args cont)
+      (let* ((fs (bb-exit-frame-size (InterpreterState-bb state)))
+              (rte (InterpreterState-rte state))
+              (stack (RTE-stack rte))
+              (proc (car args))
+              (proc-args (cadr args))
+              (nargs (length proc-args)))
+        (define r0 (RTE-ref rte backend-return-label-location))
 
-          (define (next-args!)
-            (let ((tails (##cdrs arg-lists)))
-              (and tails
-                   (let ((heads (##cars arg-lists '())))
-                     (set! arg-lists tails)
-                     heads))))
+        ;; create a dummy frame for arguments
+        (Stack-frame-exit! stack fs)
+        (Stack-frame-enter! stack 0)
+        ;; add arguments in the frame
+        (for-each 
+          (lambda (i arg) (RTE-param-set! rte nargs i arg))
+          (iota nargs)
+          proc-args)
+        ;; prepare the frame for the callee
+        (Stack-frame-exit! stack nargs)
+        (InterpreterState-transition
+          state
+          proc
+          nargs
+          (make-HostContinuation
+            (lambda ()
+              ;; exit the argument dummy frame
+              (Stack-frame-exit! stack 0)
+              (Stack-frame-enter! stack fs)
+              ;; return result
+              (RTE-set! rte backend-return-label-location r0)
+              (cont (RTE-ref rte backend-return-result-location))))))))
 
-          (define (loop)
-            (let ((args (next-args!)))
-              (if args
-                  (begin
-                    ;; add arguments in the frame
-                    (for-each 
-                      (lambda (i arg) (RTE-param-set! rte nargs i arg))
-                      (iota nargs)
-                      args)
-                    ;; prepare the frame for the callee
-                    (Stack-frame-exit! stack nargs)
-                    ;; call
-                    (InterpreterState-transition
-                      state
-                      proc
-                      nargs
-                      (make-HostContinuation
-                        (lambda ()
-                          ;; store result
-                          (set! acc (cons (RTE-ref rte backend-return-result-location) acc))
-                          ;; continue map iteration
-                          (loop)))))
-                  (return))))
-          ;; create a dummy frame for arguments
-          (Stack-frame-exit! stack fs)
-          (Stack-frame-enter! stack 0)
-          (loop))))
-    (table-set!
-      primitives-table
-      "##first-argument"
-      (lambda (state args cont)
-        (cont (if (null? (cdr args)) (car args) (cadr args)))))
-    primitives-table))
+  (register!
+    "##map"
+    (lambda (state proc-and-args cont)
+      (let* ((fs (bb-exit-frame-size (InterpreterState-bb state)))
+              (rte (InterpreterState-rte state))
+              (stack (RTE-stack rte))
+              (proc (car proc-and-args))
+              (arg-lists (cdr proc-and-args))
+              (nargs (length arg-lists)))
+        (define r0 (RTE-ref rte backend-return-label-location))
+
+        (define acc '())
+        (define (return)
+          ;; exit the argument dummy frame
+          (Stack-frame-exit! stack 0)
+          (Stack-frame-enter! stack fs)
+          (RTE-set! rte backend-return-label-location r0)
+          (cont (reverse acc)))
+
+        (define (next-args!)
+          (let ((tails (##cdrs arg-lists)))
+            (and tails
+                  (let ((heads (##cars arg-lists '())))
+                    (set! arg-lists tails)
+                    heads))))
+
+        (define (loop)
+          (let ((args (next-args!)))
+            (if args
+                (begin
+                  ;; add arguments in the frame
+                  (for-each 
+                    (lambda (i arg) (RTE-param-set! rte nargs i arg))
+                    (iota nargs)
+                    args)
+                  ;; prepare the frame for the callee
+                  (Stack-frame-exit! stack nargs)
+                  ;; call
+                  (InterpreterState-transition
+                    state
+                    proc
+                    nargs
+                    (make-HostContinuation
+                      (lambda ()
+                        ;; store result
+                        (set! acc (cons (RTE-ref rte backend-return-result-location) acc))
+                        ;; continue map iteration
+                        (loop)))))
+                (return))))
+        ;; create a dummy frame for arguments
+        (Stack-frame-exit! stack fs)
+        (Stack-frame-enter! stack 0)
+        (loop))))
+
+  (register!
+    "##first-argument"
+    (lambda (state args cont)
+      (cont (if (null? (cdr args)) (car args) (cadr args)))))
+
+  (for-each
+    (lambda (name prim)
+      ;; set a primitive that registers the length
+      (register!
+        name
+        (lambda (state args cont)
+          (let* ((v (car args))
+                 (instr (InterpreterState-current-instruction state))
+                 (loc (and (eq? (gvm-instr-kind instr) 'apply)
+                           (apply-loc instr)))
+                 (type (get-expected-type-at (gvm-instr-types instr) loc))
+                 (length-bound (type-fixnum-lo type))
+                 (representative (length-bound-object length-bound)))
+            (InterpreterState-length-bounds-register! state representative v)
+            (cont (apply prim args))))))
+    '("##vector-length" "##string-length")
+    (list ##vector-length ##string-length))
+
+  (add-default-primitive-to-primitives-table! primitives-table)
+  (add-primitive-counter-to-primitives-table! primitives-table)
+
+  primitives-table)
 
 (define (init-RTE)
   (make-RTE

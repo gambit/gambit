@@ -7489,17 +7489,20 @@
 (define (length-bound-offset x)
   (vector-ref x 1))
 
-(define (length-bound-same-object? x y) ;; TODO: check if equal? is the right predicate...
-  (equal? (length-bound-object x) (length-bound-object y)))
+(define (length-bound-object-equal? x y)
+  (equal? x y)) ;; TODO: check if equal? is the right predicate...
+
+(define (length-bound-same-object? x y)
+  (length-bound-object-equal? (length-bound-object x) (length-bound-object y)))
 
 (define (normalize-lo-length-bound x)
-  (if (length-bound-object? x)
+  (if (length-bound? x)
       (length-bound-offset x)
       x))
 
 (define (normalize-hi-length-bound x)
   (declare (generic))
-  (if (length-bound-object? x)
+  (if (length-bound? x)
       (if (< (length-bound-offset x) 0)
           '<
           '<=)
