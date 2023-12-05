@@ -5513,7 +5513,7 @@
         (let ((actual-length (get-actual-length length-bound))
               (offset (length-bound-offset length-bound)))
           (if actual-length
-            (comp value (- actual-length offset))
+            (comp value (+ actual-length offset))
             #t))) ;; object not longer live?
 
       (define (actual-length<= value length-bound)
