@@ -8064,40 +8064,38 @@
         255
         16382 16383
         32766 32767
-        65535
-        536870910)   ;; max-fixnum32 - 1
+        65535)
 
-      #(0
-        536870910)   ;; max-fixnum32 - 1
+      #(0)
 
-      #(536870910))) ;; max-fixnum32 - 1
+      #()))
 
  (define steps-down
-   '#(#(0 1 2 3 4
+   '#(#(1 2 3 4
         16
         256
         65536)
 
-      #(0
-        1)
+      #(1)
 
-      #(0)))
+      #()))
 
  (define (widen-up n)
    (let ((steps (vector-ref steps-up widening-speed)))
-     (let loop ((i (- (vector-length steps) 1)))
-       (if (or (= i 0)
-               (> n (vector-ref steps (- i 1))))
-           (vector-ref steps i)
-           (loop (- i 1))))))
+     (let loop ((i (- (vector-length steps) 1))
+                (result (- (tctx-smallest-max-fixnum tctx) 1)))
+       (if (or (< i 0) (> n (vector-ref steps i)))
+           result
+           (loop (- i 1) (vector-ref steps i))))))
 
  (define (widen-down n)
-   (let ((steps (vector-ref steps-down widening-speed)))
-     (let loop ((i 0))
-       (if (or (= i (- (vector-length steps) 1))
-               (< n (vector-ref steps (+ i 1))))
-           (vector-ref steps i)
-           (loop (+ i 1))))))
+   (let ((steps (vector-ref steps-up widening-speed)))
+     (let loop ((i 0)
+                (result 0))
+       (if (and (< i (vector-length steps))
+                (>= n (vector-ref steps i)))
+           (loop (+ i 1) (vector-ref steps i))
+           result))))
 
   (define (widen-lo n)
     (if (>= n 0)
