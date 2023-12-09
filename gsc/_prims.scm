@@ -8032,27 +8032,72 @@
 
 ;;; union of types
 
+(define use-directional-widening? #f)
+(define widening-speed 1) ;; 0..2 (0 is the slowest widening)
+
 (define (type-motley-union tctx type1 type2 widen?)
 
   (declare (generic))
 
- (define (widen-down n)
-   (if (<= n 3)
-       n
-       (expt 2 (expt 2 (- (integer-length (- (integer-length n) 1)) 1)))))
+;; (define (widen-down n)
+;;   (if (<= n 3)
+;;       n
+;;       (expt 2 (expt 2 (- (integer-length (- (integer-length n) 1)) 1)))))
+;;
+;; (define (widen-up n)
+;;   (if (<= n 3)
+;;       n
+;;       (let ((x (expt 2 (- (expt 2 (max 3 (integer-length (- (integer-length n) 1)))) 2))))
+;;         (cond ((< n (- x 1)) (- x 2))
+;;               ((< n x)       (- x 1))
+;;               (else
+;;                (let ((x (* x 2)))
+;;                  (cond ((< n (- x 1)) (- x 2))
+;;                        ((< n x)       (- x 1))
+;;                        (else
+;;                         (- (* x 2) 1)))))))))
+
+ (define steps-up
+   '#(#(0 1 2 3
+        62 63
+        126 127
+        255
+        16382 16383
+        32766 32767
+        65535
+        536870910)   ;; max-fixnum32 - 1
+
+      #(0
+        536870910)   ;; max-fixnum32 - 1
+
+      #(536870910))) ;; max-fixnum32 - 1
+
+ (define steps-down
+   '#(#(0 1 2 3 4
+        16
+        256
+        65536)
+
+      #(0
+        1)
+
+      #(0)))
 
  (define (widen-up n)
-   (if (<= n 3)
-       n
-       (let ((x (expt 2 (- (expt 2 (max 3 (integer-length (- (integer-length n) 1)))) 2))))
-         (cond ((< n (- x 1)) (- x 2))
-               ((< n x)       (- x 1))
-               (else
-                (let ((x (* x 2)))
-                  (cond ((< n (- x 1)) (- x 2))
-                        ((< n x)       (- x 1))
-                        (else
-                         (- (* x 2) 1)))))))))
+   (let ((steps (vector-ref steps-up widening-speed)))
+     (let loop ((i (- (vector-length steps) 1)))
+       (if (or (= i 0)
+               (> n (vector-ref steps (- i 1))))
+           (vector-ref steps i)
+           (loop (- i 1))))))
+
+ (define (widen-down n)
+   (let ((steps (vector-ref steps-down widening-speed)))
+     (let loop ((i 0))
+       (if (or (= i (- (vector-length steps) 1))
+               (< n (vector-ref steps (+ i 1))))
+           (vector-ref steps i)
+           (loop (+ i 1))))))
 
   (define (widen-lo n)
     (if (>= n 0)
@@ -8074,7 +8119,7 @@
                tctx
                (if (< lo2 lo1)
                    (widen-lo lo2)
-                   lo1))))))
+                   (if use-directional-widening? lo1 (widen-lo lo1))))))))
 
   (define (union-hi hi1 hi2)
     (if (= hi1 hi2)
@@ -8084,7 +8129,7 @@
               hi
               (if (> hi2 hi1)
                   (widen-hi hi2)
-                  hi1)))))
+                  (if use-directional-widening? hi1 (widen-hi hi1)))))))
 
   (let* ((lo1 (type-fixnum-lo type1))
          (hi1 (type-fixnum-hi type1))
@@ -8130,10 +8175,10 @@
                       (length-bound-object hi1)
                       (union-hi (length-bound-offset hi1)
                                 (length-bound-offset hi2)))
-                     '<)
-                 '<)))
+                     '<=)
+                 '<=)))
            ((length-bound? hi2)
-            '<)
+            '<=)
            (else
             (type-fixnum-normalize-hi
              tctx
@@ -9293,12 +9338,12 @@
 (define (type-infer-common-fxnot tctx lo hi)
   (define (abstract-fxnot x)
     (case x
-      ('<= '>=)
-      ('<  '>)
-      ('>  '<)
-      ('>= '<=)
+      ((<=) '>=)
+      ((<)  '>)
+      ((>)  '<)
+      ((>=) '<=)
       (else
-        (- -1 x))))
+       (- -1 x))))
 
   (make-type-fixnum
     (abstract-fxnot hi)
