@@ -7553,25 +7553,25 @@
   (let ((bitset (type-motley-bitset type))
         (lo (type-fixnum-lo type))
         (hi (type-fixnum-hi type)))
-
-    (define (make-type-motley-with-fixnum-range)
-      (make-type-motley
-       bitset
-       (type-fixnum-normalize-lo tctx lo)
-       (type-fixnum-normalize-hi tctx hi)))
-
-    (if (and (exact-integer? lo)
-             (exact-integer? hi))
-        (cond ((> lo hi) ;; empty fixnum range?
-               (if (= bitset type-bot-bitset)
-                   type-bot
-                   (or (make-type-singleton-from-bitset bitset)
-                       (make-type-motley-non-fixnum bitset))))
-              ((and (= bitset type-bot-bitset) (= lo hi)) ;; single value?
-               (make-type-singleton lo))
-              (else
-               (make-type-motley-with-fixnum-range)))
-        (make-type-motley-with-fixnum-range))))
+    (cond ((type-fixnum-empty? lo hi)
+           (if (= bitset type-bot-bitset)
+               type-bot
+               (or (make-type-singleton-from-bitset bitset)
+                   (make-type-motley-non-fixnum bitset))))
+          ((and (= bitset type-bot-bitset) ;; single value?
+                (exact-integer? hi)
+                (cond ((exact-integer? lo)
+                       (= lo hi))
+                      ((length-bound? lo)
+                       (= (length-bound-offset lo) hi))
+                      (else
+                       #f)))
+           (make-type-singleton hi))
+          (else
+           (make-type-motley
+            bitset
+            (type-fixnum-normalize-lo tctx lo)
+            (type-fixnum-normalize-hi tctx hi))))))
 
 (define (type-fixnum-normalize-lo tctx lo)
   (declare (generic))
@@ -8250,9 +8250,7 @@
                 (else
                  (min hi1 hi2))))
          (empty-range?
-          (and (exact-integer? lo)
-               (exact-integer? hi)
-               (> lo hi))))
+          (type-fixnum-empty? lo hi)))
     (make-type-motley
      (bitwise-and (type-motley-bitset type1)
                   (type-motley-bitset type2))
@@ -9679,18 +9677,25 @@
     result))
 
 (define (type-fixnum-empty? lo hi)
-  ;;(type-fixnum-< hi lo)
+  (declare (generic))
   (cond ((or (eq? lo '>=)
              (eq? lo '>)
              (eq? hi '<)
              (eq? hi '<=))
          #f)
-        ((exact-integer? lo)
-         (if (exact-integer? hi)
-             (> lo hi)
-             #f))
+        ((length-bound? lo)
+         (if (length-bound? hi)
+             (if (length-bound-same-object? lo hi)
+                 (> (length-bound-offset lo)
+                    (length-bound-offset hi))
+                 #f)
+             (and (exact-integer? hi)
+                  (> (length-bound-offset lo)
+                     hi))))
         (else
-         #f)))
+         (and (exact-integer? lo)
+              (exact-integer? hi)
+              (> lo hi)))))
 
 (define (type-narrow-fx< tctx type1 type2)
 
