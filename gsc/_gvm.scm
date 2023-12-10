@@ -3143,20 +3143,22 @@
 ;; Linear distance
 (define (linear-type-distance tctx type1 type2)
   (let* ((t1 (type-motley-force tctx type1))
-          (t2 (type-motley-force tctx type2)))
+         (t2 (type-motley-force tctx type2)))
     (let* ((bitset1 (type-motley-bitset t1))
-            (bitset2 (type-motley-bitset t2))
-            (bs1
+           (bitset2 (type-motley-bitset t2))
+           (bs1
             (+ (bitwise-and bitset1 (- (expt 2 30) 1))
-                (if (type-motley-included? t1 type-fixnum)
-                    (expt 2 30)
-                    0)))
-            (bs2
+               (if (type-motley-included? t1 type-fixnum)
+                   (expt 2 30)
+                   0)))
+           (bs2
             (+ (bitwise-and bitset2 (- (expt 2 30) 1))
-                (if (type-motley-included? t2 type-fixnum)
-                    (expt 2 30)
-                    0))))
-      (bit-count (bitwise-eqv bs1 bs2)))))
+               (if (type-motley-included? t2 type-fixnum)
+                   (expt 2 30)
+                   0))))
+      (+ (bit-count (bitwise-eqv bs1 bs2))
+         (bit-count (bitwise-eqv (type-motley-mutability t1)
+                                 (type-motley-mutability t2)))))))
 
 (define (types-count tctx type)
   (define count 0)
@@ -5503,38 +5505,39 @@
                 (loop (cdr bit-checker-pair))))))
 
     (define (typecheck-fixnum)
-      (define lo (type-fixnum-lo motley-type))
-      (define hi (type-fixnum-hi motley-type))
+      (let* ((fixnum-range (type-motley-fixnum-range motley-type))
+             (lo (type-fixnum-range-lo fixnum-range))
+             (hi (type-fixnum-range-hi fixnum-range)))
 
-      (define (get-actual-length length-bound)
-        (InterpreterState-length-of state (length-bound-object length-bound)))
+        (define (get-actual-length length-bound)
+          (InterpreterState-length-of state (length-bound-object length-bound)))
 
-      (define (actual-length-compare comp value length-bound)
-        (let ((actual-length (get-actual-length length-bound))
-              (offset (length-bound-offset length-bound)))
-          (if actual-length
-            (comp value (+ actual-length offset))
-            #t))) ;; object not longer live?
+        (define (actual-length-compare comp value length-bound)
+          (let ((actual-length (get-actual-length length-bound))
+                (offset (length-bound-offset length-bound)))
+            (if actual-length
+                (comp value (+ actual-length offset))
+                #t))) ;; object not longer live?
 
-      (define (actual-length<= value length-bound)
-        (actual-length-compare <= value length-bound))
+        (define (actual-length<= value length-bound)
+          (actual-length-compare <= value length-bound))
 
-      (define (actual-length>= value length-bound)
-        (actual-length-compare >= value length-bound))
+        (define (actual-length>= value length-bound)
+          (actual-length-compare >= value length-bound))
 
-      (define (over-lo? value)
-        (cond
-          ((length-bound? lo) (actual-length>= value lo))
-          ((fixnum? lo) (>= value lo))
-          (else #t))) ;; ignore other cases
+        (define (over-lo? value)
+          (cond
+           ((length-bound? lo) (actual-length>= value lo))
+           ((fixnum? lo) (>= value lo))
+           (else #t))) ;; ignore other cases
 
-      (define (below-hi? value)
-        (cond
-          ((length-bound? hi) (actual-length<= value hi))
-          ((fixnum? hi) (<= value hi))
-          (else #t))) ;; ignore other cases
+        (define (below-hi? value)
+          (cond
+           ((length-bound? hi) (actual-length<= value hi))
+           ((fixnum? hi) (<= value hi))
+           (else #t))) ;; ignore other cases
 
-      (or (not (fixnum? value)) (and (over-lo? value) (below-hi? value))))
+        (or (not (fixnum? value)) (and (over-lo? value) (below-hi? value)))))
 
     (if (not (and (typecheck-fixnum) (typecheck-generic)))
         (throw-error)))
@@ -6129,7 +6132,7 @@
                  (loc (and (eq? (gvm-instr-kind instr) 'apply)
                            (apply-loc instr)))
                  (type (get-expected-type-at (gvm-instr-types instr) loc))
-                 (length-bound (type-fixnum-lo type))
+                 (length-bound (type-fixnum-range-lo (type-motley-fixnum-range type)))
                  (representative (length-bound-object length-bound)))
             (InterpreterState-length-bounds-register! state representative v)
             (cont (apply prim args))))))
