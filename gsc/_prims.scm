@@ -8166,7 +8166,7 @@
   (define (widen-hi n)
     (if (>= n 0)
         (widen-up n)
-        (- (widen-down (- n)))))
+        (- -1 (widen-down (- -1 n)))))
 
   (define (union-lo lo1 lo2)
     (if (= lo1 lo2)
