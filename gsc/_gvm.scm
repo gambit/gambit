@@ -5539,6 +5539,13 @@
 
         (or (not (fixnum? value)) (and (over-lo? value) (below-hi? value)))))
 
+    (define (typecheck-mutability)
+      (let ((mutability (type-motley-mutability motley-type)))
+        (cond
+          ((eq? mutability type-neg-mutability) (not (##mutable? value)))
+          ((eq? mutability type-pos-mutability) (##mutable? value))
+          (else #t))))
+
     (if (not (and (typecheck-fixnum) (typecheck-generic)))
         (throw-error)))
 
