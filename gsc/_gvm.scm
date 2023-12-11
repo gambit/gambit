@@ -5547,7 +5547,7 @@
           ((eq? mutability type-top-mutability) (##mem-allocated? value)) ;; unknown, but defined
           (else (not (##mem-allocated? value))))))                        ;; undefined, because not a structure
 
-    (if (not (and (typecheck-fixnum) (typecheck-generic)))
+    (if (not (and (typecheck-fixnum) (typecheck-generic) (typecheck-mutability)))
         (throw-error)))
 
   (define (throw-error slot-kind slot-num value expected)
