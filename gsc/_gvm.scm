@@ -2817,7 +2817,9 @@
               ((close)
 ;;               (pprint '****close) (exit 1)
                (let loop1 ((lst (close-parms gvm-instr))
-                           (types-after types-after))
+                           (types-after (resized-frame-types
+                                          (gvm-instr-frame gvm-instr)
+                                          types-before)))
                  (if (pair? lst)
                      (loop1
                       (cdr lst)
@@ -2880,7 +2882,10 @@
                                    (reverse rev-parms)
                                    (gvm-instr-frame gvm-instr)
                                    (gvm-instr-comment gvm-instr))))
-                             (gvm-instr-types-set! new-instr types-after)
+                             (gvm-instr-types-set! new-instr
+                                                   (resized-frame-types-remove-dead
+                                                      (gvm-instr-frame gvm-instr)
+                                                      types-after))
                              new-instr))))))
 
               ((ifjump)
@@ -3625,7 +3630,6 @@
 
   ;; This procedure stores val in the location loc after removing it
   ;; from its current equivalence class. The locenv is mutated.
-
   (locenv-ec-detach! locenv loc)
   (vector-set! locenv (+ loc 1) val))
 
