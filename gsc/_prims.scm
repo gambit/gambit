@@ -8358,8 +8358,7 @@
       (make-type-motley
        (bitwise-and (type-motley-bitset type1)
                     (bitwise-not (type-motley-bitset type2)))
-       (bitwise-and (type-motley-mutability type1)
-                    (bitwise-not (type-motley-mutability type2)))
+       (type-motley-mutability type1) ;; TODO: can switch to bot if there are no more mutable types in bitset
        (make-type-fixnum-range lo hi)))
 
     (cond ((and (exact-integer? lo1)
