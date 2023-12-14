@@ -805,6 +805,7 @@
 ("##string-set-small"                 (3)   #f ()    0    string    extended)
 ("string-shrink!"                     (2)   #t 0     0    #f        gambit)
 ("##string-shrink!"                   (2)   #t ()    0    string    extended)
+("##string-in-bounds?"                (2)   #f ()    0    boolean   extended)
 
 ;; vector
 
@@ -839,6 +840,7 @@
 ("##vector-insert-small"              (3)   #f ()    0    vector    extended)
 ("##vector-delete"                    (2)   #f ()    0    vector    extended)
 ("##vector-delete-small"              (2)   #f ()    0    vector    extended)
+("##vector-in-bounds?"                (2)   #f ()    0    boolean   extended)
 
 ("vector-concatenate"                 (1 2) #f 0     0    vector    gambit)
 ("##vector-concatenate"               (1 2) #f ()    0    vector    extended)
@@ -905,6 +907,7 @@
 ("##s8vector-insert-small"            (3)   #f ()    0    s8vector  extended)
 ("##s8vector-delete"                  (2)   #f ()    0    s8vector  extended)
 ("##s8vector-delete-small"            (2)   #f ()    0    s8vector  extended)
+("##s8vector-in-bounds?"              (2)   #f ()    0    boolean   extended)
 
 ("u8vector-concatenate"               (1 2) #f 0     0    u8vector  gambit)
 ("##u8vector-concatenate"             (1 2) #f ()    0    u8vector  extended)
@@ -950,6 +953,7 @@
 ("##u8vector-insert-small"            (3)   #f ()    0    u8vector  extended)
 ("##u8vector-delete"                  (2)   #f ()    0    u8vector  extended)
 ("##u8vector-delete-small"            (2)   #f ()    0    u8vector  extended)
+("##u8vector-in-bounds?"              (2)   #f ()    0    boolean   extended)
 
 ("s16vector-concatenate"              (1 2) #f 0     0    s16vector gambit)
 ("##s16vector-concatenate"            (1 2) #f ()    0    s16vector extended)
@@ -995,6 +999,7 @@
 ("##s16vector-insert-small"           (3)   #f ()    0    s16vector extended)
 ("##s16vector-delete"                 (2)   #f ()    0    s16vector extended)
 ("##s16vector-delete-small"           (2)   #f ()    0    s16vector extended)
+("##s16vector-in-bounds?"             (2)   #f ()    0    boolean   extended)
 
 ("u16vector-concatenate"              (1 2) #f 0     0    u16vector gambit)
 ("##u16vector-concatenate"            (1 2) #f ()    0    u16vector extended)
@@ -1040,6 +1045,7 @@
 ("##u16vector-insert-small"           (3)   #f ()    0    u16vector extended)
 ("##u16vector-delete"                 (2)   #f ()    0    u16vector extended)
 ("##u16vector-delete-small"           (2)   #f ()    0    u16vector extended)
+("##u16vector-in-bounds?"             (2)   #f ()    0    boolean   extended)
 
 ("s32vector-concatenate"              (1 2) #f 0     0    s32vector gambit)
 ("##s32vector-concatenate"            (1 2) #f ()    0    s32vector extended)
@@ -1085,6 +1091,7 @@
 ("##s32vector-insert-small"           (3)   #f ()    0    s32vector extended)
 ("##s32vector-delete"                 (2)   #f ()    0    s32vector extended)
 ("##s32vector-delete-small"           (2)   #f ()    0    s32vector extended)
+("##s32vector-in-bounds?"             (2)   #f ()    0    boolean   extended)
 
 ("u32vector-concatenate"              (1 2) #f 0     0    u32vector gambit)
 ("##u32vector-concatenate"            (1 2) #f ()    0    u32vector extended)
@@ -1130,6 +1137,7 @@
 ("##u32vector-insert-small"           (3)   #f ()    0    u32vector extended)
 ("##u32vector-delete"                 (2)   #f ()    0    u32vector extended)
 ("##u32vector-delete-small"           (2)   #f ()    0    u32vector extended)
+("##u32vector-in-bounds?"             (2)   #f ()    0    boolean   extended)
 
 ("s64vector-concatenate"              (1 2) #f 0     0    s64vector gambit)
 ("##s64vector-concatenate"            (1 2) #f ()    0    s64vector extended)
@@ -1175,6 +1183,7 @@
 ("##s64vector-insert-small"           (3)   #f ()    0    s64vector extended)
 ("##s64vector-delete"                 (2)   #f ()    0    s64vector extended)
 ("##s64vector-delete-small"           (2)   #f ()    0    s64vector extended)
+("##s64vector-in-bounds?"             (2)   #f ()    0    boolean   extended)
 
 ("u64vector-concatenate"              (1 2) #f 0     0    u64vector gambit)
 ("##u64vector-concatenate"            (1 2) #f ()    0    u64vector extended)
@@ -1220,6 +1229,7 @@
 ("##u64vector-insert-small"           (3)   #f ()    0    u64vector extended)
 ("##u64vector-delete"                 (2)   #f ()    0    u64vector extended)
 ("##u64vector-delete-small"           (2)   #f ()    0    u64vector extended)
+("##u64vector-in-bounds?"             (2)   #f ()    0    boolean   extended)
 
 ("f32vector-concatenate"              (1 2) #f 0     0    f32vector gambit)
 ("##f32vector-concatenate"            (1 2) #f ()    0    f32vector extended)
@@ -1265,6 +1275,7 @@
 ("##f32vector-insert-small"           (3)   #f ()    0    f32vector extended)
 ("##f32vector-delete"                 (2)   #f ()    0    f32vector extended)
 ("##f32vector-delete-small"           (2)   #f ()    0    f32vector extended)
+("##f32vector-in-bounds?"             (2)   #f ()    0    boolean   extended)
 
 ("f64vector-concatenate"              (1 2) #f 0     0    f64vector gambit)
 ("##f64vector-concatenate"            (1 2) #f ()    0    f64vector extended)
@@ -1310,6 +1321,7 @@
 ("##f64vector-insert-small"           (3)   #f ()    0    f64vector extended)
 ("##f64vector-delete"                 (2)   #f ()    0    f64vector extended)
 ("##f64vector-delete-small"           (2)   #f ()    0    f64vector extended)
+("##f64vector-in-bounds?"             (2)   #f ()    0    boolean   extended)
 
 ;; symbol
 
@@ -4956,6 +4968,7 @@
            **vect-set!-str
            **vect-cas!-str
            **vect-inc!-str
+           **vect-in-bounds?-str
            value-checker)
     (let ((make-vect-sym (string->canonical-symbol make-vect-str))
           (subvect-sym (string->canonical-symbol subvect-str))
@@ -4975,7 +4988,8 @@
           (**vect-ref-sym (string->canonical-symbol **vect-ref-str))
           (**vect-set!-sym (string->canonical-symbol **vect-set!-str))
           (**vect-cas!-sym (and **vect-cas!-str (string->canonical-symbol **vect-cas!-str)))
-          (**vect-inc!-sym (and **vect-inc!-str (string->canonical-symbol **vect-inc!-str))))
+          (**vect-inc!-sym (and **vect-inc!-str (string->canonical-symbol **vect-inc!-str)))
+          (**vect-in-bounds?-sym (and **vect-in-bounds?-str (string->canonical-symbol **vect-in-bounds?-str))))
 
       (define (gen-vect-type-check source env vect-arg)
         (gen-call-prim-vars-notsafe source env
@@ -4991,14 +5005,18 @@
           (list vect-arg)))
 
       (define (gen-index-check source env vect-arg index-arg)
-        (gen-fixnum-interval-check source env
-          index-arg
-          (new-cst source env
-            0)
-          (gen-call-prim-vars-notsafe source env
-            **vect-length-sym
-            (list vect-arg))
-          #f))
+        (if **vect-in-bounds?-sym
+            (gen-call-prim-vars-notsafe source env
+              **vect-in-bounds?-sym
+              (list vect-arg index-arg))
+            (gen-fixnum-interval-check source env
+              index-arg
+              (new-cst source env
+                0)
+              (gen-call-prim-vars-notsafe source env
+                **vect-length-sym
+                (list vect-arg))
+              #f)))
 
       (define (make-make-vect-expander type-check?)
         (lambda (ptree oper args generate-call check-run-time-binding)
@@ -5263,6 +5281,7 @@
    "##vector-set!"
    "##vector-cas!"
    "##vector-inc!"
+   "##vector-in-bounds?"
    #f)
 
   (make-vector-expanders
@@ -5293,6 +5312,7 @@
    "##string-set!"
    #f
    #f
+   "##string-in-bounds?"
    (lambda (source env var)
      (gen-call-prim-vars-notsafe source env
        **char?-sym
@@ -5326,6 +5346,7 @@
    "##s8vector-set!"
    #f
    #f
+   "##s8vector-in-bounds?"
    (make-fixnum-interval-checker -128 127))
 
   (make-vector-expanders
@@ -5356,6 +5377,7 @@
    "##u8vector-set!"
    #f
    #f
+   "##u8vector-in-bounds?"
    (make-fixnum-interval-checker 0 255))
 
   (make-vector-expanders
@@ -5386,6 +5408,7 @@
    "##s16vector-set!"
    #f
    #f
+   "##s16vector-in-bounds?"
    (make-fixnum-interval-checker -32768 32767))
 
   (make-vector-expanders
@@ -5416,6 +5439,7 @@
    "##u16vector-set!"
    #f
    #f
+   "##u16vector-in-bounds?"
    (make-fixnum-interval-checker 0 65535))
 
 #;
@@ -5447,6 +5471,7 @@
    "##s32vector-set!"
    #f
    #f
+   "##s32vector-in-bounds?"
    (make-fixnum-interval-checker -2147483648 2147483647))
 
 #;
@@ -5478,6 +5503,7 @@
    "##u32vector-set!"
    #f
    #f
+   "##u32vector-in-bounds?"
    (make-fixnum-interval-checker 0 4294967295))
 
 #;
@@ -5509,6 +5535,7 @@
    "##s64vector-set!"
    #f
    #f
+   "##s64vector-in-bounds?"
    (make-fixnum-interval-checker -9223372036854775808 9223372036854775807))
 
 #;
@@ -5540,6 +5567,7 @@
    "##u64vector-set!"
    #f
    #f
+   "##u64vector-in-bounds?"
    (make-fixnum-interval-checker 0 18446744073709551615))
 
   (make-vector-expanders
@@ -5570,6 +5598,7 @@
    "##f32vector-set!"
    #f
    #f
+   "##f32vector-in-bounds?"
    (make-flonum-checker))
 
   (make-vector-expanders
@@ -5600,6 +5629,7 @@
    "##f64vector-set!"
    #f
    #f
+   "##f64vector-in-bounds?"
    (make-flonum-checker))
 )
 
@@ -7115,6 +7145,13 @@
     (let ((arg (car args)))
       (type-narrow-type-test tctx type-vector arg))))
 
+(type-narrow-set!
+ "##vector-in-bounds?"
+ (lambda (tctx args)
+   (let ((arg1 (car args))
+         (arg2 (cadr args)))
+     (type-narrow-in-bounds-test tctx arg1 arg2))))
+
 (def-type-narrow "u8vector?"
   (lambda (tctx args)
     (let ((arg (car args)))
@@ -7261,16 +7298,20 @@
 (if use-length-bound?
 (def-type-infer "string-length"
   (lambda (tctx args)
-    (let ((length-bound (make-length-bound #f 0)))
-      (make-type-fixnum length-bound length-bound))))
-)
+    (let ((a (car args)))
+      (let* ((type (type-motley-force tctx a))
+             (length-range (type-motley-length-range type)))
+        (make-type-fixnum (type-fixnum-range-lo length-range)
+                          (type-fixnum-range-hi length-range)))))))
 
 (if use-length-bound?
 (def-type-infer "vector-length"
   (lambda (tctx args)
-    (let ((length-bound (make-length-bound #f 0)))
-      (make-type-fixnum length-bound length-bound))))
-)
+    (let ((a (car args)))
+      (let* ((type (type-motley-force tctx a))
+             (length-range (type-motley-length-range type)))
+        (make-type-fixnum (type-fixnum-range-lo length-range)
+                          (type-fixnum-range-hi length-range)))))))
 
 )
 
@@ -7378,21 +7419,118 @@
 ;;; only used temporarily to indicate an overflow of the fixnum range.
 ;;; When the fixnum type is not in the set, lo = 0 and hi = -1.
 
+(define use-length-bound? #t)
+
+(define (make-length-bound object offset)
+  (vector object offset))
+
+(define (make-length-bound-or-overflow object offset)
+  (declare (generic))
+  (if (> offset 0)
+      #f
+      (make-length-bound object offset)))
+
+(define (length-bound? x)
+  (vector? x))
+
+(define (length-bound-object x)
+  (vector-ref x 0))
+
+(define (length-bound-offset x)
+  (vector-ref x 1))
+
+(define (length-bound-object-eqv? x y)
+  (eqv? x y))
+
+(define (length-bound-same-object? x y)
+  (length-bound-object-eqv? (length-bound-object x) (length-bound-object y)))
+
+(define (normalize-lo-length-bound x)
+  (if (length-bound? x)
+      (length-bound-offset x)
+      x))
+
+(define (normalize-hi-length-bound x)
+  (declare (generic))
+  (if (length-bound? x)
+      (if (< (length-bound-offset x) 0)
+          '<
+          '<=)
+      x))
+
+(define (max-lo-length-bounds x y)
+  (declare (generic))
+  (max (length-bound-offset x)
+       (length-bound-offset y)))
+
+(define (min-hi-length-bounds x y)
+  (declare (generic))
+  (if (and (= 0 (length-bound-offset x))
+           (= 0 (length-bound-offset y)))
+      '<=
+      '<))
+
 (define (make-type-fixnum-range lo hi) (cons lo hi))
 (define (type-fixnum-range-lo range)   (car range))
 (define (type-fixnum-range-hi range)   (cdr range))
 
-(define (make-type-motley bitset mutability fixnum-range)
-  (vector bitset mutability fixnum-range))
+(define type-bot-fixnum-range (make-type-fixnum-range 0 -1))
+(define type-top-fixnum-range (make-type-fixnum-range '>= '<=))
+(define type-top-length-range (make-type-fixnum-range 0 '<=))
+
+(define (type-fixnum-range-eqv? fixnum-range1 fixnum-range2)
+  (and (type-fixnum-range-lohi-eqv? (type-fixnum-range-lo fixnum-range1)
+                                    (type-fixnum-range-lo fixnum-range2))
+       (type-fixnum-range-lohi-eqv? (type-fixnum-range-hi fixnum-range1)
+                                    (type-fixnum-range-hi fixnum-range2))))
+
+(define (type-fixnum-range-lohi-eqv? lohi1 lohi2)
+  (if (length-bound? lohi1)
+      (and (length-bound? lohi2)
+           (length-bound-same-object? lohi1 lohi2)
+           (= (length-bound-offset lohi1)
+              (length-bound-offset lohi2)))
+      (eqv? lohi1 lohi2)))
+
+(define (type-bot-fixnum-range? fixnum-range)
+  (declare (generic))
+  (let ((lo (type-fixnum-range-lo fixnum-range))
+        (hi (type-fixnum-range-hi fixnum-range)))
+    (and (exact-integer? lo)
+         (exact-integer? hi)
+         (< hi lo))))
+
+(define (type-top-fixnum-range? fixnum-range)
+  (let ((lo (type-fixnum-range-lo fixnum-range))
+        (hi (type-fixnum-range-hi fixnum-range)))
+    (and (eqv? lo '>=)
+         (eqv? hi '<=))))
+
+(define (type-top-length-range? fixnum-range)
+  (let ((lo (type-fixnum-range-lo fixnum-range))
+        (hi (type-fixnum-range-hi fixnum-range)))
+    (and (or (eqv? lo 0)
+             (and (length-bound? lo) (= 0 (length-bound-offset lo))))
+         (or (eqv? hi '<=)
+             (and (length-bound? hi) (= 0 (length-bound-offset hi)))))))
+
+(define (make-type-motley bitset mutability length-range fixnum-range)
+  (vector bitset
+          (if (= 0 (bitwise-and (bitwise-not type-undefined-mutability-bitset) bitset))
+              type-bot-mutability ;; force undefined mutability
+              mutability)
+          length-range
+          fixnum-range))
 
 (define (type-motley? type)             (vector? type))
 (define (type-motley-bitset type)       (vector-ref type 0))
 (define (type-motley-mutability type)   (vector-ref type 1))
-(define (type-motley-fixnum-range type) (vector-ref type 2))
+(define (type-motley-length-range type) (vector-ref type 2))
+(define (type-motley-fixnum-range type) (vector-ref type 3))
 
 ;; values for mutability property:
 
-(define type-bot-mutability 0) ;; mutability undefined
+(define type-bot-mutability 0) ;; undefined mutability
 (define type-neg-mutability 1) ;; certainly not mutable
 (define type-pos-mutability 2) ;; certainly mutable
 (define type-top-mutability 3) ;; possibly immutable or mutable
@@ -7435,115 +7573,93 @@
 
 (define all-motley-bits
   (list
-    type-false-bit    
-    type-true-bit     
-    type-null-bit     
-    type-void-bit     
-    type-eof-bit      
-    type-absent-bit   
-    type-bignum-bit   
-    type-ratnum-bit   
-    type-flonum-bit   
-    type-cpxnum-bit   
-    type-char-bit     
-    type-symbol-bit   
-    type-keyword-bit  
-    type-string-bit   
-    type-vector-bit   
-    type-u8vector-bit 
-    type-s8vector-bit 
-    type-u16vector-bit
-    type-s16vector-bit
-    type-u32vector-bit
-    type-s32vector-bit
-    type-u64vector-bit
-    type-s64vector-bit
-    type-f32vector-bit
-    type-f64vector-bit
-    type-pair-bit     
-    type-procedure-bit
-    type-box-bit      
-    type-promise-bit  
-    type-other-bit))
+   type-false-bit
+   type-true-bit
+   type-null-bit
+   type-void-bit
+   type-eof-bit
+   type-absent-bit
+   type-bignum-bit
+   type-ratnum-bit
+   type-flonum-bit
+   type-cpxnum-bit
+   type-char-bit
+   type-symbol-bit
+   type-keyword-bit
+   type-string-bit
+   type-vector-bit
+   type-u8vector-bit
+   type-s8vector-bit
+   type-u16vector-bit
+   type-s16vector-bit
+   type-u32vector-bit
+   type-s32vector-bit
+   type-u64vector-bit
+   type-s64vector-bit
+   type-f32vector-bit
+   type-f64vector-bit
+   type-pair-bit
+   type-procedure-bit
+   type-box-bit
+   type-promise-bit
+   type-other-bit))
+
+(define type-undefined-mutability-bitset
+  (+
+   type-false-bit
+   type-true-bit
+   type-null-bit
+   type-void-bit
+   type-eof-bit
+   type-absent-bit
+   type-char-bit
+   type-other-bit))
 
 (define type-top-bitset -1) ;; sum of all type-XXX-bit
 (define type-bot-bitset  0) ;; no bits on
 
-(define (make-type-motley-non-fixnum bitset mutability)
+(define (make-type-motley-non-fixnum bitset)
   (make-type-motley bitset
-                    mutability
-                    (make-type-fixnum-range 0 -1)))
+                    type-top-mutability
+                    type-top-length-range
+                    type-bot-fixnum-range))
 
 ;;; top type (corresponds to the union of all values)
 
-(define type-top
-  (make-type-motley type-top-bitset
-                    type-top-mutability
-                    (make-type-fixnum-range '>= '<=))) ;; all types + entire fixnum range
+(define type-top-counter 0) ;; TODO: put counter in compilation context
+
+(define (make-type-top-with-new-length-bound)
+  (let* ((i type-top-counter)
+         (length-bound (make-length-bound i 0)))
+    (set! type-top-counter (+ i 1))
+    (make-type-motley type-top-bitset
+                      type-top-mutability
+                      (make-type-fixnum-range length-bound length-bound)
+                      type-top-fixnum-range))) ;; all types + entire fixnum range
 
 (define (type-top? type)
   (and (type-motley? type)
        (eqv? (type-motley-bitset type) type-top-bitset)
-       (let ((fixnum-range (type-motley-fixnum-range type)))
-         (and (eqv? (type-fixnum-range-lo fixnum-range) '>=)
-              (eqv? (type-fixnum-range-hi fixnum-range) '<=)))))
+       (type-top-length-range? (type-motley-length-range type))
+       (type-top-fixnum-range? (type-motley-fixnum-range type))))
 
 ;;; bottom type (corresponds to no possible value)
 
 (define type-bot
-  (make-type-motley-non-fixnum type-bot-bitset type-bot-mutability)) ;; no types
+  (make-type-motley-non-fixnum type-bot-bitset)) ;; no types
 
 (define (type-bot? type)
   (and (type-motley? type)
        (eqv? (type-motley-bitset type) type-bot-bitset)
-       (let ((fixnum-range (type-motley-fixnum-range type)))
-         (and (eqv? (type-fixnum-range-lo fixnum-range) 0)
-              (eqv? (type-fixnum-range-hi fixnum-range) -1)))))
+       ;; no need to check (type-motley-length-range type)
+       (type-bot-fixnum-range? (type-motley-fixnum-range type))))
 
 ;;; fixnum type
-
-(define use-length-bound? #t)
-
-(define (make-length-bound object offset)
-  (vector object offset))
-
-(define (make-length-bound-or-overflow object offset)
-  (declare (generic))
-  (if (> offset 0)
-      #f
-      (make-length-bound object offset)))
-
-(define (length-bound? x)
-  (vector? x))
-
-(define (length-bound-object x)
-  (vector-ref x 0))
-
-(define (length-bound-offset x)
-  (vector-ref x 1))
-
-(define (length-bound-object-equal? x y)
-  (equal? x y)) ;; TODO: check if equal? is the right predicate...
-
-(define (length-bound-same-object? x y)
-  (length-bound-object-equal? (length-bound-object x) (length-bound-object y)))
-
-(define (normalize-lo-length-bound x)
-  (if (length-bound? x)
-      (length-bound-offset x)
-      x))
-
-(define (normalize-hi-length-bound x)
-  (declare (generic))
-  (if (length-bound? x)
-      (if (< (length-bound-offset x) 0)
-          '<
-          '<=)
-      x))
 
 (define (make-type-fixnum lo hi)
   (make-type-motley type-bot-bitset
                     type-bot-mutability
+                    type-bot-fixnum-range
                     (make-type-fixnum-range lo hi)))
 
 (define type-fixnum
@@ -7552,6 +7668,7 @@
 (define (make-type-fixnum-or-false lo hi)
   (make-type-motley type-false-bit
                     type-bot-mutability
+                    type-bot-fixnum-range
                     (make-type-fixnum-range lo hi)))
 
 (define type-fixnum-or-false
@@ -7591,13 +7708,17 @@
          (fixnum-range (type-motley-fixnum-range type))
          (lo (type-fixnum-range-lo fixnum-range))
          (hi (type-fixnum-range-hi fixnum-range))
-         (mutability (type-motley-mutability type)))
+         (mutability (type-motley-mutability type))
+         (length-range (type-motley-length-range type)))
     (cond ((type-fixnum-empty? lo hi)
            (if (and (= bitset type-bot-bitset)
                     (= mutability type-bot-mutability))
                type-bot
                (or (make-type-singleton-from-bitset bitset)
-                   (make-type-motley-non-fixnum bitset mutability))))
+                   (make-type-motley bitset
+                                     mutability
+                                     length-range
+                                     type-bot-fixnum-range))))
           ((and (= bitset type-bot-bitset) ;; single value?
                 (exact-integer? hi)
                 (cond ((exact-integer? lo)
@@ -7611,6 +7732,7 @@
            (make-type-motley
             bitset
             mutability
+            length-range
             (make-type-fixnum-range
              (type-fixnum-normalize-lo tctx lo)
              (type-fixnum-normalize-hi tctx hi)))))))
@@ -7687,7 +7809,7 @@
         (type-motley-normalize tctx type)
         (type-union
          tctx
-         (make-type-motley-non-fixnum type-bignum-bit type-top-mutability)
+         (make-type-motley-non-fixnum type-bignum-bit)
          (make-type-fixnum
           (if lo
               (type-fixnum-normalize-lo tctx lo)
@@ -7724,39 +7846,39 @@
 
 ;;; builtin types
 
-(define type-bignum    (make-type-motley-non-fixnum type-bignum-bit type-top-mutability))
-(define type-ratnum    (make-type-motley-non-fixnum type-ratnum-bit type-top-mutability))
-(define type-flonum    (make-type-motley-non-fixnum type-flonum-bit type-top-mutability))
-(define type-cpxnum    (make-type-motley-non-fixnum type-cpxnum-bit type-top-mutability))
-(define type-motley-false  (make-type-motley-non-fixnum type-false-bit type-bot-mutability))
-(define type-motley-true   (make-type-motley-non-fixnum type-true-bit type-bot-mutability))
-(define type-motley-null   (make-type-motley-non-fixnum type-null-bit type-bot-mutability))
-(define type-motley-void   (make-type-motley-non-fixnum type-void-bit type-bot-mutability))
-(define type-motley-eof    (make-type-motley-non-fixnum type-eof-bit type-bot-mutability))
-(define type-motley-absent (make-type-motley-non-fixnum type-absent-bit type-bot-mutability))
-(define type-char      (make-type-motley-non-fixnum type-char-bit type-bot-mutability))
-(define type-symbol    (make-type-motley-non-fixnum type-symbol-bit type-top-mutability))
-(define type-keyword   (make-type-motley-non-fixnum type-keyword-bit type-top-mutability))
-(define type-string    (make-type-motley-non-fixnum type-string-bit type-top-mutability))
-(define type-vector    (make-type-motley-non-fixnum type-vector-bit type-top-mutability))
-(define type-u8vector  (make-type-motley-non-fixnum type-u8vector-bit type-top-mutability))
-(define type-s8vector  (make-type-motley-non-fixnum type-s8vector-bit type-top-mutability))
-(define type-u16vector (make-type-motley-non-fixnum type-u16vector-bit type-top-mutability))
-(define type-s16vector (make-type-motley-non-fixnum type-s16vector-bit type-top-mutability))
-(define type-u32vector (make-type-motley-non-fixnum type-u32vector-bit type-top-mutability))
-(define type-s32vector (make-type-motley-non-fixnum type-s32vector-bit type-top-mutability))
-(define type-u64vector (make-type-motley-non-fixnum type-u64vector-bit type-top-mutability))
-(define type-s64vector (make-type-motley-non-fixnum type-s64vector-bit type-top-mutability))
-(define type-f32vector (make-type-motley-non-fixnum type-f32vector-bit type-top-mutability))
-(define type-f64vector (make-type-motley-non-fixnum type-f64vector-bit type-top-mutability))
-(define type-pair      (make-type-motley-non-fixnum type-pair-bit type-top-mutability))
-(define type-procedure (make-type-motley-non-fixnum type-procedure-bit type-top-mutability))
-(define type-box       (make-type-motley-non-fixnum type-box-bit type-top-mutability))
-(define type-promise   (make-type-motley-non-fixnum type-promise-bit type-top-mutability))
-(define type-other     (make-type-motley-non-fixnum type-other-bit type-top-mutability))
+(define type-bignum    (make-type-motley-non-fixnum type-bignum-bit))
+(define type-ratnum    (make-type-motley-non-fixnum type-ratnum-bit))
+(define type-flonum    (make-type-motley-non-fixnum type-flonum-bit))
+(define type-cpxnum    (make-type-motley-non-fixnum type-cpxnum-bit))
+(define type-motley-false  (make-type-motley-non-fixnum type-false-bit))
+(define type-motley-true   (make-type-motley-non-fixnum type-true-bit))
+(define type-motley-null   (make-type-motley-non-fixnum type-null-bit))
+(define type-motley-void   (make-type-motley-non-fixnum type-void-bit))
+(define type-motley-eof    (make-type-motley-non-fixnum type-eof-bit))
+(define type-motley-absent (make-type-motley-non-fixnum type-absent-bit))
+(define type-char      (make-type-motley-non-fixnum type-char-bit))
+(define type-symbol    (make-type-motley-non-fixnum type-symbol-bit))
+(define type-keyword   (make-type-motley-non-fixnum type-keyword-bit))
+(define type-string    (make-type-motley-non-fixnum type-string-bit))
+(define type-vector    (make-type-motley-non-fixnum type-vector-bit))
+(define type-u8vector  (make-type-motley-non-fixnum type-u8vector-bit))
+(define type-s8vector  (make-type-motley-non-fixnum type-s8vector-bit))
+(define type-u16vector (make-type-motley-non-fixnum type-u16vector-bit))
+(define type-s16vector (make-type-motley-non-fixnum type-s16vector-bit))
+(define type-u32vector (make-type-motley-non-fixnum type-u32vector-bit))
+(define type-s32vector (make-type-motley-non-fixnum type-s32vector-bit))
+(define type-u64vector (make-type-motley-non-fixnum type-u64vector-bit))
+(define type-s64vector (make-type-motley-non-fixnum type-s64vector-bit))
+(define type-f32vector (make-type-motley-non-fixnum type-f32vector-bit))
+(define type-f64vector (make-type-motley-non-fixnum type-f64vector-bit))
+(define type-pair      (make-type-motley-non-fixnum type-pair-bit))
+(define type-procedure (make-type-motley-non-fixnum type-procedure-bit))
+(define type-box       (make-type-motley-non-fixnum type-box-bit))
+(define type-promise   (make-type-motley-non-fixnum type-promise-bit))
+(define type-other     (make-type-motley-non-fixnum type-other-bit))
 
 (define type-boolean ;; union of type-false and type-true
-  (make-type-motley-non-fixnum (+ type-false-bit type-true-bit) type-bot-mutability))
+  (make-type-motley-non-fixnum (+ type-false-bit type-true-bit)))
 
 (define type-typically-eq-testable ;; union of typically eq? testable types
   (make-type-motley (+ type-false-bit
@@ -7770,7 +7892,8 @@
                        type-keyword-bit
                        type-procedure-bit)
                     type-top-mutability
-                    (make-type-fixnum-range '>= '<=)))
+                    type-bot-fixnum-range
+                    type-top-fixnum-range))
 
 (define type-number
   (make-type-motley (+ type-bignum-bit
@@ -7778,25 +7901,29 @@
                        type-flonum-bit
                        type-cpxnum-bit)
                     type-top-mutability
-                    (make-type-fixnum-range '>= '<=)))
+                    type-bot-fixnum-range
+                    type-top-fixnum-range))
 
 (define type-real
   (make-type-motley (+ type-bignum-bit
                        type-ratnum-bit
                        type-flonum-bit)
                     type-top-mutability
-                    (make-type-fixnum-range '>= '<=)))
+                    type-bot-fixnum-range
+                    type-top-fixnum-range))
 
 (define type-exact-rational
   (make-type-motley (+ type-bignum-bit
                        type-ratnum-bit)
                     type-top-mutability
-                    (make-type-fixnum-range '>= '<=)))
+                    type-bot-fixnum-range
+                    type-top-fixnum-range))
 
 (define type-exact-integer
   (make-type-motley type-bignum-bit
                     type-top-mutability
-                    (make-type-fixnum-range '>= '<=)))
+                    type-bot-fixnum-range
+                    type-top-fixnum-range))
 
 ;;; singleton type (corresponds to a single value)
 
@@ -7830,6 +7957,7 @@
            (make-type-motley
             type-bot-bitset
             type-bot-mutability
+            type-bot-fixnum-range
             (make-type-fixnum-range
              (cond ((= obj min-fixnum)       '>=)
                    ((= obj (+ min-fixnum 1)) '>)
@@ -7842,10 +7970,11 @@
            ;; either fixnum or bignum
            (make-type-motley type-bignum-bit
                              type-top-mutability
-                             (make-type-fixnum-range '>= '<=)))
+                             type-bot-fixnum-range
+                             type-top-fixnum-range))
           (else
            ;; certainly bignum and certainly not fixnum
-           (make-type-motley-non-fixnum type-bignum-bit type-top-mutability)))))
+           (make-type-motley-non-fixnum type-bignum-bit)))))
 
 (define (make-type-singleton-from-bitset bitset)
   (cond ((= bitset type-false-bit)
@@ -7892,10 +8021,10 @@
                 (make-type-motley-from-exact-integer tctx obj))
                ((real? obj)
                 (if (exact? obj)
-                    (make-type-motley-non-fixnum type-ratnum-bit type-top-mutability)
-                    (make-type-motley-non-fixnum type-flonum-bit type-top-mutability)))
+                    (make-type-motley-non-fixnum type-ratnum-bit)
+                    (make-type-motley-non-fixnum type-flonum-bit)))
                (else
-                (make-type-motley-non-fixnum type-cpxnum-bit type-top-mutability))))
+                (make-type-motley-non-fixnum type-cpxnum-bit))))
         ((char? obj)
          type-char)
         ((symbol-object? obj)
@@ -7990,15 +8119,57 @@
               (if (and (not show-pos?) (= bitset type-top-bitset)) (add (list "~" top))))
 
            (define (format-length-bound bound)
-             (let ((offset (length-bound-offset bound)))
+             (let ((object (length-bound-object bound))
+                   (offset (length-bound-offset bound)))
                (string-concatenate
-                (cons "\x27e6;v\x27e7;"
-                      (cond ((= offset 0)
-                             '())
-                            ((< offset 0)
-                             (list (number->string offset)))
-                            (else
-                             (list "+" (number->string offset))))))))
+                (cons "\x27e6;"
+                      (cons (if object (number->string object) "v")
+                            (cons "\x27e7;"
+                                  (cond ((= offset 0)
+                                         '())
+                                        ((< offset 0)
+                                         (list (number->string offset)))
+                                        (else
+                                         (list "+" (number->string offset))))))))))
+
+           (define (format-fixnum-range fixnum-range)
+             (let* ((lo (type-fixnum-range-lo fixnum-range))
+                    (hi (type-fixnum-range-hi fixnum-range)))
+               (cond ((and (number? lo) (number? hi) (< hi lo))
+                      (neg '("fx"))
+                      #f)
+                     ((and (eq? lo '>=) (eq? hi '<=))
+                      (pos '("fx"))
+                      #t)
+                     ((and (length-bound? lo)
+                           (length-bound? hi)
+                           (length-bound-same-object? lo hi))
+                      (if (= (length-bound-offset lo)
+                             (length-bound-offset hi))
+                          (add `(,(format-length-bound lo)))
+                          (add `(,(format-length-bound lo)
+                                 ".."
+                                 ,(format-length-bound hi))))
+                      #t)
+                     (else
+                      (add `(,(cond ((eq? lo '>=)
+                                     ">=")
+                                    ((eq? lo '>)
+                                     ">")
+                                    ((length-bound? lo)
+                                     (format-length-bound lo))
+                                    (else
+                                     (number->string lo)))
+                             ".."
+                             ,(cond ((eq? hi '<=)
+                                     "<=")
+                                    ((eq? hi '<)
+                                     "<")
+                                    ((length-bound? hi)
+                                     (format-length-bound hi))
+                                    (else
+                                     (number->string hi)))))
+                      #t))))
 
            (element '("()") type-null-bit)
            (element '("vd") type-void-bit)
@@ -8018,43 +8189,8 @@
                    (else
                     (neg '("bl")))))
 
-           (let* ((fixnum-range (type-motley-fixnum-range type))
-                  (lo (type-fixnum-range-lo fixnum-range))
-                  (hi (type-fixnum-range-hi fixnum-range)))
-             (cond ((and (number? lo) (number? hi) (< hi lo))
-                    (neg '("fx")))
-                   ((and (eq? lo '>=) (eq? hi '<=))
-                    (pos '("fx"))
-                    (display-top-for-bitset?))
-                   ((and (length-bound? lo)
-                         (length-bound? hi)
-                         (length-bound-same-object? lo hi))
-                    (if (= (length-bound-offset lo)
-                           (length-bound-offset hi))
-                        (add `(,(format-length-bound lo)))
-                        (add `(,(format-length-bound lo)
-                               ".."
-                               ,(format-length-bound hi))))
-                    (display-top-for-bitset?))
-                   (else
-                    (add `(,(cond ((eq? lo '>=)
-                                   ">=")
-                                  ((eq? lo '>)
-                                   ">")
-                                  ((length-bound? lo)
-                                   (format-length-bound lo))
-                                  (else
-                                   (number->string lo)))
-                           ".."
-                           ,(cond ((eq? hi '<=)
-                                   "<=")
-                                  ((eq? hi '<)
-                                   "<")
-                                  ((length-bound? hi)
-                                   (format-length-bound hi))
-                                  (else
-                                   (number->string hi)))))
-                    (display-top-for-bitset?))))
+           (if (format-fixnum-range (type-motley-fixnum-range type))
+               (display-top-for-bitset?))
 
            (element '("bn")   type-bignum-bit)
            (element '("rn")   type-ratnum-bit)
@@ -8086,6 +8222,13 @@
                     (set! result (append result '(";M"))))
                    ((= mutability type-neg-mutability)
                     (set! result (append result '(";I"))))))
+
+           (let ((length-range (type-motley-length-range type)))
+             (if (not (or (type-bot-fixnum-range? length-range)
+                          #f #;(type-top-length-range? length-range)))
+                 (let ((save result))
+                   (format-fixnum-range (type-motley-length-range type))
+                   (set! result (append save '(";") result)))))
 
            result))
         (else
@@ -8190,63 +8333,67 @@
                   (widen-hi hi2)
                   (if use-directional-widening? hi1 (widen-hi hi1)))))))
 
-  (let* ((fixnum-range1 (type-motley-fixnum-range type1))
-         (lo1 (type-fixnum-range-lo fixnum-range1))
-         (hi1 (type-fixnum-range-hi fixnum-range1))
-         (fixnum-range2 (type-motley-fixnum-range type2))
-         (lo2 (type-fixnum-range-lo fixnum-range2))
-         (hi2 (type-fixnum-range-hi fixnum-range2)))
-    (make-type-motley
-     (bitwise-ior (type-motley-bitset type1)
-                  (type-motley-bitset type2))
-     (bitwise-ior (type-motley-mutability type1)
-                  (type-motley-mutability type2))
-     (make-type-fixnum-range
-      (cond ((or (not lo1) (not lo2))         #f)
-            ((or (eq? lo1 '>=) (eq? lo2 '>=)) '>=)
-            ((or (eq? lo1 '>)  (eq? lo2 '>))  '>)
-            ((length-bound? lo1)
-             (type-fixnum-normalize-lo
-              tctx
-              (if (length-bound? lo2)
-                  (if (length-bound-same-object? lo1 lo2)
-                      (make-length-bound
-                       (length-bound-object lo1)
+  (define (union-fixnum-range fixnum-range1 fixnum-range2)
+    (let* ((lo1 (type-fixnum-range-lo fixnum-range1))
+           (hi1 (type-fixnum-range-hi fixnum-range1))
+           (lo2 (type-fixnum-range-lo fixnum-range2))
+           (hi2 (type-fixnum-range-hi fixnum-range2)))
+      (make-type-fixnum-range
+       (cond ((or (not lo1) (not lo2))         #f)
+             ((or (eq? lo1 '>=) (eq? lo2 '>=)) '>=)
+             ((or (eq? lo1 '>)  (eq? lo2 '>))  '>)
+             ((length-bound? lo1)
+              (type-fixnum-normalize-lo
+               tctx
+               (if (length-bound? lo2)
+                   (if (length-bound-same-object? lo1 lo2)
+                       (make-length-bound
+                        (length-bound-object lo1)
+                        (union-lo (length-bound-offset lo1)
+                                  (length-bound-offset lo2)))
                        (union-lo (length-bound-offset lo1)
                                  (length-bound-offset lo2)))
-                      (union-lo (length-bound-offset lo1)
-                                (length-bound-offset lo2)))
-                  (union-lo (length-bound-offset lo1)
-                            lo2))))
-            ((length-bound? lo2)
-             (type-fixnum-normalize-lo
-              tctx
-              (union-lo lo1
-                        (length-bound-offset lo2))))
-            (else
-             (type-fixnum-normalize-lo
-              tctx
-              (union-lo lo1 lo2))))
-      (cond ((or (not hi1) (not hi2))         #f)
-            ((or (eq? hi1 '<=) (eq? hi2 '<=)) '<=)
-            ((or (eq? hi1 '<)  (eq? hi2 '<))  '<)
-            ((length-bound? hi1)
-             (type-fixnum-normalize-hi
-              tctx
-              (if (length-bound? hi2)
-                  (if (length-bound-same-object? hi1 hi2)
-                      (make-length-bound
-                       (length-bound-object hi1)
-                       (union-hi (length-bound-offset hi1)
-                                 (length-bound-offset hi2)))
-                      '<=)
-                  '<=)))
-            ((length-bound? hi2)
-             '<=)
-            (else
-             (type-fixnum-normalize-hi
-              tctx
-              (union-hi hi1 hi2))))))))
+                   (union-lo (length-bound-offset lo1)
+                             lo2))))
+             ((length-bound? lo2)
+              (type-fixnum-normalize-lo
+               tctx
+               (union-lo lo1
+                         (length-bound-offset lo2))))
+             (else
+              (type-fixnum-normalize-lo
+               tctx
+               (union-lo lo1 lo2))))
+       (cond ((or (not hi1) (not hi2))         #f)
+             ((or (eq? hi1 '<=) (eq? hi2 '<=)) '<=)
+             ((or (eq? hi1 '<)  (eq? hi2 '<))  '<)
+             ((length-bound? hi1)
+              (type-fixnum-normalize-hi
+               tctx
+               (if (length-bound? hi2)
+                   (if (length-bound-same-object? hi1 hi2)
+                       (make-length-bound
+                        (length-bound-object hi1)
+                        (union-hi (length-bound-offset hi1)
+                                  (length-bound-offset hi2)))
+                       '<=)
+                   '<=)))
+             ((length-bound? hi2)
+              '<=)
+             (else
+              (type-fixnum-normalize-hi
+               tctx
+               (union-hi hi1 hi2)))))))
+
+  (make-type-motley
+   (bitwise-ior (type-motley-bitset type1)
+                (type-motley-bitset type2))
+   (bitwise-ior (type-motley-mutability type1)
+                (type-motley-mutability type2))
+   (union-fixnum-range (type-motley-length-range type1)
+                       (type-motley-length-range type2))
+   (union-fixnum-range (type-motley-fixnum-range type1)
+                       (type-motley-fixnum-range type2))))
 
 (define (type-union tctx type1 type2 widen?)
   (cond ((type-bot? type1)
@@ -8265,66 +8412,80 @@
           widen?))))
 
 (define (type-motley-intersection type1 type2)
-  (let* ((fixnum-range1 (type-motley-fixnum-range type1))
-         (lo1 (type-fixnum-range-lo fixnum-range1))
-         (hi1 (type-fixnum-range-hi fixnum-range1))
-         (fixnum-range2 (type-motley-fixnum-range type2))
-         (lo2 (type-fixnum-range-lo fixnum-range2))
-         (hi2 (type-fixnum-range-hi fixnum-range2))
-         (lo ;; max of lo1 and lo2
-          (cond ((not lo1)     lo2)
-                ((not lo2)     lo1)
-                ((eq? lo1 '>=) lo2)
-                ((eq? lo2 '>=) lo1)
-                ((eq? lo1 '>)  lo2)
-                ((eq? lo2 '>)  lo1)
-                ((length-bound? lo1)
-                 (if (length-bound? lo2)
-                     (if (length-bound-same-object? lo1 lo2)
-                         (make-length-bound (length-bound-object lo1)
-                                            (max (length-bound-offset lo1)
-                                                 (length-bound-offset lo2)))
-                         (max (length-bound-offset lo1)
-                              (length-bound-offset lo2)))
-                     (max (length-bound-offset lo1)
-                          lo2)))
-                ((length-bound? lo2)
-                 (max lo1
-                      (length-bound-offset lo2)))
-                (else
-                 (max lo1 lo2))))
-         (hi ;; min of hi1 and hi2
-          (cond ((not hi1)     hi2)
-                ((not hi2)     hi1)
-                ((eq? hi1 '<=) hi2)
-                ((eq? hi2 '<=) hi1)
-                ((eq? hi1 '<)  hi2)
-                ((eq? hi2 '<)  hi1)
-                ((length-bound? hi1)
-                 (if (length-bound? hi2)
-                     (if (length-bound-same-object? hi1 hi2)
-                         (make-length-bound (length-bound-object hi1)
-                                            (min (length-bound-offset hi1)
-                                                 (length-bound-offset hi2)))
-                         (if (and (= 0 (length-bound-offset hi1))
-                                  (= 0 (length-bound-offset hi2)))
-                             '<=
-                             '<))
-                     hi2))
-                ((length-bound? hi2)
-                 hi1)
-                (else
-                 (min hi1 hi2))))
-         (empty-range?
-          (type-fixnum-empty? lo hi)))
-    (make-type-motley
-     (bitwise-and (type-motley-bitset type1)
-                  (type-motley-bitset type2))
-     (bitwise-and (type-motley-mutability type1)
-                  (type-motley-mutability type2))
-     (if empty-range?
-         (make-type-fixnum-range 0 -1)
-         (make-type-fixnum-range lo hi)))))
+
+  (declare (generic))
+
+  (define (intersection-fixnum-range fixnum-range1 fixnum-range2)
+    (cond ((type-bot-fixnum-range? fixnum-range1)
+           fixnum-range1)
+          ((type-bot-fixnum-range? fixnum-range2)
+           fixnum-range2)
+          (else
+           (let* ((lo1 (type-fixnum-range-lo fixnum-range1))
+                  (hi1 (type-fixnum-range-hi fixnum-range1))
+                  (lo2 (type-fixnum-range-lo fixnum-range2))
+                  (hi2 (type-fixnum-range-hi fixnum-range2))
+                  (lo ;; max of lo1 and lo2
+                   (cond ((not lo1)     lo2)
+                         ((not lo2)     lo1)
+                         ((eq? lo1 '>=) lo2)
+                         ((eq? lo2 '>=) lo1)
+                         ((eq? lo1 '>)  lo2)
+                         ((eq? lo2 '>)  lo1)
+                         ((length-bound? lo1)
+                          (if (length-bound? lo2)
+                              (if (length-bound-same-object? lo1 lo2)
+                                  (make-length-bound (length-bound-object lo1)
+                                                     (max-lo-length-bounds lo1 lo2))
+                                  (max-lo-length-bounds lo1 lo2))
+                              (if (<= lo2 0)
+                                  lo1
+                                  (max (length-bound-offset lo1)
+                                       lo2))))
+                         ((length-bound? lo2)
+                          (if (<= lo1 0)
+                              lo2
+                              (max lo1
+                                   (length-bound-offset lo2))))
+                         (else
+                          (max lo1 lo2))))
+                  (hi ;; min of hi1 and hi2
+                   (cond ((not hi1)     hi2)
+                         ((not hi2)     hi1)
+                         ((eq? hi1 '<=) hi2)
+                         ((eq? hi2 '<=) hi1)
+                         ((eq? hi1 '<)  hi2)
+                         ((eq? hi2 '<)  hi1)
+                         ((length-bound? hi1)
+                          (if (length-bound? hi2)
+                              (if (length-bound-same-object? hi1 hi2)
+                                  (make-length-bound (length-bound-object hi1)
+                                                     (min (length-bound-offset hi1)
+                                                          (length-bound-offset hi2)))
+                                  #; ;;TODO: remove old logic
+                                  (min-hi-length-bounds hi1 hi2)
+                                  (if (<= (length-bound-offset hi1)
+                                          (length-bound-offset hi2))
+                                      hi1
+                                      hi2))
+                              hi2))
+                         ((length-bound? hi2)
+                          hi1)
+                         (else
+                          (min hi1 hi2)))))
+             (if (type-fixnum-empty? lo hi)
+                 type-bot-fixnum-range
+                 (make-type-fixnum-range lo hi))))))
+
+  (make-type-motley
+   (bitwise-and (type-motley-bitset type1)
+                (type-motley-bitset type2))
+   (bitwise-and (type-motley-mutability type1)
+                (type-motley-mutability type2))
+   (intersection-fixnum-range (type-motley-length-range type1)
+                              (type-motley-length-range type2))
+   (intersection-fixnum-range (type-motley-fixnum-range type1)
+                              (type-motley-fixnum-range type2))))
 
 (define (type-intersection tctx type1 type2)
   (cond ((type-top? type1)
@@ -8343,43 +8504,46 @@
            (type-motley-force tctx type2))))))
 
 (define (type-motley-difference type1 type2)
-  (let* ((fixnum-range1 (type-motley-fixnum-range type1))
-         (lo1 (type-fixnum-range-lo fixnum-range1))
-         (hi1 (type-fixnum-range-hi fixnum-range1))
-         (fixnum-range2 (type-motley-fixnum-range type2))
-         (lo2 (type-fixnum-range-lo fixnum-range2))
-         (hi2 (type-fixnum-range-hi fixnum-range2))
-         (lo1 (if (length-bound? lo1) '>= lo1)) ;; TODO: remove and integrate in logic below!
-         (hi1 (if (length-bound? hi1) '<= hi1))
-         (lo2 (if (length-bound? lo2) '>= lo2))
-         (hi2 (if (length-bound? hi2) '<= hi2)))
 
-    (define (fixnum-range lo hi)
-      (make-type-motley
-       (bitwise-and (type-motley-bitset type1)
-                    (bitwise-not (type-motley-bitset type2)))
-       (type-motley-mutability type1) ;; TODO: can switch to bot if there are no more mutable types in bitset
-       (make-type-fixnum-range lo hi)))
+  (define (difference-fixnum-range fixnum-range1 fixnum-range2)
+    (if (type-bot-fixnum-range? fixnum-range2)
+        fixnum-range1
+        (let* ((lo1 (type-fixnum-range-lo fixnum-range1))
+               (hi1 (type-fixnum-range-hi fixnum-range1))
+               (lo2 (type-fixnum-range-lo fixnum-range2))
+               (hi2 (type-fixnum-range-hi fixnum-range2))
+               (lo1 (normalize-lo-length-bound lo1)) ;; TODO: remove and integrate in logic below!
+               (hi1 (normalize-hi-length-bound hi1))
+               (lo2 (normalize-lo-length-bound lo2))
+               (hi2 (normalize-hi-length-bound hi2)))
+          (cond ((and (exact-integer? lo1)
+                      (exact-integer? hi1)
+                      (exact-integer? lo2)
+                      (exact-integer? hi2))
+                 (cond ((or (< hi2 lo1)
+                            (> lo2 hi1))
+                        (make-type-fixnum-range lo1 hi1)) ;; no effect on fixnum range
+                       ((> lo2 lo1) ;; and (>= hi2 lo1)
+                        (if (< hi2 hi1) ;; and (>= hi2 lo1)
+                            (make-type-fixnum-range lo1 hi1) ;; no effect on fixnum range
+                            (make-type-fixnum-range lo1 (- lo2 1))))
+                       (else
+                        (if (< hi2 hi1) ;; and (<= lo2 lo1)
+                            (make-type-fixnum-range (+ hi2 1) hi1)
+                            type-bot-fixnum-range)))) ;; empty range
+                ((and (eq? lo2 '>=) (eq? hi2 '<=))
+                 type-bot-fixnum-range)
+                (else
+                 (make-type-fixnum-range lo1 hi1))))))
 
-    (cond ((and (exact-integer? lo1)
-                (exact-integer? hi1)
-                (exact-integer? lo2)
-                (exact-integer? hi2))
-           (cond ((or (< hi2 lo1)
-                      (> lo2 hi1))
-                  (fixnum-range lo1 hi1)) ;; no effect on fixnum range
-                 ((> lo2 lo1)             ;; and (>= hi2 lo1)
-                  (if (< hi2 hi1)         ;; and (>= hi2 lo1)
-                      (fixnum-range lo1 hi1) ;; no effect on fixnum range
-                      (fixnum-range lo1 (- lo2 1))))
-                 (else
-                  (if (< hi2 hi1) ;; and (<= lo2 lo1)
-                      (fixnum-range (+ hi2 1) hi1)
-                      (fixnum-range 0 -1))))) ;; empty range
-          ((and (eq? lo2 '>=) (eq? hi2 '<=))
-           (fixnum-range 0 -1))
-          (else
-           (fixnum-range lo1 hi1)))))
+  (make-type-motley
+   (bitwise-and (type-motley-bitset type1)
+                (bitwise-not (type-motley-bitset type2)))
+   (type-motley-mutability type1) ;; TODO: improve!
+   (difference-fixnum-range (type-motley-length-range type1)
+                            (type-motley-length-range type2))
+   (difference-fixnum-range (type-motley-fixnum-range type1)
+                            (type-motley-fixnum-range type2))))
 
 (define (type-difference tctx type1 type2)
   (cond ((type-bot? type2)
@@ -8635,23 +8799,47 @@
          (- hi 1))))
 
 (define (type-fixnum-min-hi x y)
-;;(let ((r
   (case (type-fixnum-hi-< x y)
     ((#t) x)
     ((#f) y)
-    (else (if (exact-integer? y) y x))))
-;;) (pp (list 'type-fixnum-min-hi (list x y) '=> r)) r))
+    (else
+     (if (and (length-bound? x) (length-bound? y))
+         (if (<= (length-bound-offset x) (length-bound-offset y))
+             x
+             y)
+         #; ;;TODO: remove old logic:
+         (min-hi-length-bounds x y)
+         (if (length-bound? x)
+             x
+             (if (length-bound? y)
+                 y
+                 (if (exact-integer? y) y x)))))))
 
 (define (type-fixnum-max-lo x y)
-;;(let ((r
   (case (type-fixnum-lo-< x y)
     ((#t) y)
     ((#f) x)
-    (else (if (exact-integer? y) y x))))
-;;) (pp (list 'type-fixnum-max-lo (list x y) '=> r)) r))
+    (else
+     (if (and (length-bound? x) (length-bound? y))
+         (max-lo-length-bounds x y)
+         (if (exact-integer? y) y x)))))
 
 (define (type-eqv? type1 type2) ;; is type1 equal to type2?
-  (equal? type1 type2))
+  (cond ((type-singleton? type1)
+         (and (type-singleton? type2)
+              (type-singleton-eqv? type1 type2)))
+        ((type-motley? type1)
+         (and (type-motley? type2)
+              (and (= (type-motley-bitset type1)
+                      (type-motley-bitset type2))
+                   (= (type-motley-mutability type1)
+                      (type-motley-mutability type2))
+                   (type-fixnum-range-eqv? (type-motley-length-range type1)
+                                           (type-motley-length-range type2))
+                   (type-fixnum-range-eqv? (type-motley-fixnum-range type1)
+                                           (type-motley-fixnum-range type2)))))
+        (else
+         #f)))
 
 (define (type-memv type types)
   (if (null? types)
@@ -9808,12 +9996,12 @@
              (hi2 (type-fixnum-range-hi fixnum-range2))
              (true-lo1 lo1)
              (true-hi1 (type-fixnum-min-hi hi1 (type-fixnum-dec-hi hi2)))
-             (true-lo2 (type-fixnum-max-lo lo2 (type-fixnum-inc-lo lo1)))
+             (true-lo2 (type-fixnum-max-lo (type-fixnum-inc-lo lo1) lo2))
              (true-hi2 hi2)
              (false-lo1 (type-fixnum-max-lo lo1 lo2))
              (false-hi1 hi1)
              (false-lo2 lo2)
-             (false-hi2 (type-fixnum-min-hi hi2 hi1)))
+             (false-hi2 (type-fixnum-min-hi hi1 hi2)))
         (cond ((or (type-fixnum-empty? true-lo1 true-hi1)
                    (type-fixnum-empty? true-lo2 true-hi2))
                ;; true case impossible
@@ -9919,6 +10107,7 @@
                      (make-type-motley
                       (type-motley-bitset a)
                       type-pos-mutability
+                      (type-motley-length-range a)
                       (type-motley-fixnum-range a)))))
           (if (= 0 (bitwise-and mutability type-neg-mutability))
               #f ;; true branch impossible because arg is certainly not immutable
@@ -9927,7 +10116,36 @@
                      (make-type-motley
                       (type-motley-bitset a)
                       type-neg-mutability
+                      (type-motley-length-range a)
                       (type-motley-fixnum-range a))))))))
+
+(define (type-narrow-in-bounds-test tctx arg1 arg2)
+  (let* ((test1 (type-narrow-fx<= tctx (make-type-singleton 0) arg2))
+         (true1 (car test1))
+         (false1 (cdr test1)))
+    (if true1
+        (let* ((a1 (type-motley-force tctx arg1))
+               (length-range (type-motley-length-range a1))
+               (fixnum-range (make-type-fixnum (type-fixnum-range-lo length-range)
+                                               (type-fixnum-range-hi length-range)))
+               (test2 (type-narrow-fx< tctx arg2 (type-motley-normalize tctx fixnum-range)))
+               (true2 (car test2))
+               (false2 (cdr test2)))
+          (cons
+           (if true2
+               (list (type-motley-normalize
+                      tctx
+                      (make-type-motley
+                       (type-motley-bitset a1)
+                       (type-motley-mutability a1)
+                       (type-motley-fixnum-range (type-motley-force tctx (cadr true2)))
+                       (type-motley-fixnum-range a1)))
+                     (type-intersection tctx (cadr true1) (car true2)))
+               #f)
+           (and (or false1 false2) (list arg1 arg2))))
+        (cons
+         #f
+         (and false1 (list arg1 arg2))))))
 
 (define (proc-type->type tctx type)
   (case (type-name type)
@@ -9980,7 +10198,7 @@
            s32 s32vector u32 u32vector s64 s64vector u64 u64vector
            f32vector f64vector
            #f)
-     type-top) ;;TODO: refine
+     (make-type-top-with-new-length-bound))
     (else
      (compiler-internal-error
       "proc-type->type, unknown 'type':" type))))
