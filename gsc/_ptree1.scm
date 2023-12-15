@@ -390,7 +390,7 @@
   (make-call-arg
    (if (cst? ptree)
        (make-type-singleton (cst-val ptree))
-       type-top)))
+       (make-type-top-with-new-length-bound))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ;;

@@ -144,10 +144,10 @@
         (length (frame-slots frame))
         (length (frame-closed frame))
         0
-        type-top)))
+        #f)))
 
 (define (types-keep-topmost-slots types topmost-slots)
-  (locenv-keep-topmost-slots types topmost-slots type-top))
+  (locenv-keep-topmost-slots types topmost-slots #f))
 
 (define (frame-live? var frame)
   (let ((live (frame-live frame)))
@@ -2194,7 +2194,7 @@
     (let ((nb-regs (length (frame-regs frame)))
           (nb-slots (length (frame-slots frame)))
           (nb-closed (length (frame-closed frame))))
-      (make-locenv nb-regs nb-slots nb-closed type-top)))
+      (make-locenv nb-regs nb-slots nb-closed #f)))
 
   (define (resized-frame-types-remove-dead frame types)
     (let* ((regs (frame-regs frame))
@@ -2210,12 +2210,12 @@
              types
              (vector nb-regs nb-slots nb-closed)
              0
-             type-top)))
+             #f)))
 
       (define (remove-if-not-live! var gvm-loc)
         (if (not (frame-live? var frame))
             (let ((dst-loc (gvm-loc->locenv-index new-types gvm-loc)))
-              (locenv-set! new-types dst-loc type-top))))
+              (locenv-set! new-types dst-loc type-bot))))
 
       (let loop1 ((i 1) (slots slots))
         (if (pair? slots)
@@ -2238,7 +2238,7 @@
      (length (frame-slots frame))
      (length (frame-closed frame))
      0
-     type-top))
+     #f))
 
   (define (types-merge2 types1 types2 widen?)
     (locenv-merge types1
@@ -2650,14 +2650,15 @@
 
           (define (opnd-type gvm-opnd types)
             (cond ((not gvm-opnd)
-                   type-top)
+                   type-bot)
                   ((locenv-loc? gvm-opnd)
                    (locenv-ref types
                                (gvm-loc->locenv-index types gvm-opnd)))
                   ((obj? gvm-opnd)
                    (make-type-singleton (obj-val gvm-opnd)))
                   (else
-                   type-top)))
+                   ;; global variable
+                   (make-type-top-with-new-length-bound))))
 
           (define (opnd-constantify opnd types-before)
             (if (locenv-loc? opnd)
@@ -2755,7 +2756,7 @@
                       (dst-type
                        (if type-infer
                            (type-infer tctx type-opnds)
-                           type-top))
+                           (make-type-top-with-new-length-bound)))
                       (types-after
                        (if (locenv-loc? loc)
                            (let ((dst-loc
@@ -2961,7 +2962,7 @@
                                         #f
                                         (gvm-instr-frame gvm-instr)
                                         (gvm-instr-comment gvm-instr))
-                                       (error)))))
+                                       (error "impossible true and false outcomes from test" (proc-obj-name test))))))
                            (make-ifjump
                             test
                             opnds
@@ -3013,7 +3014,7 @@
                                     (types-return
                                      (locenv-set types-after*
                                                  result-loc
-                                                 type-top)))
+                                                 (make-type-top-with-new-length-bound))))
                                (reach-ret* ret
                                        types-return
                                        (+ (- cost instr-cost) call-cost)
@@ -3153,23 +3154,19 @@
 
 ;; Linear distance
 (define (linear-type-distance tctx type1 type2)
+  (define (bs type bitset)
+    (+ (bitwise-and bitset (- (expt 2 30) 1))
+       (if (type-motley-included? type type-fixnum)
+           (expt 2 30)
+           0)))
   (let* ((t1 (type-motley-force tctx type1))
          (t2 (type-motley-force tctx type2)))
-    (let* ((bitset1 (type-motley-bitset t1))
-           (bitset2 (type-motley-bitset t2))
-           (bs1
-            (+ (bitwise-and bitset1 (- (expt 2 30) 1))
-               (if (type-motley-included? t1 type-fixnum)
-                   (expt 2 30)
-                   0)))
-           (bs2
-            (+ (bitwise-and bitset2 (- (expt 2 30) 1))
-               (if (type-motley-included? t2 type-fixnum)
-                   (expt 2 30)
-                   0))))
-      (+ (bit-count (bitwise-eqv bs1 bs2))
-         (bit-count (bitwise-eqv (type-motley-mutability t1)
-                                 (type-motley-mutability t2)))))))
+    (+ (bit-count
+        (bitwise-eqv (bs t1 (type-motley-mut-bitset t1))
+                     (bs t2 (type-motley-mut-bitset t2))))
+       (bit-count
+        (bitwise-eqv (bs t1 (type-motley-not-mut-bitset t1))
+                     (bs t2 (type-motley-not-mut-bitset t2)))))))
 
 (define (types-count tctx type)
   (define count 0)
@@ -3345,7 +3342,7 @@
 (define (locenv-val-eqv? locenv val1 val2)
   (type-eqv? val1 val2))
 
-(define (make-locenv nb-regs nb-slots nb-closed init)
+(define (make-locenv nb-regs nb-slots nb-closed init-type)
   (let* ((locenv
           (make-locenv-from-lengths (vector nb-regs nb-slots nb-closed)))
          (len
@@ -3353,9 +3350,9 @@
              (* locenv-entry-size (+ nb-regs nb-slots nb-closed)))))
     (let loop ((i locenv-start-regs))
       (if (< i len)
-          (begin
+          (let ((type (or init-type (make-type-top-with-new-length-bound))))
             (vector-set! locenv i i)
-            (vector-set! locenv (+ i 1) init)
+            (vector-set! locenv (+ i 1) type)
             (loop (+ i locenv-entry-size)))
           locenv))))
 
@@ -3369,7 +3366,7 @@
     (vector-set! locenv 0 lengths)
     locenv))
 
-(define (locenv-keep-topmost-slots locenv topmost-slots init)
+(define (locenv-keep-topmost-slots locenv topmost-slots init-type)
   (let* ((lengths (vector-ref locenv 0))
          (nb-regs (vector-ref lengths 0))
          (nb-slots (vector-ref lengths 1))
@@ -3378,9 +3375,9 @@
     (locenv-resize-from-lengths locenv
                                 (vector nb-regs topmost-slots nb-closed)
                                 slot-shift
-                                init)))
+                                init-type)))
 
-(define (locenv-resize locenv nb-regs nb-slots nb-closed slot-shift init)
+(define (locenv-resize locenv nb-regs nb-slots nb-closed slot-shift init-type)
   (let ((lengths (vector-ref locenv 0)))
     (if (and (= nb-regs (vector-ref lengths 0))
              (= nb-slots (vector-ref lengths 1))
@@ -3390,9 +3387,9 @@
         (locenv-resize-from-lengths locenv
                                     (vector nb-regs nb-slots nb-closed)
                                     slot-shift
-                                    init))))
+                                    init-type))))
 
-(define (locenv-resize-from-lengths locenv new-lengths slot-shift init)
+(define (locenv-resize-from-lengths locenv new-lengths slot-shift init-type)
   (let* ((new-locenv
           (make-locenv-from-lengths new-lengths))
          (lengths
@@ -3490,7 +3487,8 @@
             (if (< j (vector-length new-locenv))
                 (begin
                   (if (eqv? (vector-ref new-locenv j) 0)
-                      (begin
+                      (let ((type (or init-type
+                                      (make-type-top-with-new-length-bound))))
                         (vector-set!
                          new-locenv
                          j
@@ -3498,7 +3496,7 @@
                         (vector-set!
                          new-locenv
                          (+ j 1)
-                         init)))
+                         type)))
                   (loop3 (+ j locenv-entry-size)))
                 new-locenv))))))
 
@@ -3636,6 +3634,7 @@
 
   ;; This procedure stores val in the location loc after removing it
   ;; from its current equivalence class. The locenv is mutated.
+
   (locenv-ec-detach! locenv loc)
   (vector-set! locenv (+ loc 1) val))
 
@@ -4521,99 +4520,13 @@
   (display (format-concatenate (format-frame frame types 'combined '()))
            port))
 
-(define (format-frame-old frame types)
-
-  (define (format-type-gvm-loc gvm-loc)
-    (if types
-        (let ((type
-               (locenv-ref types (gvm-loc->locenv-index types gvm-loc))))
-          (if (type-eqv? type type-top)
-              '("")
-              `("|" ,@(format-type type))))
-        '("")))
-
-  (define (format-var var)
-    (cond ((eq? var closure-env-var)
-           (let ((closed (frame-closed frame)))
-             (let loop ((i (length closed))
-                        (lst (reverse closed))
-                        (sep `())
-                        (result `(")")))
-               (if (pair? lst)
-                   (loop (- i 1)
-                         (cdr lst)
-                         `(" ")
-                         (let* ((var (car lst))
-                                (type (format-type-gvm-loc (make-clo #f i))))
-                           `(,(symbol->string (var-name (car lst)))
-                             ,@type
-                             ,@sep
-                             ,@result)))
-                   `("(" ,@result)))))
-          ((eq? var ret-var)
-           `("#ret"))
-          ((var-temp? var)
-           `("#"))
-          (else
-           `(,(symbol->string (var-name var))))))
-
-  (let ((regs (frame-regs frame)))
-    (let loop1 ((i (- (length regs) 1))
-                (lst (reverse regs))
-                (sep `())
-                (result `()))
-      (if (pair? lst)
-          (let ((var (car lst)))
-            (if (frame-live? var frame) ;; only include live registers
-                (loop1 (- i 1)
-                       (cdr lst)
-                       `(" ")
-                       (let* ((reg (make-reg i))
-                              (info (if var
-                                        `("=" ,@(format-var var))
-                                        `()))
-                              (type (if var
-                                        (format-type-gvm-loc reg)
-                                        `())))
-                         `(,(format-gvm-opnd reg)
-                           ,@info
-                           ,@type
-                           ,@sep
-                           ,@result)))
-                (loop1 (- i 1)
-                       (cdr lst)
-                       sep
-                       result)))
-          (let ((slots (frame-slots frame)))
-            (let loop2 ((i (length slots))
-                        (lst slots)
-                        (sep `())
-                        (result `("]" ,@sep ,@result)))
-              (if (pair? lst)
-                  (loop2 (- i 1)
-                         (cdr lst)
-                         `(" ")
-                         (let ((var (car lst)))
-                           (if (frame-live? var frame)
-                               (let* ((stk (make-stk i))
-                                      (info (format-var var))
-                                      (type (format-type-gvm-loc stk)))
-                                 `(,@info
-                                   ,@type
-                                   ,@sep
-                                   ,@result))
-                               `("."
-                                 ,@sep
-                                 ,@result))))
-                  `("[" ,@result))))))))
-
 (define (format-frame frame types style options)
 
   (define (format-type-gvm-loc gvm-loc)
     (and types
          (let ((type
                 (locenv-ref types (gvm-loc->locenv-index types gvm-loc))))
-           (if (and (not (eq? style 'types)) (type-eqv? type type-top))
+           (if (and (not (eq? style 'types)) (type-top? type))
                #f ;; don't show universal type
                (format-type type)))))
 
@@ -5658,7 +5571,7 @@
             #f                                    ;; done
             (make-table)                          ;; primitive counter
             (make-table                           ;; length-bounds
-              test: length-bound-object-equal?
+              test: length-bound-object-eqv?
               ;;weak-values: #t
             ))))             
     (RTE-registers-set! (InterpreterState-rte state) 0 exit-return-address)
