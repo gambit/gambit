@@ -409,6 +409,12 @@
 (define (bb-entry-frame-size bb)
   (frame-size (gvm-instr-frame (bb-label-instr bb))))
 
+(define (bb-entry-nb-params bb)
+  (let ((lbl (bb-label-instr bb)))
+    (if (eq? (label-kind lbl) 'entry)
+      (label-entry-nb-parms lbl)
+      #f)))
+
 (define (bb-exit-frame-size bb)
   (frame-size (gvm-instr-frame (bb-branch-instr bb))))
 
@@ -5546,12 +5552,15 @@
     (define (typecheck-mutability)
       (let ((mutability (type-motley-mutability motley-type)))
         (cond
-          ((eq? mutability type-neg-mutability) (not (##mutable? value))) ;; not mutable
-          ((eq? mutability type-pos-mutability) (##mutable? value))       ;; mutable
-          ((eq? mutability type-top-mutability) (##mem-allocated? value)) ;; unknown, but defined
-          (else (not (##mem-allocated? value))))))                        ;; undefined, because not a structure
+          ((eq? mutability type-neg-mutability) (and (##mem-allocated? value)
+                                                     (not (##mutable? value)))) ;; not mutable
+          ((eq? mutability type-pos-mutability) (and (##mem-allocated? value)
+                                                     (##mutable? value)))       ;; mutable
+          ((eq? mutability type-bot-mutability) (not (##mem-allocated? value))) ;; undefined, because not a structure
+          (else #t))))                                                          ;; could be anything
 
-    (if (not (and (typecheck-fixnum) (typecheck-generic) (typecheck-mutability)))
+    (when (not (and (typecheck-fixnum) (typecheck-generic) (typecheck-mutability)))
+        (println (typecheck-fixnum) (typecheck-generic) (typecheck-mutability))
         (throw-error)))
 
   (define (throw-error slot-kind slot-num value expected)
@@ -5589,7 +5598,7 @@
             (iota n-slots 1)
             (iota n-slots (+ locenv-start-regs (* 2 n-registers) 1) 2))))))
 
-(define backend-nb-arg-registers 3) ;; TODO: get from backend
+(define backend-nb-args-in-registers 3) ;; TODO: get from backend
 (define backend-return-label-location 0) ;; register 0
 (define backend-return-result-location 8) ;; register 1
 
@@ -5760,8 +5769,9 @@
          (target (InterpreterState-ref state opnd)))
     (InterpreterState-transition state target nargs ret)))
 
-(define (InterpreterState-transition state target nargs ret)
-  (let ((current-bbs (InterpreterState-bbs state)))
+(define (InterpreterState-transition state target nargs ret #!key exit-fs)
+  (let* ((current-bbs (InterpreterState-bbs state))
+         (exit-fs (or exit-fs (bb-exit-frame-size (InterpreterState-bb state)))))
     (cond
       ((eq? target exit-return-address)
         (mark-exit-jump state)
@@ -5772,6 +5782,7 @@
         (let ((target-bbs (Label-bbs target)))
           (InterpreterState-transition-to-bb
             state
+            exit-fs
             target-bbs
             (lbl-num->bb (Label-id target) target-bbs)
             nargs
@@ -5783,6 +5794,7 @@
                (lbl-id (Label-id clo-lbl)))
         (InterpreterState-transition-to-bb
             state
+            exit-fs
             lbl-bbs
             (lbl-num->bb lbl-id lbl-bbs)
             nargs
@@ -5808,8 +5820,11 @@
       ((proc-obj? target)
         (let* ((target-bbs (proc-obj-code target))
                (target-entry-lbl (bbs-entry-lbl-num target-bbs)))
+          (when interpreter-debug-trace?
+            (println "Entering procedure: " (proc-obj-name target)))
           (InterpreterState-transition-to-bb
             state
+            exit-fs
             target-bbs
             (lbl-num->bb target-entry-lbl target-bbs)
             nargs
@@ -5897,14 +5912,14 @@
     (if closed? (RTE-set! rte (get-closure-loc params-info) clo))
     (for-each (lambda (loc a) (RTE-set! rte loc a)) args-loc (vector->list actual-params))))
 
-(define (InterpreterState-transition-to-bb state target-bbs target-bb nargs ret clo)
+(define (InterpreterState-transition-to-bb state exit-fs target-bbs target-bb nargs ret clo)
   (let* ((rte (InterpreterState-rte state))
          (stack (RTE-stack rte))
          (current-bbs (InterpreterState-bbs state))
          (current-bb (InterpreterState-bb state))
          (target-label (bb-label-instr target-bb)))
     (increment-branch-counter (InterpreterState-current-instruction state) target-bbs target-bb)
-    (Stack-frame-exit! stack (bb-exit-frame-size current-bb))
+    (Stack-frame-exit! stack exit-fs)
     (if (eq? (label-kind target-label) 'entry)
         (InterpreterState-align-args
           state
@@ -5955,7 +5970,7 @@
         (bbs-entry-lbl-num (Label-bbs o))))
     ((Closure? o)
       (pp-with-tag "closure"))
-    ((eq? o 'empty-stack-slot)
+    ((eq? o empty-stack-slot)
       (display ".\n"))
     ((symbol? o)
       (println "'" o))
@@ -5968,32 +5983,34 @@
                       s))
         (display "\n")))))
 
-(define (InterpreterState-debug-log state)
+(define (InterpreterState-debug-log state #!key (shift-left 0) (shift-right 0))
   (when interpreter-debug-trace?
     (let* ((rte (InterpreterState-rte state))
            (registers (RTE-registers rte))
            (bb (InterpreterState-bb state))
            (entry-fs (bb-entry-frame-size bb))
            (exit-fs (bb-exit-frame-size bb))
+           (shift-left (+ shift-left (or (bb-entry-nb-params bb) 0)))
            (instr (InterpreterState-current-instruction state))
            (nargs (if (eq? (gvm-instr-kind instr) 'jump)
                       (or (jump-nb-args instr) 0)
                       0)))
       (println "In basic block #" (bb-lbl-num bb))
-      (println "Registers:")
+      (println "  Registers:")
       (for-each
         (lambda (i)
-          (print i)
+          (print "    " i)
           (print ": ")
           (pp-gvm-obj (stretchable-vector-ref registers i)))
         (iota (stretchable-vector-length registers)))
-      (println "Frame:")
+      (println "  Frame:")
       (for-each
         (lambda (i) 
-          (print i ": " )
+          (print "    " i ": " )
           (pp-gvm-obj (RTE-frame-ref rte i)))
-        (iota (+ nargs (max entry-fs exit-fs)) 1))
-      (println "Instruction:")
+        (iota (max entry-fs (+ nargs shift-left shift-right exit-fs)) (- 1 shift-left)))
+      (println "  Instruction:")
+      (print "    ")
       (write-gvm-instr (InterpreterState-current-instruction state) (current-output-port))
       (println)
       (println "---"))))
@@ -6048,7 +6065,8 @@
               (stack (RTE-stack rte))
               (proc (car args))
               (proc-args (cadr args))
-              (nargs (length proc-args)))
+              (nargs (length proc-args))
+              (dummy-fs (max 0 (- nargs backend-nb-args-in-registers))))
         (define r0 (RTE-ref rte backend-return-label-location))
 
         ;; create a dummy frame for arguments
@@ -6060,7 +6078,7 @@
           (iota nargs)
           proc-args)
         ;; prepare the frame for the callee
-        (Stack-frame-exit! stack nargs)
+        (Stack-frame-exit! stack dummy-fs)
         (InterpreterState-transition
           state
           proc
@@ -6072,7 +6090,8 @@
               (Stack-frame-enter! stack fs)
               ;; return result
               (RTE-set! rte backend-return-label-location r0)
-              (cont (RTE-ref rte backend-return-result-location))))))))
+              (cont (RTE-ref rte backend-return-result-location))))
+          exit-fs: dummy-fs))))
 
   (register!
     "##map"
@@ -6082,7 +6101,8 @@
               (stack (RTE-stack rte))
               (proc (car proc-and-args))
               (arg-lists (cdr proc-and-args))
-              (nargs (length arg-lists)))
+              (nargs (length arg-lists))
+              (dummy-fs (max 0 (- nargs backend-nb-args-in-registers))))
         (define r0 (RTE-ref rte backend-return-label-location))
 
         (define acc '())
@@ -6110,7 +6130,7 @@
                     (iota nargs)
                     args)
                   ;; prepare the frame for the callee
-                  (Stack-frame-exit! stack nargs)
+                  (Stack-frame-exit! stack dummy-fs)
                   ;; call
                   (InterpreterState-transition
                     state
@@ -6121,7 +6141,8 @@
                         ;; store result
                         (set! acc (cons (RTE-ref rte backend-return-result-location) acc))
                         ;; continue map iteration
-                        (loop)))))
+                        (loop)))
+                    exit-fs: dummy-fs))
                 (return))))
         ;; create a dummy frame for arguments
         (Stack-frame-exit! stack fs)
@@ -6171,8 +6192,17 @@
 (define (RTE-global-set! rte name v) (table-set! (RTE-global-env rte) name v))
 (define (RTE-primitive-ref rte name) (table-ref (RTE-primitives rte) name))
 
-(define (RTE-args-ref rte nargs i)
-  (let* ((nb-arg-registers (min nargs backend-nb-arg-registers))
+(define-macro (define-safe-getter signature . body)
+  (let* ((signature-extension (list '#!key (list 'safe #t)))
+         (safe-signature (append signature signature-extension))
+         (guarded-body
+          `(let ((result (begin ,@body)))
+              (if (eq? result empty-stack-slot) (error "When reading empty slot"))
+              result)))
+    `(define ,safe-signature ,guarded-body)))
+
+(define-safe-getter (RTE-args-ref rte nargs i)
+  (let* ((nb-arg-registers (min nargs backend-nb-args-in-registers))
          (nb-arg-frames (- nargs nb-arg-registers))
          (stack (RTE-stack rte)))
     (if (< i nb-arg-frames)
@@ -6180,7 +6210,7 @@
         (RTE-registers-ref rte (- i nb-arg-frames -1)))))
   
 (define (RTE-param-set! rte nparams i param)
-  (let* ((nb-param-registers (min nparams backend-nb-arg-registers))
+  (let* ((nb-param-registers (min nparams backend-nb-args-in-registers))
          (nb-param-frames (- nparams nb-param-registers))
          (stack (RTE-stack rte)))
     (if (< i nb-param-frames)
@@ -6195,14 +6225,16 @@
     ((clo? target) (Closure-set! (RTE-ref rte (clo-base target)) (clo-index target) value))
     (else (error "cannot write to" target))))
 
-(define (RTE-ref rte target)
-  (cond
-    ((reg? target) (RTE-registers-ref rte (reg-num target)))
-    ((stk? target) (RTE-frame-ref rte (stk-num target)))
-    ((glo? target) (RTE-global-ref rte (glo-name target)))
-    ((clo? target) (Closure-ref (RTE-ref rte (clo-base target)) (clo-index target)))
-    ((obj? target) (obj-val target))
-    (else (error "cannot read from" target))))
+(define-safe-getter (RTE-ref rte target)
+  (let ((result
+          (cond
+            ((reg? target) (RTE-registers-ref rte (reg-num target)))
+            ((stk? target) (RTE-frame-ref rte (stk-num target)))
+            ((glo? target) (RTE-global-ref rte (glo-name target)))
+            ((clo? target) (Closure-ref (RTE-ref rte (clo-base target)) (clo-index target)))
+            ((obj? target) (obj-val target))
+            (else (error "cannot read from" target)))))
+    result))
 
 (define-type Stack
   frame-pointer
