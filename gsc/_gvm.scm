@@ -3148,23 +3148,19 @@
 
 ;; Linear distance
 (define (linear-type-distance tctx type1 type2)
+  (define (bs type bitset)
+    (+ (bitwise-and bitset (- (expt 2 30) 1))
+       (if (type-motley-included? type type-fixnum)
+           (expt 2 30)
+           0)))
   (let* ((t1 (type-motley-force tctx type1))
          (t2 (type-motley-force tctx type2)))
-    (let* ((bitset1 (type-motley-bitset t1))
-           (bitset2 (type-motley-bitset t2))
-           (bs1
-            (+ (bitwise-and bitset1 (- (expt 2 30) 1))
-               (if (type-motley-included? t1 type-fixnum)
-                   (expt 2 30)
-                   0)))
-           (bs2
-            (+ (bitwise-and bitset2 (- (expt 2 30) 1))
-               (if (type-motley-included? t2 type-fixnum)
-                   (expt 2 30)
-                   0))))
-      (+ (bit-count (bitwise-eqv bs1 bs2))
-         (bit-count (bitwise-eqv (type-motley-mutability t1)
-                                 (type-motley-mutability t2)))))))
+    (+ (bit-count
+        (bitwise-eqv (bs t1 (type-motley-mut-bitset t1))
+                     (bs t2 (type-motley-mut-bitset t2))))
+       (bit-count
+        (bitwise-eqv (bs t1 (type-motley-not-mut-bitset t1))
+                     (bs t2 (type-motley-not-mut-bitset t2)))))))
 
 (define (types-count tctx type)
   (define count 0)

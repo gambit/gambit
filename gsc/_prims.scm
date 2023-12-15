@@ -7514,19 +7514,17 @@
          (or (eqv? hi '<=)
              (and (length-bound? hi) (= 0 (length-bound-offset hi)))))))
 
-(define (make-type-motley bitset mutability length-range fixnum-range)
-  (vector bitset
-          (if (= 0 (bitwise-and (bitwise-not type-undefined-mutability-bitset) bitset))
-              type-bot-mutability ;; force undefined mutability
-              mutability)
+(define (make-type-motley mut-bitset not-mut-bitset length-range fixnum-range)
+  (vector (bitwise-and (bitwise-not type-undefined-mutability-bitset) mut-bitset)
+          not-mut-bitset
           length-range
           fixnum-range))
 
-(define (type-motley? type)             (vector? type))
-(define (type-motley-bitset type)       (vector-ref type 0))
-(define (type-motley-mutability type)   (vector-ref type 1))
-(define (type-motley-length-range type) (vector-ref type 2))
-(define (type-motley-fixnum-range type) (vector-ref type 3))
+(define (type-motley? type)               (vector? type))
+(define (type-motley-mut-bitset type)     (vector-ref type 0))
+(define (type-motley-not-mut-bitset type) (vector-ref type 1))
+(define (type-motley-length-range type)   (vector-ref type 2))
+(define (type-motley-fixnum-range type)   (vector-ref type 3))
 
 ;; values for mutability property:
 
@@ -7620,7 +7618,7 @@
 
 (define (make-type-motley-non-fixnum bitset)
   (make-type-motley bitset
-                    type-top-mutability
+                    bitset
                     type-top-length-range
                     type-bot-fixnum-range))
 
@@ -7633,13 +7631,17 @@
          (length-bound (make-length-bound i 0)))
     (set! type-top-counter (+ i 1))
     (make-type-motley type-top-bitset
-                      type-top-mutability
+                      type-top-bitset
                       (make-type-fixnum-range length-bound length-bound)
                       type-top-fixnum-range))) ;; all types + entire fixnum range
 
 (define (type-top? type)
   (and (type-motley? type)
-       (eqv? (type-motley-bitset type) type-top-bitset)
+       (eqv? (bitwise-ior (type-motley-mut-bitset type)
+                          type-undefined-mutability-bitset)
+             type-top-bitset)
+       (eqv? (type-motley-not-mut-bitset type)
+             type-top-bitset)
        (type-top-length-range? (type-motley-length-range type))
        (type-top-fixnum-range? (type-motley-fixnum-range type))))
 
@@ -7650,7 +7652,8 @@
 
 (define (type-bot? type)
   (and (type-motley? type)
-       (eqv? (type-motley-bitset type) type-bot-bitset)
+       (eqv? (type-motley-mut-bitset type) type-bot-bitset)
+       (eqv? (type-motley-not-mut-bitset type) type-bot-bitset)
        ;; no need to check (type-motley-length-range type)
        (type-bot-fixnum-range? (type-motley-fixnum-range type))))
 
@@ -7658,7 +7661,7 @@
 
 (define (make-type-fixnum lo hi)
   (make-type-motley type-bot-bitset
-                    type-bot-mutability
+                    type-bot-bitset
                     type-bot-fixnum-range
                     (make-type-fixnum-range lo hi)))
 
@@ -7667,7 +7670,7 @@
 
 (define (make-type-fixnum-or-false lo hi)
   (make-type-motley type-false-bit
-                    type-bot-mutability
+                    type-false-bit
                     type-bot-fixnum-range
                     (make-type-fixnum-range lo hi)))
 
@@ -7704,19 +7707,20 @@
 
 (define (type-motley-normalize tctx type)
   (declare (generic))
-  (let* ((bitset (type-motley-bitset type))
+  (let* ((mut-bitset (type-motley-mut-bitset type))
+         (not-mut-bitset (type-motley-not-mut-bitset type))
+         (bitset (bitwise-ior mut-bitset not-mut-bitset))
          (fixnum-range (type-motley-fixnum-range type))
          (lo (type-fixnum-range-lo fixnum-range))
          (hi (type-fixnum-range-hi fixnum-range))
-         (mutability (type-motley-mutability type))
          (length-range (type-motley-length-range type)))
     (cond ((type-fixnum-empty? lo hi)
-           (if (and (= bitset type-bot-bitset)
-                    (= mutability type-bot-mutability))
+           (if (and (= mut-bitset type-bot-bitset)
+                    (= not-mut-bitset type-bot-bitset))
                type-bot
                (or (make-type-singleton-from-bitset bitset)
-                   (make-type-motley bitset
-                                     mutability
+                   (make-type-motley mut-bitset
+                                     not-mut-bitset
                                      length-range
                                      type-bot-fixnum-range))))
           ((and (= bitset type-bot-bitset) ;; single value?
@@ -7730,8 +7734,8 @@
            (make-type-singleton hi))
           (else
            (make-type-motley
-            bitset
-            mutability
+            mut-bitset
+            not-mut-bitset
             length-range
             (make-type-fixnum-range
              (type-fixnum-normalize-lo tctx lo)
@@ -7881,49 +7885,59 @@
   (make-type-motley-non-fixnum (+ type-false-bit type-true-bit)))
 
 (define type-typically-eq-testable ;; union of typically eq? testable types
-  (make-type-motley (+ type-false-bit
-                       type-true-bit
-                       type-null-bit
-                       type-void-bit
-                       type-eof-bit
-                       type-absent-bit
-                       type-char-bit
-                       type-symbol-bit
-                       type-keyword-bit
-                       type-procedure-bit)
-                    type-top-mutability
-                    type-bot-fixnum-range
-                    type-top-fixnum-range))
+  (let ((bitset
+         (+ type-false-bit
+            type-true-bit
+            type-null-bit
+            type-void-bit
+            type-eof-bit
+            type-absent-bit
+            type-char-bit
+            type-symbol-bit
+            type-keyword-bit
+            type-procedure-bit)))
+    (make-type-motley bitset
+                      bitset
+                      type-bot-fixnum-range
+                      type-top-fixnum-range)))
 
 (define type-number
-  (make-type-motley (+ type-bignum-bit
-                       type-ratnum-bit
-                       type-flonum-bit
-                       type-cpxnum-bit)
-                    type-top-mutability
-                    type-bot-fixnum-range
-                    type-top-fixnum-range))
+  (let ((bitset
+         (+ type-bignum-bit
+            type-ratnum-bit
+            type-flonum-bit
+            type-cpxnum-bit)))
+    (make-type-motley bitset
+                      bitset
+                      type-bot-fixnum-range
+                      type-top-fixnum-range)))
 
 (define type-real
-  (make-type-motley (+ type-bignum-bit
-                       type-ratnum-bit
-                       type-flonum-bit)
-                    type-top-mutability
-                    type-bot-fixnum-range
-                    type-top-fixnum-range))
+  (let ((bitset
+         (+ type-bignum-bit
+            type-ratnum-bit
+            type-flonum-bit)))
+    (make-type-motley bitset
+                      bitset
+                      type-bot-fixnum-range
+                      type-top-fixnum-range)))
 
 (define type-exact-rational
-  (make-type-motley (+ type-bignum-bit
-                       type-ratnum-bit)
-                    type-top-mutability
-                    type-bot-fixnum-range
-                    type-top-fixnum-range))
+  (let ((bitset
+         (+ type-bignum-bit
+            type-ratnum-bit)))
+    (make-type-motley bitset
+                      bitset
+                      type-bot-fixnum-range
+                      type-top-fixnum-range)))
 
 (define type-exact-integer
-  (make-type-motley type-bignum-bit
-                    type-top-mutability
-                    type-bot-fixnum-range
-                    type-top-fixnum-range))
+  (let ((bitset
+         type-bignum-bit))
+    (make-type-motley bitset
+                      bitset
+                      type-bot-fixnum-range
+                      type-top-fixnum-range)))
 
 ;;; singleton type (corresponds to a single value)
 
@@ -7956,7 +7970,7 @@
            ;; fixnum within certain range
            (make-type-motley
             type-bot-bitset
-            type-bot-mutability
+            type-bot-bitset
             type-bot-fixnum-range
             (make-type-fixnum-range
              (cond ((= obj min-fixnum)       '>=)
@@ -7969,7 +7983,7 @@
                 (<= obj (tctx-largest-max-fixnum tctx)))
            ;; either fixnum or bignum
            (make-type-motley type-bignum-bit
-                             type-top-mutability
+                             type-bignum-bit
                              type-bot-fixnum-range
                              type-top-fixnum-range))
           (else
@@ -8088,8 +8102,12 @@
         ((type-motley? type)
          (let* ((result
                  '())
+                (mut-bitset
+                 (type-motley-mut-bitset type))
+                (not-mut-bitset
+                 (type-motley-not-mut-bitset type))
                 (bitset
-                 (type-motley-bitset type))
+                 (bitwise-ior mut-bitset not-mut-bitset))
                 (show-pos?
                  (let* ((mask (bitwise-not type-other-bit))
                         (on (bitwise-and mask bitset))
@@ -8111,9 +8129,13 @@
              (if (not show-pos?) (add (cons "!" lst))))
 
            (define (element lst bit)
-             (if (eqv? 0 (bitwise-and bitset bit))
-                 (neg lst)
-                 (pos lst)))
+             (if (eqv? 0 (bitwise-and mut-bitset bit))
+                 (if (eqv? 0 (bitwise-and not-mut-bitset bit))
+                     (neg lst)
+                     (pos (cons "I" lst)))
+                 (if (eqv? 0 (bitwise-and not-mut-bitset bit))
+                     (pos (cons "M" lst))
+                     (pos lst))))
 
            (define (display-top-for-bitset?)
               (if (and (not show-pos?) (= bitset type-top-bitset)) (add (list "~" top))))
@@ -8217,16 +8239,11 @@
            (element '("pm")   type-promise-bit)
            (element '("ot")   type-other-bit)
 
-           (let ((mutability (type-motley-mutability type)))
-             (cond ((= mutability type-pos-mutability)
-                    (set! result (append result '(";M"))))
-                   ((= mutability type-neg-mutability)
-                    (set! result (append result '(";I"))))))
-
            (let ((length-range (type-motley-length-range type)))
              (if (not (or (type-bot-fixnum-range? length-range)
                           #f #;(type-top-length-range? length-range)))
                  (let ((save result))
+                   (set! result '())
                    (format-fixnum-range (type-motley-length-range type))
                    (set! result (append save '(";") result)))))
 
@@ -8386,10 +8403,10 @@
                (union-hi hi1 hi2)))))))
 
   (make-type-motley
-   (bitwise-ior (type-motley-bitset type1)
-                (type-motley-bitset type2))
-   (bitwise-ior (type-motley-mutability type1)
-                (type-motley-mutability type2))
+   (bitwise-ior (type-motley-mut-bitset type1)
+                (type-motley-mut-bitset type2))
+   (bitwise-ior (type-motley-not-mut-bitset type1)
+                (type-motley-not-mut-bitset type2))
    (union-fixnum-range (type-motley-length-range type1)
                        (type-motley-length-range type2))
    (union-fixnum-range (type-motley-fixnum-range type1)
@@ -8478,10 +8495,10 @@
                  (make-type-fixnum-range lo hi))))))
 
   (make-type-motley
-   (bitwise-and (type-motley-bitset type1)
-                (type-motley-bitset type2))
-   (bitwise-and (type-motley-mutability type1)
-                (type-motley-mutability type2))
+   (bitwise-and (type-motley-mut-bitset type1)
+                (type-motley-mut-bitset type2))
+   (bitwise-and (type-motley-not-mut-bitset type1)
+                (type-motley-not-mut-bitset type2))
    (intersection-fixnum-range (type-motley-length-range type1)
                               (type-motley-length-range type2))
    (intersection-fixnum-range (type-motley-fixnum-range type1)
@@ -8537,10 +8554,11 @@
                  (make-type-fixnum-range lo1 hi1))))))
 
   (make-type-motley
-   (bitwise-and (type-motley-bitset type1)
-                (bitwise-not (type-motley-bitset type2)))
-   (type-motley-mutability type1) ;; TODO: improve!
-   (difference-fixnum-range (type-motley-length-range type1)
+   (bitwise-and (type-motley-mut-bitset type1)
+                (bitwise-not (type-motley-mut-bitset type2)))
+   (bitwise-and (type-motley-not-mut-bitset type1)
+                (bitwise-not (type-motley-not-mut-bitset type2)))
+   (difference-fixnum-range (type-motley-length-range type1) ;; TODO: this is only correct when a single type is left in bitset
                             (type-motley-length-range type2))
    (difference-fixnum-range (type-motley-fixnum-range type1)
                             (type-motley-fixnum-range type2))))
@@ -8830,10 +8848,10 @@
               (type-singleton-eqv? type1 type2)))
         ((type-motley? type1)
          (and (type-motley? type2)
-              (and (= (type-motley-bitset type1)
-                      (type-motley-bitset type2))
-                   (= (type-motley-mutability type1)
-                      (type-motley-mutability type2))
+              (and (= (type-motley-mut-bitset type1)
+                      (type-motley-mut-bitset type2))
+                   (= (type-motley-not-mut-bitset type1)
+                      (type-motley-not-mut-bitset type2))
                    (type-fixnum-range-eqv? (type-motley-length-range type1)
                                            (type-motley-length-range type2))
                    (type-fixnum-range-eqv? (type-motley-fixnum-range type1)
@@ -8852,12 +8870,12 @@
    (type-motley-force tctx type2)))
 
 (define (type-motley-included? type1 type2) ;; is type1 included in type2?
-  (and (let ((bitset1 (type-motley-bitset type1))
-             (bitset2 (type-motley-bitset type2)))
-         (= (bitwise-and bitset1 bitset2) bitset1))
-       (let ((mutability1 (type-motley-mutability type1))
-             (mutability2 (type-motley-mutability type2)))
-         (= (bitwise-and mutability1 mutability2) mutability1))
+  (and (let ((mut-bitset1 (type-motley-mut-bitset type1))
+             (mut-bitset2 (type-motley-mut-bitset type2)))
+         (= (bitwise-and mut-bitset1 mut-bitset2) mut-bitset1))
+       (let ((not-mut-bitset1 (type-motley-not-mut-bitset type1))
+             (not-mut-bitset2 (type-motley-not-mut-bitset type2)))
+         (= (bitwise-and not-mut-bitset1 not-mut-bitset2) not-mut-bitset1))
        (let* ((fixnum-range1 (type-motley-fixnum-range type1))
               (lo1 (type-fixnum-range-lo fixnum-range1))
               (hi1 (type-fixnum-range-hi fixnum-range1))
@@ -10098,24 +10116,23 @@
   (type-narrow-type-test tctx type-motley-false arg))
 
 (define (type-narrow-mutable-test tctx arg)
-  (let* ((a (type-motley-force tctx arg))
-         (mutability (type-motley-mutability a)))
-    (cons (if (= 0 (bitwise-and mutability type-pos-mutability))
+  (let ((a (type-motley-force tctx arg)))
+    (cons (if (= 0 (type-motley-mut-bitset a))
               #f ;; true branch impossible because arg is certainly not mutable
               (list (type-motley-normalize
                      tctx
                      (make-type-motley
-                      (type-motley-bitset a)
-                      type-pos-mutability
+                      (type-motley-mut-bitset a)
+                      type-bot-bitset
                       (type-motley-length-range a)
                       (type-motley-fixnum-range a)))))
-          (if (= 0 (bitwise-and mutability type-neg-mutability))
+          (if (= 0 (type-motley-not-mut-bitset a))
               #f ;; true branch impossible because arg is certainly not immutable
               (list (type-motley-normalize
                      tctx
                      (make-type-motley
-                      (type-motley-bitset a)
-                      type-neg-mutability
+                      type-bot-bitset
+                      (type-motley-not-mut-bitset a)
                       (type-motley-length-range a)
                       (type-motley-fixnum-range a))))))))
 
@@ -10136,8 +10153,8 @@
                (list (type-motley-normalize
                       tctx
                       (make-type-motley
-                       (type-motley-bitset a1)
-                       (type-motley-mutability a1)
+                       (type-motley-mut-bitset a1)
+                       (type-motley-not-mut-bitset a1)
                        (type-motley-fixnum-range (type-motley-force tctx (cadr true2)))
                        (type-motley-fixnum-range a1)))
                      (type-intersection tctx (cadr true1) (car true2)))
