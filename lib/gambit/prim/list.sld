@@ -50,8 +50,6 @@ cddddr
 cdddr
 cddr
 cdr
-concatenate
-concatenate!
 cons
 for-each
 length
