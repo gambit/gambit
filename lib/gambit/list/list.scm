@@ -316,6 +316,71 @@
         (else
          (append-multiple list1 (cons list2 lists) 1))))
 
+(define-prim&proc (append! (lists list) ...)
+
+  (define (return result)
+    (macro-if-checks
+     (if (pair? result)
+         result
+         (if (fx< result 0)
+             (macro-fail-check-mutable (fx- result) ((%procedure%) . lists))
+             (let ((arg-num (fxquotient result 2)))
+               (if (fxeven? result)
+                   (macro-fail-check-list arg-num ((%procedure%) . lists))
+                   (macro-fail-check-proper-list arg-num ((%procedure%) . lists))))))
+     result))
+
+  (define (append-rest first other-lists arg-num)
+    (let ((pair (last-pair first)))
+
+      (define (set-end! end)
+        (set-cdr! pair end)
+        first)
+
+      (define (loop probe arg-num)
+        (let ((first (car probe))
+              (rest (cdr probe)))
+          (if (not (pair? rest))
+              (set-end! first)
+              (macro-force-vars (first)
+                (if (pair? first)
+                    (macro-if-checks
+                     (let ((end (append-rest first rest arg-num)))
+                       (if (pair? end)
+                           (set-end! end)
+                           end)) ;; propagate error
+                     (set-end! (append-rest first rest arg-num)))
+                    (macro-if-checks
+                     (if (null? first)
+                         (loop rest (fx+ arg-num 1))
+                         (fx* 2 arg-num)) ;; error: list expected
+                     (loop rest (fx+ arg-num 1))))))))
+
+      (macro-if-checks
+       (cond ((not (primitive (mutable? pair)))
+              (fx- arg-num)) ;; error: nonmutable object
+             ((not (null? (cdr pair)))
+              (fx+ 1 (fx* 2 arg-num))) ;; error: proper list expected
+             (else
+              (loop other-lists (fx+ arg-num 1))))
+       (loop other-lists (fx+ arg-num 1)))))
+
+  (if (not (pair? lists))
+      '()
+      (let loop1 ((probe lists) (arg-num 1))
+        (let ((first (car probe))
+              (rest (cdr probe)))
+          (if (not (pair? rest))
+              first
+              (macro-force-vars (first)
+                (if (pair? first)
+                    (return (append-rest first rest arg-num))
+                    (macro-if-checks
+                     (if (null? first)
+                         (loop1 rest (fx+ arg-num 1))
+                         (return (fx* 2 arg-num))) ;; error: list expected
+                     (loop1 rest (fx+ arg-num 1))))))))))
+
 (define-primitive (proper-list-reverse (list list))
   (let loop ((x list) (result '()))
     (if (pair? x)
@@ -423,111 +488,111 @@
 
 (define-primitive (memq (obj  object)
                         (list proper-list))
-  (let loop ((x list))
-    (if (pair? x)
-        (if (eq? obj (car x))
-            x
-            (loop (cdr x)))
+  (let loop ((probe list))
+    (if (pair? probe)
+        (if (eq? obj (car probe))
+            probe
+            (loop (cdr probe)))
         #f)))
 
 (define-procedure (memq (obj  object)
                         (list proper-list))
-  (let loop ((x list))
-    (macro-force-vars (x)
-      (if (pair? x)
-          (let ((y (car x)))
+  (let loop ((probe list))
+    (macro-force-vars (probe)
+      (if (pair? probe)
+          (let ((y (car probe)))
             (macro-force-vars (y)
               (if (eq? obj y)
-                  x
-                  (loop (cdr x)))))
-          (macro-check-proper-list-null* x list '(2 . list) ((%procedure%) obj list)
+                  probe
+                  (loop (cdr probe)))))
+          (macro-check-proper-list-null* probe list '(2 . list) ((%procedure%) obj list)
             #f)))))
 
 (define-primitive (memv (obj  object)
                         (list proper-list))
-  (let loop ((x list))
-    (if (pair? x)
+  (let loop ((probe list))
+    (if (pair? probe)
         (if (let ()
               (declare (generic)) ;; avoid fixnum specific eqv?
-              (eqv? obj (car x)))
-            x
-            (loop (cdr x)))
+              (eqv? obj (car probe)))
+            probe
+            (loop (cdr probe)))
         #f)))
 
 (define-procedure (memv (obj  object)
                         (list proper-list))
-  (let loop ((x list))
-    (macro-force-vars (x)
-      (if (pair? x)
-          (let ((y (car x)))
+  (let loop ((probe list))
+    (macro-force-vars (probe)
+      (if (pair? probe)
+          (let ((y (car probe)))
             (macro-force-vars (y)
               (if (let ()
                     (declare (generic)) ;; avoid fixnum specific eqv?
                     (eqv? obj y))
-                  x
-                  (loop (cdr x)))))
-          (macro-check-proper-list-null* x list '(2 . list) ((%procedure%) obj list)
+                  probe
+                  (loop (cdr probe)))))
+          (macro-check-proper-list-null* probe list '(2 . list) ((%procedure%) obj list)
             #f)))))
 
 (define-primitive (member (obj     object)
                           (list    proper-list)
                           (compare procedure (primitive equal?)))
-  (let loop ((x list))
-    (if (pair? x)
-        (if (compare obj (car x))
-            x
-            (loop (cdr x)))
+  (let loop ((probe list))
+    (if (pair? probe)
+        (if (compare obj (car probe))
+            probe
+            (loop (cdr probe)))
         #f)))
 
 (define-procedure (member (obj     object)
                           (list    proper-list)
                           (compare procedure (primitive equal?)))
-  (let loop ((x list))
-    (macro-force-vars (x)
-      (if (pair? x)
-          (let ((y (car x)))
+  (let loop ((probe list))
+    (macro-force-vars (probe)
+      (if (pair? probe)
+          (let ((y (car probe)))
             (if (compare obj y)
-                x
-                (loop (cdr x))))
-          (macro-check-proper-list-null* x list '(2 . list) ((%procedure%) obj list %compare) ;; need to use %compare to avoid showing a third argument when none was given
+                probe
+                (loop (cdr probe))))
+          (macro-check-proper-list-null* probe list '(2 . list) ((%procedure%) obj list %compare) ;; need to use %compare to avoid showing a third argument when none was given
             #f)))))
 
 ;; ##assq defined in _kernel.scm
 
 (define-procedure (assq (obj   object)
                         (alist pair-list))
-  (let loop ((x alist))
-    (macro-force-vars (x)
-      (if (pair? x)
-          (let ((couple (car x)))
+  (let loop ((probe alist))
+    (macro-force-vars (probe)
+      (if (pair? probe)
+          (let ((couple (car probe)))
             (macro-force-vars (couple)
               (macro-check-pair-list-pair couple '(2 . alist) ((%procedure%) obj alist)
                 (let ((y (car couple)))
                   (macro-force-vars (y)
                     (if (eq? obj y)
                         couple
-                        (loop (cdr x))))))))
-          (macro-check-proper-list-null* x alist '(2 . alist) ((%procedure%) obj alist)
+                        (loop (cdr probe))))))))
+          (macro-check-proper-list-null* probe alist '(2 . alist) ((%procedure%) obj alist)
             #f)))))
 
 (define-primitive (assv (obj   object)
                         (alist pair-list))
-  (let loop ((x alist))
-    (if (pair? x)
-        (let ((couple (car x)))
+  (let loop ((probe alist))
+    (if (pair? probe)
+        (let ((couple (car probe)))
           (if (let ()
                 (declare (generic)) ;; avoid fixnum specific eqv?
                 (eqv? obj (car couple)))
               couple
-              (loop (cdr x))))
+              (loop (cdr probe))))
         #f)))
 
 (define-procedure (assv (obj   object)
                         (alist pair-list))
-  (let loop ((x alist))
-    (macro-force-vars (x)
-      (if (pair? x)
-          (let ((couple (car x)))
+  (let loop ((probe alist))
+    (macro-force-vars (probe)
+      (if (pair? probe)
+          (let ((couple (car probe)))
             (macro-force-vars (couple)
               (macro-check-pair-list-pair couple '(2 . alist) ((%procedure%) obj alist)
                 (let ((y (car couple)))
@@ -536,132 +601,126 @@
                           (declare (generic)) ;; avoid fixnum specific eqv?
                           (eqv? obj y))
                         couple
-                        (loop (cdr x))))))))
-          (macro-check-proper-list-null* x alist '(2 . alist) ((%procedure%) obj alist)
+                        (loop (cdr probe))))))))
+          (macro-check-proper-list-null* probe alist '(2 . alist) ((%procedure%) obj alist)
             #f)))))
 
 (define-primitive (assoc (obj     object)
                          (alist   pair-list)
                          (compare procedure (primitive equal?)))
-  (let loop ((x alist))
-    (if (pair? x)
-        (let ((couple (car x)))
+  (let loop ((probe alist))
+    (if (pair? probe)
+        (let ((couple (car probe)))
           (if (compare obj (car couple))
               couple
-              (loop (cdr x))))
+              (loop (cdr probe))))
         #f)))
 
 (define-procedure (assoc (obj     object)
                          (alist   pair-list)
                          (compare procedure (primitive equal?)))
-  (let loop ((x alist))
-    (macro-force-vars (x)
-      (if (pair? x)
-          (let ((couple (car x)))
+  (let loop ((probe alist))
+    (macro-force-vars (probe)
+      (if (pair? probe)
+          (let ((couple (car probe)))
             (macro-force-vars (couple)
               (macro-check-pair-list-pair couple '(2 . alist) ((%procedure%) obj alist %compare) ;; need to use %compare to avoid showing a third argument when none was given
                 (let ((y (car couple)))
                   (if (compare obj y)
                       couple
-                      (loop (cdr x)))))))
-          (macro-check-proper-list-null* x alist '(2 . alist) ((%procedure%) obj alist %compare) ;; need to use %compare to avoid showing a third argument when none was given
+                      (loop (cdr probe)))))))
+          (macro-check-proper-list-null* probe alist '(2 . alist) ((%procedure%) obj alist %compare) ;; need to use %compare to avoid showing a third argument when none was given
             #f)))))
 
 (define-primitive (assoc-string-equal? (str   string)
                                        (alist pair-list))
-  (let loop ((x alist))
-    (if (pair? x)
-        (let ((couple (car x)))
+  (let loop ((probe alist))
+    (if (pair? probe)
+        (let ((couple (car probe)))
           (if (primitive (string-equal? str (car couple)))
               couple
-              (loop (cdr x))))
+              (loop (cdr probe))))
         #f)))
 
-(define-macro (macro-filter prim-call list var test-expr)
-  `(let ((lst ,list))
-     (define (filter-tail lst)
-       (if (pair? lst)
-           (let* ((,var (car lst))
-                  (matches? ,test-expr)
-                  (old-tail (cdr lst))
-                  (new-tail (filter-tail old-tail)))
-             (if (and (or (pair? new-tail) (null? new-tail))
-                      matches?)
-                 (if (eq? old-tail new-tail)
-                     lst
-                     (cons x new-tail))
-                 new-tail))
-           (macro-if-checks
-            (and (null? lst)
-                 lst)
-            lst)))
-     (macro-if-checks
-      (let ((new-lst (filter-tail lst)))
-        (if (or (pair? new-lst) (null? new-lst))
-            new-lst
-            (if (or (pair? lst) (null? lst))
-                (macro-fail-check-proper-list
-                 '(2 . list)
-                 ,(cons '(%procedure%) (cdr prim-call)))
-                (macro-fail-check-list
-                 '(2 . list)
-                 ,(cons '(%procedure%) (cdr prim-call))))))
-      (filter-tail lst))))
+(define-macro (macro-filter prim-call list-var var test-expr)
+  (let ((list-var-param
+         (cons (- (length prim-call) (length (memq list-var prim-call)))
+               list-var))
+        (%call
+         (cons '(%procedure%)
+               (map (lambda (sym)
+                      (string->symbol (string-append "%" (symbol->string sym))))
+                    (cdr prim-call)))))
+    `(let ()
 
-(define-prim&proc (filter (pred procedure) (list proper-list))
-  (macro-filter (filter pred list) list x (pred x)))
+       (define (filter-recursive probe)
+         (if (pair? probe)
+             (let ((rest (macro-auto-force (cdr probe)))
+                   (,var (car probe)))
+               (if ,test-expr
+                   (let ((tail (filter-recursive rest)))
+                     (macro-if-checks
+                      (and tail (if (eq? tail rest) probe (cons ,var tail)))
+                      (if (eq? tail rest) probe (cons ,var tail))))
+                   (filter-recursive rest)))
+             (macro-if-checks
+              (and (null? probe) '())
+              '())))
 
-(define-prim&proc (remove (pred procedure) (list proper-list))
-  (macro-filter (remove pred list) list x (not (pred x))))
+       (macro-if-checks
+        (if (or (pair? ,list-var) (null? ,list-var))
+            (or (filter-recursive ,list-var)
+                (macro-fail-check-proper-list ',list-var-param ,%call))
+            (macro-fail-check-list ',list-var-param ,%call))
+        (filter-recursive ,list-var)))))
 
-(define-prim&proc (remq (elem object) (list proper-list))
-  (macro-filter (remq elem list) list x (not (eq? x elem))))
+(define-prim&proc (filter (pred procedure)
+                          (list proper-list))
+  (macro-filter (filter pred list) list x (macro-auto-force (pred x))))
 
-(define-prim&proc (partition (pred procedure) (list proper-list))
-  (let ((lst list))
-    (define (partition-tail lst)
-      (if (pair? lst)
-          (let* ((x (car lst))
-                 (matches? (pred x))
-                 (tail (cdr lst)))
-            (call-with-values
-                (lambda ()
-                  (partition-tail tail))
-              (lambda (in out)
-                (if matches?
-                    (values (if (or (pair? in) (null? in))
-                                (if (eq? tail in)
-                                    lst
-                                    (cons x in))
-                                in)
-                            out)
-                    (values in
-                            (if (or (pair? out) (null? out))
-                                (if (eq? tail out)
-                                    lst
-                                    (cons x out))
-                                out))))))
-          (macro-if-checks
-           (if (null? lst)
-               (values lst lst)
-               (values #t #t))
-           (values lst lst))))
-    (macro-if-checks
-     (call-with-values
-         (lambda ()
-           (partition-tail lst))
-       (lambda (in out)
-         (if (and (or (pair? in)  (null? in))
-                  (or (pair? out) (null? out)))
-             (values in out)
-             (if (or (pair? lst) (null? lst))
-                 (macro-fail-check-proper-list
-                  '(2 . list)
-                  ((%procedure%) pred list))
-                 (macro-fail-check-list
-                  '(2 . list)
-                  ((%procedure%) pred list))))))
-     (partition-tail lst))))
+(define-procedure (filter! (pred procedure)
+                           (list proper-list))
+  (filter pred list)) ;; no optimization due to continuations
+
+(define-prim&proc (remove (pred procedure)
+                          (list proper-list))
+  (macro-filter (remove pred list) list x (not (macro-auto-force (pred x)))))
+
+(define-procedure (remove! (pred procedure)
+                           (list proper-list))
+  (remove pred list)) ;; no optimization due to continuations
+
+(define-prim&proc (remq (x    object)
+                        (list proper-list))
+  (macro-filter (remq x list) list elem (not (eq? x elem))))
+
+(define-prim&proc (partition (pred procedure)
+                             (list proper-list))
+  (macro-force-vars (list)
+    (let loop ((probe list) (rev-in '()) (rev-out '()))
+      (if (pair? probe)
+          (let ((x (car probe)))
+            (if (macro-auto-force (pred x))
+                (loop (macro-auto-force (cdr probe)) (cons x rev-in) rev-out)
+                (loop (macro-auto-force (cdr probe)) rev-in (cons x rev-out))))
+          (macro-check-proper-list-null* probe list '(2 . list) ((%procedure%) pred list)
+            (values (reverse rev-in) ;; reverse! unusable due to continuations
+                    (reverse rev-out)))))))
+
+(define-prim&proc (partition! (pred procedure) (list proper-list))
+  (partition pred list)) ;; no optimization due to continuations
+
+(define-prim&proc (delete (x    object)
+                          (list proper-list)
+                          (=    procedure (primitive equal?)))
+  ;; TODO: don't put third parameter in error messages when it is absent
+  (macro-filter (delete x list =) list elem (not (macro-auto-force (= x elem)))))
+
+(define-procedure (delete! (x    object)
+                           (list proper-list)
+                           (=    procedure (primitive equal?)))
+  ;; TODO: don't put third parameter in error messages when it is absent
+  (delete x list =)) ;; no optimization due to continuations
 
 ;;;----------------------------------------------------------------------------
 
@@ -1000,16 +1059,16 @@
           (loop i (cons (init-proc i) result)))
         result)))
 
-(define-primitive (proper-list-copy (list list))
-  (let loop ((probe list) (rev-result '()))
+(define-primitive (proper-list-copy (obj object))
+  (let loop ((probe obj) (rev-result '()))
     (macro-force-vars (probe)
       (if (pair? probe)
           (loop (cdr probe) (cons (car probe) rev-result))
           (and (null? probe) ;; return #f when argument is not a proper list
                (reverse! rev-result))))))
 
-(define-prim&proc (list-copy (list list))
-  (let loop ((probe list) (rev-result '()))
+(define-prim&proc (list-copy (obj object))
+  (let loop ((probe obj) (rev-result '()))
     (macro-force-vars (probe)
       (if (pair? probe)
           (loop (cdr probe) (cons (car probe) rev-result))
@@ -1055,7 +1114,7 @@
               (cons (car probe) rev-result))
         (reverse! rev-result))))
 
-(define-procedure (take (x list)
+(define-procedure (take (x object)
                         (i index))
   (let loop ((probe x)
              (j i)
@@ -1073,7 +1132,7 @@
                  (cons (car probe) rev-result))))
         (reverse! rev-result))))
 
-(define-primitive (drop (x list)
+(define-primitive (drop (x object)
                         (i index))
   (let loop ((probe x)
              (j i))
@@ -1082,7 +1141,7 @@
               (fx- j 1))
         probe)))
 
-(define-procedure (drop (x list)
+(define-procedure (drop (x object)
                         (i index))
   (let loop ((probe x)
              (j i))
@@ -1097,7 +1156,108 @@
                  (fx- j 1))))
         probe)))
 
-(define-primitive (split-at (x list)
+(define-prim&proc (take-right (flist finite-list)
+                              (i     index))
+
+  (define (find-end lead lag)
+    (macro-force-vars (lead lag)
+      (if (pair? lead)
+          (if (pair? lag) ;; check for bad mutation by other thread
+              (find-end (cdr lead) (cdr lag))
+              (primitive (raise-range-exception '(2 . i) (%procedure%) flist i)))
+          lag)))
+
+  (let loop ((lead flist)
+             (j i))
+    (if (fx> j 0)
+        (macro-force-vars (lead)
+          (macro-if-checks
+           (if (pair? lead)
+               (loop (cdr lead)
+                     (fx- j 1))
+               (primitive (raise-range-exception '(2 . i) (%procedure%) flist i)))
+           (loop (cdr lead)
+                 (fx- j 1))))
+        (find-end lead flist))))
+
+(define-prim&proc (drop-right (flist finite-list)
+                              (i     index))
+
+  (define (find-end lead lag)
+    (macro-force-vars (lead lag)
+      (if (pair? lead)
+          (if (pair? lag) ;; check for bad mutation by other thread
+              (cons (car lag) (find-end (cdr lead) (cdr lag)))
+              (primitive (raise-range-exception '(2 . i) (%procedure%) flist i)))
+          '())))
+
+  (let loop ((lead flist)
+             (j i))
+    (if (fx> j 0)
+        (macro-force-vars (lead)
+          (macro-if-checks
+           (if (pair? lead)
+               (loop (cdr lead)
+                     (fx- j 1))
+               (primitive (raise-range-exception '(2 . i) (%procedure%) flist i)))
+           (loop (cdr lead)
+                 (fx- j 1))))
+        (find-end lead flist))))
+
+(define-prim&proc (take! (x object)
+                         (i index))
+  (if (fx= i 0)
+      '()
+      (let loop ((probe x)
+                 (j (fx- i 1)))
+        (macro-force-vars (probe)
+          (macro-if-checks
+           (if (pair? probe)
+               (if (fx> j 0)
+                   (loop (cdr probe)
+                         (fx- j 1))
+                   (macro-check-mutable probe '(1 . x) ((%procedure%) x i)
+                     (begin
+                       (set-cdr! probe '())
+                       x)))
+               (primitive (raise-range-exception '(2 . i) (%procedure%) x i)))
+           (if (fx> j 0)
+               (loop (cdr probe)
+                     (fx- j 1))
+               (begin
+                 (set-cdr! probe '())
+                 x)))))))
+
+(define-prim&proc (drop-right! (flist finite-list)
+                               (i     index))
+
+  (define (find-end lead lag)
+    (macro-force-vars (lead lag)
+      (if (pair? lag) ;; check for bad mutation by other thread
+          (if (pair? lead)
+              (find-end (cdr lead) (cdr lag))
+              (macro-check-mutable lag '(1 . flist) ((%procedure%) flist i)
+                (begin
+                  (set-cdr! lag '())
+                  flist)))
+          (primitive (raise-range-exception '(2 . i) (%procedure%) flist i)))))
+
+  (let loop ((lead flist)
+             (j i))
+    (macro-force-vars (lead)
+      (if (fx> j 0)
+          (macro-if-checks
+           (if (pair? lead)
+               (loop (cdr lead)
+                     (fx- j 1))
+               (primitive (raise-range-exception '(2 . i) (%procedure%) flist i)))
+           (loop (cdr lead)
+                 (fx- j 1)))
+          (if (pair? lead)
+              (find-end (cdr lead) flist)
+              '())))))
+
+(define-primitive (split-at (x object)
                             (i index))
   (let loop ((probe x)
              (j i)
@@ -1108,7 +1268,7 @@
               (cons (car probe) rev-take))
         (values (reverse! rev-take) probe))))
 
-(define-procedure (split-at (x list)
+(define-procedure (split-at (x object)
                             (i index))
   (let loop ((probe x)
              (j i)
@@ -1125,6 +1285,30 @@
                  (fx- j 1)
                  (cons (car probe) rev-take))))
         (values (reverse! rev-take) probe))))
+
+(define-prim&proc (split-at! (x object)
+                             (i index))
+  (if (fx= i 0)
+      (values '() x)
+      (let loop ((probe x)
+                 (j (fx- i 1)))
+        (macro-force-vars (probe)
+          (macro-if-checks
+           (if (pair? probe)
+               (if (fx> j 0)
+                   (loop (cdr probe)
+                         (fx- j 1))
+                   (macro-check-mutable probe '(1 . x) ((%procedure%) x i)
+                     (let ((tail (cdr probe)))
+                       (set-cdr! probe '())
+                       (values x tail))))
+               (primitive (raise-range-exception '(2 . i) (%procedure%) x i)))
+           (if (fx> j 0)
+               (loop (cdr probe)
+                     (fx- j 1))
+               (let ((tail (cdr probe)))
+                 (set-cdr! probe '())
+                 (values x tail))))))))
 
 (define-primitive (last-pair (pair pair))
   (let loop ((probe pair))
@@ -1436,19 +1620,20 @@
                           (cdr last)
                           '(1 . list-of-lists)
                           ((%procedure%) list-of-lists)
-                          (let ((elem (car lst))
-                                (rest (cdr lst)))
-                            (set-cdr! last elem)
-                            (macro-force-vars (rest)
-                              (if (pair? rest)
-                                  (loop2 result
-                                         rest
-                                         (last-pair-with-auto-forcing! last))
-                                  (macro-check-proper-list-null
-                                    rest
-                                    '(1 . list-of-lists)
-                                    ((%procedure%) list-of-lists)
-                                    result))))))
+                          (macro-check-mutable last '(1 . list-of-lists) ((%procedure%) list-of-lists)
+                            (let ((elem (car lst))
+                                  (rest (cdr lst)))
+                              (set-cdr! last elem)
+                              (macro-force-vars (rest)
+                                (if (pair? rest)
+                                    (loop2 result
+                                           rest
+                                           (last-pair-with-auto-forcing! last))
+                                    (macro-check-proper-list-null
+                                      rest
+                                      '(1 . list-of-lists)
+                                      ((%procedure%) list-of-lists)
+                                      result)))))))
 
                       ;; first pair element not yet found
                       (macro-check-list-list-null
@@ -1476,9 +1661,10 @@
   (let loop ((prev '()) (curr list))
     (macro-force-vars (curr)
       (if (pair? curr)
-          (let ((next (cdr curr)))
-            (set-cdr! curr prev)
-            (loop curr next))
+          (macro-check-mutable curr '(1 . list) ((%procedure%) list)
+            (let ((next (cdr curr)))
+              (set-cdr! curr prev)
+              (loop curr next)))
           (macro-check-proper-list-null* curr list '(1 . list) ((%procedure%) list)
             prev)))))
 
@@ -1505,9 +1691,10 @@
   (let loop ((prev tail) (curr rev-head))
     (macro-force-vars (curr)
       (if (pair? curr)
-          (let ((next (cdr curr)))
-            (set-cdr! curr prev)
-            (loop curr next))
+          (macro-check-mutable curr '(1 . rev-head) ((%procedure%) rev-head tail)
+            (let ((next (cdr curr)))
+              (set-cdr! curr prev)
+              (loop curr next)))
           (macro-check-proper-list-null* curr rev-head '(1 . rev-head) ((%procedure%) rev-head tail)
             prev)))))
 
@@ -1686,6 +1873,8 @@
 
 (define-primitive (list-sort! (proc procedure)
                               (list proper-list))
+
+  ;; TODO: add auto-forcing of list and pair mutability checks
 
   ;; Stable mergesort algorithm
 
@@ -1902,10 +2091,8 @@
             (let ((rest (cdr x)))
               (macro-force-vars (rest)
                 (if (pair? rest)
-                    (let ((result (pred (car x))))
-                      (macro-force-vars (result)
-                        (or result
-                            (loop rest))))
+                    (or (macro-auto-force (pred (car x)))
+                        (loop rest))
                     (macro-check-proper-list-null* rest clist1 '(2 . clist1) ((%procedure%) pred clist1)
                       (pred (car x)))))))
           (macro-check-proper-list-null* clst1 clist1 '(2 . clist1) ((%procedure%) pred clist1)
@@ -1917,10 +2104,8 @@
       (let* ((args (primitive (cars x '())))
              (next-rests (primitive (cdrs rests))))
         (if (pair? next-rests)
-            (let ((result (apply pred args)))
-              (macro-force-vars (result)
-                (or result
-                    (any-n* rests next-rests))))
+            (or (macro-auto-force (apply pred args))
+                (any-n* rests next-rests))
             (macro-if-checks
              (if next-rests
                  (if (fx< next-rests 0)
@@ -1960,20 +2145,102 @@
       (any-1 clist1)
       (any-n (cons clist1 clists))))
 
+(define-primitive (every (pred   procedure)
+                         (clist1 proper-or-circular-list)
+                         (clists proper-or-circular-list) ...)
+
+  (define (every-1 clist1)
+    (or (not (pair? clist1))
+        (let loop ((x clist1))
+          (let ((rest (cdr x)))
+            (if (pair? rest)
+                (and (pred (car x))
+                     (loop rest))
+                (pred (car x)))))))
+
+  (define (every-n clist1-clists)
+    (let ((rests (primitive (cdrs clist1-clists))))
+      (or (not (pair? rests))
+          (let loop ((x clist1-clists) (rests rests))
+            (let* ((args (primitive (cars x '())))
+                   (next-rests (primitive (cdrs rests))))
+              (if (pair? next-rests)
+                  (and (apply pred args)
+                       (loop rests next-rests))
+                  (apply pred args)))))))
+
+  (if (null? clists)
+      (every-1 clist1)
+      (every-n (cons clist1 clists))))
+
+(define-procedure (every (pred   procedure)
+                         (clist1 proper-or-circular-list)
+                         (clists proper-or-circular-list) ...)
+
+  (define (every-1 clst1)
+    (macro-force-vars (clst1)
+      (if (pair? clst1)
+          (let loop ((x clst1))
+            (let ((rest (cdr x)))
+              (macro-force-vars (rest)
+                (if (pair? rest)
+                    (and (macro-auto-force (pred (car x)))
+                         (loop rest))
+                    (macro-check-proper-list-null* rest clist1 '(2 . clist1) ((%procedure%) pred clist1)
+                      (pred (car x)))))))
+          (macro-check-proper-list-null* clst1 clist1 '(2 . clist1) ((%procedure%) pred clist1)
+            #t))))
+
+  (define (every-n clist1-clists)
+
+    (define (every-n* x rests)
+      (let* ((args (primitive (cars x '())))
+             (next-rests (primitive (cdrs rests))))
+        (if (pair? next-rests)
+            (and (macro-auto-force (apply pred args))
+                 (every-n* rests next-rests))
+            (macro-if-checks
+             (if next-rests
+                 (if (fx< next-rests 0)
+                     (primitive (raise-length-mismatch-exception
+                                 (argument-id (fx- 1 next-rests))
+                                 '()
+                                 (%procedure%)
+                                 pred
+                                 clist1-clists))
+                     (macro-fail-check-proper-list
+                      (argument-id (fx+ 1 next-rests))
+                      ((%procedure%) pred . clist1-clists)))
+                 (apply pred args))
+             (apply pred args)))))
+
+    (let ((rests (primitive (cdrs clist1-clists))))
+      (or (not rests)
+          (macro-if-checks
+           (if (fixnum? rests)
+               (if (fx< rests 0)
+                   (primitive (raise-length-mismatch-exception
+                               (argument-id (fx- 1 rests))
+                               '()
+                               (%procedure%)
+                               pred
+                               clist1-clists))
+                   (macro-fail-check-list
+                    (argument-id (fx+ 1 rests))
+                    ((%procedure%) pred . clist1-clists)))
+               (every-n* clist1-clists rests))
+           (every-n* clist1-clists rests)))))
+
+  (define (argument-id i)
+    (if (fx= i 2) '(2 . clist1) i))
+
+  (if (null? clists)
+      (every-1 clist1)
+      (every-n (cons clist1 clists))))
+
 #|
 
 ;; TODO:
-
-take-right flist i -> object
-drop-right flist i -> list
-
-take! x i -> list
-drop-right! flist i -> list
-
-split-at  x i -> [list object]
-split-at! x i -> [list object]
-
-append! list1 ... -> list
 
 zip clist1 clist2 ... -> list
 (lambda lists (apply map list lists))
@@ -2009,12 +2276,6 @@ pair-for-each f clist1 clist2 ... -> unspecific
 
 filter-map f clist1 clist2 ... -> list
 
-partition pred list -> [list list]
-
-filter!    pred list -> list
-partition! pred list -> [list list]
-remove!    pred list -> list
-
 find pred clist -> value
 
 find-tail pred clist -> pair or false
@@ -2029,14 +2290,7 @@ span!  pred list  -> [list list]
 break  pred clist -> [list clist]
 break! pred list  -> [list list]
 
-any pred clist1 clist2 ... -> value
-
-every pred clist1 clist2 ... -> value
-
 list-index pred clist1 clist2 ... -> integer or false
-
-delete  x list [=] -> list
-delete! x list [=] -> list
 
 delete-duplicates  list [=] -> list
 delete-duplicates! list [=] -> list

@@ -555,8 +555,6 @@ cddddr
 cdddr
 cddr
 cdr
-concatenate
-concatenate!
 cons
 for-each
 length
@@ -583,46 +581,60 @@ list-set!
 ;; gambit
 
 any
-append-reverse
+append!
 append-reverse!
+append-reverse
+car+cdr
 circular-list
 circular-list?
+concatenate!
+concatenate
 cons*
+;;UNIMPLEMENTED delete!
+delete
 dotted-list?
 drop
+drop-right!
+drop-right
+eighth
+every
+fifth
+;;UNIMPLEMENTED filter!
 filter
+first
 fold
 fold-right
+fourth
 iota
 last
 last-pair
 length+
 list-set
-list-sort
 list-sort!
+list-sort
 list-tabulate
-partition
-proper-list?
-remove
-remq
-reverse!
-split-at
-take
-xcons
-
-car+cdr
-eighth
-fifth
-first
-fourth
+;;UNIMPLEMENTED list=
 ninth
 not-pair?
 null-list?
+partition!
+partition
+proper-list?
+;;UNIMPLEMENTED remove!
+remove
+remq
+reverse!
 second
 seventh
 sixth
+split-at!
+split-at
+take!
+take
+take-right
 tenth
 third
+xcons
 
 ;;; misc.sld
 

@@ -11,49 +11,60 @@
 (##namespace ("##"
 
 any
-append-reverse
+append!
 append-reverse!
+append-reverse
+car+cdr
 circular-list
 circular-list?
-concatenate
 concatenate!
+concatenate
 cons*
+(delete! unimplemented#delete!)
+delete
 dotted-list?
 drop
+drop-right!
+drop-right
+eighth
+every
+fifth
+(filter! unimplemented#filter!)
 filter
+first
 fold
 fold-right
+fourth
 iota
 last
 last-pair
 length+
 list-set
-list-sort
 list-sort!
+list-sort
 list-tabulate
-partition
-proper-list?
-remove
-remq
-reverse!
-split-at
-take
-xcons
-
-car+cdr
-eighth
-fifth
-first
-fourth
 (list= unimplemented#list=)
 ninth
 not-pair?
 null-list?
+partition!
+partition
+proper-list?
+(remove! unimplemented#remove!)
+remove
+remq
+reverse!
 second
 seventh
 sixth
+split-at!
+split-at
+take!
+take
+take-right
 tenth
 third
+xcons
 
 ))
 

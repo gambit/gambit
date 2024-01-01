@@ -2,7 +2,7 @@
 
 ;;; File: "_gambit#.scm"
 
-;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -881,6 +881,16 @@
               (let bindings expr))
              (else
               expr))))))))
+
+(macro-define-syntax macro-auto-force
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ expr)
+       #'(cond-expand
+           (enable-auto-forcing
+            (##force expr))
+           (else
+            expr))))))
 
 (macro-define-syntax macro-if-checks
   (lambda (stx)

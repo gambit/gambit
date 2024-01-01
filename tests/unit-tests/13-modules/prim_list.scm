@@ -4,6 +4,7 @@
 
 ;; R4RS
 
+(append!) (append! (list 1 2)) (append! (list 1 2) (list 3 4)) (append! (list 1 2) (list 3 4) (list 5 6))
 (append) (append '(1 2)) (append '(1 2) '(3 4)) (append '(1 2) '(3 4) '(5 6))
 (assoc "a" '()) (assoc "a" '(("a" . 1))) (assoc "a" '(("a" . 1)) eq?)
 (assq 'a '()) (assq 'a '((a . 1)))
@@ -102,7 +103,11 @@
 (cons* 1) (cons* 1 2) (cons* 1 2 3)
 (dotted-list? '(1 2 3)) (dotted-list? '(1 2 . 3))
 (drop '(1 2 3 4) 2)
+(drop-right '(1 2 3 4) 2)
+(drop-right! (list 1 2 3 4) 2)
+(every odd? '()) (every odd? '(2 4)) (every odd? '(1 2)) (every odd? '(2 1)) (every < '(5 5 5) '(4 7 9) '(1 6 13))
 (filter odd? '(1 2 3 4 5))
+(delete 3 '(1 2 3 4 5))(delete 3 (list 1 2 3 4 5) <)
 (fold list 1 '(2 3 4 5))
 (fold-right list 1 '(2 3 4 5))
 (iota 10)
@@ -115,6 +120,7 @@
 (list-tabulate 5 list)
 (not-pair? '()) (not-pair? '(1 2 3))
 (null-list? '()) (null-list? '(1 2 3))
+(call-with-values (lambda () (partition! odd? (list 1 2 3 4 5))) (lambda (a b) (list a b)))
 (call-with-values (lambda () (partition odd? '(1 2 3 4 5))) (lambda (a b) (list a b)))
 (proper-list? '()) (proper-list? '(1 2 3)) (proper-list? '(1 2 . 3))
 (remove odd? '(1 2 3 4))
@@ -123,7 +129,10 @@
 (let ((x (list 1 2 3 4))) (append-reverse x 5))
 (let ((x (list 1 2 3 4))) (append-reverse! x 5))
 (take '(1 2 3 4) 2)
+(take! (list 1 2 3 4) 2)
+(take-right '(1 2 3 4) 2)
 (call-with-values (lambda () (split-at '(1 2 3 4) 1)) (lambda (a b) (list a b)))
+(call-with-values (lambda () (split-at! (list 1 2 3 4) 1)) (lambda (a b) (list a b)))
 (xcons 1 2)
 
 (first '(1 2 3 4 5 6 7 8 9 10 11))

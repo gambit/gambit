@@ -83,6 +83,11 @@
             (macro-fail-check-proper-or-circular-list ,arg-id ,form)))
     ,expr))
 
+;; The finite-list type excludes circular lists.
+
+(define-check-type (list finite-list) #f
+  (lambda (obj) #t)) ;; defer detailed checks to logic traversing the list
+
 ;;; Pair types.
 
 (define-check-type pair 'pair

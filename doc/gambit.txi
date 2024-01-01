@@ -5471,9 +5471,14 @@ The procedures in this section are not yet documented.
 @end deffn
 
 @deffn procedure filter @var{pred} @var{list}
+@deffnx procedure filter! @var{pred} @var{list}
 @deffnx procedure remove @var{pred} @var{list}
+@deffnx procedure remove! @var{pred} @var{list}
 @deffnx procedure partition @var{pred} @var{list}
-@deffnx procedure remq @var{elem} @var{list}
+@deffnx procedure partition! @var{pred} @var{list}
+@deffnx procedure delete @var{x} @var{list} @r{[}@var{=}@r{]}
+@deffnx procedure delete! @var{x} @var{list} @r{[}@var{=}@r{]}
+@deffnx procedure remq @var{x} @var{list}
 @end deffn
 
 @deffn procedure concatenate @var{list-of-lists} @r{[}@var{separator}@r{]}
@@ -5512,6 +5517,9 @@ The procedures in this section are not yet documented.
 @deffn procedure reverse! @var{list}
 @end deffn
 
+@deffn procedure append! @var{list}@dots{}
+@end deffn
+
 @deffn procedure append-reverse @var{list} @var{tail}
 @deffnx procedure append-reverse! @var{list} @var{tail}
 @end deffn
@@ -5521,7 +5529,12 @@ The procedures in this section are not yet documented.
 
 @deffn procedure take @var{x} @var{i}
 @deffnx procedure drop @var{x} @var{i}
+@deffnx procedure take-right @var{flist} @var{i}
+@deffnx procedure drop-right @var{flist} @var{i}
+@deffnx procedure take! @var{x} @var{i}
+@deffnx procedure drop-right! @var{flist} @var{i}
 @deffnx procedure split-at @var{x} @var{i}
+@deffnx procedure split-at! @var{x} @var{i}
 @end deffn
 
 @deffn procedure last @var{pair}
@@ -5533,6 +5546,7 @@ The procedures in this section are not yet documented.
 @end deffn
 
 @deffn procedure any @var{pred} @var{clist1} @var{clist2} @dots{}
+@deffnx procedure every @var{pred} @var{clist1} @var{clist2} @dots{}
 @end deffn
 
 @deffn procedure char-set? @var{object}

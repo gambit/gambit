@@ -17,6 +17,8 @@
 (check-equal? (take lst2 4) '(11 22 33 44))
 
 (check-equal? (take bool 0) '())
+(check-equal? (take '(1 2 . 3) 0) '())
+(check-equal? (take '(1 2 . 3) 1) '(1))
 (check-equal? (take '(1 2 . 3) 2) '(1 2))
 
 (check-tail-exn range-exception? (lambda () (take lst1 4)))

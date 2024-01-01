@@ -55,6 +55,7 @@ all-bits-set?
 any
 any-bit-set?
 any-bits-set?
+append!
 append-reverse
 append-reverse!
 apropos
@@ -205,6 +206,8 @@ dead-end
 deadlock-exception?
 default-user-interrupt-handler
 defer-user-interrupts
+delete
+delete!
 delete-directory
 delete-file-or-directory
 directory-files
@@ -219,6 +222,8 @@ divide-by-zero-exception-procedure
 divide-by-zero-exception?
 dotted-list?
 drop
+drop-right
+drop-right!
 eighth
 end-of-char-set?
 eq?-hash
@@ -232,6 +237,7 @@ error-exception?
 euclidean-quotient
 euclidean-remainder
 euclidean/
+every
 every-bit-set?
 executable-path
 expression-parsing-exception-kind
@@ -299,6 +305,7 @@ file-owner
 file-size
 file-type
 filter
+filter!
 first
 first-set-bit
 fixnum->flonum
@@ -602,6 +609,7 @@ output-port-readtable-set!
 output-port-timeout-set!
 output-port-width
 partition
+partition!
 path-directory
 path-expand
 path-extension
@@ -685,6 +693,7 @@ readtable-write-extended-read-macros?-set
 readtable?
 real-time
 remove
+remove!
 remq
 rename-file
 repl-backtrace-detail-level
@@ -882,6 +891,7 @@ socket-info-family
 socket-info-port-number
 socket-info?
 split-at
+split-at!
 stack-overflow-exception?
 started-thread-exception-arguments
 started-thread-exception-procedure
@@ -963,6 +973,8 @@ table-search
 table-set!
 table?
 take
+take!
+take-right
 tanh
 tcp-client-local-socket-info
 tcp-client-peer-socket-info
