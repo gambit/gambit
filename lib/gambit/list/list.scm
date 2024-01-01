@@ -2,7 +2,7 @@
 
 ;;; File: "list.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -76,18 +76,18 @@
 
 (define-prim&proc-c...r 1 4) ;; define car to cddddr
 
-(define-primitive (set-car! (pair pair)
+(define-primitive (set-car! (pair (and pair mutable))
                             (obj  object)))
 
-(define-procedure (set-car! (pair pair)
+(define-procedure (set-car! (pair (and pair mutable))
                             (obj  object))
   (primitive (set-car! pair obj))
   (void))
 
-(define-primitive (set-cdr! (pair pair)
+(define-primitive (set-cdr! (pair (and pair mutable))
                             (obj  object)))
 
-(define-procedure (set-cdr! (pair pair)
+(define-procedure (set-cdr! (pair (and pair mutable))
                             (obj  object))
   (primitive (set-cdr! pair obj))
   (void))
