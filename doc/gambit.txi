@@ -5544,7 +5544,7 @@ The procedures in this section are not yet documented.
 @deffn procedure char-set<= @var{char-set} @dots{}
 @end deffn
 
-@deffn procedure char-set-hash @var{char-set} @rm{[}@var{bound}@rm{]}
+@deffn procedure char-set-hash @var{char-set} @r{[}@var{bound}@r{]}
 @end deffn
 
 @deffn procedure char-set-cursor @var{char-set}
@@ -5598,7 +5598,7 @@ The procedures in this section are not yet documented.
 @deffn procedure char-set-filter! @var{pred} @var{char-set} @var{base-cs}
 @end deffn
 
-@deffn procedure ucs-range->char-set @var{lower} @var{upper} @rm{[}@var{error?} @rm{[}@var{base-cs}@rm{]}@rm{]}
+@deffn procedure ucs-range->char-set @var{lower} @var{upper} @r{[}@var{error?} @r{[}@var{base-cs}@r{]}@r{]}
 @end deffn
 
 @deffn procedure ucs-range->char-set! @var{lower} @var{upper} @var{error?} @var{base-cs}
