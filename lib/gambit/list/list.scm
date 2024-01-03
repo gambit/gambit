@@ -680,7 +680,7 @@
 
 (define-procedure (filter! (pred procedure)
                            (list proper-list))
-  (filter pred list)) ;; no optimization due to continuations
+  (macro-filter (filter! pred list) list x (macro-auto-force (pred x)))) ;; no optimization due to continuations
 
 (define-prim&proc (remove (pred procedure)
                           (list proper-list))
@@ -688,27 +688,35 @@
 
 (define-procedure (remove! (pred procedure)
                            (list proper-list))
-  (remove pred list)) ;; no optimization due to continuations
+  (macro-filter (remove! pred list) list x (not (macro-auto-force (pred x))))) ;; no optimization due to continuations
 
 (define-prim&proc (remq (x    object)
                         (list proper-list))
   (macro-filter (remq x list) list elem (not (eq? x elem))))
 
+(begin
+
+(define-macro (macro-partition)
+  '(macro-force-vars (list)
+     (let loop ((probe list) (rev-in '()) (rev-out '()))
+       (if (pair? probe)
+           (let ((x (car probe)))
+             (if (macro-auto-force (pred x))
+                 (loop (macro-auto-force (cdr probe)) (cons x rev-in) rev-out)
+                 (loop (macro-auto-force (cdr probe)) rev-in (cons x rev-out))))
+           (macro-check-proper-list-null* probe list '(2 . list) ((%procedure%) pred list)
+             (values (reverse rev-in) ;; reverse! unusable due to continuations
+                     (reverse rev-out)))))))
+
+
 (define-prim&proc (partition (pred procedure)
                              (list proper-list))
-  (macro-force-vars (list)
-    (let loop ((probe list) (rev-in '()) (rev-out '()))
-      (if (pair? probe)
-          (let ((x (car probe)))
-            (if (macro-auto-force (pred x))
-                (loop (macro-auto-force (cdr probe)) (cons x rev-in) rev-out)
-                (loop (macro-auto-force (cdr probe)) rev-in (cons x rev-out))))
-          (macro-check-proper-list-null* probe list '(2 . list) ((%procedure%) pred list)
-            (values (reverse rev-in) ;; reverse! unusable due to continuations
-                    (reverse rev-out)))))))
+  (macro-partition))
 
 (define-prim&proc (partition! (pred procedure) (list proper-list))
-  (partition pred list)) ;; no optimization due to continuations
+  (macro-partition)) ;; no optimization due to continuations
+
+)
 
 (define-prim&proc (delete (x    object)
                           (list proper-list)
@@ -720,7 +728,7 @@
                            (list proper-list)
                            (=    procedure (primitive equal?)))
   ;; TODO: don't put third parameter in error messages when it is absent
-  (delete x list =)) ;; no optimization due to continuations
+  (macro-filter (delete! x list =) list elem (not (macro-auto-force (= x elem))))) ;; no optimization due to continuations
 
 ;;;----------------------------------------------------------------------------
 
