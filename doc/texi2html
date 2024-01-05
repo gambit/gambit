@@ -7572,6 +7572,7 @@ sub t2h_default_def_line($$$$$$$$$$$$$$$$)
    my $name2 = $name;
    $name2 =~ s/&lt;/</g;
    $name2 =~ s/&gt;/>/g;
+   $name2 =~ s/&amp;/&/g;
    my $anchor1_name = escape_url(escape_spaces('Definition of ' . $name2));
    my $anchor2_name = escape_url(escape_spaces(ucfirst($category) . ' ' . $name2));
    my $anchor1 = '<a name="' . $anchor1_name . '"></a>';
@@ -7582,12 +7583,37 @@ sub t2h_default_def_line($$$$$$$$$$$$$$$$)
    if ($Texi2HTML::THISDOC{'title_texi'} eq 'wiki documentation')
    {
      #print STDERR "wiki\n";
-     $type_name .= '<code><b><a href="http://www.iro.umontreal.ca/~gambit/doc/gambit-c.html#' . $anchor1_name . '">' . $name . '</a></b></code>' if ($name ne '');
+     $type_name .= '<code><b><a href="https://gambitscheme.org/latest/manual/#' . $anchor1_name . '">' . $name . '</a></b></code>' if ($name ne '');
    }
    else
    {
      #print STDERR "manual\n";
-     $type_name .= '<code><b><a href="http://dynamo.iro.umontreal.ca/~gambit/wiki/index.php?title=Documentation:' . $anchor2_name . '">' . $name . '</a></b></code>' if ($name ne '');
+
+     my $github_wiki_name = ucfirst($category) . ' ' . $name2;
+
+     $github_wiki_name =~ s/%/%25/g;
+     $github_wiki_name =~ s/ /%20/g;
+     $github_wiki_name =~ s/!/%21/g;
+     $github_wiki_name =~ s/#/%23/g;
+     $github_wiki_name =~ s/\$/%24/g;
+     $github_wiki_name =~ s/&/%26/g;
+     $github_wiki_name =~ s/'/%27/g;
+     $github_wiki_name =~ s/\(/%28/g;
+     $github_wiki_name =~ s/\)/%29/g;
+     $github_wiki_name =~ s/\*/%2A/g;
+     $github_wiki_name =~ s/\+/%2B/g;
+     $github_wiki_name =~ s/,/%2C/g;
+     $github_wiki_name =~ s/\//%2F/g;
+     $github_wiki_name =~ s/:/%3A/g;
+     $github_wiki_name =~ s/;/%3B/g;
+     $github_wiki_name =~ s/=/%3D/g;
+     $github_wiki_name =~ s/\?/%3F/g;
+     $github_wiki_name =~ s/@/%40/g;
+     $github_wiki_name =~ s/\[/%5B/g;
+     $github_wiki_name =~ s/]/%5D/g;
+     $github_wiki_name =~ s/-/%E2%80%90/g;
+
+     $type_name .= '<code><b><a href="https://github.com/gambit/gambit/wiki/Documentation:' . $github_wiki_name . '">' . $name . '</a></b></code>' if ($name ne '');
      $labels = $anchor1 . $anchor2 . $index_label;
    }
 
