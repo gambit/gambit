@@ -986,7 +986,12 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 (define specialized-array-default-safe?
   (make-parameter
-   #f
+   ;; Does not follow the SRFI, but the default initial value should
+   ;; not cause the program to crash with a programming error.
+   ;;.Changes below now allow unsafe specialized arrays to be
+   ;; generated, but that's not the default for unsuspecting
+   ;; programmers.
+   #t
    (lambda (bool)
      (if (boolean? bool)
          bool
@@ -1001,7 +1006,7 @@ OTHER DEALINGS IN THE SOFTWARE.
          (error "specialized-array-default-mutable?: The argument is not a boolean: " bool)))))
 
 
-;; An array has a domain (which is an interval) and an getter that maps that domain into some type of
+;; An array has a domain (which is an interval) and a getter that maps that domain into some type of
 ;; Scheme objects
 
 (define %%order-unknown 1) ;; can be any nonboolean
@@ -2112,7 +2117,8 @@ OTHER DEALINGS IN THE SOFTWARE.
     (let ((getter
            (cond ((%%interval-empty? domain)
                   (%%empty-getter domain))
-                 (#t; safe?                    ;; All array getters and setters check their arguments
+                 (safe?
+                  ;; specialized-array-default-safe? is now #t initially, so the default is safe? but can be changed
                   (case (%%interval-dimension domain)
                     ((0)  (lambda ()
                             (storage-class-getter body (indexer))))
@@ -2175,7 +2181,8 @@ OTHER DEALINGS IN THE SOFTWARE.
            (and mutable?
                 (cond ((%%interval-empty? domain)
                        (%%empty-setter domain))
-                      (#t; safe?                    ;; All array getters and setters check their arguments
+                      (safe?
+                       ;; specialized-array-default-safe? is now #t initially, so the default is safe? but can be changed
                        (case (%%interval-dimension domain)
                          ((0)  (lambda (value)
                                  (cond ((not (checker value))
