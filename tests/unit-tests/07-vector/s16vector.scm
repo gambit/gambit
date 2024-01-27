@@ -118,6 +118,14 @@
 (check-eqv? (##s16vector-ref v2 3) 1)
 (check-eqv? (##s16vector-ref v2 4) 32767)
 
+(check-eqv? (##s16vector-swap! v2 0 4) v2)
+
+(check-eqv? (##s16vector-ref v2 0) 32767)
+(check-eqv? (##s16vector-ref v2 1) 99)
+(check-eqv? (##s16vector-ref v2 2) 0)
+(check-eqv? (##s16vector-ref v2 3) 1)
+(check-eqv? (##s16vector-ref v2 4) -32768)
+
 (check-eqv? (##s16vector-ref v3 1) 99)
 
 (check-eqv? (##s16vector-ref v4 0) -32768)
@@ -275,6 +283,14 @@
 (check-eqv? (s16vector-ref v6 3) 1)
 (check-eqv? (s16vector-ref v6 4) 32767)
 
+(check-eq? (s16vector-swap! v6 0 4) (void))
+
+(check-eqv? (s16vector-ref v6 0) 32767)
+(check-eqv? (s16vector-ref v6 1) 99)
+(check-eqv? (s16vector-ref v6 2) 0)
+(check-eqv? (s16vector-ref v6 3) 1)
+(check-eqv? (s16vector-ref v6 4) -32768)
+
 (check-eqv? (s16vector-ref v7 0) 0)
 (check-eqv? (s16vector-ref v7 1) 99)
 
@@ -388,6 +404,12 @@
 (check-tail-exn range-exception? (lambda () (s16vector-set! v5 -1 0)))
 (check-tail-exn range-exception? (lambda () (s16vector-set! v5 2 0)))
 
+(check-tail-exn type-exception? (lambda () (s16vector-swap! bool 0 11)))
+(check-tail-exn type-exception? (lambda () (s16vector-swap! v5 bool 11)))
+(check-tail-exn type-exception? (lambda () (s16vector-swap! v5 0 bool)))
+(check-tail-exn range-exception? (lambda () (s16vector-swap! v5 -1 0)))
+(check-tail-exn range-exception? (lambda () (s16vector-swap! v5 10 0)))
+
 (check-tail-exn type-exception? (lambda () (s16vector-shrink! bool 0)))
 (check-tail-exn type-exception? (lambda () (s16vector-shrink! v5 bool)))
 (check-tail-exn range-exception? (lambda () (s16vector-shrink! v5 3)))
@@ -468,6 +490,11 @@
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (s16vector-set! v9)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (s16vector-set! v9 0)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (s16vector-set! v9 0 0 0)))
+
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s16vector-swap!)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s16vector-swap! v9)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s16vector-swap! v9 0)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s16vector-swap! v9 0 0 0 0)))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (s16vector-shrink!)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (s16vector-shrink! v9)))

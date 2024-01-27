@@ -118,6 +118,14 @@
 (check-eqv? (##s64vector-ref v2 3) 1)
 (check-eqv? (##s64vector-ref v2 4) 9223372036854775807)
 
+(check-eqv? (##s64vector-swap! v2 0 4) v2)
+
+(check-eqv? (##s64vector-ref v2 0) 9223372036854775807)
+(check-eqv? (##s64vector-ref v2 1) 99)
+(check-eqv? (##s64vector-ref v2 2) 0)
+(check-eqv? (##s64vector-ref v2 3) 1)
+(check-eqv? (##s64vector-ref v2 4) -9223372036854775808)
+
 (check-eqv? (##s64vector-ref v3 1) 99)
 
 (check-eqv? (##s64vector-ref v4 0) -9223372036854775808)
@@ -275,6 +283,14 @@
 (check-eqv? (s64vector-ref v6 3) 1)
 (check-eqv? (s64vector-ref v6 4) 9223372036854775807)
 
+(check-eq? (s64vector-swap! v6 0 4) (void))
+
+(check-eqv? (s64vector-ref v6 0) 9223372036854775807)
+(check-eqv? (s64vector-ref v6 1) 99)
+(check-eqv? (s64vector-ref v6 2) 0)
+(check-eqv? (s64vector-ref v6 3) 1)
+(check-eqv? (s64vector-ref v6 4) -9223372036854775808)
+
 (check-eqv? (s64vector-ref v7 0) 0)
 (check-eqv? (s64vector-ref v7 1) 99)
 
@@ -388,6 +404,12 @@
 (check-tail-exn range-exception? (lambda () (s64vector-set! v5 -1 0)))
 (check-tail-exn range-exception? (lambda () (s64vector-set! v5 2 0)))
 
+(check-tail-exn type-exception? (lambda () (s64vector-swap! bool 0 11)))
+(check-tail-exn type-exception? (lambda () (s64vector-swap! v5 bool 11)))
+(check-tail-exn type-exception? (lambda () (s64vector-swap! v5 0 bool)))
+(check-tail-exn range-exception? (lambda () (s64vector-swap! v5 -1 0)))
+(check-tail-exn range-exception? (lambda () (s64vector-swap! v5 10 0)))
+
 (check-tail-exn type-exception? (lambda () (s64vector-shrink! bool 0)))
 (check-tail-exn type-exception? (lambda () (s64vector-shrink! v5 bool)))
 (check-tail-exn range-exception? (lambda () (s64vector-shrink! v5 3)))
@@ -468,6 +490,11 @@
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (s64vector-set! v9)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (s64vector-set! v9 0)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (s64vector-set! v9 0 0 0)))
+
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s64vector-swap!)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s64vector-swap! v9)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s64vector-swap! v9 0)))
+(check-tail-exn wrong-number-of-arguments-exception? (lambda () (s64vector-swap! v9 0 0 0 0)))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (s64vector-shrink!)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (s64vector-shrink! v9)))

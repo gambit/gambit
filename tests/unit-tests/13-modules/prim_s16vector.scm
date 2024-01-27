@@ -27,6 +27,7 @@
 (s16vector-ref '#s16(1 2 3 4 5) 2)
 (s16vector-set '#s16(1 2 3 4 5) 2 99)
 (let ((x (s16vector 1 2 3 4 5))) (s16vector-set! x 2 99) x)
+(let ((x (s16vector 1 2 3 4 5))) (s16vector-swap! x 2 3) x)
 (let ((x (s16vector 1 2 3 4 5))) (s16vector-shrink! x 3) x)
 (s16vector? '#s16(1 2 3)) (s16vector? 123)
 )

@@ -351,6 +351,7 @@
     (define prim-vect-set!-fixnum  (sym "##" name '-set!-fixnum))
     (define prim-vect-set          (sym "##" name '-set))
     (define prim-vect-set-small    (sym "##" name '-set-small))
+    (define prim-vect-swap!        (sym "##" name '-swap!))
     (define prim-vect->list        (sym "##" name '->list))
     (define prim-list->vect        (sym '##list-> name))
     (define prim-vect-copy         (sym "##" name '-copy))
@@ -381,6 +382,7 @@
     (define vect-set!-fixnum       (sym name '-set!-fixnum))
     (define vect-set               (sym name '-set))
     (define vect-set-small         (sym name '-set-small))
+    (define vect-swap!             (sym name '-swap!))
     (define vect->list             (sym name '->list))
     (define list->vect             (sym 'list-> name))
     (define vect->string           (sym name '->string))
@@ -555,6 +557,25 @@
                                       (,prim-vect-length ,name)))
                                   (,elem-name ,elem-type))
                  (,prim-vect-set ,name k ,elem-name))))
+
+       (define-primitive (,vect-swap! ,name i j)
+         (let ((temp (,prim-vect-ref ,name i)))
+           (,prim-vect-set! ,name i (,prim-vect-ref ,name j))
+           (,prim-vect-set! ,name j temp)
+           ,name))
+
+       ,@(if (memq name '(values))
+             '()
+             `((define-procedure (,vect-swap!
+                                  (,name ,name)
+                                  (i (index-range
+                                      0
+                                      (,prim-vect-length ,name)))
+                                  (j (index-range
+                                      0
+                                      (,prim-vect-length ,name))))
+                 (,prim-vect-swap! ,name i j)
+                 (void))))
 
        (define-primitive (,vect->list ,name
                                       (start object

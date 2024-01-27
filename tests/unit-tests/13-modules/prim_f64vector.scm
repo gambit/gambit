@@ -27,6 +27,7 @@
 (f64vector-ref '#f64(1. 2. 3. 4. 5.) 2)
 (f64vector-set '#f64(1. 2. 3. 4. 5.) 2 99.)
 (let ((x (f64vector 1. 2. 3. 4. 5.))) (f64vector-set! x 2 99.) x)
+(let ((x (f64vector 1. 2. 3. 4. 5.))) (f64vector-swap! x 2 3) x)
 (let ((x (f64vector 1. 2. 3. 4. 5.))) (f64vector-shrink! x 3) x)
 (f64vector? '#f64(1. 2. 3.)) (f64vector? 123)
 )

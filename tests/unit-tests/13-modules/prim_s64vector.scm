@@ -27,6 +27,7 @@
 (s64vector-ref '#s64(1 2 3 4 5) 2)
 (s64vector-set '#s64(1 2 3 4 5) 2 99)
 (let ((x (s64vector 1 2 3 4 5))) (s64vector-set! x 2 99) x)
+(let ((x (s64vector 1 2 3 4 5))) (s64vector-swap! x 2 3) x)
 (let ((x (s64vector 1 2 3 4 5))) (s64vector-shrink! x 3) x)
 (s64vector? '#s64(1 2 3)) (s64vector? 123)
 )
