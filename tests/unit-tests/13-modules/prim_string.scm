@@ -20,6 +20,7 @@
 (string-length "abcde")
 (string-ref "abcde" 2)
 (let ((x (string #\a #\b #\c #\d #\e))) (string-set! x 2 #\x) x)
+(let ((x (string #\a #\b #\c #\d #\e))) (string-swap! x 2 3) x)
 (string<?) (string<? "a") (string<? "a" "b") (string<? "b" "a") (string<? "a" "b" "c") (string<? "a" "a" "a") (string<? "c" "b" "a") (string<? "a" "A") (string<? "A" "a")
 (string<=?)(string<=? "a")(string<=? "a" "b")(string<=? "b" "a")(string<=? "a" "b" "c")(string<=? "a" "a" "a")(string<=? "c" "b" "a")(string<=? "a" "A")(string<=? "A" "a")
 (string=?) (string=? "a") (string=? "a" "b") (string=? "b" "a") (string=? "a" "b" "c") (string=? "a" "a" "a") (string=? "c" "b" "a") (string=? "a" "A") (string=? "A" "a")

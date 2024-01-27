@@ -27,6 +27,7 @@
 (u64vector-ref '#u64(1 2 3 4 5) 2)
 (u64vector-set '#u64(1 2 3 4 5) 2 99)
 (let ((x (u64vector 1 2 3 4 5))) (u64vector-set! x 2 99) x)
+(let ((x (u64vector 1 2 3 4 5))) (u64vector-swap! x 2 3) x)
 (let ((x (u64vector 1 2 3 4 5))) (u64vector-shrink! x 3) x)
 (u64vector? '#u64(1 2 3)) (u64vector? 123)
 )

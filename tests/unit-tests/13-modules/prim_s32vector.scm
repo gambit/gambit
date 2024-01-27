@@ -27,6 +27,7 @@
 (s32vector-ref '#s32(1 2 3 4 5) 2)
 (s32vector-set '#s32(1 2 3 4 5) 2 99)
 (let ((x (s32vector 1 2 3 4 5))) (s32vector-set! x 2 99) x)
+(let ((x (s32vector 1 2 3 4 5))) (s32vector-swap! x 2 3) x)
 (let ((x (s32vector 1 2 3 4 5))) (s32vector-shrink! x 3) x)
 (s32vector? '#s32(1 2 3)) (s32vector? 123)
 )

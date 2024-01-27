@@ -4048,6 +4048,25 @@ For example:
 
 @end deffn
 
+@deffn procedure vector-swap! @var{vector} @var{i} @var{j}
+
+The procedure @code{vector-swap!} swaps the elements at index @var{i}
+and index @var{j} of the vector @var{vector}.
+
+For example:
+
+@smallexample
+> @b{(define v1 (vector 0 1 2 3 4))}
+> @b{v1}
+#(0 1 2 3 4)
+> @b{(vector-swap! v1 0 4)}
+> @b{v1}
+#(4 1 2 3 0)
+@end smallexample
+
+@end deffn
+
+
 @deffn procedure string-set @var{string} @var{k} @var{char}
 
 The procedure @code{string-set} returns a new copy of the string
@@ -4063,6 +4082,24 @@ For example:
 "ab.d"
 > @b{(eq? s1 s2)}
 #f
+@end smallexample
+
+@end deffn
+
+@deffn procedure string-swap! @var{string} @var{i} @var{j}
+
+The procedure @code{string-swap!} swaps the characters at index @var{i}
+and index @var{j} of the string @var{string}.
+
+For example:
+
+@smallexample
+> @b{(define s1 (string #\a #\b #\c #\d #\e))}
+> @b{s1}
+"abcde"
+> @b{(string-swap! s1 0 4)}
+> @b{s1}
+"ebcda"
 @end smallexample
 
 @end deffn
@@ -8552,6 +8589,7 @@ homogeneous vector types.
 @deffnx procedure s8vector-ref @var{s8vector} @var{k}
 @deffnx procedure s8vector-set @var{s8vector} @var{k} @var{exact-int8}
 @deffnx procedure s8vector-set! @var{s8vector} @var{k} @var{exact-int8}
+@deffnx procedure s8vector-swap! @var{s8vector} @var{i} @var{j}
 @deffnx procedure s8vector->list @var{s8vector}
 @deffnx procedure list->s8vector @var{list-of-exact-int8}
 @deffnx procedure s8vector-fill! @var{s8vector} @var{fill} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
@@ -8572,6 +8610,7 @@ homogeneous vector types.
 @deffnx procedure u8vector-ref @var{u8vector} @var{k}
 @deffnx procedure u8vector-set @var{u8vector} @var{k} @var{exact-int8}
 @deffnx procedure u8vector-set! @var{u8vector} @var{k} @var{exact-int8}
+@deffnx procedure u8vector-swap! @var{u8vector} @var{i} @var{j}
 @deffnx procedure u8vector->list @var{u8vector}
 @deffnx procedure list->u8vector @var{list-of-exact-int8}
 @deffnx procedure u8vector-fill! @var{u8vector} @var{fill} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
@@ -8592,6 +8631,7 @@ homogeneous vector types.
 @deffnx procedure s16vector-ref @var{s16vector} @var{k}
 @deffnx procedure s16vector-set @var{s16vector} @var{k} @var{exact-int16}
 @deffnx procedure s16vector-set! @var{s16vector} @var{k} @var{exact-int16}
+@deffnx procedure s16vector-swap! @var{s16vector} @var{i} @var{j}
 @deffnx procedure s16vector->list @var{s16vector}
 @deffnx procedure list->s16vector @var{list-of-exact-int16}
 @deffnx procedure s16vector-fill! @var{s16vector} @var{fill} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
@@ -8612,6 +8652,7 @@ homogeneous vector types.
 @deffnx procedure u16vector-ref @var{u16vector} @var{k}
 @deffnx procedure u16vector-set @var{u16vector} @var{k} @var{exact-int16}
 @deffnx procedure u16vector-set! @var{u16vector} @var{k} @var{exact-int16}
+@deffnx procedure u16vector-swap! @var{u16vector} @var{i} @var{j}
 @deffnx procedure u16vector->list @var{u16vector}
 @deffnx procedure list->u16vector @var{list-of-exact-int16}
 @deffnx procedure u16vector-fill! @var{u16vector} @var{fill} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
@@ -8632,6 +8673,7 @@ homogeneous vector types.
 @deffnx procedure s32vector-ref @var{s32vector} @var{k}
 @deffnx procedure s32vector-set @var{s32vector} @var{k} @var{exact-int32}
 @deffnx procedure s32vector-set! @var{s32vector} @var{k} @var{exact-int32}
+@deffnx procedure s32vector-swap! @var{s32vector} @var{i} @var{j}
 @deffnx procedure s32vector->list @var{s32vector}
 @deffnx procedure list->s32vector @var{list-of-exact-int32}
 @deffnx procedure s32vector-fill! @var{s32vector} @var{fill} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
@@ -8652,6 +8694,7 @@ homogeneous vector types.
 @deffnx procedure u32vector-ref @var{u32vector} @var{k}
 @deffnx procedure u32vector-set @var{u32vector} @var{k} @var{exact-int32}
 @deffnx procedure u32vector-set! @var{u32vector} @var{k} @var{exact-int32}
+@deffnx procedure u32vector-swap! @var{u32vector} @var{i} @var{j}
 @deffnx procedure u32vector->list @var{u32vector}
 @deffnx procedure list->u32vector @var{list-of-exact-int32}
 @deffnx procedure u32vector-fill! @var{u32vector} @var{fill} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
@@ -8672,6 +8715,7 @@ homogeneous vector types.
 @deffnx procedure s64vector-ref @var{s64vector} @var{k}
 @deffnx procedure s64vector-set @var{s64vector} @var{k} @var{exact-int64}
 @deffnx procedure s64vector-set! @var{s64vector} @var{k} @var{exact-int64}
+@deffnx procedure s64vector-swap! @var{s64vector} @var{i} @var{j}
 @deffnx procedure s64vector->list @var{s64vector}
 @deffnx procedure list->s64vector @var{list-of-exact-int64}
 @deffnx procedure s64vector-fill! @var{s64vector} @var{fill} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
@@ -8692,6 +8736,7 @@ homogeneous vector types.
 @deffnx procedure u64vector-ref @var{u64vector} @var{k}
 @deffnx procedure u64vector-set @var{u64vector} @var{k} @var{exact-int64}
 @deffnx procedure u64vector-set! @var{u64vector} @var{k} @var{exact-int64}
+@deffnx procedure u64vector-swap! @var{u64vector} @var{i} @var{j}
 @deffnx procedure u64vector->list @var{u64vector}
 @deffnx procedure list->u64vector @var{list-of-exact-int64}
 @deffnx procedure u64vector-fill! @var{u64vector} @var{fill} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
@@ -8712,6 +8757,7 @@ homogeneous vector types.
 @deffnx procedure f32vector-ref @var{f32vector} @var{k}
 @deffnx procedure f32vector-set @var{f32vector} @var{k} @var{inexact-real}
 @deffnx procedure f32vector-set! @var{f32vector} @var{k} @var{inexact-real}
+@deffnx procedure f32vector-swap! @var{f32vector} @var{i} @var{j}
 @deffnx procedure f32vector->list @var{f32vector}
 @deffnx procedure list->f32vector @var{list-of-inexact-real}
 @deffnx procedure f32vector-fill! @var{f32vector} @var{fill} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}
@@ -8732,6 +8778,7 @@ homogeneous vector types.
 @deffnx procedure f64vector-ref @var{f64vector} @var{k}
 @deffnx procedure f64vector-set @var{f64vector} @var{k} @var{inexact-real}
 @deffnx procedure f64vector-set! @var{f64vector} @var{k} @var{inexact-real}
+@deffnx procedure f64vector-swap! @var{f64vector} @var{i} @var{j}
 @deffnx procedure f64vector->list @var{f64vector}
 @deffnx procedure list->f64vector @var{list-of-inexact-real}
 @deffnx procedure f64vector-fill! @var{f64vector} @var{fill} @r{[}@var{start} @r{[}@var{end}@r{]}@r{]}

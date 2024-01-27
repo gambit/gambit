@@ -27,6 +27,7 @@
 (u8vector-ref '#u8(1 2 3 4 5) 2)
 (u8vector-set '#u8(1 2 3 4 5) 2 99)
 (let ((x (u8vector 1 2 3 4 5))) (u8vector-set! x 2 99) x)
+(let ((x (u8vector 1 2 3 4 5))) (u8vector-swap! x 2 3) x)
 (let ((x (u8vector 1 2 3 4 5))) (u8vector-shrink! x 3) x)
 (u8vector? '#u8(1 2 3)) (u8vector? 123)
 )

@@ -27,6 +27,7 @@
 (f32vector-ref '#f32(1. 2. 3. 4. 5.) 2)
 (f32vector-set '#f32(1. 2. 3. 4. 5.) 2 99.)
 (let ((x (f32vector 1. 2. 3. 4. 5.))) (f32vector-set! x 2 99.) x)
+(let ((x (f32vector 1. 2. 3. 4. 5.))) (f32vector-swap! x 2 3) x)
 (let ((x (f32vector 1. 2. 3. 4. 5.))) (f32vector-shrink! x 3) x)
 (f32vector? '#f32(1. 2. 3.)) (f32vector? 123)
 )
