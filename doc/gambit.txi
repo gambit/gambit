@@ -4066,6 +4066,51 @@ For example:
 
 @end deffn
 
+@deffn procedure vector-any @var{pred} @var{vec1} @var{vec2} @dots{}
+
+The procedure @code{vector-any} returns the first non-false value that
+the predicate @var{pred} returns when applied to the elements of the vectors
+@var{vec1} @var{vec2} @dots{} in order, beginning with index 0 and
+stopping at the length of the shortest
+vector argument. It returns @code{#f} if there is no such non-false value.
+
+For example:
+
+@smallexample
+> @b{(vector-any = '#(1 2) '#(0 2 4))}
+#t
+> @b{(vector-any number? '#())}
+#f
+> @b{(vector-any (lambda (a b) (and a b)) '#(#f 1 #f 2) '#(1 #f 2 3 5))}
+3
+@end smallexample
+
+@end deffn
+
+@deffn procedure vector-every @var{pred} @var{vec1} @var{vec2} @dots{}
+
+The procedure @code{vector-every} applies
+the predicate @var{pred} to the elements of the vectors
+@var{vec1} @var{vec2} @dots{} in order, beginning with index 0 and
+stopping at the length of the shortest
+vector argument. If the result of @var{pred} is ever @code{#f}, that is
+returned; if the smallest vector is empty, then @code{#t} is returned;
+otherwise, the last value of @var{pred} is returned.
+
+For example:
+
+@smallexample
+> @b{(vector-every = '#(1 0) '#(1. 0. 4))}
+#t
+> @b{(vector-every char? '#())}
+#t
+> @b{(vector-every (lambda (a b) (or a b)) '#(#f 1 #f 2) '#(1 #f 2 3 5))}
+2
+> @b{(vector-every = '#(1 2) '#(1. 0. 4))}
+#f
+@end smallexample
+
+@end deffn
 
 @deffn procedure string-set @var{string} @var{k} @var{char}
 
@@ -4100,6 +4145,50 @@ For example:
 > @b{(string-swap! s1 0 4)}
 > @b{s1}
 "ebcda"
+@end smallexample
+
+@end deffn
+
+@deffn procedure string-any @var{pred} @var{s1} @var{s2} @dots{}
+
+The procedure @code{string-any} returns the first non-false value that
+the predicate @var{pred} returns when applied to the elements of the strings
+@var{s1} @var{s2} @dots{} in order, beginning with index 0 and
+stopping at the length of the shortest
+string argument. It returns @code{#f} if there is no such non-false value.
+
+For example:
+
+@smallexample
+> @b{(string-any char-ci=? "abc" "1B")}
+#t
+> @b{(string-any char=? "abc" "1B")}
+#f
+> @b{(string-any char-alphabetic? "")}
+#f
+@end smallexample
+
+@end deffn
+
+@deffn procedure string-every @var{pred} @var{s1} @var{s2} @dots{}
+
+The procedure @code{string-every} applies
+the predicate @var{pred} to the elements of the strings
+@var{s1} @var{s2} @dots{} in order, beginning with index 0 and
+stopping at the length of the shortest
+string argument. If the result of @var{pred} is ever @code{#f}, that is
+returned; if the smallest string is empty, then @code{#t} is returned;
+otherwise, the last value of @var{pred} is returned.
+
+For example:
+
+@smallexample
+> @b{(string-every char-ci=? "abc" "aB")}
+#t
+> @b{(string-every char=? "abc" "aB")}
+#f
+> @b{(string-every char-alphabetic? "")}
+#t
 @end smallexample
 
 @end deffn
