@@ -1391,7 +1391,7 @@ end-of-code
 
                            (define (vect-every-1 i last)
                              (if (##fx< i last)
-                                 (and (proc (,prim-vect-ref x i))
+                                 (and (macro-auto-force (proc (,prim-vect-ref x i)))
                                       (vect-every-1 (##fx+ i 1) last))
                                  (proc (,prim-vect-ref x i))))  ;; last call in tail position
 
@@ -1413,7 +1413,7 @@ end-of-code
 
                            (define (vect-every-n i last)
                              (if (##fx< i last)
-                                 (and (##apply proc (get-args i))
+                                 (and (macro-auto-force (##apply proc (get-args i)))
                                       (vect-every-n (##fx+ i 1) last))
                                  (##apply proc (get-args i))))  ;; last call in tail position
 
@@ -1495,7 +1495,7 @@ end-of-code
 
                            (define (vect-any-1 i last)
                              (if (##fx< i last)
-                                 (or (proc (,prim-vect-ref x i))
+                                 (or (macro-auto-force (proc (,prim-vect-ref x i)))
                                      (vect-any-1 (##fx+ i 1) last))
                                  (proc (,prim-vect-ref x i))))  ;; last call in tail position
 
@@ -1517,7 +1517,7 @@ end-of-code
 
                            (define (vect-any-n i last)
                              (if (##fx< i last)
-                                 (or (##apply proc (get-args i))
+                                 (or (macro-auto-force (##apply proc (get-args i)))
                                      (vect-any-n (##fx+ i 1) last))
                                  (##apply proc (get-args i))))  ;; last call in tail position
 
