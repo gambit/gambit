@@ -1258,10 +1258,12 @@ string->char-set!
 string->keyword
 string->uninterned-keyword
 string->uninterned-symbol
+string-any
 string-ci=?-hash
 string-concatenate
 string-contains
 string-contains-ci
+string-every
 string-prefix-ci?
 string-prefix-length
 string-prefix-length-ci
@@ -1519,8 +1521,10 @@ user-info-uid
 user-info?
 user-name
 vector->bits
+vector-any
 vector-cas!
 vector-concatenate
+vector-every
 vector-inc!
 vector-set
 vector-shrink!

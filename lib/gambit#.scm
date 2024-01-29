@@ -904,6 +904,7 @@ started-thread-exception-procedure
 started-thread-exception?
 step
 step-level-set!
+string-any
 string->char-set
 string->char-set!
 string->keyword
@@ -913,6 +914,7 @@ string-ci=?-hash
 string-concatenate
 string-contains
 string-contains-ci
+string-every
 string-prefix-ci?
 string-prefix-length
 string-prefix-length-ci
@@ -1170,8 +1172,10 @@ user-info-uid
 user-info?
 user-name
 vector->bits
+vector-any
 vector-cas!
 vector-concatenate
+vector-every
 vector-inc!
 vector-set
 vector-shrink!
