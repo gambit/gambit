@@ -5757,13 +5757,27 @@ end-of-code
 
     (define (init module)
       (let* ((s (macro-module-stage module))
-             (module-descr (macro-module-module-descr module)))
+             (module-descr (macro-module-module-descr module))
+             (supplied (macro-module-descr-supply-modules (macro-module-module-descr module))))
+
         (cond ((##fx>= s stage))
               ((##fx= s 0)
-               (macro-module-stage-set! module 1)
+
+               (for-each
+                (lambda (sup-mod-name)
+                  (let ((sup-mod (##lookup-registered-module sup-mod-name)))
+                    (macro-module-stage-set! sup-mod 1)))
+                (vector->list supplied))
+
                (##init-mod module-descr))
               ((##fx= s 1)
-               (macro-module-stage-set! module 2)
+
+               (for-each
+                (lambda (sup-mod-name)
+                  (let ((sup-mod (##lookup-registered-module sup-mod-name)))
+                    (macro-module-stage-set! sup-mod 2)))
+                (vector->list supplied))
+
                ((macro-module-descr-thunk module-descr))))))
 
     (if (##fx<= stage level)
