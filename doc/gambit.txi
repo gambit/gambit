@@ -4112,6 +4112,39 @@ For example:
 
 @end deffn
 
+@deffn procedure vector-fold @var{kons} @var{knil} @var{vec1} @var{vec2} @dots{}
+
+The procedure @var{kons} is iterated over each value in all of the vectors, stopping at the end of the shortest; @var{kons} is applied as @code{(@var{kons} state (vector-ref @var{vec1} i) (vector-ref @var{vec2} i) @dots{})} where @code{state} is the current state value---the current state value begins with @var{knil}, and becomes whatever @var{kons} returned on the previous iteration---and @code{i} is the current index.
+The iteration is strictly increasing in the index @code{i}, starting at 0.
+
+For example:
+
+@smallexample
+> @b{(vector-fold (lambda (len str) (max (string-length str) len)) 0 '#("a b c" "ab" "" "cde"))}
+5
+> @b{(vector-fold xcons '() '#(a b c d))}
+(d c b a)
+> @b{(vector-fold (lambda (counter n) (if (even? n) (+ counter 1) counter)) 0 '#(0 1 2 3 4))}
+3
+@end smallexample
+
+@end deffn
+
+@deffn procedure vector-fold-right @var{kons} @var{knil} @var{vec1} @var{vec2} @dots{}
+
+Similar to @code{vector-fold}, but strictly decreasing in the index.
+
+For example:
+
+@smallexample
+> @b{(vector-fold-right xcons '() '#(a b c d))}
+(a b c d)
+@end smallexample
+
+@end deffn
+
+
+
 @deffn procedure string-set @var{string} @var{k} @var{char}
 
 The procedure @code{string-set} returns a new copy of the string
@@ -4145,50 +4178,6 @@ For example:
 > @b{(string-swap! s1 0 4)}
 > @b{s1}
 "ebcda"
-@end smallexample
-
-@end deffn
-
-@deffn procedure string-any @var{pred} @var{s1} @var{s2} @dots{}
-
-The procedure @code{string-any} returns the first non-false value that
-the predicate @var{pred} returns when applied to the elements of the strings
-@var{s1} @var{s2} @dots{} in order, beginning with index 0 and
-stopping at the length of the shortest
-string argument. It returns @code{#f} if there is no such non-false value.
-
-For example:
-
-@smallexample
-> @b{(string-any char-ci=? "abc" "1B")}
-#t
-> @b{(string-any char=? "abc" "1B")}
-#f
-> @b{(string-any char-alphabetic? "")}
-#f
-@end smallexample
-
-@end deffn
-
-@deffn procedure string-every @var{pred} @var{s1} @var{s2} @dots{}
-
-The procedure @code{string-every} applies
-the predicate @var{pred} to the elements of the strings
-@var{s1} @var{s2} @dots{} in order, beginning with index 0 and
-stopping at the length of the shortest
-string argument. If the result of @var{pred} is ever @code{#f}, that is
-returned; if the smallest string is empty, then @code{#t} is returned;
-otherwise, the last value of @var{pred} is returned.
-
-For example:
-
-@smallexample
-> @b{(string-every char-ci=? "abc" "aB")}
-#t
-> @b{(string-every char=? "abc" "aB")}
-#f
-> @b{(string-every char-alphabetic? "")}
-#t
 @end smallexample
 
 @end deffn
