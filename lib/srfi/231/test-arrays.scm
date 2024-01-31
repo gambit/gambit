@@ -52,13 +52,11 @@ OTHER DEALINGS IN THE SOFTWARE.
     %%test-moves           ;; TODO: Remove after testing
     %%compose-indexers
     make-%%array
-    %%every
     %%interval->basic-indexer
     %%interval-lower-bounds
     %%interval-upper-bounds
     %%move-array-elements
     %%permutation-invert
-    %%vector-every
     %%vector-permute
     %%vector-permute->list
     %%order-unknown
@@ -569,8 +567,8 @@ OTHER DEALINGS IN THE SOFTWARE.
                                            (list->vector upper1))
                             (make-interval (list->vector lower2)
                                            (list->vector upper2)))
-          (and (%%every (lambda (x) (>= (car x) (cdr x))) (map cons lower1 lower2))
-               (%%every (lambda (x) (<= (car x) (cdr x))) (map cons upper1 upper2))))))
+          (and (every (lambda (x) (>= (car x) (cdr x))) (map cons lower1 lower2))
+               (every (lambda (x) (<= (car x) (cdr x))) (map cons upper1 upper2))))))
 
 (pp "interval-empty? tests")
 
@@ -1651,7 +1649,7 @@ OTHER DEALINGS IN THE SOFTWARE.
           (array-reverse base reversed-dimensions)))
     (test (array-packed? reversed)
           (or (array-empty? reversed)
-              (%%vector-every
+              (vector-every
                (lambda (lower upper reversed)
                  (or (= (+ 1 lower) upper)  ;; side-length 1
                      (not reversed)))       ;; dimension not reversed
@@ -1967,11 +1965,11 @@ OTHER DEALINGS IN THE SOFTWARE.
                                               "Block copy")
                                              ((eq? destination-storage-class generic-storage-class)
                                               "In order, no checks needed, generic-storage-class")
-                                             ((%%every destination-checker (cdr (assq source-storage-class extreme-values-alist)))
+                                             ((every destination-checker (cdr (assq source-storage-class extreme-values-alist)))
                                               "In order, no checks needed")
                                              (else
                                               "In order, checks needed"))
-                                       (cond ((%%every destination-checker (cdr (assq source-storage-class extreme-values-alist)))
+                                       (cond ((every destination-checker (cdr (assq source-storage-class extreme-values-alist)))
                                               "No checks needed")
                                              (else
                                               "Checks needed")))
@@ -3778,7 +3776,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                                  (car lowers)
                                  lowers))))
     ;; (pp (list args new-lowers new-uppers (vector-every < new-lowers new-uppers)))
-    (and (%%vector-every <= new-lowers new-uppers)
+    (and (vector-every <= new-lowers new-uppers)
          (make-interval new-lowers new-uppers))))
 
 
@@ -6632,13 +6630,13 @@ that computes the componentwise products when we need them, the times are
 (let ((A (make-specialized-array (make-interval '#(5 5 5 5 5) '#(8 8 8 8 8))))
       (B (make-specialized-array (make-interval '#(5 5 5 5 5)))))
   (test (array-ref A 0 0)
-        "array-getter: multi-index is not the correct dimension: ")
+        "Wrong number of arguments passed to procedure ")
   (test (array-set! A 2 0 0)
-        "array-setter: multi-index is not the correct dimension: ")
+        "Wrong number of arguments passed to procedure ")
   (test (array-ref B 0 0)
-        "array-getter: multi-index is not the correct dimension: ")
+        "Wrong number of arguments passed to procedure ")
   (test (array-set! B 2 0 0)
-        "array-setter: multi-index is not the correct dimension: "))
+        "Wrong number of arguments passed to procedure "))
 
 (pp "Test interactions of continuations and array-{copy|append|stack|decurry|block}")
 
