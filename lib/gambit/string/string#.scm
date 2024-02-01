@@ -37,6 +37,7 @@ string-ref
 string-set!
 string-set
 string-shrink!
+string-swap!
 string-upcase
 string<=?
 string<?

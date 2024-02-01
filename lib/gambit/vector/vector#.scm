@@ -30,6 +30,7 @@ f32vector-ref
 f32vector-set
 f32vector-set!
 f32vector-shrink!
+f32vector-swap!
 f32vector?
 f64vector
 f64vector->list
@@ -43,6 +44,7 @@ f64vector-ref
 f64vector-set
 f64vector-set!
 f64vector-shrink!
+f64vector-swap!
 f64vector?
 list->f32vector
 list->f64vector
@@ -79,6 +81,7 @@ s16vector-ref
 s16vector-set
 s16vector-set!
 s16vector-shrink!
+s16vector-swap!
 s16vector?
 s32vector
 s32vector->list
@@ -92,6 +95,7 @@ s32vector-ref
 s32vector-set
 s32vector-set!
 s32vector-shrink!
+s32vector-swap!
 s32vector?
 s64vector
 s64vector->list
@@ -105,6 +109,7 @@ s64vector-ref
 s64vector-set
 s64vector-set!
 s64vector-shrink!
+s64vector-swap!
 s64vector?
 s8vector
 s8vector->list
@@ -118,6 +123,7 @@ s8vector-ref
 s8vector-set
 s8vector-set!
 s8vector-shrink!
+s8vector-swap!
 s8vector?
 string->vector
 subf32vector
@@ -165,6 +171,7 @@ u16vector-ref
 u16vector-set
 u16vector-set!
 u16vector-shrink!
+u16vector-swap!
 u16vector?
 u32vector
 u32vector->list
@@ -178,6 +185,7 @@ u32vector-ref
 u32vector-set
 u32vector-set!
 u32vector-shrink!
+u32vector-swap!
 u32vector?
 u64vector
 u64vector->list
@@ -191,6 +199,7 @@ u64vector-ref
 u64vector-set
 u64vector-set!
 u64vector-shrink!
+u64vector-swap!
 u64vector?
 u8vector
 u8vector->list
@@ -204,16 +213,21 @@ u8vector-ref
 u8vector-set
 u8vector-set!
 u8vector-shrink!
+u8vector-swap!
 u8vector?
 vector
 vector->list
 vector->string
+vector-any
 vector-append
 vector-cas!
 vector-concatenate
 vector-copy
 vector-copy!
+vector-every
 vector-fill!
+vector-fold
+vector-fold-right
 vector-for-each
 vector-inc!
 vector-length
@@ -222,6 +236,7 @@ vector-ref
 vector-set
 vector-set!
 vector-shrink!
+vector-swap!
 vector?
 
 ))
