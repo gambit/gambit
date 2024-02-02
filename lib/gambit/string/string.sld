@@ -32,6 +32,7 @@ string-append
 substring-move!
 substring-fill!
 string-shrink!
+string-swap!
 string-map
 string-for-each
 string=?
