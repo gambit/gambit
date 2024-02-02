@@ -681,21 +681,23 @@ fi
 
 AC_ARG_ENABLE(module-search-order,
               AS_HELP_STRING([--enable-module-search-order=...],
-                             [Module search order (default is ~~lib,~~userlib)]),
+                             [Module search order (default is ~~lib,~~userlib,)]),
               ENABLE_MODULE_SEARCH_ORDER=$enableval,
-              ENABLE_MODULE_SEARCH_ORDER=[\~\~lib,\~\~userlib])
+              ENABLE_MODULE_SEARCH_ORDER=[\~\~lib,\~\~userlib,])
 
 DEFAULT_RUNTIME_OPTIONS=""
 
 if test "$ENABLE_MODULE_SEARCH_ORDER" != ""; then
   # must reverse order for runtime options
-  for p in `echo "$ENABLE_MODULE_SEARCH_ORDER" | sed -e 's/,/ /g'`; do
+  while read -r line; do
     if test "$DEFAULT_RUNTIME_OPTIONS" != ""; then
       DEFAULT_RUNTIME_OPTIONS=",$DEFAULT_RUNTIME_OPTIONS"
     fi
-    DEFAULT_RUNTIME_OPTIONS="search=$p$DEFAULT_RUNTIME_OPTIONS"
-  done
+    DEFAULT_RUNTIME_OPTIONS="search=$line$DEFAULT_RUNTIME_OPTIONS"
+  done < <(echo "$ENABLE_MODULE_SEARCH_ORDER" | sed -e 's/,/\n/g')
 fi
+
+echo "runtime options: $DEFAULT_RUNTIME_OPTIONS"
 
 ###############################################################################
 #

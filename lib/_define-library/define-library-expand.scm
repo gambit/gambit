@@ -8,6 +8,12 @@
 
 (##supply-module _define-library/define-library-expand)
 
+
+;; TODO: remplir ça par des vraies valeurs
+(##meta-info
+ libdef
+ ())
+
 (##namespace ("_define-library/define-library-expand#"))
 
 (##include "define-library-expand#.scm")
@@ -17,6 +23,7 @@
 (##include "~~lib/_module#.scm")
 
 (##include "~~lib/gambit/prim/prim#.scm")
+(##include "~~lib/_thread#.scm")
 
 ;;;============================================================================
 
@@ -95,37 +102,87 @@
       dir
       (parts->path (cdr parts) (##path-expand (car parts) dir))))
 
-(define (get-libdef import-src reference-src)
+;; table
+(define libdef-cache
+  (make-table weak-values: #t))
 
+(define libdef-cache-mutex (macro-make-mutex 'libdef-cache))
+
+(define (libdef-cache-add! modname val)
+  (##primitive-lock! libdef-cache-mutex 1 9)
+  (table-set! libdef-cache modname val)
+  (##primitive-unlock! libdef-cache-mutex 1 9))
+
+(define (libdef-cache-ref modname)
+  (##primitive-lock! libdef-cache-mutex 1 9)
+  (let ((val (table-ref libdef-cache modname #f)))
+    (##primitive-unlock! libdef-cache-mutex 1 9)
+    val))
+
+(define (get-libdef import-src reference-src)
   (define (err src)
     (##raise-expression-parsing-exception
      'cannot-find-library
      src
      (##desourcify src)))
 
-  (call-with-values
-   (lambda ()
-     (##find-mod-info reference-src import-src))
+  (define (normalize-module-name expr)
+    (string->symbol (##modref->string (##parse-module-ref expr))))
 
-   (lambda (mod-info module-ref)
-     (if mod-info
-         (let ((mod-dir            (##vector-ref mod-info 0))
-               (mod-filename-noext (##vector-ref mod-info 1))
-               (ext                (##vector-ref mod-info 2))
-               (mod-path           (##vector-ref mod-info 3))
-               (port               (##vector-ref mod-info 4))
-               (root               (##vector-ref mod-info 5))
-               (path               (##vector-ref mod-info 6)))
+  (let* ((module-ref (normalize-module-name (##desourcify reference-src)))
+         (in-cache (libdef-cache-ref module-ref)))
+    (if in-cache
+        (values
+         in-cache
+         module-ref)
+        (begin
+          (call-with-values
+              (lambda ()
+                (##find-mod-info reference-src import-src))
 
-           (values
-             (read-libdef-sld mod-path
-                              reference-src
-                              module-ref
-                              port
-                              root
-                              path)
-             module-ref))
-         (err reference-src)))))
+            (lambda (mod-info module-ref)
+
+              (if mod-info
+                  (cond
+                   ((mod-info-fs? mod-info)
+                    (let ((mod-dir            (mod-info-fs-dir mod-info))
+                          (mod-filename-noext (mod-info-fs-filename-noext mod-info))
+                          (ext                (mod-info-fs-ext mod-info))
+                          (mod-path           (mod-info-fs-mod-path mod-info))
+                          (port               (mod-info-fs-port mod-info))
+                          (root               (mod-info-fs-root mod-info))
+                          (path               (mod-info-fs-path mod-info)))
+
+                      (let ((the-libdef
+                             (read-libdef-sld mod-path
+                                              reference-src
+                                              module-ref
+                                              port
+                                              root
+                                              path)))
+                        (libdef-cache-add! module-ref the-libdef)
+
+                        (values
+                         the-libdef
+                         module-ref))))
+                   ((mod-info-rm? mod-info)
+                    (display mod-info) (newline)
+                    (let* ((meta-informations (macro-module-descr-meta-info
+                                               (macro-module-module-descr
+                                                (mod-info-rm-registered-module mod-info)))))
+                      (display meta-informations) (newline)
+                      (let* ((the-libdef-pair (assq 'libdef meta-informations)))
+                        (unless the-libdef-pair
+                          (error (string-append "module "
+                                                (symbol->string module-ref)
+                                                " isn't an r7rs library")))
+                        (let ((the-libdef (parse-libdef
+                                           (cadr the-libdef-pair))))
+                          (values
+                           the-libdef
+                           module-ref)))))
+                   (else (error "unknown mod-info type" mod-info)))
+                  (err reference-src))))))))
 
 (define (read-first port)
   (let* ((rt
@@ -880,6 +937,32 @@
               (pretty-print x)))))
   src)
 
+(define (unparse-idmap im)
+  (vector
+   (idmap-name im)
+   (idmap-namespace im)
+   (idmap-macros im)
+   (idmap-only-export? im)
+   (idmap-mapping im)))
+
+(define (unparse-libdef ld)
+  (vector
+   (libdef-name ld)
+   (libdef-namespace ld)
+   (libdef-meta-info ld)
+   (unparse-idmap (libdef-exports ld))))
+
+(define (parse-idmap obj)
+  (apply (lambda (name namespace macros only-export? mapping)
+           (make-idmap #f #f name namespace macros only-export? mapping))
+         (vector->list obj)))
+
+(define (parse-libdef obj)
+  (apply (lambda (name namespace meta-info exports)
+           (make-libdef
+            #f #f name namespace meta-info (parse-idmap exports) #f #f))
+         (vector->list obj)))
+
 (define (define-library-expand src)
   (let* ((ld
           (parse-define-library src #f #f #f))
@@ -931,6 +1014,10 @@
             (##namespace (,(libdef-namespace ld)))
             ,@ld-imports
             ,@(libdef-body ld)
+            (##meta-info
+             libdef
+             ,(unparse-libdef
+               ld))
             (##namespace (""))))))))
 
 (define (mapping->namespace-declaration mapping)

@@ -307,7 +307,7 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define (##search-module-with-exts mod-filename-noext mod-dir root path exts)
+(define (##search-module-with-exts mod-filename-noext mod-dir root path exts modref)
   (let ((mod-path-noext (##path-expand mod-filename-noext mod-dir)))
 
     (define (try-opening-source-file path cont)
@@ -334,21 +334,25 @@
         (try-opening-source-file
          mod-path
          (lambda (port resolved-path)
+           (when (##not (##fixnum? port))
+             (module-location-cache-add! (string->symbol (##modref->string modref))
+                                         resolved-path))
            (and (##not (##fixnum? port))
-                (##vector mod-dir
-                          mod-filename-noext
-                          ext
-                          mod-path
-                          port
-                          root
-                          path))))))
+                (make-mod-info-fs
+                 mod-dir
+                 mod-filename-noext
+                 ext
+                 mod-path
+                 port
+                 root
+                 path))))))
 
     (let loop ((exts exts))
       (and (##pair? exts)
            (or (check-source-with-ext (##car exts))
                (loop (##cdr exts)))))))
 
-(define (##search-module-at dirs nested-dirs root exts)
+(define (##search-module-at dirs nested-dirs root exts modref)
   (and (##pair? dirs)
        (let ()
 
@@ -358,7 +362,8 @@
             (##path-join-reversed dirs2 root)
             root
             dirs2
-            exts))
+            exts
+            modref))
 
          (or (check nested-dirs)
              (and (##pair? nested-dirs)
@@ -382,7 +387,8 @@
                          (if host
                              (##path-join-reversed host dir)
                              dir)))
-         ##scheme-file-extensions)
+         ##scheme-file-extensions
+         modref)
 
         (let ((main-repo-path
                (##path-expand "@" (##path-expand (##last rpath) dir))))
@@ -392,22 +398,79 @@
                rpath
                (##butlast rpath)
                main-repo-path
-               ##scheme-file-extensions)
+               ##scheme-file-extensions
+               modref)
 
               (##search-module-at
                rpath
                rpath
                dir
-               ##scheme-file-extensions))))))
+               ##scheme-file-extensions
+               modref))))))
+
+;; This cache is used to remember the location (on the file system) of a
+;; specific module. If such a path exists, value is this path. If not, the value
+;; is #f.
+(define module-location-cache
+  (make-table weak-values: #t))
+
+(define module-location-cache-mutex (macro-make-mutex 'module-location-cache))
+
+(define (module-location-cache-add! modref loc)
+  (##primitive-lock! module-location-cache-mutex 1 9)
+  (table-set! module-location-cache modref loc)
+  (##primitive-unlock! module-location-cache-mutex 1 9))
+
+(define (module-location-cache-ref modref)
+  (##primitive-lock! module-location-cache-mutex 1 9)
+  (let ((val (table-ref module-location-cache modref 'nothing)))
+    (##primitive-unlock! module-location-cache-mutex 1 9)
+    (if (eq? val 'nothing)
+        #f
+        (list val))))
 
 (define (##default-search-module-in-search-order modref search-order)
-  (let loop ((lst search-order))
-    (and (##pair? lst)
-         (let ((dir (##car lst)))
-           (or (##search-module-in-dir
-                modref
-                (##path-expand-in-initial-current-directory dir))
-               (loop (##cdr lst)))))))
+  (let* ((module-ref (string->symbol (##modref->string modref)))
+         ;; if there exists a value (can be false), (loc) will be returned. If
+         ;; not, #f will be returned.
+         (maybe-a-filepath (module-location-cache-ref module-ref)))
+    (if (pair? maybe-a-filepath)
+        (let ((maybe-a-filepath (car maybe-a-filepath)))
+          (and maybe-a-filepath
+               (make-mod-info-fs
+                ;; mod-dir
+                (path-directory maybe-a-filepath)
+                ;; mod-filename-noext
+                (path-strip-directory (path-strip-extension maybe-a-filepath))
+                ;; ext
+                (path-extension maybe-a-filepath)
+                ;; mod-path
+                maybe-a-filepath
+                ;; port
+                (open-input-file maybe-a-filepath)
+                ;; root
+                #f
+                ;; path
+                (##modref->path modref #f #f))))
+        (let loop ((lst search-order))
+          (if (##pair? lst)
+              (let ((dir (##car lst)))
+                ;; the empty string means: "look into the ##registered-modules".
+                (if (zero? (string-length dir))
+                    (let ((rm (##lookup-registered-module module-ref)))
+                      (if rm
+                          (begin
+                            (make-mod-info-rm
+                             rm))
+                          (loop (##cdr lst))))
+                    (or (##search-module-in-dir
+                         modref
+                         (##path-expand-in-initial-current-directory dir))
+                        (loop (##cdr lst)))))
+              (begin
+                ;; We want to remember this module does not exist.
+                (module-location-cache-add! module-ref #f)
+                #f))))))
 
 (define ##search-module-in-search-order
   ##default-search-module-in-search-order)
@@ -453,189 +516,198 @@
        (##comp-top top-cte src tail?)))))
 
 (define-prim (##get-module-from-file module-ref modref mod-info)
+  (cond
+   ((mod-info-fs? mod-info)
+    (let ()
+      (define (err)
+        (##raise-module-not-found-exception
+         ##get-module
+         module-ref))
 
-  (define (err)
-    (##raise-module-not-found-exception
-     ##get-module
-     module-ref))
+      (define (search-for-highest-object-file path-noext stop-at-first?)
+        (let loop ((version 1)
+                   (highest-object-file-path #f)
+                   (highest-object-file-info #f))
+          (let* ((resolved-path
+                  (##path-resolve
+                   (##string-append path-noext
+                                    ".o"
+                                    (##number->string version 10))))
+                 (_
+                  (and ##debug-modules?
+                       (##debug-modules-trace 'path-exists? resolved-path)))
+                 (resolved-info
+                  (##file-info-aux resolved-path))
+                 (resolved-path-exists?
+                  (##not (##fixnum? resolved-info))))
+            (if resolved-path-exists?
+                (if stop-at-first?
+                    (##vector resolved-path
+                              resolved-info)
+                    (loop (##fx+ version 1)
+                          resolved-path
+                          resolved-info))
+                (and highest-object-file-path
+                     (##vector highest-object-file-path
+                               highest-object-file-info))))))
 
-  (define (search-for-highest-object-file path-noext stop-at-first?)
-    (let loop ((version 1)
-               (highest-object-file-path #f)
-               (highest-object-file-info #f))
-      (let* ((resolved-path
-              (##path-resolve
-               (##string-append path-noext
-                                ".o"
-                                (##number->string version 10))))
-             (_
-              (and ##debug-modules?
-                   (##debug-modules-trace 'path-exists? resolved-path)))
-             (resolved-info
-              (##file-info-aux resolved-path))
-             (resolved-path-exists?
-              (##not (##fixnum? resolved-info))))
-        (if resolved-path-exists?
-            (if stop-at-first?
-                (##vector resolved-path
-                          resolved-info)
-                (loop (##fx+ version 1)
-                      resolved-path
-                      resolved-info))
-            (and highest-object-file-path
-                 (##vector highest-object-file-path
-                           highest-object-file-info))))))
+      ;;  (pp `(##get-module-from-file module-ref: ,module-ref modref: ,(##vector-copy modref) mod-info: ,mod-info))
 
-;;  (pp `(##get-module-from-file module-ref: ,module-ref modref: ,(##vector-copy modref) mod-info: ,mod-info))
+      (let ((mod-dir            (mod-info-fs-dir mod-info))
+            (mod-filename-noext (mod-info-fs-filename-noext mod-info))
+            (ext                (mod-info-fs-ext mod-info))
+            (mod-path           (mod-info-fs-mod-path mod-info))
+            (port               (mod-info-fs-port mod-info))
+            (root               (mod-info-fs-root mod-info))
+            (path               (mod-info-fs-path mod-info)))
 
-  (let ((mod-dir            (##vector-ref mod-info 0))
-        (mod-filename-noext (##vector-ref mod-info 1))
-        (ext                (##vector-ref mod-info 2))
-        (mod-path           (##vector-ref mod-info 3))
-        (port               (##vector-ref mod-info 4))
-        (root               (##vector-ref mod-info 5))
-        (path               (##vector-ref mod-info 6)))
-
-    (define (get-from-source-file)
-      (let ((x
-             (##read-all-as-a-begin-expr-from-port
-              port
-              ##main-readtable
-              ##wrap-datum
-              ##unwrap-datum
-              (##cdr ext) ;; start-syntax
-              #t          ;; close-port?
-              '())))
-        (if (##fixnum? x)
-            (##raise-os-exception
-             #f
-             x
-             ##get-module
-             module-ref)
-            (let* ((script-line
-                    (##vector-ref x 0))
-                   (src
-                    (##vector-ref x 1))
-                   (module-name
-                    (##symbol->string module-ref)))
-              (##call-with-values
-               (lambda ()
-                 (##compile-mod
-                  (##top-cte-clone ##interaction-cte)
-                  (##sourcify src (##make-source #f #f))
-                  module-ref
-                  root
-                  path
-                  script-line))
-               (lambda (code comp-ctx)
-                 (let* ((supply-modules
-                         (let ((mods (macro-compilation-ctx-supply-modules comp-ctx)))
-                           (##list->vector
-                            (if (##not (##memq module-ref mods))
-                                (##append (##list module-ref) mods)
-                                mods))))
-                        (demand-modules
-                         (let ((mods (macro-compilation-ctx-demand-modules comp-ctx)))
-                           (##list->vector mods)))
-                        (meta-info
-                         (##meta-info->alist
-                          (macro-compilation-ctx-meta-info comp-ctx)))
-                        (module-descr
-                         (macro-make-module-descr
+        (define (get-from-source-file)
+          (let ((x
+                 (##read-all-as-a-begin-expr-from-port
+                  port
+                  ##main-readtable
+                  ##wrap-datum
+                  ##unwrap-datum
+                  (##cdr ext) ;; start-syntax
+                  #t          ;; close-port?
+                  '())))
+            (if (##fixnum? x)
+                (##raise-os-exception
+                 #f
+                 x
+                 ##get-module
+                 module-ref)
+                (let* ((script-line
+                        (##vector-ref x 0))
+                       (src
+                        (##vector-ref x 1))
+                       (module-name
+                        (##symbol->string module-ref)))
+                  (##call-with-values
+                      (lambda ()
+                        (##compile-mod
+                         (##top-cte-clone ##interaction-cte)
+                         (##sourcify src (##make-source #f #f))
+                         module-ref
+                         root
+                         path
+                         script-line))
+                    (lambda (code comp-ctx)
+                      (let* ((supply-modules
+                              (let ((mods (macro-compilation-ctx-supply-modules comp-ctx)))
+                                (##list->vector
+                                 (if (##not (##memq module-ref mods))
+                                     (##append (##list module-ref) mods)
+                                     mods))))
+                             (demand-modules
+                              (let ((mods (macro-compilation-ctx-demand-modules comp-ctx)))
+                                (##list->vector mods)))
+                             (meta-info
+                              (##meta-info->alist
+                               (macro-compilation-ctx-meta-info comp-ctx)))
+                             (module-descr
+                              (macro-make-module-descr
+                               supply-modules
+                               demand-modules
+                               meta-info
+                               0
+                               (lambda ()
+                                 (let ((rte #f))
+                                   (macro-code-run code)))
+                               #f)))
+                        (macro-code-parent-set!
+                         code
+                         (macro-make-code-attributes
                           supply-modules
                           demand-modules
                           meta-info
-                          0
-                          (lambda ()
-                            (let ((rte #f))
-                              (macro-code-run code)))
-                          #f)))
-                   (macro-code-parent-set!
-                    code
-                    (macro-make-code-attributes
-                     supply-modules
-                     demand-modules
-                     meta-info
-                     code))
-                   ;;(pp (list 'code-parent= (##subvector (##vector-copy (macro-code-parent code)) 0 3)))
-                   (##register-module-descrs (##vector module-descr))
-                   (or (##lookup-registered-module module-ref)
-                       (err)))))))))
+                          code))
+                        ;;(pp (list 'code-parent= (##subvector (##vector-copy (macro-code-parent code)) 0 3)))
+                        (##register-module-descrs (##vector module-descr))
+                        (or (##lookup-registered-module module-ref)
+                            (err)))))))))
 
-    (define (get-from-object-file path-and-info)
-      (##close-port port)
-      (let* ((path
-              (##vector-ref path-and-info 0))
-             (linker-name
-              (##path-strip-directory path))
-             (_
-              (and ##debug-modules?
-                   (##debug-modules-trace '##os-load-object-file path linker-name)))
-             (result
-              (##os-load-object-file path linker-name)))
+        (define (get-from-object-file path-and-info)
+          (##close-port port)
+          (let* ((path
+                  (##vector-ref path-and-info 0))
+                 (linker-name
+                  (##path-strip-directory path))
+                 (_
+                  (and ##debug-modules?
+                       (##debug-modules-trace '##os-load-object-file path linker-name)))
+                 (result
+                  (##os-load-object-file path linker-name)))
 
-        (define (raise-error code)
-          (if (##fixnum? code)
-              (##raise-os-exception #f code ##get-module module-ref)
-              (##raise-os-exception code #f ##get-module module-ref)))
+            (define (raise-error code)
+              (if (##fixnum? code)
+                  (##raise-os-exception #f code ##get-module module-ref)
+                  (##raise-os-exception code #f ##get-module module-ref)))
 
-        (cond ((##not (##vector? result))
-               (raise-error result))
-              ((##fx= 2 (##vector-length result))
-               (raise-error (##vector-ref result 0)))
-              (else
-               (let ((module-descrs (##vector-ref result 0)))
-                 (##register-module-descrs module-descrs)
-                 (or (##lookup-registered-module module-ref)
-                     (err)))))))
+            (cond ((##not (##vector? result))
+                   (raise-error result))
+                  ((##fx= 2 (##vector-length result))
+                   (raise-error (##vector-ref result 0)))
+                  (else
+                   (let ((module-descrs (##vector-ref result 0)))
+                     (##register-module-descrs module-descrs)
+                     (or (##lookup-registered-module module-ref)
+                         (err)))))))
 
-    (define (search-for-object-file dir stop-at-first?)
-      (search-for-highest-object-file
-       (##path-expand mod-filename-noext dir)
-       stop-at-first?))
+        (define (search-for-object-file dir stop-at-first?)
+          (search-for-highest-object-file
+           (##path-expand mod-filename-noext dir)
+           stop-at-first?))
 
-    (let* ((build-subdir-path
-            (##module-build-subdir-path mod-dir
-                                        mod-filename-noext
-                                        (macro-target)))
-           (object-file-path-and-info
-            (or (search-for-object-file build-subdir-path #t)
-                (search-for-object-file mod-dir #f))))
+        (let* ((build-subdir-path
+                (##module-build-subdir-path mod-dir
+                                            mod-filename-noext
+                                            (macro-target)))
+               (object-file-path-and-info
+                (or (search-for-object-file build-subdir-path #t)
+                    (search-for-object-file mod-dir #f))))
 
-      (cond ((and object-file-path-and-info
-                  ;; check that the object file is not older than the
-                  ;; source file
-                  (let ((mod-path-info
-                         (##file-info-aux mod-path)))
-                    (and mod-path-info ;; source file (still) exists
-                         (##not (##fl<
-                                 (macro-time-point
-                                  (macro-file-info-last-modification-time
-                                   (##vector-ref object-file-path-and-info 1)))
-                                 (macro-time-point
-                                  (macro-file-info-last-modification-time
-                                   mod-path-info)))))))
-             (get-from-object-file object-file-path-and-info))
+          (cond ((and object-file-path-and-info
+                      ;; check that the object file is not older than the
+                      ;; source file
+                      (let ((mod-path-info
+                             (##file-info-aux mod-path)))
+                        (and mod-path-info ;; source file (still) exists
+                             (##not (##fl<
+                                     (macro-time-point
+                                      (macro-file-info-last-modification-time
+                                       (##vector-ref object-file-path-and-info 1)))
+                                     (macro-time-point
+                                      (macro-file-info-last-modification-time
+                                       mod-path-info)))))))
+                 (get-from-object-file object-file-path-and-info))
 
-            ((##file-exists?
-              (##path-expand
-               (##string-append mod-filename-noext "._must-build_")
-               mod-dir))
+                ((##file-exists?
+                  (##path-expand
+                   (##string-append mod-filename-noext "._must-build_")
+                   mod-dir))
 
-             ;; run a subprocess to build module
-             (##build-module-subprocess
-              mod-path
-              (macro-target)
-              (##list (##list 'module-ref module-ref)))
+                 ;; run a subprocess to build module
+                 (##build-module-subprocess
+                  mod-path
+                  (macro-target)
+                  (##list (##list 'module-ref module-ref)))
 
-             (let ((object-file-path-and-info
-                    (search-for-object-file build-subdir-path #t)))
-               (if object-file-path-and-info
-                   (get-from-object-file object-file-path-and-info)
-                   (get-from-source-file))))
+                 (let ((object-file-path-and-info
+                        (search-for-object-file build-subdir-path #t)))
+                   (if object-file-path-and-info
+                       (get-from-object-file object-file-path-and-info)
+                       (get-from-source-file))))
 
-            (else
-             (get-from-source-file))))))
+                (else
+                 (get-from-source-file)))))))
+   ((mod-info-rm? mod-info)
+    (let ((v(##lookup-registered-module module-ref)))
+      (unless v
+        (error "registered modules"))
+      v))
+   (else
+    (error "TODO"))))
 
 (define-prim (##build-module-subprocess path target options)
 
@@ -755,6 +827,12 @@
       (and (##install-module modref)
            (##search-module modref search-order))))
 
+
+;; ##get-module is the entrypoint of the module resolution machinery. It calls
+;; ##search-or-else-install-module which respects the search path.
+(define got-modules
+  (make-table))
+
 (##get-module-set!
  (lambda (module-ref)
 
@@ -762,15 +840,23 @@
      (##raise-module-not-found-exception
       ##get-module
       module-ref))
-
-   (or (##lookup-registered-module module-ref)
-       (let ((modref (##parse-module-ref (##symbol->string module-ref))))
-         (if (##not modref)
-             (err)
-             (let ((mod-info (##search-or-else-install-module modref)))
-               (if mod-info ;; found module?
-                   (##get-module-from-file module-ref modref mod-info)
-                   (err))))))))
+   (display (list "getting..." module-ref)) (newline)
+   (let ((the-cached-module
+          (table-ref got-modules module-ref #f)))
+     (display (list "cached:" the-cached-module)) (newline)
+     (or
+      the-cached-module
+      (let ((rm (##lookup-registered-module module-ref)))
+        (let ((modref (##parse-module-ref (##symbol->string module-ref))))
+          (if (##not modref)
+              (err)
+              (let ((mod-info (##search-or-else-install-module modref)))
+                (if mod-info ;; found module?
+                    (let ((mod (##get-module-from-file module-ref modref mod-info)))
+                      (when mod
+                        (table-set! got-modules module-ref mod))
+                      mod)
+                    (err))))))))))
 
 (define-prim (##load-module-or-file
               module-or-file
@@ -1038,17 +1124,17 @@
                (rpath
                 (if (##not relative-to-path)
                     '()
-                    (##table-ref (##compilation-scope);;TODO: deprecated interface
+                    (##table-ref (##compilation-scope) ;;TODO: deprecated interface
                                  '##modref-path
                                  '())))
 
                (root
-                ;; TODO: make this depend on the modref of the current code
-                (if (##not relative-to-path)
-                    (##current-directory)
-                    (##table-ref (##compilation-scope);;TODO: deprecated interface
-                                 '##module-root
-                                 (##path-directory relative-to-path))))
+                   ;; TODO: make this depend on the modref of the current code
+                   (if (##not relative-to-path)
+                       (##current-directory)
+                       (##table-ref (##compilation-scope) ;;TODO: deprecated interface
+                                    '##module-root
+                                    (##path-directory relative-to-path))))
 
                (module-aliases
                 (##extend-aliases-from-rpath rpath root))
@@ -1064,9 +1150,9 @@
                               (loop2 mod
                                      (##cdr rest))))
                         mod)))))
-
-          (##values (##search-or-else-install-module final-modref)
-                    (##string->symbol (##modref->string final-modref)))))))
+          (let* ((module-ref (##string->symbol (##modref->string final-modref))))
+            (##values (##search-or-else-install-module final-modref)
+                      module-ref))))))
 
 (define-runtime-syntax ##import
   (lambda (src)
@@ -1083,23 +1169,30 @@
                'module-not-found
                src
                (##desourcify arg-src))
-              (let ((sharp-path
-                     (##path-normalize
-                      (##path-expand (##string-append
-                                      (##vector-ref mod-info 1)
-                                      "#"
-                                      ".scm" #;(##car (##vector-ref mod-info 2)))
-                                     (##vector-ref mod-info 0))
-                      #f))
-                    (port
-                     (##vector-ref mod-info 4)))
-                (if port
-                    (##close-port port))
+              (cond
+               ((mod-info-fs? mod-info)
+                (display "its a fs modinfo\n")
+                (let ((sharp-path
+                       (##path-normalize
+                        (##path-expand (##string-append
+                                        (mod-info-fs-filename-noext mod-info)
+                                        "#"
+                                        ".scm" #;(##car (##vector-ref mod-info 2)))
+                                       (mod-info-fs-dir mod-info))
+                        #f))
+                      (port
+                       (##vector-ref mod-info 4)))
+                  (if port
+                      (##close-port port))
+                  `(##begin
+                     ,@(if (##file-exists? sharp-path)
+                           `((##include ,sharp-path))
+                           `())
+                     (##demand-module ,module-ref))))
+               ((mod-info-rm? mod-info)
                 `(##begin
-                  ,@(if (##file-exists? sharp-path)
-                        `((##include ,sharp-path))
-                        `())
-                  (##demand-module ,module-ref))))))))))
+                   (##demand-module ,module-ref)))
+               (else (error "unknown mod-info type" mod-info))))))))))
 
 ;;;----------------------------------------------------------------------------
 

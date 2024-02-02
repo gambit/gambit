@@ -31,6 +31,7 @@
 **macro-compilation-ctx-supply-modules-set!
 **macro-descr-def-syntax?
 **macro-descr-expander
+;; **macro-descr-expander-src
 **macro-descr-size
 **main-readtable ;; variable
 **make-macro-descr
