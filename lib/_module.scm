@@ -2,7 +2,7 @@
 
 ;;; File: "_module.scm"
 
-;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -64,7 +64,7 @@
         (##string-append name "#")
         name)))
 
-(define (##modref->path modref full? tag?)
+(define-primitive (modref->path modref full? tag?)
 
   ;;TODO: deprecated (use ##path-join instead)
   (define (join parts dir)
@@ -325,7 +325,7 @@
             psettings
             #f ;; raise-os-exception?
             cont
-            open-input-file
+            (let () (declare (standard-bindings)) open-input-file)
             path
             (macro-absent-obj))))))
 
@@ -860,7 +860,7 @@
               (alt-name (macro-absent-obj)))
 
   (define (try-open fn)
-    (with-exception-handler
+    (##with-exception-handler
       (lambda (exn)
         #f)
       (lambda ()
@@ -1129,6 +1129,16 @@
 ;;;----------------------------------------------------------------------------
 
 ;;; Accelerate syntax transformations.
+
+(##include "~~lib/gambit/prim/boolean#.scm")
+(##include "~~lib/gambit/prim/exception#.scm")
+(##include "~~lib/gambit/prim/list#.scm")
+(##include "~~lib/gambit/prim/number#.scm")
+(##include "~~lib/gambit/prim/string#.scm")
+(##include "~~lib/gambit/prim/symbol#.scm")
+(##include "~~lib/gambit/prim/vector#.scm")
+
+(##namespace ("##" eq? equal?))
 
 (##include "~~lib/_syntax-xform.scm")
 (##include "~~lib/_syntax-case-xform.scm")
