@@ -234,6 +234,7 @@
        (list binding)))
 
   (define (expand-clause-cond-literal literals condition expr)
+    ;; TODO: use free-identifier?
     `(and (equal? (syntax-source-code ,expr) ,condition) (list)))
 
   (match-source condition ()
