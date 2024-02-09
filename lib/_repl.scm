@@ -2,7 +2,7 @@
 
 ;;; File: "_repl.scm"
 
-;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -3511,10 +3511,10 @@
   (##repl-context-prompt repl-context))
 
 (define-prim (##repl-cmd-e repl-context)
-  (##repl-cmd-e-ed 1 repl-context))
+  (##repl-cmd-e-ed 2 repl-context))
 
 (define-prim (##repl-cmd-ed repl-context)
-  (##repl-cmd-e-ed 2 repl-context))
+  (##repl-cmd-e-ed 3 repl-context))
 
 (define-prim (##repl-cmd-e-ed detail-level repl-context)
   (##repl-channel-display-multiline-message
