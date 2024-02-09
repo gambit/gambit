@@ -2,13 +2,13 @@
 
 ;;; File: "_system.scm"
 
-;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
 ;;; System procedures
 
-(##include "~~lib/gambit/char/char.scm") ;; for char-set equality and hashing
+(##include "~~lib/gambit/char/char#.scm") ;; for char-set equality and hashing
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
