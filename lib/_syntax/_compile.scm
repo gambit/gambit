@@ -2,8 +2,8 @@
 
 ;;; File: "_compile.scm"
 
-;;; Copyright (c) 2024 by Marc Feeley, All Rights Reserved.
-;;; Copyright (c) 2024 by Antoine Doucet, All Rights Reserved.
+;;; Copyright (c) 2023 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2023 by Antoine Doucet, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -11,8 +11,13 @@
 ;;
 ;;  Transform a syntax-source to it's final hygienic form
 ;;  compile : syntax-source -> syntax-source
-
+;;  destroy-scopes? : syntax-source -> source
+;;
 ;;;============================================================================
+
+(define destroy-scopes? #f)
+
+;;;----------------------------------------------------------------------------
 
 (define-prim&proc (resolve-compile-local-binding (id identifier) (cte cte))
   (let ((b (##resolve-id id cte)))
@@ -25,7 +30,7 @@
             #t) ; is a core form
        (##binding-top-level-symbol b))
       (else
-        (error "syntax: not a local binding " id)))))
+        (##error-expansion ##resolve-compile-local-binding id "not a local binding")))))
  
 (define-prim&proc (resolve-compile-core-binding? (id identifier) (cte cte))
   (let ((b (##resolve-id id cte)))
@@ -57,16 +62,12 @@
   (##compile-pair/list stx cte (lambda (e) (compile e cte))))
 
 (define-prim&proc (compile-body body cte)
-  (##map-pair (lambda (e) (compile e cte))
-              (lambda (_) (##error "syntax: ill formed body (compile)"))
+  (##map-pair (lambda (e) (compile e cte)) 
+              (lambda (_) (##error-expansion ##compile-body body "ill formed body"))
               body))
 
 (define-prim&proc (compile-application stx cte)
-  (##compile-pair/list 
-    stx 
-    cte 
-    (lambda () 
-      (##error "syntax: ill formed application form (compile)"))))
+  (##compile-pair/list stx cte (lambda () (##error-expansion ##compile-application stx "ill formed application form"))))
 
 ;;;----------------------------------------------------------------------------
 

@@ -66,8 +66,36 @@
 
 ;;; Structure representing source code.
 
+(define-prim (##vector-set vec i #!optional (val (macro-absent-obj)))
+  ; non-mutable vector-set!
+  (let ((vec (##vector-copy vec)))
+    (if (##equal? val (macro-absent-obj))
+        (##vector-set! vec i)
+        (##vector-set! vec i val))))
+
+(define-prim (##vector-update! vec i proc)
+  (##vector-set! vec i (proc (##vector-ref vec i))))
+
+(define-prim (##vector-update vec i  proc)
+  (##vector-set vec i (proc (##vector-ref vec i))))
+
 (define ##source1-marker '#(source1)) ;; source markers
 (define ##source2-marker '#(source2))
+
+(define (##make-source-tag)
+  ##source1-marker)
+
+(define (##source-tag? obj)
+  (or
+    (equal? obj ##source1-marker)
+    (equal? obj ##source2-marker)))
+
+#;(define (##make-source code locat)
+  (##vector ##source1-marker
+            code
+            (if locat (##locat-container locat) #f)
+            (if locat (##locat-position locat) #f)
+            #f))
 
 (define (##make-source code locat)
   (if locat
@@ -79,15 +107,21 @@
                       code
                       container
                       start-position
-                      end-position)
+                      end-position
+                      #f)
             (##vector ##source1-marker
                       code
                       container
-                      start-position)))
+                      start-position
+                      #f)))
       (##vector ##source1-marker
                 code
                 #f
+                #f
                 #f)))
+
+(define (##source-clone src)
+  (##vector-copy src))
 
 (define (##sourcify x src)
   (if (##source? x)
@@ -95,16 +129,32 @@
       (##sourcify-aux2 x src)))
 
 (define (##sourcify-aux1 code src)
-  (##vector ##source1-marker
-            code
-            (##vector-ref src 2)
-            (##vector-ref src 3)))
+  (if (= (##vector-length src) 6)
+      (##vector ##source1-marker
+                code
+                (##vector-ref src 2)
+                (##vector-ref src 3)
+                (##vector-ref src 4)
+                (##vector-ref src 5))
+      (##vector ##source1-marker
+                code
+                (##vector-ref src 2)
+                (##vector-ref src 3)
+                (##vector-ref src 4))))
 
 (define (##sourcify-aux2 code src)
-  (##vector ##source2-marker
-            code
-            (##vector-ref src 2)
-            (##vector-ref src 3)))
+  (if (= (##vector-length src) 6)
+      (##vector ##source2-marker
+                code
+                (##vector-ref src 2)
+                (##vector-ref src 3)
+                (##vector-ref src 4)
+                (##vector-ref src 5))
+      (##vector ##source2-marker
+                code
+                (##vector-ref src 2)
+                (##vector-ref src 3)
+                (##vector-ref src 4))))
 
 (define (##sourcify-deep x src)
   (let ((visited (##make-table-aux 0 (macro-absent-obj) #f #f ##eq?)))
@@ -270,15 +320,20 @@
 
     (sourcify-deep x src)))
 
+(define (##source-tag? obj)
+  (and (##vector? obj)
+       (##fx= 1 (##vector-length obj))
+       (let ((z (##vector-ref obj 0)))
+         (or (##eq? z 'source1)
+             (##eq? z 'source2)))))
+
 (define (##source? x)
   (and (##vector? x)
        (##fx< 0 (##vector-length x))
-       (let ((y (##vector-ref x 0)))
-         (and (##vector? y)
-              (##fx= 1 (##vector-length y))
-              (let ((z (##vector-ref y 0)))
-                (or (##eq? z 'source1)
-                    (##eq? z 'source2)))))))
+       (##source-tag? (##vector-ref x 0))))
+
+(define (##set-source?! proc)
+  (set! ##source? proc))
 
 (define (##source-code src)
   (##vector-ref src 1))
@@ -286,10 +341,19 @@
 (define (##source-code-set! src code)
   (##vector-set! src 1 code))
 
+(define (##source-code-set src code)
+  (##vector-set src 1 code))
+
+(define (##source-code-update! src proc)
+  (##vector-update! src 1 proc))
+
+(define (##source-code-update src proc)
+  (##vector-update src 1 proc))
+
 (define (##source-locat src)
   (let ((container (##vector-ref src 2)))
     (if container
-        (if (##fx>= (##vector-length src) 5)
+        (if (##fx>= (##vector-length src) 6)
             (##make-locat container
                           (##vector-ref src 3)
                           (##vector-ref src 4))
@@ -303,6 +367,21 @@
          (##source-locat src)))
     (and locat
          (##container->path (##locat-container locat)))))
+
+(define (##source-scopes src)
+  (##vector-ref src (- (##vector-length src) 1)))
+
+(define (##source-scopes-set! src scopes)
+  (##vector-set! src (- (##vector-length src) 1) scopes))
+
+(define (##source-scopes-set src scopes)
+  (##vector-set src (- (##vector-length src) 1) scopes))
+
+(define (##source-scopes-update! src proc)
+  (##vector-update! src (- (##vector-length src) 1) proc))
+
+(define (##source-scopes-update src proc)
+  (##vector-update src (- (##vector-length src) 1) proc))
 
 (define (##source-strip x)
   (if (##source? x)
@@ -369,11 +448,15 @@
 
 (define (##make-alias-syntax alias)
   (lambda (src)
-    (let ((locat (##source-locat src)))
-      (##make-source
-       (##cons (##make-source alias locat)
-               (##cdr (##source-code src)))
-       locat))))
+    (##source-code-update src
+      (lambda (code)
+        (let* ((head (car code))
+               (head (if (##source? head)
+                         (##source-code-set head alias)
+                         ; retro-compatibility
+                         (##make-syntax-source alias (##source-locat src)))))
+          (cons (##source-code-set head alias)
+                (cdr code)))))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -508,6 +591,139 @@
 
 ;;;----------------------------------------------------------------------------
 
+  
+;;; Syntactic Environment
+   
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+;;; ------------------------------------
+;;;
+;;; Hash sets 
+;;;
+;;; Hash set are used to store "scopes" objects,
+;;; which are used for macro hygiene.
+;;; 
+
+; TODO: shouldn't be "include"d here
+(##include "~~lib/_hamt/primitive-hamt/primitive-hamt#.scm")
+
+(define-hamt
+  implement-hash-set-hamt
+  ##hash-set-hamt?
+  ##hash-set-hamt-empty?
+  ##make-hash-set-hamt
+  ##hash-set-hamt-ref
+  ##hash-set-hamt-set
+  ##hash-set-hamt-remove
+  ##hash-set-hamt-search
+  ##hash-set-hamt-fold
+  ##hash-set-hamt-for-each
+  ##hash-set-hamt->list
+  ##hash-set-hamt<-list
+  ##hash-set-hamt<-reversed-list
+  ##hash-set-hamt-alist-ref
+  ##hash-set-hamt-alist-remove
+  #f
+  eq? 
+  eq?-hash)
+
+(implement-hash-set-hamt)
+
+(define (##hash-set-hamt-has-key? hamt key)
+  (##hash-set-hamt-ref hamt key))
+     
+(define (##hash-set-hamt-length hamt)
+  (length (##hash-set-hamt->list hamt))
+  #;(##hash-set-hamt-fold (lambda (acc _) (+ acc 1)) 0 hamt))
+
+(define (##hash-set-hamt-subset? scps1 scps2)
+  (not
+    (##hash-set-hamt-search
+     scps1
+     (lambda (scp _)
+       (not (##hash-set-hamt-has-key? scps2 scp))))))
+
+; TODO: optimize
+(define (##hash-set-hamt-equal? scps1 scps2)
+  (and (##hash-set-hamt-subset? scps1 scps2)
+       (##hash-set-hamt-subset? scps2 scps1)))
+
+; TODO: compiler fail to serialize (see test/unit-test/05-serdes/serdes.scm)
+(define (##global-binding-table-id-equal? obj1 obj2)
+  (and (vector? obj1)
+       (fx>= (vector-length obj1) 4)
+       (vector? obj2)
+       (fx>= (vector-length obj2) 4)
+       (equal? (##source-code obj1)
+               (##source-code obj2))
+       (##hash-set-hamt-equal? (##source-scopes obj1)
+                               (##source-scopes obj2))))
+
+;;; ------------------------------------
+;;;
+;;; Syntactic Global Binding Table
+;;;
+;;; Store every bindings encountered during
+;;; the program expansion. This table
+;;; is meant to be modified by mutation
+;;; and no binding are ever to be removed.
+;;;
+
+(define (##global-binding-table-id-equal?-set! proc)
+  (set! ##global-binding-table-id-equal? proc))
+
+(define (##make-syntax-global-binding-table)
+  (##make-table test: ##global-binding-table-id-equal?))
+
+(define (##syntax-global-binding-table-set! table key val)
+  (##table-set! table key val))
+
+(define (##syntax-global-binding-table-ref table key)
+  (##table-ref table key))
+
+;;; ------------------------------------
+;;;
+;;; Syntactic Context 
+;;;
+;;; The syntactic context associates an identifier with 
+;;; its binding within the syntactic global bindings table.
+;;; The structure is based on the immutable hamt datatype.
+;;;
+
+(define-hamt
+  ##implement-ctx-hamt
+  ##ctx-hamt?
+  ##ctx-hamt-empty?
+  ##make-ctx-hamt
+  ##ctx-hamt-ref
+  ##ctx-hamt-set
+  #f ;##ctx-hamt-remove
+  #f ;##ctx-hamt-search
+  #f ;##ctx-hamt-fold
+  #f ;##ctx-hamt-for-each
+  ##ctx-hamt->list
+  #f ;##ctx-hamt<-list
+  #f ;##ctx-hamt<-reversed-list
+  #f ;##ctx-hamt-alist-ref
+  #f ;##ctx-hamt-alist-remove
+  #f
+  equal?
+  symbol-hash)
+
+(##implement-ctx-hamt)
+
+(define (##make-syntax-ctx)
+  (##make-ctx-hamt))
+
+(define (##syntax-ctx-ref ctx key #!optional (default #f))
+  (let ((res (##ctx-hamt-ref ctx key)))
+    (if res
+        (cdr res)
+        default)))
+
+(define (##syntax-ctx-set ctx key val)
+  (##ctx-hamt-set ctx key val))
+
 ;;; Compile time environments
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -536,24 +752,62 @@
 
 ;;; Representation of compile time environments
 
-;; There are 4 types of structures in a compile time environment:
+;; There are 6 types of structures in a compile time environment:
 ;;
-;;    top        end of the environment and container for current state
+;;    top        end of the environment and container for current states
 ;;    frame      binding context for variables
 ;;    macro      binding context for a macro
+;;    core-macro binding context for a core-macro
 ;;    namespace  binding context for a namespace
+;;    decl       binding context for a declaration
+;;
+;;
+;;    top        -> #(parent top ctx global-binding-table)
+;;    frame      -> #(parent top ctx vars)
+;;    macro      -> #(parent top ctx name descr)
+;;    core-macro -> #(parent top ctx name descr)
+;;    decl       -> #(parent top ctx name value)
+;;    namespace  -> #(parent top ctx prefix aliases)
+;;
+;;    The top-cte represent the top level compile time environment
+;;    overload the top cte's node with extra operations.
+;;
+;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+;;;----------------------------------------------------------------------------
+;;; cte-top
 
-(define (##cte-top top-cte)
-  (##vector top-cte))
+(define (##make-cte-top)
+  (##cte-top #f #f #f #f))
+
+(define (##cte-top parent-cte top-cte ctx global-binding-table)
+  (##vector parent-cte top-cte ctx global-binding-table 0))
 
 (define (##cte-top? cte)
-  (##fx= (##vector-length cte) 1))
+  (and (##fx= (##vector-length cte) 5)
+       (##fx= (##vector-ref cte 4) 0)))
 
-(define (##cte-top-cte cte)
-  (##vector-ref cte 0))
+(define (##cte-top-global-binding-table cte-top)
+  (##vector-ref cte-top 3))
 
-(define (##cte-top-cte-set! cte new-cte)
-  (##vector-set! cte 0 new-cte))
+(define (##cte-top-global-binding-table-set! cte-top global-binding-table)
+  (##vector-set! cte-top 3 global-binding-table))
+
+;;; ---------------------------------------
+;;; cte-top->global-binding-table
+
+(define (##cte-top-global-binding-table-table-ref cte-top id)
+  (##syntax-global-binding-table-ref
+    (##cte-top-global-binding-table cte-top)
+    id))
+
+(define (##cte-top-global-binding-table-table-set! cte-top id val)
+  (##syntax-global-binding-table-set!
+   (##cte-top-global-binding-table cte-top)
+   id
+   val))
+
+;;;----------------------------------------------------------------------------
+;;; cte-* 
 
 (define (##cte-parent-cte cte)
   (##vector-ref cte 0))
@@ -561,18 +815,119 @@
 (define (##cte-parent-cte-set! cte new-cte)
   (##vector-set! cte 0 new-cte))
 
-(define (##cte-frame parent-cte vars)
-  (##vector parent-cte vars))
-
-(define (##cte-frame? cte)
-  (##fx= (##vector-length cte) 2))
-
-(define (##cte-frame-vars cte)
+(define (##cte-top-cte cte)
   (##vector-ref cte 1))
 
-(define (##cte-frame-i parent-cte vars)
-  (##cte-frame parent-cte
-               vars)) ;; equivalent to: (map ##var-i vars)
+(define (##cte-top-cte-set! cte new-cte)
+  (##vector-set! cte 1 new-cte))
+
+(define (##cte-mutate-top-cte! cte proc)
+  (let ((top-cte (##cte-top-cte cte)))
+    (##cte-top-cte-set! top-cte (proc (##cte-top-cte top-cte)))))
+
+(define (##cte-ctx cte)
+  (##vector-ref cte 2))
+
+(define (##cte-ctx-set! cte ctx)
+  (##vector-set! cte 2 ctx))
+
+#;(define (##cte-copy cte)
+  (##vector-copy cte))
+
+(define (##cte-relink cte new-parent-cte)
+  (if new-parent-cte
+      (cond ((##cte-frame? cte)
+             (##cte-frame new-parent-cte
+                          (##cte-top-cte cte)
+                          (##cte-ctx cte)
+                          (##cte-frame-vars cte)))
+            ((##cte-macro? cte)
+             (##cte-macro new-parent-cte
+                               (##cte-top-cte cte)
+                               (##cte-ctx cte)
+                               (##cte-macro-name cte)
+                               (##cte-macro-descr cte)))
+            ((##cte-core-macro? cte)
+             (##cte-core-macro new-parent-cte
+                               (##cte-top-cte cte)
+                               (##cte-ctx cte)
+                               (##cte-core-macro-name cte)
+                               (##cte-core-macro-descr cte)))
+            ((##cte-decl? cte)
+             (##cte-decl new-parent-cte
+                              (##cte-top-cte cte)
+                              (##cte-ctx cte)
+                              (##cte-decl-name cte)
+                              (##cte-decl-value cte)))
+            ((##cte-namespace? cte)
+             (##cte-namespace new-parent-cte
+                                  (##cte-top-cte cte)
+                                  (##cte-ctx cte)
+                                  (##cte-namespace-prefix cte)
+                                  (##cte-namespace-aliases cte))))
+      #f))
+
+;;; ---------------------------------------
+;;; cte->top-cte
+
+(define (##cte-mutate-top-cte-cte! cte proc)
+  ;;; Mutate the top-cte's content from any cte node. The content begin
+  ;;; with the parent node of the unique cte-top object.
+  ;;; (see top-cte below)
+  (let ((top-cte (##cte-top-cte cte)))
+    (##top-cte-cte-set! top-cte (proc (##top-cte-cte top-cte)))))
+
+(define (##cte-top-cte-global-binding-table-mutate! cte key val)
+  (##cte-top-global-binding-table-table-set!
+    (##cte-top-cte cte)
+    key
+    val))
+
+(define (##cte-top-cte-global-binding-table cte)
+  (let ((top-cte (##cte-top-cte cte)))
+    (##cte-top-global-binding-table top-cte)))
+
+(define (##cte-top-cte-global-binding-table-ref cte key)
+  (##syntax-global-binding-table-ref
+    (##cte-top-cte-global-binding-table cte)
+    key))
+
+;;; ---------------------------------------
+;;; cte->ctx
+
+(define (##cte-ctx-ref cte key #!optional (val (macro-absent-obj)))
+  (if (equal? val (macro-absent-obj))
+      (##syntax-ctx-ref (##cte-ctx cte) key)
+      (##syntax-ctx-ref (##cte-ctx cte) key val)))
+
+(define (##cte-ctx-ctx-set cte key val)
+  (##syntax-ctx-set (##cte-ctx cte) key val))
+
+;;;----------------------------------------------------------------------------
+;;; cte-frame
+
+(define (##make-cte-frame parent-cte vars #!optional (syntax-proc-ctx identity))
+  (##cte-frame parent-cte 
+               (##cte-top-cte parent-cte)
+               (syntax-proc-ctx (##cte-ctx parent-cte))
+               vars))
+
+(define (##cte-frame parent-cte top-cte ctx vars)
+  (##vector parent-cte top-cte ctx vars))
+
+(define (##cte-frame? cte)
+  (##fx= (##vector-length cte) 4))
+
+(define (##cte-frame-vars cte)
+  (##vector-ref cte 3))
+
+;;; ---------------------------------------
+;;; cte-frame-i
+
+(define (##cte-frame-i parent-cte vars #!optional (syntax-proc-ctx identity))
+  (##make-cte-frame parent-cte
+                    vars
+                    syntax-proc-ctx)) ;; equivalent to: (map ##var-i vars)
 
 (define (##var-i name)
   name)
@@ -595,74 +950,233 @@
 (define (##var-c-boxed? x)
   (##cdr x))
 
-(define (##cte-macro parent-cte name descr)
-  (##vector parent-cte name descr))
+;;;----------------------------------------------------------------------------
+;;; cte-macro
+
+(define (##make-cte-macro parent-cte name descr #!optional (syntax-proc-ctx identity))
+  (##cte-macro parent-cte 
+               (##cte-top-cte parent-cte)
+               (syntax-proc-ctx (##cte-ctx parent-cte))
+               name 
+               descr))
+
+(define (##cte-macro parent-cte top-cte ctx name descr)
+  (##vector parent-cte top-cte ctx name descr 0))
 
 (define (##cte-macro? cte)
-  (and (##fx= (##vector-length cte) 3)
-       (##not (##string? (##vector-ref cte 1))))) ;; distinguish from namespace
+  (and (##fx= (##vector-length cte) 6)
+       (##fx= (##vector-ref cte 5) 0)))
 
 (define (##cte-macro-name cte)
-  (##vector-ref cte 1))
+  (##vector-ref cte 3))
 
 (define (##cte-macro-descr cte)
-  (##vector-ref cte 2))
+  (##vector-ref cte 4))
 
-(define (##cte-decl parent-cte name value)
-  (##vector parent-cte name value #f))
+;;; ---------------------------------------
+;;; cte-core-macro
+
+(define (##make-cte-core-macro parent-cte name descr #!optional (syntax-proc-ctx identity))
+  (##cte-core-macro 
+   parent-cte 
+   (##cte-top-cte parent-cte)
+   (syntax-proc-ctx (##cte-ctx parent-cte))
+   name 
+   descr))
+
+(define (##cte-core-macro parent-cte top-cte ctx name descr)
+  (##vector parent-cte top-cte ctx name descr 1))
+
+(define (##cte-core-macro? cte)
+  (and (##fx= (##vector-length cte) 6)
+       (##fx= (##vector-ref cte 5) 1)))
+
+(define (##cte-core-macro-name cte)
+  (##vector-ref cte 3))
+
+(define (##cte-core-macro-descr cte)
+  (##vector-ref cte 4))
+
+;;; ---------------------------------------
+;;; macro descriptor
+
+(define (##make-macro-descr def-syntax? size expander expander-src)
+  (##vector def-syntax? size expander expander-src))
+
+(define (##macro-descr-def-syntax? descr)
+  (##vector-ref descr 0))
+
+(define (##macro-descr-size descr)
+  (##vector-ref descr 1))
+
+(define (##macro-descr-expander descr)
+  (##vector-ref descr 2))
+
+(define (##macro-descr-expander-src descr)
+  (##vector-ref descr 3))
+
+;;;----------------------------------------------------------------------------
+;;; cte-decl
+
+(define (##make-cte-decl parent-cte name value)
+  (##cte-decl parent-cte 
+              (##cte-top-cte parent-cte)
+              (##cte-ctx parent-cte)
+              name
+              value))
+
+(define (##cte-decl parent-cte top-cte ctx name value)
+  (##vector parent-cte top-cte ctx name value 2))
 
 (define (##cte-decl? cte)
-  (##fx= (##vector-length cte) 4))
+  (and (##fx= (##vector-length cte) 6)
+       (##fx= (##vector-ref cte 5) 2)))
 
 (define (##cte-decl-name cte)
-  (##vector-ref cte 1))
+  (##vector-ref cte 3))
 
 (define (##cte-decl-value cte)
-  (##vector-ref cte 2))
+  (##vector-ref cte 4))
 
-(define (##cte-namespace parent-cte prefix aliases)
-  (##vector parent-cte prefix aliases))
+;;;----------------------------------------------------------------------------
+;;; cte-namespace
+
+(define (##make-cte-namespace parent-cte prefix aliases)
+  (##cte-namespace parent-cte 
+                   (##cte-top-cte parent-cte) 
+                   (##cte-ctx parent-cte)
+                   prefix 
+                   aliases))
+
+(define (##cte-namespace parent-cte top-cte ctx prefix aliases)
+  (##vector parent-cte top-cte ctx prefix aliases 3))
 
 (define (##cte-namespace? cte)
-  (and (##fx= (##vector-length cte) 3)
-       (##string? (##vector-ref cte 1)))) ;; distinguish from macro
+  (and (##fx= (##vector-length cte) 6)
+       (##fx= (##vector-ref cte 5) 3)))
 
 (define (##cte-namespace-prefix cte)
-  (##vector-ref cte 1))
+  (##vector-ref cte 3))
 
 (define (##cte-namespace-aliases cte)
-  (##vector-ref cte 2))
+  (##vector-ref cte 4))
 
-(define (##cte-relink cte new-parent-cte)
-  (if new-parent-cte
-      (cond ((##cte-frame? cte)
-             (##cte-frame new-parent-cte
-                          (##cte-frame-vars cte)))
-            ((##cte-macro? cte)
-             (##cte-macro new-parent-cte
-                          (##cte-macro-name cte)
-                          (##cte-macro-descr cte)))
-            ((##cte-decl? cte)
-             (##cte-decl new-parent-cte
-                         (##cte-decl-name cte)
-                         (##cte-decl-value cte)))
-            ((##cte-namespace? cte)
-             (##cte-namespace new-parent-cte
-                              (##cte-namespace-prefix cte)
-                              (##cte-namespace-aliases cte))))
-      #f))
+;;;----------------------------------------------------------------------------
+;;; general cte operations
+;;;
 
-(define (##cte-add-macro parent-cte name descr)
+;;;---------------------------------------
+;;; top-level variable from within local context
+;;;
+;;; top level variables do not need an associated ctx binding
+;;;
+
+;;; Can be removed; unused.
+;;;(define (##cte-top-cte-add-variable parent-cte name #!optional (syntax-proc-ctx identity))
+;;;
+;;;  (define (replace cte)
+;;;    (cond
+;;;      ((##cte-top? cte)
+;;;       (##make-cte-frame cte (list name) syntax-proc-ctx))
+;;;      ((and (##cte-frame? cte)
+;;;            (##equal? name (##cte-macro-name cte)))
+;;;       (##make-cte-frame cte (list name) syntax-proc-ctx))
+;;;      (else
+;;;        (##cte-relink cte (replace (##cte-parent-cte cte))))))
+;;;
+;;;
+;;;  ;(##make-cte-frame cte (list name) syntax-proc-ctx)
+;;;  (replace parent-cte))
+;;;
+
+(define (##cte-add-variable parent-cte name #!optional (syntax-proc-ctx identity))
+  (##make-cte-frame parent-cte (list name) syntax-proc-ctx))
+
+;;; ---------------------------------------
+;;; top-level macro from within local context
+;;;
+
+(define (##cte-top-cte-add-macro parent-cte name descr #!optional (syntax-proc-ctx identity))
 
   (define (replace cte)
     (cond ((##cte-top? cte)
-           (##cte-macro cte name descr))
-          ((and (##cte-macro? cte) (##eq? name (##cte-macro-name cte)))
-           (##cte-macro (##cte-parent-cte cte) name descr))
+           (##make-cte-macro cte name descr syntax-proc-ctx))
+          ((and (##cte-macro? cte) (##equal? name (##cte-macro-name cte)))
+           (##make-cte-macro (##cte-parent-cte cte) name descr syntax-proc-ctx))
           (else
            (##cte-relink cte (replace (##cte-parent-cte cte))))))
 
-  (replace parent-cte))
+  (##make-cte-macro parent-cte name descr syntax-proc-ctx)
+  #;(replace parent-cte))
+
+(define (##cte-top-cte-add-core-macro parent-cte name descr #!optional (syntax-proc-ctx identity))
+
+  (define (replace cte)
+    (cond ((##cte-top? cte)
+           (##make-cte-core-macro cte name descr syntax-proc-ctx))
+          ((and (##cte-core-macro? cte) (##equal? name (##cte-core-macro-name cte)))
+           (##make-cte-core-macro (##cte-parent-cte cte) name descr syntax-proc-ctx))
+          (else
+           (##cte-relink cte (replace (##cte-parent-cte cte))))))
+
+  (##make-cte-core-macro parent-cte name descr syntax-proc-ctx)
+  #;(replace parent-cte))
+
+(define (##cte-add-macro parent-cte name descr #!optional (syntax-proc-ctx identity))
+  (##make-cte-macro parent-cte name descr syntax-proc-ctx))
+
+(define (##cte-add-core-macro parent-cte name descr #!optional (syntax-proc-ctx identity))
+  (##make-cte-core-macro parent-cte name descr syntax-proc-ctx))
+
+;;; ---------------------------------------
+;;; declare
+;;;
+
+;(define (##cte-add-declare parent-cte name value)
+;  (...))
+
+(define (##cte-process-declare parent-cte src)
+  (let ((decls (##cdr (##desourcify src))))
+    (let loop ((cte parent-cte) (decls decls))
+      (if (##pair? decls)
+          (let ((decl (##car decls)))
+            (if (##pair? decl)
+                (let ((d (##car decl)))
+                  (cond ((and (##eq? d 'proper-tail-calls)
+                              (##null? (##cdr decl)))
+                         (loop (##make-cte-decl cte 'proper-tail-calls #t)
+                               (##cdr decls)))
+                        ((and (##eq? d 'not)
+                              (##pair? (##cdr decl))
+                              (##eq? (##cadr decl) 'proper-tail-calls)
+                              (##null? (##cddr decl)))
+                         (loop (##make-cte-decl cte 'proper-tail-calls #f)
+                               (##cdr decls)))
+                        (else
+                         (loop cte
+                               (##cdr decls)))))
+                (loop cte
+                      (##cdr decls))))
+          cte))))
+
+(define (##cte-lookup-decl cte name default-value)
+  (##declare (inlining-limit 500)) ;; inline CTE access procedures
+  (let loop ((cte cte))
+    (if (##cte-top? cte)
+        default-value
+        (let ((parent-cte (##cte-parent-cte cte)))
+          (if (and (##cte-decl? cte)
+                   (##eq? name (##cte-decl-name cte)))
+              (##cte-decl-value cte)
+              (loop parent-cte))))))
+
+(define (##tail-call? cte tail?)
+  (and tail?
+       (##cte-lookup-decl cte 'proper-tail-calls #t)))
+
+;;; ---------------------------------------
+;;; namespace
+;;;
 
 (define (##cte-add-namespace parent-cte prefix aliases)
 
@@ -672,14 +1186,14 @@
           ((##cte-namespace? cte)
            (if (##pair? (##cte-namespace-aliases cte))
                (replace (##cte-parent-cte cte))
-               (##cte-namespace (##cte-parent-cte cte) prefix aliases)))
+               (##make-cte-namespace (##cte-parent-cte cte) prefix aliases)))
           (else
            #f))) ;; don't go beyond a frame, macro definition or declaration
 
   (if (##pair? aliases)
-      (##cte-namespace parent-cte prefix aliases)
+      (##make-cte-namespace parent-cte prefix aliases)
       (or (replace parent-cte)
-          (##cte-namespace parent-cte prefix aliases))))
+          (##make-cte-namespace parent-cte prefix aliases))))
 
 (define (##check-namespace src)
   (let ((code (##source-code src)))
@@ -734,30 +1248,6 @@
               'ill-formed-namespace
               src))))))
 
-(define (##cte-process-declare parent-cte src)
-  (let ((decls (##cdr (##desourcify src))))
-    (let loop ((cte parent-cte) (decls decls))
-      (if (##pair? decls)
-          (let ((decl (##car decls)))
-            (if (##pair? decl)
-                (let ((d (##car decl)))
-                  (cond ((and (##eq? d 'proper-tail-calls)
-                              (##null? (##cdr decl)))
-                         (loop (##cte-decl cte 'proper-tail-calls #t)
-                               (##cdr decls)))
-                        ((and (##eq? d 'not)
-                              (##pair? (##cdr decl))
-                              (##eq? (##cadr decl) 'proper-tail-calls)
-                              (##null? (##cddr decl)))
-                         (loop (##cte-decl cte 'proper-tail-calls #f)
-                               (##cdr decls)))
-                        (else
-                         (loop cte
-                               (##cdr decls)))))
-                (loop cte
-                      (##cdr decls))))
-          cte))))
-
 (define (##cte-process-namespace parent-cte src)
   (##check-namespace src)
   (let ((forms (##cdr (##desourcify src))))
@@ -775,107 +1265,7 @@
                   (##cdr forms)))
           cte))))
 
-(define (##cte-get-top-cte cte)
-  (if (##cte-top? cte)
-      cte
-      (##cte-get-top-cte (##cte-parent-cte cte))))
-
-(define (##cte-mutate-top-cte! cte proc)
-  (let ((top-cte (##cte-get-top-cte cte)))
-    (##cte-top-cte-set! top-cte (proc (##cte-top-cte top-cte)))))
-
-(define (##make-top-cte)
-  (let ((top-cte (##cte-top #f)))
-    (##cte-top-cte-set! top-cte top-cte)
-    top-cte))
-
-(define (##top-cte-add-macro! top-cte name def)
-  (let* ((cte (##cte-top-cte top-cte))
-         (global-name (##cte-global-macro-name cte name)))
-    (##cte-mutate-top-cte!
-     top-cte
-     (lambda (cte) (##cte-add-macro cte global-name def)))))
-
-(define (##top-cte-add-macro-no-dups! top-cte name def)
-
-  ;; this could be implemented as (##top-cte-add-macro! top-cte name def)
-  ;; but we know that top-cte has no duplicates so just add the macro
-  ;; at the tail with a mutation thus avoiding the allocation that
-  ;; would be caused by a relinking
-
-  (let* ((cte (##cte-top-cte top-cte))
-         (global-name (##cte-global-macro-name cte name)))
-    (let loop ((prev-cte top-cte) (cte cte))
-      (if (##cte-top? cte)
-          (##cte-parent-cte-set! prev-cte (##cte-macro cte global-name def))
-          (loop cte (##cte-parent-cte cte))))))
-
-(define (##top-cte-process-declare! top-cte src)
-  (##cte-mutate-top-cte!
-   top-cte
-   (lambda (cte) (##cte-process-declare cte src))))
-
-(define (##top-cte-process-namespace! top-cte src)
-  (##cte-mutate-top-cte!
-   top-cte
-   (lambda (cte) (##cte-process-namespace cte src))))
-
-(define (##top-cte-clone top-cte)
-  (let ((new-top-cte (##cte-top #f)))
-
-    (define (clone cte)
-      (if (##cte-top? cte)
-          new-top-cte
-          (##cte-relink cte (clone (##cte-parent-cte cte)))))
-
-    (##cte-top-cte-set! new-top-cte (clone (##cte-top-cte top-cte)))
-    new-top-cte))
-
-(define (##cte-lookup cte name)
-  (##declare (inlining-limit 500)) ;; inline CTE access procedures
-  (let loop1 ((name name) (full? (##full-name? name)) (cte cte) (up 0))
-    (if (##cte-top? cte)
-        (##vector 'not-found name)
-        (let ((parent-cte (##cte-parent-cte cte)))
-          (cond ((##cte-frame? cte)
-                 (let loop2 ((vars (##cte-frame-vars cte))
-                             (over 1))
-                   (if (##pair? vars)
-                       (let* ((var (##car vars))
-                              (vn (if (##var-i? var)
-                                      (##var-i-name var)
-                                      (##var-c-name var))))
-                         (if (and (##eq? name vn)
-                                  (##eq? full? (##full-name? vn)))
-                             (##vector 'var var up over)
-                             (loop2 (##cdr vars)
-                                    (##fx+ over 1))))
-                       (loop1 name full? parent-cte (##fx+ up 1)))))
-                ((##cte-macro? cte)
-                 (if (##eq? name (##cte-macro-name cte))
-                     (##vector 'macro name (##cte-macro-descr cte))
-                     (loop1 name full? parent-cte up)))
-                ((and (##not full?) (##cte-namespace? cte))
-                 (let ((full-name (##cte-namespace-lookup cte name)))
-                   (if full-name
-                       (loop1 full-name #t parent-cte up)
-                       (loop1 name #f parent-cte up))))
-                (else
-                 (loop1 name full? parent-cte up)))))))
-
-(define (##cte-global-macro-name cte name)
-  (if (##full-name? name)
-      name
-      (let loop ((cte cte))
-        (if (##cte-top? cte)
-            name
-            (let ((parent-cte (##cte-parent-cte cte)))
-              (cond ((##cte-namespace? cte)
-                     (let ((full-name (##cte-namespace-lookup cte name)))
-                       (or full-name
-                           (loop parent-cte))))
-                    (else
-                     (loop parent-cte))))))))
+;;; ---------------------------------------
 
 (define (##cte-namespace-lookup cte name)
   (let ((aliases (##cte-namespace-aliases cte)))
@@ -899,8 +1289,25 @@
             i
             (loop (##fx- i 1))))))
 
+(define (##namespace-valid? str)
+
+  ;; non-null name followed by a namespace separator at end is
+  ;; valid as is the special prefix ""
+
+  (let ((len (##string-length str)))
+    (or (##fx= len 0)
+        (and (##not (##fx< len 2))
+             (##memq (##string-ref str (##fx- len 1))
+                     ##namespace-separators)))))
+
+;;; ---------------------------------------
+;;; naming
+;;;
+
+;; TODO: restore once bug fixed
 (define (##full-name? sym) ;; full name if it contains a namespace separator
-  (##fx>= (##namespace-separator-index (##symbol->string sym)) 0))
+  #t
+  #;(##fx>= (##namespace-separator-index (##symbol->string sym)) 0))
 
 (define (##namespace-split sym)
   (let* ((str (##symbol->string sym))
@@ -914,16 +1321,54 @@
       sym
       (##string->symbol (##string-append prefix (##symbol->string sym)))))
 
-(define (##namespace-valid? str)
+(define (##cte-global-name cte name)
+  (if (##full-name? name)
+      name
+      (let loop ((cte cte))
+        (if (##cte-top? cte)
+            name
+            (let ((parent-cte (##cte-parent-cte cte)))
+              (cond ((##cte-namespace? cte)
+                     (let ((full-name (##cte-namespace-lookup cte name)))
+                       (or full-name
+                           (loop parent-cte))))
+                    (else
+                     (loop parent-cte))))))))
 
-  ;; non-null name followed by a namespace separator at end is
-  ;; valid as is the special prefix ""
+;;;----------------------------------------------------------------------------
+;;; lookup
 
-  (let ((len (##string-length str)))
-    (or (##fx= len 0)
-        (and (##not (##fx< len 2))
-             (##memq (##string-ref str (##fx- len 1))
-                     ##namespace-separators)))))
+(define (##cte-lookup cte name)
+  (##declare (inlining-limit 500)) ;; inline CTE access procedures
+  (let loop1 ((name name) (full? (##full-name? name)) (cte cte) (up 0))
+    (if (##cte-top? cte)
+        (##vector 'not-found name)
+        (let ((parent-cte (##cte-parent-cte cte)))
+          (cond ((##cte-frame? cte)
+                 (let loop2 ((vars (##cte-frame-vars cte))
+                             (over 1))
+                   (if (##pair? vars)
+                       (let* ((var (##car vars))
+                              (vn (if (##var-i? var)
+                                      (##var-i-name var)
+                                      (##var-c-name var))))
+                         (if (and (##eq? name vn)
+                                  (##eq? full? (##full-name? vn)))
+                             (##vector 'var var up over)
+                             (loop2 (##cdr vars)
+                                    (##fx+ over 1))))
+                       (loop1 name full? parent-cte (##fx+ up 1)))))
+                ((and (##cte-macro? cte) (not (procedure? (##cte-macro-descr cte))))
+                 (if (##eq? name (##cte-macro-name cte))
+                     (##vector 'macro name (##cte-macro-descr cte))
+                     (loop1 name full? parent-cte up)))
+                ((and (##not full?) (##cte-namespace? cte))
+                 (let ((full-name (##cte-namespace-lookup cte name)))
+                   (if full-name
+                       (loop1 full-name #t parent-cte up)
+                       (loop1 name #f parent-cte up))))
+                (else
+                 (loop1 name full? parent-cte up)))))))
 
 (define (##var-lookup cte src)
   (let* ((name (##source-code src))
@@ -943,21 +1388,6 @@
         src
         name)))))
 
-(define (##make-macro-descr def-syntax? size expander expander-src)
-  (##vector def-syntax? size expander expander-src))
-
-(define (##macro-descr-def-syntax? descr)
-  (##vector-ref descr 0))
-
-(define (##macro-descr-size descr)
-  (##vector-ref descr 1))
-
-(define (##macro-descr-expander descr)
-  (##vector-ref descr 2))
-
-(define (##macro-descr-expander-src descr)
-  (##vector-ref descr 3))
-
 (define-prim (##macro-lookup cte name)
   (and (##symbol? name)
        (let ((ind (##cte-lookup cte name)))
@@ -971,6 +1401,149 @@
 
 (define-prim (##macro-lookup-set! x)
   (set! ##macro-lookup x))
+
+;;; ----------------------------------------------------------------
+;;; top-cte
+;;;
+
+(define (##make-top-cte)
+  (let ((top-cte (##make-cte-top)))
+    (##cte-parent-cte-set! top-cte top-cte)
+    (##cte-top-cte-set! top-cte top-cte)
+    (##cte-ctx-set! top-cte (##make-syntax-ctx))
+    (##cte-top-global-binding-table-set! top-cte (##make-syntax-global-binding-table))
+    top-cte))
+
+(define (##top-cte-cte top-cte)
+  (##cte-parent-cte top-cte))
+
+(define (##top-cte-cte-set! top-cte parent-cte)
+  (##cte-parent-cte-set! top-cte parent-cte))
+
+(define (##top-cte-clone top-cte)
+  (let ((new-top-cte (##make-cte-top)))
+
+    (define (clone cte)
+      (##cte-top-cte-set! cte new-top-cte)
+      (if (##cte-top? cte)
+          new-top-cte
+          (##cte-relink cte (clone (##cte-parent-cte cte)))))
+
+    (##cte-parent-cte-set! new-top-cte (clone (##cte-parent-cte top-cte)))
+    (##cte-top-cte-set! new-top-cte (##cte-top-cte top-cte))
+    (##cte-ctx-set! new-top-cte (##cte-ctx top-cte))
+    (##cte-top-global-binding-table-set! new-top-cte (##cte-top-global-binding-table top-cte))
+    new-top-cte))
+
+;;;----------------------------------------------------------------------------
+;;; top-cte procedures
+;;;
+
+;;;---------------------------------------
+;;; variable
+
+(define (##top-cte-add-variable! top-cte name #!optional (ctx-proc identity))
+  (let* ((cte (##top-cte-cte top-cte))
+         (global-name (##cte-global-name cte name)))
+    (##cte-mutate-top-cte-cte!
+     top-cte
+     (lambda (cte)
+       (##cte-add-variable cte global-name ctx-proc)))))
+
+;;; ---------------------------------------
+;;; macro
+;;;
+
+(define (##top-cte-add-macro! top-cte name def #!optional (ctx-proc identity))
+  (let* ((cte (##top-cte-cte top-cte))
+         (global-name (##cte-global-name cte name)))
+    (##cte-mutate-top-cte-cte!
+     top-cte
+     (lambda (cte) (##cte-top-cte-add-macro cte global-name def ctx-proc)))))
+
+;; 
+(define (##top-cte-add-macro-no-dups! top-cte name def #!optional (ctx-proc identity))
+
+  ;; this could be implemented as (##top-cte-add-macro! top-cte name def)
+  ;; but we know that top-cte has no duplicates so just add the macro
+  ;; at the tail with a mutation thus avoiding the allocation that
+  ;; would be caused by a relinking
+  ;; (##top-cte-add-macro! top-cte name def)
+  (let* ((cte (##top-cte-cte top-cte))
+         (global-name (##cte-global-name cte name)))
+    (let loop ((prev-cte top-cte) (cte cte))
+      (if (##cte-top? cte)
+          (begin
+            (##top-cte-cte-set! prev-cte (##make-cte-macro cte global-name def)))
+          (loop cte (##top-cte-cte cte))))))
+
+(define (##top-cte-add-core-macro! top-cte name def #!optional (ctx-proc identity))
+  (let* ((cte (##top-cte-cte top-cte))
+         (global-name name #;(##cte-global-name cte name)))
+    (##cte-mutate-top-cte-cte!
+     top-cte
+     (lambda (cte) (##cte-top-cte-add-core-macro cte global-name def ctx-proc)))))
+
+(define (##cte-mutate-core-macro! cte name def #!optional (ctx-proc identity))
+  (let* ((top-cte (##cte-top-cte cte))
+         (cte (##top-cte-cte top-cte))
+         (global-name name #;(##cte-global-name cte name)))
+    (let loop ((prev-cte top-cte) (cte cte))
+      (cond
+        ((##cte-top? cte)
+         (##top-cte-add-core-macro! top-cte name def ctx-proc))
+        ((and (##cte-core-macro? cte)
+              (equal? (##cte-core-macro-name cte)
+                      (syntax-source-code global-name)))
+         (let ((new-cte 
+                 (##cte-add-core-macro (##cte-parent-cte cte) global-name def ctx-proc)))
+           (##cte-parent-cte-set! prev-cte new-cte)))
+        (else
+          (loop cte (##cte-parent-cte cte)))))))
+
+(define (##top-cte-add-core-macro-no-dups! top-cte name def #!optional (ctx-proc identity))
+
+  ;; this could be implemented as (##top-cte-add-core-macro! top-cte name def)
+  ;; but we know that top-cte has no duplicates so just add the core-macro
+  ;; at the tail with a mutation thus avoiding the allocation that
+  ;; would be caused by a relinking
+  ;; (##top-cte-add-core-macro! top-cte name def)
+  (let* ((cte (##top-cte-cte top-cte))
+         (global-name (##cte-global-name cte name)))
+    (let loop ((prev-cte top-cte) (cte cte))
+      (if (##cte-top? cte)
+          (begin
+            (##top-cte-cte-set! prev-cte (##make-cte-core-macro cte global-name def)))
+          (loop cte (##top-cte-cte cte))))))
+
+;  (let* ((cte (##cte-top-cte top-cte))
+;         (global-name (##cte-global-macro-name cte name)))
+;    (let loop ((prev-cte top-cte) (cte cte))
+;      (if (##cte-top? cte)
+;          (##cte-parent-cte-set! prev-cte (##cte-macro cte (##cte-ctx cte) global-name def))
+;          (loop cte (##cte-parent-cte cte))))))
+
+
+;;; ---------------------------------------
+;;; declare
+;;;
+
+(define (##top-cte-process-declare! top-cte src)
+  (##cte-mutate-top-cte-cte!
+   top-cte
+   (lambda (cte) (##cte-process-declare cte src))))
+
+;;; ---------------------------------------
+;;; namespace
+;;;
+
+(define (##top-cte-process-namespace! top-cte src)
+  (##cte-mutate-top-cte-cte!
+   top-cte
+   (lambda (cte) (##cte-process-namespace cte src))))
+
+;;;----------------------------------------------------------------------------
+;;; macro expansion
 
 (define-prim (##macro-expand cte src descr)
   (##shape src src (##macro-descr-size descr))
@@ -997,6 +1570,20 @@
           (err)
           (##make-macro-descr def-syntax? size expander src))))
 
+  (define (form-size parms-src)
+    (let ((parms (##source-code parms-src)))
+      (let loop ((lst parms) (n 1))
+        (cond ((##pair? lst)
+               (let ((parm (##source-code (##sourcify (##car lst) parms-src))))
+                 (if (##memq parm '(#!optional #!key #!rest))
+                     (##fx- 0 n)
+                     (loop (##cdr lst)
+                           (##fx+ n 1)))))
+              ((##null? lst)
+               n)
+              (else
+               (##fx- 0 n))))))
+
   (if def-syntax?
       (make-descr -1)
       (let ((code (##source-code src)))
@@ -1005,40 +1592,11 @@
                          '(##lambda lambda)))
             (begin
               (##shape src src -3)
-              (make-descr (##form-size (##sourcify (##cadr code) src))))
+              (make-descr (form-size (##sourcify (##cadr code) src))))
             (err)))))
 
 (define-prim (##macro-descr-set! x)
   (set! ##macro-descr x))
-
-(define (##form-size parms-src)
-  (let ((parms (##source-code parms-src)))
-    (let loop ((lst parms) (n 1))
-      (cond ((##pair? lst)
-             (let ((parm (##source-code (##sourcify (##car lst) parms-src))))
-               (if (##memq parm '(#!optional #!key #!rest))
-                   (##fx- 0 n)
-                   (loop (##cdr lst)
-                         (##fx+ n 1)))))
-            ((##null? lst)
-             n)
-            (else
-             (##fx- 0 n))))))
-
-(define (##cte-lookup-decl cte name default-value)
-  (##declare (inlining-limit 500)) ;; inline CTE access procedures
-  (let loop ((cte cte))
-    (if (##cte-top? cte)
-        default-value
-        (let ((parent-cte (##cte-parent-cte cte)))
-          (if (and (##cte-decl? cte)
-                   (##eq? name (##cte-decl-name cte)))
-              (##cte-decl-value cte)
-              (loop parent-cte))))))
-
-(define (##tail-call? cte tail?)
-  (and tail?
-       (##cte-lookup-decl cte 'proper-tail-calls #t)))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1537,13 +2095,13 @@
 
 (define (##comp-top top-cte src tail?)
   (or (##comp-top* top-cte src tail?)
-      (let ((cte (##cte-top-cte top-cte)))
+      (let ((cte (##top-cte-cte top-cte)))
         (macro-gen ##gen-cst-no-step src
           (##void)))))
 
 (define (##comp-top* top-cte src tail?)
   (let ((code (##source-code src))
-        (cte (##cte-top-cte top-cte)))
+        (cte (##top-cte-cte top-cte)))
     (if (##pair? code)
         (let* ((first-src (##sourcify (##car code) src))
                (descr (##macro-lookup cte (##source-code first-src))))
@@ -1588,7 +2146,7 @@
   (let ((first-src (##sourcify (##car seq) src))
         (rest (##cdr seq)))
     (if (##pair? rest)
-        (let ((cte (##cte-top-cte top-cte)))
+        (let ((cte (##top-cte-cte top-cte)))
           (let* ((code1 (##comp-top* top-cte first-src #f))
                  (code2 (##comp-top-seq-aux top-cte src tail? rest)))
             (cond ((##not code1)
@@ -1606,7 +2164,7 @@
 (define (##comp-top-define top-cte src tail?)
   (let ((name (##definition-name src)))
     (##variable name)
-    (let* ((cte (##cte-top-cte top-cte))
+    (let* ((cte (##top-cte-cte top-cte))
            (ind (##var-lookup cte name))
            (val (##definition-value src)))
       (macro-gen ##gen-glo-def src
@@ -1620,7 +2178,7 @@
          (vars-src (##cdr names)))
     (##append-names-checking-duplicates '() vars-src)
     (let* ((cte
-            (##cte-top-cte top-cte))
+            (##top-cte-cte top-cte))
            (inds
             (##list->vector
              (##map (lambda (var-src)
@@ -1670,7 +2228,7 @@
   (##comp-top-define-macro-or-syntax top-cte src tail? #t))
 
 (define (##comp-top-define-macro-or-syntax top-cte src tail? def-syntax?)
-  (let* ((cte (##cte-top-cte top-cte))
+  (let* ((cte (##top-cte-cte top-cte))
          (name (##definition-name src))
          (val (##definition-value src)))
     (##top-cte-add-macro!
@@ -1683,7 +2241,7 @@
 
 (define (##comp-top-declare top-cte src tail?)
   (##shape src src -1)
-  (let ((cte (##cte-top-cte top-cte)))
+  (let ((cte (##top-cte-cte top-cte)))
     (##top-cte-process-declare! top-cte src)
     #f))
 
@@ -1691,7 +2249,7 @@
 
 (define (##comp-top-namespace top-cte src tail?)
   (##shape src src -1)
-  (let ((cte (##cte-top-cte top-cte)))
+  (let ((cte (##top-cte-cte top-cte)))
     (##top-cte-process-namespace! top-cte src)
     #f))
 
@@ -2113,15 +2671,26 @@
   (let* ((all-parms
           (##extract-parameters src parms-src))
          (required-parameters
-          (##vector-ref all-parms 0))
+          (map (lambda (parm-src) (##source-code parm-src)) (##vector-ref all-parms 0)))
          (optional-parameters
-          (##vector-ref all-parms 1))
+           (let ((optionals (##vector-ref all-parms 1)))
+             (and optionals
+                  (map (lambda (parm-src+val) 
+                         (cons (##source-code (car parm-src+val))
+                               (cdr parm-src+val)))
+                       optionals))))
          (rest-parameter
-          (##vector-ref all-parms 2))
+          (let ((r (##vector-ref all-parms 2)))
+            (and r (##source-code r))))
          (dsssl-style-rest?
           (##vector-ref all-parms 3))
          (key-parameters
-          (##vector-ref all-parms 4)))
+          (let ((keys (##vector-ref all-parms 4)))
+            (and keys
+                 (map (lambda (parm-src+val)
+                        (cons (##source-code (car parm-src+val))
+                              (cdr parm-src+val)))
+                      keys)))))
     (let loop1 ((frame required-parameters)
                 (lst (or optional-parameters '()))
                 (rev-inits '()))
@@ -2278,12 +2847,12 @@
                           (check-if-duplicate parm-src)
                           (if (##fx= state 4)
                               (if (##null? (##cddr lst))
-                                  (done parm)
+                                  (done parm-src)
                                   (rest-parm-must-be-last-err parm-src))
                               (loop (##cddr lst)
                                     rev-required-parms
                                     rev-optional-parms
-                                    parm
+                                    parm-src
                                     rev-key-parms
                                     3)))
                         (rest-parm-expected-err parm-src)))
@@ -2304,7 +2873,7 @@
                     (case state
                       ((1)
                        (loop (##cdr lst)
-                             (##cons parm
+                             (##cons parm-src
                                      rev-required-parms)
                              rev-optional-parms
                              rest-parm
@@ -2313,7 +2882,7 @@
                       ((2)
                        (loop (##cdr lst)
                              rev-required-parms
-                             (##cons (##cons parm
+                             (##cons (##cons parm-src
                                              (##sourcify #f parm-src))
                                      rev-optional-parms)
                              rest-parm
@@ -2324,10 +2893,10 @@
                              rev-required-parms
                              rev-optional-parms
                              rest-parm
-                             (##cons (##cons parm
+                             (##cons (##cons parm-src
                                              (##sourcify #f parm-src))
                                      rev-key-parms)
-                             state))))
+                            state))))
                    ((##pair? parm)
                     (if (##not (or (##fx= state 2) (##fx= state 4)))
                         (default-binding-illegal-err parm-src))
@@ -2343,7 +2912,7 @@
                         ((2)
                          (loop (##cdr lst)
                                rev-required-parms
-                               (##cons (##cons parm val-src)
+                               (##cons (##cons parm-src val-src)
                                        rev-optional-parms)
                                rest-parm
                                rev-key-parms
@@ -2353,7 +2922,7 @@
                                rev-required-parms
                                rev-optional-parms
                                rest-parm
-                               (##cons (##cons parm val-src)
+                               (##cons (##cons parm-src val-src)
                                        rev-key-parms)
                                state)))))
                    (else
@@ -2366,7 +2935,85 @@
              (if rest-parm
                  (duplicate-rest-parm-err parm-src))
              (check-if-duplicate parm-src)
-             (done (##source-code parm-src)))))))
+             (done parm-src))))))
+
+
+(define (##reconstruct-parameters parms-src
+                                  required-parameters
+                                  optional-parameters
+                                  rest-parameter
+                                  dsssl-style-rest?
+                                  key-parameters)
+
+  (define (reconstruct-required-parms orig-parms
+                                      required-parameters)
+    (cond
+      ((pair? orig-parms)
+       (let ((orig-parm (car  orig-parms)))
+         (cond
+           ((equal? (##source-code orig-parm) #!key)
+            (cons orig-parm
+                  (reconstruct-valued-parms (cdr orig-parms) key-parameters)))
+           ((equal? (##source-code orig-parm) #!optional)
+            (cons orig-parm
+                  (reconstruct-valued-parms (cdr orig-parms) optional-parameters)))
+           ((equal? (##source-code orig-parm) #!rest)
+            (cons orig-parm
+                  (list 
+                    (reconstruct-rest-parm (cdr orig-parms) rest-parameter))))
+           ((pair? required-parameters)
+            (cons (car required-parameters)
+                  (reconstruct-required-parms (cdr orig-parms)
+                                              (cdr required-parameters))))
+           (else
+             (reconstruct-rest-parm orig-parms rest-parameter)))))
+      ((null? orig-parms)
+       orig-parms)
+      (else
+       rest-parameter)))
+
+  (define (reconstruct-valued-parms orig-parms valued-parameters)
+    (cond
+      ((pair? orig-parms)
+       (let ((orig-parm (car orig-parms)))
+         (cond
+           ((equal? (##source-code orig-parm) #!key)
+            (cons orig-parm
+                  (reconstruct-valued-parms (cdr orig-parms) key-parameters)))
+           ((equal? (##source-code orig-parm) #!optional)
+            (cons orig-parm
+                  (reconstruct-valued-parms (cdr orig-parms) optional-parameters)))
+
+           ((equal? (##source-code orig-parm) #!rest)
+            (cons orig-parm
+                  (cons rest-parameter
+                        (reconstruct-required-parms (cddr orig-parms) ; by extract-parameter, we can
+                                                    (list)))))        ; be sure that if orig-parms contain
+                                                                      ; more element, they start with #!key 
+           ((pair? valued-parameters)
+            (cons (let* ((valued-parameter (car valued-parameters))
+                          (id               (car valued-parameter))
+                          (val              (cadr valued-parameter)))
+                     (if (and val (not (##source-code val)))
+                         id
+                         (##source-code-set orig-parm
+                           (list id val))))
+                  (reconstruct-valued-parms (cdr orig-parms)
+                                            (cdr valued-parameters))))
+           (else
+            (reconstruct-rest-parm orig-parms rest-parameter)))))
+      ((null? orig-parms)
+       orig-parms)
+      (else
+        rest-parameter)))
+
+  (define (reconstruct-rest-parm orig-parms rest-parameter)
+    (or rest-parameter (list)))
+
+  (let ((orig-parms (##source-code parms-src)))
+    (syntax-source-code-update parms-src 
+      (lambda (orig-parms)
+        (reconstruct-required-parms orig-parms required-parameters)))))
 
 (define (##source->parms src)
   (let ((x (##source-code src)))
@@ -2424,7 +3071,7 @@
                               (name-src (##definition-name src))
                               (name (##source-code name-src))
                               (val (##definition-value src)))
-                         (internal-defs (##cte-macro
+                         (internal-defs (##make-cte-macro
                                          cte
                                          name
                                          (##macro-descr val def-syntax?))
@@ -5777,6 +6424,7 @@
     (define-runtime-syntax define-syntax
       (##make-alias-syntax '##define-syntax))
 
+    ;;; Deprecated
     (define-runtime-syntax syntax-rules
       (lambda (src)
         ((##eval '(##let ()
@@ -5799,5 +6447,188 @@
          src)))
 
     ##interaction-cte))
+
+;;;----------------------------------------------------------------------------
+
+;;;----------------------------------------------------------------------------
+
+(define-prim (##eval-module-syntax src top-cte)
+  (let ((c (##compile-top-syntax top-cte
+                          (##sourcify src (##make-source #f #f)))))
+    (##setup-requirements-and-run c #f)))
+
+;;;(##eval-module-set! ##eval-module-syntax)
+
+(define-prim (##eval-top-syntax src top-cte)
+    (let ((c (##compile-top-syntax top-cte
+                          (##sourcify src (##make-source #f #f)))))
+    (##setup-requirements-and-run c #f)))
+
+;;;(##eval-top-set! ##eval-top-syntax)
+
+(define (##load-syntax
+         path-or-settings
+         script-callback
+         clone-cte?
+         raise-os-exception?
+         linker-name
+         quiet?)
+
+  (define (raise-os-exception-if-needed x)
+    (if (and (##fixnum? x)
+             raise-os-exception?)
+        (##raise-os-exception #f x load path-or-settings)
+        x))
+
+  (define (load-source psettings source-path)
+    (macro-psettings-path-set! psettings source-path)
+    (let ((x
+           (##read-all-as-a-begin-expr-from-psettings
+            psettings
+            path-or-settings
+            (##current-readtable)
+            ##wrap-datum
+            ##unwrap-datum
+            '())))
+      (if (##fixnum? x)
+          x
+          (begin
+            (script-callback (##vector-ref x 0) (##vector-ref x 2))
+            (##eval-module-syntax (##vector-ref x 1)
+                           (if clone-cte?
+                               (##top-cte-clone ##interaction-cte)
+                               ##interaction-cte))
+            (##vector-ref x 2)))))
+
+  (define (load-binary abs-path)
+    (let* ((linker-name
+            (or linker-name
+                (##path-strip-directory abs-path)))
+           (result
+            (##load-object-file abs-path linker-name quiet?)))
+
+      (define (raise-error code)
+        (if (##fixnum? code)
+            (##raise-os-exception #f code load path-or-settings)
+            (##raise-os-exception code #f load path-or-settings)))
+
+      (cond ((##not (##vector? result))
+             (raise-error result))
+            ((##fx= 2 (##vector-length result))
+             (raise-error (##vector-ref result 0)))
+            (else
+             (let ((module-descrs (##vector-ref result 0))
+                   (script-line (##vector-ref result 2)))
+               (script-callback script-line abs-path)
+               (##register-module-descrs module-descrs)
+               (##load-modules
+                (##list->vector
+                 (##map (lambda (md)
+                          (##vector-last
+                           (macro-module-descr-supply-modules md)))
+                        (##vector->list module-descrs))))
+               (##path-unresolve abs-path))))))
+
+  (define (load-no-ext psettings path)
+    (let ((result (load-source psettings path)))
+      (if (##not (##fixnum? result))
+          result
+          (let loop1 ((version 1)
+                      (last-obj-file-path #f)
+                      (last-obj-file-info #f))
+            (let* ((resolved-path
+                    (##path-resolve
+                     (##string-append path
+                                      ".o"
+                                      (##number->string version 10))))
+                   (resolved-info
+                    (##file-info-aux resolved-path))
+                   (resolved-path-exists?
+                    (##not (##fixnum? resolved-info))))
+              (if resolved-path-exists?
+                  (loop1 (##fx+ version 1)
+                         resolved-path
+                         resolved-info)
+                  (if (and last-obj-file-path
+                           (##not ##load-source-if-more-recent))
+                      (load-binary last-obj-file-path)
+                      (let loop2 ((lst ##scheme-file-extensions))
+                        (if (##pair? lst)
+                            (let* ((src-file-path
+                                    (##string-append path (##caar lst)))
+                                   (src-file-info
+                                    (if (##string? src-file-path)
+                                        (##file-info-aux src-file-path)
+                                        0))
+                                   (src-file-path-exists?
+                                    (##not (##fixnum? src-file-info))))
+                              (if (##not src-file-path-exists?)
+                                  (loop2 (##cdr lst))
+                                  (if (or (##not last-obj-file-path)
+                                          (##fl<
+                                           (macro-time-point
+                                            (macro-file-info-last-modification-time
+                                             last-obj-file-info))
+                                           (macro-time-point
+                                            (macro-file-info-last-modification-time
+                                             src-file-info))))
+                                      (let ((x (load-source psettings src-file-path)))
+                                        (if (##fixnum? x)
+                                            (raise-os-exception-if-needed result)
+                                            x))
+                                      (load-binary last-obj-file-path))))
+                            (if last-obj-file-path
+                                (load-binary last-obj-file-path)
+                                (raise-os-exception-if-needed result)))))))))))
+
+  (define (binary-extension? ext)
+    (let ((len (##string-length ext)))
+      (and (##fx< 2 len)
+           (##char=? (##string-ref ext 0) #\.)
+           (##char=? (##string-ref ext 1) #\o)
+           (let ((c (##string-ref ext 2)))
+             (and (##char>=? c #\1) (##char<=? c #\9)
+                  (let loop ((i (##fx- len 1)))
+                    (if (##fx< i 3)
+                        #t
+                        (let ((c (##string-ref ext i)))
+                          (and (##char>=? c #\0) (##char<=? c #\9)
+                               (loop (##fx- i 1)))))))))))
+
+  (define (fail)
+    (##fail-check-string-or-settings 1 load path-or-settings))
+
+  (##make-input-path-psettings
+   (if (##string? path-or-settings)
+       (##list 'path: path-or-settings
+               'eol-encoding: 'cr-lf)
+       path-or-settings)
+   fail
+   (lambda (psettings)
+     (let ((path (macro-psettings-path psettings)))
+       (if (##not path)
+           (fail)
+           (let ((ext (##path-extension path)))
+             (cond ((##string=? ext "")
+                    (load-no-ext psettings path))
+                   ((binary-extension? ext)
+                    (let ((resolved-path (##path-resolve path)))
+                      (load-binary resolved-path)))
+                   (else
+                    (raise-os-exception-if-needed
+                     (load-source psettings path))))))))))
+
+(##include "_syntax-hygiene.scm")
+
+; TODO: Combine `##compile-top` with syntax-expand's `##compile`
+;
+(define (##compile-top-syntax top-cte src)
+  (let ((src (if (and (##source? src) 
+                      (pair? (##source-code src))
+                      (not (##source? (car (##source-code src)))))
+                 ; adjust for "source2" case
+                 (plain-datum->core-syntax (##source-code src))
+                 src)))
+    (##compile-top top-cte (##syntax-expand ##syntax-interaction-cte src))))
 
 ;;;============================================================================

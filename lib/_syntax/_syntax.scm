@@ -7,7 +7,7 @@
 
 ;;;============================================================================
 
-(##include "_syntax-error.scm")
+;(##include "_syntax-error.scm")
 (##include "_scopes.scm")
 (##include "_syntax-source.scm")
 (##include "_source-match.scm")

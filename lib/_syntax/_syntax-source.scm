@@ -83,7 +83,7 @@
    proc
    args))
 
-#;(define-prim&proc (syntax-source-clone (stx-src syntax))
+(define-prim&proc (syntax-source-clone (stx-src syntax))
   (##source-clone stx-src))
 
 (define-prim&proc (syntax-source-code (stx-src syntax))
@@ -137,7 +137,10 @@
          (or (##syntax-source? stx)
              (##source? stx)))
     (##vector-set! src 2 (##vector-ref stx 2))
-    (##vector-set! src 3 (##vector-ref stx 3))))
+    (##vector-set! src 3 (##vector-ref stx 3))
+    (if (= (##vector-length src) 6)
+        (##vector-set! src 4 (and (= (##vector-length stx) 6)
+                                  (##vector-ref stx 4))))))
 
   ; adjust tag
   (cond
@@ -147,9 +150,10 @@
   ; adjust scopes
   (cond
     ((##source? src)
-     (##vector-set! src 4 (if (syntax-source? stx)
-                              (syntax-source-scopes stx)
-                              (##make-scopes)))))
+     (##source-scopes-set! src
+                           (if (syntax-source? stx)
+                               (syntax-source-scopes stx)
+                               (##make-scopes)))))
   src)
 
 (define (source->syntax! src #!optional (stx (macro-absent-obj)))
@@ -194,7 +198,7 @@
   (cond
     ((##syntax-source? src)
      (##vector-set! src 0 (##syntax->source-tag! src (##vector-ref src 0)))
-     (##vector-set! src 4 #f)
+     (##source-scopes-set! src #f)
      src)
     ((##source? src)
      src)

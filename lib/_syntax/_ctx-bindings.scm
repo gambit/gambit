@@ -17,7 +17,7 @@
                  'variable)))
 
 ; test only
-#;(define (##ctx-binding-variable-hint obj)
+(define (##ctx-binding-variable-hint obj)
   (and (##ctx-binding-variable? obj)
        (vector-ref obj 1)))
 

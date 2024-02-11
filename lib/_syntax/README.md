@@ -3,11 +3,6 @@
 ## Dev Integration check-list:
 
 - Integrate interpretation envrionment
-  - integrate new "locat" container.
-    In the last Gambit's version, source vector
-    were modified to accept an extra location parameter,
-    making source object a contianer of variable size.
-    This clash with the new source vector representation.
   - Use the "descriptor" structure instead of plain procedure for
     macro definition's expansion. Those are usefull to reconstruct the expander
     definitions and show the expected form to the user (for forms such as `cond`).
@@ -19,6 +14,7 @@
     We can then completely merge the `##interaction-cte` and the `##syntax-interaction-cte`.
 
 - Integrate compilation environment
+  - merge (phase 1) changes to this branch
   - Interface for hygienic compile cte is implemented 
     in my own fork, waiting only to be merged once
     performances are satisfaying.
@@ -28,8 +24,8 @@
     Investigate the non-linear comportment of
     `define-macro`. The problem might be arising from
     a poor handling of top-level macro definitions in local
-    context. This could be due to a "deeper" problem,
-    however. 
+    context (possible inersion in lookup order / cte construction). 
+    This could be due to a "deeper" problem, however. 
 
 - Correctness
   - serialise compilation environements.

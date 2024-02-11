@@ -1,15 +1,13 @@
 ;;;===========================================================================
 
-;;; File: "_expand.scm"
+;;; File: "_syntax.scm"
 
-;;; Copyright (c) 2024 by Marc Feeley, All Rights Reserved.
-;;; Copyright (c) 2024 by Antoine Doucet, All Rights Reserved.
+;;; Copyright (c) 2023 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2023 by Antoine Doucet, All Rights Reserved.
 
 ;;;============================================================================
 
-;;; TODO: fill environment with global primitives
 (define ##allow-unbound? #t)
-
 (define (##allow-unbound?-set! b)
   (set! ##allow-unbound? b))
 
@@ -41,9 +39,6 @@
 
 ;;;----------------------------------------------------------------------------
 ;;; binding registration
-;;;
-;;; Those forms can be generalized into one, avoiding some code repetion,
-;;; but, splitting them seems more readable.
 
 (define (expand-let-bindings bindings-src cte)
   (let ((scps (list (make-scope))))
@@ -552,8 +547,10 @@
       (cond
         ((syntax-source? transformed-stx)
          (flip-scope transformed-stx intro-scope))
-        (else
-          (error "Macro application's result is not a syntax-source"))))))
+        (##error-expansion apply-transformer 
+          stx 
+          t
+          "result is not a syntax-source")))))
 
 (define (##dispatch t s cte #!optional (no-reexpansion #f))
   (cond 
@@ -588,7 +585,8 @@
 (define-primitive (expand-application stx cte)
   (##expand-pair/list stx cte 
       (lambda (_) 
-        (error "non-list application form"))))
+        (##error-expansion ##expand-application stx 
+         "non-list application form"))))
 
 #;(define-primitive (expand-keyword-argument stx cte)
   (let ((id  
@@ -920,6 +918,10 @@
                   (##expand datum cte)))))
         ((tag-unquote-splicing? code)
          => (lambda (datum) (##expand datum cte)))
+        #;((tag-quasiquote? code)
+           => (lambda (datum)
+                (expand-template-list
+                  (expand-template (##syntax-source-code-set s datum)))))
         ((and (##pair? code) (not (tag-quasiquote? code)))
          (##implicit-prefix-apply '##list
            (syntax-source-code-set s

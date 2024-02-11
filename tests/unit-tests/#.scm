@@ -68,7 +68,8 @@
                   
 (##define-macro (##setup-check)
 
-  (eval '(##begin
+  (eval (##plain-datum->syntax
+         '(##begin
 
            (define ##enable-checks?
              (make-parameter #t))
@@ -124,43 +125,45 @@
                    src)))))
 
            (define (##expand-check src)
-             (if (not (##enable-checks?))
-                 '(##begin)
-                 (let ((form (##source-strip src)))
-                   (case (##source-strip (car form))
+             (##plain-datum->core-syntax
+               (if (not (##enable-checks?))
+                   '(##begin)
+                   (let ((form (##source-strip src)))
+                     (case (##source-strip (car form))
 
-                     ((check-equal?)
-                      (##expand-check-relation src #t '##equal?))
-                     ((check-not-equal?)
-                      (##expand-check-relation src #f '##equal?))
-                     ((check-eqv?)
-                      (##expand-check-relation src #t '##eqv?))
-                     ((check-not-eqv?)
-                      (##expand-check-relation src #f '##eqv?))
-                     ((check-eq?)
-                      (##expand-check-relation src #t '##eq?))
-                     ((check-not-eq?)
-                      (##expand-check-relation src #f '##eq?))
+                       ((check-equal?)
+                        (##expand-check-relation src #t '##equal?))
+                       ((check-not-equal?)
+                        (##expand-check-relation src #f '##equal?))
+                       ((check-eqv?)
+                        (##expand-check-relation src #t '##eqv?))
+                       ((check-not-eqv?)
+                        (##expand-check-relation src #f '##eqv?))
+                       ((check-eq?)
+                        (##expand-check-relation src #t '##eq?))
+                       ((check-not-eq?)
+                        (##expand-check-relation src #f '##eq?))
 
-                     ((check-=)
-                      (##expand-check-= src))
+                       ((check-=)
+                        (##expand-check-= src))
 
-                     ((check-true)
-                      (##expand-check-value src #t '##eq? #t))
-                     ((check-false)
-                      (##expand-check-value src #t '##eq? #f))
-                     ((check-not-false)
-                      (##expand-check-value src #f '##eq? #f))
+                       ((check-true)
+                        (##expand-check-value src #t '##eq? #t))
+                       ((check-false)
+                        (##expand-check-value src #t '##eq? #f))
+                       ((check-not-false)
+                        (##expand-check-value src #f '##eq? #f))
 
-                     ((check-exn)
-                      (##expand-check-exn src #f))
-                     ((check-tail-exn)
-                      (##expand-check-exn src #t))
+                       ((check-exn)
+                        (##expand-check-exn src #f))
+                       ((check-tail-exn)
+                        (##expand-check-exn src #t))
 
-                     (else
-                      (##raise-expression-parsing-exception
-                       'ill-formed-special-form
-                       src))))))
+                       (else
+                        (##raise-expression-parsing-exception
+                         'ill-formed-special-form
+                         src)))))
+               src))
 
            (define (##failed-check-msg src)
              (call-with-output-string
@@ -180,7 +183,7 @@
                     (##sourcify (##failed-check-msg src) src)
                     (##sourcify actual-result src))
               src))
-           ))
+           )))
 
   '(##begin))
 
@@ -211,5 +214,10 @@
          (exit 0)
          (raise e)))
    thunk))
+
+(define-syntax tt (lambda (s) (##quote-syntax 0)))
+;(pp (##expand-check (##make-syntax-source #f #f)))
+
+;(check-eqv? (##make-source #f #f) (##make-source #f #f))
 
 ;;;============================================================================
