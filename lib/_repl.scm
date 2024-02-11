@@ -3799,6 +3799,38 @@
                   (rte (macro-make-rte-from-list #f (##map ##cdr locals))))
              (run (##compile-inner cte src2) rte))))))
 
+(define-prim (##eval-within-set! x)
+  (set! ##eval-within x))
+
+(define-prim (##eval-within-syntax src cont repl-context receiver)
+
+  (define (run c rte)
+    (##continuation-graft
+     cont
+     (lambda ()
+       (macro-dynamic-bind repl-context
+                           repl-context
+                           (lambda ()
+                             (receiver
+                              (##setup-requirements-and-run c rte)))))))
+
+  (let ((src2 (##sourcify src (##make-source #f #f))))
+    (cond ((##interp-continuation? cont)
+           (let* (($code (##interp-continuation-code cont))
+                  (cte (macro-code-cte $code))
+                  (rte (##interp-continuation-rte cont)))
+             (run (##compile-inner-syntax cte src2) rte)))
+          ((##with-no-result-expected-toplevel-continuation? cont)
+           (run (##compile-top-syntax ##interaction-cte src2) #f))
+          (else
+           (let* ((locals (##continuation-locals cont))
+                  (cte (##cte-frame (##cte-top-cte ##interaction-cte)
+                                    (##map ##car locals)))
+                  (rte (macro-make-rte-from-list #f (##map ##cdr locals))))
+             (run (##compile-inner-syntax cte src2) rte))))))
+
+(##eval-within-set! ##eval-within-syntax)
+
 ;;;----------------------------------------------------------------------------
 
 (define-prim (##repl-exception-handler-hook exc other-handler)

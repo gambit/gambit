@@ -6450,174 +6450,6 @@
 
 ;;;----------------------------------------------------------------------------
 
-;;;----------------------------------------------------------------------------
-
-(define-prim (##eval-module-syntax src top-cte)
-  (let ((c (##compile-top-syntax top-cte
-                          (##sourcify src (##make-source #f #f)))))
-    (##setup-requirements-and-run c #f)))
-
-;;;(##eval-module-set! ##eval-module-syntax)
-
-(define-prim (##eval-top-syntax src top-cte)
-    (let ((c (##compile-top-syntax top-cte
-                          (##sourcify src (##make-source #f #f)))))
-    (##setup-requirements-and-run c #f)))
-
-;;;(##eval-top-set! ##eval-top-syntax)
-
-(define (##load-syntax
-         path-or-settings
-         script-callback
-         clone-cte?
-         raise-os-exception?
-         linker-name
-         quiet?)
-
-  (define (raise-os-exception-if-needed x)
-    (if (and (##fixnum? x)
-             raise-os-exception?)
-        (##raise-os-exception #f x load path-or-settings)
-        x))
-
-  (define (load-source psettings source-path)
-    (macro-psettings-path-set! psettings source-path)
-    (let ((x
-           (##read-all-as-a-begin-expr-from-psettings
-            psettings
-            path-or-settings
-            (##current-readtable)
-            ##wrap-datum
-            ##unwrap-datum
-            '())))
-      (if (##fixnum? x)
-          x
-          (begin
-            (script-callback (##vector-ref x 0) (##vector-ref x 2))
-            (##eval-module-syntax (##vector-ref x 1)
-                           (if clone-cte?
-                               (##top-cte-clone ##interaction-cte)
-                               ##interaction-cte))
-            (##vector-ref x 2)))))
-
-  (define (load-binary abs-path)
-    (let* ((linker-name
-            (or linker-name
-                (##path-strip-directory abs-path)))
-           (result
-            (##load-object-file abs-path linker-name quiet?)))
-
-      (define (raise-error code)
-        (if (##fixnum? code)
-            (##raise-os-exception #f code load path-or-settings)
-            (##raise-os-exception code #f load path-or-settings)))
-
-      (cond ((##not (##vector? result))
-             (raise-error result))
-            ((##fx= 2 (##vector-length result))
-             (raise-error (##vector-ref result 0)))
-            (else
-             (let ((module-descrs (##vector-ref result 0))
-                   (script-line (##vector-ref result 2)))
-               (script-callback script-line abs-path)
-               (##register-module-descrs module-descrs)
-               (##load-modules
-                (##list->vector
-                 (##map (lambda (md)
-                          (##vector-last
-                           (macro-module-descr-supply-modules md)))
-                        (##vector->list module-descrs))))
-               (##path-unresolve abs-path))))))
-
-  (define (load-no-ext psettings path)
-    (let ((result (load-source psettings path)))
-      (if (##not (##fixnum? result))
-          result
-          (let loop1 ((version 1)
-                      (last-obj-file-path #f)
-                      (last-obj-file-info #f))
-            (let* ((resolved-path
-                    (##path-resolve
-                     (##string-append path
-                                      ".o"
-                                      (##number->string version 10))))
-                   (resolved-info
-                    (##file-info-aux resolved-path))
-                   (resolved-path-exists?
-                    (##not (##fixnum? resolved-info))))
-              (if resolved-path-exists?
-                  (loop1 (##fx+ version 1)
-                         resolved-path
-                         resolved-info)
-                  (if (and last-obj-file-path
-                           (##not ##load-source-if-more-recent))
-                      (load-binary last-obj-file-path)
-                      (let loop2 ((lst ##scheme-file-extensions))
-                        (if (##pair? lst)
-                            (let* ((src-file-path
-                                    (##string-append path (##caar lst)))
-                                   (src-file-info
-                                    (if (##string? src-file-path)
-                                        (##file-info-aux src-file-path)
-                                        0))
-                                   (src-file-path-exists?
-                                    (##not (##fixnum? src-file-info))))
-                              (if (##not src-file-path-exists?)
-                                  (loop2 (##cdr lst))
-                                  (if (or (##not last-obj-file-path)
-                                          (##fl<
-                                           (macro-time-point
-                                            (macro-file-info-last-modification-time
-                                             last-obj-file-info))
-                                           (macro-time-point
-                                            (macro-file-info-last-modification-time
-                                             src-file-info))))
-                                      (let ((x (load-source psettings src-file-path)))
-                                        (if (##fixnum? x)
-                                            (raise-os-exception-if-needed result)
-                                            x))
-                                      (load-binary last-obj-file-path))))
-                            (if last-obj-file-path
-                                (load-binary last-obj-file-path)
-                                (raise-os-exception-if-needed result)))))))))))
-
-  (define (binary-extension? ext)
-    (let ((len (##string-length ext)))
-      (and (##fx< 2 len)
-           (##char=? (##string-ref ext 0) #\.)
-           (##char=? (##string-ref ext 1) #\o)
-           (let ((c (##string-ref ext 2)))
-             (and (##char>=? c #\1) (##char<=? c #\9)
-                  (let loop ((i (##fx- len 1)))
-                    (if (##fx< i 3)
-                        #t
-                        (let ((c (##string-ref ext i)))
-                          (and (##char>=? c #\0) (##char<=? c #\9)
-                               (loop (##fx- i 1)))))))))))
-
-  (define (fail)
-    (##fail-check-string-or-settings 1 load path-or-settings))
-
-  (##make-input-path-psettings
-   (if (##string? path-or-settings)
-       (##list 'path: path-or-settings
-               'eol-encoding: 'cr-lf)
-       path-or-settings)
-   fail
-   (lambda (psettings)
-     (let ((path (macro-psettings-path psettings)))
-       (if (##not path)
-           (fail)
-           (let ((ext (##path-extension path)))
-             (cond ((##string=? ext "")
-                    (load-no-ext psettings path))
-                   ((binary-extension? ext)
-                    (let ((resolved-path (##path-resolve path)))
-                      (load-binary resolved-path)))
-                   (else
-                    (raise-os-exception-if-needed
-                     (load-source psettings path))))))))))
-
 (##include "_syntax-hygiene.scm")
 
 ; TODO: Combine `##compile-top` with syntax-expand's `##compile`
@@ -6630,5 +6462,27 @@
                  (plain-datum->core-syntax (##source-code src))
                  src)))
     (##compile-top top-cte (##syntax-expand ##syntax-interaction-cte src))))
+
+(define (##compile-inner-syntax inner-cte src)
+  (let ((src (if (and (##source? src) 
+                      (pair? (##source-code src))
+                      (not (##source? (car (##source-code src)))))
+                 ; adjust for "source2" case
+                 (plain-datum->core-syntax (##source-code src))
+                 src)))
+    (##compile-inner inner-cte (##syntax-expand ##syntax-interaction-cte src))))
+
+(define-prim (##eval-top-syntax src top-cte)
+  (let ((c (##compile-top-syntax top-cte
+                          (##sourcify src (##make-source #f #f)))))
+    (##setup-requirements-and-run c #f)))
+
+(define-prim (##eval-module-syntax src top-cte)
+  (let ((c (##compile-top-syntax top-cte
+                          (##sourcify src (##make-source #f #f)))))
+    (##setup-requirements-and-run c #f)))
+
+(##eval-top-set! ##eval-top-syntax)
+(##eval-module-set! ##eval-module-syntax)
 
 ;;;============================================================================
