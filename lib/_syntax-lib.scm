@@ -37,12 +37,12 @@
 (##add-new-macro! ##with-syntax
   (##eval-for-syntax-binding
     (plain-datum->core-syntax
-      '(##lambda (stx)
+      `(##lambda (stx)
         (##syntax-case stx ()
           ((_ ((p e) ...) b ...)
            (##syntax
              (##syntax-case (list e ...) ()
-               ((p ...) (##syntax (##begin b ...)))))))))
+               ((p ...) (##begin b ...))))))))
     ##syntax-interaction-cte))
 
 ;; TODO: extremly low performances

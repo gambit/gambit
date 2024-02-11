@@ -75,7 +75,7 @@
        (stx (plain-datum->syntax datum))
        (stx (add-scope stx core-scope)))
   (let ((evalued (##eval-for-syntax-binding stx cte)))
-    (check-equal? (syntax-source-code evalued) 0)))
+    (check-equal? evalued 0)))
 
 (let* ((cte ##syntax-interaction-cte)
        (datum `(##begin
@@ -89,7 +89,21 @@
        (stx (plain-datum->syntax datum))
        (stx (add-scope stx core-scope)))
   (let ((evalued (##eval-for-syntax-binding stx cte)))
-    (check-equal? (syntax-source-code evalued) #t)))
+    (check-equal? evalued #t)))
+
+(let* ((cte ##syntax-interaction-cte)
+       (datum `(##begin
+                 (##define-syntax t4
+                   (##lambda (s)
+                      (##syntax-case s ()
+                       ((_ a)
+                        (##with-syntax ((b (##syntax a)))
+                         (##syntax a))))))
+                 (t4 #t)))
+       (stx (plain-datum->syntax datum))
+       (stx (add-scope stx core-scope)))
+  (let ((evalued (##eval-for-syntax-binding stx cte)))
+    (check-equal? evalued #t)))
 
 (let* ((cte ##syntax-interaction-cte)
        (datum `(##begin
@@ -137,14 +151,5 @@
        (stx (add-scope stx core-scope)))
   (let ((evalued (##eval-for-syntax-binding stx cte)))
     (check-equal? evalued (list #t))))
-
-#;(let* ((cte ##syntax-interaction-cte)
-       (datum `(##begin
-                #;(##include "lib/_syntax/_source-match.scm")
-                (##include "15-syntax/01-source-match.scm")))
-       (stx (plain-datum->syntax datum))
-       (stx (add-scope stx core-scope)))
-  (let ((evalued (##eval-for-syntax-binding stx cte)))
-    (check-equal? evalued #t)))
 
 ;;;----------------------------------------------------------------------------

@@ -219,6 +219,9 @@
     (##add-new-macro! syntax-rules
       (##make-alias-syntax '##syntax-rules))
 
+    (##add-new-macro! with-syntax
+      (##make-alias-syntax '##with-syntax))
+
 ;;;----------------------------------------------------------------------------
 
     ;;; deactivate for `make checks` ; activate for `make ut`
