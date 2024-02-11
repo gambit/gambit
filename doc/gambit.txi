@@ -4114,7 +4114,12 @@ For example:
 
 @deffn procedure vector-fold @var{kons} @var{knil} @var{vec1} @var{vec2} @dots{}
 
-The procedure @var{kons} is iterated over each value in all of the vectors, stopping at the end of the shortest; @var{kons} is applied as @code{(@var{kons} state (vector-ref @var{vec1} i) (vector-ref @var{vec2} i) @dots{})} where @code{state} is the current state value---the current state value begins with @var{knil}, and becomes whatever @var{kons} returned on the previous iteration---and @code{i} is the current index.
+The procedure @var{kons} is iterated over each value in all of the vectors,
+stopping at the end of the shortest; @var{kons} is applied as
+@code{(@var{kons} state (vector-ref @var{vec1} i) (vector-ref @var{vec2} i) @dots{})},
+where @code{state} is the current state value---the current state value
+begins with @var{knil}, and becomes whatever @var{kons} returned on the
+previous iteration---and @code{i} is the current index.
 The iteration is strictly increasing in the index @code{i}, starting at 0.
 
 For example:
@@ -4143,6 +4148,31 @@ For example:
 
 @end deffn
 
+@deffn procedure vector-unfold @var{proc} @var{len} @var{initial-seed} @dots{}
+
+Returns a new vector of length @var{len}. @code{vector-unfold} iterates
+across each index @var{k} between @code{0} and @var{len}, applying
+@var{proc} at each iteration to the current index and current seeds,
+in that order, to receive @var{n + 1} values: first, the element
+to put in the @var{k}th slot of the new vector and @var{n} new seeds
+for the next iteration. It is an error for the number of seeds
+to vary between iterations.
+
+For example:
+
+@smallexample
+> @b{(vector-unfold values 0)}
+#()
+>  @b{(vector-unfold (lambda (k i j) (values j j (+ i j))) 10 1 1)}
+#(1 2 3 5 8 13 21 34 55 89)
+>  @b{(vector-unfold values 10)}
+#(0 1 2 3 4 5 6 7 8 9)
+>  @b{(define v '#(0 2 4 6 8))}
+>  @b{(vector-unfold (lambda (i) (vector-ref v i)) 3)}
+#(0 2 4)
+@end smallexample
+
+@end deffn
 
 
 @deffn procedure string-set @var{string} @var{k} @var{char}

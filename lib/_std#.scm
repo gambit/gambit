@@ -404,10 +404,6 @@
     (define vect-shrink!           (sym name '-shrink!))
     (define vect-map               (sym name '-map))
     (define vect-for-each          (sym name '-for-each))
-    (define vect-every             (sym name '-every))
-    (define vect-any               (sym name '-any))
-    (define vect-fold              (sym name '-fold))
-    (define vect-fold-right        (sym name '-fold-right))
 
     `(begin
 

@@ -1529,6 +1529,7 @@ vector-inc!
 vector-set
 vector-shrink!
 vector-swap!
+vector-unfold
 void
 will-execute!
 will-testator

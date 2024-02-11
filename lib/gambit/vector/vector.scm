@@ -219,406 +219,455 @@
 (define-procedure (vector-every (pred procedure)
 				(x vector)
 				(y vector) ...)
-  (let ()
 
-    (define (vect-every-1 x)
+  (define (vect-every-1 x)
 
-      (define (vect-every-1 i last)
-        (if (fx< i last)
-            (and (macro-auto-force (pred (vector-ref x i)))
-                 (vect-every-1 (fx+ i 1) last))
-            (pred (vector-ref x i))))  ;; last call in tail position
+    (define (vect-every-1 i last)
+      (if (fx< i last)
+          (and (macro-auto-force (pred (vector-ref x i)))
+               (vect-every-1 (fx+ i 1) last))
+          (pred (vector-ref x i))))  ;; last call in tail position
 
-      (let ((len (vector-length x)))
-        (or (fx= len 0)
-            (vect-every-1 0 (fx- len 1)))))
-
-    (define (vect-every-n len rev-x-y)
-
-      (define (get-args i)
-        (let loop ((lst rev-x-y)
-                   (args '()))
-          (if (pair? lst)
-              (loop (cdr lst)
-                    (cons
-                     (vector-ref (car lst) i)
-                     args))
-              args)))
-
-      (define (vect-every-n i last)
-        (if (fx< i last)
-            (and (macro-auto-force (apply pred (get-args i)))
-                 (vect-every-n (fx+ i 1) last))
-            (apply pred (get-args i))))  ;; last call in tail position
-
+    (let ((len (vector-length x)))
       (or (fx= len 0)
-          (vect-every-n 0 (fx- len 1))))
+          (vect-every-1 0 (fx- len 1)))))
 
-    (if (null? y)
-        (vect-every-1 x)
-        (if ##allow-length-mismatch?
+  (define (vect-every-n len rev-x-y)
 
-            (let ((len-x (vector-length x))
-                  (x-y (cons x y)))
-              (let loop ((lst y)
-                         (rev-x-y (cons x '()))
-                         (min-len len-x)
-                         (arg-num 3))
-                (if (pair? lst)
-                    (let ((arg (car lst)))
-                      (macro-force-vars (arg)
-                        (macro-check-vector
-                          arg
-                          arg-num
-                          (vector-every pred . x-y)
-                          (let ((len-arg
-                                 (vector-length arg)))
-                            (loop (cdr lst)
-                                  (cons arg rev-x-y)
-                                  (fxmin min-len len-arg)
-                                  (fx+ arg-num 1))))))
-                    (vect-every-n min-len rev-x-y))))
+    (define (get-args i)
+      (let loop ((lst rev-x-y)
+                 (args '()))
+        (if (pair? lst)
+            (loop (cdr lst)
+                  (cons
+                   (vector-ref (car lst) i)
+                   args))
+            args)))
 
-            (let ((len-x (vector-length x))
-                  (x-y (cons x y)))
-              (let loop ((lst y)
-                         (rev-x-y (cons x '()))
-                         (min-len len-x)
-                         (max-len len-x)
-                         (max-arg 2)
-                         (arg-num 3))
-                (if (pair? lst)
-                    (let ((arg (car lst)))
-                      (macro-force-vars (arg)
-                        (macro-check-vector
-                          arg
-                          arg-num
-                          (vector-every pred . x-y)
-                          (let ((len-arg
-                                 (vector-length arg)))
-                            (if (fx> len-arg max-len)
-                                (loop (cdr lst)
-                                      (cons arg rev-x-y)
-                                      len-arg
-                                      max-len
-                                      arg-num
-                                      (fx+ arg-num 1))
-                                (loop (cdr lst)
-                                      (cons arg rev-x-y)
-                                      (fxmin min-len
-                                             len-arg)
-                                      max-len
-                                      max-arg
-                                      (fx+ arg-num 1)))))))
-                    (if (fx= min-len max-len)
-                        (vect-every-n min-len rev-x-y)
-                        (##raise-length-mismatch-exception
-                         max-arg
-                         '()
-                         vector-every
-                         pred
-                         x-y)))))))))
+    (define (vect-every-n i last)
+      (if (fx< i last)
+          (and (macro-auto-force (apply pred (get-args i)))
+               (vect-every-n (fx+ i 1) last))
+          (apply pred (get-args i))))  ;; last call in tail position
+
+    (or (fx= len 0)
+        (vect-every-n 0 (fx- len 1))))
+
+  (if (null? y)
+      (vect-every-1 x)
+      (if ##allow-length-mismatch?
+
+          (let ((len-x (vector-length x))
+                (x-y (cons x y)))
+            (let loop ((lst y)
+                       (rev-x-y (cons x '()))
+                       (min-len len-x)
+                       (arg-num 3))
+              (if (pair? lst)
+                  (let ((arg (car lst)))
+                    (macro-force-vars (arg)
+                      (macro-check-vector
+                        arg
+                        arg-num
+                        (vector-every pred . x-y)
+                        (let ((len-arg
+                               (vector-length arg)))
+                          (loop (cdr lst)
+                                (cons arg rev-x-y)
+                                (fxmin min-len len-arg)
+                                (fx+ arg-num 1))))))
+                  (vect-every-n min-len rev-x-y))))
+
+          (let ((len-x (vector-length x))
+                (x-y (cons x y)))
+            (let loop ((lst y)
+                       (rev-x-y (cons x '()))
+                       (min-len len-x)
+                       (max-len len-x)
+                       (max-arg 2)
+                       (arg-num 3))
+              (if (pair? lst)
+                  (let ((arg (car lst)))
+                    (macro-force-vars (arg)
+                      (macro-check-vector
+                        arg
+                        arg-num
+                        (vector-every pred . x-y)
+                        (let ((len-arg
+                               (vector-length arg)))
+                          (if (fx> len-arg max-len)
+                              (loop (cdr lst)
+                                    (cons arg rev-x-y)
+                                    len-arg
+                                    max-len
+                                    arg-num
+                                    (fx+ arg-num 1))
+                              (loop (cdr lst)
+                                    (cons arg rev-x-y)
+                                    (fxmin min-len
+                                           len-arg)
+                                    max-len
+                                    max-arg
+                                    (fx+ arg-num 1)))))))
+                  (if (fx= min-len max-len)
+                      (vect-every-n min-len rev-x-y)
+                      (##raise-length-mismatch-exception
+                       max-arg
+                       '()
+                       vector-every
+                       pred
+                       x-y))))))))
 
 (define-procedure (vector-any (pred procedure)
 			      (x vector)
 			      (y vector) ...)
-  (let ()
 
-    (define (vect-any-1 x)
+  (define (vect-any-1 x)
 
-      (define (vect-any-1 i last)
-        (if (fx< i last)
-            (or (macro-auto-force (pred (vector-ref x i)))
-                (vect-any-1 (fx+ i 1) last))
-            (pred (vector-ref x i))))  ;; last call in tail position
+    (define (vect-any-1 i last)
+      (if (fx< i last)
+          (or (macro-auto-force (pred (vector-ref x i)))
+              (vect-any-1 (fx+ i 1) last))
+          (pred (vector-ref x i))))  ;; last call in tail position
 
-      (let ((len (vector-length x)))
-        (and (fx> len 0)
-             (vect-any-1 0 (fx- len 1)))))
-
-    (define (vect-any-n len rev-x-y)
-
-      (define (get-args i)
-        (let loop ((lst rev-x-y)
-                   (args '()))
-          (if (pair? lst)
-              (loop (cdr lst)
-                    (cons
-                     (vector-ref (car lst) i)
-                     args))
-              args)))
-
-      (define (vect-any-n i last)
-        (if (fx< i last)
-            (or (macro-auto-force (apply pred (get-args i)))
-                (vect-any-n (fx+ i 1) last))
-            (apply pred (get-args i))))  ;; last call in tail position
-
+    (let ((len (vector-length x)))
       (and (fx> len 0)
-           (vect-any-n 0 (fx- len 1))))
+           (vect-any-1 0 (fx- len 1)))))
 
-    (if (null? y)
-        (vect-any-1 x)
-        (if ##allow-length-mismatch?
+  (define (vect-any-n len rev-x-y)
 
-            (let ((len-x (vector-length x))
-                  (x-y (cons x y)))
-              (let loop ((lst y)
-                         (rev-x-y (cons x '()))
-                         (min-len len-x)
-                         (arg-num 3))
-                (if (pair? lst)
-                    (let ((arg (car lst)))
-                      (macro-force-vars (arg)
-                        (macro-check-vector
-                          arg
-                          arg-num
-                          (vector-any pred . x-y)
-                          (let ((len-arg
-                                 (vector-length arg)))
-                            (loop (cdr lst)
-                                  (cons arg rev-x-y)
-                                  (fxmin min-len len-arg)
-                                  (fx+ arg-num 1))))))
-                    (vect-any-n min-len rev-x-y))))
+    (define (get-args i)
+      (let loop ((lst rev-x-y)
+                 (args '()))
+        (if (pair? lst)
+            (loop (cdr lst)
+                  (cons
+                   (vector-ref (car lst) i)
+                   args))
+            args)))
 
-            (let ((len-x (vector-length x))
-                  (x-y (cons x y)))
-              (let loop ((lst y)
-                         (rev-x-y (cons x '()))
-                         (min-len len-x)
-                         (max-len len-x)
-                         (max-arg 2)
-                         (arg-num 3))
-                (if (pair? lst)
-                    (let ((arg (car lst)))
-                      (macro-force-vars (arg)
-                        (macro-check-vector
-                          arg
-                          arg-num
-                          (vector-any pred . x-y)
-                          (let ((len-arg
-                                 (vector-length arg)))
-                            (if (fx> len-arg max-len)
-                                (loop (cdr lst)
-                                      (cons arg rev-x-y)
-                                      len-arg
-                                      max-len
-                                      arg-num
-                                      (fx+ arg-num 1))
-                                (loop (cdr lst)
-                                      (cons arg rev-x-y)
-                                      (fxmin min-len
-                                             len-arg)
-                                      max-len
-                                      max-arg
-                                      (fx+ arg-num 1)))))))
-                    (if (fx= min-len max-len)
-                        (vect-any-n min-len rev-x-y)
-                        (##raise-length-mismatch-exception
-                         max-arg
-                         '()
-                         vector-any
-                         pred
-                         x-y)))))))))
+    (define (vect-any-n i last)
+      (if (fx< i last)
+          (or (macro-auto-force (apply pred (get-args i)))
+              (vect-any-n (fx+ i 1) last))
+          (apply pred (get-args i))))  ;; last call in tail position
+
+    (and (fx> len 0)
+         (vect-any-n 0 (fx- len 1))))
+
+  (if (null? y)
+      (vect-any-1 x)
+      (if ##allow-length-mismatch?
+
+          (let ((len-x (vector-length x))
+                (x-y (cons x y)))
+            (let loop ((lst y)
+                       (rev-x-y (cons x '()))
+                       (min-len len-x)
+                       (arg-num 3))
+              (if (pair? lst)
+                  (let ((arg (car lst)))
+                    (macro-force-vars (arg)
+                      (macro-check-vector
+                        arg
+                        arg-num
+                        (vector-any pred . x-y)
+                        (let ((len-arg
+                               (vector-length arg)))
+                          (loop (cdr lst)
+                                (cons arg rev-x-y)
+                                (fxmin min-len len-arg)
+                                (fx+ arg-num 1))))))
+                  (vect-any-n min-len rev-x-y))))
+
+          (let ((len-x (vector-length x))
+                (x-y (cons x y)))
+            (let loop ((lst y)
+                       (rev-x-y (cons x '()))
+                       (min-len len-x)
+                       (max-len len-x)
+                       (max-arg 2)
+                       (arg-num 3))
+              (if (pair? lst)
+                  (let ((arg (car lst)))
+                    (macro-force-vars (arg)
+                      (macro-check-vector
+                        arg
+                        arg-num
+                        (vector-any pred . x-y)
+                        (let ((len-arg
+                               (vector-length arg)))
+                          (if (fx> len-arg max-len)
+                              (loop (cdr lst)
+                                    (cons arg rev-x-y)
+                                    len-arg
+                                    max-len
+                                    arg-num
+                                    (fx+ arg-num 1))
+                              (loop (cdr lst)
+                                    (cons arg rev-x-y)
+                                    (fxmin min-len
+                                           len-arg)
+                                    max-len
+                                    max-arg
+                                    (fx+ arg-num 1)))))))
+                  (if (fx= min-len max-len)
+                      (vect-any-n min-len rev-x-y)
+                      (##raise-length-mismatch-exception
+                       max-arg
+                       '()
+                       vector-any
+                       pred
+                       x-y))))))))
 
 (define-procedure (vector-fold (kons procedure)
                                (knil object)
                                (x vector)
                                (y vector) ...)
-  (let ()
 
-    (define (vect-fold-1 x)
+  (define (vect-fold-1 x)
 
-      (define (vect-fold-1 state i)
-        (if (fx< i (vector-length x))
-            (vect-fold-1 (kons state (vector-ref x i))
-                         (fx+ i 1))
-            state))
+    (define (vect-fold-1 state i)
+      (if (fx< i (vector-length x))
+          (vect-fold-1 (kons state (vector-ref x i))
+                       (fx+ i 1))
+          state))
 
-      (vect-fold-1 knil 0))
+    (vect-fold-1 knil 0))
 
-    (define (vect-fold-n len rev-x-y)
+  (define (vect-fold-n len rev-x-y)
 
-      (define (vect-fold-n state i)
-        (if (fx< i len)
-            (let loop ((lst rev-x-y)
-                       (args '()))
+    (define (vect-fold-n state i)
+      (if (fx< i len)
+          (let loop ((lst rev-x-y)
+                     (args '()))
+            (if (pair? lst)
+                (loop (cdr lst)
+                      (cons
+                       (vector-ref (car lst) i)
+                       args))
+                (vect-fold-n (apply kons state args)
+                             (fx+ i 1))))
+          state))
+
+    (vect-fold-n knil 0))
+
+  (if (null? y)
+      (vect-fold-1 x)
+      (if ##allow-length-mismatch?
+
+          (let ((len-x (vector-length x))
+                (x-y (cons x y)))
+            (let loop ((lst y)
+                       (rev-x-y (cons x '()))
+                       (min-len len-x)
+                       (arg-num 4))
               (if (pair? lst)
-                  (loop (cdr lst)
-                        (cons
-                         (vector-ref (car lst) i)
-                         args))
-                  (vect-fold-n (apply kons state args)
-                               (fx+ i 1))))
-            state))
+                  (let ((arg (car lst)))
+                    (macro-force-vars (arg)
+                      (macro-check-vector
+                        arg
+                        arg-num
+                        (vector-fold kons knil . x-y)
+                        (let ((len-arg
+                               (vector-length arg)))
+                          (loop (cdr lst)
+                                (cons arg rev-x-y)
+                                (fxmin min-len len-arg)
+                                (fx+ arg-num 1))))))
+                  (vect-fold-n min-len rev-x-y))))
 
-      (vect-fold-n knil 0))
-
-    (if (null? y)
-        (vect-fold-1 x)
-        (if ##allow-length-mismatch?
-
-            (let ((len-x (vector-length x))
-                  (x-y (cons x y)))
-              (let loop ((lst y)
-                         (rev-x-y (cons x '()))
-                         (min-len len-x)
-                         (arg-num 4))
-                (if (pair? lst)
-                    (let ((arg (car lst)))
-                      (macro-force-vars (arg)
-                        (macro-check-vector
-                          arg
-                          arg-num
-                          (vector-fold kons knil . x-y)
-                          (let ((len-arg
-                                 (vector-length arg)))
-                            (loop (cdr lst)
-                                  (cons arg rev-x-y)
-                                  (fxmin min-len len-arg)
-                                  (fx+ arg-num 1))))))
-                    (vect-fold-n min-len rev-x-y))))
-
-            (let ((len-x (vector-length x))
-                  (x-y (cons x y)))
-              (let loop ((lst y)
-                         (rev-x-y (cons x '()))
-                         (min-len len-x)
-                         (max-len len-x)
-                         (max-arg 3)
-                         (arg-num 4))
-                (if (pair? lst)
-                    (let ((arg (car lst)))
-                      (macro-force-vars (arg)
-                        (macro-check-vector
-                          arg
-                          arg-num
-                          (vector-fold kons knil . x-y)
-                          (let ((len-arg
-                                 (vector-length arg)))
-                            (if (fx> len-arg max-len)
-                                (loop (cdr lst)
-                                      (cons arg rev-x-y)
-                                      len-arg
-                                      max-len
-                                      arg-num
-                                      (fx+ arg-num 1))
-                                (loop (cdr lst)
-                                      (cons arg rev-x-y)
-                                      (fxmin min-len
-                                             len-arg)
-                                      max-len
-                                      max-arg
-                                      (fx+ arg-num 1)))))))
-                    (if (fx= min-len max-len)
-                        (vect-fold-n min-len rev-x-y)
-                        (##raise-length-mismatch-exception
-                         max-arg
-                         '()
-                         vector-fold
-                         kons
-                         knil
-                         x-y)))))))))
+          (let ((len-x (vector-length x))
+                (x-y (cons x y)))
+            (let loop ((lst y)
+                       (rev-x-y (cons x '()))
+                       (min-len len-x)
+                       (max-len len-x)
+                       (max-arg 3)
+                       (arg-num 4))
+              (if (pair? lst)
+                  (let ((arg (car lst)))
+                    (macro-force-vars (arg)
+                      (macro-check-vector
+                        arg
+                        arg-num
+                        (vector-fold kons knil . x-y)
+                        (let ((len-arg
+                               (vector-length arg)))
+                          (if (fx> len-arg max-len)
+                              (loop (cdr lst)
+                                    (cons arg rev-x-y)
+                                    len-arg
+                                    max-len
+                                    arg-num
+                                    (fx+ arg-num 1))
+                              (loop (cdr lst)
+                                    (cons arg rev-x-y)
+                                    (fxmin min-len
+                                           len-arg)
+                                    max-len
+                                    max-arg
+                                    (fx+ arg-num 1)))))))
+                  (if (fx= min-len max-len)
+                      (vect-fold-n min-len rev-x-y)
+                      (##raise-length-mismatch-exception
+                       max-arg
+                       '()
+                       vector-fold
+                       kons
+                       knil
+                       x-y))))))))
 
 (define-procedure (vector-fold-right (kons procedure)
                                      (knil object)
                                      (x vector)
                                      (y vector) ...)
-  (let ()
 
-    (define (vect-fold-right-1 x)
+  (define (vect-fold-right-1 x)
 
-      (define (vect-fold-right-1 state i)
-        (if (fx< i 0)
-            state
-            (vect-fold-right-1 (kons state (vector-ref x i))
-                               (fx- i 1))))
+    (define (vect-fold-right-1 state i)
+      (if (fx< i 0)
+          state
+          (vect-fold-right-1 (kons state (vector-ref x i))
+                             (fx- i 1))))
 
-      (vect-fold-right-1 knil (fx- (vector-length x) 1)))
+    (vect-fold-right-1 knil (fx- (vector-length x) 1)))
 
-    (define (vect-fold-right-n len rev-x-y)
+  (define (vect-fold-right-n len rev-x-y)
 
-      (define (vect-fold-right-n state i)
-        (if (fx< i 0)
-            state
-            (let loop ((lst rev-x-y)
-                       (args '()))
+    (define (vect-fold-right-n state i)
+      (if (fx< i 0)
+          state
+          (let loop ((lst rev-x-y)
+                     (args '()))
+            (if (pair? lst)
+                (loop (cdr lst)
+                      (cons
+                       (vector-ref (car lst) i)
+                       args))
+                (vect-fold-right-n (apply kons state args)
+                                   (fx- i 1))))))
+
+    (vect-fold-right-n knil (fx- len 1)))
+
+  (if (null? y)
+      (vect-fold-right-1 x)
+      (if ##allow-length-mismatch?
+
+          (let ((len-x (vector-length x))
+                (x-y (cons x y)))
+            (let loop ((lst y)
+                       (rev-x-y (cons x '()))
+                       (min-len len-x)
+                       (arg-num 4))
               (if (pair? lst)
-                  (loop (cdr lst)
-                        (cons
-                         (vector-ref (car lst) i)
-                         args))
-                  (vect-fold-right-n (apply kons state args)
-                                     (fx- i 1))))))
+                  (let ((arg (car lst)))
+                    (macro-force-vars (arg)
+                      (macro-check-vector
+                        arg
+                        arg-num
+                        (vector-fold-right kons knil . x-y)
+                        (let ((len-arg
+                               (vector-length arg)))
+                          (loop (cdr lst)
+                                (cons arg rev-x-y)
+                                (fxmin min-len len-arg)
+                                (fx+ arg-num 1))))))
+                  (vect-fold-right-n min-len rev-x-y))))
 
-      (vect-fold-right-n knil (fx- len 1)))
+          (let ((len-x (vector-length x))
+                (x-y (cons x y)))
+            (let loop ((lst y)
+                       (rev-x-y (cons x '()))
+                       (min-len len-x)
+                       (max-len len-x)
+                       (max-arg 3)
+                       (arg-num 4))
+              (if (pair? lst)
+                  (let ((arg (car lst)))
+                    (macro-force-vars (arg)
+                      (macro-check-vector
+                        arg
+                        arg-num
+                        (vector-fold-right kons knil . x-y)
+                        (let ((len-arg
+                               (vector-length arg)))
+                          (if (fx> len-arg max-len)
+                              (loop (cdr lst)
+                                    (cons arg rev-x-y)
+                                    len-arg
+                                    max-len
+                                    arg-num
+                                    (fx+ arg-num 1))
+                              (loop (cdr lst)
+                                    (cons arg rev-x-y)
+                                    (fxmin min-len
+                                           len-arg)
+                                    max-len
+                                    max-arg
+                                    (fx+ arg-num 1)))))))
+                  (if (fx= min-len max-len)
+                      (vect-fold-right-n min-len rev-x-y)
+                      (##raise-length-mismatch-exception
+                       max-arg
+                       '()
+                       vector-fold-right
+                       kons
+                       knil
+                       x-y))))))))
 
-    (if (null? y)
-        (vect-fold-right-1 x)
-        (if ##allow-length-mismatch?
+(define-procedure (vector-unfold (proc procedure)
+                                 (len  index)
+                                 (seed object) ...)
 
-            (let ((len-x (vector-length x))
-                  (x-y (cons x y)))
-              (let loop ((lst y)
-                         (rev-x-y (cons x '()))
-                         (min-len len-x)
-                         (arg-num 4))
-                (if (pair? lst)
-                    (let ((arg (car lst)))
-                      (macro-force-vars (arg)
-                        (macro-check-vector
-                          arg
-                          arg-num
-                          (vector-fold-right kons knil . x-y)
-                          (let ((len-arg
-                                 (vector-length arg)))
-                            (loop (cdr lst)
-                                  (cons arg rev-x-y)
-                                  (fxmin min-len len-arg)
-                                  (fx+ arg-num 1))))))
-                    (vect-fold-right-n min-len rev-x-y))))
+  (define (vect-unfold-0)
 
-            (let ((len-x (vector-length x))
-                  (x-y (cons x y)))
-              (let loop ((lst y)
-                         (rev-x-y (cons x '()))
-                         (min-len len-x)
-                         (max-len len-x)
-                         (max-arg 3)
-                         (arg-num 4))
-                (if (pair? lst)
-                    (let ((arg (car lst)))
-                      (macro-force-vars (arg)
-                        (macro-check-vector
-                          arg
-                          arg-num
-                          (vector-fold-right kons knil . x-y)
-                          (let ((len-arg
-                                 (vector-length arg)))
-                            (if (fx> len-arg max-len)
-                                (loop (cdr lst)
-                                      (cons arg rev-x-y)
-                                      len-arg
-                                      max-len
-                                      arg-num
-                                      (fx+ arg-num 1))
-                                (loop (cdr lst)
-                                      (cons arg rev-x-y)
-                                      (fxmin min-len
-                                             len-arg)
-                                      max-len
-                                      max-arg
-                                      (fx+ arg-num 1)))))))
-                    (if (fx= min-len max-len)
-                        (vect-fold-right-n min-len rev-x-y)
-                        (##raise-length-mismatch-exception
-                         max-arg
-                         '()
-                         vector-fold-right
-                         kons
-                         knil
-                         x-y)))))))))
+    (define (vect-unfold-0 i)
+      (if (fx< i len)
+          (let* ((elt
+                  (proc i))
+                 (vect
+                  (vect-unfold-0 (fx+ i 1))))
+            (vector-set! vect i elt)
+            vect)
+          (make-vector len)))
+
+    (vect-unfold-0 0))
+
+  (define (vect-unfold-1 seed)
+
+    (define (vect-unfold-1 i seed)
+      (if (fx< i len)
+          (receive (elt new-seed)
+              (proc i seed)
+            (let ((vect
+                   (vect-unfold-1 (fx+ i 1) new-seed)))
+              (vector-set! vect i elt)
+              vect))
+          (make-vector len)))
+
+    (vect-unfold-1 0 seed))
+
+  (define (vect-unfold-n seeds)
+
+    (define (vect-unfold-n i seeds)
+      (if (fx< i len)
+          (receive (elt . new-seeds)
+              (apply proc i seeds)
+            (let ((vect
+                   (vect-unfold-n (fx+ i 1) new-seeds)))
+              (vector-set! vect i elt)
+              vect))
+          (make-vector len)))
+
+    (vect-unfold-n 0 seeds))
+
+  (cond ((null? seed)
+         (vect-unfold-0))
+        ((null? (cdr seed))
+         (vect-unfold-1 (car seed)))
+        (else
+         (vect-unfold-n seed))))
 
 (define bytevector?        u8vector?)
 (define make-bytevector    make-u8vector)

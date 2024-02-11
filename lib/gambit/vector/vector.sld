@@ -241,6 +241,7 @@ vector-set
 vector-set!
 vector-shrink!
 vector-swap!
+vector-unfold
 vector?
 )
 
