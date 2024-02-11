@@ -28,6 +28,8 @@
     This could be due to a "deeper" problem, however. 
 
 - Correctness
+  - Bugs:
+    - unknown bug with `full-name?`
   - serialise compilation environements.
   - Fix `define-library` by removing references to the old syntax system.
     - Some modules (from `make modules`) were not tested for correctness yet.
@@ -37,8 +39,6 @@
     with hygienically renamed identifiers.
   - rename `plain-datum->syntax` as `datum->syntax`
     rename `datum->syntax` as `source->syntax`.
-  - Bugs:
-    - unknown bug with `full-name?`
 
 ## Full Integration check-list:
 
