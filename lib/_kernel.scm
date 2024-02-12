@@ -5439,7 +5439,7 @@ end-of-code
                   (loop super)))))))
 
 (define-prim (##type? obj)
-  (##structure-direct-instance-of? obj (##type-id ##type-type)))
+  (##structure-instance-of? obj (##type-id ##type-type)))
 
 (define-prim (##structure-type obj)
   (##vector-ref obj 0))
