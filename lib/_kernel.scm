@@ -5401,7 +5401,7 @@ end-of-code
           #f ;; this structure's type descriptor is itself! (set later)
           '##type-5
           'type
-          '8
+          '26 ;; extensible|concrete|nongenerative
           '#f
           '#(id 1 #f name 5 #f flags 5 #f super 5 #f fields 5 #f))))
     (##structure-type-set! type-type type-type) ;; self reference
