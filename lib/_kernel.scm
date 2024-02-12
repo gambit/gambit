@@ -5388,7 +5388,8 @@ end-of-code
 ;;
 ;;   (define-type type
 ;;     id: ...special-type...
-;;     (id      unprintable: equality-test:)
+;;     extender: ...
+;;     (id      unprintable:)
 ;;     (name    unprintable: equality-skip:)
 ;;     (flags   unprintable: equality-skip:)
 ;;     (super   unprintable: equality-skip:)
@@ -5401,7 +5402,7 @@ end-of-code
           #f ;; this structure's type descriptor is itself! (set later)
           '##type-5
           'type
-          '8
+          '26 ;; extensible|concrete|nongenerative
           '#f
           '#(id 1 #f name 5 #f flags 5 #f super 5 #f fields 5 #f))))
     (##structure-type-set! type-type type-type) ;; self reference
@@ -5439,7 +5440,7 @@ end-of-code
                   (loop super)))))))
 
 (define-prim (##type? obj)
-  (##structure-direct-instance-of? obj (##type-id ##type-type)))
+  (##structure-instance-of? obj (##type-id ##type-type)))
 
 (define-prim (##structure-type obj)
   (##vector-ref obj 0))
