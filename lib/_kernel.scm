@@ -5388,7 +5388,8 @@ end-of-code
 ;;
 ;;   (define-type type
 ;;     id: ...special-type...
-;;     (id      unprintable: equality-test:)
+;;     extender: ...
+;;     (id      unprintable:)
 ;;     (name    unprintable: equality-skip:)
 ;;     (flags   unprintable: equality-skip:)
 ;;     (super   unprintable: equality-skip:)
