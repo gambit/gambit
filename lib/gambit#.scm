@@ -1173,6 +1173,7 @@ vector->bits
 vector-any
 vector-cas!
 vector-concatenate
+vector-cumulate
 vector-every
 vector-fold
 vector-fold-right
@@ -1181,6 +1182,7 @@ vector-set
 vector-shrink!
 vector-swap!
 vector-unfold
+vector-unfold-right
 void
 will-execute!
 will-testator

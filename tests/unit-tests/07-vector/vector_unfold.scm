@@ -20,5 +20,7 @@
 (check-tail-exn type-exception? (lambda () (vector-unfold 4 4)))
 (check-tail-exn type-exception? (lambda () (vector-unfold values 'a)))
 
+(check-tail-exn range-exception? (lambda () (vector-unfold values -1)))
+
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector-unfold)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector-unfold values)))

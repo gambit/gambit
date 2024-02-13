@@ -228,6 +228,7 @@ vector-cas!
 vector-concatenate
 vector-copy
 vector-copy!
+vector-cumulate
 vector-every
 vector-fill!
 vector-fold
@@ -242,6 +243,7 @@ vector-set!
 vector-shrink!
 vector-swap!
 vector-unfold
+vector-unfold-right
 vector?
 )
 

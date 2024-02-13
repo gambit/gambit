@@ -669,6 +669,70 @@
         (else
          (vect-unfold-n seed))))
 
+(define-procedure (vector-unfold-right (proc procedure)
+                                       (len  index)
+                                       (seed object) ...)
+
+  (define (vect-unfold-right-0)
+
+    (define (vect-unfold-right-0 i)
+      (if (fx< i 0)
+          (make-vector len)
+          (let* ((elt
+                  (proc i))
+                 (vect
+                  (vect-unfold-right-0 (fx- i 1))))
+            (vector-set! vect i elt)
+            vect)))
+
+    (vect-unfold-right-0 (fx- len 1)))
+
+  (define (vect-unfold-right-1 seed)
+
+    (define (vect-unfold-right-1 i seed)
+      (if (fx< i 0)
+          (make-vector len)
+          (receive (elt new-seed)
+              (proc i seed)
+            (let ((vect
+                   (vect-unfold-right-1 (fx- i 1) new-seed)))
+              (vector-set! vect i elt)
+              vect))))
+
+    (vect-unfold-right-1 (fx- len 1) seed))
+
+  (define (vect-unfold-right-n seeds)
+
+    (define (vect-unfold-right-n i seeds)
+      (if (fx< i 0)
+          (make-vector len)
+          (receive (elt . new-seeds)
+              (apply proc i seeds)
+            (let ((vect
+                   (vect-unfold-right-n (fx- i 1) new-seeds)))
+              (vector-set! vect i elt)
+              vect))))
+
+    (vect-unfold-right-n 0 seeds))
+
+  (cond ((null? seed)
+         (vect-unfold-right-0))
+        ((null? (cdr seed))
+         (vect-unfold-right-1 (car seed)))
+        (else
+         (vect-unfold-right-n seed))))
+
+(define-procedure (vector-cumulate (proc procedure)
+                                   (knil object)
+                                   (vec  vector))
+  (let loop ((i 0)
+             (val knil))
+    (if (fx< i (vector-length vec))
+        (let* ((new-val (proc val (vector-ref vec i)))
+               (new-vec (loop (fx+ i 1) new-val)))
+          (vector-set! new-vec i new-val))
+        (make-vector (vector-length vec)))))
+
 (define bytevector?        u8vector?)
 (define make-bytevector    make-u8vector)
 (define bytevector         u8vector)

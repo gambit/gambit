@@ -4148,6 +4148,23 @@ For example:
 
 @end deffn
 
+@deffn procedure vector-cumulate @var{proc} @var{knil} @var{vec}
+
+Returns a newly allocated vector @var{new} with the same length as @var{vec}.
+The @var{i}th element of @var{new} is set to the result of invoking
+@var{proc} on the @var{i}-1'st element of @var{new} and the @var{i}th
+element of @var{vec}, except that on the first call of @var{proc} the
+first argument is @var{knil}.  The vector @var{new} is returned.
+
+For example:
+
+@smallexample
+>  @b{(vector-cumulate + 0 '#(3 1 4 1 5 9 2 5 6))}
+#(3 4 8 9 14 23 25 30 36)
+@end smallexample
+
+@end deffn
+
 @deffn procedure vector-unfold @var{proc} @var{len} @var{initial-seed} @dots{}
 
 Returns a new vector of length @var{len}. @code{vector-unfold} iterates
@@ -4174,6 +4191,23 @@ For example:
 
 @end deffn
 
+@deffn procedure vector-unfold-right @var{proc} @var{len} @var{initial-seed} @dots{}
+
+Like @code{vector-unfold}, but it uses @var{proc} to generate elements
+from right to left, rather than left to right.  The first index used is
+@var{len}-1.
+
+For example:
+
+@smallexample
+> @b{(vector-unfold-right (lambda (i x) (values (cons i x) (+ x 1))) 5 0){
+#((0 . 4) (1 . 3) (2 . 2) (3 . 1) (4 . 0))
+> @b{(define vec '#(0 1 2 3 4))}
+> @b{(vector-unfold-right (lambda (i x) (values (vector-ref vec x) (+ x 1))) (vector-length vec) 0)}
+#(4 3 2 1 0)
+@end smallexample
+
+@end deffn
 
 @deffn procedure string-set @var{string} @var{k} @var{char}
 
