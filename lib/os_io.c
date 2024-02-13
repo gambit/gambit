@@ -4662,7 +4662,7 @@ ___HIDDEN int tls_threading_setup
 
 #if OPENSSL_VERSION_NUMBER < 0x10001000L
   CRYPTO_set_id_callback (tls_id_function);
-#elseif
+#else
   CRYPTO_THREADID_set_callback (tls_id_function);
 #endif
   CRYPTO_set_locking_callback (tls_locking_function);
@@ -4684,7 +4684,7 @@ ___HIDDEN int tls_threading_cleanup
 
 #if OPENSSL_VERSION_NUMBER < 0x10001000L
   CRYPTO_set_id_callback (NULL);
-#elseif
+#else
   CRYPTO_THREADID_set_callback (NULL);
 #endif
   CRYPTO_set_locking_callback (NULL);
