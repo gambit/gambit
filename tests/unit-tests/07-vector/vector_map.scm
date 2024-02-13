@@ -7,7 +7,7 @@
 (define vect2 (vector 11 22))
 
 (define (inc x) (+ x 1))
-(define (add x y) (+ x y))
+(define add +)
 
 (check-equal? (vector-map inc vect0) '#())
 (check-equal? (vector-map inc vect1) '#(12))
@@ -42,3 +42,6 @@
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector-map)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector-map inc)))
+
+(set! ##allow-length-mismatch? #f)
+(check-tail-exn length-mismatch-exception? (lambda () (vector-map add '#(1) '#(1 2) '#(1))))

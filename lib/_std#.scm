@@ -1262,8 +1262,8 @@ end-of-code
                                                  (if (##fx> len-arg max-len)
                                                      (loop (##cdr lst)
                                                            (##cons arg rev-x-y)
+                                                           min-len
                                                            len-arg
-                                                           max-len
                                                            arg-num
                                                            (##fx+ arg-num 1))
                                                      (loop (##cdr lst)
@@ -1360,8 +1360,8 @@ end-of-code
                                                  (if (##fx> len-arg max-len)
                                                      (loop (##cdr lst)
                                                            (##cons arg rev-x-y)
+                                                           min-len
                                                            len-arg
-                                                           max-len
                                                            arg-num
                                                            (##fx+ arg-num 1))
                                                      (loop (##cdr lst)
