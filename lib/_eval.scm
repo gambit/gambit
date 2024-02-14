@@ -654,7 +654,7 @@
              (lambda (scp _)
                (not (and (##hash-set-hamt-has-key? scps2 scp)
                          (##set! l (+ l 1)))))))
-         (fx= l (##length (##hash-set-hamt->list scps2))))))
+         (fx= l (##hash-set-hamt-length scps2)))))
 
 ; TODO: compiler fail to serialize (see test/unit-test/05-serdes/serdes.scm)
 (define (##global-binding-table-id-equal? obj1 obj2)

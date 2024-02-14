@@ -20,12 +20,7 @@
     performances are satisfaying.
 
 - Performance
-  - (In progress)
-    Investigate the non-linear comportment of
-    `define-macro`. The problem might be arising from
-    a poor handling of top-level macro definitions in local
-    context (possible inersion in lookup order / cte construction). 
-    This could be due to a "deeper" problem, however. 
+  - general optimizations
 
 - Correctness
   - Bugs:
