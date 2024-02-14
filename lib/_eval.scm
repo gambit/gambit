@@ -624,7 +624,7 @@
   ##hash-set-hamt-alist-ref
   ##hash-set-hamt-alist-remove
   #f
-  eq? 
+  ##eq? 
   eq?-hash)
 
 (implement-hash-set-hamt)
@@ -633,8 +633,11 @@
   (##hash-set-hamt-ref hamt key))
      
 (define (##hash-set-hamt-length hamt)
-  (length (##hash-set-hamt->list hamt))
-  #;(##hash-set-hamt-fold (lambda (acc _) (+ acc 1)) 0 hamt))
+  (##hash-set-hamt-fold
+    hamt
+    (lambda (acc key _)
+      (+ acc 1))
+    0))
 
 (define (##hash-set-hamt-subset? scps1 scps2)
   (not
@@ -643,19 +646,24 @@
      (lambda (scp _)
        (not (##hash-set-hamt-has-key? scps2 scp))))))
 
-; TODO: optimize
 (define (##hash-set-hamt-equal? scps1 scps2)
-  (and (##hash-set-hamt-subset? scps1 scps2)
-       (##hash-set-hamt-subset? scps2 scps1)))
+  (let ((l 0))
+    (and (not
+           (##hash-set-hamt-search
+             scps1
+             (lambda (scp _)
+               (not (and (##hash-set-hamt-has-key? scps2 scp)
+                         (##set! l (+ l 1)))))))
+         (fx= l (##length (##hash-set-hamt->list scps2))))))
 
 ; TODO: compiler fail to serialize (see test/unit-test/05-serdes/serdes.scm)
 (define (##global-binding-table-id-equal? obj1 obj2)
-  (and (vector? obj1)
-       (fx>= (vector-length obj1) 4)
-       (vector? obj2)
-       (fx>= (vector-length obj2) 4)
-       (equal? (##source-code obj1)
-               (##source-code obj2))
+  (and (##vector? obj1)
+       (##fx>= (##vector-length obj1) 4)
+       (##vector? obj2)
+       (##fx>= (##vector-length obj2) 4)
+       (##equal? (##source-code obj1)
+                 (##source-code obj2))
        (##hash-set-hamt-equal? (##source-scopes obj1)
                                (##source-scopes obj2))))
 
@@ -3011,7 +3019,7 @@
     (or rest-parameter (list)))
 
   (let ((orig-parms (##source-code parms-src)))
-    (syntax-source-code-update parms-src 
+    (##syntax-source-code-update parms-src 
       (lambda (orig-parms)
         (reconstruct-required-parms orig-parms required-parameters)))))
 
@@ -6482,7 +6490,7 @@
                           (##sourcify src (##make-source #f #f)))))
     (##setup-requirements-and-run c #f)))
 
-(##eval-top-set! ##eval-top-syntax)
+(##eval-top-set!    ##eval-top-syntax)
 (##eval-module-set! ##eval-module-syntax)
 
 ;;;============================================================================

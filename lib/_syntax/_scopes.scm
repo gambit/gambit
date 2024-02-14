@@ -68,16 +68,9 @@
       (scopes-insert scps scp)))
 
 (define-prim&proc (scopes-subset? (scps1 scopes) (scps2 scopes))
-  (not
-    (##hash-set-hamt-search
-     scps1
-     (lambda (scp _)
-       (not (##hash-set-hamt-has-key? scps2 scp))))))
+  (##hash-set-hamt-subset? scps1 scps2))
 
 (define-prim&proc (scopes-equal? obj1 obj2)
-  ; TODO: optimize
-  (and (##hash-set-hamt? obj1) (##hash-set-hamt? obj2)
-       (scopes-subset? obj1 obj2)
-       (scopes-subset? obj2 obj1)))
+  (##hash-set-hamt-equal? obj1 obj2))
   
 ;;;============================================================================

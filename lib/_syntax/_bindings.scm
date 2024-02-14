@@ -55,19 +55,21 @@
   (define (find-all-matching-bindings id)
     (let* ((id-identifier (##syntax-source-code id))
            (id-scopes     (syntax-source-scopes id)))
-      ; TODO: use HAMT's fold
-      (fold (lambda (candidate-id-key acc)
-              (let ((candidate-id (car candidate-id-key)))
-                (if (and (equal? (##syntax-source-code candidate-id)
-                                 id-identifier)
-                         (##scopes-subset? 
-                           (syntax-source-scopes candidate-id) 
-                           id-scopes))
-                    (cons candidate-id acc)
-                    acc)))
-            '()
-            (let ((r (##table->list (##cte-top-cte-global-binding-table cte))))
-              r))))
+      (##table-foldl 
+        (lambda (base next) 
+          (if next
+              (cons next base)
+              base))
+        '()
+        (lambda (candidate-id _)
+          (if (and (equal? (##syntax-source-code candidate-id)
+                           id-identifier)
+                   (##scopes-subset?
+                         (syntax-source-scopes candidate-id)
+                         id-scopes))
+              candidate-id
+              #f))
+       (##cte-top-cte-global-binding-table cte))))
 
   (define (check-unambiguous max-id candidate-ids)
     (or (null? candidate-ids)
@@ -111,7 +113,7 @@
 (define (resolve-local id cte)
   ; in local ctx, try resolving the "plain" identifier
   ; before renaming according to namespace in scope.
-  (or (resolve-id id cte)
+  (or (##resolve-id id cte)
       (resolve-global id cte)))
 
 ;;;============================================================================

@@ -41,19 +41,4 @@
 (define (eval-for-syntax-binding rhs cte #!optional debug?)
   (##eval-for-syntax-binding rhs cte debug?))
 
-;;;----------------------------------------------------------------------------
-
-(define (##eval-top-syntax src top-cte)
-  (let ((c (##compile-top-syntax top-cte
-                          (##sourcify src (##make-source #f #f)))))
-    (##setup-requirements-and-run c #f)))
-
-(define-prim (##eval-module-syntax src top-cte)
-  (let ((c (##compile-top-syntax top-cte
-                          (##sourcify src (##make-source #f #f)))))
-    (##setup-requirements-and-run c #f)))
-
-(##eval-top-set! ##eval-top-syntax)
-(##eval-module-set! ##eval-module-syntax)
-
 ;;;===========================================================================
