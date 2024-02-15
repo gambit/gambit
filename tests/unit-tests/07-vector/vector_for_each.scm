@@ -103,3 +103,6 @@
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector-for-each)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector-for-each one)))
+
+(set! ##allow-length-mismatch? #f)
+(check-tail-exn length-mismatch-exception? (lambda () (vector-for-each one '#(1) '#(1 2) '#(1))))
