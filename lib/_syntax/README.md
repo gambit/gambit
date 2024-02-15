@@ -28,8 +28,6 @@
   - serialise compilation environements.
   - Fix `define-library` by removing references to the old syntax system.
     - Some modules (from `make modules`) were not tested for correctness yet.
-  - use `free-identitifer?` for literals in `syntax-case`.
-    - this was ommited when refactoring syntax-case.
   - Fix `make checks` as the string comparaison doesn't work anymore 
     with hygienically renamed identifiers.
   - rename `plain-datum->syntax` as `datum->syntax`

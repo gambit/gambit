@@ -153,3 +153,55 @@
     (check-equal? evalued (list #t))))
 
 ;;;----------------------------------------------------------------------------
+
+;;; issue 636
+;;;
+(let* ((cte ##syntax-interaction-cte)
+       (datum `(##begin
+                 (define-syntax foo 
+                   (syntax-rules (++) 
+                     ((_ x ++ y) (list x 1 1 y))))
+                 (foo 'a ++ 'b)))
+       (stx (plain-datum->core-syntax datum)))
+  (check-equal?
+    (##eval-for-syntax-binding stx cte)
+    (list 'a 1 1 'b)))
+(let* ((cte ##syntax-interaction-cte)
+       (datum `(##begin
+                 (define-syntax foo 
+                   (syntax-rules (++) 
+                     ((_ x ++ y) (list x 1 1 y))))
+                 (let ((++ 10)) (foo 1 ++ 2))))
+       (stx (plain-datum->core-syntax datum)))
+  (check-exn 
+    error-exception?
+    (lambda ()
+      (##eval-for-syntax-binding stx cte))))
+
+;;; issue #880
+(let* ((cte ##syntax-interaction-cte)
+       (datum `(##begin
+                 (##define-syntax if+
+                   (##syntax-rules (then else)
+                     ((_ test then expr1 else expr2) (if test expr1 expr2))))
+                 (let ((else #f) (x 10))
+                   (if+ (even? x) then (/ x 2) else (/ (+ x 1) 2)))))
+       (stx (plain-datum->core-syntax datum)))
+  (check-exn 
+    error-exception?
+    (lambda ()
+      (##eval-for-syntax-binding stx cte))))
+(let* ((cte ##syntax-interaction-cte)
+       (datum `(##begin
+                 (##define-syntax if+
+                   (##syntax-rules (then else)
+                     ((_ test then expr1 else expr2) (if test expr1 expr2))))
+                 (define else #f)
+                 (let ((el_se #f) (x 10))
+                   (if+ (even? x) then (/ x 2) else (/ (+ x 1) 2)))))
+       (stx (plain-datum->core-syntax datum)))
+  (check-equal?
+    (##eval-for-syntax-binding stx cte)
+    5))
+
+;;;----------------------------------------------------------------------------

@@ -32,13 +32,22 @@
                       (syntax-source-scopes id2))))
 
 
-(define (free-identitifer? id1 id2)
-  ; TODO copy back
-  #t
-)
+(define-prim&proc (bound-identifier=? id1 id2)
+  ;;; r6rs
+  ;;; 
+  (and (##identifier? id1)
+       (##identifier? id2)
+       (##equal? (##syntax-source-code id1)
+                 (##syntax-source-code id2))
+       (##scopes-equal? (##syntax-source-scopes id1)
+                        (##syntax-source-scopes id2))))
 
-(define (bound-identifier? id1 id2)
-  ; TODO copy back
-  #f)
+(define-prim&proc (free-identifier=? id1 id2)
+  ;;; r6rs
+  ;;;
+  (and (##identifier? id1)
+       (##identifier? id2)
+       (##equal? (##resolve-id id1 ##syntax-interaction-cte)
+                 (##resolve-id id2 ##syntax-interaction-cte))))
 
 ;;;============================================================================

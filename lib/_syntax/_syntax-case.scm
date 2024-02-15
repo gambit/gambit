@@ -234,17 +234,19 @@
        (list binding)))
 
   (define (expand-clause-cond-literal literals condition expr)
-    ;; TODO: use free-identifier?
-    `(and (equal? (syntax-source-code ,expr) ,condition) (list)))
+    (##pretty-print expr) (##pretty-print condition)
+    `(and (##free-identifier=? ,expr 
+                               ,(##make-syntax-source condition #f))
+          (list)))
 
   (match-source condition ()
    ((_ . _)
     (expand-clause-cond-list literals condition `(if (pair? ,expr) ,expr (syntax-source-code ,expr))))
    (_ when (and (identifier? condition)
-                 (not (member (syntax-source-code condition) literals)))
+                 (not (member (syntax-source-code condition) (map ##syntax-source-code literals))))
     (expand-clause-cond-identifier literals condition expr))
    (_
-    (expand-clause-cond-literal literals `',condition expr))))
+    (expand-clause-cond-literal literals condition expr))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -282,9 +284,7 @@
        (##expand
        (plain-datum->core-syntax
          `((lambda (,expr-id) 
-             ,(expand-clauses (map (lambda (literal) 
-                                     (syntax-source-code literal)) 
-                                   (syntax-source-code literals)) 
+             ,(expand-clauses (syntax-source-code literals)
                               expr-id 
                               clauses))
            ,expr)

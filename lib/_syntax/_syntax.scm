@@ -213,6 +213,9 @@
     (##add-new-macro! define-top-level-syntax
       (##make-alias-syntax '##define-top-level-syntax))
 
+    (##add-new-macro! syntax
+      (##make-alias-syntax '##syntax))
+
     (##add-new-macro! syntax-case
       (##make-alias-syntax '##syntax-case))
 
@@ -231,6 +234,7 @@
     (##add-new-core-macro! ##define-top-level-syntax ##expand-define-top-level-syntax)
     (##add-new-core-macro! ##quote-syntax ##expand-quote-syntax)
     (##add-new-core-macro! quote-syntax ##expand-quote-syntax)
+    (##add-new-core-macro! ##syntax ##expand-quote-syntax)
 
     (##add-new-core-macro! ##quote ##expand-quote)
     (##add-new-core-macro! quote ##expand-quote)
