@@ -8,7 +8,7 @@
 (define vect3 '#(11 22 33))
 
 (define (inc x) (+ x 1))
-(define (add x y) (+ x y))
+(define add +)
 
 (check-equal? (vector-every + vect0 vect2) #t)
 (check-equal? (vector-every + vect1 vect2) 22)
@@ -21,3 +21,6 @@
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector-every)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector-every inc)))
+
+(set! ##allow-length-mismatch? #f)
+(check-tail-exn length-mismatch-exception? (lambda () (vector-every add '#(1) '#(1 2) '#(1))))
