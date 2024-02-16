@@ -27,23 +27,24 @@
 (define (##syntax-case-binding-value binding)
   (caddr binding))
 
-(define (##syntax-case-binding-combine bindingss)
+(define (##syntax-case-binding-combine bindings-list)
 
-  (if (or (not (list? bindingss))
-          (= (length bindingss) 0))
-      (error "internal: ill formed bindings (combine bindings)"))
+  (if (or (not (list? bindings-list))
+          (and (list? bindings-list) (= (length bindings-list) 0)))
+      (error "internal: ill formed bindings (combine bindings): "))
 
-  (apply
-    map
-    (lambda bindings
-      (let ((var (##syntax-case-binding-var (car bindings)))
-            (level (##syntax-case-binding-level (car bindings)))
-            (binding-value (map ##syntax-case-binding-value bindings)))
-        (##make-syntax-case-binding (fx+ level 1) var binding-value)))
-    bindingss))
+    (apply
+      ##map
+      (lambda bindings
+        (let ((var (##syntax-case-binding-var (car bindings)))
+              (level (##syntax-case-binding-level (car bindings)))
+              (binding-value (##map ##syntax-case-binding-value bindings)))
+          (##make-syntax-case-binding (fx+ level 1) var binding-value)))
+      bindings-list))
+        
 
 (define (##syntax-case-binding-lookup bindings id)
-  (let ((r (assoc id (map cdr bindings))))
+  (let ((r (assoc id (##map cdr bindings))))
     (if r 
         (cadr r)
         (##error "syntax-case: internal not found binding"))))
@@ -68,21 +69,21 @@
             (> c-lvl 0)
             (> lvl 0))
        (list c-lvl
-             `(map (lambda (c)
+             `(##map (lambda (c)
                      ,(cadr (expand-constructor-update (- lvl 1) e-lvl e (- c-lvl 1) c)))
                    ,c)))
       ((and (> e-lvl 0)
             (= c-lvl 0)
             (> lvl 0))
        (list (+ c-lvl 1)
-             `(map (lambda (e)
+             `(##map (lambda (e)
                     ,(cadr (expand-constructor-update (- lvl 1) (- e-lvl 1) 'e c-lvl c)))
                   ,e)))
       ((and (> e-lvl 0)
             (> c-lvl 0)
             (> lvl 0))
        (list c-lvl
-             `(map (lambda (c e)
+             `(##map (lambda (c e)
                     ,(cadr (expand-constructor-update (- lvl 1) (- e-lvl 1) 'e (- c-lvl 1) 'c)))
                   ,c
                   ,e)))
@@ -174,7 +175,7 @@
 
   (match-source condition (...)
     ((var ... . rst)
-     (append (map (lambda (b)
+     (append (##map (lambda (b)
                     (list (car b)
                           (fx+ (cadr b) 1)))
                   (expand-clause-cond-compile-bindings literals var))
@@ -194,10 +195,21 @@
   ; match expression and get bindings at exec time
 
   (define (expand-clause-cond-ellipsis literals condition exprs)
-    `(and (list? ,exprs)
-          (##syntax-case-binding-combine (map (lambda (expr)
-                                                ,(expand-clause-cond literals condition 'expr))
-                                              (##reverse (##reverse ,exprs))))))
+    `(if (null? ,exprs)
+         (list
+           (##make-syntax-case-binding 
+             1 
+             ',condition
+             (list)))
+         (and (list? ,exprs)
+              (##syntax-case-binding-combine 
+                 (##map 
+                   (lambda (expr)
+                     ,(expand-clause-cond 
+                        literals 
+                        condition 
+                        'expr))
+                   (##reverse (##reverse ,exprs)))))))
 
   (define (expand-clause-cond-list literals condition exprs)
     (match-source condition (...)
@@ -234,7 +246,6 @@
        (list binding)))
 
   (define (expand-clause-cond-literal literals condition expr)
-    (##pretty-print expr) (##pretty-print condition)
     `(and (##free-identifier=? ,expr 
                                ,(##make-syntax-source condition #f))
           (list)))
@@ -243,7 +254,10 @@
    ((_ . _)
     (expand-clause-cond-list literals condition `(if (pair? ,expr) ,expr (syntax-source-code ,expr))))
    (_ when (and (identifier? condition)
-                 (not (member (syntax-source-code condition) (map ##syntax-source-code literals))))
+
+                 (not (member (syntax-source-code condition) 
+                               ; assuming there won't be more tha 1-2-3 literals ...
+                              (##map ##syntax-source-code literals))))
     (expand-clause-cond-identifier literals condition expr))
    (_
     (expand-clause-cond-literal literals condition expr))))
