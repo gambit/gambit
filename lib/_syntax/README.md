@@ -20,6 +20,8 @@
     performances are satisfaying.
 
 - Performance
+  - syntax-case optimizations
+    - literals
   - general optimizations
 
 - Correctness
