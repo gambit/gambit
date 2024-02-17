@@ -52,29 +52,4 @@
        (##equal?(##resolve-id id1 ##syntax-interaction-cte)
                 (##resolve-id id2 ##syntax-interaction-cte))))
 
-(define-prim&proc (free-identifier-member? id1 ids)
-  (and (##identifier? id1)                
-       (let loop ((ids ids)
-                  (sym-id1 (##syntax-source-code id1))
-                  (resolved-id1 #f))
-         (cond
-           ((pair? ids)
-            (let ((id2 (car ids))
-                  (ids (cdr ids)))
-              (if (and (##identifier? id2)
-                       (equal? sym-id1 
-                               (syntax-source-code id2)))
-                  (let ((resolved-id1 
-                          (or resolved-id1
-                              (##resolve-id 
-                                id1 
-                                ##syntax-interaction-cte)))
-                        (resolved-id2 
-                          (##resolve-id 
-                            id2 
-                            ##syntax-interaction-cte)))
-                    (or (##equal? resolved-id1 resolved-id2)
-                        (loop ids resolved-id1)))
-                  (loop ids resolved-id1))))))))
-
 ;;;============================================================================
