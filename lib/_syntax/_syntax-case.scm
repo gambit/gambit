@@ -31,16 +31,16 @@
 
   (if (or (not (list? bindings-list))
           (and (list? bindings-list) (= (length bindings-list) 0)))
-      (error "internal: ill formed bindings (combine bindings): "))
+      (error "internal: ill formed bindings (combine bindings)"))
 
-    (apply
-      ##map
-      (lambda bindings
-        (let ((var (##syntax-case-binding-var (car bindings)))
-              (level (##syntax-case-binding-level (car bindings)))
-              (binding-value (##map ##syntax-case-binding-value bindings)))
-          (##make-syntax-case-binding (fx+ level 1) var binding-value)))
-      bindings-list))
+  (apply
+    ##map
+    (lambda bindings
+      (let ((var (##syntax-case-binding-var (car bindings)))
+            (level (##syntax-case-binding-level (car bindings)))
+            (binding-value (##map ##syntax-case-binding-value bindings)))
+        (##make-syntax-case-binding (fx+ level 1) var binding-value)))
+    bindings-list))
         
 
 (define (##syntax-case-binding-lookup bindings id)
@@ -237,7 +237,9 @@
           (else
             #f))))
       (()
-       ''())
+       `(and (null? ,exprs)
+             '()))
+
       (_
        (expand-clause-cond literals condition exprs))))
 
@@ -249,18 +251,18 @@
     `(and (##free-identifier=? ,expr 
                                ,(##make-syntax-source condition #f))
           (list)))
-
   (match-source condition ()
    ((_ . _)
     (expand-clause-cond-list literals condition `(if (pair? ,expr) ,expr (syntax-source-code ,expr))))
-   (_ when (and (identifier? condition)
-
-                 (not (member (syntax-source-code condition) 
-                               ; assuming there won't be more tha 1-2-3 literals ...
-                              (##map ##syntax-source-code literals))))
-    (expand-clause-cond-identifier literals condition expr))
+   (()
+    (expand-clause-cond-list literals condition `(if (pair? ,expr) ,expr (syntax-source-code ,expr))))
+   (_ when (##identifier? condition)
+    (if (member (##syntax-source-code condition) 
+                (##map ##syntax-source-code literals))
+        (expand-clause-cond-literal literals condition expr)
+        (expand-clause-cond-identifier literals condition expr)))
    (_
-    (expand-clause-cond-literal literals condition expr))))
+    `(and (equal? (##syntax-source-code ,expr) ,condition) (list)))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -280,6 +282,17 @@
                ,next)
               (else
                (error "syntax-case: internal ill formed bindings"))))))
+      ((condition . exprs)
+       (expand-clause 
+         literals 
+         stx-expr 
+         (syntax-source-code-set clause
+           `(,condition 
+             ,(##make-syntax-source 
+                `(,(##make-core-syntax-source '##begin #f)
+                  ,@exprs)
+                #f)))
+         next))
       (_
        (error "syntax-case: ill formed clause"))))
 
