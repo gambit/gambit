@@ -354,8 +354,7 @@
       (_
         #f))))
 
-
-(let ((src (plain-datum->syntax `(##define (x a) x))))
+#;(let ((src (plain-datum->syntax `(##define (x a) x))))
     (match-source src ()
       ((_ binding @ (_ . _) . _)
        (##pretty-print 'asd))

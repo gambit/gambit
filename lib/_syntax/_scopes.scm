@@ -2,8 +2,8 @@
 
 ;;; File: "_scopes.scm"
 
-;;; Copyright (c) 2024 by Antoine Doucet, All Rights Reserved.
 ;;; Copyright (c) 2024 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2024 by Antoine Doucet, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -50,7 +50,7 @@
   ##hash-set-hamt?)
 
 (define-prim&proc (scopes->list (scps scopes))
-  (map car (##hash-set-hamt->list scps)))
+  (##map ##car (##hash-set-hamt->list scps)))
 
 (define-prim&proc (scopes-insert (scps scopes) (scp scope))
   (##hash-set-hamt-set scps scp #!void))
@@ -63,9 +63,9 @@
   (##hash-set-hamt-ref scps scp))
 
 (define-prim&proc (scopes-xor (scps scopes) (scp scope))
-  (if (scopes-ref scps scp)
-      (scopes-remove scps scp)
-      (scopes-insert scps scp)))
+  (if (##scopes-ref scps scp)
+      (##scopes-remove scps scp)
+      (##scopes-insert scps scp)))
 
 (define-prim&proc (scopes-subset? (scps1 scopes) (scps2 scopes))
   (##hash-set-hamt-subset? scps1 scps2))

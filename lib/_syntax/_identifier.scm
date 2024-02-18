@@ -8,8 +8,8 @@
 ;;;============================================================================
 
 (define-prim&proc (identifier? obj)
-  (and (syntax-source? obj)
-       (symbol? (syntax-source-code obj))
+  (and (##syntax-source? obj)
+       (##symbol? (##syntax-source-code obj))
        obj))
 
 (define (##fail-check-identifier arg-id proc . args)
@@ -25,20 +25,21 @@
 (define-prim&proc (identifier-copy (id identifier))
   (##vector-copy id))
 
-(define (identifier-equal? id1 id2)
-  (and (identifier? id1)
-       (identifier? id2)
-       (scopes-equal? (syntax-source-scopes id1)
-                      (syntax-source-scopes id2))))
-
+(define-prim&proc (identifier-equal? id1 id2)
+  (and (##identifier? id1)
+       (##syntax-source? id2)
+       (##eq? (##syntax-source-code id1)
+              (##syntax-source-code id2))
+       (##scopes-equal? (##syntax-source-scopes id1)
+                        (##syntax-source-scopes id2))))
 
 (define-prim&proc (bound-identifier=? id1 id2)
   ;;; r6rs
   ;;; 
   (and (##identifier? id1)
-       (##identifier? id2)
-       (##equal? (##syntax-source-code id1)
-                 (##syntax-source-code id2))
+       (##syntax-source? id2)
+       (##eq? (##syntax-source-code id1)
+              (##syntax-source-code id2))
        (##scopes-equal? (##syntax-source-scopes id1)
                         (##syntax-source-scopes id2))))
 
@@ -46,9 +47,9 @@
   ;;; r6rs
   ;;;
   (and (##identifier? id1)
-       (##identifier? id2)
-       (##equal? (##syntax-source-code id1)
-                 (##syntax-source-code id2))
+       (##syntax-source? id2)
+       (##eq? (##syntax-source-code id1)
+              (##syntax-source-code id2))
        (##equal?(##resolve-id id1 ##syntax-interaction-cte)
                 (##resolve-id id2 ##syntax-interaction-cte))))
 

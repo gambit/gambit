@@ -124,7 +124,7 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define (##source->syntax! src #!optional (stx (macro-absent-obj)))
+(define-prim (##source->syntax! src #!optional (stx (macro-absent-obj)))
 
   (if (not 
         (or (##source? src)
@@ -151,26 +151,26 @@
   (cond
     ((##source? src)
      (##source-scopes-set! src
-                           (if (syntax-source? stx)
-                               (syntax-source-scopes stx)
+                           (if (##syntax-source? stx)
+                               (##syntax-source-scopes stx)
                                (##make-scopes)))))
   src)
 
-(define (source->syntax! src #!optional (stx (macro-absent-obj)))
+(define-prim (source->syntax! src #!optional (stx (macro-absent-obj)))
   (##source->syntax! src stx))
 
-(define (##source->syntax src #!optional (stx (macro-absent-obj)))
+(define-prim (##source->syntax src #!optional (stx (macro-absent-obj)))
   (let ((src (##vector-copy src)))
     (##source->syntax! src stx)
     src))
 
-(define (source->syntax src #!optional (stx (macro-absent-obj)))
+(define-prim (source->syntax src #!optional (stx (macro-absent-obj)))
   (##source->syntax src stx))
 
 ;;;---------------------------------------
 
-(define (##syntax-set-locats stx ref)
-  (let ((code (syntax-source-code stx)))
+(define-prim (##syntax-set-locats stx ref)
+  (let ((code (##syntax-source-code stx)))
     (cond
       ((pair? code)
        (let ((stx (##syntax-source-code-set stx
@@ -223,7 +223,7 @@
 ;       and plain-datum->syntax should be renamed datum->syntax
 ; TODO: fix define-prim&proc to allow for optional parameters
 
-(define (##datum->syntax datum #!optional (stx (macro-absent-obj)))
+(define-prim (##datum->syntax datum #!optional (stx (macro-absent-obj)))
 
   (define (##datum->syntax-pair code)
     (cond
@@ -253,12 +253,12 @@
     (else
       (error "ill formed source" datum))))
 
-(define (datum->syntax src #!optional (stx (##make-syntax-source #f #f)))
+(define-prim (datum->syntax src #!optional (stx (##make-syntax-source #f #f)))
   (##datum->syntax src stx))
 
 ;;;---------------------------------------
 
-(define (##syntax->datum! stx)
+(define-prim (##syntax->datum! stx)
 
   (define (pair->datum! code)
     (cond 
@@ -320,17 +320,17 @@
    (else
     (##source-code-set stx datum)))))
 
-(define (plain-datum->syntax datum #!optional (stx (macro-absent-obj)))
+(define-prim (plain-datum->syntax datum #!optional (stx (macro-absent-obj)))
   (if (##equal? stx (macro-absent-obj))
       (##plain-datum->syntax datum)
       (##plain-datum->syntax datum stx)))
 
 ;;;---------------------------------------
 
-(define (##plain-datum->core-syntax datum #!optional (stx (macro-absent-obj)))
+(define-prim (##plain-datum->core-syntax datum #!optional (stx (macro-absent-obj)))
   (add-scope (##plain-datum->syntax datum stx) core-scope))
 
-(define (plain-datum->core-syntax datum #!optional (stx (macro-absent-obj)))
+(define-prim (plain-datum->core-syntax datum #!optional (stx (macro-absent-obj)))
   (##plain-datum->core-syntax datum stx))
 
 ;;;---------------------------------------
@@ -340,7 +340,7 @@
     ((not (syntax-source? stx))
      stx)
     ((syntax-source? stx)
-     (let ((code (syntax-source-code stx)))
+     (let ((code (##syntax-source-code stx)))
        (cond
          ((pair? code)
           (let loop ((code code))
@@ -357,8 +357,8 @@
      
 ;;;----------------------------------------------------------------------------
   
-(define-primitive (update-scope! (stx syntax) (proc! procedure))
-  (let ((code (syntax-source-code stx)))
+(define-prim (##update-scope! stx proc!)
+  (let ((code (##syntax-source-code stx)))
     (cond
       ((pair? code)
        (let loop ((code code))
@@ -373,9 +373,9 @@
       ((null? code)
        code)
       (else
-        (syntax-source-scopes-update! stx proc!)))))
+        (##syntax-source-scopes-update! stx proc!)))))
 
-(define (##update-scope-pair code proc)
+(define-prim (##update-scope-pair code proc)
   (cond
     ((pair? code)
      (cons (##update-scope (car code) proc)
@@ -385,7 +385,7 @@
     (else
      (##update-scope code proc))))
 
-(define (##update-scope stx proc)
+(define-prim (##update-scope stx proc)
   (let ((code (syntax-source-code stx)))
     (cond
       ((pair? code)
@@ -394,7 +394,7 @@
       ((null? code)
        stx)
       (else
-        (syntax-source-scopes-update stx proc)))))
+        (##syntax-source-scopes-update stx proc)))))
 
 (define-prim&proc (add-scope! (stx syntax) (scp scope))
   (##update-scope! stx (lambda (scopes) (scopes-insert scopes scp))))
@@ -429,8 +429,8 @@
   (let ((obj  (gensym 'obj))
         (name (string->symbol (string-append "syntax-source-" (symbol->string proc)))))
     `(define-prim&proc (,name ,obj)
-       (and (syntax-source? ,obj)
-            (,proc (syntax-source-code ,obj))))))
+       (and (##syntax-source? ,obj)
+            (,proc (##syntax-source-code ,obj))))))
 
 (define-syntax-source-proc pair?)
 (define-syntax-source-proc null?)
@@ -438,15 +438,15 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define (keyword->identifier stx)                  
-  (syntax-source-code-update stx
+(define-prim&proc (keyword->identifier stx)                  
+  (##syntax-source-code-update stx
     (lambda (sym)
       (if (keyword? sym)
           (string->symbol (keyword->string sym))
           sym))))
 
-(define (identifier->keyword stx)
-  (syntax-source-code-update stx
+(define-prim&proc (identifier->keyword stx)
+  (##syntax-source-code-update stx
     (lambda (sym)
       (string->keyword (symbol->string sym)))))
 
