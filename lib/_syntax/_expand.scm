@@ -12,35 +12,9 @@
   (set! ##allow-unbound? b))
 
 ;;;----------------------------------------------------------------------------
-;;; make forms
-
-(define-primitive (make-core-form form . args)
-  (plain-datum->syntax
-    `(,(make-core-syntax-source form #f)
-      ,@(let loop ((args args))
-          (let ((arg (car args))
-                (args (cdr args)))
-            (cond
-              ((null? args)
-               (cond
-                 ((pair? arg)
-                  arg
-                  (list arg))
-              (cons arg (loop args))))))))))
-
-(define-primitive (make-letrec*-form bindings body)
-  (##make-core-form '##letrec* bindings body))
-
-(define-primitive (make-begin-form body)
-  (##make-core-form '##begin body))
-
-(define-primitive (make-lambda-form args body)
-  (##make-core-form '##lambda args body))
-
-;;;----------------------------------------------------------------------------
 ;;; binding registration
 
-(define (expand-let-bindings bindings-src cte)
+(define-prim (##expand-let-bindings bindings-src cte)
   (let ((scps (list (make-scope))))
     (let loop ((bindings bindings-src)
                (res      '())
@@ -50,36 +24,36 @@
          (let ((id  (add-scope id (car scps)))
                (val (expand val cte)))
            (cond
-             ((or (pair? (syntax-source-code id))
-                  (null? (syntax-source-code id)))
-              (let loop-ids ((ids  (syntax-source-code id))
+             ((or (pair? (##syntax-source-code id))
+                  (null? (##syntax-source-code id)))
+              (let loop-ids ((ids  (##syntax-source-code id))
                              (cte cte))
                 (cond
                   ((pair? ids)
-                   (let* ((key (hcte-add-new-local-binding! cte (car ids)))
-                          (cte (hcte-add-variable-cte cte key (car ids))))
+                   (let* ((key (##hcte-add-new-local-binding! cte (car ids)))
+                          (cte (##hcte-add-variable-cte cte key (car ids))))
                      (loop-ids
                        (cdr ids)
                        cte)))
                   ((null? ids)
-                   (let ((binding (syntax-source-code-set binding (list id val))))
+                   (let ((binding (##syntax-source-code-set binding (list id val))))
                      (loop 
                        bindings
                        (cons binding res)
                        cte)))
                   (else
-                   (let* ((key (hcte-add-new-local-binding! cte ids))
-                          (cte (hcte-add-variable-cte cte key ids)))
-                     (let ((binding (syntax-source-code-set binding (list id val))))
+                   (let* ((key (##hcte-add-new-local-binding! cte ids))
+                          (cte (##hcte-add-variable-cte cte key ids)))
+                     (let ((binding (##syntax-source-code-set binding (list id val))))
                        (loop 
                          bindings
                          (cons binding res)
                          cte)))))))
 
              (else
-               (let* ((key (hcte-add-new-local-binding! cte id))
-                      (cte (hcte-add-variable-cte cte key id))
-                      (binding (syntax-source-code-set binding
+               (let* ((key (##hcte-add-new-local-binding! cte id))
+                      (cte (##hcte-add-variable-cte cte key id))
+                      (binding (##syntax-source-code-set binding
                                  (list id val))))
                  (loop 
                    bindings
@@ -87,11 +61,11 @@
                    cte))))))
         (_
           (list scps 
-                (syntax-source-code-set bindings-src
+                (##syntax-source-code-set bindings-src
                   (reverse res))
                 cte))))))
 
-(define (expand-let*-bindings bindings-src cte)
+(define-prim (##expand-let*-bindings bindings-src cte)
   (let ((scps (list)))
     (let loop ((bindings bindings-src)
                (res      '())
@@ -101,39 +75,39 @@
         ((binding @ (id val) . bindings)
          (let* ((val (expand (add-scopes val scps) cte))
                 (scps (cons (make-scope) scps))
-                (id (add-scopes id scps)))
+                (id (##add-scopes id scps)))
            (cond
-             ((or (pair? (syntax-source-code id))
-                  (null? (syntax-source-code id)))
-              (let loop-ids ((ids (syntax-source-code id))
+             ((or (pair? (##syntax-source-code id))
+                  (null? (##syntax-source-code id)))
+              (let loop-ids ((ids (##syntax-source-code id))
                              (cte cte))
                 (cond 
                   ((pair? ids)
-                   (let* ((key (hcte-add-new-local-binding! cte (car ids)))
-                          (cte (hcte-add-variable-cte cte key (car ids))))
+                   (let* ((key (##hcte-add-new-local-binding! cte (car ids)))
+                          (cte (##hcte-add-variable-cte cte key (car ids))))
                      (loop-ids
                        (cdr ids)
                        cte)))
                   ((null? ids)
-                   (let ((binding (syntax-source-code-set binding (list id val))))
+                   (let ((binding (##syntax-source-code-set binding (list id val))))
                      (loop
                        bindings
                        (cons binding res)
                        scps
                        cte)))
                   (else
-                   (let* ((key (hcte-add-new-local-binding! cte ids))
-                          (cte (hcte-add-variable-cte cte key ids)))
-                     (let ((binding (syntax-source-code-set binding (list id val))))
+                   (let* ((key (##hcte-add-new-local-binding! cte ids))
+                          (cte (##hcte-add-variable-cte cte key ids)))
+                     (let ((binding (##syntax-source-code-set binding (list id val))))
                        (loop
                          bindings
                          (cons binding res)
                          scps
                          cte)))))))
              (else
-               (let* ((key (hcte-add-new-local-binding! cte id))
-                      (cte (hcte-add-variable-cte cte key id))
-                      (binding (syntax-source-code-set binding
+               (let* ((key (##hcte-add-new-local-binding! cte id))
+                      (cte (##hcte-add-variable-cte cte key id))
+                      (binding (##syntax-source-code-set binding
                                  (list id val))))
                  (loop
                    bindings
@@ -142,11 +116,11 @@
                    cte))))))
         (_
           (list scps 
-                (syntax-source-code-set bindings-src
+                (##syntax-source-code-set bindings-src
                   (reverse res)) 
                 cte))))))
 
-(define (expand-letrec-bindings bindings-src cte)
+(define-prim (##expand-letrec-bindings bindings-src cte)
   (let ((scps (list (make-scope))))
     (let loop ((bindings bindings-src)
                (res      '())
@@ -155,40 +129,40 @@
         ((binding @ (id val) . bindings)
          (let ((id (add-scope id (car scps))))
            (cond
-            ((or (pair? (syntax-source-code id))
-                 (null? (syntax-source-code id)))
-             (let loop-ids ((ids (syntax-source-code id))
+            ((or (pair? (##syntax-source-code id))
+                 (null? (##syntax-source-code id)))
+             (let loop-ids ((ids (##syntax-source-code id))
                             (cte cte))
                (cond
                  ((pair? ids)
-                  (let* ((key (hcte-add-new-local-binding! cte (car ids)))
-                         (cte (hcte-add-variable-cte cte key (car ids))))
+                  (let* ((key (##hcte-add-new-local-binding! cte (car ids)))
+                         (cte (##hcte-add-variable-cte cte key (car ids))))
                     (loop-ids
                       (cdr ids)
                       cte)))
                  ((null? ids)
                   (let* ((val (add-scope val (car scps)))
-                         (binding (syntax-source-code-set binding
+                         (binding (##syntax-source-code-set binding
                                     (list id val))))
                     (loop 
                       bindings
                       (cons binding res)
                       cte)))
                  (else
-                  (let* ((key (hcte-add-new-local-binding! cte ids))
-                         (cte (hcte-add-variable-cte cte key ids)))
+                  (let* ((key (##hcte-add-new-local-binding! cte ids))
+                         (cte (##hcte-add-variable-cte cte key ids)))
                     (let* ((val (add-scope val (car scps)))
-                           (binding (syntax-source-code-set binding
+                           (binding (##syntax-source-code-set binding
                                       (list id val))))
                       (loop 
                         bindings
                         (cons binding res)
                         cte)))))))
             (else
-             (let* ((key (hcte-add-new-local-binding! cte id))
-                    (cte (hcte-add-variable-cte cte key id))
+             (let* ((key (##hcte-add-new-local-binding! cte id))
+                    (cte (##hcte-add-variable-cte cte key id))
                     (val (add-scope val (car scps)))
-                    (binding (syntax-source-code-set binding
+                    (binding (##syntax-source-code-set binding
                                (list id val))))
                (loop 
                  bindings
@@ -201,7 +175,7 @@
                               ((pair? bindings)
                                (let ((binding (car bindings)))
                                  (let ((new-binding
-                                         (syntax-source-code-update binding
+                                         (##syntax-source-code-update binding
                                            (lambda (binding-code)
                                              (match-source binding-code ()
                                                ((id val)
@@ -211,12 +185,12 @@
                                      (cons new-binding result)))))
                               (else
                                 result)))))
-            (list scps (syntax-source-code-set bindings-src bindings) cte)))))))
+            (list scps (##syntax-source-code-set bindings-src bindings) cte)))))))
 
-(define (expand-letrec*-bindings bindings-src cte)
-  (expand-letrec-bindings bindings-src cte))
+(define-prim (##expand-letrec*-bindings bindings-src cte)
+  (##expand-letrec-bindings bindings-src cte))
 
-(define (expand-let-syntax-bindings bindings-src cte)
+(define-prim (##expand-let-syntax-bindings bindings-src cte)
   (let ((original-cte cte))
     (let ((scps (list (make-scope))))
       (let loop ((bindings bindings-src)
@@ -225,8 +199,8 @@
           ((binding @ (id val) . bindings)
            (let ((id  (add-scope id (car scps)))
                  (val (##eval-for-syntax-binding val original-cte)))
-             (let* ((key (hcte-add-new-local-binding! cte id))
-                    (cte (hcte-add-macro-cte cte key id val)))
+             (let* ((key (##hcte-add-new-local-binding! cte id))
+                    (cte (##hcte-add-macro-cte cte key id val)))
                (loop 
                  bindings
                  cte))))
@@ -235,7 +209,7 @@
                  #f
                  cte)))))))
 
-(define (expand-let*-syntax-bindings bindings-src cte)
+(define-prim (##expand-let*-syntax-bindings bindings-src cte)
   (let ((scps (list)))
     (let loop ((bindings bindings-src)
                (res      '())
@@ -248,9 +222,9 @@
                        cte))
                 (scps (cons (make-scope) scps))
                 (id (add-scopes id scps)))
-           (let* ((key (hcte-add-new-local-binding! cte id))
-                  (cte (hcte-add-macro-cte cte key id val))
-                  (binding (syntax-source-code-set binding
+           (let* ((key (##hcte-add-new-local-binding! cte id))
+                  (cte (##hcte-add-macro-cte cte key id val))
+                  (binding (##syntax-source-code-set binding
                              (list id val))))
              (loop
                bindings
@@ -259,11 +233,11 @@
                cte))))
         (_
           (list scps 
-                (syntax-source-code-set bindings-src
+                (##syntax-source-code-set bindings-src
                   (reverse res)) 
                 cte))))))
 
-(define (expand-letrec-syntax-bindings bindings-src cte)
+(define-prim (##expand-letrec-syntax-bindings bindings-src cte)
   (let ((original-cte cte)
         (scps (list (make-scope))))
     (let loop ((bindings bindings-src)
@@ -273,10 +247,10 @@
          (let ((id  (add-scope id (car scps)))
                (val (add-scope val (car scps)))
                (fake-val (lambda _ 'dummy)))
-           (let* ((key (hcte-add-new-local-binding! cte id))
-                  (original-cte (hcte-add-macro-cte original-cte key id fake-val))
+           (let* ((key (##hcte-add-new-local-binding! cte id))
+                  (original-cte (##hcte-add-macro-cte original-cte key id fake-val))
                   (val (##eval-for-syntax-binding val original-cte))
-                  (cte (hcte-add-macro-cte cte key id val)))
+                  (cte (##hcte-add-macro-cte cte key id val)))
              (loop 
                bindings
                cte))))
@@ -285,7 +259,7 @@
                 #f
                 cte))))))
 
-(define (expand-letrec*-syntax-bindings bindings-src cte)
+(define-prim (##expand-letrec*-syntax-bindings bindings-src cte)
   (let ((scps (list)))
     (let loop ((bindings bindings-src)
                (res      '())
@@ -296,13 +270,13 @@
          (let* ((fake-val (lambda _ 'dummy))
                 (scps (cons (make-scope) scps))
                 (id (add-scopes id scps)))
-           (let* ((key (hcte-add-new-local-binding! cte id))
-                  (cte (hcte-add-macro-cte cte key id fake-val))
+           (let* ((key (##hcte-add-new-local-binding! cte id))
+                  (cte (##hcte-add-macro-cte cte key id fake-val))
                   (val (##eval-for-syntax-binding
                        (add-scopes val scps) 
                        cte))
-                  (cte (hcte-add-macro-cte cte key id val))
-                  (binding (syntax-source-code-set binding
+                  (cte (##hcte-add-macro-cte cte key id val))
+                  (binding (##syntax-source-code-set binding
                              (list id val))))
              (loop
                bindings
@@ -311,26 +285,26 @@
                cte))))
         (_
           (list scps 
-                (syntax-source-code-set bindings-src
+                (##syntax-source-code-set bindings-src
                   (reverse res)) 
                 cte))))))
 
-(define-macro (expand-let-forms head syntax? stx cte)
+(define-macro (##expand-let-forms head syntax? stx cte)
 
-  (define expand-bindings
+  (define ##expand-bindings
     (case head 
-      ((##let)            'expand-let-bindings)
-      ((##let*)           'expand-let*-bindings)
-      ((##letrec)         'expand-letrec-bindings)
-      ((##letrec*)        'expand-letrec*-bindings)
-      ((##let-syntax)     'expand-let-syntax-bindings)
-      ((##let*-syntax)    'expand-let*-syntax-bindings)
-      ((##letrec-syntax)  'expand-letrec-syntax-bindings)
-      ((##letrec*-syntax) 'expand-letrec*-syntax-bindings)
-      ((##let-values)     'expand-let-bindings)
-      ((##let*-values)    'expand-let*-bindings)
-      ((##letrec-values)  'expand-letrec-bindings)
-      ((##letrec*-values) 'expand-letrec*-bindings)
+      ((##let)            '##expand-let-bindings)
+      ((##let*)           '##expand-let*-bindings)
+      ((##letrec)         '##expand-letrec-bindings)
+      ((##letrec*)        '##expand-letrec*-bindings)
+      ((##let-syntax)     '##expand-let-syntax-bindings)
+      ((##let*-syntax)    '##expand-let*-syntax-bindings)
+      ((##letrec-syntax)  '##expand-letrec-syntax-bindings)
+      ((##letrec*-syntax) '##expand-letrec*-syntax-bindings)
+      ((##let-values)     '##expand-let-bindings)
+      ((##let*-values)    '##expand-let*-bindings)
+      ((##letrec-values)  '##expand-letrec-bindings)
+      ((##letrec*-values) '##expand-letrec*-bindings)
       (else               (error "Internal: cannot process let form's bindings"))))
 
   (let ((stx-id (##gensym 'stx)))
@@ -338,70 +312,70 @@
       (match-source ,stx-id ()
         ((let-id name bindings . body) when (identifier? name)
          (let* ((fake-binding  (##make-syntax-source `(,name ,(##make-syntax-source #f #f)) #f))
-                (fake-bindings (syntax-source-code-update bindings 
+                (fake-bindings (##syntax-source-code-update bindings 
                                  (lambda (code) (cons fake-binding code))))
-                (fake-expr     (syntax-source-code-set ,stx-id
+                (fake-expr     (##syntax-source-code-set ,stx-id
                                 `(,(##make-core-syntax-source '##let* #f) ,fake-bindings ,@body))))
            (match-source (expand fake-expr cte) ()
              ((_ ((name _) . bindings) . body)
-              (syntax-source-code-set ,stx-id
+              (##syntax-source-code-set ,stx-id
                 `(,let-id ,name ,(##make-syntax-source bindings #f) ,@body)))
              (_ (error "internal")))))
         ((let-id bindings . body)
-         (let* ((scps+bindings+cte (,expand-bindings bindings ,cte))
+         (let* ((scps+bindings+cte (,##expand-bindings bindings ,cte))
                 (scps     (car scps+bindings+cte))
                 (bindings (cadr scps+bindings+cte))
                 (cte      (caddr scps+bindings+cte))
-                (body (expand-body body cte scps)))
+                (body (##expand-body body cte scps)))
            ,(cond
              (syntax?
-               `(syntax-source-code-set ,stx-id
+               `(##syntax-source-code-set ,stx-id
                  (cons (##make-core-syntax-source '##begin #f) body)))
              (else
-               `(syntax-source-code-set ,stx-id
+               `(##syntax-source-code-set ,stx-id
                  `(,let-id ,bindings ,@body))))))
         (_
           (error "ill-formed let form"))))))
 
 (define-prim&proc (expand-let stx cte)
-  (expand-let-forms ##let #f stx cte))
+  (##expand-let-forms ##let #f stx cte))
 
 (define-prim&proc (expand-let* stx cte)
-  (expand-let-forms ##let* #f stx cte))
+  (##expand-let-forms ##let* #f stx cte))
 
 (define-prim&proc (expand-letrec stx cte)
-  (expand-let-forms ##letrec #f stx cte))
+  (##expand-let-forms ##letrec #f stx cte))
 
 (define-prim&proc (expand-letrec* stx cte)
-  (expand-let-forms ##letrec* #f stx cte))
+  (##expand-let-forms ##letrec* #f stx cte))
 
 (define-prim&proc (expand-let-values stx cte)
-  (expand-let-forms ##let-values #f stx cte))
+  (##expand-let-forms ##let-values #f stx cte))
 
 (define-prim&proc (expand-let*-values stx cte)
-  (expand-let-forms ##let*-values #f stx cte))
+  (##expand-let-forms ##let*-values #f stx cte))
 
 (define-prim&proc (expand-letrec-values stx cte)
-  (expand-let-forms ##letrec-values #f stx cte))
+  (##expand-let-forms ##letrec-values #f stx cte))
 
 (define-prim&proc (expand-letrec*-values stx cte)
-  (expand-let-forms ##letrec*-values #f stx cte))
+  (##expand-let-forms ##letrec*-values #f stx cte))
 
 (define-prim&proc (expand-let-syntax stx cte)
-  (expand-let-forms ##let-syntax #t stx cte))
+  (##expand-let-forms ##let-syntax #t stx cte))
 
 (define-prim&proc (expand-let*-syntax stx cte)
-  (expand-let-forms ##let*-syntax #t stx cte))
+  (##expand-let-forms ##let*-syntax #t stx cte))
 
 (define-prim&proc (expand-letrec-syntax stx cte)
-  (expand-let-forms ##letrec-syntax #t stx cte))
+  (##expand-let-forms ##letrec-syntax #t stx cte))
 
 (define-prim&proc (expand-letrec*-syntax stx cte)
-  (expand-let-forms ##letrec*-syntax #t stx cte))
+  (##expand-let-forms ##letrec*-syntax #t stx cte))
 
 ;;;----------------------------------------------------------------------------
 
-(define (expand->core-form stx cte)
+(define-prim (##expand->core-form stx cte)
   (match-source stx ()
     ((id . exprs) when (identifier? id)
      (let ((t (##resolve-binding-expander id cte)))
@@ -414,10 +388,10 @@
 (define-prim&proc (expand-begin s cte)
   (match-source s ()
     ((##begin-id . exprs)
-     (syntax-source-code-set s
+     (##syntax-source-code-set s
        (cons ##begin-id
-             (syntax-source-code
-               (##expand-pair/list (syntax-source-code-set s exprs) cte 
+             (##syntax-source-code
+               (##expand-pair/list (##syntax-source-code-set s exprs) cte 
                  (lambda _ 
                    (##pretty-print s)
                    (error "expand-begin error")
@@ -439,19 +413,19 @@
                (cte      cte))
       (match-source bindings ()
         ((binding . bindings)
-         (let ((core-expanded-binding (expand->core-form binding cte)))
+         (let ((core-expanded-binding (##expand->core-form binding cte)))
            (let match ((core-expanded-binding core-expanded-binding))
              (match-source core-expanded-binding (##define ##define-syntax ##define-top-level-syntax)
                ((##define (id . args) . rest)
                 (match (##transform-define-form->base-form core-expanded-binding)))
                ((##define id val)
-                (let ((definer (car (syntax-source-code core-expanded-binding))))
+                (let ((definer (car (##syntax-source-code core-expanded-binding))))
                   (let* ((scps scps)
                          (id   (add-scopes id scps))
-                         (key  (hcte-add-new-local-binding! cte id))
-                         (cte  (hcte-add-variable-cte cte key id))
+                         (key  (##hcte-add-new-local-binding! cte id))
+                         (cte  (##hcte-add-variable-cte cte key id))
                          (val  (add-scopes val scps))
-                         (binding (syntax-source-code-set core-expanded-binding (list definer id val))))
+                         (binding (##syntax-source-code-set core-expanded-binding (list definer id val))))
                     (loop
                       bindings
                       (cons binding res)
@@ -465,17 +439,17 @@
                   scps
                   cte))
                ((##define-syntax id val)
-                (let ((definer (car (syntax-source-code core-expanded-binding))))
+                (let ((definer (car (##syntax-source-code core-expanded-binding))))
                   (let* ((fake-val (lambda _ 'dummy))
                          (scps     scps)
                          (id       (add-scopes id scps))
-                         (key      (hcte-add-new-local-binding! cte id))
-                         (cte      (hcte-add-macro-cte cte key id fake-val))
+                         (key      (##hcte-add-new-local-binding! cte id))
+                         (cte      (##hcte-add-macro-cte cte key id fake-val))
                          (val      (##eval-for-syntax-binding
                                      (add-scopes val scps)
                                      cte))
-                         (cte      (hcte-add-macro-cte cte key id val))
-                         (binding  (syntax-source-code-set core-expanded-binding 
+                         (cte      (##hcte-add-macro-cte cte key id val))
+                         (binding  (##syntax-source-code-set core-expanded-binding 
                                      (list definer id val))))
                     (loop
                       bindings
@@ -486,13 +460,13 @@
                  (let ((defs (map (lambda (orig-binding binding)
                                         (match-source binding (##define ##define-syntax)
                                           ((##define id val)
-                                           (let ((definer (car (syntax-source-code binding))))
-                                             (syntax-source-code-set binding
+                                           (let ((definer (car (##syntax-source-code binding))))
+                                             (##syntax-source-code-set binding
                                                  (list definer
                                                        id
                                                        (expand val cte)))
                                              #;(##transform-define-form->sugar-form
-                                               (syntax-source-code-set binding
+                                               (##syntax-source-code-set binding
                                                  (list definer
                                                        id
                                                        (expand val cte)))
@@ -503,9 +477,9 @@
                                       res)))
                          (append
                            (reverse defs)
-                           (syntax-source-code
+                           (##syntax-source-code
                              (##expand-pair/list (add-scopes
-                                                   (syntax-source-code-set (make-syntax-source #f #f)
+                                                   (##syntax-source-code-set (make-syntax-source #f #f)
                                                      (cons binding bindings))
                                                    scps)
                                                cte
@@ -515,7 +489,7 @@
 ;;;----------------------------------------------------------------------------
 ;;; Sequencing forms
 
-(define-primitive (map-pair proc on-pair-proc p)
+(define-prim (##map-pair proc on-pair-proc p)
   (cond
     ((pair? p)
      (cons (proc (car p))
@@ -525,14 +499,14 @@
     (else
      (on-pair-proc p))))
 
-(define-primitive (expand-pair/list stx cte on-pair-proc)
-  (syntax-source-code-update stx
+(define-prim (##expand-pair/list stx cte on-pair-proc)
+  (##syntax-source-code-update stx
     (lambda (code)
       (##map-pair (lambda (e) (expand e cte))
                   on-pair-proc
                   code))))
 
-(define-primitive (expand-pair stx cte)
+(define-prim (##expand-pair stx cte)
   (##expand-pair/list stx cte 
     (lambda (code)
       (expand code cte))))
@@ -540,19 +514,19 @@
 ;;;----------------------------------------------------------------------------
 ;;; application form
 
-(define-primitive (apply-transformer t (stx syntax))
+(define-prim (##apply-transformer t stx)
   (let* ((intro-scope (make-scope))
          (intro-stx   (add-scope stx intro-scope)))
     (let ((transformed-stx (t intro-stx)))
       (cond
         ((syntax-source? transformed-stx)
          (flip-scope transformed-stx intro-scope))
-        (##error-expansion apply-transformer 
+        (##error-expansion ##apply-transformer 
           stx 
           t
           "result is not a syntax-source")))))
 
-(define (##dispatch t s cte #!optional (no-reexpansion #f))
+(define-prim (##dispatch t s cte #!optional (no-reexpansion #f))
   (cond 
     ((##ctx-binding-variable? t)
      s)
@@ -561,7 +535,7 @@
             (proc  descr)) ; TODO reimplement use of gambit descrs
        (let ((transformed-s (##apply-transformer proc s)))
          (if no-reexpansion 
-             (expand->core-form transformed-s cte)
+             (##expand->core-form transformed-s cte)
              (expand transformed-s cte)))))
     ((##ctx-binding-core-macro? t)
      (cond
@@ -574,7 +548,7 @@
     (else
      (##error-expansion "illegal use of syntax"))))
 
-(define-primitive (expand-id-application-form id stx cte)
+(define-prim (##expand-id-application-form id stx cte)
   (let ((id (or (syntax-full-name cte id) id)))
     (let ((t (##resolve-binding-expander id cte)))
       (if (or (not (##vector? t))
@@ -582,7 +556,7 @@
           (##expand-application stx cte)
           (##dispatch t stx cte)))))
 
-(define-primitive (expand-application stx cte)
+(define-prim (##expand-application stx cte)
   (##expand-pair/list stx cte 
       (lambda (_) 
         (##error-expansion ##expand-application stx 
@@ -591,7 +565,7 @@
 #;(define-primitive (expand-keyword-argument stx cte)
   (let ((id  
           (cond
-            ((keyword? (syntax-source-code stx))
+            ((keyword? (##syntax-source-code stx))
              (keyword->identifier stx))
             (else
              (error "internal")))))
@@ -600,11 +574,11 @@
 ;;;----------------------------------------------------------------------------
 ;;; lambda
 
-(define-primitive (expand-lambda stx cte)
+(define-prim (##expand-lambda stx cte)
 
   (define (register-variable id cte)
-    (let* ((key (hcte-add-new-local-binding! cte id))
-           (cte (hcte-add-variable-cte cte key id)))
+    (let* ((key (##hcte-add-new-local-binding! cte id))
+           (cte (##hcte-add-variable-cte cte key id)))
 
       (list id cte)))
 
@@ -714,29 +688,29 @@
               (bindings         (car  bindings+cte))
               (cte              (cadr bindings+cte)))
          (let ((body (##expand-body body cte (list scp))))
-           (syntax-source-code-set stx
+           (##syntax-source-code-set stx
              `(,lambda-id ,bindings ,@body))))))))
 
 ;;;----------------------------------------------------------------------------
 ;;; top-level definition forms
 
-(define-primitive (transform-define-form->base-form stx)
+(define-prim (##transform-define-form->base-form stx)
   ; desugar define forms
   (match-source stx ()
     ((define-id (id . args) . body)
-     (syntax-source-code-set stx
-      `(,define-id ,id ,(syntax-source-code-set stx
+     (##syntax-source-code-set stx
+      `(,define-id ,id ,(##syntax-source-code-set stx
                           `(,(##make-core-syntax-source '##lambda #f)
                             ,(if (identifier? args)
                                  args
-                                 (syntax-source-code-set stx args))
+                                 (##syntax-source-code-set stx args))
                             ,@body)))))
     ((define-id id val)
      stx)
     (_
       (##error-expansion ##transform-define-form->base-form stx "ill-formed define form:"))))
 
-(define-primitive (transform-define-form->sugar-form stx original-stx)
+(define-prim (##transform-define-form->sugar-form stx original-stx)
   ; reconstruct a sugared define-form
 
   (match-source original-stx ()
@@ -745,11 +719,11 @@
      ;
      (match-source stx ()
        ((define-id id (lambda-id args . body))
-        (syntax-source-code-set original-stx 
-          `(,define-id ,(syntax-source-code-set binding 
+        (##syntax-source-code-set original-stx 
+          `(,define-id ,(##syntax-source-code-set binding 
                           (cons id (if (identifier? args)
                                        args
-                                       (syntax-source-code args))))
+                                       (##syntax-source-code args))))
                        ,@body)))))
     (_
      ; base form
@@ -757,7 +731,7 @@
       stx)))
 
 (define-prim&proc (syntax-full-name cte id)
-  (let ((name (syntax-source-code id)))
+  (let ((name (##syntax-source-code id)))
     (if (##full-name? name)
         id
         (let ((full-name (let loop ((cte (##top-cte-cte cte)))
@@ -773,7 +747,7 @@
           (case (##vector-ref full-name 0)
             ((not-found)
              #f)
-            ((var) (syntax-source-code-set id
+            ((var) (##syntax-source-code-set id
                      (##vector-ref full-name 1)))
             (else  (##raise-expression-parsing-exception
                     'macro-used-as-variable
@@ -786,34 +760,34 @@
      (match-source (##transform-define-form->base-form stx) ()
       ((define-id id val)
        (let ((full-id (or (syntax-full-name cte id) id)))
-         (let* ((_   (hcte-add-new-top-level-binding! cte full-id))
+         (let* ((_   (##hcte-add-new-top-level-binding! cte full-id))
                 (val (##expand val cte))
-                (expanded-stx (syntax-source-code-set stx 
+                (expanded-stx (##syntax-source-code-set stx 
                                  `(,define-id ,full-id ,val))))
            (##transform-define-form->sugar-form expanded-stx stx))))))
     (else
       (##error-expansion ##expand-define stx "ill-placed define"))))
 
-(define-primitive (expand-define-syntax stx cte)
+(define-prim (##expand-define-syntax stx cte)
   (cond
     ((##cte-top? cte)
      (match-source stx ()
       ((define-id id expander)
        (let ((id (or (syntax-full-name cte id) id)))
-         (top-hcte-add-macro-cte! cte id (lambda _ (##make-syntax-source 'dummy #f)))
+         (##top-hcte-add-macro-cte! cte id (lambda _ (##make-syntax-source 'dummy #f)))
          (let ((descr (##eval-for-syntax-binding expander cte)))
-           (top-hcte-add-macro-cte! cte id descr)
-           (syntax-source-code-set stx #!void))))))
+           (##top-hcte-add-macro-cte! cte id descr)
+           (##syntax-source-code-set stx #!void))))))
     (else
       (##error-expansion ##expand-define-syntax stx "ill-placed define-syntax"))))
 
-(define-primitive (expand-define-top-level-syntax stx cte)
+(define-prim (##expand-define-top-level-syntax stx cte)
   ; only called at top-level
   (##expand-define-syntax stx cte))
 
 ;;;----------------------------------------------------------------------------
 
-(define-primitive (expand-identifier id cte)
+(define-prim (##expand-identifier id cte)
   (let ((id (or (syntax-full-name cte id) id)))
     (let ((binding (resolve-local (syntax-full-name cte id) cte)))
       (let ((key 
@@ -859,7 +833,7 @@
     'ill-placed-unqote-splicing
     s))
 
-(define-primitive (implicit-prefix-apply sym stx-src)
+(define-prim (##implicit-prefix-apply sym stx-src)
   (##plain-datum->syntax
     `(,(##make-core-syntax-source sym #f) ,stx-src)
      stx-src))
@@ -924,7 +898,7 @@
                   (expand-template (##syntax-source-code-set s datum)))))
         ((and (##pair? code) (not (tag-quasiquote? code)))
          (##implicit-prefix-apply '##list
-           (syntax-source-code-set s
+           (##syntax-source-code-set s
                `(,(##make-core-syntax-source '##append #f)
                   ,(expand-template-list (##car code))
                   ,(expand-template      (let ((rest (cdr code)))
@@ -948,11 +922,11 @@
 ;;;----------------------------------------------------------------------------
 
 (define-prim&proc (expand-namespace stx cte)
-  (top-hcte-process-namespace! cte stx)
+  (##top-hcte-process-namespace! cte stx)
   stx
   #;(match-source stx ()
     ((namespace-id (prefix . aliases))
-     (top-hcte-process-namespace! cte stx)
+     (##top-hcte-process-namespace! cte stx)
      stx)
     (_
      (error "ill formed namespace form"))))
@@ -1015,7 +989,7 @@
          (cons
            (match-source clause ()
              ((id val)
-              (syntax-source-code-set clause
+              (##syntax-source-code-set clause
                 `(,id ,(expand val cte)))))
            (expand-clauses clauses cte))))
       ((null? clauses)
@@ -1027,10 +1001,10 @@
     ((case-id expr . clauses)
      (let ((expr (expand expr cte))
            (clauses (expand-clauses clauses cte)))
-       (syntax-source-code-set stx
+       (##syntax-source-code-set stx
          `(,case-id ,expr ,@clauses))))))
   
-(define (##expand-cond stx-src cte)
+(define-prim (##expand-cond stx-src cte)
 
   (define (##expand-cond-clause clause next-clause cte)
     (match-source clause ()
@@ -1088,7 +1062,7 @@
 ;;;----------------------------------------------------------------------------
 
 (define-prim&proc (expand stx cte)
-  (let ((code (syntax-source-code stx)))
+  (let ((code (##syntax-source-code stx)))
     (cond
       ((null? code)
        stx)
@@ -1100,15 +1074,15 @@
           (##expand-pair stx cte))))
       ((identifier? stx)
        (##expand-identifier stx cte))
-      ((keyword? (syntax-source-code stx))
+      ((keyword? (##syntax-source-code stx))
        stx
        #;(##expand-keyword-argument stx cte))
-      ((boolean? (syntax-source-code stx))
+      ((boolean? (##syntax-source-code stx))
        stx)
       ((string? code)
        stx)
       (else
-       (syntax-source-code-set stx
+       (##syntax-source-code-set stx
          `(,(##make-core-syntax-source '##quote #f) ,stx))))))
 
 ;;;============================================================================

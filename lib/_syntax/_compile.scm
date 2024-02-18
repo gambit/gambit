@@ -281,7 +281,7 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-primitive (compile-core-form-application id stx cte)
+(define-prim (##compile-core-form-application id stx cte)
 
   (define (dispatch-core-form-id id)
     (case (syntax-source-code 
