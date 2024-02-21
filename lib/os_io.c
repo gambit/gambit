@@ -1,6 +1,6 @@
 /* File: "os_io.c" */
 
-/* Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -4572,7 +4572,7 @@ ___HIDDEN void clear_tls_error_queue
 
 /* TLS multithreading support */
 
-#ifdef ___MULTIPLE_THREADED_VMS
+#ifndef ___SINGLE_THREADED_VMS
 
 ___HIDDEN ___MUTEX *tls_mutex_buf = NULL;
 
