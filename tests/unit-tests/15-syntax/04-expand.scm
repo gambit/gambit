@@ -130,11 +130,11 @@
 ;;; body
 
 (let* ((cte (##make-top-cte))
-       (datums (list (plain-datum->syntax 0) (plain-datum->syntax 1)))
+       (datums (plain-datum->syntax `(0 1)))
        (stx    (add-scope datums core-scope)))
-  (let ((expanded (##expand-body stx cte (list))))
+  (let ((expanded (##expand-body stx cte)))
     (check-equal?
-      (map ##desourcify expanded)
+      (map ##desourcify (##syntax-source-code expanded))
       `((##quote 0) (##quote 1)))))
 
 ;;;----------------------------------------------------------------------------
@@ -361,65 +361,49 @@
 
 (let* ((cte (##top-cte-cte ##syntax-interaction-cte))
        (datum `(0))
-       (stx   (map plain-datum->syntax datum))
-       (stx   (map (lambda (e) (add-scope e core-scope)) stx)))
-  (let ((expanded (##expand-body stx cte #f)))
+       (stx   (plain-datum->core-syntax datum)))
+  (let ((expanded (##expand-body stx cte)))
     (check-equal?
-      (map ##desourcify expanded)
+      (##desourcify expanded)
       `((##quote 0)))))
 
 (let* ((cte (##top-cte-cte ##syntax-interaction-cte))
        (datum `(0 1))
-       (stx   (map plain-datum->syntax datum))
-       (stx   (map (lambda (e) (add-scope e core-scope)) stx)))
-  (let ((expanded (##expand-body stx cte #f)))
+       (stx   (plain-datum->core-syntax datum)))
+  (let ((expanded (##expand-body stx cte)))
     (check-equal?
-      (map ##desourcify expanded)
+      (##desourcify expanded)
       `((##quote 0) (##quote 1)))))
 
 (let* ((cte (##top-cte-cte ##syntax-interaction-cte))
        (datum `((##define x 0) 1))
-       (stx   (map plain-datum->syntax datum))
-       (stx   (map (lambda (e) (add-scope e core-scope)) stx)))
-  (let ((expanded (##expand-body stx cte #f)))
+       (stx   (plain-datum->core-syntax datum)))
+  (let ((expanded (##expand-body stx cte)))
     (check-equal?
-      (map ##desourcify expanded)
+      (##desourcify expanded)
       `((##define x (##quote 0)) (##quote 1)))))
 
 (let* ((cte (##top-cte-cte ##syntax-interaction-cte))
        (datum `((##define x 0) x))
-       (stx   (map plain-datum->syntax datum))
-       (stx   (map (lambda (e) (add-scope e core-scope)) stx)))
-  (let ((expanded (##expand-body stx cte #f)))
+       (stx   (plain-datum->core-syntax datum)))
+  (let ((expanded (##expand-body stx cte)))
     (check-equal?
-      (map ##desourcify expanded)
+      (##desourcify expanded)
       `((##define x (##quote 0)) x))))
 
 ;;; unbound local var
 (let* ((cte (##top-cte-cte ##syntax-interaction-cte))
        (datum `((##define x 0) y))
-       (stx   (map plain-datum->syntax datum))
-       (stx   (map (lambda (e) (add-scope e core-scope)) stx)))
-    (check-exn error-exception? (lambda () (##expand-body stx cte #f))))
+       (stx   (plain-datum->core-syntax datum)))
+    (check-exn error-exception? (lambda () (##expand-body stx cte))))
 
 (let* ((cte (##top-cte-cte ##syntax-interaction-cte))
        (datum `((##define x 0) (##define y x) x y))
-       (stx   (map plain-datum->syntax datum))
-       (stx   (map (lambda (e) (add-scope e core-scope)) stx)))
-  (let ((expanded (##expand-body stx cte #f)))
-    (check-equal?
-      (map ##desourcify expanded)
-      `((##define x (##quote 0)) (##define y x) x y))))
-
-
-#;(let* ((cte (##make-top-cte))
-       (datum (##quote ((##define-syntax) x (lambda (_) 0)) (x)))
-       (stx   (map plain-datum->syntax datum))
-       (stx   (map (lambda (e) (add-scope e core-scope)) stx)))
+       (stx   (plain-datum->core-syntax datum)))
   (let ((expanded (##expand-body stx cte)))
     (check-equal?
-      (map ##desourcify expanded)
-      (##quote ('0)))))
+      (##desourcify expanded)
+      `((##define x (##quote 0)) (##define y x) x y))))
 
 ;;;----------------------------------------------------------------------------
 ;;; core dispatch

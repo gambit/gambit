@@ -326,11 +326,12 @@
                 (scps     (car scps+bindings+cte))
                 (bindings (cadr scps+bindings+cte))
                 (cte      (caddr scps+bindings+cte))
-                (body (##expand-body body cte scps)))
+                (body (syntax-source-code 
+                        (##expand-body (add-scopes (syntax-source-code-set ,stx-id body) scps) cte))))
            ,(cond
              (syntax?
                `(##syntax-source-code-set ,stx-id
-                 (cons (##make-core-syntax-source '##begin #f) body)))
+                 `(,(##make-core-syntax-source '##begin #f) ,@body)))
              (else
                `(##syntax-source-code-set ,stx-id
                  `(,let-id ,bindings ,@body))))))
@@ -376,7 +377,13 @@
 ;;;----------------------------------------------------------------------------
 
 (define-prim (##expand->core-form stx cte)
-  (match-source stx ()
+  (match-source stx (##define ##define-syntax ##define-global-syntax)
+    ((##define . args)
+     stx)
+    ((##define-syntax . args)
+     stx)
+    ((##define-global-syntax . args)
+     stx)
     ((id . exprs) when (identifier? id)
      (let ((t (##resolve-binding-expander id cte)))
        (if (or (not (##vector? t))
@@ -399,92 +406,124 @@
     (_
      (##error-expansion ##expand-begin s "Ill formed begin form"))))
 
-(define-prim&proc (expand-body body cte scps)
-  ; `letrec*` the variables and macros but disallow mutually exclusive bindings.
-  ; The full letrec* behavior can be allowed by expanding macro definition
-  ; to a core-form, using a let* behavior for variables and macros used, 
-  ; and then binding every variable into a letrec* form. Then, it should
-  ; be easier to break hygiene to include definer macros.
+(define-prim&proc (expand-body body cte)
+  ; core-expand trough expressions, expanding syntax bindings as letrec*-syntax
+  ; and registering define form to implement letrec* behahvior.
+  ; Stop at the first non-definer, continue with normal ##begin expansion and
+  ; expand define form's value, as per letrec* behavior.
+  ; 
 
-  (let ((scps (cons (make-scope) scps)))
-    (let loop ((bindings body)
-               (res      '())
-               (scps     scps)
-               (cte      cte))
-      (match-source bindings ()
-        ((binding . bindings)
-         (let ((core-expanded-binding (##expand->core-form binding cte)))
-           (let match ((core-expanded-binding core-expanded-binding))
-             (match-source core-expanded-binding (##define ##define-syntax ##define-top-level-syntax)
-               ((##define (id . args) . rest)
-                (match (##transform-define-form->base-form core-expanded-binding)))
-               ((##define id val)
-                (let ((definer (car (##syntax-source-code core-expanded-binding))))
-                  (let* ((scps scps)
-                         (id   (add-scopes id scps))
-                         (key  (##hcte-add-new-local-binding! cte id))
-                         (cte  (##hcte-add-variable-cte cte key id))
-                         (val  (add-scopes val scps))
-                         (binding (##syntax-source-code-set core-expanded-binding (list definer id val))))
-                    (loop
-                      bindings
-                      (cons binding res)
-                      scps
-                      cte))))
-               ((##define-top-level-syntax id val)
-                (##expand-define-syntax core-expanded-binding cte)
-                (loop
-                  bindings
-                  res
-                  scps
-                  cte))
-               ((##define-syntax id val)
-                (let ((definer (car (##syntax-source-code core-expanded-binding))))
-                  (let* ((fake-val (lambda _ 'dummy))
-                         (scps     scps)
-                         (id       (add-scopes id scps))
-                         (key      (##hcte-add-new-local-binding! cte id))
-                         (cte      (##hcte-add-macro-cte cte key id fake-val))
-                         (val      (##eval-for-syntax-binding
-                                     (add-scopes val scps)
-                                     cte))
-                         (cte      (##hcte-add-macro-cte cte key id val))
-                         (binding  (##syntax-source-code-set core-expanded-binding 
-                                     (list definer id val))))
-                    (loop
-                      bindings
-                      res 
-                      scps
-                      cte))))
-               (rest
-                 (let ((defs (map (lambda (orig-binding binding)
-                                        (match-source binding (##define ##define-syntax)
-                                          ((##define id val)
-                                           (let ((definer (car (##syntax-source-code binding))))
-                                             (##syntax-source-code-set binding
-                                                 (list definer
-                                                       id
-                                                       (expand val cte)))
-                                             #;(##transform-define-form->sugar-form
-                                               (##syntax-source-code-set binding
-                                                 (list definer
-                                                       id
-                                                       (expand val cte)))
-                                               orig-binding)))
-                                          (else
-                                           binding)))
-                                      body 
-                                      res)))
-                         (append
-                           (reverse defs)
-                           (##syntax-source-code
-                             (##expand-pair/list (add-scopes
-                                                   (##syntax-source-code-set (make-syntax-source #f #f)
-                                                     (cons binding bindings))
-                                                   scps)
-                                               cte
-                                               (lambda _ 
-                                                 (##error-expansion ##expand-body body "Ill formed body form")))))))))))))))
+  (define (##expand-body exprs bindings cte)
+
+    (define (##expand-body-define expr exprs bindings cte)
+      (let* ((form (##transform-define-form->base-form expr))
+             (form-code (syntax-source-code form))
+             (scp       (make-scope))
+             (define-id (car form-code))
+             (id        (add-scope (cadr form-code) scp))
+             (value     (add-scope (caddr form-code) scp)))
+        (let* ((key (##hcte-add-new-local-binding! cte id))
+               (cte (##hcte-add-variable-cte cte key id)))
+          (let ((binding (syntax-source-code-set body `(,expr ,define-id ,id ,value))))
+            (##expand-body
+              (add-scope exprs scp)
+              (cons binding (add-scope bindings scp))
+              cte)))))
+
+    (define (##expand-body-define-syntax expr exprs bindings cte)
+      (let* ((form-code (syntax-source-code expr))
+             (scp       (make-scope))
+             (define-id (car form-code))
+             (id        (add-scope (cadr form-code) scp))
+             (value     (add-scope (caddr form-code) scp))
+             (fake-value (lambda _ 'let-dummy)))
+        (let* ((key (##hcte-add-new-local-binding! cte id))
+               (cte (##hcte-add-macro-cte cte key id fake-value))
+               (value (##eval-for-syntax-binding
+                        value
+                        cte))
+               (cte (##hcte-add-macro-cte cte key id value)))
+          (##expand-body
+            (add-scope expr scp)
+            (add-scope bindings scp)
+            cte))))
+
+    (define (##expand-body-define-global-syntax expr exprs bindings cte)
+      (let* ((form-code (syntax-source-code expr))
+             (scp       (make-scope))
+             (define-id (car form-code))
+             (id        (add-scope (cadr form-code) scp))
+             (value     (add-scope (caddr form-code) scp))
+             (fake-value (lambda _ 'let-dummy)))
+        (let* ((key (##hcte-add-new-top-level-binding! cte id))
+               (cte (##hcte-add-macro-cte cte key fake-value))
+               (val (##eval-for-syntax-binding
+                      value
+                      cte))
+               (cte (##hcte-add-macro-cte cte key value)))
+          (##expand-body
+            (add-scope exprs scp)
+            (add-scope bindings scp)
+            cte))))
+
+    (define (##expand-body-define-bindings expr exprs bindings cte)
+      (let loop ((bindings bindings)
+                           ;
+                           ; Note: we do not need to expand bindings' value before
+                           ; expanding the body's expressions as the cte is already built
+                           ; correctly for both task at this point.
+                 (expanded (##expand-define-exprs expr exprs cte)))
+        (cond
+          ((pair? bindings)
+           (let ((binding  (##syntax-source-code (car bindings)))
+                 (bindings (cdr bindings)))
+                              ; TODO vectorize-me
+             (let ((original  (list-ref binding 0))
+                   (define-id (list-ref binding 1))
+                   (id        (list-ref binding 2))
+                   (value     (list-ref binding 3)))
+               (let ((value (##expand value cte)))
+                 (loop
+                   bindings
+                   (cons 
+                     (##transform-define-form->sugar-form 
+                       (syntax-source-code-set original
+                         `(,define-id ,id ,value))
+                       original)
+                     expanded))))))
+          ((null? bindings)
+           (syntax-source-code-set body
+             expanded)))))
+
+    (define (##expand-define-exprs expr exprs cte)
+      ; act as ##begin form; we skip the transformation here ...
+      (let ((body (##syntax-source-code-set body (cons expr exprs))))
+        (##syntax-source-code
+          (##expand-pair/list body cte 
+            (lambda _ 
+              (##pretty-print body)
+              (error "expand-body error"))))))
+
+    (cond 
+      ((pair? exprs)
+       (let ((expr  (car exprs))
+             (exprs (cdr exprs)))
+         (let ((core-expanded (##expand->core-form expr cte)))
+           (match-source core-expanded (##define ##define-syntax ##define-global-syntax)
+             ((##define . args)
+              (##expand-body-define core-expanded exprs bindings cte))
+             ((##define-syntax . args)
+              (##expand-body-define-syntax core-expanded exprs bindings cte))
+             ((##define-global-syntax . args)
+              (##expand-body-define-global-syntax core-expanded exprs bindings cte))
+             (_
+              (##expand-body-define-bindings core-expanded exprs bindings cte))))))
+      (else
+        (error "Empty body"))))
+
+  (##expand-body (##syntax-source-code body) (list) cte))
+
+
     
 ;;;----------------------------------------------------------------------------
 ;;; Sequencing forms
@@ -687,7 +726,7 @@
        (let* ((bindings+cte (expand-lambda-bindings bindings scp cte))
               (bindings         (car  bindings+cte))
               (cte              (cadr bindings+cte)))
-         (let ((body (##expand-body body cte (list scp))))
+         (let ((body (syntax-source-code (##expand-body (add-scope (syntax-source-code-set stx body) scp) cte))))
            (##syntax-source-code-set stx
              `(,lambda-id ,bindings ,@body))))))))
 
