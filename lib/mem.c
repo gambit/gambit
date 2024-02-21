@@ -1,6 +1,6 @@
 /* File: "mem.c" */
 
-/* Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.  */
+/* Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.  */
 
 #define ___INCLUDED_FROM_MEM
 #define ___VERSION 409005
@@ -4987,6 +4987,262 @@ ___PSDKR)
 }
 
 
+#ifdef ___GC_HASH_TABLE_REHASH_EAGERLY
+#ifdef ___GC_HASH_TABLE_REHASH_LAZILY
+#error "Define either ___GC_HASH_TABLE_REHASH_EAGERLY or ___GC_HASH_TABLE_REHASH_LAZILY"
+#endif
+#else
+#ifndef ___GC_HASH_TABLE_REHASH_LAZILY
+#ifdef ___SINGLE_THREADED_VMS
+#define ___GC_HASH_TABLE_REHASH_LAZILY
+#else
+#define ___GC_HASH_TABLE_REHASH_EAGERLY
+#endif
+#endif
+#endif
+
+
+___HIDDEN void gc_hash_table_rehash_in_situ
+   ___P((___SCMOBJ ht),
+        (ht)
+___SCMOBJ ht;)
+{
+  ___WORD* body = ___BODY_AS(ht,___tSUBTYPED);
+  ___SIZE_TS words = ___HD_WORDS(body[-1]);
+  int size2 = words - ___GCHASHTABLE_KEY0;
+  int i;
+
+  body[___GCHASHTABLE_FLAGS] =
+    ___FIXAND(body[___GCHASHTABLE_FLAGS],
+              ___FIXNOT(___FIX(___GCHASHTABLE_FLAG_KEY_MOVED)));
+
+  if (!___FIXZEROP(___FIXAND(body[___GCHASHTABLE_FLAGS],
+                             ___FIX(___GCHASHTABLE_FLAG_UNION_FIND))))
+    {
+#if 0
+
+      /*
+       * Compress paths.
+       */
+
+      for (i=size2-2; i>=0; i-=2)
+        {
+          ___SCMOBJ val = body[i+___GCHASHTABLE_VAL0];
+          if (___FIXNUMP(val)) /* parent links are encoded as fixnums */
+            {
+              if (!___FIXODDP(val)) { /* not compressed yet */
+                int probe2 = ___INT(val);
+                int prev2 = i;
+                ___SCMOBJ x;
+                for (;;) {
+                  ___SCMOBJ v = body[probe2+___GCHASHTABLE_VAL0];
+                  if (___FIXNUMP(v)) { /* link to parent? */
+                    if (___FIXODDP(v)) { /* compressed path? */
+                      x = v;
+                      break;
+                    }
+                    body[probe2+___GCHASHTABLE_VAL0] = prev2;
+                    prev2 = probe2;
+                    probe2 = ___INT(v);
+                  } else { /* reached root of class */
+                    x = ___FIX(probe2+1);
+                    break;
+                  }
+                }
+                while (prev2 != i) {
+                  probe2 = body[prev2+___GCHASHTABLE_VAL0];
+                  body[prev2+___GCHASHTABLE_VAL0] = x;
+                  prev2 = probe2;
+                }
+                body[i+___GCHASHTABLE_VAL0] = x;
+              }
+            }
+        }
+
+      for (i=size2-2; i>=0; i-=2)
+        {
+          ___SCMOBJ val = body[i+___GCHASHTABLE_VAL0];
+          if (___FIXNUMP(val))
+            body[i+___GCHASHTABLE_VAL0] = ___FIX(___INT(val)&~1);
+        }
+
+#endif
+
+      /*
+       * Replace entry values that are parent links by the key of
+       * their parent.
+       */
+
+      for (i=size2-2; i>=0; i-=2)
+        {
+          ___SCMOBJ val = body[i+___GCHASHTABLE_VAL0];
+          if (___FIXNUMP(val)) /* parent links are encoded as fixnums */
+            body[i+___GCHASHTABLE_VAL0] = body[___INT(val)+___GCHASHTABLE_KEY0];
+        }
+    }
+
+  if (___FIXZEROP(___FIXAND(body[___GCHASHTABLE_FLAGS],
+                            ___FIX(___GCHASHTABLE_FLAG_MEM_ALLOC_KEYS))))
+    {
+      /*
+       * Free deleted entries and mark key field of all active
+       * entries.
+       */
+
+      for (i=size2-2; i>=0; i-=2)
+        {
+          ___WORD key = body[i+___GCHASHTABLE_KEY0];
+          if (key == ___DELETED)
+            {
+              body[i+___GCHASHTABLE_KEY0] = ___UNUSED;
+              body[___GCHASHTABLE_FREE] =
+                ___FIXADD(body[___GCHASHTABLE_FREE], ___FIX(1));
+            }
+          else if (key != ___UNUSED)
+            body[i+___GCHASHTABLE_KEY0] = ___MEM_ALLOCATED_SET(key);
+        }
+
+      /*
+       * Move the active entries.
+       */
+
+      for (i=size2-2; i>=0; i-=2)
+        {
+          ___WORD key = body[i+___GCHASHTABLE_KEY0];
+
+          if (___MEM_ALLOCATED(key))
+            {
+              /* this is an active entry that has not been moved yet */
+
+              ___SCMOBJ val = body[i+___GCHASHTABLE_VAL0];
+              ___SCMOBJ obj;
+              int probe2;
+              int step2;
+
+              body[i+___GCHASHTABLE_KEY0] = ___UNUSED;
+              body[i+___GCHASHTABLE_VAL0] = ___UNUSED;
+
+            chain_non_mem_alloc:
+              key = ___MEM_ALLOCATED_CLEAR(key); /* recover true encoding */
+              ___GCHASHTABLE_HASH_STEP(probe2, step2, key, size2>>1);
+              probe2 <<= 1;
+              step2 <<= 1;
+
+            next_non_mem_alloc:
+              obj = body[probe2+___GCHASHTABLE_KEY0];
+
+              if (obj == ___UNUSED)
+                {
+                  /* storing into an unused entry */
+
+                  body[probe2+___GCHASHTABLE_KEY0] = key;
+                  body[probe2+___GCHASHTABLE_VAL0] = val;
+                }
+              else if (___MEM_ALLOCATED(obj))
+                {
+                  /* storing into an active entry */
+
+                  body[probe2+___GCHASHTABLE_KEY0] = key;
+                  key = obj;
+                  obj = body[probe2+___GCHASHTABLE_VAL0];
+                  body[probe2+___GCHASHTABLE_VAL0] = val;
+                  val = obj;
+                  goto chain_non_mem_alloc; /* now move overwritten entry */
+                }
+              else
+                {
+                  /* an entry has been moved here, so keep looking */
+
+                  probe2 -= step2;
+                  if (probe2 < 0)
+                    probe2 += size2;
+                  goto next_non_mem_alloc;
+                }
+            }
+        }
+    }
+  else
+    {
+      /*
+       * Free deleted entries and mark key field of all active
+       * entries.
+       */
+
+      for (i=size2-2; i>=0; i-=2)
+        {
+          ___WORD key = body[i+___GCHASHTABLE_KEY0];
+          if (key == ___DELETED)
+            {
+              body[i+___GCHASHTABLE_KEY0] = ___UNUSED;
+              body[___GCHASHTABLE_FREE] =
+                ___FIXADD(body[___GCHASHTABLE_FREE], ___FIX(1));
+            }
+          else if (key != ___UNUSED)
+            body[i+___GCHASHTABLE_KEY0] = ___MEM_ALLOCATED_CLEAR(key);
+        }
+
+      /*
+       * Move the active entries.
+       */
+
+      for (i=size2-2; i>=0; i-=2)
+        {
+          ___WORD key = body[i+___GCHASHTABLE_KEY0];
+
+          if (key != ___UNUSED && !___MEM_ALLOCATED(key))
+            {
+              /* this is an active entry that has not been moved yet */
+
+              ___SCMOBJ val = body[i+___GCHASHTABLE_VAL0];
+              ___SCMOBJ obj;
+              int probe2;
+              int step2;
+
+              body[i+___GCHASHTABLE_KEY0] = ___UNUSED;
+              body[i+___GCHASHTABLE_VAL0] = ___UNUSED;
+
+            chain_mem_alloc:
+              key = ___MEM_ALLOCATED_SET(key); /* recover true encoding */
+              ___GCHASHTABLE_HASH_STEP(probe2, step2, key, size2>>1);
+              probe2 <<= 1;
+              step2 <<= 1;
+
+            next_mem_alloc:
+              obj = body[probe2+___GCHASHTABLE_KEY0];
+
+              if (obj == ___UNUSED)
+                {
+                  /* storing into an unused entry */
+
+                  body[probe2+___GCHASHTABLE_KEY0] = key;
+                  body[probe2+___GCHASHTABLE_VAL0] = val;
+                }
+              else if (!___MEM_ALLOCATED(obj))
+                {
+                  /* storing into an active entry */
+
+                  body[probe2+___GCHASHTABLE_KEY0] = key;
+                  key = obj;
+                  obj = body[probe2+___GCHASHTABLE_VAL0];
+                  body[probe2+___GCHASHTABLE_VAL0] = val;
+                  val = obj;
+                  goto chain_mem_alloc; /* now move overwritten entry */
+                }
+              else
+                {
+                  /* an entry has been moved here, so keep looking */
+
+                  probe2 -= step2;
+                  if (probe2 < 0)
+                    probe2 += size2;
+                  goto next_mem_alloc;
+                }
+            }
+        }
+    }
+}
+
+
 ___HIDDEN void process_gc_hash_tables
    ___P((___PSDNC),
         (___PSVNC)
@@ -5343,247 +5599,14 @@ ___PSDKR)
         }
 
       body[___GCHASHTABLE_FLAGS] = ___FIX(flags);
-    }
-}
 
+#ifndef ___GC_HASH_TABLE_REHASH_LAZILY
 
-___HIDDEN void gc_hash_table_rehash_in_situ
-   ___P((___SCMOBJ ht),
-        (ht)
-___SCMOBJ ht;)
-{
-  ___WORD* body = ___BODY_AS(ht,___tSUBTYPED);
-  ___SIZE_TS words = ___HD_WORDS(body[-1]);
-  int size2 = words - ___GCHASHTABLE_KEY0;
-  int i;
-
-  body[___GCHASHTABLE_FLAGS] =
-    ___FIXAND(body[___GCHASHTABLE_FLAGS],
-              ___FIXNOT(___FIX(___GCHASHTABLE_FLAG_KEY_MOVED)));
-
-  if (!___FIXZEROP(___FIXAND(body[___GCHASHTABLE_FLAGS],
-                             ___FIX(___GCHASHTABLE_FLAG_UNION_FIND))))
-    {
-#if 0
-
-      /*
-       * Compress paths.
-       */
-
-      for (i=size2-2; i>=0; i-=2)
-        {
-          ___SCMOBJ val = body[i+___GCHASHTABLE_VAL0];
-          if (___FIXNUMP(val)) /* parent links are encoded as fixnums */
-            {
-              if (!___FIXODDP(val)) { /* not compressed yet */
-                int probe2 = ___INT(val);
-                int prev2 = i;
-                ___SCMOBJ x;
-                for (;;) {
-                  ___SCMOBJ v = body[probe2+___GCHASHTABLE_VAL0];
-                  if (___FIXNUMP(v)) { /* link to parent? */
-                    if (___FIXODDP(v)) { /* compressed path? */
-                      x = v;
-                      break;
-                    }
-                    body[probe2+___GCHASHTABLE_VAL0] = prev2;
-                    prev2 = probe2;
-                    probe2 = ___INT(v);
-                  } else { /* reached root of class */
-                    x = ___FIX(probe2+1);
-                    break;
-                  }
-                }
-                while (prev2 != i) {
-                  probe2 = body[prev2+___GCHASHTABLE_VAL0];
-                  body[prev2+___GCHASHTABLE_VAL0] = x;
-                  prev2 = probe2;
-                }
-                body[i+___GCHASHTABLE_VAL0] = x;
-              }
-            }
-        }
-
-      for (i=size2-2; i>=0; i-=2)
-        {
-          ___SCMOBJ val = body[i+___GCHASHTABLE_VAL0];
-          if (___FIXNUMP(val))
-            body[i+___GCHASHTABLE_VAL0] = ___FIX(___INT(val)&~1);
-        }
+      if (!___FIXZEROP(___FIXAND(___FIX(flags),
+                                 ___FIX(___GCHASHTABLE_FLAG_KEY_MOVED))))
+        gc_hash_table_rehash_in_situ (___SUBTYPED_FROM_BODY(body));
 
 #endif
-
-      /*
-       * Replace entry values that are parent links by the key of
-       * their parent.
-       */
-
-      for (i=size2-2; i>=0; i-=2)
-        {
-          ___SCMOBJ val = body[i+___GCHASHTABLE_VAL0];
-          if (___FIXNUMP(val)) /* parent links are encoded as fixnums */
-            body[i+___GCHASHTABLE_VAL0] = body[___INT(val)+___GCHASHTABLE_KEY0];
-        }
-    }
-
-  if (___FIXZEROP(___FIXAND(body[___GCHASHTABLE_FLAGS],
-                            ___FIX(___GCHASHTABLE_FLAG_MEM_ALLOC_KEYS))))
-    {
-      /*
-       * Free deleted entries and mark key field of all active
-       * entries.
-       */
-
-      for (i=size2-2; i>=0; i-=2)
-        {
-          ___WORD key = body[i+___GCHASHTABLE_KEY0];
-          if (key == ___DELETED)
-            {
-              body[i+___GCHASHTABLE_KEY0] = ___UNUSED;
-              body[___GCHASHTABLE_FREE] =
-                ___FIXADD(body[___GCHASHTABLE_FREE], ___FIX(1));
-            }
-          else if (key != ___UNUSED)
-            body[i+___GCHASHTABLE_KEY0] = ___MEM_ALLOCATED_SET(key);
-        }
-
-      /*
-       * Move the active entries.
-       */
-
-      for (i=size2-2; i>=0; i-=2)
-        {
-          ___WORD key = body[i+___GCHASHTABLE_KEY0];
-
-          if (___MEM_ALLOCATED(key))
-            {
-              /* this is an active entry that has not been moved yet */
-
-              ___SCMOBJ val = body[i+___GCHASHTABLE_VAL0];
-              ___SCMOBJ obj;
-              int probe2;
-              int step2;
-
-              body[i+___GCHASHTABLE_KEY0] = ___UNUSED;
-              body[i+___GCHASHTABLE_VAL0] = ___UNUSED;
-
-            chain_non_mem_alloc:
-              key = ___MEM_ALLOCATED_CLEAR(key); /* recover true encoding */
-              ___GCHASHTABLE_HASH_STEP(probe2, step2, key, size2>>1);
-              probe2 <<= 1;
-              step2 <<= 1;
-
-            next_non_mem_alloc:
-              obj = body[probe2+___GCHASHTABLE_KEY0];
-
-              if (obj == ___UNUSED)
-                {
-                  /* storing into an unused entry */
-
-                  body[probe2+___GCHASHTABLE_KEY0] = key;
-                  body[probe2+___GCHASHTABLE_VAL0] = val;
-                }
-              else if (___MEM_ALLOCATED(obj))
-                {
-                  /* storing into an active entry */
-
-                  body[probe2+___GCHASHTABLE_KEY0] = key;
-                  key = obj;
-                  obj = body[probe2+___GCHASHTABLE_VAL0];
-                  body[probe2+___GCHASHTABLE_VAL0] = val;
-                  val = obj;
-                  goto chain_non_mem_alloc; /* now move overwritten entry */
-                }
-              else
-                {
-                  /* an entry has been moved here, so keep looking */
-
-                  probe2 -= step2;
-                  if (probe2 < 0)
-                    probe2 += size2;
-                  goto next_non_mem_alloc;
-                }
-            }
-        }
-    }
-  else
-    {
-      /*
-       * Free deleted entries and mark key field of all active
-       * entries.
-       */
-
-      for (i=size2-2; i>=0; i-=2)
-        {
-          ___WORD key = body[i+___GCHASHTABLE_KEY0];
-          if (key == ___DELETED)
-            {
-              body[i+___GCHASHTABLE_KEY0] = ___UNUSED;
-              body[___GCHASHTABLE_FREE] =
-                ___FIXADD(body[___GCHASHTABLE_FREE], ___FIX(1));
-            }
-          else if (key != ___UNUSED)
-            body[i+___GCHASHTABLE_KEY0] = ___MEM_ALLOCATED_CLEAR(key);
-        }
-
-      /*
-       * Move the active entries.
-       */
-
-      for (i=size2-2; i>=0; i-=2)
-        {
-          ___WORD key = body[i+___GCHASHTABLE_KEY0];
-
-          if (key != ___UNUSED && !___MEM_ALLOCATED(key))
-            {
-              /* this is an active entry that has not been moved yet */
-
-              ___SCMOBJ val = body[i+___GCHASHTABLE_VAL0];
-              ___SCMOBJ obj;
-              int probe2;
-              int step2;
-
-              body[i+___GCHASHTABLE_KEY0] = ___UNUSED;
-              body[i+___GCHASHTABLE_VAL0] = ___UNUSED;
-
-            chain_mem_alloc:
-              key = ___MEM_ALLOCATED_SET(key); /* recover true encoding */
-              ___GCHASHTABLE_HASH_STEP(probe2, step2, key, size2>>1);
-              probe2 <<= 1;
-              step2 <<= 1;
-
-            next_mem_alloc:
-              obj = body[probe2+___GCHASHTABLE_KEY0];
-
-              if (obj == ___UNUSED)
-                {
-                  /* storing into an unused entry */
-
-                  body[probe2+___GCHASHTABLE_KEY0] = key;
-                  body[probe2+___GCHASHTABLE_VAL0] = val;
-                }
-              else if (!___MEM_ALLOCATED(obj))
-                {
-                  /* storing into an active entry */
-
-                  body[probe2+___GCHASHTABLE_KEY0] = key;
-                  key = obj;
-                  obj = body[probe2+___GCHASHTABLE_VAL0];
-                  body[probe2+___GCHASHTABLE_VAL0] = val;
-                  val = obj;
-                  goto chain_mem_alloc; /* now move overwritten entry */
-                }
-              else
-                {
-                  /* an entry has been moved here, so keep looking */
-
-                  probe2 -= step2;
-                  if (probe2 < 0)
-                    probe2 += size2;
-                  goto next_mem_alloc;
-                }
-            }
-        }
     }
 }
 
@@ -5601,9 +5624,13 @@ ___SCMOBJ key;)
   int step2;
   ___SCMOBJ obj;
 
+#ifdef ___GC_HASH_TABLE_REHASH_LAZILY
+
   if (!___FIXZEROP(___FIXAND(___FIELD(ht, ___GCHASHTABLE_FLAGS),
                              ___FIX(___GCHASHTABLE_FLAG_KEY_MOVED))))
     gc_hash_table_rehash_in_situ (ht);
+
+#endif
 
   size2 = ___INT(___VECTORLENGTH(ht)) - ___GCHASHTABLE_KEY0;
   ___GCHASHTABLE_HASH_STEP(probe2, step2, key, size2>>1);
@@ -5649,9 +5676,13 @@ ___SCMOBJ val;)
   int step2;
   ___SCMOBJ obj;
 
+#ifdef ___GC_HASH_TABLE_REHASH_LAZILY
+
   if (!___FIXZEROP(___FIXAND(___FIELD(ht, ___GCHASHTABLE_FLAGS),
                              ___FIX(___GCHASHTABLE_FLAG_KEY_MOVED))))
     gc_hash_table_rehash_in_situ (ht);
+
+#endif
 
   size2 = ___INT(___VECTORLENGTH(ht)) - ___GCHASHTABLE_KEY0;
   ___GCHASHTABLE_HASH_STEP(probe2, step2, key, size2>>1);
@@ -5875,9 +5906,13 @@ ___BOOL find;)
   ___SCMOBJ k2 = ___FIX(0);
   ___SCMOBJ k2_probe2 = ___FIX(0);
 
+#ifdef ___GC_HASH_TABLE_REHASH_LAZILY
+
   if (!___FIXZEROP(___FIXAND(___FIELD(ht, ___GCHASHTABLE_FLAGS),
                              ___FIX(___GCHASHTABLE_FLAG_KEY_MOVED))))
     gc_hash_table_rehash_in_situ (ht);
+
+#endif
 
   size2 = ___INT(___VECTORLENGTH(ht)) - ___GCHASHTABLE_KEY0;
 
