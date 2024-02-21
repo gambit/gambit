@@ -259,6 +259,7 @@
     (##add-new-core-macro! ##letrec*-values ##expand-letrec*-values)
 
     (##add-new-core-macro! ##let-syntax     ##expand-let-syntax)
+
     (##add-new-core-macro! ##let*-syntax    ##expand-let*-syntax)
     (##add-new-core-macro! ##letrec-syntax  ##expand-letrec-syntax)
     (##add-new-core-macro! ##letrec*-syntax ##expand-letrec*-syntax)

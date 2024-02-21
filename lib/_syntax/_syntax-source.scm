@@ -383,13 +383,13 @@
     ((null? code)
      code)
     (else
-     (##update-scope code proc))))
+     (##syntax-source-scopes-update code proc))))
 
 (define-prim (##update-scope stx proc)
-  (let ((code (syntax-source-code stx)))
+  (let ((code (##syntax-source-code stx)))
     (cond
       ((pair? code)
-       (syntax-source-code-set stx
+       (##syntax-source-code-set stx
          (##update-scope-pair code proc)))
       ((null? code)
        stx)
@@ -404,24 +404,27 @@
 
 (define-prim&proc (add-scope stx (scp scope))
   ((if (or (pair? stx)
-          (null? stx))
+           (null? stx))
       ##update-scope-pair
       ##update-scope)
    stx 
-   (lambda (scopes) (scopes-insert scopes scp))))
+   (lambda (scopes) 
+     (##scopes-insert scopes scp))))
 
 (define-prim&proc (flip-scope stx (scp scope))
   ((if (or (pair? stx)
-          (null? stx))
+           (null? stx))
       ##update-scope-pair
       ##update-scope)
    stx 
-   (lambda (scopes) (scopes-xor scopes scp))))
+   (lambda (scopes) 
+     (##scopes-xor scopes scp))))
 
 (define-prim&proc (add-scopes stx scps)
-  (fold (lambda (scp stx) (add-scope stx scp))
-        stx
-        scps))
+  (##fold (lambda (scp stx) 
+            (##add-scope stx scp))
+          stx
+          scps))
 
 ;;;----------------------------------------------------------------------------
 

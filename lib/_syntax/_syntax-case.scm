@@ -137,14 +137,20 @@
          (lambda (id+lvl) 
            (list
              (cadr id+lvl)
-               `(##syntax-case-binding-lookup ,bindings ',expr))))
+               `(let ((lookup-result (##syntax-case-binding-lookup ,bindings ',expr)))
+                  (or (and ,is-tail? 
+                           (syntax-source? lookup-result)
+                           (let ((lookup-result-code (##syntax-source-code lookup-result)))
+                             (and (or (null? lookup-result-code)
+                                      (pair? lookup-result-code))
+                               lookup-result-code)))
+                      lookup-result)))))
         ((null? code)
          (list 0 `',code))
         (else
           (list
             0
-           `(,(if is-tail? syntax-source-code identity)
-             (,(##make-core-syntax-source '##syntax #f) ,expr)))))))
+           `(,(##make-core-syntax-source '##syntax #f) ,expr))))))
 
   (match-source expr (##syntax syntax)
     ((syntax syntax-expr)

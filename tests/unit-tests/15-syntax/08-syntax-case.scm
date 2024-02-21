@@ -151,4 +151,16 @@
   (let ((evalued (##eval-for-syntax-binding stx cte)))
     (check-equal? evalued (plain-datum->core-syntax 0))))
 
-;;;;----------------------------------------------------------------------------
+
+(let* ((cte ##syntax-interaction-cte)
+       (datum `(##begin
+                 (##define-syntax tt
+                   (##syntax-rules ()
+                     ((_ a b) (+ a . b))))
+                 (tt 0 ())))
+       (stx (plain-datum->syntax datum))
+       (stx (add-scope stx core-scope)))
+  (let ((evalued (##eval-for-syntax-binding stx cte)))
+    (check-equal? evalued 0)))
+
+;;;----------------------------------------------------------------------------
