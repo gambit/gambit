@@ -107,12 +107,15 @@
 
 (define-prim&proc (hcte-add-macro-cte cte key id descr)
   (let ((key (or key (hcte-add-new-local-binding! cte id))))
-    (##cte-add-macro cte key descr
-     (lambda (ctx)
-       (##syntax-ctx-set
-        ctx
-        key 
-        (##ctx-binding-macro id descr))))))
+    (let ((cte (or (and (##cte-top? cte)
+                        (##cte-parent-cte cte))
+                   cte)))
+      (##cte-add-macro cte key descr
+       (lambda (ctx)
+         (##syntax-ctx-set
+          ctx
+          key 
+          (##ctx-binding-macro id descr)))))))
 
 (define-prim&proc (hcte-add-macros-cte cte keys ids)
   (cond
