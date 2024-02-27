@@ -2352,7 +2352,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                               (car sublists)))
                         (and first
                              (every (lambda (l)
-                                        (equal? first l))
+                                      (equal? first l))
                                       (cdr sublists))
                              (cons len first)))))))))
 
@@ -2434,7 +2434,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                               (vector-ref sublists 0)))
                         (and first
                              (vector-every (lambda (l)
-                                               (equal? first l))
+                                             (equal? first l))
                                              sublists)
                              (cons len first)))))))))
 
@@ -4816,7 +4816,8 @@ OTHER DEALINGS IN THE SOFTWARE.
         ((not (boolean? safe?))
          (error (string-append caller "Expecting a boolean as the fifth argument: ") k arrays storage-class mutable? safe?))
         (else
-         (%%%array-stack k arrays storage-class mutable? safe? caller call/cc-safe?))))
+         ;; We copy the arrays argument in case any of the array getters modify the arrays list argument
+         (%%%array-stack k (list-copy arrays) storage-class mutable? safe? caller call/cc-safe?))))
 
 (define (array-append k
                       arrays
@@ -4858,14 +4859,14 @@ OTHER DEALINGS IN THE SOFTWARE.
          (error (string-append caller "Expecting a boolean as the fifth argument: ") k arrays storage-class mutable? safe?))
         ((not (let ((first-domain (%%array-domain (car arrays))))
                 (every (lambda (d)
-                           (every (lambda (i)
-                                      (or (fx= i k)
-                                          (and (= (%%interval-lower-bound first-domain i)  ;; may not be fixnums
-                                                  (%%interval-lower-bound d            i))
-                                               (= (%%interval-upper-bound first-domain i)
-                                                  (%%interval-upper-bound d            i)))))
-                                    (iota (%%interval-dimension first-domain))))
-                         (cdr (map %%array-domain arrays)))))
+                         (every (lambda (i)
+                                  (or (fx= i k)
+                                      (and (= (%%interval-lower-bound first-domain i)  ;; may not be fixnums
+                                              (%%interval-lower-bound d            i))
+                                           (= (%%interval-upper-bound first-domain i)
+                                              (%%interval-upper-bound d            i)))))
+                                (iota (%%interval-dimension first-domain))))
+                       (cdr (map %%array-domain arrays)))))
          (error (string-append caller "Expecting as the second argument a nonnull list of arrays with the same upper and lower bounds (except for index "
                                (number->string k)
                                "): ")
@@ -4885,6 +4886,8 @@ OTHER DEALINGS IN THE SOFTWARE.
                              (cdr arrays))))))
            (lambda (axis-subdividers kth-size)
              (let* ((arrays
+                     (list-copy arrays))  ;; in case any of the array getters modify the arrays list argument
+                    (arrays
                      (if call/cc-safe?
                          (map (lambda (A)
                                 (%%->specialized-array A storage-class caller))
