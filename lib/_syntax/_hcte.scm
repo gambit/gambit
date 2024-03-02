@@ -84,7 +84,7 @@
 (define-prim&proc (hcte-add-variable-cte cte key id)
   (let ((key (or key (hcte-add-new-local-binding! cte id))))
     (let ((cte (or (and (##cte-top? cte)
-                        (##cte-parent-cte cte))
+                        (##top-cte-cte cte))
                    ; top-level definitions begin at the top-cte's parent cte,
                    ; as the top-cte is used also as the tail sentinel.
                    cte)))
@@ -108,7 +108,7 @@
 (define-prim&proc (hcte-add-macro-cte cte key id descr)
   (let ((key (or key (hcte-add-new-local-binding! cte id))))
     (let ((cte (or (and (##cte-top? cte)
-                        (##cte-parent-cte cte))
+                        (##top-cte-cte cte))
                    cte)))
       (##cte-add-macro cte key descr
        (lambda (ctx)
@@ -130,7 +130,7 @@
 (define-prim&proc (hcte-add-core-macro-cte cte key id descr)
   (let ((key (or key (hcte-add-new-local-binding! cte id))))
     (let ((cte (or (and (##cte-top? cte)
-                        (##cte-parent-cte cte))
+                        (##top-cte-cte cte))
                    cte)))
       (##cte-add-core-macro cte key descr
        (lambda (ctx)
@@ -190,6 +190,9 @@
 
 (define-prim&proc (top-hcte-process-namespace! top-cte src)
   (##top-cte-process-namespace! top-cte src))
+
+(define-prim&proc (hcte-process-namespace cte src)
+  (##cte-process-namespace cte src))
 
 (define-prim&proc (hcte-namespace-lookup cte id)
   (let ((full-name 

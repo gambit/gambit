@@ -20,13 +20,9 @@
     performances are satisfaying.
 
 - Performance
-  - syntax-case optimizations
-    - literals
   - general optimizations
 
 - Correctness
-  - Bugs:
-    - unknown bug with `full-name?`
   - serialise compilation environements.
   - Fix `define-library` by removing references to the old syntax system.
     - Some modules (from `make modules`) were not tested for correctness yet.
@@ -42,7 +38,7 @@
   - Investigate the strategies used to accelerate the compilation
     of those old syntax construct and make sure we do the same when we can.
   - Complete hygiene would rejects programs with undeclared identifiers. 
-    Must fill up the environment.
+    Fill up the environment or accept unknown global?
 
 - GSI
   - merge the original `compile-top` "phase" with 

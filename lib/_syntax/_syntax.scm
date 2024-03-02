@@ -237,10 +237,12 @@
     (##add-new-core-macro! ##syntax ##expand-quote-syntax)
 
     (##add-new-core-macro! ##quote ##expand-quote)
-    (##add-new-core-macro! quote ##expand-quote)
     (##add-new-core-macro! ##quasiquote ##expand-quasiquote)
     (##add-new-core-macro! ##unquote ##expand-unquote)
     (##add-new-core-macro! ##unquote-splicing ##expand-unquote-splicing)
+    (##add-new-core-macro! quote ##expand-quote)
+    (##add-new-core-macro! quasiquote ##expand-quasiquote)
+    (##add-new-core-macro! unquote ##expand-unquote)
 
     (##add-new-core-macro! ##case ##expand-case)
     (##add-new-core-macro! ##cond ##expand-cond)
