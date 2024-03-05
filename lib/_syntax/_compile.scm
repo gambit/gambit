@@ -30,9 +30,9 @@
             #t) ; is a core form
        (##binding-top-level-symbol b))
       (else
-        (##error-expansion ##resolve-compile-local-binding id "not a local binding")))))
+       (##error "##resolve-compile-local-binding: not a local binding")))))
  
-(define-prim&proc (resolve-compile-core-binding? (id identifier) (cte cte))
+(define-prim&proc (resolve-compile-top-level-binding? (id identifier) (cte cte))
   (let ((b (##resolve-id id cte)))
     (and (and (##binding-top-level? b)
               #t) ; is a core form
@@ -240,21 +240,22 @@
 (define-prim&proc (compile-define stx cte)
 
   (define (resolve-maybe-local-binding id cte)
-    (match-source id (#!optional #!key #!rest)
-     (#!optional id)
-     (#!key id)
-     (#!rest id)
-     ((id-id val-id)
-      (syntax-source-code-set id
-        `(,(##resolve-compile-local-binding id-id cte)
-           ,(##compile val-id cte))))
-     (else
-      (let ((core? (##resolve-compile-core-binding? id cte)))
-        (if core? 
-            (syntax-source-code-set id core?)
-            ; id could be local as local definitions 
-            ; still appears in this phase
-            (##resolve-compile-local-binding id cte))))))
+    (case (##syntax-source-code id)
+      ((#!optional #!key #!rest)
+       id)
+      (else
+       (match-source id ()
+         ((id-id val-id)
+          (syntax-source-code-set id
+            `(,(##resolve-compile-local-binding id-id cte)
+               ,(##compile val-id cte))))
+         (else
+          (let ((top-level? (##resolve-compile-top-level-binding? id cte)))
+            (if top-level? 
+                (syntax-source-code-set id top-level?)
+                ; id could be local as local definitions 
+                ; still appears in this phase
+                (##resolve-compile-local-binding id cte))))))))
 
   (define (resolve-maybe-local-bindings ids cte)
     (cond

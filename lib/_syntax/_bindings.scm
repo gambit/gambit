@@ -106,7 +106,8 @@
 (define-prim&proc (resolve-global id cte) ; TODO
   ; at top level, rename identifier according to namespace
   (let ((full-name-id
-          (##hcte-namespace-lookup cte id)))
+          (##syntax-full-name cte id)
+          #;(##hcte-namespace-lookup cte id)))
     (and full-name-id
          (##resolve-id full-name-id cte))))
 

@@ -307,7 +307,8 @@
       ((##letrec*-values) '##expand-letrec*-bindings)
       (else               (error "Internal: cannot process let form's bindings"))))
 
-  (let ((stx-id (##gensym 'stx)))
+  (let ((stx-id (##gensym 'stx))
+        (cte    (if (##cte-top? cte) (##top-cte-cte cte) cte)))
    `(let ((,stx-id ,stx))
       (match-source ,stx-id ()
         ((let-id name bindings . body) when (identifier? name)
@@ -512,8 +513,7 @@
              expanded)))))
 
     (define (##expand-body-namespace expr exprs bindings cte)
-      (let ((cte (##hcte-process-namespace (if (##cte-top? cte) (##top-cte-cte cte) cte) expr)))
-;      (##pretty-print "expr") (##pretty-print expr) (##pretty-print exprs)
+      (let ((cte (##hcte-process-namespace cte expr)))
         (##expand-body exprs bindings cte)))
 
     (define (##expand-define-exprs expr exprs cte)
@@ -543,7 +543,8 @@
       (else
         (error "Empty body"))))
 
-  (##expand-body (##syntax-source-code body) (list) cte))
+  (let ((cte (if (##cte-top? cte) (##top-cte-cte cte) cte)))
+    (##expand-body (##syntax-source-code body) (list) cte)))
 
 
     
@@ -618,7 +619,7 @@
           (##dispatch t stx cte)))))
 
 (define-prim (##expand-application stx cte)
-  (##expand-pair/list stx cte 
+  (##expand-pair/list stx (if (##cte-top? cte) (##top-cte-cte cte) cte)
       (lambda (_) 
         (##pretty-print stx)
         (##error "error expansion: ill formed application"))))
@@ -742,7 +743,8 @@
                 dsssl-style-rest?
                 key-parameters)
               cte))))))
-  (let ((scp (make-scope)))
+  (let ((scp (make-scope))
+        (cte (if (##cte-top? cte) (##top-cte-cte cte) cte)))
     (match-source stx ()
       ((lambda-id bindings . body)
        (let* ((bindings+cte (expand-lambda-bindings bindings scp cte))
@@ -809,7 +811,7 @@
          (let* ((_   (##hcte-add-new-top-level-binding! cte full-id))
                 (val (##expand val cte))
                 (expanded-stx (##syntax-source-code-set stx 
-                                 `(,define-id ,full-id ,val))))
+                                 `(,define-id ,id ,val))))
            (##transform-define-form->sugar-form expanded-stx stx))))))
     (else
       (##error "ill-placed define"))))
@@ -834,29 +836,30 @@
 ;;;----------------------------------------------------------------------------
 
 (define-prim (##expand-identifier id cte)
-  (let ((id id #;(or (syntax-full-name cte id) id)))
-    (let ((binding (resolve-local id cte)))
-      (let ((key 
-              (cond
-                ((##binding-top-level? binding)
-                 (##binding-top-level-symbol binding))
-                ((##binding-local? binding)
-                 (##binding-local-key binding))
-                (else
-                 #f))))
-        (let ((value (and key (##cte-ctx-ref cte key))))
-          (cond
-            ((and value 
-                  (##ctx-binding-variable? value))
-             id)
-            (value
-             (##error-expansion ##expand-identifier id "macro name can't be used as variable"))
-            ((and binding (##binding-top-level? binding))
-             id)
-            (##allow-unbound?
-             id)
-            (else
-              (##error ##expand-identifier id  binding key value "unbound identifier"))))))))
+  (let ((binding (if (##cte-top? cte)
+                     (resolve-global id cte)
+                     (resolve-local id cte))))
+    (let ((key 
+            (cond
+              ((##binding-top-level? binding)
+               (##binding-top-level-symbol binding))
+              ((##binding-local? binding)
+               (##binding-local-key binding))
+              (else
+               #f))))
+      (let ((value (and key (##cte-ctx-ref cte key))))
+        (cond
+          ((and value 
+                (##ctx-binding-variable? value))
+           id)
+          (value
+           (##error-expansion ##expand-identifier id "macro name can't be used as variable"))
+          ((and binding (##binding-top-level? binding))
+           id)
+          (##allow-unbound?
+           id)
+          (else
+            (##error ##expand-identifier id  binding key value "unbound identifier")))))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -968,8 +971,7 @@
 ;;;----------------------------------------------------------------------------
 
 (define-prim&proc (expand-namespace stx cte)
-  (##top-hcte-process-namespace! (##cte-top-cte cte) stx)
-  #;(##cte-process-namespace cte stx)
+  (##top-hcte-process-namespace! cte stx)
   stx)
 
 (define-prim&proc (expand-include stx-src cte)

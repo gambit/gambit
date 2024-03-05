@@ -41,4 +41,32 @@
 (define (eval-for-syntax-binding rhs cte #!optional debug?)
   (##eval-for-syntax-binding rhs cte debug?))
 
+(define (##eval-for-top-syntax rhs cte #!optional debug?)
+  (define debug (or #f debug?))
+  (let ((expansion (expand rhs cte)))
+    (if debug
+        (begin
+          (##pretty-print "expansion of ")
+          (##pretty-print rhs)
+          (##pretty-print "is :")
+          (##pretty-print expansion)))
+    (let ((compiled (compile expansion cte)))
+      (if debug
+          (begin
+          (##pretty-print "compilation of ")
+          ;(##pretty-print expansion)
+          (##pretty-print "is :")
+          (##pretty-print compiled)))
+      (let ((evaluated   (##eval-top-syntax compiled cte)))
+        (if debug
+            (begin
+            (##pretty-print "evaluation of")
+            ;(##pretty-print compiled)
+            (##pretty-print "is :")
+            (##pretty-print evaluated)))
+        evaluated))))
+
+(define (eval-for-top-syntax rhs cte #!optional debug?)
+  (##eval-for-top-syntax rhs cte debug?))
+
 ;;;===========================================================================

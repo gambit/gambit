@@ -107,7 +107,7 @@
 
 (define-prim&proc (hcte-add-macro-cte cte key id descr)
   (let ((key (or key (hcte-add-new-local-binding! cte id))))
-    (let ((cte (or (and (##cte-top? cte)
+    (let ((cte cte #;(or (and (##cte-top? cte)
                         (##top-cte-cte cte))
                    cte)))
       (##cte-add-macro cte key descr
@@ -129,7 +129,7 @@
 
 (define-prim&proc (hcte-add-core-macro-cte cte key id descr)
   (let ((key (or key (hcte-add-new-local-binding! cte id))))
-    (let ((cte (or (and (##cte-top? cte)
+    (let ((cte cte #;(or (and (##cte-top? cte)
                         (##top-cte-cte cte))
                    cte)))
       (##cte-add-core-macro cte key descr
@@ -192,7 +192,8 @@
   (##top-cte-process-namespace! top-cte src))
 
 (define-prim&proc (hcte-process-namespace cte src)
-  (##cte-process-namespace cte src))
+  (let ((cte cte #;(if (##cte-top? cte) (##top-cte-cte cte) cte)))                  
+    (##cte-process-namespace cte src)))
 
 (define-prim&proc (hcte-namespace-lookup cte id)
   (let ((full-name 
