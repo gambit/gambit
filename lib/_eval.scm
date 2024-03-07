@@ -2,7 +2,7 @@
 
 ;;; File: "_eval.scm"
 
-;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1473,6 +1473,9 @@
         (macro-compilation-ctx-extra-info ctx))))
 
 (define (##make-extra-info)
+  (##make-table-aux 0 (macro-absent-obj) #f #f ##eq?))
+
+(define (##make-import-cache)
   (##make-table-aux 0 (macro-absent-obj) #f #f ##eq?))
 
 (define ##default-module-aliases '())

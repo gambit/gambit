@@ -2,7 +2,7 @@
 
 ;;; File: "_eval#.scm"
 
-;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -237,8 +237,9 @@
              (##make-meta-info) ;; meta-info
              #f ;; module-ref
              ##default-module-aliases ;; module-aliases
-             target
-             (##make-extra-info))) ;; extra-info
+             target ;; target
+             (##make-extra-info) ;; extra-info
+             (##make-import-cache))) ;; import-cache
 
 (##define-macro (macro-compilation-ctx-supply-modules ctx)
   `(##vector-ref ,ctx 0))
@@ -281,6 +282,12 @@
 
 (##define-macro (macro-compilation-ctx-extra-info-set! ctx extra-info)
    `(##vector-set! ,ctx 6 ,extra-info))
+
+(##define-macro (macro-compilation-ctx-import-cache ctx)
+   `(##vector-ref ,ctx 7))
+
+(##define-macro (macro-compilation-ctx-import-cache-set! ctx import-cache)
+   `(##vector-set! ,ctx 7 ,import-cache))
 
 ;;;----------------------------------------------------------------------------
 

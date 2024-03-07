@@ -2,7 +2,7 @@
 
 ;;; File: "_define-library-expand.scm"
 
-;;; Copyright (c) 2014-2021 by Marc Feeley and Frédéric Hamel, All Rights Reserved.
+;;; Copyright (c) 2014-2024 by Marc Feeley and Frédéric Hamel, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -117,13 +117,13 @@
                (root               (##vector-ref mod-info 5))
                (path               (##vector-ref mod-info 6)))
 
-           (values
-             (read-libdef-sld mod-path
-                              reference-src
-                              module-ref
-                              port
-                              root
-                              path)
+           (vector
+            (read-libdef-sld mod-path
+                             reference-src
+                             module-ref
+                             port
+                             root
+                             path)
              module-ref))
          (err reference-src)))))
 
@@ -682,23 +682,23 @@
                   body)))))))))
 
 (define (parse-import-set import-set-src module-aliases #!optional (ctx-library #f))
+
+  (define (import-set-err)
+    (##raise-expression-parsing-exception
+     'ill-formed-import-set
+     import-set-src))
+
+  (define (ill-formed-library-name)
+    (##raise-expression-parsing-exception
+     'ill-formed-library-name
+     import-set-src))
+
+  (define (define-library-expected src)
+    (##raise-expression-parsing-exception
+     'define-library-expected
+     src))
+
   (let ((import-set (##source-strip import-set-src)))
-
-    (define (import-set-err)
-      (##raise-expression-parsing-exception
-       'ill-formed-import-set
-       import-set-src))
-
-    (define (ill-formed-library-name)
-      (##raise-expression-parsing-exception
-       'ill-formed-library-name
-       import-set-src))
-
-    (define (define-library-expected src)
-      (##raise-expression-parsing-exception
-       'define-library-expected
-       src))
-
     (if (pair? import-set)
 
       (let* ((head-src (car import-set))
@@ -838,22 +838,37 @@
 
                  (module-ref (##string->symbol (##modref->string import-modref))))
 
-            (call-with-values
-             (lambda ()
-               (get-libdef
-                 (##make-source module-ref (##source-locat import-set-src))
-                 import-set-src))
-             (lambda (ld import-name)
-               (make-idmap
-                 (if (##source? ld)
-                     ld
-                     import-set-src)
-                 import-set-src
-                 import-name
-                 (and (libdef? ld) (libdef-namespace ld))
-                 (and (libdef? ld) (idmap-macros (libdef-exports ld)))
-                 (and (libdef? ld) (null? (libdef-body ld)) (null? (libdef-imports ld)))
-                 (and (libdef? ld) (idmap-mapping (libdef-exports ld)))))))))
+            (let* ((import-cache
+                    (let ((ctx (##compilation-ctx)))
+                      (and ctx
+                           (macro-compilation-ctx-import-cache ctx))))
+                   (libdef
+                    (and import-cache
+                         (table-ref import-cache module-ref #f)))
+                   (libdef
+                    (or libdef
+                        (let ((libdef
+                               (get-libdef
+                                (##make-source module-ref
+                                               (##source-locat import-set-src))
+                                import-set-src)))
+                          (if import-cache
+                              (table-set! import-cache module-ref libdef))
+                          libdef)))
+                   (ld
+                    (vector-ref libdef 0))
+                   (import-name
+                    (vector-ref libdef 1)))
+              (make-idmap
+               (if (##source? ld)
+                   ld
+                   import-set-src)
+               import-set-src
+               import-name
+               (and (libdef? ld) (libdef-namespace ld))
+               (and (libdef? ld) (idmap-macros (libdef-exports ld)))
+               (and (libdef? ld) (null? (libdef-body ld)) (null? (libdef-imports ld)))
+               (and (libdef? ld) (idmap-mapping (libdef-exports ld))))))))
 
       (if (symbol? import-set)
           (parse-import-set (##make-source
