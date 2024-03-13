@@ -189,11 +189,12 @@
              (if (##fx< i 0)
                  #t
                  (let ((c (##string-ref str i)))
-                   ;; otherwise a-z, A-Z, 0-9 and "-" are allowed
+                   ;; otherwise a-z, A-Z, 0-9, "-" and "~" are allowed
                    (and (or (and (##char>=? c #\a) (##char<=? c #\z))
                             (and (##char>=? c #\A) (##char<=? c #\Z))
                             (and (##char>=? c #\0) (##char<=? c #\9))
                             (##char=? c #\-)
+                            (##char=? c #\~)
                             (and (##not (##eq? context 'host))
                                  (or
                                   ;; except in host name, allow "_" and
