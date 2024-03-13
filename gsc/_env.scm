@@ -64,6 +64,10 @@
 (define (env-frame env vars)
   (vector
    ;; cell containing variables in this frame and an association between each
+   (if env (env-syntax-gbt-ref env)
+           (##make-syntax-global-binding-table))
+   (if env (env-syntax-ctx-ref env)
+           (##make-syntax-ctx))
    ;; symbol and it's namespace
    (cons vars #f)
    ;; macro definitions
@@ -92,7 +96,9 @@
     (env-macros-set env (cons (cons name* def) (env-macros-ref env)))))
 
 (define (env-macros-set env macro)
-  (vector (vector-ref env 0)
+  (vector (env-syntax-gbt-ref env)
+          (env-syntax-ctx-ref env)
+          (vector-ref env 2)
           macro
           (env-decl-ref env)
           (env-namespace-ref env)
@@ -103,7 +109,9 @@
   (env-decl-set env (cons d (env-decl-ref env))))
 
 (define (env-decl-set env decl)
-  (vector (vector-ref env 0)
+  (vector (env-syntax-gbt-ref env)
+          (env-syntax-ctx-ref env)
+          (vector-ref env 2)
           (env-macros-ref env)
           decl
           (env-namespace-ref env)
@@ -114,20 +122,37 @@
   (env-namespace-set env (cons n (env-namespace-ref env))))
 
 (define (env-namespace-set env namespace)
-  (vector (vector-ref env 0)
+  (vector (env-syntax-gbt-ref env)
+          (env-syntax-ctx-ref env)
+          (vector-ref env 2)
           (env-macros-ref env)
           (env-decl-ref env)
           namespace
           (env-parent-ref env)
           (env-externals-ref env)))
 
-(define (env-vars-ref env)              (car (vector-ref env 0)))
-(define (env-vars-set! env vars)        (set-car! (vector-ref env 0) vars))
-(define (env-macros-ref env)            (vector-ref env 1))
-(define (env-decl-ref env)              (vector-ref env 2))
-(define (env-namespace-ref env)         (vector-ref env 3))
-(define (env-parent-ref env)            (vector-ref env 4))
-(define (env-externals-ref env)         (vector-ref env 5))
+(define (env-syntax-gbt-ref env) (vector-ref env 0))
+(define (env-syntax-ctx-ref env) (vector-ref env 1))
+(define (env-syntax-gbt-set! env gbt) (vector-set! env 0 gbt))
+(define (env-syntax-ctx-set! env ctx) (vector-set! env 1 ctx))
+
+(define (env-ctx-set env ctx)
+  (vector (env-syntax-gbt-ref env)
+          ctx
+          (vector-ref env 2)
+          (env-macros-ref env)
+          (env-decl-ref env)
+          (env-namespace-ref env)
+          (env-parent-ref env)
+          (env-externals-ref env)))
+
+(define (env-vars-ref env)              (car (vector-ref env 2)))
+(define (env-vars-set! env vars)        (set-car! (vector-ref env 2) vars))
+(define (env-macros-ref env)            (vector-ref env 3))
+(define (env-decl-ref env)              (vector-ref env 4))
+(define (env-namespace-ref env)         (vector-ref env 5))
+(define (env-parent-ref env)            (vector-ref env 6))
+(define (env-externals-ref env)         (vector-ref env 7))
 
 (define (env-namespace-lookup env name)
   (let loop ((lst (env-namespace-ref env)))

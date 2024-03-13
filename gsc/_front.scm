@@ -189,7 +189,7 @@
 (define expand-source #f)
 (set! expand-source
   (lambda (program)
-    program))
+    (##syntax-expand ##syntax-interaction-cte program)))
 
 (define (compile-frontend-aux
          input
