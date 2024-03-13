@@ -8,6 +8,7 @@
 
 ;;;----------------------------------------------------------------------------
 
+; TODO adjust for new env
 (set! make-global-environment ;; import runtime macros into compilation env
   (lambda ()
 

@@ -4,26 +4,17 @@
 
 - Integrate interpretation envrionment
   - Use the "descriptor" structure instead of plain procedure for
-    macro definition's expansion. Those are usefull to reconstruct the expander
-    definitions and show the expected form to the user (for forms such as `cond`).
-    This is the last difference between the `##interaction-cte` and the `##syntax-interaction-cte`.
-    This can be done once the new `define-macro` form performs well enough to replace the old one.
-    (or we decide to keep the old `define-macro` as both forms are unhygienic by definition. Unsure yet
-    if breaking hygiene with the new system (as with the new `define-macro`) 
-    is required to keep the hygiene system sane)
-    We can then completely merge the `##interaction-cte` and the `##syntax-interaction-cte`.
+    macro definition's expansion.
+  - serialise compilation environements.
 
 - Integrate compilation environment
   - merge (phase 1) changes to this branch
-  - Interface for hygienic compile cte is implemented 
-    in my own fork, waiting only to be merged once
-    performances are satisfaying.
+    - either 
 
 - Performance
   - general optimizations
 
 - Correctness
-  - serialise compilation environements.
   - Fix `define-library` by removing references to the old syntax system.
     - Some modules (from `make modules`) were not tested for correctness yet.
   - Fix `make checks` as the string comparaison doesn't work anymore 
@@ -41,11 +32,10 @@
     Fill up the environment or accept unknown global?
 
 - GSI
-  - merge the original `compile-top` "phase" with 
-    the hygienic "compile" phase. Make sure the stepper doesn't
-    interfere with the hygiene algorithm.
+  - merge the original `compile-top` phase with 
+    the hygienic `compile` phase. 
+  - Make sure the stepper doesn't interfere with the hygiene algorithm. (more unit tests required)
 
 - GSC
-  - merge the compilation phase to the hygienic compile phase.
-    (Almost achievable for "free")
+  - merge the parse-program phase to the hygienic `compile` phase.
 
