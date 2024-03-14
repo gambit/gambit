@@ -8081,6 +8081,72 @@ end-of-code
 
 ;;; Bignum multiplication.
 
+(macro-case-target
+ ((C)
+
+(define ##mult-inner-loop
+  (c-lambda
+   (scheme-object scheme-object scheme-object scheme-object scheme-object)
+   void
+ #<<end-of-code
+
+#if defined(___BIG_ENDIAN)
+
+#if ___BIG_ABASE_WIDTH == 64 && ___BIG_MBASE_WIDTH == 16
+#define ___BIG_END_MINT_FLIP(x)((x)^3)
+#else
+#define ___BIG_END_MINT_FLIP(x)((x)^1)
+#endif
+
+#else
+
+#define ___BIG_END_MINT_FLIP(x)(x)
+
+#endif
+
+//void
+//mult (___BIGMDIGIT* x, int x_length, ___BIGMDIGIT* y, int y_length, ___BIGMDIGIT* result)
+{
+ // assumes that the elements of result are initially 0
+    ___BIGMDIGIT *x = ___CAST(___BIGMDIGIT*,___BODY_AS(___arg1,___tSUBTYPED));
+    int x_length = ___INT(___arg2);
+    ___BIGMDIGIT *y = ___CAST(___BIGMDIGIT*,___BODY_AS(___arg3,___tSUBTYPED));
+    int y_length = ___INT(___arg4);
+    ___BIGMDIGIT *result = ___CAST(___BIGMDIGIT*,___BODY_AS(___arg5,___tSUBTYPED));
+    int k;
+  for (k = 0; k < y_length; k++) {
+    ___BIGMDIGIT multiplier =  y[___BIG_END_MINT_FLIP(k)];
+    if (multiplier >  0) {
+      int i, j;
+      ___BIGMDOUBLEDIGIT carry = 0;
+      for (i = 0, j = k; i < x_length; i += 2, j += 2) {
+               /* The C backend always has an even number of mdigits
+                so we unroll the loop once. */
+        carry =
+          carry
+          + ((___BIGMDOUBLEDIGIT) result[___BIG_END_MINT_FLIP(j)])
+          + ((___BIGMDOUBLEDIGIT) multiplier) * ((___BIGMDOUBLEDIGIT) x[___BIG_END_MINT_FLIP(i)]);
+        result[___BIG_END_MINT_FLIP(j)] = (___BIGMDIGIT) carry;
+        carry =
+          (carry >> ___BIG_MBASE_WIDTH)
+          + ((___BIGMDOUBLEDIGIT) result[___BIG_END_MINT_FLIP(j+1)])
+          + ((___BIGMDOUBLEDIGIT) multiplier) * ((___BIGMDOUBLEDIGIT) x[___BIG_END_MINT_FLIP(i+1)]);
+        result[___BIG_END_MINT_FLIP(j+1)] = (___BIGMDIGIT) carry;
+        carry = carry >> ___BIG_MBASE_WIDTH;
+      }
+      result[___BIG_END_MINT_FLIP(k + x_length)] = (___BIGMDIGIT) carry;
+    }
+  }
+  ___return;
+}
+
+end-of-code
+))
+
+)
+ (else
+  (##begin)))
+
 (define-prim (##bignum.* x y)
 
   (define (fft-mul x y)
@@ -11025,27 +11091,34 @@ end-of-code
             #f
             #f)))
       (##declare (not interrupts-enabled))
-      (let loop1 ((k 0))
-        (if (##fx< k y-length)
-            (let ((multiplier (##bignum.mdigit-ref y k)))
-              (if (##fx= multiplier 0)
-                (loop1 (##fx+ k 1))
-                (let loop2 ((i 0)
-                            (j k)
-                            (carry 0))
-                  (if (##fx< i x-length)
-                    (loop2 (##fx+ i 1)
-                           (##fx+ j 1)
-                           (##bignum.mdigit-mul! result
-                                                 j
-                                                 x
-                                                 i
-                                                 multiplier
-                                                 carry))
-                    (begin
-                      (##bignum.mdigit-set! result j carry)
-                      (loop1 (##fx+ k 1)))))))
-            (cleanup x y result)))))
+      ;; We'll assume y-length is smaller than x-length to minimize the
+      ;; number of outer loops
+      (macro-case-target
+       ((C)
+        (##mult-inner-loop x x-length y y-length result))
+       (else
+          (let loop1 ((k 0))
+            (if (##fx< k y-length)
+                (let ((multiplier (##bignum.mdigit-ref y k)))
+                  (if (##fx= multiplier 0)
+                      (loop1 (##fx+ k 1))
+                      (let loop2 ((i 0)
+                                  (j k)
+                                  (carry 0))
+                        (if (##fx< i x-length)
+                            (loop2 (##fx+ i 1)
+                                   (##fx+ j 1)
+                                   (##bignum.mdigit-mul! result
+                                                         j
+                                                         x
+                                                         i
+                                                         multiplier
+                                                         carry))
+                            (begin
+                              (##bignum.mdigit-set! result j carry)
+                              (loop1 (##fx+ k 1)))))))))
+          ))
+      (cleanup x y result)))
 
   (define (cleanup x y result)
 
@@ -11114,14 +11187,14 @@ end-of-code
                          shift-bits)
                         low-term)))))))
 
-  (define (mul x x-length y y-length) ;; x-length <= y-length
+  (define (mul x x-length y y-length)
+    ;; the second argument is shorter than the first
     (let ((x-width (##fx* x-length ##bignum.mdigit-width)))
       (cond ((##fx< x-width ##bignum.naive-mul-max-width)
-             (naive-mul y y-length x x-length))
-            ((or (##not (use-fast-bignum-algorithms))       ;; Use Karatsuba even for very large integers
-                 (##fx< x-width ##bignum.fft-mul-min-width) ;; or if x is small enough
-                 (##fx< ##bignum.fft-mul-max-width          ;; or if y is too large for FFT to work.
-                        (##fx* y-length ##bignum.mdigit-width)))
+             (naive-mul x x-length y y-length))
+            ((or (##not (use-fast-bignum-algorithms))         ;; Use Karatsuba even for very large integers
+                 (##fx< x-width ##bignum.fft-mul-min-width)   ;; or if x is small enough
+                 (##fx< ##bignum.fft-mul-max-width x-width))  ;; or if x is too large for FFT to work.
              (karatsuba-mul x y))
             (else
              (fft-mul x y)))))
@@ -11151,6 +11224,7 @@ end-of-code
            ;; Don't bother shifting out low order zero bits,
            ;; just use naive multiplication
            (if (##fx< x-length y-length)
+               ;; the second argument is shorter than the first
                (naive-mul y y-length x x-length)
                (naive-mul x x-length y y-length)))
           ;; Both x and y are normalized bignums.
@@ -11167,8 +11241,9 @@ end-of-code
                  (y-low-bits (low-bits-to-shift y)))
              (if (##fx= (##fx+ x-low-bits y-low-bits) 0)
                  (if (##fx< x-length y-length)
-                     (mul x x-length y y-length)
-                     (mul y y-length x x-length))
+                     ;; the second argument is shorter than the first
+                     (mul y y-length x x-length)
+                     (mul x x-length y y-length))
                  (##arithmetic-shift
                   (##* (##arithmetic-shift x (##fx- x-low-bits))
                        (##arithmetic-shift y (##fx- y-low-bits)))
