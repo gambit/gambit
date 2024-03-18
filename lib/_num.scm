@@ -6059,7 +6059,7 @@ for a discussion of branch cuts.
           (##bignum.adigit-div (##fx+ result-bit-length ##bignum.adigit-width -1)))
          (result
           (##bignum.arithmetic-shift-into!
-           n (##max ##min-fixnum (##- position)) (##bignum.make result-word-length #f #f))))
+           n (##max ##min-fixnum (##- position)) (##bignum.make-zeros result-word-length))))
     ;; zero top bits of result and normalize
     (let ((size-words (##bignum.mdigit-div size))
           (size-bits  (##bignum.mdigit-mod size)))
@@ -6681,7 +6681,7 @@ for a discussion of branch cuts.
                      (if (fixnum? needed-bits)
                          ;; ##bignum.make requires a fixnum argument, and so does
                          ;; ##bignum.adigit-div.
-                         (##bignum.make (##bignum.adigit-div needed-bits) #f #f)
+                         (##bignum.make-zeros (##bignum.adigit-div needed-bits))
                          ;; can't make a bignum this big.
                          (##raise-heap-overflow-exception))))
                (for-each (lambda (index)
@@ -7849,6 +7849,9 @@ end-of-code
 
 (define-prim (##bignum.copy x)
   (##bignum.make (##bignum.adigit-length x) x #f))
+
+(define-prim (##bignum.make-zeros n)
+  (##bignum.make n #f #f))
 
 ;;; Bignum addition and subtraction.
 
@@ -11053,13 +11056,11 @@ end-of-code
     (let* ((x-length (##bignum.fdigit-length x))
            (y-length (##bignum.fdigit-length y))
            (result-length (##fx+ x-length y-length))
-           (result (##bignum.make
+           (result (##bignum.make-zeros
                     (##fxquotient
                      result-length
                      (##fxquotient ##bignum.adigit-width
-                                   ##bignum.fdigit-width))
-                    #f
-                    #f))
+                                   ##bignum.fdigit-width))))
            ;; minimum power of 2 >= x-length + y-length, half # of complex elements in fft vectors
            (log-two^n (##fx- (two^p>=m (##fx+ x-length y-length)) 1))
            (two^n (##fxarithmetic-shift-left 1 log-two^n)))
@@ -11086,10 +11087,8 @@ end-of-code
 
   (define (naive-mul x x-length y y-length)  ;; multiplies x by each digit of y
     (let ((result
-           (##bignum.make
-            (##fx+ (##bignum.adigit-length x) (##bignum.adigit-length y))
-            #f
-            #f)))
+           (##bignum.make-zeros
+            (##fx+ (##bignum.adigit-length x) (##bignum.adigit-length y)))))
       (##declare (not interrupts-enabled))
       ;; We'll assume y-length is smaller than x-length to minimize the
       ;; number of outer loops
@@ -11261,7 +11260,7 @@ end-of-code
                  (if (##fxzero? bit-shift) 0 1))))
     (cond ((##fx< 0 result-length)
            (##bignum.normalize!
-            (##bignum.arithmetic-shift-into! x shift (##bignum.make result-length #f #f))))
+            (##bignum.arithmetic-shift-into! x shift (##bignum.make-zeros result-length))))
           ((##bignum.negative? x)
             -1)
           (else
@@ -11506,11 +11505,10 @@ end-of-code
               (##bignum.mdigit-div (fx+ v-bits ##bignum.mdigit-width -1)))
              (temp
               ;; need three mdigits for top-bits-of-u
-              (##bignum.make (##bignum.adigit-div (+ (##fx* 3 ##bignum.mdigit-width)
-                                                     ##bignum.adigit-width
-                                                     -1))
-                             #f
-                             #f))
+              (##bignum.make-zeros
+               (##bignum.adigit-div (+ (##fx* 3 ##bignum.mdigit-width)
+                                       ##bignum.adigit-width
+                                       -1))))
              (top-2*mdigit-width-bits-of-v
               (##bignum.arithmetic-shift-into! v (##fx- (##fx* ##bignum.mdigit-width 2) v-bits) temp))
              (v_n-1
@@ -11534,7 +11532,7 @@ end-of-code
                (q
                 (and need-quotient?
                      (##fx> q-mdigits 1) ;; result might be bignum
-                     (##bignum.make q-adigits #f #f)))
+                     (##bignum.make-zeros q-adigits)))
                (u
                 (if keep-dividend?
                     ;; copy u
@@ -11577,14 +11575,14 @@ end-of-code
              (if (##fx< 0 (##bignum.mdigit-ref u i))
                  (##fx+ i 1)
                  (loop6 (##fx- i 1))))))
-      (let ((work-u (##bignum.make
-                     (##bignum.adigit-div (##fx+ (##fx* 2 ##bignum.mdigit-width)
-                                                 ##bignum.adigit-width
-                                                 -1))
-                     #f
-                     #f))
-            (q (and need-quotient?
-                    (##bignum.make (##bignum.adigit-length u) #f #f))))
+      (let ((work-u
+             (##bignum.make-zeros
+              (##bignum.adigit-div (##fx+ (##fx* 2 ##bignum.mdigit-width)
+                                          ##bignum.adigit-width
+                                          -1))))
+            (q
+             (and need-quotient?
+                  (##bignum.make-zeros (##bignum.adigit-length u)))))
 
         (##declare (not interrupts-enabled))
 
