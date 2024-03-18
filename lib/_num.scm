@@ -11057,10 +11057,7 @@ end-of-code
            (y-length (##bignum.fdigit-length y))
            (result-length (##fx+ x-length y-length))
            (result (##bignum.make-zeros
-                    (##fxquotient
-                     result-length
-                     (##fxquotient ##bignum.adigit-width
-                                   ##bignum.fdigit-width))))
+                    (##bignum.adigit-div (##fx* result-length ##bignum.fdigit-width))))
            ;; minimum power of 2 >= x-length + y-length, half # of complex elements in fft vectors
            (log-two^n (##fx- (two^p>=m (##fx+ x-length y-length)) 1))
            (two^n (##fxarithmetic-shift-left 1 log-two^n)))
