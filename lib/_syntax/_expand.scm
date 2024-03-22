@@ -308,8 +308,9 @@
       (else               (error "Internal: cannot process let form's bindings"))))
 
   (let ((stx-id (##gensym 'stx))
-        (cte    (if (##cte-top? cte) (##top-cte-cte cte) cte)))
-   `(let ((,stx-id ,stx))
+        (cte-id (##gensym 'cte)))
+   `(let ((,stx-id ,stx)
+          (,cte-id (##hcte-local-cte ,cte)))
       (match-source ,stx-id ()
         ((let-id name bindings . body) when (identifier? name)
          (let* ((fake-binding  (##make-syntax-source `(,name ,(##make-syntax-source #f #f)) #f))
@@ -317,13 +318,12 @@
                                  (lambda (code) (cons fake-binding code))))
                 (fake-expr     (##syntax-source-code-set ,stx-id
                                 `(,(##make-core-syntax-source '##let* #f) ,fake-bindings ,@body))))
-           (match-source (expand fake-expr cte) ()
+           (match-source (expand fake-expr ,cte-id) ()
              ((_ ((name _) . bindings) . body)
               (##syntax-source-code-set ,stx-id
-                `(,let-id ,name ,(##make-syntax-source bindings #f) ,@body)))
-             (_ (error "internal")))))
+                `(,let-id ,name ,(##make-syntax-source bindings #f) ,@body))))))
         ((let-id bindings . body)
-         (let* ((scps+bindings+cte (,##expand-bindings bindings ,cte))
+         (let* ((scps+bindings+cte (,##expand-bindings bindings ,cte-id))
                 (scps     (car scps+bindings+cte))
                 (bindings (cadr scps+bindings+cte))
                 (cte      (caddr scps+bindings+cte))
@@ -377,52 +377,34 @@
 
 ;;;----------------------------------------------------------------------------
 
-#;(define-prim (##expand->core-form stx cte)
-  (case (car (syntax-source-code stx))
-    ((##define ##define-syntax ##define-global-syntax ##namespace)
-     stx)
-    (else
-     (match (syntax-source-code stx) ()
-       ((id . exprs) when (identifier? id)
-        (let ((t (##resolve-binding-expander id cte)))
-          (if (or (not (##vector? t))
-                  (##not-found-object? t))
-              stx
-              (##dispatch t stx cte #t))))
-       (_ stx)))))
-
 (define-prim (##expand->core-form stx cte)
-  (match-source stx (##define ##define-syntax ##define-global-syntax ##namespace)
-    ((##define . args)
-     stx)
-    ((##define-syntax . args)
-     stx)
-    ((##define-global-syntax . args)
-     stx)
-    ((##namespace . args)
-     stx)
-    ((id . exprs) when (identifier? id)
-     (let ((t (##resolve-binding-expander id cte)))
-       (if (or (not (##vector? t))
-               (##not-found-object? t))
-           stx
-           (##dispatch t stx cte #t))))
-    (_ stx)))
+  (let ((code (syntax-source-code stx)))             
+    (if (not (pair? code))
+        stx
+        (let* ((id  (car code))
+               (sym (##syntax-source-code id)))
+          (if (not (symbol? sym))
+              stx
+              (case sym
+                ((##define ##define-syntax ##define-global-syntax ##namespace)
+                 stx)
+                (else
+                  (let ((exprs (cdr code)))
+                    (let ((t (##resolve-binding-expander id cte)))
+                      (if (or (not (##vector? t))
+                              (##not-found-object? t))
+                          stx
+                          (##dispatch t stx cte #t)))))))))))
 
 (define-prim&proc (expand-begin s cte)
-  (match-source s ()
-    ((##begin-id . exprs)
-     (##syntax-source-code-set s
-       (cons ##begin-id
-             (##syntax-source-code
-               (##expand-pair/list (##syntax-source-code-set s exprs) cte 
+  (syntax-source-code-update s
+    (lambda (code)
+      (cons (car code)
+            (##syntax-source-code
+               (##expand-pair/list (##syntax-source-code-set s (cdr code)) cte
                  (lambda _ 
-                   (##pretty-print s)
-                   (error "expand-begin error")
-                   #;(##error-expansion ##expand-begin s "Ill formed begin form")))))))
-    (_
-     (##error-expansion ##expand-begin s "Ill formed begin form"))))
-
+                   (error "begin: expansion error"))))))))
+  
 (define-prim&proc (expand-body body cte)
   ; core-expand trough expressions, expanding syntax bindings as letrec*-syntax
   ; and registering define form to implement letrec* behahvior.
@@ -541,9 +523,9 @@
              (_
               (##expand-body-define-bindings core-expanded exprs bindings cte))))))
       (else
-        (error "Empty body"))))
+       (error "empty body"))))
 
-  (let ((cte (if (##cte-top? cte) (##top-cte-cte cte) cte)))
+  (let ((cte (##hcte-local-cte cte)))
     (##expand-body (##syntax-source-code body) (list) cte)))
 
 
@@ -611,27 +593,17 @@
      (##error-expansion "illegal use of syntax"))))
 
 (define-prim (##expand-id-application-form id stx cte)
-  (let ((id id #;(or (syntax-full-name cte id) id)))
-    (let ((t (##resolve-binding-expander id cte)))
-      (if (or (not (##vector? t))
-              (##not-found-object? t))
-          (##expand-application stx cte)
-          (##dispatch t stx cte)))))
+  (let ((t (##resolve-binding-expander id cte)))
+    (if (or (not (##vector? t))
+            (##not-found-object? t))
+        (##expand-application stx cte)
+        (##dispatch t stx cte))))
 
 (define-prim (##expand-application stx cte)
-  (##expand-pair/list stx (if (##cte-top? cte) (##top-cte-cte cte) cte)
+  (##expand-pair/list stx (##hcte-local-cte cte)
       (lambda (_) 
         (##pretty-print stx)
         (##error "error expansion: ill formed application"))))
-
-#;(define-primitive (expand-keyword-argument stx cte)
-  (let ((id  
-          (cond
-            ((keyword? (##syntax-source-code stx))
-             (keyword->identifier stx))
-            (else
-             (error "internal")))))
-    (identifier->keyword (##expand-identifier id cte))))
 
 ;;;----------------------------------------------------------------------------
 ;;; lambda
@@ -643,6 +615,9 @@
            (cte (##hcte-add-variable-cte cte key id)))
 
       (list id cte)))
+
+  (define (register-keyword-variable id cte)
+    (list id cte))
 
   (define (expand-lambda-bindings bindings scp cte)
     ; -> (bindings cte)
@@ -722,7 +697,7 @@
                  (required-parameters (car required-parameters+cte))
                  (cte                 (cadr required-parameters+cte))
                  (optional-parameters+cte
-                   (expand-valued-parameters optional-parameters cte))
+                   (expand-valued-parameters optional-parameters cte #f))
                  (optional-parameters (car optional-parameters+cte))
                  (cte                 (cadr optional-parameters+cte))
                  (key-parameters+cte
@@ -744,7 +719,7 @@
                 key-parameters)
               cte))))))
   (let ((scp (make-scope))
-        (cte (if (##cte-top? cte) (##top-cte-cte cte) cte)))
+        (cte (##hcte-local-cte cte)))
     (match-source stx ()
       ((lambda-id bindings . body)
        (let* ((bindings+cte (expand-lambda-bindings bindings scp cte))
@@ -752,7 +727,9 @@
               (cte              (cadr bindings+cte)))
          (let ((body (syntax-source-code (##expand-body (add-scope (syntax-source-code-set stx body) scp) cte))))
            (##syntax-source-code-set stx
-             `(,lambda-id ,bindings ,@body))))))))
+             `(,lambda-id ,bindings ,@body)))))
+      (else
+       (error "ill-formed lambda form")))))
 
 ;;;----------------------------------------------------------------------------
 ;;; top-level definition forms
@@ -771,7 +748,7 @@
     ((define-id id val)
      stx)
     (_
-      (##error-expansion ##transform-define-form->base-form stx "ill-formed define form:"))))
+     (error "ill formed define form"))))
 
 (define-prim (##transform-define-form->sugar-form stx original-stx)
   ; reconstruct a sugared define-form
@@ -793,21 +770,21 @@
      ;
       stx)))
 
+(define-prim&proc (syntax-full-name-maybe cte id)
+  (let ((full-name (##hcte-global-name cte id)))
+      (and full-name
+           (syntax-source-code-set id full-name))))
+
 (define-prim&proc (syntax-full-name cte id)
-  (let ((full-name (##cte-global-name 
-                     (if (##cte-top? cte) 
-                         (##top-cte-cte cte) 
-                         cte)
-                     (syntax-source-code id))))
-    (and full-name
-         (syntax-source-code-set id full-name))))
+  (or (##syntax-full-name-maybe cte id)
+      id))
 
 (define-prim&proc (expand-define stx cte)
   (cond
-    ((##cte-top? cte)
+    ((##hcte-top? cte)
      (match-source (##transform-define-form->base-form stx) ()
       ((define-id id val)
-       (let ((full-id (or (##syntax-full-name cte id) id)))
+       (let ((full-id (##syntax-full-name cte id)))
          (let* ((_   (##hcte-add-new-top-level-binding! cte full-id))
                 (val (##expand val cte))
                 (expanded-stx (##syntax-source-code-set stx 
@@ -818,25 +795,27 @@
 
 (define-prim (##expand-define-syntax stx cte)
   (cond
-    ((##cte-top? cte)
+    ((##hcte-top? cte)
      (match-source stx ()
       ((define-id id expander)
-       (let ((id (or (syntax-full-name cte id) id)))
+       (let ((id (##syntax-full-name cte id)))
          (##top-hcte-add-macro-cte! cte id (lambda _ (##make-syntax-source 'dummy #f)))
          (let ((descr (##eval-for-syntax-binding expander cte)))
            (##top-hcte-add-macro-cte! cte id descr)
-           (##syntax-source-code-set stx #!void))))))
+           (##syntax-source-code-set stx #!void))))
+      (_
+       (error "ill-formed define-syntax form"))))
+
     (else
-      (##error-expansion ##expand-define-syntax stx "ill-placed define-syntax"))))
+      (##error "ill-placed define-syntax"))))
 
 (define-prim (##expand-define-top-level-syntax stx cte)
-  ; only called at top-level
-  (##expand-define-syntax stx (##cte-top-cte cte)))
+  (##expand-define-syntax stx (##hcte-top-cte cte)))
 
 ;;;----------------------------------------------------------------------------
 
 (define-prim (##expand-identifier id cte)
-  (let ((binding (if (##cte-top? cte)
+  (let ((binding (if (##hcte-top? cte)
                      (resolve-global id cte)
                      (resolve-local id cte))))
     (let ((key 
@@ -847,7 +826,7 @@
                (##binding-local-key binding))
               (else
                #f))))
-      (let ((value (and key (##cte-ctx-ref cte key))))
+      (let ((value (and key (##hcte-ctx-ref cte key))))
         (cond
           ((and value 
                 (##ctx-binding-variable? value))
@@ -864,13 +843,28 @@
 ;;;----------------------------------------------------------------------------
 
 (define-prim&proc (expand-quote stx cte)
-  stx)
+  (let ((code (##syntax-source-code stx)))
+    (if (and (pair? code)
+             (pair? (cdr code))
+             (null? (cddr code)))
+        stx
+        (error "ill-formed quote form"))))
 
 (define-prim&proc (expand-quote-syntax stx cte)
-  stx)
+  (let ((code (##syntax-source-code stx)))
+    (if (and (pair? code)
+             (pair? (cdr code))
+             (null? (cddr code)))
+        stx
+        (error "ill-formed quote-syntax form"))))
 
 (define-prim&proc (expand-syntax stx cte)
-  stx)
+  (let ((code (##syntax-source-code stx)))
+    (if (and (pair? code)
+             (pair? (cdr code))
+             (null? (cddr code)))
+        stx
+        (error "ill-formed syntax form"))))
 
 (define-prim&proc (expand-unquote s cte)
   (##raise-expression-parsing-exception
@@ -966,7 +960,7 @@
              (##null? (##cddr code)))
         (let ((datum (##cadr code)))
           (expand-template datum))
-        (##error "quasiquote error"))))
+        (##error "ill-formed quasiquote form"))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1027,7 +1021,7 @@
   (define (expand-clauses clauses cte)
     (cond
       ((pair? clauses)
-       (let ((clause (car clauses))
+       (let ((clause  (car clauses))
              (clauses (cdr clauses)))
          (cons
            (match-source clause ()
@@ -1038,21 +1032,23 @@
       ((null? clauses)
        clauses)
       (else
-        (error "ill-formed case clause"))))
+       (error "ill-formed case clause"))))
 
+  ; skip pattern expansion ...
   (match-source stx ()
     ((case-id expr . clauses)
      (let ((expr (expand expr cte))
            (clauses (expand-clauses clauses cte)))
        (##syntax-source-code-set stx
-         `(,case-id ,expr ,@clauses))))))
+         `(,case-id ,expr ,@clauses))))
+    (_
+     (error "ill-formed case form"))))
   
 (define-prim (##expand-cond stx-src cte)
 
   (define (##expand-cond-clause clause next-clause cte)
-    (match-source clause ()
-      ((condition => expr) when (##equal? (##syntax-source-code =>) 
-                                        '=>)
+    (match-source clause (=>)
+      ((condition => expr)
        (##plain-datum->core-syntax
          `(let ((x ,(##expand condition cte)))
             (if x
@@ -1071,8 +1067,7 @@
                    expanded-condition)
               ,next-clause))))
       (else
-        (##pretty-print clause)
-       (##error "cond: ill formed clause"))))
+       (##error "ill-formed cond form's clause"))))
 
   (match-source stx-src ()
     ((cond-id . clauses)
@@ -1097,10 +1092,9 @@
                  ((##null? clauses)
                   (if else-clause?
                       else-clause?
-                      #f #;`(##error "cond : no match")))))))))
+                      #f))))))))
     (_
-      (##pretty-print stx-src)
-      (error "ill formed cond form"))))
+     (error "ill formed cond form"))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1118,8 +1112,7 @@
       ((identifier? stx)
        (##expand-identifier stx cte))
       ((keyword? (##syntax-source-code stx))
-       stx
-       #;(##expand-keyword-argument stx cte))
+       stx)
       ((boolean? (##syntax-source-code stx))
        stx)
       ((string? code)

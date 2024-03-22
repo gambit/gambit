@@ -27,7 +27,7 @@
          id
          (##binding-local-key b)))
       ((and (##binding-top-level? b)
-            #t) ; is a core form
+            #t) ; ... and is a core form
        (##binding-top-level-symbol b))
       (else
        (##error "##resolve-compile-local-binding: not a local binding")))))
@@ -90,17 +90,7 @@
       (##error-expansion ##compile-identifier id "not an identifier"))))
 
 (define-prim&proc (compile-keyword-argument stx cte)
-  ; TODO: add hygiene for keywords
-  stx
-  #;(let ((id 
-          (cond
-            ((keyword? (syntax-source-code stx))
-             (keyword->identifier stx))
-            (else
-             (error "internal")))))
-    (##pretty-print "compile keyword")
-    (##pretty-print (identifier->keyword (compile-identifier id cte)))
-    (identifier->keyword (compile-identifier id cte))))
+  stx)
 
 ;;;----------------------------------------------------------------------------
 
