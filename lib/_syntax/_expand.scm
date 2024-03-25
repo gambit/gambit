@@ -59,11 +59,15 @@
                    bindings
                    (cons binding res)
                    cte))))))
-        (_
+        (()
           (list scps 
                 (##syntax-source-code-set bindings-src
                   (reverse res))
-                cte))))))
+                cte))
+        (_
+         (##raise-expression-parsing-exception
+           'ill-formed-binding-list
+           bindings-src))))))
 
 (define-prim (##expand-let*-bindings bindings-src cte)
   (let ((scps (list)))
@@ -114,11 +118,15 @@
                    (cons binding res)
                    scps
                    cte))))))
-        (_
+        (()
           (list scps 
                 (##syntax-source-code-set bindings-src
                   (reverse res)) 
-                cte))))))
+                cte))
+        (_
+         (##raise-expression-parsing-exception
+           'ill-formed-binding-list
+           bindings-src))))))
 
 (define-prim (##expand-letrec-bindings bindings-src cte)
   (let ((scps (list (make-scope))))
@@ -168,7 +176,7 @@
                  bindings
                  (cons binding res)
                  cte))))))
-        (_
+        (()
           (let ((bindings (let loop ((bindings res)
                                      (result   (list)))
                             (cond
@@ -185,7 +193,11 @@
                                      (cons new-binding result)))))
                               (else
                                 result)))))
-            (list scps (##syntax-source-code-set bindings-src bindings) cte)))))))
+            (list scps (##syntax-source-code-set bindings-src bindings) cte)))
+        (_
+         (##raise-expression-parsing-exception
+           'ill-formed-binding-list
+           bindings-src))))))
 
 (define-prim (##expand-letrec*-bindings bindings-src cte)
   (##expand-letrec-bindings bindings-src cte))
@@ -204,10 +216,14 @@
                (loop 
                  bindings
                  cte))))
-          (_
+          (()
            (list scps 
                  #f
-                 cte)))))))
+                 cte))
+          (_
+           (##raise-expression-parsing-exception
+             'ill-formed-binding-list
+             bindings-src)))))))
 
 (define-prim (##expand-let*-syntax-bindings bindings-src cte)
   (let ((scps (list)))
@@ -231,11 +247,15 @@
                (cons binding res)
                scps
                cte))))
-        (_
+        (()
           (list scps 
                 (##syntax-source-code-set bindings-src
                   (reverse res)) 
-                cte))))))
+                cte))
+        (_
+         (##raise-expression-parsing-exception
+           'ill-formed-binding-list
+           bindings-src))))))
 
 (define-prim (##expand-letrec-syntax-bindings bindings-src cte)
   (let ((original-cte cte)
@@ -254,10 +274,14 @@
              (loop 
                bindings
                cte))))
-        (_
+        (()
           (list scps 
                 #f
-                cte))))))
+                cte))
+        (_
+         (##raise-expression-parsing-exception
+           'ill-formed-binding-list
+           bindings-src))))))
 
 (define-prim (##expand-letrec*-syntax-bindings bindings-src cte)
   (let ((scps (list)))
@@ -283,11 +307,15 @@
                (cons binding res)
                scps
                cte))))
-        (_
+        (()
           (list scps 
                 (##syntax-source-code-set bindings-src
                   (reverse res)) 
-                cte))))))
+                cte))
+        (_
+         (##raise-expression-parsing-exception
+           'ill-formed-binding-list
+           bindings-src))))))
 
 (define-macro (##expand-let-forms head syntax? stx cte)
 
@@ -337,7 +365,7 @@
                `(##syntax-source-code-set ,stx-id
                  `(,let-id ,bindings ,@body))))))
         (_
-          (error "ill-formed let form"))))))
+          (##raise-ill-formed-special-form stx))))))
 
 (define-prim&proc (expand-let stx cte)
   (##expand-let-forms ##let #f stx cte))
@@ -403,7 +431,7 @@
             (##syntax-source-code
                (##expand-pair/list (##syntax-source-code-set s (cdr code)) cte
                  (lambda _ 
-                   (error "begin: expansion error"))))))))
+                   (##raise-ill-formed-special-form s))))))))
   
 (define-prim&proc (expand-body body cte)
   ; core-expand trough expressions, expanding syntax bindings as letrec*-syntax
@@ -503,8 +531,7 @@
         (##syntax-source-code
           (##expand-pair/list body cte 
             (lambda _ 
-              (##pretty-print body)
-              (error "expand-body error"))))))
+              (##raise-ill-formed-special-form body))))))
 
     (cond 
       ((pair? exprs)
@@ -523,12 +550,12 @@
              (_
               (##expand-body-define-bindings core-expanded exprs bindings cte))))))
       (else
-       (error "empty body"))))
+       (##raise-expression-parsing-exception
+         'empty-body
+         body))))
 
   (let ((cte (##hcte-local-cte cte)))
     (##expand-body (##syntax-source-code body) (list) cte)))
-
-
     
 ;;;----------------------------------------------------------------------------
 ;;; Sequencing forms
@@ -565,10 +592,10 @@
       (cond
         ((syntax-source? transformed-stx)
          (flip-scope transformed-stx intro-scope))
-        (##error-expansion ##apply-transformer 
-          stx 
-          t
-          "result is not a syntax-source")))))
+        (else
+         (##raise-expression-parsing-exception
+           'non-syntax-result
+           (##make-source transformed-stx #f)))))))
 
 (define-prim (##dispatch t s cte #!optional (no-reexpansion #f))
   (cond 
@@ -590,7 +617,9 @@
                (proc  descr)) ; TODO reimplement use of gambit descrs
            (descr s cte)))))
     (else
-     (##error-expansion "illegal use of syntax"))))
+      (##raise-expression-parsing-exception
+        'illegal-syntax-use
+        s))))
 
 (define-prim (##expand-id-application-form id stx cte)
   (let ((t (##resolve-binding-expander id cte)))
@@ -602,8 +631,9 @@
 (define-prim (##expand-application stx cte)
   (##expand-pair/list stx (##hcte-local-cte cte)
       (lambda (_) 
-        (##pretty-print stx)
-        (##error "error expansion: ill formed application"))))
+        (##raise-expression-parsing-exception
+          'ill-formed-call
+          stx))))
 
 ;;;----------------------------------------------------------------------------
 ;;; lambda
@@ -725,11 +755,16 @@
        (let* ((bindings+cte (expand-lambda-bindings bindings scp cte))
               (bindings         (car  bindings+cte))
               (cte              (cadr bindings+cte)))
-         (let ((body (syntax-source-code (##expand-body (add-scope (syntax-source-code-set stx body) scp) cte))))
+         (let ((body (syntax-source-code 
+                       (##expand-body 
+                         (add-scope 
+                           (syntax-source-code-set stx body) 
+                           scp) 
+                         cte))))
            (##syntax-source-code-set stx
              `(,lambda-id ,bindings ,@body)))))
       (else
-       (error "ill-formed lambda form")))))
+       (##raise-ill-formed-special-form stx)))))
 
 ;;;----------------------------------------------------------------------------
 ;;; top-level definition forms
@@ -748,7 +783,7 @@
     ((define-id id val)
      stx)
     (_
-     (error "ill formed define form"))))
+     (##raise-ill-formed-special-form stx))))
 
 (define-prim (##transform-define-form->sugar-form stx original-stx)
   ; reconstruct a sugared define-form
@@ -791,7 +826,9 @@
                                  `(,define-id ,id ,val))))
            (##transform-define-form->sugar-form expanded-stx stx))))))
     (else
-      (##error "ill-placed define"))))
+      (##raise-expression-parsing-exception
+        'ill-placed-define
+        stx))))
 
 (define-prim (##expand-define-syntax stx cte)
   (cond
@@ -804,10 +841,11 @@
            (##top-hcte-add-macro-cte! cte id descr)
            (##syntax-source-code-set stx #!void))))
       (_
-       (error "ill-formed define-syntax form"))))
-
+       (##raise-ill-formed-special-form stx))))
     (else
-      (##error "ill-placed define-syntax"))))
+      (##raise-expression-parsing-exception
+        'ill-placed-define-syntax
+        stx))))
 
 (define-prim (##expand-define-top-level-syntax stx cte)
   (##expand-define-syntax stx (##hcte-top-cte cte)))
@@ -832,13 +870,15 @@
                 (##ctx-binding-variable? value))
            id)
           (value
-           (##error-expansion ##expand-identifier id "macro name can't be used as variable"))
+            (##raise-expression-parsing-exception
+             'macro-used-as-variable
+             id))
           ((and binding (##binding-top-level? binding))
            id)
           (##allow-unbound?
            id)
           (else
-            (##error ##expand-identifier id  binding key value "unbound identifier")))))))
+            (##error "unbound identifier")))))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -848,7 +888,8 @@
              (pair? (cdr code))
              (null? (cddr code)))
         stx
-        (error "ill-formed quote form"))))
+        (##raise-ill-formed-special-form
+          stx))))
 
 (define-prim&proc (expand-quote-syntax stx cte)
   (let ((code (##syntax-source-code stx)))
@@ -856,7 +897,8 @@
              (pair? (cdr code))
              (null? (cddr code)))
         stx
-        (error "ill-formed quote-syntax form"))))
+        (##raise-ill-formed-special-form
+          stx))))
 
 (define-prim&proc (expand-syntax stx cte)
   (let ((code (##syntax-source-code stx)))
@@ -864,7 +906,8 @@
              (pair? (cdr code))
              (null? (cddr code)))
         stx
-        (error "ill-formed syntax form"))))
+        (##raise-ill-formed-special-form
+         stx))))
 
 (define-prim&proc (expand-unquote s cte)
   (##raise-expression-parsing-exception
@@ -908,7 +951,9 @@
         ((tag-unquote? code)
           => (lambda (datum) (##expand datum cte)))
         ((tag-unquote-splicing? code) 
-         (error "Invalid use of unquote-splicing"))
+         (##raise-expression-parsing-exception
+           'ill-placed-unquote-splicing
+           s))
         #;((tag-quasiquote? code)
            => (lambda (datum)
                 (expand-template
@@ -960,7 +1005,7 @@
              (##null? (##cddr code)))
         (let ((datum (##cadr code)))
           (expand-template datum))
-        (##error "ill-formed quasiquote form"))))
+        (##raise-ill-formed-special-form s))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1027,12 +1072,16 @@
            (match-source clause ()
              ((id val)
               (##syntax-source-code-set clause
-                `(,id ,(expand val cte)))))
+                `(,id ,(expand val cte))))
+             (_
+              (##raise-expression-parsing-exception
+                'ill-formed-selector-list
+                stx)))
            (expand-clauses clauses cte))))
       ((null? clauses)
        clauses)
       (else
-       (error "ill-formed case clause"))))
+       (##raise-ill-formed-special-form stx))))
 
   ; skip pattern expansion ...
   (match-source stx ()
@@ -1042,7 +1091,7 @@
        (##syntax-source-code-set stx
          `(,case-id ,expr ,@clauses))))
     (_
-     (error "ill-formed case form"))))
+     (##raise-ill-formed-special-form stx))))
   
 (define-prim (##expand-cond stx-src cte)
 
@@ -1067,7 +1116,7 @@
                    expanded-condition)
               ,next-clause))))
       (else
-       (##error "ill-formed cond form's clause"))))
+        (##raise-ill-formed-special-form stx-src))))
 
   (match-source stx-src ()
     ((cond-id . clauses)
@@ -1094,7 +1143,7 @@
                       else-clause?
                       #f))))))))
     (_
-     (error "ill formed cond form"))))
+     (##raise-ill-formed-special-form stx-src))))
 
 ;;;----------------------------------------------------------------------------
 

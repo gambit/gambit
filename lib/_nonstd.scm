@@ -1244,11 +1244,12 @@
                (generate-definitions)))))
 
   (let ((expansion
-         (##define-type-parser
-           form-name
-           super-type-static
-           args
-           generate)))
+         (plain-datum->core-syntax
+           (##define-type-parser
+             form-name
+             super-type-static
+             args
+             generate))))
     (if ##define-type-expansion-show?
         (pp expansion ##stdout-port))
     expansion))

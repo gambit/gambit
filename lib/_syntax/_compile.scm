@@ -61,13 +61,21 @@
 (define-prim&proc (compile-pair stx cte)
   (##compile-pair/list stx cte (lambda (e) (compile e cte))))
 
-(define-prim&proc (compile-body body cte)
-  (##map-pair (lambda (e) (compile e cte)) 
-              (lambda (_) (##error-expansion ##compile-body body "ill formed body"))
-              body))
+(define-prim&proc (compile-body stx body cte)
+  (if (pair? body)
+      (##map-pair (lambda (e) (compile e cte))
+                  (lambda (_) (##raise-ill-formed-special-form stx))
+                  body)
+      (##raise-expression-parsing-exception
+        'empty-body
+        stx)))
 
 (define-prim&proc (compile-application stx cte)
-  (##compile-pair/list stx cte (lambda () (##error-expansion ##compile-application stx "ill formed application form"))))
+  (##compile-pair/list stx cte 
+    (lambda () 
+      (##raise-expression-parsing-exception
+        'ill-formed-call
+        stx))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -78,7 +86,7 @@
        (cond
          ((not binding)
           (if #f ;safe-compile? 
-              (##error-expansion ##compile-identifier id "Unknown identifier")
+              (##error "Unknown identifier")
               id))
          (else
            (syntax-source-code-set id
@@ -87,7 +95,9 @@
                   ##binding-top-level-symbol)
               binding))))))
     (else
-      (##error-expansion ##compile-identifier id "not an identifier"))))
+      (##raise-expression-parsing-exception
+        'id-expected
+        id))))
 
 (define-prim&proc (compile-keyword-argument stx cte)
   stx)
@@ -164,7 +174,7 @@
     ((lambda-id args . body)
      (syntax-source-code-set stx
        `(,lambda-id ,(compile-lambda-bindings args cte)
-                    ,@(##compile-body body cte))))))
+                    ,@(##compile-body stx body cte))))))
 
 (define-prim&proc (compile-let-forms stx cte)
   (match-source stx ()
@@ -210,7 +220,7 @@
                         (loop bindings))))
                      (_
                       bindings))))))
-           (body (##compile-body body cte)))
+           (body (##compile-body stx body cte)))
        (syntax-source-code-set stx
          `(,let-id ,bindings ,@body))))))
 
@@ -262,7 +272,7 @@
       ((define-id binding @ (id . args) . body)
        (let ((id   (resolve-maybe-local-binding id cte))
              (args (resolve-maybe-local-bindings args cte))
-             (body (##compile-body body cte)))
+             (body (##compile-body stx body cte)))
          `(,define-id ,(syntax-source-code-set binding 
                                                (cons id args)) ,@body)))
       ((define-id id expr)
@@ -318,7 +328,7 @@
       ((null? clauses)
        clauses)
       (else
-        (error "ill formed case clause"))))
+        (##raise-ill-formed-special-form stx))))
 
   (match-source stx (else)
     ((case-id expr . clauses)

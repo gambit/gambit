@@ -4985,6 +4985,10 @@
     (ill-placed-define-syntax         . "Ill-placed 'define-syntax'")
     (ill-placed-declare               . "Ill-placed 'declare'")
     (ill-placed-namespace             . "Ill-placed 'namespace'")
+    (ill-placed-namespace             . "Ill-placed 'namespace'")
+    (ill-placed-unquote             . "Ill-placed 'unquote'")
+    (ill-placed-unquote-splicing    . "Ill-placed 'unquote-splicing'")
+
     ;;    (ill-placed-library               . "Ill-placed 'library'")
     ;;    (ill-placed-export                . "Ill-placed 'export'")
     ;;    (ill-placed-import                . "Ill-placed 'import'")
@@ -5012,6 +5016,8 @@
     (ill-formed-call                  . "Ill-formed procedure call")
     (ill-formed-cond-expand           . "Ill-formed 'cond-expand'")
     (unfulfilled-cond-expand          . "Unfulfilled 'cond-expand'")
+    (non-syntax-result                . "Macro application's result is not a syntax object")
+    (illegal-syntax-use               . "Illegal use of syntax")
     ))
 
 (define-prim (##expression-parsing-exception-names-set! x)

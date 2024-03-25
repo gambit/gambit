@@ -33,7 +33,7 @@
     ((##source-tag? source-tag)
      (##make-syntax-source-tag source-tag))
     (else
-      (error "invalid source/syntax-source tag during conversion"))))
+      (error "Cannot convert source object's tag: the object is not a tag"))))
 
 (define-prim (##syntax->source-tag! obj stx-tag)
   ; get the source-tag representation 
@@ -45,7 +45,7 @@
     ((##source-tag? stx-tag)
      stx-tag)
     (else
-     (error "invalid source/syntax-source tag during conversion"))))
+     (error "Cannot convert syntax-source object's tag: the object is not a tag"))))
 
 ;;;----------------------------------------------------------------------------
 ;;; source type check
@@ -106,9 +106,8 @@
     stx-src))
 
 (define-prim&proc (syntax-source-scopes (stx-src syntax))
-  ; "safe" version of source-scopes                  
   (let ((scopes (##source-scopes stx-src)))
-    (or scopes (error "Cannot retrieves scopes for non-syntaxic source"))))
+    (or scopes (error "Cannot retrieves scopes: the object is not a syntax object"))))
 
 (define-prim&proc (syntax-source-scopes-set! (stx-src syntax) (proc procedure))
   (##source-scopes-set! stx-src proc))
@@ -129,7 +128,7 @@
   (if (not 
         (or (##source? src)
             (##syntax-source? src)))
-      (##error "non-source conversion"))
+      (##error "Cannot convert to syntax: object is not a source object"))
 
   ; adjust location
   (cond
@@ -203,7 +202,7 @@
     ((##source? src)
      src)
     (else
-     (##error-expansion ##syntax->source! src "cannot convert non-syntax to source"))))
+     (##error "Cannot convert to source: object not a source or syntax object"))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -251,7 +250,7 @@
               code))))
        stx))
     (else
-      (error "ill formed source" datum))))
+      (error "Cannot convert to syntax: ill formed source " datum))))
 
 (define-prim (datum->syntax src #!optional (stx (##make-syntax-source #f #f)))
   (##datum->syntax src stx))
@@ -295,7 +294,7 @@
                ((##source? stx)
                 (##datum->syntax stx))
                (else
-                 (##error "Unknown object used as source reference")))))
+                 (##error "Cannot convert to source: unknown object used as source reference")))))
 
   (define (pair->syntax datum)
     (cond
