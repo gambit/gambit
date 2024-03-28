@@ -2,14 +2,8 @@
 
 ## Dev Integration check-list:
 
-- Integrate interpretation envrionment
-  - Use the "descriptor" structure instead of plain procedure for
-    macro definition's expansion.
-  - serialise compilation environements.
-
 - Integrate compilation environment
-  - merge (phase 1) changes to this branch
-    - either 
+  - choose the best approach to finalize the two env merging
 
 - Performance
   - general optimizations

@@ -31,13 +31,35 @@
    args))
 
 ;;;----------------------------------------------------------------------------
+;;; interface
 
 (define-prim&proc (hcte-ctx-ref cte key . fail)
-  (##cte-ctx-ref
-    (or (and (##cte-top? cte) 
+  (apply 
+    ##cte-ctx-ref
+      (or (and (##cte-top? cte) 
              (##cte-parent-cte cte))
-        cte)
-    key))
+          cte)
+      key
+      fail))
+ 
+(define-prim&proc (hcte-top? cte)
+  (##cte-top? cte))
+
+(define-prim&proc (hcte-top-cte cte)
+  (##cte-top-cte cte))
+
+(define-prim&proc (hcte-top-cte-global-binding-table cte)
+  (##cte-top-cte-global-binding-table cte))
+
+(define-prim&proc (hcte-global-name cte id)
+  (##cte-global-name (##hcte-local-cte cte)
+                     (##syntax-source-code id)))
+
+(define-prim&proc (hcte-top-cte-global-binding-table cte)
+  (##cte-top-cte-global-binding-table cte))
+
+(define-prim&proc (hcte-top-cte-global-binding-table-ref cte id)
+  (##cte-top-cte-global-binding-table-ref cte id))
 
 ;;;----------------------------------------------------------------------------
 ;;; new bindings
@@ -129,15 +151,18 @@
 
 (define-prim&proc (hcte-add-core-macro-cte cte key id descr)
   (let ((key (or key (hcte-add-new-local-binding! cte id))))
-    (let ((cte cte #;(or (and (##cte-top? cte)
-                        (##top-cte-cte cte))
-                   cte)))
+    (let ((cte cte #;(##hcte-local-cte cte)))
       (##cte-add-core-macro cte key descr
        (lambda (ctx)
          (##syntax-ctx-set
           ctx
           key 
           (##ctx-binding-core-macro id descr)))))))
+
+(define-prim&proc (hcte-global-name cte id)
+  (##cte-global-name 
+    (##hcte-local-cte cte)
+    (##syntax-source-code id)))
 
 ;;;----------------------------------------------------------------------------
 
@@ -200,5 +225,21 @@
           (##cte-namespace-lookup cte (##syntax-source-code id))))
     (and full-name
          (syntax-source-code-set id full-name))))
+
+;;;----------------------------------------------------------------------------
+
+(define-prim&proc (hcte-local-cte cte)
+  (if (##cte-top? cte)
+      (##top-cte-cte cte)
+      cte))
+
+;;;----------------------------------------------------------------------------
+
+(define-prim (##macro-syntax-descr expander src)
+  (if (##procedure? expander)
+      (##make-macro-descr #t -1 expander src)
+      (##raise-expression-parsing-exception
+        'ill-formed-macro-transformer
+        src)))
 
 ;;;============================================================================

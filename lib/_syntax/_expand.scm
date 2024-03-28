@@ -210,7 +210,7 @@
         (match-source bindings ()
           ((binding @ (id val) . bindings)
            (let ((id  (add-scope id (car scps)))
-                 (val (##eval-for-syntax-binding val original-cte)))
+                 (val (##macro-syntax-descr (##eval-for-syntax-binding val original-cte) val)))
              (let* ((key (##hcte-add-new-local-binding! cte id))
                     (cte (##hcte-add-macro-cte cte key id val)))
                (loop 
@@ -233,9 +233,8 @@
                (cte      cte))
       (match-source bindings ()
         ((binding @ (id val) . bindings)
-         (let* ((val (##eval-for-syntax-binding
-                       (add-scopes val scps) 
-                       cte))
+         (let* ((val  (add-scopes val scps))
+                (val  (##macro-syntax-descr (##eval-for-syntax-binding val cte) val))
                 (scps (cons (make-scope) scps))
                 (id (add-scopes id scps)))
            (let* ((key (##hcte-add-new-local-binding! cte id))
@@ -269,7 +268,7 @@
                (fake-val (lambda _ 'dummy)))
            (let* ((key (##hcte-add-new-local-binding! cte id))
                   (original-cte (##hcte-add-macro-cte original-cte key id fake-val))
-                  (val (##eval-for-syntax-binding val original-cte))
+                  (val (##macro-syntax-descr (##eval-for-syntax-binding val original-cte) val))
                   (cte (##hcte-add-macro-cte cte key id val)))
              (loop 
                bindings
@@ -296,10 +295,8 @@
                 (id (##add-scopes id scps)))
            (let* ((key (##hcte-add-new-local-binding! cte id))
                   (cte (##hcte-add-macro-cte cte key id fake-val))
-                  (val (##eval-for-syntax-binding
-                       (##add-scopes val scps) 
-                       cte))
-                  (cte (##hcte-add-macro-cte cte key id val))
+                  (val (##add-scopes val scps))
+                  (cte (##hcte-add-macro-cte cte key id (##macro-syntax-descr (##eval-for-syntax-binding val cte) val)))
                   (binding (##syntax-source-code-set binding
                              (list id val))))
              (loop
@@ -466,10 +463,9 @@
              (fake-value (lambda _ 'let-dummy)))
         (let* ((key (##hcte-add-new-local-binding! cte id))
                (cte (##hcte-add-macro-cte cte key id fake-value))
-               (value (##eval-for-syntax-binding
+               (cte (##hcte-add-macro-cte cte key id (##macro-syntax-descr (##eval-for-syntax-binding
                         value
-                        cte))
-               (cte (##hcte-add-macro-cte cte key id value)))
+                        cte) value))))
           (##expand-body
             (add-scope expr scp)
             (add-scope bindings scp)
@@ -484,10 +480,9 @@
              (fake-value (lambda _ 'let-dummy)))
         (let* ((key (##hcte-add-new-top-level-binding! cte id))
                (cte (##hcte-add-macro-cte cte key fake-value))
-               (val (##eval-for-syntax-binding
+               (cte (##hcte-add-macro-cte cte key (##eval-for-syntax-binding
                       value
-                      cte))
-               (cte (##hcte-add-macro-cte cte key value)))
+                      cte) value)))
           (##expand-body
             (add-scope exprs scp)
             (add-scope bindings scp)
@@ -603,7 +598,7 @@
      s)
     ((##ctx-binding-macro? t)
      (let* ((descr (##ctx-binding-macro-expander t))
-            (proc  descr)) ; TODO reimplement use of gambit descrs
+            (proc  (##macro-descr-expander descr))) ; TODO reimplement use of gambit descrs
        (let ((transformed-s (##apply-transformer proc s)))
          (if no-reexpansion 
              (##expand->core-form transformed-s cte)
@@ -613,9 +608,9 @@
        (no-reexpansion
         s)
        (else
-         (let ((descr (##ctx-binding-core-macro-expander t))
-               (proc  descr)) ; TODO reimplement use of gambit descrs
-           (descr s cte)))))
+         (let* ((descr (##ctx-binding-core-macro-expander t))
+                (proc  (##macro-descr-expander descr))) ; TODO reimplement use of gambit descrs
+           (proc s cte)))))
     (else
       (##raise-expression-parsing-exception
         'illegal-syntax-use
@@ -837,7 +832,7 @@
       ((define-id id expander)
        (let ((id (##syntax-full-name cte id)))
          (##top-hcte-add-macro-cte! cte id (lambda _ (##make-syntax-source 'dummy #f)))
-         (let ((descr (##eval-for-syntax-binding expander cte)))
+         (let ((descr (##macro-syntax-descr (##eval-for-syntax-binding expander cte) expander)))
            (##top-hcte-add-macro-cte! cte id descr)
            (##syntax-source-code-set stx #!void))))
       (_

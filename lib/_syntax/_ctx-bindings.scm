@@ -100,22 +100,4 @@
           (else
            (##not-found-object id)))))))
 
-#;(define-prim&proc (resolve-binding-non-expander id cte)
-  (let ((binding (##resolve-id id cte)))
-    (let ((key 
-            (cond
-              ((##binding-top-level? binding)
-               (##binding-top-level-symbol binding))
-              ((##binding-local? binding)
-               (##binding-local-key binding))
-              (else
-               #f))))
-      (let ((value (and key (##cte-ctx-ref cte key (##ctx-binding-variable key)))))
-        (cond
-          ((and value
-                (##ctx-binding-variable? value))
-           value)
-          (else
-            (##not-found-object id)))))))
-
 ;;;============================================================================

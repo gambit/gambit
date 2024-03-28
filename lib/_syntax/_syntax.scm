@@ -27,21 +27,14 @@
                                  (add-scope 
                                    (##make-syntax-source ',name #f)
                                    core-scope)
-                                 ,procedure))
+                                 (##macro-syntax-descr ,procedure (##make-core-syntax-source ',name #f))))
 
 (define-macro (##add-new-macro! name procedure)
   `(top-hcte-add-macro-cte! ##syntax-interaction-cte 
                             (add-scope 
                               (##make-syntax-source ',name #f)
                               core-scope)
-                            ,procedure))
-
-(define-macro (define-runtime-syntax-alias name alias)
-  `(top-hcte-add-core-macro-cte! ##syntax-interaction-cte
-                                 (add-scope
-                                   (##make-syntax-source ',name #f)
-                                   core-scope)
-                                 (##make-alias-syntax alias)))
+                            (##macro-syntax-descr ,procedure (##make-core-syntax-source ',name #f))))
 
 ;;;----------------------------------------------------------------------------
 

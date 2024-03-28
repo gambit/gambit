@@ -69,7 +69,7 @@
                          id-scopes))
               candidate-id
               #f))
-       (##cte-top-cte-global-binding-table cte))))
+       (##hcte-top-cte-global-binding-table cte))))
 
   (define (check-unambiguous max-id candidate-ids)
     (or (##null? candidate-ids)
@@ -101,13 +101,11 @@
                              (##syntax-source-scopes candidate-id)))
                          candidate-ids)))
            (check-unambiguous max-id candidate-ids)
-           (##cte-top-cte-global-binding-table-ref cte max-id)))))
+           (##hcte-top-cte-global-binding-table-ref cte max-id)))))
 
 (define-prim&proc (resolve-global id cte) ; TODO
   ; at top level, rename identifier according to namespace
-  (let ((full-name-id
-          (##syntax-full-name cte id)
-          #;(##hcte-namespace-lookup cte id)))
+  (let ((full-name-id (##syntax-full-name-maybe cte id)))
     (and full-name-id
          (##resolve-id full-name-id cte))))
 
