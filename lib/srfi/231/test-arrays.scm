@@ -1124,8 +1124,10 @@ OTHER DEALINGS IN THE SOFTWARE.
 ;;; FIXME: When I figure out how to make immutable data in the interpreter, I'll get this test to work.
 
 #;
-(test (make-specialized-array-from-data "123" char-storage-class #t)
-      "make-specialized-array-from-data: Cannot make mutable array from immutable data: ")
+(let ((array (make-specialized-array-from-data "123" char-storage-class #t)))
+  (test (and (array? array)
+             (not (mutable-array? array)))
+        #t))
 
 (let ((test-values
        (list ;;       storae-class   default other data
