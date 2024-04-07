@@ -5119,7 +5119,8 @@ $as_echo "#define ___SINGLE_HOST /**/" >>confdefs.h
 
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___SINGLE_HOST"
   if test "$ENABLE_SINGLE_HOST" != yes; then
-    CONF_SINGLE_HOST_LIMIT="$enableval"
+    CONF_SINGLE_HOST_LIMIT="$ENABLE_SINGLE_HOST"
+    ENABLE_SINGLE_HOST=yes
   fi
 fi
 
@@ -17486,7 +17487,7 @@ $as_echo "$as_me:
 " >&6;}
 fi
 
-if test "$ENABLE_SINGLE_HOST" != yes -a "$C_COMP_LLVM" != yes; then
+if test "$ENABLE_SINGLE_HOST" != yes; then
   { $as_echo "$as_me:${as_lineno-$LINENO}:
 **************************************************************************
 ***                                                                    ***

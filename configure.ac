@@ -505,7 +505,8 @@ if test "$ENABLE_SINGLE_HOST" != no; then
   AC_DEFINE([___SINGLE_HOST],[],[Enable single host mode])
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___SINGLE_HOST"
   if test "$ENABLE_SINGLE_HOST" != yes; then
-    CONF_SINGLE_HOST_LIMIT="$enableval"
+    CONF_SINGLE_HOST_LIMIT="$ENABLE_SINGLE_HOST"
+    ENABLE_SINGLE_HOST=yes
   fi
 fi
 
@@ -3912,7 +3913,7 @@ if test "$ENABLE_DYNAMIC_CLIB" != yes; then
 ])
 fi
 
-if test "$ENABLE_SINGLE_HOST" != yes -a "$C_COMP_LLVM" != yes; then
+if test "$ENABLE_SINGLE_HOST" != yes; then
   AC_MSG_NOTICE([
 **************************************************************************
 ***                                                                    ***
