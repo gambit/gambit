@@ -654,10 +654,10 @@
              (lambda (scp _)
                (not (and (##hash-set-hamt-has-key? scps2 scp)
                          (##set! l (+ l 1)))))))
-         (fx= l (##hash-set-hamt-length scps2)))))
+         (##fx= l (##hash-set-hamt-length scps2)))))
 
 ; TODO: compiler fail to serialize (see test/unit-test/05-serdes/serdes.scm)
-(define (##global-binding-table-id-equal? obj1 obj2)
+(define-prim (##global-binding-table-id-equal? obj1 obj2)
   (and (##vector? obj1)
        (##fx>= (##vector-length obj1) 4)
        (##vector? obj2)
@@ -676,9 +676,6 @@
 ;;; is meant to be modified by mutation
 ;;; and no binding are ever to be removed.
 ;;;
-
-(define (##global-binding-table-id-equal?-set! proc)
-  (set! ##global-binding-table-id-equal? proc))
 
 (define (##make-syntax-global-binding-table)
   (##make-table test: ##global-binding-table-id-equal?))
@@ -1115,6 +1112,7 @@
            (##cte-relink cte (replace (##cte-parent-cte cte))))))
 
   (##make-cte-macro parent-cte name descr syntax-proc-ctx)
+  ; TODO: do not need to replace anymore? (hygiene)
   #;(replace parent-cte))
 
 (define (##cte-top-cte-add-core-macro parent-cte name descr #!optional (syntax-proc-ctx identity))
@@ -1128,6 +1126,7 @@
            (##cte-relink cte (replace (##cte-parent-cte cte))))))
 
   (##make-cte-core-macro parent-cte name descr syntax-proc-ctx)
+  ; TODO
   #;(replace parent-cte))
 
 (define (##cte-add-macro parent-cte name descr #!optional (syntax-proc-ctx identity))
@@ -1314,8 +1313,7 @@
 
 ;; TODO: restore once bug fixed
 (define (##full-name? sym) ;; full name if it contains a namespace separator
-  #t
-  #;(##fx>= (##namespace-separator-index (##symbol->string sym)) 0))
+  (##fx>= (##namespace-separator-index (##symbol->string sym)) 0))
 
 (define (##namespace-split sym)
   (let* ((str (##symbol->string sym))
@@ -1547,7 +1545,7 @@
 
 (define (##top-cte-process-namespace! top-cte src)
   (##cte-mutate-top-cte-cte!
-   top-cte
+   (##top-cte-cte top-cte)
    (lambda (cte) (##cte-process-namespace cte src))))
 
 ;;;----------------------------------------------------------------------------
