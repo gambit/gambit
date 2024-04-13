@@ -223,7 +223,7 @@
 ;; top-level
 (let* ((cte (##make-top-cte))
        (id  (##make-syntax-source 'x #f))
-       (descr (plain-datum->syntax '0))
+       (descr (datum->syntax '0))
        (key (hcte-add-new-top-level-binding! cte id))
        (cte-var        (hcte-add-variable-cte cte key id))
        (cte-macro      (hcte-add-macro-cte cte key id descr))
@@ -253,7 +253,7 @@
 ;; base
 (let* ((cte (##make-top-cte))
        (id  (##make-syntax-source 'x #f))
-       (descr (plain-datum->syntax '0))
+       (descr (datum->syntax '0))
        (key (hcte-add-new-local-binding! cte id))
        (cte-var        (hcte-add-variable-cte cte key id))
        (cte-macro      (hcte-add-macro-cte cte key id descr))

@@ -915,7 +915,7 @@
     s))
 
 (define-prim (##implicit-prefix-apply sym stx-src)
-  (##plain-datum->syntax
+  (##datum->syntax
     `(,(##make-core-syntax-source sym #f) ,stx-src)
      stx-src))
 
@@ -989,7 +989,7 @@
                                                (##syntax-source-code-set s rest)
                                                rest)))))))
         (else
-          (##plain-datum->syntax 
+          (##datum->syntax 
             `(,(##make-core-syntax-source '##quote #f)
               ,(##syntax-source-code-set s (##list s)))
             s)))))
@@ -1051,7 +1051,7 @@
            src))))
 
   (let ((file-src (##include-file-as-a-begin-expr stx-src)))
-    (let ((file-stx (add-scope (##datum->syntax file-src (car (##source-code stx-src))) core-scope)))
+    (let ((file-stx (add-scope (##source->syntax-source file-src (car (##source-code stx-src))) core-scope)))
       (##expand file-stx cte))))
 
 ;;;----------------------------------------------------------------------------
@@ -1093,14 +1093,14 @@
   (define (##expand-cond-clause clause next-clause cte)
     (match-source clause (=>)
       ((condition => expr)
-       (##plain-datum->core-syntax
+       (##datum->core-syntax
          `(let ((x ,(##expand condition cte)))
             (if x
                 (,(##expand expr cte) x)
                 ,next-clause))
           clause))
       ((condition . exprs)
-       (##plain-datum->core-syntax
+       (##datum->core-syntax
         (let ((expanded-condition (##expand condition cte)))
          `(if ,expanded-condition
               ,(if (pair? exprs)

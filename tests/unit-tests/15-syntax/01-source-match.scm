@@ -20,14 +20,14 @@
 (define src2 (##make-source #t #f))
 (define src3 (##make-source '() #f))
 
-(define src4 (##plain-datum->syntax `(,0)))
-(define src5 (##plain-datum->syntax `(,0 ,0)))
-(define src6 (##plain-datum->syntax `(,0 ,0 ,0)))
-(define src7 (##plain-datum->syntax `((,0))))
-(define src8 (##plain-datum->syntax `((,0 ,0) (,0 ,0))))
+(define src4 (##datum->syntax `(,0)))
+(define src5 (##datum->syntax `(,0 ,0)))
+(define src6 (##datum->syntax `(,0 ,0 ,0)))
+(define src7 (##datum->syntax `((,0))))
+(define src8 (##datum->syntax `((,0 ,0) (,0 ,0))))
 
-(define src9 (##plain-datum->syntax `(0 . 0)))
-(define src10 (##plain-datum->syntax `((0 . 0) . (0 . 0))))
+(define src9 (##datum->syntax `(0 . 0)))
+(define src10 (##datum->syntax `((0 . 0) . (0 . 0))))
 
 
 (define srcs (macro-srcs 10))
@@ -309,7 +309,7 @@
                    (symbol? (##source-code b))) #t)
       (_ #f))))
 
-(let ((src (plain-datum->syntax `(0 (0 1) 2))))
+(let ((src (datum->syntax `(0 (0 1) 2))))
   (check-true
     (match-source src ()
       ((a (a b) c)
@@ -317,7 +317,7 @@
       (_
         #f))))
 
-(let ((src (plain-datum->syntax `(0 (3 1) 2))))
+(let ((src (datum->syntax `(0 (3 1) 2))))
   (check-true
     (match-source src ()
       ((a (a b) c)
@@ -328,7 +328,7 @@
 ;;;---------------------------------------
 ;;;
 
-#;(let ((src (plain-datum->syntax `(0))))
+#;(let ((src (datum->syntax `(0))))
   (check-true
     (match-source src ()
       ((a @ b)
@@ -336,7 +336,7 @@
       (_
         #f))))
 
-(let ((src (plain-datum->syntax `((0 1)))))
+(let ((src (datum->syntax `((0 1)))))
   (check-true
     (match-source src ()
       ((a @ (b c))
@@ -345,7 +345,7 @@
       (_
         #f))))
 
-(let ((src (plain-datum->syntax `((0 1)))))
+(let ((src (datum->syntax `((0 1)))))
   (check-true
     (match-source src ()
       ((a @ (b c) . rest)
@@ -354,7 +354,7 @@
       (_
         #f))))
 
-#;(let ((src (plain-datum->syntax `(##define (x a) x))))
+#;(let ((src (datum->syntax `(##define (x a) x))))
     (match-source src ()
       ((_ binding @ (_ . _) . _)
        (##pretty-print 'asd))

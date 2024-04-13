@@ -105,8 +105,8 @@
 ;;;  (define (symhamt-alist-ref alist sym) ...)
 ;;;  (define (symhamt-alist-remove alist sym) ...))
 
-(##namespace ("_hamt/primitive-hamt#"
-              define-hamt))
+;(##namespace ("_hamt/primitive-hamt#"
+;              define-hamt))
 
 (##define-macro (define-hamt
                   implementer

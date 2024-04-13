@@ -159,7 +159,7 @@
                          (syntax-source-code-set expr 
                            `(,(##make-core-syntax-source '##syntax #f) ,syntax-expr))))
     ((##syntax syntax-expr)
-    `(plain-datum->core-syntax ,(cadr (expand-clause-expr-syntax-expr bindings 0 syntax-expr #f)) 
+    `(datum->core-syntax ,(cadr (expand-clause-expr-syntax-expr bindings 0 syntax-expr #f)) 
                                (##syntax ,syntax-expr)))
     ((_ . _)
      (let loop ((exprs (syntax-source-code expr)))
@@ -308,14 +308,14 @@
        (let ((next (expand-clauses literals stx-expr (cdr clauses))))
          (expand-clause literals stx-expr (car clauses) next)))
       (else
-       (plain-datum->syntax `(error "syntax-case: no match" ,stx-expr)))))
+       (datum->syntax `(error "syntax-case: no match" ,stx-expr)))))
 
 
   (match-source s ()
     ((syntax-case-id expr literals . clauses)
      (let ((expr-id (gensym 'syntax-case-expr)))
        (##expand
-       (plain-datum->core-syntax
+       (datum->core-syntax
          `((lambda (,expr-id) 
              ,(expand-clauses (syntax-source-code literals)
                               expr-id 

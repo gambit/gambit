@@ -75,9 +75,9 @@
                 (equal? (car lst) scp2))))))
 
 
-(define stx2 (plain-datum->syntax `((0))))
-(define stx3 (plain-datum->syntax `((a . b))))
-(define stx4 (plain-datum->syntax `((a b) . (a b))))
+(define stx2 (datum->syntax `((0))))
+(define stx3 (datum->syntax `((a . b))))
+(define stx4 (datum->syntax `((a b) . (a b))))
 
 (define stx2a (add-scope stx2 scp1))
 (define stx3a (add-scope stx3 scp1))
@@ -123,10 +123,10 @@
 ;;;;----------------------------------------------------------------------------
 ;;;; mutatable operations
 ;
-;(define stx5 (plain-datum->syntax `(a)))
-;(define stx6 (plain-datum->syntax `((0))))
-;(define stx7 (plain-datum->syntax `((a . b))))
-;(define stx8 (plain-datum->syntax `((a b) . (a b))))
+;(define stx5 (datum->syntax `(a)))
+;(define stx6 (datum->syntax `((0))))
+;(define stx7 (datum->syntax `((a . b))))
+;(define stx8 (datum->syntax `((a b) . (a b))))
 ;
 ;(add-scope! stx5 scp1)
 ;(match-source stx5 ()
@@ -151,10 +151,10 @@
 ;   (scopes-contain-scp1-exactly c)
 ;   (scopes-contain-scp1-exactly d)))
 ;
-;(define stx9  (plain-datum->syntax `(a)))
-;(define stx10 (plain-datum->syntax `((0))))
-;(define stx11 (plain-datum->syntax `((a . b))))
-;(define stx12 (plain-datum->syntax `((a b) . (a b))))
+;(define stx9  (datum->syntax `(a)))
+;(define stx10 (datum->syntax `((0))))
+;(define stx11 (datum->syntax `((a . b))))
+;(define stx12 (datum->syntax `((a b) . (a b))))
 ;
 ;(add-scope! stx9 scp1)
 ;(match-source stx9 ()
@@ -180,10 +180,10 @@
 ;   (scopes-contain-scp1-exactly d)))
 ;
 ;(define s13   (add-scopes (make-syntax-source #f #f) (list scp1 scp2)))
-;(define stx13 (plain-datum->syntax `(a) s13))
-;(define stx14 (plain-datum->syntax `((0)) s13))
-;(define stx15 (plain-datum->syntax `((a . b)) s13))
-;(define stx16 (plain-datum->syntax `((a b) . (a b)) s13))
+;(define stx13 (datum->syntax `(a) s13))
+;(define stx14 (datum->syntax `((0)) s13))
+;(define stx15 (datum->syntax `((a . b)) s13))
+;(define stx16 (datum->syntax `((a b) . (a b)) s13))
 ;
 ;(flip-scope! stx13 scp2)
 ;(match-source stx13 ()
@@ -208,10 +208,10 @@
 ;   (scopes-contain-scp1-exactly c)
 ;   (scopes-contain-scp1-exactly d)))
 ;
-;(define stx17  (plain-datum->syntax `(a)))
-;(define stx18 (plain-datum->syntax `((0))))
-;(define stx19 (plain-datum->syntax `((a . b))))
-;(define stx20 (plain-datum->syntax `((a b) . (a b))))
+;(define stx17  (datum->syntax `(a)))
+;(define stx18 (datum->syntax `((0))))
+;(define stx19 (datum->syntax `((a . b))))
+;(define stx20 (datum->syntax `((a b) . (a b))))
 ;
 ;(flip-scope! stx17 scp2)
 ;(match-source stx17 ()

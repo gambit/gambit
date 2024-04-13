@@ -91,37 +91,32 @@ NORMAL_SOURCES = $(NORMAL_C) $(NORMAL_CPP) $(NORMAL_H)
 HEADERS_SCM = "_kernel\#.scm" "_system\#.scm" "_num\#.scm" "_std\#.scm" \
 "_eval\#.scm" "_module\#.scm" "_io\#.scm" "_nonstd\#.scm" "_thread\#.scm" \
 "_repl\#.scm" "_gambit\#.scm" "gambit\#.scm" \
-"r7rs\#.scm" "r5rs\#.scm" "r4rs\#.scm" "_optional\#.scm" "_fifo\#.scm" \
-_define-syntax.scm _syntax-boot.scm _syntax-case-xform-boot.scm \
-_syntax-case-xform.scm _syntax-common.scm _syntax-pattern.scm \
-_syntax-rules-xform.scm _syntax-template.scm \
-_syntax-xform-boot.scm _syntax-xform.scm \
-_syntax.scm _with-syntax-boot.scm
+"r7rs\#.scm" "r5rs\#.scm" "r4rs\#.scm" "_optional\#.scm" "_fifo\#.scm"
 MODULES = _kernel _system _num _std \
-_eval _module _io _nonstd _thread _repl
+_eval _module _io _nonstd _thread _syntax-lib _repl
 MODULES_SCM = _kernel.scm _system.scm _num.scm _std.scm \
-_eval.scm _module.scm _io.scm _nonstd.scm _thread.scm _repl.scm
+_eval.scm _module.scm _io.scm _nonstd.scm _thread.scm _syntax-lib.scm _repl.scm
 MODULES_C = _kernel.c _system.c _num.c _std.c \
-_eval.c _module.c _io.c _nonstd.c _thread.c _repl.c
+_eval.c _module.c _io.c _nonstd.c _thread.c _syntax-lib.c _repl.c
 MODULES_O = _kernel@obj@ _system@obj@ _num@obj@ _std@obj@ \
-_eval@obj@ _module@obj@ _io@obj@ _nonstd@obj@ _thread@obj@ _repl@obj@
+_eval@obj@ _module@obj@ _io@obj@ _nonstd@obj@ _thread@obj@ _syntax-lib@obj@ _repl@obj@
 MODULES_O_PLUS = +_kernel@obj@ +_system@obj@ +_num@obj@ +_std@obj@ \
-+_eval@obj@ +_module@obj@ +_io@obj@ +_nonstd@obj@ +_thread@obj@ +_repl@obj@
++_eval@obj@ +_module@obj@ +_io@obj@ +_nonstd@obj@ +_thread@obj@ +_syntax-lib@obj@ +_repl@obj@
 MODULES_O_COMMA = _kernel@obj@,_system@obj@,_num@obj@,_std@obj@,\
-+_eval@obj@,+_module@obj@,_io@obj@,_nonstd@obj@,_thread@obj@,_repl@obj@
++_eval@obj@,+_module@obj@,_io@obj@,_nonstd@obj@,_thread@obj@,+_syntax-lib@obj@,_repl@obj@
 NORMAL_O_IN_COMPILE_ORDER = main@obj@ os_tty@obj@ c_intf@obj@ actlog@obj@ \
 os_io@obj@ setup@obj@ mem@obj@ os_files@obj@ os_setup@obj@ os_base@obj@ \
 os_thread@obj@ os_time@obj@ os_shell@obj@ os_dyn@obj@
 MODULES_O_IN_COMPILE_ORDER = _io@obj@ _num@obj@ _std@obj@ \
-_repl@obj@ _eval@obj@ _nonstd@obj@ _kernel@obj@ _thread@obj@ _system@obj@ \
+_repl@obj@ _eval@obj@ _nonstd@obj@ _kernel@obj@ _thread@obj@ _syntax-lib@obj@ _system@obj@ \
 _module@obj@
 MODULES_C_IN_COMPILE_ORDER = _io.c _num.c _std.c \
-_repl.c _eval.c _nonstd.c _kernel.c _thread.c _system.c \
+_repl.c _eval.c _nonstd.c _kernel.c _thread.c _system.c _syntax-lib.c \
 _module.c
 
 UNIVLIB = $(rootfromhere)/gsc/_t-univ-*.scm $(rootfromhere)/gsc/_univadt.scm
 
-LIBRARIES_SCM = $(HEADERS_SCM) syntax-case.scm
+LIBRARIES_SCM = $(HEADERS_SCM)
 
 LIBRARY = $(LIB_PREFIX)$(GAMBITLIB)$(LIB_EXTENSION)
 LIBRARY_OBJECTS = $(NORMAL_O) $(MODULES_O) $(GAMBIT_LIB_O)
@@ -138,9 +133,7 @@ OBJECTS = $(LIBRARY_OBJECTS)
 
 RCFILES = makefile.in module-common.mk.in header.scm $(MODULES_SCM) sys.scm \
 $(LIBRARIES_SCM) $(NORMAL_SOURCES) check___P check___P.st \
-psyntax69c.pp psyntax69c.ss psyntax73.pp psyntax73.ss \
-syntax-case-build syntax-case-expand-file \
-syntax-case-postlude.scm syntax-case-prelude.scm _univlib.scm
+_univlib.scm
 
 GAMBIT_LIB_java = _$(GAMBITLIB).java
 GAMBIT_LIB_js = _$(GAMBITLIB).js
@@ -247,6 +240,7 @@ $(srcdirpfx)$(rootfromhere)/lib/_system.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_num.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_std.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_eval.scm \
+$(srcdirpfx)$(rootfromhere)/lib/_syntax-lib.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_module.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_io.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_nonstd.scm \
@@ -266,19 +260,8 @@ $(srcdirpfx)$(rootfromhere)/lib/_module\#.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_io\#.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_nonstd\#.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_thread\#.scm \
-$(srcdirpfx)$(rootfromhere)/lib/_repl\#.scm \
-$(srcdirpfx)$(rootfromhere)/lib/_define-syntax.scm \
-$(srcdirpfx)$(rootfromhere)/lib/_syntax-boot.scm \
-$(srcdirpfx)$(rootfromhere)/lib/_syntax-case-xform-boot.scm \
-$(srcdirpfx)$(rootfromhere)/lib/_syntax-case-xform.scm \
-$(srcdirpfx)$(rootfromhere)/lib/_syntax-common.scm \
-$(srcdirpfx)$(rootfromhere)/lib/_syntax-pattern.scm \
-$(srcdirpfx)$(rootfromhere)/lib/_syntax-rules-xform.scm \
-$(srcdirpfx)$(rootfromhere)/lib/_syntax-template.scm \
-$(srcdirpfx)$(rootfromhere)/lib/_syntax-xform-boot.scm \
-$(srcdirpfx)$(rootfromhere)/lib/_syntax-xform.scm \
-$(srcdirpfx)$(rootfromhere)/lib/_syntax.scm \
-$(srcdirpfx)$(rootfromhere)/lib/_with-syntax-boot.scm
+$(srcdirpfx)$(rootfromhere)/lib/_repl\#.scm
+
 
 $(MODULES_O) $(NORMAL_O): $(srcdirpfx)$(rootfromhere)/include/gambit.h
 
@@ -300,6 +283,9 @@ _std@obj@: _std.c os.h
 	@BUILD_OBJ@ -D___LIBRARY
 
 _eval@obj@: _eval.c
+	@BUILD_OBJ@ -D___LIBRARY
+
+_syntax-lib@obj@: _syntax-lib.c
 	@BUILD_OBJ@ -D___LIBRARY
 
 _module@obj@: _module.c

@@ -1244,7 +1244,7 @@
                (generate-definitions)))))
 
   (let ((expansion
-         (plain-datum->core-syntax
+         (datum->core-syntax
            (##define-type-parser
              form-name
              super-type-static

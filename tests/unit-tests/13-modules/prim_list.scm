@@ -86,13 +86,13 @@
 (let ((x (cons 1 2))) (set-car! x 3) x)
 (let ((x (cons 1 2))) (set-cdr! x 3) x)
 
-;; R7RS
+;;; R7RS
 
 (make-list 0) (make-list 5) (make-list 5 99)
 (list-copy '()) (list-copy '(1 2 3))
 (list-set! (list 1 2 3) 1 99)
 
-;; Gambit
+;;; Gambit
 
 (any odd? '()) (any odd? '(2 4)) (any odd? '(1 2)) (any odd? '(2 1)) (any < '(5 5 5) '(4 7 9) '(1 6 13))
 (call-with-values (lambda () (car+cdr '(1 2 3))) (lambda (a b) (list a b)))

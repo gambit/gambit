@@ -23,20 +23,20 @@
 
 (##add-new-macro! ##syntax-rules
   (##eval-for-syntax-binding
-    (plain-datum->core-syntax
+    (datum->core-syntax
       `(##lambda (stx)
          (##syntax-case stx ()
-           ((_ (k ...) (patterns template) ...)
+           ((_ (k ...) (patterns . templates) ...)
             (##syntax
               (##lambda (stx)
                 (##syntax-case stx (k ...)
-                  (patterns (##syntax template))
+                  (patterns (##syntax (##begin . templates)))
                   ...)))))))
     ##syntax-interaction-cte))
 
 (##add-new-macro! ##with-syntax
   (##eval-for-syntax-binding
-    (plain-datum->core-syntax
+    (datum->core-syntax
       `(##lambda (stx)
         (##syntax-case stx ()
           ((_ ((p e) ...) b ...)
@@ -48,7 +48,7 @@
 ;; TODO: extremly low performances
 (##add-new-macro! ##define-macro
   (##eval-for-syntax-binding
-    (plain-datum->core-syntax
+    (datum->core-syntax
       `(##lambda (s)
          (##syntax-case s ()
            ((##define-macro (name . params) body2 ...)
@@ -62,9 +62,9 @@
                 (##lambda (s)
                   (##syntax-case s (qwe)
                     ((_ . args)
-                     (##plain-datum->core-syntax
+                     (##datum->core-syntax
                          (apply expander
-                                (syntax->plain-datum (##syntax args)))
+                                (syntax->datum (##syntax args)))
                        (car (##source-code s))))
                     (_
                      (error "define-macro: ill formed macro call" s)))))))

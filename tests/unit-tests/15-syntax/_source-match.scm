@@ -24,23 +24,19 @@
                    (##pair?   (##cdr condition))
                    (##eq?     (##cadr condition) '@)
                    (##pair?   (##caddr condition)))
-              `(cond
-                ((##pair? ,code)
-                 ,(let* ((cont 
-                         (lambda (seens) 
-                           (##match-condition-pair seens code (##cddr condition) next fail))))
-                    (##match-condition seens `(##car ,code) (##car condition) cont fail)))
-                (else 
-                  ,fail)))
+              `(if (##pair? ,code)
+                    ,(let* ((cont 
+                              (lambda (seens) 
+                                (##match-condition-pair seens code (##cddr condition) next fail))))
+                       (##match-condition seens `(##car ,code) (##car condition) cont fail))
+                    ,fail))
              (else
-              `(cond
-                 ((##pair? ,code)
-                  ,(let* ((cont 
+              `(if (##pair? ,code)
+                   ,(let* ((cont 
                           (lambda (seens) 
                             (##match-condition-pair seens `(##cdr ,code) (##cdr condition) next fail))))
-                     (##match-condition seens `(##car ,code) (##car condition) cont fail)))
-                 (else 
-                   ,fail)))))
+                      (##match-condition seens `(##car ,code) (##car condition) cont fail))
+                   ,fail))))
           ((##null? condition)
            `(if (##null? ,code)
                 ,(next seens)
@@ -125,6 +121,8 @@
       (else
        `(##error "source-match : no match"))))
 
+
+    (pp "reached")
   (let ((src (##gensym 'src)))
    `(let ((,src ,src-obj))
       ,(let ((src `(if (##source? ,src) ,src (##make-source ,src #f))))

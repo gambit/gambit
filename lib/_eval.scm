@@ -6465,7 +6465,7 @@
                       (pair? (##source-code src))
                       (not (##source? (car (##source-code src)))))
                  ; adjust for "source2" case
-                 (plain-datum->core-syntax (##source-code src))
+                 (datum->core-syntax (##source-code src))
                  src)))
     (##compile-top top-cte (##syntax-expand ##syntax-interaction-cte src))))
 
@@ -6474,7 +6474,7 @@
                       (pair? (##source-code src))
                       (not (##source? (car (##source-code src)))))
                  ; adjust for "source2" case
-                 (plain-datum->core-syntax (##source-code src))
+                 (datum->core-syntax (##source-code src))
                  src)))
     (##compile-inner inner-cte (##syntax-expand ##syntax-interaction-cte src))))
 

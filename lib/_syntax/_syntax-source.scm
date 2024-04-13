@@ -24,7 +24,7 @@
 (define-prim (##make-syntax-source-tag src-tag)
   (##vector 'syntax src-tag))
 
-(define-prim (##source->syntax-tag! obj source-tag)
+(define-prim (##source-object->syntax-source-object-tag! obj source-tag)
   ; create a syntaxic-tag from a source-tag
   ; or keep the syntaxic-tag unchanged
   (cond
@@ -35,7 +35,7 @@
     (else
       (error "Cannot convert source object's tag: the object is not a tag"))))
 
-(define-prim (##syntax->source-tag! obj stx-tag)
+(define-prim (##syntax-source-object->source-object-tag! obj stx-tag)
   ; get the source-tag representation 
   ; back from a syntax-tag
   ; or keep the source-tag unchanged
@@ -123,7 +123,7 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim (##source->syntax! src #!optional (stx (macro-absent-obj)))
+(define-prim (##source-object->syntax-source-object! src #!optional (stx (macro-absent-obj)))
 
   (if (not 
         (or (##source? src)
@@ -144,7 +144,7 @@
   ; adjust tag
   (cond
     ((##source? src)
-     (##vector-set! src 0 (##source->syntax-tag! src (##vector-ref src 0)))))
+     (##vector-set! src 0 (##source-object->syntax-source-object-tag! src (##vector-ref src 0)))))
 
   ; adjust scopes
   (cond
@@ -155,16 +155,16 @@
                                (##make-scopes)))))
   src)
 
-(define-prim (source->syntax! src #!optional (stx (macro-absent-obj)))
-  (##source->syntax! src stx))
+(define-prim (source-object->syntax-source-object! src #!optional (stx (macro-absent-obj)))
+  (##source-object->syntax-source-object! src stx))
 
-(define-prim (##source->syntax src #!optional (stx (macro-absent-obj)))
+(define-prim (##source-object->syntax-source-object src #!optional (stx (macro-absent-obj)))
   (let ((src (##vector-copy src)))
-    (##source->syntax! src stx)
+    (##source-object->syntax-source-object! src stx)
     src))
 
-(define-prim (source->syntax src #!optional (stx (macro-absent-obj)))
-  (##source->syntax src stx))
+(define-prim (source-object->syntax-source-object src #!optional (stx (macro-absent-obj)))
+  (##source-object->syntax-source-object src stx))
 
 ;;;---------------------------------------
 
@@ -193,10 +193,10 @@
 
 ;;;---------------------------------------
 
-(define-prim (##syntax->source! src)
+(define-prim (##syntax-source-object->source-object! src)
   (cond
     ((##syntax-source? src)
-     (##vector-set! src 0 (##syntax->source-tag! src (##vector-ref src 0)))
+     (##vector-set! src 0 (##syntax-source-object->source-object-tag! src (##vector-ref src 0)))
      (##source-scopes-set! src #f)
      src)
     ((##source? src)
@@ -208,7 +208,7 @@
 
 (define-prim&proc (make-syntax-source code locat)
   (let ((src (##make-source code locat)))
-    (##source->syntax! src)
+    (##source-object->syntax-source-object! src)
     src))
 
 (define-prim&proc (make-core-syntax-source code locat)
@@ -218,99 +218,99 @@
 
 ;;;----------------------------------------------------------------------------
 
-; TODO: datum->syntax must be renamed source->syntax 
-;       and plain-datum->syntax should be renamed datum->syntax
+; TODO: source->syntax-source must be renamed source->syntax 
+;       and datum->syntax should be renamed source->syntax-source
 ; TODO: fix define-prim&proc to allow for optional parameters
 
-(define-prim (##datum->syntax datum #!optional (stx (macro-absent-obj)))
+(define-prim (##source->syntax-source datum #!optional (stx (macro-absent-obj)))
 
-  (define (##datum->syntax-pair code)
+  (define (##source->syntax-source-pair code)
     (cond
       ((pair? code)
        (cons (if (equal? stx (macro-absent-obj))
-                 (##datum->syntax (car code))
-                 (##datum->syntax (car code) stx))
-             (##datum->syntax-pair (cdr code))))
+                 (##source->syntax-source (car code))
+                 (##source->syntax-source (car code) stx))
+             (##source->syntax-source-pair (cdr code))))
       ((null? code)
        code)
       (else
-       (##datum->syntax code))))
+       (##source->syntax-source code))))
 
   (cond
     ((syntax-source? datum)
      datum)
     ((##source? datum)
-     (##source->syntax
+     (##source-object->syntax-source-object
        (##source-code-update datum
         (lambda (code)
           (cond
             ((pair? code)
-             (##datum->syntax-pair code))
+             (##source->syntax-source-pair code))
             (else
               code))))
        stx))
     (else
       (error "Cannot convert to syntax: ill formed source " datum))))
 
-(define-prim (datum->syntax src #!optional (stx (##make-syntax-source #f #f)))
-  (##datum->syntax src stx))
+(define-prim (source->syntax-source src #!optional (stx (##make-syntax-source #f #f)))
+  (##source->syntax-source src stx))
 
 ;;;---------------------------------------
 
-(define-prim (##syntax->datum! stx)
+(define-prim (##syntax-source->source! stx)
 
   (define (pair->datum! code)
     (cond 
       ((pair? code)
-       (##syntax->datum! (car code))
+       (##syntax-source->source! (car code))
        (pair->datum! (cdr code)))
       ((##null? code)
        code)
       (else
-       (##syntax->datum! code))))
+       (##syntax-source->source! code))))
 
   (cond
     ((##syntax-source? stx)
      (let ((code (##source-code stx)))
        (cond 
          ((##pair? code)
-          (##syntax->source! stx)
+          (##syntax-source-object->source-object! stx)
           (pair->datum! code))
          (else
-          (##syntax->source! stx)))))
+          (##syntax-source-object->source-object! stx)))))
     (else
      "cannot convert non-syntax to datum")))
 
-(define (syntax->datum! stx)
-  (##syntax->datum! stx))
+(define (syntax-source->source! stx)
+  (##syntax-source->source! stx))
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim (##plain-datum->syntax datum #!optional (stx (##make-syntax-source #f #f)))
+(define-prim (##datum->syntax datum #!optional (stx (##make-syntax-source #f #f)))
 
   (let ((stx (cond
                ((##syntax-source? stx)
                 stx)
                ((##source? stx)
-                (##datum->syntax stx))
+                (##source->syntax-source stx))
                (else
                  (##error "Cannot convert to source: unknown object used as source reference")))))
 
   (define (pair->syntax datum)
     (cond
       ((pair? datum)
-       (cons (##plain-datum->syntax (car datum) stx)
+       (cons (##datum->syntax (car datum) stx)
              (pair->syntax (cdr datum))))
       ((null? datum)
        datum)
       (else
-       (##plain-datum->syntax datum stx))))
+       (##datum->syntax datum stx))))
 
  (cond
    ((syntax-source? datum)
     datum)
    ((##source? datum)
-    (##datum->syntax datum))
+    (##source->syntax-source datum))
    ((pair? datum)
     ; The algorithm doesn't require pairs and list to carry scoping
     ; information but, it is usefull for debbuging purposes. 
@@ -319,22 +319,22 @@
    (else
     (##source-code-set stx datum)))))
 
-(define-prim (plain-datum->syntax datum #!optional (stx (macro-absent-obj)))
+(define-prim (datum->syntax datum #!optional (stx (macro-absent-obj)))
   (if (##equal? stx (macro-absent-obj))
-      (##plain-datum->syntax datum)
-      (##plain-datum->syntax datum stx)))
+      (##datum->syntax datum)
+      (##datum->syntax datum stx)))
 
 ;;;---------------------------------------
 
-(define-prim (##plain-datum->core-syntax datum #!optional (stx (macro-absent-obj)))
-  (add-scope (##plain-datum->syntax datum stx) core-scope))
+(define-prim (##datum->core-syntax datum #!optional (stx (macro-absent-obj)))
+  (add-scope (##datum->syntax datum stx) core-scope))
 
-(define-prim (plain-datum->core-syntax datum #!optional (stx (macro-absent-obj)))
-  (##plain-datum->core-syntax datum stx))
+(define-prim (datum->core-syntax datum #!optional (stx (macro-absent-obj)))
+  (##datum->core-syntax datum stx))
 
 ;;;---------------------------------------
 
-(define-prim&proc (syntax->plain-datum stx)
+(define-prim&proc (syntax->datum stx)
   (cond
     ((not (syntax-source? stx))
      stx)
@@ -345,14 +345,16 @@
           (let loop ((code code))
             (cond
               ((pair? code)
-               (cons (syntax->plain-datum (car code))
-                     (loop                (cdr code))))
+               (cons (syntax->datum (car code))
+                     (loop          (cdr code))))
               ((null? code)
                code)
               (else
-               (syntax->plain-datum code)))))
+               (syntax->datum code)))))
          (else
-           code))))))
+           code))))
+    (else
+     (error "not a syntax-source object"))))
      
 ;;;----------------------------------------------------------------------------
   

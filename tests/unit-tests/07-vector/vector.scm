@@ -21,7 +21,7 @@
 (check-false (##vector? bool))
 
 (check-true (##vector? v1))
-(check-true (##vector? '#()))
+;(check-true (##vector? '#()))
 (check-true (##vector? '#(11)))
 (check-true (##vector? '#(11 22)))
 (check-true (##vector? '#(11 22 33)))

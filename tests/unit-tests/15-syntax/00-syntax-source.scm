@@ -36,7 +36,7 @@
   (not (syntax-source? (##vector 0 0 0 0))))
 
 ;;;----------------------------------------------------------------------------
-;;; source->syntax!
+;;; source-object->syntax-source-object!
 
 (define (##make-test-source #!optional (id #f))
   (let ((src (##make-source id #f)))
@@ -45,42 +45,42 @@
     src))
 
 (let ((src (##make-test-source)))
-  (##source->syntax! src)
+  (##source-object->syntax-source-object! src)
   (check-equal? 'a-locat (vector-ref src 2))
   (check-equal? 'a-path  (vector-ref src 3))
   (check-true   (not (not (vector-ref src 4)))))
 
 (let ((src (##make-test-source))
       (stx (##make-syntax-source #f #f)))
-  (##source->syntax! src stx)
+  (##source-object->syntax-source-object! src stx)
   (check-equal? 'a-locat (vector-ref src 2))
   (check-equal? 'a-path  (vector-ref src 3))
   (check-true   (not (not (vector-ref src 4)))))
 
 (let ((src (##make-source #f #f))
       (stx (let ((stx (##make-test-source)))
-             (##source->syntax! stx)
+             (##source-object->syntax-source-object! stx)
              stx)))
-  (##source->syntax! src stx)
+  (##source-object->syntax-source-object! src stx)
   (check-equal? 'a-locat (vector-ref src 2))
   (check-equal? 'a-path  (vector-ref src 3))
   (check-true   (not (not (vector-ref src 4)))))
 
 (let* ((src (##make-source #f #f))
        (stx (let ((stx (##make-test-source)))
-              (##source->syntax! stx)
+              (##source-object->syntax-source-object! stx)
               (add-scope stx (make-scope))))
        (scopes (syntax-source-scopes stx)))
-  (##source->syntax! src stx)
+  (##source-object->syntax-source-object! src stx)
   (check-equal? 'a-locat (vector-ref src 2))
   (check-equal? 'a-path  (vector-ref src 3))
   (check-equal? scopes   (vector-ref src 4)))
 
 ;;;----------------------------------------------------------------------------
-;;; ##datum->syntax
+;;; ##source->syntax-source
 
 (let* ((datum (##make-test-source `(,(##make-test-source 0) ,(##make-test-source 1))))
-       (stx   (##datum->syntax datum)))
+       (stx   (##source->syntax-source datum)))
   (check-true (syntax-source? stx))
   (check-equal? 'a-locat (vector-ref stx 2))
   (check-true (pair? (syntax-source-code stx)))
@@ -91,9 +91,9 @@
 
 (let* ((datum (##make-source `(,(##make-source 0 #f) ,(##make-source 1 #f)) #f))
        (ref   (let ((stx (##make-test-source)))
-                (##source->syntax! stx)
+                (##source-object->syntax-source-object! stx)
                 (add-scope stx (make-scope))))
-       (stx   (##datum->syntax datum ref))
+       (stx   (##source->syntax-source datum ref))
        (scopes (syntax-source-scopes stx)))
   (check-true (syntax-source? stx))
   (check-equal? 'a-locat (vector-ref stx 2))
@@ -106,10 +106,10 @@
   (check-equal? scopes   (vector-ref (car (syntax-source-code stx)) 4)))
 
 ;;;----------------------------------------------------------------------------
-;;; ##plain-datum->syntax
+;;; ##datum->syntax
 
 (let* ((datum (##make-test-source `(,(##make-test-source 0) ,(##make-test-source 1))))
-       (stx   (##datum->syntax datum)))
+       (stx   (##source->syntax-source datum)))
   (check-true (syntax-source? stx))
   (check-equal? 'a-locat (vector-ref stx 2))
   (check-true (pair? (syntax-source-code stx)))
@@ -120,9 +120,9 @@
 
 (let* ((datum (##make-source `(,(##make-source 0 #f) ,(##make-source 1 #f)) #f))
        (ref   (let ((stx (##make-test-source)))
-                (##source->syntax! stx)
+                (##source-object->syntax-source-object! stx)
                 (add-scope stx (make-scope))))
-       (stx   (##datum->syntax datum ref))
+       (stx   (##source->syntax-source datum ref))
        (scopes (syntax-source-scopes stx)))
   (check-true (syntax-source? stx))
   (check-equal? 'a-locat (vector-ref stx 2))

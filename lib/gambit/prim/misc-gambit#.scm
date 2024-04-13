@@ -29,7 +29,7 @@ continuation-graft
 continuation-return
 continuation?
 
-(datum->syntax unimplemented#datum->syntax)
+;(datum->syntax unimplemented#datum->syntax)
 
 dead-end
 define-module-alias
@@ -78,7 +78,7 @@ repl-output-port
 (serial-number->object unimplemented#serial-number->object)
 (step unimplemented#step)
 (step-level-set! unimplemented#step-level-set!)
-(syntax->datum unimplemented#syntax->datum)
+;(syntax->datum unimplemented#syntax->datum)
 (syntax->list unimplemented#syntax->list)
 (syntax->vector unimplemented#syntax->vector)
 (touch unimplemented#touch)

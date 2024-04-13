@@ -235,19 +235,8 @@ $(srcdirpfx)$(rootfromhere)/lib/_eval\#.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_io\#.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_nonstd\#.scm \
 $(srcdirpfx)$(rootfromhere)/lib/_thread\#.scm \
-$(srcdirpfx)$(rootfromhere)/lib/_repl\#.scm \
-$(srcdirpfx)$(rootfromhere)/lib/_define-syntax.scm \
-$(srcdirpfx)$(rootfromhere)/lib/_syntax-boot.scm \
-$(srcdirpfx)$(rootfromhere)/lib/_syntax-case-xform-boot.scm \
-$(srcdirpfx)$(rootfromhere)/lib/_syntax-case-xform.scm \
-$(srcdirpfx)$(rootfromhere)/lib/_syntax-common.scm \
-$(srcdirpfx)$(rootfromhere)/lib/_syntax-pattern.scm \
-$(srcdirpfx)$(rootfromhere)/lib/_syntax-rules-xform.scm \
-$(srcdirpfx)$(rootfromhere)/lib/_syntax-template.scm \
-$(srcdirpfx)$(rootfromhere)/lib/_syntax-xform-boot.scm \
-$(srcdirpfx)$(rootfromhere)/lib/_syntax-xform.scm \
-$(srcdirpfx)$(rootfromhere)/lib/_syntax.scm \
-$(srcdirpfx)$(rootfromhere)/lib/_with-syntax-boot.scm
+$(srcdirpfx)$(rootfromhere)/lib/_repl\#.scm
+
 
 $(MODULES_O): $(srcdirpfx)$(rootfromhere)/include/gambit.h
 

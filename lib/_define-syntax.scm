@@ -12,7 +12,7 @@
 
 ;;;----------------------------------------------------------------------------
 
-(##define-syntax macro-define-syntax
-  syn#define-syntax-form-transformer)
+(define-macro (macro-define-syntax . args)
+  (cons '##define-syntax args))
 
 ;;;============================================================================

@@ -4,7 +4,7 @@
 
 (let* ((cte ##syntax-interaction-cte)
        (datum (##let ((a (lambda _ (##quote-sytnax 0)))) 0))
-       (stx (plain-datum->syntax datum))
+       (stx (datum->syntax datum))
        (stx (add-scope stx core-scope)))
   (let ((evalued (##eval-top-syntax stx cte)))
     (check-equal? evalued
@@ -16,7 +16,7 @@
 
 (let* ((cte ##syntax-interaction-cte)
        (datum `(##lambda () 0))
-       (stx (plain-datum->syntax datum))
+       (stx (datum->syntax datum))
        (stx (add-scope stx core-scope)))
   (let ((evalued (##eval-top-syntax stx cte)))
     (check-equal? (evalued)
@@ -24,7 +24,7 @@
       
 (let* ((cte ##syntax-interaction-cte)
        (datum `(##lambda (x) 0))
-       (stx (plain-datum->syntax datum))
+       (stx (datum->syntax datum))
        (stx (add-scope stx core-scope)))
   (let ((evalued (##eval-top-syntax stx cte)))
     (check-equal? (evalued 1)
@@ -32,7 +32,7 @@
 
 (let* ((cte ##syntax-interaction-cte)
        (datum `(##lambda (x) x))
-       (stx (plain-datum->syntax datum))
+       (stx (datum->syntax datum))
        (stx (add-scope stx core-scope)))
   (let ((evalued (##eval-top-syntax stx cte)))
     (check-equal?
@@ -41,7 +41,7 @@
   
 (let* ((cte ##syntax-interaction-cte)
        (datum `(##lambda (a b c) a b c))
-       (stx (plain-datum->syntax datum))
+       (stx (datum->syntax datum))
        (stx (add-scope stx core-scope)))
   (let ((evalued (##eval-top-syntax stx cte)))
     (check-equal?
@@ -50,7 +50,7 @@
 
 (let* ((cte ##syntax-interaction-cte)
        (datum `(##lambda (a b . c) a b c))
-       (stx (plain-datum->syntax datum))
+       (stx (datum->syntax datum))
        (stx (add-scope stx core-scope)))
   (let ((evalued (##eval-top-syntax stx cte)))
     (check-equal?
@@ -65,7 +65,7 @@
 
 (let* ((cte ##syntax-interaction-cte)
        (datum `(##lambda (#!optional (a 1)) a))
-       (stx (plain-datum->syntax datum))
+       (stx (datum->syntax datum))
        (stx (add-scope stx core-scope)))
   (let ((evalued (##eval-top-syntax stx cte)))
     (check-equal?
@@ -77,7 +77,7 @@
 
 (let* ((cte ##syntax-interaction-cte)
        (datum `(##lambda (x #!optional (a 1)) x a))
-       (stx (plain-datum->syntax datum))
+       (stx (datum->syntax datum))
        (stx (add-scope stx core-scope)))
   (let ((evalued (##eval-top-syntax stx cte)))
     (check-equal?
@@ -89,7 +89,7 @@
 
 (let* ((cte ##syntax-interaction-cte)
        (datum `(##lambda (x #!optional (a 1) (b 2)) x a b))
-       (stx (plain-datum->syntax datum))
+       (stx (datum->syntax datum))
        (stx (add-scope stx core-scope)))
   (let ((evalued (##eval-top-syntax stx cte)))
     (check-equal?
@@ -104,7 +104,7 @@
 
 (let* ((cte ##syntax-interaction-cte)
        (datum `(##lambda (x #!optional a (b 2)) x a b))
-       (stx (plain-datum->syntax datum))
+       (stx (datum->syntax datum))
        (stx (add-scope stx core-scope)))
   (let ((evalued (##eval-top-syntax stx cte)))
     (check-equal?
@@ -119,7 +119,7 @@
 
 (let* ((cte ##syntax-interaction-cte)
        (datum `(##lambda (x #!optional (a 1) (b 2) . c) x a b c))
-       (stx (plain-datum->syntax datum))
+       (stx (datum->syntax datum))
        (stx (add-scope stx core-scope)))
   (let ((evalued (##eval-top-syntax stx cte)))
     (check-equal?
@@ -140,7 +140,7 @@
 
 #;(let* ((cte ##syntax-interaction-cte)
        (datum `(##lambda (#!key (a 1)) a))
-       (stx (plain-datum->syntax datum))
+       (stx (datum->syntax datum))
        (stx (add-scope stx core-scope)))
   (let ((evalued (##eval-top-syntax stx cte)))
     (check-equal?
@@ -152,7 +152,7 @@
 
 #;(let* ((cte ##syntax-interaction-cte)
        (datum `(##lambda (x #!key (a 1)) x a))
-       (stx (plain-datum->syntax datum))
+       (stx (datum->syntax datum))
        (stx (add-scope stx core-scope)))
   (let ((evalued (##eval-top-syntax stx cte)))
     (check-equal?
@@ -162,7 +162,7 @@
 
 #;(let* ((cte ##syntax-interaction-cte)
        (datum `(##lambda (x #!key (a 1) (b 2)) x a b))
-       (stx (plain-datum->syntax datum))
+       (stx (datum->syntax datum))
        (stx (add-scope stx core-scope)))
   (let ((evalued (##eval-top-syntax stx cte)))
     (check-equal?
@@ -171,7 +171,7 @@
 
 #;(let* ((cte ##syntax-interaction-cte)
        (datum `(##lambda (x #!key a (b 2)) x a b))
-       (stx (plain-datum->syntax datum))
+       (stx (datum->syntax datum))
        (stx (add-scope stx core-scope)))
   (let ((evalued (##eval-top-syntax stx cte)))
     (check-equal?
@@ -180,7 +180,7 @@
 
 #;(let* ((cte ##syntax-interaction-cte)
        (datum `(##lambda (x #!key (a 1) (b 2) . c) x a b c))
-       (stx (plain-datum->syntax datum))
+       (stx (datum->syntax datum))
        (stx (add-scope stx core-scope)))
   (let ((evalued (##eval-top-syntax stx cte)))
     (check-equal?
@@ -192,7 +192,7 @@
 
 (let* ((cte ##syntax-interaction-cte)
        (datum `(##lambda (#!rest x) x))
-       (stx (plain-datum->syntax datum))
+       (stx (datum->syntax datum))
        (stx (add-scope stx core-scope)))
   (let ((evalued (##eval-top-syntax stx cte)))
     (check-equal?
@@ -204,7 +204,7 @@
 
 (let* ((cte ##syntax-interaction-cte)
        (datum `(##lambda (a b #!rest c) a b c))
-       (stx (plain-datum->syntax datum))
+       (stx (datum->syntax datum))
        (stx (add-scope stx core-scope)))
   (let ((evalued (##eval-top-syntax stx cte)))
     (check-equal?
@@ -216,7 +216,7 @@
 
 #;(let* ((cte ##syntax-interaction-cte)
        (datum `(##lambda (a #!key (b 1) #!rest c) a b c))
-       (stx (plain-datum->syntax datum))
+       (stx (datum->syntax datum))
        (stx (add-scope stx core-scope)))
   (let ((evalued (##eval-top-syntax stx cte)))
     (check-equal?
@@ -225,7 +225,7 @@
 
 #;(let* ((cte ##syntax-interaction-cte)
        (datum `(##lambda (#!optional (a 1) #!key (b 1) #!rest c) a b c))
-       (stx (plain-datum->syntax datum))
+       (stx (datum->syntax datum))
        (stx (add-scope stx core-scope)))
   (let ((evalued (##eval-top-syntax stx cte)))
     (check-equal?
@@ -234,7 +234,7 @@
 
 #;(let* ((cte ##syntax-interaction-cte)
        (datum `(##lambda (#!optional (a 1) #!rest c #!key (b 1)) a b c))
-       (stx (plain-datum->syntax datum))
+       (stx (datum->syntax datum))
        (stx (add-scope stx core-scope)))
   (let ((evalued (##eval-top-syntax stx cte)))
     (check-equal?
