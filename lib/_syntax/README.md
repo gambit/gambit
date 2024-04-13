@@ -13,13 +13,10 @@
     - Some modules (from `make modules`) were not tested for correctness yet.
   - Fix `make checks` as the string comparaison doesn't work anymore 
     with hygienically renamed identifiers.
-  - rename `plain-datum->syntax` as `datum->syntax`
-    rename `datum->syntax` as `source->syntax`.
 
 ## Full Integration check-list:
 
 - Syntax
-  - Completely remove every references to the old macro system.
   - Investigate the strategies used to accelerate the compilation
     of those old syntax construct and make sure we do the same when we can.
   - Complete hygiene would rejects programs with undeclared identifiers. 
