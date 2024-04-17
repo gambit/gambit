@@ -1082,8 +1082,8 @@
     (macro-ratnum-make (##negate (macro-ratnum-numerator x))
                        (macro-ratnum-denominator x))
     (##fl- x)
-    (##make-rectangular (##negate (macro-cpxnum-real x))
-                        (##negate (macro-cpxnum-imag x)))))
+    (macro-cpxnum-make (##negate (macro-cpxnum-real x))    ;; imaginary part can't be exact zero
+                       (##negate (macro-cpxnum-imag x)))))
 
 (define-prim (##-2 x y)
 
@@ -2773,7 +2773,7 @@ for a discussion of branch cuts.
 
   (let ((x (##real-part z)))
     (if (##eqv? x 0)
-        (##make-rectangular 0 (##asinh (##imag-part z)))
+        (macro-cpxnum-make 0 (##asinh (##imag-part z)))   ;; imaginary part cannot be exact zero
         (let ((sqrt-1-z (##sqrt (##- 1 z)))
               (sqrt-1+z (##sqrt (##+ 1 z))))
           (##make-rectangular (if (and (##= (##abs x) (macro-inexact-+inf))
@@ -2921,7 +2921,7 @@ for a discussion of branch cuts.
 
   (define (negative-log)
     (macro-if-cpxnum
-     (##make-rectangular (##log (##negate x)) (macro-inexact-+pi))
+     (macro-cpxnum-make (##log (##negate x)) (macro-inexact-+pi)) ;; imaginary part is not exact 0
      (range-error)))
 
   (define (exact-log x)
@@ -3115,10 +3115,10 @@ for a discussion of branch cuts.
       (if (and (##flonum? real)
                (##flonum? imag))
           ;; fast path for flonums case
-          (macro-cpxnum-make  (##fl* (##flsin real) (##flcosh imag))
-                              (##fl* (##flcos real) (##flsinh imag)))
-          (##make-rectangular (##* (##sin real) (##cosh imag))
-                              (##* (##cos real) (##sinh imag)))))))
+          (macro-cpxnum-make (##fl* (##flsin real) (##flcosh imag))
+                             (##fl* (##flcos real) (##flsinh imag)))
+          (macro-cpxnum-make (##* (##sin real) (##cosh imag))      ;; imaginary part cannot be exact zero
+                             (##* (##cos real) (##sinh imag)))))))
 
 (define-prim (sin x)
   (macro-force-vars (x)
@@ -3141,9 +3141,9 @@ for a discussion of branch cuts.
       (if (and (##flonum? real)
                (##flonum? imag))
           ;; fast path for flonums case
-          (macro-cpxnum-make        (##fl* (##flcos real) (##flcosh imag))
+          (macro-cpxnum-make (##fl* (##flcos real) (##flcosh imag))
                              (##fl- (##fl* (##flsin real) (##flsinh imag))))
-          (##make-rectangular           (##* (##cos real) (##cosh imag))
+          (##make-rectangular (##* (##cos real) (##cosh imag))              ;; if real is exact 0, imaginary part is exact zero
                               (##negate (##* (##sin real) (##sinh imag))))))))
 
 (define-prim (cos x)
@@ -3358,7 +3358,7 @@ for a discussion of branch cuts.
           (macro-cpxnum-make (##fl* (##flsinh real) (##flcos imag))
                              (##fl* (##flcosh real) (##flsin imag)))
           (macro-cpxnum-make (##* (##sinh real) (##cos imag))
-                             (##* (##cosh real) (##sin imag)))))))
+                             (##* (##cosh real) (##sin imag)))))))  ;; imaginary part can't be exact 0
 
 (define-prim (sinh x)
   (macro-force-vars (x)
@@ -3382,8 +3382,8 @@ for a discussion of branch cuts.
           ;; fast path for flonum case
           (macro-cpxnum-make (##fl* (##flcosh real) (##flcos imag))
                              (##fl* (##flsinh real) (##flsin imag)))
-          (macro-cpxnum-make (##* (##cosh real) (##cos imag))
-                             (##* (##sinh real) (##sin imag)))))))
+          (##make-rectangular (##* (##cosh real) (##cos imag))
+                              (##* (##sinh real) (##sin imag))))))) ;; if real is exact 0, imaginary part is exact 0
 
 (define-prim (cosh x)
   (macro-force-vars (x)
@@ -3406,7 +3406,7 @@ for a discussion of branch cuts.
       (if (##eqv? real 0)
           ;; the argument of the next ##tan is real
           ;; (##* +i (##tan (##* -i x)))
-          (macro-cpxnum-make 0 (##tan imag))
+          (macro-cpxnum-make 0 (##tan imag)) ;; imaginary part can't be exact 0
           (##ctanh x)))))
 
 (define-prim (tanh x)
@@ -3474,7 +3474,7 @@ for a discussion of branch cuts.
            (##negate (real-case (##negate x))))
           ((##< x -1)
            (macro-if-cpxnum
-            (##make-rectangular
+            (macro-cpxnum-make  ;; imaginary part is not exact 0
              (##fl/ (if (or (##exact? x)
                             (not (##fl= x (##fl- x (macro-inexact-+1)))))
                         (let ((x (##inexact->exact x)))
@@ -3521,7 +3521,7 @@ for a discussion of branch cuts.
   (define (exact-int-sqrt x)
     (if (##negative? x)
         (macro-if-cpxnum
-         (##make-rectangular 0 (nonneg-exact-int-sqrt (##negate x)))
+         (macro-cpxnum-make 0 (nonneg-exact-int-sqrt (##negate x)))  ;; imaginary part can't be exact zero
          (range-error))
         (nonneg-exact-int-sqrt x)))
 
@@ -3555,7 +3555,7 @@ for a discussion of branch cuts.
   (define (ratnum-sqrt x)
     (if (##negative? x)
         (macro-if-cpxnum
-         (##make-rectangular 0 (nonneg-ratnum-sqrt (##negate x)))
+         (macro-cpxnum-make 0 (nonneg-ratnum-sqrt (##negate x))) ;; imaginary part can't be exact zero
          (range-error))
         (nonneg-ratnum-sqrt x)))
 
@@ -3621,7 +3621,7 @@ for a discussion of branch cuts.
     (ratnum-sqrt x)
     (if (##flnegative? x)
         (macro-if-cpxnum
-         (##make-rectangular 0 (##flsqrt (##fl- x)))
+         (macro-cpxnum-make 0 (##flsqrt (##fl- x)))  ;; imaginary part is not exact zero
          (range-error))
         (##flsqrt x))
     (let ((real (##real-part x))
@@ -3633,7 +3633,7 @@ for a discussion of branch cuts.
                  (and (##exact? discriminant)
                       (let ((result-real (##sqrt (##/ (##+ real discriminant) 2))))
                         (and (##exact? result-real)
-                             (##make-rectangular result-real (##/ imag (##* 2 result-real))))))))
+                             (macro-cpxnum-make result-real (##/ imag (##* 2 result-real)))))))) ;; imaginary part is not exact zero
           (##csqrt (##exact->inexact x))))))
 
 (define-prim (sqrt x)
@@ -3858,9 +3858,9 @@ for a discussion of branch cuts.
                   (let ((magnitude (##flexpt (##fl- x) (##ratnum->flonum y))))
                     (if (##eqv? 1 (##modulo (macro-ratnum-numerator y) 4))
                         ;; multiple of i
-                        (macro-cpxnum-make 0 magnitude)
+                        (macro-cpxnum-make 0 magnitude)            ;; imaginary part is not exact 0
                         ;; multiple of -i
-                        (macro-cpxnum-make 0 (##fl- magnitude))))
+                        (macro-cpxnum-make 0 (##fl- magnitude))))  ;; imaginary part is not exact 0
                   (complex-expt x y))
               (range-error)))
             (else
@@ -3927,22 +3927,22 @@ for a discussion of branch cuts.
     (##expt x y)))
 
 (define-prim (##make-rectangular x y)
-  (cond ((##not (##real? x))
-         (##fail-check-real 1 make-rectangular x y))
-        ((##not (##real? y))
-         (##fail-check-real 2 make-rectangular x y))
-        (else
-         (let ((real (##real-part x))
-               (imag (##real-part y)))
-           (if (##eqv? imag 0)
-               real
-               (macro-if-cpxnum
-                (macro-cpxnum-make real imag)
-                (##raise-range-exception 2 make-rectangular x y)))))))
+  (let ((real (##real-part x))
+        (imag (##real-part y)))
+    (if (##eqv? imag 0)
+        real
+        (macro-if-cpxnum
+         (macro-cpxnum-make real imag)
+         (##raise-range-exception 2 make-rectangular x y)))))
 
 (define-prim (make-rectangular x y)
   (macro-force-vars (x y)
-    (##make-rectangular x y)))
+    (cond ((##not (##real? x))
+           (##fail-check-real 1 make-rectangular x y))
+          ((##not (##real? y))
+           (##fail-check-real 2 make-rectangular x y))
+          (else
+           (##make-rectangular x y)))))
 
 (define-prim (##make-polar x y)
   (##declare (mostly-flonum-fixnum))
@@ -4063,8 +4063,8 @@ for a discussion of branch cuts.
     (##exact-int->flonum x)
     (##ratnum->flonum x)
     x
-    (##make-rectangular (##exact->inexact (macro-cpxnum-real x))
-                        (##exact->inexact (macro-cpxnum-imag x)))))
+    (macro-cpxnum-make (##exact->inexact (macro-cpxnum-real x))  ;; the imaginary part cannot be exact 0
+                       (##exact->inexact (macro-cpxnum-imag x)))))
 
 (define-prim (exact->inexact x)
   (macro-force-vars (x)
@@ -4080,8 +4080,8 @@ for a discussion of branch cuts.
     (##exact-int->flonum x)
     (##ratnum->flonum x)
     x
-    (##make-rectangular (##inexact (macro-cpxnum-real x))
-                        (##inexact (macro-cpxnum-imag x)))))
+    (macro-cpxnum-make (##inexact (macro-cpxnum-real x))  ;; the imaginary part cannot be exact 0
+                       (##inexact (macro-cpxnum-imag x)))))
 
 (define-prim (inexact x)
   (macro-force-vars (x)
@@ -5157,7 +5157,7 @@ for a discussion of branch cuts.
     (if (##eqv? y 0)
         x
         (macro-if-cpxnum
-         (##make-rectangular x y)
+         (macro-cpxnum-make x y)  ;; imaginary part is not exact zero
          #f)))
 
   (define (make-pol x y e)
@@ -13026,7 +13026,7 @@ def @flonum_from_ieee754_64@(n):
         (c (macro-cpxnum-real y)) (d (macro-cpxnum-imag y)))
     (if (and (##flonum? a) (##flonum? b)
              (##flonum? c) (##flonum? d))
-        (##make-rectangular (##fl+ a c) (##fl+ b d))
+        (macro-cpxnum-make (##fl+ a c) (##fl+ b d))  ;; imaginary part cannot be exact zero
         (##make-rectangular (##+ a c) (##+ b d)))))
 
 (define-prim (##cpxnum.* x y)
@@ -13034,8 +13034,8 @@ def @flonum_from_ieee754_64@(n):
         (c (macro-cpxnum-real y)) (d (macro-cpxnum-imag y)))
     (if (and (##flonum? a) (##flonum? b)
              (##flonum? c) (##flonum? d))
-        (##make-rectangular (##fl- (##fl* a c) (##fl* b d))
-                            (##fl+ (##fl* a d) (##fl* b c)))
+        (macro-cpxnum-make (##fl- (##fl* a c) (##fl* b d))  ;; imaginary part cannot be exact zero
+                           (##fl+ (##fl* a d) (##fl* b c)))
         (##make-rectangular (##- (##* a c) (##* b d))
                             (##+ (##* a d) (##* b c))))))
 (define-prim (##cpxnum.- x y)
@@ -13043,7 +13043,7 @@ def @flonum_from_ieee754_64@(n):
         (c (macro-cpxnum-real y)) (d (macro-cpxnum-imag y)))
     (if (and (##flonum? a) (##flonum? b)
              (##flonum? c) (##flonum? d))
-        (##make-rectangular (##fl- a c) (##fl- b d))
+        (macro-cpxnum-make (##fl- a c) (##fl- b d))  ;; imaginary part cannot be exact zero
         (##make-rectangular (##- a c) (##- b d)))))
 
 
