@@ -235,10 +235,10 @@
   ) ; end comparators/bound-salt
 
   (test-group "comparators/min-max"
-    (test 5 (comparator-max real-comparator 1 5 3 2 -2))
-    (test -2 (comparator-min real-comparator 1 5 3 2 -2))
-    (test 5 (comparator-max-in-list real-comparator '(1 5 3 2 -2)))
-    (test -2 (comparator-min-in-list real-comparator '(1 5 3 2 -2)))
+    (test-eq 5 (comparator-max real-comparator 1 5 3 2 -2))
+    (test-eq -2 (comparator-min real-comparator 1 5 3 2 -2))
+    (test-eq 5 (comparator-max-in-list real-comparator '(1 5 3 2 -2)))
+    (test-eq -2 (comparator-min-in-list real-comparator '(1 5 3 2 -2)))
   ) ; end comparators/min-max
 
   (test-group "comparators/variables"
@@ -246,7 +246,7 @@
     (test-assert (=? char-comparator #\C #\C))
     (test-assert (=? char-ci-comparator #\c #\C))
     (test-assert (=? string-comparator "ABC" "ABC"))
-    (test-assert (=? string-ci-coparator "abc" "ABC"))
+    (test-assert (=? string-ci-comparator "abc" "ABC"))
     (test-assert (=? eq-comparator 32 32))
     (test-assert (=? eqv-comparator 32 32))
     (test-assert (=? equal-comparator "ABC" "ABC"))
