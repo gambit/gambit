@@ -1,3 +1,7 @@
+;;; Port of sample implementation of SRFI-128 to Gambit 
+
+;;; Sample implementation was provided with the notice below
+
 ;;; Copyright (C) John Cowan (2015). All Rights Reserved.
 ;;; 
 ;;; Permission is hereby granted, free of charge, to any person
@@ -40,22 +44,6 @@
        ((=? comparator a b) equal)
        ((<? comparator a b) less)
        (else greater)))))
-
-;; Upper bound of hash functions is 2^25-1
-(define-syntax hash-bound
-  (syntax-rules ()
-    ((hash-bound) 33554432)))
-
-(define %salt% (make-parameter 16064047))
-
-(define-syntax hash-salt
-   (syntax-rules ()
-     ((hash-salt) (%salt%))))
-
-(define-syntax with-hash-salt
-  (syntax-rules ()
-    ((with-hash-salt new-salt hash-func obj)
-     (parameterize ((%salt% new-salt)) (hash-func obj)))))
 
 ;;; Definition of comparator records with accessors and basic comparator
 
@@ -149,22 +137,14 @@
   (and (not a) b))
 
 
-(define (boolean-hash obj)
-  (if obj (%salt%) 0))
+(define boolean-hash eq?-hash)
 
-(define (char-hash obj)
-  (modulo (* (%salt%) (char->integer obj)) (hash-bound)))
+(define char-hash eq?-hash)
 
 (define (char-ci-hash obj)
-  (modulo (* (%salt%) (char->integer (char-foldcase obj))) (hash-bound)))
+  (eq?-hash (char-foldcase obj))
 
-(define (number-hash obj)
-  (cond
-    ((nan? obj) (%salt%))
-    ((and (infinite? obj) (positive? obj)) (* 2 (%salt%)))
-    ((infinite? obj) (* (%salt%) 3))
-    ((real? obj) (abs (exact (round obj))))
-    (else (+ (number-hash (real-part obj)) (number-hash (imag-part obj))))))
+(define number-hash eq?-hash)
 
 ;; Lexicographic ordering of complex numbers
 (define (complex<? a b)
@@ -172,29 +152,35 @@
     (< (imag-part a) (imag-part b))
     (< (real-part a) (real-part b))))
 
-(define (string-ci-hash obj)
-    (string-hash (string-foldcase obj)))
-
 (define (symbol<? a b) (string<? (symbol->string a) (symbol->string b)))
-
-(define (symbol-hash obj)
-  (string-hash (symbol->string obj)))
 
 ;;; Wrapped equality predicates
 ;;; These comparators don't have ordering functions.
 
 (define (make-eq-comparator)
-  (make-comparator #t eq? #f default-hash))
+  (make-comparator #t eq? #f eq?-hash))
 
 (define (make-eqv-comparator)
-  (make-comparator #t eqv? #f default-hash))
+  (make-comparator #t eqv? #f eqv?-hash))
 
 (define (make-equal-comparator)
-  (make-comparator #t equal? #f default-hash))
+  (make-comparator #t equal? #f equal?-hash))
 
 ;;; Sequence ordering and hash functions
 ;; The hash functions are based on djb2, but
 ;; modulo 2^25 instead of 2^32 in hopes of sticking to fixnums.
+
+(define %salt% (make-parameter 16064047))
+(define hash-bound (make-parameter 33554432)) ;; 2^25-1
+
+(define-syntax hash-salt
+  (syntax-rules ()
+    ((hash-salt) (%salt))))
+
+(define-syntax with-hash-salt
+  (syntax-rules ()
+    ((with-hash-salt new-salt hash-func obj)
+     (parameterize ((%salt% new-salt)) (hash-func obj)))))
 
 (define (make-hasher)
   (let ((result (%salt%)))
