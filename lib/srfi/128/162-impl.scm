@@ -39,6 +39,20 @@
     <
     number-hash))
 
+(define symbol-comparator
+  (make-comparator
+    symbol?
+    symbol=?
+    symbol<?
+    symbol-hash))
+
+(define keyword-comparator
+  (make-comparator
+     keyword?
+     keyword=?
+     keyword<?
+     keyword-hash))
+     
 (define char-comparator
   (make-comparator
     char?

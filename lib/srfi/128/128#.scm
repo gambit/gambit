@@ -13,6 +13,7 @@ make-eqv-comparator
 make-equal-comparator
 
 boolean-hash
+keyword-hash
 char-hash
 char-ci-hash
 number-hash
@@ -48,6 +49,8 @@ comparator-min-in-list
 default-comparator
 boolean-comparator
 real-comparator
+symbol-comparator
+keyword-comparator
 char-comparator
 char-ci-comparator
 string-comparator

@@ -4,11 +4,10 @@
   (export make-comparator
           make-pair-comparator make-list-comparator make-vector-comparator
           make-eq-comparator make-eqv-comparator make-equal-comparator)
-  (export boolean-hash char-hash char-ci-hash
-          string-hash string-ci-hash symbol-hash number-hash)
+  (export boolean-hash keyword-hash char-hash char-ci-hash number-hash)
   (export make-default-comparator default-hash comparator-register-default!)
   (export comparator-type-test-predicate comparator-equality-predicate
-        comparator-ordering-predicate comparator-hash-function)
+          comparator-ordering-predicate comparator-hash-function)
   (export comparator-test-type comparator-check-type comparator-hash)
   (export hash-bound hash-salt)
   (export =? <? >? <=? >=?)
@@ -16,6 +15,7 @@
   (export comparator-max comparator-min
           comparator-max-in-list comparator-min-in-list)
   (export default-comparator boolean-comparator real-comparator
+          symbol-comparator keyword-comparator
           char-comparator char-ci-comparator
           string-comparator string-ci-comparator
           list-comparator vector-comparator

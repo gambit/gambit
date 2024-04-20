@@ -13,8 +13,8 @@
 
 ;; Next index for added comparator
 
-(define first-comparator-index 9)
-(define *next-comparator-index* 9)
+(define first-comparator-index 10)
+(define *next-comparator-index* 10)
 (define *registered-comparators* (list unknown-object-comparator))
 
 ;; Register a new comparator for use by the default comparator.
@@ -36,6 +36,7 @@
     ((number? obj) 6)
     ((vector? obj) 7)
     ((bytevector? obj) 8)
+    ((keyword? obj) 9)
     ; Add more here if you want: be sure to update comparator-index variables
     (else (registered-index obj))))
 
@@ -65,6 +66,7 @@
                          vector? vector-length vector-ref) a b))
     ((8) ((make-vector=? (make-comparator exact-integer? = < default-hash)
                          bytevector? bytevector-length bytevector-u8-ref) a b))
+    ((9) (keyword=? a b))
     ; Add more here
     (else (binary=? (registered-comparator type) a b))))
 
@@ -80,6 +82,7 @@
     ((7) ((make-vector<? (make-default-comparator) vector? vector-length vector-ref) a b))
     ((8) ((make-vector<? (make-comparator exact-integer? = < default-hash)
 			 bytevector? bytevector-length bytevector-u8-ref) a b))
+    ((9) (keyword<? a b))
     ; Add more here
     (else (binary<? (registered-comparator type) a b))))
 
@@ -89,12 +92,13 @@
     ((1) ((make-pair-hash (make-default-comparator) (make-default-comparator)) obj))
     ((2) (boolean-hash obj))
     ((3) (char-hash obj))
-    ((4) (string-hash obj))
+    ((4) (string=?-hash obj))
     ((5) (symbol-hash obj))
     ((6) (number-hash obj))
     ((7) ((make-vector-hash (make-default-comparator) vector? vector-length vector-ref) obj))
     ((8) ((make-vector-hash (make-default-comparator)
                              bytevector? bytevector-length bytevector-u8-ref) obj))
+    ((9) (keyword-hash obj))
     ; Add more here
     (else (comparator-hash (registered-comparator (object-type obj)) obj))))
   
@@ -117,4 +121,5 @@
     default-equality
     default-ordering
     default-hash))
+
 

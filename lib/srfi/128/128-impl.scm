@@ -142,9 +142,9 @@
 (define char-hash eq?-hash)
 
 (define (char-ci-hash obj)
-  (eq?-hash (char-foldcase obj))
+  (eq?-hash (char-foldcase obj)))
 
-(define number-hash eq?-hash)
+(define number-hash eqv?-hash)
 
 ;; Lexicographic ordering of complex numbers
 (define (complex<? a b)
@@ -153,6 +153,10 @@
     (< (real-part a) (real-part b))))
 
 (define (symbol<? a b) (string<? (symbol->string a) (symbol->string b)))
+
+(define keyword=? eq?)
+(define (keyword<? a b) (string<? (keyword->string a) (keyword->string b)))
+(define keyword-hash eq?-hash)
 
 ;;; Wrapped equality predicates
 ;;; These comparators don't have ordering functions.
@@ -337,13 +341,3 @@
         (cond
           ((= n len) (acc))
           (else (acc (elem-hash (ref obj n))) (loop (+ n 1))))))))
-
-(define (string-hash obj)
-  (let ((acc (make-hasher))
-        (len (string-length obj)))
-    (let loop ((n 0))
-      (cond
-        ((= n len) (acc))
-        (else (acc (char->integer (string-ref obj n))) (loop (+ n 1)))))))
-
-

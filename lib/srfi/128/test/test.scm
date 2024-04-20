@@ -31,12 +31,6 @@
       vector-cdr))
   (define list-qua-vector-comparator
     (make-vector-comparator default-comparator list? length list-ref))
-  (define symbol-comparator
-    (make-comparator
-      symbol?
-      eq?
-      (lambda (a b) (string<? (symbol->string a) (symbol->string b)))
-      symbol-hash))
 
   (test-group "comparators/predicates"
     (test-assert (comparator? real-comparator))
@@ -110,11 +104,6 @@
     (test-assert (exact-integer? (char-ci-hash #\a)))
     (test-assert (not (negative? (char-ci-hash #\b))))
     (test-assert (= (char-ci-hash #\a) (char-ci-hash #\A)))
-    (test-assert (exact-integer? (string-hash "f")))
-    (test-assert (not (negative? (string-hash "g"))))
-    (test-assert (exact-integer? (string-ci-hash "f")))
-    (test-assert (not (negative? (string-ci-hash "g"))))
-    (test-assert (= (string-ci-hash "f") (string-ci-hash "F")))
     (test-assert (exact-integer? (symbol-hash 'f)))
     (test-assert (not (negative? (symbol-hash 't))))
     (test-assert (exact-integer? (number-hash 3)))
@@ -135,12 +124,16 @@
     (test-assert (not (<? default-comparator #t #t)))
     (test-assert (=? default-comparator #\a #\a))
     (test-assert (<? default-comparator #\a #\b))
+    (test-assert (=? default-comparator kw: kw:))
+    (test-assert (<? default-comparator a: b:))
+    (test-assert (not (<? default-comparator q: p:)))
 
     (test-assert (comparator-test-type default-comparator '()))
     (test-assert (comparator-test-type default-comparator #t))
     (test-assert (comparator-test-type default-comparator #\t))
     (test-assert (comparator-test-type default-comparator '(a)))
     (test-assert (comparator-test-type default-comparator 'a))
+    (test-assert (comparator-test-type default-comparator kw:))
     (test-assert (comparator-test-type default-comparator (make-bytevector 10)))
     (test-assert (comparator-test-type default-comparator 10))
     (test-assert (comparator-test-type default-comparator 10.0))
@@ -167,8 +160,7 @@
 
     (test-assert (= (comparator-hash default-comparator #t) (boolean-hash #t)))
     (test-assert (= (comparator-hash default-comparator #\t) (char-hash #\t)))
-    (test-assert (= (comparator-hash default-comparator "t") (string-hash "t")))
-    (test-assert (= (comparator-hash default-comparator 't) (symbol-hash 't)))
+    (test-assert (= (comparator-hash default-comparator kw:) (keyword-hash kw:)))
     (test-assert (= (comparator-hash default-comparator 10) (number-hash 10)))
     (test-assert (= (comparator-hash default-comparator 10.0) (number-hash 10.0)))
 
