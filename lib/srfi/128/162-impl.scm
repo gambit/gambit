@@ -58,14 +58,14 @@
     string?
     string=?
     string<?
-    string-hash))
+    string=?-hash))
 
 (define string-ci-comparator
   (make-comparator
     string?
     string-ci=?
     string-ci<?
-    string-ci-hash))
+    string-ci=?-hash))
 
 (define pair-comparator
   (make-pair-comparator

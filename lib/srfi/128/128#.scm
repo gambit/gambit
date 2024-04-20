@@ -15,9 +15,6 @@ make-equal-comparator
 boolean-hash
 char-hash
 char-ci-hash
-string-hash
-string-ci-hash
-symbol-hash
 number-hash
 
 make-default-comparator
