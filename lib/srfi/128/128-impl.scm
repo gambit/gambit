@@ -179,7 +179,7 @@
 
 (define-syntax hash-salt
   (syntax-rules ()
-    ((hash-salt) (%salt))))
+    ((hash-salt) (%salt%))))
 
 (define-syntax with-hash-salt
   (syntax-rules ()
