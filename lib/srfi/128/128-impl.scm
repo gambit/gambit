@@ -174,20 +174,16 @@
 ;; The hash functions are based on djb2, but
 ;; modulo 2^25 instead of 2^32 in hopes of sticking to fixnums.
 
-(define %salt% (make-parameter 16064047))
+(define hash-salt (make-parameter 16064047))
 (define hash-bound (make-parameter 33554432)) ;; 2^25-1
-
-(define-syntax hash-salt
-  (syntax-rules ()
-    ((hash-salt) (%salt%))))
 
 (define-syntax with-hash-salt
   (syntax-rules ()
     ((with-hash-salt new-salt hash-func obj)
-     (parameterize ((%salt% new-salt)) (hash-func obj)))))
+     (parameterize ((hash-salt new-salt)) (hash-func obj)))))
 
 (define (make-hasher)
-  (let ((result (%salt%)))
+  (let ((result (hash-salt)))
     (case-lambda
      (() result)
      ((n) (set! result (+ (modulo (* result 33) (hash-bound)) n))
