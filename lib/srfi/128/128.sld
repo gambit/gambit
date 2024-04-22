@@ -21,6 +21,8 @@
           list-comparator vector-comparator
           eq-comparator eqv-comparator equal-comparator)
 
+  (export s8vector-comparator)
+
   (cond-expand
     (gambit
      (import (gambit)))

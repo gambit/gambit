@@ -101,6 +101,13 @@
     vector-length
     vector-ref))
 
+(define s8vector-comparator
+  (make-comparator
+    s8vector?
+    equal?
+    (make-vector<? real-comparator s8vector? s8vector-length s8vector-ref)
+    equal?-hash))
+
 (define eq-comparator (make-eq-comparator))
 (define eqv-comparator (make-eqv-comparator))
 (define equal-comparator (make-equal-comparator))

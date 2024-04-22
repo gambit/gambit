@@ -61,4 +61,6 @@ eq-comparator
 eqv-comparator
 equal-comparator
 
+s8vector-comparator
+
 ))

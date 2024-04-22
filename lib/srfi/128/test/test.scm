@@ -243,6 +243,16 @@
     (test-assert (=? eq-comparator 32 32))
     (test-assert (=? eqv-comparator 32 32))
     (test-assert (=? equal-comparator "ABC" "ABC"))
-  ) ; end/comparators/variables
+  ) ; end comparators/variables
+
+  (test-group "comparators/homogenous-vectors"
+    (test-assert (comparator-test-type s8vector-comparator #s8(1 2 -3)))
+    (test-assert (=? s8vector-comparator #s8(1 2 -3) #s8(1 2 -3)))
+    (test-assert (not (=? s8vector-comparator #s8(1 2 3) #s8(2 1 3))))
+    (test-assert (<? s8vector-comparator #s8(-1 2 3) #s8(1 2 3)))
+    (test-assert (not (<? s8vector-comparator #s8(1 2 3) #s8(1 2 3))))
+    (test-assert (not (<? s8vector-comparator #s8(1 2 4) #s8(1 2 3))))
+    (test-assert (= (comparator-hash s8vector-comparator #s8(-1 -2 -3)) (equal?-hash #s8(-1 -2 -3))))
+  ) ; end comparators/homogenous-vectors 
 
 ) ; end comparators
