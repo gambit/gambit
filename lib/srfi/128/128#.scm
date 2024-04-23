@@ -62,5 +62,14 @@ eqv-comparator
 equal-comparator
 
 s8vector-comparator
+u8vector-comparator
+s16vector-comparator
+u16vector-comparator
+s32vector-comparator
+u32vector-comparator
+s64vector-comparator
+u64vector-comparator
+f32vector-comparator
+f64vector-comparator
 
 ))

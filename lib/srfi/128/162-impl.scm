@@ -101,12 +101,43 @@
     vector-length
     vector-ref))
 
-(define s8vector-comparator
+(define (make-numeric-vector-comparator type-test len-fn ref-fn)
   (make-comparator
-    s8vector?
+    type-test
     equal?
-    (make-vector<? real-comparator s8vector? s8vector-length s8vector-ref)
+    (make-vector<? real-comparator type-test len-fn ref-fn)
     equal?-hash))
+
+(define s8vector-comparator
+  (make-numeric-vector-comparator s8vector? s8vector-length s8vector-ref))
+
+(define u8vector-comparator
+  (make-numeric-vector-comparator u8vector? u8vector-length u8vector-ref))
+
+(define s16vector-comparator
+  (make-numeric-vector-comparator s16vector? s16vector-length s16vector-ref))
+
+(define u16vector-comparator
+  (make-numeric-vector-comparator u16vector? u16vector-length u16vector-ref))
+
+(define s32vector-comparator
+  (make-numeric-vector-comparator s32vector? s32vector-length s32vector-ref))
+
+(define u32vector-comparator
+  (make-numeric-vector-comparator u32vector? u32vector-length u32vector-ref))
+
+(define s64vector-comparator
+  (make-numeric-vector-comparator s64vector? s64vector-length s64vector-ref))
+
+(define u64vector-comparator
+  (make-numeric-vector-comparator u64vector? u64vector-length u64vector-ref))
+
+(define f32vector-comparator
+  (make-numeric-vector-comparator f32vector? f32vector-length f32vector-ref))
+
+(define f64vector-comparator
+  (make-numeric-vector-comparator f64vector? f64vector-length f64vector-ref))
+
 
 (define eq-comparator (make-eq-comparator))
 (define eqv-comparator (make-eqv-comparator))

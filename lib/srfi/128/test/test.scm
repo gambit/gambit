@@ -253,6 +253,79 @@
     (test-assert (not (<? s8vector-comparator #s8(1 2 3) #s8(1 2 3))))
     (test-assert (not (<? s8vector-comparator #s8(1 2 4) #s8(1 2 3))))
     (test-assert (= (comparator-hash s8vector-comparator #s8(-1 -2 -3)) (equal?-hash #s8(-1 -2 -3))))
+
+    (test-assert (comparator-test-type u8vector-comparator #u8(1 2 3)))
+    (test-assert (=? u8vector-comparator #u8(1 2 3) #u8(1 2 3)))
+    (test-assert (not (=? u8vector-comparator #u8(1 2 3) #u8(2 1 3))))
+    (test-assert (<? u8vector-comparator #u8(1 2 3) #u8(1 2 4)))
+    (test-assert (not (<? u8vector-comparator #u8(1 2 3) #u8(1 2 3))))
+    (test-assert (not (<? u8vector-comparator #u8(1 2 4) #u8(1 2 3))))
+    (test-assert (= (comparator-hash u8vector-comparator #u8(1 2 3)) (equal?-hash #u8(1 2 3))))
+
+    (test-assert (comparator-test-type s16vector-comparator #s16(1 128 -3))) ;; 2^7 is not s8
+    (test-assert (=? s16vector-comparator #s16(1 2 -3) #s16(1 2 -3)))
+    (test-assert (not (=? s16vector-comparator #s16(1 2 3) #s16(2 1 3))))
+    (test-assert (<? s16vector-comparator #s16(-1 2 3) #s16(1 2 3)))
+    (test-assert (not (<? s16vector-comparator #s16(1 2 3) #s16(1 2 3))))
+    (test-assert (not (<? s16vector-comparator #s16(1 2 4) #s16(1 2 3))))
+    (test-assert (= (comparator-hash s16vector-comparator #s16(-1 -2 -3)) (equal?-hash #s16(-1 -2 -3))))
+
+    (test-assert (comparator-test-type u16vector-comparator #u16(1 2 256))) ;; 2^8 is not u8
+    (test-assert (=? u16vector-comparator #u16(1 2 3) #u16(1 2 3)))
+    (test-assert (not (=? u16vector-comparator #u16(1 2 3) #u16(2 1 3))))
+    (test-assert (<? u16vector-comparator #u16(1 2 3) #u16(1 2 4)))
+    (test-assert (not (<? u16vector-comparator #u16(1 2 3) #u16(1 2 3))))
+    (test-assert (not (<? u16vector-comparator #u16(1 2 4) #u16(1 2 3))))
+    (test-assert (= (comparator-hash u16vector-comparator #u16(1 2 3)) (equal?-hash #u16(1 2 3))))
+
+    (test-assert (comparator-test-type s32vector-comparator #s32(1 32768 -3))) ;; 2^15 not s16 etc.
+    (test-assert (=? s32vector-comparator #s32(1 2 -3) #s32(1 2 -3)))
+    (test-assert (not (=? s32vector-comparator #s32(1 2 3) #s32(2 1 3))))
+    (test-assert (<? s32vector-comparator #s32(-1 2 3) #s32(1 2 3)))
+    (test-assert (not (<? s32vector-comparator #s32(1 2 3) #s32(1 2 3))))
+    (test-assert (not (<? s32vector-comparator #s32(1 2 4) #s32(1 2 3))))
+    (test-assert (= (comparator-hash s32vector-comparator #s32(-1 -2 -3)) (equal?-hash #s32(-1 -2 -3))))
+
+    (test-assert (comparator-test-type u32vector-comparator #u32(1 2 65536)))
+    (test-assert (=? u32vector-comparator #u32(1 2 3) #u32(1 2 3)))
+    (test-assert (not (=? u32vector-comparator #u32(1 2 3) #u32(2 1 3))))
+    (test-assert (<? u32vector-comparator #u32(1 2 3) #u32(1 2 4)))
+    (test-assert (not (<? u32vector-comparator #u32(1 2 3) #u32(1 2 3))))
+    (test-assert (not (<? u32vector-comparator #u32(1 2 4) #u32(1 2 3))))
+    (test-assert (= (comparator-hash u32vector-comparator #u32(1 2 3)) (equal?-hash #u32(1 2 3))))
+
+    (test-assert (comparator-test-type s64vector-comparator #s64(1 2147483648 -3)))
+    (test-assert (=? s64vector-comparator #s64(1 2 -3) #s64(1 2 -3)))
+    (test-assert (not (=? s64vector-comparator #s64(1 2 3) #s64(2 1 3))))
+    (test-assert (<? s64vector-comparator #s64(-1 2 3) #s64(1 2 3)))
+    (test-assert (not (<? s64vector-comparator #s64(1 2 3) #s64(1 2 3))))
+    (test-assert (not (<? s64vector-comparator #s64(1 2 4) #s64(1 2 3))))
+    (test-assert (= (comparator-hash s64vector-comparator #s64(-1 -2 -3)) (equal?-hash #s64(-1 -2 -3))))
+
+    (test-assert (comparator-test-type u64vector-comparator #u64(1 2 4294967296)))
+    (test-assert (=? u64vector-comparator #u64(1 2 3) #u64(1 2 3)))
+    (test-assert (not (=? u64vector-comparator #u64(1 2 3) #u64(2 1 3))))
+    (test-assert (<? u64vector-comparator #u64(1 2 3) #u64(1 2 4)))
+    (test-assert (not (<? u64vector-comparator #u64(1 2 3) #u64(1 2 3))))
+    (test-assert (not (<? u64vector-comparator #u64(1 2 4) #u64(1 2 3))))
+    (test-assert (= (comparator-hash u64vector-comparator #u64(1 2 3)) (equal?-hash #u64(1 2 3))))
+
+    (test-assert (comparator-test-type f32vector-comparator #f32(1.0 2.71828 +inf.0)))
+    (test-assert (=? f32vector-comparator #f32(1. 2. -3.) #f32(1. 2. -3.0)))
+    (test-assert (not (=? f32vector-comparator #f32(1.0 2.0 3.0) #f32(2.0 1.0 3.0))))
+    (test-assert (<? f32vector-comparator #f32(-1.0 2.0 3.0) #f32(1.0 2.0 3.0)))
+    (test-assert (not (<? f32vector-comparator #f32(1.0 2.0 3.0) #f32(1.0 2.0 3.0))))
+    (test-assert (not (<? f32vector-comparator #f32(1.0 2.0 +inf.0) #f32(1.0 2.0 3.0))))
+    (test-assert (= (comparator-hash f32vector-comparator #f32(-1.0 -2.0 -3.0)) (equal?-hash #f32(-1.0 -2.0 -3.0))))
+
+    (test-assert (comparator-test-type f64vector-comparator #f64(1.0 2.71828 +inf.0)))
+    (test-assert (=? f64vector-comparator #f64(1. 2. -3.) #f64(1. 2. -3.0)))
+    (test-assert (not (=? f64vector-comparator #f64(1.0 2.0 3.0) #f64(2.0 1.0 3.0))))
+    (test-assert (<? f64vector-comparator #f64(-1.0 2.0 3.0) #f64(1.0 2.0 3.0)))
+    (test-assert (not (<? f64vector-comparator #f64(1.0 2.0 3.0) #f64(1.0 2.0 3.0))))
+    (test-assert (not (<? f64vector-comparator #f64(1.0 2.0 +inf.0) #f64(1.0 2.0 3.0))))
+    (test-assert (= (comparator-hash f64vector-comparator #f64(-1.0 -2.0 -3.0)) (equal?-hash #f64(-1.0 -2.0 -3.0))))
+
   ) ; end comparators/homogenous-vectors 
 
 ) ; end comparators
