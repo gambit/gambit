@@ -138,7 +138,17 @@
 (define f64vector-comparator
   (make-numeric-vector-comparator f64vector? f64vector-length f64vector-ref))
 
-
 (define eq-comparator (make-eq-comparator))
 (define eqv-comparator (make-eqv-comparator))
 (define equal-comparator (make-equal-comparator))
+
+(comparator-register-default! s8vector-comparator)
+(comparator-register-default! u8vector-comparator)
+(comparator-register-default! s16vector-comparator)
+(comparator-register-default! u16vector-comparator)
+(comparator-register-default! s32vector-comparator)
+(comparator-register-default! u32vector-comparator)
+(comparator-register-default! s64vector-comparator)
+(comparator-register-default! u64vector-comparator)
+(comparator-register-default! f32vector-comparator)
+(comparator-register-default! f64vector-comparator)

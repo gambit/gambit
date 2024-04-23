@@ -170,6 +170,9 @@
     (test-assert (=? default-comparator (lambda () #t) (lambda () #f)))
     (test-assert (not (<? default-comparator (lambda () #t) (lambda () #f))))
     (test-assert (= 200 (comparator-hash default-comparator (lambda () #t))))
+    
+    ;; numeric vectors are part of default, tested more below
+    (test-assert (=? default-comparator #f32(1.0 2.0 3.0) #f32(1.0 2.0 3.0)))
   ) ; end comparators/default
 
   (test-group "comparators/accessors"
