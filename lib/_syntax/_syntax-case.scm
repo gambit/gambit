@@ -70,7 +70,7 @@
             (> lvl 0))
        (list c-lvl
              `(##map (lambda (c)
-                     ,(cadr (expand-constructor-update (- lvl 1) e-lvl e (- c-lvl 1) c)))
+                     ,(cadr (expand-constructor-update (- lvl 1) e-lvl e (- c-lvl 1) 'c)))
                    ,c)))
       ((and (> e-lvl 0)
             (= c-lvl 0)
