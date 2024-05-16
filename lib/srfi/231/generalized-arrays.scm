@@ -2312,7 +2312,7 @@ OTHER DEALINGS IN THE SOFTWARE.
         ((not ((storage-class-data? storage-class) data))
          (error "make-specialized-array-from-data: The first argument is not compatible with the storage class: " data))
         (else
-         (%%make-specialized-array-from-data data storage-class mutable? (and mutable? (##mutable? data))))))
+         (%%make-specialized-array-from-data data storage-class (and mutable? (##mutable? data)) safe?))))
 
 
 (define (%%make-specialized-array-from-data data storage-class mutable? safe?)
