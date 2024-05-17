@@ -275,7 +275,7 @@
                   ;src
   (let* ((stx (add-scope (##source->syntax-source src) core-scope))
          (stx (expand stx top-cte))
-         #;(stx (compile stx top-cte)))
+         (stx (compile stx top-cte)))
     ; We do not need to retransform syntax-objects
     ; as syntax objects can always be used where sources are required.
     ;(##syntax-source->source! stx)
