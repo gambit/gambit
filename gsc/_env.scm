@@ -61,13 +61,14 @@
   (lambda ()
     (env-frame #f '())))
 
-(define (env-frame env vars)
+(define (env-frame env vars #!optional (syntax-proc-ctx identity))
   (vector
    ;; cell containing variables in this frame and an association between each
    (if env (env-syntax-gbt-ref env)
            (##make-syntax-global-binding-table))
-   (if env (env-syntax-ctx-ref env)
-           (##make-syntax-ctx))
+   (syntax-proc-ctx
+     (if env (env-syntax-ctx-ref env)
+             (##make-syntax-ctx)))
    ;; symbol and it's namespace
    (cons vars #f)
    ;; macro definitions
@@ -85,19 +86,36 @@
 
 (define (env-new-var! env name source)
   (let* ((glob (not (env-parent-ref env)))
-         (var (make-var name (not glob) (ptset-empty) (ptset-empty) source #f)))
+         (var (make-var name 
+                        (not glob) 
+                        (ptset-empty) 
+                        (ptset-empty) 
+                        source 
+                        #f)))
     (env-vars-set! env (cons var (env-vars-ref env)))
     var))
 
-(define (env-macro env name def)
+(define (env-macro env name def #!optional (syntax-proc-ctx identity))
   (let ((name* (or (and (not (full-name? name))
                         (env-namespace-lookup env name))
                    name)))
-    (env-macros-set env (cons (cons name* def) (env-macros-ref env)))))
+    (env-macros-set env 
+                    (cons (cons name* def) 
+                          (env-macros-ref env))
+                    syntax-proc-ctx)))
 
-(define (env-macros-set env macro)
+(define (env-core-macro env name def #!optional (syntax-proc-ctx identity))
+  (let ((name* (or (and (not (full-name? name))
+                        (env-namespace-lookup env name))
+                   name)))
+    (env-macros-set env 
+                    (cons (cons name* def) 
+                          (env-macros-ref env))
+                    syntax-proc-ctx)))
+
+(define (env-macros-set env macro #!optional (syntax-proc-ctx identity))
   (vector (env-syntax-gbt-ref env)
-          (env-syntax-ctx-ref env)
+          (syntax-proc-ctx (env-syntax-ctx-ref env))
           (vector-ref env 2)
           macro
           (env-decl-ref env)
@@ -385,6 +403,5 @@
   (set! closure-env-var '())
   (set! empty-var '())
   '())
-
 
 ;;;============================================================================

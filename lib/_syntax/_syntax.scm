@@ -8,6 +8,7 @@
 ;;;============================================================================
 
 ;(##include "_syntax-error.scm")
+(##include "_hygiene-environment.scm")
 (##include "_scopes.scm")
 (##include "_syntax-source.scm")
 (##include "_source-match.scm")
@@ -23,14 +24,14 @@
 ;;;============================================================================
 
 (define-macro (##add-new-core-macro! name procedure)
-  `(top-hcte-add-core-macro-cte! ##syntax-interaction-cte 
+  `(top-hygiene-environment-add-core-macro-cte! ##syntax-interaction-cte 
                                  (add-scope 
                                    (##make-syntax-source ',name #f)
                                    core-scope)
                                  (##macro-syntax-descr ,procedure (##make-core-syntax-source ',name #f))))
 
 (define-macro (##add-new-macro! name procedure)
-  `(top-hcte-add-macro-cte! ##syntax-interaction-cte 
+  `(top-hygiene-environment-add-macro-cte! ##syntax-interaction-cte 
                             (add-scope 
                               (##make-syntax-source ',name #f)
                               core-scope)
@@ -260,8 +261,8 @@
     (##add-new-core-macro! ##letrec*-syntax ##expand-letrec*-syntax)
 
     (##add-new-core-macro! ##syntax-case    ##expand-syntax-case)
-    (##add-new-core-macro! ##syntax    ##expand-syntax)
-    (##add-new-core-macro! syntax    ##expand-syntax)
+    (##add-new-core-macro! ##syntax         ##expand-syntax)
+    (##add-new-core-macro! syntax           ##expand-syntax)
 
     (##add-new-core-macro! ##namespace ##expand-namespace)
     (##add-new-core-macro! ##include ##expand-include)
@@ -274,7 +275,7 @@
                   ;src
   (let* ((stx (add-scope (##source->syntax-source src) core-scope))
          (stx (expand stx top-cte))
-         (stx (compile stx top-cte)))
+         #;(stx (compile stx top-cte)))
     ; We do not need to retransform syntax-objects
     ; as syntax objects can always be used where sources are required.
     ;(##syntax-source->source! stx)

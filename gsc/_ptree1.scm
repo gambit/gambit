@@ -18,6 +18,10 @@
 (##include "_hostadt.scm")
 )
 
+; hygiene
+(include "../lib/_syntax/_henv.scm")
+(include "../lib/_syntax/_hygiene-environment.scm")
+
 ;;;----------------------------------------------------------------------------
 ;;
 ;; Parse tree manipulation module: (part 1)
@@ -880,31 +884,32 @@
                  env
                  (cons (pt source env 'true) lst)
                  cont))))))
+  (let ((program
+          (##syntax-expand env program)))
+    (if *ptree-port*
+      (begin
+        (display "Parsing:" *ptree-port*)
+        (newline *ptree-port*)))
 
-  (if *ptree-port*
-    (begin
-      (display "Parsing:" *ptree-port*)
-      (newline *ptree-port*)))
+    (c-interface-begin module-ref)
 
-  (c-interface-begin module-ref)
+    (parse-exprs
+      (list program)
+      env
+      '()
+      (lambda (env lst)
 
-  (parse-exprs
-    (list program)
-    env
-    '()
-    (lambda (env lst)
+        (if *ptree-port*
+          (newline *ptree-port*))
 
-      (if *ptree-port*
-        (newline *ptree-port*))
+        (check-global-defs env)
 
-      (check-global-defs env)
-
-      (proc (if (null? lst)
-              (list (new-cst (expression->source false-object #f) env
-                      false-object))
-              (reverse lst))
-            env
-            (c-interface-end)))))
+        (proc (if (null? lst)
+                (list (new-cst (expression->source false-object #f) env
+                        false-object))
+                (reverse lst))
+              env
+              (c-interface-end))))))
 
 (define (check-global-defs env)
   (let ((global-vars (env-global-variables env)))
