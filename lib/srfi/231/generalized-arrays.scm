@@ -1167,7 +1167,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                                  data)))))))
             '(generic s8       u8       s16       u16       s32       u32       s64       u64       f32       f64       char)
             '(vector  s8vector u8vector s16vector u16vector s32vector u32vector s64vector u64vector f32vector f64vector string)
-            '(#f      0        0        0         0         0         0         0         0         0.0        0.0     #\0)
+            '(#f      0        0        0         0         0         0         0         0         0.0        0.0     #\null)
             `((lambda (x) #t)                        ; generic
               (lambda (x)                            ; s8
                 (and (fixnum? x)
@@ -2350,7 +2350,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                         (and first
                              (every (lambda (l)
                                       (equal? first l))
-                                      (cdr sublists))
+                                    (cdr sublists))
                              (cons len first)))))))))
 
   (define (nested-list->array dimension nested-data)
@@ -2432,7 +2432,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                         (and first
                              (vector-every (lambda (l)
                                              (equal? first l))
-                                             sublists)
+                                           sublists)
                              (cons len first)))))))))
 
   (define (nested-vector->array dimension nested-data)
@@ -3371,30 +3371,22 @@ OTHER DEALINGS IN THE SOFTWARE.
                 (widths (%%interval-widths domain)))
            (let slice-widths-check ((k 0))
              (if (fx< k A-dim)
-                 (let ((S_k (vector-ref slice-widths k)))
-                   (if (eqv? (%%interval-width domain k) 0)
-                       (if (and (vector? S_k)
-                                (not (fx= (vector-length S_k) 0))
-                                (vector-every (lambda (x) (eqv? x 0)) S_k))
-                           (slice-widths-check (fx+ k 1))
-                           (error (string-append "array-tile: Axis "
-                                                 (number->string k)
-                                                 " of the domain of the first argument has width 0, but element "
-                                                 (number->string k)
-                                                 " of the second argument is not a nonempty vector of exact zeros: ")
-                                  A slice-widths))
-                       (if (or (and (exact-integer? S_k)
-                                    (positive? S_k))
-                               (and (vector? S_k)
-                                    (vector-every (lambda (x) (and (exact-integer? x) (not (negative? x)))) S_k)
-                                    (= (%%vector-fold-left (lambda (x y) (+ x y)) 0 S_k) (%%interval-width domain k))))
-                           (slice-widths-check (fx+ k 1))
-                           (error (string-append "array-tile: Axis "
-                                                 (number->string k)
-                                                 " of the domain of the first argument has nonzero width, but element "
-                                                 (number->string k)
-                                                 " of the second argument is neither an exact positive integer nor a vector of nonnegative exact integers summing to that width: ")
-                                  A slice-widths))))
+                 (let ((S_k (vector-ref slice-widths k))
+                       (width (%%interval-width domain k)))
+                   (if (or (and (exact-integer? S_k)
+                                (positive? S_k)
+                                (not (eqv? width 0)))
+                           (and (vector? S_k)
+                                (not (eqv? (vector-length S_k) 0))
+                                (vector-every (lambda (x) (and (exact-integer? x) (not (negative? x)))) S_k)
+                                (= (%%vector-fold-left (lambda (x y) (+ x y)) 0 S_k) width)))
+                       (slice-widths-check (fx+ k 1))
+                       (error (string-append "array-tile: Element "
+                                             (number->string k)
+                                             " of the second argument is neither a positive exact integer (allowed if the width of the first argument's corresponding axis is positive) nor a nonempty vector of nonnegative exact integers summing to the width of axis "
+                                             (number->string k)
+                                             " of the first argument: ")
+                              A slice-widths)))
                  (let ((offsets (make-vector A-dim)))
                    (do ((k 0 (fx+ k 1)))
                        ((fx= k A-dim))
@@ -4497,24 +4489,24 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 (define %%array-reduce
   (let ((%%array-reduce-base (list 'base)))
-    (lambda (sum A caller)
-      (if (%%array-empty? A)
-          (error (string-append caller "Attempting to reduce over an empty array: ") sum A)
-          (%%interval-fold-left (%%array-getter A)
-                                (lambda (id a)
-                                  (if (eq? id %%array-reduce-base)
-                                      a
-                                      (sum id a)))
-                                %%array-reduce-base
-                                (%%array-domain A))))))
+    (lambda (sum A)
+      (%%interval-fold-left (%%array-getter A)
+                            (lambda (id a)
+                              (if (eq? id %%array-reduce-base)
+                                  a
+                                  (sum id a)))
+                            %%array-reduce-base
+                            (%%array-domain A)))))
 
 (define (array-reduce sum A)
   (cond ((not (array? A))
          (error "array-reduce: The second argument is not an array: " sum A))
         ((not (procedure? sum))
          (error "array-reduce: The first argument is not a procedure: " sum A))
+        ((%%array-empty? A)
+         (error "array-reduce: Attempting to reduce over an empty array: " sum A))
         (else
-         (%%array-reduce sum A "array-reduce: "))))
+         (%%array-reduce sum A))))
 
 (define (%%array->reversed-list array)
   ;; safe in the face of (%%array-getter array) capturing
@@ -4687,12 +4679,9 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 (define (%%array-inner-product A f g B)
   ;; Copy the curried arrays for efficiency.
-  ;; If any of the curried arrays are empty, that's OK,
-  ;; If the elements of the curried arrays are empty, then
-  ;; the error check in %%array-reduce will catch it.
   (%%array-outer-product
    (lambda (a b)
-     (%%array-reduce f (%%array-map g a (list b)) "array-inner-product: "))
+     (%%array-reduce f (%%array-map g a (list b))))
    (array-copy (%%array-curry A 1))
    (array-copy (%%array-curry (%%array-permute B (%%index-rotate (%%array-dimension B) 1)) 1))))
 
@@ -4718,6 +4707,9 @@ OTHER DEALINGS IN THE SOFTWARE.
                           (%%interval-upper-bound B-dom 0)))))
          (error (string-append "array-inner-product: The bounds of the last dimension of the first argument "
                                "are not the same as the bounds of the first dimension of the fourth argument: ")
+                A f g B))
+        ((eqv? (%%interval-width (%%array-domain B) 0) 0)
+         (error "array-inner-product: The width of the first axis of the fourth argument is zero: "
                 A f g B))
         (else
          (%%array-inner-product A f g B))))
