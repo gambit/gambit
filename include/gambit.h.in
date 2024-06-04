@@ -3953,6 +3953,7 @@ ___ADD_PAIR_ELEM(___PAIR_CDR,y); \
 ___END_ALLOC_PAIR();}
 
 #define ___CONS(x,y)(___ALLOC_PAIR_EXPR(x,y),___GET_PAIR())
+#define ___XCONS(x,y)(___ALLOC_PAIR_EXPR(y,x),___GET_PAIR())
 
 #define ___SETCAR(obj,car)___CAR_FIELD(obj)=car;
 #define ___SETCDR(obj,cdr)___CDR_FIELD(obj)=cdr;

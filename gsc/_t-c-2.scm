@@ -2578,8 +2578,7 @@
     #t ;; proc-safe?
     #f ;; side-effects?
     #f ;; flo-result?
-    (lambda (opnds sn)
-      (cons "CONS" (reverse (map targ-opnd opnds))))))
+    (targ-apply-simp-generator #f #f "XCONS")))
 
 (define (targ-apply-list)
   (targ-apply-alloc
