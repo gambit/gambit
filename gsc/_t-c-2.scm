@@ -2572,6 +2572,14 @@
     #f ;; flo-result?
     (targ-apply-simp-generator #f #f "CONS")))
 
+(define (targ-apply-xcons)
+  (targ-apply-alloc
+    (lambda (n) targ-pair-space)
+    #t ;; proc-safe?
+    #f ;; side-effects?
+    #f ;; flo-result?
+    (targ-apply-simp-generator #f #f "XCONS")))
+
 (define (targ-apply-list)
   (targ-apply-alloc
     (lambda (n) (* n targ-pair-space))
@@ -3502,6 +3510,7 @@
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (targ-op "##cons"             (targ-apply-cons))
+(targ-op "##xcons"            (targ-apply-xcons))
 (targ-op "##set-car!"         (targ-apply-simp-u #f #t 1 "SETCAR"))
 (targ-op "##set-cdr!"         (targ-apply-simp-u #f #t 1 "SETCDR"))
 (targ-op "##car"              (targ-ifjump-apply-u "CAR"))
