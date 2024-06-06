@@ -2872,6 +2872,11 @@ OTHER DEALINGS IN THE SOFTWARE.
 (test (array-curry (make-array (make-interval '#(0 0) '#(1 1)) list)  3)
       "array-curry: The second argument is not an exact integer between 0 and (interval-dimension (array-domain array)) (inclusive): ")
 
+;;; Used to fail.
+
+(test (array? (array-curry (array-permute (make-specialized-array (make-interval '#(4 4 0 4))) (index-last 4 1)) 1))
+      #t)
+
 (let* ((dim 6)
        (domain (make-interval (make-vector dim 3)))
        (immutable (make-array domain list))

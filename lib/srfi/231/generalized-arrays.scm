@@ -4129,27 +4129,23 @@ OTHER DEALINGS IN THE SOFTWARE.
   (call-with-values
       (lambda () (%%interval-projections (%%array-domain array) right-dimension))
     (lambda (left-interval right-interval)
-      (let* ((input-array-in-order?
-              (%%array-in-order? array))
-             (in-order?
-              (or (and (boolean? input-array-in-order?)  ;; we know whether the input array is in order
-                       input-array-in-order?)            ;; and it is in order
-                  ;; But even if it isn't, the subarrays may be in order, so we
-                  ;; compute once whether all the subarrays are in order.
-                  ;; We do this without actually instantiating one of the subarrays.
-                  (%%compute-array-packed?
-                   ;; The same domain for all subarrays.
-                   right-interval
-                   ;; The new indexer computed using the general, nonspecialized new-domain->old-domain function,
-                   ;; applied specifically to the first multi-index in the left-interval.
-                   ;; If any of the arrays are empty then the indexers could be nonsense, but
-                   ;; %%compute-array-packed? special-cases empty intervals.
-                   (%%compose-indexers (%%array-indexer array)
-                                       right-interval
-                                       (lambda right-multi-index
-                                         (apply values
-                                                (append (%%interval-lower-bounds->list left-interval)
-                                                        right-multi-index))))))))
+      (let ((in-order?
+             (or (%%array-packed? array) ;; compute it if necessary, will be #t if array is empty
+                 ;; But even if it isn't, the subarrays may be in order, so we
+                 ;; compute once whether all the subarrays are in order.
+                 ;; We do this without actually instantiating one of the subarrays.
+                 (let ((left-multi-index (%%interval-lower-bounds->list left-interval)))
+                   (%%compute-array-packed?
+                    ;; The same domain for all subarrays.
+                    right-interval
+                    ;; The new indexer computed using the general, nonspecialized new-domain->old-domain function,
+                    ;; applied specifically to the first multi-index in the left-interval.
+                    (%%compose-indexers (%%array-indexer array)
+                                        right-interval
+                                        (lambda right-multi-index
+                                          (apply values
+                                                 (append left-multi-index
+                                                         right-multi-index)))))))))
         (%%make-safe-immutable-array
          left-interval
          (case (%%interval-dimension left-interval)
