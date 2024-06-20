@@ -54,7 +54,15 @@ select_ios()
   ios_platform_dir="$platforms_dir/$ios_platform"
   ios_sdks="$ios_platform_dir/Developer/SDKs"
 
-  sdk_version=`(cd "$ios_sdks"; ls -1d *.sdk |sed -e 's/\.sdk$//' -e 's/^[^0-9\.]*//' |awk 'BEGIN{best = 0.0}($0 + 0.0) > best + 0.0{best = $0;}END{print best}')`
+  sdk_version=$(
+    (cd "$ios_sdks"
+     ls -1d *.sdk | \
+     sed -e 's/\.sdk$//' -e 's/^[^0-9\.]*//' | \
+     awk 'BEGIN{best = 0.0}
+          ($0 + 0.0) > best + 0.0{best = $0;}
+          END{print best}'
+    )
+  )
   ios_sdk="$platform_type$sdk_version.sdk"
 
   ios_sdk_dir="$ios_sdks/$ios_sdk"
@@ -89,7 +97,11 @@ download_gambit_dist_tgz()
   gambit_dist="$gambit_dist_if_downloaded"
   update_with_latest_changes="$update_with_latest_changes_if_downloaded"
 
-  major_minor="`echo \"$gambit_dist\" | sed -e \"s/gambc-\\([^_]*_[^_]*\\)\\(.*\\)/\\1/g\" -e \"s/_/./g\"`"
+  major_minor="$(
+    echo "$gambit_dist" | \
+    sed -e "s/gambc-\([^_]*_[^_]*\)\(.*\)/\1/g" \
+        -e "s/_/./g"
+  )"
 
   if [ ! -f "$gambit_dist.tgz" ]; then
     curl "http://www.iro.umontreal.ca/~gambit/download/gambit/$major_minor/source/$gambit_dist.tgz" > "$gambit_dist.tgz"
@@ -98,16 +110,22 @@ download_gambit_dist_tgz()
 
 get_gambit_dist_tgz()
 {
-  rootfromhere="`grep \"^rootfromhere = *\" makefile 2> /dev/null | sed -e \"s/rootfromhere = //\"`"
-  gambit_dist="`grep \"^PACKAGE_TARNAME = *\" makefile 2> /dev/null | sed -e \"s/PACKAGE_TARNAME = *//\"`"
+  rootfromhere="$(
+    grep "^rootfromhere = *" makefile 2> /dev/null | \
+    sed -e "s/rootfromhere = //"
+  )"
+  gambit_dist="$(
+    grep "^PACKAGE_TARNAME = *" makefile 2> /dev/null | \
+    sed -e "s/PACKAGE_TARNAME = *//"
+  )"
 
-  if [ "$gambit_dist" == "" ]; then
+  case "$gambit_dist" in '')
 
     download_gambit_dist_tgz
 
     downloaded="yes"
 
-  else
+  ;; *)
 
     (cd "$rootfromhere" ; make dist)
     mv "$rootfromhere/$gambit_dist.tgz" .
@@ -115,7 +133,7 @@ get_gambit_dist_tgz()
     update_with_latest_changes="no"
     downloaded="no"
 
-  fi
+  esac
 }
 
 unpack_gambit()
@@ -141,14 +159,14 @@ make_gambit()
   what="$2"
   cd "$dir"
 
-  if [ "$update_with_latest_changes" == "yes" ]; then
+  case "$update_with_latest_changes" in "yes")
      echo "Updating to latest from master"
      make update
-  fi
+  esac
 
   make clean
 
-  if [ "$what" == "skip-gsi-gsc" ]; then
+  case "$what" in "skip-gsi-gsc")
 
     # we only care about the Gambit runtime library so avoid building gsi and gsc
 
@@ -226,18 +244,21 @@ build_all_ios()
 
 script_name="build-gambit-iOS"
 
-while [ $# -ne 0 ]; do
+while :; do
+  case "$#" in 0) break; esac
   case "$1" in
     -h|--help)
-       echo "$script_name - build gambit library for iOS"
-       echo " "
-       echo "$script_name [options]"
-       echo " "
-       echo "options:"
-       echo "-h, --help                Show help"
-       echo "-j, --jobs <number>       Number of simultaneous jobs for make to use."
-       echo "                          Should be equal to number of CPU cores."
-       echo "--no-update               Don't update downloaded Gambit distribution"
+       cat <<-HELP
+		$script_name - build gambit library for iOS
+		 
+		$script_name [options]
+		 
+		options:
+		-h, --help                Show help
+		-j, --jobs <number>       Number of simultaneous jobs for make to use.
+		                          Should be equal to number of CPU cores.
+		--no-update               Don't update downloaded Gambit distribution
+		HELP
        exit 0
        ;;
     --no-update)
