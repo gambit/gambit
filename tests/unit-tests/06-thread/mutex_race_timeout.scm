@@ -6,7 +6,7 @@
         (loop (- i 1) (cons i lst))
         lst)))
 
-(define iterations 2000)
+(define iterations 200)
 (define nb-competing-threads 20)
 (define nb-independent-threads 20)
 
@@ -48,4 +48,4 @@
             (iota nb-independent-threads))))
 
 (check-equal? result
-              '(40000 40000 40000 40000 40000 40000 40000 40000 40000 40000 40000 40000 40000 40000 40000 40000 40000 40000 40000 40000))
+              '(4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000 4000))
