@@ -1329,7 +1329,7 @@
 
 (define (##extract-demand-modules code comp-ctx)
   (##cons code
-          (macro-compilation-ctx-demand-modules comp-ctx)))
+          (##reverse (macro-compilation-ctx-demand-modules comp-ctx))))
 
 (define (##setup-requirements-and-run c rte)
   (##load-modules (##cdr c))
@@ -5466,7 +5466,7 @@
                (script-callback script-line abs-path)
                (##register-module-descrs module-descrs)
                (##load-modules
-                (##list->vector
+		(##reverse!
                  (##map (lambda (md)
                           (##vector-last
                            (macro-module-descr-supply-modules md)))
