@@ -1636,6 +1636,11 @@
       (^expr-statement
        (^call-prim (^rts-method-use 'program_start))))))
 
+  (univ-define-rtlib-feature 'program_started
+   (univ-rtlib-feature-field-priv 'bool
+                                  (lambda (ctx)
+                                    (^bool #f))))
+
   (univ-define-rtlib-feature 'program_start
    (univ-rtlib-feature-method
     '(public)
@@ -1645,47 +1650,51 @@
     '()
     (lambda (ctx)
       (let ((temp (^local-var 'temp)))
-        (^ (^var-declaration
-            'scmobj
-            temp
-            (^vector-ref
-             (^array-index
-              (^rts-field-use-priv 'module_table)
-              (^- (^array-length (^rts-field-use-priv 'module_table))
-                  (^int 1)))
-             (^int 0)))
-
-           (^setglo '##vm-main-module-ref
+        (^ (^if (^not (^rts-field-use-priv 'program_started))
+                (^ (^var-declaration
+                    'scmobj
+                    temp
                     (^vector-ref
-                     temp
-                     (^- (^vector-length temp)
-                         (^int 1))))
+                     (^array-index
+                      (^rts-field-use-priv 'module_table)
+                      (^- (^array-length (^rts-field-use-priv 'module_table))
+                          (^int 1)))
+                     (^int 0)))
 
-           (^setglo '##program-descr
-                    (^vector-box
-                     (^array-literal
-                      'scmobj
-                      (list (^vector-box
-                             (^rts-field-use-priv 'module_table))
-                            (^obj '())
-                            (^obj #f)))))
+                   (^assign (^rts-field-use-priv 'program_started)
+                            (^bool #t))
 
-           ;; execute first module
+                   (^setglo '##vm-main-module-ref
+                            (^vector-ref
+                             temp
+                             (^- (^vector-length temp)
+                                 (^int 1))))
 
-           (^assign (gvm-state-sp-use ctx 'wr)
-                    (^int -1))
+                   (^setglo '##program-descr
+                            (^vector-box
+                             (^array-literal
+                              'scmobj
+                              (list (^vector-box
+                                     (^rts-field-use-priv 'module_table))
+                                    (^obj '())
+                                    (^obj #f)))))
 
-           (^push (univ-end-of-cont-marker ctx))
+                   ;; execute first module
 
-           (^expr-statement
-            (^call-prim (^rts-method-use 'call_start)
-                        (^vector-ref
-                         (^array-index
-                          (^rts-field-use-priv 'module_table)
-                          (^int 0))
-                         (^int 4))
-                        (^array-literal 'scmobj '())
-                        (^rts-jumpable-use 'underflow))))))))
+                   (^assign (gvm-state-sp-use ctx 'wr)
+                            (^int -1))
+
+                   (^push (univ-end-of-cont-marker ctx))
+
+                   (^expr-statement
+                    (^call-prim (^rts-method-use 'call_start)
+                                (^vector-ref
+                                 (^array-index
+                                  (^rts-field-use-priv 'module_table)
+                                  (^int 0))
+                                 (^int 4))
+                                (^array-literal 'scmobj '())
+                                (^rts-jumpable-use 'underflow))))))))))
 
   (univ-define-rtlib-feature 'call_start
    (univ-rtlib-feature-method

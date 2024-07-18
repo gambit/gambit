@@ -19,6 +19,13 @@ if (typeof @os_nodejs@ === 'undefined') {
   @os_nodejs@ = !@os_web@;
 }
 
+if (@os_web@) {
+  @all_modules_registered@ = function () {
+    // delay starting program until page loaded
+    document.addEventListener('DOMContentLoaded', @program_start@);
+  }
+}
+
 if (@os_nodejs@) {
   os = require('os');
   vm = require('vm');
