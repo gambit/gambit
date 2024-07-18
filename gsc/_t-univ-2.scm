@@ -2192,20 +2192,18 @@
             ;; convert table to Object
             (^if (^and (^structure? obj)
                        (^eq?
-                        (^field
-                         'name
-                         (^array-index
-                          (^field
-                           'slots
-                           (^array-index
-                            (^field 'slots obj)
-                            (^int 0)))
-                          (^int 1)))
-                        (^str "##type-4-A7AB629D-EAB0-422F-8005-08B2282E04FC")))
+                        (^array-index
+                         (^field
+                          'slots
+                          (^array-index
+                           (^field 'slots obj)
+                           (^int 0)))
+                         (^int 1))
+                        (^obj (string->symbol "##type-5-A7AB629D-EAB0-422F-8005-08B2282E04FC"))))
                  (^ "var result = Object();"
                     (^array-index
                      (^field 'slots obj)
-                     (^int 3))
+                     (^int 4))
                     ".forEach(function (val, key) {
                         result[key] = "
                     (^call-prim
