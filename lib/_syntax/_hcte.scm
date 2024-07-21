@@ -8,9 +8,8 @@
 ;;;============================================================================
 ;;; Hygiene compilation time environement
 ;;;
-;;; overload basic cte's operation for hygiene support (interpreter)
+;;; overload basic interpreter cte's operation for hygiene support
 ;;;
-;;; 
 ;;;============================================================================
 ;;; cte type
 
@@ -37,7 +36,7 @@
   (apply 
     ##cte-ctx-ref
       (or (and (##cte-top? cte) 
-             (##cte-parent-cte cte))
+               (##cte-parent-cte cte))
           cte)
       key
       fail))

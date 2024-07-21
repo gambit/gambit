@@ -9,21 +9,21 @@
 
 (define-macro (##add-new-core-macro! name procedure)
   `(top-hcte-add-core-macro-cte! ##syntax-interaction-cte 
-                                 (add-scope 
+                                 (##add-scope 
                                    (##make-syntax-source ',name #f)
-                                   core-scope)
+                                   ##core-scope)
                                  ,procedure))
 
 (define-macro (##add-new-macro! name procedure)
   `(top-hcte-add-macro-cte! ##syntax-interaction-cte 
-                            (add-scope 
+                            (##add-scope 
                               (##make-syntax-source ',name #f)
-                              core-scope)
+                              ##core-scope)
                             ,procedure))
 
-(##add-new-macro! ##syntax-rules
+(define-prim (##make-syntax-expander-syntax-rules)
   (##eval-for-syntax-binding
-    (datum->core-syntax
+    (##datum->core-syntax
       `(##lambda (stx)
          (##syntax-case stx ()
            ((_ (k ...) (patterns . templates) ...)
@@ -34,21 +34,21 @@
                   ...)))))))
     ##syntax-interaction-cte))
 
-(##add-new-macro! ##with-syntax
+(define-prim (##make-syntax-expander-with-syntax)
   (##eval-for-syntax-binding
-    (datum->core-syntax
+    (##datum->core-syntax
       `(##lambda (stx)
         (##syntax-case stx ()
           ((_ ((p e) ...) b ...)
            (##syntax
-             (##syntax-case (list e ...) ()
+             (##syntax-case (##list e ...) ()
                ((p ...) (##begin b ...))))))))
     ##syntax-interaction-cte))
 
-;; TODO: extremly low performances
-(##add-new-macro! ##define-macro
+;; TODO: low performances
+(define-prim (##make-syntax-expander-define-macro)
   (##eval-for-syntax-binding
-    (datum->core-syntax
+    (##datum->core-syntax
       `(##lambda (s)
          (##syntax-case s ()
            ((##define-macro (name . params) body2 ...)
@@ -63,13 +63,24 @@
                   (##syntax-case s (qwe)
                     ((_ . args)
                      (##datum->core-syntax
-                         (apply expander
-                                (syntax->datum (##syntax args)))
-                       (car (##source-code s))))
+                         (##apply expander
+                                (##syntax->datum (##syntax args)))
+                       (##car (##source-code s))))
                     (_
-                     (error "define-macro: ill formed macro call" s)))))))
+                     (##error "define-macro: ill formed macro call" s)))))))
            (_
-            (error "ill-formed form : define-macro")))))
+            (##error "ill-formed form : define-macro")))))
     ##syntax-interaction-cte))
+
+;;;---------------------------------------
+
+(##add-new-macro! ##syntax-rules 
+                  (##make-syntax-expander-syntax-rules))
+
+(##add-new-macro! ##with-syntax 
+                  (##make-syntax-expander-with-syntax))
+
+(##add-new-macro! ##define-macro 
+                  (##make-syntax-expander-define-macro))
 
 ;;;============================================================================

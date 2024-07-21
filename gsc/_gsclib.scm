@@ -2,13 +2,19 @@
 
 ;;; File: "_gsclib.scm"
 
-;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.
 
 (include "generic.scm")
 
 ;;;----------------------------------------------------------------------------
 
-; TODO adjust for new env
+
+;;;----------------------------------------------------------------------------
+;;; environment setup
+
+;;;---------------------------------------
+;;; 
+
 (set! make-global-environment ;; import runtime macros into compilation env
   (lambda ()
 
@@ -23,6 +29,39 @@
             (extract-macros parent-cte)))))
 
     (extract-macros (##cte-top-cte ##interaction-cte))))
+
+;;;---------------------------------------
+;;; hygiene
+
+(define make-global-environment-syntax #f)
+(set! make-global-environment-syntax ;; import runtime macros into compilation env
+  (lambda ()
+    (define (extract-macros cte env)
+      (if (##cte-top? cte)
+          env
+          (let ((parent-cte (##cte-parent-cte cte)))
+            (cond 
+              ((##cte-macro? cte)
+               (extract-macros 
+                 parent-cte
+                 (##top-henv-add-macro-cte!
+                   env 
+                   (##make-core-syntax-source (##cte-macro-name cte) #f)
+                   (##cte-macro-descr cte))))
+              ((##cte-core-macro? cte)
+               (extract-macros
+                 parent-cte
+                 (##top-henv-add-core-macro-cte!
+                   env 
+                   (##make-core-syntax-source (##cte-macro-name cte) #f)
+                   (##cte-macro-descr cte))))
+              (else
+               (extract-macros parent-cte))))))
+
+    (extract-macros (##top-cte-cte ##syntax-interaction-cte)
+                    (make-default-global-environment))))
+
+;;;----------------------------------------------------------------------------
 
 (define (##compile-options-normalize options)
   (##add-default-compile-options

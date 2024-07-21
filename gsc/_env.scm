@@ -56,10 +56,13 @@
 
 ;; structure that represents environments:
 
+(define (make-default-global-environment) 
+  (env-frame #f '()))
+
 (define make-global-environment #f)
 (set! make-global-environment
   (lambda ()
-    (env-frame #f '())))
+    (make-default-global-environment)))
 
 (define (env-frame env vars #!optional (syntax-proc-ctx identity))
   (vector
@@ -151,8 +154,20 @@
 
 (define (env-syntax-gbt-ref env) (vector-ref env 0))
 (define (env-syntax-ctx-ref env) (vector-ref env 1))
-(define (env-syntax-gbt-set! env gbt) (vector-set! env 0 gbt))
+(define (env-syntax-gbt-set! env) (vector-set! env 0))
+
 (define (env-syntax-ctx-set! env ctx) (vector-set! env 1 ctx))
+
+(define (env-syntax-gbt-gbt-ref env id) 
+  (##syntax-global-binding-table-ref 
+    (env-syntax-gbt-ref env)
+    id))
+
+(define (env-syntax-gbt-gbt-set! env id val) 
+  (##syntax-global-binding-table-set!
+    (env-syntax-gbt-ref env)
+    id
+    val))
 
 (define (env-ctx-set env ctx)
   (vector (env-syntax-gbt-ref env)
@@ -170,6 +185,7 @@
 (define (env-decl-ref env)              (vector-ref env 4))
 (define (env-namespace-ref env)         (vector-ref env 5))
 (define (env-parent-ref env)            (vector-ref env 6))
+(define (env-parent-set! env parent)    (vector-set! env 6 parent))
 (define (env-externals-ref env)         (vector-ref env 7))
 
 (define (env-namespace-lookup env name)

@@ -204,6 +204,13 @@
     (else
      (##error "Cannot convert to source: object not a source or syntax object"))))
 
+(define-prim (##syntax-source-object->source-object src)
+  (if (##vector? src)
+      (let ((v (##vector-copy src)))
+        (##syntax-source-object->source-object! v)
+        v)
+      (##error "Cannot convert to source: object not a source or syntax object")))
+
 ;;;----------------------------------------------------------------------------
 
 (define-prim&proc (make-syntax-source code locat)
@@ -218,8 +225,6 @@
 
 ;;;----------------------------------------------------------------------------
 
-; TODO: source->syntax-source must be renamed source->syntax 
-;       and datum->syntax should be renamed source->syntax-source
 ; TODO: fix define-prim&proc to allow for optional parameters
 
 (define-prim (##source->syntax-source datum #!optional (stx (macro-absent-obj)))
@@ -283,6 +288,33 @@
 
 (define (syntax-source->source! stx)
   (##syntax-source->source! stx))
+
+(define-prim (##syntax-source->source stx)
+
+  (define (pair->datum code)
+    (cond 
+      ((pair? code)
+       (cons (##syntax-source->source (car code))
+             (pair->datum (cdr code))))
+      ((##null? code)
+       code)
+      (else
+       (##syntax-source->source code))))
+
+  (cond
+    ((##syntax-source? stx)
+     (let ((code (##source-code stx)))
+       (cond 
+         ((##pair? code)
+          (##syntax-source-object->source-object
+            (##syntax-source-code-update stx pair->datum)))
+         (else
+          (##syntax-source-object->source-object stx)))))
+    (else
+     "cannot convert non-syntax to datum")))
+
+(define (syntax-source->source stx)
+  (##syntax-source->source stx))
 
 ;;;----------------------------------------------------------------------------
 

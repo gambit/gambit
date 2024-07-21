@@ -69,7 +69,7 @@
                          id-scopes))
               candidate-id
               #f))
-       (##hcte-top-cte-global-binding-table cte))))
+       (##hygiene-environment-top-cte-global-binding-table cte))))
 
   (define (check-unambiguous max-id candidate-ids)
     (or (##null? candidate-ids)
@@ -101,7 +101,7 @@
                              (##syntax-source-scopes candidate-id)))
                          candidate-ids)))
            (check-unambiguous max-id candidate-ids)
-           (##hcte-top-cte-global-binding-table-ref cte max-id)))))
+           (##hygiene-environment-top-cte-global-binding-table-ref cte max-id)))))
 
 (define-prim&proc (resolve-global id cte) ; TODO
   ; at top level, rename identifier according to namespace

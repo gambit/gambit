@@ -66,7 +66,7 @@
                  (else
                   #f))))
       (or (and key
-               (##hcte-ctx-ref cte key #f))
+               (##hygiene-environment-ctx-ref cte key #f))
           (##not-found-object id)))))
 
 (define-prim&proc (resolve-binding-top-level id cte)
@@ -77,12 +77,12 @@
                  (else
                   #f))))
       (or (and key
-               (##hcte-ctx-ref cte key))
+               (##hygiene-environment-ctx-ref cte key))
           (##not-found-object id)))))
 
 
 (define-prim&proc (resolve-binding-expander id cte)
-  (let ((binding (resolve-id id cte)))
+  (let ((binding (##resolve-id id cte)))
     (let ((key
             (cond
               ((##binding-local? binding)
@@ -91,7 +91,7 @@
                (##binding-top-level-symbol binding))
               (else
                #f))))
-      (let ((value (and key (##hcte-ctx-ref cte key))))
+      (let ((value (and key (##hygiene-environment-ctx-ref cte key))))
         (cond
           ((and value
                 (or (##ctx-binding-core-macro? value)

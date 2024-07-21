@@ -16,22 +16,24 @@
 (##include "_bindings.scm")
 (##include "_ctx-bindings.scm")
 (##include "_hcte.scm")
+(##include "_henv.scm")
 (##include "_expand.scm")
 (##include "_eval.scm")
 (##include "_compile.scm")
 (##include "_syntax-case.scm")
 
+
 ;;;============================================================================
 
 (define-macro (##add-new-core-macro! name procedure)
-  `(top-hygiene-environment-add-core-macro-cte! ##syntax-interaction-cte 
+  `(##top-hygiene-environment-add-core-macro-cte! ##syntax-interaction-cte 
                                  (add-scope 
                                    (##make-syntax-source ',name #f)
                                    core-scope)
                                  (##macro-syntax-descr ,procedure (##make-core-syntax-source ',name #f))))
 
 (define-macro (##add-new-macro! name procedure)
-  `(top-hygiene-environment-add-macro-cte! ##syntax-interaction-cte 
+  `(##top-hygiene-environment-add-macro-cte! ##syntax-interaction-cte 
                             (add-scope 
                               (##make-syntax-source ',name #f)
                               core-scope)
@@ -219,7 +221,7 @@
     (##add-new-macro! with-syntax
       (##make-alias-syntax '##with-syntax))
 
-;;;----------------------------------------------------------------------------
+;;;---------------------------------------
 
     ;;; deactivate for `make checks` ; activate for `make ut`
     (##add-new-core-macro! ##lambda ##expand-lambda)
@@ -272,13 +274,12 @@
 ;;;============================================================================
 
 (define-prim&proc (syntax-expand top-cte src)
-                  ;src
   (let* ((stx (add-scope (##source->syntax-source src) core-scope))
          (stx (expand stx top-cte))
          (stx (compile stx top-cte)))
     ; We do not need to retransform syntax-objects
     ; as syntax objects can always be used where sources are required.
-    ;(##syntax-source->source! stx)
+    #;(##syntax-source->source stx)
     stx))
 
 ;;;============================================================================

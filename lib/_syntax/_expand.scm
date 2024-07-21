@@ -21,8 +21,8 @@
                (cte      cte))
       (match-source bindings ()
         ((binding @ (id val) . bindings)
-         (let ((id  (add-scope id (car scps)))
-               (val (expand val cte)))
+         (let ((id  (##add-scope id (car scps)))
+               (val (##expand val cte)))
            (cond
              ((or (pair? (##syntax-source-code id))
                   (null? (##syntax-source-code id)))
@@ -30,8 +30,8 @@
                              (cte cte))
                 (cond
                   ((pair? ids)
-                   (let* ((key (##hcte-add-new-local-binding! cte (car ids)))
-                          (cte (##hcte-add-variable-cte cte key (car ids))))
+                   (let* ((key (##hygiene-environment-add-new-local-binding! cte (car ids)))
+                          (cte (##hygiene-environment-add-variable-cte cte key (car ids))))
                      (loop-ids
                        (cdr ids)
                        cte)))
@@ -42,8 +42,8 @@
                        (cons binding res)
                        cte)))
                   (else
-                   (let* ((key (##hcte-add-new-local-binding! cte ids))
-                          (cte (##hcte-add-variable-cte cte key ids)))
+                   (let* ((key (##hygiene-environment-add-new-local-binding! cte ids))
+                          (cte (##hygiene-environment-add-variable-cte cte key ids)))
                      (let ((binding (##syntax-source-code-set binding (list id val))))
                        (loop 
                          bindings
@@ -51,8 +51,8 @@
                          cte)))))))
 
              (else
-               (let* ((key (##hcte-add-new-local-binding! cte id))
-                      (cte (##hcte-add-variable-cte cte key id))
+               (let* ((key (##hygiene-environment-add-new-local-binding! cte id))
+                      (cte (##hygiene-environment-add-variable-cte cte key id))
                       (binding (##syntax-source-code-set binding
                                  (list id val))))
                  (loop 
@@ -87,8 +87,8 @@
                              (cte cte))
                 (cond 
                   ((pair? ids)
-                   (let* ((key (##hcte-add-new-local-binding! cte (car ids)))
-                          (cte (##hcte-add-variable-cte cte key (car ids))))
+                   (let* ((key (##hygiene-environment-add-new-local-binding! cte (car ids)))
+                          (cte (##hygiene-environment-add-variable-cte cte key (car ids))))
                      (loop-ids
                        (cdr ids)
                        cte)))
@@ -100,8 +100,8 @@
                        scps
                        cte)))
                   (else
-                   (let* ((key (##hcte-add-new-local-binding! cte ids))
-                          (cte (##hcte-add-variable-cte cte key ids)))
+                   (let* ((key (##hygiene-environment-add-new-local-binding! cte ids))
+                          (cte (##hygiene-environment-add-variable-cte cte key ids)))
                      (let ((binding (##syntax-source-code-set binding (list id val))))
                        (loop
                          bindings
@@ -109,8 +109,8 @@
                          scps
                          cte)))))))
              (else
-               (let* ((key (##hcte-add-new-local-binding! cte id))
-                      (cte (##hcte-add-variable-cte cte key id))
+               (let* ((key (##hygiene-environment-add-new-local-binding! cte id))
+                      (cte (##hygiene-environment-add-variable-cte cte key id))
                       (binding (##syntax-source-code-set binding
                                  (list id val))))
                  (loop
@@ -143,8 +143,8 @@
                             (cte cte))
                (cond
                  ((pair? ids)
-                  (let* ((key (##hcte-add-new-local-binding! cte (car ids)))
-                         (cte (##hcte-add-variable-cte cte key (car ids))))
+                  (let* ((key (##hygiene-environment-add-new-local-binding! cte (car ids)))
+                         (cte (##hygiene-environment-add-variable-cte cte key (car ids))))
                     (loop-ids
                       (cdr ids)
                       cte)))
@@ -157,8 +157,8 @@
                       (cons binding res)
                       cte)))
                  (else
-                  (let* ((key (##hcte-add-new-local-binding! cte ids))
-                         (cte (##hcte-add-variable-cte cte key ids)))
+                  (let* ((key (##hygiene-environment-add-new-local-binding! cte ids))
+                         (cte (##hygiene-environment-add-variable-cte cte key ids)))
                     (let* ((val (add-scope val (car scps)))
                            (binding (##syntax-source-code-set binding
                                       (list id val))))
@@ -167,8 +167,8 @@
                         (cons binding res)
                         cte)))))))
             (else
-             (let* ((key (##hcte-add-new-local-binding! cte id))
-                    (cte (##hcte-add-variable-cte cte key id))
+             (let* ((key (##hygiene-environment-add-new-local-binding! cte id))
+                    (cte (##hygiene-environment-add-variable-cte cte key id))
                     (val (add-scope val (car scps)))
                     (binding (##syntax-source-code-set binding
                                (list id val))))
@@ -211,8 +211,8 @@
           ((binding @ (id val) . bindings)
            (let ((id  (add-scope id (car scps)))
                  (val (##macro-syntax-descr (##eval-for-syntax-binding val original-cte) val)))
-             (let* ((key (##hcte-add-new-local-binding! cte id))
-                    (cte (##hcte-add-macro-cte cte key id val)))
+             (let* ((key (##hygiene-environment-add-new-local-binding! cte id))
+                    (cte (##hygiene-environment-add-macro-cte cte key id val)))
                (loop 
                  bindings
                  cte))))
@@ -237,8 +237,8 @@
                 (val  (##macro-syntax-descr (##eval-for-syntax-binding val cte) val))
                 (scps (cons (make-scope) scps))
                 (id (add-scopes id scps)))
-           (let* ((key (##hcte-add-new-local-binding! cte id))
-                  (cte (##hcte-add-macro-cte cte key id val))
+           (let* ((key (##hygiene-environment-add-new-local-binding! cte id))
+                  (cte (##hygiene-environment-add-macro-cte cte key id val))
                   (binding (##syntax-source-code-set binding
                              (list id val))))
              (loop
@@ -266,10 +266,10 @@
          (let ((id  (add-scope id (car scps)))
                (val (add-scope val (car scps)))
                (fake-val (lambda _ 'dummy)))
-           (let* ((key (##hcte-add-new-local-binding! cte id))
-                  (original-cte (##hcte-add-macro-cte original-cte key id fake-val))
+           (let* ((key (##hygiene-environment-add-new-local-binding! cte id))
+                  (original-cte (##hygiene-environment-add-macro-cte original-cte key id fake-val))
                   (val (##macro-syntax-descr (##eval-for-syntax-binding val original-cte) val))
-                  (cte (##hcte-add-macro-cte cte key id val)))
+                  (cte (##hygiene-environment-add-macro-cte cte key id val)))
              (loop 
                bindings
                cte))))
@@ -293,10 +293,10 @@
          (let* ((fake-val (lambda _ 'dummy))
                 (scps (cons (make-scope) scps))
                 (id (##add-scopes id scps)))
-           (let* ((key (##hcte-add-new-local-binding! cte id))
-                  (cte (##hcte-add-macro-cte cte key id fake-val))
+           (let* ((key (##hygiene-environment-add-new-local-binding! cte id))
+                  (cte (##hygiene-environment-add-macro-cte cte key id fake-val))
                   (val (##add-scopes val scps))
-                  (cte (##hcte-add-macro-cte cte key id (##macro-syntax-descr (##eval-for-syntax-binding val cte) val)))
+                  (cte (##hygiene-environment-add-macro-cte cte key id (##macro-syntax-descr (##eval-for-syntax-binding val cte) val)))
                   (binding (##syntax-source-code-set binding
                              (list id val))))
              (loop
@@ -335,7 +335,7 @@
   (let ((stx-id (##gensym 'stx))
         (cte-id (##gensym 'cte)))
    `(let ((,stx-id ,stx)
-          (,cte-id (##hcte-local-cte ,cte)))
+          (,cte-id (##hygiene-environment-local-cte ,cte)))
       (match-source ,stx-id ()
         ((let-id name bindings . body) when (identifier? name)
          (let* ((fake-binding  (##make-syntax-source `(,name ,(##make-syntax-source #f #f)) #f))
@@ -422,7 +422,7 @@
                           (##dispatch t stx cte #t)))))))))))
 
 (define-prim&proc (expand-begin s cte)
-  (syntax-source-code-update s
+  (##syntax-source-code-update s
     (lambda (code)
       (cons (car code)
             (##syntax-source-code
@@ -446,8 +446,8 @@
              (define-id (car form-code))
              (id        (add-scope (cadr form-code) scp))
              (value     (add-scope (caddr form-code) scp)))
-        (let* ((key (##hcte-add-new-local-binding! cte id))
-               (cte (##hcte-add-variable-cte cte key id)))
+        (let* ((key (##hygiene-environment-add-new-local-binding! cte id))
+               (cte (##hygiene-environment-add-variable-cte cte key id)))
           (let ((binding (syntax-source-code-set body `(,expr ,define-id ,id ,value))))
             (##expand-body
               (add-scope exprs scp)
@@ -461,9 +461,9 @@
              (id        (add-scope (cadr form-code) scp))
              (value     (add-scope (caddr form-code) scp))
              (fake-value (lambda _ 'let-dummy)))
-        (let* ((key (##hcte-add-new-local-binding! cte id))
-               (cte (##hcte-add-macro-cte cte key id fake-value))
-               (cte (##hcte-add-macro-cte cte key id (##macro-syntax-descr (##eval-for-syntax-binding
+        (let* ((key (##hygiene-environment-add-new-local-binding! cte id))
+               (cte (##hygiene-environment-add-macro-cte cte key id fake-value))
+               (cte (##hygiene-environment-add-macro-cte cte key id (##macro-syntax-descr (##eval-for-syntax-binding
                         value
                         cte) value))))
           (##expand-body
@@ -478,9 +478,9 @@
              (id        (add-scope (cadr form-code) scp))
              (value     (add-scope (caddr form-code) scp))
              (fake-value (lambda _ 'let-dummy)))
-        (let* ((key (##hcte-add-new-top-level-binding! cte id))
-               (cte (##hcte-add-macro-cte cte key fake-value))
-               (cte (##hcte-add-macro-cte cte key (##eval-for-syntax-binding
+        (let* ((key (##hygiene-environment-add-new-top-level-binding! cte id))
+               (cte (##hygiene-environment-add-macro-cte cte key fake-value))
+               (cte (##hygiene-environment-add-macro-cte cte key (##eval-for-syntax-binding
                       value
                       cte) value)))
           (##expand-body
@@ -518,7 +518,7 @@
              expanded)))))
 
     (define (##expand-body-namespace expr exprs bindings cte)
-      (let ((cte (##hcte-process-namespace cte expr)))
+      (let ((cte (##hygiene-environment-process-namespace cte expr)))
         (##expand-body exprs bindings cte)))
 
     (define (##expand-define-exprs expr exprs cte)
@@ -549,7 +549,7 @@
          'empty-body
          body))))
 
-  (let ((cte (##hcte-local-cte cte)))
+  (let ((cte (##hygiene-environment-local-cte cte)))
     (##expand-body (##syntax-source-code body) (list) cte)))
     
 ;;;----------------------------------------------------------------------------
@@ -624,7 +624,7 @@
         (##dispatch t stx cte))))
 
 (define-prim (##expand-application stx cte)
-  (##expand-pair/list stx (##hcte-local-cte cte)
+  (##expand-pair/list stx (##hygiene-environment-local-cte cte)
       (lambda (_) 
         (##raise-expression-parsing-exception
           'ill-formed-call
@@ -636,8 +636,8 @@
 (define-prim (##expand-lambda stx cte)
 
   (define (register-variable id cte)
-    (let* ((key (##hcte-add-new-local-binding! cte id))
-           (cte (##hcte-add-variable-cte cte key id)))
+    (let* ((key (##hygiene-environment-add-new-local-binding! cte id))
+           (cte (##hygiene-environment-add-variable-cte cte key id)))
 
       (list id cte)))
 
@@ -744,7 +744,7 @@
                 key-parameters)
               cte))))))
   (let ((scp (make-scope))
-        (cte (##hcte-local-cte cte)))
+        (cte (##hygiene-environment-local-cte cte)))
     (match-source stx ()
       ((lambda-id bindings . body)
        (let* ((bindings+cte (expand-lambda-bindings bindings scp cte))
@@ -801,7 +801,7 @@
       stx)))
 
 (define-prim&proc (syntax-full-name-maybe cte id)
-  (let ((full-name (##hcte-global-name cte id)))
+  (let ((full-name (##hygiene-environment-global-name cte id)))
       (and full-name
            (syntax-source-code-set id full-name))))
 
@@ -811,11 +811,11 @@
 
 (define-prim&proc (expand-define stx cte)
   (cond
-    ((##hcte-top? cte)
+    ((##hygiene-environment-top? cte)
      (match-source (##transform-define-form->base-form stx) ()
       ((define-id id val)
        (let ((full-id (##syntax-full-name cte id)))
-         (let* ((_   (##hcte-add-new-top-level-binding! cte full-id))
+         (let* ((_   (##hygiene-environment-add-new-top-level-binding! cte full-id))
                 (val (##expand val cte))
                 (expanded-stx (##syntax-source-code-set stx 
                                  `(,define-id ,id ,val))))
@@ -827,13 +827,13 @@
 
 (define-prim (##expand-define-syntax stx cte)
   (cond
-    ((##hcte-top? cte)
+    ((##hygiene-environment-top? cte)
      (match-source stx ()
       ((define-id id expander)
        (let ((id (##syntax-full-name cte id)))
-         (##top-hcte-add-macro-cte! cte id (lambda _ (##make-syntax-source 'dummy #f)))
+         (##top-hygiene-environment-add-macro-cte! cte id (lambda _ (##make-syntax-source 'dummy #f)))
          (let ((descr (##macro-syntax-descr (##eval-for-syntax-binding expander cte) expander)))
-           (##top-hcte-add-macro-cte! cte id descr)
+           (##top-hygiene-environment-add-macro-cte! cte id descr)
            (##syntax-source-code-set stx #!void))))
       (_
        (##raise-ill-formed-special-form stx))))
@@ -843,12 +843,12 @@
         stx))))
 
 (define-prim (##expand-define-top-level-syntax stx cte)
-  (##expand-define-syntax stx (##hcte-top-cte cte)))
+  (##expand-define-syntax stx (##hygiene-environment-top-cte cte)))
 
 ;;;----------------------------------------------------------------------------
 
 (define-prim (##expand-identifier id cte)
-  (let ((binding (if (##hcte-top? cte)
+  (let ((binding (if (##hygiene-environment-top? cte)
                      (resolve-global id cte)
                      (resolve-local id cte))))
     (let ((key 
@@ -859,7 +859,7 @@
                (##binding-local-key binding))
               (else
                #f))))
-      (let ((value (and key (##hcte-ctx-ref cte key))))
+      (let ((value (and key (##hygiene-environment-ctx-ref cte key))))
         (cond
           ((and value 
                 (##ctx-binding-variable? value))
@@ -1005,7 +1005,7 @@
 ;;;----------------------------------------------------------------------------
 
 (define-prim&proc (expand-namespace stx cte)
-  (##top-hcte-process-namespace! cte stx)
+  (##top-hygiene-environment-process-namespace! cte stx)
   stx)
 
 (define-prim&proc (expand-include stx-src cte)

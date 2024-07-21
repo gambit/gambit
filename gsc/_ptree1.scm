@@ -18,10 +18,6 @@
 (##include "_hostadt.scm")
 )
 
-; hygiene
-(include "../lib/_syntax/_henv.scm")
-(include "../lib/_syntax/_hygiene-environment.scm")
-
 ;;;----------------------------------------------------------------------------
 ;;
 ;; Parse tree manipulation module: (part 1)
@@ -664,7 +660,6 @@
     (if (null? exprs)
       (cont env lst)
       (let ((source (car exprs)))
-
         (cond ((macro-expr? source env)
                (parse-exprs
                  (cons (macro-expand source env) (cdr exprs))
@@ -873,7 +868,6 @@
                      cont))))
 
               (else
-
                (if *ptree-port*
                  (begin
                    (display "  \"expr\"" *ptree-port*)
@@ -884,8 +878,11 @@
                  env
                  (cons (pt source env 'true) lst)
                  cont))))))
+
   (let ((program
-          (##syntax-expand env program)))
+           ;;; Hygiene support
+          (##syntax-expand (make-global-environment-syntax) program)))
+
     (if *ptree-port*
       (begin
         (display "Parsing:" *ptree-port*)
@@ -903,7 +900,6 @@
           (newline *ptree-port*))
 
         (check-global-defs env)
-
         (proc (if (null? lst)
                 (list (new-cst (expression->source false-object #f) env
                         false-object))
@@ -1007,7 +1003,9 @@
          (pt-syntax-error source "Ill-formed expression"))))
 
 (define (macro-expand source env)
-  (let ((code (source-code source)))
+  ; hygienic macro system
+  source
+  #;(let ((code (source-code source)))
     (let* ((descr (env-lookup-macro env (source-code (car code))))
            (expander (**macro-descr-expander descr)))
       (sourcify-deep
@@ -1810,6 +1808,7 @@
              (inner-env2
               (env-frame inner-env1 self))
              (self-proc
+               (begin
               (list (new-prc source inner-env1
                       #f
                       #f
@@ -1817,7 +1816,7 @@
                       '()
                       #f
                       #f
-                      (pt-body source (cdddr code) inner-env2 use)))))
+                      (pt-body source (cdddr code) inner-env2 use))))))
         (set-prc-names! self self-proc)
         (set-prc-names! vars vals)
         (new-call* source env
