@@ -9,14 +9,28 @@
 (define epsilon 0)
 
 (define ##failed-check? #f)
+(define ##excluded-procedures '())
+(define (##excluded-procedures-set! lst)
+  (set! ##excluded-procedures lst))
 
 ;; at exit, verify if any checks failed
 (let ((##exit-old ##exit))
   (set! ##exit
         (lambda rest
-          (if (pair? rest)
+          (if (##pair? rest)
               (##exit-old (car rest))
               (begin
+                (when ##enable-trace?
+                  (let ((procedures-called-list (##table->list ##procedures-called)))
+                    (##write (cons '%GAMBIT-COVERAGE% (##filter
+                                                       (lambda (proc-nbcalls)
+                                                         (##not (##memq (car proc-nbcalls) ##excluded-procedures)))
+                                                       procedures-called-list))
+                     ##stdout-port)))
+
+                (when ##enable-syntactic-check?
+                  (##write (cons '%GAMBIT-ANALYSE% ##procedures-list) ##stdout-port))
+
                 (##exit-cleanup)
                 (##exit-with-err-code-no-cleanup
                  (if ##failed-check? 2 1)))))))
@@ -24,7 +38,7 @@
 (define ##failed-check-absent '$$fake-absent-object$$)
 
 (define (##failed-check msg #!optional (actual-result ##failed-check-absent))
-  (println
+  (##println
    (call-with-output-string
     ""
     (lambda (port)
@@ -65,9 +79,73 @@
           (##not (##number? n2))
           (##< tolerance (##magnitude (##- n1 n2))))
       (##failed-check msg n1)))
-                  
-(##define-macro (##setup-check)
 
+
+(define (##record-procedure! code env)
+  (##import _match)
+  (match code
+    ((lambda ,params ,e1 . ,rest)
+     (for-each (lambda (expr)
+                 (##record-procedure! expr env))
+               (cons e1 rest)))
+
+    ((if ,condition ,e1)
+     (##record-procedure! condition env)
+     (##record-procedure! e1 env))
+
+    ((if ,condition ,e1 ,e2)
+     (##record-procedure! condition env)
+     (##record-procedure! e1 env)
+     (##record-procedure! e2 env))
+
+    ((begin . ,rest)
+     (for-each (lambda (expr)
+                 (##record-procedure! expr env))
+               rest))
+
+    ((,form-let ,bindings ,e1 . ,rest) when (memq form-let '(let let* letrec letrec* let-values))
+     (begin
+       (for-each
+         (lambda (binding)
+           (and (pair? binding)
+                (pair? (cdr binding))
+                (let ((expr (cadr binding)))
+                  (##record-procedure! expr env))))
+         bindings)
+
+       (for-each
+         (lambda (expr)
+           (##record-procedure! expr env))
+         (cons e1 rest))))
+
+    ((,e1 . ,rest)
+     (cond
+       ((and (symbol? e1)
+             (not (##primitive-namespace? e1))
+             (not (memq e1 env)))
+        (let ((proc (##global-var-ref (##make-global-var e1))))
+          (if (##procedure? proc)
+            (let ((code (##decompile proc)))
+              (if (eq? proc code)
+                (##add-to-procedures-list! e1)
+                (##record-procedure! code (cons e1 env)))
+              (for-each
+                (lambda (arg)
+                  (##record-procedure! arg (cons e1 env)))
+                rest)))))
+       ((pair? e1)
+        (##record-procedure! e1 env))))
+
+    (,sym when (symbol? sym)
+     (if (not (memq sym env))
+       (let ((val (##global-var-primitive-ref (##make-global-var sym))))
+         (if (##procedure? val)
+           (##add-to-procedures-list! sym)))))
+
+    (,other
+     (void))))
+
+(##define-macro (##setup-check)
   (eval '(##begin
 
            (define ##enable-checks?
@@ -91,6 +169,11 @@
              (let ((report (##failed-check-gen src '$actual-result$)))
                `(let (($actual-result$ ,(##sourcify expr1 src))
                       ($expected-result$ ,(##sourcify expr2 src)))
+                  ,(if ##enable-syntactic-check?
+                     `(let (($e1-code ',(##sourcify expr1 src))
+                            ($e2-code ',(##sourcify expr2 src)))
+                        (##record-procedure! $e1-code '())
+                        (##record-procedure! $e2-code '())))
                   (if (,relation $actual-result$ $expected-result$)
                       ,(if positive? #f report)
                       ,(if positive? report #f)))))
@@ -128,7 +211,6 @@
                  '(##begin)
                  (let ((form (##source-strip src)))
                    (case (##source-strip (car form))
-
                      ((check-equal?)
                       (##expand-check-relation src #t '##equal?))
                      ((check-not-equal?)
@@ -211,5 +293,64 @@
          (exit 0)
          (raise e)))
    thunk))
+
+(define (##primitive-namespace? sym)
+  (##string-prefix? "##" (##symbol->string sym)))
+
+(define ##procedures-list '())
+(define ##add-to-procedures-list!
+  (lambda (sym)
+    ;; Exclude primitive procedure
+    (or (##primitive-namespace? sym)
+        (##memq sym ##procedures-list)
+        (set! ##procedures-list (##cons sym ##procedures-list)))))
+
+(define ##procedures-called (make-table))
+(define ##procedures-called-mutex (make-mutex))
+
+(define-macro (##setup-trace)
+  (eval '(begin
+           (define ##enable-trace?
+             (let ((ret (##global-var-ref (##make-global-var '##enable-trace?))))
+               (and (not (##unbound? ret))
+                    (##boolean? ret)
+                    ret)))
+           (define ##enable-syntactic-check?
+             (let ((ret (##global-var-ref (##make-global-var '##enable-syntactic-check?))))
+               (and (not (##unbound? ret))
+                    (##boolean? ret)
+                    ret)))))
+
+  (if (not ##enable-trace?)
+    '(##begin)
+    '(let* ((stepper (##current-stepper))
+            (stepper-copy (vector-copy stepper)))
+       (vector-set!
+         stepper
+         1 ;; index of call handler in stepper
+         (parameterize ((##current-stepper stepper-copy))
+
+           ;; need to create this call handler in the context of a new
+           ;; stepper so that the calls it executes will not invoke the call handler
+
+           (eval '(let ((primitive-namespace? (lambda (proc-name)
+                                                (##string-prefix? "##" (##symbol->string proc-name))))
+                        (symbol->primitive (lambda (proc-name)
+                                             (##global-var-primitive-ref (##make-global-var proc-name)))))
+
+                    (lambda (leapable? $code rte execute-body . other)
+                      (let* ((proc (car other))
+                             (proc-name (##procedure-friendly-name proc))) ;; procedure being called
+                        (when (and (symbol? proc-name)
+                                   (not (primitive-namespace? proc-name))
+                                   (eq? proc (symbol->primitive proc-name)))
+                          (mutex-lock! ##procedures-called-mutex)
+                          (table-set! ##procedures-called
+                                      proc-name
+                                      (+ 1 (table-ref ##procedures-called proc-name 0)))
+                          (mutex-unlock! ##procedures-called-mutex))
+                        (apply execute-body (cons $code (cons rte other))))))))))))
+
+(##setup-trace)
 
 ;;;============================================================================
