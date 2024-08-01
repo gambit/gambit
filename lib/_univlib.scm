@@ -3872,28 +3872,80 @@ def @os_device_stream_width@(dev_condvar_scm):
   var blo = @scm2host@(port_scm.@slots@[@PORT_BYTE_RLO@]);
   var bhi = @scm2host@(port_scm.@slots@[@PORT_BYTE_RHI@]);
   var options = @scm2host@(port_scm.@slots@[@PORT_ROPTIONS@]);
+  var encoding = options & 0x1f;
 
-  if (want != false)
-    {
-      var cend2 = chi + want;
-      if (cend2 < cend)
-        cend = cend2;
-    }
+  if (want != false) {
+    var cend2 = chi + want;
+    if (cend2 < cend)
+      cend = cend2;
+  }
 
   var cbuf_avail = cend - chi;
   var bbuf_avail = bhi - blo;
 
   while (cbuf_avail > 0 && bbuf_avail > 0) {
-    cbuf_scm.@codes@[cend - cbuf_avail] = bbuf[bhi - bbuf_avail];
-    bbuf_avail--;
+    let i = bhi - bbuf_avail;
+    let c = bbuf[i];
+    if (encoding === 1) {
+      // ASCII encoding
+      bbuf_avail -= 1;
+    } else if (encoding === 2) {
+      // ISO-8859-1 encoding
+      bbuf_avail -= 1;
+    } else {
+      // UTF-8 encoding
+      if (c <= 0x7f) {
+        bbuf_avail -= 1;
+      } else if ((c & 0xe0) === 0xc0) {
+        if (bbuf_avail < 2) break;
+        if ((bbuf[i+1] & 0xc0) !== 0x80) {
+          c = 0xfffd; // on encoding error use Unicode Replacement Character
+        } else {
+          c = ((c & 0x1f) << 6) + (bbuf[i+1] & 0x3f);
+        }
+        bbuf_avail -= 2;
+      } else if ((c & 0xf0) === 0xe0) {
+        if (bbuf_avail < 3) break;
+        if ((bbuf[i+1] & 0xc0) !== 0x80 || (bbuf[i+2] & 0xc0) !== 0x80) {
+          c = 0xfffd; // on encoding error use Unicode Replacement Character
+        } else {
+          c = ((c & 0x0f) << 12) + ((bbuf[i+1] & 0x3f) << 6) + (bbuf[i+2] & 0x3f);
+        }
+        bbuf_avail -= 3;
+      } else if ((c & 0xf8) === 0xf0) {
+        if (bbuf_avail < 3) break;
+        if ((bbuf[i+1] & 0xc0) !== 0x80 || (bbuf[i+2] & 0xc0) !== 0x80 || (bbuf[i+3] & 0xc0) !== 0x80) {
+          c = 0xfffd; // on encoding error use Unicode Replacement Character
+        } else {
+          c = ((c & 0x07) << 12) + ((bbuf[i+1] & 0x3f) << 6) + ((bbuf[i+2] & 0x3f) << 6) + (bbuf[i+3] & 0x3f);
+        }
+        bbuf_avail -= 4;
+      } else {
+        c = 0xfffd; // on encoding error use Unicode Replacement Character
+        bbuf_avail -= 1;
+      }
+    }
+    cbuf_scm.@codes@[cend - cbuf_avail] = c;
     cbuf_avail--;
   }
 
+  blo = bhi - bbuf_avail;
+
+  if (bbuf_avail < 4 && blo > 0) {
+    // move buffer to make room for bytes that complete a UTF-8 encoding
+    for (let j=0; j<bbuf_avail; j++) {
+      bbuf[j] = bbuf[blo+j];
+    }
+    blo = 0;
+    bhi = bbuf_avail;
+  }
+
   port_scm.@slots@[@PORT_CHAR_RHI@] = @host2scm@(cend - cbuf_avail);
-  port_scm.@slots@[@PORT_BYTE_RLO@] = @host2scm@(bhi - bbuf_avail);
+  port_scm.@slots@[@PORT_BYTE_RLO@] = @host2scm@(blo);
+  port_scm.@slots@[@PORT_BYTE_RHI@] = @host2scm@(bhi);
   port_scm.@slots@[@PORT_ROPTIONS@] = @host2scm@(options);
 
-  return @host2scm@(0) // no error
+  return @host2scm@(0); // no error
 };
 
 ")
@@ -3971,12 +4023,46 @@ def @os_port_decode_chars@(port_scm, want_scm, eof_scm):
   var bhi = @scm2host@(port_scm.@slots@[@PORT_BYTE_WHI@]);
   var bend = bbuf.length;
   var options = @scm2host@(port_scm.@slots@[@PORT_WOPTIONS@]);
+  var encoding = options & 0x1f;
   var cbuf_avail = chi - clo;
   var bbuf_avail = bend - bhi;
 
   while (cbuf_avail > 0 && bbuf_avail > 0) {
-    bbuf[bend - bbuf_avail] = cbuf_scm.@codes@[chi - cbuf_avail];
-    bbuf_avail--;
+    let c = cbuf_scm.@codes@[chi - cbuf_avail];
+    let i = bend - bbuf_avail;
+    if (encoding === 1) {
+      // ASCII encoding
+      bbuf[i] = c & 0x7f;
+      bbuf_avail -= 1;
+    } else if (encoding === 2) {
+      // ISO-8859-1 encoding
+      bbuf[i] = c & 0xff;
+      bbuf_avail -= 1;
+    } else {
+      // UTF-8 encoding
+      if (c <= 0x7f) {
+        bbuf[i] = c;
+        bbuf_avail -= 1;
+      } else if (c <= 0x7ff) {
+        if (bbuf_avail < 2) break;
+        bbuf[i] = 0xc0 + (c >> 6);
+        bbuf[i+1] = 0x80 + (c & 0x3f);
+        bbuf_avail -= 2;
+      } else if (c <= 0xffff) {
+        if (bbuf_avail < 3) break;
+        bbuf[i] = 0xe0 + (c >> 12);
+        bbuf[i+1] = 0x80 + ((c >> 6) & 0x3f);
+        bbuf[i+2] = 0x80 + (c & 0x3f);
+        bbuf_avail -= 3;
+      } else {
+        if (bbuf_avail < 4) break;
+        bbuf[i] = 0xf0 + (c >> 18);
+        bbuf[i+1] = 0x80 + ((c >> 12) & 0x3f);
+        bbuf[i+2] = 0x80 + ((c >> 6) & 0x3f);
+        bbuf[i+3] = 0x80 + (c & 0x3f);
+        bbuf_avail -= 4;
+      }
+    }
     cbuf_avail--;
   }
 
@@ -3984,7 +4070,7 @@ def @os_port_decode_chars@(port_scm, want_scm, eof_scm):
   port_scm.@slots@[@PORT_BYTE_WHI@] = @host2scm@(bend - bbuf_avail);
   port_scm.@slots@[@PORT_WOPTIONS@] = @host2scm@(options);
 
-  return @host2scm@(0) // no error
+  return @host2scm@(0); // no error
 };
 
 ")
