@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-1.scm"
 
-;;; Copyright (c) 2011-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2024 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -2137,16 +2137,31 @@
 
 (define (univ-link-mods-and-flags inputs)
 
-  (define (m-and-f x)
-    (let ((info (caddr x)))
-      (list-ref info 3)))
+  (define (preload-flag flags)
+    (let ((x (assq 'preload flags)))
+      (and x (if (cdr x) 'preload 'nopreload))))
 
   (let ((rev-inputs (reverse inputs)))
     (let loop ((lst rev-inputs) (mods-and-flags '()))
       (if (pair? lst)
-          (let ((info (caddr (car lst))))
+          (let* ((input (car lst))
+                 (flags (cadr input))
+                 (info (caddr input))
+                 (pf (preload-flag flags)))
             (loop (cdr lst)
-                  (append (list-ref info 3) mods-and-flags)))
+                  (append
+                   (map (lambda (x)
+                          (let ((name (car x))
+                                (flags (cdr x)))
+                            (cons name
+                                  (if pf
+                                      (cons (cons 'preload
+                                                  (eq? pf 'preload))
+                                            (remq (assq 'preload flags)
+                                                  flags))
+                                      flags))))
+                        (list-ref info 3))
+                   mods-and-flags)))
           mods-and-flags))))
 
 (define (univ-link-features-used ctx inputs warnings?)
@@ -4346,6 +4361,7 @@
     ;; class modlinkinfo
     ;;(name      . d)
     (index     . a)
+    (preload   . b)
 
     ;; class symbol and keyword
     (hname     . a)

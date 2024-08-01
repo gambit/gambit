@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-2.scm"
 
-;;; Copyright (c) 2011-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2024 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -1492,7 +1492,8 @@
     #f ;; extends
     '() ;; class-fields
     (list (univ-field 'name 'str #f '(public)) ;; instance-fields
-          (univ-field 'index 'int #f '(public)))))
+          (univ-field 'index 'int #f '(public))
+          (univ-field 'preload 'int #f '(public)))))
 
   (univ-define-rtlib-feature 'module_map
    (univ-rtlib-feature-field-priv '(dict str modlinkinfo)
@@ -1610,6 +1611,8 @@
                     'scmobj
                     old
                     (^array-index (^rts-field-use-priv 'module_table) index))
+
+                   (^vector-set! module_descr (^int 3) (^field 'preload info))
 
                    (^assign (^array-index (^rts-field-use-priv 'module_table)
                                           index)
@@ -6247,11 +6250,12 @@ EOF
      'modlinkinfo
      (map-index
       (lambda (x i)
-        (let ((name (car x)))
+        (let ((name (car x))
+              (nopreload (member '(preload . #f) (cdr x))))
           (univ-glo-use ctx
                         (string->symbol name)
                         'rd)
-          (^new 'modlinkinfo (^str name) (^int i))))
+          (^new 'modlinkinfo (^str name) (^int i) (^int (if nopreload 0 1)))))
       mods-and-flags)))))
 
 (define (univ-rtlib-defs ctx init)
