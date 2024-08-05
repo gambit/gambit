@@ -2,7 +2,7 @@
 
 ;;; File: "_io.scm"
 
-;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -4873,14 +4873,14 @@
       (##output-port-width port))))
 
 (define-prim (##input-port-max-char-code port)
-  (if (macro-byte-port? port)
+  (if (macro-byte-input-port? port)
       (##options->max-char-code (macro-port-roptions port))
       (##max-char-code)))
 
 (define-prim (##output-port-max-char-code port)
-  (if (macro-byte-port? port)
-      (##options->max-char-code (macro-port-woptions port)))
-      (##max-char-code))
+  (if (macro-byte-output-port? port)
+      (##options->max-char-code (macro-port-woptions port))
+      (##max-char-code)))
 
 (define-prim (##options->max-char-code options)
   (let ((e
