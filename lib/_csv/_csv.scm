@@ -180,12 +180,12 @@
             (list->vector rows))))))
 
 (define-procedure (read-file-csv
-                   (path        string)
+                   path-or-settings
                    (separator   char #\,)
                    (permissive? boolean #f)
                    (as-list?    boolean #f))
   (let* ((port
-          (open-input-file path))
+          (open-input-file path-or-settings))
          (result
           (read-csv port
                     separator
@@ -311,11 +311,11 @@
                 (err))))))
 
 (define-procedure (write-file-csv
-                   (path      string)
+                   path-or-settings
                    (obj       object)
                    (separator char #\,))
   (let* ((port
-          (open-output-file path))
+          (open-output-file path-or-settings))
          (result
           (write-csv obj
                      port
@@ -332,3 +332,5 @@
                port
                separator)
     (get-output-string port)))
+
+;;;============================================================================
