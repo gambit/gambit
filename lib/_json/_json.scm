@@ -25,55 +25,407 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-procedure (object->json-string
-                   (obj object))
-  (let ((port (open-output-string)))
-    (write-json obj port)
-    (get-output-string port)))
+(define-procedure (read-json
+                   (port character-input-port (macro-current-input-port))
+                   (permissive? boolean #f))
+
+  (define initial-buffer-size 64)
+
+  (define (err)
+    (error "json syntax error"))
+
+  (let ((buffer (make-string initial-buffer-size)))
+
+    (define (accumulate-char pos c)
+      (if (fx>= pos (string-length buffer))
+          (let ((new-buffer (make-string (fx* 2 pos))))
+            (substring-move! buffer 0 pos new-buffer 0)
+            (set! buffer new-buffer)))
+      (string-set! buffer pos c)
+      (fx+ pos 1))
+
+    (define (read-array)
+      ;; we know the lookahead character is #\[
+      (read-char port) ;; skip #\[
+      (let ((c2 (peek-next-non-whitespace port permissive?)))
+
+        (define (read-elements n)
+          (let ((c3 (peek-next-non-whitespace port permissive?)))
+            (cond ((char=? c3 #\])
+                   (read-char port) ;; skip #\]
+                   (make-vector n))
+                  ((char=? c3 #\,)
+                   (read-char port) ;; skip #\,
+                   (let* ((next (read-value))
+                          (vect (read-elements (fx+ n 1))))
+                     (vector-set! vect n next)
+                     vect))
+                  (else
+                   (err)))))
+
+        (if (char=? c2 #\])
+            (begin
+              (read-char port) ;; skip #\]
+              '#())
+            (let* ((first (read-value-starting-with-non-whitespace c2))
+                   (vect (read-elements 1)))
+              (vector-set! vect 0 first)
+              vect))))
+
+    (define (read-object)
+      ;; we know the lookahead character is #\{
+      (read-char port) ;; skip #\{
+      (let* ((obj (make-table))
+             (c (peek-next-non-whitespace port permissive?)))
+        (if (char=? c #\})
+            (begin
+              (read-char port) ;; skip #\}
+              obj)
+            (let loop ((c c))
+              (if (char=? c #\")
+                  (let* ((key (string->keyword (read-string)))
+                         (c2 (peek-next-non-whitespace port permissive?)))
+                    (if (char=? c2 #\:)
+                        (begin
+                          (read-char port) ;; skip #\:
+                          (let ((val (read-value)))
+                            (table-set! obj key val)
+                            (let ((c3 (peek-next-non-whitespace port permissive?)))
+                              (cond ((char=? c3 #\})
+                                     (read-char port) ;; skip #\}
+                                     obj)
+                                    ((char=? c3 #\,)
+                                     (read-char port) ;; skip #\,
+                                     (loop (peek-next-non-whitespace port permissive?)))
+                                    (else
+                                     (err))))))
+                        (err)))
+                  (err))))))
+
+    (define (read-string)
+      ;; we know the lookahead character is #\"
+      (read-char port) ;; skip #\"
+      (let loop ((pos 0))
+
+        (define (add-char pos c)
+          (loop (accumulate-char pos c)))
+
+        (let ((c (read-char port)))
+          (cond
+           ((not (char? c))
+            (err))
+           ((char=? c #\")
+            (substring buffer 0 pos))
+           ((char=? c #\\)
+            (let ((c2 (read-char port)))
+              (cond
+               ((not (char? c2))
+                (err))
+               ((char=? c2 #\\)
+                (add-char pos #\\))
+               ((char=? c2 #\")
+                (add-char pos #\"))
+               ((char=? c2 #\b)
+                (add-char pos #\backspace))
+               ((char=? c2 #\t)
+                (add-char pos #\tab))
+               ((char=? c2 #\n)
+                (add-char pos #\newline))
+               ((char=? c2 #\f)
+                (add-char pos #\page))
+               ((char=? c2 #\r)
+                (add-char pos #\return))
+               ((char=? c2 #\/)
+                (add-char pos #\/))
+               ((char=? c2 #\u)
+                (let accum-hex1 ((pos pos)
+                                 (i 0))
+                  (if (fx< i 4)
+                      (let ((c3 (read-char port)))
+                        (if (char? c3)
+                            (accum-hex1
+                             (accumulate-char pos c3)
+                             (fx+ i 1))
+                            (err)))
+                      (let ((n1
+                             (string->number
+                              (substring buffer
+                                         (fx- pos 4)
+                                         pos)
+                              16)))
+                        (cond
+                         ((not n1)
+                          (err))
+                         ((and (fx>= n1 #xd800)
+                               (fx<= n1 #xdbff))
+                          (if (and (eqv? (read-char port) #\\)
+                                   (eqv? (read-char port) #\u))
+                              (let accum-hex2 ((pos (fx- pos 4))
+                                               (i 0))
+                                (if (fx< i 4)
+                                    (let ((c4 (read-char port)))
+                                      (if (char? c4)
+                                          (accum-hex2
+                                           (accumulate-char pos c4)
+                                           (fx+ i 1))
+                                          (err)))
+                                    (let ((n2
+                                           (string->number
+                                            (substring buffer
+                                                       (fx- pos 4)
+                                                       pos)
+                                            16)))
+                                      (cond
+                                       ((not n2)
+                                        (err))
+                                       ((and (fx>= n2 #xdc00)
+                                             (fx<= n2 #xdfff))
+                                        (add-char
+                                         (fx- pos 4)
+                                         (integer->char
+                                          (fx+
+                                           #x10000
+                                           (fx* 1024 (fxand n1 #x3ff))
+                                           (fxand n2 #x3ff)))))
+                                       (else
+                                        (err))))))
+                              (err)))
+                         ((and (fx>= n1 #xdc00)
+                               (fx<= n1 #xdfff))
+                          (err))
+                         (else
+                          (add-char
+                           (fx- pos 4)
+                           (integer->char n1))))))))
+               (else
+                (err)))))
+           ((and (char<? c #\space)
+                 (not permissive?))
+            (err))
+           (else
+            (add-char pos c))))))
+
+    (define (read-number pos)
+
+      (define (read-end pos syntax-ok?)
+        (if syntax-ok?
+            (string->number (substring buffer 0 pos))
+            (err)))
+
+      (define (read-exponent-digits pos)
+        (let loop ((pos pos) (digits? #f))
+          (let ((c (peek-char port)))
+            (if (char? c)
+                (if (and (char>=? c #\0) (char<=? c #\9))
+                    (begin
+                      (read-char port) ;; skip digit
+                      (loop (accumulate-char pos c) #t))
+                    (read-end pos digits?))
+                (read-end pos digits?)))))
+
+      (define (read-exponent pos c)
+        (if (or (eqv? #\e c) (eqv? #\E c))
+            (begin
+              (read-char port) ;; skip #\e or #\E
+              (let ((pos (accumulate-char pos c)) (c2 (peek-char port)))
+                (if (or (eqv? #\+ c2) (eqv? #\- c2))
+                    (begin
+                      (read-char port) ;; skip #\+ or #\-
+                      (read-exponent-digits (accumulate-char pos c2)))
+                    (read-exponent-digits pos))))
+            (read-end pos #t)))
+
+      (define (read-fraction pos c)
+        (if (eqv? #\. c)
+            (begin
+              (read-char port) ;; skip #\.
+              (let loop ((pos (accumulate-char pos c)) (decimals? #f))
+                (let ((c2 (peek-char port)))
+                  (if (and (char? c2) (char>=? c2 #\0) (char<=? c2 #\9))
+                      (begin
+                        (read-char port) ;; skip digit
+                        (loop (accumulate-char pos c2) #t))
+                      (if decimals?
+                          (read-exponent pos c2)
+                          (err))))))
+            (read-exponent pos c)))
+
+      (if (char=? (string-ref buffer (fx- pos 1)) #\0)
+          (read-fraction pos (peek-char port))
+          (let loop ((pos pos))
+            (let ((c (peek-char port)))
+              (if (and (char? c) (char>=? c #\0) (char<=? c #\9))
+                  (begin
+                    (read-char port) ;; skip digit
+                    (loop (accumulate-char pos c)))
+                  (read-fraction pos c))))))
+
+    (define (read-value)
+      (read-value-starting-with-non-whitespace
+       (peek-next-non-whitespace port permissive?)))
+
+    (define (read-word word value)
+      (let loop ((i 0))
+        (if (fx< i (string-length word))
+            (if (eqv? (peek-char port) (string-ref word i))
+                (begin
+                  (read-char port) ;; skip matched char
+                  (loop (fx+ i 1)))
+                (err))
+            value)))
+
+    (define (read-value-starting-with-non-whitespace c)
+
+      (cond ((and (char>=? c #\0) (char<=? c #\9))
+             (read-char port) ;; skip digit
+             (read-number (accumulate-char 0 c)))
+
+            ((char=? c #\-)
+             (read-char port) ;; skip #\-
+             (let ((c2 (peek-char port)))
+               (if (and (char? c2) (char>=? c2 #\0) (char<=? c2 #\9))
+                   (begin
+                     (read-char port) ;; skip digit
+                     (read-number (accumulate-char (accumulate-char 0 c) c2)))
+                   (err))))
+
+            ((char=? c #\[)
+             (read-array))
+
+            ((char=? c #\{)
+             (read-object))
+
+            ((char=? c #\")
+             (read-string))
+
+            ((char=? c #\f)
+             (read-word "false" #f))
+
+            ((char=? c #\t)
+             (read-word "true" #t))
+
+            ((char=? c #\n)
+             (read-word "null" (void)))
+
+            (else
+             (err))))
+
+    (read-value)))
+
+(define (peek-next-non-whitespace port permissive?)
+  (let loop ()
+    (let ((c (peek-char port)))
+      (if (char? c)
+          (if (if permissive?
+                  (char<=? c #\space)
+                  (or (char=? c #\space)
+                      (char=? c #\newline)
+                      (char=? c #\return)
+                      (char=? c #\tab)))
+              (begin
+                (read-char port)
+                (loop))
+              c)
+          #\space))))
+
+(define-procedure (read-file-json
+                   path-or-settings
+                   (permissive? boolean #f))
+  (let* ((port
+          (open-input-file path-or-settings))
+         (result
+          (read-json port
+                     permissive?)))
+    (close-input-port port)
+    result))
+
+(define-procedure (json-string->object
+                   (str string)
+                   (permissive? boolean #f))
+
+  (define (err)
+    (error "json syntax error"))
+
+  (let* ((port
+          (open-input-string str))
+         (result
+          (read-json port
+                     permissive?)))
+    (if (char=? (peek-next-non-whitespace port permissive?) #\space)
+        result
+        (err))))
 
 (define-procedure (write-json
                    (obj object)
                    (port character-output-port (macro-current-output-port)))
 
+  (define (err obj)
+    (error "write-json can't handle this type" obj))
+
   (define (output str)
     (write-substring str 0 (string-length str) port))
 
   (define (output-quoted-string str)
+
+    (define max-unescaped-char-code
+      (##output-port-max-char-code port))
+
     (output "\"")
     (let loop ((i 0) (j 0))
 
       (define (output-chunk)
         (write-substring str i j port))
 
+      (define (output-hex-escape n)
+        (let ((hex (number->string (fx+ #x100000 n) 16)))
+          (string-set! hex 0 #\\)
+          (string-set! hex 1 #\u)
+          (output hex)))
+
       (if (fx< j (string-length str))
+
           (let ((c (string-ref str j)))
-            (cond ((char<? c #\space)
-                   (output-chunk)
-                   (let ((n (char->integer c)))
-                     (cond ((fx= 8 n)
-                            (output "\\b"))
-                           ((fx= 9 n)
-                            (output "\\t"))
-                           ((fx= 10 n)
-                            (output "\\n"))
-                           ((fx= 12 n)
-                            (output "\\f"))
-                           ((fx= 13 n)
-                            (output "\\r"))
-                           (else
-                            (let ((hex (number->string (fx+ #x100000 n) 16)))
-                              (string-set! hex 0 #\\)
-                              (string-set! hex 1 #\u)
-                              (output hex)))))
-                   (loop (fx+ 1 j) (fx+ 1 j)))
-                  ((or (char=? c #\\) (char=? c #\"))
-                   (output-chunk)
-                   (output "\\")
-                   (loop j (fx+ 1 j)))
-                  (else
-                   (loop i (fx+ 1 j)))))
-          (output-chunk)))
-    (output "\""))
+            (if (or (char=? c #\\) (char=? c #\"))
+
+                (begin
+                  (output-chunk)
+                  (output "\\")
+                  (loop j (fx+ 1 j)))
+
+                (let ((n (char->integer c)))
+                  (cond ((fx< n 32) ;; control character?
+                         (output-chunk)
+                         (cond ((fx= 8 n)
+                                (output "\\b"))
+                               ((fx= 9 n)
+                                (output "\\t"))
+                               ((fx= 10 n)
+                                (output "\\n"))
+                               ((fx= 12 n)
+                                (output "\\f"))
+                               ((fx= 13 n)
+                                (output "\\r"))
+                               (else
+                                (output-hex-escape n)))
+                         (loop (fx+ 1 j) (fx+ 1 j)))
+                        ((fx<= n max-unescaped-char-code)
+                         (loop i (fx+ 1 j)))
+                        (else
+                         (output-chunk)
+                         (if (fx<= n #xffff)
+                             (output-hex-escape n)
+                             (let ((x (fx- n #x10000)))
+                               (output-hex-escape
+                                (fx+ #xd800
+                                     (fxarithmetic-shift-right x 10)))
+                               (output-hex-escape
+                                (fx+ #xdc00
+                                     (fxand x #x3ff)))))
+                         (loop (fx+ 1 j) (fx+ 1 j)))))))
+
+          (begin
+            (output-chunk)
+            (output "\"")))))
 
   (define (w obj)
 
@@ -121,7 +473,29 @@
 
           ((table? obj)
            (output "{")
-           (let ((alist (table->list obj)))
+           (let ((alist
+                  (list-sort
+                   (lambda (x y)
+                     (let ((kx (car x))
+                           (ky (car y)))
+                       (cond ((string? kx)
+                              (if (string? ky)
+                                  (string<? kx
+                                            ky)
+                                  (err ky)))
+                             ((symbol? kx)
+                              (if (symbol? ky)
+                                  (string<? (symbol->string kx)
+                                            (symbol->string ky))
+                                  (err ky)))
+                             ((keyword? kx)
+                              (if (keyword? ky)
+                                  (string<? (keyword->string kx)
+                                            (keyword->string ky))
+                                  (err ky)))
+                             (else
+                              (err kx)))))
+                   (table->list obj))))
 
              (define (output-prop key-val)
                (w (car key-val))
@@ -162,11 +536,33 @@
           ((symbol? obj)
            (output-quoted-string (symbol->string obj)))
 
+          ((keyword? obj)
+           (output-quoted-string (keyword->string obj)))
+
           (else
-           (error "write-json can't handle this type" obj))))
+           (err obj))))
 
   (w obj))
 
+(define-procedure (write-file-json
+                   path-or-settings
+                   (obj object))
+  (let* ((port
+          (open-output-file path-or-settings))
+         (result
+          (write-json obj
+                      port)))
+    (close-output-port port)
+    result))
+
+(define-procedure (object->json-string
+                   (obj object))
+  (let ((port (open-output-string)))
+    (write-json obj port)
+    (get-output-string port)))
+
+;; deprecated, but probably faster than using a string port
+#;
 (define-procedure (json-string->object
                    (str string)
                    (permissive? boolean #f))
@@ -230,7 +626,7 @@
             obj)
           (let loop ((c c))
             (if (char=? c #\")
-                (let* ((key (read-string))
+                (let* ((key (string->keyword (read-string)))
                        (c2 (peek-next-non-whitespace)))
                   (if (char=? c2 #\:)
                       (begin

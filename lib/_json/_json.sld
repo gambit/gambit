@@ -14,10 +14,13 @@
 
   (export
 
-object->json-string
+read-json
+read-file-json
 json-string->object
 
 write-json
+write-file-json
+object->json-string
 
 )
 

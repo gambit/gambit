@@ -20,9 +20,9 @@
         #t
         #f
         '()
-        "çé\5\t\n"
+        "çé\5\t\n\x1f60a;"
         (vector 1 2)
-        (list->table '((a . "one") (b . 2)))))
+        (list->table '((a: . "one") (b: . 2)))))
 
 (define test-obj-readback
   (vector -1
@@ -35,23 +35,65 @@
           #t
           #f
           '#()
-          "çé\5\t\n"
+          "çé\5\t\n\x1f60a;"
           (vector 1 2)
-          (list->table '(("a" . "one") ("b" . 2)))))
+          (list->table '((a: . "one") (b: . 2)))))
 
-(test-equal
-  "[-1,0.01,-0.01,0,1e-9,null,null,true,false,[],\"çé\\u0005\\t\\n\",[1,2],{\"b\":2,\"a\":\"one\"}]"
-  (object->json-string test-obj))
+(define test-obj-json-string
+  "[-1,0.01,-0.01,0,1e-9,null,null,true,false,[],\"çé\\u0005\\t\\n\x1f60a;\",[1,2],{\"a\":\"one\",\"b\":2}]")
 
-(test-equal
-  "[-1,0.01,-0.01,0,1e-9,null,null,true,false,[],\"çé\\u0005\\t\\n\",[1,2],{\"b\":2,\"a\":\"one\"}]"
- (with-output-to-string
-   (lambda ()
-     (write-json test-obj))))
+(define test-obj-json-string-ascii
+  "[-1,0.01,-0.01,0,1e-9,null,null,true,false,[],\"\\u00e7\\u00e9\\u0005\\t\\n\\ud83d\\ude0a\",[1,2],{\"a\":\"one\",\"b\":2}]")
+
+;; test read-json
 
 (test-equal
   test-obj-readback
-  (json-string->object "[-1,0.01,-0.01,0,1e-9,null,null,true,false,[],\"çé\\u0005\\t\\n\",[1,2],{\"b\":2,\"a\":\"one\"}]"))
+  (read-json (open-input-string test-obj-json-string)))
+
+;; test read-file-json
+
+(write-file-string "/tmp/test1.json" test-obj-json-string)
+
+(test-equal
+  test-obj-readback
+  (read-file-json "/tmp/test1.json"))
+
+;; test json-string->object
+
+(test-equal
+  test-obj-readback
+  (json-string->object test-obj-json-string))
+
+;; test write-json
+
+(test-equal
+  test-obj-json-string
+  (with-output-to-string
+    (lambda ()
+      (write-json test-obj))))
+
+(test-equal
+  test-obj-json-string-ascii
+  (utf8->string
+   (with-output-to-u8vector
+    '(char-encoding: ASCII)
+    (lambda ()
+      (write-json test-obj)))))
+
+;; test write-file-json
+
+(write-file-json "/tmp/test2.json" test-obj)
+
+(test-equal
+  test-obj-json-string
+  (read-file-string "/tmp/test2.json"))
+
+;; test object->json-string
+
+(test-equal
+  test-obj-json-string
+  (object->json-string test-obj))
 
 ;; tests from https://seriot.ch/projects/parsing_json.html
 
@@ -108,7 +150,7 @@
 (test-equal '#(-inf.0) (json-string->object "[-123123e100000]"))
 
 (test-equal
- (list->table '(("dfg" . "fgh") ("asd" . "sdf")))
+ (list->table '((dfg: . "fgh") (asd: . "sdf")))
  (json-string->object "{\"asd\":\"sdf\", \"dfg\":\"fgh\"}"))
 
 (test-error (json-string->object "[\""))
@@ -177,7 +219,7 @@
 (test-error (json-string->object "{\"x\": true,"))
 
 (test-equal
- (list->table '(("a" . "b")))
+ (list->table '((a: . "b")))
  (json-string->object "{\"a\":\"b\",\"a\":\"b\"}"))
 
 (test-error (json-string->object "\"\"x"))
@@ -335,7 +377,7 @@
 (test-equal '#(0.) (json-string->object "[0e+1]"))
 
 (test-equal
- (list->table '(("a" . "b")))
+ (list->table '((a: . "b")))
  (json-string->object "{\n\"a\": \"b\"\n}"))
 
 (test-error (json-string->object "[1.2a-3]"))
@@ -416,7 +458,7 @@
 
 (test-error (json-string->object "{\"a\" \"b\"}"))
 
-(test-equal (list->table '(("a" . #()))) (json-string->object "{\"a\":[]}"))
+(test-equal (list->table '((a: . #()))) (json-string->object "{\"a\":[]}"))
 
 (test-equal '#("⁤") (json-string->object "[\"\\u2064\"]"))
 
@@ -459,17 +501,17 @@
 (test-error (json-string->object "[1eE2]"))
 
 (test-equal
- (list->table '(("min" . -1e28) ("max" . 1e28)))
+ (list->table '((min: . -1e28) (max: . 1e28)))
  (json-string->object "{ \"min\": -1.0e+28, \"max\": 1.0e+28 }"))
 
 (test-error (json-string->object "[+1]"))
 
 (test-equal
  (list->table
-  (list '("id" . "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
-        (cons "x"
+  (list '(id: . "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
+        (cons 'x:
               (vector (list->table
-                       '(("id"
+                       '((id:
                           .
                           "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")))))))
  (json-string->object
@@ -500,7 +542,7 @@
 (test-error (json-string->object "[2.e-3]"))
 
 (test-equal
- (list->table '(("title" . "Полтора Землекопа")))
+ (list->table '((title: . "Полтора Землекопа")))
  (json-string->object
   "{\"title\":\"\\u041f\\u043e\\u043b\\u0442\\u043e\\u0440\\u0430 \\u0417\\u0435\\u043c\\u043b\\u0435\\u043a\\u043e\\u043f\\u0430\" }"))
 
@@ -564,7 +606,7 @@
 
 (test-error (json-string->object "[1]]"))
 
-(test-equal (list->table '(("" . 0))) (json-string->object "{\"\":0}"))
+(test-equal (list->table '((||: . 0))) (json-string->object "{\"\":0}"))
 
 (test-equal '#("￿") (json-string->object "[\"￿\"]"))
 
@@ -575,7 +617,7 @@
 (test-error (json-string->object "[\"\\ud800\"]"))
 
 (test-equal
- (list->table '(("foo\x0;bar" . 42)))
+ (list->table '((|foo\x0;bar|: . 42)))
  (json-string->object "{\"foo\\u0000bar\": 42}"))
 
 (test-error (json-string->object "<.>"))
@@ -618,7 +660,7 @@
 (test-error (json-string->object "[1 000.0]"))
 
 (test-equal
- (list->table '(("a" . "c")))
+ (list->table '((a: . "c")))
  (json-string->object "{\"a\":\"b\",\"a\":\"c\"}"))
 
 (test-error (json-string->object "[\"\\u00A\"]"))
@@ -702,7 +744,7 @@
 (test-error (json-string->object "{\"x\"::\"b\"}"))
 
 (test-equal
- (list->table '(("asd" . "sdf")))
+ (list->table '((asd: . "sdf")))
  (json-string->object "{\"asd\":\"sdf\"}"))
 
 (test-error (json-string->object "[\"\\uDFAA\"]"))
