@@ -5645,7 +5645,6 @@ end-of-code
     module))
 
 (define-prim (##register-module-descrs module-descrs)
-  ;; returns the reversed list of preload modules
   (let loop1 ((i 0)
               (rev-preload-module-refs '()))
     (if (##fx< i (##vector-length module-descrs))
@@ -5664,7 +5663,7 @@ end-of-code
                      rev-preload-module-refs
                      (##cons (##vector-last module-refs)
                              rev-preload-module-refs))))
-        rev-preload-module-refs)))
+        (##reverse! rev-preload-module-refs))))
 
 (implement-library-type-module-not-found-exception)
 
@@ -5693,11 +5692,11 @@ end-of-code
 (define-prim (##get-module-set! x)
   (set! ##get-module x))
 
-(define-prim (##collect-modules rev-module-refs
+(define-prim (##collect-modules module-refs
                                 #!optional
                                 (level 999999)) ;; init up to highest level
 
-  (define visited '()) ;; modules visited to correctly handle circular deps
+  (define visited '()) ;; modules visited to correctly handle shared deps
 
   (define (visited! module-ref)
     (set! visited (##cons module-ref visited)))
@@ -5709,46 +5708,43 @@ end-of-code
               (loop (##cdr lst)))
           #f)))
 
-  (define (get-modules rev-module-refs)
+  (define (visit module-ref rev-collected-modules)
+    (if (visited? module-ref)
+        rev-collected-modules
+        (let ((module (##get-module module-ref)))
+          (visited! module-ref)
+          (if (and module
+                   (##fx< (macro-module-stage module) level))
+              (let ((dependencies (macro-module-descr-demand-modules
+                                    (macro-module-module-descr module))))
+                (let loop ((i 0)
+                           (rev-collected-modules rev-collected-modules))
+                  (if (##fx< i (##vector-length dependencies))
+                      (loop (##fx+ i 1)
+                            (visit (##vector-ref dependencies i)
+                                   rev-collected-modules))
+                      (##cons module rev-collected-modules))))))))
 
-    (define (add-module module-ref rev-modules)
-      (if (visited? module-ref)
-          rev-modules
-          (let ((module (##get-module module-ref)))
-            (visited! module-ref)
-            (if (and module
-                     (##fx< (macro-module-stage module) level))
-                (##cons module rev-modules)
-                rev-modules))))
-
-    (if (##vector? rev-module-refs)
+  (define (collect module-refs rev-collected-modules)
+    (if (##vector? module-refs)
 
         (let loop ((i 0)
-                   (rev-modules '()))
-          (if (##fx< i (##vector-length rev-module-refs))
+                   (rev-collected-modules rev-collected-modules))
+          (if (##fx< i (##vector-length module-refs))
               (loop (##fx+ i 1)
-                    (add-module (##vector-ref rev-module-refs i) rev-modules))
-              (##reverse! rev-modules)))
+                    (visit (##vector-ref module-refs i)
+                           rev-collected-modules))
+              (##reverse! rev-collected-modules)))
 
-        (let loop ((lst rev-module-refs)
-                   (rev-modules '()))
-          (if (##pair? lst)
-              (loop (##cdr lst)
-                    (add-module (##car lst) rev-modules))
-              (##reverse! rev-modules)))))
+        (let loop ((probe module-refs)
+                   (rev-collected-modules rev-collected-modules))
+          (if (##pair? probe)
+              (loop (##cdr probe)
+                    (visit (##car probe)
+                           rev-collected-modules))
+              (##reverse! rev-collected-modules)))))
 
-  (define (collect rev-module-refs collected-modules)
-    (let loop ((modules (get-modules rev-module-refs))
-               (collected-modules collected-modules))
-      (if (##pair? modules)
-          (loop (##cdr modules)
-                (let ((module (##car modules)))
-                  (collect (macro-module-descr-demand-modules
-                            (macro-module-module-descr module))
-                           (##cons module collected-modules))))
-          collected-modules)))
-
- (collect rev-module-refs '()))
+  (collect module-refs '()))
 
 (define-prim (##init-modules modules
                              #!optional
@@ -5780,11 +5776,10 @@ end-of-code
                     (loop2 (##cdr modules))))
               (loop1 (##fx+ stage 1)))))))
 
-(define-prim (##load-modules rev-module-refs
+(define-prim (##load-modules module-refs
                              #!optional
                              (level (macro-module-last-init-stage)))
-  ;; rev-module-refs is the list of module-refs in reverse loading order
-  (let ((modules (##collect-modules rev-module-refs level)))
+  (let ((modules (##collect-modules module-refs level)))
     (##init-modules modules level)))
 
 (define-prim (##load-module module-ref
@@ -5801,12 +5796,12 @@ end-of-code
           (##vector-last
            (macro-module-descr-supply-modules this-module-descr))))
     (##init-mod this-module-descr) ;; first stage init of this module
-    (let* ((rev-preload-module-refs (##register-module-descrs module-descrs))
+    (let* ((preload-module-refs (##register-module-descrs module-descrs))
            (this-module (##lookup-registered-module this-module-ref)))
       (if this-module
           (begin
             (macro-module-stage-set! this-module 2) ;; this module init done
-            (##load-modules rev-preload-module-refs)
+            (##load-modules preload-module-refs)
             (##load-module ##vm-main-module-ref)
             (##main))))))
 
