@@ -5571,7 +5571,9 @@
                     (##string first)
                     (##string))
                 (start))
-            first))
+            (if separator
+                first
+                (##string)))) ;; empty string on end-of-file when separator=#f
       (##string)))
 
 (define-prim (read-line

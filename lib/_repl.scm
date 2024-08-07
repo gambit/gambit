@@ -2930,8 +2930,7 @@
                       (if (##port? port)
                           (let ((history (##read-line port #f #f ##max-fixnum)))
                             (##close-port port)
-                            (if (##string? history)
-                                (##tty-history-set! input-port history)))))
+                            (##tty-history-set! input-port history))))
                     open-input-file
                     (##cons eol-encoding: (##cons 'cr-lf path-or-settings)))
 
