@@ -56,13 +56,13 @@
 
 ;; structure that represents environments:
 
-(define (make-default-global-environment) 
+(define (##make-default-global-environment) 
   (env-frame #f '()))
 
 (define make-global-environment #f)
 (set! make-global-environment
   (lambda ()
-    (make-default-global-environment)))
+    (##make-default-global-environment)))
 
 (define (env-frame env vars #!optional (syntax-proc-ctx identity))
   (vector
@@ -236,7 +236,8 @@
   (define (search* env name full?)
 
     (define (search-macros macros)
-      (if (pair? macros)
+      (search-vars (env-vars-ref env))
+      #;(if (pair? macros)
           (let ((m (car macros)))
             (if (eq? (car m) name)
                 (proc env name (cdr m))

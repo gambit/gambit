@@ -55,6 +55,7 @@
   (define (find-all-matching-bindings id)
     (let* ((id-identifier (##syntax-source-code id))
            (id-scopes     (##syntax-source-scopes id)))
+
       (##table-foldl 
         (lambda (base next) 
           (if next

@@ -321,9 +321,26 @@
              (clauses (cdr clauses)))
          (cons
            (match-source clause ()
-             ((id val)
-              (syntax-source-code-set clause
-                `(,id ,(compile val cte)))))
+             ((id val . vals)
+              (let ((val (if (null? vals)
+                             val
+                             (##syntax-source-code-set stx
+                               `(,(##make-core-syntax-source '##begin #f)
+                                 ,val
+                                 ,@vals)))))
+                (let* ((compiled-val (compile val cte))
+                       (compiled-val 
+                         (if (null? vals)
+                             compiled-val
+                             (##syntax-source-code-update 
+                               compiled-val 
+                               cdr))))
+                  (syntax-source-code-set clause
+                    `(,id ,compiled-val)))))
+             (_
+              (##raise-expression-parsing-exception
+                'ill-formed-selector-list
+                stx)))
            (compile-clauses clauses cte))))
       ((null? clauses)
        clauses)

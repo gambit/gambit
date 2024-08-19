@@ -89,7 +89,7 @@
 
 ;; System procedure classes.
 
-(macro-define-syntax define-prim
+(##define-syntax define-prim
   (lambda (stx)
     (syntax-case stx ()
 
@@ -122,7 +122,7 @@
       ((_ id val)
        #'(define-prim-no-inline id val)))))
 
-(macro-define-syntax define-prim-no-inline
+(##define-syntax define-prim-no-inline
   (lambda (stx)
     (syntax-case stx ()
 
@@ -786,7 +786,7 @@
 
 ;;;----------------------------------------------------------------------------
 
-(macro-define-syntax macro-target
+(##define-syntax macro-target
   (lambda (stx)
     (syntax-case stx ()
       ((_)
@@ -801,7 +801,7 @@
                 (if t (cadr t) 'C))))
          (datum->syntax stx `',target))))))
 
-(macro-define-syntax macro-case-target
+(##define-syntax macro-case-target
   (lambda (stx)
     (syntax-case stx (else)
       ((_ . clauses)
@@ -825,7 +825,7 @@
                       (loop (cdr clauses)))))
                #'(begin))))))))
 
-(macro-define-syntax macro-if2-compilation-option
+(##define-syntax macro-if2-compilation-option
   (lambda (stx)
     (syntax-case stx ()
       ((_ option have-option dont-have-option)
@@ -840,7 +840,7 @@
 
            #'dont-have-option)))))
 
-(macro-define-syntax macro-if-compilation-option
+(##define-syntax macro-if-compilation-option
   (lambda (stx)
     (syntax-case stx ()
       ((_ option have-option)
@@ -848,7 +848,7 @@
       ((_ option have-option dont-have-option)
        #'(macro-if2-compilation-option option have-option dont-have-option)))))
 
-(macro-define-syntax macro-if-not-compilation-option
+(##define-syntax macro-if-not-compilation-option
   (lambda (stx)
     (syntax-case stx ()
       ((_ option dont-have-option)
@@ -856,7 +856,7 @@
       ((_ option dont-have-option have-option)
        #'(macro-if2-compilation-option option have-option dont-have-option)))))
 
-(macro-define-syntax macro-if-auto-forcing
+(##define-syntax macro-if-auto-forcing
   (lambda (stx)
     (syntax-case stx ()
       ((_ forcing noforcing)
@@ -866,7 +866,7 @@
           (else
            noforcing))))))
 
-(macro-define-syntax macro-force-vars
+(##define-syntax macro-force-vars
   (lambda (stx)
     (syntax-case stx ()
       ((_ vars expr)
@@ -882,7 +882,7 @@
              (else
               expr))))))))
 
-(macro-define-syntax macro-auto-force
+(##define-syntax macro-auto-force
   (lambda (stx)
     (syntax-case stx ()
       ((_ expr)
@@ -892,7 +892,7 @@
            (else
             expr))))))
 
-(macro-define-syntax macro-if-checks
+(##define-syntax macro-if-checks
   (lambda (stx)
     (syntax-case stx ()
       ((_ checks nochecks)
@@ -902,13 +902,13 @@
           (else
            nochecks))))))
 
-(macro-define-syntax macro-no-force
+(##define-syntax macro-no-force
   (lambda (stx)
     (syntax-case stx ()
       ((_ vars expr)
        #'expr))))
 
-(macro-define-syntax macro-no-check
+(##define-syntax macro-no-check
   (lambda (stx)
     (syntax-case stx ()
       ((_ var arg-id form expr)
@@ -1459,7 +1459,7 @@
 
 ;; u8vector and f64vector are always enabled
 
-(macro-define-syntax macro-if-s8vector
+(##define-syntax macro-if-s8vector
   (lambda (stx)
     (syntax-case stx ()
       ((_ yes)
@@ -1471,7 +1471,7 @@
           (else
            no))))))
 
-(macro-define-syntax macro-if-u16vector
+(##define-syntax macro-if-u16vector
   (lambda (stx)
     (syntax-case stx ()
       ((_ yes)
@@ -1483,7 +1483,7 @@
           (else
            no))))))
 
-(macro-define-syntax macro-if-s16vector
+(##define-syntax macro-if-s16vector
   (lambda (stx)
     (syntax-case stx ()
       ((_ yes)
@@ -1495,7 +1495,7 @@
           (else
            no))))))
 
-(macro-define-syntax macro-if-u32vector
+(##define-syntax macro-if-u32vector
   (lambda (stx)
     (syntax-case stx ()
       ((_ yes)
@@ -1507,7 +1507,7 @@
           (else
            no))))))
 
-(macro-define-syntax macro-if-s32vector
+(##define-syntax macro-if-s32vector
   (lambda (stx)
     (syntax-case stx ()
       ((_ yes)
@@ -1519,7 +1519,7 @@
           (else
            no))))))
 
-(macro-define-syntax macro-if-u64vector
+(##define-syntax macro-if-u64vector
   (lambda (stx)
     (syntax-case stx ()
       ((_ yes)
@@ -1531,7 +1531,7 @@
           (else
            no))))))
 
-(macro-define-syntax macro-if-s64vector
+(##define-syntax macro-if-s64vector
   (lambda (stx)
     (syntax-case stx ()
       ((_ yes)
@@ -1543,7 +1543,7 @@
           (else
            no))))))
 
-(macro-define-syntax macro-if-f32vector
+(##define-syntax macro-if-f32vector
   (lambda (stx)
     (syntax-case stx ()
       ((_ yes)

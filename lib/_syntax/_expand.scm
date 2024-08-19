@@ -1065,9 +1065,19 @@
              (clauses (cdr clauses)))
          (cons
            (match-source clause ()
-             ((id val)
-              (##syntax-source-code-set clause
-                `(,id ,(expand val cte))))
+             ((id val . vals)
+              (let ((val (if (null? vals)
+                             val
+                             (##syntax-source-code-set stx
+                               `(,(##make-core-syntax-source '##begin #f)
+                                 , val
+                                 ,@vals)))))
+                (let* ((expanded-val (expand val cte))
+                       (expanded-val (if (null? vals)
+                                         expanded-val
+                                         (##syntax-source-code-update expanded-val cdr))))
+                  (##syntax-source-code-set clause
+                    `(,id ,expanded-val)))))
              (_
               (##raise-expression-parsing-exception
                 'ill-formed-selector-list
