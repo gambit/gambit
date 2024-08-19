@@ -21,7 +21,11 @@
 
     (define (macro-transformer->syntax-transformer trans)
       (if (##macro-descr-def-syntax? trans)
-          trans
+          (##vector-set trans 2
+             (lambda (s)
+               (##datum->core-syntax
+                ((##vector-ref trans 2)
+                 s))))
           (##vector-set trans 2
             (lambda (s)
               (##datum->core-syntax
