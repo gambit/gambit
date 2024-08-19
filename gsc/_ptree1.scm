@@ -660,7 +660,7 @@
     (if (null? exprs)
       (cont env lst)
       (let ((source (car exprs)))
-        (cond ((macro-expr? source env)
+        (cond #;((macro-expr? source env)
                (parse-exprs
                  (cons (macro-expand source env) (cdr exprs))
                  env
@@ -694,7 +694,7 @@
                            lst)
                      cont))))
 
-              ((or (**define-macro-expr? source env)
+              #;((or (**define-macro-expr? source env)
                    (**define-syntax-expr? source env))
 
                (if *ptree-port*
@@ -878,10 +878,9 @@
                  env
                  (cons (pt source env 'true) lst)
                  cont))))))
-
   (let ((program
            ;;; Hygiene support
-          (##syntax-expand (make-global-environment-syntax) program)))
+          (##syntax-expand env program)))
 
     (if *ptree-port*
       (begin
@@ -949,7 +948,7 @@
                      args))))
 
 (define (pt source env use)
-  (cond ((macro-expr? source env)        (pt (macro-expand source env) env use))
+  (cond #;((macro-expr? source env)        (pt (macro-expand source env) env use))
         ((self-eval-expr? source env)    (pt-self-eval source env use))
         ((**quote-expr? source env)      (pt-quote source env use))
         ((**quasiquote-expr? source env) (pt-quasiquote source env use))
@@ -973,7 +972,7 @@
         ((**future-expr? source env)     (pt-future source env use))
         ((**define-expr? source env)
          (pt-syntax-error source "Ill-placed 'define'"))
-        ((**define-macro-expr? source env)
+        #;((**define-macro-expr? source env)
          (pt-syntax-error source "Ill-placed 'define-macro'"))
         ((**define-syntax-expr? source env)
          (pt-syntax-error source "Ill-placed 'define-syntax'"))
@@ -1501,7 +1500,7 @@
                          (cdr exprs)
                          env
                          cont))
-          ((macro-expr? (car exprs) env)
+          #;((macro-expr? (car exprs) env)
            (extract-defs defs
                          non-defs
                          (cons (macro-expand (car exprs) env)
@@ -1527,7 +1526,7 @@
                            (cdr exprs)
                            env
                            cont)))
-          ((or (**define-macro-expr? (car exprs) env)
+          #;((or (**define-macro-expr? (car exprs) env)
                (**define-syntax-expr? (car exprs) env))
            (extract-defs defs
                          non-defs
@@ -2156,7 +2155,7 @@
 (define (var-expr? source env)
   (let ((code (source-code source)))
     (and (symbol-object? code)
-         (not-macro source env code))))
+         #;(not-macro source env code))))
 
 (define (not-macro source env name)
   (if (env-lookup-macro env name)

@@ -1244,12 +1244,12 @@
                (generate-definitions)))))
 
   (let ((expansion
-         (datum->core-syntax
-           (##define-type-parser
-             form-name
-             super-type-static
-             args
-             generate))))
+          (##datum->core-syntax
+            (##define-type-parser
+              form-name
+              super-type-static
+              args
+              generate))))
     (if ##define-type-expansion-show?
         (pp expansion ##stdout-port))
     expansion))
@@ -1265,377 +1265,377 @@
                args
                cont)
 
-  (define (err)
-    (##ill-formed-special-form form-name args))
+    (define (err)
+      (##ill-formed-special-form form-name args))
 
-  (define (parse-attributes name rest)
-    (let loop1 ((lst rest)
-                (field-index (##type-field-count super-type-static))
-                (options 0)
-                (flags '())
-                (rev-fields '()))
+    (define (parse-attributes name rest)
+      (let loop1 ((lst rest)
+                  (field-index (##type-field-count super-type-static))
+                  (options 0)
+                  (flags '())
+                  (rev-fields '()))
 
-      (define allowed-field-options
-        '((printable:     . (-2 . 0))
-          (unprintable:   . (-2 . 1))
-          (read-write:    . (-3 . 0))
-          (read-only:     . (-3 . 2))
-          (equality-test: . (-5 . 0))
-          (equality-skip: . (-5 . 4))
-          (functional-setter:    . (-17 . 0))
-          (no-functional-setter: . (-17 . 16))))
+        (define allowed-field-options
+          '((printable:     . (-2 . 0))
+            (unprintable:   . (-2 . 1))
+            (read-write:    . (-3 . 0))
+            (read-only:     . (-3 . 2))
+            (equality-test: . (-5 . 0))
+            (equality-skip: . (-5 . 4))
+            (functional-setter:    . (-17 . 0))
+            (no-functional-setter: . (-17 . 16))))
 
-      (define (update-options options opt)
-        (let* ((x (##cdr opt))
-               (m (##car x))
-               (b (##cdr x)))
-          (##fxior (##fxand options m) b)))
+        (define (update-options options opt)
+          (let* ((x (##cdr opt))
+                 (m (##car x))
+                 (b (##cdr x)))
+            (##fxior (##fxand options m) b)))
 
-      (define (parse-field-attributes
-               field-name
-               getter
-               setter
-               fsetter
-               local-options
-               rest)
-        (let loop2 ((lst2 rest)
-                    (local-options local-options)
-                    (attributes '()))
-          (cond ((##pair? lst2)
-                 (let ((attribute (##car lst2)))
-                   (cond ((##assq attribute
-                                  '((init: . (-9 . 8))))
-                          =>
-                          (lambda (opt)
-                            (let ((rest (##cdr lst2)))
-                              (if (and (##pair? rest)
-                                       (##not (##assq attribute attributes)))
-                                  (let ((val (##car rest)))
-                                    (if (##constant-expression? val)
-                                        (loop2 (##cdr rest)
-                                               (update-options local-options opt)
-                                               (##cons (##cons attribute val)
-                                                       attributes))
-                                        (err)))
-                                  (err)))))
-                         ((##assq attribute
-                                  allowed-field-options)
-                          =>
-                          (lambda (opt)
-                            (loop2 (##cdr lst2)
-                                   (update-options local-options opt)
-                                   attributes)))
-                         (else
-                          (err)))))
-                ((##null? lst2)
-                 (let ((read-only?
-                        (##not
-                         (##fx= (##fxand local-options 2)
-                                0)))
-                       (functional-setter?
-                        (##fx= (##fxand local-options 16)
-                               0)))
-                   (if (or (and (##symbol? setter)
-                                read-only?)
-                           (and (##symbol? fsetter)
-                                (##not functional-setter?)))
-                       (err)
-                       (loop1 (##cdr lst)
-                              (##fx+ field-index 1)
-                              options
-                              flags
-                              (##cons (##cons field-name
-                                              (##vector
+        (define (parse-field-attributes
+                 field-name
+                 getter
+                 setter
+                 fsetter
+                 local-options
+                 rest)
+          (let loop2 ((lst2 rest)
+                      (local-options local-options)
+                      (attributes '()))
+            (cond ((##pair? lst2)
+                   (let ((attribute (##car lst2)))
+                     (cond ((##assq attribute
+                                    '((init: . (-9 . 8))))
+                            =>
+                            (lambda (opt)
+                              (let ((rest (##cdr lst2)))
+                                (if (and (##pair? rest)
+                                         (##not (##assq attribute attributes)))
+                                    (let ((val (##car rest)))
+                                      (if (##constant-expression? val)
+                                          (loop2 (##cdr rest)
+                                                 (update-options local-options opt)
+                                                 (##cons (##cons attribute val)
+                                                         attributes))
+                                          (err)))
+                                    (err)))))
+                           ((##assq attribute
+                                    allowed-field-options)
+                            =>
+                            (lambda (opt)
+                              (loop2 (##cdr lst2)
+                                     (update-options local-options opt)
+                                     attributes)))
+                           (else
+                            (err)))))
+                  ((##null? lst2)
+                   (let ((read-only?
+                          (##not
+                           (##fx= (##fxand local-options 2)
+                                  0)))
+                         (functional-setter?
+                          (##fx= (##fxand local-options 16)
+                                 0)))
+                     (if (or (and (##symbol? setter)
+                                  read-only?)
+                             (and (##symbol? fsetter)
+                                  (##not functional-setter?)))
+                         (err)
+                         (loop1 (##cdr lst)
+                                (##fx+ field-index 1)
+                                options
+                                flags
+                                (##cons (##cons field-name
+                                                (##vector
+                                                 field-name
+                                                 (##fx+ field-index 1)
+                                                 getter
+                                                 (if read-only? #f setter)
+                                                 (if functional-setter? fsetter #f)
+                                                 local-options
+                                                 attributes))
+                                        rev-fields)))))
+                  (else
+                   (err)))))
+
+        (cond ((##pair? lst)
+               (let ((next (##car lst)))
+                 (cond ((##symbol? next)
+                        (if (##not (##assq next rev-fields))
+                            (parse-field-attributes
+                             next
+                             #t
+                             #t
+                             #t
+                             options
+                             '())
+                            (err)))
+                       ((##pair? next)
+                        (let* ((field-name (##car next))
+                               (rest (##cdr next)))
+                          (if (and (##symbol? field-name)
+                                   (##not (##assq field-name rev-fields)))
+                              (if (##pair? rest)
+                                  (let ((getter (##car rest)))
+                                    (if (##symbol? getter)
+                                        (let ((rest (##cdr rest))
+                                              (opts (##fxior options 18)))
+                                          (if (##pair? rest)
+                                              (let ((setter (##car rest)))
+                                                (if (or (##symbol? setter)
+                                                        (##not setter))
+                                                    (let ((rest (##cdr rest))
+                                                          (opts (if setter
+                                                                    (##fxand opts -3)
+                                                                    opts)))
+                                                      (if (##pair? rest)
+                                                          (let ((fsetter (##car rest)))
+                                                            (if (or (##symbol? fsetter)
+                                                                    (##not fsetter))
+                                                                (parse-field-attributes
+                                                                 field-name
+                                                                 getter
+                                                                 setter
+                                                                 fsetter
+                                                                 (if fsetter
+                                                                     (##fxand opts -17)
+                                                                     opts)
+                                                                 (##cdr rest))
+                                                                (parse-field-attributes
+                                                                 field-name
+                                                                 getter
+                                                                 setter
+                                                                 #f
+                                                                 opts
+                                                                 rest)))
+                                                          (parse-field-attributes
+                                                           field-name
+                                                           getter
+                                                           setter
+                                                           #f
+                                                           opts
+                                                           rest)))
+                                                    (parse-field-attributes
+                                                     field-name
+                                                     getter
+                                                     #f
+                                                     #f
+                                                     opts
+                                                     rest)))
+                                              (parse-field-attributes
                                                field-name
-                                               (##fx+ field-index 1)
                                                getter
-                                               (if read-only? #f setter)
-                                               (if functional-setter? fsetter #f)
-                                               local-options
-                                               attributes))
-                                      rev-fields)))))
-                (else
-                 (err)))))
-
-      (cond ((##pair? lst)
-             (let ((next (##car lst)))
-               (cond ((##symbol? next)
-                      (if (##not (##assq next rev-fields))
-                          (parse-field-attributes
-                           next
-                           #t
-                           #t
-                           #t
-                           options
-                           '())
-                          (err)))
-                     ((##pair? next)
-                      (let* ((field-name (##car next))
-                             (rest (##cdr next)))
-                        (if (and (##symbol? field-name)
-                                 (##not (##assq field-name rev-fields)))
-                            (if (##pair? rest)
-                                (let ((getter (##car rest)))
-                                  (if (##symbol? getter)
-                                      (let ((rest (##cdr rest))
-                                            (opts (##fxior options 18)))
-                                        (if (##pair? rest)
-                                            (let ((setter (##car rest)))
-                                              (if (or (##symbol? setter)
-                                                      (##not setter))
-                                                  (let ((rest (##cdr rest))
-                                                        (opts (if setter
-                                                                  (##fxand opts -3)
-                                                                  opts)))
-                                                    (if (##pair? rest)
-                                                        (let ((fsetter (##car rest)))
-                                                          (if (or (##symbol? fsetter)
-                                                                  (##not fsetter))
-                                                              (parse-field-attributes
-                                                               field-name
-                                                               getter
-                                                               setter
-                                                               fsetter
-                                                               (if fsetter
-                                                                   (##fxand opts -17)
-                                                                   opts)
-                                                               (##cdr rest))
-                                                              (parse-field-attributes
-                                                               field-name
-                                                               getter
-                                                               setter
-                                                               #f
-                                                               opts
-                                                               rest)))
-                                                        (parse-field-attributes
-                                                         field-name
-                                                         getter
-                                                         setter
-                                                         #f
-                                                         opts
-                                                         rest)))
-                                                  (parse-field-attributes
-                                                   field-name
-                                                   getter
-                                                   #f
-                                                   #f
-                                                   opts
-                                                   rest)))
-                                            (parse-field-attributes
-                                             field-name
-                                             getter
-                                             #f
-                                             #f
-                                             opts
-                                             rest)))
-                                      (parse-field-attributes
-                                       field-name
-                                       #t
-                                       #t
-                                       #t
-                                       options
-                                       rest)))
-                                (parse-field-attributes
-                                 field-name
-                                 #t
-                                 #t
-                                 #t
-                                 options
-                                 rest))
-                            (err))))
-                     ((##member next
-                                '(id:
-                                  constructor:
-                                  constant-constructor:
-                                  copier:
-                                  predicate:
-                                  extender:
-                                  implementer:
-                                  type-exhibitor:
-                                  prefix:))
-                      (let ((rest (##cdr lst)))
-                        (if (and (##pair? rest)
-                                 (##not (##assq next flags)))
-                            (let ((val (##car rest)))
-                              (if (cond ((##eq? next 'constructor:)
-                                         (if (##pair? val)
-                                             (if (##symbol? (##car val))
-                                                 (let loop ((lst1 (##cdr val))
-                                                            (lst2 '()))
-                                                   (if (##pair? lst1)
-                                                       (let ((x (##car lst1)))
-                                                         (if (and (##symbol? x)
-                                                                  (##not (##member
-                                                                          x
-                                                                          lst2)))
-                                                             (loop (##cdr lst1)
-                                                                   (##cons x lst2))
-                                                             #f))
-                                                       (##null? lst1)))
-                                                 #f)
-                                             (or (##not val)
-                                                 (##symbol? val))))
-                                        (else
-                                         (or (##symbol? val)
-                                             (and (##memq
-                                                   next
-                                                   '(copier:
-                                                     predicate:
-                                                     constant-constructor:))
-                                                  (##not val)))))
-                                  (loop1 (##cdr rest)
-                                         field-index
+                                               #f
+                                               #f
+                                               opts
+                                               rest)))
+                                        (parse-field-attributes
+                                         field-name
+                                         #t
+                                         #t
+                                         #t
                                          options
-                                         (##cons (##cons next val) flags)
-                                         rev-fields)
-                                  (err)))
-                            (err))))
-                     ((##member next
-                                '(opaque:
-                                  macros:))
-                      (if (##not (##assq next flags))
+                                         rest)))
+                                  (parse-field-attributes
+                                   field-name
+                                   #t
+                                   #t
+                                   #t
+                                   options
+                                   rest))
+                              (err))))
+                       ((##member next
+                                  '(id:
+                                    constructor:
+                                    constant-constructor:
+                                    copier:
+                                    predicate:
+                                    extender:
+                                    implementer:
+                                    type-exhibitor:
+                                    prefix:))
+                        (let ((rest (##cdr lst)))
+                          (if (and (##pair? rest)
+                                   (##not (##assq next flags)))
+                              (let ((val (##car rest)))
+                                (if (cond ((##eq? next 'constructor:)
+                                           (if (##pair? val)
+                                               (if (##symbol? (##car val))
+                                                   (let loop ((lst1 (##cdr val))
+                                                              (lst2 '()))
+                                                     (if (##pair? lst1)
+                                                         (let ((x (##car lst1)))
+                                                           (if (and (##symbol? x)
+                                                                    (##not (##member
+                                                                            x
+                                                                            lst2)))
+                                                               (loop (##cdr lst1)
+                                                                     (##cons x lst2))
+                                                               #f))
+                                                         (##null? lst1)))
+                                                   #f)
+                                               (or (##not val)
+                                                   (##symbol? val))))
+                                          (else
+                                           (or (##symbol? val)
+                                               (and (##memq
+                                                     next
+                                                     '(copier:
+                                                       predicate:
+                                                       constant-constructor:))
+                                                    (##not val)))))
+                                    (loop1 (##cdr rest)
+                                           field-index
+                                           options
+                                           (##cons (##cons next val) flags)
+                                           rev-fields)
+                                    (err)))
+                              (err))))
+                       ((##member next
+                                  '(opaque:
+                                    macros:))
+                        (if (##not (##assq next flags))
+                            (loop1 (##cdr lst)
+                                   field-index
+                                   options
+                                   (##cons (##cons next #t) flags)
+                                   rev-fields)
+                            (err)))
+                       ((##assq next
+                                allowed-field-options)
+                        =>
+                        (lambda (opt)
                           (loop1 (##cdr lst)
                                  field-index
-                                 options
-                                 (##cons (##cons next #t) flags)
-                                 rev-fields)
-                          (err)))
-                     ((##assq next
-                              allowed-field-options)
-                      =>
-                      (lambda (opt)
-                        (loop1 (##cdr lst)
-                               field-index
-                               (update-options options opt)
-                               flags
-                               rev-fields)))
-                     (else
-                      (err)))))
-            ((##null? lst)
-             (let* ((fields
-                     (##reverse rev-fields))
-                    (prefix
-                     (cond ((##assq 'prefix: flags)
-                            =>
-                            ##cdr)
-                           (else
-                            '||)))
-                    (id
-                     (cond ((##assq 'id: flags)
-                            =>
-                            ##cdr)
-                           (else
-                            #f)))
-                    (extender
-                     (cond ((##assq 'extender: flags)
-                            =>
-                            ##cdr)
-                           (else
-                            #f)))
-                    (constructor
-                     (cond ((##assq 'constructor: flags)
-                            =>
-                            (lambda (x)
-                              (let ((constructor (##cdr x)))
-                                (if (##pair? constructor)
-                                    (##for-each (lambda (sym)
-                                                  (if (##not (##assq sym fields))
-                                                      (err)))
-                                                (##cdr constructor)))
-                                constructor)))
-                           (else
-                            (##symbol-append prefix
-                                             'make-
-                                             name))))
-                    (constant-constructor
-                     (cond ((##assq 'constant-constructor: flags)
-                            =>
-                            ##cdr)
-                           ((or (##not constructor)
-                                (##not id))
-                            #f)
-                           (else
-                            (##symbol-append prefix
-                                             'make-constant-
-                                             name))))
-                    (copier
-                     (cond ((##assq 'copier: flags)
-                            =>
-                            ##cdr)
-                           ((##not constructor)
-                            #f)
-                           (else
-                            (##symbol-append prefix
-                                             name
-                                             '-copy)))) ;; should be a prefix
-                    (predicate
-                     (cond ((##assq 'predicate: flags)
-                            =>
-                            ##cdr)
-                           (else
-                            (##symbol-append prefix
-                                             name
-                                             '?))))
-                    (implementer
-                     (cond ((##assq 'implementer: flags)
-                            =>
-                            ##cdr)
-                           (else
-                            #f)))
-                    (type-exhibitor
-                     (cond ((##assq 'type-exhibitor: flags)
-                            =>
-                            ##cdr)
-                           (else
-                            #f))))
-               (if (or (and constant-constructor
-                            (or (##not constructor)
-                                (##not id)))
-                       (and id
-                            super-type-static
-                            (##fx=
-                             (##fxand
-                              (##type-flags super-type-static)
-                              16)
-                             0)))
-                   (err)
-                   (cont
-                    name
-                    (##fx+ (if (or (##assq 'opaque: flags)
-                                   (and super-type-static
-                                        (##not
-                                         (##fx=
-                                          (##fxand
-                                           (##type-flags super-type-static)
-                                           1)
-                                          0))))
-                               1
-                               0)
-                           (if extender 2 0)
-                           (if (##assq 'macros: flags) 4 0)
-                           (if constructor 8 0)
-                           (if id 16 0))
-                    id
-                    extender
-                    constructor
-                    constant-constructor
-                    copier
-                    predicate
-                    implementer
-                    type-exhibitor
-                    prefix
-                    fields
-                    field-index))))
-            (else
-             (err)))))
+                                 (update-options options opt)
+                                 flags
+                                 rev-fields)))
+                       (else
+                        (err)))))
+              ((##null? lst)
+               (let* ((fields
+                       (##reverse rev-fields))
+                      (prefix
+                       (cond ((##assq 'prefix: flags)
+                              =>
+                              ##cdr)
+                             (else
+                              '||)))
+                      (id
+                       (cond ((##assq 'id: flags)
+                              =>
+                              ##cdr)
+                             (else
+                              #f)))
+                      (extender
+                       (cond ((##assq 'extender: flags)
+                              =>
+                              ##cdr)
+                             (else
+                              #f)))
+                      (constructor
+                       (cond ((##assq 'constructor: flags)
+                              =>
+                              (lambda (x)
+                                (let ((constructor (##cdr x)))
+                                  (if (##pair? constructor)
+                                      (##for-each (lambda (sym)
+                                                    (if (##not (##assq sym fields))
+                                                        (err)))
+                                                  (##cdr constructor)))
+                                  constructor)))
+                             (else
+                              (##symbol-append prefix
+                                               'make-
+                                               name))))
+                      (constant-constructor
+                       (cond ((##assq 'constant-constructor: flags)
+                              =>
+                              ##cdr)
+                             ((or (##not constructor)
+                                  (##not id))
+                              #f)
+                             (else
+                              (##symbol-append prefix
+                                               'make-constant-
+                                               name))))
+                      (copier
+                       (cond ((##assq 'copier: flags)
+                              =>
+                              ##cdr)
+                             ((##not constructor)
+                              #f)
+                             (else
+                              (##symbol-append prefix
+                                               name
+                                               '-copy)))) ;; should be a prefix
+                      (predicate
+                       (cond ((##assq 'predicate: flags)
+                              =>
+                              ##cdr)
+                             (else
+                              (##symbol-append prefix
+                                               name
+                                               '?))))
+                      (implementer
+                       (cond ((##assq 'implementer: flags)
+                              =>
+                              ##cdr)
+                             (else
+                              #f)))
+                      (type-exhibitor
+                       (cond ((##assq 'type-exhibitor: flags)
+                              =>
+                              ##cdr)
+                             (else
+                              #f))))
+                 (if (or (and constant-constructor
+                              (or (##not constructor)
+                                  (##not id)))
+                         (and id
+                              super-type-static
+                              (##fx=
+                               (##fxand
+                                (##type-flags super-type-static)
+                                16)
+                               0)))
+                     (err)
+                     (cont
+                      name
+                      (##fx+ (if (or (##assq 'opaque: flags)
+                                     (and super-type-static
+                                          (##not
+                                           (##fx=
+                                            (##fxand
+                                             (##type-flags super-type-static)
+                                             1)
+                                            0))))
+                                 1
+                                 0)
+                             (if extender 2 0)
+                             (if (##assq 'macros: flags) 4 0)
+                             (if constructor 8 0)
+                             (if id 16 0))
+                      id
+                      extender
+                      constructor
+                      constant-constructor
+                      copier
+                      predicate
+                      implementer
+                      type-exhibitor
+                      prefix
+                      fields
+                      field-index))))
+              (else
+               (err)))))
 
-  (if (##pair? args)
-      (let* ((name (##car args))
-             (rest (##cdr args)))
-        (if (##symbol? name)
-            (parse-attributes name rest)
-            (err)))
-      (err)))
+      (if (##pair? args)
+          (let* ((name (##car args))
+                 (rest (##cdr args)))
+            (if (##symbol? name)
+                (parse-attributes name rest)
+                (err)))
+          (err)))
 
 (define-prim (##define-type-construct-constant form-name type . fields)
   (let loop ((lst1 fields)
