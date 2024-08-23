@@ -463,11 +463,14 @@
              (fake-value (lambda _ 'let-dummy)))
         (let* ((key (##hygiene-environment-add-new-local-binding! cte id))
                (cte (##hygiene-environment-add-macro-cte cte key id fake-value))
-               (cte (##hygiene-environment-add-macro-cte cte key id (##macro-syntax-descr (##eval-for-syntax-binding
-                        value
-                        cte) value))))
+               (cte (##hygiene-environment-add-macro-cte cte key id 
+                      (##macro-syntax-descr 
+                        (##eval-for-syntax-binding
+                          value
+                          cte)
+                        value))))
           (##expand-body
-            (add-scope expr scp)
+            (add-scope exprs scp)
             (add-scope bindings scp)
             cte))))
 
@@ -479,10 +482,13 @@
              (value     (add-scope (caddr form-code) scp))
              (fake-value (lambda _ 'let-dummy)))
         (let* ((key (##hygiene-environment-add-new-top-level-binding! cte id))
-               (cte (##hygiene-environment-add-macro-cte cte key fake-value))
-               (cte (##hygiene-environment-add-macro-cte cte key (##eval-for-syntax-binding
-                      value
-                      cte) value)))
+               (cte (##hygiene-environment-add-macro-cte cte key id fake-value))
+               (cte (##hygiene-environment-add-macro-cte cte key id 
+                      (##macro-syntax-descr 
+                        (##eval-for-syntax-binding
+                          value
+                          cte)
+                        value))))
           (##expand-body
             (add-scope exprs scp)
             (add-scope bindings scp)
@@ -533,12 +539,12 @@
        (let ((expr  (car exprs))
              (exprs (cdr exprs)))
          (let ((core-expanded (##expand->core-form expr cte)))
-           (match-source core-expanded (##define ##define-syntax ##define-global-syntax ##namespace)
+           (match-source core-expanded (##define ##define-syntax ##define-top-level-syntax ##namespace)
              ((##define . args)
               (##expand-body-define core-expanded exprs bindings cte))
              ((##define-syntax . args)
               (##expand-body-define-syntax core-expanded exprs bindings cte))
-             ((##define-global-syntax . args)
+             ((##define-top-level-syntax . args)
               (##expand-body-define-global-syntax core-expanded exprs bindings cte))
              ((##namespace . args)
               (##expand-body-namespace core-expanded exprs bindings cte))
@@ -547,7 +553,7 @@
       (else
        (##raise-expression-parsing-exception
          'empty-body
-         body))))
+         exprs))))
 
   (let ((cte (##hygiene-environment-local-cte cte)))
     (##expand-body (##syntax-source-code body) (list) cte)))
@@ -962,7 +968,7 @@
                                         (##syntax-source-code-set s rest)
                                         rest))))))
         (else
-          (##implicit-prefix-apply '##quote s)))))
+          (##implicit-prefix-apply '##quasiquote s)))))
         
   (define (expand-template-list s)
     (let ((code (##syntax-source-code s)))

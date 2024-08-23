@@ -105,6 +105,8 @@
   (let ((evalued (##eval-for-syntax-binding stx cte)))
     (check-equal? evalued #t)))
 
+;;;---------------------------------------
+
 (let* ((cte ##syntax-interaction-cte)
        (datum `(##begin
                 (##define-macro (t5 a b) a)
@@ -153,9 +155,29 @@
   (let ((evalued (##eval-for-syntax-binding stx cte)))
     (check-equal? evalued (list #t))))
 
+(let* ((cte ##syntax-interaction-cte)
+       (datum `(##begin
+                (##define-macro (t5 a b) a)
+                (t5 #t #f)))
+       (stx (datum->syntax datum))
+       (stx (add-scope stx core-scope)))
+  (let ((evalued (##eval-for-syntax-binding stx cte)))
+    (check-equal? evalued #t)))
+
+
+(let* ((cte ##syntax-interaction-cte)
+       (datum `(##begin
+                ((lambda ()
+                   (##define-macro (t9 a b) a)
+                   (t9 #t #f)))))
+       (stx (datum->syntax datum))
+       (stx (add-scope stx core-scope)))
+  (let ((evalued (##eval-for-syntax-binding stx cte)))
+    (check-equal? evalued #t)))
+
 ;;;----------------------------------------------------------------------------
 
-;;; issue 636
+;;; issue #636
 ;;;
 (let* ((cte ##syntax-interaction-cte)
        (datum `(##begin
@@ -167,6 +189,7 @@
   (check-equal?
     (##eval-for-syntax-binding stx cte)
     (list 'a 1 1 'b)))
+
 (let* ((cte ##syntax-interaction-cte)
        (datum `(##begin
                  (define-syntax foo 
@@ -192,6 +215,7 @@
     error-exception?
     (lambda ()
       (##eval-for-syntax-binding stx cte))))
+
 (let* ((cte ##syntax-interaction-cte)
        (datum `(##begin
                  (##define-syntax if+

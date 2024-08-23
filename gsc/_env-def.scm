@@ -90,7 +90,7 @@
     id))
 
 (define (env-syntax-ctx-ref env) (vector-ref env 1))
-(define (env-syntax-gbt-set! env) (vector-set! env 0))
+(define (env-syntax-gbt-set! env val) (vector-set! env 0 val))
 (define (env-syntax-gbt-gbt-set! env id val) 
   (##syntax-global-binding-table-set!
     (env-syntax-gbt-ref env)

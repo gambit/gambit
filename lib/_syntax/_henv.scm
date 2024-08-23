@@ -25,7 +25,10 @@
   (##syntax-source-code id))
 
 (define-prim&proc (henv-top? cte)
-  (not (env-parent-ref cte)))
+  #t 
+  ; the difference is irrelevant here as the global-binding-table and syntax contex
+  ; will keep track of definitions/macro-definitions scope.
+  #;(not (env-parent-ref cte)))
 
 
 (define-prim&proc (henv-top-cte cte)
@@ -78,12 +81,21 @@
 (define-prim&proc (top-henv-add-macro-cte! cte id descr)
                   ; TODO global id
   (let ((key (##henv-add-new-top-level-binding! cte id)))
-    (env-macro cte (##source-code id) descr
-      (lambda (ctx)
-        (##syntax-ctx-set
-         ctx
-         key 
-         (##ctx-binding-macro id descr))))))
+    (let ((current-parent (env-parent-ref cte)))
+      (let ((inner 
+              (env-macro cte (##source-code id) descr
+                (lambda (ctx)
+                  (##syntax-ctx-set
+                   ctx
+                   key 
+                   (##ctx-binding-macro id descr))))))
+        (env-parent-set! inner current-parent)
+        (env-parent-set! cte inner)
+
+        (env-syntax-ctx-set! cte (env-syntax-ctx-ref inner))
+        (env-syntax-gbt-set! cte (env-syntax-gbt-ref inner))
+        cte))))
+
 
 (define-prim&proc (henv-add-core-macro-cte cte key id descr)
   (let ((key (or key (##henv-add-new-local-binding! cte id))))

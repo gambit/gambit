@@ -154,7 +154,7 @@
 
 (define (env-syntax-gbt-ref env) (vector-ref env 0))
 (define (env-syntax-ctx-ref env) (vector-ref env 1))
-(define (env-syntax-gbt-set! env) (vector-set! env 0))
+(define (env-syntax-gbt-set! env gbt) (vector-set! env 0 gbt))
 
 (define (env-syntax-ctx-set! env ctx) (vector-set! env 1 ctx))
 
