@@ -6,7 +6,7 @@ herefromroot = lib
 rootfromhere = ..
 SUBDIRS1 = _define-library
 SUBDIRS2 = @RTLIBSUBSYS@ \
-_base64 _csv _digest _geiser _git _hamt _http _json _match _pkg _six \
+_base64 _csv _digest _geiser _git _hamt _http _irregex _json _match _pkg _six \
 _tar _test _uri _zlib gambit scheme termite srfi
 SUBDIRS = $(SUBDIRS1) $(SUBDIRS2)
 
