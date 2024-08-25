@@ -1,6 +1,6 @@
 /* File: "os_setup.c" */
 
-/* Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -88,6 +88,10 @@ int options;)
         break;
     }
 
+#ifdef ___DEBUG_LOG
+  ___printf ("___waitpid_no_EINTR(%d, %p, %d) => %d\n", pid, stat_loc, options, result);
+#endif
+
   return result;
 }
 
@@ -115,8 +119,15 @@ ___SIZE_T len;)
       else if (n == 0)
         break;
       else if (errno != EINTR)
-        return n; /* this forgets that some bytes were transferred */
+        {
+          result = n; /* this forgets that some bytes were transferred */
+          break;
+        }
     }
+
+#ifdef ___DEBUG_LOG
+  ___printf ("___read_no_EINTR(%d, %p, %d) => %d\n", fd, buf, len, result);
+#endif
 
   return result;
 }
@@ -143,6 +154,10 @@ mode_t mode;)
       if (result >= 0 || errno != EINTR)
         break;
     }
+
+#ifdef ___DEBUG_LOG
+  ___printf ("___open_no_EINTR(\"%s\", %d, %d) => %d\n", path, flags, mode, result);
+#endif
 
   return result;
 }
@@ -175,6 +190,10 @@ mode_t mode;)
         break;
     }
 
+#ifdef ___DEBUG_LOG
+  ___printf ("___openat_no_EINTR(%d, \"%s\", %d, %d) => %d\n", fd, path, flags, mode, result);
+#endif
+
   return result;
 }
 
@@ -195,6 +214,10 @@ int fd;)
         break;
     }
 
+#ifdef ___DEBUG_LOG
+  ___printf ("___close_no_EINTR(%d) => %d\n", fd, result);
+#endif
+
   return result;
 }
 
@@ -212,6 +235,10 @@ int fd;)
       if (result >= 0 || errno != EINTR)
         break;
     }
+
+#ifdef ___DEBUG_LOG
+  ___printf ("___dup_no_EINTR(%d) => %d\n", fd, result);
+#endif
 
   return result;
 }
@@ -233,6 +260,10 @@ int fd2;)
       if (result >= 0 || errno != EINTR)
         break;
     }
+
+#ifdef ___DEBUG_LOG
+  ___printf ("___dup2_no_EINTR(%d, %d) => %d\n", fd, fd2, result);
+#endif
 
   return result;
 }
@@ -261,6 +292,10 @@ ___BOOL blocking;)
 
 #endif
 
+#ifdef ___DEBUG_LOG
+  ___printf ("___set_fd_blocking_mode(%d, %d) => %d\n", fd, blocking, fl);
+#endif
+
   return fl;
 }
 
@@ -287,6 +322,10 @@ ___half_duplex_pipe *hdp;)
 
   hdp->reading_fd = fds[0];
   hdp->writing_fd = fds[1];
+
+#ifdef ___DEBUG_LOG
+  ___printf ("___open_half_duplex_pipe(fds) => fds[0]=%d fds[1]=%d\n", fds[0], fds[1]);
+#endif
 
   return 0;
 }
