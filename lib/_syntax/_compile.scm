@@ -227,6 +227,9 @@
 (define-prim&proc (compile-quote stx cte)
   stx)
 
+(define-prim&proc (compile-quasiquote stx cte)
+  stx)
+
 (define-prim&proc (compile-quote-syntax stx cte)
   (match-source stx ()
     ((quote-syntax-id expr)
@@ -298,9 +301,11 @@
         ##letrec*-values) ##compile-let-forms)
       ((##define)         ##compile-define)
       ((##quote                           
-        quote)            ##compile-quote)
-      ((##quote-syntax)   ##compile-quote-syntax)
-      ((quote-syntax)     ##compile-quote-syntax)
+        quote
+        ##quasiquote
+        quasiquote)       ##compile-quote)
+      ((##quote-syntax
+        quote-syntax)     ##compile-quote-syntax)
       ((##syntax)         ##compile-syntax)
       ((##case)           ##compile-case)
       ((##begin

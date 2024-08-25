@@ -60,12 +60,12 @@
             (##syntax 
               (##define-top-level-syntax name 
                 (##lambda (s)
-                  (##syntax-case s (qwe)
+                  (##syntax-case s ()
                     ((_ . args)
                      (##datum->core-syntax
                          (##apply expander
-                                (##syntax->datum (##syntax args)))
-                       (##car (##source-code s))))
+                                  (##syntax->datum (##syntax args)))
+                         (##car (##source-code s))))
                     (_
                      (##error "define-macro: ill formed macro call" s)))))))
            (_
