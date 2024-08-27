@@ -3912,6 +3912,14 @@ OTHER DEALINGS IN THE SOFTWARE.
   (test (mutable-array? B)
         #f))
 
+(let* ((A (make-specialized-array (make-interval '#(4 4))
+                                  generic-storage-class
+                                  #t     ;; mutable?
+                                  #t))   ;; safe?
+       (B (array-extract A (make-interval '#(2 2)))))
+  (test (array-ref B 2 2)
+        "array-getter: domain does not contain multi-index: "))
+
 (do ((i 0 (fx+ i 1)))
     ((fx= i random-tests))
   (let* ((domain (random-interval))

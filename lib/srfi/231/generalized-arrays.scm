@@ -3306,27 +3306,7 @@ OTHER DEALINGS IN THE SOFTWARE.
               (%%array-setter array)))
 
 (define (%%specialized-array-extract array new-domain)
-
-  ;; (%%specialized-array-share array new-domain values)
-
-  ;; We can speed this by calling make-%%array directly,
-  ;; and so avoid a call to %%compose-indexers with values as
-  ;; new-domain->old-domain and avoid the computation of the
-  ;; new indexer, getter, and setter.
-
-  (make-%%array new-domain
-                (if (%%interval-empty? new-domain)
-                    (%%empty-getter new-domain)
-                    (%%array-getter array))
-                (and (%%array-setter array)   ;; If array has no setter, then don't add one to extracted array
-                     (if (%%interval-empty? new-domain)
-                         (%%empty-setter new-domain)
-                         (%%array-setter array)))
-                (%%array-storage-class array)
-                (%%array-body array)
-                (%%array-indexer array)
-                (%%array-safe? array)
-                %%order-unknown))
+  (%%specialized-array-share array new-domain values))
 
 (define (%%array-extract array new-domain)
   (cond ((specialized-array? array)
