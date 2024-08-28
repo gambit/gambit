@@ -3098,9 +3098,7 @@
            (let* ((prefix
                    (or path
                        (##path-expand
-                        (##string-append
-                         (##path-strip-directory (##executable-path))
-                         "-temp")
+                        "gsx-temp"
                         (##os-path-tempdir))))
                   (pid
                    (##os-getpid))
