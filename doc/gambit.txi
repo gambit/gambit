@@ -499,11 +499,11 @@ An error is not signaled when the file does not exist.  Interpreter
 extensions and patches that are meant to apply to all users and all
 modes should go in that file.
 
-Extensions which are meant to apply to a single user or to a specific
-working directory are best placed in the @dfn{initialization file},
+Extensions which are meant to apply to a single user
+are best placed in the @dfn{initialization file},
 which is a file containing Scheme code.  In all modes, the interpreter
 first tries to locate the initialization file by searching the
-following locations: @file{.gambini} and @file{~/.gambini} (with no
+following locations: @file{~/.gambini} (with no
 extension, a @samp{.sld} extension, a @samp{.scm} extension, and a
 @samp{.six} extension in that order).  The first file that is found is
 examined as though the expression @code{(include
