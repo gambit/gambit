@@ -2365,7 +2365,8 @@
                                    (fixnum-base exact-y (##remainder exact-x exact-y))
                                    (bignums-case exact-x #t exact-y #t))))))))
                 (type-error-on-x))
-            (type-error-on-x)))                ;; x = cpxnum
+            (type-error-on-x))               ;; x = cpxnum
+          (type-error-on-y)) 
 
     (type-error-on-y)))                              ;; y = cpxnum
 
