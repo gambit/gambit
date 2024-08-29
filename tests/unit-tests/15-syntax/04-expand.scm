@@ -1266,7 +1266,7 @@
 
 ;;;----------------------------------------------------------------------------
 
-#;(let* ((cte ##syntax-interaction-cte)
+(let* ((cte ##syntax-interaction-cte)
        (datum `(##cond 
                 (#t #t)
                 (else #f)))
@@ -1275,18 +1275,7 @@
   (let* ((expanded (##expand stx cte)))
     (check-equal?
       (##desourcify expanded)
-      `(##cond ((##quote #t) (##quote #t)) (else (##quote #f))))))
-
-#;(let* ((cte ##syntax-interaction-cte)
-       (datum `(cond 
-                (#t ((lambda () #t)))
-                (else ((lambda () #f)))))
-       (stx (datum->syntax datum))
-       (stx (add-scope stx core-scope)))
-  (let* ((expanded (##expand stx cte)))
-    (check-equal?
-      (##desourcify expanded)
-      `(##cond ((##quote #t) (##quote #t)) (else (##quote #f))))))
+      `(##cond (#t #t) (else #f)))))
 
 ;;;----------------------------------------------------------------------------
 ;;; quasiquote

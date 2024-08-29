@@ -1082,53 +1082,49 @@
   
 (define-prim (##expand-cond stx-src cte)
 
-  (define (##expand-cond-clause clause next-clause cte)
-    (match-source clause (=>)
-      ((condition => expr)
-       (##datum->core-syntax
-         `(let ((x ,(##expand condition cte)))
-            (if x
-                (,(##expand expr cte) x)
-                ,next-clause))
-          clause))
-      ((condition . exprs)
-       (##datum->core-syntax
-        (let ((expanded-condition (##expand condition cte)))
-         `(if ,expanded-condition
-              ,(if (pair? exprs)
-                   (##expand (##syntax-source-code-set stx-src 
-                               (##cons (##make-core-syntax-source '##begin #f)
-                                   exprs))
-                             cte)
-                   expanded-condition)
-              ,next-clause))))
+  (define (expand-cond-clause clause-src last?)
+    (##syntax-source-code-update clause-src
+      (lambda (clause)
+        (match-source clause-src (else =>)
+          ((else . exprs)
+           (cons (if last?
+                     (car clause)
+                     (error "ill placed else clause"))
+                 (##syntax-source-code
+                   (##expand-body 
+                    (##syntax-source-code-set clause-src exprs) 
+                    cte))))
+          ((condexpr => expr)
+            (list
+              (##expand condexpr cte)
+              (cadr clause)
+              (##expand expr cte)))
+          ((condexpr . exprs)
+           (cons
+             (##expand condexpr cte)
+             (##syntax-source-code
+               (##expand-body 
+                (##syntax-source-code-set clause-src exprs) 
+                cte))))
+          (_
+           (##raise-ill-formed-special-form stx-src))))))
+              
+
+  (define (expand-cond-clauses clauses)
+    (cond
+      ((pair? clauses)
+       (cons (expand-cond-clause (car clauses) (null? (cdr clauses)))
+             (expand-cond-clauses (cdr clauses))))
+      ((null? clauses)
+       clauses)
       (else
         (##raise-ill-formed-special-form stx-src))))
 
   (match-source stx-src ()
-    ((cond-id . clauses)
-
-     (let* ((r-clauses (##reverse clauses))
-            (last-clause (##car r-clauses)))
-       (let ((else-clause? 
-               (and (##equal? 'else
-                            (##syntax-source-code 
-                              (car (##syntax-source-code last-clause))))
-                    (##expand (##cadr (##syntax-source-code last-clause)) cte))))
-         (let ((r-clauses (##reverse (if else-clause?
-                              (##cdr r-clauses)
-                              r-clauses))))
-             (let loop ((clauses r-clauses))
-               (cond 
-                 ((##pair? clauses)
-                  (let ((clause (##car clauses)))
-                    (##expand-cond-clause clause 
-                                          (loop (##cdr clauses))
-                                          cte)))
-                 ((##null? clauses)
-                  (if else-clause?
-                      else-clause?
-                      #f))))))))
+    ((id . clauses)
+     (##syntax-source-code-set stx-src
+       (cons id 
+             (expand-cond-clauses clauses))))
     (_
      (##raise-ill-formed-special-form stx-src))))
 
