@@ -227,8 +227,11 @@
 (define-prim&proc (compile-quote stx cte)
   stx)
 
+
 (define-prim&proc (compile-quasiquote stx cte)
-  stx)
+  ((make-expand/compile-quasiquote-expander ##compile)
+   stx
+   cte))
 
 (define-prim&proc (compile-quote-syntax stx cte)
   (match-source stx ()
@@ -301,9 +304,9 @@
         ##letrec*-values) ##compile-let-forms)
       ((##define)         ##compile-define)
       ((##quote                           
-        quote
-        ##quasiquote
-        quasiquote)       ##compile-quote)
+        quote)       ##compile-quote)
+      ((##quasiquote
+        quasiquote)         ##compile-quasiquote)
       ((##quote-syntax
         quote-syntax)     ##compile-quote-syntax)
       ((##syntax)         ##compile-syntax)

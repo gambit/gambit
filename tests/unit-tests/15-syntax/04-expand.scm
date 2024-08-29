@@ -1289,3 +1289,35 @@
       `(##cond ((##quote #t) (##quote #t)) (else (##quote #f))))))
 
 ;;;----------------------------------------------------------------------------
+;;; quasiquote
+
+(let* ((cte ##syntax-interaction-cte)
+       (datum ``x)
+       (stx (datum->syntax datum))
+       (stx (add-scope stx core-scope)))
+  (let* ((expanded (##expand stx cte)))
+    (check-equal?
+      (##desourcify expanded)
+      '`x
+      )))
+
+(let* ((cte ##syntax-interaction-cte)
+       (datum ``,x)
+       (stx (datum->syntax datum))
+       (stx (add-scope stx core-scope)))
+  (let* ((expanded (##expand stx cte)))
+    (check-equal?
+      (##desourcify expanded)
+      '`,x
+      )))
+
+(let* ((cte ##syntax-interaction-cte)
+       (datum ```(,@x ,@y ,x 42 `(`(,x))))
+       (stx (datum->syntax datum))
+       (stx (add-scope stx core-scope)))
+  (let* ((expanded (##expand stx cte)))
+    (check-equal?
+      (##desourcify expanded)
+      '``(,@x ,@y ,x 42 `(`(,x))))))
+
+;;;----------------------------------------------------------------------------

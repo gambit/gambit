@@ -925,88 +925,64 @@
     `(,(##make-core-syntax-source sym #f) ,stx-src)
      stx-src))
 
-(define-prim&proc (expand-quasiquote s cte)
+(define-macro (make-expand/compile-quasiquote-expander expander)
 
-  (define (tag-quasiquote? code)
-    (and (##pair? code)
-         (##member (##syntax-source-code (##car code)) (##list 'quasiquote '##quasiquote))
-         (##pair? (##cdr code))
-         (##cadr code)))
+ `(lambda (s cte)
 
-  (define (tag-unquote? code)
-    (and (##pair? code)
-         (##member (##syntax-source-code (##car code)) (##list 'unquote '##unquote))
-         (##pair? (##cdr code))
-         (##cadr code)))
+    (define (tag-quasiquote? code)
+      (and (##pair? code)
+           (##member (##syntax-source-code (##car code)) (##list 'quasiquote '##quasiquote))
+           (##pair? (##cdr code))
+           (##cadr code)))
 
-  (define (tag-unquote-splicing? code)
-    (and (##pair? code)
-         (##member (##syntax-source-code (##car code)) (##list 'unquote-splicing '##unquote-splicing))
-         (##pair? (##cdr code))
-         (##cadr code)))
+    (define (tag-unquote? code)
+      (and (##pair? code)
+           (##member (##syntax-source-code (##car code)) (##list 'unquote '##unquote))
+           (##pair? (##cdr code))
+           (##cadr code)))
 
-  (define (expand-template s)
+    (define (tag-unquote-splicing? code)
+      (and (##pair? code)
+           (##member (##syntax-source-code (##car code)) (##list 'unquote-splicing '##unquote-splicing))
+           (##pair? (##cdr code))
+           (##cadr code)))
 
-    (let ((code (##syntax-source-code s)))
-      (cond
-        ((tag-unquote? code)
-          => (lambda (datum) (##expand datum cte)))
-        ((tag-unquote-splicing? code) 
-         (##raise-expression-parsing-exception
-           'ill-placed-unquote-splicing
-           s))
-        #;((tag-quasiquote? code)
+    (define (expand-template s level)
+      (let ((code (##syntax-source-code s)))
+        (cond
+          ((tag-quasiquote? code)
            => (lambda (datum)
-                (expand-template
-                  (expand-template (##syntax-source-code-set s datum)))))
-        ((and (##pair? code) (not (tag-quasiquote? code)))
-         (##syntax-source-code-set s
-           `(,(##make-core-syntax-source '##append #f)
-                ,(expand-template-list (##car code))
-                ,(expand-template (let ((rest (cdr code)))
-                                    (if (or (pair? rest) (null? rest))
-                                        (##syntax-source-code-set s rest)
-                                        rest))))))
-        (else
-          (##implicit-prefix-apply '##quasiquote s)))))
-        
-  (define (expand-template-list s)
-    (let ((code (##syntax-source-code s)))
-      (cond 
-        ((tag-unquote? code)
-         => (lambda (datum)
-              (##syntax-source-code-set s 
-                (##list 
-                  (##make-core-syntax-source '##list #f)
-                  (##expand datum cte)))))
-        ((tag-unquote-splicing? code)
-         => (lambda (datum) (##expand datum cte)))
-        #;((tag-quasiquote? code)
+                (##syntax-source-code-set s
+                  (list (car code)
+                        (expand-template datum (+ level 1))))))
+          ((or (tag-unquote? code) 
+               (tag-unquote-splicing? code))
            => (lambda (datum)
-                (expand-template-list
-                  (expand-template (##syntax-source-code-set s datum)))))
-        ((and (##pair? code) (not (tag-quasiquote? code)))
-         (##implicit-prefix-apply '##list
+                (##syntax-source-code-set s
+                  (list (car code)
+                        (if (= level 0)
+                            (,expander datum cte)
+                            (expand-template datum (- level 1)))))))
+
+          ((##pair? code)
            (##syntax-source-code-set s
-               `(,(##make-core-syntax-source '##append #f)
-                  ,(expand-template-list (##car code))
-                  ,(expand-template      (let ((rest (cdr code)))
-                                           (if (or (pair? rest) (null? rest))
-                                               (##syntax-source-code-set s rest)
-                                               rest)))))))
-        (else
-          (##datum->syntax 
-            `(,(##make-core-syntax-source '##quote #f)
-              ,(##syntax-source-code-set s (##list s)))
-            s)))))
+             (##map-pair
+               (lambda (s)
+                 (expand-template s level))
+               identity
+               code)))
+          (else
+            s))))
 
-  (let* ((code (##syntax-source-code s)))
-    (if (and (##pair? code) 
-             (##pair? (##cdr code)) 
-             (##null? (##cddr code)))
-        (let ((datum (##cadr code)))
-          (expand-template datum))
-        (##raise-ill-formed-special-form s))))
+    (let* ((code (##syntax-source-code s)))
+      (if (tag-quasiquote? code)
+          (expand-template s -1)
+          (##raise-ill-formed-special-form s)))))
+
+(define-prim&proc (expand-quasiquote stx cte)
+  ((make-expand/compile-quasiquote-expander ##expand)
+   stx
+   cte))
 
 ;;;----------------------------------------------------------------------------
 
