@@ -1740,7 +1740,7 @@ ___SCMOBJ ___os_executable_path ___PVOID
 
 #endif
 
-#if defined (USE_readlink) && defined (USE_getpid) && !(defined (__OpenBSD__))
+#if defined (USE_readlink) && defined (USE_getpid) && !defined (__OpenBSD__)
 
   {
     pid_t pid = getpid ();
