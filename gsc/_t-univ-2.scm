@@ -5032,7 +5032,7 @@ EOF
             (lambda (ctx)
               (^return
                (^call-prim
-                (^member 'String 'fromCharCode)
+                (^member 'String 'fromCodePoint)
                 (^field 'code (^this))))))
 
            ((php python)
@@ -5133,7 +5133,7 @@ EOF
                    (^if (^< (^array-length codes) limit)
                         (^return
                          (^call-prim
-                          (^member (^member "String" 'fromCharCode) 'apply)
+                          (^member (^member "String" 'fromCodePoint) 'apply)
                           "null"
                           codes))
                         (^ (^var-declaration 'object chunks (^array-literal 'object '()))
@@ -5143,7 +5143,7 @@ EOF
                                        (^array-push!
                                         chunks
                                         (^call-prim
-                                         (^member (^member "String" 'fromCharCode) 'apply)
+                                         (^member (^member "String" 'fromCodePoint) 'apply)
                                          "null"
                                          (^call-prim
                                           (^member codes 'slice)
@@ -5428,9 +5428,7 @@ EOF
 ;;TODO: clean up
 "
     var codes = [];
-    for (var i=0; i < " strng ".length; i++) {
-        codes.push(" strng ".charCodeAt(i));
-    }
+    for (var c of " strng ") codes.push(c.codePointAt(0));
     return codes;
 "))
 

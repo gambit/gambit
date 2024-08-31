@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-3.scm"
 
-;;; Copyright (c) 2011-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2024 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -1967,7 +1967,7 @@
   (case (target-name (ctx-target ctx))
 
     ((js)
-     (^call-prim (^member "String" 'fromCharCode) expr))
+     (^call-prim (^member "String" 'fromCodePoint) expr))
 
     ((php)
      (^call-prim "chr" expr))

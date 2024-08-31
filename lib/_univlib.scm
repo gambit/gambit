@@ -2,7 +2,7 @@
 
 ;;; File: "_univlib.scm"
 
-;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -141,7 +141,7 @@ if (typeof @os_fs@ === 'undefined') {
   for (var i=lo; i<hi; i++) {
     var c = buffer[i];
     if (c === 10) { // end of line?
-      console.log(String.fromCharCode.apply(null, dev.wbuf));
+      console.log(String.fromCodePoint.apply(null, dev.wbuf));
       dev.wbuf = [];
     } else {
       dev.wbuf.push(c);
