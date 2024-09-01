@@ -8776,14 +8776,19 @@ int *slave_fd;)
 }
 
 
-___HIDDEN int open_full_duplex_pipe1
+___HIDDEN ___SCMOBJ open_full_duplex_pipe1
    ___P((___full_duplex_pipe *fdp,
-         ___BOOL use_pty),
+         ___BOOL use_pty,
+         ___BOOL avoid_std),
         (fdp,
-         use_pty)
+         use_pty,
+         avoid_std)
 ___full_duplex_pipe *fdp;
-___BOOL use_pty;)
+___BOOL use_pty;
+___BOOL avoid_std;)
 {
+  ___SCMOBJ e = ___FIX(___NO_ERR);
+
   fdp->input.reading_fd = -1;
   fdp->input.writing_fd = -1;
   fdp->output.reading_fd = -1;
@@ -8793,45 +8798,62 @@ ___BOOL use_pty;)
     {
       int master_fd;
       int slave_fd;
-      if (open_pseudo_terminal_master (&master_fd, &slave_fd) >= 0)
+      if (open_pseudo_terminal_master (&master_fd, &slave_fd) < 0)
+        {
+          e = err_code_from_errno ();
+        }
+      else
         {
           int master_fd_dup;
-          int tmp;
-          if ((master_fd_dup = ___dup_no_EINTR (master_fd)) >= 0)
+          if ((master_fd_dup = ___dup_no_EINTR (master_fd)) < 0)
             {
-              fdp->input.writing_fd = master_fd;
-              fdp->output.reading_fd = master_fd_dup;
-              fdp->input.reading_fd = slave_fd;
-              return 0;
+              e = err_code_from_errno ();
+              if (master_fd >= 0)
+                ___close_no_EINTR (master_fd); /* ignore error */
+              if (slave_fd >= 0)
+                ___close_no_EINTR (slave_fd); /* ignore error */
             }
-          tmp = errno;
-          ___close_no_EINTR (master_fd); /* ignore error */
-          if (slave_fd >= 0)
-            ___close_no_EINTR (slave_fd); /* ignore error */
-          errno = tmp;
+          else if (avoid_std)
+            {
+              int fds[3];
+              fds[0] = master_fd;
+              fds[1] = master_fd_dup;
+              fds[2] = slave_fd;
+              if (___move_fds_to_non_std (fds, 3, 1) < 0)
+                e = err_code_from_errno ();
+              else
+                {
+                  fdp->input.writing_fd = fds[0];
+                  fdp->output.reading_fd = fds[1];
+                  fdp->input.reading_fd = fds[2];
+                }
+            }
         }
     }
   else
     {
-      if (___open_half_duplex_pipe (&fdp->input) >= 0)
+      if ((e = ___open_half_duplex_pipe (&fdp->input, avoid_std)) == ___FIX(___NO_ERR))
         {
-          if (___open_half_duplex_pipe (&fdp->output) >= 0)
-            return 0;
-          ___close_half_duplex_pipe (&fdp->input, 2);
+          if ((e = ___open_half_duplex_pipe (&fdp->output, avoid_std)) != ___FIX(___NO_ERR)) {
+            ___close_half_duplex_pipe (&fdp->input, 2);
+          }
         }
     }
 
-  return -1;
+  return e;
 }
 
 
 ___HIDDEN int open_full_duplex_pipe2
    ___P((___full_duplex_pipe *fdp,
-         ___BOOL use_pty),
+         ___BOOL use_pty,
+         ___BOOL avoid_std),
         (fdp,
-         use_pty)
+         use_pty,
+         avoid_std)
 ___full_duplex_pipe *fdp;
-___BOOL use_pty;)
+___BOOL use_pty;
+___BOOL avoid_std;)
 {
   if (use_pty)
     {
@@ -8842,13 +8864,19 @@ ___BOOL use_pty;)
           open_pseudo_terminal_slave (fdp->input.writing_fd,
                                       &fdp->input.reading_fd) >= 0)
         {
-          int tmp;
+          int save_errno;
           if (setup_terminal_slave (fdp->input.reading_fd) >= 0 &&
               (fdp->output.writing_fd = ___dup_no_EINTR (fdp->input.reading_fd)) >= 0)
-            return 0;
-          tmp = errno;
+            {
+              if (avoid_std)
+                {
+                  if (___move_fds_to_non_std (&fdp->output.writing_fd, 1, 1) == 0)
+                    return 0;
+                }
+            }
+          save_errno = errno;
           ___close_no_EINTR (fdp->input.reading_fd); /* ignore error */
-          errno = tmp;
+          errno = save_errno;
         }
     }
   else
@@ -9080,7 +9108,8 @@ int options;)
   ___device_process *d;
   pid_t pid = 0;
   ___half_duplex_pipe hdp_errno;
-  ___full_duplex_pipe fdp;
+  ___full_duplex_pipe fdp; /* for I/O redirection */
+  int has_redir = options & (STDIN_REDIR | STDOUT_REDIR | STDERR_REDIR);
   int execvp_errno;
   int n;
 
@@ -9096,19 +9125,15 @@ int options;)
   fdp.input.writing_fd = -1;
   fdp.output.reading_fd = -1;
 
-  if (___open_half_duplex_pipe (&hdp_errno) < 0)
-    e = err_code_from_errno ();
-  else
+  if ((e = ___open_half_duplex_pipe (&hdp_errno, 0)) == ___FIX(___NO_ERR))
     {
-      if ((options & (STDIN_REDIR | STDOUT_REDIR | STDERR_REDIR)) &&
-          open_full_duplex_pipe1 (&fdp, options & PSEUDO_TERM) < 0)
-        e = err_code_from_errno ();
-      else
+      if (!has_redir ||
+          (e = open_full_duplex_pipe1 (&fdp, options & PSEUDO_TERM, 0)) == ___FIX(___NO_ERR))
         {
           if ((pid = fork ()) < 0)
             {
               e = err_code_from_errno ();
-              if (options & (STDIN_REDIR | STDOUT_REDIR | STDERR_REDIR))
+              if (has_redir)
                 {
                   ___close_half_duplex_pipe (&fdp.input, 2);
                   ___close_half_duplex_pipe (&fdp.output, 2);
@@ -9130,10 +9155,32 @@ int options;)
 
           ___thread_affinity_reset (___PSTATE);
 
-          if (options & (STDIN_REDIR | STDOUT_REDIR | STDERR_REDIR))
+          if (has_redir)
             {
-              if (open_full_duplex_pipe2 (&fdp, options & PSEUDO_TERM) < 0 ||
-                  ((options & STDIN_REDIR) &&
+              if (open_full_duplex_pipe2 (&fdp, options & PSEUDO_TERM, 0) < 0)
+                goto return_errno;
+              else
+                {
+                  int fds[6];
+                  int err;
+
+                  fds[0] = fdp.input.reading_fd;
+                  fds[1] = fdp.input.writing_fd;
+                  fds[2] = fdp.output.reading_fd;
+                  fds[3] = fdp.output.writing_fd;
+                  fds[4] = hdp_errno.reading_fd;
+                  fds[5] = hdp_errno.writing_fd;
+                  err = ___move_fds_to_non_std (fds, 6, 0);
+                  fdp.input.reading_fd = fds[0];
+                  fdp.input.writing_fd = fds[1];
+                  fdp.output.reading_fd = fds[2];
+                  fdp.output.writing_fd = fds[3];
+                  hdp_errno.reading_fd = fds[4];
+                  hdp_errno.writing_fd = fds[5];
+                  if (err) goto return_errno;
+                }
+
+              if (((options & STDIN_REDIR) &&
                    ___dup2_no_EINTR (fdp.input.reading_fd, STDIN_FILENO) < 0) ||
                   ((options & STDOUT_REDIR) &&
                    ___dup2_no_EINTR (fdp.output.writing_fd, STDOUT_FILENO) < 0) ||
@@ -9201,7 +9248,7 @@ int options;)
 
       /* parent process */
 
-      if (options & (STDIN_REDIR | STDOUT_REDIR | STDERR_REDIR))
+      if (has_redir)
         {
           ___close_half_duplex_pipe (&fdp.input, 0);
           ___close_half_duplex_pipe (&fdp.output, 1);
@@ -9254,7 +9301,7 @@ int options;)
         }
 
       if (e != ___FIX(___NO_ERR))
-        if (options & (STDIN_REDIR | STDOUT_REDIR | STDERR_REDIR))
+        if (has_redir)
           {
             ___close_half_duplex_pipe (&fdp.input, 1);
             ___close_half_duplex_pipe (&fdp.output, 0);
@@ -11700,10 +11747,12 @@ ___processor_state ___ps;)
 
 #ifdef USE_POSIX
 
-  if (___open_half_duplex_pipe (&___ps->os.select_abort) < 0 ||
-      ___set_fd_blocking_mode (___ps->os.select_abort.writing_fd, 0) < 0 ||
-      ___set_fd_blocking_mode (___ps->os.select_abort.reading_fd, 0) < 0)
-    e = err_code_from_errno ();
+  if ((e = ___open_half_duplex_pipe (&___ps->os.select_abort, 1)) == ___FIX(___NO_ERR))
+    {
+      if (___set_fd_blocking_mode (___ps->os.select_abort.writing_fd, 0) < 0 ||
+          ___set_fd_blocking_mode (___ps->os.select_abort.reading_fd, 0) < 0)
+        e = err_code_from_errno ();
+    }
 
 #endif
 

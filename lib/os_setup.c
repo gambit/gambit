@@ -269,6 +269,64 @@ int fd2;)
 }
 
 
+int ___move_fds_to_non_std
+   ___P((int *fds,
+         int nb_fds,
+         ___BOOL close_on_error),
+        (fds,
+         nb_fds,
+         close_on_error)
+int *fds;
+int nb_fds;
+___BOOL close_on_error;)
+{
+  int fds_to_close[3];
+  int to_close = 0;
+  int save_errno = 0;
+  int i;
+
+  for (i=0; i<nb_fds; i++)
+    {
+      int initial_fd = fds[i];
+      int fd = initial_fd;
+
+      while (fd == STDIN_FILENO || fd == STDOUT_FILENO || fd == STDERR_FILENO)
+        {
+          int save_fd = fd;
+          if (save_fd != initial_fd) fds_to_close[to_close++] = save_fd;
+          fd = ___dup_no_EINTR (save_fd);
+          if (fd < 0)
+            {
+              save_errno = errno;
+              if (close_on_error) {
+                ___close_no_EINTR (initial_fd); /* ignore error */
+                for (i=0; i<nb_fds; i++)
+                  ___close_no_EINTR (fds[i]); /* ignore error */
+              }
+              goto done;
+            }
+          fds[i] = fd;
+        }
+
+      if (fd != initial_fd) fds_to_close[to_close++] = initial_fd;
+    }
+
+ done:;
+
+  while (to_close-- > 0) {
+    ___close_no_EINTR (fds_to_close[to_close]); /* ignore error */
+  }
+
+  if (save_errno == 0)
+    return 0;
+  else
+    {
+      errno = save_errno;
+      return -1;
+    }
+}
+
+
 int ___set_fd_blocking_mode
    ___P((int fd,
          ___BOOL blocking),
@@ -303,31 +361,47 @@ ___BOOL blocking;)
 #define USE_pipe
 
 
-int ___open_half_duplex_pipe
-   ___P((___half_duplex_pipe *hdp),
-        (hdp)
-___half_duplex_pipe *hdp;)
+___SCMOBJ ___open_half_duplex_pipe
+   ___P((___half_duplex_pipe *hdp,
+         ___BOOL avoid_std),
+        (hdp,
+         avoid_std)
+___half_duplex_pipe *hdp;
+___BOOL avoid_std;)
 {
+  ___SCMOBJ e = ___FIX(___NO_ERR);
   int fds[2];
 
 #ifdef USE_pipe
   if (pipe (fds) < 0)
-    return -1;
+    return err_code_from_errno ();
 #endif
 
 #ifdef USE_socketpair
   if (socketpair (AF_UNIX, SOCK_STREAM, 0, fds) < 0)
-    return -1;
+    return err_code_from_errno ();
 #endif
 
-  hdp->reading_fd = fds[0];
-  hdp->writing_fd = fds[1];
+  if (avoid_std) {
+    if (___move_fds_to_non_std (fds, 2, 1) < 0)
+      e = err_code_from_errno ();
+  }
+
+  if (e == ___FIX(___NO_ERR))
+    {
+      hdp->reading_fd = fds[0];
+      hdp->writing_fd = fds[1];
+    }
+  else
+    {
+      ___close_half_duplex_pipe(hdp, 2);
+    }
 
 #ifdef ___DEBUG_LOG
   ___printf ("___open_half_duplex_pipe(fds) => fds[0]=%d fds[1]=%d\n", fds[0], fds[1]);
 #endif
 
-  return 0;
+  return e;
 }
 
 
