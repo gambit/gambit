@@ -3067,6 +3067,17 @@
 (define-prim (executable-path)
   (##executable-path))
 
+(define-prim (##process-mnemonic-identifier)
+  (let ((path (if (##pair? ##processed-command-line)
+                  (##car ##processed-command-line)
+                  (let ((exec-path (##os-executable-path)))
+                    (if (##string? exec-path)
+                        exec-path
+                        #f)))))
+    (if path
+        (##path-strip-extension (##path-strip-directory path))
+        (##string-append "process" (##number->string (##os-getpid))))))
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Filesystem operations.
@@ -3098,7 +3109,7 @@
            (let* ((prefix
                    (or path
                        (##path-expand
-                        "gsx-temp"
+                        (##string-append (##process-mnemonic-identifier) "-temp")
                         (##os-path-tempdir))))
                   (pid
                    (##os-getpid))
