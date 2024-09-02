@@ -3067,7 +3067,7 @@
 (define-prim (executable-path)
   (##executable-path))
 
-(define-primitive (##process-mnemonic-identifier)
+(define-primitive (process-mnemonic-identifier)
   (let* ((pcl ##processed-command-line)
 	 (path (if (##pair? pcl)
 		   (##car pcl)
