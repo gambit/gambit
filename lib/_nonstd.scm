@@ -3067,6 +3067,20 @@
 (define-prim (executable-path)
   (##executable-path))
 
+(define-prim (##process-mnemonic-identifier)
+  (let* ((pcl ##processed-command-line)
+	 (path (if (##pair? pcl)
+		   (##car pcl)
+		   (let ((exec-path (##os-executable-path)))
+		     (if (##string? exec-path)
+			 exec-path
+			 #f)))))
+    (##string-append (if path
+			 (##path-strip-extension (##path-strip-directory path))
+			 "process")
+		     "-"
+		     (##number->string (##os-getpid)))))
+
 ;;;----------------------------------------------------------------------------
 
 ;;; Filesystem operations.
@@ -3098,19 +3112,14 @@
            (let* ((prefix
                    (or path
                        (##path-expand
-                        (##string-append
-                         (##path-strip-directory (##executable-path))
-                         "-temp")
+                        (##string-append (##process-mnemonic-identifier) "-temp")
                         (##os-path-tempdir))))
-                  (pid
-                   (##os-getpid))
                   (permissions
                    (##psettings->permissions psettings #o777)))
              (let loop ((i 0))
                (let* ((resolved-path
                        (##path-resolve
                         (##string-append prefix
-                                         (##number->string pid)
                                          (if (##fx= i 0)
                                              ""
                                              (##number->string i)))))
