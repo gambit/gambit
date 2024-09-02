@@ -3120,7 +3120,6 @@
                (let* ((resolved-path
                        (##path-resolve
                         (##string-append prefix
-                                         (##number->string pid)
                                          (if (##fx= i 0)
                                              ""
                                              (##number->string i)))))
