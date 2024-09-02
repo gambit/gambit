@@ -2,7 +2,7 @@
 
 ;;; File: "_host.scm"
 
-;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -190,6 +190,14 @@
 ;; characters that were written out.
 
 (define (write-returning-len obj port)
+  (write obj port)
+  1)
+
+;; 'write-returning-len-without-read-macros' is like 'write' but it
+;; returns the number of characters that were written out and it
+;; does not use read-macros for quote, quasiquote, etc.
+
+(define (write-returning-len-without-read-macros obj port)
   (write obj port)
   1)
 
@@ -768,6 +776,33 @@
 (define (write-returning-len obj port)
   (##namespace ("" with-output-to-string))
   (let ((str (with-output-to-string '() (lambda () (write obj)))))
+    (display str port)
+    (string-length str)))
+
+(define (write-returning-len-without-read-macros obj port)
+
+  (define (readtable-without-read-macros)
+    (include "~~lib/_gambit#.scm")
+    (let ((rt (##make-standard-readtable)))
+      (macro-readtable-quote-keyword-set! rt #f)
+      (macro-readtable-quasiquote-keyword-set! rt #f)
+      (macro-readtable-unquote-keyword-set! rt #f)
+      (macro-readtable-unquote-splicing-keyword-set! rt #f)
+      (macro-readtable-sharp-quote-keyword-set! rt #f)
+      (macro-readtable-sharp-quasiquote-keyword-set! rt #f)
+      (macro-readtable-sharp-unquote-keyword-set! rt #f)
+      (macro-readtable-sharp-unquote-splicing-keyword-set! rt #f)
+      (macro-readtable-sharp-num-keyword-set! rt #f)
+      (macro-readtable-sharp-seq-keyword-set! rt #f)
+      rt))
+
+  (##namespace ("" with-output-to-string))
+
+  (let ((str
+         (with-output-to-string
+           (list readtable: (readtable-without-read-macros))
+           (lambda ()
+             (write obj)))))
     (display str port)
     (string-length str)))
 

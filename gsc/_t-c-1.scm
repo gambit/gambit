@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-1.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -1305,19 +1305,24 @@
   (targ-display (compiler-version))
   (targ-line)
 
-  (write (list (target-name targ-target)) targ-port)
+  (write-returning-len-without-read-macros (list (target-name targ-target))
+                                           targ-port)
   (targ-line)
 
-  (write name targ-port)
+  (write-returning-len-without-read-macros name
+                                           targ-port)
   (targ-line)
 
-  (write supply-modules targ-port)
+  (write-returning-len-without-read-macros supply-modules
+                                           targ-port)
   (targ-line)
 
-  (write demand-modules targ-port)
+  (write-returning-len-without-read-macros demand-modules
+                                           targ-port)
   (targ-line)
 
-  (write mods-and-flags targ-port)
+  (write-returning-len-without-read-macros mods-and-flags
+                                           targ-port)
   (targ-line)
 
   (targ-write-rsrc-names 'symbols
@@ -1344,7 +1349,7 @@
                (key (car key-attribs))
                (attribs (cdr key-attribs)))
           (targ-display "(")
-          (write key targ-port)
+          (write-returning-len-without-read-macros key targ-port)
           (if (not (or (pair? attribs) (null? attribs)))
               (begin
                 (targ-display " .")
@@ -1355,7 +1360,7 @@
                 (let ((attrib (car attribs)))
                   (targ-display " ")
                   (targ-write-escaped key)
-                  (write attrib targ-port)
+                  (write-returning-len-without-read-macros attrib targ-port)
                   (targ-line)
                   (loop2 (cdr attribs)))))
           (targ-display ")")
@@ -1390,7 +1395,7 @@
   (for-each
     (lambda (r)
       (let ((name (targ-rsrc-name r)))
-        (write name targ-port)
+        (write-returning-len-without-read-macros name targ-port)
         (targ-line)))
     lst)
   (targ-display ") ")
@@ -1401,7 +1406,7 @@
   ;; writes obj so that it can't be part of valid C code (even in a
   ;; C string or mutliline C comment)
   (targ-display "#|*/\"*/\"")
-  (write obj targ-port)
+  (write-returning-len-without-read-macros obj targ-port)
   (targ-display "|#"))
 
 (define (targ-dump-module-info name linker-name linkfile? extension? meta-info)
