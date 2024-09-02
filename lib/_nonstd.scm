@@ -3067,16 +3067,19 @@
 (define-prim (executable-path)
   (##executable-path))
 
-(define-prim (##process-mnemonic-identifier)
-  (let ((path (if (##pair? ##processed-command-line)
-                  (##car ##processed-command-line)
-                  (let ((exec-path (##os-executable-path)))
-                    (if (##string? exec-path)
-                        exec-path
-                        #f)))))
-    (if path
-        (##path-strip-extension (##path-strip-directory path))
-        (##string-append "process" (##number->string (##os-getpid))))))
+(define-primitive (##process-mnemonic-identifier)
+  (let* ((pcl ##processed-command-line)
+	 (path (if (##pair? pcl)
+		   (##car pcl)
+		   (let ((exec-path (##os-executable-path)))
+		     (if (##string? exec-path)
+			 exec-path
+			 #f)))))
+    (##string-append (if path
+			 (##path-strip-extension (##path-strip-directory path))
+			 "process")
+		     "-"
+		     (##number->string (##os-getpid)))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -3109,7 +3112,7 @@
            (let* ((prefix
                    (or path
                        (##path-expand
-                        (##string-append (##process-mnemonic-identifier) "-temp")
+                        (##process-mnemonic-identifier)
                         (##os-path-tempdir))))
                   (pid
                    (##os-getpid))
