@@ -3112,10 +3112,8 @@
            (let* ((prefix
                    (or path
                        (##path-expand
-                        (##process-mnemonic-identifier)
+                        (##string-append (##process-mnemonic-identifier) "-temp")
                         (##os-path-tempdir))))
-                  (pid
-                   (##os-getpid))
                   (permissions
                    (##psettings->permissions psettings #o777)))
              (let loop ((i 0))
