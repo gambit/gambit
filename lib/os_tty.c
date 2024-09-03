@@ -813,14 +813,16 @@ ___HIDDEN ___BOOL comint_under_emacs ___PVOID
 #ifdef USE_OLD_INSIDE_EMACS_DETECTION
   {
     static ___UCS_2 emacs_env_name_old[] = { 'E', 'M', 'A', 'C', 'S', '\0' };
-    if (___getenv_UCS_2 (emacs_env_name_old, &emacs_env_value) == ___FIX(___NO_ERR))
+    if ((___env_var_defined_UCS_2 (emacs_env_name_old)) &&
+        (___getenv_UCS_2 (emacs_env_name_old, &emacs_env_value) == ___FIX(___NO_ERR)))
       goto seek_substr;
   }
 #endif
 
   {
     static ___UCS_2 emacs_env_name_new[] = { 'I', 'N', 'S', 'I', 'D', 'E', '_', 'E', 'M', 'A', 'C', 'S', '\0' };
-    if (___getenv_UCS_2 (emacs_env_name_new, &emacs_env_value) == ___FIX(___NO_ERR))
+    if ((___env_var_defined_UCS_2 (emacs_env_name_new)) &&
+        (___getenv_UCS_2 (emacs_env_name_new, &emacs_env_value) == ___FIX(___NO_ERR)))
       goto seek_substr;
   }
 
