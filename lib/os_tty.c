@@ -805,19 +805,35 @@ ___device_tty *self;)
 }
 
 
-___HIDDEN ___BOOL lineeditor_under_emacs ___PVOID
+___HIDDEN ___BOOL comint_under_emacs ___PVOID
 {
+  static ___UCS_2 comint_substr[] = { ',', 'c', 'o', 'm', 'i', 'n', 't', '\0' };
+  ___UCS_2STRING emacs_env_value;
+
 #ifdef USE_OLD_INSIDE_EMACS_DETECTION
   {
     static ___UCS_2 emacs_env_name_old[] = { 'E', 'M', 'A', 'C', 'S', '\0' };
-    if (___env_var_defined_UCS_2 (emacs_env_name_old)) return 1;
+    if (___getenv_UCS_2 (emacs_env_name_old, &emacs_env_value) == ___FIX(___NO_ERR))
+      goto seek_substr;
   }
 #endif
 
   {
     static ___UCS_2 emacs_env_name_new[] = { 'I', 'N', 'S', 'I', 'D', 'E', '_', 'E', 'M', 'A', 'C', 'S', '\0' };
-    if (___env_var_defined_UCS_2 (emacs_env_name_new)) return 1;
+    if (___getenv_UCS_2 (emacs_env_name_new, &emacs_env_value) == ___FIX(___NO_ERR))
+      goto seek_substr;
   }
+
+  return 0;
+
+  seek_substr:
+  while (*emacs_env_value != '\0')
+    {
+      if ((___strcmp_UCS_2 (emacs_env_value, comint_substr)) == 0)
+        return 1;
+      else
+        emacs_env_value++;
+    }
 
   return 0;
 }
@@ -5317,13 +5333,13 @@ ___device_tty *self;)
 
   d->lineeditor_mode = LINEEDITOR_MODE_DISABLE;
 
-  if (lineeditor_under_emacs ())
+  if (comint_under_emacs ())
     d->input_echo = 0;
 
 #if defined(USE_POSIX) || defined(USE_WIN32) || defined(USE_tcgetsetattr)
 
-  if (___TERMINAL_LINE_EDITING(___GSTATE->setup_params.io_settings[___IO_SETTINGS_TERMINAL]) !=
-      ___TERMINAL_LINE_EDITING_OFF)
+  else if (___TERMINAL_LINE_EDITING(___GSTATE->setup_params.io_settings[___IO_SETTINGS_TERMINAL]) !=
+           ___TERMINAL_LINE_EDITING_OFF)
     d->lineeditor_mode = LINEEDITOR_MODE_SCHEME;
 
 #endif
