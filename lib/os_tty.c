@@ -804,6 +804,12 @@ ___device_tty *self;)
   return ___FIX(___NO_ERR);
 }
 
+___HIDDEN ___BOOL tty_is_dumb ___PVOID
+{
+  static ___UCS_2 term_env_name[] = { 'T', 'E', 'R', 'M', '\0' };
+  static ___UCS_2 dumb_str[] = { 'd', 'u', 'm', 'b', '\0' };
+  return ___env_var_equal_UCS_2 (term_env_name, dumb_str);
+}
 
 ___HIDDEN ___BOOL comint_under_emacs ___PVOID
 {
@@ -5311,8 +5317,18 @@ ___device_tty *self;)
   ___SCMOBJ default_options =
     ___INT(___device_tty_default_options_virt (&d->base));
 
-  if (___device_kind (&d->base.base) == ___TTY_DEVICE_KIND ||
-      d->stage == TTY_STAGE_NOT_OPENED)
+  if (comint_under_emacs ())
+    {
+      /* Emacs comint-derived mode */
+
+      d->input_allow_special = 0;
+      d->input_echo = 0;
+      d->input_raw = 1;
+      d->output_raw = 0;
+      d->speed = 0;
+    }
+  else if (___device_kind (&d->base.base) == ___TTY_DEVICE_KIND ||
+           d->stage == TTY_STAGE_NOT_OPENED)
     {
       /* Console */
 
@@ -5335,13 +5351,10 @@ ___device_tty *self;)
 
   d->lineeditor_mode = LINEEDITOR_MODE_DISABLE;
 
-  if (comint_under_emacs ())
-    d->input_echo = 0;
-
 #if defined(USE_POSIX) || defined(USE_WIN32) || defined(USE_tcgetsetattr)
 
-  else if (___TERMINAL_LINE_EDITING(___GSTATE->setup_params.io_settings[___IO_SETTINGS_TERMINAL]) !=
-           ___TERMINAL_LINE_EDITING_OFF)
+  if ((___TERMINAL_LINE_EDITING(___GSTATE->setup_params.io_settings[___IO_SETTINGS_TERMINAL]) !=
+       ___TERMINAL_LINE_EDITING_OFF) && (!tty_is_dumb ()))
     d->lineeditor_mode = LINEEDITOR_MODE_SCHEME;
 
 #endif
