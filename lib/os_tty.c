@@ -811,7 +811,7 @@ ___HIDDEN ___BOOL tty_is_dumb ___PVOID
   return ___env_var_equal_UCS_2 (term_env_name, dumb_str);
 }
 
-___HIDDEN ___BOOL comint_under_emacs ___PVOID
+___HIDDEN ___BOOL lineeditor_under_emacs_comint ___PVOID
 {
   static ___UCS_2 comint_substr[] = { ',', 'c', 'o', 'm', 'i', 'n', 't', '\0' };
   ___UCS_2STRING emacs_env_value;
@@ -5314,10 +5314,10 @@ ___device_tty *self;)
   ___device_tty *d = self;
   ___SCMOBJ e;
   lineeditor_history *h;
-  ___SCMOBJ default_options =
+  int default_options =
     ___INT(___device_tty_default_options_virt (&d->base));
 
-  if (comint_under_emacs ())
+  if (lineeditor_under_emacs_comint ())
     {
       /* Emacs comint-derived mode */
 
