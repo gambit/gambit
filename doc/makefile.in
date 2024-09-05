@@ -88,7 +88,7 @@ gambit.info
 DISTFILES = $(RCFILES) $(GENDISTFILES)
 
 INSTFILES_DOC = gambit.pdf gambit*.html gambit.tsv gambit.txt
-INSTFILES_INFO = gambit.info*
+INSTFILES_INFO = gambit.info
 INSTFILES_MAN = gsi.1
 
 all: core
@@ -112,7 +112,7 @@ html: gambit.html gambit.tsv
 txt: gambit.txt
 
 gambit.info: gambit.txi version.txi
-	(cd $(srcdir) && $(MAKEINFO) gambit.txi) || (echo "*** $@ could not be built (perhaps $(MAKEINFO) is not installed?)" > $@)
+	(cd $(srcdir) && $(MAKEINFO) --no-split gambit.txi) || (echo "*** $@ could not be built (perhaps $(MAKEINFO) is not installed?)" > $@)
 
 gambit.ps: gambit.pdf
 	(cd $(srcdir) && $(PDF2PS) gambit.pdf) || (echo "*** $@ could not be built (perhaps $(PDF2PS) is not installed?)" > $@)

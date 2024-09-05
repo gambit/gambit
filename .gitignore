@@ -44,10 +44,7 @@ doc/gambit.cp
 doc/gambit.cps
 doc/gambit.fn
 doc/gambit.html
-doc/gambit.info
-doc/gambit.info-1
-doc/gambit.info-2
-doc/gambit.info-3
+doc/gambit.info*
 doc/gambit.ky
 doc/gambit.log
 doc/gambit.pdf
