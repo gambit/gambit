@@ -7,7 +7,6 @@
           (##string-ref cd (##fx- (##string-length cd) 1))))
     (##char=? #\\ directory-separator)))
 
-(let ((capture-behavior exit0-when-unimplemented-operation-os-exception))
 (check-same-behavior ("" "##" "~~lib/gambit/prim/filesystem#.scm")
 
 ;; R7RS
@@ -95,4 +94,4 @@
 (let ((x "test_file.txt")) (write-file-string-list x '("a" "b")) (read-file-string x) (delete-file x))
 (let ((x "test_file.txt")) (write-file-u8vector x (u8vector 33 34 35)) (read-file-string x) (delete-file x))
 
-))
+)

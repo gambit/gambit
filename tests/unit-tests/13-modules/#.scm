@@ -19,7 +19,7 @@
 
 (define (capture-behavior thunk)
   (with-exception-catcher
-   (lambda (e) e)
+   (lambda (e) (or (os-unimplemented-exception-string e) e))
    thunk))
 
 (define (compare-behavior namespaces calls . behaviors)
