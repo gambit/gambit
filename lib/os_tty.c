@@ -804,6 +804,7 @@ ___device_tty *self;)
   return ___FIX(___NO_ERR);
 }
 
+
 ___HIDDEN ___BOOL tty_is_dumb ___PVOID
 {
   static ___UCS_2 term_env_name[] = { 'T', 'E', 'R', 'M', '\0' };
@@ -811,36 +812,23 @@ ___HIDDEN ___BOOL tty_is_dumb ___PVOID
   return ___env_var_equal_UCS_2 (term_env_name, dumb_str);
 }
 
+
 ___HIDDEN ___BOOL lineeditor_under_emacs_comint ___PVOID
 {
+  static ___UCS_2 emacs_env_name[] = { 'I', 'N', 'S', 'I', 'D', 'E', '_', 'E', 'M', 'A', 'C', 'S', '\0' };
   static ___UCS_2 comint_substr[] = { ',', 'c', 'o', 'm', 'i', 'n', 't', '\0' };
   ___UCS_2STRING emacs_env_value;
 
-#ifdef USE_OLD_INSIDE_EMACS_DETECTION
-  {
-    static ___UCS_2 emacs_env_name_old[] = { 'E', 'M', 'A', 'C', 'S', '\0' };
-    if ((___env_var_defined_UCS_2 (emacs_env_name_old)) &&
-        (___getenv_UCS_2 (emacs_env_name_old, &emacs_env_value) == ___FIX(___NO_ERR)))
-      goto seek_substr;
-  }
-#endif
-
-  {
-    static ___UCS_2 emacs_env_name_new[] = { 'I', 'N', 'S', 'I', 'D', 'E', '_', 'E', 'M', 'A', 'C', 'S', '\0' };
-    if ((___env_var_defined_UCS_2 (emacs_env_name_new)) &&
-        (___getenv_UCS_2 (emacs_env_name_new, &emacs_env_value) == ___FIX(___NO_ERR)))
-      goto seek_substr;
-  }
-
-  return 0;
-
-  seek_substr:
-  while (*emacs_env_value != '\0')
+  if ((___env_var_defined_UCS_2 (emacs_env_name)) &&
+      (___getenv_UCS_2 (emacs_env_name, &emacs_env_value) == ___FIX(___NO_ERR)))
     {
-      if ((___strcmp_UCS_2 (emacs_env_value, comint_substr)) == 0)
-        return 1;
-      else
-        emacs_env_value++;
+      while (*emacs_env_value != '\0')
+        {
+          if ((___strcmp_UCS_2 (emacs_env_value, comint_substr)) == 0)
+            return 1;
+          else
+            emacs_env_value++;
+        }
     }
 
   return 0;
