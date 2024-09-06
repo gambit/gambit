@@ -204,9 +204,9 @@
 
 (define (os-unimplemented-exception-string e)
   (and (os-exception? e)
-       (let ((err-code (##os-err-code->string (os-exception-code e))))
-         (and (string=? err-code "Unimplemented operation")
-              err-code))))
+       (let ((err-string (##os-err-code->string (os-exception-code e))))
+         (and (string=? err-string "Unimplemented operation")
+              err-string))))
 
 (define (exit0-when-unimplemented-operation-os-exception thunk)
   (with-exception-catcher
