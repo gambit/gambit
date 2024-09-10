@@ -13427,7 +13427,7 @@ $ @b{./foo 1 2 "3 4"}
 
 This procedure returns a newly allocated string representing a
 @dfn{normalized path} to the executable file from which the running process
-spawned.  The path is determined dynamically using facilities specific
+spawned.  The path is determined dynamically using a mechanism specific
 to the host operating system.
 
 For example under UNIX:
