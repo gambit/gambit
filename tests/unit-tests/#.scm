@@ -202,12 +202,16 @@
 (##define-syntax check-exn        (lambda (src) (##expand-check src)))
 (##define-syntax check-tail-exn   (lambda (src) (##expand-check src)))
 
+(define (os-unimplemented-exception-string e)
+  (and (os-exception? e)
+       (let ((err-string (##os-err-code->string (os-exception-code e))))
+         (and (string=? err-string "Unimplemented operation")
+              err-string))))
+
 (define (exit0-when-unimplemented-operation-os-exception thunk)
   (with-exception-catcher
    (lambda (e)
-     (if (and (os-exception? e)
-              (equal? (##os-err-code->string (os-exception-code e))
-                      "Unimplemented operation"))
+     (if (os-unimplemented-exception-string e)
          (exit 0)
          (raise e)))
    thunk))
