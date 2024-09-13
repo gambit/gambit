@@ -59,7 +59,7 @@ jobs:
         make install
 
     - name: Upload Build Artifact
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       if: github.event_name == 'push'
       with:
         name: gambit-win-mingw-${{ matrix.arch }}
@@ -77,7 +77,7 @@ jobs:
         make install
 
     - name: Upload Build Artifact (--disable-multiple-threaded-vms)
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       if: github.event_name == 'push'
       with:
         name: gambit-win-mingw-${{ matrix.arch }}-st
@@ -137,7 +137,7 @@ jobs:
         msys2 -c "./configure --enable-single-host --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist CC='cl' && make clean && make -j%NUMBER_OF_PROCESSORS% core && make modules && make install"
 
     - name: Upload Build Artifact
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       if: github.event_name == 'push'
       with:
         name: gambit-win-msvc-x86_64
@@ -151,7 +151,7 @@ jobs:
         msys2 -c "./configure --enable-single-host --disable-multiple-threaded-vms --enable-gambitdir=~~execdir/.. --prefix=$(pwd)/dist-st CC='cl' && make clean && make -j%NUMBER_OF_PROCESSORS% core && make modules && make install"
 
     - name: Upload Build Artifact (--disable-multiple-threaded-vms)
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       if: github.event_name == 'push'
       with:
         name: gambit-win-msvc-x86_64-st
@@ -203,7 +203,7 @@ jobs:
         cd ..
 
     - name: Upload Build Artifact
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       if: github.event_name == 'push'
       with:
         name: gambit-linux-x86_64
@@ -219,7 +219,7 @@ jobs:
         cd ..
 
     - name: Upload Build Artifact (--disable-multiple-threaded-vms)
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       if: github.event_name == 'push'
       with:
         name: gambit-linux-x86_64-st
@@ -229,7 +229,7 @@ jobs:
       run: make dist-boot
 
     - name: Upload Source
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: boot
         path: boot.tgz
@@ -283,7 +283,7 @@ jobs:
         cd ..
 
     - name: Upload Artifact
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       if: github.event_name == 'push'
       with:
         name: gambit-macos-x86_64
@@ -301,7 +301,7 @@ jobs:
         cd ..
 
     - name: Upload Artifact (--disable-multiple-threaded-vms)
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       if: github.event_name == 'push'
       with:
         name: gambit-macos-x86_64-st
