@@ -10570,7 +10570,7 @@
 (define-prim (##readtable-setup-for-standard-level! rt)
   (let ((standard-level (##get-standard-level)))
 
-    (cond ((##fxzero? standard-level) ;; Gambit language, explicit
+    (cond ((##fx= standard-level 0) ;; Gambit language, explicit
            (macro-readtable-case-conversion?-set! rt #f)
            (macro-readtable-keywords-allowed?-set! rt #t)
            (macro-readtable-bracket-handler-set! rt '|[...]|)
