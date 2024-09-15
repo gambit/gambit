@@ -1819,6 +1819,8 @@ else
 
                AC_SEARCH_LIBS(asin,m)
 
+               AC_SEARCH_LIBS(backtrace_symbols_fd,execinfo)
+
                AC_SEARCH_LIBS(dlopen,dl)
                AC_SEARCH_LIBS(shl_load,dld)
 

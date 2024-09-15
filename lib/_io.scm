@@ -10570,19 +10570,20 @@
 (define-prim (##readtable-setup-for-standard-level! rt)
   (let ((standard-level (##get-standard-level)))
 
-    (cond ((or (##fx= standard-level 4)  ;; R4RS language
+    (cond ((##fx= standard-level 0) ;; Gambit language, explicit
+           (macro-readtable-case-conversion?-set! rt #f)
+           (macro-readtable-keywords-allowed?-set! rt #t)
+           (macro-readtable-bracket-handler-set! rt '|[...]|)
+           (macro-readtable-brace-handler-set! rt '|{...}|))
+          ((or (##fx= standard-level 4)  ;; R4RS language
                (##fx= standard-level 5)) ;; R5RS language
            (macro-readtable-case-conversion?-set! rt #t)
            (macro-readtable-keywords-allowed?-set! rt #f))
-
           ((or (##fx= standard-level 6)  ;; R6RS language
                (##fx= standard-level 7)) ;; R7RS language
            (macro-readtable-case-conversion?-set! rt #f)
            (macro-readtable-keywords-allowed?-set! rt #f))
-
-          (else ;; Gambit language
-           (macro-readtable-case-conversion?-set! rt #f)
-           (macro-readtable-keywords-allowed?-set! rt #t)
+          (else ;; Gambit language, implicit
            (macro-readtable-bracket-handler-set! rt '|[...]|)
            (macro-readtable-brace-handler-set! rt '|{...}|)))))
 
