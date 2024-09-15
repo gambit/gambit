@@ -5313,7 +5313,7 @@ ___device_tty *self;)
     {
       /* Emacs comint-derived mode */
 
-      d->input_allow_special = 0;
+      d->input_allow_special = 1;
       d->input_echo = 0;
       d->input_raw = 0;
       d->output_raw = 0;
