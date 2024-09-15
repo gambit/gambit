@@ -415,6 +415,23 @@
 
 #endif
 
+#ifndef ___CPU_loongarch
+
+#ifdef loongarch
+#define ___CPU_loongarch
+#else
+#ifdef __loongarch
+#define ___CPU_loongarch
+#else
+#ifdef __loongarch__
+#define ___CPU_loongarch
+#else
+#endif
+#endif
+#endif
+
+#endif
+
 #ifndef ___CPU_ia64
 
 #ifdef __ia64
@@ -536,6 +553,10 @@
 #endif
 
 #ifdef ___CPU_riscv
+#define ___LITTLE_ENDIAN
+#endif
+
+#ifdef ___CPU_loongarch
 #define ___LITTLE_ENDIAN
 #endif
 
