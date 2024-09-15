@@ -13425,7 +13425,7 @@ $ @b{./foo 1 2 "3 4"}
 
 @deffn procedure executable-path
 
-This procedure returns a newly allocated string representing a
+This procedure returns a string representing a
 @dfn{normalized path} to the executable file from which the running process
 spawned.  The path is determined dynamically using a mechanism specific
 to the host operating system.
@@ -13435,9 +13435,10 @@ For example under UNIX:
 @smallexample
 $ @b{echo '(pp (executable-path))' > ep.scm}
 $ @b{gsc -exe ep.scm}
-$ @b{mv ep $(mktemp -d)}
-$ @b{$_/ep}
-"/tmp/tmp.T4KyLV9QOh/ep"
+$ @b{pwd}
+/gambit/example
+$ @b{./ep}
+"/gambit/example/ep"
 @end smallexample
 
 @end deffn
