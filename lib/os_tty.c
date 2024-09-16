@@ -3787,6 +3787,7 @@ int len;)
    * emulated terminal's cursor.
    */
 
+  ___BOOL under_emacs_comint = lineeditor_under_emacs_comint();
   ___device_tty *d = self;
   ___SCMOBJ e;
   int pn;
@@ -3832,7 +3833,7 @@ int len;)
             }
         }
 
-      if ((d->input_echo <= 0) && (d->prompt_length <= 0))
+      if (under_emacs_comint && (d->prompt_length <= 0))
         return ___FIX(___NO_ERR);
 
       switch (pn)
