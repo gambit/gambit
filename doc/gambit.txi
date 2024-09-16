@@ -5459,9 +5459,6 @@ The procedures in this section are not yet documented.
 @deffn procedure get-environment-variables
 @end deffn
 
-@deffn procedure executable-path
-@end deffn
-
 @deffn procedure command-name
 @deffnx procedure command-args
 @end deffn
@@ -12905,7 +12902,7 @@ operating systems supported by Gambit (e.g. MSDOS).
 * Filesystem operations::                   Filesystem operations
 * Shell command execution::                 Shell command execution
 * Process termination::                     Process termination
-* Command line arguments::                  Command line arguments
+* Invocation information::                  Invocation information
 * Environment variables::                   Environment variables
 * Measuring time::                          Measuring time
 * File information::                        File information
@@ -13378,7 +13375,7 @@ For example under Windows:
 
 @end deffn
 
-@node Process termination, Command line arguments, Shell command execution, Host environment
+@node Process termination, Invocation information, Shell command execution, Host environment
 @section Process termination
 
 @deffn procedure exit @r{[}@var{status}@r{]}
@@ -13401,8 +13398,8 @@ $ @b{echo $?}
 
 @end deffn
 
-@node Command line arguments, Environment variables, Process termination, Host environment
-@section Command line arguments
+@node Invocation information
+@section Invocation information
 
 @deffn procedure command-line
 
@@ -13426,7 +13423,27 @@ $ @b{./foo 1 2 "3 4"}
 
 @end deffn
 
-@node Environment variables, Measuring time, Command line arguments, Host environment
+@deffn procedure executable-path
+
+This procedure returns a string representing a
+@dfn{normalized path} to the executable file from which the running process
+spawned.  The path is determined dynamically using a mechanism specific
+to the host operating system.
+
+For example under UNIX:
+
+@smallexample
+$ @b{echo '(pp (executable-path))' > ep.scm}
+$ @b{gsc -exe ep.scm}
+$ @b{pwd}
+/gambit/example
+$ @b{./ep}
+"/gambit/example/ep"
+@end smallexample
+
+@end deffn
+
+@node Environment variables, Measuring time, Invocation information, Host environment
 @section Environment variables
 
 @deffn procedure getenv @var{name} @r{[}@var{default}@r{]}
