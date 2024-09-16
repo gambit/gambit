@@ -5309,7 +5309,7 @@ ___device_tty *self;)
     ___INT(___device_tty_default_options_virt (&d->base));
 
   if (___device_kind (&d->base.base) == ___TTY_DEVICE_KIND ||
-           d->stage == TTY_STAGE_NOT_OPENED)
+      d->stage == TTY_STAGE_NOT_OPENED)
     {
       /* Console */
 
