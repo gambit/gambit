@@ -3787,7 +3787,6 @@ int len;)
    * emulated terminal's cursor.
    */
 
-  ___BOOL under_emacs_comint = lineeditor_under_emacs_comint();
   ___device_tty *d = self;
   ___SCMOBJ e;
   int pn;
@@ -3833,7 +3832,7 @@ int len;)
             }
         }
 
-      if (under_emacs_comint && (d->prompt_length <= 0))
+      if ((d->input_echo <= 0) && (d->prompt_length <= 0))
         return ___FIX(___NO_ERR);
 
       switch (pn)
@@ -5309,23 +5308,16 @@ ___device_tty *self;)
   int default_options =
     ___INT(___device_tty_default_options_virt (&d->base));
 
-  if (lineeditor_under_emacs_comint ())
-    {
-      /* Emacs comint-derived mode */
-
-      d->input_allow_special = 1;
-      d->input_echo = 0;
-      d->input_raw = 0;
-      d->output_raw = 0;
-      d->speed = 0;
-    }
-  else if (___device_kind (&d->base.base) == ___TTY_DEVICE_KIND ||
+  if (___device_kind (&d->base.base) == ___TTY_DEVICE_KIND ||
            d->stage == TTY_STAGE_NOT_OPENED)
     {
       /* Console */
 
       d->input_allow_special = 1;
-      d->input_echo = 1;
+      if (lineeditor_under_emacs_comint ())
+        d->input_echo = 0;
+      else
+        d->input_echo = 1;
       d->input_raw = 0;
       d->output_raw = 0;
       d->speed = 0;
