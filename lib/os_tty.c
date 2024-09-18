@@ -813,10 +813,13 @@ ___HIDDEN ___BOOL tty_is_dumb ___PVOID
 }
 
 
-___HIDDEN ___BOOL lineeditor_under_emacs_comint ___PVOID
+___HIDDEN ___BOOL lineeditor_should_echo ___PVOID
 {
   static ___UCS_2 emacs_env_name[] = { 'I', 'N', 'S', 'I', 'D', 'E', '_', 'E', 'M', 'A', 'C', 'S', '\0' };
-  static ___UCS_2 comint_substr[] = { ',', 'c', 'o', 'm', 'i', 'n', 't', '\0' };
+  static ___UCS_2 comint_endstr[] = { ',', 'c', 'o', 'm', 'i', 'n', 't', '\0' };
+  static ___UCS_2 eshell_endstr[] = { ',', 'e', 's', 'h', 'e', 'l', 'l', '\0' };
+  static ___UCS_2 comint_midstr[] = { ',', 'c', 'o', 'm', 'i', 'n', 't', ',', '\0'};
+  static ___UCS_2 eshell_midstr[] = { ',', 'e', 's', 'h', 'e', 'l', 'l', ',', '\0'};
   ___UCS_2STRING emacs_env_value;
 
   if ((___env_var_defined_UCS_2 (emacs_env_name)) &&
@@ -824,14 +827,17 @@ ___HIDDEN ___BOOL lineeditor_under_emacs_comint ___PVOID
     {
       while (*emacs_env_value != '\0')
         {
-          if ((___strcmp_UCS_2 (emacs_env_value, comint_substr)) == 0)
-            return 1;
+          if ((___strcmp_UCS_2 (comint_endstr, emacs_env_value)) == 0 ||
+              (___strcmp_UCS_2 (eshell_endstr, emacs_env_value)) == 0 ||
+              (___strcmp_UCS_2 (comint_midstr, emacs_env_value)) == 1 ||
+              (___strcmp_UCS_2 (eshell_midstr, emacs_env_value)) == 1)
+            return 0;
           else
             emacs_env_value++;
         }
     }
 
-  return 0;
+  return 1;
 }
 
 
@@ -3787,7 +3793,7 @@ int len;)
    * emulated terminal's cursor.
    */
 
-  ___BOOL under_emacs_comint = lineeditor_under_emacs_comint();
+  ___BOOL should_echo = lineeditor_should_echo();
   ___device_tty *d = self;
   ___SCMOBJ e;
   int pn;
@@ -3833,7 +3839,7 @@ int len;)
             }
         }
 
-      if (under_emacs_comint && (d->prompt_length <= 0))
+      if (!should_echo && (d->prompt_length <= 0))
         return ___FIX(___NO_ERR);
 
       switch (pn)
@@ -5315,10 +5321,7 @@ ___device_tty *self;)
       /* Console */
 
       d->input_allow_special = 1;
-      if (lineeditor_under_emacs_comint ())
-        d->input_echo = 0;
-      else
-        d->input_echo = 1;
+      d->input_echo = lineeditor_should_echo ();
       d->input_raw = 0;
       d->output_raw = 0;
       d->speed = 0;
