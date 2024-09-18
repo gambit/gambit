@@ -3793,7 +3793,7 @@ int len;)
    * emulated terminal's cursor.
    */
 
-  ___BOOL should_echo = lineeditor_should_echo();
+  ___BOOL should_echo = lineeditor_should_echo ();
   ___device_tty *d = self;
   ___SCMOBJ e;
   int pn;
