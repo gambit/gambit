@@ -3793,7 +3793,6 @@ int len;)
    * emulated terminal's cursor.
    */
 
-  ___BOOL should_echo = lineeditor_should_echo ();
   ___device_tty *d = self;
   ___SCMOBJ e;
   int pn;
@@ -3839,7 +3838,7 @@ int len;)
             }
         }
 
-      if (!should_echo && (d->prompt_length <= 0))
+      if ((d->input_echo <= 0) && (d->prompt_length <= 0))
         return ___FIX(___NO_ERR);
 
       switch (pn)
