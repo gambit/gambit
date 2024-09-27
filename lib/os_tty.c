@@ -3838,9 +3838,6 @@ int len;)
             }
         }
 
-      if ((d->input_echo <= 0) && (d->prompt_length <= 0))
-        return ___FIX(___NO_ERR);
-
       switch (pn)
         {
         case -2:
@@ -4164,6 +4161,9 @@ tty_text_attrs attrs;)
    * This routine outputs "len" characters from the buffer "buf" using
    * the text attributes "attrs".
    */
+
+  if (!self->input_echo)
+    return ___FIX(___NO_ERR);
 
   ___device_tty *d = self;
   ___SCMOBJ e;
