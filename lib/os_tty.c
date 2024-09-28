@@ -816,6 +816,7 @@ ___HIDDEN ___BOOL tty_is_dumb ___PVOID
 ___HIDDEN ___BOOL lineeditor_should_echo ___PVOID
 {
   static ___UCS_2 emacs_env_name[] = { 'I', 'N', 'S', 'I', 'D', 'E', '_', 'E', 'M', 'A', 'C', 'S', '\0' };
+  static ___UCS_2 common_begstr[] = { ',', '\0' };
   static ___UCS_2 comint_endstr[] = { ',', 'c', 'o', 'm', 'i', 'n', 't', '\0' };
   static ___UCS_2 eshell_endstr[] = { ',', 'e', 's', 'h', 'e', 'l', 'l', '\0' };
   static ___UCS_2 comint_midstr[] = { ',', 'c', 'o', 'm', 'i', 'n', 't', ',', '\0' };
@@ -827,10 +828,11 @@ ___HIDDEN ___BOOL lineeditor_should_echo ___PVOID
     {
       while (*emacs_env_value != '\0')
         {
-          if ((___strcmp_UCS_2 (comint_endstr, emacs_env_value)) == 0 ||
-              (___strcmp_UCS_2 (eshell_endstr, emacs_env_value)) == 0 ||
-              (___strcmp_UCS_2 (comint_midstr, emacs_env_value)) == 1 ||
-              (___strcmp_UCS_2 (eshell_midstr, emacs_env_value)) == 1)
+          if (((___strcmp_UCS_2 (common_begstr, emacs_env_value)) == 1) &&
+              ((___strcmp_UCS_2 (comint_endstr, emacs_env_value)) == 0 ||
+               (___strcmp_UCS_2 (eshell_endstr, emacs_env_value)) == 0 ||
+               (___strcmp_UCS_2 (comint_midstr, emacs_env_value)) == 1 ||
+               (___strcmp_UCS_2 (eshell_midstr, emacs_env_value)) == 1))
             return 0;
           else
             emacs_env_value++;
