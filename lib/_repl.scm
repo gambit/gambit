@@ -2947,12 +2947,30 @@
                        open-output-file
                        path-or-settings)))))))
 
-       (let ((result
-              (let ((input-port (macro-repl-channel-input-port channel)))
-                (##read-expr-from-port input-port))))
-         (let ((output-port (macro-repl-channel-output-port channel)))
-           (##output-port-column-set! output-port 1))
-         result)))))
+       (let ((input-port (macro-repl-channel-input-port channel)))
+
+         (define (flush-input only-whitespace? input-port)
+           (let ((c (##peek-char input-port)))
+             (if (##eqv? c #\newline)
+                 (##read-char input-port)
+                 (if (and (##char? c)
+                          (or (##not only-whitespace?)
+                              (##char<=? c #\space)))
+                     (begin
+                       (##read-char input-port)
+                       (flush-input only-whitespace? input-port))))))
+
+         (##with-exception-catcher
+          (lambda (exc)
+            (flush-input #f input-port)
+            (##raise exc))
+          (lambda ()
+            (let ((result (##read-expr-from-port input-port)))
+              (let ((output-port (macro-repl-channel-output-port channel)))
+                (##output-port-column-set! output-port 1))
+              (if (##not (##eof-object? result))
+                  (flush-input #t input-port))
+              result))))))))
 
 (define-prim (##repl-channel-ports-read-command channel level depth)
 
