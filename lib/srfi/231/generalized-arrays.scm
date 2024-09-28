@@ -1442,7 +1442,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                                      ;; no overflow
                                      (construct-representation sign-bit
                                                                (fx+ exponent ,exponent-bias)
-                                                               (fxand possible-mantissa ,mantissa-mask))
+                                                               possible-mantissa)
                                      ;; overflow
                                      (if (fx= exponent ,exponent-bias)
                                          ;; maximum finite exponent, overflow to infinity
