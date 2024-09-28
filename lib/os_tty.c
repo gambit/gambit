@@ -805,21 +805,41 @@ ___device_tty *self;)
 }
 
 
-___HIDDEN ___BOOL lineeditor_under_emacs ___PVOID
+___HIDDEN ___BOOL tty_is_dumb ___PVOID
 {
-#ifdef USE_OLD_INSIDE_EMACS_DETECTION
-  {
-    static ___UCS_2 emacs_env_name_old[] = { 'E', 'M', 'A', 'C', 'S', '\0' };
-    if (___env_var_defined_UCS_2 (emacs_env_name_old)) return 1;
-  }
-#endif
+  static ___UCS_2 term_env_name[] = { 'T', 'E', 'R', 'M', '\0' };
+  static ___UCS_2 dumb_str[] = { 'd', 'u', 'm', 'b', '\0' };
+  return ___env_var_equal_UCS_2 (term_env_name, dumb_str);
+}
 
-  {
-    static ___UCS_2 emacs_env_name_new[] = { 'I', 'N', 'S', 'I', 'D', 'E', '_', 'E', 'M', 'A', 'C', 'S', '\0' };
-    if (___env_var_defined_UCS_2 (emacs_env_name_new)) return 1;
-  }
 
-  return 0;
+___HIDDEN ___BOOL lineeditor_should_echo ___PVOID
+{
+  static ___UCS_2 emacs_env_name[] = { 'I', 'N', 'S', 'I', 'D', 'E', '_', 'E', 'M', 'A', 'C', 'S', '\0' };
+  static ___UCS_2 common_begstr[] = { ',', '\0' };
+  static ___UCS_2 comint_endstr[] = { ',', 'c', 'o', 'm', 'i', 'n', 't', '\0' };
+  static ___UCS_2 eshell_endstr[] = { ',', 'e', 's', 'h', 'e', 'l', 'l', '\0' };
+  static ___UCS_2 comint_midstr[] = { ',', 'c', 'o', 'm', 'i', 'n', 't', ',', '\0' };
+  static ___UCS_2 eshell_midstr[] = { ',', 'e', 's', 'h', 'e', 'l', 'l', ',', '\0' };
+  ___UCS_2STRING emacs_env_value;
+
+  if ((___env_var_defined_UCS_2 (emacs_env_name)) &&
+      (___getenv_UCS_2 (emacs_env_name, &emacs_env_value) == ___FIX(___NO_ERR)))
+    {
+      while (*emacs_env_value != '\0')
+        {
+          if (((___strcmp_UCS_2 (common_begstr, emacs_env_value)) == 1) &&
+              ((___strcmp_UCS_2 (comint_endstr, emacs_env_value)) == 0 ||
+               (___strcmp_UCS_2 (eshell_endstr, emacs_env_value)) == 0 ||
+               (___strcmp_UCS_2 (comint_midstr, emacs_env_value)) == 1 ||
+               (___strcmp_UCS_2 (eshell_midstr, emacs_env_value)) == 1))
+            return 0;
+          else
+            emacs_env_value++;
+        }
+    }
+
+  return 1;
 }
 
 
@@ -4144,6 +4164,9 @@ tty_text_attrs attrs;)
    * the text attributes "attrs".
    */
 
+  if (!self->input_echo)
+    return ___FIX(___NO_ERR);
+
   ___device_tty *d = self;
   ___SCMOBJ e;
 
@@ -5290,7 +5313,7 @@ ___device_tty *self;)
   ___device_tty *d = self;
   ___SCMOBJ e;
   lineeditor_history *h;
-  ___SCMOBJ default_options =
+  int default_options =
     ___INT(___device_tty_default_options_virt (&d->base));
 
   if (___device_kind (&d->base.base) == ___TTY_DEVICE_KIND ||
@@ -5299,7 +5322,7 @@ ___device_tty *self;)
       /* Console */
 
       d->input_allow_special = 1;
-      d->input_echo = 1;
+      d->input_echo = lineeditor_should_echo ();
       d->input_raw = 0;
       d->output_raw = 0;
       d->speed = 0;
@@ -5317,13 +5340,10 @@ ___device_tty *self;)
 
   d->lineeditor_mode = LINEEDITOR_MODE_DISABLE;
 
-  if (lineeditor_under_emacs ())
-    d->input_echo = 0;
-
 #if defined(USE_POSIX) || defined(USE_WIN32) || defined(USE_tcgetsetattr)
 
-  if (___TERMINAL_LINE_EDITING(___GSTATE->setup_params.io_settings[___IO_SETTINGS_TERMINAL]) !=
-      ___TERMINAL_LINE_EDITING_OFF)
+  if ((___TERMINAL_LINE_EDITING(___GSTATE->setup_params.io_settings[___IO_SETTINGS_TERMINAL]) !=
+       ___TERMINAL_LINE_EDITING_OFF) && (!tty_is_dumb ()))
     d->lineeditor_mode = LINEEDITOR_MODE_SCHEME;
 
 #endif
