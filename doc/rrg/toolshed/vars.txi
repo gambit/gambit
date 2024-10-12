@@ -1,0 +1,16 @@
+@c Copyright (c) 2024 by Macon Gambill, All Rights Reserved.
+@include toolshed/html-char-refs.txi
+
+@set REVISION Revised
+@set VERSION 4.9.5
+
+@set HOMEPAGEURL https://gambitscheme.org
+@set GITHUBURL https://github.com/gambit/gambit
+
+@set R7RS @inlinefmtifelse{info,@acronym{R7RS},@inlinefmtifelse{plaintext,@acronym{R7RS},@acronym{R@sup{7}RS}}}
+
+@set R5RS @inlinefmtifelse{info,@acronym{R5RS},@inlinefmtifelse{plaintext,@acronym{R5RS},@acronym{R@sup{5}RS}}}
+
+@set R4RS @inlinefmtifelse{info,@acronym{R4RS},@inlinefmtifelse{plaintext,@acronym{R4RS},@acronym{R@sup{4}RS}}}
+
+@set RNRS @inlinefmtifelse{info,@acronym{RNRS},@inlinefmtifelse{plaintext,@acronym{RNRS},@acronym{R@sup{n}RS}}}

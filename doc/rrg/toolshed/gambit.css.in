@@ -1,0 +1,104 @@
+/* Copyright (c) 2024 by Macon Gambill, All Rights Reserved. */
+/* BEGIN COLORS */
+body {
+    color: %fg-main%;
+    background-color: %bg-main%;
+}
+
+a:link {color: %link%}
+a:visited {color: %link-visited%}
+hr {color: %border%}
+span.todo {background-color: %todo%}
+.chapter-level-extent pre {border-left-color: %fg-main%}
+
+dl.first-deftp, dl.first-deftypefn, dl.first-deftypevr {
+    border-top-color: %border%;
+    dt {
+        code.def-code-arguments {color: %def-var%}
+        span.category-def {color: %category-def%}
+        code.def-code-arguments span.bracket {color: %fg-alt%}
+    }
+    dd {
+        background-color: %bg-main%;
+        p var.var, li var.var {color: %def-var%}
+    }
+    pre {
+        span.boolean {color: %boolean%}
+        span.box {color: %box%}
+        span.code-comment {color: %code-comment%}
+        span.char {color: %char%}
+        span.false {color: %false%}
+        span.keyword {color: %keyword%}
+        span.ok {color: %ok%}
+        span.problem {background-color: %problem%}
+        span.serial {color: %serial%}
+        span.sharp {color: %sharp%}
+        span.string {color: %string%}
+        span.syntax {color: %syntax%}
+    }
+}
+
+dl.first-deftp, dl.first-deftypevr {
+    p i.slanted {color: %emphasis%}
+}
+
+dl.first-deftp {
+    background-color: %bg-dim%90;
+    background-image: linear-gradient(90deg, %bg-deftp-l%, %bg-deftp-r% 35%);
+}
+
+dl.first-deftypefn {
+    background-color: %bg-dim%90;
+    background-image: linear-gradient(90deg, %bg-deftypefn-l%, %bg-deftypefn-r% 35%);
+    span.sexp-paren {color: %fg-dim%}
+    dd pre span.exception {color: %exception%}
+}
+
+dl.first-deftypevr {
+    background-color: %bg-dim%90;
+    background-image: linear-gradient(90deg, %bg-deftypevr-l%, %bg-deftypevr-r% 35%);
+}
+/* END COLORS */
+
+strong.def-name {font-size: large}
+
+.top-level-extent, .chapter-level-extent, .appendix-level-extent {
+    dd, .center, li, p:not(.nav-panel p) {width: 40rem}
+}
+
+.chapter-level-extent {
+    dd p:not(.nav-panel p), p:not(.nav-panel p) {text-align: justify}
+}
+
+dl.first-deftp, dl.first-deftypefn, dl.first-deftypevr {
+    border-top-style: solid;
+    border-top-width: thin;
+    padding-top: 0.1rem;
+    width: 44rem;
+    dt.deftp, dt.deftypefn, dt.deftypefnx, dt.deftypevr {
+        align-content: center;
+        padding-left: 0.3em;
+        strong.def-name {font-weight: normal}
+    }
+    dt.deftp, dt.deftypevr {
+        span, code, strong {font-family: inherit}
+    }
+    dt.deftypefn, dt.deftypefnx {font-family: monospace}
+    dd {
+        align-content: start;
+        margin-left: 0;
+        margin-top: 0.1rem;
+        padding-left: 2rem;
+        width: 100%;
+        div.example {
+            margin-left: 1.6rem;
+            pre {
+                border-left-style: dotted;
+                border-left-width: thin;
+                font-size: 1.1em;
+                padding-left: 0.4rem;
+                span.code-comment, span.exception {font-style: oblique}
+            }
+        }
+    }
+}

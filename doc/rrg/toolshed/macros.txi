@@ -1,0 +1,96 @@
+@c Copyright (c) 2024 by Macon Gambill, All Rights Reserved.
+@macro boolean {b}
+@inlinefmtifelse{html,@inlineraw{html,<span class="boolean">\b\</span>},\b\}
+@end macro
+
+@macro box {b}
+@inlinefmtifelse{html,@inlineraw{html,<span class="box">\b\</span>},\b\}
+@end macro
+
+@macro char {chr}
+@inlinefmtifelse{html,@inlineraw{html,<span class="char">\chr\</span>},\chr\}
+@end macro
+
+@macro codecomment {cmt}
+@inlinefmtifelse{html,@inlineraw{html,<span class="code-comment">\cmt\</span>},\cmt\}
+@end macro
+
+@macro exception {kind}
+@arrow{} @inlinefmtifelse{html,@inlineraw{html,<span class="exception">\kind\ exception</span>},\kind\ exception}
+@end macro
+
+@macro keyword {k}
+@inlinefmtifelse{html,@inlineraw{html,<span class="keyword">\k\</span>},\k\}
+@end macro
+
+@macro ok {val}
+@result{} @inlinefmtifelse{html,@inlineraw{html,<span class="ok">\val\</span>},\val\}
+@end macro
+
+@rmacro opt {arg}
+@inlinefmtifelse{html,@inlineraw{html,<span class="bracket">[</span>}\arg\@inlineraw{html,<span class="bracket">]</span>},[\arg\]}
+@end rmacro
+
+@macro paren {p}
+@inlinefmtifelse{html,@inlineraw{html,<span class="sexp-paren">\p\</span>},\p\}
+@end macro
+
+@macro pari {name}
+@inlinefmtifelse{info,\name\1,@inlinefmtifelse{plaintext,\name\1,\name\@sub{1}}}
+@end macro
+
+@macro parii {name}
+@inlinefmtifelse{info,\name\2,@inlinefmtifelse{plaintext,\name\2,\name\@sub{2}}}
+@end macro
+
+@macro pariii {name}
+@inlinefmtifelse{info,\name\3,@inlinefmtifelse{plaintext,\name\3,\name\@sub{3}}}
+@end macro
+
+@macro pariv {name}
+@inlinefmtifelse{info,\name\4,@inlinefmtifelse{plaintext,\name\4,\name\@sub{4}}}
+@end macro
+
+@macro problem {p}
+@arrow{} @inlinefmtifelse{html,@inlineraw{html,<span class="problem">\p\</span>},\p\}
+@end macro
+
+@macro quotedbl {text}
+@inlinefmtifelse{tex,``\text\'',@quotedblleft{}\text\@quotedblright{}}
+@end macro
+
+@macro serial {s}
+@inlinefmtifelse{html,@inlineraw{html,<span class="serial">\s\</span>},\s\}
+@end macro
+
+@macro sharp {s}
+@inlinefmtifelse{html,@inlineraw{html,<span class="sharp">\s\</span>},\s\}
+@end macro
+
+@macro string {str}
+@inlinefmtifelse{html,@inlineraw{html,<span class="string">\str\</span>},\str\}
+@end macro
+
+@macro syntax {stx}
+@inlinefmtifelse{html,@inlineraw{html,<span class="syntax">\stx\</span>},\stx\}
+@end macro
+
+@macro todo {t}
+@inlinefmtifelse{html,@inlineraw{html,<span class="todo">@sc{TODO}:</span> \t\},@sc{TODO}: \t\}
+@end macro
+
+@macro vari {name}
+@inlinefmtifelse{info,@var{\name\1},@inlinefmtifelse{plaintext,@var{\name\1},@var{\name\@sub{1}}}}
+@end macro
+
+@macro varii {name}
+@inlinefmtifelse{info,@var{\name\2},@inlinefmtifelse{plaintext,@var{\name\2},@var{\name\@sub{2}}}}
+@end macro
+
+@macro variii {name}
+@inlinefmtifelse{info,@var{\name\3},@inlinefmtifelse{plaintext,@var{\name\3},@var{\name\@sub{3}}}}
+@end macro
+
+@macro variv {name}
+@inlinefmtifelse{info,@var{\name\4},@inlinefmtifelse{plaintext,@var{\name\4},@var{\name\@sub{4}}}}
+@end macro
