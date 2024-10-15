@@ -388,6 +388,9 @@
     (else
      (error "not a syntax-source object"))))
      
+(define-prim&proc (syntax->list stx)
+  (##source-code stx))
+
 ;;;----------------------------------------------------------------------------
   
 (define-prim (##update-scope! stx proc!)

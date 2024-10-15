@@ -51,7 +51,7 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define (expand-clause-expr bindings-level bindings expr)
+(define (expand-clause-expr cte bindings-level bindings expr)
   ; transform expression
 
   (define (expand-constructor-update lvl e-lvl e c-lvl c)
@@ -152,25 +152,36 @@
             0
            `(,(##make-core-syntax-source '##syntax #f) ,expr))))))
 
-  (match-source expr (##syntax syntax)
+  (match-source expr (##syntax syntax ##syntax-case syntax-case)
+    ((##syntax-case e literals . clauses)
+     (expand-clause-expr
+       bindings-level
+       bindings
+       (expand expr cte)))
+    ((syntax-case e literals . clauses)
+     (expand-clause-expr
+       bindings-level
+       bindings
+       (expand expr cte)))
     ((syntax syntax-expr)
-     (expand-clause-expr bindings-level
+     (expand-clause-expr cte
+                         bindings-level
                          bindings 
                          (syntax-source-code-set expr 
                            `(,(##make-core-syntax-source '##syntax #f) ,syntax-expr))))
     ((##syntax syntax-expr)
     `(datum->core-syntax ,(cadr (expand-clause-expr-syntax-expr bindings 0 syntax-expr #f)) 
-                               (##syntax ,syntax-expr)))
+                                (##syntax ,syntax-expr)))
     ((_ . _)
      (let loop ((exprs (syntax-source-code expr)))
        (cond
          ((pair? exprs)
-          (cons (expand-clause-expr bindings-level bindings (car exprs))
+          (cons (expand-clause-expr cte bindings-level bindings (car exprs))
                 (loop (cdr exprs))))
          ((null? exprs)
           exprs)
          (else
-          (expand-clause-expr bindings-level bindings exprs)))))
+          (expand-clause-expr cte bindings-level bindings exprs)))))
     (_
       expr)))
 
@@ -281,7 +292,8 @@
          `(let ((,bindings-id ,(expand-clause-cond literals condition stx-expr)))
             (cond
               ((pair? ,bindings-id)
-               ,(expand-clause-expr (expand-clause-cond-compile-bindings literals condition)
+               ,(expand-clause-expr cte
+                                    (expand-clause-cond-compile-bindings literals condition)
                                     bindings-id 
                                     expr))
               ((not ,bindings-id)

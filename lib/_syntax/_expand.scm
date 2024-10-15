@@ -1128,6 +1128,34 @@
     (_
      (##raise-ill-formed-special-form stx-src))))
 
+
+(define-prim (##expand-cond-expand stx-src cte)
+
+  (define (expand-cond-expand-clause clause)
+    (syntax-source-code-update clause
+      (lambda (code)
+        (cons (car code)
+              (##syntax-source-code 
+                (expand-body 
+                  (syntax-source-code-set stx-src (cdr code)) 
+                  cte))))))
+
+  (define (expand-cond-expand-clauses clauses)
+    (if (pair? clauses)
+        (cons (expand-cond-expand-clause (car clauses))
+              (cdr clauses))
+        clauses))
+
+  (match-source stx-src ()
+    ((cond-expand-id . clauses)
+     (syntax-source-code-update stx-src
+       (lambda (code)
+         (cons (car code)
+               (expand-cond-expand-clauses clauses)))))
+    (_
+      (##raise-ill-formed-special-form stx-src))))
+
+
 ;;;----------------------------------------------------------------------------
 
 (define-prim&proc (expand stx cte)

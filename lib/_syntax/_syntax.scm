@@ -242,7 +242,7 @@
 
     (##add-new-core-macro! ##case ##expand-case)
     (##add-new-core-macro! ##cond ##expand-cond)
-    ;(##add-new-core-macro! ##cond-expand ##expand-cond)
+    (##add-new-core-macro! ##cond-expand ##expand-cond)
 
 
     (##add-new-core-macro! ##begin ##expand-begin)

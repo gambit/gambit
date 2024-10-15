@@ -309,7 +309,8 @@
         quasiquote)         ##compile-quasiquote)
       ((##quote-syntax
         quote-syntax)     ##compile-quote-syntax)
-      ((##syntax)         ##compile-syntax)
+      ((##syntax 
+        syntax)         ##compile-syntax)
       ((##case)           ##compile-case)
       ((##begin
         ##include

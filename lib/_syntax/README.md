@@ -2,6 +2,8 @@
 
 ## Full Integration Check-list:
 
+- Fix bootstrap (in progress)
+
 - GSC
   - merge the parse-program phase to the hygienic `compile` phase.
 
