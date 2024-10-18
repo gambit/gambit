@@ -29,6 +29,16 @@
 ;; See: http://openbsd-archive.7691.n7.nabble.com/pow-returns-a-negative-result-on-loongson-td327877.html
 (check-false (negative? (expt 0.5 1074.0)))
 
+;;; Following test motivated by work by J Pelligrini on STKlos
+;;; When the second argument is inexact, we don't know precisely
+;;; the angle of the result, so the real part is inexact as well
+;;; as the imaginary part.
+
+(check-eqv? (expt -1 0.5) 0.+1.i)
+(check-eqv? (expt -1. 1/2) +1.i)
+
+
+
 ;;; Test exceptions
 
 (check-tail-exn type-exception? (lambda () (expt 'a 2)))

@@ -3701,7 +3701,12 @@ for a discussion of branch cuts.
 
   (define (complex-expt x y)
     (macro-if-cpxnum
-     (##exp (##* (##log x) y))
+     (if (and (##flonum? y)
+              (##fl= y (macro-inexact-+1/2)))
+         ;; complex sqrt gives a more accurate value
+         ;; than the general formula
+         (##inexact (##sqrt x))
+         (##exp (##* (##log x) y)))
      (range-error)))
 
   (define (ratnum-expt x y)
