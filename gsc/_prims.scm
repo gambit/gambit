@@ -2,7 +2,7 @@
 
 ;;; File: "_prims.scm"
 
-;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -93,8 +93,8 @@
 ("##integer?"                         (1)   #f ()    0    boolean extended)
 ("lcm"                                1     #f 0     0    integer ieee)
 ("##lcm"                              1     #f ()    0    integer extended)
-("log"                                (1)   #f 0     0    number  ieee)
-("##log"                              (1)   #f ()    0    number  extended)
+("log"                                (1 2) #f 0     0    number  ieee)
+("##log"                              (1 2) #f ()    0    number  extended)
 ("magnitude"                          (1)   #f 0     0    real    ieee)
 ("##magnitude"                        (1)   #f ()    0    real    extended)
 ("make-polar"                         (2)   #f 0     0    number  ieee)
