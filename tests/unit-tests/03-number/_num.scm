@@ -974,6 +974,9 @@
 (check-eqv? (+ 1+i 1/2) 3/2+i)
 (check-eqv? (+ 1+i 1.) 2.+i)
 (check-eqv? (+ 1+i 1+i) 2+2i)
+;;; These tests exercise (macro-special-case-exact-zero?)
+(check-eqv? (+ -0.0i 0) -0.0i)
+(check-eqv? (+ 0 -0.0) -0.0)
 
 (check-eqv? (- 1 1) 0)
 (check-eqv? (- 1 1267650600228229401496703205376) -1267650600228229401496703205375)
@@ -1026,6 +1029,9 @@
 (check-eqv? (* 1+i 1/2) 1/2+1/2i)
 (check-eqv? (* 1+i 1.) 1.+1.i)
 (check-eqv? (* 1+i 1+i) +2i)
+;;; These tests exercise (macro-special-case-exact-zero?)
+(check-eqv? (* 4.-0.i 2.) 8.-0.i)
+(check-eqv? (* 4.0 0) 0)
 
 (let ((arg 1)) (check-equal? arg (* 1 arg)))
 (let ((arg 1)) (check-equal? arg (* arg 1)))

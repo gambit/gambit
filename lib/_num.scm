@@ -815,6 +815,18 @@
           (macro-ratnum-numerator rat))
      (macro-ratnum-denominator rat)))
 
+  (define (complex+real c r)
+    ;; adding a real to a complex leaves the imaginary
+    ;; part of the complex nonzero,
+    (declare (mostly-fixnum-flonum))
+    (macro-cpxnum-make
+     (##+ (macro-cpxnum-real c) r)
+     (if (or (macro-special-case-exact-zero?)
+             (not (##flonum? (macro-cpxnum-imag c))))
+         (macro-cpxnum-imag c)
+         (##+ (macro-cpxnum-imag c)
+              (macro-inexact-+0)))))
+
   (macro-number-dispatch x (type-error-on-x)
 
     (macro-number-dispatch y (type-error-on-y) ;; x = fixnum
@@ -833,7 +845,7 @@
           (##fl+ (##fixnum->flonum x) y))
       (if (and (macro-special-case-exact-zero?) (##fxzero? x))
           y
-          (##cpxnum.+ (macro-noncpxnum->cpxnum x) y)))
+          (complex+real y x)))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = bignum
       (if (##fxzero? y)
@@ -842,7 +854,7 @@
       (##bignum.+ x y)
       (int+rat x y)
       (##fl+ (##exact-int->flonum x) y)
-      (##cpxnum.+ (macro-noncpxnum->cpxnum x) y))
+      (complex+real y x))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = ratnum
       (if (##fxzero? y)
@@ -851,7 +863,7 @@
       (int+rat y x)
       (##ratnum.+ x y)
       (##fl+ (##ratnum->flonum x) y)
-      (##cpxnum.+ (macro-noncpxnum->cpxnum x) y))
+      (complex+real y x))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = flonum
       (if (and (macro-special-case-exact-zero?) (##fxzero? y))
@@ -860,15 +872,15 @@
       (##fl+ x (##exact-int->flonum y))
       (##fl+ x (##ratnum->flonum y))
       (##fl+ x y)
-      (##cpxnum.+ (macro-noncpxnum->cpxnum x) y))
+      (complex+real y x))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = cpxnum
       (if (and (macro-special-case-exact-zero?) (##fxzero? y))
           x
-          (##cpxnum.+ x (macro-noncpxnum->cpxnum y)))
-      (##cpxnum.+ x (macro-noncpxnum->cpxnum y))
-      (##cpxnum.+ x (macro-noncpxnum->cpxnum y))
-      (##cpxnum.+ x (macro-noncpxnum->cpxnum y))
+          (complex+real x y))
+      (complex+real x y)
+      (complex+real x y)
+      (complex+real x y)
       (##cpxnum.+ x y))))
 
 (define-prim-nary (##+ x y)
@@ -2753,6 +2765,9 @@ for a discussion of branch cuts.
         (macro-cpxnum-make xi eta))))
 
 (define-prim (##cacos z)
+
+  ;; can be called with real z with abs(z)>1
+
   (##- (macro-inexact-+pi/2) (##casin z)))
 
 (define-prim (##cacosh z)
@@ -2768,6 +2783,8 @@ for a discussion of branch cuts.
      (##* 2 (##atan2 (##imag-part sqrt-z-1) (##real-part sqrt-z+1))))))
 
 (define-prim (##casin z)
+
+  ;; can be called with real z with abs(z)>1
 
   ;; if (##real-part z) is exact zero, then there is a correlation of
   ;; errors in sqrt-1-z and sqrt-1+z that allows the next substitution
@@ -3185,7 +3202,7 @@ for a discussion of branch cuts.
     (if (or (##< 1 x)
             (##< x -1))
         (macro-if-cpxnum
-         (##casin (macro-cpxnum-make x 0))
+         (##casin x)
          (range-error))
         (##flasin (##exact->inexact x))))
 
@@ -3214,7 +3231,7 @@ for a discussion of branch cuts.
     (if (or (##< 1 x)
             (##< x -1))
         (macro-if-cpxnum
-         (##cacos (macro-cpxnum-make x 0))
+         (##cacos x)
          (range-error))
         (##flacos (##exact->inexact x))))
 
