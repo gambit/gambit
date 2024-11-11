@@ -915,6 +915,18 @@
           result-num
           (macro-ratnum-make result-num result-den))))
 
+  (define (complex*real complex real)
+    ;; assumes that real is not exact zero
+    (declare (mostly-fixnum-flonum))
+    (if (macro-special-case-exact-zero?)
+        (macro-cpxnum-make
+         (##* (macro-cpxnum-real complex) real)
+         (##* (macro-cpxnum-imag complex) real))
+        (let ((a (macro-cpxnum-real complex))
+              (b (macro-cpxnum-imag complex)))
+          (##make-rectangular (##- (##* a real) (##* b 0))
+                              (##+ (##* a 0)    (##* b real))))))
+
   (macro-number-dispatch x (type-error-on-x)
 
     (macro-number-dispatch y (type-error-on-y) ;; x = fixnum
@@ -957,7 +969,7 @@
             ((##fx= x 1)
              y)
             (else
-             (##cpxnum.* (macro-noncpxnum->cpxnum x) y))))
+             (complex*real y x))))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = bignum
       (cond ((##fx= y 0)
@@ -971,7 +983,7 @@
       (##bignum.* x y)
       (int*rat x y)
       (##fl* (##exact-int->flonum x) y)
-      (##cpxnum.* (macro-noncpxnum->cpxnum x) y))
+      (complex*real y x))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = ratnum
       (cond ((##fxzero? y)
@@ -985,7 +997,7 @@
       (int*rat y x)
       (##ratnum.* x y)
       (##fl* (##ratnum->flonum x) y)
-      (##cpxnum.* (macro-noncpxnum->cpxnum x) y))
+      (complex*real y x))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = flonum
       (cond ((and (macro-special-case-exact-zero?) (##fxzero? y))
@@ -997,7 +1009,7 @@
       (##fl* x (##exact-int->flonum y))
       (##fl* x (##ratnum->flonum y))
       (##fl* x y)
-      (##cpxnum.* (macro-noncpxnum->cpxnum x) y))
+      (complex*real y x))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = cpxnum
       (cond ((and (macro-special-case-exact-zero?) (##fxzero? y))
@@ -1005,10 +1017,10 @@
             ((##fx= y 1)
              x)
             (else
-             (##cpxnum.* x (macro-noncpxnum->cpxnum y))))
-      (##cpxnum.* x (macro-noncpxnum->cpxnum y))
-      (##cpxnum.* x (macro-noncpxnum->cpxnum y))
-      (##cpxnum.* x (macro-noncpxnum->cpxnum y))
+             (complex*real x y)))
+      (complex*real x y)
+      (complex*real x y)
+      (complex*real x y)
       (##cpxnum.* x y))))
 
 (define-prim-nary (##* x y)
