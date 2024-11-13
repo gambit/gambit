@@ -258,6 +258,17 @@
 
 (define-prim (##=2 x y)
 
+  (define (complex=real complex real)
+
+    ;; We're going to assume that complex is normalized,
+    ;; i.e., (imag-part complex) is not exact zero.
+
+    (declare (mostly-fixnum-flonum))
+    (let ((imag (macro-cpxnum-imag complex)))
+      (and (##flonum? imag)
+           (##flzero? imag)
+           (##= (macro-cpxnum-real complex) real))))
+
   (##define-macro (type-error-on-x) `'(1))
   (##define-macro (type-error-on-y) `'(2))
 
@@ -269,7 +280,7 @@
       #f
       (and (##fixnum->flonum-exact? x)
            (##fl= (##fixnum->flonum x) y))
-      (##cpxnum.= (macro-noncpxnum->cpxnum x) y))
+      (complex=real y x))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = bignum
       #f
@@ -278,7 +289,7 @@
       #f
       (and (##exact-int->flonum-exact? x)
            (##fl= (##exact-int->flonum x) y))
-      (##cpxnum.= (macro-noncpxnum->cpxnum x) y))
+      (complex=real y x))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = ratnum
       #f
@@ -287,7 +298,7 @@
           (##ratnum.= x y))
       (and (##flfinite? y)
            (##ratnum.= x (##flonum->ratnum y)))
-      (##cpxnum.= (macro-noncpxnum->cpxnum x) y))
+      (complex=real y x))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = flonum
       (and (##fixnum->flonum-exact? y)
@@ -297,13 +308,13 @@
       (and (##flfinite? x)
            (##ratnum.= (##flonum->ratnum x) y))
       (##fl= x y)
-      (##cpxnum.= (macro-noncpxnum->cpxnum x) y))
+      (complex=real y x))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = cpxnum
-      (##cpxnum.= x (macro-noncpxnum->cpxnum y))
-      (##cpxnum.= x (macro-noncpxnum->cpxnum y))
-      (##cpxnum.= x (macro-noncpxnum->cpxnum y))
-      (##cpxnum.= x (macro-noncpxnum->cpxnum y))
+      (complex=real x y)
+      (complex=real x y)
+      (complex=real x y)
+      (complex=real x y)
       (##cpxnum.= x y))))
 
 (define-prim-nary-bool (##= x y)
