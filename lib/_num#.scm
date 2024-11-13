@@ -657,9 +657,6 @@
 (##define-macro (macro-inexact-scale-up) ;; (expt 2.0 (+ (quotient (macro-flonum-e-bias-plus-1) 2) (macro-flonum-m-bits-plus-1)))
   (expt 2.0 565))
 
-(##define-macro (macro-inexact-radix) ;; (exact->inexact (macro-radix))
-  16384.0)
-
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 ;;; Ratnum objects.
