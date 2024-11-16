@@ -2212,6 +2212,46 @@ ___CAST_U64((val)<<(((i)&7)<<3))
 #define ___CAST_F64(x)___CAST(___F64,x)
 #endif
 
+#define ___ROTL32(n,shift) ((shift)==0 ? (n) : ((___CAST(___U32,n)<<(shift)) | (___CAST(___U32,n)>>(32-(shift)))))
+#define ___ROTR32(n,shift) ((shift)==0 ? (n) : ((___CAST(___U32,n)>>(shift)) | (___CAST(___U32,n)<<(32-(shift)))))
+#define ___ROTL64(n,shift) ((shift)==0 ? (n) : ((___CAST(___U64,n)<<(shift)) | (___CAST(___U64,n)>>(64-(shift)))))
+#define ___ROTR64(n,shift) ((shift)==0 ? (n) : ((___CAST(___U64,n)>>(shift)) | (___CAST(___U64,n)<<(64-(shift)))))
+
+typedef union ___F32_U32_union { ___F32 f32; ___U32 u32; } ___F32_U32;
+typedef union ___U32_F32_union { ___U32 u32; ___F32 f32; } ___U32_F32;
+typedef union ___F64_U64_union { ___F64 f64; ___U64 u64; } ___F64_U64;
+typedef union ___U64_F64_union { ___U64 u64; ___F64 f64; } ___U64_F64;
+
+#ifdef __cplusplus
+
+#define ___F32_TO_U32(x)___F32_U32{x}.u32
+#define ___F32_FROM_U32(x)___U32_F32{x}.f32
+#define ___F64_TO_U64(x)___F64_U64{x}.u64
+#define ___F64_FROM_U64(x)___U64_F64{x}.f64
+
+#else
+
+#ifdef _MSC_VER
+
+static inline ___U32 ___F32_TO_U32_fn(___F32 x) { return *___CAST(___U32*,&x); }
+static inline ___F32 ___F32_FROM_U32_fn(___U32 x) { return *___CAST(___F32*,&x); }
+static inline ___U64 ___F64_TO_U64_fn(___F64 x) { return *___CAST(___U64*,&x); }
+static inline ___F64 ___F64_FROM_U64_fn(___U64 x) { return *___CAST(___F64*,&x); }
+
+#define ___F32_TO_U32(x)___F32_TO_U32_fn(x)
+#define ___F32_FROM_U32(x)___F32_FROM_U32_fn(x)
+#define ___F64_TO_U64(x)___F64_TO_U64_fn(x)
+#define ___F64_FROM_U64(x)___F64_FROM_U64_fn(x)
+
+#else
+
+#define ___F32_TO_U32(x)___CAST(___F32_U32,x).u32
+#define ___F32_FROM_U32(x)___CAST(___U32_F32,x).f32
+#define ___F64_TO_U64(x)___CAST(___F64_U64,x).u64
+#define ___F64_FROM_U64(x)___CAST(___U64_F64,x).f64
+
+#endif
+#endif
 
 /*---------------------------------------------------------------------------*/
 
@@ -2856,34 +2896,34 @@ ___TAG(___CAST(___WORD*,ptr) - (___REFERENCE_TO_BODY+(n)), ___tSUBTYPED)
 
 #endif
 
+#define ___FLO_CONST(sub,hi,lo) \
+(___SELF_TAGGED_FLONUM(((___CAST(___U32,hi)>>(___SELF_TAGGED_FLONUM_SHIFT1-32))+___SELF_TAGGED_FLONUM_OFFSET)>>___SELF_TAGGED_FLONUM_SHIFT2) \
+ ? ___CAST(___WORD,___ROTR64(___ROTR64((___CAST(___U64,___CAST(___U32,hi))<<32) + ___CAST(___U64,___CAST(___U32,lo)),___SELF_TAGGED_FLONUM_SHIFT1)+___SELF_TAGGED_FLONUM_OFFSET,___SELF_TAGGED_FLONUM_SHIFT2)) \
+ : sub)
+
 #define ___F64UNBOX(x) \
 ({___U64 ___u64_x = ___CAST(___U64,x); \
   ___SELF_TAGGED_FLONUM(___u64_x) \
   ? (___u64_x = ___ROTL64(___u64_x, ___SELF_TAGGED_FLONUM_SHIFT2)-___SELF_TAGGED_FLONUM_OFFSET, \
-     ___CAST(___F64_U64,___ROTL64(___u64_x, ___SELF_TAGGED_FLONUM_SHIFT1)).f64) \
+     ___F64_FROM_U64(___ROTL64(___u64_x, ___SELF_TAGGED_FLONUM_SHIFT1))) \
   : ___MEM_ALLOCATED_FLONUM_GET(___u64_x);})
 
 #define ___F64BOX(x) \
-({___U64 ___u64_x = ___CAST(___F64_U64,x).u64; \
+({___U64 ___u64_x = ___F64_TO_U64(x); \
   ___u64_x = ___ROTR64(___u64_x, ___SELF_TAGGED_FLONUM_SHIFT1)+___SELF_TAGGED_FLONUM_OFFSET; \
   ___u64_x = ___ROTR64(___u64_x, ___SELF_TAGGED_FLONUM_SHIFT2); \
   ___SELF_TAGGED_FLONUM(___u64_x) \
   ? ___CAST(___WORD,___u64_x) \
   : ___MEM_ALLOCATED_FLONUM_ALLOC(x);})
 
-#define ___FLO_CONST(sub,hi,lo) \
-(___SELF_TAGGED_FLONUM(((___CAST(___U32,hi)>>(___SELF_TAGGED_FLONUM_SHIFT1-32))+___SELF_TAGGED_FLONUM_OFFSET)>>___SELF_TAGGED_FLONUM_SHIFT2) \
- ? ___CAST(___WORD,___ROTR64(___ROTR64((___CAST(___U64,___CAST(___U32,hi))<<32) + ___CAST(___U64,___CAST(___U32,lo)),___SELF_TAGGED_FLONUM_SHIFT1)+___SELF_TAGGED_FLONUM_OFFSET,___SELF_TAGGED_FLONUM_SHIFT2)) \
- : sub)
-
 #else
 
 #define ___SELF_TAGGED_FLONUM(x) 0
 
+#define ___FLO_CONST(sub,hi,lo) sub
+
 #define ___F64UNBOX(x) ___MEM_ALLOCATED_FLONUM_GET(x)
 #define ___F64BOX(x) ___MEM_ALLOCATED_FLONUM_ALLOC(x)
-
-#define ___FLO_CONST(sub,hi,lo) sub
 
 #endif
 
@@ -4767,11 +4807,6 @@ ___GET_SUBTYPED(___WILL_SIZE))
 #define ___GCHASHTABLEUNION(x,y,z)___EXT(___gc_hash_table_union_find)(x,y,z,0)
 #define ___GCHASHTABLEFIND(x,y,z)___EXT(___gc_hash_table_union_find)(x,y,z,1)
 #define ___GCHASHTABLEREHASH(x,y)___EXT(___gc_hash_table_rehash)(x,y)
-
-#define ___ROTL32(n,shift) ((shift)==0 ? (n) : ((___CAST(___U32,n)<<(shift)) | (___CAST(___U32,n)>>(32-(shift)))))
-#define ___ROTR32(n,shift) ((shift)==0 ? (n) : ((___CAST(___U32,n)>>(shift)) | (___CAST(___U32,n)<<(32-(shift)))))
-#define ___ROTL64(n,shift) ((shift)==0 ? (n) : ((___CAST(___U64,n)<<(shift)) | (___CAST(___U64,n)>>(64-(shift)))))
-#define ___ROTR64(n,shift) ((shift)==0 ? (n) : ((___CAST(___U64,n)>>(shift)) | (___CAST(___U64,n)<<(64-(shift)))))
 
 #if ___WS == 4
 
@@ -9409,18 +9444,6 @@ ___EXT(___U64_add_U64_U64_fn) (x,y)
 #define ___U64_lo32(val)val.lo32
 
 #endif
-
-typedef union ___F32_U32
-  {
-    ___F32 f32;
-    ___U32 u32;
-  } ___F32_U32;
-
-typedef union ___F64_U64
-  {
-    ___F64 f64;
-    ___U64 u64;
-  } ___F64_U64;
 
 /* Symbol/keyword structure */
 

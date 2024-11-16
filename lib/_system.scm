@@ -932,7 +932,7 @@
                scheme-object
        "
 #define ___HASH_ADD(a,b)((0x01000193 * ((a) ^ (b))) & ___MAX_FIX32)
-___U64 n = ___CAST(___F64_U64,___arg1).u64;
+___U64 n = ___F64_TO_U64(___arg1);
 ___U32 hi = ___U64_hi32(n);
 ___U32 lo = ___U64_lo32(n);
 ___return(___FIX(___HASH_ADD(___HASH_ADD(___HASH_ADD(hi>>16, hi&0xffff), lo>>16), lo&0xffff)));

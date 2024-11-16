@@ -4641,7 +4641,7 @@ int arg_num;)
 
 #if ___FLONUM_SELF_TAGGING_TAGS > 0
 
-  ___U64 u64_x = ___CAST(___F64_U64,x).u64;
+  ___U64 u64_x = ___F64_TO_U64(x);
 
   u64_x = ___ROTR64(u64_x, ___SELF_TAGGED_FLONUM_SHIFT1)+___SELF_TAGGED_FLONUM_OFFSET;
   u64_x = ___ROTR64(u64_x, ___SELF_TAGGED_FLONUM_SHIFT2);

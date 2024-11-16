@@ -12917,7 +12917,7 @@ end-of-code
    ((C)
     ((c-lambda (float32)
                unsigned-int32
-      "___return(___CAST(___F32_U32,___arg1).u32);")
+      "___return(___F32_TO_U32(___arg1));")
      x))
 
    ((js)
@@ -12952,7 +12952,7 @@ def @flonum_to_ieee754_32@(x):
    ((C)
     ((c-lambda (unsigned-int32)
                float32
-      "___return(___CAST(___F32_U32,___arg1).f32);")
+      "___return(___F32_FROM_U32(___arg1));")
      n))
 
    ((js)
@@ -12987,7 +12987,7 @@ def @flonum_from_ieee754_32@(n):
    ((C)
     ((c-lambda (float64)
                unsigned-int64
-      "___return(___CAST(___F64_U64,___arg1).u64);")
+      "___return(___F64_TO_U64(___arg1));")
      x))
 
    ((js)
@@ -13022,7 +13022,7 @@ def @flonum_to_ieee754_64@(x):
    ((C)
     ((c-lambda (unsigned-int64)
                float64
-      "___return(___CAST(___F64_U64,___arg1).f64);")
+      "___return(___F64_FROM_U64(___arg1));")
      n))
 
    ((js)
