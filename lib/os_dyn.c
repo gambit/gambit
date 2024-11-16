@@ -1,6 +1,6 @@
 /* File: "os_dyn.c" */
 
-/* Copyright (c) 1994-2018 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -518,7 +518,7 @@ int arg_num;)
 
   for (i=len-1; i>=0; i--)
     {
-      ___UCS_4 c = ___INT(___STRINGREF(obj,___FIX(i)));
+      ___UCS_4 c = ___ORD(___STRINGREF(obj,___FIX(i)));
       if (c == '_')
         j += 2;
       else if (c_id_subsequent(c))
@@ -550,7 +550,7 @@ int arg_num;)
 
   for (i=len-1; i>=0; i--)
     {
-      ___UCS_4 c = ___INT(___STRINGREF(obj,___FIX(i)));
+      ___UCS_4 c = ___ORD(___STRINGREF(obj,___FIX(i)));
       if (c == '_')
         {
           r[j--] = '_';

@@ -2,7 +2,7 @@
 
 ;;; File: "fixnum.scm"
 
-;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.
 
 (##declare
   (standard-bindings)
@@ -1945,7 +1945,8 @@ targ-s8vector-space
 targ-sharing-table
 targ-string-space
 targ-symbol-space
-targ-tag-bits
+targ-min-tag-bits
+targ-max-tag-bits
 targ-track-scheme-option?
 targ-unique-name
 targ-use-glo

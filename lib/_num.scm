@@ -7420,13 +7420,17 @@ for a discussion of branch cuts.
 
 (define ##bignum.2*min-fixnum
   (if (##fixnum? -1073741824)
-      -4611686018427387904 ;; (- (expt 2 62))
-      -1073741824))        ;; (- (expt 2 30))
+      (if (##fixnum? -2305843009213693952)
+          -4611686018427387904  ;; (- (expt 2 62))
+          -2305843009213693952) ;; (- (expt 2 61))
+      -1073741824))             ;; (- (expt 2 30))
 
 (define ##bignum.-min-fixnum
   (if (##fixnum? 536870912)
-      2305843009213693952 ;; (expt 2 61)
-      536870912))         ;; (expt 2 29)
+      (if (##fixnum? 1152921504606846976)
+          2305843009213693952  ;; (expt 2 61)
+          1152921504606846976) ;; (expt 2 60)
+      536870912))              ;; (expt 2 29)
 
 ;;; The following global variables control when each of the three
 ;;; multiplication algorithms are used.
@@ -12913,7 +12917,7 @@ end-of-code
    ((C)
     ((c-lambda (float32)
                unsigned-int32
-      "___return(*___CAST(___U32*,&___arg1));")
+      "___return(___CAST(___F32_U32,___arg1).u32);")
      x))
 
    ((js)
@@ -12948,7 +12952,7 @@ def @flonum_to_ieee754_32@(x):
    ((C)
     ((c-lambda (unsigned-int32)
                float32
-      "___return(*___CAST(___F32*,&___arg1));")
+      "___return(___CAST(___F32_U32,___arg1).f32);")
      n))
 
    ((js)
@@ -12983,7 +12987,7 @@ def @flonum_from_ieee754_32@(n):
    ((C)
     ((c-lambda (float64)
                unsigned-int64
-      "___return(*___CAST(___U64*,&___arg1));")
+      "___return(___CAST(___F64_U64,___arg1).u64);")
      x))
 
    ((js)
@@ -13018,7 +13022,7 @@ def @flonum_to_ieee754_64@(x):
    ((C)
     ((c-lambda (unsigned-int64)
                float64
-      "___return(*___CAST(___F64*,&___arg1));")
+      "___return(___CAST(___F64_U64,___arg1).f64);")
      n))
 
    ((js)

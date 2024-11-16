@@ -119,8 +119,9 @@
 
 ;; Number of tag bits per pointer:
 
-(define targ-tag-bits 2)
-(define targ-alignment (expt 2 targ-tag-bits))
+(define targ-min-tag-bits 2)
+(define targ-max-tag-bits 3)
+(define targ-min-alignment (expt 2 targ-min-tag-bits))
 
 ;; Upper bound on space needed by various objects:
 
@@ -128,10 +129,10 @@
   (* (quotient (+ i (- n 1)) n) n))
 
 (define (targ-max-words i) ;; minimum k such that targ-min-word-size*k >= i
-                           ;; and targ-min-word-size*k mod targ-alignment = 0
+                           ;; and targ-min-word-size*k mod targ-min-alignment = 0
   (quotient (targ-round-up-to-multiple-of
               targ-min-word-size
-              (targ-round-up-to-multiple-of targ-alignment i))
+              (targ-round-up-to-multiple-of targ-min-alignment i))
             targ-min-word-size))
 
 ;; Space occupied by various types of objects.
@@ -667,11 +668,20 @@
                  (let ((y (ordered-table-enter
                            targ-sub-objs
                            obj
-                           (if (eq? subtype 'bigfixnum)
-                             (lambda (obj i)
-                               (list "BIGFIX" i (targ-c-long-long obj)))
-                             (lambda (obj i)
-                               (list "SUB" i))))))
+                           (case subtype
+                             ((flonum)
+                              (lambda (obj i)
+                                (let ((hi-lo-bits (targ-f64->hi-lo-bits obj)))
+                                  (list "FLO"
+                                        i
+                                        (targ-c-hex-u32 (car hi-lo-bits))
+                                        (targ-c-hex-u32 (cdr hi-lo-bits))))))
+                             ((bigfixnum)
+                              (lambda (obj i)
+                                (list "BIGFIX" i (targ-c-long-long obj))))
+                             (else
+                              (lambda (obj i)
+                                (list "SUB" i)))))))
                    (case subtype
                      ((symbol)
                       (targ-use-obj (symbol->string obj))
@@ -790,11 +800,15 @@
          (define (ref-subtyped-obj obj)
            (let ((x (ordered-table-lookup targ-sub-objs obj)))
              (if x
-               (cons (if (eq? subtype 'bigfixnum)
-                       "REF_BIGFIX"
-                       "REF_SUB")
-                     (cdr x))
-               (err))))
+                 (cons (case subtype
+                         ((flonum)
+                          "REF_FLO")
+                         ((bigfixnum)
+                          "REF_BIGFIX")
+                         (else
+                          "REF_SUB"))
+                       (cdr x))
+                 (err))))
 
          (case subtype
            ((symbol)

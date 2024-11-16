@@ -1,6 +1,6 @@
 /* File: "setup.c" */
 
-/* Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module contains the routines that setup the Scheme program for
@@ -1377,7 +1377,8 @@ int n;)
   while (n > 0)
     {
       ___SCMOBJ v = *p;
-      int x = ___INT(v);
+      int x = v >> ___TB;
+
       switch (___TYP(v))
         {
 
@@ -2174,7 +2175,7 @@ ___SCMOBJ str2;)
       p = b1;
 
       for (i=0; i<len1; i++)
-        *p++ = ___INT(___STRINGREF(str1,___FIX(i)));
+        *p++ = ___ORD(___STRINGREF(str1,___FIX(i)));
 
       *p = '\0';
 
@@ -2189,7 +2190,7 @@ ___SCMOBJ str2;)
       p = b2;
 
       for (i=0; i<len2; i++)
-        *p++ = ___INT(___STRINGREF(str2,___FIX(i)));
+        *p++ = ___ORD(___STRINGREF(str2,___FIX(i)));
 
       *p = '\0';
     }
@@ -2200,14 +2201,14 @@ ___SCMOBJ str2;)
       b1 = p;
 
       for (i=0; i<len1; i++)
-        *p++ = ___INT(___STRINGREF(str1,___FIX(i)));
+        *p++ = ___ORD(___STRINGREF(str1,___FIX(i)));
 
       *p++ = '\0';
 
       b2 = p;
 
       for (i=0; i<len2; i++)
-        *p++ = ___INT(___STRINGREF(str2,___FIX(i)));
+        *p++ = ___ORD(___STRINGREF(str2,___FIX(i)));
 
       *p++ = '\0';
     }
@@ -2312,8 +2313,8 @@ ___SCMOBJ str2;)
 
   for (i=0; i<n; i++)
     {
-      ___UCS_4 c1 = ___INT(___STRINGREF(str1,___FIX(i)));
-      ___UCS_4 c2 = ___INT(___STRINGREF(str2,___FIX(i)));
+      ___UCS_4 c1 = ___ORD(___STRINGREF(str1,___FIX(i)));
+      ___UCS_4 c2 = ___ORD(___STRINGREF(str2,___FIX(i)));
 
       if (c1 >= 65 && c1 <= 90)
         c1 += 32;
@@ -3155,7 +3156,7 @@ do { \
     ___SCMOBJ name = ___FIELD(sym,___SYMKEY_NAME); \
     int i; \
     for (i=0; i<___INT(___STRINGLENGTH(name)); i++) \
-      printf ("%c", ___INT(___STRINGREF(name,___FIX(i)))); \
+      printf ("%c", ___ORD(___STRINGREF(name,___FIX(i)))); \
     printf ("\n"); \
   } \
   fflush (stdout); \
@@ -4457,7 +4458,7 @@ int line;)
       ___SCMOBJ name = ___FIELD(sym,___SYMKEY_NAME);
       int i;
       for (i=0; i<___INT(___STRINGLENGTH(name)); i++)
-        ___printf ("%c", ___INT(___STRINGREF(name,___FIX(i))));
+        ___printf ("%c", ___ORD(___STRINGREF(name,___FIX(i))));
     }
   else
     {

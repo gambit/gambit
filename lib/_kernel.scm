@@ -2,7 +2,7 @@
 
 ;;; File: "_kernel.scm"
 
-;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1414,7 +1414,7 @@ end-of-code
   (##declare (not interrupts-enabled))
   (##c-code #<<end-of-code
 
-   ___set_heartbeat_interval (___FLONUM_VAL(___ARG1));
+   ___set_heartbeat_interval (___F64UNBOX(___ARG1));
 
    ___RESULT = ___VOID;
 
@@ -2455,7 +2455,7 @@ if (!___FIXNUMP(result) && fill != ___ABSENT)
     for (i=0; i<n; i++)
       ___STRINGSET(result,___FIX(i),fill)
 #else
-    ___C f = ___INT(fill);
+    ___C f = ___ORD(fill);
     ___C *body = ___CAST(___C*, ___BODY_AS(result,___tSUBTYPED));
     if (___CAST_U8(f) * (~___CAST(___C,0)/0xff) ==
         f) /* repetition of identical bytes? */

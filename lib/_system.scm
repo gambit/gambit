@@ -913,30 +913,7 @@
                     (##fx- i 1)))))
       (macro-hash-combine (hash (macro-ratnum-numerator obj)) ;; obj = ratnum
                           (hash (macro-ratnum-denominator obj)))
-      ;; TODO: hash flonums in a portable way
-      (macro-if-u16vector ;; obj = flonum
-       (macro-hash-combine
-        (##u16vector-ref obj 0)
-        (macro-hash-combine
-         (##u16vector-ref obj 1)
-         (macro-hash-combine
-          (##u16vector-ref obj 2)
-          (##u16vector-ref obj 3))))
-       (macro-hash-combine
-        (##u8vector-ref obj 0)
-        (macro-hash-combine
-         (##u8vector-ref obj 1)
-         (macro-hash-combine
-          (##u8vector-ref obj 2)
-          (macro-hash-combine
-           (##u8vector-ref obj 3)
-           (macro-hash-combine
-            (##u8vector-ref obj 4)
-            (macro-hash-combine
-             (##u8vector-ref obj 5)
-             (macro-hash-combine
-              (##u8vector-ref obj 6)
-              (##u8vector-ref obj 7)))))))))
+      (##fleqv?-hash obj)
       (macro-hash-combine (hash (macro-cpxnum-real obj)) ;; obj = cpxnum
                           (hash (macro-cpxnum-imag obj)))))
 
@@ -945,6 +922,25 @@
 (define-prim (eqv?-hash obj)
   (macro-force-vars (obj)
     (##eqv?-hash obj)))
+
+(define-prim (##fleqv?-hash obj)
+  (##declare (not interrupts-enabled))
+  (macro-case-target
+
+   ((C)
+    ((c-lambda (float64)
+               scheme-object
+       "
+#define ___HASH_ADD(a,b)((0x01000193 * ((a) ^ (b))) & ___MAX_FIX32)
+___U64 n = ___CAST(___F64_U64,___arg1).u64;
+___U32 hi = ___U64_hi32(n);
+___U32 lo = ___U64_lo32(n);
+___return(___FIX(___HASH_ADD(___HASH_ADD(___HASH_ADD(hi>>16, hi&0xffff), lo>>16), lo&0xffff)));
+")
+     obj))
+
+   (else
+    0)))
 
 (macro-case-target
 

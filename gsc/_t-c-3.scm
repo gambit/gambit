@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-3.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.
 
 (include "generic.scm")
 
@@ -37,7 +37,7 @@
 (define targ-min-fixnum32
   (* -2
      (expt 2 (- (* 4 targ-bits-per-byte)
-                (+ targ-tag-bits 2)))))
+                (+ targ-min-tag-bits 2))))) ;; on 32 bit architectures, min tag bits are used
 
 (define targ-max-fixnum32
   (- (+ targ-min-fixnum32 1)))
@@ -55,7 +55,7 @@
 (define targ-min-fixnum64
   (* -2
      (expt 2 (- (* 8 targ-bits-per-byte)
-                (+ targ-tag-bits 2)))))
+                (+ targ-min-tag-bits 2))))) ;; on 64 bit architectures, fixnums could have only min tag bits
 
 (define targ-max-fixnum64
   (- (+ targ-min-fixnum64 1)))

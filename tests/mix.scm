@@ -690,15 +690,15 @@
 
 (define max-fixnum ##max-fixnum)
 
-(define max-fixnum-plus-1
-  (let ()
-    (##declare (safe) (generic))
-    (+ max-fixnum 1)))
+
+
 
 (define max-size-in-bytes-plus-1
   (let ()
     (##declare (safe) (generic))
-    (quotient max-fixnum-plus-1 32)))
+    (if (fixnum? 72057594037927936)
+        72057594037927936
+        16777216)))
 
 (define (f1) 'ok)
 (define (f2 a) (list a))
@@ -1483,7 +1483,7 @@
   (test (s64vector-ref '#s64(5 6 7 8) 3) 8)
   (test (let ((x (s64vector 5 6))) (s64vector-set! x 1 9223372036854775807) x) #s64(5 9223372036854775807))
   (test (s64vector->list '#s64(5 6)) (5 6))
-  (test (s64vector->list (s64vector (- (expt 2 63)) (- -1 (expt 2 61)) (- (expt 2 61)) (- -1 (expt 2 29)) (- (expt 2 29)) (- (expt 2 29) 1) (expt 2 29) (expt 2 31) (- (expt 2 61) 1) (expt 2 61) (- (expt 2 63) 1))) (-9223372036854775808 -2305843009213693953 -2305843009213693952 -536870913 -536870912 536870911 536870912 2147483648 2305843009213693951 2305843009213693952 9223372036854775807))
+  (test (s64vector->list (s64vector (- (expt 2 63)) (- -1 (expt 2 62)) (- (expt 2 62)) (- -1 (expt 2 61)) (- (expt 2 61)) (- -1 (expt 2 29)) (- (expt 2 29)) (- (expt 2 29) 1) (expt 2 29) (expt 2 31) (- (expt 2 61) 1) (expt 2 61) (- (expt 2 62) 1) (expt 2 62) (- (expt 2 63) 1))) (-9223372036854775808 -4611686018427387905 -4611686018427387904 -2305843009213693953 -2305843009213693952 -536870913 -536870912 536870911 536870912 2147483648 2305843009213693951 2305843009213693952 4611686018427387903 4611686018427387904 9223372036854775807))
   (test (list->s64vector '(-9223372036854775808 9223372036854775807)) #s64(-9223372036854775808 9223372036854775807))
   (err (make-s64vector -1))
   (err (make-s64vector (quotient max-size-in-bytes-plus-1 4)))

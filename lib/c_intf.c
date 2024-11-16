@@ -1,6 +1,6 @@
 /* File: "c_intf.c" */
 
-/* Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the conversion functions for the C
@@ -2144,12 +2144,12 @@ ___SCMOBJ obj;
 ___F32 *x;
 int arg_num;)
 {
-  ___SCMOBJ ___temp;
+  ___FLONUMP_DECL
 
   if (!___FLONUMP(obj))
     return ___FIX(___STOC_F32_ERR+arg_num);
 
-  *x = ___FLONUM_VAL(obj);
+  *x = ___F64UNBOX(obj);
   return ___FIX(___NO_ERR);
 }
 
@@ -2170,12 +2170,12 @@ ___SCMOBJ obj;
 ___F64 *x;
 int arg_num;)
 {
-  ___SCMOBJ ___temp;
+  ___FLONUMP_DECL
 
   if (!___FLONUMP(obj))
     return ___FIX(___STOC_F64_ERR+arg_num);
 
-  *x = ___FLONUM_VAL(obj);
+  *x = ___F64UNBOX(obj);
   return ___FIX(___NO_ERR);
 }
 
@@ -2200,7 +2200,7 @@ int arg_num;)
   ___SCMOBJ ___temp;
 
   if (!___CHARP(obj) ||
-      (c=UCS_4_to_uchar(___INT(obj))) > (1<<___CHAR_WIDTH)-1)
+      (c=UCS_4_to_uchar(___ORD(obj))) > (1<<___CHAR_WIDTH)-1)
     return ___FIX(___STOC_CHAR_ERR+arg_num);
 
   *x = ___CAST(char,c);
@@ -2228,7 +2228,7 @@ int arg_num;)
   ___SCMOBJ ___temp;
 
   if (!___CHARP(obj) ||
-      (c=UCS_4_to_uchar(___INT(obj))) > (1<<___CHAR_WIDTH)-1)
+      (c=UCS_4_to_uchar(___ORD(obj))) > (1<<___CHAR_WIDTH)-1)
     return ___FIX(___STOC_SCHAR_ERR+arg_num);
 
   *x = ___CAST(___SCHAR,c);
@@ -2256,7 +2256,7 @@ int arg_num;)
   ___SCMOBJ ___temp;
 
   if (!___CHARP(obj) ||
-      (c=UCS_4_to_uchar(___INT(obj))) > (1<<___CHAR_WIDTH)-1)
+      (c=UCS_4_to_uchar(___ORD(obj))) > (1<<___CHAR_WIDTH)-1)
     return ___FIX(___STOC_UCHAR_ERR+arg_num);
 
   *x = ___CAST(unsigned char,c);
@@ -2284,7 +2284,7 @@ int arg_num;)
   ___SCMOBJ ___temp;
 
   if (!___CHARP(obj) ||
-      (c=___INT(obj)) > 0xff) /* ISO-8859-1 is 8 bits */
+      (c=___ORD(obj)) > 0xff) /* ISO-8859-1 is 8 bits */
     return ___FIX(___STOC_ISO_8859_1_ERR+arg_num);
 
   *x = ___CAST(___ISO_8859_1,c);
@@ -2312,7 +2312,7 @@ int arg_num;)
   ___SCMOBJ ___temp;
 
   if (!___CHARP(obj) ||
-      (c=___INT(obj)) > 0xffff) /* UCS-2 is 16 bits */
+      (c=___ORD(obj)) > 0xffff) /* UCS-2 is 16 bits */
     return ___FIX(___STOC_UCS_2_ERR+arg_num);
 
   *x = ___CAST(___UCS_2,c);
@@ -2340,7 +2340,7 @@ int arg_num;)
   ___SCMOBJ ___temp;
 
   if (!___CHARP(obj) ||
-      (c=___INT(obj)) > 0x7fffffff) /* UCS-4 is 31 bits */
+      (c=___ORD(obj)) > 0x7fffffff) /* UCS-4 is 31 bits */
     return ___FIX(___STOC_UCS_4_ERR+arg_num);
 
   *x = ___CAST(___UCS_4,c);
@@ -2371,9 +2371,9 @@ int arg_num;)
 
   {
 #if ___WCHAR_MIN < 0
-    ___SM32 c = ___CAST(___SM32,___INT(obj));
+    ___SM32 c = ___CAST(___SM32,___ORD(obj));
 #else
-    ___UM32 c = ___CAST(___UM32,___INT(obj));
+    ___UM32 c = ___CAST(___UM32,___ORD(obj));
 #endif
 
 #if 0 < ___WCHAR_MIN || ___MAX_CHR > ___WCHAR_MAX
@@ -2753,12 +2753,12 @@ ___SCMOBJ obj;
 float *x;
 int arg_num;)
 {
-  ___SCMOBJ ___temp;
+  ___FLONUMP_DECL
 
   if (!___FLONUMP(obj))
     return ___FIX(___STOC_FLOAT_ERR+arg_num);
 
-  *x = ___FLONUM_VAL(obj);
+  *x = ___F64UNBOX(obj);
   return ___FIX(___NO_ERR);
 }
 
@@ -2779,12 +2779,12 @@ ___SCMOBJ obj;
 double *x;
 int arg_num;)
 {
-  ___SCMOBJ ___temp;
+  ___FLONUMP_DECL
 
   if (!___FLONUMP(obj))
     return ___FIX(___STOC_DOUBLE_ERR+arg_num);
 
-  *x = ___FLONUM_VAL(obj);
+  *x = ___F64UNBOX(obj);
   return ___FIX(___NO_ERR);
 }
 
@@ -3237,7 +3237,7 @@ int fudge;)
 
         for (i=0; i<n; i++)
           {
-            ___UCS_4 c = ___INT(___STRINGREF(obj,___FIX(i)));
+            ___UCS_4 c = ___ORD(___STRINGREF(obj,___FIX(i)));
             if (c == 0 || c > 0xff) /* ISO-8859-1 is 8 bits */
               {
                 ___release_rc (r);
@@ -3264,7 +3264,7 @@ int fudge;)
 
         for (i=0; i<n; i++)
           {
-            ___UCS_4 c = ___INT(___STRINGREF(obj,___FIX(i)));
+            ___UCS_4 c = ___ORD(___STRINGREF(obj,___FIX(i)));
             int c_bytes = ___UTF_8_bytes (c);
             if (c == 0 || c_bytes == 0)
               return ___FIX(___STOC_UTF_8STRING_ERR+arg_num);
@@ -3281,7 +3281,7 @@ int fudge;)
         p = r;
 
         for (i=0; i<n; i++)
-          ___UTF_8_put (&p, ___INT(___STRINGREF(obj,___FIX(i))));
+          ___UTF_8_put (&p, ___ORD(___STRINGREF(obj,___FIX(i))));
 
         *p = 0;
 
@@ -3301,7 +3301,7 @@ int fudge;)
 
         for (i=0; i<n; i++)
           {
-            ___UCS_4 c = ___INT(___STRINGREF(obj,___FIX(i)));
+            ___UCS_4 c = ___ORD(___STRINGREF(obj,___FIX(i)));
             if (c > 0xffff)
               bytes += 4;
             else if ((c > 0 && c <= 0xd7ff) || c > 0xdbff)
@@ -3321,7 +3321,7 @@ int fudge;)
 
         for (i=0; i<n; i++)
           {
-            ___UCS_4 c = ___INT(___STRINGREF(obj,___FIX(i)));
+            ___UCS_4 c = ___ORD(___STRINGREF(obj,___FIX(i)));
             if (c > 0xffff)
               {
                 c -= 0x10000;
@@ -3354,7 +3354,7 @@ int fudge;)
 
         for (i=0; i<n; i++)
           {
-            ___UCS_4 c = ___INT(___STRINGREF(obj,___FIX(i)));
+            ___UCS_4 c = ___ORD(___STRINGREF(obj,___FIX(i)));
             if (c == 0 || c > 0xffff) /* UCS-2 is 16 bits */
               {
                 ___release_rc (r);
@@ -3385,7 +3385,7 @@ int fudge;)
 
         for (i=0; i<n; i++)
           {
-            ___UCS_4 c = ___INT(___STRINGREF(obj,___FIX(i)));
+            ___UCS_4 c = ___ORD(___STRINGREF(obj,___FIX(i)));
             if (c == 0 || c > 0x7fffffff) /* UCS-4 is 31 bits */
               {
                 ___release_rc (r);
@@ -3417,9 +3417,9 @@ int fudge;)
         for (i=0; i<n; i++)
           {
 #if ___WCHAR_MIN < 0
-            ___SM32 c = ___CAST(___SM32,___INT(___STRINGREF(obj,___FIX(i))));
+            ___SM32 c = ___CAST(___SM32,___ORD(___STRINGREF(obj,___FIX(i))));
 #else
-            ___UM32 c = ___CAST(___UM32,___INT(___STRINGREF(obj,___FIX(i))));
+            ___UM32 c = ___CAST(___UM32,___ORD(___STRINGREF(obj,___FIX(i))));
 #endif
 
             if (c == 0
@@ -3460,7 +3460,7 @@ int fudge;)
 
         for (i=0; i<n; i++)
           {
-            ___UCS_4 c = UCS_4_to_uchar (___INT(___STRINGREF(obj,___FIX(i))));
+            ___UCS_4 c = UCS_4_to_uchar (___ORD(___STRINGREF(obj,___FIX(i))));
             if (c == 0 || c > (1<<___CHAR_WIDTH)-1)
               {
                 ___release_rc (r);
@@ -4363,7 +4363,7 @@ int arg_num;)
 {
   ___SCMOBJ r;
 
-  if (___S64_fits_in_width (x, ___SCMOBJ_WIDTH-___TB))
+  if (___S64_fits_in_width (x, ___SCMOBJ_WIDTH-___TB_FIXNUM))
     r = ___FIX(___S64_to_LONGLONG (x));
   else
     {
@@ -4427,7 +4427,7 @@ int arg_num;)
 {
   ___SCMOBJ r;
 
-  if (___U64_fits_in_width (x, ___SCMOBJ_WIDTH-___TB-1))
+  if (___U64_fits_in_width (x, ___SCMOBJ_WIDTH-___TB_FIXNUM-1))
     r = ___FIX(___U64_to_ULONGLONG (x));
   else
     {
@@ -4637,15 +4637,32 @@ ___F64 x;
 ___SCMOBJ *obj;
 int arg_num;)
 {
-  ___SCMOBJ r = ___alloc_scmobj (___ps, ___sFLONUM, ___FLONUM_SIZE<<___LWS);
+  ___SCMOBJ r;
 
-  if (___FIXNUMP(r))
+#if ___FLONUM_SELF_TAGGING_TAGS > 0
+
+  ___U64 u64_x = ___CAST(___F64_U64,x).u64;
+
+  u64_x = ___ROTR64(u64_x, ___SELF_TAGGED_FLONUM_SHIFT1)+___SELF_TAGGED_FLONUM_OFFSET;
+  u64_x = ___ROTR64(u64_x, ___SELF_TAGGED_FLONUM_SHIFT2);
+
+  if (___SELF_TAGGED_FLONUM(u64_x)) {
+    r = ___CAST(___WORD,u64_x);
+  } else
+
+#endif
+
     {
-      *obj = ___FAL;
-      return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+arg_num);
-    }
+      r = ___alloc_scmobj (___ps, ___sFLONUM, ___FLONUM_SIZE<<___LWS);
 
-  ___FLONUM_VAL(r) = x;
+      if (___FIXNUMP(r))
+        {
+          *obj = ___FAL;
+          return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+arg_num);
+        }
+
+      ___MEM_ALLOCATED_FLONUM_SET(r, x);
+    }
 
   *obj = r;
   return ___FIX(___NO_ERR);

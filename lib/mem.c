@@ -88,7 +88,7 @@
  * ___WORD contain a primary type tag for the object and the other
  * bits contain the immediate value or the pointer.  Because all
  * memory allocated objects are aligned on ___WORD boundaries (and a
- * ___WORD is either 4 or 8 bytes), the two lower bits of pointers
+ * ___WORD is either 4 or 8 bytes), the 2 or 3 lower bits of pointers
  * are zero and can be used to store the tag without reducing the
  * address space.  The four tags are:
  *
@@ -1834,7 +1834,7 @@ ___SCMOBJ str;)
   ___UM32 h = FN1a_offset_basis;
 
   for (i=0; i<n; i++)
-    h = HASH_STEP(h,___INT(___STRINGREF(str,___FIX(i))));
+    h = HASH_STEP(h,___ORD(___STRINGREF(str,___FIX(i))));
 
   return ___FIX(h);
 }
@@ -2014,7 +2014,7 @@ unsigned int subtype;)
       ___UCS_4 c;
       for (i=0; i<n; i++)
         if (___UTF_8_get_var (&p, c) !=
-            ___CAST(___UCS_4,___INT(___STRINGREF(name,___FIX(i)))))
+            ___CAST(___UCS_4,___ORD(___STRINGREF(name,___FIX(i)))))
           goto next;
       if (___UTF_8_get_var (&p, c) == 0)
         return probe;
@@ -2286,7 +2286,7 @@ ___SCMOBJ val;)
               ___SCMOBJ str = ___SUBTYPED_FROM_BODY(body);
               ___printf ("\"");
               for (i=0; i<___INT(___STRINGLENGTH(str)); i++)
-                ___printf ("%c", ___INT(___STRINGREF(str,___FIX(i))));
+                ___printf ("%c", ___ORD(___STRINGREF(str,___FIX(i))));
               ___printf ("\"");
             }
           else if (subtype == ___sSYMBOL)
@@ -2304,7 +2304,7 @@ ___SCMOBJ val;)
   else if (___FIXNUMP(val))
     ___printf ("%d", ___INT(val));
   else if (___CHARP(val))
-    ___printf ("#\\x%x", ___INT(val));
+    ___printf ("#\\x%x", ___ORD(val));
   else if (val == ___FAL)
     ___printf ("#f");
   else if (val == ___TRU)
@@ -2482,7 +2482,7 @@ int indent;)
   else if (typ == ___tSPECIAL)
     {
       if (obj >= 0)
-        ___printf ("#\\%c\n", ___INT(obj));
+        ___printf ("#\\%c\n", ___ORD(obj));
       else if (obj == ___FAL)
         ___printf ("#f\n");
       else if (obj == ___TRU)
@@ -2611,7 +2611,7 @@ int indent;)
             int len = ___HD_BYTES(head)>>___LCS;
             ___printf ("STRING ");
             for (i=0; i<len; i++)
-              ___printf ("%c", ___INT(___STRINGREF(obj,___FIX(i))));
+              ___printf ("%c", ___ORD(___STRINGREF(obj,___FIX(i))));
             ___printf ("\n");
           }
           break;
@@ -2683,7 +2683,7 @@ ___glo_struct *glo;)
                 {
                   ___SCMOBJ name = ___FIELD(sym,___SYMKEY_NAME);
                   for (i=0; i<___INT(___STRINGLENGTH(name)); i++)
-                    ___printf ("%c", ___INT(___STRINGREF(name,___FIX(i))));
+                    ___printf ("%c", ___ORD(___STRINGREF(name,___FIX(i))));
                   i = 0;
                   break;
                 }

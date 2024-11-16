@@ -1,6 +1,6 @@
 ; File: "mem.scm"
 
-; Copyright (c) 1996-2016 by Marc Feeley, All Rights Reserved.
+; Copyright (c) 1996-2024 by Marc Feeley, All Rights Reserved.
 
 ; Test program for Gambit's memory management system.
 
@@ -182,7 +182,7 @@
                 ((2)  (cons lst lst))
                 ((3)  (gensym))
                 ((4)  (lambda (x) lst))
-                (else (* 1.23 (random 100))))
+                (else (* 1e100 (+ 1 (random 100)))))
               lst)
         (- i 1))
      lst)))
@@ -253,9 +253,9 @@ void foo (double x, int n, int (*f)(char*))
   ___EXT(___CHARSTRING_to_SCMOBJ) (___ps, \"hello world!\", &obj3, 0);
   ___EXT(___CHARSTRING_to_SCMOBJ) (___ps, \"another string\", &obj4, 0);
   obj5 = ___EXT(___make_pair) (___ps, obj2, obj3);
-  ___EXT(___still_obj_refcount_dec) (obj1); /* no direct need for obj1, etc */
-  ___EXT(___still_obj_refcount_dec) (obj2);
-  ___EXT(___still_obj_refcount_dec) (obj3);
+  ___EXT(___release_scmobj) (obj1); /* no direct need for obj1, etc */
+  ___EXT(___release_scmobj) (obj2);
+  ___EXT(___release_scmobj) (obj3);
   f (\"was called from C\");
 }
 
@@ -358,7 +358,7 @@ ___SCMOBJ baz ()
                   (make-will (make-vector (random 40000))
                              (lambda (o) (set! result (+ result id))))))
                (else
-                (+ 1.23 (random 100))))))
+                (* 1e100 (+ 1 (random 100)))))))
         (if (= (random 2) 0)
           (make-will obj (lambda (o) #f))
           (let ((id c))
