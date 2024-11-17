@@ -2656,7 +2656,7 @@ ___STORE_U32(s,i,val))
 #define ___REST     ___SPECIAL(-11)
 #define ___UNUSED   ___SPECIAL(-14)
 #define ___DELETED  ___SPECIAL(-15)
-#define ___SPECIAL(x)(((x)<<___TB)+___tSPECIAL)
+#define ___SPECIAL(x)___CAST(___WORD,(___CAST(___UWORD,x)<<___TB)+___tSPECIAL)
 #define ___FIX(x)___CAST(___WORD,___CAST(___UWORD,x)<<___TB_FIXNUM)
 #if ___SCMOBJ_WIDTH == 32
 #define ___BIGFIX(i,x)___SUB(i)
