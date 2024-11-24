@@ -1376,7 +1376,7 @@ ___SCMOBJ (*proc) ();)
 ___HIDDEN void fixrefs
    ___P((___module_struct *module,
          ___SCMOBJ *p,
-         int n, int where),
+         int n),
         (module,
          p,
          n)
@@ -1646,14 +1646,14 @@ ___module_struct *module;)
 
   /* Fix reference in module's descriptor */
 
-  fixrefs (module, &module->moddescr, 1, 111);
+  fixrefs (module, &module->moddescr, 1);
 
   /* Fix references in module's pair table */
 
   for (i=cnscount-1; i>=0; i--)
     fixrefs (module,
              cnstbl + i*(___PAIR_BODY+___PAIR_SIZE) + ___PAIR_BODY,
-             ___PAIR_SIZE, 222);
+             ___PAIR_SIZE);
 
   /* Fix references in module's subtyped object table */
 
@@ -1675,7 +1675,7 @@ ___module_struct *module;)
       p = ___SUBTYPED_TO_START(obj);
       head = p[0];
       if (___HD_SUBTYPE(head) <= ___sKEYWORD)
-        fixrefs (module, p+___SUBTYPED_BODY, ___HD_WORDS(head), 333);
+        fixrefs (module, p+___SUBTYPED_BODY, ___HD_WORDS(head));
     }
 
   /* Align module's out-of-line frame descriptor table */
@@ -1706,14 +1706,14 @@ ___module_struct *module;)
                * (##subprocedure-parent-name proc)
                */
 
-              fixrefs (module, ___SUBTYPED_TO(lbl, ___LABEL_NAME), 1, 444);
+              fixrefs (module, ___SUBTYPED_TO(lbl, ___LABEL_NAME), 1);
 
               /*
                * Setup debugging information returned by
                * (##subprocedure-parent-info proc)
                */
 
-              fixrefs (module, ___SUBTYPED_TO(lbl, ___LABEL_INFO), 1, 555);
+              fixrefs (module, ___SUBTYPED_TO(lbl, ___LABEL_INFO), 1);
 
 #ifdef ___SUPPORT_LABEL_VALUES
               if (hlbl_ptr != 0)
