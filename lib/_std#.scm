@@ -2,7 +2,7 @@
 
 ;;; File: "_std#.scm"
 
-;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -894,8 +894,8 @@ end-of-code
               (case name
                 ((vector)
 #<<end-of-code
-  void *src = ___CAST(void*,&___FIELD(___ARG1,___INT(___ARG2)));
-  void *dst = ___CAST(void*,&___FIELD(___ARG4,___INT(___ARG5)));
+  void *src = ___CAST(void*,&___VECTORELEM(___ARG1,___INT(___ARG2)));
+  void *dst = ___CAST(void*,&___VECTORELEM(___ARG4,___INT(___ARG5)));
   ___SIZE_TS len = ___INT(___FIXSUB(___ARG3,___ARG2)) * ___WS;
 end-of-code
 )

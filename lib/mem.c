@@ -84,13 +84,13 @@
  *
  * Scheme objects are encoded using integers of type ___WORD.  A
  * ___WORD either encodes an immediate value or encodes a pointer
- * when the object is memory allocated.  The two lower bits of a
+ * when the object is memory allocated.  The 2 or 3 lower bits of a
  * ___WORD contain a primary type tag for the object and the other
  * bits contain the immediate value or the pointer.  Because all
  * memory allocated objects are aligned on ___WORD boundaries (and a
  * ___WORD is either 4 or 8 bytes), the 2 or 3 lower bits of pointers
  * are zero and can be used to store the tag without reducing the
- * address space.  The four tags are:
+ * address space.  When 2 tag bits are used, the four tags are:
  *
  *  immediate:
  *    ___tFIXNUM    object is a small integer (fixnum)
@@ -103,6 +103,8 @@
  *    otherwise
  *    ___tMEM1 = ___tSUBTYPED              subtyped object, but not a pair
  *    ___tMEM2 = ___tPAIR                  a pair
+ *
+ * See the file gambit.h for the tag assignments when 3 tag bits are used.
  *
  * A special type of object exists to support object finalization:
  * 'will' objects.  Wills contain a weak reference to an object, the
@@ -1308,7 +1310,7 @@ ___glo_struct *glo;)
 
       for (i=1; i<len; i++)
         {
-          ___SCMOBJ probe = ___FIELD(___GSTATE->symbol_table,i);
+          ___SCMOBJ probe = ___VECTORELEM(___GSTATE->symbol_table, i);
 
           while (probe != ___NUL)
             {
@@ -1395,7 +1397,7 @@ ___SCMOBJ val;)
 
   for (i = ___INT(___VECTORLENGTH(___GSTATE->symbol_table)) - 1; i>0; i--)
     {
-      sym = ___FIELD(___GSTATE->symbol_table,i);
+      sym = ___VECTORELEM(___GSTATE->symbol_table, i);
 
       while (sym != ___NUL)
        {
@@ -1516,10 +1518,16 @@ ___SIZE_TS bytes;)
 
   base[___PERM_HEADER] = ___MAKE_HD(bytes, subtype, ___PERM);
 
-  if (subtype == ___sPAIR)
-    return ___PAIR_FROM_BODY(body);
-  else
-    return ___SUBTYPED_FROM_BODY(body);
+#if ___tPAIR != ___tSUBTYPED
+  if (subtype == ___sPAIR) return ___PAIR_FROM_BODY(body);
+#endif
+#if ___tFLONUM != ___tSUBTYPED
+  if (subtype == ___sFLONUM) return ___FLONUM_FROM_BODY(body);
+#endif
+#if ___tVECTOR != ___tSUBTYPED
+  if (subtype == ___sVECTOR) return ___VECTOR_FROM_BODY(body);
+#endif
+  return ___SUBTYPED_FROM_BODY(body);
 }
 
 
@@ -1661,10 +1669,16 @@ ___SIZE_TS bytes;)
 
   /* Return tagged reference to still object. */
 
-  if (subtype == ___sPAIR)
-    return ___PAIR_FROM_BODY(body);
-  else
-    return ___SUBTYPED_FROM_BODY(body);
+#if ___tPAIR != ___tSUBTYPED
+  if (subtype == ___sPAIR) return ___PAIR_FROM_BODY(body);
+#endif
+#if ___tFLONUM != ___tSUBTYPED
+  if (subtype == ___sFLONUM) return ___FLONUM_FROM_BODY(body);
+#endif
+#if ___tVECTOR != ___tSUBTYPED
+  if (subtype == ___sVECTOR) return ___VECTOR_FROM_BODY(body);
+#endif
+  return ___SUBTYPED_FROM_BODY(body);
 }
 
 
@@ -1766,7 +1780,7 @@ ___WORD init;)
         {
           int i;
           for (i=0; i<length; i++)
-            ___FIELD(obj, i) = init;
+            ___VECTORELEM(obj, i) = init;
         }
 
       return obj;
@@ -1886,7 +1900,7 @@ ___SIZE_TS length;)
   ___SCMOBJ tbl = ___make_vector (NULL, length+1, ___NUL);
 
   if (!___FIXNUMP(tbl))
-    ___FIELD(tbl,0) = ___FIX(0);
+    ___VECTORELEM(tbl, 0) = ___FIX(0);
 
   return tbl;
 }
@@ -1907,17 +1921,17 @@ ___SCMOBJ symkey;)
    * Add symbol/keyword to the appropriate list.
    */
 
-  ___FIELD(symkey,___SYMKEY_NEXT) = ___FIELD(tbl,i);
-  ___FIELD(tbl,i) = symkey;
+  ___FIELD(symkey,___SYMKEY_NEXT) = ___VECTORELEM(tbl, i);
+  ___VECTORELEM(tbl, i) = symkey;
 
-  ___FIELD(tbl,0) = ___FIXADD(___FIELD(tbl,0),___FIX(1));
+  ___VECTORELEM(tbl, 0) = ___FIXADD(___VECTORELEM(tbl, 0), ___FIX(1));
 
   /*
    * Grow and rehash the table when it is too loaded (above an average
    * list length of 4).
    */
 
-  if (___INT(___FIELD(tbl,0)) > ___INT(___VECTORLENGTH(tbl)) * 4)
+  if (___INT(___VECTORELEM(tbl, 0)) > ___INT(___VECTORLENGTH(tbl)) * 4)
     {
       int new_len = (___INT(___VECTORLENGTH(tbl))-1) * 2;
       ___SCMOBJ newtbl = alloc_symkey_table (subtype, new_len);
@@ -1926,7 +1940,7 @@ ___SCMOBJ symkey;)
         {
           for (i=___INT(___VECTORLENGTH(tbl))-1; i>0; i--)
             {
-              ___SCMOBJ probe = ___FIELD(tbl,i);
+              ___SCMOBJ probe = ___VECTORELEM(tbl, i);
 
               while (probe != ___NUL)
                 {
@@ -1934,12 +1948,12 @@ ___SCMOBJ symkey;)
                   int j = ___INT(___FIELD(symkey,___SYMKEY_HASH))%new_len + 1;
 
                   probe = ___FIELD(symkey,___SYMKEY_NEXT);
-                  ___FIELD(symkey,___SYMKEY_NEXT) = ___FIELD(newtbl,j);
-                  ___FIELD(newtbl,j) = symkey;
+                  ___FIELD(symkey,___SYMKEY_NEXT) = ___VECTORELEM(newtbl, j);
+                  ___VECTORELEM(newtbl,j) = symkey;
                 }
             }
 
-          ___FIELD(newtbl,0) = ___FIELD(tbl,0);
+          ___VECTORELEM(newtbl, 0) = ___VECTORELEM(tbl, 0);
 
           symkey_table_set (subtype, newtbl);
         }
@@ -2003,7 +2017,7 @@ unsigned int subtype;)
     return h;
 
   tbl = symkey_table (subtype);
-  probe = ___FIELD(tbl, ___INT(h) % (___INT(___VECTORLENGTH(tbl))-1) + 1);
+  probe = ___VECTORELEM(tbl, ___INT(h) % (___INT(___VECTORLENGTH(tbl))-1) + 1);
 
   while (probe != ___NUL)
     {
@@ -2039,7 +2053,7 @@ unsigned int subtype;)
   ___SCMOBJ h = ___hash_scheme_string (str);
 
   tbl = symkey_table (subtype);
-  probe = ___FIELD(tbl, ___INT(h) % (___INT(___VECTORLENGTH(tbl))-1) + 1);
+  probe = ___VECTORELEM(tbl, ___INT(h) % (___INT(___VECTORLENGTH(tbl))-1) + 1);
 
   while (probe != ___NUL)
     {
@@ -2136,7 +2150,7 @@ void *data;)
 
   for (i=___INT(___VECTORLENGTH(tbl))-1; i>0; i--)
     {
-      ___SCMOBJ probe = ___FIELD(tbl, i);
+      ___SCMOBJ probe = ___VECTORELEM(tbl, i);
 
       while (probe != ___NUL)
         {
@@ -2224,7 +2238,7 @@ ___SCMOBJ val;)
       int subtype;
       int shift = 0;
 
-      if (___TYP(head) == ___FORW)
+      if (___TESTTYPE(head, ___FORW))
         {
           /* indirect forwarding pointer */
           body = ___BODY0(head);
@@ -2418,8 +2432,8 @@ do { \
         }
       else
         {
-          ___printf("...\n");
-            probe += skip;
+           ___printf ("...\n");
+           probe += skip;
         }
     }
 }
@@ -2473,13 +2487,11 @@ int max_depth;
 char *prefix;
 int indent;)
 {
-  int typ = ___TYP(obj);
-
   print_prefix (prefix, indent);
 
-  if (typ == ___tFIXNUM)
+  if (___FIXNUMP(obj))
     ___printf ("%d\n", ___INT(obj));
-  else if (typ == ___tSPECIAL)
+  else if (___TESTTYPE(obj, ___tSPECIAL))
     {
       if (obj >= 0)
         ___printf ("#\\%c\n", ___ORD(obj));
@@ -2519,7 +2531,7 @@ int indent;)
       int subtype;
       int shift = 0;
 
-      if (___TYP(head) == ___FORW)
+      if (___TESTTYPE(head, ___FORW))
         {
           /* indirect forwarding pointer */
           body = ___BODY0(head);
@@ -2540,7 +2552,7 @@ int indent;)
               int i;
               ___printf ("#(\n");
               for (i=0; i<___CAST(int,___HD_WORDS(head)); i++)
-                print_object (___FIELD(obj,i)>>shift, max_depth-1, prefix, indent+2);
+                print_object (___VECTORELEM(obj,i)>>shift, max_depth-1, prefix, indent+2);
               print_prefix (prefix, indent);
               ___printf (")\n");
             }
@@ -2669,7 +2681,7 @@ ___glo_struct *glo;)
 
   for (i = ___INT(___VECTORLENGTH(___GSTATE->symbol_table)) - 1; i>0; i--)
     {
-      sym = ___FIELD(___GSTATE->symbol_table,i);
+      sym = ___VECTORELEM(___GSTATE->symbol_table,i);
 
       while (sym != ___NUL)
         {
@@ -2779,7 +2791,7 @@ char *msg;)
           ___printf ("___STILL ");
         else if (___HD_TYP(head) == ___MOVABLE0)
           ___printf ("___MOVABLE0 ");
-        else if (___TYP(head) == ___FORW)
+        else if (___TESTTYPE(head, ___FORW))
           ___printf ("___FORW ");
         else
           ___printf ("UNKNOWN ");
@@ -2894,7 +2906,7 @@ ___WORD obj;)
       if (pos >= 0 && pos < ___MSECTION_SIZE)
         {
           head = *hd_ptr;
-          if (___TYP(head) == ___FORW)
+          if (___TESTTYPE(head, ___FORW))
             {
               ___WORD *hd_ptr2 = ___BODY0(head)-1;
               int i2 = find_msection (the_msections, hd_ptr2);
@@ -3494,6 +3506,7 @@ ___WORD n;)
             if (head_typ == ___MOVABLE0)
               {
                 ___SIZE_TS words = ___HD_WORDS(head);
+
                 /*TODO: add allocation of handle if using handles*/
 #if ___WS == 4
                 ___BOOL pad = 0;
@@ -3604,7 +3617,7 @@ ___WORD n;)
                   }
 #endif
               }
-            else if (___TYP(head_typ) == ___FORW)
+            else if (___TESTTYPE(head_typ, ___FORW))
               {
                 *cell = ___TAG(___UNTAG_AS(head, ___FORW), ___TYP(obj));
               }
@@ -3643,7 +3656,7 @@ ___WORD *orig_ptr;)
   ___printf ("mark_captured_continuation cf=%p\n", ___CAST(void*,cf));
 #endif
 
-  if (___TYP(cf) == ___tFIXNUM && cf != ___END_OF_CONT_MARKER)
+  if (___FIXNUMP(cf) && cf != ___END_OF_CONT_MARKER)
     {
       /* continuation frame is in the stack */
 
@@ -3684,7 +3697,7 @@ ___WORD *orig_ptr;)
 
       ra2 = ___FP_STK(fp,link+1);
 
-      if (___TYP(ra2) == ___tFIXNUM)
+      if (___FIXNUMP(ra2))
         {
           ___COVER_MARK_CAPTURED_CONTINUATION_ALREADY_COPIED;
           *ptr = ra2; /* already copied, replace by forwarding pointer */
@@ -3756,7 +3769,7 @@ ___WORD *orig_ptr;)
               alloc = alloc_heap_ptr;
             }
 
-          if (___TYP(cf) == ___tFIXNUM && cf != ___END_OF_CONT_MARKER)
+          if (___FIXNUMP(cf) && cf != ___END_OF_CONT_MARKER)
             goto next_frame;
         }
 
@@ -4091,12 +4104,12 @@ ___WORD head;)
 
         frame = ___FP_STK(fp,link+1);
 
-        if (___TYP(frame) == ___tFIXNUM && frame != ___END_OF_CONT_MARKER)
+        if (___FIXNUMP(frame) && frame != ___END_OF_CONT_MARKER)
           ___FP_SET_STK(fp,link+1,___FAL)
 
         mark_frame (___PSP fp, fs, gcmap, nextgcmap);
 
-        if (___TYP(frame) == ___tFIXNUM && frame != ___END_OF_CONT_MARKER)
+        if (___FIXNUMP(frame) && frame != ___END_OF_CONT_MARKER)
           ___FP_SET_STK(fp,link+1,___TAG(___UNTAG_AS(frame, ___tFIXNUM), ___tSUBTYPED))
 
         mark_array (___PSP &body[0], 1);
@@ -4222,7 +4235,7 @@ ___WORD *start;)
   ___ACTLOG_BEGIN_PS(scan_complete_heap_chunk,_);
 #endif
 
-  while (___TYP((head = *ptr)) != ___FORW) /* not end of complete chunk? */
+  while (!___TESTTYPE(head = *ptr, ___FORW)) /* not end of complete chunk? */
     {
       scan_and_advance(ptr, head); /* note: this advances ptr */
     }
@@ -4281,7 +4294,7 @@ ___PSDKR)
   while (ptr != alloc_heap_ptr) /* SITUATION #1 or #2 ? */
     {
       ___WORD head;
-      while (___TYP((head = *ptr)) != ___FORW) /* not end of complete chunk? */
+      while (!___TESTTYPE(head = *ptr, ___FORW)) /* not end of complete chunk? */
         {
           scan_and_advance(ptr, head); /* note: this advances ptr */
           if (ptr == alloc_heap_ptr) /* end of incomplete chunk? */
@@ -4890,7 +4903,7 @@ ___WORD list;)
       ___WORD *unmarked_body; /* used by the UNMARKED macro */
       int unmarked_typ;
 
-      if (___TYP(will_head) == ___FORW) /* was will forwarded? */
+      if (___TESTTYPE(will_head, ___FORW)) /* was will forwarded? */
         will_body = ___BODY0_AS(will_head,___FORW);
 
       list = will_body[___WILL_NEXT];
@@ -4986,6 +4999,12 @@ ___PSDKR)
   *tail_nonexec = ___TAG(0,0);
 }
 
+
+/*TODO: fix gc-hash-table representation*/
+#if ___tVECTOR != ___tSUBTYPED
+#undef ___FIELD
+#define ___FIELD(x,i)___VECTORELEM(x,i)
+#endif
 
 #ifdef ___GC_HASH_TABLE_REHASH_EAGERLY
 #ifdef ___GC_HASH_TABLE_REHASH_LAZILY
@@ -5289,7 +5308,7 @@ ___PSDKR)
                     {
                       ___WORD key_head = ___BODY0(key)[-1];
 
-                      if (___TYP(key_head) == ___FORW)
+                      if (___TESTTYPE(key_head, ___FORW))
                         {
                           /*
                            * The key is movable and has been
@@ -5300,7 +5319,7 @@ ___PSDKR)
                             {
                               ___WORD val_head = ___BODY0(val)[-1];
 
-                              if (___TYP(val_head) == ___FORW)
+                              if (___TESTTYPE(val_head, ___FORW))
                                 {
                                   /*
                                    * The key is movable and has been
@@ -5390,7 +5409,7 @@ ___PSDKR)
                             {
                               ___WORD val_head = ___BODY0(val)[-1];
 
-                              if (___TYP(val_head) == ___FORW)
+                              if (___TESTTYPE(val_head, ___FORW))
                                 {
                                   /*
                                    * The key is not movable and is
@@ -5447,7 +5466,7 @@ ___PSDKR)
                         {
                           ___WORD val_head = ___BODY0(val)[-1];
 
-                          if (___TYP(val_head) == ___FORW)
+                          if (___TESTTYPE(val_head, ___FORW))
                             {
                               /*
                                * The key is not memory allocated and
@@ -5514,7 +5533,7 @@ ___PSDKR)
                     {
                       ___WORD head = ___BODY0(key)[-1];
 
-                      if (___TYP(head) == ___FORW)
+                      if (___TESTTYPE(head, ___FORW))
                         {
                           /*
                            * The key is movable and has been
@@ -5567,7 +5586,7 @@ ___PSDKR)
                     {
                       ___WORD head = ___BODY0(val)[-1];
 
-                      if (___TYP(head) == ___FORW)
+                      if (___TESTTYPE(head, ___FORW))
                         {
                           /*
                            * The value is movable and has been

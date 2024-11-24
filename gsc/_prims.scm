@@ -1643,8 +1643,10 @@
 ("##eq?"                              (2)   #f ()    0    boolean extended)
 ("equal?"                             (2)   #f 0     0    boolean ieee)
 ("##equal?"                           (2)   #f ()    0    boolean extended)
+("##possibly-equal?"                  (2)   #f ()    0    boolean extended)
 ("eqv?"                               (2)   #f 0     0    boolean ieee)
 ("##eqv?"                             (2)   #f ()    0    boolean extended)
+("##possibly-eqv?"                    (2)   #f ()    0    boolean extended)
 
 ("identity"                           (1)   #f 0     0    (#f)    gambit)
 ("##identity"                         (1)   #f ()    0    (#f)    extended)
@@ -3429,9 +3431,8 @@
 
   (define **fixnum->flonum-sym (string->canonical-symbol "##fixnum->flonum"))
 
-  (define **mem-allocated?-sym (string->canonical-symbol "##mem-allocated?"))
-  (define **subtyped?-sym (string->canonical-symbol "##subtyped?"))
-  (define **subtype-sym (string->canonical-symbol "##subtype"))
+  (define **possibly-eqv?-sym (string->canonical-symbol "##possibly-eqv?"))
+  (define **possibly-equal?-sym (string->canonical-symbol "##possibly-equal?"))
 
   (define **ratnum?-sym (string->canonical-symbol "##ratnum?"))
   (define **ratnum-numerator-sym (string->canonical-symbol "##ratnum-numerator"))
@@ -4290,24 +4291,10 @@
                  (gen-call-prim-notsafe source env
                    prim
                    (list (new-ref source env
-                           var1)))
-                 (new-conj source env
-                   (gen-call-prim-notsafe source env
-                     prim
-                     (list (new-ref source env
-                             var2)))
-                   (new-conj source env
-                     (gen-call-prim-notsafe source env
-                       **fx=-sym
-                       (list (gen-call-prim-notsafe source env
-                               **subtype-sym
-                               (list (new-ref source env
-                                       var1)))
-                             (gen-call-prim-notsafe source env
-                               **subtype-sym
-                               (list (new-ref source env
-                                       var2)))))
-                     (out-of-line)))))))
+                           var1)
+                         (new-ref source env
+                           var2)))
+                 (out-of-line)))))
          fail)))
 
     (define case-real?
@@ -4677,11 +4664,11 @@
 
           (def-exp2
             "eqv?"
-            (make-simple-expander (case-eqv?-or-equal? **subtyped?-sym)))
+            (make-simple-expander (case-eqv?-or-equal? **possibly-eqv?-sym)))
 
           (def-exp
             "equal?"
-            (make-simple-expander (case-eqv?-or-equal? **mem-allocated?-sym)))))
+            (make-simple-expander (case-eqv?-or-equal? **possibly-equal?-sym)))))
 ))
 
 (define (setup-char-primitives)

@@ -227,6 +227,14 @@
   (macro-force-vars (obj1 obj2)
     (##eq? obj1 obj2)))
 
+(define-prim (##possibly-eqv? obj1 obj2)
+  ;; is (eqv? obj1 obj2) possibly #t given that (eq? obj1 obj2) is #f?
+  #t) ;; ok to be conservative
+
+(define-prim (##possibly-equal? obj1 obj2)
+  ;; is (equal? obj1 obj2) possibly #t given that (eq? obj1 obj2) is #f?
+  #t) ;; ok to be conservative
+
 (define-prim-nary-bool (##symbol=? x y)
   #t
   #t

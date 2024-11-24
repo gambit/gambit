@@ -393,15 +393,15 @@ ___processor_state ___ps;)
   ___SUBTYPED_HEADER_SET(p, ___MAKE_HD((___PROCESSOR_SIZE<<___LWS),___sSTRUCTURE,___PERM));
 
   for (i=0; i<___PROCESSOR_SIZE; i++)
-    ___VECTORSET(p,___FIX(i),___FAL)
+    ___FIELD(p,i) = ___FAL;
 
   /*
    * Setup primitive lock in locked state (the processor will be
    * unlocked in _thread.scm).
    */
 
-  ___VECTORSET(p,___FIX(___OBJ_LOCK1),___FIX(0))
-  ___VECTORSET(p,___FIX(___OBJ_LOCK2),___FIX(0))
+  ___FIELD(p,___OBJ_LOCK1) = ___FIX(0);
+  ___FIELD(p,___OBJ_LOCK2) = ___FIX(0);
 
   ___PRIMITIVELOCK(p,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2))
 }
@@ -418,15 +418,15 @@ ___virtual_machine_state ___vms;)
   ___SUBTYPED_HEADER_SET(vm, ___MAKE_HD((___VM_SIZE<<___LWS),___sSTRUCTURE,___PERM));
 
   for (i=0; i<___VM_SIZE; i++)
-    ___VECTORSET(vm,___FIX(i),___FAL)
+    ___FIELD(vm,i) = ___FAL;
 
   /*
    * Setup primitive lock in locked state (the VM will be
    * unlocked in _thread.scm).
    */
 
-  ___VECTORSET(vm,___FIX(___OBJ_LOCK1),___FIX(0))
-  ___VECTORSET(vm,___FIX(___OBJ_LOCK2),___FIX(0))
+  ___FIELD(vm,___OBJ_LOCK1) = ___FIX(0);
+  ___FIELD(vm,___OBJ_LOCK2) = ___FIX(0);
 
   ___PRIMITIVELOCK(vm,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2))
 }
@@ -1279,9 +1279,19 @@ ___SCMOBJ *ptr;)
   ___SCMOBJ head = ptr[0];
   int subtype = ___HD_SUBTYPE(head);
   int words = ___HD_WORDS(head);
-  return ___SUBTYPED_FROM_START(align (ptr,
-                                       words+___SUBTYPED_BODY,
-                                       subtype>=___sS64VECTOR));
+  int start = words+___SUBTYPED_BODY;
+
+#if ___tFLONUM != ___tSUBTYPED
+  if (subtype == ___sFLONUM)
+    return ___FLONUM_FROM_START(align (ptr, start, 1));
+#endif
+
+#if ___tVECTOR != ___tSUBTYPED
+  if (subtype == ___sVECTOR)
+    return ___VECTOR_FROM_START(align (ptr, start, 0));
+#endif
+
+  return ___SUBTYPED_FROM_START(align (ptr, start, subtype>=___sS64VECTOR));
 }
 
 
@@ -1366,7 +1376,7 @@ ___SCMOBJ (*proc) ();)
 ___HIDDEN void fixrefs
    ___P((___module_struct *module,
          ___SCMOBJ *p,
-         int n),
+         int n, int where),
         (module,
          p,
          n)
@@ -1636,23 +1646,36 @@ ___module_struct *module;)
 
   /* Fix reference in module's descriptor */
 
-  fixrefs (module, &module->moddescr, 1);
+  fixrefs (module, &module->moddescr, 1, 111);
 
   /* Fix references in module's pair table */
 
   for (i=cnscount-1; i>=0; i--)
     fixrefs (module,
              cnstbl + i*(___PAIR_BODY+___PAIR_SIZE) + ___PAIR_BODY,
-             ___PAIR_SIZE);
+             ___PAIR_SIZE, 222);
 
   /* Fix references in module's subtyped object table */
 
   for (j=subcount-1; j>=0; j--)
     {
-      ___SCMOBJ *p = ___SUBTYPED_TO_START(subtbl[j]);
-      ___SCMOBJ head = p[0];
+      ___SCMOBJ obj = subtbl[j];
+      ___SCMOBJ *p;
+      ___SCMOBJ head;
+
+#if ___tFLONUM != ___tSUBTYPED
+      ___FLONUMP_DECL
+      if (___FLONUMP(obj)) continue;
+#endif
+
+#if ___tVECTOR != ___tSUBTYPED
+      if (___VECTORP(obj)) p = ___VECTOR_TO_START(obj); else
+#endif
+
+      p = ___SUBTYPED_TO_START(obj);
+      head = p[0];
       if (___HD_SUBTYPE(head) <= ___sKEYWORD)
-        fixrefs (module, p+___SUBTYPED_BODY, ___HD_WORDS(head));
+        fixrefs (module, p+___SUBTYPED_BODY, ___HD_WORDS(head), 333);
     }
 
   /* Align module's out-of-line frame descriptor table */
@@ -1683,14 +1706,14 @@ ___module_struct *module;)
                * (##subprocedure-parent-name proc)
                */
 
-              fixrefs (module, ___SUBTYPED_TO(lbl, ___LABEL_NAME), 1);
+              fixrefs (module, ___SUBTYPED_TO(lbl, ___LABEL_NAME), 1, 444);
 
               /*
                * Setup debugging information returned by
                * (##subprocedure-parent-info proc)
                */
 
-              fixrefs (module, ___SUBTYPED_TO(lbl, ___LABEL_INFO), 1);
+              fixrefs (module, ___SUBTYPED_TO(lbl, ___LABEL_INFO), 1, 555);
 
 #ifdef ___SUPPORT_LABEL_VALUES
               if (hlbl_ptr != 0)
@@ -1825,12 +1848,12 @@ ___module_struct *module;)
 
               pair2 = ___make_pair (NULL, /* allocate as permanent object */
                                     pair1,
-                                    ___FIELD(ctx->program_descr,1));
+                                    ___VECTORELEM(ctx->program_descr, 1));
 
               if (___FIXNUMP(pair2))
                 return pair2;
 
-              ___FIELD(ctx->program_descr,1) = pair2;
+              ___VECTORELEM(ctx->program_descr, 1) = pair2;
             }
         }
     }
@@ -1851,21 +1874,23 @@ ___module_struct *module;)
     {
       ___SCMOBJ err;
       ___SCMOBJ descr = module->moddescr;
+      ___SCMOBJ module_scmobj;
 
       if (ctx->flags != ___FAL) /* override compiler flags */
-        ___FIELD(descr,___MODULE_DESCR_FLAGS) = ctx->flags;
+        ___VECTORELEM(descr, ___MODULE_DESCR_FLAGS) = ctx->flags;
 
       if ((err = ___NONNULLPOINTER_to_SCMOBJ
                    (NULL, /* allocate as permanent object */
                     ___CAST(void*,module),
                     ___FAL,
                     NULL,
-                    &___FIELD(descr,___MODULE_DESCR_MODULE_STRUCT),
+                    &module_scmobj,
                     ___RETURN_POS))
           != ___FIX(___NO_ERR))
         return err;
 
-      ___FIELD(___FIELD(ctx->program_descr,0),ctx->module_count) = descr;
+      ___VECTORELEM(descr, ___MODULE_DESCR_MODULE_STRUCT) = module_scmobj;
+      ___VECTORELEM(___VECTORELEM(ctx->program_descr, 0), ctx->module_count) = descr;
 
       ctx->module_count++;
     }
@@ -1955,7 +1980,7 @@ ___BOOL collect_undef_glo;)
   if (___FIXNUMP(result = ___make_vector (NULL, ctx->module_count, ___FAL)))
     return result;
 
-  ___FIELD(ctx->program_descr,0) = result;
+  ___VECTORELEM(ctx->program_descr, 0) = result;
 
   ctx->module_count = 0;
   ctx->flags = ___FAL; /* default to compiler flags */
@@ -1974,7 +1999,7 @@ ___BOOL collect_undef_glo;)
       != ___FIX(___NO_ERR))
     return result;
 
-  ___FIELD(ctx->program_descr,2) = script_line;
+  ___VECTORELEM(ctx->program_descr, 2) = script_line;
 
   return ctx->program_descr;
 }
@@ -3325,7 +3350,7 @@ ___SCMOBJ thunk;)
   if ((___err = ___make_sfun_stack_marker (___ps, &marker, thunk))
       == ___FIX(___NO_ERR))
     {
-      ___err = ___call (___PSP 0, ___FIELD(marker,0), marker);
+      ___err = ___call (___PSP 0, ___VECTORELEM(marker, 0), marker);
       ___kill_sfun_stack_marker (marker);
     }
 
@@ -6318,22 +6343,23 @@ ___setup_params_struct *setup_params;)
        * descriptors.
        */
 
-      module_descrs = ___FIELD(___GSTATE->program_descr,0);
+      module_descrs = ___VECTORELEM(___GSTATE->program_descr, 0);
 
-      supply_modules = ___FIELD(___FIELD(module_descrs,
-                                         ___INT(___VECTORLENGTH(module_descrs))-1),
-                                ___MODULE_DESCR_SUPPLY_MODS);
+      supply_modules = ___VECTORELEM(___VECTORELEM(module_descrs,
+                                                   ___INT(___VECTORLENGTH(module_descrs))-1),
+                                     ___MODULE_DESCR_SUPPLY_MODS);
 
-      ___vms->main_module_ref = ___FIELD(supply_modules,
-                                         ___INT(___VECTORLENGTH(supply_modules))-1);
+      ___vms->main_module_ref = ___VECTORELEM(supply_modules,
+                                              ___INT(___VECTORLENGTH(supply_modules))-1);
 
       /*
        * Start virtual machine execution by loading _kernel module.
        */
 
       err = ___run (___PSP
-                    ___FIELD(___FIELD(___FIELD(___GSTATE->program_descr,0),0),
-                             ___MODULE_DESCR_THUNK));
+                    ___VECTORELEM(
+                      ___VECTORELEM(___VECTORELEM(___GSTATE->program_descr, 0), 0),
+                      ___MODULE_DESCR_THUNK));
     } while (0);
 
   /*

@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-2.scm"
 
-;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -3272,6 +3272,8 @@
 (targ-op "##false-or-void?"   (targ-ifjump-simp-s #f "FALSEORVOIDP"))
 (targ-op "##unbound?"         (targ-ifjump-simp-s #f "UNBOUNDP"))
 (targ-op "##eq?"              (targ-ifjump-simp-s #f "EQP"))
+(targ-op "##possibly-eqv?"    (targ-ifjump-simp-s #f "POSSIBLYEQVP"))
+(targ-op "##possibly-equal?"  (targ-ifjump-simp-s #f "POSSIBLYEQUALP"))
 (targ-op "##eof-object?"      (targ-ifjump-simp-s #f "EOFP"))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

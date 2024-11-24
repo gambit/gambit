@@ -69,7 +69,7 @@ c-declare-end
 
    ___PUSH_ARGS3(___ps->temp1, /* arg 1 = error code, integer */
                  ___ps->temp2, /* arg 2 = error data, #f/string/other */
-                 ___FIELD(___ps->temp3,0)) /* arg 3 = procedure */
+                 ___VECTORELEM(___ps->temp3, 0)) /* arg 3 = procedure */
 
    ___COVER_SFUN_CONVERSION_ERROR_HANDLER;
 
@@ -327,7 +327,7 @@ end-of-code
 
    while (i > 0)
      {
-       ___SCMOBJ probe = ___FIELD(___symbol_table,i);
+       ___SCMOBJ probe = ___VECTORELEM(___symbol_table, i);
 
        while (probe != ___NUL)
          {
@@ -570,14 +570,14 @@ end-of-code
    /* assign values to keyword parameters from last to first */
 
    for (j=nb_key-1; j>=0; j--)
-     key_vals[j] = ___FIELD(key_descr,j*2+1);
+     key_vals[j] = ___VECTORELEM(key_descr, j*2+1);
 
    for (i=fnk+1; i<=k; i+=2)
      {
        ___SCMOBJ key = ___STK(-i);
 
        for (j=nb_key-1; j>=0; j--)
-         if (key == ___FIELD(key_descr,j*2))
+         if (key == ___VECTORELEM(key_descr, j*2))
            {
              ___COVER_KEYWORD_PARAM_HANDLER_FOUND;
              key_vals[j] = ___STK(-i+1);
@@ -731,14 +731,14 @@ end-of-code
    /* assign values to keyword parameters from last to first */
 
    for (j=nb_key-1; j>=0; j--)
-     key_vals[j] = ___FIELD(key_descr,j*2+1);
+     key_vals[j] = ___VECTORELEM(key_descr, j*2+1);
 
    for (i=fnk+1; i<=k; i+=2)
      {
        ___SCMOBJ key = ___STK(-i);
 
        for (j=nb_key-1; j>=0; j--)
-         if (key == ___FIELD(key_descr,j*2))
+         if (key == ___VECTORELEM(key_descr, j*2))
            {
              ___COVER_KEYWORD_REST_PARAM_HANDLER_FOUND;
              key_vals[j] = ___STK(-i+1);
@@ -943,13 +943,13 @@ end-of-code
 
 #ifndef ___SINGLE_THREADED_VMS
 
-     if (!___FIXEQ(___FIELD(unwind_destination,1),
+     if (!___FIXEQ(___VECTORELEM(unwind_destination, 1),
                    ___FIX(___PROCESSOR_ID(___ps,___VMSTATE_FROM_PSTATE(___ps)))))
        {
          /* not the same processor that created frame */
          ___COVER_RETURN_TO_C_HANDLER_WRONG_PROCESSOR;
          ___SET_R0(___ps->handler_return_to_c)
-         ___SET_R1(___FIELD(unwind_destination,1))
+         ___SET_R1(___VECTORELEM(unwind_destination, 1))
          ___JUMPPRM(___SET_NARGS(1),
                     ___PRMCELL(___G__23__23_c_2d_return_2d_on_2d_other_2d_processor.prm))
        }
@@ -957,7 +957,7 @@ end-of-code
 
 #endif
 
-     if (___FALSEP(___FIELD(unwind_destination,0)))
+     if (___FALSEP(___VECTORELEM(unwind_destination, 0)))
        {
          /* not first return */
          ___COVER_RETURN_TO_C_HANDLER_MULTIPLE_RETURN;
@@ -1088,7 +1088,7 @@ end-of-code
 
    cf = ___STK(-___BREAK_FRAME_NEXT); /* pointer to caller's frame */
 
-   if (___TYP(cf) != ___tSUBTYPED)
+   if (!___TESTTYPE(cf, ___tSUBTYPED))
      {
        /* caller's frame is in the stack */
 
@@ -1916,7 +1916,7 @@ end-of-code
    np = ___INT(___VECTORLENGTH(args));
 
    for (i=0; i<np; i++)
-     ___PUSH(___FIELD(args,i))
+     ___PUSH(___VECTORELEM(args, i))
 
    ___POP_ARGS_IN_REGS(np) /* load register arguments */
 
@@ -2350,8 +2350,8 @@ else
           result = ___FIX(___HEAP_OVERFLOW_ERR);
         else
           {
-            result = ___SUBTYPED_FROM_START(___hp);
-            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_WORDS(n, ___sVECTOR));
+            result = ___VECTOR_FROM_START(___hp);
+            ___VECTOR_HEADER_SET(result, ___MAKE_HD_WORDS(n, ___sVECTOR));
             ___hp += words;
           }
       }
@@ -3711,7 +3711,7 @@ end-of-code
    ___SCMOBJ frame = ___FIELD(___ARG1,___CONTINUATION_FRAME);
    ___SCMOBJ ra;
 
-   if (___TYP(frame) == ___tSUBTYPED)
+   if (___TESTTYPE(frame, ___tSUBTYPED))
      {
        /* continuation frame is in the heap */
 
@@ -3779,7 +3779,7 @@ end-of-code
    ___SCMOBJ ra;
    int fs;
 
-   if (___TYP(frame) == ___tSUBTYPED)
+   if (___TESTTYPE(frame, ___tSUBTYPED))
      {
        /* continuation frame is in the heap */
 
@@ -3838,7 +3838,7 @@ end-of-code
    int fs;
    int link;
 
-   if (___TYP(frame) == ___tSUBTYPED)
+   if (___TESTTYPE(frame, ___tSUBTYPED))
      {
        /* continuation frame is in the heap */
 
@@ -3905,7 +3905,7 @@ end-of-code
    ___WORD gcmap;
    ___WORD *nextgcmap = 0;
 
-   if (___TYP(frame) == ___tSUBTYPED)
+   if (___TESTTYPE(frame, ___tSUBTYPED))
      {
        /* continuation frame is in the heap */
 
@@ -3999,7 +3999,7 @@ end-of-code
    int fs;
    int link;
 
-   if (___TYP(frame) == ___tSUBTYPED)
+   if (___TESTTYPE(frame, ___tSUBTYPED))
      {
        /* continuation frame is in the heap */
 
@@ -4049,7 +4049,7 @@ end-of-code
    int fs;
    int link;
 
-   if (___TYP(frame) == ___tSUBTYPED)
+   if (___TESTTYPE(frame, ___tSUBTYPED))
      {
        /* continuation frame is in the heap */
 
@@ -4103,10 +4103,10 @@ end-of-code
           ___SCMOBJ denv  = ___ARG2;
 
           ___hp[0]=___MAKE_HD_WORDS(___CONTINUATION_SIZE,___sCONTINUATION);
-          ___ADD_VECTOR_ELEM(0,frame);
-          ___ADD_VECTOR_ELEM(1,denv);
+          ___ADD_SUBTYPED_ELEM(0,frame);
+          ___ADD_SUBTYPED_ELEM(1,denv);
           ___hp+=___CONTINUATION_SIZE+1;
-          ___RESULT = ___GET_VECTOR(___CONTINUATION_SIZE);
+          ___RESULT = ___GET_SUBTYPED(___CONTINUATION_SIZE);
 
 end-of-code
 
@@ -4125,10 +4125,10 @@ end-of-code
           ___SCMOBJ denv  = ___FIELD(cont,___CONTINUATION_DENV);
 
           ___hp[0]=___MAKE_HD_WORDS(___CONTINUATION_SIZE,___sCONTINUATION);
-          ___ADD_VECTOR_ELEM(0,frame);
-          ___ADD_VECTOR_ELEM(1,denv);
+          ___ADD_SUBTYPED_ELEM(0,frame);
+          ___ADD_SUBTYPED_ELEM(1,denv);
           ___hp+=___CONTINUATION_SIZE+1;
-          ___RESULT = ___GET_VECTOR(___CONTINUATION_SIZE);
+          ___RESULT = ___GET_SUBTYPED(___CONTINUATION_SIZE);
 
 end-of-code
 
@@ -4150,7 +4150,7 @@ end-of-code
    int fs;
    int link;
 
-   if (___TYP(frame)==___tSUBTYPED)
+   if (___TESTTYPE(frame, ___tSUBTYPED))
      {
        /* continuation frame is in the heap */
 
@@ -5443,19 +5443,90 @@ end-of-code
   (##structure-instance-of? obj (##type-id ##type-type)))
 
 (define-prim (##structure-type obj)
-  (##vector-ref obj 0))
+  (##unchecked-structure-ref obj 0 #f #f))
 
 (define-prim (##structure-type-set! obj type)
-  (##vector-set! obj 0 type))
+  (##unchecked-structure-set! obj type i #f #f))
 
 (define-prim (##make-structure type len)
-  (let ((s (##make-vector len)))
-    (##subtype-set! s (macro-subtype-structure))
-    (##vector-set! s 0 type)
-    s))
+  (##declare (not interrupts-enabled))
+  (let ((s (##c-code #<<end-of-code
+
+___SCMOBJ len;
+___SCMOBJ type;
+___SIZE_TS i;
+___SIZE_TS n;
+___SCMOBJ result;
+___POP_ARGS2(type,len);
+___ps->saved[0] = type;
+___ps->saved[1] = len;
+n = ___INT(len);
+if (n > ___CAST(___WORD, ___LMASK>>(___LF+___LWS)))
+  result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
+else
+  {
+    ___SIZE_TS words = n + 1;
+    if (words > ___MSECTION_BIGGEST)
+      {
+        ___FRAME_STORE_RA(___R0)
+        ___W_ALL
+        result = ___EXT(___alloc_scmobj) (___ps, ___sSTRUCTURE, n<<___LWS);
+        ___R_ALL
+        ___SET_R0(___FRAME_FETCH_RA)
+        if (!___FIXNUMP(result))
+          ___still_obj_refcount_dec (result);
+      }
+    else
+      {
+        ___BOOL overflow = 0;
+        ___hp += words;
+        if (___hp > ___ps->heap_limit)
+          {
+            ___FRAME_STORE_RA(___R0)
+            ___W_ALL
+            overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
+            ___R_ALL
+            ___SET_R0(___FRAME_FETCH_RA)
+          }
+        else
+          ___hp -= words;
+        if (overflow)
+          result = ___FIX(___HEAP_OVERFLOW_ERR);
+        else
+          {
+            result = ___SUBTYPED_FROM_START(___hp);
+            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_WORDS(n, ___sSTRUCTURE));
+            ___hp += words;
+          }
+      }
+  }
+type = ___ps->saved[0];
+len = ___ps->saved[1];
+___ps->saved[0] = ___VOID;
+___ps->saved[1] = ___VOID;
+if (!___FIXNUMP(result))
+  {
+    ___FIELD(result,0) = type;
+    for (i=1; i<n; i++)
+      ___FIELD(result,i) = ___FIX(0);
+  }
+___RESULT = result;
+___PUSH_ARGS2(type,len);
+
+end-of-code
+)))
+    (if (##fixnum? s)
+      (begin
+        (##raise-heap-overflow-exception)
+        (##make-structure type len))
+      s)))
 
 (define-prim (##structure-length obj)
-  (##vector-length obj))
+  (##declare (not interrupts-enabled))
+  (##c-code #<<end-of-code
+___RESULT = ___FIX(___HD_FIELDS(___SUBTYPED_HEADER(___ARG1)));
+end-of-code
+   obj))
 
 (define-prim (##structure type . fields)
 

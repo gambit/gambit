@@ -657,10 +657,10 @@
 (##define-macro (macro-make-will testator action)
   `(##make-will ,testator ,action))
 
-(##define-macro (macro-will-testator w)        `(macro-slot 1 ,w))
-(##define-macro (macro-will-testator-set! w x) `(macro-slot 1 ,w ,x))
-(##define-macro (macro-will-action w)          `(macro-slot 2 ,w))
-(##define-macro (macro-will-action-set! w x)   `(macro-slot 2 ,w ,x))
+(##define-macro (macro-will-testator w)        `(macro-struct-slot 1 ,w))
+(##define-macro (macro-will-testator-set! w x) `(macro-struct-slot 1 ,w ,x))
+(##define-macro (macro-will-action w)          `(macro-struct-slot 2 ,w))
+(##define-macro (macro-will-action-set! w x)   `(macro-struct-slot 2 ,w ,x))
 
 (##define-macro (macro-will-execute! will)
   `(let ((will ,will))
