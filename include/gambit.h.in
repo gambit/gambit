@@ -2483,7 +2483,10 @@ ___STORE_U32(s,i,val))
 
 #define ___tSPECIAL  2
 #define ___tMEM2     3
-#define ___MEM_ALLOCATED(obj)((obj)&1)
+
+#define ___MEM_ALLOCATED(obj) ((obj)&1)
+#define ___MEM_ALLOCATED_CLEAR(obj) ((obj)&~___CAST(___WORD,1))
+#define ___MEM_ALLOCATED_SET(obj) ((obj)|1)
 
 #else
 
@@ -2512,8 +2515,8 @@ ___STORE_U32(s,i,val))
 #if ___FLONUM_SELF_TAGGING_TAGS <= 2
 
 #define ___MEM_ALLOCATED(obj) ((obj)&1)
-#define ___MEM_ALLOCATED_CLEAR(obj)((obj)&~___CAST(___WORD,1))
-#define ___MEM_ALLOCATED_SET(obj)((obj)|1)
+#define ___MEM_ALLOCATED_CLEAR(obj) ((obj)&~___CAST(___WORD,1))
+#define ___MEM_ALLOCATED_SET(obj) ((obj)|1)
 
 #elif ___FLONUM_SELF_TAGGING_TAGS == 3
 
@@ -2522,14 +2525,14 @@ ___STORE_U32(s,i,val))
 #else
 #define ___MEM_ALLOCATED(obj) (___TESTMASK(obj,3,1) || ___TESTMASK(obj,7,2))
 #endif
-#define ___MEM_ALLOCATED_CLEAR(obj)((((obj)+1)&2) ? (obj)+2 : (obj))
-#define ___MEM_ALLOCATED_SET(obj)((((obj)+1)&2) ? (obj) : (obj)-2)
+#define ___MEM_ALLOCATED_CLEAR(obj) ((((obj)+1)&2) ? (obj)+2 : (obj))
+#define ___MEM_ALLOCATED_SET(obj) ((((obj)+1)&2) ? (obj) : (obj)-2)
 
 #else
 
 #define ___MEM_ALLOCATED(obj) ___TESTMASK(obj,3,1)
-#define ___MEM_ALLOCATED_CLEAR(obj)((obj)&~___CAST(___WORD,1))
-#define ___MEM_ALLOCATED_SET(obj)((obj)|1)
+#define ___MEM_ALLOCATED_CLEAR(obj) ((obj)&~___CAST(___WORD,1))
+#define ___MEM_ALLOCATED_SET(obj) ((obj)|1)
 
 #endif
 
