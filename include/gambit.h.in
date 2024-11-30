@@ -2435,7 +2435,7 @@ ___STORE_U32(s,i,val))
  *  FIX  SUBT ---- VECT SPEC PAIR ---- haf  ___FLONUM_SELF_TAGGING_TAGS == 0
  *  FIX  SUBT ---- VECT SPEC PAIR stf  haf  ___FLONUM_SELF_TAGGING_TAGS == 1
  *  FIX  SUBT stf1 haf  SPEC PAIR stf2 ---- ___FLONUM_SELF_TAGGING_TAGS == 2
- *  FIX  SUBT stf1 haf  SPEC PAIR stf2 stf3 ___FLONUM_SELF_TAGGING_TAGS == 3
+ *  FIX  SUBT haf  stf1 SPEC PAIR stf2 stf3 ___FLONUM_SELF_TAGGING_TAGS == 3
  *  FIX  SUBT stf1 stf2 SPEC PAIR stf3 stf4 ___FLONUM_SELF_TAGGING_TAGS == 4
  *
  *  stf = Self-tagged flonum
@@ -2498,29 +2498,42 @@ ___STORE_U32(s,i,val))
 
 #define ___tMEM2     5
 
-#if ___FLONUM_SELF_TAGGING_TAGS <= 3
+#if ___FLONUM_SELF_TAGGING_TAGS == 3
+#define ___tMEM3     2
+#else
+#if ___FLONUM_SELF_TAGGING_TAGS <= 2
 #define ___tMEM3     3
 #if ___FLONUM_SELF_TAGGING_TAGS <= 1
 #define ___tMEM4     7
 #endif
 #endif
+#endif
 
 #if ___FLONUM_SELF_TAGGING_TAGS <= 2
+
 #define ___MEM_ALLOCATED(obj) ((obj)&1)
+#define ___MEM_ALLOCATED_CLEAR(obj)((obj)&~___CAST(___WORD,1))
+#define ___MEM_ALLOCATED_SET(obj)((obj)|1)
+
 #elif ___FLONUM_SELF_TAGGING_TAGS == 3
+
 #ifdef ___USE_HAS_TAG_IN_SET
 #define ___MEM_ALLOCATED(obj) ___HAS_TAG_IN_SET(obj, ((1<<___tMEM1)|(1<<___tMEM2)|(1<<___tMEM3)))
 #else
-#define ___MEM_ALLOCATED(obj) (((obj)&1) && !___TESTMASK(obj,7,7))
+#define ___MEM_ALLOCATED(obj) (___TESTMASK(obj,3,1) || ___TESTMASK(obj,7,2))
 #endif
+#define ___MEM_ALLOCATED_CLEAR(obj)((((obj)+1)&2) ? (obj)+2 : (obj))
+#define ___MEM_ALLOCATED_SET(obj)((((obj)+1)&2) ? (obj) : (obj)-2)
+
 #else
+
 #define ___MEM_ALLOCATED(obj) ___TESTMASK(obj,3,1)
-#endif
-
-#endif
-
 #define ___MEM_ALLOCATED_CLEAR(obj)((obj)&~___CAST(___WORD,1))
 #define ___MEM_ALLOCATED_SET(obj)((obj)|1)
+
+#endif
+
+#endif
 
 #ifndef ___TB_FIXNUM
 #define ___TB_FIXNUM ___TB
@@ -2931,16 +2944,32 @@ ___TAG(___CAST(___WORD*,ptr) - (___REFERENCE_TO_BODY+(n)), ___tVECTOR)
 
 #if ___FLONUM_SELF_TAGGING_TAGS > 0
 
-#if ___FLONUM_SELF_TAGGING_TAGS <= 2
+#if ___FLONUM_SELF_TAGGING_TAGS == 1
 
-#define ___SELF_TAGGED_FLONUM_OFFSET 5
+#define ___SELF_TAGGED_FLONUM_OFFSET (6*2 + 1)
+#define ___SELF_TAGGED_FLONUM_SHIFT1 58
+#define ___SELF_TAGGED_FLONUM_SHIFT2 1
+
+#define ___SELF_TAGGED_FLONUM(x)___TESTMASK(x,7,6)
+
+#elif ___FLONUM_SELF_TAGGING_TAGS == 2
+
+#define ___SELF_TAGGED_FLONUM_OFFSET (2*2 + 1)
 #define ___SELF_TAGGED_FLONUM_SHIFT1 59
 #define ___SELF_TAGGED_FLONUM_SHIFT2 1
 
-#if ___FLONUM_SELF_TAGGING_TAGS == 1
-#define ___SELF_TAGGED_FLONUM(x)___TESTMASK(x,7,6)
-#else
 #define ___SELF_TAGGED_FLONUM(x)___TESTMASK(x,3,2)
+
+#elif ___FLONUM_SELF_TAGGING_TAGS == 3
+
+#define ___SELF_TAGGED_FLONUM_OFFSET 3
+#define ___SELF_TAGGED_FLONUM_SHIFT1 60
+#define ___SELF_TAGGED_FLONUM_SHIFT2 0
+
+#ifdef ___USE_HAS_TAG_IN_SET
+#define ___SELF_TAGGED_FLONUM(x) ___HAS_TAG_IN_SET(x, ((1<<3)|(1<<6)|(1<<7)))
+#else
+#define ___SELF_TAGGED_FLONUM(x) (((x)&2) && !___TESTTYPE(x,___tFLONUM))
 #endif
 
 #else
@@ -2949,15 +2978,7 @@ ___TAG(___CAST(___WORD*,ptr) - (___REFERENCE_TO_BODY+(n)), ___tVECTOR)
 #define ___SELF_TAGGED_FLONUM_SHIFT1 60
 #define ___SELF_TAGGED_FLONUM_SHIFT2 0
 
-#if ___FLONUM_SELF_TAGGING_TAGS == 3
-#ifdef ___USE_HAS_TAG_IN_SET
-#define ___SELF_TAGGED_FLONUM(x) ___HAS_TAG_IN_SET(x, ((1<<2)|(1<<6)|(1<<7)))
-#else
-#define ___SELF_TAGGED_FLONUM(x) (((x)&2) && !___TESTMASK(x,7,3))
-#endif
-#else
-#define ___SELF_TAGGED_FLONUM(x)((x)&2)
-#endif
+#define ___SELF_TAGGED_FLONUM(x) ((x)&2)
 
 #endif
 
@@ -3559,17 +3580,25 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #endif
 
 #if ___FLONUM_SELF_TAGGING_TAGS == 0
+
 #define ___FLONUMP(x)___MEM_ALLOCATED_FLONUM(x)
 #define ___FLONUMP_DECL ___WORD ___temp;
+
 #elif ___FLONUM_SELF_TAGGING_TAGS == 1
+
 #define ___FLONUMP(x)___TESTMASK(x,6,6)
 #define ___FLONUMP_DECL
+
 #elif ___FLONUM_SELF_TAGGING_TAGS == 4
+
 #define ___FLONUMP(x)(___SELF_TAGGED_FLONUM(___temp=(x)) || ___MEM_ALLOCATED_FLONUM(x))
 #define ___FLONUMP_DECL ___WORD ___temp;
+
 #else
+
 #define ___FLONUMP(x)((x)&2)
 #define ___FLONUMP_DECL
+
 #endif
 
 #define ___SPECIALP(x)___TESTTYPE(x,___tSPECIAL)
