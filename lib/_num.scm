@@ -8175,15 +8175,16 @@ end-of-code
       for (i = 0, j = k; i < x_length; i += 2, j += 2) {
                /* The C backend always has an even number of mdigits
                 so we unroll the loop once. */
-        carry =
+        ___BIGMDOUBLEDIGIT carry1;
+        carry1 =
           carry
           + ((___BIGMDOUBLEDIGIT) result[___BIG_END_MINT_FLIP(j)])
           + ((___BIGMDOUBLEDIGIT) multiplier) * ((___BIGMDOUBLEDIGIT) x[___BIG_END_MINT_FLIP(i)]);
-        result[___BIG_END_MINT_FLIP(j)] = (___BIGMDIGIT) carry;
         carry =
-          (carry >> ___BIG_MBASE_WIDTH)
+          (carry1 >> ___BIG_MBASE_WIDTH)
           + ((___BIGMDOUBLEDIGIT) result[___BIG_END_MINT_FLIP(j+1)])
           + ((___BIGMDOUBLEDIGIT) multiplier) * ((___BIGMDOUBLEDIGIT) x[___BIG_END_MINT_FLIP(i+1)]);
+        result[___BIG_END_MINT_FLIP(j)] = (___BIGMDIGIT) carry1;
         result[___BIG_END_MINT_FLIP(j+1)] = (___BIGMDIGIT) carry;
         carry = carry >> ___BIG_MBASE_WIDTH;
       }
