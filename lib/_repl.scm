@@ -1922,26 +1922,26 @@
             (##display-continuation-dynamic-environment cont port indent)))))
 
 (define-prim (##cmd-e proc-or-cont port detail-level)
-
-  (define (err)
-    (##write-string "Can't display environment of " port)
-    (##write proc-or-cont port)
-    (##newline port))
-
   (and proc-or-cont
-       (cond ((##continuation? proc-or-cont)
-              (##display-continuation-env proc-or-cont port 0 detail-level))
-             ((##closure? proc-or-cont)
-              (let ((parent
-                     (##subprocedure-parent (##closure-code proc-or-cont))))
-                (if (##eq? parent ##call-with-current-continuation)
-                    (let ((cont (##closure-ref proc-or-cont 1)))
-                      (##display-continuation-env cont port 0 detail-level))
-                    (err))))
-             ((##interp-procedure? proc-or-cont)
-              (##display-procedure-environment proc-or-cont port 0))
-             (else
-              (err)))))
+       (let ((cont (##cont-like->continuation proc-or-cont)))
+         (if cont
+             (##display-continuation-env cont port 0 detail-level)
+             (if (##interp-procedure? proc-or-cont)
+                 (##display-procedure-environment proc-or-cont port 0)
+                 (begin
+                   (##write-string "Can't display environment of " port)
+                   (##write proc-or-cont port)
+                   (##newline port)))))))
+
+(define-prim (##cont-like->continuation obj)
+  (cond ((##continuation? obj)
+         obj)
+        ((##closure? obj)
+         (and (##eq? (##subprocedure-parent (##closure-code obj))
+                     ##call-with-current-continuation)
+              (##closure-ref obj 1)))
+        (else
+         #f)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3663,17 +3663,17 @@
 
        (define (handle proc-or-cont depth)
          (if (##eq? cmd 'v)
-             (if (##continuation? proc-or-cont)
-                 (let ((cont
-                        (##repl-first-interesting
-                         proc-or-cont)))
-                   (##repl-within cont #f #f #f))
-                 (let ((proc
-                        proc-or-cont))
-                   (##repl-within-proc
-                    proc
-                    (macro-repl-context-cont
-                     repl-context))))
+             (let ((cont
+                    (##repl-first-interesting
+                     (##cont-like->continuation proc-or-cont))))
+               (if cont
+                   (##repl-within cont #f #f #f)
+                   (let ((proc
+                          proc-or-cont))
+                     (##repl-within-proc
+                      proc
+                      (macro-repl-context-cont
+                       repl-context)))))
              (begin
                (##repl-channel-display-multiline-message
                 (lambda (port)
@@ -3703,8 +3703,10 @@
                      (cont
                       (macro-repl-context-cont rc)))
                 (handle cont depth)))
-             ((##continuation? val)
-              (handle val 0))
+             ((##cont-like->continuation val)
+              =>
+              (lambda (cont)
+                (handle cont 0)))
              ((and (##not (or (##eq? cmd 'b)
                               (##eq? cmd 'be)
                               (##eq? cmd 'bed)))
