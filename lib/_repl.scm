@@ -1922,10 +1922,26 @@
             (##display-continuation-dynamic-environment cont port indent)))))
 
 (define-prim (##cmd-e proc-or-cont port detail-level)
+
+  (define (err)
+    (##write-string "Can't display environment of " port)
+    (##write proc-or-cont port)
+    (##newline port))
+
   (and proc-or-cont
-       (if (##continuation? proc-or-cont)
-           (##display-continuation-env proc-or-cont port 0 detail-level)
-           (##display-procedure-environment proc-or-cont port 0))))
+       (cond ((##continuation? proc-or-cont)
+              (##display-continuation-env proc-or-cont port 0 detail-level))
+             ((##closure? proc-or-cont)
+              (let ((parent
+                     (##subprocedure-parent (##closure-code proc-or-cont))))
+                (if (##eq? parent ##call-with-current-continuation)
+                    (let ((cont (##closure-ref proc-or-cont 1)))
+                      (##display-continuation-env cont port 0 detail-level))
+                    (err))))
+             ((##interp-procedure? proc-or-cont)
+              (##display-procedure-environment proc-or-cont port 0))
+             (else
+              (err)))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
