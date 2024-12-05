@@ -1,33 +1,8 @@
 ;------------------------------------------------------------------------------
 
-(module prefix (main main-entry)
-  (extern (include "sys/times.h")))
+(module prefix (main main-entry))
 
 ;INSERTCODE
-
-(define (clock-to-msecs x)
-  (quotient (* x 1000) (pragma::int "CLK_TCK")))
-
-(define (process-times)
-  (let ()
-    (pragma "struct tms buf")
-    (let ((real::long (pragma::long "times(&buf)")))
-      (cons real
-            (+ (pragma::long "buf.tms_utime")
-               (pragma::long "buf.tms_stime"))))))
-
-(define (time* thunk)
-   (let ((start (process-times)))
-     (let ((result (thunk)))
-       (let ((end (process-times)))
-         (let ((cpu (clock-to-msecs (- (cdr end) (cdr start))))
-               (real (clock-to-msecs (- (car end) (car start)))))
-           (display "cpu time: ")
-           (display cpu)
-           (display " real time: ")
-           (display real)
-           (newline)
-           result)))))
 
 (define (run-bench name count ok? run)
   (let loop ((i 0) (result (list 'undefined)))
@@ -38,7 +13,7 @@
 (define (run-benchmark name count ok? run-maker . args)
   (newline)
   (let* ((run (apply run-maker args))
-         (result (time* (lambda () (run-bench name count ok? run)))))
+         (result (run-bench name count ok? run)))
     (if (not (ok? result))
       (begin
         (display "*** wrong result ***")
