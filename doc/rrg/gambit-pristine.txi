@@ -1,0 +1,82 @@
+\input texinfo
+@c Copyright (c) 2024 by Macon Gambill, All Rights Reserved.
+@include toolshed/macros+vars.txi
+@include copying/copying.txi
+
+@settitle Gambit manual
+@clear txicodevaristt
+@synindex vr cp
+@syncodeindex pg cp
+
+@dircategory The Algorithmic Language Scheme
+@direntry
+* gambit: (gambit)The Gambit programming system. 
+@end direntry
+
+@titlepage
+@title @value{REVISION} Report on the Gambit Programming System
+@subtitle for Gambit v@value{VERSION}
+@author Marc Feeley
+@author with revisions by Macon Gambill
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+@end titlepage
+
+@contents
+
+@node Top
+@top Gambit
+
+Gambit is a portable, reliable, and efficient implementation of the
+Scheme programming language.
+
+For the most up-to-date information on Gambit and related resources,
+visit the @url{@value{HOMEPAGEURL},Gambit home page}.  Please report
+issues via @url{@value{GITHUBURL},the Gambit repository on GitHub}.
+
+@insertcopying
+
+@include prose/intro.txi
+
+@node Pairs and lists
+@nodedescription The @sc{LIS} in @sc{LISP}.
+@chapter Pairs and lists
+@lowersections
+@include prose/pairs-lists.txi
+@include procedures/pairs-lists.txi
+@raisesections
+
+@node Strings
+@nodedescription Sequences of characters.
+@chapter Strings
+@lowersections
+@include procedures/strings.txi
+@raisesections
+
+@node General Index
+@unnumbered General Index
+@printindex cp
+
+@node Type Index
+@unnumbered Type Index
+@printindex tp
+
+@node Index of procedures and syntactic forms
+@unnumbered Index of procedures and syntactic forms
+@printindex fn
+
+@ifnothtml
+@ifnotplaintext
+@ifnotxml
+@node GNU Lesser General Public License
+@appendix GNU Lesser General Public License
+@include copying/licenses/lgpl-2.1.texi
+
+@node Apache License
+@appendix Apache License
+@include copying/licenses/LICENSE-2.0.txt
+@end ifnotxml
+@end ifnotplaintext
+@end ifnothtml
+@bye
