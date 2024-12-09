@@ -47,7 +47,6 @@
 (for-each (lambda (x)
             (for-each (lambda (y)
                         (let ((z (make-rectangular x y)))
-                          (pp z)
                           (check-= (tanh z) (test-tanh z))
                           (check-eqv? (tanh (- z))
                                       (- (tanh z)))
