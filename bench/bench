@@ -100,6 +100,8 @@ GAMBIT_INT=${GAMBIT_INT:-"../../../gsi/gsi -:m10000,d-,~~=../../.."}
 RIBBIT_COMP=${RIBBIT_COMP:-rsc}
 RIBBIT_INT=${RIBBIT_INT:-rsi}
 
+BIGLOO_COMP=${BIGLOO_COMP:-"bigloo"}
+
 CPU_LIMIT=${CPU_LIMIT:-"300"}
 
 ulimit -t $CPU_LIMIT
@@ -276,13 +278,16 @@ bigloo_comp ()
      compiler|ctak|dynamic|fibc|maze|puzzle|scheme) usecc="-call/cc" ;;
      *) usecc="" ;;
   esac
-  /usr/bin/time bigloo $usecc $COMPOPTS $1.scm -o $1
+  /usr/bin/time $BIGLOO_COMP $usecc $COMPOPTS $1.scm -o $1
 }
 
 bigloo_exec ()
 {
-  if test -f ./$1
-  then DYLD_LIBRARY_PATH=/Users/feeley/bigloo/lib/bigloo/3.0d GC_INITIAL_HEAP_SIZE=10240000 ./$1
+  if command -v perf
+  then
+    perf stat ./$1
+  else
+    /usr/bin/time ./$1
   fi
 }
 
