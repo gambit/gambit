@@ -136,12 +136,6 @@ runtime == 1 && /^cpu time: ([0-9]+) real time: ([0-9]+)/ {
   }
 }
 
-runtime == 1 && /([0-9]+) seconds time elapsed/ {
-  if (real == "#f") {
-    real = $1;
-  }
-}
-
 runtime == 1 && /^code size = [0-9]+$/ {
   codesize = $4;
 }
