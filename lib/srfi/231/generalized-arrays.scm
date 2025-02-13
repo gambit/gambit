@@ -2330,10 +2330,29 @@ OTHER DEALINGS IN THE SOFTWARE.
                                 safe?
                                 #t)))         ;; this array is in order by definition
 
-(define (%%list*->array dimension nested-list storage-class mutable? safe? caller)
+(define (%%list*->array dimension nested-list storage-class mutable? safe?)
+
+  (define (storage-class-error)
+    (error "list*->array: Not all elements of the nested list can be manipulated by the storage class: "
+           dimension nested-list storage-class))
+
+  (define (shape-error)
+    (error "list*->array: The second argument is not the right shape to be converted to an array of the given dimension: "
+           dimension nested-list))
+
+  (define (copy-nested-list dimension nested-list)
+    (cond ((eqv? dimension 0)
+           nested-list)
+          ((list? nested-list)
+           (map (lambda (l)
+                  (copy-nested-list (fx- dimension 1) l))
+                nested-list))
+          (else
+           (shape-error))))
 
   (define (check-nested-list dimension nested-data)
-    (or (eqv? dimension 0)  ;; anything goes in dimension 0
+    (if (eqv? dimension 0)
+        '()
         (and (list? nested-data)
              (let ((len (length nested-data)))
                (cond ((eqv? len 0)
@@ -2353,46 +2372,42 @@ OTHER DEALINGS IN THE SOFTWARE.
                                     (cdr sublists))
                              (cons len first)))))))))
 
-  (define (nested-list->array dimension nested-data)
-    (case dimension
-      ((0)
-       (%!array-copy (make-array (make-interval '#()) (lambda () nested-data))
-                     storage-class
-                     mutable?
-                     safe?
-                     caller
-                     #f))
-      ((1)
-       (%%list->array (make-interval (vector (length nested-data)))
-                      nested-data
-                      storage-class
-                      mutable?
-                      safe?
-                      caller))
-      (else
-       (if (null? nested-data)
-           (let ((result (%%make-specialized-array (make-interval (make-vector dimension 0))
-                                                   storage-class
-                                                   (storage-class-default storage-class) ;; never used
-                                                   safe?)))
-             (if (not mutable?)
-                 (%%array-freeze! result)
-                 result))
-           (%%%array-stack 0             ;; the new dimension is always the first
-                           (map (lambda (l)
-                                  (nested-list->array (fx- dimension 1) l))
-                                nested-data)
-                           storage-class
-                           mutable?
-                           safe?
-                           caller
-                           #f)))))   ;; already call/cc-safe
-
-  (if (check-nested-list dimension nested-list)
-      (nested-list->array dimension nested-list)
-      (error (string-append caller
-                            "The second argument is not the right shape to be converted to an array of the given dimension: ")
-             dimension nested-list)))
+  (let* ((nested-list
+          (if (memq storage-class %%known-storage-classes)
+              nested-list
+              (copy-nested-list dimension nested-list)))
+         (list*-dimensions
+          (check-nested-list dimension nested-list)))
+    (if (not list*-dimensions)
+        (shape-error)
+        ;; list*-dimension is a (possibly empty) list of positive integers
+        (let ((result
+               (%%make-specialized-array (make-interval
+                                          (list->vector
+                                           (append list*-dimensions
+                                                   (make-list (fx- dimension (length list*-dimensions)) 0))))
+                                         storage-class
+                                         (storage-class-default storage-class)
+                                         safe?)))
+          (if (fxpositive? (%%interval-volume (%%array-domain result)))
+              (let ((body    (%%array-body result))
+                    (checker (storage-class-checker storage-class))
+                    (setter  (storage-class-setter storage-class))
+                    (index   0))
+                (let loop ((dim dimension)
+                           (data nested-list))
+                  (if (eqv? dim 0)
+                      (if (checker data)
+                          (begin
+                            (setter body index data)
+                            (set! index (fx+ index 1)))
+                          (storage-class-error))
+                      (for-each (lambda (data)
+                                  (loop (fx- dim 1) data))
+                                data)))))
+          (if (not mutable?)
+              (%%array-freeze! result)
+              result)))))
 
 (define (list*->array dimension
                       nested-data
@@ -2410,12 +2425,31 @@ OTHER DEALINGS IN THE SOFTWARE.
                    (fx<= 0 dimension)))
          (error "list*->array: The first argument is not a nonnegative fixnum: " dimension nested-data))
         (else
-         (%%list*->array dimension nested-data storage-class mutable? safe? "list*->array: "))))
+         (%%list*->array dimension nested-data storage-class mutable? safe?))))
 
-(define (%%vector*->array dimension nested-vector storage-class mutable? safe? caller)
+(define (%%vector*->array dimension nested-vector storage-class mutable? safe?)
+
+  (define (shape-error)
+    (error "vector*->array: The second argument is not the right shape to be converted to an array of the given dimension: "
+           dimension nested-vector))
+
+  (define (storage-class-error)
+    (error "vector*->array: Not all elements of the nested vector can be manipulated by the storage class: "
+           dimension nested-vector storage-class))
+
+  (define (copy-nested-vector dimension nested-vector)
+    (cond ((eqv? dimension 0)
+           nested-vector)
+          ((vector? nested-vector)
+           (vector-map (lambda (l)
+                         (copy-nested-vector (fx- dimension 1) l))
+                       nested-vector))
+          (else
+           (shape-error))))
 
   (define (check-nested-vector dimension nested-data)
-    (or (eqv? dimension 0)  ;; anything goes in dimension 0
+    (if (eqv? dimension 0)
+        '()
         (and (vector? nested-data)
              (let ((len (vector-length nested-data)))
                (cond ((eqv? len 0)
@@ -2435,46 +2469,42 @@ OTHER DEALINGS IN THE SOFTWARE.
                                            sublists)
                              (cons len first)))))))))
 
-  (define (nested-vector->array dimension nested-data)
-    (case dimension
-      ((0)
-       (%!array-copy (make-array (make-interval '#()) (lambda () nested-data))
-                     storage-class
-                     mutable?
-                     safe?
-                     caller
-                     #f))
-      ((1)
-       (let ((generic-array
-              (%%make-specialized-array-from-data nested-data generic-storage-class mutable? safe?))) ;; data is always a generic-vector
-         (%!array-copy generic-array
-                       storage-class
-                       mutable?
-                       safe?
-                       caller
-                       #f)))
-      (else
-       (if (eqv? (vector-length nested-data) 0)
-           (let ((result (make-specialized-array (make-interval (make-vector dimension 0))
-                                                 storage-class
-                                                 (storage-class-default storage-class) ;; never used
-                                                 safe?)))
-             (if (not mutable?)
-                 (%%array-freeze! result)
-                 result))
-           (%%%array-stack 0             ;; the new dimension is always the first
-                           (map (lambda (l)
-                                  (nested-vector->array (fx- dimension 1) l))
-                                (vector->list nested-data))
-                           storage-class
-                           mutable?
-                           safe?
-                           caller
-                           #f)))))   ;; already call/cc-safe
-
-  (if (check-nested-vector dimension nested-vector)
-      (nested-vector->array dimension nested-vector)
-      (error (string-append caller "The second argument is not the right shape to be converted to an array of the given dimension: ") dimension nested-vector)))
+  (let* ((nested-vector
+          (if (memq storage-class %%known-storage-classes)
+              nested-vector
+              (copy-nested-vector dimension nested-vector)))
+         (vector*-dimensions
+          (check-nested-vector dimension nested-vector)))
+    (if (not vector*-dimensions)
+        (shape-error)
+        ;; vector*-dimension is a (possibly empty) list of positive integers
+        (let ((result
+               (%%make-specialized-array (make-interval
+                                          (list->vector
+                                           (append vector*-dimensions
+                                                   (make-list (fx- dimension (length vector*-dimensions)) 0))))
+                                         storage-class
+                                         (storage-class-default storage-class)
+                                         safe?)))
+          (if (fxpositive? (%%interval-volume (%%array-domain result)))
+              (let ((body    (%%array-body result))
+                    (checker (storage-class-checker storage-class))
+                    (setter  (storage-class-setter storage-class))
+                    (index   0))
+                (let loop ((dim dimension)
+                           (data nested-vector))
+                  (if (eqv? dim 0)
+                      (if (checker data)
+                          (begin
+                            (setter body index data)
+                            (set! index (fx+ index 1)))
+                          (storage-class-error))
+                      (vector-for-each (lambda (data)
+                                         (loop (fx- dim 1) data))
+                                       data)))))
+          (if (not mutable?)
+              (%%array-freeze! result)
+              result)))))
 
 (define (vector*->array dimension
                         nested-data
@@ -2492,7 +2522,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                    (fx<= 0 dimension)))
          (error "vector*->array: The first argument is not a nonnegative fixnum: " dimension nested-data))
         (else
-         (%%vector*->array dimension nested-data storage-class mutable? safe? "vector*->array: "))))
+         (%%vector*->array dimension nested-data storage-class mutable? safe?))))
 
 (define make-specialized-array
   (let ()
@@ -2556,6 +2586,33 @@ OTHER DEALINGS IN THE SOFTWARE.
                  storage-class
                  initial-value
                  safe?)))))
+
+(define %%known-storage-classes
+
+  ;; These storage classes have are known to have well-behaved
+  ;; setters, getters, and checkers, so they cannot affect
+  ;; procedure arguments that are lists or vectors.
+
+  (list
+
+   generic-storage-class
+
+   u1-storage-class
+   u8-storage-class
+   u16-storage-class
+   u32-storage-class
+   u64-storage-class
+
+   s8-storage-class
+   s16-storage-class
+   s32-storage-class
+   s64-storage-class
+
+   f16-storage-class
+   f32-storage-class
+   f64-storage-class
+
+   ))
 
 (define %%storage-class-compatibility-alist
 
@@ -4518,8 +4575,6 @@ OTHER DEALINGS IN THE SOFTWARE.
         (else
          (%%array->vector array))))
 
-;;; Refactored for use in list*->array
-
 (define (%%list->array interval
                        l
                        result-storage-class
@@ -4573,7 +4628,9 @@ OTHER DEALINGS IN THE SOFTWARE.
          (error "list->array: The fifth argument is not a boolean: " interval l result-storage-class mutable? safe?))
         (else
          (%%list->array interval
-                        l
+                        (if (memq result-storage-class %%known-storage-classes)
+                            l
+                            (list-copy l))
                         result-storage-class
                         mutable?
                         safe?
@@ -4600,7 +4657,11 @@ OTHER DEALINGS IN THE SOFTWARE.
          (error "vector->array: The fifth argument is not a boolean: " interval v result-storage-class mutable? safe?))
         (else
          (specialized-array-reshape
-          (%!array-copy (%%make-specialized-array-from-data v generic-storage-class #f #f)
+          (%!array-copy (%%make-specialized-array-from-data
+                         (if (memq result-storage-class %%known-storage-classes)
+                             v
+                             (vector-copy v))
+                         generic-storage-class #f #f)
                         result-storage-class
                         mutable?
                         safe?
@@ -4690,7 +4751,7 @@ OTHER DEALINGS IN THE SOFTWARE.
         (else
          (%%array-inner-product A f g B))))
 
-;;; Refactored from array-stack to use in list*->array and vector*->array
+;;; Refactored from array-stack
 
 (define (%%%array-stack k arrays storage-class mutable? safe? caller call/cc-safe?)
   (let* ((arrays
