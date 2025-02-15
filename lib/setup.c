@@ -1073,7 +1073,7 @@ ___BOOL first_iter;)
       first_iter = 0;
     }
 
-  if (id == 0 && ___err != ___FIX(___NO_ERR))
+  if (id == 0 && ___err != ___FIX(___NO_ERR) && ___GSTATE->setup_state != 2)
     ___throw_error (___PSP ___err);
 }
 
