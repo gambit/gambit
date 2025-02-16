@@ -1,6 +1,6 @@
 /* File: "os_tty.c" */
 
-/* Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -6740,7 +6740,7 @@ void *data;)
 
   for (i=0; i<prefix; i++)
     {
-      ___C c1 = ___INT(___STRINGREF(name,___FIX(i)));
+      ___C c1 = ___ORD(___STRINGREF(name,___FIX(i)));
       ___C c2 = dat->buf->buffer[word_start+i];
       if (c1 != c2)
         return;
@@ -6750,7 +6750,7 @@ void *data;)
     {
       if (i < len)
         {
-          ___C c1 = ___INT(___STRINGREF(name,___FIX(i)));
+          ___C c1 = ___ORD(___STRINGREF(name,___FIX(i)));
           ___C c2 = dat->buf->buffer[word_start+i];
           if (c1 < c2)
             return;
@@ -6780,8 +6780,8 @@ void *data;)
         {
           if (i < n2)
             {
-              ___C c1 = ___INT(___STRINGREF(name,___FIX(i)));
-              ___C c2 = ___INT(___STRINGREF(name2,___FIX(i)));
+              ___C c1 = ___ORD(___STRINGREF(name,___FIX(i)));
+              ___C c2 = ___ORD(___STRINGREF(name2,___FIX(i)));
               if (c1 < c2)
                 goto found2;
               if (c1 > c2)
@@ -6852,7 +6852,7 @@ extensible_string *completion;)
 
       for (i=0; i<n; i++)
         {
-          ___C c = ___INT(___STRINGREF(name,___FIX(i)));
+          ___C c = ___ORD(___STRINGREF(name,___FIX(i)));
           if (extensible_string_insert_at_end (completion, 1, &c)
               != ___FIX(___NO_ERR))
             {
@@ -8640,7 +8640,7 @@ ___SCMOBJ duration;)
 {
   ___device_tty *d =
     ___CAST(___device_tty*,___FIELD(dev,___FOREIGN_PTR));
-  int duration_nsecs = ___CAST(int,___FLONUM_VAL(duration) * 1e9);
+  int duration_nsecs = ___CAST(int,___F64UNBOX(duration) * 1e9);
 
   if (duration_nsecs < 0)
     duration_nsecs = 0;
