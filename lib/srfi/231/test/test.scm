@@ -1382,16 +1382,16 @@ OTHER DEALINGS IN THE SOFTWARE.
       #t)
 
 (test (vector*->array 2 '#(#((a b c) (1 2))) u8-storage-class)
-      "vector*->array: Not all elements of the nested vector can be manipulated by the storage class: ")
+      "vector*->array: Not all elements of the source can be stored in destination: ")
 
 (test (list*->array 2 '(((a b c) (1 2))) u8-storage-class)
-      "list*->array: Not all elements of the nested list can be manipulated by the storage class: ")
+      "list*->array: Not all elements of the source can be stored in destination: ")
 
 (test (list*->array 0 'a u8-storage-class)
-      "list*->array: Not all elements of the nested list can be manipulated by the storage class: ")
+      "list*->array: Not all elements of the source can be stored in destination: ")
 
 (test (vector*->array 0 'a u8-storage-class)
-      "vector*->array: Not all elements of the nested vector can be manipulated by the storage class: ")
+      "vector*->array: Not all elements of the source can be stored in destination: ")
 
 (for-each (lambda (operation data)
             (for-each (lambda (mutable?)
