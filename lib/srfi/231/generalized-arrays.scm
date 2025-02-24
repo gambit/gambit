@@ -820,7 +820,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
       `(case (%%interval-dimension interval)
          ((0) (operator identity (f)))
-         ,@(map do-one-case (iota 8 1))
+         ,@(map do-one-case (iota 4 1))
          (else
           (let ()
 
@@ -921,7 +921,7 @@ OTHER DEALINGS IN THE SOFTWARE.
       (let ((result
              `(case (%%interval-dimension interval)
                 ((0) (operator (f) identity))
-                ,@(map do-one-case (iota 8 1))
+                ,@(map do-one-case (iota 4 1))
                 (else
                  (let ()
 
@@ -4272,7 +4272,7 @@ OTHER DEALINGS IN THE SOFTWARE.
            ,(if (eq? name 'any) #f #t)
            (case (%%interval-dimension interval)
              ((0) (f))
-             ,@(map do-one-case (iota 8 1))
+             ,@(map do-one-case (iota 4 1))
              (else
               (let ()
 
