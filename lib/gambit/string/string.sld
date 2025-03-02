@@ -15,6 +15,9 @@
   (export
 
 string?
+string-null?
+string-every
+string-any
 make-string
 string
 string-length
