@@ -1379,16 +1379,16 @@ OTHER DEALINGS IN THE SOFTWARE.
       #t)
 
 (test (vector*->array 2 '#(#((a b c) (1 2))) u8-storage-class)
-      "vector*->array: Not all elements of the source can be stored in destination: ")
+      "vector*->array: Not all elements of the source can be manipulated by the storage class: ")
 
 (test (list*->array 2 '(((a b c) (1 2))) u8-storage-class)
-      "list*->array: Not all elements of the source can be stored in destination: ")
+      "list*->array: Not all elements of the source can be manipulated by the storage class: ")
 
 (test (list*->array 0 'a u8-storage-class)
-      "list*->array: Not all elements of the source can be stored in destination: ")
+      "list*->array: Not all elements of the source can be manipulated by the storage class: ")
 
 (test (vector*->array 0 'a u8-storage-class)
-      "vector*->array: Not all elements of the source can be stored in destination: ")
+      "vector*->array: Not all elements of the source can be manipulated by the storage class: ")
 
 (for-each (lambda (operation data)
             (for-each (lambda (mutable?)
@@ -1878,7 +1878,9 @@ OTHER DEALINGS IN THE SOFTWARE.
                   (if (storage-class-copier storage-class)
                       "Block copy"
                       "In order, no checks needed")
-                  "No checks needed"))
+                  (if (eq? storage-class generic-storage-class)
+                      "Out of order, no checks needed, generic-storage-class"
+                      "Out of order, no checks needed")))
         (test (myarray= specialized-source (array-reverse specialized-destination))
               #t)
         ))))
@@ -1952,25 +1954,33 @@ OTHER DEALINGS IN THE SOFTWARE.
                 (< (magnitude (- x y)) 1e-3))))
         (if (array-every destination-checker source)
             (begin
-              (test (let ((%%move-result
-                           (%%move-array-elements destination source "test: ")))
-                      (and (equal? (if (array-packed? destination)
-                                       (cond ((and (eq? destination-storage-class source-storage-class)
-                                                   (storage-class-copier destination-storage-class))
-                                              "Block copy")
-                                             ((eq? destination-storage-class generic-storage-class)
-                                              "In order, no checks needed, generic-storage-class")
-                                             ((every destination-checker (cdr (assq source-storage-class extreme-values-alist)))
-                                              "In order, no checks needed")
-                                             (else
-                                              "In order, checks needed"))
-                                       (cond ((every destination-checker (cdr (assq source-storage-class extreme-values-alist)))
-                                              "No checks needed")
-                                             (else
-                                              "Checks needed")))
+              (test (let* ((test-source
+                            (vector-ref (vector source generalized-source) (random 2)))
+                           (%%move-result
+                            (%%move-array-elements destination test-source "test: ")))
+                      (and (equal? (if (not (specialized-array? test-source))
+                                       (if (eq? destination-storage-class generic-storage-class)
+                                           "Checks not needed, source not specialized, generic-storage-class"
+                                           "Checks needed, source not specialized")
+                                       (if (array-packed? destination)
+                                           (cond ((and (eq? destination-storage-class source-storage-class)
+                                                       (storage-class-copier destination-storage-class))
+                                                  "Block copy")
+                                                 ((eq? destination-storage-class generic-storage-class)
+                                                  "In order, no checks needed, generic storage-class")
+                                                 ((every destination-checker (cdr (assq source-storage-class extreme-values-alist)))
+                                                  "In order, no checks needed")
+                                                 (else
+                                                  "In order, checks needed"))
+                                           (cond ((eq? destination-storage-class generic-storage-class)
+                                                  "Out of order, no checks needed, generic-storage-class")
+                                                 ((every destination-checker (cdr (assq source-storage-class extreme-values-alist)))
+                                                  "Out of order, no checks needed")
+                                                 (else
+                                                  "Out of order, checks needed"))))
                                    %%move-result)
                            (myarray= destination
-                                     source
+                                     test-source
                                      (if (or (and (eq? source-storage-class c128-storage-class)
                                                   (eq? destination-storage-class c64-storage-class))
                                              (and (eq? source-storage-class f64-storage-class)
@@ -3091,8 +3101,8 @@ OTHER DEALINGS IN THE SOFTWARE.
           (make-specialized-array result-domain u1-storage-class))
          (curried-result
           (array-curry result (interval-dimension element-domain))))
-    (array-for-each array-assign! result-array A)
-    result-array))
+    (array-for-each array-assign! result A)
+    result))
 
 (do ((i 0 (+ i 1)))
     ((= i random-tests))
@@ -4469,7 +4479,7 @@ OTHER DEALINGS IN THE SOFTWARE.
             (test (function (make-interval '#(0) '#(10)) arg)
                   (string-append name "The volume of the first argument does not equal the length of the second: "))
             (test (function (make-interval '#(0) '#(1)) arg u1-storage-class)
-                  (string-append name "Not all elements of the source can be stored in destination: "))
+                  (string-append name "Not all elements of the source can be manipulated by the storage class: "))
             (test (function (make-interval '#(10)) arg)
                   (string-append name "The volume of the first argument does not equal the length of the second: ")))
           (list list->array vector->array)
