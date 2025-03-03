@@ -2925,6 +2925,13 @@ ___TAG(___CAST(___WORD*,ptr) - (___REFERENCE_TO_BODY+(n)), ___tVECTOR)
 #define ___HD_BYTES(head)(___CAST(___UWORD,head)>>___LF)
 #define ___HD_WORDS(head)(((___CAST(___UWORD,head)+((___WS-1)<<___LF)))>>(___LF+___LWS))
 #define ___HD_FIELDS(head)(___CAST(___UWORD,head)>>(___LF+___LWS))
+
+#if ___LWS >= ___TB_FIXNUM
+#define ___HD_FIELDS_FIX(head)(___CAST(___UWORD,head)>>(___LF+___LWS-___TB))
+#else
+#define ___HD_FIELDS_FIX(head)___FIX(___HD_FIELDS(head))
+#endif
+
 #define ___HD_SUBTYPE(head)((head)>>___HTB&((1<<___SB)-1))
 
 #define ___FIELD(obj,i)(*(___BODY_AS(obj,___tSUBTYPED)+i))
@@ -4454,7 +4461,7 @@ ___GET_SUBTYPED(___BOX_SIZE))
 #define ___SETBOX(x,y)___BODY_AS(x,___tSUBTYPED)[0]=y;
 
 #define ___VALUESSIZE(v)___HD_FIELDS(___SUBTYPED_HEADER(v))
-#define ___VALUESLENGTH(v)___FIX(___VALUESSIZE(v))
+#define ___VALUESLENGTH(v)___HD_FIELDS_FIX(___SUBTYPED_HEADER(v))
 #define ___VALUESREF(v,i)*(___WORD*)(((___WORD)___BODY_AS(v,___tSUBTYPED))+((i)<<(___LWS-___TB_FIXNUM)))
 #define ___VALUESSET(v,i,val)*(___WORD*)(((___WORD)___BODY_AS(v,___tSUBTYPED))+((i)<<(___LWS-___TB_FIXNUM)))=val;
 
@@ -4479,12 +4486,12 @@ ___VECTUPDATESMALL(___BODY_AS(v,___tSUBTYPED),___INT(i),val,___VALUESSIZE(v),___
 #define ___VECTORELEM(v,i)___BODY_AS(v,___tVECTOR)[i]
 
 #define ___VECTORSIZE(v)___HD_FIELDS(___VECTOR_HEADER(v))
-#define ___VECTORLENGTH(v)___FIX(___VECTORSIZE(v))
-#define ___VECTORREF(v,i)*(___WORD*)(((___WORD)___BODY_AS(v,___tVECTOR))+((i)<<(___LWS-___TB_FIXNUM)))
-#define ___VECTORSET(v,i,val)*(___WORD*)(((___WORD)___BODY_AS(v,___tVECTOR))+((i)<<(___LWS-___TB_FIXNUM)))=val;
+#define ___VECTORLENGTH(v)___HD_FIELDS_FIX(___VECTOR_HEADER(v))
+#define ___VECTORREF(v,i)*___CAST(___WORD*,___CAST(___WORD,___BODY_AS(v,___tVECTOR))+((i)<<(___LWS-___TB_FIXNUM)))
+#define ___VECTORSET(v,i,val)*___CAST(___WORD*,___CAST(___WORD,___BODY_AS(v,___tVECTOR))+((i)<<(___LWS-___TB_FIXNUM)))=val;
 #define ___VECTORSHRINK(v,i)___temp=(v);___VECTOR_HEADER_SET(___temp,(___VECTOR_HEADER(___temp)&~___LMASK)+((i)<<(___LF-___TB_FIXNUM+___LWS)));
-#define ___VECTORCAS(v,i,val,oldval)___COMPARE_AND_SWAP_WORD((___WORD*)(((___WORD)___BODY_AS(v,___tVECTOR))+((i)<<(___LWS-___TB_FIXNUM))),oldval,val)
-#define ___VECTORINC(v,i,val)___FETCH_AND_ADD_WORD((___WORD*)(((___WORD)___BODY_AS(v,___tVECTOR))+((i)<<(___LWS-___TB_FIXNUM))),val)
+#define ___VECTORCAS(v,i,val,oldval)___COMPARE_AND_SWAP_WORD(___CAST(___WORD*,___CAST(___WORD,___BODY_AS(v,___tVECTOR))+((i)<<(___LWS-___TB_FIXNUM))),oldval,val)
+#define ___VECTORINC(v,i,val)___FETCH_AND_ADD_WORD(___CAST(___WORD*,___CAST(___WORD,___BODY_AS(v,___tVECTOR))+((i)<<(___LWS-___TB_FIXNUM))),val)
 
 #define ___MAKEVECTORSMALL1(size)___MAKEVECTORSMALL2(size,___FIX(0))
 #define ___MAKEVECTORSMALL2(size,fill) \
