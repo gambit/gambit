@@ -1863,49 +1863,36 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(##define-macro (macro-will-size) 3)
-
-(define-prim (##will? obj)
-  (and (##subtyped? obj)
-       (##eq? (##subtype obj) (macro-subtype-weak))
-       (##fx= (##vector-length obj) (macro-will-size))))
+(define-prim (##will? obj))
 
 (define-prim (will? x)
   (macro-force-vars (x)
     (##will? x)))
 
-(define-prim (##make-will testator action)
-  (macro-make-will testator action))
+(define-prim (##make-will testator action))
 
 (define-prim (make-will testator action)
   (macro-force-vars (action)
     (macro-check-procedure action 2 (make-will testator action)
-      (macro-make-will testator action))))
+      (##make-will testator action))))
 
-(define-prim (##will-testator will)
-  (macro-will-testator will))
+(define-prim (##will-testator will))
 
 (define-prim (will-testator will)
   (macro-force-vars (will)
     (macro-check-will will 1 (will-testator will)
-      (macro-will-testator will))))
+      (##will-testator will))))
 
-(define-prim (##will-testator-set! will testator)
-  (macro-will-testator-set! will testator))
+(define-prim (##will-testator-set! will testator))
 
-(define-prim (##will-action will)
-  (macro-will-action will))
+(define-prim (##will-action will))
 
-(define-prim (##will-action-set! will action)
-  (macro-will-action-set! will action))
-
-(define-prim (##will-execute! will)
-  (macro-will-execute! will))
+(define-prim (##will-action-set! will action))
 
 (define-prim (will-execute! will)
   (macro-force-vars (will)
     (macro-check-will will 1 (will-execute! will)
-      (macro-will-execute! will))))
+      (##will-execute! will))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

@@ -2,7 +2,7 @@
 
 ;;; File: "_gambit#.scm"
 
-;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -644,36 +644,6 @@
   (if (null? val)
     `(##unchecked-structure-ref ,struct ,index #f #f)
     `(##unchecked-structure-set! ,struct ,@val ,index #f #f)))
-
-;;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-;; Will objects
-
-;; A will is represented by an object vector of length 3
-;; slot 0 = link to next will in list of non-executable wills
-;; slot 1 = testator
-;; slot 2 = action procedure
-
-(##define-macro (macro-make-will testator action)
-  `(##make-will ,testator ,action))
-
-(##define-macro (macro-will-testator w)        `(macro-struct-slot 1 ,w))
-(##define-macro (macro-will-testator-set! w x) `(macro-struct-slot 1 ,w ,x))
-(##define-macro (macro-will-action w)          `(macro-struct-slot 2 ,w))
-(##define-macro (macro-will-action-set! w x)   `(macro-struct-slot 2 ,w ,x))
-
-(##define-macro (macro-will-execute! will)
-  `(let ((will ,will))
-     (##declare (not interrupts-enabled))
-     (let ((testator (macro-will-testator will))
-           (action (macro-will-action will)))
-       (macro-will-testator-set! will #f) ;; zap testator
-       (macro-will-action-set! will #f)   ;; and action procedure
-       (let ()
-         (##declare (interrupts-enabled))
-         (if action
-           (action testator))
-         (##void)))))
 
 ;;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

@@ -2,7 +2,7 @@
 
 ;;; File: "_kernel.scm"
 
-;;; Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1999,9 +1999,21 @@ end-of-code
 )))
     (if will
       (begin
-        (macro-will-execute! will)
+        (##will-execute! will)
         (##gc-finalize!))
       (##gc-final-will-registry!))))
+
+(define-prim (##will-execute! will)
+  (##declare (not interrupts-enabled))
+  (let ((testator (##will-testator will))
+        (action (##will-action will)))
+    (##will-testator-set! will #f) ;; zap testator
+    (##will-action-set! will #f)   ;; and action procedure
+    (let ()
+      (##declare (interrupts-enabled))
+      (if action
+          (action testator))
+      (##void))))
 
 (define ##final-will-registry (macro-make-fifo))
 
@@ -2012,7 +2024,7 @@ end-of-code
       (let loop ((x lst))
         (if (##not (##null? x))
           (begin
-            (macro-will-execute! (##car x))
+            (##will-execute! (##car x))
             (loop (##cdr x))))))))
 
 (define-prim (##gc-final-will-registry!)
@@ -2023,7 +2035,7 @@ end-of-code
       (if (##null? next)
         (macro-fifo-tail-set! registry curr)
         (let* ((will (macro-fifo-elem next))
-               (action (macro-will-action will)))
+               (action (##will-action will)))
           (if action
             (begin
               (macro-fifo-next-set! curr next)
