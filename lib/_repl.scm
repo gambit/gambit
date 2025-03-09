@@ -4956,6 +4956,7 @@
     (open-paren-expected            . "'(' expected")
     (invalid-token                  . "Invalid token")
     (invalid-sharp-bang-name        . "Invalid '#!' name:")
+    (deserialization-error          . "Deserialization error")
     (duplicate-label-definition     . "Duplicate definition for label:")
     (missing-label-definition       . "Missing definition for label:")
     (illegal-label-definition       . "Illegal definition of label:")

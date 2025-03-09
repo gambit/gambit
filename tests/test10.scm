@@ -2,7 +2,7 @@
 
 ;;; File: "test10.scm"
 
-;;; Copyright (c) 2008-2023 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2008-2025 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -123,7 +123,7 @@ default-random-source
        (map (lambda (s)
               (let loop ((s s) (lst '()))
                 (if (symbol? s)
-                    (loop (##vector-ref s 2) (cons s lst))
+                    (loop (##symbol-interned? s) (cons s lst))
                     (reverse lst))))
             (vector->list st))))
 

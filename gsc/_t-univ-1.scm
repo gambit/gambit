@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-1.scm"
 
-;;; Copyright (c) 2011-2024 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2025 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -3915,17 +3915,17 @@
           force-var?
           (lambda ()
             (let* ((slots
-                    (##vector-copy obj)) ;;TODO: replace call of ##vector-copy
+                    (structure->list obj))
                    (cyclic?
-                    (eq? (vector-ref slots 0) obj)))
+                    (eq? (car slots) obj)))
               (^structure-box
                (^array-literal
                 'scmobj
                 (cons (if cyclic? ;; the root type descriptor is cyclic
                           (^null) ;; handle this specially
-                          (univ-emit-obj* ctx (vector-ref slots 0) #f))
+                          (univ-emit-obj* ctx (car slots) #f))
                       (map (lambda (x) (univ-emit-obj* ctx x #f))
-                           (cdr (vector->list slots))))))))))
+                           (cdr slots)))))))))
 
         ((box-object? obj)
          (univ-obj-use

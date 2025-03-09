@@ -1,6 +1,6 @@
 ; File: "mix.scm"
 
-; Copyright (c) 1998-2023 by Marc Feeley, All Rights Reserved.
+; Copyright (c) 1998-2025 by Marc Feeley, All Rights Reserved.
 
 (##declare
   (standard-bindings)
@@ -10,8 +10,8 @@
   (not safe)
 )
 
-(define word-size (##u8vector-length '#(#f))) ; may not work in the future
-(define string-char-size (##u8vector-length "a"))
+(define word-size (if (> ##max-fixnum 2147483647) 8 4)) ;; may not work in the future
+(define string-char-size (case (##max-char-code) ((255) 1) ((65535) 2) (else 4)))
 
 ;------------------------------------------------------------------------------
 
@@ -1486,7 +1486,7 @@
   (test (s64vector->list (s64vector (- (expt 2 63)) (- -1 (expt 2 62)) (- (expt 2 62)) (- -1 (expt 2 61)) (- (expt 2 61)) (- -1 (expt 2 29)) (- (expt 2 29)) (- (expt 2 29) 1) (expt 2 29) (expt 2 31) (- (expt 2 61) 1) (expt 2 61) (- (expt 2 62) 1) (expt 2 62) (- (expt 2 63) 1))) (-9223372036854775808 -4611686018427387905 -4611686018427387904 -2305843009213693953 -2305843009213693952 -536870913 -536870912 536870911 536870912 2147483648 2305843009213693951 2305843009213693952 4611686018427387903 4611686018427387904 9223372036854775807))
   (test (list->s64vector '(-9223372036854775808 9223372036854775807)) #s64(-9223372036854775808 9223372036854775807))
   (err (make-s64vector -1))
-  (err (make-s64vector (quotient max-size-in-bytes-plus-1 4)))
+  (err (make-s64vector (quotient max-size-in-bytes-plus-1 8)))
   (err (make-s64vector max-fixnum))
   (err (make-s64vector 123456789012345678901))
   (err (make-s64vector 1.5))
@@ -1525,7 +1525,7 @@
   (test (u64vector->list (u64vector (- (expt 2 29) 1) (expt 2 29) (expt 2 31) (- (expt 2 61) 1) (expt 2 61) (- (expt 2 63) 1) (expt 2 63) (- (expt 2 64) 1))) (536870911 536870912 2147483648 2305843009213693951 2305843009213693952 9223372036854775807 9223372036854775808 18446744073709551615))
   (test (list->u64vector '(0 18446744073709551615)) #u64(0 18446744073709551615))
   (err (make-u64vector -1))
-  (err (make-u64vector (quotient max-size-in-bytes-plus-1 4)))
+  (err (make-u64vector (quotient max-size-in-bytes-plus-1 8)))
   (err (make-u64vector max-fixnum))
   (err (make-u64vector 123456789012345678901))
   (err (make-u64vector 1.5))

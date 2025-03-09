@@ -3580,6 +3580,10 @@
 (targ-op "##gc-hash-table-find!"   (targ-apply-simp-u #f #f 0 "GCHASHTABLEFIND")) ;;TODO: what should be ssb-space?
 (targ-op "##gc-hash-table-rehash!" (targ-apply-simp-u #f #f 0 "GCHASHTABLEREHASH")) ;;TODO
 
+(targ-op "##gc-hash-table-length"     (targ-apply-simp-u #f #f #f "GCHASHTABLELENGTH"))
+(targ-op "##gc-hash-table-field-ref"  (targ-apply-simp-u #f #f #f "GCHASHTABLEFIELDREF"))
+(targ-op "##gc-hash-table-field-set!" (targ-apply-simp-u #f #t 0 "GCHASHTABLEFIELDSET"))
+
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (targ-op "##values"           (targ-apply-vector-s 'values))

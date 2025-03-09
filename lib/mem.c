@@ -1,6 +1,6 @@
 /* File: "mem.c" */
 
-/* Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.  */
+/* Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.  */
 
 #define ___INCLUDED_FROM_MEM
 #define ___VERSION 409005
@@ -1319,7 +1319,7 @@ ___glo_struct *glo;)
                   result = probe;
                   goto end_search;
                 }
-              probe = ___FIELD(probe,___SYMKEY_NEXT);
+              probe = ___SYMKEY_NEXT_FIELD(probe);
             }
         }
     end_search:;
@@ -1378,7 +1378,7 @@ ___SCMOBJ sym;)
 
       ___PRMCELL(glo->prm) = ___FAL;
 
-      ___FIELD(sym,___SYMBOL_GLOBAL) = ___CAST(___SCMOBJ,glo);
+      ___SYMBOL_GLOBAL_FIELD(sym) = ___CAST(___SCMOBJ,glo);
     }
 
   return sym;
@@ -1410,7 +1410,7 @@ ___SCMOBJ val;)
               break;
             }
 
-          sym = ___FIELD(sym,___SYMKEY_NEXT);
+          sym = ___SYMKEY_NEXT_FIELD(sym);
         }
     }
 
@@ -1913,7 +1913,7 @@ ___SCMOBJ symkey;)
 {
   unsigned int subtype = ___INT(___SUBTYPE(symkey));
   ___SCMOBJ tbl = symkey_table (subtype);
-  int i = ___INT(___FIELD(symkey,___SYMKEY_HASH))
+  int i = ___INT(___SYMKEY_HASH_FIELD(symkey))
           % (___INT(___VECTORLENGTH(tbl)) - 1)
           + 1;
 
@@ -1921,7 +1921,7 @@ ___SCMOBJ symkey;)
    * Add symbol/keyword to the appropriate list.
    */
 
-  ___FIELD(symkey,___SYMKEY_NEXT) = ___VECTORELEM(tbl, i);
+  ___SYMKEY_NEXT_FIELD(symkey) = ___VECTORELEM(tbl, i);
   ___VECTORELEM(tbl, i) = symkey;
 
   ___VECTORELEM(tbl, 0) = ___FIXADD(___VECTORELEM(tbl, 0), ___FIX(1));
@@ -1945,10 +1945,10 @@ ___SCMOBJ symkey;)
               while (probe != ___NUL)
                 {
                   ___SCMOBJ symkey = probe;
-                  int j = ___INT(___FIELD(symkey,___SYMKEY_HASH))%new_len + 1;
+                  int j = ___INT(___SYMKEY_HASH_FIELD(symkey))%new_len + 1;
 
-                  probe = ___FIELD(symkey,___SYMKEY_NEXT);
-                  ___FIELD(symkey,___SYMKEY_NEXT) = ___VECTORELEM(newtbl, j);
+                  probe = ___SYMKEY_NEXT_FIELD(symkey);
+                  ___SYMKEY_NEXT_FIELD(symkey) = ___VECTORELEM(newtbl, j);
                   ___VECTORELEM(newtbl,j) = symkey;
                 }
             }
@@ -1989,11 +1989,11 @@ unsigned int subtype;)
 
   /* object layout is same for ___sSYMBOL and ___sKEYWORD */
 
-  ___FIELD(obj,___SYMKEY_NAME) = name;
-  ___FIELD(obj,___SYMKEY_HASH) = ___hash_scheme_string (name);
+  ___SYMKEY_NAME_FIELD(obj) = name;
+  ___SYMKEY_HASH_FIELD(obj) = ___hash_scheme_string (name);
 
   if (subtype == ___sSYMBOL)
-    ___FIELD(obj,___SYMBOL_GLOBAL) = ___CAST(___SCMOBJ,___CAST(___glo_struct*,0));
+    ___SYMBOL_GLOBAL_FIELD(obj) = ___CAST(___SCMOBJ,___CAST(___glo_struct*,0));
 
   ___intern_symkey (obj);
 
@@ -2021,7 +2021,7 @@ unsigned int subtype;)
 
   while (probe != ___NUL)
     {
-      ___SCMOBJ name = ___FIELD(probe,___SYMKEY_NAME);
+      ___SCMOBJ name = ___SYMKEY_NAME_FIELD(probe);
       ___SIZE_T i;
       ___SIZE_T n = ___INT(___STRINGLENGTH(name));
       ___UTF_8STRING p = str;
@@ -2033,7 +2033,7 @@ unsigned int subtype;)
       if (___UTF_8_get_var (&p, c) == 0)
         return probe;
     next:
-      probe = ___FIELD(probe,___SYMKEY_NEXT);
+      probe = ___SYMKEY_NEXT_FIELD(probe);
     }
 
   return ___FAL;
@@ -2057,7 +2057,7 @@ unsigned int subtype;)
 
   while (probe != ___NUL)
     {
-      ___SCMOBJ name = ___FIELD(probe,___SYMKEY_NAME);
+      ___SCMOBJ name = ___SYMKEY_NAME_FIELD(probe);
       ___SIZE_TS i = 0;
       ___SIZE_TS n = ___INT(___STRINGLENGTH(name));
       if (___INT(___STRINGLENGTH(str)) == n)
@@ -2068,7 +2068,7 @@ unsigned int subtype;)
           return probe;
         }
     next:
-      probe = ___FIELD(probe,___SYMKEY_NEXT);
+      probe = ___SYMKEY_NEXT_FIELD(probe);
     }
 
   return ___FAL;
@@ -2155,7 +2155,7 @@ void *data;)
       while (probe != ___NUL)
         {
           visit (probe, data);
-          probe = ___FIELD(probe,___SYMKEY_NEXT);
+          probe = ___SYMKEY_NEXT_FIELD(probe);
         }
     }
 }
@@ -2271,7 +2271,7 @@ ___SCMOBJ val;)
               else
                 ___printf ("#<return ");
               if ((sym = ___find_global_var_bound_to (val)) != ___NUL)
-                print_value (___FIELD(sym,___SYMKEY_NAME));
+                print_value (___SYMKEY_NAME_FIELD(sym));
               else
                 {
                   if (___HD_TYP(head) == ___PERM)
@@ -2590,11 +2590,11 @@ int indent;)
           break;
         case ___sSYMBOL:
           ___printf ("SYMBOL ");
-          print_object (___FIELD(obj,___SYMKEY_NAME)>>shift, max_depth-1, "", 0);
+          print_object (___SYMKEY_NAME_FIELD(obj)>>shift, max_depth-1, "", 0);
           break;
         case ___sKEYWORD:
           ___printf ("KEYWORD ");
-          print_object (___FIELD(obj,___SYMKEY_NAME)>>shift, max_depth-1, "", 0);
+          print_object (___SYMKEY_NAME_FIELD(obj)>>shift, max_depth-1, "", 0);
           break;
         case ___sFRAME:
           ___printf ("FRAME\n");
@@ -2685,7 +2685,7 @@ ___glo_struct *glo;)
 
       while (sym != ___NUL)
         {
-          ___SCMOBJ g = ___FIELD(sym,___SYMBOL_GLOBAL);
+          ___SCMOBJ g = ___SYMBOL_GLOBAL_FIELD(sym);
 
           if (g != ___FIX(0))
             {
@@ -2693,7 +2693,7 @@ ___glo_struct *glo;)
 
               if (p == glo)
                 {
-                  ___SCMOBJ name = ___FIELD(sym,___SYMKEY_NAME);
+                  ___SCMOBJ name = ___SYMKEY_NAME_FIELD(sym);
                   for (i=0; i<___INT(___STRINGLENGTH(name)); i++)
                     ___printf ("%c", ___ORD(___STRINGREF(name,___FIX(i))));
                   i = 0;
@@ -2701,7 +2701,7 @@ ___glo_struct *glo;)
                 }
             }
 
-          sym = ___FIELD(sym,___SYMKEY_NEXT);
+          sym = ___SYMKEY_NEXT_FIELD(sym);
         }
     }
 }
@@ -5000,12 +5000,6 @@ ___PSDKR)
 }
 
 
-/*TODO: fix gc-hash-table representation*/
-#if ___tVECTOR != ___tSUBTYPED
-#undef ___FIELD
-#define ___FIELD(x,i)___VECTORELEM(x,i)
-#endif
-
 #ifdef ___GC_HASH_TABLE_REHASH_EAGERLY
 #ifdef ___GC_HASH_TABLE_REHASH_LAZILY
 #error "Define either ___GC_HASH_TABLE_REHASH_EAGERLY or ___GC_HASH_TABLE_REHASH_LAZILY"
@@ -5645,20 +5639,20 @@ ___SCMOBJ key;)
 
 #ifdef ___GC_HASH_TABLE_REHASH_LAZILY
 
-  if (!___FIXZEROP(___FIXAND(___FIELD(ht, ___GCHASHTABLE_FLAGS),
+  if (!___FIXZEROP(___FIXAND(___GCHASHTABLE_FLAGS_FIELD(ht),
                              ___FIX(___GCHASHTABLE_FLAG_KEY_MOVED))))
     gc_hash_table_rehash_in_situ (ht);
 
 #endif
 
-  size2 = ___INT(___VECTORLENGTH(ht)) - ___GCHASHTABLE_KEY0;
+  size2 = ___INT(___GCHASHTABLELENGTH(ht)) - ___GCHASHTABLE_KEY0;
   ___GCHASHTABLE_HASH_STEP(probe2, step2, key, size2>>1);
   probe2 <<= 1;
   step2 <<= 1;
-  obj = ___FIELD(ht, probe2+___GCHASHTABLE_KEY0);
+  obj = ___FIELD(WEAK,ht, probe2+___GCHASHTABLE_KEY0);
 
   if (___EQP(obj,key))
-    return ___FIELD(ht, probe2+___GCHASHTABLE_VAL0);
+    return ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_VAL0);
   else if (!___EQP(obj,___UNUSED))
     {
       for (;;)
@@ -5666,10 +5660,10 @@ ___SCMOBJ key;)
           probe2 -= step2;
           if (probe2 < 0)
             probe2 += size2;
-          obj = ___FIELD(ht, probe2+___GCHASHTABLE_KEY0);
+          obj = ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_KEY0);
 
           if (___EQP(obj,key))
-            return ___FIELD(ht, probe2+___GCHASHTABLE_VAL0);
+            return ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_VAL0);
           else if (___EQP(obj,___UNUSED))
             break;
         }
@@ -5697,17 +5691,17 @@ ___SCMOBJ val;)
 
 #ifdef ___GC_HASH_TABLE_REHASH_LAZILY
 
-  if (!___FIXZEROP(___FIXAND(___FIELD(ht, ___GCHASHTABLE_FLAGS),
+  if (!___FIXZEROP(___FIXAND(___GCHASHTABLE_FLAGS_FIELD(ht),
                              ___FIX(___GCHASHTABLE_FLAG_KEY_MOVED))))
     gc_hash_table_rehash_in_situ (ht);
 
 #endif
 
-  size2 = ___INT(___VECTORLENGTH(ht)) - ___GCHASHTABLE_KEY0;
+  size2 = ___INT(___GCHASHTABLELENGTH(ht)) - ___GCHASHTABLE_KEY0;
   ___GCHASHTABLE_HASH_STEP(probe2, step2, key, size2>>1);
   probe2 <<= 1;
   step2 <<= 1;
-  obj = ___FIELD(ht, probe2+___GCHASHTABLE_KEY0);
+  obj = ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_KEY0);
 
   if (!___EQP(val,___ABSENT))
     {
@@ -5716,17 +5710,17 @@ ___SCMOBJ val;)
       if (___EQP(obj,key))
         {
         replace_entry:
-          ___FIELD(ht, probe2+___GCHASHTABLE_VAL0) = val;
+          ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_VAL0) = val;
         }
       else if (___EQP(obj,___UNUSED))
         {
         add_entry:
-          ___FIELD(ht, probe2+___GCHASHTABLE_KEY0) = key;
-          ___FIELD(ht, probe2+___GCHASHTABLE_VAL0) = val;
-          ___FIELD(ht, ___GCHASHTABLE_COUNT) =
-            ___FIXADD(___FIELD(ht, ___GCHASHTABLE_COUNT), ___FIX(1));
-          if (___FIXNEGATIVEP(___FIELD(ht, ___GCHASHTABLE_FREE) =
-                                ___FIXSUB(___FIELD(ht, ___GCHASHTABLE_FREE),
+          ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_KEY0) = key;
+          ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_VAL0) = val;
+          ___GCHASHTABLE_COUNT_FIELD(ht) =
+            ___FIXADD(___GCHASHTABLE_COUNT_FIELD(ht), ___FIX(1));
+          if (___FIXNEGATIVEP(___GCHASHTABLE_FREE_FIELD(ht) =
+                                ___FIXSUB(___GCHASHTABLE_FREE_FIELD(ht),
                                           ___FIX(1))))
             return ___TRU;
         }
@@ -5742,7 +5736,7 @@ ___SCMOBJ val;)
               probe2 -= step2;
               if (probe2 < 0)
                 probe2 += size2;
-              obj = ___FIELD(ht, probe2+___GCHASHTABLE_KEY0);
+              obj = ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_KEY0);
 
               if (___EQP(obj,key))
                 goto replace_entry;
@@ -5752,10 +5746,10 @@ ___SCMOBJ val;)
                   if (deleted2 < 0)
                     goto add_entry;
 
-                  ___FIELD(ht, deleted2+___GCHASHTABLE_KEY0) = key;
-                  ___FIELD(ht, deleted2+___GCHASHTABLE_VAL0) = val;
-                  ___FIELD(ht, ___GCHASHTABLE_COUNT) =
-                    ___FIXADD(___FIELD(ht, ___GCHASHTABLE_COUNT), ___FIX(1));
+                  ___FIELD(WEAK, ht, deleted2+___GCHASHTABLE_KEY0) = key;
+                  ___FIELD(WEAK, ht, deleted2+___GCHASHTABLE_VAL0) = val;
+                  ___GCHASHTABLE_COUNT_FIELD(ht) =
+                    ___FIXADD(___GCHASHTABLE_COUNT_FIELD(ht), ___FIX(1));
 
                   break;
                 }
@@ -5769,13 +5763,13 @@ ___SCMOBJ val;)
       if (___EQP(obj,key))
         {
         delete_entry:
-          ___FIELD(ht, probe2+___GCHASHTABLE_KEY0) = ___DELETED;
-          ___FIELD(ht, probe2+___GCHASHTABLE_VAL0) = ___UNUSED;
-          ___FIELD(ht, ___GCHASHTABLE_COUNT) =
-            ___FIXSUB(___FIELD(ht, ___GCHASHTABLE_COUNT),
+          ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_KEY0) = ___DELETED;
+          ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_VAL0) = ___UNUSED;
+          ___GCHASHTABLE_COUNT_FIELD(ht) =
+            ___FIXSUB(___GCHASHTABLE_COUNT_FIELD(ht),
                       ___FIX(1));
-          if (___FIXLT(___FIELD(ht, ___GCHASHTABLE_COUNT),
-                       ___FIELD(ht, ___GCHASHTABLE_MIN_COUNT)))
+          if (___FIXLT(___GCHASHTABLE_COUNT_FIELD(ht),
+                       ___GCHASHTABLE_MIN_COUNT_FIELD(ht)))
             return ___TRU;
         }
       else if (!___EQP(obj,___UNUSED))
@@ -5785,7 +5779,7 @@ ___SCMOBJ val;)
               probe2 -= step2;
               if (probe2 < 0)
                 probe2 += size2;
-              obj = ___FIELD(ht, probe2+___GCHASHTABLE_KEY0);
+              obj = ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_KEY0);
 
               if (___EQP(obj,key))
                 goto delete_entry;
@@ -5809,14 +5803,14 @@ do {                                                                          \
   ___GCHASHTABLE_HASH_STEP(key_probe2,key_step2,key,size2>>1);                \
   key_probe2 <<= 1;                                                           \
   key_step2 <<= 1;                                                            \
-  obj = ___FIELD(ht, key_probe2+___GCHASHTABLE_KEY0);                         \
+  obj = ___FIELD(WEAK, ht, key_probe2+___GCHASHTABLE_KEY0);                   \
                                                                               \
   while (!(___EQP(obj,key) || ___EQP(obj,___UNUSED)))                         \
     {                                                                         \
       key_probe2 -= key_step2;                                                \
       if (key_probe2 < 0)                                                     \
         key_probe2 += size2;                                                  \
-      obj = ___FIELD(ht, key_probe2+___GCHASHTABLE_KEY0);                     \
+      obj = ___FIELD(WEAK, ht, key_probe2+___GCHASHTABLE_KEY0);               \
     }                                                                         \
                                                                               \
   if (___EQP(obj,key))                                                        \
@@ -5825,7 +5819,7 @@ do {                                                                          \
        * key was found, compress its path.                                    \
        */                                                                     \
                                                                               \
-      k = ___FIELD(ht, key_probe2+___GCHASHTABLE_VAL0);                       \
+      k = ___FIELD(WEAK, ht, key_probe2+___GCHASHTABLE_VAL0);                 \
                                                                               \
       if (___SPECIALP(k))                                                     \
         {                                                                     \
@@ -5848,30 +5842,30 @@ do {                                                                          \
                   ___GCHASHTABLE_HASH_STEP(k_probe2,k_step2,k,size2>>1);      \
                   k_probe2 <<= 1;                                             \
                   k_step2 <<= 1;                                              \
-                  o = ___FIELD(ht, k_probe2+___GCHASHTABLE_KEY0);             \
+                  o = ___FIELD(WEAK, ht, k_probe2+___GCHASHTABLE_KEY0);       \
                                                                               \
                   while (!___EQP(o,k))                                        \
                     {                                                         \
                       k_probe2 -= k_step2;                                    \
                       if (k_probe2 < 0)                                       \
                         k_probe2 += size2;                                    \
-                      o = ___FIELD(ht, k_probe2+___GCHASHTABLE_KEY0);         \
+                      o = ___FIELD(WEAK, ht, k_probe2+___GCHASHTABLE_KEY0);   \
                     }                                                         \
                 }                                                             \
                                                                               \
-              k = ___FIELD(ht, k_probe2+___GCHASHTABLE_VAL0);                 \
+              k = ___FIELD(WEAK, ht, k_probe2+___GCHASHTABLE_VAL0);           \
                                                                               \
               if (___SPECIALP(k))                                             \
                 break;                                                        \
                                                                               \
-              ___FIELD(ht, k_probe2+___GCHASHTABLE_VAL0) = ___FIX(k_prev2);   \
+              ___FIELD(WEAK, ht, k_probe2+___GCHASHTABLE_VAL0) = ___FIX(k_prev2); \
               k_prev2 = k_probe2;                                             \
             }                                                                 \
                                                                               \
           for (;;)                                                            \
             {                                                                 \
-              ___SCMOBJ k_p2 = ___INT(___FIELD(ht, k_prev2+___GCHASHTABLE_VAL0)); \
-              ___FIELD(ht, k_prev2+___GCHASHTABLE_VAL0) = ___FIX(k_probe2);   \
+              ___SCMOBJ k_p2 = ___INT(___FIELD(WEAK, ht, k_prev2+___GCHASHTABLE_VAL0)); \
+              ___FIELD(WEAK, ht, k_prev2+___GCHASHTABLE_VAL0) = ___FIX(k_probe2); \
               if (k_prev2 == key_probe2)                                      \
                 break;                                                        \
               k_prev2 = k_p2;                                                 \
@@ -5927,13 +5921,13 @@ ___BOOL find;)
 
 #ifdef ___GC_HASH_TABLE_REHASH_LAZILY
 
-  if (!___FIXZEROP(___FIXAND(___FIELD(ht, ___GCHASHTABLE_FLAGS),
+  if (!___FIXZEROP(___FIXAND(___GCHASHTABLE_FLAGS_FIELD(ht),
                              ___FIX(___GCHASHTABLE_FLAG_KEY_MOVED))))
     gc_hash_table_rehash_in_situ (ht);
 
 #endif
 
-  size2 = ___INT(___VECTORLENGTH(ht)) - ___GCHASHTABLE_KEY0;
+  size2 = ___INT(___GCHASHTABLELENGTH(ht)) - ___GCHASHTABLE_KEY0;
 
   /* Search for key1 */
 
@@ -5980,13 +5974,17 @@ ___BOOL find;)
 
           if (k1 > k2) /* choose biggest equivalence class */
             {
-              ___FIELD(ht, k1_probe2+___GCHASHTABLE_VAL0) = ___SPECIAL(k1+k2);
-              ___FIELD(ht, k2_probe2+___GCHASHTABLE_VAL0) = ___FIX(k1_probe2);
+              ___FIELD(WEAK, ht, k1_probe2+___GCHASHTABLE_VAL0) =
+                ___SPECIAL(k1+k2);
+              ___FIELD(WEAK, ht, k2_probe2+___GCHASHTABLE_VAL0) =
+                ___FIX(k1_probe2);
             }
           else
             {
-              ___FIELD(ht, k2_probe2+___GCHASHTABLE_VAL0) = ___SPECIAL(k1+k2);
-              ___FIELD(ht, k1_probe2+___GCHASHTABLE_VAL0) = ___FIX(k2_probe2);
+              ___FIELD(WEAK, ht, k2_probe2+___GCHASHTABLE_VAL0) =
+                ___SPECIAL(k1+k2);
+              ___FIELD(WEAK, ht, k1_probe2+___GCHASHTABLE_VAL0) =
+                ___FIX(k2_probe2);
             }
 
           return ___FIX(1);
@@ -6000,9 +5998,9 @@ ___BOOL find;)
 
           k1 = ___INT(k1);
 
-          ___FIELD(ht, k1_probe2+___GCHASHTABLE_VAL0) = ___SPECIAL(k1+1);
-          ___FIELD(ht, key2_probe2+___GCHASHTABLE_KEY0) = key2;
-          ___FIELD(ht, key2_probe2+___GCHASHTABLE_VAL0) = ___FIX(k1_probe2);
+          ___FIELD(WEAK, ht, k1_probe2+___GCHASHTABLE_VAL0) = ___SPECIAL(k1+1);
+          ___FIELD(WEAK, ht, key2_probe2+___GCHASHTABLE_KEY0) = key2;
+          ___FIELD(WEAK, ht, key2_probe2+___GCHASHTABLE_VAL0) = ___FIX(k1_probe2);
           allocated = 1;
         }
     }
@@ -6019,9 +6017,9 @@ ___BOOL find;)
 
           k2 = ___INT(k2);
 
-          ___FIELD(ht, k2_probe2+___GCHASHTABLE_VAL0) = ___SPECIAL(k2+1);
-          ___FIELD(ht, key1_probe2+___GCHASHTABLE_KEY0) = key1;
-          ___FIELD(ht, key1_probe2+___GCHASHTABLE_VAL0) = ___FIX(k2_probe2);
+          ___FIELD(WEAK, ht, k2_probe2+___GCHASHTABLE_VAL0) = ___SPECIAL(k2+1);
+          ___FIELD(WEAK, ht, key1_probe2+___GCHASHTABLE_KEY0) = key1;
+          ___FIELD(WEAK, ht, key1_probe2+___GCHASHTABLE_VAL0) = ___FIX(k2_probe2);
           allocated = 1;
         }
       else
@@ -6031,8 +6029,8 @@ ___BOOL find;)
           if (find)
             return ___FIX(5); /* keys are not in the same equiv class */
 
-          ___FIELD(ht, key1_probe2+___GCHASHTABLE_KEY0) = key1;
-          ___FIELD(ht, key1_probe2+___GCHASHTABLE_VAL0) = ___SPECIAL(2);
+          ___FIELD(WEAK, ht, key1_probe2+___GCHASHTABLE_KEY0) = key1;
+          ___FIELD(WEAK, ht, key1_probe2+___GCHASHTABLE_VAL0) = ___SPECIAL(2);
 
           if (key1_probe2 == key2_probe2)
             {
@@ -6046,21 +6044,21 @@ ___BOOL find;)
                   key2_probe2 -= key2_step2;
                   if (key2_probe2 < 0)
                     key2_probe2 += size2;
-                } while (!___EQP(___FIELD(ht, key2_probe2+___GCHASHTABLE_KEY0),
+                } while (!___EQP(___FIELD(WEAK, ht, key2_probe2+___GCHASHTABLE_KEY0),
                                  ___UNUSED));
             }
 
-          ___FIELD(ht, key2_probe2+___GCHASHTABLE_KEY0) = key2;
-          ___FIELD(ht, key2_probe2+___GCHASHTABLE_VAL0) = ___FIX(key1_probe2);
+          ___FIELD(WEAK, ht, key2_probe2+___GCHASHTABLE_KEY0) = key2;
+          ___FIELD(WEAK, ht, key2_probe2+___GCHASHTABLE_VAL0) = ___FIX(key1_probe2);
           allocated = 2;
         }
     }
 
-  ___FIELD(ht, ___GCHASHTABLE_COUNT) =
-    ___FIXADD(___FIELD(ht, ___GCHASHTABLE_COUNT), ___FIX(allocated));
+  ___GCHASHTABLE_COUNT_FIELD(ht) =
+    ___FIXADD(___GCHASHTABLE_COUNT_FIELD(ht), ___FIX(allocated));
 
-  if (___FIXNEGATIVEP(___FIELD(ht, ___GCHASHTABLE_FREE) =
-                      ___FIXSUB(___FIELD(ht, ___GCHASHTABLE_FREE),
+  if (___FIXNEGATIVEP(___GCHASHTABLE_FREE_FIELD(ht) =
+                      ___FIXSUB(___GCHASHTABLE_FREE_FIELD(ht),
                                 ___FIX(allocated))))
     return ___FIX(allocated*2); /* signal that table needs to grow */
   else

@@ -1,6 +1,6 @@
 /* File: "os_tty.c" */
 
-/* Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -6728,7 +6728,7 @@ ___SCMOBJ sym;
 void *data;)
 {
   visit_symbol_data *dat = ___CAST(visit_symbol_data*,data);
-  ___SCMOBJ name = ___FIELD(sym,___SYMKEY_NAME);
+  ___SCMOBJ name = ___SYMKEY_NAME_FIELD(sym);
   int n = ___INT(___STRINGLENGTH(name));
   int word_start = dat->word_start;
   int prefix = dat->completion_point - word_start;
@@ -6773,7 +6773,7 @@ void *data;)
     }
   else
     {
-      ___SCMOBJ name2 = ___FIELD(dat->next,___SYMKEY_NAME);
+      ___SCMOBJ name2 = ___SYMKEY_NAME_FIELD(dat->next);
       int n2 = ___INT(___STRINGLENGTH(name2));
       i = 0;
       while (i < n)
@@ -6836,7 +6836,7 @@ extensible_string *completion;)
 
   if (dat.next != ___FAL)
     {
-      ___SCMOBJ name = ___FIELD(dat.next,___SYMKEY_NAME);
+      ___SCMOBJ name = ___SYMKEY_NAME_FIELD(dat.next);
       int n = ___INT(___STRINGLENGTH(name));
       int i;
 
@@ -8461,7 +8461,7 @@ ___SCMOBJ input;
 ___SCMOBJ output;)
 {
   ___device_tty *d =
-    ___CAST(___device_tty*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_tty*,___FOREIGN_PTR_FIELD(dev));
 
   int input_attrs = ___INT(input);
   int output_attrs = ___INT(output);
@@ -8482,7 +8482,7 @@ ___SCMOBJ dev;
 ___SCMOBJ capability;)
 {
   ___device_tty *d =
-    ___CAST(___device_tty*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_tty*,___FOREIGN_PTR_FIELD(dev));
   ___SCMOBJ result = ___FAL;
   ___SCMOBJ x;
   int cap = ___INT(capability);
@@ -8506,7 +8506,7 @@ ___SCMOBJ ___os_device_tty_history
 ___SCMOBJ dev;)
 {
   ___device_tty *d =
-    ___CAST(___device_tty*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_tty*,___FOREIGN_PTR_FIELD(dev));
   ___SCMOBJ e;
   ___SCMOBJ result;
   extensible_string hist;
@@ -8568,7 +8568,7 @@ ___SCMOBJ dev;
 ___SCMOBJ history;)
 {
   ___device_tty *d =
-    ___CAST(___device_tty*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_tty*,___FOREIGN_PTR_FIELD(dev));
   ___SCMOBJ e;
   void *hist;
 
@@ -8622,7 +8622,7 @@ ___SCMOBJ dev;
 ___SCMOBJ max_length;)
 {
   ___device_tty *d =
-    ___CAST(___device_tty*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_tty*,___FOREIGN_PTR_FIELD(dev));
 
   lineeditor_set_history_max_length (d, ___INT(max_length));
 
@@ -8639,7 +8639,7 @@ ___SCMOBJ dev;
 ___SCMOBJ duration;)
 {
   ___device_tty *d =
-    ___CAST(___device_tty*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_tty*,___FOREIGN_PTR_FIELD(dev));
   int duration_nsecs = ___CAST(int,___F64UNBOX(duration) * 1e9);
 
   if (duration_nsecs < 0)
@@ -8672,7 +8672,7 @@ ___SCMOBJ output_raw;
 ___SCMOBJ speed;)
 {
   ___device_tty *d =
-    ___CAST(___device_tty*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_tty*,___FOREIGN_PTR_FIELD(dev));
   ___SCMOBJ e;
 
   if ((e = ___device_tty_force_open (d)) == ___FIX(___NO_ERR))

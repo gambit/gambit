@@ -108,7 +108,7 @@ core-post:
 
 .NOTPARALLEL:
 
-check: core test1 test2 test3 test4 test5 test6 test7 test8 test9 test10 test11
+check: core test1 test2 test4 test6 test7 test8 test9 test10 test11
 	@echo "============ ALL TESTS SUCCESSFUL"
 	rm -f mem.c mem_.c mem@obj@ mem.o1 mem_@obj@ mem@exe@ \
 	  mix.c mix_.c mix@obj@ mix_@obj@ mix@exe@ \

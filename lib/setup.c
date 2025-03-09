@@ -1,6 +1,6 @@
 /* File: "setup.c" */
 
-/* Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module contains the routines that setup the Scheme program for
@@ -263,14 +263,14 @@ ___SCMOBJ intr;)
 
   ___PRIMITIVELOCK(ps,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2))
 
-  tail = ___FIELD(ps,___PROCESSOR_INTERRUPTS_TAIL);
+  tail = ___PROCESSOR_INTERRUPTS_TAIL_FIELD(ps);
 
-  ___FIELD(ps,___PROCESSOR_INTERRUPTS_TAIL) = intr;
+  ___PROCESSOR_INTERRUPTS_TAIL_FIELD(ps) = intr;
 
   if (tail == ___NUL)
-    ___FIELD(ps,___PROCESSOR_INTERRUPTS_HEAD) = intr;
+    ___PROCESSOR_INTERRUPTS_HEAD_FIELD(ps) = intr;
   else
-    ___FIELD(tail,0) = intr;
+    ___FIELD(VECTOR,tail,0) = intr;
 
   ___PRIMITIVEUNLOCK(ps,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2))
 
@@ -393,15 +393,15 @@ ___processor_state ___ps;)
   ___SUBTYPED_HEADER_SET(p, ___MAKE_HD((___PROCESSOR_SIZE<<___LWS),___sSTRUCTURE,___PERM));
 
   for (i=0; i<___PROCESSOR_SIZE; i++)
-    ___FIELD(p,i) = ___FAL;
+    ___FIELD(STRUCTURE,p,i) = ___FAL;
 
   /*
    * Setup primitive lock in locked state (the processor will be
    * unlocked in _thread.scm).
    */
 
-  ___FIELD(p,___OBJ_LOCK1) = ___FIX(0);
-  ___FIELD(p,___OBJ_LOCK2) = ___FIX(0);
+  ___FIELD(STRUCTURE,p,___OBJ_LOCK1) = ___FIX(0);
+  ___FIELD(STRUCTURE,p,___OBJ_LOCK2) = ___FIX(0);
 
   ___PRIMITIVELOCK(p,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2))
 }
@@ -418,15 +418,15 @@ ___virtual_machine_state ___vms;)
   ___SUBTYPED_HEADER_SET(vm, ___MAKE_HD((___VM_SIZE<<___LWS),___sSTRUCTURE,___PERM));
 
   for (i=0; i<___VM_SIZE; i++)
-    ___FIELD(vm,i) = ___FAL;
+    ___FIELD(STRUCTURE,vm,i) = ___FAL;
 
   /*
    * Setup primitive lock in locked state (the VM will be
    * unlocked in _thread.scm).
    */
 
-  ___FIELD(vm,___OBJ_LOCK1) = ___FIX(0);
-  ___FIELD(vm,___OBJ_LOCK2) = ___FIX(0);
+  ___FIELD(STRUCTURE,vm,___OBJ_LOCK1) = ___FIX(0);
+  ___FIELD(STRUCTURE,vm,___OBJ_LOCK2) = ___FIX(0);
 
   ___PRIMITIVELOCK(vm,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2))
 }
@@ -3110,8 +3110,8 @@ ___mod_or_lnk mol;)
 
           sym = align_subtyped (sym_ptr);
 
-          ___FIELD(sym,___SYMKEY_NAME) = str;
-          ___FIELD(sym,___SYMBOL_GLOBAL) = ___CAST(___SCMOBJ,glo);
+          ___SYMKEY_NAME_FIELD(sym) = str;
+          ___SYMBOL_GLOBAL_FIELD(sym) = ___CAST(___SCMOBJ,glo);
 
           ___intern_symkey (sym);
         }
@@ -3130,8 +3130,8 @@ ___mod_or_lnk mol;)
 
           key = align_subtyped (key_ptr);
 
-          ___FIELD(key,___SYMKEY_NAME) = str;
-          ___FIELD(key,___SYMKEY_HASH) = ___hash_scheme_string (str);
+          ___SYMKEY_NAME_FIELD(key) = str;
+          ___SYMKEY_HASH_FIELD(key) = ___hash_scheme_string (str);
 
           ___intern_symkey (key);
         }
@@ -3178,7 +3178,7 @@ do { \
   if (sym == ___FAL) { \
     printf ("???\n"); \
   } else { \
-    ___SCMOBJ name = ___FIELD(sym,___SYMKEY_NAME); \
+    ___SCMOBJ name = ___SYMKEY_NAME_FIELD(sym); \
     int i; \
     for (i=0; i<___INT(___STRINGLENGTH(name)); i++) \
       printf ("%c", ___ORD(___STRINGREF(name,___FIX(i)))); \
@@ -4480,7 +4480,7 @@ int line;)
   if ((sym = ___find_global_var_bound_to (___ps->pc)) != ___NUL ||
       (sym = ___find_global_var_bound_to (start)) != ___NUL)
     {
-      ___SCMOBJ name = ___FIELD(sym,___SYMKEY_NAME);
+      ___SCMOBJ name = ___SYMKEY_NAME_FIELD(sym);
       int i;
       for (i=0; i<___INT(___STRINGLENGTH(name)); i++)
         ___printf ("%c", ___ORD(___STRINGREF(name,___FIX(i))));

@@ -1,6 +1,6 @@
 /* File: "os_io.c" */
 
-/* Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -9489,7 +9489,7 @@ ___SCMOBJ ___os_device_process_pid
 ___SCMOBJ dev;)
 {
   ___device_process *d =
-    ___CAST(___device_process*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_process*,___FOREIGN_PTR_FIELD(dev));
 
 #ifndef USE_POSIX
 #ifndef USE_WIN32
@@ -9519,7 +9519,7 @@ ___SCMOBJ ___os_device_process_status
 ___SCMOBJ dev;)
 {
   ___device_process *d =
-    ___CAST(___device_process*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_process*,___FOREIGN_PTR_FIELD(dev));
   ___SCMOBJ e;
 
   if ((e = ___device_process_status_poll (d)) != ___FIX(___NO_ERR))
@@ -9681,7 +9681,7 @@ ___SCMOBJ ___os_device_kind
         (dev)
 ___SCMOBJ dev;)
 {
-  ___device *d = ___CAST(___device*,___FIELD(dev,___FOREIGN_PTR));
+  ___device *d = ___CAST(___device*,___FOREIGN_PTR_FIELD(dev));
 
   return ___FIX(___device_kind (d));
 }
@@ -9695,8 +9695,8 @@ ___SCMOBJ ___os_device_force_output
 ___SCMOBJ dev_condvar;
 ___SCMOBJ level;)
 {
-  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
-  ___device *d = ___CAST(___device*,___FIELD(dev,___FOREIGN_PTR));
+  ___SCMOBJ dev = ___CONDVAR_NAME_FIELD(dev_condvar);
+  ___device *d = ___CAST(___device*,___FOREIGN_PTR_FIELD(dev));
 
   return ___device_force_output (d, ___INT(level));
 }
@@ -9710,7 +9710,7 @@ ___SCMOBJ ___os_device_close
 ___SCMOBJ dev;
 ___SCMOBJ direction;)
 {
-  ___device *d = ___CAST(___device*,___FIELD(dev,___FOREIGN_PTR));
+  ___device *d = ___CAST(___device*,___FOREIGN_PTR_FIELD(dev));
 
   return ___device_close (d, ___INT(direction));
 }
@@ -9731,9 +9731,9 @@ ___SCMOBJ dev_condvar;
 ___SCMOBJ pos;
 ___SCMOBJ whence;)
 {
-  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
+  ___SCMOBJ dev = ___CONDVAR_NAME_FIELD(dev_condvar);
   ___device_stream *d =
-    ___CAST(___device_stream*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_stream*,___FOREIGN_PTR_FIELD(dev));
   ___SSIZE_T p;
   ___SCMOBJ e;
   ___SCMOBJ result;
@@ -9764,15 +9764,15 @@ ___SCMOBJ buffer;
 ___SCMOBJ lo;
 ___SCMOBJ hi;)
 {
-  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
+  ___SCMOBJ dev = ___CONDVAR_NAME_FIELD(dev_condvar);
   ___device_stream *d =
-    ___CAST(___device_stream*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_stream*,___FOREIGN_PTR_FIELD(dev));
   ___stream_index len_done;
   ___SCMOBJ e;
 
   if ((e = ___device_stream_read
              (d,
-              ___CAST(___U8*,___BODY_AS(buffer,___tSUBTYPED)) + ___INT(lo),
+              ___CAST(___U8*,___BODY_AS(buffer,___tU8VECTOR)) + ___INT(lo),
               ___INT(hi) - ___INT(lo),
               &len_done))
       == ___FIX(___NO_ERR))
@@ -9796,15 +9796,15 @@ ___SCMOBJ buffer;
 ___SCMOBJ lo;
 ___SCMOBJ hi;)
 {
-  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
+  ___SCMOBJ dev = ___CONDVAR_NAME_FIELD(dev_condvar);
   ___device_stream *d =
-    ___CAST(___device_stream*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_stream*,___FOREIGN_PTR_FIELD(dev));
   ___stream_index len_done;
   ___SCMOBJ e;
 
   if ((e = ___device_stream_write
              (d,
-              ___CAST(___U8*,___BODY_AS(buffer,___tSUBTYPED)) + ___INT(lo),
+              ___CAST(___U8*,___BODY_AS(buffer,___tU8VECTOR)) + ___INT(lo),
               ___INT(hi) - ___INT(lo),
               &len_done))
       == ___FIX(___NO_ERR))
@@ -9819,9 +9819,9 @@ ___SCMOBJ ___os_device_stream_width
         (dev_condvar)
 ___SCMOBJ dev_condvar;)
 {
-  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
+  ___SCMOBJ dev = ___CONDVAR_NAME_FIELD(dev_condvar);
   ___device_stream *d =
-    ___CAST(___device_stream*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_stream*,___FOREIGN_PTR_FIELD(dev));
 
   return ___device_stream_width (d);
 }
@@ -9833,7 +9833,7 @@ ___SCMOBJ ___os_device_stream_default_options
 ___SCMOBJ dev;)
 {
   ___device_stream *d =
-    ___CAST(___device_stream*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_stream*,___FOREIGN_PTR_FIELD(dev));
 
   return ___device_stream_default_options (d);
 }
@@ -9848,7 +9848,7 @@ ___SCMOBJ dev;
 ___SCMOBJ options;)
 {
   ___device_stream *d =
-    ___CAST(___device_stream*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_stream*,___FOREIGN_PTR_FIELD(dev));
 
   return ___device_stream_options_set (d, options);
 }
@@ -10758,7 +10758,7 @@ ___SCMOBJ peer;)
 #else
 
   ___device_tcp_client *d =
-    ___CAST(___device_tcp_client*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_tcp_client*,___FOREIGN_PTR_FIELD(dev));
   struct sockaddr sa;
   SOCKET_LEN_TYPE salen;
 
@@ -10907,9 +10907,9 @@ ___SCMOBJ dev_condvar;)
 
 #else
 
-  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
+  ___SCMOBJ dev = ___CONDVAR_NAME_FIELD(dev_condvar);
   ___device_tcp_server *d =
-    ___CAST(___device_tcp_server*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_tcp_server*,___FOREIGN_PTR_FIELD(dev));
   ___SCMOBJ e;
   ___device_tcp_client *client = 0;
   ___SCMOBJ result;
@@ -10950,7 +10950,7 @@ ___SCMOBJ dev;)
 #else
 
   ___device_tcp_server *d =
-    ___CAST(___device_tcp_server*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_tcp_server*,___FOREIGN_PTR_FIELD(dev));
   struct sockaddr sa;
   SOCKET_LEN_TYPE salen = sizeof (sa);
 
@@ -11053,9 +11053,9 @@ ___SCMOBJ hi;)
 
 #define MAX_DATAGRAM_LENGTH 65536
 
-  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
+  ___SCMOBJ dev = ___CONDVAR_NAME_FIELD(dev_condvar);
   ___device_udp *d =
-    ___CAST(___device_udp*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_udp*,___FOREIGN_PTR_FIELD(dev));
   ___SCMOBJ e;
   ___SSIZE_T n = 0;
   ___SCMOBJ result;
@@ -11077,7 +11077,7 @@ ___SCMOBJ hi;)
       if (___FIXNUMP(result))
         return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);
 
-      memmove (___BODY_AS(result,___tSUBTYPED),
+      memmove (___BODY_AS(result,___tU8VECTOR),
                buf,
                n);
 
@@ -11087,7 +11087,7 @@ ___SCMOBJ hi;)
     {
       if ((e = ___device_udp_read_raw
                   (d,
-                   ___CAST(___U8*,___BODY_AS(buffer,___tSUBTYPED)) + ___INT(lo),
+                   ___CAST(___U8*,___BODY_AS(buffer,___tU8VECTOR)) + ___INT(lo),
                    ___INT(hi)-___INT(lo),
                    &n))
           != ___FIX(___NO_ERR))
@@ -11122,12 +11122,12 @@ ___SCMOBJ hi;)
 
 #else
 
-  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
+  ___SCMOBJ dev = ___CONDVAR_NAME_FIELD(dev_condvar);
   ___device_udp *d =
-    ___CAST(___device_udp*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_udp*,___FOREIGN_PTR_FIELD(dev));
   ___SCMOBJ e;
   ___SSIZE_T n = 0;
-  ___U8 *buf = ___CAST(___U8*,___BODY_AS(buffer,___tSUBTYPED));
+  ___U8 *buf = ___CAST(___U8*,___BODY_AS(buffer,___tU8VECTOR));
   ___SSIZE_T len;
 
   if (lo == ___FAL)
@@ -11166,7 +11166,7 @@ ___SCMOBJ source;)
 #else
 
   ___device_udp *d =
-    ___CAST(___device_udp*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_udp*,___FOREIGN_PTR_FIELD(dev));
 
   if (d->base.read_stage != ___STAGE_OPEN &&
       d->base.write_stage != ___STAGE_OPEN)
@@ -11221,9 +11221,9 @@ ___SCMOBJ port_num;)
 #else
 
   ___SCMOBJ e;
-  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
+  ___SCMOBJ dev = ___CONDVAR_NAME_FIELD(dev_condvar);
   ___device_udp *d =
-    ___CAST(___device_udp*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_udp*,___FOREIGN_PTR_FIELD(dev));
 
   if (d->base.read_stage != ___STAGE_OPEN &&
       d->base.write_stage != ___STAGE_OPEN)
@@ -11255,7 +11255,7 @@ ___SCMOBJ dev;)
 #else
 
   ___device_udp *d =
-    ___CAST(___device_udp*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_udp*,___FOREIGN_PTR_FIELD(dev));
 
   int optVal;
   SOCKET_LEN_TYPE optLen = sizeof(optVal);
@@ -11281,7 +11281,7 @@ ___SCMOBJ dev;)
 #else
 
   ___device_udp *d =
-    ___CAST(___device_udp*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_udp*,___FOREIGN_PTR_FIELD(dev));
 
   int optVal;
   SOCKET_LEN_TYPE optLen = sizeof(optVal);
@@ -11375,9 +11375,9 @@ ___SCMOBJ dev_condvar;)
 
 #else
 
-  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
+  ___SCMOBJ dev = ___CONDVAR_NAME_FIELD(dev_condvar);
   ___device_directory *d =
-    ___CAST(___device_directory*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_directory*,___FOREIGN_PTR_FIELD(dev));
   ___SCMOBJ e;
   ___STRING_TYPE(___DIR_OPEN_PATH_CE_SELECT) name;
   ___SCMOBJ result;
@@ -11442,9 +11442,9 @@ ___SCMOBJ ___os_device_event_queue_read
         (dev_condvar)
 ___SCMOBJ dev_condvar;)
 {
-  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
+  ___SCMOBJ dev = ___CONDVAR_NAME_FIELD(dev_condvar);
   ___device_event_queue *d =
-    ___CAST(___device_event_queue*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_event_queue*,___FOREIGN_PTR_FIELD(dev));
   ___SCMOBJ e;
   ___SCMOBJ result;
 
@@ -11492,14 +11492,14 @@ ___SCMOBJ timeout;)
       int i;
       int j;
 
-      condvar = ___FIELD(devices,___BTQ_DEQ_NEXT);
+      condvar = ___BTQ_DEQ_NEXT_FIELD(devices);
 
       while (condvar != devices)
         {
-          ___SCMOBJ owner = ___FIELD(condvar,___BTQ_OWNER);
+          ___SCMOBJ owner = ___BTQ_OWNER_FIELD(condvar);
           if (read_pos < MAX_CONDVARS-1)
             {
-              ___FIELD(condvar,___BTQ_OWNER) = owner & ~___FIX(1);
+              ___BTQ_OWNER_FIELD(condvar) = owner & ~___FIX(1);
               switch (___INT(owner)>>1)
                 {
                 case FOR_READING:
@@ -11518,17 +11518,16 @@ ___SCMOBJ timeout;)
             }
           else
             {
-              ___FIELD(condvar,___BTQ_OWNER) = owner | ___FIX(1);
+              ___BTQ_OWNER_FIELD(condvar) = owner | ___FIX(1);
               to = ___time_mod.time_neg_infinity;
             }
-          condvar = ___FIELD(condvar,___BTQ_DEQ_NEXT);
+          condvar = ___BTQ_DEQ_NEXT_FIELD(condvar);
         }
 
       for (i=0; i<read_pos; i++)
         {
           devs[i] = ___CAST(___device*,
-                            ___FIELD(___FIELD(condvars[i],___CONDVAR_NAME),
-                                     ___FOREIGN_PTR));
+                            ___FOREIGN_PTR_FIELD(___CONDVAR_NAME_FIELD(condvars[i])));
         }
 
       ___PRIMITIVEUNLOCK(devices,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2))
@@ -11546,7 +11545,7 @@ ___SCMOBJ timeout;)
           if (devs[i] == NULL)
             {
               condvar = condvars[i];
-              ___FIELD(condvar,___BTQ_OWNER) |= ___FIX(1);
+              ___BTQ_OWNER_FIELD(condvar) |= ___FIX(1);
             }
         }
     }
@@ -11576,15 +11575,15 @@ ___SCMOBJ want;
 ___SCMOBJ eof;)
 {
   ___SCMOBJ e = ___FIX(___NO_ERR);
-  ___SCMOBJ cbuf = ___FIELD(port,___PORT_CHAR_RBUF);
-  int chi = ___INT(___FIELD(port,___PORT_CHAR_RHI));
+  ___SCMOBJ cbuf = ___PORT_CHAR_RBUF_FIELD(port);
+  int chi = ___INT(___PORT_CHAR_RHI_FIELD(port));
   int cend = ___INT(___STRINGLENGTH(cbuf));
-  ___SCMOBJ bbuf = ___FIELD(port,___PORT_BYTE_RBUF);
-  int blo = ___INT(___FIELD(port,___PORT_BYTE_RLO));
-  int bhi = ___INT(___FIELD(port,___PORT_BYTE_RHI));
-  int options = ___INT(___FIELD(port,___PORT_ROPTIONS));
-  ___C *cbuf_ptr = ___CAST(___C*,___BODY_AS(cbuf,___tSUBTYPED));
-  ___U8 *bbuf_ptr = ___CAST(___U8*,___BODY_AS(bbuf,___tSUBTYPED));
+  ___SCMOBJ bbuf = ___PORT_BYTE_RBUF_FIELD(port);
+  int blo = ___INT(___PORT_BYTE_RLO_FIELD(port));
+  int bhi = ___INT(___PORT_BYTE_RHI_FIELD(port));
+  int options = ___INT(___PORT_ROPTIONS_FIELD(port));
+  ___C *cbuf_ptr = ___CAST(___C*,___BODY_AS(cbuf,___tSTRING));
+  ___U8 *bbuf_ptr = ___CAST(___U8*,___BODY_AS(bbuf,___tU8VECTOR));
   int cbuf_avail;
   int bbuf_avail;
   int code;
@@ -11638,9 +11637,9 @@ ___SCMOBJ eof;)
         }
     }
 
-  ___FIELD(port,___PORT_CHAR_RHI) = ___FIX(cend - cbuf_avail);
-  ___FIELD(port,___PORT_BYTE_RLO) = ___FIX(bhi - bbuf_avail);
-  ___FIELD(port,___PORT_ROPTIONS) = ___FIX(options);
+  ___PORT_CHAR_RHI_FIELD(port) = ___FIX(cend - cbuf_avail);
+  ___PORT_BYTE_RLO_FIELD(port) = ___FIX(bhi - bbuf_avail);
+  ___PORT_ROPTIONS_FIELD(port) = ___FIX(options);
 
   return e;
 }
@@ -11652,15 +11651,15 @@ ___SCMOBJ ___os_port_encode_chars
 ___SCMOBJ port;)
 {
   ___SCMOBJ e = ___FIX(___NO_ERR);
-  ___SCMOBJ cbuf = ___FIELD(port,___PORT_CHAR_WBUF);
-  int clo = ___INT(___FIELD(port,___PORT_CHAR_WLO));
-  int chi = ___INT(___FIELD(port,___PORT_CHAR_WHI));
-  ___SCMOBJ bbuf = ___FIELD(port,___PORT_BYTE_WBUF);
-  int bhi = ___INT(___FIELD(port,___PORT_BYTE_WHI));
+  ___SCMOBJ cbuf = ___PORT_CHAR_WBUF_FIELD(port);
+  int clo = ___INT(___PORT_CHAR_WLO_FIELD(port));
+  int chi = ___INT(___PORT_CHAR_WHI_FIELD(port));
+  ___SCMOBJ bbuf = ___PORT_BYTE_WBUF_FIELD(port);
+  int bhi = ___INT(___PORT_BYTE_WHI_FIELD(port));
   int bend = ___INT(___U8VECTORLENGTH(bbuf));
-  int options = ___INT(___FIELD(port,___PORT_WOPTIONS));
-  ___C *cbuf_ptr = ___CAST(___C*,___BODY_AS(cbuf,___tSUBTYPED));
-  ___U8 *bbuf_ptr = ___CAST(___U8*,___BODY_AS(bbuf,___tSUBTYPED));
+  int options = ___INT(___PORT_WOPTIONS_FIELD(port));
+  ___C *cbuf_ptr = ___CAST(___C*,___BODY_AS(cbuf,___tSTRING));
+  ___U8 *bbuf_ptr = ___CAST(___U8*,___BODY_AS(bbuf,___tU8VECTOR));
   int cbuf_avail;
   int bbuf_avail;
   int code;
@@ -11716,9 +11715,9 @@ ___SCMOBJ port;)
           }
       }
 
-  ___FIELD(port,___PORT_CHAR_WLO) = ___FIX(chi - cbuf_avail);
-  ___FIELD(port,___PORT_BYTE_WHI) = ___FIX(bend - bbuf_avail);
-  ___FIELD(port,___PORT_WOPTIONS) = ___FIX(options);
+  ___PORT_CHAR_WLO_FIELD(port) = ___FIX(chi - cbuf_avail);
+  ___PORT_BYTE_WHI_FIELD(port) = ___FIX(bend - bbuf_avail);
+  ___PORT_WOPTIONS_FIELD(port) = ___FIX(options);
 
   return e;
 }
