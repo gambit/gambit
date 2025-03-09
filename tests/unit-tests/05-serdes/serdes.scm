@@ -13,9 +13,13 @@
       des)))
 
 (define-type point
-  id: the-point-object
+  id: FF13874C-F7AB-44D2-BD01-A1C77C375742
+  extender: define-type-of-point
   x
-  y
+  y)
+
+(define-type-of-point point3d
+  id: F8A6D13D-1AAB-405B-8780-CA41F2F065B3
   z)
 
 (define objects
@@ -103,7 +107,8 @@
 
         car
 
-        (make-point 1 2 3)
+        (make-point 1 2)
+        (make-point3d 1 2 3)
         ))
 
 (define t (list->table '((a . 11) (b . 22))))
@@ -137,3 +142,82 @@
 (define add10 (make-adder 10))
 
 (check-equal? ((serdes1 add10) 5) 15)
+
+(let* ((predef-procedure
+        list)
+       (deserialized-predef-procedure
+        (serdes1 predef-procedure)))
+  (check-equal?
+   (predef-procedure 1 2 3)
+   (deserialized-predef-procedure 1 2 3)))
+
+(let* ((parameter-object
+        current-directory)
+       (deserialized-parameter-object
+        (serdes1 parameter-object)))
+  (check-equal?
+   (parameter-object)
+   (deserialized-parameter-object)))
+
+(let* ((equal-table
+        (list->table '(("xyz" . 123)) init: 42))
+       (deserialized-equal-table
+        (serdes1 equal-table)))
+  (check-equal? (table-ref equal-table "xyz")
+                (table-ref deserialized-equal-table "xyz"))
+  (check-equal? (table-ref equal-table "abc")
+                (table-ref deserialized-equal-table "abc"))
+  (check-equal? (table-ref equal-table 'foo 'undefined)
+                (table-ref deserialized-equal-table 'foo 'undefined)))
+
+(let* ((eq-table
+        (list->table '((abc . 123) (456 . 789)) test: eq?))
+       (deserialized-eq-table
+        (serdes1 eq-table)))
+  (check-equal? (table-ref eq-table 'abc)
+                (table-ref deserialized-eq-table 'abc))
+  (check-equal? (table-ref eq-table 456)
+                (table-ref deserialized-eq-table 456))
+  (check-equal? (table-ref eq-table 'foo 'undefined)
+                (table-ref deserialized-eq-table 'foo 'undefined)))
+
+(let* ((cont
+        (thread-join!
+         (thread-start!
+          (make-root-thread
+           (lambda () (continuation-capture identity))
+           'root
+           (thread-thread-group (current-thread))
+           (open-dummy)
+           (open-dummy)
+           ))))
+       (frame
+        (##continuation-frame cont))
+       (deserialized-frame
+        (serdes1 frame))
+       (deserialized-cont
+        (serdes1 cont)))
+
+  (check-equal?
+   (##frame-fs frame)
+   (##frame-fs deserialized-frame))
+
+  (check-equal?
+   (##frame-ret frame)
+   (##frame-ret deserialized-frame))
+
+  (let ((unique (list 1 2 3)))
+    (check-eq?
+     unique
+     (thread-join!
+      (thread-start!
+       (make-thread
+        (lambda () (continuation-return deserialized-cont unique))))))))
+
+(let* ((promise
+        (delay (* 6 7)))
+       (deserialized-promise
+        (serdes1 promise)))
+  (check-equal?
+   (force promise)
+   (force deserialized-promise)))

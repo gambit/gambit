@@ -1411,6 +1411,11 @@
 ("##gc-hash-table-find!"              (3)   #t ()    0    fixnum  extended)
 ("##gc-hash-table-rehash!"            (2)   #t ()    0    (#f)    extended)
 
+("##gc-hash-table-make"               (5)   #f ()    0    (#f)    extended)
+("##gc-hash-table-length"             (1)   #f ()    0    fixnum  extended)
+("##gc-hash-table-field-ref"          (2)   #f ()    0    (#f)    extended)
+("##gc-hash-table-field-set!"         (3)   #t ()    0    (#f)    extended)
+
 ;; will
 
 ("make-will"                          (2)   #t (2)   0    #f      gambit)

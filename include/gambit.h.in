@@ -1,7 +1,7 @@
 /* File: "gambit.h" */
 
 /*
- * Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.
+ * Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
  */
 
 #ifndef ___GAMBIT_H
@@ -2416,8 +2416,8 @@ ___STORE_U32(s,i,val))
  * ___tMEM4     = tag #4 for memory allocated objects or undefined
  * ___tSUBTYPED = ___tMEM1
  * ___tPAIR     = ___tMEM2 (or ___tMEM1)
- * ___tVECTOR   = ___TMEM3 (or ___tMEM1)
- * ___tFLONUM   = ___TMEM4 (or ___tMEM1)
+ * ___tVECTOR   = ___tMEM3 (or ___tMEM1)
+ * ___tFLONUM   = ___tMEM4 (or ___tMEM1)
  *
  * When ___TB == 2, the 4 tags ___tFIXNUM, ___tSPECIAL, ___tSUBTYPED, and
  * ___tPAIR use all 4 combinations of the 2 tag bits:
@@ -2552,7 +2552,7 @@ ___STORE_U32(s,i,val))
 
 #ifdef ___USE_3_TAG_BITS
 #if ___FLONUM_SELF_TAGGING_TAGS <= 1
-/* TODO: refactor lib so gc-hash-tables are not accessed as vectors, allowing #define ___tVECTOR ___tMEM3 */
+/*TODO: use #define ___tVECTOR ___tMEM3 */
 #define ___tVECTOR ___tMEM1
 #define ___tFLONUM ___tMEM4
 #else
@@ -2562,12 +2562,126 @@ ___STORE_U32(s,i,val))
 #endif
 #endif
 
+/* Default tag is ___tSUBTYPED */
+
 #ifndef ___tVECTOR
-#define ___tVECTOR ___tMEM1
+#define ___tVECTOR ___tSUBTYPED
+#endif
+
+#ifndef ___tPAIR
+#define ___tPAIR ___tSUBTYPED
+#endif
+
+#ifndef ___tRATNUM
+#define ___tRATNUM ___tSUBTYPED
+#endif
+
+#ifndef ___tCPXNUM
+#define ___tCPXNUM ___tSUBTYPED
+#endif
+
+#ifndef ___tSTRUCTURE
+#define ___tSTRUCTURE ___tSUBTYPED
+#endif
+
+#ifndef ___tBOXVALUES
+#define ___tBOXVALUES ___tSUBTYPED
+#endif
+
+#ifndef ___tMEROON
+#define ___tMEROON ___tSUBTYPED
+#endif
+
+#ifndef ___tJAZZ
+#define ___tJAZZ ___tSUBTYPED
+#endif
+
+#ifndef ___tSYMBOL
+#define ___tSYMBOL ___tSUBTYPED
+#endif
+
+#ifndef ___tKEYWORD
+#define ___tKEYWORD ___tSUBTYPED
+#endif
+
+#ifndef ___tFRAME
+#define ___tFRAME ___tSUBTYPED
+#endif
+
+#ifndef ___tCONTINUATION
+#define ___tCONTINUATION ___tSUBTYPED
+#endif
+
+#ifndef ___tPROMISE
+#define ___tPROMISE ___tSUBTYPED
+#endif
+
+#ifndef ___tWEAK
+#define ___tWEAK ___tSUBTYPED
+#endif
+
+#ifndef ___tPROCEDURE
+#define ___tPROCEDURE ___tSUBTYPED
+#endif
+
+#ifndef ___tRETURN
+#define ___tRETURN ___tSUBTYPED
+#endif
+
+#ifndef ___tFOREIGN
+#define ___tFOREIGN ___tSUBTYPED
+#endif
+
+#ifndef ___tSTRING
+#define ___tSTRING ___tSUBTYPED
+#endif
+
+#ifndef ___tS8VECTOR
+#define ___tS8VECTOR ___tSUBTYPED
+#endif
+
+#ifndef ___tU8VECTOR
+#define ___tU8VECTOR ___tSUBTYPED
+#endif
+
+#ifndef ___tS16VECTOR
+#define ___tS16VECTOR ___tSUBTYPED
+#endif
+
+#ifndef ___tU16VECTOR
+#define ___tU16VECTOR ___tSUBTYPED
+#endif
+
+#ifndef ___tS32VECTOR
+#define ___tS32VECTOR ___tSUBTYPED
+#endif
+
+#ifndef ___tU32VECTOR
+#define ___tU32VECTOR ___tSUBTYPED
+#endif
+
+#ifndef ___tF32VECTOR
+#define ___tF32VECTOR ___tSUBTYPED
+#endif
+
+#ifndef ___tS64VECTOR
+#define ___tS64VECTOR ___tSUBTYPED
+#endif
+
+#ifndef ___tU64VECTOR
+#define ___tU64VECTOR ___tSUBTYPED
+#endif
+
+#ifndef ___tF64VECTOR
+#define ___tF64VECTOR ___tSUBTYPED
 #endif
 
 #ifndef ___tFLONUM
-#define ___tFLONUM ___tMEM1
+#define ___tFLONUM ___tSUBTYPED
+#endif
+
+#ifndef ___tBIGNUM
+#define ___tBIGNUM ___tSUBTYPED
 #endif
 
 /*
@@ -2846,9 +2960,13 @@ ___hp = ___CAST(___WORD*, (___CAST(___WORD,___hp) + (((n)<<___LWS) + 7)) & ~7)
 #define ___END_ALLOC_SUBTYPED(n)___ALLOC((n)+___SUBTYPED_BODY)
 #define ___GET_SUBTYPED(n)___SUBTYPED_FROM_END(___hp,n)
 
-#define ___BEGIN_ALLOC_VECTOR(n)___hp[0] = ___MAKE_HD_WORDS(n,___sVECTOR);
-#define ___ADD_VECTOR_ELEM(i,val)___hp[(i)+___VECTOR_BODY] = val;
-#define ___END_ALLOC_VECTOR(n)___ALLOC((n)+___VECTOR_BODY);
+#define ___BEGIN_ALLOC_VECTOR_EXPR(n)___hp[0] = ___MAKE_HD_WORDS(n,___sVECTOR)
+#define ___ADD_VECTOR_ELEM_EXPR(i,val)___hp[(i)+___VECTOR_BODY] = val
+#define ___END_ALLOC_VECTOR_EXPR(n)___ALLOC((n)+___VECTOR_BODY)
+
+#define ___BEGIN_ALLOC_VECTOR(n)___BEGIN_ALLOC_VECTOR_EXPR(n);
+#define ___ADD_VECTOR_ELEM(i,val)___ADD_VECTOR_ELEM_EXPR(i,val);
+#define ___END_ALLOC_VECTOR(n)___END_ALLOC_VECTOR_EXPR(n);
 #define ___GET_VECTOR(n)___VECTOR_FROM_END(___hp,n)
 
 #define ___GET_FLONUM()___FLONUM_FROM_END(___hp)
@@ -2934,7 +3052,7 @@ ___TAG(___CAST(___WORD*,ptr) - (___REFERENCE_TO_BODY+(n)), ___tVECTOR)
 
 #define ___HD_SUBTYPE(head)((head)>>___HTB&((1<<___SB)-1))
 
-#define ___FIELD(obj,i)(*(___BODY_AS(obj,___tSUBTYPED)+i))
+#define ___FIELD(type,obj,i)(*(___BODY_AS(obj,___t ## type)+i))
 
 #define ___WORDS(bytes)(((bytes)+___WS-1)>>___LWS)
 
@@ -3571,23 +3689,15 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 
 #define ___FIXNUMP(x)(((x)&___MASK(___WORD,___TB_FIXNUM))==___tFIXNUM)
 
-#if ___tPAIR == ___tSUBTYPED
-#define ___PAIRP(x)___TESTSUBTYPE(x,___sPAIR)
-#else
-#define ___PAIRP(x)___TESTTYPE(x,___tPAIR)
-#endif
+#define ___MEM_ISA(type,obj) \
+((___t ## type == ___tSUBTYPED) ? \
+ ___TESTSUBTYPE(obj, ___s ## type) : \
+ ___TESTTYPE(obj, ___t ## type))
 
-#if ___tVECTOR == ___tSUBTYPED
-#define ___VECTORP(x)___TESTSUBTYPE(x,___sVECTOR)
-#else
-#define ___VECTORP(x)___TESTTYPE(x,___tVECTOR)
-#endif
+#define ___PAIRP(obj)___MEM_ISA(PAIR,obj)
+#define ___VECTORP(obj)___MEM_ISA(VECTOR,obj)
 
-#if ___tFLONUM == ___tSUBTYPED
-#define ___MEM_ALLOCATED_FLONUM(x)___TESTSUBTYPE(x,___sFLONUM)
-#else
-#define ___MEM_ALLOCATED_FLONUM(x)___TESTTYPE(x,___tFLONUM)
-#endif
+#define ___MEM_ALLOCATED_FLONUM(obj)___MEM_ISA(FLONUM,obj)
 
 #if ___FLONUM_SELF_TAGGING_TAGS == 0
 
@@ -3611,63 +3721,63 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 
 #endif
 
-#define ___SPECIALP(x)___TESTTYPE(x,___tSPECIAL)
+#define ___SPECIALP(obj)___TESTTYPE(obj,___tSPECIAL)
 
 #define ___MUTABLEP(obj)(___HD_TYP(___HEADER(obj))!=___PERM)
-#define ___SUBTYPEDP(x)___TESTTYPE(x,___tSUBTYPED)
+#define ___SUBTYPEDP(obj)___TESTTYPE(obj,___tSUBTYPED)
 #define ___SUBTYPEDMUTABLEP(obj)(___HD_TYP(___SUBTYPED_HEADER(obj))!=___PERM)
-#define ___SUBTYPEDVECTORP(x)___TESTSUBTYPETAG(x,___sVECTOR)
-#define ___SUBTYPEDSYMBOLP(x)___TESTSUBTYPETAG(x,___sSYMBOL)
-#define ___SUBTYPEDFLONUMP(x)___TESTSUBTYPETAG(x,___sFLONUM)
-#define ___SUBTYPEDBIGNUMP(x)___TESTSUBTYPETAG(x,___sBIGNUM)
-#define ___RATNUMP(x)___TESTSUBTYPE(x,___sRATNUM)
-#define ___CPXNUMP(x)___TESTSUBTYPE(x,___sCPXNUM)
-#define ___EXACTINTP(x)(___FIXNUMP(x)||___BIGNUMP(x))
-#define ___STRUCTUREP(x)___TESTSUBTYPE(x,___sSTRUCTURE)
-#define ___BOXP(x)(___TESTTYPE(___temp=(x),___tSUBTYPED)&&(___SUBTYPED_HEADER(___temp)&___LSMASK)==___MAKE_HD((___BOX_SIZE<<___LWS),___sBOXVALUES,0))
-#define ___VALUESP(x)(___TESTTYPE(___temp=(x),___tSUBTYPED)&&___TESTSUBTYPETAG(___temp,___sBOXVALUES)&&(___SUBTYPED_HEADER(___temp)&___LSMASK)!=___MAKE_HD((___BOX_SIZE<<___LWS),___sBOXVALUES,0))
-#define ___MEROONP(x)___TESTSUBTYPE(x,___sMEROON)
-#define ___JAZZP(x)___TESTSUBTYPE(x,___sJAZZ)
-#define ___SYMBOLP(x)___TESTSUBTYPE(x,___sSYMBOL)
-#define ___KEYWORDP(x)___TESTSUBTYPE(x,___sKEYWORD)
-#define ___SYMKEYP(x)(___SYMBOLP(x)||___KEYWORDP(x))
-#define ___FRAMEP(x)___TESTSUBTYPE(x,___sFRAME)
-#define ___CONTINUATIONP(x)___TESTSUBTYPE(x,___sCONTINUATION)
-#define ___PROMISEP(x)___TESTSUBTYPE(x,___sPROMISE)
-#define ___WILLP(x)___TESTLENGTHSUBTYPE(x,(___WILL_SIZE<<___LWS),___sWEAK)
-#define ___GCHASHTABLEP(x)(___TESTTYPE(___temp=(x),___tSUBTYPED)&&___TESTHEADERTAG((___temp=___SUBTYPED_HEADER(___temp)),___sWEAK)&&(___temp&___LSMASK)!=___MAKE_HD((___WILL_SIZE<<___LWS),___sWEAK,0))
-#define ___MEMALLOCATEDP(x)___MEM_ALLOCATED(x)
-#define ___PROCEDUREP(x)___TESTSUBTYPE(x,___sPROCEDURE)
-#define ___SUBPROCEDUREP(x) \
-(___PROCEDUREP(x) && \
- ___LABEL_ENTRY_GET(x) == x && \
- !___TESTHEADERTAG(___SUBTYPED_TO_BODY(x)[-___LABEL_SIZE-1],___sVECTOR))
-#define ___CLOSUREP(x) \
-(___PROCEDUREP(x) && \
- ___HD_TYP(___SUBTYPED_HEADER(x)) != ___PERM)
-#define ___RETURNP(x)___TESTSUBTYPE(x,___sRETURN)
-#define ___FOREIGNP(x)___TESTSUBTYPE(x,___sFOREIGN)
-#define ___STRINGP(x)___TESTSUBTYPE(x,___sSTRING)
-#define ___S8VECTORP(x)___TESTSUBTYPE(x,___sS8VECTOR)
-#define ___U8VECTORP(x)___TESTSUBTYPE(x,___sU8VECTOR)
-#define ___S16VECTORP(x)___TESTSUBTYPE(x,___sS16VECTOR)
-#define ___U16VECTORP(x)___TESTSUBTYPE(x,___sU16VECTOR)
-#define ___S32VECTORP(x)___TESTSUBTYPE(x,___sS32VECTOR)
-#define ___U32VECTORP(x)___TESTSUBTYPE(x,___sU32VECTOR)
-#define ___S64VECTORP(x)___TESTSUBTYPE(x,___sS64VECTOR)
-#define ___U64VECTORP(x)___TESTSUBTYPE(x,___sU64VECTOR)
-#define ___F32VECTORP(x)___TESTSUBTYPE(x,___sF32VECTOR)
-#define ___F64VECTORP(x)___TESTSUBTYPE(x,___sF64VECTOR)
-#define ___BIGNUMP(x)___TESTSUBTYPE(x,___sBIGNUM)
-#define ___CHARP(x)(___TESTTYPE(___temp=(x),___tSPECIAL)&&___temp>=0)
-#define ___NUMBERP(x)___COMPLEXP(x)
+#define ___SUBTYPEDVECTORP(obj)___TESTSUBTYPETAG(obj,___sVECTOR)
+#define ___SUBTYPEDSYMBOLP(obj)___TESTSUBTYPETAG(obj,___sSYMBOL)
+#define ___SUBTYPEDFLONUMP(obj)___TESTSUBTYPETAG(obj,___sFLONUM)
+#define ___SUBTYPEDBIGNUMP(obj)___TESTSUBTYPETAG(obj,___sBIGNUM)
+#define ___RATNUMP(obj)___MEM_ISA(RATNUM,obj)
+#define ___CPXNUMP(obj)___MEM_ISA(CPXNUM,obj)
+#define ___EXACTINTP(obj)(___FIXNUMP(obj)||___BIGNUMP(obj))
+#define ___STRUCTUREP(obj)___MEM_ISA(STRUCTURE,obj)
+#define ___BOXP(obj)(___TESTTYPE(___temp=(obj),___tSUBTYPED)&&(___SUBTYPED_HEADER(___temp)&___LSMASK)==___MAKE_HD((___BOX_SIZE<<___LWS),___sBOXVALUES,0))
+#define ___VALUESP(obj)(___TESTTYPE(___temp=(obj),___tSUBTYPED)&&___TESTSUBTYPETAG(___temp,___sBOXVALUES)&&(___SUBTYPED_HEADER(___temp)&___LSMASK)!=___MAKE_HD((___BOX_SIZE<<___LWS),___sBOXVALUES,0))
+#define ___MEROONP(obj)___MEM_ISA(MEROON,obj)
+#define ___JAZZP(obj)___MEM_ISA(JAZZ,obj)
+#define ___SYMBOLP(obj)___MEM_ISA(SYMBOL,obj)
+#define ___KEYWORDP(obj)___MEM_ISA(KEYWORD,obj)
+#define ___SYMKEYP(obj)(___SYMBOLP(obj)||___KEYWORDP(obj))
+#define ___FRAMEP(obj)___MEM_ISA(FRAME,obj)
+#define ___CONTINUATIONP(obj)___MEM_ISA(CONTINUATION,obj)
+#define ___PROMISEP(obj)___MEM_ISA(PROMISE,obj)
+#define ___WILLP(obj)___TESTLENGTHSUBTYPE(obj,(___WILL_SIZE<<___LWS),___sWEAK)
+#define ___GCHASHTABLEP(obj)(___TESTTYPE(___temp=(obj),___tSUBTYPED)&&___TESTHEADERTAG((___temp=___SUBTYPED_HEADER(___temp)),___sWEAK)&&(___temp&___LSMASK)!=___MAKE_HD((___WILL_SIZE<<___LWS),___sWEAK,0))
+#define ___MEMALLOCATEDP(obj)___MEM_ALLOCATED(obj)
+#define ___PROCEDUREP(obj)___MEM_ISA(PROCEDURE,obj)
+#define ___SUBPROCEDUREP(obj) \
+(___PROCEDUREP(obj) && \
+ ___LABEL_ENTRY_GET(obj) == obj && \
+ !___TESTHEADERTAG(___SUBTYPED_TO_BODY(obj)[-___LABEL_SIZE-1],___sVECTOR))
+#define ___CLOSUREP(obj) \
+(___PROCEDUREP(obj) && \
+ ___HD_TYP(___SUBTYPED_HEADER(obj)) != ___PERM)
+#define ___RETURNP(obj)___MEM_ISA(RETURN,obj)
+#define ___FOREIGNP(obj)___MEM_ISA(FOREIGN,obj)
+#define ___STRINGP(obj)___MEM_ISA(STRING,obj)
+#define ___S8VECTORP(obj)___MEM_ISA(S8VECTOR,obj)
+#define ___U8VECTORP(obj)___MEM_ISA(U8VECTOR,obj)
+#define ___S16VECTORP(obj)___MEM_ISA(S16VECTOR,obj)
+#define ___U16VECTORP(obj)___MEM_ISA(U16VECTOR,obj)
+#define ___S32VECTORP(obj)___MEM_ISA(S32VECTOR,obj)
+#define ___U32VECTORP(obj)___MEM_ISA(U32VECTOR,obj)
+#define ___S64VECTORP(obj)___MEM_ISA(S64VECTOR,obj)
+#define ___U64VECTORP(obj)___MEM_ISA(U64VECTOR,obj)
+#define ___F32VECTORP(obj)___MEM_ISA(F32VECTOR,obj)
+#define ___F64VECTORP(obj)___MEM_ISA(F64VECTOR,obj)
+#define ___BIGNUMP(obj)___MEM_ISA(BIGNUM,obj)
+#define ___CHARP(obj)(___TESTTYPE(___temp=(obj),___tSPECIAL)&&___temp>=0)
+#define ___NUMBERP(obj)___COMPLEXP(obj)
 
 #if ___tFLONUM == ___tSUBTYPED
 
-#define ___COMPLEXP(x) \
-(___FIXNUMP(___temp=(x)) || \
+#define ___COMPLEXP(obj) \
+(___FIXNUMP(___temp=(obj)) || \
  ___SELF_TAGGED_FLONUM(___temp) || \
- (___TESTTYPE(___temp=(x),___tSUBTYPED) && \
+ (___TESTTYPE(___temp=(obj),___tSUBTYPED) && \
   ((___temp=(___SUBTYPED_HEADER(___temp)&___SMASK))==(___sFLONUM<<___HTB) || \
    ___temp==(___sBIGNUM<<___HTB) || \
    ___temp==(___sRATNUM<<___HTB) || \
@@ -3675,8 +3785,8 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 
 #else
 
-#define ___COMPLEXP(x) \
-(___FIXNUMP(___temp=(x)) || \
+#define ___COMPLEXP(obj) \
+(___FIXNUMP(___temp=(obj)) || \
  ___FLONUMP(___temp) || \
  (___TESTTYPE(___temp,___tSUBTYPED) && \
   ((___temp=(___SUBTYPED_HEADER(___temp)&___SMASK))==(___sBIGNUM<<___HTB) || \
@@ -3997,10 +4107,6 @@ __asm__ __volatile__ ("rdtscp\n\tmov %%eax,%0\n\tcpuid\n":"=r"(___s32_temp)::"%e
 #define ___PORT_OBJECT_NEWLINE       18
 #define ___PORT_OBJECT_FORCE_OUTPUT  19
 
-#define ___PORT_OBJECT_OTHER1        20
-#define ___PORT_OBJECT_OTHER2        21
-#define ___PORT_OBJECT_OTHER3        22
-
 #define ___PORT_CHAR_RBUF            20
 #define ___PORT_CHAR_RLO             21
 #define ___PORT_CHAR_RHI             22
@@ -4017,15 +4123,10 @@ __asm__ __volatile__ ("rdtscp\n\tmov %%eax,%0\n\tcpuid\n":"=r"(___s32_temp)::"%e
 #define ___PORT_CHAR_WLINES          32
 #define ___PORT_CHAR_WCURLINE        33
 #define ___PORT_CHAR_WBUF_DRAIN      34
+
 #define ___PORT_INPUT_READTABLE      35
 #define ___PORT_OUTPUT_READTABLE     36
 #define ___PORT_OUTPUT_WIDTH         37
-
-#define ___PORT_CHAR_OTHER1          38
-#define ___PORT_CHAR_OTHER2          39
-#define ___PORT_CHAR_OTHER3          40
-#define ___PORT_CHAR_OTHER4          41
-#define ___PORT_CHAR_OTHER5          42
 
 #define ___PORT_BYTE_RBUF            38
 #define ___PORT_BYTE_RLO             39
@@ -4037,33 +4138,176 @@ __asm__ __volatile__ ("rdtscp\n\tmov %%eax,%0\n\tcpuid\n":"=r"(___s32_temp)::"%e
 #define ___PORT_BYTE_WHI             44
 #define ___PORT_BYTE_WBUF_DRAIN      45
 
-#define ___PORT_BYTE_OTHER1          46
-#define ___PORT_BYTE_OTHER2          47
-
 #define ___PORT_RDEVICE_CONDVAR      46
 #define ___PORT_WDEVICE_CONDVAR      47
 #define ___PORT_EVENT_CONDVAR        48
 
-#define ___PORT_DEVICE_OTHER1        49
-#define ___PORT_DEVICE_OTHER2        50
+#define ___PORT_MUTEX_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_MUTEX)
 
-#define ___DENV_INPUT_PORT  5
-#define ___DENV_OUTPUT_PORT 6
+#define ___PORT_RKIND_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_RKIND)
+
+#define ___PORT_WKIND_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_WKIND)
+
+#define ___PORT_NAME_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_NAME)
+
+#define ___PORT_WAIT_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_WAIT)
+
+#define ___PORT_CLOSE_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_CLOSE)
+
+#define ___PORT_ROPTIONS_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_ROPTIONS)
+
+#define ___PORT_RTIMEOUT_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_RTIMEOUT)
+
+#define ___PORT_RTIMEOUT_THUNK_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_RTIMEOUT_THUNK)
+
+#define ___PORT_SET_RTIMEOUT_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_SET_RTIMEOUT)
+
+#define ___PORT_WOPTIONS_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_WOPTIONS)
+
+#define ___PORT_WTIMEOUT_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_WTIMEOUT)
+
+#define ___PORT_WTIMEOUT_THUNK_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_WTIMEOUT_THUNK)
+
+#define ___PORT_SET_WTIMEOUT_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_SET_WTIMEOUT)
+
+#define ___PORT_IO_EXCEPTION_HANDLER_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_IO_EXCEPTION_HANDLER)
+
+
+#define ___PORT_OBJECT_READ_DATUM_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_OBJECT_READ_DATUM)
+
+#define ___PORT_OBJECT_WRITE_DATUM_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_OBJECT_WRITE_DATUM)
+
+#define ___PORT_OBJECT_NEWLINE_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_OBJECT_NEWLINE)
+
+#define ___PORT_OBJECT_FORCE_OUTPUT_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_OBJECT_FORCE_OUTPUT)
+
+
+#define ___PORT_CHAR_RBUF_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_CHAR_RBUF)
+
+#define ___PORT_CHAR_RLO_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_CHAR_RLO)
+
+#define ___PORT_CHAR_RHI_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_CHAR_RHI)
+
+#define ___PORT_CHAR_RCHARS_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_CHAR_RCHARS)
+
+#define ___PORT_CHAR_RLINES_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_CHAR_RLINES)
+
+#define ___PORT_CHAR_RCURLINE_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_CHAR_RCURLINE)
+
+#define ___PORT_CHAR_RBUF_FILL_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_CHAR_RBUF_FILL)
+
+#define ___PORT_CHAR_PEEK_EOFP_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_CHAR_PEEK_EOFP)
+
+
+#define ___PORT_CHAR_WBUF_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_CHAR_WBUF)
+
+#define ___PORT_CHAR_WLO_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_CHAR_WLO)
+
+#define ___PORT_CHAR_WHI_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_CHAR_WHI)
+
+#define ___PORT_CHAR_WCHARS_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_CHAR_WCHARS)
+
+#define ___PORT_CHAR_WLINES_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_CHAR_WLINES)
+
+#define ___PORT_CHAR_WCURLINE_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_CHAR_WCURLINE)
+
+#define ___PORT_CHAR_WBUF_DRAIN_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_CHAR_WBUF_DRAIN)
+
+
+#define ___PORT_INPUT_READTABLE_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_INPUT_READTABLE)
+
+#define ___PORT_OUTPUT_READTABLE_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_OUTPUT_READTABLE)
+
+#define ___PORT_OUTPUT_WIDTH_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_OUTPUT_WIDTH)
+
+
+#define ___PORT_BYTE_RBUF_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_BYTE_RBUF)
+
+#define ___PORT_BYTE_RLO_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_BYTE_RLO)
+
+#define ___PORT_BYTE_RHI_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_BYTE_RHI)
+
+#define ___PORT_BYTE_RBUF_FILL_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_BYTE_RBUF_FILL)
+
+
+#define ___PORT_BYTE_WBUF_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_BYTE_WBUF)
+
+#define ___PORT_BYTE_WLO_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_BYTE_WLO)
+
+#define ___PORT_BYTE_WHI_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_BYTE_WHI)
+
+#define ___PORT_BYTE_WBUF_DRAIN_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_BYTE_WBUF_DRAIN)
+
+
+#define ___PORT_RDEVICE_CONDVAR_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_RDEVICE_CONDVAR)
+
+#define ___PORT_WDEVICE_CONDVAR_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_WDEVICE_CONDVAR)
+
+#define ___PORT_EVENT_CONDVAR_FIELD(port) \
+___FIELD(STRUCTURE,port,___PORT_EVENT_CONDVAR)
+
 
 #define ___PEEKCHAR0P \
-{ ___SCMOBJ port = ___CDR(___FIELD(___FIELD(___CURRENTTHREAD,___THREAD_DENV),___DENV_INPUT_PORT)); \
+{ ___SCMOBJ port = ___CDR(___DENV_INPUT_PORT_FIELD(___THREAD_DENV_FIELD(___CURRENTTHREAD))); \
   ___PEEKCHAR1P(port) \
 }
 
 #define ___PEEKCHAR1P(port) \
 { ___SCMOBJ rlo; \
   ___SCMOBJ rhi; \
-  ___SCMOBJ mutex = ___FIELD(port,___PORT_MUTEX); \
+  ___SCMOBJ mutex = ___PORT_MUTEX_FIELD(port); \
   if (___PRIMITIVETRYLOCK(mutex,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2))) \
     { \
-      rlo = ___FIELD(port,___PORT_CHAR_RLO); \
-      rhi = ___FIELD(port,___PORT_CHAR_RHI); \
-      if (___FIXGE(rlo,rhi) || ___CHAREQP((___temp = ___STRINGREF(___FIELD(port,___PORT_CHAR_RBUF),rlo)),___CHR(10))) \
+      rlo = ___PORT_CHAR_RLO_FIELD(port); \
+      rhi = ___PORT_CHAR_RHI_FIELD(port); \
+      if (___FIXGE(rlo,rhi) || ___CHAREQP((___temp = ___STRINGREF(___PORT_CHAR_RBUF_FIELD(port),rlo)),___CHR(10))) \
         ___temp = ___FAL; \
       ___PRIMITIVEUNLOCK(mutex,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2)) \
     } \
@@ -4072,30 +4316,30 @@ __asm__ __volatile__ ("rdtscp\n\tmov %%eax,%0\n\tcpuid\n":"=r"(___s32_temp)::"%e
 }
 
 #define ___READCHAR0P \
-{ ___SCMOBJ port = ___CDR(___FIELD(___FIELD(___CURRENTTHREAD,___THREAD_DENV),___DENV_INPUT_PORT)); \
+{ ___SCMOBJ port = ___CDR(___DENV_INPUT_PORT_FIELD(___THREAD_DENV_FIELD(___CURRENTTHREAD))); \
   ___READCHAR1P(port) \
 }
 
 #define ___READCHAR1P(port) \
 { ___SCMOBJ rlo; \
   ___SCMOBJ rhi; \
-  ___SCMOBJ mutex = ___FIELD(port,___PORT_MUTEX); \
+  ___SCMOBJ mutex = ___PORT_MUTEX_FIELD(port); \
   if (___PRIMITIVETRYLOCK(mutex,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2))) \
     { \
-      rlo = ___FIELD(port,___PORT_CHAR_RLO); \
-      rhi = ___FIELD(port,___PORT_CHAR_RHI); \
+      rlo = ___PORT_CHAR_RLO_FIELD(port); \
+      rhi = ___PORT_CHAR_RHI_FIELD(port); \
       if (___FIXGE(rlo,rhi)) \
         ___temp = ___FAL; \
       else \
        { \
-         ___temp = ___STRINGREF(___FIELD(port,___PORT_CHAR_RBUF),rlo); \
-         ___FIELD(port,___PORT_CHAR_RLO) = rlo = ___FIXADD(rlo,___FIX(1L)); \
+         ___temp = ___STRINGREF(___PORT_CHAR_RBUF_FIELD(port),rlo); \
+         ___PORT_CHAR_RLO_FIELD(port) = rlo = ___FIXADD(rlo,___FIX(1L)); \
          if (___CHAREQP(___temp,___CHR(10))) \
            { \
-             ___FIELD(port,___PORT_CHAR_RCURLINE) = \
-               ___FIXADD(___FIELD(port,___PORT_CHAR_RCHARS),rlo); \
-             ___FIELD(port,___PORT_CHAR_RLINES) = \
-               ___FIXADD(___FIELD(port,___PORT_CHAR_RLINES),___FIX(1L)); \
+             ___PORT_CHAR_RCURLINE_FIELD(port) = \
+               ___FIXADD(___PORT_CHAR_RCHARS_FIELD(port),rlo); \
+             ___PORT_CHAR_RLINES_FIELD(port) = \
+               ___FIXADD(___PORT_CHAR_RLINES_FIELD(port),___FIX(1L)); \
            } \
        } \
       ___PRIMITIVEUNLOCK(mutex,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2)) \
@@ -4105,34 +4349,34 @@ __asm__ __volatile__ ("rdtscp\n\tmov %%eax,%0\n\tcpuid\n":"=r"(___s32_temp)::"%e
 }
 
 #define ___WRITECHAR1P(c) \
-{ ___SCMOBJ port = ___CDR(___FIELD(___FIELD(___CURRENTTHREAD,___THREAD_DENV),___DENV_OUTPUT_PORT)); \
+{ ___SCMOBJ port = ___CDR(___DENV_OUTPUT_PORT_FIELD(___THREAD_DENV_FIELD(___CURRENTTHREAD))); \
   ___WRITECHAR2P(c,port) \
 }
 
 #define ___WRITECHAR2P(c,port) \
-if (___FIXLT(___FIXAND(___FIELD(port,___PORT_WOPTIONS),___FIX(2047L)),___FIX(1536L)) && (___FIXLT(___FIXAND(___FIELD(port,___PORT_WOPTIONS),___FIX(2047L)),___FIX(1024L)) || ___CHAREQP(c,___CHR(10)))) \
+if (___FIXLT(___FIXAND(___PORT_WOPTIONS_FIELD(port),___FIX(2047L)),___FIX(1536L)) && (___FIXLT(___FIXAND(___PORT_WOPTIONS_FIELD(port),___FIX(2047L)),___FIX(1024L)) || ___CHAREQP(c,___CHR(10)))) \
   ___temp = ___FAL; \
 else \
   { \
     ___SCMOBJ wbuf; \
     ___SCMOBJ whi; \
-    ___SCMOBJ mutex = ___FIELD(port,___PORT_MUTEX); \
+    ___SCMOBJ mutex = ___PORT_MUTEX_FIELD(port); \
     if (___PRIMITIVETRYLOCK(mutex,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2))) \
       { \
-        wbuf = ___FIELD(port,___PORT_CHAR_WBUF); \
-        whi = ___FIXADD(___FIELD(port,___PORT_CHAR_WHI),___FIX(1L)); \
+        wbuf = ___PORT_CHAR_WBUF_FIELD(port); \
+        whi = ___FIXADD(___PORT_CHAR_WHI_FIELD(port),___FIX(1L)); \
         if (___FIXGE(whi,___STRINGLENGTH(wbuf))) \
           ___temp = ___FAL; \
         else \
           { \
             ___STRINGSET(wbuf,___FIXSUB(whi,___FIX(1L)),c) \
-            ___FIELD(port,___PORT_CHAR_WHI) = whi; \
+            ___PORT_CHAR_WHI_FIELD(port) = whi; \
             if (___CHAREQP(c,___CHR(10))) \
               { \
-                ___FIELD(port,___PORT_CHAR_WCURLINE) = \
-                  ___FIXADD(___FIELD(port,___PORT_CHAR_WCHARS),whi); \
-                ___FIELD(port,___PORT_CHAR_WLINES) = \
-                  ___FIXADD(___FIELD(port,___PORT_CHAR_WLINES),___FIX(1L)); \
+                ___PORT_CHAR_WCURLINE_FIELD(port) = \
+                  ___FIXADD(___PORT_CHAR_WCHARS_FIELD(port),whi); \
+                ___PORT_CHAR_WLINES_FIELD(port) = \
+                  ___FIXADD(___PORT_CHAR_WLINES_FIELD(port),___FIX(1L)); \
               } \
             ___temp = ___VOID; \
           } \
@@ -4451,6 +4695,8 @@ ___END_ALLOC_PAIR();}
   END_ALLOC_VECT(___size) \
   ___temp = GET_VECT(___size); \
 }
+
+#define ___BOX_SIZE 1
 
 #define ___BOX(x) \
 (___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(___BOX_SIZE,___sBOXVALUES)), \
@@ -4825,24 +5071,58 @@ ___VECTINSERTSMALL(___BODY_AS(v,___tSUBTYPED),___INT(i),___F64UNBOX(val),___F64V
 #define ___F64VECTORUPDATESMALL3(v,i,val) \
 ___VECTUPDATESMALL(___BODY_AS(v,___tSUBTYPED),___INT(i),___F64UNBOX(val),___F64VECTORSIZE(v),___BEGIN_ALLOC_F64VECTOR,___END_ALLOC_F64VECTOR,___ADD_F64VECTOR_ELEM,___GET_F64VECTOR,___FETCH_F64)
 
-#define ___TYPEID(x)___FIELD(x,1)
-#define ___TYPENAME(x)___FIELD(x,2)
-#define ___TYPEFLAGS(x)___FIELD(x,3)
-#define ___TYPESUPER(x)___FIELD(x,4)
-#define ___TYPEFIELDS(x)___FIELD(x,5)
 
-#define ___STRUCTURETYPE(x)___FIELD(x,0)
-#define ___STRUCTURETYPESET(x,type)___FIELD(x,0) = type;
+#define ___TYPE_ID     1
+#define ___TYPE_NAME   2
+#define ___TYPE_FLAGS  3
+#define ___TYPE_SUPER  4
+#define ___TYPE_FIELDS 5
+
+#define ___TYPE_ID_FIELD(descr) \
+___FIELD(STRUCTURE,descr,___TYPE_ID)
+
+#define ___TYPE_NAME_FIELD(descr) \
+___FIELD(STRUCTURE,descr,___TYPE_NAME)
+
+#define ___TYPE_FLAGS_FIELD(descr) \
+___FIELD(STRUCTURE,descr,___TYPE_FLAGS)
+
+#define ___TYPE_SUPER_FIELD(descr) \
+___FIELD(STRUCTURE,descr,___TYPE_SUPER)
+
+#define ___TYPE_FIELDS_FIELD(descr) \
+___FIELD(STRUCTURE,descr,___TYPE_FIELDS)
+
+#define ___TYPEID(descr)___TYPE_ID_FIELD(descr)
+#define ___TYPENAME(descr)___TYPE_NAME_FIELD(descr)
+#define ___TYPEFLAGS(descr)___TYPE_FLAGS_FIELD(descr)
+#define ___TYPESUPER(descr)___TYPE_SUPER_FIELD(descr)
+#define ___TYPEFIELDS(descr)___TYPE_FIELDS_FIELD(descr)
+
+
+#define ___STRUCTURE_TYPE 0
+
+#define ___STRUCTURE_TYPE_FIELD(obj) \
+___FIELD(STRUCTURE,obj,___STRUCTURE_TYPE)
+
+#define ___STRUCTURETYPE(obj)___STRUCTURE_TYPE_FIELD(obj)
+#define ___STRUCTURETYPESET(obj,descr)___STRUCTURE_TYPE_FIELD(obj) = descr;
+
 #define ___STRUCTUREDIOP(x,typeid)(___TESTSUBTYPE(x,___sSTRUCTURE)&&___TYPEID(___STRUCTURETYPE(___temp))==(typeid))
-#define ___UNCHECKEDSTRUCTUREREF(x,i,type,proc)___FIELD(x,___INT(i))
-#define ___UNCHECKEDSTRUCTURESET(x,val,i,type,proc)___FIELD(x,___INT(i)) = val;
+#define ___UNCHECKEDSTRUCTUREREF(x,i,type,proc)___FIELD(STRUCTURE,x,___INT(i))
+#define ___UNCHECKEDSTRUCTURESET(x,val,i,type,proc)___FIELD(STRUCTURE,x,___INT(i)) = val;
 #define ___UNCHECKEDSTRUCTURECAS(x,val,oldval,i,type,proc)___COMPARE_AND_SWAP_WORD((___WORD*)(((___WORD)___BODY_AS(x,___tSUBTYPED))+((i)<<(___LWS-___TB_FIXNUM))),oldval,val)
 
-#define ___GLOBALVARSTRUCT(gv)___CAST(___glo_struct*,___FIELD(gv,___SYMBOL_GLOBAL))
-#define ___GLOBALVARREF(gv)___GLOCELL(___GLOBALVARSTRUCT(gv)->val)
-#define ___GLOBALVARPRIMREF(gv)___PRMCELL(___GLOBALVARSTRUCT(gv)->prm)
-#define ___GLOBALVARSET(gv,x)___GLOCELL(___GLOBALVARSTRUCT(gv)->val) = x;
-#define ___GLOBALVARPRIMSET(gv,x)___PRMCELL(___GLOBALVARSTRUCT(gv)->prm) = x;
+
+#define ___RATNUM_SIZE 2
+#define ___RATNUM_NUMERATOR   0
+#define ___RATNUM_DENOMINATOR 1
+
+#define ___RATNUM_NUMERATOR_FIELD(ratnum) \
+___FIELD(RATNUM,ratnum,___RATNUM_NUMERATOR)
+
+#define ___RATNUM_DENOMINATOR_FIELD(ratnum) \
+___FIELD(RATNUM,ratnum,___RATNUM_DENOMINATOR)
 
 #define ___RATNUMMAKE(num,den) \
 (___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(___RATNUM_SIZE,___sRATNUM)), \
@@ -4851,8 +5131,19 @@ ___ADD_SUBTYPED_ELEM(1,den), \
 ___END_ALLOC_SUBTYPED(___RATNUM_SIZE), \
 ___GET_SUBTYPED(___RATNUM_SIZE))
 
-#define ___RATNUMNUMERATOR(obj)___FIELD(obj,0)
-#define ___RATNUMDENOMINATOR(obj)___FIELD(obj,1)
+#define ___RATNUMNUMERATOR(ratnum)___RATNUM_NUMERATOR_FIELD(ratnum)
+#define ___RATNUMDENOMINATOR(ratnum)___RATNUM_DENOMINATOR_FIELD(ratnum)
+
+
+#define ___CPXNUM_SIZE 2
+#define ___CPXNUM_REAL 0
+#define ___CPXNUM_IMAG 1
+
+#define ___CPXNUM_REAL_FIELD(cpxnum) \
+___FIELD(CPXNUM,cpxnum,___CPXNUM_REAL)
+
+#define ___CPXNUM_IMAG_FIELD(cpxnum) \
+___FIELD(CPXNUM,cpxnum,___CPXNUM_IMAG)
 
 #define ___CPXNUMMAKE(real,imag) \
 (___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(___CPXNUM_SIZE,___sCPXNUM)), \
@@ -4861,24 +5152,43 @@ ___ADD_SUBTYPED_ELEM(1,imag), \
 ___END_ALLOC_SUBTYPED(___CPXNUM_SIZE), \
 ___GET_SUBTYPED(___CPXNUM_SIZE))
 
-#define ___CPXNUMREAL(obj)___FIELD(obj,0)
-#define ___CPXNUMIMAG(obj)___FIELD(obj,1)
+#define ___CPXNUMREAL(cpxnum)___CPXNUM_REAL_FIELD(cpxnum)
+#define ___CPXNUMIMAG(cpxnum)___CPXNUM_IMAG_FIELD(cpxnum)
 
 #define ___REALPART(obj)(___CPXNUMP(obj)?___CPXNUMREAL(obj):obj)
 #define ___IMAGPART(obj)(___CPXNUMP(obj)?___CPXNUMIMAG(obj):___FIX(0L))
 
-#define ___MAKEDELAYPROMISE(x) \
-(___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(___PROMISE_STATE_SIZE,___sVECTOR)), \
-___ADD_SUBTYPED_ELEM(0,___SUBTYPED_FROM_START(___hp)), \
-___ADD_SUBTYPED_ELEM(1,x), \
-___END_ALLOC_SUBTYPED(___PROMISE_STATE_SIZE), \
-___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(___PROMISE_SIZE,___sPROMISE)), \
-___ADD_SUBTYPED_ELEM(0,___GET_SUBTYPED(___PROMISE_STATE_SIZE)), \
-___END_ALLOC_SUBTYPED(___PROMISE_SIZE), \
-___GET_SUBTYPED(___PROMISE_SIZE))
 
-#define ___PROMISESTATE(obj)___FIELD(obj,___PROMISE_STATE)
-#define ___PROMISESTATESET(obj,val)___FIELD(obj,___PROMISE_STATE) = val;
+#define ___PROMISE_SIZE  1
+#define ___PROMISE_STATE_SIZE 2
+#define ___PROMISE_STATE 0
+
+#define ___PROMISE_STATE_FIELD(prom) \
+___FIELD(PROMISE,prom,___PROMISE_STATE)
+
+#define ___MAKEDELAYPROMISE(x) \
+(___BEGIN_ALLOC_VECTOR_EXPR(___PROMISE_STATE_SIZE), \
+ ___ADD_VECTOR_ELEM_EXPR(0,___VECTOR_FROM_START(___hp)), \
+ ___ADD_VECTOR_ELEM_EXPR(1,x), \
+ ___END_ALLOC_VECTOR_EXPR(___PROMISE_STATE_SIZE), \
+ ___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(___PROMISE_SIZE,___sPROMISE)), \
+ ___ADD_SUBTYPED_ELEM(0,___GET_VECTOR(___PROMISE_STATE_SIZE)), \
+ ___END_ALLOC_SUBTYPED(___PROMISE_SIZE), \
+ ___GET_SUBTYPED(___PROMISE_SIZE))
+
+#define ___PROMISESTATE(prom)___PROMISE_STATE_FIELD(prom)
+#define ___PROMISESTATESET(prom,val)___PROMISE_STATE_FIELD(prom) = val;
+
+
+#define ___CONTINUATION_SIZE 2
+#define ___CONTINUATION_FRAME 0
+#define ___CONTINUATION_DENV  1
+
+#define ___CONTINUATION_FRAME_FIELD(cont) \
+___FIELD(CONTINUATION,cont,___CONTINUATION_FRAME)
+
+#define ___CONTINUATION_DENV_FIELD(cont)                \
+___FIELD(CONTINUATION,cont,___CONTINUATION_DENV)
 
 #define ___MAKECONTINUATION(frame,denv) \
 (___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(___CONTINUATION_SIZE,___sCONTINUATION)), \
@@ -4887,12 +5197,40 @@ ___ADD_SUBTYPED_ELEM(___CONTINUATION_DENV,denv), \
 ___END_ALLOC_SUBTYPED(___CONTINUATION_SIZE), \
 ___GET_SUBTYPED(___CONTINUATION_SIZE))
 
-#define ___CONTINUATIONFRAME(obj)___FIELD(obj,___CONTINUATION_FRAME)
-#define ___CONTINUATIONFRAMESET(obj,val)___FIELD(obj,___CONTINUATION_FRAME) = val;
-#define ___CONTINUATIONDENV(obj)___FIELD(obj,___CONTINUATION_DENV)
-#define ___CONTINUATIONDENVSET(obj,val)___FIELD(obj,___CONTINUATION_DENV) = val;
+#define ___CONTINUATIONFRAME(cont)___CONTINUATION_FRAME_FIELD(cont)
+#define ___CONTINUATIONFRAMESET(cont,val)___CONTINUATION_FRAME_FIELD(cont) = val;
+
+#define ___CONTINUATIONDENV(cont)___CONTINUATION_DENV_FIELD(cont)
+#define ___CONTINUATIONDENVSET(cont,val)___CONTINUATION_DENV_FIELD(cont) = val;
 
 #define ___END_OF_CONT_MARKER ___VOID
+
+
+#define ___SYMBOL_SIZE  4
+#define ___KEYWORD_SIZE 3
+#define ___SYMKEY_NAME   0
+#define ___SYMKEY_HASH   1
+#define ___SYMKEY_NEXT   2
+#define ___SYMBOL_GLOBAL 3
+
+#define ___SYMKEY_NAME_FIELD(symkey) \
+___FIELD(SYMBOL,symkey,___SYMKEY_NAME)
+
+#define ___SYMKEY_HASH_FIELD(symkey) \
+___FIELD(SYMBOL,symkey,___SYMKEY_HASH)
+
+#define ___SYMKEY_NEXT_FIELD(symkey) \
+___FIELD(SYMBOL,symkey,___SYMKEY_NEXT)
+
+#define ___SYMBOL_GLOBAL_FIELD(sym) \
+___FIELD(SYMBOL,sym,___SYMBOL_GLOBAL)
+
+#define ___GLOBALVARSTRUCT(gv)___CAST(___glo_struct*,___SYMBOL_GLOBAL_FIELD(gv))
+
+#define ___GLOBALVARREF(gv)___GLOCELL(___GLOBALVARSTRUCT(gv)->val)
+#define ___GLOBALVARPRIMREF(gv)___PRMCELL(___GLOBALVARSTRUCT(gv)->prm)
+#define ___GLOBALVARSET(gv,x)___GLOCELL(___GLOBALVARSTRUCT(gv)->val) = x;
+#define ___GLOBALVARPRIMSET(gv,x)___PRMCELL(___GLOBALVARSTRUCT(gv)->prm) = x;
 
 #define ___MAKESYMBOL(name,hash) \
 (___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(___SYMBOL_SIZE,___sSYMBOL)), \
@@ -4903,15 +5241,6 @@ ___ADD_SUBTYPED_ELEM(___SYMBOL_GLOBAL,0), \
 ___END_ALLOC_SUBTYPED(___SYMBOL_SIZE), \
 ___GET_SUBTYPED(___SYMBOL_SIZE))
 
-#define ___SYMBOLNAME(obj)___FIELD(obj,___SYMKEY_NAME)
-#define ___SYMBOLNAMESET(obj,val)___FIELD(obj,___SYMKEY_NAME) = val;
-#define ___SYMBOLHASH(obj)___FIELD(obj,___SYMKEY_HASH)
-#define ___SYMBOLHASHSET(obj,val)___FIELD(obj,___SYMKEY_HASH) = val;
-#define ___SYMBOLINTERNEDP(obj)___FIELD(obj,___SYMKEY_NEXT)
-
-#define ___SYMBOL2STRINGP_NOTFALSEP(var,x)(___temp=___SYMBOLNAME(x),___EXPECT_FALSE(___FIXNUMP(___temp))?0:(var=___temp,1))
-#define ___SYMBOL2STRINGP(x)(___SYMBOL2STRINGP_NOTFALSEP(___temp,x)?___temp:___FAL)
-
 #define ___MAKEKEYWORD(name,hash) \
 (___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(___KEYWORD_SIZE,___sKEYWORD)), \
 ___ADD_SUBTYPED_ELEM(___SYMKEY_NAME,name), \
@@ -4920,39 +5249,116 @@ ___ADD_SUBTYPED_ELEM(___SYMKEY_NEXT,___FAL), \
 ___END_ALLOC_SUBTYPED(___KEYWORD_SIZE), \
 ___GET_SUBTYPED(___KEYWORD_SIZE))
 
-#define ___KEYWORDNAME(obj)___FIELD(obj,___SYMKEY_NAME)
-#define ___KEYWORDNAMESET(obj,val)___FIELD(obj,___SYMKEY_NAME) = val;
-#define ___KEYWORDHASH(obj)___FIELD(obj,___SYMKEY_HASH)
-#define ___KEYWORDHASHSET(obj,val)___FIELD(obj,___SYMKEY_HASH) = val;
-#define ___KEYWORDINTERNEDP(obj)___FIELD(obj,___SYMKEY_NEXT)
+#define ___SYMBOLNAME(sym)___SYMKEY_NAME_FIELD(sym)
+#define ___SYMBOLNAMESET(sym,val)___SYMKEY_NAME_FIELD(sym) = val;
+#define ___KEYWORDNAME(key)___SYMKEY_NAME_FIELD(key)
+#define ___KEYWORDNAMESET(key,val)___SYMKEY_NAME_FIELD(key) = val;
+
+#define ___SYMBOLHASH(sym)___SYMKEY_HASH_FIELD(sym)
+#define ___SYMBOLHASHSET(sym,val)___SYMKEY_HASH_FIELD(sym) = val;
+#define ___KEYWORDHASH(key)___SYMKEY_HASH_FIELD(key)
+#define ___KEYWORDHASHSET(key,val)___SYMKEY_HASH_FIELD(key) = val;
+
+#define ___SYMBOLINTERNEDP(sym)___SYMKEY_NEXT_FIELD(sym)
+#define ___KEYWORDINTERNEDP(key)___SYMKEY_NEXT_FIELD(key)
+
+#define ___SYMBOL2STRINGP_NOTFALSEP(var,x)(___temp=___SYMBOLNAME(x),___EXPECT_FALSE(___FIXNUMP(___temp))?0:(var=___temp,1))
+#define ___SYMBOL2STRINGP(x)(___SYMBOL2STRINGP_NOTFALSEP(___temp,x)?___temp:___FAL)
 
 #define ___KEYWORD2STRINGP_NOTFALSEP(var,x)(___temp=___KEYWORDNAME(x),___EXPECT_FALSE(___FIXNUMP(___temp))?0:(var=___temp,1))
 #define ___KEYWORD2STRINGP(x)(___KEYWORD2STRINGP_NOTFALSEP(___temp,x)?___temp:___FAL)
 
+
+#define ___WILL_SIZE     3
+#define ___WILL_NEXT     0
+#define ___WILL_TESTATOR 1
+#define ___WILL_ACTION   2
+
+#define ___EXECUTABLE_WILL        1
+#define ___UNMARKED_TESTATOR_WILL 2
+
+#define ___WILL_NEXT_FIELD(will) \
+___FIELD(WEAK,will,___WILL_NEXT)
+
+#define ___WILL_TESTATOR_FIELD(will) \
+___FIELD(WEAK,will,___WILL_TESTATOR)
+
+#define ___WILL_ACTION_FIELD(will) \
+___FIELD(WEAK,will,___WILL_ACTION)
+
 #define ___MAKEWILL(testator,action) \
 (___BEGIN_ALLOC_SUBTYPED(___MAKE_HD_WORDS(___WILL_SIZE,___sWEAK)), \
-___ADD_SUBTYPED_ELEM(0,___ps->mem.nonexecutable_wills_), \
+___ADD_SUBTYPED_ELEM(___WILL_NEXT,___ps->mem.nonexecutable_wills_), \
 ___ADD_SUBTYPED_ELEM(___WILL_TESTATOR,testator), \
 ___ADD_SUBTYPED_ELEM(___WILL_ACTION,action), \
 ___ps->mem.nonexecutable_wills_=___TAG(___hp,0), \
 ___END_ALLOC_SUBTYPED(___WILL_SIZE), \
 ___GET_SUBTYPED(___WILL_SIZE))
 
-#define ___WILLTESTATOR(obj)___FIELD(obj,___WILL_TESTATOR)
-#define ___WILLTESTATORSET(obj,val)___FIELD(obj,___WILL_TESTATOR) = val;
-#define ___WILLACTION(obj)___FIELD(obj,___WILL_ACTION)
-#define ___WILLACTIONSET(obj,val)___FIELD(obj,___WILL_ACTION) = val;
+#define ___WILLTESTATOR(will)___WILL_TESTATOR_FIELD(will)
+#define ___WILLTESTATORSET(will,val)___WILL_TESTATOR_FIELD(will) = val;
 
-#define ___FOREIGNTAGS(obj)___FIELD(obj,___FOREIGN_TAGS)
+#define ___WILLACTION(will)___WILL_ACTION_FIELD(will)
+#define ___WILLACTIONSET(will,val)___WILL_ACTION_FIELD(will) = val;
 
-#define ___EXECUTABLE_WILL        1
-#define ___UNMARKED_TESTATOR_WILL 2
+
+#define ___FOREIGN_SIZE       3
+#define ___FOREIGN_TAGS       0
+#define ___FOREIGN_RELEASE_FN 1
+#define ___FOREIGN_PTR        2
+
+#define ___FOREIGN_TAGS_FIELD(foreign) \
+___FIELD(FOREIGN,foreign,___FOREIGN_TAGS)
+
+#define ___FOREIGN_RELEASE_FN_FIELD(foreign) \
+___FIELD(FOREIGN,foreign,___FOREIGN_RELEASE_FN)
+
+#define ___FOREIGN_PTR_FIELD(foreign) \
+___FIELD(FOREIGN,foreign,___FOREIGN_PTR)
+
+#define ___FOREIGNTAGS(foreign)___FOREIGN_TAGS_FIELD(foreign)
+
+
+#define ___GCHASHTABLE_NEXT      0
+#define ___GCHASHTABLE_FLAGS     1
+#define ___GCHASHTABLE_COUNT     2
+#define ___GCHASHTABLE_MIN_COUNT 3
+#define ___GCHASHTABLE_FREE      4
+#define ___GCHASHTABLE_KEY0      5
+#define ___GCHASHTABLE_VAL0      6
+
+#define ___GCHASHTABLE_FLAG_WEAK_KEYS      1
+#define ___GCHASHTABLE_FLAG_WEAK_VALS      2
+#define ___GCHASHTABLE_FLAG_KEY_MOVED      4
+#define ___GCHASHTABLE_FLAG_ENTRY_DELETED  8
+#define ___GCHASHTABLE_FLAG_MEM_ALLOC_KEYS 16
+#define ___GCHASHTABLE_FLAG_NEED_REHASH    32
+#define ___GCHASHTABLE_FLAG_UNION_FIND     64
+
+#define ___GCHASHTABLE_NEXT_FIELD(gcht) \
+___FIELD(WEAK,gcht,___GCHASHTABLE_NEXT)
+
+#define ___GCHASHTABLE_FLAGS_FIELD(gcht) \
+___FIELD(WEAK,gcht,___GCHASHTABLE_FLAGS)
+
+#define ___GCHASHTABLE_COUNT_FIELD(gcht) \
+___FIELD(WEAK,gcht,___GCHASHTABLE_COUNT)
+
+#define ___GCHASHTABLE_MIN_COUNT_FIELD(gcht) \
+___FIELD(WEAK,gcht,___GCHASHTABLE_MIN_COUNT)
+
+#define ___GCHASHTABLE_FREE_FIELD(gcht) \
+___FIELD(WEAK,gcht,___GCHASHTABLE_FREE)
 
 #define ___GCHASHTABLEREF(x,y)___EXT(___gc_hash_table_ref)(x,y)
 #define ___GCHASHTABLESET(x,y,z)___EXT(___gc_hash_table_set)(x,y,z)
 #define ___GCHASHTABLEUNION(x,y,z)___EXT(___gc_hash_table_union_find)(x,y,z,0)
 #define ___GCHASHTABLEFIND(x,y,z)___EXT(___gc_hash_table_union_find)(x,y,z,1)
 #define ___GCHASHTABLEREHASH(x,y)___EXT(___gc_hash_table_rehash)(x,y)
+
+#define ___GCHASHTABLELENGTH(gcht)___HD_FIELDS_FIX(___SUBTYPED_TO_BODY(gcht)[-1])
+#define ___GCHASHTABLEFIELDREF(gcht,i)*___CAST(___WORD*,___CAST(___WORD,___BODY_AS(v,___tSUBTYPED))+((i)<<(___LWS-___TB_FIXNUM)))
+#define ___GCHASHTABLEFIELDSET(gcht,i,val)*___CAST(___WORD*,___CAST(___WORD,___BODY_AS(v,___tSUBTYPED))+((i)<<(___LWS-___TB_FIXNUM)))=val;
 
 #if ___WS == 4
 
@@ -4986,24 +5392,9 @@ do { \
 #define ___GCHASHTABLE_HASH_STEP(hash,step,obj,size) \
 ___GCHASHTABLE_HASH_STEP_MULT(hash,step,obj,size)
 
-#define ___GCHASHTABLE_FLAG_WEAK_KEYS      1
-#define ___GCHASHTABLE_FLAG_WEAK_VALS      2
-#define ___GCHASHTABLE_FLAG_KEY_MOVED      4
-#define ___GCHASHTABLE_FLAG_ENTRY_DELETED  8
-#define ___GCHASHTABLE_FLAG_MEM_ALLOC_KEYS 16
-#define ___GCHASHTABLE_FLAG_NEED_REHASH    32
-#define ___GCHASHTABLE_FLAG_UNION_FIND     64
 
-#define ___GCHASHTABLE_NEXT      0
-#define ___GCHASHTABLE_FLAGS     1
-#define ___GCHASHTABLE_COUNT     2
-#define ___GCHASHTABLE_MIN_COUNT 3
-#define ___GCHASHTABLE_FREE      4
-#define ___GCHASHTABLE_KEY0      5
-#define ___GCHASHTABLE_VAL0      6
-
-#define ___CURRENTTHREAD ___FIELD(___CURRENTPROCESSOR,___PROCESSOR_CURRENT_THREAD)
-#define ___CURRENTTHREADSET(thread)___FIELD(___CURRENTPROCESSOR,___PROCESSOR_CURRENT_THREAD) = thread;
+#define ___CURRENTTHREAD ___PROCESSOR_CURRENT_THREAD_FIELD(___CURRENTPROCESSOR)
+#define ___CURRENTTHREADSET(thread)___CURRENTTHREAD = thread;
 
 #define ___PROCESSOR_SCMOBJ(ps) \
 ___SUBTYPED_FROM_START(___ALIGNUP((ps)->processor_scmobj,___WS))
@@ -5138,13 +5529,13 @@ ___FETCH_AND_ADD_WORD(___CAST(___VOLATILE ___WORD*,&current),___FIX(1))
 #define ___VOLATILE volatile
 
 #define ___PRIMITIVELOCK(obj,next,current) \
-___TICKETLOCK_LOCK2(___FIELD(obj,___INT(next)),___FIELD(obj,___INT(current)));
+___TICKETLOCK_LOCK2(___FIELD(STRUCTURE,obj,___INT(next)),___FIELD(STRUCTURE,obj,___INT(current)));
 
 #define ___PRIMITIVETRYLOCK(obj,next,current) \
-___TICKETLOCK_TRYLOCK2(___FIELD(obj,___INT(next)),___FIELD(obj,___INT(current)),___temp)
+___TICKETLOCK_TRYLOCK2(___FIELD(STRUCTURE,obj,___INT(next)),___FIELD(STRUCTURE,obj,___INT(current)),___temp)
 
 #define ___PRIMITIVEUNLOCK(obj,next,current) \
-___TICKETLOCK_UNLOCK2(___FIELD(obj,___INT(next)),___FIELD(obj,___INT(current)));
+___TICKETLOCK_UNLOCK2(___FIELD(STRUCTURE,obj,___INT(next)),___FIELD(STRUCTURE,obj,___INT(current)));
 
 #ifdef ___USE_MUTEX_FOR_SPINLOCK
 
@@ -5184,7 +5575,7 @@ else \
     ___ps->stack_break = ___fp; \
   } \
 thread = ___CURRENTTHREAD; \
-___FIELD(___FIELD(thread,___THREAD_CONT),___CONTINUATION_FRAME) = frame;
+___CONTINUATION_FRAME_FIELD(___THREAD_CONT_FIELD(thread)) = frame;
 
 
 #define ___JUMP_THREAD_SAVE1(jump) \
@@ -5234,12 +5625,12 @@ ___FIELD(___FIELD(thread,___THREAD_CONT),___CONTINUATION_FRAME) = frame;
 }
 
 #define ___THREAD_RESTORE \
-{ ___SCMOBJ cont = ___FIELD(thread,___THREAD_CONT); \
+{ ___SCMOBJ cont = ___THREAD_CONT_FIELD(thread); \
   ___SET_FP(___ps->stack_break) \
-  ___SET_STK(-___BREAK_FRAME_NEXT,___FIELD(cont,___CONTINUATION_FRAME)) \
-  ___FIELD(cont,___CONTINUATION_FRAME) = ___END_OF_CONT_MARKER; \
-  ___INTERRUPT_MASK_SET(___FIELD(___FIELD(thread,___THREAD_DENV),___DENV_INTERRUPT_MASK)); \
-  ___FIELD(thread,___THREAD_LAST_PROCESSOR) = ___CURRENTPROCESSOR; \
+  ___SET_STK(-___BREAK_FRAME_NEXT,___CONTINUATION_FRAME_FIELD(cont)) \
+  ___CONTINUATION_FRAME_FIELD(cont) = ___END_OF_CONT_MARKER; \
+  ___INTERRUPT_MASK_SET(___DENV_INTERRUPT_MASK_FIELD(___THREAD_DENV_FIELD(thread))); \
+  ___THREAD_LAST_PROCESSOR_FIELD(thread) = ___CURRENTPROCESSOR; \
   ___CURRENTTHREADSET(thread) \
   ___SET_R0(___ps->handler_break) \
 }
@@ -5285,38 +5676,11 @@ ___FIELD(___FIELD(thread,___THREAD_CONT),___CONTINUATION_FRAME) = frame;
   jump(___SET_NARGS(3),proc) \
 }
 
-#define ___BOX_SIZE 1
-#define ___RATNUM_SIZE 2
-#define ___CPXNUM_SIZE 2
 #define ___TABLE_SIZE 5
-
-#define ___SYMBOL_SIZE   4
-#define ___KEYWORD_SIZE  3
-#define ___SYMKEY_NAME   0
-#define ___SYMKEY_HASH   1
-#define ___SYMKEY_NEXT   2
-#define ___SYMBOL_GLOBAL 3
-
-#define ___PROMISE_SIZE  1
-#define ___PROMISE_STATE 0
-#define ___PROMISE_STATE_SIZE 2
-
-#define ___CONTINUATION_SIZE  2
-#define ___CONTINUATION_FRAME 0
-#define ___CONTINUATION_DENV  1
-
-#define ___WILL_SIZE     3
-#define ___WILL_NEXT     0
-#define ___WILL_TESTATOR 1
-#define ___WILL_ACTION   2
-
-#define ___FOREIGN_SIZE       3
-#define ___FOREIGN_TAGS       0
-#define ___FOREIGN_RELEASE_FN 1
-#define ___FOREIGN_PTR        2
 
 #define ___OBJ_LOCK1    1
 #define ___OBJ_LOCK2    9
+
 
 #define ___BTQ_DEQ_NEXT 2
 #define ___BTQ_DEQ_PREV 3
@@ -5327,7 +5691,36 @@ ___FIELD(___FIELD(thread,___THREAD_CONT),___CONTINUATION_FRAME) = frame;
 #define ___BTQ_LEFTMOST 7
 #define ___BTQ_OWNER    8
 
+#define ___BTQ_DEQ_NEXT_FIELD(structure) \
+___FIELD(STRUCTURE,structure,___BTQ_DEQ_NEXT)
+
+#define ___BTQ_DEQ_PREV_FIELD(structure) \
+___FIELD(STRUCTURE,structure,___BTQ_DEQ_PREV)
+
+#define ___BTQ_COLOR_FIELD(structure) \
+___FIELD(STRUCTURE,structure,___BTQ_COLOR)
+
+#define ___BTQ_PARENT_FIELD(structure) \
+___FIELD(STRUCTURE,structure,___BTQ_PARENT)
+
+#define ___BTQ_LEFT_FIELD(structure) \
+___FIELD(STRUCTURE,structure,___BTQ_LEFT)
+
+#define ___BTQ_RIGHT_FIELD(structure) \
+___FIELD(STRUCTURE,structure,___BTQ_RIGHT)
+
+#define ___BTQ_LEFTMOST_FIELD(structure) \
+___FIELD(STRUCTURE,structure,___BTQ_LEFTMOST)
+
+#define ___BTQ_OWNER_FIELD(structure) \
+___FIELD(STRUCTURE,structure,___BTQ_OWNER)
+
+
 #define ___CONDVAR_NAME 10
+
+#define ___CONDVAR_NAME_FIELD(condvar) \
+___FIELD(STRUCTURE,condvar,___CONDVAR_NAME)
+
 
 #define ___THREAD_CONT            23
 #define ___THREAD_DENV            24
@@ -5338,16 +5731,62 @@ ___FIELD(___FIELD(thread,___THREAD_CONT),___CONTINUATION_FRAME) = frame;
 #define ___THREAD_INTERRUPTS_TAIL 33
 #define ___THREAD_LAST_PROCESSOR  34
 
-#define ___PROCESSOR_SIZE            22
+#define ___THREAD_CONT_FIELD(thread) \
+___FIELD(STRUCTURE,thread,___THREAD_CONT)
+
+#define ___THREAD_DENV_FIELD(thread) \
+___FIELD(STRUCTURE,thread,___THREAD_DENV)
+
+#define ___THREAD_DENV_CACHE1_FIELD(thread) \
+___FIELD(STRUCTURE,thread,___THREAD_DENV_CACHE1)
+
+#define ___THREAD_DENV_CACHE2_FIELD(thread) \
+___FIELD(STRUCTURE,thread,___THREAD_DENV_CACHE2)
+
+#define ___THREAD_DENV_CACHE3_FIELD(thread) \
+___FIELD(STRUCTURE,thread,___THREAD_DENV_CACHE3)
+
+#define ___THREAD_INTERRUPTS_HEAD_FIELD(thread) \
+___FIELD(STRUCTURE,thread,___THREAD_INTERRUPTS_HEAD)
+
+#define ___THREAD_INTERRUPTS_TAIL_FIELD(thread) \
+___FIELD(STRUCTURE,thread,___THREAD_INTERRUPTS_TAIL)
+
+#define ___THREAD_LAST_PROCESSOR_FIELD(thread) \
+___FIELD(STRUCTURE,thread,___THREAD_LAST_PROCESSOR)
+
+
+#define ___PROCESSOR_SIZE 22
 #define ___PROCESSOR_CURRENT_THREAD  14
 #define ___PROCESSOR_INTERRUPTS_HEAD 20
 #define ___PROCESSOR_INTERRUPTS_TAIL 21
 
+#define ___PROCESSOR_CURRENT_THREAD_FIELD(processor) \
+___FIELD(STRUCTURE,processor,___PROCESSOR_CURRENT_THREAD)
+
+#define ___PROCESSOR_INTERRUPTS_HEAD_FIELD(processor) \
+___FIELD(STRUCTURE,processor,___PROCESSOR_INTERRUPTS_HEAD)
+
+#define ___PROCESSOR_INTERRUPTS_TAIL_FIELD(processor) \
+___FIELD(STRUCTURE,processor,___PROCESSOR_INTERRUPTS_TAIL)
+
+
 #define ___VM_SIZE 20
 
-#define ___ENV_NAME_VAL 0
-#define ___ENV_LEFT     1
-#define ___ENV_RIGHT    2
+
+#define ___ENV_PARAM_VAL 0
+#define ___ENV_LEFT      1
+#define ___ENV_RIGHT     2
+
+#define ___ENV_PARAM_VAL_FIELD(env) \
+___FIELD(VECTOR,env,___ENV_PARAM_VAL)
+
+#define ___ENV_LEFT_FIELD(env) \
+___FIELD(VECTOR,env,___ENV_LEFT)
+
+#define ___ENV_RIGHT_FIELD(env) \
+___FIELD(VECTOR,env,___ENV_RIGHT)
+
 
 #define ___DENV_LOCAL              0
 #define ___DENV_DYNWIND            1
@@ -5356,6 +5795,28 @@ ___FIELD(___FIELD(thread,___THREAD_CONT),___CONTINUATION_FRAME) = frame;
 #define ___DENV_EXCEPTION_HANDLER  4
 #define ___DENV_INPUT_PORT         5
 #define ___DENV_OUTPUT_PORT        6
+
+#define ___DENV_LOCAL_FIELD(denv) \
+___FIELD(VECTOR,denv,___DENV_LOCAL)
+
+#define ___DENV_DYNWIND_FIELD(denv) \
+___FIELD(VECTOR,denv,___DENV_DYNWIND)
+
+#define ___DENV_INTERRUPT_MASK_FIELD(denv) \
+___FIELD(VECTOR,denv,___DENV_INTERRUPT_MASK)
+
+#define ___DENV_DEBUGGING_SETTINGS_FIELD(denv) \
+___FIELD(VECTOR,denv,___DENV_DEBUGGING_SETTINGS)
+
+#define ___DENV_EXCEPTION_HANDLER_FIELD(denv) \
+___FIELD(VECTOR,denv,___DENV_EXCEPTION_HANDLER)
+
+#define ___DENV_INPUT_PORT_FIELD(denv) \
+___FIELD(VECTOR,denv,___DENV_INPUT_PORT)
+
+#define ___DENV_OUTPUT_PORT_FIELD(denv) \
+___FIELD(VECTOR,denv,___DENV_OUTPUT_PORT)
+
 
 #define ___FRAME_OVERHEAD(n) (___FRAME_SPACE(n)-(n))
 #define ___RETI_RA (-___FRAME_OVERHEAD(___NB_GVM_REGS+1))
@@ -5386,7 +5847,7 @@ else \
 ___ADJFP(___ROUND_TO_MULT(___SUBTYPED_BODY+___CONTINUATION_SIZE,___FRAME_ALIGN)) \
 ___SET_STK(0,___MAKE_HD_WORDS(___CONTINUATION_SIZE,___sCONTINUATION)) \
 ___SET_STK(-1,frame) \
-___SET_STK(-2,___FIELD(___CURRENTTHREAD,___THREAD_DENV)) \
+___SET_STK(-2,___THREAD_DENV_FIELD(___CURRENTTHREAD)) \
 cont = ___SUBTYPED_FROM_START(&___STK(0)); \
 ___ADJFP(___BREAK_FRAME_SPACE) \
 ___SET_STK(-___BREAK_FRAME_NEXT,frame) \
@@ -5440,14 +5901,14 @@ ___ps->stack_break = ___fp;
 
 #define ___CONTINUATION_GRAFT_NO_WINDING \
 ___SET_FP(___ps->stack_break) \
-___SET_STK(-___BREAK_FRAME_NEXT,___FIELD(cont,___CONTINUATION_FRAME)) \
-temp = ___FIELD(cont,___CONTINUATION_DENV); \
+___SET_STK(-___BREAK_FRAME_NEXT,___CONTINUATION_FRAME_FIELD(cont)) \
+temp = ___CONTINUATION_DENV_FIELD(cont); \
 thread = ___CURRENTTHREAD; \
-___FIELD(thread,___THREAD_DENV) = temp; \
-temp = ___VECTORELEM(___VECTORELEM(temp,___DENV_LOCAL),___ENV_NAME_VAL); \
-___FIELD(thread,___THREAD_DENV_CACHE1) = temp; \
-___FIELD(thread,___THREAD_DENV_CACHE2) = temp; \
-___FIELD(thread,___THREAD_DENV_CACHE3) = temp; \
+___THREAD_DENV_FIELD(thread) = temp; \
+temp = ___ENV_PARAM_VAL_FIELD(___DENV_LOCAL_FIELD(temp)); \
+___THREAD_DENV_CACHE1_FIELD(thread) = temp; \
+___THREAD_DENV_CACHE2_FIELD(thread) = temp; \
+___THREAD_DENV_CACHE3_FIELD(thread) = temp; \
 ___SET_R0(___ps->handler_break)
 
 #define ___JUMP_CONTINUATION_GRAFT_NO_WINDING2(jump) \
@@ -5507,14 +5968,14 @@ ___SET_R0(___ps->handler_break)
   ___POP_ARGS2(cont,result) \
   ___SET_R1(result) \
   ___SET_FP(___ps->stack_break) \
-  ___SET_STK(-___BREAK_FRAME_NEXT,___FIELD(cont,___CONTINUATION_FRAME)) \
-  temp = ___FIELD(cont,___CONTINUATION_DENV); \
+  ___SET_STK(-___BREAK_FRAME_NEXT,___CONTINUATION_FRAME_FIELD(cont)) \
+  temp = ___CONTINUATION_DENV_FIELD(cont); \
   thread = ___CURRENTTHREAD; \
-  ___FIELD(thread,___THREAD_DENV) = temp; \
-  temp = ___VECTORELEM(___VECTORELEM(temp,___DENV_LOCAL),___ENV_NAME_VAL); \
-  ___FIELD(thread,___THREAD_DENV_CACHE1) = temp; \
-  ___FIELD(thread,___THREAD_DENV_CACHE2) = temp; \
-  ___FIELD(thread,___THREAD_DENV_CACHE3) = temp; \
+  ___THREAD_DENV_FIELD(thread) = temp; \
+  temp = ___ENV_PARAM_VAL_FIELD(___DENV_LOCAL_FIELD(temp)); \
+  ___THREAD_DENV_CACHE1_FIELD(thread) = temp; \
+  ___THREAD_DENV_CACHE2_FIELD(thread) = temp; \
+  ___THREAD_DENV_CACHE3_FIELD(thread) = temp; \
   ___JUMPPRM(___NOTHING,___ps->handler_break) \
 }
 
@@ -6841,6 +7302,35 @@ switch (na) \
 
 /*---------------------------------------------------------------------------*/
 
+#define ___GC_SAVE1(ps,a) \
+((ps)->saved[0] = (a))
+
+#define ___GC_RESTORE1(ps,a) \
+(a = (ps)->saved[0], \
+ ___GC_SAVE1(ps,___VOID))
+
+#define ___GC_SAVE2(ps,a,b) \
+((ps)->saved[0] = (a), \
+ (ps)->saved[1] = (b))
+
+#define ___GC_RESTORE2(ps,a,b) \
+(a = (ps)->saved[0], \
+ b = (ps)->saved[1], \
+ ___GC_SAVE2(ps,___VOID,___VOID))
+
+#define ___GC_SAVE3(ps,a,b,c) \
+((ps)->saved[0] = (a), \
+ (ps)->saved[1] = (b), \
+ (ps)->saved[2] = (c))
+
+#define ___GC_RESTORE3(ps,a,b,c) \
+(a = (ps)->saved[0], \
+ b = (ps)->saved[1], \
+ c = (ps)->saved[2], \
+ ___GC_SAVE3(ps,___VOID,___VOID,___VOID))
+
+/*---------------------------------------------------------------------------*/
+
 /* Labels and switches */
 
 #define ___NOT(x)!x
@@ -6912,7 +7402,7 @@ if (___EXPECT_TRUE(___CHARP(___sw))) switch(___ORD(___sw)) {
 #define ___END_SWITCH_CHAR }}
 
 #define ___BEGIN_SWITCH_SYMKEY(x,mod,guard) { ___SCMOBJ ___sw = (x); \
-if (___EXPECT_TRUE(guard(___sw))) switch(___INT(___FIELD(___sw,___SYMKEY_HASH)) & ((mod)-1)) {
+if (___EXPECT_TRUE(guard(___sw))) switch(___INT(___SYMKEY_HASH_FIELD(___sw)) & ((mod)-1)) {
 #define ___SWITCH_SYMKEY_CASE(hash) case (hash):
 #define ___SWITCH_SYMKEY_CASE_GOTO(obj,lbl) ___IF_GOTO(___EQP(___sw,obj),lbl)
 #define ___END_SWITCH_SYMKEY }}
@@ -7316,7 +7806,7 @@ ___JUMPEXTPRM(___NOTHING,___ps->handler_heap_limit) \
 #endif
 
 #define ___FORCE1(n,src) \
-if (___TESTTYPE(___temp=(src),___tSUBTYPED)&&___SUBTYPE(___temp)==___FIX(___sPROMISE)){___ps->temp2=___temp;___pc=___FIELD(___temp,0);___temp=___FIELD(___pc,0); if (___temp==___pc){___ps->temp1=___LBL(n);___JUMPEXTPRM(___NOTHING,___ps->handler_force);
+if (___TESTTYPE(___temp=(src),___tSUBTYPED)&&___SUBTYPE(___temp)==___FIX(___sPROMISE)){___ps->temp2=___temp;___pc=___PROMISE_STATE_FIELD(___temp);___temp=___VECTORELEM(___pc,0); if (___temp==___pc){___ps->temp1=___LBL(n);___JUMPEXTPRM(___NOTHING,___ps->handler_force);
 #define ___FORCE2 ___temp=___ps->temp2;}}
 #define ___FORCE3 ___temp
 
@@ -8791,19 +9281,19 @@ void *___x;) \
 #define ___END_SFUN_BODY
 
 #define ___BEGIN_SFUN_VOID(proc) ___processor_state ___ps=___PSTATE;___SCMOBJ ___marker;___SCMOBJ ___err;___SCMOBJ ___errdata=___FAL;___SCMOBJ ___errhandler=___FAL;if ((___err=___EXT(___make_sfun_stack_marker) (___ps,&___marker,proc))==___FIX(___NO_ERR)) {
-#define ___SFUN_CALL_VOID ___err=___EXT(___call) (___PSP ___NARGS,___FIELD(___marker,0),___marker);
+#define ___SFUN_CALL_VOID ___err=___EXT(___call) (___PSP ___NARGS,___VECTORELEM(___marker,0),___marker);
 #define ___SFUN_SET_RESULT_VOID /* no result to set */
 #define ___SFUN_ERROR_VOID while ((___err!=___FIX(___NO_ERR))&&(___err!=___FIX(___UNWIND_C_STACK))) {___ps->temp1=___err;___ps->temp2=___errdata;___ps->temp3=___marker;___ps->temp4=___errhandler;___err=___EXT(___call) (___PSP 0,___ps->handler_sfun_conv_error,___marker);
 #define ___END_SFUN_VOID } ___EXT(___kill_sfun_stack_marker) (___marker); } ___EXT(___propagate_error) (___PSP ___err);
 
 #define ___BEGIN_SFUN_SCMOBJ(proc) ___processor_state ___ps=___PSTATE;___SCMOBJ ___marker;___SCMOBJ ___result;___SCMOBJ ___err;___SCMOBJ ___errdata=___FAL;___SCMOBJ ___errhandler=___FAL;if ((___err=___EXT(___make_sfun_stack_marker) (___ps,&___marker,proc))==___FIX(___NO_ERR)) {
-#define ___SFUN_CALL_SCMOBJ ___err=___EXT(___call) (___PSP ___NARGS,___FIELD(___marker,0),___marker);
+#define ___SFUN_CALL_SCMOBJ ___err=___EXT(___call) (___PSP ___NARGS,___VECTORELEM(___marker,0),___marker);
 #define ___SFUN_SET_RESULT_SCMOBJ ___result = ___SFUN_RESULT;
 #define ___SFUN_ERROR_SCMOBJ while ((___err!=___FIX(___NO_ERR))&&(___err!=___FIX(___UNWIND_C_STACK))) {___ps->temp1=___err;___ps->temp2=___errdata;___ps->temp3=___marker;___ps->temp4=___errhandler;___err=___EXT(___call) (___PSP 0,___ps->handler_sfun_conv_error,___marker);
 #define ___END_SFUN_SCMOBJ } ___EXT(___kill_sfun_stack_marker) (___marker); } ___EXT(___propagate_error) (___PSP ___err);
 
 #define ___BEGIN_SFUN(proc,decl)___processor_state ___ps=___PSTATE;___SCMOBJ ___marker;decl;___SCMOBJ ___err;___SCMOBJ ___errdata=___FAL;___SCMOBJ ___errhandler=___FAL;if ((___err=___EXT(___make_sfun_stack_marker) (___ps,&___marker,proc))==___FIX(___NO_ERR)) {
-#define ___SFUN_CALL if ((___err=___EXT(___call) (___PSP ___NARGS,___FIELD(___marker,0),___marker))==___FIX(___NO_ERR))
+#define ___SFUN_CALL if ((___err=___EXT(___call) (___PSP ___NARGS,___VECTORELEM(___marker,0),___marker))==___FIX(___NO_ERR))
 #define ___SFUN_SET_RESULT /* done in conversion function */
 #define ___SFUN_ERROR while ((___err!=___FIX(___NO_ERR))&&(___err!=___FIX(___UNWIND_C_STACK))) {___ps->temp1=___err;___ps->temp2=___errdata;___ps->temp3=___marker;___ps->temp4=___errhandler;if ((___err=___EXT(___call) (___PSP 0,___ps->handler_sfun_conv_error,___marker))==___FIX(___NO_ERR))
 #define ___END_SFUN } ___EXT(___kill_sfun_stack_marker) (___marker); } ___EXT(___propagate_error) (___PSP ___err);

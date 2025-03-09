@@ -1,6 +1,6 @@
 /* File: "os_setup.c" */
 
-/* Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -924,6 +924,21 @@ int arg_num;)
 }
 
 
+#define ___SOCKET_INFO_SIZE 4
+#define ___SOCKET_INFO_FAMILY      1
+#define ___SOCKET_INFO_PORT_NUMBER 2
+#define ___SOCKET_INFO_ADDRESS     3
+
+#define ___SOCKET_INFO_FAMILY_FIELD(si) \
+___FIELD(STRUCTURE,si,___SOCKET_INFO_FAMILY)
+
+#define ___SOCKET_INFO_PORT_NUMBER_FIELD(si) \
+___FIELD(STRUCTURE,si,___SOCKET_INFO_PORT_NUMBER)
+
+#define ___SOCKET_INFO_ADDRESS_FIELD(si) \
+___FIELD(STRUCTURE,si,___SOCKET_INFO_ADDRESS)
+
+
 ___SCMOBJ ___sockaddr_to_SCMOBJ
    ___P((struct sockaddr *sa,
          SOCKET_LEN_TYPE salen,
@@ -937,10 +952,15 @@ int arg_num;)
 {
   ___SCMOBJ result;
 
-  result = ___make_vector (___PSTATE, 4, ___FAL);
+  result = ___alloc_scmobj (___PSTATE, ___sSTRUCTURE, ___SOCKET_INFO_SIZE<<___LWS);
 
   if (___FIXNUMP(result))
     return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+arg_num);
+
+  /* guard against dangling references */
+  ___SOCKET_INFO_FAMILY_FIELD(result) = ___FAL;
+  ___SOCKET_INFO_PORT_NUMBER_FIELD(result) = ___FAL;
+  ___SOCKET_INFO_ADDRESS_FIELD(result) = ___FAL;
 
   if (salen == sizeof (struct sockaddr_in))
     {
@@ -953,9 +973,11 @@ int arg_num;)
           return addr;
         }
 
-      ___FIELD(result,1) = network_family_encode (sa_in->sin_family);
-      ___FIELD(result,2) = ___FIX(ntohs (sa_in->sin_port));
-      ___FIELD(result,3) = addr;
+      ___SOCKET_INFO_FAMILY_FIELD(result) =
+        network_family_encode (sa_in->sin_family);
+      ___SOCKET_INFO_PORT_NUMBER_FIELD(result) =
+        ___FIX(ntohs (sa_in->sin_port));
+      ___SOCKET_INFO_ADDRESS_FIELD(result) = addr;
       ___release_scmobj (addr);
     }
 #ifdef USE_IPV6
@@ -970,9 +992,11 @@ int arg_num;)
           return addr;
         }
 
-      ___FIELD(result,1) = network_family_encode (sa_in6->sin6_family);
-      ___FIELD(result,2) = ___FIX(ntohs (sa_in6->sin6_port));
-      ___FIELD(result,3) = addr;
+      ___SOCKET_INFO_FAMILY_FIELD(result) =
+        network_family_encode (sa_in6->sin6_family);
+      ___SOCKET_INFO_PORT_NUMBER_FIELD(result) =
+        ___FIX(ntohs (sa_in6->sin6_port));
+      ___SOCKET_INFO_ADDRESS_FIELD(result) = addr;
       ___release_scmobj (addr);
     }
 #endif
@@ -1085,6 +1109,25 @@ int flags;)
 #endif
 
 
+#define ___ADDRESS_INFO_SIZE 5
+#define ___ADDRESS_INFO_FAMILY      1
+#define ___ADDRESS_INFO_SOCKET_TYPE 2
+#define ___ADDRESS_INFO_PROTOCOL    3
+#define ___ADDRESS_INFO_SOCKET_INFO 4
+
+#define ___ADDRESS_INFO_FAMILY_FIELD(ai) \
+___FIELD(STRUCTURE,ai,___ADDRESS_INFO_FAMILY)
+
+#define ___ADDRESS_INFO_SOCKET_TYPE_FIELD(ai) \
+___FIELD(STRUCTURE,ai,___ADDRESS_INFO_SOCKET_TYPE)
+
+#define ___ADDRESS_INFO_PROTOCOL_FIELD(ai) \
+___FIELD(STRUCTURE,ai,___ADDRESS_INFO_PROTOCOL)
+
+#define ___ADDRESS_INFO_SOCKET_INFO_FIELD(ai) \
+___FIELD(STRUCTURE,ai,___ADDRESS_INFO_SOCKET_INFO)
+
+
 ___SCMOBJ ___os_address_infos
    ___P((___SCMOBJ host,
          ___SCMOBJ serv,
@@ -1114,7 +1157,7 @@ ___SCMOBJ protocol;)
 #ifdef USE_getaddrinfo
 
   ___SCMOBJ e;
-  ___SCMOBJ vect;
+  ___SCMOBJ info;
   ___SCMOBJ lst;
   ___SCMOBJ tail;
   ___SCMOBJ x;
@@ -1172,9 +1215,9 @@ ___SCMOBJ protocol;)
 
       if (x != ___FAL)
         {
-          vect = ___make_vector (___PSTATE, 5, ___FAL);
+          info = ___alloc_scmobj (___PSTATE, ___sSTRUCTURE, ___ADDRESS_INFO_SIZE<<___LWS);
 
-          if (___FIXNUMP(vect))
+          if (___FIXNUMP(info))
             {
               ___release_scmobj (x);
               ___release_scmobj (lst);
@@ -1182,16 +1225,19 @@ ___SCMOBJ protocol;)
               return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);
             }
 
-          ___FIELD(vect,1) = network_family_encode (res->ai_family);
-          ___FIELD(vect,2) = network_socktype_encode (res->ai_socktype);
-          ___FIELD(vect,3) = network_protocol_encode (res->ai_protocol);
-          ___FIELD(vect,4) = x;
+          ___ADDRESS_INFO_FAMILY_FIELD(info) =
+            network_family_encode (res->ai_family);
+          ___ADDRESS_INFO_SOCKET_TYPE_FIELD(info) =
+            network_socktype_encode (res->ai_socktype);
+          ___ADDRESS_INFO_PROTOCOL_FIELD(info) =
+            network_protocol_encode (res->ai_protocol);
+          ___ADDRESS_INFO_SOCKET_INFO_FIELD(info) = x;
 
           ___release_scmobj (x);
 
-          p = ___make_pair (___PSTATE, vect, ___NUL);
+          p = ___make_pair (___PSTATE, info, ___NUL);
 
-          ___release_scmobj (vect);
+          ___release_scmobj (info);
 
           if (___FIXNUMP(p))
             {
@@ -1219,6 +1265,10 @@ ___SCMOBJ protocol;)
 #endif
 }
 
+
+#define ___HOST_INFO_NAME      1
+#define ___HOST_INFO_ALIASES   2
+#define ___HOST_INFO_ADDRESSES 3
 
 ___SCMOBJ ___os_host_info
    ___P((___SCMOBJ hi,
@@ -1254,8 +1304,6 @@ ___SCMOBJ host;)
               * incorrectly which will be treated as NETDB_INTERNAL
               * (see err_code_from_h_errno)
               */
-
-#endif
 
 #ifdef USE_gethostbyaddr
 
@@ -1350,7 +1398,10 @@ ___SCMOBJ host;)
       != ___FIX(___NO_ERR))
     goto done;
 
-  ___FIELD(___ps->saved[0],1) = ___release_scmobj (x);
+  ___FIELD(STRUCTURE,___ps->saved[0],___HOST_INFO_NAME) =
+    ___release_scmobj (x);
+
+#endif
 
   /* convert h_aliases to strings */
 
@@ -1385,7 +1436,8 @@ ___SCMOBJ host;)
       lst = result;
     }
 
-  ___FIELD(___ps->saved[0],2) = ___release_scmobj (lst);
+  ___FIELD(STRUCTURE,___ps->saved[0],___HOST_INFO_ALIASES) =
+    ___release_scmobj (lst);
 
   /* convert h_addr_list to u8/u16vectors */
 
@@ -1442,7 +1494,8 @@ ___SCMOBJ host;)
       lst = result;
     }
 
-  ___FIELD(___ps->saved[0],3) = ___release_scmobj (lst);
+  ___FIELD(STRUCTURE,___ps->saved[0],___HOST_INFO_ADDRESSES) =
+    ___release_scmobj (lst);
 
   /* guarantee that at least one address is returned */
 
@@ -1495,6 +1548,11 @@ ___SCMOBJ ___os_host_name ___PVOID
 /*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
 
 /* Access to service information. */
+
+#define ___SERVICE_INFO_NAME        1
+#define ___SERVICE_INFO_ALIASES     2
+#define ___SERVICE_INFO_PORT_NUMBER 3
+#define ___SERVICE_INFO_PROTOCOL    4
 
 ___SCMOBJ ___os_service_info
    ___P((___SCMOBJ si,
@@ -1599,7 +1657,8 @@ ___SCMOBJ protocol;)
       != ___FIX(___NO_ERR))
     goto done;
 
-  ___FIELD(___ps->saved[0],1) = ___release_scmobj (x);
+  ___FIELD(STRUCTURE,___ps->saved[0],___SERVICE_INFO_NAME) =
+    ___release_scmobj (x);
 
   /* convert s_aliases to strings */
 
@@ -1634,11 +1693,13 @@ ___SCMOBJ protocol;)
       lst = result;
     }
 
-  ___FIELD(___ps->saved[0],2) = ___release_scmobj (lst);
+  ___FIELD(STRUCTURE,___ps->saved[0],___SERVICE_INFO_ALIASES) =
+    ___release_scmobj (lst);
 
   /* convert s_port to integer */
 
-  ___FIELD(___ps->saved[0],3) = ___FIX(ntohs (se->s_port));
+  ___FIELD(STRUCTURE,___ps->saved[0],___SERVICE_INFO_PORT_NUMBER) =
+    ___FIX(ntohs (se->s_port));
 
   /* convert s_name to string */
 
@@ -1649,7 +1710,8 @@ ___SCMOBJ protocol;)
       != ___FIX(___NO_ERR))
     goto done;
 
-  ___FIELD(___ps->saved[0],4) = ___release_scmobj (x);
+  ___FIELD(STRUCTURE,___ps->saved[0],___SERVICE_INFO_PROTOCOL) =
+    ___release_scmobj (x);
 
   result = ___ps->saved[0];
 
@@ -1665,6 +1727,10 @@ ___SCMOBJ protocol;)
 /*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
 
 /* Access to protocol information. */
+
+#define ___PROTOCOL_INFO_NAME    1
+#define ___PROTOCOL_INFO_ALIASES 2
+#define ___PROTOCOL_INFO_NUMBER  3
 
 ___SCMOBJ ___os_protocol_info
    ___P((___SCMOBJ pi,
@@ -1749,7 +1815,8 @@ ___SCMOBJ protocol;)
       != ___FIX(___NO_ERR))
     goto done;
 
-  ___FIELD(___ps->saved[0],1) = ___release_scmobj (x);
+  ___FIELD(STRUCTURE,___ps->saved[0],___PROTOCOL_INFO_NAME) =
+    ___release_scmobj (x);
 
   /* convert p_aliases to strings */
 
@@ -1784,11 +1851,13 @@ ___SCMOBJ protocol;)
       lst = result;
     }
 
-  ___FIELD(___ps->saved[0],2) = ___release_scmobj (lst);
+  ___FIELD(STRUCTURE,___ps->saved[0],___PROTOCOL_INFO_ALIASES) =
+    ___release_scmobj (lst);
 
   /* convert p_proto to integer */
 
-  ___FIELD(___ps->saved[0],3) = ___FIX(pe->p_proto);
+  ___FIELD(STRUCTURE,___ps->saved[0],___PROTOCOL_INFO_NUMBER) =
+    ___FIX(pe->p_proto);
 
   result = ___ps->saved[0];
 
@@ -1940,6 +2009,20 @@ ___SCMOBJ modification_time;)
 
 /* Access to file information. */
 
+#define ___FILE_INFO_TYPE                   1
+#define ___FILE_INFO_DEVICE                 2
+#define ___FILE_INFO_INODE                  3
+#define ___FILE_INFO_MODE                   4
+#define ___FILE_INFO_NUMBER_OF_LINKS        5
+#define ___FILE_INFO_OWNER                  6
+#define ___FILE_INFO_GROUP                  7
+#define ___FILE_INFO_SIZE                   8
+#define ___FILE_INFO_LAST_ACCESS_TIME       9
+#define ___FILE_INFO_LAST_MODIFICATION_TIME 10
+#define ___FILE_INFO_LAST_CHANGE_TIME       11
+#define ___FILE_INFO_ATTRIBUTES             12
+#define ___FILE_INFO_CREATION_TIME          13
+
 ___SCMOBJ ___os_file_info
    ___P((___SCMOBJ fi,
          ___SCMOBJ path,
@@ -2029,7 +2112,7 @@ ___SCMOBJ chase;)
       else
         x = ___FIX(0);
 
-      ___FIELD(___ps->saved[0],1) = x;
+      ___FIELD(STRUCTURE,___ps->saved[0],___FILE_INFO_TYPE) = x;
 
       if ((result = ___ULONGLONG_to_SCMOBJ (___ps,
                                             ___CAST(___ULONGLONG,s.st_dev),
@@ -2038,7 +2121,8 @@ ___SCMOBJ chase;)
           != ___FIX(___NO_ERR))
         goto done;
 
-      ___FIELD(___ps->saved[0],2) = ___release_scmobj (x);
+      ___FIELD(STRUCTURE,___ps->saved[0],___FILE_INFO_DEVICE) =
+        ___release_scmobj (x);
 
       if ((result = ___LONGLONG_to_SCMOBJ (___ps,
                                            ___CAST(___LONGLONG,s.st_ino),
@@ -2047,9 +2131,10 @@ ___SCMOBJ chase;)
           != ___FIX(___NO_ERR))
         goto done;
 
-      ___FIELD(___ps->saved[0],3) = ___release_scmobj (x);
+      ___FIELD(STRUCTURE,___ps->saved[0],___FILE_INFO_INODE) =
+        ___release_scmobj (x);
 
-      ___FIELD(___ps->saved[0],4) =
+      ___FIELD(STRUCTURE,___ps->saved[0],___FILE_INFO_MODE) =
         ___FIX(s.st_mode & (S_ISUID|S_ISGID|S_ISVTX|S_IRWXU|S_IRWXG|S_IRWXO));
 
       if ((result = ___ULONGLONG_to_SCMOBJ (___ps,
@@ -2059,11 +2144,14 @@ ___SCMOBJ chase;)
           != ___FIX(___NO_ERR))
         goto done;
 
-      ___FIELD(___ps->saved[0],5) = ___release_scmobj (x);
+      ___FIELD(STRUCTURE,___ps->saved[0],___FILE_INFO_NUMBER_OF_LINKS) =
+        ___release_scmobj (x);
 
-      ___FIELD(___ps->saved[0],6) = ___FIX(s.st_uid);
+      ___FIELD(STRUCTURE,___ps->saved[0],___FILE_INFO_OWNER) =
+        ___FIX(s.st_uid);
 
-      ___FIELD(___ps->saved[0],7) = ___FIX(s.st_gid);
+      ___FIELD(STRUCTURE,___ps->saved[0],___FILE_INFO_GROUP) =
+        ___FIX(s.st_gid);
 
       if ((result = ___LONGLONG_to_SCMOBJ (___ps,
                                            ___CAST(___LONGLONG,s.st_size),
@@ -2072,7 +2160,8 @@ ___SCMOBJ chase;)
           != ___FIX(___NO_ERR))
         goto done;
 
-      ___FIELD(___ps->saved[0],8) = ___release_scmobj (x);
+      ___FIELD(STRUCTURE,___ps->saved[0],___FILE_INFO_SIZE) =
+        ___release_scmobj (x);
 
       if ((result = ___F64_to_SCMOBJ (___ps,
                                       ___CAST(___F64,s.st_atime),
@@ -2081,7 +2170,8 @@ ___SCMOBJ chase;)
           != ___FIX(___NO_ERR))
         goto done;
 
-      ___FIELD(___ps->saved[0],9) = ___release_scmobj (x);
+      ___FIELD(STRUCTURE,___ps->saved[0],___FILE_INFO_LAST_ACCESS_TIME) =
+        ___release_scmobj (x);
 
       if ((result = ___F64_to_SCMOBJ (___ps,
                                       ___CAST(___F64,s.st_mtime),
@@ -2090,7 +2180,8 @@ ___SCMOBJ chase;)
           != ___FIX(___NO_ERR))
         goto done;
 
-      ___FIELD(___ps->saved[0],10) = ___release_scmobj (x);
+      ___FIELD(STRUCTURE,___ps->saved[0],___FILE_INFO_LAST_MODIFICATION_TIME) =
+        ___release_scmobj (x);
 
       if ((result = ___F64_to_SCMOBJ (___ps,
                                       ___CAST(___F64,s.st_ctime),
@@ -2099,7 +2190,8 @@ ___SCMOBJ chase;)
           != ___FIX(___NO_ERR))
         goto done;
 
-      ___FIELD(___ps->saved[0],11) = ___release_scmobj (x);
+      ___FIELD(STRUCTURE,___ps->saved[0],___FILE_INFO_LAST_CHANGE_TIME) =
+        ___release_scmobj (x);
 
 #ifndef FILE_ATTRIBUTE_READ_ONLY
 #define FILE_ATTRIBUTE_READ_ONLY 1
@@ -2113,7 +2205,7 @@ ___SCMOBJ chase;)
 #define FILE_ATTRIBUTE_NORMAL 128
 #endif
 
-      ___FIELD(___ps->saved[0],12) =
+      ___FIELD(STRUCTURE,___ps->saved[0],___FILE_INFO_ATTRIBUTES) =
         ___FIX(S_ISDIR(s.st_mode)
                ? FILE_ATTRIBUTE_DIRECTORY
                : FILE_ATTRIBUTE_NORMAL);
@@ -2125,7 +2217,8 @@ ___SCMOBJ chase;)
           != ___FIX(___NO_ERR))
         goto done;
 
-      ___FIELD(___ps->saved[0],13) = ___release_scmobj (x);
+      ___FIELD(STRUCTURE,___ps->saved[0],___FILE_INFO_CREATION_TIME) =
+        ___release_scmobj (x);
 
       result = ___ps->saved[0];
     }
@@ -2165,24 +2258,25 @@ ___SCMOBJ chase;)
       else
         x = ___FIX(1);
 
-      ___FIELD(___ps->saved[0],1) = x;
+      ___FIELD(STRUCTURE,___ps->saved[0],___FILE_INFO_TYPE) = x;
 
-      ___FIELD(___ps->saved[0],2) = ___FIX(0);
+      ___FIELD(STRUCTURE,___ps->saved[0],___FILE_INFO_DEVICE) = ___FIX(0);
 
-      ___FIELD(___ps->saved[0],3) = ___FIX(0);
+      ___FIELD(STRUCTURE,___ps->saved[0],___FILE_INFO_INODE) = ___FIX(0);
 
       if (fad.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
         x = ___FIX(0333);
       else
         x = ___FIX(0777);
 
-      ___FIELD(___ps->saved[0],4) = x;
+      ___FIELD(STRUCTURE,___ps->saved[0],___FILE_INFO_MODE) = x;
 
-      ___FIELD(___ps->saved[0],5) = ___FIX(1);
+      ___FIELD(STRUCTURE,___ps->saved[0],___FILE_INFO_NUMBER_OF_LINKS) =
+        ___FIX(1);
 
-      ___FIELD(___ps->saved[0],6) = ___FIX(0);
+      ___FIELD(STRUCTURE,___ps->saved[0],___FILE_INFO_OWNER) = ___FIX(0);
 
-      ___FIELD(___ps->saved[0],7) = ___FIX(0);
+      ___FIELD(STRUCTURE,___ps->saved[0],___FILE_INFO_GROUP) = ___FIX(0);
 
       if ((result = ___U64_to_SCMOBJ (___ps,
                                       ___U64_from_UM32_UM32(fad.nFileSizeHigh,fad.nFileSizeLow),
@@ -2191,7 +2285,8 @@ ___SCMOBJ chase;)
           != ___FIX(___NO_ERR))
         goto done;
 
-      ___FIELD(___ps->saved[0],8) = ___release_scmobj (x);
+      ___FIELD(STRUCTURE,___ps->saved[0],___FILE_INFO_SIZE) =
+        ___release_scmobj (x);
 
       ___time_from_FILETIME (&atime, fad.ftLastAccessTime);
 
@@ -2202,7 +2297,8 @@ ___SCMOBJ chase;)
           != ___FIX(___NO_ERR))
         goto done;
 
-      ___FIELD(___ps->saved[0],9) = ___release_scmobj (x);
+      ___FIELD(STRUCTURE,___ps->saved[0],___FILE_INFO_LAST_ACCESS_TIME) =
+        ___release_scmobj (x);
 
       ___time_from_FILETIME (&wtime, fad.ftLastWriteTime);
 
@@ -2213,11 +2309,13 @@ ___SCMOBJ chase;)
           != ___FIX(___NO_ERR))
         goto done;
 
-      ___FIELD(___ps->saved[0],10) = x;
+      ___FIELD(STRUCTURE,___ps->saved[0],___FILE_INFO_LAST_MODIFICATION_TIME) = x;
 
-      ___FIELD(___ps->saved[0],11) = ___release_scmobj (x);
+      ___FIELD(STRUCTURE,___ps->saved[0],___FILE_INFO_LAST_CHANGE_TIME) =
+        ___release_scmobj (x);
 
-      ___FIELD(___ps->saved[0],12) = ___FIX(fad.dwFileAttributes);
+      ___FIELD(STRUCTURE,___ps->saved[0],___FILE_INFO_ATTRIBUTES) =
+        ___FIX(fad.dwFileAttributes);
 
       ___time_from_FILETIME (&ctime, fad.ftCreationTime);
 
@@ -2228,7 +2326,8 @@ ___SCMOBJ chase;)
           != ___FIX(___NO_ERR))
         goto done;
 
-      ___FIELD(___ps->saved[0],13) = ___release_scmobj (x);
+      ___FIELD(STRUCTURE,___ps->saved[0],___FILE_INFO_CREATION_TIME) =
+        ___release_scmobj (x);
 
       result = ___ps->saved[0];
     }
@@ -2245,6 +2344,12 @@ ___SCMOBJ chase;)
 /*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
 
 /* Access to user information. */
+
+#define ___USER_INFO_NAME  1
+#define ___USER_INFO_UID   2
+#define ___USER_INFO_GID   3
+#define ___USER_INFO_HOME  4
+#define ___USER_INFO_SHELL 5
 
 ___SCMOBJ ___os_user_info
    ___P((___SCMOBJ ui,
@@ -2311,11 +2416,14 @@ ___SCMOBJ user;)
           != ___FIX(___NO_ERR))
         goto done;
 
-      ___FIELD(___ps->saved[0],1) = ___release_scmobj (x);
+      ___FIELD(STRUCTURE,___ps->saved[0],___USER_INFO_NAME) =
+        ___release_scmobj (x);
 
-      ___FIELD(___ps->saved[0],2) = ___FIX(p->pw_uid);
+      ___FIELD(STRUCTURE,___ps->saved[0],___USER_INFO_UID) =
+        ___FIX(p->pw_uid);
 
-      ___FIELD(___ps->saved[0],3) = ___FIX(p->pw_gid);
+      ___FIELD(STRUCTURE,___ps->saved[0],___USER_INFO_GID) =
+        ___FIX(p->pw_gid);
 
       if ((result = ___NONNULLCHARSTRING_to_SCMOBJ (___ps,
                                                     p->pw_dir,
@@ -2324,7 +2432,8 @@ ___SCMOBJ user;)
           != ___FIX(___NO_ERR))
         goto done;
 
-      ___FIELD(___ps->saved[0],4) = ___release_scmobj (x);
+      ___FIELD(STRUCTURE,___ps->saved[0],___USER_INFO_HOME) =
+        ___release_scmobj (x);
 
       if ((result = ___NONNULLCHARSTRING_to_SCMOBJ (___ps,
                                                     p->pw_shell,
@@ -2333,7 +2442,8 @@ ___SCMOBJ user;)
           != ___FIX(___NO_ERR))
         goto done;
 
-      ___FIELD(___ps->saved[0],5) = ___release_scmobj (x);
+      ___FIELD(STRUCTURE,___ps->saved[0],___USER_INFO_SHELL) =
+        ___release_scmobj (x);
 
       result = ___ps->saved[0];
     }
@@ -2389,6 +2499,10 @@ ___SCMOBJ ___os_user_name ___PVOID
 /*   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   -   */
 
 /* Access to group information. */
+
+#define ___GROUP_INFO_NAME    1
+#define ___GROUP_INFO_GID     2
+#define ___GROUP_INFO_MEMBERS 3
 
 ___SCMOBJ ___os_group_info
    ___P((___SCMOBJ gi,
@@ -2454,9 +2568,9 @@ ___SCMOBJ group;)
           != ___FIX(___NO_ERR))
         goto done;
 
-      ___FIELD(___ps->saved[0],1) = ___release_scmobj (x);
+      ___FIELD(STRUCTURE,___ps->saved[0],1) = ___release_scmobj (x);
 
-      ___FIELD(___ps->saved[0],2) = ___FIX(g->gr_gid);
+      ___FIELD(STRUCTURE,___ps->saved[0],2) = ___FIX(g->gr_gid);
 
       if ((result = ___NONNULLCHARSTRINGLIST_to_SCMOBJ
                       (___ps,
@@ -2466,7 +2580,7 @@ ___SCMOBJ group;)
           != ___FIX(___NO_ERR))
         goto done;
 
-      ___FIELD(___ps->saved[0],3) = ___release_scmobj (x);
+      ___FIELD(STRUCTURE,___ps->saved[0],3) = ___release_scmobj (x);
 
       result = ___ps->saved[0];
     }

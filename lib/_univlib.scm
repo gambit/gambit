@@ -2,7 +2,7 @@
 
 ;;; File: "_univlib.scm"
 
-;;; Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -849,9 +849,6 @@ def @os_device_from_basic_console@():
 (define (##check-heap) #f)
 (define (##raise-heap-overflow-exception) #f)
 
-(define (##explode-continuation cont) #f)
-(define (##explode-frame frame) #f)
-
 (define (##kernel-handlers) #f)
 
 (define (##os-host-info hi host) -5555)
@@ -950,21 +947,6 @@ def @os_device_from_basic_console@():
 (define-prim (##continuation-denv cont))
 
 (define-prim (##continuation-denv-set! cont denv))
-
-(define-prim (##explode-frame frame)
-  (let ((fs (##frame-fs frame)))
-    (let ((v (##make-vector (##fx+ fs 1))))
-      (##vector-set! v 0 (##frame-ret frame))
-      (let loop ((i fs))
-        (if (##fx< 0 i)
-          (begin
-            (if (##frame-slot-live? frame i)
-              (##vector-set!
-               v
-               i
-               (##frame-ref frame i)))
-            (loop (##fx- i 1)))
-          v)))))
 
 (define-prim (##frame-ret frame))
 

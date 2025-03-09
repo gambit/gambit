@@ -2,7 +2,7 @@
 
 ;;; File: "_nonstd.scm"
 
-;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1896,31 +1896,25 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(define-prim (##box? obj)
-  (and (##subtyped? obj)
-       (##eq? (##subtype obj) (macro-subtype-boxvalues))
-       (##fx= (##vector-length obj) 1)))
+(define-prim (##box? obj))
 
 (define-prim (box? obj)
   (macro-force-vars (obj)
     (##box? obj)))
 
-(define-prim (##box obj)
-  (##subtype-set! (##vector obj) (macro-subtype-boxvalues)))
+(define-prim (##box obj))
 
 (define-prim (box obj)
   (##box obj))
 
-(define-prim (##unbox box)
-  (##vector-ref box 0))
+(define-prim (##unbox box))
 
 (define-prim (unbox box)
   (macro-force-vars (box)
     (macro-check-box box 1 (unbox box)
       (##unbox box))))
 
-(define-prim (##set-box! box val)
-  (##vector-set! box 0 val))
+(define-prim (##set-box! box val))
 
 (define-prim (set-box! box val)
   (macro-force-vars (box)

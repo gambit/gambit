@@ -2,7 +2,7 @@
 
 ;;; File: "_num.scm"
 
-;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2004-2023 by Brad Lucier, All Rights Reserved.
 
 ;;;============================================================================
@@ -10835,7 +10835,7 @@ end-of-code
             (do ((i 0 (##fx+ i 2))
                  (j 0 (##fx+ j stride)))
                 ((##fx= j lut-size) result)
-              (##f64vector-set! result             i    (##f64vector-ref lut             j   ))
+              (##f64vector-set! result i           (##f64vector-ref lut j))
               (##f64vector-set! result (##fx+ i 1) (##f64vector-ref lut (##fx+ j 1))))))
 
         (define (extend-lut multiplier-lut start)
@@ -10857,9 +10857,9 @@ end-of-code
                           (let* ((real  (##f64vector-ref result k))
                                  (imag  (##f64vector-ref result (##fx+ k 1)))
                                  (result-real (##fl- (##fl* multiplier-real real)
-                                                          (##fl* multiplier-imag imag)))
+                                                     (##fl* multiplier-imag imag)))
                                  (result-imag (##fl+ (##fl* multiplier-real imag)
-                                                          (##fl* multiplier-imag real))))
+                                                     (##fl* multiplier-imag real))))
                             (##f64vector-set! result i result-real)
                             (##f64vector-set! result (##fx+ i 1) result-imag)
                             (inner (##fx+ i 2)

@@ -2,7 +2,7 @@
 
 ;;; File: "_io.scm"
 
-;;; Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -8007,9 +8007,13 @@
 (implement-library-type-socket-info)
 
 (define-prim (##socket-info-setup! si)
-  (##vector-set! si 1 (##net-family-decode (##vector-ref si 1)))
   (##structure-type-set! si (macro-type-socket-info))
-  (##subtype-set! si (macro-subtype-structure))
+  (##unchecked-structure-set!
+   si
+   (##net-family-decode (##unchecked-structure-ref si 1 #f #f))
+   1
+   #f
+   #f)
   si)
 
 (define-prim (##tcp-client-socket-info
@@ -8100,13 +8104,26 @@
     (else x)))
 
 (define-prim (##address-info-setup! ai)
-  (##vector-set! ai 1 (##net-family-decode      (##vector-ref ai 1)))
-  (##vector-set! ai 2 (##net-socket-type-decode (##vector-ref ai 2)))
-  (##vector-set! ai 3 (##net-protocol-decode    (##vector-ref ai 3)))
-  (let ((si (##vector-ref ai 4)))
-    (##socket-info-setup! si))
   (##structure-type-set! ai (macro-type-address-info))
-  (##subtype-set! ai (macro-subtype-structure))
+  (##unchecked-structure-set!
+   ai
+   (##net-family-decode (##unchecked-structure-ref ai 1 #f #f))
+   1
+   #f
+   #f)
+  (##unchecked-structure-set!
+   ai
+   (##net-socket-type-decode (##unchecked-structure-ref ai 2 #f #f))
+   2
+   #f
+   #f)
+  (##unchecked-structure-set!
+   ai
+   (##net-protocol-decode (##unchecked-structure-ref ai 3 #f #f))
+   3
+   #f
+   #f)
+  (##socket-info-setup! (##unchecked-structure-ref ai 4 #f #f))
   ai)
 
 (define-prim (##address-infos
@@ -10606,21 +10623,6 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim (##might-write-differently? old-obj new-obj)
-  (cond ((##eq? old-obj new-obj)
-         (or (##pair? new-obj)
-             (and (##subtyped? new-obj)
-                  (##not (or (##complex? new-obj)
-                             (##symbol? new-obj)
-                             (##keyword? new-obj))))))
-        ((##complex? old-obj)
-         (##not (and (##complex? new-obj)
-                     (##= old-obj new-obj))))
-        (else
-         #t)))
-
-;;;----------------------------------------------------------------------------
-
 (define-prim (##default-wr we obj)
   (let ((limit (macro-writeenv-limit we)))
     (if (##fx< 0 limit)
@@ -11628,68 +11630,73 @@
         (##table-set! foreign-write-handler-table tag proc)
         (##table-set! foreign-write-handler-table tag))))
 
-(define-prim (##explode-object obj)
-  (##vector-copy obj))
-
-(define-prim (##implode-object re fields subtype)
-  (let* ((n (##vector-length fields))
-         (v (##make-vector n)))
-    (##subtype-set! v subtype)
-    (let loop ((i (##fx- n 1)))
-      (if (##fx< i 0)
-          v
-          (let ((obj (##vector-ref fields i)))
-            (if (##label-marker? obj)
-                (##label-marker-fixup-handler-add!
-                 re
-                 obj
-                 (lambda (resolved-obj)
-                   (##vector-set! v i resolved-obj)))
-                (##vector-set! v i obj))
-            (loop (##fx- i 1)))))))
-
-(define-prim (##explode-structure obj)
-  (##explode-object obj))
+(define-prim (##explode-structure struct)
+  (##declare (not interrupts-enabled))
+  (let* ((len (##structure-length struct))
+         (vect (##make-vector len (##structure-type struct))))
+    (let loop ((i (##fx- len 1)))
+      (if (##fx< 0 i)
+          (begin
+            (##vector-set!
+             vect
+             i
+             (##unchecked-structure-ref struct i #f #f))
+            (loop (##fx- i 1)))
+          vect))))
 
 (define-prim (##implode-structure re fields)
-  (##implode-object re fields (macro-subtype-structure)))
+  (##declare (not interrupts-enabled))
+  (let* ((len (##vector-length fields))
+         (struct (##make-structure (##vector-ref fields 0) len)))
+    (let loop ((i (##fx- len 1)))
+      (if (##fx< 0 i)
+          (begin
+            (##unchecked-structure-set!
+             struct
+             (##vector-ref fields i)
+             i
+             #f
+             #f)
+            (loop (##fx- i 1)))
+          struct))))
 
-';old version... more type checks but incomplete type checks so why bother?
-(define-prim (##implode-structure re fields)
-  (let ((nb-fields (##vector-length fields)))
-    (if (##fx< 0 nb-fields)
-        (let ((n (##vector-length fields)))
-          (let ((s (##make-vector n)))
-
-            (define (set-element! i obj)
-              (##vector-set! s i obj)
-              (if (##fx= i 0)
-                  (let ((n (##vector-length s)))
-                    (##subtype-set! s (macro-subtype-structure))
-                    (if (##not (and (##type? obj)
-                                    (##fx= (##type-field-count obj)
-                                           (##fx- n 1))))
-                        (##subtype-set! s (macro-subtype-vector))))))
-
-            (let loop ((i (##fx- n 1)))
-              (if (##fx< i 0)
-                  s
-                  (let ((obj (##vector-ref fields i)))
-                    (if (##label-marker? obj)
-                        (##label-marker-fixup-handler-add!
-                         re
-                         obj
-                         (lambda (resolved-obj)
-                           (set-element! i resolved-obj)))
-                        (set-element! i obj))
-                    (loop (##fx- i 1)))))))
-        #f)))
+(define-prim (##explode-frame frame)
+  (##declare (not interrupts-enabled))
+  (let* ((len (##fx+ (##frame-fs frame) 1))
+         (vect (##make-vector len)))
+    (##vector-set! vect 0 (##frame-ret frame))
+    (let loop ((i (##fx- len 1)))
+      (if (##fx< 0 i)
+          (begin
+            (if (##frame-slot-live? frame i)
+                (##vector-set!
+                 vect
+                 i
+                 (##frame-ref frame i)))
+            (loop (##fx- i 1)))
+          vect))))
 
 (define-prim (##implode-frame re fields)
-  (##implode-object re fields (macro-subtype-frame)))
+  (##declare (not interrupts-enabled))
+  (let* ((len (##vector-length fields))
+         (frame (##make-frame (##vector-ref fields 0))))
+    (let loop ((i (##fx- len 1)))
+      (if (##fx< 0 i)
+          (begin
+            (##frame-set!
+             frame
+             i
+             (##vector-ref fields i))
+            (loop (##fx- i 1)))
+          frame))))
+
+(define-prim (##explode-continuation cont)
+  (##vector (##continuation-frame cont)
+            (##continuation-denv cont)))
 
 (define-prim (##implode-continuation re fields)
-  (##implode-object re fields (macro-subtype-continuation)))
+  (##make-continuation (##vector-ref fields 0)
+                       (##vector-ref fields 1)))
 
 (define-prim (##explode-procedure proc)
   (cond ((##closure? proc)
@@ -11742,28 +11749,32 @@
                                    (##fx< 0 subproc-id))
                               (let ((subproc (##make-subprocedure proc subproc-id)))
                                 (if subproc
-                                    (let* ((nb-closed (##subprocedure-nb-closed subproc))
-                                           (n (##fx- (##vector-length fields) 1)))
-                                      (if (##fx= (##fx+ nb-closed 1) n)
-                                          (if (##fx= nb-closed 0)
-                                              subproc
-                                              (let ((c (##make-vector n subproc)))
-                                                (##subtype-set! c (macro-subtype-procedure))
-                                                (let loop ((i (##fx- n 1)))
-                                                  (if (##fx< i 1)
-                                                      c
-                                                      (let ((obj
-                                                             (##vector-ref fields
-                                                                           (##fx+ i 1))))
-                                                        (if (##label-marker? obj)
-                                                            (##label-marker-fixup-handler-add!
-                                                             re
-                                                             obj
-                                                             (lambda (resolved-obj)
-                                                               (##closure-set! c i resolved-obj)))
-                                                            (##closure-set! c i obj))
-                                                        (loop (##fx- i 1)))))))
-                                          #f))
+                                    (let ((nb-closed
+                                           (##subprocedure-nb-closed subproc)))
+                                      (cond ((##fx= nb-closed -1)
+                                             subproc)
+                                            ((##fx= nb-closed
+                                                    (##fx- nb-fields 2))
+                                             (let ((c (##make-closure
+                                                       subproc
+                                                       nb-closed)))
+                                               (let loop ((i nb-closed))
+                                                 (if (##fx< i 1)
+                                                     c
+                                                     (let ((obj
+                                                            (##vector-ref
+                                                             fields
+                                                             (##fx+ i 1))))
+                                                       (if (##label-marker? obj)
+                                                           (##label-marker-fixup-handler-add!
+                                                            re
+                                                            obj
+                                                            (lambda (resolved-obj)
+                                                              (##closure-set! c i resolved-obj)))
+                                                           (##closure-set! c i obj))
+                                                       (loop (##fx- i 1)))))))
+                                            (else
+                                             #f)))
                                     #f))
                               #f)))
                     #f))
@@ -12062,67 +12073,6 @@
        'gc-hash-table
        (##void))))
 
-(define-prim (##explode-gc-hash-table gcht)
-  (##declare (not interrupts-enabled))
-  (let loop ((i (macro-gc-hash-table-key0))
-             (key-vals '()))
-    (let ((len (##vector-length gcht)))
-      (if (##fx< i len)
-          (let ((key (##vector-ref gcht i)))
-            (if (and (##not (##eq? key (macro-unused-obj)))
-                     (##not (##eq? key (macro-deleted-obj))))
-                (let ((val (##vector-ref gcht (##fx+ i 1))))
-                  (let ((new-key-vals (##cons (##cons key val) key-vals)))
-                    (##declare (interrupts-enabled))
-                    (loop (##fx+ i 2) new-key-vals)))
-                (let ()
-                  (##declare (interrupts-enabled))
-                  (loop (##fx+ i 2) key-vals))))
-          (let ((flags
-                 (macro-gc-hash-table-flags gcht))
-                (count
-                 (macro-gc-hash-table-count gcht))
-                (min-count
-                 (macro-gc-hash-table-min-count gcht))
-                (free
-                 (macro-gc-hash-table-free gcht)))
-            (##declare (interrupts-enabled))
-            (##vector len flags count min-count free key-vals))))))
-
-(define-prim (##implode-gc-hash-table re fields)
-  (let ((len (##vector-ref fields 0))
-        (flags (##vector-ref fields 1))
-        (count (##vector-ref fields 2))
-        (min-count (##vector-ref fields 3))
-        (free (##vector-ref fields 4))
-        (key-vals (##vector-ref fields 5)))
-    (let ((gcht (##make-vector len (macro-unused-obj))))
-      (macro-gc-hash-table-flags-set!
-       gcht
-       (##fxior ;; force rehash at next access!
-        flags
-        (##fx+ (macro-gc-hash-table-flag-key-moved)
-               (macro-gc-hash-table-flag-need-rehash))))
-      (macro-gc-hash-table-count-set! gcht count)
-      (macro-gc-hash-table-min-count-set! gcht min-count)
-      (macro-gc-hash-table-free-set! gcht free)
-      (let loop ((i (macro-gc-hash-table-key0))
-                 (key-vals key-vals))
-        (if (##pair? key-vals)
-            (if (##fx< i (##vector-length gcht))
-                (let ((key-val (##car key-vals)))
-                  (let ((key (##car key-val))
-                        (val (##cdr key-val)))
-                    (##vector-set! gcht i key)
-                    (##vector-set! gcht (##fx+ i 1) val)
-                    (loop (##fx+ i 2) (##cdr key-vals))))
-                #f)
-            (begin
-              (##subtype-set!
-               gcht
-               (macro-subtype-weak))
-              gcht))))))
-
 (define-prim (##wr-meroon we obj)
   (##wr-sn
    we
@@ -12178,11 +12128,13 @@
            'promise
            (##void)))))
 
-(define-prim (##explode-promise obj)
-  (##explode-object obj))
+(define-prim (##explode-promise promise)
+  (##vector (##promise-state promise)))
 
 (define-prim (##implode-promise re fields)
-  (##implode-object re fields (macro-subtype-promise)))
+  (let ((promise (##make-delay-promise #f)))
+    (##promise-state-set! promise (##vector-ref fields 0))
+    promise))
 
 (define-prim (##wr-will we obj)
   (##wr-sn
@@ -13747,7 +13699,7 @@
                       (macro-readenv-filepos-set! re old-pos) ;; restore pos
                       (##read-datum-or-label-or-none-or-dot re))))) ;; skip error
 
-            (define (deserialize re implode);;;;;;;;;;;;;;;;;;;;;;;;;;;;
+            (define (deserialize re implode)
               (let ((c (macro-read-next-char-or-eof re)))
                 (if (eqv? c #\()
                     (let* ((old-wrapper (macro-readenv-wrapper re))
@@ -13763,8 +13715,7 @@
                         (if obj
                             (macro-readenv-wrap re obj)
                             (begin
-                        ;;;;;;;;;;;;error
-                              (##raise-datum-parsing-exception 'open-paren-expected re)
+                              (##raise-datum-parsing-exception 'deserialization-error re)
                               (macro-readenv-filepos-set! re old-pos) ;; restore pos
                               (##read-datum-or-label-or-none-or-dot re))))) ;; skip error
                     (begin

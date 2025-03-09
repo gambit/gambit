@@ -2,7 +2,7 @@
 
 ;;; File: "_host.scm"
 
-;;; Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -742,7 +742,12 @@
   (##structure? obj))
 
 (define (structure->list obj)
-  (##vector->list obj))
+  (let ((len (##structure-length obj)))
+    (let loop ((i (- len 1)) (lst '()))
+      (if (< i 0)
+          lst
+          (loop (- i 1)
+                (cons (##unchecked-structure-ref obj i #f #f) lst))))))
 
 (define (open-input-file* path)
   (##open-file-generic
