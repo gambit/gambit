@@ -5357,8 +5357,8 @@ ___FIELD(WEAK,gcht,___GCHASHTABLE_FREE)
 #define ___GCHASHTABLEREHASH(x,y)___EXT(___gc_hash_table_rehash)(x,y)
 
 #define ___GCHASHTABLELENGTH(gcht)___HD_FIELDS_FIX(___SUBTYPED_TO_BODY(gcht)[-1])
-#define ___GCHASHTABLEFIELDREF(gcht,i)*___CAST(___WORD*,___CAST(___WORD,___BODY_AS(gcht,___tSUBTYPED))+((i)<<(___LWS-___TB_FIXNUM)))
-#define ___GCHASHTABLEFIELDSET(gcht,i,val)*___CAST(___WORD*,___CAST(___WORD,___BODY_AS(gcht,___tSUBTYPED))+((i)<<(___LWS-___TB_FIXNUM)))=val;
+#define ___GCHASHTABLEFIELDREF(gcht,i)*___CAST(___WORD*,___CAST(___WORD,___BODY_AS(gcht,___tWEAK))+((i)<<(___LWS-___TB_FIXNUM)))
+#define ___GCHASHTABLEFIELDSET(gcht,i,val)*___CAST(___WORD*,___CAST(___WORD,___BODY_AS(gcht,___tWEAK))+((i)<<(___LWS-___TB_FIXNUM)))=val;
 
 #if ___WS == 4
 
