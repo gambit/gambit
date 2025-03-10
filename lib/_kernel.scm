@@ -5240,7 +5240,8 @@ end-of-code
                       (loop (##fx+ i 1)
                             (visit (##vector-ref dependencies i)
                                    rev-collected-modules))
-                      (##cons module rev-collected-modules))))))))
+                      (##cons module rev-collected-modules))))
+              rev-collected-modules))))
 
   (define (collect module-refs rev-collected-modules)
     (if (##vector? module-refs)
