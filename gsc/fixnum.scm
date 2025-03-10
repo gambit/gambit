@@ -2,7 +2,7 @@
 
 ;;; File: "fixnum.scm"
 
-;;; Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
 
 (##declare
   (standard-bindings)
@@ -84,6 +84,9 @@ open-output-file-preserving-case
 optional-object
 optional-object?
 pp-expression
+write-returning-len
+write-returning-len-without-read-macros
+display-returning-len
 rest-object
 rest-object?
 s16vect->list

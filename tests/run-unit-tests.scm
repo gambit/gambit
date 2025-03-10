@@ -293,8 +293,8 @@
       (apply
        append
        (map
-        (lambda (f) (if (equal? f "03-number") '()
-          (find-files (path-expand f file-or-dir) filter)))
+        (lambda (f)
+          (find-files (path-expand f file-or-dir) filter))
         (directory-files file-or-dir)))
 
       (if (filter file-or-dir)
