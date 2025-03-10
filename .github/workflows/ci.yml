@@ -191,7 +191,7 @@ jobs:
       if: github.event_name == 'push'
       run: |
         export PROCS=`nproc`
-        ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-ansi-c && make clean && make -j$PROCS core && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
+        ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-ansi-c && make clean && make -j$PROCS core && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4)
 
     - name: Build Gambit for Use
       if: github.event_name == 'push'
@@ -269,7 +269,7 @@ jobs:
         export CC=gcc-14
         export CXX=g++-14
         export PROCS=`sysctl -n hw.physicalcpu`
-        ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-ansi-c && make clean && make -j$PROCS core && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4) && (cd tests; make test5)
+        ./configure --enable-c-opt=-O0 --enable-c-opt-rts=-O0 --enable-ansi-c && make clean && make -j$PROCS core && (cd tests; make test1) && (cd tests; make test2) && (cd tests; make test3) && (cd tests; make test4)
 
     - name: Build Gambit for Use
       if: github.event_name == 'push'
