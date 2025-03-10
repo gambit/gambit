@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_env.c", produced by Gambit v4.9.5
+; File: "_env.c", produced by Gambit v4.9.6
 (
-409005
+409006
 (C)
 "_env"
 ("_env")
@@ -185,7 +185,7 @@
 ) #|*/"*/"meta-info|#
 )
 #else
-#define ___VERSION 409005
+#define ___VERSION 409006
 #define ___MODULE_NAME "_env"
 #define ___LINKER_ID ___LNK___env
 #define ___MH_PROC ___H___env

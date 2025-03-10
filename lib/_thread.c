@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_thread.c", produced by Gambit v4.9.5
+; File: "_thread.c", produced by Gambit v4.9.6
 (
-409005
+409006
 (C)
 "_thread"
 ("_thread")
@@ -897,7 +897,7 @@
 ) #|*/"*/"meta-info|#
 )
 #else
-#define ___VERSION 409005
+#define ___VERSION 409006
 #define ___MODULE_NAME "_thread"
 #define ___LINKER_ID ___LNK___thread
 #define ___MH_PROC ___H___thread
@@ -4134,7 +4134,7 @@ ___DEF_SUB_STRUCTURE(___X2,6UL)
                ___VEC1(___REF_SUB(2))
                ___VEC1(___REF_SYM(201,___S__23__23_type_2d_5))
                ___VEC1(___REF_SYM(442,___S_type))
-               ___VEC1(___REF_FIX(8))
+               ___VEC1(___REF_FIX(26))
                ___VEC1(___REF_FAL)
                ___VEC1(___REF_SUB(3))
                ___VEC0
@@ -10911,7 +10911,7 @@ ___DEF_GLBL(___L13__23__23_timeout_2d__3e_time)
 ___DEF_GLBL(___L14__23__23_timeout_2d__3e_time)
    ___BEGIN_ALLOC_STRUCTURE(5UL)
    ___ADD_STRUCTURE_ELEM(0,___SUB(41))
-   ___ADD_STRUCTURE_ELEM(1,___SUB(57))
+   ___ADD_STRUCTURE_ELEM(1,___FLO(57,0x7ff00000L,0x0L))
    ___ADD_STRUCTURE_ELEM(2,___FAL)
    ___ADD_STRUCTURE_ELEM(3,___FAL)
    ___ADD_STRUCTURE_ELEM(4,___FAL)
@@ -16417,7 +16417,7 @@ ___DEF_SLBL(5,___L5__23__23_startup_2d_threading_21_)
    ___ADJFP(-4)
    ___JUMPGLONOTSAFE(___SET_NARGS(1),373,___G__23__23_object_2d__3e_serial_2d_number)
 ___DEF_SLBL(6,___L6__23__23_startup_2d_threading_21_)
-   ___SET_R1(___SUB(66))
+   ___SET_R1(___FLO(66,0x3f847ae1L,0x47ae147bL))
    ___SET_R0(___LBL(7))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),387,___G__23__23_set_2d_heartbeat_2d_interval_21_)
 ___DEF_SLBL(7,___L7__23__23_startup_2d_threading_21_)

@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_back.c", produced by Gambit v4.9.5
+; File: "_back.c", produced by Gambit v4.9.6
 (
-409005
+409006
 (C)
 "_back"
 ("_back")
@@ -230,7 +230,7 @@
 ) #|*/"*/"meta-info|#
 )
 #else
-#define ___VERSION 409005
+#define ___VERSION 409006
 #define ___MODULE_NAME "_back"
 #define ___LINKER_ID ___LNK___back
 #define ___MH_PROC ___H___back
@@ -240,7 +240,7 @@
 #define ___SUPCOUNT 86
 #define ___CNSCOUNT 9
 #define ___SUBCOUNT 11
-#define ___LBLCOUNT 280
+#define ___LBLCOUNT 281
 #define ___OFDCOUNT 7
 #define ___MODDESCR ___REF_SUB(8)
 #include "gambit.h"
@@ -1144,6 +1144,7 @@ ___DEF_M_HLBL(___L8_c_23_make_2d_target)
 ___DEF_M_HLBL(___L9_c_23_make_2d_target)
 ___DEF_M_HLBL(___L10_c_23_make_2d_target)
 ___DEF_M_HLBL(___L11_c_23_make_2d_target)
+___DEF_M_HLBL(___L12_c_23_make_2d_target)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0_c_23_target_2d_name)
 ___DEF_M_HLBL_INTRO
@@ -1536,110 +1537,121 @@ ___DEF_P_HLBL(___L8_c_23_make_2d_target)
 ___DEF_P_HLBL(___L9_c_23_make_2d_target)
 ___DEF_P_HLBL(___L10_c_23_make_2d_target)
 ___DEF_P_HLBL(___L11_c_23_make_2d_target)
+___DEF_P_HLBL(___L12_c_23_make_2d_target)
 ___END_P_HLBL
 ___BEGIN_P_SW
 ___DEF_SLBL(0,___L0_c_23_make_2d_target)
    ___IF_NARGS_EQ(6,___NOTHING)
    ___WRONG_NARGS(0,6,0,0)
 ___DEF_GLBL(___L_c_23_make_2d_target)
-   ___IF(___FIXEQ(___STK(-2),___FIX(15L)))
-   ___GOTO(___L12_c_23_make_2d_target)
-   ___END_IF
-   ___GOTO(___L15_c_23_make_2d_target)
+   ___SET_R4(___BOX(___VOID))
+   ___SET_STK(1,___BOX(___VOID))
+   ___SET_STK(2,___BOX(___VOID))
+   ___SETBOX(___R4,___FIX(15L))
+   ___SETBOX(___STK(1),___CNS(0))
+   ___SETBOX(___STK(2),___NUL)
+   ___SET_R4(___UNBOX(___R4))
+   ___ADJFP(2)
+   ___CHECK_HEAP(1,4096)
 ___DEF_SLBL(1,___L1_c_23_make_2d_target)
-   ___SET_R3(___STK(-6))
-   ___SET_R2(___STK(-7))
-   ___SET_R1(___STK(-8))
+   ___IF(___FIXEQ(___STK(-4),___R4))
+   ___GOTO(___L13_c_23_make_2d_target)
+   ___END_IF
+   ___GOTO(___L16_c_23_make_2d_target)
+___DEF_SLBL(2,___L2_c_23_make_2d_target)
+   ___SET_R3(___STK(-4))
+   ___SET_R2(___STK(-5))
+   ___SET_R1(___STK(-6))
    ___SET_R0(___STK(-11))
-   ___ADJFP(-9)
-___DEF_GLBL(___L12_c_23_make_2d_target)
+   ___ADJFP(-7)
+___DEF_GLBL(___L13_c_23_make_2d_target)
    ___SET_R3(___FIXADD(___FIX(22L),___R3))
    ___IF(___NOT(___FIXLE(___R3,___FIX(253L))))
-   ___GOTO(___L14_c_23_make_2d_target)
+   ___GOTO(___L15_c_23_make_2d_target)
    ___END_IF
    ___MAKEVECTORSMALL1(___R3)
    ___SET_R3(___GET_SMALL_ALLOC)
-   ___CHECK_HEAP(2,4096)
-___DEF_SLBL(2,___L2_c_23_make_2d_target)
-___DEF_GLBL(___L13_c_23_make_2d_target)
-   ___VECTORSET(___R3,___FIX(0L),___SYM_target)
-   ___VECTORSET(___R3,___FIX(1L),___STK(-1))
-   ___VECTORSET(___R3,___FIX(2L),___STK(0))
-   ___SET_STK(-2,___R0)
-   ___SET_STK(-1,___R2)
-   ___SET_STK(0,___R3)
-   ___SET_R2(___CNS(0))
-   ___SET_R0(___LBL(3))
-   ___ADJFP(5)
-   ___JUMPPRM(___SET_NARGS(2),___PRM__23__23_append)
+   ___CHECK_HEAP(3,4096)
 ___DEF_SLBL(3,___L3_c_23_make_2d_target)
-   ___VECTORSET(___STK(-5),___FIX(3L),___R1)
-   ___SET_R1(___STK(-6))
-   ___SET_R2(___NUL)
+___DEF_GLBL(___L14_c_23_make_2d_target)
+   ___VECTORSET(___R3,___FIX(0L),___SYM_target)
+   ___VECTORSET(___R3,___FIX(1L),___STK(-3))
+   ___VECTORSET(___R3,___FIX(2L),___STK(-2))
+   ___SET_STK(-4,___R0)
+   ___SET_STK(-3,___R2)
+   ___SET_STK(-2,___R3)
+   ___SET_R2(___UNBOX(___STK(-1)))
    ___SET_R0(___LBL(4))
+   ___ADJFP(3)
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23_append)
 ___DEF_SLBL(4,___L4_c_23_make_2d_target)
+   ___VECTORSET(___STK(-5),___FIX(3L),___R1)
+   ___SET_R2(___UNBOX(___STK(-3)))
+   ___SET_R1(___STK(-6))
+   ___SET_R0(___LBL(5))
+   ___JUMPPRM(___SET_NARGS(2),___PRM__23__23_append)
+___DEF_SLBL(5,___L5_c_23_make_2d_target)
    ___VECTORSET(___STK(-5),___FIX(4L),___R1)
    ___SET_STK(-4,___ALLOC_CLO(1UL))
-   ___BEGIN_SETUP_CLO(1,___STK(-4),8)
+   ___BEGIN_SETUP_CLO(1,___STK(-4),9)
    ___ADD_CLO_ELEM(0,___STK(-5))
    ___END_SETUP_CLO(1)
    ___VECTORSET(___STK(-5),___FIX(15L),___STK(-4))
    ___SET_STK(-4,___ALLOC_CLO(1UL))
-   ___BEGIN_SETUP_CLO(1,___STK(-4),6)
+   ___BEGIN_SETUP_CLO(1,___STK(-4),7)
    ___ADD_CLO_ELEM(0,___STK(-5))
    ___END_SETUP_CLO(1)
    ___VECTORSET(___STK(-5),___FIX(16L),___STK(-4))
    ___VECTORSET(___STK(-5),___FIX(13L),___FAL)
    ___SET_R1(___STK(-5))
    ___ADJFP(-7)
-   ___CHECK_HEAP(5,4096)
-___DEF_SLBL(5,___L5_c_23_make_2d_target)
+   ___CHECK_HEAP(6,4096)
+___DEF_SLBL(6,___L6_c_23_make_2d_target)
    ___ADJFP(-1)
    ___JUMPRET(___STK(1))
-___DEF_SLBL(6,___L6_c_23_make_2d_target)
+___DEF_SLBL(7,___L7_c_23_make_2d_target)
    ___IF_NARGS_EQ(1,___NOTHING)
-   ___WRONG_NARGS(6,1,0,0)
+   ___WRONG_NARGS(7,1,0,0)
    ___SET_R2(___R1)
    ___SET_R1(___CLO(___R4,1))
-   ___POLL(7)
-___DEF_SLBL(7,___L7_c_23_make_2d_target)
-   ___JUMPINT(___SET_NARGS(2),___PRC(172),___L_c_23_default_2d_jump_2d_info)
+   ___POLL(8)
 ___DEF_SLBL(8,___L8_c_23_make_2d_target)
+   ___JUMPINT(___SET_NARGS(2),___PRC(173),___L_c_23_default_2d_jump_2d_info)
+___DEF_SLBL(9,___L9_c_23_make_2d_target)
    ___IF_NARGS_EQ(2,___NOTHING)
-   ___WRONG_NARGS(8,2,0,0)
+   ___WRONG_NARGS(9,2,0,0)
    ___SET_R3(___R2)
    ___SET_R2(___R1)
    ___SET_R1(___CLO(___R4,1))
-   ___POLL(9)
-___DEF_SLBL(9,___L9_c_23_make_2d_target)
-   ___JUMPINT(___SET_NARGS(3),___PRC(159),___L_c_23_default_2d_label_2d_info)
-___DEF_GLBL(___L14_c_23_make_2d_target)
-   ___SET_STK(-2,___R0)
+   ___POLL(10)
+___DEF_SLBL(10,___L10_c_23_make_2d_target)
+   ___JUMPINT(___SET_NARGS(3),___PRC(160),___L_c_23_default_2d_label_2d_info)
+___DEF_GLBL(___L15_c_23_make_2d_target)
+   ___SET_STK(-4,___R0)
    ___SET_STK(1,___R1)
    ___SET_STK(2,___R2)
    ___SET_R1(___R3)
-   ___SET_R0(___LBL(10))
-   ___ADJFP(5)
+   ___SET_R0(___LBL(11))
+   ___ADJFP(7)
    ___JUMPPRM(___SET_NARGS(1),___PRM__23__23_make_2d_vector)
-___DEF_SLBL(10,___L10_c_23_make_2d_target)
+___DEF_SLBL(11,___L11_c_23_make_2d_target)
    ___SET_R3(___R1)
-   ___SET_R2(___STK(-3))
-   ___SET_R1(___STK(-4))
-   ___SET_R0(___STK(-7))
-   ___ADJFP(-5)
-   ___GOTO(___L13_c_23_make_2d_target)
-___DEF_GLBL(___L15_c_23_make_2d_target)
-   ___SET_STK(-2,___R0)
+   ___SET_R2(___STK(-5))
+   ___SET_R1(___STK(-6))
+   ___SET_R0(___STK(-11))
+   ___ADJFP(-7)
+   ___GOTO(___L14_c_23_make_2d_target)
+___DEF_GLBL(___L16_c_23_make_2d_target)
+   ___SET_STK(-4,___R0)
    ___SET_STK(1,___R1)
    ___SET_STK(2,___R2)
    ___SET_STK(3,___R3)
-   ___SET_R2(___STK(-1))
+   ___SET_R2(___STK(-3))
    ___SET_R1(___SUB(0))
-   ___ADJFP(9)
-   ___POLL(11)
-___DEF_SLBL(11,___L11_c_23_make_2d_target)
-   ___SET_R0(___LBL(1))
+   ___ADJFP(7)
+   ___POLL(12)
+___DEF_SLBL(12,___L12_c_23_make_2d_target)
+   ___SET_R0(___LBL(2))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),106,___G_c_23_compiler_2d_internal_2d_error)
 ___END_P_SW
 ___END_P_COD
@@ -1647,7 +1659,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_name
 #undef ___PH_LBL0
-#define ___PH_LBL0 26
+#define ___PH_LBL0 27
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -1672,7 +1684,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_file_2d_extensions
 #undef ___PH_LBL0
-#define ___PH_LBL0 28
+#define ___PH_LBL0 29
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -1697,7 +1709,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_semantics_2d_changing_2d_options
 #undef ___PH_LBL0
-#define ___PH_LBL0 30
+#define ___PH_LBL0 31
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -1722,7 +1734,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_semantics_2d_preserving_2d_options
 #undef ___PH_LBL0
-#define ___PH_LBL0 32
+#define ___PH_LBL0 33
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -1747,7 +1759,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_begin_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 34
+#define ___PH_LBL0 35
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -1772,7 +1784,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_begin_21__2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 36
+#define ___PH_LBL0 37
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -1797,7 +1809,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_end_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 38
+#define ___PH_LBL0 39
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -1822,7 +1834,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_end_21__2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 40
+#define ___PH_LBL0 41
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -1847,7 +1859,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_dump
 #undef ___PH_LBL0
-#define ___PH_LBL0 42
+#define ___PH_LBL0 43
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -1872,7 +1884,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_dump_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 44
+#define ___PH_LBL0 45
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -1897,7 +1909,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_link_2d_info
 #undef ___PH_LBL0
-#define ___PH_LBL0 46
+#define ___PH_LBL0 47
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -1922,7 +1934,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_link_2d_info_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 48
+#define ___PH_LBL0 49
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -1947,7 +1959,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_link
 #undef ___PH_LBL0
-#define ___PH_LBL0 50
+#define ___PH_LBL0 51
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -1972,7 +1984,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_link_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 52
+#define ___PH_LBL0 53
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -1997,7 +2009,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_nb_2d_regs
 #undef ___PH_LBL0
-#define ___PH_LBL0 54
+#define ___PH_LBL0 55
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -2022,7 +2034,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_nb_2d_regs_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 56
+#define ___PH_LBL0 57
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -2047,7 +2059,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_nb_2d_arg_2d_regs
 #undef ___PH_LBL0
-#define ___PH_LBL0 58
+#define ___PH_LBL0 59
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -2072,7 +2084,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_nb_2d_arg_2d_regs_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 60
+#define ___PH_LBL0 61
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -2097,7 +2109,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_compactness
 #undef ___PH_LBL0
-#define ___PH_LBL0 62
+#define ___PH_LBL0 63
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -2122,7 +2134,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_compactness_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 64
+#define ___PH_LBL0 65
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -2147,7 +2159,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_max_2d_small_2d_allocation
 #undef ___PH_LBL0
-#define ___PH_LBL0 66
+#define ___PH_LBL0 67
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -2172,7 +2184,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_max_2d_small_2d_allocation_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 68
+#define ___PH_LBL0 69
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -2197,7 +2209,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_prim_2d_info
 #undef ___PH_LBL0
-#define ___PH_LBL0 70
+#define ___PH_LBL0 71
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -2222,7 +2234,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_prim_2d_info_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 72
+#define ___PH_LBL0 73
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -2247,7 +2259,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_label_2d_info
 #undef ___PH_LBL0
-#define ___PH_LBL0 74
+#define ___PH_LBL0 75
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -2272,7 +2284,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_label_2d_info_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 76
+#define ___PH_LBL0 77
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -2297,7 +2309,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_jump_2d_info
 #undef ___PH_LBL0
-#define ___PH_LBL0 78
+#define ___PH_LBL0 79
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -2322,7 +2334,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_jump_2d_info_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 80
+#define ___PH_LBL0 81
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -2347,7 +2359,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_frame_2d_constraints
 #undef ___PH_LBL0
-#define ___PH_LBL0 82
+#define ___PH_LBL0 83
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -2372,7 +2384,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_frame_2d_constraints_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 84
+#define ___PH_LBL0 85
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -2397,7 +2409,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_proc_2d_result
 #undef ___PH_LBL0
-#define ___PH_LBL0 86
+#define ___PH_LBL0 87
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -2422,7 +2434,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_proc_2d_result_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 88
+#define ___PH_LBL0 89
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -2447,7 +2459,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_switch_2d_testable_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 90
+#define ___PH_LBL0 91
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -2472,7 +2484,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_switch_2d_testable_3f__2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 92
+#define ___PH_LBL0 93
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -2497,7 +2509,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_eq_2d_testable_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 94
+#define ___PH_LBL0 95
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -2522,7 +2534,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_eq_2d_testable_3f__2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 96
+#define ___PH_LBL0 97
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -2547,7 +2559,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_object_2d_type
 #undef ___PH_LBL0
-#define ___PH_LBL0 98
+#define ___PH_LBL0 99
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -2572,7 +2584,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_object_2d_type_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 100
+#define ___PH_LBL0 101
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -2597,7 +2609,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_extra
 #undef ___PH_LBL0
-#define ___PH_LBL0 102
+#define ___PH_LBL0 103
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -2623,7 +2635,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_extra_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 104
+#define ___PH_LBL0 105
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -2649,7 +2661,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_make_2d_frame_2d_constraints
 #undef ___PH_LBL0
-#define ___PH_LBL0 106
+#define ___PH_LBL0 107
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -2681,7 +2693,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_frame_2d_constraints_2d_reserve
 #undef ___PH_LBL0
-#define ___PH_LBL0 109
+#define ___PH_LBL0 110
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -2706,7 +2718,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_frame_2d_constraints_2d_align
 #undef ___PH_LBL0
-#define ___PH_LBL0 111
+#define ___PH_LBL0 112
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -2731,7 +2743,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_get
 #undef ___PH_LBL0
-#define ___PH_LBL0 113
+#define ___PH_LBL0 114
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -2800,7 +2812,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_targets_2d_loaded
 #undef ___PH_LBL0
-#define ___PH_LBL0 119
+#define ___PH_LBL0 120
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -2855,7 +2867,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_add
 #undef ___PH_LBL0
-#define ___PH_LBL0 125
+#define ___PH_LBL0 126
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -2928,7 +2940,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_default_2d_target
 #undef ___PH_LBL0
-#define ___PH_LBL0 131
+#define ___PH_LBL0 132
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R4
 #undef ___PR_ALL
@@ -2963,7 +2975,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_options
 #undef ___PH_LBL0
-#define ___PH_LBL0 134
+#define ___PH_LBL0 135
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -2992,7 +3004,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_get_2d_option
 #undef ___PH_LBL0
-#define ___PH_LBL0 137
+#define ___PH_LBL0 138
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -3057,7 +3069,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_make_2d_prim_2d_proc_2d_table
 #undef ___PH_LBL0
-#define ___PH_LBL0 142
+#define ___PH_LBL0 143
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -3116,7 +3128,7 @@ ___DEF_GLBL(___L7_c_23_make_2d_prim_2d_proc_2d_table)
    ___POLL(5)
 ___DEF_SLBL(5,___L5_c_23_make_2d_prim_2d_proc_2d_table)
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(2),___PRC(150),___L_c_23_prim_2d_proc_2d_add_21_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(151),___L_c_23_prim_2d_proc_2d_add_21_)
 ___DEF_GLBL(___L8_c_23_make_2d_prim_2d_proc_2d_table)
    ___SET_R1(___VOID)
    ___JUMPRET(___R0)
@@ -3130,7 +3142,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_prim_2d_proc_2d_add_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 150
+#define ___PH_LBL0 151
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -3186,7 +3198,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_prim_2d_proc_2d_info
 #undef ___PH_LBL0
-#define ___PH_LBL0 156
+#define ___PH_LBL0 157
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -3214,7 +3226,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_default_2d_label_2d_info
 #undef ___PH_LBL0
-#define ___PH_LBL0 159
+#define ___PH_LBL0 160
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -3335,7 +3347,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_default_2d_jump_2d_info
 #undef ___PH_LBL0
-#define ___PH_LBL0 172
+#define ___PH_LBL0 173
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -3442,7 +3454,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_select_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 184
+#define ___PH_LBL0 185
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -3494,7 +3506,7 @@ ___DEF_GLBL(___L_c_23_target_2d_select_21_)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_target_2d_select_21_)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(1),___PRC(113),___L_c_23_target_2d_get)
+   ___JUMPINT(___SET_NARGS(1),___PRC(114),___L_c_23_target_2d_get)
 ___DEF_SLBL(2,___L2_c_23_target_2d_select_21_)
    ___SET_GLO(27,___G_c_23_target,___R1)
    ___SET_STK(-4,___GLO_c_23_target)
@@ -3732,7 +3744,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_target_2d_unselect_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 214
+#define ___PH_LBL0 215
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R4
 #undef ___PR_ALL
@@ -3779,7 +3791,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_arith_2d_implementation
 #undef ___PH_LBL0
-#define ___PH_LBL0 218
+#define ___PH_LBL0 219
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -3810,7 +3822,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_mostly_2d_arith_2d_implementation
 #undef ___PH_LBL0
-#define ___PH_LBL0 221
+#define ___PH_LBL0 222
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -3841,7 +3853,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_allocation_2d_limit
 #undef ___PH_LBL0
-#define ___PH_LBL0 224
+#define ___PH_LBL0 225
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -3887,7 +3899,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_link_2d_modules
 #undef ___PH_LBL0
-#define ___PH_LBL0 228
+#define ___PH_LBL0 229
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -4055,7 +4067,7 @@ ___DEF_GLBL(___L27_c_23_link_2d_modules)
    ___POLL(17)
 ___DEF_SLBL(17,___L17_c_23_link_2d_modules)
    ___SET_R0(___LBL(14))
-   ___JUMPINT(___SET_NARGS(2),___PRC(254),___L_c_23_get_2d_link_2d_info)
+   ___JUMPINT(___SET_NARGS(2),___PRC(255),___L_c_23_get_2d_link_2d_info)
 ___DEF_GLBL(___L28_c_23_link_2d_modules)
    ___SET_R2(___STK(-11))
    ___SET_R1(___SUB(4))
@@ -4132,21 +4144,12 @@ ___DEF_GLBL(___L33_c_23_link_2d_modules)
    ___SET_R0(___LBL(12))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),132,___G_path_2d_strip_2d_extension)
 ___DEF_GLBL(___L34_c_23_link_2d_modules)
-   ___IF(___NOT(___MEMALLOCATEDP(___STK(-5))))
+   ___IF(___POSSIBLYEQUALP(___STK(-5),___R1))
    ___GOTO(___L35_c_23_link_2d_modules)
    ___END_IF
-   ___IF(___NOT(___MEMALLOCATEDP(___R1)))
-   ___GOTO(___L35_c_23_link_2d_modules)
-   ___END_IF
-   ___SET_R2(___SUBTYPE(___R1))
-   ___SET_R3(___SUBTYPE(___STK(-5)))
-   ___IF(___FIXEQ(___R3,___R2))
-   ___GOTO(___L36_c_23_link_2d_modules)
-   ___END_IF
-___DEF_GLBL(___L35_c_23_link_2d_modules)
    ___SET_R1(___FAL)
    ___GOTO(___L25_c_23_link_2d_modules)
-___DEF_GLBL(___L36_c_23_link_2d_modules)
+___DEF_GLBL(___L35_c_23_link_2d_modules)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(7))
@@ -4157,7 +4160,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_get_2d_link_2d_info
 #undef ___PH_LBL0
-#define ___PH_LBL0 254
+#define ___PH_LBL0 255
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -4395,7 +4398,7 @@ ___DEF_GLBL(___L34_c_23_get_2d_link_2d_info)
 ___DEF_GLBL(___L35_c_23_get_2d_link_2d_info)
    ___SET_STK(-5,___R1)
    ___SET_R0(___LBL(4))
-   ___JUMPINT(___SET_NARGS(0),___PRC(119),___L_c_23_targets_2d_loaded)
+   ___JUMPINT(___SET_NARGS(0),___PRC(120),___L_c_23_targets_2d_loaded)
 ___END_P_SW
 ___END_P_COD
 
@@ -4415,19 +4418,20 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H___back_23_,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H___back_23_,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H___back_23_,___IFD(___RETN,1,0,0x1L))
-,___DEF_LBL_INTRO(___H_c_23_make_2d_target,___REF_SYM(15,___S_c_23_make_2d_target),___REF_FAL,12,0)
+,___DEF_LBL_INTRO(___H_c_23_make_2d_target,___REF_SYM(15,___S_c_23_make_2d_target),___REF_FAL,13,0)
 ,___DEF_LBL_PROC(___H_c_23_make_2d_target,6,-1)
-,___DEF_LBL_RET(___H_c_23_make_2d_target,___IFD(___RETN,9,0,0x3fL))
-,___DEF_LBL_RET(___H_c_23_make_2d_target,___IFD(___RETI,3,4,0x3f6L))
-,___DEF_LBL_RET(___H_c_23_make_2d_target,___IFD(___RETN,5,0,0x7L))
+,___DEF_LBL_RET(___H_c_23_make_2d_target,___IFD(___RETI,5,8,0x3f1fL))
+,___DEF_LBL_RET(___H_c_23_make_2d_target,___IFD(___RETN,9,0,0xffL))
+,___DEF_LBL_RET(___H_c_23_make_2d_target,___IFD(___RETI,5,8,0x3f1eL))
+,___DEF_LBL_RET(___H_c_23_make_2d_target,___IFD(___RETN,5,0,0x17L))
 ,___DEF_LBL_RET(___H_c_23_make_2d_target,___IFD(___RETN,5,0,0x5L))
 ,___DEF_LBL_RET(___H_c_23_make_2d_target,___IFD(___RETI,1,0,0x3f1L))
 ,___DEF_LBL_PROC(___H_c_23_make_2d_target,1,1)
 ,___DEF_LBL_RET(___H_c_23_make_2d_target,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_PROC(___H_c_23_make_2d_target,2,1)
 ,___DEF_LBL_RET(___H_c_23_make_2d_target,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_RET(___H_c_23_make_2d_target,___IFD(___RETN,5,0,0x1fL))
-,___DEF_LBL_RET(___H_c_23_make_2d_target,___OFD(___RETI,12,0,0x3f03fL))
+,___DEF_LBL_RET(___H_c_23_make_2d_target,___IFD(___RETN,9,0,0x7fL))
+,___DEF_LBL_RET(___H_c_23_make_2d_target,___OFD(___RETI,12,0,0x3f0ffL))
 ,___DEF_LBL_INTRO(___H_c_23_target_2d_name,___REF_SYM(46,___S_c_23_target_2d_name),___REF_FAL,1,0)
 ,___DEF_LBL_PROC(___H_c_23_target_2d_name,1,-1)
 ,___DEF_LBL_INTRO(___H_c_23_target_2d_file_2d_extensions,___REF_SYM(32,___S_c_23_target_2d_file_2d_extensions),___REF_FAL,1,0)
@@ -4687,7 +4691,7 @@ ___END_LBL
 
 ___BEGIN_OFD
  ___DEF_OFD(___RETI,12,0)
-               ___GCMAP1(0x3f03fL)
+               ___GCMAP1(0x3f0ffL)
 ,___DEF_OFD(___RETI,12,0)
                ___GCMAP1(0x3f06fL)
 ,___DEF_OFD(___RETI,12,1)
@@ -4705,67 +4709,67 @@ ___END_OFD
 ___BEGIN_MOD_PRM
 ___DEF_MOD_PRM(0,___G___back_23_,1)
 ___DEF_MOD_PRM(23,___G_c_23_make_2d_target,13)
-___DEF_MOD_PRM(55,___G_c_23_target_2d_name,26)
-___DEF_MOD_PRM(41,___G_c_23_target_2d_file_2d_extensions,28)
-___DEF_MOD_PRM(68,___G_c_23_target_2d_semantics_2d_changing_2d_options,30)
-___DEF_MOD_PRM(69,___G_c_23_target_2d_semantics_2d_preserving_2d_options,32)
-___DEF_MOD_PRM(29,___G_c_23_target_2d_begin_21_,34)
-___DEF_MOD_PRM(30,___G_c_23_target_2d_begin_21__2d_set_21_,36)
-___DEF_MOD_PRM(35,___G_c_23_target_2d_end_21_,38)
-___DEF_MOD_PRM(36,___G_c_23_target_2d_end_21__2d_set_21_,40)
-___DEF_MOD_PRM(33,___G_c_23_target_2d_dump,42)
-___DEF_MOD_PRM(34,___G_c_23_target_2d_dump_2d_set_21_,44)
-___DEF_MOD_PRM(50,___G_c_23_target_2d_link_2d_info,46)
-___DEF_MOD_PRM(51,___G_c_23_target_2d_link_2d_info_2d_set_21_,48)
-___DEF_MOD_PRM(49,___G_c_23_target_2d_link,50)
-___DEF_MOD_PRM(52,___G_c_23_target_2d_link_2d_set_21_,52)
-___DEF_MOD_PRM(58,___G_c_23_target_2d_nb_2d_regs,54)
-___DEF_MOD_PRM(59,___G_c_23_target_2d_nb_2d_regs_2d_set_21_,56)
-___DEF_MOD_PRM(56,___G_c_23_target_2d_nb_2d_arg_2d_regs,58)
-___DEF_MOD_PRM(57,___G_c_23_target_2d_nb_2d_arg_2d_regs_2d_set_21_,60)
-___DEF_MOD_PRM(31,___G_c_23_target_2d_compactness,62)
-___DEF_MOD_PRM(32,___G_c_23_target_2d_compactness_2d_set_21_,64)
-___DEF_MOD_PRM(53,___G_c_23_target_2d_max_2d_small_2d_allocation,66)
-___DEF_MOD_PRM(54,___G_c_23_target_2d_max_2d_small_2d_allocation_2d_set_21_,68)
-___DEF_MOD_PRM(63,___G_c_23_target_2d_prim_2d_info,70)
-___DEF_MOD_PRM(64,___G_c_23_target_2d_prim_2d_info_2d_set_21_,72)
-___DEF_MOD_PRM(47,___G_c_23_target_2d_label_2d_info,74)
-___DEF_MOD_PRM(48,___G_c_23_target_2d_label_2d_info_2d_set_21_,76)
-___DEF_MOD_PRM(45,___G_c_23_target_2d_jump_2d_info,78)
-___DEF_MOD_PRM(46,___G_c_23_target_2d_jump_2d_info_2d_set_21_,80)
-___DEF_MOD_PRM(42,___G_c_23_target_2d_frame_2d_constraints,82)
-___DEF_MOD_PRM(43,___G_c_23_target_2d_frame_2d_constraints_2d_set_21_,84)
-___DEF_MOD_PRM(65,___G_c_23_target_2d_proc_2d_result,86)
-___DEF_MOD_PRM(66,___G_c_23_target_2d_proc_2d_result_2d_set_21_,88)
-___DEF_MOD_PRM(70,___G_c_23_target_2d_switch_2d_testable_3f_,90)
-___DEF_MOD_PRM(71,___G_c_23_target_2d_switch_2d_testable_3f__2d_set_21_,92)
-___DEF_MOD_PRM(37,___G_c_23_target_2d_eq_2d_testable_3f_,94)
-___DEF_MOD_PRM(38,___G_c_23_target_2d_eq_2d_testable_3f__2d_set_21_,96)
-___DEF_MOD_PRM(60,___G_c_23_target_2d_object_2d_type,98)
-___DEF_MOD_PRM(61,___G_c_23_target_2d_object_2d_type_2d_set_21_,100)
-___DEF_MOD_PRM(39,___G_c_23_target_2d_extra,102)
-___DEF_MOD_PRM(40,___G_c_23_target_2d_extra_2d_set_21_,104)
-___DEF_MOD_PRM(21,___G_c_23_make_2d_frame_2d_constraints,106)
-___DEF_MOD_PRM(17,___G_c_23_frame_2d_constraints_2d_reserve,109)
-___DEF_MOD_PRM(16,___G_c_23_frame_2d_constraints_2d_align,111)
-___DEF_MOD_PRM(44,___G_c_23_target_2d_get,113)
-___DEF_MOD_PRM(85,___G_c_23_targets_2d_loaded,119)
-___DEF_MOD_PRM(28,___G_c_23_target_2d_add,125)
-___DEF_MOD_PRM(15,___G_c_23_default_2d_target,131)
-___DEF_MOD_PRM(62,___G_c_23_target_2d_options,134)
-___DEF_MOD_PRM(19,___G_c_23_get_2d_option,137)
-___DEF_MOD_PRM(22,___G_c_23_make_2d_prim_2d_proc_2d_table,142)
-___DEF_MOD_PRM(25,___G_c_23_prim_2d_proc_2d_add_21_,150)
-___DEF_MOD_PRM(26,___G_c_23_prim_2d_proc_2d_info,156)
-___DEF_MOD_PRM(14,___G_c_23_default_2d_label_2d_info,159)
-___DEF_MOD_PRM(13,___G_c_23_default_2d_jump_2d_info,172)
-___DEF_MOD_PRM(67,___G_c_23_target_2d_select_21_,184)
-___DEF_MOD_PRM(72,___G_c_23_target_2d_unselect_21_,214)
-___DEF_MOD_PRM(12,___G_c_23_arith_2d_implementation,218)
-___DEF_MOD_PRM(24,___G_c_23_mostly_2d_arith_2d_implementation,221)
-___DEF_MOD_PRM(11,___G_c_23_allocation_2d_limit,224)
-___DEF_MOD_PRM(20,___G_c_23_link_2d_modules,228)
-___DEF_MOD_PRM(18,___G_c_23_get_2d_link_2d_info,254)
+___DEF_MOD_PRM(55,___G_c_23_target_2d_name,27)
+___DEF_MOD_PRM(41,___G_c_23_target_2d_file_2d_extensions,29)
+___DEF_MOD_PRM(68,___G_c_23_target_2d_semantics_2d_changing_2d_options,31)
+___DEF_MOD_PRM(69,___G_c_23_target_2d_semantics_2d_preserving_2d_options,33)
+___DEF_MOD_PRM(29,___G_c_23_target_2d_begin_21_,35)
+___DEF_MOD_PRM(30,___G_c_23_target_2d_begin_21__2d_set_21_,37)
+___DEF_MOD_PRM(35,___G_c_23_target_2d_end_21_,39)
+___DEF_MOD_PRM(36,___G_c_23_target_2d_end_21__2d_set_21_,41)
+___DEF_MOD_PRM(33,___G_c_23_target_2d_dump,43)
+___DEF_MOD_PRM(34,___G_c_23_target_2d_dump_2d_set_21_,45)
+___DEF_MOD_PRM(50,___G_c_23_target_2d_link_2d_info,47)
+___DEF_MOD_PRM(51,___G_c_23_target_2d_link_2d_info_2d_set_21_,49)
+___DEF_MOD_PRM(49,___G_c_23_target_2d_link,51)
+___DEF_MOD_PRM(52,___G_c_23_target_2d_link_2d_set_21_,53)
+___DEF_MOD_PRM(58,___G_c_23_target_2d_nb_2d_regs,55)
+___DEF_MOD_PRM(59,___G_c_23_target_2d_nb_2d_regs_2d_set_21_,57)
+___DEF_MOD_PRM(56,___G_c_23_target_2d_nb_2d_arg_2d_regs,59)
+___DEF_MOD_PRM(57,___G_c_23_target_2d_nb_2d_arg_2d_regs_2d_set_21_,61)
+___DEF_MOD_PRM(31,___G_c_23_target_2d_compactness,63)
+___DEF_MOD_PRM(32,___G_c_23_target_2d_compactness_2d_set_21_,65)
+___DEF_MOD_PRM(53,___G_c_23_target_2d_max_2d_small_2d_allocation,67)
+___DEF_MOD_PRM(54,___G_c_23_target_2d_max_2d_small_2d_allocation_2d_set_21_,69)
+___DEF_MOD_PRM(63,___G_c_23_target_2d_prim_2d_info,71)
+___DEF_MOD_PRM(64,___G_c_23_target_2d_prim_2d_info_2d_set_21_,73)
+___DEF_MOD_PRM(47,___G_c_23_target_2d_label_2d_info,75)
+___DEF_MOD_PRM(48,___G_c_23_target_2d_label_2d_info_2d_set_21_,77)
+___DEF_MOD_PRM(45,___G_c_23_target_2d_jump_2d_info,79)
+___DEF_MOD_PRM(46,___G_c_23_target_2d_jump_2d_info_2d_set_21_,81)
+___DEF_MOD_PRM(42,___G_c_23_target_2d_frame_2d_constraints,83)
+___DEF_MOD_PRM(43,___G_c_23_target_2d_frame_2d_constraints_2d_set_21_,85)
+___DEF_MOD_PRM(65,___G_c_23_target_2d_proc_2d_result,87)
+___DEF_MOD_PRM(66,___G_c_23_target_2d_proc_2d_result_2d_set_21_,89)
+___DEF_MOD_PRM(70,___G_c_23_target_2d_switch_2d_testable_3f_,91)
+___DEF_MOD_PRM(71,___G_c_23_target_2d_switch_2d_testable_3f__2d_set_21_,93)
+___DEF_MOD_PRM(37,___G_c_23_target_2d_eq_2d_testable_3f_,95)
+___DEF_MOD_PRM(38,___G_c_23_target_2d_eq_2d_testable_3f__2d_set_21_,97)
+___DEF_MOD_PRM(60,___G_c_23_target_2d_object_2d_type,99)
+___DEF_MOD_PRM(61,___G_c_23_target_2d_object_2d_type_2d_set_21_,101)
+___DEF_MOD_PRM(39,___G_c_23_target_2d_extra,103)
+___DEF_MOD_PRM(40,___G_c_23_target_2d_extra_2d_set_21_,105)
+___DEF_MOD_PRM(21,___G_c_23_make_2d_frame_2d_constraints,107)
+___DEF_MOD_PRM(17,___G_c_23_frame_2d_constraints_2d_reserve,110)
+___DEF_MOD_PRM(16,___G_c_23_frame_2d_constraints_2d_align,112)
+___DEF_MOD_PRM(44,___G_c_23_target_2d_get,114)
+___DEF_MOD_PRM(85,___G_c_23_targets_2d_loaded,120)
+___DEF_MOD_PRM(28,___G_c_23_target_2d_add,126)
+___DEF_MOD_PRM(15,___G_c_23_default_2d_target,132)
+___DEF_MOD_PRM(62,___G_c_23_target_2d_options,135)
+___DEF_MOD_PRM(19,___G_c_23_get_2d_option,138)
+___DEF_MOD_PRM(22,___G_c_23_make_2d_prim_2d_proc_2d_table,143)
+___DEF_MOD_PRM(25,___G_c_23_prim_2d_proc_2d_add_21_,151)
+___DEF_MOD_PRM(26,___G_c_23_prim_2d_proc_2d_info,157)
+___DEF_MOD_PRM(14,___G_c_23_default_2d_label_2d_info,160)
+___DEF_MOD_PRM(13,___G_c_23_default_2d_jump_2d_info,173)
+___DEF_MOD_PRM(67,___G_c_23_target_2d_select_21_,185)
+___DEF_MOD_PRM(72,___G_c_23_target_2d_unselect_21_,215)
+___DEF_MOD_PRM(12,___G_c_23_arith_2d_implementation,219)
+___DEF_MOD_PRM(24,___G_c_23_mostly_2d_arith_2d_implementation,222)
+___DEF_MOD_PRM(11,___G_c_23_allocation_2d_limit,225)
+___DEF_MOD_PRM(20,___G_c_23_link_2d_modules,229)
+___DEF_MOD_PRM(18,___G_c_23_get_2d_link_2d_info,255)
 ___END_MOD_PRM
 
 ___BEGIN_MOD_C_INIT
@@ -4774,67 +4778,67 @@ ___END_MOD_C_INIT
 ___BEGIN_MOD_GLO
 ___DEF_MOD_GLO(0,___G___back_23_,1)
 ___DEF_MOD_GLO(23,___G_c_23_make_2d_target,13)
-___DEF_MOD_GLO(55,___G_c_23_target_2d_name,26)
-___DEF_MOD_GLO(41,___G_c_23_target_2d_file_2d_extensions,28)
-___DEF_MOD_GLO(68,___G_c_23_target_2d_semantics_2d_changing_2d_options,30)
-___DEF_MOD_GLO(69,___G_c_23_target_2d_semantics_2d_preserving_2d_options,32)
-___DEF_MOD_GLO(29,___G_c_23_target_2d_begin_21_,34)
-___DEF_MOD_GLO(30,___G_c_23_target_2d_begin_21__2d_set_21_,36)
-___DEF_MOD_GLO(35,___G_c_23_target_2d_end_21_,38)
-___DEF_MOD_GLO(36,___G_c_23_target_2d_end_21__2d_set_21_,40)
-___DEF_MOD_GLO(33,___G_c_23_target_2d_dump,42)
-___DEF_MOD_GLO(34,___G_c_23_target_2d_dump_2d_set_21_,44)
-___DEF_MOD_GLO(50,___G_c_23_target_2d_link_2d_info,46)
-___DEF_MOD_GLO(51,___G_c_23_target_2d_link_2d_info_2d_set_21_,48)
-___DEF_MOD_GLO(49,___G_c_23_target_2d_link,50)
-___DEF_MOD_GLO(52,___G_c_23_target_2d_link_2d_set_21_,52)
-___DEF_MOD_GLO(58,___G_c_23_target_2d_nb_2d_regs,54)
-___DEF_MOD_GLO(59,___G_c_23_target_2d_nb_2d_regs_2d_set_21_,56)
-___DEF_MOD_GLO(56,___G_c_23_target_2d_nb_2d_arg_2d_regs,58)
-___DEF_MOD_GLO(57,___G_c_23_target_2d_nb_2d_arg_2d_regs_2d_set_21_,60)
-___DEF_MOD_GLO(31,___G_c_23_target_2d_compactness,62)
-___DEF_MOD_GLO(32,___G_c_23_target_2d_compactness_2d_set_21_,64)
-___DEF_MOD_GLO(53,___G_c_23_target_2d_max_2d_small_2d_allocation,66)
-___DEF_MOD_GLO(54,___G_c_23_target_2d_max_2d_small_2d_allocation_2d_set_21_,68)
-___DEF_MOD_GLO(63,___G_c_23_target_2d_prim_2d_info,70)
-___DEF_MOD_GLO(64,___G_c_23_target_2d_prim_2d_info_2d_set_21_,72)
-___DEF_MOD_GLO(47,___G_c_23_target_2d_label_2d_info,74)
-___DEF_MOD_GLO(48,___G_c_23_target_2d_label_2d_info_2d_set_21_,76)
-___DEF_MOD_GLO(45,___G_c_23_target_2d_jump_2d_info,78)
-___DEF_MOD_GLO(46,___G_c_23_target_2d_jump_2d_info_2d_set_21_,80)
-___DEF_MOD_GLO(42,___G_c_23_target_2d_frame_2d_constraints,82)
-___DEF_MOD_GLO(43,___G_c_23_target_2d_frame_2d_constraints_2d_set_21_,84)
-___DEF_MOD_GLO(65,___G_c_23_target_2d_proc_2d_result,86)
-___DEF_MOD_GLO(66,___G_c_23_target_2d_proc_2d_result_2d_set_21_,88)
-___DEF_MOD_GLO(70,___G_c_23_target_2d_switch_2d_testable_3f_,90)
-___DEF_MOD_GLO(71,___G_c_23_target_2d_switch_2d_testable_3f__2d_set_21_,92)
-___DEF_MOD_GLO(37,___G_c_23_target_2d_eq_2d_testable_3f_,94)
-___DEF_MOD_GLO(38,___G_c_23_target_2d_eq_2d_testable_3f__2d_set_21_,96)
-___DEF_MOD_GLO(60,___G_c_23_target_2d_object_2d_type,98)
-___DEF_MOD_GLO(61,___G_c_23_target_2d_object_2d_type_2d_set_21_,100)
-___DEF_MOD_GLO(39,___G_c_23_target_2d_extra,102)
-___DEF_MOD_GLO(40,___G_c_23_target_2d_extra_2d_set_21_,104)
-___DEF_MOD_GLO(21,___G_c_23_make_2d_frame_2d_constraints,106)
-___DEF_MOD_GLO(17,___G_c_23_frame_2d_constraints_2d_reserve,109)
-___DEF_MOD_GLO(16,___G_c_23_frame_2d_constraints_2d_align,111)
-___DEF_MOD_GLO(44,___G_c_23_target_2d_get,113)
-___DEF_MOD_GLO(85,___G_c_23_targets_2d_loaded,119)
-___DEF_MOD_GLO(28,___G_c_23_target_2d_add,125)
-___DEF_MOD_GLO(15,___G_c_23_default_2d_target,131)
-___DEF_MOD_GLO(62,___G_c_23_target_2d_options,134)
-___DEF_MOD_GLO(19,___G_c_23_get_2d_option,137)
-___DEF_MOD_GLO(22,___G_c_23_make_2d_prim_2d_proc_2d_table,142)
-___DEF_MOD_GLO(25,___G_c_23_prim_2d_proc_2d_add_21_,150)
-___DEF_MOD_GLO(26,___G_c_23_prim_2d_proc_2d_info,156)
-___DEF_MOD_GLO(14,___G_c_23_default_2d_label_2d_info,159)
-___DEF_MOD_GLO(13,___G_c_23_default_2d_jump_2d_info,172)
-___DEF_MOD_GLO(67,___G_c_23_target_2d_select_21_,184)
-___DEF_MOD_GLO(72,___G_c_23_target_2d_unselect_21_,214)
-___DEF_MOD_GLO(12,___G_c_23_arith_2d_implementation,218)
-___DEF_MOD_GLO(24,___G_c_23_mostly_2d_arith_2d_implementation,221)
-___DEF_MOD_GLO(11,___G_c_23_allocation_2d_limit,224)
-___DEF_MOD_GLO(20,___G_c_23_link_2d_modules,228)
-___DEF_MOD_GLO(18,___G_c_23_get_2d_link_2d_info,254)
+___DEF_MOD_GLO(55,___G_c_23_target_2d_name,27)
+___DEF_MOD_GLO(41,___G_c_23_target_2d_file_2d_extensions,29)
+___DEF_MOD_GLO(68,___G_c_23_target_2d_semantics_2d_changing_2d_options,31)
+___DEF_MOD_GLO(69,___G_c_23_target_2d_semantics_2d_preserving_2d_options,33)
+___DEF_MOD_GLO(29,___G_c_23_target_2d_begin_21_,35)
+___DEF_MOD_GLO(30,___G_c_23_target_2d_begin_21__2d_set_21_,37)
+___DEF_MOD_GLO(35,___G_c_23_target_2d_end_21_,39)
+___DEF_MOD_GLO(36,___G_c_23_target_2d_end_21__2d_set_21_,41)
+___DEF_MOD_GLO(33,___G_c_23_target_2d_dump,43)
+___DEF_MOD_GLO(34,___G_c_23_target_2d_dump_2d_set_21_,45)
+___DEF_MOD_GLO(50,___G_c_23_target_2d_link_2d_info,47)
+___DEF_MOD_GLO(51,___G_c_23_target_2d_link_2d_info_2d_set_21_,49)
+___DEF_MOD_GLO(49,___G_c_23_target_2d_link,51)
+___DEF_MOD_GLO(52,___G_c_23_target_2d_link_2d_set_21_,53)
+___DEF_MOD_GLO(58,___G_c_23_target_2d_nb_2d_regs,55)
+___DEF_MOD_GLO(59,___G_c_23_target_2d_nb_2d_regs_2d_set_21_,57)
+___DEF_MOD_GLO(56,___G_c_23_target_2d_nb_2d_arg_2d_regs,59)
+___DEF_MOD_GLO(57,___G_c_23_target_2d_nb_2d_arg_2d_regs_2d_set_21_,61)
+___DEF_MOD_GLO(31,___G_c_23_target_2d_compactness,63)
+___DEF_MOD_GLO(32,___G_c_23_target_2d_compactness_2d_set_21_,65)
+___DEF_MOD_GLO(53,___G_c_23_target_2d_max_2d_small_2d_allocation,67)
+___DEF_MOD_GLO(54,___G_c_23_target_2d_max_2d_small_2d_allocation_2d_set_21_,69)
+___DEF_MOD_GLO(63,___G_c_23_target_2d_prim_2d_info,71)
+___DEF_MOD_GLO(64,___G_c_23_target_2d_prim_2d_info_2d_set_21_,73)
+___DEF_MOD_GLO(47,___G_c_23_target_2d_label_2d_info,75)
+___DEF_MOD_GLO(48,___G_c_23_target_2d_label_2d_info_2d_set_21_,77)
+___DEF_MOD_GLO(45,___G_c_23_target_2d_jump_2d_info,79)
+___DEF_MOD_GLO(46,___G_c_23_target_2d_jump_2d_info_2d_set_21_,81)
+___DEF_MOD_GLO(42,___G_c_23_target_2d_frame_2d_constraints,83)
+___DEF_MOD_GLO(43,___G_c_23_target_2d_frame_2d_constraints_2d_set_21_,85)
+___DEF_MOD_GLO(65,___G_c_23_target_2d_proc_2d_result,87)
+___DEF_MOD_GLO(66,___G_c_23_target_2d_proc_2d_result_2d_set_21_,89)
+___DEF_MOD_GLO(70,___G_c_23_target_2d_switch_2d_testable_3f_,91)
+___DEF_MOD_GLO(71,___G_c_23_target_2d_switch_2d_testable_3f__2d_set_21_,93)
+___DEF_MOD_GLO(37,___G_c_23_target_2d_eq_2d_testable_3f_,95)
+___DEF_MOD_GLO(38,___G_c_23_target_2d_eq_2d_testable_3f__2d_set_21_,97)
+___DEF_MOD_GLO(60,___G_c_23_target_2d_object_2d_type,99)
+___DEF_MOD_GLO(61,___G_c_23_target_2d_object_2d_type_2d_set_21_,101)
+___DEF_MOD_GLO(39,___G_c_23_target_2d_extra,103)
+___DEF_MOD_GLO(40,___G_c_23_target_2d_extra_2d_set_21_,105)
+___DEF_MOD_GLO(21,___G_c_23_make_2d_frame_2d_constraints,107)
+___DEF_MOD_GLO(17,___G_c_23_frame_2d_constraints_2d_reserve,110)
+___DEF_MOD_GLO(16,___G_c_23_frame_2d_constraints_2d_align,112)
+___DEF_MOD_GLO(44,___G_c_23_target_2d_get,114)
+___DEF_MOD_GLO(85,___G_c_23_targets_2d_loaded,120)
+___DEF_MOD_GLO(28,___G_c_23_target_2d_add,126)
+___DEF_MOD_GLO(15,___G_c_23_default_2d_target,132)
+___DEF_MOD_GLO(62,___G_c_23_target_2d_options,135)
+___DEF_MOD_GLO(19,___G_c_23_get_2d_option,138)
+___DEF_MOD_GLO(22,___G_c_23_make_2d_prim_2d_proc_2d_table,143)
+___DEF_MOD_GLO(25,___G_c_23_prim_2d_proc_2d_add_21_,151)
+___DEF_MOD_GLO(26,___G_c_23_prim_2d_proc_2d_info,157)
+___DEF_MOD_GLO(14,___G_c_23_default_2d_label_2d_info,160)
+___DEF_MOD_GLO(13,___G_c_23_default_2d_jump_2d_info,173)
+___DEF_MOD_GLO(67,___G_c_23_target_2d_select_21_,185)
+___DEF_MOD_GLO(72,___G_c_23_target_2d_unselect_21_,215)
+___DEF_MOD_GLO(12,___G_c_23_arith_2d_implementation,219)
+___DEF_MOD_GLO(24,___G_c_23_mostly_2d_arith_2d_implementation,222)
+___DEF_MOD_GLO(11,___G_c_23_allocation_2d_limit,225)
+___DEF_MOD_GLO(20,___G_c_23_link_2d_modules,229)
+___DEF_MOD_GLO(18,___G_c_23_get_2d_link_2d_info,255)
 ___END_MOD_GLO
 
 ___BEGIN_MOD_SYM_KEY

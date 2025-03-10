@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_parms.c", produced by Gambit v4.9.5
+; File: "_parms.c", produced by Gambit v4.9.6
 (
-409005
+409006
 (C)
 "_parms"
 ("_parms")
@@ -212,7 +212,7 @@
 ) #|*/"*/"meta-info|#
 )
 #else
-#define ___VERSION 409005
+#define ___VERSION 409006
 #define ___MODULE_NAME "_parms"
 #define ___LINKER_ID ___LNK___parms
 #define ___MH_PROC ___H___parms
@@ -4797,7 +4797,7 @@ ___DEF_SLBL(0,___L0_c_23_compiler_2d_version)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(0,0,0,0)
 ___DEF_GLBL(___L_c_23_compiler_2d_version)
-   ___SET_R1(___FIX(409005L))
+   ___SET_R1(___FIX(409006L))
    ___JUMPRET(___R0)
 ___END_P_SW
 ___END_P_COD
@@ -4843,7 +4843,7 @@ ___DEF_SLBL(1,___L1_c_23_compiler_2d_version_2d_string)
 ___DEF_SLBL(2,___L2_c_23_compiler_2d_version_2d_string)
    ___SET_STK(-3,___STK(-4))
    ___SET_STK(-4,___R1)
-   ___SET_R1(___FIX(5L))
+   ___SET_R1(___FIX(6L))
    ___SET_R0(___LBL(3))
    ___JUMPPRM(___SET_NARGS(1),___PRM__23__23_number_2d__3e_string)
 ___DEF_SLBL(3,___L3_c_23_compiler_2d_version_2d_string)

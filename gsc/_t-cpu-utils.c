@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_t-cpu-utils.c", produced by Gambit v4.9.5
+; File: "_t-cpu-utils.c", produced by Gambit v4.9.6
 (
-409005
+409006
 (C)
 "_t-cpu-utils"
 ("_t-cpu-utils")
@@ -37,7 +37,7 @@
 ) #|*/"*/"meta-info|#
 )
 #else
-#define ___VERSION 409005
+#define ___VERSION 409006
 #define ___MODULE_NAME "_t-cpu-utils"
 #define ___LINKER_ID ___LNK___t_2d_cpu_2d_utils
 #define ___MH_PROC ___H___t_2d_cpu_2d_utils
