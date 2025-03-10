@@ -2471,18 +2471,22 @@ ___STORE_U32(s,i,val))
 #define ___HAS_TAG_IN_SET(x,set) (((___CAST(___U32,1) << (x)) & (~___CAST(___U32,0)/0xff * (set))) != 0)
 
 #ifndef ___FLONUM_SELF_TAGGING_TAGS
-#if (__clang__ || ___GNUC_VERSION) && defined(___USE_3_TAG_BITS)
 #define ___FLONUM_SELF_TAGGING_TAGS 1
-#else
-/* can't use float self-tagging because ({...}) syntax is not supported */
-#define ___FLONUM_SELF_TAGGING_TAGS 0
 #endif
+
+#if !(__clang__ || ___GNUC_VERSION)
+/* can't use float self-tagging because ({...}) syntax is not supported */
+#undef ___FLONUM_SELF_TAGGING_TAGS
+#define ___FLONUM_SELF_TAGGING_TAGS 0
 #endif
 
 #define ___tFIXNUM   0
 #define ___tMEM1     1
 
 #ifdef ___USE_2_TAG_BITS
+
+#undef ___FLONUM_SELF_TAGGING_TAGS
+#define ___FLONUM_SELF_TAGGING_TAGS 0
 
 #define ___TB 2
 

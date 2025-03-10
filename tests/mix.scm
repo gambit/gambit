@@ -10,7 +10,7 @@
   (not safe)
 )
 
-(define word-size (if (> ##max-fixnum 2147483647) 8 4)) ;; may not work in the future
+(define word-size (if (> ##max-fixnum 536870911) 8 4)) ;; may not work in the future
 (define string-char-size (case (##max-char-code) ((255) 1) ((65535) 2) (else 4)))
 
 ;------------------------------------------------------------------------------
