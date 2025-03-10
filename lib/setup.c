@@ -1490,6 +1490,7 @@ ___module_struct *module;)
   int cnscount;
   ___SCMOBJ *subtbl;
   int subcount;
+  ___WORD ___temp;
 
   /* TODO: make this phase atomic for when there are multiple VMs? */
 

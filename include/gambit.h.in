@@ -2471,7 +2471,7 @@ ___STORE_U32(s,i,val))
 #define ___HAS_TAG_IN_SET(x,set) (((___CAST(___U32,1) << (x)) & (~___CAST(___U32,0)/0xff * (set))) != 0)
 
 #ifndef ___FLONUM_SELF_TAGGING_TAGS
-#define ___FLONUM_SELF_TAGGING_TAGS 0
+#define ___FLONUM_SELF_TAGGING_TAGS 1
 #endif
 
 #define ___tFIXNUM   0
