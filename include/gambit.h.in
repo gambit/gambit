@@ -2552,8 +2552,7 @@ ___STORE_U32(s,i,val))
 
 #ifdef ___USE_3_TAG_BITS
 #if ___FLONUM_SELF_TAGGING_TAGS <= 1
-/*TODO: use #define ___tVECTOR ___tMEM3 */
-#define ___tVECTOR ___tMEM1
+#define ___tVECTOR ___tMEM3
 #define ___tFLONUM ___tMEM4
 #else
 #if ___FLONUM_SELF_TAGGING_TAGS <= 3
