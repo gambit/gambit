@@ -1,0 +1,18 @@
+;; Copyright (c) 2024 by Macon Gambill, all rights reserved.
+
+(define-library (adorn)
+  (export adorn! matches? could-match? reverse+simplify-kinds!)
+  (import (scheme base)
+          (scheme case-lambda)
+          (scheme char)
+          (scheme cxr))
+  (include "matching.scm")
+  (include "helpers.scm")
+  (include "symmetric-mesg-handlers.scm")
+  (include "comment-mesg-handlers.scm")
+  (include "binding-mesg-handlers.scm")
+  (include "char-mesg-handlers.scm")
+  (include "other-mesg-handlers.scm")
+  (include "numeric-mesg-handlers.scm")
+  (include "rt-syntax-handlers.scm")
+  (include "adornment.scm"))
