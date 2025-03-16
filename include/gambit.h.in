@@ -1664,10 +1664,10 @@
 
 #endif
 
+#if defined(___TRUST_C_TCO)
 #if __has_attribute(musttail)
 #define ___PROPER_TAIL_CALL(call) __attribute__((musttail)) return call
 #else
-#if defined(___TRUST_C_TCO)
 #define ___PROPER_TAIL_CALL(call) return call
 #endif
 #endif
