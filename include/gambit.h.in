@@ -1665,7 +1665,7 @@
 #endif
 
 #if defined(___TRUST_C_TCO)
-#if __has_attribute(musttail)
+#if __has_attribute(musttail) && (defined(__clang__) || (defined(__GNUC__) && (__GNUC__ > 14)))
 #define ___PROPER_TAIL_CALL(call) __attribute__((musttail)) return call
 #else
 #define ___PROPER_TAIL_CALL(call) return call
