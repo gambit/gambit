@@ -3,7 +3,7 @@
 ;;; File: "_num.scm"
 
 ;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
-;;; Copyright (c) 2004-2023 by Brad Lucier, All Rights Reserved.
+;;; Copyright (c) 2004-2025 by Brad Lucier, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -2401,7 +2401,7 @@
                                    (bignums-case exact-x #t exact-y #t))))))))
                 (type-error-on-x))
             (type-error-on-x))               ;; x = cpxnum
-          (type-error-on-y)) 
+          (type-error-on-y))
 
     (type-error-on-y)))                              ;; y = cpxnum
 
@@ -3701,6 +3701,8 @@ for a discussion of branch cuts.
 
   (define (exact-int-expt x y)
 
+    ;; x is exact, y is an exact int
+
     (define (positive-int-expt x y)
 
       ;; x is an exact number and y is a positive exact integer
@@ -3749,8 +3751,75 @@ for a discussion of branch cuts.
          (##exp (##* (##log x) y)))
      (range-error)))
 
+  (define (flonum-exact-int-expt x y)
+
+    ;; x is a flonum, y is exact-int
+
+    (declare (mostly-fixnum))
+
+    (cond
+     ;; The one really special case
+     ((eqv? y 0)
+      1)
+     ;; The fast path
+     ((##exact-int->flonum-exact? y)
+      (flexpt x (inexact y)))
+     ;; The next two cases simplify arguments about
+     ;; later comparisons.
+     ((flnan? x)
+      x)
+     ((flzero? x)
+      (if (and (odd? y) (flnegative? (##flcopysign 1. x)))
+          -0.
+          0.))
+     ((or (<= y (- (expt 2 63)))
+          (<= (expt 2 63) y))
+      ;; Only extreme values (plus/minus 1, 0, infty) are possible
+      ;; in IEEE double precision.
+      ;; for future reference
+      ;; (nextafter 1. +inf.0) => 1.0000000000000002
+      ;; (nextafter 1. +.0   ) =>  .9999999999999999
+      (cond ((fl= (flabs x) 1.)
+             (if (and (odd? y) (fl= x -1.0))
+                 -1.
+                 1.))
+            ((fl< 1. (flabs x))
+             (if (positive? y)
+                 (if (and (odd? y) (flnegative? x))
+                     -inf.0
+                     +inf.0)
+                 (if (and (odd? y) (flnegative? x))
+                     -0.
+                     +0.)))
+            (else
+             ;; (fl< (flabs x) 1.)
+             (if (positive? y)
+                 (if (and (odd? y) (flnegative? x))
+                     -0.
+                     +0.)
+                 (if (and (odd? y) (flnegative? x))
+                     -inf.0
+                     +inf.0)))))
+     (else
+      (let* ((abs-big-y
+              (arithmetic-shift (arithmetic-shift (abs y) -12) 12))
+             (big-part-of-y
+              (if (negative? y)
+                  (- abs-big-y)
+                  abs-big-y))
+             (rest-of-y
+              (- y big-part-of-y)))
+        ;; y = big-part-of-y + rest-of-y, both terms on right are nonzero
+        ;; because (abs y) <= 2^63 and it can't be converted exactly to a flonum,
+        ;; so there are more than 53 upper bits of y.
+        ;; big-part-of-y and rest-of-y can be converted to flonum without roundoff error.
+        ;; y, big-part-of-y, and rest-of-y have the same sign, so the following
+        ;; product is not an infinity times a zero.
+        (fl* (flexpt x (inexact big-part-of-y))
+             (flexpt x (inexact rest-of-y)))))))
+
   (define (ratnum-expt x y)
-    ;; x is exact-int or ratnum
+    ;; x is exact, y is ratnum
     (cond ((##eqv? x 0)
            (if (##negative? y)
                (range-error)
@@ -3849,20 +3918,7 @@ for a discussion of branch cuts.
       (if (##fx= y 0)
           1
           (exact-int-expt x y))
-      (cond ((##fx= y 0)
-             1)
-            ((##flnan? x)
-             x)
-            ((##flnegative? x)
-             ;; we do this because (##fixnum->flonum y) is always
-             ;; even for large enough y on 64-bit machines
-             (let ((abs-result
-                    (##flexpt (##fl- x) (##fixnum->flonum y))))
-               (if (##fxodd? y)
-                   (##fl- abs-result)
-                   abs-result)))
-            (else
-             (##flexpt x (##fixnum->flonum y))))
+      (flonum-exact-int-expt x y)
       (cond ((##fx= y 0)
              1)
             ((##fx= y 1)
@@ -3876,18 +3932,7 @@ for a discussion of branch cuts.
       (exact-int-expt x y)
       (exact-int-expt x y)
       (exact-int-expt x y)
-      (cond ((##flnan? x)
-             x)
-            ((##flnegative? x)
-             ;; we do this because (##exact-int->flonum y) is always
-             ;; even for large enough y
-             (let ((abs-result
-                    (##flexpt (##fl- x) (##exact-int->flonum y))))
-               (if (macro-bignum-odd? y)
-                   (##fl- abs-result)
-                   abs-result)))
-            (else
-             (##flexpt x (##exact-int->flonum y))))
+      (flonum-exact-int-expt x y)
       (if (##exact? x)
           (exact-int-expt x y)
           (complex-expt x y)))
@@ -3914,7 +3959,9 @@ for a discussion of branch cuts.
       (ratnum-complex-expt x y))
 
     (macro-number-dispatch x (type-error-on-x) ;; y a flonum
-      (cond ((##flnan? y)
+      (cond ((##eqv? x 1)
+             1)
+            ((##flnan? y)
              y)
             ((##eqv? x 0)
              (if (##flnegative? y)

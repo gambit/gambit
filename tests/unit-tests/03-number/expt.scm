@@ -37,6 +37,39 @@
 (check-eqv? (expt -1 0.5) 0.+1.i)
 (check-eqv? (expt -1. 1/2) +1.i)
 
+;;; Some "white box" testing
+;;; (nextafter 1. +inf.0) => 1.0000000000000002
+;;; (nextafter 1. +.0   ) =>  .9999999999999999
+
+(check-eqv? (flexpt 1.0000000000000002 (inexact (expt 2 63)))   +inf.0)
+(check-eqv? (flexpt 1.0000000000000002 (inexact (- (expt 2 63)))) +0.0)
+
+(check-eqv? (flexpt .9999999999999999 (inexact (expt 2 63)))       +0.0)
+(check-eqv? (flexpt .9999999999999999 (inexact (- (expt 2 63)))) +inf.0)
+
+(check-eqv? (expt 1.0000000000000002 (expt 2 63))   +inf.0)
+(check-eqv? (expt 1.0000000000000002 (- (expt 2 63))) +0.0)
+
+(check-eqv? (expt .9999999999999999 (expt 2 63))       +0.0)
+(check-eqv? (expt .9999999999999999 (- (expt 2 63))) +inf.0)
+
+(check-eqv? (expt -1.0000000000000002 (expt 2 63))   +inf.0)
+(check-eqv? (expt -1.0000000000000002 (- (expt 2 63))) +0.0)
+
+(check-eqv? (expt -.9999999999999999 (expt 2 63))       +0.0)
+(check-eqv? (expt -.9999999999999999 (- (expt 2 63))) +inf.0)
+
+(check-eqv? (expt 1.0000000000000002 (+ +1 (expt 2 63))) +inf.0)
+(check-eqv? (expt 1.0000000000000002 (- -1 (expt 2 63)))   +0.0)
+
+(check-eqv? (expt .9999999999999999 (+ +1 (expt 2 63)))   +0.0)
+(check-eqv? (expt .9999999999999999 (- -1 (expt 2 63))) +inf.0)
+
+(check-eqv? (expt -1.0000000000000002 (+ +1 (expt 2 63))) -inf.0)
+(check-eqv? (expt -1.0000000000000002 (- -1 (expt 2 63)))   -0.0)
+
+(check-eqv? (expt -.9999999999999999 (+ +1 (expt 2 63)))   -0.0)
+(check-eqv? (expt -.9999999999999999 (- -1 (expt 2 63))) -inf.0)
 
 
 ;;; Test exceptions
@@ -44,3 +77,67 @@
 (check-tail-exn type-exception? (lambda () (expt 'a 2)))
 (check-tail-exn type-exception? (lambda () (expt 2 'a)))
 
+;;; Tests motivated by https://en.cppreference.com/w/c/numeric/math/pow
+;;; We tweak them to test (expt flonum exact-int)
+
+;;     pow(+0, exponent), where exponent is a negative odd integer, returns +∞ and raises FE_DIVBYZERO
+(check-eqv? (expt +0. -3) +inf.0)
+
+;;     pow(-0, exponent), where exponent is a negative odd integer, returns -∞ and raises FE_DIVBYZERO
+(check-eqv? (expt -0. -3) -inf.0)
+
+;;     pow(±0, exponent), where exponent is negative, finite, and is an even integer or a non-integer, returns +∞ and raises FE_DIVBYZERO
+(check-eqv? (expt +0. -4) +inf.0)
+(check-eqv? (expt -0. -4) +inf.0)
+
+;;     pow(±0, -∞) returns +∞ and may raise FE_DIVBYZERO(until C23)
+
+;;     pow(+0, exponent), where exponent is a positive odd integer, returns +0
+(check-eqv? (expt +0. 3) +0.)
+
+;;     pow(-0, exponent), where exponent is a positive odd integer, returns -0
+(check-eqv? (expt -0. 3) -0.)
+
+;;     pow(±0, exponent), where exponent is positive non-integer or a positive even integer, returns +0
+(check-eqv? (expt +0. 2) +0.)
+(check-eqv? (expt -0. 2) +0.)
+
+;;     pow(-1, ±∞) returns 1
+
+;;     pow(+1, exponent) returns 1 for any exponent, even when exponent is NaN
+(check-eqv? (expt +1 +nan.0) +1)
+
+;;     pow(base, ±0) returns 1 for any base, even when base is NaN
+(check-eqv? (expt +nan.0 0) 1)
+
+;;     pow(base, exponent) returns NaN and raises FE_INVALID if base is finite and negative and exponent is finite and non-integer.
+
+;;     pow(base, -∞) returns +∞ for any |base|<1
+
+;;     pow(base, -∞) returns +0 for any |base|>1
+
+;;     pow(base, +∞) returns +0 for any |base|<1
+
+;;     pow(base, +∞) returns +∞ for any |base|>1
+
+;;     pow(-∞, exponent) returns -0 if exponent is a negative odd integer
+(check-eqv? (expt -inf.0 -3) -0.)
+
+;;     pow(-∞, exponent) returns +0 if exponent is a negative non-integer or negative even integer
+(check-eqv? (expt -inf.0 -2) +0.)
+
+;;     pow(-∞, exponent) returns -∞ if exponent is a positive odd integer
+(check-eqv? (expt -inf.0 3) -inf.0)
+
+;;     pow(-∞, exponent) returns +∞ if exponent is a positive non-integer or positive even integer
+(check-eqv? (expt -inf.0 4) +inf.0)
+
+;;     pow(+∞, exponent) returns +0 for any negative exponent
+(check-eqv? (expt +inf.0 -4) +0.)
+
+;;     pow(+∞, exponent) returns +∞ for any positive exponent
+(check-eqv? (expt +inf.0 3) +inf.0)
+
+;;     except where specified above, if any argument is NaN, NaN is returned. 
+(let ((test-value (expt +nan.0 2)))
+  (check-false (= test-value test-value)))
