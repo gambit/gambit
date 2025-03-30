@@ -3769,7 +3769,7 @@ for a discussion of branch cuts.
       ;; for future reference
       ;; (nextafter 1. +inf.0) => 1.0000000000000002
       ;; (nextafter 1. +.0   ) =>  .9999999999999999
-      (if (eq? (fl< 1. (flabs x)) (flpositive? y))
+      (if (eq? (fl< 1. (flabs x)) (positive? y))
           ;; result is an infinity
           (if (and (odd? y) (flnegative? x)) -inf.0 +inf.0)
           ;; result is a zero
