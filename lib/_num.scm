@@ -3752,36 +3752,28 @@ for a discussion of branch cuts.
      (range-error)))
 
   (define (flonum-exact-int-expt x y)
-
     ;; x is a flonum, y is a nonzero exact-int
-
-    (declare (mostly-fixnum))
-
     (cond
      ;; The fast path
      ((##exact-int->flonum-exact? y)
       (flexpt x (inexact y)))
-     ;; The next two cases simplify arguments about
-     ;; later comparisons.
-     ((flnan? x) x)
-     ((flzero? x) (if (odd? y) x 0.))
+     ;; singular cases
+     ((flnan? x)         x)
+     ((flzero? x)        (if (odd? y) x 0.))
+     ((fl= (flabs x) 1.) (if (odd? y) x 1.))
+     ;; extremely large exponents
      ((or (<= y (- (expt 2 63)))
           (<= (expt 2 63) y))
-      ;; Only extreme values (plus/minus 1, 0, infty) are possible
+      ;; Only extreme values (+/- 0, infty) are possible
       ;; in IEEE double precision.
       ;; for future reference
       ;; (nextafter 1. +inf.0) => 1.0000000000000002
       ;; (nextafter 1. +.0   ) =>  .9999999999999999
-      (cond ((fl= (flabs x) 1.)
-             (if (odd? y) x 1.))
-            ((eq? (fl< 1. (flabs x)) (flpositive? y))
-             ;; result is an infinity
-             (if (and (odd? y) (flnegative? x))
-                 -inf.0 +inf.0))
-            (else
-             ;; result is a zero
-             (if (and (odd? y) (flnegative? x))
-                 -0. +0.))))
+      (if (eq? (fl< 1. (flabs x)) (flpositive? y))
+          ;; result is an infinity
+          (if (and (odd? y) (flnegative? x)) -inf.0 +inf.0)
+          ;; result is a zero
+          (if (and (odd? y) (flnegative? x)) -0. +0.)))
      (else
       (let* ((abs-big-y
               ;; remove the lowest 12 bits of (abs y)
