@@ -3753,25 +3753,18 @@ for a discussion of branch cuts.
 
   (define (flonum-exact-int-expt x y)
 
-    ;; x is a flonum, y is exact-int
+    ;; x is a flonum, y is a nonzero exact-int
 
     (declare (mostly-fixnum))
 
     (cond
-     ;; The one really special case
-     ((eqv? y 0)
-      1)
      ;; The fast path
      ((##exact-int->flonum-exact? y)
       (flexpt x (inexact y)))
      ;; The next two cases simplify arguments about
      ;; later comparisons.
-     ((flnan? x)
-      x)
-     ((flzero? x)
-      (if (and (odd? y) (flnegative? (##flcopysign 1. x)))
-          -0.
-          0.))
+     ((flnan? x) x)
+     ((flzero? x) (if (odd? y) x 0.))
      ((or (<= y (- (expt 2 63)))
           (<= (expt 2 63) y))
       ;; Only extreme values (plus/minus 1, 0, infty) are possible
@@ -3780,28 +3773,18 @@ for a discussion of branch cuts.
       ;; (nextafter 1. +inf.0) => 1.0000000000000002
       ;; (nextafter 1. +.0   ) =>  .9999999999999999
       (cond ((fl= (flabs x) 1.)
-             (if (and (odd? y) (fl= x -1.0))
-                 -1.
-                 1.))
-            ((fl< 1. (flabs x))
-             (if (positive? y)
-                 (if (and (odd? y) (flnegative? x))
-                     -inf.0
-                     +inf.0)
-                 (if (and (odd? y) (flnegative? x))
-                     -0.
-                     +0.)))
+             (if (odd? y) x 1.))
+            ((eq? (fl< 1. (flabs x)) (flpositive? y))
+             ;; result is an infinity
+             (if (and (odd? y) (flnegative? x))
+                 -inf.0 +inf.0))
             (else
-             ;; (fl< (flabs x) 1.)
-             (if (positive? y)
-                 (if (and (odd? y) (flnegative? x))
-                     -0.
-                     +0.)
-                 (if (and (odd? y) (flnegative? x))
-                     -inf.0
-                     +inf.0)))))
+             ;; result is a zero
+             (if (and (odd? y) (flnegative? x))
+                 -0. +0.))))
      (else
       (let* ((abs-big-y
+              ;; remove the lowest 12 bits of (abs y)
               (arithmetic-shift (arithmetic-shift (abs y) -12) 12))
              (big-part-of-y
               (if (negative? y)
@@ -3918,7 +3901,9 @@ for a discussion of branch cuts.
       (if (##fx= y 0)
           1
           (exact-int-expt x y))
-      (flonum-exact-int-expt x y)
+      (if (##fx= y 0)
+          1
+          (flonum-exact-int-expt x y))
       (cond ((##fx= y 0)
              1)
             ((##fx= y 1)
