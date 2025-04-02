@@ -1,0 +1,29 @@
+@node Invoking Gambit
+@chapter Invoking Gambit
+This node is about invoking Gambit, covering features common to
+@command{gsc} and @command{gsi} (and @command{gsi}'s various symlinks).
+@command{gsc}-specific features are covered elsewhere.
+
+@node Argument processing
+@section Argument processing
+This node covers how Gambit processes command line arguments, and how
+those arguments may be used to choose a mode of operation (interactive,
+batch, module management, etc.).
+
+@node Interactive mode
+@section Interactive mode
+This node is about interacting with Gambit via the @acronym{REPL,
+read-eval-print loop}.
+
+@node Batch mode
+@section Batch mode
+This node is about batch mode.
+
+@node Module management mode
+@section Module management mode
+This node is about module management mode.
+
+@node Scheme scripts
+@section Scheme scripts
+This node is about using Gambit as a script interpreter.  It will cover
+shebangs, the @samp{main} procedure, etc.
