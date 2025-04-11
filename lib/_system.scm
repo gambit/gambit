@@ -2,7 +2,7 @@
 
 ;;; File: "_system.scm"
 
-;;; Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1077,7 +1077,7 @@ ___return(___FIX(___HASH_ADD(___HASH_ADD(___HASH_ADD(hi>>16, hi&0xffff), lo>>16)
                            structure-salt
                            (##eq?-hash type-id)))
                          (len
-                          (##vector-length obj)))
+                          (##structure-length obj)))
                      (if (##fx= bank 0)
                          (hb (macro-hash-combine h len)
                              0)
