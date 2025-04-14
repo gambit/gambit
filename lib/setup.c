@@ -1281,9 +1281,11 @@ ___SCMOBJ *ptr;)
   int words = ___HD_WORDS(head);
   int start = words+___SUBTYPED_BODY;
 
+#ifndef ___NAN_BOXING
 #if ___tFLONUM != ___tSUBTYPED
   if (subtype == ___sFLONUM)
     return ___FLONUM_FROM_START(align (ptr, start, 1));
+#endif
 #endif
 
 #if ___tVECTOR != ___tSUBTYPED

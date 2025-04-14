@@ -9,10 +9,10 @@
   (fixnum)
   (not safe)
 )
-
-(define word-size (if (> ##max-fixnum 536870911) 8 4)) ;; may not work in the future
+(define big-float (expt (##first-argument 10.0) 209)) ;; note that 1e209 = 0110101101010011011101111001100011110100001010000101011000110000 and that it is memory allocated in all object representations except NaN-boxing
+(define using-nan-boxing? (eq? big-float 1e209))
+(define word-size (if (or (> ##max-fixnum 536870911) using-nan-boxing?) 8 4)) ;; may not work in the future...
 (define string-char-size (case (##max-char-code) ((255) 1) ((65535) 2) (else 4)))
-
 ;------------------------------------------------------------------------------
 
 ; This first part is the "PEVAL" benchmark (partial-evaluator)
@@ -1185,8 +1185,8 @@
   (test (string->list "56") (#\5 #\6))
   (test (list->string '(#\5 #\6)) "56")
   (err (make-string -1))
-  (err (make-string (quotient max-size-in-bytes-plus-1 string-char-size)))
-  (err (make-string max-fixnum))
+  (err (if (not using-nan-boxing?) (make-string (quotient max-size-in-bytes-plus-1 string-char-size)) (##make-string big-float))) ;; note: fake heap overflow when NaN-boxing
+  (err (if (not using-nan-boxing?) (make-string max-fixnum) (##make-string big-float))) ;; note: fake heap overflow when NaN-boxing
   (err (make-string 123456789012345678901))
   (err (make-string 1.5))
   (err (make-string 1 'a))
@@ -1220,8 +1220,8 @@
   (test (vector->list '#(5 6)) (5 6))
   (test (list->vector '(5 b)) #(5 b))
   (err (make-vector -1))
-  (let ((n (quotient max-size-in-bytes-plus-1 word-size))) (err (make-vector n)))
-  (err (make-vector max-fixnum))
+  (err (if (not using-nan-boxing?) (make-vector (quotient max-size-in-bytes-plus-1 word-size)) (##make-vector big-float))) ;; note: fake heap overflow when NaN-boxing
+  (err (if (not using-nan-boxing?) (make-vector max-fixnum) (##make-vector big-float))) ;; note: fake heap overflow when NaN-boxing
   (err (make-vector 123456789012345678901))
   (err (make-vector 1.5))
   (err (vector-length 123456789012345678901))
@@ -1251,8 +1251,8 @@
   (test (s8vector->list '#s8(5 6)) (5 6))
   (test (list->s8vector '(-128 127)) #s8(-128 127))
   (err (make-s8vector -1))
-  (err (make-s8vector max-size-in-bytes-plus-1))
-  (err (make-s8vector max-fixnum))
+  (err (if (not using-nan-boxing?) (make-s8vector max-size-in-bytes-plus-1) (##make-s8vector big-float))) ;; note: fake heap overflow when NaN-boxing
+  (err (if (not using-nan-boxing?) (make-s8vector max-fixnum) (##make-s8vector big-float))) ;; note: fake heap overflow when NaN-boxing
   (err (make-s8vector 123456789012345678901))
   (err (make-s8vector 1.5))
   (err (make-s8vector 1 'a))
@@ -1290,8 +1290,8 @@
   (test (u8vector->list '#u8(5 6)) (5 6))
   (test (list->u8vector '(0 255)) #u8(0 255))
   (err (make-u8vector -1))
-  (err (make-u8vector max-size-in-bytes-plus-1))
-  (err (make-u8vector max-fixnum))
+  (err (if (not using-nan-boxing?) (make-u8vector max-size-in-bytes-plus-1) (##make-u8vector big-float))) ;; note: fake heap overflow when NaN-boxing
+  (err (if (not using-nan-boxing?) (make-u8vector max-fixnum) (##make-u8vector big-float))) ;; note: fake heap overflow when NaN-boxing
   (err (make-u8vector 123456789012345678901))
   (err (make-u8vector 1.5))
   (err (make-u8vector 1 'a))
@@ -1329,8 +1329,8 @@
   (test (s16vector->list '#s16(5 6)) (5 6))
   (test (list->s16vector '(-32768 32767)) #s16(-32768 32767))
   (err (make-s16vector -1))
-  (err (make-s16vector (quotient max-size-in-bytes-plus-1 2)))
-  (err (make-s16vector max-fixnum))
+  (err (if (not using-nan-boxing?) (make-s16vector (quotient max-size-in-bytes-plus-1 2)) (##make-s16vector big-float))) ;; note: fake heap overflow when NaN-boxing
+  (err (if (not using-nan-boxing?) (make-s16vector max-fixnum) (##make-s16vector big-float))) ;; note: fake heap overflow when NaN-boxing
   (err (make-s16vector 123456789012345678901))
   (err (make-s16vector 1.5))
   (err (make-s16vector 1 'a))
@@ -1368,8 +1368,8 @@
   (test (u16vector->list '#u16(5 6)) (5 6))
   (test (list->u16vector '(0 65535)) #u16(0 65535))
   (err (make-u16vector -1))
-  (err (make-u16vector (quotient max-size-in-bytes-plus-1 2)))
-  (err (make-u16vector max-fixnum))
+  (err (if (not using-nan-boxing?) (make-u16vector (quotient max-size-in-bytes-plus-1 2)) (##make-u16vector big-float))) ;; note: fake heap overflow when NaN-boxing
+  (err (if (not using-nan-boxing?) (make-u16vector max-fixnum) (##make-u16vector big-float))) ;; note: fake heap overflow when NaN-boxing
   (err (make-u16vector 123456789012345678901))
   (err (make-u16vector 1.5))
   (err (make-u16vector 1 'a))
@@ -1408,8 +1408,8 @@
   (test (s32vector->list (s32vector (- (expt 2 31)) (- -1 (expt 2 29)) (- (expt 2 29)) (- (expt 2 29) 1) (expt 2 29) (- (expt 2 31) 1))) (-2147483648 -536870913 -536870912 536870911 536870912 2147483647))
   (test (list->s32vector '(-2147483648 2147483647)) #s32(-2147483648 2147483647))
   (err (make-s32vector -1))
-  (err (make-s32vector (quotient max-size-in-bytes-plus-1 4)))
-  (err (make-s32vector max-fixnum))
+  (err (if (not using-nan-boxing?) (make-s32vector (quotient max-size-in-bytes-plus-1 4)) (##make-s32vector big-float))) ;; note: fake heap overflow when NaN-boxing
+  (err (if (not using-nan-boxing?) (make-s32vector max-fixnum) (##make-s32vector big-float))) ;; note: fake heap overflow when NaN-boxing
   (err (make-s32vector 123456789012345678901))
   (err (make-s32vector 1.5))
   (err (make-s32vector 1 'a))
@@ -1447,8 +1447,8 @@
   (test (u32vector->list (u32vector (- (expt 2 29) 1) (expt 2 29) (- (expt 2 31) 1) (expt 2 31) (- (expt 2 32) 1))) (536870911 536870912 2147483647 2147483648 4294967295))
   (test (list->u32vector '(0 4294967295)) #u32(0 4294967295))
   (err (make-u32vector -1))
-  (err (make-u32vector (quotient max-size-in-bytes-plus-1 4)))
-  (err (make-u32vector max-fixnum))
+  (err (if (not using-nan-boxing?) (make-u32vector (quotient max-size-in-bytes-plus-1 4)) (##make-u32vector big-float))) ;; note: fake heap overflow when NaN-boxing
+  (err (if (not using-nan-boxing?) (make-u32vector max-fixnum) (##make-u32vector big-float))) ;; note: fake heap overflow when NaN-boxing
   (err (make-u32vector 123456789012345678901))
   (err (make-u32vector 1.5))
   (err (make-u32vector 1 'a))
@@ -1486,8 +1486,8 @@
   (test (s64vector->list (s64vector (- (expt 2 63)) (- -1 (expt 2 62)) (- (expt 2 62)) (- -1 (expt 2 61)) (- (expt 2 61)) (- -1 (expt 2 29)) (- (expt 2 29)) (- (expt 2 29) 1) (expt 2 29) (expt 2 31) (- (expt 2 61) 1) (expt 2 61) (- (expt 2 62) 1) (expt 2 62) (- (expt 2 63) 1))) (-9223372036854775808 -4611686018427387905 -4611686018427387904 -2305843009213693953 -2305843009213693952 -536870913 -536870912 536870911 536870912 2147483648 2305843009213693951 2305843009213693952 4611686018427387903 4611686018427387904 9223372036854775807))
   (test (list->s64vector '(-9223372036854775808 9223372036854775807)) #s64(-9223372036854775808 9223372036854775807))
   (err (make-s64vector -1))
-  (err (make-s64vector (quotient max-size-in-bytes-plus-1 8)))
-  (err (make-s64vector max-fixnum))
+  (err (if (not using-nan-boxing?) (make-s64vector (quotient max-size-in-bytes-plus-1 8)) (##make-s64vector big-float))) ;; note: fake heap overflow when NaN-boxing
+  (err (if (not using-nan-boxing?) (make-s64vector max-fixnum) (##make-s64vector big-float))) ;; note: fake heap overflow when NaN-boxing
   (err (make-s64vector 123456789012345678901))
   (err (make-s64vector 1.5))
   (err (make-s64vector 1 'a))
@@ -1525,8 +1525,8 @@
   (test (u64vector->list (u64vector (- (expt 2 29) 1) (expt 2 29) (expt 2 31) (- (expt 2 61) 1) (expt 2 61) (- (expt 2 63) 1) (expt 2 63) (- (expt 2 64) 1))) (536870911 536870912 2147483648 2305843009213693951 2305843009213693952 9223372036854775807 9223372036854775808 18446744073709551615))
   (test (list->u64vector '(0 18446744073709551615)) #u64(0 18446744073709551615))
   (err (make-u64vector -1))
-  (err (make-u64vector (quotient max-size-in-bytes-plus-1 8)))
-  (err (make-u64vector max-fixnum))
+  (err (if (not using-nan-boxing?) (make-u64vector (quotient max-size-in-bytes-plus-1 8)) (##make-u64vector big-float))) ;; note: fake heap overflow when NaN-boxing
+  (err (if (not using-nan-boxing?) (make-u64vector max-fixnum) (##make-u64vector big-float))) ;; note: fake heap overflow when NaN-boxing
   (err (make-u64vector 123456789012345678901))
   (err (make-u64vector 1.5))
   (err (make-u64vector 1 'a))
@@ -1563,8 +1563,8 @@
   (test (f32vector->list '#f32(5. 6.)) (5. 6.))
   (test (list->f32vector '(5. 6.)) #f32(5. 6.))
   (err (make-f32vector -1))
-  (err (make-f32vector (quotient max-size-in-bytes-plus-1 4)))
-  (err (make-f32vector max-fixnum))
+  (err (if (not using-nan-boxing?) (make-f32vector (quotient max-size-in-bytes-plus-1 4)) (##make-f32vector big-float))) ;; note: fake heap overflow when NaN-boxing
+  (err (if (not using-nan-boxing?) (make-f32vector max-fixnum) (##make-f32vector big-float))) ;; note: fake heap overflow when NaN-boxing
   (err (make-f32vector 123456789012345678901))
   (err (make-f32vector 1.5))
   (err (make-f32vector 1 'a))
@@ -1598,8 +1598,8 @@
   (test (f64vector->list '#f64(5. 6.)) (5. 6.))
   (test (list->f64vector '(5. 6.)) #f64(5. 6.))
   (err (make-f64vector -1))
-  (err (make-f64vector (quotient max-size-in-bytes-plus-1 8)))
-  (err (make-f64vector max-fixnum))
+  (err (if (not using-nan-boxing?) (make-f64vector (quotient max-size-in-bytes-plus-1 8)) (##make-f64vector big-float))) ;; note: fake heap overflow when NaN-boxing
+  (err (if (not using-nan-boxing?) (make-f64vector max-fixnum) (##make-f64vector big-float))) ;; note: fake heap overflow when NaN-boxing
   (err (make-f64vector 123456789012345678901))
   (err (make-f64vector 1.5))
   (err (make-f64vector 1 'a))

@@ -2,7 +2,7 @@
 
 ;;; File: "_prims.scm"
 
-;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -5850,12 +5850,6 @@
 (define (not-bigfix? obj)
   (not (and (targ-fixnum64? obj) (not (targ-fixnum32? obj))))) ;; TODO: remove dependency on C back-end
 
-(define (mem-alloc? obj)
-  (let ((type (targ-obj-type obj))) ;; TODO: remove dependency on C back-end
-    (or (eq? type 'pair)
-        (and (eq? type 'subtyped)
-             (not-bigfix? obj)))))
-
 (define (any obj) #t)
 
 (define (alist? obj) (and (list? obj) (every? pair? obj)))
@@ -5875,18 +5869,6 @@
 (def-simp "eqv?"             (constant-folder eqv?           ))
 (def-simp "eq?"              (constant-folder eq?            ))
 (def-simp "equal?"           (constant-folder equal?         ))
-(def-simp "##mem-allocated?" (constant-folder (lambda (obj)
-                                                      (case (targ-obj-type obj) ;; TODO: remove dependency on C back-end
-                                                        ((subtyped pair) #t)
-                                                        (else            #f)))
-                                                    not-bigfix?))
-(def-simp "##subtyped?"      (constant-folder (lambda (obj)
-                                                      (case (targ-obj-type obj) ;; TODO: remove dependency on C back-end
-                                                        ((subtyped) #t)
-                                                        (else       #f)))
-                                                    not-bigfix?))
-(def-simp "##subtype"        (constant-folder targ-obj-subtype-integer ;; TODO: remove dependency on C back-end
-                                                    mem-alloc?))
 (def-simp "pair?"            (constant-folder pair?          ))
 ;(def-simp "cons"             (constant-folder cons           ))  ;; this would not preserve mutability and eq?-ness
 (def-simp "car"              (constant-folder car            pair?))

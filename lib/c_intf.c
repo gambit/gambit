@@ -2176,6 +2176,7 @@ int arg_num;)
     return ___FIX(___STOC_F64_ERR+arg_num);
 
   *x = ___F64UNBOX(obj);
+
   return ___FIX(___NO_ERR);
 }
 
@@ -4363,7 +4364,7 @@ int arg_num;)
 {
   ___SCMOBJ r;
 
-  if (___S64_fits_in_width (x, ___SCMOBJ_WIDTH-___TB_FIXNUM))
+  if (___S64_fits_in_width (x, ___FIX_WIDTH))
     r = ___FIX(___S64_to_LONGLONG (x));
   else
     {
@@ -4427,7 +4428,7 @@ int arg_num;)
 {
   ___SCMOBJ r;
 
-  if (___U64_fits_in_width (x, ___SCMOBJ_WIDTH-___TB_FIXNUM-1))
+  if (___U64_fits_in_width (x, ___FIX_WIDTH-1))
     r = ___FIX(___U64_to_ULONGLONG (x));
   else
     {
@@ -4639,6 +4640,12 @@ int arg_num;)
 {
   ___SCMOBJ r;
 
+#ifdef ___NAN_BOXING
+
+  r = ___F64BOX(x);
+
+#else
+
 #if ___FLONUM_SELF_TAGGING_TAGS > 0
 
   ___U64 u64_x = ___F64_TO_U64(x);
@@ -4663,6 +4670,8 @@ int arg_num;)
 
       ___MEM_ALLOCATED_FLONUM_SET(r, x);
     }
+
+#endif
 
   *obj = r;
   return ___FIX(___NO_ERR);

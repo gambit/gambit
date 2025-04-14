@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-2.scm"
 
-;;; Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -252,7 +252,8 @@
 (define targ-proc-lbl-tbl         #f) ; table of all labels
 (define targ-proc-lbl-tbl-ord     #f) ; table of all labels ordered by def time
 (define targ-proc-fp              #f) ; frame pointer
-(define targ-proc-heap-reserved   #f) ; heap space reserved
+(define targ-proc-heap-reserved   #f) ; heap space reserved (total)
+(define targ-proc-flo-reserved    #f) ; heap space reserved (for flonums)
 (define targ-proc-ssb-reserved    #f) ; SSB space reserved
 
 (define targ-debug-info-state     #f) ; debug information accumulator
@@ -342,11 +343,13 @@
 (define (targ-new-lbl)
   (targ-proc-lbl-counter))
 
-(define (targ-heap-reserve space)
-  (set! targ-proc-heap-reserved (+ targ-proc-heap-reserved space)))
+(define (targ-heap-reserve space flo?)
+  (set! targ-proc-heap-reserved (+ targ-proc-heap-reserved space))
+  (if flo?
+      (set! targ-proc-flo-reserved (+ targ-proc-flo-reserved space))))
 
-(define (targ-heap-reserve-and-check space sn)
-  (targ-heap-reserve space)
+(define (targ-heap-reserve-and-check space flo? sn)
+  (targ-heap-reserve space flo?)
   (if (> (+ targ-proc-heap-reserved
             (* (targ-fp-cache-size) targ-flonum-space))
          targ-msection-fudge)
@@ -354,7 +357,10 @@
 
 (define (targ-update-fr-and-check-heap space sn)
   (targ-update-fr targ-proc-entry-frame)
-  (targ-check-conditions space #f #f sn))
+  (let ((flo-space
+         (and (> targ-proc-flo-reserved 0)
+              (= targ-proc-flo-reserved targ-proc-heap-reserved))))
+    (targ-check-conditions space flo-space #f #f sn)))
 
 (define (targ-ssb-reserve space)
   (set! targ-proc-ssb-reserved (+ targ-proc-ssb-reserved space)))
@@ -363,14 +369,14 @@
   (targ-ssb-reserve space)
   (if (> targ-proc-ssb-reserved
          targ-ssb-preallocated)
-      (targ-check-conditions #f 0 #f sn)))
+      (targ-check-conditions #f #f 0 #f sn)))
 
 (define targ-ssb-preallocated 0) ;; number of SSB entries that are free upon
                                  ;; entry to a basic-block
 
 (define targ-combine-checks? #f) ;;TODO: remove when transition to combined checks
 
-(define (targ-check-conditions heap ssb poll sn)
+(define (targ-check-conditions heap flo ssb poll sn)
   (if (or heap ssb poll)
       (let ((lbl (targ-new-lbl)))
 
@@ -388,6 +394,7 @@
                             "CHECK"
                             (if poll "POLL" "CHECK"))
                         (if heap "_HEAP" "")
+                        (if (and heap (eqv? heap flo)) "_FLO" "")
                         (if ssb "_SSB" "")
                         (if (and poll targ-combine-checks?) "_POLL" "") ;;TODO: change when transition to combined checks
                         )
@@ -399,11 +406,15 @@
 
         (targ-gen-label-return* lbl 'return-internal)
 
-        (if heap (set! targ-proc-heap-reserved 0))
+        (if heap
+            (begin
+              (set! targ-proc-heap-reserved 0)
+              (set! targ-proc-flo-reserved 0)))
         (if ssb (set! targ-proc-ssb-reserved 0)))))
 
 (define (targ-start-bb fs)
   (set! targ-proc-heap-reserved 0)
+  (set! targ-proc-flo-reserved 0)
   (set! targ-proc-ssb-reserved 0)
   (set! targ-proc-fp fs))
 
@@ -925,7 +936,7 @@
     (if proc
       (begin
         (proc opnds loc sn)
-        (targ-heap-reserve-and-check 0 sn))
+        (targ-heap-reserve-and-check 0 #f sn))
       (compiler-internal-error
         "targ-gen-apply, unknown 'prim'" prim))))
 
@@ -937,7 +948,7 @@
      (targ-loc loc (targ-opnd opnd)))
 ;;    (targ-emit (targ-loc loc (targ-opnd (make-obj 1234567))));***********************
 )
-  (targ-heap-reserve-and-check 0 sn))
+  (targ-heap-reserve-and-check 0 #f sn))
 
 '(;;
   (if targ-repr-enabled?
@@ -1014,6 +1025,7 @@
                         (targ-closure-space
                           (length (closure-parms-opnds parm))))
                       parms))
+          #f
           sn*)
 
         (for-each (lambda (parm)
@@ -1025,7 +1037,7 @@
 
   (close (reverse parms) sn)
 
-  (targ-heap-reserve-and-check 0 sn))
+  (targ-heap-reserve-and-check 0 #f sn))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -1084,17 +1096,18 @@
 
       (targ-check-conditions
        (and (> targ-proc-heap-reserved 0) 0);;;;;;TODO: 0?
+       #f
        (and (> targ-proc-ssb-reserved 0) 0);;;;;;TODO: 0?
        poll?
        sn)
 
       (begin
         (if (> targ-proc-heap-reserved 0)
-            (targ-check-conditions 0 #f #f sn))
+            (targ-check-conditions 0 (and (= targ-proc-heap-reserved targ-proc-flo-reserved) 0) #f #f sn))
         (if (> targ-proc-ssb-reserved 0)
-            (targ-check-conditions #f 0 #f sn))
+            (targ-check-conditions #f #f 0 #f sn))
         (if poll?
-            (targ-check-conditions #f #f #t sn)))))
+            (targ-check-conditions #f #f #f #t sn)))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -2430,7 +2443,7 @@
              (code (targ-unboxed-loc->code loc stamp)))
         (list "SET_F64" code val)))
     (begin
-      (targ-heap-reserve-and-check targ-flonum-space fs)
+      (targ-heap-reserve-and-check targ-flonum-space #t fs)
       (targ-loc loc (list "F64BOX" val)))))
 
 ;;;----------------------------------------------------------------------------
@@ -2479,7 +2492,7 @@
   (vector-ref targ-fp-cache 0))
 
 (define (targ-fp-cache-write loc stamp)
-  (targ-heap-reserve targ-flonum-space)
+  (targ-heap-reserve targ-flonum-space #t)
   (targ-emit
     (targ-loc-no-invalidate
       loc
@@ -2560,7 +2573,9 @@
     flo-result?
     (lambda (opnds sn)
       (targ-heap-reserve-and-check
-        (compute-space (length opnds))
+        (+ (compute-space (length opnds))
+           (if flo-result? targ-flonum-space 0))
+        flo-result?
         (targ-sn-opnds opnds sn))
       (f opnds sn))))
 
@@ -2775,6 +2790,7 @@
 
             (targ-heap-reserve-and-check
               (compute-space n)
+              #f
               (targ-sn-opnds opnds sn))
 
             (let* ((flo? (or (eq? kind 'f32vector) (eq? kind 'f64vector)))
@@ -2802,6 +2818,7 @@
     (lambda (opnds sn)
       (targ-heap-reserve-and-check
        (targ-s8vector-space (targ-max-small-allocation 's8vector))
+       #f
        (targ-sn-opnds opnds sn))
       (targ-emit (cons (string-append name (number->string (length opnds)))
                        (map targ-opnd opnds)))

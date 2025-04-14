@@ -182,7 +182,7 @@
                 ((2)  (cons lst lst))
                 ((3)  (gensym))
                 ((4)  (lambda (x) lst))
-                (else (* 1e100 (+ 1 (random 100)))))
+                (else (* 1e209 (+ 1 (random 100)))))
               lst)
         (- i 1))
      lst)))
@@ -323,6 +323,8 @@ ___SCMOBJ baz ()
 
 (define (test6)
 
+  (define using-nan-boxing? (eq? (expt (##first-argument 10.0) 209) 1e209))
+
   (setup-gc-reports)
 
   (reset-random)
@@ -358,7 +360,8 @@ ___SCMOBJ baz ()
                   (make-will (make-vector (random 40000))
                              (lambda (o) (set! result (+ result id))))))
                (else
-                (* 1e100 (+ 1 (random 100)))))))
+                (* (if using-nan-boxing? 1+2i 1e209)
+                   (+ 1 (random 100)))))))
         (if (= (random 2) 0)
           (make-will obj (lambda (o) #f))
           (let ((id c))

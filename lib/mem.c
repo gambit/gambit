@@ -1521,12 +1521,17 @@ ___SIZE_TS bytes;)
 #if ___tPAIR != ___tSUBTYPED
   if (subtype == ___sPAIR) return ___PAIR_FROM_BODY(body);
 #endif
-#if ___tFLONUM != ___tSUBTYPED
+
+#ifndef ___NAN_BOXING
+#if  ___tFLONUM != ___tSUBTYPED
   if (subtype == ___sFLONUM) return ___FLONUM_FROM_BODY(body);
 #endif
+#endif
+
 #if ___tVECTOR != ___tSUBTYPED
   if (subtype == ___sVECTOR) return ___VECTOR_FROM_BODY(body);
 #endif
+
   return ___SUBTYPED_FROM_BODY(body);
 }
 
@@ -1672,12 +1677,17 @@ ___SIZE_TS bytes;)
 #if ___tPAIR != ___tSUBTYPED
   if (subtype == ___sPAIR) return ___PAIR_FROM_BODY(body);
 #endif
+
+#ifndef ___NAN_BOXING
 #if ___tFLONUM != ___tSUBTYPED
   if (subtype == ___sFLONUM) return ___FLONUM_FROM_BODY(body);
 #endif
+#endif
+
 #if ___tVECTOR != ___tSUBTYPED
   if (subtype == ___sVECTOR) return ___VECTOR_FROM_BODY(body);
 #endif
+
   return ___SUBTYPED_FROM_BODY(body);
 }
 
