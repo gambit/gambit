@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-3.scm"
 
-;;; Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
 
 (include "generic.scm")
 
@@ -206,7 +206,7 @@
         (begin
           (if (< targ-inexact-+0 y)
             (vector-set! z 0 (expt 2 m-bits)) ;; +inf.0
-            (vector-set! z 0 (- (* (expt 2 m-bits) 2) 1))) ;; +nan.0
+            (vector-set! z 0 (* 3 (expt 2 (- m-bits 1))))) ;; +nan.0 (quiet)
           (vector-set! z 1 (expt 2 (- e-bits 1))))
         (vector-set! z 0
           (truncate
