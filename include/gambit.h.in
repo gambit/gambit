@@ -4091,7 +4091,7 @@ ___EXPECT_FALSE(__builtin_mul_overflow(___FW(x),___FW(___INT(y)),&var))
 
 #define ___FIXSUBP_NOTFALSEP(var,x,y) \
 (___temp=___FIXWRAPSUB(x,y), \
- ___EXPECT_FALSE(___FW((___temp^(x))&(___temp^(y)))<0) ? 0 : (var=___temp,1))
+ ___EXPECT_FALSE(___FW((___temp^(x))&((y)^(x)))<0) ? 0 : (var=___temp,1))
 
 #else
 
