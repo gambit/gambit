@@ -50,7 +50,6 @@ OTHER DEALINGS IN THE SOFTWARE.
    ("srfi/231#"
     ;; Internal SRFI 231 procedures that are either tested or called here.
     %%compose-indexers
-    make-%%array
     %%interval->basic-indexer
     %%interval-lower-bounds
     %%interval-upper-bounds
@@ -861,24 +860,10 @@ OTHER DEALINGS IN THE SOFTWARE.
 (test (make-array (make-interval '#(3) '#(4)) list 1)
       "make-array: The third argument is not a procedure: ")
 
-(pp "array result tests")
-
 (define (myarray= array1 array2 #!optional (compare equal?))
   (and (interval= (array-domain array1)
                   (array-domain array2))
        (array-every compare array1 array2)))
-
-(let ((getter (lambda args 1.)))
-  (test (myarray= (make-array (make-interval '#(3) '#(4)) getter)
-                   (make-%%array (make-interval '#(3) '#(4))
-                                 getter
-                                 #f
-                                 #f
-                                 #f
-                                 #f
-                                 #f
-                                 %%order-unknown))
-        #t))
 
 (pp "array-domain and array-getter error tests")
 
@@ -899,27 +884,11 @@ OTHER DEALINGS IN THE SOFTWARE.
         #t)
   (test (array-domain array)
         domain)
+  ;; We now wrap the getter in checking code, so
+  ;; this test no longer passes
+  #;
   (test (array-getter array)
         getter))
-
-
-(pp "mutable-array result tests")
-
-(let ((result #f))
-  (let ((getter (lambda (i) result))
-        (setter   (lambda (v i) (set! result v)))
-        (domain   (make-interval '#(3) '#(4))))
-    (test (make-array domain
-                      getter
-                      setter)
-          (make-%%array domain
-                             getter
-                             setter
-                             #f
-                             #f
-                             #f
-                             #f
-                             %%order-unknown))))
 
 (pp "array-setter error tests")
 
@@ -941,9 +910,11 @@ OTHER DEALINGS IN THE SOFTWARE.
             #t)
       (test (mutable-array? 1)
             #f)
-      (test (array-setter array)
+      ;; We now wrap the getter and setter in checking code, so
+      ;; the next two no longer pass
+     #;(test (array-setter array)
             setter)
-      (test (array-getter array)
+      #;(test (array-getter array)
             getter)
       (test (array-domain array)
             domain))))
@@ -1881,9 +1852,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                   (if (storage-class-copier storage-class)
                       "Block copy"
                       "In order, no checks needed")
-                  (if (eq? storage-class generic-storage-class)
-                      "Out of order, no checks needed, generic-storage-class"
-                      "Out of order, no checks needed")))
+                  "Out of order, no checks"))
         (test (myarray= specialized-source (array-reverse specialized-destination))
               #t)
         ))))
@@ -1963,8 +1932,8 @@ OTHER DEALINGS IN THE SOFTWARE.
                             (%%move-array-elements destination test-source "test: ")))
                       (and (equal? (if (not (specialized-array? test-source))
                                        (if (eq? destination-storage-class generic-storage-class)
-                                           "Checks not needed, source not specialized, generic-storage-class"
-                                           "Checks needed, source not specialized")
+                                           "Out of order, no checks"
+                                           "Out of order, checks")
                                        (if (array-packed? destination)
                                            (cond ((and (eq? destination-storage-class source-storage-class)
                                                        (storage-class-copier destination-storage-class))
@@ -1976,9 +1945,9 @@ OTHER DEALINGS IN THE SOFTWARE.
                                                  (else
                                                   "In order, checks needed"))
                                            (cond ((eq? destination-storage-class generic-storage-class)
-                                                  "Out of order, no checks needed, generic-storage-class")
+                                                  "Out of order, no checks")
                                                  ((every destination-checker (cdr (assq source-storage-class extreme-values-alist)))
-                                                  "Out of order, no checks needed")
+                                                  "Out of order, no checks")
                                                  (else
                                                   "Out of order, checks needed"))))
                                    %%move-result)
@@ -1997,7 +1966,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                     #t)
               (test (let ((%%move-result
                            (%%move-array-elements generalized-destination source "test: ")))
-                      (and (equal? "Destination not specialized array"
+                      (and (equal? "Out of order, no checks"
                                    %%move-result)
                            (myarray= generalized-destination
                                      source
@@ -2895,20 +2864,41 @@ OTHER DEALINGS IN THE SOFTWARE.
        (immutable (make-array domain list))
        (mutable   (make-array domain list list)) ;; nonsensical
        (special   (make-specialized-array domain)))
-  (do ((left-dim 1 (+ left-dim 1)))
+  (do ((left-dim 0 (+ left-dim 1)))
       ((> left-dim dim))
     (let* ((right-dim (- dim left-dim))
            (immutable-curry (array-curry immutable right-dim))
            (mutable-curry   (array-curry  mutable right-dim))
            (special-curry   (array-curry special right-dim)))
       (for-each (lambda (array)
-                  (test (apply array-ref array (make-list left-dim 100))
-                        "array-curry: domain does not contain multi-index: ")
-                  (test (apply array-ref array (make-list left-dim 'a))
-                        "array-curry: multi-index component is not an exact integer: ")
-                  (if (< 4 left-dim)
+                  (if (positive? left-dim)
+                      (begin
+                        (test (apply array-ref array (make-list left-dim 100))
+                              "array-getter: domain does not contain multi-index: ")
+                        (test (apply array-ref array (make-list left-dim 'a))
+                              "array-getter: multi-index component is not an exact integer: ")))
+                  (if (positive? right-dim)
+                      (begin
+                        (test (apply array-ref
+                                     (apply array-ref array (make-list left-dim 0))
+                                     (make-list right-dim 100))
+                              "array-getter: domain does not contain multi-index: ")
+                        (test (apply array-ref
+                                     (apply array-ref array (make-list left-dim 0))
+                                     (make-list right-dim 'a))
+                              "array-getter: multi-index component is not an exact integer: ")))
+                  (if (not (= 2 left-dim))
                       (test (apply array-ref array '(0 0))
-                            "array-curry: multi-index is not the correct dimension: ")))
+                            (if (< left-dim 5)
+                                "Wrong number of arguments passed to procedure "
+                                "array-getter: multi-index is not the correct dimension: ")))
+                  (if (not (= 2 right-dim))
+                      (test (apply array-ref
+                                   (apply array-ref array (make-list left-dim 0))
+                                   '(0 0))
+                            (if (< right-dim 5)
+                                "Wrong number of arguments passed to procedure "
+                                "array-getter: multi-index is not the correct dimension: "))))
                 (list immutable-curry mutable-curry special-curry)))))
 
 (let ((array-builders (vector (list u1-storage-class      (lambda indices (random (expt 2 1))))
@@ -3318,6 +3308,19 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 (next-test-random-source-state!)
 
+(let* ((domain (make-interval '#(4 4)))
+       (specialized (array-copy (make-array domain list)))
+       (mutable (make-array domain list list)) ;; setter is nonsensical
+       (immutable (make-array domain list)))
+  (for-each (lambda (array)
+              (let ((translated (array-translate array '#(4 4))))
+                (test (array-ref translated 0 0)
+                      "array-getter: domain does not contain multi-index: ")
+                (if (mutable-array? translated)
+                    (test (array-set! translated 1 0 0)
+                          "array-setter: domain does not contain multi-index: "))))
+            (list specialized mutable immutable)))
+
 (let* ((specialized-array (array-copy (make-array (make-interval '#(0 0) '#(10 12))
                                                   list)))
        (mutable-array (let ((temp (array-copy specialized-array)))
@@ -3404,10 +3407,10 @@ OTHER DEALINGS IN THE SOFTWARE.
        (A (array-translate  mutable '#(0 0 0 0 0))))
 
   (test ((array-getter A) 0 0)
-        "The number of indices does not equal the array dimension: ")
+        "array-getter: multi-index is not the correct dimension: ")
 
   (test ((array-setter A) 'a 0 0)
-        "The number of indices does not equal the array dimension: "))
+        "array-setter: multi-index is not the correct dimension: "))
 
 
 (pp "interval and array permutation tests")
@@ -3590,6 +3593,19 @@ OTHER DEALINGS IN THE SOFTWARE.
                                   '#(1 0))
                    (make-array (make-interval '#(1 0)) error))
       #t)
+
+(let* ((domain (make-interval '#(2 4)))
+       (specialized (array-copy (make-array domain list)))
+       (mutable (make-array domain list list))
+       (immutable (make-array domain list)))
+  (for-each (lambda (array)
+              (let ((permuted (array-permute array '#(1 0))))
+                (test (array-ref permuted 1 3)
+                      "array-getter: domain does not contain multi-index: ")
+                (if (mutable-array? array)
+                    (test (array-set! permuted 1 1 3)
+                          "array-setter: domain does not contain multi-index: "))))
+            (list specialized mutable immutable)))
 
 (let* ((specialized-array (array-copy (make-array (make-interval '#(0 0) '#(10 12))
                                                                 list)))
@@ -3809,6 +3825,19 @@ OTHER DEALINGS IN THE SOFTWARE.
                       '#(1 2))
       "interval-scale: The dimension of the first argument (an interval) is not equal to the length of the second (a vector): ")
 
+(let* ((domain (make-interval '#(8)))
+       (specialized (array-copy (make-array domain list)))
+       (mutable (make-array domain list list))
+       (immutable (make-array domain list)))
+  (for-each (lambda (array)
+              (let ((sampled (array-sample array '#(3))))
+                (test (array-ref sampled 3)
+                      "array-getter: domain does not contain multi-index: ")
+                (if (mutable-array? sampled)
+                    (test (array-set! sampled 1 3)
+                          "array-setter: domain does not contain multi-index: "))))
+            (list specialized mutable immutable)))
+
 (define (myinterval-scale interval scales)
   (make-interval (interval-lower-bounds->vector interval)
                  (vector-map (lambda (u s)
@@ -3922,13 +3951,27 @@ OTHER DEALINGS IN THE SOFTWARE.
   (test (mutable-array? B)
         #f))
 
-(let* ((A (make-specialized-array (make-interval '#(4 4))
-                                  generic-storage-class
-                                  #t     ;; mutable?
-                                  #t))   ;; safe?
-       (B (array-extract A (make-interval '#(2 2)))))
-  (test (array-ref B 2 2)
-        "array-getter: domain does not contain multi-index: "))
+(let* ((specialized
+        (make-specialized-array (make-interval '#(4 4))
+                                generic-storage-class
+                                #t     ;; mutable?
+                                #t))
+       (mutable
+        (make-array (array-domain specialized)
+                    (array-getter specialized)
+                    (array-setter specialized)))
+       (immutable
+        (make-array (array-domain specialized)
+                    (array-getter specialized))))
+  (for-each (lambda (array)
+              (let ((subarray
+                     (array-extract array (make-interval '#(2 2)))))
+                (test (array-ref subarray 2 2)
+                      "array-getter: domain does not contain multi-index: ")
+                (if (mutable-array? array)
+                    (test (array-set! subarray 'a 2 2)
+                          "array-setter: domain does not contain multi-index: "))))
+            (list specialized mutable immutable)))
 
 (do ((i 0 (fx+ i 1)))
     ((fx= i random-tests))
@@ -4026,12 +4069,12 @@ OTHER DEALINGS IN THE SOFTWARE.
          (B (array-tile A (make-vector d 10)))
          (index (make-list d 12)))
     (test (apply array-ref B (make-list d 12))
-          "array-tile: domain does not contain multi-index: ")
+          "array-getter: domain does not contain multi-index: ")
     (test (apply array-ref B (make-list d 'a))
-          "array-tile: multi-index component is not an exact integer: ")
+          "array-getter: multi-index component is not an exact integer: ")
     (if (< 4 d)
         (test (array-ref B 0 0 0 0)
-              "array-tile: multi-index is not the correct dimension: "))))
+              "array-getter: multi-index is not the correct dimension: "))))
 
 (define (ceiling-quotient x d)
   ;; assumes x and d are positive
@@ -4568,6 +4611,19 @@ OTHER DEALINGS IN THE SOFTWARE.
   (test ((array-getter A*B) 0 0 0 0) ;; outside of domain
         "array-getter: Array domain is empty: "))
 
+(let* ((domain (make-interval '#(4)))
+       (specialized (array-copy (make-array domain list)))
+       (immutable (make-array domain list))
+       (arrays (list specialized immutable)))
+  (for-each (lambda (A)
+              (for-each (lambda (B)
+                          (let ((array (array-outer-product append A B)))
+                            (test (array-ref array 10 3)
+                                  "array-getter: domain does not contain multi-index: ")
+                            (test (array-ref array 1 1 1 1)
+                                  "Wrong number of arguments passed to procedure ")))
+                        arrays))
+            arrays))
 
 (do ((i 0 (+ i 1)))
     ((= i random-tests))
@@ -6563,13 +6619,13 @@ OTHER DEALINGS IN THE SOFTWARE.
 (let ((A (make-specialized-array (make-interval '#(5 5 5 5 5) '#(8 8 8 8 8))))
       (B (make-specialized-array (make-interval '#(5 5 5 5 5)))))
   (test (array-ref A 0 0)
-        "Wrong number of arguments passed to procedure ")
+        "array-getter: multi-index is not the correct dimension: ")
   (test (array-set! A 2 0 0)
-        "Wrong number of arguments passed to procedure ")
+        "array-setter: multi-index is not the correct dimension: ")
   (test (array-ref B 0 0)
-        "Wrong number of arguments passed to procedure ")
+        "array-getter: multi-index is not the correct dimension: ")
   (test (array-set! B 2 0 0)
-        "Wrong number of arguments passed to procedure "))
+        "array-setter: multi-index is not the correct dimension: "))
 
 (pp "Test interactions of continuations and array-{copy|append|stack|decurry|block}")
 

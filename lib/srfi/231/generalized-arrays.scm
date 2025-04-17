@@ -79,9 +79,11 @@ OTHER DEALINGS IN THE SOFTWARE.
   (domain read-only:)
   ;; (lambda (i_0 ... i_n-1) ...) returns a value for (i_0,...,i_n-1) in (array-domain a)
   (getter read-only:)
+  (unsafe-getter read-only:)
   ;; Part of mutable arrays
   ;; (lambda (v i_0 ... i_n-1) ...) sets a value for (i_0,...,i_n-1) in (array-domain a)
   (setter read-write:)
+  (unsafe-setter read-write:)
   ;; Part of specialized arrays
   ;; a storage class
   (storage-class read-only:)
@@ -991,6 +993,28 @@ OTHER DEALINGS IN THE SOFTWARE.
 (define (%%empty-setter domain)
   (lambda args (apply error "array-setter: Array domain is empty: " domain args)))
 
+(declare (not inline))
+
+(define (%%make-safer-array domain unsafe-getter #!optional (unsafe-setter #f) (checker #f))
+  (let ((getter
+         (%%wrap-getter-in-index-checks domain unsafe-getter))
+        (setter
+         (and unsafe-setter
+              (%%wrap-setter-in-index-and-value-checks domain unsafe-setter checker))))
+    (make-%%array domain
+                  getter
+                  unsafe-getter
+                  setter
+                  unsafe-setter
+                  #f              ; storage-class
+                  #f              ; body
+                  #f              ; indexer
+                  #f              ; safe?
+                  %%order-unknown ; in-order?
+                  )))
+
+(declare (inline))
+
 (define make-array
   (case-lambda
    ((domain getter)
@@ -999,17 +1023,7 @@ OTHER DEALINGS IN THE SOFTWARE.
           ((not (procedure? getter))
            (error "make-array: The second argument is not a procedure: " domain getter))
           (else
-           (make-%%array domain
-                         (if (%%interval-empty? domain)
-                             (%%empty-getter domain)
-                             getter)
-                         #f              ; no setter
-                         #f              ; storage-class
-                         #f              ; body
-                         #f              ; indexer
-                         #f              ; safe?
-                         %%order-unknown ; in-order?
-                         ))))
+           (%%make-safer-array domain getter))))
    ((domain getter setter)
     (cond ((not (interval? domain))
            (error "make-array: The first argument is not an interval: " domain getter setter))
@@ -1018,19 +1032,7 @@ OTHER DEALINGS IN THE SOFTWARE.
           ((not (procedure? setter))
            (error "make-array: The third argument is not a procedure: " domain getter setter))
           (else
-           (make-%%array domain
-                         (if (%%interval-empty? domain)
-                             (%%empty-getter domain)
-                             getter)
-                         (if (%%interval-empty? domain)
-                             (%%empty-setter domain)
-                             setter)
-                         #f              ; storage-class
-                         #f              ; body
-                         #f              ; indexer
-                         #f              ; safe?
-                         %%order-unknown ; in-order?
-                         ))))))
+           (%%make-safer-array domain getter setter))))))
 
 (define (array? x)
   (%%array? x))
@@ -1091,6 +1093,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 (define (%%array-freeze! A)
   (%%array-setter-set! A #f)
+  (%%array-unsafe-setter-set! A #f)
   A)
 
 (define (array-freeze! A)
@@ -1136,7 +1139,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                       (,ref v i))
                     ;; setter
                     (lambda (v i val)
-                      (,set! v i val) (void))
+                      (,set! v i val))
                     ;; checker
                     ,checker           ;; already expanded
                     ;; maker
@@ -1242,8 +1245,7 @@ OTHER DEALINGS IN THE SOFTWARE.
            (bodyv (vector-ref v  1)))
        (u16vector-set! bodyv index (fxior (fxarithmetic-shift-left val shift)
                                           (fxand (u16vector-ref bodyv index)
-                                                 (fxnot (fxarithmetic-shift-left 1 shift)))))
-       (void)))
+                                                 (fxnot (fxarithmetic-shift-left 1 shift)))))))
    ;; checker
    (lambda (val)
      (and (fixnum? val)
@@ -1289,8 +1291,7 @@ OTHER DEALINGS IN THE SOFTWARE.
             ;; setter
             (lambda (body i obj)
               (,(symbol-concatenate floating-point-prefix 'vector-set!) body (fx* 2 i)         (real-part obj))
-              (,(symbol-concatenate floating-point-prefix 'vector-set!) body (fx+ (fx* 2 i) 1) (imag-part obj))
-              (void))
+              (,(symbol-concatenate floating-point-prefix 'vector-set!) body (fx+ (fx* 2 i) 1) (imag-part obj)))
             ;; checker
             (lambda (obj)
               (and (complex? obj)
@@ -1473,7 +1474,7 @@ OTHER DEALINGS IN THE SOFTWARE.
        (f16->double (u16vector-ref body i)))
      ;; setter
      (lambda (body i obj)
-       (u16vector-set! body i (double->f16 obj)) (void))
+       (u16vector-set! body i (double->f16 obj)))
      ;; checker
      (lambda (obj)
        (flonum? obj))
@@ -2042,6 +2043,115 @@ OTHER DEALINGS IN THE SOFTWARE.
         (else
          (%%array-packed? array))))
 
+(define (%%wrap-getter-in-index-checks domain unsafe-getter)
+  (if (%%interval-empty? domain)
+      (%%empty-getter domain)
+      (case (%%interval-dimension domain)
+        ((0) (lambda ()        ;; we wrap it in a thunk to ensure that it's called with no arguments
+               (unsafe-getter)))
+        ((1)  (lambda (i)
+                (declare (inlining-limit 10000))
+                (cond ((not (exact-integer? i))
+                       (error "array-getter: multi-index component is not an exact integer: " i))
+                      ((not (%%interval-contains-multi-index?-1 domain i))
+                       (error "array-getter: domain does not contain multi-index: "    domain i))
+                      (else
+                       (unsafe-getter i)))))
+        ((2)  (lambda (i j)
+                (declare (inlining-limit 10000))
+                (cond ((not (and (exact-integer? i) (exact-integer? j)))
+                       (error "array-getter: multi-index component is not an exact integer: " i j))
+                      ((not (%%interval-contains-multi-index?-2 domain i j))
+                       (error "array-getter: domain does not contain multi-index: "    domain i j))
+                      (else
+                       (unsafe-getter i j)))))
+        ((3)  (lambda (i j k)
+                (declare (inlining-limit 10000))
+                (cond ((not (and (exact-integer? i) (exact-integer? j) (exact-integer? k)))
+                       (error "array-getter: multi-index component is not an exact integer: " i j k))
+                      ((not (%%interval-contains-multi-index?-3 domain i j k))
+                       (error "array-getter: domain does not contain multi-index: "    domain i j k))
+                      (else
+                       (unsafe-getter i j k)))))
+        ((4)  (lambda (i j k l)
+                (declare (inlining-limit 10000))
+                (cond ((not (and (exact-integer? i) (exact-integer? j) (exact-integer? k) (exact-integer? l)))
+                       (error "array-getter: multi-index component is not an exact integer: " i j k l))
+                      ((not (%%interval-contains-multi-index?-4 domain i j k l))
+                       (error "array-getter: domain does not contain multi-index: "    domain i j k l))
+                      (else
+                       (unsafe-getter i j k l)))))
+        (else (lambda multi-index
+                (cond ((not (every (lambda (x) (exact-integer? x)) multi-index))
+                       (apply error "array-getter: multi-index component is not an exact integer: " multi-index))
+                      ((not (fx= (%%interval-dimension domain) (length multi-index)))
+                       (apply error "array-getter: multi-index is not the correct dimension: " domain multi-index))
+                      ((not (%%interval-contains-multi-index?-general domain multi-index))
+                       (apply error "array-getter: domain does not contain multi-index: "    domain multi-index))
+                      (else
+                       (apply unsafe-getter multi-index))))))))
+
+(define (%%wrap-setter-in-index-and-value-checks domain unsafe-setter #!optional (checker #f))
+  (if (%%interval-empty? domain)
+      (%%empty-setter domain)
+      (case (%%interval-dimension domain)
+        ((0)  (lambda (value)
+                (cond ((and checker (not (checker value)))
+                       (error "array-setter: value cannot be stored in body: " value))
+                      (else
+                       (unsafe-setter value) (void)))))
+        ((1)  (lambda (value i)
+                (declare (inlining-limit 10000))
+                (cond ((not (exact-integer? i))
+                       (error "array-setter: multi-index component is not an exact integer: " i))
+                      ((not (%%interval-contains-multi-index?-1 domain i))
+                       (error "array-setter: domain does not contain multi-index: "    domain i))
+                      ((and checker (not (checker value)))
+                       (error "array-setter: value cannot be stored in body: " value))
+                      (else
+                       (unsafe-setter value i) (void)))))
+        ((2)  (lambda (value i j)
+                (declare (inlining-limit 10000))
+                (cond ((not (and (exact-integer? i) (exact-integer? j)))
+                       (error "array-setter: multi-index component is not an exact integer: " i j))
+                      ((not (%%interval-contains-multi-index?-2 domain i j))
+                       (error "array-setter: domain does not contain multi-index: "    domain i j))
+                      ((and checker (not (checker value)))
+                       (error "array-setter: value cannot be stored in body: " value))
+                      (else
+                       (unsafe-setter value i j) (void)))))
+        ((3)  (lambda (value i j k)
+                (declare (inlining-limit 10000))
+                (cond ((not (and (exact-integer? i) (exact-integer? j) (exact-integer? k)))
+                       (error "array-setter: multi-index component is not an exact integer: " i j k))
+                      ((not (%%interval-contains-multi-index?-3 domain i j k))
+                       (error "array-setter: domain does not contain multi-index: "    domain i j k))
+                      ((and checker (not (checker value)))
+                       (error "array-setter: value cannot be stored in body: " value))
+                      (else
+                       (unsafe-setter value i j k) (void)))))
+        ((4)  (lambda (value i j k l)
+                (declare (inlining-limit 10000))
+                (cond ((not (and (exact-integer? i) (exact-integer? j) (exact-integer? k) (exact-integer? l)))
+                       (error "array-setter: multi-index component is not an exact integer: " i j k l))
+                      ((not (%%interval-contains-multi-index?-4 domain i j k l))
+                       (error "array-setter: domain does not contain multi-index: "    domain i j k l))
+                      ((and checker (not (checker value)))
+                       (error "array-setter: value cannot be stored in body: " value))
+                      (else
+                       (unsafe-setter value i j k l) (void)))))
+        (else (lambda (value . multi-index)
+                (cond ((not (every (lambda (x) (exact-integer? x)) multi-index))
+                       (apply error "array-setter: multi-index component is not an exact integer: " multi-index))
+                      ((not (fx= (%%interval-dimension domain) (length multi-index)))
+                       (apply error "array-setter: multi-index is not the correct dimension: " domain multi-index))
+                      ((not (%%interval-contains-multi-index?-general domain multi-index))
+                       (apply error "array-setter: domain does not contain multi-index: "    domain multi-index))
+                      ((and checker (not (checker value)))
+                       (error "array-setter: value cannot be stored in body: " value))
+                      (else
+                       (apply unsafe-setter value multi-index) (void))))))))
+
 
 (define (%%finish-specialized-array domain storage-class body indexer mutable? safe? in-order?)
   (let ((storage-class-getter (storage-class-getter storage-class))
@@ -2085,149 +2195,43 @@ OTHER DEALINGS IN THE SOFTWARE.
     (define-macro (expand-setters expr)
       `(expand-storage-class -setter -set! ,expr))
 
-    (let ((getter
-           (cond ((%%interval-empty? domain)
-                  (%%empty-getter domain))
-                 (safe?
-                  ;; specialized-array-default-safe? is now #t initially, so the default is safe? but can be changed
-                  (case (%%interval-dimension domain)
-                    ((0)  (lambda ()
-                            (storage-class-getter body (indexer))))
-                    ((1)  (lambda (i)
-                            (declare (inlining-limit 10000))
-                            (cond ((not (exact-integer? i))
-                                   (error "array-getter: multi-index component is not an exact integer: " i))
-                                  ((not (%%interval-contains-multi-index?-1 domain i))
-                                   (error "array-getter: domain does not contain multi-index: "    domain i))
-                                  (else
-                                   (storage-class-getter body (indexer i))))))
-                    ((2)  (lambda (i j)
-                            (declare (inlining-limit 10000))
-                            (cond ((not (and (exact-integer? i)
-                                             (exact-integer? j)))
-                                   (error "array-getter: multi-index component is not an exact integer: " i j))
-                                  ((not (%%interval-contains-multi-index?-2 domain i j))
-                                   (error "array-getter: domain does not contain multi-index: "    domain i j))
-                                  (else
-                                   (storage-class-getter body (indexer i j))))))
-                    ((3)  (lambda (i j k)
-                            (declare (inlining-limit 10000))
-                            (cond ((not (and (exact-integer? i)
-                                             (exact-integer? j)
-                                             (exact-integer? k)))
-                                   (error "array-getter: multi-index component is not an exact integer: " i j k))
-                                  ((not (%%interval-contains-multi-index?-3 domain i j k))
-                                   (error "array-getter: domain does not contain multi-index: "    domain i j k))
-                                  (else
-                                   (storage-class-getter body (indexer i j k))))))
-                    ((4)  (lambda (i j k l)
-                            (declare (inlining-limit 10000))
-                            (cond ((not (and (exact-integer? i)
-                                             (exact-integer? j)
-                                             (exact-integer? k)
-                                             (exact-integer? l)))
-                                   (error "array-getter: multi-index component is not an exact integer: " i j k l))
-                                  ((not (%%interval-contains-multi-index?-4 domain i j k l))
-                                   (error "array-getter: domain does not contain multi-index: "    domain i j k l))
-                                  (else
-                                   (storage-class-getter body (indexer i j k l))))))
-                    (else (lambda multi-index
-                            (cond ((not (every (lambda (x) (exact-integer? x)) multi-index))
-                                   (apply error "array-getter: multi-index component is not an exact integer: " multi-index))
-                                  ((not (fx= (%%interval-dimension domain) (length multi-index)))
-                                   (apply error "array-getter: multi-index is not the correct dimension: " domain multi-index))
-                                  ((not (%%interval-contains-multi-index?-general domain multi-index))
-                                   (apply error "array-getter: domain does not contain multi-index: "    domain multi-index))
-                                  (else
-                                   (storage-class-getter body (apply indexer multi-index))))))))
-                 (else
-                  (case (%%interval-dimension domain)
-                    ((0)  (expand-getters (lambda ()          (storage-class-getter body (indexer)))))
-                    ((1)  (expand-getters (lambda (i)         (storage-class-getter body (indexer i)))))
-                    ((2)  (expand-getters (lambda (i j)       (storage-class-getter body (indexer i j)))))
-                    ((3)  (expand-getters (lambda (i j k)     (storage-class-getter body (indexer i j k)))))
-                    ((4)  (expand-getters (lambda (i j k l)   (storage-class-getter body (indexer i j k l)))))
-                    (else (expand-getters (lambda multi-index (storage-class-getter body (apply indexer multi-index)))))))))
-          (setter
-           (and mutable?
-                (cond ((%%interval-empty? domain)
-                       (%%empty-setter domain))
-                      (safe?
-                       ;; specialized-array-default-safe? is now #t initially, so the default is safe? but can be changed
-                       (case (%%interval-dimension domain)
-                         ((0)  (lambda (value)
-                                 (cond ((not (checker value))
-                                        (error "array-setter: value cannot be stored in body: " value))
-                                       (else
-                                        (storage-class-setter body (indexer) value)))))
-                         ((1)  (lambda (value i)
-                                 (declare (inlining-limit 10000))
-                                 (cond ((not (exact-integer? i))
-                                        (error "array-setter: multi-index component is not an exact integer: " i))
-                                       ((not (%%interval-contains-multi-index?-1 domain i))
-                                        (error "array-setter: domain does not contain multi-index: "    domain i))
-                                       ((not (checker value))
-                                        (error "array-setter: value cannot be stored in body: " value))
-                                       (else
-                                        (storage-class-setter body (indexer i) value)))))
-                         ((2)  (lambda (value i j)
-                                 (declare (inlining-limit 10000))
-                                 (cond ((not (and (exact-integer? i)
-                                                  (exact-integer? j)))
-                                        (error "array-setter: multi-index component is not an exact integer: " i j))
-                                       ((not (%%interval-contains-multi-index?-2 domain i j))
-                                        (error "array-setter: domain does not contain multi-index: "    domain i j))
-                                       ((not (checker value))
-                                        (error "array-setter: value cannot be stored in body: " value))
-                                       (else
-                                        (storage-class-setter body (indexer i j) value)))))
-                         ((3)  (lambda (value i j k)
-                                 (declare (inlining-limit 10000))
-                                 (cond ((not (and (exact-integer? i)
-                                                  (exact-integer? j)
-                                                  (exact-integer? k)))
-                                        (error "array-setter: multi-index component is not an exact integer: " i j k))
-                                       ((not (%%interval-contains-multi-index?-3 domain i j k))
-                                        (error "array-setter: domain does not contain multi-index: "    domain i j k))
-                                       ((not (checker value))
-                                        (error "array-setter: value cannot be stored in body: " value))
-                                       (else
-                                        (storage-class-setter body (indexer i j k) value)))))
-                         ((4)  (lambda (value i j k l)
-                                 (declare (inlining-limit 10000))
-                                 (cond ((not (and (exact-integer? i)
-                                                  (exact-integer? j)
-                                                  (exact-integer? k)
-                                                  (exact-integer? l)))
-                                        (error "array-setter: multi-index component is not an exact integer: " i j k l))
-                                       ((not (%%interval-contains-multi-index?-4 domain i j k l))
-                                        (error "array-setter: domain does not contain multi-index: "    domain i j k l))
-                                       ((not (checker value))
-                                        (error "array-setter: value cannot be stored in body: " value))
-                                       (else
-                                        (storage-class-setter body (indexer i j k l) value)))))
-                         (else (lambda (value . multi-index)
-                                 (cond ((not (every (lambda (x) (exact-integer? x)) multi-index))
-                                        (apply error "array-setter: multi-index component is not an exact integer: " multi-index))
-                                       ((not (fx= (%%interval-dimension domain) (length multi-index)))
-                                        (apply error "array-setter: multi-index is not the correct dimension: " domain multi-index))
-                                       ((not (%%interval-contains-multi-index?-general domain multi-index))
-                                        (apply error "array-setter: domain does not contain multi-index: "    domain multi-index))
-                                       ((not (checker value))
-                                        (error "array-setter: value cannot be stored in body: " value))
-                                       (else
-                                        (storage-class-setter body (apply indexer multi-index) value)))))))
-                      (else
-                       (case (%%interval-dimension domain)
-                         ((0)  (expand-setters (lambda (value)               (storage-class-setter body (indexer)                   value) (void))))
-                         ((1)  (expand-setters (lambda (value i)             (storage-class-setter body (indexer i)                 value) (void))))
-                         ((2)  (expand-setters (lambda (value i j)           (storage-class-setter body (indexer i j)               value) (void))))
-                         ((3)  (expand-setters (lambda (value i j k)         (storage-class-setter body (indexer i j k)             value) (void))))
-                         ((4)  (expand-setters (lambda (value i j k l)       (storage-class-setter body (indexer i j k l)           value) (void))))
-                         (else (expand-setters (lambda (value . multi-index) (storage-class-setter body (apply indexer multi-index) value) (void))))))))))
+    (let* ((unsafe-getter
+            (if (%%interval-empty? domain)
+                (%%empty-getter domain)
+                (case (%%interval-dimension domain)
+                  ((0)  (expand-getters (lambda ()        (storage-class-getter body (indexer)))))
+                  ((1)  (expand-getters (lambda (i)       (storage-class-getter body (indexer i)))))
+                  ((2)  (expand-getters (lambda (i j)     (storage-class-getter body (indexer i j)))))
+                  ((3)  (expand-getters (lambda (i j k)   (storage-class-getter body (indexer i j k)))))
+                  ((4)  (expand-getters (lambda (i j k l) (storage-class-getter body (indexer i j k l)))))
+                  (else
+                   ;; There's not much point in expanding the storage-class-getter considering the
+                   ;; overhead of variable-argument function call, apply, etc.
+                   (lambda multi-index (storage-class-getter body (apply indexer multi-index)))))))
+           (getter
+            (%%wrap-getter-in-index-checks domain unsafe-getter))
+           (unsafe-setter
+            (and mutable?
+                 (if (%%interval-empty? domain)
+                     (%%empty-setter domain)
+                     (case (%%interval-dimension domain)
+                       ((0)  (expand-setters (lambda (value)         (storage-class-setter body (indexer)         value))))
+                       ((1)  (expand-setters (lambda (value i)       (storage-class-setter body (indexer i)       value))))
+                       ((2)  (expand-setters (lambda (value i j)     (storage-class-setter body (indexer i j)     value))))
+                       ((3)  (expand-setters (lambda (value i j k)   (storage-class-setter body (indexer i j k)   value))))
+                       ((4)  (expand-setters (lambda (value i j k l) (storage-class-setter body (indexer i j k l) value))))
+                       ;; There's not much point in expanding the storage-class-setter considering the
+                       ;; overhead of variable-argument function call, apply, etc.
+                       (else (lambda (value . multi-index) (storage-class-setter body (apply indexer multi-index) value)))))))
+
+           (setter
+            (and mutable?
+                 (%%wrap-setter-in-index-and-value-checks domain unsafe-setter checker))))
       (make-%%array domain
                     getter
+                    unsafe-getter
                     setter
+                    unsafe-setter
                     storage-class
                     body
                     indexer
@@ -2632,318 +2636,147 @@ OTHER DEALINGS IN THE SOFTWARE.
     (error (string-append caller "Not all elements of the source can be stored in destination: ")
            destination source item))
 
-  (if (not (%%interval= (%%array-domain source) (%%array-domain destination)))
-      (domain-error))
-  (let ((common-domain (%%array-domain source)))
-    (if (%%interval-empty? common-domain)
-        "Empty arrays"
-        (if (specialized-array? destination)
-            (let* ((destination-storage-class (%%array-storage-class destination))
-                   (destination-indexer       (%%array-indexer destination))
-                   (destination-body          (%%array-body destination))
-                   (destination-setter        (storage-class-setter destination-storage-class))
-                   (destination-checker       (storage-class-checker destination-storage-class)))
-              (if (specialized-array? source)
-                  (let* ((source-storage-class (%%array-storage-class source))
-                         (source-indexer       (%%array-indexer source))
-                         (source-body          (%%array-body source))
-                         (source-getter        (storage-class-getter source-storage-class)))
-                    (if (and (%%array-packed? destination)
-                             (%%array-packed? source))
-                        (let* ((initial-destination-index (%%interval-lower-bounds->list common-domain))
-                               (destination-start         (apply destination-indexer initial-destination-index))
-                               (initial-source-index      (%%interval-lower-bounds->list common-domain))
-                               (source-start              (apply source-indexer initial-source-index))
-                               (source-end                (fx+ source-start (%%interval-volume common-domain))))
-                          (cond ((and (eq? destination-storage-class source-storage-class)
-                                      (storage-class-copier destination-storage-class))
-                                 ((storage-class-copier destination-storage-class)
-                                  destination-body
-                                  destination-start
-                                  source-body
-                                  source-start
-                                  source-end)
-                                 "Block copy")
-                                ((eq? destination-storage-class generic-storage-class)
-                                 (do ((d destination-start (fx+ d 1))
-                                      (s source-start      (fx+ s 1)))
-                                     ((fx= s source-end)
-                                      "In order, no checks needed, generic storage-class")
-                                   (vector-set! destination-body d (source-getter source-body s))))
-                                ((or (eq? destination-storage-class source-storage-class)
-                                     (let ((compatibility-list
-                                            (assq (%%array-storage-class source)
-                                                  %%storage-class-compatibility-alist)))
-                                       (and compatibility-list
-                                            (memq destination-storage-class
-                                                  compatibility-list))))
-                                 ;; No checks needed
-                                 (do ((d destination-start (fx+ d 1))
-                                      (s source-start      (fx+ s 1)))
-                                     ((fx= s source-end)
-                                      "In order, no checks needed")
-                                   (destination-setter destination-body d (source-getter source-body s))))
-                                (else
-                                 ;; Checks needed
-                                 (do ((d destination-start (fx+ d 1))
-                                      (s source-start      (fx+ s 1)))
-                                     ((fx= s source-end)
-                                      "In order, checks needed")
-                                   (let ((item (source-getter source-body s)))
-                                     (if (destination-checker item)
-                                         (destination-setter destination-body d
-                                                             (source-getter source-body s))
-                                         (checker-error item)))))))
+  (cond ((not (%%interval= (%%array-domain source) (%%array-domain destination)))
+         (domain-error))
+        ((%%interval-empty? (%%array-domain source))
+         "Empty arrays")
+        ((and (specialized-array? destination)
+              (specialized-array? source)
+              (%%array-packed? destination)
+              (%%array-packed? source))
+         (let* ((common-domain             (%%array-domain source))
+                (initial-multindex         (%%interval-lower-bounds->list common-domain))
+                (destination-body          (%%array-body destination))
+                (destination-storage-class (%%array-storage-class destination))
+                (destination-start         (apply (%%array-indexer destination) initial-multindex))
+                (source-body               (%%array-body source))
+                (source-storage-class      (%%array-storage-class source))
+                (source-start              (apply (%%array-indexer source) initial-multindex))
+                (source-end                (fx+ source-start (%%interval-volume common-domain))))
+           (if (and (eq? destination-storage-class source-storage-class)
+                    (storage-class-copier destination-storage-class))
+               (begin
+                 ((storage-class-copier destination-storage-class)
+                  destination-body
+                  destination-start
+                  source-body
+                  source-start
+                  source-end)
+                 "Block copy")
+               (let* ((destination-setter  (storage-class-setter destination-storage-class))
+                      (destination-checker (storage-class-checker destination-storage-class))
+                      (source-getter       (storage-class-getter source-storage-class)))
+                 (cond ((eq? destination-storage-class generic-storage-class)
+                        (do ((d destination-start (fx+ d 1))
+                             (s source-start      (fx+ s 1)))
+                            ((fx= s source-end)
+                             "In order, no checks needed, generic storage-class")
+                          (vector-set! destination-body d (source-getter source-body s))))
+                       ((or (eq? destination-storage-class source-storage-class)
+                            (let ((compatibility-list
+                                   (assq source-storage-class %%storage-class-compatibility-alist)))
+                              (and compatibility-list
+                                   (memq destination-storage-class compatibility-list))))
+                        ;; No checks needed
+                        (do ((d destination-start (fx+ d 1))
+                             (s source-start      (fx+ s 1)))
+                            ((fx= s source-end)
+                             "In order, no checks needed")
+                          (destination-setter destination-body d (source-getter source-body s))))
+                       (else
+                        ;; Checks needed
+                        (do ((d destination-start (fx+ d 1))
+                             (s source-start      (fx+ s 1)))
+                            ((fx= s source-end)
+                             "In order, checks needed")
+                          (let ((item (source-getter source-body s)))
+                            (if (destination-checker item)
+                                (destination-setter destination-body d
+                                                    (source-getter source-body s))
+                                (checker-error item))))))))))
+        ((or (not (specialized-array? destination))
+             (let ((destination-storage-class (%%array-storage-class destination)))
+               (or (eq? destination-storage-class generic-storage-class)
+                   (and (specialized-array? source)
+                        (let ((source-storage-class (%%array-storage-class source)))
+                          (or (eq? destination-storage-class source-storage-class)
+                              (let ((compatibility-list
+                                     (assq source-storage-class %%storage-class-compatibility-alist)))
+                                (and compatibility-list
+                                     (memq destination-storage-class compatibility-list)))))))))
+         ;; either no checks are possible (not a specialized array), or no checks are needed
+         (let ((common-domain (%%array-domain source))
+               (unsafe-getter (%%array-unsafe-getter source))
+               (unsafe-setter (%%array-unsafe-setter destination)))
+           (%%interval-for-each
+            (case (%%interval-dimension common-domain)
+              ((0)
+               (lambda ()        (unsafe-setter (unsafe-getter))))
+              ((1)
+               (lambda (i)       (unsafe-setter (unsafe-getter i)       i)))
+              ((2)
+               (lambda (i j)     (unsafe-setter (unsafe-getter i j)     i j)))
+              ((3)
+               (lambda (i j k)   (unsafe-setter (unsafe-getter i j k)   i j k)))
+              ((4)
+               (lambda (i j k l) (unsafe-setter (unsafe-getter i j k l) i j k l)))
+              (else
+               (lambda args
+                 (apply unsafe-setter (apply unsafe-getter args) args))))
+            common-domain)
+           "Out of order, no checks"))
+        (else
+         ;; destination is a specialized array, and checks are needed.
+         (let ((common-domain       (%%array-domain source))
+               (unsafe-getter       (%%array-unsafe-getter source))
+               (unsafe-setter       (%%array-unsafe-setter destination))
+               (destination-checker (storage-class-checker (%%array-storage-class destination))))
+           (begin
+             (%%interval-for-each
+              (case (%%interval-dimension common-domain)
+                ((0)
+                 (lambda ()
+                   (let ((item (unsafe-getter)))
+                     (if (destination-checker item)
+                         (unsafe-setter item)
+                         (checker-error item)))))
+                ((1)
+                 (lambda (i)
+                   (let ((item (unsafe-getter i)))
+                     (if (destination-checker item)
+                         (unsafe-setter item i)
+                         (checker-error item)))))
+                ((2)
+                 (lambda (i j)
+                   (let ((item (unsafe-getter i j)))
+                     (if (destination-checker item)
+                         (unsafe-setter item i j)
+                         (checker-error item)))))
+                ((3)
+                 (lambda (i j k)
+                   (let ((item (unsafe-getter i j k)))
+                     (if (destination-checker item)
+                         (unsafe-setter item i j k)
+                         (checker-error item)))))
+                ((4)
+                 (lambda (i j k l)
+                   (let ((item (unsafe-getter i j k l)))
+                     (if (destination-checker item)
+                         (unsafe-setter item i j k l)
+                         (checker-error item)))))
+                (else
+                 (lambda args
+                   (let ((item (apply unsafe-getter args)))
+                     (if (destination-checker item)
+                         (apply unsafe-setter item args)
+                         (checker-error item))))))
+              common-domain)
+             "Out of order, checks"))))
 
-                        ;; Source and destination are not both packed, so we can't step
-                        ;; through their bodies with step 1
-
-                        (if (eq? destination-storage-class generic-storage-class)
-                            ;; Out of order, no checks needed, generic-storage-class
-                            (begin
-                              (%%interval-for-each
-                               (case (%%interval-dimension common-domain)
-                                 ;; Arrays of dimension zero, which contain only one
-                                 ;; element, are always packed, so there is no zero case.
-                                 ((1)
-                                  (lambda (i)
-                                    (vector-set! destination-body
-                                                 (destination-indexer i)
-                                                 (source-getter source-body (source-indexer i)))))
-                                 ((2)
-                                  (lambda (i j)
-                                    (vector-set! destination-body
-                                                 (destination-indexer i j)
-                                                 (source-getter source-body (source-indexer i j)))))
-                                 ((3)
-                                  (lambda (i j k)
-                                    (vector-set! destination-body
-                                                 (destination-indexer i j k)
-                                                 (source-getter source-body (source-indexer i j k)))))
-                                 ((4)
-                                  (lambda (i j k l)
-                                    (vector-set! destination-body
-                                                 (destination-indexer i j k l)
-                                                 (source-getter source-body (source-indexer i j k l)))))
-                                 (else
-                                  (lambda args
-                                    (vector-set! destination-body
-                                                 (apply destination-indexer args)
-                                                 (source-getter source-body (apply source-indexer args))))))
-                               common-domain)
-                              "Out of order, no checks needed, generic-storage-class")
-                            ;; destination-storage-class is not generic-storage-class,
-                            ;; but checks may still not be needed
-                            (if (or (eq? destination-storage-class generic-storage-class)
-                                    (let ((compatibility-list
-                                           (assq (%%array-storage-class source)
-                                                 %%storage-class-compatibility-alist)))
-                                      (and compatibility-list
-                                           (memq destination-storage-class
-                                                 compatibility-list))))
-                                ;; No checks needed
-                                (begin
-                                  (%%interval-for-each
-                                   (case (%%interval-dimension common-domain)
-                                     ;; Arrays of dimension zero, which contain only one
-                                     ;; element, are always packed, so there is no zero case.
-                                     ((1)
-                                      (lambda (i)
-                                        (destination-setter destination-body
-                                                            (destination-indexer i)
-                                                            (source-getter source-body (source-indexer i)))))
-                                     ((2)
-                                      (lambda (i j)
-                                        (destination-setter destination-body
-                                                            (destination-indexer i j)
-                                                            (source-getter source-body (source-indexer i j)))))
-                                     ((3)
-                                      (lambda (i j k)
-                                        (destination-setter destination-body
-                                                            (destination-indexer i j k)
-                                                            (source-getter source-body (source-indexer i j k)))))
-                                     ((4)
-                                      (lambda (i j k l)
-                                        (destination-setter destination-body
-                                                            (destination-indexer i j k l)
-                                                            (source-getter source-body (source-indexer i j k l)))))
-                                     (else
-                                      (lambda args
-                                        (destination-setter destination-body
-                                                            (apply destination-indexer args)
-                                                            (source-getter source-body (apply source-indexer args))))))
-                                   common-domain)
-                                  "Out of order, no checks needed")
-                                ;; Checks needed
-                                (begin
-                                  (%%interval-for-each
-                                   (case (%%interval-dimension common-domain)
-                                     ;; Arrays of dimension zero, which contain only one
-                                     ;; element, are always packed, so there is no zero case.
-                                     ((1)
-                                      (lambda (i)
-                                        (let ((item (source-getter source-body (source-indexer i))))
-                                          (if (destination-checker item)
-                                              (destination-setter destination-body
-                                                                  (destination-indexer i)
-                                                                  item)
-                                              (checker-error item)))))
-                                     ((2)
-                                      (lambda (i j)
-                                        (let ((item (source-getter source-body (source-indexer i j))))
-                                          (if (destination-checker item)
-                                              (destination-setter destination-body
-                                                                  (destination-indexer i j)
-                                                                  item)
-                                              (checker-error item)))))
-                                     ((3)
-                                      (lambda (i j k)
-                                        (let ((item (source-getter source-body (source-indexer i j k))))
-                                          (if (destination-checker item)
-                                              (destination-setter destination-body
-                                                                  (destination-indexer i j k)
-                                                                  item)
-                                              (checker-error item)))))
-                                     ((4)
-                                      (lambda (i j k l)
-                                        (let ((item (source-getter source-body (source-indexer i j k l))))
-                                          (if (destination-checker item)
-                                              (destination-setter destination-body
-                                                                  (destination-indexer i j k l)
-                                                                  item)
-                                              (checker-error item)))))
-                                     (else
-                                      (lambda args
-                                        (let ((item (source-getter source-body (apply source-indexer args))))
-                                          (if (destination-checker item)
-                                              (destination-setter destination-body
-                                                                  (apply destination-indexer args)
-                                                                  item)
-                                              (checker-error item))))))
-                                   common-domain)
-                                  "Out of order, checks needed")))))
-                  ;; Source is not a specialized array
-                  (if (eq? destination-storage-class generic-storage-class)
-                      ;; checks are not needed, setter is vector-set!
-                      (let ((source-getter (%%array-getter source)))
-                        (%%interval-for-each
-                         (case (%%interval-dimension common-domain)
-                           ((0)
-                            (lambda ()
-                              (vector-set! destination-body
-                                           (destination-indexer)
-                                           (source-getter))))
-                           ((1)
-                            (lambda (i)
-                              (vector-set! destination-body
-                                           (destination-indexer i)
-                                           (source-getter i))))
-                           ((2)
-                            (lambda (i j)
-                              (vector-set! destination-body
-                                           (destination-indexer i j)
-                                           (source-getter i j))))
-                           ((3)
-                            (lambda (i j k)
-                              (vector-set! destination-body
-                                           (destination-indexer i j k)
-                                           (source-getter i j k))))
-                           ((4)
-                            (lambda (i j k l)
-                              (vector-set! destination-body
-                                           (destination-indexer i j k l)
-                                           (source-getter i j k l))))
-                           (else
-                            (lambda args
-                              (vector-set! destination-body
-                                           (apply destination-indexer args)
-                                           (apply source-getter args)))))
-                         common-domain)
-                        "Checks not needed, source not specialized, generic-storage-class")
-                      ;; destination-storage-class is not generic-storage-class, so
-                      ;; checks are needed and we call destination-setter instead of
-                      ;; vector-set!
-                      (let ((source-getter (%%array-getter source)))
-                        (%%interval-for-each
-                         (case (%%interval-dimension common-domain)
-                           ((0)
-                            (lambda ()
-                              (let ((item (source-getter)))
-                                (if (destination-checker item)
-                                    (destination-setter destination-body
-                                                        (destination-indexer)
-                                                        item)
-                                    (checker-error item)))))
-                           ((1)
-                            (lambda (i)
-                              (let ((item (source-getter i)))
-                                (if (destination-checker item)
-                                    (destination-setter destination-body
-                                                        (destination-indexer i)
-                                                        item)
-                                    (checker-error item)))))
-                           ((2)
-                            (lambda (i j)
-                              (let ((item (source-getter i j)))
-                                (if (destination-checker item)
-                                    (destination-setter destination-body
-                                                        (destination-indexer i j)
-                                                        item)
-                                    (checker-error item)))))
-                           ((3)
-                            (lambda (i j k)
-                              (let ((item (source-getter i j k)))
-                                (if (destination-checker item)
-                                    (destination-setter destination-body
-                                                        (destination-indexer i j k)
-                                                        item)
-                                    (checker-error item)))))
-                           ((4)
-                            (lambda (i j k l)
-                              (let ((item (source-getter i j k l)))
-                                (if (destination-checker item)
-                                    (destination-setter destination-body
-                                                        (destination-indexer i j k l)
-                                                        item)
-                                    (checker-error item)))))
-                           (else
-                            (lambda args
-                              (let ((item (apply source-getter args)))
-                                (if (destination-checker item)
-                                    (destination-setter destination-body
-                                                        (apply destination-indexer args)
-                                                        item)
-                                    (checker-error item))))))
-                         common-domain)
-                        "Checks needed, source not specialized"))))
-            ;; destination is not a specialized array, so checks,
-            ;; if any, are built into the setter.
-            (let ((setter
-                   (%%array-setter destination))
-                  (getter
-                   (%%array-getter source)))
-              (%%interval-for-each
-               (case (%%interval-dimension common-domain)
-                 ((0) (lambda ()
-                        (setter (getter))))
-                 ((1) (lambda (i)
-                        (setter (getter i)i)))
-                 ((2) (lambda (i j)
-                        (setter (getter i j) i j)))
-                 ((3) (lambda (i j k)
-                        (setter (getter i j k) i j k)))
-                 ((4) (lambda (i j k l)
-                        (setter (getter i j k l) i j k l)))
-                 (else
-                  (lambda multi-index
-                    (apply setter
-                           (apply getter multi-index)
-                           multi-index))))
-               common-domain)
-              "Destination not specialized array"))))
   ;; %%move-array-elements returns a string that designates
   ;; the copying method it used.
   ;; Calling functions should return something useful.
+
   )
 
 ;;;
@@ -3219,13 +3052,13 @@ OTHER DEALINGS IN THE SOFTWARE.
                                     new-domain->old-domain))))
 
 (define (%%immutable-array-extract array new-domain)
-  (make-array new-domain
-              (%%array-getter array)))
+  (%%make-safer-array new-domain
+                      (%%array-unsafe-getter array)))
 
 (define (%%mutable-array-extract array new-domain)
-  (make-array new-domain
-              (%%array-getter array)
-              (%%array-setter array)))
+  (%%make-safer-array new-domain
+                      (%%array-unsafe-getter array)
+                      (%%array-unsafe-setter array)))
 
 (define (%%specialized-array-extract array new-domain)
   (%%specialized-array-share array new-domain values))
@@ -3358,7 +3191,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                                                         (vector-map (lambda (slice-offsets i) (vector-ref slice-offsets (fx+ i 1))) offsets i))))
                                (%%array-extract A subdomain))))))
 
-                     (%%make-safe-immutable-array result-domain (generate-result) "array-tile: ")))))))))
+                     (%%make-safer-array result-domain (generate-result))))))))))
 
 (define (%%getter-translate getter translation)
   (case (vector-length translation)
@@ -3425,12 +3258,12 @@ OTHER DEALINGS IN THE SOFTWARE.
                                     (%%getter-translate values translation)
                                     (%%array-in-order? array)))
         ((mutable-array? array)
-         (make-array (%%interval-translate (%%array-domain array) translation)
-                     (%%getter-translate (%%array-getter array) translation)
-                     (%%setter-translate (%%array-setter array) translation)))
+         (%%make-safer-array (%%interval-translate (%%array-domain array) translation)
+                             (%%getter-translate (%%array-unsafe-getter array) translation)
+                             (%%setter-translate (%%array-unsafe-setter array) translation)))
         (else
-         (make-array (%%interval-translate (%%array-domain array) translation)
-                     (%%getter-translate (%%array-getter array) translation)))))
+         (%%make-safer-array (%%interval-translate (%%array-domain array) translation)
+                             (%%getter-translate (%%array-unsafe-getter array) translation)))))
 
 (define (array-translate array translation)
   (cond ((not (array? array))
@@ -3502,12 +3335,12 @@ OTHER DEALINGS IN THE SOFTWARE.
                                     (%%interval-permute (%%array-domain array) permutation)
                                     (%%getter-permute values permutation)))
         ((mutable-array? array)
-         (make-array (%%interval-permute (%%array-domain array) permutation)
-                     (%%getter-permute (%%array-getter array) permutation)
-                     (%%setter-permute (%%array-setter array) permutation)))
+         (%%make-safer-array (%%interval-permute (%%array-domain array) permutation)
+                             (%%getter-permute (%%array-unsafe-getter array) permutation)
+                             (%%setter-permute (%%array-unsafe-setter array) permutation)))
         (else
-         (make-array (%%interval-permute (%%array-domain array) permutation)
-                     (%%getter-permute (%%array-getter array) permutation)))))
+         (%%make-safer-array (%%interval-permute (%%array-domain array) permutation)
+                             (%%getter-permute (%%array-unsafe-getter array) permutation)))))
 
 (define (array-permute array permutation)
   (cond ((not (array? array))
@@ -3602,12 +3435,12 @@ OTHER DEALINGS IN THE SOFTWARE.
                                     (%%array-domain array)
                                     (%%getter-reverse values flip? (%%array-domain array))))
         ((mutable-array? array)
-         (make-array (%%array-domain array)
-                     (%%getter-reverse (%%array-getter array) flip? (%%array-domain array))
-                     (%%setter-reverse (%%array-setter array) flip? (%%array-domain array))))
+         (%%make-safer-array (%%array-domain array)
+                             (%%getter-reverse (%%array-unsafe-getter array) flip? (%%array-domain array))
+                             (%%setter-reverse (%%array-unsafe-setter array) flip? (%%array-domain array))))
         (else
-         (make-array (%%array-domain array)
-                     (%%getter-reverse (%%array-getter array) flip? (%%array-domain array))))))
+         (%%make-safer-array (%%array-domain array)
+                             (%%getter-reverse (%%array-unsafe-getter array) flip? (%%array-domain array))))))
 
 (define %%vector-of-trues
   '#(#()
@@ -3731,13 +3564,13 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 
 (define (%%immutable-array-sample array scales)
-  (make-array (%%interval-scale (%%array-domain array) scales)
-              (%%getter-sample (%%array-getter array) scales (%%array-domain array))))
+  (%%make-safer-array (%%interval-scale (%%array-domain array) scales)
+                      (%%getter-sample (%%array-unsafe-getter array) scales (%%array-domain array))))
 
 (define (%%mutable-array-sample array scales)
-  (make-array (%%interval-scale (%%array-domain array) scales)
-              (%%getter-sample (%%array-getter array) scales (%%array-domain array))
-              (%%setter-sample (%%array-setter array) scales (%%array-domain array))))
+  (%%make-safer-array (%%interval-scale (%%array-domain array) scales)
+                      (%%getter-sample (%%array-unsafe-getter array) scales (%%array-domain array))
+                      (%%setter-sample (%%array-unsafe-setter array) scales (%%array-domain array))))
 
 (define (%%specialized-array-sample array scales)
   (%%specialized-array-share array
@@ -3765,12 +3598,12 @@ OTHER DEALINGS IN THE SOFTWARE.
 (define (%%array-outer-product combiner A B)
   (let* ((D_A            (%%array-domain A))
          (D_B            (%%array-domain B))
-         (A_             (%%array-getter A))
-         (B_             (%%array-getter B))
+         (A_             (%%array-unsafe-getter A))
+         (B_             (%%array-unsafe-getter B))
          (dim_A          (%%interval-dimension D_A))
          (dim_B          (%%interval-dimension D_B))
          (result-domain  (%%interval-cartesian-product (list D_A D_B)))
-         (result-getter
+         (result-unsafe-getter
           (case dim_A
             ((0)
              (case dim_B
@@ -3846,7 +3679,7 @@ OTHER DEALINGS IN THE SOFTWARE.
              (lambda args
                (combiner (apply A_ (take args dim_A))
                          (apply B_ (drop args dim_A))))))))
-    (make-array result-domain result-getter)))
+    (%%make-safer-array result-domain result-unsafe-getter)))
 
 (define (array-outer-product combiner array1 array2)
   (cond ((not (array? array1))
@@ -3858,174 +3691,123 @@ OTHER DEALINGS IN THE SOFTWARE.
         (else
          (%%array-outer-product combiner array1 array2))))
 
-(define (%%make-safe-immutable-array domain getter caller)
-  (make-array
-   domain
-   (case (%%interval-dimension domain)
-     ((0) (lambda ()
-            (getter)))
-     ((1) (lambda (i)
-            (cond ((not (exact-integer? i))
-                   (error (string-append caller "multi-index component is not an exact integer: ") i))
-                  ((not (%%interval-contains-multi-index?-1 domain i))
-                   (error (string-append caller "domain does not contain multi-index: ") domain i))
-                  (else
-                   (getter i)))))
-     ((2) (lambda (i j)
-            (cond ((not (and (exact-integer? i)
-                             (exact-integer? j)))
-                   (error (string-append caller "multi-index component is not an exact integer: ") i j))
-                  ((not (%%interval-contains-multi-index?-2 domain i j))
-                   (error (string-append caller "domain does not contain multi-index: ") domain i j))
-                  (else
-                   (getter i j)))))
-     ((3) (lambda (i j k)
-            (cond ((not (and (exact-integer? i)
-                             (exact-integer? j)
-                             (exact-integer? k)))
-                   (error (string-append caller "multi-index component is not an exact integer: ") i j k))
-                  ((not (%%interval-contains-multi-index?-3 domain i j k))
-                   (error (string-append caller "domain does not contain multi-index: ") domain i j k))
-                  (else
-                   (getter i j k)))))
-     ((4) (lambda (i j k l)
-            (cond ((not (and (exact-integer? i)
-                             (exact-integer? j)
-                             (exact-integer? k)
-                             (exact-integer? l)))
-                   (error (string-append caller "multi-index component is not an exact integer: ") i j k l))
-                  ((not (%%interval-contains-multi-index?-4 domain i j k l))
-                   (error (string-append caller "domain does not contain multi-index: ") domain i j k l))
-                  (else
-                   (getter i j k l)))))
-     (else (lambda multi-index
-             (cond ((not (every exact-integer? multi-index))
-                    (apply error (string-append caller "multi-index component is not an exact integer: ") multi-index))
-                   ((not (= (length multi-index) (%%interval-dimension domain)))
-                    (apply error (string-append caller "multi-index is not the correct dimension: ") domain multi-index))
-                   ((not (%%interval-contains-multi-index?-general domain multi-index))
-                    (apply error (string-append caller "domain does not contain multi-index: ") domain multi-index))
-                   (else
-                    (apply getter multi-index))))))))
-
 (define (%%immutable-array-curry array right-dimension)
   (call-with-values
       (lambda () (%%interval-projections (%%array-domain array) right-dimension))
     (lambda (left-interval right-interval)
-      (let ((getter (%%array-getter array)))
-        (%%make-safe-immutable-array
+      (let ((unsafe-getter (%%array-unsafe-getter array)))
+        (%%make-safer-array
          left-interval
          (case (%%interval-dimension left-interval)
            ((0)  (case (%%interval-dimension right-interval)
-                   ((0)  (lambda ()        (make-array right-interval (lambda ()          (getter)))))
-                   ((1)  (lambda ()        (make-array right-interval (lambda (i)         (getter i)))))
-                   ((2)  (lambda ()        (make-array right-interval (lambda (i j)       (getter i j)))))
-                   ((3)  (lambda ()        (make-array right-interval (lambda (i j k)     (getter i j k)))))
-                   ((4)  (lambda ()        (make-array right-interval (lambda (i j k l)   (getter i j k l)))))
-                   (else (lambda ()        (make-array right-interval (lambda multi-index (apply getter multi-index)))))))
+                   ((0)  (lambda ()        (%%make-safer-array right-interval (lambda ()          (unsafe-getter)))))
+                   ((1)  (lambda ()        (%%make-safer-array right-interval (lambda (i)         (unsafe-getter i)))))
+                   ((2)  (lambda ()        (%%make-safer-array right-interval (lambda (i j)       (unsafe-getter i j)))))
+                   ((3)  (lambda ()        (%%make-safer-array right-interval (lambda (i j k)     (unsafe-getter i j k)))))
+                   ((4)  (lambda ()        (%%make-safer-array right-interval (lambda (i j k l)   (unsafe-getter i j k l)))))
+                   (else (lambda ()        (%%make-safer-array right-interval (lambda multi-index (apply unsafe-getter multi-index)))))))
            ((1)  (case (%%interval-dimension right-interval)
-                   ((0)  (lambda (i)       (make-array right-interval (lambda ()          (getter i)))))
-                   ((1)  (lambda (i)       (make-array right-interval (lambda (j)         (getter i j)))))
-                   ((2)  (lambda (i)       (make-array right-interval (lambda (j k)       (getter i j k)))))
-                   ((3)  (lambda (i)       (make-array right-interval (lambda (j k l)     (getter i j k l)))))
-                   (else (lambda (i)       (make-array right-interval (lambda multi-index (apply getter i multi-index)))))))
+                   ((0)  (lambda (i)       (%%make-safer-array right-interval (lambda ()          (unsafe-getter i)))))
+                   ((1)  (lambda (i)       (%%make-safer-array right-interval (lambda (j)         (unsafe-getter i j)))))
+                   ((2)  (lambda (i)       (%%make-safer-array right-interval (lambda (j k)       (unsafe-getter i j k)))))
+                   ((3)  (lambda (i)       (%%make-safer-array right-interval (lambda (j k l)     (unsafe-getter i j k l)))))
+                   (else (lambda (i)       (%%make-safer-array right-interval (lambda multi-index (apply unsafe-getter i multi-index)))))))
            ((2)  (case (%%interval-dimension right-interval)
-                   ((0)  (lambda (i j)     (make-array right-interval (lambda ( )         (getter i j)))))
-                   ((1)  (lambda (i j)     (make-array right-interval (lambda (  k)       (getter i j k)))))
-                   ((2)  (lambda (i j)     (make-array right-interval (lambda (  k l)     (getter i j k l)))))
-                   (else (lambda (i j)     (make-array right-interval (lambda multi-index (apply getter i j multi-index)))))))
+                   ((0)  (lambda (i j)     (%%make-safer-array right-interval (lambda ( )         (unsafe-getter i j)))))
+                   ((1)  (lambda (i j)     (%%make-safer-array right-interval (lambda (  k)       (unsafe-getter i j k)))))
+                   ((2)  (lambda (i j)     (%%make-safer-array right-interval (lambda (  k l)     (unsafe-getter i j k l)))))
+                   (else (lambda (i j)     (%%make-safer-array right-interval (lambda multi-index (apply unsafe-getter i j multi-index)))))))
            ((3)  (case (%%interval-dimension right-interval)
-                   ((0)  (lambda (i j k)   (make-array right-interval (lambda (   )       (getter i j k)))))
-                   ((1)  (lambda (i j k)   (make-array right-interval (lambda (    l)     (getter i j k l)))))
-                   (else (lambda (i j k)   (make-array right-interval (lambda multi-index (apply getter i j k multi-index)))))))
+                   ((0)  (lambda (i j k)   (%%make-safer-array right-interval (lambda (   )       (unsafe-getter i j k)))))
+                   ((1)  (lambda (i j k)   (%%make-safer-array right-interval (lambda (    l)     (unsafe-getter i j k l)))))
+                   (else (lambda (i j k)   (%%make-safer-array right-interval (lambda multi-index (apply unsafe-getter i j k multi-index)))))))
            ((4)  (case (%%interval-dimension right-interval)
-                   ((0)  (lambda (i j k l) (make-array right-interval (lambda (     )     (getter i j k l)))))
-                   (else (lambda (i j k l) (make-array right-interval (lambda multi-index (apply getter i j k l multi-index)))))))
+                   ((0)  (lambda (i j k l) (%%make-safer-array right-interval (lambda (     )     (unsafe-getter i j k l)))))
+                   (else (lambda (i j k l) (%%make-safer-array right-interval (lambda multi-index (apply unsafe-getter i j k l multi-index)))))))
            (else (lambda left-multi-index
-                   (make-array right-interval
-                               (lambda right-multi-index
-                                 (apply getter (append left-multi-index right-multi-index)))))))
-         "array-curry: ")))))
+                   (%%make-safer-array right-interval
+                                       (lambda right-multi-index
+                                         (apply unsafe-getter (append left-multi-index right-multi-index))))))))))))
 
 (define (%%mutable-array-curry array right-dimension)
   (call-with-values
       (lambda () (%%interval-projections (%%array-domain array) right-dimension))
     (lambda (left-interval right-interval)
-      (let ((getter (%%array-getter array))
-            (setter (%%array-setter   array)))
-        (%%make-safe-immutable-array
+      (let ((unsafe-getter (%%array-unsafe-getter array))
+            (unsafe-setter (%%array-unsafe-setter   array)))
+        (%%make-safer-array
          left-interval
          (case (%%interval-dimension left-interval)
            ((0)  (case (%%interval-dimension right-interval)
-                   ((0)  (lambda ()        (make-array right-interval
-                                                       (lambda ( )       (getter  ))
-                                                       (lambda (v)       (setter v)))))
-                   ((1)  (lambda ()        (make-array right-interval
-                                                       (lambda (  i)     (getter   i))
-                                                       (lambda (v i)     (setter v i)))))
-                   ((2)  (lambda ()        (make-array right-interval
-                                                       (lambda (  i j)   (getter   i j))
-                                                       (lambda (v i j)   (setter v i j)))))
-                   ((3)  (lambda ()        (make-array right-interval
-                                                       (lambda (  i j k) (getter   i j k))
-                                                       (lambda (v i j k) (setter v i j k)))))
-                   ((4)  (lambda ()        (make-array right-interval
-                                                       (lambda (  i j k l) (getter   i j k l))
-                                                       (lambda (v i j k l) (setter v i j k l)))))
-                   (else (lambda ()        (make-array right-interval
-                                                       (lambda      multi-index  (apply getter           multi-index))
-                                                       (lambda (v . multi-index) (apply setter v         multi-index)))))))
+                   ((0)  (lambda ()        (%%make-safer-array right-interval
+                                                               (lambda ( )       (unsafe-getter  ))
+                                                               (lambda (v)       (unsafe-setter v)))))
+                   ((1)  (lambda ()        (%%make-safer-array right-interval
+                                                               (lambda (  i)     (unsafe-getter   i))
+                                                               (lambda (v i)     (unsafe-setter v i)))))
+                   ((2)  (lambda ()        (%%make-safer-array right-interval
+                                                               (lambda (  i j)   (unsafe-getter   i j))
+                                                               (lambda (v i j)   (unsafe-setter v i j)))))
+                   ((3)  (lambda ()        (%%make-safer-array right-interval
+                                                               (lambda (  i j k) (unsafe-getter   i j k))
+                                                               (lambda (v i j k) (unsafe-setter v i j k)))))
+                   ((4)  (lambda ()        (%%make-safer-array right-interval
+                                                               (lambda (  i j k l) (unsafe-getter   i j k l))
+                                                               (lambda (v i j k l) (unsafe-setter v i j k l)))))
+                   (else (lambda ()        (%%make-safer-array right-interval
+                                                               (lambda      multi-index  (apply unsafe-getter           multi-index))
+                                                               (lambda (v . multi-index) (apply unsafe-setter v         multi-index)))))))
            ((1)  (case (%%interval-dimension right-interval)
-                   ((0)  (lambda (i)       (make-array right-interval
-                                                       (lambda ( )       (getter   i))
-                                                       (lambda (v)       (setter v i)))))
-                   ((1)  (lambda (i)       (make-array right-interval
-                                                       (lambda (  j)     (getter   i j))
-                                                       (lambda (v j)     (setter v i j)))))
-                   ((2)  (lambda (i)       (make-array right-interval
-                                                       (lambda (  j k)   (getter   i j k))
-                                                       (lambda (v j k)   (setter v i j k)))))
-                   ((3)  (lambda (i)       (make-array right-interval
-                                                       (lambda (  j k l) (getter   i j k l))
-                                                       (lambda (v j k l) (setter v i j k l)))))
-                   (else (lambda (i)       (make-array right-interval
-                                                       (lambda      multi-index  (apply getter   i       multi-index))
-                                                       (lambda (v . multi-index) (apply setter v i       multi-index)))))))
+                   ((0)  (lambda (i)       (%%make-safer-array right-interval
+                                                               (lambda ( )       (unsafe-getter   i))
+                                                               (lambda (v)       (unsafe-setter v i)))))
+                   ((1)  (lambda (i)       (%%make-safer-array right-interval
+                                                               (lambda (  j)     (unsafe-getter   i j))
+                                                               (lambda (v j)     (unsafe-setter v i j)))))
+                   ((2)  (lambda (i)       (%%make-safer-array right-interval
+                                                               (lambda (  j k)   (unsafe-getter   i j k))
+                                                               (lambda (v j k)   (unsafe-setter v i j k)))))
+                   ((3)  (lambda (i)       (%%make-safer-array right-interval
+                                                               (lambda (  j k l) (unsafe-getter   i j k l))
+                                                               (lambda (v j k l) (unsafe-setter v i j k l)))))
+                   (else (lambda (i)       (%%make-safer-array right-interval
+                                                               (lambda      multi-index  (apply unsafe-getter   i       multi-index))
+                                                               (lambda (v . multi-index) (apply unsafe-setter v i       multi-index)))))))
            ((2)  (case (%%interval-dimension right-interval)
-                   ((0)  (lambda (i j)     (make-array right-interval
-                                                       (lambda (   )     (getter   i j))
-                                                       (lambda (v  )     (setter v i j)))))
-                   ((1)  (lambda (i j)     (make-array right-interval
-                                                       (lambda (    k)   (getter   i j k))
-                                                       (lambda (v   k)   (setter v i j k)))))
-                   ((2)  (lambda (i j)     (make-array right-interval
-                                                       (lambda (    k l) (getter   i j k l))
-                                                       (lambda (v   k l) (setter v i j k l)))))
-                   (else (lambda (i j)     (make-array right-interval
-                                                       (lambda      multi-index  (apply getter   i j     multi-index))
-                                                       (lambda (v . multi-index) (apply setter v i j     multi-index)))))))
+                   ((0)  (lambda (i j)     (%%make-safer-array right-interval
+                                                               (lambda (   )     (unsafe-getter   i j))
+                                                               (lambda (v  )     (unsafe-setter v i j)))))
+                   ((1)  (lambda (i j)     (%%make-safer-array right-interval
+                                                               (lambda (    k)   (unsafe-getter   i j k))
+                                                               (lambda (v   k)   (unsafe-setter v i j k)))))
+                   ((2)  (lambda (i j)     (%%make-safer-array right-interval
+                                                               (lambda (    k l) (unsafe-getter   i j k l))
+                                                               (lambda (v   k l) (unsafe-setter v i j k l)))))
+                   (else (lambda (i j)     (%%make-safer-array right-interval
+                                                               (lambda      multi-index  (apply unsafe-getter   i j     multi-index))
+                                                               (lambda (v . multi-index) (apply unsafe-setter v i j     multi-index)))))))
            ((3)  (case (%%interval-dimension right-interval)
-                   ((0)  (lambda (i j k)   (make-array right-interval
-                                                       (lambda (     )   (getter   i j k))
-                                                       (lambda (v    )   (setter v i j k)))))
-                   ((1)  (lambda (i j k)   (make-array right-interval
-                                                       (lambda (      l) (getter   i j k l))
-                                                       (lambda (v     l) (setter v i j k l)))))
-                   (else (lambda (i j k)   (make-array right-interval
-                                                       (lambda      multi-index  (apply getter   i j k   multi-index))
-                                                       (lambda (v . multi-index) (apply setter v i j k   multi-index)))))))
+                   ((0)  (lambda (i j k)   (%%make-safer-array right-interval
+                                                               (lambda (     )   (unsafe-getter   i j k))
+                                                               (lambda (v    )   (unsafe-setter v i j k)))))
+                   ((1)  (lambda (i j k)   (%%make-safer-array right-interval
+                                                               (lambda (      l) (unsafe-getter   i j k l))
+                                                               (lambda (v     l) (unsafe-setter v i j k l)))))
+                   (else (lambda (i j k)   (%%make-safer-array right-interval
+                                                               (lambda      multi-index  (apply unsafe-getter   i j k   multi-index))
+                                                               (lambda (v . multi-index) (apply unsafe-setter v i j k   multi-index)))))))
            ((4)  (case (%%interval-dimension right-interval)
-                   ((0)  (lambda (i j k l) (make-array right-interval
-                                                       (lambda (     )   (getter   i j k l))
-                                                       (lambda (v    )   (setter v i j k l)))))
-                   (else (lambda (i j k l) (make-array right-interval
-                                                       (lambda      multi-index  (apply getter   i j k l multi-index))
-                                                       (lambda (v . multi-index) (apply setter v i j k l multi-index)))))))
+                   ((0)  (lambda (i j k l) (%%make-safer-array right-interval
+                                                               (lambda (     )   (unsafe-getter   i j k l))
+                                                               (lambda (v    )   (unsafe-setter v i j k l)))))
+                   (else (lambda (i j k l) (%%make-safer-array right-interval
+                                                               (lambda      multi-index  (apply unsafe-getter   i j k l multi-index))
+                                                               (lambda (v . multi-index) (apply unsafe-setter v i j k l multi-index)))))))
            (else (lambda left-multi-index
-                   (make-array right-interval
-                               (lambda      right-multi-index  (apply getter   (append left-multi-index right-multi-index)))
-                               (lambda (v . right-multi-index) (apply setter v (append left-multi-index right-multi-index)))))))
-         "array-curry: ")))))
+                   (%%make-safer-array right-interval
+                                       (lambda      right-multi-index  (apply unsafe-getter   (append left-multi-index right-multi-index)))
+                                       (lambda (v . right-multi-index) (apply unsafe-setter v (append left-multi-index right-multi-index))))))))))))
+
 
 (define (%%specialized-array-curry array right-dimension)
   (call-with-values
@@ -4048,7 +3830,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                                           (apply values
                                                  (append left-multi-index
                                                          right-multi-index)))))))))
-        (%%make-safe-immutable-array
+        (%%make-safer-array
          left-interval
          (case (%%interval-dimension left-interval)
            ((0)  (case (%%interval-dimension right-interval)
@@ -4077,8 +3859,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                    ((0)  (lambda (i j k l) (%%specialized-array-share array right-interval (lambda ()                            (values i j k l)) in-order?)))
                    (else (lambda (i j k l) (%%specialized-array-share array right-interval (lambda multi-index (apply values i j k l multi-index)) in-order?)))))
            (else (lambda left-multi-index
-                   (%%specialized-array-share array right-interval (lambda right-multi-index (apply values (append left-multi-index right-multi-index))) in-order?))))
-         "array-curry: ")))))
+                   (%%specialized-array-share array right-interval (lambda right-multi-index (apply values (append left-multi-index right-multi-index))) in-order?)))))))))
 
 (define (%%array-curry array right-dimension)
   (cond ((specialized-array? array)
@@ -4099,10 +3880,10 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 ;;;
 ;;; array-map returns an array whose domain is the same as the common domain of (cons array arrays)
-;;; and whose getter is
+;;; and whose unsafe getter is
 ;;;
 ;;; (lambda multi-index
-;;;   (apply f (map (lambda (g) (apply g multi-index)) (map array-getter (cons array arrays)))))
+;;;   (apply f (map (lambda (g) (apply g multi-index)) (map array-unsafe-getter (cons array arrays)))))
 ;;;
 ;;; This function is also used in array-for-each, so we try to specialize the this
 ;;; function to speed things up a bit.
@@ -4131,10 +3912,9 @@ OTHER DEALINGS IN THE SOFTWARE.
                                    args))))
 
       (define (do-one number-of-getters)
-        (let ((getters (map make-getter
-                            (iota number-of-getters))))
+        (let ((getters (map make-getter (iota number-of-getters))))
           `((,number-of-getters) (let ,(map (lambda (getter i)
-                                               `(,getter (%%array-getter (list-ref arrays ,i))))
+                                               `(,getter (%%array-unsafe-getter (list-ref arrays ,i))))
                                              getters
                                              (iota number-of-getters))
                                    (case (%%interval-dimension domain)
@@ -4155,7 +3935,7 @@ OTHER DEALINGS IN THE SOFTWARE.
              `(case (length arrays)
                 ,@(map do-one (iota (max-getters) 1))
                 (else
-                 (let ((getters (map array-getter arrays)))
+                 (let ((getters (map %%array-unsafe-getter arrays)))
                    (case (%%interval-dimension domain)
                      ,@(map (lambda (dimension)
                               (let ((multi-index (map (lambda (dim)
@@ -4173,8 +3953,8 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 (define (%%array-map f array arrays)
   ;; unsafe, for internal use on known intervals
-  (make-array (%%array-domain array)
-              (%%specialize-function-applied-to-array-getters f array arrays)))
+  (%%make-safer-array (%%array-domain array)
+                      (%%specialize-function-applied-to-array-getters f array arrays)))
 
 (define (array-map f array #!rest arrays)
   (cond ((not (procedure? f))
@@ -4184,9 +3964,7 @@ OTHER DEALINGS IN THE SOFTWARE.
         ((not (every (lambda (d) (%%interval= d (%%array-domain array))) (map %%array-domain arrays)))
          (apply error "array-map: Not all arrays have the same domain: " f array arrays))
         (else
-         ;; safe
-         (make-array (%%array-domain array)
-                     (%%specialize-function-applied-to-array-getters f array arrays)))))
+         (%%array-map f array arrays))))
 
 ;;; applies f to the elements of the arrays in lexicographical order.
 
@@ -4345,9 +4123,9 @@ OTHER DEALINGS IN THE SOFTWARE.
         ((not (every (lambda (a) (%%interval= (%%array-domain a) (%%array-domain array))) arrays))
          (apply error "array-fold-left: Not all arrays have the same domain: " op id array arrays))
         ((null? arrays)
-         (%%interval-fold-left (%%array-getter array) op id (%%array-domain array)))
+         (%%interval-fold-left (%%array-unsafe-getter array) op id (%%array-domain array)))
         (else
-         (%%interval-fold-left (%%array-getter (%%array-map list array arrays))
+         (%%interval-fold-left (%%array-unsafe-getter (%%array-map list array arrays))
                                (case (length arrays)
                                  ((1) (lambda (id elements)
                                         (op id (car elements) (cadr elements))))
@@ -4369,9 +4147,9 @@ OTHER DEALINGS IN THE SOFTWARE.
         ((not (every (lambda (a) (%%interval= (%%array-domain a) (%%array-domain array))) arrays))
          (apply error "array-fold-right: Not all arrays have the same domain: " op id array arrays))
         ((null? arrays)
-         (%%interval-fold-right (%%array-getter array) op id (%%array-domain array)))
+         (%%interval-fold-right (%%array-unsafe-getter array) op id (%%array-domain array)))
         (else
-         (%%interval-fold-right (%%array-getter (%%array-map list array arrays))
+         (%%interval-fold-right (%%array-unsafe-getter (%%array-map list array arrays))
                                 (case (length arrays)
                                   ((1) (lambda (elements id)
                                          (op (car elements) (cadr elements) id)))
@@ -4388,7 +4166,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 (define %%array-reduce
   (let ((%%array-reduce-base (list 'base)))
     (lambda (sum A)
-      (%%interval-fold-left (%%array-getter A)
+      (%%interval-fold-left (%%array-unsafe-getter A)
                             (lambda (id a)
                               (if (eq? id %%array-reduce-base)
                                   a
@@ -4410,7 +4188,7 @@ OTHER DEALINGS IN THE SOFTWARE.
   ;; safe in the face of (%%array-getter array) capturing
   ;; the continuation using call/cc, as long as the
   ;; resulting list is not modified.
-  (%%interval-fold-left (%%array-getter array)
+  (%%interval-fold-left (%%array-unsafe-getter array)
                         (lambda (a b) (cons b a))
                         '()
                         (%%array-domain array)))
@@ -4599,7 +4377,7 @@ OTHER DEALINGS IN THE SOFTWARE.
            (define (a->l a)
              (let ((dim (%%interval-dimension (%%array-domain a))))
                (case dim
-                 ((0) ((%%array-getter a)))  ;; special case, just the element of the array
+                 ((0) ((%%array-unsafe-getter a)))  ;; special case, just the element of the array
                  ((1) (%%array->list a))
                  (else
                   (%%array->list
@@ -4614,7 +4392,7 @@ OTHER DEALINGS IN THE SOFTWARE.
            (define (a->v a)
              (let ((dim (%%interval-dimension (%%array-domain a))))
                (case dim
-                 ((0) ((%%array-getter a)))  ;; special case, just the element of the array
+                 ((0) ((%%array-unsafe-getter a)))  ;; special case, just the element of the array
                  ((1) (%%array->vector a))
                  (else
                   (%%array->vector
@@ -4917,7 +4695,7 @@ OTHER DEALINGS IN THE SOFTWARE.
          (error (string-append caller "The fourth argument is not a boolean: ") A-arg storage-class mutable? safe?))
         (else
          (let* ((A   (array-copy A-arg))
-                (A_  (%%array-getter A))
+                (A_  (%%array-unsafe-getter A))
                 (A_D (%%array-domain A)))
            (if (not (%%array-every array? A '()))
                (error (string-append caller "Not all elements of the first argument (an array) are arrays: ") A-arg)
@@ -5015,10 +4793,10 @@ OTHER DEALINGS IN THE SOFTWARE.
                            (lambda (k)        ;; the direction
                              (let* ((pencil   ;; a pencil in that direction
                                      ;; Amazingly, this works when A_dim is 1.
-                                     (apply (%%array-getter (%%array-curry (%%array-permute A (%%index-last A_dim k)) 1))
+                                     (apply (%%array-unsafe-getter (%%array-curry (%%array-permute A (%%index-last A_dim k)) 1))
                                             (make-list (fx- A_dim 1) 0)))
                                     (pencil_
-                                     (%%array-getter pencil))
+                                     (%%array-unsafe-getter pencil))
                                     (pencil-size
                                      (%%interval-width (%%array-domain pencil) 0))
                                     (result   ;; include sum of all kth interval-widths in pencil
@@ -5041,7 +4819,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                                                      caller)
                               A))
                          (A_
-                          (%%array-getter A))
+                          (%%array-unsafe-getter A))
                          (result
                           (%%make-specialized-array
                            (make-interval
