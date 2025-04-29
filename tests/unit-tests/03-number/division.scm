@@ -64,7 +64,7 @@
                                 (balanced/ n d))
                             (lambda (quo rem)
                               (check-true (and (= n (+ (* d quo) rem))
-                                               (<= (- (/ (abs d) 2) rem))
+                                               (<= (- (/ (abs d) 2)) rem)
                                                (< rem (/ (abs d) 2))))
                               (check-eqv? (balanced-quotient n d) quo)
                               (check-eqv? (balanced-remainder n d) rem))))
