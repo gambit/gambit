@@ -1637,9 +1637,7 @@
                    (inexactify quo rem require-inexact?)
                    (inexactify (inc-quotient quo) (dec-remainder rem y) require-inexact?)))
               ((3) ;; round
-               (let ((abs-y/2 (if (negative? y)
-                                  (abs (arithmetic-shift (+ y 1) -1))
-                                  (arithmetic-shift y -1))))
+               (let ((abs-y/2 (arithmetic-shift (abs y) -1)))
                  (cond ((and (even? y)
                              (odd? quo)
                              (= (abs rem) abs-y/2))
@@ -1664,9 +1662,7 @@
                        (inexactify (dec-quotient quo) (inc-remainder rem y) require-inexact?))
                    (inexactify quo rem require-inexact?)))
               (else ;; balanced
-               (let ((abs-y/2 (if (negative? y)
-                                  (abs (arithmetic-shift (+ y 1) -1))
-                                  (arithmetic-shift y -1))))
+               (let ((abs-y/2 (arithmetic-shift (abs y) -1)))
                  (cond ((if (even? y)
                             (<= abs-y/2 rem)
                             (<  abs-y/2 rem))
