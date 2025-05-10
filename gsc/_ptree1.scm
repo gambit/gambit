@@ -2,7 +2,7 @@
 
 ;;; File: "_ptree1.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -1887,22 +1887,41 @@
 
 (define (pt-recursive-let source vars vals body env use *?)
 
-  (define (dependency-graph vars vals)
-    (let ((var-set (list->varset vars)))
-
-      (define (dgraph vars vals)
-        (if (null? vars)
-          '()
-          (let ((var (car vars)) (val (car vals)))
-            (cons (make-gnode var (varset-intersection
-                                    var-set
-                                    (bound-free-variables val)))
-                  (dgraph (cdr vars) (cdr vals))))))
-
-      (dgraph vars vals)))
+  (define vars-vals (pair-up vars vals))
 
   (define (val-of var)
-    (list-ref vals (- (length vars) (length (memq var vars)))))
+    (cdr (assq var vars-vals)))
+
+  (define (dependency-graph)
+    (let ((var-set (list->varset vars)))
+      (let loop ((vars-vals vars-vals)
+                 (must-precede-vars (varset-empty))
+                 (dgraph '()))
+        (if (pair? vars-vals)
+
+            (let* ((var-val (car vars-vals))
+                   (var (car var-val))
+                   (val (cdr var-val))
+                   (deps (varset-intersection
+                          var-set
+                          (bound-free-variables val))))
+              (if (and *? ;; must preserve evaluation order?
+                       (not (side-effects-impossible? val)))
+
+                  (loop (cdr vars-vals)
+                        (varset-adjoin must-precede-vars var)
+                        (cons (make-gnode var
+                                          (varset-union deps
+                                                        must-precede-vars))
+                              dgraph))
+
+                  (loop (cdr vars-vals)
+                        must-precede-vars
+                        (cons (make-gnode var
+                                          deps)
+                              dgraph))))
+
+            dgraph))))
 
   (define (bind-in-order order)
     (if (null? order)
@@ -1913,33 +1932,40 @@
 
       (let* ((vars (car order))
              (vars-set (list->varset vars)))
-        (let loop1 ((l (reverse vars)) (vars-b '()) (vals-b '()) (vars-a '()))
-          (if (not (null? l))
+        (let loop1 ((rvars (reverse vars))
+                    (vars-b '())
+                    (vals-b '())
+                    (vars-a '())
+                    (vals-a '()))
+          (if (not (null? rvars))
 
-            (let* ((var (car l))
+            (let* ((var (car rvars))
                    (val (val-of var)))
               (if (or (prc? val)
-                      (and (not *?)
-                           (not (varset-intersects? (bound-free-variables val)
-                                                    vars-set))))
-                (loop1 (cdr l)
+                      (not (varset-intersects? (bound-free-variables val)
+                                               vars-set)))
+                (loop1 (cdr rvars)
                        (cons var vars-b)
                        (cons val vals-b)
-                       vars-a)
-                (loop1 (cdr l)
+                       vars-a
+                       vals-a)
+                (loop1 (cdr rvars)
                        vars-b
                        vals-b
-                       (cons var vars-a))))
+                       (cons var vars-a)
+                       (cons val vals-a))))
 
             (let* ((result1
-                     (let loop2 ((l vars-a))
-                       (if (not (null? l))
+                     (let loop2 ((vars vars-a)
+                                 (vals vals-a))
+                       (if (not (null? vars))
 
-                         (let* ((var (car l))
-                                (val (val-of var)))
+                         (let* ((var (car vars))
+                                (val (car vals)))
                            (new-seq source env
                              (new-set source env var val)
-                             (loop2 (cdr l))))
+                             (loop2 (cdr vars)
+                                    (cdr vals))))
 
                          (bind-in-order (cdr order)))))
 
@@ -1979,12 +2005,10 @@
   (set-prc-names! vars vals)
 
   (let ((order
-         (if *?
-             (list vars)
-             (map varset->list
-                  (topological-sort
-                   (transitive-closure
-                    (dependency-graph vars vals)))))))
+         (map varset->list
+              (topological-sort
+               (transitive-closure
+                (dependency-graph))))))
     (bind-in-order order)))
 
 (define (pt-begin source env use)

@@ -647,6 +647,7 @@ normalize-program
 parse-tree->expression
 pt-c-lambda
 scheme-id->c-id
+side-effects-impossible?
 string->c-id
 ))
 
