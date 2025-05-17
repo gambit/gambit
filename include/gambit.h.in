@@ -5375,6 +5375,7 @@ ___FIELD(STRUCTURE,descr,___TYPE_FIELDS)
 #define ___STRUCTURE_TYPE_FIELD(obj) \
 ___FIELD(STRUCTURE,obj,___STRUCTURE_TYPE)
 
+#define ___STRUCTURELENGTH(obj)___FIX(___HD_FIELDS(___SUBTYPED_HEADER(obj)))
 #define ___STRUCTURETYPE(obj)___STRUCTURE_TYPE_FIELD(obj)
 #define ___STRUCTURETYPESET(obj,descr)___STRUCTURE_TYPE_FIELD(obj) = descr;
 #define ___STRUCTUREDIOP(x,typeid)___IS_NOT_DOUBLE_AND(x,___IS_ND_STRUCTURE(x)&&___TYPEID(___STRUCTURETYPE(___temp))==(typeid))

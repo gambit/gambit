@@ -3861,6 +3861,8 @@
 
 (targ-op "##structure-direct-instance-of?"
          (targ-ifjump-simp-s #f "STRUCTUREDIOP"))
+(targ-op "##structure-length"
+         (targ-apply-simp-u #f #f #f "STRUCTURELENGTH"))
 (targ-op "##structure-type"
          (targ-ifjump-apply-u "STRUCTURETYPE"))
 (targ-op "##structure-type-set!"
