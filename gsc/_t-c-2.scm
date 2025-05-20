@@ -3065,7 +3065,7 @@
     (lambda (opnds sn)
       (targ-apply-simp-gen opnds #f name))))
 
-(define (targ-ifjump-fixnums?)
+(define (targ-ifjump-fixflonums? fix?)
   (targ-setup-test-proc*
     #t ;; proc-safe?
     #f ;; flo?
@@ -3073,15 +3073,22 @@
     (lambda (opnds loc fs)
       (let ((opnds
              (keep (lambda (opnd)
-                     (not (and (obj? opnd) (targ-fixnum32? (obj-val opnd)))))
+                     ;; TODO: be smarter when constant is known to be not the right type
+                     (not (and (obj? opnd)
+                               (if fix?
+                                   (targ-fixnum32? (obj-val opnd))
+                                   (targ-flonum? (obj-val opnd))))))
                    opnds)))
         (if (pair? opnds)
             (let loop ((opnds (cdr opnds))
-                       (expr (list "FIXNUMSP1" (targ-opnd (car opnds)))))
+                       (expr (list (if fix? "FIXNUMSP1" "FLONUMSP1")
+                                   (targ-opnd (car opnds)))))
               (if (pair? opnds)
                   (loop (cdr opnds)
-                        (list "FIXNUMSP2" expr (targ-opnd (car opnds))))
-                  (list "FIXNUMSP" expr)))
+                        (list (if fix? "FIXNUMSP2" "FLONUMSP2")
+                              expr (targ-opnd (car opnds))))
+                  (list (if fix? "FIXNUMSP" "FLONUMSP")
+                        expr)))
             1)))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -3315,7 +3322,7 @@
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (targ-op "##fixnum?"          (targ-ifjump-simp-s #f "FIXNUMP"))
-(targ-op "##fixnums?"         (targ-ifjump-fixnums?))
+(targ-op "##fixnums?"         (targ-ifjump-fixflonums? #t))
 (targ-op "##pair?"            (targ-ifjump-simp-s #f "PAIRP"))
 (targ-op "##vector?"          (targ-ifjump-simp-s #f "VECTORP"))
 (targ-op "##ratnum?"          (targ-ifjump-simp-s #f "RATNUMP"))
@@ -3346,6 +3353,7 @@
 (targ-op "##f32vector?"       (targ-ifjump-simp-s #f "F32VECTORP"))
 (targ-op "##f64vector?"       (targ-ifjump-simp-s #f "F64VECTORP"))
 (targ-op "##flonum?"          (targ-ifjump-simp-s #f "FLONUMP"))
+(targ-op "##flonums?"         (targ-ifjump-fixflonums? #f))
 (targ-op "##bignum?"          (targ-ifjump-simp-s #f "BIGNUMP"))
 (targ-op "##char?"            (targ-ifjump-simp-s #f "CHARP"))
 (targ-op "##number?"          (targ-ifjump-simp-s #f "NUMBERP"))

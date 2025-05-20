@@ -3847,6 +3847,27 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 
 #endif
 
+#if defined(___NAN_BOXING) || ___FLONUM_SELF_TAGGING_TAGS == 4
+
+#define ___FLONUMSP1(obj)___FLONUMP(obj)
+#define ___FLONUMSP2(accu,obj)((accu)&&___FLONUMP(obj))
+#define ___FLONUMSP(accu)accu
+
+#else
+
+#define ___FLONUMSP1(obj)obj
+#define ___FLONUMSP2(accu,obj)((accu)&(obj))
+
+#if ___FLONUM_SELF_TAGGING_TAGS == 0
+#define ___FLONUMSP(accu)___TESTMASK(accu,7,7)
+#elif ___FLONUM_SELF_TAGGING_TAGS == 1
+#define ___FLONUMSP(accu)___TESTMASK(accu,6,6)
+#else
+#define ___FLONUMSP(accu)___TESTMASK(accu,2,2)
+#endif
+
+#endif
+
 #define ___IS_ND_SPECIAL(obj)___TESTTYPE(obj,___tSPECIAL)
 #define ___SPECIALP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_SPECIAL(obj))
 

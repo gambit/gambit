@@ -492,6 +492,7 @@
 ("##flodd?"                           (1)   #f ()    0    boolean extended)
 ("flonum?"                            (1)   #f 0     0    boolean r6rs)
 ("##flonum?"                          (1)   #f ()    0    boolean extended)
+("##flonums?"                         0     #f ()    0    boolean extended)
 ("flpositive?"                        (1)   #f 0     0    boolean r6rs)
 ("##flpositive?"                      (1)   #f ()    0    boolean extended)
 ("flround"                            (1)   #f 0     0    flonum  r6rs)
@@ -3378,8 +3379,6 @@
   (define **fxwraplogical-shift-right?-sym
     (string->canonical-symbol "##fxwraplogical-shift-right?"))
 
-  (define **flonum?-sym (string->canonical-symbol "##flonum?"))
-
   (define **fl=-sym (string->canonical-symbol "##fl="))
   (define **fl<-sym (string->canonical-symbol "##fl<"))
   (define **fl>-sym (string->canonical-symbol "##fl>"))
@@ -4734,7 +4733,6 @@
 
 (define (setup-vector-primitives)
 
-  (define **flonum?-sym     (string->canonical-symbol "##flonum?"))
   (define **char?-sym       (string->canonical-symbol "##char?"))
   (define **fx<-sym         (string->canonical-symbol "##fx<"))
   (define **fx<=-sym        (string->canonical-symbol "##fx<="))

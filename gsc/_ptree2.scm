@@ -367,71 +367,12 @@
       (gen-disj-multi source env (cdr nodes)))
     (car nodes)))
 
-;;TODO: remove
-#;
 (define (gen-var-type-checks source env vars check-prims tail)
 
   (define (cdr-check-prims check-prims)
     (if (pair? (cdr check-prims))
         (cdr check-prims)
         check-prims))
-
-  (define (gen-fixnums?-check)
-    (gen-call-prim-vars-notsafe source env **fixnums?-sym vars))
-
-  (define (gen-check prim-var)
-    (let ((prim (car prim-var))
-          (var (cdr prim-var)))
-      (gen-call-prim-vars-notsafe source env prim (list var))))
-
-  (define (conj-tail check)
-    (if tail
-        (new-conj source env
-          check
-          tail)
-        check))
-
-  (let loop1 ((vars vars)
-              (check-prims check-prims)
-              (all-fixnum-checks? #t)
-              (rev-checks '()))
-    (if (pair? vars)
-
-        (let ((var (car vars))
-              (check-prim (car check-prims)))
-          (loop1 (cdr vars)
-                 (cdr-check-prims check-prims)
-                 (and all-fixnum-checks?
-                      (eq? check-prim **fixnum?-sym))
-                 (cons (cons check-prim var) rev-checks)))
-
-        (if (and all-fixnum-checks?
-                 (not (= (length vars) 1)))
-
-            (conj-tail (gen-fixnums?-check))
-
-            (if (pair? rev-checks)
-                (let loop2 ((rev-checks (cdr rev-checks))
-                            (check (conj-tail (gen-check (car rev-checks)))))
-                  (if (pair? rev-checks)
-                      (loop2 (cdr rev-checks)
-                             (new-conj source env
-                               (gen-check (car rev-checks))
-                               check))
-                      check))
-                (or tail
-                    (new-cst source env
-                      #t)))))))
-
-(define (gen-var-type-checks source env vars check-prims tail)
-
-  (define (cdr-check-prims check-prims)
-    (if (pair? (cdr check-prims))
-        (cdr check-prims)
-        check-prims))
-
-  (define (gen-fixnums?-check)
-    (gen-call-prim-vars-notsafe source env **fixnums?-sym vars))
 
   (define (gen-check prim-var)
     (let ((prim (car prim-var))
@@ -1072,10 +1013,7 @@
                               pre)
 
                              (else
-                              ;; TODO: combine conjunctions
-                              (new-conj (node-source ptree) (node-env ptree)
-                                pre
-                                alt))))))))))
+                              (br-combine-conj ptree reason pre alt))))))))))
 
         ((disj? ptree)
          (br-float-let
@@ -1164,6 +1102,40 @@
 
         (else
          (compiler-internal-error "br, unknown parse tree node type"))))
+
+(define (br-combine-conj ptree reason pre alt)
+
+  (define (conj pre alt tail)
+    (combine pre (combine alt tail)))
+
+  (define (combine ptree tail)
+    (and tail
+         (cond ((conj? ptree)
+                (conj (conj-pre ptree) (conj-alt ptree) tail))
+               ((app? ptree)
+                (let ((proc (app->specialized-proc ptree)))
+                  (and proc
+                       (if (eq? (car tail) #f)
+                           (or (eq? proc **fixnum?-proc-obj)
+                               (eq? proc **flonum?-proc-obj))
+                           (eq? proc (car tail)))
+                       (cons proc
+                             (cons (car (app-args ptree)) (cdr tail))))))
+               (else
+                #f))))
+
+  (let ((x (and (eq? reason 'pred) (conj pre alt '(#f)))))
+    (if x
+
+        (gen-call-prim-notsafe (node-source ptree) (node-env ptree)
+          (if (eq? (car x) **fixnum?-proc-obj)
+              **fixnums?-sym
+              **flonums?-sym)
+          (cdr x))
+
+        (new-conj (node-source ptree) (node-env ptree)
+          pre
+          alt))))
 
 (define use-float-let? #f)
 (set! use-float-let? #t)

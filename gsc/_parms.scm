@@ -100,6 +100,8 @@
 (define **r7rs-reraise-sym     (string->canonical-symbol "##r7rs-reraise"))
 (define **fixnum?-sym          (string->canonical-symbol "##fixnum?"))
 (define **fixnums?-sym         (string->canonical-symbol "##fixnums?"))
+(define **flonum?-sym          (string->canonical-symbol "##flonum?"))
+(define **flonums?-sym         (string->canonical-symbol "##flonums?"))
 
 (define ieee-scheme-sym        (string->canonical-symbol "ieee-scheme"))
 (define r4rs-scheme-sym        (string->canonical-symbol "r4rs-scheme"))

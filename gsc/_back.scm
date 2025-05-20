@@ -2,7 +2,7 @@
 
 ;;; File: "_back.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -452,6 +452,12 @@
   (set! **case-memv-proc-obj
         (target.prim-info **case-memv-sym))
 
+  (set! **fixnum?-proc-obj
+        (target.prim-info **fixnum?-sym))
+
+  (set! **flonum?-proc-obj
+        (target.prim-info **flonum?-sym))
+
   #f)
 
 (define (target-unselect!)
@@ -466,6 +472,8 @@
   (set! **quasi-list->vector-proc-obj #f)
   (set! **quasi-vector-proc-obj       #f)
   (set! **case-memv-proc-obj          #f)
+  (set! **fixnum?-proc-obj            #f)
+  (set! **flonum?-proc-obj            #f)
 
   ((target-end! target))
 
@@ -496,6 +504,8 @@
 (define **quasi-list->vector-proc-obj #f)  ;; ##quasi-list->vector
 (define **quasi-vector-proc-obj       #f)  ;; ##quasi-vector
 (define **case-memv-proc-obj          #f)  ;; ##case-memv
+(define **fixnum?-proc-obj            #f)  ;; ##fixnum?
+(define **flonum?-proc-obj            #f)  ;; ##flonum?
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

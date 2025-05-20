@@ -50,6 +50,29 @@ c-declare-end
                     (loop (##cdr others)))
                #t)))))
 
+(define-prim (##flonum? obj))
+
+(define-prim (##flonums?
+              #!optional
+              (obj1 (macro-absent-obj))
+              (obj2 (macro-absent-obj))
+              #!rest
+              others)
+  (cond ((##eq? obj1 (macro-absent-obj))
+         #t)
+        ((##not (##flonum? obj1))
+         #f)
+        ((##eq? obj2 (macro-absent-obj))
+         #t)
+        ((##not (##flonum? obj2))
+         #f)
+        (else
+         (let loop ((others others))
+           (if (##pair? others)
+               (and (##flonum? (##car others))
+                    (loop (##cdr others)))
+               #t)))))
+
 ;; (##vector? obj) is defined in "_std.scm"
 
 (macro-if-bignum (define-prim (##bignum? obj)))
@@ -73,7 +96,6 @@ c-declare-end
 ;; (##f32vector? obj) is defined in "_std.scm"
 ;; (##f64vector? obj) is defined in "_std.scm"
 
-(define-prim (##flonum? obj))
 (define-prim (##unbound? obj))
 (define-prim (##foreign? obj))
 

@@ -294,6 +294,8 @@ string->canonical-symbol
 **r7rs-reraise-sym
 **fixnum?-sym
 **fixnums?-sym
+**flonum?-sym
+**flonums?-sym
 **raise-sym
 **set!-sym
 **set-box!-sym
@@ -827,6 +829,8 @@ virtual.end!
 **not-proc-obj
 **quasi-cons-proc-obj
 **quasi-list-proc-obj
+**fixnum?-proc-obj
+**flonum?-proc-obj
 allocation-limit
 arith-implementation
 default-target
