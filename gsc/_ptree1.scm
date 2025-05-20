@@ -232,12 +232,12 @@
       (new-prc (node-source proc) (node-env proc)
         (prc-name proc)
         (prc-c-name proc)
-        (reverse vars)
+        vars
         '()
         #f
         #f
         body)
-      (reverse vals))
+      vals)
     body))
 
 (define temp-variable-stamp #f)

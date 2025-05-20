@@ -2608,11 +2608,7 @@
          (and check-prims
               (gen-var-type-checks source env
                 vars
-                (map
-                 (lambda (check-prim)
-                   (lambda (var)
-                     (gen-call-prim-vars-notsafe source env check-prim (list var))))
-                 check-prims)
+                check-prims
                 tail))))
     (if (or type-checks
             check-run-time-binding)

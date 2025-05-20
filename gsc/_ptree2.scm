@@ -367,30 +367,107 @@
       (gen-disj-multi source env (cdr nodes)))
     (car nodes)))
 
-(define (gen-var-type-checks source env vars type-checks tail)
+;;TODO: remove
+#;
+(define (gen-var-type-checks source env vars check-prims tail)
 
-  (define (cdr-type-checks type-checks)
-    (if (pair? (cdr type-checks))
-        (cdr type-checks)
-        type-checks))
+  (define (cdr-check-prims check-prims)
+    (if (pair? (cdr check-prims))
+        (cdr check-prims)
+        check-prims))
 
-  (define (loop result lst type-checks)
-    (if (pair? lst)
-        (loop (new-conj source env
-                ((car type-checks) (car lst))
-                result)
-              (cdr lst)
-              type-checks)
-        result))
+  (define (gen-fixnums?-check)
+    (gen-call-prim-vars-notsafe source env **fixnums?-sym vars))
 
-  (cond (tail
-         (loop tail vars type-checks))
-        ((pair? vars)
-         (loop ((car type-checks) (car vars))
-               (cdr vars)
-               (cdr-type-checks type-checks)))
-        (else
-         #f)))
+  (define (gen-check prim-var)
+    (let ((prim (car prim-var))
+          (var (cdr prim-var)))
+      (gen-call-prim-vars-notsafe source env prim (list var))))
+
+  (define (conj-tail check)
+    (if tail
+        (new-conj source env
+          check
+          tail)
+        check))
+
+  (let loop1 ((vars vars)
+              (check-prims check-prims)
+              (all-fixnum-checks? #t)
+              (rev-checks '()))
+    (if (pair? vars)
+
+        (let ((var (car vars))
+              (check-prim (car check-prims)))
+          (loop1 (cdr vars)
+                 (cdr-check-prims check-prims)
+                 (and all-fixnum-checks?
+                      (eq? check-prim **fixnum?-sym))
+                 (cons (cons check-prim var) rev-checks)))
+
+        (if (and all-fixnum-checks?
+                 (not (= (length vars) 1)))
+
+            (conj-tail (gen-fixnums?-check))
+
+            (if (pair? rev-checks)
+                (let loop2 ((rev-checks (cdr rev-checks))
+                            (check (conj-tail (gen-check (car rev-checks)))))
+                  (if (pair? rev-checks)
+                      (loop2 (cdr rev-checks)
+                             (new-conj source env
+                               (gen-check (car rev-checks))
+                               check))
+                      check))
+                (or tail
+                    (new-cst source env
+                      #t)))))))
+
+(define (gen-var-type-checks source env vars check-prims tail)
+
+  (define (cdr-check-prims check-prims)
+    (if (pair? (cdr check-prims))
+        (cdr check-prims)
+        check-prims))
+
+  (define (gen-fixnums?-check)
+    (gen-call-prim-vars-notsafe source env **fixnums?-sym vars))
+
+  (define (gen-check prim-var)
+    (let ((prim (car prim-var))
+          (var (cdr prim-var)))
+      (gen-call-prim-vars-notsafe source env prim (list var))))
+
+  (define (conj-tail check)
+    (if tail
+        (new-conj source env
+          check
+          tail)
+        check))
+
+  (let loop1 ((vars vars)
+              (check-prims check-prims)
+              (rev-checks '()))
+    (if (pair? vars)
+
+        (let ((var (car vars))
+              (check-prim (car check-prims)))
+          (loop1 (cdr vars)
+                 (cdr-check-prims check-prims)
+                 (cons (cons check-prim var) rev-checks)))
+
+        (if (pair? rev-checks)
+            (let loop2 ((rev-checks (cdr rev-checks))
+                        (check (conj-tail (gen-check (car rev-checks)))))
+              (if (pair? rev-checks)
+                  (loop2 (cdr rev-checks)
+                         (new-conj source env
+                                   (gen-check (car rev-checks))
+                                   check))
+                  check))
+            (or tail
+                (new-cst source env
+                  #t))))))
 
 (define (gen-temp-vars source args)
   (let loop ((args args) (rev-vars '()))
@@ -594,7 +671,7 @@
                (new-body (ac (prc-body proc) mut)))
       (if (null? l1)
 
-        (new-let ptree proc new-vars new-vals new-body)
+        (new-let ptree proc (reverse new-vars) (reverse new-vals) new-body)
 
         (let ((var (car l1))
               (val (car l2)))
@@ -875,7 +952,7 @@
                  (new-ref (node-source ptree) (node-env ptree)
                    new-var))))))
 
-        ((set? ptree) ; variable guaranteed to be a global variable
+        ((set? ptree) ;; variable guaranteed to be a global variable
          (let ((var (set-var ptree))
                (val (br (set-val ptree) substs 'need expansion-limit)))
            (var-sets-set! var (ptset-remove (var-sets var) ptree))
@@ -883,78 +960,180 @@
              var
              val)))
 
-        ((tst? ptree)
-         (let ((pre (br (tst-pre ptree) substs 'pred expansion-limit)))
-           (if (cst? pre)
-             (if (false-object? (cst-val pre))
-               (begin
-                 (delete-ptree pre)
-                 (delete-ptree (tst-con ptree))
-                 (br (tst-alt ptree) substs reason expansion-limit))
-               (begin
-                 (delete-ptree pre)
-                 (delete-ptree (tst-alt ptree))
-                 (br (tst-con ptree) substs reason expansion-limit)))
-             (new-tst (node-source ptree) (node-env ptree)
-               pre
-               (br (tst-con ptree) substs reason expansion-limit)
-               (br (tst-alt ptree) substs reason expansion-limit)))))
 
-        ((conj? ptree)
-         (let ((pre (br (conj-pre ptree) substs reason expansion-limit)))
-           (if (cst? pre)
-             (if (false-object? (cst-val pre))
-               (begin
-                 (delete-ptree (conj-alt ptree))
-                 pre)
-               (begin
-                 (delete-ptree pre)
-                 (br (conj-alt ptree) substs reason expansion-limit)))
-             (let ((alt (br (conj-alt ptree) substs reason expansion-limit)))
-               (cond ((and (cst? alt)
-                           (false-object? (cst-val alt)))
+        ((tst? ptree)
+         (let ((con-alt-equiv?
+                (br-equiv? reason (tst-con ptree) (tst-alt ptree))))
+           (br-float-let
+            substs
+            reason
+            expansion-limit
+            (tst-pre ptree)
+            (if con-alt-equiv? 'side 'pred)
+            (lambda (pre)
+              (if con-alt-equiv?
+
+                  (begin
+                    (delete-ptree (tst-alt ptree))
+                    (let ((con
+                           (br (tst-con ptree) substs reason expansion-limit)))
                       (if (side-effects-impossible? pre)
-                        (begin
-                          ; (and X #f) => #f
-                          (delete-ptree pre)
-                          alt)
-                        (begin
-                          ; (and X #f) => (begin X #f)
-                          ; this transform should be generalized
+                          (begin
+                            (delete-ptree pre)
+                            con)
                           (new-seq (node-source ptree) (node-env ptree)
                             pre
-                            alt))))
-                     ((and (cst? alt)
-                           (not (false-object? (cst-val alt)))
-                           (eq? reason 'pred))
-                      ; (if (and X non-#f) ...) => (if X ...)
-                      (delete-ptree alt)
-                      pre)
-                     (else
-                      (new-conj (node-source ptree) (node-env ptree)
-                        pre
-                        alt)))))))
+                            con))))
+
+                  (let ((pre-truthiness (known-truthiness? pre)))
+                    (if pre-truthiness
+
+                        (let ((sei? (side-effects-impossible? pre)))
+                          (if sei? (delete-ptree pre))
+                          (let ((con-or-alt
+                                 (if (eq? pre-truthiness 'false)
+                                     (begin
+                                       (delete-ptree (tst-con ptree))
+                                       (br (tst-alt ptree) substs reason expansion-limit))
+                                     (begin
+                                       (delete-ptree (tst-alt ptree))
+                                       (br (tst-con ptree) substs reason expansion-limit)))))
+                            (if sei?
+                                con-or-alt
+                                (new-seq (node-source ptree) (node-env ptree)
+                                  pre
+                                  con-or-alt))))
+
+                        (let* ((con
+                                (br (tst-con ptree) substs reason expansion-limit))
+                               (alt
+                                (br (tst-alt ptree) substs reason expansion-limit)))
+                          (new-tst (node-source ptree) (node-env ptree)
+                            pre
+                            con
+                            alt)))))))))
+
+        ((conj? ptree)
+         (br-float-let
+          substs
+          reason
+          expansion-limit
+          (conj-pre ptree)
+          reason
+          (lambda (pre)
+            (let ((pre-truthiness (known-truthiness? pre)))
+
+              (cond ((eq? pre-truthiness 'false)
+                     ;; (and X Y) => X when X returns #f
+                     (delete-ptree (conj-alt ptree))
+                     pre)
+
+                    ((eq? pre-truthiness 'true)
+                     (let ((sei? (side-effects-impossible? pre)))
+                       (if sei? (delete-ptree pre))
+                       (let ((alt
+                              (br (conj-alt ptree) substs reason expansion-limit)))
+                         (if sei?
+                             ;; (and X Y) => Y when X returns non-#f and it
+                             ;; is side-effect free
+                             alt
+                             ;; (and X Y) => (begin X Y) when X returns non-#f
+                             ;; and it has side-effects
+                             (new-seq (node-source ptree) (node-env ptree)
+                               pre
+                               alt)))))
+
+                    (else
+                     (let* ((alt (br (conj-alt ptree) substs reason expansion-limit))
+                            (alt-truthiness (known-truthiness? alt)))
+
+                       (cond ((eq? alt-truthiness 'false)
+                              (if (side-effects-impossible? pre)
+                                  (begin
+                                    ;; (and X Y) => Y when Y returns #f and
+                                    ;; X is side-effect free
+                                    ;; (assumes a unique false object)
+                                    (delete-ptree pre)
+                                    alt)
+                                  (begin
+                                    ;; (and X Y) => (begin X Y) when Y returns
+                                    ;; #f and X has side-effects
+                                    ;; (assumes a unique false object)
+                                    (new-seq (node-source ptree) (node-env ptree)
+                                      pre
+                                      alt))))
+
+                             ((and (eq? alt-truthiness 'true)
+                                   (eq? reason 'pred)
+                                   (side-effects-impossible? alt))
+                              ;; (if (and X Y) ...) => (if X ...) when Y
+                              ;; returns non-#f and Y is side-effect free
+                              (delete-ptree alt)
+                              pre)
+
+                             (else
+                              ;; TODO: combine conjunctions
+                              (new-conj (node-source ptree) (node-env ptree)
+                                pre
+                                alt))))))))))
 
         ((disj? ptree)
-         (let ((pre (br (disj-pre ptree) substs reason expansion-limit)))
-           (if (cst? pre)
-             (if (false-object? (cst-val pre))
-               (begin
-                 (delete-ptree pre)
-                 (br (disj-alt ptree) substs reason expansion-limit))
-               (begin
-                 (delete-ptree (disj-alt ptree))
-                 pre))
-             (let ((alt (br (disj-alt ptree) substs reason expansion-limit)))
-               (if (and (cst? alt)
-                        (false-object? (cst-val alt)))
-                 (begin
-                   ; (or X #f) => X
-                   (delete-ptree alt)
-                   pre)
-                 (new-disj (node-source ptree) (node-env ptree)
-                   pre
-                   alt))))))
+         (br-float-let
+          substs
+          reason
+          expansion-limit
+          (disj-pre ptree)
+          reason
+          (lambda (pre)
+            (let ((pre-truthiness (known-truthiness? pre)))
+
+              (cond ((eq? pre-truthiness 'true)
+                     ;; (or X Y) => X when X returns non-#f
+                     (delete-ptree (disj-alt ptree))
+                     pre)
+
+                    ((eq? pre-truthiness 'false)
+                     (let ((sei? (side-effects-impossible? pre)))
+                       (if sei? (delete-ptree pre))
+                       (let ((alt
+                              (br (disj-alt ptree) substs reason expansion-limit)))
+                         (if sei?
+                             ;; (or X Y) => Y when X returns #f and X is
+                             ;; side-effect free
+                             alt
+                             ;; (or X Y) => (begin X Y) when X returns #f and
+                             ;; X has side-effects
+                             (new-seq (node-source ptree) (node-env ptree)
+                               pre
+                               alt)))))
+
+                    (else
+                     (let* ((alt (br (disj-alt ptree) substs reason expansion-limit))
+                            (alt-truthiness (known-truthiness? alt))
+                            (sei? (side-effects-impossible? alt)))
+
+                       (cond ((and sei?
+                                   (eq? alt-truthiness 'false))
+                              ;; (or X Y) => X when Y returns #f and Y is
+                              ;; side-effect free
+                              ;; (assumes a unique false object)
+                              (delete-ptree alt)
+                              pre)
+
+                             ((and sei?
+                                   (eq? alt-truthiness 'true)
+                                   (eq? reason 'pred))
+                              ;; (if (or X Y) ...) => (if (begin X Y) ...) when
+                              ;; Y returns non-#f and Y is side-effect free
+                              (new-seq (node-source ptree) (node-env ptree)
+                                pre
+                                alt))
+
+                             (else
+                              ;; TODO: combine disjunctions
+                              (new-disj (node-source ptree) (node-env ptree)
+                                pre
+                                alt))))))))))
 
         ((prc? ptree)
          (new-prc (node-source ptree) (node-env ptree)
@@ -974,7 +1153,7 @@
                (args (app-args ptree)))
            (if (or (cst? oper) (ref? oper))
              (let ((br-oper (br oper substs 'need expansion-limit)))
-               ; at this point (or (cst? br-oper) (ref? br-oper))
+               ;; at this point (or (cst? br-oper) (ref? br-oper))
                (or (br-app-inline ptree br-oper args substs reason expansion-limit)
                    (br-app-simplify ptree br-oper args substs reason expansion-limit)))
              (br-app ptree oper args substs reason expansion-limit))))
@@ -985,6 +1164,65 @@
 
         (else
          (compiler-internal-error "br, unknown parse tree node type"))))
+
+(define (br-float-let substs outer-reason expansion-limit ptree reason inner)
+  (let ((reduced-ptree (br ptree substs reason expansion-limit)))
+    (if (br-let? reduced-ptree)
+
+        (let* ((proc
+                (app-oper reduced-ptree))
+               (body
+                (prc-body proc))
+               (new-body
+                (br-float-let substs
+                              outer-reason
+                              expansion-limit
+                              body
+                              reason
+                              inner)))
+          (new-call (node-source reduced-ptree) (node-env reduced-ptree)
+            (new-prc (node-source proc) (node-env proc)
+              (prc-name proc)
+              (prc-c-name proc)
+              (prc-parms proc)
+              (prc-opts proc)
+              (prc-keys proc)
+              (prc-rest? proc)
+              new-body)
+            (app-args reduced-ptree)))
+
+        (inner reduced-ptree))))
+
+(define (br-equiv? reason ptree1 ptree2)
+  (if (eq? reason 'pred)
+
+      (let ((truthiness1 (known-truthiness? ptree1)))
+        (and truthiness1
+             (let ((truthiness2 (known-truthiness? ptree2)))
+               (and (eq? truthiness1 truthiness2)
+                    (side-effects-impossible? ptree1)
+                    (side-effects-impossible? ptree2)))))
+
+      ;; TODO: check that ptree1 and ptree2 have equivalent behaviour
+      #f))
+
+(define (known-truthiness? ptree)
+  (cond ((cst? ptree)
+         (if (false-object? (cst-val ptree))
+             'false
+             'true))
+        ((tst? ptree)
+         (let ((con-truthiness (known-truthiness? (tst-con ptree))))
+           (and con-truthiness
+                (let ((alt-truthiness (known-truthiness? (tst-alt ptree))))
+                  (and (eq? con-truthiness alt-truthiness)
+                       con-truthiness)))))
+        ((prc? ptree)
+         'true)
+        ((br-let? ptree)
+         (known-truthiness? (prc-body (app-oper ptree))))
+        (else
+         #f)))
 
 (define (var-subst var substs)
   (if (null? substs)
@@ -1116,9 +1354,7 @@
           (let ((var (car l1))
                 (br-val (car l2)))
             (if (and (not (varset-member? var reachable-vars))
-                     (or (cst? br-val)
-                         (ref? br-val)
-                         (prc? br-val)))
+                     (side-effects-impossible? br-val))
               (begin
                 (delete-ptree br-val)
                 (loop (cdr l1)
