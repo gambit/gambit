@@ -290,8 +290,10 @@ string->canonical-symbol
 **quasiquote-sym
 **quote-sym
 **r7rs-guard-sym
-**r7rs-reraise-sym
 **r7rs-with-exception-catcher-sym
+**r7rs-reraise-sym
+**fixnum?-sym
+**fixnums?-sym
 **raise-sym
 **set!-sym
 **set-box!-sym

@@ -3065,6 +3065,25 @@
     (lambda (opnds sn)
       (targ-apply-simp-gen opnds #f name))))
 
+(define (targ-ifjump-fixnums?)
+  (targ-setup-test-proc*
+    #t ;; proc-safe?
+    #f ;; flo?
+    #f ;; not optimizable in apply-ifjump
+    (lambda (opnds loc fs)
+      (let ((opnds
+             (keep (lambda (opnd)
+                     (not (and (obj? opnd) (targ-fixnum32? (obj-val opnd)))))
+                   opnds)))
+        (if (pair? opnds)
+            (let loop ((opnds (cdr opnds))
+                       (expr (list "FIXNUMSP1" (targ-opnd (car opnds)))))
+              (if (pair? opnds)
+                  (loop (cdr opnds)
+                        (list "FIXNUMSP2" expr (targ-opnd (car opnds))))
+                  (list "FIXNUMSP" expr)))
+            1)))))
+
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (define (targ-setup-test-proc* proc-safe? args-flo? optimizable? generator)
@@ -3296,6 +3315,7 @@
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 (targ-op "##fixnum?"          (targ-ifjump-simp-s #f "FIXNUMP"))
+(targ-op "##fixnums?"         (targ-ifjump-fixnums?))
 (targ-op "##pair?"            (targ-ifjump-simp-s #f "PAIRP"))
 (targ-op "##vector?"          (targ-ifjump-simp-s #f "VECTORP"))
 (targ-op "##ratnum?"          (targ-ifjump-simp-s #f "RATNUMP"))

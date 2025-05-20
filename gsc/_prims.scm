@@ -297,6 +297,7 @@
 
 ("fixnum?"                            (1)   #f 0     0    boolean r6rs)
 ("##fixnum?"                          (1)   #f ()    0    boolean extended)
+("##fixnums?"                         0     #f ()    0    boolean extended)
 ("fx*"                                0     #f 0     0    fixnum  r6rs)
 ("##fx*"                              0     #f ()    0    fixnum  extended)
 ("##fx*?"                             (2)   #f ()    0    #f      extended)
@@ -3302,8 +3303,6 @@
   (define exact?-sym      (string->canonical-symbol "exact?"))
   (define inexact?-sym    (string->canonical-symbol "inexact?"))
 
-  (define **fixnum?-sym (string->canonical-symbol "##fixnum?"))
-
   (define **fx=-sym (string->canonical-symbol "##fx="))
   (define **fx<-sym (string->canonical-symbol "##fx<"))
   (define **fx>-sym (string->canonical-symbol "##fx>"))
@@ -4739,7 +4738,6 @@
 
 (define (setup-vector-primitives)
 
-  (define **fixnum?-sym     (string->canonical-symbol "##fixnum?"))
   (define **flonum?-sym     (string->canonical-symbol "##flonum?"))
   (define **char?-sym       (string->canonical-symbol "##char?"))
   (define **fx<-sym         (string->canonical-symbol "##fx<"))

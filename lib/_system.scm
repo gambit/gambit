@@ -29,6 +29,27 @@ c-declare-end
 
 (define-prim (##fixnum? obj))
 
+(define-prim (##fixnums?
+              #!optional
+              (obj1 (macro-absent-obj))
+              (obj2 (macro-absent-obj))
+              #!rest
+              others)
+  (cond ((##eq? obj1 (macro-absent-obj))
+         #t)
+        ((##not (##fixnum? obj1))
+         #f)
+        ((##eq? obj2 (macro-absent-obj))
+         #t)
+        ((##not (##fixnum? obj2))
+         #f)
+        (else
+         (let loop ((others others))
+           (if (##pair? others)
+               (and (##fixnum? (##car others))
+                    (loop (##cdr others)))
+               #t)))))
+
 ;; (##vector? obj) is defined in "_std.scm"
 
 (macro-if-bignum (define-prim (##bignum? obj)))

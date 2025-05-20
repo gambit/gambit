@@ -3789,6 +3789,20 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 (((obj)&___MASK(___WORD,___TB_FIXNUM))==___tFIXNUM)
 #define ___FIXNUMP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_FIXNUM(obj))
 
+#if defined(___NAN_BOXING) || ___tFIXNUM != 0
+
+#define ___FIXNUMSP1(obj)___FIXNUMP(obj)
+#define ___FIXNUMSP2(accu,obj)((accu)&&___FIXNUMP(obj))
+#define ___FIXNUMSP(accu)accu
+
+#else
+
+#define ___FIXNUMSP1(obj)obj
+#define ___FIXNUMSP2(accu,obj)((accu)|(obj))
+#define ___FIXNUMSP(accu)___IS_ND_FIXNUM(accu)
+
+#endif
+
 #define ___MEM_ISA(type,obj) \
 ((___t ## type == ___tSUBTYPED) ? \
  ___TESTSUBTYPE(obj, ___s ## type) : \
