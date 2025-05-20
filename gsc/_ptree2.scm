@@ -1166,7 +1166,7 @@
          (compiler-internal-error "br, unknown parse tree node type"))))
 
 (define use-float-let? #f)
-(set! use-float-let? #f) ;; TODO: enable at next release
+(set! use-float-let? #t)
 
 (define (br-float-let substs outer-reason expansion-limit ptree reason inner)
   (let ((reduced-ptree (br ptree substs reason expansion-limit)))

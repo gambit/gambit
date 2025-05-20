@@ -1688,7 +1688,7 @@
 
 ("##object-before?"                   (2)   #t ()    0    boolean extended)
 
-("##first-argument"                   1     #f ()    0    (#f)    extended)
+("##first-argument"                   1     #t ()    0    (#f)    extended)
 ("##check-heap-limit"                 (0)   #t ()    0    (#f)    extended)
 
 ("##poll-point"                       (0)   #t ()    0    (#f)    extended)
