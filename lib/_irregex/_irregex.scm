@@ -19,6 +19,7 @@
 (declare (extended-bindings)) ;; ##fx+ is bound to fixnum addition, etc
 (declare (not safe))          ;; claim code has no type errors
 (declare (block))             ;; claim no global is assigned
+(declare (mostly-fixnum))     ;; assume most arithmetic is fixnum
 
 (##namespace ("_irregex#" ;; Don't import these from Gambit:
 vector-copy

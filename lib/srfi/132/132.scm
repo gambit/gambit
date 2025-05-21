@@ -21,6 +21,8 @@
 ;; and comes from:
 ;; https://github.com/scheme-requests-for-implementation/srfi-132
 
+(declare (mostly-fixnum))
+
 (include "delndups.scm")     ; list-delete-neighbor-dups etc
 (include "lmsort.scm")       ; list-merge, list-merge!
 (include "sortp.scm")        ; list-sorted?, vector-sorted?
