@@ -455,8 +455,14 @@
   (set! **fixnum?-proc-obj
         (target.prim-info **fixnum?-sym))
 
+  (set! **fixnums?-proc-obj
+        (target.prim-info **fixnums?-sym))
+
   (set! **flonum?-proc-obj
         (target.prim-info **flonum?-sym))
+
+  (set! **flonums?-proc-obj
+        (target.prim-info **flonums?-sym))
 
   #f)
 
@@ -473,7 +479,9 @@
   (set! **quasi-vector-proc-obj       #f)
   (set! **case-memv-proc-obj          #f)
   (set! **fixnum?-proc-obj            #f)
+  (set! **fixnums?-proc-obj           #f)
   (set! **flonum?-proc-obj            #f)
+  (set! **flonums?-proc-obj           #f)
 
   ((target-end! target))
 
@@ -505,7 +513,9 @@
 (define **quasi-vector-proc-obj       #f)  ;; ##quasi-vector
 (define **case-memv-proc-obj          #f)  ;; ##case-memv
 (define **fixnum?-proc-obj            #f)  ;; ##fixnum?
+(define **fixnums?-proc-obj           #f)  ;; ##fixnums?
 (define **flonum?-proc-obj            #f)  ;; ##flonum?
+(define **flonums?-proc-obj           #f)  ;; ##flonums?
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

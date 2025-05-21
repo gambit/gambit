@@ -830,7 +830,9 @@ virtual.end!
 **quasi-cons-proc-obj
 **quasi-list-proc-obj
 **fixnum?-proc-obj
+**fixnums?-proc-obj
 **flonum?-proc-obj
+**flonums?-proc-obj
 allocation-limit
 arith-implementation
 default-target

@@ -1113,24 +1113,36 @@
          (cond ((conj? ptree)
                 (conj (conj-pre ptree) (conj-alt ptree) tail))
                ((app? ptree)
-                (let ((proc (app->specialized-proc ptree)))
-                  (and proc
-                       (if (eq? (car tail) #f)
-                           (or (eq? proc **fixnum?-proc-obj)
-                               (eq? proc **flonum?-proc-obj))
-                           (eq? proc (car tail)))
-                       (cons proc
-                             (cons (car (app-args ptree)) (cdr tail))))))
+                (let* ((proc (app->specialized-proc ptree))
+                       (proc1
+                        (cond ((or (eq? proc **fixnum?-proc-obj)
+                                   (eq? proc **fixnums?-proc-obj))
+                               **fixnum?-proc-obj)
+                              ((or (eq? proc **flonum?-proc-obj)
+                                   (eq? proc **flonums?-proc-obj))
+                               **flonum?-proc-obj)
+                              (else
+                               #f))))
+                  (and proc1
+                       (or (eq? (car tail) #f)
+                           (eq? (car tail) proc1))
+                       (cons proc1
+                             (append (app-args ptree) (cdr tail))))))
                (else
                 #f))))
 
   (let ((x (and (eq? reason 'pred) (conj pre alt '(#f)))))
-    (if x
+    (if (and x
+             (>= (length (cdr x)) 2) ;; must have at least 2 tests
+             (every? (lambda (arg)
+                       (or (cst? arg) (ref? arg) (prc? arg)))
+                     (cddr x))) ;; only first can have side-effects or be unsafe
 
-        (gen-call-prim-notsafe (node-source ptree) (node-env ptree)
-          (if (eq? (car x) **fixnum?-proc-obj)
-              **fixnums?-sym
-              **flonums?-sym)
+        (new-call (node-source ptree) (node-env ptree)
+          (new-cst (node-source ptree) (node-env ptree)
+            (if (eq? (car x) **fixnum?-proc-obj)
+                **fixnums?-proc-obj
+                **flonums?-proc-obj))
           (cdr x))
 
         (new-conj (node-source ptree) (node-env ptree)
