@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-2.scm"
 
-;;; Copyright (c) 2011-2024 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2025 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -1470,7 +1470,8 @@
                       (^obj #f)  ;; mailbox
                       (^obj #f)  ;; specific
                       (^obj #f)  ;; resume-thunk
-                      (^obj #f)  ;; interrupts
+                      (^obj #f)  ;; interrupts-head
+                      (^obj #f)  ;; interrupts-tail
                       (^obj #f)  ;; last-processor
                       ;;(^obj #f) ;; pinned
                       )))
@@ -1479,7 +1480,8 @@
               (^obj #f) ;; processor-deq-next
               (^obj #f) ;; processor-deq-prev
               (^obj #f) ;; id
-              (^obj #f) ;; interrupts
+              (^obj #f) ;; interrupts-head
+              (^obj #f) ;; interrupts-tail
               ))))))
 
   ;;---------------------------------------------------------------------------
