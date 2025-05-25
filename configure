@@ -1883,7 +1883,7 @@ Optional Features:
                           Max number of processors per Gambit VM instance
                           (default is 64)
   --enable-thread-system[=thread-system]
-                          use OS threads (default is NO)
+                          use OS threads (default is YES)
   --enable-dynamic-tls    allow thread local storage variables to be
                           referenced from dynamically loaded code (default is
                           NO)
@@ -6411,15 +6411,12 @@ fi
 if test "${enable_thread_system+set}" = set; then :
   enableval=$enable_thread_system; ENABLE_THREAD_SYSTEM=$enableval
 else
-  ENABLE_THREAD_SYSTEM=no
+  ENABLE_THREAD_SYSTEM=yes
 fi
 
 
-if test "$ENABLE_THREAD_SYSTEM" = no; then
-
-  if test "$ENABLE_MULTIPLE_VMS" != no -o "$ENABLE_MULTIPLE_THREADED_VMS" != no; then
-    ENABLE_THREAD_SYSTEM=yes
-  fi
+if test "$ENABLE_MULTIPLE_VMS" != no -o "$ENABLE_MULTIPLE_THREADED_VMS" != no; then
+  ENABLE_THREAD_SYSTEM=yes
 fi
 
 ###############################################################################

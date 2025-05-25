@@ -1326,15 +1326,12 @@ AC_SUBST(CONF_MAX_PROCESSORS)
 
 AC_ARG_ENABLE(thread-system,
               AS_HELP_STRING([--enable-thread-system@<:@=thread-system@:>@],
-                             [use OS threads (default is NO)]),
+                             [use OS threads (default is YES)]),
               ENABLE_THREAD_SYSTEM=$enableval,
-              ENABLE_THREAD_SYSTEM=no)
+              ENABLE_THREAD_SYSTEM=yes)
 
-if test "$ENABLE_THREAD_SYSTEM" = no; then
-
-  if test "$ENABLE_MULTIPLE_VMS" != no -o "$ENABLE_MULTIPLE_THREADED_VMS" != no; then
-    ENABLE_THREAD_SYSTEM=yes
-  fi
+if test "$ENABLE_MULTIPLE_VMS" != no -o "$ENABLE_MULTIPLE_THREADED_VMS" != no; then
+  ENABLE_THREAD_SYSTEM=yes
 fi
 
 ###############################################################################

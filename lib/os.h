@@ -1,6 +1,6 @@
 /* File: "os.h" */
 
-/* Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_H
 #define ___OS_H
@@ -755,7 +755,7 @@
 #define USE_ASYNC_DEVICE_SELECT_ABORT
 #endif
 
-#ifndef ___SINGLE_THREADED_VMS
+#ifndef ___USE_NO_THREAD_SYSTEM
 #undef USE_ASYNC_DEVICE_SELECT_ABORT
 #define USE_ASYNC_DEVICE_SELECT_ABORT
 #endif
