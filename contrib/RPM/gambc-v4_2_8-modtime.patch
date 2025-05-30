@@ -1,0 +1,17 @@
+--- gambc-v4_2_8/configure.modtime	2008-05-25 00:18:44.000000000 -0400
++++ gambc-v4_2_8/configure	2008-06-07 18:51:26.000000000 -0400
+@@ -23821,10 +23821,10 @@
+   srcdirpfx="\$(srcdir)/"
+ fi
+ 
+-INSTALL='$(rootfromhere)/install-sh -c'
+-INSTALL_DATA='$(rootfromhere)/install-sh -c -m 644'
+-INSTALL_LIB='$(rootfromhere)/install-sh -c -m 644'
+-INSTALL_PROGRAM='$(rootfromhere)/install-sh -c -m 755'
++INSTALL='install -p'
++INSTALL_DATA='install -m 644 -p'
++INSTALL_LIB='install -m 644 -p'
++INSTALL_PROGRAM='install -m 755 -p'
+ 
+ 
+ 
