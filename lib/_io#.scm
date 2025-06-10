@@ -2,7 +2,7 @@
 
 ;;; File: "_io#.scm"
 
-;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -367,7 +367,7 @@
   fifo
   rcondvar
   wcondvar
-  buffering-limit
+  capacity
 )
 
 (define-check-type vector-input-port 'vector-input-port
@@ -398,7 +398,7 @@
   rcondvar
   wcondvar
   width
-  buffering-limit
+  capacity
 )
 
 (define-check-type string-input-port 'string-input-port
@@ -429,7 +429,7 @@
   rcondvar
   wcondvar
   width
-  buffering-limit
+  capacity
 )
 
 (define-check-type u8vector-input-port 'u8vector-input-port
@@ -857,6 +857,7 @@
   broadcast
   ignore-hidden
   tls-context
+  capacity
 )
 
 (define-type psettings-options
@@ -998,6 +999,8 @@
 (##define-macro (macro-permanent-close) 1)
 (##define-macro (macro-no-permanent-close) 0)
 (##define-macro (macro-default-permanent-close) `(macro-permanent-close))
+
+(##define-macro (macro-default-capacity) 0) ;; 0 = unlimited capacity
 
 (##define-macro (macro-stdin-from-port) 1)
 (##define-macro (macro-stdin-unchanged) 0)

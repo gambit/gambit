@@ -228,7 +228,8 @@
           (macro-default-reuse-address)
           (macro-default-broadcast)
           (macro-default-ignore-hidden)
-          (macro-default-tls-context))))
+          (macro-default-tls-context)
+          (macro-default-capacity))))
     (##parse-psettings!
      allowed-settings
      settings
@@ -336,6 +337,15 @@
            (macro-line-buffering))
           ((##eq? value #f)
            (macro-no-buffering))
+          (else
+           #f)))
+
+  (define (capacity value)
+    (cond ((##eq? value #f)
+           0)
+          ((and (##fixnum? value)
+                (##fx< 0 value))
+           value)
           (else
            #f)))
 
@@ -745,6 +755,16 @@
                                          x)
                                         (macro-psettings-options-buffering-set!
                                          (macro-psettings-woptions psettings)
+                                         x)
+                                        (loop rest2))
+                                      (error name))))
+
+                               ((##eq? name 'capacity:)
+                                (let ((x (capacity value)))
+                                  (if x
+                                      (begin
+                                        (macro-psettings-capacity-set!
+                                         psettings
                                          x)
                                         (loop rest2))
                                       (error name))))
@@ -2457,10 +2477,10 @@
       (sym 'macro- name '-port-wcondvar))
     (define macro-vect-port-wcondvar-set!
       (sym 'macro- name '-port-wcondvar-set!))
-    (define macro-vect-port-buffering-limit
-      (sym 'macro- name '-port-buffering-limit))
-    (define macro-vect-port-buffering-limit-set!
-      (sym 'macro- name '-port-buffering-limit-set!))
+    (define macro-vect-port-capacity
+      (sym 'macro- name '-port-capacity))
+    (define macro-vect-port-capacity-set!
+      (sym 'macro- name '-port-capacity-set!))
 
     (define vect-rbuf-fill
       (sym name '-rbuf-fill))
@@ -2681,17 +2701,17 @@
               (let loop ()
                 (let* ((peer
                         (,',macro-vect-port-peer port))
-                       (buffering-limit
-                        (,',macro-vect-port-buffering-limit port)))
-                  (if (and buffering-limit
+                       (capacity
+                        (,',macro-vect-port-capacity port)))
+                  (if (and (##fx< 0 capacity)
                            (let ((unread
                                   (##fx- (,',macro-vect-port-wlo port)
                                          (,',macro-vect-port-rlo peer))))
-                             (##fx< buffering-limit unread)))
+                             (##fx< capacity unread)))
 
-                      ;; buffering limit has been reached, so block
+                      ;; capacity has been reached, so block
                       ;; the thread until some reads decrease the
-                      ;; amount of data buffered
+                      ;; amount of data waiting to be read
 
                       (let ((continue?
                              (or (##mutex-signal-and-condvar-wait!
@@ -2704,7 +2724,7 @@
                             (loop)
                             ##err-code-EAGAIN))
 
-                      ;; buffering limit is not yet reached, so allocate
+                      ;; capacity is not yet reached, so allocate
                       ;; a new write buffer and add it to the FIFO
 
                       (let* ((new-vect-wbuf
@@ -2714,7 +2734,7 @@
                              (vect-whi
                               (,',macro-vect-port-whi port)))
 
-                        ;; keep track of amount of data buffered
+                        ;; keep track of amount of data in write buffer
                         (,',macro-vect-port-wlo-set!
                          port
                          (##fx+ (,',macro-vect-port-wlo port) vect-whi))
@@ -3321,7 +3341,8 @@
    direction:
    input-buffering:
    output-buffering:
-   buffering:))
+   buffering:
+   capacity:))
 
 (define-prim (##make-vector-port src start end psettings)
 
@@ -3377,8 +3398,8 @@
           (##make-io-condvar-for-reading #f))
          (vector-wcondvar
           (##make-io-condvar-for-writing #f))
-         (vector-buffering-limit
-          #f))
+         (vector-capacity
+          (macro-psettings-capacity psettings)))
 
     (define (read-datum port re)
 
@@ -3539,7 +3560,7 @@
             vector-fifo
             vector-rcondvar
             vector-wcondvar
-            vector-buffering-limit)))
+            vector-capacity)))
       (macro-vector-port-peer-set! port port)
       (##io-condvar-port-set! vector-rcondvar port)
       (##io-condvar-port-set! vector-wcondvar port)
@@ -3561,6 +3582,7 @@
    input-buffering:
    output-buffering:
    buffering:
+   capacity:
    input-readtable:
    output-readtable:
    readtable:))
@@ -3639,8 +3661,8 @@
           (##make-io-condvar-for-writing #f))
          (string-width
           (##psettings->output-width psettings))
-         (string-buffering-limit
-          #f))
+         (string-capacity
+          (macro-psettings-capacity psettings)))
 
     (define (read-datum port re)
 
@@ -3724,7 +3746,7 @@
             string-rcondvar
             string-wcondvar
             string-width
-            string-buffering-limit)))
+            string-capacity)))
       (macro-string-port-peer-set! port port)
       (##io-condvar-port-set! string-rcondvar port)
       (##io-condvar-port-set! string-wcondvar port)
@@ -3755,6 +3777,7 @@
    input-buffering:
    output-buffering:
    buffering:
+   capacity:
    input-readtable:
    output-readtable:
    readtable:))
@@ -3853,8 +3876,8 @@
           (##make-io-condvar-for-writing #f))
          (u8vector-width
           (##psettings->output-width psettings))
-         (u8vector-buffering-limit
-          #f))
+         (u8vector-capacity
+          (macro-psettings-capacity psettings)))
 
      (define (read-datum port re)
 
@@ -3961,7 +3984,7 @@
              u8vector-rcondvar
              u8vector-wcondvar
              u8vector-width
-             u8vector-buffering-limit)))
+             u8vector-capacity)))
        (macro-u8vector-port-peer-set! port port)
        (##io-condvar-port-set! u8vector-rcondvar port)
        (##io-condvar-port-set! u8vector-wcondvar port)

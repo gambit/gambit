@@ -16841,6 +16841,17 @@ return the end-of-file object for all subsequent calls to the
 vector-port will return to its opened state when its end-of-file is
 read.  The default value of this setting is @code{#t}.
 
+@item
+@code{capacity:} ( @code{#f} | @var{positive-exact-integer} )
+
+This setting places a limit on the number of objects stored in the
+port, i.e. objects written to the port but not yet read.  A value of
+@code{#f} removes the limit.  When the limit is reached threads are
+blocked from writing to the port until enough stored objects are read
+from the port. This is a useful feature in a producer-consumer
+scenario where the producer is faster than the consumer.  The default
+value of this setting is @code{#f}.
+
 @end itemize
 
 For example:
