@@ -186,6 +186,8 @@ ___processor_state ___ps;)
       if (next == NULL)
         ___ps->procedural_interrupts_tail = NULL;
 
+      ___SHARED_MEMORY_BARRIER(); /* make sure write happens promptly */
+
       ___MUTEX_UNLOCK(___ps->procedural_interrupts_mut);
 
       if ((err = probe->execute_fn (___CAST(void*, probe), ___TRU))
@@ -261,9 +263,11 @@ ___SCMOBJ intr;)
   ___SCMOBJ ps = ___PROCESSOR_SCMOBJ(___ps);
   ___SCMOBJ tail;
 
-  ___PRIMITIVELOCK(ps,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2))
+  ___PRIMLOCK(ps,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2))
 
   tail = ___PROCESSOR_INTERRUPTS_TAIL_FIELD(ps);
+
+  ___FIELD(VECTOR,intr,0) = ___NUL;
 
   ___PROCESSOR_INTERRUPTS_TAIL_FIELD(ps) = intr;
 
@@ -272,9 +276,41 @@ ___SCMOBJ intr;)
   else
     ___FIELD(VECTOR,tail,0) = intr;
 
-  ___PRIMITIVEUNLOCK(ps,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2))
+  ___SHARED_MEMORY_BARRIER(); /* make sure write happens promptly */
+
+  ___PRIMUNLOCK(ps,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2))
 
   ___raise_interrupt_pstate (___ps, ___INTR_OTHER);
+}
+
+
+___EXP_FUNC(___SCMOBJ,___get_next_high_level_interrupt_pstate)
+   ___P((___processor_state ___ps),
+        (___ps)
+___processor_state ___ps;)
+{
+  ___SCMOBJ ps = ___PROCESSOR_SCMOBJ(___ps);
+  ___SCMOBJ intr;
+
+  ___PRIMLOCK(ps,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2))
+
+  intr = ___PROCESSOR_INTERRUPTS_HEAD_FIELD(ps);
+
+  if (intr != ___NUL)
+    {
+      ___SCMOBJ next = ___VECTORELEM(intr, 0);
+
+      ___PROCESSOR_INTERRUPTS_HEAD_FIELD(ps) = next;
+
+      if (next == ___NUL)
+        ___PROCESSOR_INTERRUPTS_TAIL_FIELD(ps) = ___NUL;
+
+      ___SHARED_MEMORY_BARRIER(); /* make sure write happens promptly */
+    }
+
+  ___PRIMUNLOCK(ps,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2))
+
+  return intr;
 }
 
 
@@ -6074,6 +6110,9 @@ ___HIDDEN void setup_dynamic_linking ___PVOID
 
   ___GSTATE->___raise_high_level_interrupt_pstate
     = ___raise_high_level_interrupt_pstate;
+
+  ___GSTATE->___get_next_high_level_interrupt_pstate
+    = ___get_next_high_level_interrupt_pstate;
 
   ___GSTATE->___init_procedural_interrupt
     = ___init_procedural_interrupt;

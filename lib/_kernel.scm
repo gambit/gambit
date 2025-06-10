@@ -1535,6 +1535,15 @@ end-of-code
    processor-id
    intr))
 
+(define-prim (##get-next-high-level-interrupt)
+  (##declare (not interrupts-enabled))
+  (##c-code #<<end-of-code
+
+   ___RESULT = ___get_next_high_level_interrupt_pstate (___ps);
+
+end-of-code
+  ))
+
 ))
 
 ;;;----------------------------------------------------------------------------

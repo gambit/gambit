@@ -5814,13 +5814,13 @@ ___FETCH_AND_ADD_WORD(___CAST(___VOLATILE ___WORD*,&current),___FIX(1))
 
 #endif
 
-#ifdef ___SINGLE_THREADED_VMS
+#ifdef ___USE_NO_THREAD_SYSTEM
 
 #define ___VOLATILE
 
-#define ___PRIMITIVELOCK(obj,next,current)
-#define ___PRIMITIVETRYLOCK(obj,next,current) 1
-#define ___PRIMITIVEUNLOCK(obj,next,current)
+#define ___PRIMLOCK(obj,next,current)
+#define ___PRIMTRYLOCK(obj,next,current) 1
+#define ___PRIMUNLOCK(obj,next,current)
 
 #define ___SPINLOCK int
 #define ___SPINLOCK_DECL(id)
@@ -5833,13 +5833,13 @@ ___FETCH_AND_ADD_WORD(___CAST(___VOLATILE ___WORD*,&current),___FIX(1))
 
 #define ___VOLATILE volatile
 
-#define ___PRIMITIVELOCK(obj,next,current) \
+#define ___PRIMLOCK(obj,next,current) \
 ___TICKETLOCK_LOCK2(___FIELD(STRUCTURE,obj,___INT(next)),___FIELD(STRUCTURE,obj,___INT(current)));
 
-#define ___PRIMITIVETRYLOCK(obj,next,current) \
+#define ___PRIMTRYLOCK(obj,next,current) \
 ___TICKETLOCK_TRYLOCK2(___FIELD(STRUCTURE,obj,___INT(next)),___FIELD(STRUCTURE,obj,___INT(current)),___temp)
 
-#define ___PRIMITIVEUNLOCK(obj,next,current) \
+#define ___PRIMUNLOCK(obj,next,current) \
 ___TICKETLOCK_UNLOCK2(___FIELD(STRUCTURE,obj,___INT(next)),___FIELD(STRUCTURE,obj,___INT(current)));
 
 #ifdef ___USE_MUTEX_FOR_SPINLOCK
@@ -5863,6 +5863,20 @@ ___TICKETLOCK_UNLOCK2(___FIELD(STRUCTURE,obj,___INT(next)),___FIELD(STRUCTURE,ob
 #define ___SPINLOCK_UNLOCK(lock) ___TICKETLOCK_UNLOCK(lock)
 
 #endif
+
+#endif
+
+#ifdef ___SINGLE_THREADED_VMS
+
+#define ___PRIMITIVELOCK(obj,next,current)
+#define ___PRIMITIVETRYLOCK(obj,next,current) 1
+#define ___PRIMITIVEUNLOCK(obj,next,current)
+
+#else
+
+#define ___PRIMITIVELOCK(obj,next,current) ___PRIMLOCK(obj,next,current)
+#define ___PRIMITIVETRYLOCK(obj,next,current) ___PRIMTRYLOCK(obj,next,current)
+#define ___PRIMITIVEUNLOCK(obj,next,current) ___PRIMUNLOCK(obj,next,current)
 
 #endif
 
@@ -8170,7 +8184,7 @@ if (___TESTTYPE(___temp=(src),___tSUBTYPED)&&___SUBTYPE(___temp)==___FIX(___sPRO
 
 #endif
 
-#ifdef ___USE_NO_THREAD_SYSTEM
+#ifdef ___SINGLE_THREADED_VMS
 
 /* Use direct access to the only pstate */
 
@@ -13002,6 +13016,9 @@ typedef struct ___global_state_struct
        ___P((___processor_state ___ps,
              ___SCMOBJ intr),
             ());
+    ___SCMOBJ (*___get_next_high_level_interrupt_pstate)
+       ___P((___processor_state ___ps),
+            ());
     void (*___init_procedural_interrupt)
        ___P((void *intr,
              ___SCMOBJ (*execute_fn) ___P((void *self, ___SCMOBJ op),())),
@@ -14472,6 +14489,9 @@ ___IMP_FUNC(void,___actlog_dump)
 ___IMP_FUNC(void,___raise_high_level_interrupt_pstate)
    ___P((___processor_state ___ps,
          ___SCMOBJ intr),
+        ());
+___IMP_FUNC(___SCMOBJ,___get_next_high_level_interrupt_pstate)
+   ___P((___processor_state ___ps),
         ());
 ___IMP_FUNC(void,___init_procedural_interrupt)
    ___P((void *intr,

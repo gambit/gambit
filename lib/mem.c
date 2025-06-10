@@ -4321,7 +4321,9 @@ ___PSDKR)
        * SITUATION #1, at end of complete chunk.
        */
 
+#ifndef ___SINGLE_THREADED_VMS
       ___SPINLOCK_LOCK(heap_chunks_to_scan_lock);
+#endif
 
       while ((hcsh=heap_chunks_to_scan_head) != heap_chunks_to_scan_tail)
         {
@@ -4336,14 +4338,20 @@ ___PSDKR)
 
           ___SHARED_MEMORY_BARRIER(); /* share heap_chunks_to_scan_head */
 
+#ifndef ___SINGLE_THREADED_VMS
           ___SPINLOCK_UNLOCK(heap_chunks_to_scan_lock);
+#endif
 
           scan_complete_heap_chunk (___PSP ptr+1);
 
+#ifndef ___SINGLE_THREADED_VMS
           ___SPINLOCK_LOCK(heap_chunks_to_scan_lock);
+#endif
         }
 
+#ifndef ___SINGLE_THREADED_VMS
       ___SPINLOCK_UNLOCK(heap_chunks_to_scan_lock);
+#endif
 
       /*
        * Scan the incomplete heap chunk currently being created.
@@ -4546,7 +4554,9 @@ ___processor_state ___ps;)
 
   tospace_offset = ___PSTATE_FROM_PROCESSOR_ID(0,___vms)->mem.tospace_offset_;
 
+#ifndef ___SINGLE_THREADED_VMS
   ___SPINLOCK_INIT(heap_chunks_to_scan_lock);
+#endif
 
   /*
    * Allocate processor's stack and heap.
