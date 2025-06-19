@@ -11218,12 +11218,13 @@ end-of-code
     (##bignum.normalize! result))
 
   (define (karatsuba-mul x y)
+    ;; x is longer than y
     (let* ((x-length
             (##bignum.adigit-length x))
            (y-length
             (##bignum.adigit-length y))
            (shift-digits
-            (##fxarithmetic-shift-right y-length 1))
+            (##fxarithmetic-shift-right x-length 1))
            (shift-bits
             (##fx* shift-digits ##bignum.adigit-width))
            (y-high
