@@ -4309,7 +4309,7 @@ ___EXPECT_FALSE(__builtin_sub_overflow(___FW(x),___FW(y),&var))
 #define ___FIXASH(x,y)((y)<___FIX(0)?___FIXASHR(x,(y)>=___FIX(-___FIX_WIDTH)?-(y):___FIX(___FIX_WIDTH)):___FIXASHL(x,(y)<=___FIX(___FIX_WIDTH)?(y):___FIX(___FIX_WIDTH)))
 #define ___FIXASHP(x,y)((y)<___FIX(0)?((y)>=___FIX(-___FIX_WIDTH)?___FIXASHR(x,-(y)):___FAL):((y)<=___FIX(___FIX_WIDTH)?___FIXASHLP2(x,y):___FAL))
 
-#define ___FIXWRAPASHL(x,y)___FIXASHL(x,y)
+#define ___FIXWRAPASHL(x,y)___W(___FW(___UFW(x)<<___INT(y)))
 #define ___FIXWRAPASHLP(x,y)((y)>=___FIX(0)&&(y)<=___FIX(___FIX_WIDTH)?___FIXWRAPASHL(x,y):___FAL)
 
 #define ___FIXASHL(x,y)___W(___FW(x)<<___INT(y))
@@ -4321,7 +4321,7 @@ ___EXPECT_FALSE(__builtin_sub_overflow(___FW(x),___FW(y),&var))
 #define ___FIXASHR(x,y)___W((___FW(x)>>___INT(y))&~___FMASK)
 #define ___FIXASHRP(x,y)((y)>=___FIX(0)?___FIXASHR(x,(y)<=___FIX(___FIX_WIDTH)?(y):___FIX(___FIX_WIDTH)):___FAL)
 
-#define ___FIXWRAPLSHR(x,y)___W((___UFW(x)>>___INT(y))&~___FMASK)
+#define ___FIXWRAPLSHR(x,y)___W(___FW((___UFW(x)>>___INT(y))&~___FMASK))
 #define ___FIXWRAPLSHRP(x,y)((y)>=___FIX(0)?___FIXWRAPLSHR(x,(y)<=___FIX(___FIX_WIDTH)?(y):___FIX(___FIX_WIDTH)):___FAL)
 
 
