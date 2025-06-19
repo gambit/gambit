@@ -1434,7 +1434,14 @@ int n;)
           if (x < 0)
             *p = ___CAST(___SCMOBJ*,module->keytbl)[-1-x];
           else if (x < module->subcount)
-            *p = ___CAST(___SCMOBJ*,module->subtbl)[x];
+	    {
+	      v = ___CAST(___SCMOBJ*,module->subtbl)[x];
+#ifdef ___NAN_BOXING
+	      if (___TESTSUBTYPETAG(v,___sFLONUM))
+		v = ___F64BOX(*___CAST(___F64*,___BODY_AS(v,___tSUBTYPED)));
+#endif
+	      *p = v;
+	    }
           else
             *p = ___SUBTYPED_FROM_BODY(&module->lbltbl[x-module->subcount].entry_or_descr);
           break;

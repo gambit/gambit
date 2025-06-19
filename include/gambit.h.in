@@ -3246,7 +3246,7 @@ ___DOUBLE_BIAS_ADD((___CAST(___U64,___CAST(___U32,hi))<<32) + ___CAST(___U64,___
 #endif
 
 #define ___FLO(i,hi,lo) ___FLO_CONST(___SUB(i),hi,lo)
-#define ___REF_FLO(i,hi,lo) ___FLO_CONST(___REF_SUB(i),hi,lo)
+#define ___REF_FLO(i,hi,lo) ___REF_SUB(i)
 
 #define ___D_F64(x)___F64 x;
 #define ___SET_F64(x,y)x=y;
