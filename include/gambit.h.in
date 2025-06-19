@@ -2507,6 +2507,10 @@ ___CAST(___WORD, ___CAST(___U64,x) + ___NAN_BOXING_BIAS)
 #define ___IS_DOUBLE_OR(obj, x) (___IS_DOUBLE(obj) || (x))
 #define ___IS_NOT_DOUBLE_AND(obj, x) (!___IS_DOUBLE(obj) && (x))
 
+#define ___HAS_TAG_AND_IS_NOT_DOUBLE(obj, tag, tb) \
+((((obj) + (___NAN_BOXING_BIAS - (tag))) & \
+ ~(___MASK(___WORD,49)-___MASK(___WORD,tb))) == 0)
+
 #define ___FIXWORD_WIDTH 32
 #define ___FIXWORD ___S32
 #define ___UFIXWORD ___U32
@@ -2516,6 +2520,9 @@ ___CAST(___WORD, ___CAST(___U64,x) + ___NAN_BOXING_BIAS)
 
 #define ___IS_DOUBLE_OR(obj, x) (x)
 #define ___IS_NOT_DOUBLE_AND(obj, x) (x)
+
+#define ___HAS_TAG_AND_IS_NOT_DOUBLE(obj, tag, tb) \
+((((obj) - (tag)) & ___MASK(___WORD,tb)) == 0)
 
 #define ___FIXWORD_WIDTH ___WORD_WIDTH
 #define ___FIXWORD ___WORD
@@ -2605,7 +2612,7 @@ ___CAST(___WORD, ___CAST(___U64,x) + ___NAN_BOXING_BIAS)
 #endif
 
 #ifndef ___MEM_ALLOCATED
-#define ___MEM_ALLOCATED(obj) ___IS_NOT_DOUBLE_AND(obj, (obj)&1)
+#define ___MEM_ALLOCATED(obj) ___HAS_TAG_AND_IS_NOT_DOUBLE(obj, 1, 1)
 #define ___MEM_ALLOCATED_CLEAR(obj) ((obj)&~___CAST(___WORD,1))
 #define ___MEM_ALLOCATED_SET(obj) ((obj)|1)
 #endif
@@ -3787,7 +3794,7 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 
 #define ___IS_ND_FIXNUM(obj) \
 (((obj)&___MASK(___WORD,___TB_FIXNUM))==___tFIXNUM)
-#define ___FIXNUMP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_FIXNUM(obj))
+#define ___FIXNUMP(obj)___HAS_TAG_AND_IS_NOT_DOUBLE(obj, ___tFIXNUM, ___TB_FIXNUM)
 
 #if defined(___NAN_BOXING) || ___tFIXNUM != 0
 
@@ -3808,11 +3815,15 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
  ___TESTSUBTYPE(obj, ___s ## type) : \
  ___TESTTYPE(obj, ___t ## type))
 
+#define ___MEM_ISA_AND_IS_NOT_DOUBLE(type,obj) \
+(___HAS_TAG_AND_IS_NOT_DOUBLE(obj, ___t ## type, ___TB) && \
+ (___t ## type != ___tSUBTYPED || ___TESTSUBTYPE(obj, ___s ## type)))
+
 #define ___IS_ND_PAIR(obj)___MEM_ISA(PAIR,obj)
-#define ___PAIRP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_PAIR(obj))
+#define ___PAIRP(obj)___MEM_ISA_AND_IS_NOT_DOUBLE(PAIR,obj)
 
 #define ___IS_ND_VECTOR(obj)___MEM_ISA(VECTOR,obj)
-#define ___VECTORP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_VECTOR(obj))
+#define ___VECTORP(obj)___MEM_ISA_AND_IS_NOT_DOUBLE(VECTOR,obj)
 
 #ifdef ___NAN_BOXING
 
@@ -3869,13 +3880,13 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #endif
 
 #define ___IS_ND_SPECIAL(obj)___TESTTYPE(obj,___tSPECIAL)
-#define ___SPECIALP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_SPECIAL(obj))
+#define ___SPECIALP(obj)___HAS_TAG_AND_IS_NOT_DOUBLE(obj, ___tSPECIAL, ___TB)
 
 #define ___IS_ND_MUTABLE(obj)(___HD_TYP(___HEADER(obj))!=___PERM)
 #define ___MUTABLEP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_MUTABLE(obj))
 
 #define ___IS_ND_SUBTYPED(obj)___TESTTYPE(obj,___tSUBTYPED)
-#define ___SUBTYPEDP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_SUBTYPED(obj))
+#define ___SUBTYPEDP(obj)___HAS_TAG_AND_IS_NOT_DOUBLE(obj, ___tSUBTYPED, ___TB)
 
 #define ___SUBTYPEDMUTABLEP(obj)(___HD_TYP(___SUBTYPED_HEADER(obj))!=___PERM)
 #define ___SUBTYPEDVECTORP(obj)___TESTSUBTYPETAG(obj,___sVECTOR)
@@ -3884,16 +3895,16 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___SUBTYPEDBIGNUMP(obj)___TESTSUBTYPETAG(obj,___sBIGNUM)
 
 #define ___IS_ND_RATNUM(obj)___MEM_ISA(RATNUM,obj)
-#define ___RATNUMP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_RATNUM(obj))
+#define ___RATNUMP(obj)___MEM_ISA_AND_IS_NOT_DOUBLE(RATNUM,obj)
 
 #define ___IS_ND_CPXNUM(obj)___MEM_ISA(CPXNUM,obj)
-#define ___CPXNUMP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_CPXNUM(obj))
+#define ___CPXNUMP(obj)___MEM_ISA_AND_IS_NOT_DOUBLE(CPXNUM,obj)
 
 #define ___IS_ND_EXACTINT(obj)(___IS_ND_FIXNUM(obj)||___IS_ND_BIGNUM(obj))
 #define ___EXACTINTP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_EXACTINT(obj))
 
 #define ___IS_ND_STRUCTURE(obj)___MEM_ISA(STRUCTURE,obj)
-#define ___STRUCTUREP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_STRUCTURE(obj))
+#define ___STRUCTUREP(obj)___MEM_ISA_AND_IS_NOT_DOUBLE(STRUCTURE,obj)
 
 #define ___IS_ND_BOX(obj)(___TESTTYPE(___temp=(obj),___tSUBTYPED)&&(___SUBTYPED_HEADER(___temp)&___LSMASK)==___MAKE_HD((___BOX_SIZE<<___LWS),___sBOXVALUES,0))
 #define ___BOXP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_BOX(obj))
@@ -3902,28 +3913,28 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___VALUESP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_VALUES(obj))
 
 #define ___IS_ND_MEROON(obj)___MEM_ISA(MEROON,obj)
-#define ___MEROONP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_MEROON(obj))
+#define ___MEROONP(obj)___MEM_ISA_AND_IS_NOT_DOUBLE(MEROON,obj)
 
 #define ___IS_ND_JAZZ(obj)___MEM_ISA(JAZZ,obj)
-#define ___JAZZP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_JAZZ(obj))
+#define ___JAZZP(obj)___MEM_ISA_AND_IS_NOT_DOUBLE(JAZZ,obj)
 
 #define ___IS_ND_SYMBOL(obj)___MEM_ISA(SYMBOL,obj)
-#define ___SYMBOLP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_SYMBOL(obj))
+#define ___SYMBOLP(obj)___MEM_ISA_AND_IS_NOT_DOUBLE(SYMBOL,obj)
 
 #define ___IS_ND_KEYWORD(obj)___MEM_ISA(KEYWORD,obj)
-#define ___KEYWORDP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_KEYWORD(obj))
+#define ___KEYWORDP(obj)___MEM_ISA_AND_IS_NOT_DOUBLE(KEYWORD,obj)
 
 #define ___IS_ND_SYMKEY(obj)(___IS_ND_SYMBOL(obj)||___IS_ND_KEYWORD(obj))
 #define ___SYMKEYP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_SYMKEY(obj))
 
 #define ___IS_ND_FRAME(obj)___MEM_ISA(FRAME,obj)
-#define ___FRAMEP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_FRAME(obj))
+#define ___FRAMEP(obj)___MEM_ISA_AND_IS_NOT_DOUBLE(FRAME,obj)
 
 #define ___IS_ND_CONTINUATION(obj)___MEM_ISA(CONTINUATION,obj)
-#define ___CONTINUATIONP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_CONTINUATION(obj))
+#define ___CONTINUATIONP(obj)___MEM_ISA_AND_IS_NOT_DOUBLE(CONTINUATION,obj)
 
 #define ___IS_ND_PROMISE(obj)___MEM_ISA(PROMISE,obj)
-#define ___PROMISEP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_PROMISE(obj))
+#define ___PROMISEP(obj)___MEM_ISA_AND_IS_NOT_DOUBLE(PROMISE,obj)
 
 #define ___IS_ND_WILL(obj)___TESTLENGTHSUBTYPE(obj,(___WILL_SIZE<<___LWS),___sWEAK)
 #define ___WILLP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_WILL(obj))
@@ -3934,7 +3945,7 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___MEMALLOCATEDP(obj)___MEM_ALLOCATED(obj)
 
 #define ___IS_ND_PROCEDURE(obj)___MEM_ISA(PROCEDURE,obj)
-#define ___PROCEDUREP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_PROCEDURE(obj))
+#define ___PROCEDUREP(obj)___MEM_ISA_AND_IS_NOT_DOUBLE(PROCEDURE,obj)
 
 #define ___IS_ND_SUBPROCEDURE(obj) \
 (___PROCEDUREP(obj) && \
@@ -3948,46 +3959,46 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___CLOSUREP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_CLOSURE(obj))
 
 #define ___IS_ND_RETURN(obj)___MEM_ISA(RETURN,obj)
-#define ___RETURNP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_RETURN(obj))
+#define ___RETURNP(obj)___MEM_ISA_AND_IS_NOT_DOUBLE(RETURN,obj)
 
 #define ___IS_ND_FOREIGN(obj)___MEM_ISA(FOREIGN,obj)
-#define ___FOREIGNP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_FOREIGN(obj))
+#define ___FOREIGNP(obj)___MEM_ISA_AND_IS_NOT_DOUBLE(FOREIGN,obj)
 
 #define ___IS_ND_STRING(obj)___MEM_ISA(STRING,obj)
-#define ___STRINGP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_STRING(obj))
+#define ___STRINGP(obj)___MEM_ISA_AND_IS_NOT_DOUBLE(STRING,obj)
 
 #define ___IS_ND_S8VECTOR(obj)___MEM_ISA(S8VECTOR,obj)
-#define ___S8VECTORP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_S8VECTOR(obj))
+#define ___S8VECTORP(obj)___MEM_ISA_AND_IS_NOT_DOUBLE(S8VECTOR,obj)
 
 #define ___IS_ND_U8VECTOR(obj)___MEM_ISA(U8VECTOR,obj)
-#define ___U8VECTORP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_U8VECTOR(obj))
+#define ___U8VECTORP(obj)___MEM_ISA_AND_IS_NOT_DOUBLE(U8VECTOR,obj)
 
 #define ___IS_ND_S16VECTOR(obj)___MEM_ISA(S16VECTOR,obj)
-#define ___S16VECTORP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_S16VECTOR(obj))
+#define ___S16VECTORP(obj)___MEM_ISA_AND_IS_NOT_DOUBLE(S16VECTOR,obj)
 
 #define ___IS_ND_U16VECTOR(obj)___MEM_ISA(U16VECTOR,obj)
-#define ___U16VECTORP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_U16VECTOR(obj))
+#define ___U16VECTORP(obj)___MEM_ISA_AND_IS_NOT_DOUBLE(U16VECTOR,obj)
 
 #define ___IS_ND_S32VECTOR(obj)___MEM_ISA(S32VECTOR,obj)
-#define ___S32VECTORP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_S32VECTOR(obj))
+#define ___S32VECTORP(obj)___MEM_ISA_AND_IS_NOT_DOUBLE(S32VECTOR,obj)
 
 #define ___IS_ND_U32VECTOR(obj)___MEM_ISA(U32VECTOR,obj)
-#define ___U32VECTORP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_U32VECTOR(obj))
+#define ___U32VECTORP(obj)___MEM_ISA_AND_IS_NOT_DOUBLE(U32VECTOR,obj)
 
 #define ___IS_ND_S64VECTOR(obj)___MEM_ISA(S64VECTOR,obj)
-#define ___S64VECTORP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_S64VECTOR(obj))
+#define ___S64VECTORP(obj)___MEM_ISA_AND_IS_NOT_DOUBLE(S64VECTOR,obj)
 
 #define ___IS_ND_U64VECTOR(obj)___MEM_ISA(U64VECTOR,obj)
-#define ___U64VECTORP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_U64VECTOR(obj))
+#define ___U64VECTORP(obj)___MEM_ISA_AND_IS_NOT_DOUBLE(U64VECTOR,obj)
 
 #define ___IS_ND_F32VECTOR(obj)___MEM_ISA(F32VECTOR,obj)
-#define ___F32VECTORP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_F32VECTOR(obj))
+#define ___F32VECTORP(obj)___MEM_ISA_AND_IS_NOT_DOUBLE(F32VECTOR,obj)
 
 #define ___IS_ND_F64VECTOR(obj)___MEM_ISA(F64VECTOR,obj)
-#define ___F64VECTORP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_F64VECTOR(obj))
+#define ___F64VECTORP(obj)___MEM_ISA_AND_IS_NOT_DOUBLE(F64VECTOR,obj)
 
 #define ___IS_ND_BIGNUM(obj)___MEM_ISA(BIGNUM,obj)
-#define ___BIGNUMP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_BIGNUM(obj))
+#define ___BIGNUMP(obj)___MEM_ISA_AND_IS_NOT_DOUBLE(BIGNUM,obj)
 
 #define ___IS_ND_CHAR(obj)(___TESTTYPE(___temp=(obj),___tSPECIAL)&&___temp>=0)
 #define ___CHARP(obj)___IS_NOT_DOUBLE_AND(obj,___IS_ND_CHAR(obj))
