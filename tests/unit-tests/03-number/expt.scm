@@ -24,6 +24,18 @@
 (check-eqv? (expt -1 (expt 2 10000)) 1)
 (check-eqv? (expt -1 (+ 1 (expt 2 10000))) -1)
 
+;;; Checks from Matthew Flatt from the discussion here:
+;;; https://github.com/racket/racket/issues/5228#issuecomment-3006098501
+
+(check-eqv? (expt 0.0 -11) +inf.0)
+(check-eqv? (expt 0.0 -1000000000000000000000000000000001) +inf.0)
+(check-eqv? (expt 1e-320 -1000000000000000000000000000000001) +inf.0)
+
+(check-eqv? (expt -0.0 -11) -inf.0)
+(check-eqv? (expt -0.0 -1000000000000000000000000000000001) -inf.0)
+(check-eqv? (expt -1e-320 -1000000000000000000000000000000001) -inf.0)
+
+
 ;; The following check was added as a result of issue #303 (faulty
 ;; C library ldexp and pow functions on OpenBSD/mips64el up to 6.2).
 ;; See: http://openbsd-archive.7691.n7.nabble.com/pow-returns-a-negative-result-on-loongson-td327877.html

@@ -3763,7 +3763,10 @@ for a discussion of branch cuts.
       (flexpt x (inexact y)))
      ;; singular cases
      ((flnan? x)         x)
-     ((flzero? x)        (if (odd? y) x 0.))
+     ((flzero? x)
+      (if (positive? y)
+          (if (odd? y) x 0.)
+          (if (odd? y) (fl/ x) +inf.0)))
      ((fl= (flabs x) 1.) (if (odd? y) x 1.))
      ;; extremely large exponents
      ((or (<= y (- (expt 2 63)))
