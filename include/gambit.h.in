@@ -2495,7 +2495,7 @@ ___STORE_U32(s,i,val))
 
 #ifdef ___NAN_BOXING
 
-#define ___NAN_BOXING_BIAS (___CAST(___U64,1)<<48)
+#define ___NAN_BOXING_BIAS (___CAST(___UWORD,1)<<48)
 
 #define ___DOUBLE_BIAS_ADD(x) \
 ___CAST(___WORD, ___CAST(___U64,x) + ___NAN_BOXING_BIAS)
@@ -2503,7 +2503,7 @@ ___CAST(___WORD, ___CAST(___U64,x) + ___NAN_BOXING_BIAS)
 #define ___DOUBLE_BIAS_SUB(x) \
 (___CAST(___U64,x) - ___NAN_BOXING_BIAS)
 
-#define ___IS_DOUBLE(obj) (((___CAST(___UWORD,obj)+___NAN_BOXING_BIAS)>>49)!=0)
+#define ___IS_DOUBLE(obj) (((___CAST(___UWORD,obj)+___NAN_BOXING_BIAS)&~___MASK(___UWORD,49))!=0)
 #define ___IS_DOUBLE_OR(obj, x) (___IS_DOUBLE(obj) || (x))
 #define ___IS_NOT_DOUBLE_AND(obj, x) (!___IS_DOUBLE(obj) && (x))
 
