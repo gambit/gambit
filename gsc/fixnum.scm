@@ -296,6 +296,8 @@ string->canonical-symbol
 **fixnums?-sym
 **flonum?-sym
 **flonums?-sym
+**iflonum?-sym
+**iflonums?-sym
 **raise-sym
 **set!-sym
 **set-box!-sym
@@ -337,9 +339,12 @@ lambda-sym
 let-sym
 letrec-sym
 mostly-fixnum-flonum-sym
+mostly-fixnum-iflonum-sym
 mostly-fixnum-sym
 mostly-flonum-fixnum-sym
 mostly-flonum-sym
+mostly-iflonum-fixnum-sym
+mostly-iflonum-sym
 mostly-generic-sym
 multilisp-sym
 nonnull-function-sym
@@ -833,6 +838,8 @@ virtual.end!
 **fixnums?-proc-obj
 **flonum?-proc-obj
 **flonums?-proc-obj
+**iflonum?-proc-obj
+**iflonums?-proc-obj
 allocation-limit
 arith-implementation
 default-target

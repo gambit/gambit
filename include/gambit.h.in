@@ -2444,6 +2444,55 @@ ___STORE_U32(s,i,val))
  * When ___FLONUM_SELF_TAGGING_TAGS <= 1 and ___USE_2_TAG_BITS_FOR_FIXNUMS
  * is defined, the tag 100 is used for a second fixnum tag to implement the
  * same fixnum range as with ___TB == 2, and SPEC is assigned the tag 010.
+ *
+ * An alternative object representation is NaN-boxing, activated by
+ * defining ___NAN_BOXING. This approach exploits the unused range of
+ * 64 bit values encoding NaNs.
+ *
+ * A quiet NaN with negative sign has the following IEEE754 encoding:
+ *
+ * (neg quiet NaN) 4                 3                 1
+ *                 8                 2                 6                 0
+ * 11111111_11111000_00000000_00000000_00000000_00000000_00000000_00000000
+ *
+ * Current hardware does not use the range of values above this value:
+ *
+ *                 4                 3                 1
+ *                 8                 2                 6                 0
+ * 11111111_11111110_11111111_11111111_11111111_11111111_11111111_11111111
+ *
+ * Consequently, if a floating point value has encoding X then X+(1<<47) will
+ * be in the range:
+ *
+ *                 4                 3                 1
+ *                 8                 2                 6                 0
+ * 00000000_00000000_10000000_00000000_00000000_00000000_00000000_00000000
+ * ..
+ * 11111111_11111111_01111111_11111111_11111111_11111111_11111111_11111111
+ *
+ * This is convenient because it means these ranges are available to
+ * encode Scheme objects, and they correspond to 48 bit addresses with
+ * positive or negative sign:
+ *
+ * (positive)      4                 3                 1
+ *                 8                 2                 6                 0
+ * 00000000_00000000_00000000_00000000_00000000_00000000_00000000_00000000
+ * ..
+ * 00000000_00000000_01111111_11111111_11111111_11111111_11111111_11111111
+ *
+ * and
+ *
+ * (negative)      4                 3                 1
+ *                 8                 2                 6                 0
+ * 11111111_11111111_10000000_00000000_00000000_00000000_00000000_00000000
+ * ..
+ * 11111111_11111111_11111111_11111111_11111111_11111111_11111111_11111111
+ *
+ * Within these ranges the low bits are used for storing the tag. Fixnums
+ * are limited to 30 bits of precision, with the low 2 bits being 0 (this uses
+ * 2 of the 8 available 3 bit tags). The fixnum is nevertheless sign extended
+ * to 64 bits.
+ *
  */
 
 #ifdef ___USE_2_TAG_BITS
@@ -2495,7 +2544,7 @@ ___STORE_U32(s,i,val))
 
 #ifdef ___NAN_BOXING
 
-#define ___NAN_BOXING_BIAS (___CAST(___UWORD,1)<<48)
+#define ___NAN_BOXING_BIAS (___CAST(___UWORD,1)<<47)
 
 #define ___DOUBLE_BIAS_ADD(x) \
 ___CAST(___WORD, ___CAST(___U64,x) + ___NAN_BOXING_BIAS)
@@ -2503,13 +2552,14 @@ ___CAST(___WORD, ___CAST(___U64,x) + ___NAN_BOXING_BIAS)
 #define ___DOUBLE_BIAS_SUB(x) \
 (___CAST(___U64,x) - ___NAN_BOXING_BIAS)
 
-#define ___IS_DOUBLE(obj) (((___CAST(___UWORD,obj)+___NAN_BOXING_BIAS)&~___MASK(___UWORD,49))!=0)
-#define ___IS_DOUBLE_OR(obj, x) (___IS_DOUBLE(obj) || (x))
-#define ___IS_NOT_DOUBLE_AND(obj, x) (!___IS_DOUBLE(obj) && (x))
+#define ___IS_DOUBLE(obj) (((___CAST(___UWORD,obj)+___NAN_BOXING_BIAS)&~___MASK(___UWORD,48))!=0)
 
 #define ___HAS_TAG_AND_IS_NOT_DOUBLE(obj, tag, tb) \
-((((obj) + (___NAN_BOXING_BIAS - (tag))) & \
- ~(___MASK(___WORD,49)-___MASK(___WORD,tb))) == 0)
+((((obj) + (___NAN_BOXING_BIAS + (1<<tb) - (tag))) & \
+ ~(___MASK(___WORD,48)-___MASK(___WORD,tb))) == 0)
+
+#define ___IS_DOUBLE_OR(obj, x) (___IS_DOUBLE(obj) || (x))
+#define ___IS_NOT_DOUBLE_AND(obj, x) (!___IS_DOUBLE(obj) && (x))
 
 #define ___FIXWORD_WIDTH 32
 #define ___FIXWORD ___S32
@@ -3159,6 +3209,7 @@ ___TAG(___CAST(___WORD*,ptr) - (___REFERENCE_TO_BODY+(n)), ___tVECTOR)
 ___DOUBLE_BIAS_ADD((___CAST(___U64,___CAST(___U32,hi))<<32) + ___CAST(___U64,___CAST(___U32,lo)))
 
 #define ___F64UNBOX(x) ___F64_FROM_U64(___DOUBLE_BIAS_SUB(x))
+#define ___F64UNBOXI(x) ___F64UNBOX(x)
 
 #define ___F64BOX(x) ___DOUBLE_BIAS_ADD(___F64_TO_U64(x))
 
@@ -3231,6 +3282,11 @@ ___DOUBLE_BIAS_ADD((___CAST(___U64,___CAST(___U32,hi))<<32) + ___CAST(___U64,___
   : (___u64_x = ___ROTL64(___u64_x, ___SELF_TAGGED_FLONUM_SHIFT2)-___SELF_TAGGED_FLONUM_OFFSET, \
      ___F64_FROM_U64(___ROTL64(___u64_x, ___SELF_TAGGED_FLONUM_SHIFT1)));})
 
+#define ___F64UNBOXI(x) \
+({___U64 ___u64_x = ___CAST(___U64,x); \
+  ___u64_x = ___ROTL64(___u64_x, ___SELF_TAGGED_FLONUM_SHIFT2)-___SELF_TAGGED_FLONUM_OFFSET; \
+  ___F64_FROM_U64(___ROTL64(___u64_x, ___SELF_TAGGED_FLONUM_SHIFT1));})
+
 #define ___F64BOX(x) \
 ({___U64 ___u64_x = ___F64_TO_U64(x); \
   ___u64_x = ___ROTR64(___u64_x, ___SELF_TAGGED_FLONUM_SHIFT1)+___SELF_TAGGED_FLONUM_OFFSET; \
@@ -3246,6 +3302,7 @@ ___DOUBLE_BIAS_ADD((___CAST(___U64,___CAST(___U32,hi))<<32) + ___CAST(___U64,___
 #define ___FLO_CONST(sub,hi,lo) sub
 
 #define ___F64UNBOX(x) ___MEM_ALLOCATED_FLONUM_GET(x)
+#define ___F64UNBOXI(x) ___F64UNBOX(x)
 #define ___F64BOX(x) ___MEM_ALLOCATED_FLONUM_ALLOC(x)
 
 #endif
@@ -3827,6 +3884,7 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 
 #ifdef ___NAN_BOXING
 
+#define ___IFLONUMP(obj)___FLONUMP(obj)
 #define ___FLONUMP(obj)___IS_DOUBLE(obj)
 #define ___FLONUMP_DECL
 
@@ -3836,21 +3894,25 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 
 #if ___FLONUM_SELF_TAGGING_TAGS == 0
 
+#define ___IFLONUMP(obj)___FLONUMP(obj)
 #define ___FLONUMP(obj)___MEM_ALLOCATED_FLONUM(obj)
 #define ___FLONUMP_DECL ___WORD ___temp;
 
 #elif ___FLONUM_SELF_TAGGING_TAGS == 1
 
+#define ___IFLONUMP(obj)___SELF_TAGGED_FLONUM(obj)
 #define ___FLONUMP(obj)___TESTMASK(obj,6,6)
 #define ___FLONUMP_DECL
 
 #elif ___FLONUM_SELF_TAGGING_TAGS == 4
 
+#define ___IFLONUMP(obj)___SELF_TAGGED_FLONUM(obj)
 #define ___FLONUMP(obj)(___SELF_TAGGED_FLONUM(___temp=(obj)) || ___MEM_ALLOCATED_FLONUM(obj))
 #define ___FLONUMP_DECL ___WORD ___temp;
 
 #else
 
+#define ___IFLONUMP(obj)___SELF_TAGGED_FLONUM(obj)
 #define ___FLONUMP(obj)((obj)&2)
 #define ___FLONUMP_DECL
 
@@ -3875,6 +3937,33 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 #define ___FLONUMSP(accu)___TESTMASK(accu,6,6)
 #else
 #define ___FLONUMSP(accu)___TESTMASK(accu,2,2)
+#endif
+
+#endif
+
+#if defined(___NAN_BOXING) || ___FLONUM_SELF_TAGGING_TAGS == 0 || ___FLONUM_SELF_TAGGING_TAGS == 3
+
+#define ___IFLONUMSP1(obj)___IFLONUMP(obj)
+#define ___IFLONUMSP2(accu,obj)((accu)&&___IFLONUMP(obj))
+#define ___IFLONUMSP(accu)accu
+
+#else
+
+#define ___IFLONUMSP1(obj)(___CAST_U32(obj)+2)
+#define ___IFLONUMSP2(accu,obj)((accu)|___IFLONUMSP1(obj))
+
+#if ___FLONUM_SELF_TAGGING_TAGS == 1
+
+#define ___IFLONUMSP(accu)(((accu)&7)==0)
+
+#elif ___FLONUM_SELF_TAGGING_TAGS == 2
+
+#define ___IFLONUMSP(accu)(((accu)&3)==0)
+
+#else
+
+#define ___IFLONUMSP(accu)(((accu)&2)==0)
+
 #endif
 
 #endif

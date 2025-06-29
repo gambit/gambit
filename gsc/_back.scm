@@ -464,6 +464,12 @@
   (set! **flonums?-proc-obj
         (target.prim-info **flonums?-sym))
 
+  (set! **iflonum?-proc-obj
+        (target.prim-info **iflonum?-sym))
+
+  (set! **iflonums?-proc-obj
+        (target.prim-info **iflonums?-sym))
+
   #f)
 
 (define (target-unselect!)
@@ -482,6 +488,8 @@
   (set! **fixnums?-proc-obj           #f)
   (set! **flonum?-proc-obj            #f)
   (set! **flonums?-proc-obj           #f)
+  (set! **iflonum?-proc-obj           #f)
+  (set! **iflonums?-proc-obj          #f)
 
   ((target-end! target))
 
@@ -516,6 +524,8 @@
 (define **fixnums?-proc-obj           #f)  ;; ##fixnums?
 (define **flonum?-proc-obj            #f)  ;; ##flonum?
 (define **flonums?-proc-obj           #f)  ;; ##flonums?
+(define **iflonum?-proc-obj           #f)  ;; ##iflonum?
+(define **iflonums?-proc-obj          #f)  ;; ##iflonums?
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -541,11 +551,20 @@
 ;; (mostly-flonum)                   flonum arithmetic is frequent
 ;; (mostly-flonum <var1> ...)        apply only to primitives specified
 ;;
+;; (mostly-iflonum)                  immediate flonum arithmetic is frequent
+;; (mostly-iflonum <var1> ...)       apply only to primitives specified
+;;
 ;; (mostly-fixnum-flonum)            fixnum and flonum arithmetic is frequent
 ;; (mostly-fixnum-flonum <var1> ...) apply only to primitives specified
 ;;
+;; (mostly-fixnum-iflonum)            fixnum and immediate flonum arithmetic is frequent
+;; (mostly-fixnum-iflonum <var1> ...) apply only to primitives specified
+;;
 ;; (mostly-flonum-fixnum)            flonum and fixnum arithmetic is frequent
 ;; (mostly-flonum-fixnum <var1> ...) apply only to primitives specified
+;;
+;; (mostly-iflonum-fixnum)            immediate flonum and fixnum arithmetic is frequent
+;; (mostly-iflonum-fixnum <var1> ...) apply only to primitives specified
 ;;
 ;; Optimizing small object allocation declaration:
 ;;
@@ -560,14 +579,17 @@
 (define (arith-implementation name env)
   (declaration-value 'arith name generic-sym env))
 
-(define-namable-decl mostly-generic-sym       'mostly-arith)
-(define-namable-decl mostly-fixnum-sym        'mostly-arith)
-(define-namable-decl mostly-flonum-sym        'mostly-arith)
-(define-namable-decl mostly-fixnum-flonum-sym 'mostly-arith)
-(define-namable-decl mostly-flonum-fixnum-sym 'mostly-arith)
+(define-namable-decl mostly-generic-sym        'mostly-arith)
+(define-namable-decl mostly-fixnum-sym         'mostly-arith)
+(define-namable-decl mostly-flonum-sym         'mostly-arith)
+(define-namable-decl mostly-iflonum-sym        'mostly-arith)
+(define-namable-decl mostly-fixnum-flonum-sym  'mostly-arith)
+(define-namable-decl mostly-fixnum-iflonum-sym 'mostly-arith)
+(define-namable-decl mostly-flonum-fixnum-sym  'mostly-arith)
+(define-namable-decl mostly-iflonum-fixnum-sym 'mostly-arith)
 
 (define (mostly-arith-implementation name env)
-  (declaration-value 'mostly-arith name mostly-fixnum-flonum-sym env))
+  (declaration-value 'mostly-arith name mostly-fixnum-iflonum-sym env))
 
 (define-parameterized-decl allocation-limit-sym #t)
 

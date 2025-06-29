@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-4.scm"
 
-;;; Copyright (c) 2011-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2025 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -105,10 +105,17 @@
 ;;TODO: ("##u64vector?"               (1)   #f ()    0    boolean extended)
 ;;TODO: ("##f32vector?"               (1)   #f ()    0    boolean extended)
 
-(univ-define-prim-bool "##flonum?" #t
+(univ-define-prim-bool '("##flonum?" "##iflonum?") #t
   (make-translated-operand-generator
    (lambda (ctx return arg1)
      (return (^flonum? arg1)))))
+
+(univ-define-prim-bool '("##flonums?" "##iflonums?") #t
+  (univ-fold-left
+   (lambda (ctx)           #t)
+   (lambda (ctx arg1)      arg1)
+   (lambda (ctx arg1 arg2) (^and arg1 arg2))
+   (lambda (ctx arg)       (^flonum? arg))))
 
 (univ-define-prim "##cpxnum-make" #t
   (make-translated-operand-generator
@@ -160,16 +167,17 @@
 ;;TODO: ("##exact?"                   (1)   #f ()    0    boolean extended)
 ;;TODO: ("##inexact?"                 (1)   #f ()    0    boolean extended)
 
-(univ-define-prim "##flsquare" #f
-  (make-translated-operand-generator
-   (lambda (ctx return arg)
-     (return (^flonum-box (^parens (^* (^flonum-unbox arg)
-                                       (^flonum-unbox arg))))))))
-
 (univ-define-prim-bool "##fixnum?" #t
   (make-translated-operand-generator
-   (lambda (ctx return arg1)
-     (return (^fixnum? arg1)))))
+   (lambda (ctx return arg)
+     (return (^fixnum? arg)))))
+
+(univ-define-prim-bool "##fixnums?" #t
+  (univ-fold-left
+   (lambda (ctx)           #t)
+   (lambda (ctx arg1)      arg1)
+   (lambda (ctx arg1 arg2) (^and arg1 arg2))
+   (lambda (ctx arg)       (^fixnum? arg))))
 
 (univ-define-prim "##fxsquare" #f
   (make-translated-operand-generator
@@ -931,7 +939,7 @@
    (lambda (ctx return arg)
      (return (^fixnum-box (^chr-toint (^char-unbox arg)))))))
 
-(univ-define-prim "##flonum->fixnum" #f
+(univ-define-prim '("##flonum->fixnum" "##iflonum->fixnum") #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^fixnum-box (^float-toint (^flonum-unbox arg)))))))
@@ -947,7 +955,7 @@
      (return #t))))
 
 ;;TODO: make variadic, complete, clean up and test
-(univ-define-prim "##flmax" #t
+(univ-define-prim '("##flmax" "##iflmax") #t
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (return (^if-expr 'scmobj
@@ -956,7 +964,7 @@
                        arg2)))))
 
 ;;TODO: make variadic, complete, clean up and test
-(univ-define-prim "##flmin" #t
+(univ-define-prim '("##flmin" "##iflmin") #t
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (return (^if-expr 'scmobj
@@ -964,7 +972,7 @@
                        arg1
                        arg2)))))
 
-(univ-define-prim "##fl+" #f
+(univ-define-prim '("##fl+" "##ifl+") #f
   (univ-fold-left
    (lambda (ctx)           (^float targ-inexact-+0))
    (lambda (ctx arg1)      arg1)
@@ -972,7 +980,7 @@
    univ-emit-flonum-unbox
    univ-emit-flonum-box))
 
-(univ-define-prim "##fl*" #f
+(univ-define-prim '("##fl*" "##ifl*") #f
   (univ-fold-left
    (lambda (ctx)           (^float targ-inexact-+1))
    (lambda (ctx arg1)      arg1)
@@ -980,7 +988,7 @@
    univ-emit-flonum-unbox
    univ-emit-flonum-box))
 
-(univ-define-prim "##fl-" #f
+(univ-define-prim '("##fl-" "##ifl-") #f
   (univ-fold-left
    #f ;; 0 arguments impossible
    (lambda (ctx arg1)
@@ -994,7 +1002,7 @@
    univ-emit-flonum-unbox
    univ-emit-flonum-box))
 
-(univ-define-prim "##fl/" #f
+(univ-define-prim '("##fl/" "##ifl/") #f
   (univ-fold-left
    #f ;; 0 arguments impossible
    (lambda (ctx arg1)      (univ-ieee/ ctx (^float targ-inexact-+1) arg1))
@@ -1033,37 +1041,43 @@
     (else
      (^/ arg1 arg2))))
 
-(univ-define-prim "##flabs" #f
+(univ-define-prim '("##flsquare" "##iflsquare") #f
+  (make-translated-operand-generator
+   (lambda (ctx return arg)
+     (return (^flonum-box (^parens (^* (^flonum-unbox arg)
+                                       (^flonum-unbox arg))))))))
+
+(univ-define-prim '("##flabs" "##iflabs") #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^flonum-box (^float-abs (^flonum-unbox arg)))))))
 
-(univ-define-prim "##flfloor" #f
+(univ-define-prim '("##flfloor" "##iflfloor") #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^flonum-box (^float-floor (^flonum-unbox arg)))))))
 
-(univ-define-prim "##flceiling" #f
+(univ-define-prim '("##flceiling" "##iflceiling") #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^flonum-box (^float-ceiling (^flonum-unbox arg)))))))
 
-(univ-define-prim "##fltruncate" #f
+(univ-define-prim '("##fltruncate" "##ifltruncate") #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^flonum-box (^float-truncate (^flonum-unbox arg)))))))
 
-(univ-define-prim "##flround" #f
+(univ-define-prim '("##flround" "##iflround") #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^flonum-box (^float-round-half-to-even (^flonum-unbox arg)))))))
 
-(univ-define-prim "##flexp" #f
+(univ-define-prim '("##flexp" "##iflexp") #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^flonum-box (^float-exp (^flonum-unbox arg)))))))
 
-(univ-define-prim "##fllog" #f
+(univ-define-prim '("##fllog" "##ifllog") #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 #!optional (arg2 #f))
      (return
@@ -1074,32 +1088,32 @@
                        (^float-log (^flonum-unbox arg2)))
            (^float-log (^flonum-unbox arg1))))))))
 
-(univ-define-prim "##flsin" #f
+(univ-define-prim '("##flsin" "##iflsin") #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^flonum-box (^float-sin (^flonum-unbox arg)))))))
 
-(univ-define-prim "##flcos" #f
+(univ-define-prim '("##flcos" "##iflcos") #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^flonum-box (^float-cos (^flonum-unbox arg)))))))
 
-(univ-define-prim "##fltan" #f
+(univ-define-prim '("##fltan" "##ifltan") #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^flonum-box (^float-tan (^flonum-unbox arg)))))))
 
-(univ-define-prim "##flasin" #f
+(univ-define-prim '("##flasin" "##iflasin") #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^flonum-box (^float-asin (^flonum-unbox arg)))))))
 
-(univ-define-prim "##flacos" #f
+(univ-define-prim '("##flacos" "##iflacos") #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^flonum-box (^float-acos (^flonum-unbox arg)))))))
 
-(univ-define-prim "##flatan" #f
+(univ-define-prim '("##flatan" "##iflatan") #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 #!optional (arg2 #f))
      (return
@@ -1108,53 +1122,53 @@
            (^float-atan2 (^flonum-unbox arg1) (^flonum-unbox arg2))
            (^float-atan (^flonum-unbox arg1))))))))
 
-(univ-define-prim "##flsinh" #f
+(univ-define-prim '("##flsinh" "##iflsinh") #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^flonum-box (^float-sinh (^flonum-unbox arg)))))))
 
-(univ-define-prim "##flcosh" #f
+(univ-define-prim '("##flcosh" "##iflcosh") #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^flonum-box (^float-cosh (^flonum-unbox arg)))))))
 
-(univ-define-prim "##fltanh" #f
+(univ-define-prim '("##fltanh" "##ifltanh") #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^flonum-box (^float-tanh (^flonum-unbox arg)))))))
 
-(univ-define-prim "##flasinh" #f
+(univ-define-prim '("##flasinh" "##iflasinh") #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^flonum-box (^float-asinh (^flonum-unbox arg)))))))
 
-(univ-define-prim "##flacosh" #f
+(univ-define-prim '("##flacosh" "##iflacosh") #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^flonum-box (^float-acosh (^flonum-unbox arg)))))))
 
-(univ-define-prim "##flatanh" #f
+(univ-define-prim '("##flatanh" "##iflatanh") #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^flonum-box (^float-atanh (^flonum-unbox arg)))))))
 
-(univ-define-prim "##flhypot" #f
+(univ-define-prim '("##flhypot" "##iflhypot") #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (return (^flonum-box (^float-hypot (^flonum-unbox arg1)
                                         (^flonum-unbox arg2)))))))
 
-(univ-define-prim "##flexpt" #f
+(univ-define-prim '("##flexpt" "##iflexpt") #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (return (^flonum-box (^float-expt (^flonum-unbox arg1) (^flonum-unbox arg2)))))))
 
-(univ-define-prim "##flsqrt" #f
+(univ-define-prim '("##flsqrt" "##iflsqrt") #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^flonum-box (^float-sqrt (^flonum-unbox arg)))))))
 
-(univ-define-prim "##flcopysign" #f
+(univ-define-prim '("##flcopysign" "##iflcopysign") #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (case (target-name (ctx-target ctx))
@@ -1201,48 +1215,48 @@
                    arg1
                    (^flonum-box (^- (^flonum-unbox arg1))))))))))
 
-(univ-define-prim "##flscalbn" #f
+(univ-define-prim '("##flscalbn" "##iflscalbn") #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (return (^flonum-box (^float-scalbn (^flonum-unbox arg1)
                                          (^fixnum-unbox arg2)))))))
 
-(univ-define-prim "##flilogb" #f
+(univ-define-prim '("##flilogb" "##iflilogb") #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^fixnum-box (^float-ilogb (^flonum-unbox arg)))))))
 
-(univ-define-prim "##flexpm1" #f
+(univ-define-prim '("##flexpm1" "##iflexpm1") #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^flonum-box (^float-expm1 (^flonum-unbox arg)))))))
 
-(univ-define-prim "##fllog1p" #f
+(univ-define-prim '("##fllog1p" "##ifllog1p") #f
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^flonum-box (^float-log1p (^flonum-unbox arg)))))))
 
-(univ-define-prim-bool "##flinteger?" #t
+(univ-define-prim-bool '("##flinteger?" "##iflinteger?") #t
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^float-integer? (^flonum-unbox arg))))))
 
-(univ-define-prim-bool "##flzero?" #t
+(univ-define-prim-bool '("##flzero?" "##iflzero?") #t
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^= (^flonum-unbox arg) (^float targ-inexact-+0))))))
 
-(univ-define-prim-bool "##flpositive?" #t
+(univ-define-prim-bool '("##flpositive?" "##iflpositive?") #t
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^> (^flonum-unbox arg) (^float targ-inexact-+0))))))
 
-(univ-define-prim-bool "##flnegative?" #t
+(univ-define-prim-bool '("##flnegative?" "##iflnegative?") #t
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^< (^flonum-unbox arg) (^float targ-inexact-+0))))))
 
-(univ-define-prim-bool "##flodd?" #t
+(univ-define-prim-bool '("##flodd?" "##iflodd?") #t
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^&& (^float-integer? (^flonum-unbox arg))
@@ -1252,7 +1266,7 @@
                             (^parens (^* (^float targ-inexact-+1/2)
                                          (^flonum-unbox arg)))))))))))
 
-(univ-define-prim-bool "##fleven?" #t
+(univ-define-prim-bool '("##fleven?" "##ifleven?") #t
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^&& (^float-integer? (^flonum-unbox arg))
@@ -1262,57 +1276,57 @@
                            (^parens (^* (^float targ-inexact-+1/2)
                                         (^flonum-unbox arg)))))))))))
 
-(univ-define-prim-bool "##flfinite?" #t
+(univ-define-prim-bool '("##flfinite?" "##iflfinite?") #t
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^float-finite? (^flonum-unbox arg))))))
 
-(univ-define-prim-bool "##flinfinite?" #t
+(univ-define-prim-bool '("##flinfinite?" "##iflinfinite?") #t
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^float-infinite? (^flonum-unbox arg))))))
 
-(univ-define-prim-bool "##flnan?" #t
+(univ-define-prim-bool '("##flnan?" "##iflnan?") #t
   (make-translated-operand-generator
    (lambda (ctx return arg)
      (return (^float-nan? (^flonum-unbox arg))))))
 
-(univ-define-prim-bool "##fl=" #f
+(univ-define-prim-bool '("##fl=" "##ifl=") #f
   (univ-fold-left-compare
    (lambda (ctx)           #t)
    (lambda (ctx arg1)      #t)
    (lambda (ctx arg1 arg2) (^= arg1 arg2))
    univ-emit-flonum-unbox))
 
-(univ-define-prim-bool "##fl<" #f
+(univ-define-prim-bool '("##fl<" "##ifl<") #f
   (univ-fold-left-compare
    (lambda (ctx)           #t)
    (lambda (ctx arg1)      #t)
    (lambda (ctx arg1 arg2) (^< arg1 arg2))
    univ-emit-flonum-unbox))
 
-(univ-define-prim-bool "##fl>" #f
+(univ-define-prim-bool '("##fl>" "##ifl>") #f
   (univ-fold-left-compare
    (lambda (ctx)           #t)
    (lambda (ctx arg1)      #t)
    (lambda (ctx arg1 arg2) (^> arg1 arg2))
    univ-emit-flonum-unbox))
 
-(univ-define-prim-bool "##fl<=" #f
+(univ-define-prim-bool '("##fl<=" "##ifl<=") #f
   (univ-fold-left-compare
    (lambda (ctx)           #t)
    (lambda (ctx arg1)      #t)
    (lambda (ctx arg1 arg2) (^<= arg1 arg2))
    univ-emit-flonum-unbox))
 
-(univ-define-prim-bool "##fl>=" #f
+(univ-define-prim-bool '("##fl>=" "##ifl>=") #f
   (univ-fold-left-compare
    (lambda (ctx)           #t)
    (lambda (ctx arg1)      #t)
    (lambda (ctx arg1 arg2) (^>= arg1 arg2))
    univ-emit-flonum-unbox))
 
-(univ-define-prim-bool "##fleqv?" #f
+(univ-define-prim-bool '("##fleqv?" "##ifleqv?") #f
   (make-translated-operand-generator
    (lambda (ctx return arg1 arg2)
      (return (^float-eqv? (^flonum-unbox arg1) (^flonum-unbox arg2))))))

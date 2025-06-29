@@ -73,6 +73,30 @@ c-declare-end
                     (loop (##cdr others)))
                #t)))))
 
+(define-prim (##iflonum? obj)
+  (##flonum? obj)) ;; TODO: remove after bootstrap
+
+(define-prim (##iflonums?
+              #!optional
+              (obj1 (macro-absent-obj))
+              (obj2 (macro-absent-obj))
+              #!rest
+              others)
+  (cond ((##eq? obj1 (macro-absent-obj))
+         #t)
+        ((##not (##iflonum? obj1))
+         #f)
+        ((##eq? obj2 (macro-absent-obj))
+         #t)
+        ((##not (##iflonum? obj2))
+         #f)
+        (else
+         (let loop ((others others))
+           (if (##pair? others)
+               (and (##iflonum? (##car others))
+                    (loop (##cdr others)))
+               #t)))))
+
 ;; (##vector? obj) is defined in "_std.scm"
 
 (macro-if-bignum (define-prim (##bignum? obj)))

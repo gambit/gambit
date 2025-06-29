@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-3.scm"
 
-;;; Copyright (c) 2011-2024 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2025 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -4986,51 +4986,57 @@ tanh
       "univ-fxremainder, unknown target"))))
 
 (define (univ-define-prim
-         name
+         name-or-names
          proc-safe?
          apply-gen
          #!optional
          (ifjump-gen #f)
          (jump-gen #f))
-  (let ((prim (univ-prim-info* (string->canonical-symbol name))))
 
-    (if apply-gen
-        (begin
+  (define (def-prim name)
+    (let ((prim (univ-prim-info* (string->canonical-symbol name))))
 
-          (proc-obj-inlinable?-set!
-           prim
-           (lambda (env)
-             (or proc-safe?
-                 (not (safe? env)))))
+      (if apply-gen
+          (begin
 
-          (proc-obj-inline-set! prim apply-gen)))
+            (proc-obj-inlinable?-set!
+             prim
+             (lambda (env)
+               (or proc-safe?
+                   (not (safe? env)))))
 
-    (if ifjump-gen
-        (begin
+            (proc-obj-inline-set! prim apply-gen)))
 
-          (proc-obj-testable?-set!
-           prim
-           (lambda (env)
-             (or proc-safe?
-                 (not (safe? env)))))
+      (if ifjump-gen
+          (begin
 
-          (proc-obj-test-set! prim ifjump-gen)))
+            (proc-obj-testable?-set!
+             prim
+             (lambda (env)
+               (or proc-safe?
+                   (not (safe? env)))))
 
-    (if jump-gen
-        (begin
+            (proc-obj-test-set! prim ifjump-gen)))
 
-          (proc-obj-jump-inlinable?-set!
-           prim
-           (lambda (env)
-             #t))
+      (if jump-gen
+          (begin
 
-          (proc-obj-jump-inline-set!
-           prim
-           jump-gen)))))
+            (proc-obj-jump-inlinable?-set!
+             prim
+             (lambda (env)
+               #t))
 
-(define (univ-define-prim-bool name proc-safe? ifjump-gen)
+            (proc-obj-jump-inline-set!
+             prim
+             jump-gen)))))
+
+  (if (pair? name-or-names)
+      (for-each def-prim name-or-names)
+      (def-prim name-or-names)))
+
+(define (univ-define-prim-bool name-or-names proc-safe? ifjump-gen)
   (univ-define-prim
-   name
+   name-or-names
    proc-safe?
    (lambda (ctx return . opnds)
      (apply ifjump-gen

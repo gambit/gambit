@@ -1121,6 +1121,9 @@
                               ((or (eq? proc **flonum?-proc-obj)
                                    (eq? proc **flonums?-proc-obj))
                                **flonum?-proc-obj)
+                              ((or (eq? proc **iflonum?-proc-obj)
+                                   (eq? proc **iflonums?-proc-obj))
+                               **iflonum?-proc-obj)
                               (else
                                #f))))
                   (and proc1
@@ -1133,16 +1136,19 @@
 
   (let ((x (and (eq? reason 'pred) (conj pre alt '(#f)))))
     (if (and x
-             (>= (length (cdr x)) 2) ;; must have at least 2 tests
+             (= (length (cdr x)) 2) ;; must have 2 tests
              (every? (lambda (arg)
                        (or (cst? arg) (ref? arg) (prc? arg)))
                      (cddr x))) ;; only first can have side-effects or be unsafe
 
         (new-call (node-source ptree) (node-env ptree)
           (new-cst (node-source ptree) (node-env ptree)
-            (if (eq? (car x) **fixnum?-proc-obj)
-                **fixnums?-proc-obj
-                **flonums?-proc-obj))
+            (cond ((eq? (car x) **flonum?-proc-obj)
+                   **flonums?-proc-obj)
+                  ((eq? (car x) **iflonum?-proc-obj)
+                   **iflonums?-proc-obj)
+                  (else
+                   **fixnums?-proc-obj)))
           (cdr x))
 
         (new-conj (node-source ptree) (node-env ptree)
