@@ -3730,6 +3730,7 @@
 (targ-op "##string-ref"       (targ-apply-simp-u #f #f #f "STRINGREF"))
 (targ-op "##string-set!"      (targ-apply-simp-u #f #t #f "STRINGSET"))
 (targ-op "##string-shrink!"   (targ-apply-simp-u #f #t #f "STRINGSHRINK"))
+(targ-op "##string-in-bounds?"(targ-ifjump-simp-u #f "STRINGINBOUNDSP"))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -3745,6 +3746,7 @@
 (targ-op "##vector-set!"      (targ-apply-simp-u #f #t 1 "VECTORSET"))
 (targ-op "##vector-shrink!"   (targ-apply-simp-u #f #t #f "VECTORSHRINK"))
 (targ-op "##vector-cas!"      (targ-apply-simp-u #f 'expr 1 "VECTORCAS"))
+(targ-op "##vector-in-bounds?"(targ-ifjump-simp-u #f "VECTORINBOUNDSP"))
 
 (targ-op
  "##vector-inc!"
@@ -3773,6 +3775,7 @@
 (targ-op "##s8vector-ref"     (targ-apply-simp-u #f #f #f "S8VECTORREF"))
 (targ-op "##s8vector-set!"    (targ-apply-simp-u #f #t #f "S8VECTORSET"))
 (targ-op "##s8vector-shrink!" (targ-apply-simp-u #f #t #f "S8VECTORSHRINK"))
+(targ-op "##s8vector-in-bounds?"(targ-ifjump-simp-u #f "S8VECTORINBOUNDSP"))
 
 (targ-op "##u8vector"         (targ-apply-vector-u 'u8vector))
 (targ-op "##make-u8vector-small"    (targ-apply-small-alloc-u 'u8vector "MAKEU8VECTORSMALL"))
@@ -3785,6 +3788,7 @@
 (targ-op "##u8vector-ref"     (targ-apply-simp-u #f #f #f "U8VECTORREF"))
 (targ-op "##u8vector-set!"    (targ-apply-simp-u #f #t #f "U8VECTORSET"))
 (targ-op "##u8vector-shrink!" (targ-apply-simp-u #f #t #f "U8VECTORSHRINK"))
+(targ-op "##u8vector-in-bounds?"(targ-ifjump-simp-u #f "U8VECTORINBOUNDSP"))
 
 (targ-op "##s16vector"        (targ-apply-vector-u 's16vector))
 (targ-op "##make-s16vector-small"   (targ-apply-small-alloc-u 's16vector "MAKES16VECTORSMALL"))
@@ -3797,6 +3801,7 @@
 (targ-op "##s16vector-ref"    (targ-apply-simp-u #f #f #f "S16VECTORREF"))
 (targ-op "##s16vector-set!"   (targ-apply-simp-u #f #t #f "S16VECTORSET"))
 (targ-op "##s16vector-shrink!"(targ-apply-simp-u #f #t #f "S16VECTORSHRINK"))
+(targ-op "##s16vector-in-bounds?"(targ-ifjump-simp-u #f "S16VECTORINBOUNDSP"))
 
 (targ-op "##u16vector"        (targ-apply-vector-u 'u16vector))
 (targ-op "##make-u16vector-small"   (targ-apply-small-alloc-u 'u16vector "MAKEU16VECTORSMALL"))
@@ -3809,6 +3814,7 @@
 (targ-op "##u16vector-ref"    (targ-apply-simp-u #f #f #f "U16VECTORREF"))
 (targ-op "##u16vector-set!"   (targ-apply-simp-u #f #t #f "U16VECTORSET"))
 (targ-op "##u16vector-shrink!"(targ-apply-simp-u #f #t #f "U16VECTORSHRINK"))
+(targ-op "##u16vector-in-bounds?"(targ-ifjump-simp-u #f "U16VECTORINBOUNDSP"))
 
 (targ-op "##s32vector"        (targ-apply-vector-u 's32vector))
 (targ-op "##make-s32vector-small"   (targ-apply-small-alloc-u 's32vector "MAKES32VECTORSMALL"))
@@ -3823,6 +3829,7 @@
 (targ-op "##s32vector-set!"   (targ-apply-simp-u #f #t #f "S32VECTORSET"))
 (targ-op "##s32vector-set!-fixnum"  (targ-apply-simp-u #f #t #f "S32VECTORSETFIX"))
 (targ-op "##s32vector-shrink!"(targ-apply-simp-u #f #t #f "S32VECTORSHRINK"))
+(targ-op "##s32vector-in-bounds?"(targ-ifjump-simp-u #f "S32VECTORINBOUNDSP"))
 
 (targ-op "##u32vector"        (targ-apply-vector-u 'u32vector))
 (targ-op "##make-u32vector-small"   (targ-apply-small-alloc-u 'u32vector "MAKEU32VECTORSMALL"))
@@ -3837,6 +3844,7 @@
 (targ-op "##u32vector-set!"         (targ-apply-simp-u #f #t #f "U32VECTORSET"))
 (targ-op "##u32vector-set!-fixnum"  (targ-apply-simp-u #f #t #f "U32VECTORSETFIX"))
 (targ-op "##u32vector-shrink!"(targ-apply-simp-u #f #t #f "U32VECTORSHRINK"))
+(targ-op "##u32vector-in-bounds?"(targ-ifjump-simp-u #f "U32VECTORINBOUNDSP"))
 
 (targ-op "##s64vector"        (targ-apply-vector-u 's64vector))
 (targ-op "##make-s64vector-small"   (targ-apply-small-alloc-u 's64vector "MAKES64VECTORSMALL"))
@@ -3851,6 +3859,7 @@
 (targ-op "##s64vector-set!"         (targ-apply-simp-u #f #t #f "S64VECTORSET"))
 (targ-op "##s64vector-set!-fixnum"  (targ-apply-simp-u #f #t #f "S64VECTORSETFIX"))
 (targ-op "##s64vector-shrink!"(targ-apply-simp-u #f #t #f "S64VECTORSHRINK"))
+(targ-op "##s64vector-in-bounds?"(targ-ifjump-simp-u #f "S64VECTORINBOUNDSP"))
 
 (targ-op "##u64vector"        (targ-apply-vector-u 'u64vector))
 (targ-op "##make-u64vector-small"   (targ-apply-small-alloc-u 'u64vector "MAKEU64VECTORSMALL"))
@@ -3865,6 +3874,7 @@
 (targ-op "##u64vector-set!"         (targ-apply-simp-u #f #t #f "U64VECTORSET"))
 (targ-op "##u64vector-set!-fixnum"  (targ-apply-simp-u #f #t #f "U64VECTORSETFIX"))
 (targ-op "##u64vector-shrink!"(targ-apply-simp-u #f #t #f "U64VECTORSHRINK"))
+(targ-op "##u64vector-in-bounds?"(targ-ifjump-simp-u #f "U64VECTORINBOUNDSP"))
 
 (targ-op "##f32vector"        (targ-apply-vector-u 'f32vector))
 (targ-op "##make-f32vector-small"   (targ-apply-small-alloc-u 'f32vector "MAKEF32VECTORSMALL"))
@@ -3877,6 +3887,7 @@
 (targ-op "##f32vector-ref"    (targ-apply-simpflo-u #f "F32VECTORREF"))
 (targ-op "##f32vector-set!"   (targ-apply-simpflo3-u "F32VECTORSET"))
 (targ-op "##f32vector-shrink!"(targ-apply-simp-u #f #t #f "F32VECTORSHRINK"))
+(targ-op "##f32vector-in-bounds?"(targ-ifjump-simp-u #f "F32VECTORINBOUNDSP"))
 
 (targ-op "##f64vector"        (targ-apply-vector-u 'f64vector))
 (targ-op "##make-f64vector-small"   (targ-apply-small-alloc-u 'f64vector "MAKEF64VECTORSMALL"))
@@ -3889,6 +3900,7 @@
 (targ-op "##f64vector-ref"    (targ-apply-simpflo-u #f "F64VECTORREF"))
 (targ-op "##f64vector-set!"   (targ-apply-simpflo3-u "F64VECTORSET"))
 (targ-op "##f64vector-shrink!"(targ-apply-simp-u #f #t #f "F64VECTORSHRINK"))
+(targ-op "##f64vector-in-bounds?"(targ-ifjump-simp-u #f "F64VECTORINBOUNDSP"))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

@@ -863,6 +863,7 @@
 ("##string-set-small"                 (3)   #f ()    0    string    extended)
 ("string-shrink!"                     (2)   #t 0     0    #f        gambit)
 ("##string-shrink!"                   (2)   #t ()    0    string    extended)
+("##string-in-bounds?"                (2)   #f ()    0    boolean   extended)
 
 ;; vector
 
@@ -916,6 +917,7 @@
 ("##vector-set-small"                 (3)   #f ()    0    vector    extended)
 ("vector-shrink!"                     (2)   #t 0     0    #f        gambit)
 ("##vector-shrink!"                   (2)   #t ()    0    vector    extended)
+("##vector-in-bounds?"                (2)   #f ()    0    boolean   extended)
 
 ;; homogeneous vector
 
@@ -957,6 +959,7 @@
 ("##s8vector-set!"                    (3)   #t ()    0    s8vector  extended)
 ("s8vector-shrink!"                   (2)   #t 0     0    #f        gambit)
 ("##s8vector-shrink!"                 (2)   #t ()    0    s8vector  extended)
+("##s8vector-in-bounds?"              (2)   #f ()    0    boolean   extended)
 ("s8vector?"                          (1)   #f 0     0    boolean   gambit)
 ("##s8vector?"                        (1)   #f ()    0    boolean   extended)
 ("##s8vector-insert"                  (3)   #f ()    0    s8vector  extended)
@@ -1002,6 +1005,7 @@
 ("##u8vector-set!"                    (3)   #t ()    0    u8vector  extended)
 ("u8vector-shrink!"                   (2)   #t 0     0    #f        gambit)
 ("##u8vector-shrink!"                 (2)   #t ()    0    u8vector  extended)
+("##u8vector-in-bounds?"              (2)   #f ()    0    boolean   extended)
 ("u8vector?"                          (1)   #f 0     0    boolean   gambit)
 ("##u8vector?"                        (1)   #f ()    0    boolean   extended)
 ("##u8vector-insert"                  (3)   #f ()    0    u8vector  extended)
@@ -1047,6 +1051,7 @@
 ("##s16vector-set!"                   (3)   #t ()    0    s16vector extended)
 ("s16vector-shrink!"                  (2)   #t 0     0    #f        gambit)
 ("##s16vector-shrink!"                (2)   #t ()    0    s16vector extended)
+("##s16vector-in-bounds?"             (2)   #f ()    0    boolean   extended)
 ("s16vector?"                         (1)   #f 0     0    boolean   gambit)
 ("##s16vector?"                       (1)   #f ()    0    boolean   extended)
 ("##s16vector-insert"                 (3)   #f ()    0    s16vector extended)
@@ -1092,6 +1097,7 @@
 ("##u16vector-set!"                   (3)   #t ()    0    u16vector extended)
 ("u16vector-shrink!"                  (2)   #t 0     0    #f        gambit)
 ("##u16vector-shrink!"                (2)   #t ()    0    u16vector extended)
+("##u16vector-in-bounds?"             (2)   #f ()    0    boolean   extended)
 ("u16vector?"                         (1)   #f 0     0    boolean   gambit)
 ("##u16vector?"                       (1)   #f ()    0    boolean   extended)
 ("##u16vector-insert"                 (3)   #f ()    0    u16vector extended)
@@ -1139,6 +1145,7 @@
 ("##s32vector-set!-fixnum"            (3)   #t ()    0    s32vector extended)
 ("s32vector-shrink!"                  (2)   #t 0     0    #f        gambit)
 ("##s32vector-shrink!"                (2)   #t ()    0    s32vector extended)
+("##s32vector-in-bounds?"             (2)   #f ()    0    boolean   extended)
 ("s32vector?"                         (1)   #f 0     0    boolean   gambit)
 ("##s32vector?"                       (1)   #f ()    0    boolean   extended)
 ("##s32vector-insert"                 (3)   #f ()    0    s32vector extended)
@@ -1186,6 +1193,7 @@
 ("##u32vector-set!-fixnum"            (3)   #t ()    0    u32vector extended)
 ("u32vector-shrink!"                  (2)   #t 0     0    #f        gambit)
 ("##u32vector-shrink!"                (2)   #t ()    0    u32vector extended)
+("##u32vector-in-bounds?"             (2)   #f ()    0    boolean   extended)
 ("u32vector?"                         (1)   #f 0     0    boolean   gambit)
 ("##u32vector?"                       (1)   #f ()    0    boolean   extended)
 ("##u32vector-insert"                 (3)   #f ()    0    u32vector extended)
@@ -1233,6 +1241,7 @@
 ("##s64vector-set!-fixnum"            (3)   #t ()    0    s64vector extended)
 ("s64vector-shrink!"                  (2)   #t 0     0    #f        gambit)
 ("##s64vector-shrink!"                (2)   #t ()    0    s64vector extended)
+("##s64vector-in-bounds?"             (2)   #f ()    0    boolean   extended)
 ("s64vector?"                         (1)   #f 0     0    boolean   gambit)
 ("##s64vector?"                       (1)   #f ()    0    boolean   extended)
 ("##s64vector-insert"                 (3)   #f ()    0    s64vector extended)
@@ -1280,6 +1289,7 @@
 ("##u64vector-set!-fixnum"            (3)   #t ()    0    u64vector extended)
 ("u64vector-shrink!"                  (2)   #t 0     0    #f        gambit)
 ("##u64vector-shrink!"                (2)   #t ()    0    u64vector extended)
+("##u64vector-in-bounds?"             (2)   #f ()    0    boolean   extended)
 ("u64vector?"                         (1)   #f 0     0    boolean   gambit)
 ("##u64vector?"                       (1)   #f ()    0    boolean   extended)
 ("##u64vector-insert"                 (3)   #f ()    0    u64vector extended)
@@ -1325,6 +1335,7 @@
 ("##f32vector-set!"                   (3)   #t ()    0    f32vector extended)
 ("f32vector-shrink!"                  (2)   #t 0     0    #f        gambit)
 ("##f32vector-shrink!"                (2)   #t ()    0    f32vector extended)
+("##f32vector-in-bounds?"             (2)   #f ()    0    boolean   extended)
 ("f32vector?"                         (1)   #f 0     0    boolean   gambit)
 ("##f32vector?"                       (1)   #f ()    0    boolean   extended)
 ("##f32vector-insert"                 (3)   #f ()    0    f32vector extended)
@@ -1370,6 +1381,7 @@
 ("##f64vector-set!"                   (3)   #t ()    0    f64vector extended)
 ("f64vector-shrink!"                  (2)   #t 0     0    #f        gambit)
 ("##f64vector-shrink!"                (2)   #t ()    0    f64vector extended)
+("##f64vector-in-bounds?"             (2)   #f ()    0    boolean   extended)
 ("f64vector?"                         (1)   #f 0     0    boolean   gambit)
 ("##f64vector?"                       (1)   #f ()    0    boolean   extended)
 ("##f64vector-insert"                 (3)   #f ()    0    f64vector extended)
@@ -5404,6 +5416,7 @@
            **vect-set!-str
            **vect-cas!-str
            **vect-inc!-str
+           **vect-in-bounds?-str
            value-checker)
     (let ((make-vect-sym (string->canonical-symbol make-vect-str))
           (subvect-sym (string->canonical-symbol subvect-str))
@@ -5423,7 +5436,8 @@
           (**vect-ref-sym (string->canonical-symbol **vect-ref-str))
           (**vect-set!-sym (string->canonical-symbol **vect-set!-str))
           (**vect-cas!-sym (and **vect-cas!-str (string->canonical-symbol **vect-cas!-str)))
-          (**vect-inc!-sym (and **vect-inc!-str (string->canonical-symbol **vect-inc!-str))))
+          (**vect-inc!-sym (and **vect-inc!-str (string->canonical-symbol **vect-inc!-str)))
+          (**vect-in-bounds?-sym (and **vect-in-bounds?-str (string->canonical-symbol **vect-in-bounds?-str))))
 
       (define (gen-vect-type-check source env vect-arg)
         (gen-call-prim-vars-notsafe source env
@@ -5439,14 +5453,18 @@
           (list vect-arg)))
 
       (define (gen-index-check source env vect-arg index-arg)
-        (gen-fixnum-interval-check source env
-          index-arg
-          (new-cst source env
-            0)
-          (gen-call-prim-vars-notsafe source env
-            **vect-length-sym
-            (list vect-arg))
-          #f))
+        (if **vect-in-bounds?-sym
+            (gen-call-prim-vars-notsafe source env
+              **vect-in-bounds?-sym
+              (list vect-arg index-arg))
+            (gen-fixnum-interval-check source env
+              index-arg
+              (new-cst source env
+                0)
+              (gen-call-prim-vars-notsafe source env
+                **vect-length-sym
+                (list vect-arg))
+              #f)))
 
       (define (make-make-vect-expander type-check?)
         (lambda (ptree oper args generate-call check-run-time-binding)
@@ -5711,6 +5729,7 @@
    "##vector-set!"
    "##vector-cas!"
    "##vector-inc!"
+   "##vector-in-bounds?"
    #f)
 
   (make-vector-expanders
@@ -5741,6 +5760,7 @@
    "##string-set!"
    #f
    #f
+   "##string-in-bounds?"
    (lambda (source env var)
      (gen-call-prim-vars-notsafe source env
        **char?-sym
@@ -5774,6 +5794,7 @@
    "##s8vector-set!"
    #f
    #f
+   "##s8vector-in-bounds?"
    (make-fixnum-interval-checker -128 127))
 
   (make-vector-expanders
@@ -5804,6 +5825,7 @@
    "##u8vector-set!"
    #f
    #f
+   "##u8vector-in-bounds?"
    (make-fixnum-interval-checker 0 255))
 
   (make-vector-expanders
@@ -5834,6 +5856,7 @@
    "##s16vector-set!"
    #f
    #f
+   "##s16vector-in-bounds?"
    (make-fixnum-interval-checker -32768 32767))
 
   (make-vector-expanders
@@ -5864,6 +5887,7 @@
    "##u16vector-set!"
    #f
    #f
+   "##u16vector-in-bounds?"
    (make-fixnum-interval-checker 0 65535))
 
 #;
@@ -5895,6 +5919,7 @@
    "##s32vector-set!"
    #f
    #f
+   "##s32vector-in-bounds?"
    (make-fixnum-interval-checker -2147483648 2147483647))
 
 #;
@@ -5926,6 +5951,7 @@
    "##u32vector-set!"
    #f
    #f
+   "##u32vector-in-bounds?"
    (make-fixnum-interval-checker 0 4294967295))
 
 #;
@@ -5957,6 +5983,7 @@
    "##s64vector-set!"
    #f
    #f
+   "##s64vector-in-bounds?"
    (make-fixnum-interval-checker -9223372036854775808 9223372036854775807))
 
 #;
@@ -5988,6 +6015,7 @@
    "##u64vector-set!"
    #f
    #f
+   "##u64vector-in-bounds?"
    (make-fixnum-interval-checker 0 18446744073709551615))
 
   (make-vector-expanders
@@ -6018,6 +6046,7 @@
    "##f32vector-set!"
    #f
    #f
+   "##f32vector-in-bounds?"
    (make-flonum-checker))
 
   (make-vector-expanders
@@ -6048,6 +6077,7 @@
    "##f64vector-set!"
    #f
    #f
+   "##f64vector-in-bounds?"
    (make-flonum-checker))
 )
 
