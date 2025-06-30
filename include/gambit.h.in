@@ -3288,12 +3288,15 @@ ___DOUBLE_BIAS_ADD((___CAST(___U64,___CAST(___U32,hi))<<32) + ___CAST(___U64,___
   ___F64_FROM_U64(___ROTL64(___u64_x, ___SELF_TAGGED_FLONUM_SHIFT1));})
 
 #define ___F64BOX(x) \
-({___U64 ___u64_x = ___F64_TO_U64(x); \
-  ___u64_x = ___ROTR64(___u64_x, ___SELF_TAGGED_FLONUM_SHIFT1)+___SELF_TAGGED_FLONUM_OFFSET; \
-  ___u64_x = ___ROTR64(___u64_x, ___SELF_TAGGED_FLONUM_SHIFT2); \
+({___U64 ___u64_x = ___F64_TO_U64_FOR_SELF_TAGGING(x); \
   ___EXPECT_TRUE(___SELF_TAGGED_FLONUM(___u64_x)) \
   ? ___CAST(___WORD,___u64_x) \
   : ___MEM_ALLOCATED_FLONUM_ALLOC(x);})
+
+#define ___F64_TO_U64_FOR_SELF_TAGGING(x) \
+({___U64 ___u64_x = ___F64_TO_U64(x); \
+  ___u64_x = ___ROTR64(___u64_x, ___SELF_TAGGED_FLONUM_SHIFT1)+___SELF_TAGGED_FLONUM_OFFSET; \
+  ___ROTR64(___u64_x, ___SELF_TAGGED_FLONUM_SHIFT2);})
 
 #else
 

@@ -1434,14 +1434,28 @@ int n;)
           if (x < 0)
             *p = ___CAST(___SCMOBJ*,module->keytbl)[-1-x];
           else if (x < module->subcount)
-	    {
-	      v = ___CAST(___SCMOBJ*,module->subtbl)[x];
+            {
+              v = ___CAST(___SCMOBJ*,module->subtbl)[x];
 #ifdef ___NAN_BOXING
-	      if (___TESTSUBTYPETAG(v,___sFLONUM))
-		v = ___F64BOX(*___CAST(___F64*,___BODY_AS(v,___tSUBTYPED)));
+              if (___SUBTYPEDFLONUMP(v))
+                {
+                  ___F64 uv = *___CAST(___F64*,___BODY_AS(v,___tSUBTYPED));
+                  v = ___F64BOX(uv);
+                }
+#elif ___FLONUM_SELF_TAGGING_TAGS > 0
+              {
+                ___SCMOBJ ___temp; /* for ___MEM_ISA */
+                if (___MEM_ISA(FLONUM,v))
+                  {
+                    ___F64 uv = ___MEM_ALLOCATED_FLONUM_GET(v);
+                    ___U64 ___u64_uv = ___F64_TO_U64_FOR_SELF_TAGGING(uv);
+                    if (___EXPECT_TRUE(___SELF_TAGGED_FLONUM(___u64_uv)))
+                      v = ___CAST(___WORD,___u64_uv);
+                  }
+              }
 #endif
-	      *p = v;
-	    }
+              *p = v;
+            }
           else
             *p = ___SUBTYPED_FROM_BODY(&module->lbltbl[x-module->subcount].entry_or_descr);
           break;
