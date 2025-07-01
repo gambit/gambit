@@ -2005,6 +2005,7 @@ targ-fixnum64?
 targ-flonum?
 targ-gc-map-chunks
 targ-hash
+targ-iflonum?
 targ-imag-part
 targ-inexact-+0
 targ-inexact-+1

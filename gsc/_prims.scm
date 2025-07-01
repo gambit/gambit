@@ -6361,12 +6361,7 @@
 (define (nz-int? obj) (targ-nonzero-integer? obj)) ;; TODO: remove dependency on C back-end
 
 (define (flo? obj) (targ-flonum? obj)) ;; TODO: remove dependency on C back-end
-(define (iflo? obj) (and (targ-flonum? obj) ;; TODO: remove dependency on C back-end
-                         (or (zero? obj)
-                             (not (finite? obj))
-                             (let ((x (abs obj)))
-                               (and (>= x 1.0842021724855044e-19)    ;; (expt 2.0 -63)
-                                    (< x 3.6893488147419103e19)))))) ;; (expt 2.0 65)
+(define (iflo? obj) (targ-iflonum? obj)) ;; TODO: remove dependency on C back-end
 (define (nz-flo? obj) (targ-nonzero-flonum? obj)) ;; TODO: remove dependency on C back-end
 (define (int-flo? obj) (and (targ-flonum? obj) (targ-integer? obj))) ;; TODO: remove dependency on C back-end
 (define (fin-flo? obj) (and (targ-flonum? obj) (targ-finite? obj))) ;; TODO: remove dependency on C back-end

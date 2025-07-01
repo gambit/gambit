@@ -257,6 +257,14 @@
   (and (targ-flonum? x)
        (not (zero? x))))
 
+(define (targ-iflonum? x)
+  (and (targ-flonum? x)
+       (or (zero? x)
+           (not (finite? x))
+           (let ((absx (abs x)))
+             (and (>= absx 1.0842021724855044e-19)    ;; (expt 2.0 -63)
+                  (< absx 3.6893488147419103e19)))))) ;; (expt 2.0 65)
+
 ;; RATNUM representation.
 
 (define (targ-numerator x)
