@@ -1079,9 +1079,40 @@
 ;;            (targ-repr-end-block!)
 ))
 
-        (if (eqv? true-lbl next-lbl)
-          (gen-if #t false-lbl true-lbl)
-          (gen-if #f true-lbl false-lbl)))
+        (let* ((test-fixflo?
+                (cond ((or (eq? test **fixnum?-proc-obj)
+                           (eq? test **fixnums?-proc-obj))
+                       'fixnum)
+                      ((or (eq? test **flonum?-proc-obj)
+                           (eq? test **flonums?-proc-obj))
+                       'flonum)
+                      (else
+                       #f)))
+               (opnds-known-flo
+                (and test-fixflo?
+                     (map (lambda (opnd)
+                            (and targ-fp-cache-enabled?
+                                 (or (reg? opnd) (stk? opnd))
+                                 (not (not (targ-fp-cache-probe opnd)))))
+                          opnds)))
+               (dest-lbl
+                (case test-fixflo?
+                  ((fixnum)
+                   (and (memq #t opnds-known-flo)
+                        (if not? true-lbl false-lbl)))
+                  ((flonum)
+                   (and (not (memq #f opnds-known-flo))
+                        (if not? false-lbl true-lbl)))
+                  (else
+                   #f))))
+          (if (and (not loc)
+                   dest-lbl)
+
+              (targ-gen-jump (make-lbl dest-lbl) #f #f poll? #f next-lbl)
+
+              (if (eqv? true-lbl next-lbl)
+                  (gen-if #t false-lbl true-lbl)
+                  (gen-if #f true-lbl false-lbl)))))
 
       (compiler-internal-error
         "targ-gen-ifjump, unknown 'test'" test))))
