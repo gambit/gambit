@@ -2612,8 +2612,7 @@
     flo-result?
     (lambda (opnds sn)
       (targ-heap-reserve-and-check
-        (+ (compute-space (length opnds))
-           (if flo-result? targ-flonum-space 0))
+        (compute-space (length opnds))
         flo-result?
         (targ-sn-opnds opnds sn))
       (f opnds sn))))
