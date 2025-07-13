@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_riscv.c", produced by Gambit v4.9.6
+; File: "_riscv.c", produced by Gambit v4.9.7
 (
-409006
+409007
 (C)
 "_riscv"
 ("_riscv")
@@ -312,7 +312,7 @@
 ) #|*/"*/"meta-info|#
 )
 #else
-#define ___VERSION 409006
+#define ___VERSION 409007
 #define ___MODULE_NAME "_riscv"
 #define ___LINKER_ID ___LNK___riscv
 #define ___MH_PROC ___H___riscv
@@ -321,8 +321,8 @@
 #define ___GLOCOUNT 169
 #define ___SUPCOUNT 115
 #define ___SUBCOUNT 150
-#define ___LBLCOUNT 858
-#define ___OFDCOUNT 22
+#define ___LBLCOUNT 857
+#define ___OFDCOUNT 21
 #define ___MODDESCR ___REF_SUB(147)
 #include "gambit.h"
 
@@ -2164,7 +2164,6 @@ ___DEF_M_HLBL(___L25___riscv_23_riscv_2d_data_2d_elems)
 ___DEF_M_HLBL(___L26___riscv_23_riscv_2d_data_2d_elems)
 ___DEF_M_HLBL(___L27___riscv_23_riscv_2d_data_2d_elems)
 ___DEF_M_HLBL(___L28___riscv_23_riscv_2d_data_2d_elems)
-___DEF_M_HLBL(___L29___riscv_23_riscv_2d_data_2d_elems)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0___riscv_23_riscv_2d_nop)
 ___DEF_M_HLBL(___L1___riscv_23_riscv_2d_nop)
@@ -4111,11 +4110,11 @@ ___END_P_COD
 #undef ___PH_LBL0
 #define ___PH_LBL0 149
 #undef ___PD_ALL
-#define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
+#define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
-#define ___PR_ALL ___R_HEAP ___R_FP ___R_R0 ___R_R1 ___R_R2 ___R_R3 ___R_R4
+#define ___PR_ALL ___R_FP ___R_R0 ___R_R1 ___R_R2 ___R_R3 ___R_R4
 #undef ___PW_ALL
-#define ___PW_ALL ___W_HEAP ___W_FP ___W_R0 ___W_R1 ___W_R2 ___W_R3 ___W_R4
+#define ___PW_ALL ___W_FP ___W_R0 ___W_R1 ___W_R2 ___W_R3 ___W_R4
 ___BEGIN_P_COD
 ___BEGIN_P_HLBL
 ___DEF_P_HLBL_INTRO
@@ -4148,209 +4147,206 @@ ___DEF_P_HLBL(___L25___riscv_23_riscv_2d_data_2d_elems)
 ___DEF_P_HLBL(___L26___riscv_23_riscv_2d_data_2d_elems)
 ___DEF_P_HLBL(___L27___riscv_23_riscv_2d_data_2d_elems)
 ___DEF_P_HLBL(___L28___riscv_23_riscv_2d_data_2d_elems)
-___DEF_P_HLBL(___L29___riscv_23_riscv_2d_data_2d_elems)
 ___END_P_HLBL
 ___BEGIN_P_SW
 ___DEF_SLBL(0,___L0___riscv_23_riscv_2d_data_2d_elems)
    ___IF_NARGS_EQ(3,___NOTHING)
    ___WRONG_NARGS(0,3,0,0)
 ___DEF_GLBL(___L___riscv_23_riscv_2d_data_2d_elems)
-   ___SET_R4(___BOX(___VOID))
-   ___SETBOX(___R4,___FIX(4L))
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R3)
-   ___SET_STK(4,___R4)
    ___SET_R1(___R2)
    ___ADJFP(8)
-   ___CHECK_HEAP(1,4096)
+   ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_data_2d_elems)
-   ___POLL(2)
-___DEF_SLBL(2,___L2___riscv_23_riscv_2d_data_2d_elems)
-   ___SET_R0(___LBL(3))
+   ___SET_R0(___LBL(2))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),155,___G_list_2d__3e_vector)
-___DEF_SLBL(3,___L3___riscv_23_riscv_2d_data_2d_elems)
-   ___SET_STK(-3,___STK(-7))
+___DEF_SLBL(2,___L2___riscv_23_riscv_2d_data_2d_elems)
+   ___SET_STK(-4,___STK(-7))
    ___SET_STK(-7,___STK(-6))
-   ___SET_STK(-6,___STK(-5))
    ___SET_R2(___R1)
-   ___SET_R1(___STK(-4))
+   ___SET_R1(___STK(-5))
    ___SET_R3(___FIX(0L))
-   ___SET_R0(___STK(-3))
-   ___ADJFP(-6)
-   ___POLL(4)
+   ___SET_R0(___STK(-4))
+   ___ADJFP(-7)
+   ___POLL(3)
+___DEF_SLBL(3,___L3___riscv_23_riscv_2d_data_2d_elems)
+   ___GOTO(___L30___riscv_23_riscv_2d_data_2d_elems)
 ___DEF_SLBL(4,___L4___riscv_23_riscv_2d_data_2d_elems)
-   ___GOTO(___L31___riscv_23_riscv_2d_data_2d_elems)
+___DEF_GLBL(___L29___riscv_23_riscv_2d_data_2d_elems)
+   ___SET_R3(___STK(-3))
+   ___SET_R2(___STK(-5))
+   ___SET_R1(___STK(-6))
+   ___SET_R0(___STK(-4))
+   ___ADJFP(-7)
+   ___POLL(5)
 ___DEF_SLBL(5,___L5___riscv_23_riscv_2d_data_2d_elems)
 ___DEF_GLBL(___L30___riscv_23_riscv_2d_data_2d_elems)
-   ___SET_R3(___STK(-6))
-   ___SET_R2(___STK(-8))
-   ___SET_R1(___STK(-9))
-   ___SET_R0(___STK(-7))
-   ___ADJFP(-10)
-   ___POLL(6)
-___DEF_SLBL(6,___L6___riscv_23_riscv_2d_data_2d_elems)
-___DEF_GLBL(___L31___riscv_23_riscv_2d_data_2d_elems)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R2)
    ___SET_STK(4,___R3)
    ___SET_R1(___R2)
-   ___ADJFP(10)
-   ___POLL(7)
-___DEF_SLBL(7,___L7___riscv_23_riscv_2d_data_2d_elems)
-   ___SET_R0(___LBL(8))
+   ___ADJFP(7)
+   ___POLL(6)
+___DEF_SLBL(6,___L6___riscv_23_riscv_2d_data_2d_elems)
+   ___SET_R0(___LBL(7))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),165,___G_vector_2d_length)
-___DEF_SLBL(8,___L8___riscv_23_riscv_2d_data_2d_elems)
+___DEF_SLBL(7,___L7___riscv_23_riscv_2d_data_2d_elems)
    ___SET_R2(___R1)
-   ___SET_R1(___STK(-6))
-   ___SET_R0(___LBL(9))
+   ___SET_R1(___STK(-3))
+   ___SET_R0(___LBL(8))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),143,___G_fx_3c_)
-___DEF_SLBL(9,___L9___riscv_23_riscv_2d_data_2d_elems)
+___DEF_SLBL(8,___L8___riscv_23_riscv_2d_data_2d_elems)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L39___riscv_23_riscv_2d_data_2d_elems)
    ___END_IF
-   ___SET_R2(___UNBOX(___STK(-8)))
-   ___SET_R1(___STK(-6))
-   ___SET_R0(___LBL(10))
+   ___SET_R1(___STK(-3))
+   ___SET_R2(___FIX(4L))
+   ___SET_R0(___LBL(9))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),141,___G_fx_2b_)
-___DEF_SLBL(10,___L10___riscv_23_riscv_2d_data_2d_elems)
-   ___SET_STK(-5,___R1)
-   ___SET_R1(___STK(-7))
-   ___SET_R0(___LBL(11))
+___DEF_SLBL(9,___L9___riscv_23_riscv_2d_data_2d_elems)
+   ___SET_STK(-2,___R1)
+   ___SET_R1(___STK(-4))
+   ___SET_R0(___LBL(10))
+   ___ADJFP(4)
    ___JUMPGLONOTSAFE(___SET_NARGS(1),165,___G_vector_2d_length)
-___DEF_SLBL(11,___L11___riscv_23_riscv_2d_data_2d_elems)
+___DEF_SLBL(10,___L10___riscv_23_riscv_2d_data_2d_elems)
    ___SET_R2(___R1)
-   ___SET_R1(___STK(-5))
-   ___SET_R0(___LBL(12))
-   ___JUMPGLONOTSAFE(___SET_NARGS(2),152,___G_fxmin)
-___DEF_SLBL(12,___L12___riscv_23_riscv_2d_data_2d_elems)
-   ___SET_STK(-5,___STK(-9))
-   ___SET_STK(-9,___STK(-8))
-   ___SET_STK(-8,___STK(-7))
-   ___SET_R2(___STK(-6))
-   ___SET_R3(___NUL)
-   ___SET_R0(___STK(-5))
-   ___ADJFP(-8)
-   ___POLL(13)
-___DEF_SLBL(13,___L13___riscv_23_riscv_2d_data_2d_elems)
-   ___GOTO(___L32___riscv_23_riscv_2d_data_2d_elems)
-___DEF_SLBL(14,___L14___riscv_23_riscv_2d_data_2d_elems)
-   ___SET_R3(___R1)
    ___SET_R1(___STK(-6))
-   ___SET_R0(___STK(-7))
-   ___SET_R2(___STK(-5))
-   ___ADJFP(-8)
-   ___POLL(15)
-___DEF_SLBL(15,___L15___riscv_23_riscv_2d_data_2d_elems)
-___DEF_GLBL(___L32___riscv_23_riscv_2d_data_2d_elems)
+   ___SET_R0(___LBL(11))
+   ___ADJFP(-4)
+   ___JUMPGLONOTSAFE(___SET_NARGS(2),152,___G_fxmin)
+___DEF_SLBL(11,___L11___riscv_23_riscv_2d_data_2d_elems)
+   ___SET_STK(-2,___STK(-6))
+   ___SET_STK(-6,___STK(-5))
+   ___SET_STK(-5,___STK(-4))
+   ___SET_R2(___STK(-3))
+   ___SET_R3(___NUL)
+   ___SET_R0(___STK(-2))
+   ___ADJFP(-5)
+   ___POLL(12)
+___DEF_SLBL(12,___L12___riscv_23_riscv_2d_data_2d_elems)
+   ___GOTO(___L31___riscv_23_riscv_2d_data_2d_elems)
+___DEF_SLBL(13,___L13___riscv_23_riscv_2d_data_2d_elems)
+   ___SET_R3(___R1)
+   ___SET_R1(___STK(-7))
+   ___SET_R0(___STK(-8))
+   ___SET_R2(___STK(-6))
+   ___ADJFP(-9)
+   ___POLL(14)
+___DEF_SLBL(14,___L14___riscv_23_riscv_2d_data_2d_elems)
+___DEF_GLBL(___L31___riscv_23_riscv_2d_data_2d_elems)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R2)
    ___SET_STK(4,___R3)
    ___SET_R2(___R1)
    ___SET_R1(___STK(3))
-   ___ADJFP(8)
-   ___POLL(16)
-___DEF_SLBL(16,___L16___riscv_23_riscv_2d_data_2d_elems)
-   ___SET_R0(___LBL(17))
+   ___ADJFP(9)
+   ___POLL(15)
+___DEF_SLBL(15,___L15___riscv_23_riscv_2d_data_2d_elems)
+   ___SET_R0(___LBL(16))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),143,___G_fx_3c_)
-___DEF_SLBL(17,___L17___riscv_23_riscv_2d_data_2d_elems)
+___DEF_SLBL(16,___L16___riscv_23_riscv_2d_data_2d_elems)
    ___IF(___NOT(___NOTFALSEP(___R1)))
-   ___GOTO(___L33___riscv_23_riscv_2d_data_2d_elems)
+   ___GOTO(___L32___riscv_23_riscv_2d_data_2d_elems)
    ___END_IF
-   ___SET_R2(___STK(-5))
-   ___SET_R1(___STK(-8))
-   ___SET_R0(___LBL(18))
+   ___SET_R2(___STK(-6))
+   ___SET_R1(___STK(-9))
+   ___SET_R0(___LBL(17))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),166,___G_vector_2d_ref)
-___DEF_SLBL(18,___L18___riscv_23_riscv_2d_data_2d_elems)
-   ___SET_STK(-3,___R1)
+___DEF_SLBL(17,___L17___riscv_23_riscv_2d_data_2d_elems)
+   ___SET_STK(-4,___R1)
    ___SET_R3(___STK(-10))
    ___SET_R2(___R1)
    ___SET_R1(___STK(-11))
-   ___SET_R0(___LBL(19))
+   ___SET_R0(___LBL(18))
    ___JUMPGLONOTSAFE(___SET_NARGS(3),121,___G___asm_23_asm_2d_int_2d_le)
-___DEF_SLBL(19,___L19___riscv_23_riscv_2d_data_2d_elems)
-   ___SET_R1(___STK(-5))
+___DEF_SLBL(18,___L18___riscv_23_riscv_2d_data_2d_elems)
+   ___SET_R1(___STK(-6))
    ___SET_R2(___FIX(1L))
-   ___SET_R0(___LBL(20))
+   ___SET_R0(___LBL(19))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),141,___G_fx_2b_)
-___DEF_SLBL(20,___L20___riscv_23_riscv_2d_data_2d_elems)
-   ___SET_STK(-5,___R1)
-   ___SET_R2(___STK(-4))
-   ___SET_R1(___STK(-3))
-   ___SET_R0(___LBL(14))
+___DEF_SLBL(19,___L19___riscv_23_riscv_2d_data_2d_elems)
+   ___SET_STK(-6,___R1)
+   ___SET_R2(___STK(-5))
+   ___SET_R1(___STK(-4))
+   ___SET_R0(___LBL(13))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),136,___G_cons)
-___DEF_GLBL(___L33___riscv_23_riscv_2d_data_2d_elems)
+___DEF_GLBL(___L32___riscv_23_riscv_2d_data_2d_elems)
    ___SET_R1(___STK(-11))
-   ___SET_R0(___LBL(21))
+   ___SET_R0(___LBL(20))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),131,___G___codegen_23_codegen_2d_context_2d_listing_2d_format)
-___DEF_SLBL(21,___L21___riscv_23_riscv_2d_data_2d_elems)
-   ___IF(___NOT(___NOTFALSEP(___R1)))
-   ___GOTO(___L30___riscv_23_riscv_2d_data_2d_elems)
+___DEF_SLBL(20,___L20___riscv_23_riscv_2d_data_2d_elems)
+   ___IF(___NOTFALSEP(___R1))
+   ___GOTO(___L33___riscv_23_riscv_2d_data_2d_elems)
    ___END_IF
-   ___SET_STK(1,___CHR(9))
+   ___ADJFP(-4)
+   ___GOTO(___L29___riscv_23_riscv_2d_data_2d_elems)
+___DEF_GLBL(___L33___riscv_23_riscv_2d_data_2d_elems)
+   ___SET_STK(-3,___CHR(9))
    ___SET_R1(___STK(-10))
    ___SET_R2(___FIX(8L))
-   ___SET_R0(___LBL(22))
-   ___ADJFP(4)
+   ___SET_R0(___LBL(21))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),145,___G_fx_3d_)
-___DEF_SLBL(22,___L22___riscv_23_riscv_2d_data_2d_elems)
+___DEF_SLBL(21,___L21___riscv_23_riscv_2d_data_2d_elems)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L35___riscv_23_riscv_2d_data_2d_elems)
    ___END_IF
    ___SET_R1(___SUB(42))
    ___GOTO(___L34___riscv_23_riscv_2d_data_2d_elems)
-___DEF_SLBL(23,___L23___riscv_23_riscv_2d_data_2d_elems)
+___DEF_SLBL(22,___L22___riscv_23_riscv_2d_data_2d_elems)
 ___DEF_GLBL(___L34___riscv_23_riscv_2d_data_2d_elems)
-   ___SET_STK(-9,___R1)
-   ___SET_R1(___STK(-8))
-   ___SET_R0(___LBL(24))
+   ___SET_STK(-6,___R1)
+   ___SET_R1(___STK(-5))
+   ___SET_R0(___LBL(23))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),161,___G_reverse)
-___DEF_SLBL(24,___L24___riscv_23_riscv_2d_data_2d_elems)
+___DEF_SLBL(23,___L23___riscv_23_riscv_2d_data_2d_elems)
    ___SET_R2(___SUB(43))
-   ___SET_R0(___LBL(25))
+   ___SET_R0(___LBL(24))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),126,___G___asm_23_asm_2d_separated_2d_list)
-___DEF_SLBL(25,___L25___riscv_23_riscv_2d_data_2d_elems)
+___DEF_SLBL(24,___L24___riscv_23_riscv_2d_data_2d_elems)
    ___SET_R3(___R1)
    ___SET_R2(___CHR(9))
-   ___SET_R1(___STK(-9))
-   ___SET_R0(___LBL(26))
+   ___SET_R1(___STK(-6))
+   ___SET_R0(___LBL(25))
    ___ADJFP(-3)
    ___JUMPGLONOTSAFE(___SET_NARGS(4),154,___G_list)
-___DEF_SLBL(26,___L26___riscv_23_riscv_2d_data_2d_elems)
+___DEF_SLBL(25,___L25___riscv_23_riscv_2d_data_2d_elems)
    ___SET_R2(___R1)
-   ___SET_R1(___STK(-11))
-   ___SET_R0(___LBL(5))
+   ___SET_R1(___STK(-7))
+   ___SET_R0(___LBL(4))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),125,___G___asm_23_asm_2d_listing)
 ___DEF_GLBL(___L35___riscv_23_riscv_2d_data_2d_elems)
-   ___SET_R1(___STK(-14))
+   ___SET_R1(___STK(-10))
    ___SET_R2(___FIX(16L))
-   ___SET_R0(___LBL(27))
+   ___SET_R0(___LBL(26))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),145,___G_fx_3d_)
-___DEF_SLBL(27,___L27___riscv_23_riscv_2d_data_2d_elems)
+___DEF_SLBL(26,___L26___riscv_23_riscv_2d_data_2d_elems)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L36___riscv_23_riscv_2d_data_2d_elems)
    ___END_IF
    ___SET_R1(___SUB(44))
    ___GOTO(___L34___riscv_23_riscv_2d_data_2d_elems)
 ___DEF_GLBL(___L36___riscv_23_riscv_2d_data_2d_elems)
-   ___SET_R1(___STK(-14))
+   ___SET_R1(___STK(-10))
    ___SET_R2(___FIX(32L))
-   ___SET_R0(___LBL(28))
+   ___SET_R0(___LBL(27))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),145,___G_fx_3d_)
-___DEF_SLBL(28,___L28___riscv_23_riscv_2d_data_2d_elems)
+___DEF_SLBL(27,___L27___riscv_23_riscv_2d_data_2d_elems)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L37___riscv_23_riscv_2d_data_2d_elems)
    ___END_IF
    ___SET_R1(___SUB(45))
    ___GOTO(___L34___riscv_23_riscv_2d_data_2d_elems)
 ___DEF_GLBL(___L37___riscv_23_riscv_2d_data_2d_elems)
-   ___SET_R1(___STK(-14))
+   ___SET_R1(___STK(-10))
    ___SET_R2(___FIX(64L))
-   ___SET_R0(___LBL(29))
+   ___SET_R0(___LBL(28))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),145,___G_fx_3d_)
-___DEF_SLBL(29,___L29___riscv_23_riscv_2d_data_2d_elems)
+___DEF_SLBL(28,___L28___riscv_23_riscv_2d_data_2d_elems)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L38___riscv_23_riscv_2d_data_2d_elems)
    ___END_IF
@@ -4358,19 +4354,19 @@ ___DEF_SLBL(29,___L29___riscv_23_riscv_2d_data_2d_elems)
    ___GOTO(___L34___riscv_23_riscv_2d_data_2d_elems)
 ___DEF_GLBL(___L38___riscv_23_riscv_2d_data_2d_elems)
    ___SET_R1(___SUB(47))
-   ___SET_R0(___LBL(23))
+   ___SET_R0(___LBL(22))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),138,___G_error)
 ___DEF_GLBL(___L39___riscv_23_riscv_2d_data_2d_elems)
    ___SET_R1(___VOID)
-   ___ADJFP(-12)
-   ___JUMPRET(___STK(3))
+   ___ADJFP(-8)
+   ___JUMPRET(___STK(2))
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_nop
 #undef ___PH_LBL0
-#define ___PH_LBL0 180
+#define ___PH_LBL0 179
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -4409,14 +4405,14 @@ ___DEF_SLBL(2,___L2___riscv_23_riscv_2d_nop)
    ___POLL(3)
 ___DEF_SLBL(3,___L3___riscv_23_riscv_2d_nop)
    ___ADJFP(-6)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(576),___L0___riscv_23_riscv_2d_type_2d_i)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(575),___L0___riscv_23_riscv_2d_type_2d_i)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_li
 #undef ___PH_LBL0
-#define ___PH_LBL0 185
+#define ___PH_LBL0 184
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -4665,7 +4661,7 @@ ___DEF_SLBL(33,___L33___riscv_23_riscv_2d_li)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(34))
-   ___JUMPINT(___SET_NARGS(3),___PRC(746),___L___riscv_23_riscv_2d_lui)
+   ___JUMPINT(___SET_NARGS(3),___PRC(745),___L___riscv_23_riscv_2d_lui)
 ___DEF_SLBL(34,___L34___riscv_23_riscv_2d_li)
 ___DEF_GLBL(___L51___riscv_23_riscv_2d_li)
    ___SET_R1(___STK(-3))
@@ -4691,10 +4687,10 @@ ___DEF_SLBL(38,___L38___riscv_23_riscv_2d_li)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L53___riscv_23_riscv_2d_li)
    ___END_IF
-   ___SET_R1(___PRC(526))
+   ___SET_R1(___PRC(525))
    ___GOTO(___L54___riscv_23_riscv_2d_li)
 ___DEF_GLBL(___L53___riscv_23_riscv_2d_li)
-   ___SET_R1(___PRC(457))
+   ___SET_R1(___PRC(456))
 ___DEF_GLBL(___L54___riscv_23_riscv_2d_li)
    ___SET_STK(-2,___R1)
    ___SET_R1(___STK(-4))
@@ -4724,7 +4720,7 @@ ___DEF_SLBL(40,___L40___riscv_23_riscv_2d_li)
    ___POLL(41)
 ___DEF_SLBL(41,___L41___riscv_23_riscv_2d_li)
    ___ADJFP(-6)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(576),___L0___riscv_23_riscv_2d_type_2d_i)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(575),___L0___riscv_23_riscv_2d_type_2d_i)
 ___DEF_GLBL(___L57___riscv_23_riscv_2d_li)
    ___SET_R1(___STK(-4))
    ___SET_R0(___LBL(37))
@@ -4736,7 +4732,7 @@ ___DEF_SLBL(42,___L42___riscv_23_riscv_2d_li)
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(43))
    ___ADJFP(1)
-   ___JUMPINT(___SET_NARGS(4),___PRC(475),___L___riscv_23_riscv_2d_slli)
+   ___JUMPINT(___SET_NARGS(4),___PRC(474),___L___riscv_23_riscv_2d_slli)
 ___DEF_SLBL(43,___L43___riscv_23_riscv_2d_li)
    ___SET_R1(___STK(-3))
    ___SET_R0(___LBL(44))
@@ -4750,7 +4746,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_mv
 #undef ___PH_LBL0
-#define ___PH_LBL0 231
+#define ___PH_LBL0 230
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -4791,14 +4787,14 @@ ___DEF_SLBL(2,___L2___riscv_23_riscv_2d_mv)
    ___POLL(3)
 ___DEF_SLBL(3,___L3___riscv_23_riscv_2d_mv)
    ___ADJFP(-6)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(576),___L0___riscv_23_riscv_2d_type_2d_i)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(575),___L0___riscv_23_riscv_2d_type_2d_i)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_not
 #undef ___PH_LBL0
-#define ___PH_LBL0 236
+#define ___PH_LBL0 235
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -4839,14 +4835,14 @@ ___DEF_SLBL(2,___L2___riscv_23_riscv_2d_not)
    ___POLL(3)
 ___DEF_SLBL(3,___L3___riscv_23_riscv_2d_not)
    ___ADJFP(-6)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(576),___L0___riscv_23_riscv_2d_type_2d_i)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(575),___L0___riscv_23_riscv_2d_type_2d_i)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_neg
 #undef ___PH_LBL0
-#define ___PH_LBL0 241
+#define ___PH_LBL0 240
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -4870,14 +4866,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_neg)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_neg)
-   ___JUMPINT(___SET_NARGS(4),___PRC(354),___L___riscv_23_riscv_2d_sub)
+   ___JUMPINT(___SET_NARGS(4),___PRC(353),___L___riscv_23_riscv_2d_sub)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_negw
 #undef ___PH_LBL0
-#define ___PH_LBL0 244
+#define ___PH_LBL0 243
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -4901,14 +4897,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_negw)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_negw)
-   ___JUMPINT(___SET_NARGS(4),___PRC(388),___L___riscv_23_riscv_2d_subw)
+   ___JUMPINT(___SET_NARGS(4),___PRC(387),___L___riscv_23_riscv_2d_subw)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_sext_2e_w
 #undef ___PH_LBL0
-#define ___PH_LBL0 247
+#define ___PH_LBL0 246
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -4960,14 +4956,14 @@ ___DEF_SLBL(4,___L4___riscv_23_riscv_2d_sext_2e_w)
    ___POLL(5)
 ___DEF_SLBL(5,___L5___riscv_23_riscv_2d_sext_2e_w)
    ___ADJFP(-7)
-   ___JUMPINT(___SET_NARGS(4),___PRC(526),___L___riscv_23_riscv_2d_addiw)
+   ___JUMPINT(___SET_NARGS(4),___PRC(525),___L___riscv_23_riscv_2d_addiw)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_seqz
 #undef ___PH_LBL0
-#define ___PH_LBL0 254
+#define ___PH_LBL0 253
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -5008,14 +5004,14 @@ ___DEF_SLBL(2,___L2___riscv_23_riscv_2d_seqz)
    ___POLL(3)
 ___DEF_SLBL(3,___L3___riscv_23_riscv_2d_seqz)
    ___ADJFP(-6)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(576),___L0___riscv_23_riscv_2d_type_2d_i)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(575),___L0___riscv_23_riscv_2d_type_2d_i)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_snez
 #undef ___PH_LBL0
-#define ___PH_LBL0 259
+#define ___PH_LBL0 258
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -5041,14 +5037,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_snez)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_snez)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(416),___L0___riscv_23_riscv_2d_type_2d_r)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(415),___L0___riscv_23_riscv_2d_type_2d_r)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_sltz
 #undef ___PH_LBL0
-#define ___PH_LBL0 262
+#define ___PH_LBL0 261
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -5074,14 +5070,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_sltz)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_sltz)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(416),___L0___riscv_23_riscv_2d_type_2d_r)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(415),___L0___riscv_23_riscv_2d_type_2d_r)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_sgtz
 #undef ___PH_LBL0
-#define ___PH_LBL0 265
+#define ___PH_LBL0 264
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -5107,14 +5103,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_sgtz)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_sgtz)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(416),___L0___riscv_23_riscv_2d_type_2d_r)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(415),___L0___riscv_23_riscv_2d_type_2d_r)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_beqz
 #undef ___PH_LBL0
-#define ___PH_LBL0 268
+#define ___PH_LBL0 267
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -5140,14 +5136,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_beqz)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_beqz)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(705),___L0___riscv_23_riscv_2d_type_2d_b)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(704),___L0___riscv_23_riscv_2d_type_2d_b)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_bnez
 #undef ___PH_LBL0
-#define ___PH_LBL0 271
+#define ___PH_LBL0 270
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -5173,14 +5169,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_bnez)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_bnez)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(705),___L0___riscv_23_riscv_2d_type_2d_b)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(704),___L0___riscv_23_riscv_2d_type_2d_b)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_blez
 #undef ___PH_LBL0
-#define ___PH_LBL0 274
+#define ___PH_LBL0 273
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -5208,14 +5204,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_blez)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_blez)
    ___ADJFP(-1)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(705),___L0___riscv_23_riscv_2d_type_2d_b)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(704),___L0___riscv_23_riscv_2d_type_2d_b)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_bgez
 #undef ___PH_LBL0
-#define ___PH_LBL0 277
+#define ___PH_LBL0 276
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -5241,14 +5237,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_bgez)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_bgez)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(705),___L0___riscv_23_riscv_2d_type_2d_b)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(704),___L0___riscv_23_riscv_2d_type_2d_b)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_bltz
 #undef ___PH_LBL0
-#define ___PH_LBL0 280
+#define ___PH_LBL0 279
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -5274,14 +5270,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_bltz)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_bltz)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(705),___L0___riscv_23_riscv_2d_type_2d_b)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(704),___L0___riscv_23_riscv_2d_type_2d_b)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_bgtz
 #undef ___PH_LBL0
-#define ___PH_LBL0 283
+#define ___PH_LBL0 282
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -5309,14 +5305,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_bgtz)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_bgtz)
    ___ADJFP(-1)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(705),___L0___riscv_23_riscv_2d_type_2d_b)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(704),___L0___riscv_23_riscv_2d_type_2d_b)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_bgt
 #undef ___PH_LBL0
-#define ___PH_LBL0 286
+#define ___PH_LBL0 285
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -5340,14 +5336,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_bgt)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_bgt)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(705),___L0___riscv_23_riscv_2d_type_2d_b)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(704),___L0___riscv_23_riscv_2d_type_2d_b)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_ble
 #undef ___PH_LBL0
-#define ___PH_LBL0 289
+#define ___PH_LBL0 288
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -5371,14 +5367,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_ble)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_ble)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(705),___L0___riscv_23_riscv_2d_type_2d_b)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(704),___L0___riscv_23_riscv_2d_type_2d_b)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_bgtu
 #undef ___PH_LBL0
-#define ___PH_LBL0 292
+#define ___PH_LBL0 291
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -5402,14 +5398,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_bgtu)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_bgtu)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(705),___L0___riscv_23_riscv_2d_type_2d_b)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(704),___L0___riscv_23_riscv_2d_type_2d_b)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_bleu
 #undef ___PH_LBL0
-#define ___PH_LBL0 295
+#define ___PH_LBL0 294
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -5433,14 +5429,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_bleu)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_bleu)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(705),___L0___riscv_23_riscv_2d_type_2d_b)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(704),___L0___riscv_23_riscv_2d_type_2d_b)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_j
 #undef ___PH_LBL0
-#define ___PH_LBL0 298
+#define ___PH_LBL0 297
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -5462,14 +5458,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_j)
    ___SET_R2(___FIX(0L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_j)
-   ___JUMPINT(___SET_NARGS(3),___PRC(774),___L___riscv_23_riscv_2d_jal)
+   ___JUMPINT(___SET_NARGS(3),___PRC(773),___L___riscv_23_riscv_2d_jal)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_jal_2a_
 #undef ___PH_LBL0
-#define ___PH_LBL0 301
+#define ___PH_LBL0 300
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -5491,14 +5487,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_jal_2a_)
    ___SET_R2(___FIX(1L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_jal_2a_)
-   ___JUMPINT(___SET_NARGS(3),___PRC(774),___L___riscv_23_riscv_2d_jal)
+   ___JUMPINT(___SET_NARGS(3),___PRC(773),___L___riscv_23_riscv_2d_jal)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_jr
 #undef ___PH_LBL0
-#define ___PH_LBL0 304
+#define ___PH_LBL0 303
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -5549,14 +5545,14 @@ ___DEF_SLBL(4,___L4___riscv_23_riscv_2d_jr)
    ___POLL(5)
 ___DEF_SLBL(5,___L5___riscv_23_riscv_2d_jr)
    ___ADJFP(-7)
-   ___JUMPINT(___SET_NARGS(4),___PRC(436),___L___riscv_23_riscv_2d_jalr)
+   ___JUMPINT(___SET_NARGS(4),___PRC(435),___L___riscv_23_riscv_2d_jalr)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_jalr_2a_
 #undef ___PH_LBL0
-#define ___PH_LBL0 311
+#define ___PH_LBL0 310
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -5607,14 +5603,14 @@ ___DEF_SLBL(4,___L4___riscv_23_riscv_2d_jalr_2a_)
    ___POLL(5)
 ___DEF_SLBL(5,___L5___riscv_23_riscv_2d_jalr_2a_)
    ___ADJFP(-7)
-   ___JUMPINT(___SET_NARGS(4),___PRC(436),___L___riscv_23_riscv_2d_jalr)
+   ___JUMPINT(___SET_NARGS(4),___PRC(435),___L___riscv_23_riscv_2d_jalr)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_ret
 #undef ___PH_LBL0
-#define ___PH_LBL0 318
+#define ___PH_LBL0 317
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -5664,14 +5660,14 @@ ___DEF_SLBL(4,___L4___riscv_23_riscv_2d_ret)
    ___POLL(5)
 ___DEF_SLBL(5,___L5___riscv_23_riscv_2d_ret)
    ___ADJFP(-7)
-   ___JUMPINT(___SET_NARGS(4),___PRC(436),___L___riscv_23_riscv_2d_jalr)
+   ___JUMPINT(___SET_NARGS(4),___PRC(435),___L___riscv_23_riscv_2d_jalr)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_call
 #undef ___PH_LBL0
-#define ___PH_LBL0 325
+#define ___PH_LBL0 324
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -5722,7 +5718,7 @@ ___DEF_SLBL(4,___L4___riscv_23_riscv_2d_call)
    ___SET_R1(___STK(-6))
    ___SET_R2(___FIX(6L))
    ___SET_R0(___LBL(5))
-   ___JUMPINT(___SET_NARGS(3),___PRC(752),___L___riscv_23_riscv_2d_auipc)
+   ___JUMPINT(___SET_NARGS(3),___PRC(751),___L___riscv_23_riscv_2d_auipc)
 ___DEF_SLBL(5,___L5___riscv_23_riscv_2d_call)
    ___SET_STK(-4,___STK(-7))
    ___SET_STK(-7,___STK(-6))
@@ -5756,14 +5752,14 @@ ___DEF_SLBL(10,___L10___riscv_23_riscv_2d_call)
    ___POLL(11)
 ___DEF_SLBL(11,___L11___riscv_23_riscv_2d_call)
    ___ADJFP(-7)
-   ___JUMPINT(___SET_NARGS(4),___PRC(436),___L___riscv_23_riscv_2d_jalr)
+   ___JUMPINT(___SET_NARGS(4),___PRC(435),___L___riscv_23_riscv_2d_jalr)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_tail
 #undef ___PH_LBL0
-#define ___PH_LBL0 338
+#define ___PH_LBL0 337
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -5814,7 +5810,7 @@ ___DEF_SLBL(4,___L4___riscv_23_riscv_2d_tail)
    ___SET_R1(___STK(-6))
    ___SET_R2(___FIX(6L))
    ___SET_R0(___LBL(5))
-   ___JUMPINT(___SET_NARGS(3),___PRC(752),___L___riscv_23_riscv_2d_auipc)
+   ___JUMPINT(___SET_NARGS(3),___PRC(751),___L___riscv_23_riscv_2d_auipc)
 ___DEF_SLBL(5,___L5___riscv_23_riscv_2d_tail)
    ___SET_STK(-4,___STK(-7))
    ___SET_STK(-7,___STK(-6))
@@ -5848,14 +5844,14 @@ ___DEF_SLBL(10,___L10___riscv_23_riscv_2d_tail)
    ___POLL(11)
 ___DEF_SLBL(11,___L11___riscv_23_riscv_2d_tail)
    ___ADJFP(-7)
-   ___JUMPINT(___SET_NARGS(4),___PRC(436),___L___riscv_23_riscv_2d_jalr)
+   ___JUMPINT(___SET_NARGS(4),___PRC(435),___L___riscv_23_riscv_2d_jalr)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_add
 #undef ___PH_LBL0
-#define ___PH_LBL0 351
+#define ___PH_LBL0 350
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -5882,14 +5878,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_add)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_add)
    ___ADJFP(-1)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(416),___L0___riscv_23_riscv_2d_type_2d_r)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(415),___L0___riscv_23_riscv_2d_type_2d_r)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_sub
 #undef ___PH_LBL0
-#define ___PH_LBL0 354
+#define ___PH_LBL0 353
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -5916,14 +5912,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_sub)
    ___ADJFP(3)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_sub)
-   ___SET_NARGS(7) ___JUMPINT(___NOTHING,___PRC(416),___L0___riscv_23_riscv_2d_type_2d_r)
+   ___SET_NARGS(7) ___JUMPINT(___NOTHING,___PRC(415),___L0___riscv_23_riscv_2d_type_2d_r)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_sll
 #undef ___PH_LBL0
-#define ___PH_LBL0 357
+#define ___PH_LBL0 356
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -5950,14 +5946,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_sll)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_sll)
    ___ADJFP(-1)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(416),___L0___riscv_23_riscv_2d_type_2d_r)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(415),___L0___riscv_23_riscv_2d_type_2d_r)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_slt
 #undef ___PH_LBL0
-#define ___PH_LBL0 360
+#define ___PH_LBL0 359
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -5984,14 +5980,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_slt)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_slt)
    ___ADJFP(-1)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(416),___L0___riscv_23_riscv_2d_type_2d_r)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(415),___L0___riscv_23_riscv_2d_type_2d_r)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_sltu
 #undef ___PH_LBL0
-#define ___PH_LBL0 363
+#define ___PH_LBL0 362
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -6018,14 +6014,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_sltu)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_sltu)
    ___ADJFP(-1)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(416),___L0___riscv_23_riscv_2d_type_2d_r)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(415),___L0___riscv_23_riscv_2d_type_2d_r)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_xor
 #undef ___PH_LBL0
-#define ___PH_LBL0 366
+#define ___PH_LBL0 365
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -6052,14 +6048,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_xor)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_xor)
    ___ADJFP(-1)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(416),___L0___riscv_23_riscv_2d_type_2d_r)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(415),___L0___riscv_23_riscv_2d_type_2d_r)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_srl
 #undef ___PH_LBL0
-#define ___PH_LBL0 369
+#define ___PH_LBL0 368
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -6086,14 +6082,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_srl)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_srl)
    ___ADJFP(-1)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(416),___L0___riscv_23_riscv_2d_type_2d_r)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(415),___L0___riscv_23_riscv_2d_type_2d_r)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_sra
 #undef ___PH_LBL0
-#define ___PH_LBL0 372
+#define ___PH_LBL0 371
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -6120,14 +6116,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_sra)
    ___ADJFP(3)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_sra)
-   ___SET_NARGS(7) ___JUMPINT(___NOTHING,___PRC(416),___L0___riscv_23_riscv_2d_type_2d_r)
+   ___SET_NARGS(7) ___JUMPINT(___NOTHING,___PRC(415),___L0___riscv_23_riscv_2d_type_2d_r)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_or
 #undef ___PH_LBL0
-#define ___PH_LBL0 375
+#define ___PH_LBL0 374
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -6154,14 +6150,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_or)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_or)
    ___ADJFP(-1)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(416),___L0___riscv_23_riscv_2d_type_2d_r)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(415),___L0___riscv_23_riscv_2d_type_2d_r)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_and
 #undef ___PH_LBL0
-#define ___PH_LBL0 378
+#define ___PH_LBL0 377
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -6188,14 +6184,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_and)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_and)
    ___ADJFP(-1)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(416),___L0___riscv_23_riscv_2d_type_2d_r)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(415),___L0___riscv_23_riscv_2d_type_2d_r)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_addw
 #undef ___PH_LBL0
-#define ___PH_LBL0 381
+#define ___PH_LBL0 380
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -6247,7 +6243,7 @@ ___DEF_GLBL(___L6___riscv_23_riscv_2d_addw)
    ___POLL(5)
 ___DEF_SLBL(5,___L5___riscv_23_riscv_2d_addw)
    ___ADJFP(-5)
-   ___SET_NARGS(6) ___JUMPINT(___NOTHING,___PRC(416),___L0___riscv_23_riscv_2d_type_2d_r)
+   ___SET_NARGS(6) ___JUMPINT(___NOTHING,___PRC(415),___L0___riscv_23_riscv_2d_type_2d_r)
 ___DEF_GLBL(___L7___riscv_23_riscv_2d_addw)
    ___SET_R1(___SUB(50))
    ___SET_R0(___LBL(4))
@@ -6258,7 +6254,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_subw
 #undef ___PH_LBL0
-#define ___PH_LBL0 388
+#define ___PH_LBL0 387
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -6311,7 +6307,7 @@ ___DEF_GLBL(___L6___riscv_23_riscv_2d_subw)
    ___POLL(5)
 ___DEF_SLBL(5,___L5___riscv_23_riscv_2d_subw)
    ___ADJFP(-4)
-   ___SET_NARGS(7) ___JUMPINT(___NOTHING,___PRC(416),___L0___riscv_23_riscv_2d_type_2d_r)
+   ___SET_NARGS(7) ___JUMPINT(___NOTHING,___PRC(415),___L0___riscv_23_riscv_2d_type_2d_r)
 ___DEF_GLBL(___L7___riscv_23_riscv_2d_subw)
    ___SET_R1(___SUB(50))
    ___SET_R0(___LBL(4))
@@ -6322,7 +6318,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_sllw
 #undef ___PH_LBL0
-#define ___PH_LBL0 395
+#define ___PH_LBL0 394
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -6374,7 +6370,7 @@ ___DEF_GLBL(___L6___riscv_23_riscv_2d_sllw)
    ___POLL(5)
 ___DEF_SLBL(5,___L5___riscv_23_riscv_2d_sllw)
    ___ADJFP(-5)
-   ___SET_NARGS(6) ___JUMPINT(___NOTHING,___PRC(416),___L0___riscv_23_riscv_2d_type_2d_r)
+   ___SET_NARGS(6) ___JUMPINT(___NOTHING,___PRC(415),___L0___riscv_23_riscv_2d_type_2d_r)
 ___DEF_GLBL(___L7___riscv_23_riscv_2d_sllw)
    ___SET_R1(___SUB(50))
    ___SET_R0(___LBL(4))
@@ -6385,7 +6381,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_srlw
 #undef ___PH_LBL0
-#define ___PH_LBL0 402
+#define ___PH_LBL0 401
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -6437,7 +6433,7 @@ ___DEF_GLBL(___L6___riscv_23_riscv_2d_srlw)
    ___POLL(5)
 ___DEF_SLBL(5,___L5___riscv_23_riscv_2d_srlw)
    ___ADJFP(-5)
-   ___SET_NARGS(6) ___JUMPINT(___NOTHING,___PRC(416),___L0___riscv_23_riscv_2d_type_2d_r)
+   ___SET_NARGS(6) ___JUMPINT(___NOTHING,___PRC(415),___L0___riscv_23_riscv_2d_type_2d_r)
 ___DEF_GLBL(___L7___riscv_23_riscv_2d_srlw)
    ___SET_R1(___SUB(50))
    ___SET_R0(___LBL(4))
@@ -6448,7 +6444,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_sraw
 #undef ___PH_LBL0
-#define ___PH_LBL0 409
+#define ___PH_LBL0 408
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -6501,7 +6497,7 @@ ___DEF_GLBL(___L6___riscv_23_riscv_2d_sraw)
    ___POLL(5)
 ___DEF_SLBL(5,___L5___riscv_23_riscv_2d_sraw)
    ___ADJFP(-4)
-   ___SET_NARGS(7) ___JUMPINT(___NOTHING,___PRC(416),___L0___riscv_23_riscv_2d_type_2d_r)
+   ___SET_NARGS(7) ___JUMPINT(___NOTHING,___PRC(415),___L0___riscv_23_riscv_2d_type_2d_r)
 ___DEF_GLBL(___L7___riscv_23_riscv_2d_sraw)
    ___SET_R1(___SUB(50))
    ___SET_R0(___LBL(4))
@@ -6512,7 +6508,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_type_2d_r
 #undef ___PH_LBL0
-#define ___PH_LBL0 416
+#define ___PH_LBL0 415
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -6695,7 +6691,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_jalr
 #undef ___PH_LBL0
-#define ___PH_LBL0 436
+#define ___PH_LBL0 435
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -6730,7 +6726,7 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_jalr)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_jalr)
    ___SET_R0(___LBL(2))
-   ___SET_NARGS(6) ___JUMPINT(___NOTHING,___PRC(576),___L0___riscv_23_riscv_2d_type_2d_i)
+   ___SET_NARGS(6) ___JUMPINT(___NOTHING,___PRC(575),___L0___riscv_23_riscv_2d_type_2d_i)
 ___DEF_SLBL(2,___L2___riscv_23_riscv_2d_jalr)
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(3))
@@ -6759,7 +6755,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_lb
 #undef ___PH_LBL0
-#define ___PH_LBL0 442
+#define ___PH_LBL0 441
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -6785,14 +6781,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_lb)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_lb)
-   ___SET_NARGS(6) ___JUMPINT(___NOTHING,___PRC(576),___L0___riscv_23_riscv_2d_type_2d_i)
+   ___SET_NARGS(6) ___JUMPINT(___NOTHING,___PRC(575),___L0___riscv_23_riscv_2d_type_2d_i)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_lh
 #undef ___PH_LBL0
-#define ___PH_LBL0 445
+#define ___PH_LBL0 444
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -6818,14 +6814,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_lh)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_lh)
-   ___SET_NARGS(6) ___JUMPINT(___NOTHING,___PRC(576),___L0___riscv_23_riscv_2d_type_2d_i)
+   ___SET_NARGS(6) ___JUMPINT(___NOTHING,___PRC(575),___L0___riscv_23_riscv_2d_type_2d_i)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_lw
 #undef ___PH_LBL0
-#define ___PH_LBL0 448
+#define ___PH_LBL0 447
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -6851,14 +6847,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_lw)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_lw)
-   ___SET_NARGS(6) ___JUMPINT(___NOTHING,___PRC(576),___L0___riscv_23_riscv_2d_type_2d_i)
+   ___SET_NARGS(6) ___JUMPINT(___NOTHING,___PRC(575),___L0___riscv_23_riscv_2d_type_2d_i)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_lbu
 #undef ___PH_LBL0
-#define ___PH_LBL0 451
+#define ___PH_LBL0 450
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -6884,14 +6880,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_lbu)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_lbu)
-   ___SET_NARGS(6) ___JUMPINT(___NOTHING,___PRC(576),___L0___riscv_23_riscv_2d_type_2d_i)
+   ___SET_NARGS(6) ___JUMPINT(___NOTHING,___PRC(575),___L0___riscv_23_riscv_2d_type_2d_i)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_lhu
 #undef ___PH_LBL0
-#define ___PH_LBL0 454
+#define ___PH_LBL0 453
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -6917,14 +6913,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_lhu)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_lhu)
-   ___SET_NARGS(6) ___JUMPINT(___NOTHING,___PRC(576),___L0___riscv_23_riscv_2d_type_2d_i)
+   ___SET_NARGS(6) ___JUMPINT(___NOTHING,___PRC(575),___L0___riscv_23_riscv_2d_type_2d_i)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_addi
 #undef ___PH_LBL0
-#define ___PH_LBL0 457
+#define ___PH_LBL0 456
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -6951,14 +6947,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_addi)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_addi)
    ___ADJFP(-1)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(576),___L0___riscv_23_riscv_2d_type_2d_i)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(575),___L0___riscv_23_riscv_2d_type_2d_i)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_slti
 #undef ___PH_LBL0
-#define ___PH_LBL0 460
+#define ___PH_LBL0 459
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -6985,14 +6981,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_slti)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_slti)
    ___ADJFP(-1)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(576),___L0___riscv_23_riscv_2d_type_2d_i)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(575),___L0___riscv_23_riscv_2d_type_2d_i)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_sltiu
 #undef ___PH_LBL0
-#define ___PH_LBL0 463
+#define ___PH_LBL0 462
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -7019,14 +7015,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_sltiu)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_sltiu)
    ___ADJFP(-1)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(576),___L0___riscv_23_riscv_2d_type_2d_i)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(575),___L0___riscv_23_riscv_2d_type_2d_i)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_xori
 #undef ___PH_LBL0
-#define ___PH_LBL0 466
+#define ___PH_LBL0 465
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -7053,14 +7049,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_xori)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_xori)
    ___ADJFP(-1)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(576),___L0___riscv_23_riscv_2d_type_2d_i)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(575),___L0___riscv_23_riscv_2d_type_2d_i)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_ori
 #undef ___PH_LBL0
-#define ___PH_LBL0 469
+#define ___PH_LBL0 468
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -7087,14 +7083,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_ori)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_ori)
    ___ADJFP(-1)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(576),___L0___riscv_23_riscv_2d_type_2d_i)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(575),___L0___riscv_23_riscv_2d_type_2d_i)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_andi
 #undef ___PH_LBL0
-#define ___PH_LBL0 472
+#define ___PH_LBL0 471
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -7121,14 +7117,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_andi)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_andi)
    ___ADJFP(-1)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(576),___L0___riscv_23_riscv_2d_type_2d_i)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(575),___L0___riscv_23_riscv_2d_type_2d_i)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_slli
 #undef ___PH_LBL0
-#define ___PH_LBL0 475
+#define ___PH_LBL0 474
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -7214,7 +7210,7 @@ ___DEF_SLBL(9,___L9___riscv_23_riscv_2d_slli)
    ___POLL(10)
 ___DEF_SLBL(10,___L10___riscv_23_riscv_2d_slli)
    ___ADJFP(-10)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(576),___L0___riscv_23_riscv_2d_type_2d_i)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(575),___L0___riscv_23_riscv_2d_type_2d_i)
 ___DEF_GLBL(___L12___riscv_23_riscv_2d_slli)
    ___SET_R1(___SUB(75))
    ___SET_R0(___LBL(6))
@@ -7228,7 +7224,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_srli
 #undef ___PH_LBL0
-#define ___PH_LBL0 487
+#define ___PH_LBL0 486
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -7314,7 +7310,7 @@ ___DEF_SLBL(9,___L9___riscv_23_riscv_2d_srli)
    ___POLL(10)
 ___DEF_SLBL(10,___L10___riscv_23_riscv_2d_srli)
    ___ADJFP(-10)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(576),___L0___riscv_23_riscv_2d_type_2d_i)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(575),___L0___riscv_23_riscv_2d_type_2d_i)
 ___DEF_GLBL(___L12___riscv_23_riscv_2d_srli)
    ___SET_R1(___SUB(76))
    ___SET_R0(___LBL(6))
@@ -7328,7 +7324,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_srai
 #undef ___PH_LBL0
-#define ___PH_LBL0 499
+#define ___PH_LBL0 498
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -7419,7 +7415,7 @@ ___DEF_SLBL(10,___L10___riscv_23_riscv_2d_srai)
    ___POLL(11)
 ___DEF_SLBL(11,___L11___riscv_23_riscv_2d_srai)
    ___ADJFP(-10)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(576),___L0___riscv_23_riscv_2d_type_2d_i)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(575),___L0___riscv_23_riscv_2d_type_2d_i)
 ___DEF_GLBL(___L13___riscv_23_riscv_2d_srai)
    ___SET_R1(___SUB(77))
    ___SET_R0(___LBL(6))
@@ -7433,7 +7429,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_lwu
 #undef ___PH_LBL0
-#define ___PH_LBL0 512
+#define ___PH_LBL0 511
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -7485,7 +7481,7 @@ ___DEF_GLBL(___L6___riscv_23_riscv_2d_lwu)
    ___POLL(5)
 ___DEF_SLBL(5,___L5___riscv_23_riscv_2d_lwu)
    ___ADJFP(-5)
-   ___SET_NARGS(6) ___JUMPINT(___NOTHING,___PRC(576),___L0___riscv_23_riscv_2d_type_2d_i)
+   ___SET_NARGS(6) ___JUMPINT(___NOTHING,___PRC(575),___L0___riscv_23_riscv_2d_type_2d_i)
 ___DEF_GLBL(___L7___riscv_23_riscv_2d_lwu)
    ___SET_R1(___SUB(50))
    ___SET_R0(___LBL(4))
@@ -7496,7 +7492,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_ld
 #undef ___PH_LBL0
-#define ___PH_LBL0 519
+#define ___PH_LBL0 518
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -7548,7 +7544,7 @@ ___DEF_GLBL(___L6___riscv_23_riscv_2d_ld)
    ___POLL(5)
 ___DEF_SLBL(5,___L5___riscv_23_riscv_2d_ld)
    ___ADJFP(-5)
-   ___SET_NARGS(6) ___JUMPINT(___NOTHING,___PRC(576),___L0___riscv_23_riscv_2d_type_2d_i)
+   ___SET_NARGS(6) ___JUMPINT(___NOTHING,___PRC(575),___L0___riscv_23_riscv_2d_type_2d_i)
 ___DEF_GLBL(___L7___riscv_23_riscv_2d_ld)
    ___SET_R1(___SUB(50))
    ___SET_R0(___LBL(4))
@@ -7559,7 +7555,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_addiw
 #undef ___PH_LBL0
-#define ___PH_LBL0 526
+#define ___PH_LBL0 525
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -7611,7 +7607,7 @@ ___DEF_GLBL(___L6___riscv_23_riscv_2d_addiw)
    ___POLL(5)
 ___DEF_SLBL(5,___L5___riscv_23_riscv_2d_addiw)
    ___ADJFP(-5)
-   ___SET_NARGS(6) ___JUMPINT(___NOTHING,___PRC(576),___L0___riscv_23_riscv_2d_type_2d_i)
+   ___SET_NARGS(6) ___JUMPINT(___NOTHING,___PRC(575),___L0___riscv_23_riscv_2d_type_2d_i)
 ___DEF_GLBL(___L7___riscv_23_riscv_2d_addiw)
    ___SET_R1(___SUB(50))
    ___SET_R0(___LBL(4))
@@ -7622,7 +7618,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_slliw
 #undef ___PH_LBL0
-#define ___PH_LBL0 533
+#define ___PH_LBL0 532
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -7721,7 +7717,7 @@ ___DEF_SLBL(11,___L11___riscv_23_riscv_2d_slliw)
    ___POLL(12)
 ___DEF_SLBL(12,___L12___riscv_23_riscv_2d_slliw)
    ___ADJFP(-9)
-   ___SET_NARGS(6) ___JUMPINT(___NOTHING,___PRC(576),___L0___riscv_23_riscv_2d_type_2d_i)
+   ___SET_NARGS(6) ___JUMPINT(___NOTHING,___PRC(575),___L0___riscv_23_riscv_2d_type_2d_i)
 ___DEF_GLBL(___L15___riscv_23_riscv_2d_slliw)
    ___SET_R1(___SUB(78))
    ___SET_R0(___LBL(8))
@@ -7735,7 +7731,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_srliw
 #undef ___PH_LBL0
-#define ___PH_LBL0 547
+#define ___PH_LBL0 546
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -7834,7 +7830,7 @@ ___DEF_SLBL(11,___L11___riscv_23_riscv_2d_srliw)
    ___POLL(12)
 ___DEF_SLBL(12,___L12___riscv_23_riscv_2d_srliw)
    ___ADJFP(-9)
-   ___SET_NARGS(6) ___JUMPINT(___NOTHING,___PRC(576),___L0___riscv_23_riscv_2d_type_2d_i)
+   ___SET_NARGS(6) ___JUMPINT(___NOTHING,___PRC(575),___L0___riscv_23_riscv_2d_type_2d_i)
 ___DEF_GLBL(___L15___riscv_23_riscv_2d_srliw)
    ___SET_R1(___SUB(79))
    ___SET_R0(___LBL(8))
@@ -7848,7 +7844,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_sraiw
 #undef ___PH_LBL0
-#define ___PH_LBL0 561
+#define ___PH_LBL0 560
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -7952,7 +7948,7 @@ ___DEF_SLBL(12,___L12___riscv_23_riscv_2d_sraiw)
    ___POLL(13)
 ___DEF_SLBL(13,___L13___riscv_23_riscv_2d_sraiw)
    ___ADJFP(-9)
-   ___SET_NARGS(6) ___JUMPINT(___NOTHING,___PRC(576),___L0___riscv_23_riscv_2d_type_2d_i)
+   ___SET_NARGS(6) ___JUMPINT(___NOTHING,___PRC(575),___L0___riscv_23_riscv_2d_type_2d_i)
 ___DEF_GLBL(___L16___riscv_23_riscv_2d_sraiw)
    ___SET_R1(___SUB(80))
    ___SET_R0(___LBL(8))
@@ -7966,7 +7962,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_type_2d_i
 #undef ___PH_LBL0
-#define ___PH_LBL0 576
+#define ___PH_LBL0 575
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -8515,7 +8511,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_sb
 #undef ___PH_LBL0
-#define ___PH_LBL0 645
+#define ___PH_LBL0 644
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -8542,14 +8538,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_sb)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_sb)
    ___ADJFP(-1)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(661),___L0___riscv_23_riscv_2d_type_2d_s)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(660),___L0___riscv_23_riscv_2d_type_2d_s)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_sh
 #undef ___PH_LBL0
-#define ___PH_LBL0 648
+#define ___PH_LBL0 647
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -8576,14 +8572,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_sh)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_sh)
    ___ADJFP(-1)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(661),___L0___riscv_23_riscv_2d_type_2d_s)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(660),___L0___riscv_23_riscv_2d_type_2d_s)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_sw
 #undef ___PH_LBL0
-#define ___PH_LBL0 651
+#define ___PH_LBL0 650
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -8610,14 +8606,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_sw)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_sw)
    ___ADJFP(-1)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(661),___L0___riscv_23_riscv_2d_type_2d_s)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(660),___L0___riscv_23_riscv_2d_type_2d_s)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_sd
 #undef ___PH_LBL0
-#define ___PH_LBL0 654
+#define ___PH_LBL0 653
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -8668,7 +8664,7 @@ ___DEF_GLBL(___L6___riscv_23_riscv_2d_sd)
    ___POLL(5)
 ___DEF_SLBL(5,___L5___riscv_23_riscv_2d_sd)
    ___ADJFP(-6)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(661),___L0___riscv_23_riscv_2d_type_2d_s)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(660),___L0___riscv_23_riscv_2d_type_2d_s)
 ___DEF_GLBL(___L7___riscv_23_riscv_2d_sd)
    ___SET_R1(___SUB(50))
    ___SET_R0(___LBL(4))
@@ -8679,7 +8675,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_type_2d_s
 #undef ___PH_LBL0
-#define ___PH_LBL0 661
+#define ___PH_LBL0 660
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -8882,7 +8878,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_beq
 #undef ___PH_LBL0
-#define ___PH_LBL0 687
+#define ___PH_LBL0 686
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -8909,14 +8905,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_beq)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_beq)
    ___ADJFP(-1)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(705),___L0___riscv_23_riscv_2d_type_2d_b)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(704),___L0___riscv_23_riscv_2d_type_2d_b)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_bne
 #undef ___PH_LBL0
-#define ___PH_LBL0 690
+#define ___PH_LBL0 689
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -8943,14 +8939,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_bne)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_bne)
    ___ADJFP(-1)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(705),___L0___riscv_23_riscv_2d_type_2d_b)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(704),___L0___riscv_23_riscv_2d_type_2d_b)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_blt
 #undef ___PH_LBL0
-#define ___PH_LBL0 693
+#define ___PH_LBL0 692
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -8977,14 +8973,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_blt)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_blt)
    ___ADJFP(-1)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(705),___L0___riscv_23_riscv_2d_type_2d_b)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(704),___L0___riscv_23_riscv_2d_type_2d_b)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_bge
 #undef ___PH_LBL0
-#define ___PH_LBL0 696
+#define ___PH_LBL0 695
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -9011,14 +9007,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_bge)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_bge)
    ___ADJFP(-1)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(705),___L0___riscv_23_riscv_2d_type_2d_b)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(704),___L0___riscv_23_riscv_2d_type_2d_b)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_bltu
 #undef ___PH_LBL0
-#define ___PH_LBL0 699
+#define ___PH_LBL0 698
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -9045,14 +9041,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_bltu)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_bltu)
    ___ADJFP(-1)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(705),___L0___riscv_23_riscv_2d_type_2d_b)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(704),___L0___riscv_23_riscv_2d_type_2d_b)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_bgeu
 #undef ___PH_LBL0
-#define ___PH_LBL0 702
+#define ___PH_LBL0 701
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -9079,14 +9075,14 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_bgeu)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_bgeu)
    ___ADJFP(-1)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(705),___L0___riscv_23_riscv_2d_type_2d_b)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(704),___L0___riscv_23_riscv_2d_type_2d_b)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_type_2d_b
 #undef ___PH_LBL0
-#define ___PH_LBL0 705
+#define ___PH_LBL0 704
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9416,7 +9412,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_lui
 #undef ___PH_LBL0
-#define ___PH_LBL0 746
+#define ___PH_LBL0 745
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9449,7 +9445,7 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_lui)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_lui)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(4),___PRC(758),___L___riscv_23_riscv_2d_type_2d_u)
+   ___JUMPINT(___SET_NARGS(4),___PRC(757),___L___riscv_23_riscv_2d_type_2d_u)
 ___DEF_SLBL(2,___L2___riscv_23_riscv_2d_lui)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(3))
@@ -9478,7 +9474,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_auipc
 #undef ___PH_LBL0
-#define ___PH_LBL0 752
+#define ___PH_LBL0 751
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9511,7 +9507,7 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_auipc)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_auipc)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(4),___PRC(758),___L___riscv_23_riscv_2d_type_2d_u)
+   ___JUMPINT(___SET_NARGS(4),___PRC(757),___L___riscv_23_riscv_2d_type_2d_u)
 ___DEF_SLBL(2,___L2___riscv_23_riscv_2d_auipc)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(3))
@@ -9540,7 +9536,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_type_2d_u
 #undef ___PH_LBL0
-#define ___PH_LBL0 758
+#define ___PH_LBL0 757
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9660,7 +9656,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_jal
 #undef ___PH_LBL0
-#define ___PH_LBL0 774
+#define ___PH_LBL0 773
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9693,7 +9689,7 @@ ___DEF_GLBL(___L___riscv_23_riscv_2d_jal)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___riscv_23_riscv_2d_jal)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(4),___PRC(780),___L___riscv_23_riscv_2d_type_2d_j)
+   ___JUMPINT(___SET_NARGS(4),___PRC(779),___L___riscv_23_riscv_2d_type_2d_j)
 ___DEF_SLBL(2,___L2___riscv_23_riscv_2d_jal)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(3))
@@ -9722,7 +9718,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_type_2d_j
 #undef ___PH_LBL0
-#define ___PH_LBL0 780
+#define ___PH_LBL0 779
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -9992,7 +9988,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_fence
 #undef ___PH_LBL0
-#define ___PH_LBL0 816
+#define ___PH_LBL0 815
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -10221,7 +10217,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_fence_2e_i
 #undef ___PH_LBL0
-#define ___PH_LBL0 841
+#define ___PH_LBL0 840
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -10275,7 +10271,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_ecall
 #undef ___PH_LBL0
-#define ___PH_LBL0 847
+#define ___PH_LBL0 846
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -10329,7 +10325,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___riscv_23_riscv_2d_ebreak
 #undef ___PH_LBL0
-#define ___PH_LBL0 853
+#define ___PH_LBL0 852
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -10532,37 +10528,36 @@ ___BEGIN_LBL
 ,___DEF_LBL_INTRO(___H___riscv_23_riscv_2d_dq,___REF_SYM(42,___S___riscv_23_riscv_2d_dq),___REF_FAL,2,0)
 ,___DEF_LBL_PROC(___H___riscv_23_riscv_2d_dq,2,-1)
 ,___DEF_LBL_RET(___H___riscv_23_riscv_2d_dq,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_INTRO(___H___riscv_23_riscv_2d_data_2d_elems,___REF_SYM(37,___S___riscv_23_riscv_2d_data_2d_elems),___REF_FAL,30,0)
+,___DEF_LBL_INTRO(___H___riscv_23_riscv_2d_data_2d_elems,___REF_SYM(37,___S___riscv_23_riscv_2d_data_2d_elems),___REF_FAL,29,0)
 ,___DEF_LBL_PROC(___H___riscv_23_riscv_2d_data_2d_elems,3,-1)
-,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETI,8,0,0x3f0fL))
-,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETI,8,0,0x3f0fL))
-,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,5,0,0xfL))
-,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETI,2,4,0x3f3L))
-,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,9,4,0x3fL))
-,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETI,2,4,0x3f3L))
-,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___OFD(___RETI,12,2,0x3f03fL))
-,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,9,2,0x3fL))
-,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,9,2,0x3fL))
-,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,9,2,0x3fL))
-,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,9,2,0x7fL))
-,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,9,2,0x3fL))
-,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETI,4,4,0x3ffL))
-,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,9,4,0x7fL))
-,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETI,4,4,0x3ffL))
-,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___OFD(___RETI,12,4,0x3f0ffL))
-,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,9,4,0xffL))
-,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,9,4,0xffL))
-,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,9,4,0x1ffL))
-,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,9,4,0x1bfL))
-,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,9,4,0xbfL))
-,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,13,4,0x10bfL))
-,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,13,4,0x10bfL))
-,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,13,4,0x107fL))
-,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,13,4,0x107fL))
-,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,9,4,0x3fL))
-,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,13,4,0x10bfL))
-,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,13,4,0x10bfL))
-,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,13,4,0x10bfL))
+,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETI,8,0,0x3f07L))
+,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,5,0,0x7L))
+,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETI,1,4,0x3f1L))
+,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,5,3,0x1fL))
+,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETI,1,4,0x3f1L))
+,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETI,8,1,0x3f1fL))
+,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,5,1,0x1fL))
+,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,5,1,0x1fL))
+,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,5,1,0x1fL))
+,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,9,1,0x3fL))
+,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,5,1,0x1fL))
+,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETI,3,4,0x3f7L))
+,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,9,3,0x3fL))
+,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETI,3,4,0x3f7L))
+,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___OFD(___RETI,12,3,0x3f07fL))
+,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,9,3,0x7fL))
+,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,9,3,0x7fL))
+,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,9,3,0xffL))
+,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,9,3,0xdfL))
+,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,9,3,0x5fL))
+,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,9,3,0x15fL))
+,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,9,3,0x15fL))
+,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,9,3,0x13fL))
+,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,9,3,0x13fL))
+,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,5,3,0x1fL))
+,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,9,3,0x15fL))
+,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,9,3,0x15fL))
+,___DEF_LBL_RET(___H___riscv_23_riscv_2d_data_2d_elems,___IFD(___RETN,9,3,0x15fL))
 ,___DEF_LBL_INTRO(___H___riscv_23_riscv_2d_nop,___REF_SYM(79,___S___riscv_23_riscv_2d_nop),___REF_FAL,4,0)
 ,___DEF_LBL_PROC(___H___riscv_23_riscv_2d_nop,1,-1)
 ,___DEF_LBL_RET(___H___riscv_23_riscv_2d_nop,___IFD(___RETI,8,0,0x3f03L))
@@ -11245,10 +11240,8 @@ ___BEGIN_LBL
 ___END_LBL
 
 ___BEGIN_OFD
- ___DEF_OFD(___RETI,12,2)
-               ___GCMAP1(0x3f03fL)
-,___DEF_OFD(___RETI,12,4)
-               ___GCMAP1(0x3f0ffL)
+ ___DEF_OFD(___RETI,12,3)
+               ___GCMAP1(0x3f07fL)
 ,___DEF_OFD(___RETI,12,12)
                ___GCMAP1(0x3f021L)
 ,___DEF_OFD(___RETI,12,4)
@@ -11320,93 +11313,93 @@ ___DEF_MOD_PRM(29,___G___riscv_23_riscv_2d_d8b,140)
 ___DEF_MOD_PRM(32,___G___riscv_23_riscv_2d_dd,143)
 ___DEF_MOD_PRM(35,___G___riscv_23_riscv_2d_dq,146)
 ___DEF_MOD_PRM(30,___G___riscv_23_riscv_2d_data_2d_elems,149)
-___DEF_MOD_PRM(72,___G___riscv_23_riscv_2d_nop,180)
-___DEF_MOD_PRM(64,___G___riscv_23_riscv_2d_li,185)
-___DEF_MOD_PRM(69,___G___riscv_23_riscv_2d_mv,231)
-___DEF_MOD_PRM(73,___G___riscv_23_riscv_2d_not,236)
-___DEF_MOD_PRM(70,___G___riscv_23_riscv_2d_neg,241)
-___DEF_MOD_PRM(71,___G___riscv_23_riscv_2d_negw,244)
-___DEF_MOD_PRM(81,___G___riscv_23_riscv_2d_sext_2e_w,247)
-___DEF_MOD_PRM(80,___G___riscv_23_riscv_2d_seqz,254)
-___DEF_MOD_PRM(93,___G___riscv_23_riscv_2d_snez,259)
-___DEF_MOD_PRM(92,___G___riscv_23_riscv_2d_sltz,262)
-___DEF_MOD_PRM(82,___G___riscv_23_riscv_2d_sgtz,265)
-___DEF_MOD_PRM(11,___G___riscv_23_riscv_2d_beqz,268)
-___DEF_MOD_PRM(25,___G___riscv_23_riscv_2d_bnez,271)
-___DEF_MOD_PRM(20,___G___riscv_23_riscv_2d_blez,274)
-___DEF_MOD_PRM(14,___G___riscv_23_riscv_2d_bgez,277)
-___DEF_MOD_PRM(23,___G___riscv_23_riscv_2d_bltz,280)
-___DEF_MOD_PRM(17,___G___riscv_23_riscv_2d_bgtz,283)
-___DEF_MOD_PRM(15,___G___riscv_23_riscv_2d_bgt,286)
-___DEF_MOD_PRM(18,___G___riscv_23_riscv_2d_ble,289)
-___DEF_MOD_PRM(16,___G___riscv_23_riscv_2d_bgtu,292)
-___DEF_MOD_PRM(19,___G___riscv_23_riscv_2d_bleu,295)
-___DEF_MOD_PRM(52,___G___riscv_23_riscv_2d_j,298)
-___DEF_MOD_PRM(54,___G___riscv_23_riscv_2d_jal_2a_,301)
-___DEF_MOD_PRM(57,___G___riscv_23_riscv_2d_jr,304)
-___DEF_MOD_PRM(56,___G___riscv_23_riscv_2d_jalr_2a_,311)
-___DEF_MOD_PRM(77,___G___riscv_23_riscv_2d_ret,318)
-___DEF_MOD_PRM(26,___G___riscv_23_riscv_2d_call,325)
-___DEF_MOD_PRM(105,___G___riscv_23_riscv_2d_tail,338)
-___DEF_MOD_PRM(2,___G___riscv_23_riscv_2d_add,351)
-___DEF_MOD_PRM(102,___G___riscv_23_riscv_2d_sub,354)
-___DEF_MOD_PRM(84,___G___riscv_23_riscv_2d_sll,357)
-___DEF_MOD_PRM(88,___G___riscv_23_riscv_2d_slt,360)
-___DEF_MOD_PRM(91,___G___riscv_23_riscv_2d_sltu,363)
-___DEF_MOD_PRM(113,___G___riscv_23_riscv_2d_xor,366)
-___DEF_MOD_PRM(98,___G___riscv_23_riscv_2d_srl,369)
-___DEF_MOD_PRM(94,___G___riscv_23_riscv_2d_sra,372)
-___DEF_MOD_PRM(74,___G___riscv_23_riscv_2d_or,375)
-___DEF_MOD_PRM(6,___G___riscv_23_riscv_2d_and,378)
-___DEF_MOD_PRM(5,___G___riscv_23_riscv_2d_addw,381)
-___DEF_MOD_PRM(103,___G___riscv_23_riscv_2d_subw,388)
-___DEF_MOD_PRM(87,___G___riscv_23_riscv_2d_sllw,395)
-___DEF_MOD_PRM(101,___G___riscv_23_riscv_2d_srlw,402)
-___DEF_MOD_PRM(97,___G___riscv_23_riscv_2d_sraw,409)
-___DEF_MOD_PRM(109,___G___riscv_23_riscv_2d_type_2d_r,416)
-___DEF_MOD_PRM(55,___G___riscv_23_riscv_2d_jalr,436)
-___DEF_MOD_PRM(59,___G___riscv_23_riscv_2d_lb,442)
-___DEF_MOD_PRM(62,___G___riscv_23_riscv_2d_lh,445)
-___DEF_MOD_PRM(67,___G___riscv_23_riscv_2d_lw,448)
-___DEF_MOD_PRM(60,___G___riscv_23_riscv_2d_lbu,451)
-___DEF_MOD_PRM(63,___G___riscv_23_riscv_2d_lhu,454)
-___DEF_MOD_PRM(3,___G___riscv_23_riscv_2d_addi,457)
-___DEF_MOD_PRM(89,___G___riscv_23_riscv_2d_slti,460)
-___DEF_MOD_PRM(90,___G___riscv_23_riscv_2d_sltiu,463)
-___DEF_MOD_PRM(114,___G___riscv_23_riscv_2d_xori,466)
-___DEF_MOD_PRM(75,___G___riscv_23_riscv_2d_ori,469)
-___DEF_MOD_PRM(7,___G___riscv_23_riscv_2d_andi,472)
-___DEF_MOD_PRM(85,___G___riscv_23_riscv_2d_slli,475)
-___DEF_MOD_PRM(99,___G___riscv_23_riscv_2d_srli,487)
-___DEF_MOD_PRM(95,___G___riscv_23_riscv_2d_srai,499)
-___DEF_MOD_PRM(68,___G___riscv_23_riscv_2d_lwu,512)
-___DEF_MOD_PRM(61,___G___riscv_23_riscv_2d_ld,519)
-___DEF_MOD_PRM(4,___G___riscv_23_riscv_2d_addiw,526)
-___DEF_MOD_PRM(86,___G___riscv_23_riscv_2d_slliw,533)
-___DEF_MOD_PRM(100,___G___riscv_23_riscv_2d_srliw,547)
-___DEF_MOD_PRM(96,___G___riscv_23_riscv_2d_sraiw,561)
-___DEF_MOD_PRM(107,___G___riscv_23_riscv_2d_type_2d_i,576)
-___DEF_MOD_PRM(78,___G___riscv_23_riscv_2d_sb,645)
-___DEF_MOD_PRM(83,___G___riscv_23_riscv_2d_sh,648)
-___DEF_MOD_PRM(104,___G___riscv_23_riscv_2d_sw,651)
-___DEF_MOD_PRM(79,___G___riscv_23_riscv_2d_sd,654)
-___DEF_MOD_PRM(110,___G___riscv_23_riscv_2d_type_2d_s,661)
-___DEF_MOD_PRM(10,___G___riscv_23_riscv_2d_beq,687)
-___DEF_MOD_PRM(24,___G___riscv_23_riscv_2d_bne,690)
-___DEF_MOD_PRM(21,___G___riscv_23_riscv_2d_blt,693)
-___DEF_MOD_PRM(12,___G___riscv_23_riscv_2d_bge,696)
-___DEF_MOD_PRM(22,___G___riscv_23_riscv_2d_bltu,699)
-___DEF_MOD_PRM(13,___G___riscv_23_riscv_2d_bgeu,702)
-___DEF_MOD_PRM(106,___G___riscv_23_riscv_2d_type_2d_b,705)
-___DEF_MOD_PRM(66,___G___riscv_23_riscv_2d_lui,746)
-___DEF_MOD_PRM(9,___G___riscv_23_riscv_2d_auipc,752)
-___DEF_MOD_PRM(111,___G___riscv_23_riscv_2d_type_2d_u,758)
-___DEF_MOD_PRM(53,___G___riscv_23_riscv_2d_jal,774)
-___DEF_MOD_PRM(108,___G___riscv_23_riscv_2d_type_2d_j,780)
-___DEF_MOD_PRM(40,___G___riscv_23_riscv_2d_fence,816)
-___DEF_MOD_PRM(41,___G___riscv_23_riscv_2d_fence_2e_i,841)
-___DEF_MOD_PRM(39,___G___riscv_23_riscv_2d_ecall,847)
-___DEF_MOD_PRM(38,___G___riscv_23_riscv_2d_ebreak,853)
+___DEF_MOD_PRM(72,___G___riscv_23_riscv_2d_nop,179)
+___DEF_MOD_PRM(64,___G___riscv_23_riscv_2d_li,184)
+___DEF_MOD_PRM(69,___G___riscv_23_riscv_2d_mv,230)
+___DEF_MOD_PRM(73,___G___riscv_23_riscv_2d_not,235)
+___DEF_MOD_PRM(70,___G___riscv_23_riscv_2d_neg,240)
+___DEF_MOD_PRM(71,___G___riscv_23_riscv_2d_negw,243)
+___DEF_MOD_PRM(81,___G___riscv_23_riscv_2d_sext_2e_w,246)
+___DEF_MOD_PRM(80,___G___riscv_23_riscv_2d_seqz,253)
+___DEF_MOD_PRM(93,___G___riscv_23_riscv_2d_snez,258)
+___DEF_MOD_PRM(92,___G___riscv_23_riscv_2d_sltz,261)
+___DEF_MOD_PRM(82,___G___riscv_23_riscv_2d_sgtz,264)
+___DEF_MOD_PRM(11,___G___riscv_23_riscv_2d_beqz,267)
+___DEF_MOD_PRM(25,___G___riscv_23_riscv_2d_bnez,270)
+___DEF_MOD_PRM(20,___G___riscv_23_riscv_2d_blez,273)
+___DEF_MOD_PRM(14,___G___riscv_23_riscv_2d_bgez,276)
+___DEF_MOD_PRM(23,___G___riscv_23_riscv_2d_bltz,279)
+___DEF_MOD_PRM(17,___G___riscv_23_riscv_2d_bgtz,282)
+___DEF_MOD_PRM(15,___G___riscv_23_riscv_2d_bgt,285)
+___DEF_MOD_PRM(18,___G___riscv_23_riscv_2d_ble,288)
+___DEF_MOD_PRM(16,___G___riscv_23_riscv_2d_bgtu,291)
+___DEF_MOD_PRM(19,___G___riscv_23_riscv_2d_bleu,294)
+___DEF_MOD_PRM(52,___G___riscv_23_riscv_2d_j,297)
+___DEF_MOD_PRM(54,___G___riscv_23_riscv_2d_jal_2a_,300)
+___DEF_MOD_PRM(57,___G___riscv_23_riscv_2d_jr,303)
+___DEF_MOD_PRM(56,___G___riscv_23_riscv_2d_jalr_2a_,310)
+___DEF_MOD_PRM(77,___G___riscv_23_riscv_2d_ret,317)
+___DEF_MOD_PRM(26,___G___riscv_23_riscv_2d_call,324)
+___DEF_MOD_PRM(105,___G___riscv_23_riscv_2d_tail,337)
+___DEF_MOD_PRM(2,___G___riscv_23_riscv_2d_add,350)
+___DEF_MOD_PRM(102,___G___riscv_23_riscv_2d_sub,353)
+___DEF_MOD_PRM(84,___G___riscv_23_riscv_2d_sll,356)
+___DEF_MOD_PRM(88,___G___riscv_23_riscv_2d_slt,359)
+___DEF_MOD_PRM(91,___G___riscv_23_riscv_2d_sltu,362)
+___DEF_MOD_PRM(113,___G___riscv_23_riscv_2d_xor,365)
+___DEF_MOD_PRM(98,___G___riscv_23_riscv_2d_srl,368)
+___DEF_MOD_PRM(94,___G___riscv_23_riscv_2d_sra,371)
+___DEF_MOD_PRM(74,___G___riscv_23_riscv_2d_or,374)
+___DEF_MOD_PRM(6,___G___riscv_23_riscv_2d_and,377)
+___DEF_MOD_PRM(5,___G___riscv_23_riscv_2d_addw,380)
+___DEF_MOD_PRM(103,___G___riscv_23_riscv_2d_subw,387)
+___DEF_MOD_PRM(87,___G___riscv_23_riscv_2d_sllw,394)
+___DEF_MOD_PRM(101,___G___riscv_23_riscv_2d_srlw,401)
+___DEF_MOD_PRM(97,___G___riscv_23_riscv_2d_sraw,408)
+___DEF_MOD_PRM(109,___G___riscv_23_riscv_2d_type_2d_r,415)
+___DEF_MOD_PRM(55,___G___riscv_23_riscv_2d_jalr,435)
+___DEF_MOD_PRM(59,___G___riscv_23_riscv_2d_lb,441)
+___DEF_MOD_PRM(62,___G___riscv_23_riscv_2d_lh,444)
+___DEF_MOD_PRM(67,___G___riscv_23_riscv_2d_lw,447)
+___DEF_MOD_PRM(60,___G___riscv_23_riscv_2d_lbu,450)
+___DEF_MOD_PRM(63,___G___riscv_23_riscv_2d_lhu,453)
+___DEF_MOD_PRM(3,___G___riscv_23_riscv_2d_addi,456)
+___DEF_MOD_PRM(89,___G___riscv_23_riscv_2d_slti,459)
+___DEF_MOD_PRM(90,___G___riscv_23_riscv_2d_sltiu,462)
+___DEF_MOD_PRM(114,___G___riscv_23_riscv_2d_xori,465)
+___DEF_MOD_PRM(75,___G___riscv_23_riscv_2d_ori,468)
+___DEF_MOD_PRM(7,___G___riscv_23_riscv_2d_andi,471)
+___DEF_MOD_PRM(85,___G___riscv_23_riscv_2d_slli,474)
+___DEF_MOD_PRM(99,___G___riscv_23_riscv_2d_srli,486)
+___DEF_MOD_PRM(95,___G___riscv_23_riscv_2d_srai,498)
+___DEF_MOD_PRM(68,___G___riscv_23_riscv_2d_lwu,511)
+___DEF_MOD_PRM(61,___G___riscv_23_riscv_2d_ld,518)
+___DEF_MOD_PRM(4,___G___riscv_23_riscv_2d_addiw,525)
+___DEF_MOD_PRM(86,___G___riscv_23_riscv_2d_slliw,532)
+___DEF_MOD_PRM(100,___G___riscv_23_riscv_2d_srliw,546)
+___DEF_MOD_PRM(96,___G___riscv_23_riscv_2d_sraiw,560)
+___DEF_MOD_PRM(107,___G___riscv_23_riscv_2d_type_2d_i,575)
+___DEF_MOD_PRM(78,___G___riscv_23_riscv_2d_sb,644)
+___DEF_MOD_PRM(83,___G___riscv_23_riscv_2d_sh,647)
+___DEF_MOD_PRM(104,___G___riscv_23_riscv_2d_sw,650)
+___DEF_MOD_PRM(79,___G___riscv_23_riscv_2d_sd,653)
+___DEF_MOD_PRM(110,___G___riscv_23_riscv_2d_type_2d_s,660)
+___DEF_MOD_PRM(10,___G___riscv_23_riscv_2d_beq,686)
+___DEF_MOD_PRM(24,___G___riscv_23_riscv_2d_bne,689)
+___DEF_MOD_PRM(21,___G___riscv_23_riscv_2d_blt,692)
+___DEF_MOD_PRM(12,___G___riscv_23_riscv_2d_bge,695)
+___DEF_MOD_PRM(22,___G___riscv_23_riscv_2d_bltu,698)
+___DEF_MOD_PRM(13,___G___riscv_23_riscv_2d_bgeu,701)
+___DEF_MOD_PRM(106,___G___riscv_23_riscv_2d_type_2d_b,704)
+___DEF_MOD_PRM(66,___G___riscv_23_riscv_2d_lui,745)
+___DEF_MOD_PRM(9,___G___riscv_23_riscv_2d_auipc,751)
+___DEF_MOD_PRM(111,___G___riscv_23_riscv_2d_type_2d_u,757)
+___DEF_MOD_PRM(53,___G___riscv_23_riscv_2d_jal,773)
+___DEF_MOD_PRM(108,___G___riscv_23_riscv_2d_type_2d_j,779)
+___DEF_MOD_PRM(40,___G___riscv_23_riscv_2d_fence,815)
+___DEF_MOD_PRM(41,___G___riscv_23_riscv_2d_fence_2e_i,840)
+___DEF_MOD_PRM(39,___G___riscv_23_riscv_2d_ecall,846)
+___DEF_MOD_PRM(38,___G___riscv_23_riscv_2d_ebreak,852)
 ___END_MOD_PRM
 
 ___BEGIN_MOD_C_INIT
@@ -11441,93 +11434,93 @@ ___DEF_MOD_GLO(29,___G___riscv_23_riscv_2d_d8b,140)
 ___DEF_MOD_GLO(32,___G___riscv_23_riscv_2d_dd,143)
 ___DEF_MOD_GLO(35,___G___riscv_23_riscv_2d_dq,146)
 ___DEF_MOD_GLO(30,___G___riscv_23_riscv_2d_data_2d_elems,149)
-___DEF_MOD_GLO(72,___G___riscv_23_riscv_2d_nop,180)
-___DEF_MOD_GLO(64,___G___riscv_23_riscv_2d_li,185)
-___DEF_MOD_GLO(69,___G___riscv_23_riscv_2d_mv,231)
-___DEF_MOD_GLO(73,___G___riscv_23_riscv_2d_not,236)
-___DEF_MOD_GLO(70,___G___riscv_23_riscv_2d_neg,241)
-___DEF_MOD_GLO(71,___G___riscv_23_riscv_2d_negw,244)
-___DEF_MOD_GLO(81,___G___riscv_23_riscv_2d_sext_2e_w,247)
-___DEF_MOD_GLO(80,___G___riscv_23_riscv_2d_seqz,254)
-___DEF_MOD_GLO(93,___G___riscv_23_riscv_2d_snez,259)
-___DEF_MOD_GLO(92,___G___riscv_23_riscv_2d_sltz,262)
-___DEF_MOD_GLO(82,___G___riscv_23_riscv_2d_sgtz,265)
-___DEF_MOD_GLO(11,___G___riscv_23_riscv_2d_beqz,268)
-___DEF_MOD_GLO(25,___G___riscv_23_riscv_2d_bnez,271)
-___DEF_MOD_GLO(20,___G___riscv_23_riscv_2d_blez,274)
-___DEF_MOD_GLO(14,___G___riscv_23_riscv_2d_bgez,277)
-___DEF_MOD_GLO(23,___G___riscv_23_riscv_2d_bltz,280)
-___DEF_MOD_GLO(17,___G___riscv_23_riscv_2d_bgtz,283)
-___DEF_MOD_GLO(15,___G___riscv_23_riscv_2d_bgt,286)
-___DEF_MOD_GLO(18,___G___riscv_23_riscv_2d_ble,289)
-___DEF_MOD_GLO(16,___G___riscv_23_riscv_2d_bgtu,292)
-___DEF_MOD_GLO(19,___G___riscv_23_riscv_2d_bleu,295)
-___DEF_MOD_GLO(52,___G___riscv_23_riscv_2d_j,298)
-___DEF_MOD_GLO(54,___G___riscv_23_riscv_2d_jal_2a_,301)
-___DEF_MOD_GLO(57,___G___riscv_23_riscv_2d_jr,304)
-___DEF_MOD_GLO(56,___G___riscv_23_riscv_2d_jalr_2a_,311)
-___DEF_MOD_GLO(77,___G___riscv_23_riscv_2d_ret,318)
-___DEF_MOD_GLO(26,___G___riscv_23_riscv_2d_call,325)
-___DEF_MOD_GLO(105,___G___riscv_23_riscv_2d_tail,338)
-___DEF_MOD_GLO(2,___G___riscv_23_riscv_2d_add,351)
-___DEF_MOD_GLO(102,___G___riscv_23_riscv_2d_sub,354)
-___DEF_MOD_GLO(84,___G___riscv_23_riscv_2d_sll,357)
-___DEF_MOD_GLO(88,___G___riscv_23_riscv_2d_slt,360)
-___DEF_MOD_GLO(91,___G___riscv_23_riscv_2d_sltu,363)
-___DEF_MOD_GLO(113,___G___riscv_23_riscv_2d_xor,366)
-___DEF_MOD_GLO(98,___G___riscv_23_riscv_2d_srl,369)
-___DEF_MOD_GLO(94,___G___riscv_23_riscv_2d_sra,372)
-___DEF_MOD_GLO(74,___G___riscv_23_riscv_2d_or,375)
-___DEF_MOD_GLO(6,___G___riscv_23_riscv_2d_and,378)
-___DEF_MOD_GLO(5,___G___riscv_23_riscv_2d_addw,381)
-___DEF_MOD_GLO(103,___G___riscv_23_riscv_2d_subw,388)
-___DEF_MOD_GLO(87,___G___riscv_23_riscv_2d_sllw,395)
-___DEF_MOD_GLO(101,___G___riscv_23_riscv_2d_srlw,402)
-___DEF_MOD_GLO(97,___G___riscv_23_riscv_2d_sraw,409)
-___DEF_MOD_GLO(109,___G___riscv_23_riscv_2d_type_2d_r,416)
-___DEF_MOD_GLO(55,___G___riscv_23_riscv_2d_jalr,436)
-___DEF_MOD_GLO(59,___G___riscv_23_riscv_2d_lb,442)
-___DEF_MOD_GLO(62,___G___riscv_23_riscv_2d_lh,445)
-___DEF_MOD_GLO(67,___G___riscv_23_riscv_2d_lw,448)
-___DEF_MOD_GLO(60,___G___riscv_23_riscv_2d_lbu,451)
-___DEF_MOD_GLO(63,___G___riscv_23_riscv_2d_lhu,454)
-___DEF_MOD_GLO(3,___G___riscv_23_riscv_2d_addi,457)
-___DEF_MOD_GLO(89,___G___riscv_23_riscv_2d_slti,460)
-___DEF_MOD_GLO(90,___G___riscv_23_riscv_2d_sltiu,463)
-___DEF_MOD_GLO(114,___G___riscv_23_riscv_2d_xori,466)
-___DEF_MOD_GLO(75,___G___riscv_23_riscv_2d_ori,469)
-___DEF_MOD_GLO(7,___G___riscv_23_riscv_2d_andi,472)
-___DEF_MOD_GLO(85,___G___riscv_23_riscv_2d_slli,475)
-___DEF_MOD_GLO(99,___G___riscv_23_riscv_2d_srli,487)
-___DEF_MOD_GLO(95,___G___riscv_23_riscv_2d_srai,499)
-___DEF_MOD_GLO(68,___G___riscv_23_riscv_2d_lwu,512)
-___DEF_MOD_GLO(61,___G___riscv_23_riscv_2d_ld,519)
-___DEF_MOD_GLO(4,___G___riscv_23_riscv_2d_addiw,526)
-___DEF_MOD_GLO(86,___G___riscv_23_riscv_2d_slliw,533)
-___DEF_MOD_GLO(100,___G___riscv_23_riscv_2d_srliw,547)
-___DEF_MOD_GLO(96,___G___riscv_23_riscv_2d_sraiw,561)
-___DEF_MOD_GLO(107,___G___riscv_23_riscv_2d_type_2d_i,576)
-___DEF_MOD_GLO(78,___G___riscv_23_riscv_2d_sb,645)
-___DEF_MOD_GLO(83,___G___riscv_23_riscv_2d_sh,648)
-___DEF_MOD_GLO(104,___G___riscv_23_riscv_2d_sw,651)
-___DEF_MOD_GLO(79,___G___riscv_23_riscv_2d_sd,654)
-___DEF_MOD_GLO(110,___G___riscv_23_riscv_2d_type_2d_s,661)
-___DEF_MOD_GLO(10,___G___riscv_23_riscv_2d_beq,687)
-___DEF_MOD_GLO(24,___G___riscv_23_riscv_2d_bne,690)
-___DEF_MOD_GLO(21,___G___riscv_23_riscv_2d_blt,693)
-___DEF_MOD_GLO(12,___G___riscv_23_riscv_2d_bge,696)
-___DEF_MOD_GLO(22,___G___riscv_23_riscv_2d_bltu,699)
-___DEF_MOD_GLO(13,___G___riscv_23_riscv_2d_bgeu,702)
-___DEF_MOD_GLO(106,___G___riscv_23_riscv_2d_type_2d_b,705)
-___DEF_MOD_GLO(66,___G___riscv_23_riscv_2d_lui,746)
-___DEF_MOD_GLO(9,___G___riscv_23_riscv_2d_auipc,752)
-___DEF_MOD_GLO(111,___G___riscv_23_riscv_2d_type_2d_u,758)
-___DEF_MOD_GLO(53,___G___riscv_23_riscv_2d_jal,774)
-___DEF_MOD_GLO(108,___G___riscv_23_riscv_2d_type_2d_j,780)
-___DEF_MOD_GLO(40,___G___riscv_23_riscv_2d_fence,816)
-___DEF_MOD_GLO(41,___G___riscv_23_riscv_2d_fence_2e_i,841)
-___DEF_MOD_GLO(39,___G___riscv_23_riscv_2d_ecall,847)
-___DEF_MOD_GLO(38,___G___riscv_23_riscv_2d_ebreak,853)
+___DEF_MOD_GLO(72,___G___riscv_23_riscv_2d_nop,179)
+___DEF_MOD_GLO(64,___G___riscv_23_riscv_2d_li,184)
+___DEF_MOD_GLO(69,___G___riscv_23_riscv_2d_mv,230)
+___DEF_MOD_GLO(73,___G___riscv_23_riscv_2d_not,235)
+___DEF_MOD_GLO(70,___G___riscv_23_riscv_2d_neg,240)
+___DEF_MOD_GLO(71,___G___riscv_23_riscv_2d_negw,243)
+___DEF_MOD_GLO(81,___G___riscv_23_riscv_2d_sext_2e_w,246)
+___DEF_MOD_GLO(80,___G___riscv_23_riscv_2d_seqz,253)
+___DEF_MOD_GLO(93,___G___riscv_23_riscv_2d_snez,258)
+___DEF_MOD_GLO(92,___G___riscv_23_riscv_2d_sltz,261)
+___DEF_MOD_GLO(82,___G___riscv_23_riscv_2d_sgtz,264)
+___DEF_MOD_GLO(11,___G___riscv_23_riscv_2d_beqz,267)
+___DEF_MOD_GLO(25,___G___riscv_23_riscv_2d_bnez,270)
+___DEF_MOD_GLO(20,___G___riscv_23_riscv_2d_blez,273)
+___DEF_MOD_GLO(14,___G___riscv_23_riscv_2d_bgez,276)
+___DEF_MOD_GLO(23,___G___riscv_23_riscv_2d_bltz,279)
+___DEF_MOD_GLO(17,___G___riscv_23_riscv_2d_bgtz,282)
+___DEF_MOD_GLO(15,___G___riscv_23_riscv_2d_bgt,285)
+___DEF_MOD_GLO(18,___G___riscv_23_riscv_2d_ble,288)
+___DEF_MOD_GLO(16,___G___riscv_23_riscv_2d_bgtu,291)
+___DEF_MOD_GLO(19,___G___riscv_23_riscv_2d_bleu,294)
+___DEF_MOD_GLO(52,___G___riscv_23_riscv_2d_j,297)
+___DEF_MOD_GLO(54,___G___riscv_23_riscv_2d_jal_2a_,300)
+___DEF_MOD_GLO(57,___G___riscv_23_riscv_2d_jr,303)
+___DEF_MOD_GLO(56,___G___riscv_23_riscv_2d_jalr_2a_,310)
+___DEF_MOD_GLO(77,___G___riscv_23_riscv_2d_ret,317)
+___DEF_MOD_GLO(26,___G___riscv_23_riscv_2d_call,324)
+___DEF_MOD_GLO(105,___G___riscv_23_riscv_2d_tail,337)
+___DEF_MOD_GLO(2,___G___riscv_23_riscv_2d_add,350)
+___DEF_MOD_GLO(102,___G___riscv_23_riscv_2d_sub,353)
+___DEF_MOD_GLO(84,___G___riscv_23_riscv_2d_sll,356)
+___DEF_MOD_GLO(88,___G___riscv_23_riscv_2d_slt,359)
+___DEF_MOD_GLO(91,___G___riscv_23_riscv_2d_sltu,362)
+___DEF_MOD_GLO(113,___G___riscv_23_riscv_2d_xor,365)
+___DEF_MOD_GLO(98,___G___riscv_23_riscv_2d_srl,368)
+___DEF_MOD_GLO(94,___G___riscv_23_riscv_2d_sra,371)
+___DEF_MOD_GLO(74,___G___riscv_23_riscv_2d_or,374)
+___DEF_MOD_GLO(6,___G___riscv_23_riscv_2d_and,377)
+___DEF_MOD_GLO(5,___G___riscv_23_riscv_2d_addw,380)
+___DEF_MOD_GLO(103,___G___riscv_23_riscv_2d_subw,387)
+___DEF_MOD_GLO(87,___G___riscv_23_riscv_2d_sllw,394)
+___DEF_MOD_GLO(101,___G___riscv_23_riscv_2d_srlw,401)
+___DEF_MOD_GLO(97,___G___riscv_23_riscv_2d_sraw,408)
+___DEF_MOD_GLO(109,___G___riscv_23_riscv_2d_type_2d_r,415)
+___DEF_MOD_GLO(55,___G___riscv_23_riscv_2d_jalr,435)
+___DEF_MOD_GLO(59,___G___riscv_23_riscv_2d_lb,441)
+___DEF_MOD_GLO(62,___G___riscv_23_riscv_2d_lh,444)
+___DEF_MOD_GLO(67,___G___riscv_23_riscv_2d_lw,447)
+___DEF_MOD_GLO(60,___G___riscv_23_riscv_2d_lbu,450)
+___DEF_MOD_GLO(63,___G___riscv_23_riscv_2d_lhu,453)
+___DEF_MOD_GLO(3,___G___riscv_23_riscv_2d_addi,456)
+___DEF_MOD_GLO(89,___G___riscv_23_riscv_2d_slti,459)
+___DEF_MOD_GLO(90,___G___riscv_23_riscv_2d_sltiu,462)
+___DEF_MOD_GLO(114,___G___riscv_23_riscv_2d_xori,465)
+___DEF_MOD_GLO(75,___G___riscv_23_riscv_2d_ori,468)
+___DEF_MOD_GLO(7,___G___riscv_23_riscv_2d_andi,471)
+___DEF_MOD_GLO(85,___G___riscv_23_riscv_2d_slli,474)
+___DEF_MOD_GLO(99,___G___riscv_23_riscv_2d_srli,486)
+___DEF_MOD_GLO(95,___G___riscv_23_riscv_2d_srai,498)
+___DEF_MOD_GLO(68,___G___riscv_23_riscv_2d_lwu,511)
+___DEF_MOD_GLO(61,___G___riscv_23_riscv_2d_ld,518)
+___DEF_MOD_GLO(4,___G___riscv_23_riscv_2d_addiw,525)
+___DEF_MOD_GLO(86,___G___riscv_23_riscv_2d_slliw,532)
+___DEF_MOD_GLO(100,___G___riscv_23_riscv_2d_srliw,546)
+___DEF_MOD_GLO(96,___G___riscv_23_riscv_2d_sraiw,560)
+___DEF_MOD_GLO(107,___G___riscv_23_riscv_2d_type_2d_i,575)
+___DEF_MOD_GLO(78,___G___riscv_23_riscv_2d_sb,644)
+___DEF_MOD_GLO(83,___G___riscv_23_riscv_2d_sh,647)
+___DEF_MOD_GLO(104,___G___riscv_23_riscv_2d_sw,650)
+___DEF_MOD_GLO(79,___G___riscv_23_riscv_2d_sd,653)
+___DEF_MOD_GLO(110,___G___riscv_23_riscv_2d_type_2d_s,660)
+___DEF_MOD_GLO(10,___G___riscv_23_riscv_2d_beq,686)
+___DEF_MOD_GLO(24,___G___riscv_23_riscv_2d_bne,689)
+___DEF_MOD_GLO(21,___G___riscv_23_riscv_2d_blt,692)
+___DEF_MOD_GLO(12,___G___riscv_23_riscv_2d_bge,695)
+___DEF_MOD_GLO(22,___G___riscv_23_riscv_2d_bltu,698)
+___DEF_MOD_GLO(13,___G___riscv_23_riscv_2d_bgeu,701)
+___DEF_MOD_GLO(106,___G___riscv_23_riscv_2d_type_2d_b,704)
+___DEF_MOD_GLO(66,___G___riscv_23_riscv_2d_lui,745)
+___DEF_MOD_GLO(9,___G___riscv_23_riscv_2d_auipc,751)
+___DEF_MOD_GLO(111,___G___riscv_23_riscv_2d_type_2d_u,757)
+___DEF_MOD_GLO(53,___G___riscv_23_riscv_2d_jal,773)
+___DEF_MOD_GLO(108,___G___riscv_23_riscv_2d_type_2d_j,779)
+___DEF_MOD_GLO(40,___G___riscv_23_riscv_2d_fence,815)
+___DEF_MOD_GLO(41,___G___riscv_23_riscv_2d_fence_2e_i,840)
+___DEF_MOD_GLO(39,___G___riscv_23_riscv_2d_ecall,846)
+___DEF_MOD_GLO(38,___G___riscv_23_riscv_2d_ebreak,852)
 ___END_MOD_GLO
 
 ___BEGIN_MOD_SYM_KEY

@@ -8,7 +8,7 @@
  */
 
 #define ___INCLUDED_FROM_OS_TIME
-#define ___VERSION 409006
+#define ___VERSION 409007
 #include "gambit.h"
 
 #include "os_thread.h"

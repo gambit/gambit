@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_t-cpu-object-desc.c", produced by Gambit v4.9.6
+; File: "_t-cpu-object-desc.c", produced by Gambit v4.9.7
 (
-409006
+409007
 (C)
 "_t-cpu-object-desc"
 ("_t-cpu-object-desc")
@@ -209,7 +209,7 @@
 ) #|*/"*/"meta-info|#
 )
 #else
-#define ___VERSION 409006
+#define ___VERSION 409007
 #define ___MODULE_NAME "_t-cpu-object-desc"
 #define ___LINKER_ID ___LNK___t_2d_cpu_2d_object_2d_desc
 #define ___MH_PROC ___H___t_2d_cpu_2d_object_2d_desc
@@ -2403,7 +2403,7 @@ ___DEF_SLBL(0,___L0_c_23_ref_2d_desc_3f_)
 ___DEF_GLBL(___L_c_23_ref_2d_desc_3f_)
    ___SET_R2(___VECTORREF(___R1,___FIX(0L)))
    ___IF(___NOT(___EQP(___SYM_ref,___R2)))
-   ___GOTO(___L7_c_23_ref_2d_desc_3f_)
+   ___GOTO(___L8_c_23_ref_2d_desc_3f_)
    ___END_IF
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
@@ -2421,9 +2421,8 @@ ___DEF_SLBL(2,___L2_c_23_ref_2d_desc_3f_)
    ___SET_R0(___LBL(3))
    ___JUMPINT(___SET_NARGS(1),___PRC(76),___L_c_23_desc_2d_encoder)
 ___DEF_SLBL(3,___L3_c_23_ref_2d_desc_3f_)
-   ___SET_R1(___BOOLEAN(___PROCEDUREP(___R1)))
-   ___IF(___NOT(___NOTFALSEP(___R1)))
-   ___GOTO(___L6_c_23_ref_2d_desc_3f_)
+   ___IF(___NOT(___PROCEDUREP(___R1)))
+   ___GOTO(___L7_c_23_ref_2d_desc_3f_)
    ___END_IF
    ___SET_R1(___VECTORREF(___STK(-6),___FIX(3L)))
    ___SET_R0(___LBL(4))
@@ -2442,6 +2441,10 @@ ___DEF_GLBL(___L6_c_23_ref_2d_desc_3f_)
    ___ADJFP(-8)
    ___JUMPRET(___STK(1))
 ___DEF_GLBL(___L7_c_23_ref_2d_desc_3f_)
+   ___SET_R1(___FAL)
+   ___ADJFP(-8)
+   ___JUMPRET(___STK(1))
+___DEF_GLBL(___L8_c_23_ref_2d_desc_3f_)
    ___SET_R1(___FAL)
    ___JUMPRET(___R0)
 ___END_P_SW

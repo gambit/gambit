@@ -7,7 +7,7 @@
  */
 
 #define ___INCLUDED_FROM_ACTLOG
-#define ___VERSION 409006
+#define ___VERSION 409007
 #include "gambit.h"
 
 #include "os_base.h"

@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_x86.c", produced by Gambit v4.9.6
+; File: "_x86.c", produced by Gambit v4.9.7
 (
-409006
+409007
 (C)
 "_x86"
 ("_x86")
@@ -622,7 +622,7 @@
 ) #|*/"*/"meta-info|#
 )
 #else
-#define ___VERSION 409006
+#define ___VERSION 409007
 #define ___MODULE_NAME "_x86"
 #define ___LINKER_ID ___LNK___x86
 #define ___MH_PROC ___H___x86
@@ -632,8 +632,8 @@
 #define ___SUPCOUNT 226
 #define ___CNSCOUNT 2
 #define ___SUBCOUNT 273
-#define ___LBLCOUNT 1883
-#define ___OFDCOUNT 39
+#define ___LBLCOUNT 1882
+#define ___OFDCOUNT 38
 #define ___MODDESCR ___REF_SUB(270)
 #include "gambit.h"
 
@@ -4525,7 +4525,6 @@ ___DEF_M_HLBL(___L30___x86_23_x86_2d_data_2d_elems)
 ___DEF_M_HLBL(___L31___x86_23_x86_2d_data_2d_elems)
 ___DEF_M_HLBL(___L32___x86_23_x86_2d_data_2d_elems)
 ___DEF_M_HLBL(___L33___x86_23_x86_2d_data_2d_elems)
-___DEF_M_HLBL(___L34___x86_23_x86_2d_data_2d_elems)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0___x86_23_x86_2d_add)
 ___DEF_M_HLBL(___L1___x86_23_x86_2d_add)
@@ -7374,7 +7373,7 @@ ___DEF_SLBL(1,___L1___x86_23_x86_2d_listing)
    ___JUMPGLONOTSAFE(___SET_NARGS(1),247,___G___codegen_23_codegen_2d_context_2d_listing_2d_format)
 ___DEF_SLBL(2,___L2___x86_23_x86_2d_listing)
    ___IF(___NOT(___EQP(___R1,___SYM_gnu)))
-   ___GOTO(___L156___x86_23_x86_2d_listing)
+   ___GOTO(___L157___x86_23_x86_2d_listing)
    ___END_IF
    ___SET_STK(-2,___ALLOC_CLO(2UL))
    ___BEGIN_SETUP_CLO(2,___STK(-2),17)
@@ -7504,7 +7503,7 @@ ___DEF_GLBL(___L135___x86_23_x86_2d_listing)
    ___JUMPGLONOTSAFE(___SET_NARGS(1),258,___G_fixnum_3f_)
 ___DEF_SLBL(22,___L22___x86_23_x86_2d_listing)
    ___IF(___NOTFALSEP(___R1))
-   ___GOTO(___L155___x86_23_x86_2d_listing)
+   ___GOTO(___L156___x86_23_x86_2d_listing)
    ___END_IF
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(23))
@@ -7673,53 +7672,54 @@ ___DEF_GLBL(___L143___x86_23_x86_2d_listing)
    ___JUMPINT(___SET_NARGS(1),___PRC(115),___L___x86_23_x86_2d_mem_3f_)
 ___DEF_SLBL(48,___L48___x86_23_x86_2d_listing)
    ___IF(___NOT(___NOTFALSEP(___R1)))
-   ___GOTO(___L149___x86_23_x86_2d_listing)
+   ___GOTO(___L155___x86_23_x86_2d_listing)
    ___END_IF
    ___SET_R1(___STK(-6))
-   ___SET_R2(___FIX(0L))
+   ___SET_R2(___FIX(1L))
    ___SET_R0(___LBL(49))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),286,___G_vector_2d_ref)
 ___DEF_SLBL(49,___L49___x86_23_x86_2d_listing)
    ___SET_STK(-4,___R1)
    ___SET_R1(___STK(-6))
-   ___SET_R2(___FIX(3L))
+   ___SET_R2(___FIX(2L))
    ___SET_R0(___LBL(50))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),286,___G_vector_2d_ref)
 ___DEF_SLBL(50,___L50___x86_23_x86_2d_listing)
    ___SET_STK(-3,___R1)
    ___SET_R1(___STK(-6))
-   ___SET_R2(___FIX(2L))
+   ___SET_R2(___FIX(3L))
    ___SET_R0(___LBL(51))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),286,___G_vector_2d_ref)
 ___DEF_SLBL(51,___L51___x86_23_x86_2d_listing)
    ___SET_STK(-2,___R1)
    ___SET_R1(___STK(-6))
-   ___SET_R2(___FIX(1L))
+   ___SET_R2(___FIX(0L))
    ___SET_R0(___LBL(52))
    ___ADJFP(4)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),286,___G_vector_2d_ref)
 ___DEF_SLBL(52,___L52___x86_23_x86_2d_listing)
-   ___IF(___NOTFALSEP(___R1))
+   ___IF(___NOTFALSEP(___STK(-8)))
    ___GOTO(___L144___x86_23_x86_2d_listing)
    ___END_IF
-   ___IF(___NOT(___NOTFALSEP(___STK(-6))))
+   ___IF(___NOT(___NOTFALSEP(___STK(-7))))
    ___GOTO(___L154___x86_23_x86_2d_listing)
    ___END_IF
 ___DEF_GLBL(___L144___x86_23_x86_2d_listing)
-   ___IF(___NOTFALSEP(___R1))
+   ___SET_STK(-10,___R1)
+   ___IF(___NOTFALSEP(___STK(-8)))
    ___GOTO(___L153___x86_23_x86_2d_listing)
    ___END_IF
    ___SET_R1(___SUB(16))
 ___DEF_GLBL(___L145___x86_23_x86_2d_listing)
-   ___SET_STK(-10,___R1)
-   ___IF(___NOTFALSEP(___STK(-6)))
+   ___SET_STK(-8,___R1)
+   ___IF(___NOTFALSEP(___STK(-7)))
    ___GOTO(___L150___x86_23_x86_2d_listing)
    ___END_IF
    ___SET_R1(___CNS(0))
    ___ADJFP(-4)
 ___DEF_GLBL(___L146___x86_23_x86_2d_listing)
    ___SET_R2(___R1)
-   ___SET_R1(___STK(-6))
+   ___SET_R1(___STK(-4))
    ___SET_R0(___LBL(53))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),253,___G_cons)
 ___DEF_SLBL(53,___L53___x86_23_x86_2d_listing)
@@ -7728,8 +7728,8 @@ ___DEF_SLBL(53,___L53___x86_23_x86_2d_listing)
    ___SET_R0(___LBL(54))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),253,___G_cons)
 ___DEF_SLBL(54,___L54___x86_23_x86_2d_listing)
-   ___SET_STK(-6,___R1)
-   ___SET_R1(___STK(-4))
+   ___SET_STK(-5,___R1)
+   ___SET_R1(___STK(-6))
    ___SET_R2(___FIX(0L))
    ___SET_R0(___LBL(55))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),263,___G_fx_3d_)
@@ -7737,7 +7737,7 @@ ___DEF_SLBL(55,___L55___x86_23_x86_2d_listing)
    ___IF(___NOTFALSEP(___R1))
    ___GOTO(___L149___x86_23_x86_2d_listing)
    ___END_IF
-   ___SET_R1(___STK(-4))
+   ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(56))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),270,___G_fxpositive_3f_)
 ___DEF_SLBL(56,___L56___x86_23_x86_2d_listing)
@@ -7749,8 +7749,8 @@ ___DEF_SLBL(56,___L56___x86_23_x86_2d_listing)
 ___DEF_GLBL(___L147___x86_23_x86_2d_listing)
    ___SET_R1(___SUB(20))
 ___DEF_GLBL(___L148___x86_23_x86_2d_listing)
-   ___SET_STK(-5,___R1)
-   ___SET_R1(___STK(-4))
+   ___SET_STK(-4,___R1)
+   ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(57))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),265,___G_fxabs)
 ___DEF_SLBL(57,___L57___x86_23_x86_2d_listing)
@@ -7758,29 +7758,28 @@ ___DEF_SLBL(57,___L57___x86_23_x86_2d_listing)
    ___SET_R0(___LBL(58))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),276,___G_number_2d__3e_string)
 ___DEF_SLBL(58,___L58___x86_23_x86_2d_listing)
-   ___SET_R2(___STK(-6))
+   ___SET_R2(___STK(-5))
    ___SET_R0(___LBL(59))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),253,___G_cons)
 ___DEF_SLBL(59,___L59___x86_23_x86_2d_listing)
    ___SET_R2(___R1)
    ___SET_R0(___STK(-7))
-   ___SET_R1(___STK(-5))
+   ___SET_R1(___STK(-4))
    ___POLL(60)
 ___DEF_SLBL(60,___L60___x86_23_x86_2d_listing)
    ___ADJFP(-8)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),253,___G_cons)
 ___DEF_GLBL(___L149___x86_23_x86_2d_listing)
-   ___SET_R1(___STK(-6))
+   ___SET_R1(___STK(-5))
    ___ADJFP(-8)
    ___JUMPRET(___STK(1))
 ___DEF_GLBL(___L150___x86_23_x86_2d_listing)
-   ___SET_R1(___STK(-6))
+   ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(61))
-   ___ADJFP(-4)
-   ___JUMPGENNOTSAFE(___SET_NARGS(1),___CLO(___STK(-5),2))
+   ___JUMPGENNOTSAFE(___SET_NARGS(1),___CLO(___STK(-9),2))
 ___DEF_SLBL(61,___L61___x86_23_x86_2d_listing)
-   ___SET_STK(-5,___R1)
-   ___SET_R1(___STK(-3))
+   ___SET_STK(-9,___R1)
+   ___SET_R1(___STK(-6))
    ___SET_R2(___FIX(0L))
    ___SET_R0(___LBL(62))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),263,___G_fx_3d_)
@@ -7789,6 +7788,7 @@ ___DEF_SLBL(62,___L62___x86_23_x86_2d_listing)
    ___GOTO(___L152___x86_23_x86_2d_listing)
    ___END_IF
    ___SET_R2(___CNS(1))
+   ___ADJFP(-4)
    ___GOTO(___L151___x86_23_x86_2d_listing)
 ___DEF_SLBL(63,___L63___x86_23_x86_2d_listing)
    ___SET_R2(___R1)
@@ -7804,9 +7804,10 @@ ___DEF_SLBL(64,___L64___x86_23_x86_2d_listing)
 ___DEF_SLBL(65,___L65___x86_23_x86_2d_listing)
    ___GOTO(___L146___x86_23_x86_2d_listing)
 ___DEF_GLBL(___L152___x86_23_x86_2d_listing)
-   ___SET_R2(___STK(-3))
+   ___SET_R2(___STK(-6))
    ___SET_R1(___FIX(1L))
    ___SET_R0(___LBL(66))
+   ___ADJFP(-4)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),267,___G_fxarithmetic_2d_shift_2d_left)
 ___DEF_SLBL(66,___L66___x86_23_x86_2d_listing)
    ___SET_R2(___R1)
@@ -7815,21 +7816,25 @@ ___DEF_SLBL(66,___L66___x86_23_x86_2d_listing)
    ___SET_R0(___LBL(63))
    ___JUMPGLONOTSAFE(___SET_NARGS(3),271,___G_list)
 ___DEF_GLBL(___L153___x86_23_x86_2d_listing)
+   ___SET_R1(___STK(-8))
    ___SET_R0(___LBL(67))
    ___JUMPGENNOTSAFE(___SET_NARGS(1),___CLO(___STK(-9),2))
 ___DEF_SLBL(67,___L67___x86_23_x86_2d_listing)
    ___GOTO(___L145___x86_23_x86_2d_listing)
 ___DEF_GLBL(___L154___x86_23_x86_2d_listing)
-   ___SET_R1(___STK(-8))
    ___ADJFP(-12)
    ___JUMPRET(___STK(1))
 ___DEF_GLBL(___L155___x86_23_x86_2d_listing)
+   ___SET_R1(___STK(-6))
+   ___ADJFP(-8)
+   ___JUMPRET(___STK(1))
+___DEF_GLBL(___L156___x86_23_x86_2d_listing)
    ___SET_R2(___STK(-6))
    ___SET_R1(___SUB(0))
    ___SET_R0(___LBL(31))
    ___ADJFP(-4)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),286,___G_vector_2d_ref)
-___DEF_GLBL(___L156___x86_23_x86_2d_listing)
+___DEF_GLBL(___L157___x86_23_x86_2d_listing)
    ___SET_R1(___STK(-3))
    ___SET_R0(___LBL(68))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),279,___G_pair_3f_)
@@ -7859,70 +7864,70 @@ ___DEF_SLBL(70,___L70___x86_23_x86_2d_listing)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),242,___G___asm_23_asm_2d_separated_2d_list)
 ___DEF_SLBL(71,___L71___x86_23_x86_2d_listing)
    ___IF(___NOT(___NOTFALSEP(___UNBOX(___STK(-5)))))
-   ___GOTO(___L158___x86_23_x86_2d_listing)
+   ___GOTO(___L159___x86_23_x86_2d_listing)
    ___END_IF
    ___ADJFP(-4)
-   ___GOTO(___L157___x86_23_x86_2d_listing)
+   ___GOTO(___L158___x86_23_x86_2d_listing)
 ___DEF_SLBL(72,___L72___x86_23_x86_2d_listing)
-___DEF_GLBL(___L157___x86_23_x86_2d_listing)
+___DEF_GLBL(___L158___x86_23_x86_2d_listing)
    ___SET_R2(___R1)
    ___SET_R1(___CHR(9))
    ___SET_R0(___LBL(11))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),253,___G_cons)
-___DEF_GLBL(___L158___x86_23_x86_2d_listing)
+___DEF_GLBL(___L159___x86_23_x86_2d_listing)
    ___SET_STK(-7,___R1)
    ___SET_R1(___STK(-8))
    ___SET_R0(___LBL(126))
    ___ADJFP(-4)
    ___BEGIN_SWITCH_FIXNUM(___R1)
-   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(8L),___L186___x86_23_x86_2d_listing)
-   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(16L),___L185___x86_23_x86_2d_listing)
-   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(32L),___L184___x86_23_x86_2d_listing)
-   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(64L),___L183___x86_23_x86_2d_listing)
-   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(1L),___L164___x86_23_x86_2d_listing)
+   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(8L),___L188___x86_23_x86_2d_listing)
+   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(16L),___L187___x86_23_x86_2d_listing)
+   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(32L),___L186___x86_23_x86_2d_listing)
+   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(64L),___L185___x86_23_x86_2d_listing)
+   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(1L),___L165___x86_23_x86_2d_listing)
    ___END_SWITCH_FIXNUM
-   ___GOTO(___L160___x86_23_x86_2d_listing)
+   ___GOTO(___L161___x86_23_x86_2d_listing)
 ___DEF_SLBL(73,___L73___x86_23_x86_2d_listing)
    ___IF(___NOTFALSEP(___R1))
-   ___GOTO(___L161___x86_23_x86_2d_listing)
+   ___GOTO(___L162___x86_23_x86_2d_listing)
    ___END_IF
-___DEF_GLBL(___L159___x86_23_x86_2d_listing)
-   ___SET_R1(___STK(-7))
+___DEF_GLBL(___L160___x86_23_x86_2d_listing)
+   ___SET_R1(___STK(-3))
    ___SET_R0(___LBL(78))
    ___BEGIN_SWITCH_FIXNUM(___R1)
-   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(8L),___L186___x86_23_x86_2d_listing)
-   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(16L),___L185___x86_23_x86_2d_listing)
-   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(32L),___L184___x86_23_x86_2d_listing)
-   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(64L),___L183___x86_23_x86_2d_listing)
-   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(1L),___L164___x86_23_x86_2d_listing)
+   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(8L),___L188___x86_23_x86_2d_listing)
+   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(16L),___L187___x86_23_x86_2d_listing)
+   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(32L),___L186___x86_23_x86_2d_listing)
+   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(64L),___L185___x86_23_x86_2d_listing)
+   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(1L),___L165___x86_23_x86_2d_listing)
    ___END_SWITCH_FIXNUM
-___DEF_GLBL(___L160___x86_23_x86_2d_listing)
+___DEF_GLBL(___L161___x86_23_x86_2d_listing)
    ___SET_R1(___SUB(26))
    ___JUMPRET(___R0)
 ___DEF_SLBL(74,___L74___x86_23_x86_2d_listing)
    ___IF(___NOT(___NOTFALSEP(___R1)))
-   ___GOTO(___L162___x86_23_x86_2d_listing)
+   ___GOTO(___L163___x86_23_x86_2d_listing)
    ___END_IF
-___DEF_GLBL(___L161___x86_23_x86_2d_listing)
-   ___SET_R1(___STK(-3))
+___DEF_GLBL(___L162___x86_23_x86_2d_listing)
+   ___SET_R1(___STK(-7))
    ___ADJFP(-8)
    ___JUMPRET(___STK(2))
-___DEF_GLBL(___L162___x86_23_x86_2d_listing)
+___DEF_GLBL(___L163___x86_23_x86_2d_listing)
    ___SET_R1(___STK(-4))
    ___SET_R2(___FIX(64L))
    ___SET_R0(___LBL(75))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),263,___G_fx_3d_)
 ___DEF_SLBL(75,___L75___x86_23_x86_2d_listing)
    ___IF(___NOT(___NOTFALSEP(___R1)))
-   ___GOTO(___L159___x86_23_x86_2d_listing)
+   ___GOTO(___L160___x86_23_x86_2d_listing)
    ___END_IF
-   ___SET_R1(___STK(-7))
+   ___SET_R1(___STK(-3))
    ___SET_R2(___FIX(32L))
    ___SET_R0(___LBL(76))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),263,___G_fx_3d_)
 ___DEF_SLBL(76,___L76___x86_23_x86_2d_listing)
    ___IF(___NOT(___NOTFALSEP(___R1)))
-   ___GOTO(___L159___x86_23_x86_2d_listing)
+   ___GOTO(___L160___x86_23_x86_2d_listing)
    ___END_IF
    ___SET_R1(___STK(-5))
    ___SET_R2(___SUB(27))
@@ -7932,31 +7937,31 @@ ___DEF_SLBL(77,___L77___x86_23_x86_2d_listing)
    ___SET_R0(___LBL(73))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),274,___G_not)
 ___DEF_SLBL(78,___L78___x86_23_x86_2d_listing)
-   ___SET_R2(___STK(-3))
+   ___SET_R2(___STK(-7))
    ___SET_R0(___STK(-6))
    ___POLL(79)
 ___DEF_SLBL(79,___L79___x86_23_x86_2d_listing)
-   ___GOTO(___L163___x86_23_x86_2d_listing)
+   ___GOTO(___L164___x86_23_x86_2d_listing)
 ___DEF_SLBL(80,___L80___x86_23_x86_2d_listing)
    ___SET_R2(___R1)
    ___SET_R1(___SUB(28))
    ___SET_R0(___STK(-6))
    ___POLL(81)
 ___DEF_SLBL(81,___L81___x86_23_x86_2d_listing)
-___DEF_GLBL(___L163___x86_23_x86_2d_listing)
+___DEF_GLBL(___L164___x86_23_x86_2d_listing)
    ___ADJFP(-8)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),271,___G_list)
 ___DEF_SLBL(82,___L82___x86_23_x86_2d_listing)
    ___SET_R0(___LBL(83))
    ___BEGIN_SWITCH_FIXNUM(___R1)
-   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(8L),___L186___x86_23_x86_2d_listing)
-   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(16L),___L185___x86_23_x86_2d_listing)
-   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(32L),___L184___x86_23_x86_2d_listing)
-   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(64L),___L183___x86_23_x86_2d_listing)
-   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(1L),___L164___x86_23_x86_2d_listing)
+   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(8L),___L188___x86_23_x86_2d_listing)
+   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(16L),___L187___x86_23_x86_2d_listing)
+   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(32L),___L186___x86_23_x86_2d_listing)
+   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(64L),___L185___x86_23_x86_2d_listing)
+   ___SWITCH_FIXNUM_CASE_GOTO(___FIX(1L),___L165___x86_23_x86_2d_listing)
    ___END_SWITCH_FIXNUM
-   ___GOTO(___L160___x86_23_x86_2d_listing)
-___DEF_GLBL(___L164___x86_23_x86_2d_listing)
+   ___GOTO(___L161___x86_23_x86_2d_listing)
+___DEF_GLBL(___L165___x86_23_x86_2d_listing)
    ___SET_R1(___SUB(29))
    ___JUMPRET(___R0)
 ___DEF_SLBL(83,___L83___x86_23_x86_2d_listing)
@@ -7973,14 +7978,14 @@ ___DEF_SLBL(84,___L84___x86_23_x86_2d_listing)
    ___SET_R1(___STK(-13))
    ___SET_R0(___LBL(124))
    ___ADJFP(-3)
-   ___GOTO(___L166___x86_23_x86_2d_listing)
+   ___GOTO(___L167___x86_23_x86_2d_listing)
 ___DEF_SLBL(85,___L85___x86_23_x86_2d_listing)
    ___IF(___NOT(___NOTFALSEP(___R1)))
-   ___GOTO(___L165___x86_23_x86_2d_listing)
+   ___GOTO(___L166___x86_23_x86_2d_listing)
    ___END_IF
    ___SET_R0(___CLO(___STK(-5),4))
    ___SETBOX(___R0,___TRU)
-___DEF_GLBL(___L165___x86_23_x86_2d_listing)
+___DEF_GLBL(___L166___x86_23_x86_2d_listing)
    ___SET_STK(-4,___STK(-7))
    ___SET_STK(-7,___CLO(___STK(-5),1))
    ___SET_R3(___STK(-6))
@@ -7990,7 +7995,7 @@ ___DEF_GLBL(___L165___x86_23_x86_2d_listing)
    ___ADJFP(-7)
    ___POLL(86)
 ___DEF_SLBL(86,___L86___x86_23_x86_2d_listing)
-___DEF_GLBL(___L166___x86_23_x86_2d_listing)
+___DEF_GLBL(___L167___x86_23_x86_2d_listing)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R2)
@@ -8003,19 +8008,19 @@ ___DEF_SLBL(87,___L87___x86_23_x86_2d_listing)
    ___JUMPINT(___SET_NARGS(1),___PRC(28),___L___x86_23_x86_2d_force_2d_width_3f_)
 ___DEF_SLBL(88,___L88___x86_23_x86_2d_listing)
    ___IF(___NOT(___NOTFALSEP(___R1)))
-   ___GOTO(___L167___x86_23_x86_2d_listing)
+   ___GOTO(___L168___x86_23_x86_2d_listing)
    ___END_IF
    ___SET_R1(___STK(-3))
    ___SET_R2(___FIX(1L))
    ___SET_R0(___LBL(82))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),286,___G_vector_2d_ref)
-___DEF_GLBL(___L167___x86_23_x86_2d_listing)
+___DEF_GLBL(___L168___x86_23_x86_2d_listing)
    ___SET_R1(___STK(-3))
    ___SET_R0(___LBL(89))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),258,___G_fixnum_3f_)
 ___DEF_SLBL(89,___L89___x86_23_x86_2d_listing)
    ___IF(___NOT(___NOTFALSEP(___R1)))
-   ___GOTO(___L168___x86_23_x86_2d_listing)
+   ___GOTO(___L169___x86_23_x86_2d_listing)
    ___END_IF
    ___SET_R2(___STK(-3))
    ___SET_R1(___SUB(0))
@@ -8024,29 +8029,29 @@ ___DEF_SLBL(89,___L89___x86_23_x86_2d_listing)
 ___DEF_SLBL(90,___L90___x86_23_x86_2d_listing)
    ___ADJFP(-8)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),286,___G_vector_2d_ref)
-___DEF_GLBL(___L168___x86_23_x86_2d_listing)
+___DEF_GLBL(___L169___x86_23_x86_2d_listing)
    ___SET_R1(___STK(-3))
    ___SET_R0(___LBL(91))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),279,___G_pair_3f_)
 ___DEF_SLBL(91,___L91___x86_23_x86_2d_listing)
    ___IF(___NOT(___NOTFALSEP(___R1)))
-   ___GOTO(___L174___x86_23_x86_2d_listing)
+   ___GOTO(___L175___x86_23_x86_2d_listing)
    ___END_IF
    ___SET_R1(___STK(-3))
    ___SET_R0(___LBL(92))
    ___JUMPINT(___SET_NARGS(1),___PRC(46),___L___x86_23_x86_2d_imm_2d_int_3f_)
 ___DEF_SLBL(92,___L92___x86_23_x86_2d_listing)
    ___IF(___NOT(___NOTFALSEP(___R1)))
-   ___GOTO(___L169___x86_23_x86_2d_listing)
+   ___GOTO(___L170___x86_23_x86_2d_listing)
    ___END_IF
    ___SET_R1(___STK(-3))
    ___SET_R0(___LBL(93))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),251,___G_car)
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),252,___G_cdr)
 ___DEF_SLBL(93,___L93___x86_23_x86_2d_listing)
    ___SET_STK(-7,___R1)
    ___SET_R1(___STK(-3))
    ___SET_R0(___LBL(94))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),252,___G_cdr)
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),251,___G_car)
 ___DEF_SLBL(94,___L94___x86_23_x86_2d_listing)
    ___SET_STK(-3,___R1)
    ___SET_R1(___STK(-4))
@@ -8055,19 +8060,19 @@ ___DEF_SLBL(94,___L94___x86_23_x86_2d_listing)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),263,___G_fx_3d_)
 ___DEF_SLBL(95,___L95___x86_23_x86_2d_listing)
    ___IF(___NOTFALSEP(___R1))
-   ___GOTO(___L161___x86_23_x86_2d_listing)
+   ___GOTO(___L162___x86_23_x86_2d_listing)
    ___END_IF
-   ___SET_R2(___STK(-7))
+   ___SET_R2(___STK(-3))
    ___SET_R1(___STK(-4))
    ___SET_R0(___LBL(74))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),263,___G_fx_3d_)
-___DEF_GLBL(___L169___x86_23_x86_2d_listing)
+___DEF_GLBL(___L170___x86_23_x86_2d_listing)
    ___SET_R1(___STK(-3))
    ___SET_R0(___LBL(96))
    ___JUMPINT(___SET_NARGS(1),___PRC(61),___L___x86_23_x86_2d_imm_2d_lbl_3f_)
 ___DEF_SLBL(96,___L96___x86_23_x86_2d_listing)
    ___IF(___NOT(___NOTFALSEP(___R1)))
-   ___GOTO(___L170___x86_23_x86_2d_listing)
+   ___GOTO(___L171___x86_23_x86_2d_listing)
    ___END_IF
    ___SET_R1(___STK(-3))
    ___SET_R0(___LBL(97))
@@ -8091,13 +8096,13 @@ ___DEF_SLBL(100,___L100___x86_23_x86_2d_listing)
 ___DEF_SLBL(101,___L101___x86_23_x86_2d_listing)
    ___ADJFP(-8)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),271,___G_list)
-___DEF_GLBL(___L170___x86_23_x86_2d_listing)
+___DEF_GLBL(___L171___x86_23_x86_2d_listing)
    ___SET_R1(___STK(-3))
    ___SET_R0(___LBL(102))
    ___JUMPINT(___SET_NARGS(1),___PRC(76),___L___x86_23_x86_2d_imm_2d_glo_3f_)
 ___DEF_SLBL(102,___L102___x86_23_x86_2d_listing)
    ___IF(___NOT(___NOTFALSEP(___R1)))
-   ___GOTO(___L171___x86_23_x86_2d_listing)
+   ___GOTO(___L172___x86_23_x86_2d_listing)
    ___END_IF
    ___SET_R1(___STK(-3))
    ___SET_R0(___LBL(103))
@@ -8111,13 +8116,13 @@ ___DEF_SLBL(103,___L103___x86_23_x86_2d_listing)
 ___DEF_SLBL(104,___L104___x86_23_x86_2d_listing)
    ___ADJFP(-8)
    ___JUMPGLONOTSAFE(___SET_NARGS(3),271,___G_list)
-___DEF_GLBL(___L171___x86_23_x86_2d_listing)
+___DEF_GLBL(___L172___x86_23_x86_2d_listing)
    ___SET_R1(___STK(-3))
    ___SET_R0(___LBL(105))
    ___JUMPINT(___SET_NARGS(1),___PRC(88),___L___x86_23_x86_2d_imm_2d_late_3f_)
 ___DEF_SLBL(105,___L105___x86_23_x86_2d_listing)
    ___IF(___NOT(___NOTFALSEP(___R1)))
-   ___GOTO(___L172___x86_23_x86_2d_listing)
+   ___GOTO(___L173___x86_23_x86_2d_listing)
    ___END_IF
    ___SET_R1(___STK(-3))
    ___SET_R0(___LBL(106))
@@ -8131,13 +8136,13 @@ ___DEF_SLBL(106,___L106___x86_23_x86_2d_listing)
 ___DEF_SLBL(107,___L107___x86_23_x86_2d_listing)
    ___ADJFP(-8)
    ___JUMPGENNOTSAFE(___SET_NARGS(2),___STK(3))
-___DEF_GLBL(___L172___x86_23_x86_2d_listing)
+___DEF_GLBL(___L173___x86_23_x86_2d_listing)
    ___SET_R1(___STK(-3))
    ___SET_R0(___LBL(108))
    ___JUMPINT(___SET_NARGS(1),___PRC(103),___L___x86_23_x86_2d_imm_2d_obj_3f_)
 ___DEF_SLBL(108,___L108___x86_23_x86_2d_listing)
    ___IF(___NOTFALSEP(___R1))
-   ___GOTO(___L173___x86_23_x86_2d_listing)
+   ___GOTO(___L174___x86_23_x86_2d_listing)
    ___END_IF
    ___SET_R2(___STK(-3))
    ___SET_R1(___SUB(32))
@@ -8146,109 +8151,109 @@ ___DEF_SLBL(108,___L108___x86_23_x86_2d_listing)
 ___DEF_SLBL(109,___L109___x86_23_x86_2d_listing)
    ___ADJFP(-8)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),257,___G_error)
-___DEF_GLBL(___L173___x86_23_x86_2d_listing)
+___DEF_GLBL(___L174___x86_23_x86_2d_listing)
    ___SET_R1(___STK(-3))
    ___SET_R0(___LBL(110))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),251,___G_car)
 ___DEF_SLBL(110,___L110___x86_23_x86_2d_listing)
    ___SET_R0(___LBL(80))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),278,___G_object_2d__3e_string)
-___DEF_GLBL(___L174___x86_23_x86_2d_listing)
+___DEF_GLBL(___L175___x86_23_x86_2d_listing)
    ___SET_R1(___STK(-3))
    ___SET_R0(___LBL(111))
    ___JUMPINT(___SET_NARGS(1),___PRC(115),___L___x86_23_x86_2d_mem_3f_)
 ___DEF_SLBL(111,___L111___x86_23_x86_2d_listing)
    ___IF(___NOT(___NOTFALSEP(___R1)))
-   ___GOTO(___L161___x86_23_x86_2d_listing)
+   ___GOTO(___L184___x86_23_x86_2d_listing)
    ___END_IF
    ___SET_R1(___STK(-3))
-   ___SET_R2(___FIX(3L))
+   ___SET_R2(___FIX(0L))
    ___SET_R0(___LBL(112))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),286,___G_vector_2d_ref)
 ___DEF_SLBL(112,___L112___x86_23_x86_2d_listing)
    ___SET_STK(-2,___R1)
    ___SET_R1(___STK(-3))
-   ___SET_R2(___FIX(2L))
+   ___SET_R2(___FIX(1L))
    ___SET_R0(___LBL(113))
    ___ADJFP(4)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),286,___G_vector_2d_ref)
 ___DEF_SLBL(113,___L113___x86_23_x86_2d_listing)
    ___SET_STK(-5,___R1)
    ___SET_R1(___STK(-7))
-   ___SET_R2(___FIX(1L))
+   ___SET_R2(___FIX(2L))
    ___SET_R0(___LBL(114))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),286,___G_vector_2d_ref)
 ___DEF_SLBL(114,___L114___x86_23_x86_2d_listing)
    ___SET_STK(-4,___R1)
    ___SET_R1(___STK(-7))
-   ___SET_R2(___FIX(0L))
+   ___SET_R2(___FIX(3L))
    ___SET_R0(___LBL(115))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),286,___G_vector_2d_ref)
 ___DEF_SLBL(115,___L115___x86_23_x86_2d_listing)
    ___SET_STK(-7,___STK(-11))
    ___SET_STK(-11,___SUB(33))
-   ___IF(___NOT(___NOTFALSEP(___STK(-4))))
-   ___GOTO(___L175___x86_23_x86_2d_listing)
+   ___IF(___NOT(___NOTFALSEP(___STK(-5))))
+   ___GOTO(___L176___x86_23_x86_2d_listing)
    ___END_IF
    ___SET_STK(-3,___R1)
    ___SET_STK(1,___STK(-7))
-   ___SET_R3(___STK(-4))
+   ___SET_R3(___STK(-5))
    ___SET_R2(___STK(-8))
    ___SET_R1(___STK(-9))
    ___SET_R0(___LBL(116))
    ___ADJFP(1)
-   ___GOTO(___L166___x86_23_x86_2d_listing)
+   ___GOTO(___L167___x86_23_x86_2d_listing)
 ___DEF_SLBL(116,___L116___x86_23_x86_2d_listing)
-   ___GOTO(___L176___x86_23_x86_2d_listing)
-___DEF_GLBL(___L175___x86_23_x86_2d_listing)
+   ___GOTO(___L177___x86_23_x86_2d_listing)
+___DEF_GLBL(___L176___x86_23_x86_2d_listing)
    ___SET_STK(-3,___R1)
    ___SET_R1(___SUB(34))
-___DEF_GLBL(___L176___x86_23_x86_2d_listing)
+___DEF_GLBL(___L177___x86_23_x86_2d_listing)
    ___SET_STK(-2,___STK(-10))
    ___SET_STK(-10,___R1)
-   ___IF(___NOT(___NOTFALSEP(___STK(-5))))
-   ___GOTO(___L179___x86_23_x86_2d_listing)
-   ___END_IF
    ___IF(___NOT(___NOTFALSEP(___STK(-4))))
-   ___GOTO(___L182___x86_23_x86_2d_listing)
+   ___GOTO(___L180___x86_23_x86_2d_listing)
+   ___END_IF
+   ___IF(___NOT(___NOTFALSEP(___STK(-5))))
+   ___GOTO(___L183___x86_23_x86_2d_listing)
    ___END_IF
    ___SET_R1(___SUB(35))
-___DEF_GLBL(___L177___x86_23_x86_2d_listing)
-   ___SET_STK(-4,___R1)
+___DEF_GLBL(___L178___x86_23_x86_2d_listing)
+   ___SET_STK(-5,___R1)
    ___SET_STK(5,___STK(-7))
-   ___SET_R3(___STK(-5))
+   ___SET_R3(___STK(-4))
    ___SET_R2(___STK(-8))
    ___SET_R1(___STK(-9))
    ___SET_R0(___LBL(117))
    ___ADJFP(5)
-   ___GOTO(___L166___x86_23_x86_2d_listing)
+   ___GOTO(___L167___x86_23_x86_2d_listing)
 ___DEF_SLBL(117,___L117___x86_23_x86_2d_listing)
    ___SET_STK(-13,___R1)
-   ___SET_R1(___STK(-10))
+   ___SET_R1(___STK(-7))
    ___SET_R2(___FIX(0L))
    ___SET_R0(___LBL(118))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),263,___G_fx_3d_)
 ___DEF_SLBL(118,___L118___x86_23_x86_2d_listing)
    ___IF(___NOT(___NOTFALSEP(___R1)))
-   ___GOTO(___L181___x86_23_x86_2d_listing)
+   ___GOTO(___L182___x86_23_x86_2d_listing)
    ___END_IF
    ___SET_R3(___SUB(36))
-   ___GOTO(___L178___x86_23_x86_2d_listing)
+   ___GOTO(___L179___x86_23_x86_2d_listing)
 ___DEF_SLBL(119,___L119___x86_23_x86_2d_listing)
    ___SET_R3(___R1)
-___DEF_GLBL(___L178___x86_23_x86_2d_listing)
+___DEF_GLBL(___L179___x86_23_x86_2d_listing)
    ___SET_R2(___STK(-13))
-   ___SET_R1(___STK(-8))
+   ___SET_R1(___STK(-9))
    ___SET_R0(___LBL(120))
    ___JUMPGLONOTSAFE(___SET_NARGS(3),271,___G_list)
 ___DEF_SLBL(120,___L120___x86_23_x86_2d_listing)
    ___ADJFP(-4)
-   ___GOTO(___L180___x86_23_x86_2d_listing)
-___DEF_GLBL(___L179___x86_23_x86_2d_listing)
-   ___SET_R1(___SUB(37))
+   ___GOTO(___L181___x86_23_x86_2d_listing)
 ___DEF_GLBL(___L180___x86_23_x86_2d_listing)
+   ___SET_R1(___SUB(37))
+___DEF_GLBL(___L181___x86_23_x86_2d_listing)
    ___SET_STK(-9,___R1)
-   ___SET_R1(___STK(-3))
+   ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(121))
    ___ADJFP(4)
    ___JUMPINT(___SET_NARGS(1),___PRC(140),___L___x86_23_x86_2d_offset_2d__3e_string)
@@ -8261,8 +8266,8 @@ ___DEF_SLBL(121,___L121___x86_23_x86_2d_listing)
 ___DEF_SLBL(122,___L122___x86_23_x86_2d_listing)
    ___ADJFP(-14)
    ___JUMPGLONOTSAFE(___SET_NARGS(5),271,___G_list)
-___DEF_GLBL(___L181___x86_23_x86_2d_listing)
-   ___SET_R2(___STK(-10))
+___DEF_GLBL(___L182___x86_23_x86_2d_listing)
+   ___SET_R2(___STK(-7))
    ___SET_R1(___FIX(1L))
    ___SET_R0(___LBL(123))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),267,___G_fxarithmetic_2d_shift_2d_left)
@@ -8271,9 +8276,13 @@ ___DEF_SLBL(123,___L123___x86_23_x86_2d_listing)
    ___SET_R1(___SUB(39))
    ___SET_R0(___LBL(119))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),271,___G_list)
-___DEF_GLBL(___L182___x86_23_x86_2d_listing)
+___DEF_GLBL(___L183___x86_23_x86_2d_listing)
    ___SET_R1(___SUB(40))
-   ___GOTO(___L177___x86_23_x86_2d_listing)
+   ___GOTO(___L178___x86_23_x86_2d_listing)
+___DEF_GLBL(___L184___x86_23_x86_2d_listing)
+   ___SET_R1(___STK(-3))
+   ___ADJFP(-8)
+   ___JUMPRET(___STK(2))
 ___DEF_SLBL(124,___L124___x86_23_x86_2d_listing)
    ___SET_R2(___R1)
    ___SET_R0(___STK(-10))
@@ -8282,16 +8291,16 @@ ___DEF_SLBL(124,___L124___x86_23_x86_2d_listing)
 ___DEF_SLBL(125,___L125___x86_23_x86_2d_listing)
    ___ADJFP(-12)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),271,___G_list)
-___DEF_GLBL(___L183___x86_23_x86_2d_listing)
+___DEF_GLBL(___L185___x86_23_x86_2d_listing)
    ___SET_R1(___SUB(41))
    ___JUMPRET(___R0)
-___DEF_GLBL(___L184___x86_23_x86_2d_listing)
+___DEF_GLBL(___L186___x86_23_x86_2d_listing)
    ___SET_R1(___SUB(42))
    ___JUMPRET(___R0)
-___DEF_GLBL(___L185___x86_23_x86_2d_listing)
+___DEF_GLBL(___L187___x86_23_x86_2d_listing)
    ___SET_R1(___SUB(43))
    ___JUMPRET(___R0)
-___DEF_GLBL(___L186___x86_23_x86_2d_listing)
+___DEF_GLBL(___L188___x86_23_x86_2d_listing)
    ___SET_R1(___SUB(44))
    ___JUMPRET(___R0)
 ___DEF_SLBL(126,___L126___x86_23_x86_2d_listing)
@@ -10480,11 +10489,11 @@ ___END_P_COD
 #undef ___PH_LBL0
 #define ___PH_LBL0 517
 #undef ___PD_ALL
-#define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
+#define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
-#define ___PR_ALL ___R_HEAP ___R_FP ___R_R0 ___R_R1 ___R_R2 ___R_R3 ___R_R4
+#define ___PR_ALL ___R_FP ___R_R0 ___R_R1 ___R_R2 ___R_R3 ___R_R4
 #undef ___PW_ALL
-#define ___PW_ALL ___W_HEAP ___W_FP ___W_R0 ___W_R1 ___W_R2 ___W_R3 ___W_R4
+#define ___PW_ALL ___W_FP ___W_R0 ___W_R1 ___W_R2 ___W_R3 ___W_R4
 ___BEGIN_P_COD
 ___BEGIN_P_HLBL
 ___DEF_P_HLBL_INTRO
@@ -10522,216 +10531,213 @@ ___DEF_P_HLBL(___L30___x86_23_x86_2d_data_2d_elems)
 ___DEF_P_HLBL(___L31___x86_23_x86_2d_data_2d_elems)
 ___DEF_P_HLBL(___L32___x86_23_x86_2d_data_2d_elems)
 ___DEF_P_HLBL(___L33___x86_23_x86_2d_data_2d_elems)
-___DEF_P_HLBL(___L34___x86_23_x86_2d_data_2d_elems)
 ___END_P_HLBL
 ___BEGIN_P_SW
 ___DEF_SLBL(0,___L0___x86_23_x86_2d_data_2d_elems)
    ___IF_NARGS_EQ(3,___NOTHING)
    ___WRONG_NARGS(0,3,0,0)
 ___DEF_GLBL(___L___x86_23_x86_2d_data_2d_elems)
-   ___SET_R4(___BOX(___VOID))
-   ___SETBOX(___R4,___FIX(4L))
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R3)
-   ___SET_STK(4,___R4)
    ___SET_R1(___R2)
    ___ADJFP(8)
-   ___CHECK_HEAP(1,4096)
+   ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_data_2d_elems)
-   ___POLL(2)
-___DEF_SLBL(2,___L2___x86_23_x86_2d_data_2d_elems)
-   ___SET_R0(___LBL(3))
+   ___SET_R0(___LBL(2))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),272,___G_list_2d__3e_vector)
-___DEF_SLBL(3,___L3___x86_23_x86_2d_data_2d_elems)
-   ___SET_STK(-3,___STK(-7))
+___DEF_SLBL(2,___L2___x86_23_x86_2d_data_2d_elems)
+   ___SET_STK(-4,___STK(-7))
    ___SET_STK(-7,___STK(-6))
-   ___SET_STK(-6,___STK(-5))
    ___SET_R2(___R1)
-   ___SET_R1(___STK(-4))
+   ___SET_R1(___STK(-5))
    ___SET_R3(___FIX(0L))
-   ___SET_R0(___STK(-3))
-   ___ADJFP(-6)
-   ___POLL(4)
+   ___SET_R0(___STK(-4))
+   ___ADJFP(-7)
+   ___POLL(3)
+___DEF_SLBL(3,___L3___x86_23_x86_2d_data_2d_elems)
+   ___GOTO(___L35___x86_23_x86_2d_data_2d_elems)
 ___DEF_SLBL(4,___L4___x86_23_x86_2d_data_2d_elems)
-   ___GOTO(___L36___x86_23_x86_2d_data_2d_elems)
+___DEF_GLBL(___L34___x86_23_x86_2d_data_2d_elems)
+   ___SET_R3(___STK(-3))
+   ___SET_R2(___STK(-5))
+   ___SET_R1(___STK(-6))
+   ___SET_R0(___STK(-4))
+   ___ADJFP(-7)
+   ___POLL(5)
 ___DEF_SLBL(5,___L5___x86_23_x86_2d_data_2d_elems)
 ___DEF_GLBL(___L35___x86_23_x86_2d_data_2d_elems)
-   ___SET_R3(___STK(-6))
-   ___SET_R2(___STK(-8))
-   ___SET_R1(___STK(-9))
-   ___SET_R0(___STK(-7))
-   ___ADJFP(-10)
-   ___POLL(6)
-___DEF_SLBL(6,___L6___x86_23_x86_2d_data_2d_elems)
-___DEF_GLBL(___L36___x86_23_x86_2d_data_2d_elems)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R2)
    ___SET_STK(4,___R3)
    ___SET_R1(___R2)
-   ___ADJFP(10)
-   ___POLL(7)
-___DEF_SLBL(7,___L7___x86_23_x86_2d_data_2d_elems)
-   ___SET_R0(___LBL(8))
+   ___ADJFP(7)
+   ___POLL(6)
+___DEF_SLBL(6,___L6___x86_23_x86_2d_data_2d_elems)
+   ___SET_R0(___LBL(7))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),285,___G_vector_2d_length)
-___DEF_SLBL(8,___L8___x86_23_x86_2d_data_2d_elems)
+___DEF_SLBL(7,___L7___x86_23_x86_2d_data_2d_elems)
    ___SET_R2(___R1)
-   ___SET_R1(___STK(-6))
-   ___SET_R0(___LBL(9))
+   ___SET_R1(___STK(-3))
+   ___SET_R0(___LBL(8))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),261,___G_fx_3c_)
-___DEF_SLBL(9,___L9___x86_23_x86_2d_data_2d_elems)
+___DEF_SLBL(8,___L8___x86_23_x86_2d_data_2d_elems)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L49___x86_23_x86_2d_data_2d_elems)
    ___END_IF
-   ___SET_R2(___UNBOX(___STK(-8)))
-   ___SET_R1(___STK(-6))
-   ___SET_R0(___LBL(10))
+   ___SET_R1(___STK(-3))
+   ___SET_R2(___FIX(4L))
+   ___SET_R0(___LBL(9))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),259,___G_fx_2b_)
-___DEF_SLBL(10,___L10___x86_23_x86_2d_data_2d_elems)
-   ___SET_STK(-5,___R1)
-   ___SET_R1(___STK(-7))
-   ___SET_R0(___LBL(11))
+___DEF_SLBL(9,___L9___x86_23_x86_2d_data_2d_elems)
+   ___SET_STK(-2,___R1)
+   ___SET_R1(___STK(-4))
+   ___SET_R0(___LBL(10))
+   ___ADJFP(4)
    ___JUMPGLONOTSAFE(___SET_NARGS(1),285,___G_vector_2d_length)
-___DEF_SLBL(11,___L11___x86_23_x86_2d_data_2d_elems)
+___DEF_SLBL(10,___L10___x86_23_x86_2d_data_2d_elems)
    ___SET_R2(___R1)
-   ___SET_R1(___STK(-5))
-   ___SET_R0(___LBL(12))
-   ___JUMPGLONOTSAFE(___SET_NARGS(2),269,___G_fxmin)
-___DEF_SLBL(12,___L12___x86_23_x86_2d_data_2d_elems)
-   ___SET_STK(-5,___STK(-9))
-   ___SET_STK(-9,___STK(-8))
-   ___SET_STK(-8,___STK(-7))
-   ___SET_R2(___STK(-6))
-   ___SET_R3(___NUL)
-   ___SET_R0(___STK(-5))
-   ___ADJFP(-8)
-   ___POLL(13)
-___DEF_SLBL(13,___L13___x86_23_x86_2d_data_2d_elems)
-   ___GOTO(___L37___x86_23_x86_2d_data_2d_elems)
-___DEF_SLBL(14,___L14___x86_23_x86_2d_data_2d_elems)
-   ___SET_R3(___R1)
    ___SET_R1(___STK(-6))
-   ___SET_R0(___STK(-7))
-   ___SET_R2(___STK(-5))
-   ___ADJFP(-8)
-   ___POLL(15)
-___DEF_SLBL(15,___L15___x86_23_x86_2d_data_2d_elems)
-___DEF_GLBL(___L37___x86_23_x86_2d_data_2d_elems)
+   ___SET_R0(___LBL(11))
+   ___ADJFP(-4)
+   ___JUMPGLONOTSAFE(___SET_NARGS(2),269,___G_fxmin)
+___DEF_SLBL(11,___L11___x86_23_x86_2d_data_2d_elems)
+   ___SET_STK(-2,___STK(-6))
+   ___SET_STK(-6,___STK(-5))
+   ___SET_STK(-5,___STK(-4))
+   ___SET_R2(___STK(-3))
+   ___SET_R3(___NUL)
+   ___SET_R0(___STK(-2))
+   ___ADJFP(-5)
+   ___POLL(12)
+___DEF_SLBL(12,___L12___x86_23_x86_2d_data_2d_elems)
+   ___GOTO(___L36___x86_23_x86_2d_data_2d_elems)
+___DEF_SLBL(13,___L13___x86_23_x86_2d_data_2d_elems)
+   ___SET_R3(___R1)
+   ___SET_R1(___STK(-7))
+   ___SET_R0(___STK(-8))
+   ___SET_R2(___STK(-6))
+   ___ADJFP(-9)
+   ___POLL(14)
+___DEF_SLBL(14,___L14___x86_23_x86_2d_data_2d_elems)
+___DEF_GLBL(___L36___x86_23_x86_2d_data_2d_elems)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R2)
    ___SET_STK(4,___R3)
    ___SET_R2(___R1)
    ___SET_R1(___STK(3))
-   ___ADJFP(8)
-   ___POLL(16)
-___DEF_SLBL(16,___L16___x86_23_x86_2d_data_2d_elems)
-   ___SET_R0(___LBL(17))
+   ___ADJFP(9)
+   ___POLL(15)
+___DEF_SLBL(15,___L15___x86_23_x86_2d_data_2d_elems)
+   ___SET_R0(___LBL(16))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),261,___G_fx_3c_)
-___DEF_SLBL(17,___L17___x86_23_x86_2d_data_2d_elems)
+___DEF_SLBL(16,___L16___x86_23_x86_2d_data_2d_elems)
    ___IF(___NOT(___NOTFALSEP(___R1)))
-   ___GOTO(___L38___x86_23_x86_2d_data_2d_elems)
+   ___GOTO(___L37___x86_23_x86_2d_data_2d_elems)
    ___END_IF
-   ___SET_R2(___STK(-5))
-   ___SET_R1(___STK(-8))
-   ___SET_R0(___LBL(18))
+   ___SET_R2(___STK(-6))
+   ___SET_R1(___STK(-9))
+   ___SET_R0(___LBL(17))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),286,___G_vector_2d_ref)
-___DEF_SLBL(18,___L18___x86_23_x86_2d_data_2d_elems)
-   ___SET_STK(-3,___R1)
+___DEF_SLBL(17,___L17___x86_23_x86_2d_data_2d_elems)
+   ___SET_STK(-4,___R1)
    ___SET_R3(___STK(-10))
    ___SET_R2(___R1)
    ___SET_R1(___STK(-11))
-   ___SET_R0(___LBL(19))
+   ___SET_R0(___LBL(18))
    ___JUMPGLONOTSAFE(___SET_NARGS(3),236,___G___asm_23_asm_2d_int_2d_le)
-___DEF_SLBL(19,___L19___x86_23_x86_2d_data_2d_elems)
-   ___SET_R1(___STK(-5))
+___DEF_SLBL(18,___L18___x86_23_x86_2d_data_2d_elems)
+   ___SET_R1(___STK(-6))
    ___SET_R2(___FIX(1L))
-   ___SET_R0(___LBL(20))
+   ___SET_R0(___LBL(19))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),259,___G_fx_2b_)
-___DEF_SLBL(20,___L20___x86_23_x86_2d_data_2d_elems)
-   ___SET_STK(-5,___R1)
-   ___SET_R2(___STK(-4))
-   ___SET_R1(___STK(-3))
-   ___SET_R0(___LBL(14))
+___DEF_SLBL(19,___L19___x86_23_x86_2d_data_2d_elems)
+   ___SET_STK(-6,___R1)
+   ___SET_R2(___STK(-5))
+   ___SET_R1(___STK(-4))
+   ___SET_R0(___LBL(13))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),253,___G_cons)
+___DEF_GLBL(___L37___x86_23_x86_2d_data_2d_elems)
+   ___SET_R1(___STK(-11))
+   ___SET_R0(___LBL(20))
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),247,___G___codegen_23_codegen_2d_context_2d_listing_2d_format)
+___DEF_SLBL(20,___L20___x86_23_x86_2d_data_2d_elems)
+   ___IF(___NOTFALSEP(___R1))
+   ___GOTO(___L38___x86_23_x86_2d_data_2d_elems)
+   ___END_IF
+   ___ADJFP(-4)
+   ___GOTO(___L34___x86_23_x86_2d_data_2d_elems)
 ___DEF_GLBL(___L38___x86_23_x86_2d_data_2d_elems)
+   ___SET_STK(-3,___CHR(9))
    ___SET_R1(___STK(-11))
    ___SET_R0(___LBL(21))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),247,___G___codegen_23_codegen_2d_context_2d_listing_2d_format)
 ___DEF_SLBL(21,___L21___x86_23_x86_2d_data_2d_elems)
-   ___IF(___NOT(___NOTFALSEP(___R1)))
-   ___GOTO(___L35___x86_23_x86_2d_data_2d_elems)
-   ___END_IF
-   ___SET_STK(1,___CHR(9))
-   ___SET_R1(___STK(-11))
-   ___SET_R0(___LBL(22))
-   ___ADJFP(4)
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),247,___G___codegen_23_codegen_2d_context_2d_listing_2d_format)
-___DEF_SLBL(22,___L22___x86_23_x86_2d_data_2d_elems)
    ___IF(___NOT(___EQP(___R1,___SYM_gnu)))
    ___GOTO(___L44___x86_23_x86_2d_data_2d_elems)
    ___END_IF
-   ___SET_R1(___STK(-14))
+   ___SET_R1(___STK(-10))
    ___SET_R2(___FIX(8L))
-   ___SET_R0(___LBL(23))
+   ___SET_R0(___LBL(22))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),263,___G_fx_3d_)
-___DEF_SLBL(23,___L23___x86_23_x86_2d_data_2d_elems)
+___DEF_SLBL(22,___L22___x86_23_x86_2d_data_2d_elems)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L40___x86_23_x86_2d_data_2d_elems)
    ___END_IF
    ___SET_R1(___SUB(65))
    ___GOTO(___L39___x86_23_x86_2d_data_2d_elems)
-___DEF_SLBL(24,___L24___x86_23_x86_2d_data_2d_elems)
+___DEF_SLBL(23,___L23___x86_23_x86_2d_data_2d_elems)
 ___DEF_GLBL(___L39___x86_23_x86_2d_data_2d_elems)
-   ___SET_STK(-9,___R1)
-   ___SET_R1(___STK(-8))
-   ___SET_R0(___LBL(25))
+   ___SET_STK(-6,___R1)
+   ___SET_R1(___STK(-5))
+   ___SET_R0(___LBL(24))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),281,___G_reverse)
-___DEF_SLBL(25,___L25___x86_23_x86_2d_data_2d_elems)
+___DEF_SLBL(24,___L24___x86_23_x86_2d_data_2d_elems)
    ___SET_R2(___SUB(66))
-   ___SET_R0(___LBL(26))
+   ___SET_R0(___LBL(25))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),242,___G___asm_23_asm_2d_separated_2d_list)
-___DEF_SLBL(26,___L26___x86_23_x86_2d_data_2d_elems)
+___DEF_SLBL(25,___L25___x86_23_x86_2d_data_2d_elems)
    ___SET_R3(___R1)
    ___SET_R2(___CHR(9))
-   ___SET_R1(___STK(-9))
-   ___SET_R0(___LBL(27))
+   ___SET_R1(___STK(-6))
+   ___SET_R0(___LBL(26))
    ___ADJFP(-3)
    ___JUMPGLONOTSAFE(___SET_NARGS(4),271,___G_list)
-___DEF_SLBL(27,___L27___x86_23_x86_2d_data_2d_elems)
+___DEF_SLBL(26,___L26___x86_23_x86_2d_data_2d_elems)
    ___SET_R2(___R1)
-   ___SET_R1(___STK(-11))
-   ___SET_R0(___LBL(5))
+   ___SET_R1(___STK(-7))
+   ___SET_R0(___LBL(4))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),241,___G___asm_23_asm_2d_listing)
 ___DEF_GLBL(___L40___x86_23_x86_2d_data_2d_elems)
-   ___SET_R1(___STK(-14))
+   ___SET_R1(___STK(-10))
    ___SET_R2(___FIX(16L))
-   ___SET_R0(___LBL(28))
+   ___SET_R0(___LBL(27))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),263,___G_fx_3d_)
-___DEF_SLBL(28,___L28___x86_23_x86_2d_data_2d_elems)
+___DEF_SLBL(27,___L27___x86_23_x86_2d_data_2d_elems)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L41___x86_23_x86_2d_data_2d_elems)
    ___END_IF
    ___SET_R1(___SUB(67))
    ___GOTO(___L39___x86_23_x86_2d_data_2d_elems)
 ___DEF_GLBL(___L41___x86_23_x86_2d_data_2d_elems)
-   ___SET_R1(___STK(-14))
+   ___SET_R1(___STK(-10))
    ___SET_R2(___FIX(32L))
-   ___SET_R0(___LBL(29))
+   ___SET_R0(___LBL(28))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),263,___G_fx_3d_)
-___DEF_SLBL(29,___L29___x86_23_x86_2d_data_2d_elems)
+___DEF_SLBL(28,___L28___x86_23_x86_2d_data_2d_elems)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L42___x86_23_x86_2d_data_2d_elems)
    ___END_IF
    ___SET_R1(___SUB(68))
    ___GOTO(___L39___x86_23_x86_2d_data_2d_elems)
 ___DEF_GLBL(___L42___x86_23_x86_2d_data_2d_elems)
-   ___SET_R1(___STK(-14))
+   ___SET_R1(___STK(-10))
    ___SET_R2(___FIX(64L))
-   ___SET_R0(___LBL(30))
+   ___SET_R0(___LBL(29))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),263,___G_fx_3d_)
-___DEF_SLBL(30,___L30___x86_23_x86_2d_data_2d_elems)
+___DEF_SLBL(29,___L29___x86_23_x86_2d_data_2d_elems)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L43___x86_23_x86_2d_data_2d_elems)
    ___END_IF
@@ -10739,47 +10745,47 @@ ___DEF_SLBL(30,___L30___x86_23_x86_2d_data_2d_elems)
    ___GOTO(___L39___x86_23_x86_2d_data_2d_elems)
 ___DEF_GLBL(___L43___x86_23_x86_2d_data_2d_elems)
    ___SET_R1(___SUB(70))
-   ___SET_R0(___LBL(24))
+   ___SET_R0(___LBL(23))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),257,___G_error)
 ___DEF_GLBL(___L44___x86_23_x86_2d_data_2d_elems)
-   ___SET_R1(___STK(-14))
+   ___SET_R1(___STK(-10))
    ___SET_R2(___FIX(8L))
-   ___SET_R0(___LBL(31))
+   ___SET_R0(___LBL(30))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),263,___G_fx_3d_)
-___DEF_SLBL(31,___L31___x86_23_x86_2d_data_2d_elems)
+___DEF_SLBL(30,___L30___x86_23_x86_2d_data_2d_elems)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L45___x86_23_x86_2d_data_2d_elems)
    ___END_IF
    ___SET_R1(___SUB(71))
    ___GOTO(___L39___x86_23_x86_2d_data_2d_elems)
 ___DEF_GLBL(___L45___x86_23_x86_2d_data_2d_elems)
-   ___SET_R1(___STK(-14))
+   ___SET_R1(___STK(-10))
    ___SET_R2(___FIX(16L))
-   ___SET_R0(___LBL(32))
+   ___SET_R0(___LBL(31))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),263,___G_fx_3d_)
-___DEF_SLBL(32,___L32___x86_23_x86_2d_data_2d_elems)
+___DEF_SLBL(31,___L31___x86_23_x86_2d_data_2d_elems)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L46___x86_23_x86_2d_data_2d_elems)
    ___END_IF
    ___SET_R1(___SUB(72))
    ___GOTO(___L39___x86_23_x86_2d_data_2d_elems)
 ___DEF_GLBL(___L46___x86_23_x86_2d_data_2d_elems)
-   ___SET_R1(___STK(-14))
+   ___SET_R1(___STK(-10))
    ___SET_R2(___FIX(32L))
-   ___SET_R0(___LBL(33))
+   ___SET_R0(___LBL(32))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),263,___G_fx_3d_)
-___DEF_SLBL(33,___L33___x86_23_x86_2d_data_2d_elems)
+___DEF_SLBL(32,___L32___x86_23_x86_2d_data_2d_elems)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L47___x86_23_x86_2d_data_2d_elems)
    ___END_IF
    ___SET_R1(___SUB(73))
    ___GOTO(___L39___x86_23_x86_2d_data_2d_elems)
 ___DEF_GLBL(___L47___x86_23_x86_2d_data_2d_elems)
-   ___SET_R1(___STK(-14))
+   ___SET_R1(___STK(-10))
    ___SET_R2(___FIX(64L))
-   ___SET_R0(___LBL(34))
+   ___SET_R0(___LBL(33))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),263,___G_fx_3d_)
-___DEF_SLBL(34,___L34___x86_23_x86_2d_data_2d_elems)
+___DEF_SLBL(33,___L33___x86_23_x86_2d_data_2d_elems)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L48___x86_23_x86_2d_data_2d_elems)
    ___END_IF
@@ -10787,19 +10793,19 @@ ___DEF_SLBL(34,___L34___x86_23_x86_2d_data_2d_elems)
    ___GOTO(___L39___x86_23_x86_2d_data_2d_elems)
 ___DEF_GLBL(___L48___x86_23_x86_2d_data_2d_elems)
    ___SET_R1(___SUB(75))
-   ___SET_R0(___LBL(24))
+   ___SET_R0(___LBL(23))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),257,___G_error)
 ___DEF_GLBL(___L49___x86_23_x86_2d_data_2d_elems)
    ___SET_R1(___VOID)
-   ___ADJFP(-12)
-   ___JUMPRET(___STK(3))
+   ___ADJFP(-8)
+   ___JUMPRET(___STK(2))
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_add
 #undef ___PH_LBL0
-#define ___PH_LBL0 553
+#define ___PH_LBL0 552
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -10827,14 +10833,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_add)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_add)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(5),___PRC(580),___L___x86_23_x86_2d_op)
+   ___JUMPINT(___SET_NARGS(5),___PRC(579),___L___x86_23_x86_2d_op)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_or
 #undef ___PH_LBL0
-#define ___PH_LBL0 556
+#define ___PH_LBL0 555
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -10862,14 +10868,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_or)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_or)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(5),___PRC(580),___L___x86_23_x86_2d_op)
+   ___JUMPINT(___SET_NARGS(5),___PRC(579),___L___x86_23_x86_2d_op)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_adc
 #undef ___PH_LBL0
-#define ___PH_LBL0 559
+#define ___PH_LBL0 558
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -10897,14 +10903,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_adc)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_adc)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(5),___PRC(580),___L___x86_23_x86_2d_op)
+   ___JUMPINT(___SET_NARGS(5),___PRC(579),___L___x86_23_x86_2d_op)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_sbb
 #undef ___PH_LBL0
-#define ___PH_LBL0 562
+#define ___PH_LBL0 561
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -10932,14 +10938,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_sbb)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_sbb)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(5),___PRC(580),___L___x86_23_x86_2d_op)
+   ___JUMPINT(___SET_NARGS(5),___PRC(579),___L___x86_23_x86_2d_op)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_and
 #undef ___PH_LBL0
-#define ___PH_LBL0 565
+#define ___PH_LBL0 564
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -10967,14 +10973,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_and)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_and)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(5),___PRC(580),___L___x86_23_x86_2d_op)
+   ___JUMPINT(___SET_NARGS(5),___PRC(579),___L___x86_23_x86_2d_op)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_sub
 #undef ___PH_LBL0
-#define ___PH_LBL0 568
+#define ___PH_LBL0 567
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -11002,14 +11008,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_sub)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_sub)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(5),___PRC(580),___L___x86_23_x86_2d_op)
+   ___JUMPINT(___SET_NARGS(5),___PRC(579),___L___x86_23_x86_2d_op)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_xor
 #undef ___PH_LBL0
-#define ___PH_LBL0 571
+#define ___PH_LBL0 570
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -11037,14 +11043,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_xor)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_xor)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(5),___PRC(580),___L___x86_23_x86_2d_op)
+   ___JUMPINT(___SET_NARGS(5),___PRC(579),___L___x86_23_x86_2d_op)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmp
 #undef ___PH_LBL0
-#define ___PH_LBL0 574
+#define ___PH_LBL0 573
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -11072,14 +11078,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmp)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmp)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(5),___PRC(580),___L___x86_23_x86_2d_op)
+   ___JUMPINT(___SET_NARGS(5),___PRC(579),___L___x86_23_x86_2d_op)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_mov
 #undef ___PH_LBL0
-#define ___PH_LBL0 577
+#define ___PH_LBL0 576
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -11107,14 +11113,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_mov)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_mov)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(5),___PRC(580),___L___x86_23_x86_2d_op)
+   ___JUMPINT(___SET_NARGS(5),___PRC(579),___L___x86_23_x86_2d_op)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_op
 #undef ___PH_LBL0
-#define ___PH_LBL0 580
+#define ___PH_LBL0 579
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -11746,7 +11752,7 @@ ___DEF_SLBL(61,___L61___x86_23_x86_2d_op)
    ___GOTO(___L174___x86_23_x86_2d_op)
    ___END_IF
 ___DEF_GLBL(___L170___x86_23_x86_2d_op)
-   ___SET_R3(___STK(-5))
+   ___SET_R3(___STK(-7))
    ___SET_R2(___STK(-6))
    ___SET_R1(___STK(-8))
    ___SET_R0(___STK(-9))
@@ -11886,12 +11892,12 @@ ___DEF_SLBL(82,___L82___x86_23_x86_2d_op)
    ___END_IF
 ___DEF_GLBL(___L174___x86_23_x86_2d_op)
    ___SET_R3(___STK(-10))
-   ___SET_R2(___STK(-5))
+   ___SET_R2(___STK(-7))
    ___SET_R1(___STK(-11))
    ___SET_R0(___LBL(83))
    ___JUMPINT(___SET_NARGS(3),___PRC(326),___L___x86_23_x86_2d_opnd_2d_prefix_2d_opnd)
 ___DEF_SLBL(83,___L83___x86_23_x86_2d_op)
-   ___SET_R1(___STK(-5))
+   ___SET_R1(___STK(-7))
    ___SET_R2(___FIX(8L))
    ___SET_R0(___LBL(84))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),263,___G_fx_3d_)
@@ -11904,14 +11910,14 @@ ___DEF_SLBL(84,___L84___x86_23_x86_2d_op)
 ___DEF_GLBL(___L175___x86_23_x86_2d_op)
    ___SET_R1(___FIX(5L))
 ___DEF_GLBL(___L176___x86_23_x86_2d_op)
-   ___SET_STK(-7,___R1)
+   ___SET_STK(-5,___R1)
    ___SET_R1(___STK(-6))
    ___SET_R2(___FIX(3L))
    ___SET_R0(___LBL(85))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),267,___G_fxarithmetic_2d_shift_2d_left)
 ___DEF_SLBL(85,___L85___x86_23_x86_2d_op)
    ___SET_R2(___R1)
-   ___SET_R1(___STK(-7))
+   ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(86))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),259,___G_fx_2b_)
 ___DEF_SLBL(86,___L86___x86_23_x86_2d_op)
@@ -11920,9 +11926,9 @@ ___DEF_SLBL(86,___L86___x86_23_x86_2d_op)
    ___SET_R0(___LBL(87))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),234,___G___asm_23_asm_2d_8)
 ___DEF_SLBL(87,___L87___x86_23_x86_2d_op)
-   ___SET_STK(-7,___STK(-10))
+   ___SET_STK(-5,___STK(-10))
    ___SET_STK(-10,___STK(-6))
-   ___SET_R2(___STK(-5))
+   ___SET_R2(___STK(-7))
    ___SET_R1(___FIX(32L))
    ___SET_R0(___LBL(88))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),269,___G_fxmin)
@@ -11934,8 +11940,8 @@ ___DEF_SLBL(88,___L88___x86_23_x86_2d_op)
    ___JUMPINT(___SET_NARGS(3),___PRC(463),___L___x86_23_x86_2d_imm_2d_encode)
 ___DEF_SLBL(89,___L89___x86_23_x86_2d_op)
    ___SET_R3(___R1)
-   ___SET_R2(___STK(-7))
-   ___SET_R1(___STK(-5))
+   ___SET_R2(___STK(-5))
+   ___SET_R1(___STK(-7))
    ___SET_R0(___STK(-9))
    ___ADJFP(-10)
    ___POLL(90)
@@ -11953,29 +11959,27 @@ ___DEF_SLBL(92,___L92___x86_23_x86_2d_op)
    ___JUMPGLONOTSAFE(___SET_NARGS(1),274,___G_not)
 ___DEF_GLBL(___L178___x86_23_x86_2d_op)
    ___SET_R1(___STK(-10))
-   ___SET_R2(___FIX(15L))
-   ___SET_R0(___LBL(93))
-   ___JUMPGLONOTSAFE(___SET_NARGS(2),266,___G_fxand)
-___DEF_SLBL(93,___L93___x86_23_x86_2d_op)
-   ___SET_STK(-7,___R1)
-   ___SET_R1(___STK(-10))
    ___SET_R2(___FIX(16L))
-   ___SET_R0(___LBL(94))
+   ___SET_R0(___LBL(93))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),261,___G_fx_3c_)
-___DEF_SLBL(94,___L94___x86_23_x86_2d_op)
+___DEF_SLBL(93,___L93___x86_23_x86_2d_op)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L181___x86_23_x86_2d_op)
    ___END_IF
    ___SET_R1(___FIX(64L))
    ___GOTO(___L179___x86_23_x86_2d_op)
-___DEF_SLBL(95,___L95___x86_23_x86_2d_op)
+___DEF_SLBL(94,___L94___x86_23_x86_2d_op)
    ___IF(___NOTFALSEP(___R1))
    ___GOTO(___L180___x86_23_x86_2d_op)
    ___END_IF
    ___SET_R1(___FIX(8L))
 ___DEF_GLBL(___L179___x86_23_x86_2d_op)
-   ___SET_STK(-5,___R1)
-   ___SET_R1(___STK(-7))
+   ___SET_STK(-7,___R1)
+   ___SET_R1(___STK(-10))
+   ___SET_R2(___FIX(15L))
+   ___SET_R0(___LBL(95))
+   ___JUMPGLONOTSAFE(___SET_NARGS(2),266,___G_fxand)
+___DEF_SLBL(95,___L95___x86_23_x86_2d_op)
    ___SET_R2(___FIX(0L))
    ___SET_R0(___LBL(96))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),263,___G_fx_3d_)
@@ -11983,7 +11987,7 @@ ___DEF_SLBL(96,___L96___x86_23_x86_2d_op)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L170___x86_23_x86_2d_op)
    ___END_IF
-   ___SET_R1(___STK(-5))
+   ___SET_R1(___STK(-7))
    ___SET_R2(___FIX(8L))
    ___SET_R0(___LBL(97))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),263,___G_fx_3d_)
@@ -12036,7 +12040,7 @@ ___DEF_SLBL(101,___L101___x86_23_x86_2d_op)
 ___DEF_GLBL(___L184___x86_23_x86_2d_op)
    ___SET_R1(___STK(-10))
    ___SET_R2(___FIX(80L))
-   ___SET_R0(___LBL(95))
+   ___SET_R0(___LBL(94))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),261,___G_fx_3c_)
 ___DEF_GLBL(___L185___x86_23_x86_2d_op)
    ___SET_R1(___STK(-10))
@@ -12431,7 +12435,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_inc
 #undef ___PH_LBL0
-#define ___PH_LBL0 719
+#define ___PH_LBL0 718
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -12459,14 +12463,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_inc)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_inc)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(4),___PRC(725),___L___x86_23_x86_2d_inc_2d_dec)
+   ___JUMPINT(___SET_NARGS(4),___PRC(724),___L___x86_23_x86_2d_inc_2d_dec)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_dec
 #undef ___PH_LBL0
-#define ___PH_LBL0 722
+#define ___PH_LBL0 721
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -12494,14 +12498,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_dec)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_dec)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(4),___PRC(725),___L___x86_23_x86_2d_inc_2d_dec)
+   ___JUMPINT(___SET_NARGS(4),___PRC(724),___L___x86_23_x86_2d_inc_2d_dec)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_inc_2d_dec
 #undef ___PH_LBL0
-#define ___PH_LBL0 725
+#define ___PH_LBL0 724
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -12888,7 +12892,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_lea
 #undef ___PH_LBL0
-#define ___PH_LBL0 765
+#define ___PH_LBL0 764
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -13048,7 +13052,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_ret
 #undef ___PH_LBL0
-#define ___PH_LBL0 782
+#define ___PH_LBL0 781
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -13154,7 +13158,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_enter
 #undef ___PH_LBL0
-#define ___PH_LBL0 794
+#define ___PH_LBL0 793
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -13276,7 +13280,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_nop
 #undef ___PH_LBL0
-#define ___PH_LBL0 808
+#define ___PH_LBL0 807
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -13297,14 +13301,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_nop)
    ___SET_R2(___FIX(144L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_nop)
-   ___JUMPINT(___SET_NARGS(2),___PRC(844),___L___x86_23_x86_2d_no_2d_opnd_2d_instr)
+   ___JUMPINT(___SET_NARGS(2),___PRC(843),___L___x86_23_x86_2d_no_2d_opnd_2d_instr)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_pushf
 #undef ___PH_LBL0
-#define ___PH_LBL0 811
+#define ___PH_LBL0 810
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -13325,14 +13329,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_pushf)
    ___SET_R2(___FIX(156L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_pushf)
-   ___JUMPINT(___SET_NARGS(2),___PRC(844),___L___x86_23_x86_2d_no_2d_opnd_2d_instr)
+   ___JUMPINT(___SET_NARGS(2),___PRC(843),___L___x86_23_x86_2d_no_2d_opnd_2d_instr)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_popf
 #undef ___PH_LBL0
-#define ___PH_LBL0 814
+#define ___PH_LBL0 813
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -13353,14 +13357,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_popf)
    ___SET_R2(___FIX(157L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_popf)
-   ___JUMPINT(___SET_NARGS(2),___PRC(844),___L___x86_23_x86_2d_no_2d_opnd_2d_instr)
+   ___JUMPINT(___SET_NARGS(2),___PRC(843),___L___x86_23_x86_2d_no_2d_opnd_2d_instr)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_leave
 #undef ___PH_LBL0
-#define ___PH_LBL0 817
+#define ___PH_LBL0 816
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -13381,14 +13385,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_leave)
    ___SET_R2(___FIX(201L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_leave)
-   ___JUMPINT(___SET_NARGS(2),___PRC(844),___L___x86_23_x86_2d_no_2d_opnd_2d_instr)
+   ___JUMPINT(___SET_NARGS(2),___PRC(843),___L___x86_23_x86_2d_no_2d_opnd_2d_instr)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_hlt
 #undef ___PH_LBL0
-#define ___PH_LBL0 820
+#define ___PH_LBL0 819
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -13409,14 +13413,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_hlt)
    ___SET_R2(___FIX(244L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_hlt)
-   ___JUMPINT(___SET_NARGS(2),___PRC(844),___L___x86_23_x86_2d_no_2d_opnd_2d_instr)
+   ___JUMPINT(___SET_NARGS(2),___PRC(843),___L___x86_23_x86_2d_no_2d_opnd_2d_instr)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmc
 #undef ___PH_LBL0
-#define ___PH_LBL0 823
+#define ___PH_LBL0 822
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -13437,14 +13441,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmc)
    ___SET_R2(___FIX(245L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmc)
-   ___JUMPINT(___SET_NARGS(2),___PRC(844),___L___x86_23_x86_2d_no_2d_opnd_2d_instr)
+   ___JUMPINT(___SET_NARGS(2),___PRC(843),___L___x86_23_x86_2d_no_2d_opnd_2d_instr)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_clc
 #undef ___PH_LBL0
-#define ___PH_LBL0 826
+#define ___PH_LBL0 825
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -13465,14 +13469,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_clc)
    ___SET_R2(___FIX(248L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_clc)
-   ___JUMPINT(___SET_NARGS(2),___PRC(844),___L___x86_23_x86_2d_no_2d_opnd_2d_instr)
+   ___JUMPINT(___SET_NARGS(2),___PRC(843),___L___x86_23_x86_2d_no_2d_opnd_2d_instr)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_stc
 #undef ___PH_LBL0
-#define ___PH_LBL0 829
+#define ___PH_LBL0 828
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -13493,14 +13497,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_stc)
    ___SET_R2(___FIX(249L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_stc)
-   ___JUMPINT(___SET_NARGS(2),___PRC(844),___L___x86_23_x86_2d_no_2d_opnd_2d_instr)
+   ___JUMPINT(___SET_NARGS(2),___PRC(843),___L___x86_23_x86_2d_no_2d_opnd_2d_instr)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cli
 #undef ___PH_LBL0
-#define ___PH_LBL0 832
+#define ___PH_LBL0 831
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -13521,14 +13525,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cli)
    ___SET_R2(___FIX(250L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cli)
-   ___JUMPINT(___SET_NARGS(2),___PRC(844),___L___x86_23_x86_2d_no_2d_opnd_2d_instr)
+   ___JUMPINT(___SET_NARGS(2),___PRC(843),___L___x86_23_x86_2d_no_2d_opnd_2d_instr)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_sti
 #undef ___PH_LBL0
-#define ___PH_LBL0 835
+#define ___PH_LBL0 834
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -13549,14 +13553,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_sti)
    ___SET_R2(___FIX(251L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_sti)
-   ___JUMPINT(___SET_NARGS(2),___PRC(844),___L___x86_23_x86_2d_no_2d_opnd_2d_instr)
+   ___JUMPINT(___SET_NARGS(2),___PRC(843),___L___x86_23_x86_2d_no_2d_opnd_2d_instr)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cld
 #undef ___PH_LBL0
-#define ___PH_LBL0 838
+#define ___PH_LBL0 837
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -13577,14 +13581,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cld)
    ___SET_R2(___FIX(252L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cld)
-   ___JUMPINT(___SET_NARGS(2),___PRC(844),___L___x86_23_x86_2d_no_2d_opnd_2d_instr)
+   ___JUMPINT(___SET_NARGS(2),___PRC(843),___L___x86_23_x86_2d_no_2d_opnd_2d_instr)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_std
 #undef ___PH_LBL0
-#define ___PH_LBL0 841
+#define ___PH_LBL0 840
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -13605,14 +13609,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_std)
    ___SET_R2(___FIX(253L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_std)
-   ___JUMPINT(___SET_NARGS(2),___PRC(844),___L___x86_23_x86_2d_no_2d_opnd_2d_instr)
+   ___JUMPINT(___SET_NARGS(2),___PRC(843),___L___x86_23_x86_2d_no_2d_opnd_2d_instr)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_no_2d_opnd_2d_instr
 #undef ___PH_LBL0
-#define ___PH_LBL0 844
+#define ___PH_LBL0 843
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -13729,7 +13733,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_int
 #undef ___PH_LBL0
-#define ___PH_LBL0 856
+#define ___PH_LBL0 855
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -13799,7 +13803,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_int3
 #undef ___PH_LBL0
-#define ___PH_LBL0 864
+#define ___PH_LBL0 863
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -13862,7 +13866,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_syscall
 #undef ___PH_LBL0
-#define ___PH_LBL0 871
+#define ___PH_LBL0 870
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -13883,14 +13887,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_syscall)
    ___SET_R2(___FIX(5L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_syscall)
-   ___JUMPINT(___SET_NARGS(2),___PRC(892),___L___x86_23_x86_2d_no_2d_opnd_2d_instr_2d_esc)
+   ___JUMPINT(___SET_NARGS(2),___PRC(891),___L___x86_23_x86_2d_no_2d_opnd_2d_instr_2d_esc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_sysret
 #undef ___PH_LBL0
-#define ___PH_LBL0 874
+#define ___PH_LBL0 873
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -13911,14 +13915,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_sysret)
    ___SET_R2(___FIX(7L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_sysret)
-   ___JUMPINT(___SET_NARGS(2),___PRC(892),___L___x86_23_x86_2d_no_2d_opnd_2d_instr_2d_esc)
+   ___JUMPINT(___SET_NARGS(2),___PRC(891),___L___x86_23_x86_2d_no_2d_opnd_2d_instr_2d_esc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_wrmsr
 #undef ___PH_LBL0
-#define ___PH_LBL0 877
+#define ___PH_LBL0 876
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -13939,14 +13943,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_wrmsr)
    ___SET_R2(___FIX(48L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_wrmsr)
-   ___JUMPINT(___SET_NARGS(2),___PRC(892),___L___x86_23_x86_2d_no_2d_opnd_2d_instr_2d_esc)
+   ___JUMPINT(___SET_NARGS(2),___PRC(891),___L___x86_23_x86_2d_no_2d_opnd_2d_instr_2d_esc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_rdtsc
 #undef ___PH_LBL0
-#define ___PH_LBL0 880
+#define ___PH_LBL0 879
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -13967,14 +13971,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_rdtsc)
    ___SET_R2(___FIX(49L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_rdtsc)
-   ___JUMPINT(___SET_NARGS(2),___PRC(892),___L___x86_23_x86_2d_no_2d_opnd_2d_instr_2d_esc)
+   ___JUMPINT(___SET_NARGS(2),___PRC(891),___L___x86_23_x86_2d_no_2d_opnd_2d_instr_2d_esc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_rdmsr
 #undef ___PH_LBL0
-#define ___PH_LBL0 883
+#define ___PH_LBL0 882
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -13995,14 +13999,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_rdmsr)
    ___SET_R2(___FIX(50L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_rdmsr)
-   ___JUMPINT(___SET_NARGS(2),___PRC(892),___L___x86_23_x86_2d_no_2d_opnd_2d_instr_2d_esc)
+   ___JUMPINT(___SET_NARGS(2),___PRC(891),___L___x86_23_x86_2d_no_2d_opnd_2d_instr_2d_esc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_rdpmc
 #undef ___PH_LBL0
-#define ___PH_LBL0 886
+#define ___PH_LBL0 885
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -14023,14 +14027,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_rdpmc)
    ___SET_R2(___FIX(51L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_rdpmc)
-   ___JUMPINT(___SET_NARGS(2),___PRC(892),___L___x86_23_x86_2d_no_2d_opnd_2d_instr_2d_esc)
+   ___JUMPINT(___SET_NARGS(2),___PRC(891),___L___x86_23_x86_2d_no_2d_opnd_2d_instr_2d_esc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cpuid
 #undef ___PH_LBL0
-#define ___PH_LBL0 889
+#define ___PH_LBL0 888
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -14051,14 +14055,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cpuid)
    ___SET_R2(___FIX(162L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cpuid)
-   ___JUMPINT(___SET_NARGS(2),___PRC(892),___L___x86_23_x86_2d_no_2d_opnd_2d_instr_2d_esc)
+   ___JUMPINT(___SET_NARGS(2),___PRC(891),___L___x86_23_x86_2d_no_2d_opnd_2d_instr_2d_esc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_no_2d_opnd_2d_instr_2d_esc
 #undef ___PH_LBL0
-#define ___PH_LBL0 892
+#define ___PH_LBL0 891
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -14170,7 +14174,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_jmp
 #undef ___PH_LBL0
-#define ___PH_LBL0 904
+#define ___PH_LBL0 903
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -14213,7 +14217,7 @@ ___DEF_SLBL(2,___L2___x86_23_x86_2d_jmp)
    ___POLL(3)
 ___DEF_SLBL(3,___L3___x86_23_x86_2d_jmp)
    ___ADJFP(-7)
-   ___JUMPINT(___SET_NARGS(4),___PRC(964),___L___x86_23_x86_2d_jump_2d_label)
+   ___JUMPINT(___SET_NARGS(4),___PRC(963),___L___x86_23_x86_2d_jump_2d_label)
 ___DEF_GLBL(___L5___x86_23_x86_2d_jmp)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-6))
@@ -14222,14 +14226,14 @@ ___DEF_GLBL(___L5___x86_23_x86_2d_jmp)
    ___POLL(4)
 ___DEF_SLBL(4,___L4___x86_23_x86_2d_jmp)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(3),___PRC(1015),___L___x86_23_x86_2d_jump_2d_general)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1014),___L___x86_23_x86_2d_jump_2d_general)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_call
 #undef ___PH_LBL0
-#define ___PH_LBL0 910
+#define ___PH_LBL0 909
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -14272,7 +14276,7 @@ ___DEF_SLBL(2,___L2___x86_23_x86_2d_call)
    ___POLL(3)
 ___DEF_SLBL(3,___L3___x86_23_x86_2d_call)
    ___ADJFP(-7)
-   ___JUMPINT(___SET_NARGS(4),___PRC(964),___L___x86_23_x86_2d_jump_2d_label)
+   ___JUMPINT(___SET_NARGS(4),___PRC(963),___L___x86_23_x86_2d_jump_2d_label)
 ___DEF_GLBL(___L5___x86_23_x86_2d_call)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-6))
@@ -14281,14 +14285,14 @@ ___DEF_GLBL(___L5___x86_23_x86_2d_call)
    ___POLL(4)
 ___DEF_SLBL(4,___L4___x86_23_x86_2d_call)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(3),___PRC(1015),___L___x86_23_x86_2d_jump_2d_general)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1014),___L___x86_23_x86_2d_jump_2d_general)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_jo
 #undef ___PH_LBL0
-#define ___PH_LBL0 916
+#define ___PH_LBL0 915
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -14313,14 +14317,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_jo)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_jo)
-   ___JUMPINT(___SET_NARGS(4),___PRC(964),___L___x86_23_x86_2d_jump_2d_label)
+   ___JUMPINT(___SET_NARGS(4),___PRC(963),___L___x86_23_x86_2d_jump_2d_label)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_jno
 #undef ___PH_LBL0
-#define ___PH_LBL0 919
+#define ___PH_LBL0 918
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -14345,14 +14349,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_jno)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_jno)
-   ___JUMPINT(___SET_NARGS(4),___PRC(964),___L___x86_23_x86_2d_jump_2d_label)
+   ___JUMPINT(___SET_NARGS(4),___PRC(963),___L___x86_23_x86_2d_jump_2d_label)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_jb
 #undef ___PH_LBL0
-#define ___PH_LBL0 922
+#define ___PH_LBL0 921
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -14377,14 +14381,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_jb)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_jb)
-   ___JUMPINT(___SET_NARGS(4),___PRC(964),___L___x86_23_x86_2d_jump_2d_label)
+   ___JUMPINT(___SET_NARGS(4),___PRC(963),___L___x86_23_x86_2d_jump_2d_label)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_jae
 #undef ___PH_LBL0
-#define ___PH_LBL0 925
+#define ___PH_LBL0 924
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -14409,14 +14413,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_jae)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_jae)
-   ___JUMPINT(___SET_NARGS(4),___PRC(964),___L___x86_23_x86_2d_jump_2d_label)
+   ___JUMPINT(___SET_NARGS(4),___PRC(963),___L___x86_23_x86_2d_jump_2d_label)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_je
 #undef ___PH_LBL0
-#define ___PH_LBL0 928
+#define ___PH_LBL0 927
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -14441,14 +14445,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_je)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_je)
-   ___JUMPINT(___SET_NARGS(4),___PRC(964),___L___x86_23_x86_2d_jump_2d_label)
+   ___JUMPINT(___SET_NARGS(4),___PRC(963),___L___x86_23_x86_2d_jump_2d_label)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_jne
 #undef ___PH_LBL0
-#define ___PH_LBL0 931
+#define ___PH_LBL0 930
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -14473,14 +14477,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_jne)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_jne)
-   ___JUMPINT(___SET_NARGS(4),___PRC(964),___L___x86_23_x86_2d_jump_2d_label)
+   ___JUMPINT(___SET_NARGS(4),___PRC(963),___L___x86_23_x86_2d_jump_2d_label)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_jbe
 #undef ___PH_LBL0
-#define ___PH_LBL0 934
+#define ___PH_LBL0 933
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -14505,14 +14509,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_jbe)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_jbe)
-   ___JUMPINT(___SET_NARGS(4),___PRC(964),___L___x86_23_x86_2d_jump_2d_label)
+   ___JUMPINT(___SET_NARGS(4),___PRC(963),___L___x86_23_x86_2d_jump_2d_label)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_ja
 #undef ___PH_LBL0
-#define ___PH_LBL0 937
+#define ___PH_LBL0 936
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -14537,14 +14541,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_ja)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_ja)
-   ___JUMPINT(___SET_NARGS(4),___PRC(964),___L___x86_23_x86_2d_jump_2d_label)
+   ___JUMPINT(___SET_NARGS(4),___PRC(963),___L___x86_23_x86_2d_jump_2d_label)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_js
 #undef ___PH_LBL0
-#define ___PH_LBL0 940
+#define ___PH_LBL0 939
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -14569,14 +14573,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_js)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_js)
-   ___JUMPINT(___SET_NARGS(4),___PRC(964),___L___x86_23_x86_2d_jump_2d_label)
+   ___JUMPINT(___SET_NARGS(4),___PRC(963),___L___x86_23_x86_2d_jump_2d_label)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_jns
 #undef ___PH_LBL0
-#define ___PH_LBL0 943
+#define ___PH_LBL0 942
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -14601,14 +14605,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_jns)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_jns)
-   ___JUMPINT(___SET_NARGS(4),___PRC(964),___L___x86_23_x86_2d_jump_2d_label)
+   ___JUMPINT(___SET_NARGS(4),___PRC(963),___L___x86_23_x86_2d_jump_2d_label)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_jp
 #undef ___PH_LBL0
-#define ___PH_LBL0 946
+#define ___PH_LBL0 945
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -14633,14 +14637,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_jp)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_jp)
-   ___JUMPINT(___SET_NARGS(4),___PRC(964),___L___x86_23_x86_2d_jump_2d_label)
+   ___JUMPINT(___SET_NARGS(4),___PRC(963),___L___x86_23_x86_2d_jump_2d_label)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_jnp
 #undef ___PH_LBL0
-#define ___PH_LBL0 949
+#define ___PH_LBL0 948
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -14665,14 +14669,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_jnp)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_jnp)
-   ___JUMPINT(___SET_NARGS(4),___PRC(964),___L___x86_23_x86_2d_jump_2d_label)
+   ___JUMPINT(___SET_NARGS(4),___PRC(963),___L___x86_23_x86_2d_jump_2d_label)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_jl
 #undef ___PH_LBL0
-#define ___PH_LBL0 952
+#define ___PH_LBL0 951
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -14697,14 +14701,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_jl)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_jl)
-   ___JUMPINT(___SET_NARGS(4),___PRC(964),___L___x86_23_x86_2d_jump_2d_label)
+   ___JUMPINT(___SET_NARGS(4),___PRC(963),___L___x86_23_x86_2d_jump_2d_label)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_jge
 #undef ___PH_LBL0
-#define ___PH_LBL0 955
+#define ___PH_LBL0 954
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -14729,14 +14733,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_jge)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_jge)
-   ___JUMPINT(___SET_NARGS(4),___PRC(964),___L___x86_23_x86_2d_jump_2d_label)
+   ___JUMPINT(___SET_NARGS(4),___PRC(963),___L___x86_23_x86_2d_jump_2d_label)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_jle
 #undef ___PH_LBL0
-#define ___PH_LBL0 958
+#define ___PH_LBL0 957
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -14761,14 +14765,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_jle)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_jle)
-   ___JUMPINT(___SET_NARGS(4),___PRC(964),___L___x86_23_x86_2d_jump_2d_label)
+   ___JUMPINT(___SET_NARGS(4),___PRC(963),___L___x86_23_x86_2d_jump_2d_label)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_jg
 #undef ___PH_LBL0
-#define ___PH_LBL0 961
+#define ___PH_LBL0 960
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -14793,14 +14797,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_jg)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_jg)
-   ___JUMPINT(___SET_NARGS(4),___PRC(964),___L___x86_23_x86_2d_jump_2d_label)
+   ___JUMPINT(___SET_NARGS(4),___PRC(963),___L___x86_23_x86_2d_jump_2d_label)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_jump_2d_label
 #undef ___PH_LBL0
-#define ___PH_LBL0 964
+#define ___PH_LBL0 963
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -15227,7 +15231,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_jump_2d_general
 #undef ___PH_LBL0
-#define ___PH_LBL0 1015
+#define ___PH_LBL0 1014
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -15422,7 +15426,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_seto
 #undef ___PH_LBL0
-#define ___PH_LBL0 1035
+#define ___PH_LBL0 1034
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R3
 #undef ___PR_ALL
@@ -15443,14 +15447,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_seto)
    ___SET_R3(___FIX(0L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_seto)
-   ___JUMPINT(___SET_NARGS(3),___PRC(1083),___L___x86_23_x86_2d_set_2d_cc)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1082),___L___x86_23_x86_2d_set_2d_cc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_setno
 #undef ___PH_LBL0
-#define ___PH_LBL0 1038
+#define ___PH_LBL0 1037
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R3
 #undef ___PR_ALL
@@ -15471,14 +15475,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_setno)
    ___SET_R3(___FIX(1L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_setno)
-   ___JUMPINT(___SET_NARGS(3),___PRC(1083),___L___x86_23_x86_2d_set_2d_cc)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1082),___L___x86_23_x86_2d_set_2d_cc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_setb
 #undef ___PH_LBL0
-#define ___PH_LBL0 1041
+#define ___PH_LBL0 1040
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R3
 #undef ___PR_ALL
@@ -15499,14 +15503,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_setb)
    ___SET_R3(___FIX(2L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_setb)
-   ___JUMPINT(___SET_NARGS(3),___PRC(1083),___L___x86_23_x86_2d_set_2d_cc)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1082),___L___x86_23_x86_2d_set_2d_cc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_setae
 #undef ___PH_LBL0
-#define ___PH_LBL0 1044
+#define ___PH_LBL0 1043
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R3
 #undef ___PR_ALL
@@ -15527,14 +15531,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_setae)
    ___SET_R3(___FIX(3L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_setae)
-   ___JUMPINT(___SET_NARGS(3),___PRC(1083),___L___x86_23_x86_2d_set_2d_cc)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1082),___L___x86_23_x86_2d_set_2d_cc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_sete
 #undef ___PH_LBL0
-#define ___PH_LBL0 1047
+#define ___PH_LBL0 1046
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R3
 #undef ___PR_ALL
@@ -15555,14 +15559,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_sete)
    ___SET_R3(___FIX(4L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_sete)
-   ___JUMPINT(___SET_NARGS(3),___PRC(1083),___L___x86_23_x86_2d_set_2d_cc)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1082),___L___x86_23_x86_2d_set_2d_cc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_setne
 #undef ___PH_LBL0
-#define ___PH_LBL0 1050
+#define ___PH_LBL0 1049
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R3
 #undef ___PR_ALL
@@ -15583,14 +15587,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_setne)
    ___SET_R3(___FIX(5L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_setne)
-   ___JUMPINT(___SET_NARGS(3),___PRC(1083),___L___x86_23_x86_2d_set_2d_cc)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1082),___L___x86_23_x86_2d_set_2d_cc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_setbe
 #undef ___PH_LBL0
-#define ___PH_LBL0 1053
+#define ___PH_LBL0 1052
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R3
 #undef ___PR_ALL
@@ -15611,14 +15615,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_setbe)
    ___SET_R3(___FIX(6L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_setbe)
-   ___JUMPINT(___SET_NARGS(3),___PRC(1083),___L___x86_23_x86_2d_set_2d_cc)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1082),___L___x86_23_x86_2d_set_2d_cc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_seta
 #undef ___PH_LBL0
-#define ___PH_LBL0 1056
+#define ___PH_LBL0 1055
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R3
 #undef ___PR_ALL
@@ -15639,14 +15643,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_seta)
    ___SET_R3(___FIX(7L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_seta)
-   ___JUMPINT(___SET_NARGS(3),___PRC(1083),___L___x86_23_x86_2d_set_2d_cc)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1082),___L___x86_23_x86_2d_set_2d_cc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_sets
 #undef ___PH_LBL0
-#define ___PH_LBL0 1059
+#define ___PH_LBL0 1058
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R3
 #undef ___PR_ALL
@@ -15667,14 +15671,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_sets)
    ___SET_R3(___FIX(8L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_sets)
-   ___JUMPINT(___SET_NARGS(3),___PRC(1083),___L___x86_23_x86_2d_set_2d_cc)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1082),___L___x86_23_x86_2d_set_2d_cc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_setns
 #undef ___PH_LBL0
-#define ___PH_LBL0 1062
+#define ___PH_LBL0 1061
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R3
 #undef ___PR_ALL
@@ -15695,14 +15699,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_setns)
    ___SET_R3(___FIX(9L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_setns)
-   ___JUMPINT(___SET_NARGS(3),___PRC(1083),___L___x86_23_x86_2d_set_2d_cc)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1082),___L___x86_23_x86_2d_set_2d_cc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_setp
 #undef ___PH_LBL0
-#define ___PH_LBL0 1065
+#define ___PH_LBL0 1064
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R3
 #undef ___PR_ALL
@@ -15723,14 +15727,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_setp)
    ___SET_R3(___FIX(10L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_setp)
-   ___JUMPINT(___SET_NARGS(3),___PRC(1083),___L___x86_23_x86_2d_set_2d_cc)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1082),___L___x86_23_x86_2d_set_2d_cc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_setnp
 #undef ___PH_LBL0
-#define ___PH_LBL0 1068
+#define ___PH_LBL0 1067
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R3
 #undef ___PR_ALL
@@ -15751,14 +15755,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_setnp)
    ___SET_R3(___FIX(11L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_setnp)
-   ___JUMPINT(___SET_NARGS(3),___PRC(1083),___L___x86_23_x86_2d_set_2d_cc)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1082),___L___x86_23_x86_2d_set_2d_cc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_setl
 #undef ___PH_LBL0
-#define ___PH_LBL0 1071
+#define ___PH_LBL0 1070
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R3
 #undef ___PR_ALL
@@ -15779,14 +15783,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_setl)
    ___SET_R3(___FIX(12L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_setl)
-   ___JUMPINT(___SET_NARGS(3),___PRC(1083),___L___x86_23_x86_2d_set_2d_cc)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1082),___L___x86_23_x86_2d_set_2d_cc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_setge
 #undef ___PH_LBL0
-#define ___PH_LBL0 1074
+#define ___PH_LBL0 1073
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R3
 #undef ___PR_ALL
@@ -15807,14 +15811,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_setge)
    ___SET_R3(___FIX(13L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_setge)
-   ___JUMPINT(___SET_NARGS(3),___PRC(1083),___L___x86_23_x86_2d_set_2d_cc)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1082),___L___x86_23_x86_2d_set_2d_cc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_setle
 #undef ___PH_LBL0
-#define ___PH_LBL0 1077
+#define ___PH_LBL0 1076
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R3
 #undef ___PR_ALL
@@ -15835,14 +15839,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_setle)
    ___SET_R3(___FIX(14L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_setle)
-   ___JUMPINT(___SET_NARGS(3),___PRC(1083),___L___x86_23_x86_2d_set_2d_cc)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1082),___L___x86_23_x86_2d_set_2d_cc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_setg
 #undef ___PH_LBL0
-#define ___PH_LBL0 1080
+#define ___PH_LBL0 1079
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R3
 #undef ___PR_ALL
@@ -15863,14 +15867,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_setg)
    ___SET_R3(___FIX(15L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_setg)
-   ___JUMPINT(___SET_NARGS(3),___PRC(1083),___L___x86_23_x86_2d_set_2d_cc)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1082),___L___x86_23_x86_2d_set_2d_cc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_set_2d_cc
 #undef ___PH_LBL0
-#define ___PH_LBL0 1083
+#define ___PH_LBL0 1082
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -15962,7 +15966,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_push
 #undef ___PH_LBL0
-#define ___PH_LBL0 1094
+#define ___PH_LBL0 1093
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R3
 #undef ___PR_ALL
@@ -15983,14 +15987,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_push)
    ___SET_R3(___FIX(80L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_push)
-   ___JUMPINT(___SET_NARGS(3),___PRC(1100),___L___x86_23_x86_2d_push_2d_pop)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1099),___L___x86_23_x86_2d_push_2d_pop)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_pop
 #undef ___PH_LBL0
-#define ___PH_LBL0 1097
+#define ___PH_LBL0 1096
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R3
 #undef ___PR_ALL
@@ -16011,14 +16015,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_pop)
    ___SET_R3(___FIX(88L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_pop)
-   ___JUMPINT(___SET_NARGS(3),___PRC(1100),___L___x86_23_x86_2d_push_2d_pop)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1099),___L___x86_23_x86_2d_push_2d_pop)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_push_2d_pop
 #undef ___PH_LBL0
-#define ___PH_LBL0 1100
+#define ___PH_LBL0 1099
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -16348,7 +16352,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cwde
 #undef ___PH_LBL0
-#define ___PH_LBL0 1140
+#define ___PH_LBL0 1139
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -16369,14 +16373,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cwde)
    ___SET_R2(___FIX(0L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cwde)
-   ___JUMPINT(___SET_NARGS(2),___PRC(1158),___L___x86_23_x86_2d_widen)
+   ___JUMPINT(___SET_NARGS(2),___PRC(1157),___L___x86_23_x86_2d_widen)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cdq
 #undef ___PH_LBL0
-#define ___PH_LBL0 1143
+#define ___PH_LBL0 1142
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -16397,14 +16401,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cdq)
    ___SET_R2(___FIX(1L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cdq)
-   ___JUMPINT(___SET_NARGS(2),___PRC(1158),___L___x86_23_x86_2d_widen)
+   ___JUMPINT(___SET_NARGS(2),___PRC(1157),___L___x86_23_x86_2d_widen)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cbw
 #undef ___PH_LBL0
-#define ___PH_LBL0 1146
+#define ___PH_LBL0 1145
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -16425,14 +16429,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cbw)
    ___SET_R2(___FIX(2L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cbw)
-   ___JUMPINT(___SET_NARGS(2),___PRC(1158),___L___x86_23_x86_2d_widen)
+   ___JUMPINT(___SET_NARGS(2),___PRC(1157),___L___x86_23_x86_2d_widen)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cwd
 #undef ___PH_LBL0
-#define ___PH_LBL0 1149
+#define ___PH_LBL0 1148
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -16453,14 +16457,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cwd)
    ___SET_R2(___FIX(3L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cwd)
-   ___JUMPINT(___SET_NARGS(2),___PRC(1158),___L___x86_23_x86_2d_widen)
+   ___JUMPINT(___SET_NARGS(2),___PRC(1157),___L___x86_23_x86_2d_widen)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cdqe
 #undef ___PH_LBL0
-#define ___PH_LBL0 1152
+#define ___PH_LBL0 1151
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -16481,14 +16485,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cdqe)
    ___SET_R2(___FIX(4L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cdqe)
-   ___JUMPINT(___SET_NARGS(2),___PRC(1158),___L___x86_23_x86_2d_widen)
+   ___JUMPINT(___SET_NARGS(2),___PRC(1157),___L___x86_23_x86_2d_widen)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cqo
 #undef ___PH_LBL0
-#define ___PH_LBL0 1155
+#define ___PH_LBL0 1154
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -16509,14 +16513,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cqo)
    ___SET_R2(___FIX(5L))
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cqo)
-   ___JUMPINT(___SET_NARGS(2),___PRC(1158),___L___x86_23_x86_2d_widen)
+   ___JUMPINT(___SET_NARGS(2),___PRC(1157),___L___x86_23_x86_2d_widen)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_widen
 #undef ___PH_LBL0
-#define ___PH_LBL0 1158
+#define ___PH_LBL0 1157
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -16641,7 +16645,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_rol
 #undef ___PH_LBL0
-#define ___PH_LBL0 1173
+#define ___PH_LBL0 1172
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -16669,14 +16673,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_rol)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_rol)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(5),___PRC(1194),___L___x86_23_x86_2d_shift)
+   ___JUMPINT(___SET_NARGS(5),___PRC(1193),___L___x86_23_x86_2d_shift)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_ror
 #undef ___PH_LBL0
-#define ___PH_LBL0 1176
+#define ___PH_LBL0 1175
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -16704,14 +16708,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_ror)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_ror)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(5),___PRC(1194),___L___x86_23_x86_2d_shift)
+   ___JUMPINT(___SET_NARGS(5),___PRC(1193),___L___x86_23_x86_2d_shift)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_rcl
 #undef ___PH_LBL0
-#define ___PH_LBL0 1179
+#define ___PH_LBL0 1178
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -16739,14 +16743,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_rcl)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_rcl)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(5),___PRC(1194),___L___x86_23_x86_2d_shift)
+   ___JUMPINT(___SET_NARGS(5),___PRC(1193),___L___x86_23_x86_2d_shift)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_rcr
 #undef ___PH_LBL0
-#define ___PH_LBL0 1182
+#define ___PH_LBL0 1181
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -16774,14 +16778,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_rcr)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_rcr)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(5),___PRC(1194),___L___x86_23_x86_2d_shift)
+   ___JUMPINT(___SET_NARGS(5),___PRC(1193),___L___x86_23_x86_2d_shift)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_shl
 #undef ___PH_LBL0
-#define ___PH_LBL0 1185
+#define ___PH_LBL0 1184
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -16809,14 +16813,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_shl)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_shl)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(5),___PRC(1194),___L___x86_23_x86_2d_shift)
+   ___JUMPINT(___SET_NARGS(5),___PRC(1193),___L___x86_23_x86_2d_shift)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_shr
 #undef ___PH_LBL0
-#define ___PH_LBL0 1188
+#define ___PH_LBL0 1187
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -16844,14 +16848,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_shr)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_shr)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(5),___PRC(1194),___L___x86_23_x86_2d_shift)
+   ___JUMPINT(___SET_NARGS(5),___PRC(1193),___L___x86_23_x86_2d_shift)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_sar
 #undef ___PH_LBL0
-#define ___PH_LBL0 1191
+#define ___PH_LBL0 1190
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -16879,14 +16883,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_sar)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_sar)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(5),___PRC(1194),___L___x86_23_x86_2d_shift)
+   ___JUMPINT(___SET_NARGS(5),___PRC(1193),___L___x86_23_x86_2d_shift)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_shift
 #undef ___PH_LBL0
-#define ___PH_LBL0 1194
+#define ___PH_LBL0 1193
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -17331,7 +17335,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_not
 #undef ___PH_LBL0
-#define ___PH_LBL0 1240
+#define ___PH_LBL0 1239
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -17359,14 +17363,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_not)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_not)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(4),___PRC(1246),___L___x86_23_x86_2d_negate)
+   ___JUMPINT(___SET_NARGS(4),___PRC(1245),___L___x86_23_x86_2d_negate)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_neg
 #undef ___PH_LBL0
-#define ___PH_LBL0 1243
+#define ___PH_LBL0 1242
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -17394,14 +17398,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_neg)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_neg)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(4),___PRC(1246),___L___x86_23_x86_2d_negate)
+   ___JUMPINT(___SET_NARGS(4),___PRC(1245),___L___x86_23_x86_2d_negate)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_negate
 #undef ___PH_LBL0
-#define ___PH_LBL0 1246
+#define ___PH_LBL0 1245
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -17673,7 +17677,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_test
 #undef ___PH_LBL0
-#define ___PH_LBL0 1271
+#define ___PH_LBL0 1270
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -18375,7 +18379,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_xchg
 #undef ___PH_LBL0
-#define ___PH_LBL0 1337
+#define ___PH_LBL0 1336
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -18850,7 +18854,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_mul
 #undef ___PH_LBL0
-#define ___PH_LBL0 1386
+#define ___PH_LBL0 1385
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -18878,14 +18882,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_mul)
    ___ADJFP(3)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_mul)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1398),___L___x86_23_x86_2d_multiply_2d_divide)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1397),___L___x86_23_x86_2d_multiply_2d_divide)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_imul
 #undef ___PH_LBL0
-#define ___PH_LBL0 1389
+#define ___PH_LBL0 1388
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -18917,14 +18921,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_imul)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_imul)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1398),___L___x86_23_x86_2d_multiply_2d_divide)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1397),___L___x86_23_x86_2d_multiply_2d_divide)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_div
 #undef ___PH_LBL0
-#define ___PH_LBL0 1392
+#define ___PH_LBL0 1391
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -18952,14 +18956,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_div)
    ___ADJFP(3)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_div)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1398),___L___x86_23_x86_2d_multiply_2d_divide)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1397),___L___x86_23_x86_2d_multiply_2d_divide)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_idiv
 #undef ___PH_LBL0
-#define ___PH_LBL0 1395
+#define ___PH_LBL0 1394
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -18987,14 +18991,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_idiv)
    ___ADJFP(3)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_idiv)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1398),___L___x86_23_x86_2d_multiply_2d_divide)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1397),___L___x86_23_x86_2d_multiply_2d_divide)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_multiply_2d_divide
 #undef ___PH_LBL0
-#define ___PH_LBL0 1398
+#define ___PH_LBL0 1397
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -19606,7 +19610,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_movzx
 #undef ___PH_LBL0
-#define ___PH_LBL0 1461
+#define ___PH_LBL0 1460
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -19634,14 +19638,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_movzx)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_movzx)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(5),___PRC(1467),___L___x86_23_x86_2d_move_2d_extended)
+   ___JUMPINT(___SET_NARGS(5),___PRC(1466),___L___x86_23_x86_2d_move_2d_extended)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_movsx
 #undef ___PH_LBL0
-#define ___PH_LBL0 1464
+#define ___PH_LBL0 1463
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -19669,14 +19673,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_movsx)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_movsx)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(5),___PRC(1467),___L___x86_23_x86_2d_move_2d_extended)
+   ___JUMPINT(___SET_NARGS(5),___PRC(1466),___L___x86_23_x86_2d_move_2d_extended)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_move_2d_extended
 #undef ___PH_LBL0
-#define ___PH_LBL0 1467
+#define ___PH_LBL0 1466
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -20270,7 +20274,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_bt
 #undef ___PH_LBL0
-#define ___PH_LBL0 1526
+#define ___PH_LBL0 1525
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -20298,14 +20302,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_bt)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_bt)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(5),___PRC(1538),___L___x86_23_x86_2d_bit_2d_op)
+   ___JUMPINT(___SET_NARGS(5),___PRC(1537),___L___x86_23_x86_2d_bit_2d_op)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_bts
 #undef ___PH_LBL0
-#define ___PH_LBL0 1529
+#define ___PH_LBL0 1528
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -20333,14 +20337,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_bts)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_bts)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(5),___PRC(1538),___L___x86_23_x86_2d_bit_2d_op)
+   ___JUMPINT(___SET_NARGS(5),___PRC(1537),___L___x86_23_x86_2d_bit_2d_op)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_btr
 #undef ___PH_LBL0
-#define ___PH_LBL0 1532
+#define ___PH_LBL0 1531
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -20368,14 +20372,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_btr)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_btr)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(5),___PRC(1538),___L___x86_23_x86_2d_bit_2d_op)
+   ___JUMPINT(___SET_NARGS(5),___PRC(1537),___L___x86_23_x86_2d_bit_2d_op)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_btc
 #undef ___PH_LBL0
-#define ___PH_LBL0 1535
+#define ___PH_LBL0 1534
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -20403,14 +20407,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_btc)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_btc)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(5),___PRC(1538),___L___x86_23_x86_2d_bit_2d_op)
+   ___JUMPINT(___SET_NARGS(5),___PRC(1537),___L___x86_23_x86_2d_bit_2d_op)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_bit_2d_op
 #undef ___PH_LBL0
-#define ___PH_LBL0 1538
+#define ___PH_LBL0 1537
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -21156,7 +21160,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmova
 #undef ___PH_LBL0
-#define ___PH_LBL0 1614
+#define ___PH_LBL0 1613
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21183,14 +21187,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmova)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmova)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1704),___L___x86_23_x86_2d_cmovcc)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1703),___L___x86_23_x86_2d_cmovcc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmovae
 #undef ___PH_LBL0
-#define ___PH_LBL0 1617
+#define ___PH_LBL0 1616
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21217,14 +21221,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmovae)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmovae)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1704),___L___x86_23_x86_2d_cmovcc)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1703),___L___x86_23_x86_2d_cmovcc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmovb
 #undef ___PH_LBL0
-#define ___PH_LBL0 1620
+#define ___PH_LBL0 1619
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21251,14 +21255,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmovb)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmovb)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1704),___L___x86_23_x86_2d_cmovcc)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1703),___L___x86_23_x86_2d_cmovcc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmovbe
 #undef ___PH_LBL0
-#define ___PH_LBL0 1623
+#define ___PH_LBL0 1622
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21285,14 +21289,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmovbe)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmovbe)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1704),___L___x86_23_x86_2d_cmovcc)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1703),___L___x86_23_x86_2d_cmovcc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmovc
 #undef ___PH_LBL0
-#define ___PH_LBL0 1626
+#define ___PH_LBL0 1625
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21319,14 +21323,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmovc)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmovc)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1704),___L___x86_23_x86_2d_cmovcc)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1703),___L___x86_23_x86_2d_cmovcc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmove
 #undef ___PH_LBL0
-#define ___PH_LBL0 1629
+#define ___PH_LBL0 1628
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21353,14 +21357,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmove)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmove)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1704),___L___x86_23_x86_2d_cmovcc)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1703),___L___x86_23_x86_2d_cmovcc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmovg
 #undef ___PH_LBL0
-#define ___PH_LBL0 1632
+#define ___PH_LBL0 1631
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21387,14 +21391,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmovg)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmovg)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1704),___L___x86_23_x86_2d_cmovcc)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1703),___L___x86_23_x86_2d_cmovcc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmovge
 #undef ___PH_LBL0
-#define ___PH_LBL0 1635
+#define ___PH_LBL0 1634
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21421,14 +21425,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmovge)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmovge)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1704),___L___x86_23_x86_2d_cmovcc)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1703),___L___x86_23_x86_2d_cmovcc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmovl
 #undef ___PH_LBL0
-#define ___PH_LBL0 1638
+#define ___PH_LBL0 1637
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21455,14 +21459,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmovl)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmovl)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1704),___L___x86_23_x86_2d_cmovcc)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1703),___L___x86_23_x86_2d_cmovcc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmovle
 #undef ___PH_LBL0
-#define ___PH_LBL0 1641
+#define ___PH_LBL0 1640
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21489,14 +21493,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmovle)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmovle)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1704),___L___x86_23_x86_2d_cmovcc)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1703),___L___x86_23_x86_2d_cmovcc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmovna
 #undef ___PH_LBL0
-#define ___PH_LBL0 1644
+#define ___PH_LBL0 1643
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21523,14 +21527,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmovna)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmovna)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1704),___L___x86_23_x86_2d_cmovcc)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1703),___L___x86_23_x86_2d_cmovcc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmovnae
 #undef ___PH_LBL0
-#define ___PH_LBL0 1647
+#define ___PH_LBL0 1646
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21557,14 +21561,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmovnae)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmovnae)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1704),___L___x86_23_x86_2d_cmovcc)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1703),___L___x86_23_x86_2d_cmovcc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmovnb
 #undef ___PH_LBL0
-#define ___PH_LBL0 1650
+#define ___PH_LBL0 1649
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21591,14 +21595,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmovnb)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmovnb)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1704),___L___x86_23_x86_2d_cmovcc)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1703),___L___x86_23_x86_2d_cmovcc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmovnbe
 #undef ___PH_LBL0
-#define ___PH_LBL0 1653
+#define ___PH_LBL0 1652
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21625,14 +21629,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmovnbe)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmovnbe)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1704),___L___x86_23_x86_2d_cmovcc)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1703),___L___x86_23_x86_2d_cmovcc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmovnc
 #undef ___PH_LBL0
-#define ___PH_LBL0 1656
+#define ___PH_LBL0 1655
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21659,14 +21663,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmovnc)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmovnc)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1704),___L___x86_23_x86_2d_cmovcc)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1703),___L___x86_23_x86_2d_cmovcc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmovne
 #undef ___PH_LBL0
-#define ___PH_LBL0 1659
+#define ___PH_LBL0 1658
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21693,14 +21697,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmovne)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmovne)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1704),___L___x86_23_x86_2d_cmovcc)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1703),___L___x86_23_x86_2d_cmovcc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmovng
 #undef ___PH_LBL0
-#define ___PH_LBL0 1662
+#define ___PH_LBL0 1661
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21727,14 +21731,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmovng)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmovng)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1704),___L___x86_23_x86_2d_cmovcc)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1703),___L___x86_23_x86_2d_cmovcc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmovnge
 #undef ___PH_LBL0
-#define ___PH_LBL0 1665
+#define ___PH_LBL0 1664
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21761,14 +21765,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmovnge)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmovnge)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1704),___L___x86_23_x86_2d_cmovcc)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1703),___L___x86_23_x86_2d_cmovcc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmovnl
 #undef ___PH_LBL0
-#define ___PH_LBL0 1668
+#define ___PH_LBL0 1667
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21795,14 +21799,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmovnl)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmovnl)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1704),___L___x86_23_x86_2d_cmovcc)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1703),___L___x86_23_x86_2d_cmovcc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmovnle
 #undef ___PH_LBL0
-#define ___PH_LBL0 1671
+#define ___PH_LBL0 1670
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21829,14 +21833,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmovnle)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmovnle)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1704),___L___x86_23_x86_2d_cmovcc)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1703),___L___x86_23_x86_2d_cmovcc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmovno
 #undef ___PH_LBL0
-#define ___PH_LBL0 1674
+#define ___PH_LBL0 1673
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21863,14 +21867,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmovno)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmovno)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1704),___L___x86_23_x86_2d_cmovcc)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1703),___L___x86_23_x86_2d_cmovcc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmovnp
 #undef ___PH_LBL0
-#define ___PH_LBL0 1677
+#define ___PH_LBL0 1676
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21897,14 +21901,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmovnp)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmovnp)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1704),___L___x86_23_x86_2d_cmovcc)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1703),___L___x86_23_x86_2d_cmovcc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmovns
 #undef ___PH_LBL0
-#define ___PH_LBL0 1680
+#define ___PH_LBL0 1679
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21931,14 +21935,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmovns)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmovns)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1704),___L___x86_23_x86_2d_cmovcc)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1703),___L___x86_23_x86_2d_cmovcc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmovnz
 #undef ___PH_LBL0
-#define ___PH_LBL0 1683
+#define ___PH_LBL0 1682
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21965,14 +21969,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmovnz)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmovnz)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1704),___L___x86_23_x86_2d_cmovcc)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1703),___L___x86_23_x86_2d_cmovcc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmovo
 #undef ___PH_LBL0
-#define ___PH_LBL0 1686
+#define ___PH_LBL0 1685
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21999,14 +22003,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmovo)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmovo)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1704),___L___x86_23_x86_2d_cmovcc)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1703),___L___x86_23_x86_2d_cmovcc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmovp
 #undef ___PH_LBL0
-#define ___PH_LBL0 1689
+#define ___PH_LBL0 1688
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -22033,14 +22037,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmovp)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmovp)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1704),___L___x86_23_x86_2d_cmovcc)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1703),___L___x86_23_x86_2d_cmovcc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmovpe
 #undef ___PH_LBL0
-#define ___PH_LBL0 1692
+#define ___PH_LBL0 1691
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -22067,14 +22071,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmovpe)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmovpe)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1704),___L___x86_23_x86_2d_cmovcc)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1703),___L___x86_23_x86_2d_cmovcc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmovpo
 #undef ___PH_LBL0
-#define ___PH_LBL0 1695
+#define ___PH_LBL0 1694
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -22101,14 +22105,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmovpo)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmovpo)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1704),___L___x86_23_x86_2d_cmovcc)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1703),___L___x86_23_x86_2d_cmovcc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmovs
 #undef ___PH_LBL0
-#define ___PH_LBL0 1698
+#define ___PH_LBL0 1697
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -22135,14 +22139,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmovs)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmovs)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1704),___L___x86_23_x86_2d_cmovcc)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1703),___L___x86_23_x86_2d_cmovcc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmovz
 #undef ___PH_LBL0
-#define ___PH_LBL0 1701
+#define ___PH_LBL0 1700
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -22169,14 +22173,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_cmovz)
    ___ADJFP(2)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_cmovz)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1704),___L___x86_23_x86_2d_cmovcc)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1703),___L___x86_23_x86_2d_cmovcc)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_cmovcc
 #undef ___PH_LBL0
-#define ___PH_LBL0 1704
+#define ___PH_LBL0 1703
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -22636,7 +22640,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_popcnt
 #undef ___PH_LBL0
-#define ___PH_LBL0 1750
+#define ___PH_LBL0 1749
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -22664,14 +22668,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_popcnt)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_popcnt)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(5),___PRC(1756),___L___x86_23_x86_2d_count)
+   ___JUMPINT(___SET_NARGS(5),___PRC(1755),___L___x86_23_x86_2d_count)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_lzcnt
 #undef ___PH_LBL0
-#define ___PH_LBL0 1753
+#define ___PH_LBL0 1752
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -22699,14 +22703,14 @@ ___DEF_GLBL(___L___x86_23_x86_2d_lzcnt)
    ___POLL(1)
 ___DEF_SLBL(1,___L1___x86_23_x86_2d_lzcnt)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(5),___PRC(1756),___L___x86_23_x86_2d_count)
+   ___JUMPINT(___SET_NARGS(5),___PRC(1755),___L___x86_23_x86_2d_count)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_count
 #undef ___PH_LBL0
-#define ___PH_LBL0 1756
+#define ___PH_LBL0 1755
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -23188,7 +23192,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_in_2d_imm
 #undef ___PH_LBL0
-#define ___PH_LBL0 1804
+#define ___PH_LBL0 1803
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -23385,7 +23389,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_in_2d_dx
 #undef ___PH_LBL0
-#define ___PH_LBL0 1825
+#define ___PH_LBL0 1824
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -23568,7 +23572,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_out_2d_imm
 #undef ___PH_LBL0
-#define ___PH_LBL0 1844
+#define ___PH_LBL0 1843
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -23765,7 +23769,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H___x86_23_x86_2d_out_2d_dx
 #undef ___PH_LBL0
-#define ___PH_LBL0 1865
+#define ___PH_LBL0 1864
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -24150,21 +24154,21 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,5,0,0xfL))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,5,0,0x1fL))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,9,0,0x3dL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,5,0,0x9L))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,5,0,0x9L))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,5,0,0xbL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,5,0,0xbL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,5,0,0x3L))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,5,0,0x7L))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,5,0,0x5L))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETI,8,8,0x3f04L))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,5,0,0x1bL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,5,0,0x1fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,5,0,0xdL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,5,0,0xdL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,5,0,0x9L))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETI,8,8,0x3f08L))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,9,0,0x2bL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,9,0,0x2fL))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,5,0,0xfL))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,5,0,0xbL))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,5,0,0xbL))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,5,0,0xfL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,9,0,0x3dL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,9,0,0x37L))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,5,1,0x1fL))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___OFD(___RETI,12,1,0x3f04fL))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,9,1,0x4fL))
@@ -24175,7 +24179,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,5,1,0x17L))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,5,1,0x17L))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,5,1,0x13L))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,5,1,0x12L))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,5,1,0x3L))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETI,8,8,0x3f00L))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,5,1,0x2L))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETI,8,8,0x3f00L))
@@ -24214,13 +24218,13 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,9,1,0x7fL))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,9,1,0xefL))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,9,1,0x1ffL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,13,9,0x3a3L))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,13,9,0x3a7L))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,13,9,0x387L))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,13,9,0x303L))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,13,9,0x363L))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,13,9,0x367L))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,13,9,0x267L))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,13,9,0x223L))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,13,9,0x207L))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___OFD(___RETI,16,16,0x3f0007L))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,13,9,0x387L))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,13,9,0x267L))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,9,1,0x22L))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___OFD(___RETI,12,12,0x3f020L))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_listing,___IFD(___RETN,5,1,0x17L))
@@ -24465,42 +24469,41 @@ ___BEGIN_LBL
 ,___DEF_LBL_INTRO(___H___x86_23_x86_2d_dq,___REF_SYM(63,___S___x86_23_x86_2d_dq),___REF_FAL,2,0)
 ,___DEF_LBL_PROC(___H___x86_23_x86_2d_dq,2,-1)
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_dq,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_INTRO(___H___x86_23_x86_2d_data_2d_elems,___REF_SYM(58,___S___x86_23_x86_2d_data_2d_elems),___REF_FAL,35,0)
+,___DEF_LBL_INTRO(___H___x86_23_x86_2d_data_2d_elems,___REF_SYM(58,___S___x86_23_x86_2d_data_2d_elems),___REF_FAL,34,0)
 ,___DEF_LBL_PROC(___H___x86_23_x86_2d_data_2d_elems,3,-1)
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETI,8,0,0x3f0fL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETI,8,0,0x3f0fL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,5,0,0xfL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETI,2,4,0x3f3L))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,4,0x3fL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETI,2,4,0x3f3L))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___OFD(___RETI,12,2,0x3f03fL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,2,0x3fL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,2,0x3fL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,2,0x3fL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,2,0x7fL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,2,0x3fL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETI,4,4,0x3ffL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,4,0x7fL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETI,4,4,0x3ffL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___OFD(___RETI,12,4,0x3f0ffL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,4,0xffL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,4,0xffL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,4,0x1ffL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,4,0x1bfL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,4,0xbfL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,13,4,0x10bfL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,13,4,0x10bfL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,13,4,0x10bfL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,13,4,0x107fL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,13,4,0x107fL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,4,0x3fL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,13,4,0x10bfL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,13,4,0x10bfL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,13,4,0x10bfL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,13,4,0x10bfL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,13,4,0x10bfL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,13,4,0x10bfL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,13,4,0x10bfL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETI,8,0,0x3f07L))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,5,0,0x7L))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETI,1,4,0x3f1L))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,5,3,0x1fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETI,1,4,0x3f1L))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETI,8,1,0x3f1fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,5,1,0x1fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,5,1,0x1fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,5,1,0x1fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,1,0x3fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,5,1,0x1fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETI,3,4,0x3f7L))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,3,0x3fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETI,3,4,0x3f7L))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___OFD(___RETI,12,3,0x3f07fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,3,0x7fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,3,0x7fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,3,0xffL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,3,0xdfL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,3,0x5fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,3,0x15fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,3,0x15fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,3,0x15fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,3,0x13fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,3,0x13fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,5,3,0x1fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,3,0x15fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,3,0x15fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,3,0x15fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,3,0x15fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,3,0x15fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,3,0x15fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_data_2d_elems,___IFD(___RETN,9,3,0x15fL))
 ,___DEF_LBL_INTRO(___H___x86_23_x86_2d_add,___REF_SYM(4,___S___x86_23_x86_2d_add),___REF_FAL,2,0)
 ,___DEF_LBL_PROC(___H___x86_23_x86_2d_add,4,-1)
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_add,___IFD(___RETI,3,4,0x3f3L))
@@ -24590,7 +24593,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x3fL))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x3fL))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETI,2,4,0x3f3L))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x6fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x3fL))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETI,2,4,0x3f3L))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___OFD(___RETI,12,2,0x3f03fL))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x3fL))
@@ -24611,26 +24614,26 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x6fL))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x67L))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETI,2,4,0x3f3L))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x6fL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x6fL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x6fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x3fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x3fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x3fL))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x7fL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x6fL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x6fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x3fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x3fL))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x5fL))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x57L))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETI,2,4,0x3f3L))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x6fL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x6fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x3fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x3fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x2fL))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x2fL))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x3fL))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x3fL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x6fL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x6fL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x6fL))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x3fL))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x3fL))
-,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x3fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x2fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x2fL))
+,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x2fL))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x3fL))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x3fL))
 ,___DEF_LBL_RET(___H___x86_23_x86_2d_op,___IFD(___RETN,9,2,0x3fL))
@@ -25847,10 +25850,8 @@ ___BEGIN_OFD
                ___GCMAP1(0x3f003L)
 ,___DEF_OFD(___RETI,12,2)
                ___GCMAP1(0x3f03fL)
-,___DEF_OFD(___RETI,12,2)
-               ___GCMAP1(0x3f03fL)
-,___DEF_OFD(___RETI,12,4)
-               ___GCMAP1(0x3f0ffL)
+,___DEF_OFD(___RETI,12,3)
+               ___GCMAP1(0x3f07fL)
 ,___DEF_OFD(___RETI,12,2)
                ___GCMAP1(0x3f03fL)
 ,___DEF_OFD(___RETI,12,3)
@@ -25973,156 +25974,156 @@ ___DEF_MOD_PRM(64,___G___x86_23_x86_2d_dw,508)
 ___DEF_MOD_PRM(60,___G___x86_23_x86_2d_dd,511)
 ___DEF_MOD_PRM(63,___G___x86_23_x86_2d_dq,514)
 ___DEF_MOD_PRM(58,___G___x86_23_x86_2d_data_2d_elems,517)
-___DEF_MOD_PRM(3,___G___x86_23_x86_2d_add,553)
-___DEF_MOD_PRM(172,___G___x86_23_x86_2d_or,556)
-___DEF_MOD_PRM(2,___G___x86_23_x86_2d_adc,559)
-___DEF_MOD_PRM(191,___G___x86_23_x86_2d_sbb,562)
-___DEF_MOD_PRM(5,___G___x86_23_x86_2d_and,565)
-___DEF_MOD_PRM(215,___G___x86_23_x86_2d_sub,568)
-___DEF_MOD_PRM(225,___G___x86_23_x86_2d_xor,571)
-___DEF_MOD_PRM(52,___G___x86_23_x86_2d_cmp,574)
-___DEF_MOD_PRM(152,___G___x86_23_x86_2d_mov,577)
-___DEF_MOD_PRM(165,___G___x86_23_x86_2d_op,580)
-___DEF_MOD_PRM(99,___G___x86_23_x86_2d_inc,719)
-___DEF_MOD_PRM(61,___G___x86_23_x86_2d_dec,722)
-___DEF_MOD_PRM(100,___G___x86_23_x86_2d_inc_2d_dec,725)
-___DEF_MOD_PRM(141,___G___x86_23_x86_2d_lea,765)
-___DEF_MOD_PRM(187,___G___x86_23_x86_2d_ret,782)
-___DEF_MOD_PRM(65,___G___x86_23_x86_2d_enter,794)
-___DEF_MOD_PRM(162,___G___x86_23_x86_2d_nop,808)
-___DEF_MOD_PRM(180,___G___x86_23_x86_2d_pushf,811)
-___DEF_MOD_PRM(177,___G___x86_23_x86_2d_popf,814)
-___DEF_MOD_PRM(142,___G___x86_23_x86_2d_leave,817)
-___DEF_MOD_PRM(71,___G___x86_23_x86_2d_hlt,820)
-___DEF_MOD_PRM(20,___G___x86_23_x86_2d_cmc,823)
-___DEF_MOD_PRM(17,___G___x86_23_x86_2d_clc,826)
-___DEF_MOD_PRM(212,___G___x86_23_x86_2d_stc,829)
-___DEF_MOD_PRM(19,___G___x86_23_x86_2d_cli,832)
-___DEF_MOD_PRM(214,___G___x86_23_x86_2d_sti,835)
-___DEF_MOD_PRM(18,___G___x86_23_x86_2d_cld,838)
-___DEF_MOD_PRM(213,___G___x86_23_x86_2d_std,841)
-___DEF_MOD_PRM(160,___G___x86_23_x86_2d_no_2d_opnd_2d_instr,844)
-___DEF_MOD_PRM(101,___G___x86_23_x86_2d_int,856)
-___DEF_MOD_PRM(102,___G___x86_23_x86_2d_int3,864)
-___DEF_MOD_PRM(216,___G___x86_23_x86_2d_syscall,871)
-___DEF_MOD_PRM(217,___G___x86_23_x86_2d_sysret,874)
-___DEF_MOD_PRM(222,___G___x86_23_x86_2d_wrmsr,877)
-___DEF_MOD_PRM(185,___G___x86_23_x86_2d_rdtsc,880)
-___DEF_MOD_PRM(183,___G___x86_23_x86_2d_rdmsr,883)
-___DEF_MOD_PRM(184,___G___x86_23_x86_2d_rdpmc,886)
-___DEF_MOD_PRM(54,___G___x86_23_x86_2d_cpuid,889)
-___DEF_MOD_PRM(161,___G___x86_23_x86_2d_no_2d_opnd_2d_instr_2d_esc,892)
-___DEF_MOD_PRM(121,___G___x86_23_x86_2d_jmp,904)
-___DEF_MOD_PRM(12,___G___x86_23_x86_2d_call,910)
-___DEF_MOD_PRM(132,___G___x86_23_x86_2d_jo,916)
-___DEF_MOD_PRM(126,___G___x86_23_x86_2d_jno,919)
-___DEF_MOD_PRM(107,___G___x86_23_x86_2d_jb,922)
-___DEF_MOD_PRM(105,___G___x86_23_x86_2d_jae,925)
-___DEF_MOD_PRM(111,___G___x86_23_x86_2d_je,928)
-___DEF_MOD_PRM(124,___G___x86_23_x86_2d_jne,931)
-___DEF_MOD_PRM(109,___G___x86_23_x86_2d_jbe,934)
-___DEF_MOD_PRM(103,___G___x86_23_x86_2d_ja,937)
-___DEF_MOD_PRM(136,___G___x86_23_x86_2d_js,940)
-___DEF_MOD_PRM(130,___G___x86_23_x86_2d_jns,943)
-___DEF_MOD_PRM(134,___G___x86_23_x86_2d_jp,946)
-___DEF_MOD_PRM(128,___G___x86_23_x86_2d_jnp,949)
-___DEF_MOD_PRM(117,___G___x86_23_x86_2d_jl,952)
-___DEF_MOD_PRM(115,___G___x86_23_x86_2d_jge,955)
-___DEF_MOD_PRM(119,___G___x86_23_x86_2d_jle,958)
-___DEF_MOD_PRM(113,___G___x86_23_x86_2d_jg,961)
-___DEF_MOD_PRM(139,___G___x86_23_x86_2d_jump_2d_label,964)
-___DEF_MOD_PRM(138,___G___x86_23_x86_2d_jump_2d_general,1015)
-___DEF_MOD_PRM(206,___G___x86_23_x86_2d_seto,1035)
-___DEF_MOD_PRM(203,___G___x86_23_x86_2d_setno,1038)
-___DEF_MOD_PRM(195,___G___x86_23_x86_2d_setb,1041)
-___DEF_MOD_PRM(194,___G___x86_23_x86_2d_setae,1044)
-___DEF_MOD_PRM(197,___G___x86_23_x86_2d_sete,1047)
-___DEF_MOD_PRM(202,___G___x86_23_x86_2d_setne,1050)
-___DEF_MOD_PRM(196,___G___x86_23_x86_2d_setbe,1053)
-___DEF_MOD_PRM(193,___G___x86_23_x86_2d_seta,1056)
-___DEF_MOD_PRM(208,___G___x86_23_x86_2d_sets,1059)
-___DEF_MOD_PRM(205,___G___x86_23_x86_2d_setns,1062)
-___DEF_MOD_PRM(207,___G___x86_23_x86_2d_setp,1065)
-___DEF_MOD_PRM(204,___G___x86_23_x86_2d_setnp,1068)
-___DEF_MOD_PRM(200,___G___x86_23_x86_2d_setl,1071)
-___DEF_MOD_PRM(199,___G___x86_23_x86_2d_setge,1074)
-___DEF_MOD_PRM(201,___G___x86_23_x86_2d_setle,1077)
-___DEF_MOD_PRM(198,___G___x86_23_x86_2d_setg,1080)
-___DEF_MOD_PRM(192,___G___x86_23_x86_2d_set_2d_cc,1083)
-___DEF_MOD_PRM(178,___G___x86_23_x86_2d_push,1094)
-___DEF_MOD_PRM(175,___G___x86_23_x86_2d_pop,1097)
-___DEF_MOD_PRM(179,___G___x86_23_x86_2d_push_2d_pop,1100)
-___DEF_MOD_PRM(57,___G___x86_23_x86_2d_cwde,1140)
-___DEF_MOD_PRM(15,___G___x86_23_x86_2d_cdq,1143)
-___DEF_MOD_PRM(14,___G___x86_23_x86_2d_cbw,1146)
-___DEF_MOD_PRM(56,___G___x86_23_x86_2d_cwd,1149)
-___DEF_MOD_PRM(16,___G___x86_23_x86_2d_cdqe,1152)
-___DEF_MOD_PRM(55,___G___x86_23_x86_2d_cqo,1155)
-___DEF_MOD_PRM(219,___G___x86_23_x86_2d_widen,1158)
-___DEF_MOD_PRM(188,___G___x86_23_x86_2d_rol,1173)
-___DEF_MOD_PRM(189,___G___x86_23_x86_2d_ror,1176)
-___DEF_MOD_PRM(181,___G___x86_23_x86_2d_rcl,1179)
-___DEF_MOD_PRM(182,___G___x86_23_x86_2d_rcr,1182)
-___DEF_MOD_PRM(210,___G___x86_23_x86_2d_shl,1185)
-___DEF_MOD_PRM(211,___G___x86_23_x86_2d_shr,1188)
-___DEF_MOD_PRM(190,___G___x86_23_x86_2d_sar,1191)
-___DEF_MOD_PRM(209,___G___x86_23_x86_2d_shift,1194)
-___DEF_MOD_PRM(163,___G___x86_23_x86_2d_not,1240)
-___DEF_MOD_PRM(158,___G___x86_23_x86_2d_neg,1243)
-___DEF_MOD_PRM(159,___G___x86_23_x86_2d_negate,1246)
-___DEF_MOD_PRM(218,___G___x86_23_x86_2d_test,1271)
-___DEF_MOD_PRM(223,___G___x86_23_x86_2d_xchg,1337)
-___DEF_MOD_PRM(156,___G___x86_23_x86_2d_mul,1386)
-___DEF_MOD_PRM(96,___G___x86_23_x86_2d_imul,1389)
-___DEF_MOD_PRM(62,___G___x86_23_x86_2d_div,1392)
-___DEF_MOD_PRM(72,___G___x86_23_x86_2d_idiv,1395)
-___DEF_MOD_PRM(157,___G___x86_23_x86_2d_multiply_2d_divide,1398)
-___DEF_MOD_PRM(155,___G___x86_23_x86_2d_movzx,1461)
-___DEF_MOD_PRM(154,___G___x86_23_x86_2d_movsx,1464)
-___DEF_MOD_PRM(153,___G___x86_23_x86_2d_move_2d_extended,1467)
-___DEF_MOD_PRM(8,___G___x86_23_x86_2d_bt,1526)
-___DEF_MOD_PRM(11,___G___x86_23_x86_2d_bts,1529)
-___DEF_MOD_PRM(10,___G___x86_23_x86_2d_btr,1532)
-___DEF_MOD_PRM(9,___G___x86_23_x86_2d_btc,1535)
-___DEF_MOD_PRM(7,___G___x86_23_x86_2d_bit_2d_op,1538)
-___DEF_MOD_PRM(21,___G___x86_23_x86_2d_cmova,1614)
-___DEF_MOD_PRM(22,___G___x86_23_x86_2d_cmovae,1617)
-___DEF_MOD_PRM(23,___G___x86_23_x86_2d_cmovb,1620)
-___DEF_MOD_PRM(24,___G___x86_23_x86_2d_cmovbe,1623)
-___DEF_MOD_PRM(25,___G___x86_23_x86_2d_cmovc,1626)
-___DEF_MOD_PRM(27,___G___x86_23_x86_2d_cmove,1629)
-___DEF_MOD_PRM(28,___G___x86_23_x86_2d_cmovg,1632)
-___DEF_MOD_PRM(29,___G___x86_23_x86_2d_cmovge,1635)
-___DEF_MOD_PRM(30,___G___x86_23_x86_2d_cmovl,1638)
-___DEF_MOD_PRM(31,___G___x86_23_x86_2d_cmovle,1641)
-___DEF_MOD_PRM(32,___G___x86_23_x86_2d_cmovna,1644)
-___DEF_MOD_PRM(33,___G___x86_23_x86_2d_cmovnae,1647)
-___DEF_MOD_PRM(34,___G___x86_23_x86_2d_cmovnb,1650)
-___DEF_MOD_PRM(35,___G___x86_23_x86_2d_cmovnbe,1653)
-___DEF_MOD_PRM(36,___G___x86_23_x86_2d_cmovnc,1656)
-___DEF_MOD_PRM(37,___G___x86_23_x86_2d_cmovne,1659)
-___DEF_MOD_PRM(38,___G___x86_23_x86_2d_cmovng,1662)
-___DEF_MOD_PRM(39,___G___x86_23_x86_2d_cmovnge,1665)
-___DEF_MOD_PRM(40,___G___x86_23_x86_2d_cmovnl,1668)
-___DEF_MOD_PRM(41,___G___x86_23_x86_2d_cmovnle,1671)
-___DEF_MOD_PRM(42,___G___x86_23_x86_2d_cmovno,1674)
-___DEF_MOD_PRM(43,___G___x86_23_x86_2d_cmovnp,1677)
-___DEF_MOD_PRM(44,___G___x86_23_x86_2d_cmovns,1680)
-___DEF_MOD_PRM(45,___G___x86_23_x86_2d_cmovnz,1683)
-___DEF_MOD_PRM(46,___G___x86_23_x86_2d_cmovo,1686)
-___DEF_MOD_PRM(47,___G___x86_23_x86_2d_cmovp,1689)
-___DEF_MOD_PRM(48,___G___x86_23_x86_2d_cmovpe,1692)
-___DEF_MOD_PRM(49,___G___x86_23_x86_2d_cmovpo,1695)
-___DEF_MOD_PRM(50,___G___x86_23_x86_2d_cmovs,1698)
-___DEF_MOD_PRM(51,___G___x86_23_x86_2d_cmovz,1701)
-___DEF_MOD_PRM(26,___G___x86_23_x86_2d_cmovcc,1704)
-___DEF_MOD_PRM(176,___G___x86_23_x86_2d_popcnt,1750)
-___DEF_MOD_PRM(144,___G___x86_23_x86_2d_lzcnt,1753)
-___DEF_MOD_PRM(53,___G___x86_23_x86_2d_count,1756)
-___DEF_MOD_PRM(98,___G___x86_23_x86_2d_in_2d_imm,1804)
-___DEF_MOD_PRM(97,___G___x86_23_x86_2d_in_2d_dx,1825)
-___DEF_MOD_PRM(174,___G___x86_23_x86_2d_out_2d_imm,1844)
-___DEF_MOD_PRM(173,___G___x86_23_x86_2d_out_2d_dx,1865)
+___DEF_MOD_PRM(3,___G___x86_23_x86_2d_add,552)
+___DEF_MOD_PRM(172,___G___x86_23_x86_2d_or,555)
+___DEF_MOD_PRM(2,___G___x86_23_x86_2d_adc,558)
+___DEF_MOD_PRM(191,___G___x86_23_x86_2d_sbb,561)
+___DEF_MOD_PRM(5,___G___x86_23_x86_2d_and,564)
+___DEF_MOD_PRM(215,___G___x86_23_x86_2d_sub,567)
+___DEF_MOD_PRM(225,___G___x86_23_x86_2d_xor,570)
+___DEF_MOD_PRM(52,___G___x86_23_x86_2d_cmp,573)
+___DEF_MOD_PRM(152,___G___x86_23_x86_2d_mov,576)
+___DEF_MOD_PRM(165,___G___x86_23_x86_2d_op,579)
+___DEF_MOD_PRM(99,___G___x86_23_x86_2d_inc,718)
+___DEF_MOD_PRM(61,___G___x86_23_x86_2d_dec,721)
+___DEF_MOD_PRM(100,___G___x86_23_x86_2d_inc_2d_dec,724)
+___DEF_MOD_PRM(141,___G___x86_23_x86_2d_lea,764)
+___DEF_MOD_PRM(187,___G___x86_23_x86_2d_ret,781)
+___DEF_MOD_PRM(65,___G___x86_23_x86_2d_enter,793)
+___DEF_MOD_PRM(162,___G___x86_23_x86_2d_nop,807)
+___DEF_MOD_PRM(180,___G___x86_23_x86_2d_pushf,810)
+___DEF_MOD_PRM(177,___G___x86_23_x86_2d_popf,813)
+___DEF_MOD_PRM(142,___G___x86_23_x86_2d_leave,816)
+___DEF_MOD_PRM(71,___G___x86_23_x86_2d_hlt,819)
+___DEF_MOD_PRM(20,___G___x86_23_x86_2d_cmc,822)
+___DEF_MOD_PRM(17,___G___x86_23_x86_2d_clc,825)
+___DEF_MOD_PRM(212,___G___x86_23_x86_2d_stc,828)
+___DEF_MOD_PRM(19,___G___x86_23_x86_2d_cli,831)
+___DEF_MOD_PRM(214,___G___x86_23_x86_2d_sti,834)
+___DEF_MOD_PRM(18,___G___x86_23_x86_2d_cld,837)
+___DEF_MOD_PRM(213,___G___x86_23_x86_2d_std,840)
+___DEF_MOD_PRM(160,___G___x86_23_x86_2d_no_2d_opnd_2d_instr,843)
+___DEF_MOD_PRM(101,___G___x86_23_x86_2d_int,855)
+___DEF_MOD_PRM(102,___G___x86_23_x86_2d_int3,863)
+___DEF_MOD_PRM(216,___G___x86_23_x86_2d_syscall,870)
+___DEF_MOD_PRM(217,___G___x86_23_x86_2d_sysret,873)
+___DEF_MOD_PRM(222,___G___x86_23_x86_2d_wrmsr,876)
+___DEF_MOD_PRM(185,___G___x86_23_x86_2d_rdtsc,879)
+___DEF_MOD_PRM(183,___G___x86_23_x86_2d_rdmsr,882)
+___DEF_MOD_PRM(184,___G___x86_23_x86_2d_rdpmc,885)
+___DEF_MOD_PRM(54,___G___x86_23_x86_2d_cpuid,888)
+___DEF_MOD_PRM(161,___G___x86_23_x86_2d_no_2d_opnd_2d_instr_2d_esc,891)
+___DEF_MOD_PRM(121,___G___x86_23_x86_2d_jmp,903)
+___DEF_MOD_PRM(12,___G___x86_23_x86_2d_call,909)
+___DEF_MOD_PRM(132,___G___x86_23_x86_2d_jo,915)
+___DEF_MOD_PRM(126,___G___x86_23_x86_2d_jno,918)
+___DEF_MOD_PRM(107,___G___x86_23_x86_2d_jb,921)
+___DEF_MOD_PRM(105,___G___x86_23_x86_2d_jae,924)
+___DEF_MOD_PRM(111,___G___x86_23_x86_2d_je,927)
+___DEF_MOD_PRM(124,___G___x86_23_x86_2d_jne,930)
+___DEF_MOD_PRM(109,___G___x86_23_x86_2d_jbe,933)
+___DEF_MOD_PRM(103,___G___x86_23_x86_2d_ja,936)
+___DEF_MOD_PRM(136,___G___x86_23_x86_2d_js,939)
+___DEF_MOD_PRM(130,___G___x86_23_x86_2d_jns,942)
+___DEF_MOD_PRM(134,___G___x86_23_x86_2d_jp,945)
+___DEF_MOD_PRM(128,___G___x86_23_x86_2d_jnp,948)
+___DEF_MOD_PRM(117,___G___x86_23_x86_2d_jl,951)
+___DEF_MOD_PRM(115,___G___x86_23_x86_2d_jge,954)
+___DEF_MOD_PRM(119,___G___x86_23_x86_2d_jle,957)
+___DEF_MOD_PRM(113,___G___x86_23_x86_2d_jg,960)
+___DEF_MOD_PRM(139,___G___x86_23_x86_2d_jump_2d_label,963)
+___DEF_MOD_PRM(138,___G___x86_23_x86_2d_jump_2d_general,1014)
+___DEF_MOD_PRM(206,___G___x86_23_x86_2d_seto,1034)
+___DEF_MOD_PRM(203,___G___x86_23_x86_2d_setno,1037)
+___DEF_MOD_PRM(195,___G___x86_23_x86_2d_setb,1040)
+___DEF_MOD_PRM(194,___G___x86_23_x86_2d_setae,1043)
+___DEF_MOD_PRM(197,___G___x86_23_x86_2d_sete,1046)
+___DEF_MOD_PRM(202,___G___x86_23_x86_2d_setne,1049)
+___DEF_MOD_PRM(196,___G___x86_23_x86_2d_setbe,1052)
+___DEF_MOD_PRM(193,___G___x86_23_x86_2d_seta,1055)
+___DEF_MOD_PRM(208,___G___x86_23_x86_2d_sets,1058)
+___DEF_MOD_PRM(205,___G___x86_23_x86_2d_setns,1061)
+___DEF_MOD_PRM(207,___G___x86_23_x86_2d_setp,1064)
+___DEF_MOD_PRM(204,___G___x86_23_x86_2d_setnp,1067)
+___DEF_MOD_PRM(200,___G___x86_23_x86_2d_setl,1070)
+___DEF_MOD_PRM(199,___G___x86_23_x86_2d_setge,1073)
+___DEF_MOD_PRM(201,___G___x86_23_x86_2d_setle,1076)
+___DEF_MOD_PRM(198,___G___x86_23_x86_2d_setg,1079)
+___DEF_MOD_PRM(192,___G___x86_23_x86_2d_set_2d_cc,1082)
+___DEF_MOD_PRM(178,___G___x86_23_x86_2d_push,1093)
+___DEF_MOD_PRM(175,___G___x86_23_x86_2d_pop,1096)
+___DEF_MOD_PRM(179,___G___x86_23_x86_2d_push_2d_pop,1099)
+___DEF_MOD_PRM(57,___G___x86_23_x86_2d_cwde,1139)
+___DEF_MOD_PRM(15,___G___x86_23_x86_2d_cdq,1142)
+___DEF_MOD_PRM(14,___G___x86_23_x86_2d_cbw,1145)
+___DEF_MOD_PRM(56,___G___x86_23_x86_2d_cwd,1148)
+___DEF_MOD_PRM(16,___G___x86_23_x86_2d_cdqe,1151)
+___DEF_MOD_PRM(55,___G___x86_23_x86_2d_cqo,1154)
+___DEF_MOD_PRM(219,___G___x86_23_x86_2d_widen,1157)
+___DEF_MOD_PRM(188,___G___x86_23_x86_2d_rol,1172)
+___DEF_MOD_PRM(189,___G___x86_23_x86_2d_ror,1175)
+___DEF_MOD_PRM(181,___G___x86_23_x86_2d_rcl,1178)
+___DEF_MOD_PRM(182,___G___x86_23_x86_2d_rcr,1181)
+___DEF_MOD_PRM(210,___G___x86_23_x86_2d_shl,1184)
+___DEF_MOD_PRM(211,___G___x86_23_x86_2d_shr,1187)
+___DEF_MOD_PRM(190,___G___x86_23_x86_2d_sar,1190)
+___DEF_MOD_PRM(209,___G___x86_23_x86_2d_shift,1193)
+___DEF_MOD_PRM(163,___G___x86_23_x86_2d_not,1239)
+___DEF_MOD_PRM(158,___G___x86_23_x86_2d_neg,1242)
+___DEF_MOD_PRM(159,___G___x86_23_x86_2d_negate,1245)
+___DEF_MOD_PRM(218,___G___x86_23_x86_2d_test,1270)
+___DEF_MOD_PRM(223,___G___x86_23_x86_2d_xchg,1336)
+___DEF_MOD_PRM(156,___G___x86_23_x86_2d_mul,1385)
+___DEF_MOD_PRM(96,___G___x86_23_x86_2d_imul,1388)
+___DEF_MOD_PRM(62,___G___x86_23_x86_2d_div,1391)
+___DEF_MOD_PRM(72,___G___x86_23_x86_2d_idiv,1394)
+___DEF_MOD_PRM(157,___G___x86_23_x86_2d_multiply_2d_divide,1397)
+___DEF_MOD_PRM(155,___G___x86_23_x86_2d_movzx,1460)
+___DEF_MOD_PRM(154,___G___x86_23_x86_2d_movsx,1463)
+___DEF_MOD_PRM(153,___G___x86_23_x86_2d_move_2d_extended,1466)
+___DEF_MOD_PRM(8,___G___x86_23_x86_2d_bt,1525)
+___DEF_MOD_PRM(11,___G___x86_23_x86_2d_bts,1528)
+___DEF_MOD_PRM(10,___G___x86_23_x86_2d_btr,1531)
+___DEF_MOD_PRM(9,___G___x86_23_x86_2d_btc,1534)
+___DEF_MOD_PRM(7,___G___x86_23_x86_2d_bit_2d_op,1537)
+___DEF_MOD_PRM(21,___G___x86_23_x86_2d_cmova,1613)
+___DEF_MOD_PRM(22,___G___x86_23_x86_2d_cmovae,1616)
+___DEF_MOD_PRM(23,___G___x86_23_x86_2d_cmovb,1619)
+___DEF_MOD_PRM(24,___G___x86_23_x86_2d_cmovbe,1622)
+___DEF_MOD_PRM(25,___G___x86_23_x86_2d_cmovc,1625)
+___DEF_MOD_PRM(27,___G___x86_23_x86_2d_cmove,1628)
+___DEF_MOD_PRM(28,___G___x86_23_x86_2d_cmovg,1631)
+___DEF_MOD_PRM(29,___G___x86_23_x86_2d_cmovge,1634)
+___DEF_MOD_PRM(30,___G___x86_23_x86_2d_cmovl,1637)
+___DEF_MOD_PRM(31,___G___x86_23_x86_2d_cmovle,1640)
+___DEF_MOD_PRM(32,___G___x86_23_x86_2d_cmovna,1643)
+___DEF_MOD_PRM(33,___G___x86_23_x86_2d_cmovnae,1646)
+___DEF_MOD_PRM(34,___G___x86_23_x86_2d_cmovnb,1649)
+___DEF_MOD_PRM(35,___G___x86_23_x86_2d_cmovnbe,1652)
+___DEF_MOD_PRM(36,___G___x86_23_x86_2d_cmovnc,1655)
+___DEF_MOD_PRM(37,___G___x86_23_x86_2d_cmovne,1658)
+___DEF_MOD_PRM(38,___G___x86_23_x86_2d_cmovng,1661)
+___DEF_MOD_PRM(39,___G___x86_23_x86_2d_cmovnge,1664)
+___DEF_MOD_PRM(40,___G___x86_23_x86_2d_cmovnl,1667)
+___DEF_MOD_PRM(41,___G___x86_23_x86_2d_cmovnle,1670)
+___DEF_MOD_PRM(42,___G___x86_23_x86_2d_cmovno,1673)
+___DEF_MOD_PRM(43,___G___x86_23_x86_2d_cmovnp,1676)
+___DEF_MOD_PRM(44,___G___x86_23_x86_2d_cmovns,1679)
+___DEF_MOD_PRM(45,___G___x86_23_x86_2d_cmovnz,1682)
+___DEF_MOD_PRM(46,___G___x86_23_x86_2d_cmovo,1685)
+___DEF_MOD_PRM(47,___G___x86_23_x86_2d_cmovp,1688)
+___DEF_MOD_PRM(48,___G___x86_23_x86_2d_cmovpe,1691)
+___DEF_MOD_PRM(49,___G___x86_23_x86_2d_cmovpo,1694)
+___DEF_MOD_PRM(50,___G___x86_23_x86_2d_cmovs,1697)
+___DEF_MOD_PRM(51,___G___x86_23_x86_2d_cmovz,1700)
+___DEF_MOD_PRM(26,___G___x86_23_x86_2d_cmovcc,1703)
+___DEF_MOD_PRM(176,___G___x86_23_x86_2d_popcnt,1749)
+___DEF_MOD_PRM(144,___G___x86_23_x86_2d_lzcnt,1752)
+___DEF_MOD_PRM(53,___G___x86_23_x86_2d_count,1755)
+___DEF_MOD_PRM(98,___G___x86_23_x86_2d_in_2d_imm,1803)
+___DEF_MOD_PRM(97,___G___x86_23_x86_2d_in_2d_dx,1824)
+___DEF_MOD_PRM(174,___G___x86_23_x86_2d_out_2d_imm,1843)
+___DEF_MOD_PRM(173,___G___x86_23_x86_2d_out_2d_dx,1864)
 ___END_MOD_PRM
 
 ___BEGIN_MOD_C_INIT
@@ -26186,156 +26187,156 @@ ___DEF_MOD_GLO(64,___G___x86_23_x86_2d_dw,508)
 ___DEF_MOD_GLO(60,___G___x86_23_x86_2d_dd,511)
 ___DEF_MOD_GLO(63,___G___x86_23_x86_2d_dq,514)
 ___DEF_MOD_GLO(58,___G___x86_23_x86_2d_data_2d_elems,517)
-___DEF_MOD_GLO(3,___G___x86_23_x86_2d_add,553)
-___DEF_MOD_GLO(172,___G___x86_23_x86_2d_or,556)
-___DEF_MOD_GLO(2,___G___x86_23_x86_2d_adc,559)
-___DEF_MOD_GLO(191,___G___x86_23_x86_2d_sbb,562)
-___DEF_MOD_GLO(5,___G___x86_23_x86_2d_and,565)
-___DEF_MOD_GLO(215,___G___x86_23_x86_2d_sub,568)
-___DEF_MOD_GLO(225,___G___x86_23_x86_2d_xor,571)
-___DEF_MOD_GLO(52,___G___x86_23_x86_2d_cmp,574)
-___DEF_MOD_GLO(152,___G___x86_23_x86_2d_mov,577)
-___DEF_MOD_GLO(165,___G___x86_23_x86_2d_op,580)
-___DEF_MOD_GLO(99,___G___x86_23_x86_2d_inc,719)
-___DEF_MOD_GLO(61,___G___x86_23_x86_2d_dec,722)
-___DEF_MOD_GLO(100,___G___x86_23_x86_2d_inc_2d_dec,725)
-___DEF_MOD_GLO(141,___G___x86_23_x86_2d_lea,765)
-___DEF_MOD_GLO(187,___G___x86_23_x86_2d_ret,782)
-___DEF_MOD_GLO(65,___G___x86_23_x86_2d_enter,794)
-___DEF_MOD_GLO(162,___G___x86_23_x86_2d_nop,808)
-___DEF_MOD_GLO(180,___G___x86_23_x86_2d_pushf,811)
-___DEF_MOD_GLO(177,___G___x86_23_x86_2d_popf,814)
-___DEF_MOD_GLO(142,___G___x86_23_x86_2d_leave,817)
-___DEF_MOD_GLO(71,___G___x86_23_x86_2d_hlt,820)
-___DEF_MOD_GLO(20,___G___x86_23_x86_2d_cmc,823)
-___DEF_MOD_GLO(17,___G___x86_23_x86_2d_clc,826)
-___DEF_MOD_GLO(212,___G___x86_23_x86_2d_stc,829)
-___DEF_MOD_GLO(19,___G___x86_23_x86_2d_cli,832)
-___DEF_MOD_GLO(214,___G___x86_23_x86_2d_sti,835)
-___DEF_MOD_GLO(18,___G___x86_23_x86_2d_cld,838)
-___DEF_MOD_GLO(213,___G___x86_23_x86_2d_std,841)
-___DEF_MOD_GLO(160,___G___x86_23_x86_2d_no_2d_opnd_2d_instr,844)
-___DEF_MOD_GLO(101,___G___x86_23_x86_2d_int,856)
-___DEF_MOD_GLO(102,___G___x86_23_x86_2d_int3,864)
-___DEF_MOD_GLO(216,___G___x86_23_x86_2d_syscall,871)
-___DEF_MOD_GLO(217,___G___x86_23_x86_2d_sysret,874)
-___DEF_MOD_GLO(222,___G___x86_23_x86_2d_wrmsr,877)
-___DEF_MOD_GLO(185,___G___x86_23_x86_2d_rdtsc,880)
-___DEF_MOD_GLO(183,___G___x86_23_x86_2d_rdmsr,883)
-___DEF_MOD_GLO(184,___G___x86_23_x86_2d_rdpmc,886)
-___DEF_MOD_GLO(54,___G___x86_23_x86_2d_cpuid,889)
-___DEF_MOD_GLO(161,___G___x86_23_x86_2d_no_2d_opnd_2d_instr_2d_esc,892)
-___DEF_MOD_GLO(121,___G___x86_23_x86_2d_jmp,904)
-___DEF_MOD_GLO(12,___G___x86_23_x86_2d_call,910)
-___DEF_MOD_GLO(132,___G___x86_23_x86_2d_jo,916)
-___DEF_MOD_GLO(126,___G___x86_23_x86_2d_jno,919)
-___DEF_MOD_GLO(107,___G___x86_23_x86_2d_jb,922)
-___DEF_MOD_GLO(105,___G___x86_23_x86_2d_jae,925)
-___DEF_MOD_GLO(111,___G___x86_23_x86_2d_je,928)
-___DEF_MOD_GLO(124,___G___x86_23_x86_2d_jne,931)
-___DEF_MOD_GLO(109,___G___x86_23_x86_2d_jbe,934)
-___DEF_MOD_GLO(103,___G___x86_23_x86_2d_ja,937)
-___DEF_MOD_GLO(136,___G___x86_23_x86_2d_js,940)
-___DEF_MOD_GLO(130,___G___x86_23_x86_2d_jns,943)
-___DEF_MOD_GLO(134,___G___x86_23_x86_2d_jp,946)
-___DEF_MOD_GLO(128,___G___x86_23_x86_2d_jnp,949)
-___DEF_MOD_GLO(117,___G___x86_23_x86_2d_jl,952)
-___DEF_MOD_GLO(115,___G___x86_23_x86_2d_jge,955)
-___DEF_MOD_GLO(119,___G___x86_23_x86_2d_jle,958)
-___DEF_MOD_GLO(113,___G___x86_23_x86_2d_jg,961)
-___DEF_MOD_GLO(139,___G___x86_23_x86_2d_jump_2d_label,964)
-___DEF_MOD_GLO(138,___G___x86_23_x86_2d_jump_2d_general,1015)
-___DEF_MOD_GLO(206,___G___x86_23_x86_2d_seto,1035)
-___DEF_MOD_GLO(203,___G___x86_23_x86_2d_setno,1038)
-___DEF_MOD_GLO(195,___G___x86_23_x86_2d_setb,1041)
-___DEF_MOD_GLO(194,___G___x86_23_x86_2d_setae,1044)
-___DEF_MOD_GLO(197,___G___x86_23_x86_2d_sete,1047)
-___DEF_MOD_GLO(202,___G___x86_23_x86_2d_setne,1050)
-___DEF_MOD_GLO(196,___G___x86_23_x86_2d_setbe,1053)
-___DEF_MOD_GLO(193,___G___x86_23_x86_2d_seta,1056)
-___DEF_MOD_GLO(208,___G___x86_23_x86_2d_sets,1059)
-___DEF_MOD_GLO(205,___G___x86_23_x86_2d_setns,1062)
-___DEF_MOD_GLO(207,___G___x86_23_x86_2d_setp,1065)
-___DEF_MOD_GLO(204,___G___x86_23_x86_2d_setnp,1068)
-___DEF_MOD_GLO(200,___G___x86_23_x86_2d_setl,1071)
-___DEF_MOD_GLO(199,___G___x86_23_x86_2d_setge,1074)
-___DEF_MOD_GLO(201,___G___x86_23_x86_2d_setle,1077)
-___DEF_MOD_GLO(198,___G___x86_23_x86_2d_setg,1080)
-___DEF_MOD_GLO(192,___G___x86_23_x86_2d_set_2d_cc,1083)
-___DEF_MOD_GLO(178,___G___x86_23_x86_2d_push,1094)
-___DEF_MOD_GLO(175,___G___x86_23_x86_2d_pop,1097)
-___DEF_MOD_GLO(179,___G___x86_23_x86_2d_push_2d_pop,1100)
-___DEF_MOD_GLO(57,___G___x86_23_x86_2d_cwde,1140)
-___DEF_MOD_GLO(15,___G___x86_23_x86_2d_cdq,1143)
-___DEF_MOD_GLO(14,___G___x86_23_x86_2d_cbw,1146)
-___DEF_MOD_GLO(56,___G___x86_23_x86_2d_cwd,1149)
-___DEF_MOD_GLO(16,___G___x86_23_x86_2d_cdqe,1152)
-___DEF_MOD_GLO(55,___G___x86_23_x86_2d_cqo,1155)
-___DEF_MOD_GLO(219,___G___x86_23_x86_2d_widen,1158)
-___DEF_MOD_GLO(188,___G___x86_23_x86_2d_rol,1173)
-___DEF_MOD_GLO(189,___G___x86_23_x86_2d_ror,1176)
-___DEF_MOD_GLO(181,___G___x86_23_x86_2d_rcl,1179)
-___DEF_MOD_GLO(182,___G___x86_23_x86_2d_rcr,1182)
-___DEF_MOD_GLO(210,___G___x86_23_x86_2d_shl,1185)
-___DEF_MOD_GLO(211,___G___x86_23_x86_2d_shr,1188)
-___DEF_MOD_GLO(190,___G___x86_23_x86_2d_sar,1191)
-___DEF_MOD_GLO(209,___G___x86_23_x86_2d_shift,1194)
-___DEF_MOD_GLO(163,___G___x86_23_x86_2d_not,1240)
-___DEF_MOD_GLO(158,___G___x86_23_x86_2d_neg,1243)
-___DEF_MOD_GLO(159,___G___x86_23_x86_2d_negate,1246)
-___DEF_MOD_GLO(218,___G___x86_23_x86_2d_test,1271)
-___DEF_MOD_GLO(223,___G___x86_23_x86_2d_xchg,1337)
-___DEF_MOD_GLO(156,___G___x86_23_x86_2d_mul,1386)
-___DEF_MOD_GLO(96,___G___x86_23_x86_2d_imul,1389)
-___DEF_MOD_GLO(62,___G___x86_23_x86_2d_div,1392)
-___DEF_MOD_GLO(72,___G___x86_23_x86_2d_idiv,1395)
-___DEF_MOD_GLO(157,___G___x86_23_x86_2d_multiply_2d_divide,1398)
-___DEF_MOD_GLO(155,___G___x86_23_x86_2d_movzx,1461)
-___DEF_MOD_GLO(154,___G___x86_23_x86_2d_movsx,1464)
-___DEF_MOD_GLO(153,___G___x86_23_x86_2d_move_2d_extended,1467)
-___DEF_MOD_GLO(8,___G___x86_23_x86_2d_bt,1526)
-___DEF_MOD_GLO(11,___G___x86_23_x86_2d_bts,1529)
-___DEF_MOD_GLO(10,___G___x86_23_x86_2d_btr,1532)
-___DEF_MOD_GLO(9,___G___x86_23_x86_2d_btc,1535)
-___DEF_MOD_GLO(7,___G___x86_23_x86_2d_bit_2d_op,1538)
-___DEF_MOD_GLO(21,___G___x86_23_x86_2d_cmova,1614)
-___DEF_MOD_GLO(22,___G___x86_23_x86_2d_cmovae,1617)
-___DEF_MOD_GLO(23,___G___x86_23_x86_2d_cmovb,1620)
-___DEF_MOD_GLO(24,___G___x86_23_x86_2d_cmovbe,1623)
-___DEF_MOD_GLO(25,___G___x86_23_x86_2d_cmovc,1626)
-___DEF_MOD_GLO(27,___G___x86_23_x86_2d_cmove,1629)
-___DEF_MOD_GLO(28,___G___x86_23_x86_2d_cmovg,1632)
-___DEF_MOD_GLO(29,___G___x86_23_x86_2d_cmovge,1635)
-___DEF_MOD_GLO(30,___G___x86_23_x86_2d_cmovl,1638)
-___DEF_MOD_GLO(31,___G___x86_23_x86_2d_cmovle,1641)
-___DEF_MOD_GLO(32,___G___x86_23_x86_2d_cmovna,1644)
-___DEF_MOD_GLO(33,___G___x86_23_x86_2d_cmovnae,1647)
-___DEF_MOD_GLO(34,___G___x86_23_x86_2d_cmovnb,1650)
-___DEF_MOD_GLO(35,___G___x86_23_x86_2d_cmovnbe,1653)
-___DEF_MOD_GLO(36,___G___x86_23_x86_2d_cmovnc,1656)
-___DEF_MOD_GLO(37,___G___x86_23_x86_2d_cmovne,1659)
-___DEF_MOD_GLO(38,___G___x86_23_x86_2d_cmovng,1662)
-___DEF_MOD_GLO(39,___G___x86_23_x86_2d_cmovnge,1665)
-___DEF_MOD_GLO(40,___G___x86_23_x86_2d_cmovnl,1668)
-___DEF_MOD_GLO(41,___G___x86_23_x86_2d_cmovnle,1671)
-___DEF_MOD_GLO(42,___G___x86_23_x86_2d_cmovno,1674)
-___DEF_MOD_GLO(43,___G___x86_23_x86_2d_cmovnp,1677)
-___DEF_MOD_GLO(44,___G___x86_23_x86_2d_cmovns,1680)
-___DEF_MOD_GLO(45,___G___x86_23_x86_2d_cmovnz,1683)
-___DEF_MOD_GLO(46,___G___x86_23_x86_2d_cmovo,1686)
-___DEF_MOD_GLO(47,___G___x86_23_x86_2d_cmovp,1689)
-___DEF_MOD_GLO(48,___G___x86_23_x86_2d_cmovpe,1692)
-___DEF_MOD_GLO(49,___G___x86_23_x86_2d_cmovpo,1695)
-___DEF_MOD_GLO(50,___G___x86_23_x86_2d_cmovs,1698)
-___DEF_MOD_GLO(51,___G___x86_23_x86_2d_cmovz,1701)
-___DEF_MOD_GLO(26,___G___x86_23_x86_2d_cmovcc,1704)
-___DEF_MOD_GLO(176,___G___x86_23_x86_2d_popcnt,1750)
-___DEF_MOD_GLO(144,___G___x86_23_x86_2d_lzcnt,1753)
-___DEF_MOD_GLO(53,___G___x86_23_x86_2d_count,1756)
-___DEF_MOD_GLO(98,___G___x86_23_x86_2d_in_2d_imm,1804)
-___DEF_MOD_GLO(97,___G___x86_23_x86_2d_in_2d_dx,1825)
-___DEF_MOD_GLO(174,___G___x86_23_x86_2d_out_2d_imm,1844)
-___DEF_MOD_GLO(173,___G___x86_23_x86_2d_out_2d_dx,1865)
+___DEF_MOD_GLO(3,___G___x86_23_x86_2d_add,552)
+___DEF_MOD_GLO(172,___G___x86_23_x86_2d_or,555)
+___DEF_MOD_GLO(2,___G___x86_23_x86_2d_adc,558)
+___DEF_MOD_GLO(191,___G___x86_23_x86_2d_sbb,561)
+___DEF_MOD_GLO(5,___G___x86_23_x86_2d_and,564)
+___DEF_MOD_GLO(215,___G___x86_23_x86_2d_sub,567)
+___DEF_MOD_GLO(225,___G___x86_23_x86_2d_xor,570)
+___DEF_MOD_GLO(52,___G___x86_23_x86_2d_cmp,573)
+___DEF_MOD_GLO(152,___G___x86_23_x86_2d_mov,576)
+___DEF_MOD_GLO(165,___G___x86_23_x86_2d_op,579)
+___DEF_MOD_GLO(99,___G___x86_23_x86_2d_inc,718)
+___DEF_MOD_GLO(61,___G___x86_23_x86_2d_dec,721)
+___DEF_MOD_GLO(100,___G___x86_23_x86_2d_inc_2d_dec,724)
+___DEF_MOD_GLO(141,___G___x86_23_x86_2d_lea,764)
+___DEF_MOD_GLO(187,___G___x86_23_x86_2d_ret,781)
+___DEF_MOD_GLO(65,___G___x86_23_x86_2d_enter,793)
+___DEF_MOD_GLO(162,___G___x86_23_x86_2d_nop,807)
+___DEF_MOD_GLO(180,___G___x86_23_x86_2d_pushf,810)
+___DEF_MOD_GLO(177,___G___x86_23_x86_2d_popf,813)
+___DEF_MOD_GLO(142,___G___x86_23_x86_2d_leave,816)
+___DEF_MOD_GLO(71,___G___x86_23_x86_2d_hlt,819)
+___DEF_MOD_GLO(20,___G___x86_23_x86_2d_cmc,822)
+___DEF_MOD_GLO(17,___G___x86_23_x86_2d_clc,825)
+___DEF_MOD_GLO(212,___G___x86_23_x86_2d_stc,828)
+___DEF_MOD_GLO(19,___G___x86_23_x86_2d_cli,831)
+___DEF_MOD_GLO(214,___G___x86_23_x86_2d_sti,834)
+___DEF_MOD_GLO(18,___G___x86_23_x86_2d_cld,837)
+___DEF_MOD_GLO(213,___G___x86_23_x86_2d_std,840)
+___DEF_MOD_GLO(160,___G___x86_23_x86_2d_no_2d_opnd_2d_instr,843)
+___DEF_MOD_GLO(101,___G___x86_23_x86_2d_int,855)
+___DEF_MOD_GLO(102,___G___x86_23_x86_2d_int3,863)
+___DEF_MOD_GLO(216,___G___x86_23_x86_2d_syscall,870)
+___DEF_MOD_GLO(217,___G___x86_23_x86_2d_sysret,873)
+___DEF_MOD_GLO(222,___G___x86_23_x86_2d_wrmsr,876)
+___DEF_MOD_GLO(185,___G___x86_23_x86_2d_rdtsc,879)
+___DEF_MOD_GLO(183,___G___x86_23_x86_2d_rdmsr,882)
+___DEF_MOD_GLO(184,___G___x86_23_x86_2d_rdpmc,885)
+___DEF_MOD_GLO(54,___G___x86_23_x86_2d_cpuid,888)
+___DEF_MOD_GLO(161,___G___x86_23_x86_2d_no_2d_opnd_2d_instr_2d_esc,891)
+___DEF_MOD_GLO(121,___G___x86_23_x86_2d_jmp,903)
+___DEF_MOD_GLO(12,___G___x86_23_x86_2d_call,909)
+___DEF_MOD_GLO(132,___G___x86_23_x86_2d_jo,915)
+___DEF_MOD_GLO(126,___G___x86_23_x86_2d_jno,918)
+___DEF_MOD_GLO(107,___G___x86_23_x86_2d_jb,921)
+___DEF_MOD_GLO(105,___G___x86_23_x86_2d_jae,924)
+___DEF_MOD_GLO(111,___G___x86_23_x86_2d_je,927)
+___DEF_MOD_GLO(124,___G___x86_23_x86_2d_jne,930)
+___DEF_MOD_GLO(109,___G___x86_23_x86_2d_jbe,933)
+___DEF_MOD_GLO(103,___G___x86_23_x86_2d_ja,936)
+___DEF_MOD_GLO(136,___G___x86_23_x86_2d_js,939)
+___DEF_MOD_GLO(130,___G___x86_23_x86_2d_jns,942)
+___DEF_MOD_GLO(134,___G___x86_23_x86_2d_jp,945)
+___DEF_MOD_GLO(128,___G___x86_23_x86_2d_jnp,948)
+___DEF_MOD_GLO(117,___G___x86_23_x86_2d_jl,951)
+___DEF_MOD_GLO(115,___G___x86_23_x86_2d_jge,954)
+___DEF_MOD_GLO(119,___G___x86_23_x86_2d_jle,957)
+___DEF_MOD_GLO(113,___G___x86_23_x86_2d_jg,960)
+___DEF_MOD_GLO(139,___G___x86_23_x86_2d_jump_2d_label,963)
+___DEF_MOD_GLO(138,___G___x86_23_x86_2d_jump_2d_general,1014)
+___DEF_MOD_GLO(206,___G___x86_23_x86_2d_seto,1034)
+___DEF_MOD_GLO(203,___G___x86_23_x86_2d_setno,1037)
+___DEF_MOD_GLO(195,___G___x86_23_x86_2d_setb,1040)
+___DEF_MOD_GLO(194,___G___x86_23_x86_2d_setae,1043)
+___DEF_MOD_GLO(197,___G___x86_23_x86_2d_sete,1046)
+___DEF_MOD_GLO(202,___G___x86_23_x86_2d_setne,1049)
+___DEF_MOD_GLO(196,___G___x86_23_x86_2d_setbe,1052)
+___DEF_MOD_GLO(193,___G___x86_23_x86_2d_seta,1055)
+___DEF_MOD_GLO(208,___G___x86_23_x86_2d_sets,1058)
+___DEF_MOD_GLO(205,___G___x86_23_x86_2d_setns,1061)
+___DEF_MOD_GLO(207,___G___x86_23_x86_2d_setp,1064)
+___DEF_MOD_GLO(204,___G___x86_23_x86_2d_setnp,1067)
+___DEF_MOD_GLO(200,___G___x86_23_x86_2d_setl,1070)
+___DEF_MOD_GLO(199,___G___x86_23_x86_2d_setge,1073)
+___DEF_MOD_GLO(201,___G___x86_23_x86_2d_setle,1076)
+___DEF_MOD_GLO(198,___G___x86_23_x86_2d_setg,1079)
+___DEF_MOD_GLO(192,___G___x86_23_x86_2d_set_2d_cc,1082)
+___DEF_MOD_GLO(178,___G___x86_23_x86_2d_push,1093)
+___DEF_MOD_GLO(175,___G___x86_23_x86_2d_pop,1096)
+___DEF_MOD_GLO(179,___G___x86_23_x86_2d_push_2d_pop,1099)
+___DEF_MOD_GLO(57,___G___x86_23_x86_2d_cwde,1139)
+___DEF_MOD_GLO(15,___G___x86_23_x86_2d_cdq,1142)
+___DEF_MOD_GLO(14,___G___x86_23_x86_2d_cbw,1145)
+___DEF_MOD_GLO(56,___G___x86_23_x86_2d_cwd,1148)
+___DEF_MOD_GLO(16,___G___x86_23_x86_2d_cdqe,1151)
+___DEF_MOD_GLO(55,___G___x86_23_x86_2d_cqo,1154)
+___DEF_MOD_GLO(219,___G___x86_23_x86_2d_widen,1157)
+___DEF_MOD_GLO(188,___G___x86_23_x86_2d_rol,1172)
+___DEF_MOD_GLO(189,___G___x86_23_x86_2d_ror,1175)
+___DEF_MOD_GLO(181,___G___x86_23_x86_2d_rcl,1178)
+___DEF_MOD_GLO(182,___G___x86_23_x86_2d_rcr,1181)
+___DEF_MOD_GLO(210,___G___x86_23_x86_2d_shl,1184)
+___DEF_MOD_GLO(211,___G___x86_23_x86_2d_shr,1187)
+___DEF_MOD_GLO(190,___G___x86_23_x86_2d_sar,1190)
+___DEF_MOD_GLO(209,___G___x86_23_x86_2d_shift,1193)
+___DEF_MOD_GLO(163,___G___x86_23_x86_2d_not,1239)
+___DEF_MOD_GLO(158,___G___x86_23_x86_2d_neg,1242)
+___DEF_MOD_GLO(159,___G___x86_23_x86_2d_negate,1245)
+___DEF_MOD_GLO(218,___G___x86_23_x86_2d_test,1270)
+___DEF_MOD_GLO(223,___G___x86_23_x86_2d_xchg,1336)
+___DEF_MOD_GLO(156,___G___x86_23_x86_2d_mul,1385)
+___DEF_MOD_GLO(96,___G___x86_23_x86_2d_imul,1388)
+___DEF_MOD_GLO(62,___G___x86_23_x86_2d_div,1391)
+___DEF_MOD_GLO(72,___G___x86_23_x86_2d_idiv,1394)
+___DEF_MOD_GLO(157,___G___x86_23_x86_2d_multiply_2d_divide,1397)
+___DEF_MOD_GLO(155,___G___x86_23_x86_2d_movzx,1460)
+___DEF_MOD_GLO(154,___G___x86_23_x86_2d_movsx,1463)
+___DEF_MOD_GLO(153,___G___x86_23_x86_2d_move_2d_extended,1466)
+___DEF_MOD_GLO(8,___G___x86_23_x86_2d_bt,1525)
+___DEF_MOD_GLO(11,___G___x86_23_x86_2d_bts,1528)
+___DEF_MOD_GLO(10,___G___x86_23_x86_2d_btr,1531)
+___DEF_MOD_GLO(9,___G___x86_23_x86_2d_btc,1534)
+___DEF_MOD_GLO(7,___G___x86_23_x86_2d_bit_2d_op,1537)
+___DEF_MOD_GLO(21,___G___x86_23_x86_2d_cmova,1613)
+___DEF_MOD_GLO(22,___G___x86_23_x86_2d_cmovae,1616)
+___DEF_MOD_GLO(23,___G___x86_23_x86_2d_cmovb,1619)
+___DEF_MOD_GLO(24,___G___x86_23_x86_2d_cmovbe,1622)
+___DEF_MOD_GLO(25,___G___x86_23_x86_2d_cmovc,1625)
+___DEF_MOD_GLO(27,___G___x86_23_x86_2d_cmove,1628)
+___DEF_MOD_GLO(28,___G___x86_23_x86_2d_cmovg,1631)
+___DEF_MOD_GLO(29,___G___x86_23_x86_2d_cmovge,1634)
+___DEF_MOD_GLO(30,___G___x86_23_x86_2d_cmovl,1637)
+___DEF_MOD_GLO(31,___G___x86_23_x86_2d_cmovle,1640)
+___DEF_MOD_GLO(32,___G___x86_23_x86_2d_cmovna,1643)
+___DEF_MOD_GLO(33,___G___x86_23_x86_2d_cmovnae,1646)
+___DEF_MOD_GLO(34,___G___x86_23_x86_2d_cmovnb,1649)
+___DEF_MOD_GLO(35,___G___x86_23_x86_2d_cmovnbe,1652)
+___DEF_MOD_GLO(36,___G___x86_23_x86_2d_cmovnc,1655)
+___DEF_MOD_GLO(37,___G___x86_23_x86_2d_cmovne,1658)
+___DEF_MOD_GLO(38,___G___x86_23_x86_2d_cmovng,1661)
+___DEF_MOD_GLO(39,___G___x86_23_x86_2d_cmovnge,1664)
+___DEF_MOD_GLO(40,___G___x86_23_x86_2d_cmovnl,1667)
+___DEF_MOD_GLO(41,___G___x86_23_x86_2d_cmovnle,1670)
+___DEF_MOD_GLO(42,___G___x86_23_x86_2d_cmovno,1673)
+___DEF_MOD_GLO(43,___G___x86_23_x86_2d_cmovnp,1676)
+___DEF_MOD_GLO(44,___G___x86_23_x86_2d_cmovns,1679)
+___DEF_MOD_GLO(45,___G___x86_23_x86_2d_cmovnz,1682)
+___DEF_MOD_GLO(46,___G___x86_23_x86_2d_cmovo,1685)
+___DEF_MOD_GLO(47,___G___x86_23_x86_2d_cmovp,1688)
+___DEF_MOD_GLO(48,___G___x86_23_x86_2d_cmovpe,1691)
+___DEF_MOD_GLO(49,___G___x86_23_x86_2d_cmovpo,1694)
+___DEF_MOD_GLO(50,___G___x86_23_x86_2d_cmovs,1697)
+___DEF_MOD_GLO(51,___G___x86_23_x86_2d_cmovz,1700)
+___DEF_MOD_GLO(26,___G___x86_23_x86_2d_cmovcc,1703)
+___DEF_MOD_GLO(176,___G___x86_23_x86_2d_popcnt,1749)
+___DEF_MOD_GLO(144,___G___x86_23_x86_2d_lzcnt,1752)
+___DEF_MOD_GLO(53,___G___x86_23_x86_2d_count,1755)
+___DEF_MOD_GLO(98,___G___x86_23_x86_2d_in_2d_imm,1803)
+___DEF_MOD_GLO(97,___G___x86_23_x86_2d_in_2d_dx,1824)
+___DEF_MOD_GLO(174,___G___x86_23_x86_2d_out_2d_imm,1843)
+___DEF_MOD_GLO(173,___G___x86_23_x86_2d_out_2d_dx,1864)
 ___END_MOD_GLO
 
 ___BEGIN_MOD_SYM_KEY
