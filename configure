@@ -915,6 +915,7 @@ DASH_mpc64
 DASH_mieee_with_inexact
 DASH_mieee
 DASH_foptimize_sibling_calls
+DASH_DASH_param_max_gcse_memory
 DASH_fno_gcse
 DASH_fgcse
 DASH_fno_move_loop_invariants
@@ -10457,6 +10458,7 @@ if test "$C_COMP_GNUC" = yes; then
     DASH_fno_move_loop_invariants=""
     DASH_fgcse=""
     DASH_fno_gcse=""
+    DASH_DASH_param_max_gcse_memory=""
     DASH_foptimize_sibling_calls=""
 
     DASH_mieee=""
@@ -10855,6 +10857,49 @@ $as_echo "$ac_cv_DASH_fno_gcse" >&6; }
 DASH_fno_gcse="$ac_cv_DASH_fno_gcse"
 
 
+    { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts --param max-gcse-memory=400000" >&5
+$as_echo_n "checking whether $C_COMPILER accepts --param max-gcse-memory=400000... " >&6; }
+if ${ac_cv_DASH_DASH_param_max_gcse_memory+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+rm -f conftest.$ac_ext
+cat >conftest.$ac_ext <<_ACEOF
+#line $LINENO "configure"
+int
+main ()
+{
+  return 0;
+}
+_ACEOF
+ac_test_CFLAGS=${CFLAGS+set}
+ac_test_CXXFLAGS=${CXXFLAGS+set}
+ac_save_CFLAGS=$CFLAGS
+ac_save_CXXFLAGS=$CXXFLAGS
+CFLAGS="--param max-gcse-memory=400000"
+CXXFLAGS="--param max-gcse-memory=400000"
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; then
+  ac_cv_DASH_DASH_param_max_gcse_memory=" --param max-gcse-memory=400000"
+else
+  ac_cv_DASH_DASH_param_max_gcse_memory=""
+fi
+if test "$ac_test_CFLAGS" = set; then
+  CFLAGS=$ac_save_CFLAGS
+fi
+if test "$ac_test_CXXFLAGS" = set; then
+  CXXFLAGS=$ac_save_CXXFLAGS
+fi
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_DASH_DASH_param_max_gcse_memory" >&5
+$as_echo "$ac_cv_DASH_DASH_param_max_gcse_memory" >&6; }
+DASH_DASH_param_max_gcse_memory="$ac_cv_DASH_DASH_param_max_gcse_memory"
+
+ # 400 MB to do GCSE is a reasonable limit
     { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $C_COMPILER accepts -foptimize-sibling-calls" >&5
 $as_echo_n "checking whether $C_COMPILER accepts -foptimize-sibling-calls... " >&6; }
 if ${ac_cv_DASH_foptimize_sibling_calls+:} false; then :
@@ -12053,6 +12098,7 @@ DASH_march="$ac_cv_DASH_march"
   FLAGS_OPT="$FLAGS_OPT_LO"
   FLAGS_OPT="$FLAGS_OPT$DASH_fexpensive_optimizations"
   FLAGS_OPT="$FLAGS_OPT$DASH_fno_gcse"
+  FLAGS_OPT="$FLAGS_OPT$DASH_DASH_param_max_gcse_memory"
 
   FLAGS_OPT_RTS="$FLAGS_OPT_HI"
 

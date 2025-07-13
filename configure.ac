@@ -2365,6 +2365,7 @@ if test "$C_COMP_GNUC" = yes; then
     DASH_fno_move_loop_invariants=""
     DASH_fgcse=""
     DASH_fno_gcse=""
+    DASH_DASH_param_max_gcse_memory=""
     DASH_foptimize_sibling_calls=""
 
     DASH_mieee=""
@@ -2385,6 +2386,7 @@ if test "$C_COMP_GNUC" = yes; then
     AC_CHECK_C_COMPILER_OPT(-fno-move-loop-invariants,DASH_fno_move_loop_invariants)
     AC_CHECK_C_COMPILER_OPT(-fgcse,DASH_fgcse)
     AC_CHECK_C_COMPILER_OPT(-fno-gcse,DASH_fno_gcse)
+    AC_CHECK_C_COMPILER_OPT(--param max-gcse-memory=400000,DASH_DASH_param_max_gcse_memory) # 400 MB to do GCSE is a reasonable limit
     AC_CHECK_C_COMPILER_OPT(-foptimize-sibling-calls,DASH_foptimize_sibling_calls)
 
     # machine specific options:
@@ -2449,6 +2451,7 @@ if test "$C_COMP_GNUC" = yes; then
   FLAGS_OPT="$FLAGS_OPT_LO"
   FLAGS_OPT="$FLAGS_OPT$DASH_fexpensive_optimizations"
   FLAGS_OPT="$FLAGS_OPT$DASH_fno_gcse"
+  FLAGS_OPT="$FLAGS_OPT$DASH_DASH_param_max_gcse_memory"
 
   FLAGS_OPT_RTS="$FLAGS_OPT_HI"
 

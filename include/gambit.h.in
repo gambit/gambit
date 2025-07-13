@@ -2411,7 +2411,7 @@ ___STORE_U32(s,i,val))
  * ___tFIXNUM   = tag for fixnums (small integers), must be 0
  * ___tSPECIAL  = tag for other immediates (#f, #t, (), #!eof, chars, ...)
  * ___tMEM1     = tag #1 for memory allocated objects
- * ___tMEM2     = tag #2 for memory allocated objects
+ * ___tMEM2     = tag #2 for memory allocated objects or undefined
  * ___tMEM3     = tag #3 for memory allocated objects or undefined
  * ___tMEM4     = tag #4 for memory allocated objects or undefined
  * ___tSUBTYPED = ___tMEM1
@@ -2470,7 +2470,7 @@ ___STORE_U32(s,i,val))
  * ..
  * 11111111_11111111_01111111_11111111_11111111_11111111_11111111_11111111
  *
- * This is convenient because it means these ranges are available to
+ * This is convenient because it means the following ranges are available to
  * encode Scheme objects, and they correspond to 48 bit addresses with
  * positive or negative sign:
  *
@@ -2491,8 +2491,10 @@ ___STORE_U32(s,i,val))
  * Within these ranges the low bits are used for storing the tag. Fixnums
  * are limited to 30 bits of precision, with the low 2 bits being 0 (this uses
  * 2 of the 8 available 3 bit tags). The fixnum is nevertheless sign extended
- * to 64 bits.
+ * to 64 bits so that arithmetic on fixnums typically can avoid having to mask
+ * the lower 32 bits.
  *
+ * This biased variant of NaN-boxing is sometimes called NuN-boxing.
  */
 
 #ifdef ___USE_2_TAG_BITS
@@ -2529,7 +2531,7 @@ ___STORE_U32(s,i,val))
 #if ___SCMOBJ_WIDTH == 32
 #define ___FLONUM_SELF_TAGGING_TAGS 0
 #else
-#define ___FLONUM_SELF_TAGGING_TAGS 1
+#define ___FLONUM_SELF_TAGGING_TAGS 4
 #endif
 #endif
 
