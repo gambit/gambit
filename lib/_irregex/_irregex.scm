@@ -16,10 +16,11 @@
 (##include "~~lib/_gambit#.scm")          ;; for macro-check-string,
                                           ;; macro-absent-obj, etc
 
-(declare (extended-bindings)) ;; ##fx+ is bound to fixnum addition, etc
-(declare (not safe))          ;; claim code has no type errors
-(declare (block))             ;; claim no global is assigned
-(declare (mostly-fixnum))     ;; assume most arithmetic is fixnum
+(declare (extended-bindings))  ;; ##fx+ is bound to fixnum addition, etc
+(declare (not safe))           ;; claim code has no type errors
+(declare (block))              ;; claim no global is assigned
+(declare (mostly-fixnum))      ;; assume most arithmetic is fixnum
+(declare (inlining-limit 100)) ;; make compiled files smaller
 
 (##namespace ("_irregex#" ;; Don't import these from Gambit:
 vector-copy
