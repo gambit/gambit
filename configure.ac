@@ -158,9 +158,7 @@ if test "$ENABLE_CPLUSPLUS" = yes; then
 
 fi
 
-# Don't search for pkg-config, just assume it is in the path
-#AC_PATH_PROG(PKG_CONFIG, pkg-config, , $PATH:/usr/bin:/usr/bin/X11:/usr/local/bin)
-PKG_CONFIG="pkg-config"
+PKG_PROG_PKG_CONFIG
 
 AC_SUBST(C_COMPILER)
 AC_SUBST(C_PREPROC)
