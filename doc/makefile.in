@@ -278,12 +278,12 @@ clean-post clean-post-nonrec: mostlyclean-post-nonrec
 distclean-pre: clean-pre
 
 distclean-post distclean-post-nonrec: clean-post-nonrec
+	rm -f stamp.vti version.txi \
+	  gambit.ps gambit.pdf gambit*.html gambit.txt gambit.info*
 
 bootclean-pre: distclean-pre
 
 bootclean-post bootclean-post-nonrec: distclean-post-nonrec
-	rm -f stamp.vti version.txi \
-	  gambit.ps gambit.pdf gambit*.html gambit.txt gambit.info*
 
 realclean-pre: bootclean-pre
 
