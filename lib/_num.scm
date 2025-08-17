@@ -826,29 +826,17 @@
           (macro-ratnum-numerator rat))
      (macro-ratnum-denominator rat)))
 
-  (define (flo+big flo big)
+  (define (flo+exact_real flo real)
     (if (or (##flinfinite? flo)
             (##flnan? flo))
         flo
-        (let ((inexact-big (##exact-int->flonum big)))
+        (let ((inexact-real (##inexact real)))
           (cond ((##flzero? flo)
-                 inexact-big)
-                ((##flonum-full-precision? inexact-big)
-                 (##fl+ flo inexact-big)) ;; may incur double rounding
+                 inexact-real)
+                ((##flonum-full-precision? inexact-real)
+                 (##fl+ flo inexact-real)) ;; may incur double rounding
                 (else
-                 (##exact->inexact (##+ big (##inexact->exact flo))))))))
-
-  (define (flo+rat flo rat)
-    (if (or (##flinfinite? flo)
-            (##flnan? flo))
-        flo
-        (let ((inexact-rat (##ratnum->flonum rat)))
-          (cond ((##flzero? flo)
-                 inexact-rat)
-                ((##flonum-full-precision? inexact-rat)
-                 (##fl+ flo inexact-rat)) ;; may incur double rounding
-                (else
-                 (##exact->inexact (##+ rat (##inexact->exact flo))))))))
+                 (##exact->inexact (##+ real (##inexact->exact flo))))))))
 
   (define (complex+real c r)
     ;; adding a real to a complex leaves the imaginary
@@ -888,7 +876,7 @@
           (##bignum.+ x (##fixnum->bignum y)))
       (##bignum.+ x y)
       (int+rat x y)
-      (flo+big y x)
+      (flo+exact_real y x)
       (complex+real y x))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = ratnum
@@ -897,15 +885,15 @@
           (int+rat y x))
       (int+rat y x)
       (##ratnum.+ x y)
-      (flo+rat y x)
+      (flo+exact_real y x)
       (complex+real y x))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = flonum
       (if (and (macro-special-case-exact-zero?) (##fxzero? y))
           x
           (##fl+ x (##fixnum->flonum y)))
-      (flo+big x y)
-      (flo+rat x y)
+      (flo+exact_real x y)
+      (flo+exact_real x y)
       (##fl+ x y)
       (complex+real y x))
 
@@ -962,25 +950,15 @@
           (##make-rectangular (##- (##* a real) (##* b 0))
                               (##+ (##* a 0)    (##* b real))))))
 
-  (define (flo*big flo big)
+  (define (flo*exact_real flo real)
     (if (or (##flinfinite? flo)
             (##flzero? flo))
-        (if (##bignum.negative? big)
+        (if (##negative? real)
             (##fl- flo) flo)
-        (let ((inexact-big (##exact-int->flonum big)))
-          (if (##flonum-full-precision? inexact-big)
-              (##fl* flo inexact-big) ;; may incur double rounding
-              (##exact->inexact (##* big (##inexact->exact flo)))))))
-
-  (define (flo*rat flo rat)
-    (if (or (##flinfinite? flo)
-            (##flzero? flo))
-        (if (##negative? (macro-ratnum-numerator rat))
-            (##fl- flo) flo)
-        (let ((inexact-rat (##ratnum->flonum rat)))
-          (if (##flonum-full-precision? inexact-rat)
-              (##fl* flo inexact-rat) ;; may incur double rouonding
-              (##exact->inexact (##* rat (##inexact->exact flo)))))))
+        (let ((inexact-real (##inexact real)))
+          (if (##flonum-full-precision? inexact-real)
+              (##fl* flo inexact-real) ;; may incur double rounding
+              (##exact->inexact (##* real (##inexact->exact flo)))))))
 
   (macro-number-dispatch x (type-error-on-x)
 
@@ -1037,7 +1015,7 @@
              (##bignum.* x (##fixnum->bignum y))))
       (##bignum.* x y)
       (int*rat x y)
-      (flo*big y x)
+      (flo*exact_real y x)
       (complex*real y x))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = ratnum
@@ -1051,7 +1029,7 @@
              (int*rat y x)))
       (int*rat y x)
       (##ratnum.* x y)
-      (flo*rat y x)
+      (flo*exact_real y x)
       (complex*real y x))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = flonum
@@ -1061,8 +1039,8 @@
              x)
             (else
              (##fl* x (##fixnum->flonum y))))
-      (flo*big x y)
-      (flo*rat x y)
+      (flo*exact_real x y)
+      (flo*exact_real x y)
       (##fl* x y)
       (complex*real y x))
 
@@ -1184,6 +1162,30 @@
                int))
      (macro-ratnum-denominator rat)))
 
+  (define (flo-exact_real flo real)
+    (if (or (##flinfinite? flo)
+            (##flnan? flo))
+        flo
+        (let ((inexact-real (##inexact real)))
+          (cond ((##flzero? flo)
+                 (##fl- inexact-real))
+                ((##flonum-full-precision? inexact-real)
+                 (##fl- flo inexact-real)) ;; may incur double rounding
+                (else
+                 (##exact->inexact (##- (##inexact->exact flo) real)))))))
+
+  (define (exact_real-flo real flo)
+    (if (or (##flinfinite? flo)
+            (##flnan? flo))
+        (##fl- flo)
+        (let ((inexact-real (##inexact real)))
+          (cond ((##flzero? flo)
+                 (##fl- inexact-real))
+                ((##flonum-full-precision? inexact-real)
+                 (##fl- inexact-real flo)) ;; may incur double rounding
+                (else
+                 (##exact->inexact (##- real (##inexact->exact flo))))))))
+
   (macro-number-dispatch x (type-error-on-x)
 
     (macro-number-dispatch y (type-error-on-y) ;; x = fixnum
@@ -1206,16 +1208,7 @@
           (##bignum.- x (##fixnum->bignum y)))
       (##bignum.- x y)
       (int-rat x y)
-      (if (or (##flinfinite? y)
-              (##flnan? y))
-          (##fl- y)
-          (let ((inexact-x (##exact-int->flonum x)))
-            (cond ((##flzero? y)
-                   inexact-x)
-                  ((##flonum-full-precision? inexact-x)
-                   (##fl- inexact-x y)) ;; may incur double rounding
-                  (else
-                   (##exact->inexact (##- x (##inexact->exact y)))))))
+      (exact_real-flo x y)
       (##cpxnum.- (macro-noncpxnum->cpxnum x) y))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = ratnum
@@ -1224,42 +1217,15 @@
           (rat-int x y))
       (rat-int x y)
       (##ratnum.- x y)
-      (if (or (##flinfinite? y)
-              (##flnan? y))
-          (##fl- y)
-          (let ((inexact-x (##ratnum->flonum x)))
-            (cond ((##flzero? y)
-                   (##fl- inexact-x))
-                  ((##flonum-full-precision? inexact-x)
-                   (##fl- inexact-x y)) ;; may incur double rounding
-                  (else
-                   (##exact->inexact (##- x (##inexact->exact y)))))))
+      (exact_real-flo x y)
       (##cpxnum.- (macro-noncpxnum->cpxnum x) y))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = flonum
       (if (and (macro-special-case-exact-zero?) (##fxzero? y))
           x
           (##fl- x (##fixnum->flonum y)))
-      (if (or (##flinfinite? x)
-              (##flnan? x))
-          x
-          (let ((inexact-y (##exact-int->flonum y)))
-            (cond ((##flzero? x)
-                   (##fl- inexact-y))
-                  ((##flonum-full-precision? inexact-y)
-                   (##fl- x inexact-y)) ;; may incur double rounding
-                  (else
-                   (##exact->inexact (##- (##inexact->exact x) y))))))
-      (if (or (##flinfinite? x)
-              (##flnan? x))
-          x
-          (let ((inexact-y (##ratnum->flonum y)))
-            (cond ((##flzero? x)
-                   (##fl- inexact-y))
-                  ((##flonum-full-precision? inexact-y)
-                   (##fl- x inexact-y)) ;; may incur double rounding
-                  (else
-                   (##exact->inexact (##- (##inexact->exact x) y))))))
+      (flo-exact_real x y)
+      (flo-exact_real x y)
       (##fl- x y)
       (##cpxnum.- (macro-noncpxnum->cpxnum x) y))
 
@@ -1364,6 +1330,26 @@
           (macro-ratnum-make (##negate result-num) (##negate result-den))
           (macro-ratnum-make result-num result-den))))
 
+  (define (flo/exact_real flo real)
+    (if (or (##flinfinite? flo)
+              (##flzero? flo))
+          (if (##negative? real)
+              (##fl- flo) flo)
+          (let ((inexact-real (##inexact real)))
+            (if (##flonum-full-precision? inexact-real)
+                (##fl/ flo inexact-real) ;; may incur double rounding
+                (##exact->inexact (##/ (##inexact->exact flo) real))))))
+
+  (define (exact_real/flo real flo)
+    (if (or (##flzero? flo)
+            (##flinfinite? flo))
+        (if (##negative? real)
+            (##fl- (##fl/ flo)) (##fl/ flo))
+        (let ((inexact-real (##inexact real)))
+          (if (##flonum-full-precision? inexact-real)
+              (##fl/ inexact-real flo) ;; may incur double rounding
+              (##exact->inexact (##/ real (##inexact->exact flo)))))))
+
   (define (divide-exact-ints)
     (macro-if-ratnum
      (##ratnum.normalize x y)
@@ -1425,14 +1411,7 @@
              (divide-exact-ints)))
       (divide-exact-ints)
       (rat/int x y)
-      (if (or (##flinfinite? x)
-              (##flzero? x))
-          (if (##bignum.negative? y)
-              (##fl- x) x)
-          (let ((inexact-y (##exact-int->flonum y)))
-            (if (##flonum-full-precision? inexact-y)
-                (##fl/ x y) ;; may incur double rounding
-                (##exact->inexact (##/ (##inexact->exact x) y)))))
+      (flo/exact_real x y)
       (##cpxnum./ x (macro-noncpxnum->cpxnum y)))
 
     (macro-number-dispatch x (type-error-on-x) ;; y = ratnum
@@ -1444,36 +1423,15 @@
              (int/rat x y)))
       (int/rat x y)
       (##ratnum./ x y)
-      (if (or (##flinfinite? x)
-              (##flzero? x))
-          (if (##negative? (macro-ratnum-numerator y))
-              (##fl- x) x)
-          (let ((inexact-y (##ratnum->flonum y)))
-            (if (##flonum-full-precision? inexact-y)
-                (##fl* x inexact-y) ;; may incur double rounding
-                (##exact->inexact (##/ (##inexact->exact x) y)))))
+      (flo/exact_real x y)
       (##cpxnum./ x (macro-noncpxnum->cpxnum y)))
 
     (macro-number-dispatch x (type-error-on-x) ;; y = flonum, no error possible
       (if (and (macro-special-case-exact-zero?) (##fxzero? x))
           0
           (##fl/ (##fixnum->flonum x) y))
-      (if (or (##flzero? y)
-              (##flinfinite? y))
-          (if (##bignum.negative? x)
-              (##fl- (##fl/ y)) (##fl/ y))
-          (let ((inexact-x (##exact-int->flonum x)))
-            (if (##flonum-full-precision? inexact-x)
-                (##fl/ inexact-x y) ;; may incur double rounding
-                (##exact->inexact (##/ x (##inexact->exact y))))))
-      (if (or (##flzero? y)
-              (##flinfinite? y))
-          (if (##negative? (macro-ratnum-numerator x))
-              (##fl- (##fl/ y)) (##fl/ y))
-          (let ((inexact-x (##ratnum->flonum x)))
-            (if (##flonum-full-precision? inexact-x)
-                (##fl/ inexact-x y) ;; may incur double rounding
-                (##exact->inexact (##/ x (##inexact->exact y))))))
+      (exact_real/flo x y)
+      (exact_real/flo x y)
       (##fl/ x y)
       (##cpxnum./ x (macro-noncpxnum->cpxnum y)))
 
