@@ -938,6 +938,20 @@
           (##make-rectangular (##- (##* a real) (##* b 0))
                               (##+ (##* a 0)    (##* b real))))))
 
+  (define (flo*big flo big)
+    (if (or (##flinfinite? flo)
+            (##flzero? flo))
+        (if (##bignum.negative? big)
+            (##fl- flo) flo)
+        (##exact->inexact (##* big (##inexact->exact flo)))))
+
+  (define (flo*rat flo rat)
+    (if (or (##flinfinite? flo)
+            (##flzero? flo))
+        (if (##negative? (macro-ratnum-numerator rat))
+            (##fl- flo) flo)
+        (##exact->inexact (##* rat (##inexact->exact flo)))))
+
   (macro-number-dispatch x (type-error-on-x)
 
     (macro-number-dispatch y (type-error-on-y) ;; x = fixnum
@@ -993,7 +1007,7 @@
              (##bignum.* x (##fixnum->bignum y))))
       (##bignum.* x y)
       (int*rat x y)
-      (##fl* (##exact-int->flonum x) y)
+      (flo*big y x)
       (complex*real y x))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = ratnum
@@ -1007,7 +1021,7 @@
              (int*rat y x)))
       (int*rat y x)
       (##ratnum.* x y)
-      (##fl* (##ratnum->flonum x) y)
+      (flo*rat y x)
       (complex*real y x))
 
     (macro-number-dispatch y (type-error-on-y) ;; x = flonum
@@ -1017,8 +1031,8 @@
              x)
             (else
              (##fl* x (##fixnum->flonum y))))
-      (##fl* x (##exact-int->flonum y))
-      (##fl* x (##ratnum->flonum y))
+      (flo*big x y)
+      (flo*rat x y)
       (##fl* x y)
       (complex*real y x))
 
@@ -1345,7 +1359,11 @@
              (divide-exact-ints)))
       (divide-exact-ints)
       (rat/int x y)
-      (##fl/ x (##exact-int->flonum y))
+      (if (or (##flinfinite? x)
+              (##flzero? x))
+          (if (##bignum.negative? y)
+              (##fl- x) x)
+          (##exact->inexact (##/ (##inexact->exact x) y)))
       (##cpxnum./ x (macro-noncpxnum->cpxnum y)))
 
     (macro-number-dispatch x (type-error-on-x) ;; y = ratnum
@@ -1357,15 +1375,27 @@
              (int/rat x y)))
       (int/rat x y)
       (##ratnum./ x y)
-      (##fl/ x (##ratnum->flonum y))
+      (if (or (##flinfinite? x)
+              (##flzero? x))
+          (if (##negative? (macro-ratnum-numerator y))
+              (##fl- x) x)
+          (##exact->inexact (##/ (##inexact->exact x) y)))
       (##cpxnum./ x (macro-noncpxnum->cpxnum y)))
 
     (macro-number-dispatch x (type-error-on-x) ;; y = flonum, no error possible
       (if (and (macro-special-case-exact-zero?) (##fxzero? x))
           0
           (##fl/ (##fixnum->flonum x) y))
-      (##fl/ (##exact-int->flonum x) y)
-      (##fl/ (##ratnum->flonum x) y)
+      (if (or (##flzero? y)
+              (##flinfinite? y))
+          (if (##bignum.negative? x)
+              (##fl- (##fl/ y)) (##fl/ y))
+          (##exact->inexact (##/ x (##inexact->exact y))))
+      (if (or (##flzero? y)
+              (##flinfinite? y))
+          (if (##negative? (macro-ratnum-numerator x))
+              (##fl- (##fl/ y)) (##fl/ y))
+          (##exact->inexact (##/ x (##inexact->exact y))))
       (##fl/ x y)
       (##cpxnum./ x (macro-noncpxnum->cpxnum y)))
 
