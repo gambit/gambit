@@ -4036,7 +4036,11 @@ for a discussion of branch cuts.
              (##flexpt (##ratnum->flonum x) y))
             (else
              (complex-expt x y)))
-      (cond ((##flnan? x)
+      (cond ((##flzero? y)
+             (macro-inexact-+1))
+            ((##fl= x (macro-inexact-+1))
+             (macro-inexact-+1))
+            ((##flnan? x)
              x)
             ((##flnan? y)
              y)
