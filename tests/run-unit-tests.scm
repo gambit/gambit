@@ -9,6 +9,7 @@
 ;;;----------------------------------------------------------------------------
 
 (define cleanup? #t)
+(define expansion? #f)
 
 (define nb-good 0)
 (define nb-fail 0)
@@ -210,20 +211,51 @@
         ((member mode '(gsc gsc-dbg))
          (case target
            ((C)
-            (let* ((filename "_test.o1")
-                   (result (run "../gsc/gsc" (add-inst-dirs "-:debug-settings=-,io-settings=lu") "-f" "-o" filename file)))
+            (let* ((filename
+                    "_test.o1")
+                   (args
+                    (append
+                     (list "../gsc/gsc"
+                           (add-inst-dirs "-:debug-settings=-,io-settings=lu")
+                           "-f"
+                           "-o" filename)
+                     (if expansion? '("-expansion") '())
+                     (if cleanup? '() '("-keep-temp"))
+                     (list file)))
+                   (result
+                    (apply run args)))
               (if (= 0 (car result))
-                  (let ((result (run-gsi-under-debugger filename (eq? mode 'gsc-dbg) target)))
-                    (if cleanup? (delete-file filename))
-                    result)
+                  (begin
+                    (if expansion?
+                        (display (cdr result)))
+                    (let ((result (run-gsi-under-debugger filename (eq? mode 'gsc-dbg) target)))
+                      (if cleanup? (delete-file filename))
+                      result))
                   result)))
            (else
-            (let* ((filename "_test.bat")
-                   (result (run "../gsc/gsc" (add-inst-dirs "-:debug-settings=-,io-settings=lu") "-warnings" "-target" (symbol->string target) "-exe" "-postlude" "(##exit)" "-o" filename file)))
+            (let* ((filename
+                    "_test.bat")
+                   (args
+                    (append
+                     (list "../gsc/gsc"
+                           (add-inst-dirs "-:debug-settings=-,io-settings=lu")
+                           "-warnings"
+                           "-target" (symbol->string target)
+                           "-exe"
+                           "-postlude" "(##exit)"
+                           "-o" filename)
+                     (if expansion? '("-expansion") '())
+                     (if cleanup? '() '("-keep-temp"))
+                     (list file)))
+                   (result
+                    (apply run args)))
               (if (= 0 (car result))
-                  (let ((result (run (path-expand filename))))
-                    (if cleanup? (delete-file filename))
-                    result)
+                  (begin
+                    (if expansion?
+                        (display (cdr result)))
+                    (let ((result (run (path-expand filename))))
+                      (if cleanup? (delete-file filename))
+                      result))
                   result)))))))
 
 (define (trim-filename file)
@@ -334,7 +366,11 @@
              (> (string-length (car args)) 1)
              (char=? #\- (string-ref (car args) 0)))
         (let ((word (substring (car args) 1 (string-length (car args)))))
-          (cond ((equal? word "stress")
+          (cond ((equal? word "no-cleanup")
+                 (set! cleanup? #f))
+                ((equal? word "expansion")
+                 (set! expansion? #t))
+                ((equal? word "stress")
                  (set! stress? #t))
                 ((member word '("C" "js" "python" "ruby" "php" "go" "java"))
                  (set! targets
