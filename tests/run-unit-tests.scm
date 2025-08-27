@@ -1,10 +1,10 @@
-#! /usr/bin/env ../gsi/gsi
+#! /usr/bin/env ../gsi/gsi -:=..
 
 ;;;============================================================================
 
 ;;; File: "run-unit-tests.scm"
 
-;;; Copyright (c) 2012-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2012-2025 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
