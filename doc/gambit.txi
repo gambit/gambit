@@ -15864,9 +15864,9 @@ This setting indicates the location of the executable program in the
 filesystem.  There is no default value for this setting.
 
 @item
-@code{arguments:} @var{list-of-strings}
+@code{arguments:} @var{list-of-strings-or-u8vectors}
 
-This setting indicates the string arguments that are passed to the
+This setting indicates the string or u8vector arguments that are passed to the
 program.  The default value of this setting is the empty list (i.e. no
 arguments).
 

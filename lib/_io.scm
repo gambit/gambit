@@ -7124,11 +7124,31 @@
   (define (fail)
     (##fail-check-string-or-settings 1 prim path-or-settings arg2))
 
+  (define (utf8 string)
+    (u8vector->string (##string->utf8 string)))
+
+  (define (u8vector->string u8vect)
+    (##list->string (##map ##integer->char (##u8vector->list u8vect))))
+
   (##make-process-psettings
    direction
    (if (##string? path-or-settings)
        (##list 'path: path-or-settings)
-       path-or-settings)
+       (let normalize-settings ((settings path-or-settings))
+         (if (##eq? (##car settings) 'arguments:)
+             (##cons 'arguments:
+                     (##cons (##map
+                              (lambda (argument)
+                                (cond
+                                  ((##string? argument)
+                                   (utf8 argument))
+                                  ((##u8vector? argument)
+                                   (u8vector->string argument))
+                                  (else argument)))
+                              (##cadr settings))
+                             (##cddr settings)))
+             (##cons (##car settings)
+                     (normalize-settings (##cdr settings))))))
    fail
    (lambda (psettings)
      (let ((path (macro-psettings-path psettings))
