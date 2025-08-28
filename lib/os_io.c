@@ -8621,31 +8621,54 @@ ___mask_child_interrupts_state *state;)
 
 /*---------------------------------------------------------------------------*/
 
-#ifndef ___STREAM_OPEN_PROCESS_CE_SELECT
+#ifdef ___PROCESS_PATH_AND_ARGS_ENCODING_LATIN1
+#define ___PROCESS_PATH_AND_ARGS_ENCODING(latin1,utf8,ucs2,ucs4,wchar,native) latin1
+#else
+#ifdef ___PROCESS_PATH_AND_ARGS_ENCODING_UTF8
+#define ___PROCESS_PATH_AND_ARGS_ENCODING(latin1,utf8,ucs2,ucs4,wchar,native) utf8
+#else
+#ifdef ___PROCESS_PATH_AND_ARGS_ENCODING_UCS2
+#define ___PROCESS_PATH_AND_ARGS_ENCODING(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
+#else
+#ifdef ___PROCESS_PATH_AND_ARGS_ENCODING_UCS4
+#define ___PROCESS_PATH_AND_ARGS_ENCODING(latin1,utf8,ucs2,ucs4,wchar,native) ucs4
+#else
+#ifdef ___PROCESS_PATH_AND_ARGS_ENCODING_WCHAR
+#define ___PROCESS_PATH_AND_ARGS_ENCODING(latin1,utf8,ucs2,ucs4,wchar,native) wchar
+#else
+#ifdef ___PROCESS_PATH_AND_ARGS_ENCODING_NATIVE
+#define ___PROCESS_PATH_AND_ARGS_ENCODING(latin1,utf8,ucs2,ucs4,wchar,native) native
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
 
 #ifdef USE_execvp
-#define ___STREAM_OPEN_PROCESS_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
+#define ___PROCESS_PATH_AND_ARGS_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) utf8
 #ifndef USE_openpty
 #ifndef USE_ptsname
-#undef ___STREAM_OPEN_PROCESS_CE_SELECT
+#undef ___PROCESS_PATH_AND_ARGS_CE_SELECT
 #endif
 #endif
 #endif
 
 #ifdef USE_CreateProcess
 #ifdef _UNICODE
-#define ___STREAM_OPEN_PROCESS_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
-#define CP_ENV_FLAGS CREATE_UNICODE_ENVIRONMENT
+#define ___PROCESS_PATH_AND_ARGS_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
 #else
-#define ___STREAM_OPEN_PROCESS_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#define CP_ENV_FLAGS 0
+#define ___PROCESS_PATH_AND_ARGS_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 #endif
 #endif
 
+#ifdef ___PROCESS_PATH_AND_ARGS_CE_SELECT
+
+#ifdef ___PROCESS_PATH_AND_ARGS_ENCODING
+#undef ___PROCESS_PATH_AND_ARGS_CE_SELECT
+#define ___PROCESS_PATH_AND_ARGS_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) \
+___PROCESS_PATH_AND_ARGS_ENCODING(latin1,utf8,ucs2,ucs4,wchar,native)
 #endif
-
-
-#ifdef ___STREAM_OPEN_PROCESS_CE_SELECT
 
 #ifdef USE_execvp
 
@@ -8893,13 +8916,13 @@ ___BOOL avoid_std;)
 #define ___ESCAPE_PROCESS_ARGS
 
 int arg_encoding
-   ___P((___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) arg,
+   ___P((___STRING_TYPE(___PROCESS_PATH_AND_ARGS_CE_SELECT) arg,
          int *len_increase,
          ___BOOL *need_quotes),
         (arg,
          len_increase,
          need_quotes)
-___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) arg;
+___STRING_TYPE(___PROCESS_PATH_AND_ARGS_CE_SELECT) arg;
 int *len_increase;
 ___BOOL *need_quotes;)
 {
@@ -8918,7 +8941,7 @@ ___BOOL *need_quotes;)
 
     while (--j >= 0)
       {
-        ___CHAR_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) c = arg[j];
+        ___CHAR_TYPE(___PROCESS_PATH_AND_ARGS_CE_SELECT) c = arg[j];
         if (c == ___UNICODE_DOUBLEQUOTE ||
             (double_backslash && c == ___UNICODE_BACKSLASH))
           {
@@ -8953,17 +8976,17 @@ ___BOOL *need_quotes;)
   return len;
 }
 
-___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) argv_to_ccmd
-   ___P((___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *argv),
+___STRING_TYPE(___PROCESS_PATH_AND_ARGS_CE_SELECT) argv_to_ccmd
+   ___P((___STRING_TYPE(___PROCESS_PATH_AND_ARGS_CE_SELECT) *argv),
         (argv)
-___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *argv;)
+___STRING_TYPE(___PROCESS_PATH_AND_ARGS_CE_SELECT) *argv;)
 {
-  ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) ccmd;
+  ___STRING_TYPE(___PROCESS_PATH_AND_ARGS_CE_SELECT) ccmd;
   int ccmd_len = 0;
   int i = 0;
   int len_increase;
   ___BOOL need_quotes;
-  ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) arg;
+  ___STRING_TYPE(___PROCESS_PATH_AND_ARGS_CE_SELECT) arg;
 
   while ((arg = argv[i]) != NULL)
     {
@@ -8972,7 +8995,7 @@ ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *argv;)
       i++;
     }
 
-  ccmd = ___CAST(___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT),
+  ccmd = ___CAST(___STRING_TYPE(___PROCESS_PATH_AND_ARGS_CE_SELECT),
                  ___ALLOC_MEM(ccmd_len * sizeof (*ccmd)));
 
   if (ccmd != NULL)
@@ -8997,7 +9020,7 @@ ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *argv;)
 
             while (--j >= 0)
               {
-                ___CHAR_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) c = arg[j];
+                ___CHAR_TYPE(___PROCESS_PATH_AND_ARGS_CE_SELECT) c = arg[j];
                 ccmd[--ccmd_len] = c;
                 if (c == ___UNICODE_DOUBLEQUOTE ||
                     (double_backslash && c == ___UNICODE_BACKSLASH))
@@ -9017,7 +9040,7 @@ ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *argv;)
 
           while (--j >= 0)
             {
-              ___CHAR_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) c = arg[j];
+              ___CHAR_TYPE(___PROCESS_PATH_AND_ARGS_CE_SELECT) c = arg[j];
               ccmd[--ccmd_len] = c;
             }
 
@@ -9078,7 +9101,7 @@ ___STRING_TYPE(___ENVIRON_CE_SELECT) *env;)
 ___SCMOBJ ___device_stream_setup_from_process
    ___P((___device_stream **dev,
          ___device_group *dgroup,
-         ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *argv,
+         ___STRING_TYPE(___PROCESS_PATH_AND_ARGS_CE_SELECT) *argv,
          ___STRING_TYPE(___ENVIRON_CE_SELECT) *env,
          ___STRING_TYPE(___SET_CURRENT_DIRECTORY_PATH_CE_SELECT) dir,
          int options),
@@ -9090,7 +9113,7 @@ ___SCMOBJ ___device_stream_setup_from_process
          options)
 ___device_stream **dev;
 ___device_group *dgroup;
-___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *argv;
+___STRING_TYPE(___PROCESS_PATH_AND_ARGS_CE_SELECT) *argv;
 ___STRING_TYPE(___ENVIRON_CE_SELECT) *env;
 ___STRING_TYPE(___SET_CURRENT_DIRECTORY_PATH_CE_SELECT) dir;
 int options;)
@@ -9322,7 +9345,7 @@ int options;)
   int direction;
   ___device_process *d;
 
-  ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) ccmd;
+  ___STRING_TYPE(___PROCESS_PATH_AND_ARGS_CE_SELECT) ccmd;
   ___STRING_TYPE(___ENVIRON_CE_SELECT) cenv = NULL;
 
   HANDLE hstdin_rd = NULL;
@@ -9423,7 +9446,8 @@ int options;)
                   NULL, /* process handle not inheritable           */
                   NULL, /* thread handle not inheritable            */
                   TRUE, /* set handle inheritance to TRUE           */
-                  (CP_ENV_FLAGS | ((options & SHOW_CONSOLE) ? 0 : CREATE_NO_WINDOW)), /* creation flags */
+                  (___PROCESS_PATH_AND_ARGS_CE_SELECT(0,0,CREATE_UNICODE_ENVIRONMENT,0,0,0) |
+                   ((options & SHOW_CONSOLE) ? 0 : CREATE_NO_WINDOW)), /* creation flags */
                   cenv, /* child's environment                      */
                   dir,  /* child's starting directory               */
                   &si,  /* pointer to STARTUPINFO structure         */
@@ -10533,7 +10557,7 @@ ___SCMOBJ environment;
 ___SCMOBJ directory;
 ___SCMOBJ options;)
 {
-#ifndef ___STREAM_OPEN_PROCESS_CE_SELECT
+#ifndef ___PROCESS_PATH_AND_ARGS_CE_SELECT
 
   return ___FIX(___UNIMPL_ERR);
 
@@ -10551,7 +10575,7 @@ ___SCMOBJ options;)
               path_and_args,
               &argv,
               1,
-              ___CE(___STREAM_OPEN_PROCESS_CE_SELECT)))
+              ___CE(___PROCESS_PATH_AND_ARGS_CE_SELECT)))
       != ___FIX(___NO_ERR) ||
       (environment != ___FAL &&
        (e = ___SCMOBJ_to_NONNULLSTRINGLIST
@@ -10573,7 +10597,7 @@ ___SCMOBJ options;)
       (e = ___device_stream_setup_from_process
              (&dev,
               ___global_device_group (),
-              ___CAST(___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT)*,argv),
+              ___CAST(___STRING_TYPE(___PROCESS_PATH_AND_ARGS_CE_SELECT)*,argv),
               ___CAST(___STRING_TYPE(___ENVIRON_CE_SELECT)*,env),
               ___CAST(___STRING_TYPE(___SET_CURRENT_DIRECTORY_PATH_CE_SELECT),dir),
               ___INT(options)))
