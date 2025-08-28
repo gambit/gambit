@@ -2,7 +2,7 @@
 
 ;;; File: "_utils.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -125,31 +125,57 @@
           (else
            (loop (cdr l) (cons (car l) head))))))
 
-(define (sort-list l <?)
+(define (sort-list lst <?)
 
-  (define (mergesort l)
+  ;; Stable mergesort algorithm
 
-    (define (merge l1 l2)
-      (cond ((null? l1) l2)
-            ((null? l2) l1)
-            (else
-             (let ((e1 (car l1)) (e2 (car l2)))
-               (if (<? e1 e2)
-                 (cons e1 (merge (cdr l1) l2))
-                 (cons e2 (merge l1 (cdr l2))))))))
+  (define (sort lst len)
+    (if (= len 1)
+        (begin
+          (set-cdr! lst '())
+          lst)
+        (let ((len1 (quotient len 2)))
+          (let loop ((n len1) (tail lst))
+            (if (> n 0)
+                (loop (- n 1) (cdr tail))
+                (let ((x (sort tail (- len len1))))
+                  (merge (sort lst len1) x)))))))
 
-    (define (split l)
-      (if (or (null? l) (null? (cdr l)))
-        l
-        (cons (car l) (split (cddr l)))))
+  (define (merge lst1 lst2)
+    (if (pair? lst1)
+        (if (pair? lst2)
+            (let ((x1 (car lst1))
+                  (x2 (car lst2)))
+              (if (<? x2 x1)
+                  (merge-loop lst2 lst2 lst1 (cdr lst2))
+                  (merge-loop lst1 lst1 (cdr lst1) lst2)))
+            lst1)
+        lst2))
 
-    (if (or (null? l) (null? (cdr l)))
-      l
-      (let* ((l1 (mergesort (split l)))
-             (l2 (mergesort (split (cdr l)))))
-        (merge l1 l2))))
+  (define (merge-loop result prev lst1 lst2)
+    (if (pair? lst1)
+        (if (pair? lst2)
+            (let ((x1 (car lst1))
+                  (x2 (car lst2)))
+              (if (<? x2 x1)
+                  (begin
+                    (set-cdr! prev lst2)
+                    (merge-loop result lst2 lst1 (cdr lst2)))
+                  (begin
+                    (set-cdr! prev lst1)
+                    (merge-loop result lst1 (cdr lst1) lst2))))
+            (begin
+              (set-cdr! prev lst1)
+              result))
+        (begin
+          (set-cdr! prev lst2)
+          result)))
 
-  (mergesort l))
+  (let* ((lst (append lst '()))
+         (len (list-length lst)))
+    (if (= len 0)
+        '()
+        (sort lst len))))
 
 (define (list->vect l)
   (let* ((n (list-length l))
