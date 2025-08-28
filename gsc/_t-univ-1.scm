@@ -544,16 +544,20 @@
           ((null? x))
 
           ((pair? x)
-           (case (car x)
-             (($$indent$$)
-              (set! indent-level (+ indent-level 1))
-              (disp (cdr x))
-              (set! indent-level (- indent-level 1)))
-             (($$box$$)
-              (disp (cadr x)))
-             (else
-              (disp (car x))
-              (disp (cdr x)))))
+           (let ((car-x (car x))
+                 (cdr-x (cdr x)))
+             (case car-x
+               (($$indent$$)
+                (set! indent-level (+ indent-level 1))
+                (disp cdr-x)
+                (set! indent-level (- indent-level 1)))
+               (($$box$$)
+                (disp (car cdr-x)))
+               ((null? cdr-x) ;; avoid deep stack on proper lists
+                (disp car-x))
+               (else
+                (disp car-x)
+                (disp cdr-x)))))
 
           ((vector? x)
            (disp (vector->list x)))
@@ -562,7 +566,7 @@
            (indent)
            (display x port))))
 
-   (disp x))
+  (disp x))
 
 (define (univ-display-to-file x path)
   (let ((port (open-output-file-preserving-case path)))
