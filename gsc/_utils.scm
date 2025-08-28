@@ -513,7 +513,7 @@
 ;;
 ;; Transitive closure and topological sorting.
 
-(define (make-gnode var depvars) (vector var depvars)) ; graph node
+(define (make-gnode var depvars) (vector var depvars)) ;; graph node
 (define (gnode-var x) (vector-ref x 0))
 (define (gnode-depvars x) (vector-ref x 1))
 
@@ -527,10 +527,23 @@
     (let loop ((graph-vector graph-vector))
       (let ((changed? #f))
 
+        (define (gnode-get-depvars var)
+          (let loop ((f 0) (l (- (vector-length graph-vector) 1)))
+            (if (< l f)
+                (varset-empty)
+                (let* ((i (quotient (+ l f) 2))
+                       (node (vector-ref graph-vector i)))
+                  (cond ((eq? (gnode-var node) var)
+                         (gnode-depvars node))
+                        ((varset-< var (gnode-var node))
+                         (loop f (- i 1)))
+                        (else
+                         (loop (+ i 1) l)))))))
+
         (define (closure depvars)
           (varset-union-multi
            (cons depvars
-                 (map (lambda (var) (gnode-find-depvars var graph-vector))
+                 (map (lambda (var) (gnode-get-depvars var))
                       (varset->list depvars)))))
 
         (let ((new-graph-vector
@@ -541,69 +554,63 @@
                      (let ((new-depvars (closure (gnode-depvars x))))
                        (if (not (= (varset-size new-depvars)
                                    (varset-size (gnode-depvars x))))
-                         (set! changed? #t))
+                           (set! changed? #t))
                        (vector-set!
                         result
                         i
                         (make-gnode (gnode-var x) new-depvars))))))))
           (if changed?
-            (loop new-graph-vector)
-            (vect->list new-graph-vector)))))))
+              (loop new-graph-vector)
+              (vect->list new-graph-vector)))))))
 
-(define (gnode-find-depvars var graph-vector)
-  (let loop ((f 0) (l (- (vector-length graph-vector) 1)))
-    (if (< l f)
-      (varset-empty)
-      (let* ((i (quotient (+ l f) 2))
-             (node (vector-ref graph-vector i)))
-        (cond ((eq? (gnode-var node) var)
-               (gnode-depvars node))
-              ((varset-< var (gnode-var node))
-               (loop f (- i 1)))
-              (else
-               (loop (+ i 1) l)))))))
+(define (topological-sort graph) ;; topological sort fixed to handle cycles
+  (let loop ((graph graph) (rev-order '()))
 
-(define (gnodes-remove graph gnodes)
-  (if (null? graph)
-    '()
-    (let ((node (car graph)))
-      (if (memq node gnodes)
-        (gnodes-remove (cdr graph) gnodes)
-        (cons node (gnodes-remove (cdr graph) gnodes))))))
+    (define (remove graph nodes-to-remove vars-to-remove)
+      (let loop ((graph graph) (rev-graph '()))
+        (if (pair? graph)
+            (loop (cdr graph)
+                  (let ((node (car graph)))
+                    (if (memq node nodes-to-remove)
+                        rev-graph
+                        (cons (make-gnode
+                               (gnode-var node)
+                               (varset-difference (gnode-depvars node)
+                                                  vars-to-remove))
+                              rev-graph))))
+            (reverse rev-graph))))
 
-(define (topological-sort graph) ; topological sort fixed to handle cycles
-  (if (null? graph)
-    '()
-    (let ((to-remove (or (remove-no-depvars graph) (remove-cycle graph))))
-      (let ((vars (list->varset (map gnode-var to-remove))))
-        (cons vars
-              (topological-sort
-                (map (lambda (x)
-                       (make-gnode
-                         (gnode-var x)
-                         (varset-difference (gnode-depvars x) vars)))
-                     (gnodes-remove graph to-remove))))))))
+    (define (get-no-depvars graph)
+      (let ((nodes-with-no-depvars
+             (keep (lambda (x) (varset-empty? (gnode-depvars x))) graph)))
+        (and (pair? nodes-with-no-depvars)
+             nodes-with-no-depvars)))
 
-(define (remove-no-depvars graph)
-  (let ((nodes-with-no-depvars
-         (keep (lambda (x) (varset-empty? (gnode-depvars x))) graph)))
-    (if (null? nodes-with-no-depvars)
-      #f
-      nodes-with-no-depvars)))
+    (define (get-cycle graph)
 
-(define (remove-cycle graph)
-  (define (remove l)
-    (let* ((node (car l))
-           (depvars (gnode-depvars node)))
-      (define (equal-depvars? x) (varset-equal? (gnode-depvars x) depvars))
-      (define (member-depvars? x) (varset-member? (gnode-var x) depvars))
-      (if (member-depvars? node)
-        (let ((depvar-graph (keep member-depvars? graph)))
-          (if (every? equal-depvars? depvar-graph)
-            depvar-graph
-            (remove (cdr l))))
-        (remove (cdr l)))))
-  (remove graph))
+      (define (remove lst)
+        (let* ((node (car lst))
+               (depvars (gnode-depvars node)))
+          (define (equal-depvars? x) (varset-equal? (gnode-depvars x) depvars))
+          (define (member-depvars? x) (varset-member? (gnode-var x) depvars))
+          (if (member-depvars? node)
+              (let ((depvar-graph (keep member-depvars? graph)))
+                (if (every? equal-depvars? depvar-graph)
+                    depvar-graph
+                    (remove (cdr lst))))
+              (remove (cdr lst)))))
+
+      (remove graph))
+
+    (if (pair? graph)
+        (let* ((nodes-to-remove
+                (or (get-no-depvars graph)
+                    (get-cycle graph)))
+               (vars-to-remove
+                (list->varset (map gnode-var nodes-to-remove))))
+          (loop (remove graph nodes-to-remove vars-to-remove)
+                (cons vars-to-remove rev-order)))
+        (reverse rev-order))))
 
 ;;;----------------------------------------------------------------------------
 ;;
