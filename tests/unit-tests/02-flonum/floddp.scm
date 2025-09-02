@@ -11,12 +11,8 @@
 (check-eqv? (##flodd? 3.0)    #t)
 (check-eqv? (##flodd? -3.0)   #t)
 
-(check-eqv? (flodd? +inf.0) #f)
-(check-eqv? (flodd? -inf.0) #f)
 (check-eqv? (flodd? -0.0)   #f)
 (check-eqv? (flodd? 0.0)    #f)
-(check-eqv? (flodd? 1.5)    #f)
-(check-eqv? (flodd? -1.5)   #f)
 (check-eqv? (flodd? 2.0)    #f)
 (check-eqv? (flodd? -2.0)   #f)
 (check-eqv? (flodd? 3.0)    #t)
@@ -27,3 +23,8 @@
 
 (check-tail-exn type-exception? (lambda () (flodd? 1)))
 (check-tail-exn type-exception? (lambda () (flodd? 1/2)))
+(check-tail-exn type-exception? (lambda () (flodd? +inf.0)))
+(check-tail-exn type-exception? (lambda () (flodd? -inf.0)))
+(check-tail-exn type-exception? (lambda () (flodd? +nan.0)))
+(check-tail-exn type-exception? (lambda () (flodd? 1.5)))
+(check-tail-exn type-exception? (lambda () (flodd? -1.5)))

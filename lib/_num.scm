@@ -12300,7 +12300,7 @@ end-of-code
 ;;; -----------------
 
 (##define-macro (define-prim-flonum form . special-body)
-  (let ((body (if (null? special-body) form `(begin ,@special-body))))
+  (let ((body (if (null? special-body) form `(let () ,@special-body))))
     (cond ((= 1 (length (cdr form)))
            (let* ((name-fn (car form))
                   (name-param1 (cadr form)))
@@ -12475,14 +12475,26 @@ end-of-code
   (##flodd? x)) ;; TODO: remove after bootstrap
 
 (define-prim-flonum (flodd? x)
-  (##flodd? x))
+
+  (define (type-error)
+    (##fail-check-integer 1 flodd? x))
+
+  (if (macro-flonum-int? x)
+      (##flodd? x)
+      (type-error)))
 
 (define-prim (##fleven? x))
 (define-prim (##ifleven? x)
   (##fleven? x)) ;; TODO: remove after bootstrap
 
 (define-prim-flonum (fleven? x)
-  (##fleven? x))
+
+  (define (type-error)
+    (##fail-check-integer 1 fleven? x))
+
+  (if (macro-flonum-int? x)
+      (##fleven? x)
+      (type-error)))
 
 (define-prim (##flfinite? x))
 (define-prim (##iflfinite? x)
