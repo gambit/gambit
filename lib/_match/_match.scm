@@ -2,11 +2,11 @@
 
 ;;; File: "_match.scm"
 
-;;; Copyright (c) 2008-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2008-2025 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
-;; Pattern-matching 'match' special form.
+;; Pattern-matching 'match' and 'match-syntax' special forms.
 
 (##supply-module _match)
 
