@@ -5328,6 +5328,7 @@ for a discussion of branch cuts.
                            (##f64vector-length exact-10^n-table))
                     (##fx< exponent
                            (##f64vector-length exact-10^n-table)))
+
                (if (##fx< exponent 0)
                    (##fl/ (##fixnum->flonum uinteger)
                           (##f64vector-ref exact-10^n-table
@@ -5335,9 +5336,35 @@ for a discussion of branch cuts.
                    (##fl* (##fixnum->flonum uinteger)
                           (##f64vector-ref exact-10^n-table
                                            exponent)))
-               (##exact->inexact
-                (##* uinteger
-                     (##exact-int.expt 10 exponent))))))
+
+               (let* ((conservative-exponent-base2
+                       ;; use 3 as a conservative (log 10 2)
+                       (or (and (##fixnum? exponent)
+                                (##fx*? 3 exponent))
+                           (##* 3 exponent)))
+                      (conservative-log2-of-uinteger
+                       (##fx- (if (##fixnum? uinteger)
+                                  (##fxlength uinteger)
+                                  (##integer-length uinteger))
+                              1))
+                      (conservative-log2-of-n
+                       (or (and (##fixnum? conservative-exponent-base2)
+                                (##fx+? conservative-exponent-base2
+                                        conservative-log2-of-uinteger))
+                           (##+ conservative-exponent-base2
+                                conservative-log2-of-uinteger))))
+                 (cond ((##bignum? conservative-log2-of-n)
+                        (if (##bignum.negative? conservative-log2-of-n)
+                            (macro-inexact-+0)
+                            (macro-inexact-+inf)))
+                       ((##fx< conservative-log2-of-n (macro-flonum-e-min))
+                        (macro-inexact-+0))
+                       ((##fx> conservative-log2-of-n (macro-flonum-e-max))
+                        (macro-inexact-+inf))
+                       (else
+                        (##exact->inexact
+                         (##* uinteger
+                              (##exact-int.expt 10 exponent)))))))))
       (if (##char=? sign #\-)
           (##flcopysign n (macro-inexact--1))
           n)))

@@ -2,7 +2,7 @@
 
 ;;; File: "_num#.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -641,6 +641,9 @@
 
 (##define-macro (macro-flonum-e-min) ;; (- (+ (macro-flonum-e-bias) (macro-flonum-m-bits) -1))
   -1074)
+
+(##define-macro (macro-flonum-e-max) ;; (- (- (expt 2 (macro-flonum-e-bits)) 2) (macro-flonum-e-bias))
+  1023)
 
 (##define-macro (macro-flonum-min-normal) ;; (expt 2.0 (+ (macro-flonum-m-bits) (macro-flonum-e-min)))
   (expt 2.0 (+ 52 -1074)))
