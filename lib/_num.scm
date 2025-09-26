@@ -2819,11 +2819,11 @@ for a discussion of branch cuts.
                   (y^2 (##flsquare y))
                   (rho (##fl+ x^2 y^2)))
              (if (or (##flinfinite? rho)     ;; false if rho is NaN
-                     (and (or (##fl< x^2 (macro-inexact-lambda)) ;; underflow?
-                              (##fl< y^2 (macro-inexact-lambda)))
+                     (and (or (##fl< x^2 (macro-flonum-min-normal)) ;; underflow?
+                              (##fl< y^2 (macro-flonum-min-normal)))
                           (##fl< rho
                                  (##fl/
-                                  (macro-inexact-lambda) ;; false if rho is NaN
+                                  (macro-flonum-min-normal) ;; false if rho is NaN
                                   (macro-inexact-epsilon)))))
                  ;; rho is not NaN, so x and y are not NaN,
                  ;; and x and y are not infinite.  Whew.
@@ -2919,8 +2919,7 @@ for a discussion of branch cuts.
         (##inexact->exact (##flcopysign (macro-inexact-+1) x))
         (if (##negative? x) -1 1)))
 
-  (let* ((pi/2 (##* 2 (##atan 1)))
-         (theta (##fl/ (##flsqrt (macro-inexact-omega)) (macro-inexact-+4)))
+  (let* ((theta (##fl/ (##flsqrt (macro-flonum-max-normal)) (macro-inexact-+4)))
          (rho (##fl/ theta))
          (beta (##->exact-sign (##real-part x+iy))) ;; beta is exact
          (x+iy (##* beta (##conjugate x+iy)))
@@ -2932,14 +2931,16 @@ for a discussion of branch cuts.
          (zeta (cond ((or (##fl< theta inexact-x)
                           (##fl< theta abs-y))
                       (macro-cpxnum-make (##exact->inexact (x/x^2+y^2 inexact-x inexact-y))
-                                         (##flcopysign pi/2 inexact-y)))
+                                         (##flcopysign (macro-inexact-+pi/2) inexact-y)))
                      ((##fl= inexact-x (macro-inexact-+1))
                       (macro-cpxnum-make
                        (if (fl= inexact-y (macro-inexact-+0))
                            (macro-inexact--inf)
                            (##fllog (##fl/ (##flsqrt (##flsqrt (##fl+ (macro-inexact-+4) (##flsquare abs-y))))
                                            (##flsqrt (##fl+ abs-y rho)))))
-                       (##fl/ (##flcopysign (##fl+ pi/2 (##flatan (##fl/ (##fl+ abs-y rho) (macro-inexact-+2))))
+                       (##fl/ (##flcopysign (##fl+ (macro-inexact-+pi/2)
+                                                   (##flatan (##fl/ (##fl+ abs-y rho)
+                                                                    (macro-inexact-+2))))
                                             inexact-y)
                               (macro-inexact-+2))))
                      (else
@@ -2963,7 +2964,7 @@ for a discussion of branch cuts.
   ;; we assume that neither xi nor eta can be exact 0
   (let* ((xi  (macro-cpxnum-real xi+ieta))
          (eta (macro-cpxnum-imag xi+ieta)))
-    (if (##< (##fl/ (##flasinh (macro-inexact-omega)) (macro-inexact-+4))
+    (if (##< (##fl/ (##flasinh (macro-flonum-max-normal)) (macro-inexact-+4))
              (##abs xi))
         (macro-cpxnum-make
          (##flcopysign (macro-inexact-+1) (##exact->inexact xi))   ;; xi cannot be exact 0
