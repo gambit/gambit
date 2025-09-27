@@ -3010,8 +3010,13 @@
          (name2constx
           (if (and (pair? maybe-name2constyx) (pair? (cdr maybe-name2constyx)))
               (cadr maybe-name2constyx)
-              name2)))
-    (targ-apply-fold #t flo? name0 name1 name2 name2consty name2constx)))
+              name2))
+         (fixnum32?
+          (and (pair? maybe-name2constyx)
+               (pair? (cdr maybe-name2constyx))
+               (pair? (cddr maybe-name2constyx))
+               (caddr maybe-name2constyx))))
+    (targ-apply-fold #t flo? name0 name1 name2 name2consty name2constx fixnum32?)))
 
 (define (targ-apply-fold-u flo? name0 name1 name2 . maybe-name2constyx)
   (let* ((name2consty
@@ -3021,12 +3026,17 @@
          (name2constx
           (if (and (pair? maybe-name2constyx) (pair? (cdr maybe-name2constyx)))
               (cadr maybe-name2constyx)
-              name2)))
-    (targ-apply-fold #f flo? name0 name1 name2 name2consty name2constx)))
+              name2))
+         (fixnum32?
+          (and (pair? maybe-name2constyx)
+               (pair? (cdr maybe-name2constyx))
+               (pair? (cddr maybe-name2constyx))
+               (caddr maybe-name2constyx))))
+    (targ-apply-fold #f flo? name0 name1 name2 name2consty name2constx fixnum32?)))
 
-(define (targ-apply-fold proc-safe? flo? name0 name1 name2 name2consty name2constx)
+(define (targ-apply-fold proc-safe? flo? name0 name1 name2 name2consty name2constx fixnum32?)
   (let ((generator
-         (targ-apply-fold-generator flo? name0 name1 name2 name2consty name2constx)))
+         (targ-apply-fold-generator flo? name0 name1 name2 name2consty name2constx fixnum32?)))
     (if flo?
       (targ-apply-alloc
         (lambda (n) 0) ; targ-apply-alloc accounts for space for flonum result
@@ -3049,6 +3059,11 @@
           (if (and (pair? maybe-name2constyx) (pair? (cdr maybe-name2constyx)))
               (cadr maybe-name2constyx)
               name2))
+         (fixnum32?
+          (and (pair? maybe-name2constyx)
+               (pair? (cdr maybe-name2constyx))
+               (pair? (cddr maybe-name2constyx))
+               (caddr maybe-name2constyx)))
          (apply-generator
           (lambda (opnds sn)
             (if (not (pair? opnds))
@@ -3060,9 +3075,16 @@
                       (let* ((o2 (cadr opnds))
                              (o2-code (targ-opnd o2)))
                         (list
-                         (cond ((obj? o2) name2consty)
-                               ((obj? o1) name2constx)
-                               (else      name2))
+                         (cond ((and (obj? o2)
+                                     (or (not fixnum32?)
+                                         (targ-fixnum32? (obj-val o2))))
+                                name2consty)
+                               ((and (obj? o1)
+                                     (or (not fixnum32?)
+                                         (targ-fixnum32? (obj-val o1))))
+                                name2constx)
+                               (else
+                                name2))
                          o1-code
                          o2-code)))))))
          (ifjump-generator
@@ -3344,26 +3366,35 @@
                     args)))
       (cons name (reverse args)))))
 
-(define (targ-apply-fold-generator flo? name0 name1 name2 name2consty name2constx)
+(define (targ-apply-fold-generator flo? name0 name1 name2 name2consty name2constx fixnum32?)
   (lambda (opnds sn)
-    (targ-apply-fold-gen opnds flo? name0 name1 name2 name2consty name2constx)))
+    (targ-apply-fold-gen opnds flo? name0 name1 name2 name2consty name2constx fixnum32?)))
 
-(define (targ-apply-fold-gen opnds flo? name0 name1 name2 name2consty name2constx)
+(define (targ-apply-fold-gen opnds flo? name0 name1 name2 name2consty name2constx fixnum32?)
   (if (not (pair? opnds))
       (list name0)
       (let* ((o (car opnds))
              (o-code (targ-opnd* o flo?)))
         (if (not (pair? (cdr opnds)))
             (list name1 o-code)
-            (let loop ((lst (cdr opnds)) (r-code o-code) (r-obj? (obj? o)))
+            (let loop ((lst (cdr opnds))
+                       (r-code o-code)
+                       (r-obj? (and (obj? o)
+                                    (or (not fixnum32?)
+                                        (targ-fixnum32? (obj-val o))))))
               (if (pair? lst)
                   (let* ((opnd (car lst))
                          (opnd-code (targ-opnd* opnd flo?)))
                     (loop (cdr lst)
                           (list
-                           (cond ((obj? opnd) name2consty)
-                                 (r-obj?      name2constx)
-                                 (else        name2))
+                           (cond ((and (obj? opnd)
+                                       (or (not fixnum32?)
+                                           (targ-fixnum32? (obj-val opnd))))
+                                  name2consty)
+                                 (r-obj?
+                                  name2constx)
+                                 (else
+                                  name2))
                            r-code
                            opnd-code)
                           #f))
@@ -3492,13 +3523,13 @@
 
 (targ-op "##fxwrap+"        (targ-apply-fold-u #f "FIX_0"  "FIXPOS" "FIXWRAPADD"))
 (targ-op "##fx+"            (targ-apply-fold-u #f "FIX_0"  "FIXPOS" "FIXADD"))
-(targ-op "##fx+?"           (targ-apply-ifjump #f #f #f "FIXADDP"))
+(targ-op "##fx+?"           (targ-apply-ifjump #f #f #f "FIXADDP" "FIXADDPCONSTY" "FIXADDPCONSTX" #t))
 (targ-op "##fxwrap*"        (targ-apply-fold-u #f "FIX_1"  "FIXPOS" "FIXWRAPMUL"))
 (targ-op "##fx*"            (targ-apply-fold-u #f "FIX_1"  "FIXPOS" "FIXMUL"))
-(targ-op "##fx*?"           (targ-apply-ifjump #f #f #f "FIXMULP" "FIXMULPCONSTY" "FIXMULPCONSTX"))
+(targ-op "##fx*?"           (targ-apply-ifjump #f #f #f "FIXMULP" "FIXMULPCONSTY" "FIXMULPCONSTX" #t))
 (targ-op "##fxwrap-"        (targ-apply-fold-u #f #f       "FIXWRAPNEG" "FIXWRAPSUB"))
 (targ-op "##fx-"            (targ-apply-fold-u #f #f       "FIXNEG" "FIXSUB"))
-(targ-op "##fx-?"           (targ-apply-ifjump #f #f "FIXNEGP""FIXSUBP"))
+(targ-op "##fx-?"           (targ-apply-ifjump #f #f "FIXNEGP" "FIXSUBP" "FIXSUBPCONSTY" "FIXSUBP" #t))
 (targ-op "##fxwrapquotient" (targ-apply-fold-u #f #f       #f       "FIXWRAPQUO" "FIXWRAPQUOCONSTY"))
 (targ-op "##fxquotient"     (targ-apply-fold-u #f #f       #f       "FIXQUO" "FIXQUOCONSTY"))
 (targ-op "##fxremainder"    (targ-apply-fold-u #f #f       #f       "FIXREM" "FIXREMCONSTY"))

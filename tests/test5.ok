@@ -9294,7 +9294,7 @@ ___DEF_SLBL(15,___L15_mix_23_)
    ___IF(___NOT(___FIXNUMP(___STK(-6))))
    ___GOTO(___L169_mix_23_)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R1,___STK(-6),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R1,___STK(-6),___FIX(1L))))
    ___SET_R1(___FAL)
    ___GOTO(___L168_mix_23_)
    ___END_IF
@@ -9491,7 +9491,7 @@ ___DEF_SLBL(43,___L43_mix_23_)
    ___IF(___NOT(___FIXNUMP(___STK(-6))))
    ___GOTO(___L208_mix_23_)
    ___END_IF
-   ___IF(___NOT(___FIXADDP_NOTFALSEP(___R1,___STK(-6),___FIX(1L))))
+   ___IF(___NOT(___FIXADDPCONSTY_NOTFALSEP(___R1,___STK(-6),___FIX(1L))))
    ___SET_R1(___FAL)
    ___GOTO(___L207_mix_23_)
    ___END_IF
@@ -9533,7 +9533,7 @@ ___DEF_GLBL(___L184_mix_23_)
    ___IF(___NOT(___FIXNUMP(___STK(-6))))
    ___GOTO(___L199_mix_23_)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R1,___STK(-6),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R1,___STK(-6),___FIX(1L))))
    ___SET_R1(___FAL)
    ___GOTO(___L198_mix_23_)
    ___END_IF
@@ -9936,7 +9936,7 @@ ___DEF_SLBL(89,___L89_mix_23_)
    ___IF(___NOT(___FIXNUMP(___STK(-2))))
    ___GOTO(___L227_mix_23_)
    ___END_IF
-   ___IF(___FIXADDP_NOTFALSEP(___R1,___STK(-2),___FIX(1L)))
+   ___IF(___FIXADDPCONSTY_NOTFALSEP(___R1,___STK(-2),___FIX(1L)))
    ___GOTO(___L224_mix_23_)
    ___END_IF
    ___SET_R1(___FAL)
@@ -30360,7 +30360,7 @@ ___DEF_SLBL(117,___L117_run_2d_s32vectors)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L203_run_2d_s32vectors)
    ___END_IF
-   ___IF(___FIXSUBP_NOTFALSEP(___R2,___R1,___FIX(1L)))
+   ___IF(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R1,___FIX(1L)))
    ___GOTO(___L194_run_2d_s32vectors)
    ___END_IF
    ___SET_R2(___FAL)
@@ -30387,7 +30387,7 @@ ___DEF_SLBL(120,___L120_run_2d_s32vectors)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L200_run_2d_s32vectors)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___R1,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R1,___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L199_run_2d_s32vectors)
    ___END_IF
@@ -31513,7 +31513,7 @@ ___DEF_SLBL(105,___L105_run_2d_u32vectors)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L172_run_2d_u32vectors)
    ___END_IF
-   ___IF(___FIXSUBP_NOTFALSEP(___R2,___R1,___FIX(1L)))
+   ___IF(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R1,___FIX(1L)))
    ___GOTO(___L164_run_2d_u32vectors)
    ___END_IF
    ___SET_R2(___FAL)
@@ -31540,7 +31540,7 @@ ___DEF_SLBL(108,___L108_run_2d_u32vectors)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L171_run_2d_u32vectors)
    ___END_IF
-   ___IF(___FIXSUBP_NOTFALSEP(___R2,___R1,___FIX(1L)))
+   ___IF(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R1,___FIX(1L)))
    ___GOTO(___L165_run_2d_u32vectors)
    ___END_IF
    ___SET_R2(___FAL)
@@ -31566,7 +31566,7 @@ ___DEF_SLBL(111,___L111_run_2d_u32vectors)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L170_run_2d_u32vectors)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___R1,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R1,___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L170_run_2d_u32vectors)
    ___END_IF
@@ -32793,7 +32793,7 @@ ___DEF_SLBL(125,___L125_run_2d_s64vectors)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L246_run_2d_s64vectors)
    ___END_IF
-   ___IF(___FIXSUBP_NOTFALSEP(___R2,___R1,___FIX(1L)))
+   ___IF(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R1,___FIX(1L)))
    ___GOTO(___L229_run_2d_s64vectors)
    ___END_IF
    ___SET_R2(___FAL)
@@ -32826,7 +32826,7 @@ ___DEF_SLBL(129,___L129_run_2d_s64vectors)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L243_run_2d_s64vectors)
    ___END_IF
-   ___IF(___FIXSUBP_NOTFALSEP(___R2,___R1,___FIX(1L)))
+   ___IF(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R1,___FIX(1L)))
    ___GOTO(___L230_run_2d_s64vectors)
    ___END_IF
    ___SET_R2(___FAL)
@@ -32852,7 +32852,7 @@ ___DEF_SLBL(132,___L132_run_2d_s64vectors)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L240_run_2d_s64vectors)
    ___END_IF
-   ___IF(___FIXSUBP_NOTFALSEP(___R2,___R1,___FIX(1L)))
+   ___IF(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R1,___FIX(1L)))
    ___GOTO(___L231_run_2d_s64vectors)
    ___END_IF
    ___SET_R2(___FAL)
@@ -32879,7 +32879,7 @@ ___DEF_SLBL(135,___L135_run_2d_s64vectors)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L237_run_2d_s64vectors)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___R1,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R1,___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L236_run_2d_s64vectors)
    ___END_IF
@@ -34207,7 +34207,7 @@ ___DEF_SLBL(111,___L111_run_2d_u64vectors)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L203_run_2d_u64vectors)
    ___END_IF
-   ___IF(___FIXSUBP_NOTFALSEP(___R2,___R1,___FIX(1L)))
+   ___IF(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R1,___FIX(1L)))
    ___GOTO(___L186_run_2d_u64vectors)
    ___END_IF
    ___SET_R2(___FAL)
@@ -34240,7 +34240,7 @@ ___DEF_SLBL(115,___L115_run_2d_u64vectors)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L200_run_2d_u64vectors)
    ___END_IF
-   ___IF(___FIXSUBP_NOTFALSEP(___R2,___R1,___FIX(1L)))
+   ___IF(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R1,___FIX(1L)))
    ___GOTO(___L187_run_2d_u64vectors)
    ___END_IF
    ___SET_R2(___FAL)
@@ -34267,7 +34267,7 @@ ___DEF_SLBL(118,___L118_run_2d_u64vectors)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L197_run_2d_u64vectors)
    ___END_IF
-   ___IF(___FIXSUBP_NOTFALSEP(___R2,___R1,___FIX(1L)))
+   ___IF(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R1,___FIX(1L)))
    ___GOTO(___L188_run_2d_u64vectors)
    ___END_IF
    ___SET_R2(___FAL)
@@ -34293,7 +34293,7 @@ ___DEF_SLBL(121,___L121_run_2d_u64vectors)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L194_run_2d_u64vectors)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___R1,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R1,___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L193_run_2d_u64vectors)
    ___END_IF
@@ -36978,7 +36978,7 @@ ___DEF_GLBL(___L8_width)
    ___GOTO(___L12_width)
    ___END_IF
 ___DEF_GLBL(___L9_width)
-   ___IF(___NOT(___FIXADDP_NOTFALSEP(___R4,___R2,___FIX(1L))))
+   ___IF(___NOT(___FIXADDPCONSTY_NOTFALSEP(___R4,___R2,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L12_width)
    ___END_IF
@@ -37117,7 +37117,7 @@ ___DEF_SLBL(2,___L2_root)
    ___IF(___NOT(___FIXNUMP(___STK(-5))))
    ___GOTO(___L80_root)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___STK(-5),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___STK(-5),___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L80_root)
    ___END_IF
@@ -37185,7 +37185,7 @@ ___DEF_GLBL(___L32_root)
    ___IF(___NOT(___FIXNUMP(___R2)))
    ___GOTO(___L72_root)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R4,___R2,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R4,___R2,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L72_root)
    ___END_IF
@@ -37224,7 +37224,7 @@ ___DEF_GLBL(___L35_root)
    ___END_IF
 ___DEF_GLBL(___L36_root)
    ___ADJFP(1)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___STK(0),___R2,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___STK(0),___R2,___FIX(1L))))
    ___SET_STK(0,___FAL)
    ___GOTO(___L63_root)
    ___END_IF

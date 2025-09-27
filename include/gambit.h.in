@@ -4152,9 +4152,12 @@ ___IS_DOUBLE_OR(obj, \
 
 #define ___FIXWRAPADD(x,y)___W(___FW(___UFW(x)+___UFW(y)))
 #define ___FIXADD(x,y)___W(___FW(x)+___FW(y))
-#define ___FIXADDP(x,y)(___FIXADDP_NOTFALSEP(___temp,x,y)?___temp:___FAL)
 
 #ifndef ___USE_builtin_op_overflow
+
+#define ___FIXADDP(x,y) \
+(___temp=___FIXWRAPADD(x,y), \
+ ___EXPECT_FALSE(___FW((___temp^(x))&(___temp^(y)))<0) ? ___FAL : ___temp)
 
 #define ___FIXADDP_NOTFALSEP(var,x,y) \
 (___temp=___FIXWRAPADD(x,y), \
@@ -4166,13 +4169,41 @@ ___IS_DOUBLE_OR(obj, \
 ___EXPECT_FALSE(__builtin_add_overflow(___FW(x),___FW(y),&var))
 
 #if ___FIXWORD_WIDTH == ___WORD_WIDTH
+#define ___FIXADDP(x,y)(___FIXADDP_NOTFALSEP(___temp,x,y)?___temp:___FAL)
 #define ___FIXADDP_NOTFALSEP(var,x,y)!___FIXADDP_OVERFLOWS(var,x,y)
 #else
+#define ___FIXADDP(x,y) \
+(___FIXADDP_OVERFLOWS(___FIXTEMP,x,y) ? ___FAL : ___W(___FIXTEMP))
 #define ___FIXADDP_NOTFALSEP(var,x,y) \
 (___FIXADDP_OVERFLOWS(___FIXTEMP,x,y) ? 0 : (var=___W(___FIXTEMP),1))
 #endif
 
 #endif
+
+#define ___FIXADDPCONSTY(x,y) \
+((y)==___FIX(0) \
+ ? (x) \
+ : (y)>___FIX(0) \
+   ? (___EXPECT_TRUE(___FIXLE(x,___FIXSUB(___FIX(___MAX_FIX),y))) \
+     ? ___FIXADD(x,y) \
+     : ___FAL) \
+   : ___EXPECT_TRUE(___FIXGE(x,___FIXSUB(___FIX(___MIN_FIX),y))) \
+     ? ___FIXADD(x,y) \
+     : ___FAL)
+
+#define ___FIXADDPCONSTY_NOTFALSEP(var,x,y) \
+((y)==___FIX(0) \
+ ? (var=(x),1) \
+ : (y)>___FIX(0) \
+   ? (___EXPECT_TRUE(___FIXLE(x,___FIXSUB(___FIX(___MAX_FIX),y))) \
+     ? (var=___FIXADD(x,y),1) \
+     : 0) \
+   : ___EXPECT_TRUE(___FIXGE(x,___FIXSUB(___FIX(___MIN_FIX),y))) \
+     ? (var=___FIXADD(x,y),1) \
+     : 0)
+
+#define ___FIXADDPCONSTX(x,y) ___FIXADDPCONSTY(y,x)
+#define ___FIXADDPCONSTX_NOTFALSEP(var,x,y) ___FIXADDPCONSTY_NOTFALSEP(var,y,x)
 
 
 #define ___FIXWRAPMUL(x,y)___W(___FW(___UFW(x)*___UFW(___INT(y))))
@@ -4254,9 +4285,12 @@ ___EXPECT_FALSE(__builtin_mul_overflow(___FW(x),___FW(___INT(y)),&var))
 
 #define ___FIXWRAPSUB(x,y)___W(___FW(___UFW(x)-___UFW(y)))
 #define ___FIXSUB(x,y)___W(___FW(x)-___FW(y))
-#define ___FIXSUBP(x,y)(___FIXSUBP_NOTFALSEP(___temp,x,y)?___temp:___FAL)
 
 #ifndef ___USE_builtin_op_overflow
+
+#define ___FIXSUBP(x,y) \
+(___temp=___FIXWRAPSUB(x,y), \
+ ___EXPECT_FALSE(___FW((___temp^(x))&((y)^(x)))<0) ? ___FAL : ___temp)
 
 #define ___FIXSUBP_NOTFALSEP(var,x,y) \
 (___temp=___FIXWRAPSUB(x,y), \
@@ -4268,13 +4302,38 @@ ___EXPECT_FALSE(__builtin_mul_overflow(___FW(x),___FW(___INT(y)),&var))
 ___EXPECT_FALSE(__builtin_sub_overflow(___FW(x),___FW(y),&var))
 
 #if ___FIXWORD_WIDTH == ___WORD_WIDTH
+#define ___FIXSUBP(x,y)(___FIXSUBP_NOTFALSEP(___temp,x,y)?___temp:___FAL)
 #define ___FIXSUBP_NOTFALSEP(var,x,y)!___FIXSUBP_OVERFLOWS(var,x,y)
 #else
+#define ___FIXSUBP(x,y) \
+(___FIXSUBP_OVERFLOWS(___FIXTEMP,x,y) ? ___FAL : ___W(___FIXTEMP))
 #define ___FIXSUBP_NOTFALSEP(var,x,y) \
 (___FIXSUBP_OVERFLOWS(___FIXTEMP,x,y) ? 0 : (var=___W(___FIXTEMP),1))
 #endif
 
 #endif
+
+#define ___FIXSUBPCONSTY(x,y) \
+((y)==___FIX(0) \
+ ? (x) \
+ : (y)>___FIX(0) \
+   ? (___EXPECT_TRUE(___FIXGE(x,___FIXADD(___FIX(___MIN_FIX),y))) \
+     ? ___FIXSUB(x,y) \
+     : ___FAL) \
+   : ___EXPECT_TRUE(___FIXLE(x,___FIXADD(___FIX(___MAX_FIX),y))) \
+     ? ___FIXSUB(x,y) \
+     : ___FAL)
+
+#define ___FIXSUBPCONSTY_NOTFALSEP(var,x,y) \
+((y)==___FIX(0) \
+ ? (var=(x),1) \
+ : (y)>___FIX(0) \
+   ? (___EXPECT_TRUE(___FIXGE(x,___FIXADD(___FIX(___MIN_FIX),y))) \
+     ? (var=___FIXSUB(x,y),1) \
+     : 0) \
+   : ___EXPECT_TRUE(___FIXLE(x,___FIXADD(___FIX(___MAX_FIX),y))) \
+     ? (var=___FIXSUB(x,y),1) \
+     : 0)
 
 
 #define ___FIXWRAPQUO(x,y)((y)==___FIX(-1)?___FIXWRAPNEG(x):___FIXQUO(x,y))
