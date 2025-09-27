@@ -4138,6 +4138,8 @@ ___IS_DOUBLE_OR(obj, \
 
 #define ___OBJECTBEFOREP(x,y)((x)<(y))
 
+#define ___FIX_BETWEEN(x,lo,hi)(___UFW(x)-___UFW(lo)<=___UFW(hi)-___UFW(lo))
+
 /* APPLY-able operations */
 
 #define ___FIX_0 ___FIX(0)
@@ -4183,10 +4185,6 @@ ___EXPECT_FALSE(__builtin_add_overflow(___FW(x),___FW(y),&var))
 (___temp=___FIXWRAPMUL(x,y), \
  ___EXPECT_FALSE(___FIXQUO(___temp,y)!=(x)) ? 0 : (var=___temp,1))
 
-#define ___FIXMULPCONSTY_NOTFALSEP(var,x,y) \
-(___temp=___FIXWRAPMUL(x,y), \
- ___EXPECT_FALSE(___FIXQUOCONSTY(___temp,y)!=(x)) ? 0 : (var=___temp,1))
-
 #else
 
 #define ___FIXMULP_OVERFLOWS(var,x,y) \
@@ -4199,9 +4197,37 @@ ___EXPECT_FALSE(__builtin_mul_overflow(___FW(x),___FW(___INT(y)),&var))
 (___FIXMULP_OVERFLOWS(___FIXTEMP,x,y) ? 0 : (var=___W(___FIXTEMP),1))
 #endif
 
-#define ___FIXMULPCONSTY_NOTFALSEP(var,x,y)___FIXMULP_NOTFALSEP(var,x,y)
-
 #endif
+
+#define ___FIXMULPCONSTY(x,y) \
+((y)==___FIX(0) \
+ ? ___FIX(0) \
+ : (y)>___FIX(0) \
+   ? ((y)==___FIX(1) \
+      ? (x) \
+      : ___EXPECT_TRUE(___FIX_BETWEEN(x,___FIX(___MIN_FIX/___INT(y)),___FIX(___MAX_FIX/___INT(y)))) \
+        ? ___FIXMUL(x,y) \
+        : ___FAL) \
+   : (y)==___FIX(-1) \
+     ? ___FIXNEGP(x) \
+     : ___EXPECT_TRUE(___FIX_BETWEEN(x,___FIX(___MAX_FIX/___INT(y)),___FIX(___MIN_FIX/___INT(y)))) \
+       ? ___FIXMUL(x,y) \
+       : ___FAL)
+
+#define ___FIXMULPCONSTY_NOTFALSEP(var,x,y) \
+((y)==___FIX(0) \
+ ? (var=___FIX(0),1) \
+ : (y)>___FIX(0) \
+   ? ((y)==___FIX(1) \
+      ? (var=(x),1) \
+      : ___EXPECT_TRUE(___FIX_BETWEEN(x,___FIX(___MIN_FIX/___INT(y)),___FIX(___MAX_FIX/___INT(y)))) \
+        ? (var=___FIXMUL(x,y),1) \
+        : 0) \
+   : (y)==___FIX(-1) \
+     ? (var=___FIXNEGP(x),1) \
+     : ___EXPECT_TRUE(___FIX_BETWEEN(x,___FIX(___MAX_FIX/___INT(y)),___FIX(___MIN_FIX/___INT(y)))) \
+       ? (var=___FIXMUL(x,y),1) \
+       : 0)
 
 
 #define ___FIXWRAPSQUARE(x)___FIXWRAPMUL(x,x)
