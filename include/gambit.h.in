@@ -4229,6 +4229,9 @@ ___EXPECT_FALSE(__builtin_mul_overflow(___FW(x),___FW(___INT(y)),&var))
        ? (var=___FIXMUL(x,y),1) \
        : 0)
 
+#define ___FIXMULPCONSTX(x,y) ___FIXMULPCONSTY(y,x)
+#define ___FIXMULPCONSTX_NOTFALSEP(var,x,y) ___FIXMULPCONSTY_NOTFALSEP(var,y,x)
+
 
 #define ___FIXWRAPSQUARE(x)___FIXWRAPMUL(x,x)
 #define ___FIXSQUARE(x)___FIXMUL(x,x)

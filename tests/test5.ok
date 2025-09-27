@@ -37955,7 +37955,7 @@ ___DEF_GLBL(___L57_pi_2d_brent_2d_salamin)
    ___END_IF
    ___GOTO(___L51_pi_2d_brent_2d_salamin)
 ___DEF_GLBL(___L58_pi_2d_brent_2d_salamin)
-   ___IF(___FIXMULP_NOTFALSEP(___R3,___FIX(4L),___R2))
+   ___IF(___FIXMULPCONSTX_NOTFALSEP(___R3,___FIX(4L),___R2))
    ___GOTO(___L57_pi_2d_brent_2d_salamin)
    ___END_IF
    ___SET_R3(___FAL)
@@ -38208,7 +38208,7 @@ ___DEF_GLBL(___L81_pi_2d_brent_2d_salamin)
    ___END_IF
    ___GOTO(___L83_pi_2d_brent_2d_salamin)
 ___DEF_GLBL(___L82_pi_2d_brent_2d_salamin)
-   ___IF(___FIXMULP_NOTFALSEP(___R1,___FIX(2L),___STK(-6)))
+   ___IF(___FIXMULPCONSTX_NOTFALSEP(___R1,___FIX(2L),___STK(-6)))
    ___GOTO(___L80_pi_2d_brent_2d_salamin)
    ___END_IF
    ___SET_R1(___FAL)
@@ -39216,7 +39216,7 @@ ___DEF_GLBL(___L134_pi_2d_borwein2)
    ___END_IF
    ___GOTO(___L137_pi_2d_borwein2)
 ___DEF_GLBL(___L135_pi_2d_borwein2)
-   ___IF(___NOT(___FIXMULP_NOTFALSEP(___R3,___FIX(2L),___R1)))
+   ___IF(___NOT(___FIXMULPCONSTX_NOTFALSEP(___R3,___FIX(2L),___R1)))
    ___SET_R3(___FAL)
    ___GOTO(___L137_pi_2d_borwein2)
    ___END_IF
@@ -39676,7 +39676,7 @@ ___DEF_GLBL(___L177_pi_2d_borwein2)
    ___END_IF
    ___GOTO(___L180_pi_2d_borwein2)
 ___DEF_GLBL(___L178_pi_2d_borwein2)
-   ___IF(___NOT(___FIXMULP_NOTFALSEP(___R1,___FIX(2L),___STK(-2))))
+   ___IF(___NOT(___FIXMULPCONSTX_NOTFALSEP(___R1,___FIX(2L),___STK(-2))))
    ___SET_R1(___FAL)
    ___GOTO(___L180_pi_2d_borwein2)
    ___END_IF
@@ -39747,7 +39747,7 @@ ___DEF_GLBL(___L185_pi_2d_borwein2)
    ___END_IF
    ___GOTO(___L188_pi_2d_borwein2)
 ___DEF_GLBL(___L186_pi_2d_borwein2)
-   ___IF(___NOT(___FIXMULP_NOTFALSEP(___R3,___FIX(2L),___R1)))
+   ___IF(___NOT(___FIXMULPCONSTX_NOTFALSEP(___R3,___FIX(2L),___R1)))
    ___SET_R3(___FAL)
    ___GOTO(___L188_pi_2d_borwein2)
    ___END_IF
@@ -40494,7 +40494,7 @@ ___DEF_GLBL(___L125_pi_2d_borwein4)
    ___END_IF
    ___GOTO(___L127_pi_2d_borwein4)
 ___DEF_GLBL(___L126_pi_2d_borwein4)
-   ___IF(___FIXMULP_NOTFALSEP(___R1,___FIX(4L),___STK(-6)))
+   ___IF(___FIXMULPCONSTX_NOTFALSEP(___R1,___FIX(4L),___STK(-6)))
    ___GOTO(___L124_pi_2d_borwein4)
    ___END_IF
    ___SET_R1(___FAL)
@@ -41311,7 +41311,7 @@ ___DEF_GLBL(___L218_pi_2d_borwein4)
    ___END_IF
    ___GOTO(___L220_pi_2d_borwein4)
 ___DEF_GLBL(___L219_pi_2d_borwein4)
-   ___IF(___FIXMULP_NOTFALSEP(___R3,___FIX(4L),___R1))
+   ___IF(___FIXMULPCONSTX_NOTFALSEP(___R3,___FIX(4L),___R1))
    ___GOTO(___L214_pi_2d_borwein4)
    ___END_IF
    ___SET_R3(___FAL)
@@ -41353,7 +41353,7 @@ ___DEF_GLBL(___L222_pi_2d_borwein4)
    ___END_IF
    ___GOTO(___L225_pi_2d_borwein4)
 ___DEF_GLBL(___L223_pi_2d_borwein4)
-   ___IF(___NOT(___FIXMULP_NOTFALSEP(___R2,___FIX(6L),___STK(-2))))
+   ___IF(___NOT(___FIXMULPCONSTX_NOTFALSEP(___R2,___FIX(6L),___STK(-2))))
    ___SET_R2(___FAL)
    ___GOTO(___L225_pi_2d_borwein4)
    ___END_IF
