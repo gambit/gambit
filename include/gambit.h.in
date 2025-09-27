@@ -4208,13 +4208,20 @@ ___EXPECT_FALSE(__builtin_add_overflow(___FW(x),___FW(y),&var))
 
 #define ___FIXWRAPMUL(x,y)___W(___FW(___UFW(x)*___UFW(___INT(y))))
 #define ___FIXMUL(x,y)___W(___FW(x)*___FW(___INT(y)))
-#define ___FIXMULP(x,y)(___FIXMULP_NOTFALSEP(___temp,x,y)?___temp:___FAL)
 
 #ifndef ___USE_builtin_op_overflow
 
+#define ___FIXMULP(x,y) \
+(___EXPECT_FALSE(___FIX_BETWEEN(y,___FIX(-1),___FIX(0))) \
+ ? ((y)==___FIX(0) ? ___FIX(0) : ___FIXNEGP(x)) \
+ : (___temp=___FIXWRAPMUL(x,y), \
+    ___EXPECT_FALSE(___FIXQUO(___temp,y)!=(x)) ? ___FAL : ___temp))
+
 #define ___FIXMULP_NOTFALSEP(var,x,y) \
-(___temp=___FIXWRAPMUL(x,y), \
- ___EXPECT_FALSE(___FIXQUO(___temp,y)!=(x)) ? 0 : (var=___temp,1))
+(___EXPECT_FALSE(___FIX_BETWEEN(y,___FIX(-1),___FIX(0))) \
+ ? ((y)==___FIX(0) ? (var=___FIX(0),1) : ___FIXNEGP_NOTFALSEP(var,x)) \
+ : (___temp=___FIXWRAPMUL(x,y), \
+    ___EXPECT_FALSE(___FIXQUO(___temp,y)!=(x)) ? 0 : (var=___temp,1)))
 
 #else
 
@@ -4222,8 +4229,11 @@ ___EXPECT_FALSE(__builtin_add_overflow(___FW(x),___FW(y),&var))
 ___EXPECT_FALSE(__builtin_mul_overflow(___FW(x),___FW(___INT(y)),&var))
 
 #if ___FIXWORD_WIDTH == ___WORD_WIDTH
+#define ___FIXMULP(x,y)(___FIXMULP_NOTFALSEP(___temp,x,y)?___temp:___FAL)
 #define ___FIXMULP_NOTFALSEP(var,x,y)!___FIXMULP_OVERFLOWS(var,x,y)
 #else
+#define ___FIXMULP(x,y) \
+(___FIXMULP_OVERFLOWS(___FIXTEMP,x,y) ? ___FAL : ___W(___FIXTEMP))
 #define ___FIXMULP_NOTFALSEP(var,x,y) \
 (___FIXMULP_OVERFLOWS(___FIXTEMP,x,y) ? 0 : (var=___W(___FIXTEMP),1))
 #endif

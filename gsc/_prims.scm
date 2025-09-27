@@ -4038,36 +4038,7 @@
        (make-nary-generator
         gen-fixnum-1
         gen-first-arg
-        (lambda (source env vars out-of-line)
-          (new-tst source env
-            (gen-disj-multi source env
-              (map (lambda (var)
-                     (gen-call-prim-notsafe source env
-                       **eqv?-sym
-                       (list (new-ref source env
-                               var)
-                             (new-cst source env
-                               0))))
-                   (reverse (cdr vars))))
-            (new-cst source env
-              0)
-            (gen-conditional-fold source env
-              vars
-              out-of-line
-              (lambda (source env var1 var2)
-                (new-tst source env
-                  (gen-call-prim-notsafe source env
-                    **eqv?-sym
-                    (list (new-ref source env
-                            var2)
-                          (new-cst source env
-                            -1)))
-                  (gen-call-prim-vars-notsafe source env
-                    **fx-?-sym
-                    (list var1))
-                  (gen-call-prim-vars-notsafe source env
-                    **fx*?-sym
-                    (list var1 var2))))))))))
+        (make-conditional-fold-generator **fx*?-sym))))
 
     (define case-fxwrap-
       (gen-fixnum-case
