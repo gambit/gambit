@@ -9,6 +9,10 @@
 
 (check-eqv? (tanh 1e-30+1e-40i) 1e-30+1e-40i)
 
+;;; Test derived from https://github.com/racket/racket/issues/3324
+
+(check-false (zero? (imag-part (tanh 300+20i))))
+
 ;;; https://en.cppreference.com/w/cpp/numeric/complex/tanh
 
 (check-eqv? (tanh +0.+0.i) +0.+0.i)

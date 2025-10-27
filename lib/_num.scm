@@ -2963,25 +2963,38 @@ for a discussion of branch cuts.
 (define-prim (##ctanh xi+ieta)
   ;; we assume that neither xi nor eta can be exact 0
   (let* ((xi  (macro-cpxnum-real xi+ieta))
-         (eta (macro-cpxnum-imag xi+ieta)))
-    (if (##< (##fl/ (##flasinh (macro-flonum-max-normal)) (macro-inexact-+4))
-             (##abs xi))
-        (macro-cpxnum-make
-         (##flcopysign (macro-inexact-+1) (##exact->inexact xi))   ;; xi cannot be exact 0
-         (##flcopysign (macro-inexact-+0) (##exact->inexact eta))) ;; eta cannot be exact 0
-        (let* ((t (##tan eta))                                     ;; sin(eta)/cos(eta) can't be exact 0, so can't be exact
-               (beta (##fl+ (macro-inexact-+1) (##flsquare t)))    ;; 1/cos^2(eta), can't be exact
-               (s (##sinh xi))                                     ;; sinh(xi), can't be exact zero, so can't be exact
-               (rho (##flsqrt (##fl+ (macro-inexact-+1)            ;; cosh(xi), can't be exact
-                                     (##flsquare s)))))
-          (if (##infinite? t)                                      ;; if sin(eta)/cos(eta) = infinity (how, I don't know)
-              (macro-cpxnum-make (##fl/ rho s)
-                                 (##fl/ t))
-              (let ((one+beta*s^2 (##fl+ (macro-inexact-+1) (##fl* beta (##flsquare s)))))
-                (macro-cpxnum-make (##fl/ (##fl* beta (##fl* rho s))
-                                          one+beta*s^2)
-                                   (##fl/ t
-                                          one+beta*s^2))))))))
+         (eta (macro-cpxnum-imag xi+ieta))
+         (abs-xi (##abs xi)))
+    ;; the first two clauses of the cond are slightly modified from Kahan, see the discussion
+    ;; https://github.com/racket/racket/issues/3324
+    (cond ((##< (##fl/ (##flasinh (macro-flonum-max-normal)) (macro-inexact-+2)) abs-xi)
+           (macro-cpxnum-make
+            (if (##flonum? xi)
+                (##flcopysign (macro-inexact-+1) xi)   ;; xi cannot be exact 0
+                (if (##negative? xi) (macro-inexact--1) (macro-inexact-+1)))
+            (if (##flonum? eta)
+                (##flcopysign (macro-inexact-+0) eta) ;; eta cannot be exact 0
+                (if (##negative? eta) (macro-inexact--0) (macro-inexact-+0)))))
+          ((##< (##fl/ (##flasinh (macro-flonum-max-normal)) (macro-inexact-+4)) abs-xi)
+           (macro-cpxnum-make
+            (if (##flonum? xi)
+                (##flcopysign (macro-inexact-+1) xi)   ;; xi cannot be exact 0
+                (if (##negative? xi) (macro-inexact--1) (macro-inexact-+1)))
+            (##/ (##sin (##* 2 eta)) (##cosh (##* 2 xi)))))
+          (else
+           (let* ((t (##tan eta))                                     ;; sin(eta)/cos(eta) can't be exact 0, so can't be exact
+                  (beta (##fl+ (macro-inexact-+1) (##flsquare t)))    ;; 1/cos^2(eta), can't be exact
+                  (s (##sinh xi))                                     ;; sinh(xi), can't be exact zero, so can't be exact
+                  (rho (##flsqrt (##fl+ (macro-inexact-+1)            ;; cosh(xi), can't be exact
+                                        (##flsquare s)))))
+             (if (##infinite? t)                                      ;; if sin(eta)/cos(eta) = infinity (how, I don't know)
+                 (macro-cpxnum-make (##fl/ rho s)
+                                    (##fl/ t))
+                 (let ((one+beta*s^2 (##fl+ (macro-inexact-+1) (##fl* beta (##flsquare s)))))
+                   (macro-cpxnum-make (##fl/ (##fl* beta (##fl* rho s))
+                                             one+beta*s^2)
+                                      (##fl/ t
+                                             one+beta*s^2)))))))))
 ))
 
 ;;; End of Kahan's functions
