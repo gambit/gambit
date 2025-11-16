@@ -2976,18 +2976,29 @@ for a discussion of branch cuts.
                 (##flcopysign (macro-inexact-+0) eta) ;; eta cannot be exact 0
                 (if (##negative? eta) (macro-inexact--0) (macro-inexact-+0)))))
           ((##< (##fl/ (##flasinh (macro-flonum-max-normal)) (macro-inexact-+4)) abs-xi)
+           ;; in this case we use the formula from
+           ;; https://proofwiki.org/wiki/Hyperbolic_Tangent_of_Complex_Number/Formulation_4
            (macro-cpxnum-make
             (if (##flonum? xi)
                 (##flcopysign (macro-inexact-+1) xi)   ;; xi cannot be exact 0
                 (if (##negative? xi) (macro-inexact--1) (macro-inexact-+1)))
-            (##/ (##sin (##* 2 eta)) (##cosh (##* 2 xi)))))
+            (let* ((eta (##inexact eta))
+                   (eta*2 (##fl* eta (macro-inexact-+2))))
+              (cond ((##flfinite? eta*2)
+                     (##fl/ (##flsin eta*2)
+                            (##cosh (##* 2 xi))))
+                    ((##flfinite? eta)
+                     (##fl/ (##fl* (macro-inexact-+2) (##flsin eta) (##flcos eta))
+                            (##cosh (##* 2 xi))))
+                    (else
+                     (##flcopysign (macro-inexact-+0) eta))))))     ;; inexact zero is better than NaN.
           (else
-           (let* ((t (##tan eta))                                     ;; sin(eta)/cos(eta) can't be exact 0, so can't be exact
-                  (beta (##fl+ (macro-inexact-+1) (##flsquare t)))    ;; 1/cos^2(eta), can't be exact
-                  (s (##sinh xi))                                     ;; sinh(xi), can't be exact zero, so can't be exact
-                  (rho (##flsqrt (##fl+ (macro-inexact-+1)            ;; cosh(xi), can't be exact
+           (let* ((t (##tan eta))                                   ;; sin(eta)/cos(eta) can't be exact 0, so can't be exact
+                  (beta (##fl+ (macro-inexact-+1) (##flsquare t)))  ;; 1/cos^2(eta), can't be exact
+                  (s (##sinh xi))                                   ;; sinh(xi), can't be exact zero, so can't be exact
+                  (rho (##flsqrt (##fl+ (macro-inexact-+1)          ;; cosh(xi), can't be exact
                                         (##flsquare s)))))
-             (if (##infinite? t)                                      ;; if sin(eta)/cos(eta) = infinity (how, I don't know)
+             (if (##infinite? t)                                    ;; if sin(eta)/cos(eta) = infinity (how, I don't know)
                  (macro-cpxnum-make (##fl/ rho s)
                                     (##fl/ t))
                  (let ((one+beta*s^2 (##fl+ (macro-inexact-+1) (##fl* beta (##flsquare s)))))
