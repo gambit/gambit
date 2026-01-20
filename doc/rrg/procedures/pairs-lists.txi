@@ -1,0 +1,548 @@
+@c Copyright (c) 2024 by Macon Gambill, All Rights Reserved.
+@node Pair and list procedures
+@nodedescription The @sc{P} in @sc{LISP}.
+@chapter Pair and list procedures
+
+@tindex pair @subentry predicate @subentry pair?
+@deftypefn scheme/base @/ pair? obj
+Returns @code{#t} if @var{obj} is a pair.
+
+@lisp
+(pair? '(a . b))      @ok{#t}
+(pair? '(a b . c))    @ok{#t}
+(pair? '(a b c))      @ok{#t}
+(pair? '(#u8()))      @ok{#t}
+(pair? '(()))         @ok{#t}
+@end lisp
+
+@lisp
+(pair? '())           @ok{#f}
+(pair? #(0 1))        @ok{#f}
+@end lisp
+@end deftypefn
+
+@cindex cons @subentry @code{cons} procedure
+@tindex pair @subentry constructor @subentry cons
+@deftypefn scheme/base @/ cons @pari{obj} @parii{obj}
+Returns a newly allocated pair whose car is @vari{obj} and whose cdr is
+@varii{obj}.  The pair is guaranteed to be different (in the sense of
+@code{eqv?}) from every existing object.
+
+@lisp
+(cons 'a '())        @ok{(a)}
+(cons '(a) '(b c d)) @ok{((a) b c d)}
+(cons "a" '(b c))    @ok{("a" b c)}
+(cons 'a 3)          @ok{(a . 3)}
+(cons '(a b) 'c)     @ok{((a b) . c)}
+@end lisp
+
+@lisp
+(eqv?   (cons + car) (cons + car)) @ok{#f}
+(equal? (cons + car) (cons + car)) @ok{#t}
+(eq? cons (cdr (cons cons cons)))  @ok{#t}
+@end lisp
+
+@lisp
+(cons)    @exception{wrong-number-of-arguments}
+(cons 'a) @exception{wrong-number-of-arguments}
+@end lisp
+@end deftypefn
+
+@cindex car @subentry @code{car} procedure
+@tindex pair @subentry selectors @subentry car
+@deftypefn scheme/base @/ car pair
+Returns the contents of the cdr field of @var{pair}.  If an attempt is
+made to take the car of the empty list, an exception that satisfies
+@code{type-exception?} is raised.
+
+@lisp
+(car '(a b c))     @ok{a}
+(car '((a) b c d)) @ok{(a)}
+(car '(1 . 2))     @ok{1}
+@end lisp
+
+@lisp
+(car '())      @exception{type}
+(car #(4 6 8)) @exception{type}
+@end lisp
+@end deftypefn
+
+@cindex cdr @subentry @code{cdr} procedure
+@tindex pair @subentry selectors @subentry cdr
+@deftypefn scheme/base @/ cdr pair
+Returns the contents of the cdr field of @var{pair}.  If an attempt is
+made to take the cdr of the empty list, an exception that satisfies
+@code{type-exception?} is raised.
+
+@lisp
+(cdr '(a b c))     @ok{(b c)}
+(cdr '((a) b c d)) @ok{(b c d)}
+(cdr '(1 . 2))     @ok{2}
+@end lisp
+
+@lisp
+(cdr '())      @exception{type}
+(cdr #(4 6 8)) @exception{type}
+@end lisp
+@end deftypefn
+
+@tindex pair @subentry mutators @subentry set-car!
+@deftypefn scheme/base @/ set-car! pair obj
+Mutates @var{pair} by storing @var{obj} in the car field of @var{pair}.
+
+@lisp
+(define (f) (list 'not-a-constant-list))
+(set-car! (f) 3)
+(f) @ok{(not-a-constant-list)}
+@end lisp
+
+@lisp
+(define (g) '(constant-list))
+(set-car! (g) 3) ;; R7RS says this is an error
+(g) @ok{(3)}        ;; current Gambit behavior
+@end lisp
+@end deftypefn
+
+@tindex pair @subentry mutators @subentry set-cdr!
+@deftypefn scheme/base @/ set-cdr! pair obj
+Mutates @var{pair} by storing @var{obj} in the cdr field of @var{pair}.
+
+@lisp
+(define (f) (list 'not-a-constant-list))
+(set-cdr! (f) 3)
+(f) @ok{(not-a-constant-list)}
+@end lisp
+
+@lisp
+(define (g) '(constant-list))
+(set-cdr! (g) 3)          ;; R7RS says this is an error
+(g) @ok{(constant-list . 3)} ;; current Gambit behavior
+@end lisp
+@end deftypefn
+
+@tindex pair @subentry selectors @subentry scheme/cxr
+@deftypefn  scheme/cxr @/ caar pair
+@deftypefnx scheme/cxr @/ cadr pair
+@deftypefnx scheme/cxr @/ cdar pair
+@deftypefnx scheme/cxr @/ cddr pair
+@deftypefnx scheme/cxr @/ caaar pair
+@deftypefnx scheme/cxr @/ caadr pair
+@deftypefnx scheme/cxr @/ cadar pair
+@deftypefnx scheme/cxr @/ caddr pair
+@deftypefnx scheme/cxr @/ cdaar pair
+@deftypefnx scheme/cxr @/ cdadr pair
+@deftypefnx scheme/cxr @/ cddar pair
+@deftypefnx scheme/cxr @/ cdddr pair
+@deftypefnx scheme/cxr @/ caaaar pair
+@deftypefnx scheme/cxr @/ caaadr pair
+@deftypefnx scheme/cxr @/ caadar pair
+@deftypefnx scheme/cxr @/ caaddr pair
+@deftypefnx scheme/cxr @/ cadaar pair
+@deftypefnx scheme/cxr @/ cadadr pair
+@deftypefnx scheme/cxr @/ caddar pair
+@deftypefnx scheme/cxr @/ cadddr pair
+@deftypefnx scheme/cxr @/ cdaaar pair
+@deftypefnx scheme/cxr @/ cdaadr pair
+@deftypefnx scheme/cxr @/ cdadar pair
+@deftypefnx scheme/cxr @/ cdaddr pair
+@deftypefnx scheme/cxr @/ cddaar pair
+@deftypefnx scheme/cxr @/ cddadr pair
+@deftypefnx scheme/cxr @/ cdddar pair
+@deftypefnx scheme/cxr @/ cddddr pair
+These 28 procedures are compositions of @code{car} and @code{cdr}.
+
+@lisp
+(define l '((a b) (c) d (e (f) g)))
+(cadr l)             @ok{(c)}
+(car (cdr l))        @ok{(c)}
+(cddr '(a b c . d))  @ok{(c . d)}
+(cdddr '(a b c . d)) @ok{d}
+(cdadr l)            @ok{()}
+(cdar (cdr l))       @ok{()}
+(caar (cdr l))       @ok{c}
+(car (car (cdr l)))  @ok{c}
+(cadddr l)           @ok{(e (f) g)}
+@end lisp
+
+@lisp
+(define circle (circular-list 'a 'b 'c))
+(car circle)    @ok{a}
+(cadr circle)   @ok{b}
+(caddr circle)  @ok{c}
+(cadddr circle) @ok{a}
+@end lisp
+
+@lisp
+(cdar '(a . b))   @exception{type}
+(cddr (list #\f)) @exception{type}
+@end lisp
+@end deftypefn
+
+@tindex empty list @subentry predicate @subentry null?
+@deftypefn scheme/base @/ null? obj
+Returns @code{#t} if @var{obj} is the empty list.
+
+@lisp
+(null? '())    @ok{#t}
+(null? '(  ))  @ok{#t}
+(null? (list)) @ok{#t}
+(null? #\null) @ok{#f}
+(null? #!void) @ok{#f}
+(null? (void)) @ok{#f}
+(null? #f)     @ok{#f}
+(null? 0)      @ok{#f}
+(null? "")     @ok{#f}
+(null? #())    @ok{#f}
+(null? #u8( )) @ok{#f}
+@end lisp
+@end deftypefn
+
+@tindex list @subentry predicates @subentry list?
+@tindex list @subentry predicates @subentry proper-list?
+@deftypefn  scheme/base @/ list? obj
+@deftypefnx gambit/list @/ proper-list? obj
+Returns @code{#t} if @var{obj} is a proper list (@pxref{Pair and list
+jargon}).  By definition, a list of finite length is terminated by the
+empty list.
+
+@code{proper-list?} is functionally equivalent to @code{list?}.
+
+@lisp
+(list? '(a b c))              @ok{#t}
+(list? '())                   @ok{#t}
+(list? (list 0))              @ok{#t}
+(list? '(a . b))              @ok{#f}
+(list? list)                  @ok{#f}
+(list? "list")                @ok{#f}
+(list? #(0 1 2))              @ok{#f}
+(list? (circular-list 0 1 2)) @ok{#f}
+@end lisp
+
+@lisp
+(let ((x (list 'a)))
+  (set-cdr! x x)
+  (list? x)) @ok{#f}
+@end lisp
+@end deftypefn
+
+@tindex list @subentry constructors @subentry make-list
+@deftypefn scheme/base @/ make-list k @opt{fill}
+Returns a newly allocated list of @var{k} elements.  In the one-argument
+form, each element is initialized to a default value.  In the
+two-argument form, each element is initialized to @var{fill}.
+
+The default value used by the one-argument form may change in a future
+version.  Programs that require a specific initialization value should
+use the two-argument form.
+
+If @var{k} is not an exact integer, an exception that satisfies
+@code{type-exception?} is raised.  If @var{k} is a negative exact
+integer, an exception that satisfies @code{range-exception?} is raised.
+
+@lisp
+(make-list 0)                        @ok{()}
+(make-list 3 (list))                 @ok{(() () ())}
+(make-list 3 (vector))               @ok{(#() #() #())}
+(make-list 2 (make-list 2 (vector))) @ok{((#() #()) (#() #()))}
+@end lisp
+
+@lisp
+(make-list 1.25) @exception{type}
+(make-list -1)   @exception{range}
+@end lisp
+@end deftypefn
+
+@cindex lists @subentry @code{list} procedure
+@tindex list @subentry constructors @subentry list
+@deftypefn scheme/base @/ list obj@defdots{}
+Returns a newly allocated list consisting of its arguments.
+
+@lisp
+(list 'a (+ 3 4) 'c)         @ok{(a 7 c)}
+(list)                       @ok{()}
+((car (list list)) 'list)    @ok{(list)}
+(eqv? (list #\l) (list #\l)) @ok{#f}
+@end lisp
+
+@lisp
+`(list ,(+ 1 2) 4)                     @ok{(list 3 4)}
+(let ((name 'a)) `(list ,name ',name)) @ok{(list a (quote a))}
+@end lisp
+@end deftypefn
+
+@deftypefn scheme/base @/ length list
+Returns the length of @var{list}.
+
+@lisp
+(define circle (circular-list 'x 'y 'z))
+(length '(a b c))            @ok{3}
+(length '(a (b) (c d e)))    @ok{3}
+(length '())                 @ok{0}
+(length (cdr (make-list 5))) @ok{4}
+(length circle)              @problem{infinite loop}
+@end lisp
+@end deftypefn
+
+@deftypefn scheme/base @/ append list@defdots{} @opt{obj}
+The zero-argument form returns the empty list.  The one-argument form
+returns its argument, whatever that argument's type.  Each argument
+except the last, if present, must be a list.
+
+With two or more arguments, the returned value consists of the elements
+of each @var{list} in order (excluding each @var{list}'s terminating
+empty list).  A proper list is returned if @var{obj} is a proper list;
+an improper list is returned if if @var{obj} is not a proper list
+(@pxref{Pair and list jargon}).  The returned value is newly allocated,
+except that it shares structure with the last argument, @var{obj}.
+
+@lisp
+(append '(x) '(y))       @ok{(x y)}
+(append '(a) '(b c d))   @ok{(a b c d)}
+(append '(a (b)) '((c))) @ok{(a (b) (c))}
+(append '(a b) '(c . d)) @ok{(a b c . d)} ;; lacking propriety
+(append '() 'a)          @ok{a} ;; egregiously lacking propriety
+@end lisp
+
+@lisp
+(define l (list 'f 'g 'h))
+(eq?    l (append (append) l)) @ok{#t}
+(eq?    l (append l (append))) @ok{#f}
+(equal? l (append l (append))) @ok{#t}
+@end lisp
+@end deftypefn
+
+@deftypefn scheme/base @/ reverse list
+Returns a newly allocated list consisting of the elements of @var{list}
+in reverse order (excluding the terminating empty list).
+
+@lisp
+(reverse '(a b c))             @ok{(c b a)}
+(reverse '(a (b c) d (e (f)))) @ok{((e (f)) d (b c) a)}
+@end lisp
+
+@lisp
+(define l (list 'a 'b 'c))
+(eq?    l (reverse (reverse l))) @ok{#f}
+(equal? l (reverse (reverse l))) @ok{#t}
+@end lisp
+@end deftypefn
+
+@tindex list @subentry selectors @subentry list-tail
+@deftypefn scheme/base @/ list-tail list k
+Returns a copy of @var{list} obtained by omitting the first @var{k}
+elements.  If @var{list} is a proper list, a proper list is returned; if
+@var{list} is an improper list, an improper list is returned
+(@pxref{Pair and list jargon}).
+
+If @var{k} is not an exact integer, an exception that satisfies
+@code{type-exception?} is raised.  If @var{list} has fewer than @var{k}
+elements, an exception that satisfies @code{range-exception?} is raised.
+
+@lisp
+(list-tail '(a b c) 1)   @ok{(b c)}
+(list-tail '(a b c) 3)   @ok{()}
+(list-tail '(a b . c) 1) @ok{(b . c)} ;; impropriety
+(list-tail '(a b . c) 2) @ok{c} ;; abject impropriety
+@end lisp
+
+@lisp
+(list-tail '(a b c) 1.1) @exception{type}
+(list-tail '(a b c) 4)   @exception{range}
+@end lisp
+@end deftypefn
+
+@tindex list @subentry selectors @subentry list-ref
+@deftypefn scheme/base @/ list-ref list k
+Returns element @var{k} of @var{list}.  Equivalent to @samp{(car
+(list-tail @slanted{list} @slanted{k}))}.  The @var{list} argument may
+be circular.
+
+@lisp
+(list-ref '(a b c d) 2)                   @ok{c}
+(list-ref '(a b c d) (exact (round 1.8))) @ok{c}
+@end lisp
+
+@lisp
+(list-ref (circular-list 'a 'b) 3) @ok{b} ;; R7RS says this is an error
+@end lisp
+@end deftypefn
+
+@tindex list @subentry mutator @subentry list-set!
+@deftypefn scheme/base @/ list-set! list k obj
+Mutates @var{list} by storing @var{obj} in element @var{k} of
+@var{list}.  It is an error if @var{k} is not a valid index of
+@var{list}.
+
+@lisp
+(define ls (list 'one 'two 'five!))
+(list-set! ls 2 'three)
+ls @ok{(one two three)}
+@end lisp
+
+@lisp
+(list-set! '(0 1 2) 1 "oops") ;; R7RS says this is an error
+@end lisp
+@end deftypefn
+
+@tindex list @subentry selectors @subentry memq
+@tindex list @subentry selectors @subentry memv
+@tindex list @subentry selectors @subentry member
+@deftypefn  scheme/base @/ memq   obj list
+@deftypefnx scheme/base @/ memv   obj list
+@deftypefnx scheme/base @/ member obj list @opt{compare}
+Each procedure successively applies some test procedure to each element
+of @var{list} and returns the first sublist of @var{list} whose car
+satisfies that test procedure relative to @var{obj}.  They differ only
+in the test procedure that is used.  If no element of @var{list}
+satisfies the test, @code{#f} is returned.
+
+In each two-argument form, a standard equivalence predicate is used.  In
+the three-argument form of @code{@slanted{member}}, @var{compare} may
+return a non-Boolean value.
+
+@itemize @bullet
+@item
+@code{memq} uses @code{eq?}
+@item
+@code{memv} uses @code{eqv?}
+@item
+@code{member} uses @code{equal?} in the two-argument form.
+@item
+@code{member} uses @var{compare} in the three-argument form.
+@end itemize
+
+@lisp
+(memq   101 '(100 101 102)) @ok{(101 102)} ;; R7RS: unspecified
+(memv   101 '(100 101 102)) @ok{(101 102)}
+(member 7 '(100 101 102) +) @ok{(100 101 102)}
+@end lisp
+
+@lisp
+(memq   'a '(a b c))                    @ok{(a b c)}
+(memq   'a '(b c d))                    @ok{#f}
+(memq   (list 'a) '(b (a) c))           @ok{#f}
+(memq   'a '(a b c))                    @ok{(a b c)}
+(memv   'b '(a b c))                    @ok{(b c)}
+(memv   'b '(a b . c))                  @ok{(b . c)}
+(member 'b '(a b c) eq?)                @ok{(b c)}
+(member (list 'a) '(b (a) c))           @ok{((a) c)}
+(member "B" '("a" "b" "c") string-ci=?) @ok{("b" "c")}
+(member 7 '(7 8 9) (lambda x #f))       @ok{#f}
+@end lisp
+
+@lisp
+(memv 'c '(a b . c))      @exception{type}
+(member 9 '(7 8 9) zero?) @exception{wrong-number-of-arguments}
+@end lisp
+@end deftypefn
+
+@tindex list @subentry selectors @subentry assq
+@tindex list @subentry selectors @subentry assv
+@tindex list @subentry selectors @subentry assoc
+@deftypefn  scheme/base @/ assq obj  alist
+@deftypefnx scheme/base @/ assv obj  alist
+@deftypefnx scheme/base @/ assoc obj alist @opt{compare}
+Each of these procedures successively applies some test procedure to the
+elements of @var{alist} and returns the first pair of @var{alist} whose
+car satisfies that test procedure relative to @var{obj} (``alist'' is
+short for ``association list''; @pxref{Pair and list jargon}).  They
+differ only in the test procedure that is used.  If none of
+@var{alist}'s elements' cars satisfies the test, @code{#f} is returned.
+
+In each two-argument form, a standard equivalence predicate is used.  In
+the three-argument form of @code{@slanted{assoc}}, @var{compare} may
+return a non-Boolean value.
+
+@itemize @bullet
+@item
+@code{assq} uses @code{@slanted{eq?}}
+@item
+@code{assv} uses @code{@slanted{eqv?}}
+@item
+@code{assoc} uses @code{@slanted{equal?}} in the two-argument form.
+@item
+@code{assoc} uses @var{compare} in the three-argument form.
+@end itemize
+
+@lisp
+(define p '((a 1) (b 2) (c 3)))
+(assq 'a p)                            @ok{(a 1)}
+(assq 'b p)                            @ok{(b 2)}
+(assv 'd p)                            @ok{#f}
+(assq (list 'a) '(((a)) ((b)) ((c))))  @ok{#f}
+(assoc (list 'a) '(((a)) ((b)) ((c)))) @ok{((a))}
+(assoc 2.0 '((1 1) (2 4) (3 9)) =)     @ok{(2 4)}
+(assq 5 '((2 3) (5 7) (11 13)))        @ok{(5 7)} ;; R7RS: unspecified
+(assv 5 '((2 3) (5 7) (11 13)))        @ok{(5 7)}
+@end lisp
+
+@lisp
+(define i '((a . 1) (b . 2) (c . 3)))
+(assq 'b i) @ok{(a . 1)}
+(assv 'c i) @ok{(c . 3)}
+(assq 'd p) @ok{#f}
+(assv 'b '((a . 1) (b . 2) . (c . 3))) @ok{(b . 2)}
+@end lisp
+
+@lisp
+(assv 'c '((a . 1) (b . 2) . (c . 3))) @exception{type}
+@end lisp
+
+@lisp
+(define dc '(("red"    . "rouge")
+             ("green"  . "vert")
+             ("blue"   . "bleu")
+             ("orange" . "orange")))
+
+(define (f e)
+  (let ((f (assoc e dc string=?)))
+    (and f (cdr f))))
+
+(f "green")  @ok{"vert"}
+(f "orange") @ok{"orange"}
+(f "purple") @ok{#f}
+@end lisp
+@end deftypefn
+
+@tindex list @subentry constructors @subentry list-copy
+@deftypefn scheme/base @/ list-copy obj
+Returns a newly allocated copy of the given @var{obj} if it is a list.
+Only the pairs themselves are copied; the cars of the result are the
+same (in the sense of @code{eqv?}) as the cars of @var{list}.  If
+@var{obj} is an improper list, so is the result, and the final cdrs are
+the same in the sense of @code{eqv?}.  An @var{obj} which is not a list
+is returned unchanged.  It is an error if @var{obj} is a circular list.
+
+@lisp
+(define a '(1 8 2 8))    ;; a may be immutable
+(define b (list-copy a))
+(set-car! b 3)           ;; b is mutable
+b @ok{(3 8 2 8)}
+a @ok{(1 8 2 8)}
+@end lisp
+
+@lisp
+(list-copy '(a b . c))                           @ok{(a b . c)}
+(list-copy 'unchanged)                           @ok{unchanged}
+(eqv? '() (list-copy '()))                       @ok{#t}
+(eqv? list-copy ((lambda (x) x) list-copy))      @ok{#t}
+(eqv? (lambda (x) x) (list-copy (lambda (x) x))) @ok{#f}
+@end lisp
+
+@lisp
+(define i (cons (string-copy "one") (string-copy "two")))
+(define p (cons (car i) (cons (cdr i) '())))
+(eqv? (cdr i) (cdr (list-copy i))) @ok{#t}
+(eqv? (cdr p) (cdr (list-copy p))) @ok{#f}
+@end lisp
+
+@lisp
+(list-copy) @exception{wrong-number-of-arguments}
+@end lisp
+
+@lisp
+(define c (circular-list 0 1 2))
+(circular-list? c) @ok{#t}
+(list-copy (circular-list 0 1 2)) @problem{infinite loop}
+@end lisp
+@end deftypefn
