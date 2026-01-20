@@ -27,6 +27,55 @@
 
 ;;;----------------------------------------------------------------------------
 
+(define-procedure (string-null? (str string))
+  (fxzero? (string-length str)))
+
+(define-procedure (string-every
+                   key
+                   (str   string)
+                   (start (index-range-incl 0 (string-length str))
+                          0)
+                   (end   (index-range-incl start (string-length str))
+                          (string-length str)))
+  (cond ((char? key)
+         (let loop ((i start))
+           (or (fx= i end)
+               (and (char=? key (string-ref str i))
+                    (loop (fx+ i 1))))))
+        ((procedure? key)
+         (let ((last-i (- end 1)))
+           (let loop ((i start))
+             (if (fx< i last-i)
+                 (and (key (string-ref str i))
+                      (loop (fx+ i 1)))
+                 (or (fx= i end)
+                     (key (string-ref str i)))))))
+        (else
+         (error "type error"))))
+
+(define-procedure (string-any
+                   key
+                   (str   string)
+                   (start (index-range-incl 0 (string-length str))
+                          0)
+                   (end   (index-range-incl start (string-length str))
+                          (string-length str)))
+  (cond ((char? key)
+         (let loop ((i start))
+           (and (fx< i end)
+                (or (char=? key (string-ref str i))
+                    (loop (fx+ i 1))))))
+        ((procedure? key)
+         (let ((last-i (- end 1)))
+           (let loop ((i start))
+             (if (fx< i last-i)
+                 (or (key (string-ref str i))
+                     (loop (fx+ i 1)))
+                 (and (fx< i end)
+                      (key (string-ref str i)))))))
+        (else
+         (error "type error"))))
+
 (define-prim-nary-bool (##string=? str1 str2)
   #t
   #t
