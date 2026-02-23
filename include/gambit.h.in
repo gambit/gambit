@@ -3833,8 +3833,18 @@ ___FIX((((___BIGMDOUBLEDIGIT)___BIGMFETCH(___BODY_AS(u,___tSUBTYPED),___INT(___B
 
 /* APPLY-able operations */
 
+#if ___TB_FIXNUM == ___TB
+
 #define ___TYPE(x)___FIX(___TYP(x))
 #define ___TYPECAST(x,y)(((x)&~___TMASK)+___INT(y))
+
+#else
+
+#define ___TYPE(x)(___FIXNUMP(x) ? ___FIX(___tFIXNUM) : ___FIX(___TYP(x)))
+#define ___TYPECAST(x,y)(___FIXNUMP(x) ? ((y)==___FIX(___tFIXNUM) ? (x) : ___CAST(___WORD,(___CAST(___UWORD,___INT(x))<<___TB)+___INT(y))) : ((y)==___FIX(___tFIXNUM) ? (___INT(x)<<___TB)+___INT(y) : ((x)&~___TMASK)+___INT(y)))
+
+#endif
+
 #define ___SUBTYPE(x)((___HEADER(x)&___SMASK)>>(___HTB-___TB_FIXNUM))
 #define ___SUBTYPESET(x,y)___temp=(x);___HEADER_SET(___temp,(___HEADER(___temp)&~___SMASK)+((y)<<(___HTB-___TB_FIXNUM)));
 
