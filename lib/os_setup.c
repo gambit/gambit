@@ -1,6 +1,6 @@
 /* File: "os_setup.c" */
 
-/* Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -219,6 +219,66 @@ int fd;)
 #endif
 
   return result;
+}
+
+
+int ___closefrom
+   ___P((int start_fd),
+        (start_fd)
+int start_fd;)
+{
+#ifdef ___DEBUG_LOG
+  ___printf ("___closefrom(%d)\n", start_fd);
+#endif
+
+#if defined(USE_closefrom)
+
+  closefrom (start_fd);
+  return 0;
+
+#elif defined(USE_SYS_close_range)
+
+  return syscall (SYS_close_range, start_fd, ~0U, 0);
+
+#elif defined(USE_fcntl) && defined(F_CLOSEM)
+
+  return fcntl (start_fd, F_CLOSEM, start_fd);
+
+#else
+
+  int max_fds;
+  int fd;
+
+#if defined(USE_sysconf)
+
+  max_fds = sysconf (_SC_OPEN_MAX);
+
+#elif defined(USE_getrlimit) && defined(RLIMIT_NOFILE)
+
+  {
+    struct rlimit rl;
+    getrlimit (RLIMIT_NOFILE, &rl);
+    max_fds = rl.rlim_cur;
+  }
+
+#elif defined(OPEN_MAX)
+
+  max_fds = OPEN_MAX;
+
+#else
+
+  max_fds = 1024;
+
+#endif
+
+  for (fd=start_fd; fd<max_fds; fd++)
+    {
+      ___close_no_EINTR (fd);
+    }
+
+  return 0;
+
+#endif
 }
 
 

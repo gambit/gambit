@@ -1,6 +1,6 @@
 /* File: "os_setup.h" */
 
-/* Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_SETUP_H
 #define ___OS_SETUP_H
@@ -52,6 +52,10 @@ extern int ___openat_no_EINTR
 
 extern int ___close_no_EINTR
    ___P((int fd),
+        ());
+
+extern int ___closefrom
+   ___P((int start_fd),
         ());
 
 extern int ___dup_no_EINTR

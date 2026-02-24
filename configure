@@ -9223,6 +9223,17 @@ _ACEOF
 fi
 done
 
+  for ac_func in closefrom
+do :
+  ac_fn_c_check_func "$LINENO" "closefrom" "ac_cv_func_closefrom"
+if test "x$ac_cv_func_closefrom" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_CLOSEFROM 1
+_ACEOF
+
+fi
+done
+
 
   for ac_func in fstatat
 do :
@@ -9664,6 +9675,58 @@ fi
 done
 
   fi
+
+
+
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for close_range" >&5
+$as_echo_n "checking for close_range... " >&6; }
+if ${ac_cv_sys_close_range+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+
+    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+      #ifdef HAVE_SYS_SYSCALL_H
+      #include <sys/syscall.h>
+      #endif
+
+int
+main ()
+{
+syscall (SYS_close_range, 0, ~0U, 0);
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  ac_cv_sys_close_range=yes
+else
+  ac_cv_sys_close_range=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_sys_close_range" >&5
+$as_echo "$ac_cv_sys_close_range" >&6; }
+    if test $ac_cv_sys_close_range = yes; then
+
+$as_echo "#define HAVE_SYS_close_range /**/" >>confdefs.h
+
+    fi
+
+
+  for ac_func in getrlimit
+do :
+  ac_fn_c_check_func "$LINENO" "getrlimit" "ac_cv_func_getrlimit"
+if test "x$ac_cv_func_getrlimit" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_GETRLIMIT 1
+_ACEOF
+
+fi
+done
+
 
   for ac_func in setitimer
 do :

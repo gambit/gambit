@@ -1,6 +1,6 @@
 # Configure template for Gambit system.
 
-# Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved.
 
 # Process this file with autoconf to produce a configure script.
 
@@ -1877,6 +1877,7 @@ else
   AC_CHECK_FUNCS(unlink)
   AC_CHECK_FUNCS(utimes)
   AC_CHECK_FUNCS(waitpid)
+  AC_CHECK_FUNCS(closefrom)
 
   AC_CHECK_FUNCS(fstatat)
   AC_CHECK_FUNCS(linkat)
@@ -2014,6 +2015,26 @@ else
   else
     AC_CHECK_FUNCS(nanosleep)
   fi
+
+  AC_DEFUN([AC_CHECK_SYS_CLOSE_RANGE],
+  [AC_CACHE_CHECK([for close_range], ac_cv_sys_close_range,
+  [
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
+      #ifdef HAVE_SYS_SYSCALL_H
+      #include <sys/syscall.h>
+      #endif
+      ],[syscall (SYS_close_range, 0, ~0U, 0);])],
+    ac_cv_sys_close_range=yes,
+    ac_cv_sys_close_range=no)
+  ])
+    if test $ac_cv_sys_close_range = yes; then
+      AC_DEFINE([HAVE_SYS_close_range],[],[Defined when SYS_close_range syscall is available])
+    fi
+  ])
+
+  AC_CHECK_SYS_CLOSE_RANGE
+
+  AC_CHECK_FUNCS(getrlimit)
 
   AC_CHECK_FUNCS(setitimer)
   AC_CHECK_FUNCS(dos_setvect)

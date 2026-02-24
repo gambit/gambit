@@ -1,6 +1,6 @@
 /* File: "os.h" */
 
-/* Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_H
 #define ___OS_H
@@ -347,6 +347,18 @@
 
 #ifdef HAVE_SCHED_GETCPU
 #define USE_sched_getcpu
+#endif
+
+#ifdef HAVE_CLOSEFROM
+#define USE_closefrom
+#else
+#ifdef HAVE_SYS_close_range
+#define USE_SYS_close_range
+#else
+#ifdef HAVE_GETRLIMIT
+#define USE_getrlimit
+#endif
+#endif
 #endif
 
 #if 0
@@ -1049,6 +1061,21 @@ ___END_C_LINKAGE
 #ifdef USE_getclock
 #undef INCLUDE_sys_timers_h
 #define INCLUDE_sys_timers_h
+#endif
+
+#ifdef USE_closefrom
+#undef INCLUDE_unistd_h
+#define INCLUDE_unistd_h
+#endif
+
+#ifdef USE_SYS_close_range
+#undef INCLUDE_SYS_syscall_h
+#define INCLUDE_SYS_syscall_h
+#endif
+
+#ifdef USE_getrlimit
+#undef INCLUDE_sys_resource_h
+#define INCLUDE_sys_resource_h
 #endif
 
 #ifdef USE_getrusage
@@ -1839,6 +1866,12 @@ typedef unsigned int fpu_control_t __attribute__ ((__mode__ (__HI__)));
 #ifdef INCLUDE_sys_socket_h
 #ifdef HAVE_SYS_SOCKET_H
 #include <sys/socket.h>
+#endif
+#endif
+
+#ifdef INCLUDE_sys_syscall_h
+#ifdef HAVE_SYS_SYSCALL_H
+#include <sys/syscall.h>
 #endif
 #endif
 

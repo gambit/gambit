@@ -1,6 +1,6 @@
 /* File: "os_io.c" */
 
-/* Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -9228,17 +9228,24 @@ int options;)
           {
             /* Close all file descriptors that aren't used. */
 
-            int fd = sysconf (_SC_OPEN_MAX) - 1;
+            int fd = hdp_errno.writing_fd;
 
-            while (fd >= 0)
+            if (fd < STDERR_FILENO) fd = STDERR_FILENO;
+            if (fd < STDOUT_FILENO) fd = STDOUT_FILENO;
+            if (fd < STDIN_FILENO) fd = STDIN_FILENO;
+
+            ___closefrom (fd+1);
+
+            while (fd > 0)
               {
+                fd--;
                 if (fd != STDIN_FILENO &&
                     fd != STDOUT_FILENO &&
                     fd != STDERR_FILENO &&
                     fd != hdp_errno.writing_fd)
                   ___close_no_EINTR (fd); /* ignore error */
-                fd--;
               }
+
           }
 
           if (dir == NULL || chdir_long_path (dir) == 0)

@@ -229,6 +229,10 @@
 #undef HAVE_CLOCK
 #undef HAVE_DOSQUERYSYSINFO
 
+#undef HAVE_CLOSEFROM
+#undef HAVE_SYS_close_range
+#undef HAVE_GETRLIMIT
+
 /* Define one of these to support preemptive Scheme thread scheduling: */
 #undef HAVE_SETITIMER
 #undef HAVE_DOS_SETVECT
