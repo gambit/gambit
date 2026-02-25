@@ -590,9 +590,16 @@
          (lambda (name-src . body-srcs)
            ;;TODO: deprecated interface
            (let* ((comp-ctx (##compilation-ctx))
-                  (module-ref (or modref-str (macro-compilation-ctx-module-ref comp-ctx)))
-                  (module-root (table-ref (##compilation-scope) '##module-root module-root))
-                  (modref-path (table-ref (##compilation-scope) '##modref-path modref-path))
+
+                  (module-ref
+                   (or modref-str
+                       (macro-compilation-ctx-module-ref comp-ctx)))
+
+                  (module-root
+                   (table-ref (##compilation-scope) '##module-root module-root))
+
+                  (modref-path
+                   (table-ref (##compilation-scope) '##modref-path modref-path))
 
                   ;; ("A" "B" "C")
                   (dot-and-modref
@@ -613,8 +620,11 @@
                                      (##symbol->string module-ref))
                                     (else module-ref))
                                   name-default-string))
-
-                  (modref (##parse-module-ref library-name))
+                  (modref
+                   (or (##parse-module-ref library-name)
+                       (##raise-expression-parsing-exception
+                        'invalid-module-name
+                        name-src)))
 
                   ;; Test if modref-path == .../ + name-default-string
                   #;(valid? (if (not (macro-modref-host modref))
