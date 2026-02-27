@@ -5026,11 +5026,17 @@ ___PSDKR)
 #endif
 #else
 #ifndef ___GC_HASH_TABLE_REHASH_LAZILY
-#ifdef ___SINGLE_THREADED_VMS
+/*
+ * Always use lazy rehash.  Eager rehash uses a pointer-based hash
+ * function (___GCHASHTABLE_HASH_STEP) which is only correct for eq?
+ * tables.  Non-eq? tables place entries using a content-based Scheme
+ * hash function, and eagerly repositioning them based on pointer hash
+ * corrupts the table.  With lazy rehash, eq? tables are rehashed
+ * on first access via ___gc_hash_table_ref/set (which use pointer
+ * hash), and non-eq? tables need no rehash because content-based
+ * hashes are stable across GC.
+ */
 #define ___GC_HASH_TABLE_REHASH_LAZILY
-#else
-#define ___GC_HASH_TABLE_REHASH_EAGERLY
-#endif
 #endif
 #endif
 
@@ -6671,6 +6677,20 @@ ___PSDKR)
   mark_type_cache (___PSPNC);
 
   mark_processor_scmobj (___PSPNC);
+
+  /*
+   * Ensure all processors have completed root marking (especially
+   * mark_captured_continuation which copies stack frames to the heap
+   * and installs forwarding pointers) before any processor begins
+   * the transitive scan.  Without this barrier, a processor that
+   * finishes root marking early can steal heap chunks and scan
+   * ___sCONTINUATION objects that reference stack frames still being
+   * copied by another processor's mark_captured_continuation, leading
+   * to races on the forwarding pointers and partially-written
+   * ___sFRAME heap objects.
+   */
+
+  BARRIER();
 
   mark_reachable_from_marked (___PSPNC);
 
