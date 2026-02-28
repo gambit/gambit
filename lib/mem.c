@@ -368,19 +368,32 @@
 
 /*---------------------------------------------------------------------------*/
 
+/*
+ * File-static spinlock to protect the global symbol/keyword tables
+ * and global variable list from concurrent access by multiple
+ * processors.  Kept outside any struct to avoid changing the
+ * ___global_state_struct layout (ABI compatibility).
+ */
+
 #ifdef ___SINGLE_THREADED_VMS
 
 #define ALLOC_MEM_LOCK()
 #define ALLOC_MEM_UNLOCK()
 #define MISC_MEM_LOCK()
 #define MISC_MEM_UNLOCK()
+#define SYMKEY_LOCK()
+#define SYMKEY_UNLOCK()
 
 #else
+
+___SPINLOCK_DECL(symkey_lock_storage)
 
 #define ALLOC_MEM_LOCK() ___SPINLOCK_LOCK(alloc_mem_lock)
 #define ALLOC_MEM_UNLOCK() ___SPINLOCK_UNLOCK(alloc_mem_lock)
 #define MISC_MEM_LOCK() ___SPINLOCK_LOCK(misc_mem_lock)
 #define MISC_MEM_UNLOCK() ___SPINLOCK_UNLOCK(misc_mem_lock)
+#define SYMKEY_LOCK() ___SPINLOCK_LOCK(symkey_lock_storage)
+#define SYMKEY_UNLOCK() ___SPINLOCK_UNLOCK(symkey_lock_storage)
 
 #endif
 
@@ -1357,6 +1370,13 @@ ___SCMOBJ ___make_global_var
         (sym)
 ___SCMOBJ sym;)
 {
+  /*
+   * Protect with symkey_lock to prevent concurrent creation of
+   * the same global variable by multiple processors.
+   */
+
+  SYMKEY_LOCK();
+
   if (___GLOBALVARSTRUCT(sym) == 0)
     {
       ___glo_struct *glo = ___CAST(___glo_struct*,
@@ -1366,7 +1386,10 @@ ___SCMOBJ sym;)
                                       0));
 
       if (glo == 0)
-        return ___FIX(___HEAP_OVERFLOW_ERR);
+        {
+          SYMKEY_UNLOCK();
+          return ___FIX(___HEAP_OVERFLOW_ERR);
+        }
 
 #ifdef ___SINGLE_VM
       glo->val = ___UNB1;
@@ -1380,6 +1403,8 @@ ___SCMOBJ sym;)
 
       ___SYMBOL_GLOBAL_FIELD(sym) = ___CAST(___SCMOBJ,glo);
     }
+
+  SYMKEY_UNLOCK();
 
   return sym;
 }
@@ -1916,6 +1941,11 @@ ___SIZE_TS length;)
 }
 
 
+/*
+ * ___intern_symkey adds a symbol/keyword to the global table.
+ * Caller must hold SYMKEY_LOCK when there are multiple processors.
+ */
+
 void ___intern_symkey
    ___P((___SCMOBJ symkey),
         (symkey)
@@ -2093,7 +2123,11 @@ ___SCMOBJ ___make_symkey_from_UTF_8_string
 ___UTF_8STRING str;
 unsigned int subtype;)
 {
-  ___SCMOBJ obj = ___find_symkey_from_UTF_8_string (str, subtype);
+  ___SCMOBJ obj;
+
+  SYMKEY_LOCK();
+
+  obj = ___find_symkey_from_UTF_8_string (str, subtype);
 
   if (obj == ___FAL)
     {
@@ -2106,10 +2140,15 @@ unsigned int subtype;)
                     &name,
                     -1))
           != ___FIX(___NO_ERR))
-        return err;
+        {
+          SYMKEY_UNLOCK();
+          return err;
+        }
 
       obj = ___new_symkey (name, subtype);
     }
+
+  SYMKEY_UNLOCK();
 
   return obj;
 }
@@ -2123,7 +2162,11 @@ ___SCMOBJ ___make_symkey_from_scheme_string
 ___SCMOBJ str;
 unsigned int subtype;)
 {
-  ___SCMOBJ obj = ___find_symkey_from_scheme_string (str, subtype);
+  ___SCMOBJ obj;
+
+  SYMKEY_LOCK();
+
+  obj = ___find_symkey_from_scheme_string (str, subtype);
 
   if (obj == ___FAL)
     {
@@ -2131,7 +2174,10 @@ unsigned int subtype;)
       ___SCMOBJ name = ___alloc_scmobj (NULL, ___sSTRING, n<<___LCS);
 
       if (___FIXNUMP(name))
-        return name;
+        {
+          SYMKEY_UNLOCK();
+          return name;
+        }
 
       memmove (___BODY_AS(name,___tSUBTYPED),
                ___BODY_AS(str,___tSUBTYPED),
@@ -2139,6 +2185,8 @@ unsigned int subtype;)
 
       obj = ___new_symkey (name, subtype);
     }
+
+  SYMKEY_UNLOCK();
 
   return obj;
 }
@@ -2155,8 +2203,12 @@ unsigned int subtype;
 void (*visit) ();
 void *data;)
 {
-  ___SCMOBJ tbl = symkey_table (subtype);
+  ___SCMOBJ tbl;
   int i;
+
+  SYMKEY_LOCK();
+
+  tbl = symkey_table (subtype);
 
   for (i=___INT(___VECTORLENGTH(tbl))-1; i>0; i--)
     {
@@ -2168,6 +2220,8 @@ void *data;)
           probe = ___SYMKEY_NEXT_FIELD(probe);
         }
     }
+
+  SYMKEY_UNLOCK();
 }
 
 
@@ -4816,6 +4870,10 @@ ___SCMOBJ ___setup_mem ___PVOID
    * table.
    */
 
+#ifndef ___SINGLE_THREADED_VMS
+  ___SPINLOCK_INIT(symkey_lock_storage);
+#endif
+
   ___glo_list_setup ();
 
   {
@@ -4905,6 +4963,9 @@ ___virtual_machine_state ___vms;)
 
 void ___cleanup_mem ___PVOID
 {
+#ifndef ___SINGLE_THREADED_VMS
+  ___SPINLOCK_DESTROY(symkey_lock_storage);
+#endif
   free_psections ();
 }
 
