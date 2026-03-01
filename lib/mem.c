@@ -385,6 +385,10 @@
 #define MISC_MEM_UNLOCK()
 #define SYMKEY_LOCK()
 #define SYMKEY_UNLOCK()
+#define GCHT_LOCK(ht)
+#define GCHT_UNLOCK(ht)
+#define GCHT_TABLE_LOCK(ht)
+#define GCHT_TABLE_UNLOCK(ht)
 
 #else
 
@@ -396,6 +400,53 @@ ___SPINLOCK_DECL(symkey_lock_storage)
 #define MISC_MEM_UNLOCK() ___SPINLOCK_UNLOCK(misc_mem_lock)
 #define SYMKEY_LOCK() ___SPINLOCK_LOCK(symkey_lock_storage)
 #define SYMKEY_UNLOCK() ___SPINLOCK_UNLOCK(symkey_lock_storage)
+
+/*
+ * Per-table CAS spinlock using the NEXT field (body[0]) of gc-hash-tables.
+ * During normal operation NEXT is ___FIX(0) (unused).  During GC all
+ * mutators are stopped, so GC can freely repurpose NEXT for its chain.
+ */
+#define GCHT_LOCK(ht) \
+  do { \
+    ___VOLATILE ___WORD *___gcht_lk = \
+      &___BODY_AS(ht,___tWEAK)[___GCHASHTABLE_NEXT]; \
+    while (___COMPARE_AND_SWAP_WORD( \
+             ___CAST(___WORD*,___gcht_lk), ___FIX(0), ___FIX(1)) \
+           != ___FIX(0)) \
+      ___CPU_RELAX(); \
+  } while (0)
+
+#define GCHT_UNLOCK(ht) \
+  do { \
+    ___SHARED_MEMORY_BARRIER(); \
+    ___BODY_AS(ht,___tWEAK)[___GCHASHTABLE_NEXT] = ___FIX(0); \
+  } while (0)
+
+/*
+ * Spinlock array for Scheme-level hash table access (##table-access).
+ * Unlike GCHT_LOCK (which uses body[0] and is only safe in C where GC
+ * can't trigger), this array is external to gc-hash-tables and immune
+ * to GC interference.  Indexed by hashing the gcht address.
+ */
+#define GCHT_TABLE_LOCK_COUNT 64
+static ___VOLATILE ___WORD gcht_table_lock_words[GCHT_TABLE_LOCK_COUNT];
+
+#define GCHT_TABLE_LOCK_INDEX(ht) \
+  ((___CAST(___UWORD, ht) >> 6) & (GCHT_TABLE_LOCK_COUNT - 1))
+
+#define GCHT_TABLE_LOCK(ht) \
+  do { \
+    ___VOLATILE ___WORD *___p = \
+      &gcht_table_lock_words[GCHT_TABLE_LOCK_INDEX(ht)]; \
+    while (___COMPARE_AND_SWAP_WORD(___CAST(___WORD*,___p), 0, 1) != 0) \
+      ___CPU_RELAX(); \
+  } while (0)
+
+#define GCHT_TABLE_UNLOCK(ht) \
+  do { \
+    ___SHARED_MEMORY_BARRIER(); \
+    gcht_table_lock_words[GCHT_TABLE_LOCK_INDEX(ht)] = 0; \
+  } while (0)
 
 #endif
 
@@ -1459,7 +1510,11 @@ ___EXP_FUNC(void,___still_obj_refcount_inc)
         (obj)
 ___WORD obj;)
 {
+#ifndef ___SINGLE_THREADED_VMS
+  ___FETCH_AND_ADD_WORD(&___BODY0(obj)[___STILL_REFCOUNT-___STILL_BODY], 1);
+#else
   ___BODY0(obj)[___STILL_REFCOUNT-___STILL_BODY]++;
+#endif
 }
 
 
@@ -1473,7 +1528,11 @@ ___EXP_FUNC(void,___still_obj_refcount_dec)
         (obj)
 ___WORD obj;)
 {
+#ifndef ___SINGLE_THREADED_VMS
+  ___FETCH_AND_ADD_WORD(&___BODY0(obj)[___STILL_REFCOUNT-___STILL_BODY], -1);
+#else
   ___BODY0(obj)[___STILL_REFCOUNT-___STILL_BODY]--;
+#endif
 }
 
 
@@ -4887,6 +4946,11 @@ ___SCMOBJ ___setup_mem ___PVOID
 
 #ifndef ___SINGLE_THREADED_VMS
   ___SPINLOCK_INIT(symkey_lock_storage);
+  {
+    int ___i;
+    for (___i = 0; ___i < GCHT_TABLE_LOCK_COUNT; ___i++)
+      gcht_table_lock_words[___i] = 0;
+  }
 #endif
 
   ___glo_list_setup ();
@@ -5726,6 +5790,30 @@ ___PSDKR)
 }
 
 
+/*
+ * Scheme-callable lock/unlock for non-eq? hash table access.
+ * Uses the external spinlock array (not body[0]) so GC cannot
+ * interfere with the lock state.
+ */
+___SCMOBJ ___gc_hash_table_table_lock
+   ___P((___SCMOBJ ht),
+        (ht)
+___SCMOBJ ht;)
+{
+  GCHT_TABLE_LOCK(ht);
+  return ___VOID;
+}
+
+___SCMOBJ ___gc_hash_table_table_unlock
+   ___P((___SCMOBJ ht),
+        (ht)
+___SCMOBJ ht;)
+{
+  GCHT_TABLE_UNLOCK(ht);
+  return ___VOID;
+}
+
+
 ___SCMOBJ ___gc_hash_table_ref
    ___P((___SCMOBJ ht,
          ___SCMOBJ key),
@@ -5738,6 +5826,9 @@ ___SCMOBJ key;)
   int probe2;
   int step2;
   ___SCMOBJ obj;
+  ___SCMOBJ result;
+
+  GCHT_LOCK(ht);
 
 #ifdef ___GC_HASH_TABLE_REHASH_LAZILY
 
@@ -5754,9 +5845,12 @@ ___SCMOBJ key;)
   obj = ___FIELD(WEAK,ht, probe2+___GCHASHTABLE_KEY0);
 
   if (___EQP(obj,key))
-    return ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_VAL0);
+    {
+      result = ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_VAL0);
+    }
   else if (!___EQP(obj,___UNUSED))
     {
+      result = ___UNUSED;
       for (;;)
         {
           probe2 -= step2;
@@ -5765,13 +5859,21 @@ ___SCMOBJ key;)
           obj = ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_KEY0);
 
           if (___EQP(obj,key))
-            return ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_VAL0);
+            {
+              result = ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_VAL0);
+              break;
+            }
           else if (___EQP(obj,___UNUSED))
             break;
         }
     }
+  else
+    {
+      result = ___UNUSED; /* key was not found */
+    }
 
-  return ___UNUSED; /* key was not found */
+  GCHT_UNLOCK(ht);
+  return result;
 }
 
 
@@ -5790,6 +5892,9 @@ ___SCMOBJ val;)
   int probe2;
   int step2;
   ___SCMOBJ obj;
+  ___SCMOBJ result;
+
+  GCHT_LOCK(ht);
 
 #ifdef ___GC_HASH_TABLE_REHASH_LAZILY
 
@@ -5804,6 +5909,8 @@ ___SCMOBJ val;)
   probe2 <<= 1;
   step2 <<= 1;
   obj = ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_KEY0);
+
+  result = ___FAL; /* default: table does not need to be resized */
 
   if (!___EQP(val,___ABSENT))
     {
@@ -5824,7 +5931,9 @@ ___SCMOBJ val;)
           if (___FIXNEGATIVEP(___GCHASHTABLE_FREE_FIELD(ht) =
                                 ___FIXSUB(___GCHASHTABLE_FREE_FIELD(ht),
                                           ___FIX(1))))
-            return ___TRU;
+            {
+              result = ___TRU;
+            }
         }
       else
         {
@@ -5872,7 +5981,9 @@ ___SCMOBJ val;)
                       ___FIX(1));
           if (___FIXLT(___GCHASHTABLE_COUNT_FIELD(ht),
                        ___GCHASHTABLE_MIN_COUNT_FIELD(ht)))
-            return ___TRU;
+            {
+              result = ___TRU;
+            }
         }
       else if (!___EQP(obj,___UNUSED))
         {
@@ -5892,11 +6003,8 @@ ___SCMOBJ val;)
         }
     }
 
- /*
-  * Hash table does not need to be resized.
-  */
-
-  return ___FAL;
+  GCHT_UNLOCK(ht);
+  return result;
 }
 
 
@@ -6020,6 +6128,9 @@ ___BOOL find;)
   ___SCMOBJ k1_probe2 = ___FIX(0);
   ___SCMOBJ k2 = ___FIX(0);
   ___SCMOBJ k2_probe2 = ___FIX(0);
+  ___SCMOBJ result;
+
+  GCHT_LOCK(ht);
 
 #ifdef ___GC_HASH_TABLE_REHASH_LAZILY
 
@@ -6066,10 +6177,16 @@ ___BOOL find;)
           /* both key1 and key2 were found in the table */
 
           if (k1_probe2 == k2_probe2)
-            return ___FIX(0); /* keys are in the same equiv class */
+            {
+              result = ___FIX(0); /* keys are in the same equiv class */
+              goto done;
+            }
 
           if (find)
-            return ___FIX(1); /* keys are not in the same equiv class */
+            {
+              result = ___FIX(1); /* keys are not in the same equiv class */
+              goto done;
+            }
 
           k1 = ___INT(k1);
           k2 = ___INT(k2);
@@ -6089,14 +6206,18 @@ ___BOOL find;)
                 ___FIX(k2_probe2);
             }
 
-          return ___FIX(1);
+          result = ___FIX(1);
+          goto done;
         }
       else
         {
           /* key1 was found in the table, but key2 was not found */
 
           if (find)
-            return ___FIX(3); /* keys are not in the same equiv class */
+            {
+              result = ___FIX(3); /* keys are not in the same equiv class */
+              goto done;
+            }
 
           k1 = ___INT(k1);
 
@@ -6115,7 +6236,10 @@ ___BOOL find;)
           /* key2 was found in the table, but key1 was not found */
 
           if (find)
-            return ___FIX(3); /* keys are not in the same equiv class */
+            {
+              result = ___FIX(3); /* keys are not in the same equiv class */
+              goto done;
+            }
 
           k2 = ___INT(k2);
 
@@ -6129,7 +6253,10 @@ ___BOOL find;)
           /* key1 and key2 were not found in the table */
 
           if (find)
-            return ___FIX(5); /* keys are not in the same equiv class */
+            {
+              result = ___FIX(5); /* keys are not in the same equiv class */
+              goto done;
+            }
 
           ___FIELD(WEAK, ht, key1_probe2+___GCHASHTABLE_KEY0) = key1;
           ___FIELD(WEAK, ht, key1_probe2+___GCHASHTABLE_VAL0) = ___SPECIAL(2);
@@ -6162,9 +6289,17 @@ ___BOOL find;)
   if (___FIXNEGATIVEP(___GCHASHTABLE_FREE_FIELD(ht) =
                       ___FIXSUB(___GCHASHTABLE_FREE_FIELD(ht),
                                 ___FIX(allocated))))
-    return ___FIX(allocated*2); /* signal that table needs to grow */
+    {
+      result = ___FIX(allocated*2); /* signal that table needs to grow */
+    }
   else
-    return ___FIX(allocated*2+1); /* signal that table doesn't need to grow */
+    {
+      result = ___FIX(allocated*2+1); /* signal that table doesn't need to grow */
+    }
+
+done:
+  GCHT_UNLOCK(ht);
+  return result;
 }
 
 
@@ -6176,10 +6311,16 @@ ___SCMOBJ ___gc_hash_table_rehash
 ___SCMOBJ ht_src;
 ___SCMOBJ ht_dst;)
 {
-  ___SCMOBJ* body_src = ___BODY_AS(ht_src,___tSUBTYPED);
-  ___SIZE_TS words = ___HD_WORDS(body_src[-1]);
-  int size2 = words - ___GCHASHTABLE_KEY0;
+  ___SCMOBJ* body_src;
+  ___SIZE_TS words;
+  int size2;
   int i;
+
+  GCHT_LOCK(ht_src);
+
+  body_src = ___BODY_AS(ht_src,___tSUBTYPED);
+  words = ___HD_WORDS(body_src[-1]);
+  size2 = words - ___GCHASHTABLE_KEY0;
 
   if (___FIXZEROP(___FIXAND(body_src[___GCHASHTABLE_FLAGS],
                             ___FIX(___GCHASHTABLE_FLAG_UNION_FIND))))
@@ -6212,6 +6353,8 @@ ___SCMOBJ ht_dst;)
             }
         }
     }
+
+  GCHT_UNLOCK(ht_src);
 
   return ht_dst;
 }

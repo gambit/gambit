@@ -491,15 +491,7 @@ ___mod_or_lnk (*linker)();)
   min_heap_len = 0;
   max_heap_len = 0;
   live_percent = 0;
-#ifdef ___SINGLE_THREADED_VMS
-  parallelism_level = 1;
-#else
-  {
-    int count = ___cpu_count (-1);
-    if (count < 1) count = 1;
-    parallelism_level = ___CEILING_DIV(count*50,100); /* default = 50% */
-  }
-#endif
+  parallelism_level = 1; /* default to 1; use GAMBOPT=-:pN for more */
   standard_level = -1;
   debug_settings = ___DEBUG_SETTINGS_INITIAL;
 

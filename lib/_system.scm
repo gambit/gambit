@@ -18,6 +18,10 @@
 
 #include "mem.h"
 
+/* SMP table lock functions defined in mem.c */
+extern ___SCMOBJ ___gc_hash_table_table_lock(___SCMOBJ ht);
+extern ___SCMOBJ ___gc_hash_table_table_unlock(___SCMOBJ ht);
+
 c-declare-end
 )
 
@@ -1442,6 +1446,27 @@ end-of-code
         (##gc-hash-table-make flags count min-count free size))
       gcht)))
 
+;; SMP: per-table spinlock for Scheme-level hash table access.
+;; Uses external spinlock array in mem.c (GC-safe, not body[0]).
+;; Calls C functions defined in mem.c.
+(define-prim (##gc-hash-table-table-lock! gcht)
+  (##c-code #<<end-of-code
+___SCMOBJ ht;
+___POP_ARGS1(ht);
+___gc_hash_table_table_lock(ht);
+___RESULT = ___VOID;
+end-of-code
+))
+
+(define-prim (##gc-hash-table-table-unlock! gcht)
+  (##c-code #<<end-of-code
+___SCMOBJ ht;
+___POP_ARGS1(ht);
+___gc_hash_table_table_unlock(ht);
+___RESULT = ___VOID;
+end-of-code
+))
+
 (define-prim (##gc-hash-table-length gcht)
   ;;TODO: update to new gcht primitives
   (##structure-length gcht))
@@ -2079,7 +2104,7 @@ end-of-code
     (let loop1 ((h (f key)))
       (if (##not (##fixnum? h))
           (loop1 (##raise-invalid-hash-number-exception f key))
-          (let* ((gcht
+          (let ((gcht
                   (let* ((gcht (##table-get-gcht table))
                          (flags (macro-gc-hash-table-flags gcht)))
                     (if (or (##not
@@ -2107,38 +2132,63 @@ end-of-code
                         (begin
                           (##table-resize! table)
                           (macro-table-gcht table))
-                        gcht)))
-                 (size
-                  (macro-gc-hash-table-size gcht))
-                 (probe2
-                  (##fxarithmetic-shift-left
-                   (##fxmodulo h size)
-                   1))
-                 (step2
-                  2)
-                 (size2
-                  (##fxarithmetic-shift-left size 1))
-                 (test
-                  (macro-table-test table)))
-            (let loop2 ((probe2 probe2)
-                        (deleted2 #f))
-              (let ((k (macro-gc-hash-table-key-ref gcht probe2)))
-                (cond ((##eq? k (macro-unused-obj))
-                       (not-found table key gcht probe2 deleted2 val))
-                      ((##eq? k (macro-deleted-obj))
-                       (let ((next-probe2 (##fx- probe2 step2)))
-                         (loop2 (if (##fx< next-probe2 0)
-                                    (##fx+ next-probe2 size2)
-                                    next-probe2)
-                                (or deleted2 probe2))))
-                      ((test key k)
-                       (found table key gcht probe2 val))
-                      (else
-                       (let ((next-probe2 (##fx- probe2 step2)))
-                         (loop2 (if (##fx< next-probe2 0)
-                                    (##fx+ next-probe2 size2)
-                                    next-probe2)
-                                deleted2)))))))))))
+                        gcht))))
+            ;; Probe WITHOUT lock — test calls may trigger GC, which
+            ;; moves gcht and invalidates address-based spinlock index.
+            ;; Lock only for the brief mutation phase after probing.
+            (let* ((size
+                    (macro-gc-hash-table-size gcht))
+                   (probe2
+                    (##fxarithmetic-shift-left
+                     (##fxmodulo h size)
+                     1))
+                   (step2
+                    2)
+                   (size2
+                    (##fxarithmetic-shift-left size 1))
+                   (test
+                    (macro-table-test table)))
+              (let loop2 ((probe2 probe2)
+                          (deleted2 #f))
+                (let ((k (macro-gc-hash-table-key-ref gcht probe2)))
+                  (cond ((##eq? k (macro-unused-obj))
+                         ;; Key not found. Lock, verify, then callback.
+                         (##gc-hash-table-table-lock! gcht)
+                         (if (and (##eq? gcht (macro-table-gcht table))
+                                  (##eq? (macro-gc-hash-table-key-ref
+                                          gcht probe2)
+                                         (macro-unused-obj))
+                                  (or (##not deleted2)
+                                      (let ((dk (macro-gc-hash-table-key-ref
+                                                 gcht deleted2)))
+                                        (or (##eq? dk (macro-deleted-obj))
+                                            (##eq? dk (macro-unused-obj))))))
+                             (not-found table key gcht probe2 deleted2 val)
+                             (begin
+                               (##gc-hash-table-table-unlock! gcht)
+                               (loop1 (f key)))))
+                        ((##eq? k (macro-deleted-obj))
+                         (let ((next-probe2 (##fx- probe2 step2)))
+                           (loop2 (if (##fx< next-probe2 0)
+                                      (##fx+ next-probe2 size2)
+                                      next-probe2)
+                                  (or deleted2 probe2))))
+                        ((test key k)
+                         ;; Key found. Lock, verify, then callback.
+                         (##gc-hash-table-table-lock! gcht)
+                         (if (and (##eq? gcht (macro-table-gcht table))
+                                  (##eq? k (macro-gc-hash-table-key-ref
+                                            gcht probe2)))
+                             (found table key gcht probe2 val)
+                             (begin
+                               (##gc-hash-table-table-unlock! gcht)
+                               (loop1 (f key)))))
+                        (else
+                         (let ((next-probe2 (##fx- probe2 step2)))
+                           (loop2 (if (##fx< next-probe2 0)
+                                      (##fx+ next-probe2 size2)
+                                      next-probe2)
+                                  deleted2))))))))))))
 
 (define-prim (##table-ref
               table
@@ -2154,10 +2204,13 @@ end-of-code
          key
          (lambda (table key gcht probe2 default-value)
            ;; key was found at position "probe2" so just return value field
-           (macro-gc-hash-table-val-ref gcht probe2))
+           (let ((v (macro-gc-hash-table-val-ref gcht probe2)))
+             (##gc-hash-table-table-unlock! gcht)
+             v))
          (lambda (table key gcht probe2 deleted2 default-value)
            ;; key was not found (search ended at position "probe2" and the
            ;; first deleted entry encountered is at position "deleted2")
+           (##gc-hash-table-table-unlock! gcht)
            (cond ((##not (##eq? default-value (macro-absent-obj)))
                   default-value)
                  ((##not (##eq? (macro-table-init table) (macro-absent-obj)))
@@ -2229,22 +2282,27 @@ end-of-code
                  (macro-gc-hash-table-count-set! gcht count)
                  (macro-gc-hash-table-key-set! gcht probe2 (macro-deleted-obj))
                  (macro-gc-hash-table-val-set! gcht probe2 (macro-unused-obj))
+                 (##gc-hash-table-table-unlock! gcht)
                  (if (##fx< count (macro-gc-hash-table-min-count gcht))
                      (##table-resize! table)
                      (##void)))
                (begin
                  (macro-gc-hash-table-val-set! gcht probe2 val)
+                 (##gc-hash-table-table-unlock! gcht)
                  (##void))))
          (lambda (table key gcht probe2 deleted2 val)
            ;; key was not found (search ended at position "probe2" and the
            ;; first deleted entry encountered is at position "deleted2")
            (if (##eq? val (macro-absent-obj))
-               (##void)
+               (begin
+                 (##gc-hash-table-table-unlock! gcht)
+                 (##void))
                (if deleted2
                    (let ((count (##fx+ (macro-gc-hash-table-count gcht) 1)))
                      (macro-gc-hash-table-count-set! gcht count)
                      (macro-gc-hash-table-key-set! gcht deleted2 key)
                      (macro-gc-hash-table-val-set! gcht deleted2 val)
+                     (##gc-hash-table-table-unlock! gcht)
                      (##void))
                    (let ((count (##fx+ (macro-gc-hash-table-count gcht) 1))
                          (free (##fx- (macro-gc-hash-table-free gcht) 1)))
@@ -2252,6 +2310,7 @@ end-of-code
                      (macro-gc-hash-table-free-set! gcht free)
                      (macro-gc-hash-table-key-set! gcht probe2 key)
                      (macro-gc-hash-table-val-set! gcht probe2 val)
+                     (##gc-hash-table-table-unlock! gcht)
                      (if (##fx< free 0)
                          (##table-resize! table)
                          (##void))))))
