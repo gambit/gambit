@@ -1479,6 +1479,11 @@
 
   (##declare (not interrupts-enabled))
 
+  ;; Lazily start extra VM processors on first thread-start!
+  ;; This avoids the overhead of idle processors for single-threaded
+  ;; programs (e.g., gsc compilation).
+  (##ensure-parallelism!)
+
   ;; acquire low-level lock of thread
   (macro-lock-thread! thread)
 
@@ -3165,6 +3170,14 @@
           (if (##fx> level 0) level (##fx+ (##cpu-count) level))))
     (if (##fx> nb-procs 1)
         (##cvmr nb-procs))))
+
+(define ##parallelism-started? #f)
+
+(define (##ensure-parallelism!)
+  (if (##not ##parallelism-started?)
+      (begin
+        (set! ##parallelism-started? #t)
+        (##startup-parallelism!))))
 
 ;; The ##startup-threading! procedure initializes the thread system.
 ;; It creates the primordial thread, the primordial thread group and
@@ -6899,6 +6912,14 @@
           (if (##fx> level 0) level (##fx+ (##cpu-count) level))))
     (if (##fx> nb-procs 1)
         (##cvmr nb-procs))))
+
+(define ##parallelism-started? #f)
+
+(define (##ensure-parallelism!)
+  (if (##not ##parallelism-started?)
+      (begin
+        (set! ##parallelism-started? #t)
+        (##startup-parallelism!))))
 
 (define-prim (##startup-threading!)
 
