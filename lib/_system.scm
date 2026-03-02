@@ -2325,7 +2325,14 @@ end-of-code
                 (if (##mem-allocated? key)
                     (macro-table-gcht-set! table new-gcht)
                     (macro-table-hash-set! table new-gcht))))
-          (##void)))))
+          ;; SMP: verify gcht is still current; another thread may have
+          ;; resized between our get-eq-gcht and gc-hash-table-set!
+          (if (##eq? gcht
+                     (if (##mem-allocated? key)
+                         (macro-table-gcht table)
+                         (macro-table-hash table)))
+              (##void)
+              (##table-set! table key val))))))
 
 (define-prim (table-set!
               table

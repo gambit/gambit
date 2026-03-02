@@ -400,31 +400,11 @@ ___SPINLOCK_DECL(symkey_lock_storage)
 #define SYMKEY_UNLOCK() ___SPINLOCK_UNLOCK(symkey_lock_storage)
 
 /*
- * Per-table CAS spinlock using the NEXT field (body[0]) of gc-hash-tables.
- * During normal operation NEXT is ___FIX(0) (unused).  During GC all
- * mutators are stopped, so GC can freely repurpose NEXT for its chain.
- */
-#define GCHT_LOCK(ht) \
-  do { \
-    ___VOLATILE ___WORD *___gcht_lk = \
-      &___BODY_AS(ht,___tWEAK)[___GCHASHTABLE_NEXT]; \
-    while (___COMPARE_AND_SWAP_WORD( \
-             ___CAST(___WORD*,___gcht_lk), ___FIX(0), ___FIX(1)) \
-           != ___FIX(0)) \
-      ___CPU_RELAX(); \
-  } while (0)
-
-#define GCHT_UNLOCK(ht) \
-  do { \
-    ___SHARED_MEMORY_BARRIER(); \
-    ___BODY_AS(ht,___tWEAK)[___GCHASHTABLE_NEXT] = ___FIX(0); \
-  } while (0)
-
-/*
- * Spinlock array for Scheme-level hash table access (##table-access).
- * Unlike GCHT_LOCK (which uses body[0] and is only safe in C where GC
- * can't trigger), this array is external to gc-hash-tables and immune
- * to GC interference.  Indexed by hashing the gcht address.
+ * External spinlock array for all gc-hash-table locking (both C-level
+ * operations and Scheme-level table-access).  Uses a fixed array of
+ * spinlocks indexed by hashing the gcht address.  This is GC-safe
+ * because the locks are external to gc-hash-table objects, so GC's
+ * use of body[0] (GCHASHTABLE_NEXT) for chaining doesn't interfere.
  */
 #define GCHT_TABLE_LOCK_COUNT 64
 static ___VOLATILE ___WORD gcht_table_lock_words[GCHT_TABLE_LOCK_COUNT];
@@ -445,6 +425,10 @@ static ___VOLATILE ___WORD gcht_table_lock_words[GCHT_TABLE_LOCK_COUNT];
     ___SHARED_MEMORY_BARRIER(); \
     gcht_table_lock_words[GCHT_TABLE_LOCK_INDEX(ht)] = 0; \
   } while (0)
+
+/* C-level hash table functions use the same external spinlock array */
+#define GCHT_LOCK(ht)   GCHT_TABLE_LOCK(ht)
+#define GCHT_UNLOCK(ht) GCHT_TABLE_UNLOCK(ht)
 
 #endif
 
@@ -5151,17 +5135,11 @@ ___PSDKR)
 #endif
 #else
 #ifndef ___GC_HASH_TABLE_REHASH_LAZILY
-/*
- * Always use lazy rehash.  Eager rehash uses a pointer-based hash
- * function (___GCHASHTABLE_HASH_STEP) which is only correct for eq?
- * tables.  Non-eq? tables place entries using a content-based Scheme
- * hash function, and eagerly repositioning them based on pointer hash
- * corrupts the table.  With lazy rehash, eq? tables are rehashed
- * on first access via ___gc_hash_table_ref/set (which use pointer
- * hash), and non-eq? tables need no rehash because content-based
- * hashes are stable across GC.
- */
+#ifdef ___SINGLE_THREADED_VMS
 #define ___GC_HASH_TABLE_REHASH_LAZILY
+#else
+#define ___GC_HASH_TABLE_REHASH_EAGERLY
+#endif
 #endif
 #endif
 
