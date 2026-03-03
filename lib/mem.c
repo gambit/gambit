@@ -6378,7 +6378,21 @@ ___PSDKR)
 
   alloc_stack_ptr = p2;
 
-  ___FP_SET_STK(alloc_stack_ptr,
+  /*
+   * Mark the first break frame as not created by a stack section
+   * overflow, so that ___stack_overflow_undo_if_possible will not
+   * try to undo to a previous msection.
+   *
+   * NOTE: This must write to ___ps->stack_break (the first break
+   * frame position), NOT alloc_stack_ptr (the current fp position).
+   * When there are frames on the stack (length > FIRST_BREAK_FRAME_SPACE),
+   * alloc_stack_ptr is below the first break frame, and writing to
+   * alloc_stack_ptr[FIRST_BREAK_FRAME_STACK_MSECTION] would miss the
+   * actual STACK_MSECTION slot, leaving stale data that could cause
+   * ___stack_overflow_undo_if_possible to corrupt stack_break.
+   */
+
+  ___FP_SET_STK(___ps->stack_break,
                 -___FIRST_BREAK_FRAME_STACK_MSECTION,
                 ___CAST(___WORD,
                         ___CAST(___msection*,NULL))) /* not a stack section overflow */
@@ -7302,6 +7316,21 @@ ___PSDKR)
        */
 
       ___FP_ADJFP(alloc_stack_ptr,___FIRST_BREAK_FRAME_SPACE)
+
+      /*
+       * Initialize the first break frame's msection field to NULL.
+       * This is needed because if the "reached break frame" path is
+       * taken (instead of "reached max frames"), the STACK_MSECTION
+       * and STACK_BREAK fields won't be explicitly set.  Without
+       * this initialization, ___stack_overflow_undo_if_possible may
+       * read stale data from a previous use of this msection,
+       * potentially causing stack_break corruption and crashes.
+       */
+
+      ___FP_SET_STK(alloc_stack_ptr,
+                    -___FIRST_BREAK_FRAME_STACK_MSECTION,
+                    ___CAST(___WORD,
+                            ___CAST(___msection*,NULL)))
 
       /*
        * Because ___stack_limit is only called by the stack-limit
