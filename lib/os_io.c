@@ -9286,6 +9286,62 @@ int options;)
 
       ___close_half_duplex_pipe (&hdp_errno, 1);
 
+#ifndef ___SINGLE_THREADED_VMS
+
+      /*
+       * SMP fix: Use non-blocking read with polling to allow this
+       * processor to participate in GC barriers while waiting for
+       * the child process to exec().
+       *
+       * When another processor triggers GC, it raises ___INTR_SYNC_OP
+       * on all processors and waits in the barrier for them to join.
+       * If this processor is blocked in a synchronous read(), it
+       * cannot enter the barrier, causing a deadlock that leads to
+       * memory corruption when the read eventually completes and GC
+       * state is inconsistent.
+       *
+       * The non-blocking read loop checks the interrupt flag between
+       * attempts and calls service_sync_op to participate in the
+       * barrier when requested.
+       */
+
+      {
+        ___processor_state ___ps = ___PSTATE;
+        int pipe_flags = fcntl (hdp_errno.reading_fd, F_GETFL, 0);
+
+        if (pipe_flags >= 0)
+          fcntl (hdp_errno.reading_fd, F_SETFL, pipe_flags | O_NONBLOCK);
+
+        for (;;)
+          {
+            n = read (hdp_errno.reading_fd,
+                      &execvp_errno,
+                      sizeof (execvp_errno));
+
+            if (n >= 0)
+              break; /* got data or EOF */
+
+            if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
+              break; /* real error */
+
+            /* Service GC barrier if another processor requested it */
+            if (___ps->intr_flag[___INTR_SYNC_OP] != ___FIX(0))
+              service_sync_op (___PSPNC);
+            else
+              {
+                int spin_i;
+                for (spin_i = 0; spin_i < 1000; spin_i++)
+                  ___CPU_RELAX();
+              }
+          }
+
+        /* Restore blocking mode */
+        if (pipe_flags >= 0)
+          fcntl (hdp_errno.reading_fd, F_SETFL, pipe_flags);
+      }
+
+#else
+
       /*
        * The following call to read has been known to fail with EINTR,
        * in particular on OpenBSD 4.5.  This is probably because the
@@ -9297,6 +9353,8 @@ int options;)
       n = ___read_no_EINTR (hdp_errno.reading_fd,
                             &execvp_errno,
                             sizeof (execvp_errno));
+
+#endif
 
       if (n < 0)
         e = err_code_from_errno ();
