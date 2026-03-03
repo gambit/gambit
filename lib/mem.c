@@ -5150,11 +5150,18 @@ ___PSDKR)
 #endif
 #else
 #ifndef ___GC_HASH_TABLE_REHASH_LAZILY
-#ifdef ___SINGLE_THREADED_VMS
+/*
+ * Always use lazy rehash.  Eager rehash uses ___GCHASHTABLE_HASH_STEP
+ * (pointer-based hash) which is only correct for eq? tables.  Non-eq?
+ * tables (equal?, string=?, etc.) place entries using content-based
+ * Scheme hash functions.  Eagerly repositioning them by pointer hash
+ * corrupts the table — creating unreachable entries or infinite probe
+ * loops.  With lazy rehash, eq? tables are rehashed on first access
+ * via ___gc_hash_table_ref/set (which use pointer hash), and non-eq?
+ * tables are marked KEY_MOVED but rehashed correctly by the Scheme
+ * level ##table-access which uses the proper hash function.
+ */
 #define ___GC_HASH_TABLE_REHASH_LAZILY
-#else
-#define ___GC_HASH_TABLE_REHASH_EAGERLY
-#endif
 #endif
 #endif
 
@@ -6294,7 +6301,16 @@ ___SCMOBJ ht_dst;)
   int size2;
   int i;
 
-  GCHT_LOCK(ht_src);
+  /*
+   * Do NOT hold GCHT_LOCK(ht_src) here.  ___gc_hash_table_set takes
+   * GCHT_LOCK(ht_dst) internally.  With the striped spinlock array
+   * (64 slots), ht_src and ht_dst can hash to the same slot, and
+   * the non-reentrant CAS would self-deadlock.
+   *
+   * No lock is needed on ht_src because the Scheme-level ##table-rehash!
+   * ensures exclusive access to the source table during rehash.  ht_dst
+   * is a freshly allocated table not yet visible to other threads.
+   */
 
   body_src = ___BODY_AS(ht_src,___tSUBTYPED);
   words = ___HD_WORDS(body_src[-1]);
@@ -6331,8 +6347,6 @@ ___SCMOBJ ht_dst;)
             }
         }
     }
-
-  GCHT_UNLOCK(ht_src);
 
   return ht_dst;
 }
