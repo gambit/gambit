@@ -157,6 +157,17 @@ int maxfd;)
 
 /* Device groups. */
 
+#ifdef ___SINGLE_THREADED_VMS
+#define DGROUP_LOCK(dg)
+#define DGROUP_UNLOCK(dg)
+#define DGROUP_LOCK_INIT(dg)
+#else
+#define DGROUP_LOCK(dg)   do { while (__sync_lock_test_and_set(&(dg)->lock, 1)) while ((dg)->lock) ; } while(0)
+#define DGROUP_UNLOCK(dg) __sync_lock_release(&(dg)->lock)
+#define DGROUP_LOCK_INIT(dg) ((dg)->lock = 0)
+#endif
+
+
 
 ___SCMOBJ ___device_group_setup
    ___P((___device_group **dgroup),
@@ -173,6 +184,7 @@ ___device_group **dgroup;)
     return ___FIX(___HEAP_OVERFLOW_ERR);
 
   g->list = NULL;
+  DGROUP_LOCK_INIT(g);
 
   *dgroup = g;
 
@@ -201,8 +213,11 @@ void ___device_add_to_group
 ___device_group *dgroup;
 ___device *dev;)
 {
-  ___device *head = dgroup->list;
+  ___device *head;
 
+  DGROUP_LOCK(dgroup);
+
+  head = dgroup->list;
   dev->group = dgroup;
 
   if (head == NULL)
@@ -219,6 +234,8 @@ ___device *dev;)
       tail->next = dev;
       head->prev = dev;
     }
+
+  DGROUP_UNLOCK(dgroup);
 }
 
 void ___device_remove_from_group
@@ -227,22 +244,38 @@ void ___device_remove_from_group
 ___device *dev;)
 {
   ___device_group *dgroup = dev->group;
-  ___device *prev = dev->prev;
-  ___device *next = dev->next;
 
-  if (prev == dev)
-    dgroup->list = NULL;
-  else
+  if (dgroup == NULL) return;
+
+  DGROUP_LOCK(dgroup);
+
+  /* Re-check under lock in case another thread already removed this device */
+  if (dev->group == NULL)
     {
-      if (dgroup->list == dev)
-        dgroup->list = next;
-      prev->next = next;
-      next->prev = prev;
-      dev->next = dev;
-      dev->prev = dev;
+      DGROUP_UNLOCK(dgroup);
+      return;
     }
 
+  {
+    ___device *prev = dev->prev;
+    ___device *next = dev->next;
+
+    if (prev == dev)
+      dgroup->list = NULL;
+    else
+      {
+        if (dgroup->list == dev)
+          dgroup->list = next;
+        prev->next = next;
+        next->prev = prev;
+        dev->next = dev;
+        dev->prev = dev;
+      }
+  }
+
   dev->group = NULL;
+
+  DGROUP_UNLOCK(dgroup);
 }
 
 ___device_group *___global_device_group ___PVOID
@@ -1611,21 +1644,32 @@ ___device *self;)
 {
   ___SCMOBJ e = ___FIX(___NO_ERR);
 
-  if (
+  {
 #ifdef USE_PUMPS
-      InterlockedDecrement (&self->refcount) == 0
+    int new_rc = InterlockedDecrement (&self->refcount);
 #else
 #ifndef ___SINGLE_THREADED_VMS
-      __sync_sub_and_fetch (&self->refcount, 1) == 0
+    int new_rc = __sync_sub_and_fetch (&self->refcount, 1);
 #else
-      --self->refcount == 0
+    int new_rc = --self->refcount;
 #endif
 #endif
-      )
-    {
-      e = ___device_release_virt (self);
-      ___FREE_MEM(self);
-    }
+
+#ifndef ___SINGLE_THREADED_VMS
+    if (new_rc < 0)
+      return ___FIX(___NO_ERR); /* don't double-free */
+#endif
+
+    if (new_rc == 0)
+      {
+#ifndef ___SINGLE_THREADED_VMS
+        if (self->group != NULL)
+          ___device_remove_from_group (self);
+#endif
+        e = ___device_release_virt (self);
+        ___FREE_MEM(self);
+      }
+  }
 
   return e;
 }
@@ -1640,6 +1684,11 @@ ___device *self;)
 
   if (self->group == NULL)
     return ___FIX(___UNKNOWN_ERR);
+
+#ifndef ___SINGLE_THREADED_VMS
+  if (self->refcount <= 0)
+    return ___FIX(___UNKNOWN_ERR);
+#endif
 
   ___device_remove_from_group (self);
 

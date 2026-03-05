@@ -4506,8 +4506,10 @@ ___PSDKR)
         {
           ___WORD head = base[___STILL_BODY-1];
           if (___HD_SUBTYPE(head) == ___sFOREIGN)
-            ___release_foreign
-              (___TAG(base + ___STILL_BODY - ___REFERENCE_TO_BODY, ___tSUBTYPED));
+            {
+              ___release_foreign
+                (___TAG(base + ___STILL_BODY - ___REFERENCE_TO_BODY, ___tSUBTYPED));
+            }
           free_mem_aligned_heap (base);
         }
       else
@@ -4548,8 +4550,10 @@ ___processor_state ___ps;)
       ___WORD link = base[___STILL_LINK];
       ___WORD head = base[___STILL_BODY-1];
       if (___HD_SUBTYPE(head) == ___sFOREIGN)
-        ___release_foreign
-          (___TAG(base + ___STILL_BODY - ___REFERENCE_TO_BODY, ___tSUBTYPED));
+        {
+          ___release_foreign
+            (___TAG(base + ___STILL_BODY - ___REFERENCE_TO_BODY, ___tSUBTYPED));
+        }
       free_mem_aligned_heap (base);
       base = ___CAST(___WORD*,link);
     }
