@@ -1596,7 +1596,11 @@ ___device *self;)
 #ifdef USE_PUMPS
   InterlockedIncrement (&self->refcount);
 #else
+#ifndef ___SINGLE_THREADED_VMS
+  __sync_fetch_and_add (&self->refcount, 1);
+#else
   self->refcount++;
+#endif
 #endif
 }
 
@@ -1611,7 +1615,11 @@ ___device *self;)
 #ifdef USE_PUMPS
       InterlockedDecrement (&self->refcount) == 0
 #else
+#ifndef ___SINGLE_THREADED_VMS
+      __sync_sub_and_fetch (&self->refcount, 1) == 0
+#else
       --self->refcount == 0
+#endif
 #endif
       )
     {

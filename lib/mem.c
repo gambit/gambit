@@ -385,6 +385,8 @@
 #define MISC_MEM_UNLOCK()
 #define SYMKEY_LOCK()
 #define SYMKEY_UNLOCK()
+#define RC_LOCK()
+#define RC_UNLOCK()
 #define GCHT_LOCK(ht)
 #define GCHT_UNLOCK(ht)
 #define GCHT_TABLE_LOCK(ht)
@@ -393,6 +395,7 @@
 #else
 
 ___SPINLOCK_DECL(symkey_lock_storage)
+___SPINLOCK_DECL(rc_lock_storage)
 
 #define ALLOC_MEM_LOCK() ___SPINLOCK_LOCK(alloc_mem_lock)
 #define ALLOC_MEM_UNLOCK() ___SPINLOCK_UNLOCK(alloc_mem_lock)
@@ -400,6 +403,8 @@ ___SPINLOCK_DECL(symkey_lock_storage)
 #define MISC_MEM_UNLOCK() ___SPINLOCK_UNLOCK(misc_mem_lock)
 #define SYMKEY_LOCK() ___SPINLOCK_LOCK(symkey_lock_storage)
 #define SYMKEY_UNLOCK() ___SPINLOCK_UNLOCK(symkey_lock_storage)
+#define RC_LOCK() ___SPINLOCK_LOCK(rc_lock_storage)
+#define RC_UNLOCK() ___SPINLOCK_UNLOCK(rc_lock_storage)
 
 /*
  * External spinlock array for all gc-hash-table locking (both C-level
@@ -764,12 +769,18 @@ void *ptr;)
   ___PSGET
   ___rc_header *h = ___CAST(___rc_header*, ptr) - 1;
   ___rc_header *head = &rc_head;
-  ___rc_header *tail = head->prev;
+  ___rc_header *tail;
+
+  RC_LOCK();
+
+  tail = head->prev;
 
   h->prev = tail;
   h->next = head;
   head->prev = h;
   tail->next = h;
+
+  RC_UNLOCK();
 }
 
 
@@ -799,13 +810,24 @@ void *ptr;)
     {
       ___rc_header *h = ___CAST(___rc_header*,ptr) - 1;
 
+#ifndef ___SINGLE_THREADED_VMS
+      if (___FETCH_AND_ADD_WORD(&h->refcount, -1) == 1)
+#else
       if (--h->refcount == 0)
+#endif
         {
-          ___rc_header *prev = h->prev;
-          ___rc_header *next = h->next;
+          ___rc_header *prev;
+          ___rc_header *next;
+
+          RC_LOCK();
+
+          prev = h->prev;
+          next = h->next;
 
           next->prev = prev;
           prev->next = next;
+
+          RC_UNLOCK();
 
           ___FREE_MEM(h);
         }
@@ -821,7 +843,11 @@ void *ptr;)
   if (ptr != 0)
     {
       ___rc_header *h = ___CAST(___rc_header*,ptr) - 1;
+#ifndef ___SINGLE_THREADED_VMS
+      ___FETCH_AND_ADD_WORD(&h->refcount, 1);
+#else
       h->refcount++;
+#endif
     }
 }
 
@@ -4772,6 +4798,7 @@ ___virtual_machine_state ___vms;)
 
   ___SPINLOCK_INIT(misc_mem_lock);
   ___SPINLOCK_INIT(alloc_mem_lock);
+  ___SPINLOCK_INIT(rc_lock_storage);
 
   /*
    * Initialize condition variable to determine end of scan at VM level.
@@ -4987,6 +5014,7 @@ ___virtual_machine_state ___vms;)
 
   ___SPINLOCK_DESTROY(misc_mem_lock);
   ___SPINLOCK_DESTROY(alloc_mem_lock);
+  ___SPINLOCK_DESTROY(rc_lock_storage);
 
   /*
    * Destroy condition variable to determine end of scan at VM level.
@@ -6913,8 +6941,9 @@ ___PSDKR)
     {
       mark_vm_scmobj (___PSPNC);
       mark_symkey_tables (___PSPNC);
-      mark_rc (___PSPNC);
     }
+
+  mark_rc (___PSPNC); /* each processor marks its own per-processor RC list */
 
   mark_global_variables (___PSPNC);
 
