@@ -2623,11 +2623,11 @@
 
   ;; Assumes that exclusive access to the processor has been acquired.
 
-  ;;(##c-code "printf(\"P%d ##wait! in ##thread-check-devices!\\n\",___INT(___ARG1));" (##current-processor-id));;TODO: remove
-
   (let ((code (##wait! (macro-current-processor) timeout))) ;; wait for IO
 
     ;; For each device, check if the IO operation is now possible.
+    ;; The processor lock is held throughout iteration to prevent
+    ;; races on the condvar deq.
 
     (let loop ((condvar (macro-btq-deq-next (macro-current-processor))))
       (if (##eq? condvar (macro-current-processor))
@@ -2636,16 +2636,8 @@
 
             ;; Wakeup waiting threads when IO becomes possible on a
             ;; device.
-            ;;(##c-code "printf(\"(macro-btq-owner condvar)=%d\\n\",___INT(___ARG1));" (macro-btq-owner condvar));;TODO: remove
             (if (##fxodd? (macro-btq-owner condvar)) ;; IO now possible?
-                (begin
-                  ;;(##c-code "printf(\"P%d calling ##device-condvar-broadcast-no-reschedule!\\n\",___INT(___ARG1));" (##current-processor-id));;TODO: remove
-                  ;;TODO: remove possibility of deadlock!
-                  (macro-unlock-current-processor!)
-                  (##device-condvar-broadcast-no-reschedule! condvar)
-                  (macro-lock-current-processor!))
-                ;;(##c-code "printf(\"P%d NOT calling ##device-condvar-broadcast-no-reschedule!\\n\",___INT(___ARG1));" (##current-processor-id))
-                );;TODO: remove
+                (##device-condvar-broadcast-with-processor-locked! condvar))
 
             (loop next))))))
 
@@ -4189,6 +4181,96 @@
   (macro-btq-deq-init! condvar)
 
   (##condvar-signal-no-reschedule! condvar #t))
+
+;; Version of device-condvar-broadcast that keeps the processor lock
+;; held throughout, avoiding the race condition where the condvar deq
+;; is modified between unlock/relock of the processor.
+;;
+;; Uses trylock for condvar and thread locks to prevent lock ordering
+;; deadlocks (processor -> condvar vs condvar -> processor in other
+;; code paths). If a lock can't be acquired, the condvar is left in
+;; the deq for the next heartbeat/poll cycle to retry.
+;;
+;; This follows the same pattern as ##thread-check-timeouts! which
+;; also uses trylock and without-locking variants while holding the
+;; processor lock.
+
+(define-prim (##device-condvar-broadcast-with-processor-locked! condvar)
+  (##declare (not interrupts-enabled))
+
+  ;; Assumes that exclusive access to the processor has been acquired.
+  ;; Does NOT release the processor lock.
+
+  (if (##not (macro-trylock-condvar! condvar))
+      ;; Can't get condvar lock — skip, will retry on next poll
+      (##void)
+      (begin
+        ;; Remove condvar from processor's device deq
+        (macro-btq-deq-remove! condvar)
+        (macro-btq-deq-init! condvar)
+
+        ;; Wake up all threads waiting on this condvar
+        (let loop ()
+          (macro-if-btq-next
+           condvar
+           next-thread
+
+           (if (##not (macro-trylock-thread! next-thread))
+               ;; Can't lock thread — stop processing this condvar.
+               ;; Remaining threads stay in condvar's btq and will be
+               ;; woken when condvar is re-checked.
+               (begin
+                 (macro-unlock-condvar! condvar)
+                 (##void))
+               (begin
+
+                 (macro-thread-resume-thunk-set!
+                  next-thread
+                  ##thread-signaled-condvar-action!)
+
+                 (##thread-btq-remove! next-thread)
+
+                 ;; Remove from timeout queue if present.
+                 ;; Can't use macro-thread-toq-remove-if-in-toq! because
+                 ;; it would try to lock the toq (= current processor),
+                 ;; causing self-deadlock with ticket locks.
+                 (let ((parent (macro-toq-parent next-thread)))
+                   (if parent
+                       (let ((toq (macro-thread->toq next-thread)))
+                         (if (##eq? toq (macro-current-processor))
+                             ;; Same processor — already hold the lock
+                             (##thread-toq-remove! next-thread)
+                             ;; Different processor
+                             (begin
+                               (macro-lock-toq! toq)
+                               (##thread-toq-remove! next-thread)
+                               (macro-unlock-toq! toq))))))
+
+                 ;; Add to run queue without re-locking processor
+                 (let ((pinned (macro-thread-pinned next-thread)))
+                   (if pinned
+                       (if (##eq? pinned (macro-current-processor))
+                           ;; Pinned to current processor
+                           (macro-add-thread-to-run-queue-of-current-processor-without-locking!
+                            next-thread)
+                           ;; Pinned to different processor
+                           (begin
+                             (macro-lock-processor! pinned)
+                             (##btq-insert! pinned next-thread)
+                             (macro-unlock-processor! pinned)
+                             (##wait-abort! pinned)))
+                       ;; Not pinned — add to current processor
+                       (macro-add-thread-to-run-queue-of-current-processor-without-locking!
+                        next-thread)))
+
+                 (macro-unlock-thread! next-thread)
+
+                 (loop)))
+
+           ;; No more threads in condvar
+           (begin
+             (macro-unlock-condvar! condvar)
+             (##void)))))))
 
 ;;;----------------------------------------------------------------------------
 
