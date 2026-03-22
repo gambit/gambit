@@ -3,6 +3,7 @@
 |[![CI Build Status](https://github.com/gambit/gambit/workflows/Gambit/badge.svg?branch=master)](https://github.com/gambit/gambit/actions?query=workflow%3A%22Gambit%22)|
 
 [![Join the chat at https://gitter.im/gambit/gambit](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/gambit/gambit?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![gitcgr](https://gitcgr.com/badge/gambit/gambit.svg)](https://gitcgr.com/gambit/gambit)
 
 The Gambit Scheme system is a complete, portable, efficient and
 reliable implementation of the Scheme programming language.
