@@ -2246,20 +2246,371 @@
       (every-1 clist1)
       (every-n (cons clist1 clists))))
 
+(define-procedure (zip (clist1 proper-or-circular-list)
+                       (clist2 proper-or-circular-list (macro-absent-obj))
+                       (clists proper-or-circular-list) ...)
+
+  (define (zip-1 clist1)
+
+    (define (zip-1* lst1)
+      (macro-force-vars (lst1)
+        (if (pair? lst1)
+            (let* ((result (list (car lst1)))
+                   (tail (zip-1* (cdr lst1))))
+              (macro-if-checks
+               (if (fixnum? tail)
+                   tail
+                   (cons result tail))
+               (cons result tail)))
+            (macro-if-checks
+             (if (null? lst1)
+                 '()
+                 1)
+             '()))))
+
+    (macro-if-checks
+     (let ((result (zip-1* clist1)))
+       (if (fixnum? result)
+           (macro-fail-check-proper-list
+            '(1 . clist1)
+            ((%procedure%) clist1))
+           result))
+     (zip-1* clist1)))
+
+  (define (zip-2 clist1 clist2)
+
+    (define (zip-2* lst1 lst2)
+      (macro-force-vars (lst1 lst2)
+        (if (pair? lst1)
+            (if (pair? lst2)
+                (let* ((result (list (car lst1) (car lst2)))
+                       (tail (zip-2* (cdr lst1) (cdr lst2))))
+                  (macro-if-checks
+                   (if (fixnum? tail)
+                       tail
+                       (cons result tail))
+                   (cons result tail)))
+                (macro-if-checks
+                 (if (null? lst2)
+                     '()
+                     2)
+                 '()))
+            (macro-if-checks
+             (if (null? lst1)
+                 (if (or (null? lst2) (pair? lst2))
+                     '()
+                     2)
+                 1)
+             '()))))
+
+    (macro-if-checks
+     (let ((result (zip-2* clist1 clist2)))
+       (if (fixnum? result)
+           (macro-fail-check-proper-list
+            (case result ((1) '(1 . clist1)) (else '(2 . clist2)))
+            ((%procedure%) clist1 clist2))
+           result))
+     (zip-2* clist1 clist2)))
+
+  (define (zip-n clists)
+
+    (define (zip-n* lsts)
+      (let ((rests (primitive (cdrs lsts))))
+        (cond ((pair? rests)
+               (let* ((result (primitive (cars lsts '())))
+                      (tail (zip-n* rests)))
+                 (macro-if-checks
+                  (if (fixnum? tail)
+                      tail
+                      (cons result tail))
+                  (cons result tail))))
+              ((fixnum? rests)
+               (if (fx> rests 0)
+                   rests
+                   '()))
+              (else
+               '()))))
+
+    (macro-if-checks
+     (let ((result (zip-n* clists)))
+       (if (fixnum? result)
+           (macro-fail-check-proper-list
+            (case result ((1) '(1 . clist1)) ((2) '(2 . clist2)) (else result))
+            ((%procedure%) . clists))
+           result))
+     (zip-n* clists)))
+
+  (cond ((eq? clist2 (macro-absent-obj))
+         ;; 1 parameter
+         (zip-1 clist1))
+
+        ((null? clists)
+         ;; 2 parameters
+         (zip-2 clist1 clist2))
+
+        (else
+         ;; 3 parameters or more
+         (zip-n (cons clist1 (cons clist2 clists))))))
+
+(define-procedure (unzip1 (list proper-list))
+
+  (define (one-of-the-lists-is-too-short)
+    (##fail-check-deeper-pair-tree '(1 . list) (%procedure%) list))
+
+  (define (unzip lst rev-res1)
+    (macro-force-vars (lst)
+      (if (pair? lst)
+          (let ((rest (car lst)))
+            (if (pair? rest)
+                (let ((elem1 (car rest)))
+                  (unzip (cdr lst)
+                         (cons elem1 rev-res1)))
+                (one-of-the-lists-is-too-short)))
+          (macro-if-checks
+           (if (null? lst)
+               (reverse rev-res1)
+               (macro-fail-check-proper-list
+                '(1 . list)
+                ((%procedure%) list)))
+           (reverse rev-res1)))))
+
+  (unzip list '()))
+
+(define-procedure (unzip2 (list proper-list))
+
+  (define (one-of-the-lists-is-too-short)
+    (##fail-check-deeper-pair-tree '(1 . list) (%procedure%) list))
+
+  (define (unzip lst rev-res1 rev-res2)
+    (macro-force-vars (lst)
+      (if (pair? lst)
+          (let ((rest (car lst)))
+            (if (pair? rest)
+                (let ((elem1 (car rest))
+                      (rest (cdr rest)))
+                  (if (pair? rest)
+                      (let ((elem2 (car rest)))
+                        (unzip (cdr lst)
+                               (cons elem1 rev-res1)
+                               (cons elem2 rev-res2)))
+                      (one-of-the-lists-is-too-short)))
+                (one-of-the-lists-is-too-short)))
+          (macro-if-checks
+           (if (null? lst)
+               (values (reverse rev-res1)
+                       (reverse rev-res2))
+               (macro-fail-check-proper-list
+                '(1 . list)
+                ((%procedure%) list)))
+           (values (reverse rev-res1)
+                   (reverse rev-res2))))))
+
+  (unzip list '() '()))
+
+(define-procedure (unzip3 (list proper-list))
+
+  (define (one-of-the-lists-is-too-short)
+    (##fail-check-deeper-pair-tree '(1 . list) (%procedure%) list))
+
+  (define (unzip lst rev-res1 rev-res2 rev-res3)
+    (macro-force-vars (lst)
+      (if (pair? lst)
+          (let ((rest (car lst)))
+            (if (pair? rest)
+                (let ((elem1 (car rest))
+                      (rest (cdr rest)))
+                  (if (pair? rest)
+                      (let ((elem2 (car rest))
+                            (rest (cdr rest)))
+                        (if (pair? rest)
+                            (let ((elem3 (car rest)))
+                              (unzip (cdr lst)
+                                     (cons elem1 rev-res1)
+                                     (cons elem2 rev-res2)
+                                     (cons elem3 rev-res3)))
+                            (one-of-the-lists-is-too-short)))
+                      (one-of-the-lists-is-too-short)))
+                (one-of-the-lists-is-too-short)))
+          (macro-if-checks
+           (if (null? lst)
+               (values (reverse rev-res1)
+                       (reverse rev-res2)
+                       (reverse rev-res3))
+               (macro-fail-check-proper-list
+                '(1 . list)
+                ((%procedure%) list)))
+           (values (reverse rev-res1)
+                   (reverse rev-res2)
+                   (reverse rev-res3))))))
+
+  (unzip list '() '() '()))
+
+(define-procedure (unzip4 (list proper-list))
+
+  (define (one-of-the-lists-is-too-short)
+    (##fail-check-deeper-pair-tree '(1 . list) (%procedure%) list))
+
+  (define (unzip lst rev-res1 rev-res2 rev-res3 rev-res4)
+    (macro-force-vars (lst)
+      (if (pair? lst)
+          (let ((rest (car lst)))
+            (if (pair? rest)
+                (let ((elem1 (car rest))
+                      (rest (cdr rest)))
+                  (if (pair? rest)
+                      (let ((elem2 (car rest))
+                            (rest (cdr rest)))
+                        (if (pair? rest)
+                            (let ((elem3 (car rest))
+                                  (rest (cdr rest)))
+                              (if (pair? rest)
+                                  (let ((elem4 (car rest)))
+                                    (unzip (cdr lst)
+                                           (cons elem1 rev-res1)
+                                           (cons elem2 rev-res2)
+                                           (cons elem3 rev-res3)
+                                           (cons elem4 rev-res4)))
+                                  (one-of-the-lists-is-too-short)))
+                            (one-of-the-lists-is-too-short)))
+                      (one-of-the-lists-is-too-short)))
+                (one-of-the-lists-is-too-short)))
+          (macro-if-checks
+           (if (null? lst)
+               (values (reverse rev-res1)
+                       (reverse rev-res2)
+                       (reverse rev-res3)
+                       (reverse rev-res4))
+               (macro-fail-check-proper-list
+                '(1 . list)
+                ((%procedure%) list)))
+           (values (reverse rev-res1)
+                   (reverse rev-res2)
+                   (reverse rev-res3)
+                   (reverse rev-res4))))))
+
+  (unzip list '() '() '() '()))
+
+(define-procedure (unzip5 (list proper-list))
+
+  (define (one-of-the-lists-is-too-short)
+    (##fail-check-deeper-pair-tree '(1 . list) (%procedure%) list))
+
+  (define (unzip lst rev-res1 rev-res2 rev-res3 rev-res4 rev-res5)
+    (macro-force-vars (lst)
+      (if (pair? lst)
+          (let ((rest (car lst)))
+            (if (pair? rest)
+                (let ((elem1 (car rest))
+                      (rest (cdr rest)))
+                  (if (pair? rest)
+                      (let ((elem2 (car rest))
+                            (rest (cdr rest)))
+                        (if (pair? rest)
+                            (let ((elem3 (car rest))
+                                  (rest (cdr rest)))
+                              (if (pair? rest)
+                                  (let ((elem4 (car rest))
+                                        (rest (cdr rest)))
+                                    (if (pair? rest)
+                                        (let ((elem5 (car rest)))
+                                          (unzip (cdr lst)
+                                                 (cons elem1 rev-res1)
+                                                 (cons elem2 rev-res2)
+                                                 (cons elem3 rev-res3)
+                                                 (cons elem4 rev-res4)
+                                                 (cons elem5 rev-res5)))
+                                        (one-of-the-lists-is-too-short)))
+                                  (one-of-the-lists-is-too-short)))
+                            (one-of-the-lists-is-too-short)))
+                      (one-of-the-lists-is-too-short)))
+                (one-of-the-lists-is-too-short)))
+          (macro-if-checks
+           (if (null? lst)
+               (values (reverse rev-res1)
+                       (reverse rev-res2)
+                       (reverse rev-res3)
+                       (reverse rev-res4)
+                       (reverse rev-res5))
+               (macro-fail-check-proper-list
+                '(1 . list)
+                ((%procedure%) list)))
+           (values (reverse rev-res1)
+                   (reverse rev-res2)
+                   (reverse rev-res3)
+                   (reverse rev-res4)
+                   (reverse rev-res5))))))
+
+  (unzip list '() '() '() '() '()))
+
+(define-procedure (count (pred   procedure)
+                         (clist1 proper-or-circular-list)
+                         (clist2 proper-or-circular-list (macro-absent-obj))
+                         (clists proper-or-circular-list) ...)
+
+  (define (count-1 lst1 result)
+    (macro-force-vars (lst1)
+      (if (pair? lst1)
+          (count-1 (cdr lst1)
+                   (if (pred (car lst1))
+                       (fx+ result 1)
+                       result))
+          (macro-check-proper-list-null
+            lst1
+            '(2 . clist1)
+            ((%procedure%) pred clist1)
+            result))))
+
+  (define (count-2 lst1 lst2 result)
+    (macro-force-vars (lst1 lst2)
+      (if (pair? lst1)
+          (if (pair? lst2)
+              (count-2 (cdr lst1)
+                       (cdr lst2)
+                       (if (pred (car lst1) (car lst2))
+                           (fx+ result 1)
+                           result))
+              (macro-check-proper-list-null
+                lst2
+                '(3 . clist2)
+                ((%procedure%) pred clist1 clist2)
+                result))
+          (macro-check-proper-list-null
+            lst1
+            '(2 . clist1)
+            ((%procedure%) pred clist1 clist2)
+            result))))
+
+  (define (count-n lsts result)
+    (let ((rests (primitive (cdrs lsts))))
+      (cond ((pair? rests)
+             (count-n rests
+                      (if (apply pred (primitive (cars lsts '())))
+                          (fx+ result 1)
+                          result)))
+            ((fixnum? rests)
+             (if (fx> rests 0)
+                 (macro-fail-check-proper-list
+                  (case rests ((1) '(2 . clist1)) ((2) '(3 . clist2)) (else (fx+ rests 1)))
+                  ((%procedure%) pred clist1 clist2 . clists))
+                 result))
+            (else
+             result))))
+
+  (cond ((eq? clist2 (macro-absent-obj))
+         ;; 1 parameter
+         (count-1 clist1 0))
+
+        ((null? clists)
+         ;; 2 parameters
+         (count-2 clist1 clist2 0))
+
+        (else
+         ;; 3 parameters or more
+         (count-n (cons clist1 (cons clist2 clists)) 0))))
+
 #|
 
 ;; TODO:
-
-zip clist1 clist2 ... -> list
-(lambda lists (apply map list lists))
-
-unzip1 list -> list
-unzip2 list -> [list list]
-unzip3 list -> [list list list]
-unzip4 list -> [list list list list]
-unzip5 list -> [list list list list list]
-
-count pred clist1 clist2 -> integer
 
 pair-fold kons knil clist1 clist2 ... -> value
 

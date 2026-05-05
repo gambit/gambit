@@ -2,7 +2,7 @@
 
 ;;; File: "list#.scm"
 
-;;; Copyright (c) 1994-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -85,7 +85,13 @@ reverse!
 set-car!
 set-cdr!
 take
+unzip1
+unzip2
+unzip3
+unzip4
+unzip5
 xcons
+zip
 
 ))
 

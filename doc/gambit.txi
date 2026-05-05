@@ -39,7 +39,7 @@ END-INFO-DIR-ENTRY
 @ifinfo
 This file documents Gambit, a portable implementation of Scheme.
 
-Copyright (C) 1994-2022 Marc Feeley.
+Copyright (C) 1994-2026 Marc Feeley.
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -71,7 +71,7 @@ by the copyright holder.
 
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1994-2022 Marc Feeley.
+Copyright @copyright{} 1994-2026 Marc Feeley.
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -5731,6 +5731,19 @@ The procedures in this section are not yet documented.
 
 @deffn procedure any @var{pred} @var{clist1} @var{clist2} @dots{}
 @deffnx procedure every @var{pred} @var{clist1} @var{clist2} @dots{}
+@end deffn
+
+@deffn procedure zip @var{clist1} @var{clist2} @dots{}
+@end deffn
+
+@deffn procedure unzip1 @var{list}
+@deffnx procedure unzip2 @var{list}
+@deffnx procedure unzip3 @var{list}
+@deffnx procedure unzip4 @var{list}
+@deffnx procedure unzip5 @var{list}
+@end deffn
+
+@deffn procedure count @var{pred} @var{clist1} @var{clist2} @dots{}
 @end deffn
 
 @deffn procedure char-set? @var{object}
@@ -20001,7 +20014,7 @@ the @code{apply} procedure is 8192.
 @chapter Copyright and license
 
 The Gambit system release @value{VERSION} is Copyright @copyright{}
-1994-2022 by Marc Feeley, all rights reserved.  The Gambit system
+1994-2026 by Marc Feeley, all rights reserved.  The Gambit system
 release @value{VERSION} is licensed under two licenses: the Apache
 License, Version 2.0, and the GNU LESSER GENERAL PUBLIC LICENSE,
 Version 2.1.  You have the option to choose which of these two
