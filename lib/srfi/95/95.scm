@@ -131,7 +131,7 @@
   (sort! (sequence object) (less? procedure) (key procedure (lambda (x) x)))
   (if (list? sequence) (sort!list sequence less? key)
     (begin
-      (heapsort sequence 0 0 (lambda (x y) (less? (key x) (key y))))
+      (heapsort sequence -2 -2 (lambda (x y) (less? (key x) (key y))))
       sequence
       )))
 
@@ -173,14 +173,6 @@
         (let ((save (get x)))
           (set x (get y))
           (set y save)))
-      (define 
-        (heap-restore-child heap heap_end less?)
-        (cond 
-          ((= heap_end 0) '())
-          ((less? (get (parent heap_end)) (get heap_end))
-           (swap heap_end (parent heap_end))
-           (heap-restore-child heap (parent heap_end) less?))
-          (else '())))
 
       (define 
         (heap-remove-top heap end position less?)
@@ -200,13 +192,15 @@
                   (swap (left-child position) position) 
                   (heap-remove-top heap end (left-child position) less?)))))))
       (cond
-        ((< (+ end 1) (vector-length vect)) 
-         (heap-restore-child vect (+ end 1) less?)
-         (heapsort vect (- (vector-length vect) 1) (+ end 1) less?))
+        ((>= end 0) 
+         (heap-remove-top vect start end less?)
+         (heapsort vect (- (vector-length vect) 1) (- end 1) less?))
         ((> start 0) 
          (swap 0 start)
          (heap-remove-top vect (- start 1) 0 less?)
          (heapsort vect (- start 1) end less?))
-        ((less? (get 1) (get 0)) (swap 0 1))
+        ((= end -2)
+         (heapsort vect (- (vector-length vect) 1) 
+                   (- (truncate-quotient (vector-length vect) 2) 1) less?))
         (else '())))
     (##raise-type-exception 1 'list sorted? (list vect less?))))
