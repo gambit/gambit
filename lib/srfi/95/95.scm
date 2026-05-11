@@ -81,126 +81,83 @@
   (reverse (internal-merge list1 list2 '())))
 
 
+(define-macro (dispatch-sort types)
+              (define (sym . lst)
+                (string->symbol
+                  (apply string-append
+                         (map (lambda (s) (if (symbol? s) (symbol->string s) s))
+                              lst))))
+              `(cond
+                 ,@(map 
+                     (lambda (type) 
+                          (define prim-vect?             (sym "##" type '?))
+                          (define prim-make-vect         (sym '##make- type))
+                          (define prim-vect-length       (sym "##" type '-length))
+                          (define prim-vect-ref          (sym "##" type '-ref))
+                          (define prim-vect-ref-fixnum   (sym "##" type '-ref-fixnum))
+                          (define prim-vect-set!         (sym "##" type '-set!))
+                          (define prim-vect-set!-fixnum  (sym "##" type '-set!-fixnum))
+                          (define prim-vect-set          (sym "##" type '-set))
+                          (define prim-vect-set-small    (sym "##" type '-set-small))
+                          (define prim-vect-swap!        (sym "##" type '-swap!))
+                          (define prim-subvect-move!     (sym '##sub type '-move!))
+                      `((,prim-vect? sequence) (let* ((len (,prim-vect-length sequence))
+                              (temp (,prim-make-vect len)))
+
+                         (define (merge! lo mid hi)
+
+                           (let loop1 ((i lo))
+                             (if (fx< i hi)
+                               (begin
+                                 (,prim-vect-set! temp i (,prim-vect-ref sequence i))
+                                 (loop1 (fx+ i 1)))))
+
+                           (let loop2 ((i lo) (j mid) (k lo))
+                             (cond ((and (fx< i mid) (fx< j hi))
+                                    (let ((a (,prim-vect-ref temp i))
+                                          (b (,prim-vect-ref temp j)))
+                                      (if (less? b a)
+                                        (begin
+                                          (,prim-vect-set! sequence k b)
+                                          (loop2 i (fx+ j 1) (fx+ k 1)))
+                                        (begin
+                                          (,prim-vect-set! sequence k a)
+                                          (loop2 (fx+ i 1) j (fx+ k 1))))))
+                                   ((fx< i mid)
+                                    (,prim-vect-set! sequence k (,prim-vect-ref temp i))
+                                    (loop2 (fx+ i 1) j (fx+ k 1)))
+                                   ((fx< j hi)
+                                    (,prim-vect-set! sequence k (,prim-vect-ref temp j))
+                                    (loop2 i (fx+ j 1) (fx+ k 1))))))
+
+                         (define (sort! lo hi)
+                           (let ((n (fx- hi lo)))
+                             (if (fx< 1 n)
+                               (let ((mid (fx+ lo (fxarithmetic-shift-right n 1))))
+                                 (sort! lo mid)
+                                 (sort! mid hi)
+                                 (merge! lo mid hi)))))
+                         (sort! 0 len)
+                        sequence)))
+                     types)
+                 (else (##raise-type-exception 1 'list sort! (list sequence less? key)))
+                 ))
+
+
+
 (define-procedure 
-  (sort!list (li proper-list) 
-             (less? procedure) 
-             (key procedure (lambda (x) x)))
-
-  (define 
-    (halfway li len . traversed)
-    (cond
-      ((null? traversed) (halfway li len 0))
-      ((>= (* 2 (car traversed)) len) li)
-      (else (halfway (cdr li) len (+ 1 (car traversed))))))
-
-  (define 
-    (split li)
-    (let* ((half (halfway li (length li))) (nxt (cdr half)))
-      (set-cdr! half '())
-      nxt))
-
-  (define 
-    (sort!2 li)
-    (if (less? (cadr li) (car li)) 
-      (let ((old-car (car li)))
-        (set-car! li (cadr li))
-        (set-car! (cdr li) old-car)))
-    li)
-  (define 
-    (sort!3 li)
-    (sort!2 li)
-    (sort!2 (cdr li))
-    (sort!2 li)
-    li)
-  (cond
-    ((or (null? li) (null? (cdr li))) li)
-    ((null? (cddr li)) (sort!2 li))
-    ((null? (cdddr li)) (sort!3 li))
-    (else (merge! (sort!list (split li) less? key) (sort! li less? key) less? key)) ))
-
-
-(define-procedure
-  (sort (sequence object) (less? procedure) (key procedure (lambda (x) x)))
-  (type-dispatch (list vector string 
-                       u8vector u16vector u32vector 
-                       u64vector f32vector f64vector) #t
-                 sequence (sort! sequence less? key)
-                 (##raise-type-exception 1 'list sorted? (list sequence less? key)))) 
-
-(define-procedure
   (sort! (sequence object) (less? procedure) (key procedure (lambda (x) x)))
-  (if (list? sequence) (sort!list sequence less? key)
-    (begin
-      (heapsort sequence -2 -2 (lambda (x y) (less? (key x) (key y))))
-      sequence
-      )))
+  (if (list? sequence) (list-sort! (lambda (x y) (less? (key x) (key y))) sequence)
+    (dispatch-sort (string vector u8vector u16vector u32vector u64vector f32vector f64vector))))
 
 
-(define-macro
-  (type-vector-dispatch types name body . else-clause) 
-  (define 
-    (sym . lst)
-    (string->symbol
-      (apply string-append
-             (map (lambda (s) (if (symbol? s) (symbol->string s) s))
-                  lst))))
 
-  `(cond
-     ,@(map 
-         (lambda (type) 
-           `((,(sym type '?) ,name)
-             (let ((vector-ref ,(sym type '-ref))
-                   (vector-set! ,(sym type '-set!))
-                   (vector-length ,(sym type '-length))
-                   (vector->listi,(sym type '->list)))
-               ,body)))
-         types)
-     ,@(if (null? else-clause) '() `((else ,@else-clause)))
-     ))
-
-(define 
-  (heapsort vect start end less?)
-  (type-vector-dispatch 
-    (string vector u8vector u16vector 
-            u32vector u64vector f32vector f64vector) vect
-    (begin
-      (define (parent x) (truncate-quotient (- x 1) 2))
-      (define (left-child  x) (+ (* 2 x) 1))
-      (define (right-child x) (+ (* 2 x) 2))
-      (define (get  x) (vector-ref vect x))
-      (define (set x y) (vector-set! vect x y))
-      (define (swap  x y)
-        (let ((save (get x)))
-          (set x (get y))
-          (set y save)))
-
-      (define 
-        (heap-remove-top heap end position less?)
-        (if (> (left-child position) end) #f
-          (if (> (right-child position) end) 
-            (if (less? (get position) (get (left-child position)))
-              (begin
-                (swap (left-child position) position) 
-                (heap-remove-top heap end (left-child position) less?)))
-            (if (less? (get (left-child position)) (get (right-child position)))
-              (if (less? (get position) (get (right-child position)))
-                (begin
-                  (swap (right-child position) position) 
-                  (heap-remove-top heap end (right-child position) less?)))
-              (if (less? (get position) (get (left-child position)))
-                (begin
-                  (swap (left-child position) position) 
-                  (heap-remove-top heap end (left-child position) less?)))))))
-      (cond
-        ((>= end 0) 
-         (heap-remove-top vect start end less?)
-         (heapsort vect (- (vector-length vect) 1) (- end 1) less?))
-        ((> start 0) 
-         (swap 0 start)
-         (heap-remove-top vect (- start 1) 0 less?)
-         (heapsort vect (- start 1) end less?))
-        ((= end -2)
-         (heapsort vect (- (vector-length vect) 1) 
-                   (- (truncate-quotient (vector-length vect) 2) 1) less?))
-        (else '())))
-    (##raise-type-exception 1 'list sorted? (list vect less?))))
+(define-procedure 
+  (sort (sequence object) (less? procedure) (key procedure (lambda (x) x)))
+          (type-dispatch 
+            (list vector string 
+                  u8vector u16vector u32vector 
+                  u64vector f32vector f64vector) #t
+            sequence (list-sort (lambda (x y) (less? (key x) (key y)))  sequence)
+            (##raise-type-exception 1 'list sort (list sequence less? key))
+            ))
