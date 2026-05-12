@@ -8,19 +8,20 @@
 ;;; This file just defines the general sort API in terms of some
 ;;; algorithm-specific calls.
 
-(define (list-sort < l)			; Sort lists by converting to
+#;(define (list-sort < l)			; Sort lists by converting to
   (let ((v (list->vector l)))		; a vector and sorting that.
     (vector-heap-sort! < v)
     (vector->list v)))
 
-(define list-sort! list-merge-sort!)
+(define list-sort ##list-sort)
 
-(define list-stable-sort  list-merge-sort)
-(define list-stable-sort! list-merge-sort!)
+(define list-sort! ##list-sort!)
 
-(define vector-sort  vector-quick-sort)
-(define vector-sort! vector-quick-sort!)
+(define list-stable-sort list-sort) 
+(define list-stable-sort! list-sort!)
 
-(define vector-stable-sort  vector-merge-sort)
-(define vector-stable-sort! vector-merge-sort!)
+(define vector-sort vector-quick-sort)
+(define vector-sort! ##vector-sort!)
 
+(define vector-stable-sort vector-merge-sort)
+(define vector-stable-sort! ##vector-sort!)
