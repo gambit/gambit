@@ -11,7 +11,9 @@
 (##namespace ("srfi/132#"
 
 list-sorted?
+list-sort
 list-stable-sort
+list-sort!
 list-stable-sort!
 list-merge
 list-merge!
@@ -21,6 +23,7 @@ list-delete-neighbor-dups!
 vector-sorted?
 vector-sort
 vector-stable-sort
+vector-sort!
 vector-stable-sort!
 vector-merge
 vector-merge!
