@@ -311,6 +311,48 @@
 (define-check-type procedure 'procedure
   ##procedure?)
 
+(define-macro (macro-vect-mergesort! before? vect start end make-vect vect-ref vect-set!)
+  `(let ((temp (,make-vect (fx- ,end ,start))))
+
+     (define (merge! lo mid hi)
+
+       (let loop1 ((i lo))
+         (if (fx< i hi)
+             (begin
+               (,vect-set! temp (fx- i ,start) (,vect-ref ,vect i))
+               (loop1 (fx+ i 1)))))
+
+       (let loop2 ((i lo) (j mid) (k lo))
+         (if (fx< i mid)
+             (if (fx< j hi)
+                 (let ((a (,vect-ref temp (fx- i ,start)))
+                       (b (,vect-ref temp (fx- j ,start))))
+                   (if (,before? b a)
+                       (begin
+                         (,vect-set! ,vect k b)
+                         (loop2 i (fx+ j 1) (fx+ k 1)))
+                       (begin
+                         (,vect-set! ,vect k a)
+                         (loop2 (fx+ i 1) j (fx+ k 1)))))
+                 (begin
+                   (,vect-set! ,vect k (,vect-ref temp (fx- i ,start)))
+                   (loop2 (fx+ i 1) j (fx+ k 1))))
+             (if (fx< j hi)
+                 (begin
+                   (,vect-set! ,vect k (,vect-ref temp (fx- j ,start)))
+                   (loop2 i (fx+ j 1) (fx+ k 1)))))))
+
+     (define (sort! lo hi)
+       (let ((n (fx- hi lo)))
+         (if (fx< 1 n)
+             (let ((mid (fx+ lo (fxarithmetic-shift-right n 1))))
+               (sort! lo mid)
+               (sort! mid hi)
+               (merge! lo mid hi)))))
+
+     (sort! ,start ,end)))
+
+
 (##define-macro (define-prim-vector-procedures
                   name
                   elem-name
@@ -894,46 +936,7 @@
                                               #!optional
                                               (start 0)
                                               (end (,prim-vect-length ,name)))
-                              (let* ((len (- end start))
-                                     (temp (,prim-make-vect (- end start))))
-
-                                (define (merge! lo mid hi)
-
-                                  (let loop1 ((i lo))
-                                    (if (fx< i hi)
-                                      (begin
-                                        (,prim-vect-set! temp i (,prim-vect-ref ,name i))
-                                        (loop1 (fx+ i 1)))))
-
-                                  (let loop2 ((i lo) (j mid) (k lo))
-                                    (cond ((and (fx< i mid) (fx< j hi))
-                                           (let ((a (,prim-vect-ref temp i))
-                                                 (b (,prim-vect-ref temp j)))
-                                             (if (less? b a)
-                                               (begin
-                                                 (,prim-vect-set! ,name k b)
-                                                 (loop2 i (fx+ j 1) (fx+ k 1)))
-                                               (begin
-                                                 (,prim-vect-set! ,name k a)
-                                                 (loop2 (fx+ i 1) j (fx+ k 1))))))
-                                          ((fx< i mid)
-                                           (,prim-vect-set! ,name k (,prim-vect-ref temp i))
-                                           (loop2 (fx+ i 1) j (fx+ k 1)))
-                                          ((fx< j hi)
-                                           (,prim-vect-set! ,name k (,prim-vect-ref temp j))
-                                           (loop2 i (fx+ j 1) (fx+ k 1))))))
-
-                                (define (sort! lo hi)
-                                  (let ((n (fx- hi lo)))
-                                    (if (fx< 1 n)
-                                      (let ((mid (fx+ lo (fxarithmetic-shift-right n 1))))
-                                        (sort! lo mid)
-                                        (sort! mid hi)
-                                        (merge! lo mid hi)))))
-
-                                (sort! start end)
-
-                                ,name)) 
+                            (macro-vect-mergesort! less? ,name start end ,prim-make-vect ,prim-vect-ref ,prim-vect-set!))
                (define-procedure (,vect-sort!
                                    (less? procedure)
                                    (,name ,name)
