@@ -13,15 +13,24 @@
     (vector-heap-sort! < v)
     (vector->list v)))
 
-(define list-sort ##list-sort)
+;(define list-sort ##list-sort)
+(define-procedure (list-sort (< procedure) (lis list))
+        (##list-sort < lis))
 
-(define list-sort! ##list-sort!)
+(define-procedure (list-sort! (< procedure) (lis list))
+        (##list-sort! < lis))
 
 (define list-stable-sort list-sort) 
 (define list-stable-sort! list-sort!)
 
-(define vector-sort vector-quick-sort)
-(define vector-sort! ##vector-sort!)
+(define-procedure (vector-sort! (< procedure) (v vector) (start number 0) (end number (vector-length v)) )
+        (##vector-sort! < v start end))
 
-(define vector-stable-sort vector-merge-sort)
-(define vector-stable-sort! ##vector-sort!)
+
+(define-procedure (vector-sort (< procedure) (v vector) (start number 0) (end number (vector-length v)) )
+        (let ((vect (vector-copy v)))
+        (##vector-sort! < vect start end)
+        (subvector vect start end)))
+
+(define vector-stable-sort vector-sort)
+(define vector-stable-sort! vector-sort!)
