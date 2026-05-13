@@ -13,15 +13,15 @@
     (vector-heap-sort! < v)
     (vector->list v)))
 
-(define list-sort ##list-sort)
+;;(define list-sort ##list-sort)
 
-(define list-sort! ##list-sort!)
+;;(define list-sort! ##list-sort!)
 
 (define list-stable-sort list-sort) 
 (define list-stable-sort! list-sort!)
 
 (define vector-sort vector-quick-sort)
-(define vector-sort! ##vector-sort!)
+;;(define vector-sort! ##vector-sort!)
 
 (define vector-stable-sort vector-merge-sort)
-(define vector-stable-sort! ##vector-sort!)
+(define vector-stable-sort! vector-sort!)
