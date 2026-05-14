@@ -1186,6 +1186,7 @@ vector-fold-right
 vector-inc!
 vector-set
 vector-shrink!
+vector-sort!
 vector-swap!
 vector-unfold
 vector-unfold-right

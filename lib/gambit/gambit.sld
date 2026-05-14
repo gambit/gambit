@@ -858,6 +858,7 @@ list->u8vector
 list-set
 list-sort
 list-sort!
+vector-sort!
 list-tabulate
 list=
 mailbox-receive-timeout-exception-arguments

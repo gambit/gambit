@@ -5727,6 +5727,7 @@ The procedures in this section are not yet documented.
 
 @deffn procedure list-sort @var{proc} @var{list}
 @deffnx procedure list-sort! @var{proc} @var{list}
+@deffnx procedure vector-sort! @var{proc} @var{vect} @var{start} @var{end}
 @end deffn
 
 @deffn procedure any @var{pred} @var{clist1} @var{clist2} @dots{}
