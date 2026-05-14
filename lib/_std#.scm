@@ -553,7 +553,6 @@
        (define-primitive (,vect-ref ,name k))
 
 
-
        ,@(if (memq name '(values))
              `()
              `((define-procedure (,vect-ref
@@ -569,7 +568,6 @@
              `())
 
        (define-primitive (,vect-set! ,name k ,elem-name))
-
 
 
        ,@(if (memq name '(values))
@@ -930,25 +928,28 @@
                  (,prim-vect-concatenate ,vect (macro-deleted-obj)))))
 
 
-
         ,@(if (eq? name 'vector)
-             `((define-prim (,prim-vect-sort! less? ,name
-                                              #!optional
-                                              (start 0)
-                                              (end (,prim-vect-length ,name)))
-                            (macro-vect-mergesort! less? ,name start end ,prim-make-vect ,prim-vect-ref ,prim-vect-set!))
-               (define-procedure (,vect-sort!
-                                   (less? procedure)
-                                   (,name ,name)
-                                   (start (index-range-incl
-                                            0
-                                            (,prim-vect-length ,name))
-                                          0)
-                                   (end (index-range-incl
-                                          start
-                                          (,prim-vect-length ,name))
-                                        (,prim-vect-length ,name)))
-                (,prim-vect-sort! less? ,name))
+             `((define-prim 
+                 (,prim-vect-sort!
+                   less? 
+                   ,name
+                   #!optional
+                   (start 0)
+                   (end (,prim-vect-length ,name)))
+                 (macro-vect-mergesort! less? ,name start end ,prim-make-vect ,prim-vect-ref ,prim-vect-set!))
+               (define-procedure 
+                 (,vect-sort!
+                   (less? procedure)
+                   (,name ,name)
+                   (start (index-range-incl
+                            0
+                            (,prim-vect-length ,name))
+                          0)
+                   (end (index-range-incl
+                          start
+                          (,prim-vect-length ,name))
+                        (,prim-vect-length ,name)))
+                 (,prim-vect-sort! less? ,name))
               ) (write 1))
 
        (macro-case-target
