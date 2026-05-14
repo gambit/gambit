@@ -950,7 +950,7 @@
                           (,prim-vect-length ,name))
                         (,prim-vect-length ,name)))
                  (,prim-vect-sort! less? ,name start end))
-              ) (write 1))
+              ) '())
 
        (macro-case-target
 
