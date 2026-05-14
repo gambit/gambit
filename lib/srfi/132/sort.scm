@@ -14,16 +14,16 @@
     (vector->list v)))
 
 ;(define list-sort ##list-sort)
-(define-procedure (list-sort (< procedure) (lis list))
+#;(define-procedure (list-sort (< procedure) (lis list))
         (##list-sort < lis))
 
-(define-procedure (list-sort! (< procedure) (lis list))
+#;(define-procedure (list-sort! (< procedure) (lis list))
         (##list-sort! < lis))
 
 (define list-stable-sort list-sort) 
 (define list-stable-sort! list-sort!)
 
-(define-procedure (vector-sort! (< procedure) (v vector) (start number 0) (end number (vector-length v)) )
+#;(define-procedure (vector-sort! (< procedure) (v vector) (start number 0) (end number (vector-length v)) )
         (##vector-sort! < v start end))
 
 

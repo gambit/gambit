@@ -9,7 +9,6 @@
 ;;; SRFI 132, Sort Libraries
 
 (##supply-module srfi/132)
-(##namespace ("srfi/132#"))
 (##include "~~lib/gambit/prim/prim#.scm") ;; map fx+ to ##fx+, etc
 (##include "~~lib/_gambit#.scm")          ;; for macro-check-procedure, 
 (##include "132#.scm")
