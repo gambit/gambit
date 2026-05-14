@@ -100,44 +100,8 @@
                           (define prim-vect-set-small    (sym "##" type '-set-small))
                           (define prim-vect-swap!        (sym "##" type '-swap!))
                           (define prim-subvect-move!     (sym '##sub type '-move!))
-                      `((,prim-vect? sequence) (let* ((len (,prim-vect-length sequence))
-                              (temp (,prim-make-vect len)))
-
-                         (define (merge! lo mid hi)
-
-                           (let loop1 ((i lo))
-                             (if (fx< i hi)
-                               (begin
-                                 (,prim-vect-set! temp i (,prim-vect-ref sequence i))
-                                 (loop1 (fx+ i 1)))))
-
-                           (let loop2 ((i lo) (j mid) (k lo))
-                             (cond ((and (fx< i mid) (fx< j hi))
-                                    (let ((a (,prim-vect-ref temp i))
-                                          (b (,prim-vect-ref temp j)))
-                                      (if (less? b a)
-                                        (begin
-                                          (,prim-vect-set! sequence k b)
-                                          (loop2 i (fx+ j 1) (fx+ k 1)))
-                                        (begin
-                                          (,prim-vect-set! sequence k a)
-                                          (loop2 (fx+ i 1) j (fx+ k 1))))))
-                                   ((fx< i mid)
-                                    (,prim-vect-set! sequence k (,prim-vect-ref temp i))
-                                    (loop2 (fx+ i 1) j (fx+ k 1)))
-                                   ((fx< j hi)
-                                    (,prim-vect-set! sequence k (,prim-vect-ref temp j))
-                                    (loop2 i (fx+ j 1) (fx+ k 1))))))
-
-                         (define (sort! lo hi)
-                           (let ((n (fx- hi lo)))
-                             (if (fx< 1 n)
-                               (let ((mid (fx+ lo (fxarithmetic-shift-right n 1))))
-                                 (sort! lo mid)
-                                 (sort! mid hi)
-                                 (merge! lo mid hi)))))
-                         (sort! 0 len)
-                        sequence)))
+                      `((,prim-vect? sequence) 
+                        (macro-vect-mergesort! less? sequence 0 (,prim-vect-length sequence) ,prim-make-vect ,prim-vect-ref ,prim-vect-set!)))
                      types)
                  (else (##raise-type-exception 1 'list sort! (list sequence less? key)))
                  ))
@@ -147,7 +111,9 @@
 (define-procedure 
   (sort! (sequence object) (less? procedure) (key procedure (lambda (x) x)))
   (if (list? sequence) (list-sort! (lambda (x y) (less? (key x) (key y))) sequence)
-    (dispatch-sort (string vector u8vector u16vector u32vector u64vector f32vector f64vector))))
+    (begin
+    (dispatch-sort (string vector u8vector u16vector u32vector u64vector f32vector f64vector))
+    sequence)))
 
 
 
