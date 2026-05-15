@@ -935,10 +935,8 @@
                    #!optional
                    (start 0)
                    (end (,prim-vect-length ,name)))
-                 (cond
-                   ((fx<= end start) ,name)
-                 (else (macro-vect-mergesort! less? ,name start end ,prim-make-vect ,prim-vect-ref ,prim-vect-set!)
-                 ,name)))
+                 (macro-vect-mergesort! less? ,name start end ,prim-make-vect ,prim-vect-ref ,prim-vect-set!)
+                 ,name)
                (define-procedure 
                  (,vect-sort!
                    (less? procedure)
