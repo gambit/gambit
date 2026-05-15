@@ -858,7 +858,6 @@ list->u8vector
 list-set
 list-sort
 list-sort!
-vector-sort!
 list-tabulate
 list=
 mailbox-receive-timeout-exception-arguments
@@ -1077,6 +1076,8 @@ s16vector-ref
 s16vector-set
 s16vector-set!
 s16vector-shrink!
+vector-sort!
+vector-sort
 s16vector-swap!
 s16vector?
 s32vector

@@ -425,6 +425,7 @@
     (define vect-set               (sym name '-set))
     (define vect-set-small         (sym name '-set-small))
     (define vect-sort!              (sym name '-sort!))
+    (define vect-sort              (sym name '-sort))
     (define vect-swap!             (sym name '-swap!))
     (define vect->list             (sym name '->list))
     (define list->vect             (sym 'list-> name))
@@ -936,7 +937,8 @@
                    #!optional
                    (start 0)
                    (end (,prim-vect-length ,name)))
-                 (macro-vect-mergesort! less? ,name start end ,prim-make-vect ,prim-vect-ref ,prim-vect-set!))
+                 (macro-vect-mergesort! less? ,name start end ,prim-make-vect ,prim-vect-ref ,prim-vect-set!)
+                 ,name)
                (define-procedure 
                  (,vect-sort!
                    (less? procedure)
@@ -949,8 +951,22 @@
                           start
                           (,prim-vect-length ,name))
                         (,prim-vect-length ,name)))
-                 (,prim-vect-sort! less? ,name start end))
-              ) '())
+                   (,prim-vect-sort! less? ,name start end))
+               (define-procedure 
+                 (,vect-sort
+                   (less? procedure)
+                   (,name ,name)
+                   (start (index-range-incl
+                            0
+                            (,prim-vect-length ,name))
+                          0)
+                   (end (index-range-incl
+                          start
+                          (,prim-vect-length ,name))
+                        (,prim-vect-length ,name)))
+                 (,vect-sort! less? (,vect-copy ,name) start end))
+              ) 
+             '())
 
        (macro-case-target
 
