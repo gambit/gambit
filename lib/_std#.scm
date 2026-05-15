@@ -352,7 +352,6 @@
 
      (sort! ,start ,end)))
 
-
 (##define-macro (define-prim-vector-procedures
                   name
                   elem-name
@@ -927,7 +926,6 @@
 
                (define-prim&proc (,vect-append ,vect ...)
                  (,prim-vect-concatenate ,vect (macro-deleted-obj)))))
-
 
         ,@(if (eq? name 'vector)
              `((define-prim 
