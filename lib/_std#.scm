@@ -36,8 +36,6 @@
 (define-check-type mutable 'mutable
   ##mutable?)
 
-;;; General list types.
-
 ;; The list type covers all types of lists including circular and dotted.
 
 (define-check-type list 'list
@@ -313,6 +311,47 @@
 (define-check-type procedure 'procedure
   ##procedure?)
 
+(define-macro (macro-vect-mergesort! before? vect start end make-vect vect-ref vect-set!)
+  `(let ((temp (,make-vect (fx- ,end ,start))))
+
+     (define (merge! lo mid hi)
+
+       (let loop1 ((i lo))
+         (if (fx< i hi)
+             (begin
+               (,vect-set! temp (fx- i ,start) (,vect-ref ,vect i))
+               (loop1 (fx+ i 1)))))
+
+       (let loop2 ((i lo) (j mid) (k lo))
+         (if (fx< i mid)
+             (if (fx< j hi)
+                 (let ((a (,vect-ref temp (fx- i ,start)))
+                       (b (,vect-ref temp (fx- j ,start))))
+                   (if (,before? b a)
+                       (begin
+                         (,vect-set! ,vect k b)
+                         (loop2 i (fx+ j 1) (fx+ k 1)))
+                       (begin
+                         (,vect-set! ,vect k a)
+                         (loop2 (fx+ i 1) j (fx+ k 1)))))
+                 (begin
+                   (,vect-set! ,vect k (,vect-ref temp (fx- i ,start)))
+                   (loop2 (fx+ i 1) j (fx+ k 1))))
+             (if (fx< j hi)
+                 (begin
+                   (,vect-set! ,vect k (,vect-ref temp (fx- j ,start)))
+                   (loop2 i (fx+ j 1) (fx+ k 1)))))))
+
+     (define (sort! lo hi)
+       (let ((n (fx- hi lo)))
+         (if (fx< 1 n)
+             (let ((mid (fx+ lo (fxarithmetic-shift-right n 1))))
+               (sort! lo mid)
+               (sort! mid hi)
+               (merge! lo mid hi)))))
+
+     (sort! ,start ,end)))
+
 (##define-macro (define-prim-vector-procedures
                   name
                   elem-name
@@ -359,6 +398,7 @@
     (define prim-vect-copy!        (sym "##" name '-copy!))
     (define prim-vect-delete       (sym "##" name '-delete))
     (define prim-vect-delete-small (sym "##" name '-delete-small))
+    (define prim-vect-sort!        (sym "##" name '-sort!))
     (define prim-vect-insert       (sym "##" name '-insert))
     (define prim-vect-insert-small (sym "##" name '-insert-small))
     (define prim-vect-fill!        (sym "##" name '-fill!))
@@ -383,6 +423,8 @@
     (define vect-set!-fixnum       (sym name '-set!-fixnum))
     (define vect-set               (sym name '-set))
     (define vect-set-small         (sym name '-set-small))
+    (define vect-sort!              (sym name '-sort!))
+    (define vect-sort              (sym name '-sort))
     (define vect-swap!             (sym name '-swap!))
     (define vect->list             (sym name '->list))
     (define list->vect             (sym 'list-> name))
@@ -510,6 +552,7 @@
 
        (define-primitive (,vect-ref ,name k))
 
+
        ,@(if (memq name '(values))
              `()
              `((define-procedure (,vect-ref
@@ -525,6 +568,7 @@
              `())
 
        (define-primitive (,vect-set! ,name k ,elem-name))
+
 
        ,@(if (memq name '(values))
              `()
@@ -882,6 +926,45 @@
 
                (define-prim&proc (,vect-append ,vect ...)
                  (,prim-vect-concatenate ,vect (macro-deleted-obj)))))
+
+        ,@(if (eq? name 'vector)
+             `((define-prim 
+                 (,prim-vect-sort!
+                   less? 
+                   ,name
+                   #!optional
+                   (start 0)
+                   (end (,prim-vect-length ,name)))
+                 (macro-vect-mergesort! less? ,name start end ,prim-make-vect ,prim-vect-ref ,prim-vect-set!)
+                 ,name)
+               (define-procedure 
+                 (,vect-sort!
+                   (less? procedure)
+                   (,name ,name)
+                   (start (index-range-incl
+                            0
+                            (,prim-vect-length ,name))
+                          0)
+                   (end (index-range-incl
+                          start
+                          (,prim-vect-length ,name))
+                        (,prim-vect-length ,name)))
+                   (,prim-vect-sort! less? ,name start end))
+               (define-procedure 
+                 (,vect-sort
+                   (less? procedure)
+                   (,name ,name)
+                   (start (index-range-incl
+                            0
+                            (,prim-vect-length ,name))
+                          0)
+                   (end (index-range-incl
+                          start
+                          (,prim-vect-length ,name))
+                        (,prim-vect-length ,name)))
+                 (,vect-sort! less? (,vect-copy ,name) start end))
+              ) 
+             '())
 
        (macro-case-target
 

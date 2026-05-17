@@ -1076,6 +1076,8 @@ s16vector-ref
 s16vector-set
 s16vector-set!
 s16vector-shrink!
+vector-sort!
+vector-sort
 s16vector-swap!
 s16vector?
 s32vector
