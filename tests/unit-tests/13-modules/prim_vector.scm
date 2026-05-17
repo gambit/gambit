@@ -39,6 +39,9 @@
 (let ((x (vector 1 2 3 4)) (y (vector 6 7 8 9 0))) (subvector-move! x 2 3 y 1) y)
 (let ((x (vector 5))) (vector-cas! x 0 6 5) x)
 
+(let ((x (vector 3 1 4 1 5 9 2 6))) (vector-sort < x))
+(let ((x (vector 3 1 4 1 5 9 2 6))) (vector-sort! > x))
+
 ;;unimplemented;;(let ((x (vector 5))) (vector-inc! x 0) x)
 
 )

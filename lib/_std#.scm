@@ -2,7 +2,7 @@
 
 ;;; File: "_std#.scm"
 
-;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -399,6 +399,7 @@
     (define prim-vect-delete       (sym "##" name '-delete))
     (define prim-vect-delete-small (sym "##" name '-delete-small))
     (define prim-vect-sort!        (sym "##" name '-sort!))
+    (define prim-vect-sort         (sym "##" name '-sort))
     (define prim-vect-insert       (sym "##" name '-insert))
     (define prim-vect-insert-small (sym "##" name '-insert-small))
     (define prim-vect-fill!        (sym "##" name '-fill!))
@@ -928,43 +929,52 @@
                  (,prim-vect-concatenate ,vect (macro-deleted-obj)))))
 
         ,@(if (eq? name 'vector)
-             `((define-prim 
-                 (,prim-vect-sort!
-                   less? 
-                   ,name
-                   #!optional
-                   (start 0)
-                   (end (,prim-vect-length ,name)))
-                 (macro-vect-mergesort! less? ,name start end ,prim-make-vect ,prim-vect-ref ,prim-vect-set!)
-                 ,name)
-               (define-procedure 
-                 (,vect-sort!
-                   (less? procedure)
-                   (,name ,name)
-                   (start (index-range-incl
-                            0
-                            (,prim-vect-length ,name))
-                          0)
-                   (end (index-range-incl
-                          start
-                          (,prim-vect-length ,name))
-                        (,prim-vect-length ,name)))
-                   (,prim-vect-sort! less? ,name start end))
-               (define-procedure 
-                 (,vect-sort
-                   (less? procedure)
-                   (,name ,name)
-                   (start (index-range-incl
-                            0
-                            (,prim-vect-length ,name))
-                          0)
-                   (end (index-range-incl
-                          start
-                          (,prim-vect-length ,name))
-                        (,prim-vect-length ,name)))
-                 (,vect-sort! less? (,vect-copy ,name) start end))
-              ) 
-             '())
+              `(
+                (define-prim (,prim-vect-sort!
+                              less?
+                              ,name
+                              #!optional
+                              (start 0)
+                              (end (,prim-vect-length ,name)))
+                  (macro-vect-mergesort! less? ,name start end ,prim-make-vect ,prim-vect-ref ,prim-vect-set!)
+                  ,name)
+
+                (define-procedure (,vect-sort!
+                                   (less? procedure)
+                                   (,name ,name)
+                                   (start (index-range-incl
+                                           0
+                                           (,prim-vect-length ,name))
+                                          0)
+                                   (end   (index-range-incl
+                                           start
+                                           (,prim-vect-length ,name))
+                                          (,prim-vect-length ,name)))
+                  (,prim-vect-sort! less? ,name start end))
+
+                (define-prim (,prim-vect-sort
+                              less?
+                              ,name
+                              #!optional
+                              (start 0)
+                              (end (,prim-vect-length ,name)))
+                  (,prim-vect-sort! less? (,prim-vect-copy ,name) start end))
+
+                (define-procedure (,vect-sort
+                                   (less? procedure)
+                                   (,name ,name)
+                                   (start (index-range-incl
+                                           0
+                                           (,prim-vect-length ,name))
+                                          0)
+                                   (end   (index-range-incl
+                                           start
+                                           (,prim-vect-length ,name))
+                                          (,prim-vect-length ,name)))
+                  (,vect-sort! less? (,prim-vect-copy ,name) start end))
+                )
+
+              '())
 
        (macro-case-target
 
