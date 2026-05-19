@@ -1,0 +1,80 @@
+(##supply-module srfi/143)
+
+(##namespace ("srfi/143#"))                ;; in srfi/95#
+(##include "~~lib/gambit/prim/prim#.scm") 
+(##include "~~lib/_gambit#.scm")          
+(##include "143#.scm")
+
+(define fx-width 61)
+(define fx-greatest (- (expt 2 (- fx-width 1)) 1))
+(define fx-least (* (expt 2 (- fx-width 1)) -1))
+(define fxsqrt exact-integer-sqrt)
+(define-procedure (fxneg (i number))
+                  (- i))
+(define-macro (rename procedures prefix suffix)
+  (define (sym . lst)
+    (string->symbol
+      (apply string-append
+             (map (lambda (s) (if (symbol? s) (symbol->string s) s))
+                  lst))))
+     `(begin
+        ,@(map
+            (lambda (proc)
+              `(define ,(sym prefix proc suffix) ,proc)) procedures)))
+
+(define-macro (double-rename procedures prefix prefix-orig)
+  (define (sym . lst)
+    (string->symbol
+      (apply string-append
+             (map (lambda (s) (if (symbol? s) (symbol->string s) s))
+                  lst))))
+     `(begin
+        ,@(map
+            (lambda (proc)
+              `(define ,(sym prefix) ,(sym prefix-orig proc))) procedures)))
+(define-macro
+  (redefine-2
+    procedures)
+  (define (sym . lst)
+    (string->symbol
+      (apply string-append
+             (map (lambda (s) (if (symbol? s) (symbol->string s) s))
+                  lst))))
+     `(begin
+        ,@(map
+            (lambda (proc)
+              `(define-procedure 
+                 (,proc (i number) (j number))  
+                 (,(sym "##" proc) i j))
+                 ) procedures)))
+
+(redefine-2 (fx+ fx- fx*))
+
+(rename (fx= fx< fx> fx<= fx>=) || ?)
+(rename (bit-field-reverse bit-field-rotate) fx ||)
+(double-rename (and ior xor if) fx bitwise-)
+
+(define (fx+/carry i j k)
+(let*-values (((s) (+ i j k))
+              ((q r) (balanced/ s (expt 2 fx-width))))
+  (values r q)))
+
+(define (fx-/carry i j k)
+  (let*-values (((d) (- i j k))
+                ((q r) (balanced/ d (expt 2 fx-width))))
+    (values r q)))
+
+(define (fx*/carry i j k)
+  (let*-values (((s) (+ (* i j) k))
+                ((q r) (balanced/ s (expt 2 fx-width))))
+    (values r q)))
+
+(define-procedure 
+  (fxarithmetic-shift-right 
+    (i number) (j (index-range-incl 0 fx-width)))
+(##fxarithmetic-shift-right i j))
+
+(define-procedure
+  (fxcopy-bit
+    (i (index-range-incl 0 fx-width)) (j number) (boolean boolean))
+  (copy-bit i j boolean))
