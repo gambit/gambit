@@ -9,7 +9,7 @@
 (define fx-greatest ##max-fixnum)
 (define fx-least ##min-fixnum)
 (define fxsqrt exact-integer-sqrt)
-(define-procedure (fxneg (i number))
+(define-procedure (fxneg (i fixnum))
                   (- i))
 (define-macro (rename procedures prefix suffix)
   (define (sym . lst)
@@ -44,7 +44,7 @@
         ,@(map
             (lambda (proc)
               `(define-procedure 
-                 (,proc (i number) (j number))  
+                 (,proc (i fixnum) (j fixnum))  
                  (,(sym "##" proc) i j))
                  ) procedures)))
 (define-macro
@@ -83,11 +83,11 @@
     (values r q)))
 
 (define-procedure 
-  (fxarithmetic-shift-right 
-    (i number) (j (index-range-incl 0 fx-width)))
+  (fxarithmetic-shift-right (i fixnum) 
+                            (j (index-range-incl 0 fx-width)))
 (##fxarithmetic-shift-right i j))
 
 (define-procedure
   (fxcopy-bit
-    (i (index-range-incl 0 fx-width)) (j number) (boolean boolean))
+    (i (index-range-incl 0 fx-width)) (j fixnum) (boolean boolean))
   (copy-bit i j boolean))
