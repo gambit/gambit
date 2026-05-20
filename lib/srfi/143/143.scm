@@ -1,6 +1,6 @@
 (##supply-module srfi/143)
 
-(##namespace ("srfi/143#"))                ;; in srfi/95#
+(##namespace ("srfi/143#"))                
 (##include "~~lib/gambit/prim/prim#.scm") 
 (##include "~~lib/_gambit#.scm")          
 (##include "143#.scm")
