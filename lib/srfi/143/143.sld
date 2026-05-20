@@ -9,18 +9,41 @@
 ;;; SRFI 132, Sort Libraries
 
 (define-library (srfi 143)
-
   (export
    fx-width 
    fx-greatest
+   fxquotient
    fx-least
-   fxsqrt
    fxneg
+   fixnum?
    fx=?
    fx<?
    fx<=?
    fx>?
    fx>=?
+   fxzero?
+   fxpositive?
+   fxnegative?
+   fxodd?
+   fxeven?
+   fxmax
+   fxmin
+   fxremainder
+   fxabs
+   fxsquare
+   fxsqrt   
+   fxnot
+   fxand
+   fxior
+   fxxor
+   fxarithmetic-shift
+   fxarithmetic-shift-left
+   fxbit-count
+   fxlength
+   fxif
+   fxbit-set?
+   fxfirst-set-bit
+   fxbit-field
    fx+/carry
    fx-/carry
    fx*/carry

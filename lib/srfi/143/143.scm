@@ -5,9 +5,9 @@
 (##include "~~lib/_gambit#.scm")          
 (##include "143#.scm")
 
-(define fx-width 61)
-(define fx-greatest (- (expt 2 (- fx-width 1)) 1))
-(define fx-least (* (expt 2 (- fx-width 1)) -1))
+(define fx-width ##fixnum-width)
+(define fx-greatest ##max-fixnum)
+(define fx-least ##min-fixnum)
 (define fxsqrt exact-integer-sqrt)
 (define-procedure (fxneg (i number))
                   (- i))
@@ -47,8 +47,21 @@
                  (,proc (i number) (j number))  
                  (,(sym "##" proc) i j))
                  ) procedures)))
+(define-macro
+  (reexport 
+    procedures)
+  `(begin
+     ,@(map
+         (lambda (proc)
+           `(define ,proc (let () (namespace ("")) ,proc))) procedures)))
 
 (redefine-2 (fx+ fx- fx*))
+(reexport 
+  (fxquotient fixnum? fxzero? fxpositive?  fxnegative? 
+    fxodd? fxeven? fxabs fxsquare fxbit-count 
+    fxfirst-set-bit fxlength fxmax fxmin fxremainder
+    fxand fxior fxif fxxor fxbit-set? 
+    fxarithmetic-shift ))
 
 (rename (fx= fx< fx> fx<= fx>=) || ?)
 (rename (bit-field-reverse bit-field-rotate) fx ||)
