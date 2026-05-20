@@ -20,10 +20,10 @@
 (check-eqv? (fxwrap- 11 22 33) -44)
 (check-eqv? (fxwrap- 11 22 33 44) -88)
 
-(check-eqv? (fxwrap- ##min-fixnum 1) ##max-fixnum)
-(check-eqv? (fxwrap- 0 ##max-fixnum 1 0) ##min-fixnum)
-(check-eqv? (fxwrap- ##max-fixnum -1) ##min-fixnum)
-(check-eqv? (fxwrap- 0 ##max-fixnum 1 0) ##min-fixnum)
+(check-eqv? (fxwrap- (##least-fixnum) 1) (##greatest-fixnum))
+(check-eqv? (fxwrap- 0 (##greatest-fixnum) 1 0) (##least-fixnum))
+(check-eqv? (fxwrap- (##greatest-fixnum) -1) (##least-fixnum))
+(check-eqv? (fxwrap- 0 (##greatest-fixnum) 1 0) (##least-fixnum))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxwrap-)))
 

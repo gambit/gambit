@@ -3969,24 +3969,25 @@ end-of-code
 (define ##err-code-unimplemented
   (##c-code "___RESULT = ___FIX(___UNIMPL_ERR);"))
 
-(define ##min-fixnum
-  (##c-code "___RESULT = ___FIX(___MIN_FIX);"))
-
-(define ##max-fixnum
-  (##c-code "___RESULT = ___FIX(___MAX_FIX);"))
-
-(define ##fixnum-width
+(define-prim (##fixnum-width)
   (##c-code "___RESULT = ___FIX(___FIX_WIDTH);"))
 
-(define ##fixnum-width-neg (##fx- ##fixnum-width))
+(define-prim (##fixnum-width-neg)
+  (##c-code "___RESULT = ___FIX(-___FIX_WIDTH);"))
 
-(define ##bignum.adigit-width
+(define-prim (##least-fixnum)
+  (##c-code "___RESULT = ___FIX(___MIN_FIX);"))
+
+(define-prim (##greatest-fixnum)
+  (##c-code "___RESULT = ___FIX(___MAX_FIX);"))
+
+(define-prim (##bignum.adigit-width)
   (##c-code "___RESULT = ___FIX(___BIG_ABASE_WIDTH);"))
 
-(define ##bignum.mdigit-width
+(define-prim (##bignum.mdigit-width)
   (##c-code "___RESULT = ___FIX(___BIG_MBASE_WIDTH);"))
 
-(define ##bignum.fdigit-width
+(define-prim (##bignum.fdigit-width)
   (##c-code "___RESULT = ___FIX(___BIG_FBASE_WIDTH);"))
 
 ;;;----------------------------------------------------------------------------

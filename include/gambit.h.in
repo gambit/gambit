@@ -3022,6 +3022,11 @@ ___TESTMASK(obj,___MASK(___WORD,tb),tag)
 
 #define ___MAX_FIX32 ((___CAST(___WORD,1)<<(32-2-1))-1)
 
+#define ___FIXNUM_WIDTH ___FIX(___FIX_WIDTH)
+#define ___FIXNUM_WIDTH_NEG ___FIX(-___FIX_WIDTH)
+#define ___LEAST_FIXNUM ___FIX(___MIN_FIX)
+#define ___GREATEST_FIXNUM ___FIX(___MAX_FIX)
+
 #if ___FIX_WIDTH == 30
 #define ___SQRT_MAX_FIX 23170
 #endif
@@ -3333,6 +3338,10 @@ ___DOUBLE_BIAS_ADD((___CAST(___U64,___CAST(___U32,hi))<<32) + ___CAST(___U64,___
 #else
 #define ___BIG_ABASE_WIDTH 64
 #endif
+
+#define ___BIG_ADIGIT_WIDTH ___FIX(___BIG_ABASE_WIDTH)
+#define ___BIG_MDIGIT_WIDTH ___FIX(___BIG_MBASE_WIDTH)
+#define ___BIG_FDIGIT_WIDTH ___FIX(___BIG_FBASE_WIDTH)
 
 #if ___BIG_ABASE_WIDTH == 32
 

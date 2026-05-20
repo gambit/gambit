@@ -33,8 +33,8 @@
         -2
         100
         -100
-        ##max-fixnum
-        ##min-fixnum
+        (##greatest-fixnum)
+        (##least-fixnum)
         12345678901234567890
         -12345678901234567890
         0.0

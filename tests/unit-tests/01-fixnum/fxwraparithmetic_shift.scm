@@ -14,7 +14,7 @@
 (check-eqv? (fxwraparithmetic-shift -5 1) -10)
 (check-eqv? (fxwraparithmetic-shift -3 1) -6)
 
-(check-tail-exn range-exception? (lambda () (fxwraparithmetic-shift 1 ##min-fixnum)))
+(check-tail-exn range-exception? (lambda () (fxwraparithmetic-shift 1 (##least-fixnum))))
 
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxwraparithmetic-shift)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxwraparithmetic-shift 1 1 1)))

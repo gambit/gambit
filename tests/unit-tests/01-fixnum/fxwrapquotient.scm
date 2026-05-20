@@ -4,13 +4,13 @@
 (check-eqv? (##fxwrapquotient 2 1) 2)
 (check-eqv? (##fxwrapquotient 3 1) 3)
 (check-eqv? (##fxwrapquotient 5 -1) -5)
-(check-eqv? (##fxwrapquotient ##min-fixnum -1) ##min-fixnum)
+(check-eqv? (##fxwrapquotient (##least-fixnum) -1) (##least-fixnum))
 
 (check-eqv? (fxwrapquotient 1 1) 1)
 (check-eqv? (fxwrapquotient 2 1) 2)
 (check-eqv? (fxwrapquotient 3 1) 3)
 (check-eqv? (fxwrapquotient 5 -1) -5)
-(check-eqv? (fxwrapquotient ##min-fixnum -1) ##min-fixnum)
+(check-eqv? (fxwrapquotient (##least-fixnum) -1) (##least-fixnum))
 
 (check-tail-exn divide-by-zero-exception? (lambda () (fxwrapquotient 1 0)))
 

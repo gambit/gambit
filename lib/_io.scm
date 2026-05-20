@@ -2,7 +2,7 @@
 
 ;;; File: "_io.scm"
 
-;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -4300,7 +4300,7 @@
               obj
               #!optional
               (port (macro-current-output-port))
-              (max-length ##max-fixnum)
+              (max-length (##greatest-fixnum))
               (force? (macro-if-auto-forcing #t #f)))
   (##write-with-style
    obj
@@ -4325,7 +4325,7 @@
               obj
               #!optional
               (port (macro-current-output-port))
-              (max-length ##max-fixnum)
+              (max-length (##greatest-fixnum))
               (force? (macro-if-auto-forcing #t #f)))
   (##write-with-style
    obj
@@ -4350,7 +4350,7 @@
               obj
               #!optional
               (port (macro-current-output-port))
-              (max-length ##max-fixnum)
+              (max-length (##greatest-fixnum))
               (force? (macro-if-auto-forcing #t #f)))
   (##write-with-style
    obj
@@ -4375,7 +4375,7 @@
               obj
               #!optional
               (port (macro-current-output-port))
-              (max-length ##max-fixnum)
+              (max-length (##greatest-fixnum))
               (force? (macro-if-auto-forcing #t #f)))
   (##write-generic-to-character-port
    'display
@@ -4402,7 +4402,7 @@
               obj
               #!optional
               (port (macro-current-output-port))
-              (max-length ##max-fixnum)
+              (max-length (##greatest-fixnum))
               (force? (macro-if-auto-forcing #t #f)))
   (##write-generic-to-character-port
    'pretty-print
@@ -4429,7 +4429,7 @@
               obj
               #!optional
               (port (macro-current-output-port))
-              (max-length ##max-fixnum)
+              (max-length (##greatest-fixnum))
               (force? (macro-if-auto-forcing #t #f)))
   (##write-generic-to-character-port
    'print
@@ -4985,15 +4985,15 @@
 (define-prim (##object->string
               obj
               #!optional
-              (max-length ##max-fixnum)
+              (max-length (##greatest-fixnum))
               (max-unescaped-char (macro-absent-obj)))
   (if (##fx< 0 max-length)
       (let ((str
              (##object->truncated-string
               obj
-              (if (##fx< max-length ##max-fixnum)
+              (if (##fx< max-length (##greatest-fixnum))
                   (##fx+ max-length 1)
-                  ##max-fixnum)
+                  (##greatest-fixnum))
               max-unescaped-char)))
         (##string->limited-string str max-length))
       (##string)))
@@ -5536,7 +5536,7 @@
               (port (macro-current-input-port))
               (separator #\newline)
               (include-separator? #f)
-              (max-length ##max-fixnum))
+              (max-length (##greatest-fixnum)))
 
   (define max-chunk-length 512)
 
@@ -5620,7 +5620,7 @@
                include-separator?))
           (ml
            (if (##eq? max-length (macro-absent-obj))
-               ##max-fixnum
+               (##greatest-fixnum)
                max-length)))
       (macro-check-character-input-port
         p
@@ -13118,7 +13118,7 @@
                                (+ (* n 16) next-digit)))))
                   (else
                    (if (or (not nb-digits)
-                           (and (= nb-digits ##max-fixnum)
+                           (and (= nb-digits (##greatest-fixnum))
                                 (let ((next (macro-peek-next-char-or-eof re)))
                                   (and (char? next)
                                        (char=? next #\;)
@@ -13142,7 +13142,7 @@
            (read-escape-hexadecimal
             (if (macro-readtable-r7rs-compatible-read?
                  (macro-readenv-readtable re))
-                ##max-fixnum
+                (##greatest-fixnum)
                 #f)))
           ((char=? next #\u)
            (read-escape-hexadecimal 4))
@@ -13422,7 +13422,7 @@
 
 (define (##read-script-line re prefix)
   (let* ((rest-of-line
-          (##read-line (macro-readenv-port re) #\newline #f ##max-fixnum))
+          (##read-line (macro-readenv-port re) #\newline #f (##greatest-fixnum)))
          (script-line
           (string-append prefix (if (string? rest-of-line) rest-of-line "")))
          (language-and-tail
@@ -13595,10 +13595,10 @@
                ;; hello world
                ;; END
                (let ((tag
-                      (##read-line (macro-readenv-port re) #\newline #t ##max-fixnum)))
+                      (##read-line (macro-readenv-port re) #\newline #t (##greatest-fixnum))))
                  (let loop ((lines-rev '()))
                    (let ((line
-                          (##read-line (macro-readenv-port re) #\newline #t ##max-fixnum)))
+                          (##read-line (macro-readenv-port re) #\newline #t (##greatest-fixnum))))
                      (if (string? line)
                          (if (string=? line tag)
                              (let* ((str
@@ -13615,7 +13615,7 @@
                     #t)
                ;; Delimited here string of the form #<|foo|
                (let ((str
-                      (##read-line (macro-readenv-port re) separator #t ##max-fixnum)))
+                      (##read-line (macro-readenv-port re) separator #t (##greatest-fixnum))))
                  (if (string? str)
                      (let ((len (string-length str)))
                        (if (and (< 0 len)
@@ -15781,8 +15781,8 @@
           #f                 ;; eval-allowed?
           #f                 ;; write-extended-read-macros?
           #f                 ;; write-cdr-read-macros?
-          ##max-fixnum       ;; max-write-level
-          ##max-fixnum       ;; max-write-length
+          (##greatest-fixnum);; max-write-level
+          (##greatest-fixnum);; max-write-length
           ##standard-pretty-print-formats
           'quote             ;; quote-keyword
           'quasiquote        ;; quasiquote-keyword

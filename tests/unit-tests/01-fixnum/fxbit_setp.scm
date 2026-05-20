@@ -3,8 +3,8 @@
 (check-eqv? (##fxbit-set? 0 0) #f)
 (check-eqv? (##fxbit-set? 1 0) #f)
 
-(check-eqv? (##fxbit-set? 10 ##max-fixnum) #t)
-(check-eqv? (##fxbit-set? 28 ##max-fixnum) #t)
+(check-eqv? (##fxbit-set? 10 (##greatest-fixnum)) #t)
+(check-eqv? (##fxbit-set? 28 (##greatest-fixnum)) #t)
 
 (if (fixnum? 2305843009213693951)
     (check-eqv? (##fxbit-set? 60 2305843009213693951) #t))
@@ -12,8 +12,8 @@
 (check-eqv? (fxbit-set? 0 0) #f)
 (check-eqv? (fxbit-set? 1 0) #f)
 
-(check-eqv? (fxbit-set? 10 ##max-fixnum) #t)
-(check-eqv? (fxbit-set? 28 ##max-fixnum) #t)
+(check-eqv? (fxbit-set? 10 (##greatest-fixnum)) #t)
+(check-eqv? (fxbit-set? 28 (##greatest-fixnum)) #t)
 
 (if (fixnum? 2305843009213693951)
     (check-eqv? (fxbit-set? 60 2305843009213693951) #t))

@@ -303,9 +303,9 @@
 (check-tail-exn type-exception? (lambda () (= 1 'a)))
 (check-tail-exn type-exception? (lambda () (= 'a 1)))
 (check-eqv? (+ 1 1) 2)
-(check-eqv? (let ((x (- (* 3 (quotient ##min-fixnum 4)))))
+(check-eqv? (let ((x (- (* 3 (quotient (##least-fixnum) 4)))))
 	      (+ x x))
-	    (* 3 (- (quotient ##min-fixnum 2))))
+	    (* 3 (- (quotient (##least-fixnum) 2))))
 
 (check-tail-exn type-exception? (lambda () (square 'a)))
 (check-eqv? (square 3) 9)
@@ -1316,12 +1316,12 @@
 (check-tail-exn divide-by-zero-exception? (lambda () (/ 1. 0)))
 (check-tail-exn divide-by-zero-exception? (lambda () (/ 1+i 0)))
 
-(check-eqv? (+ ##max-fixnum 1) `,(+ ##max-fixnum 1))
-(check-eqv? (+ 1 ##max-fixnum) `,(+ 1 ##max-fixnum))
-(check-eqv? (* ##max-fixnum 2) `,(* ##max-fixnum 2))
-(check-eqv? (* 2 ##max-fixnum) `,(* 2 ##max-fixnum))
-(check-eqv? (- ##min-fixnum 1) `,(- ##min-fixnum 1))
-(check-eqv? (- ##min-fixnum) `,(+ ##max-fixnum 1))
+(check-eqv? (+ (##greatest-fixnum) 1) `,(+ (##greatest-fixnum) 1))
+(check-eqv? (+ 1 (##greatest-fixnum)) `,(+ 1 (##greatest-fixnum)))
+(check-eqv? (* (##greatest-fixnum) 2) `,(* (##greatest-fixnum) 2))
+(check-eqv? (* 2 (##greatest-fixnum)) `,(* 2 (##greatest-fixnum)))
+(check-eqv? (- (##least-fixnum) 1) `,(- (##least-fixnum) 1))
+(check-eqv? (- (##least-fixnum)) `,(+ (##greatest-fixnum) 1))
 
 ;;; I should include the programs to generate the arguments to the
 ;;; next tests
@@ -1535,8 +1535,8 @@
 
   (let ((ns (list (random-integer (expt 2 400))
 		  (- (random-integer (expt 2 400)))
-		  (random-integer ##max-fixnum)
-		  (- (random-integer ##max-fixnum))))
+		  (random-integer (##greatest-fixnum))
+		  (- (random-integer (##greatest-fixnum)))))
 	(sizes (list (random-integer 200)
 		     (random-integer 20)))
 	(positions (list (random-integer 200)
@@ -1788,8 +1788,8 @@
 
   (let ((xs (list (random-integer (expt 2 400))
 		  (- (random-integer (expt 2 400)))
-		  (random-integer (integer-sqrt ##max-fixnum))
-		  (- (random-integer (integer-sqrt ##max-fixnum)))))
+		  (random-integer (integer-sqrt (##greatest-fixnum)))
+		  (- (random-integer (integer-sqrt (##greatest-fixnum))))))
 	(shifts (list (random-integer 200)
 		     (random-integer 20)
 		     (- (random-integer 200))

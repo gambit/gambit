@@ -2,7 +2,7 @@
 
 ;;; File: "process.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -120,7 +120,7 @@ c-declare-end
              (if (##not (##eq? null-stdin? #t))
                  (##close-output-port port))
              (if (##eq? capture? #t)
-                 (let* ((out (##read-line port #f #f ##max-fixnum))
+                 (let* ((out (##read-line port #f #f (##greatest-fixnum)))
                         (output (if (##string? out) out "")))
                    (##close-input-port port)
                    (let ((status (##process-status port)))

@@ -2,7 +2,7 @@
 
 ;;; File: "_system.scm"
 
-;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -703,7 +703,7 @@ c-declare-end
    #f
 
    (##define-macro (true) `bank)
-   (##define-macro (false) `##min-fixnum)
+   (##define-macro (false) `(##least-fixnum))
 
    (##define-macro (recursion obj1 obj2 tail-expr)
      `(let ((bank (##fx- bank 1)))
@@ -785,7 +785,7 @@ c-declare-end
                      (fr (fast-equal-objs? obj1 obj2 bank)))
                 (if (##fx>= fr 0) ;; determine if bank was not exhausted
                     (fast-equal-returning-true (##fx- bank fr)) ;; equal
-                    (if (##fx= fr ##min-fixnum)
+                    (if (##fx= fr (##least-fixnum))
                         (fast-equal-returning-false) ;; not equal
                         (let* ((size slow-size0) ;; exhausted available bank
                                (ht (new-gc-hash-table size))
@@ -805,7 +805,7 @@ c-declare-end
             (fr (fast-equal-objs? obj1 obj2 bank)))
        (if (##fx>= fr 0) ;; determine if bank was not exhausted
            (fast-equal-returning-true (##fx- bank fr)) ;; equal
-           (if (##fx= fr ##min-fixnum)
+           (if (##fx= fr (##least-fixnum))
                (fast-equal-returning-false) ;; not equal
                (slow obj1 obj2 limit))))) ;; reached limit, so try slow algo
 
@@ -2940,7 +2940,7 @@ end-of-code
 
 ;;; imports:
 ;;; from _kernel.scm
-;;;    ##max-fixnum
+;;;    (##greatest-fixnum)
 ;;;    (##global-var? ...)
 ;;;    (##type-id ...)
 ;;;    (##type-super ...)
@@ -3216,8 +3216,8 @@ end-of-code
  gcd
  ))
 
-(##define-macro (max-fixnum)
-  `##max-fixnum)
+(##define-macro (greatest-fixnum)
+  `(##greatest-fixnum))
 
 (##define-macro (max-char-code)
   `(##max-char-code))
@@ -3855,7 +3855,7 @@ end-of-code
   (define (deserialize-nonneg-fixnum! n shift)
     (let loop ((n n)
                (shift shift)
-               (range (fxwraplogical-shift-right (max-fixnum) shift)))
+               (range (fxwraplogical-shift-right (greatest-fixnum) shift)))
       (if (fx= range 0)
           (err)
           (let ((x (read-u8)))

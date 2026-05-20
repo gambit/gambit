@@ -2,7 +2,7 @@
 
 ;;; File: "_repl.scm"
 
-;;; Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -2161,7 +2161,7 @@
              (##make-friendly-call-form
               proc
               (##argument-list-remove-absent! args '())
-              ##max-fixnum
+              (##greatest-fixnum)
               ##inverse-eval
               #f)
              execute
@@ -2944,7 +2944,7 @@
                     #f
                     (lambda (port resolved-path)
                       (if (##port? port)
-                          (let ((history (##read-line port #f #f ##max-fixnum)))
+                          (let ((history (##read-line port #f #f (##greatest-fixnum))))
                             (##close-port port)
                             (##tty-history-set! input-port history))))
                     open-input-file
@@ -3016,7 +3016,7 @@
              (##repl-channel-result-history-add channel obj)
              (##exit-with-exception-on-exception
               (lambda ()
-                (##pretty-print obj output-port ##max-fixnum #f))))))
+                (##pretty-print obj output-port (##greatest-fixnum) #f))))))
      results)))
 
 (define-prim (##repl-channel-ports-display-monoline-message
