@@ -7,8 +7,8 @@
 
 
 (check-eqv? (##fxwraparithmetic-shift-left? 1 -1) #f)
-(check-eqv? (##fxwraparithmetic-shift-left? 1 ##fixnum-width) 0)
-(check-eqv? (##fxwraparithmetic-shift-left? 1 (+ ##fixnum-width 1)) #f)
+(check-eqv? (##fxwraparithmetic-shift-left? 1 (##fixnum-width)) 0)
+(check-eqv? (##fxwraparithmetic-shift-left? 1 (+ (##fixnum-width) 1)) #f)
 
-(check-eqv? (##fxwraparithmetic-shift-left? ##max-fixnum 0) ##max-fixnum)
-(check-eqv? (##fxwraparithmetic-shift-left? ##max-fixnum 1) -2)
+(check-eqv? (##fxwraparithmetic-shift-left? (##greatest-fixnum) 0) (##greatest-fixnum))
+(check-eqv? (##fxwraparithmetic-shift-left? (##greatest-fixnum) 1) -2)

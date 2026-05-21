@@ -38,8 +38,8 @@ by visual examination.
 
 (define exact-arguments
   (list 0 1 -1
-        ##min-fixnum ##max-fixnum
-        (* ##min-fixnum 2) (* ##max-fixnum 2)))
+        (##least-fixnum) (##greatest-fixnum)
+        (* (##least-fixnum) 2) (* (##greatest-fixnum) 2)))
 
 (define all-arguments
   (append exact-arguments (cons -0. (map exact->inexact exact-arguments))))

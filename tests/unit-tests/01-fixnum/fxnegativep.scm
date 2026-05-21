@@ -1,10 +1,10 @@
 (include "#.scm")
 
-(check-eqv? (##fxnegative? ##min-fixnum) #t)
-(check-eqv? (##fxnegative? ##max-fixnum) #f)
+(check-eqv? (##fxnegative? (##least-fixnum)) #t)
+(check-eqv? (##fxnegative? (##greatest-fixnum)) #f)
 
-(check-eqv? (fxnegative? ##min-fixnum) #t)
-(check-eqv? (fxnegative? ##max-fixnum) #f)
+(check-eqv? (fxnegative? (##least-fixnum)) #t)
+(check-eqv? (fxnegative? (##greatest-fixnum)) #f)
 
 (check-tail-exn type-exception? (lambda () (fxnegative? 0.0)))
 (check-tail-exn type-exception? (lambda () (fxnegative? 0.5)))

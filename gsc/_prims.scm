@@ -2,7 +2,7 @@
 
 ;;; File: "_prims.scm"
 
-;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -283,6 +283,10 @@
 ("##bignum.fdigit-ref"                (2)   #f ()    0    integer extended)
 ("##bignum.fdigit-set!"               (3)   #t ()    0    #f      extended)
 
+("##bignum.adigit-width"              (0)   #f ()    0    fixnum  extended)
+("##bignum.mdigit-width"              (0)   #f ()    0    fixnum  extended)
+("##bignum.fdigit-width"              (0)   #f ()    0    fixnum  extended)
+
 ("##ratnum?"                          (1)   #f ()    0    boolean extended)
 ("##ratnum-make"                      (2)   #f ()    0    number  extended)
 ("##ratnum-numerator"                 (1)   #f ()    0    integer extended)
@@ -379,10 +383,12 @@
 ("fxzero?"                            (1)   #f 0     0    boolean r6rs)
 ("##fxzero?"                          (1)   #f ()    0    boolean extended)
 
+("##fixnum-width"                     (0)   #f ()    0    fixnum  extended)
+("##fixnum-width-neg"                 (0)   #f ()    0    fixnum  extended)
+("##least-fixnum"                     (0)   #f ()    0    fixnum  extended)
+("##greatest-fixnum"                  (0)   #f ()    0    fixnum  extended)
+
 ;;R6RS fixnum primitives not yet implemented:
-;;(fixnum-width)
-;;(least-fixnum)
-;;(greatest-fixnum)
 ;;(fxdiv-and-mod fx1 fx2)
 ;;(fxdiv fx1 fx2)
 ;;(fxmod fx1 fx2)

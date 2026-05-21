@@ -2,4 +2,4 @@
 
 (define (fixnum-wrap n)
   (declare (standard-bindings) (generic))
-  (+ (modulo (- n ##min-fixnum) (* -2 ##min-fixnum)) ##min-fixnum))
+  (+ (modulo (- n (##least-fixnum)) (* -2 (##least-fixnum))) (##least-fixnum)))

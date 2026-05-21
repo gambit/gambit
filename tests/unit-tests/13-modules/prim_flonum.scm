@@ -9,7 +9,7 @@
 
 ;; Gambit
 
-(fixnum->flonum 0) (fixnum->flonum ##min-fixnum) (fixnum->flonum ##max-fixnum)
+(fixnum->flonum 0) (fixnum->flonum (##least-fixnum)) (fixnum->flonum (##greatest-fixnum))
 
 (fl*) (fl* 2.) (fl* 3. 4.) (fl* 5. 6. 7.)
 (fl+) (fl+ 1.) (fl+ 2. 3.) (fl+ 4. 5. 6.)

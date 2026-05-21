@@ -9,10 +9,10 @@
 (check-false  (##fixnum? +nan.0))
 
 
-(check-true   (##fixnum? ##max-fixnum))
-(check-true   (##fixnum? ##min-fixnum))
-(check-false  (##fixnum? (+ ##max-fixnum 1)))
-(check-false  (##fixnum? (- ##min-fixnum 1)))
+(check-true   (##fixnum? (##greatest-fixnum)))
+(check-true   (##fixnum? (##least-fixnum)))
+(check-false  (##fixnum? (+ (##greatest-fixnum) 1)))
+(check-false  (##fixnum? (- (##least-fixnum) 1)))
 
 (check-false   (##fixnum? "test"))
 (check-false   (##fixnum? #\a))
@@ -42,10 +42,10 @@
 (check-false  (fixnum? +nan.0))
 
 
-(check-true   (fixnum? ##max-fixnum))
-(check-true   (fixnum? ##min-fixnum))
-(check-false  (fixnum? (+ ##max-fixnum 1)))
-(check-false  (fixnum? (- ##min-fixnum 1)))
+(check-true   (fixnum? (##greatest-fixnum)))
+(check-true   (fixnum? (##least-fixnum)))
+(check-false  (fixnum? (+ (##greatest-fixnum) 1)))
+(check-false  (fixnum? (- (##least-fixnum) 1)))
 
 (check-false   (fixnum? "test"))
 (check-false   (fixnum? #\a))

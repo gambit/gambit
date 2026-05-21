@@ -22,10 +22,10 @@
 (check-eqv? (fxwrap+ 11 22 33) 66)
 (check-eqv? (fxwrap+ 11 22 33 44) 110)
 
-(check-eqv? (fxwrap+ ##max-fixnum 1) ##min-fixnum)
-(check-eqv? (fxwrap+ 0 ##max-fixnum 1 0) ##min-fixnum)
-(check-eqv? (fxwrap+ ##min-fixnum -1) ##max-fixnum)
-(check-eqv? (fxwrap+ 0 ##min-fixnum -1 0) ##max-fixnum)
+(check-eqv? (fxwrap+ (##greatest-fixnum) 1) (##least-fixnum))
+(check-eqv? (fxwrap+ 0 (##greatest-fixnum) 1 0) (##least-fixnum))
+(check-eqv? (fxwrap+ (##least-fixnum) -1) (##greatest-fixnum))
+(check-eqv? (fxwrap+ 0 (##least-fixnum) -1 0) (##greatest-fixnum))
 
 (check-tail-exn type-exception? (lambda () (fxwrap+ 0.0)))
 (check-tail-exn type-exception? (lambda () (fxwrap+ 0.5)))

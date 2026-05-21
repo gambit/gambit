@@ -6,7 +6,7 @@
 
 (fixnum? 'a) (fixnum? 536870911) (fixnum? 2305843009213693952)
 
-(fx*) (fx* 2) (fx* 3 4) (fx* 5 6 7) (fx* ##max-fixnum -1)
+(fx*) (fx* 2) (fx* 3 4) (fx* 5 6 7) (fx* (##greatest-fixnum) -1)
 (fx+) (fx+ 1) (fx+ 2 3) (fx+ 4 5 6)
 (fx- 1) (fx- 2 3) (fx- 4 5 6)
 
@@ -46,7 +46,7 @@
 (fxnand 12 5)
 (fxnegative? -1) (fxnegative? 0) (fxnegative? 1)
 (fxnor 12 5)
-(fxnot -1) (fxnot 0) (fxnot 1) (fxnot 5) (fxnot ##max-fixnum)
+(fxnot -1) (fxnot 0) (fxnot 1) (fxnot 5) (fxnot (##greatest-fixnum))
 (fxodd? -1) (fxodd? 0) (fxodd? 1)
 (fxorc1 12 5)
 (fxorc2 12 5)
@@ -54,24 +54,24 @@
 (fxquotient 17 3) (fxquotient -17 -3) (fxquotient -17 3) (fxquotient 17 -3)
 (fxremainder 17 3) (fxremainder -17 -3) (fxremainder -17 3) (fxremainder 17 -3)
 (fxsquare -23170) (fxsquare 0) (fxsquare 23170)
-(fxwrap*) (fxwrap* 1) (fxwrap* 2 3) (fxwrap* 4 5 6) (fxwrap* ##min-fixnum -1)
-(fxwrap+) (fxwrap+ 1) (fxwrap+ 2 3) (fxwrap+ 4 5 6) (fxwrap+ ##max-fixnum 1)
-(fxwrap- 1) (fxwrap- 2 3) (fxwrap- 4 5 6) (fxwrap- ##min-fixnum 1)
-(fxwrapabs -10) (fxwrapabs 10) (fxwrapabs ##min-fixnum)
+(fxwrap*) (fxwrap* 1) (fxwrap* 2 3) (fxwrap* 4 5 6) (fxwrap* (##least-fixnum) -1)
+(fxwrap+) (fxwrap+ 1) (fxwrap+ 2 3) (fxwrap+ 4 5 6) (fxwrap+ (##greatest-fixnum) 1)
+(fxwrap- 1) (fxwrap- 2 3) (fxwrap- 4 5 6) (fxwrap- (##least-fixnum) 1)
+(fxwrapabs -10) (fxwrapabs 10) (fxwrapabs (##least-fixnum))
 
 (fxwraparithmetic-shift 241 -2)
 (fxwraparithmetic-shift 241 0)
-(fxwraparithmetic-shift ##max-fixnum 5)
+(fxwraparithmetic-shift (##greatest-fixnum) 5)
 
 (fxwraparithmetic-shift-left 241 0)
 (fxwraparithmetic-shift-left 241 5)
 
 (fxwraplogical-shift-right 241 0)
 (fxwraplogical-shift-right 241 2)
-(fxwraplogical-shift-right ##min-fixnum 5)
+(fxwraplogical-shift-right (##least-fixnum) 5)
 
-(fxwrapquotient 17 3) (fxwrapquotient -17 -3) (fxwrapquotient ##min-fixnum -1)
-(fxwrapsquare -23170) (fxwrapsquare ##min-fixnum) (fxwrapsquare ##max-fixnum)
+(fxwrapquotient 17 3) (fxwrapquotient -17 -3) (fxwrapquotient (##least-fixnum) -1)
+(fxwrapsquare -23170) (fxwrapsquare (##least-fixnum)) (fxwrapsquare (##greatest-fixnum))
 (fxxor) (fxxor 13) (fxxor 13 7) (fxxor 13 7 6)
 (fxzero? -1) (fxzero? 0) (fxzero? 1)
 

@@ -2,7 +2,7 @@
 
 ;;; File: "_univlib.scm"
 
-;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -814,12 +814,13 @@ def @os_device_from_basic_console@():
 (define ##err-code-EAGAIN            -35)
 (define ##err-code-unimplemented   -9999)
 
-(define ##min-fixnum          -536870912)
-(define ##max-fixnum           536870911)
-(define ##fixnum-width                30)
-(define ##fixnum-width-neg           -30)
-(define ##bignum.adigit-width         14)
-(define ##bignum.mdigit-width         14)
+(define-prim (##fixnum-width)               30)
+(define-prim (##fixnum-width-neg)          -30)
+(define-prim (##least-fixnum)       -536870912)
+(define-prim (##greatest-fixnum)     536870911)
+(define-prim (##bignum.adigit-width)        14)
+(define-prim (##bignum.mdigit-width)        14)
+(define-prim (##bignum.fdigit-width)         7)
 
 (define ##os-bat-extension-string-saved "")
 (define ##os-exe-extension-string-saved "")

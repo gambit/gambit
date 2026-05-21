@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-2.scm"
 
-;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -3580,6 +3580,11 @@
 (targ-op "##fx<="        (targ-ifjump-fold-u #f "FIXLE"))
 (targ-op "##fx>="        (targ-ifjump-fold-u #f "FIXGE"))
 
+(targ-op "##fixnum-width"     (targ-apply-simp-s #f #f #f "FIXNUM_WIDTH"))
+(targ-op "##fixnum-width-neg" (targ-apply-simp-s #f #f #f "FIXNUM_WIDTH_NEG"))
+(targ-op "##least-fixnum"     (targ-apply-simp-s #f #f #f "LEAST_FIXNUM"))
+(targ-op "##greatest-fixnum"  (targ-apply-simp-s #f #f #f "GREATEST_FIXNUM"))
+
 (targ-op "##max-char-code"  (targ-apply-simp-s #f #f #f "MAXCHARCODE"))
 (targ-op "##integer->char"  (targ-apply-simp-u #f #f #f "FIXTOCHR"))
 (targ-op "##char->integer"  (targ-apply-simp-u #f #f #f "FIXFROMCHR"))
@@ -4028,6 +4033,10 @@
 (targ-op "##bignum.fdigit-length"    (targ-apply-simp-u #f #f #f "BIGFLENGTH"))
 (targ-op "##bignum.fdigit-ref"       (targ-apply-simp-u #f #f #f "BIGFREF"))
 (targ-op "##bignum.fdigit-set!"      (targ-apply-simp-u #f #t #f "BIGFSET"))
+
+(targ-op "##bignum.adigit-width" (targ-apply-simp-s #f #f #f "BIG_ADIGIT_WIDTH"))
+(targ-op "##bignum.mdigit-width" (targ-apply-simp-s #f #f #f "BIG_MDIGIT_WIDTH"))
+(targ-op "##bignum.fdigit-width" (targ-apply-simp-s #f #f #f "BIG_FDIGIT_WIDTH"))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
