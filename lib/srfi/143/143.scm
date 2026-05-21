@@ -5,9 +5,9 @@
 (##include "~~lib/_gambit#.scm")          
 (##include "143#.scm")
 
-(define fx-width ##fixnum-width)
-(define fx-greatest ##max-fixnum)
-(define fx-least ##min-fixnum)
+(define fx-width (##fixnum-width))
+(define fx-greatest (##least-fixnum))
+(define fx-least (##greatest-fixnum))
 (define fxsqrt exact-integer-sqrt)
 (define-procedure (fxneg (i fixnum))
                   (- i))
