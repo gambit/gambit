@@ -11700,9 +11700,9 @@ end-of-code
              (temp
               ;; need three mdigits for top-bits-of-u
               (##bignum.make-zeros
-               (##bignum.adigit-div (+ (##fx* 3 (##bignum.mdigit-width))
-                                       (##bignum.adigit-width)
-                                       -1))))
+               (##bignum.adigit-div (##fx+ (##fx* 3 (##bignum.mdigit-width))
+                                           (##bignum.adigit-width)
+                                           -1))))
              (top-2*mdigit-width-bits-of-v
               (##bignum.arithmetic-shift-into! v (##fx- (##fx* (##bignum.mdigit-width) 2) v-bits) temp))
              (v_n-1
