@@ -18,15 +18,27 @@
        (test-approx-eq (cadr k) (cadr j))))))
  
 (define-macro 
-  (test-equivalence names arg prefix suffix)
+  (test-equivalent names arg prefix suffix)
+  (define (sym . lst)
+    (string->symbol
+     (apply string-append
+            (map (lambda (s) (if (symbol? s) (symbol->string s) s))
+                 lst))))
   `(begin
-     ,@(lambda (name)
-         `(test-equal (,(sym prefix name suffix) ,@arg) (,name ,@arg))) names))
+     ,@(map (lambda (name)
+         `(test-equal (,(sym prefix name suffix) ,@arg) (,name ,@arg)))
+     names)))
+
 (define-macro 
   (test-almost-equivalent names arg prefix suffix)
+  (define (sym . lst)
+    (string->symbol
+     (apply string-append
+            (map (lambda (s) (if (symbol? s) (symbol->string s) s))
+                 lst))))
   `(begin
-     ,@(lambda (name)
-         `(test-approx-eq (,(sym prefix name suffix) ,@arg) (,name ,@arg))) names))
+     ,@(map (lambda (name)
+         `(test-approx-eq (,(sym prefix name suffix) ,@arg) (,name ,@arg))) names)))
 
 (define-syntax single-number-tests
   (syntax-rules ()
@@ -37,37 +49,56 @@
          ((and (real? x) (inexact? x)) (test-equal (flonum x) x))
          ((exact? x) (test-equal (flonum x) (exact->inexact x)))
          (else (test-error #t (flonum x))))
-       (test-equal (flexponent-integer x)  (floor (flexponent x)))
+       (test-equal (flinteger-exponent x)  (floor (flexponent x)))
        (if (< x 0) (test-equal (flsign-bit x) 1)
          (test-equal (flsign-bit x) 0))
-       (test-equal (flinteger? x) (= x (floor x)))
-       (test-equal (flpositive? x) (positive? x))
-       (let ((y n) (flnormalized-fraction-exponent x))
-         (test-assert (exact? y))
-         (test-assert (integer? n))
-         (test-assert (<= 1/2 y))
-         (test-assert (< y 1))
-         (test-approx-eq (* y (expt 2 n)) x))
-       (test-equal (flinteger? x) (= x (floor x)))
-       (test-equal (flzero? x) (= x 0.0))
-       (test-assert (<= (flexponent x) (log x 2)))
-       (test-assert (<= (flexponent-integer x) (log x 2)))
+       (cond ((finite? x)
+              (test-equal (flinteger? x) (= x (floor x)))
+              (test-equal (flpositive? x) (positive? x))
+              (let-values (((y n) (flnormalized-fraction-exponent x)))
+                (test-assert (exact? y))
+                (test-assert (integer? n))
+                (test-assert (<= 1/2 (abs y)))
+                (test-assert (< y 1))
+                (test-approx-eq (* y (expt 2 n)) x))
+              (test-assert (<= (flexponent x) (log x 2)))
+              (test-assert (<= (flinteger-exponent x) (log x 2)))
+              )
+             (else 
+               (test-equal #f (flinteger? x))
+               (test-equal #f (flpositive? x))))
        (if (integer? x)
          (test-equivalent (odd? even?) (x) fl ||)
          (begin
            (test-error #t (flodd? x))
            (test-error #t (fleven? x))))
-       (test-equal (flfinite? x) (not (flinfinite? x))) ;; Sanity check
-       (test-equal (flnormalized? x) (not (fldenormalized? x))) ;; sanity check
+       (when (not (nan? x))
+           (test-equal (flfinite? x) (not (flinfinite? x))) ;; Sanity check
+           (test-equal (flnormalized? x) (not (fldenormalized? x))) ;; sanity check
+           (test-almost-equivalent
+             (square sqrt sin asinh acosh
+             cos tan atan sinh cosh tanh) (x) fl ||)
+          (if (<= (abs x) 1)
+           (test-almost-equivalent
+             (asin acos asinh acosh) (x) fl ||)
+           (begin
+           (test-assert (nan? (flasin x)))
+           (test-assert (nan? (flacos x)))))
+           (if (and (real? (atanh x)) (finite? (atanh x)))
+             (test-equal (flatanh x) (atanh x))
+             (test-assert (not (finite? (flatanh x)))))
+                
+
+           (test-approx-eq (expt x 1/3) (flcbrt x))
+           (test-equal (flnumerator x) (flonum (numerator (##flonum->exact x))))
+           (test-equal (fldenominator x) (flonum (denominator (##flonum->exact x))))
+           (test-approx-eq (flexp2 x) (expt 2 x))
+           (test-approx-eq (flexp-1 x) (- (exp x) 1))
+           (test-equivalent
+             (positive? negative? floor ceiling round truncate) (x) fl ||))
        (test-equivalent
-         (positive? negative? floor ceil round truncate finite? infinite? nan?) (x) fl ||)
-       (test-almost-equivalent
-         (square sqrt cbrt) (x) fl ||)
+         (infinite? finite? nan?) (x) fl ||)
        (test-equal (flcopysign 1.0 x) (flsgn x))
-       (test-equal (flnumerator x) (numerator (##flonum->exact x)))
-       (test-equal (fldenominator x) (denominator (##flonum->exact x)))
-       (test-approx-eq (flexp2 x) (expt 2 x))
-       (test-approx-eq (flexp-1 x) (- (expt x) 1))
        (single-number-tests . x*)
        ))))
 

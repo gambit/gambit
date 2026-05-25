@@ -90,8 +90,13 @@
     flquotient
     flremaider
     flremquo
+    flnormalized-fraction-exponent
+    flinteger-exponent
     flfirst-bessel
+    flcopysign
+    flsgn
     flsecond-bessel
+    flonum
     flerf
     flerfc
     fl+

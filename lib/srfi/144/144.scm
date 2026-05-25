@@ -37,8 +37,6 @@
            `(define ,(sym 'fl-1/ name) (/ 1 ,(sym 'fl- name))))
          names)))
 
-
-
 (define-macro
   (apply-op names prefix suffix function)
 (define (sym . lst)
@@ -93,6 +91,12 @@
 (define fl-pi-squared (* fl-pi fl-pi))
 (define fl-degree (/ fl-pi 180))
 (define fl-4thrt-2 (expt 2 (/ 1 4)))
+(define-procedure (flonum (f number))
+    (cond
+      ((flonum? f) f)
+      ((##ratnum? f) (##ratnum->flonum f))
+      ((exact-integer? f) (##exact-int->flonum f))
+      (else (error "This is a Bug in SRFI 144. it Should never happen"))))
 (apply-op (2 3 5 10 pi) sqrt- || sqrt)
 (apply-op  (2 3) cbrt- || (lambda (x) (expt x (/ 1 3))))
 (apply-op (2 3 pi 10 phi) log- || log)
@@ -110,7 +114,8 @@
 ;        flnormalized? fldenormalized? flexp-1 fllog1+  flquotient  flremainder flremquo
         flmax flmin flexp flsquare flsqrt flexpt fllog
         flsin flcos fltan flasin flacos flatan flsinh flinteger?
-        flcosh fltanh flasinh flacosh flatanh 
+        flcosh fltanh flasinh flacosh flatanh  flfloor flceiling flround
+        fltruncate
         fl+* fl* fl/ flabs))
 
 
@@ -130,9 +135,6 @@
   (make-fllog-base (z flonum))
   (lambda (x) (fllog x z)))
 
-(define-procedure
-  (flexponent (z flonum))
-  (+ (vector-ref (##flonum->exact-exponential-format z) 1) 52))
 
 (define-procedure
   (flsign-bit (z flonum))
@@ -144,30 +146,66 @@
 
 (define-procedure
   (flexp2 (z flonum))
-  (flexpt x 2))
+  (flexpt z 2))
 
 (define-procedure
   (flinteger-fraction (x flonum))
   (values (flfloor x) (- x (flfloor x))))
 
+(define (flsgn x) (flcopysign 1.0 x))
+(define-procedure
+  (flcopysign (x flonum) (y flonum))
+  (cond
+    ((fl<= y 0) (flabs x))
+    (else (fl* -1  (flabs x)))))
+(define-procedure
+  (flexp-1 (x flonum))
+   (fl- (flexp x) 1))
+
+(define-procedure
+  (flnormalized-fraction-exponent (x flonum))
+  (let ((repr (##flonum->inexact-exponential-format x)))
+  (values
+    (* (##flonum->ratnum (fl* 0.5 (vector-ref repr 0))) (vector-ref repr 2))
+    (fx+ (vector-ref repr 1) 1))))
+
+(define (flinteger-exponent x) (truncate (flexponent x)))
 (cond-expand
   ((compilation-target C)
-    (define flgamma (c-lambda (double) (double) "tgamma"))
-    (define flexponent (c-lambda (double) (double) "logb"))
-    (define flcbrt (c-lambda (double) (double) "cbrt"))
-    (define flhypot (c-lambda (double double) (double) "hypot"))
-    (define flfirst-bessel (c-lambda (double double) (double) "jn"))
-    (define flsecond-bessel (c-lambda (double double) (double) "yn"))
-    (define flerf (c-lambda (double double) (double) "erf"))
-    (define flerfc (c-lambda (double double) (double) "erfc"))
+    (define flgamma (c-lambda (double) double "tgamma"))
+    (define flexponent (c-lambda (double) double "logb"))
+    (define flcbrt (c-lambda (double) double "cbrt"))
+    (define flhypot (c-lambda (double double) double "hypot"))
+    (define flfirst-bessel (c-lambda (double double) double "jn"))
+    (define flsecond-bessel (c-lambda (double double) double "yn"))
+    (define flerf (c-lambda (double double) double "erf"))
+    (define flerfc (c-lambda (double double) double "erfc"))
+    (define flexponent (c-lambda (double) double "logb"))
+    (define flexp-1 (c-lambda (double) double "expm1"))
+    (define flnormalized? (double) bool "isnormal")
+    (define fldenormalized (double) bool "issubnormal")
    )
   (else
+  
+    (define-procedure
+      (flnormalized? (z flonum))
+        (fl>= z (* 2.23 (expt 10 -308))))
+
+    (define-procedure
+      (fldenormalized? (z flonum))
+        (fl<= z (* 2.23 (expt 10 -308))))
+
     (define-procedure
       (flhypot (a flonum) (b flonum))
-      (flsqrt (+ (flsquare a) (flsquare b))))-
+      (flsqrt (+ (flsquare a) (flsquare b))))
+
     (define-procedure
-      (flcbrt (z flonum))
-      (flexpt z (/ 1.0 3.0)))
+      (flexponent (z flonum))
+      (vector-ref (##flonum->inexact-exponential-format z) 1))
+        (define-procedure
+          (flcbrt (z flonum))
+          (flexpt z (/ 1.0 3.0)))
+
     (define-procedure
       (flgamma (z flonum))
         (fl*

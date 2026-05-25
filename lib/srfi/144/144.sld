@@ -70,7 +70,9 @@
     fldenormalized?
     flmax
     flmin
+    flcopysign
     flfloor
+    flsgn
     flceiling
     flround
     fltruncate
@@ -105,6 +107,9 @@
     flsecond-bessel
     flerf
     flerfc
+    flonum
+    flinteger-exponent
+    flnormalized-fraction-exponent
     fl+
     fl*
     fl+*
