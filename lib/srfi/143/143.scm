@@ -82,12 +82,10 @@
                 ((q r) (balanced/ s (expt 2 fx-width))))
     (values r q)))
 
-(define-procedure 
-  (fxarithmetic-shift-right (i fixnum) 
-                            (j (index-range-incl 0 fx-width)))
-(##fxarithmetic-shift-right i j))
+(define-procedure (fxarithmetic-shift-right (i fixnum) 
+                                            (j (index-range-incl 0 fx-width)))
+                  (##fxarithmetic-shift-right i j))
 
-(define-procedure
-  (fxcopy-bit
-    (i (index-range-incl 0 fx-width)) (j fixnum) (boolean boolean))
-  (copy-bit i j boolean))
+(define-procedure (fxcopy-bit (i (index-range-incl 0 fx-width))
+                              (j fixnum) (boolean boolean))
+                  (copy-bit i j boolean))
