@@ -48,6 +48,8 @@
     fl-1/sqrt-2
     fl-cbrt-2
     fl-cbrt-3
+    fl-greatest
+    fl-least
     fl-phi
     fl-log-phi
     fl<?

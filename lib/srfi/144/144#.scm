@@ -11,6 +11,8 @@
     fl-log-3
     fl-log-pi
     fl-log-10
+    fl-greatest
+    fl-least
     fl-1/log-10
     fl-pi
     fl-4thrt-2

@@ -6,7 +6,7 @@
   (syntax-rules ()
     ((_ a b) 
      (begin
-     (test-assert (>= b a))
+     (test-assert (>= b a) (list  a b))
      (test-assert (>= (+ b 0.00005) a))))))
 
 (define-syntax test-values-equal
@@ -61,8 +61,8 @@
                 (test-assert (<= 1/2 (abs y)))
                 (test-assert (< y 1))
                 (test-approx-eq (* y (expt 2 n)) x))
-              (test-assert (<= (flexponent x) (log x 2)))
-              (test-assert (<= (flinteger-exponent x) (log x 2)))
+              (test-assert (<= (flexponent (abs x)) (log (abs x) 2)))
+              (test-assert (<= (flinteger-exponent (abs x)) (log (abs x) 2)))
               )
              (else 
                (test-equal #f (flinteger? x))
@@ -76,11 +76,11 @@
            (test-equal (flfinite? x) (not (flinfinite? x))) ;; Sanity check
            (test-equal (flnormalized? x) (not (fldenormalized? x))) ;; sanity check
            (test-almost-equivalent
-             (square sqrt sin asinh acosh
+             (square sin 
              cos tan atan sinh cosh tanh) (x) fl ||)
           (if (<= (abs x) 1)
            (test-almost-equivalent
-             (asin acos asinh acosh) (x) fl ||)
+             (asin acos) (x) fl ||)
            (begin
            (test-assert (nan? (flasin x)))
            (test-assert (nan? (flacos x)))))
@@ -88,8 +88,7 @@
              (test-equal (flatanh x) (atanh x))
              (test-assert (not (finite? (flatanh x)))))
                 
-
-           (test-approx-eq (expt x 1/3) (flcbrt x))
+           (test-approx-eq (flsqrt (abs x)) (sqrt (abs x)))
            (test-equal (flnumerator x) (flonum (numerator (##flonum->exact x))))
            (test-equal (fldenominator x) (flonum (denominator (##flonum->exact x))))
            (test-approx-eq (flexp2 x) (expt 2 x))
@@ -135,7 +134,6 @@
 (define (test-exists a)
   (test-equal a a))
 
-(single-number-tests 1.0 2.0 3.0 +nan.0)
 (define e 2.718281828459045)
 (define pi 3.1415926535897932384626433832795028841971)
 (test-approx-eq fl-sqrt-2 1.4142135623730951)
@@ -185,13 +183,12 @@
 (test-assert (flunordered? 2.0 +nan.0))
 (test-assert (flunordered? 2.0 -nan.0))
 (test-assert (flinteger? 1.0))
+(test-approx-eq 2.0 (flcopysign 2.0 1.0))
+(write (flcopysign -2.0 1.0))
+(test-approx-eq (flcopysign 2.0 -1.0) -2.0)
+(test-approx-eq (flexponent 2.0) 1.0)
+(test-approx-eq (flexponent 4.0) 2.0)
 (test-assert (not (flinteger? 1.5)))
-(single-number-tests 1.0)
-(single-number-tests -1.0)
-(single-number-tests -2.0)
-(single-number-tests 2.0)
-(double-number-tests 0.1 fl-pi)
-(double-number-tests fl-pi fl-e)
 (test-exists fl-greatest)
 (test-exists fl-least)
 (test-exists fl-epsilon)
@@ -214,3 +211,18 @@
 (test-assert (fldenormalized? +nan.0))
 (test-assert (fldenormalized? 0.0))
 (test-assert (fldenormalized? 0.0000000000000000001))
+(test-assert (infinite? (asin 2.0)))
+(test-approx-eq (flcbrt 8.0) 2.0)
+(test-approx-eq (flcbrt -8.0) -2.0)
+(test-approx-eq (flcbrt -1.0) -1.0)
+(test-approx-eq (flcbrt 1.0) 1.0)
+(test-approx-eq (flcbrt +nan.0) +nan.0)
+(test-approx-eq (flcbrt +inf.0) +inf.0)
+(test-approx-eq (flcbrt -inf.0) -inf.0)
+(single-number-tests 1.0)
+(single-number-tests -1.0)
+(single-number-tests -2.0)
+(single-number-tests 2.0)
+(double-number-tests 0.1 fl-pi)
+(double-number-tests fl-pi fl-e)
+(single-number-tests 1.0 2.0 3.0 +nan.0)

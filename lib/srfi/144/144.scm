@@ -108,13 +108,15 @@
 (apply-op (pi sqrt-pi) "2/" || (lambda (x) (/ 2 x)))
 (define fl-sin-1 (sin 1))
 (define fl-cos-1 (cos 1))
+(define fl-greatest (* 1.80 (expt 10 308)))
+(define fl-least (* 4.94 (expt 10 -324)))
 (rename (fl= fl< fl> fl<= fl>=) || ?)
 (reexport (fl+ fl- flzero? flpositive? 
         flnegative? flodd? fleven? flfinite? flnan?
 ;        flnormalized? fldenormalized? flexp-1 fllog1+  flquotient  flremainder flremquo
         flmax flmin flexp flsquare flsqrt flexpt fllog
         flsin flcos fltan flasin flacos flatan flsinh flinteger?
-        flcosh fltanh flasinh flacosh flatanh  flfloor flceiling flround
+        flcosh fltanh flasinh flacosh flatanh flfloor flceiling flround
         fltruncate
         fl+* fl* fl/ flabs))
 
@@ -153,11 +155,13 @@
   (values (flfloor x) (- x (flfloor x))))
 
 (define (flsgn x) (flcopysign 1.0 x))
+
 (define-procedure
   (flcopysign (x flonum) (y flonum))
   (cond
-    ((fl<= y 0) (flabs x))
-    (else (fl* -1  (flabs x)))))
+    ((<= y 0) (abs x))
+    (else (* -1  (abs x)))))
+
 (define-procedure
   (flexp-1 (x flonum))
    (fl- (flexp x) 1))
@@ -173,9 +177,7 @@
 (cond-expand
   ((compilation-target C)
     (define flgamma (c-lambda (double) double "tgamma"))
-    (define flexponent (c-lambda (double) double "logb"))
-    (define flcbrt (c-lambda (double) double "cbrt"))
-    (define flhypot (c-lambda (double double) double "hypot"))
+    (define flexponent (c-lambda (double) double "logb")) (define flcbrt (c-lambda (double) double "cbrt")) (define flhypot (c-lambda (double double) double "hypot"))
     (define flfirst-bessel (c-lambda (double double) double "jn"))
     (define flsecond-bessel (c-lambda (double double) double "yn"))
     (define flerf (c-lambda (double double) double "erf"))
