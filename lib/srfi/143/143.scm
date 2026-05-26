@@ -6,8 +6,8 @@
 (##include "143#.scm")
 
 (define fx-width (##fixnum-width))
-(define fx-greatest (##least-fixnum))
-(define fx-least (##greatest-fixnum))
+(define fx-least (##least-fixnum))
+(define fx-greatest (##greatest-fixnum))
 (define fxsqrt exact-integer-sqrt)
 (define-procedure (fxneg (i fixnum))
                   (- i))
@@ -67,20 +67,29 @@
 (rename (bit-field-reverse bit-field-rotate) fx ||)
 (double-rename (and ior xor if) fx bitwise-)
 
-(define (fx+/carry i j k)
-(let*-values (((s) (+ i j k))
-              ((q r) (balanced/ s (expt 2 fx-width))))
-  (values r q)))
+(define-procedure (fx+/carry (i fixnum) 
+                             (j fixnum)
+                             (k fixnum))
+    (let ((x (fxwrap+ i j k)))
+      (values
+        x
+        (if (or (eq? (##fx+? i j) #f) (eq? (##fx+? (fx+ i j) k) #f)) 1 0))))
 
-(define (fx-/carry i j k)
-  (let*-values (((d) (- i j k))
-                ((q r) (balanced/ d (expt 2 fx-width))))
-    (values r q)))
+(define-procedure (fx-/carry (i fixnum) 
+                             (j fixnum)
+                             (k fixnum))
+    (let ((x (fxwrap- i j k)))
+      (values
+        x
+        (if (or (eq? (##fx-? i j) #f) (eq? (##fx-? (fx- i j) k) #f)) 1 0))))
 
-(define (fx*/carry i j k)
-  (let*-values (((s) (+ (* i j) k))
-                ((q r) (balanced/ s (expt 2 fx-width))))
-    (values r q)))
+(define-procedure (fx*/carry (i fixnum) 
+                             (j fixnum)
+                             (k fixnum))
+    (let ((x (fxwrap+ (fxwrap* i j) k)))
+      (values
+        x
+        (if (or (eq? (##fx*? i j) #f) (eq? (##fx+? (fx* i j) k) #f)) 1 0))))
 
 (define-procedure (fxarithmetic-shift-right (i fixnum) 
                                             (j (index-range-incl 0 fx-width)))
