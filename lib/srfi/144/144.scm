@@ -159,7 +159,7 @@
 (define-procedure
   (flcopysign (x flonum) (y flonum))
   (cond
-    ((<= y 0) (abs x))
+    ((>= y 0) (abs x))
     (else (* -1  (abs x)))))
 
 (define-procedure

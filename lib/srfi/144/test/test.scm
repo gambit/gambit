@@ -171,30 +171,38 @@
 (test-approx-eq fl-gamma-1/2 1.7724538509055159)
 (test-approx-eq fl-gamma-1/3 2.678938534707748)
 (test-approx-eq fl-gamma-2/3 1.3541179394264005)
+
 (test-values-equal (flinteger-fraction 2.5) (values 2.0 0.5))
 (test-values-equal (flinteger-fraction 2.75) (values 2.0 0.75))
 (test-values-equal (flinteger-fraction 3.25) (values 3.0 0.25))
+
 (test-approx-eq (flexponent 4.0) 2.0)
 (test-approx-eq (flexponent 8.0) 3.0)
 (test-equal 2 (flexponent 4.0))
+(test-approx-eq (flexponent 2.0) 1.0)
+(test-approx-eq (flexponent 4.0) 2.0)
+
 (test-equal 0 (flsign-bit 0.0))
 (test-equal 1 (flsign-bit -0.0))
 (test-assert (flunordered? 1.0 +nan.0))
+
 (test-assert (flunordered? 2.0 +nan.0))
 (test-assert (flunordered? 2.0 -nan.0))
+
 (test-assert (flinteger? 1.0))
-(test-approx-eq 2.0 (flcopysign 2.0 1.0))
-(write (flcopysign -2.0 1.0))
-(test-approx-eq (flcopysign 2.0 -1.0) -2.0)
-(test-approx-eq (flexponent 2.0) 1.0)
-(test-approx-eq (flexponent 4.0) 2.0)
 (test-assert (not (flinteger? 1.5)))
+
+(test-equal 2.0 (flcopysign 2.0 1.0))
+(test-equal -2.0 (flcopysign 2.0 -1.0))
+
 (test-exists fl-greatest)
 (test-exists fl-least)
 (test-exists fl-epsilon)
 (test-exists fl-fast-fl+*)
+
 (test-equal fl-integer-exponent-zero (flinteger-exponent 0.0))
 (test-equal fl-integer-exponent-nan (flinteger-exponent +nan.0))
+
 (test-assert (flfinite? 2.0))
 (test-assert (flfinite? 3.0))
 (test-assert (flfinite? 4.0))
@@ -204,14 +212,18 @@
 (test-equal #f (flfinite? +inf.0))
 (test-equal #f (flfinite? -inf.0))
 (test-equal #f (flfinite? -nan.0))
+
 (test-assert (isnan? +nan.0))
 (test-assert (isnan? -nan.0))
 (test-equal #f (isnan? 0.0))
+
 (test-assert (flnormalized? 0.2))
 (test-assert (fldenormalized? +nan.0))
 (test-assert (fldenormalized? 0.0))
 (test-assert (fldenormalized? 0.0000000000000000001))
+
 (test-assert (infinite? (asin 2.0)))
+
 (test-approx-eq (flcbrt 8.0) 2.0)
 (test-approx-eq (flcbrt -8.0) -2.0)
 (test-approx-eq (flcbrt -1.0) -1.0)
@@ -219,6 +231,29 @@
 (test-approx-eq (flcbrt +nan.0) +nan.0)
 (test-approx-eq (flcbrt +inf.0) +inf.0)
 (test-approx-eq (flcbrt -inf.0) -inf.0)
+
+(test-equal (flmax 1. 2.) 2.)
+(test-equal (flmax 2.3 2.1 .2) 2.3)
+(test-equal (flmax 3.4 2. +nan.0) +nan.0)
+(test-equal (flmax +inf.0 -inf.0 0.) +inf.0)
+(test-equal (flmax 2. +nan.0 +inf.0) +nan.0)
+
+(test-equal (flmin 1. 2.) 1.)
+(test-equal (flmin 2.3 2.1 .2) .2)
+(test-equal (flmin 3.4 2. +nan.0) +nan.0)
+(test-equal (flmin +inf.0 -inf.0 0.) -inf.0)
+(test-equal (flmin 2. +nan.0 +inf.0) +nan.0)
+
+
+(test-equal (fl+ 1. 2.) 3.)
+(test-equal (fl+ 2.3 2.1 .2) 4.6)
+(test-equal (fl+ 3.4 2. +nan.0) +nan.0)
+(test-equal (fl+ +inf.0 -inf.0 0.) +nan.0)
+(test-equal (fl+ 1.2 2.3 3.5) 7.)
+(test-equal (fl+ 2. +nan.0 +inf.0) +nan.0)
+
+
+
 (single-number-tests 1.0)
 (single-number-tests -1.0)
 (single-number-tests -2.0)
