@@ -81,29 +81,6 @@
 (rename  (bit-field-rotate) fx ||)
 (double-rename (and ior xor if) fx bitwise-)
 
-(define-procedure (fx+/carry (i fixnum) 
-                             (j fixnum)
-                             (k fixnum))
-    (let ((x (fxwrap+ i j k)))
-      (values
-        x
-        (if (or (eq? (##fx+? i j) #f) (eq? (##fx+? (fx+ i j) k) #f)) 1 0))))
-
-(define-procedure (fx-/carry (i fixnum) 
-                             (j fixnum)
-                             (k fixnum))
-    (let ((x (fxwrap- i j k)))
-      (values
-        x
-        (if (or (eq? (##fx-? i j) #f) (eq? (##fx-? (fx- i j) k) #f)) 1 0))))
-
-(define-procedure (fx*/carry (i fixnum) 
-                             (j fixnum)
-                             (k fixnum))
-    (let ((x (fxwrap+ (fxwrap* i j) k)))
-      (values
-        x
-        (if (or (eq? (##fx*? i j) #f) (eq? (##fx+? (fx* i j) k) #f)) 1 0))))
 
 (define-procedure (fxarithmetic-shift-right (i fixnum) 
                                             (j (index-range-incl 0 fx-width)))
@@ -112,3 +89,18 @@
 (define-procedure (fxcopy-bit (i (index-range-incl 0 fx-width))
                               (j fixnum) (boolean boolean))
                   (copy-bit i j boolean))
+
+(define (fx+/carry i j k)
+(let*-values (((s) (+ i j k))
+              ((q r) (balanced/ s (expt 2 fx-width))))
+  (values r q)))
+
+(define (fx-/carry i j k)
+  (let*-values (((d) (- i j k))
+                ((q r) (balanced/ d (expt 2 fx-width))))
+    (values r q)))
+
+(define (fx*/carry i j k)
+  (let*-values (((s) (+ (* i j) k))
+                ((q r) (balanced/ s (expt 2 fx-width))))
+    (values r q)))
