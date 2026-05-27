@@ -45,7 +45,7 @@
             (lambda (proc)
               `(define-procedure 
                  (,proc (i fixnum) (j fixnum))  
-                 (,(sym "##" proc) i j))
+                 ((let () (namespace ("")) ,proc) i j))
                  ) procedures)))
 (define-macro
   (reexport 
@@ -63,8 +63,24 @@
     fxand fxior fxif fxxor fxbit-set? 
     fxarithmetic-shift ))
 
+(define-procedure (fxbit-field (i fixnum) (start fixnum) (end fixnum))
+        (cond
+          ((fx< start 0) (##raise-range-exception 1 'fxbit-field i start end))
+          ((fx< end 0) (##raise-range-exception 2 'fxbit-field i start end))
+        (else
+          (fxand
+          i
+          (- (fxarithmetic-shift-left 1 end) (fxarithmetic-shift-left 1 start))))))
+
+(define-procedure (fxbit-field-reverse (i fixnum) (start fixnum) (end fixnum))
+        (write 1)
+        (cond
+          ((fx< start 0) (##raise-range-exception 1 'fxbit-field i start end))
+          ((fx< end 0) (##raise-range-exception 2 'fxbit-field i start end))
+          (else (bit-field-reverse i start end))))
+
 (rename (fx= fx< fx> fx<= fx>=) || ?)
-(rename (bit-field-reverse bit-field-rotate) fx ||)
+(rename  (bit-field-rotate) fx ||)
 (double-rename (and ior xor if) fx bitwise-)
 
 (define-procedure (fx+/carry (i fixnum) 
