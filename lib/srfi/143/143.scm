@@ -63,21 +63,19 @@
     fxand fxior fxif fxxor fxbit-set? 
     fxarithmetic-shift ))
 
-(define-procedure (fxbit-field (i fixnum) (start fixnum) (end fixnum))
-        (cond
-          ((fx< start 0) (##raise-range-exception 1 'fxbit-field i start end))
-          ((fx< end 0) (##raise-range-exception 2 'fxbit-field i start end))
-        (else
+(define-procedure (fxbit-field (i fixnum) 
+                               (start (index-range-incl 0 fx-width)) 
+                               (end (index-range-incl 0 fx-width)))
+          (fxarithmetic-shift-right
           (fxand
           i
-          (- (fxarithmetic-shift-left 1 end) (fxarithmetic-shift-left 1 start))))))
+          (- (fxarithmetic-shift-left 1 end) (fxarithmetic-shift-left 1 start)))
+          start))
 
-(define-procedure (fxbit-field-reverse (i fixnum) (start fixnum) (end fixnum))
-        (write 1)
-        (cond
-          ((fx< start 0) (##raise-range-exception 1 'fxbit-field i start end))
-          ((fx< end 0) (##raise-range-exception 2 'fxbit-field i start end))
-          (else (bit-field-reverse i start end))))
+(define-procedure (fxbit-field-reverse (i fixnum) 
+                                       (start (index-range-incl 0 fx-width)) 
+                                       (end (index-range-incl 0 fx-width)))
+                  (bit-field-reverse i start end))
 
 (rename (fx= fx< fx> fx<= fx>=) || ?)
 (rename  (bit-field-rotate) fx ||)
