@@ -176,4 +176,4 @@
 (test-error #t (fx- 1 1 1))
 (test-error #t (fx* 1 1 1))
 (test-error #t (fxneg 1 2))
-(test-fixnum-operations (1 3 2 45 56 423 6 56 -3 5 4 0 (##greatest-fixnum) (##least-fixnum)))
+(test-fixnum-operations (1 3 2 45 61 56 423 6 56 -3 5 4 0 (##greatest-fixnum) (##least-fixnum)))
