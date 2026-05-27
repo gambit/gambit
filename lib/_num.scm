@@ -7362,7 +7362,7 @@ for a discussion of branch cuts.
 
 (define-prim (fxbit-set? x y)
   (macro-force-vars (x y)
-    (macro-check-fixnum-range-incl
+    (macro-check-fixnum-range
       x
       1
       0
@@ -7382,7 +7382,7 @@ for a discussion of branch cuts.
       x
       1
       (fxwraparithmetic-shift x y)
-      (macro-check-fixnum-range-incl
+      (macro-check-fixnum-range
         y
         2
         (##fixnum-width-neg)
@@ -7408,7 +7408,7 @@ for a discussion of branch cuts.
       x
       1
       (fxwraparithmetic-shift-left x y)
-      (macro-check-fixnum-range-incl
+      (macro-check-fixnum-range
         y
         2
         0
