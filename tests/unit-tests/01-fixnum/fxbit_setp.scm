@@ -3,6 +3,9 @@
 (check-eqv? (##fxbit-set? 0 0) #f)
 (check-eqv? (##fxbit-set? 1 0) #f)
 
+(check-eqv? (##fxbit-set? (- (##fixnum-width) 1) 3) #f)
+(check-eqv? (##fxbit-set? (- (##fixnum-width) 1) -3) #t)
+
 (check-eqv? (##fxbit-set? 10 (##greatest-fixnum)) #t)
 (check-eqv? (##fxbit-set? 28 (##greatest-fixnum)) #t)
 
@@ -11,6 +14,9 @@
 
 (check-eqv? (fxbit-set? 0 0) #f)
 (check-eqv? (fxbit-set? 1 0) #f)
+
+(check-eqv? (fxbit-set? (- (##fixnum-width) 1) 3) #f)
+(check-eqv? (fxbit-set? (- (##fixnum-width) 1) -3) #t)
 
 (check-eqv? (fxbit-set? 10 (##greatest-fixnum)) #t)
 (check-eqv? (fxbit-set? 28 (##greatest-fixnum)) #t)
