@@ -98,14 +98,14 @@
                                fx ||)
                         #f)
                         ,(if (and (>= y 0)
-                                  (< y (- (##fixnum-width) 3)))
+                                  (< (+ y 3) (##fixnum-width)))
                             `(test-equivalence
                               (,x ,y ,(+ y 3))
                               (bit-field bit-field-reverse)
                               fx ||)
                               `(begin 
-                                 (test-error #t (fxbit-field ,x ,y ,(+ y 1)))
-                                 (test-error #t (fxbit-field-reverse ,x ,y ,(+ y 1)))))
+                                 (test-error #t (fxbit-field ,x ,y ,(+ y 3)))
+                                 (test-error #t (fxbit-field-reverse ,x ,y ,(+ y 3)))))
                         (test-equal
                           (values->list (+/carry ,x ,y 1))
                           (values->list (fx+/carry ,x ,y 1)))
