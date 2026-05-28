@@ -87,7 +87,8 @@
                   (##fxarithmetic-shift-right i j))
 
 (define-procedure (fxcopy-bit (i (index-range-incl 0 fx-width))
-                              j fixnum) (boolean boolean))
+                              (j fixnum) 
+                              (boolean boolean))
                   (copy-bit i j boolean))
 
 (define (fx+/carry i j k)

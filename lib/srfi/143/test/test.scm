@@ -98,7 +98,7 @@
                                fx ||)
                         #f)
                         ,(if (and (>= y 0)
-                                  (< y (##fixnum-width)))
+                                  (< y (- (##fixnum-width) 3)))
                             `(test-equivalence
                               (,x ,y ,(+ y 3))
                               (bit-field bit-field-reverse)
@@ -144,7 +144,7 @@
                         (test-equal 
                           ,(bitwise-xor x y) 
                           (fxxor ,x ,y))
-                        (if (or (> ,x fx-width) (< ,x 0))
+                        (if (or (>= ,x fx-width) (< ,x 0))
                           (test-error #t (fxbit-set? ,x ,y))
                           (test-equal (bit-set? ,x ,y) (fxbit-set? ,x ,y)))
                         (if (or (> ,(abs y) fx-width) (not (fixnum? (arithmetic-shift ,x ,y))))
@@ -176,4 +176,4 @@
 (test-error #t (fx- 1 1 1))
 (test-error #t (fx* 1 1 1))
 (test-error #t (fxneg 1 2))
-(test-fixnum-operations (1 3 2 45 61 56 423 6 56 -3 5 4 0 (##greatest-fixnum) (##least-fixnum)))
+(test-fixnum-operations (1 3 2 45 56 423 6 56 -3 5 4 0 (##greatest-fixnum) (- (##fixnum-width) 1) (##fixnum-width) (+ (##fixnum-width) 1) (##least-fixnum)))
