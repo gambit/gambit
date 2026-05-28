@@ -174,16 +174,18 @@
     (fx+ (vector-ref repr 1) 1))))
 
 (define (flinteger-exponent x) (truncate (flexponent x)))
+(define flexp-1 flexpm1)
 (cond-expand
   ((compilation-target C)
     (define flgamma (c-lambda (double) double "tgamma"))
-    (define flexponent (c-lambda (double) double "logb")) (define flcbrt (c-lambda (double) double "cbrt")) (define flhypot (c-lambda (double double) double "hypot"))
+    (define flexponent (c-lambda (double) double "logb")) 
+    (define flcbrt (c-lambda (double) double "cbrt")) 
+    (define flhypot (c-lambda (double double) double "hypot"))
     (define flfirst-bessel (c-lambda (double double) double "jn"))
     (define flsecond-bessel (c-lambda (double double) double "yn"))
     (define flerf (c-lambda (double double) double "erf"))
     (define flerfc (c-lambda (double double) double "erfc"))
     (define flexponent (c-lambda (double) double "logb"))
-    (define flexp-1 (c-lambda (double) double "expm1"))
     (define flnormalized? (double) bool "isnormal")
     (define fldenormalized (double) bool "issubnormal")
    )
@@ -204,18 +206,35 @@
     (define-procedure
       (flexponent (z flonum))
       (vector-ref (##flonum->inexact-exponential-format z) 1))
-        (define-procedure
-          (flcbrt (z flonum))
-          (flexpt z (/ 1.0 3.0)))
+
+    (define-procedure
+      (flcbrt (z flonum))
+      (flcopysign
+         (flexpt (flabs z) (/ 1.0 3.0))
+         z))
+    (define (pass x)
+      (write x)
+      (display "\n")
+      x)
+
+    (define (term z)
+      (fl*
+        z
+        (flsqrt 
+          (fl* z (flsinh (fl/ 1.0 z)))
+          (fl/ 1.0 (fl* 810.0 (flexpt z 6.0))))))
+
 
     (define-procedure
       (flgamma (z flonum))
-        (fl*
-          (sqrt (fl* fl-2pi z))
-          (flexpt (/ z fl-e) z)))))
+        (pass (fl*
+          (flsqrt (fl/ fl-2pi z))
+          (flexpt (/ (term z) fl-e) z))))))
 
-(apply-op (1/2 1/3 2/3) gamma- || (lambda (x) (flgamma (##ratnum->flonum x))))
+(define fl-gamma-1/2 fl-sqrt-pi)
+(define fl-gamma-2/3 1.3541179394264004169452880281545137855193272660567936983940224679637829654017425416758341479529729111064348236100330588541422615) ;; from https://www.wolframalpha.com/input?i=Gamma%282%2F3%29
 
+(define fl-gamma-1/3 2.6789385347077476336556929409746776441286893779573011009504283275904176101677438195409828890411887894191590492000722633357190845) ;; from https://www.wolframalpha.com/input/?i=Gamma%281%2F3%29
       
 
 
