@@ -148,7 +148,8 @@
 
 (define-procedure
   (flexp2 (z flonum))
-  (flexpt z 2))
+  (flexpt 2 z))
+
 
 (define-procedure
   (flinteger-fraction (x flonum))
