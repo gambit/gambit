@@ -1476,14 +1476,17 @@ int n;)
 
 
 ___HIDDEN ___SCMOBJ make_global
-   ___P((___BOOL collect_undef_glo,
+   ___P((___processor_state ___ps,
+         ___BOOL collect_undef_glo,
          ___UTF_8STRING str,
          int supply,
          ___glo_struct **glo),
-        (collect_undef_glo,
+        (___ps,
+         collect_undef_glo,
          str,
          supply,
          glo)
+___processor_state ___ps;
 ___BOOL collect_undef_glo;
 ___UTF_8STRING str;
 int supply;
@@ -1649,7 +1652,8 @@ ___module_struct *module;)
       while (i-- > 0)
         {
           ___glo_struct *glo = 0;
-          ___SCMOBJ e = make_global (ctx->collect_undef_glo,
+          ___SCMOBJ e = make_global (ctx->ps,
+                                     ctx->collect_undef_glo,
                                      glo_names[i],
                                      i<supcount,
                                      &glo);
