@@ -137,6 +137,14 @@
   (make-fllog-base (z flonum))
   (lambda (x) (fllog x z)))
 
+(define a1 0.278393)
+(define a2 0.230389)
+(define a3 0.000972)
+(define a4 0.078108)
+
+
+      
+
 
 (define-procedure
   (flsign-bit (z flonum))
@@ -212,6 +220,18 @@
       (fldenormalized? (z flonum))
         (fl<= z (* 2.23 (expt 10 -308))))
 
+    (define-procedure (flerf (z flonum))
+        (fltanh
+          (fl* 
+          fl-2/sqrt-pi
+          (fl+ z
+            (fl* 
+              (fl/ 11.0 123.0)
+              (fl* z z z ))))))
+
+    (define-procedure (flerfc (z flonum))
+        (fl- 1 (flerf z)))
+
     (define-procedure
       (flhypot (a flonum) (b flonum))
       (flsqrt (+ (flsquare a) (flsquare b))))
@@ -225,21 +245,10 @@
       (flcopysign
          (flexpt (flabs z) (/ 1.0 3.0))
          z))
-    (define (pass x)
-      x)
-
-    (define (term z)
-      (fl*
-        z
-        (flsqrt 
-          (fl+
-              (fl* z (flsinh (fl/ 1.0 z)))
-              (fl/ 1.0 (fl* 810.0 (flexpt z 6.0)))))))
-
 
     (define-procedure
       (flgamma (z flonum))
-        (pass (fl*
+        (fl*
           (flsqrt (fl/ fl-2pi z))
           (flexpt (fl/ 
               (fl*
@@ -248,7 +257,7 @@
                   (fl+
                       (fl* z (flsinh (fl/ 1.0 z)))
                       (fl/ 1.0 (fl* 810.0 (flexpt z 6.0))))))
-                    fl-e) z))))))
+                    fl-e) z)))))
 
 (define fl-gamma-1/2 fl-sqrt-pi)
 (define fl-gamma-2/3 1.3541179394264004169452880281545137855193272660567936983940224679637829654017425416758341479529729111064348236100330588541422615) ;; from https://www.wolframalpha.com/input?i=Gamma%282%2F3%29
