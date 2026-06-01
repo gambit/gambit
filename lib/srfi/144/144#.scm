@@ -74,8 +74,10 @@
     flhypot
     flexpt
     fllog
+    fllog1+
     fllog2
     fllog10
+    flloggamma
     make-fllog-base
     flsin
     flcos

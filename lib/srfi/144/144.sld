@@ -87,8 +87,10 @@
     flhypot
     flexpt
     fllog
+    fllog1+
     fllog2
     fllog10
+    flloggamma
     make-fllog-base
     flsin
     flcos
@@ -103,7 +105,7 @@
     flacosh
     flatanh
     flquotient
-    flremaider
+    flremainder
     flremquo
     flfirst-bessel
     flsecond-bessel

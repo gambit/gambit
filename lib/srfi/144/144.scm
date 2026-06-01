@@ -123,15 +123,15 @@
 
 (define-procedure
   (fllog2 (z flonum))
-  (fllog z 2))
+  (fllog z 2.0))
 
 (define-procedure
   (flloggamma (z flonum))
-    (values (flabs (flgamma z)) (/ (flgamma z) (flabs (flgamma z)))))
+    (values (fllog (flabs (flgamma z))) (/ (flgamma z) (flabs (flgamma z)))))
 
 (define-procedure
   (fllog10 (z flonum))
-  (fllog z 10))
+  (fllog z 10.0))
 
 (define-procedure
   (make-fllog-base (z flonum))
@@ -146,10 +146,23 @@
   (flunordered? (x flonum) (y flonum))
   (or (flnan? x) (flnan? y)))
 
+(define-procedure (flquotient (x flonum) 
+                              (y flonum))
+    (flfloor (fl/ x y)))
+
+(define-procedure (flremainder (x flonum)
+                               (y flonum))
+    (fl- x (fl* y (flquotient x y))))
+
 (define-procedure
   (flexp2 (z flonum))
-  (flexpt 2 z))
+  (flexpt 2.0 z))
 
+(define-procedure (flremquo (x flonum) 
+                            (y flonum))
+    (values
+      (flremainder x y)
+      (inexact->exact (flquotient x y))))
 
 (define-procedure
   (flinteger-fraction (x flonum))
@@ -163,9 +176,8 @@
     ((>= y 0) (abs x))
     (else (* -1  (abs x)))))
 
-(define-procedure
-  (flexp-1 (x flonum))
-   (fl- (flexp x) 1))
+(define flexp-1 flexpm1)
+(define fllog1+ fllog1p)
 
 (define-procedure
   (flnormalized-fraction-exponent (x flonum))
@@ -214,23 +226,29 @@
          (flexpt (flabs z) (/ 1.0 3.0))
          z))
     (define (pass x)
-      (write x)
-      (display "\n")
       x)
 
     (define (term z)
       (fl*
         z
         (flsqrt 
-          (fl* z (flsinh (fl/ 1.0 z)))
-          (fl/ 1.0 (fl* 810.0 (flexpt z 6.0))))))
+          (fl+
+              (fl* z (flsinh (fl/ 1.0 z)))
+              (fl/ 1.0 (fl* 810.0 (flexpt z 6.0)))))))
 
 
     (define-procedure
       (flgamma (z flonum))
         (pass (fl*
           (flsqrt (fl/ fl-2pi z))
-          (flexpt (/ (term z) fl-e) z))))))
+          (flexpt (fl/ 
+              (fl*
+                z
+                (flsqrt 
+                  (fl+
+                      (fl* z (flsinh (fl/ 1.0 z)))
+                      (fl/ 1.0 (fl* 810.0 (flexpt z 6.0))))))
+                    fl-e) z))))))
 
 (define fl-gamma-1/2 fl-sqrt-pi)
 (define fl-gamma-2/3 1.3541179394264004169452880281545137855193272660567936983940224679637829654017425416758341479529729111064348236100330588541422615) ;; from https://www.wolframalpha.com/input?i=Gamma%282%2F3%29
