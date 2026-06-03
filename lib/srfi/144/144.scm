@@ -194,8 +194,70 @@
     (* (##flonum->ratnum (fl* 0.5 (vector-ref repr 0))) (vector-ref repr 2))
     (fx+ (vector-ref repr 1) 1))))
 
+(define-macro (interpolate fcn name start end step)
+    (define (range-map start step end li fcn)
+      (cond
+        ((>= start end) li)
+        (else
+          (range-map
+            (+ start step)
+            step
+            end
+            (cons (fcn start (+ start step)) li)
+            fcn))))
+    `(begin
+       (define (,name x)
+           (cond
+             ,@(range-map start step end '() 
+                 (lambda (start end)
+                   `((and 
+                       (>= x ,start)
+                       (<= x ,end))
+                     (let ((b ,(eval `(,fcn ,start)))
+                          (m ,(/ (- (eval `(,fcn ,end))
+                                    (eval `(,fcn ,start)))
+                                 (- end start))))
+                       (+ b (* m (- x ,start)))))))))))
+(define-macro (precompute fcn start end step)
+    (define (range-map start step end li fcn)
+      (cond
+        ((>= start end) li)
+        (else
+          (range-map
+            start
+            step
+            (- end step)
+            (cons (fcn end) li)
+            fcn))))
+    `(vector ,@(range-map start end step '()
+                (lambda (start)
+                  (eval `(,fcn ,start))))))
+(define (factorial x n)
+  (cond
+    ((= x 0) n)
+    (else
+      (factorial (- x 1) (* x n)))))
+
+(define snum #f64(
+	23531376880.410759688572007674451636754734846804940
+	42919803642.649098768957899047001988850926355848959
+	35711959237.355668049440185451547166705960488635843
+	17921034426.037209699919755754458931112671403265390
+	6039542586.3520280050642916443072979210699388420708
+	1439720407.3117216736632230727949123939715485786772
+	248874557.86205415651146038641322942321632125127801
+	31426415.585400194380614231628318205362874684987640
+	2876370.6289353724412254090516208496135991145378768
+	186056.26539522349504029498971604569928220784236328
+	8071.6720023658162106380029022722506138218516325024
+	210.82427775157934587250973392071336271166969580291
+	2.5066282746310002701649081771338373386264310793408))
+
+(define sden #f64(0.0  39916800.0  120543840.0  150917976.0  105258076.0  45995730.0  13339535.0 
+	2637558.0  357423.0  32670.0  1925.0  66.0  1.0))
+
+
 (define (flinteger-exponent x) (truncate (flexponent x)))
-(define flexp-1 flexpm1)
 (cond-expand
   ((compilation-target C)
     (define flgamma (c-lambda (double) double "tgamma"))
@@ -230,8 +292,27 @@
               (fl* z z z ))))))
 
     (define-procedure (flerfc (z flonum))
-        (fl- 1 (flerf z)))
+        (fl- 1.0 (flerf z)))
 
+    (define (pass x)
+      (write x)
+      (display "\n")
+      x)
+
+    (define-procedure (flfirst-bessel (x flonum)
+                                      (n exact-integer))
+    
+        (fl*
+          (flcos 
+            (fl- x (fl*  (fx+ (fx* 2.0 (##exact-int->flonum n)) 1.0) fl-pi/4)))
+            (flsqrt (fl* fl-pi (fl/ 2 x)))))
+
+    (define-procedure (flsecond-bessel (x flonum)
+                                       (n exact-integer))
+        (fl*
+          (flsin 
+            (fl- x (fl* (fixnum->flonum (fx+ (fx* 2.0 n) 1.0)) fl-pi/4)))
+            (flsqrt (fl* fl-pi (fl/ 2 x)))))
     (define-procedure
       (flhypot (a flonum) (b flonum))
       (flsqrt (+ (flsquare a) (flsquare b))))
@@ -246,18 +327,71 @@
          (flexpt (flabs z) (/ 1.0 3.0))
          z))
 
+    (interpolate 
+      (lambda (x)
+        (define (accurate-gamma x steps result) ;; Incedibly slow but accurate gamma function
+          (cond
+            ((= x 0) +inf.0)
+            ((= steps 0) (accurate-gamma x 1 (/ 1 x)))
+            ((= steps 1000) result)
+            (else
+              (accurate-gamma
+                x (+ steps 1)
+                (* result
+                   (* 
+                     (/ 1 (+ 1 (/ x steps)))
+                     (expt (+ 1 (/ 1 steps)) x)))))))
+        (accurate-gamma x 0 0)) interpolated-gamma 0 1 0.001)
     (define-procedure
       (flgamma (z flonum))
-        (fl*
-          (flsqrt (fl/ fl-2pi z))
-          (flexpt (fl/ 
-              (fl*
-                z
-                (flsqrt 
-                  (fl+
-                      (fl* z (flsinh (fl/ 1.0 z)))
-                      (fl/ 1.0 (fl* 810.0 (flexpt z 6.0))))))
-                    fl-e) z)))))
+      (define factorials (precompute
+           (lambda (x)
+            (define (factorial x n)
+              (cond
+                ((= x 0) n)
+                (else
+                  (factorial (- x 1) (* x n)))))
+            (factorial x 1)) 0 1 170))
+        (define (S x n num den)
+          (cond
+            ((= n 12) (fl/ num den))
+            (else
+              (S x (fx+ n 1)
+                 (fl+ (fl/ num x) (vector-ref snum n))
+                 (fl+ (fl/ num x) (vector-ref sden n))))))
+
+      (define g 6.024680040776729583740234375)
+      (cond
+        ((fl>= z 170.0) +inf.0) ;; overflow
+        ((fl= z -inf.0) +nan.0)
+        ((fl<= z -184.0) 0.0) ;; underflow
+        ((and (flinteger? z) (fl<= z 0.0)) +nan.0) ;; undefined on those values
+        ((fl< z 0.0) (fl/ fl-pi (fl* (flsin (fl* fl-pi z)) (flgamma (fl- 1.0 z))))) ;; Euler's reflection formula
+        ((and (flinteger? z) (<= z (vector-length factorials)))
+         (vector-ref factorials (- (inexact->exact z) 1))) ;; precomputed factorials
+        (else 
+          (fl/ 
+          (let ((x (fl+ z 8.0)))
+            (fl*
+              (flsqrt (fl/ fl-2pi x))
+              (flexpt (fl/ 
+                  (fl*
+                    x
+                    (flsqrt 
+                      (fl+
+                          (fl* x (flsinh (fl/ 1.0 x)))
+                          (fl/ 1.0 (fl* 810.0 (flexpt x 6.0))))))
+                        fl-e) x)))
+          (fl* 
+            z
+            (fl+ z 1.0)
+            (fl+ z 2.0)
+            (fl+ z 3.0)
+            (fl+ z 4.0)
+            (fl+ z 5.0)
+            (fl+ z 6.0)
+            (fl+ z 7.0))
+          ))))))
 
 (define fl-gamma-1/2 fl-sqrt-pi)
 (define fl-gamma-2/3 1.3541179394264004169452880281545137855193272660567936983940224679637829654017425416758341479529729111064348236100330588541422615) ;; from https://www.wolframalpha.com/input?i=Gamma%282%2F3%29
