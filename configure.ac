@@ -1295,6 +1295,11 @@ AC_ARG_ENABLE(smp,
               ENABLE_SMP=no)
 
 if test "$ENABLE_SMP" = yes; then
+  if test "$ENABLE_MULTIPLE_THREADED_VMS" = no; then
+    AC_MSG_NOTICE([enabling multiple-threaded-vms because --enable-smp was specified])
+    ENABLE_MULTIPLE_THREADED_VMS=yes
+    CONF_SINGLE_MULTIPLE_THREADED_VMS="___MULTIPLE_THREADED_VMS"
+  fi
   RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|enable-smp|)"
 else
   RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|disable-smp|)"

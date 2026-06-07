@@ -6376,6 +6376,12 @@ fi
 
 
 if test "$ENABLE_SMP" = yes; then
+  if test "$ENABLE_MULTIPLE_THREADED_VMS" = no; then
+    { $as_echo "$as_me:${as_lineno-$LINENO}: enabling multiple-threaded-vms because --enable-smp was specified" >&5
+$as_echo "$as_me: enabling multiple-threaded-vms because --enable-smp was specified" >&6;}
+    ENABLE_MULTIPLE_THREADED_VMS=yes
+    CONF_SINGLE_MULTIPLE_THREADED_VMS="___MULTIPLE_THREADED_VMS"
+  fi
   RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|enable-smp|)"
 else
   RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|disable-smp|)"
