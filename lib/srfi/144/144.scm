@@ -120,6 +120,31 @@
         fltruncate
         fl+* fl* fl/ flabs))
 
+(define-procedure (flremquo (x flonum) (y flonum))
+    (cond
+      ((or (not (flfinite? x)) (not (flfinite? y))) (values +nan.0 0))
+      ((flnegative? y) 
+       (let-values (((a b) (flremquo x (fl- y))))
+         (values
+           a
+           (- b))))
+    (else
+    (let* (
+          (a (fl* 
+               (flnumerator x)
+               (fldenominator y)))
+          (b (fl* 
+               (flnumerator y)
+               (fldenominator x)))
+          (rem (fl/ 
+                 (flremainder a b)
+                 (fl* (fldenominator x) (fldenominator y)))))
+      (values
+        (if (fl> rem (fl/ y 2.0)) (fl- (fl- y rem)) rem)
+        (+ 
+          (##flonum->exact-int (flquotient a b))
+          (if (fl> rem (fl/ y 2.0)) 1 0)) 
+        )))))
 
 (define-procedure
   (fllog2 (z flonum))
@@ -136,15 +161,6 @@
 (define-procedure
   (make-fllog-base (z flonum))
   (lambda (x) (fllog x z)))
-
-(define a1 0.278393)
-(define a2 0.230389)
-(define a3 0.000972)
-(define a4 0.078108)
-
-
-      
-
 
 (define-procedure
   (flsign-bit (z flonum))
@@ -166,11 +182,6 @@
   (flexp2 (z flonum))
   (flexpt 2.0 z))
 
-(define-procedure (flremquo (x flonum) 
-                            (y flonum))
-    (values
-      (flremainder x y)
-      (inexact->exact (flquotient x y))))
 
 (define-procedure
   (flinteger-fraction (x flonum))
@@ -277,24 +288,162 @@
         (fl- 1.0 (flerf z)))
 
     (define (pass x)
+      (display "\n")
       (write x)
       (display "\n")
       x)
+  (define factorials (precompute
+       (lambda (x)
+        (define (factorial x n)
+          (cond
+            ((= x 0) n)
+            (else
+              (factorial (- x 1) (* x n)))))
+        (exact->inexact (factorial x 1))) 0 1 170))
 
-    (define-procedure (flfirst-bessel (x flonum)
+    (define (flfirst-bessel x n) #;(flfirst-bessel (x flonum)
                                       (n exact-integer))
-    
-        (fl*
-          (flcos 
-            (fl- x (fl*  (fx+ (fx* 2.0 (##exact-int->flonum n)) 1.0) fl-pi/4)))
-            (flsqrt (fl* fl-pi (fl/ 2 x)))))
+        (define (taylor-n x k)
+          (fl*
+           (fl/ 
+              (if (fxodd? k) -1.0 1.0)
+              (fl* 
+                (if (fx= k 0) 1.0 (vector-ref factorials (- k 1))) 
+                (if (= (+ n k) 0) 1.0 (vector-ref factorials (- (+ n k) 1)))))
+           (flexpt (fl/ x 2.0) (exact->inexact (+ (fx* 2 k) n)))
+           ))
 
-    (define-procedure (flsecond-bessel (x flonum)
-                                       (n exact-integer))
-        (fl*
-          (flsin 
-            (fl- x (fl* (fixnum->flonum (fx+ (fx* 2.0 n) 1.0)) fl-pi/4)))
-            (flsqrt (fl* fl-pi (fl/ 2 x)))))
+        (cond 
+          ((<= x 20)
+           (fold
+             (lambda (a b) (fl+ a b))
+             (taylor-n x 0)
+             (map (lambda (n) (taylor-n x n))   
+                  '(1 2 3 4 5 6 7 8 9 10 11 12 13 15 15 16 17 18 19 20 21 22 23))))
+        (else
+            (fl*
+              (flcos 
+                (fl- x (fl*  (fx+ (fx* 2.0 (##exact-int->flonum n)) 1.0) fl-pi/4)))
+                (flsqrt (fl* fl-pi (fl/ 2.0 x)))))))
+
+
+  ;;  (define-procedure (flsecond-bessel (x flonum) (n exact-integer))
+        (define (flsecond-bessel x n)
+          (define table-0u #f64(
+            -7.38042951086872317523e-02 
+             1.76666452509181115538e-01 
+            -1.38185671945596898896e-02 
+             3.47453432093683650238e-04 
+            -3.81407053724364161125e-06 
+             1.95590137035022920206e-08 
+            -3.98205194132103398453e-11))
+            (define table-0v #f64(
+             1.00
+             1.27304834834123699328e-02 
+             7.60068627350353253702e-05 
+             2.59150851840457805467e-07 
+             4.41110311332675467403e-10)) 
+            (define table-1u #f64(
+           -1.96057090646238940668e-01
+            5.04438716639811282616e-02
+           -1.91256895875763547298e-03
+            2.35252600561610495928e-05
+           -9.19099158039878874504e-08))
+            (define table-1v #f64(
+            1.00
+            1.99167318236649903973e-02
+            2.02552581025135171496e-04
+            1.35608801097516229404e-06
+            6.22741452364621501295e-09
+            1.66559246207992079114e-11))
+            (define (apply-polynomial vect x end res)
+              (if (< end 0)
+                   res 
+                   (apply-polynomial 
+                     vect x (fx- end 1)
+                     (fl+
+                       (f64vector-ref vect end)
+                       (fl* x res)))))
+        (define tpi 6.36619772367581382433e-01)
+                                    
+        (cond
+          ((fl< x 0.0) +nan.0)
+          ((> n 170) +inf.0)
+          ((< n -169) +inf.0)
+
+
+          ((= n 0)
+           (cond
+             ((fl= x +inf.0) 0.0)
+             ((fl= x 0.0) -inf.0)
+             ((fl< x 0.0) +nan.0)
+             (else 
+               (let ((u (apply-polynomial 
+                          table-0u 
+                          (fl* x x)
+                          (- (vector-length table-0u) 1)
+                          0.0))
+                     (v (apply-polynomial
+                          table-0v
+                          (fl* x x)
+                          (- (vector-length table-0v) 1)
+                          0.0)))
+                 (fl+
+                   (fl/ u v)
+                   (fl* 
+                      tpi
+                      (flfirst-bessel x 0)
+                      (fllog x)))))))
+          ((= n 1)
+            (let ((u (apply-polynomial  
+                       table-1u
+                       (fl* x x)
+                       (- (vector-length table-1u) 1)
+                       0.0))
+                   (v (apply-polynomial
+                        table-1v
+                        (fl* x x)
+                        (- (vector-length table-1v) 1)
+                        0.0)))
+              (fl+
+              (fl* x (fl/ u v))
+              (fl* 
+                tpi
+                (fl-
+                (fl*
+                    (flfirst-bessel x 1)
+                    (fllog x))
+                (fl/ 1.0 x))))))
+          ((fl> x 20.0)
+           (fl* 
+             (flsqrt (fl/ 2.0 (fl* fl-pi x)))
+             (flsin 
+               (fl-
+                 x 
+                 (fl* 
+                   fl-pi
+                   (fl+
+                     0.25
+                     (fl/ (fixnum->flonum n) 2.0)))))))
+          ((> n 0)
+           (fl+
+             (fl* -1.0
+                (vector-ref factorials (- n 1))
+                (fl/ 1.0 fl-pi)
+                (flexpt (fl/ 2.0 x) (fixnum->flonum n)))
+             (fl* 
+               (flexpt (fl/ x 2.0) (fixnum->flonum n)) 
+               (fl/ 1.0 (vector-ref factorials n))
+               (fl/ 1.0 (fltan (fl* (fixnum->flonum n) x))))))
+          ((< n 0)
+           (fl* -1.0
+            (if (odd? n) -1.0 1.0)
+            (flgamma (fl- (fixnum->flonum n)))
+            (fl/ 1.0 fl-pi)
+            (flexpt (fl/ x 2.0) (fixnum->flonum n))))))
+             
+
+        
     (define-procedure
       (flhypot (a flonum) (b flonum))
       (flsqrt (+ (flsquare a) (flsquare b))))
@@ -311,21 +460,6 @@
 
     (define-procedure
       (flgamma (z flonum))
-      (define factorials (precompute
-           (lambda (x)
-            (define (factorial x n)
-              (cond
-                ((= x 0) n)
-                (else
-                  (factorial (- x 1) (* x n)))))
-            (factorial x 1)) 0 1 170))
-        (define (S x n num den)
-          (cond
-            ((= n 12) (fl/ num den))
-            (else
-              (S x (fx+ n 1)
-                 (fl+ (fl/ num x) (vector-ref snum n))
-                 (fl+ (fl/ num x) (vector-ref sden n))))))
 
       (cond
         ((fl>= z 170.0) +inf.0) ;; overflow
@@ -334,7 +468,7 @@
         ((and (flinteger? z) (fl<= z 0.0)) +nan.0) ;; undefined on those values
         ((fl< z 0.0) (fl/ fl-pi (fl* (flsin (fl* fl-pi z)) (flgamma (fl- 1.0 z))))) ;; Euler's reflection formula
         ((and (flinteger? z) (<= z (vector-length factorials)))
-         (vector-ref factorials (- (inexact->exact z) 1))) ;; precomputed factorials
+         (if (fl= z 1.0) 1.0 (vector-ref factorials (- (inexact->exact z) 2)))) ;; precomputed factorials
         (else 
           (fl/ 
           (let ((x (fl+ z 8.0)))
@@ -357,7 +491,8 @@
             (fl+ z 5.0)
             (fl+ z 6.0)
             (fl+ z 7.0))
-          ))))))
+          ))))
+    ))
 
 (define fl-gamma-1/2 fl-sqrt-pi)
 (define fl-gamma-2/3 1.3541179394264004169452880281545137855193272660567936983940224679637829654017425416758341479529729111064348236100330588541422615) ;; from https://www.wolframalpha.com/input?i=Gamma%282%2F3%29

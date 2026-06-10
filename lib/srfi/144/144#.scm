@@ -77,7 +77,8 @@
     fllog1+
     fllog2
     fllog10
-    flloggamma
+    flfirst-bessel
+    flsecond-bessel
     make-fllog-base
     flsin
     flcos
