@@ -110,6 +110,7 @@
 (define fl-cos-1 (cos 1))
 (define fl-greatest (* 1.80 (expt 10 308)))
 (define fl-least (* 4.94 (expt 10 -324)))
+(define fl-epsilon (expt 2 -53))
 (rename (fl= fl< fl> fl<= fl>=) || ?)
 (reexport (fl+ fl- flzero? flpositive? 
         flnegative? flodd? fleven? flfinite? flnan?
