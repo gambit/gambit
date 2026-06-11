@@ -1,6 +1,8 @@
 (##namespace ("srfi/144#"
     fl-e
     fl-epsilon
+    fladjacent
+    flabsdiff
     fl-fast-fl+*
     fl-1/e
     fl-e-2
@@ -12,6 +14,7 @@
     fl-1/log-2
     fl-log-3
     fl-log-pi
+    flposdiff
     fl-log-10
     fl-greatest
     fl-least

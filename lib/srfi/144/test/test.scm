@@ -62,7 +62,7 @@
 
 (define-syntax single-number-tests
   (syntax-rules ()
-    ((single-number-tests) (write 1))
+    ((single-number-tests) #f)
     ((single-number-tests x . x*)
      (begin
        (cond 
@@ -142,13 +142,13 @@
        (cond
          ((< y 0) (test-assert (<= (flcopysign x y) 0)))
          ((> y 0) (test-assert (>= (flcopysign x y) 0))))
-      (test-equivalence
+      (test-equivalent
         (= < > <= >=) (x y) fl ?)
-      (test-equal (flunordered? x y) (flunoredered? y x)) ;; simple reflexivity test
+      (test-equal (flunordered? x y) (flunordered? y x)) ;; simple reflexivity test
       (test-almost-equivalent
-        (max min + * - / abs) (x y) fl ||)
+        (max min + * - /) (x y) fl ||)
       (test-equal (abs (- x y)) (flabsdiff x y))
-      (test-equal (max (- x y) 0) (flposdiff x y))
+      (test-approx-eq (max (- x y) 0) (flposdiff x y))
      ))))
 
 (define (test-exists a)

@@ -100,6 +100,9 @@
     flcos
     fltan
     flasin
+    fladjacent
+    flabsdiff
+    flposdiff
     flacos
     flatan
     flsinh

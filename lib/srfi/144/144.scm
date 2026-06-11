@@ -72,6 +72,13 @@
            (lambda (name)
              `(define ,(sym prefix name suffix) ,name)) names)))
 
+(define-procedure (fladjacent 
+                    (x flonum) (y flonum))
+  (define (adjacency x y z)
+    (if (= x y) z
+      (adjacency x (/ (+ x y) 2) y)))
+  (adjacency x y x))
+
 (define-macro
   (reexport names)
     `(begin
@@ -79,6 +86,14 @@
            (lambda (name)
              `(define ,name (let () (namespace ("")) ,name))) names)))
     
+(define-procedure (flabsdiff (x flonum)
+                             (y flonum))
+        (flabs (fl- x y)))
+
+(define-procedure (flposdiff (x flonum)
+                             (y flonum))
+    (if (fl< x y) 0
+      (fl- x y)))
 
 
 (define fl-pi 3.1415926535897932384626433832795028841971)
