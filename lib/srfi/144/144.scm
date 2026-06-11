@@ -111,6 +111,7 @@
 (define fl-greatest (* 1.80 (expt 10 308)))
 (define fl-least (* 4.94 (expt 10 -324)))
 (define fl-epsilon (expt 2 -53))
+(define fl-fast-fl+* #t)
 (rename (fl= fl< fl> fl<= fl>=) || ?)
 (reexport (fl+ fl- flzero? flpositive? 
         flnegative? flodd? fleven? flfinite? flnan?
@@ -192,9 +193,7 @@
 
 (define-procedure
   (flcopysign (x flonum) (y flonum))
-  (cond
-    ((>= y 0) (abs x))
-    (else (* -1  (abs x)))))
+  (##flcopysign x y))
 
 (define flexp-1 flexpm1)
 (define fllog1+ fllog1p)
@@ -251,7 +250,6 @@
       (factorial (- x 1) (* x n)))))
 
 
-(define (flinteger-exponent x) (truncate (flexponent x)))
 (cond-expand
   ((compilation-target C)
     (define flgamma (c-lambda (double) double "tgamma"))
@@ -494,6 +492,11 @@
             (fl+ z 7.0))
           ))))
     ))
+
+
+(define (flinteger-exponent x) (truncate (flexponent x)))
+(define fl-integer-exponent-zero (flinteger-exponent 0.0))
+(define fl-integer-exponent-nan (flinteger-exponent +nan.0))
 
 (define fl-gamma-1/2 fl-sqrt-pi)
 (define fl-gamma-2/3 1.3541179394264004169452880281545137855193272660567936983940224679637829654017425416758341479529729111064348236100330588541422615) ;; from https://www.wolframalpha.com/input?i=Gamma%282%2F3%29

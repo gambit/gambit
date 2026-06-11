@@ -1,5 +1,7 @@
 (##namespace ("srfi/144#"
     fl-e
+    fl-epsilon
+    fl-fast-fl+*
     fl-1/e
     fl-e-2
     fl-e-pi/4
@@ -28,6 +30,8 @@
     flinteger-fraction
     flunordered?
     flexponent
+    fl-integer-exponent-zero
+    fl-integer-exponent-nan
     fl-gamma-1/3
     fl-gamma-2/3
     fl-2/pi
