@@ -563,7 +563,7 @@ install: install-post
 
 install-post: install-recursive
 
-install-recursive: install-pre
+install-recursive: install-pre core
 
 uninstall: uninstall-post
 

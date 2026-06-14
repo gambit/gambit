@@ -315,7 +315,7 @@ mostlyclean-post mostlyclean-post-nonrec:
 clean-pre: mostlyclean-pre
 
 clean-post clean-post-nonrec: mostlyclean-post-nonrec
-	@rm -rf *@gambit*
+	@rm -rf *@gambit* **/*@gambit*
 
 distclean-pre: clean-pre
 
