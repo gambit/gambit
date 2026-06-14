@@ -120,7 +120,7 @@ gambit.ps: gambit.pdf
 gambit.pdf: gambit.txi version.txi
 	(cd $(srcdir) && cd $(srcdir) && $(TEXI2DVI) -p gambit.txi) || (echo "*** $@ could not be built (perhaps $(TEXI2DVI) is not installed?)" > $@)
 
-gambit.html gambit.tsv: gambit.txi
+gambit.html gambit.tsv &: gambit.txi
 	(cd $(srcdir) && $(TEXI2HTML) --idx-sum --def-table gambit.txi) || (echo "*** $@ could not be built (perhaps $(TEXI2HTML) is not installed?)" > $@)
 
 gambit.txt: gambit.txi
