@@ -2265,10 +2265,34 @@ static inline ___F64 ___F64_FROM_U64_fn(___U64 x) { return *___CAST(___F64*,&x);
  * ___FLONUM_SIZE    is equal to sizeof (___F64) / ___WS
  */
 
+#ifndef ___DONT_USE_stddef_h
+
+#include <stddef.h>
+
+#ifndef ___SIZE_T
+#define ___SIZE_T size_t
+#endif
+
+#ifndef ___SSIZE_T
+#define ___SSIZE_T ssize_t
+#endif
+
+#ifndef ___PTRDIFF_T
+#define ___PTRDIFF_T ptrdiff_t
+#endif
+
+#endif
+
 #ifdef ___USE_32_BIT_ADDR
+#ifndef ___SIZE_T
 #define ___SIZE_T ___U32
+#endif
+#ifndef ___SSIZE_T
 #define ___SSIZE_T ___S32
+#endif
+#ifndef ___PTRDIFF_T
 #define ___PTRDIFF_T ___S32
+#endif
 #define ___WORD ___S32
 #define ___UWORD ___U32
 #define ___WORD_WIDTH 32
@@ -2280,9 +2304,15 @@ static inline ___F64 ___F64_FROM_U64_fn(___U64 x) { return *___CAST(___F64*,&x);
 #define ___LWS 2
 #define ___FLONUM_SIZE 2
 #else
+#ifndef ___SIZE_T
 #define ___SIZE_T ___U64
+#endif
+#ifndef ___SSIZE_T
 #define ___SSIZE_T ___S64
+#endif
+#ifndef ___PTRDIFF_T
 #define ___PTRDIFF_T ___S64
+#endif
 #define ___WORD ___S64
 #define ___UWORD ___U64
 #define ___WORD_WIDTH 64
