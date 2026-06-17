@@ -157,10 +157,10 @@
                                     (flremainder a b)
                                     (fl* (fldenominator x) (fldenominator y)))))
                         (values
-                          (if (fl> rem (fl/ y 2.0)) (fl- (fl- y rem)) rem)
+                          (if (fl> rem (fl* y 0.5)) (fl- (fl- y rem)) rem)
                           (+ 
                             (##flonum->exact-int (flquotient a b))
-                            (if (fl> rem (fl/ y 2.0)) 1 0)) 
+                            (if (fl> rem (fl* y 0.5)) 1 0)) 
                           )))))
 
 (define-procedure
@@ -324,16 +324,13 @@
           (fl* 
             (if (fx= k 0) 1.0 (vector-ref factorials (- k 1))) 
             (if (= (+ n k) 0) 1.0 (vector-ref factorials (- (+ n k) 1)))))
-        (flexpt (fl/ x 2.0) (exact->inexact (+ (fx* 2 k) n)))
+        (flexpt (fl* x 0.5) (exact->inexact (+ (fx* 2 k) n)))
         ))
 
     (cond 
       ((<= x 20)
-       (fold
-         (lambda (a b) (fl+ a b))
-         (taylor-n x 0)
-         (map (lambda (n) (taylor-n x n))   
-              '(1 2 3 4 5 6 7 8 9 10 11 12 13 15 15 16 17 18 19 20 21 22 23))))
+       (do ((n 0 (+ n 1)) (total 0.0 (fl+ total (taylor-n x n))))
+        ((= n 25) total)))
       (else
         (fl*
           (flcos 
@@ -445,7 +442,7 @@
               (fl/ 1.0 fl-pi)
               (flexpt (fl/ 2.0 x) (fixnum->flonum n)))
          (fl* 
-           (flexpt (fl/ x 2.0) (fixnum->flonum n)) 
+           (flexpt (fl/ x 0.5) (fixnum->flonum n)) 
            (fl/ 1.0 (vector-ref factorials n))
            (fl/ 1.0 (fltan (fl* (fixnum->flonum n) x))))))
       ((< n 0)
@@ -453,7 +450,7 @@
             (if (odd? n) -1.0 1.0)
             (flgamma (fl- (fixnum->flonum n)))
             (fl/ 1.0 fl-pi)
-            (flexpt (fl/ x 2.0) (fixnum->flonum n))))))
+            (flexpt (fl* x 0.5) (fixnum->flonum n))))))
 
 
 

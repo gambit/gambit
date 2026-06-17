@@ -1037,13 +1037,6 @@
     (test-approx-eq 1.795533 (flgamma 2.88))
     (test-approx-eq 0.885805 (flgamma 1.44))
 
-    (define (pass x)
-      (display "\n")
-      (write x)
-      (display "\n")
-      x)
-
-
     (test-approx-eq 0.2626384293785387 (flfirst-bessel 8.82 1))
     (test-approx-eq 0.2984893034783086 (flfirst-bessel -7.12 0))
     (test-approx-eq 0.3572891345415345 (flfirst-bessel -2.0199999999999996 2))
