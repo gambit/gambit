@@ -203,21 +203,90 @@
 
 (##setup-check)
 
-(##define-syntax check-equal?     (lambda (src) (##expand-check src)))
-(##define-syntax check-not-equal? (lambda (src) (##expand-check src)))
-(##define-syntax check-eqv?       (lambda (src) (##expand-check src)))
-(##define-syntax check-not-eqv?   (lambda (src) (##expand-check src)))
-(##define-syntax check-eq?        (lambda (src) (##expand-check src)))
-(##define-syntax check-not-eq?    (lambda (src) (##expand-check src)))
+(define-macro (env-expand name match otherwise)
+    (if (eq? (get-environment-variable name) #f)
+      otherwise
+      match))
+(env-expand "GAMBIT_COVERAGE" 
+ (begin
+    (define (in x li equality?)
+      (cond
+        ((null? li) #f)
+        ((equality? x (car li)) #t)
+        (else (in x (cdr li)))))
 
-(##define-syntax check-=          (lambda (src) (##expand-check src)))
 
-(##define-syntax check-true       (lambda (src) (##expand-check src)))
-(##define-syntax check-false      (lambda (src) (##expand-check src)))
-(##define-syntax check-not-false  (lambda (src) (##expand-check src)))
+    (define (pass x)
+      (write x)
+      x)
 
-(##define-syntax check-exn        (lambda (src) (##expand-check src)))
-(##define-syntax check-tail-exn   (lambda (src) (##expand-check src)))
+    (define-macro 
+      (define-show-injected name-args . body)
+      `(define-macro ,name-args
+          (define (show x)
+            (if (symbol? x)
+                (let ((file (open-output-file "tested.txt")))
+                    (pp x file)
+                    (close-output-port file))
+                #f))
+          ,@body))
+    
+    (define-macro
+       (equality-check . names)
+       `(begin
+          ,@(map
+              (lambda (x) 
+                `(define-show-injected (,x a b . rest)
+                    (cond 
+                        ((pair? a)
+                         (show (car a)))
+                      (else    (show a)))
+                    ))
+              names)))
+
+    (equality-check check-equal? check-not-eq? check-not-equal? check-eqv? check-eq? check-not-eqv? check-=)
+
+    (define-macro
+      (boolean-checks . names)
+       `(begin
+          ,@(map
+              (lambda (x) 
+                `(define-show-injected (,x a . rest)
+                    (cond 
+                      ((pair? a)
+                         (show (car a)))
+                      (else    (show a)))
+                    #f))
+              names)))
+
+    (boolean-checks check-true check-false check-not-false)
+
+    (define-show-injected
+      (check-exn a b)
+      (show (caaddr b))
+      #f)
+
+    (define-show-injected
+      (check-tail-exn a b)
+      (show (caaddr b))
+      #f))
+
+     (begin
+        (##define-syntax check-equal?     (lambda (src) (##expand-check src)))
+        (##define-syntax check-not-equal? (lambda (src) (##expand-check src)))
+        (##define-syntax check-eqv?       (lambda (src) (##expand-check src)))
+        (##define-syntax check-not-eqv?   (lambda (src) (##expand-check src)))
+        (##define-syntax check-eq?        (lambda (src) (##expand-check src)))
+        (##define-syntax check-not-eq?    (lambda (src) (##expand-check src)))
+
+        (##define-syntax check-=          (lambda (src) (##expand-check src)))
+
+        (##define-syntax check-true       (lambda (src) (##expand-check src)))
+        (##define-syntax check-false      (lambda (src) (##expand-check src)))
+        (##define-syntax check-not-false  (lambda (src) (##expand-check src)))
+
+        (##define-syntax check-exn        (lambda (src) (##expand-check src)))
+        (##define-syntax check-tail-exn   (lambda (src) (##expand-check src)))))
 
 (define (exception-description-string e)
   (##with-input-from-string
