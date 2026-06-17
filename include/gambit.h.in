@@ -1134,6 +1134,10 @@
 #endif
 #endif
 
+#if ___LONGLONG_WIDTH == 64
+#define ___S64 ___LONGLONG
+#define ___U64 unsigned ___LONGLONG
+#else
 #if ___INT_WIDTH == 64
 #define ___S64 int
 #define ___U64 unsigned int
@@ -1149,10 +1153,6 @@
 #if ___CHAR_WIDTH == 64
 #define ___S64 ___SCHAR
 #define ___U64 unsigned char
-#else
-#if ___LONGLONG_WIDTH == 64
-#define ___S64 ___LONGLONG
-#define ___U64 unsigned ___LONGLONG
 #endif
 #endif
 #endif
