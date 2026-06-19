@@ -1,9 +1,9 @@
 (include "#.scm")
 
-(check-= (fltanh 0.) (fltanh-144 0.))
-(check-= (fltanh 0.5) (fltanh-144 0.5))
-(check-= (fltanh -0.5) (fltanh-144 -0.5))
+(test-approximate 0.0 (fltanh 0.) 1e-12)
+(test-approximate 0.46211715726000974 (fltanh 0.5) 1e-12)
+(test-approximate -0.46211715726000974 (fltanh -0.5) 1e-12)
 
-(check-tail-exn type-exception? (lambda () (fltanh 0)))
-(check-tail-exn type-exception? (lambda () (fltanh 1/2)))
-(check-tail-exn type-exception? (lambda () (fltanh 'a)))
+(test-error-tail type-exception? (fltanh 0))
+(test-error-tail type-exception? (fltanh 1/2))
+(test-error-tail type-exception? (fltanh 'a))

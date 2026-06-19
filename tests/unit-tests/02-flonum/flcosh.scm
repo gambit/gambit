@@ -1,9 +1,9 @@
 (include "#.scm")
 
-(check-= (flcosh 0.) (flcosh-144 0.))
-(check-= (flcosh 0.5) (flcosh-144 0.5))
-(check-= (flcosh -0.5) (flcosh-144 -0.5))
+(test-approximate 1.0 (flcosh 0.) 1e-12)
+(test-approximate 1.1276259652063807 (flcosh 0.5) 1e-12)
+(test-approximate 1.1276259652063807 (flcosh -0.5) 1e-12)
 
-(check-tail-exn type-exception? (lambda () (flcosh 0)))
-(check-tail-exn type-exception? (lambda () (flcosh 1/2)))
-(check-tail-exn type-exception? (lambda () (flcosh 'a)))
+(test-error-tail type-exception? (flcosh 0))
+(test-error-tail type-exception? (flcosh 1/2))
+(test-error-tail type-exception? (flcosh 'a))

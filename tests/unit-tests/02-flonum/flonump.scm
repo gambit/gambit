@@ -1,53 +1,53 @@
 (include "#.scm")
 
 
-(check-false (##flonum? 0))
-(check-true  (##flonum? 0.5))
-(check-false (##flonum? 1+2i))
+(test-eqv #f (##flonum? 0))
+(test-eqv #t (##flonum? 0.5))
+(test-eqv #f (##flonum? 1+2i))
 
-(check-true  (##flonum? +inf.0))
-(check-true  (##flonum? -inf.0))
-(check-true  (##flonum? +nan.0))
-
-
-(check-false (##flonum? "test"))
-(check-false (##flonum? #\a))
-(check-false (##flonum? #!eof))
-(check-false (##flonum? #t))
-(check-false (##flonum? #f))
-(check-false (##flonum? #!void))
-(check-false (##flonum? '()))
+(test-eqv #t (##flonum? +inf.0))
+(test-eqv #t (##flonum? -inf.0))
+(test-eqv #t (##flonum? +nan.0))
 
 
-(check-false (##flonum? (lambda () #f)))
-(check-false (##flonum? '(1 . 2)))
-(check-false (##flonum? '#(1)))
-(check-false (##flonum? 'test))
-(check-false (##flonum? (box 1)))
+(test-eqv #f (##flonum? "test"))
+(test-eqv #f (##flonum? #\a))
+(test-eqv #f (##flonum? #!eof))
+(test-eqv #f (##flonum? #t))
+(test-eqv #f (##flonum? #f))
+(test-eqv #f (##flonum? #!void))
+(test-eqv #f (##flonum? '()))
 
 
-
-(check-false (flonum? 0))
-(check-true  (flonum? 0.5))
-(check-false (flonum? 1+2i))
-
-(check-true  (flonum? +inf.0))
-(check-true  (flonum? -inf.0))
-(check-true  (flonum? +nan.0))
+(test-eqv #f (##flonum? (lambda () #f)))
+(test-eqv #f (##flonum? '(1 . 2)))
+(test-eqv #f (##flonum? '#(1)))
+(test-eqv #f (##flonum? 'test))
+(test-eqv #f (##flonum? (box 1)))
 
 
 
-(check-false (flonum? "test"))
-(check-false (flonum? #\a))
-(check-false (flonum? #!eof))
-(check-false (flonum? #t))
-(check-false (flonum? #f))
-(check-false (flonum? #!void))
-(check-false (flonum? '()))
+(test-eqv #f (flonum? 0))
+(test-eqv #t (flonum? 0.5))
+(test-eqv #f (flonum? 1+2i))
+
+(test-eqv #t (flonum? +inf.0))
+(test-eqv #t (flonum? -inf.0))
+(test-eqv #t (flonum? +nan.0))
 
 
-(check-false (flonum? (lambda () #f)))
-(check-false (flonum? '(1 . 2)))
-(check-false (flonum? '#(1)))
-(check-false (flonum? 'test))
-(check-false (flonum? (box 1)))
+
+(test-eqv #f (flonum? "test"))
+(test-eqv #f (flonum? #\a))
+(test-eqv #f (flonum? #!eof))
+(test-eqv #f (flonum? #t))
+(test-eqv #f (flonum? #f))
+(test-eqv #f (flonum? #!void))
+(test-eqv #f (flonum? '()))
+
+
+(test-eqv #f (flonum? (lambda () #f)))
+(test-eqv #f (flonum? '(1 . 2)))
+(test-eqv #f (flonum? '#(1)))
+(test-eqv #f (flonum? 'test))
+(test-eqv #f (flonum? (box 1)))

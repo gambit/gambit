@@ -1,9 +1,9 @@
 (include "#.scm")
 
-(check-= (flasinh 0.) (flasinh-144 0.))
-(check-= (flasinh 0.5) (flasinh-144 0.5))
-(check-= (flasinh -0.5) (flasinh-144 -0.5))
+(test-approximate 0.0 (flasinh 0.) 1e-12)
+(test-approximate 0.48121182505960347 (flasinh 0.5) 1e-12)
+(test-approximate -0.48121182505960347 (flasinh -0.5) 1e-12)
 
-(check-tail-exn type-exception? (lambda () (flasinh 0)))
-(check-tail-exn type-exception? (lambda () (flasinh 1/2)))
-(check-tail-exn type-exception? (lambda () (flasinh 'a)))
+(test-error-tail type-exception? (flasinh 1))
+(test-error-tail type-exception? (flasinh 1/2))
+(test-error-tail type-exception? (flasinh 'a))
