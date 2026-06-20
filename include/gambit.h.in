@@ -597,7 +597,7 @@
 #ifdef ___DONT_HAVE_LIMITS_H
 
 /*
- * If the file "limits.h" is not available then the symbol
+ * If the header file "limits.h" is not available then the symbol
  * ___DONT_HAVE_LIMITS_H must be defined (for example on the compiler's
  * command line) and the following definitions will be used:
  */
@@ -614,7 +614,7 @@
 #else
 
 /*
- * If the file "limits.h" is available then it contains macros
+ * If the header file "limits.h" is available then it contains macros
  * defining the range of the integer types.  The following
  * preprocessor conditional definitions are written so that they will
  * work regardless of the number of bits in the integer types
@@ -888,7 +888,7 @@
 #ifdef ___DONT_HAVE_WCHAR_H
 
 /*
- * If the file "wchar.h" is not available then the symbol
+ * If the header file "wchar.h" is not available then the symbol
  * ___DONT_HAVE_WCHAR_H must be defined (for example on the compiler's
  * command line) and the following definitions will be used:
  */
@@ -900,7 +900,7 @@
 #else
 
 /*
- * If the file "wchar.h" is available then it should contain macros
+ * If the header file "wchar.h" is available then it should contain macros
  * defining the range of the wchar_t type.
  */
 
@@ -930,7 +930,7 @@
 #ifdef ___DONT_HAVE_FLOAT_H
 
 /*
- * If the file "float.h" is not available then the symbol
+ * If the header file "float.h" is not available then the symbol
  * ___DONT_HAVE_FLOAT_H must be defined (for example on the compiler's
  * command line) and the following definitions will be used:
  */
@@ -941,7 +941,7 @@
 #else
 
 /*
- * If the file "float.h" is available then it contains macros defining
+ * If the header file "float.h" is available then it contains macros defining
  * the range of the floating point types.  The following preprocessor
  * conditional definitions are not completely correct (and may not
  * even compile properly because it is possible that FLT_MAX_EXP and
@@ -1619,7 +1619,7 @@
 #ifdef ___DONT_HAVE_SETJMP_H
 
 /*
- * If the file "setjmp.h" is not available then the symbol
+ * If the header file "setjmp.h" is not available then the symbol
  * ___DONT_HAVE_SETJMP_H must be defined (for example on the compiler's
  * command line).  In this case we assume that setjmp is defined as
  * a macro.
@@ -1631,7 +1631,7 @@
 #else
 
 /*
- * If the file "setjmp.h" is available then we can use the C
+ * If the header file "setjmp.h" is available then we can use the C
  * preprocessor to check if setjmp is a macro (otherwise it has to be
  * a function).  If it is a macro then we can't get a pointer to it!
  */
@@ -2268,7 +2268,7 @@ static inline ___F64 ___F64_FROM_U64_fn(___U64 x) { return *___CAST(___F64*,&x);
 #if !defined(___DONT_HAVE_STDDEF_H) && defined(__STDC__)
 
 /*
- * If the file "stddef.h" is not available then the symbol
+ * If the header file "stddef.h" is not available then the symbol
  * ___DONT_HAVE_STDDEF_H must be defined (for example on the compiler's
  * command line). In that case the definition of size_t and ptrdiff_t
  * will be guessed to be related to the word size.
@@ -2286,10 +2286,10 @@ static inline ___F64 ___F64_FROM_U64_fn(___U64 x) { return *___CAST(___F64*,&x);
 
 #endif
 
-#if !defined(___DONT_HAVE_SYS_TYPES_H)
+#if !defined(___DONT_HAVE_SYS_TYPES_H) && !defined(___OS_WIN32)
 
 /*
- * If the file "sys/types.h" is not available then the symbol
+ * If the header file "sys/types.h" is not available then the symbol
  * ___DONT_HAVE_SYS_TYPES_H must be defined (for example on the compiler's
  * command line). In that case the definition of ssize_t
  * will be guessed to be related to the word size.
