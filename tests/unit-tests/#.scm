@@ -130,7 +130,7 @@
                                   (table-set! ##tested-procs-tbl first #t))))
                         (for-each walk expr))))))
 
-             (if (not (getenv "GAMBIT_COVERAGE" #f))
+             (if (getenv "GAMBIT_COVERAGE" #f)
                  (walk (##desourcify src))))
 
            (define (##expand-test-relation src positive? relation)
