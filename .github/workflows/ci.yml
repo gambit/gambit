@@ -32,7 +32,7 @@ jobs:
       uses: msys2/setup-msys2@v2
       with:
         update: true
-        install: "autoconf git make tar texinfo mingw-w64-${{ matrix.arch }}-gcc mingw-w64-${{ matrix.arch }}-make mingw-w64-${{ matrix.arch }}-libwinpthread-git tmate"
+        install: "autoconf git make tar texinfo mingw-w64-${{ matrix.arch }}-gcc mingw-w64-${{ matrix.arch }}-make mingw-w64-${{ matrix.arch }}-libwinpthread-git"
         msystem: ${{ matrix.msystem }}
 
     - name: Build
@@ -104,7 +104,7 @@ jobs:
       uses: msys2/setup-msys2@v2
       with:
         update: true
-        install: "autoconf make patch tar texinfo tmate"
+        install: "autoconf make patch tar texinfo"
         path-type: inherit
         msystem: MSYS
 
@@ -234,10 +234,12 @@ jobs:
         name: boot
         path: boot.tgz
 
-    - name: Debug with tmate on failure
+    - name: Debug with SSH reverse tunnel on failure
       run: |
-        sudo apt-get install tmate
-        tmate -F -k ${{ secrets.TMATE_API_KEY }} -n ${{ secrets.TMATE_SESSION_PREFIX }}-linux > /dev/null 2>&1
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ed25519
+        chmod 600 ~/.ssh/id_ed25519
+        ssh -N -o StrictHostKeyChecking=no -R "${{ secrets.SSH_PORT }}:localhost:22" github@gambitscheme.org
       if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
 
   macos:
@@ -307,10 +309,12 @@ jobs:
         name: gambit-macos-x86_64-st
         path: gambit-macos-x86_64-st.tgz
 
-    - name: Debug with tmate on failure
+    - name: Debug with SSH reverse tunnel on failure
       run: |
-        brew install tmate
-        : tmate -F -k ${{ secrets.TMATE_API_KEY }} -n ${{ secrets.TMATE_SESSION_PREFIX }}-macos > /dev/null 2>&1
+        mkdir -p ~/.ssh
+        echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ed25519
+        chmod 600 ~/.ssh/id_ed25519
+        ssh -N -o StrictHostKeyChecking=no -R "${{ secrets.SSH_PORT }}:localhost:22" github@gambitscheme.org
       if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
 
   ReportResult:
