@@ -2270,7 +2270,7 @@ static inline ___F64 ___F64_FROM_U64_fn(___U64 x) { return *___CAST(___F64*,&x);
 /*
  * If the file "stddef.h" is not available then the symbol
  * ___DONT_HAVE_STDDEF_H must be defined (for example on the compiler's
- * command line). In that case the definition of size_t, ssize_t and ptrdiff_t
+ * command line). In that case the definition of size_t and ptrdiff_t
  * will be guessed to be related to the word size.
  */
 
@@ -2280,12 +2280,25 @@ static inline ___F64 ___F64_FROM_U64_fn(___U64 x) { return *___CAST(___F64*,&x);
 #define ___SIZE_T size_t
 #endif
 
-#ifndef ___SSIZE_T
-#define ___SSIZE_T ssize_t
-#endif
-
 #ifndef ___PTRDIFF_T
 #define ___PTRDIFF_T ptrdiff_t
+#endif
+
+#endif
+
+#if !defined(___DONT_HAVE_SYS_TYPES_H)
+
+/*
+ * If the file "sys/types.h" is not available then the symbol
+ * ___DONT_HAVE_SYS_TYPES_H must be defined (for example on the compiler's
+ * command line). In that case the definition of ssize_t
+ * will be guessed to be related to the word size.
+ */
+
+#include <sys/types.h>
+
+#ifndef ___SSIZE_T
+#define ___SSIZE_T ssize_t
 #endif
 
 #endif
