@@ -2265,7 +2265,14 @@ static inline ___F64 ___F64_FROM_U64_fn(___U64 x) { return *___CAST(___F64*,&x);
  * ___FLONUM_SIZE    is equal to sizeof (___F64) / ___WS
  */
 
-#ifndef ___DONT_USE_stddef_h
+#if !defined(___DONT_HAVE_STDDEF_H) && defined(__STDC__)
+
+/*
+ * If the file "stddef.h" is not available then the symbol
+ * ___DONT_HAVE_STDDEF_H must be defined (for example on the compiler's
+ * command line). In that case the definition of size_t, ssize_t and ptrdiff_t
+ * will be guessed to be related to the word size.
+ */
 
 #include <stddef.h>
 
