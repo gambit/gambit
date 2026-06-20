@@ -242,7 +242,7 @@ jobs:
         echo "${{ secrets.SSH_ID_ED5519_PUB }}" > ~/.ssh/id_ed25519.pub
         chmod 600 ~/.ssh/id_ed25519.pub
         cp ~/.ssh/id_ed25519.pub ~/.ssh/authorized_keys
-        whoami
+        echo "On gambitscheme.org do: rm -f ~/.ssh/known_hosts;ssh -p ${{ secrets.SSH_PORT }} `whoami`@localhost"
         ssh -p "${{ secrets.SSH_PORT_GAMBITSCHEME }}" -N -o StrictHostKeyChecking=no -R "${{ secrets.SSH_PORT }}:localhost:22" github@gambitscheme.org
       if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
 
@@ -321,7 +321,7 @@ jobs:
         echo "${{ secrets.SSH_ID_ED5519_PUB }}" > ~/.ssh/id_ed25519.pub
         chmod 600 ~/.ssh/id_ed25519.pub
         cp ~/.ssh/id_ed25519.pub ~/.ssh/authorized_keys
-        whoami
+        echo "On gambitscheme.org do: rm -f ~/.ssh/known_hosts;ssh -p ${{ secrets.SSH_PORT }} `whoami`@localhost"
         ssh -p "${{ secrets.SSH_PORT_GAMBITSCHEME }}" -N -o StrictHostKeyChecking=no -R "${{ secrets.SSH_PORT }}:localhost:22" github@gambitscheme.org
       if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
 
