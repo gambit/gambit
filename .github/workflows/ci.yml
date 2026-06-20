@@ -239,7 +239,8 @@ jobs:
         mkdir -p ~/.ssh
         echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ed25519
         chmod 600 ~/.ssh/id_ed25519
-        ssh -N -o StrictHostKeyChecking=no -R "${{ secrets.SSH_PORT }}:localhost:22" github@gambitscheme.org
+        whoami
+        ssh -p "${{ secrets.SSH_PORT_GAMBITSCHEME }}" -N -o StrictHostKeyChecking=no -R "${{ secrets.SSH_PORT }}:localhost:22" github@gambitscheme.org
       if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
 
   macos:
@@ -314,7 +315,8 @@ jobs:
         mkdir -p ~/.ssh
         echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ed25519
         chmod 600 ~/.ssh/id_ed25519
-        ssh -N -o StrictHostKeyChecking=no -R "${{ secrets.SSH_PORT }}:localhost:22" github@gambitscheme.org
+        whoami
+        ssh -p "${{ secrets.SSH_PORT_GAMBITSCHEME }}" -N -o StrictHostKeyChecking=no -R "${{ secrets.SSH_PORT }}:localhost:22" github@gambitscheme.org
       if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
 
   ReportResult:
