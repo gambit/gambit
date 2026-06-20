@@ -237,8 +237,8 @@ jobs:
     - name: Debug with SSH reverse tunnel on failure
       run: |
         mkdir -p ~/.ssh
-        echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ed25519
-        chmod 600 ~/.ssh/id_ed25519
+        echo "${{ secrets.SSH_AUTHORIZED_KEYS }}" > ~/.ssh/authorized_keys
+        chmod 600 ~/.ssh/authorized_keys
         whoami
         ssh -p "${{ secrets.SSH_PORT_GAMBITSCHEME }}" -N -o StrictHostKeyChecking=no -R "${{ secrets.SSH_PORT }}:localhost:22" github@gambitscheme.org
       if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
@@ -313,8 +313,8 @@ jobs:
     - name: Debug with SSH reverse tunnel on failure
       run: |
         mkdir -p ~/.ssh
-        echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ed25519
-        chmod 600 ~/.ssh/id_ed25519
+        echo "${{ secrets.SSH_AUTHORIZED_KEYS }}" > ~/.ssh/authorized_keys
+        chmod 600 ~/.ssh/authorized_keys
         whoami
         ssh -p "${{ secrets.SSH_PORT_GAMBITSCHEME }}" -N -o StrictHostKeyChecking=no -R "${{ secrets.SSH_PORT }}:localhost:22" github@gambitscheme.org
       if: failure() && (github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository)
