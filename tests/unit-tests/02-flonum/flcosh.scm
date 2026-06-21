@@ -1,5 +1,9 @@
 (include "#.scm")
 
+(test-approximate 1.0 (##flcosh 0.) 1e-12)
+(test-approximate 1.1276259652063807 (##flcosh 0.5) 1e-12)
+(test-approximate 1.1276259652063807 (##flcosh -0.5) 1e-12)
+
 (test-approximate 1.0 (flcosh 0.) 1e-12)
 (test-approximate 1.1276259652063807 (flcosh 0.5) 1e-12)
 (test-approximate 1.1276259652063807 (flcosh -0.5) 1e-12)

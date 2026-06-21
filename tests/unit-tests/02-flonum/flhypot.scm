@@ -5,7 +5,7 @@
 ;;; If the implementation has error < 1 ulp, then it
 ;;; should give exact answers when the result is an integer.
 
-(test-eqv 5. (flhypot 3. 4.))
+(test-eqv 5. (##flhypot 3. 4.))
 
 #|
 
@@ -19,6 +19,32 @@ if one of the arguments is +/-inf, hypot returns +inf even if the other argument
 otherwise, if any of the arguments is NaN, NaN is returned 
 
 |#
+
+;; if one of the arguments is +/-0, hypot is equivalent to fabs called with the non-zero argument
+
+(test-eqv +1. (##flhypot +0. -1.))
+(test-eqv +0. (##flhypot +0. -0.))
+(test-eqv +1. (##flhypot -0. -1.))
+(test-eqv +0. (##flhypot -0. -0.))
+
+;; if one of the arguments is +/-inf, hypot returns +inf even if the other argument is NaN
+
+(test-eqv +inf.0 (##flhypot +inf.0 1.))
+(test-eqv +inf.0 (##flhypot 1. +inf.0))
+(test-eqv +inf.0 (##flhypot -inf.0 1.))
+(test-eqv +inf.0 (##flhypot 1. -inf.0))
+(test-eqv +inf.0 (##flhypot +inf.0 +nan.0))
+(test-eqv +inf.0 (##flhypot +nan.0 +inf.0))
+(test-eqv +inf.0 (##flhypot -inf.0 +nan.0))
+(test-eqv +inf.0 (##flhypot +nan.0 -inf.0))
+
+;; otherwise, if any of the arguments is NaN, NaN is returned
+
+(test-assert (flnan? (##flhypot +nan.0 1.)))
+(test-assert (flnan? (##flhypot 1. +nan.0)))
+
+
+(test-eqv 5. (flhypot 3. 4.))
 
 ;; if one of the arguments is +/-0, hypot is equivalent to fabs called with the non-zero argument
 

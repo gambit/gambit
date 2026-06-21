@@ -1,5 +1,9 @@
 (include "#.scm")
 
+(test-approximate 0.0 (##flasinh 0.) 1e-12)
+(test-approximate 0.48121182505960347 (##flasinh 0.5) 1e-12)
+(test-approximate -0.48121182505960347 (##flasinh -0.5) 1e-12)
+
 (test-approximate 0.0 (flasinh 0.) 1e-12)
 (test-approximate 0.48121182505960347 (flasinh 0.5) 1e-12)
 (test-approximate -0.48121182505960347 (flasinh -0.5) 1e-12)

@@ -1,5 +1,13 @@
 (include "#.scm")
 
+(test-eqv 1.0 (##fldenominator  0.0))
+(test-eqv 1.0 (##fldenominator -0.0))
+(test-eqv 2.0 (##fldenominator  0.5))
+(test-eqv 1.0 (##fldenominator  1.0))
+(test-eqv 2.0 (##fldenominator  1.5))
+(test-eqv 2.0 (##fldenominator  3.5))
+(test-eqv 1.0 (##fldenominator  5.0))
+
 (test-eqv 1.0 (fldenominator  0.0))
 (test-eqv 1.0 (fldenominator -0.0))
 (test-eqv 2.0 (fldenominator  0.5))
