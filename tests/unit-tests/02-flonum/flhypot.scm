@@ -43,3 +43,9 @@ otherwise, if any of the arguments is NaN, NaN is returned
 (test-assert (flnan? (flhypot +nan.0 1.)))
 (test-assert (flnan? (flhypot 1. +nan.0)))
 
+(test-error-tail wrong-number-of-arguments-exception? (flhypot))
+(test-error-tail wrong-number-of-arguments-exception? (flhypot 1.0))
+(test-error-tail wrong-number-of-arguments-exception? (flhypot 1.0 2.0 3.0))
+
+(test-error-tail type-exception? (flhypot 1 2.0))
+(test-error-tail type-exception? (flhypot 1.0 2))

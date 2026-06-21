@@ -1,6 +1,10 @@
 (include "#.scm")
 
-;;; Test two-arg atan
+(test-approximate 0.0 (flatan 0.0) 1e-12)
+(test-approximate 0.7853981633974483 (flatan 1.0) 1e-12)
+(test-approximate -0.7853981633974483 (flatan -1.0) 1e-12)
+
+(test-assert (flnan? (flatan +nan.0)))
 
 #|
 
@@ -70,3 +74,10 @@ If either x is NaN or y is NaN, NaN is returned
 
 (test-assert (flnan? (flatan +nan.0 1.)))
 (test-assert (flnan? (flatan 1. +nan.0)))
+
+(test-error-tail wrong-number-of-arguments-exception? (flatan))
+(test-error-tail wrong-number-of-arguments-exception? (flatan 1.0 2.0 3.0))
+
+(test-error-tail type-exception? (flatan 1))
+(test-error-tail type-exception? (flatan 1 2.0))
+(test-error-tail type-exception? (flatan 1.0 2))

@@ -51,3 +51,6 @@
 (test-eqv #f (flonum? '#(1)))
 (test-eqv #f (flonum? 'test))
 (test-eqv #f (flonum? (box 1)))
+
+(test-error-tail wrong-number-of-arguments-exception? (flonum?))
+(test-error-tail wrong-number-of-arguments-exception? (flonum? 1.0 2.0))

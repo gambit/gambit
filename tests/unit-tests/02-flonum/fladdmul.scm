@@ -9,6 +9,7 @@
 (test-error-tail wrong-number-of-arguments-exception? (fl+* 123))
 (test-error-tail wrong-number-of-arguments-exception? (fl+* 123 9.0))
 (test-error-tail wrong-number-of-arguments-exception? (fl+* 9.0 123))
+
 (test-error-tail type-exception? (fl+* 123 3.0 9.0))
 (test-error-tail type-exception? (fl+* 3.0 123 9.0))
 (test-error-tail type-exception? (fl+* 3.0 9.0 123))
