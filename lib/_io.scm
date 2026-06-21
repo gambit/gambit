@@ -6321,7 +6321,7 @@
   (macro-force-vars (k port)
     (macro-check-index
       k
-      1
+      '(1 . k)
       (read-bytevector k port)
       (let ((p
              (if (##eq? port (macro-absent-obj))
@@ -6329,19 +6329,19 @@
                  port)))
         (macro-check-byte-input-port
           p
-          2
+          '(2 . port)
           (read-bytevector k port)
-          (let* ((u8vect
-                  (##make-u8vector k))
-                 (n
-                  (##read-subu8vector u8vect 0 k p #f #f)))
-            (cond ((##fx> n 0)
-                   (##u8vector-shrink! u8vect n)
-                   u8vect)
-                  ((##fx= n 0)
-                   #!eof)
-                  (else
-                   (##raise-os-io-exception port #f n read-bytevector k port)))))))))
+          (let ((u8vect (##make-u8vector k)))
+            (if (##fx= k 0)
+                u8vect
+                (let ((n (##read-subu8vector u8vect 0 k p #f #f)))
+                  (cond ((##fx> n 0)
+                         (##u8vector-shrink! u8vect n)
+                         u8vect)
+                        ((##fx= n 0)
+                         #!eof)
+                        (else
+                         (##raise-os-io-exception port #f n read-bytevector k port)))))))))))
 
 (define-prim (##read-bytevector!
               u8vect
