@@ -59,3 +59,10 @@
 (test-error-tail wrong-number-of-arguments-exception? (read (current-input-port) #f))
 
 (test-error-tail type-exception? (read #f))
+
+;; note that read errors are not raised in tail position:
+(test-assert (read-error? 
+              (with-exception-catcher
+               (lambda (exn) exn)
+               (lambda ()
+                 (with-input-from-string ")" (lambda () (read)))))))
