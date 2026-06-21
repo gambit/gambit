@@ -5513,23 +5513,27 @@
   (macro-force-vars (k port)
     (macro-check-index
       k
-      1
+      '(1 . k)
       (read-string k port)
-      (let* ((p
-              (if (##eq? port (macro-absent-obj))
-                  (macro-current-input-port)
-                  port))
-             (str
-              (##make-string k))
-             (n
-              (##read-substring str 0 k p #f #f)))
-        (cond ((##fx> n 0)
-               (##string-shrink! str n)
-               str)
-              ((##fx= n 0)
-               #!eof)
-              (else
-               (##raise-os-io-exception port #f n read-string k port)))))))
+      (let ((p
+             (if (##eq? port (macro-absent-obj))
+                 (macro-current-input-port)
+                 port)))
+        (macro-check-character-input-port
+          p
+          '(2 . port)
+          (read-string k port)
+          (let ((str (##make-string k)))
+            (if (##fx= k 0)
+                str
+                (let ((n (##read-substring str 0 k p #f #f)))
+                  (cond ((##fx> n 0)
+                         (##string-shrink! str n)
+                         str)
+                        ((##fx= n 0)
+                         #!eof)
+                        (else
+                         (##raise-os-io-exception port #f n read-string k port)))))))))))
 
 (define-prim (##read-line
               #!optional
