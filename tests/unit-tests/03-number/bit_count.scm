@@ -1,0 +1,26 @@
+(include "#.scm")
+
+(test-eqv 0 (##bit-count -1))
+(test-eqv 1 (##bit-count 1))
+(test-eqv 6 (##bit-count 1000))
+(test-eqv 29 (##bit-count 536870911))
+(test-eqv 60 (##bit-count 1152921504606846975))
+(test-eqv 1 (##bit-count 1152921504606846976))
+(test-eqv 46 (##bit-count 12345678901234567890123456789))
+(test-eqv 45 (##bit-count -12345678901234567890123456789))
+
+(test-eqv 0 (bit-count -1))
+(test-eqv 1 (bit-count 1))
+(test-eqv 6 (bit-count 1000))
+(test-eqv 29 (bit-count 536870911))
+(test-eqv 60 (bit-count 1152921504606846975))
+(test-eqv 1 (bit-count 1152921504606846976))
+(test-eqv 46 (bit-count 12345678901234567890123456789))
+(test-eqv 45 (bit-count -12345678901234567890123456789))
+
+(test-error-tail wrong-number-of-arguments-exception? (bit-count))
+(test-error-tail wrong-number-of-arguments-exception? (bit-count 1 1))
+
+(test-error-tail type-exception? (bit-count 0.0))
+(test-error-tail type-exception? (bit-count 0.5))
+(test-error-tail type-exception? (bit-count 1/2))
