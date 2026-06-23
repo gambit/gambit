@@ -13,6 +13,11 @@
  (with-output-to-string (lambda () (print 1 2 3))))
 
 (test-equal
+ "1234567"
+ (with-output-to-string
+  (lambda () (print 1 (list (cons 2 3) (vector 4 5) 6) 7))))
+
+(test-equal
  "123"
  (call-with-output-string (lambda (port) (print port: port 1 2 3))))
 
@@ -27,6 +32,11 @@
 (test-equal
  "123\n"
  (with-output-to-string (lambda () (println 1 2 3))))
+
+(test-equal
+ "1234567\n"
+ (with-output-to-string
+  (lambda () (println 1 (list (cons 2 3) (vector 4 5) 6) 7))))
 
 (test-equal
  "123\n"
