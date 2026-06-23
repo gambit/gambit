@@ -9,7 +9,7 @@
      (with-input-from-string str read-all))))
 
 (define-macro (chk str first . rest)
-  `(check-equal? (str->obj ,str) '((six.infix ,first) ,@rest)))
+  `(test-equal '((six.infix ,first) ,@rest) (str->obj ,str)))
 
 (chk "\\a"        (six.identifier a))
 (chk "\\ a "      (six.identifier a))

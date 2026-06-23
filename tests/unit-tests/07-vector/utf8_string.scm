@@ -1,18 +1,18 @@
 (include "#.scm")
 
-(check-equal? (utf8->string '#u8(65 66 67)) "ABC")
-(check-equal? (utf8->string '#u8(65 66 67) 0) "ABC")
-(check-equal? (utf8->string '#u8(65 66 67) 3) "")
-(check-equal? (utf8->string '#u8(65 66 67) 1 3) "BC")
-(check-equal? (utf8->string '#u8(65 66 67) 3 3) "")
-(check-equal? (utf8->string '#u8(128 65 66 67 128) 1 4) "ABC")
+(test-equal "ABC" (utf8->string '#u8(65 66 67)))
+(test-equal "ABC" (utf8->string '#u8(65 66 67) 0))
+(test-equal "" (utf8->string '#u8(65 66 67) 3))
+(test-equal "BC" (utf8->string '#u8(65 66 67) 1 3))
+(test-equal "" (utf8->string '#u8(65 66 67) 3 3))
+(test-equal "ABC" (utf8->string '#u8(128 65 66 67 128) 1 4))
 
-(check-equal? (utf8->string '#u8()) "")
-(check-equal? (utf8->string '#u8(#x00)) "\x0;")
-(check-equal? (utf8->string '#u8(#x7F)) "\x7f;")
-(check-equal? (utf8->string '#u8(#xC2 #x80)) "\x80;")
-(check-equal? (utf8->string '#u8(#xC2 #xBF)) "\xbf;")
-(check-equal? (utf8->string '#u8(#xC3 #xBF)) "\xff;")
+(test-equal "" (utf8->string '#u8()))
+(test-equal "\x0;" (utf8->string '#u8(#x00)))
+(test-equal "\x7f;" (utf8->string '#u8(#x7F)))
+(test-equal "\x80;" (utf8->string '#u8(#xC2 #x80)))
+(test-equal "\xbf;" (utf8->string '#u8(#xC2 #xBF)))
+(test-equal "\xff;" (utf8->string '#u8(#xC3 #xBF)))
 
 (define-macro (if-max-char-code-greater-than n code-as-string)
   (if (> (##max-char-code) n)
@@ -20,939 +20,947 @@
       `(begin)))
 
 (if-max-char-code-greater-than 255 #<<end-of-at-least-2-byte-chars
-(check-equal? (utf8->string '#u8(#xDF #x80)) "\x7c0;")
-(check-equal? (utf8->string '#u8(#xDF #xBF)) "\x7ff;")
-(check-equal? (utf8->string '#u8(#xE0 #xA0 #x80)) "\x800;")
-(check-equal? (utf8->string '#u8(#xE0 #xA0 #xBF)) "\x83f;")
-(check-equal? (utf8->string '#u8(#xE0 #xBF #x80)) "\xfc0;")
-(check-equal? (utf8->string '#u8(#xE0 #xBF #xBF)) "\xfff;")
-(check-equal? (utf8->string '#u8(#xE1 #x80 #x80)) "\x1000;")
-(check-equal? (utf8->string '#u8(#xE1 #x80 #xBF)) "\x103f;")
-(check-equal? (utf8->string '#u8(#xE1 #xBF #x80)) "\x1fc0;")
-(check-equal? (utf8->string '#u8(#xE1 #xBF #xBF)) "\x1fff;")
-(check-equal? (utf8->string '#u8(#xEF #x80 #x80)) "\xf000;")
-(check-equal? (utf8->string '#u8(#xEF #x80 #xBF)) "\xf03f;")
-(check-equal? (utf8->string '#u8(#xEF #xBF #x80)) "\xffc0;")
-(check-equal? (utf8->string '#u8(#xEF #xBF #xBF)) "\xffff;")
-(check-equal? (utf8->string '#u8(#xED #x9F #xBF)) "\xd7ff;")
-(check-equal? (utf8->string '#u8(#xEE #x80 #x80)) "\xe000;")
-(check-equal? (utf8->string '#u8(#xEF #xBF #xBF)) "\xffff;")
+(test-equal "\x7c0;" (utf8->string '#u8(#xDF #x80)))
+(test-equal "\x7ff;" (utf8->string '#u8(#xDF #xBF)))
+(test-equal "\x800;" (utf8->string '#u8(#xE0 #xA0 #x80)))
+(test-equal "\x83f;" (utf8->string '#u8(#xE0 #xA0 #xBF)))
+(test-equal "\xfc0;" (utf8->string '#u8(#xE0 #xBF #x80)))
+(test-equal "\xfff;" (utf8->string '#u8(#xE0 #xBF #xBF)))
+(test-equal "\x1000;" (utf8->string '#u8(#xE1 #x80 #x80)))
+(test-equal "\x103f;" (utf8->string '#u8(#xE1 #x80 #xBF)))
+(test-equal "\x1fc0;" (utf8->string '#u8(#xE1 #xBF #x80)))
+(test-equal "\x1fff;" (utf8->string '#u8(#xE1 #xBF #xBF)))
+(test-equal "\xf000;" (utf8->string '#u8(#xEF #x80 #x80)))
+(test-equal "\xf03f;" (utf8->string '#u8(#xEF #x80 #xBF)))
+(test-equal "\xffc0;" (utf8->string '#u8(#xEF #xBF #x80)))
+(test-equal "\xffff;" (utf8->string '#u8(#xEF #xBF #xBF)))
+(test-equal "\xd7ff;" (utf8->string '#u8(#xED #x9F #xBF)))
+(test-equal "\xe000;" (utf8->string '#u8(#xEE #x80 #x80)))
+(test-equal "\xffff;" (utf8->string '#u8(#xEF #xBF #xBF)))
 end-of-at-least-2-byte-chars
 )
 
 (if-max-char-code-greater-than 65535 #<<end-of-4-byte-chars
-(check-equal? (utf8->string '#u8(#xF0 #x90 #x80 #x80)) "\x10000;")
-(check-equal? (utf8->string '#u8(#xF0 #x90 #x80 #xBF)) "\x1003f;")
-(check-equal? (utf8->string '#u8(#xF0 #x90 #xBF #x80)) "\x10fc0;")
-(check-equal? (utf8->string '#u8(#xF0 #x90 #xBF #xBF)) "\x10fff;")
-(check-equal? (utf8->string '#u8(#xF0 #xBF #x80 #x80)) "\x3f000;")
-(check-equal? (utf8->string '#u8(#xF0 #xBF #x80 #xBF)) "\x3f03f;")
-(check-equal? (utf8->string '#u8(#xF0 #xBF #xBF #x80)) "\x3ffc0;")
-(check-equal? (utf8->string '#u8(#xF0 #xBF #xBF #xBF)) "\x3ffff;")
-(check-equal? (utf8->string '#u8(#xF1 #x80 #x80 #x80)) "\x40000;")
-(check-equal? (utf8->string '#u8(#xF1 #x80 #x80 #xBF)) "\x4003f;")
-(check-equal? (utf8->string '#u8(#xF1 #x80 #xBF #x80)) "\x40fc0;")
-(check-equal? (utf8->string '#u8(#xF1 #x80 #xBF #xBF)) "\x40fff;")
-(check-equal? (utf8->string '#u8(#xF1 #xBF #x80 #x80)) "\x7f000;")
-(check-equal? (utf8->string '#u8(#xF1 #xBF #x80 #xBF)) "\x7f03f;")
-(check-equal? (utf8->string '#u8(#xF1 #xBF #xBF #x80)) "\x7ffc0;")
-(check-equal? (utf8->string '#u8(#xF1 #xBF #xBF #xBF)) "\x7ffff;")
-(check-equal? (utf8->string '#u8(#xF3 #x80 #x80 #x80)) "\xc0000;")
-(check-equal? (utf8->string '#u8(#xF3 #x80 #x80 #xBF)) "\xc003f;")
-(check-equal? (utf8->string '#u8(#xF3 #x80 #xBF #x80)) "\xc0fc0;")
-(check-equal? (utf8->string '#u8(#xF3 #x80 #xBF #xBF)) "\xc0fff;")
-(check-equal? (utf8->string '#u8(#xF3 #xBF #x80 #x80)) "\xff000;")
-(check-equal? (utf8->string '#u8(#xF3 #xBF #x80 #xBF)) "\xff03f;")
-(check-equal? (utf8->string '#u8(#xF3 #xBF #xBF #x80)) "\xfffc0;")
-(check-equal? (utf8->string '#u8(#xF3 #xBF #xBF #xBF)) "\xfffff;")
-(check-equal? (utf8->string '#u8(#xF4 #x80 #x80 #x80)) "\x100000;")
-(check-equal? (utf8->string '#u8(#xF4 #x80 #x80 #xBF)) "\x10003f;")
-(check-equal? (utf8->string '#u8(#xF4 #x80 #xBF #x80)) "\x100fc0;")
-(check-equal? (utf8->string '#u8(#xF4 #x80 #xBF #xBF)) "\x100fff;")
-(check-equal? (utf8->string '#u8(#xF4 #x8F #x80 #x80)) "\x10f000;")
-(check-equal? (utf8->string '#u8(#xF4 #x8F #x80 #xBF)) "\x10f03f;")
-(check-equal? (utf8->string '#u8(#xF4 #x8F #xBF #x80)) "\x10ffc0;")
-(check-equal? (utf8->string '#u8(#xF4 #x8F #xBF #xBF)) "\x10ffff;")
+(test-equal "\x10000;" (utf8->string '#u8(#xF0 #x90 #x80 #x80)))
+(test-equal "\x1003f;" (utf8->string '#u8(#xF0 #x90 #x80 #xBF)))
+(test-equal "\x10fc0;" (utf8->string '#u8(#xF0 #x90 #xBF #x80)))
+(test-equal "\x10fff;" (utf8->string '#u8(#xF0 #x90 #xBF #xBF)))
+(test-equal "\x3f000;" (utf8->string '#u8(#xF0 #xBF #x80 #x80)))
+(test-equal "\x3f03f;" (utf8->string '#u8(#xF0 #xBF #x80 #xBF)))
+(test-equal "\x3ffc0;" (utf8->string '#u8(#xF0 #xBF #xBF #x80)))
+(test-equal "\x3ffff;" (utf8->string '#u8(#xF0 #xBF #xBF #xBF)))
+(test-equal "\x40000;" (utf8->string '#u8(#xF1 #x80 #x80 #x80)))
+(test-equal "\x4003f;" (utf8->string '#u8(#xF1 #x80 #x80 #xBF)))
+(test-equal "\x40fc0;" (utf8->string '#u8(#xF1 #x80 #xBF #x80)))
+(test-equal "\x40fff;" (utf8->string '#u8(#xF1 #x80 #xBF #xBF)))
+(test-equal "\x7f000;" (utf8->string '#u8(#xF1 #xBF #x80 #x80)))
+(test-equal "\x7f03f;" (utf8->string '#u8(#xF1 #xBF #x80 #xBF)))
+(test-equal "\x7ffc0;" (utf8->string '#u8(#xF1 #xBF #xBF #x80)))
+(test-equal "\x7ffff;" (utf8->string '#u8(#xF1 #xBF #xBF #xBF)))
+(test-equal "\xc0000;" (utf8->string '#u8(#xF3 #x80 #x80 #x80)))
+(test-equal "\xc003f;" (utf8->string '#u8(#xF3 #x80 #x80 #xBF)))
+(test-equal "\xc0fc0;" (utf8->string '#u8(#xF3 #x80 #xBF #x80)))
+(test-equal "\xc0fff;" (utf8->string '#u8(#xF3 #x80 #xBF #xBF)))
+(test-equal "\xff000;" (utf8->string '#u8(#xF3 #xBF #x80 #x80)))
+(test-equal "\xff03f;" (utf8->string '#u8(#xF3 #xBF #x80 #xBF)))
+(test-equal "\xfffc0;" (utf8->string '#u8(#xF3 #xBF #xBF #x80)))
+(test-equal "\xfffff;" (utf8->string '#u8(#xF3 #xBF #xBF #xBF)))
+(test-equal "\x100000;" (utf8->string '#u8(#xF4 #x80 #x80 #x80)))
+(test-equal "\x10003f;" (utf8->string '#u8(#xF4 #x80 #x80 #xBF)))
+(test-equal "\x100fc0;" (utf8->string '#u8(#xF4 #x80 #xBF #x80)))
+(test-equal "\x100fff;" (utf8->string '#u8(#xF4 #x80 #xBF #xBF)))
+(test-equal "\x10f000;" (utf8->string '#u8(#xF4 #x8F #x80 #x80)))
+(test-equal "\x10f03f;" (utf8->string '#u8(#xF4 #x8F #x80 #xBF)))
+(test-equal "\x10ffc0;" (utf8->string '#u8(#xF4 #x8F #xBF #x80)))
+(test-equal "\x10ffff;" (utf8->string '#u8(#xF4 #x8F #xBF #xBF)))
 end-of-4-byte-chars
 )
+(test-error-tail type-exception? (utf8->string #f))
+(test-error-tail type-exception? (utf8->string '#u8(65 66 67) #f))
+(test-error-tail type-exception? (utf8->string '#u8(65 66 67) 0 #f))
 
-(check-tail-exn type-exception? (lambda () (utf8->string #f)))
-(check-tail-exn type-exception? (lambda () (utf8->string '#u8(65 66 67) #f)))
-(check-tail-exn type-exception? (lambda () (utf8->string '#u8(65 66 67) 0 #f)))
+(test-error-tail range-exception? (utf8->string '#u8(65 66 67) -1))
+(test-error-tail range-exception? (utf8->string '#u8(65 66 67) 4))
+(test-error-tail range-exception? (utf8->string '#u8(65 66 67) 0 4))
 
-(check-tail-exn range-exception? (lambda () (utf8->string '#u8(65 66 67) -1)))
-(check-tail-exn range-exception? (lambda () (utf8->string '#u8(65 66 67) 4)))
-(check-tail-exn range-exception? (lambda () (utf8->string '#u8(65 66 67) 0 4)))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(128)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x80))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(128 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x80 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(128 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x80 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(128 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x80 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(129)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x81))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(129 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x81 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(129 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x81 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(129 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x81 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(130)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x82))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(130 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x82 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(130 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x82 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(130 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x82 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(131)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x83))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(131 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x83 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(131 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x83 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(131 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x83 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(132)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x84))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(132 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x84 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(132 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x84 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(132 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x84 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(133)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x85))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(133 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x85 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(133 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x85 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(133 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x85 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(134)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x86))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(134 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x86 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(134 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x86 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(134 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x86 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(135)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x87))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(135 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x87 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(135 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x87 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(135 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x87 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(136)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x88))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(136 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x88 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(136 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x88 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(136 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x88 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(137)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x89))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(137 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x89 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(137 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x89 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(137 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x89 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(138)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x8A))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(138 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x8A #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(138 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x8A #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(138 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x8A #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(139)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x8B))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(139 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x8B #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(139 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x8B #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(139 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x8B #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(140)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x8C))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(140 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x8C #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(140 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x8C #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(140 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x8C #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(141)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x8D))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(141 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x8D #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(141 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x8D #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(141 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x8D #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x8F #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(143 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x8F #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(144)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x90))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(144 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x90 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(144 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x90 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(144 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x90 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(145)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x91))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(145 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x91 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(145 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x91 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(145 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x91 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(146)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x92))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(146 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x92 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(146 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x92 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(146 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x92 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(147)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x93))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(147 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x93 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(147 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x93 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(147 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x93 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(148)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x94))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(148 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x94 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(148 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x94 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(148 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x94 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(149)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x95))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(149 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x95 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(149 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x95 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(149 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x95 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(150)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x96))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(150 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x96 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(150 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x96 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(150 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x96 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(151)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x97))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(151 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x97 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(151 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x97 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(151 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x97 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(152)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x98))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(152 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x98 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(152 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x98 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(152 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x98 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(153)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x99))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(153 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x99 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(153 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x99 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(153 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x99 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(154)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x9A))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(154 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x9A #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(154 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x9A #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(154 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x9A #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(155)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x9B))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(155 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x9B #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(155 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x9B #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(155 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x9B #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(156)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x9C))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(156 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x9C #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(156 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x9C #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(156 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x9C #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(157)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x9D))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(157 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x9D #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(157 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x9D #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(157 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x9D #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(159)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x9F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(159 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x9F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(159 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x9F #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(159 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#x9F #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(160)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA0))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(160 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA0 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(160 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA0 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(160 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA0 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(161)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA1))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(161 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA1 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(161 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA1 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(161 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA1 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(162)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA2))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(162 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA2 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(162 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA2 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(162 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA2 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(163)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA3))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(163 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA3 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(163 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA3 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(163 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA3 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(164)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA4))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(164 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA4 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(164 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA4 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(164 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA4 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(165)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA5))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(165 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA5 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(165 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA5 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(165 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA5 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(166)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA6))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(166 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA6 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(166 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA6 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(166 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA6 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(167)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA7))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(167 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA7 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(167 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA7 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(167 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA7 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(168)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA8))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(168 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA8 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(168 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA8 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(168 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA8 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(169)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA9))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(169 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA9 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(169 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA9 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(169 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xA9 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(170)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xAA))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(170 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xAA #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(170 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xAA #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(170 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xAA #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(171)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xAB))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(171 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xAB #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(171 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xAB #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(171 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xAB #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(172)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xAC))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(172 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xAC #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(172 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xAC #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(172 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xAC #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(173)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xAD))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(173 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xAD #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(173 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xAD #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(173 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xAD #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(175)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xAF))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(175 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xAF #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(175 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xAF #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(175 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xAF #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(176)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB0))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(176 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB0 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(176 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB0 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(176 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB0 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(177)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB1))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(177 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB1 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(177 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB1 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(177 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB1 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(178)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB2))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(178 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB2 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(178 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB2 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(178 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB2 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(179)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB3))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(179 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB3 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(179 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB3 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(179 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB3 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(180)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB4))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(180 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB4 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(180 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB4 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(180 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB4 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(181)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB5))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(181 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB5 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(181 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB5 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(181 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB5 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(182)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB6))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(182 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB6 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(182 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB6 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(182 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB6 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(183)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB7))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(183 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB7 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(183 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB7 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(183 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB7 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(184)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB8))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(184 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB8 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(184 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB8 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(184 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB8 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(185)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB9))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(185 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB9 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(185 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB9 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(185 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xB9 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(186)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xBA))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(186 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xBA #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(186 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xBA #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(186 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xBA #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(187)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xBB))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(187 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xBB #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(187 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xBB #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(187 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xBB #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(188)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xBC))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(188 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xBC #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(188 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xBC #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(188 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xBC #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(189)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xBD))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(189 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xBD #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(189 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xBD #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(189 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xBD #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(191)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xBF))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(191 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xBF #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(191 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xBF #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(191 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xBF #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(245)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xF5))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(245 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xF5 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(245 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xF5 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(245 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xF5 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(246)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xF6))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(246 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xF6 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(246 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xF6 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(246 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xF6 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(247)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xF7))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(247 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xF7 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(247 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xF7 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(247 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xF7 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(248)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xF8))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(248 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xF8 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(248 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xF8 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(248 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xF8 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(249)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xF9))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(249 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xF9 #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(249 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xF9 #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(249 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xF9 #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(250)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xFA))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(250 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xFA #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(250 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xFA #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(250 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xFA #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(251)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xFB))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(251 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xFB #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(251 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xFB #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(251 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xFB #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(252)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xFC))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(252 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xFC #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(252 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xFC #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(252 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xFC #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(253)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xFD))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(253 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xFD #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(253 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xFD #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(253 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xFD #x8F #x8F #x8F))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(255)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xFF))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(255 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xFF #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(255 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xFF #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(255 143 143 143)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xFF #x8F #x8F #x8F))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(237 160 128)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xED #xA0 #x80))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(237 191 191)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xED #xBF #xBF))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(244 144 128 128)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xF4 #x90 #x80 #x80))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(244 191 191 191)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xF4 #xBF #xBF #xBF))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(192 128)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xC0 #x80))))
+(test-error-tail invalid-utf8-encoding-exception? (utf8->string '#u8(193 191)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xC1 #xBF))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(224 128 128)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xE0 #x80 #x80))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(224 159 191)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xE0 #x9F #xBF))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(240 128 128 128)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xF0 #x80 #x80 #x80))))
+(test-error-tail
+ invalid-utf8-encoding-exception?
+ (utf8->string '#u8(240 143 191 191)))
 
-(check-tail-exn invalid-utf8-encoding-exception?
-                (lambda () (utf8->string '#u8(#xF0 #x8F #xBF #xBF))))
+(test-error-tail wrong-number-of-arguments-exception? (utf8->string))
+(test-error-tail
+ wrong-number-of-arguments-exception?
+ (utf8->string '#u8() 0 0 0))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (utf8->string)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (utf8->string '#u8() 0 0 0)))

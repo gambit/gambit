@@ -1,15 +1,15 @@
 (include "#.scm")
 
-(check-true (number? (current-second)))
-(check-true (number? (current-jiffy)))
-(check-true (number? (jiffies-per-second)))
+(test-assert (eq? #t (number? (current-second))))
+(test-assert (eq? #t (number? (current-jiffy))))
+(test-assert (eq? #t (number? (jiffies-per-second))))
 
-(check-true (> (current-second) 0))
-(check-true (> (current-jiffy) 0))
-(check-true (> (jiffies-per-second) 0))
+(test-assert (eq? #t (> (current-second) 0)))
+(test-assert (eq? #t (> (current-jiffy) 0)))
+(test-assert (eq? #t (> (jiffies-per-second) 0)))
 
 ;;; Test exceptions
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (current-second #f)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (current-jiffy #f)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (jiffies-per-second #f)))
+(test-error-tail wrong-number-of-arguments-exception? (current-second #f))
+(test-error-tail wrong-number-of-arguments-exception? (current-jiffy #f))
+(test-error-tail wrong-number-of-arguments-exception? (jiffies-per-second #f))

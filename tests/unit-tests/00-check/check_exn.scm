@@ -1,5 +1,5 @@
 (include "#.scm")
 
-(check-exn string? (lambda () (raise "hello") 123))
+(test-error string? (raise "hello"))
 
-(check-exn divide-by-zero-exception? (lambda () (quotient 123 0)))
+(test-error divide-by-zero-exception? (quotient 123 0))

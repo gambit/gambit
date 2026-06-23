@@ -1,8 +1,8 @@
 (include "#.scm")
 
-(check-equal? (cons* 1) 1)
-(check-equal? (cons* 1 2) '(1 . 2))
-(check-equal? (cons* 1 2 3) '(1 2 . 3))
-(check-equal? (cons* 1 2 3 4) '(1 2 3 . 4))
+(test-equal 1 (cons* 1))
+(test-equal '(1 . 2) (cons* 1 2))
+(test-equal '(1 2 . 3) (cons* 1 2 3))
+(test-equal '(1 2 3 . 4) (cons* 1 2 3 4))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (cons*)))
+(test-error-tail wrong-number-of-arguments-exception? (cons*))

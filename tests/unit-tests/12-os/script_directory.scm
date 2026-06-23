@@ -1,5 +1,5 @@
 (include "#.scm")
 
-(check-equal? (script-directory) #f)
+(test-equal #f (script-directory))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (script-directory #f)))
+(test-error-tail wrong-number-of-arguments-exception? (script-directory #f))

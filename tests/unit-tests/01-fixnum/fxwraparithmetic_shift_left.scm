@@ -1,24 +1,36 @@
 (include "#.scm")
 
-(check-eqv? (##fxwraparithmetic-shift-left 0 0) 0)
-(check-eqv? (##fxwraparithmetic-shift-left 1 1) 2)
-(check-eqv? (##fxwraparithmetic-shift-left -3 3) -24)
-(check-eqv? (##fxwraparithmetic-shift-left -5 5) -160)
-(check-eqv? (##fxwraparithmetic-shift-left (##greatest-fixnum) 0) (##greatest-fixnum))
+(test-eqv 0 (##fxwraparithmetic-shift-left 0 0))
+(test-eqv 2 (##fxwraparithmetic-shift-left 1 1))
+(test-eqv -24 (##fxwraparithmetic-shift-left -3 3))
+(test-eqv -160 (##fxwraparithmetic-shift-left -5 5))
+(test-eqv
+ (##greatest-fixnum)
+ (##fxwraparithmetic-shift-left (##greatest-fixnum) 0))
 
-(check-eqv? (fxwraparithmetic-shift-left 0 0) 0)
-(check-eqv? (fxwraparithmetic-shift-left 1 1) 2)
-(check-eqv? (fxwraparithmetic-shift-left -3 3) -24)
-(check-eqv? (fxwraparithmetic-shift-left -5 5) -160)
-(check-eqv? (fxwraparithmetic-shift-left (##greatest-fixnum) 0) (##greatest-fixnum))
+(test-eqv 0 (fxwraparithmetic-shift-left 0 0))
+(test-eqv 2 (fxwraparithmetic-shift-left 1 1))
+(test-eqv -24 (fxwraparithmetic-shift-left -3 3))
+(test-eqv -160 (fxwraparithmetic-shift-left -5 5))
+(test-eqv
+ (##greatest-fixnum)
+ (fxwraparithmetic-shift-left (##greatest-fixnum) 0))
 
-(check-tail-exn range-exception? (lambda () (fxwraparithmetic-shift-left 1 (##greatest-fixnum))))
+(test-error-tail
+ range-exception?
+ (fxwraparithmetic-shift-left 1 (##greatest-fixnum)))
 
-(check-tail-exn type-exception? (lambda () (fxwraparithmetic-shift-left 1 0.0)))
-(check-tail-exn type-exception? (lambda () (fxwraparithmetic-shift-left 0.5 1)))
-(check-tail-exn type-exception? (lambda () (fxwraparithmetic-shift-left 1 0.5)))
-(check-tail-exn type-exception? (lambda () (fxwraparithmetic-shift-left 1 1/2)))
+(test-error-tail type-exception? (fxwraparithmetic-shift-left 1 0.))
+(test-error-tail type-exception? (fxwraparithmetic-shift-left .5 1))
+(test-error-tail type-exception? (fxwraparithmetic-shift-left 1 .5))
+(test-error-tail type-exception? (fxwraparithmetic-shift-left 1 1/2))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxwraparithmetic-shift-left)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxwraparithmetic-shift-left 1)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxwraparithmetic-shift-left 1 2 3)))
+(test-error-tail
+ wrong-number-of-arguments-exception?
+ (fxwraparithmetic-shift-left))
+(test-error-tail
+ wrong-number-of-arguments-exception?
+ (fxwraparithmetic-shift-left 1))
+(test-error-tail
+ wrong-number-of-arguments-exception?
+ (fxwraparithmetic-shift-left 1 2 3))

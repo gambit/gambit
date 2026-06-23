@@ -4,20 +4,27 @@
 (define int 11)
 (define sym 'foo)
 
-(set! ##symbol-counter (##greatest-fixnum)) ;; to cause hash code wrap around
+(set! ##symbol-counter (##greatest-fixnum))
+;; to cause hash code wrap around
 
-(check-true (symbol? (string->uninterned-symbol str)))
-(check-true (symbol? (string->uninterned-symbol str int)))
+(test-assert (eq? #t (symbol? (string->uninterned-symbol str))))
+(test-assert (eq? #t (symbol? (string->uninterned-symbol str int))))
 
-(check-false (eq? (string->uninterned-symbol str) sym))
-(check-false (eq? (string->uninterned-symbol str) (string->uninterned-symbol str)))
+(test-assert (eq? #f (eq? (string->uninterned-symbol str) sym)))
+(test-assert
+ (eq? #f
+      (eq? (string->uninterned-symbol str) (string->uninterned-symbol str))))
 
-(check-tail-exn type-exception? (lambda () (string->uninterned-symbol int)))
-(check-tail-exn type-exception? (lambda () (string->uninterned-symbol sym)))
-(check-tail-exn type-exception? (lambda () (string->uninterned-symbol str sym)))
+(test-error-tail type-exception? (string->uninterned-symbol int))
+(test-error-tail type-exception? (string->uninterned-symbol sym))
+(test-error-tail type-exception? (string->uninterned-symbol str sym))
 
-(check-tail-exn range-exception? (lambda () (string->uninterned-symbol str -1)))
-(check-tail-exn range-exception? (lambda () (string->uninterned-symbol str 536870912)))
+(test-error-tail range-exception? (string->uninterned-symbol str -1))
+(test-error-tail range-exception? (string->uninterned-symbol str 536870912))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (string->uninterned-symbol)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (string->uninterned-symbol str int #f)))
+(test-error-tail
+ wrong-number-of-arguments-exception?
+ (string->uninterned-symbol))
+(test-error-tail
+ wrong-number-of-arguments-exception?
+ (string->uninterned-symbol str int #f))

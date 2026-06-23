@@ -1,12 +1,12 @@
 (include "#.scm")
 
-(check-eqv? (##fxnor 11 26) -28)
-(check-eqv? (##fxnor 11 -27) 16)
+(test-eqv -28 (##fxnor 11 26))
+(test-eqv 16 (##fxnor 11 -27))
 
-(check-eqv? (fxnor 11 26) -28)
-(check-eqv? (fxnor 11 -27) 16)
+(test-eqv -28 (fxnor 11 26))
+(test-eqv 16 (fxnor 11 -27))
 
-(check-tail-exn type-exception? (lambda () (fxnor 0.0 1)))
-(check-tail-exn type-exception? (lambda () (fxnor 0.5 1)))
-(check-tail-exn type-exception? (lambda () (fxnor 1 0.5)))
-(check-tail-exn type-exception? (lambda () (fxnor 1 1/2)))
+(test-error-tail type-exception? (fxnor 0. 1))
+(test-error-tail type-exception? (fxnor .5 1))
+(test-error-tail type-exception? (fxnor 1 .5))
+(test-error-tail type-exception? (fxnor 1 1/2))

@@ -1,10 +1,10 @@
 (include "#.scm")
 
-(check-false (processor? 0))
-(check-false (processor? #f))
-(check-false (processor? "hello"))
+(test-assert (eq? #f (processor? 0)))
+(test-assert (eq? #f (processor? #f)))
+(test-assert (eq? #f (processor? "hello")))
 
-(check-true  (processor? (current-processor)))
+(test-assert (eq? #t (processor? (current-processor))))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (processor?)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (processor? #f #f)))
+(test-error-tail wrong-number-of-arguments-exception? (processor?))
+(test-error-tail wrong-number-of-arguments-exception? (processor? #f #f))

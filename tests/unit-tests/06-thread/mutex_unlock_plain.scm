@@ -4,10 +4,12 @@
 
 (mutex-lock! m)
 
-(check-equal? (mutex-unlock! m) (void))
+(test-equal (void) (mutex-unlock! m))
 
-(check-tail-exn type-exception? (lambda () (mutex-unlock! #f)))
-(check-tail-exn type-exception? (lambda () (mutex-unlock! m #f)))
+(test-error-tail type-exception? (mutex-unlock! #f))
+(test-error-tail type-exception? (mutex-unlock! m #f))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (mutex-unlock!)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (mutex-unlock! #f #f #f #f)))
+(test-error-tail wrong-number-of-arguments-exception? (mutex-unlock!))
+(test-error-tail
+ wrong-number-of-arguments-exception?
+ (mutex-unlock! #f #f #f #f))

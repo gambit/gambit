@@ -1,16 +1,16 @@
 (include "#.scm")
 
-(check-eqv? (##fxfirst-set-bit 1) 0)
-(check-eqv? (##fxfirst-set-bit 100) 2)
-(check-eqv? (##fxfirst-set-bit -1000) 3)
+(test-eqv 0 (##fxfirst-set-bit 1))
+(test-eqv 2 (##fxfirst-set-bit 100))
+(test-eqv 3 (##fxfirst-set-bit -1000))
 
-(check-eqv? (fxfirst-set-bit 1) 0)
-(check-eqv? (fxfirst-set-bit 100) 2)
-(check-eqv? (fxfirst-set-bit -1000) 3)
+(test-eqv 0 (fxfirst-set-bit 1))
+(test-eqv 2 (fxfirst-set-bit 100))
+(test-eqv 3 (fxfirst-set-bit -1000))
 
-(check-tail-exn type-exception? (lambda () (fxfirst-set-bit 0.0)))
-(check-tail-exn type-exception? (lambda () (fxfirst-set-bit 0.5)))
-(check-tail-exn type-exception? (lambda () (fxfirst-set-bit 1/2)))
+(test-error-tail type-exception? (fxfirst-set-bit 0.))
+(test-error-tail type-exception? (fxfirst-set-bit .5))
+(test-error-tail type-exception? (fxfirst-set-bit 1/2))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxfirst-set-bit)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxfirst-set-bit 1 1)))
+(test-error-tail wrong-number-of-arguments-exception? (fxfirst-set-bit))
+(test-error-tail wrong-number-of-arguments-exception? (fxfirst-set-bit 1 1))

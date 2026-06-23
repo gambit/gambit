@@ -1,26 +1,26 @@
 (include "#.scm")
 
-(check-eqv? (##fxbit-count -1) 0)
-(check-eqv? (##fxbit-count 1) 1)
-(check-eqv? (##fxbit-count 1000) 6)
+(test-eqv 0 (##fxbit-count -1))
+(test-eqv 1 (##fxbit-count 1))
+(test-eqv 6 (##fxbit-count 1000))
 
-(check-eqv? (##fxbit-count 536870911) 29)
-
-(if (fixnum? 2305843009213693951)
-    (check-eqv? (##fxbit-count 2305843009213693951) 61))
-
-(check-eqv? (fxbit-count -1) 0)
-(check-eqv? (fxbit-count 1) 1)
-(check-eqv? (fxbit-count 1000) 6)
-
-(check-eqv? (fxbit-count 536870911) 29)
+(test-eqv 29 (##fxbit-count 536870911))
 
 (if (fixnum? 2305843009213693951)
-    (check-eqv? (fxbit-count 2305843009213693951) 61))
+    (test-eqv 61 (##fxbit-count 2305843009213693951)))
 
-(check-tail-exn type-exception? (lambda () (fxbit-count 0.0)))
-(check-tail-exn type-exception? (lambda () (fxbit-count 0.5)))
-(check-tail-exn type-exception? (lambda () (fxbit-count 1/2)))
+(test-eqv 0 (fxbit-count -1))
+(test-eqv 1 (fxbit-count 1))
+(test-eqv 6 (fxbit-count 1000))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxbit-count)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxbit-count 1 1)))
+(test-eqv 29 (fxbit-count 536870911))
+
+(if (fixnum? 2305843009213693951)
+    (test-eqv 61 (fxbit-count 2305843009213693951)))
+
+(test-error-tail type-exception? (fxbit-count 0.))
+(test-error-tail type-exception? (fxbit-count .5))
+(test-error-tail type-exception? (fxbit-count 1/2))
+
+(test-error-tail wrong-number-of-arguments-exception? (fxbit-count))
+(test-error-tail wrong-number-of-arguments-exception? (fxbit-count 1 1))

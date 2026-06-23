@@ -13,96 +13,98 @@
 (define (three x y z) (set! res (cons (list x y z) res)))
 
 (set! res '())
-(check-eq? (vector-for-each one vect0) (void))
-(check-equal? res '())
+(test-eq (void) (vector-for-each one vect0))
+(test-equal '() res)
 
 (set! res '())
-(check-eq? (vector-for-each one vect1) (void))
-(check-equal? res '(11))
+(test-eq (void) (vector-for-each one vect1))
+(test-equal '(11) res)
 
 (set! res '())
-(check-eq? (vector-for-each one vect2) (void))
-(check-equal? res '(22 11))
+(test-eq (void) (vector-for-each one vect2))
+(test-equal '(22 11) res)
 
 (set! res '())
-(check-eq? (vector-for-each two vect0 vect0) (void))
-(check-equal? res '())
+(test-eq (void) (vector-for-each two vect0 vect0))
+(test-equal '() res)
 
 (set! res '())
-(check-eq? (vector-for-each two vect1 '#(1)) (void))
-(check-equal? res '((11 1)))
+(test-eq (void) (vector-for-each two vect1 '#(1)))
+(test-equal '((11 1)) res)
 
 (set! res '())
-(check-eq? (vector-for-each two vect2 '#(1 2)) (void))
-(check-equal? res '((22 2) (11 1)))
+(test-eq (void) (vector-for-each two vect2 '#(1 2)))
+(test-equal '((22 2) (11 1)) res)
 
 
 ;; these checks verify that lists of different lengths can be used
 
 (set! res '())
-(check-eq? (vector-for-each two vect2 '#(1)) (void))
-(check-equal? res '((11 1)))
+(test-eq (void) (vector-for-each two vect2 '#(1)))
+(test-equal '((11 1)) res)
 
 (set! res '())
-(check-eq? (vector-for-each two '#(1) vect2) (void))
-(check-equal? res '((1 11)))
+(test-eq (void) (vector-for-each two '#(1) vect2))
+(test-equal '((1 11)) res)
 
 (set! res '())
-(check-eq? (vector-for-each two vect2 '#()) (void))
-(check-equal? res '())
+(test-eq (void) (vector-for-each two vect2 '#()))
+(test-equal '() res)
 
 (set! res '())
-(check-eq? (vector-for-each two '#() vect2) (void))
-(check-equal? res '())
+(test-eq (void) (vector-for-each two '#() vect2))
+(test-equal '() res)
 
 
 (set! res '())
-(check-eq? (vector-for-each three vect0 vect0 '#()) (void))
-(check-equal? res '())
+(test-eq (void) (vector-for-each three vect0 vect0 '#()))
+(test-equal '() res)
 
 (set! res '())
-(check-eq? (vector-for-each three vect1 vect1 '#(1)) (void))
-(check-equal? res '((11 11 1)))
+(test-eq (void) (vector-for-each three vect1 vect1 '#(1)))
+(test-equal '((11 11 1)) res)
 
 (set! res '())
-(check-eq? (vector-for-each three vect2 vect2 '#(1 2)) (void))
-(check-equal? res '((22 22 2) (11 11 1)))
+(test-eq (void) (vector-for-each three vect2 vect2 '#(1 2)))
+(test-equal '((22 22 2) (11 11 1)) res)
 
 
 ;; these checks verify that lists of different lengths can be used
 
 (set! res '())
-(check-eq? (vector-for-each three vect2 vect2 '#(1)) (void))
-(check-equal? res '((11 11 1)))
+(test-eq (void) (vector-for-each three vect2 vect2 '#(1)))
+(test-equal '((11 11 1)) res)
 
 (set! res '())
-(check-eq? (vector-for-each three vect2 '#(1) vect2) (void))
-(check-equal? res '((11 1 11)))
+(test-eq (void) (vector-for-each three vect2 '#(1) vect2))
+(test-equal '((11 1 11)) res)
 
 (set! res '())
-(check-eq? (vector-for-each three '#(1) vect2 vect2) (void))
-(check-equal? res '((1 11 11)))
+(test-eq (void) (vector-for-each three '#(1) vect2 vect2))
+(test-equal '((1 11 11)) res)
 
 (set! res '())
-(check-eq? (vector-for-each three vect2 vect2 '#()) (void))
-(check-equal? res '())
+(test-eq (void) (vector-for-each three vect2 vect2 '#()))
+(test-equal '() res)
 
 (set! res '())
-(check-eq? (vector-for-each three vect2 '#() vect2) (void))
-(check-equal? res '())
+(test-eq (void) (vector-for-each three vect2 '#() vect2))
+(test-equal '() res)
 
 (set! res '())
-(check-eq? (vector-for-each three '#() vect2 vect2) (void))
-(check-equal? res '())
+(test-eq (void) (vector-for-each three '#() vect2 vect2))
+(test-equal '() res)
 
 
-(check-tail-exn type-exception? (lambda () (vector-for-each #f vect0)))
-(check-tail-exn type-exception? (lambda () (vector-for-each one #f)))
-(check-tail-exn type-exception? (lambda () (vector-for-each two '#(1 2) #f)))
-(check-tail-exn type-exception? (lambda () (vector-for-each two #f '#(1 2))))
+(test-error-tail type-exception? (vector-for-each #f vect0))
+(test-error-tail type-exception? (vector-for-each one #f))
+(test-error-tail type-exception? (vector-for-each two '#(1 2) #f))
+(test-error-tail type-exception? (vector-for-each two #f '#(1 2)))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector-for-each)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector-for-each one)))
+(test-error-tail wrong-number-of-arguments-exception? (vector-for-each))
+(test-error-tail wrong-number-of-arguments-exception? (vector-for-each one))
 
 (set! ##allow-length-mismatch? #f)
-(check-tail-exn length-mismatch-exception? (lambda () (vector-for-each one '#(1) '#(1 2) '#(1))))
+(test-error-tail
+ length-mismatch-exception?
+ (vector-for-each one '#(1) '#(1 2) '#(1)))

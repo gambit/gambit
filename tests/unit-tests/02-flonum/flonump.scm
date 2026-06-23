@@ -2,7 +2,7 @@
 
 
 (test-eqv #f (##flonum? 0))
-(test-eqv #t (##flonum? 0.5))
+(test-eqv #t (##flonum? .5))
 (test-eqv #f (##flonum? 1+2i))
 
 (test-eqv #t (##flonum? +inf.0))
@@ -28,7 +28,7 @@
 
 
 (test-eqv #f (flonum? 0))
-(test-eqv #t (flonum? 0.5))
+(test-eqv #t (flonum? .5))
 (test-eqv #f (flonum? 1+2i))
 
 (test-eqv #t (flonum? +inf.0))
@@ -53,4 +53,4 @@
 (test-eqv #f (flonum? (box 1)))
 
 (test-error-tail wrong-number-of-arguments-exception? (flonum?))
-(test-error-tail wrong-number-of-arguments-exception? (flonum? 1.0 2.0))
+(test-error-tail wrong-number-of-arguments-exception? (flonum? 1. 2.))

@@ -22,20 +22,22 @@
 (define lst7 (list 11 22 33))
 (set-cdr! (cddr lst7) (cdr lst7))
 
-(check-false (circular-list? str))
-(check-false (circular-list? int))
-(check-false (circular-list? bool))
+(test-assert (eq? #f (circular-list? str)))
+(test-assert (eq? #f (circular-list? int)))
+(test-assert (eq? #f (circular-list? bool)))
 
-(check-false (circular-list? lst0))
-(check-false (circular-list? lst1))
-(check-false (circular-list? lst2))
+(test-assert (eq? #f (circular-list? lst0)))
+(test-assert (eq? #f (circular-list? lst1)))
+(test-assert (eq? #f (circular-list? lst2)))
 
-(check-false (circular-list? lst3))
+(test-assert (eq? #f (circular-list? lst3)))
 
-(check-true  (circular-list? lst4))
-(check-true  (circular-list? lst5))
-(check-true  (circular-list? lst6))
-(check-true  (circular-list? lst7))
+(test-assert (eq? #t (circular-list? lst4)))
+(test-assert (eq? #t (circular-list? lst5)))
+(test-assert (eq? #t (circular-list? lst6)))
+(test-assert (eq? #t (circular-list? lst7)))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (circular-list?)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (circular-list? bool bool)))
+(test-error-tail wrong-number-of-arguments-exception? (circular-list?))
+(test-error-tail
+ wrong-number-of-arguments-exception?
+ (circular-list? bool bool))

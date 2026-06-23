@@ -22,20 +22,20 @@
 (define lst7 (list 11 22 33))
 (set-cdr! (cddr lst7) (cdr lst7))
 
-(check-false (list? str))
-(check-false (list? int))
-(check-false (list? bool))
+(test-assert (eq? #f (list? str)))
+(test-assert (eq? #f (list? int)))
+(test-assert (eq? #f (list? bool)))
 
-(check-true  (list? lst0))
-(check-true  (list? lst1))
-(check-true  (list? lst2))
+(test-assert (eq? #t (list? lst0)))
+(test-assert (eq? #t (list? lst1)))
+(test-assert (eq? #t (list? lst2)))
 
-(check-false (list? lst3))
+(test-assert (eq? #f (list? lst3)))
 
-(check-false (list? lst4))
-(check-false (list? lst5))
-(check-false (list? lst6))
-(check-false (list? lst7))
+(test-assert (eq? #f (list? lst4)))
+(test-assert (eq? #f (list? lst5)))
+(test-assert (eq? #f (list? lst6)))
+(test-assert (eq? #f (list? lst7)))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (list?)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (list? bool bool)))
+(test-error-tail wrong-number-of-arguments-exception? (list?))
+(test-error-tail wrong-number-of-arguments-exception? (list? bool bool))

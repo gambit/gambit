@@ -2,12 +2,13 @@
 
 ;;; Test special values
 
-(check-eqv? (cosh 0) 1)
-(check-eqv? (cosh 1) (cos +i))
+(test-eqv 1 (cosh 0))
+(test-eqv (cos +i) (cosh 1))
 
-(check-eqv? (cosh +i) .5403023058681398)   ;; Issue #902
+(test-eqv .5403023058681398 (cosh +i))
+;; Issue #902
 
 ;;; Test exceptions
 
-(check-tail-exn type-exception? (lambda () (cosh 'a)))
+(test-error-tail type-exception? (cosh 'a))
 

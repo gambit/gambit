@@ -1,12 +1,12 @@
 (include "#.scm")
 
-(check-false (thread? 0))
-(check-false (thread? #f))
-(check-false (thread? "hello"))
+(test-assert (eq? #f (thread? 0)))
+(test-assert (eq? #f (thread? #f)))
+(test-assert (eq? #f (thread? "hello")))
 
-(check-true  (thread? (current-thread)))
+(test-assert (eq? #t (thread? (current-thread))))
 
 ;; other cases of threads are checked in make-thread.scm
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (thread?)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (thread? #f #f)))
+(test-error-tail wrong-number-of-arguments-exception? (thread?))
+(test-error-tail wrong-number-of-arguments-exception? (thread? #f #f))

@@ -1,14 +1,16 @@
 (include "#.scm")
 
-(check-eqv? (##fxwraparithmetic-shift-left? 0 0) 0)
-(check-eqv? (##fxwraparithmetic-shift-left? 1 1) 2)
-(check-eqv? (##fxwraparithmetic-shift-left? -3 3) -24)
-(check-eqv? (##fxwraparithmetic-shift-left? -5 5) -160)
+(test-eqv 0 (##fxwraparithmetic-shift-left? 0 0))
+(test-eqv 2 (##fxwraparithmetic-shift-left? 1 1))
+(test-eqv -24 (##fxwraparithmetic-shift-left? -3 3))
+(test-eqv -160 (##fxwraparithmetic-shift-left? -5 5))
 
 
-(check-eqv? (##fxwraparithmetic-shift-left? 1 -1) #f)
-(check-eqv? (##fxwraparithmetic-shift-left? 1 (##fixnum-width)) 0)
-(check-eqv? (##fxwraparithmetic-shift-left? 1 (+ (##fixnum-width) 1)) #f)
+(test-eqv #f (##fxwraparithmetic-shift-left? 1 -1))
+(test-eqv 0 (##fxwraparithmetic-shift-left? 1 (##fixnum-width)))
+(test-eqv #f (##fxwraparithmetic-shift-left? 1 (+ (##fixnum-width) 1)))
 
-(check-eqv? (##fxwraparithmetic-shift-left? (##greatest-fixnum) 0) (##greatest-fixnum))
-(check-eqv? (##fxwraparithmetic-shift-left? (##greatest-fixnum) 1) -2)
+(test-eqv
+ (##greatest-fixnum)
+ (##fxwraparithmetic-shift-left? (##greatest-fixnum) 0))
+(test-eqv -2 (##fxwraparithmetic-shift-left? (##greatest-fixnum) 1))

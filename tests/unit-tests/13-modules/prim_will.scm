@@ -1,12 +1,13 @@
 (include "#.scm")
 
-(check-same-behavior ("" "##" "~~lib/gambit/prim/will#.scm")
-
-;; Gambit
-
-(will? (make-will (##cons 1 2) ##list))
-(will-execute! (make-will (##cons 1 2) ##list))
-(will-testator (make-will (##cons 1 2) ##list))
-(will? (make-will (##cons 1 2) ##list)) (will? 123)
-
-)
+(check-same-behavior
+ ("" "##" "~~lib/gambit/prim/will#.scm")
+ 
+ ;; Gambit
+ 
+ (will? (make-will (##cons 1 2) ##list))
+ (will-execute! (make-will (##cons 1 2) ##list))
+ (will-testator (make-will (##cons 1 2) ##list))
+ (will? (make-will (##cons 1 2) ##list))
+ (will? 123)
+ )

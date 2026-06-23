@@ -3,11 +3,11 @@
 (define null '())
 (define pair (cons 11 22))
 
-(check-equal? (null? #f) #f)
-(check-equal? (null? null) #t)
-(check-equal? (null? 123) #f)
-(check-equal? (null? '(1 . 2)) #f)
-(check-equal? (null? pair) #f)
+(test-equal #f (null? #f))
+(test-equal #t (null? null))
+(test-equal #f (null? 123))
+(test-equal #f (null? '(1 . 2)))
+(test-equal #f (null? pair))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (null?)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (null? 0 0)))
+(test-error-tail wrong-number-of-arguments-exception? (null?))
+(test-error-tail wrong-number-of-arguments-exception? (null? 0 0))

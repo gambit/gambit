@@ -2,60 +2,61 @@
 
 ;;; Test branch cuts
 
-(check-eqv? (sqrt -1) +i)
-(check-= (sqrt -1+0.i) +i)
-(check-= (sqrt -1-0.i) -i)
+(test-eqv +i (sqrt -1))
+(test-approximate +i (sqrt -1+0.i) 1e-12)
+(test-approximate -i (sqrt -1-0.i) 1e-12)
 
 ;;; Test some exact values
 
-(check-eqv? (sqrt -1) +i)
-(check-eqv? (sqrt +2i) 1+i)
-(check-eqv? (sqrt -2i) 1-i)
+(test-eqv +i (sqrt -1))
+(test-eqv 1+i (sqrt +2i))
+(test-eqv 1-i (sqrt -2i))
 
 ;;; Test that we avoid double rounding in rational sqrt
 
-(check-eqv? (sqrt 1/7) .37796447300922725)
-(check-eqv? (sqrt 3/7) .6546536707079772)
-(check-eqv? (sqrt 4/7) .7559289460184545)
+(test-eqv .37796447300922725 (sqrt 1/7))
+(test-eqv .6546536707079772 (sqrt 3/7))
+(test-eqv .7559289460184545 (sqrt 4/7))
 
 ;;; std::sqrt(std::complex)
 ;;; https://en.cppreference.com/w/cpp/numeric/complex/sqrt
 
-(check-eqv? (sqrt +0.0+0.0i) +0.0+0.0i)
-(check-eqv? (sqrt -0.0+0.0i) +0.0+0.0i)
+(test-eqv 0.+0.i (sqrt 0.+0.i))
+(test-eqv 0.+0.i (sqrt -0.+0.i))
 
-(check-eqv? (sqrt +nan.0+inf.0i) +inf.0+inf.0i)
-(check-eqv? (sqrt +200.0+inf.0i) +inf.0+inf.0i)
+(test-eqv +inf.0+inf.0i (sqrt +nan.0+inf.0i))
+(test-eqv +inf.0+inf.0i (sqrt 200.+inf.0i))
 
-(check-true (nan? (real-part (sqrt +2.0+nan.0i))))
-(check-true (nan? (imag-part (sqrt +2.0+nan.0i))))
+(test-assert (eq? #t (nan? (real-part (sqrt 2.+nan.0i)))))
+(test-assert (eq? #t (nan? (imag-part (sqrt 2.+nan.0i)))))
 
-(check-eqv? (sqrt -inf.0+2.0i) +0.0+inf.0i)
+(test-eqv 0.+inf.0i (sqrt -inf.0+2.i))
 
-(check-eqv? (sqrt +inf.0+2.0i) +inf.0+0.0i)
+(test-eqv +inf.0+0.i (sqrt +inf.0+2.i))
 
-(check-true (nan? (real-part (sqrt -inf.0+nan.0i))))
-(check-eqv?  (abs (imag-part (sqrt -inf.0+nan.0i))) +inf.0)
+(test-assert (eq? #t (nan? (real-part (sqrt -inf.0+nan.0i)))))
+(test-eqv +inf.0 (abs (imag-part (sqrt -inf.0+nan.0i))))
 
-(check-eqv?       (real-part (sqrt +inf.0+nan.0i)) +inf.0)
-(check-true (nan? (imag-part (sqrt +inf.0+nan.0i))))
+(test-eqv +inf.0 (real-part (sqrt +inf.0+nan.0i)))
+(test-assert (eq? #t (nan? (imag-part (sqrt +inf.0+nan.0i)))))
 
-(check-true (nan? (real-part (sqrt +nan.0+2.0i))))
-(check-true (nan? (imag-part (sqrt +nan.0+2.0i))))
+(test-assert (eq? #t (nan? (real-part (sqrt +nan.0+2.i)))))
+(test-assert (eq? #t (nan? (imag-part (sqrt +nan.0+2.i)))))
 
-(check-true (nan? (real-part (sqrt +nan.0+nan.0i))))
-(check-true (nan? (imag-part (sqrt +nan.0+nan.0i))))
+(test-assert (eq? #t (nan? (real-part (sqrt +nan.0+nan.0i)))))
+(test-assert (eq? #t (nan? (imag-part (sqrt +nan.0+nan.0i)))))
 
-(let ((args '(+0. -0. +0.5 -0.5 +1. -1. +2.0 -2.0 +inf.0 -inf.0)))
-  (for-each (lambda (x)
-              (for-each (lambda (y)
-                          (let ((z (make-rectangular x y)))
-                            (check-eqv? (sqrt (conjugate z))
-                                        (conjugate (sqrt z)))))
-                        args))
-            args))
+(let ((args '(0. -0. .5 -.5 1. -1. 2. -2. +inf.0 -inf.0)))
+  (for-each
+   (lambda (x)
+     (for-each
+      (lambda (y)
+        (let ((z (make-rectangular x y)))
+          (test-eqv (conjugate (sqrt z)) (sqrt (conjugate z)))))
+      args))
+   args))
 
 ;;; Test exceptions
 
-(check-tail-exn type-exception? (lambda () (sqrt #\c)))
+(test-error-tail type-exception? (sqrt #\c))
 

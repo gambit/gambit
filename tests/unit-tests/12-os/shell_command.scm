@@ -1,62 +1,79 @@
 (include "#.scm")
 
-;; Both Unix and Windows shells define "exit" and "echo" commands
+;; Both Unix and Windows shells define " exit " and " echo " commands
 
-(check-equal? (shell-command "exit 0") 0)
-(check-equal? (shell-command "exit 1") 256)
+(test-equal 0 (shell-command "exit 0"))
+(test-equal 256 (shell-command "exit 1"))
 
-(check-equal? (shell-command "exit 0" #f) 0)
-(check-equal? (shell-command "exit 1" #f) 256)
+(test-equal 0 (shell-command "exit 0" #f))
+(test-equal 256 (shell-command "exit 1" #f))
 
-(check-equal? (shell-command "exit 0" #t) '(0 . ""))
-(check-equal? (shell-command "exit 1" #t) '(256 . ""))
+(test-equal '(0 . "") (shell-command "exit 0" #t))
+(test-equal '(256 . "") (shell-command "exit 1" #t))
 
 ;; make sure setenv has an effect on shell-command
 
-(check-equal? (getenv "UNKNOWNVAR" #f) #f)
+(test-equal #f (getenv "UNKNOWNVAR" #f))
 
-(check-true
- (let ((out (shell-command "echo %UNKNOWNVAR%$UNKNOWNVAR" #t)))
-   (or (equal? out '(0 . "%UNKNOWNVAR%\n")) ;; Unix
-       (equal? out '(0 . "%UNKNOWNVAR%$UNKNOWNVAR\r\n")) ;; Windows
-       )))
+(test-assert
+ (eq? #t
+      (let ((out (shell-command "echo %UNKNOWNVAR%$UNKNOWNVAR" #t)))
+        (or (equal? out '(0 . "%UNKNOWNVAR%\n"))
+            ;; Unix
+            (equal? out '(0 . "%UNKNOWNVAR%$UNKNOWNVAR\r\n"))
+            ;; Windows
+            ))))
 
 (setenv "UNKNOWNVAR" "foobar")
 
-(check-equal? (getenv "UNKNOWNVAR" #f) "foobar")
+(test-equal "foobar" (getenv "UNKNOWNVAR" #f))
 
-(check-true
- (let ((out (shell-command "echo %UNKNOWNVAR%$UNKNOWNVAR" #t)))
-   (or (equal? out '(0 . "%UNKNOWNVAR%foobar\n")) ;; Unix
-       (equal? out '(0 . "foobar$UNKNOWNVAR\r\n")) ;; Windows
-       )))
+(test-assert
+ (eq? #t
+      (let ((out (shell-command "echo %UNKNOWNVAR%$UNKNOWNVAR" #t)))
+        (or (equal? out '(0 . "%UNKNOWNVAR%foobar\n"))
+            ;; Unix
+            (equal? out '(0 . "foobar$UNKNOWNVAR\r\n"))
+            ;; Windows
+            ))))
 
-(check-true
- (equal? (assoc "UNKNOWNVAR" (get-environment-variables))
-         '("UNKNOWNVAR" . "foobar")))
+(test-assert
+ (eq? #t
+      (equal? (assoc "UNKNOWNVAR" (get-environment-variables))
+              '("UNKNOWNVAR" . "foobar"))))
 
 ;;; Test exceptions
 
-(check-tail-exn type-exception? (lambda () (shell-command #f)))
-(check-tail-exn type-exception? (lambda () (shell-command #f #f)))
+(test-error-tail type-exception? (shell-command #f))
+(test-error-tail type-exception? (shell-command #f #f))
 
-(check-tail-exn type-exception? (lambda () (getenv #f)))
+(test-error-tail type-exception? (getenv #f))
 
-(check-tail-exn type-exception? (lambda () (setenv #f "foo")))
-(check-tail-exn type-exception? (lambda () (setenv "foo" #f)))
+(test-error-tail type-exception? (setenv #f "foo"))
+(test-error-tail type-exception? (setenv "foo" #f))
 
-(check-tail-exn type-exception? (lambda () (get-environment-variable #f)))
+(test-error-tail type-exception? (get-environment-variable #f))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (shell-command)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (shell-command "exit 0" #f #f)))
+(test-error-tail wrong-number-of-arguments-exception? (shell-command))
+(test-error-tail
+ wrong-number-of-arguments-exception?
+ (shell-command "exit 0" #f #f))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (getenv)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (getenv "HOME" #f #f)))
+(test-error-tail wrong-number-of-arguments-exception? (getenv))
+(test-error-tail wrong-number-of-arguments-exception? (getenv "HOME" #f #f))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (setenv)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (setenv "HOME" "foo" "bar")))
+(test-error-tail wrong-number-of-arguments-exception? (setenv))
+(test-error-tail
+ wrong-number-of-arguments-exception?
+ (setenv "HOME" "foo" "bar"))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (get-environment-variable)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (get-environment-variable "HOME" #f)))
+(test-error-tail
+ wrong-number-of-arguments-exception?
+ (get-environment-variable))
+(test-error-tail
+ wrong-number-of-arguments-exception?
+ (get-environment-variable "HOME" #f))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (get-environment-variables #f)))
+(test-error-tail
+ wrong-number-of-arguments-exception?
+ (get-environment-variables #f))

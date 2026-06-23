@@ -1,19 +1,19 @@
 (include "#.scm")
 
-(check-eqv? (##fxremainder 3 1) 0)
-(check-eqv? (##fxremainder 3 2) 1)
-(check-eqv? (##fxremainder 3 3) 0)
+(test-eqv 0 (##fxremainder 3 1))
+(test-eqv 1 (##fxremainder 3 2))
+(test-eqv 0 (##fxremainder 3 3))
 
-(check-eqv? (fxremainder 3 1) 0)
-(check-eqv? (fxremainder 3 2) 1)
-(check-eqv? (fxremainder 3 3) 0)
+(test-eqv 0 (fxremainder 3 1))
+(test-eqv 1 (fxremainder 3 2))
+(test-eqv 0 (fxremainder 3 3))
 
-(check-tail-exn divide-by-zero-exception? (lambda () (fxremainder 1 0)))
+(test-error-tail divide-by-zero-exception? (fxremainder 1 0))
 
-(check-tail-exn type-exception? (lambda () (fxremainder 1 0.0)))
-(check-tail-exn type-exception? (lambda () (fxremainder 0.5 1)))
-(check-tail-exn type-exception? (lambda () (fxremainder 1 0.5)))
-(check-tail-exn type-exception? (lambda () (fxremainder 1 1/2)))
+(test-error-tail type-exception? (fxremainder 1 0.))
+(test-error-tail type-exception? (fxremainder .5 1))
+(test-error-tail type-exception? (fxremainder 1 .5))
+(test-error-tail type-exception? (fxremainder 1 1/2))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxremainder)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxremainder 1 1 1)))
+(test-error-tail wrong-number-of-arguments-exception? (fxremainder))
+(test-error-tail wrong-number-of-arguments-exception? (fxremainder 1 1 1))

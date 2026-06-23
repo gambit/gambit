@@ -1,4 +1,4 @@
 (include "#.scm")
 
-(check-true #t)
-(check-true (even? 0))
+(test-assert (eq? #t #t))
+(test-assert (eq? #t (even? 0)))

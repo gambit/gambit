@@ -2,5 +2,5 @@
 
 ;;; Test exceptions
 
-(check-tail-exn type-exception? (lambda () (real-part 'a)))
+(test-error-tail type-exception? (real-part 'a))
 

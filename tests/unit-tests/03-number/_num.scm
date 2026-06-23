@@ -2,247 +2,254 @@
 
 ;;; These tests come from coverage statistics for part of _num.scm
 
-(check-tail-exn type-exception? (lambda () (finite? 'a)))
-(check-eqv? (finite? 0) #t)
-(check-eqv? (finite? 1) #t)
-(check-eqv? (finite? 99999999999999999999999999999999) #t)
-(check-eqv? (finite? 1/2) #t)
-(check-eqv? (finite? 0.) #t)
-(check-eqv? (finite? 1.5) #t)
-(check-eqv? (finite? +inf.0) #f)
-(check-eqv? (finite? +nan.0) #f)
-(check-eqv? (finite? 0) #t)
-(check-eqv? (finite? +i) #t)
-(check-eqv? (finite? +99999999999999999999999999999999i) #t)
-(check-eqv? (finite? +1/2i) #t)
-(check-eqv? (finite? +0.i) #t)
-(check-eqv? (finite? +1.5i) #t)
-(check-eqv? (finite? +inf.0i) #f)
-(check-eqv? (finite? +nan.0i) #f)
-(check-eqv? (finite? 1) #t)
-(check-eqv? (finite? 1+i) #t)
-(check-eqv? (finite? 1+99999999999999999999999999999999i) #t)
-(check-eqv? (finite? 1+1/2i) #t)
-(check-eqv? (finite? 1+0.i) #t)
-(check-eqv? (finite? 1+1.5i) #t)
-(check-eqv? (finite? 1+inf.0i) #f)
-(check-eqv? (finite? 1+nan.0i) #f)
-(check-eqv? (finite? 99999999999999999999999999999999) #t)
-(check-eqv? (finite? 99999999999999999999999999999999+i) #t)
-(check-eqv? (finite? 99999999999999999999999999999999+99999999999999999999999999999999i) #t)
-(check-eqv? (finite? 99999999999999999999999999999999+1/2i) #t)
-(check-eqv? (finite? 99999999999999999999999999999999+0.i) #t)
-(check-eqv? (finite? 99999999999999999999999999999999+1.5i) #t)
-(check-eqv? (finite? 99999999999999999999999999999999+inf.0i) #f)
-(check-eqv? (finite? 99999999999999999999999999999999+nan.0i) #f)
-(check-eqv? (finite? 1/2) #t)
-(check-eqv? (finite? 1/2+i) #t)
-(check-eqv? (finite? 1/2+99999999999999999999999999999999i) #t)
-(check-eqv? (finite? 1/2+1/2i) #t)
-(check-eqv? (finite? 1/2+0.i) #t)
-(check-eqv? (finite? 1/2+1.5i) #t)
-(check-eqv? (finite? 1/2+inf.0i) #f)
-(check-eqv? (finite? 1/2+nan.0i) #f)
-(check-eqv? (finite? 0.) #t)
-(check-eqv? (finite? 0.+i) #t)
-(check-eqv? (finite? 0.+99999999999999999999999999999999i) #t)
-(check-eqv? (finite? 0.+1/2i) #t)
-(check-eqv? (finite? 0.+0.i) #t)
-(check-eqv? (finite? 0.+1.5i) #t)
-(check-eqv? (finite? 0.+inf.0i) #f)
-(check-eqv? (finite? 0.+nan.0i) #f)
-(check-eqv? (finite? 1.5) #t)
-(check-eqv? (finite? 1.5+i) #t)
-(check-eqv? (finite? 1.5+99999999999999999999999999999999i) #t)
-(check-eqv? (finite? 1.5+1/2i) #t)
-(check-eqv? (finite? 1.5+0.i) #t)
-(check-eqv? (finite? 1.5+1.5i) #t)
-(check-eqv? (finite? 1.5+inf.0i) #f)
-(check-eqv? (finite? 1.5+nan.0i) #f)
-(check-eqv? (finite? +inf.0) #f)
-(check-eqv? (finite? +inf.0+i) #f)
-(check-eqv? (finite? +inf.0+99999999999999999999999999999999i) #f)
-(check-eqv? (finite? +inf.0+1/2i) #f)
-(check-eqv? (finite? +inf.0+0.i) #f)
-(check-eqv? (finite? +inf.0+1.5i) #f)
-(check-eqv? (finite? +inf.0+inf.0i) #f)
-(check-eqv? (finite? +inf.0+nan.0i) #f)
-(check-eqv? (finite? +nan.0) #f)
-(check-eqv? (finite? +nan.0+i) #f)
-(check-eqv? (finite? +nan.0+99999999999999999999999999999999i) #f)
-(check-eqv? (finite? +nan.0+1/2i) #f)
-(check-eqv? (finite? +nan.0+0.i) #f)
-(check-eqv? (finite? +nan.0+1.5i) #f)
-(check-eqv? (finite? +nan.0+inf.0i) #f)
-(check-eqv? (finite? +nan.0+nan.0i) #f)
+(test-error-tail type-exception? (finite? 'a))
+(test-eqv #t (finite? 0))
+(test-eqv #t (finite? 1))
+(test-eqv #t (finite? 99999999999999999999999999999999))
+(test-eqv #t (finite? 1/2))
+(test-eqv #t (finite? 0.))
+(test-eqv #t (finite? 1.5))
+(test-eqv #f (finite? +inf.0))
+(test-eqv #f (finite? +nan.0))
+(test-eqv #t (finite? 0))
+(test-eqv #t (finite? +i))
+(test-eqv #t (finite? +99999999999999999999999999999999i))
+(test-eqv #t (finite? +1/2i))
+(test-eqv #t (finite? +0.i))
+(test-eqv #t (finite? +1.5i))
+(test-eqv #f (finite? +inf.0i))
+(test-eqv #f (finite? +nan.0i))
+(test-eqv #t (finite? 1))
+(test-eqv #t (finite? 1+i))
+(test-eqv #t (finite? 1+99999999999999999999999999999999i))
+(test-eqv #t (finite? 1+1/2i))
+(test-eqv #t (finite? 1+0.i))
+(test-eqv #t (finite? 1+1.5i))
+(test-eqv #f (finite? 1+inf.0i))
+(test-eqv #f (finite? 1+nan.0i))
+(test-eqv #t (finite? 99999999999999999999999999999999))
+(test-eqv #t (finite? 99999999999999999999999999999999+i))
+(test-eqv
+ #t
+ (finite? 99999999999999999999999999999999+99999999999999999999999999999999i))
+(test-eqv #t (finite? 99999999999999999999999999999999+1/2i))
+(test-eqv #t (finite? 99999999999999999999999999999999+0.i))
+(test-eqv #t (finite? 99999999999999999999999999999999+1.5i))
+(test-eqv #f (finite? 99999999999999999999999999999999+inf.0i))
+(test-eqv #f (finite? 99999999999999999999999999999999+nan.0i))
+(test-eqv #t (finite? 1/2))
+(test-eqv #t (finite? 1/2+i))
+(test-eqv #t (finite? 1/2+99999999999999999999999999999999i))
+(test-eqv #t (finite? 1/2+1/2i))
+(test-eqv #t (finite? 1/2+0.i))
+(test-eqv #t (finite? 1/2+1.5i))
+(test-eqv #f (finite? 1/2+inf.0i))
+(test-eqv #f (finite? 1/2+nan.0i))
+(test-eqv #t (finite? 0.))
+(test-eqv #t (finite? 0.+i))
+(test-eqv #t (finite? 0.+99999999999999999999999999999999i))
+(test-eqv #t (finite? 0.+1/2i))
+(test-eqv #t (finite? 0.+0.i))
+(test-eqv #t (finite? 0.+1.5i))
+(test-eqv #f (finite? 0.+inf.0i))
+(test-eqv #f (finite? 0.+nan.0i))
+(test-eqv #t (finite? 1.5))
+(test-eqv #t (finite? 1.5+i))
+(test-eqv #t (finite? 1.5+99999999999999999999999999999999i))
+(test-eqv #t (finite? 1.5+1/2i))
+(test-eqv #t (finite? 1.5+0.i))
+(test-eqv #t (finite? 1.5+1.5i))
+(test-eqv #f (finite? 1.5+inf.0i))
+(test-eqv #f (finite? 1.5+nan.0i))
+(test-eqv #f (finite? +inf.0))
+(test-eqv #f (finite? +inf.0+i))
+(test-eqv #f (finite? +inf.0+99999999999999999999999999999999i))
+(test-eqv #f (finite? +inf.0+1/2i))
+(test-eqv #f (finite? +inf.0+0.i))
+(test-eqv #f (finite? +inf.0+1.5i))
+(test-eqv #f (finite? +inf.0+inf.0i))
+(test-eqv #f (finite? +inf.0+nan.0i))
+(test-eqv #f (finite? +nan.0))
+(test-eqv #f (finite? +nan.0+i))
+(test-eqv #f (finite? +nan.0+99999999999999999999999999999999i))
+(test-eqv #f (finite? +nan.0+1/2i))
+(test-eqv #f (finite? +nan.0+0.i))
+(test-eqv #f (finite? +nan.0+1.5i))
+(test-eqv #f (finite? +nan.0+inf.0i))
+(test-eqv #f (finite? +nan.0+nan.0i))
 
-(check-tail-exn type-exception? (lambda () (infinite? 'a)))
-(check-eqv? (infinite? 0) #f)
-(check-eqv? (infinite? 1) #f)
-(check-eqv? (infinite? 99999999999999999999999999999999) #f)
-(check-eqv? (infinite? 1/2) #f)
-(check-eqv? (infinite? 0.) #f)
-(check-eqv? (infinite? 1.5) #f)
-(check-eqv? (infinite? +inf.0) #t)
-(check-eqv? (infinite? +nan.0) #f)
-(check-eqv? (infinite? 0) #f)
-(check-eqv? (infinite? +i) #f)
-(check-eqv? (infinite? +99999999999999999999999999999999i) #f)
-(check-eqv? (infinite? +1/2i) #f)
-(check-eqv? (infinite? +0.i) #f)
-(check-eqv? (infinite? +1.5i) #f)
-(check-eqv? (infinite? +inf.0i) #t)
-(check-eqv? (infinite? +nan.0i) #f)
-(check-eqv? (infinite? 1) #f)
-(check-eqv? (infinite? 1+i) #f)
-(check-eqv? (infinite? 1+99999999999999999999999999999999i) #f)
-(check-eqv? (infinite? 1+1/2i) #f)
-(check-eqv? (infinite? 1+0.i) #f)
-(check-eqv? (infinite? 1+1.5i) #f)
-(check-eqv? (infinite? 1+inf.0i) #t)
-(check-eqv? (infinite? 1+nan.0i) #f)
-(check-eqv? (infinite? 99999999999999999999999999999999) #f)
-(check-eqv? (infinite? 99999999999999999999999999999999+i) #f)
-(check-eqv? (infinite? 99999999999999999999999999999999+99999999999999999999999999999999i) #f)
-(check-eqv? (infinite? 99999999999999999999999999999999+1/2i) #f)
-(check-eqv? (infinite? 99999999999999999999999999999999+0.i) #f)
-(check-eqv? (infinite? 99999999999999999999999999999999+1.5i) #f)
-(check-eqv? (infinite? 99999999999999999999999999999999+inf.0i) #t)
-(check-eqv? (infinite? 99999999999999999999999999999999+nan.0i) #f)
-(check-eqv? (infinite? 1/2) #f)
-(check-eqv? (infinite? 1/2+i) #f)
-(check-eqv? (infinite? 1/2+99999999999999999999999999999999i) #f)
-(check-eqv? (infinite? 1/2+1/2i) #f)
-(check-eqv? (infinite? 1/2+0.i) #f)
-(check-eqv? (infinite? 1/2+1.5i) #f)
-(check-eqv? (infinite? 1/2+inf.0i) #t)
-(check-eqv? (infinite? 1/2+nan.0i) #f)
-(check-eqv? (infinite? 0.) #f)
-(check-eqv? (infinite? 0.+i) #f)
-(check-eqv? (infinite? 0.+99999999999999999999999999999999i) #f)
-(check-eqv? (infinite? 0.+1/2i) #f)
-(check-eqv? (infinite? 0.+0.i) #f)
-(check-eqv? (infinite? 0.+1.5i) #f)
-(check-eqv? (infinite? 0.+inf.0i) #t)
-(check-eqv? (infinite? 0.+nan.0i) #f)
-(check-eqv? (infinite? 1.5) #f)
-(check-eqv? (infinite? 1.5+i) #f)
-(check-eqv? (infinite? 1.5+99999999999999999999999999999999i) #f)
-(check-eqv? (infinite? 1.5+1/2i) #f)
-(check-eqv? (infinite? 1.5+0.i) #f)
-(check-eqv? (infinite? 1.5+1.5i) #f)
-(check-eqv? (infinite? 1.5+inf.0i) #t)
-(check-eqv? (infinite? 1.5+nan.0i) #f)
-(check-eqv? (infinite? +inf.0) #t)
-(check-eqv? (infinite? +inf.0+i) #t)
-(check-eqv? (infinite? +inf.0+99999999999999999999999999999999i) #t)
-(check-eqv? (infinite? +inf.0+1/2i) #t)
-(check-eqv? (infinite? +inf.0+0.i) #t)
-(check-eqv? (infinite? +inf.0+1.5i) #t)
-(check-eqv? (infinite? +inf.0+inf.0i) #t)
-(check-eqv? (infinite? +inf.0+nan.0i) #f)
-(check-eqv? (infinite? +nan.0) #f)
-(check-eqv? (infinite? +nan.0+i) #f)
-(check-eqv? (infinite? +nan.0+99999999999999999999999999999999i) #f)
-(check-eqv? (infinite? +nan.0+1/2i) #f)
-(check-eqv? (infinite? +nan.0+0.i) #f)
-(check-eqv? (infinite? +nan.0+1.5i) #f)
-(check-eqv? (infinite? +nan.0+inf.0i) #f)
-(check-eqv? (infinite? +nan.0+nan.0i) #f)
+(test-error-tail type-exception? (infinite? 'a))
+(test-eqv #f (infinite? 0))
+(test-eqv #f (infinite? 1))
+(test-eqv #f (infinite? 99999999999999999999999999999999))
+(test-eqv #f (infinite? 1/2))
+(test-eqv #f (infinite? 0.))
+(test-eqv #f (infinite? 1.5))
+(test-eqv #t (infinite? +inf.0))
+(test-eqv #f (infinite? +nan.0))
+(test-eqv #f (infinite? 0))
+(test-eqv #f (infinite? +i))
+(test-eqv #f (infinite? +99999999999999999999999999999999i))
+(test-eqv #f (infinite? +1/2i))
+(test-eqv #f (infinite? +0.i))
+(test-eqv #f (infinite? +1.5i))
+(test-eqv #t (infinite? +inf.0i))
+(test-eqv #f (infinite? +nan.0i))
+(test-eqv #f (infinite? 1))
+(test-eqv #f (infinite? 1+i))
+(test-eqv #f (infinite? 1+99999999999999999999999999999999i))
+(test-eqv #f (infinite? 1+1/2i))
+(test-eqv #f (infinite? 1+0.i))
+(test-eqv #f (infinite? 1+1.5i))
+(test-eqv #t (infinite? 1+inf.0i))
+(test-eqv #f (infinite? 1+nan.0i))
+(test-eqv #f (infinite? 99999999999999999999999999999999))
+(test-eqv #f (infinite? 99999999999999999999999999999999+i))
+(test-eqv
+ #f
+ (infinite?
+  99999999999999999999999999999999+99999999999999999999999999999999i))
+(test-eqv #f (infinite? 99999999999999999999999999999999+1/2i))
+(test-eqv #f (infinite? 99999999999999999999999999999999+0.i))
+(test-eqv #f (infinite? 99999999999999999999999999999999+1.5i))
+(test-eqv #t (infinite? 99999999999999999999999999999999+inf.0i))
+(test-eqv #f (infinite? 99999999999999999999999999999999+nan.0i))
+(test-eqv #f (infinite? 1/2))
+(test-eqv #f (infinite? 1/2+i))
+(test-eqv #f (infinite? 1/2+99999999999999999999999999999999i))
+(test-eqv #f (infinite? 1/2+1/2i))
+(test-eqv #f (infinite? 1/2+0.i))
+(test-eqv #f (infinite? 1/2+1.5i))
+(test-eqv #t (infinite? 1/2+inf.0i))
+(test-eqv #f (infinite? 1/2+nan.0i))
+(test-eqv #f (infinite? 0.))
+(test-eqv #f (infinite? 0.+i))
+(test-eqv #f (infinite? 0.+99999999999999999999999999999999i))
+(test-eqv #f (infinite? 0.+1/2i))
+(test-eqv #f (infinite? 0.+0.i))
+(test-eqv #f (infinite? 0.+1.5i))
+(test-eqv #t (infinite? 0.+inf.0i))
+(test-eqv #f (infinite? 0.+nan.0i))
+(test-eqv #f (infinite? 1.5))
+(test-eqv #f (infinite? 1.5+i))
+(test-eqv #f (infinite? 1.5+99999999999999999999999999999999i))
+(test-eqv #f (infinite? 1.5+1/2i))
+(test-eqv #f (infinite? 1.5+0.i))
+(test-eqv #f (infinite? 1.5+1.5i))
+(test-eqv #t (infinite? 1.5+inf.0i))
+(test-eqv #f (infinite? 1.5+nan.0i))
+(test-eqv #t (infinite? +inf.0))
+(test-eqv #t (infinite? +inf.0+i))
+(test-eqv #t (infinite? +inf.0+99999999999999999999999999999999i))
+(test-eqv #t (infinite? +inf.0+1/2i))
+(test-eqv #t (infinite? +inf.0+0.i))
+(test-eqv #t (infinite? +inf.0+1.5i))
+(test-eqv #t (infinite? +inf.0+inf.0i))
+(test-eqv #f (infinite? +inf.0+nan.0i))
+(test-eqv #f (infinite? +nan.0))
+(test-eqv #f (infinite? +nan.0+i))
+(test-eqv #f (infinite? +nan.0+99999999999999999999999999999999i))
+(test-eqv #f (infinite? +nan.0+1/2i))
+(test-eqv #f (infinite? +nan.0+0.i))
+(test-eqv #f (infinite? +nan.0+1.5i))
+(test-eqv #f (infinite? +nan.0+inf.0i))
+(test-eqv #f (infinite? +nan.0+nan.0i))
 
-(check-tail-exn type-exception? (lambda () (nan? 'a)))
-(check-eqv? (nan? 0) #f)
-(check-eqv? (nan? 1) #f)
-(check-eqv? (nan? 99999999999999999999999999999999) #f)
-(check-eqv? (nan? 1/2) #f)
-(check-eqv? (nan? 0.) #f)
-(check-eqv? (nan? 1.5) #f)
-(check-eqv? (nan? +inf.0) #f)
-(check-eqv? (nan? +nan.0) #t)
-(check-eqv? (nan? 0) #f)
-(check-eqv? (nan? +i) #f)
-(check-eqv? (nan? +99999999999999999999999999999999i) #f)
-(check-eqv? (nan? +1/2i) #f)
-(check-eqv? (nan? +0.i) #f)
-(check-eqv? (nan? +1.5i) #f)
-(check-eqv? (nan? +inf.0i) #f)
-(check-eqv? (nan? +nan.0i) #t)
-(check-eqv? (nan? 1) #f)
-(check-eqv? (nan? 1+i) #f)
-(check-eqv? (nan? 1+99999999999999999999999999999999i) #f)
-(check-eqv? (nan? 1+1/2i) #f)
-(check-eqv? (nan? 1+0.i) #f)
-(check-eqv? (nan? 1+1.5i) #f)
-(check-eqv? (nan? 1+inf.0i) #f)
-(check-eqv? (nan? 1+nan.0i) #t)
-(check-eqv? (nan? 99999999999999999999999999999999) #f)
-(check-eqv? (nan? 99999999999999999999999999999999+i) #f)
-(check-eqv? (nan? 99999999999999999999999999999999+99999999999999999999999999999999i) #f)
-(check-eqv? (nan? 99999999999999999999999999999999+1/2i) #f)
-(check-eqv? (nan? 99999999999999999999999999999999+0.i) #f)
-(check-eqv? (nan? 99999999999999999999999999999999+1.5i) #f)
-(check-eqv? (nan? 99999999999999999999999999999999+inf.0i) #f)
-(check-eqv? (nan? 99999999999999999999999999999999+nan.0i) #t)
-(check-eqv? (nan? 1/2) #f)
-(check-eqv? (nan? 1/2+i) #f)
-(check-eqv? (nan? 1/2+99999999999999999999999999999999i) #f)
-(check-eqv? (nan? 1/2+1/2i) #f)
-(check-eqv? (nan? 1/2+0.i) #f)
-(check-eqv? (nan? 1/2+1.5i) #f)
-(check-eqv? (nan? 1/2+inf.0i) #f)
-(check-eqv? (nan? 1/2+nan.0i) #t)
-(check-eqv? (nan? 0.) #f)
-(check-eqv? (nan? 0.+i) #f)
-(check-eqv? (nan? 0.+99999999999999999999999999999999i) #f)
-(check-eqv? (nan? 0.+1/2i) #f)
-(check-eqv? (nan? 0.+0.i) #f)
-(check-eqv? (nan? 0.+1.5i) #f)
-(check-eqv? (nan? 0.+inf.0i) #f)
-(check-eqv? (nan? 0.+nan.0i) #t)
-(check-eqv? (nan? 1.5) #f)
-(check-eqv? (nan? 1.5+i) #f)
-(check-eqv? (nan? 1.5+99999999999999999999999999999999i) #f)
-(check-eqv? (nan? 1.5+1/2i) #f)
-(check-eqv? (nan? 1.5+0.i) #f)
-(check-eqv? (nan? 1.5+1.5i) #f)
-(check-eqv? (nan? 1.5+inf.0i) #f)
-(check-eqv? (nan? 1.5+nan.0i) #t)
-(check-eqv? (nan? +inf.0) #f)
-(check-eqv? (nan? +inf.0+i) #f)
-(check-eqv? (nan? +inf.0+99999999999999999999999999999999i) #f)
-(check-eqv? (nan? +inf.0+1/2i) #f)
-(check-eqv? (nan? +inf.0+0.i) #f)
-(check-eqv? (nan? +inf.0+1.5i) #f)
-(check-eqv? (nan? +inf.0+inf.0i) #f)
-(check-eqv? (nan? +inf.0+nan.0i) #t)
-(check-eqv? (nan? +nan.0) #t)
-(check-eqv? (nan? +nan.0+i) #t)
-(check-eqv? (nan? +nan.0+99999999999999999999999999999999i) #t)
-(check-eqv? (nan? +nan.0+1/2i) #t)
-(check-eqv? (nan? +nan.0+0.i) #t)
-(check-eqv? (nan? +nan.0+1.5i) #t)
-(check-eqv? (nan? +nan.0+inf.0i) #t)
-(check-eqv? (nan? +nan.0+nan.0i) #t)
+(test-error-tail type-exception? (nan? 'a))
+(test-eqv #f (nan? 0))
+(test-eqv #f (nan? 1))
+(test-eqv #f (nan? 99999999999999999999999999999999))
+(test-eqv #f (nan? 1/2))
+(test-eqv #f (nan? 0.))
+(test-eqv #f (nan? 1.5))
+(test-eqv #f (nan? +inf.0))
+(test-eqv #t (nan? +nan.0))
+(test-eqv #f (nan? 0))
+(test-eqv #f (nan? +i))
+(test-eqv #f (nan? +99999999999999999999999999999999i))
+(test-eqv #f (nan? +1/2i))
+(test-eqv #f (nan? +0.i))
+(test-eqv #f (nan? +1.5i))
+(test-eqv #f (nan? +inf.0i))
+(test-eqv #t (nan? +nan.0i))
+(test-eqv #f (nan? 1))
+(test-eqv #f (nan? 1+i))
+(test-eqv #f (nan? 1+99999999999999999999999999999999i))
+(test-eqv #f (nan? 1+1/2i))
+(test-eqv #f (nan? 1+0.i))
+(test-eqv #f (nan? 1+1.5i))
+(test-eqv #f (nan? 1+inf.0i))
+(test-eqv #t (nan? 1+nan.0i))
+(test-eqv #f (nan? 99999999999999999999999999999999))
+(test-eqv #f (nan? 99999999999999999999999999999999+i))
+(test-eqv
+ #f
+ (nan? 99999999999999999999999999999999+99999999999999999999999999999999i))
+(test-eqv #f (nan? 99999999999999999999999999999999+1/2i))
+(test-eqv #f (nan? 99999999999999999999999999999999+0.i))
+(test-eqv #f (nan? 99999999999999999999999999999999+1.5i))
+(test-eqv #f (nan? 99999999999999999999999999999999+inf.0i))
+(test-eqv #t (nan? 99999999999999999999999999999999+nan.0i))
+(test-eqv #f (nan? 1/2))
+(test-eqv #f (nan? 1/2+i))
+(test-eqv #f (nan? 1/2+99999999999999999999999999999999i))
+(test-eqv #f (nan? 1/2+1/2i))
+(test-eqv #f (nan? 1/2+0.i))
+(test-eqv #f (nan? 1/2+1.5i))
+(test-eqv #f (nan? 1/2+inf.0i))
+(test-eqv #t (nan? 1/2+nan.0i))
+(test-eqv #f (nan? 0.))
+(test-eqv #f (nan? 0.+i))
+(test-eqv #f (nan? 0.+99999999999999999999999999999999i))
+(test-eqv #f (nan? 0.+1/2i))
+(test-eqv #f (nan? 0.+0.i))
+(test-eqv #f (nan? 0.+1.5i))
+(test-eqv #f (nan? 0.+inf.0i))
+(test-eqv #t (nan? 0.+nan.0i))
+(test-eqv #f (nan? 1.5))
+(test-eqv #f (nan? 1.5+i))
+(test-eqv #f (nan? 1.5+99999999999999999999999999999999i))
+(test-eqv #f (nan? 1.5+1/2i))
+(test-eqv #f (nan? 1.5+0.i))
+(test-eqv #f (nan? 1.5+1.5i))
+(test-eqv #f (nan? 1.5+inf.0i))
+(test-eqv #t (nan? 1.5+nan.0i))
+(test-eqv #f (nan? +inf.0))
+(test-eqv #f (nan? +inf.0+i))
+(test-eqv #f (nan? +inf.0+99999999999999999999999999999999i))
+(test-eqv #f (nan? +inf.0+1/2i))
+(test-eqv #f (nan? +inf.0+0.i))
+(test-eqv #f (nan? +inf.0+1.5i))
+(test-eqv #f (nan? +inf.0+inf.0i))
+(test-eqv #t (nan? +inf.0+nan.0i))
+(test-eqv #t (nan? +nan.0))
+(test-eqv #t (nan? +nan.0+i))
+(test-eqv #t (nan? +nan.0+99999999999999999999999999999999i))
+(test-eqv #t (nan? +nan.0+1/2i))
+(test-eqv #t (nan? +nan.0+0.i))
+(test-eqv #t (nan? +nan.0+1.5i))
+(test-eqv #t (nan? +nan.0+inf.0i))
+(test-eqv #t (nan? +nan.0+nan.0i))
 
-(check-eqv? (number? 'a) #f)
-(check-eqv? (number? +1+0.i) #t)
-(check-eqv? (number? 1) #t)
-(check-eqv? (number? 11111111111111111111111111111111) #t)
-(check-eqv? (number? 2/3) #t)
-(check-eqv? (number? 1.0) #t)
-(check-eqv? (number? +nan.0) #t)
-(check-eqv? (number? +inf.0) #t)
-(check-eqv? (number? -inf.0) #t)
+(test-eqv #f (number? 'a))
+(test-eqv #t (number? 1+0.i))
+(test-eqv #t (number? 1))
+(test-eqv #t (number? 11111111111111111111111111111111))
+(test-eqv #t (number? 2/3))
+(test-eqv #t (number? 1.))
+(test-eqv #t (number? +nan.0))
+(test-eqv #t (number? +inf.0))
+(test-eqv #t (number? -inf.0))
 
-(check-eqv? (real? 'a) #f)
-(check-eqv? (real? +1+0.i) #f)
-(check-eqv? (real? 1) #t)
-(check-eqv? (real? 11111111111111111111111111111111) #t)
-(check-eqv? (real? 2/3) #t)
-(check-eqv? (real? 1.0) #t)
-(check-eqv? (real? +nan.0) #t)
-(check-eqv? (real? +inf.0) #t)
-(check-eqv? (real? -inf.0) #t)
+(test-eqv #f (real? 'a))
+(test-eqv #f (real? 1+0.i))
+(test-eqv #t (real? 1))
+(test-eqv #t (real? 11111111111111111111111111111111))
+(test-eqv #t (real? 2/3))
+(test-eqv #t (real? 1.))
+(test-eqv #t (real? +nan.0))
+(test-eqv #t (real? +inf.0))
+(test-eqv #t (real? -inf.0))
 
 #|
 
@@ -257,125 +264,125 @@
 (check-eqv? (? -inf.0) #t)
 |#
 
-(check-eqv? (rational? 'a) #f)
-(check-eqv? (rational? +1+0.i) #f)
-(check-eqv? (rational? 1) #t)
-(check-eqv? (rational? 11111111111111111111111111111111) #t)
-(check-eqv? (rational? 2/3) #t)
-(check-eqv? (rational? 1.0) #t)
-(check-eqv? (rational? +nan.0) #f)
-(check-eqv? (rational? +inf.0) #f)
-(check-eqv? (rational? -inf.0) #f)
+(test-eqv #f (rational? 'a))
+(test-eqv #f (rational? 1+0.i))
+(test-eqv #t (rational? 1))
+(test-eqv #t (rational? 11111111111111111111111111111111))
+(test-eqv #t (rational? 2/3))
+(test-eqv #t (rational? 1.))
+(test-eqv #f (rational? +nan.0))
+(test-eqv #f (rational? +inf.0))
+(test-eqv #f (rational? -inf.0))
 
-(check-eqv? (integer? 'a) #f)
-(check-eqv? (integer? +1+0.i) #f)
-(check-eqv? (integer? 1) #t)
-(check-eqv? (integer? 11111111111111111111111111111111) #t)
-(check-eqv? (integer? 2/3) #f)
-(check-eqv? (integer? 1.0) #t)
-(check-eqv? (integer? 0.5) #f)
-(check-eqv? (integer? +nan.0) #f)
-(check-eqv? (integer? +inf.0) #f)
-(check-eqv? (integer? -inf.0) #f)
+(test-eqv #f (integer? 'a))
+(test-eqv #f (integer? 1+0.i))
+(test-eqv #t (integer? 1))
+(test-eqv #t (integer? 11111111111111111111111111111111))
+(test-eqv #f (integer? 2/3))
+(test-eqv #t (integer? 1.))
+(test-eqv #f (integer? .5))
+(test-eqv #f (integer? +nan.0))
+(test-eqv #f (integer? +inf.0))
+(test-eqv #f (integer? -inf.0))
 
-(check-tail-exn type-exception? (lambda () (exact? 'a)))
-(check-eqv? (exact? +1+0.i) #f)
-(check-eqv? (exact? 1) #t)
-(check-eqv? (exact? 11111111111111111111111111111111) #t)
-(check-eqv? (exact? 2/3) #t)
-(check-eqv? (exact? 1.0) #f)
-(check-eqv? (exact? +nan.0) #f)
-(check-eqv? (exact? +inf.0) #f)
-(check-eqv? (exact? -inf.0) #f)
+(test-error-tail type-exception? (exact? 'a))
+(test-eqv #f (exact? 1+0.i))
+(test-eqv #t (exact? 1))
+(test-eqv #t (exact? 11111111111111111111111111111111))
+(test-eqv #t (exact? 2/3))
+(test-eqv #f (exact? 1.))
+(test-eqv #f (exact? +nan.0))
+(test-eqv #f (exact? +inf.0))
+(test-eqv #f (exact? -inf.0))
 
-(check-tail-exn type-exception? (lambda () (= 1 'a)))
-(check-tail-exn type-exception? (lambda () (= 'a 1)))
-(check-eqv? (= 1 +1+0.i) #t)
-(check-eqv? (= (expt 2. 100) (expt 2 100)) #t)
-(check-eqv? (= (+ 1/3 1/3) 2/3) #t)
-(check-eqv? (= 1.0 1) #t)
-(check-eqv? (= +nan.0 1) #f)
-(check-eqv? (let ((x +nan.0)) (= x x)) #f)
-(check-eqv? (= +inf.0 +inf.0) #t)
-(check-eqv? (= -inf.0 -inf.0) #t)
-(check-eqv? (= (- +inf.0) -inf.0) #t)
+(test-error-tail type-exception? (= 1 'a))
+(test-error-tail type-exception? (= 'a 1))
+(test-eqv #t (= 1 1+0.i))
+(test-eqv #t (= (expt 2. 100) (expt 2 100)))
+(test-eqv #t (= (+ 1/3 1/3) 2/3))
+(test-eqv #t (= 1. 1))
+(test-eqv #f (= +nan.0 1))
+(test-eqv #f (let ((x +nan.0)) (= x x)))
+(test-eqv #t (= +inf.0 +inf.0))
+(test-eqv #t (= -inf.0 -inf.0))
+(test-eqv #t (= (- +inf.0) -inf.0))
 
-(check-tail-exn type-exception? (lambda () (= 1 'a)))
-(check-tail-exn type-exception? (lambda () (= 'a 1)))
-(check-eqv? (+ 1 1) 2)
-(check-eqv? (let ((x (- (* 3 (quotient (##least-fixnum) 4)))))
-	      (+ x x))
-	    (* 3 (- (quotient (##least-fixnum) 2))))
+(test-error-tail type-exception? (= 1 'a))
+(test-error-tail type-exception? (= 'a 1))
+(test-eqv 2 (+ 1 1))
+(test-eqv
+ (* 3 (- (quotient (##least-fixnum) 2)))
+ (let ((x (- (* 3 (quotient (##least-fixnum) 4))))) (+ x x)))
 
-(check-tail-exn type-exception? (lambda () (square 'a)))
-(check-eqv? (square 3) 9)
-(check-eqv? (square (expt 2 1000)) (expt 2 2000))
-(check-eqv? (square 2/3) 4/9)
-(check-eqv? (square 0.25) 0.0625)
-(check-=    (square 0.25+.125i) .046875+.0625i)
-(check-eqv? (square +inf.0+inf.0i) 0.+inf.0i)
+(test-error-tail type-exception? (square 'a))
+(test-eqv 9 (square 3))
+(test-eqv (expt 2 2000) (square (expt 2 1000)))
+(test-eqv 4/9 (square 2/3))
+(test-eqv .0625 (square .25))
+(test-approximate .046875+.0625i (square .25+.125i) 1e-12)
+(test-eqv 0.+inf.0i (square +inf.0+inf.0i))
 
-(check-tail-exn type-exception? (lambda () (sqrt 'a)))
-(check-eqv? (sqrt 16) 4)
-(check-eqv? (sqrt (expt 3 100)) (expt 3 50))
-(check-eqv? (sqrt 4/9) 2/3)
-(check-eqv? (sqrt 4.0) 2.0)
-(check-eqv? (sqrt +2.0i) 1.0+1.0i)
-(check-eqv? (sqrt -2.0i) 1.-1.i)
-(check-eqv? (sqrt (+ (expt 2 1000) 1)) (expt 2. 500))
-(check-eqv? (sqrt (+ (expt 3 60) 1)) 2.05891132094649e14)
+(test-error-tail type-exception? (sqrt 'a))
+(test-eqv 4 (sqrt 16))
+(test-eqv (expt 3 50) (sqrt (expt 3 100)))
+(test-eqv 2/3 (sqrt 4/9))
+(test-eqv 2. (sqrt 4.))
+(test-eqv 1.+1.i (sqrt +2.i))
+(test-eqv 1.-1.i (sqrt -2.i))
+(test-eqv (expt 2. 500) (sqrt (+ (expt 2 1000) 1)))
+(test-eqv 2.05891132094649e14 (sqrt (+ (expt 3 60) 1)))
 ;; The following argument exercises the (##fxnegative? r)
 ;; code path in ##exact-int.sqrt for 64-bit fixnums.
-(check-eqv? (integer-sqrt 177929191730305443) 421816537)
+(test-eqv 421816537 (integer-sqrt 177929191730305443))
 
-(check-tail-exn type-exception? (lambda () (abs 'a)))
-(check-eqv? (abs -1) 1)
-(check-eqv? (abs 1) 1)
-(check-eqv? (abs (- (expt 3 100))) (expt 3 100))
-(check-eqv? (abs (expt 3 100)) (expt 3 100))
-(check-eqv? (abs 2/3) 2/3)
-(check-eqv? (abs -2/3) 2/3)
-(check-eqv? (abs -1.) 1.)
-(check-eqv? (abs 1.) 1.)
-(check-tail-exn type-exception? (lambda () (abs 12.+5.i)))
-(check-tail-exn type-exception? (lambda () (abs 12+5i)))
+(test-error-tail type-exception? (abs 'a))
+(test-eqv 1 (abs -1))
+(test-eqv 1 (abs 1))
+(test-eqv (expt 3 100) (abs (- (expt 3 100))))
+(test-eqv (expt 3 100) (abs (expt 3 100)))
+(test-eqv 2/3 (abs 2/3))
+(test-eqv 2/3 (abs -2/3))
+(test-eqv 1. (abs -1.))
+(test-eqv 1. (abs 1.))
+(test-error-tail type-exception? (abs 12.+5.i))
+(test-error-tail type-exception? (abs 12+5i))
 
-(check-tail-exn type-exception? (lambda () (magnitude 'a)))
-(check-eqv? (magnitude -1) 1)
-(check-eqv? (magnitude 1) 1)
-(check-eqv? (magnitude (- (expt 3 100))) (expt 3 100))
-(check-eqv? (magnitude (expt 3 100)) (expt 3 100))
-(check-eqv? (magnitude 2/3) 2/3)
-(check-eqv? (magnitude -2/3) 2/3)
-(check-eqv? (magnitude -1.) 1.)
-(check-eqv? (magnitude 1.) 1.)
-(check-eqv? (magnitude 12.+5.i) 13.)
-(check-eqv? (magnitude 12+5i) 13)
+(test-error-tail type-exception? (magnitude 'a))
+(test-eqv 1 (magnitude -1))
+(test-eqv 1 (magnitude 1))
+(test-eqv (expt 3 100) (magnitude (- (expt 3 100))))
+(test-eqv (expt 3 100) (magnitude (expt 3 100)))
+(test-eqv 2/3 (magnitude 2/3))
+(test-eqv 2/3 (magnitude -2/3))
+(test-eqv 1. (magnitude -1.))
+(test-eqv 1. (magnitude 1.))
+(test-eqv 13. (magnitude 12.+5.i))
+(test-eqv 13 (magnitude 12+5i))
 
-(check-eqv? (log (expt 2 10000)) (* 10000 (log 2)))
-(check-eqv? (log +inf.0+0.0i) +inf.0+0.i)
-(check-eqv? (log -inf.0+0.0i) (+ +inf.0 (log -1.0)))
+(test-eqv (* 10000 (log 2)) (log (expt 2 10000)))
+(test-eqv +inf.0+0.i (log +inf.0+0.i))
+(test-eqv (+ +inf.0 (log -1.)) (log -inf.0+0.i))
 
-(check-eqv? (atan +nan.0 0) +nan.0)
-(check-eqv? (atan 0 +nan.0) +nan.0)
-(check-eqv? (atan 2 0) (macro-inexact-+pi/2))
-(check-eqv? (atan +inf.0 +inf.0) (macro-inexact-+pi/4))
-(check-eqv? (atan -inf.0 +inf.0)  (- (macro-inexact-+pi/4)))
-(check-eqv? (atan (expt 3 10000) (expt 3 10000)) (macro-inexact-+pi/4))
+(test-eqv +nan.0 (atan +nan.0 0))
+(test-eqv +nan.0 (atan 0 +nan.0))
+(test-eqv (macro-inexact-+pi/2) (atan 2 0))
+(test-eqv (macro-inexact-+pi/4) (atan +inf.0 +inf.0))
+(test-eqv (- (macro-inexact-+pi/4)) (atan -inf.0 +inf.0))
+(test-eqv (macro-inexact-+pi/4) (atan (expt 3 10000) (expt 3 10000)))
 
-(check-eqv? (expt -4 1/2) +2i)
-(check-eqv? (expt -4. 1/2) +2.i)
-(check-eqv? (expt -4 3/2) -8i)
-(check-eqv? (expt -4. 3/2) -8.i)
-(check-eqv? (expt -8 1/3) (* 2 (macro-cpxnum-+1/2+sqrt3/2i)))
-(check-eqv? (expt -8 2/3) (* 4 (macro-cpxnum--1/2+sqrt3/2i)))
-(check-eqv? (expt -8 4/3) (* 16 (macro-cpxnum--1/2-sqrt3/2i)))
-(check-eqv? (expt -8 5/3) (* 32 (macro-cpxnum-+1/2-sqrt3/2i)))
-(check-eqv? (expt -64 1/6) (* 2 (macro-cpxnum-+sqrt3/2+1/2i)))
-(check-eqv? (expt -64 5/6) (* 32 (macro-cpxnum--sqrt3/2+1/2i)))
-(check-eqv? (expt -64 7/6) (* 128 (macro-cpxnum--sqrt3/2-1/2i)))
-(check-eqv? (expt -64 11/6) (* 2048 (macro-cpxnum-+sqrt3/2-1/2i)))
-(check-eqv? (expt 100 -1/4) (/ (sqrt (sqrt 100))))
+(test-eqv +2i (expt -4 1/2))
+(test-eqv +2.i (expt -4. 1/2))
+(test-eqv -8i (expt -4 3/2))
+(test-eqv -8.i (expt -4. 3/2))
+(test-eqv (* 2 (macro-cpxnum-+1/2+sqrt3/2i)) (expt -8 1/3))
+(test-eqv (* 4 (macro-cpxnum--1/2+sqrt3/2i)) (expt -8 2/3))
+(test-eqv (* 16 (macro-cpxnum--1/2-sqrt3/2i)) (expt -8 4/3))
+(test-eqv (* 32 (macro-cpxnum-+1/2-sqrt3/2i)) (expt -8 5/3))
+(test-eqv (* 2 (macro-cpxnum-+sqrt3/2+1/2i)) (expt -64 1/6))
+(test-eqv (* 32 (macro-cpxnum--sqrt3/2+1/2i)) (expt -64 5/6))
+(test-eqv (* 128 (macro-cpxnum--sqrt3/2-1/2i)) (expt -64 7/6))
+(test-eqv (* 2048 (macro-cpxnum-+sqrt3/2-1/2i)) (expt -64 11/6))
+(test-eqv (/ (sqrt (sqrt 100))) (expt 100 -1/4))
 
 ;; On Windows with 32 bit MinGW, the following unit tests fail:
 ;;
@@ -392,648 +399,855 @@
 ;; this issue will have to wait until the issue appears in a
 ;; debugging environment we have access to.
 
-(check-eqv? (expt 27/8 1/3) 3/2)
-(check-eqv? (expt +2i 3/2) -2+2i)
-(check-eqv? (expt +2i 1/2) 1+i)
-(check-tail-exn range-exception? (lambda () (expt 0 -1+i)))
-(check-tail-exn range-exception? (lambda () (expt 0 -3/4)))
+(test-eqv 3/2 (expt 27/8 1/3))
+(test-eqv -2+2i (expt +2i 3/2))
+(test-eqv 1+i (expt +2i 1/2))
+(test-error-tail range-exception? (expt 0 -1+i))
+(test-error-tail range-exception? (expt 0 -3/4))
 
-(check-tail-exn type-exception? (lambda () (bitwise-and 1 'a)))
-(check-tail-exn type-exception? (lambda () (bitwise-and 'a 1)))
-(check-eqv? (bitwise-and 123443 17042360) (test-bitwise-and 123443 17042360))
-(check-eqv? (bitwise-and 123443 902345798234656542928345617042360)
-	    (test-bitwise-and 123443 902345798234656542928345617042360))
-(check-eqv? (bitwise-and -123443 17042360) (test-bitwise-and -123443 17042360))
-(check-eqv? (bitwise-and -123443 902345798234656542928345617042360)
-	    (test-bitwise-and -123443 902345798234656542928345617042360))
-(check-eqv? (bitwise-and 123443 -17042360)
-	    (test-bitwise-and 123443 -17042360))
-(check-eqv? (bitwise-and 123443 -902345798234656542928345617042360)
-	    (test-bitwise-and 123443 -902345798234656542928345617042360))
-(check-eqv? (bitwise-and -123443 -17042360)
-	    (test-bitwise-and -123443 -17042360))
-(check-eqv? (bitwise-and -123443 -902345798234656542928345617042360)
-	    (test-bitwise-and -123443 -902345798234656542928345617042360))
-(check-eqv? (bitwise-and 34572348562304523465432065423 234532485620943562345234958634)
-	    (test-bitwise-and 34572348562304523465432065423 234532485620943562345234958634))
-(check-eqv? (bitwise-and -34572348562304523465432065423 234532485620943562345234958634)
-	    (test-bitwise-and -34572348562304523465432065423 234532485620943562345234958634))
-(check-eqv? (bitwise-and 34572348562304523465432065423 -234532485620943562345234958634)
-	    (test-bitwise-and 34572348562304523465432065423 -234532485620943562345234958634))
-(check-eqv? (bitwise-and -34572348562304523465432065423 -234532485620943562345234958634)
-	    (test-bitwise-and -34572348562304523465432065423 -234532485620943562345234958634))
-(check-eqv? (bitwise-and  902345798234656542928345617042360 123443)
-	    (test-bitwise-and  902345798234656542928345617042360 123443))
+(test-error-tail type-exception? (bitwise-and 1 'a))
+(test-error-tail type-exception? (bitwise-and 'a 1))
+(test-eqv (test-bitwise-and 123443 17042360) (bitwise-and 123443 17042360))
+(test-eqv
+ (test-bitwise-and 123443 902345798234656542928345617042360)
+ (bitwise-and 123443 902345798234656542928345617042360))
+(test-eqv (test-bitwise-and -123443 17042360) (bitwise-and -123443 17042360))
+(test-eqv
+ (test-bitwise-and -123443 902345798234656542928345617042360)
+ (bitwise-and -123443 902345798234656542928345617042360))
+(test-eqv (test-bitwise-and 123443 -17042360) (bitwise-and 123443 -17042360))
+(test-eqv
+ (test-bitwise-and 123443 -902345798234656542928345617042360)
+ (bitwise-and 123443 -902345798234656542928345617042360))
+(test-eqv (test-bitwise-and -123443 -17042360) (bitwise-and -123443 -17042360))
+(test-eqv
+ (test-bitwise-and -123443 -902345798234656542928345617042360)
+ (bitwise-and -123443 -902345798234656542928345617042360))
+(test-eqv
+ (test-bitwise-and
+  34572348562304523465432065423
+  234532485620943562345234958634)
+ (bitwise-and 34572348562304523465432065423 234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-and
+  -34572348562304523465432065423
+  234532485620943562345234958634)
+ (bitwise-and -34572348562304523465432065423 234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-and
+  34572348562304523465432065423
+  -234532485620943562345234958634)
+ (bitwise-and 34572348562304523465432065423 -234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-and
+  -34572348562304523465432065423
+  -234532485620943562345234958634)
+ (bitwise-and -34572348562304523465432065423 -234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-and 902345798234656542928345617042360 123443)
+ (bitwise-and 902345798234656542928345617042360 123443))
 
-(check-tail-exn type-exception? (lambda () (bitwise-andc1 1 'a)))
-(check-tail-exn type-exception? (lambda () (bitwise-andc1 'a 1)))
-(check-eqv? (bitwise-andc1 123443 17042360) (test-bitwise-andc1 123443 17042360))
-(check-eqv? (bitwise-andc1 123443 902345798234656542928345617042360)
-	    (test-bitwise-andc1 123443 902345798234656542928345617042360))
-(check-eqv? (bitwise-andc1 -123443 17042360) (test-bitwise-andc1 -123443 17042360))
-(check-eqv? (bitwise-andc1 -123443 902345798234656542928345617042360)
-	    (test-bitwise-andc1 -123443 902345798234656542928345617042360))
-(check-eqv? (bitwise-andc1 123443 -17042360)
-	    (test-bitwise-andc1 123443 -17042360))
-(check-eqv? (bitwise-andc1 123443 -902345798234656542928345617042360)
-	    (test-bitwise-andc1 123443 -902345798234656542928345617042360))
-(check-eqv? (bitwise-andc1 -123443 -17042360)
-	    (test-bitwise-andc1 -123443 -17042360))
-(check-eqv? (bitwise-andc1 -123443 -902345798234656542928345617042360)
-	    (test-bitwise-andc1 -123443 -902345798234656542928345617042360))
-(check-eqv? (bitwise-andc1 34572348562304523465432065423 234532485620943562345234958634)
-	    (test-bitwise-andc1 34572348562304523465432065423 234532485620943562345234958634))
-(check-eqv? (bitwise-andc1 -34572348562304523465432065423 234532485620943562345234958634)
-	    (test-bitwise-andc1 -34572348562304523465432065423 234532485620943562345234958634))
-(check-eqv? (bitwise-andc1 34572348562304523465432065423 -234532485620943562345234958634)
-	    (test-bitwise-andc1 34572348562304523465432065423 -234532485620943562345234958634))
-(check-eqv? (bitwise-andc1 -34572348562304523465432065423 -234532485620943562345234958634)
-	    (test-bitwise-andc1 -34572348562304523465432065423 -234532485620943562345234958634))
-(check-eqv? (bitwise-andc1  902345798234656542928345617042360 123443)
-	    (test-bitwise-andc1  902345798234656542928345617042360 123443))
+(test-error-tail type-exception? (bitwise-andc1 1 'a))
+(test-error-tail type-exception? (bitwise-andc1 'a 1))
+(test-eqv (test-bitwise-andc1 123443 17042360) (bitwise-andc1 123443 17042360))
+(test-eqv
+ (test-bitwise-andc1 123443 902345798234656542928345617042360)
+ (bitwise-andc1 123443 902345798234656542928345617042360))
+(test-eqv
+ (test-bitwise-andc1 -123443 17042360)
+ (bitwise-andc1 -123443 17042360))
+(test-eqv
+ (test-bitwise-andc1 -123443 902345798234656542928345617042360)
+ (bitwise-andc1 -123443 902345798234656542928345617042360))
+(test-eqv
+ (test-bitwise-andc1 123443 -17042360)
+ (bitwise-andc1 123443 -17042360))
+(test-eqv
+ (test-bitwise-andc1 123443 -902345798234656542928345617042360)
+ (bitwise-andc1 123443 -902345798234656542928345617042360))
+(test-eqv
+ (test-bitwise-andc1 -123443 -17042360)
+ (bitwise-andc1 -123443 -17042360))
+(test-eqv
+ (test-bitwise-andc1 -123443 -902345798234656542928345617042360)
+ (bitwise-andc1 -123443 -902345798234656542928345617042360))
+(test-eqv
+ (test-bitwise-andc1
+  34572348562304523465432065423
+  234532485620943562345234958634)
+ (bitwise-andc1 34572348562304523465432065423 234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-andc1
+  -34572348562304523465432065423
+  234532485620943562345234958634)
+ (bitwise-andc1 -34572348562304523465432065423 234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-andc1
+  34572348562304523465432065423
+  -234532485620943562345234958634)
+ (bitwise-andc1 34572348562304523465432065423 -234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-andc1
+  -34572348562304523465432065423
+  -234532485620943562345234958634)
+ (bitwise-andc1
+  -34572348562304523465432065423
+  -234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-andc1 902345798234656542928345617042360 123443)
+ (bitwise-andc1 902345798234656542928345617042360 123443))
 
-(check-tail-exn type-exception? (lambda () (bitwise-andc2 1 'a)))
-(check-tail-exn type-exception? (lambda () (bitwise-andc2 'a 1)))
-(check-eqv? (bitwise-andc2 123443 17042360) (test-bitwise-andc2 123443 17042360))
-(check-eqv? (bitwise-andc2 123443 902345798234656542928345617042360)
-	    (test-bitwise-andc2 123443 902345798234656542928345617042360))
-(check-eqv? (bitwise-andc2 -123443 17042360) (test-bitwise-andc2 -123443 17042360))
-(check-eqv? (bitwise-andc2 -123443 902345798234656542928345617042360)
-	    (test-bitwise-andc2 -123443 902345798234656542928345617042360))
-(check-eqv? (bitwise-andc2 123443 -17042360)
-	    (test-bitwise-andc2 123443 -17042360))
-(check-eqv? (bitwise-andc2 123443 -902345798234656542928345617042360)
-	    (test-bitwise-andc2 123443 -902345798234656542928345617042360))
-(check-eqv? (bitwise-andc2 -123443 -17042360)
-	    (test-bitwise-andc2 -123443 -17042360))
-(check-eqv? (bitwise-andc2 -123443 -902345798234656542928345617042360)
-	    (test-bitwise-andc2 -123443 -902345798234656542928345617042360))
-(check-eqv? (bitwise-andc2 34572348562304523465432065423 234532485620943562345234958634)
-	    (test-bitwise-andc2 34572348562304523465432065423 234532485620943562345234958634))
-(check-eqv? (bitwise-andc2 -34572348562304523465432065423 234532485620943562345234958634)
-	    (test-bitwise-andc2 -34572348562304523465432065423 234532485620943562345234958634))
-(check-eqv? (bitwise-andc2 34572348562304523465432065423 -234532485620943562345234958634)
-	    (test-bitwise-andc2 34572348562304523465432065423 -234532485620943562345234958634))
-(check-eqv? (bitwise-andc2 -34572348562304523465432065423 -234532485620943562345234958634)
-	    (test-bitwise-andc2 -34572348562304523465432065423 -234532485620943562345234958634))
-(check-eqv? (bitwise-andc2  902345798234656542928345617042360 123443)
-	    (test-bitwise-andc2  902345798234656542928345617042360 123443))
+(test-error-tail type-exception? (bitwise-andc2 1 'a))
+(test-error-tail type-exception? (bitwise-andc2 'a 1))
+(test-eqv (test-bitwise-andc2 123443 17042360) (bitwise-andc2 123443 17042360))
+(test-eqv
+ (test-bitwise-andc2 123443 902345798234656542928345617042360)
+ (bitwise-andc2 123443 902345798234656542928345617042360))
+(test-eqv
+ (test-bitwise-andc2 -123443 17042360)
+ (bitwise-andc2 -123443 17042360))
+(test-eqv
+ (test-bitwise-andc2 -123443 902345798234656542928345617042360)
+ (bitwise-andc2 -123443 902345798234656542928345617042360))
+(test-eqv
+ (test-bitwise-andc2 123443 -17042360)
+ (bitwise-andc2 123443 -17042360))
+(test-eqv
+ (test-bitwise-andc2 123443 -902345798234656542928345617042360)
+ (bitwise-andc2 123443 -902345798234656542928345617042360))
+(test-eqv
+ (test-bitwise-andc2 -123443 -17042360)
+ (bitwise-andc2 -123443 -17042360))
+(test-eqv
+ (test-bitwise-andc2 -123443 -902345798234656542928345617042360)
+ (bitwise-andc2 -123443 -902345798234656542928345617042360))
+(test-eqv
+ (test-bitwise-andc2
+  34572348562304523465432065423
+  234532485620943562345234958634)
+ (bitwise-andc2 34572348562304523465432065423 234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-andc2
+  -34572348562304523465432065423
+  234532485620943562345234958634)
+ (bitwise-andc2 -34572348562304523465432065423 234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-andc2
+  34572348562304523465432065423
+  -234532485620943562345234958634)
+ (bitwise-andc2 34572348562304523465432065423 -234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-andc2
+  -34572348562304523465432065423
+  -234532485620943562345234958634)
+ (bitwise-andc2
+  -34572348562304523465432065423
+  -234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-andc2 902345798234656542928345617042360 123443)
+ (bitwise-andc2 902345798234656542928345617042360 123443))
 
-(check-tail-exn type-exception? (lambda () (bitwise-eqv 1 'a)))
-(check-tail-exn type-exception? (lambda () (bitwise-eqv 'a 1)))
-(check-eqv? (bitwise-eqv 123443 17042360) (test-bitwise-eqv 123443 17042360))
-(check-eqv? (bitwise-eqv 123443 902345798234656542928345617042360)
-	    (test-bitwise-eqv 123443 902345798234656542928345617042360))
-(check-eqv? (bitwise-eqv -123443 17042360) (test-bitwise-eqv -123443 17042360))
-(check-eqv? (bitwise-eqv -123443 902345798234656542928345617042360)
-	    (test-bitwise-eqv -123443 902345798234656542928345617042360))
-(check-eqv? (bitwise-eqv 123443 -17042360)
-	    (test-bitwise-eqv 123443 -17042360))
-(check-eqv? (bitwise-eqv 123443 -902345798234656542928345617042360)
-	    (test-bitwise-eqv 123443 -902345798234656542928345617042360))
-(check-eqv? (bitwise-eqv -123443 -17042360)
-	    (test-bitwise-eqv -123443 -17042360))
-(check-eqv? (bitwise-eqv -123443 -902345798234656542928345617042360)
-	    (test-bitwise-eqv -123443 -902345798234656542928345617042360))
-(check-eqv? (bitwise-eqv 34572348562304523465432065423 234532485620943562345234958634)
-	    (test-bitwise-eqv 34572348562304523465432065423 234532485620943562345234958634))
-(check-eqv? (bitwise-eqv -34572348562304523465432065423 234532485620943562345234958634)
-	    (test-bitwise-eqv -34572348562304523465432065423 234532485620943562345234958634))
-(check-eqv? (bitwise-eqv 34572348562304523465432065423 -234532485620943562345234958634)
-	    (test-bitwise-eqv 34572348562304523465432065423 -234532485620943562345234958634))
-(check-eqv? (bitwise-eqv -34572348562304523465432065423 -234532485620943562345234958634)
-	    (test-bitwise-eqv -34572348562304523465432065423 -234532485620943562345234958634))
-(check-eqv? (bitwise-eqv  902345798234656542928345617042360 123443)
-	    (test-bitwise-eqv  902345798234656542928345617042360 123443))
+(test-error-tail type-exception? (bitwise-eqv 1 'a))
+(test-error-tail type-exception? (bitwise-eqv 'a 1))
+(test-eqv (test-bitwise-eqv 123443 17042360) (bitwise-eqv 123443 17042360))
+(test-eqv
+ (test-bitwise-eqv 123443 902345798234656542928345617042360)
+ (bitwise-eqv 123443 902345798234656542928345617042360))
+(test-eqv (test-bitwise-eqv -123443 17042360) (bitwise-eqv -123443 17042360))
+(test-eqv
+ (test-bitwise-eqv -123443 902345798234656542928345617042360)
+ (bitwise-eqv -123443 902345798234656542928345617042360))
+(test-eqv (test-bitwise-eqv 123443 -17042360) (bitwise-eqv 123443 -17042360))
+(test-eqv
+ (test-bitwise-eqv 123443 -902345798234656542928345617042360)
+ (bitwise-eqv 123443 -902345798234656542928345617042360))
+(test-eqv (test-bitwise-eqv -123443 -17042360) (bitwise-eqv -123443 -17042360))
+(test-eqv
+ (test-bitwise-eqv -123443 -902345798234656542928345617042360)
+ (bitwise-eqv -123443 -902345798234656542928345617042360))
+(test-eqv
+ (test-bitwise-eqv
+  34572348562304523465432065423
+  234532485620943562345234958634)
+ (bitwise-eqv 34572348562304523465432065423 234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-eqv
+  -34572348562304523465432065423
+  234532485620943562345234958634)
+ (bitwise-eqv -34572348562304523465432065423 234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-eqv
+  34572348562304523465432065423
+  -234532485620943562345234958634)
+ (bitwise-eqv 34572348562304523465432065423 -234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-eqv
+  -34572348562304523465432065423
+  -234532485620943562345234958634)
+ (bitwise-eqv -34572348562304523465432065423 -234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-eqv 902345798234656542928345617042360 123443)
+ (bitwise-eqv 902345798234656542928345617042360 123443))
 
-(check-tail-exn type-exception? (lambda () (bitwise-ior 1 'a)))
-(check-tail-exn type-exception? (lambda () (bitwise-ior 'a 1)))
-(check-eqv? (bitwise-ior 123443 17042360) (test-bitwise-ior 123443 17042360))
-(check-eqv? (bitwise-ior 123443 902345798234656542928345617042360)
-	    (test-bitwise-ior 123443 902345798234656542928345617042360))
-(check-eqv? (bitwise-ior -123443 17042360) (test-bitwise-ior -123443 17042360))
-(check-eqv? (bitwise-ior -123443 902345798234656542928345617042360)
-	    (test-bitwise-ior -123443 902345798234656542928345617042360))
-(check-eqv? (bitwise-ior 123443 -17042360)
-	    (test-bitwise-ior 123443 -17042360))
-(check-eqv? (bitwise-ior 123443 -902345798234656542928345617042360)
-	    (test-bitwise-ior 123443 -902345798234656542928345617042360))
-(check-eqv? (bitwise-ior -123443 -17042360)
-	    (test-bitwise-ior -123443 -17042360))
-(check-eqv? (bitwise-ior -123443 -902345798234656542928345617042360)
-	    (test-bitwise-ior -123443 -902345798234656542928345617042360))
-(check-eqv? (bitwise-ior 34572348562304523465432065423 234532485620943562345234958634)
-	    (test-bitwise-ior 34572348562304523465432065423 234532485620943562345234958634))
-(check-eqv? (bitwise-ior -34572348562304523465432065423 234532485620943562345234958634)
-	    (test-bitwise-ior -34572348562304523465432065423 234532485620943562345234958634))
-(check-eqv? (bitwise-ior 34572348562304523465432065423 -234532485620943562345234958634)
-	    (test-bitwise-ior 34572348562304523465432065423 -234532485620943562345234958634))
-(check-eqv? (bitwise-ior -34572348562304523465432065423 -234532485620943562345234958634)
-	    (test-bitwise-ior -34572348562304523465432065423 -234532485620943562345234958634))
-(check-eqv? (bitwise-ior  902345798234656542928345617042360 123443)
-	    (test-bitwise-ior  902345798234656542928345617042360 123443))
+(test-error-tail type-exception? (bitwise-ior 1 'a))
+(test-error-tail type-exception? (bitwise-ior 'a 1))
+(test-eqv (test-bitwise-ior 123443 17042360) (bitwise-ior 123443 17042360))
+(test-eqv
+ (test-bitwise-ior 123443 902345798234656542928345617042360)
+ (bitwise-ior 123443 902345798234656542928345617042360))
+(test-eqv (test-bitwise-ior -123443 17042360) (bitwise-ior -123443 17042360))
+(test-eqv
+ (test-bitwise-ior -123443 902345798234656542928345617042360)
+ (bitwise-ior -123443 902345798234656542928345617042360))
+(test-eqv (test-bitwise-ior 123443 -17042360) (bitwise-ior 123443 -17042360))
+(test-eqv
+ (test-bitwise-ior 123443 -902345798234656542928345617042360)
+ (bitwise-ior 123443 -902345798234656542928345617042360))
+(test-eqv (test-bitwise-ior -123443 -17042360) (bitwise-ior -123443 -17042360))
+(test-eqv
+ (test-bitwise-ior -123443 -902345798234656542928345617042360)
+ (bitwise-ior -123443 -902345798234656542928345617042360))
+(test-eqv
+ (test-bitwise-ior
+  34572348562304523465432065423
+  234532485620943562345234958634)
+ (bitwise-ior 34572348562304523465432065423 234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-ior
+  -34572348562304523465432065423
+  234532485620943562345234958634)
+ (bitwise-ior -34572348562304523465432065423 234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-ior
+  34572348562304523465432065423
+  -234532485620943562345234958634)
+ (bitwise-ior 34572348562304523465432065423 -234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-ior
+  -34572348562304523465432065423
+  -234532485620943562345234958634)
+ (bitwise-ior -34572348562304523465432065423 -234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-ior 902345798234656542928345617042360 123443)
+ (bitwise-ior 902345798234656542928345617042360 123443))
 
-(check-tail-exn type-exception? (lambda () (bitwise-nand 1 'a)))
-(check-tail-exn type-exception? (lambda () (bitwise-nand 'a 1)))
-(check-eqv? (bitwise-nand 123443 17042360) (test-bitwise-nand 123443 17042360))
-(check-eqv? (bitwise-nand 123443 902345798234656542928345617042360)
-	    (test-bitwise-nand 123443 902345798234656542928345617042360))
-(check-eqv? (bitwise-nand -123443 17042360) (test-bitwise-nand -123443 17042360))
-(check-eqv? (bitwise-nand -123443 902345798234656542928345617042360)
-	    (test-bitwise-nand -123443 902345798234656542928345617042360))
-(check-eqv? (bitwise-nand 123443 -17042360)
-	    (test-bitwise-nand 123443 -17042360))
-(check-eqv? (bitwise-nand 123443 -902345798234656542928345617042360)
-	    (test-bitwise-nand 123443 -902345798234656542928345617042360))
-(check-eqv? (bitwise-nand -123443 -17042360)
-	    (test-bitwise-nand -123443 -17042360))
-(check-eqv? (bitwise-nand -123443 -902345798234656542928345617042360)
-	    (test-bitwise-nand -123443 -902345798234656542928345617042360))
-(check-eqv? (bitwise-nand 34572348562304523465432065423 234532485620943562345234958634)
-	    (test-bitwise-nand 34572348562304523465432065423 234532485620943562345234958634))
-(check-eqv? (bitwise-nand -34572348562304523465432065423 234532485620943562345234958634)
-	    (test-bitwise-nand -34572348562304523465432065423 234532485620943562345234958634))
-(check-eqv? (bitwise-nand 34572348562304523465432065423 -234532485620943562345234958634)
-	    (test-bitwise-nand 34572348562304523465432065423 -234532485620943562345234958634))
-(check-eqv? (bitwise-nand -34572348562304523465432065423 -234532485620943562345234958634)
-	    (test-bitwise-nand -34572348562304523465432065423 -234532485620943562345234958634))
-(check-eqv? (bitwise-nand  902345798234656542928345617042360 123443)
-	    (test-bitwise-nand  902345798234656542928345617042360 123443))
+(test-error-tail type-exception? (bitwise-nand 1 'a))
+(test-error-tail type-exception? (bitwise-nand 'a 1))
+(test-eqv (test-bitwise-nand 123443 17042360) (bitwise-nand 123443 17042360))
+(test-eqv
+ (test-bitwise-nand 123443 902345798234656542928345617042360)
+ (bitwise-nand 123443 902345798234656542928345617042360))
+(test-eqv (test-bitwise-nand -123443 17042360) (bitwise-nand -123443 17042360))
+(test-eqv
+ (test-bitwise-nand -123443 902345798234656542928345617042360)
+ (bitwise-nand -123443 902345798234656542928345617042360))
+(test-eqv (test-bitwise-nand 123443 -17042360) (bitwise-nand 123443 -17042360))
+(test-eqv
+ (test-bitwise-nand 123443 -902345798234656542928345617042360)
+ (bitwise-nand 123443 -902345798234656542928345617042360))
+(test-eqv
+ (test-bitwise-nand -123443 -17042360)
+ (bitwise-nand -123443 -17042360))
+(test-eqv
+ (test-bitwise-nand -123443 -902345798234656542928345617042360)
+ (bitwise-nand -123443 -902345798234656542928345617042360))
+(test-eqv
+ (test-bitwise-nand
+  34572348562304523465432065423
+  234532485620943562345234958634)
+ (bitwise-nand 34572348562304523465432065423 234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-nand
+  -34572348562304523465432065423
+  234532485620943562345234958634)
+ (bitwise-nand -34572348562304523465432065423 234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-nand
+  34572348562304523465432065423
+  -234532485620943562345234958634)
+ (bitwise-nand 34572348562304523465432065423 -234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-nand
+  -34572348562304523465432065423
+  -234532485620943562345234958634)
+ (bitwise-nand -34572348562304523465432065423 -234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-nand 902345798234656542928345617042360 123443)
+ (bitwise-nand 902345798234656542928345617042360 123443))
 
-(check-tail-exn type-exception? (lambda () (bitwise-nor 1 'a)))
-(check-tail-exn type-exception? (lambda () (bitwise-nor 'a 1)))
-(check-eqv? (bitwise-nor 123443 17042360) (test-bitwise-nor 123443 17042360))
-(check-eqv? (bitwise-nor 123443 902345798234656542928345617042360)
-	    (test-bitwise-nor 123443 902345798234656542928345617042360))
-(check-eqv? (bitwise-nor -123443 17042360) (test-bitwise-nor -123443 17042360))
-(check-eqv? (bitwise-nor -123443 902345798234656542928345617042360)
-	    (test-bitwise-nor -123443 902345798234656542928345617042360))
-(check-eqv? (bitwise-nor 123443 -17042360)
-	    (test-bitwise-nor 123443 -17042360))
-(check-eqv? (bitwise-nor 123443 -902345798234656542928345617042360)
-	    (test-bitwise-nor 123443 -902345798234656542928345617042360))
-(check-eqv? (bitwise-nor -123443 -17042360)
-	    (test-bitwise-nor -123443 -17042360))
-(check-eqv? (bitwise-nor -123443 -902345798234656542928345617042360)
-	    (test-bitwise-nor -123443 -902345798234656542928345617042360))
-(check-eqv? (bitwise-nor 34572348562304523465432065423 234532485620943562345234958634)
-	    (test-bitwise-nor 34572348562304523465432065423 234532485620943562345234958634))
-(check-eqv? (bitwise-nor -34572348562304523465432065423 234532485620943562345234958634)
-	    (test-bitwise-nor -34572348562304523465432065423 234532485620943562345234958634))
-(check-eqv? (bitwise-nor 34572348562304523465432065423 -234532485620943562345234958634)
-	    (test-bitwise-nor 34572348562304523465432065423 -234532485620943562345234958634))
-(check-eqv? (bitwise-nor -34572348562304523465432065423 -234532485620943562345234958634)
-	    (test-bitwise-nor -34572348562304523465432065423 -234532485620943562345234958634))
-(check-eqv? (bitwise-nor  902345798234656542928345617042360 123443)
-	    (test-bitwise-nor  902345798234656542928345617042360 123443))
+(test-error-tail type-exception? (bitwise-nor 1 'a))
+(test-error-tail type-exception? (bitwise-nor 'a 1))
+(test-eqv (test-bitwise-nor 123443 17042360) (bitwise-nor 123443 17042360))
+(test-eqv
+ (test-bitwise-nor 123443 902345798234656542928345617042360)
+ (bitwise-nor 123443 902345798234656542928345617042360))
+(test-eqv (test-bitwise-nor -123443 17042360) (bitwise-nor -123443 17042360))
+(test-eqv
+ (test-bitwise-nor -123443 902345798234656542928345617042360)
+ (bitwise-nor -123443 902345798234656542928345617042360))
+(test-eqv (test-bitwise-nor 123443 -17042360) (bitwise-nor 123443 -17042360))
+(test-eqv
+ (test-bitwise-nor 123443 -902345798234656542928345617042360)
+ (bitwise-nor 123443 -902345798234656542928345617042360))
+(test-eqv (test-bitwise-nor -123443 -17042360) (bitwise-nor -123443 -17042360))
+(test-eqv
+ (test-bitwise-nor -123443 -902345798234656542928345617042360)
+ (bitwise-nor -123443 -902345798234656542928345617042360))
+(test-eqv
+ (test-bitwise-nor
+  34572348562304523465432065423
+  234532485620943562345234958634)
+ (bitwise-nor 34572348562304523465432065423 234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-nor
+  -34572348562304523465432065423
+  234532485620943562345234958634)
+ (bitwise-nor -34572348562304523465432065423 234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-nor
+  34572348562304523465432065423
+  -234532485620943562345234958634)
+ (bitwise-nor 34572348562304523465432065423 -234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-nor
+  -34572348562304523465432065423
+  -234532485620943562345234958634)
+ (bitwise-nor -34572348562304523465432065423 -234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-nor 902345798234656542928345617042360 123443)
+ (bitwise-nor 902345798234656542928345617042360 123443))
 
-(check-tail-exn type-exception? (lambda () (bitwise-not 'a)))
-(check-eqv? (bitwise-not 17042360) (test-bitwise-not 17042360))
-(check-eqv? (bitwise-not -123443) (test-bitwise-not -123443))
-(check-eqv? (bitwise-not 902345798234656542928345617042360)
-	    (test-bitwise-not 902345798234656542928345617042360))
-(check-eqv? (bitwise-not -902345798234656542928345617042360)
-	    (test-bitwise-not -902345798234656542928345617042360))
+(test-error-tail type-exception? (bitwise-not 'a))
+(test-eqv (test-bitwise-not 17042360) (bitwise-not 17042360))
+(test-eqv (test-bitwise-not -123443) (bitwise-not -123443))
+(test-eqv
+ (test-bitwise-not 902345798234656542928345617042360)
+ (bitwise-not 902345798234656542928345617042360))
+(test-eqv
+ (test-bitwise-not -902345798234656542928345617042360)
+ (bitwise-not -902345798234656542928345617042360))
 
-(check-tail-exn type-exception? (lambda () (bitwise-orc1 1 'a)))
-(check-tail-exn type-exception? (lambda () (bitwise-orc1 'a 1)))
-(check-eqv? (bitwise-orc1 123443 17042360) (test-bitwise-orc1 123443 17042360))
-(check-eqv? (bitwise-orc1 123443 902345798234656542928345617042360)
-	    (test-bitwise-orc1 123443 902345798234656542928345617042360))
-(check-eqv? (bitwise-orc1 -123443 17042360) (test-bitwise-orc1 -123443 17042360))
-(check-eqv? (bitwise-orc1 -123443 902345798234656542928345617042360)
-	    (test-bitwise-orc1 -123443 902345798234656542928345617042360))
-(check-eqv? (bitwise-orc1 123443 -17042360)
-	    (test-bitwise-orc1 123443 -17042360))
-(check-eqv? (bitwise-orc1 123443 -902345798234656542928345617042360)
-	    (test-bitwise-orc1 123443 -902345798234656542928345617042360))
-(check-eqv? (bitwise-orc1 -123443 -17042360)
-	    (test-bitwise-orc1 -123443 -17042360))
-(check-eqv? (bitwise-orc1 -123443 -902345798234656542928345617042360)
-	    (test-bitwise-orc1 -123443 -902345798234656542928345617042360))
-(check-eqv? (bitwise-orc1 34572348562304523465432065423 234532485620943562345234958634)
-	    (test-bitwise-orc1 34572348562304523465432065423 234532485620943562345234958634))
-(check-eqv? (bitwise-orc1 -34572348562304523465432065423 234532485620943562345234958634)
-	    (test-bitwise-orc1 -34572348562304523465432065423 234532485620943562345234958634))
-(check-eqv? (bitwise-orc1 34572348562304523465432065423 -234532485620943562345234958634)
-	    (test-bitwise-orc1 34572348562304523465432065423 -234532485620943562345234958634))
-(check-eqv? (bitwise-orc1 -34572348562304523465432065423 -234532485620943562345234958634)
-	    (test-bitwise-orc1 -34572348562304523465432065423 -234532485620943562345234958634))
-(check-eqv? (bitwise-orc1  902345798234656542928345617042360 123443)
-	    (test-bitwise-orc1  902345798234656542928345617042360 123443))
+(test-error-tail type-exception? (bitwise-orc1 1 'a))
+(test-error-tail type-exception? (bitwise-orc1 'a 1))
+(test-eqv (test-bitwise-orc1 123443 17042360) (bitwise-orc1 123443 17042360))
+(test-eqv
+ (test-bitwise-orc1 123443 902345798234656542928345617042360)
+ (bitwise-orc1 123443 902345798234656542928345617042360))
+(test-eqv (test-bitwise-orc1 -123443 17042360) (bitwise-orc1 -123443 17042360))
+(test-eqv
+ (test-bitwise-orc1 -123443 902345798234656542928345617042360)
+ (bitwise-orc1 -123443 902345798234656542928345617042360))
+(test-eqv (test-bitwise-orc1 123443 -17042360) (bitwise-orc1 123443 -17042360))
+(test-eqv
+ (test-bitwise-orc1 123443 -902345798234656542928345617042360)
+ (bitwise-orc1 123443 -902345798234656542928345617042360))
+(test-eqv
+ (test-bitwise-orc1 -123443 -17042360)
+ (bitwise-orc1 -123443 -17042360))
+(test-eqv
+ (test-bitwise-orc1 -123443 -902345798234656542928345617042360)
+ (bitwise-orc1 -123443 -902345798234656542928345617042360))
+(test-eqv
+ (test-bitwise-orc1
+  34572348562304523465432065423
+  234532485620943562345234958634)
+ (bitwise-orc1 34572348562304523465432065423 234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-orc1
+  -34572348562304523465432065423
+  234532485620943562345234958634)
+ (bitwise-orc1 -34572348562304523465432065423 234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-orc1
+  34572348562304523465432065423
+  -234532485620943562345234958634)
+ (bitwise-orc1 34572348562304523465432065423 -234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-orc1
+  -34572348562304523465432065423
+  -234532485620943562345234958634)
+ (bitwise-orc1 -34572348562304523465432065423 -234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-orc1 902345798234656542928345617042360 123443)
+ (bitwise-orc1 902345798234656542928345617042360 123443))
 
-(check-tail-exn type-exception? (lambda () (bitwise-orc2 1 'a)))
-(check-tail-exn type-exception? (lambda () (bitwise-orc2 'a 1)))
-(check-eqv? (bitwise-orc2 123443 17042360) (test-bitwise-orc2 123443 17042360))
-(check-eqv? (bitwise-orc2 123443 902345798234656542928345617042360)
-	    (test-bitwise-orc2 123443 902345798234656542928345617042360))
-(check-eqv? (bitwise-orc2 -123443 17042360) (test-bitwise-orc2 -123443 17042360))
-(check-eqv? (bitwise-orc2 -123443 902345798234656542928345617042360)
-	    (test-bitwise-orc2 -123443 902345798234656542928345617042360))
-(check-eqv? (bitwise-orc2 123443 -17042360)
-	    (test-bitwise-orc2 123443 -17042360))
-(check-eqv? (bitwise-orc2 123443 -902345798234656542928345617042360)
-	    (test-bitwise-orc2 123443 -902345798234656542928345617042360))
-(check-eqv? (bitwise-orc2 -123443 -17042360)
-	    (test-bitwise-orc2 -123443 -17042360))
-(check-eqv? (bitwise-orc2 -123443 -902345798234656542928345617042360)
-	    (test-bitwise-orc2 -123443 -902345798234656542928345617042360))
-(check-eqv? (bitwise-orc2 34572348562304523465432065423 234532485620943562345234958634)
-	    (test-bitwise-orc2 34572348562304523465432065423 234532485620943562345234958634))
-(check-eqv? (bitwise-orc2 -34572348562304523465432065423 234532485620943562345234958634)
-	    (test-bitwise-orc2 -34572348562304523465432065423 234532485620943562345234958634))
-(check-eqv? (bitwise-orc2 34572348562304523465432065423 -234532485620943562345234958634)
-	    (test-bitwise-orc2 34572348562304523465432065423 -234532485620943562345234958634))
-(check-eqv? (bitwise-orc2 -34572348562304523465432065423 -234532485620943562345234958634)
-	    (test-bitwise-orc2 -34572348562304523465432065423 -234532485620943562345234958634))
-(check-eqv? (bitwise-orc2  902345798234656542928345617042360 123443)
-	    (test-bitwise-orc2  902345798234656542928345617042360 123443))
+(test-error-tail type-exception? (bitwise-orc2 1 'a))
+(test-error-tail type-exception? (bitwise-orc2 'a 1))
+(test-eqv (test-bitwise-orc2 123443 17042360) (bitwise-orc2 123443 17042360))
+(test-eqv
+ (test-bitwise-orc2 123443 902345798234656542928345617042360)
+ (bitwise-orc2 123443 902345798234656542928345617042360))
+(test-eqv (test-bitwise-orc2 -123443 17042360) (bitwise-orc2 -123443 17042360))
+(test-eqv
+ (test-bitwise-orc2 -123443 902345798234656542928345617042360)
+ (bitwise-orc2 -123443 902345798234656542928345617042360))
+(test-eqv (test-bitwise-orc2 123443 -17042360) (bitwise-orc2 123443 -17042360))
+(test-eqv
+ (test-bitwise-orc2 123443 -902345798234656542928345617042360)
+ (bitwise-orc2 123443 -902345798234656542928345617042360))
+(test-eqv
+ (test-bitwise-orc2 -123443 -17042360)
+ (bitwise-orc2 -123443 -17042360))
+(test-eqv
+ (test-bitwise-orc2 -123443 -902345798234656542928345617042360)
+ (bitwise-orc2 -123443 -902345798234656542928345617042360))
+(test-eqv
+ (test-bitwise-orc2
+  34572348562304523465432065423
+  234532485620943562345234958634)
+ (bitwise-orc2 34572348562304523465432065423 234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-orc2
+  -34572348562304523465432065423
+  234532485620943562345234958634)
+ (bitwise-orc2 -34572348562304523465432065423 234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-orc2
+  34572348562304523465432065423
+  -234532485620943562345234958634)
+ (bitwise-orc2 34572348562304523465432065423 -234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-orc2
+  -34572348562304523465432065423
+  -234532485620943562345234958634)
+ (bitwise-orc2 -34572348562304523465432065423 -234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-orc2 902345798234656542928345617042360 123443)
+ (bitwise-orc2 902345798234656542928345617042360 123443))
 
-(check-tail-exn type-exception? (lambda () (bitwise-xor 1 'a)))
-(check-tail-exn type-exception? (lambda () (bitwise-xor 'a 1)))
-(check-eqv? (bitwise-xor 123443 17042360) (test-bitwise-xor 123443 17042360))
-(check-eqv? (bitwise-xor 123443 902345798234656542928345617042360)
-	    (test-bitwise-xor 123443 902345798234656542928345617042360))
-(check-eqv? (bitwise-xor -123443 17042360) (test-bitwise-xor -123443 17042360))
-(check-eqv? (bitwise-xor -123443 902345798234656542928345617042360)
-	    (test-bitwise-xor -123443 902345798234656542928345617042360))
-(check-eqv? (bitwise-xor 123443 -17042360)
-	    (test-bitwise-xor 123443 -17042360))
-(check-eqv? (bitwise-xor 123443 -902345798234656542928345617042360)
-	    (test-bitwise-xor 123443 -902345798234656542928345617042360))
-(check-eqv? (bitwise-xor -123443 -17042360)
-	    (test-bitwise-xor -123443 -17042360))
-(check-eqv? (bitwise-xor -123443 -902345798234656542928345617042360)
-	    (test-bitwise-xor -123443 -902345798234656542928345617042360))
-(check-eqv? (bitwise-xor 34572348562304523465432065423 234532485620943562345234958634)
-	    (test-bitwise-xor 34572348562304523465432065423 234532485620943562345234958634))
-(check-eqv? (bitwise-xor -34572348562304523465432065423 234532485620943562345234958634)
-	    (test-bitwise-xor -34572348562304523465432065423 234532485620943562345234958634))
-(check-eqv? (bitwise-xor 34572348562304523465432065423 -234532485620943562345234958634)
-	    (test-bitwise-xor 34572348562304523465432065423 -234532485620943562345234958634))
-(check-eqv? (bitwise-xor -34572348562304523465432065423 -234532485620943562345234958634)
-	    (test-bitwise-xor -34572348562304523465432065423 -234532485620943562345234958634))
-(check-eqv? (bitwise-xor  902345798234656542928345617042360 123443)
-	    (test-bitwise-xor  902345798234656542928345617042360 123443))
+(test-error-tail type-exception? (bitwise-xor 1 'a))
+(test-error-tail type-exception? (bitwise-xor 'a 1))
+(test-eqv (test-bitwise-xor 123443 17042360) (bitwise-xor 123443 17042360))
+(test-eqv
+ (test-bitwise-xor 123443 902345798234656542928345617042360)
+ (bitwise-xor 123443 902345798234656542928345617042360))
+(test-eqv (test-bitwise-xor -123443 17042360) (bitwise-xor -123443 17042360))
+(test-eqv
+ (test-bitwise-xor -123443 902345798234656542928345617042360)
+ (bitwise-xor -123443 902345798234656542928345617042360))
+(test-eqv (test-bitwise-xor 123443 -17042360) (bitwise-xor 123443 -17042360))
+(test-eqv
+ (test-bitwise-xor 123443 -902345798234656542928345617042360)
+ (bitwise-xor 123443 -902345798234656542928345617042360))
+(test-eqv (test-bitwise-xor -123443 -17042360) (bitwise-xor -123443 -17042360))
+(test-eqv
+ (test-bitwise-xor -123443 -902345798234656542928345617042360)
+ (bitwise-xor -123443 -902345798234656542928345617042360))
+(test-eqv
+ (test-bitwise-xor
+  34572348562304523465432065423
+  234532485620943562345234958634)
+ (bitwise-xor 34572348562304523465432065423 234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-xor
+  -34572348562304523465432065423
+  234532485620943562345234958634)
+ (bitwise-xor -34572348562304523465432065423 234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-xor
+  34572348562304523465432065423
+  -234532485620943562345234958634)
+ (bitwise-xor 34572348562304523465432065423 -234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-xor
+  -34572348562304523465432065423
+  -234532485620943562345234958634)
+ (bitwise-xor -34572348562304523465432065423 -234532485620943562345234958634))
+(test-eqv
+ (test-bitwise-xor 902345798234656542928345617042360 123443)
+ (bitwise-xor 902345798234656542928345617042360 123443))
 
-(check-tail-exn type-exception? (lambda () (bits 123)))
-(check-tail-exn type-exception? (lambda () (bits "foo")))
-(check-eqv? (bits) 0)
-(check-eqv? (bits #f) 0)
-(check-eqv? (bits #t) 1)
-(check-eqv? (bits #f #t #f #t) 10)
+(test-error-tail type-exception? (bits 123))
+(test-error-tail type-exception? (bits "foo"))
+(test-eqv 0 (bits))
+(test-eqv 0 (bits #f))
+(test-eqv 1 (bits #t))
+(test-eqv 10 (bits #f #t #f #t))
 
-(check-tail-exn type-exception? (lambda () (list->bits "foo")))
-(check-tail-exn type-exception? (lambda () (list->bits '(123))))
-(check-tail-exn type-exception? (lambda () (list->bits '("foo"))))
-(check-tail-exn type-exception? (lambda () (list->bits '(#f . #f))))
-(check-eqv? (list->bits '()) 0)
-(check-eqv? (list->bits '(#f)) 0)
-(check-eqv? (list->bits '(#t)) 1)
-(check-eqv? (list->bits '(#t #t #t #f)) 7)
-(check-eqv? (list->bits '(#f #t #f #t)) 10)
+(test-error-tail type-exception? (list->bits "foo"))
+(test-error-tail type-exception? (list->bits '(123)))
+(test-error-tail type-exception? (list->bits '("foo")))
+(test-error-tail type-exception? (list->bits '(#f . #f)))
+(test-eqv 0 (list->bits '()))
+(test-eqv 0 (list->bits '(#f)))
+(test-eqv 1 (list->bits '(#t)))
+(test-eqv 7 (list->bits '(#t #t #t #f)))
+(test-eqv 10 (list->bits '(#f #t #f #t)))
 
-(check-tail-exn type-exception? (lambda () (vector->bits "foo")))
-(check-tail-exn type-exception? (lambda () (vector->bits '#(123))))
-(check-tail-exn type-exception? (lambda () (vector->bits '#("foo"))))
-(check-eqv? (vector->bits '#()) 0)
-(check-eqv? (vector->bits '#(#f)) 0)
-(check-eqv? (vector->bits '#(#t)) 1)
-(check-eqv? (vector->bits '#(#t #t #t #f)) 7)
-(check-eqv? (vector->bits '#(#f #t #f #t)) 10)
+(test-error-tail type-exception? (vector->bits "foo"))
+(test-error-tail type-exception? (vector->bits '#(123)))
+(test-error-tail type-exception? (vector->bits '#("foo")))
+(test-eqv 0 (vector->bits '#()))
+(test-eqv 0 (vector->bits '#(#f)))
+(test-eqv 1 (vector->bits '#(#t)))
+(test-eqv 7 (vector->bits '#(#t #t #t #f)))
+(test-eqv 10 (vector->bits '#(#f #t #f #t)))
 
-(check-tail-exn type-exception? (lambda () (bits->vector "foo")))
-(check-tail-exn type-exception? (lambda () (bits->vector 10 "foo")))
-(check-equal? (bits->vector -9) '#(#t #t #t #f))
-(check-equal? (bits->vector -1) '#())
-(check-equal? (bits->vector 0) '#())
-(check-equal? (bits->vector 1) '#(#t))
-(check-equal? (bits->vector 10) '#(#f #t #f #t))
-(check-equal? (bits->vector -9 3) '#(#t #t #t))
-(check-equal? (bits->vector -1 3) '#(#t #t #t))
-(check-equal? (bits->vector 0 3) '#(#f #f #f))
-(check-equal? (bits->vector 1 3) '#(#t #f #f))
-(check-equal? (bits->vector 10 3) '#(#f #t #f))
+(test-error-tail type-exception? (bits->vector "foo"))
+(test-error-tail type-exception? (bits->vector 10 "foo"))
+(test-equal '#(#t #t #t #f) (bits->vector -9))
+(test-equal '#() (bits->vector -1))
+(test-equal '#() (bits->vector 0))
+(test-equal '#(#t) (bits->vector 1))
+(test-equal '#(#f #t #f #t) (bits->vector 10))
+(test-equal '#(#t #t #t) (bits->vector -9 3))
+(test-equal '#(#t #t #t) (bits->vector -1 3))
+(test-equal '#(#f #f #f) (bits->vector 0 3))
+(test-equal '#(#t #f #f) (bits->vector 1 3))
+(test-equal '#(#f #t #f) (bits->vector 10 3))
 
-(check-tail-exn type-exception? (lambda () (bits->list "foo")))
-(check-tail-exn type-exception? (lambda () (bits->list 10 "foo")))
-(check-equal? (bits->list -9) '(#t #t #t #f))
-(check-equal? (bits->list -1) '())
-(check-equal? (bits->list 0) '())
-(check-equal? (bits->list 1) '(#t))
-(check-equal? (bits->list 10) '(#f #t #f #t))
-(check-equal? (bits->list -9 3) '(#t #t #t))
-(check-equal? (bits->list -1 3) '(#t #t #t))
-(check-equal? (bits->list 0 3) '(#f #f #f))
-(check-equal? (bits->list 1 3) '(#t #f #f))
-(check-equal? (bits->list 10 3) '(#f #t #f))
+(test-error-tail type-exception? (bits->list "foo"))
+(test-error-tail type-exception? (bits->list 10 "foo"))
+(test-equal '(#t #t #t #f) (bits->list -9))
+(test-equal '() (bits->list -1))
+(test-equal '() (bits->list 0))
+(test-equal '(#t) (bits->list 1))
+(test-equal '(#f #t #f #t) (bits->list 10))
+(test-equal '(#t #t #t) (bits->list -9 3))
+(test-equal '(#t #t #t) (bits->list -1 3))
+(test-equal '(#f #f #f) (bits->list 0 3))
+(test-equal '(#t #f #f) (bits->list 1 3))
+(test-equal '(#f #t #f) (bits->list 10 3))
 
 ;;;------------------------------------------------------------
 ;;; Minimal new tests for the remainder of SRFI 151 routines
 ;;;------------------------------------------------------------
 
-(check-tail-exn type-exception? (lambda () (bitwise-if 'a 3 2)))
-(check-tail-exn type-exception? (lambda () (bitwise-if 2 'a 3)))
-(check-tail-exn type-exception? (lambda () (bitwise-if 2 2 'a)))
-(check-eqv? (bitwise-if 3 1 8)  9)
-(check-eqv? (bitwise-if 3 8 1)  0)
-(check-eqv? (bitwise-if 1 1 2)  3)
-(check-eqv? (bitwise-if #b00111100 #b11110000 #b00001111)  #b00110011)
+(test-error-tail type-exception? (bitwise-if 'a 3 2))
+(test-error-tail type-exception? (bitwise-if 2 'a 3))
+(test-error-tail type-exception? (bitwise-if 2 2 'a))
+(test-eqv 9 (bitwise-if 3 1 8))
+(test-eqv 0 (bitwise-if 3 8 1))
+(test-eqv 3 (bitwise-if 1 1 2))
+(test-eqv 51 (bitwise-if 60 240 15))
 
-(check-tail-exn type-exception? (lambda () (copy-bit 0 0 'a)))
-(check-tail-exn type-exception? (lambda () (copy-bit 0 'a #f)))
-(check-tail-exn type-exception? (lambda () (copy-bit 'a -1 #f)))
-(check-tail-exn range-exception? (lambda () (copy-bit -1 -1 #f)))
-(check-eqv? (copy-bit 0 0 #f) 0)
-(check-eqv? (copy-bit 30 0 #f) 0)
-(check-eqv? (copy-bit 31 0 #f) 0)
-(check-eqv? (copy-bit 62 0 #f) 0)
-(check-eqv? (copy-bit 63 0 #f) 0)
-(check-eqv? (copy-bit 128 0 #f) 0)
-(check-eqv? (copy-bit 0 -1 #t) -1)
-(check-eqv? (copy-bit 30 -1 #t) -1)
-(check-eqv? (copy-bit 31 -1 #t) -1)
-(check-eqv? (copy-bit 62 -1 #t) -1)
-(check-eqv? (copy-bit 63 -1 #t) -1)
-(check-eqv? (copy-bit 128 -1 #t) -1)
-(check-eqv? (copy-bit 0 0 #t) 1)
-(check-eqv? (copy-bit 8 6 #t) 262)
-(check-eqv? (copy-bit 8 6 #f) 6)
-(check-eqv? (copy-bit 0 -1 #f) -2)
-(check-eqv? (copy-bit 128 340282366920938463463374607431768211456 #f) 0)
-(check-eqv?
- (copy-bit 128 340282366920938463463374607431768211456 #t)
- 340282366920938463463374607431768211456)
-(check-eqv?
- (copy-bit 64 340282366920938463463374607431768211456 #f)
- 340282366920938463463374607431768211456)
-(check-eqv?
- (copy-bit 64 -340282366920938463463374607431768211456 #f)
- -340282366920938463463374607431768211456)
-(check-eqv?
- (copy-bit 256 -340282366920938463463374607431768211456 #t)
- -340282366920938463463374607431768211456)
-(check-eqv? (copy-bit 2 0 #t) 4)
-(check-eqv? (copy-bit 2 15 #f) 11)
-(check-eqv? (copy-bit 0 0 #t) 1)
+(test-error-tail type-exception? (copy-bit 0 0 'a))
+(test-error-tail type-exception? (copy-bit 0 'a #f))
+(test-error-tail type-exception? (copy-bit 'a -1 #f))
+(test-error-tail range-exception? (copy-bit -1 -1 #f))
+(test-eqv 0 (copy-bit 0 0 #f))
+(test-eqv 0 (copy-bit 30 0 #f))
+(test-eqv 0 (copy-bit 31 0 #f))
+(test-eqv 0 (copy-bit 62 0 #f))
+(test-eqv 0 (copy-bit 63 0 #f))
+(test-eqv 0 (copy-bit 128 0 #f))
+(test-eqv -1 (copy-bit 0 -1 #t))
+(test-eqv -1 (copy-bit 30 -1 #t))
+(test-eqv -1 (copy-bit 31 -1 #t))
+(test-eqv -1 (copy-bit 62 -1 #t))
+(test-eqv -1 (copy-bit 63 -1 #t))
+(test-eqv -1 (copy-bit 128 -1 #t))
+(test-eqv 1 (copy-bit 0 0 #t))
+(test-eqv 262 (copy-bit 8 6 #t))
+(test-eqv 6 (copy-bit 8 6 #f))
+(test-eqv -2 (copy-bit 0 -1 #f))
+(test-eqv 0 (copy-bit 128 340282366920938463463374607431768211456 #f))
+(test-eqv
+ 340282366920938463463374607431768211456
+ (copy-bit 128 340282366920938463463374607431768211456 #t))
+(test-eqv
+ 340282366920938463463374607431768211456
+ (copy-bit 64 340282366920938463463374607431768211456 #f))
+(test-eqv
+ -340282366920938463463374607431768211456
+ (copy-bit 64 -340282366920938463463374607431768211456 #f))
+(test-eqv
+ -340282366920938463463374607431768211456
+ (copy-bit 256 -340282366920938463463374607431768211456 #t))
+(test-eqv 4 (copy-bit 2 0 #t))
+(test-eqv 11 (copy-bit 2 15 #f))
+(test-eqv 1 (copy-bit 0 0 #t))
 
-(check-tail-exn type-exception? (lambda () (bit-swap 1 2 'a)))
-(check-tail-exn type-exception? (lambda () (bit-swap 1'a -1)))
-(check-tail-exn range-exception? (lambda () (bit-swap 1 -1 -1)))
-(check-tail-exn type-exception? (lambda () (bit-swap 'a 1 -1)))
-(check-tail-exn range-exception? (lambda () (bit-swap -1 1 -1)))
-(check-eqv? (bit-swap 1 2 13) 11)
-(check-eqv? (bit-swap 2 1 13) 11)
-(check-eqv? (bit-swap 0 1 13) 14)
-(check-eqv? (bit-swap 3 10 13) 1029)
-(check-eqv? (bit-swap 0 2 4) 1)
+(test-error-tail type-exception? (bit-swap 1 2 'a))
+(test-error-tail type-exception? (bit-swap 1 'a -1))
+(test-error-tail range-exception? (bit-swap 1 -1 -1))
+(test-error-tail type-exception? (bit-swap 'a 1 -1))
+(test-error-tail range-exception? (bit-swap -1 1 -1))
+(test-eqv 11 (bit-swap 1 2 13))
+(test-eqv 11 (bit-swap 2 1 13))
+(test-eqv 14 (bit-swap 0 1 13))
+(test-eqv 1029 (bit-swap 3 10 13))
+(test-eqv 1 (bit-swap 0 2 4))
 
-(check-tail-exn type-exception? (lambda () (any-bit-set? 'a 6)))
-(check-tail-exn type-exception? (lambda () (any-bit-set?  6 'a)))
-(check-eqv? (any-bit-set? 3 6) #t)
-(check-eqv? (any-bit-set? 3 12) #f)
-(check-eqv? (every-bit-set? 4 6) #t)
-(check-eqv? (every-bit-set? 7 6) #f)
+(test-error-tail type-exception? (any-bit-set? 'a 6))
+(test-error-tail type-exception? (any-bit-set? 6 'a))
+(test-eqv #t (any-bit-set? 3 6))
+(test-eqv #f (any-bit-set? 3 12))
+(test-eqv #t (every-bit-set? 4 6))
+(test-eqv #f (every-bit-set? 7 6))
 
-(check-tail-exn type-exception? (lambda () (every-bit-set? 'a 6)))
-(check-tail-exn type-exception? (lambda () (every-bit-set?  6 'a)))
-(check-eqv? (every-bit-set? 4 6) #t)
-(check-eqv? (every-bit-set? 7 6) #f)
+(test-error-tail type-exception? (every-bit-set? 'a 6))
+(test-error-tail type-exception? (every-bit-set? 6 'a))
+(test-eqv #t (every-bit-set? 4 6))
+(test-eqv #f (every-bit-set? 7 6))
 
-(check-tail-exn type-exception? (lambda () (bit-field 6 0 'a)))
-(check-tail-exn type-exception? (lambda () (bit-field 6 'a 1)))
-(check-tail-exn type-exception? (lambda () (bit-field 'a 0 1)))
-(check-tail-exn range-exception? (lambda () (bit-field 6 0 -1)))
-(check-tail-exn range-exception? (lambda () (bit-field 6 -1 1)))
-(check-tail-exn range-exception? (lambda () (bit-field 6 2 1)))
-(check-eqv? (bit-field 6 0 1) 0)
-(check-eqv? (bit-field 6 1 3) 3)
-(check-eqv? (bit-field 6 2 999) 1)
-(check-eqv? (bit-field 340282366920938463463374607431768211456 128 129) 1)
-(check-eqv? (bit-field 874 0 4) 10)
-(check-eqv? (bit-field 874 3 9) 45)
-(check-eqv? (bit-field 874 4 9) 22)
-(check-eqv? (bit-field 874 4 10) 54)
+(test-error-tail type-exception? (bit-field 6 0 'a))
+(test-error-tail type-exception? (bit-field 6 'a 1))
+(test-error-tail type-exception? (bit-field 'a 0 1))
+(test-error-tail range-exception? (bit-field 6 0 -1))
+(test-error-tail range-exception? (bit-field 6 -1 1))
+(test-error-tail range-exception? (bit-field 6 2 1))
+(test-eqv 0 (bit-field 6 0 1))
+(test-eqv 3 (bit-field 6 1 3))
+(test-eqv 1 (bit-field 6 2 999))
+(test-eqv 1 (bit-field 340282366920938463463374607431768211456 128 129))
+(test-eqv 10 (bit-field 874 0 4))
+(test-eqv 45 (bit-field 874 3 9))
+(test-eqv 22 (bit-field 874 4 9))
+(test-eqv 54 (bit-field 874 4 10))
 
-(check-tail-exn type-exception? (lambda () (bit-field-any? 6 0 'a)))
-(check-tail-exn type-exception? (lambda () (bit-field-any? 6 'a 1)))
-(check-tail-exn type-exception? (lambda () (bit-field-any? 'a 0 1)))
-(check-tail-exn range-exception? (lambda () (bit-field-any? 6 0 -1)))
-(check-tail-exn range-exception? (lambda () (bit-field-any? 6 -1 1)))
-(check-tail-exn range-exception? (lambda () (bit-field-any? 6 2 1)))
-(check-eqv? (bit-field-any? 45 0 2) #t)
-(check-eqv? (bit-field-any? 45 2 4) #t)
-(check-eqv? (bit-field-any? 45 1 2) #f)
-
-
-(check-tail-exn type-exception? (lambda () (bit-field-every? 6 0 'a)))
-(check-tail-exn type-exception? (lambda () (bit-field-every? 6 'a 1)))
-(check-tail-exn type-exception? (lambda () (bit-field-every? 'a 0 1)))
-(check-tail-exn range-exception? (lambda () (bit-field-every? 6 0 -1)))
-(check-tail-exn range-exception? (lambda () (bit-field-every? 6 -1 1)))
-(check-tail-exn range-exception? (lambda () (bit-field-every? 6 2 1)))
-(check-eqv? (bit-field-every? 45 0 2) #f)
-(check-eqv? (bit-field-every? 45 2 4) #t)
-(check-eqv? (bit-field-every? 45 0 1) #t)
+(test-error-tail type-exception? (bit-field-any? 6 0 'a))
+(test-error-tail type-exception? (bit-field-any? 6 'a 1))
+(test-error-tail type-exception? (bit-field-any? 'a 0 1))
+(test-error-tail range-exception? (bit-field-any? 6 0 -1))
+(test-error-tail range-exception? (bit-field-any? 6 -1 1))
+(test-error-tail range-exception? (bit-field-any? 6 2 1))
+(test-eqv #t (bit-field-any? 45 0 2))
+(test-eqv #t (bit-field-any? 45 2 4))
+(test-eqv #f (bit-field-any? 45 1 2))
 
 
-(check-tail-exn type-exception? (lambda () (bit-field-clear 6 0 'a)))
-(check-tail-exn type-exception? (lambda () (bit-field-clear 6 'a 1)))
-(check-tail-exn type-exception? (lambda () (bit-field-clear 'a 0 1)))
-(check-tail-exn range-exception? (lambda () (bit-field-clear 6 0 -1)))
-(check-tail-exn range-exception? (lambda () (bit-field-clear 6 -1 1)))
-(check-tail-exn range-exception? (lambda () (bit-field-clear 6 2 1)))
-(check-eqv? (bit-field-clear 42 1 4) 32)
-
-(check-tail-exn type-exception? (lambda () (bit-field-set 6 0 'a)))
-(check-tail-exn type-exception? (lambda () (bit-field-set 6 'a 1)))
-(check-tail-exn type-exception? (lambda () (bit-field-set 'a 0 1)))
-(check-tail-exn range-exception? (lambda () (bit-field-set 6 0 -1)))
-(check-tail-exn range-exception? (lambda () (bit-field-set 6 -1 1)))
-(check-tail-exn range-exception? (lambda () (bit-field-set 6 2 1)))
-(check-eqv? (bit-field-set 42 1 4) 46)
-
-(check-tail-exn type-exception? (lambda () (bit-field-replace 'a 1 0 1)))
-(check-tail-exn type-exception? (lambda () (bit-field-replace 6 'a 0 1)))
-(check-tail-exn type-exception? (lambda () (bit-field-replace 6 1 'a 1)))
-(check-tail-exn type-exception? (lambda () (bit-field-replace 6 1 0 'a)))
-(check-tail-exn range-exception? (lambda () (bit-field-replace 6 1 -1 1)))
-(check-tail-exn range-exception? (lambda () (bit-field-replace 6 1 0 -1)))
-(check-tail-exn range-exception? (lambda () (bit-field-replace 6 1 2 1)))
-(check-eqv? (bit-field-replace 6 1 0 1) 7)
-(check-eqv? (bit-field-replace 6 1 1 2) 6)
-(check-eqv? (bit-field-replace 6 1 1 3) 2)
-(check-eqv? (bit-field-replace 42 2 1 4) 36)
-
-(check-tail-exn type-exception? (lambda () (bit-field-replace-same 'a 1 0 1)))
-(check-tail-exn type-exception? (lambda () (bit-field-replace-same 6 'a 0 1)))
-(check-tail-exn type-exception? (lambda () (bit-field-replace-same 6 1 'a 1)))
-(check-tail-exn type-exception? (lambda () (bit-field-replace-same 6 1 0 'a)))
-(check-tail-exn range-exception? (lambda () (bit-field-replace-same 6 1 -1 1)))
-(check-tail-exn range-exception? (lambda () (bit-field-replace-same 6 1 0 -1)))
-(check-tail-exn range-exception? (lambda () (bit-field-replace-same 6 1 2 1)))
-(check-eqv? (bit-field-replace-same 15 0 1 3) 9)
+(test-error-tail type-exception? (bit-field-every? 6 0 'a))
+(test-error-tail type-exception? (bit-field-every? 6 'a 1))
+(test-error-tail type-exception? (bit-field-every? 'a 0 1))
+(test-error-tail range-exception? (bit-field-every? 6 0 -1))
+(test-error-tail range-exception? (bit-field-every? 6 -1 1))
+(test-error-tail range-exception? (bit-field-every? 6 2 1))
+(test-eqv #f (bit-field-every? 45 0 2))
+(test-eqv #t (bit-field-every? 45 2 4))
+(test-eqv #t (bit-field-every? 45 0 1))
 
 
-(check-tail-exn type-exception? (lambda () (bit-field-rotate 'a 0 0 10)))
-(check-tail-exn type-exception? (lambda () (bit-field-rotate #b110 'a 0 10)))
-(check-tail-exn type-exception? (lambda () (bit-field-rotate #b110 0 'a 10)))
-(check-tail-exn type-exception? (lambda () (bit-field-rotate #b110 0 0 'a)))
-(check-tail-exn range-exception? (lambda () (bit-field-rotate #b110 0 -1 10)))
-(check-tail-exn range-exception? (lambda () (bit-field-rotate #b110 0 0 -1)))
-(check-tail-exn range-exception? (lambda () (bit-field-rotate #b110 0 2 1)))
-(check-eqv? (bit-field-rotate #b110 0 0 10)  #b110)
-(check-eqv? (bit-field-rotate #b110 0 0 256)  #b110)
-(check-eqv? (bit-field-rotate #x100000000000000000000000000000000 1 0 129)  1)
-(check-eqv? (bit-field-rotate #b110 1 1 2)  #b110)
-(check-eqv? (bit-field-rotate #b110 1 2 4)  #b1010)
-(check-eqv? (bit-field-rotate #b0111 -1 1 4)  #b1011)
+(test-error-tail type-exception? (bit-field-clear 6 0 'a))
+(test-error-tail type-exception? (bit-field-clear 6 'a 1))
+(test-error-tail type-exception? (bit-field-clear 'a 0 1))
+(test-error-tail range-exception? (bit-field-clear 6 0 -1))
+(test-error-tail range-exception? (bit-field-clear 6 -1 1))
+(test-error-tail range-exception? (bit-field-clear 6 2 1))
+(test-eqv 32 (bit-field-clear 42 1 4))
+
+(test-error-tail type-exception? (bit-field-set 6 0 'a))
+(test-error-tail type-exception? (bit-field-set 6 'a 1))
+(test-error-tail type-exception? (bit-field-set 'a 0 1))
+(test-error-tail range-exception? (bit-field-set 6 0 -1))
+(test-error-tail range-exception? (bit-field-set 6 -1 1))
+(test-error-tail range-exception? (bit-field-set 6 2 1))
+(test-eqv 46 (bit-field-set 42 1 4))
+
+(test-error-tail type-exception? (bit-field-replace 'a 1 0 1))
+(test-error-tail type-exception? (bit-field-replace 6 'a 0 1))
+(test-error-tail type-exception? (bit-field-replace 6 1 'a 1))
+(test-error-tail type-exception? (bit-field-replace 6 1 0 'a))
+(test-error-tail range-exception? (bit-field-replace 6 1 -1 1))
+(test-error-tail range-exception? (bit-field-replace 6 1 0 -1))
+(test-error-tail range-exception? (bit-field-replace 6 1 2 1))
+(test-eqv 7 (bit-field-replace 6 1 0 1))
+(test-eqv 6 (bit-field-replace 6 1 1 2))
+(test-eqv 2 (bit-field-replace 6 1 1 3))
+(test-eqv 36 (bit-field-replace 42 2 1 4))
+
+(test-error-tail type-exception? (bit-field-replace-same 'a 1 0 1))
+(test-error-tail type-exception? (bit-field-replace-same 6 'a 0 1))
+(test-error-tail type-exception? (bit-field-replace-same 6 1 'a 1))
+(test-error-tail type-exception? (bit-field-replace-same 6 1 0 'a))
+(test-error-tail range-exception? (bit-field-replace-same 6 1 -1 1))
+(test-error-tail range-exception? (bit-field-replace-same 6 1 0 -1))
+(test-error-tail range-exception? (bit-field-replace-same 6 1 2 1))
+(test-eqv 9 (bit-field-replace-same 15 0 1 3))
 
 
-(check-tail-exn type-exception? (lambda () (bit-field-reverse 'a 1 4)))
-(check-tail-exn type-exception? (lambda () (bit-field-reverse 6 'a 4)))
-(check-tail-exn type-exception? (lambda () (bit-field-reverse 6 1 'a)))
-(check-tail-exn range-exception? (lambda () (bit-field-reverse 6 -1 3)))
-(check-tail-exn range-exception? (lambda () (bit-field-reverse 6 1 -1)))
-(check-tail-exn range-exception? (lambda () (bit-field-reverse 6 3 1)))
-(check-eqv? (bit-field-reverse 6 1 3)  6)
-(check-eqv? (bit-field-reverse 6 1 4)  12)
-(check-eqv? (bit-field-reverse 1 0 32)  #x80000000)
-(check-eqv? (bit-field-reverse 1 0 31)  #x40000000)
-(check-eqv? (bit-field-reverse 1 0 30)  #x20000000)
-(check-eqv? (bit-field-reverse #x140000000000000000000000000000000 0 129)  5)
+(test-error-tail type-exception? (bit-field-rotate 'a 0 0 10))
+(test-error-tail type-exception? (bit-field-rotate 6 'a 0 10))
+(test-error-tail type-exception? (bit-field-rotate 6 0 'a 10))
+(test-error-tail type-exception? (bit-field-rotate 6 0 0 'a))
+(test-error-tail range-exception? (bit-field-rotate 6 0 -1 10))
+(test-error-tail range-exception? (bit-field-rotate 6 0 0 -1))
+(test-error-tail range-exception? (bit-field-rotate 6 0 2 1))
+(test-eqv 6 (bit-field-rotate 6 0 0 10))
+(test-eqv 6 (bit-field-rotate 6 0 0 256))
+(test-eqv 1 (bit-field-rotate 340282366920938463463374607431768211456 1 0 129))
+(test-eqv 6 (bit-field-rotate 6 1 1 2))
+(test-eqv 10 (bit-field-rotate 6 1 2 4))
+(test-eqv 11 (bit-field-rotate 7 -1 1 4))
 
-(check-tail-exn type-exception? (lambda () (bitwise-fold 'a '() #b1010111)))
-(check-tail-exn type-exception? (lambda () (bitwise-fold cons '() 'a)))
-(check-equal? (bitwise-fold cons '() #b1010111) '(#t #f #t #f #t #t #t))
 
-(check-tail-exn type-exception? (lambda () (bitwise-for-each 'a #b1010111)))
-(check-tail-exn type-exception? (lambda () (bitwise-for-each (lambda (b) #t) 'a)))
-(check-eqv? (let ((count 0))
-              (bitwise-for-each (lambda (b) (if b (set! count (+ count 1))))
-                                #b1010111)
-              count)
-            5)
+(test-error-tail type-exception? (bit-field-reverse 'a 1 4))
+(test-error-tail type-exception? (bit-field-reverse 6 'a 4))
+(test-error-tail type-exception? (bit-field-reverse 6 1 'a))
+(test-error-tail range-exception? (bit-field-reverse 6 -1 3))
+(test-error-tail range-exception? (bit-field-reverse 6 1 -1))
+(test-error-tail range-exception? (bit-field-reverse 6 3 1))
+(test-eqv 6 (bit-field-reverse 6 1 3))
+(test-eqv 12 (bit-field-reverse 6 1 4))
+(test-eqv 2147483648 (bit-field-reverse 1 0 32))
+(test-eqv 1073741824 (bit-field-reverse 1 0 31))
+(test-eqv 536870912 (bit-field-reverse 1 0 30))
+(test-eqv 5 (bit-field-reverse 425352958651173079329218259289710264320 0 129))
 
-(check-tail-exn type-exception? (lambda ()
-                                  (bitwise-unfold 'a
-                                                  even?
-                                                  (lambda (i) (+ i 1))
-                                                  0)))
-(check-tail-exn type-exception? (lambda ()
-                                  (bitwise-unfold (lambda (i) (= i 10))
-                                                  'a
-                                                  (lambda (i) (+ i 1))
-                                                  0)))(check-tail-exn type-exception? (lambda ()
-                                  (bitwise-unfold (lambda (i) (= i 10))
-                                                  even?
-                                                  'a
-                                                  0)))
-(check-eqv? (bitwise-unfold (lambda (i) (= i 10))
-                            even?
-                            (lambda (i) (+ i 1))
-                            0)
-            #b101010101)
+(test-error-tail type-exception? (bitwise-fold 'a '() 87))
+(test-error-tail type-exception? (bitwise-fold cons '() 'a))
+(test-equal '(#t #f #t #f #t #t #t) (bitwise-fold cons '() 87))
 
-(check-tail-exn type-exception? (lambda () (make-bitwise-generator 1.)))
-(let ((g (make-bitwise-generator #b110)))
-  (check-eqv? (g) #f)
-  (check-eqv? (g) #t)
-  (check-eqv? (g) #t)
-  (check-eqv? (g) #f))
+(test-error-tail type-exception? (bitwise-for-each 'a 87))
+(test-error-tail type-exception? (bitwise-for-each (lambda (b) #t) 'a))
+(test-eqv
+ 5
+ (let ((count 0))
+   (bitwise-for-each (lambda (b) (if b (set! count (+ count 1)))) 87)
+   count))
+
+(test-error-tail
+ type-exception?
+ (bitwise-unfold 'a even? (lambda (i) (+ i 1)) 0))
+(test-error-tail
+ type-exception?
+ (bitwise-unfold (lambda (i) (= i 10)) 'a (lambda (i) (+ i 1)) 0))
+(test-error-tail
+ type-exception?
+ (bitwise-unfold (lambda (i) (= i 10)) even? 'a 0))
+(test-eqv
+ 341
+ (bitwise-unfold (lambda (i) (= i 10)) even? (lambda (i) (+ i 1)) 0))
+
+(test-error-tail type-exception? (make-bitwise-generator 1.))
+(let ((g (make-bitwise-generator 6)))
+  (test-eqv #f (g))
+  (test-eqv #t (g))
+  (test-eqv #t (g))
+  (test-eqv #f (g)))
 
 ;;;------------------------------------------------------------
 ;;; End of tests for the remainder of SRFI 151 routines
 ;;;------------------------------------------------------------
 
 (if (##use-fast-bignum-algorithms?)
-    (check-eqv? (expt 15 1000000) (* (expt 3 1000000) (expt 5 1000000))))
+    (test-eqv (* (expt 3 1000000) (expt 5 1000000)) (expt 15 1000000)))
 
-(check-eqv? (+ 1 1) 2)
-(check-eqv? (+ 1 1267650600228229401496703205376) 1267650600228229401496703205377)
-(check-eqv? (+ 1 1/2) 3/2)
-(check-eqv? (+ 1 1.) 2.)
-(check-eqv? (+ 1 1+i) 2+i)
-(check-eqv? (+ 1267650600228229401496703205376 1) 1267650600228229401496703205377)
-(check-eqv? (+ 1267650600228229401496703205376 1267650600228229401496703205376) 2535301200456458802993406410752)
-(check-eqv? (+ 1267650600228229401496703205376 1/2) 2535301200456458802993406410753/2)
-(check-eqv? (+ 1267650600228229401496703205376 1.) 1.2676506002282294e30)
-(check-eqv? (+ 1267650600228229401496703205376 1+i) 1267650600228229401496703205377+i)
-(check-eqv? (+ 1/2 1) 3/2)
-(check-eqv? (+ 1/2 1267650600228229401496703205376) 2535301200456458802993406410753/2)
-(check-eqv? (+ 1/2 1/2) 1)
-(check-eqv? (+ 1/2 1.) 1.5)
-(check-eqv? (+ 1/2 1+i) 3/2+i)
-(check-eqv? (+ 1. 1) 2.)
-(check-eqv? (+ 1. 1267650600228229401496703205376) 1.2676506002282294e30)
-(check-eqv? (+ 1. 1/2) 1.5)
-(check-eqv? (+ 1. 1.) 2.)
-(check-eqv? (+ 1. 1+i) 2.+i)
-(check-eqv? (+ 1+i 1) 2+i)
-(check-eqv? (+ 1+i 1267650600228229401496703205376) 1267650600228229401496703205377+i)
-(check-eqv? (+ 1+i 1/2) 3/2+i)
-(check-eqv? (+ 1+i 1.) 2.+i)
-(check-eqv? (+ 1+i 1+i) 2+2i)
-(if (eqv? 0 (* 0 0.0))   ;; These tests exercise (macro-special-case-exact-zero?)
-    (begin
-      (check-eqv? (+ -0.0i 0) -0.0i)
-      (check-eqv? (+ 0 -0.0) -0.0)))
+(test-eqv 2 (+ 1 1))
+(test-eqv
+ 1267650600228229401496703205377
+ (+ 1 1267650600228229401496703205376))
+(test-eqv 3/2 (+ 1 1/2))
+(test-eqv 2. (+ 1 1.))
+(test-eqv 2+i (+ 1 1+i))
+(test-eqv
+ 1267650600228229401496703205377
+ (+ 1267650600228229401496703205376 1))
+(test-eqv
+ 2535301200456458802993406410752
+ (+ 1267650600228229401496703205376 1267650600228229401496703205376))
+(test-eqv
+ 2535301200456458802993406410753/2
+ (+ 1267650600228229401496703205376 1/2))
+(test-eqv 1.2676506002282294e30 (+ 1267650600228229401496703205376 1.))
+(test-eqv
+ 1267650600228229401496703205377+i
+ (+ 1267650600228229401496703205376 1+i))
+(test-eqv 3/2 (+ 1/2 1))
+(test-eqv
+ 2535301200456458802993406410753/2
+ (+ 1/2 1267650600228229401496703205376))
+(test-eqv 1 (+ 1/2 1/2))
+(test-eqv 1.5 (+ 1/2 1.))
+(test-eqv 3/2+i (+ 1/2 1+i))
+(test-eqv 2. (+ 1. 1))
+(test-eqv 1.2676506002282294e30 (+ 1. 1267650600228229401496703205376))
+(test-eqv 1.5 (+ 1. 1/2))
+(test-eqv 2. (+ 1. 1.))
+(test-eqv 2.+i (+ 1. 1+i))
+(test-eqv 2+i (+ 1+i 1))
+(test-eqv
+ 1267650600228229401496703205377+i
+ (+ 1+i 1267650600228229401496703205376))
+(test-eqv 3/2+i (+ 1+i 1/2))
+(test-eqv 2.+i (+ 1+i 1.))
+(test-eqv 2+2i (+ 1+i 1+i))
+(if (eqv? 0 (* 0 0.))
+    ;; These tests exercise (macro-special-case-exact-zero?)
+    (begin (test-eqv -0.i (+ -0.i 0)) (test-eqv -0. (+ 0 -0.))))
 
-(check-eqv? (- 1 1) 0)
-(check-eqv? (- 1 1267650600228229401496703205376) -1267650600228229401496703205375)
-(check-eqv? (- 1 1/2) 1/2)
-(check-eqv? (- 1 1.) 0.)
-(check-eqv? (- 1 1+i) -i)
-(check-eqv? (- 1267650600228229401496703205376 1) 1267650600228229401496703205375)
-(check-eqv? (- 1267650600228229401496703205376 1267650600228229401496703205376) 0)
-(check-eqv? (- 1267650600228229401496703205376 1/2) 2535301200456458802993406410751/2)
-(check-eqv? (- 1267650600228229401496703205376 1.) 1.2676506002282294e30)
-(check-eqv? (- 1267650600228229401496703205376 1+i) 1267650600228229401496703205375-i)
-(check-eqv? (- 1/2 1) -1/2)
-(check-eqv? (- 1/2 1267650600228229401496703205376) -2535301200456458802993406410751/2)
-(check-eqv? (- 1/2 1/2) 0)
-(check-eqv? (- 1/2 1.) -.5)
-(check-eqv? (- 1/2 1+i) -1/2-i)
-(check-eqv? (- 1. 1) 0.)
-(check-eqv? (- 1. 1267650600228229401496703205376) -1.2676506002282294e30)
-(check-eqv? (- 1. 1/2) .5)
-(check-eqv? (- 1. 1.) 0.)
-(check-eqv? (- 1. 1+i) 0.-i)
-(check-eqv? (- 1+i 1) +i)
-(check-eqv? (- 1+i 1267650600228229401496703205376) -1267650600228229401496703205375+i)
-(check-eqv? (- 1+i 1/2) 1/2+i)
-(check-eqv? (- 1+i 1.) 0.+i)
-(check-eqv? (- 1+i 1+i) 0)
+(test-eqv 0 (- 1 1))
+(test-eqv
+ -1267650600228229401496703205375
+ (- 1 1267650600228229401496703205376))
+(test-eqv 1/2 (- 1 1/2))
+(test-eqv 0. (- 1 1.))
+(test-eqv -i (- 1 1+i))
+(test-eqv
+ 1267650600228229401496703205375
+ (- 1267650600228229401496703205376 1))
+(test-eqv
+ 0
+ (- 1267650600228229401496703205376 1267650600228229401496703205376))
+(test-eqv
+ 2535301200456458802993406410751/2
+ (- 1267650600228229401496703205376 1/2))
+(test-eqv 1.2676506002282294e30 (- 1267650600228229401496703205376 1.))
+(test-eqv
+ 1267650600228229401496703205375-i
+ (- 1267650600228229401496703205376 1+i))
+(test-eqv -1/2 (- 1/2 1))
+(test-eqv
+ -2535301200456458802993406410751/2
+ (- 1/2 1267650600228229401496703205376))
+(test-eqv 0 (- 1/2 1/2))
+(test-eqv -.5 (- 1/2 1.))
+(test-eqv -1/2-i (- 1/2 1+i))
+(test-eqv 0. (- 1. 1))
+(test-eqv -1.2676506002282294e30 (- 1. 1267650600228229401496703205376))
+(test-eqv .5 (- 1. 1/2))
+(test-eqv 0. (- 1. 1.))
+(test-eqv 0.-i (- 1. 1+i))
+(test-eqv +i (- 1+i 1))
+(test-eqv
+ -1267650600228229401496703205375+i
+ (- 1+i 1267650600228229401496703205376))
+(test-eqv 1/2+i (- 1+i 1/2))
+(test-eqv 0.+i (- 1+i 1.))
+(test-eqv 0 (- 1+i 1+i))
 
-(check-eqv? (* 1 1) 1)
-(check-eqv? (* 1 1267650600228229401496703205376) 1267650600228229401496703205376)
-(check-eqv? (* 1 1/2) 1/2)
-(check-eqv? (* 1 1.) 1.)
-(check-eqv? (* 1 1+i) 1+i)
-(check-eqv? (* 1267650600228229401496703205376 1) 1267650600228229401496703205376)
-(check-eqv? (* 1267650600228229401496703205376 1267650600228229401496703205376) 1606938044258990275541962092341162602522202993782792835301376)
-(check-eqv? (* 1267650600228229401496703205376 1/2) 633825300114114700748351602688)
-(check-eqv? (* 1267650600228229401496703205376 1.) 1.2676506002282294e30)
-(check-eqv? (* 1267650600228229401496703205376 1+i) 1267650600228229401496703205376+1267650600228229401496703205376i)
-(check-eqv? (* 1/2 1) 1/2)
-(check-eqv? (* 1/2 1267650600228229401496703205376) 633825300114114700748351602688)
-(check-eqv? (* 1/2 1/2) 1/4)
-(check-eqv? (* 1/2 1.) .5)
-(check-eqv? (* 1/2 1+i) 1/2+1/2i)
-(check-eqv? (* 1. 1) 1.)
-(check-eqv? (* 1. 1267650600228229401496703205376) 1.2676506002282294e30)
-(check-eqv? (* 1. 1/2) .5)
-(check-eqv? (* 1. 1.) 1.)
-(check-eqv? (* 1. 1+i) 1.+1.i)
-(check-eqv? (* 1+i 1) 1+i)
-(check-eqv? (* 1+i 1267650600228229401496703205376) 1267650600228229401496703205376+1267650600228229401496703205376i)
-(check-eqv? (* 1+i 1/2) 1/2+1/2i)
-(check-eqv? (* 1+i 1.) 1.+1.i)
-(check-eqv? (* 1+i 1+i) +2i)
-(if (eqv? 0 (* 0 0.0))     ;; These tests exercise (macro-special-case-exact-zero?)
-    (begin
-      (check-eqv? (* 4.-0.i 2.) 8.-0.i)
-      (check-eqv? (* 4.0 0) 0)))
+(test-eqv 1 (* 1 1))
+(test-eqv
+ 1267650600228229401496703205376
+ (* 1 1267650600228229401496703205376))
+(test-eqv 1/2 (* 1 1/2))
+(test-eqv 1. (* 1 1.))
+(test-eqv 1+i (* 1 1+i))
+(test-eqv
+ 1267650600228229401496703205376
+ (* 1267650600228229401496703205376 1))
+(test-eqv
+ 1606938044258990275541962092341162602522202993782792835301376
+ (* 1267650600228229401496703205376 1267650600228229401496703205376))
+(test-eqv
+ 633825300114114700748351602688
+ (* 1267650600228229401496703205376 1/2))
+(test-eqv 1.2676506002282294e30 (* 1267650600228229401496703205376 1.))
+(test-eqv
+ 1267650600228229401496703205376+1267650600228229401496703205376i
+ (* 1267650600228229401496703205376 1+i))
+(test-eqv 1/2 (* 1/2 1))
+(test-eqv
+ 633825300114114700748351602688
+ (* 1/2 1267650600228229401496703205376))
+(test-eqv 1/4 (* 1/2 1/2))
+(test-eqv .5 (* 1/2 1.))
+(test-eqv 1/2+1/2i (* 1/2 1+i))
+(test-eqv 1. (* 1. 1))
+(test-eqv 1.2676506002282294e30 (* 1. 1267650600228229401496703205376))
+(test-eqv .5 (* 1. 1/2))
+(test-eqv 1. (* 1. 1.))
+(test-eqv 1.+1.i (* 1. 1+i))
+(test-eqv 1+i (* 1+i 1))
+(test-eqv
+ 1267650600228229401496703205376+1267650600228229401496703205376i
+ (* 1+i 1267650600228229401496703205376))
+(test-eqv 1/2+1/2i (* 1+i 1/2))
+(test-eqv 1.+1.i (* 1+i 1.))
+(test-eqv +2i (* 1+i 1+i))
+(if (eqv? 0 (* 0 0.))
+    ;; These tests exercise (macro-special-case-exact-zero?)
+    (begin (test-eqv 8.-0.i (* 4.-0.i 2.)) (test-eqv 0 (* 4. 0))))
 
 #;
 (let* ((exact-arguments ;; expressions
@@ -1057,102 +1271,102 @@
             inexact-arguments
             (reverse inexact-arguments)))
 
-(check-eqv? (* 0. (expt 2 10000)) 0.)
-(check-eqv? (* 0. (- (expt 2 10000))) -0.)
-(check-eqv? (* (expt 2 10000) 0.) 0.)
-(check-eqv? (* (- (expt 2 10000)) 0.) -0.)
-(check-eqv? (/ 0. (expt 2 10000)) 0.)
-(check-eqv? (/ 0. (- (expt 2 10000))) -0.)
-(check-eqv? (/ (expt 2 10000) 0.) +inf.0)
-(check-eqv? (/ (- (expt 2 10000)) 0.) -inf.0)
-(check-eqv? (* 0. (expt 5/2 10000)) 0.)
-(check-eqv? (* 0. (- (expt 5/2 10000))) -0.)
-(check-eqv? (* (expt 5/2 10000) 0.) 0.)
-(check-eqv? (* (- (expt 5/2 10000)) 0.) -0.)
-(check-eqv? (/ 0. (expt 5/2 10000)) 0.)
-(check-eqv? (/ 0. (- (expt 5/2 10000))) -0.)
-(check-eqv? (/ (expt 5/2 10000) 0.) +inf.0)
-(check-eqv? (/ (- (expt 5/2 10000)) 0.) -inf.0)
-(check-eqv? (* 0. (expt 2/5 10000)) 0.)
-(check-eqv? (* 0. (- (expt 2/5 10000))) -0.)
-(check-eqv? (* (expt 2/5 10000) 0.) 0.)
-(check-eqv? (* (- (expt 2/5 10000)) 0.) -0.)
-(check-eqv? (/ 0. (expt 2/5 10000)) 0.)
-(check-eqv? (/ 0. (- (expt 2/5 10000))) -0.)
-(check-eqv? (/ (expt 2/5 10000) 0.) +inf.0)
-(check-eqv? (/ (- (expt 2/5 10000)) 0.) -inf.0)
-(check-eqv? (* -0. (expt 2 10000)) -0.)
-(check-eqv? (* -0. (- (expt 2 10000))) 0.)
-(check-eqv? (* (expt 2 10000) -0.) -0.)
-(check-eqv? (* (- (expt 2 10000)) -0.) 0.)
-(check-eqv? (/ -0. (expt 2 10000)) -0.)
-(check-eqv? (/ -0. (- (expt 2 10000))) 0.)
-(check-eqv? (/ (expt 2 10000) -0.) -inf.0)
-(check-eqv? (/ (- (expt 2 10000)) -0.) +inf.0)
-(check-eqv? (* -0. (expt 5/2 10000)) -0.)
-(check-eqv? (* -0. (- (expt 5/2 10000))) 0.)
-(check-eqv? (* (expt 5/2 10000) -0.) -0.)
-(check-eqv? (* (- (expt 5/2 10000)) -0.) 0.)
-(check-eqv? (/ -0. (expt 5/2 10000)) -0.)
-(check-eqv? (/ -0. (- (expt 5/2 10000))) 0.)
-(check-eqv? (/ (expt 5/2 10000) -0.) -inf.0)
-(check-eqv? (/ (- (expt 5/2 10000)) -0.) +inf.0)
-(check-eqv? (* -0. (expt 2/5 10000)) -0.)
-(check-eqv? (* -0. (- (expt 2/5 10000))) 0.)
-(check-eqv? (* (expt 2/5 10000) -0.) -0.)
-(check-eqv? (* (- (expt 2/5 10000)) -0.) 0.)
-(check-eqv? (/ -0. (expt 2/5 10000)) -0.)
-(check-eqv? (/ -0. (- (expt 2/5 10000))) 0.)
-(check-eqv? (/ (expt 2/5 10000) -0.) -inf.0)
-(check-eqv? (/ (- (expt 2/5 10000)) -0.) +inf.0)
-(check-eqv? (* -inf.0 (expt 2 10000)) -inf.0)
-(check-eqv? (* -inf.0 (- (expt 2 10000))) +inf.0)
-(check-eqv? (* (expt 2 10000) -inf.0) -inf.0)
-(check-eqv? (* (- (expt 2 10000)) -inf.0) +inf.0)
-(check-eqv? (/ -inf.0 (expt 2 10000)) -inf.0)
-(check-eqv? (/ -inf.0 (- (expt 2 10000))) +inf.0)
-(check-eqv? (/ (expt 2 10000) -inf.0) -0.)
-(check-eqv? (/ (- (expt 2 10000)) -inf.0) 0.)
-(check-eqv? (* -inf.0 (expt 5/2 10000)) -inf.0)
-(check-eqv? (* -inf.0 (- (expt 5/2 10000))) +inf.0)
-(check-eqv? (* (expt 5/2 10000) -inf.0) -inf.0)
-(check-eqv? (* (- (expt 5/2 10000)) -inf.0) +inf.0)
-(check-eqv? (/ -inf.0 (expt 5/2 10000)) -inf.0)
-(check-eqv? (/ -inf.0 (- (expt 5/2 10000))) +inf.0)
-(check-eqv? (/ (expt 5/2 10000) -inf.0) -0.)
-(check-eqv? (/ (- (expt 5/2 10000)) -inf.0) 0.)
-(check-eqv? (* -inf.0 (expt 2/5 10000)) -inf.0)
-(check-eqv? (* -inf.0 (- (expt 2/5 10000))) +inf.0)
-(check-eqv? (* (expt 2/5 10000) -inf.0) -inf.0)
-(check-eqv? (* (- (expt 2/5 10000)) -inf.0) +inf.0)
-(check-eqv? (/ -inf.0 (expt 2/5 10000)) -inf.0)
-(check-eqv? (/ -inf.0 (- (expt 2/5 10000))) +inf.0)
-(check-eqv? (/ (expt 2/5 10000) -inf.0) -0.)
-(check-eqv? (/ (- (expt 2/5 10000)) -inf.0) 0.)
-(check-eqv? (* +inf.0 (expt 2 10000)) +inf.0)
-(check-eqv? (* +inf.0 (- (expt 2 10000))) -inf.0)
-(check-eqv? (* (expt 2 10000) +inf.0) +inf.0)
-(check-eqv? (* (- (expt 2 10000)) +inf.0) -inf.0)
-(check-eqv? (/ +inf.0 (expt 2 10000)) +inf.0)
-(check-eqv? (/ +inf.0 (- (expt 2 10000))) -inf.0)
-(check-eqv? (/ (expt 2 10000) +inf.0) 0.)
-(check-eqv? (/ (- (expt 2 10000)) +inf.0) -0.)
-(check-eqv? (* +inf.0 (expt 5/2 10000)) +inf.0)
-(check-eqv? (* +inf.0 (- (expt 5/2 10000))) -inf.0)
-(check-eqv? (* (expt 5/2 10000) +inf.0) +inf.0)
-(check-eqv? (* (- (expt 5/2 10000)) +inf.0) -inf.0)
-(check-eqv? (/ +inf.0 (expt 5/2 10000)) +inf.0)
-(check-eqv? (/ +inf.0 (- (expt 5/2 10000))) -inf.0)
-(check-eqv? (/ (expt 5/2 10000) +inf.0) 0.)
-(check-eqv? (/ (- (expt 5/2 10000)) +inf.0) -0.)
-(check-eqv? (* +inf.0 (expt 2/5 10000)) +inf.0)
-(check-eqv? (* +inf.0 (- (expt 2/5 10000))) -inf.0)
-(check-eqv? (* (expt 2/5 10000) +inf.0) +inf.0)
-(check-eqv? (* (- (expt 2/5 10000)) +inf.0) -inf.0)
-(check-eqv? (/ +inf.0 (expt 2/5 10000)) +inf.0)
-(check-eqv? (/ +inf.0 (- (expt 2/5 10000))) -inf.0)
-(check-eqv? (/ (expt 2/5 10000) +inf.0) 0.)
-(check-eqv? (/ (- (expt 2/5 10000)) +inf.0) -0.)
+(test-eqv 0. (* 0. (expt 2 10000)))
+(test-eqv -0. (* 0. (- (expt 2 10000))))
+(test-eqv 0. (* (expt 2 10000) 0.))
+(test-eqv -0. (* (- (expt 2 10000)) 0.))
+(test-eqv 0. (/ 0. (expt 2 10000)))
+(test-eqv -0. (/ 0. (- (expt 2 10000))))
+(test-eqv +inf.0 (/ (expt 2 10000) 0.))
+(test-eqv -inf.0 (/ (- (expt 2 10000)) 0.))
+(test-eqv 0. (* 0. (expt 5/2 10000)))
+(test-eqv -0. (* 0. (- (expt 5/2 10000))))
+(test-eqv 0. (* (expt 5/2 10000) 0.))
+(test-eqv -0. (* (- (expt 5/2 10000)) 0.))
+(test-eqv 0. (/ 0. (expt 5/2 10000)))
+(test-eqv -0. (/ 0. (- (expt 5/2 10000))))
+(test-eqv +inf.0 (/ (expt 5/2 10000) 0.))
+(test-eqv -inf.0 (/ (- (expt 5/2 10000)) 0.))
+(test-eqv 0. (* 0. (expt 2/5 10000)))
+(test-eqv -0. (* 0. (- (expt 2/5 10000))))
+(test-eqv 0. (* (expt 2/5 10000) 0.))
+(test-eqv -0. (* (- (expt 2/5 10000)) 0.))
+(test-eqv 0. (/ 0. (expt 2/5 10000)))
+(test-eqv -0. (/ 0. (- (expt 2/5 10000))))
+(test-eqv +inf.0 (/ (expt 2/5 10000) 0.))
+(test-eqv -inf.0 (/ (- (expt 2/5 10000)) 0.))
+(test-eqv -0. (* -0. (expt 2 10000)))
+(test-eqv 0. (* -0. (- (expt 2 10000))))
+(test-eqv -0. (* (expt 2 10000) -0.))
+(test-eqv 0. (* (- (expt 2 10000)) -0.))
+(test-eqv -0. (/ -0. (expt 2 10000)))
+(test-eqv 0. (/ -0. (- (expt 2 10000))))
+(test-eqv -inf.0 (/ (expt 2 10000) -0.))
+(test-eqv +inf.0 (/ (- (expt 2 10000)) -0.))
+(test-eqv -0. (* -0. (expt 5/2 10000)))
+(test-eqv 0. (* -0. (- (expt 5/2 10000))))
+(test-eqv -0. (* (expt 5/2 10000) -0.))
+(test-eqv 0. (* (- (expt 5/2 10000)) -0.))
+(test-eqv -0. (/ -0. (expt 5/2 10000)))
+(test-eqv 0. (/ -0. (- (expt 5/2 10000))))
+(test-eqv -inf.0 (/ (expt 5/2 10000) -0.))
+(test-eqv +inf.0 (/ (- (expt 5/2 10000)) -0.))
+(test-eqv -0. (* -0. (expt 2/5 10000)))
+(test-eqv 0. (* -0. (- (expt 2/5 10000))))
+(test-eqv -0. (* (expt 2/5 10000) -0.))
+(test-eqv 0. (* (- (expt 2/5 10000)) -0.))
+(test-eqv -0. (/ -0. (expt 2/5 10000)))
+(test-eqv 0. (/ -0. (- (expt 2/5 10000))))
+(test-eqv -inf.0 (/ (expt 2/5 10000) -0.))
+(test-eqv +inf.0 (/ (- (expt 2/5 10000)) -0.))
+(test-eqv -inf.0 (* -inf.0 (expt 2 10000)))
+(test-eqv +inf.0 (* -inf.0 (- (expt 2 10000))))
+(test-eqv -inf.0 (* (expt 2 10000) -inf.0))
+(test-eqv +inf.0 (* (- (expt 2 10000)) -inf.0))
+(test-eqv -inf.0 (/ -inf.0 (expt 2 10000)))
+(test-eqv +inf.0 (/ -inf.0 (- (expt 2 10000))))
+(test-eqv -0. (/ (expt 2 10000) -inf.0))
+(test-eqv 0. (/ (- (expt 2 10000)) -inf.0))
+(test-eqv -inf.0 (* -inf.0 (expt 5/2 10000)))
+(test-eqv +inf.0 (* -inf.0 (- (expt 5/2 10000))))
+(test-eqv -inf.0 (* (expt 5/2 10000) -inf.0))
+(test-eqv +inf.0 (* (- (expt 5/2 10000)) -inf.0))
+(test-eqv -inf.0 (/ -inf.0 (expt 5/2 10000)))
+(test-eqv +inf.0 (/ -inf.0 (- (expt 5/2 10000))))
+(test-eqv -0. (/ (expt 5/2 10000) -inf.0))
+(test-eqv 0. (/ (- (expt 5/2 10000)) -inf.0))
+(test-eqv -inf.0 (* -inf.0 (expt 2/5 10000)))
+(test-eqv +inf.0 (* -inf.0 (- (expt 2/5 10000))))
+(test-eqv -inf.0 (* (expt 2/5 10000) -inf.0))
+(test-eqv +inf.0 (* (- (expt 2/5 10000)) -inf.0))
+(test-eqv -inf.0 (/ -inf.0 (expt 2/5 10000)))
+(test-eqv +inf.0 (/ -inf.0 (- (expt 2/5 10000))))
+(test-eqv -0. (/ (expt 2/5 10000) -inf.0))
+(test-eqv 0. (/ (- (expt 2/5 10000)) -inf.0))
+(test-eqv +inf.0 (* +inf.0 (expt 2 10000)))
+(test-eqv -inf.0 (* +inf.0 (- (expt 2 10000))))
+(test-eqv +inf.0 (* (expt 2 10000) +inf.0))
+(test-eqv -inf.0 (* (- (expt 2 10000)) +inf.0))
+(test-eqv +inf.0 (/ +inf.0 (expt 2 10000)))
+(test-eqv -inf.0 (/ +inf.0 (- (expt 2 10000))))
+(test-eqv 0. (/ (expt 2 10000) +inf.0))
+(test-eqv -0. (/ (- (expt 2 10000)) +inf.0))
+(test-eqv +inf.0 (* +inf.0 (expt 5/2 10000)))
+(test-eqv -inf.0 (* +inf.0 (- (expt 5/2 10000))))
+(test-eqv +inf.0 (* (expt 5/2 10000) +inf.0))
+(test-eqv -inf.0 (* (- (expt 5/2 10000)) +inf.0))
+(test-eqv +inf.0 (/ +inf.0 (expt 5/2 10000)))
+(test-eqv -inf.0 (/ +inf.0 (- (expt 5/2 10000))))
+(test-eqv 0. (/ (expt 5/2 10000) +inf.0))
+(test-eqv -0. (/ (- (expt 5/2 10000)) +inf.0))
+(test-eqv +inf.0 (* +inf.0 (expt 2/5 10000)))
+(test-eqv -inf.0 (* +inf.0 (- (expt 2/5 10000))))
+(test-eqv +inf.0 (* (expt 2/5 10000) +inf.0))
+(test-eqv -inf.0 (* (- (expt 2/5 10000)) +inf.0))
+(test-eqv +inf.0 (/ +inf.0 (expt 2/5 10000)))
+(test-eqv -inf.0 (/ +inf.0 (- (expt 2/5 10000))))
+(test-eqv 0. (/ (expt 2/5 10000) +inf.0))
+(test-eqv -0. (/ (- (expt 2/5 10000)) +inf.0))
 
 #;
 (let* ((exact-arguments ;; expressions
@@ -1174,38 +1388,38 @@
                         exact-arguments))
             inexact-arguments))
 
-(check-eqv? (+ +inf.0 (expt 2 10000)) +inf.0)
-(check-eqv? (+ +inf.0 (- (expt 2 10000))) +inf.0)
-(check-eqv? (+ (expt 2 10000) +inf.0) +inf.0)
-(check-eqv? (+ (- (expt 2 10000)) +inf.0) +inf.0)
-(check-eqv? (- +inf.0 (expt 2 10000)) +inf.0)
-(check-eqv? (- +inf.0 (- (expt 2 10000))) +inf.0)
-(check-eqv? (- (expt 2 10000) +inf.0) -inf.0)
-(check-eqv? (- (- (expt 2 10000)) +inf.0) -inf.0)
-(check-eqv? (+ +inf.0 (expt 5/2 10000)) +inf.0)
-(check-eqv? (+ +inf.0 (- (expt 5/2 10000))) +inf.0)
-(check-eqv? (+ (expt 5/2 10000) +inf.0) +inf.0)
-(check-eqv? (+ (- (expt 5/2 10000)) +inf.0) +inf.0)
-(check-eqv? (- +inf.0 (expt 5/2 10000)) +inf.0)
-(check-eqv? (- +inf.0 (- (expt 5/2 10000))) +inf.0)
-(check-eqv? (- (expt 5/2 10000) +inf.0) -inf.0)
-(check-eqv? (- (- (expt 5/2 10000)) +inf.0) -inf.0)
-(check-eqv? (+ -inf.0 (expt 2 10000)) -inf.0)
-(check-eqv? (+ -inf.0 (- (expt 2 10000))) -inf.0)
-(check-eqv? (+ (expt 2 10000) -inf.0) -inf.0)
-(check-eqv? (+ (- (expt 2 10000)) -inf.0) -inf.0)
-(check-eqv? (- -inf.0 (expt 2 10000)) -inf.0)
-(check-eqv? (- -inf.0 (- (expt 2 10000))) -inf.0)
-(check-eqv? (- (expt 2 10000) -inf.0) +inf.0)
-(check-eqv? (- (- (expt 2 10000)) -inf.0) +inf.0)
-(check-eqv? (+ -inf.0 (expt 5/2 10000)) -inf.0)
-(check-eqv? (+ -inf.0 (- (expt 5/2 10000))) -inf.0)
-(check-eqv? (+ (expt 5/2 10000) -inf.0) -inf.0)
-(check-eqv? (+ (- (expt 5/2 10000)) -inf.0) -inf.0)
-(check-eqv? (- -inf.0 (expt 5/2 10000)) -inf.0)
-(check-eqv? (- -inf.0 (- (expt 5/2 10000))) -inf.0)
-(check-eqv? (- (expt 5/2 10000) -inf.0) +inf.0)
-(check-eqv? (- (- (expt 5/2 10000)) -inf.0) +inf.0)
+(test-eqv +inf.0 (+ +inf.0 (expt 2 10000)))
+(test-eqv +inf.0 (+ +inf.0 (- (expt 2 10000))))
+(test-eqv +inf.0 (+ (expt 2 10000) +inf.0))
+(test-eqv +inf.0 (+ (- (expt 2 10000)) +inf.0))
+(test-eqv +inf.0 (- +inf.0 (expt 2 10000)))
+(test-eqv +inf.0 (- +inf.0 (- (expt 2 10000))))
+(test-eqv -inf.0 (- (expt 2 10000) +inf.0))
+(test-eqv -inf.0 (- (- (expt 2 10000)) +inf.0))
+(test-eqv +inf.0 (+ +inf.0 (expt 5/2 10000)))
+(test-eqv +inf.0 (+ +inf.0 (- (expt 5/2 10000))))
+(test-eqv +inf.0 (+ (expt 5/2 10000) +inf.0))
+(test-eqv +inf.0 (+ (- (expt 5/2 10000)) +inf.0))
+(test-eqv +inf.0 (- +inf.0 (expt 5/2 10000)))
+(test-eqv +inf.0 (- +inf.0 (- (expt 5/2 10000))))
+(test-eqv -inf.0 (- (expt 5/2 10000) +inf.0))
+(test-eqv -inf.0 (- (- (expt 5/2 10000)) +inf.0))
+(test-eqv -inf.0 (+ -inf.0 (expt 2 10000)))
+(test-eqv -inf.0 (+ -inf.0 (- (expt 2 10000))))
+(test-eqv -inf.0 (+ (expt 2 10000) -inf.0))
+(test-eqv -inf.0 (+ (- (expt 2 10000)) -inf.0))
+(test-eqv -inf.0 (- -inf.0 (expt 2 10000)))
+(test-eqv -inf.0 (- -inf.0 (- (expt 2 10000))))
+(test-eqv +inf.0 (- (expt 2 10000) -inf.0))
+(test-eqv +inf.0 (- (- (expt 2 10000)) -inf.0))
+(test-eqv -inf.0 (+ -inf.0 (expt 5/2 10000)))
+(test-eqv -inf.0 (+ -inf.0 (- (expt 5/2 10000))))
+(test-eqv -inf.0 (+ (expt 5/2 10000) -inf.0))
+(test-eqv -inf.0 (+ (- (expt 5/2 10000)) -inf.0))
+(test-eqv -inf.0 (- -inf.0 (expt 5/2 10000)))
+(test-eqv -inf.0 (- -inf.0 (- (expt 5/2 10000))))
+(test-eqv +inf.0 (- (expt 5/2 10000) -inf.0))
+(test-eqv +inf.0 (- (- (expt 5/2 10000)) -inf.0))
 
 #;
 (let* ((exact-arguments ;; expressions
@@ -1224,14 +1438,18 @@
                         exact-arguments))
             inexact-arguments))
 
-(check-true (finite? (+ (expt 2 1024) -8.98846567431158e307)))
-(check-true (finite? (+ -8.98846567431158e307 (expt 2 1024))))
-(check-true (finite? (- 8.98846567431158e307 (expt 2 1024))))
-(check-true (finite? (- (expt 2 1024) 8.98846567431158e307)))
-(check-true (finite? (+ (expt 20001/10000 1024) -8.98846567431158e307)))
-(check-true (finite? (+ -8.98846567431158e307 (expt 20001/10000 1024))))
-(check-true (finite? (- 8.98846567431158e307 (expt 20001/10000 1024))))
-(check-true (finite? (- (expt 20001/10000 1024) 8.98846567431158e307)))
+(test-assert (eq? #t (finite? (+ (expt 2 1024) -8.98846567431158e307))))
+(test-assert (eq? #t (finite? (+ -8.98846567431158e307 (expt 2 1024)))))
+(test-assert (eq? #t (finite? (- 8.98846567431158e307 (expt 2 1024)))))
+(test-assert (eq? #t (finite? (- (expt 2 1024) 8.98846567431158e307))))
+(test-assert
+ (eq? #t (finite? (+ (expt 20001/10000 1024) -8.98846567431158e307))))
+(test-assert
+ (eq? #t (finite? (+ -8.98846567431158e307 (expt 20001/10000 1024)))))
+(test-assert
+ (eq? #t (finite? (- 8.98846567431158e307 (expt 20001/10000 1024)))))
+(test-assert
+ (eq? #t (finite? (- (expt 20001/10000 1024) 8.98846567431158e307))))
 
 #;
 (let ()
@@ -1261,67 +1479,69 @@
 
 )
 
-(check-eqv? (* (expt 2 1500) 1.688508503057271e-226) 5.922386521532856e225)
-(check-eqv? (* 1.688508503057271e-226 (expt 2 1500)) 5.922386521532856e225)
-(check-eqv? (* (expt 21/10 1500) 1.688508503057271e-226) 3.6011843398019324e257)
-(check-eqv? (* 1.688508503057271e-226 (expt 21/10 1500)) 3.6011843398019324e257)
-(check-eqv? (* (expt 2 -1500) 5.922386521532856e225) 1.688508503057271e-226)
-(check-eqv? (* 5.922386521532856e225 (expt 2 -1500)) 1.688508503057271e-226)
-(check-eqv? (* (expt 21/10 -1500) 5.922386521532856e225) 2.776864235878024e-258)
-(check-eqv? (* 5.922386521532856e225 (expt 21/10 -1500)) 2.776864235878024e-258)
-(check-eqv? (/ (expt 2 1500) 5.922386521532856e225) 5.922386521532856e225)
-(check-eqv? (/ 5.922386521532856e225 (expt 2 1500)) 1.688508503057271e-226)
-(check-eqv? (/ (expt 21/10 1500) 5.922386521532856e225) 3.6011843398019324e257)
-(check-eqv? (/ 5.922386521532856e225 (expt 21/10 1500)) 2.776864235878024e-258)
-(check-eqv? (/ (expt 2 -1500) 1.688508503057271e-226) 1.688508503057271e-226)
-(check-eqv? (/ 1.688508503057271e-226 (expt 2 -1500)) 5.922386521532856e225)
-(check-eqv? (/ (expt 21/10 1500) 5.922386521532856e225) 3.6011843398019324e257)
-(check-eqv? (/ 5.922386521532856e225 (expt 21/10 1500)) 2.776864235878024e-258)
+(test-eqv 5.922386521532856e225 (* (expt 2 1500) 1.688508503057271e-226))
+(test-eqv 5.922386521532856e225 (* 1.688508503057271e-226 (expt 2 1500)))
+(test-eqv 3.6011843398019324e257 (* (expt 21/10 1500) 1.688508503057271e-226))
+(test-eqv 3.6011843398019324e257 (* 1.688508503057271e-226 (expt 21/10 1500)))
+(test-eqv 1.688508503057271e-226 (* (expt 2 -1500) 5.922386521532856e225))
+(test-eqv 1.688508503057271e-226 (* 5.922386521532856e225 (expt 2 -1500)))
+(test-eqv 2.776864235878024e-258 (* (expt 21/10 -1500) 5.922386521532856e225))
+(test-eqv 2.776864235878024e-258 (* 5.922386521532856e225 (expt 21/10 -1500)))
+(test-eqv 5.922386521532856e225 (/ (expt 2 1500) 5.922386521532856e225))
+(test-eqv 1.688508503057271e-226 (/ 5.922386521532856e225 (expt 2 1500)))
+(test-eqv 3.6011843398019324e257 (/ (expt 21/10 1500) 5.922386521532856e225))
+(test-eqv 2.776864235878024e-258 (/ 5.922386521532856e225 (expt 21/10 1500)))
+(test-eqv 1.688508503057271e-226 (/ (expt 2 -1500) 1.688508503057271e-226))
+(test-eqv 5.922386521532856e225 (/ 1.688508503057271e-226 (expt 2 -1500)))
+(test-eqv 3.6011843398019324e257 (/ (expt 21/10 1500) 5.922386521532856e225))
+(test-eqv 2.776864235878024e-258 (/ 5.922386521532856e225 (expt 21/10 1500)))
 
 
-(let ((arg 1)) (check-equal? arg (* 1 arg)))
-(let ((arg 1)) (check-equal? arg (* arg 1)))
-(let ((arg 1)) (check-equal? arg (+ 0 arg)))
-(let ((arg 1)) (check-equal? arg (+ arg 0)))
-(let ((arg 1)) (check-equal? arg (/ arg 1)))
-(let ((arg 1)) (check-equal? arg (- arg 0)))
-(let ((arg 1267650600228229401496703205376)) (check-equal? arg (* 1 arg)))
-(let ((arg 1267650600228229401496703205376)) (check-equal? arg (* arg 1)))
-(let ((arg 1267650600228229401496703205376)) (check-equal? arg (+ 0 arg)))
-(let ((arg 1267650600228229401496703205376)) (check-equal? arg (+ arg 0)))
-(let ((arg 1267650600228229401496703205376)) (check-equal? arg (/ arg 1)))
-(let ((arg 1267650600228229401496703205376)) (check-equal? arg (- arg 0)))
-(let ((arg 1/2)) (check-equal? arg (* 1 arg)))
-(let ((arg 1/2)) (check-equal? arg (* arg 1)))
-(let ((arg 1/2)) (check-equal? arg (+ 0 arg)))
-(let ((arg 1/2)) (check-equal? arg (+ arg 0)))
-(let ((arg 1/2)) (check-equal? arg (/ arg 1)))
-(let ((arg 1/2)) (check-equal? arg (- arg 0)))
-(let ((arg 1.)) (check-equal? arg (* 1 arg)))
-(let ((arg 1.)) (check-equal? arg (* arg 1)))
-(let ((arg 1.)) (check-equal? arg (+ 0 arg)))
-(let ((arg 1.)) (check-equal? arg (+ arg 0)))
-(let ((arg 1.)) (check-equal? arg (/ arg 1)))
-(let ((arg 1.)) (check-equal? arg (- arg 0)))
-(let ((arg 1+i)) (check-equal? arg (* 1 arg)))
-(let ((arg 1+i)) (check-equal? arg (* arg 1)))
-(let ((arg 1+i)) (check-equal? arg (+ 0 arg)))
-(let ((arg 1+i)) (check-equal? arg (+ arg 0)))
-(let ((arg 1+i)) (check-equal? arg (/ arg 1)))
-(let ((arg 1+i)) (check-equal? arg (- arg 0)))
+(let ((arg 1)) (test-equal (* 1 arg) arg))
+(let ((arg 1)) (test-equal (* arg 1) arg))
+(let ((arg 1)) (test-equal (+ 0 arg) arg))
+(let ((arg 1)) (test-equal (+ arg 0) arg))
+(let ((arg 1)) (test-equal (/ arg 1) arg))
+(let ((arg 1)) (test-equal (- arg 0) arg))
+(let ((arg 1267650600228229401496703205376)) (test-equal (* 1 arg) arg))
+(let ((arg 1267650600228229401496703205376)) (test-equal (* arg 1) arg))
+(let ((arg 1267650600228229401496703205376)) (test-equal (+ 0 arg) arg))
+(let ((arg 1267650600228229401496703205376)) (test-equal (+ arg 0) arg))
+(let ((arg 1267650600228229401496703205376)) (test-equal (/ arg 1) arg))
+(let ((arg 1267650600228229401496703205376)) (test-equal (- arg 0) arg))
+(let ((arg 1/2)) (test-equal (* 1 arg) arg))
+(let ((arg 1/2)) (test-equal (* arg 1) arg))
+(let ((arg 1/2)) (test-equal (+ 0 arg) arg))
+(let ((arg 1/2)) (test-equal (+ arg 0) arg))
+(let ((arg 1/2)) (test-equal (/ arg 1) arg))
+(let ((arg 1/2)) (test-equal (- arg 0) arg))
+(let ((arg 1.)) (test-equal (* 1 arg) arg))
+(let ((arg 1.)) (test-equal (* arg 1) arg))
+(let ((arg 1.)) (test-equal (+ 0 arg) arg))
+(let ((arg 1.)) (test-equal (+ arg 0) arg))
+(let ((arg 1.)) (test-equal (/ arg 1) arg))
+(let ((arg 1.)) (test-equal (- arg 0) arg))
+(let ((arg 1+i)) (test-equal (* 1 arg) arg))
+(let ((arg 1+i)) (test-equal (* arg 1) arg))
+(let ((arg 1+i)) (test-equal (+ 0 arg) arg))
+(let ((arg 1+i)) (test-equal (+ arg 0) arg))
+(let ((arg 1+i)) (test-equal (/ arg 1) arg))
+(let ((arg 1+i)) (test-equal (- arg 0) arg))
 
-(check-tail-exn divide-by-zero-exception? (lambda () (/ 1 0)))
-(check-tail-exn divide-by-zero-exception? (lambda () (/ 1267650600228229401496703205376 0)))
-(check-tail-exn divide-by-zero-exception? (lambda () (/ 1/2 0)))
-(check-tail-exn divide-by-zero-exception? (lambda () (/ 1. 0)))
-(check-tail-exn divide-by-zero-exception? (lambda () (/ 1+i 0)))
+(test-error-tail divide-by-zero-exception? (/ 1 0))
+(test-error-tail
+ divide-by-zero-exception?
+ (/ 1267650600228229401496703205376 0))
+(test-error-tail divide-by-zero-exception? (/ 1/2 0))
+(test-error-tail divide-by-zero-exception? (/ 1. 0))
+(test-error-tail divide-by-zero-exception? (/ 1+i 0))
 
-(check-eqv? (+ (##greatest-fixnum) 1) `,(+ (##greatest-fixnum) 1))
-(check-eqv? (+ 1 (##greatest-fixnum)) `,(+ 1 (##greatest-fixnum)))
-(check-eqv? (* (##greatest-fixnum) 2) `,(* (##greatest-fixnum) 2))
-(check-eqv? (* 2 (##greatest-fixnum)) `,(* 2 (##greatest-fixnum)))
-(check-eqv? (- (##least-fixnum) 1) `,(- (##least-fixnum) 1))
-(check-eqv? (- (##least-fixnum)) `,(+ (##greatest-fixnum) 1))
+(test-eqv `,(+ (##greatest-fixnum) 1) (+ (##greatest-fixnum) 1))
+(test-eqv `,(+ 1 (##greatest-fixnum)) (+ 1 (##greatest-fixnum)))
+(test-eqv `,(* (##greatest-fixnum) 2) (* (##greatest-fixnum) 2))
+(test-eqv `,(* 2 (##greatest-fixnum)) (* 2 (##greatest-fixnum)))
+(test-eqv `,(- (##least-fixnum) 1) (- (##least-fixnum) 1))
+(test-eqv `,(+ (##greatest-fixnum) 1) (- (##least-fixnum)))
 
 ;;; I should include the programs to generate the arguments to the
 ;;; next tests
@@ -1376,156 +1596,221 @@
 
   )
 
-(check-=    (+ 1 1) 2)
-(check-eqv? (+ 1 1) 2)
-(check-=    (+ 1 1180591620717411303424) 1180591620717411303425)
-(check-eqv? (+ 1 1180591620717411303424) 1180591620717411303425)
-(check-=    (+ 1 3/4) 7/4)
-(check-eqv? (+ 1 3/4) 7/4)
-(check-=    (+ 1 3.4359738368e10) 34359738369)
-(check-eqv? (+ 1 3.4359738368e10) 3.4359738369e10)
-(check-=    (+ 1 1+i) 2+i)
-(check-eqv? (+ 1 1+i) 2+i)
-(check-=    (+ 1180591620717411303424 1) 1180591620717411303425)
-(check-eqv? (+ 1180591620717411303424 1) 1180591620717411303425)
-(check-=    (+ 1180591620717411303424 1180591620717411303424) 2361183241434822606848)
-(check-eqv? (+ 1180591620717411303424 1180591620717411303424) 2361183241434822606848)
-(check-=    (+ 1180591620717411303424 3/4) 4722366482869645213699/4)
-(check-eqv? (+ 1180591620717411303424 3/4) 4722366482869645213699/4)
-(check-=    (+ 1180591620717411303424 3.4359738368e10) 1180591620751771041792)
-(check-eqv? (+ 1180591620717411303424 3.4359738368e10) 1.180591620751771e21)
-(check-=    (+ 1180591620717411303424 1+i) 1180591620717411303425+i)
-(check-eqv? (+ 1180591620717411303424 1+i) 1180591620717411303425+i)
-(check-=    (+ 3/4 1) 7/4)
-(check-eqv? (+ 3/4 1) 7/4)
-(check-=    (+ 3/4 1180591620717411303424) 4722366482869645213699/4)
-(check-eqv? (+ 3/4 1180591620717411303424) 4722366482869645213699/4)
-(check-=    (+ 3/4 3/4) 3/2)
-(check-eqv? (+ 3/4 3/4) 3/2)
-(check-=    (+ 3/4 3.4359738368e10) 137438953475/4)
-(check-eqv? (+ 3/4 3.4359738368e10) 3.435973836875e10)
-(check-=    (+ 3/4 1+i) 7/4+i)
-(check-eqv? (+ 3/4 1+i) 7/4+i)
-(check-=    (+ 3.4359738368e10 1) 34359738369)
-(check-eqv? (+ 3.4359738368e10 1) 3.4359738369e10)
-(check-=    (+ 3.4359738368e10 1180591620717411303424) 1180591620751771041792)
-(check-eqv? (+ 3.4359738368e10 1180591620717411303424) 1.180591620751771e21)
-(check-=    (+ 3.4359738368e10 3/4) 137438953475/4)
-(check-eqv? (+ 3.4359738368e10 3/4) 3.435973836875e10)
-(check-=    (+ 3.4359738368e10 3.4359738368e10) 68719476736)
-(check-eqv? (+ 3.4359738368e10 3.4359738368e10) 6.8719476736e10)
-(check-=    (+ 3.4359738368e10 1+i) 34359738369+i)
-(check-eqv? (+ 3.4359738368e10 1+i) 3.4359738369e10+i)
-(check-=    (+ 1+i 1) 2+i)
-(check-eqv? (+ 1+i 1) 2+i)
-(check-=    (+ 1+i 1180591620717411303424) 1180591620717411303425+i)
-(check-eqv? (+ 1+i 1180591620717411303424) 1180591620717411303425+i)
-(check-=    (+ 1+i 3/4) 7/4+i)
-(check-eqv? (+ 1+i 3/4) 7/4+i)
-(check-=    (+ 1+i 3.4359738368e10) 34359738369+i)
-(check-eqv? (+ 1+i 3.4359738368e10) 3.4359738369e10+i)
-(check-=    (+ 1+i 1+i) 2+2i)
-(check-eqv? (+ 1+i 1+i) 2+2i)
-(check-=    (- 1 1) 0)
-(check-eqv? (- 1 1) 0)
-(check-=    (- 1 1180591620717411303424) -1180591620717411303423)
-(check-eqv? (- 1 1180591620717411303424) -1180591620717411303423)
-(check-=    (- 1 3/4) 1/4)
-(check-eqv? (- 1 3/4) 1/4)
-(check-=    (- 1 3.4359738368e10) -34359738367)
-(check-eqv? (- 1 3.4359738368e10) -3.4359738367e10)
-(check-=    (- 1 1+i) -i)
-(check-eqv? (- 1 1+i) -i)
-(check-=    (- 1180591620717411303424 1) 1180591620717411303423)
-(check-eqv? (- 1180591620717411303424 1) 1180591620717411303423)
-(check-=    (- 1180591620717411303424 1180591620717411303424) 0)
-(check-eqv? (- 1180591620717411303424 1180591620717411303424) 0)
-(check-=    (- 1180591620717411303424 3/4) 4722366482869645213693/4)
-(check-eqv? (- 1180591620717411303424 3/4) 4722366482869645213693/4)
-(check-=    (- 1180591620717411303424 3.4359738368e10) 1180591620683051565056)
-(check-eqv? (- 1180591620717411303424 3.4359738368e10) 1.1805916206830516e21)
-(check-=    (- 1180591620717411303424 1+i) 1180591620717411303423-i)
-(check-eqv? (- 1180591620717411303424 1+i) 1180591620717411303423-i)
-(check-=    (- 3/4 1) -1/4)
-(check-eqv? (- 3/4 1) -1/4)
-(check-=    (- 3/4 1180591620717411303424) -4722366482869645213693/4)
-(check-eqv? (- 3/4 1180591620717411303424) -4722366482869645213693/4)
-(check-=    (- 3/4 3/4) 0)
-(check-eqv? (- 3/4 3/4) 0)
-(check-=    (- 3/4 3.4359738368e10) -137438953469/4)
-(check-eqv? (- 3/4 3.4359738368e10) -3.435973836725e10)
-(check-=    (- 3/4 1+i) -1/4-i)
-(check-eqv? (- 3/4 1+i) -1/4-i)
-(check-=    (- 3.4359738368e10 1) 34359738367)
-(check-eqv? (- 3.4359738368e10 1) 3.4359738367e10)
-(check-=    (- 3.4359738368e10 1180591620717411303424) -1180591620683051565056)
-(check-eqv? (- 3.4359738368e10 1180591620717411303424) -1.1805916206830516e21)
-(check-=    (- 3.4359738368e10 3/4) 137438953469/4)
-(check-eqv? (- 3.4359738368e10 3/4) 3.435973836725e10)
-(check-=    (- 3.4359738368e10 3.4359738368e10) 0)
-(check-eqv? (- 3.4359738368e10 3.4359738368e10) 0.)
-(check-=    (- 3.4359738368e10 1+i) 34359738367-i)
-(check-eqv? (- 3.4359738368e10 1+i) 3.4359738367e10-i)
-(check-=    (- 1+i 1) +i)
-(check-eqv? (- 1+i 1) +i)
-(check-=    (- 1+i 1180591620717411303424) -1180591620717411303423+i)
-(check-eqv? (- 1+i 1180591620717411303424) -1180591620717411303423+i)
-(check-=    (- 1+i 3/4) 1/4+i)
-(check-eqv? (- 1+i 3/4) 1/4+i)
-(check-=    (- 1+i 3.4359738368e10) -34359738367+i)
-(check-eqv? (- 1+i 3.4359738368e10) -3.4359738367e10+i)
-(check-=    (- 1+i 1+i) 0)
-(check-eqv? (- 1+i 1+i) 0)
-(check-=    (* 1 1) 1)
-(check-eqv? (* 1 1) 1)
-(check-=    (* 1 1180591620717411303424) 1180591620717411303424)
-(check-eqv? (* 1 1180591620717411303424) 1180591620717411303424)
-(check-=    (* 1 3/4) 3/4)
-(check-eqv? (* 1 3/4) 3/4)
-(check-=    (* 1 3.4359738368e10) 34359738368)
-(check-eqv? (* 1 3.4359738368e10) 3.4359738368e10)
-(check-=    (* 1 1+i) 1+i)
-(check-eqv? (* 1 1+i) 1+i)
-(check-=    (* 1180591620717411303424 1) 1180591620717411303424)
-(check-eqv? (* 1180591620717411303424 1) 1180591620717411303424)
-(check-=    (* 1180591620717411303424 1180591620717411303424) 1393796574908163946345982392040522594123776)
-(check-eqv? (* 1180591620717411303424 1180591620717411303424) 1393796574908163946345982392040522594123776)
-(check-=    (* 1180591620717411303424 3/4) 885443715538058477568)
-(check-eqv? (* 1180591620717411303424 3/4) 885443715538058477568)
-(check-=    (* 1180591620717411303424 3.4359738368e10) 40564819207303340847894502572032)
-(check-eqv? (* 1180591620717411303424 3.4359738368e10) 4.056481920730334e31)
-(check-=    (* 1180591620717411303424 1+i) 1180591620717411303424+1180591620717411303424i)
-(check-eqv? (* 1180591620717411303424 1+i) 1180591620717411303424+1180591620717411303424i)
-(check-=    (* 3/4 1) 3/4)
-(check-eqv? (* 3/4 1) 3/4)
-(check-=    (* 3/4 1180591620717411303424) 885443715538058477568)
-(check-eqv? (* 3/4 1180591620717411303424) 885443715538058477568)
-(check-=    (* 3/4 3/4) 9/16)
-(check-eqv? (* 3/4 3/4) 9/16)
-(check-=    (* 3/4 3.4359738368e10) 25769803776)
-(check-eqv? (* 3/4 3.4359738368e10) 2.5769803776e10)
-(check-=    (* 3/4 1+i) 3/4+3/4i)
-(check-eqv? (* 3/4 1+i) 3/4+3/4i)
-(check-=    (* 3.4359738368e10 1) 34359738368)
-(check-eqv? (* 3.4359738368e10 1) 3.4359738368e10)
-(check-=    (* 3.4359738368e10 1180591620717411303424) 40564819207303340847894502572032)
-(check-eqv? (* 3.4359738368e10 1180591620717411303424) 4.056481920730334e31)
-(check-=    (* 3.4359738368e10 3/4) 25769803776)
-(check-eqv? (* 3.4359738368e10 3/4) 2.5769803776e10)
-(check-=    (* 3.4359738368e10 3.4359738368e10) 1180591620717411303424)
-(check-eqv? (* 3.4359738368e10 3.4359738368e10) 1.1805916207174113e21)
-(check-=    (* 3.4359738368e10 1+i) 34359738368+34359738368i)
-(check-eqv? (* 3.4359738368e10 1+i) 3.4359738368e10+3.4359738368e10i)
-(check-=    (* 1+i 1) 1+i)
-(check-eqv? (* 1+i 1) 1+i)
-(check-=    (* 1+i 1180591620717411303424) 1180591620717411303424+1180591620717411303424i)
-(check-eqv? (* 1+i 1180591620717411303424) 1180591620717411303424+1180591620717411303424i)
-(check-=    (* 1+i 3/4) 3/4+3/4i)
-(check-eqv? (* 1+i 3/4) 3/4+3/4i)
-(check-=    (* 1+i 3.4359738368e10) 34359738368+34359738368i)
-(check-eqv? (* 1+i 3.4359738368e10) 3.4359738368e10+3.4359738368e10i)
-(check-=    (* 1+i 1+i) +2i)
-(check-eqv? (* 1+i 1+i) +2i)
+(test-approximate 2 (+ 1 1) 1e-12)
+(test-eqv 2 (+ 1 1))
+(test-approximate 1180591620717411303425 (+ 1 1180591620717411303424) 1e-12)
+(test-eqv 1180591620717411303425 (+ 1 1180591620717411303424))
+(test-approximate 7/4 (+ 1 3/4) 1e-12)
+(test-eqv 7/4 (+ 1 3/4))
+(test-approximate 34359738369 (+ 1 3.4359738368e10) 1e-12)
+(test-eqv 3.4359738369e10 (+ 1 3.4359738368e10))
+(test-approximate 2+i (+ 1 1+i) 1e-12)
+(test-eqv 2+i (+ 1 1+i))
+(test-approximate 1180591620717411303425 (+ 1180591620717411303424 1) 1e-12)
+(test-eqv 1180591620717411303425 (+ 1180591620717411303424 1))
+(test-approximate
+ 2361183241434822606848
+ (+ 1180591620717411303424 1180591620717411303424)
+ 1e-12)
+(test-eqv
+ 2361183241434822606848
+ (+ 1180591620717411303424 1180591620717411303424))
+(test-approximate
+ 4722366482869645213699/4
+ (+ 1180591620717411303424 3/4)
+ 1e-12)
+(test-eqv 4722366482869645213699/4 (+ 1180591620717411303424 3/4))
+(test-approximate
+ 1180591620751771041792
+ (+ 1180591620717411303424 3.4359738368e10)
+ 1e-12)
+(test-eqv 1.180591620751771e21 (+ 1180591620717411303424 3.4359738368e10))
+(test-approximate
+ 1180591620717411303425+i
+ (+ 1180591620717411303424 1+i)
+ 1e-12)
+(test-eqv 1180591620717411303425+i (+ 1180591620717411303424 1+i))
+(test-approximate 7/4 (+ 3/4 1) 1e-12)
+(test-eqv 7/4 (+ 3/4 1))
+(test-approximate
+ 4722366482869645213699/4
+ (+ 3/4 1180591620717411303424)
+ 1e-12)
+(test-eqv 4722366482869645213699/4 (+ 3/4 1180591620717411303424))
+(test-approximate 3/2 (+ 3/4 3/4) 1e-12)
+(test-eqv 3/2 (+ 3/4 3/4))
+(test-approximate 137438953475/4 (+ 3/4 3.4359738368e10) 1e-12)
+(test-eqv 3.435973836875e10 (+ 3/4 3.4359738368e10))
+(test-approximate 7/4+i (+ 3/4 1+i) 1e-12)
+(test-eqv 7/4+i (+ 3/4 1+i))
+(test-approximate 34359738369 (+ 3.4359738368e10 1) 1e-12)
+(test-eqv 3.4359738369e10 (+ 3.4359738368e10 1))
+(test-approximate
+ 1180591620751771041792
+ (+ 3.4359738368e10 1180591620717411303424)
+ 1e-12)
+(test-eqv 1.180591620751771e21 (+ 3.4359738368e10 1180591620717411303424))
+(test-approximate 137438953475/4 (+ 3.4359738368e10 3/4) 1e-12)
+(test-eqv 3.435973836875e10 (+ 3.4359738368e10 3/4))
+(test-approximate 68719476736 (+ 3.4359738368e10 3.4359738368e10) 1e-12)
+(test-eqv 6.8719476736e10 (+ 3.4359738368e10 3.4359738368e10))
+(test-approximate 34359738369+i (+ 3.4359738368e10 1+i) 1e-12)
+(test-eqv 3.4359738369e10+i (+ 3.4359738368e10 1+i))
+(test-approximate 2+i (+ 1+i 1) 1e-12)
+(test-eqv 2+i (+ 1+i 1))
+(test-approximate
+ 1180591620717411303425+i
+ (+ 1+i 1180591620717411303424)
+ 1e-12)
+(test-eqv 1180591620717411303425+i (+ 1+i 1180591620717411303424))
+(test-approximate 7/4+i (+ 1+i 3/4) 1e-12)
+(test-eqv 7/4+i (+ 1+i 3/4))
+(test-approximate 34359738369+i (+ 1+i 3.4359738368e10) 1e-12)
+(test-eqv 3.4359738369e10+i (+ 1+i 3.4359738368e10))
+(test-approximate 2+2i (+ 1+i 1+i) 1e-12)
+(test-eqv 2+2i (+ 1+i 1+i))
+(test-approximate 0 (- 1 1) 1e-12)
+(test-eqv 0 (- 1 1))
+(test-approximate -1180591620717411303423 (- 1 1180591620717411303424) 1e-12)
+(test-eqv -1180591620717411303423 (- 1 1180591620717411303424))
+(test-approximate 1/4 (- 1 3/4) 1e-12)
+(test-eqv 1/4 (- 1 3/4))
+(test-approximate -34359738367 (- 1 3.4359738368e10) 1e-12)
+(test-eqv -3.4359738367e10 (- 1 3.4359738368e10))
+(test-approximate -i (- 1 1+i) 1e-12)
+(test-eqv -i (- 1 1+i))
+(test-approximate 1180591620717411303423 (- 1180591620717411303424 1) 1e-12)
+(test-eqv 1180591620717411303423 (- 1180591620717411303424 1))
+(test-approximate 0 (- 1180591620717411303424 1180591620717411303424) 1e-12)
+(test-eqv 0 (- 1180591620717411303424 1180591620717411303424))
+(test-approximate
+ 4722366482869645213693/4
+ (- 1180591620717411303424 3/4)
+ 1e-12)
+(test-eqv 4722366482869645213693/4 (- 1180591620717411303424 3/4))
+(test-approximate
+ 1180591620683051565056
+ (- 1180591620717411303424 3.4359738368e10)
+ 1e-12)
+(test-eqv 1.1805916206830516e21 (- 1180591620717411303424 3.4359738368e10))
+(test-approximate
+ 1180591620717411303423-i
+ (- 1180591620717411303424 1+i)
+ 1e-12)
+(test-eqv 1180591620717411303423-i (- 1180591620717411303424 1+i))
+(test-approximate -1/4 (- 3/4 1) 1e-12)
+(test-eqv -1/4 (- 3/4 1))
+(test-approximate
+ -4722366482869645213693/4
+ (- 3/4 1180591620717411303424)
+ 1e-12)
+(test-eqv -4722366482869645213693/4 (- 3/4 1180591620717411303424))
+(test-approximate 0 (- 3/4 3/4) 1e-12)
+(test-eqv 0 (- 3/4 3/4))
+(test-approximate -137438953469/4 (- 3/4 3.4359738368e10) 1e-12)
+(test-eqv -3.435973836725e10 (- 3/4 3.4359738368e10))
+(test-approximate -1/4-i (- 3/4 1+i) 1e-12)
+(test-eqv -1/4-i (- 3/4 1+i))
+(test-approximate 34359738367 (- 3.4359738368e10 1) 1e-12)
+(test-eqv 3.4359738367e10 (- 3.4359738368e10 1))
+(test-approximate
+ -1180591620683051565056
+ (- 3.4359738368e10 1180591620717411303424)
+ 1e-12)
+(test-eqv -1.1805916206830516e21 (- 3.4359738368e10 1180591620717411303424))
+(test-approximate 137438953469/4 (- 3.4359738368e10 3/4) 1e-12)
+(test-eqv 3.435973836725e10 (- 3.4359738368e10 3/4))
+(test-approximate 0 (- 3.4359738368e10 3.4359738368e10) 1e-12)
+(test-eqv 0. (- 3.4359738368e10 3.4359738368e10))
+(test-approximate 34359738367-i (- 3.4359738368e10 1+i) 1e-12)
+(test-eqv 3.4359738367e10-i (- 3.4359738368e10 1+i))
+(test-approximate +i (- 1+i 1) 1e-12)
+(test-eqv +i (- 1+i 1))
+(test-approximate
+ -1180591620717411303423+i
+ (- 1+i 1180591620717411303424)
+ 1e-12)
+(test-eqv -1180591620717411303423+i (- 1+i 1180591620717411303424))
+(test-approximate 1/4+i (- 1+i 3/4) 1e-12)
+(test-eqv 1/4+i (- 1+i 3/4))
+(test-approximate -34359738367+i (- 1+i 3.4359738368e10) 1e-12)
+(test-eqv -3.4359738367e10+i (- 1+i 3.4359738368e10))
+(test-approximate 0 (- 1+i 1+i) 1e-12)
+(test-eqv 0 (- 1+i 1+i))
+(test-approximate 1 (* 1 1) 1e-12)
+(test-eqv 1 (* 1 1))
+(test-approximate 1180591620717411303424 (* 1 1180591620717411303424) 1e-12)
+(test-eqv 1180591620717411303424 (* 1 1180591620717411303424))
+(test-approximate 3/4 (* 1 3/4) 1e-12)
+(test-eqv 3/4 (* 1 3/4))
+(test-approximate 34359738368 (* 1 3.4359738368e10) 1e-12)
+(test-eqv 3.4359738368e10 (* 1 3.4359738368e10))
+(test-approximate 1+i (* 1 1+i) 1e-12)
+(test-eqv 1+i (* 1 1+i))
+(test-approximate 1180591620717411303424 (* 1180591620717411303424 1) 1e-12)
+(test-eqv 1180591620717411303424 (* 1180591620717411303424 1))
+(test-approximate
+ 1393796574908163946345982392040522594123776
+ (* 1180591620717411303424 1180591620717411303424)
+ 1e-12)
+(test-eqv
+ 1393796574908163946345982392040522594123776
+ (* 1180591620717411303424 1180591620717411303424))
+(test-approximate 885443715538058477568 (* 1180591620717411303424 3/4) 1e-12)
+(test-eqv 885443715538058477568 (* 1180591620717411303424 3/4))
+(test-approximate
+ 40564819207303340847894502572032
+ (* 1180591620717411303424 3.4359738368e10)
+ 1e-12)
+(test-eqv 4.056481920730334e31 (* 1180591620717411303424 3.4359738368e10))
+(test-approximate
+ 1180591620717411303424+1180591620717411303424i
+ (* 1180591620717411303424 1+i)
+ 1e-12)
+(test-eqv
+ 1180591620717411303424+1180591620717411303424i
+ (* 1180591620717411303424 1+i))
+(test-approximate 3/4 (* 3/4 1) 1e-12)
+(test-eqv 3/4 (* 3/4 1))
+(test-approximate 885443715538058477568 (* 3/4 1180591620717411303424) 1e-12)
+(test-eqv 885443715538058477568 (* 3/4 1180591620717411303424))
+(test-approximate 9/16 (* 3/4 3/4) 1e-12)
+(test-eqv 9/16 (* 3/4 3/4))
+(test-approximate 25769803776 (* 3/4 3.4359738368e10) 1e-12)
+(test-eqv 2.5769803776e10 (* 3/4 3.4359738368e10))
+(test-approximate 3/4+3/4i (* 3/4 1+i) 1e-12)
+(test-eqv 3/4+3/4i (* 3/4 1+i))
+(test-approximate 34359738368 (* 3.4359738368e10 1) 1e-12)
+(test-eqv 3.4359738368e10 (* 3.4359738368e10 1))
+(test-approximate
+ 40564819207303340847894502572032
+ (* 3.4359738368e10 1180591620717411303424)
+ 1e-12)
+(test-eqv 4.056481920730334e31 (* 3.4359738368e10 1180591620717411303424))
+(test-approximate 25769803776 (* 3.4359738368e10 3/4) 1e-12)
+(test-eqv 2.5769803776e10 (* 3.4359738368e10 3/4))
+(test-approximate
+ 1180591620717411303424
+ (* 3.4359738368e10 3.4359738368e10)
+ 1e-12)
+(test-eqv 1.1805916207174113e21 (* 3.4359738368e10 3.4359738368e10))
+(test-approximate 34359738368+34359738368i (* 3.4359738368e10 1+i) 1e-12)
+(test-eqv 3.4359738368e10+3.4359738368e10i (* 3.4359738368e10 1+i))
+(test-approximate 1+i (* 1+i 1) 1e-12)
+(test-eqv 1+i (* 1+i 1))
+(test-approximate
+ 1180591620717411303424+1180591620717411303424i
+ (* 1+i 1180591620717411303424)
+ 1e-12)
+(test-eqv
+ 1180591620717411303424+1180591620717411303424i
+ (* 1+i 1180591620717411303424))
+(test-approximate 3/4+3/4i (* 1+i 3/4) 1e-12)
+(test-eqv 3/4+3/4i (* 1+i 3/4))
+(test-approximate 34359738368+34359738368i (* 1+i 3.4359738368e10) 1e-12)
+(test-eqv 3.4359738368e10+3.4359738368e10i (* 1+i 3.4359738368e10))
+(test-approximate +2i (* 1+i 1+i) 1e-12)
+(test-eqv +2i (* 1+i 1+i))
 
 
 #;(let ()
@@ -1568,106 +1853,321 @@
 	      '(extract-bit-field test-bit-field? clear-bit-field))
     ))
 
-(check-eqv? (extract-bit-field 79 109 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261)
-            (test-extract-bit-field 79 109 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261))
-(check-eqv? (extract-bit-field 79 13 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261)
-            (test-extract-bit-field 79 13 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261))
-(check-eqv? (extract-bit-field 4 109 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261)
-            (test-extract-bit-field 4 109 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261))
-(check-eqv? (extract-bit-field 4 13 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261)
-            (test-extract-bit-field 4 13 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261))
-(check-eqv? (extract-bit-field 79 109 -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942)
-            (test-extract-bit-field 79 109 -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942))
-(check-eqv? (extract-bit-field 79 13 -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942)
-            (test-extract-bit-field 79 13 -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942))
-(check-eqv? (extract-bit-field 4 109 -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942)
-            (test-extract-bit-field 4 109 -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942))
-(check-eqv? (extract-bit-field 4 13 -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942)
-            (test-extract-bit-field 4 13 -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942))
-(check-eqv? (extract-bit-field 79 109 103713854486608146) (test-extract-bit-field 79 109 103713854486608146))
-(check-eqv? (extract-bit-field 79 13 103713854486608146) (test-extract-bit-field 79 13 103713854486608146))
-(check-eqv? (extract-bit-field 4 109 103713854486608146) (test-extract-bit-field 4 109 103713854486608146))
-(check-eqv? (extract-bit-field 4 13 103713854486608146) (test-extract-bit-field 4 13 103713854486608146))
-(check-eqv? (extract-bit-field 79 109 -608462309321751311) (test-extract-bit-field 79 109 -608462309321751311))
-(check-eqv? (extract-bit-field 79 13 -608462309321751311) (test-extract-bit-field 79 13 -608462309321751311))
-(check-eqv? (extract-bit-field 4 109 -608462309321751311) (test-extract-bit-field 4 109 -608462309321751311))
-(check-eqv? (extract-bit-field 4 13 -608462309321751311) (test-extract-bit-field 4 13 -608462309321751311))
-(check-eqv? (test-bit-field? 79 109 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261)
-            (test-test-bit-field? 79 109 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261))
-(check-eqv? (test-bit-field? 79 13 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261)
-            (test-test-bit-field? 79 13 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261))
-(check-eqv? (test-bit-field? 4 109 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261)
-            (test-test-bit-field? 4 109 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261))
-(check-eqv? (test-bit-field? 4 13 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261)
-            (test-test-bit-field? 4 13 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261))
-(check-eqv? (test-bit-field? 79 109 -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942)
-            (test-test-bit-field? 79 109 -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942))
-(check-eqv? (test-bit-field? 79 13 -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942)
-            (test-test-bit-field? 79 13 -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942))
-(check-eqv? (test-bit-field? 4 109 -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942)
-            (test-test-bit-field? 4 109 -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942))
-(check-eqv? (test-bit-field? 4 13 -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942)
-            (test-test-bit-field? 4 13 -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942))
-(check-eqv? (test-bit-field? 79 109 103713854486608146) (test-test-bit-field? 79 109 103713854486608146))
-(check-eqv? (test-bit-field? 79 13 103713854486608146) (test-test-bit-field? 79 13 103713854486608146))
-(check-eqv? (test-bit-field? 4 109 103713854486608146) (test-test-bit-field? 4 109 103713854486608146))
-(check-eqv? (test-bit-field? 4 13 103713854486608146) (test-test-bit-field? 4 13 103713854486608146))
-(check-eqv? (test-bit-field? 79 109 -608462309321751311) (test-test-bit-field? 79 109 -608462309321751311))
-(check-eqv? (test-bit-field? 79 13 -608462309321751311) (test-test-bit-field? 79 13 -608462309321751311))
-(check-eqv? (test-bit-field? 4 109 -608462309321751311) (test-test-bit-field? 4 109 -608462309321751311))
-(check-eqv? (test-bit-field? 4 13 -608462309321751311) (test-test-bit-field? 4 13 -608462309321751311))
-(check-eqv? (clear-bit-field 79 109 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261)
-            (test-clear-bit-field 79 109 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261))
-(check-eqv? (clear-bit-field 79 13 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261)
-            (test-clear-bit-field 79 13 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261))
-(check-eqv? (clear-bit-field 4 109 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261)
-            (test-clear-bit-field 4 109 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261))
-(check-eqv? (clear-bit-field 4 13 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261)
-            (test-clear-bit-field 4 13 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261))
-(check-eqv? (clear-bit-field 79 109 -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942)
-            (test-clear-bit-field 79 109 -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942))
-(check-eqv? (clear-bit-field 79 13 -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942)
-            (test-clear-bit-field 79 13 -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942))
-(check-eqv? (clear-bit-field 4 109 -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942)
-            (test-clear-bit-field 4 109 -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942))
-(check-eqv? (clear-bit-field 4 13 -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942)
-            (test-clear-bit-field 4 13 -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942))
-(check-eqv? (clear-bit-field 79 109 103713854486608146) (test-clear-bit-field 79 109 103713854486608146))
-(check-eqv? (clear-bit-field 79 13 103713854486608146) (test-clear-bit-field 79 13 103713854486608146))
-(check-eqv? (clear-bit-field 4 109 103713854486608146) (test-clear-bit-field 4 109 103713854486608146))
-(check-eqv? (clear-bit-field 4 13 103713854486608146) (test-clear-bit-field 4 13 103713854486608146))
-(check-eqv? (clear-bit-field 79 109 -608462309321751311) (test-clear-bit-field 79 109 -608462309321751311))
-(check-eqv? (clear-bit-field 79 13 -608462309321751311) (test-clear-bit-field 79 13 -608462309321751311))
-(check-eqv? (clear-bit-field 4 109 -608462309321751311) (test-clear-bit-field 4 109 -608462309321751311))
-(check-eqv? (clear-bit-field 4 13 -608462309321751311) (test-clear-bit-field 4 13 -608462309321751311))
+(test-eqv
+ (test-extract-bit-field
+  79
+  109
+  819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261)
+ (extract-bit-field
+  79
+  109
+  819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261))
+(test-eqv
+ (test-extract-bit-field
+  79
+  13
+  819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261)
+ (extract-bit-field
+  79
+  13
+  819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261))
+(test-eqv
+ (test-extract-bit-field
+  4
+  109
+  819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261)
+ (extract-bit-field
+  4
+  109
+  819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261))
+(test-eqv
+ (test-extract-bit-field
+  4
+  13
+  819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261)
+ (extract-bit-field
+  4
+  13
+  819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261))
+(test-eqv
+ (test-extract-bit-field
+  79
+  109
+  -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942)
+ (extract-bit-field
+  79
+  109
+  -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942))
+(test-eqv
+ (test-extract-bit-field
+  79
+  13
+  -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942)
+ (extract-bit-field
+  79
+  13
+  -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942))
+(test-eqv
+ (test-extract-bit-field
+  4
+  109
+  -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942)
+ (extract-bit-field
+  4
+  109
+  -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942))
+(test-eqv
+ (test-extract-bit-field
+  4
+  13
+  -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942)
+ (extract-bit-field
+  4
+  13
+  -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942))
+(test-eqv
+ (test-extract-bit-field 79 109 103713854486608146)
+ (extract-bit-field 79 109 103713854486608146))
+(test-eqv
+ (test-extract-bit-field 79 13 103713854486608146)
+ (extract-bit-field 79 13 103713854486608146))
+(test-eqv
+ (test-extract-bit-field 4 109 103713854486608146)
+ (extract-bit-field 4 109 103713854486608146))
+(test-eqv
+ (test-extract-bit-field 4 13 103713854486608146)
+ (extract-bit-field 4 13 103713854486608146))
+(test-eqv
+ (test-extract-bit-field 79 109 -608462309321751311)
+ (extract-bit-field 79 109 -608462309321751311))
+(test-eqv
+ (test-extract-bit-field 79 13 -608462309321751311)
+ (extract-bit-field 79 13 -608462309321751311))
+(test-eqv
+ (test-extract-bit-field 4 109 -608462309321751311)
+ (extract-bit-field 4 109 -608462309321751311))
+(test-eqv
+ (test-extract-bit-field 4 13 -608462309321751311)
+ (extract-bit-field 4 13 -608462309321751311))
+(test-eqv
+ (test-test-bit-field?
+  79
+  109
+  819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261)
+ (test-bit-field?
+  79
+  109
+  819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261))
+(test-eqv
+ (test-test-bit-field?
+  79
+  13
+  819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261)
+ (test-bit-field?
+  79
+  13
+  819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261))
+(test-eqv
+ (test-test-bit-field?
+  4
+  109
+  819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261)
+ (test-bit-field?
+  4
+  109
+  819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261))
+(test-eqv
+ (test-test-bit-field?
+  4
+  13
+  819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261)
+ (test-bit-field?
+  4
+  13
+  819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261))
+(test-eqv
+ (test-test-bit-field?
+  79
+  109
+  -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942)
+ (test-bit-field?
+  79
+  109
+  -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942))
+(test-eqv
+ (test-test-bit-field?
+  79
+  13
+  -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942)
+ (test-bit-field?
+  79
+  13
+  -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942))
+(test-eqv
+ (test-test-bit-field?
+  4
+  109
+  -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942)
+ (test-bit-field?
+  4
+  109
+  -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942))
+(test-eqv
+ (test-test-bit-field?
+  4
+  13
+  -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942)
+ (test-bit-field?
+  4
+  13
+  -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942))
+(test-eqv
+ (test-test-bit-field? 79 109 103713854486608146)
+ (test-bit-field? 79 109 103713854486608146))
+(test-eqv
+ (test-test-bit-field? 79 13 103713854486608146)
+ (test-bit-field? 79 13 103713854486608146))
+(test-eqv
+ (test-test-bit-field? 4 109 103713854486608146)
+ (test-bit-field? 4 109 103713854486608146))
+(test-eqv
+ (test-test-bit-field? 4 13 103713854486608146)
+ (test-bit-field? 4 13 103713854486608146))
+(test-eqv
+ (test-test-bit-field? 79 109 -608462309321751311)
+ (test-bit-field? 79 109 -608462309321751311))
+(test-eqv
+ (test-test-bit-field? 79 13 -608462309321751311)
+ (test-bit-field? 79 13 -608462309321751311))
+(test-eqv
+ (test-test-bit-field? 4 109 -608462309321751311)
+ (test-bit-field? 4 109 -608462309321751311))
+(test-eqv
+ (test-test-bit-field? 4 13 -608462309321751311)
+ (test-bit-field? 4 13 -608462309321751311))
+(test-eqv
+ (test-clear-bit-field
+  79
+  109
+  819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261)
+ (clear-bit-field
+  79
+  109
+  819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261))
+(test-eqv
+ (test-clear-bit-field
+  79
+  13
+  819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261)
+ (clear-bit-field
+  79
+  13
+  819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261))
+(test-eqv
+ (test-clear-bit-field
+  4
+  109
+  819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261)
+ (clear-bit-field
+  4
+  109
+  819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261))
+(test-eqv
+ (test-clear-bit-field
+  4
+  13
+  819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261)
+ (clear-bit-field
+  4
+  13
+  819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261))
+(test-eqv
+ (test-clear-bit-field
+  79
+  109
+  -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942)
+ (clear-bit-field
+  79
+  109
+  -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942))
+(test-eqv
+ (test-clear-bit-field
+  79
+  13
+  -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942)
+ (clear-bit-field
+  79
+  13
+  -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942))
+(test-eqv
+ (test-clear-bit-field
+  4
+  109
+  -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942)
+ (clear-bit-field
+  4
+  109
+  -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942))
+(test-eqv
+ (test-clear-bit-field
+  4
+  13
+  -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942)
+ (clear-bit-field
+  4
+  13
+  -2560481503630520084802251286722070556183711270103420284967696348412255744250015987909211821032873931231996971794614933942))
+(test-eqv
+ (test-clear-bit-field 79 109 103713854486608146)
+ (clear-bit-field 79 109 103713854486608146))
+(test-eqv
+ (test-clear-bit-field 79 13 103713854486608146)
+ (clear-bit-field 79 13 103713854486608146))
+(test-eqv
+ (test-clear-bit-field 4 109 103713854486608146)
+ (clear-bit-field 4 109 103713854486608146))
+(test-eqv
+ (test-clear-bit-field 4 13 103713854486608146)
+ (clear-bit-field 4 13 103713854486608146))
+(test-eqv
+ (test-clear-bit-field 79 109 -608462309321751311)
+ (clear-bit-field 79 109 -608462309321751311))
+(test-eqv
+ (test-clear-bit-field 79 13 -608462309321751311)
+ (clear-bit-field 79 13 -608462309321751311))
+(test-eqv
+ (test-clear-bit-field 4 109 -608462309321751311)
+ (clear-bit-field 4 109 -608462309321751311))
+(test-eqv
+ (test-clear-bit-field 4 13 -608462309321751311)
+ (clear-bit-field 4 13 -608462309321751311))
 
 ;;; extract-bit-field
 
 ;;; Now some ad-hoc tests with size and position bignums
 
-(check-eqv? (extract-bit-field 4 (expt 2 100) -1) 15)
-(check-eqv? (extract-bit-field (expt 2 100) 0 15) 15)
-(check-eqv? (extract-bit-field (expt 2 100) (expt 3 100) 15) 0)
+(test-eqv 15 (extract-bit-field 4 (expt 2 100) -1))
+(test-eqv 15 (extract-bit-field (expt 2 100) 0 15))
+(test-eqv 0 (extract-bit-field (expt 2 100) (expt 3 100) 15))
 
 ;;; Have size be bigger than (integer-length x)
 
-(check-eqv? (extract-bit-field 200 0 (expt 3 110)) (expt 3 110))
+(test-eqv (expt 3 110) (extract-bit-field 200 0 (expt 3 110)))
 
 ;;; This is a quality of implementation test:
 
-(let ((x (expt 3 110)))
-  (check-eq? (extract-bit-field 200 0 x) x))
+(let ((x (expt 3 110))) (test-eq x (extract-bit-field 200 0 x)))
 
 ;;; Some error tests.
 
 ;;; heap-overflow-exception? doesn't seem to exist in the universal back end.
 ;;; (check-exn heap-overflow-exception? (lambda () (extract-bit-field (expt 2 100) (expt 2 100) -1)))
 
-(check-tail-exn type-exception? (lambda () (extract-bit-field -1 1 1)))
-(check-tail-exn type-exception? (lambda () (extract-bit-field 1 -1 1)))
-(check-tail-exn type-exception? (lambda () (extract-bit-field 'a 1 1)))
-(check-tail-exn type-exception? (lambda () (extract-bit-field 1 'a 1)))
-(check-tail-exn type-exception? (lambda () (extract-bit-field 1 1 'a)))
+(test-error-tail type-exception? (extract-bit-field -1 1 1))
+(test-error-tail type-exception? (extract-bit-field 1 -1 1))
+(test-error-tail type-exception? (extract-bit-field 'a 1 1))
+(test-error-tail type-exception? (extract-bit-field 1 'a 1))
+(test-error-tail type-exception? (extract-bit-field 1 1 'a))
 
 ;;; test-bit-field
 
@@ -1685,100 +2185,99 @@
           (iota 9 -4))
 |#
 
-(check-eqv? (test-bit-field? 1 0 -4) (test-test-bit-field? 1 0 -4))
-(check-eqv? (test-bit-field? 1 1 -4) (test-test-bit-field? 1 1 -4))
-(check-eqv? (test-bit-field? 1 2 -4) (test-test-bit-field? 1 2 -4))
-(check-eqv? (test-bit-field? 2 0 -4) (test-test-bit-field? 2 0 -4))
-(check-eqv? (test-bit-field? 2 1 -4) (test-test-bit-field? 2 1 -4))
-(check-eqv? (test-bit-field? 2 2 -4) (test-test-bit-field? 2 2 -4))
-(check-eqv? (test-bit-field? 3 0 -4) (test-test-bit-field? 3 0 -4))
-(check-eqv? (test-bit-field? 3 1 -4) (test-test-bit-field? 3 1 -4))
-(check-eqv? (test-bit-field? 3 2 -4) (test-test-bit-field? 3 2 -4))
-(check-eqv? (test-bit-field? 1 0 -3) (test-test-bit-field? 1 0 -3))
-(check-eqv? (test-bit-field? 1 1 -3) (test-test-bit-field? 1 1 -3))
-(check-eqv? (test-bit-field? 1 2 -3) (test-test-bit-field? 1 2 -3))
-(check-eqv? (test-bit-field? 2 0 -3) (test-test-bit-field? 2 0 -3))
-(check-eqv? (test-bit-field? 2 1 -3) (test-test-bit-field? 2 1 -3))
-(check-eqv? (test-bit-field? 2 2 -3) (test-test-bit-field? 2 2 -3))
-(check-eqv? (test-bit-field? 3 0 -3) (test-test-bit-field? 3 0 -3))
-(check-eqv? (test-bit-field? 3 1 -3) (test-test-bit-field? 3 1 -3))
-(check-eqv? (test-bit-field? 3 2 -3) (test-test-bit-field? 3 2 -3))
-(check-eqv? (test-bit-field? 1 0 -2) (test-test-bit-field? 1 0 -2))
-(check-eqv? (test-bit-field? 1 1 -2) (test-test-bit-field? 1 1 -2))
-(check-eqv? (test-bit-field? 1 2 -2) (test-test-bit-field? 1 2 -2))
-(check-eqv? (test-bit-field? 2 0 -2) (test-test-bit-field? 2 0 -2))
-(check-eqv? (test-bit-field? 2 1 -2) (test-test-bit-field? 2 1 -2))
-(check-eqv? (test-bit-field? 2 2 -2) (test-test-bit-field? 2 2 -2))
-(check-eqv? (test-bit-field? 3 0 -2) (test-test-bit-field? 3 0 -2))
-(check-eqv? (test-bit-field? 3 1 -2) (test-test-bit-field? 3 1 -2))
-(check-eqv? (test-bit-field? 3 2 -2) (test-test-bit-field? 3 2 -2))
-(check-eqv? (test-bit-field? 1 0 -1) (test-test-bit-field? 1 0 -1))
-(check-eqv? (test-bit-field? 1 1 -1) (test-test-bit-field? 1 1 -1))
-(check-eqv? (test-bit-field? 1 2 -1) (test-test-bit-field? 1 2 -1))
-(check-eqv? (test-bit-field? 2 0 -1) (test-test-bit-field? 2 0 -1))
-(check-eqv? (test-bit-field? 2 1 -1) (test-test-bit-field? 2 1 -1))
-(check-eqv? (test-bit-field? 2 2 -1) (test-test-bit-field? 2 2 -1))
-(check-eqv? (test-bit-field? 3 0 -1) (test-test-bit-field? 3 0 -1))
-(check-eqv? (test-bit-field? 3 1 -1) (test-test-bit-field? 3 1 -1))
-(check-eqv? (test-bit-field? 3 2 -1) (test-test-bit-field? 3 2 -1))
-(check-eqv? (test-bit-field? 1 0 0) (test-test-bit-field? 1 0 0))
-(check-eqv? (test-bit-field? 1 1 0) (test-test-bit-field? 1 1 0))
-(check-eqv? (test-bit-field? 1 2 0) (test-test-bit-field? 1 2 0))
-(check-eqv? (test-bit-field? 2 0 0) (test-test-bit-field? 2 0 0))
-(check-eqv? (test-bit-field? 2 1 0) (test-test-bit-field? 2 1 0))
-(check-eqv? (test-bit-field? 2 2 0) (test-test-bit-field? 2 2 0))
-(check-eqv? (test-bit-field? 3 0 0) (test-test-bit-field? 3 0 0))
-(check-eqv? (test-bit-field? 3 1 0) (test-test-bit-field? 3 1 0))
-(check-eqv? (test-bit-field? 3 2 0) (test-test-bit-field? 3 2 0))
-(check-eqv? (test-bit-field? 1 0 1) (test-test-bit-field? 1 0 1))
-(check-eqv? (test-bit-field? 1 1 1) (test-test-bit-field? 1 1 1))
-(check-eqv? (test-bit-field? 1 2 1) (test-test-bit-field? 1 2 1))
-(check-eqv? (test-bit-field? 2 0 1) (test-test-bit-field? 2 0 1))
-(check-eqv? (test-bit-field? 2 1 1) (test-test-bit-field? 2 1 1))
-(check-eqv? (test-bit-field? 2 2 1) (test-test-bit-field? 2 2 1))
-(check-eqv? (test-bit-field? 3 0 1) (test-test-bit-field? 3 0 1))
-(check-eqv? (test-bit-field? 3 1 1) (test-test-bit-field? 3 1 1))
-(check-eqv? (test-bit-field? 3 2 1) (test-test-bit-field? 3 2 1))
-(check-eqv? (test-bit-field? 1 0 2) (test-test-bit-field? 1 0 2))
-(check-eqv? (test-bit-field? 1 1 2) (test-test-bit-field? 1 1 2))
-(check-eqv? (test-bit-field? 1 2 2) (test-test-bit-field? 1 2 2))
-(check-eqv? (test-bit-field? 2 0 2) (test-test-bit-field? 2 0 2))
-(check-eqv? (test-bit-field? 2 1 2) (test-test-bit-field? 2 1 2))
-(check-eqv? (test-bit-field? 2 2 2) (test-test-bit-field? 2 2 2))
-(check-eqv? (test-bit-field? 3 0 2) (test-test-bit-field? 3 0 2))
-(check-eqv? (test-bit-field? 3 1 2) (test-test-bit-field? 3 1 2))
-(check-eqv? (test-bit-field? 3 2 2) (test-test-bit-field? 3 2 2))
-(check-eqv? (test-bit-field? 1 0 3) (test-test-bit-field? 1 0 3))
-(check-eqv? (test-bit-field? 1 1 3) (test-test-bit-field? 1 1 3))
-(check-eqv? (test-bit-field? 1 2 3) (test-test-bit-field? 1 2 3))
-(check-eqv? (test-bit-field? 2 0 3) (test-test-bit-field? 2 0 3))
-(check-eqv? (test-bit-field? 2 1 3) (test-test-bit-field? 2 1 3))
-(check-eqv? (test-bit-field? 2 2 3) (test-test-bit-field? 2 2 3))
-(check-eqv? (test-bit-field? 3 0 3) (test-test-bit-field? 3 0 3))
-(check-eqv? (test-bit-field? 3 1 3) (test-test-bit-field? 3 1 3))
-(check-eqv? (test-bit-field? 3 2 3) (test-test-bit-field? 3 2 3))
-(check-eqv? (test-bit-field? 1 0 4) (test-test-bit-field? 1 0 4))
-(check-eqv? (test-bit-field? 1 1 4) (test-test-bit-field? 1 1 4))
-(check-eqv? (test-bit-field? 1 2 4) (test-test-bit-field? 1 2 4))
-(check-eqv? (test-bit-field? 2 0 4) (test-test-bit-field? 2 0 4))
-(check-eqv? (test-bit-field? 2 1 4) (test-test-bit-field? 2 1 4))
-(check-eqv? (test-bit-field? 2 2 4) (test-test-bit-field? 2 2 4))
-(check-eqv? (test-bit-field? 3 0 4) (test-test-bit-field? 3 0 4))
-(check-eqv? (test-bit-field? 3 1 4) (test-test-bit-field? 3 1 4))
-(check-eqv? (test-bit-field? 3 2 4) (test-test-bit-field? 3 2 4))
+(test-eqv (test-test-bit-field? 1 0 -4) (test-bit-field? 1 0 -4))
+(test-eqv (test-test-bit-field? 1 1 -4) (test-bit-field? 1 1 -4))
+(test-eqv (test-test-bit-field? 1 2 -4) (test-bit-field? 1 2 -4))
+(test-eqv (test-test-bit-field? 2 0 -4) (test-bit-field? 2 0 -4))
+(test-eqv (test-test-bit-field? 2 1 -4) (test-bit-field? 2 1 -4))
+(test-eqv (test-test-bit-field? 2 2 -4) (test-bit-field? 2 2 -4))
+(test-eqv (test-test-bit-field? 3 0 -4) (test-bit-field? 3 0 -4))
+(test-eqv (test-test-bit-field? 3 1 -4) (test-bit-field? 3 1 -4))
+(test-eqv (test-test-bit-field? 3 2 -4) (test-bit-field? 3 2 -4))
+(test-eqv (test-test-bit-field? 1 0 -3) (test-bit-field? 1 0 -3))
+(test-eqv (test-test-bit-field? 1 1 -3) (test-bit-field? 1 1 -3))
+(test-eqv (test-test-bit-field? 1 2 -3) (test-bit-field? 1 2 -3))
+(test-eqv (test-test-bit-field? 2 0 -3) (test-bit-field? 2 0 -3))
+(test-eqv (test-test-bit-field? 2 1 -3) (test-bit-field? 2 1 -3))
+(test-eqv (test-test-bit-field? 2 2 -3) (test-bit-field? 2 2 -3))
+(test-eqv (test-test-bit-field? 3 0 -3) (test-bit-field? 3 0 -3))
+(test-eqv (test-test-bit-field? 3 1 -3) (test-bit-field? 3 1 -3))
+(test-eqv (test-test-bit-field? 3 2 -3) (test-bit-field? 3 2 -3))
+(test-eqv (test-test-bit-field? 1 0 -2) (test-bit-field? 1 0 -2))
+(test-eqv (test-test-bit-field? 1 1 -2) (test-bit-field? 1 1 -2))
+(test-eqv (test-test-bit-field? 1 2 -2) (test-bit-field? 1 2 -2))
+(test-eqv (test-test-bit-field? 2 0 -2) (test-bit-field? 2 0 -2))
+(test-eqv (test-test-bit-field? 2 1 -2) (test-bit-field? 2 1 -2))
+(test-eqv (test-test-bit-field? 2 2 -2) (test-bit-field? 2 2 -2))
+(test-eqv (test-test-bit-field? 3 0 -2) (test-bit-field? 3 0 -2))
+(test-eqv (test-test-bit-field? 3 1 -2) (test-bit-field? 3 1 -2))
+(test-eqv (test-test-bit-field? 3 2 -2) (test-bit-field? 3 2 -2))
+(test-eqv (test-test-bit-field? 1 0 -1) (test-bit-field? 1 0 -1))
+(test-eqv (test-test-bit-field? 1 1 -1) (test-bit-field? 1 1 -1))
+(test-eqv (test-test-bit-field? 1 2 -1) (test-bit-field? 1 2 -1))
+(test-eqv (test-test-bit-field? 2 0 -1) (test-bit-field? 2 0 -1))
+(test-eqv (test-test-bit-field? 2 1 -1) (test-bit-field? 2 1 -1))
+(test-eqv (test-test-bit-field? 2 2 -1) (test-bit-field? 2 2 -1))
+(test-eqv (test-test-bit-field? 3 0 -1) (test-bit-field? 3 0 -1))
+(test-eqv (test-test-bit-field? 3 1 -1) (test-bit-field? 3 1 -1))
+(test-eqv (test-test-bit-field? 3 2 -1) (test-bit-field? 3 2 -1))
+(test-eqv (test-test-bit-field? 1 0 0) (test-bit-field? 1 0 0))
+(test-eqv (test-test-bit-field? 1 1 0) (test-bit-field? 1 1 0))
+(test-eqv (test-test-bit-field? 1 2 0) (test-bit-field? 1 2 0))
+(test-eqv (test-test-bit-field? 2 0 0) (test-bit-field? 2 0 0))
+(test-eqv (test-test-bit-field? 2 1 0) (test-bit-field? 2 1 0))
+(test-eqv (test-test-bit-field? 2 2 0) (test-bit-field? 2 2 0))
+(test-eqv (test-test-bit-field? 3 0 0) (test-bit-field? 3 0 0))
+(test-eqv (test-test-bit-field? 3 1 0) (test-bit-field? 3 1 0))
+(test-eqv (test-test-bit-field? 3 2 0) (test-bit-field? 3 2 0))
+(test-eqv (test-test-bit-field? 1 0 1) (test-bit-field? 1 0 1))
+(test-eqv (test-test-bit-field? 1 1 1) (test-bit-field? 1 1 1))
+(test-eqv (test-test-bit-field? 1 2 1) (test-bit-field? 1 2 1))
+(test-eqv (test-test-bit-field? 2 0 1) (test-bit-field? 2 0 1))
+(test-eqv (test-test-bit-field? 2 1 1) (test-bit-field? 2 1 1))
+(test-eqv (test-test-bit-field? 2 2 1) (test-bit-field? 2 2 1))
+(test-eqv (test-test-bit-field? 3 0 1) (test-bit-field? 3 0 1))
+(test-eqv (test-test-bit-field? 3 1 1) (test-bit-field? 3 1 1))
+(test-eqv (test-test-bit-field? 3 2 1) (test-bit-field? 3 2 1))
+(test-eqv (test-test-bit-field? 1 0 2) (test-bit-field? 1 0 2))
+(test-eqv (test-test-bit-field? 1 1 2) (test-bit-field? 1 1 2))
+(test-eqv (test-test-bit-field? 1 2 2) (test-bit-field? 1 2 2))
+(test-eqv (test-test-bit-field? 2 0 2) (test-bit-field? 2 0 2))
+(test-eqv (test-test-bit-field? 2 1 2) (test-bit-field? 2 1 2))
+(test-eqv (test-test-bit-field? 2 2 2) (test-bit-field? 2 2 2))
+(test-eqv (test-test-bit-field? 3 0 2) (test-bit-field? 3 0 2))
+(test-eqv (test-test-bit-field? 3 1 2) (test-bit-field? 3 1 2))
+(test-eqv (test-test-bit-field? 3 2 2) (test-bit-field? 3 2 2))
+(test-eqv (test-test-bit-field? 1 0 3) (test-bit-field? 1 0 3))
+(test-eqv (test-test-bit-field? 1 1 3) (test-bit-field? 1 1 3))
+(test-eqv (test-test-bit-field? 1 2 3) (test-bit-field? 1 2 3))
+(test-eqv (test-test-bit-field? 2 0 3) (test-bit-field? 2 0 3))
+(test-eqv (test-test-bit-field? 2 1 3) (test-bit-field? 2 1 3))
+(test-eqv (test-test-bit-field? 2 2 3) (test-bit-field? 2 2 3))
+(test-eqv (test-test-bit-field? 3 0 3) (test-bit-field? 3 0 3))
+(test-eqv (test-test-bit-field? 3 1 3) (test-bit-field? 3 1 3))
+(test-eqv (test-test-bit-field? 3 2 3) (test-bit-field? 3 2 3))
+(test-eqv (test-test-bit-field? 1 0 4) (test-bit-field? 1 0 4))
+(test-eqv (test-test-bit-field? 1 1 4) (test-bit-field? 1 1 4))
+(test-eqv (test-test-bit-field? 1 2 4) (test-bit-field? 1 2 4))
+(test-eqv (test-test-bit-field? 2 0 4) (test-bit-field? 2 0 4))
+(test-eqv (test-test-bit-field? 2 1 4) (test-bit-field? 2 1 4))
+(test-eqv (test-test-bit-field? 2 2 4) (test-bit-field? 2 2 4))
+(test-eqv (test-test-bit-field? 3 0 4) (test-bit-field? 3 0 4))
+(test-eqv (test-test-bit-field? 3 1 4) (test-bit-field? 3 1 4))
+(test-eqv (test-test-bit-field? 3 2 4) (test-bit-field? 3 2 4))
 
 ;;; the following should not overflow the heap.
 
-(check-eqv? (test-bit-field? (expt 2 100) (expt 2 100) -1)
-            #t)
+(test-eqv #t (test-bit-field? (expt 2 100) (expt 2 100) -1))
 
 ;;; Some error tests
 
-(check-tail-exn type-exception? (lambda () (test-bit-field? -1 1 1)))
-(check-tail-exn type-exception? (lambda () (test-bit-field? 1 -1 1)))
-(check-tail-exn type-exception? (lambda () (test-bit-field? 'a 1 1)))
-(check-tail-exn type-exception? (lambda () (test-bit-field? 1 'a 1)))
-(check-tail-exn type-exception? (lambda () (test-bit-field? 1 1 'a)))
+(test-error-tail type-exception? (test-bit-field? -1 1 1))
+(test-error-tail type-exception? (test-bit-field? 1 -1 1))
+(test-error-tail type-exception? (test-bit-field? 'a 1 1))
+(test-error-tail type-exception? (test-bit-field? 1 'a 1))
+(test-error-tail type-exception? (test-bit-field? 1 1 'a))
 
 
 #;(let ()
@@ -1813,30 +2312,84 @@
 	      xs)
     ))
 
-(check-eqv? (arithmetic-shift 1510654584040625753730018974833480216667530151201555010392492426076866671982958500628614593424711863814629067143762706485 25)
-            (test-arithmetic-shift 1510654584040625753730018974833480216667530151201555010392492426076866671982958500628614593424711863814629067143762706485 25))
-(check-eqv? (arithmetic-shift 1510654584040625753730018974833480216667530151201555010392492426076866671982958500628614593424711863814629067143762706485 6)
-            (test-arithmetic-shift 1510654584040625753730018974833480216667530151201555010392492426076866671982958500628614593424711863814629067143762706485 6))
-(check-eqv? (arithmetic-shift 1510654584040625753730018974833480216667530151201555010392492426076866671982958500628614593424711863814629067143762706485 -85)
-            (test-arithmetic-shift 1510654584040625753730018974833480216667530151201555010392492426076866671982958500628614593424711863814629067143762706485 -85))
-(check-eqv? (arithmetic-shift 1510654584040625753730018974833480216667530151201555010392492426076866671982958500628614593424711863814629067143762706485 -7)
-            (test-arithmetic-shift 1510654584040625753730018974833480216667530151201555010392492426076866671982958500628614593424711863814629067143762706485 -7))
-(check-eqv? (arithmetic-shift -559642383537053245096412692765977685103422952228866058440690017354464196389779391618197852441636114137703871379414475911 25)
-            (test-arithmetic-shift -559642383537053245096412692765977685103422952228866058440690017354464196389779391618197852441636114137703871379414475911 25))
-(check-eqv? (arithmetic-shift -559642383537053245096412692765977685103422952228866058440690017354464196389779391618197852441636114137703871379414475911 6)
-            (test-arithmetic-shift -559642383537053245096412692765977685103422952228866058440690017354464196389779391618197852441636114137703871379414475911 6))
-(check-eqv? (arithmetic-shift -559642383537053245096412692765977685103422952228866058440690017354464196389779391618197852441636114137703871379414475911 -85)
-            (test-arithmetic-shift -559642383537053245096412692765977685103422952228866058440690017354464196389779391618197852441636114137703871379414475911 -85))
-(check-eqv? (arithmetic-shift -559642383537053245096412692765977685103422952228866058440690017354464196389779391618197852441636114137703871379414475911 -7)
-            (test-arithmetic-shift -559642383537053245096412692765977685103422952228866058440690017354464196389779391618197852441636114137703871379414475911 -7))
-(check-eqv? (arithmetic-shift 1069741397 25) (test-arithmetic-shift 1069741397 25))
-(check-eqv? (arithmetic-shift 1069741397 6) (test-arithmetic-shift 1069741397 6))
-(check-eqv? (arithmetic-shift 1069741397 -85) (test-arithmetic-shift 1069741397 -85))
-(check-eqv? (arithmetic-shift 1069741397 -7) (test-arithmetic-shift 1069741397 -7))
-(check-eqv? (arithmetic-shift -1094530198 25) (test-arithmetic-shift -1094530198 25))
-(check-eqv? (arithmetic-shift -1094530198 6) (test-arithmetic-shift -1094530198 6))
-(check-eqv? (arithmetic-shift -1094530198 -85) (test-arithmetic-shift -1094530198 -85))
-(check-eqv? (arithmetic-shift -1094530198 -7) (test-arithmetic-shift -1094530198 -7))
+(test-eqv
+ (test-arithmetic-shift
+  1510654584040625753730018974833480216667530151201555010392492426076866671982958500628614593424711863814629067143762706485
+  25)
+ (arithmetic-shift
+  1510654584040625753730018974833480216667530151201555010392492426076866671982958500628614593424711863814629067143762706485
+  25))
+(test-eqv
+ (test-arithmetic-shift
+  1510654584040625753730018974833480216667530151201555010392492426076866671982958500628614593424711863814629067143762706485
+  6)
+ (arithmetic-shift
+  1510654584040625753730018974833480216667530151201555010392492426076866671982958500628614593424711863814629067143762706485
+  6))
+(test-eqv
+ (test-arithmetic-shift
+  1510654584040625753730018974833480216667530151201555010392492426076866671982958500628614593424711863814629067143762706485
+  -85)
+ (arithmetic-shift
+  1510654584040625753730018974833480216667530151201555010392492426076866671982958500628614593424711863814629067143762706485
+  -85))
+(test-eqv
+ (test-arithmetic-shift
+  1510654584040625753730018974833480216667530151201555010392492426076866671982958500628614593424711863814629067143762706485
+  -7)
+ (arithmetic-shift
+  1510654584040625753730018974833480216667530151201555010392492426076866671982958500628614593424711863814629067143762706485
+  -7))
+(test-eqv
+ (test-arithmetic-shift
+  -559642383537053245096412692765977685103422952228866058440690017354464196389779391618197852441636114137703871379414475911
+  25)
+ (arithmetic-shift
+  -559642383537053245096412692765977685103422952228866058440690017354464196389779391618197852441636114137703871379414475911
+  25))
+(test-eqv
+ (test-arithmetic-shift
+  -559642383537053245096412692765977685103422952228866058440690017354464196389779391618197852441636114137703871379414475911
+  6)
+ (arithmetic-shift
+  -559642383537053245096412692765977685103422952228866058440690017354464196389779391618197852441636114137703871379414475911
+  6))
+(test-eqv
+ (test-arithmetic-shift
+  -559642383537053245096412692765977685103422952228866058440690017354464196389779391618197852441636114137703871379414475911
+  -85)
+ (arithmetic-shift
+  -559642383537053245096412692765977685103422952228866058440690017354464196389779391618197852441636114137703871379414475911
+  -85))
+(test-eqv
+ (test-arithmetic-shift
+  -559642383537053245096412692765977685103422952228866058440690017354464196389779391618197852441636114137703871379414475911
+  -7)
+ (arithmetic-shift
+  -559642383537053245096412692765977685103422952228866058440690017354464196389779391618197852441636114137703871379414475911
+  -7))
+(test-eqv
+ (test-arithmetic-shift 1069741397 25)
+ (arithmetic-shift 1069741397 25))
+(test-eqv (test-arithmetic-shift 1069741397 6) (arithmetic-shift 1069741397 6))
+(test-eqv
+ (test-arithmetic-shift 1069741397 -85)
+ (arithmetic-shift 1069741397 -85))
+(test-eqv
+ (test-arithmetic-shift 1069741397 -7)
+ (arithmetic-shift 1069741397 -7))
+(test-eqv
+ (test-arithmetic-shift -1094530198 25)
+ (arithmetic-shift -1094530198 25))
+(test-eqv
+ (test-arithmetic-shift -1094530198 6)
+ (arithmetic-shift -1094530198 6))
+(test-eqv
+ (test-arithmetic-shift -1094530198 -85)
+ (arithmetic-shift -1094530198 -85))
+(test-eqv
+ (test-arithmetic-shift -1094530198 -7)
+ (arithmetic-shift -1094530198 -7))
 
 #;(let ()
 
@@ -1864,311 +2417,743 @@
 				      '(< > =)))
 			  args))
 	      args)))
-
-(check-eq? (< 120 120) #f)
-(check-eq? (> 120 120) #f)
-(check-eq? (= 120 120) #t)
-(check-eq? (< 120 3433683820292512484657849089281) #t)
-(check-eq? (> 120 3433683820292512484657849089281) #f)
-(check-eq? (= 120 3433683820292512484657849089281) #f)
-(check-eq? (< 120 3433683820292512484657849089282) #t)
-(check-eq? (> 120 3433683820292512484657849089282) #f)
-(check-eq? (= 120 3433683820292512484657849089282) #f)
-(check-eq? (< 120 11790184577738583171520872861412518665678211592275841109096961) #t)
-(check-eq? (> 120 11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (= 120 11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (< 120 11790184577738583171520872861412518665678211592275841109096962) #t)
-(check-eq? (> 120 11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (= 120 11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (< 120 -120) #f)
-(check-eq? (> 120 -120) #t)
-(check-eq? (= 120 -120) #f)
-(check-eq? (< 120 -3433683820292512484657849089281) #f)
-(check-eq? (> 120 -3433683820292512484657849089281) #t)
-(check-eq? (= 120 -3433683820292512484657849089281) #f)
-(check-eq? (< 120 -3433683820292512484657849089282) #f)
-(check-eq? (> 120 -3433683820292512484657849089282) #t)
-(check-eq? (= 120 -3433683820292512484657849089282) #f)
-(check-eq? (< 120 -11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (> 120 -11790184577738583171520872861412518665678211592275841109096961) #t)
-(check-eq? (= 120 -11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (< 120 -11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (> 120 -11790184577738583171520872861412518665678211592275841109096962) #t)
-(check-eq? (= 120 -11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (< 3433683820292512484657849089281 120) #f)
-(check-eq? (> 3433683820292512484657849089281 120) #t)
-(check-eq? (= 3433683820292512484657849089281 120) #f)
-(check-eq? (< 3433683820292512484657849089281 3433683820292512484657849089281) #f)
-(check-eq? (> 3433683820292512484657849089281 3433683820292512484657849089281) #f)
-(check-eq? (= 3433683820292512484657849089281 3433683820292512484657849089281) #t)
-(check-eq? (< 3433683820292512484657849089281 3433683820292512484657849089282) #t)
-(check-eq? (> 3433683820292512484657849089281 3433683820292512484657849089282) #f)
-(check-eq? (= 3433683820292512484657849089281 3433683820292512484657849089282) #f)
-(check-eq? (< 3433683820292512484657849089281 11790184577738583171520872861412518665678211592275841109096961) #t)
-(check-eq? (> 3433683820292512484657849089281 11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (= 3433683820292512484657849089281 11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (< 3433683820292512484657849089281 11790184577738583171520872861412518665678211592275841109096962) #t)
-(check-eq? (> 3433683820292512484657849089281 11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (= 3433683820292512484657849089281 11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (< 3433683820292512484657849089281 -120) #f)
-(check-eq? (> 3433683820292512484657849089281 -120) #t)
-(check-eq? (= 3433683820292512484657849089281 -120) #f)
-(check-eq? (< 3433683820292512484657849089281 -3433683820292512484657849089281) #f)
-(check-eq? (> 3433683820292512484657849089281 -3433683820292512484657849089281) #t)
-(check-eq? (= 3433683820292512484657849089281 -3433683820292512484657849089281) #f)
-(check-eq? (< 3433683820292512484657849089281 -3433683820292512484657849089282) #f)
-(check-eq? (> 3433683820292512484657849089281 -3433683820292512484657849089282) #t)
-(check-eq? (= 3433683820292512484657849089281 -3433683820292512484657849089282) #f)
-(check-eq? (< 3433683820292512484657849089281 -11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (> 3433683820292512484657849089281 -11790184577738583171520872861412518665678211592275841109096961) #t)
-(check-eq? (= 3433683820292512484657849089281 -11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (< 3433683820292512484657849089281 -11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (> 3433683820292512484657849089281 -11790184577738583171520872861412518665678211592275841109096962) #t)
-(check-eq? (= 3433683820292512484657849089281 -11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (< 3433683820292512484657849089282 120) #f)
-(check-eq? (> 3433683820292512484657849089282 120) #t)
-(check-eq? (= 3433683820292512484657849089282 120) #f)
-(check-eq? (< 3433683820292512484657849089282 3433683820292512484657849089281) #f)
-(check-eq? (> 3433683820292512484657849089282 3433683820292512484657849089281) #t)
-(check-eq? (= 3433683820292512484657849089282 3433683820292512484657849089281) #f)
-(check-eq? (< 3433683820292512484657849089282 3433683820292512484657849089282) #f)
-(check-eq? (> 3433683820292512484657849089282 3433683820292512484657849089282) #f)
-(check-eq? (= 3433683820292512484657849089282 3433683820292512484657849089282) #t)
-(check-eq? (< 3433683820292512484657849089282 11790184577738583171520872861412518665678211592275841109096961) #t)
-(check-eq? (> 3433683820292512484657849089282 11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (= 3433683820292512484657849089282 11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (< 3433683820292512484657849089282 11790184577738583171520872861412518665678211592275841109096962) #t)
-(check-eq? (> 3433683820292512484657849089282 11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (= 3433683820292512484657849089282 11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (< 3433683820292512484657849089282 -120) #f)
-(check-eq? (> 3433683820292512484657849089282 -120) #t)
-(check-eq? (= 3433683820292512484657849089282 -120) #f)
-(check-eq? (< 3433683820292512484657849089282 -3433683820292512484657849089281) #f)
-(check-eq? (> 3433683820292512484657849089282 -3433683820292512484657849089281) #t)
-(check-eq? (= 3433683820292512484657849089282 -3433683820292512484657849089281) #f)
-(check-eq? (< 3433683820292512484657849089282 -3433683820292512484657849089282) #f)
-(check-eq? (> 3433683820292512484657849089282 -3433683820292512484657849089282) #t)
-(check-eq? (= 3433683820292512484657849089282 -3433683820292512484657849089282) #f)
-(check-eq? (< 3433683820292512484657849089282 -11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (> 3433683820292512484657849089282 -11790184577738583171520872861412518665678211592275841109096961) #t)
-(check-eq? (= 3433683820292512484657849089282 -11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (< 3433683820292512484657849089282 -11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (> 3433683820292512484657849089282 -11790184577738583171520872861412518665678211592275841109096962) #t)
-(check-eq? (= 3433683820292512484657849089282 -11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (< 11790184577738583171520872861412518665678211592275841109096961 120) #f)
-(check-eq? (> 11790184577738583171520872861412518665678211592275841109096961 120) #t)
-(check-eq? (= 11790184577738583171520872861412518665678211592275841109096961 120) #f)
-(check-eq? (< 11790184577738583171520872861412518665678211592275841109096961 3433683820292512484657849089281) #f)
-(check-eq? (> 11790184577738583171520872861412518665678211592275841109096961 3433683820292512484657849089281) #t)
-(check-eq? (= 11790184577738583171520872861412518665678211592275841109096961 3433683820292512484657849089281) #f)
-(check-eq? (< 11790184577738583171520872861412518665678211592275841109096961 3433683820292512484657849089282) #f)
-(check-eq? (> 11790184577738583171520872861412518665678211592275841109096961 3433683820292512484657849089282) #t)
-(check-eq? (= 11790184577738583171520872861412518665678211592275841109096961 3433683820292512484657849089282) #f)
-(check-eq? (< 11790184577738583171520872861412518665678211592275841109096961 11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (> 11790184577738583171520872861412518665678211592275841109096961 11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (= 11790184577738583171520872861412518665678211592275841109096961 11790184577738583171520872861412518665678211592275841109096961) #t)
-(check-eq? (< 11790184577738583171520872861412518665678211592275841109096961 11790184577738583171520872861412518665678211592275841109096962) #t)
-(check-eq? (> 11790184577738583171520872861412518665678211592275841109096961 11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (= 11790184577738583171520872861412518665678211592275841109096961 11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (< 11790184577738583171520872861412518665678211592275841109096961 -120) #f)
-(check-eq? (> 11790184577738583171520872861412518665678211592275841109096961 -120) #t)
-(check-eq? (= 11790184577738583171520872861412518665678211592275841109096961 -120) #f)
-(check-eq? (< 11790184577738583171520872861412518665678211592275841109096961 -3433683820292512484657849089281) #f)
-(check-eq? (> 11790184577738583171520872861412518665678211592275841109096961 -3433683820292512484657849089281) #t)
-(check-eq? (= 11790184577738583171520872861412518665678211592275841109096961 -3433683820292512484657849089281) #f)
-(check-eq? (< 11790184577738583171520872861412518665678211592275841109096961 -3433683820292512484657849089282) #f)
-(check-eq? (> 11790184577738583171520872861412518665678211592275841109096961 -3433683820292512484657849089282) #t)
-(check-eq? (= 11790184577738583171520872861412518665678211592275841109096961 -3433683820292512484657849089282) #f)
-(check-eq? (< 11790184577738583171520872861412518665678211592275841109096961 -11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (> 11790184577738583171520872861412518665678211592275841109096961 -11790184577738583171520872861412518665678211592275841109096961) #t)
-(check-eq? (= 11790184577738583171520872861412518665678211592275841109096961 -11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (< 11790184577738583171520872861412518665678211592275841109096961 -11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (> 11790184577738583171520872861412518665678211592275841109096961 -11790184577738583171520872861412518665678211592275841109096962) #t)
-(check-eq? (= 11790184577738583171520872861412518665678211592275841109096961 -11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (< 11790184577738583171520872861412518665678211592275841109096962 120) #f)
-(check-eq? (> 11790184577738583171520872861412518665678211592275841109096962 120) #t)
-(check-eq? (= 11790184577738583171520872861412518665678211592275841109096962 120) #f)
-(check-eq? (< 11790184577738583171520872861412518665678211592275841109096962 3433683820292512484657849089281) #f)
-(check-eq? (> 11790184577738583171520872861412518665678211592275841109096962 3433683820292512484657849089281) #t)
-(check-eq? (= 11790184577738583171520872861412518665678211592275841109096962 3433683820292512484657849089281) #f)
-(check-eq? (< 11790184577738583171520872861412518665678211592275841109096962 3433683820292512484657849089282) #f)
-(check-eq? (> 11790184577738583171520872861412518665678211592275841109096962 3433683820292512484657849089282) #t)
-(check-eq? (= 11790184577738583171520872861412518665678211592275841109096962 3433683820292512484657849089282) #f)
-(check-eq? (< 11790184577738583171520872861412518665678211592275841109096962 11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (> 11790184577738583171520872861412518665678211592275841109096962 11790184577738583171520872861412518665678211592275841109096961) #t)
-(check-eq? (= 11790184577738583171520872861412518665678211592275841109096962 11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (< 11790184577738583171520872861412518665678211592275841109096962 11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (> 11790184577738583171520872861412518665678211592275841109096962 11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (= 11790184577738583171520872861412518665678211592275841109096962 11790184577738583171520872861412518665678211592275841109096962) #t)
-(check-eq? (< 11790184577738583171520872861412518665678211592275841109096962 -120) #f)
-(check-eq? (> 11790184577738583171520872861412518665678211592275841109096962 -120) #t)
-(check-eq? (= 11790184577738583171520872861412518665678211592275841109096962 -120) #f)
-(check-eq? (< 11790184577738583171520872861412518665678211592275841109096962 -3433683820292512484657849089281) #f)
-(check-eq? (> 11790184577738583171520872861412518665678211592275841109096962 -3433683820292512484657849089281) #t)
-(check-eq? (= 11790184577738583171520872861412518665678211592275841109096962 -3433683820292512484657849089281) #f)
-(check-eq? (< 11790184577738583171520872861412518665678211592275841109096962 -3433683820292512484657849089282) #f)
-(check-eq? (> 11790184577738583171520872861412518665678211592275841109096962 -3433683820292512484657849089282) #t)
-(check-eq? (= 11790184577738583171520872861412518665678211592275841109096962 -3433683820292512484657849089282) #f)
-(check-eq? (< 11790184577738583171520872861412518665678211592275841109096962 -11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (> 11790184577738583171520872861412518665678211592275841109096962 -11790184577738583171520872861412518665678211592275841109096961) #t)
-(check-eq? (= 11790184577738583171520872861412518665678211592275841109096962 -11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (< 11790184577738583171520872861412518665678211592275841109096962 -11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (> 11790184577738583171520872861412518665678211592275841109096962 -11790184577738583171520872861412518665678211592275841109096962) #t)
-(check-eq? (= 11790184577738583171520872861412518665678211592275841109096962 -11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (< -120 120) #t)
-(check-eq? (> -120 120) #f)
-(check-eq? (= -120 120) #f)
-(check-eq? (< -120 3433683820292512484657849089281) #t)
-(check-eq? (> -120 3433683820292512484657849089281) #f)
-(check-eq? (= -120 3433683820292512484657849089281) #f)
-(check-eq? (< -120 3433683820292512484657849089282) #t)
-(check-eq? (> -120 3433683820292512484657849089282) #f)
-(check-eq? (= -120 3433683820292512484657849089282) #f)
-(check-eq? (< -120 11790184577738583171520872861412518665678211592275841109096961) #t)
-(check-eq? (> -120 11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (= -120 11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (< -120 11790184577738583171520872861412518665678211592275841109096962) #t)
-(check-eq? (> -120 11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (= -120 11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (< -120 -120) #f)
-(check-eq? (> -120 -120) #f)
-(check-eq? (= -120 -120) #t)
-(check-eq? (< -120 -3433683820292512484657849089281) #f)
-(check-eq? (> -120 -3433683820292512484657849089281) #t)
-(check-eq? (= -120 -3433683820292512484657849089281) #f)
-(check-eq? (< -120 -3433683820292512484657849089282) #f)
-(check-eq? (> -120 -3433683820292512484657849089282) #t)
-(check-eq? (= -120 -3433683820292512484657849089282) #f)
-(check-eq? (< -120 -11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (> -120 -11790184577738583171520872861412518665678211592275841109096961) #t)
-(check-eq? (= -120 -11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (< -120 -11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (> -120 -11790184577738583171520872861412518665678211592275841109096962) #t)
-(check-eq? (= -120 -11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (< -3433683820292512484657849089281 120) #t)
-(check-eq? (> -3433683820292512484657849089281 120) #f)
-(check-eq? (= -3433683820292512484657849089281 120) #f)
-(check-eq? (< -3433683820292512484657849089281 3433683820292512484657849089281) #t)
-(check-eq? (> -3433683820292512484657849089281 3433683820292512484657849089281) #f)
-(check-eq? (= -3433683820292512484657849089281 3433683820292512484657849089281) #f)
-(check-eq? (< -3433683820292512484657849089281 3433683820292512484657849089282) #t)
-(check-eq? (> -3433683820292512484657849089281 3433683820292512484657849089282) #f)
-(check-eq? (= -3433683820292512484657849089281 3433683820292512484657849089282) #f)
-(check-eq? (< -3433683820292512484657849089281 11790184577738583171520872861412518665678211592275841109096961) #t)
-(check-eq? (> -3433683820292512484657849089281 11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (= -3433683820292512484657849089281 11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (< -3433683820292512484657849089281 11790184577738583171520872861412518665678211592275841109096962) #t)
-(check-eq? (> -3433683820292512484657849089281 11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (= -3433683820292512484657849089281 11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (< -3433683820292512484657849089281 -120) #t)
-(check-eq? (> -3433683820292512484657849089281 -120) #f)
-(check-eq? (= -3433683820292512484657849089281 -120) #f)
-(check-eq? (< -3433683820292512484657849089281 -3433683820292512484657849089281) #f)
-(check-eq? (> -3433683820292512484657849089281 -3433683820292512484657849089281) #f)
-(check-eq? (= -3433683820292512484657849089281 -3433683820292512484657849089281) #t)
-(check-eq? (< -3433683820292512484657849089281 -3433683820292512484657849089282) #f)
-(check-eq? (> -3433683820292512484657849089281 -3433683820292512484657849089282) #t)
-(check-eq? (= -3433683820292512484657849089281 -3433683820292512484657849089282) #f)
-(check-eq? (< -3433683820292512484657849089281 -11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (> -3433683820292512484657849089281 -11790184577738583171520872861412518665678211592275841109096961) #t)
-(check-eq? (= -3433683820292512484657849089281 -11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (< -3433683820292512484657849089281 -11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (> -3433683820292512484657849089281 -11790184577738583171520872861412518665678211592275841109096962) #t)
-(check-eq? (= -3433683820292512484657849089281 -11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (< -3433683820292512484657849089282 120) #t)
-(check-eq? (> -3433683820292512484657849089282 120) #f)
-(check-eq? (= -3433683820292512484657849089282 120) #f)
-(check-eq? (< -3433683820292512484657849089282 3433683820292512484657849089281) #t)
-(check-eq? (> -3433683820292512484657849089282 3433683820292512484657849089281) #f)
-(check-eq? (= -3433683820292512484657849089282 3433683820292512484657849089281) #f)
-(check-eq? (< -3433683820292512484657849089282 3433683820292512484657849089282) #t)
-(check-eq? (> -3433683820292512484657849089282 3433683820292512484657849089282) #f)
-(check-eq? (= -3433683820292512484657849089282 3433683820292512484657849089282) #f)
-(check-eq? (< -3433683820292512484657849089282 11790184577738583171520872861412518665678211592275841109096961) #t)
-(check-eq? (> -3433683820292512484657849089282 11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (= -3433683820292512484657849089282 11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (< -3433683820292512484657849089282 11790184577738583171520872861412518665678211592275841109096962) #t)
-(check-eq? (> -3433683820292512484657849089282 11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (= -3433683820292512484657849089282 11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (< -3433683820292512484657849089282 -120) #t)
-(check-eq? (> -3433683820292512484657849089282 -120) #f)
-(check-eq? (= -3433683820292512484657849089282 -120) #f)
-(check-eq? (< -3433683820292512484657849089282 -3433683820292512484657849089281) #t)
-(check-eq? (> -3433683820292512484657849089282 -3433683820292512484657849089281) #f)
-(check-eq? (= -3433683820292512484657849089282 -3433683820292512484657849089281) #f)
-(check-eq? (< -3433683820292512484657849089282 -3433683820292512484657849089282) #f)
-(check-eq? (> -3433683820292512484657849089282 -3433683820292512484657849089282) #f)
-(check-eq? (= -3433683820292512484657849089282 -3433683820292512484657849089282) #t)
-(check-eq? (< -3433683820292512484657849089282 -11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (> -3433683820292512484657849089282 -11790184577738583171520872861412518665678211592275841109096961) #t)
-(check-eq? (= -3433683820292512484657849089282 -11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (< -3433683820292512484657849089282 -11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (> -3433683820292512484657849089282 -11790184577738583171520872861412518665678211592275841109096962) #t)
-(check-eq? (= -3433683820292512484657849089282 -11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (< -11790184577738583171520872861412518665678211592275841109096961 120) #t)
-(check-eq? (> -11790184577738583171520872861412518665678211592275841109096961 120) #f)
-(check-eq? (= -11790184577738583171520872861412518665678211592275841109096961 120) #f)
-(check-eq? (< -11790184577738583171520872861412518665678211592275841109096961 3433683820292512484657849089281) #t)
-(check-eq? (> -11790184577738583171520872861412518665678211592275841109096961 3433683820292512484657849089281) #f)
-(check-eq? (= -11790184577738583171520872861412518665678211592275841109096961 3433683820292512484657849089281) #f)
-(check-eq? (< -11790184577738583171520872861412518665678211592275841109096961 3433683820292512484657849089282) #t)
-(check-eq? (> -11790184577738583171520872861412518665678211592275841109096961 3433683820292512484657849089282) #f)
-(check-eq? (= -11790184577738583171520872861412518665678211592275841109096961 3433683820292512484657849089282) #f)
-(check-eq? (< -11790184577738583171520872861412518665678211592275841109096961 11790184577738583171520872861412518665678211592275841109096961) #t)
-(check-eq? (> -11790184577738583171520872861412518665678211592275841109096961 11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (= -11790184577738583171520872861412518665678211592275841109096961 11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (< -11790184577738583171520872861412518665678211592275841109096961 11790184577738583171520872861412518665678211592275841109096962) #t)
-(check-eq? (> -11790184577738583171520872861412518665678211592275841109096961 11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (= -11790184577738583171520872861412518665678211592275841109096961 11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (< -11790184577738583171520872861412518665678211592275841109096961 -120) #t)
-(check-eq? (> -11790184577738583171520872861412518665678211592275841109096961 -120) #f)
-(check-eq? (= -11790184577738583171520872861412518665678211592275841109096961 -120) #f)
-(check-eq? (< -11790184577738583171520872861412518665678211592275841109096961 -3433683820292512484657849089281) #t)
-(check-eq? (> -11790184577738583171520872861412518665678211592275841109096961 -3433683820292512484657849089281) #f)
-(check-eq? (= -11790184577738583171520872861412518665678211592275841109096961 -3433683820292512484657849089281) #f)
-(check-eq? (< -11790184577738583171520872861412518665678211592275841109096961 -3433683820292512484657849089282) #t)
-(check-eq? (> -11790184577738583171520872861412518665678211592275841109096961 -3433683820292512484657849089282) #f)
-(check-eq? (= -11790184577738583171520872861412518665678211592275841109096961 -3433683820292512484657849089282) #f)
-(check-eq? (< -11790184577738583171520872861412518665678211592275841109096961 -11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (> -11790184577738583171520872861412518665678211592275841109096961 -11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (= -11790184577738583171520872861412518665678211592275841109096961 -11790184577738583171520872861412518665678211592275841109096961) #t)
-(check-eq? (< -11790184577738583171520872861412518665678211592275841109096961 -11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (> -11790184577738583171520872861412518665678211592275841109096961 -11790184577738583171520872861412518665678211592275841109096962) #t)
-(check-eq? (= -11790184577738583171520872861412518665678211592275841109096961 -11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (< -11790184577738583171520872861412518665678211592275841109096962 120) #t)
-(check-eq? (> -11790184577738583171520872861412518665678211592275841109096962 120) #f)
-(check-eq? (= -11790184577738583171520872861412518665678211592275841109096962 120) #f)
-(check-eq? (< -11790184577738583171520872861412518665678211592275841109096962 3433683820292512484657849089281) #t)
-(check-eq? (> -11790184577738583171520872861412518665678211592275841109096962 3433683820292512484657849089281) #f)
-(check-eq? (= -11790184577738583171520872861412518665678211592275841109096962 3433683820292512484657849089281) #f)
-(check-eq? (< -11790184577738583171520872861412518665678211592275841109096962 3433683820292512484657849089282) #t)
-(check-eq? (> -11790184577738583171520872861412518665678211592275841109096962 3433683820292512484657849089282) #f)
-(check-eq? (= -11790184577738583171520872861412518665678211592275841109096962 3433683820292512484657849089282) #f)
-(check-eq? (< -11790184577738583171520872861412518665678211592275841109096962 11790184577738583171520872861412518665678211592275841109096961) #t)
-(check-eq? (> -11790184577738583171520872861412518665678211592275841109096962 11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (= -11790184577738583171520872861412518665678211592275841109096962 11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (< -11790184577738583171520872861412518665678211592275841109096962 11790184577738583171520872861412518665678211592275841109096962) #t)
-(check-eq? (> -11790184577738583171520872861412518665678211592275841109096962 11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (= -11790184577738583171520872861412518665678211592275841109096962 11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (< -11790184577738583171520872861412518665678211592275841109096962 -120) #t)
-(check-eq? (> -11790184577738583171520872861412518665678211592275841109096962 -120) #f)
-(check-eq? (= -11790184577738583171520872861412518665678211592275841109096962 -120) #f)
-(check-eq? (< -11790184577738583171520872861412518665678211592275841109096962 -3433683820292512484657849089281) #t)
-(check-eq? (> -11790184577738583171520872861412518665678211592275841109096962 -3433683820292512484657849089281) #f)
-(check-eq? (= -11790184577738583171520872861412518665678211592275841109096962 -3433683820292512484657849089281) #f)
-(check-eq? (< -11790184577738583171520872861412518665678211592275841109096962 -3433683820292512484657849089282) #t)
-(check-eq? (> -11790184577738583171520872861412518665678211592275841109096962 -3433683820292512484657849089282) #f)
-(check-eq? (= -11790184577738583171520872861412518665678211592275841109096962 -3433683820292512484657849089282) #f)
-(check-eq? (< -11790184577738583171520872861412518665678211592275841109096962 -11790184577738583171520872861412518665678211592275841109096961) #t)
-(check-eq? (> -11790184577738583171520872861412518665678211592275841109096962 -11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (= -11790184577738583171520872861412518665678211592275841109096962 -11790184577738583171520872861412518665678211592275841109096961) #f)
-(check-eq? (< -11790184577738583171520872861412518665678211592275841109096962 -11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (> -11790184577738583171520872861412518665678211592275841109096962 -11790184577738583171520872861412518665678211592275841109096962) #f)
-(check-eq? (= -11790184577738583171520872861412518665678211592275841109096962 -11790184577738583171520872861412518665678211592275841109096962) #t)
+(test-eq #f (< 120 120))
+(test-eq #f (> 120 120))
+(test-eq #t (= 120 120))
+(test-eq #t (< 120 3433683820292512484657849089281))
+(test-eq #f (> 120 3433683820292512484657849089281))
+(test-eq #f (= 120 3433683820292512484657849089281))
+(test-eq #t (< 120 3433683820292512484657849089282))
+(test-eq #f (> 120 3433683820292512484657849089282))
+(test-eq #f (= 120 3433683820292512484657849089282))
+(test-eq #t
+         (< 120
+            11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (> 120
+            11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (= 120
+            11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #t
+         (< 120
+            11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (> 120
+            11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (= 120
+            11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f (< 120 -120))
+(test-eq #t (> 120 -120))
+(test-eq #f (= 120 -120))
+(test-eq #f (< 120 -3433683820292512484657849089281))
+(test-eq #t (> 120 -3433683820292512484657849089281))
+(test-eq #f (= 120 -3433683820292512484657849089281))
+(test-eq #f (< 120 -3433683820292512484657849089282))
+(test-eq #t (> 120 -3433683820292512484657849089282))
+(test-eq #f (= 120 -3433683820292512484657849089282))
+(test-eq #f
+         (< 120
+            -11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #t
+         (> 120
+            -11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (= 120
+            -11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (< 120
+            -11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #t
+         (> 120
+            -11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (= 120
+            -11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f (< 3433683820292512484657849089281 120))
+(test-eq #t (> 3433683820292512484657849089281 120))
+(test-eq #f (= 3433683820292512484657849089281 120))
+(test-eq #f
+         (< 3433683820292512484657849089281 3433683820292512484657849089281))
+(test-eq #f
+         (> 3433683820292512484657849089281 3433683820292512484657849089281))
+(test-eq #t
+         (= 3433683820292512484657849089281 3433683820292512484657849089281))
+(test-eq #t
+         (< 3433683820292512484657849089281 3433683820292512484657849089282))
+(test-eq #f
+         (> 3433683820292512484657849089281 3433683820292512484657849089282))
+(test-eq #f
+         (= 3433683820292512484657849089281 3433683820292512484657849089282))
+(test-eq #t
+         (< 3433683820292512484657849089281
+            11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (> 3433683820292512484657849089281
+            11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (= 3433683820292512484657849089281
+            11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #t
+         (< 3433683820292512484657849089281
+            11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (> 3433683820292512484657849089281
+            11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (= 3433683820292512484657849089281
+            11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f (< 3433683820292512484657849089281 -120))
+(test-eq #t (> 3433683820292512484657849089281 -120))
+(test-eq #f (= 3433683820292512484657849089281 -120))
+(test-eq #f
+         (< 3433683820292512484657849089281 -3433683820292512484657849089281))
+(test-eq #t
+         (> 3433683820292512484657849089281 -3433683820292512484657849089281))
+(test-eq #f
+         (= 3433683820292512484657849089281 -3433683820292512484657849089281))
+(test-eq #f
+         (< 3433683820292512484657849089281 -3433683820292512484657849089282))
+(test-eq #t
+         (> 3433683820292512484657849089281 -3433683820292512484657849089282))
+(test-eq #f
+         (= 3433683820292512484657849089281 -3433683820292512484657849089282))
+(test-eq #f
+         (< 3433683820292512484657849089281
+            -11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #t
+         (> 3433683820292512484657849089281
+            -11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (= 3433683820292512484657849089281
+            -11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (< 3433683820292512484657849089281
+            -11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #t
+         (> 3433683820292512484657849089281
+            -11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (= 3433683820292512484657849089281
+            -11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f (< 3433683820292512484657849089282 120))
+(test-eq #t (> 3433683820292512484657849089282 120))
+(test-eq #f (= 3433683820292512484657849089282 120))
+(test-eq #f
+         (< 3433683820292512484657849089282 3433683820292512484657849089281))
+(test-eq #t
+         (> 3433683820292512484657849089282 3433683820292512484657849089281))
+(test-eq #f
+         (= 3433683820292512484657849089282 3433683820292512484657849089281))
+(test-eq #f
+         (< 3433683820292512484657849089282 3433683820292512484657849089282))
+(test-eq #f
+         (> 3433683820292512484657849089282 3433683820292512484657849089282))
+(test-eq #t
+         (= 3433683820292512484657849089282 3433683820292512484657849089282))
+(test-eq #t
+         (< 3433683820292512484657849089282
+            11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (> 3433683820292512484657849089282
+            11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (= 3433683820292512484657849089282
+            11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #t
+         (< 3433683820292512484657849089282
+            11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (> 3433683820292512484657849089282
+            11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (= 3433683820292512484657849089282
+            11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f (< 3433683820292512484657849089282 -120))
+(test-eq #t (> 3433683820292512484657849089282 -120))
+(test-eq #f (= 3433683820292512484657849089282 -120))
+(test-eq #f
+         (< 3433683820292512484657849089282 -3433683820292512484657849089281))
+(test-eq #t
+         (> 3433683820292512484657849089282 -3433683820292512484657849089281))
+(test-eq #f
+         (= 3433683820292512484657849089282 -3433683820292512484657849089281))
+(test-eq #f
+         (< 3433683820292512484657849089282 -3433683820292512484657849089282))
+(test-eq #t
+         (> 3433683820292512484657849089282 -3433683820292512484657849089282))
+(test-eq #f
+         (= 3433683820292512484657849089282 -3433683820292512484657849089282))
+(test-eq #f
+         (< 3433683820292512484657849089282
+            -11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #t
+         (> 3433683820292512484657849089282
+            -11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (= 3433683820292512484657849089282
+            -11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (< 3433683820292512484657849089282
+            -11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #t
+         (> 3433683820292512484657849089282
+            -11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (= 3433683820292512484657849089282
+            -11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (< 11790184577738583171520872861412518665678211592275841109096961
+            120))
+(test-eq #t
+         (> 11790184577738583171520872861412518665678211592275841109096961
+            120))
+(test-eq #f
+         (= 11790184577738583171520872861412518665678211592275841109096961
+            120))
+(test-eq #f
+         (< 11790184577738583171520872861412518665678211592275841109096961
+            3433683820292512484657849089281))
+(test-eq #t
+         (> 11790184577738583171520872861412518665678211592275841109096961
+            3433683820292512484657849089281))
+(test-eq #f
+         (= 11790184577738583171520872861412518665678211592275841109096961
+            3433683820292512484657849089281))
+(test-eq #f
+         (< 11790184577738583171520872861412518665678211592275841109096961
+            3433683820292512484657849089282))
+(test-eq #t
+         (> 11790184577738583171520872861412518665678211592275841109096961
+            3433683820292512484657849089282))
+(test-eq #f
+         (= 11790184577738583171520872861412518665678211592275841109096961
+            3433683820292512484657849089282))
+(test-eq #f
+         (< 11790184577738583171520872861412518665678211592275841109096961
+            11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (> 11790184577738583171520872861412518665678211592275841109096961
+            11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #t
+         (= 11790184577738583171520872861412518665678211592275841109096961
+            11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #t
+         (< 11790184577738583171520872861412518665678211592275841109096961
+            11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (> 11790184577738583171520872861412518665678211592275841109096961
+            11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (= 11790184577738583171520872861412518665678211592275841109096961
+            11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (< 11790184577738583171520872861412518665678211592275841109096961
+            -120))
+(test-eq #t
+         (> 11790184577738583171520872861412518665678211592275841109096961
+            -120))
+(test-eq #f
+         (= 11790184577738583171520872861412518665678211592275841109096961
+            -120))
+(test-eq #f
+         (< 11790184577738583171520872861412518665678211592275841109096961
+            -3433683820292512484657849089281))
+(test-eq #t
+         (> 11790184577738583171520872861412518665678211592275841109096961
+            -3433683820292512484657849089281))
+(test-eq #f
+         (= 11790184577738583171520872861412518665678211592275841109096961
+            -3433683820292512484657849089281))
+(test-eq #f
+         (< 11790184577738583171520872861412518665678211592275841109096961
+            -3433683820292512484657849089282))
+(test-eq #t
+         (> 11790184577738583171520872861412518665678211592275841109096961
+            -3433683820292512484657849089282))
+(test-eq #f
+         (= 11790184577738583171520872861412518665678211592275841109096961
+            -3433683820292512484657849089282))
+(test-eq #f
+         (< 11790184577738583171520872861412518665678211592275841109096961
+            -11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #t
+         (> 11790184577738583171520872861412518665678211592275841109096961
+            -11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (= 11790184577738583171520872861412518665678211592275841109096961
+            -11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (< 11790184577738583171520872861412518665678211592275841109096961
+            -11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #t
+         (> 11790184577738583171520872861412518665678211592275841109096961
+            -11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (= 11790184577738583171520872861412518665678211592275841109096961
+            -11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (< 11790184577738583171520872861412518665678211592275841109096962
+            120))
+(test-eq #t
+         (> 11790184577738583171520872861412518665678211592275841109096962
+            120))
+(test-eq #f
+         (= 11790184577738583171520872861412518665678211592275841109096962
+            120))
+(test-eq #f
+         (< 11790184577738583171520872861412518665678211592275841109096962
+            3433683820292512484657849089281))
+(test-eq #t
+         (> 11790184577738583171520872861412518665678211592275841109096962
+            3433683820292512484657849089281))
+(test-eq #f
+         (= 11790184577738583171520872861412518665678211592275841109096962
+            3433683820292512484657849089281))
+(test-eq #f
+         (< 11790184577738583171520872861412518665678211592275841109096962
+            3433683820292512484657849089282))
+(test-eq #t
+         (> 11790184577738583171520872861412518665678211592275841109096962
+            3433683820292512484657849089282))
+(test-eq #f
+         (= 11790184577738583171520872861412518665678211592275841109096962
+            3433683820292512484657849089282))
+(test-eq #f
+         (< 11790184577738583171520872861412518665678211592275841109096962
+            11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #t
+         (> 11790184577738583171520872861412518665678211592275841109096962
+            11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (= 11790184577738583171520872861412518665678211592275841109096962
+            11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (< 11790184577738583171520872861412518665678211592275841109096962
+            11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (> 11790184577738583171520872861412518665678211592275841109096962
+            11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #t
+         (= 11790184577738583171520872861412518665678211592275841109096962
+            11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (< 11790184577738583171520872861412518665678211592275841109096962
+            -120))
+(test-eq #t
+         (> 11790184577738583171520872861412518665678211592275841109096962
+            -120))
+(test-eq #f
+         (= 11790184577738583171520872861412518665678211592275841109096962
+            -120))
+(test-eq #f
+         (< 11790184577738583171520872861412518665678211592275841109096962
+            -3433683820292512484657849089281))
+(test-eq #t
+         (> 11790184577738583171520872861412518665678211592275841109096962
+            -3433683820292512484657849089281))
+(test-eq #f
+         (= 11790184577738583171520872861412518665678211592275841109096962
+            -3433683820292512484657849089281))
+(test-eq #f
+         (< 11790184577738583171520872861412518665678211592275841109096962
+            -3433683820292512484657849089282))
+(test-eq #t
+         (> 11790184577738583171520872861412518665678211592275841109096962
+            -3433683820292512484657849089282))
+(test-eq #f
+         (= 11790184577738583171520872861412518665678211592275841109096962
+            -3433683820292512484657849089282))
+(test-eq #f
+         (< 11790184577738583171520872861412518665678211592275841109096962
+            -11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #t
+         (> 11790184577738583171520872861412518665678211592275841109096962
+            -11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (= 11790184577738583171520872861412518665678211592275841109096962
+            -11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (< 11790184577738583171520872861412518665678211592275841109096962
+            -11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #t
+         (> 11790184577738583171520872861412518665678211592275841109096962
+            -11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (= 11790184577738583171520872861412518665678211592275841109096962
+            -11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #t (< -120 120))
+(test-eq #f (> -120 120))
+(test-eq #f (= -120 120))
+(test-eq #t (< -120 3433683820292512484657849089281))
+(test-eq #f (> -120 3433683820292512484657849089281))
+(test-eq #f (= -120 3433683820292512484657849089281))
+(test-eq #t (< -120 3433683820292512484657849089282))
+(test-eq #f (> -120 3433683820292512484657849089282))
+(test-eq #f (= -120 3433683820292512484657849089282))
+(test-eq #t
+         (< -120
+            11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (> -120
+            11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (= -120
+            11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #t
+         (< -120
+            11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (> -120
+            11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (= -120
+            11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f (< -120 -120))
+(test-eq #f (> -120 -120))
+(test-eq #t (= -120 -120))
+(test-eq #f (< -120 -3433683820292512484657849089281))
+(test-eq #t (> -120 -3433683820292512484657849089281))
+(test-eq #f (= -120 -3433683820292512484657849089281))
+(test-eq #f (< -120 -3433683820292512484657849089282))
+(test-eq #t (> -120 -3433683820292512484657849089282))
+(test-eq #f (= -120 -3433683820292512484657849089282))
+(test-eq #f
+         (< -120
+            -11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #t
+         (> -120
+            -11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (= -120
+            -11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (< -120
+            -11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #t
+         (> -120
+            -11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (= -120
+            -11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #t (< -3433683820292512484657849089281 120))
+(test-eq #f (> -3433683820292512484657849089281 120))
+(test-eq #f (= -3433683820292512484657849089281 120))
+(test-eq #t
+         (< -3433683820292512484657849089281 3433683820292512484657849089281))
+(test-eq #f
+         (> -3433683820292512484657849089281 3433683820292512484657849089281))
+(test-eq #f
+         (= -3433683820292512484657849089281 3433683820292512484657849089281))
+(test-eq #t
+         (< -3433683820292512484657849089281 3433683820292512484657849089282))
+(test-eq #f
+         (> -3433683820292512484657849089281 3433683820292512484657849089282))
+(test-eq #f
+         (= -3433683820292512484657849089281 3433683820292512484657849089282))
+(test-eq #t
+         (< -3433683820292512484657849089281
+            11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (> -3433683820292512484657849089281
+            11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (= -3433683820292512484657849089281
+            11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #t
+         (< -3433683820292512484657849089281
+            11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (> -3433683820292512484657849089281
+            11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (= -3433683820292512484657849089281
+            11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #t (< -3433683820292512484657849089281 -120))
+(test-eq #f (> -3433683820292512484657849089281 -120))
+(test-eq #f (= -3433683820292512484657849089281 -120))
+(test-eq #f
+         (< -3433683820292512484657849089281 -3433683820292512484657849089281))
+(test-eq #f
+         (> -3433683820292512484657849089281 -3433683820292512484657849089281))
+(test-eq #t
+         (= -3433683820292512484657849089281 -3433683820292512484657849089281))
+(test-eq #f
+         (< -3433683820292512484657849089281 -3433683820292512484657849089282))
+(test-eq #t
+         (> -3433683820292512484657849089281 -3433683820292512484657849089282))
+(test-eq #f
+         (= -3433683820292512484657849089281 -3433683820292512484657849089282))
+(test-eq #f
+         (< -3433683820292512484657849089281
+            -11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #t
+         (> -3433683820292512484657849089281
+            -11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (= -3433683820292512484657849089281
+            -11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (< -3433683820292512484657849089281
+            -11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #t
+         (> -3433683820292512484657849089281
+            -11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (= -3433683820292512484657849089281
+            -11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #t (< -3433683820292512484657849089282 120))
+(test-eq #f (> -3433683820292512484657849089282 120))
+(test-eq #f (= -3433683820292512484657849089282 120))
+(test-eq #t
+         (< -3433683820292512484657849089282 3433683820292512484657849089281))
+(test-eq #f
+         (> -3433683820292512484657849089282 3433683820292512484657849089281))
+(test-eq #f
+         (= -3433683820292512484657849089282 3433683820292512484657849089281))
+(test-eq #t
+         (< -3433683820292512484657849089282 3433683820292512484657849089282))
+(test-eq #f
+         (> -3433683820292512484657849089282 3433683820292512484657849089282))
+(test-eq #f
+         (= -3433683820292512484657849089282 3433683820292512484657849089282))
+(test-eq #t
+         (< -3433683820292512484657849089282
+            11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (> -3433683820292512484657849089282
+            11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (= -3433683820292512484657849089282
+            11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #t
+         (< -3433683820292512484657849089282
+            11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (> -3433683820292512484657849089282
+            11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (= -3433683820292512484657849089282
+            11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #t (< -3433683820292512484657849089282 -120))
+(test-eq #f (> -3433683820292512484657849089282 -120))
+(test-eq #f (= -3433683820292512484657849089282 -120))
+(test-eq #t
+         (< -3433683820292512484657849089282 -3433683820292512484657849089281))
+(test-eq #f
+         (> -3433683820292512484657849089282 -3433683820292512484657849089281))
+(test-eq #f
+         (= -3433683820292512484657849089282 -3433683820292512484657849089281))
+(test-eq #f
+         (< -3433683820292512484657849089282 -3433683820292512484657849089282))
+(test-eq #f
+         (> -3433683820292512484657849089282 -3433683820292512484657849089282))
+(test-eq #t
+         (= -3433683820292512484657849089282 -3433683820292512484657849089282))
+(test-eq #f
+         (< -3433683820292512484657849089282
+            -11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #t
+         (> -3433683820292512484657849089282
+            -11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (= -3433683820292512484657849089282
+            -11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (< -3433683820292512484657849089282
+            -11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #t
+         (> -3433683820292512484657849089282
+            -11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (= -3433683820292512484657849089282
+            -11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #t
+         (< -11790184577738583171520872861412518665678211592275841109096961
+            120))
+(test-eq #f
+         (> -11790184577738583171520872861412518665678211592275841109096961
+            120))
+(test-eq #f
+         (= -11790184577738583171520872861412518665678211592275841109096961
+            120))
+(test-eq #t
+         (< -11790184577738583171520872861412518665678211592275841109096961
+            3433683820292512484657849089281))
+(test-eq #f
+         (> -11790184577738583171520872861412518665678211592275841109096961
+            3433683820292512484657849089281))
+(test-eq #f
+         (= -11790184577738583171520872861412518665678211592275841109096961
+            3433683820292512484657849089281))
+(test-eq #t
+         (< -11790184577738583171520872861412518665678211592275841109096961
+            3433683820292512484657849089282))
+(test-eq #f
+         (> -11790184577738583171520872861412518665678211592275841109096961
+            3433683820292512484657849089282))
+(test-eq #f
+         (= -11790184577738583171520872861412518665678211592275841109096961
+            3433683820292512484657849089282))
+(test-eq #t
+         (< -11790184577738583171520872861412518665678211592275841109096961
+            11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (> -11790184577738583171520872861412518665678211592275841109096961
+            11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (= -11790184577738583171520872861412518665678211592275841109096961
+            11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #t
+         (< -11790184577738583171520872861412518665678211592275841109096961
+            11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (> -11790184577738583171520872861412518665678211592275841109096961
+            11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (= -11790184577738583171520872861412518665678211592275841109096961
+            11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #t
+         (< -11790184577738583171520872861412518665678211592275841109096961
+            -120))
+(test-eq #f
+         (> -11790184577738583171520872861412518665678211592275841109096961
+            -120))
+(test-eq #f
+         (= -11790184577738583171520872861412518665678211592275841109096961
+            -120))
+(test-eq #t
+         (< -11790184577738583171520872861412518665678211592275841109096961
+            -3433683820292512484657849089281))
+(test-eq #f
+         (> -11790184577738583171520872861412518665678211592275841109096961
+            -3433683820292512484657849089281))
+(test-eq #f
+         (= -11790184577738583171520872861412518665678211592275841109096961
+            -3433683820292512484657849089281))
+(test-eq #t
+         (< -11790184577738583171520872861412518665678211592275841109096961
+            -3433683820292512484657849089282))
+(test-eq #f
+         (> -11790184577738583171520872861412518665678211592275841109096961
+            -3433683820292512484657849089282))
+(test-eq #f
+         (= -11790184577738583171520872861412518665678211592275841109096961
+            -3433683820292512484657849089282))
+(test-eq #f
+         (< -11790184577738583171520872861412518665678211592275841109096961
+            -11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (> -11790184577738583171520872861412518665678211592275841109096961
+            -11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #t
+         (= -11790184577738583171520872861412518665678211592275841109096961
+            -11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (< -11790184577738583171520872861412518665678211592275841109096961
+            -11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #t
+         (> -11790184577738583171520872861412518665678211592275841109096961
+            -11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (= -11790184577738583171520872861412518665678211592275841109096961
+            -11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #t
+         (< -11790184577738583171520872861412518665678211592275841109096962
+            120))
+(test-eq #f
+         (> -11790184577738583171520872861412518665678211592275841109096962
+            120))
+(test-eq #f
+         (= -11790184577738583171520872861412518665678211592275841109096962
+            120))
+(test-eq #t
+         (< -11790184577738583171520872861412518665678211592275841109096962
+            3433683820292512484657849089281))
+(test-eq #f
+         (> -11790184577738583171520872861412518665678211592275841109096962
+            3433683820292512484657849089281))
+(test-eq #f
+         (= -11790184577738583171520872861412518665678211592275841109096962
+            3433683820292512484657849089281))
+(test-eq #t
+         (< -11790184577738583171520872861412518665678211592275841109096962
+            3433683820292512484657849089282))
+(test-eq #f
+         (> -11790184577738583171520872861412518665678211592275841109096962
+            3433683820292512484657849089282))
+(test-eq #f
+         (= -11790184577738583171520872861412518665678211592275841109096962
+            3433683820292512484657849089282))
+(test-eq #t
+         (< -11790184577738583171520872861412518665678211592275841109096962
+            11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (> -11790184577738583171520872861412518665678211592275841109096962
+            11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (= -11790184577738583171520872861412518665678211592275841109096962
+            11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #t
+         (< -11790184577738583171520872861412518665678211592275841109096962
+            11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (> -11790184577738583171520872861412518665678211592275841109096962
+            11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (= -11790184577738583171520872861412518665678211592275841109096962
+            11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #t
+         (< -11790184577738583171520872861412518665678211592275841109096962
+            -120))
+(test-eq #f
+         (> -11790184577738583171520872861412518665678211592275841109096962
+            -120))
+(test-eq #f
+         (= -11790184577738583171520872861412518665678211592275841109096962
+            -120))
+(test-eq #t
+         (< -11790184577738583171520872861412518665678211592275841109096962
+            -3433683820292512484657849089281))
+(test-eq #f
+         (> -11790184577738583171520872861412518665678211592275841109096962
+            -3433683820292512484657849089281))
+(test-eq #f
+         (= -11790184577738583171520872861412518665678211592275841109096962
+            -3433683820292512484657849089281))
+(test-eq #t
+         (< -11790184577738583171520872861412518665678211592275841109096962
+            -3433683820292512484657849089282))
+(test-eq #f
+         (> -11790184577738583171520872861412518665678211592275841109096962
+            -3433683820292512484657849089282))
+(test-eq #f
+         (= -11790184577738583171520872861412518665678211592275841109096962
+            -3433683820292512484657849089282))
+(test-eq #t
+         (< -11790184577738583171520872861412518665678211592275841109096962
+            -11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (> -11790184577738583171520872861412518665678211592275841109096962
+            -11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (= -11790184577738583171520872861412518665678211592275841109096962
+            -11790184577738583171520872861412518665678211592275841109096961))
+(test-eq #f
+         (< -11790184577738583171520872861412518665678211592275841109096962
+            -11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #f
+         (> -11790184577738583171520872861412518665678211592275841109096962
+            -11790184577738583171520872861412518665678211592275841109096962))
+(test-eq #t
+         (= -11790184577738583171520872861412518665678211592275841109096962
+            -11790184577738583171520872861412518665678211592275841109096962))
 
 ;;; Some complex tests
 
-(check-eq? (= 3/4+0.i .75) #t)
-(check-eq? (= 3/4+i 3/4) #f)
-(check-eq? (= +0.i 0) #t)
-(check-eq? (= 3+0.i .8) #f)
+(test-eq #t (= 3/4+0.i .75))
+(test-eq #f (= 3/4+i 3/4))
+(test-eq #t (= +0.i 0))
+(test-eq #f (= 3+0.i .8))
+

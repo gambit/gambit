@@ -1,30 +1,30 @@
 (include "#.scm")
 
-(check-eqv? (##fxlength 0) 0)
-(check-eqv? (##fxlength -1) 0)
+(test-eqv 0 (##fxlength 0))
+(test-eqv 0 (##fxlength -1))
 
-(check-eqv? (##fxlength -536870912) 29)
-(check-eqv? (##fxlength  536870911) 29)
-
-(if (fixnum? 2305843009213693951)
-    (begin
-      (check-eqv? (##fxlength -2305843009213693952) 61)
-      (check-eqv? (##fxlength  2305843009213693951) 61)))
-
-(check-eqv? (fxlength 0) 0)
-(check-eqv? (fxlength -1) 0)
-
-(check-eqv? (fxlength -536870912) 29)
-(check-eqv? (fxlength  536870911) 29)
+(test-eqv 29 (##fxlength -536870912))
+(test-eqv 29 (##fxlength 536870911))
 
 (if (fixnum? 2305843009213693951)
     (begin
-      (check-eqv? (fxlength -2305843009213693952) 61)
-      (check-eqv? (fxlength  2305843009213693951) 61)))
+      (test-eqv 61 (##fxlength -2305843009213693952))
+      (test-eqv 61 (##fxlength 2305843009213693951))))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxlength)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxlength 1 1)))
+(test-eqv 0 (fxlength 0))
+(test-eqv 0 (fxlength -1))
 
-(check-tail-exn type-exception? (lambda () (fxlength 0.0)))
-(check-tail-exn type-exception? (lambda () (fxlength 0.5)))
-(check-tail-exn type-exception? (lambda () (fxlength 1/2)))
+(test-eqv 29 (fxlength -536870912))
+(test-eqv 29 (fxlength 536870911))
+
+(if (fixnum? 2305843009213693951)
+    (begin
+      (test-eqv 61 (fxlength -2305843009213693952))
+      (test-eqv 61 (fxlength 2305843009213693951))))
+
+(test-error-tail wrong-number-of-arguments-exception? (fxlength))
+(test-error-tail wrong-number-of-arguments-exception? (fxlength 1 1))
+
+(test-error-tail type-exception? (fxlength 0.))
+(test-error-tail type-exception? (fxlength .5))
+(test-error-tail type-exception? (fxlength 1/2))

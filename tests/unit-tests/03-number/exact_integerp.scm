@@ -1,14 +1,14 @@
 (include "#.scm")
 
-(check-false (exact-integer? 123.0) #f)
-(check-false (exact-integer? 0.5) #f)
-(check-true  (exact-integer? 123) #t)
-(check-true  (exact-integer? 100000000000000000000) #t)
-(check-false (exact-integer? 1/2) #f)
-(check-false (exact-integer? 1/2+3/4i) #f)
-(check-false (exact-integer? 123+0.i) #f)
+(test-assert (eq? #f (exact-integer? 123.)))
+(test-assert (eq? #f (exact-integer? .5)))
+(test-assert (eq? #t (exact-integer? 123)))
+(test-assert (eq? #t (exact-integer? 100000000000000000000)))
+(test-assert (eq? #f (exact-integer? 1/2)))
+(test-assert (eq? #f (exact-integer? 1/2+3/4i)))
+(test-assert (eq? #f (exact-integer? 123+0.i)))
 
 ;;; Test exceptions
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (exact-integer?)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (exact-integer? 0 0)))
+(test-error-tail wrong-number-of-arguments-exception? (exact-integer?))
+(test-error-tail wrong-number-of-arguments-exception? (exact-integer? 0 0))

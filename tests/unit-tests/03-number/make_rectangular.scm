@@ -2,8 +2,8 @@
 
 ;;; Test exceptions
 
-(check-tail-exn type-exception? (lambda () (make-rectangular 'a 2)))
-(check-tail-exn type-exception? (lambda () (make-rectangular 2 'a)))
-(check-tail-exn type-exception? (lambda () (make-rectangular 2 +i)))
-(check-tail-exn type-exception? (lambda () (make-rectangular +i 2)))
+(test-error-tail type-exception? (make-rectangular 'a 2))
+(test-error-tail type-exception? (make-rectangular 2 'a))
+(test-error-tail type-exception? (make-rectangular 2 +i))
+(test-error-tail type-exception? (make-rectangular +i 2))
 

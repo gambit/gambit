@@ -1,14 +1,14 @@
 (include "#.scm")
 
-(check-eqv? (##fxnegative? (##least-fixnum)) #t)
-(check-eqv? (##fxnegative? (##greatest-fixnum)) #f)
+(test-eqv #t (##fxnegative? (##least-fixnum)))
+(test-eqv #f (##fxnegative? (##greatest-fixnum)))
 
-(check-eqv? (fxnegative? (##least-fixnum)) #t)
-(check-eqv? (fxnegative? (##greatest-fixnum)) #f)
+(test-eqv #t (fxnegative? (##least-fixnum)))
+(test-eqv #f (fxnegative? (##greatest-fixnum)))
 
-(check-tail-exn type-exception? (lambda () (fxnegative? 0.0)))
-(check-tail-exn type-exception? (lambda () (fxnegative? 0.5)))
-(check-tail-exn type-exception? (lambda () (fxnegative? 1/2)))
+(test-error-tail type-exception? (fxnegative? 0.))
+(test-error-tail type-exception? (fxnegative? .5))
+(test-error-tail type-exception? (fxnegative? 1/2))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxnegative?)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxnegative? 2 -4)))
+(test-error-tail wrong-number-of-arguments-exception? (fxnegative?))
+(test-error-tail wrong-number-of-arguments-exception? (fxnegative? 2 -4))

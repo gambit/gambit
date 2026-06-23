@@ -2,5 +2,5 @@
 
 ;;; Test exceptions
 
-(check-tail-exn type-exception? (lambda () (imag-part 'a)))
+(test-error-tail type-exception? (imag-part 'a))
 

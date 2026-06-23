@@ -1,22 +1,19 @@
 (include "#.scm")
 
-(receive (a b) (exact-integer-sqrt 0)
-  (check-eqv? a 0)
-  (check-eqv? b 0))
+(receive (a b) (exact-integer-sqrt 0) (test-eqv 0 a) (test-eqv 0 b))
 
-(receive (a b) (exact-integer-sqrt 1000)
-  (check-eqv? a 31)
-  (check-eqv? b 39))
+(receive (a b) (exact-integer-sqrt 1000) (test-eqv 31 a) (test-eqv 39 b))
 
-(receive (a b) (exact-integer-sqrt 1000000000000000000000)
-  (check-eqv? a 31622776601)
-  (check-eqv? b 43246886799))
+(receive (a b)
+         (exact-integer-sqrt 1000000000000000000000)
+         (test-eqv 31622776601 a)
+         (test-eqv 43246886799 b))
 
 ;;; Test exceptions
 
-(check-tail-exn type-exception? (lambda () (exact-integer-sqrt #f)))
+(test-error-tail type-exception? (exact-integer-sqrt #f))
 
-(check-tail-exn range-exception? (lambda () (exact-integer-sqrt -1)))
+(test-error-tail range-exception? (exact-integer-sqrt -1))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (exact-integer-sqrt)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (exact-integer-sqrt 0 0)))
+(test-error-tail wrong-number-of-arguments-exception? (exact-integer-sqrt))
+(test-error-tail wrong-number-of-arguments-exception? (exact-integer-sqrt 0 0))

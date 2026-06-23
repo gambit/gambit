@@ -4,20 +4,27 @@
 (define int 11)
 (define key 'foo:)
 
-(set! ##keyword-counter (##greatest-fixnum)) ;; to cause hash code wrap around
+(set! ##keyword-counter (##greatest-fixnum))
+;; to cause hash code wrap around
 
-(check-true (keyword? (string->uninterned-keyword str)))
-(check-true (keyword? (string->uninterned-keyword str int)))
+(test-assert (eq? #t (keyword? (string->uninterned-keyword str))))
+(test-assert (eq? #t (keyword? (string->uninterned-keyword str int))))
 
-(check-false (eq? (string->uninterned-keyword str) key))
-(check-false (eq? (string->uninterned-keyword str) (string->uninterned-keyword str)))
+(test-assert (eq? #f (eq? (string->uninterned-keyword str) key)))
+(test-assert
+ (eq? #f
+      (eq? (string->uninterned-keyword str) (string->uninterned-keyword str))))
 
-(check-tail-exn type-exception? (lambda () (string->uninterned-keyword int)))
-(check-tail-exn type-exception? (lambda () (string->uninterned-keyword key)))
-(check-tail-exn type-exception? (lambda () (string->uninterned-keyword str key)))
+(test-error-tail type-exception? (string->uninterned-keyword int))
+(test-error-tail type-exception? (string->uninterned-keyword key))
+(test-error-tail type-exception? (string->uninterned-keyword str key))
 
-(check-tail-exn range-exception? (lambda () (string->uninterned-keyword str -1)))
-(check-tail-exn range-exception? (lambda () (string->uninterned-keyword str 536870912)))
+(test-error-tail range-exception? (string->uninterned-keyword str -1))
+(test-error-tail range-exception? (string->uninterned-keyword str 536870912))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (string->uninterned-keyword)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (string->uninterned-keyword str int #f)))
+(test-error-tail
+ wrong-number-of-arguments-exception?
+ (string->uninterned-keyword))
+(test-error-tail
+ wrong-number-of-arguments-exception?
+ (string->uninterned-keyword str int #f))

@@ -10,17 +10,19 @@
 (define (inc x) (+ x 1))
 (define add +)
 
-(check-equal? (vector-every + vect0 vect2) #t)
-(check-equal? (vector-every + vect1 vect2) 22)
-(check-equal? (vector-every + vect3 vect2) 44)
+(test-equal #t (vector-every + vect0 vect2))
+(test-equal 22 (vector-every + vect1 vect2))
+(test-equal 44 (vector-every + vect3 vect2))
 
-(check-tail-exn type-exception? (lambda () (vector-every #f vect0)))
-(check-tail-exn type-exception? (lambda () (vector-every inc #f)))
-(check-tail-exn type-exception? (lambda () (vector-every add '#(1 2) #f)))
-(check-tail-exn type-exception? (lambda () (vector-every add #f '#(1 2))))
+(test-error-tail type-exception? (vector-every #f vect0))
+(test-error-tail type-exception? (vector-every inc #f))
+(test-error-tail type-exception? (vector-every add '#(1 2) #f))
+(test-error-tail type-exception? (vector-every add #f '#(1 2)))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector-every)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector-every inc)))
+(test-error-tail wrong-number-of-arguments-exception? (vector-every))
+(test-error-tail wrong-number-of-arguments-exception? (vector-every inc))
 
 (set! ##allow-length-mismatch? #f)
-(check-tail-exn length-mismatch-exception? (lambda () (vector-every add '#(1) '#(1 2) '#(1))))
+(test-error-tail
+ length-mismatch-exception?
+ (vector-every add '#(1) '#(1 2) '#(1)))

@@ -1,12 +1,12 @@
 (include "#.scm")
 
-(check-eqv? (##fxandc1 11 26) 16)
-(check-eqv? (##fxandc1 -12 26) 10)
+(test-eqv 16 (##fxandc1 11 26))
+(test-eqv 10 (##fxandc1 -12 26))
 
-(check-eqv? (fxandc1 11 26) 16)
-(check-eqv? (fxandc1 -12 26) 10)
+(test-eqv 16 (fxandc1 11 26))
+(test-eqv 10 (fxandc1 -12 26))
 
-(check-tail-exn type-exception? (lambda () (fxandc1 0.0 1)))
-(check-tail-exn type-exception? (lambda () (fxandc1 0.5 1)))
-(check-tail-exn type-exception? (lambda () (fxandc1 1 0.5)))
-(check-tail-exn type-exception? (lambda () (fxandc1 1 1/2)))
+(test-error-tail type-exception? (fxandc1 0. 1))
+(test-error-tail type-exception? (fxandc1 .5 1))
+(test-error-tail type-exception? (fxandc1 1 .5))
+(test-error-tail type-exception? (fxandc1 1 1/2))

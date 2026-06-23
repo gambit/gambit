@@ -1,35 +1,37 @@
 (include "#.scm")
 
-(check-eqv? (##fxwrapsquare  0) 0)
-(check-eqv? (##fxwrapsquare  11) 121)
-(check-eqv? (##fxwrapsquare -11) 121)
-(check-eqv? (##fxwrapsquare  23170) 536848900)
-(check-eqv? (##fxwrapsquare -23170) 536848900)
+(test-eqv 0 (##fxwrapsquare 0))
+(test-eqv 121 (##fxwrapsquare 11))
+(test-eqv 121 (##fxwrapsquare -11))
+(test-eqv 536848900 (##fxwrapsquare 23170))
+(test-eqv 536848900 (##fxwrapsquare -23170))
 
-(check-eqv? (##fxwrapsquare  23171) (fixnum-wrap 536895241))
-(check-eqv? (##fxwrapsquare -23171) (fixnum-wrap 536895241))
-
-(if (fixnum? 1518500249)
-    (begin
-      (check-eqv? (##fxwrapsquare  1518500249) (fixnum-wrap 2305843006213062001))
-      (check-eqv? (##fxwrapsquare -1518500249) (fixnum-wrap 2305843006213062001))))
-
-(check-eqv? (fxwrapsquare  0) 0)
-(check-eqv? (fxwrapsquare  11) 121)
-(check-eqv? (fxwrapsquare -11) 121)
-(check-eqv? (fxwrapsquare  23170) 536848900)
-(check-eqv? (fxwrapsquare -23170) 536848900)
-
-(check-eqv? (fxwrapsquare  23171) (fixnum-wrap 536895241))
-(check-eqv? (fxwrapsquare -23171) (fixnum-wrap 536895241))
+(test-eqv (fixnum-wrap 536895241) (##fxwrapsquare 23171))
+(test-eqv (fixnum-wrap 536895241) (##fxwrapsquare -23171))
 
 (if (fixnum? 1518500249)
     (begin
-      (check-eqv? (fxwrapsquare  1518500249) (fixnum-wrap 2305843006213062001))
-      (check-eqv? (fxwrapsquare -1518500249) (fixnum-wrap 2305843006213062001))))
+      (test-eqv (fixnum-wrap 2305843006213062001) (##fxwrapsquare 1518500249))
+      (test-eqv
+       (fixnum-wrap 2305843006213062001)
+       (##fxwrapsquare -1518500249))))
 
-(check-eqv? (fxwrapsquare (##greatest-fixnum)) 1)
-(check-eqv? (fxwrapsquare (##least-fixnum)) 0)
+(test-eqv 0 (fxwrapsquare 0))
+(test-eqv 121 (fxwrapsquare 11))
+(test-eqv 121 (fxwrapsquare -11))
+(test-eqv 536848900 (fxwrapsquare 23170))
+(test-eqv 536848900 (fxwrapsquare -23170))
 
-(check-tail-exn type-exception? (lambda () (fxwrapsquare 0.0)))
-(check-tail-exn type-exception? (lambda () (fxwrapsquare 0.5)))
+(test-eqv (fixnum-wrap 536895241) (fxwrapsquare 23171))
+(test-eqv (fixnum-wrap 536895241) (fxwrapsquare -23171))
+
+(if (fixnum? 1518500249)
+    (begin
+      (test-eqv (fixnum-wrap 2305843006213062001) (fxwrapsquare 1518500249))
+      (test-eqv (fixnum-wrap 2305843006213062001) (fxwrapsquare -1518500249))))
+
+(test-eqv 1 (fxwrapsquare (##greatest-fixnum)))
+(test-eqv 0 (fxwrapsquare (##least-fixnum)))
+
+(test-error-tail type-exception? (fxwrapsquare 0.))
+(test-error-tail type-exception? (fxwrapsquare .5))

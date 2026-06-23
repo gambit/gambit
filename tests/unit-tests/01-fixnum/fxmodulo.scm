@@ -1,19 +1,19 @@
 (include "#.scm")
 
-(check-eqv? (##fxmodulo 3 1) 0)
-(check-eqv? (##fxmodulo 3 2) 1)
-(check-eqv? (##fxmodulo 3 3) 0)
+(test-eqv 0 (##fxmodulo 3 1))
+(test-eqv 1 (##fxmodulo 3 2))
+(test-eqv 0 (##fxmodulo 3 3))
 
-(check-eqv? (fxmodulo 3 1) 0)
-(check-eqv? (fxmodulo 3 2) 1)
-(check-eqv? (fxmodulo 3 3) 0)
+(test-eqv 0 (fxmodulo 3 1))
+(test-eqv 1 (fxmodulo 3 2))
+(test-eqv 0 (fxmodulo 3 3))
 
-(check-tail-exn divide-by-zero-exception? (lambda () (fxmodulo 1 0)))
+(test-error-tail divide-by-zero-exception? (fxmodulo 1 0))
 
-(check-tail-exn type-exception? (lambda () (fxmodulo 1 0.0)))
-(check-tail-exn type-exception? (lambda () (fxmodulo 0.5 1)))
-(check-tail-exn type-exception? (lambda () (fxmodulo 1 0.5)))
-(check-tail-exn type-exception? (lambda () (fxmodulo 1 1/2)))
+(test-error-tail type-exception? (fxmodulo 1 0.))
+(test-error-tail type-exception? (fxmodulo .5 1))
+(test-error-tail type-exception? (fxmodulo 1 .5))
+(test-error-tail type-exception? (fxmodulo 1 1/2))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxmodulo)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxmodulo 1 1 1)))
+(test-error-tail wrong-number-of-arguments-exception? (fxmodulo))
+(test-error-tail wrong-number-of-arguments-exception? (fxmodulo 1 1 1))
