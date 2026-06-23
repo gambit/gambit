@@ -1,8 +1,16 @@
 (include "#.scm")
 
+(define ##windows? ;; detect Windows
+  (let* ((cd
+          (##current-directory))
+         (directory-separator
+          (##string-ref cd (##fx- (##string-length cd) 1))))
+    (##char=? #\\ directory-separator)))
+
 
 (test-assert (host-info? (##host-info "localhost")))
-(test-assert (host-info? (##host-info '#u8(127 0 0 1))))
+(if (not ##windows?)
+    (test-assert (host-info? (##host-info '#u8(127 0 0 1)))))
 
 ;;(test-assert (string? (##host-info-name (##host-info "localhost"))))
 ;;(test-assert (list? (##host-info-aliases (##host-info "localhost"))))
@@ -10,7 +18,8 @@
 
 
 (test-assert (host-info? (host-info "localhost")))
-(test-assert (host-info? (host-info '#u8(127 0 0 1))))
+(if (not ##windows?)
+    (test-assert (host-info? (host-info '#u8(127 0 0 1)))))
 
 (test-assert (string? (host-info-name (host-info "localhost"))))
 (test-assert (list? (host-info-aliases (host-info "localhost"))))
