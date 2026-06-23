@@ -12118,12 +12118,18 @@ end-of-code
     ;; And that is all fixnums.  So we ran a code to check this.
 
     (let* ((s (##flonum->fixnum (##flsqrt (##fixnum->flonum x))))
-           (r (##fx- x (##fx* s s))))
-      ;; s can be too big, so we check for that here.
-      (if (##fxnegative? r)
-          (macro-make-sr (##fx- s 1)
-                         (##fx+ r (##fx* s 2) -1))
-          (macro-make-sr s r)))
+           (s^2? (##fxsquare? s)))
+      ;; if ##fixnum->flonum rounded up, then s^2 may not be a
+      ;; fixnum, so we need to check for that here
+      (if s^2?
+          (let ((r (##fx- x s^2?)))
+            (if (##fxnegative? r)
+                (macro-make-sr (##fx- s 1)
+                               (##fx+ r (##fx* s 2) -1))
+                (macro-make-sr s r)))
+          (let* ((s (##fx- s 1))
+                 (r (##fx- x (##fxsquare s))))
+            (macro-make-sr s r))))
 
     (let ((length/4
            (##fxarithmetic-shift-right
