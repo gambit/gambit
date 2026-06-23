@@ -12,9 +12,10 @@
   (check-eqv? a 31622776601)
   (check-eqv? b 43246886799))
 
-(receive (a b) (exact-integer-sqrt 1152921504606846974)
-  (check-eqv? a 1073741823)
-  (check-eqv? b 2147483645))
+(receive (a b) (exact-integer-sqrt (##greatest-fixnum))
+  (check-eqv? (##greatest-fixnum) (+ (* a a) b))
+  (check-false (negative? a))
+  (check-false (negative? b)))
 
 ;;; Test exceptions
 
