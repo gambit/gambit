@@ -9,7 +9,13 @@
 
 (macro-case-target
  ((C)
-  (c-declare "#include \"mem.h\"")
+  (c-declare #<<end-of-c-declare
+#include "mem.h"
+#ifdef ___USE_GMP_BIGNUM
+#include <gmp.h>
+#endif
+end-of-c-declare
+)
   (##define-macro (macro-min-bignum-adigits) 1)
   (##define-macro (use-fast-bignum-algorithms) #t))
 
@@ -7609,6 +7615,15 @@ for a discussion of branch cuts.
 (define-prim (##bignum.fft-mul-min-width-set! x)
   (set! ##bignum.fft-mul-min-width x))
 
+(cond-expand
+  (enable-gmp-bignum
+   (define ##bignum.gmp-mul-min-width 20000)
+
+   (define-prim (##bignum.gmp-mul-min-width-set! x)
+     (set! ##bignum.gmp-mul-min-width x)))
+  (else
+   (##begin)))
+
 (define ##bignum.fft-mul-max-width
   (if (##fixnum? -1073741824) ;; #t iff using 64-bit fixnums
       536870912
@@ -8345,6 +8360,235 @@ end-of-code
 )
  (else
   (##begin)))
+
+(cond-expand
+  (enable-gmp-bignum
+   (define-prim (##bignum.gmp-mul x y square?)
+     (##declare (not interrupts-enabled))
+     (macro-case-target
+      ((C)
+       (let ((v
+              (##c-code #<<end-of-code
+
+___SCMOBJ x;
+___SCMOBJ y;
+___SCMOBJ square;
+___SCMOBJ result;
+
+___POP_ARGS3(x,y,square);
+result = ___FAL;
+
+#ifdef ___USE_GMP_BIGNUM
+{
+  mpz_t a;
+  mpz_t b;
+  mpz_t product;
+  mpz_t temp;
+  int product_sign;
+  ___SIZE_TS i;
+  ___SIZE_TS n;
+  size_t count;
+
+#define ___GMP_IMPORT_BIGNUM(rop,obj)                                      \
+  do                                                                       \
+    {                                                                      \
+      ___SCMOBJ ___gmp_obj = (obj);                                        \
+      ___SIZE_TS ___gmp_len = ___INT(___BIGALENGTH(___gmp_obj));           \
+      ___WORD *___gmp_body = ___BODY_AS(___gmp_obj,___tSUBTYPED);          \
+      mpz_import ((rop),                                                   \
+                  ___gmp_len,                                              \
+                  -1,                                                      \
+                  sizeof (___BIGADIGIT),                                   \
+                  0,                                                       \
+                  0,                                                       \
+                  ___gmp_body);                                            \
+      if (___BIGAFETCHSIGNED(___gmp_body, ___gmp_len - 1) < 0)             \
+        {                                                                  \
+          mpz_set_ui (temp, 0);                                            \
+          mpz_setbit (temp,                                                \
+                      ___CAST(mp_bitcnt_t, ___gmp_len) *                  \
+                      ___BIG_ABASE_WIDTH);                                 \
+          mpz_sub ((rop), (rop), temp);                                    \
+        }                                                                  \
+    }                                                                      \
+  while (0)
+
+  mpz_init (a);
+  mpz_init (b);
+  mpz_init (product);
+  mpz_init (temp);
+
+  ___GMP_IMPORT_BIGNUM(a, x);
+
+  if (square != ___FAL)
+    mpz_mul (product, a, a);
+  else
+    {
+      ___GMP_IMPORT_BIGNUM(b, y);
+      mpz_mul (product, a, b);
+    }
+
+  product_sign = mpz_sgn (product);
+
+  if (product_sign < 0)
+    {
+      size_t bits;
+      mp_bitcnt_t sign_bit;
+
+      mpz_abs (temp, product);
+      bits = mpz_sizeinbase (temp, 2);
+      n = (bits + ___BIG_ABASE_WIDTH - 1) / ___BIG_ABASE_WIDTH;
+      if (n == 0)
+        n = 1;
+
+      sign_bit = ___CAST(mp_bitcnt_t, n) * ___BIG_ABASE_WIDTH - 1;
+      mpz_set_ui (b, 0);
+      mpz_setbit (b, sign_bit);
+      if (mpz_cmp (temp, b) > 0)
+        n++;
+    }
+  else
+    {
+      size_t bits = product_sign == 0 ? 1 : mpz_sizeinbase (product, 2);
+      n = (bits + ___BIG_ABASE_WIDTH) / ___BIG_ABASE_WIDTH;
+      if (n == 0)
+        n = 1;
+    }
+
+  if (n > ___CAST(___WORD, ___LMASK>>___LF)/(___BIG_ABASE_WIDTH/8))
+    result = ___FIX(___HEAP_OVERFLOW_ERR);
+  else
+    {
+      ___SIZE_TS words =
+        ___WORDS((n*(___BIG_ABASE_WIDTH/8))) + ___SUBTYPED_BODY;
+
+#if ___BIG_ABASE_WIDTH == 64 && ___WS == 4
+      words++;
+#endif
+
+      ___ps->saved[0] = x;
+      ___ps->saved[1] = y;
+      ___ps->saved[2] = square;
+
+      if (words > ___MSECTION_BIGGEST)
+        {
+          ___FRAME_STORE_RA(___R0)
+          ___W_ALL
+#if ___BIG_ABASE_WIDTH == 32
+          result = ___EXT(___alloc_scmobj) (___ps, ___sBIGNUM, n<<2);
+#else
+          result = ___EXT(___alloc_scmobj) (___ps, ___sBIGNUM, n<<3);
+#endif
+          ___R_ALL
+          ___SET_R0(___FRAME_FETCH_RA)
+          if (!___FIXNUMP(result))
+            ___still_obj_refcount_dec (result);
+        }
+      else
+        {
+          ___BOOL overflow = 0;
+          ___hp += words;
+          if (___hp > ___ps->heap_limit)
+            {
+              ___FRAME_STORE_RA(___R0)
+              ___W_ALL
+              overflow = ___heap_limit (___PSPNC) &&
+                         ___garbage_collect (___PSP 0);
+              ___R_ALL
+              ___SET_R0(___FRAME_FETCH_RA)
+            }
+          else
+            ___hp -= words;
+          if (overflow)
+            result = ___FIX(___HEAP_OVERFLOW_ERR);
+          else
+            {
+#if ___BIG_ABASE_WIDTH == 64 && ___WS == 4
+              result =
+                ___SUBTYPED_FROM_BODY(___CAST(___WORD,
+                                              ___hp+___SUBTYPED_BODY+1)&~7);
+#else
+              result = ___SUBTYPED_FROM_START(___hp);
+#endif
+#if ___BIG_ABASE_WIDTH == 32
+              ___SUBTYPED_HEADER_SET(result,
+                                      ___MAKE_HD_BYTES((n<<2), ___sBIGNUM));
+#else
+              ___SUBTYPED_HEADER_SET(result,
+                                      ___MAKE_HD_BYTES((n<<3), ___sBIGNUM));
+#endif
+              ___hp += words;
+            }
+        }
+
+      x = ___ps->saved[0];
+      y = ___ps->saved[1];
+      square = ___ps->saved[2];
+      ___ps->saved[0] = ___VOID;
+      ___ps->saved[1] = ___VOID;
+      ___ps->saved[2] = ___VOID;
+
+      if (!___FIXNUMP(result))
+        {
+          ___WORD *body = ___BODY_AS(result,___tSUBTYPED);
+
+          for (i=0; i<n; i++)
+            ___BIGASTORE(body, i, 0);
+
+          if (product_sign < 0)
+            {
+              mpz_set_ui (temp, 0);
+              mpz_setbit (temp,
+                          ___CAST(mp_bitcnt_t, n) * ___BIG_ABASE_WIDTH);
+              mpz_add (temp, temp, product);
+              mpz_export (body,
+                          &count,
+                          -1,
+                          sizeof (___BIGADIGIT),
+                          0,
+                          0,
+                          temp);
+            }
+          else
+            {
+              mpz_export (body,
+                          &count,
+                          -1,
+                          sizeof (___BIGADIGIT),
+                          0,
+                          0,
+                          product);
+            }
+        }
+    }
+
+  mpz_clear (temp);
+  mpz_clear (product);
+  mpz_clear (b);
+  mpz_clear (a);
+
+#undef ___GMP_IMPORT_BIGNUM
+}
+#endif
+
+___RESULT = result;
+___PUSH_ARGS3(x,y,square);
+
+end-of-code
+                x
+                y
+                square?)))
+         (cond ((##not v)
+                #f)
+               ((##fixnum? v)
+                (##raise-heap-overflow-exception)
+                (##bignum.gmp-mul x y square?))
+               (else
+                (##bignum.normalize! v)))))
+      (else
+       #f))))
+  (else
+   (##begin)))
 
 (define-prim (##bignum.* x y)
 
@@ -11385,12 +11629,24 @@ end-of-code
     (let ((x-width (##fx* x-length (##bignum.mdigit-width))))
       (cond ((##fx< x-width ##bignum.naive-mul-max-width)
              (naive-mul x x-length y y-length))
-            ((or (##not (use-fast-bignum-algorithms))         ;; Use Karatsuba even for very large integers
-                 (##fx< x-width ##bignum.fft-mul-min-width)   ;; or if x is small enough
-                 (##fx< ##bignum.fft-mul-max-width x-width))  ;; or if x is too large for FFT to work.
-             (karatsuba-mul x y))
             (else
-             (fft-mul x y)))))
+             (cond-expand
+               (enable-gmp-bignum
+                (or (and (##fx>= x-width ##bignum.gmp-mul-min-width)
+                         (##bignum.gmp-mul x y (##eq? x y)))
+                    (cond ((or (##not (use-fast-bignum-algorithms))         ;; Use Karatsuba even for very large integers
+                               (##fx< x-width ##bignum.fft-mul-min-width)   ;; or if x is small enough
+                               (##fx< ##bignum.fft-mul-max-width x-width))  ;; or if x is too large for FFT to work.
+                           (karatsuba-mul x y))
+                          (else
+                           (fft-mul x y)))))
+               (else
+                (cond ((or (##not (use-fast-bignum-algorithms))         ;; Use Karatsuba even for very large integers
+                           (##fx< x-width ##bignum.fft-mul-min-width)   ;; or if x is small enough
+                           (##fx< ##bignum.fft-mul-max-width x-width))  ;; or if x is too large for FFT to work.
+                       (karatsuba-mul x y))
+                      (else
+                       (fft-mul x y)))))))))
 
   ;; Certain decisions must be made for multiplication.
   ;; First, if either bignum is small, just do naive mul to avoid
