@@ -4868,6 +4868,41 @@ ___SCMOBJ ___setup_mem ___PVOID
 {
   if (___GSTATE->setup_params.min_heap == 0)
     {
+      ___SIZE_T default_min_heap = ___DEFAULT_MIN_HEAP;
+
+#ifndef ___SINGLE_THREADED_VMS
+      {
+        int parallelism_level = ___GSTATE->setup_params.parallelism_level;
+
+        if (parallelism_level < 0)
+          {
+            int processor_count = ___cpu_count (-1);
+
+            if (processor_count < 1)
+              processor_count = 1;
+
+            parallelism_level += processor_count;
+
+            if (parallelism_level < 1)
+              parallelism_level = 1;
+          }
+
+        if (parallelism_level > ___MAX_PROCESSORS)
+          parallelism_level = ___MAX_PROCESSORS;
+
+        if (parallelism_level > 2)
+          {
+            int multiplier = parallelism_level - 2;
+            ___SIZE_T max_min_heap = ___CAST(___SIZE_T,-1);
+
+            if (default_min_heap > max_min_heap / multiplier)
+              default_min_heap = max_min_heap;
+            else
+              default_min_heap *= multiplier;
+          }
+      }
+#endif
+
       /*
        * Choose a reasonable minimum heap size.
        *
@@ -4875,9 +4910,13 @@ ___SCMOBJ ___setup_mem ___PVOID
        */
 
       ___GSTATE->setup_params.min_heap = ___cpu_cache_size (0, 0) * 3 / 4;
-    }
 
-  SET_MAX(___GSTATE->setup_params.min_heap, ___DEFAULT_MIN_HEAP);
+      SET_MAX(___GSTATE->setup_params.min_heap, default_min_heap);
+    }
+  else
+    {
+      SET_MAX(___GSTATE->setup_params.min_heap, ___DEFAULT_MIN_HEAP);
+    }
 
   if (___GSTATE->setup_params.live_percent <= 0 ||
       ___GSTATE->setup_params.live_percent > 100)
