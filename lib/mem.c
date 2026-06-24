@@ -371,19 +371,72 @@
 
 /*---------------------------------------------------------------------------*/
 
+/*
+ * File-static spinlock to protect the global symbol/keyword tables
+ * and global variable list from concurrent access by multiple
+ * processors.  Kept outside any struct to avoid changing the
+ * ___global_state_struct layout (ABI compatibility).
+ */
+
 #ifdef ___SINGLE_THREADED_VMS
 
 #define ALLOC_MEM_LOCK()
 #define ALLOC_MEM_UNLOCK()
 #define MISC_MEM_LOCK()
 #define MISC_MEM_UNLOCK()
+#define SYMKEY_LOCK()
+#define SYMKEY_UNLOCK()
+#define RC_LOCK()
+#define RC_UNLOCK()
+#define GCHT_LOCK(ht)
+#define GCHT_UNLOCK(ht)
+#define GCHT_TABLE_LOCK(ht)
+#define GCHT_TABLE_UNLOCK(ht)
 
 #else
+
+___SPINLOCK_DECL(symkey_lock_storage)
+___SPINLOCK_DECL(rc_lock_storage)
 
 #define ALLOC_MEM_LOCK() ___SPINLOCK_LOCK(alloc_mem_lock)
 #define ALLOC_MEM_UNLOCK() ___SPINLOCK_UNLOCK(alloc_mem_lock)
 #define MISC_MEM_LOCK() ___SPINLOCK_LOCK(misc_mem_lock)
 #define MISC_MEM_UNLOCK() ___SPINLOCK_UNLOCK(misc_mem_lock)
+#define SYMKEY_LOCK() ___SPINLOCK_LOCK(symkey_lock_storage)
+#define SYMKEY_UNLOCK() ___SPINLOCK_UNLOCK(symkey_lock_storage)
+#define RC_LOCK() ___SPINLOCK_LOCK(rc_lock_storage)
+#define RC_UNLOCK() ___SPINLOCK_UNLOCK(rc_lock_storage)
+
+/*
+ * External spinlock array for all gc-hash-table locking (both C-level
+ * operations and Scheme-level table-access).  Uses a fixed array of
+ * spinlocks indexed by hashing the gcht address.  This is GC-safe
+ * because the locks are external to gc-hash-table objects, so GC's
+ * use of body[0] (GCHASHTABLE_NEXT) for chaining doesn't interfere.
+ */
+#define GCHT_TABLE_LOCK_COUNT 64
+static ___VOLATILE ___WORD gcht_table_lock_words[GCHT_TABLE_LOCK_COUNT];
+
+#define GCHT_TABLE_LOCK_INDEX(ht) \
+  ((___CAST(___UWORD, ht) >> 6) & (GCHT_TABLE_LOCK_COUNT - 1))
+
+#define GCHT_TABLE_LOCK(ht) \
+  do { \
+    ___VOLATILE ___WORD *___p = \
+      &gcht_table_lock_words[GCHT_TABLE_LOCK_INDEX(ht)]; \
+    while (___COMPARE_AND_SWAP_WORD(___CAST(___WORD*,___p), 0, 1) != 0) \
+      ___CPU_RELAX(); \
+  } while (0)
+
+#define GCHT_TABLE_UNLOCK(ht) \
+  do { \
+    ___SHARED_MEMORY_BARRIER(); \
+    gcht_table_lock_words[GCHT_TABLE_LOCK_INDEX(ht)] = 0; \
+  } while (0)
+
+/* C-level hash table functions use the same external spinlock array */
+#define GCHT_LOCK(ht)   GCHT_TABLE_LOCK(ht)
+#define GCHT_UNLOCK(ht) GCHT_TABLE_UNLOCK(ht)
 
 #endif
 
@@ -731,12 +784,18 @@ void *ptr;)
   ___PSGET
   ___rc_header *h = ___CAST(___rc_header*, ptr) - 1;
   ___rc_header *head = &rc_head;
-  ___rc_header *tail = head->prev;
+  ___rc_header *tail;
+
+  RC_LOCK();
+
+  tail = head->prev;
 
   h->prev = tail;
   h->next = head;
   head->prev = h;
   tail->next = h;
+
+  RC_UNLOCK();
 }
 
 
@@ -766,13 +825,24 @@ void *ptr;)
     {
       ___rc_header *h = ___CAST(___rc_header*,ptr) - 1;
 
+#ifndef ___SINGLE_THREADED_VMS
+      if (___FETCH_AND_ADD_WORD(&h->refcount, -1) == 1)
+#else
       if (--h->refcount == 0)
+#endif
         {
-          ___rc_header *prev = h->prev;
-          ___rc_header *next = h->next;
+          ___rc_header *prev;
+          ___rc_header *next;
+
+          RC_LOCK();
+
+          prev = h->prev;
+          next = h->next;
 
           next->prev = prev;
           prev->next = next;
+
+          RC_UNLOCK();
 
           ___FREE_MEM(h);
         }
@@ -788,7 +858,11 @@ void *ptr;)
   if (ptr != 0)
     {
       ___rc_header *h = ___CAST(___rc_header*,ptr) - 1;
+#ifndef ___SINGLE_THREADED_VMS
+      ___FETCH_AND_ADD_WORD(&h->refcount, 1);
+#else
       h->refcount++;
+#endif
     }
 }
 
@@ -1374,6 +1448,13 @@ ___SCMOBJ ___make_global_var
         (sym)
 ___SCMOBJ sym;)
 {
+  /*
+   * Protect with symkey_lock to prevent concurrent creation of
+   * the same global variable by multiple processors.
+   */
+
+  SYMKEY_LOCK();
+
   if (___GLOBALVARSTRUCT(sym) == 0)
     {
       ___glo_struct *glo = ___CAST(___glo_struct*,
@@ -1383,7 +1464,10 @@ ___SCMOBJ sym;)
                                       0));
 
       if (glo == 0)
-        return ___FIX(___HEAP_OVERFLOW_ERR);
+        {
+          SYMKEY_UNLOCK();
+          return ___FIX(___HEAP_OVERFLOW_ERR);
+        }
 
 #ifdef ___SINGLE_VM
       glo->val = ___UNB1;
@@ -1397,6 +1481,8 @@ ___SCMOBJ sym;)
 
       ___SYMBOL_GLOBAL_FIELD(sym) = ___CAST(___SCMOBJ,glo);
     }
+
+  SYMKEY_UNLOCK();
 
   return sym;
 }
@@ -1449,7 +1535,11 @@ ___EXP_FUNC(void,___still_obj_refcount_inc)
         (obj)
 ___WORD obj;)
 {
+#ifndef ___SINGLE_THREADED_VMS
+  ___FETCH_AND_ADD_WORD(&___BODY0(obj)[___STILL_REFCOUNT-___STILL_BODY], 1);
+#else
   ___BODY0(obj)[___STILL_REFCOUNT-___STILL_BODY]++;
+#endif
 }
 
 
@@ -1463,7 +1553,11 @@ ___EXP_FUNC(void,___still_obj_refcount_dec)
         (obj)
 ___WORD obj;)
 {
+#ifndef ___SINGLE_THREADED_VMS
+  ___FETCH_AND_ADD_WORD(&___BODY0(obj)[___STILL_REFCOUNT-___STILL_BODY], -1);
+#else
   ___BODY0(obj)[___STILL_REFCOUNT-___STILL_BODY]--;
+#endif
 }
 
 
@@ -1933,6 +2027,11 @@ ___SIZE_TS length;)
 }
 
 
+/*
+ * ___intern_symkey adds a symbol/keyword to the global table.
+ * Caller must hold SYMKEY_LOCK when there are multiple processors.
+ */
+
 void ___intern_symkey
    ___P((___SCMOBJ symkey),
         (symkey)
@@ -2110,7 +2209,11 @@ ___SCMOBJ ___make_symkey_from_UTF_8_string
 ___UTF_8STRING str;
 unsigned int subtype;)
 {
-  ___SCMOBJ obj = ___find_symkey_from_UTF_8_string (str, subtype);
+  ___SCMOBJ obj;
+
+  SYMKEY_LOCK();
+
+  obj = ___find_symkey_from_UTF_8_string (str, subtype);
 
   if (obj == ___FAL)
     {
@@ -2123,10 +2226,15 @@ unsigned int subtype;)
                     &name,
                     -1))
           != ___FIX(___NO_ERR))
-        return err;
+        {
+          SYMKEY_UNLOCK();
+          return err;
+        }
 
       obj = ___new_symkey (name, subtype);
     }
+
+  SYMKEY_UNLOCK();
 
   return obj;
 }
@@ -2140,7 +2248,11 @@ ___SCMOBJ ___make_symkey_from_scheme_string
 ___SCMOBJ str;
 unsigned int subtype;)
 {
-  ___SCMOBJ obj = ___find_symkey_from_scheme_string (str, subtype);
+  ___SCMOBJ obj;
+
+  SYMKEY_LOCK();
+
+  obj = ___find_symkey_from_scheme_string (str, subtype);
 
   if (obj == ___FAL)
     {
@@ -2148,7 +2260,10 @@ unsigned int subtype;)
       ___SCMOBJ name = ___alloc_scmobj (NULL, ___sSTRING, n<<___LCS);
 
       if (___FIXNUMP(name))
-        return name;
+        {
+          SYMKEY_UNLOCK();
+          return name;
+        }
 
       memmove (___BODY_AS(name,___tSUBTYPED),
                ___BODY_AS(str,___tSUBTYPED),
@@ -2156,6 +2271,8 @@ unsigned int subtype;)
 
       obj = ___new_symkey (name, subtype);
     }
+
+  SYMKEY_UNLOCK();
 
   return obj;
 }
@@ -2172,8 +2289,12 @@ unsigned int subtype;
 void (*visit) ();
 void *data;)
 {
-  ___SCMOBJ tbl = symkey_table (subtype);
+  ___SCMOBJ tbl;
   int i;
+
+  SYMKEY_LOCK();
+
+  tbl = symkey_table (subtype);
 
   for (i=___INT(___VECTORLENGTH(tbl))-1; i>0; i--)
     {
@@ -2185,6 +2306,8 @@ void *data;)
           probe = ___SYMKEY_NEXT_FIELD(probe);
         }
     }
+
+  SYMKEY_UNLOCK();
 }
 
 
@@ -4401,8 +4524,10 @@ ___PSDKR)
         {
           ___WORD head = base[___STILL_BODY-1];
           if (___HD_SUBTYPE(head) == ___sFOREIGN)
-            ___release_foreign
-              (___TAG(base + ___STILL_BODY - ___REFERENCE_TO_BODY, ___tSUBTYPED));
+            {
+              ___release_foreign
+                (___TAG(base + ___STILL_BODY - ___REFERENCE_TO_BODY, ___tSUBTYPED));
+            }
           free_mem_aligned_heap (base);
         }
       else
@@ -4443,8 +4568,10 @@ ___processor_state ___ps;)
       ___WORD link = base[___STILL_LINK];
       ___WORD head = base[___STILL_BODY-1];
       if (___HD_SUBTYPE(head) == ___sFOREIGN)
-        ___release_foreign
-          (___TAG(base + ___STILL_BODY - ___REFERENCE_TO_BODY, ___tSUBTYPED));
+        {
+          ___release_foreign
+            (___TAG(base + ___STILL_BODY - ___REFERENCE_TO_BODY, ___tSUBTYPED));
+        }
       free_mem_aligned_heap (base);
       base = ___CAST(___WORD*,link);
     }
@@ -4739,6 +4866,7 @@ ___virtual_machine_state ___vms;)
 
   ___SPINLOCK_INIT(misc_mem_lock);
   ___SPINLOCK_INIT(alloc_mem_lock);
+  ___SPINLOCK_INIT(rc_lock_storage);
 
   /*
    * Initialize condition variable to determine end of scan at VM level.
@@ -4901,6 +5029,15 @@ ___SCMOBJ ___setup_mem ___PVOID
    * table.
    */
 
+#ifndef ___SINGLE_THREADED_VMS
+  ___SPINLOCK_INIT(symkey_lock_storage);
+  {
+    int ___i;
+    for (___i = 0; ___i < GCHT_TABLE_LOCK_COUNT; ___i++)
+      gcht_table_lock_words[___i] = 0;
+  }
+#endif
+
   ___glo_list_setup ();
 
   {
@@ -4951,6 +5088,7 @@ ___virtual_machine_state ___vms;)
 
   ___SPINLOCK_DESTROY(misc_mem_lock);
   ___SPINLOCK_DESTROY(alloc_mem_lock);
+  ___SPINLOCK_DESTROY(rc_lock_storage);
 
   /*
    * Destroy condition variable to determine end of scan at VM level.
@@ -4990,6 +5128,9 @@ ___virtual_machine_state ___vms;)
 
 void ___cleanup_mem ___PVOID
 {
+#ifndef ___SINGLE_THREADED_VMS
+  ___SPINLOCK_DESTROY(symkey_lock_storage);
+#endif
   free_psections ();
 }
 
@@ -5111,11 +5252,18 @@ ___PSDKR)
 #endif
 #else
 #ifndef ___GC_HASH_TABLE_REHASH_LAZILY
-#ifdef ___SINGLE_THREADED_VMS
+/*
+ * Always use lazy rehash.  Eager rehash uses ___GCHASHTABLE_HASH_STEP
+ * (pointer-based hash) which is only correct for eq? tables.  Non-eq?
+ * tables (equal?, string=?, etc.) place entries using content-based
+ * Scheme hash functions.  Eagerly repositioning them by pointer hash
+ * corrupts the table — creating unreachable entries or infinite probe
+ * loops.  With lazy rehash, eq? tables are rehashed on first access
+ * via ___gc_hash_table_ref/set (which use pointer hash), and non-eq?
+ * tables are marked KEY_MOVED but rehashed correctly by the Scheme
+ * level ##table-access which uses the proper hash function.
+ */
 #define ___GC_HASH_TABLE_REHASH_LAZILY
-#else
-#define ___GC_HASH_TABLE_REHASH_EAGERLY
-#endif
 #endif
 #endif
 
@@ -5729,6 +5877,30 @@ ___PSDKR)
 }
 
 
+/*
+ * Scheme-callable lock/unlock for non-eq? hash table access.
+ * Uses the external spinlock array (not body[0]) so GC cannot
+ * interfere with the lock state.
+ */
+___SCMOBJ ___gc_hash_table_table_lock
+   ___P((___SCMOBJ ht),
+        (ht)
+___SCMOBJ ht;)
+{
+  GCHT_TABLE_LOCK(ht);
+  return ___VOID;
+}
+
+___SCMOBJ ___gc_hash_table_table_unlock
+   ___P((___SCMOBJ ht),
+        (ht)
+___SCMOBJ ht;)
+{
+  GCHT_TABLE_UNLOCK(ht);
+  return ___VOID;
+}
+
+
 ___SCMOBJ ___gc_hash_table_ref
    ___P((___SCMOBJ ht,
          ___SCMOBJ key),
@@ -5741,6 +5913,9 @@ ___SCMOBJ key;)
   int probe2;
   int step2;
   ___SCMOBJ obj;
+  ___SCMOBJ result;
+
+  GCHT_LOCK(ht);
 
 #ifdef ___GC_HASH_TABLE_REHASH_LAZILY
 
@@ -5757,9 +5932,12 @@ ___SCMOBJ key;)
   obj = ___FIELD(WEAK,ht, probe2+___GCHASHTABLE_KEY0);
 
   if (___EQP(obj,key))
-    return ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_VAL0);
+    {
+      result = ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_VAL0);
+    }
   else if (!___EQP(obj,___UNUSED))
     {
+      result = ___UNUSED;
       for (;;)
         {
           probe2 -= step2;
@@ -5768,13 +5946,21 @@ ___SCMOBJ key;)
           obj = ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_KEY0);
 
           if (___EQP(obj,key))
-            return ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_VAL0);
+            {
+              result = ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_VAL0);
+              break;
+            }
           else if (___EQP(obj,___UNUSED))
             break;
         }
     }
+  else
+    {
+      result = ___UNUSED; /* key was not found */
+    }
 
-  return ___UNUSED; /* key was not found */
+  GCHT_UNLOCK(ht);
+  return result;
 }
 
 
@@ -5793,6 +5979,9 @@ ___SCMOBJ val;)
   int probe2;
   int step2;
   ___SCMOBJ obj;
+  ___SCMOBJ result;
+
+  GCHT_LOCK(ht);
 
 #ifdef ___GC_HASH_TABLE_REHASH_LAZILY
 
@@ -5807,6 +5996,8 @@ ___SCMOBJ val;)
   probe2 <<= 1;
   step2 <<= 1;
   obj = ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_KEY0);
+
+  result = ___FAL; /* default: table does not need to be resized */
 
   if (!___EQP(val,___ABSENT))
     {
@@ -5827,7 +6018,9 @@ ___SCMOBJ val;)
           if (___FIXNEGATIVEP(___GCHASHTABLE_FREE_FIELD(ht) =
                                 ___FIXSUB(___GCHASHTABLE_FREE_FIELD(ht),
                                           ___FIX(1))))
-            return ___TRU;
+            {
+              result = ___TRU;
+            }
         }
       else
         {
@@ -5875,7 +6068,9 @@ ___SCMOBJ val;)
                       ___FIX(1));
           if (___FIXLT(___GCHASHTABLE_COUNT_FIELD(ht),
                        ___GCHASHTABLE_MIN_COUNT_FIELD(ht)))
-            return ___TRU;
+            {
+              result = ___TRU;
+            }
         }
       else if (!___EQP(obj,___UNUSED))
         {
@@ -5895,11 +6090,8 @@ ___SCMOBJ val;)
         }
     }
 
- /*
-  * Hash table does not need to be resized.
-  */
-
-  return ___FAL;
+  GCHT_UNLOCK(ht);
+  return result;
 }
 
 
@@ -6023,6 +6215,9 @@ ___BOOL find;)
   ___SCMOBJ k1_probe2 = ___FIX(0);
   ___SCMOBJ k2 = ___FIX(0);
   ___SCMOBJ k2_probe2 = ___FIX(0);
+  ___SCMOBJ result;
+
+  GCHT_LOCK(ht);
 
 #ifdef ___GC_HASH_TABLE_REHASH_LAZILY
 
@@ -6069,10 +6264,16 @@ ___BOOL find;)
           /* both key1 and key2 were found in the table */
 
           if (k1_probe2 == k2_probe2)
-            return ___FIX(0); /* keys are in the same equiv class */
+            {
+              result = ___FIX(0); /* keys are in the same equiv class */
+              goto done;
+            }
 
           if (find)
-            return ___FIX(1); /* keys are not in the same equiv class */
+            {
+              result = ___FIX(1); /* keys are not in the same equiv class */
+              goto done;
+            }
 
           k1 = ___INT(k1);
           k2 = ___INT(k2);
@@ -6092,14 +6293,18 @@ ___BOOL find;)
                 ___FIX(k2_probe2);
             }
 
-          return ___FIX(1);
+          result = ___FIX(1);
+          goto done;
         }
       else
         {
           /* key1 was found in the table, but key2 was not found */
 
           if (find)
-            return ___FIX(3); /* keys are not in the same equiv class */
+            {
+              result = ___FIX(3); /* keys are not in the same equiv class */
+              goto done;
+            }
 
           k1 = ___INT(k1);
 
@@ -6118,7 +6323,10 @@ ___BOOL find;)
           /* key2 was found in the table, but key1 was not found */
 
           if (find)
-            return ___FIX(3); /* keys are not in the same equiv class */
+            {
+              result = ___FIX(3); /* keys are not in the same equiv class */
+              goto done;
+            }
 
           k2 = ___INT(k2);
 
@@ -6132,7 +6340,10 @@ ___BOOL find;)
           /* key1 and key2 were not found in the table */
 
           if (find)
-            return ___FIX(5); /* keys are not in the same equiv class */
+            {
+              result = ___FIX(5); /* keys are not in the same equiv class */
+              goto done;
+            }
 
           ___FIELD(WEAK, ht, key1_probe2+___GCHASHTABLE_KEY0) = key1;
           ___FIELD(WEAK, ht, key1_probe2+___GCHASHTABLE_VAL0) = ___SPECIAL(2);
@@ -6165,9 +6376,17 @@ ___BOOL find;)
   if (___FIXNEGATIVEP(___GCHASHTABLE_FREE_FIELD(ht) =
                       ___FIXSUB(___GCHASHTABLE_FREE_FIELD(ht),
                                 ___FIX(allocated))))
-    return ___FIX(allocated*2); /* signal that table needs to grow */
+    {
+      result = ___FIX(allocated*2); /* signal that table needs to grow */
+    }
   else
-    return ___FIX(allocated*2+1); /* signal that table doesn't need to grow */
+    {
+      result = ___FIX(allocated*2+1); /* signal that table doesn't need to grow */
+    }
+
+done:
+  GCHT_UNLOCK(ht);
+  return result;
 }
 
 
@@ -6179,10 +6398,25 @@ ___SCMOBJ ___gc_hash_table_rehash
 ___SCMOBJ ht_src;
 ___SCMOBJ ht_dst;)
 {
-  ___SCMOBJ* body_src = ___BODY_AS(ht_src,___tSUBTYPED);
-  ___SIZE_TS words = ___HD_WORDS(body_src[-1]);
-  int size2 = words - ___GCHASHTABLE_KEY0;
+  ___SCMOBJ* body_src;
+  ___SIZE_TS words;
+  int size2;
   int i;
+
+  /*
+   * Do NOT hold GCHT_LOCK(ht_src) here.  ___gc_hash_table_set takes
+   * GCHT_LOCK(ht_dst) internally.  With the striped spinlock array
+   * (64 slots), ht_src and ht_dst can hash to the same slot, and
+   * the non-reentrant CAS would self-deadlock.
+   *
+   * No lock is needed on ht_src because the Scheme-level ##table-rehash!
+   * ensures exclusive access to the source table during rehash.  ht_dst
+   * is a freshly allocated table not yet visible to other threads.
+   */
+
+  body_src = ___BODY_AS(ht_src,___tSUBTYPED);
+  words = ___HD_WORDS(body_src[-1]);
+  size2 = words - ___GCHASHTABLE_KEY0;
 
   if (___FIXZEROP(___FIXAND(body_src[___GCHASHTABLE_FLAGS],
                             ___FIX(___GCHASHTABLE_FLAG_UNION_FIND))))
@@ -6246,7 +6480,21 @@ ___PSDKR)
 
   alloc_stack_ptr = p2;
 
-  ___FP_SET_STK(alloc_stack_ptr,
+  /*
+   * Mark the first break frame as not created by a stack section
+   * overflow, so that ___stack_overflow_undo_if_possible will not
+   * try to undo to a previous msection.
+   *
+   * NOTE: This must write to ___ps->stack_break (the first break
+   * frame position), NOT alloc_stack_ptr (the current fp position).
+   * When there are frames on the stack (length > FIRST_BREAK_FRAME_SPACE),
+   * alloc_stack_ptr is below the first break frame, and writing to
+   * alloc_stack_ptr[FIRST_BREAK_FRAME_STACK_MSECTION] would miss the
+   * actual STACK_MSECTION slot, leaving stale data that could cause
+   * ___stack_overflow_undo_if_possible to corrupt stack_break.
+   */
+
+  ___FP_SET_STK(___ps->stack_break,
                 -___FIRST_BREAK_FRAME_STACK_MSECTION,
                 ___CAST(___WORD,
                         ___CAST(___msection*,NULL))) /* not a stack section overflow */
@@ -6846,8 +7094,9 @@ ___PSDKR)
     {
       mark_vm_scmobj (___PSPNC);
       mark_symkey_tables (___PSPNC);
-      mark_rc (___PSPNC);
     }
+
+  mark_rc (___PSPNC); /* each processor marks its own per-processor RC list */
 
   mark_global_variables (___PSPNC);
 
@@ -6860,6 +7109,20 @@ ___PSDKR)
   mark_type_cache (___PSPNC);
 
   mark_processor_scmobj (___PSPNC);
+
+  /*
+   * Ensure all processors have completed root marking (especially
+   * mark_captured_continuation which copies stack frames to the heap
+   * and installs forwarding pointers) before any processor begins
+   * the transitive scan.  Without this barrier, a processor that
+   * finishes root marking early can steal heap chunks and scan
+   * ___sCONTINUATION objects that reference stack frames still being
+   * copied by another processor's mark_captured_continuation, leading
+   * to races on the forwarding pointers and partially-written
+   * ___sFRAME heap objects.
+   */
+
+  BARRIER();
 
   mark_reachable_from_marked (___PSPNC);
 
@@ -7235,6 +7498,21 @@ ___PSDKR)
        */
 
       ___FP_ADJFP(alloc_stack_ptr,___FIRST_BREAK_FRAME_SPACE)
+
+      /*
+       * Initialize the first break frame's msection field to NULL.
+       * This is needed because if the "reached break frame" path is
+       * taken (instead of "reached max frames"), the STACK_MSECTION
+       * and STACK_BREAK fields won't be explicitly set.  Without
+       * this initialization, ___stack_overflow_undo_if_possible may
+       * read stale data from a previous use of this msection,
+       * potentially causing stack_break corruption and crashes.
+       */
+
+      ___FP_SET_STK(alloc_stack_ptr,
+                    -___FIRST_BREAK_FRAME_STACK_MSECTION,
+                    ___CAST(___WORD,
+                            ___CAST(___msection*,NULL)))
 
       /*
        * Because ___stack_limit is only called by the stack-limit

@@ -1693,6 +1693,21 @@ ___SCMOBJ obj;)
   if (!___TESTSUBTYPE(obj,___sFOREIGN))
     return ___FIX(___UNKNOWN_ERR);
 
+#ifndef ___SINGLE_THREADED_VMS
+  {
+    ___WORD old_fn;
+    do {
+      old_fn = ___FOREIGN_RELEASE_FN_FIELD(obj);
+      if (old_fn == 0) return ___FIX(___NO_ERR);
+    } while (__sync_val_compare_and_swap(
+               &___FOREIGN_RELEASE_FN_FIELD(obj), old_fn, 0) != old_fn);
+    release_fn = ___CAST(___SCMOBJ (*) ___P((void *ptr),()), old_fn);
+    ptr = ___CAST(void*,___FOREIGN_PTR_FIELD(obj));
+    ___FOREIGN_PTR_FIELD(obj) = ___CAST(___SCMOBJ,___CAST(void*,0));
+    if ((e = release_fn (ptr)) != ___FIX(___NO_ERR))
+      return e;
+  }
+#else
   release_fn = ___CAST(___SCMOBJ (*) ___P((void *ptr),()),
                        ___FOREIGN_RELEASE_FN_FIELD(obj));
 
@@ -1706,6 +1721,7 @@ ___SCMOBJ obj;)
       if ((e = release_fn (ptr)) != ___FIX(___NO_ERR))
         return e;
     }
+#endif
 
   return ___FIX(___NO_ERR);
 }

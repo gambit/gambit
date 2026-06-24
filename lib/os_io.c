@@ -157,6 +157,17 @@ int maxfd;)
 
 /* Device groups. */
 
+#ifdef ___SINGLE_THREADED_VMS
+#define DGROUP_LOCK(dg)
+#define DGROUP_UNLOCK(dg)
+#define DGROUP_LOCK_INIT(dg)
+#else
+#define DGROUP_LOCK(dg)   do { while (__sync_lock_test_and_set(&(dg)->lock, 1)) while ((dg)->lock) ; } while(0)
+#define DGROUP_UNLOCK(dg) __sync_lock_release(&(dg)->lock)
+#define DGROUP_LOCK_INIT(dg) ((dg)->lock = 0)
+#endif
+
+
 
 ___SCMOBJ ___device_group_setup
    ___P((___device_group **dgroup),
@@ -173,6 +184,7 @@ ___device_group **dgroup;)
     return ___FIX(___HEAP_OVERFLOW_ERR);
 
   g->list = NULL;
+  DGROUP_LOCK_INIT(g);
 
   *dgroup = g;
 
@@ -201,8 +213,11 @@ void ___device_add_to_group
 ___device_group *dgroup;
 ___device *dev;)
 {
-  ___device *head = dgroup->list;
+  ___device *head;
 
+  DGROUP_LOCK(dgroup);
+
+  head = dgroup->list;
   dev->group = dgroup;
 
   if (head == NULL)
@@ -219,6 +234,8 @@ ___device *dev;)
       tail->next = dev;
       head->prev = dev;
     }
+
+  DGROUP_UNLOCK(dgroup);
 }
 
 void ___device_remove_from_group
@@ -227,22 +244,38 @@ void ___device_remove_from_group
 ___device *dev;)
 {
   ___device_group *dgroup = dev->group;
-  ___device *prev = dev->prev;
-  ___device *next = dev->next;
 
-  if (prev == dev)
-    dgroup->list = NULL;
-  else
+  if (dgroup == NULL) return;
+
+  DGROUP_LOCK(dgroup);
+
+  /* Re-check under lock in case another thread already removed this device */
+  if (dev->group == NULL)
     {
-      if (dgroup->list == dev)
-        dgroup->list = next;
-      prev->next = next;
-      next->prev = prev;
-      dev->next = dev;
-      dev->prev = dev;
+      DGROUP_UNLOCK(dgroup);
+      return;
     }
 
+  {
+    ___device *prev = dev->prev;
+    ___device *next = dev->next;
+
+    if (prev == dev)
+      dgroup->list = NULL;
+    else
+      {
+        if (dgroup->list == dev)
+          dgroup->list = next;
+        prev->next = next;
+        next->prev = prev;
+        dev->next = dev;
+        dev->prev = dev;
+      }
+  }
+
   dev->group = NULL;
+
+  DGROUP_UNLOCK(dgroup);
 }
 
 ___device_group *___global_device_group ___PVOID
@@ -1596,7 +1629,11 @@ ___device *self;)
 #ifdef USE_PUMPS
   InterlockedIncrement (&self->refcount);
 #else
+#ifndef ___SINGLE_THREADED_VMS
+  __sync_fetch_and_add (&self->refcount, 1);
+#else
   self->refcount++;
+#endif
 #endif
 }
 
@@ -1607,17 +1644,32 @@ ___device *self;)
 {
   ___SCMOBJ e = ___FIX(___NO_ERR);
 
-  if (
+  {
 #ifdef USE_PUMPS
-      InterlockedDecrement (&self->refcount) == 0
+    int new_rc = InterlockedDecrement (&self->refcount);
 #else
-      --self->refcount == 0
+#ifndef ___SINGLE_THREADED_VMS
+    int new_rc = __sync_sub_and_fetch (&self->refcount, 1);
+#else
+    int new_rc = --self->refcount;
 #endif
-      )
-    {
-      e = ___device_release_virt (self);
-      ___FREE_MEM(self);
-    }
+#endif
+
+#ifndef ___SINGLE_THREADED_VMS
+    if (new_rc < 0)
+      return ___FIX(___NO_ERR); /* don't double-free */
+#endif
+
+    if (new_rc == 0)
+      {
+#ifndef ___SINGLE_THREADED_VMS
+        if (self->group != NULL)
+          ___device_remove_from_group (self);
+#endif
+        e = ___device_release_virt (self);
+        ___FREE_MEM(self);
+      }
+  }
 
   return e;
 }
@@ -1632,6 +1684,11 @@ ___device *self;)
 
   if (self->group == NULL)
     return ___FIX(___UNKNOWN_ERR);
+
+#ifndef ___SINGLE_THREADED_VMS
+  if (self->refcount <= 0)
+    return ___FIX(___UNKNOWN_ERR);
+#endif
 
   ___device_remove_from_group (self);
 
@@ -9286,6 +9343,62 @@ int options;)
 
       ___close_half_duplex_pipe (&hdp_errno, 1);
 
+#ifndef ___SINGLE_THREADED_VMS
+
+      /*
+       * SMP fix: Use non-blocking read with polling to allow this
+       * processor to participate in GC barriers while waiting for
+       * the child process to exec().
+       *
+       * When another processor triggers GC, it raises ___INTR_SYNC_OP
+       * on all processors and waits in the barrier for them to join.
+       * If this processor is blocked in a synchronous read(), it
+       * cannot enter the barrier, causing a deadlock that leads to
+       * memory corruption when the read eventually completes and GC
+       * state is inconsistent.
+       *
+       * The non-blocking read loop checks the interrupt flag between
+       * attempts and calls service_sync_op to participate in the
+       * barrier when requested.
+       */
+
+      {
+        ___processor_state ___ps = ___PSTATE;
+        int pipe_flags = fcntl (hdp_errno.reading_fd, F_GETFL, 0);
+
+        if (pipe_flags >= 0)
+          fcntl (hdp_errno.reading_fd, F_SETFL, pipe_flags | O_NONBLOCK);
+
+        for (;;)
+          {
+            n = read (hdp_errno.reading_fd,
+                      &execvp_errno,
+                      sizeof (execvp_errno));
+
+            if (n >= 0)
+              break; /* got data or EOF */
+
+            if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
+              break; /* real error */
+
+            /* Service GC barrier if another processor requested it */
+            if (___ps->intr_flag[___INTR_SYNC_OP] != ___FIX(0))
+              service_sync_op (___PSPNC);
+            else
+              {
+                int spin_i;
+                for (spin_i = 0; spin_i < 1000; spin_i++)
+                  ___CPU_RELAX();
+              }
+          }
+
+        /* Restore blocking mode */
+        if (pipe_flags >= 0)
+          fcntl (hdp_errno.reading_fd, F_SETFL, pipe_flags);
+      }
+
+#else
+
       /*
        * The following call to read has been known to fail with EINTR,
        * in particular on OpenBSD 4.5.  This is probably because the
@@ -9297,6 +9410,8 @@ int options;)
       n = ___read_no_EINTR (hdp_errno.reading_fd,
                             &execvp_errno,
                             sizeof (execvp_errno));
+
+#endif
 
       if (n < 0)
         e = err_code_from_errno ();
