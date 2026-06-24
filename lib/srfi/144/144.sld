@@ -1,0 +1,132 @@
+;;;============================================================================
+
+;;; File: "144.sld"
+
+;;; Copyright (c) 2018-2023 by Marc Feeley, All Rights Reserved.
+
+;;;============================================================================
+
+;;; SRFI 144, Sort Libraries
+
+(define-library (srfi 144)
+  (export
+    fl-e
+    fl-epsilon
+    fl-fast-fl+*
+    fl-1/e
+    fl-e-2
+    fl-e-pi/4
+    fl-log-2
+    fl-log-2-e
+    fl-log10-e
+    fl-pi/2
+    fl-1/log-2
+    fl-log-3
+    fl-log-pi
+    fl-log-10
+    fl-1/log-10
+    fl-pi
+    fl-4thrt-2
+    fl-2pi
+    fl-1/pi
+    fl-pi/4
+    fl-pi-squared
+    fl-degree
+    fl-euler
+    fl-sin-1
+    fl-cos-1
+    fl-gamma-1/2
+    flinteger-fraction
+    flunordered?
+    flexponent
+    fl-integer-exponent-zero
+    fl-integer-exponent-nan
+    fl-gamma-1/3
+    fl-gamma-2/3
+    fl-2/pi
+    fl-2/sqrt-pi
+    fl-sqrt-2
+    fl-sqrt-3
+    fl-sqrt-5
+    fl-sqrt-10
+    fl-1/sqrt-2
+    fl-cbrt-2
+    fl-cbrt-3
+    fl-greatest
+    fl-least
+    fl-phi
+    fl-log-phi
+    fl<?
+    fl>?
+    flgamma
+    fl<=?
+    fl>=?
+    fl=?
+    flinteger?
+    flzero?
+    flsign-bit
+    flpositive?
+    flnegative?
+    flodd?
+    fleven?
+    flfinite?
+    flinitinite?
+    flnan?
+    flnormalized?
+    fldenormalized?
+    flmax
+    flmin
+    flcopysign
+    flfloor
+    flsgn
+    flceiling
+    flround
+    fltruncate
+    flexp
+    flexp2
+    flexp-1
+    flsquare
+    flsqrt
+    flcbrt
+    flhypot
+    flexpt
+    fllog
+    fllog1+
+    fllog2
+    fllog10
+    flloggamma
+    make-fllog-base
+    flsin
+    flcos
+    fltan
+    flasin
+    fladjacent
+    flabsdiff
+    flposdiff
+    flacos
+    flatan
+    flsinh
+    flcosh
+    fltanh
+    flasinh
+    flacosh
+    flatanh
+    flquotient
+    flremainder
+    flremquo
+    flfirst-bessel
+    flsecond-bessel
+    flerf
+    flerfc
+    flonum
+    flinteger-exponent
+    flnormalized-fraction-exponent
+    fl+
+    fl*
+    fl+*
+    fl-
+    fl/
+    )
+(include "144.scm"))
+
+;;;============================================================================
