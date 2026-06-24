@@ -1,0 +1,15 @@
+@node Debugging
+@chapter Debugging
+This node gives an overview of Gambit's debugging facilities.
+
+@node Debugging model
+@section Debugging model
+This node is about Gambit's debugging model.
+
+@node Debugging commands
+@section Debugging commands
+This node is about debugging commands.
+
+@node Debugging example
+@section Debugging example
+This node presents an example debugging session.

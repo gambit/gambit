@@ -1,0 +1,16 @@
+@node gsc
+@chapter gsc
+This node is about features unique to Gambit's compiler, @command{gsc}.
+
+@node Invoking gsc
+@section Invoking gsc
+This node is about invoking @command{gsc}.  It will focus on features
+not available via @command{gsi}.
+
+@node gsc declarations
+@section gsc declarations
+This node is about @command{gsc} declarations.
+
+@node Link files
+@section Link files
+This node is about link files.
