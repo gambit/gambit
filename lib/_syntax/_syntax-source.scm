@@ -318,25 +318,33 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim (##datum->syntax datum #!optional (stx (##make-syntax-source #f #f)))
+(define (##datum->syntax-ref? x)
+  (or (##syntax-source? x) (##source? x)))
 
-  (let ((stx (cond
-               ((##syntax-source? stx)
-                stx)
-               ((##source? stx)
-                (##source->syntax-source stx))
-               (else
-                 (##error "Cannot convert to source: unknown object used as source reference")))))
+(define (##datum->syntax-aux datum stx)
+
+  (let ((stx (let ref->stx ((stx stx))
+               (cond
+                 ((##syntax-source? stx)
+                  stx)
+                 ((##source? stx)
+                  (##source->syntax-source stx))
+                 ((pair? stx)
+                  (ref->stx (car stx)))
+                 ((or (null? stx) (##equal? stx (macro-absent-obj)))
+                  (##make-syntax-source #f #f))
+                 (else
+                   (##error "Cannot convert to source: unknown object used as source reference" stx))))))
 
   (define (pair->syntax datum)
     (cond
       ((pair? datum)
-       (cons (##datum->syntax (car datum) stx)
+       (cons (##datum->syntax-aux (car datum) stx)
              (pair->syntax (cdr datum))))
       ((null? datum)
        datum)
       (else
-       (##datum->syntax datum stx))))
+       (##datum->syntax-aux datum stx))))
 
  (cond
    ((syntax-source? datum)
@@ -345,11 +353,21 @@
     (##source->syntax-source datum))
    ((pair? datum)
     ; The algorithm doesn't require pairs and list to carry scoping
-    ; information but, it is usefull for debbuging purposes. 
+    ; information but, it is usefull for debbuging purposes.
     ; Could interfere with GC by keeping useless scopes in memory.
     (##source-code-set stx (pair->syntax datum)))
    (else
     (##source-code-set stx datum)))))
+
+(define-prim (##datum->syntax a #!optional (b (macro-absent-obj)))
+  (cond
+    ((##equal? b (macro-absent-obj))
+     (##datum->syntax-aux a (##make-syntax-source #f #f)))
+    ((and (##datum->syntax-ref? a)
+          (not (##datum->syntax-ref? b)))
+     (##datum->syntax-aux b a))
+    (else
+     (##datum->syntax-aux a b))))
 
 (define-prim (datum->syntax datum #!optional (stx (macro-absent-obj)))
   (if (##equal? stx (macro-absent-obj))
@@ -359,7 +377,11 @@
 ;;;---------------------------------------
 
 (define-prim (##datum->core-syntax datum #!optional (stx (macro-absent-obj)))
-  (add-scope (##datum->syntax datum stx) core-scope))
+  (add-scope
+    (if (##equal? stx (macro-absent-obj))
+        (##datum->syntax datum)
+        (##datum->syntax datum stx))
+    core-scope))
 
 (define-prim (datum->core-syntax datum #!optional (stx (macro-absent-obj)))
   (##datum->core-syntax datum stx))

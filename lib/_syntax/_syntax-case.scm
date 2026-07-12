@@ -155,11 +155,13 @@
   (match-source expr (##syntax syntax ##syntax-case syntax-case)
     ((##syntax-case e literals . clauses)
      (expand-clause-expr
+       cte
        bindings-level
        bindings
        (expand expr cte)))
     ((syntax-case e literals . clauses)
      (expand-clause-expr
+       cte
        bindings-level
        bindings
        (expand expr cte)))

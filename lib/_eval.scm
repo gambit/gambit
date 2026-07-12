@@ -66,12 +66,10 @@
 
 ;;; Structure representing source code.
 
-(define-prim (##vector-set vec i #!optional (val (macro-absent-obj)))
-  ; non-mutable vector-set!
+(define-prim (##vector-set vec i val)
   (let ((vec (##vector-copy vec)))
-    (if (##equal? val (macro-absent-obj))
-        (##vector-set! vec i)
-        (##vector-set! vec i val))))
+    (##vector-set! vec i val)
+    vec))
 
 (define-prim (##vector-update! vec i proc)
   (##vector-set! vec i (proc (##vector-ref vec i))))
@@ -351,16 +349,18 @@
   (##vector-update src 1 proc))
 
 (define (##source-locat src)
-  (let ((container (##vector-ref src 2)))
-    (if container
-        (if (##fx>= (##vector-length src) 6)
-            (##make-locat container
-                          (##vector-ref src 3)
-                          (##vector-ref src 4))
-            (##make-locat container
-                          (##vector-ref src 3)
-                          #f))
-        #f)))
+  (if (##not (and (##vector? src) (##fx>= (##vector-length src) 5)))
+      (##error "##source-locat: not a source object" src)
+      (let ((container (##vector-ref src 2)))
+        (if container
+            (if (##fx>= (##vector-length src) 6)
+                (##make-locat container
+                              (##vector-ref src 3)
+                              (##vector-ref src 4))
+                (##make-locat container
+                              (##vector-ref src 3)
+                              #f))
+            #f))))
 
 (define (##source-path src)
   (let ((locat
@@ -678,13 +678,43 @@
 ;;;
 
 (define (##make-syntax-global-binding-table)
-  (##make-table test: ##global-binding-table-id-equal?))
+  (##make-table test: ##equal?))
+
+(define (##global-binding-table-entry-set entries id binding)
+  (let loop ((lst entries) (rev '()))
+    (cond ((##pair? lst)
+           (let ((entry (##car lst)))
+             (if (##global-binding-table-id-equal? (##car entry) id)
+                 (##append (##reverse rev)
+                           (##cons (##cons id binding) (##cdr lst)))
+                 (loop (##cdr lst) (##cons entry rev)))))
+          (else
+           (##cons (##cons id binding) entries)))))
+
+(define (##global-binding-table-entry entries id)
+  (let loop ((lst entries))
+    (and (##pair? lst)
+         (if (##global-binding-table-id-equal? (##car (##car lst)) id)
+             (##car lst)
+             (loop (##cdr lst))))))
 
 (define (##syntax-global-binding-table-set! table key val)
-  (##table-set! table key val))
+  (let ((sym (##source-code key)))
+    (##table-set!
+      table
+      sym
+      (##global-binding-table-entry-set (##table-ref table sym '())
+                                        key
+                                        val))))
 
 (define (##syntax-global-binding-table-ref table key)
-  (##table-ref table key))
+  (let ((entry (##global-binding-table-entry
+                 (##table-ref table (##source-code key) '())
+                 key)))
+    (and entry (##cdr entry))))
+
+(define (##syntax-global-binding-table-candidates table id)
+  (##map ##car (##table-ref table (##source-code id) '())))
 
 ;;; ------------------------------------
 ;;;

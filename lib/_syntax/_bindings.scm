@@ -53,24 +53,21 @@
 (define-prim&proc (resolve-id (id identifier) cte)
 
   (define (find-all-matching-bindings id)
-    (let* ((id-identifier (##syntax-source-code id))
-           (id-scopes     (##syntax-source-scopes id)))
-
-      (##table-foldl 
-        (lambda (base next) 
-          (if next
-              (##cons next base)
-              base))
-        '()
-        (lambda (candidate-id _)
-          (if (and (##eq? (##syntax-source-code candidate-id)
-                          id-identifier)
-                   (##scopes-subset?
-                         (syntax-source-scopes candidate-id)
-                         id-scopes))
-              candidate-id
-              #f))
-       (##hygiene-environment-top-cte-global-binding-table cte))))
+    (let ((id-scopes (##syntax-source-scopes id)))
+      (let loop ((candidate-ids
+                   (##syntax-global-binding-table-candidates
+                     (##hygiene-environment-top-cte-global-binding-table cte)
+                     id))
+                 (matching '()))
+        (if (##pair? candidate-ids)
+            (let ((candidate-id (##car candidate-ids)))
+              (loop (##cdr candidate-ids)
+                    (if (##scopes-subset?
+                          (##syntax-source-scopes candidate-id)
+                          id-scopes)
+                        (##cons candidate-id matching)
+                        matching)))
+            matching))))
 
   (define (check-unambiguous max-id candidate-ids)
     (or (##null? candidate-ids)

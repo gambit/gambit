@@ -2,6 +2,9 @@
 
 (include "./_source-match.scm")
 
+(define (gbt-count gbt)
+  (apply + (map (lambda (e) (length (cdr e))) (##table->list gbt))))
+
 ;;;----------------------------------------------------------------------------
 ;;; bindings insertion
 
@@ -14,7 +17,8 @@
   (let ((key (hcte-add-new-local-binding! cte id)))
     (let ((lst (table->list (##cte-top-global-binding-table cte))))
       (and (= (length lst) 1)
-           (let* ((binding (car lst))
+           (let* ((entry   (car lst))
+                  (binding (car (cdr entry)))
                   (name    (car binding))
                   (val     (cdr binding)))
              (check-true
@@ -35,7 +39,8 @@
   (let ((key (hcte-add-new-top-level-binding! cte id)))
     (let ((lst (table->list (##cte-top-global-binding-table cte))))
       (and (= (length lst) 1)
-           (let* ((binding (car lst))
+           (let* ((entry   (car lst))
+                  (binding (car (cdr entry)))
                   (name    (car binding))
                   (val     (cdr binding)))
              (check-true
@@ -153,7 +158,7 @@
 
       ; no top-level duplicate
       (check-true 
-        (= (length (##table->list (##cte-top-global-binding-table top-cte)))
+        (= (gbt-count (##cte-top-global-binding-table top-cte))
            2))
 
       (let* ((id4 (add-scope (##make-syntax-source 'x #f) core-scope))
@@ -166,7 +171,7 @@
                (not (##binding-local? binding4))
                (equal? (##binding-top-level-symbol binding) key4)))
         (check-true 
-          (= (length (##table->list (##cte-top-global-binding-table top-cte)))
+          (= (gbt-count (##cte-top-global-binding-table top-cte))
              3))))))
 
 ;; local
@@ -202,7 +207,7 @@
 
       ; no local duplicate
       (check-true 
-        (= (length (##table->list (##cte-top-global-binding-table top-cte)))
+        (= (gbt-count (##cte-top-global-binding-table top-cte))
            2))
 
       (let* ((id4 (add-scope (##make-syntax-source 'x #f) core-scope))
@@ -215,7 +220,7 @@
                (not (##binding-top-level? binding4))
                (not (equal? (##binding-local-key binding) key4))))
         (check-true 
-          (= (length (##table->list (##cte-top-global-binding-table top-cte)))
+          (= (gbt-count (##cte-top-global-binding-table top-cte))
              3))))))
 
 ;; resolve-binding

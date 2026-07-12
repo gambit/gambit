@@ -60,14 +60,14 @@
                    (cons binding res)
                    cte))))))
         (()
-          (list scps 
+          (list scps
                 (##syntax-source-code-set bindings-src
                   (reverse res))
                 cte))
         (_
          (##raise-expression-parsing-exception
            'ill-formed-binding-list
-           bindings-src))))))
+           (begin (##pretty-print (syntax->datum bindings-src)) bindings-src)))))))
 
 (define-prim (##expand-let*-bindings bindings-src cte)
   (let ((scps (list)))
@@ -424,11 +424,13 @@
 (define-prim&proc (expand-begin s cte)
   (##syntax-source-code-update s
     (lambda (code)
-      (cons (car code)
-            (##syntax-source-code
-               (##expand-pair/list (##syntax-source-code-set s (cdr code)) cte
-                 (lambda _ 
-                   (##raise-ill-formed-special-form s))))))))
+      (if (null? (cdr code))
+          #!void
+          (cons (car code)
+                (##syntax-source-code
+                   (##expand-pair/list (##syntax-source-code-set s (cdr code)) cte
+                     (lambda _
+                       (##raise-ill-formed-special-form s)))))))))
   
 (define-prim&proc (expand-body body cte)
   ; core-expand trough expressions, expanding syntax bindings as letrec*-syntax
