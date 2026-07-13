@@ -224,6 +224,9 @@
        (syntax-source-code-set stx
          `(,let-id ,bindings ,@body))))))
 
+(define-prim&proc (compile-declare stx cte)
+  stx)
+
 (define-prim&proc (compile-quote stx cte)
   stx)
 
@@ -312,6 +315,8 @@
       ((##syntax 
         syntax)         ##compile-syntax)
       ((##case)           ##compile-case)
+      ((##declare
+        ##c-declare)      ##compile-declare)
       ((##begin
         ##include
         ##if)             ##compile-application)

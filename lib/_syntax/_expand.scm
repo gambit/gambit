@@ -885,6 +885,9 @@
 
 ;;;----------------------------------------------------------------------------
 
+(define-prim&proc (expand-declare stx cte)
+  stx)
+
 (define-prim&proc (expand-quote stx cte)
   (let ((code (##syntax-source-code stx)))
     (if (and (pair? code)

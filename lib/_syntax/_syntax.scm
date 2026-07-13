@@ -271,6 +271,9 @@
     (##add-new-core-macro! ##namespace ##expand-namespace)
     (##add-new-core-macro! ##include ##expand-include)
 
+    (##add-new-core-macro! ##declare ##expand-declare)
+    (##add-new-core-macro! ##c-declare ##expand-declare)
+
   ##syntax-interaction-cte))
 
 ;;;============================================================================
