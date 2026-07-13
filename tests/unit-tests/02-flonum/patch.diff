@@ -1,0 +1,1256 @@
+commit 98d9d3ded8a742f206cf2fc46f72463e80f812c1
+Author: Carlos-Ariel Vanegas <vanegascarlosar@gmail.com>
+Date:   Tue Jun 23 15:56:53 2026 -0400
+
+    tests rewritten to use SRFI 64 form
+
+diff --git a/tests/unit-tests/02-flonum/flacosh.scm b/tests/unit-tests/02-flonum/flacosh.scm
+index 6660d691..dd2bb321 100644
+--- a/tests/unit-tests/02-flonum/flacosh.scm
++++ b/tests/unit-tests/02-flonum/flacosh.scm
+@@ -1,15 +1,15 @@
+ (include "#.scm")
+ 
+-(test-approximate 0.0 (##flacosh 1.) 1e-12)
+-(test-approximate 0.9624236501192069 (##flacosh 1.5) 1e-12)
++(test-approximate 0. (##flacosh 1.) 1e-12)
++(test-approximate .9624236501192069 (##flacosh 1.5) 1e-12)
+ (test-approximate 2.941657314651186 (##flacosh 9.5) 1e-12)
+ 
+-(test-approximate 0.0 (flacosh 1.) 1e-12)
+-(test-approximate 0.9624236501192069 (flacosh 1.5) 1e-12)
++(test-approximate 0. (flacosh 1.) 1e-12)
++(test-approximate .9624236501192069 (flacosh 1.5) 1e-12)
+ (test-approximate 2.941657314651186 (flacosh 9.5) 1e-12)
+ 
+ (test-error-tail wrong-number-of-arguments-exception? (flacosh))
+-(test-error-tail wrong-number-of-arguments-exception? (flacosh 1.0 2.0))
++(test-error-tail wrong-number-of-arguments-exception? (flacosh 1. 2.))
+ 
+ (test-error-tail type-exception? (flacosh 1))
+ (test-error-tail type-exception? (flacosh 1/2))
+diff --git a/tests/unit-tests/02-flonum/fladd.scm b/tests/unit-tests/02-flonum/fladd.scm
+index 7a5a4a29..c9366998 100644
+--- a/tests/unit-tests/02-flonum/fladd.scm
++++ b/tests/unit-tests/02-flonum/fladd.scm
+@@ -1,30 +1,30 @@
+ (include "#.scm")
+ 
+-(test-eqv  4.5 (##fl+ 1.0 3.5))
+-(test-eqv  0.0 (##fl+ 1.0 -1.0))
+-(test-eqv -2.5 (##fl+ 1.0 -3.5))
+-(test-eqv  2.5 (##fl+ -1.0 3.5))
++(test-eqv 4.5 (##fl+ 1. 3.5))
++(test-eqv 0. (##fl+ 1. -1.))
++(test-eqv -2.5 (##fl+ 1. -3.5))
++(test-eqv 2.5 (##fl+ -1. 3.5))
+ 
+-(test-eqv  0.0 (##fl+))
+-(test-eqv  1.0 (##fl+ 1.0))
+-(test-eqv  3.5 (##fl+ 1.0 2.5))
+-(test-eqv  6.5 (##fl+ 1.0 2.5 3.0))
+-(test-eqv 11.0 (##fl+ 1.0 2.5 3.0 4.5))
++(test-eqv 0. (##fl+))
++(test-eqv 1. (##fl+ 1.))
++(test-eqv 3.5 (##fl+ 1. 2.5))
++(test-eqv 6.5 (##fl+ 1. 2.5 3.))
++(test-eqv 11. (##fl+ 1. 2.5 3. 4.5))
+ 
+-(test-eqv  4.5 (fl+ 1.0 3.5))
+-(test-eqv  0.0 (fl+ 1.0 -1.0))
+-(test-eqv -2.5 (fl+ 1.0 -3.5))
+-(test-eqv  2.5 (fl+ -1.0 3.5))
++(test-eqv 4.5 (fl+ 1. 3.5))
++(test-eqv 0. (fl+ 1. -1.))
++(test-eqv -2.5 (fl+ 1. -3.5))
++(test-eqv 2.5 (fl+ -1. 3.5))
+ 
+-(test-eqv  0.0 (fl+))
+-(test-eqv  1.0 (fl+ 1.0))
+-(test-eqv  3.5 (fl+ 1.0 2.5))
+-(test-eqv  6.5 (fl+ 1.0 2.5 3.0))
+-(test-eqv 11.0 (fl+ 1.0 2.5 3.0 4.5))
++(test-eqv 0. (fl+))
++(test-eqv 1. (fl+ 1.))
++(test-eqv 3.5 (fl+ 1. 2.5))
++(test-eqv 6.5 (fl+ 1. 2.5 3.))
++(test-eqv 11. (fl+ 1. 2.5 3. 4.5))
+ 
+ (test-error-tail type-exception? (fl+ 123))
+-(test-error-tail type-exception? (fl+ 123 9.0))
+-(test-error-tail type-exception? (fl+ 9.0 123))
+-(test-error-tail type-exception? (fl+ 123 3.0 9.0))
+-(test-error-tail type-exception? (fl+ 3.0 123 9.0))
+-(test-error-tail type-exception? (fl+ 3.0 9.0 123))
++(test-error-tail type-exception? (fl+ 123 9.))
++(test-error-tail type-exception? (fl+ 9. 123))
++(test-error-tail type-exception? (fl+ 123 3. 9.))
++(test-error-tail type-exception? (fl+ 3. 123 9.))
++(test-error-tail type-exception? (fl+ 3. 9. 123))
+diff --git a/tests/unit-tests/02-flonum/fladdmul.scm b/tests/unit-tests/02-flonum/fladdmul.scm
+index 98fade5d..cbd7970d 100644
+--- a/tests/unit-tests/02-flonum/fladdmul.scm
++++ b/tests/unit-tests/02-flonum/fladdmul.scm
+@@ -1,15 +1,18 @@
+ (include "#.scm")
+ 
+-(test-approximate -1.1102230246251565e-16 (##fl+* -0.4 3.0 1.2) 1e-12)
+-(test-approximate 1.0 (##fl+* -268435455.0 268435457.0 7.205759403792794e16) 1e-12)
++(test-approximate -1.1102230246251565e-16 (##fl+* -.4 3. 1.2) 1e-12)
++(test-approximate
++ 1.
++ (##fl+* -268435455. 268435457. 7.205759403792794e16)
++ 1e-12)
+ 
+-(test-approximate -1.1102230246251565e-16 (fl+* -0.4 3.0 1.2) 1e-12)
+-(test-approximate 1.0 (fl+* -268435455.0 268435457.0 7.205759403792794e16) 1e-12)
++(test-approximate -1.1102230246251565e-16 (fl+* -.4 3. 1.2) 1e-12)
++(test-approximate 1. (fl+* -268435455. 268435457. 7.205759403792794e16) 1e-12)
+ 
+-(test-error-tail wrong-number-of-arguments-exception? (fl+* 1.0))
+-(test-error-tail wrong-number-of-arguments-exception? (fl+* 1.0 2.0))
+-(test-error-tail wrong-number-of-arguments-exception? (fl+* 1.0 2.0 3.0 4.0))
++(test-error-tail wrong-number-of-arguments-exception? (fl+* 1.))
++(test-error-tail wrong-number-of-arguments-exception? (fl+* 1. 2.))
++(test-error-tail wrong-number-of-arguments-exception? (fl+* 1. 2. 3. 4.))
+ 
+-(test-error-tail type-exception? (fl+* 123 3.0 9.0))
+-(test-error-tail type-exception? (fl+* 3.0 123 9.0))
+-(test-error-tail type-exception? (fl+* 3.0 9.0 123))
++(test-error-tail type-exception? (fl+* 123 3. 9.))
++(test-error-tail type-exception? (fl+* 3. 123 9.))
++(test-error-tail type-exception? (fl+* 3. 9. 123))
+diff --git a/tests/unit-tests/02-flonum/flasinh.scm b/tests/unit-tests/02-flonum/flasinh.scm
+index b3c3f825..ff869492 100644
+--- a/tests/unit-tests/02-flonum/flasinh.scm
++++ b/tests/unit-tests/02-flonum/flasinh.scm
+@@ -1,15 +1,15 @@
+ (include "#.scm")
+ 
+-(test-approximate 0.0 (##flasinh 0.) 1e-12)
+-(test-approximate 0.48121182505960347 (##flasinh 0.5) 1e-12)
+-(test-approximate -0.48121182505960347 (##flasinh -0.5) 1e-12)
++(test-approximate 0. (##flasinh 0.) 1e-12)
++(test-approximate .48121182505960347 (##flasinh .5) 1e-12)
++(test-approximate -.48121182505960347 (##flasinh -.5) 1e-12)
+ 
+-(test-approximate 0.0 (flasinh 0.) 1e-12)
+-(test-approximate 0.48121182505960347 (flasinh 0.5) 1e-12)
+-(test-approximate -0.48121182505960347 (flasinh -0.5) 1e-12)
++(test-approximate 0. (flasinh 0.) 1e-12)
++(test-approximate .48121182505960347 (flasinh .5) 1e-12)
++(test-approximate -.48121182505960347 (flasinh -.5) 1e-12)
+ 
+ (test-error-tail wrong-number-of-arguments-exception? (flasinh))
+-(test-error-tail wrong-number-of-arguments-exception? (flasinh 0.5 2.0))
++(test-error-tail wrong-number-of-arguments-exception? (flasinh .5 2.))
+ 
+ (test-error-tail type-exception? (flasinh 1))
+ (test-error-tail type-exception? (flasinh 1/2))
+diff --git a/tests/unit-tests/02-flonum/flatan.scm b/tests/unit-tests/02-flonum/flatan.scm
+index 7bc780b2..cd77602d 100644
+--- a/tests/unit-tests/02-flonum/flatan.scm
++++ b/tests/unit-tests/02-flonum/flatan.scm
+@@ -1,43 +1,25 @@
+ (include "#.scm")
+ 
+-(test-approximate 0.0 (##flatan 0.0) 1e-12)
+-(test-approximate 0.7853981633974483 (##flatan 1.0) 1e-12)
+-(test-approximate -0.7853981633974483 (##flatan -1.0) 1e-12)
++(test-approximate 0. (##flatan 0.) 1e-12)
++(test-approximate .7853981633974483 (##flatan 1.) 1e-12)
++(test-approximate -.7853981633974483 (##flatan -1.) 1e-12)
+ 
+ (test-assert (flnan? (##flatan +nan.0)))
+ 
+-#|
+-
+-If the implementation supports IEEE floating-point arithmetic (IEC 60559), 
+-
+-If y is +/-0 and x is negative or -0, +/-pi is returned
+-If y is +/-0 and x is positive or +0, +/-0 is returned
+-If y is +/-inf and x is finite, +/-pi/2 is returned
+-If y is +/-inf and x is -inf, +/-3pi/4 is returned
+-If y is +/-inf and x is +inf, +/-pi/4 is returned
+-If x is +/-0 and y is negative, -pi/2 is returned
+-If x is +/-0 and y is positive, +pi/2 is returned
+-If x is -inf and y is finite and positive, +pi is returned
+-If x is -inf and y is finite and negative, -pi is returned
+-If x is +inf and y is finite and positive, +0 is returned
+-If x is +inf and y is finite and negative, -0 is returned
+-If either x is NaN or y is NaN, NaN is returned
+-
+-|#
+ 
+ ;; If y is +/-0 and x is negative or -0, +/-pi is returned
+ 
+-(test-approximate 3.141592653589793 (##flatan +0. -1.) 1e-12)
+-(test-approximate 3.141592653589793 (##flatan +0. -0.) 1e-12)
++(test-approximate 3.141592653589793 (##flatan 0. -1.) 1e-12)
++(test-approximate 3.141592653589793 (##flatan 0. -0.) 1e-12)
+ (test-approximate -3.141592653589793 (##flatan -0. -1.) 1e-12)
+ (test-approximate -3.141592653589793 (##flatan -0. -0.) 1e-12)
+ 
+ ;; If y is +/-0 and x is positive or +0, +/-0 is returned
+ 
+-(test-approximate +0. (##flatan +0. +1.) 1e-12)
+-(test-approximate +0. (##flatan +0. +0.) 1e-12)
+-(test-approximate -0. (##flatan -0. +1.) 1e-12)
+-(test-approximate -0. (##flatan -0. +0.) 1e-12)
++(test-approximate 0. (##flatan 0. 1.) 1e-12)
++(test-approximate 0. (##flatan 0. 0.) 1e-12)
++(test-approximate -0. (##flatan -0. 1.) 1e-12)
++(test-approximate -0. (##flatan -0. 0.) 1e-12)
+ 
+ ;; If y is +/-inf and x is finite, +/-pi/2 is returned
+ 
+@@ -51,12 +33,12 @@ If either x is NaN or y is NaN, NaN is returned
+ 
+ ;; If y is +/-inf and x is +inf, +/-pi/4 is returned
+ 
+-(test-approximate 0.7853981633974483 (##flatan +inf.0 +inf.0) 1e-12)
+-(test-approximate -0.7853981633974483 (##flatan -inf.0 +inf.0) 1e-12)
++(test-approximate .7853981633974483 (##flatan +inf.0 +inf.0) 1e-12)
++(test-approximate -.7853981633974483 (##flatan -inf.0 +inf.0) 1e-12)
+ 
+ ;; If x is -inf and y is finite and positive, +pi is returned
+ 
+-(test-approximate 3.141592653589793 (##flatan 1.0 -inf.0) 1e-12)
++(test-approximate 3.141592653589793 (##flatan 1. -inf.0) 1e-12)
+ 
+ ;; If x is -inf and y is finite and negative, -pi is returned
+ 
+@@ -64,7 +46,7 @@ If either x is NaN or y is NaN, NaN is returned
+ 
+ ;; If x is +inf and y is finite and positive, +0 is returned
+ 
+-(test-approximate +0. (##flatan +1. +inf.0) 1e-12)
++(test-approximate 0. (##flatan 1. +inf.0) 1e-12)
+ 
+ ;; If x is +inf and y is finite and negative, -0 is returned
+ 
+@@ -76,25 +58,25 @@ If either x is NaN or y is NaN, NaN is returned
+ (test-assert (flnan? (##flatan 1. +nan.0)))
+ 
+ 
+-(test-approximate 0.0 (flatan 0.0) 1e-12)
+-(test-approximate 0.7853981633974483 (flatan 1.0) 1e-12)
+-(test-approximate -0.7853981633974483 (flatan -1.0) 1e-12)
++(test-approximate 0. (flatan 0.) 1e-12)
++(test-approximate .7853981633974483 (flatan 1.) 1e-12)
++(test-approximate -.7853981633974483 (flatan -1.) 1e-12)
+ 
+ (test-assert (flnan? (flatan +nan.0)))
+ 
+ ;; If y is +/-0 and x is negative or -0, +/-pi is returned
+ 
+-(test-approximate 3.141592653589793 (flatan +0. -1.) 1e-12)
+-(test-approximate 3.141592653589793 (flatan +0. -0.) 1e-12)
++(test-approximate 3.141592653589793 (flatan 0. -1.) 1e-12)
++(test-approximate 3.141592653589793 (flatan 0. -0.) 1e-12)
+ (test-approximate -3.141592653589793 (flatan -0. -1.) 1e-12)
+ (test-approximate -3.141592653589793 (flatan -0. -0.) 1e-12)
+ 
+ ;; If y is +/-0 and x is positive or +0, +/-0 is returned
+ 
+-(test-approximate +0. (flatan +0. +1.) 1e-12)
+-(test-approximate +0. (flatan +0. +0.) 1e-12)
+-(test-approximate -0. (flatan -0. +1.) 1e-12)
+-(test-approximate -0. (flatan -0. +0.) 1e-12)
++(test-approximate 0. (flatan 0. 1.) 1e-12)
++(test-approximate 0. (flatan 0. 0.) 1e-12)
++(test-approximate -0. (flatan -0. 1.) 1e-12)
++(test-approximate -0. (flatan -0. 0.) 1e-12)
+ 
+ ;; If y is +/-inf and x is finite, +/-pi/2 is returned
+ 
+@@ -108,12 +90,12 @@ If either x is NaN or y is NaN, NaN is returned
+ 
+ ;; If y is +/-inf and x is +inf, +/-pi/4 is returned
+ 
+-(test-approximate 0.7853981633974483 (flatan +inf.0 +inf.0) 1e-12)
+-(test-approximate -0.7853981633974483 (flatan -inf.0 +inf.0) 1e-12)
++(test-approximate .7853981633974483 (flatan +inf.0 +inf.0) 1e-12)
++(test-approximate -.7853981633974483 (flatan -inf.0 +inf.0) 1e-12)
+ 
+ ;; If x is -inf and y is finite and positive, +pi is returned
+ 
+-(test-approximate 3.141592653589793 (flatan 1.0 -inf.0) 1e-12)
++(test-approximate 3.141592653589793 (flatan 1. -inf.0) 1e-12)
+ 
+ ;; If x is -inf and y is finite and negative, -pi is returned
+ 
+@@ -121,7 +103,7 @@ If either x is NaN or y is NaN, NaN is returned
+ 
+ ;; If x is +inf and y is finite and positive, +0 is returned
+ 
+-(test-approximate +0. (flatan +1. +inf.0) 1e-12)
++(test-approximate 0. (flatan 1. +inf.0) 1e-12)
+ 
+ ;; If x is +inf and y is finite and negative, -0 is returned
+ 
+@@ -133,8 +115,8 @@ If either x is NaN or y is NaN, NaN is returned
+ (test-assert (flnan? (flatan 1. +nan.0)))
+ 
+ (test-error-tail wrong-number-of-arguments-exception? (flatan))
+-(test-error-tail wrong-number-of-arguments-exception? (flatan 1.0 2.0 3.0))
++(test-error-tail wrong-number-of-arguments-exception? (flatan 1. 2. 3.))
+ 
+ (test-error-tail type-exception? (flatan 1))
+-(test-error-tail type-exception? (flatan 1 2.0))
+-(test-error-tail type-exception? (flatan 1.0 2))
++(test-error-tail type-exception? (flatan 1 2.))
++(test-error-tail type-exception? (flatan 1. 2))
+diff --git a/tests/unit-tests/02-flonum/flatanh.scm b/tests/unit-tests/02-flonum/flatanh.scm
+index de4d5dcb..71889907 100644
+--- a/tests/unit-tests/02-flonum/flatanh.scm
++++ b/tests/unit-tests/02-flonum/flatanh.scm
+@@ -1,15 +1,15 @@
+ (include "#.scm")
+ 
+-(test-approximate 0.0 (##flatanh 0.) 1e-12)
+-(test-approximate 0.5493061443340549 (##flatanh 0.5) 1e-12)
+-(test-approximate -0.5493061443340549 (##flatanh -0.5) 1e-12)
++(test-approximate 0. (##flatanh 0.) 1e-12)
++(test-approximate .5493061443340549 (##flatanh .5) 1e-12)
++(test-approximate -.5493061443340549 (##flatanh -.5) 1e-12)
+ 
+-(test-approximate 0.0 (flatanh 0.) 1e-12)
+-(test-approximate 0.5493061443340549 (flatanh 0.5) 1e-12)
+-(test-approximate -0.5493061443340549 (flatanh -0.5) 1e-12)
++(test-approximate 0. (flatanh 0.) 1e-12)
++(test-approximate .5493061443340549 (flatanh .5) 1e-12)
++(test-approximate -.5493061443340549 (flatanh -.5) 1e-12)
+ 
+ (test-error-tail wrong-number-of-arguments-exception? (flatanh))
+-(test-error-tail wrong-number-of-arguments-exception? (flatanh 1.0 2.0))
++(test-error-tail wrong-number-of-arguments-exception? (flatanh 1. 2.))
+ 
+ (test-error-tail type-exception? (flatanh 1))
+ (test-error-tail type-exception? (flatanh 1/2))
+diff --git a/tests/unit-tests/02-flonum/flcos.scm b/tests/unit-tests/02-flonum/flcos.scm
+index 3a0b0a80..ff6f0a88 100644
+--- a/tests/unit-tests/02-flonum/flcos.scm
++++ b/tests/unit-tests/02-flonum/flcos.scm
+@@ -1,21 +1,21 @@
+ (include "#.scm")
+ 
+-(test-approximate 0.5403023058681398 (##flcos -1.0) 1e-12)
+-(test-approximate 0.8775825618903728 (##flcos -0.5) 1e-12)
+-(test-approximate 1.0 (##flcos -0.0) 1e-12)
+-(test-approximate 1.0 (##flcos 0.0) 1e-12)
+-(test-approximate 0.8775825618903728 (##flcos 0.5) 1e-12)
+-(test-approximate 0.5403023058681398 (##flcos 1.0) 1e-12)
++(test-approximate .5403023058681398 (##flcos -1.) 1e-12)
++(test-approximate .8775825618903728 (##flcos -.5) 1e-12)
++(test-approximate 1. (##flcos -0.) 1e-12)
++(test-approximate 1. (##flcos 0.) 1e-12)
++(test-approximate .8775825618903728 (##flcos .5) 1e-12)
++(test-approximate .5403023058681398 (##flcos 1.) 1e-12)
+ 
+-(test-approximate 0.5403023058681398 (flcos -1.0) 1e-12)
+-(test-approximate 0.8775825618903728 (flcos -0.5) 1e-12)
+-(test-approximate 1.0 (flcos -0.0) 1e-12)
+-(test-approximate 1.0 (flcos 0.0) 1e-12)
+-(test-approximate 0.8775825618903728 (flcos 0.5) 1e-12)
+-(test-approximate 0.5403023058681398 (flcos 1.0) 1e-12)
++(test-approximate .5403023058681398 (flcos -1.) 1e-12)
++(test-approximate .8775825618903728 (flcos -.5) 1e-12)
++(test-approximate 1. (flcos -0.) 1e-12)
++(test-approximate 1. (flcos 0.) 1e-12)
++(test-approximate .8775825618903728 (flcos .5) 1e-12)
++(test-approximate .5403023058681398 (flcos 1.) 1e-12)
+ 
+ (test-error-tail wrong-number-of-arguments-exception? (flcos))
+-(test-error-tail wrong-number-of-arguments-exception? (flcos 1.0 2.0 3.0))
++(test-error-tail wrong-number-of-arguments-exception? (flcos 1. 2. 3.))
+ 
+ (test-error-tail type-exception? (flcos 0))
+ (test-error-tail type-exception? (flcos 1/2))
+diff --git a/tests/unit-tests/02-flonum/flcosh.scm b/tests/unit-tests/02-flonum/flcosh.scm
+index 224ca59f..5c196c21 100644
+--- a/tests/unit-tests/02-flonum/flcosh.scm
++++ b/tests/unit-tests/02-flonum/flcosh.scm
+@@ -1,15 +1,15 @@
+ (include "#.scm")
+ 
+-(test-approximate 1.0 (##flcosh 0.) 1e-12)
+-(test-approximate 1.1276259652063807 (##flcosh 0.5) 1e-12)
+-(test-approximate 1.1276259652063807 (##flcosh -0.5) 1e-12)
++(test-approximate 1. (##flcosh 0.) 1e-12)
++(test-approximate 1.1276259652063807 (##flcosh .5) 1e-12)
++(test-approximate 1.1276259652063807 (##flcosh -.5) 1e-12)
+ 
+-(test-approximate 1.0 (flcosh 0.) 1e-12)
+-(test-approximate 1.1276259652063807 (flcosh 0.5) 1e-12)
+-(test-approximate 1.1276259652063807 (flcosh -0.5) 1e-12)
++(test-approximate 1. (flcosh 0.) 1e-12)
++(test-approximate 1.1276259652063807 (flcosh .5) 1e-12)
++(test-approximate 1.1276259652063807 (flcosh -.5) 1e-12)
+ 
+ (test-error-tail wrong-number-of-arguments-exception? (flcosh))
+-(test-error-tail wrong-number-of-arguments-exception? (flcosh 1.0 2.0))
++(test-error-tail wrong-number-of-arguments-exception? (flcosh 1. 2.))
+ 
+ (test-error-tail type-exception? (flcosh 0))
+ (test-error-tail type-exception? (flcosh 1/2))
+diff --git a/tests/unit-tests/02-flonum/fldenominator.scm b/tests/unit-tests/02-flonum/fldenominator.scm
+index a76abbe7..92733816 100644
+--- a/tests/unit-tests/02-flonum/fldenominator.scm
++++ b/tests/unit-tests/02-flonum/fldenominator.scm
+@@ -1,23 +1,23 @@
+ (include "#.scm")
+ 
+-(test-eqv 1.0 (##fldenominator  0.0))
+-(test-eqv 1.0 (##fldenominator -0.0))
+-(test-eqv 2.0 (##fldenominator  0.5))
+-(test-eqv 1.0 (##fldenominator  1.0))
+-(test-eqv 2.0 (##fldenominator  1.5))
+-(test-eqv 2.0 (##fldenominator  3.5))
+-(test-eqv 1.0 (##fldenominator  5.0))
++(test-eqv 1. (##fldenominator 0.))
++(test-eqv 1. (##fldenominator -0.))
++(test-eqv 2. (##fldenominator .5))
++(test-eqv 1. (##fldenominator 1.))
++(test-eqv 2. (##fldenominator 1.5))
++(test-eqv 2. (##fldenominator 3.5))
++(test-eqv 1. (##fldenominator 5.))
+ 
+-(test-eqv 1.0 (fldenominator  0.0))
+-(test-eqv 1.0 (fldenominator -0.0))
+-(test-eqv 2.0 (fldenominator  0.5))
+-(test-eqv 1.0 (fldenominator  1.0))
+-(test-eqv 2.0 (fldenominator  1.5))
+-(test-eqv 2.0 (fldenominator  3.5))
+-(test-eqv 1.0 (fldenominator  5.0))
++(test-eqv 1. (fldenominator 0.))
++(test-eqv 1. (fldenominator -0.))
++(test-eqv 2. (fldenominator .5))
++(test-eqv 1. (fldenominator 1.))
++(test-eqv 2. (fldenominator 1.5))
++(test-eqv 2. (fldenominator 3.5))
++(test-eqv 1. (fldenominator 5.))
+ 
+ (test-error-tail wrong-number-of-arguments-exception? (fldenominator))
+-(test-error-tail wrong-number-of-arguments-exception? (fldenominator 1.0 2.0))
++(test-error-tail wrong-number-of-arguments-exception? (fldenominator 1. 2.))
+ 
+ (test-error-tail type-exception? (fldenominator 1))
+ (test-error-tail type-exception? (fldenominator 1/2))
+diff --git a/tests/unit-tests/02-flonum/fleq.scm b/tests/unit-tests/02-flonum/fleq.scm
+index 39a78fb1..58f0a54a 100644
+--- a/tests/unit-tests/02-flonum/fleq.scm
++++ b/tests/unit-tests/02-flonum/fleq.scm
+@@ -1,22 +1,22 @@
+ (include "#.scm")
+ 
+ (test-eqv #f (##fl= +inf.0 -inf.0))
+-(test-eqv #t (##fl= -0.0 0.0))
+-(test-eqv #t (##fl= 0.0))
+-(test-eqv #f (##fl= 0.0 1.5))
+-(test-eqv #f (##fl= 2.0 -1.5 0.5))
+-(test-eqv #f (##fl= -1.0 1.0 1.0))
+-(test-eqv #t (##fl= 1.0 1.0 1.0))
++(test-eqv #t (##fl= -0. 0.))
++(test-eqv #t (##fl= 0.))
++(test-eqv #f (##fl= 0. 1.5))
++(test-eqv #f (##fl= 2. -1.5 .5))
++(test-eqv #f (##fl= -1. 1. 1.))
++(test-eqv #t (##fl= 1. 1. 1.))
+ 
+ (test-eqv #f (fl= +inf.0 -inf.0))
+-(test-eqv #t (fl= -0.0 0.0))
+-(test-eqv #t (fl= 0.0))
+-(test-eqv #f (fl= 0.0 1.5))
+-(test-eqv #f (fl= 2.0 -1.5 0.5))
+-(test-eqv #f (fl= -1.0 1.0 1.0))
+-(test-eqv #t (fl= 1.0 1.0 1.0))
++(test-eqv #t (fl= -0. 0.))
++(test-eqv #t (fl= 0.))
++(test-eqv #f (fl= 0. 1.5))
++(test-eqv #f (fl= 2. -1.5 .5))
++(test-eqv #f (fl= -1. 1. 1.))
++(test-eqv #t (fl= 1. 1. 1.))
+ 
+-(test-error-tail type-exception? (fl= 1 1.0))
+-(test-error-tail type-exception? (fl= 1.0 1))
+-(test-error-tail type-exception? (fl= 1.0 1.0 1))
++(test-error-tail type-exception? (fl= 1 1.))
++(test-error-tail type-exception? (fl= 1. 1))
++(test-error-tail type-exception? (fl= 1. 1. 1))
+ (test-error-tail type-exception? (fl= 1/2))
+diff --git a/tests/unit-tests/02-flonum/flevenp.scm b/tests/unit-tests/02-flonum/flevenp.scm
+index b22317c4..3e67d831 100644
+--- a/tests/unit-tests/02-flonum/flevenp.scm
++++ b/tests/unit-tests/02-flonum/flevenp.scm
+@@ -2,24 +2,24 @@
+ 
+ (test-eqv #f (##fleven? +inf.0))
+ (test-eqv #f (##fleven? -inf.0))
+-(test-eqv #t (##fleven? -0.0))
+-(test-eqv #t (##fleven? 0.0))
++(test-eqv #t (##fleven? -0.))
++(test-eqv #t (##fleven? 0.))
+ (test-eqv #f (##fleven? 1.5))
+ (test-eqv #f (##fleven? -1.5))
+-(test-eqv #t (##fleven? 2.0))
+-(test-eqv #t (##fleven? -2.0))
+-(test-eqv #f (##fleven? 3.0))
+-(test-eqv #f (##fleven? -3.0))
++(test-eqv #t (##fleven? 2.))
++(test-eqv #t (##fleven? -2.))
++(test-eqv #f (##fleven? 3.))
++(test-eqv #f (##fleven? -3.))
+ 
+-(test-eqv #t (fleven? -0.0))
+-(test-eqv #t (fleven? 0.0))
+-(test-eqv #t (fleven? 2.0))
+-(test-eqv #t (fleven? -2.0))
+-(test-eqv #f (fleven? 3.0))
+-(test-eqv #f (fleven? -3.0))
++(test-eqv #t (fleven? -0.))
++(test-eqv #t (fleven? 0.))
++(test-eqv #t (fleven? 2.))
++(test-eqv #t (fleven? -2.))
++(test-eqv #f (fleven? 3.))
++(test-eqv #f (fleven? -3.))
+ 
+ (test-error-tail wrong-number-of-arguments-exception? (fleven?))
+-(test-error-tail wrong-number-of-arguments-exception? (fleven? 1.0 2.0))
++(test-error-tail wrong-number-of-arguments-exception? (fleven? 1. 2.))
+ 
+ (test-error-tail type-exception? (fleven? 1))
+ (test-error-tail type-exception? (fleven? 1/2))
+diff --git a/tests/unit-tests/02-flonum/flfinitep.scm b/tests/unit-tests/02-flonum/flfinitep.scm
+index 3c395e79..106a50d5 100644
+--- a/tests/unit-tests/02-flonum/flfinitep.scm
++++ b/tests/unit-tests/02-flonum/flfinitep.scm
+@@ -2,20 +2,20 @@
+ 
+ (test-eqv #f (##flfinite? +inf.0))
+ (test-eqv #f (##flfinite? -inf.0))
+-(test-eqv #t (##flfinite? -0.0))
+-(test-eqv #t (##flfinite? 0.0))
++(test-eqv #t (##flfinite? -0.))
++(test-eqv #t (##flfinite? 0.))
+ (test-eqv #t (##flfinite? 1.5))
+ (test-eqv #t (##flfinite? -1.5))
+ 
+ (test-eqv #f (flfinite? +inf.0))
+ (test-eqv #f (flfinite? -inf.0))
+-(test-eqv #t (flfinite? -0.0))
+-(test-eqv #t (flfinite? 0.0))
++(test-eqv #t (flfinite? -0.))
++(test-eqv #t (flfinite? 0.))
+ (test-eqv #t (flfinite? 1.5))
+ (test-eqv #t (flfinite? -1.5))
+ 
+ (test-error-tail wrong-number-of-arguments-exception? (flfinite?))
+-(test-error-tail wrong-number-of-arguments-exception? (flfinite? 1.0 2.0))
++(test-error-tail wrong-number-of-arguments-exception? (flfinite? 1. 2.))
+ 
+ (test-error-tail type-exception? (flfinite? 1))
+ (test-error-tail type-exception? (flfinite? 1/2))
+diff --git a/tests/unit-tests/02-flonum/flhypot.scm b/tests/unit-tests/02-flonum/flhypot.scm
+index 99b34d76..9ec836d6 100644
+--- a/tests/unit-tests/02-flonum/flhypot.scm
++++ b/tests/unit-tests/02-flonum/flhypot.scm
+@@ -7,25 +7,13 @@
+ 
+ (test-eqv 5. (##flhypot 3. 4.))
+ 
+-#|
+-
+-C99 rules:
+-
+-If the implementation supports IEEE floating-point arithmetic (IEC 60559),
+-
+-hypot(x, y), hypot(y, x), and hypot(x, -y) are equivalent
+-if one of the arguments is +/-0, hypot is equivalent to fabs called with the non-zero argument
+-if one of the arguments is +/-inf, hypot returns +inf even if the other argument is NaN
+-otherwise, if any of the arguments is NaN, NaN is returned 
+-
+-|#
+ 
+ ;; if one of the arguments is +/-0, hypot is equivalent to fabs called with the non-zero argument
+ 
+-(test-eqv +1. (##flhypot +0. -1.))
+-(test-eqv +0. (##flhypot +0. -0.))
+-(test-eqv +1. (##flhypot -0. -1.))
+-(test-eqv +0. (##flhypot -0. -0.))
++(test-eqv 1. (##flhypot 0. -1.))
++(test-eqv 0. (##flhypot 0. -0.))
++(test-eqv 1. (##flhypot -0. -1.))
++(test-eqv 0. (##flhypot -0. -0.))
+ 
+ ;; if one of the arguments is +/-inf, hypot returns +inf even if the other argument is NaN
+ 
+@@ -48,10 +36,10 @@ otherwise, if any of the arguments is NaN, NaN is returned
+ 
+ ;; if one of the arguments is +/-0, hypot is equivalent to fabs called with the non-zero argument
+ 
+-(test-eqv +1. (flhypot +0. -1.))
+-(test-eqv +0. (flhypot +0. -0.))
+-(test-eqv +1. (flhypot -0. -1.))
+-(test-eqv +0. (flhypot -0. -0.))
++(test-eqv 1. (flhypot 0. -1.))
++(test-eqv 0. (flhypot 0. -0.))
++(test-eqv 1. (flhypot -0. -1.))
++(test-eqv 0. (flhypot -0. -0.))
+ 
+ ;; if one of the arguments is +/-inf, hypot returns +inf even if the other argument is NaN
+ 
+@@ -70,8 +58,8 @@ otherwise, if any of the arguments is NaN, NaN is returned
+ (test-assert (flnan? (flhypot 1. +nan.0)))
+ 
+ (test-error-tail wrong-number-of-arguments-exception? (flhypot))
+-(test-error-tail wrong-number-of-arguments-exception? (flhypot 1.0))
+-(test-error-tail wrong-number-of-arguments-exception? (flhypot 1.0 2.0 3.0))
++(test-error-tail wrong-number-of-arguments-exception? (flhypot 1.))
++(test-error-tail wrong-number-of-arguments-exception? (flhypot 1. 2. 3.))
+ 
+-(test-error-tail type-exception? (flhypot 1 2.0))
+-(test-error-tail type-exception? (flhypot 1.0 2))
++(test-error-tail type-exception? (flhypot 1 2.))
++(test-error-tail type-exception? (flhypot 1. 2))
+diff --git a/tests/unit-tests/02-flonum/flinfinitep.scm b/tests/unit-tests/02-flonum/flinfinitep.scm
+index e535a645..0d6e1fa2 100644
+--- a/tests/unit-tests/02-flonum/flinfinitep.scm
++++ b/tests/unit-tests/02-flonum/flinfinitep.scm
+@@ -2,20 +2,20 @@
+ 
+ (test-eqv #t (##flinfinite? +inf.0))
+ (test-eqv #t (##flinfinite? -inf.0))
+-(test-eqv #f (##flinfinite? -0.0))
+-(test-eqv #f (##flinfinite? 0.0))
++(test-eqv #f (##flinfinite? -0.))
++(test-eqv #f (##flinfinite? 0.))
+ (test-eqv #f (##flinfinite? 1.5))
+ (test-eqv #f (##flinfinite? -1.5))
+ 
+ (test-eqv #t (flinfinite? +inf.0))
+ (test-eqv #t (flinfinite? -inf.0))
+-(test-eqv #f (flinfinite? -0.0))
+-(test-eqv #f (flinfinite? 0.0))
++(test-eqv #f (flinfinite? -0.))
++(test-eqv #f (flinfinite? 0.))
+ (test-eqv #f (flinfinite? 1.5))
+ (test-eqv #f (flinfinite? -1.5))
+ 
+ (test-error-tail wrong-number-of-arguments-exception? (flinfinite?))
+-(test-error-tail wrong-number-of-arguments-exception? (flinfinite? 1.0 2.0))
++(test-error-tail wrong-number-of-arguments-exception? (flinfinite? 1. 2.))
+ 
+ (test-error-tail type-exception? (flinfinite? 1))
+ (test-error-tail type-exception? (flinfinite? 1/2))
+diff --git a/tests/unit-tests/02-flonum/flintegerp.scm b/tests/unit-tests/02-flonum/flintegerp.scm
+index 4e8f293c..93a60263 100644
+--- a/tests/unit-tests/02-flonum/flintegerp.scm
++++ b/tests/unit-tests/02-flonum/flintegerp.scm
+@@ -2,20 +2,20 @@
+ 
+ (test-eqv #f (##flinteger? +inf.0))
+ (test-eqv #f (##flinteger? -inf.0))
+-(test-eqv #t (##flinteger? -0.0))
+-(test-eqv #t (##flinteger? 0.0))
++(test-eqv #t (##flinteger? -0.))
++(test-eqv #t (##flinteger? 0.))
+ (test-eqv #f (##flinteger? 1.5))
+ (test-eqv #f (##flinteger? -1.5))
+ 
+ (test-eqv #f (flinteger? +inf.0))
+ (test-eqv #f (flinteger? -inf.0))
+-(test-eqv #t (flinteger? -0.0))
+-(test-eqv #t (flinteger? 0.0))
++(test-eqv #t (flinteger? -0.))
++(test-eqv #t (flinteger? 0.))
+ (test-eqv #f (flinteger? 1.5))
+ (test-eqv #f (flinteger? -1.5))
+ 
+ (test-error-tail wrong-number-of-arguments-exception? (flinteger?))
+-(test-error-tail wrong-number-of-arguments-exception? (flinteger? 1.0 2.0))
++(test-error-tail wrong-number-of-arguments-exception? (flinteger? 1. 2.))
+ 
+ (test-error-tail type-exception? (flinteger? 1))
+ (test-error-tail type-exception? (flinteger? 1/2))
+diff --git a/tests/unit-tests/02-flonum/flmax.scm b/tests/unit-tests/02-flonum/flmax.scm
+index a57e2c3f..4bc53700 100644
+--- a/tests/unit-tests/02-flonum/flmax.scm
++++ b/tests/unit-tests/02-flonum/flmax.scm
+@@ -1,21 +1,21 @@
+ (include "#.scm")
+ 
+ (test-eqv +inf.0 (##flmax +inf.0 -inf.0))
+-(test-eqv 0.0    (##flmax -0.0 0.0))
+-(test-eqv 0.0    (##flmax 0.0))
+-(test-eqv 1.5    (##flmax 0.0 1.5))
+-(test-eqv 2.0    (##flmax 2.0 -1.5 0.5))
+-(test-eqv 2.0    (##flmax -3.0 2.0 1.5))
++(test-eqv 0. (##flmax -0. 0.))
++(test-eqv 0. (##flmax 0.))
++(test-eqv 1.5 (##flmax 0. 1.5))
++(test-eqv 2. (##flmax 2. -1.5 .5))
++(test-eqv 2. (##flmax -3. 2. 1.5))
+ 
+ (test-eqv +inf.0 (flmax +inf.0 -inf.0))
+-(test-eqv 0.0    (flmax -0.0 0.0))
+-(test-eqv 0.0    (flmax 0.0))
+-(test-eqv 1.5    (flmax 0.0 1.5))
+-(test-eqv 2.0    (flmax 2.0 -1.5 0.5))
+-(test-eqv 2.0    (flmax -3.0 2.0 1.5))
++(test-eqv 0. (flmax -0. 0.))
++(test-eqv 0. (flmax 0.))
++(test-eqv 1.5 (flmax 0. 1.5))
++(test-eqv 2. (flmax 2. -1.5 .5))
++(test-eqv 2. (flmax -3. 2. 1.5))
+ 
+ (test-error-tail wrong-number-of-arguments-exception? (flmax))
+ 
+-(test-error-tail type-exception? (flmax 1 1.0))
+-(test-error-tail type-exception? (flmax 1.0 1))
++(test-error-tail type-exception? (flmax 1 1.))
++(test-error-tail type-exception? (flmax 1. 1))
+ (test-error-tail type-exception? (flmax 1/2))
+diff --git a/tests/unit-tests/02-flonum/flmin.scm b/tests/unit-tests/02-flonum/flmin.scm
+index ac2656bc..4d150e22 100644
+--- a/tests/unit-tests/02-flonum/flmin.scm
++++ b/tests/unit-tests/02-flonum/flmin.scm
+@@ -1,21 +1,21 @@
+ (include "#.scm")
+ 
+ (test-eqv -inf.0 (##flmin +inf.0 -inf.0))
+-(test-eqv  0.0   (##flmin -0.0 0.0))
+-(test-eqv  0.0   (##flmin 0.0))
+-(test-eqv  0.0   (##flmin 0.0 1.5))
+-(test-eqv -1.5   (##flmin 2.0 -1.5 0.5))
+-(test-eqv -3.0   (##flmin -3.0 2.0 1.5))
++(test-eqv 0. (##flmin -0. 0.))
++(test-eqv 0. (##flmin 0.))
++(test-eqv 0. (##flmin 0. 1.5))
++(test-eqv -1.5 (##flmin 2. -1.5 .5))
++(test-eqv -3. (##flmin -3. 2. 1.5))
+ 
+ (test-eqv -inf.0 (flmin +inf.0 -inf.0))
+-(test-eqv  0.0   (flmin -0.0 0.0))
+-(test-eqv  0.0   (flmin 0.0))
+-(test-eqv  0.0   (flmin 0.0 1.5))
+-(test-eqv -1.5   (flmin 2.0 -1.5 0.5))
+-(test-eqv -3.0   (flmin -3.0 2.0 1.5))
++(test-eqv 0. (flmin -0. 0.))
++(test-eqv 0. (flmin 0.))
++(test-eqv 0. (flmin 0. 1.5))
++(test-eqv -1.5 (flmin 2. -1.5 .5))
++(test-eqv -3. (flmin -3. 2. 1.5))
+ 
+ (test-error-tail wrong-number-of-arguments-exception? (flmin))
+ 
+-(test-error-tail type-exception? (flmin 1 1.0))
+-(test-error-tail type-exception? (flmin 1.0 1))
++(test-error-tail type-exception? (flmin 1 1.))
++(test-error-tail type-exception? (flmin 1. 1))
+ (test-error-tail type-exception? (flmin 1/2))
+diff --git a/tests/unit-tests/02-flonum/flmul.scm b/tests/unit-tests/02-flonum/flmul.scm
+index 35db4ef1..fdac22d6 100644
+--- a/tests/unit-tests/02-flonum/flmul.scm
++++ b/tests/unit-tests/02-flonum/flmul.scm
+@@ -1,30 +1,30 @@
+ (include "#.scm")
+ 
+-(test-eqv  0.1875 (##fl*  0.25  0.75))
+-(test-eqv -0.0625 (##fl*  0.25 -0.25))
+-(test-eqv -0.1875 (##fl*  0.25 -0.75))
+-(test-eqv -0.1875 (##fl* -0.25  0.75))
++(test-eqv .1875 (##fl* .25 .75))
++(test-eqv -.0625 (##fl* .25 -.25))
++(test-eqv -.1875 (##fl* .25 -.75))
++(test-eqv -.1875 (##fl* -.25 .75))
+ 
+-(test-eqv 1.0    (##fl*))
+-(test-eqv 0.25   (##fl* 0.25))
+-(test-eqv 0.5    (##fl* 0.25 2.0))
+-(test-eqv 0.25   (##fl* 0.25 2.0 0.5))
+-(test-eqv 0.1875 (##fl* 0.25 2.0 0.5 0.75))
++(test-eqv 1. (##fl*))
++(test-eqv .25 (##fl* .25))
++(test-eqv .5 (##fl* .25 2.))
++(test-eqv .25 (##fl* .25 2. .5))
++(test-eqv .1875 (##fl* .25 2. .5 .75))
+ 
+-(test-eqv  0.1875 (fl*  0.25  0.75))
+-(test-eqv -0.0625 (fl*  0.25 -0.25))
+-(test-eqv -0.1875 (fl*  0.25 -0.75))
+-(test-eqv -0.1875 (fl* -0.25  0.75))
++(test-eqv .1875 (fl* .25 .75))
++(test-eqv -.0625 (fl* .25 -.25))
++(test-eqv -.1875 (fl* .25 -.75))
++(test-eqv -.1875 (fl* -.25 .75))
+ 
+-(test-eqv 1.0    (fl*))
+-(test-eqv 0.25   (fl* 0.25))
+-(test-eqv 0.5    (fl* 0.25 2.0))
+-(test-eqv 0.25   (fl* 0.25 2.0 0.5))
+-(test-eqv 0.1875 (fl* 0.25 2.0 0.5 0.75))
++(test-eqv 1. (fl*))
++(test-eqv .25 (fl* .25))
++(test-eqv .5 (fl* .25 2.))
++(test-eqv .25 (fl* .25 2. .5))
++(test-eqv .1875 (fl* .25 2. .5 .75))
+ 
+ (test-error-tail type-exception? (fl* 1))
+ (test-error-tail type-exception? (fl* 1 4.2))
+-(test-error-tail type-exception? (fl* 0.5 9))
+-(test-error-tail type-exception? (fl* 9 0.5 4.2))
+-(test-error-tail type-exception? (fl* 0.5 9 4.2))
+-(test-error-tail type-exception? (fl* 0.5 4.2 9))
++(test-error-tail type-exception? (fl* .5 9))
++(test-error-tail type-exception? (fl* 9 .5 4.2))
++(test-error-tail type-exception? (fl* .5 9 4.2))
++(test-error-tail type-exception? (fl* .5 4.2 9))
+diff --git a/tests/unit-tests/02-flonum/flnegativep.scm b/tests/unit-tests/02-flonum/flnegativep.scm
+index 7d494c49..07e5af18 100644
+--- a/tests/unit-tests/02-flonum/flnegativep.scm
++++ b/tests/unit-tests/02-flonum/flnegativep.scm
+@@ -2,20 +2,20 @@
+ 
+ (test-eqv #t (##flnegative? -inf.0))
+ (test-eqv #f (##flnegative? +inf.0))
+-(test-eqv #f (##flnegative? 0.0))
+-(test-eqv #f (##flnegative? -0.0))
+-(test-eqv #t (##flnegative? -1.0))
+-(test-eqv #f (##flnegative? 1.0))
++(test-eqv #f (##flnegative? 0.))
++(test-eqv #f (##flnegative? -0.))
++(test-eqv #t (##flnegative? -1.))
++(test-eqv #f (##flnegative? 1.))
+ 
+ (test-eqv #t (flnegative? -inf.0))
+ (test-eqv #f (flnegative? +inf.0))
+-(test-eqv #f (flnegative? 0.0))
+-(test-eqv #f (flnegative? -0.0))
+-(test-eqv #t (flnegative? -1.0))
+-(test-eqv #f (flnegative? 1.0))
++(test-eqv #f (flnegative? 0.))
++(test-eqv #f (flnegative? -0.))
++(test-eqv #t (flnegative? -1.))
++(test-eqv #f (flnegative? 1.))
+ 
+ (test-error-tail wrong-number-of-arguments-exception? (flnegative?))
+-(test-error-tail wrong-number-of-arguments-exception? (flnegative? 1.0 2.0))
++(test-error-tail wrong-number-of-arguments-exception? (flnegative? 1. 2.))
+ 
+ (test-error-tail type-exception? (flnegative? 1))
+ (test-error-tail type-exception? (flnegative? 1/2))
+diff --git a/tests/unit-tests/02-flonum/flnumerator.scm b/tests/unit-tests/02-flonum/flnumerator.scm
+index dff632b0..7c48020f 100644
+--- a/tests/unit-tests/02-flonum/flnumerator.scm
++++ b/tests/unit-tests/02-flonum/flnumerator.scm
+@@ -1,23 +1,23 @@
+ (include "#.scm")
+ 
+-(test-eqv  0.0 (##flnumerator  0.0))
+-(test-eqv -0.0 (##flnumerator -0.0))
+-(test-eqv  1.0 (##flnumerator  0.5))
+-(test-eqv  1.0 (##flnumerator  1.0))
+-(test-eqv  3.0 (##flnumerator  1.5))
+-(test-eqv  7.0 (##flnumerator  3.5))
+-(test-eqv  5.0 (##flnumerator  5.0))
++(test-eqv 0. (##flnumerator 0.))
++(test-eqv -0. (##flnumerator -0.))
++(test-eqv 1. (##flnumerator .5))
++(test-eqv 1. (##flnumerator 1.))
++(test-eqv 3. (##flnumerator 1.5))
++(test-eqv 7. (##flnumerator 3.5))
++(test-eqv 5. (##flnumerator 5.))
+ 
+-(test-eqv  0.0 (flnumerator  0.0))
+-(test-eqv -0.0 (flnumerator -0.0))
+-(test-eqv  1.0 (flnumerator  0.5))
+-(test-eqv  1.0 (flnumerator  1.0))
+-(test-eqv  3.0 (flnumerator  1.5))
+-(test-eqv  7.0 (flnumerator  3.5))
+-(test-eqv  5.0 (flnumerator  5.0))
++(test-eqv 0. (flnumerator 0.))
++(test-eqv -0. (flnumerator -0.))
++(test-eqv 1. (flnumerator .5))
++(test-eqv 1. (flnumerator 1.))
++(test-eqv 3. (flnumerator 1.5))
++(test-eqv 7. (flnumerator 3.5))
++(test-eqv 5. (flnumerator 5.))
+ 
+ (test-error-tail wrong-number-of-arguments-exception? (flnumerator))
+-(test-error-tail wrong-number-of-arguments-exception? (flnumerator 1.0 2.0))
++(test-error-tail wrong-number-of-arguments-exception? (flnumerator 1. 2.))
+ 
+ (test-error-tail type-exception? (flnumerator 1))
+ (test-error-tail type-exception? (flnumerator 1/2))
+diff --git a/tests/unit-tests/02-flonum/floddp.scm b/tests/unit-tests/02-flonum/floddp.scm
+index e1cc4f25..150ca029 100644
+--- a/tests/unit-tests/02-flonum/floddp.scm
++++ b/tests/unit-tests/02-flonum/floddp.scm
+@@ -2,24 +2,24 @@
+ 
+ (test-eqv #f (##flodd? +inf.0))
+ (test-eqv #f (##flodd? -inf.0))
+-(test-eqv #f (##flodd? -0.0))
+-(test-eqv #f (##flodd? 0.0))
++(test-eqv #f (##flodd? -0.))
++(test-eqv #f (##flodd? 0.))
+ (test-eqv #f (##flodd? 1.5))
+ (test-eqv #f (##flodd? -1.5))
+-(test-eqv #f (##flodd? 2.0))
+-(test-eqv #f (##flodd? -2.0))
+-(test-eqv #t (##flodd? 3.0))
+-(test-eqv #t (##flodd? -3.0))
++(test-eqv #f (##flodd? 2.))
++(test-eqv #f (##flodd? -2.))
++(test-eqv #t (##flodd? 3.))
++(test-eqv #t (##flodd? -3.))
+ 
+-(test-eqv #f (flodd? -0.0))
+-(test-eqv #f (flodd? 0.0))
+-(test-eqv #f (flodd? 2.0))
+-(test-eqv #f (flodd? -2.0))
+-(test-eqv #t (flodd? 3.0))
+-(test-eqv #t (flodd? -3.0))
++(test-eqv #f (flodd? -0.))
++(test-eqv #f (flodd? 0.))
++(test-eqv #f (flodd? 2.))
++(test-eqv #f (flodd? -2.))
++(test-eqv #t (flodd? 3.))
++(test-eqv #t (flodd? -3.))
+ 
+ (test-error-tail wrong-number-of-arguments-exception? (flodd?))
+-(test-error-tail wrong-number-of-arguments-exception? (flodd? 1.0 2.0))
++(test-error-tail wrong-number-of-arguments-exception? (flodd? 1. 2.))
+ 
+ (test-error-tail type-exception? (flodd? 1))
+ (test-error-tail type-exception? (flodd? 1/2))
+diff --git a/tests/unit-tests/02-flonum/flonump.scm b/tests/unit-tests/02-flonum/flonump.scm
+index b82fa304..e92ed4fc 100644
+--- a/tests/unit-tests/02-flonum/flonump.scm
++++ b/tests/unit-tests/02-flonum/flonump.scm
+@@ -2,7 +2,7 @@
+ 
+ 
+ (test-eqv #f (##flonum? 0))
+-(test-eqv #t (##flonum? 0.5))
++(test-eqv #t (##flonum? .5))
+ (test-eqv #f (##flonum? 1+2i))
+ 
+ (test-eqv #t (##flonum? +inf.0))
+@@ -28,7 +28,7 @@
+ 
+ 
+ (test-eqv #f (flonum? 0))
+-(test-eqv #t (flonum? 0.5))
++(test-eqv #t (flonum? .5))
+ (test-eqv #f (flonum? 1+2i))
+ 
+ (test-eqv #t (flonum? +inf.0))
+@@ -53,4 +53,4 @@
+ (test-eqv #f (flonum? (box 1)))
+ 
+ (test-error-tail wrong-number-of-arguments-exception? (flonum?))
+-(test-error-tail wrong-number-of-arguments-exception? (flonum? 1.0 2.0))
++(test-error-tail wrong-number-of-arguments-exception? (flonum? 1. 2.))
+diff --git a/tests/unit-tests/02-flonum/flpositivep.scm b/tests/unit-tests/02-flonum/flpositivep.scm
+index 521265cb..56ec9186 100644
+--- a/tests/unit-tests/02-flonum/flpositivep.scm
++++ b/tests/unit-tests/02-flonum/flpositivep.scm
+@@ -2,20 +2,20 @@
+ 
+ (test-eqv #t (##flpositive? +inf.0))
+ (test-eqv #f (##flpositive? -inf.0))
+-(test-eqv #f (##flpositive? -0.0))
+-(test-eqv #f (##flpositive? 0.0))
+-(test-eqv #t (##flpositive? 1.0))
+-(test-eqv #f (##flpositive? -1.0))
++(test-eqv #f (##flpositive? -0.))
++(test-eqv #f (##flpositive? 0.))
++(test-eqv #t (##flpositive? 1.))
++(test-eqv #f (##flpositive? -1.))
+ 
+ (test-eqv #t (flpositive? +inf.0))
+ (test-eqv #f (flpositive? -inf.0))
+-(test-eqv #f (flpositive? -0.0))
+-(test-eqv #f (flpositive? 0.0))
+-(test-eqv #t (flpositive? 1.0))
+-(test-eqv #f (flpositive? -1.0))
++(test-eqv #f (flpositive? -0.))
++(test-eqv #f (flpositive? 0.))
++(test-eqv #t (flpositive? 1.))
++(test-eqv #f (flpositive? -1.))
+ 
+ (test-error-tail wrong-number-of-arguments-exception? (flpositive?))
+-(test-error-tail wrong-number-of-arguments-exception? (flpositive? 1.0 2.0))
++(test-error-tail wrong-number-of-arguments-exception? (flpositive? 1. 2.))
+ 
+ (test-error-tail type-exception? (flpositive? 1))
+ (test-error-tail type-exception? (flpositive? 1/2))
+diff --git a/tests/unit-tests/02-flonum/flsin.scm b/tests/unit-tests/02-flonum/flsin.scm
+index 67593398..071fdb09 100644
+--- a/tests/unit-tests/02-flonum/flsin.scm
++++ b/tests/unit-tests/02-flonum/flsin.scm
+@@ -1,21 +1,21 @@
+ (include "#.scm")
+ 
+-(test-approximate -0.8414709848078965 (##flsin -1.0) 1e-12)
+-(test-approximate -0.479425538604203 (##flsin -0.5) 1e-12)
+-(test-approximate -0.0 (##flsin -0.0) 1e-12)
+-(test-approximate 0.0 (##flsin 0.0) 1e-12)
+-(test-approximate 0.479425538604203 (##flsin 0.5) 1e-12)
+-(test-approximate 0.8414709848078965 (##flsin 1.0) 1e-12)
++(test-approximate -.8414709848078965 (##flsin -1.) 1e-12)
++(test-approximate -.479425538604203 (##flsin -.5) 1e-12)
++(test-approximate -0. (##flsin -0.) 1e-12)
++(test-approximate 0. (##flsin 0.) 1e-12)
++(test-approximate .479425538604203 (##flsin .5) 1e-12)
++(test-approximate .8414709848078965 (##flsin 1.) 1e-12)
+ 
+-(test-approximate -0.8414709848078965 (flsin -1.0) 1e-12)
+-(test-approximate -0.479425538604203 (flsin -0.5) 1e-12)
+-(test-approximate -0.0 (flsin -0.0) 1e-12)
+-(test-approximate 0.0 (flsin 0.0) 1e-12)
+-(test-approximate 0.479425538604203 (flsin 0.5) 1e-12)
+-(test-approximate 0.8414709848078965 (flsin 1.0) 1e-12)
++(test-approximate -.8414709848078965 (flsin -1.) 1e-12)
++(test-approximate -.479425538604203 (flsin -.5) 1e-12)
++(test-approximate -0. (flsin -0.) 1e-12)
++(test-approximate 0. (flsin 0.) 1e-12)
++(test-approximate .479425538604203 (flsin .5) 1e-12)
++(test-approximate .8414709848078965 (flsin 1.) 1e-12)
+ 
+ (test-error-tail wrong-number-of-arguments-exception? (flsin))
+-(test-error-tail wrong-number-of-arguments-exception? (flsin 1.0 2.0 3.0))
++(test-error-tail wrong-number-of-arguments-exception? (flsin 1. 2. 3.))
+ 
+ (test-error-tail type-exception? (flsin 0))
+ (test-error-tail type-exception? (flsin 1/2))
+diff --git a/tests/unit-tests/02-flonum/flsinh.scm b/tests/unit-tests/02-flonum/flsinh.scm
+index ffbccf95..c0b14508 100644
+--- a/tests/unit-tests/02-flonum/flsinh.scm
++++ b/tests/unit-tests/02-flonum/flsinh.scm
+@@ -1,15 +1,15 @@
+ (include "#.scm")
+ 
+-(test-approximate 0.0 (##flsinh 0.) 1e-12)
+-(test-approximate 0.5210953054937474 (##flsinh 0.5) 1e-12)
+-(test-approximate -0.5210953054937474 (##flsinh -0.5) 1e-12)
++(test-approximate 0. (##flsinh 0.) 1e-12)
++(test-approximate .5210953054937474 (##flsinh .5) 1e-12)
++(test-approximate -.5210953054937474 (##flsinh -.5) 1e-12)
+ 
+-(test-approximate 0.0 (flsinh 0.) 1e-12)
+-(test-approximate 0.5210953054937474 (flsinh 0.5) 1e-12)
+-(test-approximate -0.5210953054937474 (flsinh -0.5) 1e-12)
++(test-approximate 0. (flsinh 0.) 1e-12)
++(test-approximate .5210953054937474 (flsinh .5) 1e-12)
++(test-approximate -.5210953054937474 (flsinh -.5) 1e-12)
+ 
+ (test-error-tail wrong-number-of-arguments-exception? (flsinh))
+-(test-error-tail wrong-number-of-arguments-exception? (flsinh 1.0 2.0 3.0))
++(test-error-tail wrong-number-of-arguments-exception? (flsinh 1. 2. 3.))
+ 
+ (test-error-tail type-exception? (flsinh 0))
+ (test-error-tail type-exception? (flsinh 1/2))
+diff --git a/tests/unit-tests/02-flonum/flsub.scm b/tests/unit-tests/02-flonum/flsub.scm
+index 28f07e83..1dd72601 100644
+--- a/tests/unit-tests/02-flonum/flsub.scm
++++ b/tests/unit-tests/02-flonum/flsub.scm
+@@ -1,28 +1,28 @@
+ (include "#.scm")
+ 
+-(test-eqv -2.5   (##fl- 1.0 3.5))
+-(test-eqv  2.0   (##fl- 1.0 -1.0))
+-(test-eqv +inf.0 (##fl- 1.0 -inf.0))
+-(test-eqv -inf.0 (##fl- 1.0 +inf.0))
+-(test-eqv -1.0   (##fl- 1.0))
+-(test-eqv -1.5   (##fl- 1.0 2.5))
+-(test-eqv -4.5   (##fl- 1.0 2.5 3.0))
+-(test-eqv -9.0   (##fl- 1.0 2.5 3.0 4.5))
++(test-eqv -2.5 (##fl- 1. 3.5))
++(test-eqv 2. (##fl- 1. -1.))
++(test-eqv +inf.0 (##fl- 1. -inf.0))
++(test-eqv -inf.0 (##fl- 1. +inf.0))
++(test-eqv -1. (##fl- 1.))
++(test-eqv -1.5 (##fl- 1. 2.5))
++(test-eqv -4.5 (##fl- 1. 2.5 3.))
++(test-eqv -9. (##fl- 1. 2.5 3. 4.5))
+ 
+-(test-eqv -2.5   (fl- 1.0 3.5))
+-(test-eqv  2.0   (fl- 1.0 -1.0))
+-(test-eqv +inf.0 (fl- 1.0 -inf.0))
+-(test-eqv -inf.0 (fl- 1.0 +inf.0))
+-(test-eqv -1.0   (fl- 1.0))
+-(test-eqv -1.5   (fl- 1.0 2.5))
+-(test-eqv -4.5   (fl- 1.0 2.5 3.0))
+-(test-eqv -9.0   (fl- 1.0 2.5 3.0 4.5))
++(test-eqv -2.5 (fl- 1. 3.5))
++(test-eqv 2. (fl- 1. -1.))
++(test-eqv +inf.0 (fl- 1. -inf.0))
++(test-eqv -inf.0 (fl- 1. +inf.0))
++(test-eqv -1. (fl- 1.))
++(test-eqv -1.5 (fl- 1. 2.5))
++(test-eqv -4.5 (fl- 1. 2.5 3.))
++(test-eqv -9. (fl- 1. 2.5 3. 4.5))
+ 
+ (test-error-tail wrong-number-of-arguments-exception? (fl-))
+ 
+ (test-error-tail type-exception? (fl- 123))
+-(test-error-tail type-exception? (fl- 123 9.0))
+-(test-error-tail type-exception? (fl- 9.0 123))
+-(test-error-tail type-exception? (fl- 123 3.0 9.0))
+-(test-error-tail type-exception? (fl- 3.0 123 9.0))
+-(test-error-tail type-exception? (fl- 3.0 9.0 123))
++(test-error-tail type-exception? (fl- 123 9.))
++(test-error-tail type-exception? (fl- 9. 123))
++(test-error-tail type-exception? (fl- 123 3. 9.))
++(test-error-tail type-exception? (fl- 3. 123 9.))
++(test-error-tail type-exception? (fl- 3. 9. 123))
+diff --git a/tests/unit-tests/02-flonum/fltan.scm b/tests/unit-tests/02-flonum/fltan.scm
+index e3b0618b..2367845c 100644
+--- a/tests/unit-tests/02-flonum/fltan.scm
++++ b/tests/unit-tests/02-flonum/fltan.scm
+@@ -1,21 +1,21 @@
+ (include "#.scm")
+ 
+-(test-approximate -1.557407724654902 (##fltan -1.0) 1e-12)
+-(test-approximate -0.5463024898437905 (##fltan -0.5) 1e-12)
+-(test-approximate -0.0 (##fltan -0.0) 1e-12)
+-(test-approximate 0.0 (##fltan 0.0) 1e-12)
+-(test-approximate 0.5463024898437905 (##fltan 0.5) 1e-12)
+-(test-approximate 1.557407724654902 (##fltan 1.0) 1e-12)
++(test-approximate -1.557407724654902 (##fltan -1.) 1e-12)
++(test-approximate -.5463024898437905 (##fltan -.5) 1e-12)
++(test-approximate -0. (##fltan -0.) 1e-12)
++(test-approximate 0. (##fltan 0.) 1e-12)
++(test-approximate .5463024898437905 (##fltan .5) 1e-12)
++(test-approximate 1.557407724654902 (##fltan 1.) 1e-12)
+ 
+-(test-approximate -1.557407724654902 (fltan -1.0) 1e-12)
+-(test-approximate -0.5463024898437905 (fltan -0.5) 1e-12)
+-(test-approximate -0.0 (fltan -0.0) 1e-12)
+-(test-approximate 0.0 (fltan 0.0) 1e-12)
+-(test-approximate 0.5463024898437905 (fltan 0.5) 1e-12)
+-(test-approximate 1.557407724654902 (fltan 1.0) 1e-12)
++(test-approximate -1.557407724654902 (fltan -1.) 1e-12)
++(test-approximate -.5463024898437905 (fltan -.5) 1e-12)
++(test-approximate -0. (fltan -0.) 1e-12)
++(test-approximate 0. (fltan 0.) 1e-12)
++(test-approximate .5463024898437905 (fltan .5) 1e-12)
++(test-approximate 1.557407724654902 (fltan 1.) 1e-12)
+ 
+ (test-error-tail wrong-number-of-arguments-exception? (fltan))
+-(test-error-tail wrong-number-of-arguments-exception? (fltan 1.0 2.0 3.0))
++(test-error-tail wrong-number-of-arguments-exception? (fltan 1. 2. 3.))
+ 
+ (test-error-tail type-exception? (fltan 0))
+ (test-error-tail type-exception? (fltan 1/2))
+diff --git a/tests/unit-tests/02-flonum/fltanh.scm b/tests/unit-tests/02-flonum/fltanh.scm
+index b2e7b912..4976a455 100644
+--- a/tests/unit-tests/02-flonum/fltanh.scm
++++ b/tests/unit-tests/02-flonum/fltanh.scm
+@@ -1,15 +1,15 @@
+ (include "#.scm")
+ 
+-(test-approximate 0.0 (##fltanh 0.) 1e-12)
+-(test-approximate 0.46211715726000974 (##fltanh 0.5) 1e-12)
+-(test-approximate -0.46211715726000974 (##fltanh -0.5) 1e-12)
++(test-approximate 0. (##fltanh 0.) 1e-12)
++(test-approximate .46211715726000974 (##fltanh .5) 1e-12)
++(test-approximate -.46211715726000974 (##fltanh -.5) 1e-12)
+ 
+-(test-approximate 0.0 (fltanh 0.) 1e-12)
+-(test-approximate 0.46211715726000974 (fltanh 0.5) 1e-12)
+-(test-approximate -0.46211715726000974 (fltanh -0.5) 1e-12)
++(test-approximate 0. (fltanh 0.) 1e-12)
++(test-approximate .46211715726000974 (fltanh .5) 1e-12)
++(test-approximate -.46211715726000974 (fltanh -.5) 1e-12)
+ 
+ (test-error-tail wrong-number-of-arguments-exception? (fltanh))
+-(test-error-tail wrong-number-of-arguments-exception? (fltanh 1.0 2.0 3.0))
++(test-error-tail wrong-number-of-arguments-exception? (fltanh 1. 2. 3.))
+ 
+ (test-error-tail type-exception? (fltanh 0))
+ (test-error-tail type-exception? (fltanh 1/2))
+diff --git a/tests/unit-tests/02-flonum/fltruncate.scm b/tests/unit-tests/02-flonum/fltruncate.scm
+index b7a44278..4077ee09 100644
+--- a/tests/unit-tests/02-flonum/fltruncate.scm
++++ b/tests/unit-tests/02-flonum/fltruncate.scm
+@@ -2,28 +2,28 @@
+ 
+ (test-eqv +inf.0 (##fltruncate +inf.0))
+ (test-eqv -inf.0 (##fltruncate -inf.0))
+-(test-eqv -0.0   (##fltruncate -0.0))
+-(test-eqv  0.0   (##fltruncate 0.0))
+-(test-eqv  1.0   (##fltruncate 1.5))
+-(test-eqv -1.0   (##fltruncate -1.5))
+-(test-eqv  2.0   (##fltruncate 2.12))
+-(test-eqv -2.0   (##fltruncate -2.12))
+-(test-eqv  3.0   (##fltruncate 3.123))
+-(test-eqv -3.0   (##fltruncate -3.123))
++(test-eqv -0. (##fltruncate -0.))
++(test-eqv 0. (##fltruncate 0.))
++(test-eqv 1. (##fltruncate 1.5))
++(test-eqv -1. (##fltruncate -1.5))
++(test-eqv 2. (##fltruncate 2.12))
++(test-eqv -2. (##fltruncate -2.12))
++(test-eqv 3. (##fltruncate 3.123))
++(test-eqv -3. (##fltruncate -3.123))
+ 
+ (test-eqv +inf.0 (fltruncate +inf.0))
+ (test-eqv -inf.0 (fltruncate -inf.0))
+-(test-eqv -0.0   (fltruncate -0.0))
+-(test-eqv  0.0   (fltruncate 0.0))
+-(test-eqv  1.0   (fltruncate 1.5))
+-(test-eqv -1.0   (fltruncate -1.5))
+-(test-eqv  2.0   (fltruncate 2.12))
+-(test-eqv -2.0   (fltruncate -2.12))
+-(test-eqv  3.0   (fltruncate 3.123))
+-(test-eqv -3.0   (fltruncate -3.123))
++(test-eqv -0. (fltruncate -0.))
++(test-eqv 0. (fltruncate 0.))
++(test-eqv 1. (fltruncate 1.5))
++(test-eqv -1. (fltruncate -1.5))
++(test-eqv 2. (fltruncate 2.12))
++(test-eqv -2. (fltruncate -2.12))
++(test-eqv 3. (fltruncate 3.123))
++(test-eqv -3. (fltruncate -3.123))
+ 
+ (test-error-tail wrong-number-of-arguments-exception? (fltruncate))
+-(test-error-tail wrong-number-of-arguments-exception? (fltruncate 1.0 2.0))
++(test-error-tail wrong-number-of-arguments-exception? (fltruncate 1. 2.))
+ 
+ (test-error-tail type-exception? (fltruncate 1))
+ (test-error-tail type-exception? (fltruncate 1/2))
+diff --git a/tests/unit-tests/02-flonum/flzerop.scm b/tests/unit-tests/02-flonum/flzerop.scm
+index 1482b3e6..8943d32c 100644
+--- a/tests/unit-tests/02-flonum/flzerop.scm
++++ b/tests/unit-tests/02-flonum/flzerop.scm
+@@ -1,21 +1,21 @@
+ (include "#.scm")
+ 
+-(test-eqv #t (##flzero? 0.0))
+-(test-eqv #t (##flzero? -0.0))
++(test-eqv #t (##flzero? 0.))
++(test-eqv #t (##flzero? -0.))
+ (test-eqv #f (##flzero? 1.5))
+ (test-eqv #f (##flzero? -1.5))
+ (test-eqv #f (##flzero? +inf.0))
+ (test-eqv #f (##flzero? -inf.0))
+ 
+-(test-eqv #t (flzero? 0.0))
+-(test-eqv #t (flzero? -0.0))
++(test-eqv #t (flzero? 0.))
++(test-eqv #t (flzero? -0.))
+ (test-eqv #f (flzero? 1.5))
+ (test-eqv #f (flzero? -1.5))
+ (test-eqv #f (flzero? +inf.0))
+ (test-eqv #f (flzero? -inf.0))
+ 
+ (test-error-tail wrong-number-of-arguments-exception? (flzero?))
+-(test-error-tail wrong-number-of-arguments-exception? (flzero? 1.0 0.5))
++(test-error-tail wrong-number-of-arguments-exception? (flzero? 1. .5))
+ 
+ (test-error-tail type-exception? (flzero? 1/2))
+ (test-error-tail type-exception? (flzero? 0))
