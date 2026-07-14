@@ -57,17 +57,13 @@
                 (##lambda params
                   body2 ...))))
            ((_ name expander)
-            (##syntax 
-              (##define-top-level-syntax name 
+            (##syntax
+              (##define-top-level-syntax name
                 (##lambda (s)
-                  (##syntax-case s ()
-                    ((_ . args)
-                     (##datum->core-syntax
-                         (##apply expander
-                                  (##syntax->datum (##syntax args)))
-                         (##car (##source-code s))))
-                    (_
-                     (##error "define-macro: ill formed macro call" s)))))))
+                  (##datum->core-syntax
+                    (##apply expander
+                             (##cdr (##syntax->datum s)))
+                    (##car (##source-code s)))))))
            (_
             (##error "ill-formed form : define-macro")))))
     ##syntax-interaction-cte))

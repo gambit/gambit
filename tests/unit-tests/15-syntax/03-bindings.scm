@@ -3,7 +3,12 @@
 (include "./_source-match.scm")
 
 (define (gbt-count gbt)
-  (apply + (map (lambda (e) (length (cdr e))) (##table->list gbt))))
+  (apply +
+    (map (lambda (e)
+           (apply +
+             (map (lambda (se) (length (cdr se)))
+                  (##table->list (cdr e)))))
+         (##table->list gbt))))
 
 ;;;----------------------------------------------------------------------------
 ;;; bindings insertion
@@ -18,7 +23,7 @@
     (let ((lst (table->list (##cte-top-global-binding-table cte))))
       (and (= (length lst) 1)
            (let* ((entry   (car lst))
-                  (binding (car (cdr entry)))
+                  (binding (car (cdr (car (##table->list (cdr entry))))))
                   (name    (car binding))
                   (val     (cdr binding)))
              (check-true
@@ -40,7 +45,7 @@
     (let ((lst (table->list (##cte-top-global-binding-table cte))))
       (and (= (length lst) 1)
            (let* ((entry   (car lst))
-                  (binding (car (cdr entry)))
+                  (binding (car (cdr (car (##table->list (cdr entry))))))
                   (name    (car binding))
                   (val     (cdr binding)))
              (check-true

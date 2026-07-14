@@ -29,8 +29,7 @@
 
 (define (##syntax-case-binding-combine bindings-list)
 
-  (if (or (##not (##list? bindings-list))
-          (and (##list? bindings-list) (##fx= (##length bindings-list) 0)))
+  (if (##not (##pair? bindings-list))
       (error "internal: ill formed bindings (combine bindings)"))
 
   (apply
@@ -44,9 +43,12 @@
         
 
 (define (##syntax-case-binding-lookup bindings id)
-  (let ((r (assoc id (##map ##cdr bindings))))
-    (if r 
-        (##cadr r)
+  (let loop ((bs bindings))
+    (if (##pair? bs)
+        (let ((b (##car bs)))
+          (if (##equal? id (##syntax-case-binding-var b))
+              (##syntax-case-binding-value b)
+              (loop (##cdr bs))))
         (##error "syntax-case: internal not found binding"))))
 
 ;;;----------------------------------------------------------------------------
@@ -218,14 +220,14 @@
              ',condition
              (##list)))
          (and (##list? ,exprs)
-              (##syntax-case-binding-combine 
-                 (##map 
+              (##syntax-case-binding-combine
+                 (##map
                    (lambda (expr)
-                     ,(expand-clause-cond 
-                        literals 
-                        condition 
+                     ,(expand-clause-cond
+                        literals
+                        condition
                         'expr))
-                   (##reverse (##reverse ,exprs)))))))
+                   ,exprs)))))
 
   (define (expand-clause-cond-list literals condition exprs)
     (match-source condition (...)

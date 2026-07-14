@@ -678,7 +678,14 @@
 ;;;
 
 (define (##make-syntax-global-binding-table)
-  (##make-table test: ##equal?))
+  (##make-table test: ##eq?))
+
+(define (##binding-table-sub table sym create?)
+  (or (##table-ref table sym #f)
+      (and create?
+           (let ((sub (##make-table test: ##eq?)))
+             (##table-set! table sym sub)
+             sub))))
 
 (define (##global-binding-table-entry-set entries id binding)
   (let loop ((lst entries) (rev '()))
@@ -712,39 +719,40 @@
         -1)))
 
 (define (##syntax-global-binding-table-set! table key val)
-  (let ((k (##cons (##source-code key) (##id-rep-scope-id key))))
+  (let ((sub (##binding-table-sub table (##source-code key) #t))
+        (sid (##id-rep-scope-id key)))
     (##table-set!
-      table
-      k
-      (##global-binding-table-entry-set (##table-ref table k '())
+      sub
+      sid
+      (##global-binding-table-entry-set (##table-ref sub sid '())
                                         key
                                         val))))
 
 (define (##syntax-global-binding-table-ref table key)
-  (let ((entry (##global-binding-table-entry
-                 (##table-ref table
-                              (##cons (##source-code key) (##id-rep-scope-id key))
-                              '())
-                 key)))
-    (and entry (##cdr entry))))
+  (let ((sub (##binding-table-sub table (##source-code key) #f)))
+    (and sub
+         (let ((entry (##global-binding-table-entry
+                        (##table-ref sub (##id-rep-scope-id key) '())
+                        key)))
+           (and entry (##cdr entry))))))
 
 (define (##syntax-global-binding-table-candidates table id)
-  (let ((sym    (##source-code id))
-        (scopes (##source-scopes id)))
-    (let ((base (##map ##car (##table-ref table (##cons sym -1) '()))))
-      (if (##hash-set-hamt? scopes)
-          (##hash-set-hamt-fold
-            scopes
-            (lambda (acc scp _)
-              (let loop ((entries (##table-ref table
-                                               (##cons sym (scope-id scp))
-                                               '()))
-                         (acc acc))
-                (if (##pair? entries)
-                    (loop (##cdr entries) (##cons (##car (##car entries)) acc))
-                    acc)))
-            base)
-          base))))
+  (let ((sub (##binding-table-sub table (##source-code id) #f)))
+    (if (##not sub)
+        '()
+        (let ((scopes (##source-scopes id))
+              (base   (##map ##car (##table-ref sub -1 '()))))
+          (if (##hash-set-hamt? scopes)
+              (##hash-set-hamt-fold
+                scopes
+                (lambda (acc scp _)
+                  (let loop ((entries (##table-ref sub (scope-id scp) '()))
+                             (acc acc))
+                    (if (##pair? entries)
+                        (loop (##cdr entries) (##cons (##car (##car entries)) acc))
+                        acc)))
+                base)
+              base)))))
 
 ;;; ------------------------------------
 ;;;
