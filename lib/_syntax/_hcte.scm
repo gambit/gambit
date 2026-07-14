@@ -73,6 +73,15 @@
       binding)
     key))
 
+(define-prim&proc (hcte-add-local-binding-with-key! (cte cte)
+                                                    (id identifier)
+                                                    key)
+  (let ((binding (##binding-local key)))
+    (##cte-top-global-binding-table-table-set! (##cte-top-cte cte)
+      (identifier-copy id)
+      binding)
+    key))
+
 (define-prim&proc (hcte-add-new-local-bindings! (cte cte) ids)
   (fold (lambda (id acc) 
           (cons (hcte-add-new-local-binding! cte id)

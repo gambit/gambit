@@ -659,7 +659,10 @@
       (list id cte)))
 
   (define (register-keyword-variable id cte)
-    (list id cte))
+    (let* ((key (##hygiene-environment-add-local-binding-with-key!
+                  cte id (##syntax-source-code id)))
+           (cte (##hygiene-environment-add-variable-cte cte key id)))
+      (list id cte)))
 
   (define (expand-lambda-bindings bindings scp cte)
     ; -> (bindings cte)

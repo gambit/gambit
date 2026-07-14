@@ -41,6 +41,9 @@
 (define (##hygiene-environment-add-new-local-binding! env . args)
   (apply (if (gsc-env? env) henv-add-new-local-binding! hcte-add-new-local-binding!) env args))
 
+(define (##hygiene-environment-add-local-binding-with-key! env . args)
+  (apply (if (gsc-env? env) henv-add-local-binding-with-key! hcte-add-local-binding-with-key!) env args))
+
 (define (##hygiene-environment-add-new-top-level-binding! env . args)
   (apply (if (gsc-env? env) henv-add-new-top-level-binding! hcte-add-new-top-level-binding!) env args))
 

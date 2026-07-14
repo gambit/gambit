@@ -47,9 +47,14 @@
   (##syntax-ctx-ref (env-syntax-ctx-ref cte) key))
 
 
-(define-prim&proc (henv-add-new-local-binding! cte id)  
+(define-prim&proc (henv-add-new-local-binding! cte id)
   (let* ((key     (gensym (##syntax-source-code id)))
          (binding (##binding-local key)))
+    (env-syntax-gbt-gbt-set! cte (##vector-copy id) binding)
+    key))
+
+(define-prim&proc (henv-add-local-binding-with-key! cte id key)
+  (let ((binding (##binding-local key)))
     (env-syntax-gbt-gbt-set! cte (##vector-copy id) binding)
     key))
 
