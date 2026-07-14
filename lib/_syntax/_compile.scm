@@ -283,7 +283,7 @@
              (args (resolve-maybe-local-bindings args cte))
              (body (##compile-body stx body cte)))
          `(,define-id ,(syntax-source-code-set binding 
-                                               (cons id args)) ,@body)))
+                                               (##cons id args)) ,@body)))
       ((define-id id expr)
        (let ((id   (resolve-maybe-local-binding id cte))
              (expr (##compile expr cte)))

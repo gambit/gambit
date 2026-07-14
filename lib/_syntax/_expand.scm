@@ -342,7 +342,7 @@
                 (fake-bindings (##syntax-source-code-update bindings 
                                  (lambda (code) (cons fake-binding code))))
                 (fake-expr     (##syntax-source-code-set ,stx-id
-                                `(,(##make-core-syntax-source '##let* #f) ,fake-bindings ,@body))))
+                                `(,(##make-core-syntax-source '##let #f) ,fake-bindings ,@body))))
            (match-source (expand fake-expr ,cte-id) ()
              ((_ ((name _) . bindings) . body)
               (##syntax-source-code-set ,stx-id
