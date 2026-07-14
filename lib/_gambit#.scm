@@ -190,8 +190,9 @@
                (else
                 (err))))))))
 
-(##define-syntax primitive
-  (lambda (src)
+(##define-macro (primitive . %args)
+
+    (define src (cons 'primitive %args))
 
     (define (err)
       (##raise-expression-parsing-exception
@@ -218,10 +219,11 @@
                       (cons (prim name) (cdr arg))
                       (err))))
                (else
-                (err))))))))
+                (err)))))))
 
-(##define-syntax define-procedure
-  (lambda (src)
+(##define-macro (define-procedure . %args)
+
+    (define src (cons 'define-procedure %args))
 
     (define (err)
       (##raise-expression-parsing-exception
@@ -589,7 +591,7 @@
                 ,(gen-definition 'procedure))
               (gen-definition (or prim? 'procedure)))))
 
-    (expand src)))
+    (expand src))
 
 (##define-syntax define-primitive
   (lambda (src)
@@ -866,21 +868,13 @@
           (else
            noforcing))))))
 
-(##define-syntax macro-force-vars
-  (lambda (stx)
-    (syntax-case stx ()
-      ((_ vars expr)
-       (syntax-case (datum->syntax
-                     #'vars
-                     (map (lambda (x) `(,x (##force ,x)))
-                          (syntax->list #'vars)))
-           ()
-         (bindings
-          #'(cond-expand
-             (enable-auto-forcing
-              (let bindings expr))
-             (else
-              expr))))))))
+(##define-macro (macro-force-vars vars expr)
+  `(cond-expand
+     (enable-auto-forcing
+      (let ,(map (lambda (x) (list x (list '##force x))) vars)
+        ,expr))
+     (else
+      ,expr)))
 
 (##define-syntax macro-auto-force
   (lambda (stx)

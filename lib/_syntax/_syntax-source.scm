@@ -229,17 +229,31 @@
 
 (define-prim (##source->syntax-source datum #!optional (stx (macro-absent-obj)))
 
+  (define (##source->syntax-source-elem code)
+    (if (equal? stx (macro-absent-obj))
+        (##source->syntax-source code)
+        (##source->syntax-source code stx)))
+
   (define (##source->syntax-source-pair code)
     (cond
       ((pair? code)
-       (cons (if (equal? stx (macro-absent-obj))
-                 (##source->syntax-source (car code))
-                 (##source->syntax-source (car code) stx))
+       (cons (##source->syntax-source-elem (car code))
              (##source->syntax-source-pair (cdr code))))
       ((null? code)
        code)
       (else
        (##source->syntax-source code))))
+
+  (define (##source->syntax-source-vector code)
+    (let* ((n   (##vector-length code))
+           (new (##make-vector n #f)))
+      (let loop ((i 0))
+        (if (##fx< i n)
+            (begin
+              (##vector-set! new i
+                (##source->syntax-source-elem (##vector-ref code i)))
+              (loop (##fx+ i 1)))
+            new))))
 
   (cond
     ((syntax-source? datum)
@@ -251,6 +265,8 @@
           (cond
             ((pair? code)
              (##source->syntax-source-pair code))
+            ((vector? code)
+             (##source->syntax-source-vector code))
             (else
               code))))
        stx))
@@ -265,7 +281,7 @@
 (define-prim (##syntax-source->source! stx)
 
   (define (pair->datum! code)
-    (cond 
+    (cond
       ((pair? code)
        (##syntax-source->source! (car code))
        (pair->datum! (cdr code)))
@@ -274,13 +290,25 @@
       (else
        (##syntax-source->source! code))))
 
+  (define (vector->datum! code)
+    (let ((n (##vector-length code)))
+      (let loop ((i 0))
+        (if (##fx< i n)
+            (begin
+              (##syntax-source->source! (##vector-ref code i))
+              (loop (##fx+ i 1)))
+            code))))
+
   (cond
     ((##syntax-source? stx)
      (let ((code (##source-code stx)))
-       (cond 
+       (cond
          ((##pair? code)
           (##syntax-source-object->source-object! stx)
           (pair->datum! code))
+         ((##vector? code)
+          (##syntax-source-object->source-object! stx)
+          (vector->datum! code))
          (else
           (##syntax-source-object->source-object! stx)))))
     (else
@@ -292,7 +320,7 @@
 (define-prim (##syntax-source->source stx)
 
   (define (pair->datum code)
-    (cond 
+    (cond
       ((pair? code)
        (cons (##syntax-source->source (car code))
              (pair->datum (cdr code))))
@@ -301,13 +329,29 @@
       (else
        (##syntax-source->source code))))
 
+  (define (vector->datum code)
+    (let* ((n   (##vector-length code))
+           (new (##make-vector n #f)))
+      (let loop ((i 0))
+        (if (##fx< i n)
+            (let ((elem (##vector-ref code i)))
+              (##vector-set! new i
+                (if (##syntax-source? elem)
+                    (##syntax-source->source elem)
+                    elem))
+              (loop (##fx+ i 1)))
+            new))))
+
   (cond
     ((##syntax-source? stx)
      (let ((code (##source-code stx)))
-       (cond 
+       (cond
          ((##pair? code)
           (##syntax-source-object->source-object
             (##syntax-source-code-update stx pair->datum)))
+         ((##vector? code)
+          (##syntax-source-object->source-object
+            (##syntax-source-code-update stx vector->datum)))
          (else
           (##syntax-source-object->source-object stx)))))
     (else
@@ -436,10 +480,19 @@
            ((pair? code)
             (##update-scope! (car code) proc!)
             (loop (cdr code)))
-           ((null? code) 
+           ((null? code)
             #!void)
            (else
             (##update-scope! code proc!)))))
+      ((vector? code)
+       (let ((n (##vector-length code)))
+         (let loop ((i 0))
+           (if (##fx< i n)
+               (let ((elem (##vector-ref code i)))
+                 (if (##syntax-source? elem)
+                     (##update-scope! elem proc!))
+                 (loop (##fx+ i 1)))
+               #!void))))
       ((null? code)
        code)
       (else
@@ -455,12 +508,28 @@
     (else
      (##update-scope code proc))))
 
+(define-prim (##update-scope-vector code proc)
+  (let* ((n   (##vector-length code))
+         (new (##make-vector n #f)))
+    (let loop ((i 0))
+      (if (##fx< i n)
+          (let ((elem (##vector-ref code i)))
+            (##vector-set! new i
+              (if (##syntax-source? elem)
+                  (##update-scope elem proc)
+                  elem))
+            (loop (##fx+ i 1)))
+          new))))
+
 (define-prim (##update-scope stx proc)
   (let ((code (##syntax-source-code stx)))
     (cond
       ((pair? code)
        (##syntax-source-code-set stx
          (##update-scope-pair code proc)))
+      ((vector? code)
+       (##syntax-source-code-set stx
+         (##update-scope-vector code proc)))
       ((null? code)
        stx)
       (else

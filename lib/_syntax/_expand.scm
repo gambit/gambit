@@ -989,6 +989,12 @@
                (lambda (s)
                  (expand-template s level))
                code)))
+          ((##vector? code)
+           (##syntax-source-code-set s
+             (##list->vector
+               (##map (lambda (s)
+                        (expand-template s level))
+                      (##vector->list code)))))
           (else
             s))))
 
@@ -1120,10 +1126,12 @@
           ((condexpr . exprs)
            (cons
              (##expand condexpr cte)
-             (##syntax-source-code
-               (##expand-body 
-                (##syntax-source-code-set clause-src exprs) 
-                cte))))
+             (if (##null? exprs)
+                 exprs
+                 (##syntax-source-code
+                   (##expand-body
+                    (##syntax-source-code-set clause-src exprs)
+                    cte)))))
           (_
            (##raise-ill-formed-special-form stx-src))))))
               
