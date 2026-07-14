@@ -529,12 +529,21 @@
       (let ((cte (##hygiene-environment-process-namespace cte expr)))
         (##expand-body exprs bindings cte)))
 
+    (define (##remove-body-voids forms)
+      (cond ((##not (##pair? forms)) forms)
+            ((##null? (##cdr forms)) forms)
+            ((##eq? (##syntax-source-code (##car forms)) #!void)
+             (##remove-body-voids (##cdr forms)))
+            (else
+             (##cons (##car forms) (##remove-body-voids (##cdr forms))))))
+
     (define (##expand-define-exprs expr exprs cte)
       (let ((body (##syntax-source-code-set body (cons expr exprs))))
-        (##syntax-source-code
-          (##expand-pair/list body cte 
-            (lambda _ 
-              (##raise-ill-formed-special-form body))))))
+        (##remove-body-voids
+          (##syntax-source-code
+            (##expand-pair/list body cte
+              (lambda _
+                (##raise-ill-formed-special-form body)))))))
 
     (cond 
       ((pair? exprs)
@@ -596,19 +605,19 @@
         ((syntax-source? transformed-stx)
          (flip-scope transformed-stx intro-scope))
         (else
-         (##raise-expression-parsing-exception
-           'non-syntax-result
-           (##make-source transformed-stx #f)))))))
+         (flip-scope
+           (##datum->core-syntax (##desourcify transformed-stx))
+           intro-scope))))))
 
 (define-prim (##dispatch t s cte #!optional (no-reexpansion #f))
-  (cond 
+  (cond
     ((##ctx-binding-variable? t)
      s)
     ((##ctx-binding-macro? t)
      (let* ((descr (##ctx-binding-macro-expander t))
             (proc  (##macro-descr-expander descr))) ; TODO reimplement use of gambit descrs
        (let ((transformed-s (##apply-transformer proc s)))
-         (if no-reexpansion 
+         (if no-reexpansion
              (##expand->core-form transformed-s cte)
              (expand transformed-s cte)))))
     ((##ctx-binding-core-macro? t)
@@ -974,7 +983,8 @@
              (##map-pair
                (lambda (s)
                  (expand-template s level))
-               identity
+               (lambda (s)
+                 (expand-template s level))
                code)))
           (else
             s))))
@@ -1136,27 +1146,44 @@
 
 (define-prim (##expand-cond-expand stx-src cte)
 
-  (define (expand-cond-expand-clause clause)
-    (syntax-source-code-update clause
-      (lambda (code)
-        (cons (car code)
-              (##syntax-source-code 
-                (expand-body 
-                  (syntax-source-code-set stx-src (cdr code)) 
-                  cte))))))
+  (define (satisfied? fr)
+    (cond
+      ((##symbol? fr)
+       (and (##member fr (##cond-expand-features)) #t))
+      ((##pair? fr)
+       (let ((head (##car fr)))
+         (cond
+           ((##eq? head 'not)
+            (##not (satisfied? (##car (##cdr fr)))))
+           ((##eq? head 'and)
+            (let loop ((l (##cdr fr)))
+              (or (##null? l)
+                  (and (satisfied? (##car l)) (loop (##cdr l))))))
+           ((##eq? head 'or)
+            (let loop ((l (##cdr fr)))
+              (and (##pair? l)
+                   (or (satisfied? (##car l)) (loop (##cdr l))))))
+           (else #f))))
+      (else #f)))
 
-  (define (expand-cond-expand-clauses clauses)
-    (if (pair? clauses)
-        (cons (expand-cond-expand-clause (car clauses))
-              (cdr clauses))
-        clauses))
+  (define (select clauses)
+    (if (##pair? clauses)
+        (let* ((clause (##syntax-source-code (##car clauses)))
+               (fr     (##desourcify (##car clause))))
+          (if (or (##eq? fr 'else) (satisfied? fr))
+              (##expand
+                (##syntax-source-code-set (##car clauses)
+                  (##cons (##make-core-syntax-source '##begin #f)
+                          (##cdr clause)))
+                cte)
+              (select (##cdr clauses))))
+        (##raise-expression-parsing-exception
+          'unfulfilled-cond-expand
+          stx-src)))
 
   (match-source stx-src ()
     ((cond-expand-id . clauses)
-     (syntax-source-code-update stx-src
-       (lambda (code)
-         (cons (car code)
-               (expand-cond-expand-clauses clauses)))))
+     (select clauses))
     (_
       (##raise-ill-formed-special-form stx-src))))
 

@@ -624,8 +624,8 @@
   ##hash-set-hamt-alist-ref
   ##hash-set-hamt-alist-remove
   #f
-  ##eq? 
-  eq?-hash)
+  ##eq?
+  scope-id)
 
 (implement-hash-set-hamt)
 
@@ -698,23 +698,53 @@
              (##car lst)
              (loop (##cdr lst))))))
 
+;; Representative scope of an identifier: the highest scope-id in its scope set
+;; Bindings with an empty/absent scope set use the -1 sentinel
+(define (##id-rep-scope-id id)
+  (let ((scopes (##source-scopes id)))
+    (if (##hash-set-hamt? scopes)
+        (##hash-set-hamt-fold
+          scopes
+          (lambda (acc scp _)
+            (let ((s (scope-id scp)))
+              (if (##fx> s acc) s acc)))
+          -1)
+        -1)))
+
 (define (##syntax-global-binding-table-set! table key val)
-  (let ((sym (##source-code key)))
+  (let ((k (##cons (##source-code key) (##id-rep-scope-id key))))
     (##table-set!
       table
-      sym
-      (##global-binding-table-entry-set (##table-ref table sym '())
+      k
+      (##global-binding-table-entry-set (##table-ref table k '())
                                         key
                                         val))))
 
 (define (##syntax-global-binding-table-ref table key)
   (let ((entry (##global-binding-table-entry
-                 (##table-ref table (##source-code key) '())
+                 (##table-ref table
+                              (##cons (##source-code key) (##id-rep-scope-id key))
+                              '())
                  key)))
     (and entry (##cdr entry))))
 
 (define (##syntax-global-binding-table-candidates table id)
-  (##map ##car (##table-ref table (##source-code id) '())))
+  (let ((sym    (##source-code id))
+        (scopes (##source-scopes id)))
+    (let ((base (##map ##car (##table-ref table (##cons sym -1) '()))))
+      (if (##hash-set-hamt? scopes)
+          (##hash-set-hamt-fold
+            scopes
+            (lambda (acc scp _)
+              (let loop ((entries (##table-ref table
+                                               (##cons sym (scope-id scp))
+                                               '()))
+                         (acc acc))
+                (if (##pair? entries)
+                    (loop (##cdr entries) (##cons (##car (##car entries)) acc))
+                    acc)))
+            base)
+          base))))
 
 ;;; ------------------------------------
 ;;;

@@ -72,8 +72,9 @@
    (syntax-proc-ctx
      (if env (env-syntax-ctx-ref env)
              (##make-syntax-ctx)))
-   ;; symbol and it's namespace
-   (cons vars #f)
+   ;; symbol and it's namespace.
+   ;; local frames use #f (linear scan)
+   (cons vars (and (not env) (make-table test: eq?)))
    ;; macro definitions
    '()
    ;; declarations
@@ -96,6 +97,8 @@
                         source 
                         #f)))
     (env-vars-set! env (cons var (env-vars-ref env)))
+    (let ((tbl (cdr (vector-ref env 2))))
+      (if tbl (table-set! tbl name var)))
     var))
 
 (define (env-macro env name def #!optional (syntax-proc-ctx identity))
@@ -245,16 +248,22 @@
           (search-vars (env-vars-ref env))))
 
     (define (search-vars vars)
-      (if (pair? vars)
-          (let* ((v (car vars))
-                 (vn (var-name v)))
-            (if (eq? vn name)
-                (proc env name v)
-                (search-vars (cdr vars))))
-          (let ((env* (env-parent-ref env)))
-            (if (or stop-at-first-frame? (not env*))
-                (proc env name #f)
-                (search env* name full?)))))
+      (let ((v (let ((tbl (cdr (vector-ref env 2))))
+                 (if tbl
+                     ;; global frame
+                     (table-ref tbl name #f)
+                     ;; local frame: linear scan
+                     (let scan ((vs vars))
+                       (and (pair? vs)
+                            (if (eq? (var-name (car vs)) name)
+                                (car vs)
+                                (scan (cdr vs)))))))))
+        (if v
+            (proc env name v)
+            (let ((env* (env-parent-ref env)))
+              (if (or stop-at-first-frame? (not env*))
+                  (proc env name #f)
+                  (search env* name full?))))))
 
     (search-macros (env-macros-ref env)))
 

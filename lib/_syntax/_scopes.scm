@@ -16,7 +16,14 @@
 
 (define-type scope
   type-exhibitor: type-scope
-  constructor:    make-scope)
+  constructor:    ##make-scope*
+  id)
+
+(define ##scope-id-counter 0)
+
+(define (make-scope)
+  (set! ##scope-id-counter (##fx+ ##scope-id-counter 1))
+  (##make-scope* ##scope-id-counter))
 
 (define (##fail-check-scope arg-id proc . args)
   (##raise-type-exception

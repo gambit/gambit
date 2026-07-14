@@ -346,6 +346,16 @@
       (else
        (##datum->syntax-aux datum stx))))
 
+  (define (vec->syntax datum)
+    (let* ((len (##vector-length datum))
+           (new (##make-vector len #f)))
+      (let loop ((i 0))
+        (if (##fx< i len)
+            (begin
+              (##vector-set! new i (##datum->syntax-aux (##vector-ref datum i) stx))
+              (loop (##fx+ i 1)))
+            new))))
+
  (cond
    ((syntax-source? datum)
     datum)
@@ -356,6 +366,8 @@
     ; information but, it is usefull for debbuging purposes.
     ; Could interfere with GC by keeping useless scopes in memory.
     (##source-code-set stx (pair->syntax datum)))
+   ((##vector? datum)
+    (##source-code-set stx (vec->syntax datum)))
    (else
     (##source-code-set stx datum)))))
 
@@ -441,7 +453,7 @@
     ((null? code)
      code)
     (else
-     (##syntax-source-scopes-update code proc))))
+     (##update-scope code proc))))
 
 (define-prim (##update-scope stx proc)
   (let ((code (##syntax-source-code stx)))

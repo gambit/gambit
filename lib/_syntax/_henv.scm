@@ -80,21 +80,17 @@
 
 (define-prim&proc (top-henv-add-macro-cte! cte id descr)
                   ; TODO global id
+  ;; A top-level macro is resolved through the ctx HAMT (see henv-ctx-ref), not
+  ;; the frame chain, and c#env-lookup ignores the macro slot -- so we only need
+  ;; to register the binding and record it in the ctx.  We do NOT chain a fresh
+  ;; frame per macro: that added thousands of vars-less frames (one per imported
+  ;; runtime macro) that c#env-lookup then walked on every reference.
   (let ((key (##henv-add-new-top-level-binding! cte id)))
-    (let ((current-parent (env-parent-ref cte)))
-      (let ((inner 
-              (env-macro cte (##source-code id) descr
-                (lambda (ctx)
-                  (##syntax-ctx-set
-                   ctx
-                   key 
-                   (##ctx-binding-macro id descr))))))
-        (env-parent-set! inner current-parent)
-        (env-parent-set! cte inner)
-
-        (env-syntax-ctx-set! cte (env-syntax-ctx-ref inner))
-        (env-syntax-gbt-set! cte (env-syntax-gbt-ref inner))
-        cte))))
+    (env-syntax-ctx-set! cte
+      (##syntax-ctx-set (env-syntax-ctx-ref cte)
+                        key
+                        (##ctx-binding-macro id descr)))
+    cte))
 
 
 (define-prim&proc (henv-add-core-macro-cte cte key id descr)
