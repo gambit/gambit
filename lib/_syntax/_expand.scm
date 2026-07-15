@@ -695,7 +695,7 @@
                       (id    (add-scope (car param) scp))
                       (val   (let ((val (cdr param)))
                                (if (##syntax-source? val)
-                                   (expand val cte)
+                                   (expand (add-scope val scp) cte)
                                    val)))
                       (id+cte (if keyword-arguments?
                                   (register-keyword-variable id cte)
@@ -1111,11 +1111,11 @@
                                  , val
                                  ,@vals)))))
                 (let* ((expanded-val (expand val cte))
-                       (expanded-val (if (null? vals)
-                                         expanded-val
-                                         (##syntax-source-code-update expanded-val cdr))))
+                       (expanded-vals (if (null? vals)
+                                          (list expanded-val)
+                                          (cdr (##syntax-source-code expanded-val)))))
                   (##syntax-source-code-set clause
-                    `(,id ,expanded-val)))))
+                    `(,id ,@expanded-vals)))))
              (_
               (##raise-expression-parsing-exception
                 'ill-formed-selector-list

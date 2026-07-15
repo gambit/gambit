@@ -343,14 +343,12 @@
                                  ,val
                                  ,@vals)))))
                 (let* ((compiled-val (compile val cte))
-                       (compiled-val 
+                       (compiled-vals
                          (if (null? vals)
-                             compiled-val
-                             (##syntax-source-code-update 
-                               compiled-val 
-                               cdr))))
+                             (list compiled-val)
+                             (cdr (##syntax-source-code compiled-val)))))
                   (syntax-source-code-set clause
-                    `(,id ,compiled-val)))))
+                    `(,id ,@compiled-vals)))))
              (_
               (##raise-expression-parsing-exception
                 'ill-formed-selector-list

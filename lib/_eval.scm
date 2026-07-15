@@ -3033,8 +3033,10 @@
                   (reconstruct-valued-parms (cdr orig-parms) optional-parameters)))
            ((equal? (##source-code orig-parm) #!rest)
             (cons orig-parm
-                  (list 
-                    (reconstruct-rest-parm (cdr orig-parms) rest-parameter))))
+                  (cons
+                    (reconstruct-rest-parm (cdr orig-parms) rest-parameter)
+                    (reconstruct-required-parms (cddr orig-parms)
+                                                (list)))))
            ((pair? required-parameters)
             (cons (car required-parameters)
                   (reconstruct-required-parms (cdr orig-parms)
