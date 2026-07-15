@@ -20,6 +20,15 @@
 (define-prim (##binding-top-level-symbol b)
   (##vector-ref b 0))
 
+(define ##hygiene-key->source-name-table (##make-table-aux 0 #f #t #f ##eq?))
+
+(define-prim (##hygiene-record-source-name! key name)
+  (##table-set! ##hygiene-key->source-name-table key name))
+
+(define-prim (##hygiene-source-name key)
+  (and (##symbol? key)
+       (##table-ref ##hygiene-key->source-name-table key #f)))
+
 (define-prim (##binding-local key)
   (##vector key #f))
 

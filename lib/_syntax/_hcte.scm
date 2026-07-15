@@ -66,8 +66,10 @@
 (define-prim&proc (hcte-add-new-local-binding! (cte cte)
                                                (id identifier))
   ; add a new local binding to the global binding table.
-  (let* ((key     (gensym (syntax-source-code id)))
+  (let* ((name    (syntax-source-code id))
+         (key     (gensym name))
          (binding (##binding-local key)))
+    (##hygiene-record-source-name! key name)
     (##cte-top-global-binding-table-table-set! (##cte-top-cte cte)
       (identifier-copy id)
       binding)

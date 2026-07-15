@@ -2875,13 +2875,17 @@
             (queue-put! var-descr-queue descr)
             m))))
 
+  (define (debug-name v)
+    (let ((name (var-name v)))
+      (or (##hygiene-source-name name) name)))
+
   (define (encode slot)
     (let ((v (car slot))
           (i (cdr slot)))
       (+ (* i 32768)
          (if (pair? v)
            (* (add-var-descr! (map encode v)) 2)
-           (+ (* (add-var-descr! (var-name v)) 2)
+           (+ (* (add-var-descr! (debug-name v)) 2)
               (if (var-boxed? v) 1 0))))))
 
   (define (closure-env-slot closure-vars stack-slots)
@@ -2893,7 +2897,7 @@
             (loop (+ i 1)
                   (cdr lst1)
                   lst2)
-            (let ((y (assq (var-name x) stack-slots)))
+            (let ((y (assq (debug-name x) stack-slots)))
               (if (and y (not (eq? x (cadr y))))
                 (begin
                   (if (< (var-lexical-level (cadr y))
@@ -2939,7 +2943,7 @@
                         closure-env
                         closure-env-index))
                 (else
-                 (let* ((name (var-name x))
+                 (let* ((name (debug-name x))
                         (y (assq name lst2)))
                    (if (and y (not (eq? x (cadr y))))
                      (let ((level-x (var-lexical-level x))

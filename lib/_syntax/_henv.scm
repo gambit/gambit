@@ -48,8 +48,10 @@
 
 
 (define-prim&proc (henv-add-new-local-binding! cte id)
-  (let* ((key     (gensym (##syntax-source-code id)))
+  (let* ((name    (##syntax-source-code id))
+         (key     (gensym name))
          (binding (##binding-local key)))
+    (##hygiene-record-source-name! key name)
     (env-syntax-gbt-gbt-set! cte (##vector-copy id) binding)
     key))
 
