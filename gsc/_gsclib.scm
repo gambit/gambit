@@ -18,68 +18,7 @@
 ;;; hygiene
 (set! make-global-environment ;; import runtime macros into compilation env
   (lambda ()
-
-    (define (macro-transformer->syntax-transformer trans)
-      (if (##macro-descr-def-syntax? trans)
-          (##vector-set trans 2
-             (lambda (s)
-               (##datum->core-syntax
-                ((##vector-ref trans 2)
-                 s))))
-          (##vector-set trans 2
-            (lambda (s)
-              (##datum->core-syntax
-                (apply (##vector-ref trans 2) 
-                       (cdr (##syntax->datum s))))))))
-
-    (define (extract-macros cte env)
-      (if (##cte-top? cte)
-          env
-          (let ((parent-cte (##cte-parent-cte cte)))
-            (cond 
-              ((##cte-macro? cte)
-               (extract-macros 
-                 parent-cte
-                 (##top-henv-add-macro-cte!
-                   env 
-                   (##make-core-syntax-source (##cte-macro-name cte) #f)
-                   (macro-transformer->syntax-transformer (##cte-macro-descr cte)))))
-              ((##cte-core-macro? cte)
-               (extract-macros
-                 parent-cte
-                 (##top-henv-add-core-macro-cte!
-                   env 
-                   (##make-core-syntax-source (##cte-macro-name cte) #f)
-                   (##cte-macro-descr cte))))
-              (else
-               (extract-macros parent-cte))))))
-
-    ;; TODO undivise interaction environments
-    (define (extract-macros-syntax cte env)
-      (if (##cte-top? cte)
-          env
-          (let ((parent-cte (##cte-parent-cte cte)))
-            (cond 
-              ((##cte-macro? cte)
-               (extract-macros 
-                 parent-cte
-                 (##top-henv-add-macro-cte!
-                   env 
-                   (##make-core-syntax-source (##cte-macro-name cte) #f)
-                   (##cte-macro-descr cte))))
-              ((##cte-core-macro? cte)
-               (extract-macros
-                 parent-cte
-                 (##top-henv-add-core-macro-cte!
-                   env 
-                   (##make-core-syntax-source (##cte-macro-name cte) #f)
-                   (##cte-macro-descr cte))))
-              (else
-               (extract-macros parent-cte))))))
-    
-    (extract-macros-syntax (##top-cte-cte ##syntax-interaction-cte)
-                           (extract-macros (##top-cte-cte ##interaction-cte)
-                                           (##make-default-global-environment)))))
+    (##henv-import-runtime-macros (##make-default-global-environment))))
 
 ;;;----------------------------------------------------------------------------
 

@@ -61,11 +61,28 @@
               (##define-top-level-syntax name
                 (##lambda (s)
                   (##datum->core-syntax
-                    (##apply expander
-                             (##cdr (##syntax->datum s)))
+                    (##syntax->datum
+                      (##apply expander
+                               (##cdr (##syntax->datum s))))
                     (##car (##source-code s)))))))
            (_
             (##error "ill-formed form : define-macro")))))
+    ##syntax-interaction-cte))
+
+(define-prim (##make-syntax-expander-define-unhygienic-syntax)
+  (##eval-for-syntax-binding
+    (##datum->core-syntax
+      `(##lambda (s)
+         (##syntax-case s ()
+           ((_ name expander)
+            (##syntax
+              (##define-top-level-syntax name
+                (##lambda (s)
+                  (##datum->core-syntax
+                    (##syntax->datum (expander s))
+                    (##car (##source-code s)))))))
+           (_
+            (##error "ill-formed form : define-unhygienic-syntax")))))
     ##syntax-interaction-cte))
 
 ;;;---------------------------------------
@@ -76,7 +93,10 @@
 (##add-new-macro! ##with-syntax 
                   (##make-syntax-expander-with-syntax))
 
-(##add-new-macro! ##define-macro 
+(##add-new-macro! ##define-macro
                   (##make-syntax-expander-define-macro))
+
+(##add-new-macro! ##define-unhygienic-syntax
+                  (##make-syntax-expander-define-unhygienic-syntax))
 
 ;;;============================================================================

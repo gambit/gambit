@@ -122,3 +122,50 @@
 (define-prim&proc (top-henv-process-namespace! cte expr)
   (env-namespace cte expr))
 
+(define-prim (##macro-descr->syntax-transformer descr)
+  (if (##macro-descr-def-syntax? descr)
+      (##vector-set descr 2
+        (lambda (s)
+          (##datum->core-syntax
+            (##syntax->datum
+              ((##vector-ref descr 2) s))
+            (##car (##source-code s)))))
+      (##vector-set descr 2
+        (lambda (s)
+          (##datum->core-syntax
+            (##syntax->datum
+              (##apply (##vector-ref descr 2)
+                       (##cdr (##syntax->datum s))))
+            (##car (##source-code s)))))))
+
+(define-prim (##henv-import-interaction-cte-macros! env cte convert)
+  (let loop ((cte cte) (env env))
+    (if (##cte-top? cte)
+        env
+        (let ((parent-cte (##cte-parent-cte cte)))
+          (cond
+            ((##cte-macro? cte)
+             (loop parent-cte
+                   (##top-henv-add-macro-cte!
+                     env
+                     (##make-core-syntax-source (##cte-macro-name cte) #f)
+                     (convert (##cte-macro-descr cte)))))
+            ((##cte-core-macro? cte)
+             (loop parent-cte
+                   (##top-henv-add-core-macro-cte!
+                     env
+                     (##make-core-syntax-source (##cte-macro-name cte) #f)
+                     (##cte-macro-descr cte))))
+            (else
+             (loop parent-cte env)))))))
+
+;; TODO undivise interaction environments
+(define-prim&proc (henv-import-runtime-macros env)
+  (##henv-import-interaction-cte-macros!
+    (##henv-import-interaction-cte-macros!
+      env
+      (##top-cte-cte ##interaction-cte)
+      ##macro-descr->syntax-transformer)
+    (##top-cte-cte ##syntax-interaction-cte)
+    (lambda (descr) descr)))
+

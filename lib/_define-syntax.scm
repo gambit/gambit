@@ -13,6 +13,11 @@
 ;;;----------------------------------------------------------------------------
 
 (define-macro (macro-define-syntax . args)
-  (cons '##define-syntax args))
+  (cons (if (##unbound?
+             (##global-var-ref
+              (##make-global-var '##syntax-interaction-cte)))
+            '##define-syntax
+            '##define-unhygienic-syntax)
+        args))
 
 ;;;============================================================================
