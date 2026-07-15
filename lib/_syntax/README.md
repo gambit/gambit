@@ -3,15 +3,22 @@
 ## Full Integration Check-list:
 
 - Bootstrap progress:
-  - phase1 make (/)
-  - phase1 make ut (/) 320/320
-  - phase1 make modules (?)
-  - phase2 make (/) (2 warnings)
-  - phase2 make ut (/) 320/320
-  - phase2 make modules (?)
-  - phase3 make (?) 
-  - phase3 make ut (?)
-  - phase3 output == phase2 output (?)
+  - [x] phase1 make
+  - [ ] phase1 make check 
+  - [x] phase1 make ut
+  - [ ] phase1 make modules
+
+  - [x] phase2 make    (2 warnings)
+  - [ ] phase1 make check 
+  - [x] phase2 make ut
+  - [ ] phase2 make modules
+
+  - [x] phase3 make (2 warnings)
+  - [ ] phase1 make check 
+  - [x] phase3 make ut
+  - [ ] phase2 make modules
+
+  - [x] phase3 output == phase2 output
 
 - GSC
   - merge the parse-program phase to the hygienic `compile` phase. (might not be required)
