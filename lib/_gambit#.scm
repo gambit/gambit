@@ -190,9 +190,8 @@
                (else
                 (err))))))))
 
-(##define-macro (primitive . %args)
-
-    (define src (cons 'primitive %args))
+(macro-define-syntax primitive
+  (lambda (src)
 
     (define (err)
       (##raise-expression-parsing-exception
@@ -219,11 +218,10 @@
                       (cons (prim name) (cdr arg))
                       (err))))
                (else
-                (err)))))))
+                (err))))))))
 
-(##define-macro (define-procedure . %args)
-
-    (define src (cons 'define-procedure %args))
+(macro-define-syntax define-procedure
+  (lambda (src)
 
     (define (err)
       (##raise-expression-parsing-exception
@@ -591,7 +589,7 @@
                 ,(gen-definition 'procedure))
               (gen-definition (or prim? 'procedure)))))
 
-    (expand src))
+    (expand src)))
 
 (##define-syntax define-primitive
   (lambda (src)

@@ -228,6 +228,7 @@
     (##add-new-core-macro! ##define ##expand-define)
     (##add-new-core-macro! ##define-syntax ##expand-define-syntax)
     (##add-new-core-macro! ##define-top-level-syntax ##expand-define-top-level-syntax)
+    (##add-new-core-macro! ##define-unhygienic-syntax ##expand-define-unhygienic-syntax)
     (##add-new-core-macro! ##quote-syntax ##expand-quote-syntax)
     (##add-new-core-macro! quote-syntax ##expand-quote-syntax)
     (##add-new-core-macro! ##syntax ##expand-quote-syntax)

@@ -446,25 +446,24 @@
 
 (define-prim&proc (syntax->datum stx)
   (cond
-    ((not (syntax-source? stx))
-     stx)
     ((syntax-source? stx)
-     (let ((code (##syntax-source-code stx)))
-       (cond
-         ((pair? code)
-          (let loop ((code code))
-            (cond
-              ((pair? code)
-               (cons (syntax->datum (car code))
-                     (loop          (cdr code))))
-              ((null? code)
-               code)
-              (else
-               (syntax->datum code)))))
-         (else
-           code))))
+     (syntax->datum (##syntax-source-code stx)))
+    ((##source? stx)
+     (syntax->datum (##source-code stx)))
+    ((pair? stx)
+     (cons (syntax->datum (car stx))
+           (syntax->datum (cdr stx))))
+    ((##vector? stx)
+     (let* ((len (##vector-length stx))
+            (new (##make-vector len #f)))
+       (let loop ((i 0))
+         (if (##fx< i len)
+             (begin
+               (##vector-set! new i (syntax->datum (##vector-ref stx i)))
+               (loop (##fx+ i 1)))
+             new))))
     (else
-     (error "not a syntax-source object"))))
+     stx)))
      
 (define-prim&proc (syntax->list stx)
   (##source-code stx))

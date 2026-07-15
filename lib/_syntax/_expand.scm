@@ -865,6 +865,29 @@
 (define-prim (##expand-define-top-level-syntax stx cte)
   (##expand-define-syntax stx (##hygiene-environment-top-cte cte)))
 
+(define-prim (##expand-define-unhygienic-syntax stx cte)
+  (cond
+    ((##hygiene-environment-top? cte)
+     (match-source stx ()
+      ((define-id id expander)
+       (let ((id (##syntax-full-name cte id)))
+         (##top-hygiene-environment-add-macro-cte! cte id (lambda _ (##make-syntax-source 'dummy #f)))
+         (let* ((proc (##eval-for-syntax-binding expander cte))
+                (descr (##macro-syntax-descr
+                         (lambda (s)
+                           (##datum->core-syntax
+                             (##syntax->datum (proc s))
+                             (##car (##source-code s))))
+                         expander)))
+           (##top-hygiene-environment-add-macro-cte! cte id descr)
+           (##syntax-source-code-set stx #!void))))
+      (_
+       (##raise-ill-formed-special-form stx))))
+    (else
+      (##raise-expression-parsing-exception
+        'ill-placed-define-syntax
+        stx))))
+
 ;;;----------------------------------------------------------------------------
 
 (define-prim (##expand-identifier id cte)
@@ -983,12 +1006,21 @@
 
           ((##pair? code)
            (##syntax-source-code-set s
-             (##map-pair
-               (lambda (s)
-                 (expand-template s level))
-               (lambda (s)
-                 (expand-template s level))
-               code)))
+             (let loop ((p code))
+               (cond
+                 ((tag-unquote? p)
+                  => (lambda (datum)
+                       (##list (##car p)
+                               (if (= level 0)
+                                   (,expander datum cte)
+                                   (expand-template datum (- level 1))))))
+                 ((##pair? p)
+                  (##cons (expand-template (##car p) level)
+                          (loop (##cdr p))))
+                 ((##null? p)
+                  p)
+                 (else
+                  (expand-template p level))))))
           ((##vector? code)
            (##syntax-source-code-set s
              (##list->vector
