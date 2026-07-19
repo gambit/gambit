@@ -866,13 +866,21 @@
           (else
            noforcing))))))
 
-(##define-macro (macro-force-vars vars expr)
-  `(cond-expand
-     (enable-auto-forcing
-      (let ,(map (lambda (x) (list x (list '##force x))) vars)
-        ,expr))
-     (else
-      ,expr)))
+(macro-define-syntax macro-force-vars
+  (lambda (stx)
+    (syntax-case stx ()
+      ((_ vars expr)
+       (syntax-case (datum->syntax
+                     #'vars
+                     (map (lambda (x) `(,x (##force ,x)))
+                          (syntax->list #'vars)))
+           ()
+         (bindings
+          #'(cond-expand
+             (enable-auto-forcing
+              (let bindings expr))
+             (else
+              expr))))))))
 
 (##define-syntax macro-auto-force
   (lambda (stx)

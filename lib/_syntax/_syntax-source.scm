@@ -466,7 +466,11 @@
      stx)))
      
 (define-prim&proc (syntax->list stx)
-  (##source-code stx))
+  ;; original syntax->list drops the improper list tail
+  (let loop ((code (##source-code stx)))
+    (if (##pair? code)
+        (##cons (##car code) (loop (##cdr code)))
+        '())))
 
 ;;;----------------------------------------------------------------------------
   

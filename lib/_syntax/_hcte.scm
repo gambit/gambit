@@ -239,7 +239,7 @@
   (##top-cte-process-namespace! top-cte src))
 
 (define-prim&proc (hcte-process-namespace cte src)
-  (let ((cte cte #;(if (##cte-top? cte) (##top-cte-cte cte) cte)))                  
+  (let ((cte cte #;(if (##cte-top? cte) (##top-cte-cte cte) cte)))
     (##cte-process-namespace cte src)))
 
 (define-prim&proc (hcte-namespace-lookup cte id)

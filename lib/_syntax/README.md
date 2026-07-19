@@ -15,11 +15,6 @@
 
   - [x] phase3 output == phase2 output
 
-  - Bug / Todo: 
-    - srfi 158(:428):
-      - macro-force-vars: 
-          declare expanded binding causes map -> ##map and thus accept dotted tail parameter
-
 - Tests
   - add more unit tests
 
