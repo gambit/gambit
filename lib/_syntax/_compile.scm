@@ -20,20 +20,19 @@
 ;;;----------------------------------------------------------------------------
 
 (define-prim&proc (resolve-compile-local-binding (id identifier) (cte cte))
-  (let ((b (##resolve-id id cte)))
+  (let ((b (##resolve-local id cte)))
     (cond
       ((##binding-local? b)
        (syntax-source-code-set
          id
          (##binding-local-key b)))
-      ((and (##binding-top-level? b)
-            #t) ; ... and is a core form
+      ((##binding-top-level? b)
        (##binding-top-level-symbol b))
       (else
-       (##error "##resolve-compile-local-binding: not a local binding")))))
+       id))))
  
 (define-prim&proc (resolve-compile-top-level-binding? (id identifier) (cte cte))
-  (let ((b (##resolve-id id cte)))
+  (let ((b (##resolve-local id cte)))
     (and (and (##binding-top-level? b)
               #t) ; is a core form
          (##binding-top-level-symbol b))))
@@ -85,9 +84,7 @@
      (let ((binding (resolve-id id cte)))
        (cond
          ((not binding)
-          (if #f ;safe-compile? 
-              (##error "Unknown identifier")
-              id))
+          id)
          (else
            (syntax-source-code-set id
              ((if (##binding-local? binding)
@@ -260,10 +257,8 @@
                ,(##compile val-id cte))))
          (else
           (let ((top-level? (##resolve-compile-top-level-binding? id cte)))
-            (if top-level? 
+            (if top-level?
                 (syntax-source-code-set id top-level?)
-                ; id could be local as local definitions 
-                ; still appears in this phase
                 (##resolve-compile-local-binding id cte))))))))
 
   (define (resolve-maybe-local-bindings ids cte)

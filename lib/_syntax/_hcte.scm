@@ -47,6 +47,18 @@
 (define-prim&proc (hcte-top-cte cte)
   (##cte-top-cte cte))
 
+(define-prim&proc (hcte-macro-state-ref cte)
+  (##top-cte-cte (##cte-top-cte cte)))
+
+(define-prim&proc (hcte-macro-state-restore! cte state)
+  (##top-cte-cte-set! (##cte-top-cte cte) state))
+
+(define-prim&proc (hcte-namespace-state-ref cte)
+  (##top-cte-cte (##cte-top-cte cte)))
+
+(define-prim&proc (hcte-namespace-state-restore! cte state)
+  (##top-cte-cte-set! (##cte-top-cte cte) state))
+
 (define-prim&proc (hcte-top-cte-global-binding-table cte)
   (##cte-top-cte-global-binding-table cte))
 

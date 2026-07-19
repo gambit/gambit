@@ -82,7 +82,7 @@
 
 
 (define-prim&proc (resolve-binding-expander id cte)
-  (let ((binding (##resolve-id id cte)))
+  (let ((binding (##resolve-local id cte)))
     (let ((key
             (cond
               ((##binding-local? binding)

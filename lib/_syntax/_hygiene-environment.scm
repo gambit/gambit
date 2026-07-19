@@ -29,6 +29,18 @@
 (define (##hygiene-environment-top-cte env . args)
   (apply (if (gsc-env? env) henv-top-cte hcte-top-cte) env args))
 
+(define (##hygiene-environment-macro-state-ref env . args)
+  (apply (if (gsc-env? env) henv-macro-state-ref hcte-macro-state-ref) env args))
+
+(define (##hygiene-environment-macro-state-restore! env . args)
+  (apply (if (gsc-env? env) henv-macro-state-restore! hcte-macro-state-restore!) env args))
+
+(define (##hygiene-environment-namespace-state-ref env . args)
+  (apply (if (gsc-env? env) henv-namespace-state-ref hcte-namespace-state-ref) env args))
+
+(define (##hygiene-environment-namespace-state-restore! env . args)
+  (apply (if (gsc-env? env) henv-namespace-state-restore! hcte-namespace-state-restore!) env args))
+
 (define (##hygiene-environment-top-cte-global-binding-table env . args)
   (apply (if (gsc-env? env) henv-top-cte-global-binding-table hcte-top-cte-global-binding-table) env args))
 

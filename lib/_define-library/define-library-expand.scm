@@ -495,27 +495,29 @@
                                          #f))))))
                      (if (not (symbol? sym))
                          (loop (cdr expr-srcs)) ;; keep looking for syntax defs
-                         (let* ((id
-                                 (resolve-id ctx sym))
-                                (val-src
-                                 (caddr expr))
-                                (val
-                                 (##source-strip val-src))
-                                (def
-                                 (##make-source
-                                  (if def-syntax?
-                                      (if (and (pair? val)
-                                               (eq? (##source-strip (car val))
-                                                    'syntax-rules))
-                                          (let ((crules
-                                                 (syn#syntax-rules->crules val-src)))
-                                            `(##define-syntax ,id
-                                               (##lambda (##src)
-                                                         (syn#apply-rules ',crules
-                                                                          ##src))))
-                                          `(##define-syntax ,id ,val-src))
-                                      `(##define-macro ,id
-                                         ,(##definition-value expr-src)))
+                         (let* ((id (resolve-id ctx sym))
+                                (val-src (caddr expr))
+                                (val (##source-strip val-src))
+                                (def (##make-source
+                                       (if def-syntax?
+                                           (if (##unbound?
+                                                 (##global-var-ref
+                                                   (##make-global-var
+                                                     '##syntax-interaction-cte)))
+                                               (if (and (pair? val)
+                                                        (eq? (##source-strip (car val))
+                                                             'syntax-rules))
+                                                   (let ((crules
+                                                          (syn#syntax-rules->crules val-src)))
+                                                     `(##define-syntax ,id
+                                                        (##lambda (##src)
+                                                                  (syn#apply-rules ',crules
+                                                                                   ##src))))
+                                                   `(##define-syntax ,id ,val-src))
+                                               ;; hygiene: expands (syntax-rules ...) natively
+                                               `(##define-syntax ,id ,val-src))
+                                           `(##define-macro ,id
+                                              ,(##definition-value expr-src)))
                                   (##source-locat expr-src))))
 
                            (if (table-ref (ctx-exports-tbl ctx) sym #f) ;;exported?

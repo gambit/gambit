@@ -8,7 +8,7 @@ HEADERS_SCM = js\#.scm python\#.scm six-expand\#.scm
 
 MODULES_SCM = js.scm js.sld python.scm python.sld six-expand.scm test/test.scm
 
-MAIN_MODULES = js python six-expand
+MAIN_MODULES = six-expand js python
 
 OTHER_RCFILES = makefile
 

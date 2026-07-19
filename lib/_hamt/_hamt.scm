@@ -141,7 +141,7 @@
   (macro-force-vars (hamt)
     (macro-hamt? obj)))
 
-(define-syntax macro-make-hamt-from-parameters
+(macro-define-syntax macro-make-hamt-from-parameters
   (lambda (src)
     (##deconstruct-call
      src

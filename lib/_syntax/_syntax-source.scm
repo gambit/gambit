@@ -242,7 +242,7 @@
       ((null? code)
        code)
       (else
-       (##source->syntax-source code))))
+       (##source->syntax-source-elem code))))
 
   (define (##source->syntax-source-vector code)
     (let* ((n   (##vector-length code))
@@ -271,7 +271,7 @@
               code))))
        stx))
     (else
-      (error "Cannot convert to syntax: ill formed source " datum))))
+      (##source-object->syntax-source-object (##make-source datum #f) stx))))
 
 (define-prim (source->syntax-source src #!optional (stx (##make-syntax-source #f #f)))
   (##source->syntax-source src stx))
@@ -404,7 +404,7 @@
    ((syntax-source? datum)
     datum)
    ((##source? datum)
-    (##source->syntax-source datum))
+    (##source->syntax-source datum stx))
    ((pair? datum)
     ; The algorithm doesn't require pairs and list to carry scoping
     ; information but, it is usefull for debbuging purposes.

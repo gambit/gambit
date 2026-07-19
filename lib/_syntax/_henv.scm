@@ -20,19 +20,50 @@
 (define-prim&proc (henv-local-cte cte)
   cte)
 
+(define (env-namespace-set! env namespace) (##vector-set! env 5 namespace))
+
+(define (henv-namespace-lookup env name)
+  ; mirror of gsc's env-namespace-lookup, one env's slot 5 only.
+  ; empty aliases = catch-all; non-empty = selective; #f on miss.
+  (let loop ((lst (env-namespace-ref env)))
+    (and (##pair? lst)
+         (let* ((entry   (##car lst))
+                (space   (##car entry))
+                (aliases (##cdr entry)))
+           (if (##null? aliases)
+               (##make-full-name space name)
+               (let ((a (##assq name aliases)))
+                 (if a
+                     (##make-full-name space (##cdr a))
+                     (loop (##cdr lst)))))))))
+
 (define-prim&proc (henv-global-name cte id)
-  ; TODO
-  (##syntax-source-code id))
+  ; mirror of ##cte-global-name: already-qualified names pass through;
+  ; else walk the parent chain, first hit wins; fall through to the BARE name.
+  (let ((name (##syntax-source-code id)))
+    (if (##full-name? name)
+        name
+        (let loop ((env cte))
+          (if (##not env)
+              name
+              (or (henv-namespace-lookup env name)
+                  (loop (env-parent-ref env))))))))
 
 (define-prim&proc (henv-top? cte)
-  #t 
-  ; the difference is irrelevant here as the global-binding-table and syntax contex
-  ; will keep track of definitions/macro-definitions scope.
+  #t
+  ; the difference is irrelevant here as the global-binding-table and syntax
+  ; context keep track of definitions/macro-definitions scope.
   #;(not (env-parent-ref cte)))
 
 
 (define-prim&proc (henv-top-cte cte)
   cte)
+
+(define-prim&proc (henv-macro-state-ref cte)
+  (env-syntax-ctx-ref cte))
+
+(define-prim&proc (henv-macro-state-restore! cte state)
+  (env-syntax-ctx-set! cte state))
 
 (define-prim&proc (henv-top-cte-global-binding-table cte)
   (env-syntax-gbt-ref cte))
@@ -118,19 +149,47 @@
                 key 
                 (##ctx-binding-core-macro id descr))))))
 
+(define (henv-namespace-forms->list expr)
+  ; mirror of ##cte-process-namespace's parse: -> list of (space . ((from . to) ...))
+  (##check-namespace expr)
+  (##map (lambda (form)
+           (##cons (##car form)
+                   (##map (lambda (x)
+                            (if (##symbol? x)
+                                (##cons x x)
+                                (##cons (##car x) (##cadr x))))
+                          (##cdr form))))
+         (##cdr (##desourcify expr))))
+
 (define-prim&proc (henv-process-namespace cte expr)
-  (env-namespace cte expr))
+  ; functional: caller (##expand-body-namespace) threads the result
+  (let loop ((cte cte) (forms (henv-namespace-forms->list expr)))
+    (if (##pair? forms)
+        (loop (env-namespace cte (##car forms)) (##cdr forms))
+        cte)))
 
 (define-prim&proc (top-henv-process-namespace! cte expr)
-  (env-namespace cte expr))
+  ; mutating: caller (expand-namespace) discards the result, and the top-level
+  ; form sequence shares one cte with no accumulator to thread through.
+  (let loop ((forms (henv-namespace-forms->list expr)))
+    (if (##pair? forms)
+        (begin
+          (env-namespace-set! cte (##cons (##car forms) (env-namespace-ref cte)))
+          (loop (##cdr forms)))
+        cte)))
+
+(define-prim&proc (henv-namespace-state-ref cte)
+  (env-namespace-ref cte))
+
+(define-prim&proc (henv-namespace-state-restore! cte state)
+  (env-namespace-set! cte state))
 
 (define-prim (##macro-descr->syntax-transformer descr)
   (if (##macro-descr-def-syntax? descr)
       (##vector-set descr 2
         (lambda (s)
           (##datum->core-syntax
-            (##syntax->datum
-              ((##vector-ref descr 2) s))
+            ((##vector-ref descr 2) s)
             (##car (##source-code s)))))
       (##vector-set descr 2
         (lambda (s)

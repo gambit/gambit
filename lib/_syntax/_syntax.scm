@@ -248,6 +248,10 @@
 
     (##add-new-core-macro! ##begin ##expand-begin)
 
+    (##add-new-core-macro! ##macro-scope ##expand-macro-scope)
+
+    (##add-new-core-macro! ##namespace-scope ##expand-namespace-scope)
+
 
     (##add-new-core-macro! ##let     ##expand-let)
     (##add-new-core-macro! ##let*    ##expand-let*)

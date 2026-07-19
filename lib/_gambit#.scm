@@ -786,7 +786,7 @@
 
 ;;;----------------------------------------------------------------------------
 
-(##define-syntax macro-target
+(macro-define-syntax macro-target
   (lambda (stx)
     (syntax-case stx ()
       ((_)

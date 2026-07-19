@@ -102,7 +102,7 @@ hamt-values
 
 ;;; Type checking.
 
-(##define-syntax macro-check-hamt
+(macro-define-syntax macro-check-hamt
   (lambda (src)
     (##deconstruct-call
      src

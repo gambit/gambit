@@ -13,6 +13,16 @@
          (##cdr code))
         (else code)))
 
+(define (##syntax-case-split-tail exprs n)
+  (let ((len (let count ((x exprs) (k 0))
+               (if (##pair? x) (count (##cdr x) (##fx+ k 1)) k))))
+    (and (##fx>= len n)
+         (let take ((x exprs) (i (##fx- len n)))
+           (if (##fx= i 0)
+               (##cons '() x)
+               (let ((sub (take (##cdr x) (##fx- i 1))))
+                 (##cons (##cons (##car x) (##car sub)) (##cdr sub))))))))
+
 ;;; ---------------------------------------------------------------------------
 
 (define (##make-syntax-case-binding lvl var value)
@@ -41,7 +51,6 @@
         (##make-syntax-case-binding (##fx+ level 1) var binding-value)))
     bindings-list))
         
-
 (define (##syntax-case-binding-lookup bindings id)
   (let loop ((bs bindings))
     (if (##pair? bs)
@@ -104,13 +113,21 @@
                  (e        (##cadr lvl+elem)))
             (expand-constructor-update lvl e-lvl e c-lvl c)))
          ((e ... . rst)
-          (let* ((lvl+elem (expand-clause-expr-syntax-expr bindings (##fx+ lvl 1) e #f))
-                 (e-lvl    (##car lvl+elem))
-                 (e        (##cadr lvl+elem)))
-            (let* ((lvl+new-constructor (expand-constructor-update lvl e-lvl e c-lvl c))
-                   (c-lvl               (##car lvl+new-constructor))
-                   (c                   (##cadr lvl+new-constructor)))
-              (loop lvl c-lvl c rst))))
+          (let peel ((rst rst) (extra 0))
+            (match-source rst (...)
+              ((... . rst2)
+               (peel rst2 (##fx+ extra 1)))
+              (_
+               (let* ((lvl+elem (expand-clause-expr-syntax-expr bindings (##fx+ lvl 1) e #f))
+                      (e-lvl    (##car lvl+elem))
+                      (ecode    (##cadr lvl+elem)))
+                 (let* ((flat  (let fl ((x ecode) (k extra))
+                                 (if (##fx= k 0) x (fl `(##apply ##append ,x) (##fx- k 1)))))
+                        (e-lvl (if (##fx= extra 0) e-lvl 1))
+                        (lvl+new-constructor (expand-constructor-update lvl e-lvl flat c-lvl c))
+                        (c-lvl               (##car lvl+new-constructor))
+                        (c                   (##cadr lvl+new-constructor)))
+                   (loop lvl c-lvl c rst)))))))
          ((e . rst)
           (let* ((lvl+elem (expand-clause-expr-syntax-expr bindings lvl e #f))
                  (e-lvl    (##car lvl+elem))
@@ -202,8 +219,28 @@
      (append (expand-clause-cond-compile-bindings literals var)
              (expand-clause-cond-compile-bindings literals rst)))
     (id when (and (identifier? id)
-                  (not (member (syntax-source-code id) literals)))
+                  (not (member (syntax-source-code id)
+                               (##map ##syntax-source-code literals))))
      (##list (##list (syntax-source-code id) 0)))
+    (else
+     (##list))))
+
+(define (expand-clause-cond-pattern-vars literals condition)
+  ; collect the pattern-variable syntax objects with their ellipsis levels
+
+  (match-source condition (...)
+    ((var ... . rst)
+     (append (##map (lambda (b)
+                      (##cons (##car b) (##fx+ (##cdr b) 1)))
+                    (expand-clause-cond-pattern-vars literals var))
+             (expand-clause-cond-pattern-vars literals rst)))
+    ((var . rst)
+     (append (expand-clause-cond-pattern-vars literals var)
+             (expand-clause-cond-pattern-vars literals rst)))
+    (id when (and (identifier? id)
+                  (not (member (syntax-source-code id)
+                               (##map ##syntax-source-code literals))))
+     (##list (##cons id 0)))
     (else
      (##list))))
 
@@ -213,12 +250,17 @@
   ; match expression and get bindings at exec time
 
   (define (expand-clause-cond-ellipsis literals condition exprs)
+    (let ((pattern-vars (expand-clause-cond-pattern-vars literals condition)))
     `(if (##null? ,exprs)
          (##list
-           (##make-syntax-case-binding 
-             1 
-             ',condition
-             (##list)))
+           ,@(if (##pair? pattern-vars)
+                 (##map (lambda (vl)
+                          `(##make-syntax-case-binding
+                             ,(##fx+ (##cdr vl) 1)
+                             ',(##car vl)
+                             (##list)))
+                        pattern-vars)
+                 (##list `(##make-syntax-case-binding 1 ',condition (##list)))))
          (and (##list? ,exprs)
               (##syntax-case-binding-combine
                  (##map
@@ -227,21 +269,27 @@
                         literals
                         condition
                         'expr))
-                   ,exprs)))))
+                   ,exprs))))))
 
   (define (expand-clause-cond-list literals condition exprs)
     (match-source condition (...)
       ((var ...)
        (expand-clause-cond-ellipsis literals var exprs))
-      ((var ... . rest) ;when (not (##pair? rest))
-       `(let ((bindings ,(expand-clause-cond-ellipsis literals var exprs)))
-          (and bindings
-               (let ((rest-binding
-                       ,(expand-clause-cond-list literals
-                                                 rest 
-                                                 `(get-last-pair ,exprs))))
-                   (and rest-binding
-                        (append bindings rest-binding))))))
+      ((var ... . rest)
+       (let count ((r (##syntax->datum rest)) (n 0))
+         (if (##pair? r)
+             (count (##cdr r) (##fx+ n 1))
+             `(let ((split (##syntax-case-split-tail ,exprs ,n)))
+                (and split
+                     (let ((front-exprs (##car split))
+                           (back-exprs (##cdr split)))
+                       (let ((ellipsis-binding
+                               ,(expand-clause-cond-ellipsis literals var 'front-exprs)))
+                         (and ellipsis-binding
+                              (let ((rest-binding
+                                      ,(expand-clause-cond-list literals rest 'back-exprs)))
+                                (and rest-binding
+                                     (append ellipsis-binding rest-binding)))))))))))
       ((cond-head . cond-tail)
        (let ((head-id (gensym 'head))
              (tail-id (gensym 'tail)))
