@@ -30,22 +30,22 @@
 
 (test-eqv +inf.0+0.i (acosh +inf.0+1.i))
 
-;; (check-eqv? (acosh -inf.0+inf.0i) (make-rectangular +inf.0 (macro-inexact-+3pi/4))) GOT +inf.0+1.5707963267948966i
+;; (test-eqv (acosh -inf.0+inf.0i) (make-rectangular +inf.0 (macro-inexact-+3pi/4))) GOT +inf.0+1.5707963267948966i
 
-;; (check-eqv?       (real-part (acosh +inf.0+nan.0i)) +inf.0) GOT +nan.0
-(test-assert (eq? #t (nan? (imag-part (acosh +inf.0+nan.0i)))))
+;; (test-eqv  +inf.0 (real-part (acosh +inf.0+nan.0i)) ) GOT +nan.0
+(test-assert (nan? (imag-part (acosh +inf.0+nan.0i))))
 
-;; (check-eqv?       (real-part (acosh -inf.0+nan.0i)) +inf.0) GOT +nan.0
-(test-assert (eq? #t (nan? (imag-part (acosh -inf.0+nan.0i)))))
+;; (test-eqv +inf.0 (real-part (acosh -inf.0+nan.0i)) ) GOT +nan.0
+(test-assert (nan? (imag-part (acosh -inf.0+nan.0i))))
 
-(test-assert (eq? #t (nan? (real-part (acosh +nan.0+1.i)))))
-(test-assert (eq? #t (nan? (imag-part (acosh +nan.0+1.i)))))
+(test-assert (nan? (real-part (acosh +nan.0+1.i))))
+(test-assert (nan? (imag-part (acosh +nan.0+1.i))))
 
 (test-eqv +inf.0 (real-part (acosh +nan.0+inf.0i)))
-;; (check-true (nan? (imag-part (acosh +nan.0+inf.0i)))) got +1.5707963267948966
+;; (test-assert (nan? (imag-part (acosh +nan.0+inf.0i)))) got +1.5707963267948966
 
-(test-assert (eq? #t (nan? (real-part (acosh +nan.0+nan.0i)))))
-(test-assert (eq? #t (nan? (imag-part (acosh +nan.0+nan.0i)))))
+(test-assert (nan? (real-part (acosh +nan.0+nan.0i))))
+(test-assert (nan? (imag-part (acosh +nan.0+nan.0i))))
 
 (let ((args '(0. -0. .5 -.5 1. -1. 2. -2. +inf.0 -inf.0)))
   (for-each

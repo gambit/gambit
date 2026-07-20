@@ -1,0 +1,336 @@
+diff --git a/tests/unit-tests/03-number/_num.scm b/tests/unit-tests/03-number/_num.scm
+index 5211271e..767bdbb9 100644
+--- a/tests/unit-tests/03-number/_num.scm
++++ b/tests/unit-tests/03-number/_num.scm
+@@ -244,18 +244,6 @@
+ (check-eqv? (real? +inf.0) #t)
+ (check-eqv? (real? -inf.0) #t)
+ 
+-#|
+-
+-(check-eqv? (? 'a) #f)
+-(check-eqv? (? +1+0.i) #f)
+-(check-eqv? (? 1) #t)
+-(check-eqv? (? 11111111111111111111111111111111) #t)
+-(check-eqv? (? 2/3) #t)
+-(check-eqv? (? 1.0) #t)
+-(check-eqv? (? +nan.0) #t)
+-(check-eqv? (? +inf.0) #t)
+-(check-eqv? (? -inf.0) #t)
+-|#
+ 
+ (check-eqv? (rational? 'a) #f)
+ (check-eqv? (rational? +1+0.i) #f)
+@@ -384,8 +372,6 @@
+ ;;
+ ;; They give these errors:
+ ;;
+-;;"unit-tests\\04-coverage\\_num.scm"@174.1: FAILED (check-eqv? (expt 100/81 -1/4) (/ 3 (sqrt (sqrt 100)))) GOT .9486832980505139
+-;;"unit-tests\\04-coverage\\_num.scm"@175.1: FAILED (check-eqv? (expt -1. (expt 3 1000)) -1.) GOT +nan.0
+ ;;
+ ;; The problem occurs specifically in the appveyor environment.
+ ;; Unfortunately it can't be reproduced elsewhere, so solving
+@@ -1035,27 +1021,6 @@
+       (check-eqv? (* 4.-0.i 2.) 8.-0.i)
+       (check-eqv? (* 4.0 0) 0)))
+ 
+-#;
+-(let* ((exact-arguments ;; expressions
+-        '((expt   2 10000)
+-          (expt 5/2 10000)
+-          (expt 2/5 10000)))
+-       (inexact-arguments
+-        ;; numbers, (list-ref inexact-arguments k) = (/ (list-ref (reverse inexact-arguments) k))
+-        '(+0. -0. -inf.0 +inf.0)))
+-  (for-each (lambda (inexact inexact-inverse)
+-              (for-each (lambda (exact)
+-                          (pp `(check-eqv? (* ,inexact    ,exact)     ,inexact))
+-                          (pp `(check-eqv? (* ,inexact (- ,exact)) ,(- inexact)))
+-                          (pp `(check-eqv? (*    ,exact  ,inexact)     ,inexact))
+-                          (pp `(check-eqv? (* (- ,exact) ,inexact) ,(- inexact)))
+-                          (pp `(check-eqv? (/ ,inexact    ,exact)     ,inexact))
+-                          (pp `(check-eqv? (/ ,inexact (- ,exact)) ,(- inexact)))
+-                          (pp `(check-eqv? (/    ,exact  ,inexact)    ,inexact-inverse))
+-                          (pp `(check-eqv? (/ (- ,exact) ,inexact) ,(- inexact-inverse))))
+-                        exact-arguments))
+-            inexact-arguments
+-            (reverse inexact-arguments)))
+ 
+ (check-eqv? (* 0. (expt 2 10000)) 0.)
+ (check-eqv? (* 0. (- (expt 2 10000))) -0.)
+@@ -1154,25 +1119,6 @@
+ (check-eqv? (/ (expt 2/5 10000) +inf.0) 0.)
+ (check-eqv? (/ (- (expt 2/5 10000)) +inf.0) -0.)
+ 
+-#;
+-(let* ((exact-arguments ;; expressions
+-        '((expt   2 10000)
+-          (expt 5/2 10000)))
+-       (inexact-arguments
+-        ;; numbers
+-        '(+inf.0 -inf.0)))
+-  (for-each (lambda (inexact)
+-              (for-each (lambda (exact)
+-                          (pp `(check-eqv? (+ ,inexact    ,exact)      ,inexact))
+-                          (pp `(check-eqv? (+ ,inexact (- ,exact))     ,inexact))
+-                          (pp `(check-eqv? (+    ,exact  ,inexact)     ,inexact))
+-                          (pp `(check-eqv? (+ (- ,exact) ,inexact)     ,inexact))
+-                          (pp `(check-eqv? (- ,inexact    ,exact)      ,inexact))
+-                          (pp `(check-eqv? (- ,inexact (- ,exact))     ,inexact))
+-                          (pp `(check-eqv? (-    ,exact  ,inexact)  ,(- inexact)))
+-                          (pp `(check-eqv? (- (- ,exact) ,inexact)  ,(- inexact))))
+-                        exact-arguments))
+-            inexact-arguments))
+ 
+ (check-eqv? (+ +inf.0 (expt 2 10000)) +inf.0)
+ (check-eqv? (+ +inf.0 (- (expt 2 10000))) +inf.0)
+@@ -1207,22 +1153,6 @@
+ (check-eqv? (- (expt 5/2 10000) -inf.0) +inf.0)
+ (check-eqv? (- (- (expt 5/2 10000)) -inf.0) +inf.0)
+ 
+-#;
+-(let* ((exact-arguments ;; expressions
+-        '((expt   2 1024)
+-          (expt #e2.0001 1024)))
+-       (inexact-arguments
+-        ;; numbers
+-        (list (expt 2. 1023))))
+-  (for-each (lambda (inexact)
+-              (for-each (lambda (exact)
+-                          (pp `(check-true (finite? (+ ,exact ,(- inexact)))))
+-                          (pp `(check-true (finite? (+ ,(- inexact) ,exact))))
+-
+-                          (pp `(check-true (finite? (- ,inexact ,exact))))
+-                          (pp `(check-true (finite? (- ,exact ,inexact)))))
+-                        exact-arguments))
+-            inexact-arguments))
+ 
+ (check-true (finite? (+ (expt 2 1024) -8.98846567431158e307)))
+ (check-true (finite? (+ -8.98846567431158e307 (expt 2 1024))))
+@@ -1233,33 +1163,7 @@
+ (check-true (finite? (- 8.98846567431158e307 (expt 20001/10000 1024))))
+ (check-true (finite? (- (expt 20001/10000 1024) 8.98846567431158e307)))
+ 
+-#;
+-(let ()
+-  (pp `(check-eqv? (* (expt 2 1500) ,(inexact (expt 2 -750))) ,(inexact (expt 2 750))))
+-  (pp `(check-eqv? (* ,(inexact (expt 2 -750)) (expt 2 1500)) ,(inexact (expt 2 750))))
+ 
+-  (pp `(check-eqv? (* (expt #e2.1 1500) ,(inexact (expt 2 -750))) ,(inexact (* (expt #e2.1 1500) (expt 2 -750)))))
+-  (pp `(check-eqv? (* ,(inexact (expt 2 -750)) (expt #e2.1 1500)) ,(inexact (* (expt #e2.1 1500) (expt 2 -750)))))
+-
+-  (pp `(check-eqv? (* (expt 2 -1500) ,(inexact (expt 2 750))) ,(inexact (expt 2 -750))))
+-  (pp `(check-eqv? (* ,(inexact (expt 2 750)) (expt 2 -1500)) ,(inexact (expt 2 -750))))
+-
+-  (pp `(check-eqv? (* (expt #e2.1 -1500) ,(inexact (expt 2 750))) ,(inexact (* (expt #e2.1 -1500) (expt 2 750)))))
+-  (pp `(check-eqv? (* ,(inexact (expt 2 750)) (expt #e2.1 -1500)) ,(inexact (* (expt #e2.1 -1500) (expt 2 750)))))
+-
+-  (pp `(check-eqv? (/ (expt 2 1500) ,(inexact (expt 2 750))) ,(inexact (expt 2 +750))))
+-  (pp `(check-eqv? (/ ,(inexact (expt 2 750)) (expt 2 1500)) ,(inexact (expt 2 -750))))
+-
+-  (pp `(check-eqv? (/ (expt #e2.1 1500) ,(inexact (expt 2 750))) ,(inexact (/ (expt #e2.1 1500) (expt 2 750)))))
+-  (pp `(check-eqv? (/ ,(inexact (expt 2 750)) (expt #e2.1 1500)) ,(inexact (/ (expt 2 750) (expt #e2.1 1500)))))
+-
+-  (pp `(check-eqv? (/ (expt 2 -1500) ,(inexact (expt 2 -750))) ,(inexact (expt 2 -750))))
+-  (pp `(check-eqv? (/ ,(inexact (expt 2 -750)) (expt 2 -1500)) ,(inexact (expt 2 +750))))
+-
+-  (pp `(check-eqv? (/ (expt #e2.1 1500) ,(inexact (expt 2 750))) ,(inexact (/ (expt #e2.1 1500) (expt 2 750)))))
+-  (pp `(check-eqv? (/ ,(inexact (expt 2 750)) (expt #e2.1 1500)) ,(inexact (/ (expt 2 750) (expt #e2.1 1500)))))
+-
+-)
+ 
+ (check-eqv? (* (expt 2 1500) 1.688508503057271e-226) 5.922386521532856e225)
+ (check-eqv? (* 1.688508503057271e-226 (expt 2 1500)) 5.922386521532856e225)
+@@ -1325,56 +1229,6 @@
+ 
+ ;;; I should include the programs to generate the arguments to the
+ ;;; next tests
+-#;
+-(let ()
+-
+-  ;; These are designed so that (a) each one is exactly representable
+-  ;; and (b) their sum, difference and product are exactly representable
+-  ;; But we need to check that.
+-
+-  ;; Division (/) needs something different, which I'll work out later
+-
+-  ;; This is incorrect, the result is not a ratnum.
+-
+-     (define operands `(1             ; fixnum
+-			,(expt 2 70)  ; bignum
+-			3/4           ; ratnum
+-			,(expt 2. 35) ; flonum
+-			1+i           ; cpxnum
+-			))
+-
+-  (for-each (lambda (op op-name)
+-	      (for-each (lambda (x)
+-			  (for-each (lambda (y)
+-				      ;; first check result is exactly representable
+-				      (for-each display (list "(check-=    ("
+-							      op-name
+-							      " "
+-							      x
+-							      " "
+-							      y
+-							      ") "
+-							      (op (inexact->exact x) (inexact->exact y))
+-							      ")\n"
+-							      ))
+-				      ;; then check result is eqv? (includes inexactness check)
+-				      (for-each display (list "(check-eqv? ("
+-							      op-name
+-							      " "
+-							      x
+-							      " "
+-							      y
+-							      ") "
+-							      (op x y)
+-							      ")\n"
+-							      ))
+-				      )
+-				    operands))
+-			operands)
+-	      )
+-	    (list + - *) '(+ - *))
+-
+-  )
+ 
+ (check-=    (+ 1 1) 2)
+ (check-eqv? (+ 1 1) 2)
+@@ -1528,45 +1382,6 @@
+ (check-eqv? (* 1+i 1+i) +2i)
+ 
+ 
+-#;(let ()
+-
+-  (define (make-symbol . args)
+-    (string->symbol (apply string-append (map (lambda (x) (if (symbol? x) (symbol->string x) x)) args))))
+-
+-  (let ((ns (list (random-integer (expt 2 400))
+-		  (- (random-integer (expt 2 400)))
+-		  (random-integer (##greatest-fixnum))
+-		  (- (random-integer (##greatest-fixnum)))))
+-	(sizes (list (random-integer 200)
+-		     (random-integer 20)))
+-	(positions (list (random-integer 200)
+-			 (random-integer 20))))
+-    (for-each (lambda (op-name)
+-		(for-each (lambda (n)
+-			    (for-each (lambda (size)
+-					(for-each (lambda (position)
+-						    (for-each display (list "(check-eqv? ("
+-									    op-name
+-									    " "
+-									    size
+-									    " "
+-									    position
+-									    " "
+-									    n
+-									    ") ("
+-									    (make-symbol 'test- op-name)
+-									    " "
+-									    size
+-									    " "
+-									    position
+-									    " "
+-									    n
+-									    "))\n")))
+-						  positions))
+-				      sizes))
+-			  ns))
+-	      '(extract-bit-field test-bit-field? clear-bit-field))
+-    ))
+ 
+ (check-eqv? (extract-bit-field 79 109 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261)
+             (test-extract-bit-field 79 109 819289025694944586759318860605577375432306836892969486208725872284023634378009092711199478706560747106627062245621894261))
+@@ -1673,17 +1488,6 @@
+ 
+ ;;; Some ad-hoc tests
+ 
+-#| The following was generated with:
+-
+-(for-each (lambda (n)
+-            (for-each (lambda (size)
+-                        (for-each (lambda (position)
+-                                    (pp `(check-eqv? (test-bit-field?      ,size ,position ,n)
+-                                                     (test-test-bit-field? ,size ,position ,n))))
+-                                  (iota 3 0)))
+-                      (iota 3 1)))
+-          (iota 9 -4))
+-|#
+ 
+ (check-eqv? (test-bit-field? 1 0 -4) (test-test-bit-field? 1 0 -4))
+ (check-eqv? (test-bit-field? 1 1 -4) (test-test-bit-field? 1 1 -4))
+@@ -1781,37 +1585,6 @@
+ (check-tail-exn type-exception? (lambda () (test-bit-field? 1 1 'a)))
+ 
+ 
+-#;(let ()
+-
+-  (define (make-symbol . args)
+-    (string->symbol (apply string-append (map (lambda (x) (if (symbol? x) (symbol->string x) x)) args))))
+-
+-  (let ((xs (list (random-integer (expt 2 400))
+-		  (- (random-integer (expt 2 400)))
+-		  (random-integer (integer-sqrt (##greatest-fixnum)))
+-		  (- (random-integer (integer-sqrt (##greatest-fixnum))))))
+-	(shifts (list (random-integer 200)
+-		     (random-integer 20)
+-		     (- (random-integer 200))
+-		     (- (random-integer 20)))))
+-    (for-each (lambda (x)
+-		(for-each (lambda (shift)
+-					(for-each display (list "(check-eqv? ("
+-								'arithmetic-shift
+-								" "
+-								x
+-								" "
+-								shift
+-								") ("
+-								(make-symbol 'test- 'arithmetic-shift)
+-								" "
+-								x
+-								" "
+-								shift
+-								"))\n")))
+-			  shifts))
+-	      xs)
+-    ))
+ 
+ (check-eqv? (arithmetic-shift 1510654584040625753730018974833480216667530151201555010392492426076866671982958500628614593424711863814629067143762706485 25)
+             (test-arithmetic-shift 1510654584040625753730018974833480216667530151201555010392492426076866671982958500628614593424711863814629067143762706485 25))
+@@ -1838,33 +1611,6 @@
+ (check-eqv? (arithmetic-shift -1094530198 -85) (test-arithmetic-shift -1094530198 -85))
+ (check-eqv? (arithmetic-shift -1094530198 -7) (test-arithmetic-shift -1094530198 -7))
+ 
+-#;(let ()
+-
+-  ;; I'll visually inspect the results
+-
+-  (let* ((args `(120                        ; fixnum
+-		 ,(expt 3 64)               ; bignum
+-		 ,(+ (expt 3 64) 1)         ; close to bignum
+-		 ,(expt 3 128)              ; bigger bignum (more adigits)
+-		 ,(+ (expt 3 128) 1)))      ; close to bigger bignum
+-	 (args (append args (map - args)))) ; and their negatives
+-    (for-each (lambda (x)
+-		(for-each (lambda (y)
+-			    (for-each (lambda (op op-name)
+-					(for-each display (list "(check-eq? ("
+-								op-name
+-								" "
+-								x
+-								" "
+-								y
+-								") "
+-								(op x y)
+-								")\n")))
+-				      (list < > =)
+-				      '(< > =)))
+-			  args))
+-	      args)))
+-
+ (check-eq? (< 120 120) #f)
+ (check-eq? (> 120 120) #f)
+ (check-eq? (= 120 120) #t)

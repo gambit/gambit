@@ -37,12 +37,12 @@
 (test-assert (eq? #t (nan? (imag-part (asinh +inf.0+nan.0i)))))
 
 (test-assert (eq? #t (nan? (real-part (asinh +nan.0+0.i)))))
-;; (check-eqv?       (imag-part (asinh +nan.0+0.0i)) +0.)  GOT +nan.0
+;; (test-eqv +0.    (imag-part (asinh +nan.0+0.0i)) )  GOT +nan.0
 
 (test-assert (eq? #t (nan? (real-part (asinh +nan.0+1.i)))))
 (test-assert (eq? #t (nan? (imag-part (asinh +nan.0+1.i)))))
 
-;; (check-eqv?  (abs (real-part (asinh +nan.0+inf.0i))) +inf.0) GOT +nan.0
+;; (test-eqv  +inf.0 (abs (real-part (asinh +nan.0+inf.0i))) ) GOT +nan.0
 (test-assert (eq? #t (nan? (imag-part (asinh +nan.0+inf.0i)))))
 
 (test-assert (eq? #t (nan? (real-part (asinh +nan.0+nan.0i)))))

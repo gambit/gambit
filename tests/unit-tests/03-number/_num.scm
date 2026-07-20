@@ -253,15 +253,15 @@
 
 #|
 
-(check-eqv? (? 'a) #f)
-(check-eqv? (? +1+0.i) #f)
-(check-eqv? (? 1) #t)
-(check-eqv? (? 11111111111111111111111111111111) #t)
-(check-eqv? (? 2/3) #t)
-(check-eqv? (? 1.0) #t)
-(check-eqv? (? +nan.0) #t)
-(check-eqv? (? +inf.0) #t)
-(check-eqv? (? -inf.0) #t)
+(test-eqv #f (? 'a))
+(test-eqv #f (? 1+0.i))
+(test-eqv #t (? 1))
+(test-eqv #t (? 11111111111111111111111111111111))
+(test-eqv #t (? 2/3))
+(test-eqv #t (? 1.))
+(test-eqv #t (? +nan.0))
+(test-eqv #t (? +inf.0))
+(test-eqv #t (? -inf.0))
 |#
 
 (test-eqv #f (rational? 'a))
@@ -386,9 +386,8 @@
 
 ;; On Windows with 32 bit MinGW, the following unit tests fail:
 ;;
-;;(check-eqv? (expt 100/81 -1/4) (/ 3 (sqrt (sqrt 100))))
-;;(check-eqv? (expt -1. (expt 3 1000)) -1.)
-;;
+;;(test-eqv (/ 3 (sqrt (sqrt 100))) (expt 100/81 -1/4))
+;;(test-eqv -1. (expt -1. (expt 3 1000)))
 ;; They give these errors:
 ;;
 ;;"unit-tests\\04-coverage\\_num.scm"@174.1: FAILED (check-eqv? (expt 100/81 -1/4) (/ 3 (sqrt (sqrt 100)))) GOT .9486832980505139
@@ -1259,14 +1258,14 @@
         '(+0. -0. -inf.0 +inf.0)))
   (for-each (lambda (inexact inexact-inverse)
               (for-each (lambda (exact)
-                          (pp `(check-eqv? (* ,inexact    ,exact)     ,inexact))
-                          (pp `(check-eqv? (* ,inexact (- ,exact)) ,(- inexact)))
-                          (pp `(check-eqv? (*    ,exact  ,inexact)     ,inexact))
-                          (pp `(check-eqv? (* (- ,exact) ,inexact) ,(- inexact)))
-                          (pp `(check-eqv? (/ ,inexact    ,exact)     ,inexact))
-                          (pp `(check-eqv? (/ ,inexact (- ,exact)) ,(- inexact)))
-                          (pp `(check-eqv? (/    ,exact  ,inexact)    ,inexact-inverse))
-                          (pp `(check-eqv? (/ (- ,exact) ,inexact) ,(- inexact-inverse))))
+                          (pp `(test-eqv ,inexact (* ,inexact ,exact)))
+                          (pp `(test-eqv ,(- inexact) (* ,inexact (- ,exact))))
+                          (pp `(test-eqv ,inexact (* ,exact ,inexact)))
+                          (pp `(test-eqv ,(- inexact) (* (- ,exact) ,inexact)))
+                          (pp `(test-eqv ,inexact (/ ,inexact ,exact)))
+                          (pp `(test-eqv ,(- inexact) (/ ,inexact (- ,exact))))
+                          (pp `(test-eqv ,inexact-inverse (/ ,exact ,inexact)))
+                          (pp `(test-eqv ,(- inexact-inverse) (/ (- ,exact) ,inexact))))
                         exact-arguments))
             inexact-arguments
             (reverse inexact-arguments)))
@@ -1369,7 +1368,7 @@
 (test-eqv -0. (/ (- (expt 2/5 10000)) +inf.0))
 
 #;
-(let* ((exact-arguments ;; expressions
+(let* ((exact-arguments ;; expression
         '((expt   2 10000)
           (expt 5/2 10000)))
        (inexact-arguments
@@ -1377,14 +1376,14 @@
         '(+inf.0 -inf.0)))
   (for-each (lambda (inexact)
               (for-each (lambda (exact)
-                          (pp `(check-eqv? (+ ,inexact    ,exact)      ,inexact))
-                          (pp `(check-eqv? (+ ,inexact (- ,exact))     ,inexact))
-                          (pp `(check-eqv? (+    ,exact  ,inexact)     ,inexact))
-                          (pp `(check-eqv? (+ (- ,exact) ,inexact)     ,inexact))
-                          (pp `(check-eqv? (- ,inexact    ,exact)      ,inexact))
-                          (pp `(check-eqv? (- ,inexact (- ,exact))     ,inexact))
-                          (pp `(check-eqv? (-    ,exact  ,inexact)  ,(- inexact)))
-                          (pp `(check-eqv? (- (- ,exact) ,inexact)  ,(- inexact))))
+                          (pp `(test-eqv ,inexact (+ ,inexact ,exact)))
+                          (pp `(test-eqv ,inexact (+ ,inexact (- ,exact))))
+                          (pp `(test-eqv ,inexact (+ ,exact ,inexact)))
+                          (pp `(test-eqv ,inexact (+ (- ,exact) ,inexact)))
+                          (pp `(test-eqv ,inexact (- ,inexact ,exact)))
+                          (pp `(test-eqv ,inexact (- ,inexact (- ,exact))))
+                          (pp `(test-eqv ,(- inexact) (- ,exact ,inexact)))
+                          (pp `(test-eqv ,(- inexact) (- (- ,exact) ,inexact))))
                         exact-arguments))
             inexact-arguments))
 
@@ -1430,11 +1429,11 @@
         (list (expt 2. 1023))))
   (for-each (lambda (inexact)
               (for-each (lambda (exact)
-                          (pp `(check-true (finite? (+ ,exact ,(- inexact)))))
-                          (pp `(check-true (finite? (+ ,(- inexact) ,exact))))
+                          (pp `(test-assert (finite? (+ ,exact ,(- inexact)))))
+                          (pp `(test-assert (finite? (+ ,(- inexact) ,exact))))
 
-                          (pp `(check-true (finite? (- ,inexact ,exact))))
-                          (pp `(check-true (finite? (- ,exact ,inexact)))))
+                          (pp `(test-assert (finite? (- ,inexact ,exact))))
+                          (pp `(test-assert (finite? (- ,exact ,inexact)))))
                         exact-arguments))
             inexact-arguments))
 

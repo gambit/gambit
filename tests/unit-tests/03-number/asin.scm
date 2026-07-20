@@ -22,7 +22,7 @@
 ;;; The vagaries of complex multiplication and signed zeros make
 ;;; the " naive " test-asin give an incorrect answer.
 
-;; (check-= (asin 1234000000.+0.i) (test-asin 1234000000.+0.i))
+;; (test-approximate (asin 1234000000.+0.i) (test-asin 1234000000.+0.i))
 (test-approximate (test-asin -1234000000.-0.i) (asin -1234000000.-0.i) 1e-12)
 
 ;;; Test exceptions

@@ -5,7 +5,7 @@
 (test-eqv 1 (cosh 0))
 (test-eqv (cos +i) (cosh 1))
 
-(test-eqv .5403023058681398 (cosh +i))
+(test-eqv 0.5403023058681398 (cosh +i))
 ;; Issue #902
 
 ;;; Test exceptions

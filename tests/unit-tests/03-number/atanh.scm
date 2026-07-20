@@ -37,10 +37,10 @@
 
 (test-eqv 0.+0.i (atanh 0.+0.i))
 
-;; (check-eqv?       (real-part (atanh +0.+nan.0i)) 0.)  ;; GOT +nan.0
-(test-assert (eq? #t (nan? (imag-part (atanh 0.+nan.0i)))))
+;; (test-eqv   0.    (real-part (atanh +0.+nan.0i)))  ;; GOT +nan.0
+(test-assert (nan? (imag-part (atanh 0.+nan.0i))))
 
-;; (check-eqv? (atanh +1.+0.i)    +inf.0+0.i)  ;; GOT +inf.0+.7853981633974483i
+;; (test-eqv +inf.0+0.i (atanh +1.+0.i))  ;; GOT +inf.0+.7853981633974483i
 
 (test-eqv (make-rectangular 0. (macro-inexact-+pi/2)) (atanh 2.+inf.0i))
 
@@ -52,7 +52,7 @@
 (test-eqv (make-rectangular 0. (macro-inexact-+pi/2)) (atanh +inf.0+inf.0i))
 
 (test-eqv 0. (real-part (atanh +inf.0+nan.0i)))
-;; (check-true (nan? (imag-part (atanh +inf.0+nan.0i))))  ;; GOT pi/2
+;; (test-assert (nan? (imag-part (atanh +inf.0+nan.0i))))  ;; GOT pi/2
 
 (test-assert (eq? #t (nan? (real-part (atanh +nan.0+2.i)))))
 (test-assert (eq? #t (nan? (imag-part (atanh +nan.0+2.i)))))

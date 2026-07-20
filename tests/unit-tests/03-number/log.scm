@@ -38,7 +38,7 @@
 
 ;;; If the argument is ±0, -∞ is returned and FE_DIVBYZERO is raised.
 (test-eqv -inf.0 (log 0.))
-;;; (check-eqv? (log -0.) -inf.0)    ;; C99
+;;; (test-eqv -inf.0 (log -0.))    ;; C99
 (test-approximate -inf.0+3.141592653589793i (log -0.) 1e-12)
 ;; R7RS
 

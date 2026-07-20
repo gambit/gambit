@@ -18,7 +18,7 @@
 ;;; The vagaries of complex multiplication and signed zeros make
 ;;; the " naive " test-acos give an incorrect answer.
 
-;; (check-= (acos 1234000000.+0.i) (test-acos 1234000000.+0.i))
+;; (test-approximate (acos 1234000000.+0.i) (test-acos 1234000000.+0.i))
 (test-approximate (test-acos -1234000000.-0.i) (acos -1234000000.-0.i) 1e-12)
 
 ;;; Test exceptions

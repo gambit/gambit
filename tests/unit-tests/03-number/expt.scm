@@ -130,8 +130,8 @@
 (test-eqv 0. (expt -0. 2))
 
 ;;     pow(-1, ±∞) returns 1
-;; (check-eqv? (expt -1. +inf.0) 1.) ;; FAILED (check-eqv? (expt -1. +inf.0) 1.) GOT +nan.0+nan.0i
-;; (check-eqv? (expt -1. -inf.0) 1.) ;; FAILED (check-eqv? (expt -1. -inf.0) 1.) GOT +nan.0+nan.0i
+;; (test-eqv 1. (expt -1. +inf.0) 1.) ;; FAILED (check-eqv? (expt -1. +inf.0) ) GOT +nan.0+nan.0i
+;; (test-eqv 1. (expt -1. -inf.0) 1.) ;; FAILED (check-eqv? (expt -1. -inf.0) ) GOT +nan.0+nan.0i
 
 ;;     pow(+1, exponent) returns 1 for any exponent, even when exponent is NaN
 (test-eqv 1. (expt 1. +nan.0))
@@ -147,28 +147,28 @@
 
 ;;     pow(base, -∞) returns +∞ for any |base|<1
 (test-eqv +inf.0 (expt 1/2 -inf.0))
-;; (check-eqv? (expt -1/2 -inf.0) +inf.0) ;; FAILED (check-eqv? (expt -1/2 -inf.0) +inf.0) GOT +nan.0+nan.0i
+;; (test-eqv +inf.0 (expt -1/2 -inf.0)) ;; FAILED (check-eqv? (expt -1/2 -inf.0) +inf.0) GOT +nan.0+nan.0i
 (test-eqv +inf.0 (expt .5 -inf.0))
-;; (check-eqv? (expt -0.5 -inf.0) +inf.0) ;; FAILED (check-eqv? (expt -.5 -inf.0) +inf.0) GOT +nan.0+nan.0i
+;; (test-eqv +inf.0 (expt -0.5 -inf.0)) ;; FAILED (check-eqv? (expt -.5 -inf.0) +inf.0) GOT +nan.0+nan.0i
 
 
 ;;     pow(base, -∞) returns +0 for any |base|>1
 (test-eqv 0. (expt 3/2 -inf.0))
-;; (check-eqv? (expt -3/2 -inf.0) +0.) ;; FAILED (check-eqv? (expt -3/2 -inf.0) 0.) GOT +nan.0+nan.0i
+;; (test-eqv +0. (expt -3/2 -inf.0)) ;; FAILED (check-eqv? (expt -3/2 -inf.0) 0.) GOT +nan.0+nan.0i
 (test-eqv 0. (expt 1.5 -inf.0))
-;; (check-eqv? (expt -1.5 -inf.0) +0.) ;; FAILED (check-eqv? (expt -1.5 -inf.0) 0.) GOT +nan.0+nan.0i
+;; (test-eqv +0. (expt -1.5 -inf.0)) ;; FAILED (check-eqv? (expt -1.5 -inf.0) 0.) GOT +nan.0+nan.0i
 
 ;;     pow(base, +∞) returns +0 for any |base|<1
 (test-eqv 0. (expt 1/2 +inf.0))
-;; (check-eqv? (expt -1/2 +inf.0) +.0) ;; FAILED (check-eqv? (expt -1/2 +inf.0) 0.) GOT +nan.0+nan.0i
+;; (test-eqv +0. (expt -1/2 +inf.0)) ;; FAILED (check-eqv? (expt -1/2 +inf.0) 0.) GOT +nan.0+nan.0i
 (test-eqv 0. (expt .5 +inf.0))
-;; (check-eqv? (expt -0.5 +inf.0) +.0) ;; FAILED (check-eqv? (expt -.5 +inf.0) 0.) GOT +nan.0+nan.0i
+;; (check-eqv? +0. (expt -0.5 +inf.0)) ;; FAILED (check-eqv? (expt -.5 +inf.0) 0.) GOT +nan.0+nan.0i
 
 ;;     pow(base, +∞) returns +∞ for any |base|>1
 (test-eqv +inf.0 (expt 3/2 +inf.0))
-;; (check-eqv? (expt -3/2 +inf.0) +inf.0) ;; FAILED (check-eqv? (expt -3/2 +inf.0) +inf.0) GOT +nan.0+nan.0i
+;; (test-eqv +inf.0 (expt -3/2 +inf.0)) ;; FAILED (check-eqv? (expt -3/2 +inf.0) +inf.0) GOT +nan.0+nan.0i
 (test-eqv +inf.0 (expt 1.5 +inf.0))
-;; (check-eqv? (expt -1.5 +inf.0) +inf.0) ;; FAILED (check-eqv? (expt -1.5 +inf.0) +inf.0) GOT +nan.0+nan.0i
+;; (check-eqv? +inf.0 (expt -1.5 +inf.0)) ;; FAILED (check-eqv? (expt -1.5 +inf.0) +inf.0) GOT +nan.0+nan.0i
 
 ;;     pow(-∞, exponent) returns -0 if exponent is a negative odd integer
 (test-eqv -0. (expt -inf.0 -3))
@@ -177,8 +177,8 @@
 ;;     pow(-∞, exponent) returns +0 if exponent is a negative non-integer or negative even integer
 (test-eqv 0. (expt -inf.0 -2))
 (test-eqv 0. (expt -inf.0 -2.))
-;; (check-eqv? (expt -inf.0 -3/2) +0.)   ;; FAILED (check-eqv? (expt -inf.0 -3/2) 0.) GOT +0.i
-;; (check-eqv? (expt -inf.0 #i-3/2) +0.) ;; FAILED (check-eqv? (expt -inf.0 -1.5) 0.) GOT -0.+0.i
+;; (test-eqv +0. (expt -inf.0 -3/2))   ;; FAILED (check-eqv? (expt -inf.0 -3/2) 0.) GOT +0.i
+;; (test-eqv +0. (expt -inf.0 #i-3/2)) ;; FAILED (check-eqv? (expt -inf.0 -1.5) 0.) GOT -0.+0.i
 
 ;;     pow(-∞, exponent) returns -∞ if exponent is a positive odd integer
 (test-eqv -inf.0 (expt -inf.0 3))
@@ -187,8 +187,8 @@
 ;;     pow(-∞, exponent) returns +∞ if exponent is a positive non-integer or positive even integer
 (test-eqv +inf.0 (expt -inf.0 4))
 (test-eqv +inf.0 (expt -inf.0 4.))
-;; (check-eqv? (expt -inf.0 #e4.5) +inf.0) ;; FAILED (check-eqv? (expt -inf.0 9/2) +inf.0) GOT +inf.0i
-;; (check-eqv? (expt -inf.0 4.5) +inf.0)   ;; FAILED (check-eqv? (expt -inf.0 4.5) +inf.0) GOT +inf.0+inf.0i
+;; (test-eqv +inf.0 (expt -inf.0 #e4.5)) ;; FAILED (check-eqv? (expt -inf.0 9/2) +inf.0) GOT +inf.0i
+;; (test-eqv +inf.0 (expt -inf.0 4.5))   ;; FAILED (check-eqv? (expt -inf.0 4.5) +inf.0) GOT +inf.0+inf.0i
 
 ;;     pow(+∞, exponent) returns +0 for any negative exponent
 (test-eqv 0. (expt +inf.0 -4))
