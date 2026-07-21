@@ -15,6 +15,9 @@
 
   - [x] phase3 output == phase2 output
 
+- Performance
+  - general optimizations (Now ~1.5-2.0x initial speed)
+
 - Tests
   - add more unit tests
 
@@ -23,12 +26,5 @@
 
 - GSI
   - merge the original `compile-top` phase with the hygienic `compile` phase. (might not be required)
-  - add more unit-tests for the command-line's stepper.
-
-- Performance
-  - general optimizations (Now ~2x initial speed, need find/create real benchmark)
-
-- Correctness
-  - Fix `define-library` within hygienic system (fixed?)
 
 
