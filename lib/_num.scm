@@ -2920,7 +2920,6 @@ for a discussion of branch cuts.
         (if (##negative? x) -1 1)))
 
   (let* ((theta (##fl/ (##flsqrt (macro-flonum-max-normal)) (macro-inexact-+4)))
-         (rho (##fl/ theta))
          (beta (##->exact-sign (##real-part x+iy))) ;; beta is exact
          (x+iy (##* beta (##conjugate x+iy)))
          (x (##real-part x+iy))
@@ -2946,7 +2945,7 @@ for a discussion of branch cuts.
                      (else
                       (macro-cpxnum-make
                        (if (##eqv? x 0)
-                           ;; if rho and abs-y were exact in the next expression (no matter their values)
+                           ;; if abs-y were exact in the next expression (no matter its value)
                            ;; then the argument to fllog1p would be exact 0, so the result would be exact 0.
                            0
                            (##fl/ (##fllog1p (##fl/ (##fl* (macro-inexact-+4) inexact-x)   ;; was (##* 4 x) originally
