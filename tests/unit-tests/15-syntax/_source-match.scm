@@ -121,8 +121,6 @@
       (else
        `(##error "source-match : no match"))))
 
-
-    (pp "reached")
   (let ((src (##gensym 'src)))
    `(let ((,src ,src-obj))
       ,(let ((src `(if (##source? ,src) ,src (##make-source ,src #f))))

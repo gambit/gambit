@@ -2198,8 +2198,9 @@
                  (##comp-top-declare top-cte src tail?))
                 ((##namespace)
                  (##comp-top-namespace top-cte src tail?))
+                ((##namespace-scope)
+                 (##comp-top-namespace-scope top-cte src tail?))
 ;;                ((##declare-scope)   (##comp-top-declare-scope top-cte src tail?))
-;;                ((##namespace-scope) (##comp-top-namespace-scope top-cte src tail?))
 ;;                ((##macro-scope)     (##comp-top-macro-scope top-cte src tail?))
                 (else                (##comp-aux cte src tail? descr)))))
         (##comp-simple cte src tail?))))
@@ -2326,6 +2327,13 @@
   (let ((cte (##top-cte-cte top-cte)))
     (##top-cte-process-namespace! top-cte src)
     #f))
+
+(define (##comp-top-namespace-scope top-cte src tail?)
+  (##shape src src -1)
+  (let ((saved (##top-cte-cte top-cte)))
+    (let ((code (##comp-top-seq top-cte src tail? (##cdr (##source-code src)))))
+      (##top-cte-cte-set! top-cte saved)
+      code)))
 
 ;;;----------------------------------------------------------------------------
 

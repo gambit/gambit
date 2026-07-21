@@ -434,6 +434,10 @@
 
 (define-prim&proc (expand-macro-scope s cte)
   (let* ((state (##hygiene-environment-macro-state-ref cte))
+         (s     (syntax-source-code-update s 
+                  (lambda (s)
+                    (cons (datum->syntax '##begin (car s))
+                          (cdr s)))))
          (expanded (##expand-begin s cte)))
     (##hygiene-environment-macro-state-restore! cte state)
     expanded))
@@ -964,10 +968,7 @@
 ;;;----------------------------------------------------------------------------
 
 (define-prim (##expand-identifier id cte)
-  (let* ((bare-binding (##resolve-id id cte))
-         (binding (if (and bare-binding (##binding-local? bare-binding))
-                      bare-binding
-                      (resolve-global id cte))))
+  (let ((binding (##resolve-local id cte)))
     (let ((key
             (cond
               ((##binding-top-level? binding)
