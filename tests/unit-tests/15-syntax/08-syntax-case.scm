@@ -232,3 +232,114 @@
     (check-equal? evalued 0)))
 
 ;;;----------------------------------------------------------------------------
+;;; negative cases: no clause matches
+
+;; too few arguments for the only pattern
+(let* ((cte ##syntax-interaction-cte)
+       (datum `(##begin
+                 (##define-syntax t-nomatch
+                   (##lambda (s)
+                     (##syntax-case s ()
+                       ((_ a b) (##syntax 0)))))
+                 (t-nomatch 1)))
+       (stx (add-scope (datum->syntax datum) core-scope)))
+  (check-exn error-exception?
+    (lambda () (##eval-for-syntax-binding stx cte))))
+
+;; a required literal is not supplied
+(let* ((cte ##syntax-interaction-cte)
+       (datum `(##begin
+                 (##define-syntax t-litbad
+                   (##lambda (s)
+                     (##syntax-case s (lit)
+                       ((_ lit) (##syntax 0)))))
+                 (t-litbad nope)))
+       (stx (add-scope (datum->syntax datum) core-scope)))
+  (check-exn error-exception?
+    (lambda () (##eval-for-syntax-binding stx cte))))
+
+;; positive control: the literal supplied correctly matches
+(let* ((cte ##syntax-interaction-cte)
+       (datum `(##begin
+                 (##define-syntax t-litok
+                   (##lambda (s)
+                     (##syntax-case s (lit)
+                       ((_ lit) (##syntax 7)))))
+                 (t-litok lit)))
+       (stx (add-scope (datum->syntax datum) core-scope)))
+  (check-equal? (##eval-for-syntax-binding stx cte) 7))
+
+;;;----------------------------------------------------------------------------
+;;; _ wildcard: matches without binding, may repeat
+
+(let* ((cte ##syntax-interaction-cte)
+       (datum `(##begin
+                 (##define-syntax t-wild
+                   (##lambda (s)
+                     (##syntax-case s ()
+                       ((_ _ b) (##syntax b)))))
+                 (t-wild 1 2)))
+       (stx (add-scope (datum->syntax datum) core-scope)))
+  (check-equal? (##eval-for-syntax-binding stx cte) 2))
+
+(let* ((cte ##syntax-interaction-cte)
+       (datum `(##begin
+                 (##define-syntax t-wild2
+                   (##lambda (s)
+                     (##syntax-case s ()
+                       ((_ _ _) (##syntax 9)))))
+                 (t-wild2 1 2)))
+       (stx (add-scope (datum->syntax datum) core-scope)))
+  (check-equal? (##eval-for-syntax-binding stx cte) 9))
+
+;;;----------------------------------------------------------------------------
+;;; vector patterns: a vector pattern destructures a vector argument
+
+(let* ((cte ##syntax-interaction-cte)
+       (datum `(##begin
+                 (##define-syntax t-vec
+                   (##lambda (s)
+                     (##syntax-case s ()
+                       ((_ #(a b)) (##syntax (list a b))))))
+                 (t-vec #(1 2))))
+       (stx (add-scope (datum->syntax datum) core-scope)))
+  (check-equal? (##eval-for-syntax-binding stx cte)
+                (list 1 2)))
+
+;; ellipsis inside a vector pattern
+(let* ((cte ##syntax-interaction-cte)
+       (datum `(##begin
+                 (##define-syntax t-vec-ell
+                   (##lambda (s)
+                     (##syntax-case s ()
+                       ((_ #(a ...)) (##syntax (list a ...))))))
+                 (t-vec-ell #(1 2 3))))
+       (stx (add-scope (datum->syntax datum) core-scope)))
+  (check-equal? (##eval-for-syntax-binding stx cte)
+                (list 1 2 3)))
+
+;; nested vector pattern
+(let* ((cte ##syntax-interaction-cte)
+       (datum `(##begin
+                 (##define-syntax t-vec-nest
+                   (##lambda (s)
+                     (##syntax-case s ()
+                       ((_ #(a #(b c))) (##syntax (list a b c))))))
+                 (t-vec-nest #(1 #(2 3)))))
+       (stx (add-scope (datum->syntax datum) core-scope)))
+  (check-equal? (##eval-for-syntax-binding stx cte)
+                (list 1 2 3)))
+
+;; a vector pattern of fixed length does not match a longer vector
+(let* ((cte ##syntax-interaction-cte)
+       (datum `(##begin
+                 (##define-syntax t-vec-len
+                   (##lambda (s)
+                     (##syntax-case s ()
+                       ((_ #(a b)) (##syntax 0)))))
+                 (t-vec-len #(1 2 3))))
+       (stx (add-scope (datum->syntax datum) core-scope)))
+  (check-exn error-exception?
+    (lambda () (##eval-for-syntax-binding stx cte))))
+
+;;;----------------------------------------------------------------------------

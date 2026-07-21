@@ -209,6 +209,9 @@
   ; get bindings' level at compile time
 
   (match-source condition (...)
+    (v when (##vector? (##syntax-source-code v))
+     (expand-clause-cond-compile-bindings literals
+       (syntax-source-code-set v (##vector->list (##syntax-source-code v)))))
     ((var ... . rst)
      (append (##map (lambda (b)
                     (##list (##car b)
@@ -229,6 +232,9 @@
   ; collect the pattern-variable syntax objects with their ellipsis levels
 
   (match-source condition (...)
+    (v when (##vector? (##syntax-source-code v))
+     (expand-clause-cond-pattern-vars literals
+       (syntax-source-code-set v (##vector->list (##syntax-source-code v)))))
     ((var ... . rst)
      (append (##map (lambda (b)
                       (##cons (##car b) (##fx+ (##cdr b) 1)))
@@ -323,10 +329,16 @@
    (()
     (expand-clause-cond-list literals condition `(if (##pair? ,expr) ,expr (syntax-source-code ,expr))))
    (_ when (##identifier? condition)
-    (if (member (##syntax-source-code condition) 
+    (if (member (##syntax-source-code condition)
                 (##map ##syntax-source-code literals))
         (expand-clause-cond-literal literals condition expr)
         (expand-clause-cond-identifier literals condition expr)))
+   (_ when (##vector? (##syntax-source-code condition))
+    (let ((list-pattern (syntax-source-code-set condition
+                          (##vector->list (##syntax-source-code condition)))))
+      `(let ((vcode (if (syntax-source? ,expr) (syntax-source-code ,expr) ,expr)))
+         (and (##vector? vcode)
+              ,(expand-clause-cond-list literals list-pattern `(##vector->list vcode))))))
    (_
     `(and (equal? (##syntax-source-code ,expr) ,condition) (##list)))))
 

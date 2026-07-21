@@ -91,148 +91,125 @@
 (match-source stx2a ()
   (((a))
    (scopes-contain-scp1-exactly a)))
-;
-;(match-source stx3a ()
-;  (((a . b))
-;   (scopes-contain-scp1-exactly a)
-;   (scopes-contain-scp1-exactly b)))
-;
-;(match-source stx4a ()
-;  (((a b) . (c d)) 
-;   (scopes-contain-scp1-exactly a)
-;   (scopes-contain-scp1-exactly b)
-;   (scopes-contain-scp1-exactly c)
-;   (scopes-contain-scp1-exactly d)))
-;
-;(match-source stx2f ()
-;  (((a))
-;   (scopes-contain-scp1-exactly a)))
-;
-;(match-source stx3f ()
-;  (((a . b))
-;   (scopes-contain-scp1-exactly a)
-;   (scopes-contain-scp1-exactly b)))
-;
-;(match-source stx4f ()
-;  (((a b) . (c d)) 
-;   (scopes-contain-scp1-exactly a)
-;   (scopes-contain-scp1-exactly b)
-;   (scopes-contain-scp1-exactly c)
-;   (scopes-contain-scp1-exactly d)))
-;
-;;;;----------------------------------------------------------------------------
-;;;; mutatable operations
-;
-;(define stx5 (datum->syntax `(a)))
-;(define stx6 (datum->syntax `((0))))
-;(define stx7 (datum->syntax `((a . b))))
-;(define stx8 (datum->syntax `((a b) . (a b))))
-;
-;(add-scope! stx5 scp1)
-;(match-source stx5 ()
-;  ((a) (scopes-contain-scp1-exactly a)))
-;
-;(add-scope! stx6 scp1)
-;(match-source stx6 ()
-;  (((a))
-;   (scopes-contain-scp1-exactly a)))
-;
-;(add-scope! stx7 scp1)
-;(match-source stx7 ()
-;  (((a . b))
-;   (scopes-contain-scp1-exactly a)
-;   (scopes-contain-scp1-exactly b)))
-;
-;(add-scope! stx8 scp1)
-;(match-source stx8 ()
-;  (((a b) . (c d)) 
-;   (scopes-contain-scp1-exactly a)
-;   (scopes-contain-scp1-exactly b)
-;   (scopes-contain-scp1-exactly c)
-;   (scopes-contain-scp1-exactly d)))
-;
-;(define stx9  (datum->syntax `(a)))
-;(define stx10 (datum->syntax `((0))))
-;(define stx11 (datum->syntax `((a . b))))
-;(define stx12 (datum->syntax `((a b) . (a b))))
-;
-;(add-scope! stx9 scp1)
-;(match-source stx9 ()
-;  ((a) (scopes-contain-scp1-exactly a)))
-;
-;(add-scope! stx10 scp1)
-;(match-source stx10 ()
-;  (((a))
-;   (scopes-contain-scp1-exactly a)))
-;
-;(add-scope! stx11 scp1)
-;(match-source stx11 ()
-;  (((a . b))
-;   (scopes-contain-scp1-exactly a)
-;   (scopes-contain-scp1-exactly b)))
-;
-;(add-scope! stx12 scp1)
-;(match-source stx12 ()
-;  (((a b) . (c d)) 
-;   (scopes-contain-scp1-exactly a)
-;   (scopes-contain-scp1-exactly b)
-;   (scopes-contain-scp1-exactly c)
-;   (scopes-contain-scp1-exactly d)))
-;
-;(define s13   (add-scopes (make-syntax-source #f #f) (list scp1 scp2)))
-;(define stx13 (datum->syntax `(a) s13))
-;(define stx14 (datum->syntax `((0)) s13))
-;(define stx15 (datum->syntax `((a . b)) s13))
-;(define stx16 (datum->syntax `((a b) . (a b)) s13))
-;
-;(flip-scope! stx13 scp2)
-;(match-source stx13 ()
-;  ((a) (scopes-contain-scp1-exactly a)))
-;
-;(flip-scope! stx14 scp2)
-;(match-source stx14 ()
-;  (((a))
-;   (scopes-contain-scp1-exactly a)))
-;
-;(flip-scope! stx15 scp2)
-;(match-source stx15 ()
-;  (((a . b))
-;   (scopes-contain-scp1-exactly a)
-;   (scopes-contain-scp1-exactly b)))
-;
-;(flip-scope! stx16 scp2)
-;(match-source stx16 ()
-;  (((a b) . (c d)) 
-;   (scopes-contain-scp1-exactly a)
-;   (scopes-contain-scp1-exactly b)
-;   (scopes-contain-scp1-exactly c)
-;   (scopes-contain-scp1-exactly d)))
-;
-;(define stx17  (datum->syntax `(a)))
-;(define stx18 (datum->syntax `((0))))
-;(define stx19 (datum->syntax `((a . b))))
-;(define stx20 (datum->syntax `((a b) . (a b))))
-;
-;(flip-scope! stx17 scp2)
-;(match-source stx17 ()
-;  ((a) (scopes-contain-scp1-exactly a)))
-;
-;(flip-scope! stx18 scp2)
-;(match-source stx18 ()
-;  (((a))
-;   (scopes-contain-scp1-exactly a)))
-;
-;(flip-scope! stx19 scp2)
-;(match-source stx19 ()
-;  (((a . b))
-;   (scopes-contain-scp1-exactly a)
-;   (scopes-contain-scp1-exactly b)))
-;
-;(flip-scope! stx20 scp2)
-;(match-source stx20 ()
-;  (((a b) . (c d)) 
-;   (scopes-contain-scp1-exactly a)
-;   (scopes-contain-scp1-exactly b)
-;   (scopes-contain-scp1-exactly c)
-;   (scopes-contain-scp1-exactly d)))
-;
+
+(match-source stx3a ()
+  (((a . b))
+   (scopes-contain-scp1-exactly a)
+   (scopes-contain-scp1-exactly b)))
+
+(match-source stx4a ()
+  (((a b) . (c d))
+   (scopes-contain-scp1-exactly a)
+   (scopes-contain-scp1-exactly b)
+   (scopes-contain-scp1-exactly c)
+   (scopes-contain-scp1-exactly d)))
+
+(match-source stx2f ()
+  (((a))
+   (scopes-contain-scp1-exactly a)))
+
+(match-source stx3f ()
+  (((a . b))
+   (scopes-contain-scp1-exactly a)
+   (scopes-contain-scp1-exactly b)))
+
+(match-source stx4f ()
+  (((a b) . (c d))
+   (scopes-contain-scp1-exactly a)
+   (scopes-contain-scp1-exactly b)
+   (scopes-contain-scp1-exactly c)
+   (scopes-contain-scp1-exactly d)))
+
+;;;----------------------------------------------------------------------------
+;;; mutable operations
+
+;;; add-scope! propagates into compound / dotted / nested syntax
+
+(define stx5 (datum->syntax `(a)))
+(define stx6 (datum->syntax `((0))))
+(define stx7 (datum->syntax `((a . b))))
+(define stx8 (datum->syntax `((a b) . (a b))))
+
+(add-scope! stx5 scp1)
+(match-source stx5 ()
+  ((a) (scopes-contain-scp1-exactly a)))
+
+(add-scope! stx6 scp1)
+(match-source stx6 ()
+  (((a))
+   (scopes-contain-scp1-exactly a)))
+
+(add-scope! stx7 scp1)
+(match-source stx7 ()
+  (((a . b))
+   (scopes-contain-scp1-exactly a)
+   (scopes-contain-scp1-exactly b)))
+
+(add-scope! stx8 scp1)
+(match-source stx8 ()
+  (((a b) . (c d))
+   (scopes-contain-scp1-exactly a)
+   (scopes-contain-scp1-exactly b)
+   (scopes-contain-scp1-exactly c)
+   (scopes-contain-scp1-exactly d)))
+
+;;; flip-scope! removing a scope that was already present (scp1+scp2 -> scp1)
+
+(define s13   (add-scopes (make-syntax-source #f #f) (list scp1 scp2)))
+(define stx13 (datum->syntax `(a) s13))
+(define stx14 (datum->syntax `((0)) s13))
+(define stx15 (datum->syntax `((a . b)) s13))
+(define stx16 (datum->syntax `((a b) . (a b)) s13))
+
+(flip-scope! stx13 scp2)
+(match-source stx13 ()
+  ((a) (scopes-contain-scp1-exactly a)))
+
+(flip-scope! stx14 scp2)
+(match-source stx14 ()
+  (((a))
+   (scopes-contain-scp1-exactly a)))
+
+(flip-scope! stx15 scp2)
+(match-source stx15 ()
+  (((a . b))
+   (scopes-contain-scp1-exactly a)
+   (scopes-contain-scp1-exactly b)))
+
+(flip-scope! stx16 scp2)
+(match-source stx16 ()
+  (((a b) . (c d))
+   (scopes-contain-scp1-exactly a)
+   (scopes-contain-scp1-exactly b)
+   (scopes-contain-scp1-exactly c)
+   (scopes-contain-scp1-exactly d)))
+
+;;; flip-scope! adding a scope that was absent (none -> scp2)
+
+(define stx17 (datum->syntax `(a)))
+(define stx18 (datum->syntax `((0))))
+(define stx19 (datum->syntax `((a . b))))
+(define stx20 (datum->syntax `((a b) . (a b))))
+
+(flip-scope! stx17 scp2)
+(match-source stx17 ()
+  ((a) (scopes-contain-scp2-exactly a)))
+
+(flip-scope! stx18 scp2)
+(match-source stx18 ()
+  (((a))
+   (scopes-contain-scp2-exactly a)))
+
+(flip-scope! stx19 scp2)
+(match-source stx19 ()
+  (((a . b))
+   (scopes-contain-scp2-exactly a)
+   (scopes-contain-scp2-exactly b)))
+
+(flip-scope! stx20 scp2)
+(match-source stx20 ()
+  (((a b) . (c d))
+   (scopes-contain-scp2-exactly a)
+   (scopes-contain-scp2-exactly b)
+   (scopes-contain-scp2-exactly c)
+   (scopes-contain-scp2-exactly d)))

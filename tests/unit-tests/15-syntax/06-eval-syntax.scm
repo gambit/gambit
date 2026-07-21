@@ -263,6 +263,58 @@
       ((##lambda (#!optional (a '1) #!rest c #!key (b '1)) a b c) 5))))
 
 ;;;----------------------------------------------------------------------------
+;;; #!optional
+
+(let* ((cte ##syntax-interaction-cte)
+       (datum `((##lambda (x #!optional (a x)) (##list x a)) 5))
+       (stx (add-scope (datum->syntax datum) core-scope)))
+  (check-equal? (##eval-top-syntax stx cte)
+                ((lambda (x #!optional (a x)) (list x a)) 5)))
+
+(let* ((cte ##syntax-interaction-cte)
+       (datum `((##lambda (x #!optional (a x)) (##list x a)) 5 9))
+       (stx (add-scope (datum->syntax datum) core-scope)))
+  (check-equal? (##eval-top-syntax stx cte)
+                ((lambda (x #!optional (a x)) (list x a)) 5 9)))
+
+(let* ((cte ##syntax-interaction-cte)
+       (datum `((##lambda (#!optional (a 1) (b a)) (##list a b))))
+       (stx (add-scope (datum->syntax datum) core-scope)))
+  (check-equal? (##eval-top-syntax stx cte)
+                ((lambda (#!optional (a 1) (b a)) (list a b)))))
+
+(let* ((cte ##syntax-interaction-cte)
+       (datum `((##lambda (y) ((##lambda (#!optional (a y)) a))) 10))
+       (stx (add-scope (datum->syntax datum) core-scope)))
+  (check-equal? (##eval-top-syntax stx cte)
+                10))
+
+(let* ((cte ##syntax-interaction-cte)
+       (datum `(##begin
+                 (##define dsssl-shadow-x 100)
+                 ((##lambda (dsssl-shadow-x #!optional (a dsssl-shadow-x)) a) 5)))
+       (stx (add-scope (datum->syntax datum) core-scope)))
+  (check-equal? (##eval-for-top-syntax stx cte)
+                5))
+
+;;;----------------------------------------------------------------------------
+;;; #!key
+
+(let* ((cte ##syntax-interaction-cte)
+       (datum `((##lambda (x #!key (a x)) (##list x a)) 5))
+       (stx (add-scope (datum->syntax datum) core-scope)))
+  (check-equal? (##eval-top-syntax stx cte)
+                ((lambda (x #!key (a x)) (list x a)) 5)))
+
+(let* ((cte ##syntax-interaction-cte)
+       (datum `(##begin
+                 (##define dsssl-shadow-k 100)
+                 ((##lambda (dsssl-shadow-k #!key (a dsssl-shadow-k)) a) 5)))
+       (stx (add-scope (datum->syntax datum) core-scope)))
+  (check-equal? (##eval-for-top-syntax stx cte)
+                5))
+
+;;;----------------------------------------------------------------------------
 ;;; quasiquote unquote-splicing
 
 (let* ((cte ##syntax-interaction-cte)

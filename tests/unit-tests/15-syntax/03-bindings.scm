@@ -446,3 +446,33 @@
                  (##ctx-binding-core-macro-expander b))))))))
 
 ;;;----------------------------------------------------------------------------
+;;; identifier predicates (bound-identifier=? & free-identifier=?)
+
+(let* ((scp1 (make-scope))
+       (ix   (##make-syntax-source 'x #f))
+       (ix2  (##make-syntax-source 'x #f))
+       (iy   (##make-syntax-source 'y #f))
+       (inum (##make-syntax-source 0 #f))
+       (ixs  (add-scope ix scp1)))
+
+  ; same symbol, both scope-free
+  (check-true (and (bound-identifier=? ix ix2) #t))
+  ; same symbol, different scope sets
+  (check-true (not (bound-identifier=? ix ixs)))
+  ; different symbol
+  (check-true (not (bound-identifier=? ix iy)))
+  ; same symbol, same scope
+  (check-true (and (bound-identifier=? (add-scope ix2 scp1) ixs) #t))
+  ; non-identifier argument
+  (check-true (not (bound-identifier=? inum ix)))
+
+  (check-true (and (free-identifier=? ix ixs) #t))
+  (check-true (not (free-identifier=? ix iy))))
+
+(let* ((scp1 (make-scope))
+       (car1 (add-scope (##make-syntax-source 'car #f) core-scope))
+       (car2 (add-scope car1 scp1)))
+  (check-true (and (free-identifier=? car1 car2) #t))
+  (check-true (not (bound-identifier=? car1 car2))))
+
+;;;----------------------------------------------------------------------------
