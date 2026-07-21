@@ -3580,7 +3580,7 @@ for a discussion of branch cuts.
   (define (real-case x)
     (if (##< x 1)
         (macro-if-cpxnum
-         (##cacosh (macro-cpxnum-make x 0))
+         (##cacosh x)
          (range-error))
         (##flacosh (##exact->inexact x))))
 

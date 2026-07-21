@@ -9,6 +9,8 @@
 (check-= (acosh 0)    (test-acosh 0))
 (check-= (acosh +0.i) (test-acosh +0.i))
 (check-= (acosh -0.i) (test-acosh -0.i))
+(check-= (acosh 1)    (test-acosh 1))
+(check-= (acosh -1)   (test-acosh -1))
 
 (check-= (acosh 1/2)  (test-acosh 1/2))
 (check-= (acosh +1/2i) (test-acosh +1/2i))
