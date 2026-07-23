@@ -164,7 +164,7 @@
  (obj->str obj2 write 'default))
 
 ;;write would loop forever on obj2...
-;;(check-equal?
+;;(test-equal
 ;; (obj->str obj2 write #f)
 ;; " ")
 
@@ -177,12 +177,12 @@
  (obj->str obj2 write 'serialize))
 
 ;;write-simple would loop forever on obj2...
-;;(check-equal?
+;;(test-equal
 ;; (obj->str obj2 write-simple 'default)
 ;; " ")
 
 ;;write-simple would loop forever on obj2...
-;;(check-equal?
+;;(test-equal
 ;; (obj->str obj2 write-simple #f)
 ;; " ")
 
@@ -199,7 +199,7 @@
  (obj->str obj2 write-shared 'default))
 
 ;;write-shared would loop forever on obj2...
-;;(check-equal?
+;;(test-equal
 ;; (obj->str obj2 write-shared #f)
 ;; " ")
 
@@ -216,7 +216,7 @@
  (obj->str obj2 display 'default))
 
 ;;display would loop forever on obj2...
-;;(check-equal?
+;;(test-equal
 ;; (obj->str obj2 display #f)
 ;; " ")
 
@@ -233,7 +233,7 @@
  (obj->str obj2 pretty-print 'default))
 
 ;;pretty-print would loop forever on obj2...
-;;(check-equal?
+;;(test-equal
 ;; (obj->str obj2 pretty-print #f)
 ;; " ")
 
