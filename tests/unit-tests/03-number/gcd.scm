@@ -29,6 +29,33 @@
 ;;; Tickled a previous bug
 
 (test-eqv 1 (gcd 6521908912666391553 9223372036854775808))
+#|
+
+The following tests were generated as part of a new version of gcd.
+The code that generated them is as follows.  Correctness was checked
+by visual examination.
+
+(define exact-arguments
+  (list 0 1 -1
+        (##least-fixnum) (##greatest-fixnum)
+        (* (##least-fixnum) 2) (* (##greatest-fixnum) 2)))
+
+(define all-arguments
+  (append exact-arguments (cons -0. (map exact->inexact exact-arguments))))
+
+(for-each (lambda (x)
+            (for-each (lambda (y)
+                        (let ((expr `(my-gcd2 ,x ,y)))
+                          (display "(test-eqv ")
+                          (display (cons 'gcd (cdr expr)))
+                          (display " ")
+                          (display (eval expr))
+                          (display ")")
+                          (newline)))
+                      all-arguments))
+          all-arguments)
+|#
+
 
 
 (test-eqv 0 (gcd 0 0))

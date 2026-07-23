@@ -24,13 +24,13 @@
 (test-assert (eq? #t (nan? (real-part (tanh 1.+nan.0i)))))
 (test-assert (eq? #t (nan? (imag-part (tanh 1.+nan.0i)))))
 
-;; (check-eqv?       (real-part (tanh +0.+nan.0i)) 0.0) GOT +nan.0
+;; (test-eqv       (real-part (tanh +0.+nan.0i)) 0.0) GOT +nan.0
 (test-assert (eq? #t (nan? (imag-part (tanh 0.+nan.0i)))))
 
 (test-assert (eq? #t (nan? (real-part (tanh 1.+inf.0i)))))
 (test-assert (eq? #t (nan? (imag-part (tanh 1.+inf.0i)))))
 
-;; (check-eqv?       (real-part (tanh +0.+inf.0i)) 0.0) GOT +nan.0
+;; (test-eqv       (real-part (tanh +0.+inf.0i)) 0.0) GOT +nan.0
 (test-assert (eq? #t (nan? (imag-part (tanh 0.+inf.0i)))))
 
 (test-eqv 1.+0.i (tanh +inf.0+1.i))
@@ -42,7 +42,7 @@
 (test-eqv 0. (abs (imag-part (tanh +inf.0+nan.0i))))
 
 (test-assert (eq? #t (nan? (real-part (tanh +nan.0+0.i)))))
-;; (check-eqv?       (imag-part (tanh +nan.0+0.i)) 0.) GOT +nan.0
+;; (test-eqv       (imag-part (tanh +nan.0+0.i)) 0.) GOT +nan.0
 
 (test-assert (eq? #t (nan? (real-part (tanh +nan.0+1.i)))))
 (test-assert (eq? #t (nan? (imag-part (tanh +nan.0+1.i)))))

@@ -7,7 +7,7 @@
 (test-equal '#u8(66 67) (string->utf8 "ABC" 1 3))
 (test-equal '#u8() (string->utf8 "ABC" 3 3))
 
-#;(test-equal '#u8() (string->utf8 ""))
+(test-equal '#u8() (string->utf8 ""))
 (test-equal '#u8(#x00) (string->utf8 "\x0;"))
 (test-equal '#u8(#x7F) (string->utf8 "\x7f;"))
 (test-equal '#u8(#xC2 #x80) (string->utf8 "\x80;"))

@@ -32,10 +32,10 @@
 
 (test-assert (eq? #f (circular-list? lst3)))
 
-(test-assert (eq? #t (circular-list? lst4)))
-(test-assert (eq? #t (circular-list? lst5)))
-(test-assert (eq? #t (circular-list? lst6)))
-(test-assert (eq? #t (circular-list? lst7)))
+(test-assert (circular-list? lst4))
+(test-assert (circular-list? lst5))
+(test-assert (circular-list? lst6))
+(test-assert (circular-list? lst7))
 
 (test-error-tail wrong-number-of-arguments-exception? (circular-list?))
 (test-error-tail

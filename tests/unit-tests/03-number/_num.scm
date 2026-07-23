@@ -387,11 +387,11 @@
 ;; On Windows with 32 bit MinGW, the following unit tests fail:
 ;;
 ;;(test-eqv (/ 3 (sqrt (sqrt 100))) (expt 100/81 -1/4))
-;;(test-eqv -1. (expt -1. (expt 3 1000)))
+;;(test-eqv (expt -1. (expt 3 1000)) -1)
 ;; They give these errors:
 ;;
-;;"unit-tests\\04-coverage\\_num.scm"@174.1: FAILED (check-eqv? (expt 100/81 -1/4) (/ 3 (sqrt (sqrt 100)))) GOT .9486832980505139
-;;"unit-tests\\04-coverage\\_num.scm"@175.1: FAILED (check-eqv? (expt -1. (expt 3 1000)) -1.) GOT +nan.0
+;;"unit-tests\\04-coverage\\_num.scm"@174.1: FAILED (test-eqv (expt 100/81 -1/4) (/ 3 (sqrt (sqrt 100)))) GOT .9486832980505139
+;;"unit-tests\\04-coverage\\_num.scm"@175.1: FAILED (test-eqv (expt -1. (expt 3 1000)) -1.) GOT +nan.0
 ;;
 ;; The problem occurs specifically in the appveyor environment.
 ;; Unfortunately it can't be reproduced elsewhere, so solving
@@ -1452,29 +1452,29 @@
 
 #;
 (let ()
-  (pp `(check-eqv? (* (expt 2 1500) ,(inexact (expt 2 -750))) ,(inexact (expt 2 750))))
-  (pp `(check-eqv? (* ,(inexact (expt 2 -750)) (expt 2 1500)) ,(inexact (expt 2 750))))
+  (pp `(test-eqv (* (expt 2 1500) ,(inexact (expt 2 -750))) ,(inexact (expt 2 750))))
+  (pp `(test-eqv (* ,(inexact (expt 2 -750)) (expt 2 1500)) ,(inexact (expt 2 750))))
 
-  (pp `(check-eqv? (* (expt #e2.1 1500) ,(inexact (expt 2 -750))) ,(inexact (* (expt #e2.1 1500) (expt 2 -750)))))
-  (pp `(check-eqv? (* ,(inexact (expt 2 -750)) (expt #e2.1 1500)) ,(inexact (* (expt #e2.1 1500) (expt 2 -750)))))
+  (pp `(test-eqv (* (expt #e2.1 1500) ,(inexact (expt 2 -750))) ,(inexact (* (expt #e2.1 1500) (expt 2 -750)))))
+  (pp `(test-eqv (* ,(inexact (expt 2 -750)) (expt #e2.1 1500)) ,(inexact (* (expt #e2.1 1500) (expt 2 -750)))))
 
-  (pp `(check-eqv? (* (expt 2 -1500) ,(inexact (expt 2 750))) ,(inexact (expt 2 -750))))
-  (pp `(check-eqv? (* ,(inexact (expt 2 750)) (expt 2 -1500)) ,(inexact (expt 2 -750))))
+  (pp `(test-eqv (* (expt 2 -1500) ,(inexact (expt 2 750))) ,(inexact (expt 2 -750))))
+  (pp `(test-eqv (* ,(inexact (expt 2 750)) (expt 2 -1500)) ,(inexact (expt 2 -750))))
 
-  (pp `(check-eqv? (* (expt #e2.1 -1500) ,(inexact (expt 2 750))) ,(inexact (* (expt #e2.1 -1500) (expt 2 750)))))
-  (pp `(check-eqv? (* ,(inexact (expt 2 750)) (expt #e2.1 -1500)) ,(inexact (* (expt #e2.1 -1500) (expt 2 750)))))
+  (pp `(test-eqv (* (expt #e2.1 -1500) ,(inexact (expt 2 750))) ,(inexact (* (expt #e2.1 -1500) (expt 2 750)))))
+  (pp `(test-eqv (* ,(inexact (expt 2 750)) (expt #e2.1 -1500)) ,(inexact (* (expt #e2.1 -1500) (expt 2 750)))))
 
-  (pp `(check-eqv? (/ (expt 2 1500) ,(inexact (expt 2 750))) ,(inexact (expt 2 +750))))
-  (pp `(check-eqv? (/ ,(inexact (expt 2 750)) (expt 2 1500)) ,(inexact (expt 2 -750))))
+  (pp `(test-eqv (/ (expt 2 1500) ,(inexact (expt 2 750))) ,(inexact (expt 2 +750))))
+  (pp `(test-eqv (/ ,(inexact (expt 2 750)) (expt 2 1500)) ,(inexact (expt 2 -750))))
 
-  (pp `(check-eqv? (/ (expt #e2.1 1500) ,(inexact (expt 2 750))) ,(inexact (/ (expt #e2.1 1500) (expt 2 750)))))
-  (pp `(check-eqv? (/ ,(inexact (expt 2 750)) (expt #e2.1 1500)) ,(inexact (/ (expt 2 750) (expt #e2.1 1500)))))
+  (pp `(test-eqv (/ (expt #e2.1 1500) ,(inexact (expt 2 750))) ,(inexact (/ (expt #e2.1 1500) (expt 2 750)))))
+  (pp `(test-eqv (/ ,(inexact (expt 2 750)) (expt #e2.1 1500)) ,(inexact (/ (expt 2 750) (expt #e2.1 1500)))))
 
-  (pp `(check-eqv? (/ (expt 2 -1500) ,(inexact (expt 2 -750))) ,(inexact (expt 2 -750))))
-  (pp `(check-eqv? (/ ,(inexact (expt 2 -750)) (expt 2 -1500)) ,(inexact (expt 2 +750))))
+  (pp `(test-eqv (/ (expt 2 -1500) ,(inexact (expt 2 -750))) ,(inexact (expt 2 -750))))
+  (pp `(test-eqv (/ ,(inexact (expt 2 -750)) (expt 2 -1500)) ,(inexact (expt 2 +750))))
 
-  (pp `(check-eqv? (/ (expt #e2.1 1500) ,(inexact (expt 2 750))) ,(inexact (/ (expt #e2.1 1500) (expt 2 750)))))
-  (pp `(check-eqv? (/ ,(inexact (expt 2 750)) (expt #e2.1 1500)) ,(inexact (/ (expt 2 750) (expt #e2.1 1500)))))
+  (pp `(test-eqv (/ (expt #e2.1 1500) ,(inexact (expt 2 750))) ,(inexact (/ (expt #e2.1 1500) (expt 2 750)))))
+  (pp `(test-eqv (/ ,(inexact (expt 2 750)) (expt #e2.1 1500)) ,(inexact (/ (expt 2 750) (expt #e2.1 1500)))))
 
 )
 
@@ -1577,7 +1577,7 @@
 							      ")\n"
 							      ))
 				      ;; then check result is eqv? (includes inexactness check)
-				      (for-each display (list "(check-eqv? ("
+				      (for-each display (list "(test-eqv ("
 							      op-name
 							      " "
 							      x
@@ -1829,7 +1829,7 @@
 		(for-each (lambda (n)
 			    (for-each (lambda (size)
 					(for-each (lambda (position)
-						    (for-each display (list "(check-eqv? ("
+						    (for-each display (list "(test-eqv ("
 									    op-name
 									    " "
 									    size
@@ -2160,7 +2160,7 @@
 ;;; Some error tests.
 
 ;;; heap-overflow-exception? doesn't seem to exist in the universal back end.
-;;; (check-exn heap-overflow-exception? (lambda () (extract-bit-field (expt 2 100) (expt 2 100) -1)))
+;;; (test-error heap-overflow-exception? (lambda () (extract-bit-field (expt 2 100) (expt 2 100) -1)))
 
 (test-error-tail type-exception? (extract-bit-field -1 1 1))
 (test-error-tail type-exception? (extract-bit-field 1 -1 1))
@@ -2177,7 +2177,7 @@
 (for-each (lambda (n)
             (for-each (lambda (size)
                         (for-each (lambda (position)
-                                    (pp `(check-eqv? (test-bit-field?      ,size ,position ,n)
+                                    (pp `(test-eqv (test-bit-field?      ,size ,position ,n)
                                                      (test-test-bit-field? ,size ,position ,n))))
                                   (iota 3 0)))
                       (iota 3 1)))
@@ -2294,7 +2294,7 @@
 		     (- (random-integer 20)))))
     (for-each (lambda (x)
 		(for-each (lambda (shift)
-					(for-each display (list "(check-eqv? ("
+					(for-each display (list "(test-eqv ("
 								'arithmetic-shift
 								" "
 								x
@@ -2403,7 +2403,7 @@
     (for-each (lambda (x)
 		(for-each (lambda (y)
 			    (for-each (lambda (op op-name)
-					(for-each display (list "(check-eq? ("
+					(for-each display (list "(test-eq ("
 								op-name
 								" "
 								x
