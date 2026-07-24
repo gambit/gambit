@@ -77,7 +77,7 @@
                (cte      cte))
       (match-source bindings ()
         ((binding @ (id val) . bindings)
-         (let* ((val (expand (add-scopes val scps) cte))
+         (let* ((val (##expand (add-scopes val scps) cte))
                 (scps (cons (make-scope) scps))
                 (id (##add-scopes id scps)))
            (cond
@@ -187,7 +187,7 @@
                                            (lambda (binding-code)
                                              (match-source binding-code ()
                                                ((id val)
-                                                (list id (expand val cte))))))))
+                                                (list id (##expand val cte))))))))
                                    (loop 
                                      (cdr bindings)
                                      (cons new-binding result)))))
@@ -343,7 +343,7 @@
                                  (lambda (code) (cons fake-binding code))))
                 (fake-expr     (##syntax-source-code-set ,stx-id
                                 `(,(##make-core-syntax-source '##let #f) ,fake-bindings ,@body))))
-           (match-source (expand fake-expr ,cte-id) ()
+           (match-source (##expand fake-expr ,cte-id) ()
              ((_ ((name _) . bindings) . body)
               (##syntax-source-code-set ,stx-id
                 `(,let-id ,name ,(##make-syntax-source bindings #f) ,@body))))))
@@ -364,40 +364,40 @@
         (_
           (##raise-ill-formed-special-form stx))))))
 
-(define-prim&proc (expand-let stx cte)
+(define-primitive (expand-let stx cte)
   (##expand-let-forms ##let #f stx cte))
 
-(define-prim&proc (expand-let* stx cte)
+(define-primitive (expand-let* stx cte)
   (##expand-let-forms ##let* #f stx cte))
 
-(define-prim&proc (expand-letrec stx cte)
+(define-primitive (expand-letrec stx cte)
   (##expand-let-forms ##letrec #f stx cte))
 
-(define-prim&proc (expand-letrec* stx cte)
+(define-primitive (expand-letrec* stx cte)
   (##expand-let-forms ##letrec* #f stx cte))
 
-(define-prim&proc (expand-let-values stx cte)
+(define-primitive (expand-let-values stx cte)
   (##expand-let-forms ##let-values #f stx cte))
 
-(define-prim&proc (expand-let*-values stx cte)
+(define-primitive (expand-let*-values stx cte)
   (##expand-let-forms ##let*-values #f stx cte))
 
-(define-prim&proc (expand-letrec-values stx cte)
+(define-primitive (expand-letrec-values stx cte)
   (##expand-let-forms ##letrec-values #f stx cte))
 
-(define-prim&proc (expand-letrec*-values stx cte)
+(define-primitive (expand-letrec*-values stx cte)
   (##expand-let-forms ##letrec*-values #f stx cte))
 
-(define-prim&proc (expand-let-syntax stx cte)
+(define-primitive (expand-let-syntax stx cte)
   (##expand-let-forms ##let-syntax #t stx cte))
 
-(define-prim&proc (expand-let*-syntax stx cte)
+(define-primitive (expand-let*-syntax stx cte)
   (##expand-let-forms ##let*-syntax #t stx cte))
 
-(define-prim&proc (expand-letrec-syntax stx cte)
+(define-primitive (expand-letrec-syntax stx cte)
   (##expand-let-forms ##letrec-syntax #t stx cte))
 
-(define-prim&proc (expand-letrec*-syntax stx cte)
+(define-primitive (expand-letrec*-syntax stx cte)
   (##expand-let-forms ##letrec*-syntax #t stx cte))
 
 ;;;----------------------------------------------------------------------------
@@ -421,7 +421,7 @@
                           stx
                           (##dispatch t stx cte #t)))))))))))
 
-(define-prim&proc (expand-begin s cte)
+(define-primitive (expand-begin s cte)
   (##syntax-source-code-update s
     (lambda (code)
       (if (null? (cdr code))
@@ -432,7 +432,7 @@
                      (lambda _
                        (##raise-ill-formed-special-form s)))))))))
 
-(define-prim&proc (expand-macro-scope s cte)
+(define-primitive (expand-macro-scope s cte)
   (let* ((state (##hygiene-environment-macro-state-ref cte))
          (s     (syntax-source-code-update s 
                   (lambda (s)
@@ -442,13 +442,13 @@
     (##hygiene-environment-macro-state-restore! cte state)
     expanded))
 
-(define-prim&proc (expand-namespace-scope s cte)
+(define-primitive (expand-namespace-scope s cte)
   (let* ((state (##hygiene-environment-namespace-state-ref cte))
          (expanded (##expand-begin s cte)))
     (##hygiene-environment-namespace-state-restore! cte state)
     expanded))
 
-(define-prim&proc (expand-body body cte)
+(define-primitive (expand-body body cte)
   ; core-expand trough expressions, expanding syntax bindings as letrec*-syntax
   ; and registering define form to implement letrec* behahvior.
   ; Stop at the first non-definer, continue with normal ##begin expansion and
@@ -633,14 +633,14 @@
 (define-prim (##expand-pair/list stx cte on-pair-proc)
   (##syntax-source-code-update stx
     (lambda (code)
-      (##map-pair (lambda (e) (expand e cte))
+      (##map-pair (lambda (e) (##expand e cte))
                   on-pair-proc
                   code))))
 
 (define-prim (##expand-pair stx cte)
   (##expand-pair/list stx cte 
     (lambda (code)
-      (expand code cte))))
+      (##expand code cte))))
 
 ;;;----------------------------------------------------------------------------
 ;;; application form
@@ -667,7 +667,7 @@
        (let ((transformed-s (##apply-transformer proc s)))
          (if no-reexpansion
              (##expand->core-form transformed-s cte)
-             (expand transformed-s cte)))))
+             (##expand transformed-s cte)))))
     ((##ctx-binding-core-macro? t)
      (cond
        (no-reexpansion
@@ -743,7 +743,7 @@
                (let* ((param (car params))
                       (val   (let ((val (cdr param)))
                                (if (##syntax-source? val)
-                                   (expand (add-scopes val scps) cte)
+                                   (##expand (add-scopes val scps) cte)
                                    val)))
                       (scps  (cons (make-scope) scps))
                       (id    (add-scopes (car param) scps))
@@ -897,16 +897,16 @@
      ;
       stx)))
 
-(define-prim&proc (syntax-full-name-maybe cte id)
+(define-primitive (syntax-full-name-maybe cte id)
   (let ((full-name (##hygiene-environment-global-name cte id)))
       (and full-name
            (syntax-source-code-set id full-name))))
 
-(define-prim&proc (syntax-full-name cte id)
+(define-primitive (syntax-full-name cte id)
   (or (##syntax-full-name-maybe cte id)
       id))
 
-(define-prim&proc (expand-define stx cte)
+(define-primitive (expand-define stx cte)
   (cond
     ((##hygiene-environment-top? cte)
      (match-source (##transform-define-form->base-form stx) ()
@@ -995,10 +995,10 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim&proc (expand-declare stx cte)
+(define-primitive (expand-declare stx cte)
   stx)
 
-(define-prim&proc (expand-quote stx cte)
+(define-primitive (expand-quote stx cte)
   (let ((code (##syntax-source-code stx)))
     (if (and (pair? code)
              (pair? (cdr code))
@@ -1007,7 +1007,7 @@
         (##raise-ill-formed-special-form
           stx))))
 
-(define-prim&proc (expand-quote-syntax stx cte)
+(define-primitive (expand-quote-syntax stx cte)
   (let ((code (##syntax-source-code stx)))
     (if (and (pair? code)
              (pair? (cdr code))
@@ -1016,7 +1016,7 @@
         (##raise-ill-formed-special-form
           stx))))
 
-(define-prim&proc (expand-syntax stx cte)
+(define-primitive (expand-syntax stx cte)
   (let ((code (##syntax-source-code stx)))
     (if (and (pair? code)
              (pair? (cdr code))
@@ -1025,12 +1025,12 @@
         (##raise-ill-formed-special-form
          stx))))
 
-(define-prim&proc (expand-unquote s cte)
+(define-primitive (expand-unquote s cte)
   (##raise-expression-parsing-exception
     'ill-placed-unquote
     s))
 
-(define-prim&proc (expand-unquote-splicing s cte)
+(define-primitive (expand-unquote-splicing s cte)
   (##raise-expression-parsing-exception
     'ill-placed-unqote-splicing
     s))
@@ -1110,18 +1110,18 @@
           (expand-template s -1)
           (##raise-ill-formed-special-form s)))))
 
-(define-prim&proc (expand-quasiquote stx cte)
+(define-primitive (expand-quasiquote stx cte)
   ((make-expand/compile-quasiquote-expander ##expand)
    stx
    cte))
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim&proc (expand-namespace stx cte)
+(define-primitive (expand-namespace stx cte)
   (##top-hygiene-environment-process-namespace! cte stx)
   stx)
 
-(define-prim&proc (expand-include stx-src cte)
+(define-primitive (expand-include stx-src cte)
 
   (define (##include-file-as-a-begin-expr src)
 
@@ -1169,7 +1169,7 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim&proc (expand-case stx cte)
+(define-primitive (expand-case stx cte)
 
   (define (expand-clauses clauses cte)
     (cond
@@ -1185,7 +1185,7 @@
                                `(,(##make-core-syntax-source '##begin #f)
                                  , val
                                  ,@vals)))))
-                (let* ((expanded-val (expand val cte))
+                (let* ((expanded-val (##expand val cte))
                        (expanded-vals (if (null? vals)
                                           (list expanded-val)
                                           (cdr (##syntax-source-code expanded-val)))))
@@ -1204,7 +1204,7 @@
   ; skip pattern expansion ...
   (match-source stx ()
     ((case-id expr . clauses)
-     (let ((expr (expand expr cte))
+     (let ((expr (##expand expr cte))
            (clauses (expand-clauses clauses cte)))
        (##syntax-source-code-set stx
          `(,case-id ,expr ,@clauses))))

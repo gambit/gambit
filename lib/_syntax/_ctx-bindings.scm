@@ -56,7 +56,7 @@
        (##eq? (##vector-ref obj 0) 
               'not-found)))
 
-(define-prim&proc (resolve-binding id cte)
+(define-primitive (resolve-binding id cte)
   (let ((binding (##resolve-id id cte))) ;!!!!
     (let ((key (cond
                  ((##binding-top-level? binding)
@@ -69,7 +69,7 @@
                (##hygiene-environment-ctx-ref cte key #f))
           (##not-found-object id)))))
 
-(define-prim&proc (resolve-binding-top-level id cte)
+(define-primitive (resolve-binding-top-level id cte)
   (let ((binding (##resolve-id id cte))) ;!!!!
     (let ((key (cond
                  ((##binding-top-level? binding)
@@ -81,7 +81,7 @@
           (##not-found-object id)))))
 
 
-(define-prim&proc (resolve-binding-expander id cte)
+(define-primitive (resolve-binding-expander id cte)
   (let ((binding (##resolve-local id cte)))
     (let ((key
             (cond

@@ -19,7 +19,7 @@
 
 (let ((cte (##make-top-cte))
       (id  (##make-syntax-source 'x #f)))
-  (let ((key (hcte-add-new-local-binding! cte id)))
+  (let ((key (##hcte-add-new-local-binding! cte id)))
     (let ((lst (table->list (##cte-top-global-binding-table cte))))
       (and (= (length lst) 1)
            (let* ((entry   (car lst))
@@ -41,7 +41,7 @@
 
 (let ((cte (##make-top-cte))
       (id  (##make-syntax-source 'x #f)))
-  (let ((key (hcte-add-new-top-level-binding! cte id)))
+  (let ((key (##hcte-add-new-top-level-binding! cte id)))
     (let ((lst (table->list (##cte-top-global-binding-table cte))))
       (and (= (length lst) 1)
            (let* ((entry   (car lst))
@@ -65,8 +65,8 @@
 
 (let ((cte (##make-top-cte))
       (id  (##make-syntax-source 'x #f)))
-  (let ((key (hcte-add-new-top-level-binding! cte id)))
-    (let ((new-cte (hcte-add-variable-cte cte key id)))
+  (let ((key (##hcte-add-new-top-level-binding! cte id)))
+    (let ((new-cte (##hcte-add-variable-cte cte key id)))
       (let ((lst (##hash-set-hamt->list (##cte-ctx new-cte))))
         (check-true
           (and (list? lst)
@@ -85,8 +85,8 @@
 
 (let ((cte (##make-top-cte))
       (id  (##make-syntax-source 'x #f)))
-  (let ((key (hcte-add-new-top-level-binding! cte id)))
-    (let ((new-cte (hcte-add-macro-cte cte key id (##make-syntax-source '+ #f))))
+  (let ((key (##hcte-add-new-top-level-binding! cte id)))
+    (let ((new-cte (##hcte-add-macro-cte cte key id (##make-syntax-source '+ #f))))
       (let ((lst (##hash-set-hamt->list (##cte-ctx new-cte))))
         (check-true
           (and (list? lst)
@@ -106,8 +106,8 @@
 
 (let ((cte (##make-top-cte))
       (id  (##make-syntax-source 'x #f)))
-  (let ((key (hcte-add-new-top-level-binding! cte id)))
-    (let ((new-cte (hcte-add-core-macro-cte cte key id (##make-syntax-source '+ #f))))
+  (let ((key (##hcte-add-new-top-level-binding! cte id)))
+    (let ((new-cte (##hcte-add-core-macro-cte cte key id (##make-syntax-source '+ #f))))
       (let ((lst (##hash-set-hamt->list (##cte-ctx new-cte))))
         (check-true
           (and (list? lst)
@@ -129,17 +129,17 @@
 
 (let* ((top-cte (##make-top-cte))
        (id  (##make-syntax-source 'x #f))
-       (key (hcte-add-new-top-level-binding! top-cte id))
-       (binding (resolve-id id top-cte)))
+       (key (##hcte-add-new-top-level-binding! top-cte id))
+       (binding (##resolve-id id top-cte)))
   ; simple insert
   (check-true
     (and (##binding-top-level? binding)
          (not (##binding-local? binding))
          (equal? (##binding-top-level-symbol binding) key)))
   (let* ((id2 (##make-syntax-source 'y #f))
-         (key2 (hcte-add-new-top-level-binding! top-cte id2))
-         (binding   (resolve-id id top-cte))
-         (binding2  (resolve-id id2 top-cte)))
+         (key2 (##hcte-add-new-top-level-binding! top-cte id2))
+         (binding   (##resolve-id id top-cte))
+         (binding2  (##resolve-id id2 top-cte)))
     ; second simple insert
     (check-true
       (and (##binding-top-level? binding)
@@ -152,8 +152,8 @@
            (equal? (##binding-top-level-symbol binding2) key2)))
 
     (let* ((id3 id)
-           (key3 (hcte-add-new-top-level-binding! top-cte id3))
-           (binding3 (resolve-id id top-cte)))
+           (key3 (##hcte-add-new-top-level-binding! top-cte id3))
+           (binding3 (##resolve-id id top-cte)))
 
       ; re-definition
       (check-true
@@ -167,8 +167,8 @@
            2))
 
       (let* ((id4 (add-scope (##make-syntax-source 'x #f) core-scope))
-             (key4 (hcte-add-new-top-level-binding! top-cte id4))
-             (binding4 (resolve-id id4 top-cte)))
+             (key4 (##hcte-add-new-top-level-binding! top-cte id4))
+             (binding4 (##resolve-id id4 top-cte)))
 
         ; simple insert same name differents scopes
         (check-true
@@ -183,17 +183,17 @@
 
 (let* ((top-cte (##make-top-cte))
        (id  (##make-syntax-source 'x #f))
-       (key (hcte-add-new-local-binding! top-cte id))
-       (binding (resolve-id id top-cte)))
+       (key (##hcte-add-new-local-binding! top-cte id))
+       (binding (##resolve-id id top-cte)))
   ; simple insert
   (check-true
     (and (##binding-local? binding)
          (not (##binding-top-level? binding))
          (equal? (##binding-local-key binding) key)))
   (let* ((id2 (##make-syntax-source 'y #f))
-         (key2 (hcte-add-new-local-binding! top-cte id2))
-         (binding   (resolve-id id top-cte))
-         (binding2  (resolve-id id2 top-cte)))
+         (key2 (##hcte-add-new-local-binding! top-cte id2))
+         (binding   (##resolve-id id top-cte))
+         (binding2  (##resolve-id id2 top-cte)))
     ; second simple insert
     (check-true
       (and (##binding-local? binding)
@@ -201,8 +201,8 @@
            (equal? (##binding-local-key binding) key)))
 
     (let* ((id3 id)
-           (key3 (hcte-add-new-local-binding! top-cte id3))
-           (binding3 (resolve-id id top-cte)))
+           (key3 (##hcte-add-new-local-binding! top-cte id3))
+           (binding3 (##resolve-id id top-cte)))
 
       ; re-definition
       (check-true
@@ -216,8 +216,8 @@
            2))
 
       (let* ((id4 (add-scope (##make-syntax-source 'x #f) core-scope))
-             (key4 (hcte-add-new-local-binding! top-cte id4))
-             (binding4 (resolve-id id4 top-cte)))
+             (key4 (##hcte-add-new-local-binding! top-cte id4))
+             (binding4 (##resolve-id id4 top-cte)))
 
         ; simple insert same name differents scopes
         (check-true
@@ -234,15 +234,15 @@
 (let* ((cte (##make-top-cte))
        (id  (##make-syntax-source 'x #f))
        (descr (datum->syntax '0))
-       (key (hcte-add-new-top-level-binding! cte id))
-       (cte-var        (hcte-add-variable-cte cte key id))
-       (cte-macro      (hcte-add-macro-cte cte key id descr))
-       (cte-core-macro (hcte-add-core-macro-cte cte key id descr)))
-  (let* ((default-var (resolve-binding id cte))
-         (nt-fnd      (resolve-binding id (##make-top-cte)))
-         (ctx-b-var        (resolve-binding id cte-var))
-         (ctx-b-macro      (resolve-binding id cte-macro))
-         (ctx-b-core-macro (resolve-binding id cte-core-macro)))
+       (key (##hcte-add-new-top-level-binding! cte id))
+       (cte-var        (##hcte-add-variable-cte cte key id))
+       (cte-macro      (##hcte-add-macro-cte cte key id descr))
+       (cte-core-macro (##hcte-add-core-macro-cte cte key id descr)))
+  (let* ((default-var (##resolve-binding id cte))
+         (nt-fnd      (##resolve-binding id (##make-top-cte)))
+         (ctx-b-var        (##resolve-binding id cte-var))
+         (ctx-b-macro      (##resolve-binding id cte-macro))
+         (ctx-b-core-macro (##resolve-binding id cte-core-macro)))
     ; default to variable for top-level binding
     #;(check-true 
       (##ctx-binding-variable? default-var))
@@ -264,15 +264,15 @@
 (let* ((cte (##make-top-cte))
        (id  (##make-syntax-source 'x #f))
        (descr (datum->syntax '0))
-       (key (hcte-add-new-local-binding! cte id))
-       (cte-var        (hcte-add-variable-cte cte key id))
-       (cte-macro      (hcte-add-macro-cte cte key id descr))
-       (cte-core-macro (hcte-add-core-macro-cte cte key id descr)))
-  (let* ((default-var (resolve-binding id cte))
-         (nt-fnd      (resolve-binding id (##make-top-cte)))
-         (ctx-b-var        (resolve-binding id cte-var))
-         (ctx-b-macro      (resolve-binding id cte-macro))
-         (ctx-b-core-macro (resolve-binding id cte-core-macro)))
+       (key (##hcte-add-new-local-binding! cte id))
+       (cte-var        (##hcte-add-variable-cte cte key id))
+       (cte-macro      (##hcte-add-macro-cte cte key id descr))
+       (cte-core-macro (##hcte-add-core-macro-cte cte key id descr)))
+  (let* ((default-var (##resolve-binding id cte))
+         (nt-fnd      (##resolve-binding id (##make-top-cte)))
+         (ctx-b-var        (##resolve-binding id cte-var))
+         (ctx-b-macro      (##resolve-binding id cte-macro))
+         (ctx-b-core-macro (##resolve-binding id cte-core-macro)))
     ; default to variable for top-level binding
     (check-true 
       (##not-found-object? default-var))
@@ -293,47 +293,47 @@
        (id1  (##make-syntax-source 'x #f))
        (id2  (add-scope (##make-syntax-source 'y #f) scp1))
        (id3  (add-scope (##make-syntax-source 'x #f) scp1)))
-  (let* ((key1 (hcte-add-new-local-binding! cte id1))
-         (cte1 (hcte-add-variable-cte cte key1 id1)))
+  (let* ((key1 (##hcte-add-new-local-binding! cte id1))
+         (cte1 (##hcte-add-variable-cte cte key1 id1)))
 
     (check-equal?
       id1
-      (let ((b (resolve-binding id1 cte1)))
+      (let ((b (##resolve-binding id1 cte1)))
         (and (##ctx-binding-variable? b)
              (##ctx-binding-variable-hint b))))
 
     (check-equal?
       id1
-      (let ((b (resolve-binding id3 cte1)))
+      (let ((b (##resolve-binding id3 cte1)))
         (and (##ctx-binding-variable? b)
              (##ctx-binding-variable-hint b))))
 
-    (let* ((key2 (hcte-add-new-local-binding! cte1 id2))
-           (cte2 (hcte-add-variable-cte cte1 key2 id2)))
+    (let* ((key2 (##hcte-add-new-local-binding! cte1 id2))
+           (cte2 (##hcte-add-variable-cte cte1 key2 id2)))
 
       (check-equal?
         id1
-        (let ((b (resolve-binding id1 cte2)))
+        (let ((b (##resolve-binding id1 cte2)))
           (and (##ctx-binding-variable? b)
                (##ctx-binding-variable-hint b))))
       (check-equal?
         id2
-        (let ((b (resolve-binding id2 cte2)))
+        (let ((b (##resolve-binding id2 cte2)))
           (and (##ctx-binding-variable? b)
                (##ctx-binding-variable-hint b))))
 
-      (let* ((key3 (hcte-add-new-local-binding! cte2 id3))
-             (cte3 (hcte-add-variable-cte cte2 key3 id3)))
+      (let* ((key3 (##hcte-add-new-local-binding! cte2 id3))
+             (cte3 (##hcte-add-variable-cte cte2 key3 id3)))
 
         (check-equal?
           id3
-          (let ((b (resolve-binding id3 cte3)))
+          (let ((b (##resolve-binding id3 cte3)))
             (and (##ctx-binding-variable? b)
                  (##ctx-binding-variable-hint b))))
 
         (check-equal?
           id2
-          (let ((b (resolve-binding id2 cte3)))
+          (let ((b (##resolve-binding id2 cte3)))
             (and (##ctx-binding-variable? b)
                  (##ctx-binding-variable-hint b))))))))
 
@@ -347,47 +347,47 @@
        (val1 (##make-syntax-source 'ex1 #f))
        (val2 (add-scope (##make-syntax-source 'ex2 #f) scp1))
        (val3 (add-scope (##make-syntax-source 'ex3 #f) scp1)))
-  (let* ((key1 (hcte-add-new-local-binding! cte id1))
-         (cte1 (hcte-add-macro-cte cte key1 id1 val1)))
+  (let* ((key1 (##hcte-add-new-local-binding! cte id1))
+         (cte1 (##hcte-add-macro-cte cte key1 id1 val1)))
 
     (check-equal?
       val1
-      (let ((b (resolve-binding id1 cte1)))
+      (let ((b (##resolve-binding id1 cte1)))
         (and (##ctx-binding-macro? b)
              (##ctx-binding-macro-expander b))))
 
     (check-equal?
       val1
-      (let ((b (resolve-binding id3 cte1)))
+      (let ((b (##resolve-binding id3 cte1)))
         (and (##ctx-binding-macro? b)
              (##ctx-binding-macro-expander b))))
 
-    (let* ((key2 (hcte-add-new-local-binding! cte1 id2))
-           (cte2 (hcte-add-macro-cte cte1 key2 id2 val2)))
+    (let* ((key2 (##hcte-add-new-local-binding! cte1 id2))
+           (cte2 (##hcte-add-macro-cte cte1 key2 id2 val2)))
 
       (check-equal?
         val1
-        (let ((b (resolve-binding id1 cte2)))
+        (let ((b (##resolve-binding id1 cte2)))
           (and (##ctx-binding-macro? b)
                (##ctx-binding-macro-expander b))))
       (check-equal?
         val2
-        (let ((b (resolve-binding id2 cte2)))
+        (let ((b (##resolve-binding id2 cte2)))
           (and (##ctx-binding-macro? b)
                (##ctx-binding-macro-expander b))))
 
-      (let* ((key3 (hcte-add-new-local-binding! cte2 id3))
-             (cte3 (hcte-add-macro-cte cte2 key3 id3 val3)))
+      (let* ((key3 (##hcte-add-new-local-binding! cte2 id3))
+             (cte3 (##hcte-add-macro-cte cte2 key3 id3 val3)))
 
         (check-equal?
           val3
-          (let ((b (resolve-binding id3 cte3)))
+          (let ((b (##resolve-binding id3 cte3)))
             (and (##ctx-binding-macro? b)
                  (##ctx-binding-macro-expander b))))
 
         (check-equal?
           val2
-          (let ((b (resolve-binding id2 cte3)))
+          (let ((b (##resolve-binding id2 cte3)))
             (and (##ctx-binding-macro? b)
                  (##ctx-binding-macro-expander b))))))))
 
@@ -401,47 +401,47 @@
        (val1 (##make-syntax-source 'ex1 #f))
        (val2 (add-scope (##make-syntax-source 'ex2 #f) scp1))
        (val3 (add-scope (##make-syntax-source 'ex3 #f) scp1)))
-  (let* ((key1 (hcte-add-new-local-binding! cte id1))
-         (cte1 (hcte-add-core-macro-cte cte key1 id1 val1)))
+  (let* ((key1 (##hcte-add-new-local-binding! cte id1))
+         (cte1 (##hcte-add-core-macro-cte cte key1 id1 val1)))
 
     (check-equal?
       val1
-      (let ((b (resolve-binding id1 cte1)))
+      (let ((b (##resolve-binding id1 cte1)))
         (and (##ctx-binding-core-macro? b)
              (##ctx-binding-core-macro-expander b))))
 
     (check-equal?
       val1
-      (let ((b (resolve-binding id3 cte1)))
+      (let ((b (##resolve-binding id3 cte1)))
         (and (##ctx-binding-core-macro? b)
              (##ctx-binding-core-macro-expander b))))
 
-    (let* ((key2 (hcte-add-new-local-binding! cte1 id2))
-           (cte2 (hcte-add-core-macro-cte cte1 key2 id2 val2)))
+    (let* ((key2 (##hcte-add-new-local-binding! cte1 id2))
+           (cte2 (##hcte-add-core-macro-cte cte1 key2 id2 val2)))
 
       (check-equal?
         val1
-        (let ((b (resolve-binding id1 cte2)))
+        (let ((b (##resolve-binding id1 cte2)))
           (and (##ctx-binding-core-macro? b)
                (##ctx-binding-core-macro-expander b))))
       (check-equal?
         val2
-        (let ((b (resolve-binding id2 cte2)))
+        (let ((b (##resolve-binding id2 cte2)))
           (and (##ctx-binding-core-macro? b)
                (##ctx-binding-core-macro-expander b))))
 
-      (let* ((key3 (hcte-add-new-local-binding! cte2 id3))
-             (cte3 (hcte-add-core-macro-cte cte2 key3 id3 val3)))
+      (let* ((key3 (##hcte-add-new-local-binding! cte2 id3))
+             (cte3 (##hcte-add-core-macro-cte cte2 key3 id3 val3)))
 
         (check-equal?
           val3
-          (let ((b (resolve-binding id3 cte3)))
+          (let ((b (##resolve-binding id3 cte3)))
             (and (##ctx-binding-core-macro? b)
                  (##ctx-binding-core-macro-expander b))))
 
         (check-equal?
           val2
-          (let ((b (resolve-binding id2 cte3)))
+          (let ((b (##resolve-binding id2 cte3)))
             (and (##ctx-binding-core-macro? b)
                  (##ctx-binding-core-macro-expander b))))))))
 

@@ -19,7 +19,7 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim&proc (resolve-compile-local-binding (id identifier) (cte cte))
+(define-primitive (resolve-compile-local-binding (id identifier) (cte cte))
   (let ((b (##resolve-local id cte)))
     (cond
       ((##binding-local? b)
@@ -31,13 +31,13 @@
       (else
        id))))
  
-(define-prim&proc (resolve-compile-top-level-binding? (id identifier) (cte cte))
+(define-primitive (resolve-compile-top-level-binding? (id identifier) (cte cte))
   (let ((b (##resolve-local id cte)))
     (and (and (##binding-top-level? b)
               #t) ; is a core form
          (##binding-top-level-symbol b))))
        
-(define-prim&proc (resolve-compile-local-bindings ids (cte cte))
+(define-primitive (resolve-compile-local-bindings ids (cte cte))
   (cond
     ((pair? ids)
      (cons
@@ -50,26 +50,26 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim&proc (compile-pair/list stx cte on-pair-proc)
+(define-primitive (compile-pair/list stx cte on-pair-proc)
   (syntax-source-code-update stx
     (lambda (code)
-      (##map-pair (lambda (e) (compile e cte)) 
+      (##map-pair (lambda (e) (##compile e cte)) 
                 on-pair-proc 
                 code))))
 
-(define-prim&proc (compile-pair stx cte)
-  (##compile-pair/list stx cte (lambda (e) (compile e cte))))
+(define-primitive (compile-pair stx cte)
+  (##compile-pair/list stx cte (lambda (e) (##compile e cte))))
 
-(define-prim&proc (compile-body stx body cte)
+(define-primitive (compile-body stx body cte)
   (if (pair? body)
-      (##map-pair (lambda (e) (compile e cte))
+      (##map-pair (lambda (e) (##compile e cte))
                   (lambda (_) (##raise-ill-formed-special-form stx))
                   body)
       (##raise-expression-parsing-exception
         'empty-body
         stx)))
 
-(define-prim&proc (compile-application stx cte)
+(define-primitive (compile-application stx cte)
   (##compile-pair/list stx cte 
     (lambda () 
       (##raise-expression-parsing-exception
@@ -78,10 +78,10 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim&proc (compile-identifier id cte)
+(define-primitive (compile-identifier id cte)
   (cond
     ((identifier? id)
-     (let ((binding (resolve-id id cte)))
+     (let ((binding (##resolve-id id cte)))
        (cond
          ((not binding)
           id)
@@ -96,12 +96,12 @@
         'id-expected
         id))))
 
-(define-prim&proc (compile-keyword-argument stx cte)
+(define-primitive (compile-keyword-argument stx cte)
   stx)
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim&proc (compile-lambda stx cte)
+(define-primitive (compile-lambda stx cte)
 
   (define (compile-lambda-bindings bindings-src cte)
     (cond
@@ -131,7 +131,7 @@
                            `(,(if keywords? 
                                   (car binding-code)
                                   (##resolve-compile-local-binding (car binding-code) cte))
-                             ,(compile (cadr binding-code) cte)))
+                             ,(##compile (cadr binding-code) cte)))
                          result)
                        keywords?))
                     (else
@@ -157,7 +157,7 @@
                       ((pair? binding-code)
                        (syntax-source-code-set binding
                          `(,(##resolve-compile-local-binding (car binding-code) cte)
-                           ,(compile (cadr binding-code) cte))))
+                           ,(##compile (cadr binding-code) cte))))
                       (else
                         (##resolve-compile-local-binding binding cte)))
                     (loop (cdr bindings)))))
@@ -173,7 +173,7 @@
        `(,lambda-id ,(compile-lambda-bindings args cte)
                     ,@(##compile-body stx body cte))))))
 
-(define-prim&proc (compile-let-forms stx cte)
+(define-primitive (compile-let-forms stx cte)
   (match-source stx ()
     ((let-id id bindings . body) when (identifier? id)
      (let ((compiled-let 
@@ -221,29 +221,29 @@
        (syntax-source-code-set stx
          `(,let-id ,bindings ,@body))))))
 
-(define-prim&proc (compile-declare stx cte)
+(define-primitive (compile-declare stx cte)
   stx)
 
-(define-prim&proc (compile-quote stx cte)
+(define-primitive (compile-quote stx cte)
   stx)
 
 
-(define-prim&proc (compile-quasiquote stx cte)
+(define-primitive (compile-quasiquote stx cte)
   ((make-expand/compile-quasiquote-expander ##compile)
    stx
    cte))
 
-(define-prim&proc (compile-quote-syntax stx cte)
+(define-primitive (compile-quote-syntax stx cte)
   (match-source stx ()
     ((quote-syntax-id expr)
      (syntax-source-code-set stx
        `(,(syntax-source-code-set stx '##quote)
          ,(syntax-source-code-set stx expr))))))
 
-(define-prim&proc (compile-syntax stx cte)
+(define-primitive (compile-syntax stx cte)
   (##compile-quote-syntax stx cte))
 
-(define-prim&proc (compile-define stx cte)
+(define-primitive (compile-define stx cte)
 
   (define (resolve-maybe-local-binding id cte)
     (case (##syntax-source-code id)
@@ -321,7 +321,7 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim&proc (compile-case stx cte)
+(define-primitive (compile-case stx cte)
 
   (define (compile-clauses clauses cte)
     (cond
@@ -337,7 +337,7 @@
                                `(,(##make-core-syntax-source '##begin #f)
                                  ,val
                                  ,@vals)))))
-                (let* ((compiled-val (compile val cte))
+                (let* ((compiled-val (##compile val cte))
                        (compiled-vals
                          (if (null? vals)
                              (list compiled-val)
@@ -356,19 +356,19 @@
 
   (match-source stx (else)
     ((case-id expr . clauses)
-     (let ((expr (compile expr cte))
+     (let ((expr (##compile expr cte))
            (clauses (compile-clauses clauses cte)))
        (syntax-source-code-set stx
          `(,case-id ,expr ,@clauses))))))
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim&proc (compile-namespace stx cte)
+(define-primitive (compile-namespace stx cte)
   stx)
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim&proc (compile stx cte)
+(define-primitive (compile stx cte)
   (let ((code (syntax-source-code stx)))
     (cond
       ((pair? code)

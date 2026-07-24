@@ -46,7 +46,7 @@
 ;;;----------------------------------------------------------------------------
 ;;; ctx bindings
 
-(define-prim&proc (fail-check-binding arg-id proc . args)
+(define-primitive (fail-check-binding arg-id proc . args)
   (##raise-type-exception
    arg-id
    (vector)
@@ -59,7 +59,7 @@
 ;;;----------------------------------------------------------------------------
 ;;; resolve
 
-(define-prim&proc (resolve-id (id identifier) cte)
+(define-primitive (resolve-id (id identifier) cte)
 
   (define (find-all-matching-bindings id)
     (let ((id-scopes (##syntax-source-scopes id)))
@@ -110,13 +110,13 @@
            (check-unambiguous max-id candidate-ids)
            (##hygiene-environment-top-cte-global-binding-table-ref cte max-id)))))
 
-(define-prim&proc (resolve-global id cte) ; TODO
+(define-primitive (resolve-global id cte) ; TODO
   ; at top level, rename identifier according to namespace
   (let ((full-name-id (##syntax-full-name-maybe cte id)))
     (and full-name-id
          (##resolve-id full-name-id cte))))
 
-(define-prim&proc (resolve-local id cte)
+(define-primitive (resolve-local id cte)
   ; in local ctx, try resolving the "plain" identifier
   ; before renaming according to namespace in scope.
   (or (##resolve-id id cte)

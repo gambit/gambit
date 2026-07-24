@@ -17,6 +17,7 @@
 
 - Performance
   - general optimizations (Now ~1.5-2.0x initial speed)
+  - heap allocation (Now ~2.2x initial heap allocation)
 
 - Tests
   - add more unit tests

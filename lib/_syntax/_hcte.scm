@@ -32,7 +32,7 @@
 ;;;----------------------------------------------------------------------------
 ;;; interface
 
-(define-prim&proc (hcte-ctx-ref cte key . fail)
+(define-primitive (hcte-ctx-ref cte key . fail)
   (apply 
     ##cte-ctx-ref
       (or (and (##cte-top? cte) 
@@ -41,41 +41,41 @@
       key
       fail))
  
-(define-prim&proc (hcte-top? cte)
+(define-primitive (hcte-top? cte)
   (##cte-top? cte))
 
-(define-prim&proc (hcte-top-cte cte)
+(define-primitive (hcte-top-cte cte)
   (##cte-top-cte cte))
 
-(define-prim&proc (hcte-macro-state-ref cte)
+(define-primitive (hcte-macro-state-ref cte)
   (##top-cte-cte (##cte-top-cte cte)))
 
-(define-prim&proc (hcte-macro-state-restore! cte state)
+(define-primitive (hcte-macro-state-restore! cte state)
   (##top-cte-cte-set! (##cte-top-cte cte) state))
 
-(define-prim&proc (hcte-namespace-state-ref cte)
+(define-primitive (hcte-namespace-state-ref cte)
   (##top-cte-cte (##cte-top-cte cte)))
 
-(define-prim&proc (hcte-namespace-state-restore! cte state)
+(define-primitive (hcte-namespace-state-restore! cte state)
   (##top-cte-cte-set! (##cte-top-cte cte) state))
 
-(define-prim&proc (hcte-top-cte-global-binding-table cte)
+(define-primitive (hcte-top-cte-global-binding-table cte)
   (##cte-top-cte-global-binding-table cte))
 
-(define-prim&proc (hcte-global-name cte id)
+(define-primitive (hcte-global-name cte id)
   (##cte-global-name (##hcte-local-cte cte)
                      (##syntax-source-code id)))
 
-(define-prim&proc (hcte-top-cte-global-binding-table cte)
+(define-primitive (hcte-top-cte-global-binding-table cte)
   (##cte-top-cte-global-binding-table cte))
 
-(define-prim&proc (hcte-top-cte-global-binding-table-ref cte id)
+(define-primitive (hcte-top-cte-global-binding-table-ref cte id)
   (##cte-top-cte-global-binding-table-ref cte id))
 
 ;;;----------------------------------------------------------------------------
 ;;; new bindings
 
-(define-prim&proc (hcte-add-new-local-binding! (cte cte)
+(define-primitive (hcte-add-new-local-binding! (cte cte)
                                                (id identifier))
   ; add a new local binding to the global binding table.
   (let* ((name    (syntax-source-code id))
@@ -87,7 +87,7 @@
       binding)
     key))
 
-(define-prim&proc (hcte-add-local-binding-with-key! (cte cte)
+(define-primitive (hcte-add-local-binding-with-key! (cte cte)
                                                     (id identifier)
                                                     key)
   (let ((binding (##binding-local key)))
@@ -96,14 +96,14 @@
       binding)
     key))
 
-(define-prim&proc (hcte-add-new-local-bindings! (cte cte) ids)
+(define-primitive (hcte-add-new-local-bindings! (cte cte) ids)
   (fold (lambda (id acc) 
-          (cons (hcte-add-new-local-binding! cte id)
+          (cons (##hcte-add-new-local-binding! cte id)
                 acc))
         '()
         ids))
 
-(define-prim&proc (hcte-add-new-top-level-binding! (cte cte)
+(define-primitive (hcte-add-new-top-level-binding! (cte cte)
                                                    (id identifier))
   ; add a new top level binding to the global binding table.
   ; the procedure assume that the identifier provided
@@ -116,17 +116,17 @@
       binding)
     key))
 
-(define-prim&proc (hcte-add-new-top-level-bindings! (cte cte) ids)
+(define-primitive (hcte-add-new-top-level-bindings! (cte cte) ids)
   (fold (lambda (acc id) 
-          (cons (hcte-add-new-top-level-binding! cte id)
+          (cons (##hcte-add-new-top-level-binding! cte id)
                 acc))
         '()
         ids))
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim&proc (hcte-add-variable-cte cte key id)
-  (let ((key (or key (hcte-add-new-local-binding! cte id))))
+(define-primitive (hcte-add-variable-cte cte key id)
+  (let ((key (or key (##hcte-add-new-local-binding! cte id))))
     (let ((cte (or (and (##cte-top? cte)
                         (##top-cte-cte cte))
                    ; top-level definitions begin at the top-cte's parent cte,
@@ -139,18 +139,18 @@
           key 
           (##ctx-binding-variable id)))))))
  
-(define-prim&proc (hcte-add-variables-cte cte keys ids)
+(define-primitive (hcte-add-variables-cte cte keys ids)
   (cond
     ((pair? keys)
-     (hcte-add-variables-cte 
-       (hcte-add-variable-cte cte (car keys) (car ids))
+     (##hcte-add-variables-cte 
+       (##hcte-add-variable-cte cte (car keys) (car ids))
        (cdr keys)
        (cdr ids)))
     (else
       cte)))
 
-(define-prim&proc (hcte-add-macro-cte cte key id descr)
-  (let ((key (or key (hcte-add-new-local-binding! cte id))))
+(define-primitive (hcte-add-macro-cte cte key id descr)
+  (let ((key (or key (##hcte-add-new-local-binding! cte id))))
     (let ((cte cte #;(or (and (##cte-top? cte)
                         (##top-cte-cte cte))
                    cte)))
@@ -161,18 +161,18 @@
           key 
           (##ctx-binding-macro id descr)))))))
 
-(define-prim&proc (hcte-add-macros-cte cte keys ids)
+(define-primitive (hcte-add-macros-cte cte keys ids)
   (cond
     ((pair? keys)
-     (hcte-add-macros-cte 
-       (hcte-add-macro-cte cte (car keys) (car ids))
+     (##hcte-add-macros-cte 
+       (##hcte-add-macro-cte cte (car keys) (car ids))
        (cdr keys)
        (cdr ids)))
     (else
       cte)))
 
-(define-prim&proc (hcte-add-core-macro-cte cte key id descr)
-  (let ((key (or key (hcte-add-new-local-binding! cte id))))
+(define-primitive (hcte-add-core-macro-cte cte key id descr)
+  (let ((key (or key (##hcte-add-new-local-binding! cte id))))
     (let ((cte cte #;(##hcte-local-cte cte)))
       (##cte-add-core-macro cte key descr
        (lambda (ctx)
@@ -181,42 +181,42 @@
           key 
           (##ctx-binding-core-macro id descr)))))))
 
-(define-prim&proc (hcte-global-name cte id)
+(define-primitive (hcte-global-name cte id)
   (##cte-global-name 
     (##hcte-local-cte cte)
     (##syntax-source-code id)))
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim&proc (top-hcte-add-variable-cte! top-cte var)
+(define-primitive (top-hcte-add-variable-cte! top-cte var)
   (let* ((global-id   (##cte-global-name top-cte var))
          (global-name (##syntax-source-code global-id))
-         (key (hcte-add-new-top-level-binding! top-cte global-id))
+         (key (##hcte-add-new-top-level-binding! top-cte global-id))
          (ctx-binding (##ctx-binding-variable global-id)))
     (##top-cte-add-variable! top-cte global-name 
      (lambda (ctx)
        (##syntax-ctx-set ctx key ctx-binding)))))
 
-(define-prim&proc (top-hcte-add-variables-cte! top-cte vars)
+(define-primitive (top-hcte-add-variables-cte! top-cte vars)
   (and (pair? vars)
-       (top-hcte-add-variable-cte! top-cte (car vars))
-       (top-hcte-add-variables-cte! top-cte (cdr vars))))
+       (##top-hcte-add-variable-cte! top-cte (car vars))
+       (##top-hcte-add-variables-cte! top-cte (cdr vars))))
 
-(define-prim&proc (top-hcte-add-macro-cte! top-cte id descr)
+(define-primitive (top-hcte-add-macro-cte! top-cte id descr)
   (let* ((global-id   (##cte-global-name top-cte id))
          (global-name (##syntax-source-code global-id))
-         (key (hcte-add-new-top-level-binding! top-cte global-id))
+         (key (##hcte-add-new-top-level-binding! top-cte global-id))
          (ctx-binding (##ctx-binding-macro global-id descr)))
     (##top-cte-add-macro! top-cte global-name descr
      (lambda (ctx)
        (##syntax-ctx-set ctx key ctx-binding)))))
 
-(define-prim&proc (top-hcte-add-macros-cte! top-cte vars)
+(define-primitive (top-hcte-add-macros-cte! top-cte vars)
   (and (pair? vars)
-       (top-hcte-add-macro-cte! top-cte (car vars))
-       (top-hcte-add-macros-cte! top-cte (cdr vars))))
+       (##top-hcte-add-macro-cte! top-cte (car vars))
+       (##top-hcte-add-macros-cte! top-cte (cdr vars))))
 
-(define-prim&proc (top-hcte-add-core-macro-cte! top-cte id descr)
+(define-primitive (top-hcte-add-core-macro-cte! top-cte id descr)
   (let* ((global-id   (##cte-global-name top-cte id))
          (global-name (##syntax-source-code global-id))
          (key (##hcte-add-new-top-level-binding! top-cte global-id))
@@ -225,7 +225,7 @@
       (lambda (ctx)
         (##syntax-ctx-set ctx key ctx-binding)))))
 
-(define-prim&proc (hcte-mutate-core-macro-cte! cte name def)
+(define-primitive (hcte-mutate-core-macro-cte! cte name def)
   (let ((global-id (##cte-global-name cte name)))
     (##cte-mutate-core-macro! cte global-id def
      (lambda (ctx)
@@ -235,14 +235,14 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim&proc (top-hcte-process-namespace! top-cte src)
+(define-primitive (top-hcte-process-namespace! top-cte src)
   (##top-cte-process-namespace! top-cte src))
 
-(define-prim&proc (hcte-process-namespace cte src)
+(define-primitive (hcte-process-namespace cte src)
   (let ((cte cte #;(if (##cte-top? cte) (##top-cte-cte cte) cte)))
     (##cte-process-namespace cte src)))
 
-(define-prim&proc (hcte-namespace-lookup cte id)
+(define-primitive (hcte-namespace-lookup cte id)
   (let ((full-name 
           (##cte-namespace-lookup cte (##syntax-source-code id))))
     (and full-name
@@ -250,7 +250,7 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim&proc (hcte-local-cte cte)
+(define-primitive (hcte-local-cte cte)
   (if (##cte-top? cte)
       (##top-cte-cte cte)
       cte))

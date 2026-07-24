@@ -284,9 +284,9 @@
 ;;;============================================================================
 
 (define-prim&proc (syntax-expand top-cte src)
-  (let* ((stx (add-scope (##source->syntax-source src) core-scope))
-         (stx (expand stx top-cte))
-         (stx (compile stx top-cte)))
+  (let* ((stx (##add-scope (##source->syntax-source src) core-scope))
+         (stx (##expand stx top-cte))
+         (stx (##compile stx top-cte)))
     (##syntax-source->source stx)))
 
 ;;;============================================================================

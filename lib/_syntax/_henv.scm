@@ -13,11 +13,40 @@
 ;;;
 ;;;============================================================================
 
+(##namespace ("##"
+identity
+env-frame
+env-macro
+env-core-macro
+env-macros-set
+env-declare
+env-decl-set
+env-namespace
+env-namespace-set
+env-namespace-set!
+env-syntax-gbt-ref
+env-syntax-gbt-gbt-ref
+env-syntax-ctx-ref
+env-syntax-gbt-set!
+env-syntax-gbt-gbt-set!
+env-syntax-ctx-set!
+env-ctx-set
+env-vars-ref
+env-vars-set!
+env-macros-ref
+env-decl-ref
+env-namespace-ref
+env-parent-ref
+env-parent-set!
+env-externals-ref
+henv-namespace-lookup
+henv-namespace-forms->list))
+
 (##include "../../gsc/_env-def.scm")
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim&proc (henv-local-cte cte)
+(define-primitive (henv-local-cte cte)
   cte)
 
 (define (env-namespace-set! env namespace) (##vector-set! env 5 namespace))
@@ -37,7 +66,7 @@
                      (##make-full-name space (##cdr a))
                      (loop (##cdr lst)))))))))
 
-(define-prim&proc (henv-global-name cte id)
+(define-primitive (henv-global-name cte id)
   ; mirror of ##cte-global-name: already-qualified names pass through;
   ; else walk the parent chain, first hit wins; fall through to the BARE name.
   (let ((name (##syntax-source-code id)))
@@ -49,36 +78,36 @@
               (or (henv-namespace-lookup env name)
                   (loop (env-parent-ref env))))))))
 
-(define-prim&proc (henv-top? cte)
+(define-primitive (henv-top? cte)
   #t
   ; the difference is irrelevant here as the global-binding-table and syntax
   ; context keep track of definitions/macro-definitions scope.
   #;(not (env-parent-ref cte)))
 
 
-(define-prim&proc (henv-top-cte cte)
+(define-primitive (henv-top-cte cte)
   cte)
 
-(define-prim&proc (henv-macro-state-ref cte)
+(define-primitive (henv-macro-state-ref cte)
   (env-syntax-ctx-ref cte))
 
-(define-prim&proc (henv-macro-state-restore! cte state)
+(define-primitive (henv-macro-state-restore! cte state)
   (env-syntax-ctx-set! cte state))
 
-(define-prim&proc (henv-top-cte-global-binding-table cte)
+(define-primitive (henv-top-cte-global-binding-table cte)
   (env-syntax-gbt-ref cte))
 
 
-(define-prim&proc (henv-top-cte-global-binding-table-ref cte id)
+(define-primitive (henv-top-cte-global-binding-table-ref cte id)
   ;; TODO
   (env-syntax-gbt-gbt-ref cte id))
 
 
-(define-prim&proc (henv-ctx-ref cte key)
+(define-primitive (henv-ctx-ref cte key)
   (##syntax-ctx-ref (env-syntax-ctx-ref cte) key))
 
 
-(define-prim&proc (henv-add-new-local-binding! cte id)
+(define-primitive (henv-add-new-local-binding! cte id)
   (let* ((name    (##syntax-source-code id))
          (key     (gensym name))
          (binding (##binding-local key)))
@@ -86,19 +115,19 @@
     (env-syntax-gbt-gbt-set! cte (##vector-copy id) binding)
     key))
 
-(define-prim&proc (henv-add-local-binding-with-key! cte id key)
+(define-primitive (henv-add-local-binding-with-key! cte id key)
   (let ((binding (##binding-local key)))
     (env-syntax-gbt-gbt-set! cte (##vector-copy id) binding)
     key))
 
 
-(define-prim&proc (henv-add-new-top-level-binding! cte id)
+(define-primitive (henv-add-new-top-level-binding! cte id)
   (let* ((key (##syntax-source-code id))
          (binding (##binding-top-level key)))
     (env-syntax-gbt-gbt-set! cte (##vector-copy id) binding)
     key))
 
-(define-prim&proc (henv-add-variable-cte cte key id)
+(define-primitive (henv-add-variable-cte cte key id)
   (let ((key (or key (##henv-add-new-local-binding! cte id))))
     (env-frame cte (list (##source-code id))
       (lambda (ctx)
@@ -107,7 +136,7 @@
          key 
          (##ctx-binding-variable id))))))
 
-(define-prim&proc (henv-add-macro-cte cte key id descr)
+(define-primitive (henv-add-macro-cte cte key id descr)
   (let ((key (or key (##henv-add-new-local-binding! cte id))))
     (env-macro cte (##source-code id) descr
       (lambda (ctx)
@@ -116,7 +145,7 @@
          key 
          (##ctx-binding-macro id descr))))))
 
-(define-prim&proc (top-henv-add-macro-cte! cte id descr)
+(define-primitive (top-henv-add-macro-cte! cte id descr)
                   ; TODO global id
   ;; A top-level macro is resolved through the ctx HAMT (see henv-ctx-ref), not
   ;; the frame chain, and c#env-lookup ignores the macro slot -- so we only need
@@ -131,7 +160,7 @@
     cte))
 
 
-(define-prim&proc (henv-add-core-macro-cte cte key id descr)
+(define-primitive (henv-add-core-macro-cte cte key id descr)
   (let ((key (or key (##henv-add-new-local-binding! cte id))))
     (env-macro cte (##source-code id) descr
       (lambda (ctx)
@@ -140,7 +169,7 @@
                 key 
                 (##ctx-binding-core-macro id descr))))))
 
-(define-prim&proc (top-henv-add-core-macro-cte! cte id descr)
+(define-primitive (top-henv-add-core-macro-cte! cte id descr)
   (let ((key (##henv-add-new-top-level-binding! cte id)))
     (env-core-macro cte (##source-code id) descr
       (lambda (ctx)
@@ -161,14 +190,14 @@
                           (##cdr form))))
          (##cdr (##desourcify expr))))
 
-(define-prim&proc (henv-process-namespace cte expr)
+(define-primitive (henv-process-namespace cte expr)
   ; functional: caller (##expand-body-namespace) threads the result
   (let loop ((cte cte) (forms (henv-namespace-forms->list expr)))
     (if (##pair? forms)
         (loop (env-namespace cte (##car forms)) (##cdr forms))
         cte)))
 
-(define-prim&proc (top-henv-process-namespace! cte expr)
+(define-primitive (top-henv-process-namespace! cte expr)
   ; mutating: caller (expand-namespace) discards the result, and the top-level
   ; form sequence shares one cte with no accumulator to thread through.
   (let loop ((forms (henv-namespace-forms->list expr)))
@@ -178,10 +207,10 @@
           (loop (##cdr forms)))
         cte)))
 
-(define-prim&proc (henv-namespace-state-ref cte)
+(define-primitive (henv-namespace-state-ref cte)
   (env-namespace-ref cte))
 
-(define-prim&proc (henv-namespace-state-restore! cte state)
+(define-primitive (henv-namespace-state-restore! cte state)
   (env-namespace-set! cte state))
 
 (define-prim (##macro-descr->syntax-transformer descr)
@@ -221,7 +250,7 @@
              (loop parent-cte env)))))))
 
 ;; TODO undivise interaction environments
-(define-prim&proc (henv-import-runtime-macros env)
+(define-primitive (henv-import-runtime-macros env)
   (##henv-import-interaction-cte-macros!
     (##henv-import-interaction-cte-macros!
       env

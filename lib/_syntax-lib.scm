@@ -8,14 +8,14 @@
 ;;;============================================================================
 
 (define-macro (##add-new-core-macro! name procedure)
-  `(top-hcte-add-core-macro-cte! ##syntax-interaction-cte 
+  `(##top-hcte-add-core-macro-cte! ##syntax-interaction-cte 
                                  (##add-scope 
                                    (##make-syntax-source ',name #f)
                                    ##core-scope)
                                  ,procedure))
 
 (define-macro (##add-new-macro! name procedure)
-  `(top-hcte-add-macro-cte! ##syntax-interaction-cte 
+  `(##top-hcte-add-macro-cte! ##syntax-interaction-cte 
                             (##add-scope 
                               (##make-syntax-source ',name #f)
                               ##core-scope)

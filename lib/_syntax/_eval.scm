@@ -9,68 +9,24 @@
 
 ;; Expand and evaluate `rhs` as a compile-time expression
 
-(define ##interaction-cte-original ##interaction-cte)
-
-(define (##eval-for-syntax-binding rhs cte #!optional debug?)
-  (define debug (or #f debug?))
+(define-prim (##eval-for-syntax-binding rhs cte)
   (##call-with-values
    (lambda ()
      (##in-new-compilation-ctx
-      (macro-interpreter-target)
-      (lambda ()
-        (let ((expansion (expand rhs cte)))
-          (if debug
-              (begin
-                (##pretty-print "expansion of ")
-                (##pretty-print rhs)
-                (##pretty-print "is :")
-                (##pretty-print expansion)))
-          (let ((compiled (compile expansion cte)))
-            (if debug
-                (begin
-                  (##pretty-print "compilation of ")
-                  (##pretty-print "is :")
-                  (##pretty-print compiled)))
-            (##compile-top ##interaction-cte-original compiled))))))
+       (macro-interpreter-target)
+       (lambda ()
+         (let* ((expansion (##expand rhs cte))
+                (compiled (##compile expansion cte)))
+           (##compile-top ##interaction-cte compiled)))))
    (lambda (c ctx)
      (##load-modules (macro-compilation-ctx-demand-modules ctx))
      (let ((evaluated (##setup-requirements-and-run c #f)))
-       (if debug
-           (begin
-             (##pretty-print "evaluation of")
-             (##pretty-print "is :")
-             (##pretty-print evaluated)))
        evaluated))))
 
-(define (eval-for-syntax-binding rhs cte #!optional debug?)
-  (##eval-for-syntax-binding rhs cte debug?))
-
-(define (##eval-for-top-syntax rhs cte #!optional debug?)
-  (define debug (or #f debug?))
-  (let ((expansion (expand rhs cte)))
-    (if debug
-        (begin
-          (##pretty-print "expansion of ")
-          (##pretty-print rhs)
-          (##pretty-print "is :")
-          (##pretty-print expansion)))
-    (let ((compiled (compile expansion cte)))
-      (if debug
-          (begin
-          (##pretty-print "compilation of ")
-          ;(##pretty-print expansion)
-          (##pretty-print "is :")
-          (##pretty-print compiled)))
-      (let ((evaluated   (##eval-top-syntax compiled cte)))
-        (if debug
-            (begin
-            (##pretty-print "evaluation of")
-            ;(##pretty-print compiled)
-            (##pretty-print "is :")
-            (##pretty-print evaluated)))
-        evaluated))))
-
-(define (eval-for-top-syntax rhs cte #!optional debug?)
-  (##eval-for-top-syntax rhs cte debug?))
+(define-prim (##eval-for-top-syntax rhs cte)
+  (let* ((expansion (##expand rhs cte))
+         (compiled (##compile expansion cte))
+         (evaluated   (##eval-top-syntax compiled cte)))
+    evaluated))
 
 ;;;===========================================================================

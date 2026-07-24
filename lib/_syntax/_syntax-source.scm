@@ -220,7 +220,7 @@
 
 (define-prim&proc (make-core-syntax-source code locat)
   (let ((stx (##make-syntax-source code locat)))
-    (add-scope! stx ##core-scope)
+    (##add-scope! stx ##core-scope)
     stx))
 
 ;;;----------------------------------------------------------------------------
@@ -472,6 +472,17 @@
         (##cons (##car code) (loop (##cdr code)))
         '())))
 
+(define-prim&proc (syntax->vector stx)
+  (let* ((code (##source-code stx))
+         (len (##vector-length code))
+         (new (##make-vector len #f)))
+    (let loop ((i 0))
+      (if (##fx< i len)
+          (begin
+            (##vector-set! new i (##vector-ref code i))
+            (loop (##fx+ i 1)))
+          new))))
+
 ;;;----------------------------------------------------------------------------
   
 (define-prim (##update-scope! stx proc!)
@@ -538,10 +549,10 @@
       (else
         (##syntax-source-scopes-update stx proc)))))
 
-(define-prim&proc (add-scope! (stx syntax) (scp scope))
+(define-primitive (add-scope! (stx syntax) (scp scope))
   (##update-scope! stx (lambda (scopes) (scopes-insert scopes scp))))
 
-(define-prim&proc (flip-scope! (stx syntax) (scp scope))
+(define-primitive (flip-scope! (stx syntax) (scp scope))
   (##update-scope! stx (lambda (scopes) (scopes-xor scopes scp))))
 
 (define-prim&proc (add-scope stx (scp scope))
@@ -580,19 +591,5 @@
 (define-syntax-source-proc pair?)
 (define-syntax-source-proc null?)
 (define-syntax-source-proc list?)
-
-;;;----------------------------------------------------------------------------
-
-(define-prim&proc (keyword->identifier stx)                  
-  (##syntax-source-code-update stx
-    (lambda (sym)
-      (if (keyword? sym)
-          (string->symbol (keyword->string sym))
-          sym))))
-
-(define-prim&proc (identifier->keyword stx)
-  (##syntax-source-code-update stx
-    (lambda (sym)
-      (string->keyword (symbol->string sym)))))
 
 ;;;============================================================================

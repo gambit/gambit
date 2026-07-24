@@ -15,14 +15,14 @@
 
 (let* ((top-cte (##make-top-cte))
        (id  (##make-syntax-source (##quote x) #f))
-       (key (hcte-add-new-top-level-binding! top-cte id)))
+       (key (##hcte-add-new-top-level-binding! top-cte id)))
   ; simple insert
   (check-equal?
     id
     (##expand-identifier id top-cte))
 
   (let* ((id2 (##make-syntax-source (##quote y) #f))
-         (key2 (hcte-add-new-top-level-binding! top-cte id2)))
+         (key2 (##hcte-add-new-top-level-binding! top-cte id2)))
 
     (check-equal?
       id
@@ -33,8 +33,8 @@
       (##expand-identifier id2 top-cte))
 
     (let* ((id3 id)
-           (key3 (hcte-add-new-top-level-binding! top-cte id3))
-           (binding3 (resolve-id id top-cte)))
+           (key3 (##hcte-add-new-top-level-binding! top-cte id3))
+           (binding3 (##resolve-id id top-cte)))
 
       (check-equal?
         id3
@@ -45,8 +45,8 @@
         (##expand-identifier id top-cte))
 
       (let* ((id4 (add-scope (##make-syntax-source (##quote x) #f) core-scope))
-             (key4 (hcte-add-new-top-level-binding! top-cte id4))
-             (binding4 (resolve-id id4 top-cte)))
+             (key4 (##hcte-add-new-top-level-binding! top-cte id4))
+             (binding4 (##resolve-id id4 top-cte)))
 
         (check-equal?
           id4
@@ -66,8 +66,8 @@
 (let* ((cte  (##make-top-cte))
        (scp1 (make-scope))
        (id1  (add-scope (##make-syntax-source (##quote x) #f) scp1)))
-  (let* ((key1 (hcte-add-new-local-binding! cte id1))
-         (cte1 (hcte-add-variable-cte cte key1 id1)))
+  (let* ((key1 (##hcte-add-new-local-binding! cte id1))
+         (cte1 (##hcte-add-variable-cte cte key1 id1)))
     (let ((expanded (##expand-identifier id1 cte)))
       (check-equal? expanded id1))))
 
@@ -84,8 +84,8 @@
                           (##make-syntax-source (##quote x) #f) 
                           scp0)
                         scp1)))
-  (let* ((key1 (hcte-add-new-local-binding! cte id1))
-         (cte1 (hcte-add-variable-cte cte key1 id1)))
+  (let* ((key1 (##hcte-add-new-local-binding! cte id1))
+         (cte1 (##hcte-add-variable-cte cte key1 id1)))
 
     (check-equal?
       id1
@@ -99,8 +99,8 @@
       (##scopes-subset? (syntax-source-scopes id1)
                         (syntax-source-scopes (##expand-identifier id3 cte1))))
 
-    (let* ((key2 (hcte-add-new-local-binding! cte1 id2))
-           (cte2 (hcte-add-variable-cte cte1 key2 id2)))
+    (let* ((key2 (##hcte-add-new-local-binding! cte1 id2))
+           (cte2 (##hcte-add-variable-cte cte1 key2 id2)))
 
       (check-equal?
         id1
@@ -111,8 +111,8 @@
         (##expand-identifier id2 cte2))
 
 
-      (let* ((key3 (hcte-add-new-local-binding! cte2 id3))
-             (cte3 (hcte-add-variable-cte cte2 key3 id3)))
+      (let* ((key3 (##hcte-add-new-local-binding! cte2 id3))
+             (cte3 (##hcte-add-variable-cte cte2 key3 id3)))
 
         (check-equal?
           id3
@@ -466,7 +466,7 @@
        (datum `(##let ((x 0)) 1))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-let stx cte)))
+  (let ((expanded (##expand-let stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##let ((x (##quote 0))) (##quote 1)))))
@@ -475,7 +475,7 @@
        (datum `(##let ((x 0)) x))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-let stx cte)))
+  (let ((expanded (##expand-let stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##let ((x (##quote 0))) x))))
@@ -496,7 +496,7 @@
        (datum `(##let ((x 0) (y 1)) 2))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-let stx cte)))
+  (let ((expanded (##expand-let stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##let ((x (##quote 0)) (y (##quote 1))) (##quote 2)))))
@@ -505,7 +505,7 @@
        (datum `(##let ((x 0) (y 1)) x y))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-let stx cte)))
+  (let ((expanded (##expand-let stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##let ((x (##quote 0)) (y (##quote 1))) x y))))
@@ -531,7 +531,7 @@
        (datum `(##let* ((x 0)) 1))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-let* stx cte)))
+  (let ((expanded (##expand-let* stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##let* ((x (##quote 0))) (##quote 1)))))
@@ -540,7 +540,7 @@
        (datum `(##let* ((x 0)) x))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-let* stx cte)))
+  (let ((expanded (##expand-let* stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##let* ((x (##quote 0))) x))))
@@ -561,7 +561,7 @@
        (datum `(##let* ((x 0) (y 1)) 2))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-let* stx cte)))
+  (let ((expanded (##expand-let* stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##let* ((x (##quote 0)) (y (##quote 1))) (##quote 2)))))
@@ -570,7 +570,7 @@
        (datum `(##let* ((x 0) (y 1)) x y))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-let* stx cte)))
+  (let ((expanded (##expand-let* stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##let* ((x (##quote 0)) (y (##quote 1))) x y))))
@@ -579,7 +579,7 @@
        (datum `(##let* ((x 0) (y x)) 2))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-let* stx cte)))
+  (let ((expanded (##expand-let* stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##let* ((x (##quote 0)) (y x)) (##quote 2)))))
@@ -598,7 +598,7 @@
        (datum `(##letrec ((x 0)) 1))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-letrec stx cte)))
+  (let ((expanded (##expand-letrec stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##letrec ((x (##quote 0))) (##quote 1)))))
@@ -607,7 +607,7 @@
        (datum `(##letrec ((x 0)) x))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-letrec stx cte)))
+  (let ((expanded (##expand-letrec stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##letrec ((x (##quote 0))) x))))
@@ -616,7 +616,7 @@
        (datum `(##letrec ((x x)) 0))
        (stx (datum->syntax datum))
        (stx (add-scope stx core-scope)))
-  (let ((expanded (expand-letrec stx cte)))
+  (let ((expanded (##expand-letrec stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##letrec ((x x)) (##quote 0)))))
@@ -631,7 +631,7 @@
        (datum `(##letrec ((x 0) (y 1)) 2))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-letrec stx cte)))
+  (let ((expanded (##expand-letrec stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##letrec ((x (##quote 0)) (y (##quote 1))) (##quote 2)))))
@@ -640,7 +640,7 @@
        (datum `(##letrec ((x 0) (y 1)) x y))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-letrec stx cte)))
+  (let ((expanded (##expand-letrec stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##letrec ((x (##quote 0)) (y (##quote 1))) x y))))
@@ -649,7 +649,7 @@
        (datum `(##letrec ((x 0) (y x)) 2))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-letrec stx cte)))
+  (let ((expanded (##expand-letrec stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##letrec ((x (##quote 0)) (y x)) (##quote 2)))))
@@ -658,7 +658,7 @@
        (datum `(##letrec ((x y) (y x)) 2))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-letrec stx cte)))
+  (let ((expanded (##expand-letrec stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##letrec ((x y) (y x)) (##quote 2)))))
@@ -667,7 +667,7 @@
        (datum `(##letrec ((x x) (y 1)) 2))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
- (let ((expanded (expand-letrec stx cte)))
+ (let ((expanded (##expand-letrec stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##letrec ((x x) (y (##quote 1))) (##quote 2)))))
@@ -677,7 +677,7 @@
                  (##let* ((x ((lambda () x))) (y 1)) 2)))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
- (let ((expanded (expand-letrec stx cte)))
+ (let ((expanded (##expand-letrec stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##let ((x (##quote 0)))
@@ -690,7 +690,7 @@
        (datum `(##letrec* ((x 0)) 1))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-letrec* stx cte)))
+  (let ((expanded (##expand-letrec* stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##letrec* ((x (##quote 0))) (##quote 1)))))
@@ -699,7 +699,7 @@
        (datum `(##letrec* ((x 0)) x))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-letrec* stx cte)))
+  (let ((expanded (##expand-letrec* stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##letrec* ((x (##quote 0))) x))))
@@ -708,7 +708,7 @@
        (datum `(##letrec* ((x x)) 0))
        (stx (datum->syntax datum))
        (stx (add-scope stx core-scope)))
-  (let ((expanded (expand-letrec* stx cte)))
+  (let ((expanded (##expand-letrec* stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##letrec* ((x x)) (##quote 0)))))
@@ -723,7 +723,7 @@
        (datum `(##letrec* ((x 0) (y 1)) 2))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-letrec* stx cte)))
+  (let ((expanded (##expand-letrec* stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##letrec* ((x (##quote 0)) (y (##quote 1))) (##quote 2)))))
@@ -732,7 +732,7 @@
        (datum `(##letrec* ((x 0) (y 1)) x y))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-letrec* stx cte)))
+  (let ((expanded (##expand-letrec* stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##letrec* ((x (##quote 0)) (y (##quote 1))) x y))))
@@ -741,7 +741,7 @@
        (datum `(##letrec* ((x 0) (y x)) 2))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-letrec* stx cte)))
+  (let ((expanded (##expand-letrec* stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##letrec* ((x (##quote 0)) (y x)) (##quote 2)))))
@@ -750,7 +750,7 @@
        (datum `(##letrec* ((x y) (y x)) 2))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-letrec* stx cte)))
+  (let ((expanded (##expand-letrec* stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##letrec* ((x y) (y x)) (##quote 2)))))
@@ -759,7 +759,7 @@
        (datum `(##letrec* ((x x) (y 1)) 2))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
- (let ((expanded (expand-letrec* stx cte)))
+ (let ((expanded (##expand-letrec* stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##letrec* ((x x) (y (##quote 1))) (##quote 2)))))
@@ -787,7 +787,7 @@
        (datum `(##let-syntax ((x (##lambda (s) (##quote-syntax 0)))) 0))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-let-syntax stx cte)))
+  (let ((expanded (##expand-let-syntax stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##begin (##quote 0)))))
@@ -801,7 +801,7 @@
                  (m 1)))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-let-syntax stx cte)))
+  (let ((expanded (##expand-let-syntax stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##begin (##quote 0)))))
@@ -813,7 +813,7 @@
        (datum `(##let-syntax ((x (##lambda (s) (##quote-syntax 0)))) 1))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-let-syntax stx cte)))
+  (let ((expanded (##expand-let-syntax stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##begin (##quote 1)))))
@@ -822,7 +822,7 @@
        (datum `(##let-syntax ((x (##lambda (s) (##quote-syntax 0)))) (x)))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-let-syntax stx cte)))
+  (let ((expanded (##expand-let-syntax stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##begin (##quote 0)))))
@@ -841,7 +841,7 @@
                 1))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-let-syntax stx cte)))
+  (let ((expanded (##expand-let-syntax stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##begin (##quote 1)))))
@@ -852,7 +852,7 @@
                 (x) (y)))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-let-syntax stx cte)))
+  (let ((expanded (##expand-let-syntax stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##begin (##quote 0) (##quote 1)))))
@@ -882,7 +882,7 @@
        (datum `(##let*-syntax ((x (##lambda (s) (##quote-syntax 0)))) 1))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-let*-syntax stx cte)))
+  (let ((expanded (##expand-let*-syntax stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##begin (##quote 1)))))
@@ -891,7 +891,7 @@
        (datum `(##let*-syntax ((x (##lambda (s) (##quote-syntax 0)))) (x)))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-let*-syntax stx cte)))
+  (let ((expanded (##expand-let*-syntax stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##begin (##quote 0)))))
@@ -910,7 +910,7 @@
                 1))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-let*-syntax stx cte)))
+  (let ((expanded (##expand-let*-syntax stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##begin (##quote 1)))))
@@ -921,7 +921,7 @@
                 (x) (y)))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-let*-syntax stx cte)))
+  (let ((expanded (##expand-let*-syntax stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##begin (##quote 0) (##quote 1)))))
@@ -932,7 +932,7 @@
                 2))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-let*-syntax stx cte)))
+  (let ((expanded (##expand-let*-syntax stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##begin (##quote 2) ))))
@@ -943,7 +943,7 @@
                 (y)))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-let*-syntax stx cte)))
+  (let ((expanded (##expand-let*-syntax stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##begin (##quote 0) ))))
@@ -955,7 +955,7 @@
        (datum `(##letrec-syntax ((x (##lambda (s) (##quote-syntax 0)))) 1))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-letrec-syntax stx cte)))
+  (let ((expanded (##expand-letrec-syntax stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##begin (##quote 1)))))
@@ -964,7 +964,7 @@
        (datum `(##letrec-syntax ((x (##lambda (s) (##quote-syntax 0)))) (x)))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-letrec-syntax stx cte)))
+  (let ((expanded (##expand-letrec-syntax stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##begin (##quote 0)))))
@@ -973,7 +973,7 @@
        (datum `(##letrec-syntax ((x (##lambda (s) (##quote-syntax (x))))) 0))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-letrec-syntax stx cte)))
+  (let ((expanded (##expand-letrec-syntax stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##begin (##quote 0)))))
@@ -982,7 +982,7 @@
        (datum `(##letrec-syntax ((x (##lambda (s) (##quote-syntax (x))))) 0))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-letrec-syntax stx cte)))
+  (let ((expanded (##expand-letrec-syntax stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##begin (##quote 0)))))
@@ -994,7 +994,7 @@
                 1))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-letrec-syntax stx cte)))
+  (let ((expanded (##expand-letrec-syntax stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##begin (##quote 1)))))
@@ -1005,7 +1005,7 @@
                 (x) (y)))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-letrec-syntax stx cte)))
+  (let ((expanded (##expand-letrec-syntax stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##begin (##quote 0) (##quote 1)))))
@@ -1025,7 +1025,7 @@
        (datum `(##letrec*-syntax ((x (##lambda (s) (##quote-syntax 0)))) 1))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-letrec*-syntax stx cte)))
+  (let ((expanded (##expand-letrec*-syntax stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##begin (##quote 1)))))
@@ -1034,7 +1034,7 @@
        (datum `(##letrec*-syntax ((x (##lambda (s) (##quote-syntax 0)))) (x)))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-letrec*-syntax stx cte)))
+  (let ((expanded (##expand-letrec*-syntax stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##begin (##quote 0)))))
@@ -1043,7 +1043,7 @@
        (datum `(##letrec*-syntax ((x (##lambda (s) (##quote-syntax (x))))) 0))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-letrec*-syntax stx cte)))
+  (let ((expanded (##expand-letrec*-syntax stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##begin (##quote 0)))))
@@ -1052,7 +1052,7 @@
        (datum `(##letrec*-syntax ((x (##lambda (s) (##quote-syntax (x))))) 0))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-letrec*-syntax stx cte)))
+  (let ((expanded (##expand-letrec*-syntax stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##begin (##quote 0)))))
@@ -1064,7 +1064,7 @@
                 1))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-letrec*-syntax stx cte)))
+  (let ((expanded (##expand-letrec*-syntax stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##begin (##quote 1)))))
@@ -1075,7 +1075,7 @@
                 (x) (y)))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-letrec*-syntax stx cte)))
+  (let ((expanded (##expand-letrec*-syntax stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##begin (##quote 0) (##quote 1)))))
@@ -1086,7 +1086,7 @@
                 (y)))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-letrec*-syntax stx cte)))
+  (let ((expanded (##expand-letrec*-syntax stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##begin (##quote 0)))))
@@ -1098,7 +1098,7 @@
        (datum `(##define xg0 0))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-define stx cte)))
+  (let ((expanded (##expand-define stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##define xg0 (##quote 0)))
@@ -1114,7 +1114,7 @@
        (datum `(##define (xg1) 0))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-define stx cte)))
+  (let ((expanded (##expand-define stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##define (xg1) (##quote 0)))
@@ -1130,7 +1130,7 @@
        (datum `(##define (f . args) 0))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-define stx cte)))
+  (let ((expanded (##expand-define stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##define (f . args ) (##quote 0)))
@@ -1146,7 +1146,7 @@
        (datum `(##let () (xg0 xg1)))
        (stx   (datum->syntax datum))
        (stx   (add-scope stx core-scope)))
-  (let ((expanded (expand-let stx cte)))
+  (let ((expanded (##expand-let stx cte)))
     (check-equal?
       (##desourcify expanded)
       `(##let () (xg0 xg1)))))

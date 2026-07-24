@@ -113,8 +113,17 @@ default-random-source
           (else
            (extract-macros (##cte-parent-cte cte)))))
 
+  (define (dedup lst)
+    (let loop ((lst lst) (seen '()))
+      (cond ((null? lst) (reverse seen))
+            ((memq (car lst) seen) (loop (cdr lst) seen))
+            (else (loop (cdr lst) (cons (car lst) seen))))))
+
   (define rtlib-macros
-    (extract-macros (##cte-top-cte ##interaction-cte)))
+    (dedup
+     (append
+      (extract-macros (##top-cte-cte (##cte-top-cte ##interaction-cte)))
+      (extract-macros (##top-cte-cte (##cte-top-cte ##syntax-interaction-cte))))))
 
   (define (get-rtlib-mapping filename)
 
