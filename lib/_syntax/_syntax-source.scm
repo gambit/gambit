@@ -18,8 +18,9 @@
 (define-prim (##syntax-source-tag? src-tag)
   (and
     (##vector? src-tag)
-    (##equal? (##vector-ref src-tag 0)
-              'syntax)))
+    (##fx> (##vector-length src-tag) 0)
+    (##eq? (##vector-ref src-tag 0)
+           'syntax)))
 
 (define-prim (##make-syntax-source-tag src-tag)
   (##vector 'syntax src-tag))
@@ -65,6 +66,7 @@
 
 (define-prim&proc (syntax-source? obj)
   (and (##vector? obj)
+       (##fx> (##vector-length obj) 0)
        (##syntax-source-tag? (##vector-ref obj 0))))
 
 (##set-source?! 
@@ -550,10 +552,10 @@
         (##syntax-source-scopes-update stx proc)))))
 
 (define-primitive (add-scope! (stx syntax) (scp scope))
-  (##update-scope! stx (lambda (scopes) (scopes-insert scopes scp))))
+  (##update-scope! stx (lambda (scopes) (##scopes-insert scopes scp))))
 
 (define-primitive (flip-scope! (stx syntax) (scp scope))
-  (##update-scope! stx (lambda (scopes) (scopes-xor scopes scp))))
+  (##update-scope! stx (lambda (scopes) (##scopes-xor scopes scp))))
 
 (define-prim&proc (add-scope stx (scp scope))
   ((if (or (pair? stx)

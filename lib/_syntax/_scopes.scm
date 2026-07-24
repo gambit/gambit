@@ -43,7 +43,7 @@
 
 ;(implement-hash-set-hamt)
 
-(define-prim&proc (make-scopes . args)
+(define-primitive (make-scopes . args)
   (##apply ##make-hash-set-hamt args))
 
 (define (##fail-check-scopes arg-id proc . args)
@@ -56,28 +56,28 @@
 (define-check-type scopes (type-scope)
   ##hash-set-hamt?)
 
-(define-prim&proc (scopes->list (scps scopes))
+(define-primitive (scopes->list (scps scopes))
   (##map ##car (##hash-set-hamt->list scps)))
 
-(define-prim&proc (scopes-insert (scps scopes) (scp scope))
+(define-primitive (scopes-insert (scps scopes) (scp scope))
   (##hash-set-hamt-set scps scp #!void))
 
-(define-prim&proc (scopes-remove (scps scopes) (scp scope))
+(define-primitive (scopes-remove (scps scopes) (scp scope))
   (let ((res (##hash-set-hamt-remove scps scp)))
     res))
 
-(define-prim&proc (scopes-ref (scps scopes) (scp scope))
+(define-primitive (scopes-ref (scps scopes) (scp scope))
   (##hash-set-hamt-ref scps scp))
 
-(define-prim&proc (scopes-xor (scps scopes) (scp scope))
+(define-primitive (scopes-xor (scps scopes) (scp scope))
   (if (##scopes-ref scps scp)
       (##scopes-remove scps scp)
       (##scopes-insert scps scp)))
 
-(define-prim&proc (scopes-subset? (scps1 scopes) (scps2 scopes))
+(define-primitive (scopes-subset? (scps1 scopes) (scps2 scopes))
   (##hash-set-hamt-subset? scps1 scps2))
 
-(define-prim&proc (scopes-equal? obj1 obj2)
+(define-primitive (scopes-equal? obj1 obj2)
   (##hash-set-hamt-equal? obj1 obj2))
   
 ;;;============================================================================

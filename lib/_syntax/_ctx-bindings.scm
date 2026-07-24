@@ -25,7 +25,7 @@
   (##vector 'macro hint expander))
 
 (define-prim (##ctx-binding-macro? obj)
-  (and (##vector obj)
+  (and (##vector? obj)
        (##fx> (##vector-length obj) 0)
        (##eq? (##vector-ref obj 0)
               'macro)))
@@ -37,7 +37,7 @@
   (##vector 'core-macro hint expander))
 
 (define-prim (##ctx-binding-core-macro? obj)
-  (and (##vector obj)
+  (and (##vector? obj)
        (##fx> (##vector-length obj) 0)
        (##eq? (##vector-ref obj 0)
               'core-macro)))

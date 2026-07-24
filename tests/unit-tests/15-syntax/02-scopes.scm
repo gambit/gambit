@@ -17,7 +17,7 @@
 ;;;base
 (check-true
   (let ((lst 
-          (scopes->list 
+          (##scopes->list 
             (syntax-source-scopes
               (add-scope
                 stx
@@ -33,7 +33,7 @@
 
 (check-true
   (let ((lst 
-          (scopes->list 
+          (##scopes->list 
             (syntax-source-scopes
               (add-scopes
                 stx
@@ -45,14 +45,14 @@
 
 (check-true
   (let ((lst
-          (scopes->list
+          (##scopes->list
             (syntax-source-scopes
               (flip-scope stx1 scp1)))))
     (= (length lst) 0)))
 
 (check-true
   (let ((lst
-          (scopes->list
+          (##scopes->list
             (syntax-source-scopes
               (flip-scope stx1 scp2)))))
     (and (= (length lst) 2)
@@ -63,14 +63,14 @@
 (define (scopes-contain-scp1-exactly s)
   (check-true
     (and (syntax-source? s)
-         (let ((lst (scopes->list (syntax-source-scopes s))))
+         (let ((lst (##scopes->list (syntax-source-scopes s))))
            (and (= (length lst) 1)
                 (equal? (car lst) scp1))))))
 
 (define (scopes-contain-scp2-exactly s)
   (check-true
     (and (syntax-source? s)
-         (let ((lst (scopes->list (syntax-source-scopes s))))
+         (let ((lst (##scopes->list (syntax-source-scopes s))))
            (and (= (length lst) 1)
                 (equal? (car lst) scp2))))))
 
