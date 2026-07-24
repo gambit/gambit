@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-1.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -119,8 +119,9 @@
 
 ;; Number of tag bits per pointer:
 
-(define targ-tag-bits 2)
-(define targ-alignment (expt 2 targ-tag-bits))
+(define targ-min-tag-bits 2)
+(define targ-max-tag-bits 3)
+(define targ-min-alignment (expt 2 targ-min-tag-bits))
 
 ;; Upper bound on space needed by various objects:
 
@@ -128,10 +129,10 @@
   (* (quotient (+ i (- n 1)) n) n))
 
 (define (targ-max-words i) ;; minimum k such that targ-min-word-size*k >= i
-                           ;; and targ-min-word-size*k mod targ-alignment = 0
+                           ;; and targ-min-word-size*k mod targ-min-alignment = 0
   (quotient (targ-round-up-to-multiple-of
               targ-min-word-size
-              (targ-round-up-to-multiple-of targ-alignment i))
+              (targ-round-up-to-multiple-of targ-min-alignment i))
             targ-min-word-size))
 
 ;; Space occupied by various types of objects.
@@ -667,11 +668,20 @@
                  (let ((y (ordered-table-enter
                            targ-sub-objs
                            obj
-                           (if (eq? subtype 'bigfixnum)
-                             (lambda (obj i)
-                               (list "BIGFIX" i (targ-c-long-long obj)))
-                             (lambda (obj i)
-                               (list "SUB" i))))))
+                           (case subtype
+                             ((flonum)
+                              (lambda (obj i)
+                                (let ((hi-lo-bits (targ-f64->hi-lo-bits obj)))
+                                  (list "FLO"
+                                        i
+                                        (targ-c-hex-u32 (car hi-lo-bits))
+                                        (targ-c-hex-u32 (cdr hi-lo-bits))))))
+                             ((bigfixnum)
+                              (lambda (obj i)
+                                (list "BIGFIX" i (targ-c-long-long obj))))
+                             (else
+                              (lambda (obj i)
+                                (list "SUB" i)))))))
                    (case subtype
                      ((symbol)
                       (targ-use-obj (symbol->string obj))
@@ -790,11 +800,15 @@
          (define (ref-subtyped-obj obj)
            (let ((x (ordered-table-lookup targ-sub-objs obj)))
              (if x
-               (cons (if (eq? subtype 'bigfixnum)
-                       "REF_BIGFIX"
-                       "REF_SUB")
-                     (cdr x))
-               (err))))
+                 (cons (case subtype
+                         ((flonum)
+                          "REF_FLO")
+                         ((bigfixnum)
+                          "REF_BIGFIX")
+                         (else
+                          "REF_SUB"))
+                       (cdr x))
+                 (err))))
 
          (case subtype
            ((symbol)
@@ -1305,19 +1319,24 @@
   (targ-display (compiler-version))
   (targ-line)
 
-  (write (list (target-name targ-target)) targ-port)
+  (write-returning-len-without-read-macros (list (target-name targ-target))
+                                           targ-port)
   (targ-line)
 
-  (write name targ-port)
+  (write-returning-len-without-read-macros name
+                                           targ-port)
   (targ-line)
 
-  (write supply-modules targ-port)
+  (write-returning-len-without-read-macros supply-modules
+                                           targ-port)
   (targ-line)
 
-  (write demand-modules targ-port)
+  (write-returning-len-without-read-macros demand-modules
+                                           targ-port)
   (targ-line)
 
-  (write mods-and-flags targ-port)
+  (write-returning-len-without-read-macros mods-and-flags
+                                           targ-port)
   (targ-line)
 
   (targ-write-rsrc-names 'symbols
@@ -1344,7 +1363,7 @@
                (key (car key-attribs))
                (attribs (cdr key-attribs)))
           (targ-display "(")
-          (write key targ-port)
+          (write-returning-len-without-read-macros key targ-port)
           (if (not (or (pair? attribs) (null? attribs)))
               (begin
                 (targ-display " .")
@@ -1355,7 +1374,7 @@
                 (let ((attrib (car attribs)))
                   (targ-display " ")
                   (targ-write-escaped key)
-                  (write attrib targ-port)
+                  (write-returning-len-without-read-macros attrib targ-port)
                   (targ-line)
                   (loop2 (cdr attribs)))))
           (targ-display ")")
@@ -1390,7 +1409,7 @@
   (for-each
     (lambda (r)
       (let ((name (targ-rsrc-name r)))
-        (write name targ-port)
+        (write-returning-len-without-read-macros name targ-port)
         (targ-line)))
     lst)
   (targ-display ") ")
@@ -1401,7 +1420,7 @@
   ;; writes obj so that it can't be part of valid C code (even in a
   ;; C string or mutliline C comment)
   (targ-display "#|*/\"*/\"")
-  (write obj targ-port)
+  (write-returning-len-without-read-macros obj targ-port)
   (targ-display "|#"))
 
 (define (targ-dump-module-info name linker-name linkfile? extension? meta-info)

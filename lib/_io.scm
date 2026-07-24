@@ -2,7 +2,7 @@
 
 ;;; File: "_io.scm"
 
-;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -228,7 +228,8 @@
           (macro-default-reuse-address)
           (macro-default-broadcast)
           (macro-default-ignore-hidden)
-          (macro-default-tls-context))))
+          (macro-default-tls-context)
+          (macro-default-capacity))))
     (##parse-psettings!
      allowed-settings
      settings
@@ -336,6 +337,15 @@
            (macro-line-buffering))
           ((##eq? value #f)
            (macro-no-buffering))
+          (else
+           #f)))
+
+  (define (capacity value)
+    (cond ((##eq? value #f)
+           0)
+          ((and (##fixnum? value)
+                (##fx< 0 value))
+           value)
           (else
            #f)))
 
@@ -745,6 +755,16 @@
                                          x)
                                         (macro-psettings-options-buffering-set!
                                          (macro-psettings-woptions psettings)
+                                         x)
+                                        (loop rest2))
+                                      (error name))))
+
+                               ((##eq? name 'capacity:)
+                                (let ((x (capacity value)))
+                                  (if x
+                                      (begin
+                                        (macro-psettings-capacity-set!
+                                         psettings
                                          x)
                                         (loop rest2))
                                       (error name))))
@@ -2457,10 +2477,10 @@
       (sym 'macro- name '-port-wcondvar))
     (define macro-vect-port-wcondvar-set!
       (sym 'macro- name '-port-wcondvar-set!))
-    (define macro-vect-port-buffering-limit
-      (sym 'macro- name '-port-buffering-limit))
-    (define macro-vect-port-buffering-limit-set!
-      (sym 'macro- name '-port-buffering-limit-set!))
+    (define macro-vect-port-capacity
+      (sym 'macro- name '-port-capacity))
+    (define macro-vect-port-capacity-set!
+      (sym 'macro- name '-port-capacity-set!))
 
     (define vect-rbuf-fill
       (sym name '-rbuf-fill))
@@ -2681,17 +2701,17 @@
               (let loop ()
                 (let* ((peer
                         (,',macro-vect-port-peer port))
-                       (buffering-limit
-                        (,',macro-vect-port-buffering-limit port)))
-                  (if (and buffering-limit
+                       (capacity
+                        (,',macro-vect-port-capacity port)))
+                  (if (and (##fx< 0 capacity)
                            (let ((unread
                                   (##fx- (,',macro-vect-port-wlo port)
                                          (,',macro-vect-port-rlo peer))))
-                             (##fx< buffering-limit unread)))
+                             (##fx< capacity unread)))
 
-                      ;; buffering limit has been reached, so block
+                      ;; capacity has been reached, so block
                       ;; the thread until some reads decrease the
-                      ;; amount of data buffered
+                      ;; amount of data waiting to be read
 
                       (let ((continue?
                              (or (##mutex-signal-and-condvar-wait!
@@ -2704,7 +2724,7 @@
                             (loop)
                             ##err-code-EAGAIN))
 
-                      ;; buffering limit is not yet reached, so allocate
+                      ;; capacity is not yet reached, so allocate
                       ;; a new write buffer and add it to the FIFO
 
                       (let* ((new-vect-wbuf
@@ -2714,7 +2734,7 @@
                              (vect-whi
                               (,',macro-vect-port-whi port)))
 
-                        ;; keep track of amount of data buffered
+                        ;; keep track of amount of data in write buffer
                         (,',macro-vect-port-wlo-set!
                          port
                          (##fx+ (,',macro-vect-port-wlo port) vect-whi))
@@ -3321,7 +3341,8 @@
    direction:
    input-buffering:
    output-buffering:
-   buffering:))
+   buffering:
+   capacity:))
 
 (define-prim (##make-vector-port src start end psettings)
 
@@ -3377,8 +3398,8 @@
           (##make-io-condvar-for-reading #f))
          (vector-wcondvar
           (##make-io-condvar-for-writing #f))
-         (vector-buffering-limit
-          #f))
+         (vector-capacity
+          (macro-psettings-capacity psettings)))
 
     (define (read-datum port re)
 
@@ -3539,7 +3560,7 @@
             vector-fifo
             vector-rcondvar
             vector-wcondvar
-            vector-buffering-limit)))
+            vector-capacity)))
       (macro-vector-port-peer-set! port port)
       (##io-condvar-port-set! vector-rcondvar port)
       (##io-condvar-port-set! vector-wcondvar port)
@@ -3561,6 +3582,7 @@
    input-buffering:
    output-buffering:
    buffering:
+   capacity:
    input-readtable:
    output-readtable:
    readtable:))
@@ -3639,8 +3661,8 @@
           (##make-io-condvar-for-writing #f))
          (string-width
           (##psettings->output-width psettings))
-         (string-buffering-limit
-          #f))
+         (string-capacity
+          (macro-psettings-capacity psettings)))
 
     (define (read-datum port re)
 
@@ -3724,7 +3746,7 @@
             string-rcondvar
             string-wcondvar
             string-width
-            string-buffering-limit)))
+            string-capacity)))
       (macro-string-port-peer-set! port port)
       (##io-condvar-port-set! string-rcondvar port)
       (##io-condvar-port-set! string-wcondvar port)
@@ -3755,6 +3777,7 @@
    input-buffering:
    output-buffering:
    buffering:
+   capacity:
    input-readtable:
    output-readtable:
    readtable:))
@@ -3853,8 +3876,8 @@
           (##make-io-condvar-for-writing #f))
          (u8vector-width
           (##psettings->output-width psettings))
-         (u8vector-buffering-limit
-          #f))
+         (u8vector-capacity
+          (macro-psettings-capacity psettings)))
 
      (define (read-datum port re)
 
@@ -3961,7 +3984,7 @@
              u8vector-rcondvar
              u8vector-wcondvar
              u8vector-width
-             u8vector-buffering-limit)))
+             u8vector-capacity)))
        (macro-u8vector-port-peer-set! port port)
        (##io-condvar-port-set! u8vector-rcondvar port)
        (##io-condvar-port-set! u8vector-wcondvar port)
@@ -4277,7 +4300,7 @@
               obj
               #!optional
               (port (macro-current-output-port))
-              (max-length ##max-fixnum)
+              (max-length (##greatest-fixnum))
               (force? (macro-if-auto-forcing #t #f)))
   (##write-with-style
    obj
@@ -4302,7 +4325,7 @@
               obj
               #!optional
               (port (macro-current-output-port))
-              (max-length ##max-fixnum)
+              (max-length (##greatest-fixnum))
               (force? (macro-if-auto-forcing #t #f)))
   (##write-with-style
    obj
@@ -4327,7 +4350,7 @@
               obj
               #!optional
               (port (macro-current-output-port))
-              (max-length ##max-fixnum)
+              (max-length (##greatest-fixnum))
               (force? (macro-if-auto-forcing #t #f)))
   (##write-with-style
    obj
@@ -4352,7 +4375,7 @@
               obj
               #!optional
               (port (macro-current-output-port))
-              (max-length ##max-fixnum)
+              (max-length (##greatest-fixnum))
               (force? (macro-if-auto-forcing #t #f)))
   (##write-generic-to-character-port
    'display
@@ -4379,7 +4402,7 @@
               obj
               #!optional
               (port (macro-current-output-port))
-              (max-length ##max-fixnum)
+              (max-length (##greatest-fixnum))
               (force? (macro-if-auto-forcing #t #f)))
   (##write-generic-to-character-port
    'pretty-print
@@ -4406,7 +4429,7 @@
               obj
               #!optional
               (port (macro-current-output-port))
-              (max-length ##max-fixnum)
+              (max-length (##greatest-fixnum))
               (force? (macro-if-auto-forcing #t #f)))
   (##write-generic-to-character-port
    'print
@@ -4873,14 +4896,14 @@
       (##output-port-width port))))
 
 (define-prim (##input-port-max-char-code port)
-  (if (macro-byte-port? port)
+  (if (macro-byte-input-port? port)
       (##options->max-char-code (macro-port-roptions port))
       (##max-char-code)))
 
 (define-prim (##output-port-max-char-code port)
-  (if (macro-byte-port? port)
-      (##options->max-char-code (macro-port-woptions port)))
-      (##max-char-code))
+  (if (macro-byte-output-port? port)
+      (##options->max-char-code (macro-port-woptions port))
+      (##max-char-code)))
 
 (define-prim (##options->max-char-code options)
   (let ((e
@@ -4962,15 +4985,15 @@
 (define-prim (##object->string
               obj
               #!optional
-              (max-length ##max-fixnum)
+              (max-length (##greatest-fixnum))
               (max-unescaped-char (macro-absent-obj)))
   (if (##fx< 0 max-length)
       (let ((str
              (##object->truncated-string
               obj
-              (if (##fx< max-length ##max-fixnum)
+              (if (##fx< max-length (##greatest-fixnum))
                   (##fx+ max-length 1)
-                  ##max-fixnum)
+                  (##greatest-fixnum))
               max-unescaped-char)))
         (##string->limited-string str max-length))
       (##string)))
@@ -5490,30 +5513,34 @@
   (macro-force-vars (k port)
     (macro-check-index
       k
-      1
+      '(1 . k)
       (read-string k port)
-      (let* ((p
-              (if (##eq? port (macro-absent-obj))
-                  (macro-current-input-port)
-                  port))
-             (str
-              (##make-string k))
-             (n
-              (##read-substring str 0 k p #f #f)))
-        (cond ((##fx> n 0)
-               (##string-shrink! str n)
-               str)
-              ((##fx= n 0)
-               #!eof)
-              (else
-               (##raise-os-io-exception port #f n read-string k port)))))))
+      (let ((p
+             (if (##eq? port (macro-absent-obj))
+                 (macro-current-input-port)
+                 port)))
+        (macro-check-character-input-port
+          p
+          '(2 . port)
+          (read-string k port)
+          (let ((str (##make-string k)))
+            (if (##fx= k 0)
+                str
+                (let ((n (##read-substring str 0 k p #f #f)))
+                  (cond ((##fx> n 0)
+                         (##string-shrink! str n)
+                         str)
+                        ((##fx= n 0)
+                         #!eof)
+                        (else
+                         (##raise-os-io-exception port #f n read-string k port)))))))))))
 
 (define-prim (##read-line
               #!optional
               (port (macro-current-input-port))
               (separator #\newline)
               (include-separator? #f)
-              (max-length ##max-fixnum))
+              (max-length (##greatest-fixnum)))
 
   (define max-chunk-length 512)
 
@@ -5571,7 +5598,9 @@
                     (##string first)
                     (##string))
                 (start))
-            first))
+            (if separator
+                first
+                (##string)))) ;; empty string on end-of-file when separator=#f
       (##string)))
 
 (define-prim (read-line
@@ -5595,7 +5624,7 @@
                include-separator?))
           (ml
            (if (##eq? max-length (macro-absent-obj))
-               ##max-fixnum
+               (##greatest-fixnum)
                max-length)))
       (macro-check-character-input-port
         p
@@ -6292,7 +6321,7 @@
   (macro-force-vars (k port)
     (macro-check-index
       k
-      1
+      '(1 . k)
       (read-bytevector k port)
       (let ((p
              (if (##eq? port (macro-absent-obj))
@@ -6300,19 +6329,19 @@
                  port)))
         (macro-check-byte-input-port
           p
-          2
+          '(2 . port)
           (read-bytevector k port)
-          (let* ((u8vect
-                  (##make-u8vector k))
-                 (n
-                  (##read-subu8vector u8vect 0 k p #f #f)))
-            (cond ((##fx> n 0)
-                   (##u8vector-shrink! u8vect n)
-                   u8vect)
-                  ((##fx= n 0)
-                   #!eof)
-                  (else
-                   (##raise-os-io-exception port #f n read-bytevector k port)))))))))
+          (let ((u8vect (##make-u8vector k)))
+            (if (##fx= k 0)
+                u8vect
+                (let ((n (##read-subu8vector u8vect 0 k p #f #f)))
+                  (cond ((##fx> n 0)
+                         (##u8vector-shrink! u8vect n)
+                         u8vect)
+                        ((##fx= n 0)
+                         #!eof)
+                        (else
+                         (##raise-os-io-exception port #f n read-bytevector k port)))))))))))
 
 (define-prim (##read-bytevector!
               u8vect
@@ -8005,9 +8034,13 @@
 (implement-library-type-socket-info)
 
 (define-prim (##socket-info-setup! si)
-  (##vector-set! si 1 (##net-family-decode (##vector-ref si 1)))
   (##structure-type-set! si (macro-type-socket-info))
-  (##subtype-set! si (macro-subtype-structure))
+  (##unchecked-structure-set!
+   si
+   (##net-family-decode (##unchecked-structure-ref si 1 #f #f))
+   1
+   #f
+   #f)
   si)
 
 (define-prim (##tcp-client-socket-info
@@ -8098,13 +8131,26 @@
     (else x)))
 
 (define-prim (##address-info-setup! ai)
-  (##vector-set! ai 1 (##net-family-decode      (##vector-ref ai 1)))
-  (##vector-set! ai 2 (##net-socket-type-decode (##vector-ref ai 2)))
-  (##vector-set! ai 3 (##net-protocol-decode    (##vector-ref ai 3)))
-  (let ((si (##vector-ref ai 4)))
-    (##socket-info-setup! si))
   (##structure-type-set! ai (macro-type-address-info))
-  (##subtype-set! ai (macro-subtype-structure))
+  (##unchecked-structure-set!
+   ai
+   (##net-family-decode (##unchecked-structure-ref ai 1 #f #f))
+   1
+   #f
+   #f)
+  (##unchecked-structure-set!
+   ai
+   (##net-socket-type-decode (##unchecked-structure-ref ai 2 #f #f))
+   2
+   #f
+   #f)
+  (##unchecked-structure-set!
+   ai
+   (##net-protocol-decode (##unchecked-structure-ref ai 3 #f #f))
+   3
+   #f
+   #f)
+  (##socket-info-setup! (##unchecked-structure-ref ai 4 #f #f))
   ai)
 
 (define-prim (##address-infos
@@ -10568,19 +10614,20 @@
 (define-prim (##readtable-setup-for-standard-level! rt)
   (let ((standard-level (##get-standard-level)))
 
-    (cond ((or (##fx= standard-level 4)  ;; R4RS language
+    (cond ((##fx= standard-level 0) ;; Gambit language, explicit
+           (macro-readtable-case-conversion?-set! rt #f)
+           (macro-readtable-keywords-allowed?-set! rt #t)
+           (macro-readtable-bracket-handler-set! rt '|[...]|)
+           (macro-readtable-brace-handler-set! rt '|{...}|))
+          ((or (##fx= standard-level 4)  ;; R4RS language
                (##fx= standard-level 5)) ;; R5RS language
            (macro-readtable-case-conversion?-set! rt #t)
            (macro-readtable-keywords-allowed?-set! rt #f))
-
           ((or (##fx= standard-level 6)  ;; R6RS language
                (##fx= standard-level 7)) ;; R7RS language
            (macro-readtable-case-conversion?-set! rt #f)
            (macro-readtable-keywords-allowed?-set! rt #f))
-
-          (else ;; Gambit language
-           (macro-readtable-case-conversion?-set! rt #f)
-           (macro-readtable-keywords-allowed?-set! rt #t)
+          (else ;; Gambit language, implicit
            (macro-readtable-bracket-handler-set! rt '|[...]|)
            (macro-readtable-brace-handler-set! rt '|{...}|)))))
 
@@ -10600,21 +10647,6 @@
 (##define-macro (macro-must-escape-char? we c)
   `(or (macro-ctrl-char? ,c)
        (macro-gt-max-unescaped-char? ,we ,c)))
-
-;;;----------------------------------------------------------------------------
-
-(define-prim (##might-write-differently? old-obj new-obj)
-  (cond ((##eq? old-obj new-obj)
-         (or (##pair? new-obj)
-             (and (##subtyped? new-obj)
-                  (##not (or (##complex? new-obj)
-                             (##symbol? new-obj)
-                             (##keyword? new-obj))))))
-        ((##complex? old-obj)
-         (##not (and (##complex? new-obj)
-                     (##= old-obj new-obj))))
-        (else
-         #t)))
 
 ;;;----------------------------------------------------------------------------
 
@@ -11625,68 +11657,73 @@
         (##table-set! foreign-write-handler-table tag proc)
         (##table-set! foreign-write-handler-table tag))))
 
-(define-prim (##explode-object obj)
-  (##vector-copy obj))
-
-(define-prim (##implode-object re fields subtype)
-  (let* ((n (##vector-length fields))
-         (v (##make-vector n)))
-    (##subtype-set! v subtype)
-    (let loop ((i (##fx- n 1)))
-      (if (##fx< i 0)
-          v
-          (let ((obj (##vector-ref fields i)))
-            (if (##label-marker? obj)
-                (##label-marker-fixup-handler-add!
-                 re
-                 obj
-                 (lambda (resolved-obj)
-                   (##vector-set! v i resolved-obj)))
-                (##vector-set! v i obj))
-            (loop (##fx- i 1)))))))
-
-(define-prim (##explode-structure obj)
-  (##explode-object obj))
+(define-prim (##explode-structure struct)
+  (##declare (not interrupts-enabled))
+  (let* ((len (##structure-length struct))
+         (vect (##make-vector len (##structure-type struct))))
+    (let loop ((i (##fx- len 1)))
+      (if (##fx< 0 i)
+          (begin
+            (##vector-set!
+             vect
+             i
+             (##unchecked-structure-ref struct i #f #f))
+            (loop (##fx- i 1)))
+          vect))))
 
 (define-prim (##implode-structure re fields)
-  (##implode-object re fields (macro-subtype-structure)))
+  (##declare (not interrupts-enabled))
+  (let* ((len (##vector-length fields))
+         (struct (##make-structure (##vector-ref fields 0) len)))
+    (let loop ((i (##fx- len 1)))
+      (if (##fx< 0 i)
+          (begin
+            (##unchecked-structure-set!
+             struct
+             (##vector-ref fields i)
+             i
+             #f
+             #f)
+            (loop (##fx- i 1)))
+          struct))))
 
-';old version... more type checks but incomplete type checks so why bother?
-(define-prim (##implode-structure re fields)
-  (let ((nb-fields (##vector-length fields)))
-    (if (##fx< 0 nb-fields)
-        (let ((n (##vector-length fields)))
-          (let ((s (##make-vector n)))
-
-            (define (set-element! i obj)
-              (##vector-set! s i obj)
-              (if (##fx= i 0)
-                  (let ((n (##vector-length s)))
-                    (##subtype-set! s (macro-subtype-structure))
-                    (if (##not (and (##type? obj)
-                                    (##fx= (##type-field-count obj)
-                                           (##fx- n 1))))
-                        (##subtype-set! s (macro-subtype-vector))))))
-
-            (let loop ((i (##fx- n 1)))
-              (if (##fx< i 0)
-                  s
-                  (let ((obj (##vector-ref fields i)))
-                    (if (##label-marker? obj)
-                        (##label-marker-fixup-handler-add!
-                         re
-                         obj
-                         (lambda (resolved-obj)
-                           (set-element! i resolved-obj)))
-                        (set-element! i obj))
-                    (loop (##fx- i 1)))))))
-        #f)))
+(define-prim (##explode-frame frame)
+  (##declare (not interrupts-enabled))
+  (let* ((len (##fx+ (##frame-fs frame) 1))
+         (vect (##make-vector len)))
+    (##vector-set! vect 0 (##frame-ret frame))
+    (let loop ((i (##fx- len 1)))
+      (if (##fx< 0 i)
+          (begin
+            (if (##frame-slot-live? frame i)
+                (##vector-set!
+                 vect
+                 i
+                 (##frame-ref frame i)))
+            (loop (##fx- i 1)))
+          vect))))
 
 (define-prim (##implode-frame re fields)
-  (##implode-object re fields (macro-subtype-frame)))
+  (##declare (not interrupts-enabled))
+  (let* ((len (##vector-length fields))
+         (frame (##make-frame (##vector-ref fields 0))))
+    (let loop ((i (##fx- len 1)))
+      (if (##fx< 0 i)
+          (begin
+            (##frame-set!
+             frame
+             i
+             (##vector-ref fields i))
+            (loop (##fx- i 1)))
+          frame))))
+
+(define-prim (##explode-continuation cont)
+  (##vector (##continuation-frame cont)
+            (##continuation-denv cont)))
 
 (define-prim (##implode-continuation re fields)
-  (##implode-object re fields (macro-subtype-continuation)))
+  (##make-continuation (##vector-ref fields 0)
+                       (##vector-ref fields 1)))
 
 (define-prim (##explode-procedure proc)
   (cond ((##closure? proc)
@@ -11739,28 +11776,32 @@
                                    (##fx< 0 subproc-id))
                               (let ((subproc (##make-subprocedure proc subproc-id)))
                                 (if subproc
-                                    (let* ((nb-closed (##subprocedure-nb-closed subproc))
-                                           (n (##fx- (##vector-length fields) 1)))
-                                      (if (##fx= (##fx+ nb-closed 1) n)
-                                          (if (##fx= nb-closed 0)
-                                              subproc
-                                              (let ((c (##make-vector n subproc)))
-                                                (##subtype-set! c (macro-subtype-procedure))
-                                                (let loop ((i (##fx- n 1)))
-                                                  (if (##fx< i 1)
-                                                      c
-                                                      (let ((obj
-                                                             (##vector-ref fields
-                                                                           (##fx+ i 1))))
-                                                        (if (##label-marker? obj)
-                                                            (##label-marker-fixup-handler-add!
-                                                             re
-                                                             obj
-                                                             (lambda (resolved-obj)
-                                                               (##closure-set! c i resolved-obj)))
-                                                            (##closure-set! c i obj))
-                                                        (loop (##fx- i 1)))))))
-                                          #f))
+                                    (let ((nb-closed
+                                           (##subprocedure-nb-closed subproc)))
+                                      (cond ((##fx= nb-closed -1)
+                                             subproc)
+                                            ((##fx= nb-closed
+                                                    (##fx- nb-fields 2))
+                                             (let ((c (##make-closure
+                                                       subproc
+                                                       nb-closed)))
+                                               (let loop ((i nb-closed))
+                                                 (if (##fx< i 1)
+                                                     c
+                                                     (let ((obj
+                                                            (##vector-ref
+                                                             fields
+                                                             (##fx+ i 1))))
+                                                       (if (##label-marker? obj)
+                                                           (##label-marker-fixup-handler-add!
+                                                            re
+                                                            obj
+                                                            (lambda (resolved-obj)
+                                                              (##closure-set! c i resolved-obj)))
+                                                           (##closure-set! c i obj))
+                                                       (loop (##fx- i 1)))))))
+                                            (else
+                                             #f)))
                                     #f))
                               #f)))
                     #f))
@@ -12059,67 +12100,6 @@
        'gc-hash-table
        (##void))))
 
-(define-prim (##explode-gc-hash-table gcht)
-  (##declare (not interrupts-enabled))
-  (let loop ((i (macro-gc-hash-table-key0))
-             (key-vals '()))
-    (let ((len (##vector-length gcht)))
-      (if (##fx< i len)
-          (let ((key (##vector-ref gcht i)))
-            (if (and (##not (##eq? key (macro-unused-obj)))
-                     (##not (##eq? key (macro-deleted-obj))))
-                (let ((val (##vector-ref gcht (##fx+ i 1))))
-                  (let ((new-key-vals (##cons (##cons key val) key-vals)))
-                    (##declare (interrupts-enabled))
-                    (loop (##fx+ i 2) new-key-vals)))
-                (let ()
-                  (##declare (interrupts-enabled))
-                  (loop (##fx+ i 2) key-vals))))
-          (let ((flags
-                 (macro-gc-hash-table-flags gcht))
-                (count
-                 (macro-gc-hash-table-count gcht))
-                (min-count
-                 (macro-gc-hash-table-min-count gcht))
-                (free
-                 (macro-gc-hash-table-free gcht)))
-            (##declare (interrupts-enabled))
-            (##vector len flags count min-count free key-vals))))))
-
-(define-prim (##implode-gc-hash-table re fields)
-  (let ((len (##vector-ref fields 0))
-        (flags (##vector-ref fields 1))
-        (count (##vector-ref fields 2))
-        (min-count (##vector-ref fields 3))
-        (free (##vector-ref fields 4))
-        (key-vals (##vector-ref fields 5)))
-    (let ((gcht (##make-vector len (macro-unused-obj))))
-      (macro-gc-hash-table-flags-set!
-       gcht
-       (##fxior ;; force rehash at next access!
-        flags
-        (##fx+ (macro-gc-hash-table-flag-key-moved)
-               (macro-gc-hash-table-flag-need-rehash))))
-      (macro-gc-hash-table-count-set! gcht count)
-      (macro-gc-hash-table-min-count-set! gcht min-count)
-      (macro-gc-hash-table-free-set! gcht free)
-      (let loop ((i (macro-gc-hash-table-key0))
-                 (key-vals key-vals))
-        (if (##pair? key-vals)
-            (if (##fx< i (##vector-length gcht))
-                (let ((key-val (##car key-vals)))
-                  (let ((key (##car key-val))
-                        (val (##cdr key-val)))
-                    (##vector-set! gcht i key)
-                    (##vector-set! gcht (##fx+ i 1) val)
-                    (loop (##fx+ i 2) (##cdr key-vals))))
-                #f)
-            (begin
-              (##subtype-set!
-               gcht
-               (macro-subtype-weak))
-              gcht))))))
-
 (define-prim (##wr-meroon we obj)
   (##wr-sn
    we
@@ -12175,11 +12155,13 @@
            'promise
            (##void)))))
 
-(define-prim (##explode-promise obj)
-  (##explode-object obj))
+(define-prim (##explode-promise promise)
+  (##vector (##promise-state promise)))
 
 (define-prim (##implode-promise re fields)
-  (##implode-object re fields (macro-subtype-promise)))
+  (let ((promise (##make-delay-promise #f)))
+    (##promise-state-set! promise (##vector-ref fields 0))
+    promise))
 
 (define-prim (##wr-will we obj)
   (##wr-sn
@@ -13140,7 +13122,7 @@
                                (+ (* n 16) next-digit)))))
                   (else
                    (if (or (not nb-digits)
-                           (and (= nb-digits ##max-fixnum)
+                           (and (= nb-digits (##greatest-fixnum))
                                 (let ((next (macro-peek-next-char-or-eof re)))
                                   (and (char? next)
                                        (char=? next #\;)
@@ -13164,7 +13146,7 @@
            (read-escape-hexadecimal
             (if (macro-readtable-r7rs-compatible-read?
                  (macro-readenv-readtable re))
-                ##max-fixnum
+                (##greatest-fixnum)
                 #f)))
           ((char=? next #\u)
            (read-escape-hexadecimal 4))
@@ -13444,7 +13426,7 @@
 
 (define (##read-script-line re prefix)
   (let* ((rest-of-line
-          (##read-line (macro-readenv-port re) #\newline #f ##max-fixnum))
+          (##read-line (macro-readenv-port re) #\newline #f (##greatest-fixnum)))
          (script-line
           (string-append prefix (if (string? rest-of-line) rest-of-line "")))
          (language-and-tail
@@ -13617,10 +13599,10 @@
                ;; hello world
                ;; END
                (let ((tag
-                      (##read-line (macro-readenv-port re) #\newline #t ##max-fixnum)))
+                      (##read-line (macro-readenv-port re) #\newline #t (##greatest-fixnum))))
                  (let loop ((lines-rev '()))
                    (let ((line
-                          (##read-line (macro-readenv-port re) #\newline #t ##max-fixnum)))
+                          (##read-line (macro-readenv-port re) #\newline #t (##greatest-fixnum))))
                      (if (string? line)
                          (if (string=? line tag)
                              (let* ((str
@@ -13637,7 +13619,7 @@
                     #t)
                ;; Delimited here string of the form #<|foo|
                (let ((str
-                      (##read-line (macro-readenv-port re) separator #t ##max-fixnum)))
+                      (##read-line (macro-readenv-port re) separator #t (##greatest-fixnum))))
                  (if (string? str)
                      (let ((len (string-length str)))
                        (if (and (< 0 len)
@@ -13744,7 +13726,7 @@
                       (macro-readenv-filepos-set! re old-pos) ;; restore pos
                       (##read-datum-or-label-or-none-or-dot re))))) ;; skip error
 
-            (define (deserialize re implode);;;;;;;;;;;;;;;;;;;;;;;;;;;;
+            (define (deserialize re implode)
               (let ((c (macro-read-next-char-or-eof re)))
                 (if (eqv? c #\()
                     (let* ((old-wrapper (macro-readenv-wrapper re))
@@ -13760,8 +13742,7 @@
                         (if obj
                             (macro-readenv-wrap re obj)
                             (begin
-                        ;;;;;;;;;;;;error
-                              (##raise-datum-parsing-exception 'open-paren-expected re)
+                              (##raise-datum-parsing-exception 'deserialization-error re)
                               (macro-readenv-filepos-set! re old-pos) ;; restore pos
                               (##read-datum-or-label-or-none-or-dot re))))) ;; skip error
                     (begin
@@ -15804,8 +15785,8 @@
           #f                 ;; eval-allowed?
           #f                 ;; write-extended-read-macros?
           #f                 ;; write-cdr-read-macros?
-          ##max-fixnum       ;; max-write-level
-          ##max-fixnum       ;; max-write-length
+          (##greatest-fixnum);; max-write-level
+          (##greatest-fixnum);; max-write-length
           ##standard-pretty-print-formats
           'quote             ;; quote-keyword
           'quasiquote        ;; quasiquote-keyword

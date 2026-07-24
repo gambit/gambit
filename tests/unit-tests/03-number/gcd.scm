@@ -4,6 +4,12 @@
 (check-tail-exn type-exception? (lambda () (gcd 'a 1)))
 (check-tail-exn type-exception? (lambda () (gcd 3/2 1)))
 (check-tail-exn type-exception? (lambda () (gcd 1 3/2)))
+(check-tail-exn type-exception? (lambda () (gcd #i3/2 1)))
+(check-tail-exn type-exception? (lambda () (gcd 1 #i3/2)))
+(check-tail-exn type-exception? (lambda () (gcd 1+0.i 1)))
+(check-tail-exn type-exception? (lambda () (gcd 1 1+0.i)))
+
+
 (check-eqv? (gcd (expt 3 100) (expt 5 100)) 1)
 (if (##use-fast-bignum-algorithms?)
     (begin
@@ -32,8 +38,8 @@ by visual examination.
 
 (define exact-arguments
   (list 0 1 -1
-        ##min-fixnum ##max-fixnum
-        (* ##min-fixnum 2) (* ##max-fixnum 2)))
+        (##least-fixnum) (##greatest-fixnum)
+        (* (##least-fixnum) 2) (* (##greatest-fixnum) 2)))
 
 (define all-arguments
   (append exact-arguments (cons -0. (map exact->inexact exact-arguments))))

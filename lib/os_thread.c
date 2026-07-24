@@ -7,7 +7,7 @@
  */
 
 #define ___INCLUDED_FROM_OS_THREAD
-#define ___VERSION 409005
+#define ___VERSION 409007
 #include "gambit.h"
 
 #include "os_setup.h"
@@ -230,85 +230,6 @@ int level;)
 {
   int cache_size = 0;
 
-#ifdef USE_sysconf
-
-  {
-
-  static struct { int name; int level; int kind; } sysconf_info[] = {
-
-#ifdef _SC_LEVEL1_DCACHE_SIZE
-    { _SC_LEVEL1_DCACHE_SIZE, 1, 1 },
-#endif
-#ifdef _SC_LEVEL1_ICACHE_SIZE
-    { _SC_LEVEL1_ICACHE_SIZE, 1, 2 },
-#endif
-#ifdef _SC_LEVEL1_CACHE_SIZE
-    { _SC_LEVEL1_CACHE_SIZE,  1, 3 },
-#endif
-
-#ifdef _SC_LEVEL2_DCACHE_SIZE
-    { _SC_LEVEL2_DCACHE_SIZE, 2, 1 },
-#endif
-#ifdef _SC_LEVEL2_ICACHE_SIZE
-    { _SC_LEVEL2_ICACHE_SIZE, 2, 2 },
-#endif
-#ifdef _SC_LEVEL2_CACHE_SIZE
-    { _SC_LEVEL2_CACHE_SIZE,  2, 3 },
-#endif
-
-#ifdef _SC_LEVEL3_DCACHE_SIZE
-    { _SC_LEVEL3_DCACHE_SIZE, 3, 1 },
-#endif
-#ifdef _SC_LEVEL3_ICACHE_SIZE
-    { _SC_LEVEL3_ICACHE_SIZE, 3, 2 },
-#endif
-#ifdef _SC_LEVEL3_CACHE_SIZE
-    { _SC_LEVEL3_CACHE_SIZE,  3, 3 },
-#endif
-
-#ifdef _SC_LEVEL4_DCACHE_SIZE
-    { _SC_LEVEL4_DCACHE_SIZE, 4, 1 },
-#endif
-#ifdef _SC_LEVEL4_ICACHE_SIZE
-    { _SC_LEVEL4_ICACHE_SIZE, 4, 2 },
-#endif
-#ifdef _SC_LEVEL4_CACHE_SIZE
-    { _SC_LEVEL4_CACHE_SIZE,  4, 3 },
-#endif
-
-      { 0, 0, 0 }
-  };
-
-  int i = 0;
-
-  while (sysconf_info[i].kind != 0) {
-
-    if ((level == 0 || level == sysconf_info[i].level) &&
-        (sysconf_info[i].kind & (1<<instruction_cache))) {
-
-      int size = sysconf (sysconf_info[i].name);
-
-      if (level != 0) {
-        cache_size = size;
-        break;
-      }
-
-      if (size > cache_size) {
-        cache_size = size;
-      }
-    }
-
-    i++;
-  }
-
-  if (cache_size != 0) {
-    return cache_size;
-  }
-
-  }
-
-#endif
-
 #ifdef USE_sysctl
 
 #ifdef CTL_HW
@@ -397,6 +318,85 @@ int level;)
   }
 
 #endif
+
+#endif
+
+#ifdef USE_sysconf
+
+  {
+
+  static struct { int name; int level; int kind; } sysconf_info[] = {
+
+#ifdef _SC_LEVEL1_DCACHE_SIZE
+    { _SC_LEVEL1_DCACHE_SIZE, 1, 1 },
+#endif
+#ifdef _SC_LEVEL1_ICACHE_SIZE
+    { _SC_LEVEL1_ICACHE_SIZE, 1, 2 },
+#endif
+#ifdef _SC_LEVEL1_CACHE_SIZE
+    { _SC_LEVEL1_CACHE_SIZE,  1, 3 },
+#endif
+
+#ifdef _SC_LEVEL2_DCACHE_SIZE
+    { _SC_LEVEL2_DCACHE_SIZE, 2, 1 },
+#endif
+#ifdef _SC_LEVEL2_ICACHE_SIZE
+    { _SC_LEVEL2_ICACHE_SIZE, 2, 2 },
+#endif
+#ifdef _SC_LEVEL2_CACHE_SIZE
+    { _SC_LEVEL2_CACHE_SIZE,  2, 3 },
+#endif
+
+#ifdef _SC_LEVEL3_DCACHE_SIZE
+    { _SC_LEVEL3_DCACHE_SIZE, 3, 1 },
+#endif
+#ifdef _SC_LEVEL3_ICACHE_SIZE
+    { _SC_LEVEL3_ICACHE_SIZE, 3, 2 },
+#endif
+#ifdef _SC_LEVEL3_CACHE_SIZE
+    { _SC_LEVEL3_CACHE_SIZE,  3, 3 },
+#endif
+
+#ifdef _SC_LEVEL4_DCACHE_SIZE
+    { _SC_LEVEL4_DCACHE_SIZE, 4, 1 },
+#endif
+#ifdef _SC_LEVEL4_ICACHE_SIZE
+    { _SC_LEVEL4_ICACHE_SIZE, 4, 2 },
+#endif
+#ifdef _SC_LEVEL4_CACHE_SIZE
+    { _SC_LEVEL4_CACHE_SIZE,  4, 3 },
+#endif
+
+      { 0, 0, 0 }
+  };
+
+  int i = 0;
+
+  while (sysconf_info[i].kind != 0) {
+
+    if ((level == 0 || level == sysconf_info[i].level) &&
+        (sysconf_info[i].kind & (1<<instruction_cache))) {
+
+      int size = sysconf (sysconf_info[i].name);
+
+      if (level != 0) {
+        cache_size = size;
+        break;
+      }
+
+      if (size > cache_size) {
+        cache_size = size;
+      }
+    }
+
+    i++;
+  }
+
+  if (cache_size != 0) {
+    return cache_size;
+  }
+
+  }
 
 #endif
 

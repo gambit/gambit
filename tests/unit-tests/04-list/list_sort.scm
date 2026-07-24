@@ -1,13 +1,18 @@
 (include "#.scm")
 
-(define lst1 (list 8 3 1 2 4))
+(test-equal
+ '()
+ (list-sort (lambda (x y) (< (car x) (car y))) '()))
 
-(check-equal? (list-sort < '()) '())
-(check-equal? (list-sort < lst1) '(1 2 3 4 8))
-(check-equal? lst1 '(8 3 1 2 4))
+(test-equal
+ '((11 5) (22 2) (22 4) (33 1) (33 6) (55 3) (55 7))
+ (list-sort (lambda (x y) (< (car x) (car y))) '((33 1) (22 2) (55 3) (22 4) (11 5) (33 6) (55 7))))
 
-(check-tail-exn type-exception? (lambda () (list-sort < #f)))
-(check-tail-exn type-exception? (lambda () (list-sort #f lst1)))
+(test-error-tail wrong-number-of-arguments-exception?
+                 (list-sort))
+(test-error-tail wrong-number-of-arguments-exception?
+                 (list-sort <))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (list-sort)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (list-sort < lst1 #f)))
+(test-error-tail type-exception? (list-sort #f '()))
+(test-error-tail type-exception? (list-sort < #f))
+(test-error-tail type-exception? (list-sort < '(1 . 2)))

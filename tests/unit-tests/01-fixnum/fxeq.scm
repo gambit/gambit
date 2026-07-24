@@ -2,13 +2,13 @@
 
 (check-eqv? (##fx=) #t)
 (check-eqv? (##fx= 1) #t)
-(check-eqv? (##fx= ##max-fixnum ##min-fixnum) #f)
-(check-eqv? (##fx= ##max-fixnum ##max-fixnum) #t)
+(check-eqv? (##fx= (##greatest-fixnum) (##least-fixnum)) #f)
+(check-eqv? (##fx= (##greatest-fixnum) (##greatest-fixnum)) #t)
 
 (check-eqv? (fx=) #t)
 (check-eqv? (fx= 1) #t)
-(check-eqv? (fx= ##max-fixnum ##min-fixnum) #f)
-(check-eqv? (fx= ##max-fixnum ##max-fixnum) #t)
+(check-eqv? (fx= (##greatest-fixnum) (##least-fixnum)) #f)
+(check-eqv? (fx= (##greatest-fixnum) (##greatest-fixnum)) #t)
 
 (check-tail-exn type-exception? (lambda () (fx= 0.0 1)))
 (check-tail-exn type-exception? (lambda () (fx= 0.5 1)))

@@ -2,7 +2,7 @@
 
 ;;; File: "gambit.sld"
 
-;;; Copyright (c) 2005-2023 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2005-2026 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -538,6 +538,7 @@ continuation?
 copy-bit
 copy-bit-field
 copy-file
+count
 cosh
 cpu-time
 create-directory
@@ -1075,6 +1076,8 @@ s16vector-ref
 s16vector-set
 s16vector-set!
 s16vector-shrink!
+vector-sort!
+vector-sort
 s16vector-swap!
 s16vector?
 s32vector
@@ -1510,6 +1513,11 @@ unterminated-process-exception-arguments
 unterminated-process-exception-procedure
 unterminated-process-exception?
 untrace
+unzip1
+unzip2
+unzip3
+unzip4
+unzip5
 user-info
 user-info-gid
 user-info-home
@@ -1522,6 +1530,7 @@ vector->bits
 vector-any
 vector-cas!
 vector-concatenate
+vector-cumulate
 vector-every
 vector-fold
 vector-fold-right
@@ -1529,6 +1538,8 @@ vector-inc!
 vector-set
 vector-shrink!
 vector-swap!
+vector-unfold
+vector-unfold-right
 void
 will-execute!
 will-testator
@@ -1559,6 +1570,7 @@ wrong-number-of-values-exception-vals
 wrong-number-of-values-exception?
 wrong-processor-c-return-exception?
 xcons
+zip
 
 ))
 

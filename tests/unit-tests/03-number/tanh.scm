@@ -9,6 +9,11 @@
 
 (check-eqv? (tanh 1e-30+1e-40i) 1e-30+1e-40i)
 
+;;; Tests derived from https://github.com/racket/racket/issues/3324
+
+(check-false (zero? (imag-part (tanh 300+20i))))
+(check-true (rational? (imag-part (tanh 266.42844752772896+1.3482698511467367e308i))))
+
 ;;; https://en.cppreference.com/w/cpp/numeric/complex/tanh
 
 (check-eqv? (tanh +0.+0.i) +0.+0.i)
@@ -42,12 +47,20 @@
 (check-true (nan? (real-part (tanh +nan.0+nan.0i))))
 (check-true (nan? (imag-part (tanh +nan.0+nan.0i))))
 
-(define (test-tanh z) (/ (sinh z) (cosh z)))
+(define (test-tanh z)
+  ;; avoid infinity / infinity
+  (cond ((< 1 (real-part z))
+         (/ (- 1 (exp (* -2 z)))
+            (+ 1 (exp (* -2 z)))))
+        ((< (real-part z) -1)
+         (/ (- (exp (* 2 z)) 1)
+            (+ (exp (* 2 z)) 1)))
+        (else
+         (/ (sinh z) (cosh z)))))
 
 (for-each (lambda (x)
             (for-each (lambda (y)
                         (let ((z (make-rectangular x y)))
-                          (pp z)
                           (check-= (tanh z) (test-tanh z))
                           (check-eqv? (tanh (- z))
                                       (- (tanh z)))

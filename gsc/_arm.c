@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_arm.c", produced by Gambit v4.9.5
+; File: "_arm.c", produced by Gambit v4.9.7
 (
-409005
+409007
 (C)
 "_arm"
 ("_arm")
@@ -245,7 +245,7 @@
 ) #|*/"*/"meta-info|#
 )
 #else
-#define ___VERSION 409005
+#define ___VERSION 409007
 #define ___MODULE_NAME "_arm"
 #define ___LINKER_ID ___LNK___arm
 #define ___MH_PROC ___H___arm

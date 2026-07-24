@@ -2,11 +2,11 @@
 
 ;;; File: "match-expand.scm"
 
-;;; Copyright (c) 2008-2020 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2008-2025 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
-;; Pattern-matching 'match' special form expander.
+;; Pattern-matching 'match' and 'match-syntax' special forms expander.
 
 (##supply-module _match/match-expand)
 
@@ -27,7 +27,8 @@
          src
          use-question-mark-prefix-pattern-variables?
          use-exhaustive-cases?
-         use-else?)
+         use-else?
+         allow-source?)
 
   (define expansion-debug? #f)
 
@@ -46,14 +47,17 @@
         (and (pair? x)
              (pair? (cdr x))
              (null? (cddr x))
-             (eq? (source-code (car x)) 'unquote)
-             (symbol? (source-code (cadr x)))
+             (eq? (source-strip (car x)) 'unquote)
+             (symbol? (source-strip (cadr x)))
              (cadr x))))
 
-  (define (source-code src)
-    (if (##source? src)
-        (##source-code src)
-        src))
+  (define (source-strip x)
+    (##source-strip x))
+
+  (define (gen-source-strip var)
+    (if allow-source?
+        `(##source-strip ,var)
+        var))
 
   (define gensym ;; a version of gensym useful for debugging
     (let ((count 0))
@@ -64,34 +68,34 @@
   (define (expand subject . clauses)
 
     (define (if-equal? var pattern-src yes no)
-      (let ((pattern (source-code pattern-src)))
+      (let ((pattern (source-strip pattern-src)))
         (cond ((pattern-variable? pattern)
                =>
                (lambda (pattern-var)
                  `(##let ((,pattern-var ,var))
                     ,yes)))
               ((null? pattern)
-               `(##if (##null? ,var) ,yes ,(no)))
+               `(##if (##null? ,(gen-source-strip var)) ,yes ,(no)))
               ((symbol? pattern)
-               `(##if (##eq? ,var ',pattern) ,yes ,(no)))
+               `(##if (##eq? ,(gen-source-strip var) ',pattern) ,yes ,(no)))
               ((keyword? pattern)
-               `(##if (##eq? ,var ',pattern) ,yes ,(no)))
+               `(##if (##eq? ,(gen-source-strip var) ',pattern) ,yes ,(no)))
               ((boolean? pattern)
-               `(##if (##eq? ,var ,pattern) ,yes ,(no)))
+               `(##if (##eq? ,(gen-source-strip var) ,pattern) ,yes ,(no)))
               ((or (number? pattern)
                    (char? pattern))
-               `(##if (##eqv? ,var ,pattern) ,yes ,(no)))
+               `(##if (##eqv? ,(gen-source-strip var) ,pattern) ,yes ,(no)))
               ((string? pattern)
-               `(##if (##equal? ,var ,pattern) ,yes ,(no)))
+               `(##if (##equal? ,(gen-source-strip var) ,pattern) ,yes ,(no)))
               ((pair? pattern)
                (let ((carvar (gensym))
                      (cdrvar (gensym)))
-                 `(##if (##pair? ,var)
-                        (##let ((,carvar (##car ,var)))
+                 `(##if (##pair? ,(gen-source-strip var))
+                        (##let ((,carvar (##car ,(gen-source-strip var))))
                           ,(if-equal?
                             carvar
                             (car pattern)
-                            `(##let ((,cdrvar (##cdr ,var)))
+                            `(##let ((,cdrvar (##cdr ,(gen-source-strip var))))
                                ,(if-equal?
                                  cdrvar
                                  (cdr pattern)
@@ -104,7 +108,7 @@
 
     (define (else-clause? sc)
       (and use-else?
-           (eq? (source-code (car sc)) 'else)))
+           (eq? (source-strip (car sc)) 'else)))
 
     (let* ((var
             (gensym))
@@ -117,7 +121,7 @@
               (if (pair? lst)
                   (let* ((name (gensym))
                          (clause (car lst))
-                         (sc (source-code clause)))
+                         (sc (source-strip clause)))
                     (cond ((not (pair? sc))
                            (error "clause must be a list"))
                           ((and (else-clause? sc)
@@ -144,14 +148,14 @@
                 (set! defs
                   (cons `(##define (,name)
                            ,(if next
-                                (let ((sc (source-code clause)))
+                                (let ((sc (source-strip clause)))
                                   (if (else-clause? sc)
                                       `(##let () ,@(cdr sc))
                                       (if-equal?
                                        var
                                        (car sc)
                                        (if (and (pair? (cdr sc))
-                                                (eq? (source-code (cadr sc))
+                                                (eq? (source-strip (cadr sc))
                                                      'when)
                                                 (pair? (cddr sc)))
                                            `(##if ,(caddr sc)

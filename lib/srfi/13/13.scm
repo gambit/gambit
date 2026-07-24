@@ -23,6 +23,7 @@
 (declare (extended-bindings)) ;; ##fx+ is bound to fixnum addition, etc
 ;;(declare (not safe))          ;; claim code has no type errors
 (declare (block))             ;; claim no global is assigned
+(declare (mostly-fixnum))
 
 ;;;============================================================================
 

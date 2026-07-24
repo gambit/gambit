@@ -24,3 +24,6 @@
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector-fold)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector-fold xcons)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector-fold xcons 0)))
+
+(set! ##allow-length-mismatch? #f)
+(check-tail-exn length-mismatch-exception? (lambda () (vector-fold + 0 '#(1) '#(1 2) '#(1))))

@@ -4,7 +4,7 @@
 (define int 11)
 (define sym 'foo)
 
-(set! ##symbol-counter ##max-fixnum) ;; to cause hash code wrap around
+(set! ##symbol-counter (##greatest-fixnum)) ;; to cause hash code wrap around
 
 (check-true (symbol? (string->uninterned-symbol str)))
 (check-true (symbol? (string->uninterned-symbol str int)))

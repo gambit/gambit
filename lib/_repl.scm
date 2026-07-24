@@ -2,7 +2,7 @@
 
 ;;; File: "_repl.scm"
 
-;;; Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1923,9 +1923,25 @@
 
 (define-prim (##cmd-e proc-or-cont port detail-level)
   (and proc-or-cont
-       (if (##continuation? proc-or-cont)
-           (##display-continuation-env proc-or-cont port 0 detail-level)
-           (##display-procedure-environment proc-or-cont port 0))))
+       (let ((cont (##cont-like->continuation proc-or-cont)))
+         (if cont
+             (##display-continuation-env cont port 0 detail-level)
+             (if (##interp-procedure? proc-or-cont)
+                 (##display-procedure-environment proc-or-cont port 0)
+                 (begin
+                   (##write-string "Can't display environment of " port)
+                   (##write proc-or-cont port)
+                   (##newline port)))))))
+
+(define-prim (##cont-like->continuation obj)
+  (cond ((##continuation? obj)
+         obj)
+        ((##closure? obj)
+         (and (##eq? (##subprocedure-parent (##closure-code obj))
+                     ##call-with-current-continuation)
+              (##closure-ref obj 1)))
+        (else
+         #f)))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -2145,7 +2161,7 @@
              (##make-friendly-call-form
               proc
               (##argument-list-remove-absent! args '())
-              ##max-fixnum
+              (##greatest-fixnum)
               ##inverse-eval
               #f)
              execute
@@ -2928,10 +2944,9 @@
                     #f
                     (lambda (port resolved-path)
                       (if (##port? port)
-                          (let ((history (##read-line port #f #f ##max-fixnum)))
+                          (let ((history (##read-line port #f #f (##greatest-fixnum))))
                             (##close-port port)
-                            (if (##string? history)
-                                (##tty-history-set! input-port history)))))
+                            (##tty-history-set! input-port history))))
                     open-input-file
                     (##cons eol-encoding: (##cons 'cr-lf path-or-settings)))
 
@@ -2948,12 +2963,30 @@
                        open-output-file
                        path-or-settings)))))))
 
-       (let ((result
-              (let ((input-port (macro-repl-channel-input-port channel)))
-                (##read-expr-from-port input-port))))
-         (let ((output-port (macro-repl-channel-output-port channel)))
-           (##output-port-column-set! output-port 1))
-         result)))))
+       (let ((input-port (macro-repl-channel-input-port channel)))
+
+         (define (flush-input only-whitespace? input-port)
+           (let ((c (##peek-char input-port)))
+             (if (##eqv? c #\newline)
+                 (##read-char input-port)
+                 (if (and (##char? c)
+                          (or (##not only-whitespace?)
+                              (##char<=? c #\space)))
+                     (begin
+                       (##read-char input-port)
+                       (flush-input only-whitespace? input-port))))))
+
+         (##with-exception-catcher
+          (lambda (exc)
+            (flush-input #f input-port)
+            (##raise exc))
+          (lambda ()
+            (let ((result (##read-expr-from-port input-port)))
+              (let ((output-port (macro-repl-channel-output-port channel)))
+                (##output-port-column-set! output-port 1))
+              (if (##not (##eof-object? result))
+                  (flush-input #t input-port))
+              result))))))))
 
 (define-prim (##repl-channel-ports-read-command channel level depth)
 
@@ -2983,7 +3016,7 @@
              (##repl-channel-result-history-add channel obj)
              (##exit-with-exception-on-exception
               (lambda ()
-                (##pretty-print obj output-port ##max-fixnum #f))))))
+                (##pretty-print obj output-port (##greatest-fixnum) #f))))))
      results)))
 
 (define-prim (##repl-channel-ports-display-monoline-message
@@ -3630,17 +3663,17 @@
 
        (define (handle proc-or-cont depth)
          (if (##eq? cmd 'v)
-             (if (##continuation? proc-or-cont)
-                 (let ((cont
-                        (##repl-first-interesting
-                         proc-or-cont)))
-                   (##repl-within cont #f #f #f))
-                 (let ((proc
-                        proc-or-cont))
-                   (##repl-within-proc
-                    proc
-                    (macro-repl-context-cont
-                     repl-context))))
+             (let ((cont
+                    (##repl-first-interesting
+                     (##cont-like->continuation proc-or-cont))))
+               (if cont
+                   (##repl-within cont #f #f #f)
+                   (let ((proc
+                          proc-or-cont))
+                     (##repl-within-proc
+                      proc
+                      (macro-repl-context-cont
+                       repl-context)))))
              (begin
                (##repl-channel-display-multiline-message
                 (lambda (port)
@@ -3670,8 +3703,10 @@
                      (cont
                       (macro-repl-context-cont rc)))
                 (handle cont depth)))
-             ((##continuation? val)
-              (handle val 0))
+             ((##cont-like->continuation val)
+              =>
+              (lambda (cont)
+                (handle cont 0)))
              ((and (##not (or (##eq? cmd 'b)
                               (##eq? cmd 'be)
                               (##eq? cmd 'bed)))
@@ -4953,6 +4988,7 @@
     (open-paren-expected            . "'(' expected")
     (invalid-token                  . "Invalid token")
     (invalid-sharp-bang-name        . "Invalid '#!' name:")
+    (deserialization-error          . "Deserialization error")
     (duplicate-label-definition     . "Duplicate definition for label:")
     (missing-label-definition       . "Missing definition for label:")
     (illegal-label-definition       . "Illegal definition of label:")

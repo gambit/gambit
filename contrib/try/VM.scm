@@ -149,6 +149,13 @@ main_vm = new VM();
 EOF
 )
 
+(##inline-host-statement #<<EOF
+
+main_vm.init('#ui');
+
+EOF
+)
+
 ;;;----------------------------------------------------------------------------
 
 ;; Define "console" ports that support multiple independent REPLs.

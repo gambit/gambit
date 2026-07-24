@@ -2,7 +2,7 @@
 
 ;;; File: "vector.sld"
 
-;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -36,13 +36,15 @@ vector-copy!
 
 ;; gambit
 
-vector-concatenate
-vector-set
-vector-shrink!
 subvector
 subvector-fill!
 subvector-move!
 vector-cas!
+vector-concatenate
+vector-set
+vector-shrink!
+vector-sort
+vector-sort!
 
 ;;UNIMPLEMENTED vector-inc!
 

@@ -39,7 +39,7 @@ END-INFO-DIR-ENTRY
 @ifinfo
 This file documents Gambit, a portable implementation of Scheme.
 
-Copyright (C) 1994-2022 Marc Feeley.
+Copyright (C) 1994-2026 Marc Feeley.
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -71,7 +71,7 @@ by the copyright holder.
 
 @page
 @vskip 0pt plus 1filll
-Copyright @copyright{} 1994-2022 Marc Feeley.
+Copyright @copyright{} 1994-2026 Marc Feeley.
 
 Permission is granted to make and distribute verbatim copies of
 this manual provided the copyright notice and this permission notice
@@ -499,18 +499,17 @@ An error is not signaled when the file does not exist.  Interpreter
 extensions and patches that are meant to apply to all users and all
 modes should go in that file.
 
-Extensions which are meant to apply to a single user or to a specific
-working directory are best placed in the @dfn{initialization file},
-which is a file containing Scheme code.  In all modes, the interpreter
-first tries to locate the initialization file by searching the
-following locations: @file{.gambini} and @file{~/.gambini} (with no
-extension, a @samp{.sld} extension, a @samp{.scm} extension, and a
-@samp{.six} extension in that order).  The first file that is found is
-examined as though the expression @code{(include
-@var{initialization-file})} had been entered at the read-eval-print
-loop where @var{initialization-file} is the file that was found.  Note
-that by using an @code{include} the macros defined in the
-initialization file will be visible from the read-eval-print loop
+Extensions which are meant to apply to a single user are best placed
+in the @dfn{initialization file}, which is a file containing Scheme
+code.  In all modes, the interpreter first tries to locate the
+initialization file by searching the following locations:
+@file{~/.gambini} (with no extension, a @samp{.sld} extension, a
+@samp{.scm} extension, and a @samp{.six} extension in that order).
+The first file that is found is examined as though the expression
+@code{(include @var{initialization-file})} had been entered at the
+read-eval-print loop where @var{initialization-file} is the file that
+was found.  Note that by using an @code{include} the macros defined in
+the initialization file will be visible from the read-eval-print loop
 (this would not have been the case if @code{load} had been used).  The
 initialization file is not searched for or examined when the @samp{-f}
 option is specified.
@@ -4114,7 +4113,12 @@ For example:
 
 @deffn procedure vector-fold @var{kons} @var{knil} @var{vec1} @var{vec2} @dots{}
 
-The procedure @var{kons} is iterated over each value in all of the vectors, stopping at the end of the shortest; @var{kons} is applied as @code{(@var{kons} state (vector-ref @var{vec1} i) (vector-ref @var{vec2} i) @dots{})} where @code{state} is the current state value---the current state value begins with @var{knil}, and becomes whatever @var{kons} returned on the previous iteration---and @code{i} is the current index.
+The procedure @var{kons} is iterated over each value in all of the vectors,
+stopping at the end of the shortest; @var{kons} is applied as
+@code{(@var{kons} state (vector-ref @var{vec1} i) (vector-ref @var{vec2} i) @dots{})},
+where @code{state} is the current state value---the current state value
+begins with @var{knil}, and becomes whatever @var{kons} returned on the
+previous iteration---and @code{i} is the current index.
 The iteration is strictly increasing in the index @code{i}, starting at 0.
 
 For example:
@@ -4143,7 +4147,66 @@ For example:
 
 @end deffn
 
+@deffn procedure vector-cumulate @var{proc} @var{knil} @var{vec}
 
+Returns a newly allocated vector @var{new} with the same length as @var{vec}.
+The @var{i}th element of @var{new} is set to the result of invoking
+@var{proc} on the @var{i}-1'st element of @var{new} and the @var{i}th
+element of @var{vec}, except that on the first call of @var{proc} the
+first argument is @var{knil}.  The vector @var{new} is returned.
+
+For example:
+
+@smallexample
+>  @b{(vector-cumulate + 0 '#(3 1 4 1 5 9 2 5 6))}
+#(3 4 8 9 14 23 25 30 36)
+@end smallexample
+
+@end deffn
+
+@deffn procedure vector-unfold @var{proc} @var{len} @var{initial-seed} @dots{}
+
+Returns a new vector of length @var{len}. @code{vector-unfold} iterates
+across each index @var{k} between @code{0} and @var{len}, applying
+@var{proc} at each iteration to the current index and current seeds,
+in that order, to receive @var{n + 1} values: first, the element
+to put in the @var{k}th slot of the new vector and @var{n} new seeds
+for the next iteration. It is an error for the number of seeds
+to vary between iterations.
+
+For example:
+
+@smallexample
+> @b{(vector-unfold values 0)}
+#()
+>  @b{(vector-unfold (lambda (k i j) (values j j (+ i j))) 10 1 1)}
+#(1 2 3 5 8 13 21 34 55 89)
+>  @b{(vector-unfold values 10)}
+#(0 1 2 3 4 5 6 7 8 9)
+>  @b{(define v '#(0 2 4 6 8))}
+>  @b{(vector-unfold (lambda (i) (vector-ref v i)) 3)}
+#(0 2 4)
+@end smallexample
+
+@end deffn
+
+@deffn procedure vector-unfold-right @var{proc} @var{len} @var{initial-seed} @dots{}
+
+Like @code{vector-unfold}, but it uses @var{proc} to generate elements
+from right to left, rather than left to right.  The first index used is
+@var{len}-1.
+
+For example:
+
+@smallexample
+> @b{(vector-unfold-right (lambda (i x) (values (cons i x) (+ x 1))) 5 0)}
+#((0 . 4) (1 . 3) (2 . 2) (3 . 1) (4 . 0))
+> @b{(define vec '#(0 1 2 3 4))}
+> @b{(vector-unfold-right (lambda (i x) (values (vector-ref vec x) (+ x 1))) (vector-length vec) 0)}
+#(4 3 2 1 0)
+@end smallexample
+
+@end deffn
 
 @deffn procedure string-set @var{string} @var{k} @var{char}
 
@@ -5060,13 +5123,22 @@ known to be of the given type (all primitives if none specified).
 @opindex mostly-generic
 @opindex mostly-fixnum
 @opindex mostly-fixnum-flonum
+@opindex mostly-fixnum-iflonum
 @opindex mostly-flonum
+@opindex mostly-iflonum
 @opindex mostly-flonum-fixnum
+@opindex mostly-iflonum-fixnum
 Numeric arguments and result of the specified primitives are expected
 to be most often of the given type (all primitives if none specified).
 @var{mostly-number-type} can be: @samp{mostly-generic},
-@samp{mostly-fixnum}, @samp{mostly-fixnum-flonum},
-@samp{mostly-flonum}, or @samp{mostly-flonum-fixnum}.
+@samp{mostly-fixnum}, @samp{mostly-fixnum-flonum}, @samp{mostly-fixnum-iflonum},
+@samp{mostly-flonum}, @samp{mostly-iflonum}, @samp{mostly-flonum-fixnum},
+or @samp{mostly-iflonum-fixnum}.
+The term @samp{iflonum} (immediate flonum) means a floating point value
+that does not need memory allocation (typically floating point values
+that are close to 1.0). If the system is built to treat all floating point values
+the same way (for example when using NaN-boxing or heap-allocated flonums)
+@samp{iflonum} is equivalent to @samp{flonum}.
 
 @end table
 
@@ -5097,7 +5169,7 @@ The default declarations used by the compiler are equivalent to:
   (optimize-dead-local-variables)
   (not optimize-dead-definitions)
   (generic)
-  (mostly-fixnum-flonum)
+  (mostly-fixnum-iflonum)
 )
 @end smallexample
 
@@ -5396,9 +5468,6 @@ The procedures in this section are not yet documented.
 @deffn procedure get-environment-variables
 @end deffn
 
-@deffn procedure executable-path
-@end deffn
-
 @deffn procedure command-name
 @deffnx procedure command-args
 @end deffn
@@ -5660,8 +5729,25 @@ The procedures in this section are not yet documented.
 @deffnx procedure list-sort! @var{proc} @var{list}
 @end deffn
 
+@deffn procedure vector-sort! @var{proc} @var{vect} @var{start} @var{end}
+@deffnx procedure vector-sort @var{proc} @var{vect} @var{start} @var{end}
+@end deffn
+
 @deffn procedure any @var{pred} @var{clist1} @var{clist2} @dots{}
 @deffnx procedure every @var{pred} @var{clist1} @var{clist2} @dots{}
+@end deffn
+
+@deffn procedure zip @var{clist1} @var{clist2} @dots{}
+@end deffn
+
+@deffn procedure unzip1 @var{list}
+@deffnx procedure unzip2 @var{list}
+@deffnx procedure unzip3 @var{list}
+@deffnx procedure unzip4 @var{list}
+@deffnx procedure unzip5 @var{list}
+@end deffn
+
+@deffn procedure count @var{pred} @var{clist1} @var{clist2} @dots{}
 @end deffn
 
 @deffn procedure char-set? @var{object}
@@ -12842,7 +12928,7 @@ operating systems supported by Gambit (e.g. MSDOS).
 * Filesystem operations::                   Filesystem operations
 * Shell command execution::                 Shell command execution
 * Process termination::                     Process termination
-* Command line arguments::                  Command line arguments
+* Invocation information::                  Invocation information
 * Environment variables::                   Environment variables
 * Measuring time::                          Measuring time
 * File information::                        File information
@@ -13315,7 +13401,7 @@ For example under Windows:
 
 @end deffn
 
-@node Process termination, Command line arguments, Shell command execution, Host environment
+@node Process termination, Invocation information, Shell command execution, Host environment
 @section Process termination
 
 @deffn procedure exit @r{[}@var{status}@r{]}
@@ -13338,8 +13424,8 @@ $ @b{echo $?}
 
 @end deffn
 
-@node Command line arguments, Environment variables, Process termination, Host environment
-@section Command line arguments
+@node Invocation information
+@section Invocation information
 
 @deffn procedure command-line
 
@@ -13363,7 +13449,27 @@ $ @b{./foo 1 2 "3 4"}
 
 @end deffn
 
-@node Environment variables, Measuring time, Command line arguments, Host environment
+@deffn procedure executable-path
+
+This procedure returns a string representing a
+@dfn{normalized path} to the executable file from which the running process
+spawned.  The path is determined dynamically using a mechanism specific
+to the host operating system.
+
+For example under UNIX:
+
+@smallexample
+$ @b{echo '(pp (executable-path))' > ep.scm}
+$ @b{gsc -exe ep.scm}
+$ @b{pwd}
+/gambit/example
+$ @b{./ep}
+"/gambit/example/ep"
+@end smallexample
+
+@end deffn
+
+@node Environment variables, Measuring time, Invocation information, Host environment
 @section Environment variables
 
 @deffn procedure getenv @var{name} @r{[}@var{default}@r{]}
@@ -16761,6 +16867,17 @@ return the end-of-file object for all subsequent calls to the
 vector-port will return to its opened state when its end-of-file is
 read.  The default value of this setting is @code{#t}.
 
+@item
+@code{capacity:} ( @code{#f} | @var{positive-exact-integer} )
+
+This setting places a limit on the number of objects stored in the
+port, i.e. objects written to the port but not yet read.  A value of
+@code{#f} removes the limit.  When the limit is reached threads are
+blocked from writing to the port until enough stored objects are read
+from the port. This is a useful feature in a producer-consumer
+scenario where the producer is faster than the consumer.  The default
+value of this setting is @code{#f}.
+
 @end itemize
 
 For example:
@@ -19901,7 +20018,7 @@ the @code{apply} procedure is 8192.
 @chapter Copyright and license
 
 The Gambit system release @value{VERSION} is Copyright @copyright{}
-1994-2022 by Marc Feeley, all rights reserved.  The Gambit system
+1994-2026 by Marc Feeley, all rights reserved.  The Gambit system
 release @value{VERSION} is licensed under two licenses: the Apache
 License, Version 2.0, and the GNU LESSER GENERAL PUBLIC LICENSE,
 Version 2.1.  You have the option to choose which of these two

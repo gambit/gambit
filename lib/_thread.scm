@@ -2,7 +2,7 @@
 
 ;;; File: "_thread.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1401,20 +1401,10 @@
   ;; high-level interrupts (generated from Scheme code).
 
   (let loop ()
-    (macro-lock-current-processor!)
-    (let ((interrupt
-           (macro-processor-interrupts-head (macro-current-processor))))
+    (let ((interrupt (##get-next-high-level-interrupt)))
       (if (##null? interrupt)
-          (macro-unlock-current-processor!)
-          (let ((next (##vector-ref interrupt 0)))
-            (macro-processor-interrupts-head-set!
-             (macro-current-processor)
-             next)
-            (if (##null? next)
-                (macro-processor-interrupts-tail-set!
-                 (macro-current-processor)
-                 '()))
-            (macro-unlock-current-processor!)
+          #f
+          (begin
             (let ((x (##vector-ref interrupt 1)))
 
               ;; There are two types of interrupts:
@@ -7512,18 +7502,10 @@
   ;; high-level interrupts (generated from Scheme code).
 
   (let loop ()
-    (let ((interrupt
-           (macro-processor-interrupts-head (macro-current-processor))))
+    (let ((interrupt (##get-next-high-level-interrupt)))
       (if (##null? interrupt)
           #f
-          (let ((next (##vector-ref interrupt 0)))
-            (macro-processor-interrupts-head-set!
-             (macro-current-processor)
-             next)
-            (if (##null? next)
-                (macro-processor-interrupts-tail-set!
-                 (macro-current-processor)
-                 '()))
+          (begin
             (let ((x (##vector-ref interrupt 1)))
               (cond ((##procedure? x)
                      (x interrupt))))

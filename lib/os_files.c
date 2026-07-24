@@ -8,7 +8,7 @@
  */
 
 #define ___INCLUDED_FROM_OS_FILES
-#define ___VERSION 409005
+#define ___VERSION 409007
 #include "gambit.h"
 
 #include "os_setup.h"
@@ -1740,7 +1740,7 @@ ___SCMOBJ ___os_executable_path ___PVOID
 
 #endif
 
-#if defined (USE_readlink) && defined (USE_getpid)
+#if defined (USE_readlink) && defined (USE_getpid) && !defined (__OpenBSD__)
 
   {
     pid_t pid = getpid ();

@@ -2,7 +2,7 @@
 
 ;;; File: "_gvm.scm"
 
-;;; Copyright (c) 1994-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -40,7 +40,9 @@
   (let loop ((i 0))
     (if (< i *opnd-table-alloc*)
       (let ((x (vector-ref *opnd-table* i)))
-        (if (and (eqv? (car x) arg1) (eqv? (cdr x) arg2))
+        (if (let ()
+              (declare (generic))
+              (and (eqv? (car x) arg1) (eqv? (cdr x) arg2)))
           i
           (loop (+ i 1))))
       (begin
@@ -1422,8 +1424,10 @@
                 (and (eqv-gvm-opnd? (switch-opnd instr1)
                                     (switch-opnd instr2))
                      (every? (lambda (x)
-                               (and (eqv? (switch-case-obj (car x))
-                                          (switch-case-obj (cdr x)))
+                               (and (let ()
+                                      (declare (generic))
+                                      (eqv? (switch-case-obj (car x))
+                                            (switch-case-obj (cdr x))))
                                     (eqv-lbl-num? (switch-case-lbl (car x))
                                                   (switch-case-lbl (cdr x)))))
                              (map cons

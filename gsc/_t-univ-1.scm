@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-1.scm"
 
-;;; Copyright (c) 2011-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2025 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -544,16 +544,20 @@
           ((null? x))
 
           ((pair? x)
-           (case (car x)
-             (($$indent$$)
-              (set! indent-level (+ indent-level 1))
-              (disp (cdr x))
-              (set! indent-level (- indent-level 1)))
-             (($$box$$)
-              (disp (cadr x)))
-             (else
-              (disp (car x))
-              (disp (cdr x)))))
+           (let ((car-x (car x))
+                 (cdr-x (cdr x)))
+             (case car-x
+               (($$indent$$)
+                (set! indent-level (+ indent-level 1))
+                (disp cdr-x)
+                (set! indent-level (- indent-level 1)))
+               (($$box$$)
+                (disp (car cdr-x)))
+               ((null? cdr-x) ;; avoid deep stack on proper lists
+                (disp car-x))
+               (else
+                (disp car-x)
+                (disp cdr-x)))))
 
           ((vector? x)
            (disp (vector->list x)))
@@ -562,7 +566,7 @@
            (indent)
            (display x port))))
 
-   (disp x))
+  (disp x))
 
 (define (univ-display-to-file x path)
   (let ((port (open-output-file-preserving-case path)))
@@ -2137,16 +2141,31 @@
 
 (define (univ-link-mods-and-flags inputs)
 
-  (define (m-and-f x)
-    (let ((info (caddr x)))
-      (list-ref info 3)))
+  (define (preload-flag flags)
+    (let ((x (assq 'preload flags)))
+      (and x (if (cdr x) 'preload 'nopreload))))
 
   (let ((rev-inputs (reverse inputs)))
     (let loop ((lst rev-inputs) (mods-and-flags '()))
       (if (pair? lst)
-          (let ((info (caddr (car lst))))
+          (let* ((input (car lst))
+                 (flags (cadr input))
+                 (info (caddr input))
+                 (pf (preload-flag flags)))
             (loop (cdr lst)
-                  (append (list-ref info 3) mods-and-flags)))
+                  (append
+                   (map (lambda (x)
+                          (let ((name (car x))
+                                (flags (cdr x)))
+                            (cons name
+                                  (if pf
+                                      (cons (cons 'preload
+                                                  (eq? pf 'preload))
+                                            (remq (assq 'preload flags)
+                                                  flags))
+                                      flags))))
+                        (list-ref info 3))
+                   mods-and-flags)))
           mods-and-flags))))
 
 (define (univ-link-features-used ctx inputs warnings?)
@@ -3900,17 +3919,17 @@
           force-var?
           (lambda ()
             (let* ((slots
-                    (##vector-copy obj)) ;;TODO: replace call of ##vector-copy
+                    (structure->list obj))
                    (cyclic?
-                    (eq? (vector-ref slots 0) obj)))
+                    (eq? (car slots) obj)))
               (^structure-box
                (^array-literal
                 'scmobj
                 (cons (if cyclic? ;; the root type descriptor is cyclic
                           (^null) ;; handle this specially
-                          (univ-emit-obj* ctx (vector-ref slots 0) #f))
+                          (univ-emit-obj* ctx (car slots) #f))
                       (map (lambda (x) (univ-emit-obj* ctx x #f))
-                           (cdr (vector->list slots))))))))))
+                           (cdr slots)))))))))
 
         ((box-object? obj)
          (univ-obj-use
@@ -4346,6 +4365,7 @@
     ;; class modlinkinfo
     ;;(name      . d)
     (index     . a)
+    (preload   . b)
 
     ;; class symbol and keyword
     (hname     . a)

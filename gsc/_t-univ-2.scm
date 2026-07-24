@@ -2,7 +2,7 @@
 
 ;;; File: "_t-univ-2.scm"
 
-;;; Copyright (c) 2011-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2011-2025 by Marc Feeley, All Rights Reserved.
 ;;; Copyright (c) 2012 by Eric Thivierge, All Rights Reserved.
 
 (include "generic.scm")
@@ -1470,7 +1470,8 @@
                       (^obj #f)  ;; mailbox
                       (^obj #f)  ;; specific
                       (^obj #f)  ;; resume-thunk
-                      (^obj #f)  ;; interrupts
+                      (^obj #f)  ;; interrupts-head
+                      (^obj #f)  ;; interrupts-tail
                       (^obj #f)  ;; last-processor
                       ;;(^obj #f) ;; pinned
                       )))
@@ -1479,7 +1480,8 @@
               (^obj #f) ;; processor-deq-next
               (^obj #f) ;; processor-deq-prev
               (^obj #f) ;; id
-              (^obj #f) ;; interrupts
+              (^obj #f) ;; interrupts-head
+              (^obj #f) ;; interrupts-tail
               ))))))
 
   ;;---------------------------------------------------------------------------
@@ -1492,7 +1494,8 @@
     #f ;; extends
     '() ;; class-fields
     (list (univ-field 'name 'str #f '(public)) ;; instance-fields
-          (univ-field 'index 'int #f '(public)))))
+          (univ-field 'index 'int #f '(public))
+          (univ-field 'preload 'int #f '(public)))))
 
   (univ-define-rtlib-feature 'module_map
    (univ-rtlib-feature-field-priv '(dict str modlinkinfo)
@@ -1611,6 +1614,8 @@
                     old
                     (^array-index (^rts-field-use-priv 'module_table) index))
 
+                   (^vector-set! module_descr (^int 3) (^field 'preload info))
+
                    (^assign (^array-index (^rts-field-use-priv 'module_table)
                                           index)
                             module_descr)
@@ -1636,6 +1641,11 @@
       (^expr-statement
        (^call-prim (^rts-method-use 'program_start))))))
 
+  (univ-define-rtlib-feature 'program_started
+   (univ-rtlib-feature-field-priv 'bool
+                                  (lambda (ctx)
+                                    (^bool #f))))
+
   (univ-define-rtlib-feature 'program_start
    (univ-rtlib-feature-method
     '(public)
@@ -1645,47 +1655,51 @@
     '()
     (lambda (ctx)
       (let ((temp (^local-var 'temp)))
-        (^ (^var-declaration
-            'scmobj
-            temp
-            (^vector-ref
-             (^array-index
-              (^rts-field-use-priv 'module_table)
-              (^- (^array-length (^rts-field-use-priv 'module_table))
-                  (^int 1)))
-             (^int 0)))
-
-           (^setglo '##vm-main-module-ref
+        (^ (^if (^not (^rts-field-use-priv 'program_started))
+                (^ (^var-declaration
+                    'scmobj
+                    temp
                     (^vector-ref
-                     temp
-                     (^- (^vector-length temp)
-                         (^int 1))))
+                     (^array-index
+                      (^rts-field-use-priv 'module_table)
+                      (^- (^array-length (^rts-field-use-priv 'module_table))
+                          (^int 1)))
+                     (^int 0)))
 
-           (^setglo '##program-descr
-                    (^vector-box
-                     (^array-literal
-                      'scmobj
-                      (list (^vector-box
-                             (^rts-field-use-priv 'module_table))
-                            (^obj '())
-                            (^obj #f)))))
+                   (^assign (^rts-field-use-priv 'program_started)
+                            (^bool #t))
 
-           ;; execute first module
+                   (^setglo '##vm-main-module-ref
+                            (^vector-ref
+                             temp
+                             (^- (^vector-length temp)
+                                 (^int 1))))
 
-           (^assign (gvm-state-sp-use ctx 'wr)
-                    (^int -1))
+                   (^setglo '##program-descr
+                            (^vector-box
+                             (^array-literal
+                              'scmobj
+                              (list (^vector-box
+                                     (^rts-field-use-priv 'module_table))
+                                    (^obj '())
+                                    (^obj #f)))))
 
-           (^push (univ-end-of-cont-marker ctx))
+                   ;; execute first module
 
-           (^expr-statement
-            (^call-prim (^rts-method-use 'call_start)
-                        (^vector-ref
-                         (^array-index
-                          (^rts-field-use-priv 'module_table)
-                          (^int 0))
-                         (^int 4))
-                        (^array-literal 'scmobj '())
-                        (^rts-jumpable-use 'underflow))))))))
+                   (^assign (gvm-state-sp-use ctx 'wr)
+                            (^int -1))
+
+                   (^push (univ-end-of-cont-marker ctx))
+
+                   (^expr-statement
+                    (^call-prim (^rts-method-use 'call_start)
+                                (^vector-ref
+                                 (^array-index
+                                  (^rts-field-use-priv 'module_table)
+                                  (^int 0))
+                                 (^int 4))
+                                (^array-literal 'scmobj '())
+                                (^rts-jumpable-use 'underflow))))))))))
 
   (univ-define-rtlib-feature 'call_start
    (univ-rtlib-feature-method
@@ -2183,20 +2197,18 @@
             ;; convert table to Object
             (^if (^and (^structure? obj)
                        (^eq?
-                        (^field
-                         'name
-                         (^array-index
-                          (^field
-                           'slots
-                           (^array-index
-                            (^field 'slots obj)
-                            (^int 0)))
-                          (^int 1)))
-                        (^str "##type-4-A7AB629D-EAB0-422F-8005-08B2282E04FC")))
+                        (^array-index
+                         (^field
+                          'slots
+                          (^array-index
+                           (^field 'slots obj)
+                           (^int 0)))
+                         (^int 1))
+                        (^obj (string->symbol "##type-5-A7AB629D-EAB0-422F-8005-08B2282E04FC"))))
                  (^ "var result = Object();"
                     (^array-index
                      (^field 'slots obj)
-                     (^int 3))
+                     (^int 4))
                     ".forEach(function (val, key) {
                         result[key] = "
                     (^call-prim
@@ -5022,7 +5034,7 @@ EOF
             (lambda (ctx)
               (^return
                (^call-prim
-                (^member 'String 'fromCharCode)
+                (^member 'String 'fromCodePoint)
                 (^field 'code (^this))))))
 
            ((php python)
@@ -5123,7 +5135,7 @@ EOF
                    (^if (^< (^array-length codes) limit)
                         (^return
                          (^call-prim
-                          (^member (^member "String" 'fromCharCode) 'apply)
+                          (^member (^member "String" 'fromCodePoint) 'apply)
                           "null"
                           codes))
                         (^ (^var-declaration 'object chunks (^array-literal 'object '()))
@@ -5133,7 +5145,7 @@ EOF
                                        (^array-push!
                                         chunks
                                         (^call-prim
-                                         (^member (^member "String" 'fromCharCode) 'apply)
+                                         (^member (^member "String" 'fromCodePoint) 'apply)
                                          "null"
                                          (^call-prim
                                           (^member codes 'slice)
@@ -5418,9 +5430,7 @@ EOF
 ;;TODO: clean up
 "
     var codes = [];
-    for (var i=0; i < " strng ".length; i++) {
-        codes.push(" strng ".charCodeAt(i));
-    }
+    for (var c of " strng ") codes.push(c.codePointAt(0));
     return codes;
 "))
 
@@ -6240,11 +6250,12 @@ EOF
      'modlinkinfo
      (map-index
       (lambda (x i)
-        (let ((name (car x)))
+        (let ((name (car x))
+              (nopreload (member '(preload . #f) (cdr x))))
           (univ-glo-use ctx
                         (string->symbol name)
                         'rd)
-          (^new 'modlinkinfo (^str name) (^int i))))
+          (^new 'modlinkinfo (^str name) (^int i) (^int (if nopreload 0 1)))))
       mods-and-flags)))))
 
 (define (univ-rtlib-defs ctx init)
@@ -6256,19 +6267,20 @@ EOF
 (define (univ-rtlib-gen ctx)
 
   (define (topological-sort graph)
-    (if (null? graph)
-        '()
-        (let* ((nodes-to-remove (independent-nodes graph))
-               (to-remove (map car nodes-to-remove)))
-          (append nodes-to-remove
-                  (topological-sort
-                   (map (lambda (x)
-                          (list (car x)
-                                (diff (cadr x) to-remove)
-                                (caddr x)))
-                        (keep (lambda (x)
-                                (not (memq (car x) to-remove)))
-                              graph)))))))
+    (let loop ((graph graph) (rev-order '()))
+      (if (null? graph)
+          (reverse rev-order)
+          (let* ((nodes-to-remove (independent-nodes graph))
+                 (to-remove (map car nodes-to-remove)))
+            (loop (map (lambda (x)
+                         (list (car x)
+                               (diff (cadr x) to-remove)
+                               (caddr x)))
+                       (keep (lambda (x)
+                               (not (memq (car x) to-remove)))
+                             graph))
+                  (append (reverse nodes-to-remove)
+                          rev-order))))))
 
   (define (independent-nodes graph)
     (keep (lambda (x) (null? (cadr x))) graph))

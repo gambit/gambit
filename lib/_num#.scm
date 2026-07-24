@@ -2,7 +2,7 @@
 
 ;;; File: "_num#.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -572,12 +572,6 @@
 (##define-macro (macro-inexact-exp--1/2) (exp -1/2))
 (##define-macro (macro-inexact-log-2)    (log 2))
 
-;;; The next constants are for 64-bit, IEEE 754 binary arithmetic
-
-(##define-macro (macro-inexact-epsilon) 1.1102230246251565e-16)     ; (- 1 epsilon) <> 1, epsilon smallest
-(##define-macro (macro-inexact-lambda)  2.2250738585072014e-308)    ; smallest positive flonum
-(##define-macro (macro-inexact-omega)   1.7976931348623157e308)     ; largest finite flonum
-
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 ;;; Bignum related constants.
@@ -624,6 +618,9 @@
 (##define-macro (macro-flonum-inverse-+m-max-plus-1-inexact);; (/ (macro-flonum-+m-max-plus-1-inexact))
   (/ 9007199254740992.0))
 
+(##define-macro (macro-inexact-epsilon) ;; (- 1 epsilon) <> 1, epsilon smallest
+  1.1102230246251565e-16) ;; happens to be numerically equal to (macro-flonum-inverse-+m-max-plus-1-inexact)
+
 (##define-macro (macro-flonum--m-min) ;; (- (macro-flonum-+m-min))
   -4503599627370496)
 
@@ -642,8 +639,14 @@
 (##define-macro (macro-flonum-e-min) ;; (- (+ (macro-flonum-e-bias) (macro-flonum-m-bits) -1))
   -1074)
 
+(##define-macro (macro-flonum-e-max) ;; (- (- (expt 2 (macro-flonum-e-bits)) 2) (macro-flonum-e-bias))
+  1023)
+
 (##define-macro (macro-flonum-min-normal) ;; (expt 2.0 (+ (macro-flonum-m-bits) (macro-flonum-e-min)))
   (expt 2.0 (+ 52 -1074)))
+
+(##define-macro (macro-flonum-max-normal) ;; (* (macro-flonum-+m-max) (expt 2.0 (- (macro-flonum-e-max) (macro-flonum-m-bits))))
+  (* 9007199254740991 (expt 2.0 (- 1023 52))))
 
 (##define-macro (macro-scale-down) ;; (expt 2 (- (+ (quotient (macro-flonum-e-bias-plus-1) 2) 1)))
   (expt 2 -513))
@@ -656,9 +659,6 @@
 
 (##define-macro (macro-inexact-scale-up) ;; (expt 2.0 (+ (quotient (macro-flonum-e-bias-plus-1) 2) (macro-flonum-m-bits-plus-1)))
   (expt 2.0 565))
-
-(##define-macro (macro-inexact-radix) ;; (exact->inexact (macro-radix))
-  16384.0)
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

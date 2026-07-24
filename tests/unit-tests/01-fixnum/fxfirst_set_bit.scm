@@ -1,16 +1,26 @@
 (include "#.scm")
 
-(check-eqv? (##fxfirst-set-bit 1) 0)
-(check-eqv? (##fxfirst-set-bit 100) 2)
-(check-eqv? (##fxfirst-set-bit -1000) 3)
+(test-eqv 0 (##fxfirst-set-bit 1))
+(test-eqv 2 (##fxfirst-set-bit 100))
+(test-eqv 3 (##fxfirst-set-bit -1000))
+(test-eqv 20 (##fxfirst-set-bit 55574528))
 
-(check-eqv? (fxfirst-set-bit 1) 0)
-(check-eqv? (fxfirst-set-bit 100) 2)
-(check-eqv? (fxfirst-set-bit -1000) 3)
+(if (fixnum? 1152921504606846975)
+    (test-eqv 50 (##fxfirst-set-bit 59672695062659072)))
 
-(check-tail-exn type-exception? (lambda () (fxfirst-set-bit 0.0)))
-(check-tail-exn type-exception? (lambda () (fxfirst-set-bit 0.5)))
-(check-tail-exn type-exception? (lambda () (fxfirst-set-bit 1/2)))
+(test-eqv 0 (fxfirst-set-bit 1))
+(test-eqv 2 (fxfirst-set-bit 100))
+(test-eqv 3 (fxfirst-set-bit -1000))
+(test-eqv 20 (fxfirst-set-bit 55574528))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxfirst-set-bit)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxfirst-set-bit 1 1)))
+(if (fixnum? 1152921504606846975)
+    (test-eqv 50 (fxfirst-set-bit 59672695062659072)))
+
+(test-eqv 100 (first-set-bit 67185481812096158279325269884928))
+
+(test-error-tail wrong-number-of-arguments-exception? (fxfirst-set-bit))
+(test-error-tail wrong-number-of-arguments-exception? (fxfirst-set-bit 1 1))
+
+(test-error-tail type-exception? (fxfirst-set-bit 0.0))
+(test-error-tail type-exception? (fxfirst-set-bit 0.5))
+(test-error-tail type-exception? (fxfirst-set-bit 1/2))

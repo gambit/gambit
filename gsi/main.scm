@@ -163,8 +163,7 @@ usage-end
                #f
                #f)))
 
-    (or (try (macro-initialization-file))
-        (try (in-homedir (macro-initialization-file)))))
+    (try (in-homedir (macro-initialization-file))))
 
   (define (read-source-from-string str name)
     (let ((port

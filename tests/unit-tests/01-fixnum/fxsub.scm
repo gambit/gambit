@@ -22,10 +22,10 @@
 (check-eqv? (fx- -11 -22 -33) 44)
 (check-eqv? (fx- 11 22 33 44) -88)
 
-(check-tail-exn fixnum-overflow-exception? (lambda () (fx- ##min-fixnum 1)))
-(check-tail-exn fixnum-overflow-exception? (lambda () (fx- 0 ##min-fixnum 1 0)))
-(check-tail-exn fixnum-overflow-exception? (lambda () (fx- ##min-fixnum)))
-(check-tail-exn fixnum-overflow-exception? (lambda () (fx- 0 ##min-fixnum 1 0)))
+(check-tail-exn fixnum-overflow-exception? (lambda () (fx- (##least-fixnum) 1)))
+(check-tail-exn fixnum-overflow-exception? (lambda () (fx- 0 (##least-fixnum) 1 0)))
+(check-tail-exn fixnum-overflow-exception? (lambda () (fx- (##least-fixnum))))
+(check-tail-exn fixnum-overflow-exception? (lambda () (fx- 0 (##least-fixnum) 1 0)))
 
 (check-tail-exn type-exception? (lambda () (fx- 0.0)))
 (check-tail-exn type-exception? (lambda () (fx- 0.5)))

@@ -2,7 +2,7 @@
 
 ;;; File: "_syntax.scm"
 
-;;; Copyright (c) 2000-2022 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2000-2026 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -48,6 +48,7 @@
         (let* ((crule (car crules))
                (cpattern (vector-ref crule 0))
                (ctemplate (vector-ref crule 1))
+               (src (if (##source? src) src (##make-source src #f)))
                (bindings (syn#match-pattern cpattern src)))
           (if (syn#match-success? bindings)
               (syn#expand-template ctemplate bindings)

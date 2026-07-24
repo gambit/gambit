@@ -12,7 +12,7 @@
 
 (check-tail-exn divide-by-zero-exception? (lambda () (fxquotient 1 0)))
 
-(check-tail-exn fixnum-overflow-exception? (lambda () (fxquotient ##min-fixnum -1)))
+(check-tail-exn fixnum-overflow-exception? (lambda () (fxquotient (##least-fixnum) -1)))
 
 (check-tail-exn type-exception? (lambda () (fxquotient 1 0.0)))
 (check-tail-exn type-exception? (lambda () (fxquotient 0.5 1)))

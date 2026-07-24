@@ -1,9 +1,9 @@
 /* File: "mem.c" */
 
-/* Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.  */
+/* Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved.  */
 
 #define ___INCLUDED_FROM_MEM
-#define ___VERSION 409005
+#define ___VERSION 409007
 #include "gambit.h"
 
 #include "os_setup.h"
@@ -84,13 +84,13 @@
  *
  * Scheme objects are encoded using integers of type ___WORD.  A
  * ___WORD either encodes an immediate value or encodes a pointer
- * when the object is memory allocated.  The two lower bits of a
+ * when the object is memory allocated.  The 2 or 3 lower bits of a
  * ___WORD contain a primary type tag for the object and the other
  * bits contain the immediate value or the pointer.  Because all
  * memory allocated objects are aligned on ___WORD boundaries (and a
- * ___WORD is either 4 or 8 bytes), the two lower bits of pointers
+ * ___WORD is either 4 or 8 bytes), the 2 or 3 lower bits of pointers
  * are zero and can be used to store the tag without reducing the
- * address space.  The four tags are:
+ * address space.  When 2 tag bits are used, the four tags are:
  *
  *  immediate:
  *    ___tFIXNUM    object is a small integer (fixnum)
@@ -103,6 +103,8 @@
  *    otherwise
  *    ___tMEM1 = ___tSUBTYPED              subtyped object, but not a pair
  *    ___tMEM2 = ___tPAIR                  a pair
+ *
+ * See the file gambit.h for the tag assignments when 3 tag bits are used.
  *
  * A special type of object exists to support object finalization:
  * 'will' objects.  Wills contain a weak reference to an object, the
@@ -324,6 +326,9 @@
 #define the_msections           ___VMSTATE_MEM(the_msections_)
 #define alloc_msection          ___VMSTATE_MEM(alloc_msection_)
 #define nb_msections_assigned   ___VMSTATE_MEM(nb_msections_assigned_)
+#define nb_msections_stacks     ___VMSTATE_MEM(nb_msections_stacks_)
+#define target_heap_space_hist  ___VMSTATE_MEM(target_heap_space_hist_)
+#define target_heap_space_hist_last ___VMSTATE_MEM(target_heap_space_hist_last_)
 #define target_processor_count  ___VMSTATE_MEM(target_processor_count_)
 
 #ifndef ___SINGLE_THREADED_VMS
@@ -480,14 +485,28 @@
  *  alloc_heap_start                                          alloc_stack_start
  */
 
-#define compute_heap_space() \
-(___CAST(___SIZE_TS,the_msections->nb_sections) * ___MSECTION_SIZE + occupied_words_still)
+#define compute_heap_size() \
+(compute_msection_size(the_msections->nb_sections) + occupied_words_still)
 
-#define compute_assigned_heap_space() \
-(___CAST(___SIZE_TS,nb_msections_assigned) * ___MSECTION_SIZE + occupied_words_still)
+#define compute_msection_size(nb_sections) \
+(___CAST(___SIZE_TS,nb_sections) * ___MSECTION_SIZE)
 
-#define compute_free_heap_space() \
-(heap_size - compute_assigned_heap_space() - overflow_reserve)
+#define compute_free_heap_space_approximately() \
+(heap_size - compute_msection_size(nb_msections_assigned) \
+ - occupied_words_still - overflow_reserve)
+
+#define compute_free_heap_space_in_msections(nb_sections) \
+(compute_msection_space(nb_sections - nb_msections_stacks) \
+ - occupied_words_movable)
+
+#define compute_msection_space(nb_sections) \
+(___CAST(___SIZE_TS,nb_sections) * (___MSECTION_SIZE - 2*___MSECTION_FUDGE))
+
+#define compute_nb_msections_needed(words) \
+(___CEILING_DIV(words, ___MSECTION_SIZE - 2*___MSECTION_FUDGE))
+
+#define compute_nb_msections_min(processor_count) \
+(___MIN_NB_MSECTIONS_PER_PROCESSOR * processor_count)
 
 /*---------------------------------------------------------------------------*/
 
@@ -1308,7 +1327,7 @@ ___glo_struct *glo;)
 
       for (i=1; i<len; i++)
         {
-          ___SCMOBJ probe = ___FIELD(___GSTATE->symbol_table,i);
+          ___SCMOBJ probe = ___VECTORELEM(___GSTATE->symbol_table, i);
 
           while (probe != ___NUL)
             {
@@ -1317,7 +1336,7 @@ ___glo_struct *glo;)
                   result = probe;
                   goto end_search;
                 }
-              probe = ___FIELD(probe,___SYMKEY_NEXT);
+              probe = ___SYMKEY_NEXT_FIELD(probe);
             }
         }
     end_search:;
@@ -1376,7 +1395,7 @@ ___SCMOBJ sym;)
 
       ___PRMCELL(glo->prm) = ___FAL;
 
-      ___FIELD(sym,___SYMBOL_GLOBAL) = ___CAST(___SCMOBJ,glo);
+      ___SYMBOL_GLOBAL_FIELD(sym) = ___CAST(___SCMOBJ,glo);
     }
 
   return sym;
@@ -1395,7 +1414,7 @@ ___SCMOBJ val;)
 
   for (i = ___INT(___VECTORLENGTH(___GSTATE->symbol_table)) - 1; i>0; i--)
     {
-      sym = ___FIELD(___GSTATE->symbol_table,i);
+      sym = ___VECTORELEM(___GSTATE->symbol_table, i);
 
       while (sym != ___NUL)
        {
@@ -1408,7 +1427,7 @@ ___SCMOBJ val;)
               break;
             }
 
-          sym = ___FIELD(sym,___SYMKEY_NEXT);
+          sym = ___SYMKEY_NEXT_FIELD(sym);
         }
     }
 
@@ -1516,10 +1535,21 @@ ___SIZE_TS bytes;)
 
   base[___PERM_HEADER] = ___MAKE_HD(bytes, subtype, ___PERM);
 
-  if (subtype == ___sPAIR)
-    return ___PAIR_FROM_BODY(body);
-  else
-    return ___SUBTYPED_FROM_BODY(body);
+#if ___tPAIR != ___tSUBTYPED
+  if (subtype == ___sPAIR) return ___PAIR_FROM_BODY(body);
+#endif
+
+#ifndef ___NAN_BOXING
+#if  ___tFLONUM != ___tSUBTYPED
+  if (subtype == ___sFLONUM) return ___FLONUM_FROM_BODY(body);
+#endif
+#endif
+
+#if ___tVECTOR != ___tSUBTYPED
+  if (subtype == ___sVECTOR) return ___VECTOR_FROM_BODY(body);
+#endif
+
+  return ___SUBTYPED_FROM_BODY(body);
 }
 
 
@@ -1585,7 +1615,7 @@ ___SIZE_TS bytes;)
 
       ALLOC_MEM_LOCK();
 
-      if (words_including_deferred <= compute_free_heap_space())
+      if (words_including_deferred <= compute_free_heap_space_approximately())
         {
           /*
            * There is sufficient free heap space, so no need to call GC.
@@ -1661,10 +1691,21 @@ ___SIZE_TS bytes;)
 
   /* Return tagged reference to still object. */
 
-  if (subtype == ___sPAIR)
-    return ___PAIR_FROM_BODY(body);
-  else
-    return ___SUBTYPED_FROM_BODY(body);
+#if ___tPAIR != ___tSUBTYPED
+  if (subtype == ___sPAIR) return ___PAIR_FROM_BODY(body);
+#endif
+
+#ifndef ___NAN_BOXING
+#if ___tFLONUM != ___tSUBTYPED
+  if (subtype == ___sFLONUM) return ___FLONUM_FROM_BODY(body);
+#endif
+#endif
+
+#if ___tVECTOR != ___tSUBTYPED
+  if (subtype == ___sVECTOR) return ___VECTOR_FROM_BODY(body);
+#endif
+
+  return ___SUBTYPED_FROM_BODY(body);
 }
 
 
@@ -1766,7 +1807,7 @@ ___WORD init;)
         {
           int i;
           for (i=0; i<length; i++)
-            ___FIELD(obj, i) = init;
+            ___VECTORELEM(obj, i) = init;
         }
 
       return obj;
@@ -1834,7 +1875,7 @@ ___SCMOBJ str;)
   ___UM32 h = FN1a_offset_basis;
 
   for (i=0; i<n; i++)
-    h = HASH_STEP(h,___INT(___STRINGREF(str,___FIX(i))));
+    h = HASH_STEP(h,___ORD(___STRINGREF(str,___FIX(i))));
 
   return ___FIX(h);
 }
@@ -1886,7 +1927,7 @@ ___SIZE_TS length;)
   ___SCMOBJ tbl = ___make_vector (NULL, length+1, ___NUL);
 
   if (!___FIXNUMP(tbl))
-    ___FIELD(tbl,0) = ___FIX(0);
+    ___VECTORELEM(tbl, 0) = ___FIX(0);
 
   return tbl;
 }
@@ -1899,7 +1940,7 @@ ___SCMOBJ symkey;)
 {
   unsigned int subtype = ___INT(___SUBTYPE(symkey));
   ___SCMOBJ tbl = symkey_table (subtype);
-  int i = ___INT(___FIELD(symkey,___SYMKEY_HASH))
+  int i = ___INT(___SYMKEY_HASH_FIELD(symkey))
           % (___INT(___VECTORLENGTH(tbl)) - 1)
           + 1;
 
@@ -1907,17 +1948,17 @@ ___SCMOBJ symkey;)
    * Add symbol/keyword to the appropriate list.
    */
 
-  ___FIELD(symkey,___SYMKEY_NEXT) = ___FIELD(tbl,i);
-  ___FIELD(tbl,i) = symkey;
+  ___SYMKEY_NEXT_FIELD(symkey) = ___VECTORELEM(tbl, i);
+  ___VECTORELEM(tbl, i) = symkey;
 
-  ___FIELD(tbl,0) = ___FIXADD(___FIELD(tbl,0),___FIX(1));
+  ___VECTORELEM(tbl, 0) = ___FIXADD(___VECTORELEM(tbl, 0), ___FIX(1));
 
   /*
    * Grow and rehash the table when it is too loaded (above an average
    * list length of 4).
    */
 
-  if (___INT(___FIELD(tbl,0)) > ___INT(___VECTORLENGTH(tbl)) * 4)
+  if (___INT(___VECTORELEM(tbl, 0)) > ___INT(___VECTORLENGTH(tbl)) * 4)
     {
       int new_len = (___INT(___VECTORLENGTH(tbl))-1) * 2;
       ___SCMOBJ newtbl = alloc_symkey_table (subtype, new_len);
@@ -1926,20 +1967,20 @@ ___SCMOBJ symkey;)
         {
           for (i=___INT(___VECTORLENGTH(tbl))-1; i>0; i--)
             {
-              ___SCMOBJ probe = ___FIELD(tbl,i);
+              ___SCMOBJ probe = ___VECTORELEM(tbl, i);
 
               while (probe != ___NUL)
                 {
                   ___SCMOBJ symkey = probe;
-                  int j = ___INT(___FIELD(symkey,___SYMKEY_HASH))%new_len + 1;
+                  int j = ___INT(___SYMKEY_HASH_FIELD(symkey))%new_len + 1;
 
-                  probe = ___FIELD(symkey,___SYMKEY_NEXT);
-                  ___FIELD(symkey,___SYMKEY_NEXT) = ___FIELD(newtbl,j);
-                  ___FIELD(newtbl,j) = symkey;
+                  probe = ___SYMKEY_NEXT_FIELD(symkey);
+                  ___SYMKEY_NEXT_FIELD(symkey) = ___VECTORELEM(newtbl, j);
+                  ___VECTORELEM(newtbl,j) = symkey;
                 }
             }
 
-          ___FIELD(newtbl,0) = ___FIELD(tbl,0);
+          ___VECTORELEM(newtbl, 0) = ___VECTORELEM(tbl, 0);
 
           symkey_table_set (subtype, newtbl);
         }
@@ -1975,11 +2016,11 @@ unsigned int subtype;)
 
   /* object layout is same for ___sSYMBOL and ___sKEYWORD */
 
-  ___FIELD(obj,___SYMKEY_NAME) = name;
-  ___FIELD(obj,___SYMKEY_HASH) = ___hash_scheme_string (name);
+  ___SYMKEY_NAME_FIELD(obj) = name;
+  ___SYMKEY_HASH_FIELD(obj) = ___hash_scheme_string (name);
 
   if (subtype == ___sSYMBOL)
-    ___FIELD(obj,___SYMBOL_GLOBAL) = ___CAST(___SCMOBJ,___CAST(___glo_struct*,0));
+    ___SYMBOL_GLOBAL_FIELD(obj) = ___CAST(___SCMOBJ,___CAST(___glo_struct*,0));
 
   ___intern_symkey (obj);
 
@@ -2003,23 +2044,23 @@ unsigned int subtype;)
     return h;
 
   tbl = symkey_table (subtype);
-  probe = ___FIELD(tbl, ___INT(h) % (___INT(___VECTORLENGTH(tbl))-1) + 1);
+  probe = ___VECTORELEM(tbl, ___INT(h) % (___INT(___VECTORLENGTH(tbl))-1) + 1);
 
   while (probe != ___NUL)
     {
-      ___SCMOBJ name = ___FIELD(probe,___SYMKEY_NAME);
+      ___SCMOBJ name = ___SYMKEY_NAME_FIELD(probe);
       ___SIZE_T i;
       ___SIZE_T n = ___INT(___STRINGLENGTH(name));
       ___UTF_8STRING p = str;
       ___UCS_4 c;
       for (i=0; i<n; i++)
         if (___UTF_8_get_var (&p, c) !=
-            ___CAST(___UCS_4,___INT(___STRINGREF(name,___FIX(i)))))
+            ___CAST(___UCS_4,___ORD(___STRINGREF(name,___FIX(i)))))
           goto next;
       if (___UTF_8_get_var (&p, c) == 0)
         return probe;
     next:
-      probe = ___FIELD(probe,___SYMKEY_NEXT);
+      probe = ___SYMKEY_NEXT_FIELD(probe);
     }
 
   return ___FAL;
@@ -2039,11 +2080,11 @@ unsigned int subtype;)
   ___SCMOBJ h = ___hash_scheme_string (str);
 
   tbl = symkey_table (subtype);
-  probe = ___FIELD(tbl, ___INT(h) % (___INT(___VECTORLENGTH(tbl))-1) + 1);
+  probe = ___VECTORELEM(tbl, ___INT(h) % (___INT(___VECTORLENGTH(tbl))-1) + 1);
 
   while (probe != ___NUL)
     {
-      ___SCMOBJ name = ___FIELD(probe,___SYMKEY_NAME);
+      ___SCMOBJ name = ___SYMKEY_NAME_FIELD(probe);
       ___SIZE_TS i = 0;
       ___SIZE_TS n = ___INT(___STRINGLENGTH(name));
       if (___INT(___STRINGLENGTH(str)) == n)
@@ -2054,7 +2095,7 @@ unsigned int subtype;)
           return probe;
         }
     next:
-      probe = ___FIELD(probe,___SYMKEY_NEXT);
+      probe = ___SYMKEY_NEXT_FIELD(probe);
     }
 
   return ___FAL;
@@ -2136,12 +2177,12 @@ void *data;)
 
   for (i=___INT(___VECTORLENGTH(tbl))-1; i>0; i--)
     {
-      ___SCMOBJ probe = ___FIELD(tbl, i);
+      ___SCMOBJ probe = ___VECTORELEM(tbl, i);
 
       while (probe != ___NUL)
         {
           visit (probe, data);
-          probe = ___FIELD(probe,___SYMKEY_NEXT);
+          probe = ___SYMKEY_NEXT_FIELD(probe);
         }
     }
 }
@@ -2224,7 +2265,7 @@ ___SCMOBJ val;)
       int subtype;
       int shift = 0;
 
-      if (___TYP(head) == ___FORW)
+      if (___TESTTYPE(head, ___FORW))
         {
           /* indirect forwarding pointer */
           body = ___BODY0(head);
@@ -2257,7 +2298,7 @@ ___SCMOBJ val;)
               else
                 ___printf ("#<return ");
               if ((sym = ___find_global_var_bound_to (val)) != ___NUL)
-                print_value (___FIELD(sym,___SYMKEY_NAME));
+                print_value (___SYMKEY_NAME_FIELD(sym));
               else
                 {
                   if (___HD_TYP(head) == ___PERM)
@@ -2286,7 +2327,7 @@ ___SCMOBJ val;)
               ___SCMOBJ str = ___SUBTYPED_FROM_BODY(body);
               ___printf ("\"");
               for (i=0; i<___INT(___STRINGLENGTH(str)); i++)
-                ___printf ("%c", ___INT(___STRINGREF(str,___FIX(i))));
+                ___printf ("%c", ___ORD(___STRINGREF(str,___FIX(i))));
               ___printf ("\"");
             }
           else if (subtype == ___sSYMBOL)
@@ -2304,7 +2345,7 @@ ___SCMOBJ val;)
   else if (___FIXNUMP(val))
     ___printf ("%d", ___INT(val));
   else if (___CHARP(val))
-    ___printf ("#\\x%x", ___INT(val));
+    ___printf ("#\\x%x", ___ORD(val));
   else if (val == ___FAL)
     ___printf ("#f");
   else if (val == ___TRU)
@@ -2418,8 +2459,8 @@ do { \
         }
       else
         {
-          ___printf("...\n");
-            probe += skip;
+           ___printf ("...\n");
+           probe += skip;
         }
     }
 }
@@ -2473,16 +2514,14 @@ int max_depth;
 char *prefix;
 int indent;)
 {
-  int typ = ___TYP(obj);
-
   print_prefix (prefix, indent);
 
-  if (typ == ___tFIXNUM)
+  if (___FIXNUMP(obj))
     ___printf ("%d\n", ___INT(obj));
-  else if (typ == ___tSPECIAL)
+  else if (___TESTTYPE(obj, ___tSPECIAL))
     {
       if (obj >= 0)
-        ___printf ("#\\%c\n", ___INT(obj));
+        ___printf ("#\\%c\n", ___ORD(obj));
       else if (obj == ___FAL)
         ___printf ("#f\n");
       else if (obj == ___TRU)
@@ -2519,7 +2558,7 @@ int indent;)
       int subtype;
       int shift = 0;
 
-      if (___TYP(head) == ___FORW)
+      if (___TESTTYPE(head, ___FORW))
         {
           /* indirect forwarding pointer */
           body = ___BODY0(head);
@@ -2540,7 +2579,7 @@ int indent;)
               int i;
               ___printf ("#(\n");
               for (i=0; i<___CAST(int,___HD_WORDS(head)); i++)
-                print_object (___FIELD(obj,i)>>shift, max_depth-1, prefix, indent+2);
+                print_object (___VECTORELEM(obj,i)>>shift, max_depth-1, prefix, indent+2);
               print_prefix (prefix, indent);
               ___printf (")\n");
             }
@@ -2578,11 +2617,11 @@ int indent;)
           break;
         case ___sSYMBOL:
           ___printf ("SYMBOL ");
-          print_object (___FIELD(obj,___SYMKEY_NAME)>>shift, max_depth-1, "", 0);
+          print_object (___SYMKEY_NAME_FIELD(obj)>>shift, max_depth-1, "", 0);
           break;
         case ___sKEYWORD:
           ___printf ("KEYWORD ");
-          print_object (___FIELD(obj,___SYMKEY_NAME)>>shift, max_depth-1, "", 0);
+          print_object (___SYMKEY_NAME_FIELD(obj)>>shift, max_depth-1, "", 0);
           break;
         case ___sFRAME:
           ___printf ("FRAME\n");
@@ -2611,7 +2650,7 @@ int indent;)
             int len = ___HD_BYTES(head)>>___LCS;
             ___printf ("STRING ");
             for (i=0; i<len; i++)
-              ___printf ("%c", ___INT(___STRINGREF(obj,___FIX(i))));
+              ___printf ("%c", ___ORD(___STRINGREF(obj,___FIX(i))));
             ___printf ("\n");
           }
           break;
@@ -2669,11 +2708,11 @@ ___glo_struct *glo;)
 
   for (i = ___INT(___VECTORLENGTH(___GSTATE->symbol_table)) - 1; i>0; i--)
     {
-      sym = ___FIELD(___GSTATE->symbol_table,i);
+      sym = ___VECTORELEM(___GSTATE->symbol_table,i);
 
       while (sym != ___NUL)
         {
-          ___SCMOBJ g = ___FIELD(sym,___SYMBOL_GLOBAL);
+          ___SCMOBJ g = ___SYMBOL_GLOBAL_FIELD(sym);
 
           if (g != ___FIX(0))
             {
@@ -2681,15 +2720,15 @@ ___glo_struct *glo;)
 
               if (p == glo)
                 {
-                  ___SCMOBJ name = ___FIELD(sym,___SYMKEY_NAME);
+                  ___SCMOBJ name = ___SYMKEY_NAME_FIELD(sym);
                   for (i=0; i<___INT(___STRINGLENGTH(name)); i++)
-                    ___printf ("%c", ___INT(___STRINGREF(name,___FIX(i))));
+                    ___printf ("%c", ___ORD(___STRINGREF(name,___FIX(i))));
                   i = 0;
                   break;
                 }
             }
 
-          sym = ___FIELD(sym,___SYMKEY_NEXT);
+          sym = ___SYMKEY_NEXT_FIELD(sym);
         }
     }
 }
@@ -2779,7 +2818,7 @@ char *msg;)
           ___printf ("___STILL ");
         else if (___HD_TYP(head) == ___MOVABLE0)
           ___printf ("___MOVABLE0 ");
-        else if (___TYP(head) == ___FORW)
+        else if (___TESTTYPE(head, ___FORW))
           ___printf ("___FORW ");
         else
           ___printf ("UNKNOWN ");
@@ -2894,7 +2933,7 @@ ___WORD obj;)
       if (pos >= 0 && pos < ___MSECTION_SIZE)
         {
           head = *hd_ptr;
-          if (___TYP(head) == ___FORW)
+          if (___TESTTYPE(head, ___FORW))
             {
               ___WORD *hd_ptr2 = ___BODY0(head)-1;
               int i2 = find_msection (the_msections, hd_ptr2);
@@ -3177,6 +3216,7 @@ ___processor_state ___ps;)
 {
   ___msection *ms;
   ms = next_msection_without_locking (___ps, heap_msection);
+  nb_msections_stacks++; /* one more msection assigned to stacks */
   set_stack_msection_possibly_sharing_with_heap (___ps, ms);
 }
 
@@ -3189,6 +3229,7 @@ ___processor_state ___ps;)
   ___msection *ms;
   ALLOC_MEM_LOCK();
   ms = next_msection_without_locking (___ps, heap_msection);
+  nb_msections_stacks++; /* one more msection assigned to stacks */
   ALLOC_MEM_UNLOCK();
   set_stack_msection_possibly_sharing_with_heap (___ps, ms);
 }
@@ -3408,6 +3449,7 @@ ___virtual_machine_state ___vms;)
     }
 
   nb_msections_assigned = np*2;
+  nb_msections_stacks   = np;
 
 #ifndef ___SINGLE_THREADED_VMS
 
@@ -3494,6 +3536,7 @@ ___WORD n;)
             if (head_typ == ___MOVABLE0)
               {
                 ___SIZE_TS words = ___HD_WORDS(head);
+
                 /*TODO: add allocation of handle if using handles*/
 #if ___WS == 4
                 ___BOOL pad = 0;
@@ -3604,7 +3647,7 @@ ___WORD n;)
                   }
 #endif
               }
-            else if (___TYP(head_typ) == ___FORW)
+            else if (___TESTTYPE(head_typ, ___FORW))
               {
                 *cell = ___TAG(___UNTAG_AS(head, ___FORW), ___TYP(obj));
               }
@@ -3643,7 +3686,7 @@ ___WORD *orig_ptr;)
   ___printf ("mark_captured_continuation cf=%p\n", ___CAST(void*,cf));
 #endif
 
-  if (___TYP(cf) == ___tFIXNUM && cf != ___END_OF_CONT_MARKER)
+  if (___FIXNUMP(cf) && cf != ___END_OF_CONT_MARKER)
     {
       /* continuation frame is in the stack */
 
@@ -3684,7 +3727,7 @@ ___WORD *orig_ptr;)
 
       ra2 = ___FP_STK(fp,link+1);
 
-      if (___TYP(ra2) == ___tFIXNUM)
+      if (___FIXNUMP(ra2))
         {
           ___COVER_MARK_CAPTURED_CONTINUATION_ALREADY_COPIED;
           *ptr = ra2; /* already copied, replace by forwarding pointer */
@@ -3756,7 +3799,7 @@ ___WORD *orig_ptr;)
               alloc = alloc_heap_ptr;
             }
 
-          if (___TYP(cf) == ___tFIXNUM && cf != ___END_OF_CONT_MARKER)
+          if (___FIXNUMP(cf) && cf != ___END_OF_CONT_MARKER)
             goto next_frame;
         }
 
@@ -4091,12 +4134,12 @@ ___WORD head;)
 
         frame = ___FP_STK(fp,link+1);
 
-        if (___TYP(frame) == ___tFIXNUM && frame != ___END_OF_CONT_MARKER)
+        if (___FIXNUMP(frame) && frame != ___END_OF_CONT_MARKER)
           ___FP_SET_STK(fp,link+1,___FAL)
 
         mark_frame (___PSP fp, fs, gcmap, nextgcmap);
 
-        if (___TYP(frame) == ___tFIXNUM && frame != ___END_OF_CONT_MARKER)
+        if (___FIXNUMP(frame) && frame != ___END_OF_CONT_MARKER)
           ___FP_SET_STK(fp,link+1,___TAG(___UNTAG_AS(frame, ___tFIXNUM), ___tSUBTYPED))
 
         mark_array (___PSP &body[0], 1);
@@ -4222,7 +4265,7 @@ ___WORD *start;)
   ___ACTLOG_BEGIN_PS(scan_complete_heap_chunk,_);
 #endif
 
-  while (___TYP((head = *ptr)) != ___FORW) /* not end of complete chunk? */
+  while (!___TESTTYPE(head = *ptr, ___FORW)) /* not end of complete chunk? */
     {
       scan_and_advance(ptr, head); /* note: this advances ptr */
     }
@@ -4281,7 +4324,7 @@ ___PSDKR)
   while (ptr != alloc_heap_ptr) /* SITUATION #1 or #2 ? */
     {
       ___WORD head;
-      while (___TYP((head = *ptr)) != ___FORW) /* not end of complete chunk? */
+      while (!___TESTTYPE(head = *ptr, ___FORW)) /* not end of complete chunk? */
         {
           scan_and_advance(ptr, head); /* note: this advances ptr */
           if (ptr == alloc_heap_ptr) /* end of incomplete chunk? */
@@ -4298,7 +4341,9 @@ ___PSDKR)
        * SITUATION #1, at end of complete chunk.
        */
 
+#ifndef ___SINGLE_THREADED_VMS
       ___SPINLOCK_LOCK(heap_chunks_to_scan_lock);
+#endif
 
       while ((hcsh=heap_chunks_to_scan_head) != heap_chunks_to_scan_tail)
         {
@@ -4313,14 +4358,20 @@ ___PSDKR)
 
           ___SHARED_MEMORY_BARRIER(); /* share heap_chunks_to_scan_head */
 
+#ifndef ___SINGLE_THREADED_VMS
           ___SPINLOCK_UNLOCK(heap_chunks_to_scan_lock);
+#endif
 
           scan_complete_heap_chunk (___PSP ptr+1);
 
+#ifndef ___SINGLE_THREADED_VMS
           ___SPINLOCK_LOCK(heap_chunks_to_scan_lock);
+#endif
         }
 
+#ifndef ___SINGLE_THREADED_VMS
       ___SPINLOCK_UNLOCK(heap_chunks_to_scan_lock);
+#endif
 
       /*
        * Scan the incomplete heap chunk currently being created.
@@ -4400,29 +4451,74 @@ ___processor_state ___ps;)
 }
 
 
+___HIDDEN ___SIZE_TS max_target_heap_space_in_recent_history
+    ___P((___virtual_machine_state ___vms),
+         (___vms)
+___virtual_machine_state ___vms;)
+{
+#undef ___VMSTATE_MEM
+#define ___VMSTATE_MEM(var) ___vms->mem.var
+
+  ___SIZE_TS max_target_heap_space = 0;
+
+#if ___TARGET_HEAP_SPACE_HIST_LENGTH > 0
+
+  int i;
+
+  for (i=0; i<___TARGET_HEAP_SPACE_HIST_LENGTH; i++)
+    if (target_heap_space_hist[i] > max_target_heap_space)
+      max_target_heap_space = target_heap_space_hist[i];
+
+#endif
+
+  return max_target_heap_space;
+
+#undef ___VMSTATE_MEM
+#define ___VMSTATE_MEM(var) ___VMSTATE_FROM_PSTATE(___ps)->mem.var
+}
+
+
+___HIDDEN void add_to_target_heap_space_history
+    ___P((___virtual_machine_state ___vms,
+          ___SIZE_TS target_heap_space),
+         (___vms,
+          target_heap_space)
+___virtual_machine_state ___vms;
+___SIZE_TS target_heap_space;)
+{
+#undef ___VMSTATE_MEM
+#define ___VMSTATE_MEM(var) ___vms->mem.var
+
+#if ___TARGET_HEAP_SPACE_HIST_LENGTH > 0
+
+  target_heap_space_hist_last =
+    (target_heap_space_hist_last+1) % ___TARGET_HEAP_SPACE_HIST_LENGTH;
+
+  target_heap_space_hist[target_heap_space_hist_last] = target_heap_space;
+
+#endif
+
+#undef ___VMSTATE_MEM
+#define ___VMSTATE_MEM(var) ___VMSTATE_FROM_PSTATE(___ps)->mem.var
+}
+
+
 ___HIDDEN ___SIZE_TS adjust_heap
    ___P((___SIZE_TS live),
         (live)
 ___SIZE_TS live;)
 {
-  ___SIZE_TS target;
+  ___SIZE_TS target_heap_space = live;
 
   if (___GSTATE->setup_params.adjust_heap_hook != 0)
-    return ___GSTATE->setup_params.adjust_heap_hook (live);
+    target_heap_space = ___GSTATE->setup_params.adjust_heap_hook (live);
+  else if (___GSTATE->setup_params.live_percent < 100)
+    target_heap_space = live / ___GSTATE->setup_params.live_percent * 100;
 
-  if (___GSTATE->setup_params.live_percent < 100)
-    target = live / ___GSTATE->setup_params.live_percent * 100;
-  else
-    target = live + ___MSECTION_BIGGEST;
-
-  SET_MAX(target,
+  SET_MAX(target_heap_space,
           ___CAST(___SIZE_TS,(___GSTATE->setup_params.min_heap >> ___LWS)));
 
-  if (___GSTATE->setup_params.max_heap > 0)
-    SET_MIN(target,
-            ___CAST(___SIZE_TS,(___GSTATE->setup_params.max_heap >> ___LWS)));
-
-  return target;
+  return target_heap_space;
 }
 
 
@@ -4441,7 +4537,7 @@ ___processor_state ___ps;)
   avail = 0;
   ___ps->mem.gc_calls_to_punt_ = 2000;
 #else
-  avail = compute_free_heap_space()/2;
+  avail = compute_free_heap_space_approximately()/2;
   SET_MAX(avail,0);
 #endif
 
@@ -4523,7 +4619,9 @@ ___processor_state ___ps;)
 
   tospace_offset = ___PSTATE_FROM_PROCESSOR_ID(0,___vms)->mem.tospace_offset_;
 
+#ifndef ___SINGLE_THREADED_VMS
   ___SPINLOCK_INIT(heap_chunks_to_scan_lock);
+#endif
 
   /*
    * Allocate processor's stack and heap.
@@ -4630,6 +4728,7 @@ ___virtual_machine_state ___vms;)
 #undef ___VMSTATE_MEM
 #define ___VMSTATE_MEM(var) ___vms->mem.var
 
+  ___SIZE_TS init_heap_size;
   int init_nb_sections;
 
 #ifndef ___SINGLE_THREADED_VMS
@@ -4694,13 +4793,12 @@ ___virtual_machine_state ___vms;)
   ___PSTATE_FROM_PROCESSOR_ID(0,___vms)->mem.tospace_offset_ = 0;
 
   /*
-   * Set the overflow reserve so that the rest parameter handler can
-   * construct the rest parameter list without having to call the
-   * garbage collector.
+   * Set the overflow reserve so that there is 4 times the space for
+   * the rest parameter handler to construct the rest parameter list
+   * without having to call the garbage collector.
    */
 
-  normal_overflow_reserve = 2*((___MAX_NB_PARMS+___SUBTYPED_BODY) +
-                               ___MAX_NB_ARGS*(___PAIR_SIZE+___PAIR_BODY));
+  normal_overflow_reserve = ___DEFAULT_NORMAL_OVERFLOW_RESERVE;
   overflow_reserve = normal_overflow_reserve;
 
   /* Setup GC statistics */
@@ -4722,11 +4820,15 @@ ___virtual_machine_state ___vms;)
 
   /* Allocate msections of VM */
 
-  init_nb_sections =
-    ___MIN_NB_MSECTIONS_PER_PROCESSOR * ___vms->processor_count +
-    ___CEILING_DIV((___GSTATE->setup_params.min_heap >> ___LWS) +
-                   normal_overflow_reserve,
-                   ___MSECTION_SIZE - 2*___MSECTION_FUDGE);
+  init_heap_size = ___GSTATE->setup_params.min_heap;
+
+  if (___GSTATE->setup_params.max_heap > 0)
+    SET_MIN(init_heap_size, ___GSTATE->setup_params.max_heap);
+
+  init_nb_sections = compute_nb_msections_needed(init_heap_size >> ___LWS);
+
+  SET_MAX(init_nb_sections,
+          compute_nb_msections_min(___vms->processor_count));
 
   adjust_msections (&the_msections, init_nb_sections);
 
@@ -4738,8 +4840,22 @@ ___virtual_machine_state ___vms;)
   occupied_words_still = 0;
 
   nb_msections_assigned = 0;
+  nb_msections_stacks   = 0;
 
-  heap_size = compute_heap_space();
+#if ___TARGET_HEAP_SPACE_HIST_LENGTH > 0
+
+  {
+    int i;
+
+    for (i=0; i<___TARGET_HEAP_SPACE_HIST_LENGTH; i++)
+      target_heap_space_hist[i] = 0;
+
+    target_heap_space_hist_last = 0;
+  }
+
+#endif
+
+  heap_size = compute_heap_size();
 
   return ___FIX(___NO_ERR);
 
@@ -4754,12 +4870,14 @@ ___SCMOBJ ___setup_mem ___PVOID
     {
       /*
        * Choose a reasonable minimum heap size.
+       *
+       * A fraction of the last data cache size is probably good.
        */
 
-      ___GSTATE->setup_params.min_heap = ___cpu_cache_size (0, 0) / 2;
-
-      SET_MAX(___GSTATE->setup_params.min_heap, ___DEFAULT_MIN_HEAP);
+      ___GSTATE->setup_params.min_heap = ___cpu_cache_size (0, 0) * 3 / 4;
     }
+
+  SET_MAX(___GSTATE->setup_params.min_heap, ___DEFAULT_MIN_HEAP);
 
   if (___GSTATE->setup_params.live_percent <= 0 ||
       ___GSTATE->setup_params.live_percent > 100)
@@ -4890,7 +5008,7 @@ ___WORD list;)
       ___WORD *unmarked_body; /* used by the UNMARKED macro */
       int unmarked_typ;
 
-      if (___TYP(will_head) == ___FORW) /* was will forwarded? */
+      if (___TESTTYPE(will_head, ___FORW)) /* was will forwarded? */
         will_body = ___BODY0_AS(will_head,___FORW);
 
       list = will_body[___WILL_NEXT];
@@ -4987,364 +5105,19 @@ ___PSDKR)
 }
 
 
-___HIDDEN void process_gc_hash_tables
-   ___P((___PSDNC),
-        (___PSVNC)
-___PSDKR)
-{
-  ___PSGET
-  ___WORD curr = reached_gc_hash_tables;
-
-  while (curr != ___TAG(0,0))
-    {
-      ___WORD* body = ___CAST(___WORD*,curr);
-      ___SIZE_TS words = ___HD_WORDS(body[-1]);
-      int flags = ___INT(body[___GCHASHTABLE_FLAGS]);
-      int i;
-
-      curr = body[___GCHASHTABLE_NEXT];
-
-      body[___GCHASHTABLE_NEXT] = ___FIX(0);
-
-      if (((___GCHASHTABLE_FLAG_WEAK_KEYS | ___GCHASHTABLE_FLAG_MEM_ALLOC_KEYS)
-           & flags) ==
-          (___GCHASHTABLE_FLAG_WEAK_KEYS | ___GCHASHTABLE_FLAG_MEM_ALLOC_KEYS))
-        {
-          if (flags & ___GCHASHTABLE_FLAG_WEAK_VALS)
-            {
-              /*
-               * GC hash table is weak on keys and on values.
-               */
-
-              /*
-               * Eliminate GC hash table entries with an unmarked key
-               * or an unmarked value.
-               */
-
-              for (i=words-2; i>=___GCHASHTABLE_KEY0; i-=2)
-                {
-                  ___WORD *unmarked_body; /* used by the UNMARKED macro */
-                  int unmarked_typ;
-
-                  ___WORD key = body[i];
-                  ___WORD val = body[i+1];
-
-                  if (___MEM_ALLOCATED(key))
-                    {
-                      ___WORD key_head = ___BODY0(key)[-1];
-
-                      if (___TYP(key_head) == ___FORW)
-                        {
-                          /*
-                           * The key is movable and has been
-                           * forwarded.
-                           */
-
-                          if (___MEM_ALLOCATED(val))
-                            {
-                              ___WORD val_head = ___BODY0(val)[-1];
-
-                              if (___TYP(val_head) == ___FORW)
-                                {
-                                  /*
-                                   * The key is movable and has been
-                                   * forwarded and the value is
-                                   * movable and has been forwarded,
-                                   * so update key field and value
-                                   * field and remember to rehash next
-                                   * time the GC hash table is
-                                   * accessed.
-                                   */
-
-                                  body[i] =
-                                    ___TAG(___UNTAG_AS(key_head, ___FORW),
-                                           ___TYP(key));
-                                  body[i+1] =
-                                    ___TAG(___UNTAG_AS(val_head, ___FORW),
-                                           ___TYP(val));
-                                  flags |= ___GCHASHTABLE_FLAG_KEY_MOVED;
-                                }
-                              else if (UNMARKED(val))
-                                {
-                                  /*
-                                   * Change the entry to indicate it
-                                   * has been deleted.
-                                   */
-
-                                  body[i] = ___DELETED;
-                                  body[i+1] = ___UNUSED;
-                                  body[___GCHASHTABLE_COUNT] =
-                                    ___FIXSUB(body[___GCHASHTABLE_COUNT],
-                                              ___FIX(1));
-                                  flags |= ___GCHASHTABLE_FLAG_ENTRY_DELETED;
-                                }
-                              else
-                                {
-                                  /*
-                                   * The key is movable and has been
-                                   * forwarded and the value is not
-                                   * movable and is reachable, so
-                                   * update key field and remember to
-                                   * rehash next time the GC hash
-                                   * table is accessed.
-                                   */
-
-                                  body[i] =
-                                    ___TAG(___UNTAG_AS(key_head, ___FORW),
-                                           ___TYP(key));
-                                  flags |= ___GCHASHTABLE_FLAG_KEY_MOVED;
-                                }
-                            }
-                          else
-                            {
-                              /*
-                               * The key is movable and has been
-                               * forwarded, and the value is not
-                               * memory allocated, so update key field
-                               * and remember to rehash next time the
-                               * GC hash table is accessed.
-                               */
-
-                              body[i] =
-                                ___TAG(___UNTAG_AS(key_head, ___FORW),
-                                       ___TYP(key));
-                              flags |= ___GCHASHTABLE_FLAG_KEY_MOVED;
-                            }
-                        }
-                      else if (UNMARKED(key))
-                        {
-                          /*
-                           * Change the entry to indicate it has been
-                           * deleted.
-                           */
-
-                          body[i] = ___DELETED;
-                          body[i+1] = ___UNUSED;
-                          body[___GCHASHTABLE_COUNT] =
-                            ___FIXSUB(body[___GCHASHTABLE_COUNT],___FIX(1));
-                          flags |= ___GCHASHTABLE_FLAG_ENTRY_DELETED;
-                        }
-                      else
-                        {
-                          /*
-                           * The key is not movable and is reachable.
-                           */
-
-                          if (___MEM_ALLOCATED(val))
-                            {
-                              ___WORD val_head = ___BODY0(val)[-1];
-
-                              if (___TYP(val_head) == ___FORW)
-                                {
-                                  /*
-                                   * The key is not movable and is
-                                   * reachable and the value is
-                                   * movable and has been forwarded,
-                                   * so update value field.
-                                   */
-
-                                  body[i+1] =
-                                    ___TAG(___UNTAG_AS(val_head, ___FORW),
-                                           ___TYP(val));
-                                }
-                              else if (UNMARKED(val))
-                                {
-                                  /*
-                                   * Change the entry to indicate it
-                                   * has been deleted.
-                                   */
-
-                                  body[i] = ___DELETED;
-                                  body[i+1] = ___UNUSED;
-                                  body[___GCHASHTABLE_COUNT] =
-                                    ___FIXSUB(body[___GCHASHTABLE_COUNT],
-                                              ___FIX(1));
-                                  flags |= ___GCHASHTABLE_FLAG_ENTRY_DELETED;
-                                }
-                              else
-                                {
-                                  /*
-                                   * The key is not movable and is
-                                   * reachable and the value is not
-                                   * movable and is reachable, so
-                                   * leave fields untouched.
-                                   */
-                                }
-                            }
-                          else
-                            {
-                              /*
-                               * The key is not movable and is
-                               * reachable and the value is not memory
-                               * allocated, so leave fields untouched.
-                               */
-                            }
-                        }
-                    }
-                  else
-                    {
-                      /*
-                       * The key is not memory allocated.
-                       */
-
-                      if (___MEM_ALLOCATED(val))
-                        {
-                          ___WORD val_head = ___BODY0(val)[-1];
-
-                          if (___TYP(val_head) == ___FORW)
-                            {
-                              /*
-                               * The key is not memory allocated and
-                               * the value is movable and has been
-                               * forwarded, so update value field.
-                               */
-
-                              body[i+1] =
-                                ___TAG(___UNTAG_AS(val_head, ___FORW),
-                                       ___TYP(val));
-                            }
-                          else if (UNMARKED(val))
-                            {
-                              /*
-                               * Change the entry to indicate it
-                               * has been deleted.
-                               */
-
-                              body[i] = ___DELETED;
-                              body[i+1] = ___UNUSED;
-                              body[___GCHASHTABLE_COUNT] =
-                                ___FIXSUB(body[___GCHASHTABLE_COUNT],
-                                          ___FIX(1));
-                              flags |= ___GCHASHTABLE_FLAG_ENTRY_DELETED;
-                            }
-                          else
-                            {
-                              /*
-                               * The key is not memory allocated and
-                               * the value is not movable and is
-                               * reachable, so leave fields untouched.
-                               */
-                            }
-                        }
-                      else
-                        {
-                          /*
-                           * The key is not memory allocated and the
-                           * value is not memory allocated, so leave
-                           * fields untouched.
-                           */
-                        }
-                    }
-                }
-            }
-          else
-            {
-              /*
-               * GC hash table is weak on keys only.
-               */
-
-              /*
-               * Eliminate GC hash table entries with an unmarked key.
-               */
-
-              for (i=words-2; i>=___GCHASHTABLE_KEY0; i-=2)
-                {
-                  ___WORD *unmarked_body; /* used by the UNMARKED macro */
-                  int unmarked_typ;
-
-                  ___WORD key = body[i];
-
-                  if (___MEM_ALLOCATED(key))
-                    {
-                      ___WORD head = ___BODY0(key)[-1];
-
-                      if (___TYP(head) == ___FORW)
-                        {
-                          /*
-                           * The key is movable and has been
-                           * forwarded, so update key field and
-                           * remember to rehash next time the
-                           * GC hash table is accessed.
-                           */
-
-                          body[i] = ___TAG(___UNTAG_AS(head, ___FORW),
-                                           ___TYP(key));
-                          flags |= ___GCHASHTABLE_FLAG_KEY_MOVED;
-                        }
-                      else if (UNMARKED(key))
-                        {
-                          /*
-                           * Change the entry to indicate it has been
-                           * deleted.
-                           */
-
-                          body[i] = ___DELETED;
-                          body[i+1] = ___UNUSED;
-                          body[___GCHASHTABLE_COUNT] =
-                            ___FIXSUB(body[___GCHASHTABLE_COUNT],___FIX(1));
-                          flags |= ___GCHASHTABLE_FLAG_ENTRY_DELETED;
-                        }
-                    }
-                }
-            }
-        }
-      else
-        {
-          if (flags & ___GCHASHTABLE_FLAG_WEAK_VALS)
-            {
-              /*
-               * GC hash table is weak on values only.
-               */
-
-              /*
-               * Eliminate GC hash table entries with an unmarked value.
-               */
-
-              for (i=words-2; i>=___GCHASHTABLE_KEY0; i-=2)
-                {
-                  ___WORD *unmarked_body; /* used by the UNMARKED macro */
-                  int unmarked_typ;
-
-                  ___WORD val = body[i+1];
-
-                  if (___MEM_ALLOCATED(val))
-                    {
-                      ___WORD head = ___BODY0(val)[-1];
-
-                      if (___TYP(head) == ___FORW)
-                        {
-                          /*
-                           * The value is movable and has been
-                           * forwarded, so update value field.
-                           */
-
-                          body[i+1] = ___TAG(___UNTAG_AS(head, ___FORW),
-                                             ___TYP(val));
-                        }
-                      else if (UNMARKED(val))
-                        {
-                          /*
-                           * Change the entry to indicate it has been
-                           * deleted.
-                           */
-
-                          body[i] = ___DELETED;
-                          body[i+1] = ___UNUSED;
-                          body[___GCHASHTABLE_COUNT] =
-                            ___FIXSUB(body[___GCHASHTABLE_COUNT],___FIX(1));
-                          flags |= ___GCHASHTABLE_FLAG_ENTRY_DELETED;
-                        }
-                    }
-                }
-            }
-
-          if (flags & ___GCHASHTABLE_FLAG_MEM_ALLOC_KEYS)
-            flags |= ___GCHASHTABLE_FLAG_KEY_MOVED; /* assume worst case */
-        }
-
-      body[___GCHASHTABLE_FLAGS] = ___FIX(flags);
-    }
-}
+#ifdef ___GC_HASH_TABLE_REHASH_EAGERLY
+#ifdef ___GC_HASH_TABLE_REHASH_LAZILY
+#error "Define either ___GC_HASH_TABLE_REHASH_EAGERLY or ___GC_HASH_TABLE_REHASH_LAZILY"
+#endif
+#else
+#ifndef ___GC_HASH_TABLE_REHASH_LAZILY
+#ifdef ___SINGLE_THREADED_VMS
+#define ___GC_HASH_TABLE_REHASH_LAZILY
+#else
+#define ___GC_HASH_TABLE_REHASH_EAGERLY
+#endif
+#endif
+#endif
 
 
 ___HIDDEN void gc_hash_table_rehash_in_situ
@@ -5588,6 +5361,374 @@ ___SCMOBJ ht;)
 }
 
 
+___HIDDEN void process_gc_hash_tables
+   ___P((___PSDNC),
+        (___PSVNC)
+___PSDKR)
+{
+  ___PSGET
+  ___WORD curr = reached_gc_hash_tables;
+
+  while (curr != ___TAG(0,0))
+    {
+      ___WORD* body = ___CAST(___WORD*,curr);
+      ___SIZE_TS words = ___HD_WORDS(body[-1]);
+      int flags = ___INT(body[___GCHASHTABLE_FLAGS]);
+      int i;
+
+      curr = body[___GCHASHTABLE_NEXT];
+
+      body[___GCHASHTABLE_NEXT] = ___FIX(0);
+
+      if (((___GCHASHTABLE_FLAG_WEAK_KEYS | ___GCHASHTABLE_FLAG_MEM_ALLOC_KEYS)
+           & flags) ==
+          (___GCHASHTABLE_FLAG_WEAK_KEYS | ___GCHASHTABLE_FLAG_MEM_ALLOC_KEYS))
+        {
+          if (flags & ___GCHASHTABLE_FLAG_WEAK_VALS)
+            {
+              /*
+               * GC hash table is weak on keys and on values.
+               */
+
+              /*
+               * Eliminate GC hash table entries with an unmarked key
+               * or an unmarked value.
+               */
+
+              for (i=words-2; i>=___GCHASHTABLE_KEY0; i-=2)
+                {
+                  ___WORD *unmarked_body; /* used by the UNMARKED macro */
+                  int unmarked_typ;
+
+                  ___WORD key = body[i];
+                  ___WORD val = body[i+1];
+
+                  if (___MEM_ALLOCATED(key))
+                    {
+                      ___WORD key_head = ___BODY0(key)[-1];
+
+                      if (___TESTTYPE(key_head, ___FORW))
+                        {
+                          /*
+                           * The key is movable and has been
+                           * forwarded.
+                           */
+
+                          if (___MEM_ALLOCATED(val))
+                            {
+                              ___WORD val_head = ___BODY0(val)[-1];
+
+                              if (___TESTTYPE(val_head, ___FORW))
+                                {
+                                  /*
+                                   * The key is movable and has been
+                                   * forwarded and the value is
+                                   * movable and has been forwarded,
+                                   * so update key field and value
+                                   * field and remember to rehash next
+                                   * time the GC hash table is
+                                   * accessed.
+                                   */
+
+                                  body[i] =
+                                    ___TAG(___UNTAG_AS(key_head, ___FORW),
+                                           ___TYP(key));
+                                  body[i+1] =
+                                    ___TAG(___UNTAG_AS(val_head, ___FORW),
+                                           ___TYP(val));
+                                  flags |= ___GCHASHTABLE_FLAG_KEY_MOVED;
+                                }
+                              else if (UNMARKED(val))
+                                {
+                                  /*
+                                   * Change the entry to indicate it
+                                   * has been deleted.
+                                   */
+
+                                  body[i] = ___DELETED;
+                                  body[i+1] = ___UNUSED;
+                                  body[___GCHASHTABLE_COUNT] =
+                                    ___FIXSUB(body[___GCHASHTABLE_COUNT],
+                                              ___FIX(1));
+                                  flags |= ___GCHASHTABLE_FLAG_ENTRY_DELETED;
+                                }
+                              else
+                                {
+                                  /*
+                                   * The key is movable and has been
+                                   * forwarded and the value is not
+                                   * movable and is reachable, so
+                                   * update key field and remember to
+                                   * rehash next time the GC hash
+                                   * table is accessed.
+                                   */
+
+                                  body[i] =
+                                    ___TAG(___UNTAG_AS(key_head, ___FORW),
+                                           ___TYP(key));
+                                  flags |= ___GCHASHTABLE_FLAG_KEY_MOVED;
+                                }
+                            }
+                          else
+                            {
+                              /*
+                               * The key is movable and has been
+                               * forwarded, and the value is not
+                               * memory allocated, so update key field
+                               * and remember to rehash next time the
+                               * GC hash table is accessed.
+                               */
+
+                              body[i] =
+                                ___TAG(___UNTAG_AS(key_head, ___FORW),
+                                       ___TYP(key));
+                              flags |= ___GCHASHTABLE_FLAG_KEY_MOVED;
+                            }
+                        }
+                      else if (UNMARKED(key))
+                        {
+                          /*
+                           * Change the entry to indicate it has been
+                           * deleted.
+                           */
+
+                          body[i] = ___DELETED;
+                          body[i+1] = ___UNUSED;
+                          body[___GCHASHTABLE_COUNT] =
+                            ___FIXSUB(body[___GCHASHTABLE_COUNT],___FIX(1));
+                          flags |= ___GCHASHTABLE_FLAG_ENTRY_DELETED;
+                        }
+                      else
+                        {
+                          /*
+                           * The key is not movable and is reachable.
+                           */
+
+                          if (___MEM_ALLOCATED(val))
+                            {
+                              ___WORD val_head = ___BODY0(val)[-1];
+
+                              if (___TESTTYPE(val_head, ___FORW))
+                                {
+                                  /*
+                                   * The key is not movable and is
+                                   * reachable and the value is
+                                   * movable and has been forwarded,
+                                   * so update value field.
+                                   */
+
+                                  body[i+1] =
+                                    ___TAG(___UNTAG_AS(val_head, ___FORW),
+                                           ___TYP(val));
+                                }
+                              else if (UNMARKED(val))
+                                {
+                                  /*
+                                   * Change the entry to indicate it
+                                   * has been deleted.
+                                   */
+
+                                  body[i] = ___DELETED;
+                                  body[i+1] = ___UNUSED;
+                                  body[___GCHASHTABLE_COUNT] =
+                                    ___FIXSUB(body[___GCHASHTABLE_COUNT],
+                                              ___FIX(1));
+                                  flags |= ___GCHASHTABLE_FLAG_ENTRY_DELETED;
+                                }
+                              else
+                                {
+                                  /*
+                                   * The key is not movable and is
+                                   * reachable and the value is not
+                                   * movable and is reachable, so
+                                   * leave fields untouched.
+                                   */
+                                }
+                            }
+                          else
+                            {
+                              /*
+                               * The key is not movable and is
+                               * reachable and the value is not memory
+                               * allocated, so leave fields untouched.
+                               */
+                            }
+                        }
+                    }
+                  else
+                    {
+                      /*
+                       * The key is not memory allocated.
+                       */
+
+                      if (___MEM_ALLOCATED(val))
+                        {
+                          ___WORD val_head = ___BODY0(val)[-1];
+
+                          if (___TESTTYPE(val_head, ___FORW))
+                            {
+                              /*
+                               * The key is not memory allocated and
+                               * the value is movable and has been
+                               * forwarded, so update value field.
+                               */
+
+                              body[i+1] =
+                                ___TAG(___UNTAG_AS(val_head, ___FORW),
+                                       ___TYP(val));
+                            }
+                          else if (UNMARKED(val))
+                            {
+                              /*
+                               * Change the entry to indicate it
+                               * has been deleted.
+                               */
+
+                              body[i] = ___DELETED;
+                              body[i+1] = ___UNUSED;
+                              body[___GCHASHTABLE_COUNT] =
+                                ___FIXSUB(body[___GCHASHTABLE_COUNT],
+                                          ___FIX(1));
+                              flags |= ___GCHASHTABLE_FLAG_ENTRY_DELETED;
+                            }
+                          else
+                            {
+                              /*
+                               * The key is not memory allocated and
+                               * the value is not movable and is
+                               * reachable, so leave fields untouched.
+                               */
+                            }
+                        }
+                      else
+                        {
+                          /*
+                           * The key is not memory allocated and the
+                           * value is not memory allocated, so leave
+                           * fields untouched.
+                           */
+                        }
+                    }
+                }
+            }
+          else
+            {
+              /*
+               * GC hash table is weak on keys only.
+               */
+
+              /*
+               * Eliminate GC hash table entries with an unmarked key.
+               */
+
+              for (i=words-2; i>=___GCHASHTABLE_KEY0; i-=2)
+                {
+                  ___WORD *unmarked_body; /* used by the UNMARKED macro */
+                  int unmarked_typ;
+
+                  ___WORD key = body[i];
+
+                  if (___MEM_ALLOCATED(key))
+                    {
+                      ___WORD head = ___BODY0(key)[-1];
+
+                      if (___TESTTYPE(head, ___FORW))
+                        {
+                          /*
+                           * The key is movable and has been
+                           * forwarded, so update key field and
+                           * remember to rehash next time the
+                           * GC hash table is accessed.
+                           */
+
+                          body[i] = ___TAG(___UNTAG_AS(head, ___FORW),
+                                           ___TYP(key));
+                          flags |= ___GCHASHTABLE_FLAG_KEY_MOVED;
+                        }
+                      else if (UNMARKED(key))
+                        {
+                          /*
+                           * Change the entry to indicate it has been
+                           * deleted.
+                           */
+
+                          body[i] = ___DELETED;
+                          body[i+1] = ___UNUSED;
+                          body[___GCHASHTABLE_COUNT] =
+                            ___FIXSUB(body[___GCHASHTABLE_COUNT],___FIX(1));
+                          flags |= ___GCHASHTABLE_FLAG_ENTRY_DELETED;
+                        }
+                    }
+                }
+            }
+        }
+      else
+        {
+          if (flags & ___GCHASHTABLE_FLAG_WEAK_VALS)
+            {
+              /*
+               * GC hash table is weak on values only.
+               */
+
+              /*
+               * Eliminate GC hash table entries with an unmarked value.
+               */
+
+              for (i=words-2; i>=___GCHASHTABLE_KEY0; i-=2)
+                {
+                  ___WORD *unmarked_body; /* used by the UNMARKED macro */
+                  int unmarked_typ;
+
+                  ___WORD val = body[i+1];
+
+                  if (___MEM_ALLOCATED(val))
+                    {
+                      ___WORD head = ___BODY0(val)[-1];
+
+                      if (___TESTTYPE(head, ___FORW))
+                        {
+                          /*
+                           * The value is movable and has been
+                           * forwarded, so update value field.
+                           */
+
+                          body[i+1] = ___TAG(___UNTAG_AS(head, ___FORW),
+                                             ___TYP(val));
+                        }
+                      else if (UNMARKED(val))
+                        {
+                          /*
+                           * Change the entry to indicate it has been
+                           * deleted.
+                           */
+
+                          body[i] = ___DELETED;
+                          body[i+1] = ___UNUSED;
+                          body[___GCHASHTABLE_COUNT] =
+                            ___FIXSUB(body[___GCHASHTABLE_COUNT],___FIX(1));
+                          flags |= ___GCHASHTABLE_FLAG_ENTRY_DELETED;
+                        }
+                    }
+                }
+            }
+
+          if (flags & ___GCHASHTABLE_FLAG_MEM_ALLOC_KEYS)
+            flags |= ___GCHASHTABLE_FLAG_KEY_MOVED; /* assume worst case */
+        }
+
+      body[___GCHASHTABLE_FLAGS] = ___FIX(flags);
+
+#ifndef ___GC_HASH_TABLE_REHASH_LAZILY
+
+      if (!___FIXZEROP(___FIXAND(___FIX(flags),
+                                 ___FIX(___GCHASHTABLE_FLAG_KEY_MOVED))))
+        gc_hash_table_rehash_in_situ (___SUBTYPED_FROM_BODY(body));
+
+#endif
+    }
+}
+
+
 ___SCMOBJ ___gc_hash_table_ref
    ___P((___SCMOBJ ht,
          ___SCMOBJ key),
@@ -5601,18 +5742,22 @@ ___SCMOBJ key;)
   int step2;
   ___SCMOBJ obj;
 
-  if (!___FIXZEROP(___FIXAND(___FIELD(ht, ___GCHASHTABLE_FLAGS),
+#ifdef ___GC_HASH_TABLE_REHASH_LAZILY
+
+  if (!___FIXZEROP(___FIXAND(___GCHASHTABLE_FLAGS_FIELD(ht),
                              ___FIX(___GCHASHTABLE_FLAG_KEY_MOVED))))
     gc_hash_table_rehash_in_situ (ht);
 
-  size2 = ___INT(___VECTORLENGTH(ht)) - ___GCHASHTABLE_KEY0;
+#endif
+
+  size2 = ___INT(___GCHASHTABLELENGTH(ht)) - ___GCHASHTABLE_KEY0;
   ___GCHASHTABLE_HASH_STEP(probe2, step2, key, size2>>1);
   probe2 <<= 1;
   step2 <<= 1;
-  obj = ___FIELD(ht, probe2+___GCHASHTABLE_KEY0);
+  obj = ___FIELD(WEAK,ht, probe2+___GCHASHTABLE_KEY0);
 
   if (___EQP(obj,key))
-    return ___FIELD(ht, probe2+___GCHASHTABLE_VAL0);
+    return ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_VAL0);
   else if (!___EQP(obj,___UNUSED))
     {
       for (;;)
@@ -5620,10 +5765,10 @@ ___SCMOBJ key;)
           probe2 -= step2;
           if (probe2 < 0)
             probe2 += size2;
-          obj = ___FIELD(ht, probe2+___GCHASHTABLE_KEY0);
+          obj = ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_KEY0);
 
           if (___EQP(obj,key))
-            return ___FIELD(ht, probe2+___GCHASHTABLE_VAL0);
+            return ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_VAL0);
           else if (___EQP(obj,___UNUSED))
             break;
         }
@@ -5649,15 +5794,19 @@ ___SCMOBJ val;)
   int step2;
   ___SCMOBJ obj;
 
-  if (!___FIXZEROP(___FIXAND(___FIELD(ht, ___GCHASHTABLE_FLAGS),
+#ifdef ___GC_HASH_TABLE_REHASH_LAZILY
+
+  if (!___FIXZEROP(___FIXAND(___GCHASHTABLE_FLAGS_FIELD(ht),
                              ___FIX(___GCHASHTABLE_FLAG_KEY_MOVED))))
     gc_hash_table_rehash_in_situ (ht);
 
-  size2 = ___INT(___VECTORLENGTH(ht)) - ___GCHASHTABLE_KEY0;
+#endif
+
+  size2 = ___INT(___GCHASHTABLELENGTH(ht)) - ___GCHASHTABLE_KEY0;
   ___GCHASHTABLE_HASH_STEP(probe2, step2, key, size2>>1);
   probe2 <<= 1;
   step2 <<= 1;
-  obj = ___FIELD(ht, probe2+___GCHASHTABLE_KEY0);
+  obj = ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_KEY0);
 
   if (!___EQP(val,___ABSENT))
     {
@@ -5666,17 +5815,17 @@ ___SCMOBJ val;)
       if (___EQP(obj,key))
         {
         replace_entry:
-          ___FIELD(ht, probe2+___GCHASHTABLE_VAL0) = val;
+          ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_VAL0) = val;
         }
       else if (___EQP(obj,___UNUSED))
         {
         add_entry:
-          ___FIELD(ht, probe2+___GCHASHTABLE_KEY0) = key;
-          ___FIELD(ht, probe2+___GCHASHTABLE_VAL0) = val;
-          ___FIELD(ht, ___GCHASHTABLE_COUNT) =
-            ___FIXADD(___FIELD(ht, ___GCHASHTABLE_COUNT), ___FIX(1));
-          if (___FIXNEGATIVEP(___FIELD(ht, ___GCHASHTABLE_FREE) =
-                                ___FIXSUB(___FIELD(ht, ___GCHASHTABLE_FREE),
+          ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_KEY0) = key;
+          ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_VAL0) = val;
+          ___GCHASHTABLE_COUNT_FIELD(ht) =
+            ___FIXADD(___GCHASHTABLE_COUNT_FIELD(ht), ___FIX(1));
+          if (___FIXNEGATIVEP(___GCHASHTABLE_FREE_FIELD(ht) =
+                                ___FIXSUB(___GCHASHTABLE_FREE_FIELD(ht),
                                           ___FIX(1))))
             return ___TRU;
         }
@@ -5692,7 +5841,7 @@ ___SCMOBJ val;)
               probe2 -= step2;
               if (probe2 < 0)
                 probe2 += size2;
-              obj = ___FIELD(ht, probe2+___GCHASHTABLE_KEY0);
+              obj = ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_KEY0);
 
               if (___EQP(obj,key))
                 goto replace_entry;
@@ -5702,10 +5851,10 @@ ___SCMOBJ val;)
                   if (deleted2 < 0)
                     goto add_entry;
 
-                  ___FIELD(ht, deleted2+___GCHASHTABLE_KEY0) = key;
-                  ___FIELD(ht, deleted2+___GCHASHTABLE_VAL0) = val;
-                  ___FIELD(ht, ___GCHASHTABLE_COUNT) =
-                    ___FIXADD(___FIELD(ht, ___GCHASHTABLE_COUNT), ___FIX(1));
+                  ___FIELD(WEAK, ht, deleted2+___GCHASHTABLE_KEY0) = key;
+                  ___FIELD(WEAK, ht, deleted2+___GCHASHTABLE_VAL0) = val;
+                  ___GCHASHTABLE_COUNT_FIELD(ht) =
+                    ___FIXADD(___GCHASHTABLE_COUNT_FIELD(ht), ___FIX(1));
 
                   break;
                 }
@@ -5719,13 +5868,13 @@ ___SCMOBJ val;)
       if (___EQP(obj,key))
         {
         delete_entry:
-          ___FIELD(ht, probe2+___GCHASHTABLE_KEY0) = ___DELETED;
-          ___FIELD(ht, probe2+___GCHASHTABLE_VAL0) = ___UNUSED;
-          ___FIELD(ht, ___GCHASHTABLE_COUNT) =
-            ___FIXSUB(___FIELD(ht, ___GCHASHTABLE_COUNT),
+          ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_KEY0) = ___DELETED;
+          ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_VAL0) = ___UNUSED;
+          ___GCHASHTABLE_COUNT_FIELD(ht) =
+            ___FIXSUB(___GCHASHTABLE_COUNT_FIELD(ht),
                       ___FIX(1));
-          if (___FIXLT(___FIELD(ht, ___GCHASHTABLE_COUNT),
-                       ___FIELD(ht, ___GCHASHTABLE_MIN_COUNT)))
+          if (___FIXLT(___GCHASHTABLE_COUNT_FIELD(ht),
+                       ___GCHASHTABLE_MIN_COUNT_FIELD(ht)))
             return ___TRU;
         }
       else if (!___EQP(obj,___UNUSED))
@@ -5735,7 +5884,7 @@ ___SCMOBJ val;)
               probe2 -= step2;
               if (probe2 < 0)
                 probe2 += size2;
-              obj = ___FIELD(ht, probe2+___GCHASHTABLE_KEY0);
+              obj = ___FIELD(WEAK, ht, probe2+___GCHASHTABLE_KEY0);
 
               if (___EQP(obj,key))
                 goto delete_entry;
@@ -5759,14 +5908,14 @@ do {                                                                          \
   ___GCHASHTABLE_HASH_STEP(key_probe2,key_step2,key,size2>>1);                \
   key_probe2 <<= 1;                                                           \
   key_step2 <<= 1;                                                            \
-  obj = ___FIELD(ht, key_probe2+___GCHASHTABLE_KEY0);                         \
+  obj = ___FIELD(WEAK, ht, key_probe2+___GCHASHTABLE_KEY0);                   \
                                                                               \
   while (!(___EQP(obj,key) || ___EQP(obj,___UNUSED)))                         \
     {                                                                         \
       key_probe2 -= key_step2;                                                \
       if (key_probe2 < 0)                                                     \
         key_probe2 += size2;                                                  \
-      obj = ___FIELD(ht, key_probe2+___GCHASHTABLE_KEY0);                     \
+      obj = ___FIELD(WEAK, ht, key_probe2+___GCHASHTABLE_KEY0);               \
     }                                                                         \
                                                                               \
   if (___EQP(obj,key))                                                        \
@@ -5775,7 +5924,7 @@ do {                                                                          \
        * key was found, compress its path.                                    \
        */                                                                     \
                                                                               \
-      k = ___FIELD(ht, key_probe2+___GCHASHTABLE_VAL0);                       \
+      k = ___FIELD(WEAK, ht, key_probe2+___GCHASHTABLE_VAL0);                 \
                                                                               \
       if (___SPECIALP(k))                                                     \
         {                                                                     \
@@ -5798,30 +5947,30 @@ do {                                                                          \
                   ___GCHASHTABLE_HASH_STEP(k_probe2,k_step2,k,size2>>1);      \
                   k_probe2 <<= 1;                                             \
                   k_step2 <<= 1;                                              \
-                  o = ___FIELD(ht, k_probe2+___GCHASHTABLE_KEY0);             \
+                  o = ___FIELD(WEAK, ht, k_probe2+___GCHASHTABLE_KEY0);       \
                                                                               \
                   while (!___EQP(o,k))                                        \
                     {                                                         \
                       k_probe2 -= k_step2;                                    \
                       if (k_probe2 < 0)                                       \
                         k_probe2 += size2;                                    \
-                      o = ___FIELD(ht, k_probe2+___GCHASHTABLE_KEY0);         \
+                      o = ___FIELD(WEAK, ht, k_probe2+___GCHASHTABLE_KEY0);   \
                     }                                                         \
                 }                                                             \
                                                                               \
-              k = ___FIELD(ht, k_probe2+___GCHASHTABLE_VAL0);                 \
+              k = ___FIELD(WEAK, ht, k_probe2+___GCHASHTABLE_VAL0);           \
                                                                               \
               if (___SPECIALP(k))                                             \
                 break;                                                        \
                                                                               \
-              ___FIELD(ht, k_probe2+___GCHASHTABLE_VAL0) = ___FIX(k_prev2);   \
+              ___FIELD(WEAK, ht, k_probe2+___GCHASHTABLE_VAL0) = ___FIX(k_prev2); \
               k_prev2 = k_probe2;                                             \
             }                                                                 \
                                                                               \
           for (;;)                                                            \
             {                                                                 \
-              ___SCMOBJ k_p2 = ___INT(___FIELD(ht, k_prev2+___GCHASHTABLE_VAL0)); \
-              ___FIELD(ht, k_prev2+___GCHASHTABLE_VAL0) = ___FIX(k_probe2);   \
+              ___SCMOBJ k_p2 = ___INT(___FIELD(WEAK, ht, k_prev2+___GCHASHTABLE_VAL0)); \
+              ___FIELD(WEAK, ht, k_prev2+___GCHASHTABLE_VAL0) = ___FIX(k_probe2); \
               if (k_prev2 == key_probe2)                                      \
                 break;                                                        \
               k_prev2 = k_p2;                                                 \
@@ -5875,11 +6024,15 @@ ___BOOL find;)
   ___SCMOBJ k2 = ___FIX(0);
   ___SCMOBJ k2_probe2 = ___FIX(0);
 
-  if (!___FIXZEROP(___FIXAND(___FIELD(ht, ___GCHASHTABLE_FLAGS),
+#ifdef ___GC_HASH_TABLE_REHASH_LAZILY
+
+  if (!___FIXZEROP(___FIXAND(___GCHASHTABLE_FLAGS_FIELD(ht),
                              ___FIX(___GCHASHTABLE_FLAG_KEY_MOVED))))
     gc_hash_table_rehash_in_situ (ht);
 
-  size2 = ___INT(___VECTORLENGTH(ht)) - ___GCHASHTABLE_KEY0;
+#endif
+
+  size2 = ___INT(___GCHASHTABLELENGTH(ht)) - ___GCHASHTABLE_KEY0;
 
   /* Search for key1 */
 
@@ -5926,13 +6079,17 @@ ___BOOL find;)
 
           if (k1 > k2) /* choose biggest equivalence class */
             {
-              ___FIELD(ht, k1_probe2+___GCHASHTABLE_VAL0) = ___SPECIAL(k1+k2);
-              ___FIELD(ht, k2_probe2+___GCHASHTABLE_VAL0) = ___FIX(k1_probe2);
+              ___FIELD(WEAK, ht, k1_probe2+___GCHASHTABLE_VAL0) =
+                ___SPECIAL(k1+k2);
+              ___FIELD(WEAK, ht, k2_probe2+___GCHASHTABLE_VAL0) =
+                ___FIX(k1_probe2);
             }
           else
             {
-              ___FIELD(ht, k2_probe2+___GCHASHTABLE_VAL0) = ___SPECIAL(k1+k2);
-              ___FIELD(ht, k1_probe2+___GCHASHTABLE_VAL0) = ___FIX(k2_probe2);
+              ___FIELD(WEAK, ht, k2_probe2+___GCHASHTABLE_VAL0) =
+                ___SPECIAL(k1+k2);
+              ___FIELD(WEAK, ht, k1_probe2+___GCHASHTABLE_VAL0) =
+                ___FIX(k2_probe2);
             }
 
           return ___FIX(1);
@@ -5946,9 +6103,9 @@ ___BOOL find;)
 
           k1 = ___INT(k1);
 
-          ___FIELD(ht, k1_probe2+___GCHASHTABLE_VAL0) = ___SPECIAL(k1+1);
-          ___FIELD(ht, key2_probe2+___GCHASHTABLE_KEY0) = key2;
-          ___FIELD(ht, key2_probe2+___GCHASHTABLE_VAL0) = ___FIX(k1_probe2);
+          ___FIELD(WEAK, ht, k1_probe2+___GCHASHTABLE_VAL0) = ___SPECIAL(k1+1);
+          ___FIELD(WEAK, ht, key2_probe2+___GCHASHTABLE_KEY0) = key2;
+          ___FIELD(WEAK, ht, key2_probe2+___GCHASHTABLE_VAL0) = ___FIX(k1_probe2);
           allocated = 1;
         }
     }
@@ -5965,9 +6122,9 @@ ___BOOL find;)
 
           k2 = ___INT(k2);
 
-          ___FIELD(ht, k2_probe2+___GCHASHTABLE_VAL0) = ___SPECIAL(k2+1);
-          ___FIELD(ht, key1_probe2+___GCHASHTABLE_KEY0) = key1;
-          ___FIELD(ht, key1_probe2+___GCHASHTABLE_VAL0) = ___FIX(k2_probe2);
+          ___FIELD(WEAK, ht, k2_probe2+___GCHASHTABLE_VAL0) = ___SPECIAL(k2+1);
+          ___FIELD(WEAK, ht, key1_probe2+___GCHASHTABLE_KEY0) = key1;
+          ___FIELD(WEAK, ht, key1_probe2+___GCHASHTABLE_VAL0) = ___FIX(k2_probe2);
           allocated = 1;
         }
       else
@@ -5977,8 +6134,8 @@ ___BOOL find;)
           if (find)
             return ___FIX(5); /* keys are not in the same equiv class */
 
-          ___FIELD(ht, key1_probe2+___GCHASHTABLE_KEY0) = key1;
-          ___FIELD(ht, key1_probe2+___GCHASHTABLE_VAL0) = ___SPECIAL(2);
+          ___FIELD(WEAK, ht, key1_probe2+___GCHASHTABLE_KEY0) = key1;
+          ___FIELD(WEAK, ht, key1_probe2+___GCHASHTABLE_VAL0) = ___SPECIAL(2);
 
           if (key1_probe2 == key2_probe2)
             {
@@ -5992,21 +6149,21 @@ ___BOOL find;)
                   key2_probe2 -= key2_step2;
                   if (key2_probe2 < 0)
                     key2_probe2 += size2;
-                } while (!___EQP(___FIELD(ht, key2_probe2+___GCHASHTABLE_KEY0),
+                } while (!___EQP(___FIELD(WEAK, ht, key2_probe2+___GCHASHTABLE_KEY0),
                                  ___UNUSED));
             }
 
-          ___FIELD(ht, key2_probe2+___GCHASHTABLE_KEY0) = key2;
-          ___FIELD(ht, key2_probe2+___GCHASHTABLE_VAL0) = ___FIX(key1_probe2);
+          ___FIELD(WEAK, ht, key2_probe2+___GCHASHTABLE_KEY0) = key2;
+          ___FIELD(WEAK, ht, key2_probe2+___GCHASHTABLE_VAL0) = ___FIX(key1_probe2);
           allocated = 2;
         }
     }
 
-  ___FIELD(ht, ___GCHASHTABLE_COUNT) =
-    ___FIXADD(___FIELD(ht, ___GCHASHTABLE_COUNT), ___FIX(allocated));
+  ___GCHASHTABLE_COUNT_FIELD(ht) =
+    ___FIXADD(___GCHASHTABLE_COUNT_FIELD(ht), ___FIX(allocated));
 
-  if (___FIXNEGATIVEP(___FIELD(ht, ___GCHASHTABLE_FREE) =
-                      ___FIXSUB(___FIELD(ht, ___GCHASHTABLE_FREE),
+  if (___FIXNEGATIVEP(___GCHASHTABLE_FREE_FIELD(ht) =
+                      ___FIXSUB(___GCHASHTABLE_FREE_FIELD(ht),
                                 ___FIX(allocated))))
     return ___FIX(allocated*2); /* signal that table needs to grow */
   else
@@ -6153,24 +6310,144 @@ ___SIZE_TS requested_words_still;)
 
   ___BOOL overflow = 0;
   ___SIZE_TS target_heap_space;
+  ___SIZE_TS ths;
   ___SIZE_TS target_movable_space;
   int target_nb_sections;
+  int recent_history;
+  int lower_bound_nb_sections;
+  int upper_bound_nb_sections;
   ___SIZE_TS live;
+  ___SIZE_TS free_space;
+
+  /*
+   * Compute the space occupied by live objects.
+   */
 
   determine_occupied_words (___vms);
 
-  occupied_words_still += requested_words_still; /* pretend requested space is live */
-
-  live = occupied_words_movable + occupied_words_still;
-
   /*
-   * Determine the target size of the heap in msections given the
-   * space requested for the still object.
+   * Determine the strict minimum number of msections required after
+   * the GC.  The code reserves ___MIN_NB_MSECTIONS_PER_PROCESSOR per
+   * processor taking the target number of processors into account in
+   * case the GC was called as part of the resizing of the VM.
    */
 
-  target_heap_space = adjust_heap (live);
+  lower_bound_nb_sections = compute_nb_msections_min(target_processor_count);
 
-  if (live > target_heap_space)
+  SET_MAX(lower_bound_nb_sections,
+          (compute_nb_msections_needed(occupied_words_movable) +
+           nb_msections_stacks));
+
+  /*
+   * Use the recent target heap space history to avoid shrinking the
+   * heap size abruptly.
+   */
+
+  recent_history = max_target_heap_space_in_recent_history (___vms);
+
+  /*
+   * Determine how to resize the heap assuming the requested space is
+   * live and no heap overflow happens, but if this would cause a heap
+   * overflow then try again after setting requested_words_still to
+   * zero and lowering the overflow reserve to make some free space
+   * available to handle the heap overflow.
+   */
+
+  while (1)
+    {
+      /*
+       * At most 2 iterations are executed. From the first to second
+       * iteration, the following variables will change values:
+       *
+       *   overflow will be 0 at first iteration and 1 at second iteration
+       *   overflow_reserve will be lower at second iteration
+       *   requested_words_still will be 0 at second iteration
+       */
+
+      /* Pretend requested space is live */
+      occupied_words_still += requested_words_still;
+
+      live = occupied_words_movable + occupied_words_still;
+
+      /*
+       * Determine the size to grow/shrink the heap at the end of the
+       * GC, taking into account the resizing policy (live ratio and
+       * min/max heap size).
+       */
+
+      target_heap_space = adjust_heap (live) + normal_overflow_reserve;
+
+      ths = target_heap_space; /* remember target_heap_space for history */
+
+      SET_MAX(ths, recent_history);
+
+      target_movable_space = ths - occupied_words_still;
+
+      /*
+       * Compute the number of msections required after the GC.
+       */
+
+      target_nb_sections = compute_nb_msections_needed(target_movable_space) +
+                           nb_msections_stacks;
+
+      upper_bound_nb_sections = target_nb_sections;
+
+      if (___GSTATE->setup_params.max_heap > 0)
+        {
+          upper_bound_nb_sections =
+            ((___GSTATE->setup_params.max_heap >> ___LWS) -
+             occupied_words_still) / ___MSECTION_SIZE;
+
+          SET_MAX(target_nb_sections, lower_bound_nb_sections);
+          SET_MIN(target_nb_sections, upper_bound_nb_sections);
+        }
+
+      /*
+       * Check if there was a heap overflow.
+       */
+
+      if (overflow) break;
+
+      free_space = compute_free_heap_space_in_msections(target_nb_sections);
+
+      if (free_space <  overflow_reserve)
+        {
+          /*
+           * Trigger a recoverable heap overflow.
+           */
+
+          overflow = 1;
+
+          /*
+           * Get space from overflow reserve to handle heap overflow.
+           */
+
+          overflow_reserve >>= 1; /* make 50% of reserve usable */
+
+          if (overflow_reserve < (normal_overflow_reserve>>2))
+            fatal_heap_overflow ();
+
+          /*
+           * Stop pretending requested space is live.
+           */
+
+          occupied_words_still -= requested_words_still;
+          requested_words_still = 0;
+        }
+      else
+        break;
+    }
+
+  adjust_msections (&the_msections, target_nb_sections);
+
+  /*
+   * Detect heap overflows caused by failure to allocate msections
+   * from the C heap. These heap overflows can happen even when a
+   * maximum heap size was not set in the runtime options, for example
+   * if the virtual memory is exhausted.
+   */
+
+  if (the_msections->nb_sections < target_nb_sections)
     {
       /*
        * Trigger a recoverable heap overflow.
@@ -6179,56 +6456,40 @@ ___SIZE_TS requested_words_still;)
       overflow = 1;
 
       /*
-       * Take some space from the overflow reserve.
+       * Get space from overflow reserve to handle heap overflow.
        */
 
-      overflow_reserve >>= 5; /* make 96.875% of reserve usable */
+      overflow_reserve >>= 1; /* make 50% of reserve usable */
 
-      if (overflow_reserve == 0)
+      if (overflow_reserve < (normal_overflow_reserve>>2))
         fatal_heap_overflow ();
 
       /*
-       * Cancel allocation of still object.
+       * Stop pretending requested space is live.
        */
 
       occupied_words_still -= requested_words_still;
-      live -= requested_words_still;
-
-      target_heap_space = adjust_heap (live);
+      requested_words_still = 0;
     }
 
-  if (live + normal_overflow_reserve <= target_heap_space)
+  if (!overflow)
     {
-      /*
-       * Now that there is enough free space, reset the overflow
-       * reserve to its normal value.
-       */
+      add_to_target_heap_space_history (___vms, target_heap_space);
 
-      overflow_reserve = normal_overflow_reserve;
+      free_space = compute_free_heap_space_in_msections(the_msections->nb_sections);
+
+      if (free_space > normal_overflow_reserve)
+        {
+          /*
+           * Now that there is enough free space, reset the overflow
+           * reserve to its normal value.
+           */
+
+          overflow_reserve = normal_overflow_reserve;
+        }
     }
 
-  target_movable_space = target_heap_space - occupied_words_still;
-
-  SET_MAX(target_movable_space, 0);
-
-  /*
-   * Compute the number of msections required after the GC.  The code
-   * reserves ___MIN_NB_MSECTIONS_PER_PROCESSOR per processor taking
-   * the target number of processors into account in case the GC was
-   * called as part of the resizing of the VM.
-   */
-
-  target_nb_sections =
-    ___MIN_NB_MSECTIONS_PER_PROCESSOR * target_processor_count +
-    ___CEILING_DIV(target_movable_space + normal_overflow_reserve,
-                   ___MSECTION_SIZE - 2*___MSECTION_FUDGE);
-
-  SET_MAX(target_nb_sections,
-          nb_msections_assigned);
-
-  adjust_msections (&the_msections, target_nb_sections);
-
-  heap_size = compute_heap_space();
+  heap_size = compute_heap_size();
 
   /*
    * Maintain GC statistics.
@@ -6912,7 +7173,7 @@ ___PSDKR)
 #ifdef CALL_GC_FREQUENTLY
               --___gc_calls_to_punt < 0 ||
 #endif
-              compute_free_heap_space() < ___MSECTION_SIZE)
+              compute_free_heap_space_approximately() < ___MSECTION_SIZE)
             {
               ALLOC_MEM_UNLOCK();
 
@@ -7220,7 +7481,7 @@ ___PSDKR)
 #ifdef CALL_GC_FREQUENTLY
             --___gc_calls_to_punt >= 0 &&
 #endif
-            compute_free_heap_space() >= ___MSECTION_SIZE)
+            compute_free_heap_space_approximately() >= ___MSECTION_SIZE)
           {
             if (alloc_heap_ptr > alloc_heap_limit - ___MSECTION_FUDGE)
               next_heap_msection_without_locking (___ps);

@@ -1,14 +1,30 @@
 (include "#.scm")
 
-(check-eqv? (integer-sqrt 0) 0)
-(check-eqv? (integer-sqrt 1000) 31)
-(check-eqv? (integer-sqrt 1000000000000000000000) 31622776601)
+(test-eqv 0 (##integer-sqrt 0))
+(test-eqv 1 (##integer-sqrt 1))
+(test-eqv 10 (##integer-sqrt 108))
+(test-eqv 536870911 (##integer-sqrt 288230375077969921))
+(test-eqv 536870912 (##integer-sqrt 288230376151711744))
+(test-eqv 111111110611111 (##integer-sqrt 12345678901234567890123456789))
+(test-eqv 1152921504606846975 (##integer-sqrt 1329227995784915870597964051066650625))
+(test-eqv 1152921504606846976 (##integer-sqrt 1329227995784915872903807060280344576))
+(test-eqv 2305843009213693951 (##integer-sqrt 5316911983139663487003542222693990401))
+(test-eqv 2305843009213693952 (##integer-sqrt 5316911983139663491615228241121378304))
 
-;;; Test exceptions
+(test-eqv 0 (integer-sqrt 0))
+(test-eqv 1 (integer-sqrt 1))
+(test-eqv 10 (integer-sqrt 108))
+(test-eqv 536870911 (integer-sqrt 288230375077969921))
+(test-eqv 536870912 (integer-sqrt 288230376151711744))
+(test-eqv 111111110611111 (integer-sqrt 12345678901234567890123456789))
+(test-eqv 1152921504606846975 (integer-sqrt 1329227995784915870597964051066650625))
+(test-eqv 1152921504606846976 (integer-sqrt 1329227995784915872903807060280344576))
+(test-eqv 2305843009213693951 (integer-sqrt 5316911983139663487003542222693990401))
+(test-eqv 2305843009213693952 (integer-sqrt 5316911983139663491615228241121378304))
 
-(check-tail-exn type-exception? (lambda () (integer-sqrt #f)))
+(test-error-tail wrong-number-of-arguments-exception? (integer-sqrt))
+(test-error-tail wrong-number-of-arguments-exception? (integer-sqrt 1 2))
 
-(check-tail-exn range-exception? (lambda () (integer-sqrt -1)))
+(test-error-tail type-exception? (integer-sqrt 1.0))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (integer-sqrt)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (integer-sqrt 0 0)))
+(test-error-tail range-exception? (integer-sqrt -1))

@@ -1,6 +1,6 @@
 /* File: "os_io.c" */
 
-/* Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -8,7 +8,7 @@
  */
 
 #define ___INCLUDED_FROM_OS_IO
-#define ___VERSION 409005
+#define ___VERSION 409007
 #include "gambit.h"
 
 #include "os_setup.h"
@@ -4572,7 +4572,7 @@ ___HIDDEN void clear_tls_error_queue
 
 /* TLS multithreading support */
 
-#ifdef ___MULTIPLE_THREADED_VMS
+#ifndef ___SINGLE_THREADED_VMS
 
 ___HIDDEN ___MUTEX *tls_mutex_buf = NULL;
 
@@ -4662,7 +4662,7 @@ ___HIDDEN int tls_threading_setup
 
 #if OPENSSL_VERSION_NUMBER < 0x10001000L
   CRYPTO_set_id_callback (tls_id_function);
-#elseif
+#else
   CRYPTO_THREADID_set_callback (tls_id_function);
 #endif
   CRYPTO_set_locking_callback (tls_locking_function);
@@ -4684,7 +4684,7 @@ ___HIDDEN int tls_threading_cleanup
 
 #if OPENSSL_VERSION_NUMBER < 0x10001000L
   CRYPTO_set_id_callback (NULL);
-#elseif
+#else
   CRYPTO_THREADID_set_callback (NULL);
 #endif
   CRYPTO_set_locking_callback (NULL);
@@ -8621,31 +8621,54 @@ ___mask_child_interrupts_state *state;)
 
 /*---------------------------------------------------------------------------*/
 
-#ifndef ___STREAM_OPEN_PROCESS_CE_SELECT
+#ifdef ___PROCESS_PATH_AND_ARGS_ENCODING_LATIN1
+#define ___PROCESS_PATH_AND_ARGS_ENCODING(latin1,utf8,ucs2,ucs4,wchar,native) latin1
+#else
+#ifdef ___PROCESS_PATH_AND_ARGS_ENCODING_UTF8
+#define ___PROCESS_PATH_AND_ARGS_ENCODING(latin1,utf8,ucs2,ucs4,wchar,native) utf8
+#else
+#ifdef ___PROCESS_PATH_AND_ARGS_ENCODING_UCS2
+#define ___PROCESS_PATH_AND_ARGS_ENCODING(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
+#else
+#ifdef ___PROCESS_PATH_AND_ARGS_ENCODING_UCS4
+#define ___PROCESS_PATH_AND_ARGS_ENCODING(latin1,utf8,ucs2,ucs4,wchar,native) ucs4
+#else
+#ifdef ___PROCESS_PATH_AND_ARGS_ENCODING_WCHAR
+#define ___PROCESS_PATH_AND_ARGS_ENCODING(latin1,utf8,ucs2,ucs4,wchar,native) wchar
+#else
+#ifdef ___PROCESS_PATH_AND_ARGS_ENCODING_NATIVE
+#define ___PROCESS_PATH_AND_ARGS_ENCODING(latin1,utf8,ucs2,ucs4,wchar,native) native
+#endif
+#endif
+#endif
+#endif
+#endif
+#endif
 
 #ifdef USE_execvp
-#define ___STREAM_OPEN_PROCESS_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
+#define ___PROCESS_PATH_AND_ARGS_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) utf8
 #ifndef USE_openpty
 #ifndef USE_ptsname
-#undef ___STREAM_OPEN_PROCESS_CE_SELECT
+#undef ___PROCESS_PATH_AND_ARGS_CE_SELECT
 #endif
 #endif
 #endif
 
 #ifdef USE_CreateProcess
 #ifdef _UNICODE
-#define ___STREAM_OPEN_PROCESS_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
-#define CP_ENV_FLAGS CREATE_UNICODE_ENVIRONMENT
+#define ___PROCESS_PATH_AND_ARGS_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
 #else
-#define ___STREAM_OPEN_PROCESS_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
-#define CP_ENV_FLAGS 0
+#define ___PROCESS_PATH_AND_ARGS_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) native
 #endif
 #endif
 
+#ifdef ___PROCESS_PATH_AND_ARGS_CE_SELECT
+
+#ifdef ___PROCESS_PATH_AND_ARGS_ENCODING
+#undef ___PROCESS_PATH_AND_ARGS_CE_SELECT
+#define ___PROCESS_PATH_AND_ARGS_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) \
+___PROCESS_PATH_AND_ARGS_ENCODING(latin1,utf8,ucs2,ucs4,wchar,native)
 #endif
-
-
-#ifdef ___STREAM_OPEN_PROCESS_CE_SELECT
 
 #ifdef USE_execvp
 
@@ -8776,14 +8799,19 @@ int *slave_fd;)
 }
 
 
-___HIDDEN int open_full_duplex_pipe1
+___HIDDEN ___SCMOBJ open_full_duplex_pipe1
    ___P((___full_duplex_pipe *fdp,
-         ___BOOL use_pty),
+         ___BOOL use_pty,
+         ___BOOL avoid_std),
         (fdp,
-         use_pty)
+         use_pty,
+         avoid_std)
 ___full_duplex_pipe *fdp;
-___BOOL use_pty;)
+___BOOL use_pty;
+___BOOL avoid_std;)
 {
+  ___SCMOBJ e = ___FIX(___NO_ERR);
+
   fdp->input.reading_fd = -1;
   fdp->input.writing_fd = -1;
   fdp->output.reading_fd = -1;
@@ -8793,45 +8821,62 @@ ___BOOL use_pty;)
     {
       int master_fd;
       int slave_fd;
-      if (open_pseudo_terminal_master (&master_fd, &slave_fd) >= 0)
+      if (open_pseudo_terminal_master (&master_fd, &slave_fd) < 0)
+        {
+          e = err_code_from_errno ();
+        }
+      else
         {
           int master_fd_dup;
-          int tmp;
-          if ((master_fd_dup = ___dup_no_EINTR (master_fd)) >= 0)
+          if ((master_fd_dup = ___dup_no_EINTR (master_fd)) < 0)
             {
-              fdp->input.writing_fd = master_fd;
-              fdp->output.reading_fd = master_fd_dup;
-              fdp->input.reading_fd = slave_fd;
-              return 0;
+              e = err_code_from_errno ();
+              if (master_fd >= 0)
+                ___close_no_EINTR (master_fd); /* ignore error */
+              if (slave_fd >= 0)
+                ___close_no_EINTR (slave_fd); /* ignore error */
             }
-          tmp = errno;
-          ___close_no_EINTR (master_fd); /* ignore error */
-          if (slave_fd >= 0)
-            ___close_no_EINTR (slave_fd); /* ignore error */
-          errno = tmp;
+          else if (avoid_std)
+            {
+              int fds[3];
+              fds[0] = master_fd;
+              fds[1] = master_fd_dup;
+              fds[2] = slave_fd;
+              if (___move_fds_to_non_std (fds, 3, 1) < 0)
+                e = err_code_from_errno ();
+              else
+                {
+                  fdp->input.writing_fd = fds[0];
+                  fdp->output.reading_fd = fds[1];
+                  fdp->input.reading_fd = fds[2];
+                }
+            }
         }
     }
   else
     {
-      if (___open_half_duplex_pipe (&fdp->input) >= 0)
+      if ((e = ___open_half_duplex_pipe (&fdp->input, avoid_std)) == ___FIX(___NO_ERR))
         {
-          if (___open_half_duplex_pipe (&fdp->output) >= 0)
-            return 0;
-          ___close_half_duplex_pipe (&fdp->input, 2);
+          if ((e = ___open_half_duplex_pipe (&fdp->output, avoid_std)) != ___FIX(___NO_ERR)) {
+            ___close_half_duplex_pipe (&fdp->input, 2);
+          }
         }
     }
 
-  return -1;
+  return e;
 }
 
 
 ___HIDDEN int open_full_duplex_pipe2
    ___P((___full_duplex_pipe *fdp,
-         ___BOOL use_pty),
+         ___BOOL use_pty,
+         ___BOOL avoid_std),
         (fdp,
-         use_pty)
+         use_pty,
+         avoid_std)
 ___full_duplex_pipe *fdp;
-___BOOL use_pty;)
+___BOOL use_pty;
+___BOOL avoid_std;)
 {
   if (use_pty)
     {
@@ -8842,13 +8887,19 @@ ___BOOL use_pty;)
           open_pseudo_terminal_slave (fdp->input.writing_fd,
                                       &fdp->input.reading_fd) >= 0)
         {
-          int tmp;
+          int save_errno;
           if (setup_terminal_slave (fdp->input.reading_fd) >= 0 &&
               (fdp->output.writing_fd = ___dup_no_EINTR (fdp->input.reading_fd)) >= 0)
-            return 0;
-          tmp = errno;
+            {
+              if (avoid_std)
+                {
+                  if (___move_fds_to_non_std (&fdp->output.writing_fd, 1, 1) == 0)
+                    return 0;
+                }
+            }
+          save_errno = errno;
           ___close_no_EINTR (fdp->input.reading_fd); /* ignore error */
-          errno = tmp;
+          errno = save_errno;
         }
     }
   else
@@ -8865,13 +8916,13 @@ ___BOOL use_pty;)
 #define ___ESCAPE_PROCESS_ARGS
 
 int arg_encoding
-   ___P((___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) arg,
+   ___P((___STRING_TYPE(___PROCESS_PATH_AND_ARGS_CE_SELECT) arg,
          int *len_increase,
          ___BOOL *need_quotes),
         (arg,
          len_increase,
          need_quotes)
-___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) arg;
+___STRING_TYPE(___PROCESS_PATH_AND_ARGS_CE_SELECT) arg;
 int *len_increase;
 ___BOOL *need_quotes;)
 {
@@ -8890,7 +8941,7 @@ ___BOOL *need_quotes;)
 
     while (--j >= 0)
       {
-        ___CHAR_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) c = arg[j];
+        ___CHAR_TYPE(___PROCESS_PATH_AND_ARGS_CE_SELECT) c = arg[j];
         if (c == ___UNICODE_DOUBLEQUOTE ||
             (double_backslash && c == ___UNICODE_BACKSLASH))
           {
@@ -8925,17 +8976,17 @@ ___BOOL *need_quotes;)
   return len;
 }
 
-___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) argv_to_ccmd
-   ___P((___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *argv),
+___STRING_TYPE(___PROCESS_PATH_AND_ARGS_CE_SELECT) argv_to_ccmd
+   ___P((___STRING_TYPE(___PROCESS_PATH_AND_ARGS_CE_SELECT) *argv),
         (argv)
-___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *argv;)
+___STRING_TYPE(___PROCESS_PATH_AND_ARGS_CE_SELECT) *argv;)
 {
-  ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) ccmd;
+  ___STRING_TYPE(___PROCESS_PATH_AND_ARGS_CE_SELECT) ccmd;
   int ccmd_len = 0;
   int i = 0;
   int len_increase;
   ___BOOL need_quotes;
-  ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) arg;
+  ___STRING_TYPE(___PROCESS_PATH_AND_ARGS_CE_SELECT) arg;
 
   while ((arg = argv[i]) != NULL)
     {
@@ -8944,7 +8995,7 @@ ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *argv;)
       i++;
     }
 
-  ccmd = ___CAST(___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT),
+  ccmd = ___CAST(___STRING_TYPE(___PROCESS_PATH_AND_ARGS_CE_SELECT),
                  ___ALLOC_MEM(ccmd_len * sizeof (*ccmd)));
 
   if (ccmd != NULL)
@@ -8969,7 +9020,7 @@ ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *argv;)
 
             while (--j >= 0)
               {
-                ___CHAR_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) c = arg[j];
+                ___CHAR_TYPE(___PROCESS_PATH_AND_ARGS_CE_SELECT) c = arg[j];
                 ccmd[--ccmd_len] = c;
                 if (c == ___UNICODE_DOUBLEQUOTE ||
                     (double_backslash && c == ___UNICODE_BACKSLASH))
@@ -8989,7 +9040,7 @@ ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *argv;)
 
           while (--j >= 0)
             {
-              ___CHAR_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) c = arg[j];
+              ___CHAR_TYPE(___PROCESS_PATH_AND_ARGS_CE_SELECT) c = arg[j];
               ccmd[--ccmd_len] = c;
             }
 
@@ -9050,7 +9101,7 @@ ___STRING_TYPE(___ENVIRON_CE_SELECT) *env;)
 ___SCMOBJ ___device_stream_setup_from_process
    ___P((___device_stream **dev,
          ___device_group *dgroup,
-         ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *argv,
+         ___STRING_TYPE(___PROCESS_PATH_AND_ARGS_CE_SELECT) *argv,
          ___STRING_TYPE(___ENVIRON_CE_SELECT) *env,
          ___STRING_TYPE(___SET_CURRENT_DIRECTORY_PATH_CE_SELECT) dir,
          int options),
@@ -9062,7 +9113,7 @@ ___SCMOBJ ___device_stream_setup_from_process
          options)
 ___device_stream **dev;
 ___device_group *dgroup;
-___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) *argv;
+___STRING_TYPE(___PROCESS_PATH_AND_ARGS_CE_SELECT) *argv;
 ___STRING_TYPE(___ENVIRON_CE_SELECT) *env;
 ___STRING_TYPE(___SET_CURRENT_DIRECTORY_PATH_CE_SELECT) dir;
 int options;)
@@ -9080,7 +9131,8 @@ int options;)
   ___device_process *d;
   pid_t pid = 0;
   ___half_duplex_pipe hdp_errno;
-  ___full_duplex_pipe fdp;
+  ___full_duplex_pipe fdp; /* for I/O redirection */
+  int has_redir = options & (STDIN_REDIR | STDOUT_REDIR | STDERR_REDIR);
   int execvp_errno;
   int n;
 
@@ -9096,19 +9148,15 @@ int options;)
   fdp.input.writing_fd = -1;
   fdp.output.reading_fd = -1;
 
-  if (___open_half_duplex_pipe (&hdp_errno) < 0)
-    e = err_code_from_errno ();
-  else
+  if ((e = ___open_half_duplex_pipe (&hdp_errno, 0)) == ___FIX(___NO_ERR))
     {
-      if ((options & (STDIN_REDIR | STDOUT_REDIR | STDERR_REDIR)) &&
-          open_full_duplex_pipe1 (&fdp, options & PSEUDO_TERM) < 0)
-        e = err_code_from_errno ();
-      else
+      if (!has_redir ||
+          (e = open_full_duplex_pipe1 (&fdp, options & PSEUDO_TERM, 0)) == ___FIX(___NO_ERR))
         {
           if ((pid = fork ()) < 0)
             {
               e = err_code_from_errno ();
-              if (options & (STDIN_REDIR | STDOUT_REDIR | STDERR_REDIR))
+              if (has_redir)
                 {
                   ___close_half_duplex_pipe (&fdp.input, 2);
                   ___close_half_duplex_pipe (&fdp.output, 2);
@@ -9130,10 +9178,32 @@ int options;)
 
           ___thread_affinity_reset (___PSTATE);
 
-          if (options & (STDIN_REDIR | STDOUT_REDIR | STDERR_REDIR))
+          if (has_redir)
             {
-              if (open_full_duplex_pipe2 (&fdp, options & PSEUDO_TERM) < 0 ||
-                  ((options & STDIN_REDIR) &&
+              if (open_full_duplex_pipe2 (&fdp, options & PSEUDO_TERM, 0) < 0)
+                goto return_errno;
+              else
+                {
+                  int fds[6];
+                  int err;
+
+                  fds[0] = fdp.input.reading_fd;
+                  fds[1] = fdp.input.writing_fd;
+                  fds[2] = fdp.output.reading_fd;
+                  fds[3] = fdp.output.writing_fd;
+                  fds[4] = hdp_errno.reading_fd;
+                  fds[5] = hdp_errno.writing_fd;
+                  err = ___move_fds_to_non_std (fds, 6, 0);
+                  fdp.input.reading_fd = fds[0];
+                  fdp.input.writing_fd = fds[1];
+                  fdp.output.reading_fd = fds[2];
+                  fdp.output.writing_fd = fds[3];
+                  hdp_errno.reading_fd = fds[4];
+                  hdp_errno.writing_fd = fds[5];
+                  if (err) goto return_errno;
+                }
+
+              if (((options & STDIN_REDIR) &&
                    ___dup2_no_EINTR (fdp.input.reading_fd, STDIN_FILENO) < 0) ||
                   ((options & STDOUT_REDIR) &&
                    ___dup2_no_EINTR (fdp.output.writing_fd, STDOUT_FILENO) < 0) ||
@@ -9158,17 +9228,24 @@ int options;)
           {
             /* Close all file descriptors that aren't used. */
 
-            int fd = sysconf (_SC_OPEN_MAX) - 1;
+            int fd = hdp_errno.writing_fd;
 
-            while (fd >= 0)
+            if (fd < STDERR_FILENO) fd = STDERR_FILENO;
+            if (fd < STDOUT_FILENO) fd = STDOUT_FILENO;
+            if (fd < STDIN_FILENO) fd = STDIN_FILENO;
+
+            ___closefrom (fd+1);
+
+            while (fd > 0)
               {
+                fd--;
                 if (fd != STDIN_FILENO &&
                     fd != STDOUT_FILENO &&
                     fd != STDERR_FILENO &&
                     fd != hdp_errno.writing_fd)
                   ___close_no_EINTR (fd); /* ignore error */
-                fd--;
               }
+
           }
 
           if (dir == NULL || chdir_long_path (dir) == 0)
@@ -9201,7 +9278,7 @@ int options;)
 
       /* parent process */
 
-      if (options & (STDIN_REDIR | STDOUT_REDIR | STDERR_REDIR))
+      if (has_redir)
         {
           ___close_half_duplex_pipe (&fdp.input, 0);
           ___close_half_duplex_pipe (&fdp.output, 1);
@@ -9254,7 +9331,7 @@ int options;)
         }
 
       if (e != ___FIX(___NO_ERR))
-        if (options & (STDIN_REDIR | STDOUT_REDIR | STDERR_REDIR))
+        if (has_redir)
           {
             ___close_half_duplex_pipe (&fdp.input, 1);
             ___close_half_duplex_pipe (&fdp.output, 0);
@@ -9275,7 +9352,7 @@ int options;)
   int direction;
   ___device_process *d;
 
-  ___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT) ccmd;
+  ___STRING_TYPE(___PROCESS_PATH_AND_ARGS_CE_SELECT) ccmd;
   ___STRING_TYPE(___ENVIRON_CE_SELECT) cenv = NULL;
 
   HANDLE hstdin_rd = NULL;
@@ -9376,7 +9453,8 @@ int options;)
                   NULL, /* process handle not inheritable           */
                   NULL, /* thread handle not inheritable            */
                   TRUE, /* set handle inheritance to TRUE           */
-                  (CP_ENV_FLAGS | ((options & SHOW_CONSOLE) ? 0 : CREATE_NO_WINDOW)), /* creation flags */
+                  (___PROCESS_PATH_AND_ARGS_CE_SELECT(0,0,CREATE_UNICODE_ENVIRONMENT,0,0,0) |
+                   ((options & SHOW_CONSOLE) ? 0 : CREATE_NO_WINDOW)), /* creation flags */
                   cenv, /* child's environment                      */
                   dir,  /* child's starting directory               */
                   &si,  /* pointer to STARTUPINFO structure         */
@@ -9442,7 +9520,7 @@ ___SCMOBJ ___os_device_process_pid
 ___SCMOBJ dev;)
 {
   ___device_process *d =
-    ___CAST(___device_process*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_process*,___FOREIGN_PTR_FIELD(dev));
 
 #ifndef USE_POSIX
 #ifndef USE_WIN32
@@ -9472,7 +9550,7 @@ ___SCMOBJ ___os_device_process_status
 ___SCMOBJ dev;)
 {
   ___device_process *d =
-    ___CAST(___device_process*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_process*,___FOREIGN_PTR_FIELD(dev));
   ___SCMOBJ e;
 
   if ((e = ___device_process_status_poll (d)) != ___FIX(___NO_ERR))
@@ -9634,7 +9712,7 @@ ___SCMOBJ ___os_device_kind
         (dev)
 ___SCMOBJ dev;)
 {
-  ___device *d = ___CAST(___device*,___FIELD(dev,___FOREIGN_PTR));
+  ___device *d = ___CAST(___device*,___FOREIGN_PTR_FIELD(dev));
 
   return ___FIX(___device_kind (d));
 }
@@ -9648,8 +9726,8 @@ ___SCMOBJ ___os_device_force_output
 ___SCMOBJ dev_condvar;
 ___SCMOBJ level;)
 {
-  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
-  ___device *d = ___CAST(___device*,___FIELD(dev,___FOREIGN_PTR));
+  ___SCMOBJ dev = ___CONDVAR_NAME_FIELD(dev_condvar);
+  ___device *d = ___CAST(___device*,___FOREIGN_PTR_FIELD(dev));
 
   return ___device_force_output (d, ___INT(level));
 }
@@ -9663,7 +9741,7 @@ ___SCMOBJ ___os_device_close
 ___SCMOBJ dev;
 ___SCMOBJ direction;)
 {
-  ___device *d = ___CAST(___device*,___FIELD(dev,___FOREIGN_PTR));
+  ___device *d = ___CAST(___device*,___FOREIGN_PTR_FIELD(dev));
 
   return ___device_close (d, ___INT(direction));
 }
@@ -9684,9 +9762,9 @@ ___SCMOBJ dev_condvar;
 ___SCMOBJ pos;
 ___SCMOBJ whence;)
 {
-  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
+  ___SCMOBJ dev = ___CONDVAR_NAME_FIELD(dev_condvar);
   ___device_stream *d =
-    ___CAST(___device_stream*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_stream*,___FOREIGN_PTR_FIELD(dev));
   ___SSIZE_T p;
   ___SCMOBJ e;
   ___SCMOBJ result;
@@ -9717,15 +9795,15 @@ ___SCMOBJ buffer;
 ___SCMOBJ lo;
 ___SCMOBJ hi;)
 {
-  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
+  ___SCMOBJ dev = ___CONDVAR_NAME_FIELD(dev_condvar);
   ___device_stream *d =
-    ___CAST(___device_stream*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_stream*,___FOREIGN_PTR_FIELD(dev));
   ___stream_index len_done;
   ___SCMOBJ e;
 
   if ((e = ___device_stream_read
              (d,
-              ___CAST(___U8*,___BODY_AS(buffer,___tSUBTYPED)) + ___INT(lo),
+              ___CAST(___U8*,___BODY_AS(buffer,___tU8VECTOR)) + ___INT(lo),
               ___INT(hi) - ___INT(lo),
               &len_done))
       == ___FIX(___NO_ERR))
@@ -9749,15 +9827,15 @@ ___SCMOBJ buffer;
 ___SCMOBJ lo;
 ___SCMOBJ hi;)
 {
-  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
+  ___SCMOBJ dev = ___CONDVAR_NAME_FIELD(dev_condvar);
   ___device_stream *d =
-    ___CAST(___device_stream*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_stream*,___FOREIGN_PTR_FIELD(dev));
   ___stream_index len_done;
   ___SCMOBJ e;
 
   if ((e = ___device_stream_write
              (d,
-              ___CAST(___U8*,___BODY_AS(buffer,___tSUBTYPED)) + ___INT(lo),
+              ___CAST(___U8*,___BODY_AS(buffer,___tU8VECTOR)) + ___INT(lo),
               ___INT(hi) - ___INT(lo),
               &len_done))
       == ___FIX(___NO_ERR))
@@ -9772,9 +9850,9 @@ ___SCMOBJ ___os_device_stream_width
         (dev_condvar)
 ___SCMOBJ dev_condvar;)
 {
-  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
+  ___SCMOBJ dev = ___CONDVAR_NAME_FIELD(dev_condvar);
   ___device_stream *d =
-    ___CAST(___device_stream*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_stream*,___FOREIGN_PTR_FIELD(dev));
 
   return ___device_stream_width (d);
 }
@@ -9786,7 +9864,7 @@ ___SCMOBJ ___os_device_stream_default_options
 ___SCMOBJ dev;)
 {
   ___device_stream *d =
-    ___CAST(___device_stream*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_stream*,___FOREIGN_PTR_FIELD(dev));
 
   return ___device_stream_default_options (d);
 }
@@ -9801,7 +9879,7 @@ ___SCMOBJ dev;
 ___SCMOBJ options;)
 {
   ___device_stream *d =
-    ___CAST(___device_stream*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_stream*,___FOREIGN_PTR_FIELD(dev));
 
   return ___device_stream_options_set (d, options);
 }
@@ -10486,7 +10564,7 @@ ___SCMOBJ environment;
 ___SCMOBJ directory;
 ___SCMOBJ options;)
 {
-#ifndef ___STREAM_OPEN_PROCESS_CE_SELECT
+#ifndef ___PROCESS_PATH_AND_ARGS_CE_SELECT
 
   return ___FIX(___UNIMPL_ERR);
 
@@ -10504,7 +10582,7 @@ ___SCMOBJ options;)
               path_and_args,
               &argv,
               1,
-              ___CE(___STREAM_OPEN_PROCESS_CE_SELECT)))
+              ___CE(___PROCESS_PATH_AND_ARGS_CE_SELECT)))
       != ___FIX(___NO_ERR) ||
       (environment != ___FAL &&
        (e = ___SCMOBJ_to_NONNULLSTRINGLIST
@@ -10526,7 +10604,7 @@ ___SCMOBJ options;)
       (e = ___device_stream_setup_from_process
              (&dev,
               ___global_device_group (),
-              ___CAST(___STRING_TYPE(___STREAM_OPEN_PROCESS_CE_SELECT)*,argv),
+              ___CAST(___STRING_TYPE(___PROCESS_PATH_AND_ARGS_CE_SELECT)*,argv),
               ___CAST(___STRING_TYPE(___ENVIRON_CE_SELECT)*,env),
               ___CAST(___STRING_TYPE(___SET_CURRENT_DIRECTORY_PATH_CE_SELECT),dir),
               ___INT(options)))
@@ -10711,7 +10789,7 @@ ___SCMOBJ peer;)
 #else
 
   ___device_tcp_client *d =
-    ___CAST(___device_tcp_client*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_tcp_client*,___FOREIGN_PTR_FIELD(dev));
   struct sockaddr sa;
   SOCKET_LEN_TYPE salen;
 
@@ -10860,9 +10938,9 @@ ___SCMOBJ dev_condvar;)
 
 #else
 
-  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
+  ___SCMOBJ dev = ___CONDVAR_NAME_FIELD(dev_condvar);
   ___device_tcp_server *d =
-    ___CAST(___device_tcp_server*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_tcp_server*,___FOREIGN_PTR_FIELD(dev));
   ___SCMOBJ e;
   ___device_tcp_client *client = 0;
   ___SCMOBJ result;
@@ -10903,7 +10981,7 @@ ___SCMOBJ dev;)
 #else
 
   ___device_tcp_server *d =
-    ___CAST(___device_tcp_server*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_tcp_server*,___FOREIGN_PTR_FIELD(dev));
   struct sockaddr sa;
   SOCKET_LEN_TYPE salen = sizeof (sa);
 
@@ -11006,9 +11084,9 @@ ___SCMOBJ hi;)
 
 #define MAX_DATAGRAM_LENGTH 65536
 
-  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
+  ___SCMOBJ dev = ___CONDVAR_NAME_FIELD(dev_condvar);
   ___device_udp *d =
-    ___CAST(___device_udp*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_udp*,___FOREIGN_PTR_FIELD(dev));
   ___SCMOBJ e;
   ___SSIZE_T n = 0;
   ___SCMOBJ result;
@@ -11030,7 +11108,7 @@ ___SCMOBJ hi;)
       if (___FIXNUMP(result))
         return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);
 
-      memmove (___BODY_AS(result,___tSUBTYPED),
+      memmove (___BODY_AS(result,___tU8VECTOR),
                buf,
                n);
 
@@ -11040,7 +11118,7 @@ ___SCMOBJ hi;)
     {
       if ((e = ___device_udp_read_raw
                   (d,
-                   ___CAST(___U8*,___BODY_AS(buffer,___tSUBTYPED)) + ___INT(lo),
+                   ___CAST(___U8*,___BODY_AS(buffer,___tU8VECTOR)) + ___INT(lo),
                    ___INT(hi)-___INT(lo),
                    &n))
           != ___FIX(___NO_ERR))
@@ -11075,12 +11153,12 @@ ___SCMOBJ hi;)
 
 #else
 
-  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
+  ___SCMOBJ dev = ___CONDVAR_NAME_FIELD(dev_condvar);
   ___device_udp *d =
-    ___CAST(___device_udp*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_udp*,___FOREIGN_PTR_FIELD(dev));
   ___SCMOBJ e;
   ___SSIZE_T n = 0;
-  ___U8 *buf = ___CAST(___U8*,___BODY_AS(buffer,___tSUBTYPED));
+  ___U8 *buf = ___CAST(___U8*,___BODY_AS(buffer,___tU8VECTOR));
   ___SSIZE_T len;
 
   if (lo == ___FAL)
@@ -11119,7 +11197,7 @@ ___SCMOBJ source;)
 #else
 
   ___device_udp *d =
-    ___CAST(___device_udp*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_udp*,___FOREIGN_PTR_FIELD(dev));
 
   if (d->base.read_stage != ___STAGE_OPEN &&
       d->base.write_stage != ___STAGE_OPEN)
@@ -11174,9 +11252,9 @@ ___SCMOBJ port_num;)
 #else
 
   ___SCMOBJ e;
-  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
+  ___SCMOBJ dev = ___CONDVAR_NAME_FIELD(dev_condvar);
   ___device_udp *d =
-    ___CAST(___device_udp*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_udp*,___FOREIGN_PTR_FIELD(dev));
 
   if (d->base.read_stage != ___STAGE_OPEN &&
       d->base.write_stage != ___STAGE_OPEN)
@@ -11208,7 +11286,7 @@ ___SCMOBJ dev;)
 #else
 
   ___device_udp *d =
-    ___CAST(___device_udp*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_udp*,___FOREIGN_PTR_FIELD(dev));
 
   int optVal;
   SOCKET_LEN_TYPE optLen = sizeof(optVal);
@@ -11234,7 +11312,7 @@ ___SCMOBJ dev;)
 #else
 
   ___device_udp *d =
-    ___CAST(___device_udp*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_udp*,___FOREIGN_PTR_FIELD(dev));
 
   int optVal;
   SOCKET_LEN_TYPE optLen = sizeof(optVal);
@@ -11328,9 +11406,9 @@ ___SCMOBJ dev_condvar;)
 
 #else
 
-  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
+  ___SCMOBJ dev = ___CONDVAR_NAME_FIELD(dev_condvar);
   ___device_directory *d =
-    ___CAST(___device_directory*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_directory*,___FOREIGN_PTR_FIELD(dev));
   ___SCMOBJ e;
   ___STRING_TYPE(___DIR_OPEN_PATH_CE_SELECT) name;
   ___SCMOBJ result;
@@ -11395,9 +11473,9 @@ ___SCMOBJ ___os_device_event_queue_read
         (dev_condvar)
 ___SCMOBJ dev_condvar;)
 {
-  ___SCMOBJ dev = ___FIELD(dev_condvar,___CONDVAR_NAME);
+  ___SCMOBJ dev = ___CONDVAR_NAME_FIELD(dev_condvar);
   ___device_event_queue *d =
-    ___CAST(___device_event_queue*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_event_queue*,___FOREIGN_PTR_FIELD(dev));
   ___SCMOBJ e;
   ___SCMOBJ result;
 
@@ -11445,14 +11523,14 @@ ___SCMOBJ timeout;)
       int i;
       int j;
 
-      condvar = ___FIELD(devices,___BTQ_DEQ_NEXT);
+      condvar = ___BTQ_DEQ_NEXT_FIELD(devices);
 
       while (condvar != devices)
         {
-          ___SCMOBJ owner = ___FIELD(condvar,___BTQ_OWNER);
+          ___SCMOBJ owner = ___BTQ_OWNER_FIELD(condvar);
           if (read_pos < MAX_CONDVARS-1)
             {
-              ___FIELD(condvar,___BTQ_OWNER) = owner & ~___FIX(1);
+              ___BTQ_OWNER_FIELD(condvar) = owner & ~___FIX(1);
               switch (___INT(owner)>>1)
                 {
                 case FOR_READING:
@@ -11471,17 +11549,16 @@ ___SCMOBJ timeout;)
             }
           else
             {
-              ___FIELD(condvar,___BTQ_OWNER) = owner | ___FIX(1);
+              ___BTQ_OWNER_FIELD(condvar) = owner | ___FIX(1);
               to = ___time_mod.time_neg_infinity;
             }
-          condvar = ___FIELD(condvar,___BTQ_DEQ_NEXT);
+          condvar = ___BTQ_DEQ_NEXT_FIELD(condvar);
         }
 
       for (i=0; i<read_pos; i++)
         {
           devs[i] = ___CAST(___device*,
-                            ___FIELD(___FIELD(condvars[i],___CONDVAR_NAME),
-                                     ___FOREIGN_PTR));
+                            ___FOREIGN_PTR_FIELD(___CONDVAR_NAME_FIELD(condvars[i])));
         }
 
       ___PRIMITIVEUNLOCK(devices,___FIX(___OBJ_LOCK1),___FIX(___OBJ_LOCK2))
@@ -11499,7 +11576,7 @@ ___SCMOBJ timeout;)
           if (devs[i] == NULL)
             {
               condvar = condvars[i];
-              ___FIELD(condvar,___BTQ_OWNER) |= ___FIX(1);
+              ___BTQ_OWNER_FIELD(condvar) |= ___FIX(1);
             }
         }
     }
@@ -11529,15 +11606,15 @@ ___SCMOBJ want;
 ___SCMOBJ eof;)
 {
   ___SCMOBJ e = ___FIX(___NO_ERR);
-  ___SCMOBJ cbuf = ___FIELD(port,___PORT_CHAR_RBUF);
-  int chi = ___INT(___FIELD(port,___PORT_CHAR_RHI));
+  ___SCMOBJ cbuf = ___PORT_CHAR_RBUF_FIELD(port);
+  int chi = ___INT(___PORT_CHAR_RHI_FIELD(port));
   int cend = ___INT(___STRINGLENGTH(cbuf));
-  ___SCMOBJ bbuf = ___FIELD(port,___PORT_BYTE_RBUF);
-  int blo = ___INT(___FIELD(port,___PORT_BYTE_RLO));
-  int bhi = ___INT(___FIELD(port,___PORT_BYTE_RHI));
-  int options = ___INT(___FIELD(port,___PORT_ROPTIONS));
-  ___C *cbuf_ptr = ___CAST(___C*,___BODY_AS(cbuf,___tSUBTYPED));
-  ___U8 *bbuf_ptr = ___CAST(___U8*,___BODY_AS(bbuf,___tSUBTYPED));
+  ___SCMOBJ bbuf = ___PORT_BYTE_RBUF_FIELD(port);
+  int blo = ___INT(___PORT_BYTE_RLO_FIELD(port));
+  int bhi = ___INT(___PORT_BYTE_RHI_FIELD(port));
+  int options = ___INT(___PORT_ROPTIONS_FIELD(port));
+  ___C *cbuf_ptr = ___CAST(___C*,___BODY_AS(cbuf,___tSTRING));
+  ___U8 *bbuf_ptr = ___CAST(___U8*,___BODY_AS(bbuf,___tU8VECTOR));
   int cbuf_avail;
   int bbuf_avail;
   int code;
@@ -11591,9 +11668,9 @@ ___SCMOBJ eof;)
         }
     }
 
-  ___FIELD(port,___PORT_CHAR_RHI) = ___FIX(cend - cbuf_avail);
-  ___FIELD(port,___PORT_BYTE_RLO) = ___FIX(bhi - bbuf_avail);
-  ___FIELD(port,___PORT_ROPTIONS) = ___FIX(options);
+  ___PORT_CHAR_RHI_FIELD(port) = ___FIX(cend - cbuf_avail);
+  ___PORT_BYTE_RLO_FIELD(port) = ___FIX(bhi - bbuf_avail);
+  ___PORT_ROPTIONS_FIELD(port) = ___FIX(options);
 
   return e;
 }
@@ -11605,15 +11682,15 @@ ___SCMOBJ ___os_port_encode_chars
 ___SCMOBJ port;)
 {
   ___SCMOBJ e = ___FIX(___NO_ERR);
-  ___SCMOBJ cbuf = ___FIELD(port,___PORT_CHAR_WBUF);
-  int clo = ___INT(___FIELD(port,___PORT_CHAR_WLO));
-  int chi = ___INT(___FIELD(port,___PORT_CHAR_WHI));
-  ___SCMOBJ bbuf = ___FIELD(port,___PORT_BYTE_WBUF);
-  int bhi = ___INT(___FIELD(port,___PORT_BYTE_WHI));
+  ___SCMOBJ cbuf = ___PORT_CHAR_WBUF_FIELD(port);
+  int clo = ___INT(___PORT_CHAR_WLO_FIELD(port));
+  int chi = ___INT(___PORT_CHAR_WHI_FIELD(port));
+  ___SCMOBJ bbuf = ___PORT_BYTE_WBUF_FIELD(port);
+  int bhi = ___INT(___PORT_BYTE_WHI_FIELD(port));
   int bend = ___INT(___U8VECTORLENGTH(bbuf));
-  int options = ___INT(___FIELD(port,___PORT_WOPTIONS));
-  ___C *cbuf_ptr = ___CAST(___C*,___BODY_AS(cbuf,___tSUBTYPED));
-  ___U8 *bbuf_ptr = ___CAST(___U8*,___BODY_AS(bbuf,___tSUBTYPED));
+  int options = ___INT(___PORT_WOPTIONS_FIELD(port));
+  ___C *cbuf_ptr = ___CAST(___C*,___BODY_AS(cbuf,___tSTRING));
+  ___U8 *bbuf_ptr = ___CAST(___U8*,___BODY_AS(bbuf,___tU8VECTOR));
   int cbuf_avail;
   int bbuf_avail;
   int code;
@@ -11669,9 +11746,9 @@ ___SCMOBJ port;)
           }
       }
 
-  ___FIELD(port,___PORT_CHAR_WLO) = ___FIX(chi - cbuf_avail);
-  ___FIELD(port,___PORT_BYTE_WHI) = ___FIX(bend - bbuf_avail);
-  ___FIELD(port,___PORT_WOPTIONS) = ___FIX(options);
+  ___PORT_CHAR_WLO_FIELD(port) = ___FIX(chi - cbuf_avail);
+  ___PORT_BYTE_WHI_FIELD(port) = ___FIX(bend - bbuf_avail);
+  ___PORT_WOPTIONS_FIELD(port) = ___FIX(options);
 
   return e;
 }
@@ -11700,10 +11777,12 @@ ___processor_state ___ps;)
 
 #ifdef USE_POSIX
 
-  if (___open_half_duplex_pipe (&___ps->os.select_abort) < 0 ||
-      ___set_fd_blocking_mode (___ps->os.select_abort.writing_fd, 0) < 0 ||
-      ___set_fd_blocking_mode (___ps->os.select_abort.reading_fd, 0) < 0)
-    e = err_code_from_errno ();
+  if ((e = ___open_half_duplex_pipe (&___ps->os.select_abort, 1)) == ___FIX(___NO_ERR))
+    {
+      if (___set_fd_blocking_mode (___ps->os.select_abort.writing_fd, 0) < 0 ||
+          ___set_fd_blocking_mode (___ps->os.select_abort.reading_fd, 0) < 0)
+        e = err_code_from_errno ();
+    }
 
 #endif
 

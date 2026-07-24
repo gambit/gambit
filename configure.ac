@@ -1,10 +1,10 @@
 # Configure template for Gambit system.
 
-# Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
+# Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved.
 
 # Process this file with autoconf to produce a configure script.
 
-AC_INIT(Gambit,v4.9.5,gambit@iro.umontreal.ca,gambit-v4_9_5)
+AC_INIT(Gambit,v4.9.7,gambit@iro.umontreal.ca,gambit-v4_9_7)
 
 AC_CONFIG_HEADERS(include/config.h)
 
@@ -158,9 +158,7 @@ if test "$ENABLE_CPLUSPLUS" = yes; then
 
 fi
 
-# Don't search for pkg-config, just assume it is in the path
-#AC_PATH_PROG(PKG_CONFIG, pkg-config, , $PATH:/usr/bin:/usr/bin/X11:/usr/local/bin)
-PKG_CONFIG="pkg-config"
+PKG_PROG_PKG_CONFIG
 
 AC_SUBST(C_COMPILER)
 AC_SUBST(C_PREPROC)
@@ -505,7 +503,8 @@ if test "$ENABLE_SINGLE_HOST" != no; then
   AC_DEFINE([___SINGLE_HOST],[],[Enable single host mode])
   DEFS_OBJ_DYN_LIB_EXE="$DEFS_OBJ_DYN_LIB_EXE -D___SINGLE_HOST"
   if test "$ENABLE_SINGLE_HOST" != yes; then
-    CONF_SINGLE_HOST_LIMIT="$enableval"
+    CONF_SINGLE_HOST_LIMIT="$ENABLE_SINGLE_HOST"
+    ENABLE_SINGLE_HOST=yes
   fi
 fi
 
@@ -1325,15 +1324,12 @@ AC_SUBST(CONF_MAX_PROCESSORS)
 
 AC_ARG_ENABLE(thread-system,
               AS_HELP_STRING([--enable-thread-system@<:@=thread-system@:>@],
-                             [use OS threads (default is NO)]),
+                             [use OS threads (default is YES)]),
               ENABLE_THREAD_SYSTEM=$enableval,
-              ENABLE_THREAD_SYSTEM=no)
+              ENABLE_THREAD_SYSTEM=yes)
 
-if test "$ENABLE_THREAD_SYSTEM" = no; then
-
-  if test "$ENABLE_MULTIPLE_VMS" != no -o "$ENABLE_MULTIPLE_THREADED_VMS" != no; then
-    ENABLE_THREAD_SYSTEM=yes
-  fi
+if test "$ENABLE_MULTIPLE_VMS" != no -o "$ENABLE_MULTIPLE_THREADED_VMS" != no; then
+  ENABLE_THREAD_SYSTEM=yes
 fi
 
 ###############################################################################
@@ -1818,6 +1814,8 @@ else
 
                AC_SEARCH_LIBS(asin,m)
 
+               AC_SEARCH_LIBS(backtrace_symbols_fd,execinfo)
+
                AC_SEARCH_LIBS(dlopen,dl)
                AC_SEARCH_LIBS(shl_load,dld)
 
@@ -1877,6 +1875,7 @@ else
   AC_CHECK_FUNCS(unlink)
   AC_CHECK_FUNCS(utimes)
   AC_CHECK_FUNCS(waitpid)
+  AC_CHECK_FUNCS(closefrom)
 
   AC_CHECK_FUNCS(fstatat)
   AC_CHECK_FUNCS(linkat)
@@ -2014,6 +2013,26 @@ else
   else
     AC_CHECK_FUNCS(nanosleep)
   fi
+
+  AC_DEFUN([AC_CHECK_SYS_CLOSE_RANGE],
+  [AC_CACHE_CHECK([for close_range], ac_cv_sys_close_range,
+  [
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([
+      #ifdef HAVE_SYS_SYSCALL_H
+      #include <sys/syscall.h>
+      #endif
+      ],[syscall (SYS_close_range, 0, ~0U, 0);])],
+    ac_cv_sys_close_range=yes,
+    ac_cv_sys_close_range=no)
+  ])
+    if test $ac_cv_sys_close_range = yes; then
+      AC_DEFINE([HAVE_SYS_close_range],[],[Defined when SYS_close_range syscall is available])
+    fi
+  ])
+
+  AC_CHECK_SYS_CLOSE_RANGE
+
+  AC_CHECK_FUNCS(getrlimit)
 
   AC_CHECK_FUNCS(setitimer)
   AC_CHECK_FUNCS(dos_setvect)
@@ -3912,7 +3931,7 @@ if test "$ENABLE_DYNAMIC_CLIB" != yes; then
 ])
 fi
 
-if test "$ENABLE_SINGLE_HOST" != yes -a "$C_COMP_LLVM" != yes; then
+if test "$ENABLE_SINGLE_HOST" != yes; then
   AC_MSG_NOTICE([
 **************************************************************************
 ***                                                                    ***

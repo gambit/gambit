@@ -2,7 +2,7 @@
 
 ;;; File: "_kernel.scm"
 
-;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -40,6 +40,97 @@
 #define ___STAMP_HMS ___STAMP_RELEASE_HMS
 #endif
 
+#define ___ALLOC_SCMOBJ_INLINE(type, elem_type, nb_elems, align64) \
+do { \
+  if ((nb_elems) > ___CAST(___WORD, (___LMASK>>___LF) / sizeof (elem_type))) \
+    result = ___FIX(___HEAP_OVERFLOW_ERR); \
+  else \
+    { \
+      ___SIZE_TS bytes = (nb_elems) * sizeof (elem_type); \
+      ___SIZE_TS words = ((bytes + (___WS - 1)) >> ___LWS) + ___SUBTYPED_BODY; \
+      if (___WS == 4 && (align64)) words++; \
+      if (words > ___MSECTION_BIGGEST) \
+        { \
+          ___FRAME_STORE_RA(___R0) \
+          ___W_ALL \
+          result = ___EXT(___alloc_scmobj) (___ps, ___s ## type, bytes); \
+          ___R_ALL \
+          ___SET_R0(___FRAME_FETCH_RA) \
+          if (!___FIXNUMP(result)) \
+            ___still_obj_refcount_dec (result); \
+        } \
+      else \
+        { \
+          ___BOOL overflow = 0; \
+          if (___hp > ___ps->heap_limit) \
+            { \
+              ___FRAME_STORE_RA(___R0) \
+              ___W_ALL \
+              overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0); \
+              ___R_ALL \
+              ___SET_R0(___FRAME_FETCH_RA) \
+            } \
+          if (overflow) \
+            result = ___FIX(___HEAP_OVERFLOW_ERR); \
+          else \
+            { \
+              if (___WS == 4 && (align64)) \
+                { \
+                  ___hp = ___CAST(___WORD*, \
+                                  ___CAST(___WORD,___hp+(___SUBTYPED_BODY+1))&~7) \
+                          - ___SUBTYPED_BODY; \
+                  words--; \
+                } \
+              ___hp[___SUBTYPED_BODY-1] = ___MAKE_HD_BYTES(bytes, ___s ## type); \
+              result = ___TAG(&___hp[___SUBTYPED_BODY-1], ___t ## type); \
+              ___hp += words; \
+            } \
+        } \
+    } \
+  } while (0)
+
+#define ___INIT_SCMOBJ_INLINE(type, elem_type, unsigned_elem_type, nb_elems, fill) \
+do { \
+  if (!___FIXNUMP(result)) \
+    { \
+      elem_type *body = ___CAST(elem_type*, ___BODY_AS(result,___t ## type)); \
+      elem_type f = fill; \
+      if (sizeof (elem_type) == 1 || \
+          ___CAST_U8(f) * (~___CAST(unsigned_elem_type,0)/0xff) == \
+          ___CAST(unsigned_elem_type,f)) /* repetition of identical bytes? */ \
+        { \
+          /* it is usually faster to initialize an array with memset */ \
+          memset(body, ___CAST_U8(f), (nb_elems) * sizeof (elem_type)); \
+        } \
+      else \
+        { \
+          ___SIZE_TS i; \
+          for (i=0; i<n; i++) \
+            body[i] = f; \
+        } \
+    } \
+  } while (0)
+
+#define ___INIT_SCMOBJ_INLINE_FLOAT(type, elem_type, nb_elems, fill) \
+do { \
+  if (!___FIXNUMP(result)) \
+    { \
+      elem_type *body = ___CAST(elem_type*, ___BODY_AS(result,___t ## type)); \
+      elem_type f = fill; \
+      if (f == 0.0 && 1.0/f > 0.0) /* detect positive 0 */ \
+        { \
+          /* it is usually faster to initialize an array with memset */ \
+          memset(body, 0, (nb_elems) * sizeof (elem_type)); \
+        } \
+      else \
+        { \
+          ___SIZE_TS i; \
+          for (i=0; i<n; i++) \
+            body[i] = f; \
+        } \
+    } \
+  } while (0)
+
 c-declare-end
 )
 
@@ -69,7 +160,7 @@ c-declare-end
 
    ___PUSH_ARGS3(___ps->temp1, /* arg 1 = error code, integer */
                  ___ps->temp2, /* arg 2 = error data, #f/string/other */
-                 ___FIELD(___ps->temp3,0)) /* arg 3 = procedure */
+                 ___VECTORELEM(___ps->temp3, 0)) /* arg 3 = procedure */
 
    ___COVER_SFUN_CONVERSION_ERROR_HANDLER;
 
@@ -327,7 +418,7 @@ end-of-code
 
    while (i > 0)
      {
-       ___SCMOBJ probe = ___FIELD(___symbol_table,i);
+       ___SCMOBJ probe = ___VECTORELEM(___symbol_table, i);
 
        while (probe != ___NUL)
          {
@@ -339,7 +430,7 @@ end-of-code
                break;
              }
            ___COVER_GLOBAL_NONPROC_HANDLER_NEXT;
-           probe = ___FIELD(probe,___SYMKEY_NEXT);
+           probe = ___SYMKEY_NEXT_FIELD(probe);
          }
        i--;
      }
@@ -570,14 +661,14 @@ end-of-code
    /* assign values to keyword parameters from last to first */
 
    for (j=nb_key-1; j>=0; j--)
-     key_vals[j] = ___FIELD(key_descr,j*2+1);
+     key_vals[j] = ___VECTORELEM(key_descr, j*2+1);
 
    for (i=fnk+1; i<=k; i+=2)
      {
        ___SCMOBJ key = ___STK(-i);
 
        for (j=nb_key-1; j>=0; j--)
-         if (key == ___FIELD(key_descr,j*2))
+         if (key == ___VECTORELEM(key_descr, j*2))
            {
              ___COVER_KEYWORD_PARAM_HANDLER_FOUND;
              key_vals[j] = ___STK(-i+1);
@@ -731,14 +822,14 @@ end-of-code
    /* assign values to keyword parameters from last to first */
 
    for (j=nb_key-1; j>=0; j--)
-     key_vals[j] = ___FIELD(key_descr,j*2+1);
+     key_vals[j] = ___VECTORELEM(key_descr, j*2+1);
 
    for (i=fnk+1; i<=k; i+=2)
      {
        ___SCMOBJ key = ___STK(-i);
 
        for (j=nb_key-1; j>=0; j--)
-         if (key == ___FIELD(key_descr,j*2))
+         if (key == ___VECTORELEM(key_descr, j*2))
            {
              ___COVER_KEYWORD_REST_PARAM_HANDLER_FOUND;
              key_vals[j] = ___STK(-i+1);
@@ -943,13 +1034,13 @@ end-of-code
 
 #ifndef ___SINGLE_THREADED_VMS
 
-     if (!___FIXEQ(___FIELD(unwind_destination,1),
+     if (!___FIXEQ(___VECTORELEM(unwind_destination, 1),
                    ___FIX(___PROCESSOR_ID(___ps,___VMSTATE_FROM_PSTATE(___ps)))))
        {
          /* not the same processor that created frame */
          ___COVER_RETURN_TO_C_HANDLER_WRONG_PROCESSOR;
          ___SET_R0(___ps->handler_return_to_c)
-         ___SET_R1(___FIELD(unwind_destination,1))
+         ___SET_R1(___VECTORELEM(unwind_destination, 1))
          ___JUMPPRM(___SET_NARGS(1),
                     ___PRMCELL(___G__23__23_c_2d_return_2d_on_2d_other_2d_processor.prm))
        }
@@ -957,7 +1048,7 @@ end-of-code
 
 #endif
 
-     if (___FALSEP(___FIELD(unwind_destination,0)))
+     if (___FALSEP(___VECTORELEM(unwind_destination, 0)))
        {
          /* not first return */
          ___COVER_RETURN_TO_C_HANDLER_MULTIPLE_RETURN;
@@ -1088,7 +1179,7 @@ end-of-code
 
    cf = ___STK(-___BREAK_FRAME_NEXT); /* pointer to caller's frame */
 
-   if (___TYP(cf) != ___tSUBTYPED)
+   if (!___TESTTYPE(cf, ___tFRAME))
      {
        /* caller's frame is in the stack */
 
@@ -1153,7 +1244,7 @@ end-of-code
      {
        /* caller's frame is in the heap */
 
-       fp = ___BODY_AS(cf,___tSUBTYPED); /* get pointer to frame's body */
+       fp = ___BODY_AS(cf,___tFRAME); /* get pointer to frame's body */
 
        ra1 = fp[___FRAME_RA];
 
@@ -1414,7 +1505,7 @@ end-of-code
   (##declare (not interrupts-enabled))
   (##c-code #<<end-of-code
 
-   ___set_heartbeat_interval (___FLONUM_VAL(___ARG1));
+   ___set_heartbeat_interval (___F64UNBOX(___ARG1));
 
    ___RESULT = ___VOID;
 
@@ -1443,6 +1534,15 @@ end-of-code
 
    processor-id
    intr))
+
+(define-prim (##get-next-high-level-interrupt)
+  (##declare (not interrupts-enabled))
+  (##c-code #<<end-of-code
+
+   ___RESULT = ___get_next_high_level_interrupt_pstate (___ps);
+
+end-of-code
+  ))
 
 ))
 
@@ -1916,7 +2016,7 @@ end-of-code
    np = ___INT(___VECTORLENGTH(args));
 
    for (i=0; i<np; i++)
-     ___PUSH(___FIELD(args,i))
+     ___PUSH(___VECTORELEM(args, i))
 
    ___POP_ARGS_IN_REGS(np) /* load register arguments */
 
@@ -1991,7 +2091,7 @@ end-of-code
           else
             {
               ___WORD will = ___SUBTYPED_FROM_START(___UNTAG(exec_wills));
-              ___ps->mem.executable_wills_ = ___FIELD(will,___WILL_NEXT);
+              ___ps->mem.executable_wills_ = ___WILL_NEXT_FIELD(will);
               ___RESULT = will;
             }
 
@@ -1999,9 +2099,21 @@ end-of-code
 )))
     (if will
       (begin
-        (macro-will-execute! will)
+        (##will-execute! will)
         (##gc-finalize!))
       (##gc-final-will-registry!))))
+
+(define-prim (##will-execute! will)
+  (##declare (not interrupts-enabled))
+  (let ((testator (##will-testator will))
+        (action (##will-action will)))
+    (##will-testator-set! will #f) ;; zap testator
+    (##will-action-set! will #f)   ;; and action procedure
+    (let ()
+      (##declare (interrupts-enabled))
+      (if action
+          (action testator))
+      (##void))))
 
 (define ##final-will-registry (macro-make-fifo))
 
@@ -2012,7 +2124,7 @@ end-of-code
       (let loop ((x lst))
         (if (##not (##null? x))
           (begin
-            (macro-will-execute! (##car x))
+            (##will-execute! (##car x))
             (loop (##cdr x))))))))
 
 (define-prim (##gc-final-will-registry!)
@@ -2023,7 +2135,7 @@ end-of-code
       (if (##null? next)
         (macro-fifo-tail-set! registry curr)
         (let* ((will (macro-fifo-elem next))
-               (action (macro-will-action will)))
+               (action (##will-action will)))
           (if action
             (begin
               (macro-fifo-next-set! curr next)
@@ -2306,1081 +2418,432 @@ end-of-code
 
 (define-prim (##make-vector k #!optional (fill (macro-absent-obj)))
   (##declare (not interrupts-enabled))
-  (let ((v (##c-code #<<end-of-code
+  (let ((result (##c-code #<<end-of-code
+
+___SCMOBJ result;
+___SIZE_TS n;
 
 ___SCMOBJ k;
 ___SCMOBJ fill;
-___SIZE_TS i;
-___SIZE_TS n;
-___SCMOBJ result;
-___POP_ARGS2(k,fill);
-___ps->saved[0] = k;
-___ps->saved[1] = fill;
+
+___POP_ARGS2(k, fill);
+
 n = ___INT(k);
-if (n > ___CAST(___WORD, ___LMASK>>(___LF+___LWS)))
-  result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
-else
-  {
-    ___SIZE_TS words = n + 1;
-    if (words > ___MSECTION_BIGGEST)
-      {
-        ___FRAME_STORE_RA(___R0)
-        ___W_ALL
-        result = ___EXT(___alloc_scmobj) (___ps, ___sVECTOR, n<<___LWS);
-        ___R_ALL
-        ___SET_R0(___FRAME_FETCH_RA)
-        if (!___FIXNUMP(result))
-          ___still_obj_refcount_dec (result);
-      }
-    else
-      {
-        ___BOOL overflow = 0;
-        ___hp += words;
-        if (___hp > ___ps->heap_limit)
-          {
-            ___FRAME_STORE_RA(___R0)
-            ___W_ALL
-            overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
-            ___R_ALL
-            ___SET_R0(___FRAME_FETCH_RA)
-          }
-        else
-          ___hp -= words;
-        if (overflow)
-          result = ___FIX(___HEAP_OVERFLOW_ERR);
-        else
-          {
-            result = ___SUBTYPED_FROM_START(___hp);
-            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_WORDS(n, ___sVECTOR));
-            ___hp += words;
-          }
-      }
-  }
-k = ___ps->saved[0];
-fill = ___ps->saved[1];
-___ps->saved[0] = ___VOID;
-___ps->saved[1] = ___VOID;
-if (fill == ___ABSENT)
-  fill = ___FIX(0);
-if (!___FIXNUMP(result))
-  {
-#ifdef ___USE_SCHEME_VECTOR_OPS
-    for (i=0; i<n; i++)
-      ___VECTORSET(result,___FIX(i),fill)
-#else
-    ___SCMOBJ *body = ___CAST(___SCMOBJ*, ___BODY_AS(result,___tSUBTYPED));
-    if (___CAST_U8(fill) * (~___CAST(___UWORD,0)/0xff) ==
-        ___CAST(___UWORD,fill)) /* repetition of identical bytes? */
-      {
-        /* it is usually faster to initialize an array with memset */
-        memset(body, ___CAST_U8(fill), n * sizeof (*body));
-      }
-    else
-      {
-        for (i=0; i<n; i++)
-          body[i] = fill;
-      }
-#endif
-  }
+
+___GC_SAVE1(___ps, fill);
+___ALLOC_SCMOBJ_INLINE(VECTOR, ___WORD, n, 0);
+___GC_RESTORE1(___ps, fill);
+
+if (fill == ___ABSENT) fill = ___FIX(0);
+
+___INIT_SCMOBJ_INLINE(VECTOR, ___WORD, ___UWORD, n, fill);
+
 ___RESULT = result;
-___PUSH_ARGS2(k,fill);
+
+___PUSH_ARGS2(k, fill);
 
 end-of-code
 )))
-    (if (##fixnum? v)
-      (begin
-        (##raise-heap-overflow-exception)
-        (##make-vector k fill))
-      v)))
+    (if (##fixnum? result)
+        (begin
+          (##raise-heap-overflow-exception)
+          (##make-vector k fill))
+        result)))
 
 (define-prim (##make-string k #!optional (fill (macro-absent-obj)))
   (##declare (not interrupts-enabled))
-  (let ((s (##c-code #<<end-of-code
+  (let ((result (##c-code #<<end-of-code
+
+___SCMOBJ result;
+___SIZE_TS n;
 
 ___SCMOBJ k;
 ___SCMOBJ fill;
-___SIZE_TS i;
-___SIZE_TS n;
-___SCMOBJ result;
-___POP_ARGS2(k,fill);
-___ps->saved[0] = k;
-___ps->saved[1] = fill;
+
+___POP_ARGS2(k, fill);
+
 n = ___INT(k);
-if (n > ___CAST(___WORD, ___LMASK>>(___LF+___LCS)))
-  result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
-else
-  {
-    ___SIZE_TS words = ___WORDS((n<<___LCS)) + 1;
-    if (words > ___MSECTION_BIGGEST)
-      {
-        ___FRAME_STORE_RA(___R0)
-        ___W_ALL
-        result = ___EXT(___alloc_scmobj) (___ps, ___sSTRING, n<<___LCS);
-        ___R_ALL
-        ___SET_R0(___FRAME_FETCH_RA)
-        if (!___FIXNUMP(result))
-          ___still_obj_refcount_dec (result);
-      }
-    else
-      {
-        ___BOOL overflow = 0;
-        ___hp += words;
-        if (___hp > ___ps->heap_limit)
-          {
-            ___FRAME_STORE_RA(___R0)
-            ___W_ALL
-            overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
-            ___R_ALL
-            ___SET_R0(___FRAME_FETCH_RA)
-          }
-        else
-          ___hp -= words;
-        if (overflow)
-          result = ___FIX(___HEAP_OVERFLOW_ERR);
-        else
-          {
-            result = ___SUBTYPED_FROM_START(___hp);
-            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<___LCS), ___sSTRING));
-            ___hp += words;
-          }
-      }
-  }
-k = ___ps->saved[0];
-fill = ___ps->saved[1];
-___ps->saved[0] = ___VOID;
-___ps->saved[1] = ___VOID;
-if (!___FIXNUMP(result) && fill != ___ABSENT)
-  {
-#ifdef ___USE_SCHEME_VECTOR_OPS
-    for (i=0; i<n; i++)
-      ___STRINGSET(result,___FIX(i),fill)
-#else
-    ___C f = ___INT(fill);
-    ___C *body = ___CAST(___C*, ___BODY_AS(result,___tSUBTYPED));
-    if (___CAST_U8(f) * (~___CAST(___C,0)/0xff) ==
-        f) /* repetition of identical bytes? */
-      {
-        /* it is usually faster to initialize an array with memset */
-        memset(body, ___CAST_U8(f), n * sizeof (*body));
-      }
-    else
-      {
-        for (i=0; i<n; i++)
-          body[i] = f;
-      }
-#endif
-  }
+
+___ALLOC_SCMOBJ_INLINE(STRING, ___C, n, 0);
+
+if (fill != ___ABSENT)
+  ___INIT_SCMOBJ_INLINE(STRING, ___C, ___C, n, ___ORD(fill));
+
 ___RESULT = result;
-___PUSH_ARGS2(k,fill);
+
+___PUSH_ARGS2(k, fill);
 
 end-of-code
 )))
-    (if (##fixnum? s)
-      (begin
-        (##raise-heap-overflow-exception)
-        (##make-string k fill))
-      s)))
+    (if (##fixnum? result)
+        (begin
+          (##raise-heap-overflow-exception)
+          (##make-string k fill))
+        result)))
 
 (define-prim (##make-u8vector k #!optional (fill (macro-absent-obj)))
   (##declare (not interrupts-enabled))
-  (let ((v (##c-code #<<end-of-code
+  (let ((result (##c-code #<<end-of-code
+
+___SCMOBJ result;
+___SIZE_TS n;
 
 ___SCMOBJ k;
 ___SCMOBJ fill;
-___SIZE_TS i;
-___SIZE_TS n;
-___SCMOBJ result;
-___POP_ARGS2(k,fill);
-___ps->saved[0] = k;
-___ps->saved[1] = fill;
+
+___POP_ARGS2(k, fill);
+
 n = ___INT(k);
-if (n > ___CAST(___WORD, ___LMASK>>___LF))
-  result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
-else
-  {
-    ___SIZE_TS words = ___WORDS(n) + 1;
-    if (words > ___MSECTION_BIGGEST)
-      {
-        ___FRAME_STORE_RA(___R0)
-        ___W_ALL
-        result = ___EXT(___alloc_scmobj) (___ps, ___sU8VECTOR, n);
-        ___R_ALL
-        ___SET_R0(___FRAME_FETCH_RA)
-        if (!___FIXNUMP(result))
-          ___still_obj_refcount_dec (result);
-      }
-    else
-      {
-        ___BOOL overflow = 0;
-        ___hp += words;
-        if (___hp > ___ps->heap_limit)
-          {
-            ___FRAME_STORE_RA(___R0)
-            ___W_ALL
-            overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
-            ___R_ALL
-            ___SET_R0(___FRAME_FETCH_RA)
-          }
-        else
-          ___hp -= words;
-        if (overflow)
-          result = ___FIX(___HEAP_OVERFLOW_ERR);
-        else
-          {
-            result = ___SUBTYPED_FROM_START(___hp);
-            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES(n, ___sU8VECTOR));
-            ___hp += words;
-          }
-      }
-  }
-k = ___ps->saved[0];
-fill = ___ps->saved[1];
-___ps->saved[0] = ___VOID;
-___ps->saved[1] = ___VOID;
-if (!___FIXNUMP(result) && fill != ___ABSENT)
-  {
-#ifdef ___USE_SCHEME_VECTOR_OPS
-    for (i=0; i<n; i++)
-      ___U8VECTORSET(result,___FIX(i),fill)
-#else
-    ___U8 f = ___INT(fill);
-    ___U8 *body = ___CAST(___U8*, ___BODY_AS(result,___tSUBTYPED));
-    /* it is usually faster to initialize an array with memset */
-    memset(body, f, n * sizeof (*body));
-#endif
-  }
+
+___ALLOC_SCMOBJ_INLINE(U8VECTOR, ___U8, n, 0);
+
+if (fill != ___ABSENT)
+  ___INIT_SCMOBJ_INLINE(U8VECTOR, ___U8, ___U8, n, ___INT(fill));
+
 ___RESULT = result;
-___PUSH_ARGS2(k,fill);
+
+___PUSH_ARGS2(k, fill);
 
 end-of-code
 )))
-    (if (##fixnum? v)
-      (begin
-        (##raise-heap-overflow-exception)
-        (##make-u8vector k fill))
-      v)))
+    (if (##fixnum? result)
+        (begin
+          (##raise-heap-overflow-exception)
+          (##make-u8vector k fill))
+        result)))
 
 (macro-if-s8vector
 (define-prim (##make-s8vector k #!optional (fill (macro-absent-obj)))
   (##declare (not interrupts-enabled))
-  (let ((v (##c-code #<<end-of-code
+  (let ((result (##c-code #<<end-of-code
+
+___SCMOBJ result;
+___SIZE_TS n;
 
 ___SCMOBJ k;
 ___SCMOBJ fill;
-___SIZE_TS i;
-___SIZE_TS n;
-___SCMOBJ result;
-___POP_ARGS2(k,fill);
-___ps->saved[0] = k;
-___ps->saved[1] = fill;
+
+___POP_ARGS2(k, fill);
+
 n = ___INT(k);
-if (n > ___CAST(___WORD, ___LMASK>>___LF))
-  result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
-else
-  {
-    ___SIZE_TS words = ___WORDS(n) + 1;
-    if (words > ___MSECTION_BIGGEST)
-      {
-        ___FRAME_STORE_RA(___R0)
-        ___W_ALL
-        result = ___EXT(___alloc_scmobj) (___ps, ___sS8VECTOR, n);
-        ___R_ALL
-        ___SET_R0(___FRAME_FETCH_RA)
-        if (!___FIXNUMP(result))
-          ___still_obj_refcount_dec (result);
-      }
-    else
-      {
-        ___BOOL overflow = 0;
-        ___hp += words;
-        if (___hp > ___ps->heap_limit)
-          {
-            ___FRAME_STORE_RA(___R0)
-            ___W_ALL
-            overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
-            ___R_ALL
-            ___SET_R0(___FRAME_FETCH_RA)
-          }
-        else
-          ___hp -= words;
-        if (overflow)
-          result = ___FIX(___HEAP_OVERFLOW_ERR);
-        else
-          {
-            result = ___SUBTYPED_FROM_START(___hp);
-            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES(n, ___sS8VECTOR));
-            ___hp += words;
-          }
-      }
-  }
-k = ___ps->saved[0];
-fill = ___ps->saved[1];
-___ps->saved[0] = ___VOID;
-___ps->saved[1] = ___VOID;
-if (!___FIXNUMP(result) && fill != ___ABSENT)
-  {
-#ifdef ___USE_SCHEME_VECTOR_OPS
-    for (i=0; i<n; i++)
-      ___S8VECTORSET(result,___FIX(i),fill)
-#else
-    ___S8 f = ___INT(fill);
-    ___S8 *body = ___CAST(___S8*, ___BODY_AS(result,___tSUBTYPED));
-    /* it is usually faster to initialize an array with memset */
-    memset(body, ___CAST_U8(f), n * sizeof (*body));
-#endif
-  }
+
+___ALLOC_SCMOBJ_INLINE(S8VECTOR, ___S8, n, 0);
+
+if (fill != ___ABSENT)
+  ___INIT_SCMOBJ_INLINE(S8VECTOR, ___S8, ___U8, n, ___INT(fill));
+
 ___RESULT = result;
-___PUSH_ARGS2(k,fill);
+
+___PUSH_ARGS2(k, fill);
 
 end-of-code
 )))
-    (if (##fixnum? v)
-      (begin
-        (##raise-heap-overflow-exception)
-        (##make-s8vector k fill))
-      v))))
+    (if (##fixnum? result)
+        (begin
+          (##raise-heap-overflow-exception)
+          (##make-s8vector k fill))
+        result))))
 
 (macro-if-u16vector
 (define-prim (##make-u16vector k #!optional (fill (macro-absent-obj)))
   (##declare (not interrupts-enabled))
-  (let ((v (##c-code #<<end-of-code
+  (let ((result (##c-code #<<end-of-code
+
+___SCMOBJ result;
+___SIZE_TS n;
 
 ___SCMOBJ k;
 ___SCMOBJ fill;
-___SIZE_TS i;
-___SIZE_TS n;
-___SCMOBJ result;
-___POP_ARGS2(k,fill);
-___ps->saved[0] = k;
-___ps->saved[1] = fill;
+
+___POP_ARGS2(k, fill);
+
 n = ___INT(k);
-if (n > ___CAST(___WORD, ___LMASK>>(___LF+1)))
-  result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
-else
-  {
-    ___SIZE_TS words = ___WORDS((n<<1)) + 1;
-    if (words > ___MSECTION_BIGGEST)
-      {
-        ___FRAME_STORE_RA(___R0)
-        ___W_ALL
-        result = ___EXT(___alloc_scmobj) (___ps, ___sU16VECTOR, n<<1);
-        ___R_ALL
-        ___SET_R0(___FRAME_FETCH_RA)
-        if (!___FIXNUMP(result))
-          ___still_obj_refcount_dec (result);
-      }
-    else
-      {
-        ___BOOL overflow = 0;
-        ___hp += words;
-        if (___hp > ___ps->heap_limit)
-          {
-            ___FRAME_STORE_RA(___R0)
-            ___W_ALL
-            overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
-            ___R_ALL
-            ___SET_R0(___FRAME_FETCH_RA)
-          }
-        else
-          ___hp -= words;
-        if (overflow)
-          result = ___FIX(___HEAP_OVERFLOW_ERR);
-        else
-          {
-            result = ___SUBTYPED_FROM_START(___hp);
-            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<1), ___sU16VECTOR));
-            ___hp += words;
-          }
-      }
-  }
-k = ___ps->saved[0];
-fill = ___ps->saved[1];
-___ps->saved[0] = ___VOID;
-___ps->saved[1] = ___VOID;
-if (!___FIXNUMP(result) && fill != ___ABSENT)
-  {
-#ifdef ___USE_SCHEME_VECTOR_OPS
-    for (i=0; i<n; i++)
-      ___U16VECTORSET(result,___FIX(i),fill)
-#else
-    ___U16 f = ___INT(fill);
-    ___U16 *body = ___CAST(___U16*, ___BODY_AS(result,___tSUBTYPED));
-    if (___CAST_U8(f) * (~___CAST(___U16,0)/0xff) ==
-        ___CAST_U16(f)) /* repetition of identical bytes? */
-      {
-        /* it is usually faster to initialize an array with memset */
-        memset(body, ___CAST_U8(f), n * sizeof (*body));
-      }
-    else
-      {
-        for (i=0; i<n; i++)
-          body[i] = f;
-      }
-#endif
-  }
+
+___ALLOC_SCMOBJ_INLINE(U16VECTOR, ___U16, n, 0);
+
+if (fill != ___ABSENT)
+  ___INIT_SCMOBJ_INLINE(U16VECTOR, ___U16, ___U16, n, ___INT(fill));
+
 ___RESULT = result;
-___PUSH_ARGS2(k,fill);
+
+___PUSH_ARGS2(k, fill);
 
 end-of-code
 )))
-    (if (##fixnum? v)
-      (begin
-        (##raise-heap-overflow-exception)
-        (##make-u16vector k fill))
-      v))))
+    (if (##fixnum? result)
+        (begin
+          (##raise-heap-overflow-exception)
+          (##make-u16vector k fill))
+        result))))
 
 (macro-if-s16vector
 (define-prim (##make-s16vector k #!optional (fill (macro-absent-obj)))
   (##declare (not interrupts-enabled))
-  (let ((v (##c-code #<<end-of-code
+  (let ((result (##c-code #<<end-of-code
+
+___SCMOBJ result;
+___SIZE_TS n;
 
 ___SCMOBJ k;
 ___SCMOBJ fill;
-___SIZE_TS i;
-___SIZE_TS n;
-___SCMOBJ result;
-___POP_ARGS2(k,fill);
-___ps->saved[0] = k;
-___ps->saved[1] = fill;
+
+___POP_ARGS2(k, fill);
+
 n = ___INT(k);
-if (n > ___CAST(___WORD, ___LMASK>>(___LF+1)))
-  result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
-else
-  {
-    ___SIZE_TS words = ___WORDS((n<<1)) + 1;
-    if (words > ___MSECTION_BIGGEST)
-      {
-        ___FRAME_STORE_RA(___R0)
-        ___W_ALL
-        result = ___EXT(___alloc_scmobj) (___ps, ___sS16VECTOR, n<<1);
-        ___R_ALL
-        ___SET_R0(___FRAME_FETCH_RA)
-        if (!___FIXNUMP(result))
-          ___still_obj_refcount_dec (result);
-      }
-    else
-      {
-        ___BOOL overflow = 0;
-        ___hp += words;
-        if (___hp > ___ps->heap_limit)
-          {
-            ___FRAME_STORE_RA(___R0)
-            ___W_ALL
-            overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
-            ___R_ALL
-            ___SET_R0(___FRAME_FETCH_RA)
-          }
-        else
-          ___hp -= words;
-        if (overflow)
-          result = ___FIX(___HEAP_OVERFLOW_ERR);
-        else
-          {
-            result = ___SUBTYPED_FROM_START(___hp);
-            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<1), ___sS16VECTOR));
-            ___hp += words;
-          }
-      }
-  }
-k = ___ps->saved[0];
-fill = ___ps->saved[1];
-___ps->saved[0] = ___VOID;
-___ps->saved[1] = ___VOID;
-if (!___FIXNUMP(result) && fill != ___ABSENT)
-  {
-#ifdef ___USE_SCHEME_VECTOR_OPS
-    for (i=0; i<n; i++)
-      ___S16VECTORSET(result,___FIX(i),fill)
-#else
-    ___S16 f = ___INT(fill);
-    ___S16 *body = ___CAST(___S16*, ___BODY_AS(result,___tSUBTYPED));
-    if (___CAST_U8(f) * (~___CAST(___U16,0)/0xff) ==
-        ___CAST_U16(f)) /* repetition of identical bytes? */
-      {
-        /* it is usually faster to initialize an array with memset */
-        memset(body, ___CAST_U8(f), n * sizeof (*body));
-      }
-    else
-      {
-        for (i=0; i<n; i++)
-          body[i] = f;
-      }
-#endif
-  }
+
+___ALLOC_SCMOBJ_INLINE(S16VECTOR, ___S16, n, 0);
+
+if (fill != ___ABSENT)
+  ___INIT_SCMOBJ_INLINE(S16VECTOR, ___S16, ___U16, n, ___INT(fill));
+
 ___RESULT = result;
-___PUSH_ARGS2(k,fill);
+
+___PUSH_ARGS2(k, fill);
 
 end-of-code
 )))
-    (if (##fixnum? v)
-      (begin
-        (##raise-heap-overflow-exception)
-        (##make-s16vector k fill))
-      v))))
+    (if (##fixnum? result)
+        (begin
+          (##raise-heap-overflow-exception)
+          (##make-s16vector k fill))
+        result))))
 
 (macro-if-u32vector
 (define-prim (##make-u32vector k #!optional (fill (macro-absent-obj)))
   (##declare (not interrupts-enabled))
-  (let ((v (##c-code #<<end-of-code
+  (let ((result (##c-code #<<end-of-code
+
+___SCMOBJ result;
+___SIZE_TS n;
 
 ___SCMOBJ k;
 ___SCMOBJ fill;
-___SIZE_TS i;
-___SIZE_TS n;
-___SCMOBJ result;
-___POP_ARGS2(k,fill);
-___ps->saved[0] = k;
-___ps->saved[1] = fill;
+
+___POP_ARGS2(k, fill);
+
 n = ___INT(k);
-if (n > ___CAST(___WORD, ___LMASK>>(___LF+2)))
-  result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
-else
-  {
-    ___SIZE_TS words = ___WORDS((n<<2)) + 1;
-    if (words > ___MSECTION_BIGGEST)
-      {
-        ___FRAME_STORE_RA(___R0)
-        ___W_ALL
-        result = ___EXT(___alloc_scmobj) (___ps, ___sU32VECTOR, n<<2);
-        ___R_ALL
-        ___SET_R0(___FRAME_FETCH_RA)
-        if (!___FIXNUMP(result))
-          ___still_obj_refcount_dec (result);
-      }
-    else
-      {
-        ___BOOL overflow = 0;
-        ___hp += words;
-        if (___hp > ___ps->heap_limit)
-          {
-            ___FRAME_STORE_RA(___R0)
-            ___W_ALL
-            overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
-            ___R_ALL
-            ___SET_R0(___FRAME_FETCH_RA)
-          }
-        else
-          ___hp -= words;
-        if (overflow)
-          result = ___FIX(___HEAP_OVERFLOW_ERR);
-        else
-          {
-            result = ___SUBTYPED_FROM_START(___hp);
-            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<2), ___sU32VECTOR));
-            ___hp += words;
-          }
-      }
-  }
-k = ___ps->saved[0];
-fill = ___ps->saved[1];
-___ps->saved[0] = ___VOID;
-___ps->saved[1] = ___VOID;
-if (!___FIXNUMP(result) && fill != ___ABSENT)
-  {
-#ifdef ___USE_SCHEME_VECTOR_OPS
-    for (i=0; i<n; i++)
-      ___U32VECTORSET(result,___FIX(i),fill)
-#else
-    ___U32 f = ___U32UNBOX(fill);
-    ___U32 *body = ___CAST(___U32*, ___BODY_AS(result,___tSUBTYPED));
-    if (___CAST_U8(f) * (~___CAST(___U32,0)/0xff) ==
-        ___CAST_U32(f)) /* repetition of identical bytes? */
-      {
-        /* it is usually faster to initialize an array with memset */
-        memset(body, ___CAST_U8(f), n * sizeof (*body));
-      }
-    else
-      {
-        for (i=0; i<n; i++)
-          body[i] = f;
-      }
-#endif
-  }
+
+___GC_SAVE1(___ps, fill);
+___ALLOC_SCMOBJ_INLINE(U32VECTOR, ___U32, n, 0);
+___GC_RESTORE1(___ps, fill);
+
+if (fill != ___ABSENT)
+  ___INIT_SCMOBJ_INLINE(U32VECTOR, ___U32, ___U32, n, ___U32UNBOX(fill));
+
 ___RESULT = result;
-___PUSH_ARGS2(k,fill);
+
+___PUSH_ARGS2(k, fill);
 
 end-of-code
 )))
-    (if (##fixnum? v)
-      (begin
-        (##raise-heap-overflow-exception)
-        (##make-u32vector k fill))
-      v))))
+    (if (##fixnum? result)
+        (begin
+          (##raise-heap-overflow-exception)
+          (##make-u32vector k fill))
+        result))))
 
 (macro-if-s32vector
 (define-prim (##make-s32vector k #!optional (fill (macro-absent-obj)))
   (##declare (not interrupts-enabled))
-  (let ((v (##c-code #<<end-of-code
+  (let ((result (##c-code #<<end-of-code
+
+___SCMOBJ result;
+___SIZE_TS n;
 
 ___SCMOBJ k;
 ___SCMOBJ fill;
-___SIZE_TS i;
-___SIZE_TS n;
-___SCMOBJ result;
-___POP_ARGS2(k,fill);
-___ps->saved[0] = k;
-___ps->saved[1] = fill;
+
+___POP_ARGS2(k, fill);
+
 n = ___INT(k);
-if (n > ___CAST(___WORD, ___LMASK>>(___LF+2)))
-  result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
-else
-  {
-    ___SIZE_TS words = ___WORDS((n<<2)) + 1;
-    if (words > ___MSECTION_BIGGEST)
-      {
-        ___FRAME_STORE_RA(___R0)
-        ___W_ALL
-        result = ___EXT(___alloc_scmobj) (___ps, ___sS32VECTOR, n<<2);
-        ___R_ALL
-        ___SET_R0(___FRAME_FETCH_RA)
-        if (!___FIXNUMP(result))
-          ___still_obj_refcount_dec (result);
-      }
-    else
-      {
-        ___BOOL overflow = 0;
-        ___hp += words;
-        if (___hp > ___ps->heap_limit)
-          {
-            ___FRAME_STORE_RA(___R0)
-            ___W_ALL
-            overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
-            ___R_ALL
-            ___SET_R0(___FRAME_FETCH_RA)
-          }
-        else
-          ___hp -= words;
-        if (overflow)
-          result = ___FIX(___HEAP_OVERFLOW_ERR);
-        else
-          {
-            result = ___SUBTYPED_FROM_START(___hp);
-            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<2), ___sS32VECTOR));
-            ___hp += words;
-          }
-      }
-  }
-k = ___ps->saved[0];
-fill = ___ps->saved[1];
-___ps->saved[0] = ___VOID;
-___ps->saved[1] = ___VOID;
-if (!___FIXNUMP(result) && fill != ___ABSENT)
-  {
-#ifdef ___USE_SCHEME_VECTOR_OPS
-    for (i=0; i<n; i++)
-      ___S32VECTORSET(result,___FIX(i),fill)
-#else
-    ___S32 f = ___S32UNBOX(fill);
-    ___S32 *body = ___CAST(___S32*, ___BODY_AS(result,___tSUBTYPED));
-    if (___CAST_U8(f) * (~___CAST(___U32,0)/0xff) ==
-        ___CAST_U32(f)) /* repetition of identical bytes? */
-      {
-        /* it is usually faster to initialize an array with memset */
-        memset(body, ___CAST_U8(f), n * sizeof (*body));
-      }
-    else
-      {
-        for (i=0; i<n; i++)
-          body[i] = f;
-      }
-#endif
-  }
+
+___GC_SAVE1(___ps, fill);
+___ALLOC_SCMOBJ_INLINE(S32VECTOR, ___S32, n, 0);
+___GC_RESTORE1(___ps, fill);
+
+if (fill != ___ABSENT)
+  ___INIT_SCMOBJ_INLINE(S32VECTOR, ___S32, ___U32, n, ___S32UNBOX(fill));
+
 ___RESULT = result;
-___PUSH_ARGS2(k,fill);
+
+___PUSH_ARGS2(k, fill);
 
 end-of-code
 )))
-    (if (##fixnum? v)
-      (begin
-        (##raise-heap-overflow-exception)
-        (##make-s32vector k fill))
-      v))))
+    (if (##fixnum? result)
+        (begin
+          (##raise-heap-overflow-exception)
+          (##make-s32vector k fill))
+        result))))
 
 (macro-if-u64vector
 (define-prim (##make-u64vector k #!optional (fill (macro-absent-obj)))
   (##declare (not interrupts-enabled))
-  (let ((v (##c-code #<<end-of-code
+  (let ((result (##c-code #<<end-of-code
+
+___SCMOBJ result;
+___SIZE_TS n;
 
 ___SCMOBJ k;
 ___SCMOBJ fill;
-___SIZE_TS i;
-___SIZE_TS n;
-___SCMOBJ result;
-___POP_ARGS2(k,fill);
-___ps->saved[0] = k;
-___ps->saved[1] = fill;
+
+___POP_ARGS2(k, fill);
+
 n = ___INT(k);
-if (n > ___CAST(___WORD, ___LMASK>>(___LF+3)))
-  result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
-else
-  {
-    ___SIZE_TS words = ___WORDS((n<<3)) + ___SUBTYPED_BODY;
 
-#if ___WS == 4
-    words++;
-#endif
+___GC_SAVE1(___ps, fill);
+___ALLOC_SCMOBJ_INLINE(U64VECTOR, ___U64, n, 0);
+___GC_RESTORE1(___ps, fill);
 
-    if (words > ___MSECTION_BIGGEST)
-      {
-        ___FRAME_STORE_RA(___R0)
-        ___W_ALL
-        result = ___EXT(___alloc_scmobj) (___ps, ___sU64VECTOR, n<<3);
-        ___R_ALL
-        ___SET_R0(___FRAME_FETCH_RA)
-        if (!___FIXNUMP(result))
-          ___still_obj_refcount_dec (result);
-      }
-    else
-      {
-        ___BOOL overflow = 0;
-        ___hp += words;
-        if (___hp > ___ps->heap_limit)
-          {
-            ___FRAME_STORE_RA(___R0)
-            ___W_ALL
-            overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
-            ___R_ALL
-            ___SET_R0(___FRAME_FETCH_RA)
-          }
-        else
-          ___hp -= words;
-        if (overflow)
-          result = ___FIX(___HEAP_OVERFLOW_ERR);
-        else
-          {
-#if ___WS == 4
-            result = ___SUBTYPED_FROM_BODY(___CAST(___WORD,___hp+___SUBTYPED_BODY+1)&~7);
-#else
-            result = ___SUBTYPED_FROM_START(___hp);
-#endif
-            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<3), ___sU64VECTOR));
-            ___hp += words;
-          }
-      }
-  }
-k = ___ps->saved[0];
-fill = ___ps->saved[1];
-___ps->saved[0] = ___VOID;
-___ps->saved[1] = ___VOID;
-if (!___FIXNUMP(result) && fill != ___ABSENT)
-  {
-#ifdef ___USE_SCHEME_VECTOR_OPS
-    for (i=0; i<n; i++)
-      ___U64VECTORSET(result,___FIX(i),fill)
-#else
-    ___U64 f = ___U64UNBOX(fill);
-    ___U64 *body = ___CAST(___U64*, ___BODY_AS(result,___tSUBTYPED));
-    if (___CAST_U8(f) * (~___CAST(___U64,0)/0xff) ==
-        ___CAST_U64(f)) /* repetition of identical bytes? */
-      {
-        /* it is usually faster to initialize an array with memset */
-        memset(body, ___CAST_U8(f), n * sizeof (*body));
-      }
-    else
-      {
-        for (i=0; i<n; i++)
-          body[i] = f;
-      }
-#endif
-  }
+if (fill != ___ABSENT)
+  ___INIT_SCMOBJ_INLINE(U64VECTOR, ___U64, ___U64, n, ___U64UNBOX(fill));
+
 ___RESULT = result;
-___PUSH_ARGS2(k,fill);
+
+___PUSH_ARGS2(k, fill);
 
 end-of-code
 )))
-    (if (##fixnum? v)
-      (begin
-        (##raise-heap-overflow-exception)
-        (##make-u64vector k fill))
-      v))))
+    (if (##fixnum? result)
+        (begin
+          (##raise-heap-overflow-exception)
+          (##make-u64vector k fill))
+        result))))
 
 (macro-if-s64vector
 (define-prim (##make-s64vector k #!optional (fill (macro-absent-obj)))
   (##declare (not interrupts-enabled))
-  (let ((v (##c-code #<<end-of-code
+  (let ((result (##c-code #<<end-of-code
+
+___SCMOBJ result;
+___SIZE_TS n;
 
 ___SCMOBJ k;
 ___SCMOBJ fill;
-___SIZE_TS i;
-___SIZE_TS n;
-___SCMOBJ result;
-___POP_ARGS2(k,fill);
-___ps->saved[0] = k;
-___ps->saved[1] = fill;
+
+___POP_ARGS2(k, fill);
+
 n = ___INT(k);
-if (n > ___CAST(___WORD, ___LMASK>>(___LF+3)))
-  result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
-else
-  {
-    ___SIZE_TS words = ___WORDS((n<<3)) + ___SUBTYPED_BODY;
 
-#if ___WS == 4
-    words++;
-#endif
+___GC_SAVE1(___ps, fill);
+___ALLOC_SCMOBJ_INLINE(S64VECTOR, ___S64, n, 0);
+___GC_RESTORE1(___ps, fill);
 
-    if (words > ___MSECTION_BIGGEST)
-      {
-        ___FRAME_STORE_RA(___R0)
-        ___W_ALL
-        result = ___EXT(___alloc_scmobj) (___ps, ___sS64VECTOR, n<<3);
-        ___R_ALL
-        ___SET_R0(___FRAME_FETCH_RA)
-        if (!___FIXNUMP(result))
-          ___still_obj_refcount_dec (result);
-      }
-    else
-      {
-        ___BOOL overflow = 0;
-        ___hp += words;
-        if (___hp > ___ps->heap_limit)
-          {
-            ___FRAME_STORE_RA(___R0)
-            ___W_ALL
-            overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
-            ___R_ALL
-            ___SET_R0(___FRAME_FETCH_RA)
-          }
-        else
-          ___hp -= words;
-        if (overflow)
-          result = ___FIX(___HEAP_OVERFLOW_ERR);
-        else
-          {
-#if ___WS == 4
-            result = ___SUBTYPED_FROM_BODY(___CAST(___WORD,___hp+___SUBTYPED_BODY+1)&~7);
-#else
-            result = ___SUBTYPED_FROM_START(___hp);
-#endif
-            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<3), ___sS64VECTOR));
-            ___hp += words;
-          }
-      }
-  }
-k = ___ps->saved[0];
-fill = ___ps->saved[1];
-___ps->saved[0] = ___VOID;
-___ps->saved[1] = ___VOID;
-if (!___FIXNUMP(result) && fill != ___ABSENT)
-  {
-#ifdef ___USE_SCHEME_VECTOR_OPS
-    for (i=0; i<n; i++)
-      ___S64VECTORSET(result,___FIX(i),fill)
-#else
-    ___S64 f = ___S64UNBOX(fill);
-    ___S64 *body = ___CAST(___S64*, ___BODY_AS(result,___tSUBTYPED));
-    if (___CAST_U8(f) * (~___CAST(___U64,0)/0xff) ==
-        ___CAST_U64(f)) /* repetition of identical bytes? */
-      {
-        /* it is usually faster to initialize an array with memset */
-        memset(body, ___CAST_U8(f), n * sizeof (*body));
-      }
-    else
-      {
-        for (i=0; i<n; i++)
-          body[i] = f;
-      }
-#endif
-  }
+if (fill != ___ABSENT)
+  ___INIT_SCMOBJ_INLINE(S64VECTOR, ___S64, ___U64, n, ___S64UNBOX(fill));
+
 ___RESULT = result;
-___PUSH_ARGS2(k,fill);
+
+___PUSH_ARGS2(k, fill);
 
 end-of-code
 )))
-    (if (##fixnum? v)
-      (begin
-        (##raise-heap-overflow-exception)
-        (##make-s64vector k fill))
-      v))))
+    (if (##fixnum? result)
+        (begin
+          (##raise-heap-overflow-exception)
+          (##make-s64vector k fill))
+        result))))
 
 (macro-if-f32vector
 (define-prim (##make-f32vector k #!optional (fill (macro-absent-obj)))
   (##declare (not interrupts-enabled))
-  (let ((v (##c-code #<<end-of-code
+  (let ((result (##c-code #<<end-of-code
+
+___SCMOBJ result;
+___SIZE_TS n;
 
 ___SCMOBJ k;
 ___SCMOBJ fill;
-___SIZE_TS i;
-___SIZE_TS n;
-___SCMOBJ result;
-___POP_ARGS2(k,fill);
-___ps->saved[0] = k;
-___ps->saved[1] = fill;
+
+___POP_ARGS2(k, fill);
+
 n = ___INT(k);
-if (n > ___CAST(___WORD, ___LMASK>>(___LF+2)))
-  result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
-else
-  {
-    ___SIZE_TS words = ___WORDS((n<<2)) + 1;
-    if (words > ___MSECTION_BIGGEST)
-      {
-        ___FRAME_STORE_RA(___R0)
-        ___W_ALL
-        result = ___EXT(___alloc_scmobj) (___ps, ___sF32VECTOR, n<<2);
-        ___R_ALL
-        ___SET_R0(___FRAME_FETCH_RA)
-        if (!___FIXNUMP(result))
-          ___still_obj_refcount_dec (result);
-      }
-    else
-      {
-        ___BOOL overflow = 0;
-        ___hp += words;
-        if (___hp > ___ps->heap_limit)
-          {
-            ___FRAME_STORE_RA(___R0)
-            ___W_ALL
-            overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
-            ___R_ALL
-            ___SET_R0(___FRAME_FETCH_RA)
-          }
-        else
-          ___hp -= words;
-        if (overflow)
-          result = ___FIX(___HEAP_OVERFLOW_ERR);
-        else
-          {
-            result = ___SUBTYPED_FROM_START(___hp);
-            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<2), ___sF32VECTOR));
-            ___hp += words;
-          }
-      }
-  }
-k = ___ps->saved[0];
-fill = ___ps->saved[1];
-___ps->saved[0] = ___VOID;
-___ps->saved[1] = ___VOID;
-if (!___FIXNUMP(result) && fill != ___ABSENT)
-  {
-    ___F32 f = ___F64UNBOX(fill);
-#ifdef ___USE_SCHEME_VECTOR_OPS
-    for (i=0; i<n; i++)
-      ___F32VECTORSET(result,___FIX(i),f)
-#else
-    ___F32 *body = ___CAST(___F32*, ___BODY_AS(result,___tSUBTYPED));
-    if (f == 0.0 && ___copysign (1.0, f) > 0.0) /* detect positive 0 */
-      {
-        /* it is usually faster to initialize an array with memset */
-        memset(body, 0, n * sizeof (*body));
-      }
-    else
-      {
-        for (i=0; i<n; i++)
-          body[i] = f;
-      }
-#endif
-  }
+
+___GC_SAVE1(___ps, fill);
+___ALLOC_SCMOBJ_INLINE(F32VECTOR, ___F32, n, 0);
+___GC_RESTORE1(___ps, fill);
+
+if (fill != ___ABSENT)
+  ___INIT_SCMOBJ_INLINE_FLOAT(F32VECTOR, ___F32, n, ___F64UNBOX(fill));
+
 ___RESULT = result;
-___PUSH_ARGS2(k,fill);
+
+___PUSH_ARGS2(k, fill);
 
 end-of-code
 )))
-    (if (##fixnum? v)
-      (begin
-        (##raise-heap-overflow-exception)
-        (##make-f32vector k fill))
-      v))))
+    (if (##fixnum? result)
+        (begin
+          (##raise-heap-overflow-exception)
+          (##make-f32vector k fill))
+        result))))
 
 (define-prim (##make-f64vector k #!optional (fill (macro-absent-obj)))
   (##declare (not interrupts-enabled))
-  (let ((v (##c-code #<<end-of-code
+  (let ((result (##c-code #<<end-of-code
+
+___SCMOBJ result;
+___SIZE_TS n;
 
 ___SCMOBJ k;
 ___SCMOBJ fill;
-___SIZE_TS i;
-___SIZE_TS n;
-___SCMOBJ result;
-___POP_ARGS2(k,fill);
-___ps->saved[0] = k;
-___ps->saved[1] = fill;
+
+___POP_ARGS2(k, fill);
+
 n = ___INT(k);
-if (n > ___CAST(___WORD, ___LMASK>>(___LF+3)))
-  result = ___FIX(___HEAP_OVERFLOW_ERR); /* requested object is too big! */
-else
-  {
-    ___SIZE_TS words = ___WORDS((n<<3)) + ___SUBTYPED_BODY;
 
-#if ___WS == 4
-    words++;
-#endif
+___GC_SAVE1(___ps, fill);
+___ALLOC_SCMOBJ_INLINE(F64VECTOR, ___F64, n, 1); /* align to 64 bits */
+___GC_RESTORE1(___ps, fill);
 
-    if (words > ___MSECTION_BIGGEST)
-      {
-        ___FRAME_STORE_RA(___R0)
-        ___W_ALL
-        result = ___EXT(___alloc_scmobj) (___ps, ___sF64VECTOR, n<<3);
-        ___R_ALL
-        ___SET_R0(___FRAME_FETCH_RA)
-        if (!___FIXNUMP(result))
-          ___still_obj_refcount_dec (result);
-      }
-    else
-      {
-        ___BOOL overflow = 0;
-        ___hp += words;
-        if (___hp > ___ps->heap_limit)
-          {
-            ___FRAME_STORE_RA(___R0)
-            ___W_ALL
-            overflow = ___heap_limit (___PSPNC) && ___garbage_collect (___PSP 0);
-            ___R_ALL
-            ___SET_R0(___FRAME_FETCH_RA)
-          }
-        else
-          ___hp -= words;
-        if (overflow)
-          result = ___FIX(___HEAP_OVERFLOW_ERR);
-        else
-          {
-#if ___WS == 4
-            result = ___SUBTYPED_FROM_BODY(___CAST(___WORD,___hp+___SUBTYPED_BODY+1)&~7);
-#else
-            result = ___SUBTYPED_FROM_START(___hp);
-#endif
-            ___SUBTYPED_HEADER_SET(result, ___MAKE_HD_BYTES((n<<3), ___sF64VECTOR));
-            ___hp += words;
-          }
-      }
-  }
-k = ___ps->saved[0];
-fill = ___ps->saved[1];
-___ps->saved[0] = ___VOID;
-___ps->saved[1] = ___VOID;
-if (!___FIXNUMP(result) && fill != ___ABSENT)
-  {
-    ___F64 f = ___F64UNBOX(fill);
-#ifdef ___USE_SCHEME_VECTOR_OPS
-    for (i=0; i<n; i++)
-      ___F64VECTORSET(result,___FIX(i),f)
-#else
-    ___F64 *body = ___CAST(___F64*, ___BODY_AS(result,___tSUBTYPED));
-    if (f == 0.0 && ___copysign (1.0, f) > 0.0) /* detect positive 0 */
-      {
-        /* it is usually faster to initialize an array with memset */
-        memset(body, 0, n * sizeof (*body));
-      }
-    else
-      {
-        for (i=0; i<n; i++)
-          body[i] = f;
-      }
-#endif
-  }
+if (fill != ___ABSENT)
+  ___INIT_SCMOBJ_INLINE_FLOAT(F64VECTOR, ___F64, n, ___F64UNBOX(fill));
+
 ___RESULT = result;
-___PUSH_ARGS2(k,fill);
+
+___PUSH_ARGS2(k, fill);
 
 end-of-code
 )))
-    (if (##fixnum? v)
-      (begin
-        (##raise-heap-overflow-exception)
-        (##make-f64vector k fill))
-      v)))
+    (if (##fixnum? result)
+        (begin
+          (##raise-heap-overflow-exception)
+          (##make-f64vector k fill))
+        result)))
 
-  (define-prim (##make-values k #!optional (fill 0))
-    ;; Note: this will create a box object when k = 1
-    (let ((vals (##make-vector k fill)))
-      (##subtype-set! vals (macro-subtype-boxvalues))
-      vals))
+(define-prim (##make-values k #!optional (fill (macro-absent-obj)))
+  (##declare (not interrupts-enabled))
+  (let ((result (##c-code #<<end-of-code
+
+___SCMOBJ result;
+___SIZE_TS n;
+
+___SCMOBJ k;
+___SCMOBJ fill;
+
+___POP_ARGS2(k, fill);
+
+n = ___INT(k);
+
+___GC_SAVE1(___ps, fill);
+___ALLOC_SCMOBJ_INLINE(BOXVALUES, ___WORD, n, 0);
+___GC_RESTORE1(___ps, fill);
+
+if (fill == ___ABSENT) fill = ___FIX(0);
+
+___INIT_SCMOBJ_INLINE(BOXVALUES, ___WORD, ___UWORD, n, fill);
+
+___RESULT = result;
+
+___PUSH_ARGS2(k, fill);
+
+end-of-code
+)))
+    (if (##fixnum? result)
+        (begin
+          (##raise-heap-overflow-exception)
+          (##make-values k fill))
+        result)))
 
 )
 
@@ -3453,7 +2916,7 @@ end-of-code
          int len = ___INT(___U8VECTORLENGTH(___arg1));
          void *mcb = ___alloc_mem_code (len);
          if (mcb != 0)
-           memmove (mcb, ___BODY_AS(___arg1,___tSUBTYPED), len);
+           memmove (mcb, ___BODY_AS(___arg1,___tU8VECTOR), len);
          ___return(mcb);
        }
 
@@ -3592,10 +3055,36 @@ end-of-code
 (define-prim (##closure? proc))
 
 (define-prim (##make-closure code nb-closed)
-  (let ((closure (##make-vector (##fx+ nb-closed 1))))
-    (##vector-set! closure 0 code)
-    (##subtype-set! closure (macro-subtype-procedure))
-    closure))
+  (##declare (not interrupts-enabled))
+  (let ((result (##c-code #<<end-of-code
+
+___SCMOBJ result;
+___SIZE_TS n;
+
+___SCMOBJ code;
+___SCMOBJ nb_closed;
+
+___POP_ARGS2(code, nb_closed);
+
+n = ___INT(nb_closed) + 1;
+
+___GC_SAVE1(___ps, code);
+___ALLOC_SCMOBJ_INLINE(PROCEDURE, ___WORD, n, 0);
+___GC_RESTORE1(___ps, code);
+
+___INIT_SCMOBJ_INLINE(PROCEDURE, ___WORD, ___UWORD, n, code);
+
+___RESULT = result;
+
+___PUSH_ARGS2(code, nb_closed);
+
+end-of-code
+)))
+    (if (##fixnum? result)
+        (begin
+          (##raise-heap-overflow-exception)
+          (##make-closure code nb-closed))
+        result)))
 
 (define-prim (##closure-length closure))
 (define-prim (##closure-code closure))
@@ -3651,12 +3140,8 @@ end-of-code
 
 ;;; Continuation objects.
 
-(define-prim (##explode-continuation cont)
-  (##vector (##continuation-frame cont)
-            (##continuation-denv cont)))
-
 (define-prim (##continuation-frame cont)
-  (let ((frame (##vector-ref cont 0)))
+  (let ((frame (##c-code "___RESULT = ___CONTINUATIONFRAME(___ARG1);" cont)))
     (if (or (##eq? frame (macro-end-of-cont-marker))
             (##frame? frame))
       frame
@@ -3674,29 +3159,14 @@ end-of-code
 (define-prim (##continuation-denv-set! cont denv)
   (macro-continuation-denv-set! cont denv))
 
-(define-prim (##explode-frame frame)
-  (let ((fs (##frame-fs frame)))
-    (let ((v (##make-vector (##fx+ fs 1))))
-      (##vector-set! v 0 (##frame-ret frame))
-      (let loop ((i fs))
-        (if (##fx< 0 i)
-          (begin
-            (if (##frame-slot-live? frame i)
-              (##vector-set!
-               v
-               i
-               (##frame-ref frame i)))
-            (loop (##fx- i 1)))
-          v)))))
-
 (define-prim (##frame-ret frame)
   (##declare (not interrupts-enabled))
   (##c-code #<<end-of-code
 
-   ___SCMOBJ ra = ___FIELD(___ARG1,0);
+   ___SCMOBJ ra = ___FIELD(FRAME,___ARG1,0);
 
    if (ra == ___ps->internal_return)
-     ra = ___FIELD(___ARG1,___FRAME_RETI_RA);
+     ra = ___FIELD(FRAME,___ARG1,___FRAME_RETI_RA);
 
    ___RESULT = ra;
 
@@ -3708,17 +3178,17 @@ end-of-code
   (##declare (not interrupts-enabled))
   (##c-code #<<end-of-code
 
-   ___SCMOBJ frame = ___FIELD(___ARG1,___CONTINUATION_FRAME);
+   ___SCMOBJ frame = ___CONTINUATION_FRAME_FIELD(___ARG1);
    ___SCMOBJ ra;
 
-   if (___TYP(frame) == ___tSUBTYPED)
+   if (___TESTTYPE(frame, ___tFRAME))
      {
        /* continuation frame is in the heap */
 
-       ra = ___FIELD(frame,0);
+       ra = ___FIELD(FRAME,frame,0);
 
        if (ra == ___ps->internal_return)
-         ra = ___FIELD(frame,___FRAME_RETI_RA);
+         ra = ___FIELD(FRAME,frame,___FRAME_RETI_RA);
      }
    else
      {
@@ -3757,11 +3227,11 @@ end-of-code
   (##declare (not interrupts-enabled))
   (##c-code #<<end-of-code
 
-   ___SCMOBJ ra = ___FIELD(___ARG1,0);
+   ___SCMOBJ ra = ___FIELD(FRAME,___ARG1,0);
    int fs;
 
    if (ra == ___ps->internal_return)
-     ___RETI_GET_FS(___FIELD(___ARG1,___FRAME_RETI_RA),fs)
+     ___RETI_GET_FS(___FIELD(FRAME,___ARG1,___FRAME_RETI_RA),fs)
    else
      ___RETN_GET_FS(ra,fs)
 
@@ -3775,18 +3245,18 @@ end-of-code
   (##declare (not interrupts-enabled))
   (##c-code #<<end-of-code
 
-   ___SCMOBJ frame = ___FIELD(___ARG1,___CONTINUATION_FRAME);
+   ___SCMOBJ frame = ___CONTINUATION_FRAME_FIELD(___ARG1);
    ___SCMOBJ ra;
    int fs;
 
-   if (___TYP(frame) == ___tSUBTYPED)
+   if (___TESTTYPE(frame, ___tFRAME))
      {
        /* continuation frame is in the heap */
 
-       ra = ___FIELD(frame,0);
+       ra = ___FIELD(FRAME,frame,0);
 
        if (ra == ___ps->internal_return)
-         ___RETI_GET_FS(___FIELD(frame,___FRAME_RETI_RA),fs)
+         ___RETI_GET_FS(___FIELD(FRAME,frame,___FRAME_RETI_RA),fs)
        else
          ___RETN_GET_FS(ra,fs)
      }
@@ -3814,12 +3284,12 @@ end-of-code
   (##declare (not interrupts-enabled))
   (##c-code #<<end-of-code
 
-   ___SCMOBJ ra = ___FIELD(___ARG1,0);
+   ___SCMOBJ ra = ___FIELD(FRAME,___ARG1,0);
    int fs;
    int link;
 
    if (ra == ___ps->internal_return)
-     ___RETI_GET_FS_LINK(___BODY_AS(___ARG1,___tSUBTYPED)[___FRAME_RETI_RA],fs,link)
+     ___RETI_GET_FS_LINK(___BODY_AS(___ARG1,___tFRAME)[___FRAME_RETI_RA],fs,link)
    else
      ___RETN_GET_FS_LINK(ra,fs,link)
 
@@ -3833,19 +3303,19 @@ end-of-code
   (##declare (not interrupts-enabled))
   (##c-code #<<end-of-code
 
-   ___SCMOBJ frame = ___FIELD(___ARG1,___CONTINUATION_FRAME);
+   ___SCMOBJ frame = ___CONTINUATION_FRAME_FIELD(___ARG1);
    ___SCMOBJ ra;
    int fs;
    int link;
 
-   if (___TYP(frame) == ___tSUBTYPED)
+   if (___TESTTYPE(frame, ___tFRAME))
      {
        /* continuation frame is in the heap */
 
-       ra = ___FIELD(frame,0);
+       ra = ___FIELD(FRAME,frame,0);
 
        if (ra == ___ps->internal_return)
-         ___RETI_GET_FS_LINK(___BODY_AS(frame,___tSUBTYPED)[___FRAME_RETI_RA],fs,link)
+         ___RETI_GET_FS_LINK(___BODY_AS(frame,___tFRAME)[___FRAME_RETI_RA],fs,link)
        else
          ___RETN_GET_FS_LINK(ra,fs,link)
      }
@@ -3872,14 +3342,14 @@ end-of-code
   (##c-code #<<end-of-code
 
    int i = ___INT(___ARG2);
-   ___SCMOBJ ra = ___FIELD(___ARG1,0);
+   ___SCMOBJ ra = ___FIELD(FRAME,___ARG1,0);
    int fs;
    int link;
    ___WORD gcmap;
    ___WORD *nextgcmap = 0;
 
    if (ra == ___ps->internal_return)
-     ___RETI_GET_FS_LINK_GCMAP(___BODY_AS(___ARG1,___tSUBTYPED)[___FRAME_RETI_RA],fs,link,gcmap,nextgcmap)
+     ___RETI_GET_FS_LINK_GCMAP(___BODY_AS(___ARG1,___tFRAME)[___FRAME_RETI_RA],fs,link,gcmap,nextgcmap)
    else
      ___RETN_GET_FS_LINK_GCMAP(ra,fs,link,gcmap,nextgcmap)
 
@@ -3897,7 +3367,7 @@ end-of-code
   (##declare (not interrupts-enabled))
   (##c-code #<<end-of-code
 
-   ___SCMOBJ frame = ___FIELD(___ARG1,___CONTINUATION_FRAME);
+   ___SCMOBJ frame = ___CONTINUATION_FRAME_FIELD(___ARG1);
    int i = ___INT(___ARG2);
    ___SCMOBJ ra;
    int fs;
@@ -3905,14 +3375,14 @@ end-of-code
    ___WORD gcmap;
    ___WORD *nextgcmap = 0;
 
-   if (___TYP(frame) == ___tSUBTYPED)
+   if (___TESTTYPE(frame, ___tFRAME))
      {
        /* continuation frame is in the heap */
 
-       ra = ___FIELD(frame,0);
+       ra = ___FIELD(FRAME,frame,0);
 
        if (ra == ___ps->internal_return)
-         ___RETI_GET_FS_LINK_GCMAP(___FIELD(frame,___FRAME_RETI_RA),fs,link,gcmap,nextgcmap)
+         ___RETI_GET_FS_LINK_GCMAP(___FIELD(FRAME,frame,___FRAME_RETI_RA),fs,link,gcmap,nextgcmap)
        else
          ___RETN_GET_FS_LINK_GCMAP(ra,fs,link,gcmap,nextgcmap)
      }
@@ -3945,16 +3415,16 @@ end-of-code
   (##c-code #<<end-of-code
 
    int i = ___INT(___ARG2);
-   ___SCMOBJ ra = ___FIELD(___ARG1,0);
+   ___SCMOBJ ra = ___FIELD(FRAME,___ARG1,0);
    int fs;
    int link;
 
    if (ra == ___ps->internal_return)
-     ___RETI_GET_FS_LINK(___BODY_AS(___ARG1,___tSUBTYPED)[___FRAME_RETI_RA],fs,link)
+     ___RETI_GET_FS_LINK(___BODY_AS(___ARG1,___tFRAME)[___FRAME_RETI_RA],fs,link)
    else
      ___RETN_GET_FS_LINK(ra,fs,link)
 
-   ___RESULT = ___BODY_AS(___ARG1,___tSUBTYPED)[fs-i+1];  /* what if i==link and frame is first in section???? */
+   ___RESULT = ___BODY_AS(___ARG1,___tFRAME)[fs-i+1];  /* what if i==link and frame is first in section???? */
 #if 0
    if (i == link) ___RESULT = ___FIX(999999);/***********/
 #endif
@@ -3969,16 +3439,16 @@ end-of-code
   (##c-code #<<end-of-code
 
    int i = ___INT(___ARG2);
-   ___SCMOBJ ra = ___FIELD(___ARG1,0);
+   ___SCMOBJ ra = ___FIELD(FRAME,___ARG1,0);
    int fs;
    int link;
 
    if (ra == ___ps->internal_return)
-     ___RETI_GET_FS_LINK(___BODY_AS(___ARG1,___tSUBTYPED)[___FRAME_RETI_RA],fs,link)
+     ___RETI_GET_FS_LINK(___BODY_AS(___ARG1,___tFRAME)[___FRAME_RETI_RA],fs,link)
    else
      ___RETN_GET_FS_LINK(ra,fs,link)
 
-   ___BODY_AS(___ARG1,___tSUBTYPED)[fs-i+1] = ___ARG3;  /* what if i==link and frame is first in section???? */
+   ___BODY_AS(___ARG1,___tFRAME)[fs-i+1] = ___ARG3;  /* what if i==link and frame is first in section???? */
 
    ___RESULT = ___VOID;
 
@@ -3994,23 +3464,23 @@ end-of-code
 
    ___SCMOBJ cont = ___ARG1;
    int i = ___INT(___ARG2);
-   ___SCMOBJ frame = ___FIELD(cont,___CONTINUATION_FRAME);
+   ___SCMOBJ frame = ___CONTINUATION_FRAME_FIELD(cont);
    ___SCMOBJ ra;
    int fs;
    int link;
 
-   if (___TYP(frame) == ___tSUBTYPED)
+   if (___TESTTYPE(frame, ___tFRAME))
      {
        /* continuation frame is in the heap */
 
-       ra = ___FIELD(frame,0);
+       ra = ___FIELD(FRAME,frame,0);
 
        if (ra == ___ps->internal_return)
-         ___RETI_GET_FS_LINK(___BODY_AS(frame,___tSUBTYPED)[___FRAME_RETI_RA],fs,link)
+         ___RETI_GET_FS_LINK(___BODY_AS(frame,___tFRAME)[___FRAME_RETI_RA],fs,link)
        else
          ___RETN_GET_FS_LINK(ra,fs,link)
 
-       ___RESULT = ___BODY_AS(frame,___tSUBTYPED)[fs-i+1];  /* what if i==link and frame is first in section???? */
+       ___RESULT = ___BODY_AS(frame,___tFRAME)[fs-i+1];  /* what if i==link and frame is first in section???? */
 #if 0
       if (i == link) ___RESULT = ___FIX(999999);/***********/
 #endif
@@ -4044,23 +3514,23 @@ end-of-code
    ___SCMOBJ cont = ___ARG1;
    int i = ___INT(___ARG2);
    ___SCMOBJ val = ___ARG3;
-   ___SCMOBJ frame = ___FIELD(cont,___CONTINUATION_FRAME);
+   ___SCMOBJ frame = ___CONTINUATION_FRAME_FIELD(cont);
    ___SCMOBJ ra;
    int fs;
    int link;
 
-   if (___TYP(frame) == ___tSUBTYPED)
+   if (___TESTTYPE(frame, ___tFRAME))
      {
        /* continuation frame is in the heap */
 
-       ra = ___FIELD(frame,0);
+       ra = ___FIELD(FRAME,frame,0);
 
        if (ra == ___ps->internal_return)
-         ___RETI_GET_FS_LINK(___BODY_AS(frame,___tSUBTYPED)[___FRAME_RETI_RA],fs,link)
+         ___RETI_GET_FS_LINK(___BODY_AS(frame,___tFRAME)[___FRAME_RETI_RA],fs,link)
        else
          ___RETN_GET_FS_LINK(ra,fs,link)
 
-       ___BODY_AS(frame,___tSUBTYPED)[fs-i+1] = val;  /* what if i==link and frame is first in section???? */
+       ___BODY_AS(frame,___tFRAME)[fs-i+1] = val;  /* what if i==link and frame is first in section???? */
      }
    else
      {
@@ -4088,11 +3558,37 @@ end-of-code
    val))
 
 (define-prim (##make-frame ret)
-  (let ((fs (##return-fs ret)))
-    (let ((frame (##make-vector (##fx+ fs 1) 0)))
-      (##vector-set! frame 0 ret)
-      (##subtype-set! frame (macro-subtype-frame))
-      frame)))
+  (##declare (not interrupts-enabled))
+  (let ((result (##c-code #<<end-of-code
+
+___SCMOBJ result;
+___SIZE_TS n;
+
+___SCMOBJ ret;
+
+___POP_ARGS1(ret);
+
+___RETN_GET_FS(ret, n)
+
+n += 1;
+
+___GC_SAVE1(___ps, ret);
+___ALLOC_SCMOBJ_INLINE(FRAME, ___WORD, n, 0);
+___GC_RESTORE1(___ps, ret);
+
+___INIT_SCMOBJ_INLINE(FRAME, ___WORD, ___UWORD, n, ret);
+
+___RESULT = result;
+
+___PUSH_ARGS1(ret);
+
+end-of-code
+)))
+    (if (##fixnum? result)
+        (begin
+          (##raise-heap-overflow-exception)
+          (##make-frame ret))
+        result)))
 
 (define-prim (##make-continuation frame denv)
   (##declare (not interrupts-enabled))
@@ -4103,10 +3599,10 @@ end-of-code
           ___SCMOBJ denv  = ___ARG2;
 
           ___hp[0]=___MAKE_HD_WORDS(___CONTINUATION_SIZE,___sCONTINUATION);
-          ___ADD_VECTOR_ELEM(0,frame);
-          ___ADD_VECTOR_ELEM(1,denv);
+          ___ADD_SUBTYPED_ELEM(0,frame);
+          ___ADD_SUBTYPED_ELEM(1,denv);
           ___hp+=___CONTINUATION_SIZE+1;
-          ___RESULT = ___GET_VECTOR(___CONTINUATION_SIZE);
+          ___RESULT = ___GET_SUBTYPED(___CONTINUATION_SIZE);
 
 end-of-code
 
@@ -4121,14 +3617,14 @@ end-of-code
          (##c-code #<<end-of-code
 
           ___SCMOBJ cont = ___ARG1;
-          ___SCMOBJ frame = ___FIELD(cont,___CONTINUATION_FRAME);
-          ___SCMOBJ denv  = ___FIELD(cont,___CONTINUATION_DENV);
+          ___SCMOBJ frame = ___CONTINUATION_FRAME_FIELD(cont);
+          ___SCMOBJ denv  = ___CONTINUATION_DENV_FIELD(cont);
 
           ___hp[0]=___MAKE_HD_WORDS(___CONTINUATION_SIZE,___sCONTINUATION);
-          ___ADD_VECTOR_ELEM(0,frame);
-          ___ADD_VECTOR_ELEM(1,denv);
+          ___ADD_SUBTYPED_ELEM(0,frame);
+          ___ADD_SUBTYPED_ELEM(1,denv);
           ___hp+=___CONTINUATION_SIZE+1;
-          ___RESULT = ___GET_VECTOR(___CONTINUATION_SIZE);
+          ___RESULT = ___GET_SUBTYPED(___CONTINUATION_SIZE);
 
 end-of-code
 
@@ -4143,20 +3639,20 @@ end-of-code
 #define DYNAMIC_ENV_BIND_DENV 2
 
    ___SCMOBJ cont = ___ARG1;
-   ___SCMOBJ frame = ___FIELD(cont,___CONTINUATION_FRAME);
-   ___SCMOBJ denv  = ___FIELD(cont,___CONTINUATION_DENV);
+   ___SCMOBJ frame = ___CONTINUATION_FRAME_FIELD(cont);
+   ___SCMOBJ denv  = ___CONTINUATION_DENV_FIELD(cont);
    ___SCMOBJ ra;
    ___SCMOBJ *fp, frame_ra, next_frame;
    int fs;
    int link;
 
-   if (___TYP(frame)==___tSUBTYPED)
+   if (___TESTTYPE(frame, ___tFRAME))
      {
        /* continuation frame is in the heap */
 
-       ra = ___FIELD(frame,0);
+       ra = ___FIELD(FRAME,frame,0);
 
-       fp = ___BODY_AS(frame,___tSUBTYPED);
+       fp = ___BODY_AS(frame,___tFRAME);
 
        if (ra == ___ps->internal_return)
          ___RETI_GET_FS_LINK(fp[___FRAME_RETI_RA],fs,link)
@@ -4174,8 +3670,8 @@ end-of-code
          ___RESULT = ___FAL;
        else
          {
-           ___FIELD(cont,___CONTINUATION_FRAME) = next_frame;
-           ___FIELD(cont,___CONTINUATION_DENV) = denv;
+           ___CONTINUATION_FRAME_FIELD(cont) = next_frame;
+           ___CONTINUATION_DENV_FIELD(cont) = denv;
            ___RESULT = cont;
          }
      }
@@ -4214,8 +3710,8 @@ end-of-code
          ___RESULT = ___FAL;
        else
          {
-           ___FIELD(cont,___CONTINUATION_FRAME) = next_frame;
-           ___FIELD(cont,___CONTINUATION_DENV) = denv;
+           ___CONTINUATION_FRAME_FIELD(cont) = next_frame;
+           ___CONTINUATION_DENV_FIELD(cont) = denv;
            ___RESULT = cont;
          }
      }
@@ -4299,8 +3795,8 @@ end-of-code
     (if (##fx> i 0)
         (let loop2 ((symkey (##vector-ref symkey-table i))
                     (result result))
-          (if (##subtyped? symkey)
-              (loop2 (##vector-ref symkey 2) ;; next in bucket
+          (if (##mem-allocated? symkey)
+              (loop2 (##c-code "___RESULT = ___SYMKEY_NEXT_FIELD(___ARG1);" symkey) ;; next in bucket
                      (f result symkey))
               (loop1 (##fx- i 1)
                      result)))
@@ -4372,7 +3868,7 @@ end-of-code
   (##declare (not interrupts-enabled))
   (##c-code #<<end-of-code
 
-   ___RESULT = ___BOOLEAN(___CAST(void*,___FIELD(___ARG1,___FOREIGN_PTR)) == 0);
+   ___RESULT = ___BOOLEAN(___CAST(void*,___FOREIGN_PTR_FIELD(___ARG1)) == 0);
 
 end-of-code
 
@@ -4400,7 +3896,7 @@ end-of-code
              size_t
     "
     ___return(___CAST(___SIZE_T,
-                      ___CAST(void*,___FIELD(___arg1,___FOREIGN_PTR))));
+                      ___CAST(void*,___FOREIGN_PTR_FIELD(___arg1))));
     ")
    f))
 
@@ -4473,24 +3969,25 @@ end-of-code
 (define ##err-code-unimplemented
   (##c-code "___RESULT = ___FIX(___UNIMPL_ERR);"))
 
-(define ##min-fixnum
-  (##c-code "___RESULT = ___FIX(___MIN_FIX);"))
-
-(define ##max-fixnum
-  (##c-code "___RESULT = ___FIX(___MAX_FIX);"))
-
-(define ##fixnum-width
+(define-prim (##fixnum-width)
   (##c-code "___RESULT = ___FIX(___FIX_WIDTH);"))
 
-(define ##fixnum-width-neg (##fx- ##fixnum-width))
+(define-prim (##fixnum-width-neg)
+  (##c-code "___RESULT = ___FIX(-___FIX_WIDTH);"))
 
-(define ##bignum.adigit-width
+(define-prim (##least-fixnum)
+  (##c-code "___RESULT = ___FIX(___MIN_FIX);"))
+
+(define-prim (##greatest-fixnum)
+  (##c-code "___RESULT = ___FIX(___MAX_FIX);"))
+
+(define-prim (##bignum.adigit-width)
   (##c-code "___RESULT = ___FIX(___BIG_ABASE_WIDTH);"))
 
-(define ##bignum.mdigit-width
+(define-prim (##bignum.mdigit-width)
   (##c-code "___RESULT = ___FIX(___BIG_MBASE_WIDTH);"))
 
-(define ##bignum.fdigit-width
+(define-prim (##bignum.fdigit-width)
   (##c-code "___RESULT = ___FIX(___BIG_FBASE_WIDTH);"))
 
 ;;;----------------------------------------------------------------------------
@@ -4598,7 +4095,7 @@ end-of-code
   (##declare (not interrupts-enabled))
   (##c-code #<<end-of-code
 
-   ___STORE_U64(___BODY_AS(___ARG1,___tSUBTYPED),
+   ___STORE_U64(___BODY_AS(___ARG1,___tU64VECTOR),
                 ___INT(___ARG2),
                 ___time_get_monotonic_time ());
 
@@ -4613,7 +4110,7 @@ end-of-code
   (##declare (not interrupts-enabled))
   (##c-code #<<end-of-code
 
-   ___STORE_U64(___BODY_AS(___ARG1,___tSUBTYPED),
+   ___STORE_U64(___BODY_AS(___ARG1,___tU64VECTOR),
                 ___INT(___ARG2),
                 ___time_get_monotonic_time_frequency ());
 
@@ -5388,7 +4885,8 @@ end-of-code
 ;;
 ;;   (define-type type
 ;;     id: ...special-type...
-;;     (id      unprintable: equality-test:)
+;;     extender: ...
+;;     (id      unprintable:)
 ;;     (name    unprintable: equality-skip:)
 ;;     (flags   unprintable: equality-skip:)
 ;;     (super   unprintable: equality-skip:)
@@ -5401,7 +4899,7 @@ end-of-code
           #f ;; this structure's type descriptor is itself! (set later)
           '##type-5
           'type
-          '8
+          '26 ;; extensible|concrete|nongenerative
           '#f
           '#(id 1 #f name 5 #f flags 5 #f super 5 #f fields 5 #f))))
     (##structure-type-set! type-type type-type) ;; self reference
@@ -5439,22 +4937,53 @@ end-of-code
                   (loop super)))))))
 
 (define-prim (##type? obj)
-  (##structure-direct-instance-of? obj (##type-id ##type-type)))
+  (##structure-instance-of? obj (##type-id ##type-type)))
 
 (define-prim (##structure-type obj)
-  (##vector-ref obj 0))
+  (##unchecked-structure-ref obj 0 #f #f))
 
 (define-prim (##structure-type-set! obj type)
-  (##vector-set! obj 0 type))
+  (##unchecked-structure-set! obj type i #f #f))
 
 (define-prim (##make-structure type len)
-  (let ((s (##make-vector len)))
-    (##subtype-set! s (macro-subtype-structure))
-    (##vector-set! s 0 type)
-    s))
+  (##declare (not interrupts-enabled))
+  (let ((result (##c-code #<<end-of-code
+
+___SCMOBJ result;
+___SIZE_TS n;
+
+___SCMOBJ type_;
+___SCMOBJ len;
+
+___POP_ARGS2(type_, len);
+
+n = ___INT(len);
+
+___GC_SAVE1(___ps, type_);
+___ALLOC_SCMOBJ_INLINE(STRUCTURE, ___WORD, n, 0);
+___GC_RESTORE1(___ps, type_);
+
+___INIT_SCMOBJ_INLINE(STRUCTURE, ___WORD, ___UWORD, n, type_);
+
+___RESULT = result;
+
+___PUSH_ARGS2(type_, len);
+
+end-of-code
+)))
+    (if (##fixnum? result)
+        (begin
+          (##raise-heap-overflow-exception)
+          (##make-structure type len))
+        result)))
 
 (define-prim (##structure-length obj)
-  (##vector-length obj))
+  ;; TODO: remove after bootstrap
+  (##declare (not interrupts-enabled))
+  (##c-code #<<end-of-code
+___RESULT = ___FIX(___HD_FIELDS(___SUBTYPED_HEADER(___ARG1)));
+end-of-code
+   obj))
 
 (define-prim (##structure type . fields)
 
@@ -5599,7 +5128,7 @@ end-of-code
     (let ((module-struct (macro-module-descr-module-struct module-descr)))
       (and module-struct
            (##c-code
-            "___RESULT = ___CAST(___module_struct*,___FIELD(___ARG1,___FOREIGN_PTR))->init_mod (___PSPNC);"
+            "___RESULT = ___CAST(___module_struct*,___FOREIGN_PTR_FIELD(___ARG1))->init_mod (___PSPNC);"
             module-struct))))
 
   (##main-set!
@@ -5645,7 +5174,7 @@ end-of-code
 
 (define-prim (##register-module-descrs module-descrs)
   (let loop1 ((i 0)
-              (preload-module-refs '()))
+              (rev-preload-module-refs '()))
     (if (##fx< i (##vector-length module-descrs))
         (let* ((module-descr
                 (##vector-ref module-descrs i))
@@ -5658,11 +5187,11 @@ end-of-code
                   (loop2 (##fx+ j 1)))))
           (loop1 (##fx+ i 1)
                  (if (##fx= (##fxand 1 (macro-module-descr-flags module-descr))
-                            0)
-                     preload-module-refs
+                            0) ;; preload flag is off?
+                     rev-preload-module-refs
                      (##cons (##vector-last module-refs)
-                             preload-module-refs))))
-        (##reverse! preload-module-refs))))
+                             rev-preload-module-refs))))
+        (##reverse! rev-preload-module-refs))))
 
 (implement-library-type-module-not-found-exception)
 
@@ -5695,7 +5224,7 @@ end-of-code
                                 #!optional
                                 (level 999999)) ;; init up to highest level
 
-  (define visited '()) ;; modules visited to correctly handle circular deps
+  (define visited '()) ;; modules visited to correctly handle shared deps
 
   (define (visited! module-ref)
     (set! visited (##cons module-ref visited)))
@@ -5707,47 +5236,44 @@ end-of-code
               (loop (##cdr lst)))
           #f)))
 
-  (define (get-modules module-refs)
+  (define (visit module-ref rev-collected-modules)
+    (if (visited? module-ref)
+        rev-collected-modules
+        (let ((module (##get-module module-ref)))
+          (visited! module-ref)
+          (if (and module
+                   (##fx< (macro-module-stage module) level))
+              (let ((dependencies (macro-module-descr-demand-modules
+                                    (macro-module-module-descr module))))
+                (let loop ((i 0)
+                           (rev-collected-modules rev-collected-modules))
+                  (if (##fx< i (##vector-length dependencies))
+                      (loop (##fx+ i 1)
+                            (visit (##vector-ref dependencies i)
+                                   rev-collected-modules))
+                      (##cons module rev-collected-modules))))
+              rev-collected-modules))))
 
-    (define (add-module module-ref result)
-      (if (visited? module-ref)
-          result
-          (let ((module (##get-module module-ref)))
-            (visited! module-ref)
-            (if (and module
-                     (##fx< (macro-module-stage module) level))
-                (##cons module result)
-                result))))
-
+  (define (collect module-refs rev-collected-modules)
     (if (##vector? module-refs)
 
         (let loop ((i 0)
-                   (result '()))
+                   (rev-collected-modules rev-collected-modules))
           (if (##fx< i (##vector-length module-refs))
               (loop (##fx+ i 1)
-                    (add-module (##vector-ref module-refs i) result))
-              result))
+                    (visit (##vector-ref module-refs i)
+                           rev-collected-modules))
+              (##reverse! rev-collected-modules)))
 
-        (let loop ((lst module-refs)
-                   (result '()))
-          (if (##pair? lst)
-              (loop (##cdr lst)
-                    (add-module (##car lst) result))
-              result))))
+        (let loop ((probe module-refs)
+                   (rev-collected-modules rev-collected-modules))
+          (if (##pair? probe)
+              (loop (##cdr probe)
+                    (visit (##car probe)
+                           rev-collected-modules))
+              (##reverse! rev-collected-modules)))))
 
-  (define (collect module-refs collected-modules)
-    (let loop ((modules (##reverse! (get-modules module-refs)))
-               (collected-modules collected-modules))
-      (if (##pair? modules)
-          (loop (##cdr modules)
-                (let ((module (##car modules)))
-                  (##cons module
-                          (collect (macro-module-descr-demand-modules
-                                    (macro-module-module-descr module))
-                                   collected-modules))))
-          collected-modules)))
-
-  (##reverse! (collect module-refs '())))
+  (collect module-refs '()))
 
 (define-prim (##init-modules modules
                              #!optional
@@ -5788,7 +5314,7 @@ end-of-code
 (define-prim (##load-module module-ref
                             #!optional
                             (level (macro-module-last-init-stage)))
-  (##load-modules (##vector module-ref) level))
+  (##load-modules (##list module-ref) level))
 
 (define-prim (##load-vm)
   (let* ((module-descrs

@@ -1,6 +1,6 @@
 /* File: "os_tty.c" */
 
-/* Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the operating system specific routines
@@ -8,7 +8,7 @@
  */
 
 #define ___INCLUDED_FROM_OS_TTY
-#define ___VERSION 409005
+#define ___VERSION 409007
 #include "gambit.h"
 
 #include "os_setup.h"
@@ -805,21 +805,41 @@ ___device_tty *self;)
 }
 
 
-___HIDDEN ___BOOL lineeditor_under_emacs ___PVOID
+___HIDDEN ___BOOL tty_is_dumb ___PVOID
 {
-#ifdef USE_OLD_INSIDE_EMACS_DETECTION
-  {
-    static ___UCS_2 emacs_env_name_old[] = { 'E', 'M', 'A', 'C', 'S', '\0' };
-    if (___env_var_defined_UCS_2 (emacs_env_name_old)) return 1;
-  }
-#endif
+  static ___UCS_2 term_env_name[] = { 'T', 'E', 'R', 'M', '\0' };
+  static ___UCS_2 dumb_str[] = { 'd', 'u', 'm', 'b', '\0' };
+  return ___env_var_equal_UCS_2 (term_env_name, dumb_str);
+}
 
-  {
-    static ___UCS_2 emacs_env_name_new[] = { 'I', 'N', 'S', 'I', 'D', 'E', '_', 'E', 'M', 'A', 'C', 'S', '\0' };
-    if (___env_var_defined_UCS_2 (emacs_env_name_new)) return 1;
-  }
 
-  return 0;
+___HIDDEN ___BOOL lineeditor_should_echo ___PVOID
+{
+  static ___UCS_2 emacs_env_name[] = { 'I', 'N', 'S', 'I', 'D', 'E', '_', 'E', 'M', 'A', 'C', 'S', '\0' };
+  static ___UCS_2 common_begstr[] = { ',', '\0' };
+  static ___UCS_2 comint_endstr[] = { ',', 'c', 'o', 'm', 'i', 'n', 't', '\0' };
+  static ___UCS_2 eshell_endstr[] = { ',', 'e', 's', 'h', 'e', 'l', 'l', '\0' };
+  static ___UCS_2 comint_midstr[] = { ',', 'c', 'o', 'm', 'i', 'n', 't', ',', '\0' };
+  static ___UCS_2 eshell_midstr[] = { ',', 'e', 's', 'h', 'e', 'l', 'l', ',', '\0' };
+  ___UCS_2STRING emacs_env_value;
+
+  if ((___env_var_defined_UCS_2 (emacs_env_name)) &&
+      (___getenv_UCS_2 (emacs_env_name, &emacs_env_value) == ___FIX(___NO_ERR)))
+    {
+      while (*emacs_env_value != '\0')
+        {
+          if (((___strcmp_UCS_2 (common_begstr, emacs_env_value)) == 1) &&
+              ((___strcmp_UCS_2 (comint_endstr, emacs_env_value)) == 0 ||
+               (___strcmp_UCS_2 (eshell_endstr, emacs_env_value)) == 0 ||
+               (___strcmp_UCS_2 (comint_midstr, emacs_env_value)) == 1 ||
+               (___strcmp_UCS_2 (eshell_midstr, emacs_env_value)) == 1))
+            return 0;
+          else
+            emacs_env_value++;
+        }
+    }
+
+  return 1;
 }
 
 
@@ -4144,6 +4164,9 @@ tty_text_attrs attrs;)
    * the text attributes "attrs".
    */
 
+  if (!self->input_echo)
+    return ___FIX(___NO_ERR);
+
   ___device_tty *d = self;
   ___SCMOBJ e;
 
@@ -5290,7 +5313,7 @@ ___device_tty *self;)
   ___device_tty *d = self;
   ___SCMOBJ e;
   lineeditor_history *h;
-  ___SCMOBJ default_options =
+  int default_options =
     ___INT(___device_tty_default_options_virt (&d->base));
 
   if (___device_kind (&d->base.base) == ___TTY_DEVICE_KIND ||
@@ -5299,7 +5322,7 @@ ___device_tty *self;)
       /* Console */
 
       d->input_allow_special = 1;
-      d->input_echo = 1;
+      d->input_echo = lineeditor_should_echo ();
       d->input_raw = 0;
       d->output_raw = 0;
       d->speed = 0;
@@ -5317,13 +5340,10 @@ ___device_tty *self;)
 
   d->lineeditor_mode = LINEEDITOR_MODE_DISABLE;
 
-  if (lineeditor_under_emacs ())
-    d->input_echo = 0;
-
 #if defined(USE_POSIX) || defined(USE_WIN32) || defined(USE_tcgetsetattr)
 
-  if (___TERMINAL_LINE_EDITING(___GSTATE->setup_params.io_settings[___IO_SETTINGS_TERMINAL]) !=
-      ___TERMINAL_LINE_EDITING_OFF)
+  if ((___TERMINAL_LINE_EDITING(___GSTATE->setup_params.io_settings[___IO_SETTINGS_TERMINAL]) !=
+       ___TERMINAL_LINE_EDITING_OFF) && (!tty_is_dumb ()))
     d->lineeditor_mode = LINEEDITOR_MODE_SCHEME;
 
 #endif
@@ -6708,7 +6728,7 @@ ___SCMOBJ sym;
 void *data;)
 {
   visit_symbol_data *dat = ___CAST(visit_symbol_data*,data);
-  ___SCMOBJ name = ___FIELD(sym,___SYMKEY_NAME);
+  ___SCMOBJ name = ___SYMKEY_NAME_FIELD(sym);
   int n = ___INT(___STRINGLENGTH(name));
   int word_start = dat->word_start;
   int prefix = dat->completion_point - word_start;
@@ -6720,7 +6740,7 @@ void *data;)
 
   for (i=0; i<prefix; i++)
     {
-      ___C c1 = ___INT(___STRINGREF(name,___FIX(i)));
+      ___C c1 = ___ORD(___STRINGREF(name,___FIX(i)));
       ___C c2 = dat->buf->buffer[word_start+i];
       if (c1 != c2)
         return;
@@ -6730,7 +6750,7 @@ void *data;)
     {
       if (i < len)
         {
-          ___C c1 = ___INT(___STRINGREF(name,___FIX(i)));
+          ___C c1 = ___ORD(___STRINGREF(name,___FIX(i)));
           ___C c2 = dat->buf->buffer[word_start+i];
           if (c1 < c2)
             return;
@@ -6753,15 +6773,15 @@ void *data;)
     }
   else
     {
-      ___SCMOBJ name2 = ___FIELD(dat->next,___SYMKEY_NAME);
+      ___SCMOBJ name2 = ___SYMKEY_NAME_FIELD(dat->next);
       int n2 = ___INT(___STRINGLENGTH(name2));
       i = 0;
       while (i < n)
         {
           if (i < n2)
             {
-              ___C c1 = ___INT(___STRINGREF(name,___FIX(i)));
-              ___C c2 = ___INT(___STRINGREF(name2,___FIX(i)));
+              ___C c1 = ___ORD(___STRINGREF(name,___FIX(i)));
+              ___C c2 = ___ORD(___STRINGREF(name2,___FIX(i)));
               if (c1 < c2)
                 goto found2;
               if (c1 > c2)
@@ -6816,7 +6836,7 @@ extensible_string *completion;)
 
   if (dat.next != ___FAL)
     {
-      ___SCMOBJ name = ___FIELD(dat.next,___SYMKEY_NAME);
+      ___SCMOBJ name = ___SYMKEY_NAME_FIELD(dat.next);
       int n = ___INT(___STRINGLENGTH(name));
       int i;
 
@@ -6832,7 +6852,7 @@ extensible_string *completion;)
 
       for (i=0; i<n; i++)
         {
-          ___C c = ___INT(___STRINGREF(name,___FIX(i)));
+          ___C c = ___ORD(___STRINGREF(name,___FIX(i)));
           if (extensible_string_insert_at_end (completion, 1, &c)
               != ___FIX(___NO_ERR))
             {
@@ -8441,7 +8461,7 @@ ___SCMOBJ input;
 ___SCMOBJ output;)
 {
   ___device_tty *d =
-    ___CAST(___device_tty*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_tty*,___FOREIGN_PTR_FIELD(dev));
 
   int input_attrs = ___INT(input);
   int output_attrs = ___INT(output);
@@ -8462,7 +8482,7 @@ ___SCMOBJ dev;
 ___SCMOBJ capability;)
 {
   ___device_tty *d =
-    ___CAST(___device_tty*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_tty*,___FOREIGN_PTR_FIELD(dev));
   ___SCMOBJ result = ___FAL;
   ___SCMOBJ x;
   int cap = ___INT(capability);
@@ -8486,7 +8506,7 @@ ___SCMOBJ ___os_device_tty_history
 ___SCMOBJ dev;)
 {
   ___device_tty *d =
-    ___CAST(___device_tty*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_tty*,___FOREIGN_PTR_FIELD(dev));
   ___SCMOBJ e;
   ___SCMOBJ result;
   extensible_string hist;
@@ -8548,7 +8568,7 @@ ___SCMOBJ dev;
 ___SCMOBJ history;)
 {
   ___device_tty *d =
-    ___CAST(___device_tty*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_tty*,___FOREIGN_PTR_FIELD(dev));
   ___SCMOBJ e;
   void *hist;
 
@@ -8602,7 +8622,7 @@ ___SCMOBJ dev;
 ___SCMOBJ max_length;)
 {
   ___device_tty *d =
-    ___CAST(___device_tty*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_tty*,___FOREIGN_PTR_FIELD(dev));
 
   lineeditor_set_history_max_length (d, ___INT(max_length));
 
@@ -8619,8 +8639,8 @@ ___SCMOBJ dev;
 ___SCMOBJ duration;)
 {
   ___device_tty *d =
-    ___CAST(___device_tty*,___FIELD(dev,___FOREIGN_PTR));
-  int duration_nsecs = ___CAST(int,___FLONUM_VAL(duration) * 1e9);
+    ___CAST(___device_tty*,___FOREIGN_PTR_FIELD(dev));
+  int duration_nsecs = ___CAST(int,___F64UNBOX(duration) * 1e9);
 
   if (duration_nsecs < 0)
     duration_nsecs = 0;
@@ -8652,7 +8672,7 @@ ___SCMOBJ output_raw;
 ___SCMOBJ speed;)
 {
   ___device_tty *d =
-    ___CAST(___device_tty*,___FIELD(dev,___FOREIGN_PTR));
+    ___CAST(___device_tty*,___FOREIGN_PTR_FIELD(dev));
   ___SCMOBJ e;
 
   if ((e = ___device_tty_force_open (d)) == ___FIX(___NO_ERR))

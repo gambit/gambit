@@ -1,6 +1,6 @@
 /* File: "os_setup.h" */
 
-/* Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved. */
 
 #ifndef ___OS_SETUP_H
 #define ___OS_SETUP_H
@@ -54,6 +54,10 @@ extern int ___close_no_EINTR
    ___P((int fd),
         ());
 
+extern int ___closefrom
+   ___P((int start_fd),
+        ());
+
 extern int ___dup_no_EINTR
    ___P((int fd),
         ());
@@ -63,13 +67,20 @@ extern int ___dup2_no_EINTR
          int fd2),
         ());
 
+extern int ___move_fds_to_non_std
+   ___P((int *fds,
+         int nb_fds,
+         ___BOOL close_on_error),
+        ());
+
 extern int ___set_fd_blocking_mode
    ___P((int fd,
          ___BOOL blocking),
         ());
 
-extern int ___open_half_duplex_pipe
-   ___P((___half_duplex_pipe *hdp),
+extern ___SCMOBJ ___open_half_duplex_pipe
+   ___P((___half_duplex_pipe *hdp,
+         ___BOOL avoid_std),
         ());
 
 extern void ___close_half_duplex_pipe

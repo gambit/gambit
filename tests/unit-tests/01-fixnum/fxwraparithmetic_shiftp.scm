@@ -10,5 +10,5 @@
 (check-eqv? (##fxwraparithmetic-shift? 10 -1) 5)
 (check-eqv? (##fxwraparithmetic-shift? 1 -1) 0)
 
-(check-eqv? (##fxwraparithmetic-shift? 1 (+ ##fixnum-width 1)) #f)
-(check-eqv? (##fxwraparithmetic-shift? 1 (- (+ ##fixnum-width 1))) #f)
+(check-eqv? (##fxwraparithmetic-shift? 1 (+ (##fixnum-width) 1)) #f)
+(check-eqv? (##fxwraparithmetic-shift? 1 (- (+ (##fixnum-width) 1))) #f)

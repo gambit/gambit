@@ -127,7 +127,10 @@ core-pre:
 
 core-post:
 
-try: browserfs.min.js codemirror UI.css UI.js index.html VM.min.js
+node_modules:
+	npm ci
+
+try: UI.css UI.js index.html VM.min.js node_modules
 	@echo "===== Copying library files"; \
 	INSTALL="`pwd`/$(INSTALL_DATA)"; \
 	DESTDIR="`pwd`/try"; \
@@ -136,8 +139,9 @@ try: browserfs.min.js codemirror UI.css UI.js index.html VM.min.js
 	(cd "$$DESTDIR" && find lib -path "*@js/*.o1" -exec echo "{}.js" ";" -exec mv "{}" "$$DESTDIR/{}.js" ";" -exec touch "$$DESTDIR/{}" ";" -exec gzip -k9 "$$DESTDIR/{}.js" ";")
 	mkdir try/doc
 	cp `$(GSC) -e '(display (path-expand "~~doc"))'`/gambit.html try/doc/.
-	cp -r browserfs.min.js try/.
-	cp -r codemirror try/.
+	cp -r node_modules/browserfs/dist/browserfs.min.js try/.
+	cp -r node_modules/codemirror try/.
+	cp -r node_modules/jquery/dist/jquery.min.js try/.
 	cp UI.css try/.
 	cp UI.js try/.
 	cp index.html try/.
@@ -159,21 +163,10 @@ VM.js: extra.scm VM.scm
 	cp `$(GSC) -e '(display (path-expand "~~lib/_six/six-expand#.scm"))'` .
 	$(GSC) -target js -label-namespace "z" -exe -o VM.js $(PRELUDE_OPT) -nopreload js.scm six-expand.scm extra.scm VM.scm
 
-VM.min.js: VM.js
-	npx google-closure-compiler --language_in=ECMASCRIPT_2020 --language_out=ECMASCRIPT_2020 --js VM.js --js_output_file VM.min.js
+VM.min.js: VM.js node_modules
+	node_modules/.bin/google-closure-compiler --language_in=ECMASCRIPT_2020 --language_out=ECMASCRIPT_2020 --js VM.js --js_output_file VM.min.js
 	sed -i.tmp -e "s/^'use strict';//" VM.min.js
 	gzip -k -9 VM.min.js
-
-browserfs.min.js:
-	wget https://cdnjs.cloudflare.com/ajax/libs/BrowserFS/$(BROWSERFS)/browserfs.min.js
-
-$(CODEMIRROR).zip:
-	wget https://codemirror.net/$(CODEMIRROR).zip
-
-codemirror: $(CODEMIRROR).zip
-	rm -rf -- $(CODEMIRROR)
-	unzip -q $(CODEMIRROR).zip
-	mv $(CODEMIRROR) codemirror
 
 serve: try
 	@echo "===== A local https server with a self signed certificate is"
@@ -229,7 +222,7 @@ mostlyclean-post mostlyclean-post-nonrec:
 clean-pre: mostlyclean-pre
 
 clean-post clean-post-nonrec: mostlyclean-post-nonrec
-	rm -rf js.scm js\#.scm six.js six-expand.scm six-expand\#.scm six-expand.js VM.min.js* try try.tgz codemirror $(CODEMIRROR)
+	rm -rf js.scm js\#.scm six.js six-expand.scm six-expand\#.scm six-expand.js VM.min.js* try try.tgz
 
 distclean-pre: clean-pre
 
@@ -242,7 +235,7 @@ bootclean-post bootclean-post-nonrec: distclean-post-nonrec
 realclean-pre: bootclean-pre
 
 realclean-post realclean-post-nonrec: bootclean-post-nonrec
-	rm -rf makefile $(CODEMIRROR).zip browserfs.min.js
+	rm -rf makefile
 
 rc-setup-pre:
 	$(RC) add $(RCFILES)

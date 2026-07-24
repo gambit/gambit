@@ -2,7 +2,7 @@
 
 ;;; File: "_t-c-3.scm"
 
-;;; Copyright (c) 1994-2019 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
 
 (include "generic.scm")
 
@@ -37,7 +37,7 @@
 (define targ-min-fixnum32
   (* -2
      (expt 2 (- (* 4 targ-bits-per-byte)
-                (+ targ-tag-bits 2)))))
+                (+ targ-min-tag-bits 2))))) ;; on 32 bit architectures, min tag bits are used
 
 (define targ-max-fixnum32
   (- (+ targ-min-fixnum32 1)))
@@ -55,7 +55,7 @@
 (define targ-min-fixnum64
   (* -2
      (expt 2 (- (* 8 targ-bits-per-byte)
-                (+ targ-tag-bits 2)))))
+                (+ targ-min-tag-bits 2))))) ;; on 64 bit architectures, fixnums could have only min tag bits
 
 (define targ-max-fixnum64
   (- (+ targ-min-fixnum64 1)))
@@ -206,7 +206,7 @@
         (begin
           (if (< targ-inexact-+0 y)
             (vector-set! z 0 (expt 2 m-bits)) ;; +inf.0
-            (vector-set! z 0 (- (* (expt 2 m-bits) 2) 1))) ;; +nan.0
+            (vector-set! z 0 (* 3 (expt 2 (- m-bits 1))))) ;; +nan.0 (quiet)
           (vector-set! z 1 (expt 2 (- e-bits 1))))
         (vector-set! z 0
           (truncate
@@ -256,6 +256,14 @@
 (define (targ-nonzero-flonum? x)
   (and (targ-flonum? x)
        (not (zero? x))))
+
+(define (targ-iflonum? x)
+  (and (targ-flonum? x)
+       (or (zero? x)
+           (not (finite? x))
+           (let ((absx (abs x)))
+             (and (>= absx 1.0842021724855044e-19)    ;; (expt 2.0 -63)
+                  (< absx 3.6893488147419103e19)))))) ;; (expt 2.0 65)
 
 ;; RATNUM representation.
 

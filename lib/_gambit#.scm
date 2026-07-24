@@ -2,7 +2,7 @@
 
 ;;; File: "_gambit#.scm"
 
-;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -633,12 +633,17 @@
 
 ;;;----------------------------------------------------------------------------
 
-;; Macro to define structure accessors.
+;; Macros to define structure accessors.
 
-(##define-macro (macro-slot index struct . val)
+(##define-macro (macro-vector-slot index struct . val)
   (if (null? val)
     `(##vector-ref ,struct ,index)
     `(##vector-set! ,struct ,index ,@val)))
+
+(##define-macro (macro-subtyped-slot index struct . val)
+  (if (null? val)
+    `(##unchecked-structure-ref ,struct ,index #f #f)
+    `(##unchecked-structure-set! ,struct ,@val ,index #f #f)))
 
 (##define-macro (macro-struct-slot index struct . val)
   (if (null? val)
@@ -647,98 +652,28 @@
 
 ;;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-;; Will objects
-
-;; A will is represented by an object vector of length 3
-;; slot 0 = link to next will in list of non-executable wills
-;; slot 1 = testator
-;; slot 2 = action procedure
-
-(##define-macro (macro-make-will testator action)
-  `(##make-will ,testator ,action))
-
-(##define-macro (macro-will-testator w)        `(macro-slot 1 ,w))
-(##define-macro (macro-will-testator-set! w x) `(macro-slot 1 ,w ,x))
-(##define-macro (macro-will-action w)          `(macro-slot 2 ,w))
-(##define-macro (macro-will-action-set! w x)   `(macro-slot 2 ,w ,x))
-
-(##define-macro (macro-will-execute! will)
-  `(let ((will ,will))
-     (##declare (not interrupts-enabled))
-     (let ((testator (macro-will-testator will))
-           (action (macro-will-action will)))
-       (macro-will-testator-set! will #f) ;; zap testator
-       (macro-will-action-set! will #f)   ;; and action procedure
-       (let ()
-         (##declare (interrupts-enabled))
-         (if action
-           (action testator))
-         (##void)))))
-
-;;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
 ;; GC hash tables
 
 ;; A GC hash table is represented by an object vector
 ;; slot 0 = link to next GC hash table
-;; slot 1 = flags (1=weak keys, 2=weak values, 4=need rehashing, ...)
+;; slot 1 = flags (1=weak keys, 2=weak values, 4=key moved, ...)
 ;; slot 2 = count (nb. of keys in table)
 ;; slot 3 = min-count (nb. of keys below which table needs to shrink)
 ;; slot 4 = free (nb. of keys that can be added to table before need to grow)
 ;; slot 5 = key of entry #0
 ;; slot 6 = value of entry #0
 
-(##define-macro (macro-gc-hash-table-nb-entries ht)
-  `(##fxwraplogical-shift-right
-    (##fx- (##vector-length ,ht) (macro-gc-hash-table-key0))
-    1))
-
-(##define-macro (macro-gc-hash-table-minimal-nb-entries) 5)
+(##define-macro (macro-gc-hash-table-minimal-size) 5)
 (##define-macro (macro-gc-hash-table-minimal-free) 2) ;; need 2 free entries for union/find
 
-(##define-macro (macro-make-minimal-gc-hash-table flags count)
-  `(let ((ht
-          (##vector
-           0
-           ,flags
-           ,count
-           0 ;; min-count
-           3 ;; free = (- (macro-gc-hash-table-minimal-nb-entries)
-             ;;           (macro-gc-hash-table-minimal-free))
-           (macro-unused-obj) (macro-unused-obj)
-           (macro-unused-obj) (macro-unused-obj)
-           (macro-unused-obj) (macro-unused-obj)
-           (macro-unused-obj) (macro-unused-obj)
-           (macro-unused-obj) (macro-unused-obj))))
-     (##subtype-set! ht (macro-subtype-weak))
-     ht))
-
-(##define-macro (macro-make-gc-hash-table flags count min-count free length)
-  `(let ((ht
-          (##make-vector
-           (##fx+ (##fxarithmetic-shift-left ,length 1)
-                  (macro-gc-hash-table-key0))
-           (macro-unused-obj))))
-     (macro-gc-hash-table-flags-set! ht ,flags)
-     (macro-gc-hash-table-count-set! ht ,count)
-     (macro-gc-hash-table-min-count-set! ht ,min-count)
-     (macro-gc-hash-table-free-set! ht ,free)
-     (##subtype-set! ht (macro-subtype-weak))
-     ht))
-
-(##define-macro (macro-gc-hash-table-size ht)
-  `(##fxarithmetic-shift-right
-    (##fx- (##vector-length ,ht) (macro-gc-hash-table-key0))
-    1))
-
-(##define-macro (macro-gc-hash-table-flags ht)        `(macro-slot 1 ,ht))
-(##define-macro (macro-gc-hash-table-flags-set! ht x) `(macro-slot 1 ,ht ,x))
-(##define-macro (macro-gc-hash-table-count ht)        `(macro-slot 2 ,ht))
-(##define-macro (macro-gc-hash-table-count-set! ht x) `(macro-slot 2 ,ht ,x))
-(##define-macro (macro-gc-hash-table-min-count ht)       `(macro-slot 3 ,ht))
-(##define-macro (macro-gc-hash-table-min-count-set! ht x)`(macro-slot 3 ,ht ,x))
-(##define-macro (macro-gc-hash-table-free ht)         `(macro-slot 4 ,ht))
-(##define-macro (macro-gc-hash-table-free-set! ht x)  `(macro-slot 4 ,ht ,x))
+(##define-macro (macro-gc-hash-table-flags ht)        `(macro-subtyped-slot 1 ,ht))
+(##define-macro (macro-gc-hash-table-flags-set! ht x) `(macro-subtyped-slot 1 ,ht ,x))
+(##define-macro (macro-gc-hash-table-count ht)        `(macro-subtyped-slot 2 ,ht))
+(##define-macro (macro-gc-hash-table-count-set! ht x) `(macro-subtyped-slot 2 ,ht ,x))
+(##define-macro (macro-gc-hash-table-min-count ht)       `(macro-subtyped-slot 3 ,ht))
+(##define-macro (macro-gc-hash-table-min-count-set! ht x)`(macro-subtyped-slot 3 ,ht ,x))
+(##define-macro (macro-gc-hash-table-free ht)         `(macro-subtyped-slot 4 ,ht))
+(##define-macro (macro-gc-hash-table-free-set! ht x)  `(macro-subtyped-slot 4 ,ht ,x))
 
 (##define-macro (macro-gc-hash-table-key0) 5)
 (##define-macro (macro-gc-hash-table-val0) 6)
@@ -750,16 +685,6 @@
 (##define-macro (macro-gc-hash-table-flag-mem-alloc-keys) 16)
 (##define-macro (macro-gc-hash-table-flag-need-rehash)    32)
 (##define-macro (macro-gc-hash-table-flag-union-find)     64)
-
-(##define-macro (macro-gc-hash-table-key-ref ht i*2)
-  `(##vector-ref ,ht (##fx+ ,i*2 (macro-gc-hash-table-key0))))
-(##define-macro (macro-gc-hash-table-key-set! ht i*2 x)
-  `(##vector-set! ,ht (##fx+ ,i*2 (macro-gc-hash-table-key0)) ,x))
-
-(##define-macro (macro-gc-hash-table-val-ref ht i*2)
-  `(##vector-ref ,ht (##fx+ ,i*2 (macro-gc-hash-table-val0))))
-(##define-macro (macro-gc-hash-table-val-set! ht i*2 x)
-  `(##vector-set! ,ht (##fx+ ,i*2 (macro-gc-hash-table-val0)) ,x))
 
 ;;- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 

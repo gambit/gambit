@@ -70,7 +70,9 @@
                     (begin
                       (display " and " output-port)
                       (plural nb-skipped-tests " skipped test")))
-                (display "\n" output-port)))
+                (display "\n" output-port)
+
+                (force-output output-port)))
 
           (if (pair? rest)
               (##exit (car rest))

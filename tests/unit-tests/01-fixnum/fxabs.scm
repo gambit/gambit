@@ -10,7 +10,7 @@
 (check-eqv? (fxabs 100) 100)
 (check-eqv? (fxabs -100) 100)
 
-(check-tail-exn fixnum-overflow-exception? (lambda () (fxabs ##min-fixnum)))
+(check-tail-exn fixnum-overflow-exception? (lambda () (fxabs (##least-fixnum))))
 
 (check-tail-exn type-exception? (lambda () (fxabs 0.0)))
 (check-tail-exn type-exception? (lambda () (fxabs 0.5)))

@@ -2,7 +2,7 @@
 
 ;;; File: "fixnum.scm"
 
-;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
 
 (##declare
   (standard-bindings)
@@ -84,6 +84,9 @@ open-output-file-preserving-case
 optional-object
 optional-object?
 pp-expression
+write-returning-len
+write-returning-len-without-read-macros
+display-returning-len
 rest-object
 rest-object?
 s16vect->list
@@ -287,8 +290,14 @@ string->canonical-symbol
 **quasiquote-sym
 **quote-sym
 **r7rs-guard-sym
-**r7rs-reraise-sym
 **r7rs-with-exception-catcher-sym
+**r7rs-reraise-sym
+**fixnum?-sym
+**fixnums?-sym
+**flonum?-sym
+**flonums?-sym
+**iflonum?-sym
+**iflonums?-sym
 **raise-sym
 **set!-sym
 **set-box!-sym
@@ -330,9 +339,12 @@ lambda-sym
 let-sym
 letrec-sym
 mostly-fixnum-flonum-sym
+mostly-fixnum-iflonum-sym
 mostly-fixnum-sym
 mostly-flonum-fixnum-sym
 mostly-flonum-sym
+mostly-iflonum-fixnum-sym
+mostly-iflonum-sym
 mostly-generic-sym
 multilisp-sym
 nonnull-function-sym
@@ -644,6 +656,7 @@ normalize-program
 parse-tree->expression
 pt-c-lambda
 scheme-id->c-id
+side-effects-impossible?
 string->c-id
 ))
 
@@ -821,6 +834,12 @@ virtual.end!
 **not-proc-obj
 **quasi-cons-proc-obj
 **quasi-list-proc-obj
+**fixnum?-proc-obj
+**fixnums?-proc-obj
+**flonum?-proc-obj
+**flonums?-proc-obj
+**iflonum?-proc-obj
+**iflonums?-proc-obj
 allocation-limit
 arith-implementation
 default-target
@@ -1945,7 +1964,8 @@ targ-s8vector-space
 targ-sharing-table
 targ-string-space
 targ-symbol-space
-targ-tag-bits
+targ-min-tag-bits
+targ-max-tag-bits
 targ-track-scheme-option?
 targ-unique-name
 targ-use-glo
@@ -1985,6 +2005,7 @@ targ-fixnum64?
 targ-flonum?
 targ-gc-map-chunks
 targ-hash
+targ-iflonum?
 targ-imag-part
 targ-inexact-+0
 targ-inexact-+1

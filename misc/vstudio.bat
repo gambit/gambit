@@ -10,10 +10,6 @@ rem directory.  For example:
 rem
 rem   misc\vstudio.bat c:\gambit
 
-rem We can't use -D___SINGLE_HOST for all Gambit generated C files
-rem because the C compiler runs out of memory while compiling _num.c
-rem and _io.c .
-
 set C_COMPILER=cl.exe
 set C_PREPROC=cl.exe -E
 set PKG_CONFIG=pkg-config
@@ -39,14 +35,11 @@ set DEFS_LIB=%DEFS_LIB% -D___GAMBITDIR_INSTLIB=\"~~userlib\"
 
 
 set DEFS_SH= -D___SINGLE_HOST 
-set DEFS_MH=
 set DEFS_COMMON=%DEFS_SH%
 set LIBS= Kernel32.Lib User32.Lib Gdi32.Lib WS2_32.Lib
 
 
 set COMP_GEN=%C_COMPILER% %FLAGS_COMMON% -c -I..\include
-set COMP_LIB_MH=%COMP_GEN% %FLAGS_OPT% %DEFS_LIB% -D___LIBRARY
-set COMP_LIB_PR_MH=%COMP_GEN% %FLAGS_OPT% %DEFS_LIB% -D___LIBRARY -D___PRIMAL
 set COMP_LIB=%COMP_GEN% %FLAGS_OPT% %DEFS_LIB% %DEFS_SH% -D___LIBRARY
 set COMP_LIB_PR=%COMP_GEN% %FLAGS_OPT% %DEFS_LIB% %DEFS_SH% -D___LIBRARY -D___PRIMAL
 set COMP_LIB_PR_RTS=%COMP_GEN% %FLAGS_OPT_RTS% %DEFS_LIB% %DEFS_SH% -D___LIBRARY -D___PRIMAL
@@ -104,7 +97,20 @@ echo #ifndef ___USE_NO_SIGSET_T               >> include\gambit.h
 echo #define ___USE_NO_SIGSET_T               >> include\gambit.h
 echo #endif                                   >> include\gambit.h
 echo #endif                                   >> include\gambit.h
+echo #ifndef ___SINGLE_HOST_LIMIT             >> include\gambit.h
+echo #define ___SINGLE_HOST_LIMIT 30000       >> include\gambit.h
+echo #endif                                   >> include\gambit.h
+echo #ifndef ___OPTIMIZED_MODULE_LIMIT        >> include\gambit.h
+echo #define ___OPTIMIZED_MODULE_LIMIT 20000  >> include\gambit.h
+echo #endif                                   >> include\gambit.h
+
 type include\gambit.h.in                      >> include\gambit.h
+
+rem The include/stamp.h file is normally created using information
+rem obtained with git and we can't rely on git being available.
+rem So just copy the include/stamp-release.h file which is "close enough".
+
+type include\stamp-release.h > include\stamp.h
 
 cd lib
 
@@ -125,10 +131,10 @@ cd lib
 
 %COMP_LIB_PR% _kernel.c
 %COMP_LIB_PR% _system.c
-%COMP_LIB_PR_MH% _num.c
+%COMP_LIB_PR% _num.c
 %COMP_LIB_PR% _std.c
 %COMP_LIB_PR% _eval.c
-%COMP_LIB_PR_MH% _io.c
+%COMP_LIB_PR% _io.c
 %COMP_LIB_PR% _nonstd.c
 %COMP_LIB_PR% _thread.c
 %COMP_LIB_PR% _repl.c

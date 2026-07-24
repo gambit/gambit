@@ -12,3 +12,6 @@
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector-fold-right)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector-fold-right xcons)))
 (check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector-fold-right xcons 0)))
+
+(set! ##allow-length-mismatch? #f)
+(check-tail-exn length-mismatch-exception? (lambda () (vector-fold-right + 0 '#(1) '#(1 2) '#(1))))

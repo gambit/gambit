@@ -425,6 +425,9 @@ clean-post clean-post-nonrec: mostlyclean-post-nonrec
 	  gambdoc@bat@ \
 	  gambdoc.unix \
 	  gambdoc.bat.windows \
+	  gambvcs@bat@ \
+	  gambvcs.unix \
+	  gambvcs.bat.windows \
 	  six@exe@ six@exe@.lnk \
 	  gsi-script@bat@ \
 	  gsi-script@bat@.lnk \
@@ -452,7 +455,8 @@ bootclean-post bootclean-post-nonrec: distclean-post-nonrec
 realclean-pre: bootclean-pre
 
 realclean-post realclean-post-nonrec: bootclean-post-nonrec
-	rm -f gambuild-C.unix gambuild-C.bat.windows \
+	rm -f makefile \
+	  gambuild-C.unix gambuild-C.bat.windows \
 	  gambuild-js.unix gambuild-js.bat.windows \
 	  gambuild-python.unix gambuild-python.bat.windows \
 	  gambuild-ruby.unix gambuild-ruby.bat.windows \
@@ -463,7 +467,8 @@ realclean-post realclean-post-nonrec: bootclean-post-nonrec
 	  gambuild-arm.unix gambuild-arm.bat.windows \
 	  gambuild-riscv-32.unix gambuild-riscv-32.bat.windows \
 	  gambuild-riscv-64.unix gambuild-riscv-64.bat.windows \
-	  gambdoc.unix gambdoc.bat.windows makefile
+	  gambdoc.unix gambdoc.bat.windows \
+	  gambvcs.unix gambvcs.bat.windows
 
 rc-setup-pre:
 	$(RC) add $(RCFILES)
@@ -648,6 +653,12 @@ gambdoc.unix: gambdoc.unix.in $(rootfromhere)/config.status
 	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
 
 gambdoc.bat.windows: gambdoc.bat.windows.in $(rootfromhere)/config.status
+	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
+
+gambvcs.unix: gambvcs.unix.in $(rootfromhere)/config.status
+	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
+
+gambvcs.bat.windows: gambvcs.bat.windows.in $(rootfromhere)/config.status
 	cd $(rootfromhere) && CONFIG_FILES=$(herefromroot)/$@ CONFIG_HEADERS= ./config.status
 
 # Tell versions [3.59,3.63) of GNU make not to export all variables.

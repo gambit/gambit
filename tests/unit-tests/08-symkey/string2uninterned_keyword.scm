@@ -4,7 +4,7 @@
 (define int 11)
 (define key 'foo:)
 
-(set! ##keyword-counter ##max-fixnum) ;; to cause hash code wrap around
+(set! ##keyword-counter (##greatest-fixnum)) ;; to cause hash code wrap around
 
 (check-true (keyword? (string->uninterned-keyword str)))
 (check-true (keyword? (string->uninterned-keyword str int)))

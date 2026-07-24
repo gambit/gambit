@@ -2,7 +2,7 @@
 
 ;;; File: "_back.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -452,6 +452,24 @@
   (set! **case-memv-proc-obj
         (target.prim-info **case-memv-sym))
 
+  (set! **fixnum?-proc-obj
+        (target.prim-info **fixnum?-sym))
+
+  (set! **fixnums?-proc-obj
+        (target.prim-info **fixnums?-sym))
+
+  (set! **flonum?-proc-obj
+        (target.prim-info **flonum?-sym))
+
+  (set! **flonums?-proc-obj
+        (target.prim-info **flonums?-sym))
+
+  (set! **iflonum?-proc-obj
+        (target.prim-info **iflonum?-sym))
+
+  (set! **iflonums?-proc-obj
+        (target.prim-info **iflonums?-sym))
+
   #f)
 
 (define (target-unselect!)
@@ -466,6 +484,12 @@
   (set! **quasi-list->vector-proc-obj #f)
   (set! **quasi-vector-proc-obj       #f)
   (set! **case-memv-proc-obj          #f)
+  (set! **fixnum?-proc-obj            #f)
+  (set! **fixnums?-proc-obj           #f)
+  (set! **flonum?-proc-obj            #f)
+  (set! **flonums?-proc-obj           #f)
+  (set! **iflonum?-proc-obj           #f)
+  (set! **iflonums?-proc-obj          #f)
 
   ((target-end! target))
 
@@ -496,6 +520,12 @@
 (define **quasi-list->vector-proc-obj #f)  ;; ##quasi-list->vector
 (define **quasi-vector-proc-obj       #f)  ;; ##quasi-vector
 (define **case-memv-proc-obj          #f)  ;; ##case-memv
+(define **fixnum?-proc-obj            #f)  ;; ##fixnum?
+(define **fixnums?-proc-obj           #f)  ;; ##fixnums?
+(define **flonum?-proc-obj            #f)  ;; ##flonum?
+(define **flonums?-proc-obj           #f)  ;; ##flonums?
+(define **iflonum?-proc-obj           #f)  ;; ##iflonum?
+(define **iflonums?-proc-obj          #f)  ;; ##iflonums?
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -521,11 +551,20 @@
 ;; (mostly-flonum)                   flonum arithmetic is frequent
 ;; (mostly-flonum <var1> ...)        apply only to primitives specified
 ;;
+;; (mostly-iflonum)                  immediate flonum arithmetic is frequent
+;; (mostly-iflonum <var1> ...)       apply only to primitives specified
+;;
 ;; (mostly-fixnum-flonum)            fixnum and flonum arithmetic is frequent
 ;; (mostly-fixnum-flonum <var1> ...) apply only to primitives specified
 ;;
+;; (mostly-fixnum-iflonum)            fixnum and immediate flonum arithmetic is frequent
+;; (mostly-fixnum-iflonum <var1> ...) apply only to primitives specified
+;;
 ;; (mostly-flonum-fixnum)            flonum and fixnum arithmetic is frequent
 ;; (mostly-flonum-fixnum <var1> ...) apply only to primitives specified
+;;
+;; (mostly-iflonum-fixnum)            immediate flonum and fixnum arithmetic is frequent
+;; (mostly-iflonum-fixnum <var1> ...) apply only to primitives specified
 ;;
 ;; Optimizing small object allocation declaration:
 ;;
@@ -540,14 +579,17 @@
 (define (arith-implementation name env)
   (declaration-value 'arith name generic-sym env))
 
-(define-namable-decl mostly-generic-sym       'mostly-arith)
-(define-namable-decl mostly-fixnum-sym        'mostly-arith)
-(define-namable-decl mostly-flonum-sym        'mostly-arith)
-(define-namable-decl mostly-fixnum-flonum-sym 'mostly-arith)
-(define-namable-decl mostly-flonum-fixnum-sym 'mostly-arith)
+(define-namable-decl mostly-generic-sym        'mostly-arith)
+(define-namable-decl mostly-fixnum-sym         'mostly-arith)
+(define-namable-decl mostly-flonum-sym         'mostly-arith)
+(define-namable-decl mostly-iflonum-sym        'mostly-arith)
+(define-namable-decl mostly-fixnum-flonum-sym  'mostly-arith)
+(define-namable-decl mostly-fixnum-iflonum-sym 'mostly-arith)
+(define-namable-decl mostly-flonum-fixnum-sym  'mostly-arith)
+(define-namable-decl mostly-iflonum-fixnum-sym 'mostly-arith)
 
 (define (mostly-arith-implementation name env)
-  (declaration-value 'mostly-arith name mostly-fixnum-flonum-sym env))
+  (declaration-value 'mostly-arith name mostly-fixnum-iflonum-sym env))
 
 (define-parameterized-decl allocation-limit-sym #t)
 

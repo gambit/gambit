@@ -2,7 +2,7 @@
 
 ; File: "tcltk.scm"
 
-; Copyright (c) 1997-2019 by Marc Feeley, All Rights Reserved.
+; Copyright (c) 1997-2025 by Marc Feeley, All Rights Reserved.
 
 ; This is the Gambit interface for Tcl/Tk.
 
@@ -322,7 +322,7 @@ c-declare-end
             }
           else
             {
-              ___FIELD(vect,0) = ___arg2;
+              ___VECTORELEM(vect,0) = ___arg2;
               ___EXT(___set_data_rc) (cd, vect);
 
               /*

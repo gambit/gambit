@@ -2,7 +2,7 @@
 
 ;;; File: "_univlib.scm"
 
-;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -17,6 +17,13 @@
 // Autodetect availability of nodejs features.
 if (typeof @os_nodejs@ === 'undefined') {
   @os_nodejs@ = !@os_web@;
+}
+
+if (@os_web@) {
+  @all_modules_registered@ = function () {
+    // delay starting program until page loaded
+    document.addEventListener('DOMContentLoaded', @program_start@);
+  }
 }
 
 if (@os_nodejs@) {
@@ -134,7 +141,7 @@ if (typeof @os_fs@ === 'undefined') {
   for (var i=lo; i<hi; i++) {
     var c = buffer[i];
     if (c === 10) { // end of line?
-      console.log(String.fromCharCode.apply(null, dev.wbuf));
+      console.log(String.fromCodePoint.apply(null, dev.wbuf));
       dev.wbuf = [];
     } else {
       dev.wbuf.push(c);
@@ -807,12 +814,13 @@ def @os_device_from_basic_console@():
 (define ##err-code-EAGAIN            -35)
 (define ##err-code-unimplemented   -9999)
 
-(define ##min-fixnum          -536870912)
-(define ##max-fixnum           536870911)
-(define ##fixnum-width                30)
-(define ##fixnum-width-neg           -30)
-(define ##bignum.adigit-width         14)
-(define ##bignum.mdigit-width         14)
+(define-prim (##fixnum-width)               30)
+(define-prim (##fixnum-width-neg)          -30)
+(define-prim (##least-fixnum)       -536870912)
+(define-prim (##greatest-fixnum)     536870911)
+(define-prim (##bignum.adigit-width)        14)
+(define-prim (##bignum.mdigit-width)        14)
+(define-prim (##bignum.fdigit-width)         7)
 
 (define ##os-bat-extension-string-saved "")
 (define ##os-exe-extension-string-saved "")
@@ -841,9 +849,6 @@ def @os_device_from_basic_console@():
 
 (define (##check-heap) #f)
 (define (##raise-heap-overflow-exception) #f)
-
-(define (##explode-continuation cont) #f)
-(define (##explode-frame frame) #f)
 
 (define (##kernel-handlers) #f)
 
@@ -943,21 +948,6 @@ def @os_device_from_basic_console@():
 (define-prim (##continuation-denv cont))
 
 (define-prim (##continuation-denv-set! cont denv))
-
-(define-prim (##explode-frame frame)
-  (let ((fs (##frame-fs frame)))
-    (let ((v (##make-vector (##fx+ fs 1))))
-      (##vector-set! v 0 (##frame-ret frame))
-      (let loop ((i fs))
-        (if (##fx< 0 i)
-          (begin
-            (if (##frame-slot-live? frame i)
-              (##vector-set!
-               v
-               i
-               (##frame-ref frame i)))
-            (loop (##fx- i 1)))
-          v)))))
 
 (define-prim (##frame-ret frame))
 
@@ -3865,28 +3855,80 @@ def @os_device_stream_width@(dev_condvar_scm):
   var blo = @scm2host@(port_scm.@slots@[@PORT_BYTE_RLO@]);
   var bhi = @scm2host@(port_scm.@slots@[@PORT_BYTE_RHI@]);
   var options = @scm2host@(port_scm.@slots@[@PORT_ROPTIONS@]);
+  var encoding = options & 0x1f;
 
-  if (want != false)
-    {
-      var cend2 = chi + want;
-      if (cend2 < cend)
-        cend = cend2;
-    }
+  if (want != false) {
+    var cend2 = chi + want;
+    if (cend2 < cend)
+      cend = cend2;
+  }
 
   var cbuf_avail = cend - chi;
   var bbuf_avail = bhi - blo;
 
   while (cbuf_avail > 0 && bbuf_avail > 0) {
-    cbuf_scm.@codes@[cend - cbuf_avail] = bbuf[bhi - bbuf_avail];
-    bbuf_avail--;
+    let i = bhi - bbuf_avail;
+    let c = bbuf[i];
+    if (encoding === 1) {
+      // ASCII encoding
+      bbuf_avail -= 1;
+    } else if (encoding === 2) {
+      // ISO-8859-1 encoding
+      bbuf_avail -= 1;
+    } else {
+      // UTF-8 encoding
+      if (c <= 0x7f) {
+        bbuf_avail -= 1;
+      } else if ((c & 0xe0) === 0xc0) {
+        if (bbuf_avail < 2) break;
+        if ((bbuf[i+1] & 0xc0) !== 0x80) {
+          c = 0xfffd; // on encoding error use Unicode Replacement Character
+        } else {
+          c = ((c & 0x1f) << 6) + (bbuf[i+1] & 0x3f);
+        }
+        bbuf_avail -= 2;
+      } else if ((c & 0xf0) === 0xe0) {
+        if (bbuf_avail < 3) break;
+        if ((bbuf[i+1] & 0xc0) !== 0x80 || (bbuf[i+2] & 0xc0) !== 0x80) {
+          c = 0xfffd; // on encoding error use Unicode Replacement Character
+        } else {
+          c = ((c & 0x0f) << 12) + ((bbuf[i+1] & 0x3f) << 6) + (bbuf[i+2] & 0x3f);
+        }
+        bbuf_avail -= 3;
+      } else if ((c & 0xf8) === 0xf0) {
+        if (bbuf_avail < 3) break;
+        if ((bbuf[i+1] & 0xc0) !== 0x80 || (bbuf[i+2] & 0xc0) !== 0x80 || (bbuf[i+3] & 0xc0) !== 0x80) {
+          c = 0xfffd; // on encoding error use Unicode Replacement Character
+        } else {
+          c = ((c & 0x07) << 12) + ((bbuf[i+1] & 0x3f) << 6) + ((bbuf[i+2] & 0x3f) << 6) + (bbuf[i+3] & 0x3f);
+        }
+        bbuf_avail -= 4;
+      } else {
+        c = 0xfffd; // on encoding error use Unicode Replacement Character
+        bbuf_avail -= 1;
+      }
+    }
+    cbuf_scm.@codes@[cend - cbuf_avail] = c;
     cbuf_avail--;
   }
 
+  blo = bhi - bbuf_avail;
+
+  if (bbuf_avail < 4 && blo > 0) {
+    // move buffer to make room for bytes that complete a UTF-8 encoding
+    for (let j=0; j<bbuf_avail; j++) {
+      bbuf[j] = bbuf[blo+j];
+    }
+    blo = 0;
+    bhi = bbuf_avail;
+  }
+
   port_scm.@slots@[@PORT_CHAR_RHI@] = @host2scm@(cend - cbuf_avail);
-  port_scm.@slots@[@PORT_BYTE_RLO@] = @host2scm@(bhi - bbuf_avail);
+  port_scm.@slots@[@PORT_BYTE_RLO@] = @host2scm@(blo);
+  port_scm.@slots@[@PORT_BYTE_RHI@] = @host2scm@(bhi);
   port_scm.@slots@[@PORT_ROPTIONS@] = @host2scm@(options);
 
-  return @host2scm@(0) // no error
+  return @host2scm@(0); // no error
 };
 
 ")
@@ -3964,12 +4006,46 @@ def @os_port_decode_chars@(port_scm, want_scm, eof_scm):
   var bhi = @scm2host@(port_scm.@slots@[@PORT_BYTE_WHI@]);
   var bend = bbuf.length;
   var options = @scm2host@(port_scm.@slots@[@PORT_WOPTIONS@]);
+  var encoding = options & 0x1f;
   var cbuf_avail = chi - clo;
   var bbuf_avail = bend - bhi;
 
   while (cbuf_avail > 0 && bbuf_avail > 0) {
-    bbuf[bend - bbuf_avail] = cbuf_scm.@codes@[chi - cbuf_avail];
-    bbuf_avail--;
+    let c = cbuf_scm.@codes@[chi - cbuf_avail];
+    let i = bend - bbuf_avail;
+    if (encoding === 1) {
+      // ASCII encoding
+      bbuf[i] = c & 0x7f;
+      bbuf_avail -= 1;
+    } else if (encoding === 2) {
+      // ISO-8859-1 encoding
+      bbuf[i] = c & 0xff;
+      bbuf_avail -= 1;
+    } else {
+      // UTF-8 encoding
+      if (c <= 0x7f) {
+        bbuf[i] = c;
+        bbuf_avail -= 1;
+      } else if (c <= 0x7ff) {
+        if (bbuf_avail < 2) break;
+        bbuf[i] = 0xc0 + (c >> 6);
+        bbuf[i+1] = 0x80 + (c & 0x3f);
+        bbuf_avail -= 2;
+      } else if (c <= 0xffff) {
+        if (bbuf_avail < 3) break;
+        bbuf[i] = 0xe0 + (c >> 12);
+        bbuf[i+1] = 0x80 + ((c >> 6) & 0x3f);
+        bbuf[i+2] = 0x80 + (c & 0x3f);
+        bbuf_avail -= 3;
+      } else {
+        if (bbuf_avail < 4) break;
+        bbuf[i] = 0xf0 + (c >> 18);
+        bbuf[i+1] = 0x80 + ((c >> 12) & 0x3f);
+        bbuf[i+2] = 0x80 + ((c >> 6) & 0x3f);
+        bbuf[i+3] = 0x80 + (c & 0x3f);
+        bbuf_avail -= 4;
+      }
+    }
     cbuf_avail--;
   }
 
@@ -3977,7 +4053,7 @@ def @os_port_decode_chars@(port_scm, want_scm, eof_scm):
   port_scm.@slots@[@PORT_BYTE_WHI@] = @host2scm@(bend - bbuf_avail);
   port_scm.@slots@[@PORT_WOPTIONS@] = @host2scm@(options);
 
-  return @host2scm@(0) // no error
+  return @host2scm@(0); // no error
 };
 
 ")
