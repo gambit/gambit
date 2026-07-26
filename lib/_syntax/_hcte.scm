@@ -78,12 +78,12 @@
 (define-primitive (hcte-add-new-local-binding! (cte cte)
                                                (id identifier))
   ; add a new local binding to the global binding table.
-  (let* ((name    (syntax-source-code id))
+  (let* ((name    (##syntax-source-code id))
          (key     (gensym name))
          (binding (##binding-local key)))
     (##hygiene-record-source-name! key name)
     (##cte-top-global-binding-table-table-set! (##cte-top-cte cte)
-      (identifier-copy id)
+      (##identifier-copy id)
       binding)
     key))
 
@@ -92,7 +92,7 @@
                                                     key)
   (let ((binding (##binding-local key)))
     (##cte-top-global-binding-table-table-set! (##cte-top-cte cte)
-      (identifier-copy id)
+      (##identifier-copy id)
       binding)
     key))
 
@@ -109,10 +109,10 @@
   ; the procedure assume that the identifier provided
   ; has already been renamed properly according to
   ; namespaces convention.
-  (let* ((key    (syntax-source-code id))
+  (let* ((key    (##syntax-source-code id))
          (binding (##binding-top-level key)))
     (##cte-top-global-binding-table-table-set! (##cte-top-cte cte)
-      (identifier-copy id)
+      (##identifier-copy id)
       binding)
     key))
 
@@ -246,7 +246,7 @@
   (let ((full-name 
           (##cte-namespace-lookup cte (##syntax-source-code id))))
     (and full-name
-         (syntax-source-code-set id full-name))))
+         (##syntax-source-code-set id full-name))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -263,5 +263,16 @@
       (##raise-expression-parsing-exception
         'ill-formed-macro-transformer
         src)))
+
+(define-prim (##macro-not-yet-defined-descr id)
+  (##make-macro-descr
+    #t
+    -1
+    (lambda (src)
+      (##raise-expression-parsing-exception
+        'macro-used-before-definition
+        src
+        (##syntax-source-code id)))
+    id))
 
 ;;;============================================================================

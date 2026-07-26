@@ -13,7 +13,7 @@
                  (define z (+ a#y a#x))
                  z))
        (stx (datum->syntax datum))
-       (stx (add-scope stx core-scope)))
+       (stx (##add-scope stx ##core-scope)))
   (let ((evalued  (##eval-for-top-syntax stx cte)))
     (check-equal? evalued 3)))
 
@@ -26,7 +26,7 @@
                  (define z (+ y b#x))
                  z))
        (stx (datum->syntax datum))
-       (stx (add-scope stx core-scope)))
+       (stx (##add-scope stx ##core-scope)))
   (let ((evalued  (##eval-for-top-syntax stx cte)))
     (check-equal? evalued 3)))
 
@@ -40,7 +40,7 @@
                  (define-syntax z (lambda (s) (+ (aa#y) (aa#x))))
                  (z)))
        (stx (datum->syntax datum))
-       (stx (add-scope stx core-scope)))
+       (stx (##add-scope stx ##core-scope)))
   (let ((evalued  (##eval-for-top-syntax stx cte)))
     (check-equal? evalued 3)))
 
@@ -55,7 +55,7 @@
                  (##let ((x 0))
                    x)))
        (stx (datum->syntax datum))
-       (stx (add-scope stx core-scope)))
+       (stx (##add-scope stx ##core-scope)))
   (let ((evalued  (##eval-for-top-syntax stx cte)))
     (check-equal? evalued 0)))
 
@@ -66,7 +66,7 @@
                  (##let ((x 0))
                    d#x)))
        (stx (datum->syntax datum))
-       (stx (add-scope stx core-scope)))
+       (stx (##add-scope stx ##core-scope)))
   (check-exn
     unbound-global-exception?
     (lambda () (##eval-for-top-syntax stx cte))))
@@ -81,7 +81,7 @@
                    (##namespace (""))
                    x)))
        (stx (datum->syntax datum))
-       (stx (add-scope stx core-scope)))
+       (stx (##add-scope stx ##core-scope)))
   (check-exn
     unbound-global-exception?
     (lambda () (##eval-for-top-syntax stx cte))))
@@ -95,7 +95,7 @@
                    (##namespace (""))
                    f#x)))
        (stx (datum->syntax datum))
-       (stx (add-scope stx core-scope)))
+       (stx (##add-scope stx ##core-scope)))
   (check-exn
     unbound-global-exception?
     (lambda () (##eval-for-top-syntax stx cte))))

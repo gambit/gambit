@@ -231,8 +231,8 @@ zero?
 
 ;; special forms
 define-syntax
-;;let-syntax ;; not implemented
-;;letrec-syntax ;; not implemented
+let-syntax
+letrec-syntax
 syntax-rules
 
 ;; procedures
@@ -244,7 +244,17 @@ null-environment
 scheme-report-environment
 values
 
-;; Identifier bindings that R7RS adds to R5RS
+;; Identifier bindings that R6RS adds to R5RS
+
+;; special forms
+with-syntax
+
+;; procedures
+bound-identifier=?
+free-identifier=?
+identifier?
+
+;; Identifier bindings that R7RS adds to R6RS
 
 ;; special forms
 case-lambda
@@ -261,6 +271,8 @@ letrec*
 letrec*-values
 letrec-values
 parameterize
+syntax
+syntax-case
 syntax-error
 unless
 when
@@ -395,8 +407,9 @@ time
 define-cond-expand-feature
 define-values
 r7rs-guard
-syntax
-syntax-case
+let*-syntax
+letrec*-syntax
+quote-syntax
 
 ;; global variable
 default-random-source

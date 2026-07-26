@@ -625,7 +625,7 @@
   ##hash-set-hamt-alist-remove
   #f
   ##eq?
-  scope-id)
+  ##scope-id)
 
 (implement-hash-set-hamt)
 
@@ -656,7 +656,6 @@
                          (##set! l (+ l 1)))))))
          (##fx= l (##hash-set-hamt-length scps2)))))
 
-; TODO: compiler fail to serialize (see test/unit-test/05-serdes/serdes.scm)
 (define-prim (##global-binding-table-id-equal? obj1 obj2)
   (and (##vector? obj1)
        (##fx>= (##vector-length obj1) 4)
@@ -713,7 +712,7 @@
         (##hash-set-hamt-fold
           scopes
           (lambda (acc scp _)
-            (let ((s (scope-id scp)))
+            (let ((s (##scope-id scp)))
               (if (##fx> s acc) s acc)))
           -1)
         -1)))
@@ -746,7 +745,7 @@
               (##hash-set-hamt-fold
                 scopes
                 (lambda (acc scp _)
-                  (let loop ((entries (##table-ref sub (scope-id scp) '()))
+                  (let loop ((entries (##table-ref sub (##scope-id scp) '()))
                              (acc acc))
                     (if (##pair? entries)
                         (loop (##cdr entries) (##cons (##car (##car entries)) acc))
@@ -903,9 +902,6 @@
 
 (define (##cte-ctx-set! cte ctx)
   (##vector-set! cte 2 ctx))
-
-#;(define (##cte-copy cte)
-  (##vector-copy cte))
 
 (define (##cte-relink cte new-parent-cte)
   (if new-parent-cte
@@ -1144,24 +1140,6 @@
 ;;; top level variables do not need an associated ctx binding
 ;;;
 
-;;; Can be removed; unused.
-;;;(define (##cte-top-cte-add-variable parent-cte name #!optional (syntax-proc-ctx identity))
-;;;
-;;;  (define (replace cte)
-;;;    (cond
-;;;      ((##cte-top? cte)
-;;;       (##make-cte-frame cte (list name) syntax-proc-ctx))
-;;;      ((and (##cte-frame? cte)
-;;;            (##equal? name (##cte-macro-name cte)))
-;;;       (##make-cte-frame cte (list name) syntax-proc-ctx))
-;;;      (else
-;;;        (##cte-relink cte (replace (##cte-parent-cte cte))))))
-;;;
-;;;
-;;;  ;(##make-cte-frame cte (list name) syntax-proc-ctx)
-;;;  (replace parent-cte))
-;;;
-
 (define (##cte-add-variable parent-cte name #!optional (syntax-proc-ctx identity))
   (##make-cte-frame parent-cte (list name) syntax-proc-ctx))
 
@@ -1379,7 +1357,6 @@
 ;;; naming
 ;;;
 
-;; TODO: restore once bug fixed
 (define (##full-name? sym) ;; full name if it contains a namespace separator
   (##fx>= (##namespace-separator-index (##symbol->string sym)) 0))
 
@@ -1568,7 +1545,7 @@
          (##top-cte-add-core-macro! top-cte name def ctx-proc))
         ((and (##cte-core-macro? cte)
               (equal? (##cte-core-macro-name cte)
-                      (syntax-source-code global-name)))
+                      (##source-code global-name)))
          (let ((new-cte 
                  (##cte-add-core-macro (##cte-parent-cte cte) global-name def ctx-proc)))
            (##cte-parent-cte-set! prev-cte new-cte)))
@@ -1589,14 +1566,6 @@
           (begin
             (##top-cte-cte-set! prev-cte (##make-cte-core-macro cte global-name def)))
           (loop cte (##top-cte-cte cte))))))
-
-;  (let* ((cte (##cte-top-cte top-cte))
-;         (global-name (##cte-global-macro-name cte name)))
-;    (let loop ((prev-cte top-cte) (cte cte))
-;      (if (##cte-top? cte)
-;          (##cte-parent-cte-set! prev-cte (##cte-macro cte (##cte-ctx cte) global-name def))
-;          (loop cte (##cte-parent-cte cte))))))
-
 
 ;;; ---------------------------------------
 ;;; declare
@@ -6545,7 +6514,7 @@
                       (pair? (##source-code src))
                       (not (##source? (car (##source-code src)))))
                  ; adjust for "source2" case
-                 (datum->core-syntax (##source-code src))
+                 (##datum->core-syntax (##source-code src))
                  src)))
     (##compile-top top-cte (##syntax-expand ##syntax-interaction-cte src))))
 
@@ -6554,7 +6523,7 @@
                       (pair? (##source-code src))
                       (not (##source? (car (##source-code src)))))
                  ; adjust for "source2" case
-                 (datum->core-syntax (##source-code src))
+                 (##datum->core-syntax (##source-code src))
                  src)))
     (##compile-inner inner-cte (##syntax-expand ##syntax-interaction-cte src))))
 

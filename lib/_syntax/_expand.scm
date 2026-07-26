@@ -15,7 +15,7 @@
 ;;; binding registration
 
 (define-prim (##expand-let-bindings bindings-src cte)
-  (let ((scps (list (make-scope))))
+  (let ((scps (list (##make-scope))))
     (let loop ((bindings bindings-src)
                (res      '())
                (cte      cte))
@@ -77,8 +77,8 @@
                (cte      cte))
       (match-source bindings ()
         ((binding @ (id val) . bindings)
-         (let* ((val (##expand (add-scopes val scps) cte))
-                (scps (cons (make-scope) scps))
+         (let* ((val (##expand (##add-scopes val scps) cte))
+                (scps (cons (##make-scope) scps))
                 (id (##add-scopes id scps)))
            (cond
              ((or (pair? (##syntax-source-code id))
@@ -129,13 +129,13 @@
            bindings-src))))))
 
 (define-prim (##expand-letrec-bindings bindings-src cte)
-  (let ((scps (list (make-scope))))
+  (let ((scps (list (##make-scope))))
     (let loop ((bindings bindings-src)
                (res      '())
                (cte      cte))
       (match-source bindings ()
         ((binding @ (id val) . bindings)
-         (let ((id (add-scope id (car scps))))
+         (let ((id (##add-scope id (car scps))))
            (cond
             ((or (pair? (##syntax-source-code id))
                  (null? (##syntax-source-code id)))
@@ -149,7 +149,7 @@
                       (cdr ids)
                       cte)))
                  ((null? ids)
-                  (let* ((val (add-scope val (car scps)))
+                  (let* ((val (##add-scope val (car scps)))
                          (binding (##syntax-source-code-set binding
                                     (list id val))))
                     (loop 
@@ -159,7 +159,7 @@
                  (else
                   (let* ((key (##hygiene-environment-add-new-local-binding! cte ids))
                          (cte (##hygiene-environment-add-variable-cte cte key ids)))
-                    (let* ((val (add-scope val (car scps)))
+                    (let* ((val (##add-scope val (car scps)))
                            (binding (##syntax-source-code-set binding
                                       (list id val))))
                       (loop 
@@ -169,7 +169,7 @@
             (else
              (let* ((key (##hygiene-environment-add-new-local-binding! cte id))
                     (cte (##hygiene-environment-add-variable-cte cte key id))
-                    (val (add-scope val (car scps)))
+                    (val (##add-scope val (car scps)))
                     (binding (##syntax-source-code-set binding
                                (list id val))))
                (loop 
@@ -204,12 +204,12 @@
 
 (define-prim (##expand-let-syntax-bindings bindings-src cte)
   (let ((original-cte cte))
-    (let ((scps (list (make-scope))))
+    (let ((scps (list (##make-scope))))
       (let loop ((bindings bindings-src)
                  (cte      cte))
         (match-source bindings ()
           ((binding @ (id val) . bindings)
-           (let ((id  (add-scope id (car scps)))
+           (let ((id  (##add-scope id (car scps)))
                  (val (##macro-syntax-descr (##eval-for-syntax-binding val original-cte) val)))
              (let* ((key (##hygiene-environment-add-new-local-binding! cte id))
                     (cte (##hygiene-environment-add-macro-cte cte key id val)))
@@ -233,10 +233,10 @@
                (cte      cte))
       (match-source bindings ()
         ((binding @ (id val) . bindings)
-         (let* ((val  (add-scopes val scps))
+         (let* ((val  (##add-scopes val scps))
                 (val  (##macro-syntax-descr (##eval-for-syntax-binding val cte) val))
-                (scps (cons (make-scope) scps))
-                (id (add-scopes id scps)))
+                (scps (cons (##make-scope) scps))
+                (id (##add-scopes id scps)))
            (let* ((key (##hygiene-environment-add-new-local-binding! cte id))
                   (cte (##hygiene-environment-add-macro-cte cte key id val))
                   (binding (##syntax-source-code-set binding
@@ -256,59 +256,101 @@
            'ill-formed-binding-list
            bindings-src))))))
 
+(define-prim (##eval-syntax-bindings-values ids vals keys rhs-cte cte sequential?)
+  (cond
+    ((pair? ids)
+     (let* ((id   (car ids))
+            (val  (car vals))
+            (key  (car keys))
+            (descr (##macro-syntax-descr
+                     (##eval-for-syntax-binding val rhs-cte)
+                     val)))
+       (##eval-syntax-bindings-values
+         (cdr ids)
+         (cdr vals)
+         (cdr keys)
+         (if sequential?
+             (##hygiene-environment-add-macro-cte rhs-cte key id descr)
+             rhs-cte)
+         (##hygiene-environment-add-macro-cte cte key id descr)
+         sequential?)))
+    (else
+     cte)))
+
 (define-prim (##expand-letrec-syntax-bindings bindings-src cte)
-  (let ((original-cte cte)
-        (scps (list (make-scope))))
+  (let ((scps (list (##make-scope))))
     (let loop ((bindings bindings-src)
-               (cte      cte))
+               (ids      '())
+               (vals     '())
+               (keys     '())
+               (rhs-cte  cte))
       (match-source bindings ()
         ((binding @ (id val) . bindings)
-         (let ((id  (add-scope id (car scps)))
-               (val (add-scope val (car scps)))
-               (fake-val (lambda _ 'dummy)))
-           (let* ((key (##hygiene-environment-add-new-local-binding! cte id))
-                  (original-cte (##hygiene-environment-add-macro-cte original-cte key id fake-val))
-                  (val (##macro-syntax-descr (##eval-for-syntax-binding val original-cte) val))
-                  (cte (##hygiene-environment-add-macro-cte cte key id val)))
-             (loop 
-               bindings
-               cte))))
+         (let* ((id  (##add-scope id (car scps)))
+                (val (##add-scope val (car scps)))
+                (key (##hygiene-environment-add-new-local-binding! cte id)))
+           (loop
+             bindings
+             (cons id ids)
+             (cons val vals)
+             (cons key keys)
+             (##hygiene-environment-add-macro-cte rhs-cte key id
+               (##macro-not-yet-defined-descr id)))))
         (()
-          (list scps 
+          (list scps
                 #f
-                cte))
+                (##eval-syntax-bindings-values
+                  (reverse ids)
+                  (reverse vals)
+                  (reverse keys)
+                  rhs-cte
+                  cte
+                  #f)))
         (_
          (##raise-expression-parsing-exception
            'ill-formed-binding-list
            bindings-src))))))
 
 (define-prim (##expand-letrec*-syntax-bindings bindings-src cte)
-  (let ((scps (list)))
-    (let loop ((bindings bindings-src)
-               (res      '())
-               (scps     scps)
-               (cte      cte))
+  (let ((all-scps (let loop ((bindings bindings-src)
+                             (scps     '()))
+                    (match-source bindings ()
+                      ((_ . bindings)
+                       (loop bindings (cons (##make-scope) scps)))
+                      (_
+                       scps)))))
+    (let loop ((bindings  bindings-src)
+               (new-scps  (reverse all-scps))
+               (scps      '())
+               (ids       '())
+               (vals      '())
+               (keys      '())
+               (rhs-cte   cte))
       (match-source bindings ()
         ((binding @ (id val) . bindings)
-         (let* ((fake-val (lambda _ 'dummy))
-                (scps (cons (make-scope) scps))
-                (id (##add-scopes id scps)))
-           (let* ((key (##hygiene-environment-add-new-local-binding! cte id))
-                  (cte (##hygiene-environment-add-macro-cte cte key id fake-val))
-                  (val (##add-scopes val scps))
-                  (cte (##hygiene-environment-add-macro-cte cte key id (##macro-syntax-descr (##eval-for-syntax-binding val cte) val)))
-                  (binding (##syntax-source-code-set binding
-                             (list id val))))
-             (loop
-               bindings
-               (cons binding res)
-               scps
-               cte))))
+         (let* ((scps (cons (car new-scps) scps))
+                (id   (##add-scopes id scps))
+                (val  (##add-scopes val all-scps))
+                (key  (##hygiene-environment-add-new-local-binding! cte id)))
+           (loop
+             bindings
+             (cdr new-scps)
+             scps
+             (cons id ids)
+             (cons val vals)
+             (cons key keys)
+             (##hygiene-environment-add-macro-cte rhs-cte key id
+               (##macro-not-yet-defined-descr id)))))
         (()
-          (list scps 
-                (##syntax-source-code-set bindings-src
-                  (reverse res)) 
-                cte))
+          (list all-scps
+                #f
+                (##eval-syntax-bindings-values
+                  (reverse ids)
+                  (reverse vals)
+                  (reverse keys)
+                  rhs-cte
+                  cte
+                  #t)))
         (_
          (##raise-expression-parsing-exception
            'ill-formed-binding-list
@@ -352,8 +394,8 @@
                 (scps     (car scps+bindings+cte))
                 (bindings (cadr scps+bindings+cte))
                 (cte      (caddr scps+bindings+cte))
-                (body (syntax-source-code 
-                        (##expand-body (add-scopes (##syntax-source-code-set ,stx-id body) scps) cte))))
+                (body (##syntax-source-code 
+                        (##expand-body (##add-scopes (##syntax-source-code-set ,stx-id body) scps) cte))))
            ,(cond
              (syntax?
                `(##syntax-source-code-set ,stx-id
@@ -403,7 +445,7 @@
 ;;;----------------------------------------------------------------------------
 
 (define-prim (##expand->core-form stx cte)
-  (let ((code (syntax-source-code stx)))             
+  (let ((code (##syntax-source-code stx)))             
     (if (not (pair? code))
         stx
         (let* ((id  (car code))
@@ -434,7 +476,7 @@
 
 (define-primitive (expand-macro-scope s cte)
   (let* ((state (##hygiene-environment-macro-state-ref cte))
-         (s     (syntax-source-code-update s 
+         (s     (##syntax-source-code-update s 
                   (lambda (s)
                     (cons (datum->syntax '##begin (car s))
                           (cdr s)))))
@@ -459,25 +501,25 @@
 
     (define (##expand-body-define expr exprs bindings cte)
       (let* ((form (##transform-define-form->base-form expr))
-             (form-code (syntax-source-code form))
-             (scp       (make-scope))
+             (form-code (##syntax-source-code form))
+             (scp       (##make-scope))
              (define-id (car form-code))
-             (id        (add-scope (cadr form-code) scp))
-             (value     (add-scope (caddr form-code) scp)))
+             (id        (##add-scope (cadr form-code) scp))
+             (value     (##add-scope (caddr form-code) scp)))
         (let* ((key (##hygiene-environment-add-new-local-binding! cte id))
                (cte (##hygiene-environment-add-variable-cte cte key id)))
-          (let ((binding (syntax-source-code-set body `(,expr ,define-id ,id ,value))))
+          (let ((binding (##syntax-source-code-set body `(,expr ,define-id ,id ,value))))
             (##expand-body
-              (add-scope exprs scp)
-              (cons binding (add-scope bindings scp))
+              (##add-scope exprs scp)
+              (cons binding (##add-scope bindings scp))
               cte)))))
 
     (define (##expand-body-define-syntax expr exprs bindings cte)
-      (let* ((form-code (syntax-source-code expr))
-             (scp       (make-scope))
+      (let* ((form-code (##syntax-source-code expr))
+             (scp       (##make-scope))
              (define-id (car form-code))
-             (id        (add-scope (cadr form-code) scp))
-             (value     (add-scope (caddr form-code) scp))
+             (id        (##add-scope (cadr form-code) scp))
+             (value     (##add-scope (caddr form-code) scp))
              (fake-value (lambda _ 'let-dummy)))
         (let* ((key (##hygiene-environment-add-new-local-binding! cte id))
                (cte (##hygiene-environment-add-macro-cte cte key id fake-value))
@@ -488,16 +530,16 @@
                           cte)
                         value))))
           (##expand-body
-            (add-scope exprs scp)
-            (add-scope bindings scp)
+            (##add-scope exprs scp)
+            (##add-scope bindings scp)
             cte))))
 
     (define (##expand-body-define-global-syntax expr exprs bindings cte)
-      (let* ((form-code (syntax-source-code expr))
-             (scp       (make-scope))
+      (let* ((form-code (##syntax-source-code expr))
+             (scp       (##make-scope))
              (define-id (car form-code))
-             (id        (add-scope (cadr form-code) scp))
-             (value     (add-scope (caddr form-code) scp))
+             (id        (##add-scope (cadr form-code) scp))
+             (value     (##add-scope (caddr form-code) scp))
              (fake-value (lambda _ 'let-dummy)))
         (let* ((key (##hygiene-environment-add-new-top-level-binding! cte id))
                (cte (##hygiene-environment-add-macro-cte cte key id fake-value))
@@ -508,8 +550,8 @@
                           cte)
                         value))))
           (##expand-body
-            (add-scope exprs scp)
-            (add-scope bindings scp)
+            (##add-scope exprs scp)
+            (##add-scope bindings scp)
             cte))))
 
     (define (##expand-body-define-bindings expr exprs bindings cte)
@@ -535,19 +577,19 @@
                        bindings
                        (cons
                          (##transform-define-form->sugar-form
-                           (syntax-source-code-set original
+                           (##syntax-source-code-set original
                              `(,define-id ,id ,value))
                            original)
                          expanded)))))))
           ((null? bindings)
-           (syntax-source-code-set body
+           (##syntax-source-code-set body
              expanded)))))
 
     (define (##expand-body-namespace expr exprs bindings cte)
       (let ((cte (##hygiene-environment-process-namespace cte expr)))
         (##expand-body
           exprs
-          (cons (syntax-source-code-set body
+          (cons (##syntax-source-code-set body
                   (##list (##make-core-syntax-source '##body-declare #f) expr))
                 bindings)
           cte)))
@@ -555,7 +597,7 @@
     (define (##expand-body-declare expr exprs bindings cte)
       (##expand-body
         exprs
-        (cons (syntax-source-code-set body
+        (cons (##syntax-source-code-set body
                 (##list (##make-core-syntax-source '##body-declare #f) expr))
               bindings)
         cte))
@@ -646,14 +688,14 @@
 ;;; application form
 
 (define-prim (##apply-transformer t stx)
-  (let* ((intro-scope (make-scope))
-         (intro-stx   (add-scope stx intro-scope)))
+  (let* ((intro-scope (##make-scope))
+         (intro-stx   (##add-scope stx intro-scope)))
     (let ((transformed-stx (t intro-stx)))
       (cond
-        ((syntax-source? transformed-stx)
-         (flip-scope transformed-stx intro-scope))
+        ((##syntax-source? transformed-stx)
+         (##flip-scope transformed-stx intro-scope))
         (else
-         (flip-scope
+         (##flip-scope
            (##datum->core-syntax (##desourcify transformed-stx))
            intro-scope))))))
 
@@ -716,7 +758,7 @@
     ; -> (bindings cte scps)
 
     (define (expand-required-parameters params cte)
-      (let loop ((params (add-scope params scp))
+      (let loop ((params (##add-scope params scp))
                  (res    (list))
                  (cte    cte))
         (cond
@@ -743,10 +785,10 @@
                (let* ((param (car params))
                       (val   (let ((val (cdr param)))
                                (if (##syntax-source? val)
-                                   (##expand (add-scopes val scps) cte)
+                                   (##expand (##add-scopes val scps) cte)
                                    val)))
-                      (scps  (cons (make-scope) scps))
-                      (id    (add-scopes (car param) scps))
+                      (scps  (cons (##make-scope) scps))
+                      (id    (##add-scopes (car param) scps))
                       (id+cte (if keyword-arguments?
                                   (register-keyword-variable id cte)
                                   (register-variable id cte)))
@@ -764,8 +806,8 @@
 
     (define (expand-rest-parameter param cte scps)
       (if param
-          (let* ((scps   (cons (make-scope) scps))
-                 (id+cte (register-variable (add-scopes param scps) cte)))
+          (let* ((scps   (cons (##make-scope) scps))
+                 (id+cte (register-variable (##add-scopes param scps) cte)))
             (list (car id+cte) (cadr id+cte) scps))
           (list param cte scps)))
 
@@ -792,7 +834,7 @@
 
     (cond
       ((identifier? bindings)
-       (let* ((bindings (add-scope bindings scp))
+       (let* ((bindings (##add-scope bindings scp))
               (id+cte   (register-variable bindings cte)))
          (list (car id+cte) (cadr id+cte) (list scp))))
       (else
@@ -839,7 +881,7 @@
                 key-parameters)
               cte
               scps))))))
-  (let ((scp (make-scope))
+  (let ((scp (##make-scope))
         (cte (##hygiene-environment-local-cte cte)))
     (match-source stx ()
       ((lambda-id bindings . body)
@@ -847,10 +889,10 @@
               (bindings         (car   bindings+cte))
               (cte              (cadr  bindings+cte))
               (scps             (caddr bindings+cte)))
-         (let ((body (syntax-source-code
+         (let ((body (##syntax-source-code
                        (##expand-body
-                         (add-scopes
-                           (syntax-source-code-set stx body)
+                         (##add-scopes
+                           (##syntax-source-code-set stx body)
                            scps)
                          cte))))
            (##syntax-source-code-set stx
@@ -900,7 +942,7 @@
 (define-primitive (syntax-full-name-maybe cte id)
   (let ((full-name (##hygiene-environment-global-name cte id)))
       (and full-name
-           (syntax-source-code-set id full-name))))
+           (##syntax-source-code-set id full-name))))
 
 (define-primitive (syntax-full-name cte id)
   (or (##syntax-full-name-maybe cte id)
@@ -1164,7 +1206,7 @@
            src))))
 
   (let ((file-src (##include-file-as-a-begin-expr stx-src)))
-    (let ((file-stx (add-scope (##source->syntax-source file-src (car (##source-code stx-src))) core-scope)))
+    (let ((file-stx (##add-scope (##source->syntax-source file-src (car (##source-code stx-src))) ##core-scope)))
       (##expand file-stx cte))))
 
 ;;;----------------------------------------------------------------------------
@@ -1308,7 +1350,7 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim&proc (expand stx cte)
+(define-primitive (expand stx cte)
   (let ((code (##syntax-source-code stx)))
     (cond
       ((null? code)

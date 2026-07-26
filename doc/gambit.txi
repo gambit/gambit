@@ -5613,6 +5613,12 @@ The procedures in this section are not yet documented.
 @deffn {special form} case-lambda @dots{}
 @deffnx {special form} syntax-case @dots{}
 @deffnx {special form} syntax @dots{}
+@deffnx {special form} quote-syntax @dots{}
+@deffnx {special form} define-syntax @dots{}
+@deffnx {special form} let-syntax @dots{}
+@deffnx {special form} let*-syntax @dots{}
+@deffnx {special form} letrec-syntax @dots{}
+@deffnx {special form} letrec*-syntax @dots{}
 @end deffn
 
 @deffn procedure datum->syntax @var{obj}

@@ -34,8 +34,9 @@ time
 define-cond-expand-feature
 define-values
 r7rs-guard
-syntax
-syntax-case
+let*-syntax
+letrec*-syntax
+quote-syntax
 
 ;; global variable
 default-random-source

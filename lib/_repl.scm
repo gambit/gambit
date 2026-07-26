@@ -1123,6 +1123,19 @@
 (define (##values-with-sn?-set! x)
   (set! ##values-with-sn? x))
 
+(define ##expanded-identifier-names? #f)
+
+(define-prim (##expanded-identifier-names?-set! x)
+  (set! ##expanded-identifier-names? x))
+
+(##symbol-display-name-hook-set!
+ (lambda (sym)
+   (and (##not ##expanded-identifier-names?)
+        (let ((name (##hygiene-source-name sym)))
+          (cond ((##symbol? name) (##symbol->string name))
+                ((##string? name) name)
+                (else #f))))))
+
 (define ##backtrace-default-max-head 10)
 
 (define-prim (##backtrace-default-max-head-set! x)
@@ -5054,6 +5067,7 @@
     (unfulfilled-cond-expand          . "Unfulfilled 'cond-expand'")
     (non-syntax-result                . "Macro application's result is not a syntax object")
     (illegal-syntax-use               . "Illegal use of syntax")
+    (macro-used-before-definition     . "Macro used before its transformer is defined:")
     ))
 
 (define-prim (##expression-parsing-exception-names-set! x)

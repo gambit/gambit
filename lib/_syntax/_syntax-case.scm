@@ -139,7 +139,7 @@
              (expand-constructor-update lvl (fx+ e-lvl 1) e c-lvl c))))))
 
   (define (##expand-clause-expr-syntax-expr bindings lvl expr is-tail?)
-    (let ((code (syntax-source-code expr)))
+    (let ((code (##syntax-source-code expr)))
       (cond
         ((##pair? code)
          (##expand-clause-expr-syntax-list bindings lvl code))
@@ -149,7 +149,7 @@
              (##cadr id+lvl)
                `(let ((lookup-result (##syntax-case-binding-lookup ,bindings ',expr)))
                   (or (and ,is-tail? 
-                           (syntax-source? lookup-result)
+                           (##syntax-source? lookup-result)
                            (let ((lookup-result-code (##syntax-source-code lookup-result)))
                              (and (or (##null? lookup-result-code)
                                       (##pair? lookup-result-code))
@@ -179,13 +179,13 @@
      (##expand-clause-expr cte
                          bindings-level
                          bindings 
-                         (syntax-source-code-set expr 
+                         (##syntax-source-code-set expr 
                            `(,(##make-core-syntax-source '##syntax #f) ,syntax-expr))))
     ((##syntax syntax-expr)
-    `(datum->core-syntax ,(##cadr (##expand-clause-expr-syntax-expr bindings 0 syntax-expr #f)) 
+    `(##datum->core-syntax ,(##cadr (##expand-clause-expr-syntax-expr bindings 0 syntax-expr #f)) 
                                 (##syntax ,syntax-expr)))
     ((_ . _)
-     (let loop ((exprs (syntax-source-code expr)))
+     (let loop ((exprs (##syntax-source-code expr)))
        (cond
          ((##pair? exprs)
           (##cons (##expand-clause-expr cte bindings-level bindings (##car exprs))
@@ -205,7 +205,7 @@
   (match-source condition (...)
     (v when (##vector? (##syntax-source-code v))
      (##expand-clause-cond-compile-bindings literals
-       (syntax-source-code-set v (##vector->list (##syntax-source-code v)))))
+       (##syntax-source-code-set v (##vector->list (##syntax-source-code v)))))
     ((var ... . rst)
      (append (##map (lambda (b)
                     (##list (##car b)
@@ -216,9 +216,9 @@
      (append (##expand-clause-cond-compile-bindings literals var)
              (##expand-clause-cond-compile-bindings literals rst)))
     (id when (and (identifier? id)
-                  (not (member (syntax-source-code id)
+                  (not (member (##syntax-source-code id)
                                (##map ##syntax-source-code literals))))
-     (##list (##list (syntax-source-code id) 0)))
+     (##list (##list (##syntax-source-code id) 0)))
     (else
      (##list))))
 
@@ -228,7 +228,7 @@
   (match-source condition (...)
     (v when (##vector? (##syntax-source-code v))
      (##expand-clause-cond-pattern-vars literals
-       (syntax-source-code-set v (##vector->list (##syntax-source-code v)))))
+       (##syntax-source-code-set v (##vector->list (##syntax-source-code v)))))
     ((var ... . rst)
      (append (##map (lambda (b)
                       (##cons (##car b) (##fx+ (##cdr b) 1)))
@@ -238,7 +238,7 @@
      (append (##expand-clause-cond-pattern-vars literals var)
              (##expand-clause-cond-pattern-vars literals rst)))
     (id when (and (identifier? id)
-                  (not (member (syntax-source-code id)
+                  (not (member (##syntax-source-code id)
                                (##map ##syntax-source-code literals))))
      (##list (##cons id 0)))
     (else
@@ -319,18 +319,18 @@
           (##list)))
   (match-source condition ()
    ((_ . _)
-    (##expand-clause-cond-list literals condition `(if (##pair? ,expr) ,expr (syntax-source-code ,expr))))
+    (##expand-clause-cond-list literals condition `(if (##pair? ,expr) ,expr (##syntax-source-code ,expr))))
    (()
-    (##expand-clause-cond-list literals condition `(if (##pair? ,expr) ,expr (syntax-source-code ,expr))))
+    (##expand-clause-cond-list literals condition `(if (##pair? ,expr) ,expr (##syntax-source-code ,expr))))
    (_ when (##identifier? condition)
     (if (member (##syntax-source-code condition)
                 (##map ##syntax-source-code literals))
         (##expand-clause-cond-literal literals condition expr)
         (##expand-clause-cond-identifier literals condition expr)))
    (_ when (##vector? (##syntax-source-code condition))
-    (let ((list-pattern (syntax-source-code-set condition
+    (let ((list-pattern (##syntax-source-code-set condition
                           (##vector->list (##syntax-source-code condition)))))
-      `(let ((vcode (if (syntax-source? ,expr) (syntax-source-code ,expr) ,expr)))
+      `(let ((vcode (if (##syntax-source? ,expr) (##syntax-source-code ,expr) ,expr)))
          (and (##vector? vcode)
               ,(##expand-clause-cond-list literals list-pattern `(##vector->list vcode))))))
    (_
@@ -359,7 +359,7 @@
        (expand-clause 
          literals 
          stx-expr 
-         (syntax-source-code-set clause
+         (##syntax-source-code-set clause
            `(,condition 
              ,(##make-syntax-source 
                 `(,(##make-core-syntax-source '##begin #f)
@@ -382,9 +382,9 @@
     ((syntax-case-id expr literals . clauses)
      (let ((expr-id (gensym 'syntax-case-expr)))
        (##expand
-       (datum->core-syntax
+       (##datum->core-syntax
          `((lambda (,expr-id) 
-             ,(expand-clauses (syntax-source-code literals)
+             ,(expand-clauses (##syntax-source-code literals)
                               expr-id 
                               clauses))
            ,expr)

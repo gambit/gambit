@@ -15,8 +15,8 @@
 
 ;; special forms
 define-syntax
-;;let-syntax ;; not implemented
-;;letrec-syntax ;; not implemented
+let-syntax
+letrec-syntax
 syntax-rules
 
 ;; procedures

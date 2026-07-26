@@ -11,7 +11,7 @@
                      (_ #t)))
                  (t0)))
        (stx (datum->syntax datum))
-       (stx (add-scope stx core-scope)))
+       (stx (##add-scope stx ##core-scope)))
   (let ((evalued (##eval-for-syntax-binding stx cte)))
     ;(syntax->datum! evalued)
     (check-equal? evalued #t)))
@@ -25,7 +25,7 @@
                      (_ #t)))
                  (t1 0)))
        (stx (datum->syntax datum))
-       (stx (add-scope stx core-scope)))
+       (stx (##add-scope stx ##core-scope)))
   (let ((evalued (##eval-for-syntax-binding stx cte)))
     (check-equal? evalued #t)))
 
@@ -37,7 +37,7 @@
                        ((_ (a ...)) (list a ...))))
                  (t2 (0 1))))
        (stx (datum->syntax datum))
-       (stx (add-scope stx core-scope)))
+       (stx (##add-scope stx ##core-scope)))
   (let ((evalued (##eval-for-syntax-binding stx cte)))
     (check-equal? evalued (list 0 1))))
 
@@ -48,7 +48,7 @@
                      ((_ (a ...) ...) (list (list a ...) ...))))
                  (t2 (0 1) (2 3))))
        (stx (datum->syntax datum))
-       (stx (add-scope stx core-scope)))
+       (stx (##add-scope stx ##core-scope)))
   (let ((evalued (##eval-for-syntax-binding stx cte)))
     (check-equal? evalued (list (list 0 1) (list 2 3)))))
 
@@ -59,7 +59,7 @@
                      ((_ (a b) ...) (list (list a ...) (list b ...)))))
                  (t3 (0 1) (2 3))))
        (stx (datum->syntax datum))
-       (stx (add-scope stx core-scope)))
+       (stx (##add-scope stx ##core-scope)))
   (let ((evalued (##eval-for-syntax-binding stx cte)))
     (check-equal? evalued (list (list 0 2) (list 1 3)))))
 
@@ -73,7 +73,7 @@
                        (##syntax b))))
                  (t4 #t)))
        (stx (datum->syntax datum))
-       (stx (add-scope stx core-scope)))
+       (stx (##add-scope stx ##core-scope)))
   (let ((evalued (##eval-for-syntax-binding stx cte)))
     (check-equal? evalued 0)))
 
@@ -87,7 +87,7 @@
                          (##syntax b))))))
                  (t4 #t)))
        (stx (datum->syntax datum))
-       (stx (add-scope stx core-scope)))
+       (stx (##add-scope stx ##core-scope)))
   (let ((evalued (##eval-for-syntax-binding stx cte)))
     (check-equal? evalued #t)))
 
@@ -101,7 +101,7 @@
                          (##syntax a))))))
                  (t4 #t)))
        (stx (datum->syntax datum))
-       (stx (add-scope stx core-scope)))
+       (stx (##add-scope stx ##core-scope)))
   (let ((evalued (##eval-for-syntax-binding stx cte)))
     (check-equal? evalued #t)))
 
@@ -112,7 +112,7 @@
                 (##define-macro (t5 a b) a)
                 (t5 #t #f)))
        (stx (datum->syntax datum))
-       (stx (add-scope stx core-scope)))
+       (stx (##add-scope stx ##core-scope)))
   (let ((evalued (##eval-for-syntax-binding stx cte)))
     (check-equal? evalued #t)))
 
@@ -121,7 +121,7 @@
                 (##define-macro (t6 a) #t)
                 (t6 #t)))
        (stx (datum->syntax datum))
-       (stx (add-scope stx core-scope)))
+       (stx (##add-scope stx ##core-scope)))
   (let ((evalued (##eval-for-syntax-binding stx cte)))
     (check-equal? evalued #t)))
 
@@ -131,7 +131,7 @@
                 (##define-macro t7 (lambda () #t))
                 (t7)))
        (stx (datum->syntax datum))
-       (stx (add-scope stx core-scope)))
+       (stx (##add-scope stx ##core-scope)))
   (let ((evalued (##eval-for-syntax-binding stx cte)))
     (check-equal? evalued #t)))
 
@@ -140,7 +140,7 @@
                 (##define-macro (t7) #t)
                 (t7)))
        (stx (datum->syntax datum))
-       (stx (add-scope stx core-scope)))
+       (stx (##add-scope stx ##core-scope)))
   (let ((evalued (##eval-for-syntax-binding stx cte)))
     (check-equal? evalued #t)))
 
@@ -151,7 +151,7 @@
                 (##define-macro (t7 a) `(list ,a))
                 (t7 #t)))
        (stx (datum->syntax datum))
-       (stx (add-scope stx core-scope)))
+       (stx (##add-scope stx ##core-scope)))
   (let ((evalued (##eval-for-syntax-binding stx cte)))
     (check-equal? evalued (list #t))))
 
@@ -160,7 +160,7 @@
                 (##define-macro (t5 a b) a)
                 (t5 #t #f)))
        (stx (datum->syntax datum))
-       (stx (add-scope stx core-scope)))
+       (stx (##add-scope stx ##core-scope)))
   (let ((evalued (##eval-for-syntax-binding stx cte)))
     (check-equal? evalued #t)))
 
@@ -171,7 +171,7 @@
                    (##define-macro (t9 a b) a)
                    (t9 #t #f)))))
        (stx (datum->syntax datum))
-       (stx (add-scope stx core-scope)))
+       (stx (##add-scope stx ##core-scope)))
   (let ((evalued (##eval-for-syntax-binding stx cte)))
     (check-equal? evalued #t)))
 
@@ -185,7 +185,7 @@
                    (syntax-rules (++) 
                      ((_ x ++ y) (list x 1 1 y))))
                  (foo 'a ++ 'b)))
-       (stx (datum->core-syntax datum)))
+       (stx (##datum->core-syntax datum)))
   (check-equal?
     (##eval-for-syntax-binding stx cte)
     (list 'a 1 1 'b)))
@@ -196,7 +196,7 @@
                    (syntax-rules (++) 
                      ((_ x ++ y) (list x 1 1 y))))
                  (let ((++ 10)) (foo 1 ++ 2))))
-       (stx (datum->core-syntax datum)))
+       (stx (##datum->core-syntax datum)))
   (check-exn 
     error-exception?
     (lambda ()
@@ -210,7 +210,7 @@
                      ((_ test then expr1 else expr2) (if test expr1 expr2))))
                  (let ((else #f) (x 10))
                    (if+ (even? x) then (/ x 2) else (/ (+ x 1) 2)))))
-       (stx (datum->core-syntax datum)))
+       (stx (##datum->core-syntax datum)))
   (check-exn 
     error-exception?
     (lambda ()
@@ -224,7 +224,7 @@
                  (define else #f)
                  (let ((el_se #f) (x 10))
                    (if+ (even? x) then (/ x 2) else (/ (+ x 1) 2)))))
-       (stx (datum->core-syntax datum)))
+       (stx (##datum->core-syntax datum)))
   (check-equal?
     (##eval-for-syntax-binding stx cte)
     5))
@@ -236,7 +236,7 @@
                      ((_ a b) (+ a . b))))
                  (tt 0 ())))
        (stx (datum->syntax datum))
-       (stx (add-scope stx core-scope)))
+       (stx (##add-scope stx ##core-scope)))
   (let ((evalued (##eval-for-syntax-binding stx cte)))
     (check-equal? evalued 0)))
 

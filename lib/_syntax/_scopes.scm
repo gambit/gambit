@@ -12,36 +12,33 @@
 ;; Scope
 
 ;; A scope is a comparable address in memory.
-;; TODO: change representation to handle serialization.
 
+(##namespace ("##" scope? scope-copy scope-id))
 (define-type scope
-  type-exhibitor: type-scope
+  type-exhibitor: ##type-scope*
   constructor:    ##make-scope*
-  id)
+  (id no-functional-setter: read-only:))
 
 (define ##scope-id-counter 0)
 
-(define (make-scope)
+(define-primitive (make-scope)
   (set! ##scope-id-counter (##fx+ ##scope-id-counter 1))
   (##make-scope* ##scope-id-counter))
 
 (define (##fail-check-scope arg-id proc . args)
   (##raise-type-exception
    arg-id
-   (type-scope)
+   (##type-scope*)
    proc
    args))
 
-(define-check-type scope (type-scope)
-  scope?)
+(define-check-type scope (##type-scope*)
+  ##scope?)
 
-(define ##core-scope (make-scope))
-(define core-scope ##core-scope)
+(define ##core-scope (##make-scope))
 
 ;;;----------------------------------------------------------------------------
 ;;; set of scopes
-
-;(implement-hash-set-hamt)
 
 (define-primitive (make-scopes . args)
   (##apply ##make-hash-set-hamt args))
@@ -53,7 +50,7 @@
    proc
    args))
 
-(define-check-type scopes (type-scope)
+(define-check-type scopes (##type-scope*)
   ##hash-set-hamt?)
 
 (define-primitive (scopes->list (scps scopes))

@@ -22,16 +22,8 @@
 (define-check-type identifier (type-scope)
   identifier?)
 
-(define-prim&proc (identifier-copy (id identifier))
+(define-primitive (identifier-copy (id identifier))
   (##vector-copy id))
-
-(define-prim&proc (identifier-equal? id1 id2)
-  (and (##identifier? id1)
-       (##syntax-source? id2)
-       (##eq? (##syntax-source-code id1)
-              (##syntax-source-code id2))
-       (##scopes-equal? (##syntax-source-scopes id1)
-                        (##syntax-source-scopes id2))))
 
 (define-prim&proc (bound-identifier=? id1 id2)
   ;;; r6rs

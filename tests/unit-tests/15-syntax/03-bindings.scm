@@ -166,7 +166,7 @@
         (= (gbt-count (##cte-top-global-binding-table top-cte))
            2))
 
-      (let* ((id4 (add-scope (##make-syntax-source 'x #f) core-scope))
+      (let* ((id4 (##add-scope (##make-syntax-source 'x #f) ##core-scope))
              (key4 (##hcte-add-new-top-level-binding! top-cte id4))
              (binding4 (##resolve-id id4 top-cte)))
 
@@ -215,7 +215,7 @@
         (= (gbt-count (##cte-top-global-binding-table top-cte))
            2))
 
-      (let* ((id4 (add-scope (##make-syntax-source 'x #f) core-scope))
+      (let* ((id4 (##add-scope (##make-syntax-source 'x #f) ##core-scope))
              (key4 (##hcte-add-new-local-binding! top-cte id4))
              (binding4 (##resolve-id id4 top-cte)))
 
@@ -288,11 +288,11 @@
 
 ;; variables
 (let* ((cte  (##make-top-cte))
-       (scp1 (make-scope))
-       (scp2 (make-scope))
+       (scp1 (##make-scope))
+       (scp2 (##make-scope))
        (id1  (##make-syntax-source 'x #f))
-       (id2  (add-scope (##make-syntax-source 'y #f) scp1))
-       (id3  (add-scope (##make-syntax-source 'x #f) scp1)))
+       (id2  (##add-scope (##make-syntax-source 'y #f) scp1))
+       (id3  (##add-scope (##make-syntax-source 'x #f) scp1)))
   (let* ((key1 (##hcte-add-new-local-binding! cte id1))
          (cte1 (##hcte-add-variable-cte cte key1 id1)))
 
@@ -339,14 +339,14 @@
 
 ;; macro
 (let* ((cte  (##make-top-cte))
-       (scp1 (make-scope))
-       (scp2 (make-scope))
+       (scp1 (##make-scope))
+       (scp2 (##make-scope))
        (id1  (##make-syntax-source 'x #f))
-       (id2  (add-scope (##make-syntax-source 'y #f) scp1))
-       (id3  (add-scope (##make-syntax-source 'x #f) scp1))
+       (id2  (##add-scope (##make-syntax-source 'y #f) scp1))
+       (id3  (##add-scope (##make-syntax-source 'x #f) scp1))
        (val1 (##make-syntax-source 'ex1 #f))
-       (val2 (add-scope (##make-syntax-source 'ex2 #f) scp1))
-       (val3 (add-scope (##make-syntax-source 'ex3 #f) scp1)))
+       (val2 (##add-scope (##make-syntax-source 'ex2 #f) scp1))
+       (val3 (##add-scope (##make-syntax-source 'ex3 #f) scp1)))
   (let* ((key1 (##hcte-add-new-local-binding! cte id1))
          (cte1 (##hcte-add-macro-cte cte key1 id1 val1)))
 
@@ -393,14 +393,14 @@
 
 ;; core-macro
 (let* ((cte  (##make-top-cte))
-       (scp1 (make-scope))
-       (scp2 (make-scope))
+       (scp1 (##make-scope))
+       (scp2 (##make-scope))
        (id1  (##make-syntax-source 'x #f))
-       (id2  (add-scope (##make-syntax-source 'y #f) scp1))
-       (id3  (add-scope (##make-syntax-source 'x #f) scp1))
+       (id2  (##add-scope (##make-syntax-source 'y #f) scp1))
+       (id3  (##add-scope (##make-syntax-source 'x #f) scp1))
        (val1 (##make-syntax-source 'ex1 #f))
-       (val2 (add-scope (##make-syntax-source 'ex2 #f) scp1))
-       (val3 (add-scope (##make-syntax-source 'ex3 #f) scp1)))
+       (val2 (##add-scope (##make-syntax-source 'ex2 #f) scp1))
+       (val3 (##add-scope (##make-syntax-source 'ex3 #f) scp1)))
   (let* ((key1 (##hcte-add-new-local-binding! cte id1))
          (cte1 (##hcte-add-core-macro-cte cte key1 id1 val1)))
 
@@ -448,12 +448,12 @@
 ;;;----------------------------------------------------------------------------
 ;;; identifier predicates (bound-identifier=? & free-identifier=?)
 
-(let* ((scp1 (make-scope))
+(let* ((scp1 (##make-scope))
        (ix   (##make-syntax-source 'x #f))
        (ix2  (##make-syntax-source 'x #f))
        (iy   (##make-syntax-source 'y #f))
        (inum (##make-syntax-source 0 #f))
-       (ixs  (add-scope ix scp1)))
+       (ixs  (##add-scope ix scp1)))
 
   ; same symbol, both scope-free
   (check-true (and (bound-identifier=? ix ix2) #t))
@@ -462,16 +462,16 @@
   ; different symbol
   (check-true (not (bound-identifier=? ix iy)))
   ; same symbol, same scope
-  (check-true (and (bound-identifier=? (add-scope ix2 scp1) ixs) #t))
+  (check-true (and (bound-identifier=? (##add-scope ix2 scp1) ixs) #t))
   ; non-identifier argument
   (check-true (not (bound-identifier=? inum ix)))
 
   (check-true (and (free-identifier=? ix ixs) #t))
   (check-true (not (free-identifier=? ix iy))))
 
-(let* ((scp1 (make-scope))
-       (car1 (add-scope (##make-syntax-source 'car #f) core-scope))
-       (car2 (add-scope car1 scp1)))
+(let* ((scp1 (##make-scope))
+       (car1 (##add-scope (##make-syntax-source 'car #f) ##core-scope))
+       (car2 (##add-scope car1 scp1)))
   (check-true (and (free-identifier=? car1 car2) #t))
   (check-true (not (bound-identifier=? car1 car2))))
 

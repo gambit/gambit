@@ -64,7 +64,7 @@
 ;;;----------------------------------------------------------------------------
 ;;; syntax-source
 
-(define-prim&proc (syntax-source? obj)
+(define-primitive (syntax-source? obj)
   (and (##vector? obj)
        (##fx> (##vector-length obj) 0)
        (##syntax-source-tag? (##vector-ref obj 0))))
@@ -76,7 +76,7 @@
           (##syntax-source? obj)))))
 
 (define-check-type syntax (type-vector)
-  syntax-source?)
+  ##syntax-source?)
 
 (define (##fail-check-syntax arg-id proc . args)
   (##raise-type-exception
@@ -85,42 +85,42 @@
    proc
    args))
 
-(define-prim&proc (syntax-source-clone (stx-src syntax))
+(define-primitive (syntax-source-clone (stx-src syntax))
   (##source-clone stx-src))
 
-(define-prim&proc (syntax-source-code (stx-src syntax))
+(define-primitive (syntax-source-code (stx-src syntax))
   (##source-code stx-src))
 
-(define-prim&proc (syntax-source-code-set! (stx-src syntax) code)
+(define-primitive (syntax-source-code-set! (stx-src syntax) code)
   (##source-code-set! stx-src code))
 
-(define-prim&proc (syntax-source-code-set (stx-src syntax) code)
+(define-primitive (syntax-source-code-set (stx-src syntax) code)
   (let ((stx-src (##syntax-source-clone stx-src)))
     (##syntax-source-code-set! stx-src code)
     stx-src))
 
-(define-prim&proc (syntax-source-code-update! (stx-src syntax) (proc procedure))
+(define-primitive (syntax-source-code-update! (stx-src syntax) (proc procedure))
   (##source-code-update! stx-src proc))
 
-(define-prim&proc (syntax-source-code-update (stx-src syntax) (proc procedure))
+(define-primitive (syntax-source-code-update (stx-src syntax) (proc procedure))
   (let ((stx-src (##syntax-source-clone stx-src)))
     (##syntax-source-code-update! stx-src proc)
     stx-src))
 
-(define-prim&proc (syntax-source-scopes (stx-src syntax))
+(define-primitive (syntax-source-scopes (stx-src syntax))
   (let ((scopes (##source-scopes stx-src)))
     (or scopes (error "Cannot retrieves scopes: the object is not a syntax object"))))
 
-(define-prim&proc (syntax-source-scopes-set! (stx-src syntax) (proc procedure))
+(define-primitive (syntax-source-scopes-set! (stx-src syntax) (proc procedure))
   (##source-scopes-set! stx-src proc))
 
-(define-prim&proc (syntax-source-scopes-set (stx-src syntax) (proc procedure))
+(define-primitive (syntax-source-scopes-set (stx-src syntax) (proc procedure))
   (##source-scopes-set stx-src proc))
 
-(define-prim&proc (syntax-source-scopes-update! (stx-src syntax) (proc procedure))
+(define-primitive (syntax-source-scopes-update! (stx-src syntax) (proc procedure))
   (##source-scopes-update! stx-src proc))
 
-(define-prim&proc (syntax-source-scopes-update (stx-src syntax) (proc procedure))
+(define-primitive (syntax-source-scopes-update (stx-src syntax) (proc procedure))
   (##source-scopes-update stx-src proc))
 
 ;;;----------------------------------------------------------------------------
@@ -157,16 +157,10 @@
                                (##make-scopes)))))
   src)
 
-(define-prim (source-object->syntax-source-object! src #!optional (stx (macro-absent-obj)))
-  (##source-object->syntax-source-object! src stx))
-
 (define-prim (##source-object->syntax-source-object src #!optional (stx (macro-absent-obj)))
   (let ((src (##vector-copy src)))
     (##source-object->syntax-source-object! src stx)
     src))
-
-(define-prim (source-object->syntax-source-object src #!optional (stx (macro-absent-obj)))
-  (##source-object->syntax-source-object src stx))
 
 ;;;---------------------------------------
 
@@ -215,19 +209,19 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-prim&proc (make-syntax-source code locat)
+(define-primitive (make-syntax-source code locat)
   (let ((src (##make-source code locat)))
     (##source-object->syntax-source-object! src)
     src))
 
-(define-prim&proc (make-core-syntax-source code locat)
+(define-primitive (make-core-syntax-source code locat)
   (let ((stx (##make-syntax-source code locat)))
     (##add-scope! stx ##core-scope)
     stx))
 
 ;;;----------------------------------------------------------------------------
 
-; TODO: fix define-prim&proc to allow for optional parameters
+; TODO: fix define-primitive to allow for optional parameters
 
 (define-prim (##source->syntax-source datum #!optional (stx (macro-absent-obj)))
 
@@ -258,7 +252,7 @@
             new))))
 
   (cond
-    ((syntax-source? datum)
+    ((##syntax-source? datum)
      datum)
     ((##source? datum)
      (##source-object->syntax-source-object
@@ -274,9 +268,6 @@
        stx))
     (else
       (##source-object->syntax-source-object (##make-source datum #f) stx))))
-
-(define-prim (source->syntax-source src #!optional (stx (##make-syntax-source #f #f)))
-  (##source->syntax-source src stx))
 
 ;;;---------------------------------------
 
@@ -315,9 +306,6 @@
           (##syntax-source-object->source-object! stx)))))
     (else
      "cannot convert non-syntax to datum")))
-
-(define (syntax-source->source! stx)
-  (##syntax-source->source! stx))
 
 (define-prim (##syntax-source->source stx)
 
@@ -359,16 +347,12 @@
     (else
      "cannot convert non-syntax to datum")))
 
-(define (syntax-source->source stx)
-  (##syntax-source->source stx))
-
 ;;;----------------------------------------------------------------------------
 
-(define (##datum->syntax-ref? x)
+(define-prim (##datum->syntax-ref? x)
   (or (##syntax-source? x) (##source? x)))
 
-(define (##datum->syntax-aux datum stx)
-
+(define-prim (##datum->syntax-aux datum stx)
   (let ((stx (let ref->stx ((stx stx))
                (cond
                  ((##syntax-source? stx)
@@ -403,7 +387,7 @@
             new))))
 
  (cond
-   ((syntax-source? datum)
+   ((##syntax-source? datum)
     datum)
    ((##source? datum)
     (##source->syntax-source datum stx))
@@ -435,20 +419,18 @@
 ;;;---------------------------------------
 
 (define-prim (##datum->core-syntax datum #!optional (stx (macro-absent-obj)))
-  (add-scope
+  (##add-scope
     (if (##equal? stx (macro-absent-obj))
         (##datum->syntax datum)
         (##datum->syntax datum stx))
-    core-scope))
-
-(define-prim (datum->core-syntax datum #!optional (stx (macro-absent-obj)))
-  (##datum->core-syntax datum stx))
+    ##core-scope))
 
 ;;;---------------------------------------
 
+;override _syntax-common
 (define-prim&proc (syntax->datum stx)
   (cond
-    ((syntax-source? stx)
+    ((##syntax-source? stx)
      (syntax->datum (##syntax-source-code stx)))
     ((##source? stx)
      (syntax->datum (##source-code stx)))
@@ -467,6 +449,7 @@
     (else
      stx)))
      
+;override _syntax-common
 (define-prim&proc (syntax->list stx)
   ;; original syntax->list drops the improper list tail
   (let loop ((code (##source-code stx)))
@@ -474,6 +457,7 @@
         (##cons (##car code) (loop (##cdr code)))
         '())))
 
+;override _syntax-common
 (define-prim&proc (syntax->vector stx)
   (let* ((code (##source-code stx))
          (len (##vector-length code))
@@ -557,7 +541,7 @@
 (define-primitive (flip-scope! (stx syntax) (scp scope))
   (##update-scope! stx (lambda (scopes) (##scopes-xor scopes scp))))
 
-(define-prim&proc (add-scope stx (scp scope))
+(define-primitive (add-scope stx (scp scope))
   ((if (or (pair? stx)
            (null? stx))
       ##update-scope-pair
@@ -566,7 +550,7 @@
    (lambda (scopes) 
      (##scopes-insert scopes scp))))
 
-(define-prim&proc (flip-scope stx (scp scope))
+(define-primitive (flip-scope stx (scp scope))
   ((if (or (pair? stx)
            (null? stx))
       ##update-scope-pair
@@ -575,7 +559,7 @@
    (lambda (scopes) 
      (##scopes-xor scopes scp))))
 
-(define-prim&proc (add-scopes stx scps)
+(define-primitive (add-scopes stx scps)
   (##fold (lambda (scp stx) 
             (##add-scope stx scp))
           stx
@@ -583,15 +567,15 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define-macro (define-syntax-source-proc proc)
+(define-macro (##define-syntax-source-proc proc)
   (let ((obj  (gensym 'obj))
         (name (string->symbol (string-append "syntax-source-" (symbol->string proc)))))
-    `(define-prim&proc (,name ,obj)
+    `(define-primitive (,name ,obj)
        (and (##syntax-source? ,obj)
             (,proc (##syntax-source-code ,obj))))))
 
-(define-syntax-source-proc pair?)
-(define-syntax-source-proc null?)
-(define-syntax-source-proc list?)
+(##define-syntax-source-proc pair?)
+(##define-syntax-source-proc null?)
+(##define-syntax-source-proc list?)
 
 ;;;============================================================================

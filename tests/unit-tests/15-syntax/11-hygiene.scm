@@ -8,7 +8,7 @@
                  (let ((tmp 1) (x 2))
                    (hyg-swap! tmp x)
                    (list tmp x))))
-       (stx (add-scope (datum->syntax datum) core-scope)))
+       (stx (##add-scope (datum->syntax datum) ##core-scope)))
   (check-equal? (##eval-for-syntax-binding stx cte)
                 (list 2 1)))
 
@@ -19,7 +19,7 @@
                      ((_ body) (let ((x 10)) body))))
                  (let ((x 1))
                    (hyg-with-ten x))))
-       (stx (add-scope (datum->syntax datum) core-scope)))
+       (stx (##add-scope (datum->syntax datum) ##core-scope)))
   (check-equal? (##eval-for-syntax-binding stx cte)
                 1))
 
@@ -29,7 +29,7 @@
                    (##syntax-rules () ((_ a) (list a a))))
                  (let ((list (lambda args (quote nope))))
                    (hyg-mk 5))))
-       (stx (add-scope (datum->syntax datum) core-scope)))
+       (stx (##add-scope (datum->syntax datum) ##core-scope)))
   (check-equal? (##eval-for-syntax-binding stx cte)
                 (list 5 5)))
 
@@ -40,7 +40,7 @@
                  (##define-syntax hyg-inc2
                    (##syntax-rules () ((_ n) (hyg-inc (hyg-inc n)))))
                  (hyg-inc2 5)))
-       (stx (add-scope (datum->syntax datum) core-scope)))
+       (stx (##add-scope (datum->syntax datum) ##core-scope)))
   (check-equal? (##eval-for-syntax-binding stx cte)
                 7))
 
@@ -52,7 +52,7 @@
                      ((_ e) e)
                      ((_ e1 e2 ...) (if e1 (hyg-and e2 ...) #f))))
                  (hyg-and 1 2 3)))
-       (stx (add-scope (datum->syntax datum) core-scope)))
+       (stx (##add-scope (datum->syntax datum) ##core-scope)))
   (check-equal? (##eval-for-syntax-binding stx cte)
                 3))
 
@@ -64,7 +64,7 @@
                      ((_ e) e)
                      ((_ e1 e2 ...) (if e1 (hyg-and e2 ...) #f))))
                  (hyg-and 1 #f 3)))
-       (stx (add-scope (datum->syntax datum) core-scope)))
+       (stx (##add-scope (datum->syntax datum) ##core-scope)))
   (check-equal? (##eval-for-syntax-binding stx cte)
                 #f))
 
@@ -75,7 +75,7 @@
                                      ((_ x) (let ((t x)) (+ t t))))))
                  (let ((t 100))
                    (dbl t))))
-       (stx (add-scope (datum->syntax datum) core-scope)))
+       (stx (##add-scope (datum->syntax datum) ##core-scope)))
   (check-equal? (##eval-for-syntax-binding stx cte)
                 200))
 
@@ -84,7 +84,7 @@
                                         ((_ ()) 0)
                                         ((_ (x . rest)) (+ 1 (cnt rest))))))
                  (cnt (a b c))))
-       (stx (add-scope (datum->syntax datum) core-scope)))
+       (stx (##add-scope (datum->syntax datum) ##core-scope)))
   (check-equal? (##eval-for-syntax-binding stx cte)
                 3))
 
@@ -100,7 +100,7 @@
                         (##with-syntax ((it (datum->syntax (##quote it) (##syntax test))))
                           (##syntax (let ((it test)) (if it then els))))))))
                  (hyg-aif 42 it 0)))
-       (stx (add-scope (datum->syntax datum) core-scope)))
+       (stx (##add-scope (datum->syntax datum) ##core-scope)))
   (check-equal? (##eval-for-syntax-binding stx cte)
                 42))
 
@@ -110,7 +110,7 @@
                    (##syntax-rules ()
                      ((_ test then els) (let ((it test)) (if it then els)))))
                  (hyg-hif 42 it 0)))
-       (stx (add-scope (datum->syntax datum) core-scope)))
+       (stx (##add-scope (datum->syntax datum) ##core-scope)))
   (check-exn unbound-global-exception?
     (lambda () (##eval-for-syntax-binding stx cte))))
 
@@ -119,7 +119,7 @@
                  (##define-unhygienic-syntax hyg-uh
                    (##lambda (s) (##quote-syntax (let ((it 5)) it))))
                  (hyg-uh)))
-       (stx (add-scope (datum->syntax datum) core-scope)))
+       (stx (##add-scope (datum->syntax datum) ##core-scope)))
   (check-equal? (##eval-for-syntax-binding stx cte)
                 5))
 

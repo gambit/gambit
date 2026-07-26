@@ -27,16 +27,16 @@
 
 (define-macro (##add-new-core-macro! name procedure)
   `(##top-hygiene-environment-add-core-macro-cte! ##syntax-interaction-cte 
-                                 (add-scope 
+                                 (##add-scope 
                                    (##make-syntax-source ',name #f)
-                                   core-scope)
+                                   ##core-scope)
                                  (##macro-syntax-descr ,procedure (##make-core-syntax-source ',name #f))))
 
 (define-macro (##add-new-macro! name procedure)
   `(##top-hygiene-environment-add-macro-cte! ##syntax-interaction-cte 
-                            (add-scope 
+                            (##add-scope 
                               (##make-syntax-source ',name #f)
-                              core-scope)
+                              ##core-scope)
                             (##macro-syntax-descr ,procedure (##make-core-syntax-source ',name #f))))
 
 ;;;----------------------------------------------------------------------------
@@ -194,20 +194,11 @@
     (##add-new-macro! case-lambda
       (##make-alias-syntax '##case-lambda))
 
-    (##add-new-macro! when
-      (##make-alias-syntax '##when))
-
-    (##add-new-macro! unless
-      (##make-alias-syntax '##unless))
-
     (##add-new-macro! syntax-error
       (##make-alias-syntax '##syntax-error))
 
     (##add-new-macro! define-syntax
       (##make-alias-syntax '##define-syntax))
-
-    (##add-new-macro! define-top-level-syntax
-      (##make-alias-syntax '##define-top-level-syntax))
 
     (##add-new-macro! syntax
       (##make-alias-syntax '##syntax))
@@ -223,7 +214,6 @@
 
 ;;;---------------------------------------
 
-    ;;; deactivate for `make checks` ; activate for `make ut`
     (##add-new-core-macro! ##lambda ##expand-lambda)
     (##add-new-core-macro! ##define ##expand-define)
     (##add-new-core-macro! ##define-syntax ##expand-define-syntax)
@@ -283,8 +273,8 @@
 
 ;;;============================================================================
 
-(define-prim&proc (syntax-expand top-cte src)
-  (let* ((stx (##add-scope (##source->syntax-source src) core-scope))
+(define-primitive (syntax-expand top-cte src)
+  (let* ((stx (##add-scope (##source->syntax-source src) ##core-scope))
          (stx (##expand stx top-cte))
          (stx (##compile stx top-cte)))
     (##syntax-source->source stx)))

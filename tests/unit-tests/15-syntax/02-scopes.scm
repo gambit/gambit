@@ -6,36 +6,33 @@
 
 ;;;----------------------------------------------------------------------------
 
-(define stx (make-syntax-source 0 #f))
+(define stx (##make-syntax-source 0 #f))
 
-(define scp1 (make-scope))
-(define scp2 (make-scope))
+(define scp1 (##make-scope))
+(define scp2 (##make-scope))
 
 ;;;---------------------------------------
-;;; add-scope / flip-scope
+;;; ##add-scope / ##flip-scope
 
 ;;;base
 (check-true
   (let ((lst 
           (##scopes->list 
-            (syntax-source-scopes
-              (add-scope
+            (##syntax-source-scopes
+              (##add-scope
                 stx
                 scp1)))))
     (and (= (length lst) 1)
          (eq? (car lst) scp1))))
 
-;;; form
-(check-tail-exn type-exception? (lambda () (add-scope stx 0)))
-
 ;;; 
-(define stx1 (add-scope stx scp1))
+(define stx1 (##add-scope stx scp1))
 
 (check-true
   (let ((lst 
           (##scopes->list 
-            (syntax-source-scopes
-              (add-scopes
+            (##syntax-source-scopes
+              (##add-scopes
                 stx
                 (list scp1 scp2))))))
     (and (= (length lst) 2)
@@ -46,15 +43,15 @@
 (check-true
   (let ((lst
           (##scopes->list
-            (syntax-source-scopes
-              (flip-scope stx1 scp1)))))
+            (##syntax-source-scopes
+              (##flip-scope stx1 scp1)))))
     (= (length lst) 0)))
 
 (check-true
   (let ((lst
           (##scopes->list
-            (syntax-source-scopes
-              (flip-scope stx1 scp2)))))
+            (##syntax-source-scopes
+              (##flip-scope stx1 scp2)))))
     (and (= (length lst) 2)
          (member scp1 lst)
          (member scp2 lst)
@@ -62,15 +59,15 @@
 
 (define (scopes-contain-scp1-exactly s)
   (check-true
-    (and (syntax-source? s)
-         (let ((lst (##scopes->list (syntax-source-scopes s))))
+    (and (##syntax-source? s)
+         (let ((lst (##scopes->list (##syntax-source-scopes s))))
            (and (= (length lst) 1)
                 (equal? (car lst) scp1))))))
 
 (define (scopes-contain-scp2-exactly s)
   (check-true
-    (and (syntax-source? s)
-         (let ((lst (##scopes->list (syntax-source-scopes s))))
+    (and (##syntax-source? s)
+         (let ((lst (##scopes->list (##syntax-source-scopes s))))
            (and (= (length lst) 1)
                 (equal? (car lst) scp2))))))
 
@@ -79,13 +76,13 @@
 (define stx3 (datum->syntax `((a . b))))
 (define stx4 (datum->syntax `((a b) . (a b))))
 
-(define stx2a (add-scope stx2 scp1))
-(define stx3a (add-scope stx3 scp1))
-(define stx4a (add-scope stx4 scp1))
+(define stx2a (##add-scope stx2 scp1))
+(define stx3a (##add-scope stx3 scp1))
+(define stx4a (##add-scope stx4 scp1))
 
-(define stx2f (flip-scope stx2 scp1))
-(define stx3f (flip-scope stx3 scp1))
-(define stx4f (flip-scope stx4 scp1))
+(define stx2f (##flip-scope stx2 scp1))
+(define stx3f (##flip-scope stx3 scp1))
+(define stx4f (##flip-scope stx4 scp1))
 
 
 (match-source stx2a ()
@@ -155,7 +152,7 @@
 
 ;;; ##flip-scope! removing a scope that was already present (scp1+scp2 -> scp1)
 
-(define s13   (add-scopes (make-syntax-source #f #f) (list scp1 scp2)))
+(define s13   (##add-scopes (##make-syntax-source #f #f) (list scp1 scp2)))
 (define stx13 (datum->syntax `(a) s13))
 (define stx14 (datum->syntax `((0)) s13))
 (define stx15 (datum->syntax `((a . b)) s13))

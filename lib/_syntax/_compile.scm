@@ -9,9 +9,9 @@
 
 ;;; Compile
 ;;
-;;  Transform a syntax-source to it's final hygienic form
-;;  compile : syntax-source -> syntax-source
-;;  destroy-scopes? : syntax-source -> source
+;;  Transform a ##syntax-source to it's final hygienic form
+;;  compile : ##syntax-source -> ##syntax-source
+;;  destroy-scopes? : ##syntax-source -> source
 ;;
 ;;;============================================================================
 
@@ -23,7 +23,7 @@
   (let ((b (##resolve-local id cte)))
     (cond
       ((##binding-local? b)
-       (syntax-source-code-set
+       (##syntax-source-code-set
          id
          (##binding-local-key b)))
       ((##binding-top-level? b)
@@ -51,7 +51,7 @@
 ;;;----------------------------------------------------------------------------
 
 (define-primitive (compile-pair/list stx cte on-pair-proc)
-  (syntax-source-code-update stx
+  (##syntax-source-code-update stx
     (lambda (code)
       (##map-pair (lambda (e) (##compile e cte)) 
                 on-pair-proc 
@@ -86,7 +86,7 @@
          ((not binding)
           id)
          (else
-           (syntax-source-code-set id
+           (##syntax-source-code-set id
              ((if (##binding-local? binding)
                   ##binding-local-key
                   ##binding-top-level-symbol)
@@ -108,7 +108,7 @@
       ((identifier? bindings-src)
        (##resolve-compile-local-binding bindings-src cte))
       (else
-       (syntax-source-code-update bindings-src
+       (##syntax-source-code-update bindings-src
          (lambda (bindings)
            (let loop ((bindings bindings)
                       (result   '())
@@ -116,7 +116,7 @@
              (cond
                ((pair? bindings)
                 (let* ((binding (car bindings))
-                       (binding-code (syntax-source-code binding)))
+                       (binding-code (##syntax-source-code binding)))
                   (cond
                     ((equal? binding-code '#!key)
                      (loop (cdr bindings) (cons binding result) #t))
@@ -127,7 +127,7 @@
                      (loop
                        (cdr bindings)
                        (cons
-                         (syntax-source-code-set binding
+                         (##syntax-source-code-set binding
                            `(,(if keywords? 
                                   (car binding-code)
                                   (##resolve-compile-local-binding (car binding-code) cte))
@@ -148,14 +148,14 @@
              (cond
                ((pair? bindings)
                 (let* ((binding (car bindings))
-                       (binding-code (syntax-source-code binding)))
+                       (binding-code (##syntax-source-code binding)))
                   (cons
                     (cond
                       ((member binding-code
                                `(#!optional #!key #!rest))
                        binding)
                       ((pair? binding-code)
-                       (syntax-source-code-set binding
+                       (##syntax-source-code-set binding
                          `(,(##resolve-compile-local-binding (car binding-code) cte)
                            ,(##compile (cadr binding-code) cte))))
                       (else
@@ -169,7 +169,7 @@
 
   (match-source stx ()
     ((lambda-id args . body)
-     (syntax-source-code-set stx
+     (##syntax-source-code-set stx
        `(,lambda-id ,(compile-lambda-bindings args cte)
                     ,@(##compile-body stx body cte))))))
 
@@ -178,26 +178,26 @@
     ((let-id id bindings . body) when (identifier? id)
      (let ((compiled-let 
              (##compile-let-forms 
-               (syntax-source-code-set stx
+               (##syntax-source-code-set stx
                  `(,let-id ,bindings ,@body))
                cte))
            (id (##compile-identifier id cte)))
        (match-source compiled-let ()
          ((let-id bindings . body)
-          (syntax-source-code-set stx
+          (##syntax-source-code-set stx
            `(,let-id ,id ,bindings ,@body))))))
     ((let-id bindings . body)
      (let ((bindings 
-             (syntax-source-code-update bindings
+             (##syntax-source-code-update bindings
                (lambda (bindings)
                  (let loop ((bindings bindings))
                    (match-source bindings ()
                      ((binding @ (id val) . bindings)
                       (let ((compiled-id 
                               (cond
-                                ((or (pair? (syntax-source-code id))
-                                     (list? (syntax-source-code id)))
-                                 (syntax-source-code-update id
+                                ((or (pair? (##syntax-source-code id))
+                                     (list? (##syntax-source-code id)))
+                                 (##syntax-source-code-update id
                                    (lambda (ids)
                                      (let loop-ids ((ids ids))
                                        (cond
@@ -211,14 +211,14 @@
                                 (else
                                  (##compile-identifier id cte)))))
                       (cons
-                        (syntax-source-code-set binding
+                        (##syntax-source-code-set binding
                           `(,compiled-id
                             ,(##compile val cte)))
                         (loop bindings))))
                      (_
                       bindings))))))
            (body (##compile-body stx body cte)))
-       (syntax-source-code-set stx
+       (##syntax-source-code-set stx
          `(,let-id ,bindings ,@body))))))
 
 (define-primitive (compile-declare stx cte)
@@ -236,9 +236,9 @@
 (define-primitive (compile-quote-syntax stx cte)
   (match-source stx ()
     ((quote-syntax-id expr)
-     (syntax-source-code-set stx
-       `(,(syntax-source-code-set stx '##quote)
-         ,(syntax-source-code-set stx expr))))))
+     (##syntax-source-code-set stx
+       `(,(##syntax-source-code-set stx '##quote)
+         ,(##syntax-source-code-set stx expr))))))
 
 (define-primitive (compile-syntax stx cte)
   (##compile-quote-syntax stx cte))
@@ -252,13 +252,13 @@
       (else
        (match-source id ()
          ((id-id val-id)
-          (syntax-source-code-set id
+          (##syntax-source-code-set id
             `(,(##resolve-compile-local-binding id-id cte)
                ,(##compile val-id cte))))
          (else
           (let ((top-level? (##resolve-compile-top-level-binding? id cte)))
             (if top-level?
-                (syntax-source-code-set id top-level?)
+                (##syntax-source-code-set id top-level?)
                 (##resolve-compile-local-binding id cte))))))))
 
   (define (resolve-maybe-local-bindings ids cte)
@@ -271,13 +271,13 @@
       (else
        (resolve-maybe-local-binding ids cte))))
 
-  (syntax-source-code-set stx
+  (##syntax-source-code-set stx
     (match-source stx ()
       ((define-id binding @ (id . args) . body)
        (let ((id   (resolve-maybe-local-binding id cte))
              (args (resolve-maybe-local-bindings args cte))
              (body (##compile-body stx body cte)))
-         `(,define-id ,(syntax-source-code-set binding 
+         `(,define-id ,(##syntax-source-code-set binding 
                                                (##cons id args)) ,@body)))
       ((define-id id expr)
        (let ((id   (resolve-maybe-local-binding id cte))
@@ -289,7 +289,7 @@
 (define-prim (##compile-core-form-application id stx cte)
 
   (define (dispatch-core-form-id id)
-    (case (syntax-source-code 
+    (case (##syntax-source-code 
             (##compile-identifier id cte))
       ((##lambda)         ##compile-lambda)
       ((##let
@@ -342,7 +342,7 @@
                          (if (null? vals)
                              (list compiled-val)
                              (cdr (##syntax-source-code compiled-val)))))
-                  (syntax-source-code-set clause
+                  (##syntax-source-code-set clause
                     `(,id ,@compiled-vals)))))
              (_
               (##raise-expression-parsing-exception
@@ -358,7 +358,7 @@
     ((case-id expr . clauses)
      (let ((expr (##compile expr cte))
            (clauses (compile-clauses clauses cte)))
-       (syntax-source-code-set stx
+       (##syntax-source-code-set stx
          `(,case-id ,expr ,@clauses))))))
 
 ;;;----------------------------------------------------------------------------
@@ -369,7 +369,7 @@
 ;;;----------------------------------------------------------------------------
 
 (define-primitive (compile stx cte)
-  (let ((code (syntax-source-code stx)))
+  (let ((code (##syntax-source-code stx)))
     (cond
       ((pair? code)
        (let ((head (car code)))
@@ -380,7 +380,7 @@
             (##compile-application stx cte)))))
       ((identifier? stx)
        (##compile-identifier stx cte))
-      ((keyword? (syntax-source-code stx))
+      ((keyword? (##syntax-source-code stx))
        (##compile-keyword-argument stx cte))
       (else
        stx))))

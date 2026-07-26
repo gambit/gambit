@@ -4,16 +4,20 @@
 
 - Bootstrap progress:
   - [x] phase1 make
-  - [x] phase1 make check (up to golden-file like changes)
+  - [x] phase1 make check
   - [x] phase1 make ut
   - [x] phase1 make modules
 
   - [x] phase2 make
-  - [x] phase2 make check (up to golden-file like changes)
+  - [x] phase2 make check
   - [x] phase2 make ut
   - [x] phase2 make modules
 
   - [x] phase3 output == phase2 output
+
+- Documentation
+  - Document hygiene properly
+  - Document in gambit.txi
 
 - Performance
   - general optimizations (Now ~1.5-2.0x initial speed)

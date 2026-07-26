@@ -10896,8 +10896,20 @@
 
 ;;; Write methods for each object type
 
+(define ##symbol-display-name-hook #f)
+
+(define-prim (##symbol-display-name-hook-set! x)
+  (set! ##symbol-display-name-hook x))
+
 (define-prim (##wr-symbol we obj)
-  (let ((uninterned? (##uninterned-symbol? obj)))
+  (let* ((uninterned?
+          (##uninterned-symbol? obj))
+         (hook
+          (and uninterned? ##symbol-display-name-hook))
+         (display-name
+          (and hook
+               (let ((name (hook obj)))
+                 (and (##string? name) name)))))
     (case (macro-writeenv-style we)
       ((mark)
        (if uninterned?
@@ -10905,12 +10917,12 @@
       (else
        (if (or (##not uninterned?)
                (##wr-stamp we obj))
-           (let ((str (##symbol->string obj)))
+           (let ((str (or display-name (##symbol->string obj))))
              (case (macro-writeenv-style we)
                ((display print)
                 (##wr-str we str))
                (else
-                (if uninterned?
+                (if (and uninterned? (##not display-name))
                     (##wr-str we "#:"))
                 (if (##not (##escape-symbol? we str))
                     (##wr-str we str)

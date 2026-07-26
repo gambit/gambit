@@ -9,7 +9,7 @@
 ;; Identifiers bound to syntactic forms and procedures defined by R7RS
 ;; are mapped to the empty namespace (no prefix).
 
-(##include "r5rs#.scm") ;; most identifier bindings are inherited from R5RS
+(##include "r6rs#.scm") ;; most identifier bindings are inherited from R5RS
 
 (##namespace ("" ;; these identifier bindings are new in R7RS
 
@@ -28,6 +28,8 @@ letrec*
 letrec*-values
 letrec-values
 parameterize
+syntax
+syntax-case
 syntax-error
 unless
 when
