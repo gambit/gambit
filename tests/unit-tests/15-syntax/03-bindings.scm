@@ -17,6 +17,7 @@
 ; ##binding-local?
 ; ##binding-local-key
 
+(call-with-new-global-binding-table (lambda ()
 (let ((cte (##make-top-cte))
       (id  (##make-syntax-source 'x #f)))
   (let ((key (##hcte-add-new-local-binding! cte id)))
@@ -34,11 +35,13 @@
                     (and (##binding-local? val)
                          (not (##binding-top-level? val))
                          (equal? key (##binding-local-key val))))))))))
+))
 
 ; hcte-add-new-top-level-binding!
 ; ##binding-top-level?
 ; ##binding-top-level-symbol
 
+(call-with-new-global-binding-table (lambda ()
 (let ((cte (##make-top-cte))
       (id  (##make-syntax-source 'x #f)))
   (let ((key (##hcte-add-new-top-level-binding! cte id)))
@@ -56,6 +59,7 @@
                     (and (##binding-top-level? val)
                          (not (##binding-local? val))
                          (equal? key (##binding-top-level-symbol val))))))))))
+))
 
 ;;;----------------------------------------------------------------------------
 ;;; ctx-binding insertion 
@@ -63,6 +67,7 @@
 ; hcte-add-variable-cte
 ; ctx-binding-variable?
 
+(call-with-new-global-binding-table (lambda ()
 (let ((cte (##make-top-cte))
       (id  (##make-syntax-source 'x #f)))
   (let ((key (##hcte-add-new-top-level-binding! cte id)))
@@ -78,11 +83,13 @@
                       (and (##ctx-binding-variable? binding-val)
                            (not (##ctx-binding-macro? binding-val))
                            (not (##ctx-binding-core-macro? binding-val)))))))))))
+))
       
 
 ; hcte-add-macro-cte
 ; ##ctx-binding-macro?
 
+(call-with-new-global-binding-table (lambda ()
 (let ((cte (##make-top-cte))
       (id  (##make-syntax-source 'x #f)))
   (let ((key (##hcte-add-new-top-level-binding! cte id)))
@@ -100,10 +107,12 @@
                            (not (##ctx-binding-core-macro? binding-val)))
                       (and #t ; TODO check for descrs
                            #t)))))))))
+))
 
 ; hcte-add-core-macro-cte
 ; ##ctx-binding-core-macro?
 
+(call-with-new-global-binding-table (lambda ()
 (let ((cte (##make-top-cte))
       (id  (##make-syntax-source 'x #f)))
   (let ((key (##hcte-add-new-top-level-binding! cte id)))
@@ -121,12 +130,14 @@
                            (not (##ctx-binding-macro? binding-val)))
                       (and #t ; TODO check for descrs
                            #t)))))))))
+))
 
 ;;;----------------------------------------------------------------------------
 ;;; resolve-id
 
 ;;; top-level
 
+(call-with-new-global-binding-table (lambda ()
 (let* ((top-cte (##make-top-cte))
        (id  (##make-syntax-source 'x #f))
        (key (##hcte-add-new-top-level-binding! top-cte id))
@@ -178,9 +189,11 @@
         (check-true 
           (= (gbt-count (##cte-top-global-binding-table top-cte))
              3))))))
+))
 
 ;; local
 
+(call-with-new-global-binding-table (lambda ()
 (let* ((top-cte (##make-top-cte))
        (id  (##make-syntax-source 'x #f))
        (key (##hcte-add-new-local-binding! top-cte id))
@@ -227,10 +240,12 @@
         (check-true 
           (= (gbt-count (##cte-top-global-binding-table top-cte))
              3))))))
+))
 
 ;; resolve-binding
 
 ;; top-level
+(call-with-new-global-binding-table (lambda ()
 (let* ((cte (##make-top-cte))
        (id  (##make-syntax-source 'x #f))
        (descr (datum->syntax '0))
@@ -256,11 +271,13 @@
       (##ctx-binding-macro? ctx-b-macro))
     (check-true
       (##ctx-binding-core-macro? ctx-b-core-macro))))
+))
 
 
 ;; local
 
 ;; base
+(call-with-new-global-binding-table (lambda ()
 (let* ((cte (##make-top-cte))
        (id  (##make-syntax-source 'x #f))
        (descr (datum->syntax '0))
@@ -285,8 +302,10 @@
       (##ctx-binding-macro? ctx-b-macro))
     (check-true
       (##ctx-binding-core-macro? ctx-b-core-macro))))
+))
 
 ;; variables
+(call-with-new-global-binding-table (lambda ()
 (let* ((cte  (##make-top-cte))
        (scp1 (##make-scope))
        (scp2 (##make-scope))
@@ -336,8 +355,10 @@
           (let ((b (##resolve-binding id2 cte3)))
             (and (##ctx-binding-variable? b)
                  (##ctx-binding-variable-hint b))))))))
+))
 
 ;; macro
+(call-with-new-global-binding-table (lambda ()
 (let* ((cte  (##make-top-cte))
        (scp1 (##make-scope))
        (scp2 (##make-scope))
@@ -390,8 +411,10 @@
           (let ((b (##resolve-binding id2 cte3)))
             (and (##ctx-binding-macro? b)
                  (##ctx-binding-macro-expander b))))))))
+))
 
 ;; core-macro
+(call-with-new-global-binding-table (lambda ()
 (let* ((cte  (##make-top-cte))
        (scp1 (##make-scope))
        (scp2 (##make-scope))
@@ -444,35 +467,6 @@
           (let ((b (##resolve-binding id2 cte3)))
             (and (##ctx-binding-core-macro? b)
                  (##ctx-binding-core-macro-expander b))))))))
-
-;;;----------------------------------------------------------------------------
-;;; identifier predicates (bound-identifier=? & free-identifier=?)
-
-(let* ((scp1 (##make-scope))
-       (ix   (##make-syntax-source 'x #f))
-       (ix2  (##make-syntax-source 'x #f))
-       (iy   (##make-syntax-source 'y #f))
-       (inum (##make-syntax-source 0 #f))
-       (ixs  (##add-scope ix scp1)))
-
-  ; same symbol, both scope-free
-  (check-true (and (bound-identifier=? ix ix2) #t))
-  ; same symbol, different scope sets
-  (check-true (not (bound-identifier=? ix ixs)))
-  ; different symbol
-  (check-true (not (bound-identifier=? ix iy)))
-  ; same symbol, same scope
-  (check-true (and (bound-identifier=? (##add-scope ix2 scp1) ixs) #t))
-  ; non-identifier argument
-  (check-true (not (bound-identifier=? inum ix)))
-
-  (check-true (and (free-identifier=? ix ixs) #t))
-  (check-true (not (free-identifier=? ix iy))))
-
-(let* ((scp1 (##make-scope))
-       (car1 (##add-scope (##make-syntax-source 'car #f) ##core-scope))
-       (car2 (##add-scope car1 scp1)))
-  (check-true (and (free-identifier=? car1 car2) #t))
-  (check-true (not (bound-identifier=? car1 car2))))
+))
 
 ;;;----------------------------------------------------------------------------

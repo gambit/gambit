@@ -679,6 +679,8 @@
 (define (##make-syntax-global-binding-table)
   (##make-table test: ##eq?))
 
+(define ##syntax-global-binding-table (##make-syntax-global-binding-table))
+
 (define (##binding-table-sub table sym create?)
   (or (##table-ref table sym #f)
       (and create?
@@ -1462,7 +1464,7 @@
     (##cte-parent-cte-set! top-cte top-cte)
     (##cte-top-cte-set! top-cte top-cte)
     (##cte-ctx-set! top-cte (##make-syntax-ctx))
-    (##cte-top-global-binding-table-set! top-cte (##make-syntax-global-binding-table))
+    (##cte-top-global-binding-table-set! top-cte ##syntax-global-binding-table)
     top-cte))
 
 (define (##top-cte-cte top-cte)

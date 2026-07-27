@@ -14,7 +14,7 @@
   (vector
    ;; cell containing variables in this frame and an association between each
    (if env (env-syntax-gbt-ref env)
-           (##make-syntax-global-binding-table))
+           ##syntax-global-binding-table)
    (syntax-proc-ctx
      (if env (env-syntax-ctx-ref env)
              (##make-syntax-ctx)))

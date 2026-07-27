@@ -42,7 +42,7 @@
        (##syntax-source? id2)
        (##eq? (##syntax-source-code id1)
               (##syntax-source-code id2))
-       (##eq?(##resolve-id id1 ##syntax-interaction-cte)
-             (##resolve-id id2 ##syntax-interaction-cte))))
+       (##eq? (##resolve-id id1 ##syntax-interaction-cte)
+              (##resolve-id id2 ##syntax-interaction-cte))))
 
 ;;;============================================================================

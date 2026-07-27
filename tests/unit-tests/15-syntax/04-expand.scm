@@ -13,6 +13,7 @@
       (##desourcify expanded)
       (##quote caaadr))))
 
+(call-with-new-global-binding-table (lambda ()
 (let* ((top-cte (##make-top-cte))
        (id  (##make-syntax-source (##quote x) #f))
        (key (##hcte-add-new-top-level-binding! top-cte id)))
@@ -59,6 +60,7 @@
         (check-equal?
           id3
           (##expand-identifier id top-cte))))))
+))
 
 ;;;----------------------------------------------------------------------------
 ;;; local id
