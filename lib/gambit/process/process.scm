@@ -125,12 +125,34 @@ c-declare-end
                    (##close-input-port port)
                    (let ((status (##process-status port)))
                      (cont2 (##cons status output))))
-                 (let loop ()
-                   (if (##char? (##read-char port))
-                       (loop)
+                 (let ((capturing? (##not (or (##eq? capture? (macro-absent-obj))
+                                               (##not capture?)))))
+                   (if capturing?
+                       (let loop ()
+                         (if (##char? (##read-char port))
+                             (loop)
+                             (begin
+                               (##close-input-port port)
+                               (cont2 (##process-status port)))))
                        (begin
                          (##close-input-port port)
-                         (cont2 (##process-status port))))))))))
+                         ;; stdout/stderr are not redirected in this case, so
+                         ;; there is no input EOF to wait for on the port.
+                         (let loop ()
+                           (let ((status (##os-device-process-status
+                                          (##port-device port))))
+                             (cond ((##not status)
+                                    (##thread-sleep! 0.01)
+                                    (loop))
+                                   ((##fx< status 0)
+                                    (##raise-os-io-exception
+                                     port
+                                     #f
+                                     status
+                                     process-status
+                                     port))
+                                   (else
+                                    (cont2 status)))))))))))))
    open-process
    (let ((cap (##not (or (##eq? capture? (macro-absent-obj))
                          (##not capture?)))))

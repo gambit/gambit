@@ -8,6 +8,8 @@
 (check-equal? (shell-command "exit 0" #f) 0)
 (check-equal? (shell-command "exit 1" #f) 256)
 
+(check-equal? (shell-command "echo shell-command-no-capture" #f) 0)
+
 (check-equal? (shell-command "exit 0" #t) '(0 . ""))
 (check-equal? (shell-command "exit 1" #t) '(256 . ""))
 
