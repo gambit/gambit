@@ -15,6 +15,9 @@
 typedef struct ___device_group_struct
   {
     struct ___device_struct *list; /* list of devices in this group */
+#ifndef ___SINGLE_THREADED_VMS
+    volatile int lock;             /* spinlock for SMP list protection */
+#endif
   } ___device_group;
 
 /*TODO: remove "DEVICE" from names*/

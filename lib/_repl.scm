@@ -5440,7 +5440,9 @@
 
 (##enable-interrupts!)
 
-(##startup-parallelism!)
+;; ##startup-parallelism! is now called lazily by ##thread-start!
+;; via ##ensure-parallelism!, so single-threaded programs (like gsc)
+;; don't pay the cost of idle VM processor threads.
 
 (##startup-repl-server)
 

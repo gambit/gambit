@@ -365,6 +365,7 @@
 "c#with-stack-pointer-adjust"
 "car"
 "cdr"
+"cdr-x"
 "char"
 "check_procedure"
 "check_procedure_glo"
@@ -459,6 +460,7 @@
 "node"
 "nopreload"
 "null"
+"null?"
 "num"
 "number"
 "o"
@@ -1271,14 +1273,14 @@
 #define ___LINKER_ID ___LNK___t_2d_univ_2d_1
 #define ___MH_PROC ___H___t_2d_univ_2d_1
 #define ___SCRIPT_LINE 0
-#define ___SYMCOUNT 577
+#define ___SYMCOUNT 579
 #define ___KEYCOUNT 1
 #define ___GLOCOUNT 667
 #define ___SUPCOUNT 353
 #define ___CNSCOUNT 284
 #define ___SUBCOUNT 430
-#define ___LBLCOUNT 3582
-#define ___OFDCOUNT 360
+#define ___LBLCOUNT 3564
+#define ___OFDCOUNT 359
 #define ___MODDESCR ___REF_SUB(427)
 #include "gambit.h"
 
@@ -1639,6 +1641,7 @@ ___NEED_SYM(___S_c_23_with_2d_stack_2d_base_2d_offset)
 ___NEED_SYM(___S_c_23_with_2d_stack_2d_pointer_2d_adjust)
 ___NEED_SYM(___S_car)
 ___NEED_SYM(___S_cdr)
+___NEED_SYM(___S_cdr_2d_x)
 ___NEED_SYM(___S_char)
 ___NEED_SYM(___S_check__procedure)
 ___NEED_SYM(___S_check__procedure__glo)
@@ -1733,6 +1736,7 @@ ___NEED_SYM(___S_nfree)
 ___NEED_SYM(___S_node)
 ___NEED_SYM(___S_nopreload)
 ___NEED_SYM(___S_null)
+___NEED_SYM(___S_null_3f_)
 ___NEED_SYM(___S_num)
 ___NEED_SYM(___S_number)
 ___NEED_SYM(___S_o)
@@ -2924,226 +2928,228 @@ ___DEF_SYM(353,___S_c_23_with_2d_stack_2d_base_2d_offset,"c#with-stack-base-offs
 ___DEF_SYM(354,___S_c_23_with_2d_stack_2d_pointer_2d_adjust,"c#with-stack-pointer-adjust")
 ___DEF_SYM(355,___S_car,"car")
 ___DEF_SYM(356,___S_cdr,"cdr")
-___DEF_SYM(357,___S_char,"char")
-___DEF_SYM(358,___S_check__procedure,"check_procedure")
-___DEF_SYM(359,___S_check__procedure__glo,"check_procedure_glo")
-___DEF_SYM(360,___S_class,"class")
-___DEF_SYM(361,___S_close,"close")
-___DEF_SYM(362,___S_closure,"closure")
-___DEF_SYM(363,___S_closure__alloc,"closure_alloc")
-___DEF_SYM(364,___S_code,"code")
-___DEF_SYM(365,___S_codes,"codes")
-___DEF_SYM(366,___S_compactness,"compactness")
-___DEF_SYM(367,___S_cons,"cons")
-___DEF_SYM(368,___S_copy,"copy")
-___DEF_SYM(369,___S_copyOfRange,"copyOfRange")
-___DEF_SYM(370,___S_cpxnum,"cpxnum")
-___DEF_SYM(371,___S_ctrlpt,"ctrlpt")
-___DEF_SYM(372,___S_ctrlpt__init,"ctrlpt_init")
-___DEF_SYM(373,___S_ctrlpts,"ctrlpts")
-___DEF_SYM(374,___S_current__processor,"current_processor")
-___DEF_SYM(375,___S_current__vm,"current_vm")
-___DEF_SYM(376,___S_d,"d")
-___DEF_SYM(377,___S_deleted,"deleted")
-___DEF_SYM(378,___S_den,"den")
-___DEF_SYM(379,___S_denv,"denv")
-___DEF_SYM(380,___S_digits,"digits")
-___DEF_SYM(381,___S_e,"e")
-___DEF_SYM(382,___S_elems,"elems")
-___DEF_SYM(383,___S_entry,"entry")
-___DEF_SYM(384,___S_entrypt,"entrypt")
-___DEF_SYM(385,___S_entrypt__init,"entrypt_init")
-___DEF_SYM(386,___S_eof,"eof")
-___DEF_SYM(387,___S_error,"error")
-___DEF_SYM(388,___S_extended,"extended")
-___DEF_SYM(389,___S_f,"f")
-___DEF_SYM(390,___S_f32,"f32")
-___DEF_SYM(391,___S_f32vector,"f32vector")
-___DEF_SYM(392,___S_f64,"f64")
-___DEF_SYM(393,___S_f64vector,"f64vector")
-___DEF_SYM(394,___S_fixnum,"fixnum")
-___DEF_SYM(395,___S_flonum,"flonum")
-___DEF_SYM(396,___S_flonumbox,"flonumbox")
-___DEF_SYM(397,___S_flonump,"flonump")
-___DEF_SYM(398,___S_fmt,"fmt")
-___DEF_SYM(399,___S_frame,"frame")
-___DEF_SYM(400,___S_fs,"fs")
-___DEF_SYM(401,___S_g,"g")
-___DEF_SYM(402,___S_get,"get")
-___DEF_SYM(403,___S_glo,"glo")
-___DEF_SYM(404,___S_global,"global")
-___DEF_SYM(405,___S_go,"go")
-___DEF_SYM(406,___S_h,"h")
-___DEF_SYM(407,___S_hasattr,"hasattr")
-___DEF_SYM(408,___S_hash,"hash")
-___DEF_SYM(409,___S_hname,"hname")
-___DEF_SYM(410,___S_host,"host")
-___DEF_SYM(411,___S_i,"i")
-___DEF_SYM(412,___S_id,"id")
-___DEF_SYM(413,___S_ifjump,"ifjump")
-___DEF_SYM(414,___S_imag,"imag")
-___DEF_SYM(415,___S_index,"index")
-___DEF_SYM(416,___S_info,"info")
-___DEF_SYM(417,___S_inherited,"inherited")
-___DEF_SYM(418,___S_instance__variable__defined_3f_,"instance_variable_defined?")
-___DEF_SYM(419,___S_int,"int")
-___DEF_SYM(420,___S_interned,"interned")
-___DEF_SYM(421,___S_inttemp1,"inttemp1")
-___DEF_SYM(422,___S_inttemp2,"inttemp2")
-___DEF_SYM(423,___S_j,"j")
-___DEF_SYM(424,___S_java,"java")
-___DEF_SYM(425,___S_js,"js")
-___DEF_SYM(426,___S_jsnumberp,"jsnumberp")
-___DEF_SYM(427,___S_jump,"jump")
-___DEF_SYM(428,___S_jumpable,"jumpable")
-___DEF_SYM(429,___S_k,"k")
-___DEF_SYM(430,___S_key,"key")
-___DEF_SYM(431,___S_keyword,"keyword")
-___DEF_SYM(432,___S_l,"l")
-___DEF_SYM(433,___S_label_2d_namespace,"label-namespace")
-___DEF_SYM(434,___S_length,"length")
-___DEF_SYM(435,___S_link,"link")
-___DEF_SYM(436,___S_m,"m")
-___DEF_SYM(437,___S_make__interned__symbol,"make_interned_symbol")
-___DEF_SYM(438,___S_module__register,"module_register")
-___DEF_SYM(439,___S_n,"n")
-___DEF_SYM(440,___S_name,"name")
-___DEF_SYM(441,___S_namespace,"namespace")
-___DEF_SYM(442,___S_nargs,"nargs")
-___DEF_SYM(443,___S_nb_2d_arg_2d_regs,"nb-arg-regs")
-___DEF_SYM(444,___S_nb_2d_gvm_2d_regs,"nb-gvm-regs")
-___DEF_SYM(445,___S_never_2d_return_2d_jump,"never-return-jump")
-___DEF_SYM(446,___S_new,"new")
-___DEF_SYM(447,___S_nfree,"nfree")
-___DEF_SYM(448,___S_node,"node")
-___DEF_SYM(449,___S_nopreload,"nopreload")
-___DEF_SYM(450,___S_null,"null")
-___DEF_SYM(451,___S_num,"num")
-___DEF_SYM(452,___S_number,"number")
-___DEF_SYM(453,___S_o,"o")
-___DEF_SYM(454,___S_optional,"optional")
-___DEF_SYM(455,___S_other,"other")
-___DEF_SYM(456,___S_p,"p")
-___DEF_SYM(457,___S_package,"package")
-___DEF_SYM(458,___S_pair,"pair")
-___DEF_SYM(459,___S_pairp,"pairp")
-___DEF_SYM(460,___S_parent,"parent")
-___DEF_SYM(461,___S_parententrypoint,"parententrypoint")
-___DEF_SYM(462,___S_parententrypt,"parententrypt")
-___DEF_SYM(463,___S_parententrypt__init,"parententrypt_init")
-___DEF_SYM(464,___S_peps,"peps")
-___DEF_SYM(465,___S_php,"php")
-___DEF_SYM(466,___S_poll,"poll")
-___DEF_SYM(467,___S_pollcount,"pollcount")
-___DEF_SYM(468,___S_pre3,"pre3")
-___DEF_SYM(469,___S_pre53,"pre53")
-___DEF_SYM(470,___S_pre7,"pre7")
-___DEF_SYM(471,___S_preload,"preload")
-___DEF_SYM(472,___S_prim,"prim")
-___DEF_SYM(473,___S_println,"println")
-___DEF_SYM(474,___S_property__exists,"property_exists")
-___DEF_SYM(475,___S_push,"push")
-___DEF_SYM(476,___S_python,"python")
-___DEF_SYM(477,___S_q,"q")
-___DEF_SYM(478,___S_r,"r")
-___DEF_SYM(479,___S_r0,"r0")
-___DEF_SYM(480,___S_r1,"r1")
-___DEF_SYM(481,___S_r2,"r2")
-___DEF_SYM(482,___S_r3,"r3")
-___DEF_SYM(483,___S_r4,"r4")
-___DEF_SYM(484,___S_ratnum,"ratnum")
-___DEF_SYM(485,___S_rd,"rd")
-___DEF_SYM(486,___S_rdwr,"rdwr")
-___DEF_SYM(487,___S_real,"real")
-___DEF_SYM(488,___S_real_2d_time_2d_milliseconds,"real-time-milliseconds")
-___DEF_SYM(489,___S_repr_2d_boolean,"repr-boolean")
-___DEF_SYM(490,___S_repr_2d_f32vector,"repr-f32vector")
-___DEF_SYM(491,___S_repr_2d_f64vector,"repr-f64vector")
-___DEF_SYM(492,___S_repr_2d_fixnum,"repr-fixnum")
-___DEF_SYM(493,___S_repr_2d_flonum,"repr-flonum")
-___DEF_SYM(494,___S_repr_2d_frame,"repr-frame")
-___DEF_SYM(495,___S_repr_2d_module,"repr-module")
-___DEF_SYM(496,___S_repr_2d_null,"repr-null")
-___DEF_SYM(497,___S_repr_2d_procedure,"repr-procedure")
-___DEF_SYM(498,___S_repr_2d_s16vector,"repr-s16vector")
-___DEF_SYM(499,___S_repr_2d_s32vector,"repr-s32vector")
-___DEF_SYM(500,___S_repr_2d_s64vector,"repr-s64vector")
-___DEF_SYM(501,___S_repr_2d_s8vector,"repr-s8vector")
-___DEF_SYM(502,___S_repr_2d_string,"repr-string")
-___DEF_SYM(503,___S_repr_2d_symbol,"repr-symbol")
-___DEF_SYM(504,___S_repr_2d_u16vector,"repr-u16vector")
-___DEF_SYM(505,___S_repr_2d_u32vector,"repr-u32vector")
-___DEF_SYM(506,___S_repr_2d_u64vector,"repr-u64vector")
-___DEF_SYM(507,___S_repr_2d_u8vector,"repr-u8vector")
-___DEF_SYM(508,___S_repr_2d_values,"repr-values")
-___DEF_SYM(509,___S_repr_2d_vector,"repr-vector")
-___DEF_SYM(510,___S_repr_2d_void,"repr-void")
-___DEF_SYM(511,___S_rest,"rest")
-___DEF_SYM(512,___S_return,"return")
-___DEF_SYM(513,___S_returnpt,"returnpt")
-___DEF_SYM(514,___S_returnpt__init,"returnpt_init")
-___DEF_SYM(515,___S_ruby,"ruby")
-___DEF_SYM(516,___S_s,"s")
-___DEF_SYM(517,___S_s16,"s16")
-___DEF_SYM(518,___S_s16vector,"s16vector")
-___DEF_SYM(519,___S_s32,"s32")
-___DEF_SYM(520,___S_s32vector,"s32vector")
-___DEF_SYM(521,___S_s64,"s64")
-___DEF_SYM(522,___S_s64vector,"s64vector")
-___DEF_SYM(523,___S_s8,"s8")
-___DEF_SYM(524,___S_s8vector,"s8vector")
-___DEF_SYM(525,___S_scmobj,"scmobj")
-___DEF_SYM(526,___S_sequence_2d_number,"sequence-number")
-___DEF_SYM(527,___S_set,"set")
-___DEF_SYM(528,___S_simple,"simple")
-___DEF_SYM(529,___S_slice,"slice")
-___DEF_SYM(530,___S_slice_21_,"slice!")
-___DEF_SYM(531,___S_slots,"slots")
-___DEF_SYM(532,___S_sp,"sp")
-___DEF_SYM(533,___S_stack,"stack")
-___DEF_SYM(534,___S_state,"state")
-___DEF_SYM(535,___S_str,"str")
-___DEF_SYM(536,___S_string,"string")
-___DEF_SYM(537,___S_stringbox,"stringbox")
-___DEF_SYM(538,___S_struct,"struct")
-___DEF_SYM(539,___S_structure,"structure")
-___DEF_SYM(540,___S_switch,"switch")
-___DEF_SYM(541,___S_symbol,"symbol")
-___DEF_SYM(542,___S_t,"t")
-___DEF_SYM(543,___S_tags,"tags")
-___DEF_SYM(544,___S_task_2d_entry,"task-entry")
-___DEF_SYM(545,___S_task_2d_return,"task-return")
-___DEF_SYM(546,___S_testator,"testator")
-___DEF_SYM(547,___S_toString,"toString")
-___DEF_SYM(548,___S_to__s,"to_s")
-___DEF_SYM(549,___S_u,"u")
-___DEF_SYM(550,___S_u16,"u16")
-___DEF_SYM(551,___S_u16vector,"u16vector")
-___DEF_SYM(552,___S_u32,"u32")
-___DEF_SYM(553,___S_u32vector,"u32vector")
-___DEF_SYM(554,___S_u64,"u64")
-___DEF_SYM(555,___S_u64vector,"u64vector")
-___DEF_SYM(556,___S_u8,"u8")
-___DEF_SYM(557,___S_u8vector,"u8vector")
-___DEF_SYM(558,___S_unbound,"unbound")
-___DEF_SYM(559,___S_unicode,"unicode")
-___DEF_SYM(560,___S_unused,"unused")
-___DEF_SYM(561,___S_unwind,"unwind")
-___DEF_SYM(562,___S_v,"v")
-___DEF_SYM(563,___S_val,"val")
-___DEF_SYM(564,___S_vals,"vals")
-___DEF_SYM(565,___S_value,"value")
-___DEF_SYM(566,___S_vector,"vector")
-___DEF_SYM(567,___S_vectorbox,"vectorbox")
-___DEF_SYM(568,___S_vectorp,"vectorp")
-___DEF_SYM(569,___S_void,"void")
-___DEF_SYM(570,___S_w,"w")
-___DEF_SYM(571,___S_wr,"wr")
-___DEF_SYM(572,___S_wrong__key__args,"wrong_key_args")
-___DEF_SYM(573,___S_wrong__nargs,"wrong_nargs")
-___DEF_SYM(574,___S_x,"x")
-___DEF_SYM(575,___S_y,"y")
-___DEF_SYM(576,___S_z,"z")
+___DEF_SYM(357,___S_cdr_2d_x,"cdr-x")
+___DEF_SYM(358,___S_char,"char")
+___DEF_SYM(359,___S_check__procedure,"check_procedure")
+___DEF_SYM(360,___S_check__procedure__glo,"check_procedure_glo")
+___DEF_SYM(361,___S_class,"class")
+___DEF_SYM(362,___S_close,"close")
+___DEF_SYM(363,___S_closure,"closure")
+___DEF_SYM(364,___S_closure__alloc,"closure_alloc")
+___DEF_SYM(365,___S_code,"code")
+___DEF_SYM(366,___S_codes,"codes")
+___DEF_SYM(367,___S_compactness,"compactness")
+___DEF_SYM(368,___S_cons,"cons")
+___DEF_SYM(369,___S_copy,"copy")
+___DEF_SYM(370,___S_copyOfRange,"copyOfRange")
+___DEF_SYM(371,___S_cpxnum,"cpxnum")
+___DEF_SYM(372,___S_ctrlpt,"ctrlpt")
+___DEF_SYM(373,___S_ctrlpt__init,"ctrlpt_init")
+___DEF_SYM(374,___S_ctrlpts,"ctrlpts")
+___DEF_SYM(375,___S_current__processor,"current_processor")
+___DEF_SYM(376,___S_current__vm,"current_vm")
+___DEF_SYM(377,___S_d,"d")
+___DEF_SYM(378,___S_deleted,"deleted")
+___DEF_SYM(379,___S_den,"den")
+___DEF_SYM(380,___S_denv,"denv")
+___DEF_SYM(381,___S_digits,"digits")
+___DEF_SYM(382,___S_e,"e")
+___DEF_SYM(383,___S_elems,"elems")
+___DEF_SYM(384,___S_entry,"entry")
+___DEF_SYM(385,___S_entrypt,"entrypt")
+___DEF_SYM(386,___S_entrypt__init,"entrypt_init")
+___DEF_SYM(387,___S_eof,"eof")
+___DEF_SYM(388,___S_error,"error")
+___DEF_SYM(389,___S_extended,"extended")
+___DEF_SYM(390,___S_f,"f")
+___DEF_SYM(391,___S_f32,"f32")
+___DEF_SYM(392,___S_f32vector,"f32vector")
+___DEF_SYM(393,___S_f64,"f64")
+___DEF_SYM(394,___S_f64vector,"f64vector")
+___DEF_SYM(395,___S_fixnum,"fixnum")
+___DEF_SYM(396,___S_flonum,"flonum")
+___DEF_SYM(397,___S_flonumbox,"flonumbox")
+___DEF_SYM(398,___S_flonump,"flonump")
+___DEF_SYM(399,___S_fmt,"fmt")
+___DEF_SYM(400,___S_frame,"frame")
+___DEF_SYM(401,___S_fs,"fs")
+___DEF_SYM(402,___S_g,"g")
+___DEF_SYM(403,___S_get,"get")
+___DEF_SYM(404,___S_glo,"glo")
+___DEF_SYM(405,___S_global,"global")
+___DEF_SYM(406,___S_go,"go")
+___DEF_SYM(407,___S_h,"h")
+___DEF_SYM(408,___S_hasattr,"hasattr")
+___DEF_SYM(409,___S_hash,"hash")
+___DEF_SYM(410,___S_hname,"hname")
+___DEF_SYM(411,___S_host,"host")
+___DEF_SYM(412,___S_i,"i")
+___DEF_SYM(413,___S_id,"id")
+___DEF_SYM(414,___S_ifjump,"ifjump")
+___DEF_SYM(415,___S_imag,"imag")
+___DEF_SYM(416,___S_index,"index")
+___DEF_SYM(417,___S_info,"info")
+___DEF_SYM(418,___S_inherited,"inherited")
+___DEF_SYM(419,___S_instance__variable__defined_3f_,"instance_variable_defined?")
+___DEF_SYM(420,___S_int,"int")
+___DEF_SYM(421,___S_interned,"interned")
+___DEF_SYM(422,___S_inttemp1,"inttemp1")
+___DEF_SYM(423,___S_inttemp2,"inttemp2")
+___DEF_SYM(424,___S_j,"j")
+___DEF_SYM(425,___S_java,"java")
+___DEF_SYM(426,___S_js,"js")
+___DEF_SYM(427,___S_jsnumberp,"jsnumberp")
+___DEF_SYM(428,___S_jump,"jump")
+___DEF_SYM(429,___S_jumpable,"jumpable")
+___DEF_SYM(430,___S_k,"k")
+___DEF_SYM(431,___S_key,"key")
+___DEF_SYM(432,___S_keyword,"keyword")
+___DEF_SYM(433,___S_l,"l")
+___DEF_SYM(434,___S_label_2d_namespace,"label-namespace")
+___DEF_SYM(435,___S_length,"length")
+___DEF_SYM(436,___S_link,"link")
+___DEF_SYM(437,___S_m,"m")
+___DEF_SYM(438,___S_make__interned__symbol,"make_interned_symbol")
+___DEF_SYM(439,___S_module__register,"module_register")
+___DEF_SYM(440,___S_n,"n")
+___DEF_SYM(441,___S_name,"name")
+___DEF_SYM(442,___S_namespace,"namespace")
+___DEF_SYM(443,___S_nargs,"nargs")
+___DEF_SYM(444,___S_nb_2d_arg_2d_regs,"nb-arg-regs")
+___DEF_SYM(445,___S_nb_2d_gvm_2d_regs,"nb-gvm-regs")
+___DEF_SYM(446,___S_never_2d_return_2d_jump,"never-return-jump")
+___DEF_SYM(447,___S_new,"new")
+___DEF_SYM(448,___S_nfree,"nfree")
+___DEF_SYM(449,___S_node,"node")
+___DEF_SYM(450,___S_nopreload,"nopreload")
+___DEF_SYM(451,___S_null,"null")
+___DEF_SYM(452,___S_null_3f_,"null?")
+___DEF_SYM(453,___S_num,"num")
+___DEF_SYM(454,___S_number,"number")
+___DEF_SYM(455,___S_o,"o")
+___DEF_SYM(456,___S_optional,"optional")
+___DEF_SYM(457,___S_other,"other")
+___DEF_SYM(458,___S_p,"p")
+___DEF_SYM(459,___S_package,"package")
+___DEF_SYM(460,___S_pair,"pair")
+___DEF_SYM(461,___S_pairp,"pairp")
+___DEF_SYM(462,___S_parent,"parent")
+___DEF_SYM(463,___S_parententrypoint,"parententrypoint")
+___DEF_SYM(464,___S_parententrypt,"parententrypt")
+___DEF_SYM(465,___S_parententrypt__init,"parententrypt_init")
+___DEF_SYM(466,___S_peps,"peps")
+___DEF_SYM(467,___S_php,"php")
+___DEF_SYM(468,___S_poll,"poll")
+___DEF_SYM(469,___S_pollcount,"pollcount")
+___DEF_SYM(470,___S_pre3,"pre3")
+___DEF_SYM(471,___S_pre53,"pre53")
+___DEF_SYM(472,___S_pre7,"pre7")
+___DEF_SYM(473,___S_preload,"preload")
+___DEF_SYM(474,___S_prim,"prim")
+___DEF_SYM(475,___S_println,"println")
+___DEF_SYM(476,___S_property__exists,"property_exists")
+___DEF_SYM(477,___S_push,"push")
+___DEF_SYM(478,___S_python,"python")
+___DEF_SYM(479,___S_q,"q")
+___DEF_SYM(480,___S_r,"r")
+___DEF_SYM(481,___S_r0,"r0")
+___DEF_SYM(482,___S_r1,"r1")
+___DEF_SYM(483,___S_r2,"r2")
+___DEF_SYM(484,___S_r3,"r3")
+___DEF_SYM(485,___S_r4,"r4")
+___DEF_SYM(486,___S_ratnum,"ratnum")
+___DEF_SYM(487,___S_rd,"rd")
+___DEF_SYM(488,___S_rdwr,"rdwr")
+___DEF_SYM(489,___S_real,"real")
+___DEF_SYM(490,___S_real_2d_time_2d_milliseconds,"real-time-milliseconds")
+___DEF_SYM(491,___S_repr_2d_boolean,"repr-boolean")
+___DEF_SYM(492,___S_repr_2d_f32vector,"repr-f32vector")
+___DEF_SYM(493,___S_repr_2d_f64vector,"repr-f64vector")
+___DEF_SYM(494,___S_repr_2d_fixnum,"repr-fixnum")
+___DEF_SYM(495,___S_repr_2d_flonum,"repr-flonum")
+___DEF_SYM(496,___S_repr_2d_frame,"repr-frame")
+___DEF_SYM(497,___S_repr_2d_module,"repr-module")
+___DEF_SYM(498,___S_repr_2d_null,"repr-null")
+___DEF_SYM(499,___S_repr_2d_procedure,"repr-procedure")
+___DEF_SYM(500,___S_repr_2d_s16vector,"repr-s16vector")
+___DEF_SYM(501,___S_repr_2d_s32vector,"repr-s32vector")
+___DEF_SYM(502,___S_repr_2d_s64vector,"repr-s64vector")
+___DEF_SYM(503,___S_repr_2d_s8vector,"repr-s8vector")
+___DEF_SYM(504,___S_repr_2d_string,"repr-string")
+___DEF_SYM(505,___S_repr_2d_symbol,"repr-symbol")
+___DEF_SYM(506,___S_repr_2d_u16vector,"repr-u16vector")
+___DEF_SYM(507,___S_repr_2d_u32vector,"repr-u32vector")
+___DEF_SYM(508,___S_repr_2d_u64vector,"repr-u64vector")
+___DEF_SYM(509,___S_repr_2d_u8vector,"repr-u8vector")
+___DEF_SYM(510,___S_repr_2d_values,"repr-values")
+___DEF_SYM(511,___S_repr_2d_vector,"repr-vector")
+___DEF_SYM(512,___S_repr_2d_void,"repr-void")
+___DEF_SYM(513,___S_rest,"rest")
+___DEF_SYM(514,___S_return,"return")
+___DEF_SYM(515,___S_returnpt,"returnpt")
+___DEF_SYM(516,___S_returnpt__init,"returnpt_init")
+___DEF_SYM(517,___S_ruby,"ruby")
+___DEF_SYM(518,___S_s,"s")
+___DEF_SYM(519,___S_s16,"s16")
+___DEF_SYM(520,___S_s16vector,"s16vector")
+___DEF_SYM(521,___S_s32,"s32")
+___DEF_SYM(522,___S_s32vector,"s32vector")
+___DEF_SYM(523,___S_s64,"s64")
+___DEF_SYM(524,___S_s64vector,"s64vector")
+___DEF_SYM(525,___S_s8,"s8")
+___DEF_SYM(526,___S_s8vector,"s8vector")
+___DEF_SYM(527,___S_scmobj,"scmobj")
+___DEF_SYM(528,___S_sequence_2d_number,"sequence-number")
+___DEF_SYM(529,___S_set,"set")
+___DEF_SYM(530,___S_simple,"simple")
+___DEF_SYM(531,___S_slice,"slice")
+___DEF_SYM(532,___S_slice_21_,"slice!")
+___DEF_SYM(533,___S_slots,"slots")
+___DEF_SYM(534,___S_sp,"sp")
+___DEF_SYM(535,___S_stack,"stack")
+___DEF_SYM(536,___S_state,"state")
+___DEF_SYM(537,___S_str,"str")
+___DEF_SYM(538,___S_string,"string")
+___DEF_SYM(539,___S_stringbox,"stringbox")
+___DEF_SYM(540,___S_struct,"struct")
+___DEF_SYM(541,___S_structure,"structure")
+___DEF_SYM(542,___S_switch,"switch")
+___DEF_SYM(543,___S_symbol,"symbol")
+___DEF_SYM(544,___S_t,"t")
+___DEF_SYM(545,___S_tags,"tags")
+___DEF_SYM(546,___S_task_2d_entry,"task-entry")
+___DEF_SYM(547,___S_task_2d_return,"task-return")
+___DEF_SYM(548,___S_testator,"testator")
+___DEF_SYM(549,___S_toString,"toString")
+___DEF_SYM(550,___S_to__s,"to_s")
+___DEF_SYM(551,___S_u,"u")
+___DEF_SYM(552,___S_u16,"u16")
+___DEF_SYM(553,___S_u16vector,"u16vector")
+___DEF_SYM(554,___S_u32,"u32")
+___DEF_SYM(555,___S_u32vector,"u32vector")
+___DEF_SYM(556,___S_u64,"u64")
+___DEF_SYM(557,___S_u64vector,"u64vector")
+___DEF_SYM(558,___S_u8,"u8")
+___DEF_SYM(559,___S_u8vector,"u8vector")
+___DEF_SYM(560,___S_unbound,"unbound")
+___DEF_SYM(561,___S_unicode,"unicode")
+___DEF_SYM(562,___S_unused,"unused")
+___DEF_SYM(563,___S_unwind,"unwind")
+___DEF_SYM(564,___S_v,"v")
+___DEF_SYM(565,___S_val,"val")
+___DEF_SYM(566,___S_vals,"vals")
+___DEF_SYM(567,___S_value,"value")
+___DEF_SYM(568,___S_vector,"vector")
+___DEF_SYM(569,___S_vectorbox,"vectorbox")
+___DEF_SYM(570,___S_vectorp,"vectorp")
+___DEF_SYM(571,___S_void,"void")
+___DEF_SYM(572,___S_w,"w")
+___DEF_SYM(573,___S_wr,"wr")
+___DEF_SYM(574,___S_wrong__key__args,"wrong_key_args")
+___DEF_SYM(575,___S_wrong__nargs,"wrong_nargs")
+___DEF_SYM(576,___S_x,"x")
+___DEF_SYM(577,___S_y,"y")
+___DEF_SYM(578,___S_z,"z")
 ___END_SYM
 
 #define ___SYM__23__23_exit_2d_process ___SYM(0,___S__23__23_exit_2d_process)
@@ -3503,226 +3509,228 @@ ___END_SYM
 #define ___SYM_c_23_with_2d_stack_2d_pointer_2d_adjust ___SYM(354,___S_c_23_with_2d_stack_2d_pointer_2d_adjust)
 #define ___SYM_car ___SYM(355,___S_car)
 #define ___SYM_cdr ___SYM(356,___S_cdr)
-#define ___SYM_char ___SYM(357,___S_char)
-#define ___SYM_check__procedure ___SYM(358,___S_check__procedure)
-#define ___SYM_check__procedure__glo ___SYM(359,___S_check__procedure__glo)
-#define ___SYM_class ___SYM(360,___S_class)
-#define ___SYM_close ___SYM(361,___S_close)
-#define ___SYM_closure ___SYM(362,___S_closure)
-#define ___SYM_closure__alloc ___SYM(363,___S_closure__alloc)
-#define ___SYM_code ___SYM(364,___S_code)
-#define ___SYM_codes ___SYM(365,___S_codes)
-#define ___SYM_compactness ___SYM(366,___S_compactness)
-#define ___SYM_cons ___SYM(367,___S_cons)
-#define ___SYM_copy ___SYM(368,___S_copy)
-#define ___SYM_copyOfRange ___SYM(369,___S_copyOfRange)
-#define ___SYM_cpxnum ___SYM(370,___S_cpxnum)
-#define ___SYM_ctrlpt ___SYM(371,___S_ctrlpt)
-#define ___SYM_ctrlpt__init ___SYM(372,___S_ctrlpt__init)
-#define ___SYM_ctrlpts ___SYM(373,___S_ctrlpts)
-#define ___SYM_current__processor ___SYM(374,___S_current__processor)
-#define ___SYM_current__vm ___SYM(375,___S_current__vm)
-#define ___SYM_d ___SYM(376,___S_d)
-#define ___SYM_deleted ___SYM(377,___S_deleted)
-#define ___SYM_den ___SYM(378,___S_den)
-#define ___SYM_denv ___SYM(379,___S_denv)
-#define ___SYM_digits ___SYM(380,___S_digits)
-#define ___SYM_e ___SYM(381,___S_e)
-#define ___SYM_elems ___SYM(382,___S_elems)
-#define ___SYM_entry ___SYM(383,___S_entry)
-#define ___SYM_entrypt ___SYM(384,___S_entrypt)
-#define ___SYM_entrypt__init ___SYM(385,___S_entrypt__init)
-#define ___SYM_eof ___SYM(386,___S_eof)
-#define ___SYM_error ___SYM(387,___S_error)
-#define ___SYM_extended ___SYM(388,___S_extended)
-#define ___SYM_f ___SYM(389,___S_f)
-#define ___SYM_f32 ___SYM(390,___S_f32)
-#define ___SYM_f32vector ___SYM(391,___S_f32vector)
-#define ___SYM_f64 ___SYM(392,___S_f64)
-#define ___SYM_f64vector ___SYM(393,___S_f64vector)
-#define ___SYM_fixnum ___SYM(394,___S_fixnum)
-#define ___SYM_flonum ___SYM(395,___S_flonum)
-#define ___SYM_flonumbox ___SYM(396,___S_flonumbox)
-#define ___SYM_flonump ___SYM(397,___S_flonump)
-#define ___SYM_fmt ___SYM(398,___S_fmt)
-#define ___SYM_frame ___SYM(399,___S_frame)
-#define ___SYM_fs ___SYM(400,___S_fs)
-#define ___SYM_g ___SYM(401,___S_g)
-#define ___SYM_get ___SYM(402,___S_get)
-#define ___SYM_glo ___SYM(403,___S_glo)
-#define ___SYM_global ___SYM(404,___S_global)
-#define ___SYM_go ___SYM(405,___S_go)
-#define ___SYM_h ___SYM(406,___S_h)
-#define ___SYM_hasattr ___SYM(407,___S_hasattr)
-#define ___SYM_hash ___SYM(408,___S_hash)
-#define ___SYM_hname ___SYM(409,___S_hname)
-#define ___SYM_host ___SYM(410,___S_host)
-#define ___SYM_i ___SYM(411,___S_i)
-#define ___SYM_id ___SYM(412,___S_id)
-#define ___SYM_ifjump ___SYM(413,___S_ifjump)
-#define ___SYM_imag ___SYM(414,___S_imag)
-#define ___SYM_index ___SYM(415,___S_index)
-#define ___SYM_info ___SYM(416,___S_info)
-#define ___SYM_inherited ___SYM(417,___S_inherited)
-#define ___SYM_instance__variable__defined_3f_ ___SYM(418,___S_instance__variable__defined_3f_)
-#define ___SYM_int ___SYM(419,___S_int)
-#define ___SYM_interned ___SYM(420,___S_interned)
-#define ___SYM_inttemp1 ___SYM(421,___S_inttemp1)
-#define ___SYM_inttemp2 ___SYM(422,___S_inttemp2)
-#define ___SYM_j ___SYM(423,___S_j)
-#define ___SYM_java ___SYM(424,___S_java)
-#define ___SYM_js ___SYM(425,___S_js)
-#define ___SYM_jsnumberp ___SYM(426,___S_jsnumberp)
-#define ___SYM_jump ___SYM(427,___S_jump)
-#define ___SYM_jumpable ___SYM(428,___S_jumpable)
-#define ___SYM_k ___SYM(429,___S_k)
-#define ___SYM_key ___SYM(430,___S_key)
-#define ___SYM_keyword ___SYM(431,___S_keyword)
-#define ___SYM_l ___SYM(432,___S_l)
-#define ___SYM_label_2d_namespace ___SYM(433,___S_label_2d_namespace)
-#define ___SYM_length ___SYM(434,___S_length)
-#define ___SYM_link ___SYM(435,___S_link)
-#define ___SYM_m ___SYM(436,___S_m)
-#define ___SYM_make__interned__symbol ___SYM(437,___S_make__interned__symbol)
-#define ___SYM_module__register ___SYM(438,___S_module__register)
-#define ___SYM_n ___SYM(439,___S_n)
-#define ___SYM_name ___SYM(440,___S_name)
-#define ___SYM_namespace ___SYM(441,___S_namespace)
-#define ___SYM_nargs ___SYM(442,___S_nargs)
-#define ___SYM_nb_2d_arg_2d_regs ___SYM(443,___S_nb_2d_arg_2d_regs)
-#define ___SYM_nb_2d_gvm_2d_regs ___SYM(444,___S_nb_2d_gvm_2d_regs)
-#define ___SYM_never_2d_return_2d_jump ___SYM(445,___S_never_2d_return_2d_jump)
-#define ___SYM_new ___SYM(446,___S_new)
-#define ___SYM_nfree ___SYM(447,___S_nfree)
-#define ___SYM_node ___SYM(448,___S_node)
-#define ___SYM_nopreload ___SYM(449,___S_nopreload)
-#define ___SYM_null ___SYM(450,___S_null)
-#define ___SYM_num ___SYM(451,___S_num)
-#define ___SYM_number ___SYM(452,___S_number)
-#define ___SYM_o ___SYM(453,___S_o)
-#define ___SYM_optional ___SYM(454,___S_optional)
-#define ___SYM_other ___SYM(455,___S_other)
-#define ___SYM_p ___SYM(456,___S_p)
-#define ___SYM_package ___SYM(457,___S_package)
-#define ___SYM_pair ___SYM(458,___S_pair)
-#define ___SYM_pairp ___SYM(459,___S_pairp)
-#define ___SYM_parent ___SYM(460,___S_parent)
-#define ___SYM_parententrypoint ___SYM(461,___S_parententrypoint)
-#define ___SYM_parententrypt ___SYM(462,___S_parententrypt)
-#define ___SYM_parententrypt__init ___SYM(463,___S_parententrypt__init)
-#define ___SYM_peps ___SYM(464,___S_peps)
-#define ___SYM_php ___SYM(465,___S_php)
-#define ___SYM_poll ___SYM(466,___S_poll)
-#define ___SYM_pollcount ___SYM(467,___S_pollcount)
-#define ___SYM_pre3 ___SYM(468,___S_pre3)
-#define ___SYM_pre53 ___SYM(469,___S_pre53)
-#define ___SYM_pre7 ___SYM(470,___S_pre7)
-#define ___SYM_preload ___SYM(471,___S_preload)
-#define ___SYM_prim ___SYM(472,___S_prim)
-#define ___SYM_println ___SYM(473,___S_println)
-#define ___SYM_property__exists ___SYM(474,___S_property__exists)
-#define ___SYM_push ___SYM(475,___S_push)
-#define ___SYM_python ___SYM(476,___S_python)
-#define ___SYM_q ___SYM(477,___S_q)
-#define ___SYM_r ___SYM(478,___S_r)
-#define ___SYM_r0 ___SYM(479,___S_r0)
-#define ___SYM_r1 ___SYM(480,___S_r1)
-#define ___SYM_r2 ___SYM(481,___S_r2)
-#define ___SYM_r3 ___SYM(482,___S_r3)
-#define ___SYM_r4 ___SYM(483,___S_r4)
-#define ___SYM_ratnum ___SYM(484,___S_ratnum)
-#define ___SYM_rd ___SYM(485,___S_rd)
-#define ___SYM_rdwr ___SYM(486,___S_rdwr)
-#define ___SYM_real ___SYM(487,___S_real)
-#define ___SYM_real_2d_time_2d_milliseconds ___SYM(488,___S_real_2d_time_2d_milliseconds)
-#define ___SYM_repr_2d_boolean ___SYM(489,___S_repr_2d_boolean)
-#define ___SYM_repr_2d_f32vector ___SYM(490,___S_repr_2d_f32vector)
-#define ___SYM_repr_2d_f64vector ___SYM(491,___S_repr_2d_f64vector)
-#define ___SYM_repr_2d_fixnum ___SYM(492,___S_repr_2d_fixnum)
-#define ___SYM_repr_2d_flonum ___SYM(493,___S_repr_2d_flonum)
-#define ___SYM_repr_2d_frame ___SYM(494,___S_repr_2d_frame)
-#define ___SYM_repr_2d_module ___SYM(495,___S_repr_2d_module)
-#define ___SYM_repr_2d_null ___SYM(496,___S_repr_2d_null)
-#define ___SYM_repr_2d_procedure ___SYM(497,___S_repr_2d_procedure)
-#define ___SYM_repr_2d_s16vector ___SYM(498,___S_repr_2d_s16vector)
-#define ___SYM_repr_2d_s32vector ___SYM(499,___S_repr_2d_s32vector)
-#define ___SYM_repr_2d_s64vector ___SYM(500,___S_repr_2d_s64vector)
-#define ___SYM_repr_2d_s8vector ___SYM(501,___S_repr_2d_s8vector)
-#define ___SYM_repr_2d_string ___SYM(502,___S_repr_2d_string)
-#define ___SYM_repr_2d_symbol ___SYM(503,___S_repr_2d_symbol)
-#define ___SYM_repr_2d_u16vector ___SYM(504,___S_repr_2d_u16vector)
-#define ___SYM_repr_2d_u32vector ___SYM(505,___S_repr_2d_u32vector)
-#define ___SYM_repr_2d_u64vector ___SYM(506,___S_repr_2d_u64vector)
-#define ___SYM_repr_2d_u8vector ___SYM(507,___S_repr_2d_u8vector)
-#define ___SYM_repr_2d_values ___SYM(508,___S_repr_2d_values)
-#define ___SYM_repr_2d_vector ___SYM(509,___S_repr_2d_vector)
-#define ___SYM_repr_2d_void ___SYM(510,___S_repr_2d_void)
-#define ___SYM_rest ___SYM(511,___S_rest)
-#define ___SYM_return ___SYM(512,___S_return)
-#define ___SYM_returnpt ___SYM(513,___S_returnpt)
-#define ___SYM_returnpt__init ___SYM(514,___S_returnpt__init)
-#define ___SYM_ruby ___SYM(515,___S_ruby)
-#define ___SYM_s ___SYM(516,___S_s)
-#define ___SYM_s16 ___SYM(517,___S_s16)
-#define ___SYM_s16vector ___SYM(518,___S_s16vector)
-#define ___SYM_s32 ___SYM(519,___S_s32)
-#define ___SYM_s32vector ___SYM(520,___S_s32vector)
-#define ___SYM_s64 ___SYM(521,___S_s64)
-#define ___SYM_s64vector ___SYM(522,___S_s64vector)
-#define ___SYM_s8 ___SYM(523,___S_s8)
-#define ___SYM_s8vector ___SYM(524,___S_s8vector)
-#define ___SYM_scmobj ___SYM(525,___S_scmobj)
-#define ___SYM_sequence_2d_number ___SYM(526,___S_sequence_2d_number)
-#define ___SYM_set ___SYM(527,___S_set)
-#define ___SYM_simple ___SYM(528,___S_simple)
-#define ___SYM_slice ___SYM(529,___S_slice)
-#define ___SYM_slice_21_ ___SYM(530,___S_slice_21_)
-#define ___SYM_slots ___SYM(531,___S_slots)
-#define ___SYM_sp ___SYM(532,___S_sp)
-#define ___SYM_stack ___SYM(533,___S_stack)
-#define ___SYM_state ___SYM(534,___S_state)
-#define ___SYM_str ___SYM(535,___S_str)
-#define ___SYM_string ___SYM(536,___S_string)
-#define ___SYM_stringbox ___SYM(537,___S_stringbox)
-#define ___SYM_struct ___SYM(538,___S_struct)
-#define ___SYM_structure ___SYM(539,___S_structure)
-#define ___SYM_switch ___SYM(540,___S_switch)
-#define ___SYM_symbol ___SYM(541,___S_symbol)
-#define ___SYM_t ___SYM(542,___S_t)
-#define ___SYM_tags ___SYM(543,___S_tags)
-#define ___SYM_task_2d_entry ___SYM(544,___S_task_2d_entry)
-#define ___SYM_task_2d_return ___SYM(545,___S_task_2d_return)
-#define ___SYM_testator ___SYM(546,___S_testator)
-#define ___SYM_toString ___SYM(547,___S_toString)
-#define ___SYM_to__s ___SYM(548,___S_to__s)
-#define ___SYM_u ___SYM(549,___S_u)
-#define ___SYM_u16 ___SYM(550,___S_u16)
-#define ___SYM_u16vector ___SYM(551,___S_u16vector)
-#define ___SYM_u32 ___SYM(552,___S_u32)
-#define ___SYM_u32vector ___SYM(553,___S_u32vector)
-#define ___SYM_u64 ___SYM(554,___S_u64)
-#define ___SYM_u64vector ___SYM(555,___S_u64vector)
-#define ___SYM_u8 ___SYM(556,___S_u8)
-#define ___SYM_u8vector ___SYM(557,___S_u8vector)
-#define ___SYM_unbound ___SYM(558,___S_unbound)
-#define ___SYM_unicode ___SYM(559,___S_unicode)
-#define ___SYM_unused ___SYM(560,___S_unused)
-#define ___SYM_unwind ___SYM(561,___S_unwind)
-#define ___SYM_v ___SYM(562,___S_v)
-#define ___SYM_val ___SYM(563,___S_val)
-#define ___SYM_vals ___SYM(564,___S_vals)
-#define ___SYM_value ___SYM(565,___S_value)
-#define ___SYM_vector ___SYM(566,___S_vector)
-#define ___SYM_vectorbox ___SYM(567,___S_vectorbox)
-#define ___SYM_vectorp ___SYM(568,___S_vectorp)
-#define ___SYM_void ___SYM(569,___S_void)
-#define ___SYM_w ___SYM(570,___S_w)
-#define ___SYM_wr ___SYM(571,___S_wr)
-#define ___SYM_wrong__key__args ___SYM(572,___S_wrong__key__args)
-#define ___SYM_wrong__nargs ___SYM(573,___S_wrong__nargs)
-#define ___SYM_x ___SYM(574,___S_x)
-#define ___SYM_y ___SYM(575,___S_y)
-#define ___SYM_z ___SYM(576,___S_z)
+#define ___SYM_cdr_2d_x ___SYM(357,___S_cdr_2d_x)
+#define ___SYM_char ___SYM(358,___S_char)
+#define ___SYM_check__procedure ___SYM(359,___S_check__procedure)
+#define ___SYM_check__procedure__glo ___SYM(360,___S_check__procedure__glo)
+#define ___SYM_class ___SYM(361,___S_class)
+#define ___SYM_close ___SYM(362,___S_close)
+#define ___SYM_closure ___SYM(363,___S_closure)
+#define ___SYM_closure__alloc ___SYM(364,___S_closure__alloc)
+#define ___SYM_code ___SYM(365,___S_code)
+#define ___SYM_codes ___SYM(366,___S_codes)
+#define ___SYM_compactness ___SYM(367,___S_compactness)
+#define ___SYM_cons ___SYM(368,___S_cons)
+#define ___SYM_copy ___SYM(369,___S_copy)
+#define ___SYM_copyOfRange ___SYM(370,___S_copyOfRange)
+#define ___SYM_cpxnum ___SYM(371,___S_cpxnum)
+#define ___SYM_ctrlpt ___SYM(372,___S_ctrlpt)
+#define ___SYM_ctrlpt__init ___SYM(373,___S_ctrlpt__init)
+#define ___SYM_ctrlpts ___SYM(374,___S_ctrlpts)
+#define ___SYM_current__processor ___SYM(375,___S_current__processor)
+#define ___SYM_current__vm ___SYM(376,___S_current__vm)
+#define ___SYM_d ___SYM(377,___S_d)
+#define ___SYM_deleted ___SYM(378,___S_deleted)
+#define ___SYM_den ___SYM(379,___S_den)
+#define ___SYM_denv ___SYM(380,___S_denv)
+#define ___SYM_digits ___SYM(381,___S_digits)
+#define ___SYM_e ___SYM(382,___S_e)
+#define ___SYM_elems ___SYM(383,___S_elems)
+#define ___SYM_entry ___SYM(384,___S_entry)
+#define ___SYM_entrypt ___SYM(385,___S_entrypt)
+#define ___SYM_entrypt__init ___SYM(386,___S_entrypt__init)
+#define ___SYM_eof ___SYM(387,___S_eof)
+#define ___SYM_error ___SYM(388,___S_error)
+#define ___SYM_extended ___SYM(389,___S_extended)
+#define ___SYM_f ___SYM(390,___S_f)
+#define ___SYM_f32 ___SYM(391,___S_f32)
+#define ___SYM_f32vector ___SYM(392,___S_f32vector)
+#define ___SYM_f64 ___SYM(393,___S_f64)
+#define ___SYM_f64vector ___SYM(394,___S_f64vector)
+#define ___SYM_fixnum ___SYM(395,___S_fixnum)
+#define ___SYM_flonum ___SYM(396,___S_flonum)
+#define ___SYM_flonumbox ___SYM(397,___S_flonumbox)
+#define ___SYM_flonump ___SYM(398,___S_flonump)
+#define ___SYM_fmt ___SYM(399,___S_fmt)
+#define ___SYM_frame ___SYM(400,___S_frame)
+#define ___SYM_fs ___SYM(401,___S_fs)
+#define ___SYM_g ___SYM(402,___S_g)
+#define ___SYM_get ___SYM(403,___S_get)
+#define ___SYM_glo ___SYM(404,___S_glo)
+#define ___SYM_global ___SYM(405,___S_global)
+#define ___SYM_go ___SYM(406,___S_go)
+#define ___SYM_h ___SYM(407,___S_h)
+#define ___SYM_hasattr ___SYM(408,___S_hasattr)
+#define ___SYM_hash ___SYM(409,___S_hash)
+#define ___SYM_hname ___SYM(410,___S_hname)
+#define ___SYM_host ___SYM(411,___S_host)
+#define ___SYM_i ___SYM(412,___S_i)
+#define ___SYM_id ___SYM(413,___S_id)
+#define ___SYM_ifjump ___SYM(414,___S_ifjump)
+#define ___SYM_imag ___SYM(415,___S_imag)
+#define ___SYM_index ___SYM(416,___S_index)
+#define ___SYM_info ___SYM(417,___S_info)
+#define ___SYM_inherited ___SYM(418,___S_inherited)
+#define ___SYM_instance__variable__defined_3f_ ___SYM(419,___S_instance__variable__defined_3f_)
+#define ___SYM_int ___SYM(420,___S_int)
+#define ___SYM_interned ___SYM(421,___S_interned)
+#define ___SYM_inttemp1 ___SYM(422,___S_inttemp1)
+#define ___SYM_inttemp2 ___SYM(423,___S_inttemp2)
+#define ___SYM_j ___SYM(424,___S_j)
+#define ___SYM_java ___SYM(425,___S_java)
+#define ___SYM_js ___SYM(426,___S_js)
+#define ___SYM_jsnumberp ___SYM(427,___S_jsnumberp)
+#define ___SYM_jump ___SYM(428,___S_jump)
+#define ___SYM_jumpable ___SYM(429,___S_jumpable)
+#define ___SYM_k ___SYM(430,___S_k)
+#define ___SYM_key ___SYM(431,___S_key)
+#define ___SYM_keyword ___SYM(432,___S_keyword)
+#define ___SYM_l ___SYM(433,___S_l)
+#define ___SYM_label_2d_namespace ___SYM(434,___S_label_2d_namespace)
+#define ___SYM_length ___SYM(435,___S_length)
+#define ___SYM_link ___SYM(436,___S_link)
+#define ___SYM_m ___SYM(437,___S_m)
+#define ___SYM_make__interned__symbol ___SYM(438,___S_make__interned__symbol)
+#define ___SYM_module__register ___SYM(439,___S_module__register)
+#define ___SYM_n ___SYM(440,___S_n)
+#define ___SYM_name ___SYM(441,___S_name)
+#define ___SYM_namespace ___SYM(442,___S_namespace)
+#define ___SYM_nargs ___SYM(443,___S_nargs)
+#define ___SYM_nb_2d_arg_2d_regs ___SYM(444,___S_nb_2d_arg_2d_regs)
+#define ___SYM_nb_2d_gvm_2d_regs ___SYM(445,___S_nb_2d_gvm_2d_regs)
+#define ___SYM_never_2d_return_2d_jump ___SYM(446,___S_never_2d_return_2d_jump)
+#define ___SYM_new ___SYM(447,___S_new)
+#define ___SYM_nfree ___SYM(448,___S_nfree)
+#define ___SYM_node ___SYM(449,___S_node)
+#define ___SYM_nopreload ___SYM(450,___S_nopreload)
+#define ___SYM_null ___SYM(451,___S_null)
+#define ___SYM_null_3f_ ___SYM(452,___S_null_3f_)
+#define ___SYM_num ___SYM(453,___S_num)
+#define ___SYM_number ___SYM(454,___S_number)
+#define ___SYM_o ___SYM(455,___S_o)
+#define ___SYM_optional ___SYM(456,___S_optional)
+#define ___SYM_other ___SYM(457,___S_other)
+#define ___SYM_p ___SYM(458,___S_p)
+#define ___SYM_package ___SYM(459,___S_package)
+#define ___SYM_pair ___SYM(460,___S_pair)
+#define ___SYM_pairp ___SYM(461,___S_pairp)
+#define ___SYM_parent ___SYM(462,___S_parent)
+#define ___SYM_parententrypoint ___SYM(463,___S_parententrypoint)
+#define ___SYM_parententrypt ___SYM(464,___S_parententrypt)
+#define ___SYM_parententrypt__init ___SYM(465,___S_parententrypt__init)
+#define ___SYM_peps ___SYM(466,___S_peps)
+#define ___SYM_php ___SYM(467,___S_php)
+#define ___SYM_poll ___SYM(468,___S_poll)
+#define ___SYM_pollcount ___SYM(469,___S_pollcount)
+#define ___SYM_pre3 ___SYM(470,___S_pre3)
+#define ___SYM_pre53 ___SYM(471,___S_pre53)
+#define ___SYM_pre7 ___SYM(472,___S_pre7)
+#define ___SYM_preload ___SYM(473,___S_preload)
+#define ___SYM_prim ___SYM(474,___S_prim)
+#define ___SYM_println ___SYM(475,___S_println)
+#define ___SYM_property__exists ___SYM(476,___S_property__exists)
+#define ___SYM_push ___SYM(477,___S_push)
+#define ___SYM_python ___SYM(478,___S_python)
+#define ___SYM_q ___SYM(479,___S_q)
+#define ___SYM_r ___SYM(480,___S_r)
+#define ___SYM_r0 ___SYM(481,___S_r0)
+#define ___SYM_r1 ___SYM(482,___S_r1)
+#define ___SYM_r2 ___SYM(483,___S_r2)
+#define ___SYM_r3 ___SYM(484,___S_r3)
+#define ___SYM_r4 ___SYM(485,___S_r4)
+#define ___SYM_ratnum ___SYM(486,___S_ratnum)
+#define ___SYM_rd ___SYM(487,___S_rd)
+#define ___SYM_rdwr ___SYM(488,___S_rdwr)
+#define ___SYM_real ___SYM(489,___S_real)
+#define ___SYM_real_2d_time_2d_milliseconds ___SYM(490,___S_real_2d_time_2d_milliseconds)
+#define ___SYM_repr_2d_boolean ___SYM(491,___S_repr_2d_boolean)
+#define ___SYM_repr_2d_f32vector ___SYM(492,___S_repr_2d_f32vector)
+#define ___SYM_repr_2d_f64vector ___SYM(493,___S_repr_2d_f64vector)
+#define ___SYM_repr_2d_fixnum ___SYM(494,___S_repr_2d_fixnum)
+#define ___SYM_repr_2d_flonum ___SYM(495,___S_repr_2d_flonum)
+#define ___SYM_repr_2d_frame ___SYM(496,___S_repr_2d_frame)
+#define ___SYM_repr_2d_module ___SYM(497,___S_repr_2d_module)
+#define ___SYM_repr_2d_null ___SYM(498,___S_repr_2d_null)
+#define ___SYM_repr_2d_procedure ___SYM(499,___S_repr_2d_procedure)
+#define ___SYM_repr_2d_s16vector ___SYM(500,___S_repr_2d_s16vector)
+#define ___SYM_repr_2d_s32vector ___SYM(501,___S_repr_2d_s32vector)
+#define ___SYM_repr_2d_s64vector ___SYM(502,___S_repr_2d_s64vector)
+#define ___SYM_repr_2d_s8vector ___SYM(503,___S_repr_2d_s8vector)
+#define ___SYM_repr_2d_string ___SYM(504,___S_repr_2d_string)
+#define ___SYM_repr_2d_symbol ___SYM(505,___S_repr_2d_symbol)
+#define ___SYM_repr_2d_u16vector ___SYM(506,___S_repr_2d_u16vector)
+#define ___SYM_repr_2d_u32vector ___SYM(507,___S_repr_2d_u32vector)
+#define ___SYM_repr_2d_u64vector ___SYM(508,___S_repr_2d_u64vector)
+#define ___SYM_repr_2d_u8vector ___SYM(509,___S_repr_2d_u8vector)
+#define ___SYM_repr_2d_values ___SYM(510,___S_repr_2d_values)
+#define ___SYM_repr_2d_vector ___SYM(511,___S_repr_2d_vector)
+#define ___SYM_repr_2d_void ___SYM(512,___S_repr_2d_void)
+#define ___SYM_rest ___SYM(513,___S_rest)
+#define ___SYM_return ___SYM(514,___S_return)
+#define ___SYM_returnpt ___SYM(515,___S_returnpt)
+#define ___SYM_returnpt__init ___SYM(516,___S_returnpt__init)
+#define ___SYM_ruby ___SYM(517,___S_ruby)
+#define ___SYM_s ___SYM(518,___S_s)
+#define ___SYM_s16 ___SYM(519,___S_s16)
+#define ___SYM_s16vector ___SYM(520,___S_s16vector)
+#define ___SYM_s32 ___SYM(521,___S_s32)
+#define ___SYM_s32vector ___SYM(522,___S_s32vector)
+#define ___SYM_s64 ___SYM(523,___S_s64)
+#define ___SYM_s64vector ___SYM(524,___S_s64vector)
+#define ___SYM_s8 ___SYM(525,___S_s8)
+#define ___SYM_s8vector ___SYM(526,___S_s8vector)
+#define ___SYM_scmobj ___SYM(527,___S_scmobj)
+#define ___SYM_sequence_2d_number ___SYM(528,___S_sequence_2d_number)
+#define ___SYM_set ___SYM(529,___S_set)
+#define ___SYM_simple ___SYM(530,___S_simple)
+#define ___SYM_slice ___SYM(531,___S_slice)
+#define ___SYM_slice_21_ ___SYM(532,___S_slice_21_)
+#define ___SYM_slots ___SYM(533,___S_slots)
+#define ___SYM_sp ___SYM(534,___S_sp)
+#define ___SYM_stack ___SYM(535,___S_stack)
+#define ___SYM_state ___SYM(536,___S_state)
+#define ___SYM_str ___SYM(537,___S_str)
+#define ___SYM_string ___SYM(538,___S_string)
+#define ___SYM_stringbox ___SYM(539,___S_stringbox)
+#define ___SYM_struct ___SYM(540,___S_struct)
+#define ___SYM_structure ___SYM(541,___S_structure)
+#define ___SYM_switch ___SYM(542,___S_switch)
+#define ___SYM_symbol ___SYM(543,___S_symbol)
+#define ___SYM_t ___SYM(544,___S_t)
+#define ___SYM_tags ___SYM(545,___S_tags)
+#define ___SYM_task_2d_entry ___SYM(546,___S_task_2d_entry)
+#define ___SYM_task_2d_return ___SYM(547,___S_task_2d_return)
+#define ___SYM_testator ___SYM(548,___S_testator)
+#define ___SYM_toString ___SYM(549,___S_toString)
+#define ___SYM_to__s ___SYM(550,___S_to__s)
+#define ___SYM_u ___SYM(551,___S_u)
+#define ___SYM_u16 ___SYM(552,___S_u16)
+#define ___SYM_u16vector ___SYM(553,___S_u16vector)
+#define ___SYM_u32 ___SYM(554,___S_u32)
+#define ___SYM_u32vector ___SYM(555,___S_u32vector)
+#define ___SYM_u64 ___SYM(556,___S_u64)
+#define ___SYM_u64vector ___SYM(557,___S_u64vector)
+#define ___SYM_u8 ___SYM(558,___S_u8)
+#define ___SYM_u8vector ___SYM(559,___S_u8vector)
+#define ___SYM_unbound ___SYM(560,___S_unbound)
+#define ___SYM_unicode ___SYM(561,___S_unicode)
+#define ___SYM_unused ___SYM(562,___S_unused)
+#define ___SYM_unwind ___SYM(563,___S_unwind)
+#define ___SYM_v ___SYM(564,___S_v)
+#define ___SYM_val ___SYM(565,___S_val)
+#define ___SYM_vals ___SYM(566,___S_vals)
+#define ___SYM_value ___SYM(567,___S_value)
+#define ___SYM_vector ___SYM(568,___S_vector)
+#define ___SYM_vectorbox ___SYM(569,___S_vectorbox)
+#define ___SYM_vectorp ___SYM(570,___S_vectorp)
+#define ___SYM_void ___SYM(571,___S_void)
+#define ___SYM_w ___SYM(572,___S_w)
+#define ___SYM_wr ___SYM(573,___S_wr)
+#define ___SYM_wrong__key__args ___SYM(574,___S_wrong__key__args)
+#define ___SYM_wrong__nargs ___SYM(575,___S_wrong__nargs)
+#define ___SYM_x ___SYM(576,___S_x)
+#define ___SYM_y ___SYM(577,___S_y)
+#define ___SYM_z ___SYM(578,___S_z)
 
 ___BEGIN_KEY
 ___DEF_KEY(0,___K_test,"test")
@@ -5760,17 +5768,17 @@ ___BEGIN_CNS
  ___DEF_CNS(___REF_CNS(1),___REF_NUL)
 ,___DEF_CNS(___REF_SUB(1),___REF_SYM(7,___S_JavaScript))
 ,___DEF_CNS(___REF_CNS(3),___REF_NUL)
-,___DEF_CNS(___REF_SYM(468,___S_pre3),___REF_NUL)
+,___DEF_CNS(___REF_SYM(470,___S_pre3),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(5),___REF_NUL)
 ,___DEF_CNS(___REF_SUB(2),___REF_SYM(9,___S_Python))
 ,___DEF_CNS(___REF_CNS(7),___REF_NUL)
 ,___DEF_CNS(___REF_SUB(3),___REF_SYM(10,___S_Ruby))
 ,___DEF_CNS(___REF_CNS(9),___REF_NUL)
-,___DEF_CNS(___REF_SYM(469,___S_pre53),___REF_NUL)
+,___DEF_CNS(___REF_SYM(471,___S_pre53),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(11),___REF_NUL)
 ,___DEF_CNS(___REF_SUB(4),___REF_SYM(8,___S_PHP))
 ,___DEF_CNS(___REF_CNS(13),___REF_NUL)
-,___DEF_CNS(___REF_SYM(470,___S_pre7),___REF_NUL)
+,___DEF_CNS(___REF_SYM(472,___S_pre7),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(15),___REF_NUL)
 ,___DEF_CNS(___REF_SUB(5),___REF_SYM(6,___S_Java))
 ,___DEF_CNS(___REF_CNS(17),___REF_NUL)
@@ -5783,7 +5791,7 @@ ___BEGIN_CNS
 ,___DEF_CNS(___REF_FIX(0),___REF_CNS(24))
 ,___DEF_CNS(___REF_CNS(25),___REF_CNS(26))
 ,___DEF_CNS(___REF_FAL,___REF_NUL)
-,___DEF_CNS(___REF_SYM(388,___S_extended),___REF_NUL)
+,___DEF_CNS(___REF_SYM(389,___S_extended),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(28),___REF_CNS(36))
 ,___DEF_CNS(___REF_SUB(8),___REF_CNS(29))
 ,___DEF_CNS(___REF_FIX(1),___REF_CNS(30))
@@ -5792,7 +5800,7 @@ ___BEGIN_CNS
 ,___DEF_CNS(___REF_FIX(0),___REF_CNS(33))
 ,___DEF_CNS(___REF_CNS(34),___REF_CNS(35))
 ,___DEF_CNS(___REF_FAL,___REF_NUL)
-,___DEF_CNS(___REF_SYM(388,___S_extended),___REF_NUL)
+,___DEF_CNS(___REF_SYM(389,___S_extended),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(37),___REF_CNS(46))
 ,___DEF_CNS(___REF_SUB(9),___REF_CNS(38))
 ,___DEF_CNS(___REF_CNS(39),___REF_CNS(40))
@@ -5802,7 +5810,7 @@ ___BEGIN_CNS
 ,___DEF_CNS(___REF_FIX(0),___REF_CNS(43))
 ,___DEF_CNS(___REF_CNS(44),___REF_CNS(45))
 ,___DEF_CNS(___REF_FAL,___REF_NUL)
-,___DEF_CNS(___REF_SYM(388,___S_extended),___REF_NUL)
+,___DEF_CNS(___REF_SYM(389,___S_extended),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(47),___REF_CNS(56))
 ,___DEF_CNS(___REF_SUB(10),___REF_CNS(48))
 ,___DEF_CNS(___REF_CNS(49),___REF_CNS(50))
@@ -5812,7 +5820,7 @@ ___BEGIN_CNS
 ,___DEF_CNS(___REF_FIX(0),___REF_CNS(53))
 ,___DEF_CNS(___REF_CNS(54),___REF_CNS(55))
 ,___DEF_CNS(___REF_FAL,___REF_NUL)
-,___DEF_CNS(___REF_SYM(388,___S_extended),___REF_NUL)
+,___DEF_CNS(___REF_SYM(389,___S_extended),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(57),___REF_CNS(65))
 ,___DEF_CNS(___REF_SUB(11),___REF_CNS(58))
 ,___DEF_CNS(___REF_CNS(59),___REF_CNS(60))
@@ -5821,7 +5829,7 @@ ___BEGIN_CNS
 ,___DEF_CNS(___REF_FIX(0),___REF_CNS(62))
 ,___DEF_CNS(___REF_FIX(0),___REF_CNS(63))
 ,___DEF_CNS(___REF_SYM(38,___S_boolean),___REF_CNS(64))
-,___DEF_CNS(___REF_SYM(388,___S_extended),___REF_NUL)
+,___DEF_CNS(___REF_SYM(389,___S_extended),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(66),___REF_CNS(75))
 ,___DEF_CNS(___REF_SUB(12),___REF_CNS(67))
 ,___DEF_CNS(___REF_CNS(68),___REF_CNS(69))
@@ -5831,7 +5839,7 @@ ___BEGIN_CNS
 ,___DEF_CNS(___REF_FIX(0),___REF_CNS(72))
 ,___DEF_CNS(___REF_CNS(73),___REF_CNS(74))
 ,___DEF_CNS(___REF_FAL,___REF_NUL)
-,___DEF_CNS(___REF_SYM(388,___S_extended),___REF_NUL)
+,___DEF_CNS(___REF_SYM(389,___S_extended),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(76),___REF_CNS(85))
 ,___DEF_CNS(___REF_SUB(13),___REF_CNS(77))
 ,___DEF_CNS(___REF_CNS(78),___REF_CNS(79))
@@ -5841,7 +5849,7 @@ ___BEGIN_CNS
 ,___DEF_CNS(___REF_FIX(0),___REF_CNS(82))
 ,___DEF_CNS(___REF_CNS(83),___REF_CNS(84))
 ,___DEF_CNS(___REF_FAL,___REF_NUL)
-,___DEF_CNS(___REF_SYM(388,___S_extended),___REF_NUL)
+,___DEF_CNS(___REF_SYM(389,___S_extended),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(86),___REF_CNS(95))
 ,___DEF_CNS(___REF_SUB(14),___REF_CNS(87))
 ,___DEF_CNS(___REF_CNS(88),___REF_CNS(89))
@@ -5851,7 +5859,7 @@ ___BEGIN_CNS
 ,___DEF_CNS(___REF_FIX(0),___REF_CNS(92))
 ,___DEF_CNS(___REF_CNS(93),___REF_CNS(94))
 ,___DEF_CNS(___REF_FAL,___REF_NUL)
-,___DEF_CNS(___REF_SYM(388,___S_extended),___REF_NUL)
+,___DEF_CNS(___REF_SYM(389,___S_extended),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(96),___REF_CNS(105))
 ,___DEF_CNS(___REF_SUB(15),___REF_CNS(97))
 ,___DEF_CNS(___REF_CNS(98),___REF_CNS(99))
@@ -5861,7 +5869,7 @@ ___BEGIN_CNS
 ,___DEF_CNS(___REF_FIX(0),___REF_CNS(102))
 ,___DEF_CNS(___REF_CNS(103),___REF_CNS(104))
 ,___DEF_CNS(___REF_FAL,___REF_NUL)
-,___DEF_CNS(___REF_SYM(388,___S_extended),___REF_NUL)
+,___DEF_CNS(___REF_SYM(389,___S_extended),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(106),___REF_NUL)
 ,___DEF_CNS(___REF_SUB(16),___REF_CNS(107))
 ,___DEF_CNS(___REF_CNS(108),___REF_CNS(109))
@@ -5869,178 +5877,178 @@ ___BEGIN_CNS
 ,___DEF_CNS(___REF_FAL,___REF_CNS(110))
 ,___DEF_CNS(___REF_FIX(0),___REF_CNS(111))
 ,___DEF_CNS(___REF_FIX(0),___REF_CNS(112))
-,___DEF_CNS(___REF_SYM(452,___S_number),___REF_CNS(113))
-,___DEF_CNS(___REF_SYM(388,___S_extended),___REF_NUL)
+,___DEF_CNS(___REF_SYM(454,___S_number),___REF_CNS(113))
+,___DEF_CNS(___REF_SYM(389,___S_extended),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(115),___REF_CNS(116))
-,___DEF_CNS(___REF_SYM(412,___S_id),___REF_SYM(22,___S_a))
+,___DEF_CNS(___REF_SYM(413,___S_id),___REF_SYM(22,___S_a))
 ,___DEF_CNS(___REF_CNS(117),___REF_CNS(118))
-,___DEF_CNS(___REF_SYM(460,___S_parent),___REF_SYM(33,___S_b))
+,___DEF_CNS(___REF_SYM(462,___S_parent),___REF_SYM(33,___S_b))
 ,___DEF_CNS(___REF_CNS(119),___REF_CNS(120))
-,___DEF_CNS(___REF_SYM(447,___S_nfree),___REF_SYM(42,___S_c))
+,___DEF_CNS(___REF_SYM(448,___S_nfree),___REF_SYM(42,___S_c))
 ,___DEF_CNS(___REF_CNS(121),___REF_CNS(122))
-,___DEF_CNS(___REF_SYM(440,___S_name),___REF_SYM(376,___S_d))
+,___DEF_CNS(___REF_SYM(441,___S_name),___REF_SYM(377,___S_d))
 ,___DEF_CNS(___REF_CNS(123),___REF_CNS(124))
-,___DEF_CNS(___REF_SYM(373,___S_ctrlpts),___REF_SYM(381,___S_e))
+,___DEF_CNS(___REF_SYM(374,___S_ctrlpts),___REF_SYM(382,___S_e))
 ,___DEF_CNS(___REF_CNS(125),___REF_CNS(126))
-,___DEF_CNS(___REF_SYM(416,___S_info),___REF_SYM(389,___S_f))
+,___DEF_CNS(___REF_SYM(417,___S_info),___REF_SYM(390,___S_f))
 ,___DEF_CNS(___REF_CNS(127),___REF_CNS(128))
-,___DEF_CNS(___REF_SYM(472,___S_prim),___REF_SYM(401,___S_g))
+,___DEF_CNS(___REF_SYM(474,___S_prim),___REF_SYM(402,___S_g))
 ,___DEF_CNS(___REF_CNS(129),___REF_CNS(130))
-,___DEF_CNS(___REF_SYM(400,___S_fs),___REF_SYM(406,___S_h))
+,___DEF_CNS(___REF_SYM(401,___S_fs),___REF_SYM(407,___S_h))
 ,___DEF_CNS(___REF_CNS(131),___REF_CNS(132))
-,___DEF_CNS(___REF_SYM(435,___S_link),___REF_SYM(376,___S_d))
+,___DEF_CNS(___REF_SYM(436,___S_link),___REF_SYM(377,___S_d))
 ,___DEF_CNS(___REF_CNS(133),___REF_CNS(134))
-,___DEF_CNS(___REF_SYM(531,___S_slots),___REF_SYM(22,___S_a))
+,___DEF_CNS(___REF_SYM(533,___S_slots),___REF_SYM(22,___S_a))
 ,___DEF_CNS(___REF_CNS(135),___REF_CNS(136))
-,___DEF_CNS(___REF_SYM(534,___S_state),___REF_SYM(22,___S_a))
+,___DEF_CNS(___REF_SYM(536,___S_state),___REF_SYM(22,___S_a))
 ,___DEF_CNS(___REF_CNS(137),___REF_CNS(138))
-,___DEF_CNS(___REF_SYM(546,___S_testator),___REF_SYM(22,___S_a))
+,___DEF_CNS(___REF_SYM(548,___S_testator),___REF_SYM(22,___S_a))
 ,___DEF_CNS(___REF_CNS(139),___REF_CNS(140))
 ,___DEF_CNS(___REF_SYM(24,___S_action),___REF_SYM(33,___S_b))
 ,___DEF_CNS(___REF_CNS(141),___REF_CNS(142))
-,___DEF_CNS(___REF_SYM(564,___S_vals),___REF_SYM(22,___S_a))
+,___DEF_CNS(___REF_SYM(566,___S_vals),___REF_SYM(22,___S_a))
 ,___DEF_CNS(___REF_CNS(143),___REF_CNS(144))
-,___DEF_CNS(___REF_SYM(563,___S_val),___REF_SYM(22,___S_a))
+,___DEF_CNS(___REF_SYM(565,___S_val),___REF_SYM(22,___S_a))
 ,___DEF_CNS(___REF_CNS(145),___REF_CNS(146))
-,___DEF_CNS(___REF_SYM(543,___S_tags),___REF_SYM(33,___S_b))
+,___DEF_CNS(___REF_SYM(545,___S_tags),___REF_SYM(33,___S_b))
 ,___DEF_CNS(___REF_CNS(147),___REF_CNS(148))
-,___DEF_CNS(___REF_SYM(525,___S_scmobj),___REF_SYM(22,___S_a))
+,___DEF_CNS(___REF_SYM(527,___S_scmobj),___REF_SYM(22,___S_a))
 ,___DEF_CNS(___REF_CNS(149),___REF_CNS(150))
-,___DEF_CNS(___REF_SYM(380,___S_digits),___REF_SYM(22,___S_a))
+,___DEF_CNS(___REF_SYM(381,___S_digits),___REF_SYM(22,___S_a))
 ,___DEF_CNS(___REF_CNS(151),___REF_CNS(152))
-,___DEF_CNS(___REF_SYM(451,___S_num),___REF_SYM(22,___S_a))
+,___DEF_CNS(___REF_SYM(453,___S_num),___REF_SYM(22,___S_a))
 ,___DEF_CNS(___REF_CNS(153),___REF_CNS(154))
-,___DEF_CNS(___REF_SYM(378,___S_den),___REF_SYM(33,___S_b))
+,___DEF_CNS(___REF_SYM(379,___S_den),___REF_SYM(33,___S_b))
 ,___DEF_CNS(___REF_CNS(155),___REF_CNS(156))
-,___DEF_CNS(___REF_SYM(487,___S_real),___REF_SYM(22,___S_a))
+,___DEF_CNS(___REF_SYM(489,___S_real),___REF_SYM(22,___S_a))
 ,___DEF_CNS(___REF_CNS(157),___REF_CNS(158))
-,___DEF_CNS(___REF_SYM(414,___S_imag),___REF_SYM(33,___S_b))
+,___DEF_CNS(___REF_SYM(415,___S_imag),___REF_SYM(33,___S_b))
 ,___DEF_CNS(___REF_CNS(159),___REF_CNS(160))
 ,___DEF_CNS(___REF_SYM(355,___S_car),___REF_SYM(22,___S_a))
 ,___DEF_CNS(___REF_CNS(161),___REF_CNS(162))
 ,___DEF_CNS(___REF_SYM(356,___S_cdr),___REF_SYM(33,___S_b))
 ,___DEF_CNS(___REF_CNS(163),___REF_CNS(164))
-,___DEF_CNS(___REF_SYM(382,___S_elems),___REF_SYM(22,___S_a))
+,___DEF_CNS(___REF_SYM(383,___S_elems),___REF_SYM(22,___S_a))
 ,___DEF_CNS(___REF_CNS(165),___REF_CNS(166))
-,___DEF_CNS(___REF_SYM(531,___S_slots),___REF_SYM(22,___S_a))
+,___DEF_CNS(___REF_SYM(533,___S_slots),___REF_SYM(22,___S_a))
 ,___DEF_CNS(___REF_CNS(167),___REF_CNS(168))
-,___DEF_CNS(___REF_SYM(399,___S_frame),___REF_SYM(22,___S_a))
+,___DEF_CNS(___REF_SYM(400,___S_frame),___REF_SYM(22,___S_a))
 ,___DEF_CNS(___REF_CNS(169),___REF_CNS(170))
-,___DEF_CNS(___REF_SYM(379,___S_denv),___REF_SYM(33,___S_b))
+,___DEF_CNS(___REF_SYM(380,___S_denv),___REF_SYM(33,___S_b))
 ,___DEF_CNS(___REF_CNS(171),___REF_CNS(172))
-,___DEF_CNS(___REF_SYM(364,___S_code),___REF_SYM(22,___S_a))
+,___DEF_CNS(___REF_SYM(365,___S_code),___REF_SYM(22,___S_a))
 ,___DEF_CNS(___REF_CNS(173),___REF_CNS(174))
-,___DEF_CNS(___REF_SYM(365,___S_codes),___REF_SYM(22,___S_a))
+,___DEF_CNS(___REF_SYM(366,___S_codes),___REF_SYM(22,___S_a))
 ,___DEF_CNS(___REF_CNS(175),___REF_CNS(176))
-,___DEF_CNS(___REF_SYM(415,___S_index),___REF_SYM(22,___S_a))
+,___DEF_CNS(___REF_SYM(416,___S_index),___REF_SYM(22,___S_a))
 ,___DEF_CNS(___REF_CNS(177),___REF_CNS(178))
-,___DEF_CNS(___REF_SYM(471,___S_preload),___REF_SYM(33,___S_b))
+,___DEF_CNS(___REF_SYM(473,___S_preload),___REF_SYM(33,___S_b))
 ,___DEF_CNS(___REF_CNS(179),___REF_CNS(180))
-,___DEF_CNS(___REF_SYM(409,___S_hname),___REF_SYM(22,___S_a))
+,___DEF_CNS(___REF_SYM(410,___S_hname),___REF_SYM(22,___S_a))
 ,___DEF_CNS(___REF_CNS(181),___REF_CNS(182))
-,___DEF_CNS(___REF_SYM(408,___S_hash),___REF_SYM(33,___S_b))
+,___DEF_CNS(___REF_SYM(409,___S_hash),___REF_SYM(33,___S_b))
 ,___DEF_CNS(___REF_CNS(183),___REF_NUL)
-,___DEF_CNS(___REF_SYM(420,___S_interned),___REF_SYM(42,___S_c))
+,___DEF_CNS(___REF_SYM(421,___S_interned),___REF_SYM(42,___S_c))
 ,___DEF_CNS(___REF_CNS(185),___REF_CNS(187))
-,___DEF_CNS(___REF_SYM(495,___S_repr_2d_module),___REF_CNS(186))
-,___DEF_CNS(___REF_SYM(541,___S_symbol),___REF_NUL)
+,___DEF_CNS(___REF_SYM(497,___S_repr_2d_module),___REF_CNS(186))
+,___DEF_CNS(___REF_SYM(543,___S_symbol),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(188),___REF_CNS(190))
-,___DEF_CNS(___REF_SYM(497,___S_repr_2d_procedure),___REF_CNS(189))
-,___DEF_CNS(___REF_SYM(541,___S_symbol),___REF_NUL)
+,___DEF_CNS(___REF_SYM(499,___S_repr_2d_procedure),___REF_CNS(189))
+,___DEF_CNS(___REF_SYM(543,___S_symbol),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(191),___REF_CNS(193))
-,___DEF_CNS(___REF_SYM(494,___S_repr_2d_frame),___REF_CNS(192))
-,___DEF_CNS(___REF_SYM(541,___S_symbol),___REF_NUL)
+,___DEF_CNS(___REF_SYM(496,___S_repr_2d_frame),___REF_CNS(192))
+,___DEF_CNS(___REF_SYM(543,___S_symbol),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(194),___REF_CNS(196))
-,___DEF_CNS(___REF_SYM(496,___S_repr_2d_null),___REF_CNS(195))
-,___DEF_CNS(___REF_SYM(541,___S_symbol),___REF_NUL)
+,___DEF_CNS(___REF_SYM(498,___S_repr_2d_null),___REF_CNS(195))
+,___DEF_CNS(___REF_SYM(543,___S_symbol),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(197),___REF_CNS(199))
-,___DEF_CNS(___REF_SYM(510,___S_repr_2d_void),___REF_CNS(198))
-,___DEF_CNS(___REF_SYM(541,___S_symbol),___REF_NUL)
+,___DEF_CNS(___REF_SYM(512,___S_repr_2d_void),___REF_CNS(198))
+,___DEF_CNS(___REF_SYM(543,___S_symbol),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(200),___REF_CNS(202))
-,___DEF_CNS(___REF_SYM(489,___S_repr_2d_boolean),___REF_CNS(201))
-,___DEF_CNS(___REF_SYM(541,___S_symbol),___REF_NUL)
+,___DEF_CNS(___REF_SYM(491,___S_repr_2d_boolean),___REF_CNS(201))
+,___DEF_CNS(___REF_SYM(543,___S_symbol),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(203),___REF_CNS(205))
-,___DEF_CNS(___REF_SYM(492,___S_repr_2d_fixnum),___REF_CNS(204))
-,___DEF_CNS(___REF_SYM(541,___S_symbol),___REF_NUL)
+,___DEF_CNS(___REF_SYM(494,___S_repr_2d_fixnum),___REF_CNS(204))
+,___DEF_CNS(___REF_SYM(543,___S_symbol),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(206),___REF_CNS(208))
-,___DEF_CNS(___REF_SYM(493,___S_repr_2d_flonum),___REF_CNS(207))
-,___DEF_CNS(___REF_SYM(541,___S_symbol),___REF_NUL)
+,___DEF_CNS(___REF_SYM(495,___S_repr_2d_flonum),___REF_CNS(207))
+,___DEF_CNS(___REF_SYM(543,___S_symbol),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(209),___REF_CNS(211))
-,___DEF_CNS(___REF_SYM(509,___S_repr_2d_vector),___REF_CNS(210))
-,___DEF_CNS(___REF_SYM(541,___S_symbol),___REF_NUL)
+,___DEF_CNS(___REF_SYM(511,___S_repr_2d_vector),___REF_CNS(210))
+,___DEF_CNS(___REF_SYM(543,___S_symbol),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(212),___REF_CNS(214))
-,___DEF_CNS(___REF_SYM(507,___S_repr_2d_u8vector),___REF_CNS(213))
-,___DEF_CNS(___REF_SYM(541,___S_symbol),___REF_NUL)
+,___DEF_CNS(___REF_SYM(509,___S_repr_2d_u8vector),___REF_CNS(213))
+,___DEF_CNS(___REF_SYM(543,___S_symbol),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(215),___REF_CNS(217))
-,___DEF_CNS(___REF_SYM(504,___S_repr_2d_u16vector),___REF_CNS(216))
-,___DEF_CNS(___REF_SYM(541,___S_symbol),___REF_NUL)
+,___DEF_CNS(___REF_SYM(506,___S_repr_2d_u16vector),___REF_CNS(216))
+,___DEF_CNS(___REF_SYM(543,___S_symbol),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(218),___REF_CNS(220))
-,___DEF_CNS(___REF_SYM(505,___S_repr_2d_u32vector),___REF_CNS(219))
-,___DEF_CNS(___REF_SYM(541,___S_symbol),___REF_NUL)
+,___DEF_CNS(___REF_SYM(507,___S_repr_2d_u32vector),___REF_CNS(219))
+,___DEF_CNS(___REF_SYM(543,___S_symbol),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(221),___REF_CNS(223))
-,___DEF_CNS(___REF_SYM(506,___S_repr_2d_u64vector),___REF_CNS(222))
-,___DEF_CNS(___REF_SYM(541,___S_symbol),___REF_NUL)
+,___DEF_CNS(___REF_SYM(508,___S_repr_2d_u64vector),___REF_CNS(222))
+,___DEF_CNS(___REF_SYM(543,___S_symbol),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(224),___REF_CNS(226))
-,___DEF_CNS(___REF_SYM(501,___S_repr_2d_s8vector),___REF_CNS(225))
-,___DEF_CNS(___REF_SYM(541,___S_symbol),___REF_NUL)
+,___DEF_CNS(___REF_SYM(503,___S_repr_2d_s8vector),___REF_CNS(225))
+,___DEF_CNS(___REF_SYM(543,___S_symbol),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(227),___REF_CNS(229))
-,___DEF_CNS(___REF_SYM(498,___S_repr_2d_s16vector),___REF_CNS(228))
-,___DEF_CNS(___REF_SYM(541,___S_symbol),___REF_NUL)
+,___DEF_CNS(___REF_SYM(500,___S_repr_2d_s16vector),___REF_CNS(228))
+,___DEF_CNS(___REF_SYM(543,___S_symbol),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(230),___REF_CNS(232))
-,___DEF_CNS(___REF_SYM(499,___S_repr_2d_s32vector),___REF_CNS(231))
-,___DEF_CNS(___REF_SYM(541,___S_symbol),___REF_NUL)
+,___DEF_CNS(___REF_SYM(501,___S_repr_2d_s32vector),___REF_CNS(231))
+,___DEF_CNS(___REF_SYM(543,___S_symbol),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(233),___REF_CNS(235))
-,___DEF_CNS(___REF_SYM(500,___S_repr_2d_s64vector),___REF_CNS(234))
-,___DEF_CNS(___REF_SYM(541,___S_symbol),___REF_NUL)
+,___DEF_CNS(___REF_SYM(502,___S_repr_2d_s64vector),___REF_CNS(234))
+,___DEF_CNS(___REF_SYM(543,___S_symbol),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(236),___REF_CNS(238))
-,___DEF_CNS(___REF_SYM(490,___S_repr_2d_f32vector),___REF_CNS(237))
-,___DEF_CNS(___REF_SYM(541,___S_symbol),___REF_NUL)
+,___DEF_CNS(___REF_SYM(492,___S_repr_2d_f32vector),___REF_CNS(237))
+,___DEF_CNS(___REF_SYM(543,___S_symbol),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(239),___REF_CNS(241))
-,___DEF_CNS(___REF_SYM(491,___S_repr_2d_f64vector),___REF_CNS(240))
-,___DEF_CNS(___REF_SYM(541,___S_symbol),___REF_NUL)
+,___DEF_CNS(___REF_SYM(493,___S_repr_2d_f64vector),___REF_CNS(240))
+,___DEF_CNS(___REF_SYM(543,___S_symbol),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(242),___REF_CNS(244))
-,___DEF_CNS(___REF_SYM(508,___S_repr_2d_values),___REF_CNS(243))
-,___DEF_CNS(___REF_SYM(541,___S_symbol),___REF_NUL)
+,___DEF_CNS(___REF_SYM(510,___S_repr_2d_values),___REF_CNS(243))
+,___DEF_CNS(___REF_SYM(543,___S_symbol),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(245),___REF_CNS(247))
-,___DEF_CNS(___REF_SYM(502,___S_repr_2d_string),___REF_CNS(246))
-,___DEF_CNS(___REF_SYM(541,___S_symbol),___REF_NUL)
+,___DEF_CNS(___REF_SYM(504,___S_repr_2d_string),___REF_CNS(246))
+,___DEF_CNS(___REF_SYM(543,___S_symbol),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(248),___REF_CNS(250))
-,___DEF_CNS(___REF_SYM(503,___S_repr_2d_symbol),___REF_CNS(249))
-,___DEF_CNS(___REF_SYM(541,___S_symbol),___REF_NUL)
+,___DEF_CNS(___REF_SYM(505,___S_repr_2d_symbol),___REF_CNS(249))
+,___DEF_CNS(___REF_SYM(543,___S_symbol),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(251),___REF_NUL)
-,___DEF_CNS(___REF_SYM(441,___S_namespace),___REF_CNS(252))
-,___DEF_CNS(___REF_SYM(536,___S_string),___REF_NUL)
+,___DEF_CNS(___REF_SYM(442,___S_namespace),___REF_CNS(252))
+,___DEF_CNS(___REF_SYM(538,___S_string),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(254),___REF_CNS(255))
 ,___DEF_CNS(___REF_SYM(25,___S_always_2d_return_2d_jump),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(256),___REF_CNS(257))
-,___DEF_CNS(___REF_SYM(445,___S_never_2d_return_2d_jump),___REF_NUL)
+,___DEF_CNS(___REF_SYM(446,___S_never_2d_return_2d_jump),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(258),___REF_CNS(260))
-,___DEF_CNS(___REF_SYM(433,___S_label_2d_namespace),___REF_CNS(259))
-,___DEF_CNS(___REF_SYM(536,___S_string),___REF_NUL)
+,___DEF_CNS(___REF_SYM(434,___S_label_2d_namespace),___REF_CNS(259))
+,___DEF_CNS(___REF_SYM(538,___S_string),___REF_NUL)
 ,___DEF_CNS(___REF_CNS(261),___REF_NUL)
-,___DEF_CNS(___REF_SYM(526,___S_sequence_2d_number),___REF_CNS(262))
-,___DEF_CNS(___REF_SYM(394,___S_fixnum),___REF_NUL)
-,___DEF_CNS(___REF_SYM(417,___S_inherited),___REF_NUL)
-,___DEF_CNS(___REF_SYM(417,___S_inherited),___REF_NUL)
-,___DEF_CNS(___REF_SYM(417,___S_inherited),___REF_NUL)
-,___DEF_CNS(___REF_SYM(417,___S_inherited),___REF_NUL)
-,___DEF_CNS(___REF_SYM(417,___S_inherited),___REF_NUL)
+,___DEF_CNS(___REF_SYM(528,___S_sequence_2d_number),___REF_CNS(262))
+,___DEF_CNS(___REF_SYM(395,___S_fixnum),___REF_NUL)
+,___DEF_CNS(___REF_SYM(418,___S_inherited),___REF_NUL)
+,___DEF_CNS(___REF_SYM(418,___S_inherited),___REF_NUL)
+,___DEF_CNS(___REF_SYM(418,___S_inherited),___REF_NUL)
+,___DEF_CNS(___REF_SYM(418,___S_inherited),___REF_NUL)
+,___DEF_CNS(___REF_SYM(418,___S_inherited),___REF_NUL)
 ,___DEF_CNS(___REF_SYM(29,___S_array),___REF_CNS(269))
-,___DEF_CNS(___REF_SYM(371,___S_ctrlpt),___REF_NUL)
-,___DEF_CNS(___REF_SYM(417,___S_inherited),___REF_NUL)
-,___DEF_CNS(___REF_SYM(417,___S_inherited),___REF_NUL)
-,___DEF_CNS(___REF_SYM(417,___S_inherited),___REF_NUL)
-,___DEF_CNS(___REF_SYM(417,___S_inherited),___REF_NUL)
-,___DEF_CNS(___REF_SYM(473,___S_println),___REF_CNS(275))
-,___DEF_CNS(___REF_SYM(488,___S_real_2d_time_2d_milliseconds),___REF_CNS(276))
+,___DEF_CNS(___REF_SYM(372,___S_ctrlpt),___REF_NUL)
+,___DEF_CNS(___REF_SYM(418,___S_inherited),___REF_NUL)
+,___DEF_CNS(___REF_SYM(418,___S_inherited),___REF_NUL)
+,___DEF_CNS(___REF_SYM(418,___S_inherited),___REF_NUL)
+,___DEF_CNS(___REF_SYM(418,___S_inherited),___REF_NUL)
+,___DEF_CNS(___REF_SYM(475,___S_println),___REF_CNS(275))
+,___DEF_CNS(___REF_SYM(490,___S_real_2d_time_2d_milliseconds),___REF_CNS(276))
 ,___DEF_CNS(___REF_SYM(0,___S__23__23_exit_2d_process),___REF_NUL)
-,___DEF_CNS(___REF_SYM(425,___S_js),___REF_CNS(278))
-,___DEF_CNS(___REF_SYM(476,___S_python),___REF_NUL)
-,___DEF_CNS(___REF_SYM(556,___S_u8),___REF_CNS(280))
-,___DEF_CNS(___REF_SYM(550,___S_u16),___REF_CNS(281))
-,___DEF_CNS(___REF_SYM(552,___S_u32),___REF_CNS(282))
+,___DEF_CNS(___REF_SYM(426,___S_js),___REF_CNS(278))
+,___DEF_CNS(___REF_SYM(478,___S_python),___REF_NUL)
+,___DEF_CNS(___REF_SYM(558,___S_u8),___REF_CNS(280))
+,___DEF_CNS(___REF_SYM(552,___S_u16),___REF_CNS(281))
+,___DEF_CNS(___REF_SYM(554,___S_u32),___REF_CNS(282))
 ,___DEF_CNS(___REF_SYM(35,___S_bigdigit),___REF_CNS(283))
-,___DEF_CNS(___REF_SYM(559,___S_unicode),___REF_NUL)
+,___DEF_CNS(___REF_SYM(561,___S_unicode),___REF_NUL)
 ___END_CNS
 
 ___DEF_SUB_BIGFIX(___X0,1UL)
@@ -8227,8 +8235,6 @@ ___DEF_M_HLBL(___L70_c_23_univ_2d_emit_2d_popcount_21_)
 ___DEF_M_HLBL(___L71_c_23_univ_2d_emit_2d_popcount_21_)
 ___DEF_M_HLBL(___L72_c_23_univ_2d_emit_2d_popcount_21_)
 ___DEF_M_HLBL(___L73_c_23_univ_2d_emit_2d_popcount_21_)
-___DEF_M_HLBL(___L74_c_23_univ_2d_emit_2d_popcount_21_)
-___DEF_M_HLBL(___L75_c_23_univ_2d_emit_2d_popcount_21_)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0_c_23_univ_2d_emit_2d_map)
 ___DEF_M_HLBL(___L1_c_23_univ_2d_emit_2d_map)
@@ -11109,22 +11115,6 @@ ___DEF_M_HLBL(___L23_c_23_univ_2d_bignum_2d__3e_digits)
 ___DEF_M_HLBL(___L24_c_23_univ_2d_bignum_2d__3e_digits)
 ___DEF_M_HLBL(___L25_c_23_univ_2d_bignum_2d__3e_digits)
 ___DEF_M_HLBL(___L26_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_M_HLBL(___L27_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_M_HLBL(___L28_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_M_HLBL(___L29_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_M_HLBL(___L30_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_M_HLBL(___L31_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_M_HLBL(___L32_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_M_HLBL(___L33_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_M_HLBL(___L34_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_M_HLBL(___L35_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_M_HLBL(___L36_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_M_HLBL(___L37_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_M_HLBL(___L38_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_M_HLBL(___L39_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_M_HLBL(___L40_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_M_HLBL(___L41_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_M_HLBL(___L42_c_23_univ_2d_bignum_2d__3e_digits)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0_c_23_univ_2d_typed_2d_array_2d_constructor)
 ___DEF_M_HLBL(___L1_c_23_univ_2d_typed_2d_array_2d_constructor)
@@ -11463,7 +11453,7 @@ ___DEF_GLBL(___L___t_2d_univ_2d_1_23_)
    ___IF(___NOT(___FIXNUMP(___BIGFIX(0,536870912LL))))
    ___GOTO(___L16___t_2d_univ_2d_1_23_)
    ___END_IF
-   ___IF(___FIXSUBP_NOTFALSEP(___R1,___BIGFIX(0,536870912LL),___FIX(1L)))
+   ___IF(___FIXSUBPCONSTY_NOTFALSEP(___R1,___BIGFIX(0,536870912LL),___FIX(1L)))
    ___GOTO(___L17___t_2d_univ_2d_1_23_)
    ___END_IF
    ___SET_R1(___FAL)
@@ -11491,7 +11481,7 @@ ___DEF_GLBL(___L18___t_2d_univ_2d_1_23_)
    ___GOTO(___L23___t_2d_univ_2d_1_23_)
    ___END_IF
 ___DEF_GLBL(___L19___t_2d_univ_2d_1_23_)
-   ___IF(___NOT(___FIXADDP_NOTFALSEP(___R2,___R1,___FIX(1L))))
+   ___IF(___NOT(___FIXADDPCONSTY_NOTFALSEP(___R2,___R1,___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L23___t_2d_univ_2d_1_23_)
    ___END_IF
@@ -13760,7 +13750,7 @@ ___DEF_SLBL(33,___L33_c_23_univ_2d_setup)
    ___POLL(34)
 ___DEF_SLBL(34,___L34_c_23_univ_2d_setup)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1513),___L_c_23_univ_2d_link)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1511),___L_c_23_univ_2d_link)
 ___DEF_SLBL(35,___L35_c_23_univ_2d_setup)
    ___IF_NARGS_EQ(1,___NOTHING)
    ___WRONG_NARGS(35,1,0,0)
@@ -13768,7 +13758,7 @@ ___DEF_SLBL(35,___L35_c_23_univ_2d_setup)
    ___SET_R1(___CLO(___R4,1))
    ___POLL(36)
 ___DEF_SLBL(36,___L36_c_23_univ_2d_setup)
-   ___JUMPINT(___SET_NARGS(2),___PRC(1375),___L_c_23_univ_2d_link_2d_info)
+   ___JUMPINT(___SET_NARGS(2),___PRC(1373),___L_c_23_univ_2d_link_2d_info)
 ___DEF_SLBL(37,___L37_c_23_univ_2d_setup)
    ___IF_NARGS_EQ(5,___NOTHING)
    ___WRONG_NARGS(37,5,0,0)
@@ -13787,7 +13777,7 @@ ___DEF_SLBL(37,___L37_c_23_univ_2d_setup)
    ___POLL(38)
 ___DEF_SLBL(38,___L38_c_23_univ_2d_setup)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(8),___PRC(1269),___L_c_23_univ_2d_dump)
+   ___JUMPINT(___SET_NARGS(8),___PRC(1267),___L_c_23_univ_2d_dump)
 ___END_P_SW
 ___END_P_COD
 
@@ -13972,7 +13962,7 @@ ___DEF_GLBL(___L19_c_23_univ_2d_set_2d_nb_2d_regs)
    ___GOTO(___L26_c_23_univ_2d_set_2d_nb_2d_regs)
    ___END_IF
 ___DEF_GLBL(___L20_c_23_univ_2d_set_2d_nb_2d_regs)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___STK(-4),___FIX(2L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___STK(-4),___FIX(2L))))
    ___SET_R2(___FAL)
    ___GOTO(___L26_c_23_univ_2d_set_2d_nb_2d_regs)
    ___END_IF
@@ -13988,7 +13978,7 @@ ___DEF_GLBL(___L22_c_23_univ_2d_set_2d_nb_2d_regs)
    ___IF(___NOT(___FIXNUMP(___STK(-4))))
    ___GOTO(___L30_c_23_univ_2d_set_2d_nb_2d_regs)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R1,___STK(-4),___FIX(2L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R1,___STK(-4),___FIX(2L))))
    ___SET_R1(___FAL)
    ___GOTO(___L29_c_23_univ_2d_set_2d_nb_2d_regs)
    ___END_IF
@@ -14156,7 +14146,7 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_comment)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_comment)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(3439),___L_c_23_univ_2d_compactness_3e__3d__3f_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(3421),___L_c_23_univ_2d_compactness_3e__3d__3f_)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_comment)
    ___IF(___NOTFALSEP(___R1))
    ___GOTO(___L6_c_23_univ_2d_emit_2d_comment)
@@ -14265,7 +14255,7 @@ ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_indent)
    ___SET_R1(___STK(-6))
    ___SET_R2(___FIX(5L))
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(2),___PRC(3439),___L_c_23_univ_2d_compactness_3e__3d__3f_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(3421),___L_c_23_univ_2d_compactness_3e__3d__3f_)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_indent)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L5_c_23_univ_2d_emit_2d_indent)
@@ -14502,7 +14492,7 @@ ___DEF_SLBL(1,___L1_c_23_univ_2d_display)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_display)
    ___GOTO(___L47_c_23_univ_2d_display)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_display)
-   ___SET_R3(___CDR(___STK(-3)))
+   ___SET_R3(___R1)
    ___SET_R2(___STK(-4))
    ___SET_R1(___STK(-5))
    ___SET_R0(___STK(-6))
@@ -14511,7 +14501,7 @@ ___DEF_SLBL(3,___L3_c_23_univ_2d_display)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_display)
 ___DEF_GLBL(___L47_c_23_univ_2d_display)
    ___IF(___NOT(___STRINGP(___R3)))
-   ___GOTO(___L97_c_23_univ_2d_display)
+   ___GOTO(___L94_c_23_univ_2d_display)
    ___END_IF
    ___SET_STK(1,___R1)
    ___SET_STK(2,___R2)
@@ -14532,24 +14522,24 @@ ___DEF_SLBL(6,___L6_c_23_univ_2d_display)
 ___DEF_GLBL(___L49_c_23_univ_2d_display)
    ___SET_R4(___STRINGLENGTH(___R1))
    ___IF(___NOT(___FIXNUMSP(___FIXNUMSP2(___FIXNUMSP1(___R3),___R4))))
-   ___GOTO(___L93_c_23_univ_2d_display)
+   ___GOTO(___L90_c_23_univ_2d_display)
    ___END_IF
    ___IF(___NOT(___FIXLT(___R3,___R4)))
-   ___GOTO(___L94_c_23_univ_2d_display)
+   ___GOTO(___L91_c_23_univ_2d_display)
    ___END_IF
 ___DEF_GLBL(___L50_c_23_univ_2d_display)
    ___SET_R4(___STRINGREF(___R1,___R3))
    ___IF(___NOT(___FIXNUMP(___R3)))
-   ___GOTO(___L92_c_23_univ_2d_display)
+   ___GOTO(___L89_c_23_univ_2d_display)
    ___END_IF
    ___ADJFP(1)
-   ___IF(___NOT(___FIXADDP_NOTFALSEP(___STK(0),___R3,___FIX(1L))))
+   ___IF(___NOT(___FIXADDPCONSTY_NOTFALSEP(___STK(0),___R3,___FIX(1L))))
    ___SET_STK(0,___FAL)
-   ___GOTO(___L91_c_23_univ_2d_display)
+   ___GOTO(___L88_c_23_univ_2d_display)
    ___END_IF
    ___SET_R3(___STK(0))
    ___IF(___NOT(___CHAREQP(___R4,___CHR(10))))
-   ___GOTO(___L90_c_23_univ_2d_display)
+   ___GOTO(___L87_c_23_univ_2d_display)
    ___END_IF
 ___DEF_GLBL(___L51_c_23_univ_2d_display)
    ___SET_STK(0,___R0)
@@ -14558,32 +14548,32 @@ ___DEF_GLBL(___L51_c_23_univ_2d_display)
    ___SET_STK(9,___STK(-3))
    ___SET_STK(10,___STK(-2))
    ___SET_STK(11,___STK(-1))
-   ___SET_R0(___LBL(27))
+   ___SET_R0(___LBL(26))
    ___ADJFP(11)
    ___POLL(7)
 ___DEF_SLBL(7,___L7_c_23_univ_2d_display)
 ___DEF_GLBL(___L52_c_23_univ_2d_display)
    ___IF(___NOT(___FIXNUMSP(___FIXNUMSP2(___FIXNUMSP1(___R2),___R3))))
-   ___GOTO(___L86_c_23_univ_2d_display)
+   ___GOTO(___L83_c_23_univ_2d_display)
    ___END_IF
    ___IF(___NOT(___FIXLT(___R2,___R3)))
-   ___GOTO(___L87_c_23_univ_2d_display)
+   ___GOTO(___L84_c_23_univ_2d_display)
    ___END_IF
 ___DEF_GLBL(___L53_c_23_univ_2d_display)
    ___IF(___NOT(___FIXNUMSP(___FIXNUMSP2(___FIXNUMSP1(___R3),___R2))))
-   ___GOTO(___L83_c_23_univ_2d_display)
+   ___GOTO(___L80_c_23_univ_2d_display)
    ___END_IF
 ___DEF_GLBL(___L54_c_23_univ_2d_display)
    ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R4,___R3,___R2)))
    ___SET_R4(___FAL)
-   ___GOTO(___L84_c_23_univ_2d_display)
+   ___GOTO(___L81_c_23_univ_2d_display)
    ___END_IF
    ___IF(___NOT(___FIXNUMP(___R4)))
-   ___GOTO(___L82_c_23_univ_2d_display)
+   ___GOTO(___L79_c_23_univ_2d_display)
    ___END_IF
 ___DEF_GLBL(___L55_c_23_univ_2d_display)
    ___IF(___NOT(___FIXGT(___R4,___FIX(1L))))
-   ___GOTO(___L78_c_23_univ_2d_display)
+   ___GOTO(___L75_c_23_univ_2d_display)
    ___END_IF
 ___DEF_GLBL(___L56_c_23_univ_2d_display)
    ___SET_STK(1,___R0)
@@ -14593,30 +14583,30 @@ ___DEF_GLBL(___L56_c_23_univ_2d_display)
    ___SET_R3(___STK(0))
    ___SET_R2(___STK(-1))
    ___SET_R1(___STK(-2))
-   ___SET_R0(___LBL(14))
+   ___SET_R0(___LBL(13))
    ___ADJFP(9)
    ___POLL(8)
 ___DEF_SLBL(8,___L8_c_23_univ_2d_display)
 ___DEF_GLBL(___L57_c_23_univ_2d_display)
    ___IF(___NOT(___NOTFALSEP(___UNBOX(___R3))))
-   ___GOTO(___L66_c_23_univ_2d_display)
+   ___GOTO(___L63_c_23_univ_2d_display)
    ___END_IF
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R3)
    ___SET_R2(___UNBOX(___R2))
    ___ADJFP(2)
    ___IF(___NOT(___FIXNUMP(___R2)))
-   ___GOTO(___L65_c_23_univ_2d_display)
-   ___END_IF
-   ___IF(___NOT(___EQP(___R2,___FIX(0L))))
    ___GOTO(___L62_c_23_univ_2d_display)
    ___END_IF
-   ___SET_R2(___FIX(0L))
-   ___IF(___NOT(___FIXLE(___R2,___FIX(253L))))
+   ___IF(___NOT(___FIXMULPCONSTX_NOTFALSEP(___R3,___FIX(2L),___R2)))
+   ___SET_R3(___FAL)
    ___GOTO(___L61_c_23_univ_2d_display)
    ___END_IF
+   ___IF(___NOT(___FIXLE(___R3,___FIX(253L))))
+   ___GOTO(___L60_c_23_univ_2d_display)
+   ___END_IF
 ___DEF_GLBL(___L58_c_23_univ_2d_display)
-   ___MAKESTRINGSMALL2(___R2,___CHR(32))
+   ___MAKESTRINGSMALL2(___R3,___CHR(32))
    ___SET_R2(___GET_SMALL_ALLOC)
    ___CHECK_HEAP(9,4096)
 ___DEF_SLBL(9,___L9_c_23_univ_2d_display)
@@ -14635,14 +14625,12 @@ ___DEF_SLBL(11,___L11_c_23_univ_2d_display)
    ___SET_R3(___R1)
    ___SET_R1(___STK(-5))
    ___ADJFP(-6)
-___DEF_GLBL(___L60_c_23_univ_2d_display)
-   ___SET_R2(___R3)
-   ___IF(___FIXLE(___R2,___FIX(253L)))
+   ___IF(___FIXLE(___R3,___FIX(253L)))
    ___GOTO(___L58_c_23_univ_2d_display)
    ___END_IF
-___DEF_GLBL(___L61_c_23_univ_2d_display)
+___DEF_GLBL(___L60_c_23_univ_2d_display)
    ___SET_STK(1,___R1)
-   ___SET_R1(___R2)
+   ___SET_R1(___R3)
    ___SET_R2(___CHR(32))
    ___SET_R0(___LBL(12))
    ___ADJFP(6)
@@ -14652,169 +14640,147 @@ ___DEF_SLBL(12,___L12_c_23_univ_2d_display)
    ___SET_R1(___STK(-5))
    ___ADJFP(-6)
    ___GOTO(___L59_c_23_univ_2d_display)
-___DEF_GLBL(___L62_c_23_univ_2d_display)
-   ___IF(___NOT(___EQP(___R2,___FIX(-1L))))
-   ___GOTO(___L63_c_23_univ_2d_display)
-   ___END_IF
-   ___SET_R3(___FIX(-2L))
-   ___IF(___NOTFALSEP(___R3))
-   ___GOTO(___L60_c_23_univ_2d_display)
-   ___END_IF
-   ___GOTO(___L64_c_23_univ_2d_display)
-___DEF_GLBL(___L63_c_23_univ_2d_display)
-   ___IF(___FIXMULP_NOTFALSEP(___R3,___FIX(2L),___R2))
-   ___GOTO(___L60_c_23_univ_2d_display)
-   ___END_IF
-   ___SET_R3(___FAL)
-___DEF_GLBL(___L64_c_23_univ_2d_display)
+___DEF_GLBL(___L61_c_23_univ_2d_display)
    ___SET_STK(1,___R1)
    ___SET_R1(___FIX(2L))
    ___SET_R0(___LBL(11))
    ___ADJFP(6)
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__2a_)
-___DEF_GLBL(___L65_c_23_univ_2d_display)
+___DEF_GLBL(___L62_c_23_univ_2d_display)
    ___SET_STK(1,___R1)
    ___SET_R1(___FIX(2L))
-   ___SET_R0(___LBL(13))
+   ___SET_R0(___LBL(11))
    ___ADJFP(6)
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__2a_)
-___DEF_SLBL(13,___L13_c_23_univ_2d_display)
-   ___SET_R2(___R1)
-   ___SET_R1(___STK(-5))
-   ___ADJFP(-6)
-   ___IF(___FIXLE(___R2,___FIX(253L)))
-   ___GOTO(___L58_c_23_univ_2d_display)
-   ___END_IF
-   ___GOTO(___L61_c_23_univ_2d_display)
-___DEF_GLBL(___L66_c_23_univ_2d_display)
+___DEF_GLBL(___L63_c_23_univ_2d_display)
    ___SET_R1(___VOID)
    ___JUMPRET(___R0)
-___DEF_SLBL(14,___L14_c_23_univ_2d_display)
+___DEF_SLBL(13,___L13_c_23_univ_2d_display)
    ___SET_R3(___STK(-5))
    ___SET_R2(___STK(-6))
    ___SET_R1(___STK(-7))
    ___SET_R0(___STK(-8))
    ___ADJFP(-9)
    ___IF(___FIXNUMP(___R2))
-   ___GOTO(___L68_c_23_univ_2d_display)
+   ___GOTO(___L65_c_23_univ_2d_display)
    ___END_IF
-   ___GOTO(___L77_c_23_univ_2d_display)
-___DEF_SLBL(15,___L15_c_23_univ_2d_display)
+   ___GOTO(___L74_c_23_univ_2d_display)
+___DEF_SLBL(14,___L14_c_23_univ_2d_display)
    ___SET_R4(___R1)
    ___SET_R3(___STK(-5))
    ___SET_R2(___STK(-6))
    ___SET_R1(___STK(-7))
    ___SET_R0(___STK(-8))
    ___ADJFP(-9)
-___DEF_GLBL(___L67_c_23_univ_2d_display)
+___DEF_GLBL(___L64_c_23_univ_2d_display)
    ___SET_R4(___STRINGREF(___R1,___R4))
    ___IF(___NOT(___CHAREQP(___R4,___CHR(10))))
    ___GOTO(___L56_c_23_univ_2d_display)
    ___END_IF
    ___IF(___NOT(___FIXNUMP(___R2)))
-   ___GOTO(___L77_c_23_univ_2d_display)
+   ___GOTO(___L74_c_23_univ_2d_display)
    ___END_IF
-___DEF_GLBL(___L68_c_23_univ_2d_display)
+___DEF_GLBL(___L65_c_23_univ_2d_display)
    ___IF(___NOT(___FIXEQ(___R2,___FIX(0L))))
-   ___GOTO(___L72_c_23_univ_2d_display)
+   ___GOTO(___L69_c_23_univ_2d_display)
    ___END_IF
-___DEF_GLBL(___L69_c_23_univ_2d_display)
+___DEF_GLBL(___L66_c_23_univ_2d_display)
    ___SET_R4(___STRINGLENGTH(___R1))
    ___IF(___NOT(___FIXNUMSP(___FIXNUMSP2(___FIXNUMSP1(___R3),___R4))))
-   ___GOTO(___L71_c_23_univ_2d_display)
+   ___GOTO(___L68_c_23_univ_2d_display)
    ___END_IF
    ___IF(___NOT(___FIXEQ(___R3,___R4)))
-   ___GOTO(___L72_c_23_univ_2d_display)
+   ___GOTO(___L69_c_23_univ_2d_display)
    ___END_IF
-___DEF_GLBL(___L70_c_23_univ_2d_display)
+___DEF_GLBL(___L67_c_23_univ_2d_display)
    ___SET_R2(___STK(-2))
-   ___POLL(16)
-___DEF_SLBL(16,___L16_c_23_univ_2d_display)
+   ___POLL(15)
+___DEF_SLBL(15,___L15_c_23_univ_2d_display)
    ___ADJFP(-3)
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23_display)
-___DEF_GLBL(___L71_c_23_univ_2d_display)
+___DEF_GLBL(___L68_c_23_univ_2d_display)
    ___IF(___NOT(___IFLONUMSP(___IFLONUMSP2(___IFLONUMSP1(___R3),___R4))))
-   ___GOTO(___L74_c_23_univ_2d_display)
+   ___GOTO(___L71_c_23_univ_2d_display)
    ___END_IF
    ___SET_F64(___F64V1,___F64UNBOXI(___R3))
    ___SET_F64(___F64V2,___F64UNBOXI(___R4))
    ___IF(___F64EQ(___F64V1,___F64V2))
-   ___GOTO(___L70_c_23_univ_2d_display)
+   ___GOTO(___L67_c_23_univ_2d_display)
    ___END_IF
-___DEF_GLBL(___L72_c_23_univ_2d_display)
+___DEF_GLBL(___L69_c_23_univ_2d_display)
    ___SET_STK(-1,___R0)
-   ___SET_R0(___LBL(17))
+   ___SET_R0(___LBL(16))
    ___ADJFP(5)
    ___JUMPPRM(___SET_NARGS(3),___PRM__23__23_substring)
-___DEF_SLBL(17,___L17_c_23_univ_2d_display)
+___DEF_SLBL(16,___L16_c_23_univ_2d_display)
    ___SET_R2(___STK(-7))
    ___SET_R0(___STK(-6))
-   ___POLL(18)
+   ___POLL(17)
+___DEF_SLBL(17,___L17_c_23_univ_2d_display)
+   ___GOTO(___L70_c_23_univ_2d_display)
 ___DEF_SLBL(18,___L18_c_23_univ_2d_display)
-   ___GOTO(___L73_c_23_univ_2d_display)
-___DEF_SLBL(19,___L19_c_23_univ_2d_display)
    ___SET_R2(___STK(-7))
    ___SET_R1(___STK(-5))
    ___SET_R0(___STK(-6))
-   ___POLL(20)
-___DEF_SLBL(20,___L20_c_23_univ_2d_display)
-___DEF_GLBL(___L73_c_23_univ_2d_display)
+   ___POLL(19)
+___DEF_SLBL(19,___L19_c_23_univ_2d_display)
+___DEF_GLBL(___L70_c_23_univ_2d_display)
    ___ADJFP(-8)
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23_display)
-___DEF_GLBL(___L74_c_23_univ_2d_display)
+___DEF_GLBL(___L71_c_23_univ_2d_display)
    ___SET_STK(-1,___R0)
    ___SET_STK(0,___R1)
    ___SET_STK(1,___R2)
    ___SET_STK(2,___R3)
    ___SET_R2(___R4)
    ___SET_R1(___R3)
-   ___SET_R0(___LBL(21))
+   ___SET_R0(___LBL(20))
    ___ADJFP(5)
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__3d_)
-___DEF_SLBL(21,___L21_c_23_univ_2d_display)
+___DEF_SLBL(20,___L20_c_23_univ_2d_display)
    ___IF(___NOT(___NOTFALSEP(___R1)))
-   ___GOTO(___L75_c_23_univ_2d_display)
-   ___END_IF
-   ___SET_R1(___STK(-5))
-   ___SET_R0(___STK(-6))
-   ___ADJFP(-5)
-   ___GOTO(___L70_c_23_univ_2d_display)
-___DEF_SLBL(22,___L22_c_23_univ_2d_display)
-   ___IF(___NOTFALSEP(___R1))
-   ___GOTO(___L76_c_23_univ_2d_display)
-   ___END_IF
-___DEF_GLBL(___L75_c_23_univ_2d_display)
-   ___SET_R3(___STK(-3))
-   ___SET_R2(___STK(-4))
-   ___SET_R1(___STK(-5))
-   ___SET_R0(___STK(-6))
-   ___ADJFP(-5)
    ___GOTO(___L72_c_23_univ_2d_display)
-___DEF_GLBL(___L76_c_23_univ_2d_display)
+   ___END_IF
+   ___SET_R1(___STK(-5))
+   ___SET_R0(___STK(-6))
+   ___ADJFP(-5)
+   ___GOTO(___L67_c_23_univ_2d_display)
+___DEF_SLBL(21,___L21_c_23_univ_2d_display)
+   ___IF(___NOTFALSEP(___R1))
+   ___GOTO(___L73_c_23_univ_2d_display)
+   ___END_IF
+___DEF_GLBL(___L72_c_23_univ_2d_display)
    ___SET_R3(___STK(-3))
    ___SET_R2(___STK(-4))
    ___SET_R1(___STK(-5))
    ___SET_R0(___STK(-6))
    ___ADJFP(-5)
    ___GOTO(___L69_c_23_univ_2d_display)
-___DEF_GLBL(___L77_c_23_univ_2d_display)
+___DEF_GLBL(___L73_c_23_univ_2d_display)
+   ___SET_R3(___STK(-3))
+   ___SET_R2(___STK(-4))
+   ___SET_R1(___STK(-5))
+   ___SET_R0(___STK(-6))
+   ___ADJFP(-5)
+   ___GOTO(___L66_c_23_univ_2d_display)
+___DEF_GLBL(___L74_c_23_univ_2d_display)
    ___SET_STK(-1,___R0)
    ___SET_STK(0,___R1)
    ___SET_STK(1,___R2)
    ___SET_STK(2,___R3)
    ___SET_R1(___R2)
    ___SET_R2(___FIX(0L))
-   ___SET_R0(___LBL(22))
+   ___SET_R0(___LBL(21))
    ___ADJFP(5)
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__3d_)
-___DEF_GLBL(___L78_c_23_univ_2d_display)
+___DEF_GLBL(___L75_c_23_univ_2d_display)
    ___IF(___FIXNUMP(___R3))
-   ___GOTO(___L79_c_23_univ_2d_display)
+   ___GOTO(___L76_c_23_univ_2d_display)
    ___END_IF
-   ___GOTO(___L80_c_23_univ_2d_display)
-___DEF_SLBL(23,___L23_c_23_univ_2d_display)
+   ___GOTO(___L77_c_23_univ_2d_display)
+___DEF_SLBL(22,___L22_c_23_univ_2d_display)
    ___IF(___NOTFALSEP(___R1))
-   ___GOTO(___L81_c_23_univ_2d_display)
+   ___GOTO(___L78_c_23_univ_2d_display)
    ___END_IF
    ___SET_R3(___STK(-5))
    ___SET_R2(___STK(-6))
@@ -14822,31 +14788,31 @@ ___DEF_SLBL(23,___L23_c_23_univ_2d_display)
    ___SET_R0(___STK(-8))
    ___ADJFP(-9)
    ___IF(___NOT(___FIXNUMP(___R3)))
-   ___GOTO(___L80_c_23_univ_2d_display)
+   ___GOTO(___L77_c_23_univ_2d_display)
    ___END_IF
-___DEF_GLBL(___L79_c_23_univ_2d_display)
-   ___IF(___FIXSUBP_NOTFALSEP(___R4,___R3,___FIX(1L)))
-   ___GOTO(___L67_c_23_univ_2d_display)
+___DEF_GLBL(___L76_c_23_univ_2d_display)
+   ___IF(___FIXSUBPCONSTY_NOTFALSEP(___R4,___R3,___FIX(1L)))
+   ___GOTO(___L64_c_23_univ_2d_display)
    ___END_IF
    ___SET_R4(___FAL)
-___DEF_GLBL(___L80_c_23_univ_2d_display)
+___DEF_GLBL(___L77_c_23_univ_2d_display)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R2)
    ___SET_STK(4,___R3)
    ___SET_R1(___R3)
    ___SET_R2(___FIX(1L))
-   ___SET_R0(___LBL(15))
+   ___SET_R0(___LBL(14))
    ___ADJFP(9)
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__2d_)
-___DEF_GLBL(___L81_c_23_univ_2d_display)
+___DEF_GLBL(___L78_c_23_univ_2d_display)
    ___SET_R3(___STK(-5))
    ___SET_R2(___STK(-6))
    ___SET_R1(___STK(-7))
    ___SET_R0(___STK(-8))
    ___ADJFP(-9)
    ___GOTO(___L56_c_23_univ_2d_display)
-___DEF_SLBL(24,___L24_c_23_univ_2d_display)
+___DEF_SLBL(23,___L23_c_23_univ_2d_display)
    ___SET_R4(___R1)
    ___SET_R3(___STK(-5))
    ___SET_R2(___STK(-6))
@@ -14856,19 +14822,19 @@ ___DEF_SLBL(24,___L24_c_23_univ_2d_display)
    ___IF(___FIXNUMP(___R4))
    ___GOTO(___L55_c_23_univ_2d_display)
    ___END_IF
-___DEF_GLBL(___L82_c_23_univ_2d_display)
+___DEF_GLBL(___L79_c_23_univ_2d_display)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R2)
    ___SET_STK(4,___R3)
    ___SET_R1(___R4)
    ___SET_R2(___FIX(1L))
-   ___SET_R0(___LBL(23))
+   ___SET_R0(___LBL(22))
    ___ADJFP(9)
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__3e_)
-___DEF_SLBL(25,___L25_c_23_univ_2d_display)
+___DEF_SLBL(24,___L24_c_23_univ_2d_display)
    ___IF(___NOT(___NOTFALSEP(___R1)))
-   ___GOTO(___L85_c_23_univ_2d_display)
+   ___GOTO(___L82_c_23_univ_2d_display)
    ___END_IF
    ___SET_R3(___STK(-5))
    ___SET_R2(___STK(-6))
@@ -14878,65 +14844,65 @@ ___DEF_SLBL(25,___L25_c_23_univ_2d_display)
    ___IF(___FIXNUMSP(___FIXNUMSP2(___FIXNUMSP1(___R3),___R2)))
    ___GOTO(___L54_c_23_univ_2d_display)
    ___END_IF
-___DEF_GLBL(___L83_c_23_univ_2d_display)
+___DEF_GLBL(___L80_c_23_univ_2d_display)
    ___IF(___IFLONUMSP(___IFLONUMSP2(___IFLONUMSP1(___R3),___R2)))
-   ___GOTO(___L89_c_23_univ_2d_display)
+   ___GOTO(___L86_c_23_univ_2d_display)
    ___END_IF
-___DEF_GLBL(___L84_c_23_univ_2d_display)
+___DEF_GLBL(___L81_c_23_univ_2d_display)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R2)
    ___SET_STK(4,___R3)
    ___SET_R1(___R3)
-   ___SET_R0(___LBL(24))
+   ___SET_R0(___LBL(23))
    ___ADJFP(9)
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__2d_)
-___DEF_GLBL(___L85_c_23_univ_2d_display)
+___DEF_GLBL(___L82_c_23_univ_2d_display)
    ___SET_R0(___STK(-8))
    ___ADJFP(-9)
-   ___GOTO(___L87_c_23_univ_2d_display)
-___DEF_GLBL(___L86_c_23_univ_2d_display)
+   ___GOTO(___L84_c_23_univ_2d_display)
+___DEF_GLBL(___L83_c_23_univ_2d_display)
    ___IF(___NOT(___IFLONUMSP(___IFLONUMSP2(___IFLONUMSP1(___R2),___R3))))
-   ___GOTO(___L88_c_23_univ_2d_display)
+   ___GOTO(___L85_c_23_univ_2d_display)
    ___END_IF
    ___SET_F64(___F64V1,___F64UNBOXI(___R2))
    ___SET_F64(___F64V2,___F64UNBOXI(___R3))
    ___IF(___F64LT(___F64V1,___F64V2))
    ___GOTO(___L53_c_23_univ_2d_display)
    ___END_IF
-___DEF_GLBL(___L87_c_23_univ_2d_display)
+___DEF_GLBL(___L84_c_23_univ_2d_display)
    ___SET_R1(___VOID)
    ___ADJFP(-3)
    ___JUMPRET(___R0)
-___DEF_GLBL(___L88_c_23_univ_2d_display)
+___DEF_GLBL(___L85_c_23_univ_2d_display)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R2)
    ___SET_STK(4,___R3)
    ___SET_R2(___R3)
    ___SET_R1(___STK(3))
-   ___SET_R0(___LBL(25))
+   ___SET_R0(___LBL(24))
    ___ADJFP(9)
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__3c_)
-___DEF_GLBL(___L89_c_23_univ_2d_display)
+___DEF_GLBL(___L86_c_23_univ_2d_display)
    ___SET_F64(___F64V1,___F64UNBOXI(___R3))
    ___SET_F64(___F64V2,___F64UNBOXI(___R2))
    ___SET_F64(___F64V3,___F64SUB(___F64V1,___F64V2))
    ___SET_R4(___F64BOX(___F64V3))
-   ___CHECK_HEAP_FLO(26,4096)
+   ___CHECK_HEAP_FLO(25,4096)
+___DEF_SLBL(25,___L25_c_23_univ_2d_display)
+   ___GOTO(___L79_c_23_univ_2d_display)
 ___DEF_SLBL(26,___L26_c_23_univ_2d_display)
-   ___GOTO(___L82_c_23_univ_2d_display)
-___DEF_SLBL(27,___L27_c_23_univ_2d_display)
    ___SETBOX(___STK(-9),___TRU)
    ___SET_R3(___STK(-6))
    ___SET_R2(___STK(-7))
    ___SET_R1(___STK(-9))
    ___SET_R0(___STK(-8))
    ___ADJFP(-10)
-   ___POLL(28)
-___DEF_SLBL(28,___L28_c_23_univ_2d_display)
+   ___POLL(27)
+___DEF_SLBL(27,___L27_c_23_univ_2d_display)
    ___GOTO(___L48_c_23_univ_2d_display)
-___DEF_SLBL(29,___L29_c_23_univ_2d_display)
+___DEF_SLBL(28,___L28_c_23_univ_2d_display)
    ___SET_R3(___R1)
    ___SET_R4(___STK(-5))
    ___SET_R2(___STK(-6))
@@ -14946,49 +14912,49 @@ ___DEF_SLBL(29,___L29_c_23_univ_2d_display)
    ___IF(___CHAREQP(___R4,___CHR(10)))
    ___GOTO(___L51_c_23_univ_2d_display)
    ___END_IF
-___DEF_GLBL(___L90_c_23_univ_2d_display)
+___DEF_GLBL(___L87_c_23_univ_2d_display)
    ___ADJFP(-1)
-   ___POLL(30)
-___DEF_SLBL(30,___L30_c_23_univ_2d_display)
+   ___POLL(29)
+___DEF_SLBL(29,___L29_c_23_univ_2d_display)
    ___GOTO(___L49_c_23_univ_2d_display)
-___DEF_GLBL(___L91_c_23_univ_2d_display)
+___DEF_GLBL(___L88_c_23_univ_2d_display)
    ___ADJFP(-1)
-___DEF_GLBL(___L92_c_23_univ_2d_display)
+___DEF_GLBL(___L89_c_23_univ_2d_display)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R2)
    ___SET_STK(4,___R4)
    ___SET_R1(___R3)
    ___SET_R2(___FIX(1L))
-   ___SET_R0(___LBL(29))
+   ___SET_R0(___LBL(28))
    ___ADJFP(9)
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__2b_)
-___DEF_GLBL(___L93_c_23_univ_2d_display)
+___DEF_GLBL(___L90_c_23_univ_2d_display)
    ___IF(___NOT(___IFLONUMSP(___IFLONUMSP2(___IFLONUMSP1(___R3),___R4))))
-   ___GOTO(___L95_c_23_univ_2d_display)
+   ___GOTO(___L92_c_23_univ_2d_display)
    ___END_IF
    ___SET_F64(___F64V1,___F64UNBOXI(___R3))
    ___SET_F64(___F64V2,___F64UNBOXI(___R4))
    ___IF(___F64LT(___F64V1,___F64V2))
    ___GOTO(___L50_c_23_univ_2d_display)
    ___END_IF
-___DEF_GLBL(___L94_c_23_univ_2d_display)
-   ___POLL(31)
-___DEF_SLBL(31,___L31_c_23_univ_2d_display)
+___DEF_GLBL(___L91_c_23_univ_2d_display)
+   ___POLL(30)
+___DEF_SLBL(30,___L30_c_23_univ_2d_display)
    ___GOTO(___L52_c_23_univ_2d_display)
-___DEF_GLBL(___L95_c_23_univ_2d_display)
+___DEF_GLBL(___L92_c_23_univ_2d_display)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R2)
    ___SET_STK(4,___R3)
    ___SET_R2(___R4)
    ___SET_R1(___R3)
-   ___SET_R0(___LBL(32))
+   ___SET_R0(___LBL(31))
    ___ADJFP(9)
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__3c_)
-___DEF_SLBL(32,___L32_c_23_univ_2d_display)
+___DEF_SLBL(31,___L31_c_23_univ_2d_display)
    ___IF(___NOT(___NOTFALSEP(___R1)))
-   ___GOTO(___L96_c_23_univ_2d_display)
+   ___GOTO(___L93_c_23_univ_2d_display)
    ___END_IF
    ___SET_R3(___STK(-5))
    ___SET_R2(___STK(-6))
@@ -14996,79 +14962,112 @@ ___DEF_SLBL(32,___L32_c_23_univ_2d_display)
    ___SET_R0(___STK(-8))
    ___ADJFP(-9)
    ___GOTO(___L50_c_23_univ_2d_display)
-___DEF_GLBL(___L96_c_23_univ_2d_display)
+___DEF_GLBL(___L93_c_23_univ_2d_display)
    ___SET_R3(___STK(-5))
    ___SET_R2(___STK(-6))
    ___SET_R1(___STK(-7))
    ___SET_R0(___STK(-8))
    ___ADJFP(-9)
-   ___POLL(33)
-___DEF_SLBL(33,___L33_c_23_univ_2d_display)
+   ___POLL(32)
+___DEF_SLBL(32,___L32_c_23_univ_2d_display)
    ___GOTO(___L52_c_23_univ_2d_display)
-___DEF_GLBL(___L97_c_23_univ_2d_display)
+___DEF_GLBL(___L94_c_23_univ_2d_display)
    ___IF(___NOT(___SYMBOLP(___R3)))
-   ___GOTO(___L100_c_23_univ_2d_display)
+   ___GOTO(___L97_c_23_univ_2d_display)
    ___END_IF
    ___IF(___SYMBOL2STRINGP_NOTFALSEP(___R4,___R3))
-   ___GOTO(___L98_c_23_univ_2d_display)
+   ___GOTO(___L95_c_23_univ_2d_display)
    ___END_IF
    ___SET_R4(___FAL)
-   ___GOTO(___L99_c_23_univ_2d_display)
-___DEF_SLBL(34,___L34_c_23_univ_2d_display)
+   ___GOTO(___L96_c_23_univ_2d_display)
+___DEF_SLBL(33,___L33_c_23_univ_2d_display)
    ___SET_R4(___R1)
    ___SET_R2(___STK(-4))
    ___SET_R1(___STK(-5))
    ___SET_R0(___STK(-6))
    ___ADJFP(-7)
-___DEF_GLBL(___L98_c_23_univ_2d_display)
+___DEF_GLBL(___L95_c_23_univ_2d_display)
    ___SET_R3(___R4)
-   ___POLL(35)
-___DEF_SLBL(35,___L35_c_23_univ_2d_display)
+   ___POLL(34)
+___DEF_SLBL(34,___L34_c_23_univ_2d_display)
    ___GOTO(___L47_c_23_univ_2d_display)
-___DEF_GLBL(___L99_c_23_univ_2d_display)
+___DEF_GLBL(___L96_c_23_univ_2d_display)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R2)
    ___SET_R1(___R3)
-   ___SET_R0(___LBL(34))
+   ___SET_R0(___LBL(33))
    ___ADJFP(7)
    ___JUMPPRM(___SET_NARGS(1),___PRM__23__23_symbol_2d__3e_string)
-___DEF_GLBL(___L100_c_23_univ_2d_display)
+___DEF_GLBL(___L97_c_23_univ_2d_display)
    ___IF(___NOT(___CHARP(___R3)))
-   ___GOTO(___L101_c_23_univ_2d_display)
+   ___GOTO(___L98_c_23_univ_2d_display)
    ___END_IF
    ___BEGIN_ALLOC_STRING(1UL)
    ___ADD_STRING_ELEM(0,___R3)
    ___END_ALLOC_STRING(1)
    ___SET_R3(___GET_STRING(1))
-   ___CHECK_HEAP(36,4096)
+   ___CHECK_HEAP(35,4096)
+___DEF_SLBL(35,___L35_c_23_univ_2d_display)
+   ___POLL(36)
 ___DEF_SLBL(36,___L36_c_23_univ_2d_display)
+   ___GOTO(___L47_c_23_univ_2d_display)
+___DEF_GLBL(___L98_c_23_univ_2d_display)
+   ___IF(___NULLP(___R3))
+   ___GOTO(___L109_c_23_univ_2d_display)
+   ___END_IF
+   ___IF(___NOT(___PAIRP(___R3)))
+   ___GOTO(___L107_c_23_univ_2d_display)
+   ___END_IF
+   ___SET_R4(___CAR(___R3))
+   ___SET_R3(___CDR(___R3))
+   ___IF_GOTO(___EQP(___R4,___SYM__24__24_indent_24__24_),___L101_c_23_univ_2d_display)
+   ___IF_GOTO(___EQP(___R4,___SYM__24__24_box_24__24_),___L100_c_23_univ_2d_display)
+   ___IF_GOTO(___EQP(___R4,___SYM_cdr_2d_x),___L99_c_23_univ_2d_display)
+   ___IF_GOTO(___EQP(___R4,___SYM_null_3f_),___L99_c_23_univ_2d_display)
+   ___SET_STK(1,___R0)
+   ___SET_STK(2,___R1)
+   ___SET_STK(3,___R2)
+   ___SET_STK(4,___R3)
+   ___SET_STK(8,___STK(0))
+   ___SET_R3(___R4)
+   ___SET_R0(___LBL(38))
+   ___ADJFP(8)
    ___POLL(37)
 ___DEF_SLBL(37,___L37_c_23_univ_2d_display)
    ___GOTO(___L47_c_23_univ_2d_display)
+___DEF_SLBL(38,___L38_c_23_univ_2d_display)
+   ___SET_R3(___STK(-3))
+   ___SET_R2(___STK(-4))
+   ___SET_R1(___STK(-5))
+   ___SET_R0(___STK(-6))
+   ___ADJFP(-7)
+   ___POLL(39)
+___DEF_SLBL(39,___L39_c_23_univ_2d_display)
+   ___GOTO(___L47_c_23_univ_2d_display)
+___DEF_GLBL(___L99_c_23_univ_2d_display)
+   ___SET_R3(___R4)
+   ___POLL(40)
+___DEF_SLBL(40,___L40_c_23_univ_2d_display)
+   ___GOTO(___L47_c_23_univ_2d_display)
+___DEF_GLBL(___L100_c_23_univ_2d_display)
+   ___SET_R3(___CAR(___R3))
+   ___POLL(41)
+___DEF_SLBL(41,___L41_c_23_univ_2d_display)
+   ___GOTO(___L47_c_23_univ_2d_display)
 ___DEF_GLBL(___L101_c_23_univ_2d_display)
-   ___IF(___NULLP(___R3))
-   ___GOTO(___L111_c_23_univ_2d_display)
-   ___END_IF
-   ___IF(___NOT(___PAIRP(___R3)))
-   ___GOTO(___L109_c_23_univ_2d_display)
-   ___END_IF
-   ___SET_R4(___CAR(___R3))
-   ___IF(___NOT(___EQP(___R4,___SYM__24__24_indent_24__24_)))
-   ___GOTO(___L107_c_23_univ_2d_display)
-   ___END_IF
    ___SET_R4(___UNBOX(___R1))
    ___IF(___NOT(___FIXNUMP(___R4)))
    ___GOTO(___L106_c_23_univ_2d_display)
    ___END_IF
    ___ADJFP(1)
-   ___IF(___NOT(___FIXADDP_NOTFALSEP(___STK(0),___R4,___FIX(1L))))
+   ___IF(___NOT(___FIXADDPCONSTY_NOTFALSEP(___STK(0),___R4,___FIX(1L))))
    ___SET_STK(0,___FAL)
    ___GOTO(___L105_c_23_univ_2d_display)
    ___END_IF
    ___SET_R4(___STK(0))
    ___GOTO(___L102_c_23_univ_2d_display)
-___DEF_SLBL(38,___L38_c_23_univ_2d_display)
+___DEF_SLBL(42,___L42_c_23_univ_2d_display)
    ___SET_R4(___R1)
    ___SET_R3(___STK(-3))
    ___SET_R2(___STK(-4))
@@ -15080,26 +15079,25 @@ ___DEF_GLBL(___L102_c_23_univ_2d_display)
    ___SET_STK(0,___R0)
    ___SET_STK(1,___R1)
    ___SET_STK(7,___STK(-1))
-   ___SET_R3(___CDR(___R3))
-   ___SET_R0(___LBL(40))
+   ___SET_R0(___LBL(44))
    ___ADJFP(7)
-   ___POLL(39)
-___DEF_SLBL(39,___L39_c_23_univ_2d_display)
+   ___POLL(43)
+___DEF_SLBL(43,___L43_c_23_univ_2d_display)
    ___GOTO(___L47_c_23_univ_2d_display)
-___DEF_SLBL(40,___L40_c_23_univ_2d_display)
+___DEF_SLBL(44,___L44_c_23_univ_2d_display)
    ___SET_R1(___UNBOX(___STK(-5)))
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L103_c_23_univ_2d_display)
    ___END_IF
-   ___IF(___FIXSUBP_NOTFALSEP(___R2,___R1,___FIX(1L)))
+   ___IF(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R1,___FIX(1L)))
    ___GOTO(___L104_c_23_univ_2d_display)
    ___END_IF
    ___SET_R2(___FAL)
 ___DEF_GLBL(___L103_c_23_univ_2d_display)
    ___SET_R2(___FIX(1L))
-   ___SET_R0(___LBL(41))
+   ___SET_R0(___LBL(45))
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__2d_)
-___DEF_SLBL(41,___L41_c_23_univ_2d_display)
+___DEF_SLBL(45,___L45_c_23_univ_2d_display)
    ___SET_R2(___R1)
 ___DEF_GLBL(___L104_c_23_univ_2d_display)
    ___SETBOX(___STK(-5),___R2) ___SET_R1(___STK(-5))
@@ -15112,7 +15110,7 @@ ___DEF_GLBL(___L105_c_23_univ_2d_display)
    ___SET_STK(3,___R3)
    ___SET_R1(___R4)
    ___SET_R2(___FIX(1L))
-   ___SET_R0(___LBL(38))
+   ___SET_R0(___LBL(42))
    ___ADJFP(6)
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__2b_)
 ___DEF_GLBL(___L106_c_23_univ_2d_display)
@@ -15122,61 +15120,32 @@ ___DEF_GLBL(___L106_c_23_univ_2d_display)
    ___SET_STK(4,___R3)
    ___SET_R1(___R4)
    ___SET_R2(___FIX(1L))
-   ___SET_R0(___LBL(38))
+   ___SET_R0(___LBL(42))
    ___ADJFP(7)
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__2b_)
 ___DEF_GLBL(___L107_c_23_univ_2d_display)
-   ___IF(___NOT(___EQP(___R4,___SYM__24__24_box_24__24_)))
-   ___GOTO(___L108_c_23_univ_2d_display)
-   ___END_IF
-   ___SET_R3(___CADR(___R3))
-   ___POLL(42)
-___DEF_SLBL(42,___L42_c_23_univ_2d_display)
-   ___GOTO(___L47_c_23_univ_2d_display)
-___DEF_GLBL(___L108_c_23_univ_2d_display)
-   ___SET_STK(1,___R0)
-   ___SET_STK(2,___R1)
-   ___SET_STK(3,___R2)
-   ___SET_STK(4,___R3)
-   ___SET_STK(8,___STK(0))
-   ___SET_R3(___CAR(___R3))
-   ___SET_R0(___LBL(3))
-   ___ADJFP(8)
-   ___POLL(43)
-___DEF_SLBL(43,___L43_c_23_univ_2d_display)
-   ___GOTO(___L47_c_23_univ_2d_display)
-___DEF_GLBL(___L109_c_23_univ_2d_display)
    ___IF(___VECTORP(___R3))
-   ___GOTO(___L110_c_23_univ_2d_display)
+   ___GOTO(___L108_c_23_univ_2d_display)
    ___END_IF
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R3)
    ___SET_R3(___R2)
    ___SET_R2(___R1)
    ___SET_R1(___STK(0))
-   ___SET_R0(___LBL(19))
+   ___SET_R0(___LBL(18))
    ___ADJFP(7)
-   ___POLL(44)
-___DEF_SLBL(44,___L44_c_23_univ_2d_display)
+   ___POLL(46)
+___DEF_SLBL(46,___L46_c_23_univ_2d_display)
    ___GOTO(___L57_c_23_univ_2d_display)
-___DEF_GLBL(___L110_c_23_univ_2d_display)
+___DEF_GLBL(___L108_c_23_univ_2d_display)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R2)
    ___SET_R1(___R3)
-   ___SET_R0(___LBL(45))
+   ___SET_R0(___LBL(3))
    ___ADJFP(7)
    ___JUMPPRM(___SET_NARGS(1),___PRM__23__23_vector_2d__3e_list)
-___DEF_SLBL(45,___L45_c_23_univ_2d_display)
-   ___SET_R3(___R1)
-   ___SET_R2(___STK(-4))
-   ___SET_R1(___STK(-5))
-   ___SET_R0(___STK(-6))
-   ___ADJFP(-7)
-   ___POLL(46)
-___DEF_SLBL(46,___L46_c_23_univ_2d_display)
-   ___GOTO(___L47_c_23_univ_2d_display)
-___DEF_GLBL(___L111_c_23_univ_2d_display)
+___DEF_GLBL(___L109_c_23_univ_2d_display)
    ___SET_R1(___TRU)
    ___ADJFP(-1)
    ___JUMPRET(___R0)
@@ -15619,8 +15588,6 @@ ___DEF_P_HLBL(___L70_c_23_univ_2d_emit_2d_popcount_21_)
 ___DEF_P_HLBL(___L71_c_23_univ_2d_emit_2d_popcount_21_)
 ___DEF_P_HLBL(___L72_c_23_univ_2d_emit_2d_popcount_21_)
 ___DEF_P_HLBL(___L73_c_23_univ_2d_emit_2d_popcount_21_)
-___DEF_P_HLBL(___L74_c_23_univ_2d_emit_2d_popcount_21_)
-___DEF_P_HLBL(___L75_c_23_univ_2d_emit_2d_popcount_21_)
 ___END_P_HLBL
 ___BEGIN_P_SW
 ___DEF_SLBL(0,___L0_c_23_univ_2d_emit_2d_popcount_21_)
@@ -15642,7 +15609,7 @@ ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R2(___STK(-4))
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(3),___PRC(658),___L_c_23_univ_2d_emit_2d_bitand)
+   ___JUMPINT(___SET_NARGS(3),___PRC(656),___L_c_23_univ_2d_emit_2d_bitand)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_popcount_21_)
    ___BEGIN_ALLOC_LIST(3UL,___R1)
    ___ADD_LIST_ELEM(1,___SUB(35))
@@ -15653,7 +15620,7 @@ ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R0(___LBL(5))
    ___CHECK_HEAP(4,4096)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_popcount_21_)
-   ___JUMPINT(___SET_NARGS(2),___PRC(452),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
+   ___JUMPINT(___SET_NARGS(2),___PRC(450),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
 ___DEF_SLBL(5,___L5_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-4))
@@ -15662,9 +15629,9 @@ ___DEF_SLBL(5,___L5_c_23_univ_2d_emit_2d_popcount_21_)
    ___ADJFP(-7)
    ___POLL(6)
 ___DEF_SLBL(6,___L6_c_23_univ_2d_emit_2d_popcount_21_)
-   ___GOTO(___L77_c_23_univ_2d_emit_2d_popcount_21_)
+   ___GOTO(___L75_c_23_univ_2d_emit_2d_popcount_21_)
 ___DEF_SLBL(7,___L7_c_23_univ_2d_emit_2d_popcount_21_)
-___DEF_GLBL(___L76_c_23_univ_2d_emit_2d_popcount_21_)
+___DEF_GLBL(___L74_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R3(___R1)
    ___SET_R1(___STK(-5))
    ___SET_R0(___STK(-6))
@@ -15672,14 +15639,14 @@ ___DEF_GLBL(___L76_c_23_univ_2d_emit_2d_popcount_21_)
    ___ADJFP(-7)
    ___POLL(8)
 ___DEF_SLBL(8,___L8_c_23_univ_2d_emit_2d_popcount_21_)
-___DEF_GLBL(___L77_c_23_univ_2d_emit_2d_popcount_21_)
+___DEF_GLBL(___L75_c_23_univ_2d_emit_2d_popcount_21_)
    ___IF(___NOT(___FIXNUMP(___R3)))
-   ___GOTO(___L95_c_23_univ_2d_emit_2d_popcount_21_)
+   ___GOTO(___L93_c_23_univ_2d_emit_2d_popcount_21_)
    ___END_IF
    ___IF(___NOT(___FIXGE(___R3,___FIX(32L))))
-   ___GOTO(___L79_c_23_univ_2d_emit_2d_popcount_21_)
+   ___GOTO(___L77_c_23_univ_2d_emit_2d_popcount_21_)
    ___END_IF
-___DEF_GLBL(___L78_c_23_univ_2d_emit_2d_popcount_21_)
+___DEF_GLBL(___L76_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R2)
@@ -15695,7 +15662,7 @@ ___DEF_SLBL(10,___L10_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(11))
-   ___JUMPINT(___SET_NARGS(3),___PRC(658),___L_c_23_univ_2d_emit_2d_bitand)
+   ___JUMPINT(___SET_NARGS(3),___PRC(656),___L_c_23_univ_2d_emit_2d_bitand)
 ___DEF_SLBL(11,___L11_c_23_univ_2d_emit_2d_popcount_21_)
    ___BEGIN_ALLOC_LIST(3UL,___R1)
    ___ADD_LIST_ELEM(1,___SUB(35))
@@ -15706,7 +15673,7 @@ ___DEF_SLBL(11,___L11_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R0(___LBL(13))
    ___CHECK_HEAP(12,4096)
 ___DEF_SLBL(12,___L12_c_23_univ_2d_emit_2d_popcount_21_)
-   ___JUMPINT(___SET_NARGS(2),___PRC(452),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
+   ___JUMPINT(___SET_NARGS(2),___PRC(450),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
 ___DEF_SLBL(13,___L13_c_23_univ_2d_emit_2d_popcount_21_)
    ___BEGIN_ALLOC_LIST(2UL,___R1)
    ___ADD_LIST_ELEM(1,___STK(-4))
@@ -15717,14 +15684,14 @@ ___DEF_SLBL(13,___L13_c_23_univ_2d_emit_2d_popcount_21_)
 ___DEF_SLBL(14,___L14_c_23_univ_2d_emit_2d_popcount_21_)
    ___ADJFP(-2)
    ___JUMPRET(___STK(2))
-___DEF_GLBL(___L79_c_23_univ_2d_emit_2d_popcount_21_)
+___DEF_GLBL(___L77_c_23_univ_2d_emit_2d_popcount_21_)
    ___IF(___EQP(___R3,___FIX(1L)))
-   ___GOTO(___L80_c_23_univ_2d_emit_2d_popcount_21_)
+   ___GOTO(___L78_c_23_univ_2d_emit_2d_popcount_21_)
    ___END_IF
-   ___GOTO(___L92_c_23_univ_2d_emit_2d_popcount_21_)
+   ___GOTO(___L90_c_23_univ_2d_emit_2d_popcount_21_)
 ___DEF_SLBL(15,___L15_c_23_univ_2d_emit_2d_popcount_21_)
    ___IF(___NOTFALSEP(___R1))
-   ___GOTO(___L91_c_23_univ_2d_emit_2d_popcount_21_)
+   ___GOTO(___L89_c_23_univ_2d_emit_2d_popcount_21_)
    ___END_IF
    ___SET_R3(___STK(-3))
    ___SET_R2(___STK(-4))
@@ -15732,9 +15699,9 @@ ___DEF_SLBL(15,___L15_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R0(___STK(-6))
    ___ADJFP(-7)
    ___IF(___NOT(___EQP(___R3,___FIX(1L))))
-   ___GOTO(___L92_c_23_univ_2d_emit_2d_popcount_21_)
+   ___GOTO(___L90_c_23_univ_2d_emit_2d_popcount_21_)
    ___END_IF
-___DEF_GLBL(___L80_c_23_univ_2d_emit_2d_popcount_21_)
+___DEF_GLBL(___L78_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R2)
@@ -15751,12 +15718,12 @@ ___DEF_SLBL(17,___L17_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(18))
-   ___JUMPINT(___SET_NARGS(3),___PRC(629),___L_c_23_univ_2d_emit_2d__3e__3e_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(627),___L_c_23_univ_2d_emit_2d__3e__3e_)
 ___DEF_SLBL(18,___L18_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(19))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(19,___L19_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_STK(-2,___R1)
    ___SET_R1(___STK(-7))
@@ -15770,24 +15737,24 @@ ___DEF_SLBL(20,___L20_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R2(___STK(-6))
    ___SET_R0(___LBL(21))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(3),___PRC(658),___L_c_23_univ_2d_emit_2d_bitand)
+   ___JUMPINT(___SET_NARGS(3),___PRC(656),___L_c_23_univ_2d_emit_2d_bitand)
 ___DEF_SLBL(21,___L21_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(22))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(22,___L22_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R3(___R1)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(23))
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(543),___L0_c_23_univ_2d_emit_2d__2d_)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(541),___L0_c_23_univ_2d_emit_2d__2d_)
 ___DEF_SLBL(23,___L23_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R3(___R1)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(24))
-   ___JUMPINT(___SET_NARGS(3),___PRC(1047),___L_c_23_univ_2d_emit_2d_assign)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1045),___L_c_23_univ_2d_emit_2d_assign)
 ___DEF_SLBL(24,___L24_c_23_univ_2d_emit_2d_popcount_21_)
    ___BEGIN_ALLOC_LIST(2UL,___R1)
    ___ADD_LIST_ELEM(1,___STK(-4))
@@ -15796,35 +15763,35 @@ ___DEF_SLBL(24,___L24_c_23_univ_2d_emit_2d_popcount_21_)
    ___CHECK_HEAP(25,4096)
 ___DEF_SLBL(25,___L25_c_23_univ_2d_emit_2d_popcount_21_)
    ___IF(___NOT(___FIXNUMP(___STK(-3))))
-   ___GOTO(___L90_c_23_univ_2d_emit_2d_popcount_21_)
+   ___GOTO(___L88_c_23_univ_2d_emit_2d_popcount_21_)
    ___END_IF
    ___IF(___NOT(___FIXMULPCONSTY_NOTFALSEP(___R2,___STK(-3),___FIX(2L))))
    ___SET_R2(___FAL)
-   ___GOTO(___L90_c_23_univ_2d_emit_2d_popcount_21_)
+   ___GOTO(___L88_c_23_univ_2d_emit_2d_popcount_21_)
    ___END_IF
    ___IF(___FIXNUMP(___R2))
-   ___GOTO(___L81_c_23_univ_2d_emit_2d_popcount_21_)
+   ___GOTO(___L79_c_23_univ_2d_emit_2d_popcount_21_)
    ___END_IF
-   ___GOTO(___L89_c_23_univ_2d_emit_2d_popcount_21_)
+   ___GOTO(___L87_c_23_univ_2d_emit_2d_popcount_21_)
 ___DEF_SLBL(26,___L26_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-4))
    ___IF(___NOT(___FIXNUMP(___R2)))
-   ___GOTO(___L89_c_23_univ_2d_emit_2d_popcount_21_)
+   ___GOTO(___L87_c_23_univ_2d_emit_2d_popcount_21_)
    ___END_IF
-___DEF_GLBL(___L81_c_23_univ_2d_emit_2d_popcount_21_)
+___DEF_GLBL(___L79_c_23_univ_2d_emit_2d_popcount_21_)
    ___IF(___FIXGE(___R2,___FIX(32L)))
-   ___GOTO(___L88_c_23_univ_2d_emit_2d_popcount_21_)
-   ___END_IF
-   ___IF(___EQP(___R2,___FIX(1L)))
    ___GOTO(___L86_c_23_univ_2d_emit_2d_popcount_21_)
    ___END_IF
-___DEF_GLBL(___L82_c_23_univ_2d_emit_2d_popcount_21_)
+   ___IF(___EQP(___R2,___FIX(1L)))
+   ___GOTO(___L84_c_23_univ_2d_emit_2d_popcount_21_)
+   ___END_IF
+___DEF_GLBL(___L80_c_23_univ_2d_emit_2d_popcount_21_)
    ___IF(___EQP(___R2,___FIX(2L)))
-   ___GOTO(___L85_c_23_univ_2d_emit_2d_popcount_21_)
+   ___GOTO(___L83_c_23_univ_2d_emit_2d_popcount_21_)
    ___END_IF
    ___IF(___NOT(___EQP(___R2,___FIX(4L))))
-   ___GOTO(___L84_c_23_univ_2d_emit_2d_popcount_21_)
+   ___GOTO(___L82_c_23_univ_2d_emit_2d_popcount_21_)
    ___END_IF
    ___SET_STK(-4,___R1)
    ___SET_STK(-3,___R2)
@@ -15837,23 +15804,23 @@ ___DEF_SLBL(27,___L27_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(28))
-   ___JUMPINT(___SET_NARGS(3),___PRC(629),___L_c_23_univ_2d_emit_2d__3e__3e_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(627),___L_c_23_univ_2d_emit_2d__3e__3e_)
 ___DEF_SLBL(28,___L28_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(29))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(29,___L29_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R3(___R1)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(30))
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(536),___L0_c_23_univ_2d_emit_2d__2b_)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(534),___L0_c_23_univ_2d_emit_2d__2b_)
 ___DEF_SLBL(30,___L30_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(31))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(31,___L31_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_STK(-2,___R1)
    ___SET_R1(___STK(-7))
@@ -15867,13 +15834,13 @@ ___DEF_SLBL(32,___L32_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R2(___STK(-6))
    ___SET_R0(___LBL(33))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(3),___PRC(658),___L_c_23_univ_2d_emit_2d_bitand)
+   ___JUMPINT(___SET_NARGS(3),___PRC(656),___L_c_23_univ_2d_emit_2d_bitand)
 ___DEF_SLBL(33,___L33_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R3(___R1)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(34))
-   ___JUMPINT(___SET_NARGS(3),___PRC(1047),___L_c_23_univ_2d_emit_2d_assign)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1045),___L_c_23_univ_2d_emit_2d_assign)
 ___DEF_SLBL(34,___L34_c_23_univ_2d_emit_2d_popcount_21_)
    ___BEGIN_ALLOC_LIST(2UL,___R1)
    ___ADD_LIST_ELEM(1,___STK(-4))
@@ -15883,37 +15850,37 @@ ___DEF_SLBL(34,___L34_c_23_univ_2d_emit_2d_popcount_21_)
    ___CHECK_HEAP(35,4096)
 ___DEF_SLBL(35,___L35_c_23_univ_2d_emit_2d_popcount_21_)
    ___IF(___NOT(___FIXNUMP(___STK(-3))))
-   ___GOTO(___L83_c_23_univ_2d_emit_2d_popcount_21_)
+   ___GOTO(___L81_c_23_univ_2d_emit_2d_popcount_21_)
    ___END_IF
    ___IF(___FIXMULPCONSTY_NOTFALSEP(___R1,___STK(-3),___FIX(2L)))
-   ___GOTO(___L76_c_23_univ_2d_emit_2d_popcount_21_)
+   ___GOTO(___L74_c_23_univ_2d_emit_2d_popcount_21_)
    ___END_IF
    ___SET_R1(___FAL)
-___DEF_GLBL(___L83_c_23_univ_2d_emit_2d_popcount_21_)
+___DEF_GLBL(___L81_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R1(___STK(-3))
    ___SET_R2(___FIX(2L))
    ___SET_R0(___LBL(7))
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__2a_)
-___DEF_GLBL(___L84_c_23_univ_2d_emit_2d_popcount_21_)
+___DEF_GLBL(___L82_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_STK(-4,___R1)
    ___SET_STK(-3,___R2)
    ___SET_R3(___R2)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(36))
-   ___JUMPINT(___SET_NARGS(3),___PRC(629),___L_c_23_univ_2d_emit_2d__3e__3e_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(627),___L_c_23_univ_2d_emit_2d__3e__3e_)
 ___DEF_SLBL(36,___L36_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(37))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(37,___L37_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R3(___R1)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(33))
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(536),___L0_c_23_univ_2d_emit_2d__2b_)
-___DEF_GLBL(___L85_c_23_univ_2d_emit_2d_popcount_21_)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(534),___L0_c_23_univ_2d_emit_2d__2b_)
+___DEF_GLBL(___L83_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_STK(-4,___R1)
    ___SET_STK(-3,___R2)
    ___SET_R1(___STK(-7))
@@ -15925,12 +15892,12 @@ ___DEF_SLBL(38,___L38_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(39))
-   ___JUMPINT(___SET_NARGS(3),___PRC(658),___L_c_23_univ_2d_emit_2d_bitand)
+   ___JUMPINT(___SET_NARGS(3),___PRC(656),___L_c_23_univ_2d_emit_2d_bitand)
 ___DEF_SLBL(39,___L39_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(40))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(40,___L40_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_STK(-2,___R1)
    ___SET_R1(___STK(-7))
@@ -15943,12 +15910,12 @@ ___DEF_SLBL(41,___L41_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R2(___STK(-9))
    ___SET_R1(___STK(-11))
    ___SET_R0(___LBL(42))
-   ___JUMPINT(___SET_NARGS(3),___PRC(629),___L_c_23_univ_2d_emit_2d__3e__3e_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(627),___L_c_23_univ_2d_emit_2d__3e__3e_)
 ___DEF_SLBL(42,___L42_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-11))
    ___SET_R0(___LBL(43))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(43,___L43_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_STK(-5,___R1)
    ___SET_R1(___STK(-11))
@@ -15960,29 +15927,29 @@ ___DEF_SLBL(44,___L44_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R1(___STK(-11))
    ___SET_R2(___STK(-5))
    ___SET_R0(___LBL(45))
-   ___JUMPINT(___SET_NARGS(3),___PRC(658),___L_c_23_univ_2d_emit_2d_bitand)
+   ___JUMPINT(___SET_NARGS(3),___PRC(656),___L_c_23_univ_2d_emit_2d_bitand)
 ___DEF_SLBL(45,___L45_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-11))
    ___SET_R0(___LBL(46))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(46,___L46_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R3(___R1)
    ___SET_R1(___STK(-11))
    ___SET_R2(___STK(-6))
    ___SET_R0(___LBL(33))
    ___ADJFP(-4)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(536),___L0_c_23_univ_2d_emit_2d__2b_)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(534),___L0_c_23_univ_2d_emit_2d__2b_)
 ___DEF_SLBL(47,___L47_c_23_univ_2d_emit_2d_popcount_21_)
    ___IF(___NOTFALSEP(___R1))
-   ___GOTO(___L87_c_23_univ_2d_emit_2d_popcount_21_)
+   ___GOTO(___L85_c_23_univ_2d_emit_2d_popcount_21_)
    ___END_IF
    ___SET_R2(___STK(-3))
    ___SET_R1(___STK(-4))
    ___IF(___NOT(___EQP(___R2,___FIX(1L))))
-   ___GOTO(___L82_c_23_univ_2d_emit_2d_popcount_21_)
+   ___GOTO(___L80_c_23_univ_2d_emit_2d_popcount_21_)
    ___END_IF
-___DEF_GLBL(___L86_c_23_univ_2d_emit_2d_popcount_21_)
+___DEF_GLBL(___L84_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_STK(-4,___R1)
    ___SET_STK(-3,___R2)
    ___SET_R1(___STK(-7))
@@ -15994,12 +15961,12 @@ ___DEF_SLBL(48,___L48_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(49))
-   ___JUMPINT(___SET_NARGS(3),___PRC(629),___L_c_23_univ_2d_emit_2d__3e__3e_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(627),___L_c_23_univ_2d_emit_2d__3e__3e_)
 ___DEF_SLBL(49,___L49_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(50))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(50,___L50_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_STK(-2,___R1)
    ___SET_R1(___STK(-7))
@@ -16013,59 +15980,48 @@ ___DEF_SLBL(51,___L51_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R2(___STK(-6))
    ___SET_R0(___LBL(52))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(3),___PRC(658),___L_c_23_univ_2d_emit_2d_bitand)
+   ___JUMPINT(___SET_NARGS(3),___PRC(656),___L_c_23_univ_2d_emit_2d_bitand)
 ___DEF_SLBL(52,___L52_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(53))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(53,___L53_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R3(___R1)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-7))
-   ___SET_R0(___LBL(54))
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(543),___L0_c_23_univ_2d_emit_2d__2d_)
-___DEF_SLBL(54,___L54_c_23_univ_2d_emit_2d_popcount_21_)
-   ___BEGIN_ALLOC_LIST(3UL,___R1)
-   ___ADD_LIST_ELEM(1,___SUB(35))
-   ___ADD_LIST_ELEM(2,___STK(-5))
-   ___END_ALLOC_LIST(3)
-   ___SET_R2(___GET_LIST(3))
-   ___SET_R1(___STK(-7))
-   ___SET_R0(___LBL(34))
-   ___CHECK_HEAP(55,4096)
-___DEF_SLBL(55,___L55_c_23_univ_2d_emit_2d_popcount_21_)
-   ___JUMPINT(___SET_NARGS(2),___PRC(452),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
-___DEF_GLBL(___L87_c_23_univ_2d_emit_2d_popcount_21_)
+   ___SET_R0(___LBL(33))
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(541),___L0_c_23_univ_2d_emit_2d__2d_)
+___DEF_GLBL(___L85_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R1(___STK(-4))
-___DEF_GLBL(___L88_c_23_univ_2d_emit_2d_popcount_21_)
+___DEF_GLBL(___L86_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_STK(-4,___R1)
    ___SET_R1(___STK(-7))
    ___SET_R2(___FIX(63L))
    ___SET_R0(___LBL(10))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),592,___G_c_23_univ_2d_emit_2d_int)
-___DEF_GLBL(___L89_c_23_univ_2d_emit_2d_popcount_21_)
+___DEF_GLBL(___L87_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_STK(-4,___R1)
    ___SET_STK(-3,___R2)
    ___SET_R1(___R2)
    ___SET_R2(___FIX(32L))
    ___SET_R0(___LBL(47))
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__3e__3d_)
-___DEF_GLBL(___L90_c_23_univ_2d_emit_2d_popcount_21_)
+___DEF_GLBL(___L88_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_STK(-4,___R1)
    ___SET_R1(___STK(-3))
    ___SET_R2(___FIX(2L))
    ___SET_R0(___LBL(26))
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__2a_)
-___DEF_GLBL(___L91_c_23_univ_2d_emit_2d_popcount_21_)
+___DEF_GLBL(___L89_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R2(___STK(-4))
    ___SET_R1(___STK(-5))
    ___SET_R0(___STK(-6))
    ___ADJFP(-7)
-   ___GOTO(___L78_c_23_univ_2d_emit_2d_popcount_21_)
-___DEF_GLBL(___L92_c_23_univ_2d_emit_2d_popcount_21_)
+   ___GOTO(___L76_c_23_univ_2d_emit_2d_popcount_21_)
+___DEF_GLBL(___L90_c_23_univ_2d_emit_2d_popcount_21_)
    ___IF(___NOT(___EQP(___R3,___FIX(2L))))
-   ___GOTO(___L93_c_23_univ_2d_emit_2d_popcount_21_)
+   ___GOTO(___L91_c_23_univ_2d_emit_2d_popcount_21_)
    ___END_IF
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
@@ -16074,66 +16030,66 @@ ___DEF_GLBL(___L92_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R1(___STK(0))
    ___SET_R2(___BIGFIX(37,858993459LL))
    ___ADJFP(7)
-   ___POLL(56)
-___DEF_SLBL(56,___L56_c_23_univ_2d_emit_2d_popcount_21_)
-   ___SET_R0(___LBL(57))
+   ___POLL(54)
+___DEF_SLBL(54,___L54_c_23_univ_2d_emit_2d_popcount_21_)
+   ___SET_R0(___LBL(55))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),592,___G_c_23_univ_2d_emit_2d_int)
-___DEF_SLBL(57,___L57_c_23_univ_2d_emit_2d_popcount_21_)
+___DEF_SLBL(55,___L55_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R3(___R1)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-7))
-   ___SET_R0(___LBL(58))
-   ___JUMPINT(___SET_NARGS(3),___PRC(658),___L_c_23_univ_2d_emit_2d_bitand)
-___DEF_SLBL(58,___L58_c_23_univ_2d_emit_2d_popcount_21_)
+   ___SET_R0(___LBL(56))
+   ___JUMPINT(___SET_NARGS(3),___PRC(656),___L_c_23_univ_2d_emit_2d_bitand)
+___DEF_SLBL(56,___L56_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-7))
-   ___SET_R0(___LBL(59))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
-___DEF_SLBL(59,___L59_c_23_univ_2d_emit_2d_popcount_21_)
+   ___SET_R0(___LBL(57))
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
+___DEF_SLBL(57,___L57_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_STK(-2,___R1)
    ___SET_R1(___STK(-7))
    ___SET_R2(___FIX(2L))
-   ___SET_R0(___LBL(60))
+   ___SET_R0(___LBL(58))
    ___ADJFP(4)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),592,___G_c_23_univ_2d_emit_2d_int)
-___DEF_SLBL(60,___L60_c_23_univ_2d_emit_2d_popcount_21_)
+___DEF_SLBL(58,___L58_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R3(___R1)
    ___SET_R2(___STK(-9))
    ___SET_R1(___STK(-11))
-   ___SET_R0(___LBL(61))
-   ___JUMPINT(___SET_NARGS(3),___PRC(629),___L_c_23_univ_2d_emit_2d__3e__3e_)
-___DEF_SLBL(61,___L61_c_23_univ_2d_emit_2d_popcount_21_)
+   ___SET_R0(___LBL(59))
+   ___JUMPINT(___SET_NARGS(3),___PRC(627),___L_c_23_univ_2d_emit_2d__3e__3e_)
+___DEF_SLBL(59,___L59_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-11))
-   ___SET_R0(___LBL(62))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
-___DEF_SLBL(62,___L62_c_23_univ_2d_emit_2d_popcount_21_)
+   ___SET_R0(___LBL(60))
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
+___DEF_SLBL(60,___L60_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_STK(-5,___R1)
    ___SET_R1(___STK(-11))
    ___SET_R2(___BIGFIX(37,858993459LL))
-   ___SET_R0(___LBL(63))
+   ___SET_R0(___LBL(61))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),592,___G_c_23_univ_2d_emit_2d_int)
-___DEF_SLBL(63,___L63_c_23_univ_2d_emit_2d_popcount_21_)
+___DEF_SLBL(61,___L61_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R3(___R1)
    ___SET_R1(___STK(-11))
    ___SET_R2(___STK(-5))
-   ___SET_R0(___LBL(64))
-   ___JUMPINT(___SET_NARGS(3),___PRC(658),___L_c_23_univ_2d_emit_2d_bitand)
-___DEF_SLBL(64,___L64_c_23_univ_2d_emit_2d_popcount_21_)
+   ___SET_R0(___LBL(62))
+   ___JUMPINT(___SET_NARGS(3),___PRC(656),___L_c_23_univ_2d_emit_2d_bitand)
+___DEF_SLBL(62,___L62_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-11))
-   ___SET_R0(___LBL(65))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
-___DEF_SLBL(65,___L65_c_23_univ_2d_emit_2d_popcount_21_)
+   ___SET_R0(___LBL(63))
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
+___DEF_SLBL(63,___L63_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R3(___R1)
    ___SET_R1(___STK(-11))
    ___SET_R2(___STK(-6))
    ___SET_R0(___LBL(23))
    ___ADJFP(-4)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(536),___L0_c_23_univ_2d_emit_2d__2b_)
-___DEF_GLBL(___L93_c_23_univ_2d_emit_2d_popcount_21_)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(534),___L0_c_23_univ_2d_emit_2d__2b_)
+___DEF_GLBL(___L91_c_23_univ_2d_emit_2d_popcount_21_)
    ___IF(___NOT(___EQP(___R3,___FIX(4L))))
-   ___GOTO(___L94_c_23_univ_2d_emit_2d_popcount_21_)
+   ___GOTO(___L92_c_23_univ_2d_emit_2d_popcount_21_)
    ___END_IF
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
@@ -16142,47 +16098,47 @@ ___DEF_GLBL(___L93_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R1(___STK(0))
    ___SET_R2(___FIX(4L))
    ___ADJFP(7)
-   ___POLL(66)
-___DEF_SLBL(66,___L66_c_23_univ_2d_emit_2d_popcount_21_)
-   ___SET_R0(___LBL(67))
+   ___POLL(64)
+___DEF_SLBL(64,___L64_c_23_univ_2d_emit_2d_popcount_21_)
+   ___SET_R0(___LBL(65))
    ___JUMPGLONOTSAFE(___SET_NARGS(2),592,___G_c_23_univ_2d_emit_2d_int)
+___DEF_SLBL(65,___L65_c_23_univ_2d_emit_2d_popcount_21_)
+   ___SET_R3(___R1)
+   ___SET_R2(___STK(-5))
+   ___SET_R1(___STK(-7))
+   ___SET_R0(___LBL(66))
+   ___JUMPINT(___SET_NARGS(3),___PRC(627),___L_c_23_univ_2d_emit_2d__3e__3e_)
+___DEF_SLBL(66,___L66_c_23_univ_2d_emit_2d_popcount_21_)
+   ___SET_R2(___R1)
+   ___SET_R1(___STK(-7))
+   ___SET_R0(___LBL(67))
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(67,___L67_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R3(___R1)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(68))
-   ___JUMPINT(___SET_NARGS(3),___PRC(629),___L_c_23_univ_2d_emit_2d__3e__3e_)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(534),___L0_c_23_univ_2d_emit_2d__2b_)
 ___DEF_SLBL(68,___L68_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(69))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(69,___L69_c_23_univ_2d_emit_2d_popcount_21_)
-   ___SET_R3(___R1)
-   ___SET_R2(___STK(-5))
-   ___SET_R1(___STK(-7))
-   ___SET_R0(___LBL(70))
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(536),___L0_c_23_univ_2d_emit_2d__2b_)
-___DEF_SLBL(70,___L70_c_23_univ_2d_emit_2d_popcount_21_)
-   ___SET_R2(___R1)
-   ___SET_R1(___STK(-7))
-   ___SET_R0(___LBL(71))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
-___DEF_SLBL(71,___L71_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_STK(-2,___R1)
    ___SET_R1(___STK(-7))
    ___SET_R2(___FIX(252645135L))
-   ___SET_R0(___LBL(72))
+   ___SET_R0(___LBL(70))
    ___ADJFP(4)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),592,___G_c_23_univ_2d_emit_2d_int)
-___DEF_SLBL(72,___L72_c_23_univ_2d_emit_2d_popcount_21_)
+___DEF_SLBL(70,___L70_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R3(___R1)
    ___SET_R1(___STK(-11))
    ___SET_R2(___STK(-6))
    ___SET_R0(___LBL(23))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(3),___PRC(658),___L_c_23_univ_2d_emit_2d_bitand)
-___DEF_GLBL(___L94_c_23_univ_2d_emit_2d_popcount_21_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(656),___L_c_23_univ_2d_emit_2d_bitand)
+___DEF_GLBL(___L92_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R2)
@@ -16190,22 +16146,22 @@ ___DEF_GLBL(___L94_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R2(___R1)
    ___SET_R1(___STK(0))
    ___ADJFP(7)
-   ___POLL(73)
-___DEF_SLBL(73,___L73_c_23_univ_2d_emit_2d_popcount_21_)
-   ___SET_R0(___LBL(74))
-   ___JUMPINT(___SET_NARGS(3),___PRC(629),___L_c_23_univ_2d_emit_2d__3e__3e_)
-___DEF_SLBL(74,___L74_c_23_univ_2d_emit_2d_popcount_21_)
+   ___POLL(71)
+___DEF_SLBL(71,___L71_c_23_univ_2d_emit_2d_popcount_21_)
+   ___SET_R0(___LBL(72))
+   ___JUMPINT(___SET_NARGS(3),___PRC(627),___L_c_23_univ_2d_emit_2d__3e__3e_)
+___DEF_SLBL(72,___L72_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-7))
-   ___SET_R0(___LBL(75))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
-___DEF_SLBL(75,___L75_c_23_univ_2d_emit_2d_popcount_21_)
+   ___SET_R0(___LBL(73))
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
+___DEF_SLBL(73,___L73_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_R3(___R1)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(23))
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(536),___L0_c_23_univ_2d_emit_2d__2b_)
-___DEF_GLBL(___L95_c_23_univ_2d_emit_2d_popcount_21_)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(534),___L0_c_23_univ_2d_emit_2d__2b_)
+___DEF_GLBL(___L93_c_23_univ_2d_emit_2d_popcount_21_)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R2)
@@ -16221,7 +16177,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_map
 #undef ___PH_LBL0
-#define ___PH_LBL0 414
+#define ___PH_LBL0 412
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -16330,7 +16286,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_call_2d_with_2d_arg_2d_array
 #undef ___PH_LBL0
-#define ___PH_LBL0 424
+#define ___PH_LBL0 422
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -16438,7 +16394,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_var_2d_declaration
 #undef ___PH_LBL0
-#define ___PH_LBL0 434
+#define ___PH_LBL0 432
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -16603,7 +16559,7 @@ ___DEF_GLBL(___L27_c_23_univ_2d_emit_2d_var_2d_declaration)
    ___SET_R2(___FAL)
    ___SET_R0(___LBL(11))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(3),___PRC(3023),___L_c_23_univ_2d_emit_2d_obj_2a_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3021),___L_c_23_univ_2d_emit_2d_obj_2a_)
 ___DEF_GLBL(___L28_c_23_univ_2d_emit_2d_var_2d_declaration)
    ___SET_R1(___STK(-7))
    ___IF(___NOT(___NOTFALSEP(___R1)))
@@ -16630,7 +16586,7 @@ ___DEF_GLBL(___L30_c_23_univ_2d_emit_2d_var_2d_declaration)
    ___SET_R2(___FAL)
    ___SET_R0(___LBL(13))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(3),___PRC(3023),___L_c_23_univ_2d_emit_2d_obj_2a_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3021),___L_c_23_univ_2d_emit_2d_obj_2a_)
 ___DEF_GLBL(___L31_c_23_univ_2d_emit_2d_var_2d_declaration)
    ___IF(___NOT(___NOTFALSEP(___STK(-6))))
    ___GOTO(___L32_c_23_univ_2d_emit_2d_var_2d_declaration)
@@ -16673,7 +16629,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_expr_2d_statement
 #undef ___PH_LBL0
-#define ___PH_LBL0 452
+#define ___PH_LBL0 450
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -16742,7 +16698,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_if
 #undef ___PH_LBL0
-#define ___PH_LBL0 459
+#define ___PH_LBL0 457
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -16967,7 +16923,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_if_2d_expr
 #undef ___PH_LBL0
-#define ___PH_LBL0 480
+#define ___PH_LBL0 478
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -17040,7 +16996,7 @@ ___DEF_SLBL(5,___L5_c_23_univ_2d_emit_2d_if_2d_expr)
    ___SET_R2(___STK(-15))
    ___SET_R0(___LBL(6))
    ___ADJFP(-3)
-   ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(459),___L0_c_23_univ_2d_emit_2d_if)
+   ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(457),___L0_c_23_univ_2d_emit_2d_if)
 ___DEF_SLBL(6,___L6_c_23_univ_2d_emit_2d_if_2d_expr)
    ___SET_R3(___R1)
    ___SET_R1(___STK(-14))
@@ -17085,7 +17041,7 @@ ___DEF_SLBL(10,___L10_c_23_univ_2d_emit_2d_if_2d_expr)
    ___POLL(11)
 ___DEF_SLBL(11,___L11_c_23_univ_2d_emit_2d_if_2d_expr)
    ___ADJFP(-12)
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_GLBL(___L16_c_23_univ_2d_emit_2d_if_2d_expr)
    ___BEGIN_ALLOC_LIST(5UL,___STK(-6))
    ___ADD_LIST_ELEM(1,___SUB(102))
@@ -17105,7 +17061,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_if_2d_instanceof
 #undef ___PH_LBL0
-#define ___PH_LBL0 494
+#define ___PH_LBL0 492
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -17201,14 +17157,14 @@ ___DEF_SLBL(7,___L7_c_23_univ_2d_emit_2d_if_2d_instanceof)
    ___POLL(8)
 ___DEF_SLBL(8,___L8_c_23_univ_2d_emit_2d_if_2d_instanceof)
    ___ADJFP(-11)
-   ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(459),___L0_c_23_univ_2d_emit_2d_if)
+   ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(457),___L0_c_23_univ_2d_emit_2d_if)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_while
 #undef ___PH_LBL0
-#define ___PH_LBL0 504
+#define ___PH_LBL0 502
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -17336,7 +17292,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_try_2d_catch
 #undef ___PH_LBL0
-#define ___PH_LBL0 517
+#define ___PH_LBL0 515
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -17438,7 +17394,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_eq_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 527
+#define ___PH_LBL0 525
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -17535,7 +17491,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d__2b_
 #undef ___PH_LBL0
-#define ___PH_LBL0 536
+#define ___PH_LBL0 534
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -17610,7 +17566,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d__2d_
 #undef ___PH_LBL0
-#define ___PH_LBL0 543
+#define ___PH_LBL0 541
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -17685,7 +17641,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d__2a_
 #undef ___PH_LBL0
-#define ___PH_LBL0 550
+#define ___PH_LBL0 548
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -17745,7 +17701,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d__2f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 556
+#define ___PH_LBL0 554
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -17805,7 +17761,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_wrap
 #undef ___PH_LBL0
-#define ___PH_LBL0 562
+#define ___PH_LBL0 560
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -17877,7 +17833,7 @@ ___DEF_GLBL(___L24_c_23_univ_2d_wrap)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(5))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(5,___L5_c_23_univ_2d_wrap)
    ___SET_STK(-5,___R1)
    ___SET_R1(___STK(-6))
@@ -17889,12 +17845,12 @@ ___DEF_SLBL(6,___L6_c_23_univ_2d_wrap)
    ___SET_R1(___STK(-6))
    ___SET_R2(___STK(-5))
    ___SET_R0(___LBL(7))
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(536),___L0_c_23_univ_2d_emit_2d__2b_)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(534),___L0_c_23_univ_2d_emit_2d__2b_)
 ___DEF_SLBL(7,___L7_c_23_univ_2d_wrap)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(8))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(8,___L8_c_23_univ_2d_wrap)
    ___SET_STK(-5,___R1)
    ___SET_R1(___STK(-6))
@@ -17906,12 +17862,12 @@ ___DEF_SLBL(9,___L9_c_23_univ_2d_wrap)
    ___SET_R1(___STK(-6))
    ___SET_R2(___STK(-5))
    ___SET_R0(___LBL(10))
-   ___JUMPINT(___SET_NARGS(3),___PRC(658),___L_c_23_univ_2d_emit_2d_bitand)
+   ___JUMPINT(___SET_NARGS(3),___PRC(656),___L_c_23_univ_2d_emit_2d_bitand)
 ___DEF_SLBL(10,___L10_c_23_univ_2d_wrap)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(11))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(11,___L11_c_23_univ_2d_wrap)
    ___SET_STK(-5,___R1)
    ___SET_R1(___STK(-6))
@@ -17926,12 +17882,12 @@ ___DEF_SLBL(12,___L12_c_23_univ_2d_wrap)
    ___POLL(13)
 ___DEF_SLBL(13,___L13_c_23_univ_2d_wrap)
    ___ADJFP(-8)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(543),___L0_c_23_univ_2d_emit_2d__2d_)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(541),___L0_c_23_univ_2d_emit_2d__2d_)
 ___DEF_GLBL(___L25_c_23_univ_2d_wrap)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(14))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(14,___L14_c_23_univ_2d_wrap)
    ___SET_STK(-5,___R1)
    ___SET_R1(___STK(-6))
@@ -17943,7 +17899,7 @@ ___DEF_SLBL(15,___L15_c_23_univ_2d_wrap)
    ___SET_R1(___STK(-6))
    ___SET_R2(___STK(-5))
    ___SET_R0(___LBL(16))
-   ___JUMPINT(___SET_NARGS(3),___PRC(623),___L_c_23_univ_2d_emit_2d__3c__3c_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(621),___L_c_23_univ_2d_emit_2d__3c__3c_)
 ___DEF_SLBL(16,___L16_c_23_univ_2d_wrap)
    ___SET_R3(___R1)
    ___SET_R1(___STK(-6))
@@ -17970,12 +17926,12 @@ ___DEF_SLBL(19,___L19_c_23_univ_2d_wrap)
    ___POLL(20)
 ___DEF_SLBL(20,___L20_c_23_univ_2d_wrap)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(3),___PRC(629),___L_c_23_univ_2d_emit_2d__3e__3e_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(627),___L_c_23_univ_2d_emit_2d__3e__3e_)
 ___DEF_GLBL(___L26_c_23_univ_2d_wrap)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(21))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(21,___L21_c_23_univ_2d_wrap)
    ___SET_STK(-5,___R1)
    ___SET_R1(___STK(-6))
@@ -17987,14 +17943,14 @@ ___DEF_SLBL(22,___L22_c_23_univ_2d_wrap)
    ___SET_R1(___STK(-6))
    ___SET_R2(___STK(-5))
    ___SET_R0(___LBL(18))
-   ___JUMPINT(___SET_NARGS(3),___PRC(623),___L_c_23_univ_2d_emit_2d__3c__3c_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(621),___L_c_23_univ_2d_emit_2d__3c__3c_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_wrap_2b_
 #undef ___PH_LBL0
-#define ___PH_LBL0 586
+#define ___PH_LBL0 584
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -18020,7 +17976,7 @@ ___DEF_GLBL(___L_c_23_univ_2d_wrap_2b_)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_wrap_2b_)
    ___SET_R0(___LBL(2))
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(536),___L0_c_23_univ_2d_emit_2d__2b_)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(534),___L0_c_23_univ_2d_emit_2d__2b_)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_wrap_2b_)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
@@ -18028,14 +17984,14 @@ ___DEF_SLBL(2,___L2_c_23_univ_2d_wrap_2b_)
    ___POLL(3)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_wrap_2b_)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(562),___L_c_23_univ_2d_wrap)
+   ___JUMPINT(___SET_NARGS(2),___PRC(560),___L_c_23_univ_2d_wrap)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_wrap_2d_
 #undef ___PH_LBL0
-#define ___PH_LBL0 591
+#define ___PH_LBL0 589
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -18075,7 +18031,7 @@ ___DEF_GLBL(___L5_c_23_univ_2d_wrap_2d_)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_wrap_2d_)
 ___DEF_GLBL(___L6_c_23_univ_2d_wrap_2d_)
    ___SET_R0(___LBL(3))
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(543),___L0_c_23_univ_2d_emit_2d__2d_)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(541),___L0_c_23_univ_2d_emit_2d__2d_)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_wrap_2d_)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
@@ -18083,14 +18039,14 @@ ___DEF_SLBL(3,___L3_c_23_univ_2d_wrap_2d_)
    ___POLL(4)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_wrap_2d_)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(562),___L_c_23_univ_2d_wrap)
+   ___JUMPINT(___SET_NARGS(2),___PRC(560),___L_c_23_univ_2d_wrap)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_wrap_2a_
 #undef ___PH_LBL0
-#define ___PH_LBL0 597
+#define ___PH_LBL0 595
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -18156,7 +18112,7 @@ ___DEF_GLBL(___L16_c_23_univ_2d_wrap_2a_)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(5))
-   ___JUMPINT(___SET_NARGS(3),___PRC(550),___L_c_23_univ_2d_emit_2d__2a_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(548),___L_c_23_univ_2d_emit_2d__2a_)
 ___DEF_SLBL(5,___L5_c_23_univ_2d_wrap_2a_)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
@@ -18164,67 +18120,67 @@ ___DEF_SLBL(5,___L5_c_23_univ_2d_wrap_2a_)
    ___POLL(6)
 ___DEF_SLBL(6,___L6_c_23_univ_2d_wrap_2a_)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(562),___L_c_23_univ_2d_wrap)
+   ___JUMPINT(___SET_NARGS(2),___PRC(560),___L_c_23_univ_2d_wrap)
 ___DEF_GLBL(___L17_c_23_univ_2d_wrap_2a_)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-6))
    ___SET_R3(___FIX(65535L))
    ___SET_R0(___LBL(7))
-   ___JUMPINT(___SET_NARGS(3),___PRC(658),___L_c_23_univ_2d_emit_2d_bitand)
+   ___JUMPINT(___SET_NARGS(3),___PRC(656),___L_c_23_univ_2d_emit_2d_bitand)
 ___DEF_SLBL(7,___L7_c_23_univ_2d_wrap_2a_)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(8))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(8,___L8_c_23_univ_2d_wrap_2a_)
    ___SET_R2(___R1)
    ___SET_R3(___STK(-4))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(9))
-   ___JUMPINT(___SET_NARGS(3),___PRC(550),___L_c_23_univ_2d_emit_2d__2a_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(548),___L_c_23_univ_2d_emit_2d__2a_)
 ___DEF_SLBL(9,___L9_c_23_univ_2d_wrap_2a_)
    ___SET_STK(-3,___R1)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-6))
    ___SET_R3(___BIGFIX(150,4294901760LL))
    ___SET_R0(___LBL(10))
-   ___JUMPINT(___SET_NARGS(3),___PRC(658),___L_c_23_univ_2d_emit_2d_bitand)
+   ___JUMPINT(___SET_NARGS(3),___PRC(656),___L_c_23_univ_2d_emit_2d_bitand)
 ___DEF_SLBL(10,___L10_c_23_univ_2d_wrap_2a_)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(11))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(11,___L11_c_23_univ_2d_wrap_2a_)
    ___SET_STK(-5,___R1)
    ___SET_R2(___STK(-4))
    ___SET_R1(___STK(-6))
    ___SET_R3(___FIX(65535L))
    ___SET_R0(___LBL(12))
-   ___JUMPINT(___SET_NARGS(3),___PRC(658),___L_c_23_univ_2d_emit_2d_bitand)
+   ___JUMPINT(___SET_NARGS(3),___PRC(656),___L_c_23_univ_2d_emit_2d_bitand)
 ___DEF_SLBL(12,___L12_c_23_univ_2d_wrap_2a_)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(13))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(13,___L13_c_23_univ_2d_wrap_2a_)
    ___SET_R3(___R1)
    ___SET_R1(___STK(-6))
    ___SET_R2(___STK(-5))
    ___SET_R0(___LBL(14))
-   ___JUMPINT(___SET_NARGS(3),___PRC(550),___L_c_23_univ_2d_emit_2d__2a_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(548),___L_c_23_univ_2d_emit_2d__2a_)
 ___DEF_SLBL(14,___L14_c_23_univ_2d_wrap_2a_)
    ___SET_R3(___R1)
    ___SET_R1(___STK(-6))
    ___SET_R2(___STK(-3))
    ___SET_R0(___LBL(5))
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(536),___L0_c_23_univ_2d_emit_2d__2b_)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(534),___L0_c_23_univ_2d_emit_2d__2b_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_wrap_2f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 613
+#define ___PH_LBL0 611
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -18268,7 +18224,7 @@ ___DEF_SLBL(2,___L2_c_23_univ_2d_wrap_2f_)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(3),___PRC(556),___L_c_23_univ_2d_emit_2d__2f_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(554),___L_c_23_univ_2d_emit_2d__2f_)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_wrap_2f_)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
@@ -18276,7 +18232,7 @@ ___DEF_SLBL(3,___L3_c_23_univ_2d_wrap_2f_)
    ___POLL(4)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_wrap_2f_)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(562),___L_c_23_univ_2d_wrap)
+   ___JUMPINT(___SET_NARGS(2),___PRC(560),___L_c_23_univ_2d_wrap)
 ___DEF_GLBL(___L9_c_23_univ_2d_wrap_2f_)
    ___SET_R1(___CONS(___SUB(151),___NUL))
    ___ADJFP(-7)
@@ -18294,12 +18250,12 @@ ___DEF_SLBL(6,___L6_c_23_univ_2d_wrap_2f_)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(7))
-   ___JUMPINT(___SET_NARGS(3),___PRC(556),___L_c_23_univ_2d_emit_2d__2f_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(554),___L_c_23_univ_2d_emit_2d__2f_)
 ___DEF_SLBL(7,___L7_c_23_univ_2d_wrap_2f_)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(8))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(8,___L8_c_23_univ_2d_wrap_2f_)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
@@ -18311,7 +18267,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d__3c__3c_
 #undef ___PH_LBL0
-#define ___PH_LBL0 623
+#define ___PH_LBL0 621
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -18371,7 +18327,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d__3e__3e_
 #undef ___PH_LBL0
-#define ___PH_LBL0 629
+#define ___PH_LBL0 627
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -18431,7 +18387,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d__3e__3e__3e_
 #undef ___PH_LBL0
-#define ___PH_LBL0 635
+#define ___PH_LBL0 633
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -18497,7 +18453,7 @@ ___DEF_GLBL(___L16_c_23_univ_2d_emit_2d__3e__3e__3e_)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(5))
-   ___JUMPINT(___SET_NARGS(3),___PRC(629),___L_c_23_univ_2d_emit_2d__3e__3e_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(627),___L_c_23_univ_2d_emit_2d__3e__3e_)
 ___DEF_SLBL(5,___L5_c_23_univ_2d_emit_2d__3e__3e__3e_)
    ___SET_STK(-5,___R1)
    ___SET_R1(___STK(-6))
@@ -18515,18 +18471,18 @@ ___DEF_SLBL(7,___L7_c_23_univ_2d_emit_2d__3e__3e__3e_)
    ___SET_R3(___STK(-4))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(8))
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(543),___L0_c_23_univ_2d_emit_2d__2d_)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(541),___L0_c_23_univ_2d_emit_2d__2d_)
 ___DEF_SLBL(8,___L8_c_23_univ_2d_emit_2d__3e__3e__3e_)
    ___SET_R3(___R1)
    ___SET_R1(___STK(-6))
    ___SET_R2(___STK(-3))
    ___SET_R0(___LBL(9))
-   ___JUMPINT(___SET_NARGS(3),___PRC(623),___L_c_23_univ_2d_emit_2d__3c__3c_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(621),___L_c_23_univ_2d_emit_2d__3c__3c_)
 ___DEF_SLBL(9,___L9_c_23_univ_2d_emit_2d__3e__3e__3e_)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(10))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(10,___L10_c_23_univ_2d_emit_2d__3e__3e__3e_)
    ___SET_STK(-4,___R1)
    ___SET_R1(___STK(-6))
@@ -18538,7 +18494,7 @@ ___DEF_SLBL(11,___L11_c_23_univ_2d_emit_2d__3e__3e__3e_)
    ___SET_R1(___STK(-6))
    ___SET_R2(___STK(-4))
    ___SET_R0(___LBL(12))
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(543),___L0_c_23_univ_2d_emit_2d__2d_)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(541),___L0_c_23_univ_2d_emit_2d__2d_)
 ___DEF_SLBL(12,___L12_c_23_univ_2d_emit_2d__3e__3e__3e_)
    ___SET_R3(___R1)
    ___SET_R1(___STK(-6))
@@ -18547,7 +18503,7 @@ ___DEF_SLBL(12,___L12_c_23_univ_2d_emit_2d__3e__3e__3e_)
    ___POLL(13)
 ___DEF_SLBL(13,___L13_c_23_univ_2d_emit_2d__3e__3e__3e_)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(3),___PRC(658),___L_c_23_univ_2d_emit_2d_bitand)
+   ___JUMPINT(___SET_NARGS(3),___PRC(656),___L_c_23_univ_2d_emit_2d_bitand)
 ___DEF_GLBL(___L17_c_23_univ_2d_emit_2d__3e__3e__3e_)
    ___BEGIN_ALLOC_LIST(3UL,___STK(-4))
    ___ADD_LIST_ELEM(1,___SUB(158))
@@ -18565,7 +18521,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_bitnot
 #undef ___PH_LBL0
-#define ___PH_LBL0 651
+#define ___PH_LBL0 649
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -18634,7 +18590,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_bitand
 #undef ___PH_LBL0
-#define ___PH_LBL0 658
+#define ___PH_LBL0 656
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -18694,7 +18650,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_bitior
 #undef ___PH_LBL0
-#define ___PH_LBL0 664
+#define ___PH_LBL0 662
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -18754,7 +18710,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_bitxor
 #undef ___PH_LBL0
-#define ___PH_LBL0 670
+#define ___PH_LBL0 668
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -18814,7 +18770,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d__3d_
 #undef ___PH_LBL0
-#define ___PH_LBL0 676
+#define ___PH_LBL0 674
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -18886,7 +18842,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d__21__3d_
 #undef ___PH_LBL0
-#define ___PH_LBL0 683
+#define ___PH_LBL0 681
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -18958,7 +18914,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d__3c_
 #undef ___PH_LBL0
-#define ___PH_LBL0 690
+#define ___PH_LBL0 688
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1
 #undef ___PR_ALL
@@ -18981,14 +18937,14 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d__3c_)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d__3c_)
-   ___JUMPINT(___SET_NARGS(4),___PRC(702),___L_c_23_univ_2d_emit_2d_comparison)
+   ___JUMPINT(___SET_NARGS(4),___PRC(700),___L_c_23_univ_2d_emit_2d_comparison)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d__3c__3d_
 #undef ___PH_LBL0
-#define ___PH_LBL0 693
+#define ___PH_LBL0 691
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1
 #undef ___PR_ALL
@@ -19011,14 +18967,14 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d__3c__3d_)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d__3c__3d_)
-   ___JUMPINT(___SET_NARGS(4),___PRC(702),___L_c_23_univ_2d_emit_2d_comparison)
+   ___JUMPINT(___SET_NARGS(4),___PRC(700),___L_c_23_univ_2d_emit_2d_comparison)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d__3e_
 #undef ___PH_LBL0
-#define ___PH_LBL0 696
+#define ___PH_LBL0 694
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1
 #undef ___PR_ALL
@@ -19041,14 +18997,14 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d__3e_)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d__3e_)
-   ___JUMPINT(___SET_NARGS(4),___PRC(702),___L_c_23_univ_2d_emit_2d_comparison)
+   ___JUMPINT(___SET_NARGS(4),___PRC(700),___L_c_23_univ_2d_emit_2d_comparison)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d__3e__3d_
 #undef ___PH_LBL0
-#define ___PH_LBL0 699
+#define ___PH_LBL0 697
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1
 #undef ___PR_ALL
@@ -19071,14 +19027,14 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d__3e__3d_)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d__3e__3d_)
-   ___JUMPINT(___SET_NARGS(4),___PRC(702),___L_c_23_univ_2d_emit_2d_comparison)
+   ___JUMPINT(___SET_NARGS(4),___PRC(700),___L_c_23_univ_2d_emit_2d_comparison)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_comparison
 #undef ___PH_LBL0
-#define ___PH_LBL0 702
+#define ___PH_LBL0 700
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -19139,7 +19095,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_not
 #undef ___PH_LBL0
-#define ___PH_LBL0 708
+#define ___PH_LBL0 706
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -19208,7 +19164,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d__26__26_
 #undef ___PH_LBL0
-#define ___PH_LBL0 715
+#define ___PH_LBL0 713
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -19280,7 +19236,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_and
 #undef ___PH_LBL0
-#define ___PH_LBL0 722
+#define ___PH_LBL0 720
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -19365,7 +19321,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_or
 #undef ___PH_LBL0
-#define ___PH_LBL0 730
+#define ___PH_LBL0 728
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -19437,7 +19393,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_concat
 #undef ___PH_LBL0
-#define ___PH_LBL0 737
+#define ___PH_LBL0 735
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -19509,7 +19465,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_tostr
 #undef ___PH_LBL0
-#define ___PH_LBL0 744
+#define ___PH_LBL0 742
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -19563,7 +19519,7 @@ ___DEF_GLBL(___L12_c_23_univ_2d_emit_2d_tostr)
    ___SET_R1(___STK(-6))
    ___SET_R2(___SUB(197))
    ___SET_R0(___LBL(4))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2651),___L_c_23_univ_2d_add_2d_module_2d_import)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2649),___L_c_23_univ_2d_add_2d_module_2d_import)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_tostr)
    ___SET_STK(-4,___STK(-7))
    ___SET_STK(-7,___STK(-6))
@@ -19634,7 +19590,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_conv_2a_
 #undef ___PH_LBL0
-#define ___PH_LBL0 757
+#define ___PH_LBL0 755
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -19678,7 +19634,7 @@ ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_conv_2a_)
    ___POLL(3)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_conv_2a_)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(3),___PRC(775),___L_c_23_univ_2d_emit_2d_cast_2a_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(773),___L_c_23_univ_2d_emit_2d_cast_2a_)
 ___DEF_GLBL(___L7_c_23_univ_2d_emit_2d_conv_2a_)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-6))
@@ -19689,7 +19645,7 @@ ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_conv_2a_)
    ___SET_R2(___STK(-4))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(5))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(5,___L5_c_23_univ_2d_emit_2d_conv_2a_)
    ___BEGIN_ALLOC_LIST(2UL,___R1)
    ___ADD_LIST_ELEM(1,___STK(-5))
@@ -19706,7 +19662,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_cast
 #undef ___PH_LBL0
-#define ___PH_LBL0 765
+#define ___PH_LBL0 763
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -19751,7 +19707,7 @@ ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_cast)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_cast)
    ___SET_R3(___R1)
    ___SET_R2(___STK(-4))
@@ -19769,13 +19725,13 @@ ___DEF_GLBL(___L10_c_23_univ_2d_emit_2d_cast)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(5))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(5,___L5_c_23_univ_2d_emit_2d_cast)
    ___SET_STK(-5,___R1)
    ___SET_R2(___STK(-4))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(6))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(6,___L6_c_23_univ_2d_emit_2d_cast)
    ___BEGIN_ALLOC_LIST(2UL,___R1)
    ___ADD_LIST_ELEM(1,___STK(-5))
@@ -19788,14 +19744,14 @@ ___DEF_SLBL(7,___L7_c_23_univ_2d_emit_2d_cast)
    ___POLL(8)
 ___DEF_SLBL(8,___L8_c_23_univ_2d_emit_2d_cast)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_cast_2a_
 #undef ___PH_LBL0
-#define ___PH_LBL0 775
+#define ___PH_LBL0 773
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -19846,7 +19802,7 @@ ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_cast_2a_)
    ___POLL(4)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_cast_2a_)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(3),___PRC(765),___L_c_23_univ_2d_emit_2d_cast)
+   ___JUMPINT(___SET_NARGS(3),___PRC(763),___L_c_23_univ_2d_emit_2d_cast)
 ___DEF_GLBL(___L6_c_23_univ_2d_emit_2d_cast_2a_)
    ___SET_R1(___STK(-4))
    ___ADJFP(-8)
@@ -19857,7 +19813,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_cast_2a__2d_scmobj
 #undef ___PH_LBL0
-#define ___PH_LBL0 781
+#define ___PH_LBL0 779
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -19879,14 +19835,14 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_cast_2a__2d_scmobj)
    ___SET_R2(___SYM_scmobj)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_cast_2a__2d_scmobj)
-   ___JUMPINT(___SET_NARGS(3),___PRC(775),___L_c_23_univ_2d_emit_2d_cast_2a_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(773),___L_c_23_univ_2d_emit_2d_cast_2a_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_cast_2a__2d_jumpable
 #undef ___PH_LBL0
-#define ___PH_LBL0 784
+#define ___PH_LBL0 782
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -19908,14 +19864,14 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_cast_2a__2d_jumpable)
    ___SET_R2(___SYM_jumpable)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_cast_2a__2d_jumpable)
-   ___JUMPINT(___SET_NARGS(3),___PRC(775),___L_c_23_univ_2d_emit_2d_cast_2a_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(773),___L_c_23_univ_2d_emit_2d_cast_2a_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_upcast_2a_
 #undef ___PH_LBL0
-#define ___PH_LBL0 787
+#define ___PH_LBL0 785
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -20001,7 +19957,7 @@ ___DEF_GLBL(___L12_c_23_univ_2d_emit_2d_upcast_2a_)
    ___SET_R2(___STK(-3))
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(7))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(7,___L7_c_23_univ_2d_emit_2d_upcast_2a_)
    ___GOTO(___L10_c_23_univ_2d_emit_2d_upcast_2a_)
 ___DEF_GLBL(___L13_c_23_univ_2d_emit_2d_upcast_2a_)
@@ -20020,14 +19976,14 @@ ___DEF_GLBL(___L15_c_23_univ_2d_emit_2d_upcast_2a_)
    ___POLL(8)
 ___DEF_SLBL(8,___L8_c_23_univ_2d_emit_2d_upcast_2a_)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(3),___PRC(775),___L_c_23_univ_2d_emit_2d_cast_2a_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(773),___L_c_23_univ_2d_emit_2d_cast_2a_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_downcast_2a_
 #undef ___PH_LBL0
-#define ___PH_LBL0 797
+#define ___PH_LBL0 795
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -20071,7 +20027,7 @@ ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_downcast_2a_)
    ___POLL(3)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_downcast_2a_)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(3),___PRC(775),___L_c_23_univ_2d_emit_2d_cast_2a_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(773),___L_c_23_univ_2d_emit_2d_cast_2a_)
 ___DEF_GLBL(___L7_c_23_univ_2d_emit_2d_downcast_2a_)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-6))
@@ -20081,7 +20037,7 @@ ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_downcast_2a_)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(5))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(5,___L5_c_23_univ_2d_emit_2d_downcast_2a_)
    ___SET_R3(___R1)
    ___SET_R2(___STK(-4))
@@ -20097,7 +20053,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_downupcast_2a_
 #undef ___PH_LBL0
-#define ___PH_LBL0 805
+#define ___PH_LBL0 803
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -20126,7 +20082,7 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_downupcast_2a_)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_downupcast_2a_)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(3),___PRC(797),___L_c_23_univ_2d_emit_2d_downcast_2a_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(795),___L_c_23_univ_2d_emit_2d_downcast_2a_)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_downupcast_2a_)
    ___SET_R3(___R1)
    ___SET_R2(___STK(-4))
@@ -20135,14 +20091,14 @@ ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_downupcast_2a_)
    ___POLL(3)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_downupcast_2a_)
    ___ADJFP(-7)
-   ___JUMPINT(___SET_NARGS(4),___PRC(787),___L_c_23_univ_2d_emit_2d_upcast_2a_)
+   ___JUMPINT(___SET_NARGS(4),___PRC(785),___L_c_23_univ_2d_emit_2d_upcast_2a_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_seq
 #undef ___PH_LBL0
-#define ___PH_LBL0 810
+#define ___PH_LBL0 808
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -20222,14 +20178,14 @@ ___DEF_SLBL(7,___L7_c_23_univ_2d_emit_2d_seq)
 ___DEF_SLBL(8,___L8_c_23_univ_2d_emit_2d_seq)
 ___DEF_GLBL(___L12_c_23_univ_2d_emit_2d_seq)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_parens
 #undef ___PH_LBL0
-#define ___PH_LBL0 820
+#define ___PH_LBL0 818
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -20288,7 +20244,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_parens_2d_php
 #undef ___PH_LBL0
-#define ___PH_LBL0 826
+#define ___PH_LBL0 824
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -20327,7 +20283,7 @@ ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_parens_2d_php)
    ___POLL(3)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_parens_2d_php)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_GLBL(___L4_c_23_univ_2d_emit_2d_parens_2d_php)
    ___SET_R1(___STK(-5))
    ___ADJFP(-8)
@@ -20338,7 +20294,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_local_2d_var
 #undef ___PH_LBL0
-#define ___PH_LBL0 831
+#define ___PH_LBL0 829
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -20400,7 +20356,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_global_2d_var
 #undef ___PH_LBL0
-#define ___PH_LBL0 837
+#define ___PH_LBL0 835
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -20462,7 +20418,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_global_2d_function
 #undef ___PH_LBL0
-#define ___PH_LBL0 843
+#define ___PH_LBL0 841
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -20513,7 +20469,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_this_2d_mod_2d_field
 #undef ___PH_LBL0
-#define ___PH_LBL0 848
+#define ___PH_LBL0 846
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1
 #undef ___PR_ALL
@@ -20536,14 +20492,14 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_this_2d_mod_2d_field)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_this_2d_mod_2d_field)
-   ___JUMPINT(___SET_NARGS(4),___PRC(871),___L_c_23_univ_2d_emit_2d_mod_2d_field)
+   ___JUMPINT(___SET_NARGS(4),___PRC(869),___L_c_23_univ_2d_emit_2d_mod_2d_field)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_this_2d_mod_2d_method
 #undef ___PH_LBL0
-#define ___PH_LBL0 851
+#define ___PH_LBL0 849
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1
 #undef ___PR_ALL
@@ -20566,14 +20522,14 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_this_2d_mod_2d_method)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_this_2d_mod_2d_method)
-   ___JUMPINT(___SET_NARGS(4),___PRC(883),___L_c_23_univ_2d_emit_2d_mod_2d_method)
+   ___JUMPINT(___SET_NARGS(4),___PRC(881),___L_c_23_univ_2d_emit_2d_mod_2d_method)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_this_2d_mod_2d_jumpable
 #undef ___PH_LBL0
-#define ___PH_LBL0 854
+#define ___PH_LBL0 852
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1
 #undef ___PR_ALL
@@ -20596,14 +20552,14 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_this_2d_mod_2d_jumpable)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_this_2d_mod_2d_jumpable)
-   ___JUMPINT(___SET_NARGS(4),___PRC(899),___L_c_23_univ_2d_emit_2d_mod_2d_jumpable)
+   ___JUMPINT(___SET_NARGS(4),___PRC(897),___L_c_23_univ_2d_emit_2d_mod_2d_jumpable)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_mod_2d_member
 #undef ___PH_LBL0
-#define ___PH_LBL0 857
+#define ___PH_LBL0 855
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -20741,7 +20697,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_mod_2d_field
 #undef ___PH_LBL0
-#define ___PH_LBL0 871
+#define ___PH_LBL0 869
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -20790,13 +20746,13 @@ ___DEF_GLBL(___L11_c_23_univ_2d_emit_2d_mod_2d_field)
    ___SET_R2(___STK(-4))
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(3),___PRC(1023),___L_c_23_univ_2d_emit_2d_prefix)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1021),___L_c_23_univ_2d_emit_2d_prefix)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_mod_2d_field)
    ___SET_R3(___R1)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(4))
-   ___JUMPINT(___SET_NARGS(3),___PRC(857),___L_c_23_univ_2d_emit_2d_mod_2d_member)
+   ___JUMPINT(___SET_NARGS(3),___PRC(855),___L_c_23_univ_2d_emit_2d_mod_2d_member)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_mod_2d_field)
    ___SET_R2(___R1)
    ___SET_R1(___SUB(223))
@@ -20837,19 +20793,19 @@ ___DEF_GLBL(___L14_c_23_univ_2d_emit_2d_mod_2d_field)
    ___SET_R2(___STK(-4))
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(10))
-   ___JUMPINT(___SET_NARGS(3),___PRC(1023),___L_c_23_univ_2d_emit_2d_prefix)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1021),___L_c_23_univ_2d_emit_2d_prefix)
 ___DEF_SLBL(10,___L10_c_23_univ_2d_emit_2d_mod_2d_field)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(6))
-   ___JUMPINT(___SET_NARGS(2),___PRC(837),___L_c_23_univ_2d_emit_2d_global_2d_var)
+   ___JUMPINT(___SET_NARGS(2),___PRC(835),___L_c_23_univ_2d_emit_2d_global_2d_var)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_mod_2d_method
 #undef ___PH_LBL0
-#define ___PH_LBL0 883
+#define ___PH_LBL0 881
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -20898,13 +20854,13 @@ ___DEF_GLBL(___L11_c_23_univ_2d_emit_2d_mod_2d_method)
    ___SET_R2(___STK(-4))
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(3),___PRC(1023),___L_c_23_univ_2d_emit_2d_prefix)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1021),___L_c_23_univ_2d_emit_2d_prefix)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_mod_2d_method)
    ___SET_R3(___R1)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(4))
-   ___JUMPINT(___SET_NARGS(3),___PRC(857),___L_c_23_univ_2d_emit_2d_mod_2d_member)
+   ___JUMPINT(___SET_NARGS(3),___PRC(855),___L_c_23_univ_2d_emit_2d_mod_2d_member)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_mod_2d_method)
    ___SET_R2(___R1)
    ___SET_R1(___SUB(225))
@@ -20945,19 +20901,19 @@ ___DEF_GLBL(___L14_c_23_univ_2d_emit_2d_mod_2d_method)
    ___SET_R2(___STK(-4))
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(10))
-   ___JUMPINT(___SET_NARGS(3),___PRC(1023),___L_c_23_univ_2d_emit_2d_prefix)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1021),___L_c_23_univ_2d_emit_2d_prefix)
 ___DEF_SLBL(10,___L10_c_23_univ_2d_emit_2d_mod_2d_method)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(6))
-   ___JUMPINT(___SET_NARGS(2),___PRC(843),___L_c_23_univ_2d_emit_2d_global_2d_function)
+   ___JUMPINT(___SET_NARGS(2),___PRC(841),___L_c_23_univ_2d_emit_2d_global_2d_function)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_mod_2d_jumpable_2d_is_2d_field_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 895
+#define ___PH_LBL0 893
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R4
 #undef ___PR_ALL
@@ -20993,7 +20949,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_mod_2d_jumpable
 #undef ___PH_LBL0
-#define ___PH_LBL0 899
+#define ___PH_LBL0 897
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -21060,7 +21016,7 @@ ___DEF_GLBL(___L14_c_23_univ_2d_emit_2d_mod_2d_jumpable)
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(4))
    ___ADJFP(1)
-   ___JUMPINT(___SET_NARGS(4),___PRC(871),___L_c_23_univ_2d_emit_2d_mod_2d_field)
+   ___JUMPINT(___SET_NARGS(4),___PRC(869),___L_c_23_univ_2d_emit_2d_mod_2d_field)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_mod_2d_jumpable)
    ___GOTO(___L15_c_23_univ_2d_emit_2d_mod_2d_jumpable)
 ___DEF_SLBL(5,___L5_c_23_univ_2d_emit_2d_mod_2d_jumpable)
@@ -21101,7 +21057,7 @@ ___DEF_SLBL(8,___L8_c_23_univ_2d_emit_2d_mod_2d_jumpable)
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(9))
    ___ADJFP(1)
-   ___JUMPINT(___SET_NARGS(4),___PRC(883),___L_c_23_univ_2d_emit_2d_mod_2d_method)
+   ___JUMPINT(___SET_NARGS(4),___PRC(881),___L_c_23_univ_2d_emit_2d_mod_2d_method)
 ___DEF_SLBL(9,___L9_c_23_univ_2d_emit_2d_mod_2d_jumpable)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-7))
@@ -21123,13 +21079,13 @@ ___DEF_GLBL(___L19_c_23_univ_2d_emit_2d_mod_2d_jumpable)
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(11))
    ___ADJFP(1)
-   ___JUMPINT(___SET_NARGS(4),___PRC(871),___L_c_23_univ_2d_emit_2d_mod_2d_field)
+   ___JUMPINT(___SET_NARGS(4),___PRC(869),___L_c_23_univ_2d_emit_2d_mod_2d_field)
 ___DEF_SLBL(11,___L11_c_23_univ_2d_emit_2d_mod_2d_jumpable)
    ___SET_STK(-5,___R1)
    ___SET_R2(___R1)
    ___SET_R1(___VECTORREF(___STK(-7),___FIX(13L)))
    ___SET_R0(___LBL(5))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2687),___L_c_23_resource_2d_set_2d_add_21_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2685),___L_c_23_resource_2d_set_2d_add_21_)
 ___DEF_GLBL(___L20_c_23_univ_2d_emit_2d_mod_2d_jumpable)
    ___IF(___EQP(___R1,___SYM_php))
    ___GOTO(___L21_c_23_univ_2d_emit_2d_mod_2d_jumpable)
@@ -21156,7 +21112,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_id_2d_to_2d_jumpable
 #undef ___PH_LBL0
-#define ___PH_LBL0 912
+#define ___PH_LBL0 910
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -21207,7 +21163,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_rts_2d_method
 #undef ___PH_LBL0
-#define ___PH_LBL0 917
+#define ___PH_LBL0 915
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21262,13 +21218,13 @@ ___DEF_GLBL(___L11_c_23_univ_2d_emit_2d_rts_2d_method)
    ___SET_R1(___STK(-6))
    ___SET_R3(___FAL)
    ___SET_R0(___LBL(4))
-   ___JUMPINT(___SET_NARGS(3),___PRC(1023),___L_c_23_univ_2d_emit_2d_prefix)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1021),___L_c_23_univ_2d_emit_2d_prefix)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_rts_2d_method)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(5))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(2),___PRC(843),___L_c_23_univ_2d_emit_2d_global_2d_function)
+   ___JUMPINT(___SET_NARGS(2),___PRC(841),___L_c_23_univ_2d_emit_2d_global_2d_function)
 ___DEF_SLBL(5,___L5_c_23_univ_2d_emit_2d_rts_2d_method)
    ___SET_R2(___R1)
    ___SET_R1(___SUB(229))
@@ -21310,14 +21266,14 @@ ___DEF_GLBL(___L14_c_23_univ_2d_emit_2d_rts_2d_method)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(7))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(3),___PRC(1023),___L_c_23_univ_2d_emit_2d_prefix)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1021),___L_c_23_univ_2d_emit_2d_prefix)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_rts_2d_method_2d_ref
 #undef ___PH_LBL0
-#define ___PH_LBL0 929
+#define ___PH_LBL0 927
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21367,14 +21323,14 @@ ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_rts_2d_method_2d_ref)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(3),___PRC(1023),___L_c_23_univ_2d_emit_2d_prefix)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1021),___L_c_23_univ_2d_emit_2d_prefix)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_rts_2d_method_2d_ref)
    ___SET_R3(___R1)
    ___SET_R2(___VECTORREF(___STK(-6),___FIX(4L)))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(4))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(3),___PRC(857),___L_c_23_univ_2d_emit_2d_mod_2d_member)
+   ___JUMPINT(___SET_NARGS(3),___PRC(855),___L_c_23_univ_2d_emit_2d_mod_2d_member)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_rts_2d_method_2d_ref)
    ___SET_R2(___R1)
    ___SET_R1(___SUB(231))
@@ -21415,24 +21371,24 @@ ___DEF_GLBL(___L16_c_23_univ_2d_emit_2d_rts_2d_method_2d_ref)
    ___SET_R1(___STK(-6))
    ___SET_R3(___FAL)
    ___SET_R0(___LBL(10))
-   ___JUMPINT(___SET_NARGS(3),___PRC(1023),___L_c_23_univ_2d_emit_2d_prefix)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1021),___L_c_23_univ_2d_emit_2d_prefix)
 ___DEF_SLBL(10,___L10_c_23_univ_2d_emit_2d_rts_2d_method_2d_ref)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(6))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(2),___PRC(843),___L_c_23_univ_2d_emit_2d_global_2d_function)
+   ___JUMPINT(___SET_NARGS(2),___PRC(841),___L_c_23_univ_2d_emit_2d_global_2d_function)
 ___DEF_GLBL(___L17_c_23_univ_2d_emit_2d_rts_2d_method_2d_ref)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(11))
-   ___JUMPINT(___SET_NARGS(1),___PRC(2576),___L_c_23_ctx_2d_rts_2d_module_2d_name)
+   ___JUMPINT(___SET_NARGS(1),___PRC(2574),___L_c_23_ctx_2d_rts_2d_module_2d_name)
 ___DEF_SLBL(11,___L11_c_23_univ_2d_emit_2d_rts_2d_method_2d_ref)
    ___SET_R2(___R1)
    ___SET_R3(___STK(-5))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(12))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(3),___PRC(857),___L_c_23_univ_2d_emit_2d_mod_2d_member)
+   ___JUMPINT(___SET_NARGS(3),___PRC(855),___L_c_23_univ_2d_emit_2d_mod_2d_member)
 ___DEF_SLBL(12,___L12_c_23_univ_2d_emit_2d_rts_2d_method_2d_ref)
    ___SET_R2(___R1)
    ___SET_R1(___SUB(233))
@@ -21446,7 +21402,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_rts_2d_method_2d_use
 #undef ___PH_LBL0
-#define ___PH_LBL0 944
+#define ___PH_LBL0 942
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21475,12 +21431,12 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2709),___L_c_23_univ_2d_use_2d_rtlib)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2707),___L_c_23_univ_2d_use_2d_rtlib)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(2),___PRC(3435),___L_c_23_univ_2d_rts_2d_method_2d_low_2d_level_2d_name)
+   ___JUMPINT(___SET_NARGS(2),___PRC(3417),___L_c_23_univ_2d_rts_2d_method_2d_low_2d_level_2d_name)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
    ___SET_R2(___R1)
    ___SET_R3(___STK(-4))
@@ -21489,14 +21445,14 @@ ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
    ___POLL(4)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(3),___PRC(929),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_ref)
+   ___JUMPINT(___SET_NARGS(3),___PRC(927),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_ref)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_rts_2d_field
 #undef ___PH_LBL0
-#define ___PH_LBL0 950
+#define ___PH_LBL0 948
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21550,13 +21506,13 @@ ___DEF_GLBL(___L11_c_23_univ_2d_emit_2d_rts_2d_field)
    ___SET_R1(___STK(-6))
    ___SET_R3(___FAL)
    ___SET_R0(___LBL(4))
-   ___JUMPINT(___SET_NARGS(3),___PRC(1023),___L_c_23_univ_2d_emit_2d_prefix)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1021),___L_c_23_univ_2d_emit_2d_prefix)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_rts_2d_field)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(5))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(2),___PRC(837),___L_c_23_univ_2d_emit_2d_global_2d_var)
+   ___JUMPINT(___SET_NARGS(2),___PRC(835),___L_c_23_univ_2d_emit_2d_global_2d_var)
 ___DEF_SLBL(5,___L5_c_23_univ_2d_emit_2d_rts_2d_field)
    ___SET_R2(___R1)
    ___SET_R1(___SUB(235))
@@ -21598,14 +21554,14 @@ ___DEF_GLBL(___L14_c_23_univ_2d_emit_2d_rts_2d_field)
    ___SET_R3(___TRU)
    ___SET_R0(___LBL(7))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(3),___PRC(1023),___L_c_23_univ_2d_emit_2d_prefix)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1021),___L_c_23_univ_2d_emit_2d_prefix)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_rts_2d_field_2d_ref
 #undef ___PH_LBL0
-#define ___PH_LBL0 962
+#define ___PH_LBL0 960
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21655,14 +21611,14 @@ ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_rts_2d_field_2d_ref)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(3),___PRC(1023),___L_c_23_univ_2d_emit_2d_prefix)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1021),___L_c_23_univ_2d_emit_2d_prefix)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_rts_2d_field_2d_ref)
    ___SET_R3(___R1)
    ___SET_R2(___VECTORREF(___STK(-6),___FIX(4L)))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(4))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(3),___PRC(857),___L_c_23_univ_2d_emit_2d_mod_2d_member)
+   ___JUMPINT(___SET_NARGS(3),___PRC(855),___L_c_23_univ_2d_emit_2d_mod_2d_member)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_rts_2d_field_2d_ref)
    ___SET_R2(___R1)
    ___SET_R1(___SUB(237))
@@ -21703,24 +21659,24 @@ ___DEF_GLBL(___L16_c_23_univ_2d_emit_2d_rts_2d_field_2d_ref)
    ___SET_R1(___STK(-6))
    ___SET_R3(___FAL)
    ___SET_R0(___LBL(10))
-   ___JUMPINT(___SET_NARGS(3),___PRC(1023),___L_c_23_univ_2d_emit_2d_prefix)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1021),___L_c_23_univ_2d_emit_2d_prefix)
 ___DEF_SLBL(10,___L10_c_23_univ_2d_emit_2d_rts_2d_field_2d_ref)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(6))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(2),___PRC(837),___L_c_23_univ_2d_emit_2d_global_2d_var)
+   ___JUMPINT(___SET_NARGS(2),___PRC(835),___L_c_23_univ_2d_emit_2d_global_2d_var)
 ___DEF_GLBL(___L17_c_23_univ_2d_emit_2d_rts_2d_field_2d_ref)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(11))
-   ___JUMPINT(___SET_NARGS(1),___PRC(2576),___L_c_23_ctx_2d_rts_2d_module_2d_name)
+   ___JUMPINT(___SET_NARGS(1),___PRC(2574),___L_c_23_ctx_2d_rts_2d_module_2d_name)
 ___DEF_SLBL(11,___L11_c_23_univ_2d_emit_2d_rts_2d_field_2d_ref)
    ___SET_R2(___R1)
    ___SET_R3(___STK(-5))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(12))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(3),___PRC(857),___L_c_23_univ_2d_emit_2d_mod_2d_member)
+   ___JUMPINT(___SET_NARGS(3),___PRC(855),___L_c_23_univ_2d_emit_2d_mod_2d_member)
 ___DEF_SLBL(12,___L12_c_23_univ_2d_emit_2d_rts_2d_field_2d_ref)
    ___SET_R2(___R1)
    ___SET_R1(___SUB(239))
@@ -21734,7 +21690,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_rts_2d_field_2d_use
 #undef ___PH_LBL0
-#define ___PH_LBL0 977
+#define ___PH_LBL0 975
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21764,24 +21720,24 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2709),___L_c_23_univ_2d_use_2d_rtlib)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2707),___L_c_23_univ_2d_use_2d_rtlib)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(2),___PRC(3431),___L_c_23_univ_2d_rts_2d_field_2d_low_2d_level_2d_name)
+   ___JUMPINT(___SET_NARGS(2),___PRC(3413),___L_c_23_univ_2d_rts_2d_field_2d_low_2d_level_2d_name)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
    ___SET_R2(___R1)
    ___SET_R3(___STK(-4))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(4))
-   ___JUMPINT(___SET_NARGS(3),___PRC(962),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_ref)
+   ___JUMPINT(___SET_NARGS(3),___PRC(960),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_ref)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
    ___SET_STK(-5,___R1)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(5))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2706),___L_c_23_use_2d_global)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2704),___L_c_23_use_2d_global)
 ___DEF_SLBL(5,___L5_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
    ___SET_R1(___STK(-5))
    ___ADJFP(-8)
@@ -21792,7 +21748,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_rts_2d_jumpable_2d_use
 #undef ___PH_LBL0
-#define ___PH_LBL0 984
+#define ___PH_LBL0 982
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -21819,7 +21775,7 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_rts_2d_jumpable_2d_use)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_rts_2d_jumpable_2d_use)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2709),___L_c_23_univ_2d_use_2d_rtlib)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2707),___L_c_23_univ_2d_use_2d_rtlib)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_rts_2d_jumpable_2d_use)
    ___SET_STK(-4,___STK(-7))
    ___SET_STK(-7,___STK(-6))
@@ -21830,14 +21786,14 @@ ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_rts_2d_jumpable_2d_use)
    ___POLL(3)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_rts_2d_jumpable_2d_use)
    ___ADJFP(-7)
-   ___JUMPINT(___SET_NARGS(4),___PRC(899),___L_c_23_univ_2d_emit_2d_mod_2d_jumpable)
+   ___JUMPINT(___SET_NARGS(4),___PRC(897),___L_c_23_univ_2d_emit_2d_mod_2d_jumpable)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_rts_2d_class
 #undef ___PH_LBL0
-#define ___PH_LBL0 989
+#define ___PH_LBL0 987
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -21886,14 +21842,14 @@ ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_rts_2d_class)
 ___DEF_GLBL(___L11_c_23_univ_2d_emit_2d_rts_2d_class)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(4))
-   ___JUMPINT(___SET_NARGS(1),___PRC(2576),___L_c_23_ctx_2d_rts_2d_module_2d_name)
+   ___JUMPINT(___SET_NARGS(1),___PRC(2574),___L_c_23_ctx_2d_rts_2d_module_2d_name)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_rts_2d_class)
    ___SET_R2(___R1)
    ___SET_R3(___STK(-5))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(5))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(3),___PRC(857),___L_c_23_univ_2d_emit_2d_mod_2d_member)
+   ___JUMPINT(___SET_NARGS(3),___PRC(855),___L_c_23_univ_2d_emit_2d_mod_2d_member)
 ___DEF_SLBL(5,___L5_c_23_univ_2d_emit_2d_rts_2d_class)
    ___SET_R2(___R1)
    ___SET_R1(___SUB(240))
@@ -21935,14 +21891,14 @@ ___DEF_GLBL(___L14_c_23_univ_2d_emit_2d_rts_2d_class)
    ___SET_R3(___FAL)
    ___SET_R0(___LBL(7))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(3),___PRC(1035),___L_c_23_univ_2d_emit_2d_prefix_2d_class)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1033),___L_c_23_univ_2d_emit_2d_prefix_2d_class)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_rts_2d_class_2d_ref
 #undef ___PH_LBL0
-#define ___PH_LBL0 1001
+#define ___PH_LBL0 999
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -21991,14 +21947,14 @@ ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_rts_2d_class_2d_ref)
 ___DEF_GLBL(___L11_c_23_univ_2d_emit_2d_rts_2d_class_2d_ref)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(4))
-   ___JUMPINT(___SET_NARGS(1),___PRC(2576),___L_c_23_ctx_2d_rts_2d_module_2d_name)
+   ___JUMPINT(___SET_NARGS(1),___PRC(2574),___L_c_23_ctx_2d_rts_2d_module_2d_name)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_rts_2d_class_2d_ref)
    ___SET_R2(___R1)
    ___SET_R3(___STK(-5))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(5))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(3),___PRC(857),___L_c_23_univ_2d_emit_2d_mod_2d_member)
+   ___JUMPINT(___SET_NARGS(3),___PRC(855),___L_c_23_univ_2d_emit_2d_mod_2d_member)
 ___DEF_SLBL(5,___L5_c_23_univ_2d_emit_2d_rts_2d_class_2d_ref)
    ___SET_R2(___R1)
    ___SET_R1(___SUB(242))
@@ -22040,14 +21996,14 @@ ___DEF_GLBL(___L14_c_23_univ_2d_emit_2d_rts_2d_class_2d_ref)
    ___SET_R3(___FAL)
    ___SET_R0(___LBL(7))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(3),___PRC(1035),___L_c_23_univ_2d_emit_2d_prefix_2d_class)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1033),___L_c_23_univ_2d_emit_2d_prefix_2d_class)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_rts_2d_class_2d_use
 #undef ___PH_LBL0
-#define ___PH_LBL0 1013
+#define ___PH_LBL0 1011
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -22075,7 +22031,7 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_rts_2d_class_2d_use)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_rts_2d_class_2d_use)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2709),___L_c_23_univ_2d_use_2d_rtlib)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2707),___L_c_23_univ_2d_use_2d_rtlib)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_rts_2d_class_2d_use)
    ___SET_R3(___STK(-4))
    ___SET_R2(___STK(-5))
@@ -22084,14 +22040,14 @@ ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_rts_2d_class_2d_use)
    ___POLL(3)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_rts_2d_class_2d_use)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(3),___PRC(1001),___L_c_23_univ_2d_emit_2d_rts_2d_class_2d_ref)
+   ___JUMPINT(___SET_NARGS(3),___PRC(999),___L_c_23_univ_2d_emit_2d_rts_2d_class_2d_ref)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_rts_2d_module_2d_name
 #undef ___PH_LBL0
-#define ___PH_LBL0 1018
+#define ___PH_LBL0 1016
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R4
 #undef ___PR_ALL
@@ -22141,7 +22097,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_prefix
 #undef ___PH_LBL0
-#define ___PH_LBL0 1023
+#define ___PH_LBL0 1021
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -22235,7 +22191,7 @@ ___DEF_GLBL(___L15_c_23_univ_2d_emit_2d_prefix)
 ___DEF_GLBL(___L16_c_23_univ_2d_emit_2d_prefix)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(8))
-   ___JUMPINT(___SET_NARGS(1),___PRC(2580),___L_c_23_ctx_2d_ns_2d_prefix)
+   ___JUMPINT(___SET_NARGS(1),___PRC(2578),___L_c_23_ctx_2d_ns_2d_prefix)
 ___DEF_SLBL(8,___L8_c_23_univ_2d_emit_2d_prefix)
    ___BEGIN_ALLOC_LIST(2UL,___STK(-5))
    ___ADD_LIST_ELEM(1,___R1)
@@ -22254,7 +22210,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_prefix_2d_class
 #undef ___PH_LBL0
-#define ___PH_LBL0 1035
+#define ___PH_LBL0 1033
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -22289,7 +22245,7 @@ ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_prefix_2d_class)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_prefix_2d_class)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(1),___PRC(2584),___L_c_23_ctx_2d_ns_2d_prefix_2d_class)
+   ___JUMPINT(___SET_NARGS(1),___PRC(2582),___L_c_23_ctx_2d_ns_2d_prefix_2d_class)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_prefix_2d_class)
    ___BEGIN_ALLOC_LIST(2UL,___STK(-5))
    ___ADD_LIST_ELEM(1,___R1)
@@ -22328,7 +22284,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_assign_2d_expr
 #undef ___PH_LBL0
-#define ___PH_LBL0 1044
+#define ___PH_LBL0 1042
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -22360,7 +22316,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_assign
 #undef ___PH_LBL0
-#define ___PH_LBL0 1047
+#define ___PH_LBL0 1045
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -22388,14 +22344,14 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_assign)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_assign)
    ___POLL(2)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_assign)
-   ___JUMPINT(___SET_NARGS(2),___PRC(452),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
+   ___JUMPINT(___SET_NARGS(2),___PRC(450),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_inc_2d_by
 #undef ___PH_LBL0
-#define ___PH_LBL0 1051
+#define ___PH_LBL0 1049
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4 ___D_F64(___F64V1) ___D_F64( \
 ___F64V2)
@@ -22630,7 +22586,7 @@ ___DEF_SLBL(15,___L15_c_23_univ_2d_emit_2d_inc_2d_by)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(452),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
+   ___JUMPINT(___SET_NARGS(2),___PRC(450),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
 ___DEF_GLBL(___L48_c_23_univ_2d_emit_2d_inc_2d_by)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
@@ -22681,7 +22637,7 @@ ___DEF_GLBL(___L51_c_23_univ_2d_emit_2d_inc_2d_by)
    ___POLL(20)
 ___DEF_SLBL(20,___L20_c_23_univ_2d_emit_2d_inc_2d_by)
    ___SET_R0(___LBL(21))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(21,___L21_c_23_univ_2d_emit_2d_inc_2d_by)
    ___SET_STK(-7,___STK(-5))
    ___SET_R0(___STK(-6))
@@ -22700,12 +22656,12 @@ ___DEF_GLBL(___L53_c_23_univ_2d_emit_2d_inc_2d_by)
    ___POLL(24)
 ___DEF_SLBL(24,___L24_c_23_univ_2d_emit_2d_inc_2d_by)
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(2),___PRC(452),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
+   ___JUMPINT(___SET_NARGS(2),___PRC(450),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
 ___DEF_SLBL(25,___L25_c_23_univ_2d_emit_2d_inc_2d_by)
    ___SET_STK(-5,___R1)
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(26))
-   ___JUMPINT(___SET_NARGS(1),___PRC(2560),___L_c_23_ctx_2d_target)
+   ___JUMPINT(___SET_NARGS(1),___PRC(2558),___L_c_23_ctx_2d_target)
 ___DEF_SLBL(26,___L26_c_23_univ_2d_emit_2d_inc_2d_by)
    ___SET_R0(___LBL(27))
    ___JUMPGLONOTSAFE(___SET_NARGS(1),533,___G_c_23_target_2d_name)
@@ -22730,7 +22686,7 @@ ___DEF_GLBL(___L55_c_23_univ_2d_emit_2d_inc_2d_by)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(28))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_GLBL(___L56_c_23_univ_2d_emit_2d_inc_2d_by)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-7))
@@ -22738,7 +22694,7 @@ ___DEF_GLBL(___L56_c_23_univ_2d_emit_2d_inc_2d_by)
    ___POLL(30)
 ___DEF_SLBL(30,___L30_c_23_univ_2d_emit_2d_inc_2d_by)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(452),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
+   ___JUMPINT(___SET_NARGS(2),___PRC(450),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
 ___DEF_SLBL(31,___L31_c_23_univ_2d_emit_2d_inc_2d_by)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-3))
@@ -22754,7 +22710,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_alias
 #undef ___PH_LBL0
-#define ___PH_LBL0 1085
+#define ___PH_LBL0 1083
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -22816,7 +22772,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_unalias
 #undef ___PH_LBL0
-#define ___PH_LBL0 1091
+#define ___PH_LBL0 1089
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -22873,7 +22829,7 @@ ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_unalias)
    ___POLL(5)
 ___DEF_SLBL(5,___L5_c_23_univ_2d_emit_2d_unalias)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(452),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
+   ___JUMPINT(___SET_NARGS(2),___PRC(450),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
 ___DEF_GLBL(___L7_c_23_univ_2d_emit_2d_unalias)
    ___SET_R1(___NUL)
    ___ADJFP(-8)
@@ -22884,7 +22840,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_array_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 1098
+#define ___PH_LBL0 1096
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -22981,7 +22937,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_array_2d_length
 #undef ___PH_LBL0
-#define ___PH_LBL0 1108
+#define ___PH_LBL0 1106
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -23033,7 +22989,7 @@ ___DEF_GLBL(___L9_c_23_univ_2d_emit_2d_array_2d_length)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(4))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_array_2d_length)
    ___BEGIN_ALLOC_LIST(2UL,___R1)
    ___ADD_LIST_ELEM(1,___SUB(269))
@@ -23049,7 +23005,7 @@ ___DEF_GLBL(___L10_c_23_univ_2d_emit_2d_array_2d_length)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(6))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(6,___L6_c_23_univ_2d_emit_2d_array_2d_length)
    ___BEGIN_ALLOC_LIST(2UL,___R1)
    ___ADD_LIST_ELEM(1,___SUB(270))
@@ -23076,7 +23032,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_array_2d_push_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 1118
+#define ___PH_LBL0 1116
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -23141,7 +23097,7 @@ ___DEF_SLBL(5,___L5_c_23_univ_2d_emit_2d_array_2d_push_21_)
    ___POLL(6)
 ___DEF_SLBL(6,___L6_c_23_univ_2d_emit_2d_array_2d_push_21_)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(452),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
+   ___JUMPINT(___SET_NARGS(2),___PRC(450),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
 ___DEF_GLBL(___L8_c_23_univ_2d_emit_2d_array_2d_push_21_)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-6))
@@ -23154,7 +23110,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_array_2d_shrink_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 1126
+#define ___PH_LBL0 1124
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -23215,7 +23171,7 @@ ___DEF_GLBL(___L15_c_23_univ_2d_emit_2d_array_2d_shrink_21_)
    ___SET_R2(___FIX(0L))
    ___SET_R0(___LBL(4))
    ___ADJFP(1)
-   ___JUMPINT(___SET_NARGS(4),___PRC(1193),___L_c_23_univ_2d_emit_2d_subarray)
+   ___JUMPINT(___SET_NARGS(4),___PRC(1191),___L_c_23_univ_2d_emit_2d_subarray)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_array_2d_shrink_21_)
    ___BEGIN_ALLOC_LIST(3UL,___R1)
    ___ADD_LIST_ELEM(1,___SUB(35))
@@ -23237,7 +23193,7 @@ ___DEF_SLBL(7,___L7_c_23_univ_2d_emit_2d_array_2d_shrink_21_)
 ___DEF_SLBL(8,___L8_c_23_univ_2d_emit_2d_array_2d_shrink_21_)
 ___DEF_GLBL(___L16_c_23_univ_2d_emit_2d_array_2d_shrink_21_)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(452),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
+   ___JUMPINT(___SET_NARGS(2),___PRC(450),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
 ___DEF_GLBL(___L17_c_23_univ_2d_emit_2d_array_2d_shrink_21_)
    ___BEGIN_ALLOC_LIST(6UL,___SUB(276))
    ___ADD_LIST_ELEM(1,___STK(-5))
@@ -23299,7 +23255,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_array_2d_shrink_2d_possibly_2d_copy_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 1142
+#define ___PH_LBL0 1140
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -23406,7 +23362,7 @@ ___DEF_SLBL(10,___L10_c_23_univ_2d_emit_2d_array_2d_shrink_2d_possibly_2d_copy_2
 ___DEF_SLBL(11,___L11_c_23_univ_2d_emit_2d_array_2d_shrink_2d_possibly_2d_copy_21_)
 ___DEF_GLBL(___L18_c_23_univ_2d_emit_2d_array_2d_shrink_2d_possibly_2d_copy_21_)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(3),___PRC(810),___L_c_23_univ_2d_emit_2d_seq)
+   ___JUMPINT(___SET_NARGS(3),___PRC(808),___L_c_23_univ_2d_emit_2d_seq)
 ___DEF_GLBL(___L19_c_23_univ_2d_emit_2d_array_2d_shrink_2d_possibly_2d_copy_21_)
    ___SET_STK(-3,___STK(-7))
    ___SET_STK(-7,___STK(-6))
@@ -23422,7 +23378,7 @@ ___DEF_SLBL(12,___L12_c_23_univ_2d_emit_2d_array_2d_shrink_2d_possibly_2d_copy_2
    ___POLL(13)
 ___DEF_SLBL(13,___L13_c_23_univ_2d_emit_2d_array_2d_shrink_2d_possibly_2d_copy_21_)
    ___ADJFP(-7)
-   ___JUMPINT(___SET_NARGS(4),___PRC(1193),___L_c_23_univ_2d_emit_2d_subarray)
+   ___JUMPINT(___SET_NARGS(4),___PRC(1191),___L_c_23_univ_2d_emit_2d_subarray)
 ___DEF_GLBL(___L20_c_23_univ_2d_emit_2d_array_2d_shrink_2d_possibly_2d_copy_21_)
    ___SET_STK(-3,___STK(-7))
    ___SET_STK(-7,___STK(-6))
@@ -23453,7 +23409,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_move_2d_array_2d_to_2d_array
 #undef ___PH_LBL0
-#define ___PH_LBL0 1159
+#define ___PH_LBL0 1157
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -23530,14 +23486,14 @@ ___DEF_SLBL(6,___L6_c_23_univ_2d_emit_2d_move_2d_array_2d_to_2d_array)
    ___POLL(7)
 ___DEF_SLBL(7,___L7_c_23_univ_2d_emit_2d_move_2d_array_2d_to_2d_array)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(452),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
+   ___JUMPINT(___SET_NARGS(2),___PRC(450),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_copy_2d_array_2d_to_2d_extensible_2d_array
 #undef ___PH_LBL0
-#define ___PH_LBL0 1168
+#define ___PH_LBL0 1166
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -23605,14 +23561,14 @@ ___DEF_GLBL(___L7_c_23_univ_2d_emit_2d_copy_2d_array_2d_to_2d_extensible_2d_arra
    ___POLL(5)
 ___DEF_SLBL(5,___L5_c_23_univ_2d_emit_2d_copy_2d_array_2d_to_2d_extensible_2d_array)
    ___ADJFP(-7)
-   ___JUMPINT(___SET_NARGS(4),___PRC(1193),___L_c_23_univ_2d_emit_2d_subarray)
+   ___JUMPINT(___SET_NARGS(4),___PRC(1191),___L_c_23_univ_2d_emit_2d_subarray)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_extensible_2d_array_2d_to_2d_array_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 1175
+#define ___PH_LBL0 1173
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -23685,7 +23641,7 @@ ___DEF_SLBL(5,___L5_c_23_univ_2d_emit_2d_extensible_2d_array_2d_to_2d_array_21_)
    ___POLL(6)
 ___DEF_SLBL(6,___L6_c_23_univ_2d_emit_2d_extensible_2d_array_2d_to_2d_array_21_)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(452),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
+   ___JUMPINT(___SET_NARGS(2),___PRC(450),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
 ___DEF_GLBL(___L9_c_23_univ_2d_emit_2d_extensible_2d_array_2d_to_2d_array_21_)
    ___SET_R1(___NUL)
    ___ADJFP(-8)
@@ -23696,7 +23652,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_extensible_2d_subarray
 #undef ___PH_LBL0
-#define ___PH_LBL0 1183
+#define ___PH_LBL0 1181
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -23783,7 +23739,7 @@ ___DEF_GLBL(___L12_c_23_univ_2d_emit_2d_extensible_2d_subarray)
    ___SET_R2(___STK(-4))
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(5))
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(536),___L0_c_23_univ_2d_emit_2d__2b_)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(534),___L0_c_23_univ_2d_emit_2d__2b_)
 ___DEF_GLBL(___L13_c_23_univ_2d_emit_2d_extensible_2d_subarray)
    ___SET_R3(___STK(-3))
    ___SET_R2(___STK(-4))
@@ -23792,14 +23748,14 @@ ___DEF_GLBL(___L13_c_23_univ_2d_emit_2d_extensible_2d_subarray)
    ___POLL(8)
 ___DEF_SLBL(8,___L8_c_23_univ_2d_emit_2d_extensible_2d_subarray)
    ___ADJFP(-7)
-   ___JUMPINT(___SET_NARGS(4),___PRC(1193),___L_c_23_univ_2d_emit_2d_subarray)
+   ___JUMPINT(___SET_NARGS(4),___PRC(1191),___L_c_23_univ_2d_emit_2d_subarray)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_subarray
 #undef ___PH_LBL0
-#define ___PH_LBL0 1193
+#define ___PH_LBL0 1191
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -23883,7 +23839,7 @@ ___DEF_GLBL(___L16_c_23_univ_2d_emit_2d_subarray)
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(5))
    ___ADJFP(4)
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(536),___L0_c_23_univ_2d_emit_2d__2b_)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(534),___L0_c_23_univ_2d_emit_2d__2b_)
 ___DEF_GLBL(___L17_c_23_univ_2d_emit_2d_subarray)
    ___IF(___NOT(___EQP(___STK(-4),___FIX(0L))))
    ___GOTO(___L19_c_23_univ_2d_emit_2d_subarray)
@@ -23910,7 +23866,7 @@ ___DEF_GLBL(___L19_c_23_univ_2d_emit_2d_subarray)
    ___SET_R2(___STK(-4))
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(7))
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(536),___L0_c_23_univ_2d_emit_2d__2b_)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(534),___L0_c_23_univ_2d_emit_2d__2b_)
 ___DEF_GLBL(___L20_c_23_univ_2d_emit_2d_subarray)
    ___SET_STK(-2,___STK(-6))
    ___SET_STK(-6,___SYM_array__slice)
@@ -23949,14 +23905,14 @@ ___DEF_GLBL(___L23_c_23_univ_2d_emit_2d_subarray)
    ___SET_R2(___STK(-4))
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(11))
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(536),___L0_c_23_univ_2d_emit_2d__2b_)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(534),___L0_c_23_univ_2d_emit_2d__2b_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_array_2d_index
 #undef ___PH_LBL0
-#define ___PH_LBL0 1207
+#define ___PH_LBL0 1205
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -23989,7 +23945,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_prop_2d_index
 #undef ___PH_LBL0
-#define ___PH_LBL0 1210
+#define ___PH_LBL0 1208
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -24039,7 +23995,7 @@ ___DEF_GLBL(___L6_c_23_univ_2d_emit_2d_prop_2d_index)
    ___POLL(2)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_prop_2d_index)
    ___SET_R0(___LBL(1))
-   ___JUMPINT(___SET_NARGS(3),___PRC(1224),___L_c_23_univ_2d_emit_2d_prop_2d_index_2d_exists_3f_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1222),___L_c_23_univ_2d_emit_2d_prop_2d_index_2d_exists_3f_)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_prop_2d_index)
    ___SET_R2(___R1)
    ___SET_R3(___STK(-6))
@@ -24048,7 +24004,7 @@ ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_prop_2d_index)
    ___POLL(4)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_prop_2d_index)
    ___ADJFP(-10)
-   ___JUMPINT(___SET_NARGS(5),___PRC(480),___L_c_23_univ_2d_emit_2d_if_2d_expr)
+   ___JUMPINT(___SET_NARGS(5),___PRC(478),___L_c_23_univ_2d_emit_2d_if_2d_expr)
 ___DEF_GLBL(___L7_c_23_univ_2d_emit_2d_prop_2d_index)
    ___BEGIN_ALLOC_LIST(4UL,___SUB(306))
    ___ADD_LIST_ELEM(1,___R2)
@@ -24066,7 +24022,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_prop_2d_index_2d_or_2d_null
 #undef ___PH_LBL0
-#define ___PH_LBL0 1217
+#define ___PH_LBL0 1215
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -24111,7 +24067,7 @@ ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_prop_2d_index_2d_or_2d_null)
    ___POLL(3)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_prop_2d_index_2d_or_2d_null)
    ___ADJFP(-6)
-   ___JUMPINT(___SET_NARGS(5),___PRC(1210),___L_c_23_univ_2d_emit_2d_prop_2d_index)
+   ___JUMPINT(___SET_NARGS(5),___PRC(1208),___L_c_23_univ_2d_emit_2d_prop_2d_index)
 ___DEF_GLBL(___L6_c_23_univ_2d_emit_2d_prop_2d_index_2d_or_2d_null)
    ___SET_STK(-2,___STK(-6))
    ___SET_STK(-6,___STK(-5))
@@ -24127,14 +24083,14 @@ ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_prop_2d_index_2d_or_2d_null)
    ___POLL(5)
 ___DEF_SLBL(5,___L5_c_23_univ_2d_emit_2d_prop_2d_index_2d_or_2d_null)
    ___ADJFP(-10)
-   ___JUMPINT(___SET_NARGS(5),___PRC(1210),___L_c_23_univ_2d_emit_2d_prop_2d_index)
+   ___JUMPINT(___SET_NARGS(5),___PRC(1208),___L_c_23_univ_2d_emit_2d_prop_2d_index)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_prop_2d_index_2d_exists_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 1224
+#define ___PH_LBL0 1222
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -24242,7 +24198,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_get
 #undef ___PH_LBL0
-#define ___PH_LBL0 1234
+#define ___PH_LBL0 1232
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -24304,7 +24260,7 @@ ___DEF_GLBL(___L11_c_23_univ_2d_emit_2d_get)
    ___SET_R3(___TRU)
    ___SET_R2(___SYM_get)
    ___SET_R0(___LBL(5))
-   ___JUMPINT(___SET_NARGS(3),___PRC(944),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(942),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
 ___DEF_SLBL(5,___L5_c_23_univ_2d_emit_2d_get)
    ___SET_STK(-2,___R1)
    ___SET_R2(___STK(-4))
@@ -24338,14 +24294,14 @@ ___DEF_SLBL(8,___L8_c_23_univ_2d_emit_2d_get)
    ___POLL(9)
 ___DEF_SLBL(9,___L9_c_23_univ_2d_emit_2d_get)
    ___ADJFP(-6)
-   ___JUMPINT(___SET_NARGS(5),___PRC(1210),___L_c_23_univ_2d_emit_2d_prop_2d_index)
+   ___JUMPINT(___SET_NARGS(5),___PRC(1208),___L_c_23_univ_2d_emit_2d_prop_2d_index)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_set
 #undef ___PH_LBL0
-#define ___PH_LBL0 1245
+#define ___PH_LBL0 1243
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -24406,7 +24362,7 @@ ___DEF_GLBL(___L12_c_23_univ_2d_emit_2d_set)
    ___SET_R3(___TRU)
    ___SET_R2(___SYM_set)
    ___SET_R0(___LBL(5))
-   ___JUMPINT(___SET_NARGS(3),___PRC(944),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(942),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
 ___DEF_SLBL(5,___L5_c_23_univ_2d_emit_2d_set)
    ___SET_STK(-2,___STK(-6))
    ___SET_STK(-6,___R1)
@@ -24438,7 +24394,7 @@ ___DEF_SLBL(8,___L8_c_23_univ_2d_emit_2d_set)
    ___SET_R3(___FAL)
    ___SET_R0(___LBL(9))
    ___ADJFP(-6)
-   ___JUMPINT(___SET_NARGS(5),___PRC(1210),___L_c_23_univ_2d_emit_2d_prop_2d_index)
+   ___JUMPINT(___SET_NARGS(5),___PRC(1208),___L_c_23_univ_2d_emit_2d_prop_2d_index)
 ___DEF_SLBL(9,___L9_c_23_univ_2d_emit_2d_set)
    ___BEGIN_ALLOC_LIST(3UL,___STK(-3))
    ___ADD_LIST_ELEM(1,___SUB(35))
@@ -24456,7 +24412,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_attribute_2d_exists_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 1257
+#define ___PH_LBL0 1255
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -24573,7 +24529,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_dump
 #undef ___PH_LBL0
-#define ___PH_LBL0 1269
+#define ___PH_LBL0 1267
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -24605,7 +24561,7 @@ ___DEF_GLBL(___L_c_23_univ_2d_dump)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_dump)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(8),___PRC(1276),___L_c_23_univ_2d_dump_2d_code)
+   ___JUMPINT(___SET_NARGS(8),___PRC(1274),___L_c_23_univ_2d_dump_2d_code)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_dump)
    ___SET_R2(___STK(-9))
    ___SET_R0(___LBL(3))
@@ -24632,7 +24588,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_dump_2d_code
 #undef ___PH_LBL0
-#define ___PH_LBL0 1276
+#define ___PH_LBL0 1274
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -24692,7 +24648,7 @@ ___DEF_GLBL(___L_c_23_univ_2d_dump_2d_code)
    ___IF(___NOT(___FIXNUMP(___R4)))
    ___GOTO(___L42_c_23_univ_2d_dump_2d_code)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___STK(-2),___R4,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___STK(-2),___R4,___FIX(1L))))
    ___SET_STK(-2,___FAL)
    ___GOTO(___L42_c_23_univ_2d_dump_2d_code)
    ___END_IF
@@ -24730,12 +24686,12 @@ ___DEF_SLBL(3,___L3_c_23_univ_2d_dump_2d_code)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_dump_2d_code)
    ___SET_STK(-3,___R1)
    ___SET_R0(___LBL(5))
-   ___JUMPINT(___SET_NARGS(0),___PRC(1595),___L_c_23_make_2d_objs_2d_used)
+   ___JUMPINT(___SET_NARGS(0),___PRC(1593),___L_c_23_make_2d_objs_2d_used)
 ___DEF_SLBL(5,___L5_c_23_univ_2d_dump_2d_code)
    ___SET_STK(-2,___R1)
    ___SET_R0(___LBL(6))
    ___ADJFP(4)
-   ___JUMPINT(___SET_NARGS(0),___PRC(2682),___L_c_23_make_2d_resource_2d_set)
+   ___JUMPINT(___SET_NARGS(0),___PRC(2680),___L_c_23_make_2d_resource_2d_set)
 ___DEF_SLBL(6,___L6_c_23_univ_2d_dump_2d_code)
    ___SET_STK(-5,___R1)
    ___SET_R0(___LBL(7))
@@ -24780,7 +24736,7 @@ ___DEF_SLBL(15,___L15_c_23_univ_2d_dump_2d_code)
    ___SET_R0(___LBL(17))
    ___CHECK_HEAP(16,4096)
 ___DEF_SLBL(16,___L16_c_23_univ_2d_dump_2d_code)
-   ___JUMPINT(___SET_NARGS(0),___PRC(2682),___L_c_23_make_2d_resource_2d_set)
+   ___JUMPINT(___SET_NARGS(0),___PRC(2680),___L_c_23_make_2d_resource_2d_set)
 ___DEF_SLBL(17,___L17_c_23_univ_2d_dump_2d_code)
    ___BEGIN_ALLOC_VECTOR(22UL)
    ___ADD_VECTOR_ELEM(0,___STK(-23))
@@ -24819,7 +24775,7 @@ ___DEF_SLBL(19,___L19_c_23_univ_2d_dump_2d_code)
    ___SET_R1(___STK(-11))
    ___SET_R3(___TRU)
    ___SET_R0(___LBL(20))
-   ___JUMPINT(___SET_NARGS(3),___PRC(1035),___L_c_23_univ_2d_emit_2d_prefix_2d_class)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1033),___L_c_23_univ_2d_emit_2d_prefix_2d_class)
 ___DEF_SLBL(20,___L20_c_23_univ_2d_dump_2d_code)
    ___SET_R0(___LBL(21))
    ___JUMPINT(___SET_NARGS(1),___PRC(314),___L_c_23_univ_2d_display_2d_to_2d_string)
@@ -24827,30 +24783,30 @@ ___DEF_SLBL(21,___L21_c_23_univ_2d_dump_2d_code)
    ___SET_STK(-8,___R1)
    ___SET_R1(___STK(-11))
    ___SET_R0(___LBL(22))
-   ___JUMPINT(___SET_NARGS(1),___PRC(1018),___L_c_23_univ_2d_rts_2d_module_2d_name)
+   ___JUMPINT(___SET_NARGS(1),___PRC(1016),___L_c_23_univ_2d_rts_2d_module_2d_name)
 ___DEF_SLBL(22,___L22_c_23_univ_2d_dump_2d_code)
    ___VECTORSET(___STK(-11),___FIX(4L),___R1)
    ___VECTORSET(___STK(-11),___FIX(3L),___STK(-8))
    ___SET_R2(___VECTORREF(___STK(-11),___FIX(4L)))
    ___SET_R1(___STK(-11))
    ___SET_R0(___LBL(23))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2651),___L_c_23_univ_2d_add_2d_module_2d_import)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2649),___L_c_23_univ_2d_add_2d_module_2d_import)
 ___DEF_SLBL(23,___L23_c_23_univ_2d_dump_2d_code)
    ___SET_R2(___STK(-10))
    ___SET_R1(___STK(-11))
    ___SET_R0(___LBL(24))
-   ___JUMPINT(___SET_NARGS(2),___PRC(1608),___L_c_23_univ_2d_dump_2d_procs)
+   ___JUMPINT(___SET_NARGS(2),___PRC(1606),___L_c_23_univ_2d_dump_2d_procs)
 ___DEF_SLBL(24,___L24_c_23_univ_2d_dump_2d_code)
    ___SET_STK(-10,___R1)
    ___SET_R1(___STK(-11))
    ___SET_R0(___LBL(25))
-   ___JUMPINT(___SET_NARGS(1),___PRC(1552),___L_c_23_univ_2d_objs_2d_defs)
+   ___JUMPINT(___SET_NARGS(1),___PRC(1550),___L_c_23_univ_2d_objs_2d_defs)
 ___DEF_SLBL(25,___L25_c_23_univ_2d_dump_2d_code)
    ___SET_STK(-6,___R1)
    ___SET_R2(___STK(-7))
    ___SET_R1(___STK(-11))
    ___SET_R0(___LBL(26))
-   ___JUMPINT(___SET_NARGS(2),___PRC(1316),___L_c_23_univ_2d_module_2d_register)
+   ___JUMPINT(___SET_NARGS(2),___PRC(1314),___L_c_23_univ_2d_module_2d_register)
 ___DEF_SLBL(26,___L26_c_23_univ_2d_dump_2d_code)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-10))
@@ -24866,7 +24822,7 @@ ___DEF_SLBL(28,___L28_c_23_univ_2d_dump_2d_code)
    ___SET_R2(___STK(-8))
    ___SET_R1(___STK(-11))
    ___SET_R0(___LBL(29))
-   ___JUMPINT(___SET_NARGS(3),___PRC(1328),___L_c_23_univ_2d_defs_2d__3e_code)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1326),___L_c_23_univ_2d_defs_2d__3e_code)
 ___DEF_SLBL(29,___L29_c_23_univ_2d_dump_2d_code)
    ___SET_STK(-10,___R1)
    ___SET_R1(___VECTORREF(___STK(-11),___FIX(17L)))
@@ -24876,7 +24832,7 @@ ___DEF_SLBL(30,___L30_c_23_univ_2d_dump_2d_code)
    ___SET_STK(-7,___R1)
    ___SET_R1(___STK(-11))
    ___SET_R0(___LBL(31))
-   ___JUMPINT(___SET_NARGS(1),___PRC(2620),___L_c_23_ctx_2d_rtlib_2d_features_2d_used)
+   ___JUMPINT(___SET_NARGS(1),___PRC(2618),___L_c_23_ctx_2d_rtlib_2d_features_2d_used)
 ___DEF_SLBL(31,___L31_c_23_univ_2d_dump_2d_code)
    ___SET_R1(___CDR(___R1))
    ___SET_STK(-3,___STK(-11))
@@ -24889,7 +24845,7 @@ ___DEF_SLBL(31,___L31_c_23_univ_2d_dump_2d_code)
    ___ADJFP(-1)
    ___CHECK_HEAP(32,4096)
 ___DEF_SLBL(32,___L32_c_23_univ_2d_dump_2d_code)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1344),___L_c_23_univ_2d_link_2d_info_2d_header)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1342),___L_c_23_univ_2d_link_2d_info_2d_header)
 ___DEF_SLBL(33,___L33_c_23_univ_2d_dump_2d_code)
    ___SET_STK(-2,___R1)
    ___SET_R2(___STK(-4))
@@ -24906,7 +24862,7 @@ ___DEF_SLBL(35,___L35_c_23_univ_2d_dump_2d_code)
    ___SET_STK(-5,___R1)
    ___SET_R1(___STK(-11))
    ___SET_R0(___LBL(36))
-   ___JUMPINT(___SET_NARGS(1),___PRC(1370),___L_c_23_univ_2d_link_2d_info_2d_footer)
+   ___JUMPINT(___SET_NARGS(1),___PRC(1368),___L_c_23_univ_2d_link_2d_info_2d_footer)
 ___DEF_SLBL(36,___L36_c_23_univ_2d_dump_2d_code)
    ___BEGIN_ALLOC_LIST(6UL,___R1)
    ___ADD_LIST_ELEM(1,___STK(-5))
@@ -24951,7 +24907,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_module_2d_register
 #undef ___PH_LBL0
-#define ___PH_LBL0 1316
+#define ___PH_LBL0 1314
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -25013,14 +24969,14 @@ ___DEF_SLBL(5,___L5_c_23_univ_2d_module_2d_register)
    ___POLL(6)
 ___DEF_SLBL(6,___L6_c_23_univ_2d_module_2d_register)
    ___SET_R0(___LBL(7))
-   ___JUMPINT(___SET_NARGS(3),___PRC(944),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(942),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
 ___DEF_SLBL(7,___L7_c_23_univ_2d_module_2d_register)
    ___SET_STK(-4,___R1)
    ___SET_R2(___CLO(___STK(-5),1))
    ___SET_R1(___STK(-6))
    ___SET_R3(___TRU)
    ___SET_R0(___LBL(8))
-   ___JUMPINT(___SET_NARGS(3),___PRC(3023),___L_c_23_univ_2d_emit_2d_obj_2a_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3021),___L_c_23_univ_2d_emit_2d_obj_2a_)
 ___DEF_SLBL(8,___L8_c_23_univ_2d_module_2d_register)
    ___SET_R3(___R1)
    ___SET_R1(___STK(-6))
@@ -25034,14 +24990,14 @@ ___DEF_SLBL(9,___L9_c_23_univ_2d_module_2d_register)
    ___POLL(10)
 ___DEF_SLBL(10,___L10_c_23_univ_2d_module_2d_register)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(452),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
+   ___JUMPINT(___SET_NARGS(2),___PRC(450),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_defs_2d__3e_code
 #undef ___PH_LBL0
-#define ___PH_LBL0 1328
+#define ___PH_LBL0 1326
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -25160,7 +25116,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_link_2d_info_2d_header
 #undef ___PH_LBL0
-#define ___PH_LBL0 1344
+#define ___PH_LBL0 1342
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -25377,7 +25333,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_link_2d_info_2d_footer
 #undef ___PH_LBL0
-#define ___PH_LBL0 1370
+#define ___PH_LBL0 1368
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R4
 #undef ___PR_ALL
@@ -25416,7 +25372,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_link_2d_info
 #undef ___PH_LBL0
-#define ___PH_LBL0 1375
+#define ___PH_LBL0 1373
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4 ___D_F64(___F64V1) ___D_F64(___F64V2) \
 
@@ -25512,7 +25468,7 @@ ___DEF_GLBL(___L20_c_23_univ_2d_link_2d_info)
    ___IF(___NOT(___FIXNUMP(___R3)))
    ___GOTO(___L21_c_23_univ_2d_link_2d_info)
    ___END_IF
-   ___IF(___FIXADDP_NOTFALSEP(___R4,___R3,___FIX(1L)))
+   ___IF(___FIXADDPCONSTY_NOTFALSEP(___R4,___R3,___FIX(1L)))
    ___GOTO(___L17_c_23_univ_2d_link_2d_info)
    ___END_IF
    ___SET_R4(___FAL)
@@ -25665,7 +25621,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_link_2d_semantics_2d_changing_2d_options
 #undef ___PH_LBL0
-#define ___PH_LBL0 1393
+#define ___PH_LBL0 1391
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -25801,7 +25757,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_link_2d_mods_2d_and_2d_flags
 #undef ___PH_LBL0
-#define ___PH_LBL0 1405
+#define ___PH_LBL0 1403
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -26138,7 +26094,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_link_2d_features_2d_used
 #undef ___PH_LBL0
-#define ___PH_LBL0 1437
+#define ___PH_LBL0 1435
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -26293,7 +26249,7 @@ ___DEF_GLBL(___L76_c_23_univ_2d_link_2d_features_2d_used)
    ___POLL(9)
 ___DEF_SLBL(9,___L9_c_23_univ_2d_link_2d_features_2d_used)
    ___SET_R0(___LBL(7))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2709),___L_c_23_univ_2d_use_2d_rtlib)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2707),___L_c_23_univ_2d_use_2d_rtlib)
 ___DEF_SLBL(10,___L10_c_23_univ_2d_link_2d_features_2d_used)
    ___SET_R1(___CDR(___STK(-6)))
    ___SET_R0(___STK(-7))
@@ -26683,7 +26639,7 @@ ___DEF_GLBL(___L95_c_23_univ_2d_link_2d_features_2d_used)
    ___POLL(63)
 ___DEF_SLBL(63,___L63_c_23_univ_2d_link_2d_features_2d_used)
    ___SET_R0(___LBL(61))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2892),___L_c_23_univ_2d_glo_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2890),___L_c_23_univ_2d_glo_2d_use)
 ___DEF_SLBL(64,___L64_c_23_univ_2d_link_2d_features_2d_used)
    ___SET_R1(___STK(-4))
    ___SET_R2(___FIX(6L))
@@ -26718,7 +26674,7 @@ ___DEF_GLBL(___L96_c_23_univ_2d_link_2d_features_2d_used)
    ___POLL(68)
 ___DEF_SLBL(68,___L68_c_23_univ_2d_link_2d_features_2d_used)
    ___SET_R0(___LBL(66))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2892),___L_c_23_univ_2d_glo_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2890),___L_c_23_univ_2d_glo_2d_use)
 ___DEF_SLBL(69,___L69_c_23_univ_2d_link_2d_features_2d_used)
    ___SET_R1(___STK(-4))
    ___SET_R2(___FIX(7L))
@@ -26754,20 +26710,20 @@ ___DEF_GLBL(___L97_c_23_univ_2d_link_2d_features_2d_used)
    ___POLL(73)
 ___DEF_SLBL(73,___L73_c_23_univ_2d_link_2d_features_2d_used)
    ___SET_R0(___LBL(74))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2892),___L_c_23_univ_2d_glo_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2890),___L_c_23_univ_2d_glo_2d_use)
 ___DEF_SLBL(74,___L74_c_23_univ_2d_link_2d_features_2d_used)
    ___SET_R2(___STK(-4))
    ___SET_R1(___STK(-6))
    ___SET_R3(___SYM_wr)
    ___SET_R0(___LBL(71))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2892),___L_c_23_univ_2d_glo_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2890),___L_c_23_univ_2d_glo_2d_use)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_link
 #undef ___PH_LBL0
-#define ___PH_LBL0 1513
+#define ___PH_LBL0 1511
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -26838,12 +26794,12 @@ ___DEF_SLBL(3,___L3_c_23_univ_2d_link)
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(4))
    ___ADJFP(4)
-   ___JUMPINT(___SET_NARGS(2),___PRC(1393),___L_c_23_univ_2d_link_2d_semantics_2d_changing_2d_options)
+   ___JUMPINT(___SET_NARGS(2),___PRC(1391),___L_c_23_univ_2d_link_2d_semantics_2d_changing_2d_options)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_link)
    ___SET_STK(-5,___R1)
    ___SET_R1(___STK(-9))
    ___SET_R0(___LBL(5))
-   ___JUMPINT(___SET_NARGS(1),___PRC(1405),___L_c_23_univ_2d_link_2d_mods_2d_and_2d_flags)
+   ___JUMPINT(___SET_NARGS(1),___PRC(1403),___L_c_23_univ_2d_link_2d_mods_2d_and_2d_flags)
 ___DEF_SLBL(5,___L5_c_23_univ_2d_link)
    ___SET_STK(-4,___R1)
    ___SET_R1(___STK(-5))
@@ -26858,11 +26814,11 @@ ___DEF_SLBL(7,___L7_c_23_univ_2d_link)
    ___SET_STK(-2,___R1)
    ___SET_R0(___LBL(8))
    ___ADJFP(4)
-   ___JUMPINT(___SET_NARGS(0),___PRC(1595),___L_c_23_make_2d_objs_2d_used)
+   ___JUMPINT(___SET_NARGS(0),___PRC(1593),___L_c_23_make_2d_objs_2d_used)
 ___DEF_SLBL(8,___L8_c_23_univ_2d_link)
    ___SET_STK(-5,___R1)
    ___SET_R0(___LBL(9))
-   ___JUMPINT(___SET_NARGS(0),___PRC(2682),___L_c_23_make_2d_resource_2d_set)
+   ___JUMPINT(___SET_NARGS(0),___PRC(2680),___L_c_23_make_2d_resource_2d_set)
 ___DEF_SLBL(9,___L9_c_23_univ_2d_link)
    ___SET_STK(-4,___R1)
    ___SET_R0(___LBL(10))
@@ -26902,7 +26858,7 @@ ___DEF_SLBL(17,___L17_c_23_univ_2d_link)
    ___SET_R0(___LBL(19))
    ___CHECK_HEAP(18,4096)
 ___DEF_SLBL(18,___L18_c_23_univ_2d_link)
-   ___JUMPINT(___SET_NARGS(0),___PRC(2682),___L_c_23_make_2d_resource_2d_set)
+   ___JUMPINT(___SET_NARGS(0),___PRC(2680),___L_c_23_make_2d_resource_2d_set)
 ___DEF_SLBL(19,___L19_c_23_univ_2d_link)
    ___BEGIN_ALLOC_VECTOR(22UL)
    ___ADD_VECTOR_ELEM(0,___STK(-23))
@@ -26934,12 +26890,12 @@ ___DEF_SLBL(19,___L19_c_23_univ_2d_link)
    ___ADJFP(-12)
    ___CHECK_HEAP(20,4096)
 ___DEF_SLBL(20,___L20_c_23_univ_2d_link)
-   ___JUMPINT(___SET_NARGS(1),___PRC(1018),___L_c_23_univ_2d_rts_2d_module_2d_name)
+   ___JUMPINT(___SET_NARGS(1),___PRC(1016),___L_c_23_univ_2d_rts_2d_module_2d_name)
 ___DEF_SLBL(21,___L21_c_23_univ_2d_link)
    ___VECTORSET(___STK(-5),___FIX(4L),___R1)
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(22))
-   ___JUMPINT(___SET_NARGS(1),___PRC(2576),___L_c_23_ctx_2d_rts_2d_module_2d_name)
+   ___JUMPINT(___SET_NARGS(1),___PRC(2574),___L_c_23_ctx_2d_rts_2d_module_2d_name)
 ___DEF_SLBL(22,___L22_c_23_univ_2d_link)
    ___VECTORSET(___STK(-5),___FIX(3L),___R1)
    ___SET_R2(___STK(-4))
@@ -26952,11 +26908,11 @@ ___DEF_SLBL(23,___L23_c_23_univ_2d_link)
    ___SET_R2(___STK(-9))
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(24))
-   ___JUMPINT(___SET_NARGS(3),___PRC(1437),___L_c_23_univ_2d_link_2d_features_2d_used)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1435),___L_c_23_univ_2d_link_2d_features_2d_used)
 ___DEF_SLBL(24,___L24_c_23_univ_2d_link)
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(25))
-   ___JUMPINT(___SET_NARGS(1),___PRC(2620),___L_c_23_ctx_2d_rtlib_2d_features_2d_used)
+   ___JUMPINT(___SET_NARGS(1),___PRC(2618),___L_c_23_ctx_2d_rtlib_2d_features_2d_used)
 ___DEF_SLBL(25,___L25_c_23_univ_2d_link)
    ___SET_R1(___CDR(___R1))
    ___SET_STK(-9,___R1)
@@ -26981,7 +26937,7 @@ ___DEF_SLBL(28,___L28_c_23_univ_2d_link)
    ___SET_R2(___VECTORREF(___STK(-5),___FIX(3L)))
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(29))
-   ___JUMPINT(___SET_NARGS(3),___PRC(1328),___L_c_23_univ_2d_defs_2d__3e_code)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1326),___L_c_23_univ_2d_defs_2d__3e_code)
 ___DEF_SLBL(29,___L29_c_23_univ_2d_link)
    ___SET_STK(-7,___R1)
    ___SET_R1(___VECTORREF(___STK(-5),___FIX(17L)))
@@ -26997,7 +26953,7 @@ ___DEF_SLBL(30,___L30_c_23_univ_2d_link)
    ___SET_R3(___FAL)
    ___SET_R0(___LBL(31))
    ___ADJFP(3)
-   ___JUMPINT(___SET_NARGS(6),___PRC(1344),___L_c_23_univ_2d_link_2d_info_2d_header)
+   ___JUMPINT(___SET_NARGS(6),___PRC(1342),___L_c_23_univ_2d_link_2d_info_2d_header)
 ___DEF_SLBL(31,___L31_c_23_univ_2d_link)
    ___SET_STK(-9,___R1)
    ___SET_R2(___VECTORREF(___STK(-5),___FIX(3L)))
@@ -27013,7 +26969,7 @@ ___DEF_SLBL(33,___L33_c_23_univ_2d_link)
    ___SET_STK(-4,___R1)
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(34))
-   ___JUMPINT(___SET_NARGS(1),___PRC(1370),___L_c_23_univ_2d_link_2d_info_2d_footer)
+   ___JUMPINT(___SET_NARGS(1),___PRC(1368),___L_c_23_univ_2d_link_2d_info_2d_footer)
 ___DEF_SLBL(34,___L34_c_23_univ_2d_link)
    ___BEGIN_ALLOC_LIST(7UL,___R1)
    ___ADD_LIST_ELEM(1,___STK(-4))
@@ -27044,14 +27000,14 @@ ___DEF_SLBL(37,___L37_c_23_univ_2d_link)
    ___SET_R2(___STK(-6))
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(27))
-   ___JUMPINT(___SET_NARGS(3),___PRC(1328),___L_c_23_univ_2d_defs_2d__3e_code)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1326),___L_c_23_univ_2d_defs_2d__3e_code)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_objs_2d_defs
 #undef ___PH_LBL0
-#define ___PH_LBL0 1552
+#define ___PH_LBL0 1550
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -27203,13 +27159,13 @@ ___DEF_GLBL(___L30_c_23_univ_2d_objs_2d_defs)
    ___SET_R3(___FAL)
    ___SET_R0(___LBL(13))
    ___ADJFP(1)
-   ___JUMPINT(___SET_NARGS(4),___PRC(871),___L_c_23_univ_2d_emit_2d_mod_2d_field)
+   ___JUMPINT(___SET_NARGS(4),___PRC(869),___L_c_23_univ_2d_emit_2d_mod_2d_field)
 ___DEF_SLBL(13,___L13_c_23_univ_2d_objs_2d_defs)
    ___SET_R2(___VECTORREF(___STK(-5),___FIX(1L)))
    ___SETCAR(___R2,___R1)
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(14))
-   ___JUMPINT(___SET_NARGS(1),___PRC(3231),___L_c_23_univ_2d_obj_2d_type)
+   ___JUMPINT(___SET_NARGS(1),___PRC(3229),___L_c_23_univ_2d_obj_2d_type)
 ___DEF_SLBL(14,___L14_c_23_univ_2d_objs_2d_defs)
    ___SET_R2(___R1)
    ___SET_R3(___STK(-3))
@@ -27265,13 +27221,13 @@ ___DEF_GLBL(___L36_c_23_univ_2d_objs_2d_defs)
    ___SET_R3(___FAL)
    ___SET_R0(___LBL(19))
    ___ADJFP(1)
-   ___JUMPINT(___SET_NARGS(4),___PRC(871),___L_c_23_univ_2d_emit_2d_mod_2d_field)
+   ___JUMPINT(___SET_NARGS(4),___PRC(869),___L_c_23_univ_2d_emit_2d_mod_2d_field)
 ___DEF_SLBL(19,___L19_c_23_univ_2d_objs_2d_defs)
    ___SET_R2(___VECTORREF(___STK(-5),___FIX(1L)))
    ___SETCAR(___R2,___R1)
    ___SET_R1(___STK(-8))
    ___SET_R0(___LBL(20))
-   ___JUMPINT(___SET_NARGS(1),___PRC(3231),___L_c_23_univ_2d_obj_2d_type)
+   ___JUMPINT(___SET_NARGS(1),___PRC(3229),___L_c_23_univ_2d_obj_2d_type)
 ___DEF_SLBL(20,___L20_c_23_univ_2d_objs_2d_defs)
    ___SET_R2(___R1)
    ___SET_R3(___STK(-3))
@@ -27320,7 +27276,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_obj_2d_use
 #undef ___PH_LBL0
-#define ___PH_LBL0 1576
+#define ___PH_LBL0 1574
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -27414,7 +27370,7 @@ ___DEF_SLBL(6,___L6_c_23_univ_2d_obj_2d_use)
    ___SET_R1(___STK(-6))
    ___SET_R3(___FAL)
    ___SET_R0(___LBL(7))
-   ___JUMPINT(___SET_NARGS(3),___PRC(848),___L_c_23_univ_2d_emit_2d_this_2d_mod_2d_field)
+   ___JUMPINT(___SET_NARGS(3),___PRC(846),___L_c_23_univ_2d_emit_2d_this_2d_mod_2d_field)
 ___DEF_SLBL(7,___L7_c_23_univ_2d_obj_2d_use)
    ___SET_R2(___R1)
    ___SET_R1(___VECTORREF(___STK(-6),___FIX(13L)))
@@ -27422,7 +27378,7 @@ ___DEF_SLBL(7,___L7_c_23_univ_2d_obj_2d_use)
    ___POLL(8)
 ___DEF_SLBL(8,___L8_c_23_univ_2d_obj_2d_use)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(2687),___L_c_23_resource_2d_set_2d_add_21_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2685),___L_c_23_resource_2d_set_2d_add_21_)
 ___DEF_GLBL(___L20_c_23_univ_2d_obj_2d_use)
    ___SET_R1(___VOID)
    ___ADJFP(-8)
@@ -27455,7 +27411,7 @@ ___DEF_SLBL(13,___L13_c_23_univ_2d_obj_2d_use)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L22_c_23_univ_2d_obj_2d_use)
    ___END_IF
-   ___IF(___FIXADDP_NOTFALSEP(___R2,___R1,___FIX(1L)))
+   ___IF(___FIXADDPCONSTY_NOTFALSEP(___R2,___R1,___FIX(1L)))
    ___GOTO(___L23_c_23_univ_2d_obj_2d_use)
    ___END_IF
    ___SET_R2(___FAL)
@@ -27499,14 +27455,14 @@ ___DEF_GLBL(___L26_c_23_univ_2d_obj_2d_use)
    ___SET_R2(___STK(-7))
    ___SET_R0(___LBL(3))
    ___ADJFP(-3)
-   ___JUMPINT(___SET_NARGS(4),___PRC(3468),___L_c_23_label_2d__3e_id)
+   ___JUMPINT(___SET_NARGS(4),___PRC(3450),___L_c_23_label_2d__3e_id)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_make_2d_objs_2d_used
 #undef ___PH_LBL0
-#define ___PH_LBL0 1595
+#define ___PH_LBL0 1593
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -27551,7 +27507,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_objs_2d_used_2d_stack
 #undef ___PH_LBL0
-#define ___PH_LBL0 1600
+#define ___PH_LBL0 1598
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -27576,7 +27532,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_objs_2d_used_2d_stack_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 1602
+#define ___PH_LBL0 1600
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -27601,7 +27557,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_objs_2d_used_2d_table
 #undef ___PH_LBL0
-#define ___PH_LBL0 1604
+#define ___PH_LBL0 1602
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -27626,7 +27582,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_objs_2d_used_2d_table_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 1606
+#define ___PH_LBL0 1604
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -27651,7 +27607,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_dump_2d_procs
 #undef ___PH_LBL0
-#define ___PH_LBL0 1608
+#define ___PH_LBL0 1606
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4 ___D_F64(___F64V1) ___D_F64( \
 ___F64V2) ___D_F64(___F64V3)
@@ -29320,7 +29276,7 @@ ___DEF_SLBL(132,___L132_c_23_univ_2d_dump_2d_procs)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L763_c_23_univ_2d_dump_2d_procs)
    ___END_IF
-   ___IF(___FIXADDP_NOTFALSEP(___R2,___R1,___FIX(1L)))
+   ___IF(___FIXADDPCONSTY_NOTFALSEP(___R2,___R1,___FIX(1L)))
    ___GOTO(___L761_c_23_univ_2d_dump_2d_procs)
    ___END_IF
    ___SET_R2(___FAL)
@@ -30041,7 +29997,7 @@ ___DEF_GLBL(___L798_c_23_univ_2d_dump_2d_procs)
    ___POLL(218)
 ___DEF_SLBL(218,___L218_c_23_univ_2d_dump_2d_procs)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(2963),___L_c_23_univ_2d_emit_2d_getopnd)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2961),___L_c_23_univ_2d_emit_2d_getopnd)
 ___DEF_GLBL(___L799_c_23_univ_2d_dump_2d_procs)
    ___SET_R1(___STK(-3))
    ___SET_R0(___LBL(219))
@@ -30088,7 +30044,7 @@ ___DEF_SLBL(225,___L225_c_23_univ_2d_dump_2d_procs)
    ___POLL(226)
 ___DEF_SLBL(226,___L226_c_23_univ_2d_dump_2d_procs)
    ___SET_R0(___LBL(227))
-   ___JUMPINT(___SET_NARGS(2),___PRC(3439),___L_c_23_univ_2d_compactness_3e__3d__3f_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(3421),___L_c_23_univ_2d_compactness_3e__3d__3f_)
 ___DEF_SLBL(227,___L227_c_23_univ_2d_dump_2d_procs)
    ___IF(___NOTFALSEP(___R1))
    ___GOTO(___L800_c_23_univ_2d_dump_2d_procs)
@@ -30321,13 +30277,13 @@ ___DEF_GLBL(___L816_c_23_univ_2d_dump_2d_procs)
    ___POLL(252)
 ___DEF_SLBL(252,___L252_c_23_univ_2d_dump_2d_procs)
    ___SET_R0(___LBL(253))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2714),___L_c_23_use_2d_resource)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2712),___L_c_23_use_2d_resource)
 ___DEF_SLBL(253,___L253_c_23_univ_2d_dump_2d_procs)
    ___SET_R1(___STK(-7))
    ___SET_R3(___TRU)
    ___SET_R2(___SYM_sp)
    ___SET_R0(___LBL(254))
-   ___JUMPINT(___SET_NARGS(3),___PRC(977),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(975),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
 ___DEF_SLBL(254,___L254_c_23_univ_2d_dump_2d_procs)
    ___IF(___NOT(___EQP(___STK(-4),___FIX(0L))))
    ___GOTO(___L818_c_23_univ_2d_dump_2d_procs)
@@ -30489,7 +30445,7 @@ ___DEF_SLBL(263,___L263_c_23_univ_2d_dump_2d_procs)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(264))
-   ___JUMPINT(___SET_NARGS(2),___PRC(452),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
+   ___JUMPINT(___SET_NARGS(2),___PRC(450),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
 ___DEF_SLBL(264,___L264_c_23_univ_2d_dump_2d_procs)
    ___BEGIN_ALLOC_LIST(2UL,___NUL)
    ___ADD_LIST_ELEM(1,___R1)
@@ -30509,7 +30465,7 @@ ___DEF_SLBL(267,___L267_c_23_univ_2d_dump_2d_procs)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(255))
-   ___JUMPINT(___SET_NARGS(2),___PRC(452),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
+   ___JUMPINT(___SET_NARGS(2),___PRC(450),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
 ___DEF_GLBL(___L831_c_23_univ_2d_dump_2d_procs)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
@@ -30530,7 +30486,7 @@ ___DEF_SLBL(269,___L269_c_23_univ_2d_dump_2d_procs)
    ___SET_R1(___STK(-11))
    ___SET_R0(___LBL(270))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(2),___PRC(452),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
+   ___JUMPINT(___SET_NARGS(2),___PRC(450),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
 ___DEF_SLBL(270,___L270_c_23_univ_2d_dump_2d_procs)
    ___GOTO(___L817_c_23_univ_2d_dump_2d_procs)
 ___DEF_GLBL(___L832_c_23_univ_2d_dump_2d_procs)
@@ -30544,7 +30500,7 @@ ___DEF_GLBL(___L832_c_23_univ_2d_dump_2d_procs)
    ___ADJFP(-4)
    ___CHECK_HEAP(271,4096)
 ___DEF_SLBL(271,___L271_c_23_univ_2d_dump_2d_procs)
-   ___JUMPINT(___SET_NARGS(2),___PRC(452),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
+   ___JUMPINT(___SET_NARGS(2),___PRC(450),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
 ___DEF_SLBL(272,___L272_c_23_univ_2d_dump_2d_procs)
    ___GOTO(___L817_c_23_univ_2d_dump_2d_procs)
 ___DEF_GLBL(___L833_c_23_univ_2d_dump_2d_procs)
@@ -30558,7 +30514,7 @@ ___DEF_GLBL(___L833_c_23_univ_2d_dump_2d_procs)
    ___ADJFP(-4)
    ___CHECK_HEAP(273,4096)
 ___DEF_SLBL(273,___L273_c_23_univ_2d_dump_2d_procs)
-   ___JUMPINT(___SET_NARGS(2),___PRC(452),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
+   ___JUMPINT(___SET_NARGS(2),___PRC(450),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
 ___DEF_SLBL(274,___L274_c_23_univ_2d_dump_2d_procs)
    ___GOTO(___L817_c_23_univ_2d_dump_2d_procs)
 ___DEF_GLBL(___L834_c_23_univ_2d_dump_2d_procs)
@@ -30644,7 +30600,7 @@ ___DEF_SLBL(279,___L279_c_23_univ_2d_dump_2d_procs)
    ___POLL(280)
 ___DEF_SLBL(280,___L280_c_23_univ_2d_dump_2d_procs)
    ___ADJFP(-7)
-   ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(459),___L0_c_23_univ_2d_emit_2d_if)
+   ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(457),___L0_c_23_univ_2d_emit_2d_if)
 ___DEF_GLBL(___L838_c_23_univ_2d_dump_2d_procs)
    ___SET_R2(___STK(-8))
    ___SET_R1(___SUB(348))
@@ -30696,13 +30652,13 @@ ___DEF_SLBL(285,___L285_c_23_univ_2d_dump_2d_procs)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-10))
    ___SET_R0(___LBL(286))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2963),___L_c_23_univ_2d_emit_2d_getopnd)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2961),___L_c_23_univ_2d_emit_2d_getopnd)
 ___DEF_SLBL(286,___L286_c_23_univ_2d_dump_2d_procs)
    ___SET_R3(___R1)
    ___SET_R1(___STK(-10))
    ___SET_R2(___GLO_c_23_return_2d_addr_2d_reg)
    ___SET_R0(___LBL(287))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2996),___L_c_23_univ_2d_emit_2d_setloc)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2994),___L_c_23_univ_2d_emit_2d_setloc)
 ___DEF_SLBL(287,___L287_c_23_univ_2d_dump_2d_procs)
    ___BEGIN_ALLOC_LIST(2UL,___R1)
    ___ADD_LIST_ELEM(1,___STK(-7))
@@ -30789,7 +30745,7 @@ ___DEF_SLBL(292,___L292_c_23_univ_2d_dump_2d_procs)
    ___SET_R2(___SYM_check__procedure__glo)
    ___SET_R0(___LBL(293))
    ___ADJFP(4)
-   ___JUMPINT(___SET_NARGS(3),___PRC(944),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(942),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
 ___DEF_SLBL(293,___L293_c_23_univ_2d_dump_2d_procs)
    ___SET_STK(-17,___R1)
    ___SET_STK(1,___STK(-21))
@@ -30809,7 +30765,7 @@ ___DEF_SLBL(295,___L295_c_23_univ_2d_dump_2d_procs)
    ___SET_R1(___STK(-18))
    ___SET_R3(___TRU)
    ___SET_R0(___LBL(296))
-   ___JUMPINT(___SET_NARGS(3),___PRC(3023),___L_c_23_univ_2d_emit_2d_obj_2a_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3021),___L_c_23_univ_2d_emit_2d_obj_2a_)
 ___DEF_SLBL(296,___L296_c_23_univ_2d_dump_2d_procs)
    ___SET_R3(___R1)
    ___SET_R2(___STK(-21))
@@ -30825,7 +30781,7 @@ ___DEF_GLBL(___L851_c_23_univ_2d_dump_2d_procs)
    ___SET_R1(___STK(-14))
    ___SET_R2(___FIX(7L))
    ___SET_R0(___LBL(299))
-   ___JUMPINT(___SET_NARGS(2),___PRC(3439),___L_c_23_univ_2d_compactness_3e__3d__3f_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(3421),___L_c_23_univ_2d_compactness_3e__3d__3f_)
 ___DEF_SLBL(299,___L299_c_23_univ_2d_dump_2d_procs)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L854_c_23_univ_2d_dump_2d_procs)
@@ -30892,7 +30848,7 @@ ___DEF_GLBL(___L859_c_23_univ_2d_dump_2d_procs)
    ___SET_R3(___TRU)
    ___SET_R2(___SYM_check__procedure)
    ___SET_R0(___LBL(305))
-   ___JUMPINT(___SET_NARGS(3),___PRC(944),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(942),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
 ___DEF_SLBL(305,___L305_c_23_univ_2d_dump_2d_procs)
    ___SET_STK(-13,___R1)
    ___SET_STK(1,___STK(-17))
@@ -30934,7 +30890,7 @@ ___DEF_SLBL(311,___L311_c_23_univ_2d_dump_2d_procs)
    ___SET_R2(___UNBOX(___STK(-10)))
    ___SET_R1(___STK(-14))
    ___SET_R0(___LBL(312))
-   ___JUMPINT(___SET_NARGS(2),___PRC(3445),___L_c_23_gvm_2d_lbl_2d_use)
+   ___JUMPINT(___SET_NARGS(2),___PRC(3427),___L_c_23_gvm_2d_lbl_2d_use)
 ___DEF_SLBL(312,___L312_c_23_univ_2d_dump_2d_procs)
    ___GOTO(___L851_c_23_univ_2d_dump_2d_procs)
 ___DEF_GLBL(___L861_c_23_univ_2d_dump_2d_procs)
@@ -30960,7 +30916,7 @@ ___DEF_GLBL(___L863_c_23_univ_2d_dump_2d_procs)
    ___SET_R2(___UNBOX(___STK(-10)))
    ___SET_R1(___STK(-14))
    ___SET_R0(___LBL(315))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2963),___L_c_23_univ_2d_emit_2d_getopnd)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2961),___L_c_23_univ_2d_emit_2d_getopnd)
 ___DEF_SLBL(315,___L315_c_23_univ_2d_dump_2d_procs)
    ___SET_STK(1,___STK(-14))
    ___SET_R3(___R1)
@@ -30968,14 +30924,14 @@ ___DEF_SLBL(315,___L315_c_23_univ_2d_dump_2d_procs)
    ___SET_R1(___STK(-14))
    ___SET_R0(___LBL(316))
    ___ADJFP(4)
-   ___JUMPINT(___SET_NARGS(3),___PRC(797),___L_c_23_univ_2d_emit_2d_downcast_2a_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(795),___L_c_23_univ_2d_emit_2d_downcast_2a_)
 ___DEF_SLBL(316,___L316_c_23_univ_2d_dump_2d_procs)
    ___SET_R3(___R1)
    ___SET_R1(___STK(-21))
    ___SET_R2(___SYM_jumpable)
    ___SET_R0(___LBL(298))
    ___ADJFP(-3)
-   ___JUMPINT(___SET_NARGS(4),___PRC(787),___L_c_23_univ_2d_emit_2d_upcast_2a_)
+   ___JUMPINT(___SET_NARGS(4),___PRC(785),___L_c_23_univ_2d_emit_2d_upcast_2a_)
 ___DEF_GLBL(___L864_c_23_univ_2d_dump_2d_procs)
    ___SET_R1(___SYM_returnpt)
    ___GOTO(___L863_c_23_univ_2d_dump_2d_procs)
@@ -30988,7 +30944,7 @@ ___DEF_SLBL(317,___L317_c_23_univ_2d_dump_2d_procs)
    ___SET_R1(___STK(-14))
    ___SET_R2(___SYM_jumpable)
    ___SET_R0(___LBL(318))
-   ___JUMPINT(___SET_NARGS(3),___PRC(3217),___L_c_23_univ_2d_emit_2d_obj_2d_proc_2d_as)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3215),___L_c_23_univ_2d_emit_2d_obj_2d_proc_2d_as)
 ___DEF_SLBL(318,___L318_c_23_univ_2d_dump_2d_procs)
    ___GOTO(___L851_c_23_univ_2d_dump_2d_procs)
 ___DEF_GLBL(___L866_c_23_univ_2d_dump_2d_procs)
@@ -31084,7 +31040,7 @@ ___DEF_GLBL(___L874_c_23_univ_2d_dump_2d_procs)
    ___SET_R1(___VECTORREF(___STK(-14),___FIX(15L)))
    ___SET_R2(___SYM_sp)
    ___SET_R0(___LBL(330))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2687),___L_c_23_resource_2d_set_2d_add_21_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2685),___L_c_23_resource_2d_set_2d_add_21_)
 ___DEF_SLBL(330,___L330_c_23_univ_2d_dump_2d_procs)
    ___IF(___NOT(___SYMBOL2STRINGP_NOTFALSEP(___R1,___SYM_sp)))
    ___SET_R1(___FAL)
@@ -31094,26 +31050,26 @@ ___DEF_GLBL(___L875_c_23_univ_2d_dump_2d_procs)
    ___SET_R1(___STK(-14))
    ___SET_R2(___SYM_sp)
    ___SET_R0(___LBL(331))
-   ___JUMPINT(___SET_NARGS(2),___PRC(3431),___L_c_23_univ_2d_rts_2d_field_2d_low_2d_level_2d_name)
+   ___JUMPINT(___SET_NARGS(2),___PRC(3413),___L_c_23_univ_2d_rts_2d_field_2d_low_2d_level_2d_name)
 ___DEF_SLBL(331,___L331_c_23_univ_2d_dump_2d_procs)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-14))
    ___SET_R3(___TRU)
    ___SET_R0(___LBL(332))
-   ___JUMPINT(___SET_NARGS(3),___PRC(962),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_ref)
+   ___JUMPINT(___SET_NARGS(3),___PRC(960),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_ref)
 ___DEF_SLBL(332,___L332_c_23_univ_2d_dump_2d_procs)
    ___SET_STK(-18,___R1)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-14))
    ___SET_R0(___LBL(333))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2706),___L_c_23_use_2d_global)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2704),___L_c_23_use_2d_global)
 ___DEF_SLBL(333,___L333_c_23_univ_2d_dump_2d_procs)
    ___SET_R1(___STK(-18))
    ___SET_R2(___STK(-19))
    ___SET_R3(___FAL)
    ___SET_R0(___LBL(334))
    ___ADJFP(-3)
-   ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(1051),___L0_c_23_univ_2d_emit_2d_inc_2d_by)
+   ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(1049),___L0_c_23_univ_2d_emit_2d_inc_2d_by)
 ___DEF_SLBL(334,___L334_c_23_univ_2d_dump_2d_procs)
    ___SET_R2(___STK(-15))
    ___GOTO(___L849_c_23_univ_2d_dump_2d_procs)
@@ -31177,7 +31133,7 @@ ___DEF_GLBL(___L882_c_23_univ_2d_dump_2d_procs)
    ___SET_R2(___STK(-8))
    ___SET_R1(___STK(-10))
    ___SET_R0(___LBL(338))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2817),___L_c_23_univ_2d_emit_2d_setnargs)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2815),___L_c_23_univ_2d_emit_2d_setnargs)
 ___DEF_SLBL(338,___L338_c_23_univ_2d_dump_2d_procs)
    ___GOTO(___L846_c_23_univ_2d_dump_2d_procs)
 ___DEF_GLBL(___L883_c_23_univ_2d_dump_2d_procs)
@@ -31195,7 +31151,7 @@ ___DEF_SLBL(340,___L340_c_23_univ_2d_dump_2d_procs)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L890_c_23_univ_2d_dump_2d_procs)
    ___END_IF
-   ___IF(___NOT(___FIXADDP_NOTFALSEP(___R2,___R1,___FIX(1L))))
+   ___IF(___NOT(___FIXADDPCONSTY_NOTFALSEP(___R2,___R1,___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L889_c_23_univ_2d_dump_2d_procs)
    ___END_IF
@@ -31218,13 +31174,13 @@ ___DEF_GLBL(___L886_c_23_univ_2d_dump_2d_procs)
    ___SET_R2(___UNBOX(___STK(-6)))
    ___SET_R1(___STK(-10))
    ___SET_R0(___LBL(342))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2963),___L_c_23_univ_2d_emit_2d_getopnd)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2961),___L_c_23_univ_2d_emit_2d_getopnd)
 ___DEF_SLBL(342,___L342_c_23_univ_2d_dump_2d_procs)
    ___SET_R3(___R1)
    ___SET_R2(___STK(-7))
    ___SET_R1(___STK(-10))
    ___SET_R0(___LBL(343))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2996),___L_c_23_univ_2d_emit_2d_setloc)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2994),___L_c_23_univ_2d_emit_2d_setloc)
 ___DEF_SLBL(343,___L343_c_23_univ_2d_dump_2d_procs)
    ___SETBOX(___STK(-6),___STK(-7))
    ___GOTO(___L843_c_23_univ_2d_dump_2d_procs)
@@ -31550,7 +31506,7 @@ ___DEF_GLBL(___L909_c_23_univ_2d_dump_2d_procs)
    ___SET_R1(___STK(-11))
    ___SET_R0(___LBL(366))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(2),___PRC(2963),___L_c_23_univ_2d_emit_2d_getopnd)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2961),___L_c_23_univ_2d_emit_2d_getopnd)
 ___DEF_SLBL(380,___L380_c_23_univ_2d_dump_2d_procs)
    ___SET_R1(___CONS(___STK(-6),___R1))
    ___ADJFP(-10)
@@ -31567,7 +31523,7 @@ ___DEF_SLBL(382,___L382_c_23_univ_2d_dump_2d_procs)
    ___IF(___NOT(___FIXNUMP(___R2)))
    ___GOTO(___L921_c_23_univ_2d_dump_2d_procs)
    ___END_IF
-   ___IF(___FIXADDP_NOTFALSEP(___R3,___R2,___FIX(1L)))
+   ___IF(___FIXADDPCONSTY_NOTFALSEP(___R3,___R2,___FIX(1L)))
    ___GOTO(___L911_c_23_univ_2d_dump_2d_procs)
    ___END_IF
    ___SET_R3(___FAL)
@@ -31654,13 +31610,13 @@ ___DEF_GLBL(___L916_c_23_univ_2d_dump_2d_procs)
    ___SET_R1(___STK(-19))
    ___SET_R2(___SYM_closure__alloc)
    ___SET_R0(___LBL(391))
-   ___JUMPINT(___SET_NARGS(2),___PRC(3435),___L_c_23_univ_2d_rts_2d_method_2d_low_2d_level_2d_name)
+   ___JUMPINT(___SET_NARGS(2),___PRC(3417),___L_c_23_univ_2d_rts_2d_method_2d_low_2d_level_2d_name)
 ___DEF_SLBL(391,___L391_c_23_univ_2d_dump_2d_procs)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-19))
    ___SET_R3(___TRU)
    ___SET_R0(___LBL(392))
-   ___JUMPINT(___SET_NARGS(3),___PRC(929),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_ref)
+   ___JUMPINT(___SET_NARGS(3),___PRC(927),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_ref)
 ___DEF_SLBL(392,___L392_c_23_univ_2d_dump_2d_procs)
    ___SET_STK(-10,___R1)
    ___SET_R1(___STK(-13))
@@ -31670,7 +31626,7 @@ ___DEF_SLBL(393,___L393_c_23_univ_2d_dump_2d_procs)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-19))
    ___SET_R0(___LBL(394))
-   ___JUMPINT(___SET_NARGS(2),___PRC(3445),___L_c_23_gvm_2d_lbl_2d_use)
+   ___JUMPINT(___SET_NARGS(2),___PRC(3427),___L_c_23_gvm_2d_lbl_2d_use)
 ___DEF_SLBL(394,___L394_c_23_univ_2d_dump_2d_procs)
    ___SET_R3(___CONS(___R1,___STK(-14)))
    ___SET_R1(___STK(-19))
@@ -31678,7 +31634,7 @@ ___DEF_SLBL(394,___L394_c_23_univ_2d_dump_2d_procs)
    ___SET_R0(___LBL(396))
    ___CHECK_HEAP(395,4096)
 ___DEF_SLBL(395,___L395_c_23_univ_2d_dump_2d_procs)
-   ___JUMPINT(___SET_NARGS(3),___PRC(3319),___L_c_23_univ_2d_emit_2d_array_2d_literal)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3301),___L_c_23_univ_2d_emit_2d_array_2d_literal)
 ___DEF_SLBL(396,___L396_c_23_univ_2d_dump_2d_procs)
    ___SET_R3(___R1)
    ___SET_R1(___STK(-19))
@@ -31691,7 +31647,7 @@ ___DEF_SLBL(397,___L397_c_23_univ_2d_dump_2d_procs)
    ___SET_R3(___FAL)
    ___SET_R0(___LBL(360))
    ___ADJFP(-6)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(434),___L0_c_23_univ_2d_emit_2d_var_2d_declaration)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(432),___L0_c_23_univ_2d_emit_2d_var_2d_declaration)
 ___DEF_GLBL(___L917_c_23_univ_2d_dump_2d_procs)
    ___SET_R1(___STK(-9))
    ___SET_R3(___TRU)
@@ -31871,7 +31827,7 @@ ___DEF_GLBL(___L929_c_23_univ_2d_dump_2d_procs)
    ___GOTO(___L972_c_23_univ_2d_dump_2d_procs)
    ___END_IF
    ___ADJFP(1)
-   ___IF(___NOT(___FIXADDP_NOTFALSEP(___STK(0),___R1,___FIX(1L))))
+   ___IF(___NOT(___FIXADDPCONSTY_NOTFALSEP(___STK(0),___R1,___FIX(1L))))
    ___SET_STK(0,___FAL)
    ___GOTO(___L971_c_23_univ_2d_dump_2d_procs)
    ___END_IF
@@ -32090,7 +32046,7 @@ ___DEF_SLBL(436,___L436_c_23_univ_2d_dump_2d_procs)
    ___IF(___NOT(___FIXNUMP(___STK(-5))))
    ___GOTO(___L966_c_23_univ_2d_dump_2d_procs)
    ___END_IF
-   ___IF(___NOT(___FIXADDP_NOTFALSEP(___R3,___STK(-5),___FIX(1L))))
+   ___IF(___NOT(___FIXADDPCONSTY_NOTFALSEP(___R3,___STK(-5),___FIX(1L))))
    ___SET_R3(___FAL)
    ___GOTO(___L965_c_23_univ_2d_dump_2d_procs)
    ___END_IF
@@ -32398,7 +32354,7 @@ ___DEF_GLBL(___L969_c_23_univ_2d_dump_2d_procs)
    ___POLL(460)
 ___DEF_SLBL(460,___L460_c_23_univ_2d_dump_2d_procs)
    ___SET_R0(___LBL(459))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2996),___L_c_23_univ_2d_emit_2d_setloc)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2994),___L_c_23_univ_2d_emit_2d_setloc)
 ___DEF_SLBL(461,___L461_c_23_univ_2d_dump_2d_procs)
    ___SET_R1(___CONS(___STK(-4),___R1))
    ___ADJFP(-7)
@@ -32502,7 +32458,7 @@ ___DEF_SLBL(472,___L472_c_23_univ_2d_dump_2d_procs)
    ___SET_R2(___STK(-10))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(473))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2963),___L_c_23_univ_2d_emit_2d_getopnd)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2961),___L_c_23_univ_2d_emit_2d_getopnd)
 ___DEF_SLBL(473,___L473_c_23_univ_2d_dump_2d_procs)
    ___SET_R3(___R1)
    ___SET_R2(___STK(-11))
@@ -32511,7 +32467,7 @@ ___DEF_SLBL(473,___L473_c_23_univ_2d_dump_2d_procs)
    ___POLL(474)
 ___DEF_SLBL(474,___L474_c_23_univ_2d_dump_2d_procs)
    ___ADJFP(-12)
-   ___JUMPINT(___SET_NARGS(3),___PRC(2996),___L_c_23_univ_2d_emit_2d_setloc)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2994),___L_c_23_univ_2d_emit_2d_setloc)
 ___DEF_GLBL(___L975_c_23_univ_2d_dump_2d_procs)
    ___SET_R1(___NUL)
    ___ADJFP(-12)
@@ -32576,7 +32532,7 @@ ___DEF_GLBL(___L977_c_23_univ_2d_dump_2d_procs)
    ___SET_R1(___CLO(___R4,1))
    ___POLL(483)
 ___DEF_SLBL(483,___L483_c_23_univ_2d_dump_2d_procs)
-   ___JUMPINT(___SET_NARGS(3),___PRC(2996),___L_c_23_univ_2d_emit_2d_setloc)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2994),___L_c_23_univ_2d_emit_2d_setloc)
 ___DEF_GLBL(___L978_c_23_univ_2d_dump_2d_procs)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R4)
@@ -32884,20 +32840,20 @@ ___DEF_GLBL(___L994_c_23_univ_2d_dump_2d_procs)
    ___SET_R3(___FAL)
    ___SET_R0(___LBL(521))
    ___ADJFP(5)
-   ___JUMPINT(___SET_NARGS(4),___PRC(899),___L_c_23_univ_2d_emit_2d_mod_2d_jumpable)
+   ___JUMPINT(___SET_NARGS(4),___PRC(897),___L_c_23_univ_2d_emit_2d_mod_2d_jumpable)
 ___DEF_SLBL(521,___L521_c_23_univ_2d_dump_2d_procs)
    ___SET_R3(___R1)
    ___SET_R2(___CLO(___STK(-9),5))
    ___SET_R1(___CLO(___STK(-9),3))
    ___SET_R0(___LBL(155))
    ___ADJFP(-3)
-   ___JUMPINT(___SET_NARGS(4),___PRC(2337),___L_c_23_univ_2d_label_2d_entry)
+   ___JUMPINT(___SET_NARGS(4),___PRC(2335),___L_c_23_univ_2d_label_2d_entry)
 ___DEF_GLBL(___L995_c_23_univ_2d_dump_2d_procs)
    ___SET_R1(___STK(-6))
    ___SET_R3(___TRU)
    ___SET_R2(___SYM_println)
    ___SET_R0(___LBL(522))
-   ___JUMPINT(___SET_NARGS(3),___PRC(944),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(942),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
 ___DEF_SLBL(522,___L522_c_23_univ_2d_dump_2d_procs)
    ___SET_R2(___R1)
    ___SET_R0(___CLO(___STK(-5),4))
@@ -32915,7 +32871,7 @@ ___DEF_SLBL(524,___L524_c_23_univ_2d_dump_2d_procs)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(525))
-   ___JUMPINT(___SET_NARGS(2),___PRC(452),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
+   ___JUMPINT(___SET_NARGS(2),___PRC(450),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
 ___DEF_SLBL(525,___L525_c_23_univ_2d_dump_2d_procs)
    ___GOTO(___L772_c_23_univ_2d_dump_2d_procs)
 ___DEF_GLBL(___L996_c_23_univ_2d_dump_2d_procs)
@@ -32989,7 +32945,7 @@ ___DEF_GLBL(___L1004_c_23_univ_2d_dump_2d_procs)
    ___SET_R1(___STK(-20))
    ___SET_R2(___FIX(5L))
    ___SET_R0(___LBL(531))
-   ___JUMPINT(___SET_NARGS(2),___PRC(3439),___L_c_23_univ_2d_compactness_3e__3d__3f_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(3421),___L_c_23_univ_2d_compactness_3e__3d__3f_)
 ___DEF_SLBL(531,___L531_c_23_univ_2d_dump_2d_procs)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L1006_c_23_univ_2d_dump_2d_procs)
@@ -33842,7 +33798,7 @@ ___DEF_SLBL(552,___L552_c_23_univ_2d_dump_2d_procs)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L1120_c_23_univ_2d_dump_2d_procs)
    ___END_IF
-   ___IF(___FIXADDP_NOTFALSEP(___R2,___FIX(260L),___R1))
+   ___IF(___FIXADDPCONSTX_NOTFALSEP(___R2,___FIX(260L),___R1))
    ___GOTO(___L1118_c_23_univ_2d_dump_2d_procs)
    ___END_IF
    ___SET_R2(___FAL)
@@ -34390,7 +34346,7 @@ ___DEF_SLBL(626,___L626_c_23_univ_2d_dump_2d_procs)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L1148_c_23_univ_2d_dump_2d_procs)
    ___END_IF
-   ___IF(___FIXADDP_NOTFALSEP(___R2,___R1,___FIX(1L)))
+   ___IF(___FIXADDPCONSTY_NOTFALSEP(___R2,___R1,___FIX(1L)))
    ___GOTO(___L1146_c_23_univ_2d_dump_2d_procs)
    ___END_IF
    ___SET_R2(___FAL)
@@ -34593,20 +34549,20 @@ ___DEF_GLBL(___L1159_c_23_univ_2d_dump_2d_procs)
    ___SET_R3(___FAL)
    ___SET_R0(___LBL(652))
    ___ADJFP(5)
-   ___JUMPINT(___SET_NARGS(4),___PRC(899),___L_c_23_univ_2d_emit_2d_mod_2d_jumpable)
+   ___JUMPINT(___SET_NARGS(4),___PRC(897),___L_c_23_univ_2d_emit_2d_mod_2d_jumpable)
 ___DEF_SLBL(652,___L652_c_23_univ_2d_dump_2d_procs)
    ___SET_R3(___R1)
    ___SET_R2(___CLO(___STK(-9),5))
    ___SET_R1(___CLO(___STK(-9),3))
    ___SET_R0(___LBL(649))
    ___ADJFP(-3)
-   ___JUMPINT(___SET_NARGS(4),___PRC(2337),___L_c_23_univ_2d_label_2d_entry)
+   ___JUMPINT(___SET_NARGS(4),___PRC(2335),___L_c_23_univ_2d_label_2d_entry)
 ___DEF_GLBL(___L1160_c_23_univ_2d_dump_2d_procs)
    ___SET_R1(___STK(-6))
    ___SET_R3(___TRU)
    ___SET_R2(___SYM_println)
    ___SET_R0(___LBL(653))
-   ___JUMPINT(___SET_NARGS(3),___PRC(944),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(942),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
 ___DEF_SLBL(653,___L653_c_23_univ_2d_dump_2d_procs)
    ___SET_R2(___R1)
    ___SET_R0(___CLO(___STK(-5),4))
@@ -34624,7 +34580,7 @@ ___DEF_SLBL(655,___L655_c_23_univ_2d_dump_2d_procs)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(656))
-   ___JUMPINT(___SET_NARGS(2),___PRC(452),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
+   ___JUMPINT(___SET_NARGS(2),___PRC(450),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
 ___DEF_SLBL(656,___L656_c_23_univ_2d_dump_2d_procs)
    ___GOTO(___L1157_c_23_univ_2d_dump_2d_procs)
 ___DEF_GLBL(___L1161_c_23_univ_2d_dump_2d_procs)
@@ -35211,7 +35167,7 @@ ___DEF_SLBL(674,___L674_c_23_univ_2d_dump_2d_procs)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L1239_c_23_univ_2d_dump_2d_procs)
    ___END_IF
-   ___IF(___FIXADDP_NOTFALSEP(___R2,___FIX(260L),___R1))
+   ___IF(___FIXADDPCONSTX_NOTFALSEP(___R2,___FIX(260L),___R1))
    ___GOTO(___L1237_c_23_univ_2d_dump_2d_procs)
    ___END_IF
    ___SET_R2(___FAL)
@@ -35274,7 +35230,7 @@ ___DEF_SLBL(682,___L682_c_23_univ_2d_dump_2d_procs)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-13))
    ___SET_R0(___LBL(683))
-   ___JUMPINT(___SET_NARGS(2),___PRC(3445),___L_c_23_gvm_2d_lbl_2d_use)
+   ___JUMPINT(___SET_NARGS(2),___PRC(3427),___L_c_23_gvm_2d_lbl_2d_use)
 ___DEF_SLBL(683,___L683_c_23_univ_2d_dump_2d_procs)
    ___SET_STK(-12,___R1)
    ___SET_R1(___STK(-13))
@@ -35322,7 +35278,7 @@ ___DEF_SLBL(688,___L688_c_23_univ_2d_dump_2d_procs)
    ___SET_R2(___SYM_ctrlpt)
    ___SET_R0(___LBL(686))
    ___ADJFP(-3)
-   ___JUMPINT(___SET_NARGS(4),___PRC(787),___L_c_23_univ_2d_emit_2d_upcast_2a_)
+   ___JUMPINT(___SET_NARGS(4),___PRC(785),___L_c_23_univ_2d_emit_2d_upcast_2a_)
 ___DEF_SLBL(689,___L689_c_23_univ_2d_dump_2d_procs)
    ___SET_R1(___CONS(___STK(-4),___R1))
    ___ADJFP(-7)
@@ -35338,7 +35294,7 @@ ___DEF_SLBL(691,___L691_c_23_univ_2d_dump_2d_procs)
    ___SET_R1(___STK(-13))
    ___SET_R2(___STK(-10))
    ___SET_R0(___LBL(692))
-   ___JUMPINT(___SET_NARGS(3),___PRC(3319),___L_c_23_univ_2d_emit_2d_array_2d_literal)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3301),___L_c_23_univ_2d_emit_2d_array_2d_literal)
 ___DEF_SLBL(692,___L692_c_23_univ_2d_dump_2d_procs)
    ___SET_STK(-10,___R1)
    ___SET_R1(___STK(-13))
@@ -35395,7 +35351,7 @@ ___DEF_SLBL(700,___L700_c_23_univ_2d_dump_2d_procs)
    ___SET_R1(___STK(-13))
    ___SET_R3(___TRU)
    ___SET_R0(___LBL(701))
-   ___JUMPINT(___SET_NARGS(3),___PRC(3023),___L_c_23_univ_2d_emit_2d_obj_2a_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3021),___L_c_23_univ_2d_emit_2d_obj_2a_)
 ___DEF_SLBL(701,___L701_c_23_univ_2d_dump_2d_procs)
    ___SETCAR(___STK(-5),___R1)
    ___SET_R2(___STK(-12))
@@ -35466,19 +35422,19 @@ ___DEF_GLBL(___L1249_c_23_univ_2d_dump_2d_procs)
    ___SET_R3(___SYM_wr)
    ___SET_R0(___LBL(712))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(3),___PRC(2880),___L_c_23_univ_2d_glo_2d_dependency)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2878),___L_c_23_univ_2d_glo_2d_dependency)
 ___DEF_GLBL(___L1250_c_23_univ_2d_dump_2d_procs)
    ___SET_R3(___CLO(___STK(-5),1))
    ___SET_R1(___STK(-6))
    ___SET_R2(___SYM_parententrypt)
    ___SET_R0(___LBL(713))
-   ___JUMPINT(___SET_NARGS(3),___PRC(3217),___L_c_23_univ_2d_emit_2d_obj_2d_proc_2d_as)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3215),___L_c_23_univ_2d_emit_2d_obj_2d_proc_2d_as)
 ___DEF_SLBL(713,___L713_c_23_univ_2d_dump_2d_procs)
    ___SET_R3(___R1)
    ___SET_R2(___STK(-4))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(714))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2913),___L_c_23_univ_2d_emit_2d_setpeps)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2911),___L_c_23_univ_2d_emit_2d_setpeps)
 ___DEF_SLBL(714,___L714_c_23_univ_2d_dump_2d_procs)
    ___SET_STK(-3,___R1)
    ___SET_R1(___CLO(___STK(-5),1))
@@ -35507,13 +35463,13 @@ ___DEF_GLBL(___L1252_c_23_univ_2d_dump_2d_procs)
    ___SET_R1(___STK(-6))
    ___SET_R2(___SYM_scmobj)
    ___SET_R0(___LBL(718))
-   ___JUMPINT(___SET_NARGS(3),___PRC(3217),___L_c_23_univ_2d_emit_2d_obj_2d_proc_2d_as)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3215),___L_c_23_univ_2d_emit_2d_obj_2d_proc_2d_as)
 ___DEF_SLBL(718,___L718_c_23_univ_2d_dump_2d_procs)
    ___SET_R3(___R1)
    ___SET_R2(___STK(-4))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(716))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2926),___L_c_23_univ_2d_emit_2d_setglo)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2924),___L_c_23_univ_2d_emit_2d_setglo)
 ___DEF_SLBL(719,___L719_c_23_univ_2d_dump_2d_procs)
    ___IF_NARGS_EQ(1,___NOTHING)
    ___WRONG_NARGS(719,1,0,0)
@@ -35592,7 +35548,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_label_2d_entry
 #undef ___PH_LBL0
-#define ___PH_LBL0 2337
+#define ___PH_LBL0 2335
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4 ___D_F64(___F64V1) ___D_F64( \
 ___F64V2) ___D_F64(___F64V3)
@@ -35981,7 +35937,7 @@ ___DEF_GLBL(___L192_c_23_univ_2d_label_2d_entry)
    ___POLL(16)
 ___DEF_SLBL(16,___L16_c_23_univ_2d_label_2d_entry)
    ___SET_R0(___LBL(17))
-   ___JUMPINT(___SET_NARGS(2),___PRC(831),___L_c_23_univ_2d_emit_2d_local_2d_var)
+   ___JUMPINT(___SET_NARGS(2),___PRC(829),___L_c_23_univ_2d_emit_2d_local_2d_var)
 ___DEF_SLBL(17,___L17_c_23_univ_2d_label_2d_entry)
    ___SET_STK(-4,___R1)
    ___SET_STK(1,___STK(-11))
@@ -35992,7 +35948,7 @@ ___DEF_SLBL(17,___L17_c_23_univ_2d_label_2d_entry)
    ___SET_R2(___SYM_build__key__rest)
    ___SET_R0(___LBL(18))
    ___ADJFP(12)
-   ___JUMPINT(___SET_NARGS(3),___PRC(944),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(942),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
 ___DEF_SLBL(18,___L18_c_23_univ_2d_label_2d_entry)
    ___SET_STK(-2,___R1)
    ___SET_R2(___STK(-15))
@@ -36042,7 +35998,7 @@ ___DEF_GLBL(___L193_c_23_univ_2d_label_2d_entry)
    ___POLL(23)
 ___DEF_SLBL(23,___L23_c_23_univ_2d_label_2d_entry)
    ___SET_R0(___LBL(24))
-   ___JUMPINT(___SET_NARGS(3),___PRC(3023),___L_c_23_univ_2d_emit_2d_obj_2a_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3021),___L_c_23_univ_2d_emit_2d_obj_2a_)
 ___DEF_SLBL(24,___L24_c_23_univ_2d_label_2d_entry)
    ___SET_STK(-3,___R1)
    ___SET_R1(___CDR(___STK(-4)))
@@ -36053,7 +36009,7 @@ ___DEF_SLBL(25,___L25_c_23_univ_2d_label_2d_entry)
    ___SET_R1(___STK(-6))
    ___SET_R3(___TRU)
    ___SET_R0(___LBL(21))
-   ___JUMPINT(___SET_NARGS(3),___PRC(3023),___L_c_23_univ_2d_emit_2d_obj_2a_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3021),___L_c_23_univ_2d_emit_2d_obj_2a_)
 ___DEF_SLBL(26,___L26_c_23_univ_2d_label_2d_entry)
    ___SET_R1(___CONS(___STK(-4),___R1))
    ___ADJFP(-7)
@@ -36074,7 +36030,7 @@ ___DEF_SLBL(29,___L29_c_23_univ_2d_label_2d_entry)
    ___SET_R1(___STK(-27))
    ___SET_R2(___SYM_scmobj)
    ___SET_R0(___LBL(30))
-   ___JUMPINT(___SET_NARGS(3),___PRC(3319),___L_c_23_univ_2d_emit_2d_array_2d_literal)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3301),___L_c_23_univ_2d_emit_2d_array_2d_literal)
 ___DEF_SLBL(30,___L30_c_23_univ_2d_label_2d_entry)
    ___SET_R3(___R1)
    ___SET_R2(___STK(-24))
@@ -36088,7 +36044,7 @@ ___DEF_SLBL(31,___L31_c_23_univ_2d_label_2d_entry)
    ___SET_R3(___FAL)
    ___SET_R0(___LBL(32))
    ___ADJFP(-6)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(434),___L0_c_23_univ_2d_emit_2d_var_2d_declaration)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(432),___L0_c_23_univ_2d_emit_2d_var_2d_declaration)
 ___DEF_SLBL(32,___L32_c_23_univ_2d_label_2d_entry)
    ___SET_STK(-8,___R1)
    ___SET_STK(1,___STK(-11))
@@ -36101,17 +36057,17 @@ ___DEF_SLBL(33,___L33_c_23_univ_2d_label_2d_entry)
    ___SET_R2(___STK(-8))
    ___SET_R1(___STK(-15))
    ___SET_R0(___LBL(34))
-   ___JUMPINT(___SET_NARGS(3),___PRC(527),___L_c_23_univ_2d_emit_2d_eq_3f_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(525),___L_c_23_univ_2d_emit_2d_eq_3f_)
 ___DEF_SLBL(34,___L34_c_23_univ_2d_label_2d_entry)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-15))
    ___SET_R0(___LBL(35))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(35,___L35_c_23_univ_2d_label_2d_entry)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-15))
    ___SET_R0(___LBL(36))
-   ___JUMPINT(___SET_NARGS(2),___PRC(708),___L_c_23_univ_2d_emit_2d_not)
+   ___JUMPINT(___SET_NARGS(2),___PRC(706),___L_c_23_univ_2d_emit_2d_not)
 ___DEF_SLBL(36,___L36_c_23_univ_2d_label_2d_entry)
    ___SET_STK(-11,___R1)
    ___SET_STK(1,___STK(-15))
@@ -36120,7 +36076,7 @@ ___DEF_SLBL(36,___L36_c_23_univ_2d_label_2d_entry)
    ___SET_R2(___SYM_wrong__key__args)
    ___SET_R0(___LBL(37))
    ___ADJFP(4)
-   ___JUMPINT(___SET_NARGS(3),___PRC(944),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(942),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
 ___DEF_SLBL(37,___L37_c_23_univ_2d_label_2d_entry)
    ___SET_STK(-11,___R1)
    ___IF(___NOTFALSEP(___STK(-13)))
@@ -36132,7 +36088,7 @@ ___DEF_SLBL(37,___L37_c_23_univ_2d_label_2d_entry)
    ___SET_R2(___SYM_entrypt)
    ___SET_R0(___LBL(38))
    ___ADJFP(1)
-   ___JUMPINT(___SET_NARGS(4),___PRC(787),___L_c_23_univ_2d_emit_2d_upcast_2a_)
+   ___JUMPINT(___SET_NARGS(4),___PRC(785),___L_c_23_univ_2d_emit_2d_upcast_2a_)
 ___DEF_SLBL(38,___L38_c_23_univ_2d_label_2d_entry)
    ___GOTO(___L195_c_23_univ_2d_label_2d_entry)
 ___DEF_SLBL(39,___L39_c_23_univ_2d_label_2d_entry)
@@ -36149,7 +36105,7 @@ ___DEF_SLBL(40,___L40_c_23_univ_2d_label_2d_entry)
    ___SET_R1(___STK(-11))
    ___SET_R0(___LBL(41))
    ___ADJFP(-3)
-   ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(459),___L0_c_23_univ_2d_emit_2d_if)
+   ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(457),___L0_c_23_univ_2d_emit_2d_if)
 ___DEF_SLBL(41,___L41_c_23_univ_2d_label_2d_entry)
    ___BEGIN_ALLOC_LIST(2UL,___R1)
    ___ADD_LIST_ELEM(1,___STK(-8))
@@ -36168,7 +36124,7 @@ ___DEF_SLBL(43,___L43_c_23_univ_2d_label_2d_entry)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L200_c_23_univ_2d_label_2d_entry)
    ___END_IF
-   ___IF(___FIXADDP_NOTFALSEP(___R2,___R1,___FIX(1L)))
+   ___IF(___FIXADDPCONSTY_NOTFALSEP(___R2,___R1,___FIX(1L)))
    ___GOTO(___L197_c_23_univ_2d_label_2d_entry)
    ___END_IF
    ___SET_R2(___FAL)
@@ -36181,7 +36137,7 @@ ___DEF_GLBL(___L197_c_23_univ_2d_label_2d_entry)
    ___SET_R1(___STK(-19))
    ___SET_R2(___SYM_rd)
    ___SET_R0(___LBL(45))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2714),___L_c_23_use_2d_resource)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2712),___L_c_23_use_2d_resource)
 ___DEF_SLBL(45,___L45_c_23_univ_2d_label_2d_entry)
    ___SET_R1(___STK(-18))
    ___SET_R0(___LBL(46))
@@ -36199,7 +36155,7 @@ ___DEF_SLBL(48,___L48_c_23_univ_2d_label_2d_entry)
    ___SET_R1(___STK(-19))
    ___SET_R3(___TRU)
    ___SET_R0(___LBL(49))
-   ___JUMPINT(___SET_NARGS(3),___PRC(977),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(975),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
 ___DEF_SLBL(49,___L49_c_23_univ_2d_label_2d_entry)
    ___SET_STK(-18,___R1)
    ___SET_R1(___VECTORREF(___STK(-19),___FIX(0L)))
@@ -36224,7 +36180,7 @@ ___DEF_SLBL(51,___L51_c_23_univ_2d_label_2d_entry)
    ___SET_R3(___STK(-18))
    ___SET_R1(___STK(-19))
    ___SET_R0(___LBL(39))
-   ___JUMPINT(___SET_NARGS(3),___PRC(765),___L_c_23_univ_2d_emit_2d_cast)
+   ___JUMPINT(___SET_NARGS(3),___PRC(763),___L_c_23_univ_2d_emit_2d_cast)
 ___DEF_GLBL(___L199_c_23_univ_2d_label_2d_entry)
    ___SET_R2(___FIX(1L))
    ___SET_R0(___LBL(44))
@@ -36256,7 +36212,7 @@ ___DEF_GLBL(___L201_c_23_univ_2d_label_2d_entry)
    ___POLL(54)
 ___DEF_SLBL(54,___L54_c_23_univ_2d_label_2d_entry)
    ___SET_R0(___LBL(55))
-   ___JUMPINT(___SET_NARGS(2),___PRC(831),___L_c_23_univ_2d_emit_2d_local_2d_var)
+   ___JUMPINT(___SET_NARGS(2),___PRC(829),___L_c_23_univ_2d_emit_2d_local_2d_var)
 ___DEF_SLBL(55,___L55_c_23_univ_2d_label_2d_entry)
    ___SET_STK(-4,___R1)
    ___SET_STK(1,___STK(-11))
@@ -36267,7 +36223,7 @@ ___DEF_SLBL(55,___L55_c_23_univ_2d_label_2d_entry)
    ___SET_R2(___SYM_build__key)
    ___SET_R0(___LBL(56))
    ___ADJFP(12)
-   ___JUMPINT(___SET_NARGS(3),___PRC(944),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(942),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
 ___DEF_SLBL(56,___L56_c_23_univ_2d_label_2d_entry)
    ___SET_STK(-2,___R1)
    ___SET_R2(___STK(-15))
@@ -36317,7 +36273,7 @@ ___DEF_GLBL(___L202_c_23_univ_2d_label_2d_entry)
    ___POLL(61)
 ___DEF_SLBL(61,___L61_c_23_univ_2d_label_2d_entry)
    ___SET_R0(___LBL(62))
-   ___JUMPINT(___SET_NARGS(3),___PRC(3023),___L_c_23_univ_2d_emit_2d_obj_2a_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3021),___L_c_23_univ_2d_emit_2d_obj_2a_)
 ___DEF_SLBL(62,___L62_c_23_univ_2d_label_2d_entry)
    ___SET_STK(-3,___R1)
    ___SET_R1(___CDR(___STK(-4)))
@@ -36328,7 +36284,7 @@ ___DEF_SLBL(63,___L63_c_23_univ_2d_label_2d_entry)
    ___SET_R1(___STK(-6))
    ___SET_R3(___TRU)
    ___SET_R0(___LBL(59))
-   ___JUMPINT(___SET_NARGS(3),___PRC(3023),___L_c_23_univ_2d_emit_2d_obj_2a_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3021),___L_c_23_univ_2d_emit_2d_obj_2a_)
 ___DEF_SLBL(64,___L64_c_23_univ_2d_label_2d_entry)
    ___SET_R1(___CONS(___STK(-4),___R1))
    ___ADJFP(-7)
@@ -36349,7 +36305,7 @@ ___DEF_SLBL(67,___L67_c_23_univ_2d_label_2d_entry)
    ___SET_R1(___STK(-27))
    ___SET_R2(___SYM_scmobj)
    ___SET_R0(___LBL(68))
-   ___JUMPINT(___SET_NARGS(3),___PRC(3319),___L_c_23_univ_2d_emit_2d_array_2d_literal)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3301),___L_c_23_univ_2d_emit_2d_array_2d_literal)
 ___DEF_SLBL(68,___L68_c_23_univ_2d_label_2d_entry)
    ___SET_R3(___R1)
    ___SET_R2(___STK(-24))
@@ -36363,7 +36319,7 @@ ___DEF_SLBL(69,___L69_c_23_univ_2d_label_2d_entry)
    ___SET_R3(___FAL)
    ___SET_R0(___LBL(70))
    ___ADJFP(-6)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(434),___L0_c_23_univ_2d_emit_2d_var_2d_declaration)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(432),___L0_c_23_univ_2d_emit_2d_var_2d_declaration)
 ___DEF_SLBL(70,___L70_c_23_univ_2d_label_2d_entry)
    ___SET_STK(-8,___R1)
    ___SET_STK(1,___STK(-11))
@@ -36376,17 +36332,17 @@ ___DEF_SLBL(71,___L71_c_23_univ_2d_label_2d_entry)
    ___SET_R2(___STK(-8))
    ___SET_R1(___STK(-15))
    ___SET_R0(___LBL(72))
-   ___JUMPINT(___SET_NARGS(3),___PRC(527),___L_c_23_univ_2d_emit_2d_eq_3f_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(525),___L_c_23_univ_2d_emit_2d_eq_3f_)
 ___DEF_SLBL(72,___L72_c_23_univ_2d_label_2d_entry)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-15))
    ___SET_R0(___LBL(73))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(73,___L73_c_23_univ_2d_label_2d_entry)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-15))
    ___SET_R0(___LBL(74))
-   ___JUMPINT(___SET_NARGS(2),___PRC(708),___L_c_23_univ_2d_emit_2d_not)
+   ___JUMPINT(___SET_NARGS(2),___PRC(706),___L_c_23_univ_2d_emit_2d_not)
 ___DEF_SLBL(74,___L74_c_23_univ_2d_label_2d_entry)
    ___SET_STK(-11,___R1)
    ___SET_STK(1,___STK(-15))
@@ -36395,7 +36351,7 @@ ___DEF_SLBL(74,___L74_c_23_univ_2d_label_2d_entry)
    ___SET_R2(___SYM_wrong__key__args)
    ___SET_R0(___LBL(75))
    ___ADJFP(4)
-   ___JUMPINT(___SET_NARGS(3),___PRC(944),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(942),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
 ___DEF_SLBL(75,___L75_c_23_univ_2d_label_2d_entry)
    ___SET_STK(-11,___R1)
    ___IF(___NOTFALSEP(___STK(-13)))
@@ -36407,7 +36363,7 @@ ___DEF_SLBL(75,___L75_c_23_univ_2d_label_2d_entry)
    ___SET_R2(___SYM_entrypt)
    ___SET_R0(___LBL(76))
    ___ADJFP(1)
-   ___JUMPINT(___SET_NARGS(4),___PRC(787),___L_c_23_univ_2d_emit_2d_upcast_2a_)
+   ___JUMPINT(___SET_NARGS(4),___PRC(785),___L_c_23_univ_2d_emit_2d_upcast_2a_)
 ___DEF_SLBL(76,___L76_c_23_univ_2d_label_2d_entry)
    ___GOTO(___L204_c_23_univ_2d_label_2d_entry)
 ___DEF_SLBL(77,___L77_c_23_univ_2d_label_2d_entry)
@@ -36424,7 +36380,7 @@ ___DEF_SLBL(78,___L78_c_23_univ_2d_label_2d_entry)
    ___SET_R1(___STK(-11))
    ___SET_R0(___LBL(79))
    ___ADJFP(-3)
-   ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(459),___L0_c_23_univ_2d_emit_2d_if)
+   ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(457),___L0_c_23_univ_2d_emit_2d_if)
 ___DEF_SLBL(79,___L79_c_23_univ_2d_label_2d_entry)
    ___BEGIN_ALLOC_LIST(2UL,___R1)
    ___ADD_LIST_ELEM(1,___STK(-8))
@@ -36443,7 +36399,7 @@ ___DEF_SLBL(81,___L81_c_23_univ_2d_label_2d_entry)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L210_c_23_univ_2d_label_2d_entry)
    ___END_IF
-   ___IF(___FIXADDP_NOTFALSEP(___R2,___R1,___FIX(1L)))
+   ___IF(___FIXADDPCONSTY_NOTFALSEP(___R2,___R1,___FIX(1L)))
    ___GOTO(___L206_c_23_univ_2d_label_2d_entry)
    ___END_IF
    ___SET_R2(___FAL)
@@ -36455,7 +36411,7 @@ ___DEF_GLBL(___L206_c_23_univ_2d_label_2d_entry)
    ___SET_R1(___STK(-19))
    ___SET_R2(___SYM_rd)
    ___SET_R0(___LBL(83))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2764),___L_c_23_gvm_2d_state_2d_reg_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2762),___L_c_23_gvm_2d_state_2d_reg_2d_use)
 ___DEF_SLBL(83,___L83_c_23_univ_2d_label_2d_entry)
    ___SET_STK(-18,___R1)
    ___SET_R1(___VECTORREF(___STK(-19),___FIX(0L)))
@@ -36473,7 +36429,7 @@ ___DEF_SLBL(85,___L85_c_23_univ_2d_label_2d_entry)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-19))
    ___SET_R0(___LBL(86))
-   ___JUMPINT(___SET_NARGS(2),___PRC(820),___L_c_23_univ_2d_emit_2d_parens)
+   ___JUMPINT(___SET_NARGS(2),___PRC(818),___L_c_23_univ_2d_emit_2d_parens)
 ___DEF_SLBL(86,___L86_c_23_univ_2d_label_2d_entry)
    ___SET_R3(___R1)
    ___SET_R2(___STK(-18))
@@ -36505,7 +36461,7 @@ ___DEF_SLBL(89,___L89_c_23_univ_2d_label_2d_entry)
    ___SET_R3(___STK(-18))
    ___SET_R1(___STK(-19))
    ___SET_R0(___LBL(77))
-   ___JUMPINT(___SET_NARGS(3),___PRC(765),___L_c_23_univ_2d_emit_2d_cast)
+   ___JUMPINT(___SET_NARGS(3),___PRC(763),___L_c_23_univ_2d_emit_2d_cast)
 ___DEF_GLBL(___L209_c_23_univ_2d_label_2d_entry)
    ___SET_R2(___FIX(1L))
    ___SET_R0(___LBL(82))
@@ -36529,7 +36485,7 @@ ___DEF_GLBL(___L211_c_23_univ_2d_label_2d_entry)
    ___POLL(91)
 ___DEF_SLBL(91,___L91_c_23_univ_2d_label_2d_entry)
    ___SET_R0(___LBL(92))
-   ___JUMPINT(___SET_NARGS(3),___PRC(944),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(942),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
 ___DEF_SLBL(92,___L92_c_23_univ_2d_label_2d_entry)
    ___SET_STK(-7,___R1)
    ___SET_R2(___STK(-4))
@@ -36546,7 +36502,7 @@ ___DEF_SLBL(94,___L94_c_23_univ_2d_label_2d_entry)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-11))
    ___SET_R0(___LBL(95))
-   ___JUMPINT(___SET_NARGS(2),___PRC(708),___L_c_23_univ_2d_emit_2d_not)
+   ___JUMPINT(___SET_NARGS(2),___PRC(706),___L_c_23_univ_2d_emit_2d_not)
 ___DEF_SLBL(95,___L95_c_23_univ_2d_label_2d_entry)
    ___GOTO(___L212_c_23_univ_2d_label_2d_entry)
 ___DEF_SLBL(96,___L96_c_23_univ_2d_label_2d_entry)
@@ -36556,7 +36512,7 @@ ___DEF_GLBL(___L212_c_23_univ_2d_label_2d_entry)
    ___SET_R3(___TRU)
    ___SET_R2(___SYM_wrong__nargs)
    ___SET_R0(___LBL(97))
-   ___JUMPINT(___SET_NARGS(3),___PRC(944),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(942),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
 ___DEF_SLBL(97,___L97_c_23_univ_2d_label_2d_entry)
    ___SET_STK(-6,___R1)
    ___IF(___NOTFALSEP(___STK(-5)))
@@ -36568,7 +36524,7 @@ ___DEF_SLBL(97,___L97_c_23_univ_2d_label_2d_entry)
    ___SET_R2(___SYM_entrypt)
    ___SET_R0(___LBL(98))
    ___ADJFP(1)
-   ___JUMPINT(___SET_NARGS(4),___PRC(787),___L_c_23_univ_2d_emit_2d_upcast_2a_)
+   ___JUMPINT(___SET_NARGS(4),___PRC(785),___L_c_23_univ_2d_emit_2d_upcast_2a_)
 ___DEF_SLBL(98,___L98_c_23_univ_2d_label_2d_entry)
    ___GOTO(___L213_c_23_univ_2d_label_2d_entry)
 ___DEF_SLBL(99,___L99_c_23_univ_2d_label_2d_entry)
@@ -36680,7 +36636,7 @@ ___DEF_SLBL(111,___L111_c_23_univ_2d_label_2d_entry)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L221_c_23_univ_2d_label_2d_entry)
    ___END_IF
-   ___IF(___FIXADDP_NOTFALSEP(___R2,___R1,___FIX(1L)))
+   ___IF(___FIXADDPCONSTY_NOTFALSEP(___R2,___R1,___FIX(1L)))
    ___GOTO(___L219_c_23_univ_2d_label_2d_entry)
    ___END_IF
    ___SET_R2(___FAL)
@@ -36692,13 +36648,13 @@ ___DEF_GLBL(___L219_c_23_univ_2d_label_2d_entry)
    ___SET_R1(___STK(-11))
    ___SET_R2(___SYM_rd)
    ___SET_R0(___LBL(113))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2764),___L_c_23_gvm_2d_state_2d_reg_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2762),___L_c_23_gvm_2d_state_2d_reg_2d_use)
 ___DEF_SLBL(113,___L113_c_23_univ_2d_label_2d_entry)
    ___SET_R3(___R1)
    ___SET_R1(___STK(-11))
    ___SET_R2(___SYM_jumpable)
    ___SET_R0(___LBL(99))
-   ___JUMPINT(___SET_NARGS(3),___PRC(797),___L_c_23_univ_2d_emit_2d_downcast_2a_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(795),___L_c_23_univ_2d_emit_2d_downcast_2a_)
 ___DEF_GLBL(___L220_c_23_univ_2d_label_2d_entry)
    ___SET_R2(___FIX(1L))
    ___SET_R0(___LBL(112))
@@ -36718,7 +36674,7 @@ ___DEF_GLBL(___L222_c_23_univ_2d_label_2d_entry)
    ___POLL(115)
 ___DEF_SLBL(115,___L115_c_23_univ_2d_label_2d_entry)
    ___SET_R0(___LBL(116))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2759),___L_c_23_gvm_2d_state_2d_nargs_2d_use)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2757),___L_c_23_gvm_2d_state_2d_nargs_2d_use)
 ___DEF_SLBL(116,___L116_c_23_univ_2d_label_2d_entry)
    ___SET_STK(-7,___R1)
    ___SET_R2(___STK(-4))
@@ -36730,7 +36686,7 @@ ___DEF_SLBL(117,___L117_c_23_univ_2d_label_2d_entry)
    ___SET_R1(___STK(-11))
    ___SET_R2(___STK(-7))
    ___SET_R0(___LBL(96))
-   ___JUMPINT(___SET_NARGS(3),___PRC(683),___L_c_23_univ_2d_emit_2d__21__3d_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(681),___L_c_23_univ_2d_emit_2d__21__3d_)
 ___DEF_GLBL(___L223_c_23_univ_2d_label_2d_entry)
    ___SET_R3(___STK(-3))
    ___SET_R2(___STK(-4))
@@ -36825,7 +36781,7 @@ ___DEF_GLBL(___L231_c_23_univ_2d_label_2d_entry)
    ___IF(___NOT(___FIXNUMP(___STK(-8))))
    ___GOTO(___L286_c_23_univ_2d_label_2d_entry)
    ___END_IF
-   ___IF(___NOT(___FIXADDP_NOTFALSEP(___R2,___STK(-8),___FIX(1L))))
+   ___IF(___NOT(___FIXADDPCONSTY_NOTFALSEP(___R2,___STK(-8),___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L285_c_23_univ_2d_label_2d_entry)
    ___END_IF
@@ -36856,7 +36812,7 @@ ___DEF_GLBL(___L234_c_23_univ_2d_label_2d_entry)
    ___IF(___NOT(___FIXNUMP(___R3)))
    ___GOTO(___L283_c_23_univ_2d_label_2d_entry)
    ___END_IF
-   ___IF(___NOT(___FIXADDP_NOTFALSEP(___R1,___R3,___FIX(1L))))
+   ___IF(___NOT(___FIXADDPCONSTY_NOTFALSEP(___R1,___R3,___FIX(1L))))
    ___SET_R1(___FAL)
    ___GOTO(___L282_c_23_univ_2d_label_2d_entry)
    ___END_IF
@@ -36951,7 +36907,7 @@ ___DEF_GLBL(___L243_c_23_univ_2d_label_2d_entry)
    ___SET_R1(___FAL)
    ___GOTO(___L269_c_23_univ_2d_label_2d_entry)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R1,___R1,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R1,___R1,___FIX(1L))))
    ___SET_R1(___FAL)
    ___GOTO(___L268_c_23_univ_2d_label_2d_entry)
    ___END_IF
@@ -36974,7 +36930,7 @@ ___DEF_GLBL(___L245_c_23_univ_2d_label_2d_entry)
    ___SET_R1(___STK(-15))
    ___SET_R3(___TRU)
    ___SET_R0(___LBL(130))
-   ___JUMPINT(___SET_NARGS(3),___PRC(3023),___L_c_23_univ_2d_emit_2d_obj_2a_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3021),___L_c_23_univ_2d_emit_2d_obj_2a_)
 ___DEF_SLBL(130,___L130_c_23_univ_2d_label_2d_entry)
    ___IF(___FIXNUMSP(___FIXNUMSP2(___FIXNUMSP1(___STK(-6)),___STK(-7))))
    ___GOTO(___L246_c_23_univ_2d_label_2d_entry)
@@ -37018,7 +36974,7 @@ ___DEF_GLBL(___L253_c_23_univ_2d_label_2d_entry)
    ___SET_R3(___R1)
    ___SET_R1(___STK(-11))
    ___SET_R0(___LBL(132))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2826),___L_c_23_univ_2d_emit_2d_setreg)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2824),___L_c_23_univ_2d_emit_2d_setreg)
 ___DEF_SLBL(132,___L132_c_23_univ_2d_label_2d_entry)
    ___BEGIN_ALLOC_LIST(2UL,___STK(-10))
    ___ADD_LIST_ELEM(1,___R1)
@@ -37149,7 +37105,7 @@ ___DEF_GLBL(___L265_c_23_univ_2d_label_2d_entry)
    ___SET_R1(___STK(-15))
    ___SET_R0(___LBL(141))
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(2),___PRC(2803),___L_c_23_univ_2d_emit_2d_push)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2801),___L_c_23_univ_2d_emit_2d_push)
 ___DEF_SLBL(141,___L141_c_23_univ_2d_label_2d_entry)
    ___BEGIN_ALLOC_LIST(2UL,___STK(-10))
    ___ADD_LIST_ELEM(1,___R1)
@@ -37205,7 +37161,7 @@ ___DEF_GLBL(___L271_c_23_univ_2d_label_2d_entry)
    ___SET_R3(___TRU)
    ___SET_R2(___NUL)
    ___SET_R0(___LBL(131))
-   ___JUMPINT(___SET_NARGS(3),___PRC(3023),___L_c_23_univ_2d_emit_2d_obj_2a_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3021),___L_c_23_univ_2d_emit_2d_obj_2a_)
 ___DEF_GLBL(___L272_c_23_univ_2d_label_2d_entry)
    ___SET_R1(___STK(-13))
    ___GOTO(___L243_c_23_univ_2d_label_2d_entry)
@@ -37237,7 +37193,7 @@ ___DEF_GLBL(___L275_c_23_univ_2d_label_2d_entry)
    ___SET_R1(___STK(-15))
    ___SET_R2(___SYM_rd)
    ___SET_R0(___LBL(140))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2764),___L_c_23_gvm_2d_state_2d_reg_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2762),___L_c_23_gvm_2d_state_2d_reg_2d_use)
 ___DEF_GLBL(___L276_c_23_univ_2d_label_2d_entry)
    ___SET_R1(___STK(-5))
    ___IF(___NOTFALSEP(___STK(-13)))
@@ -37314,7 +37270,7 @@ ___DEF_SLBL(152,___L152_c_23_univ_2d_label_2d_entry)
    ___SET_R2(___SYM_rd)
    ___SET_R0(___LBL(153))
    ___ADJFP(4)
-   ___JUMPINT(___SET_NARGS(2),___PRC(2759),___L_c_23_gvm_2d_state_2d_nargs_2d_use)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2757),___L_c_23_gvm_2d_state_2d_nargs_2d_use)
 ___DEF_SLBL(153,___L153_c_23_univ_2d_label_2d_entry)
    ___SET_STK(-5,___R1)
    ___SET_R2(___STK(-7))
@@ -37326,7 +37282,7 @@ ___DEF_SLBL(154,___L154_c_23_univ_2d_label_2d_entry)
    ___SET_R1(___STK(-19))
    ___SET_R2(___STK(-5))
    ___SET_R0(___LBL(155))
-   ___JUMPINT(___SET_NARGS(3),___PRC(676),___L_c_23_univ_2d_emit_2d__3d_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(674),___L_c_23_univ_2d_emit_2d__3d_)
 ___DEF_SLBL(155,___L155_c_23_univ_2d_label_2d_entry)
    ___SET_STK(-5,___R1)
    ___SET_STK(1,___STK(-19))
@@ -37342,7 +37298,7 @@ ___DEF_SLBL(155,___L155_c_23_univ_2d_label_2d_entry)
    ___IF(___NOT(___FIXNUMP(___STK(-16))))
    ___GOTO(___L284_c_23_univ_2d_label_2d_entry)
    ___END_IF
-   ___IF(___FIXADDP_NOTFALSEP(___R1,___STK(-16),___FIX(1L)))
+   ___IF(___FIXADDPCONSTY_NOTFALSEP(___R1,___STK(-16),___FIX(1L)))
    ___GOTO(___L187_c_23_univ_2d_label_2d_entry)
    ___END_IF
    ___SET_R1(___FAL)
@@ -37513,7 +37469,7 @@ ___DEF_SLBL(167,___L167_c_23_univ_2d_label_2d_entry)
    ___POLL(168)
 ___DEF_SLBL(168,___L168_c_23_univ_2d_label_2d_entry)
    ___ADJFP(-19)
-   ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(459),___L0_c_23_univ_2d_emit_2d_if)
+   ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(457),___L0_c_23_univ_2d_emit_2d_if)
 ___DEF_GLBL(___L300_c_23_univ_2d_label_2d_entry)
    ___SET_R1(___NUL)
    ___SET_STK(-4,___R2)
@@ -37638,7 +37594,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_separated_2d_list
 #undef ___PH_LBL0
-#define ___PH_LBL0 2516
+#define ___PH_LBL0 2514
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -37702,7 +37658,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_map_2d_index
 #undef ___PH_LBL0
-#define ___PH_LBL0 2521
+#define ___PH_LBL0 2519
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -37763,7 +37719,7 @@ ___DEF_SLBL(4,___L4_c_23_univ_2d_map_2d_index)
    ___IF(___NOT(___FIXNUMP(___STK(-4))))
    ___GOTO(___L16_c_23_univ_2d_map_2d_index)
    ___END_IF
-   ___IF(___NOT(___FIXADDP_NOTFALSEP(___R3,___STK(-4),___FIX(1L))))
+   ___IF(___NOT(___FIXADDPCONSTY_NOTFALSEP(___R3,___STK(-4),___FIX(1L))))
    ___SET_R3(___FAL)
    ___GOTO(___L16_c_23_univ_2d_map_2d_index)
    ___END_IF
@@ -37801,7 +37757,7 @@ ___DEF_SLBL(7,___L7_c_23_univ_2d_map_2d_index)
    ___IF(___NOT(___FIXNUMP(___STK(-3))))
    ___GOTO(___L15_c_23_univ_2d_map_2d_index)
    ___END_IF
-   ___IF(___FIXADDP_NOTFALSEP(___R1,___STK(-3),___FIX(1L)))
+   ___IF(___FIXADDPCONSTY_NOTFALSEP(___R1,___STK(-3),___FIX(1L)))
    ___GOTO(___L10_c_23_univ_2d_map_2d_index)
    ___END_IF
    ___SET_R1(___FAL)
@@ -37839,7 +37795,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_gensym
 #undef ___PH_LBL0
-#define ___PH_LBL0 2532
+#define ___PH_LBL0 2530
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -37865,7 +37821,7 @@ ___DEF_GLBL(___L_c_23_univ_2d_gensym)
    ___IF(___NOT(___FIXNUMP(___R3)))
    ___GOTO(___L9_c_23_univ_2d_gensym)
    ___END_IF
-   ___IF(___FIXADDP_NOTFALSEP(___R4,___R3,___FIX(1L)))
+   ___IF(___FIXADDPCONSTY_NOTFALSEP(___R4,___R3,___FIX(1L)))
    ___GOTO(___L6_c_23_univ_2d_gensym)
    ___END_IF
    ___SET_R4(___FAL)
@@ -37929,7 +37885,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_closure_2d_alloc
 #undef ___PH_LBL0
-#define ___PH_LBL0 2539
+#define ___PH_LBL0 2537
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -37968,12 +37924,12 @@ ___DEF_GLBL(___L_c_23_univ_2d_closure_2d_alloc)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_closure_2d_alloc)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2532),___L_c_23_univ_2d_gensym)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2530),___L_c_23_univ_2d_gensym)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_closure_2d_alloc)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(2),___PRC(831),___L_c_23_univ_2d_emit_2d_local_2d_var)
+   ___JUMPINT(___SET_NARGS(2),___PRC(829),___L_c_23_univ_2d_emit_2d_local_2d_var)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_closure_2d_alloc)
    ___SET_STK(-2,___R1)
    ___SET_STK(5,___STK(-7))
@@ -37983,7 +37939,7 @@ ___DEF_SLBL(3,___L3_c_23_univ_2d_closure_2d_alloc)
    ___SET_R2(___SYM_closure__alloc)
    ___SET_R0(___LBL(4))
    ___ADJFP(12)
-   ___JUMPINT(___SET_NARGS(3),___PRC(944),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(942),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_closure_2d_alloc)
    ___SET_STK(-13,___R1)
    ___SET_R1(___STK(-17))
@@ -37993,7 +37949,7 @@ ___DEF_SLBL(5,___L5_c_23_univ_2d_closure_2d_alloc)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-19))
    ___SET_R0(___LBL(6))
-   ___JUMPINT(___SET_NARGS(2),___PRC(3445),___L_c_23_gvm_2d_lbl_2d_use)
+   ___JUMPINT(___SET_NARGS(2),___PRC(3427),___L_c_23_gvm_2d_lbl_2d_use)
 ___DEF_SLBL(6,___L6_c_23_univ_2d_closure_2d_alloc)
    ___SET_R3(___CONS(___R1,___STK(-16)))
    ___SET_R1(___STK(-19))
@@ -38001,7 +37957,7 @@ ___DEF_SLBL(6,___L6_c_23_univ_2d_closure_2d_alloc)
    ___SET_R0(___LBL(8))
    ___CHECK_HEAP(7,4096)
 ___DEF_SLBL(7,___L7_c_23_univ_2d_closure_2d_alloc)
-   ___JUMPINT(___SET_NARGS(3),___PRC(3319),___L_c_23_univ_2d_emit_2d_array_2d_literal)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3301),___L_c_23_univ_2d_emit_2d_array_2d_literal)
 ___DEF_SLBL(8,___L8_c_23_univ_2d_closure_2d_alloc)
    ___SET_R3(___R1)
    ___SET_R1(___STK(-19))
@@ -38014,7 +37970,7 @@ ___DEF_SLBL(9,___L9_c_23_univ_2d_closure_2d_alloc)
    ___SET_R3(___FAL)
    ___SET_R0(___LBL(10))
    ___ADJFP(-6)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(434),___L0_c_23_univ_2d_emit_2d_var_2d_declaration)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(432),___L0_c_23_univ_2d_emit_2d_var_2d_declaration)
 ___DEF_SLBL(10,___L10_c_23_univ_2d_closure_2d_alloc)
    ___SET_STK(-11,___R1)
    ___SET_R1(___STK(-6))
@@ -38037,7 +37993,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_make_2d_ctx
 #undef ___PH_LBL0
-#define ___PH_LBL0 2553
+#define ___PH_LBL0 2551
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -38067,16 +38023,16 @@ ___DEF_GLBL(___L_c_23_make_2d_ctx)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_make_2d_ctx)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(0),___PRC(2682),___L_c_23_make_2d_resource_2d_set)
+   ___JUMPINT(___SET_NARGS(0),___PRC(2680),___L_c_23_make_2d_resource_2d_set)
 ___DEF_SLBL(2,___L2_c_23_make_2d_ctx)
    ___SET_STK(-2,___R1)
    ___SET_R0(___LBL(3))
    ___ADJFP(4)
-   ___JUMPINT(___SET_NARGS(0),___PRC(2682),___L_c_23_make_2d_resource_2d_set)
+   ___JUMPINT(___SET_NARGS(0),___PRC(2680),___L_c_23_make_2d_resource_2d_set)
 ___DEF_SLBL(3,___L3_c_23_make_2d_ctx)
    ___SET_STK(-5,___R1)
    ___SET_R0(___LBL(4))
-   ___JUMPINT(___SET_NARGS(0),___PRC(2682),___L_c_23_make_2d_resource_2d_set)
+   ___JUMPINT(___SET_NARGS(0),___PRC(2680),___L_c_23_make_2d_resource_2d_set)
 ___DEF_SLBL(4,___L4_c_23_make_2d_ctx)
    ___BEGIN_ALLOC_VECTOR(22UL)
    ___ADD_VECTOR_ELEM(0,___STK(-23))
@@ -38114,7 +38070,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_target
 #undef ___PH_LBL0
-#define ___PH_LBL0 2560
+#define ___PH_LBL0 2558
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -38139,7 +38095,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_target_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 2562
+#define ___PH_LBL0 2560
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -38164,7 +38120,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_semantics_2d_changing_2d_options
 #undef ___PH_LBL0
-#define ___PH_LBL0 2564
+#define ___PH_LBL0 2562
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -38189,7 +38145,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_semantics_2d_changing_2d_options_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 2566
+#define ___PH_LBL0 2564
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -38214,7 +38170,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_semantics_2d_preserving_2d_options
 #undef ___PH_LBL0
-#define ___PH_LBL0 2568
+#define ___PH_LBL0 2566
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -38239,7 +38195,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_semantics_2d_preserving_2d_options_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 2570
+#define ___PH_LBL0 2568
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -38264,7 +38220,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_module_2d_name
 #undef ___PH_LBL0
-#define ___PH_LBL0 2572
+#define ___PH_LBL0 2570
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -38289,7 +38245,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_module_2d_name_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 2574
+#define ___PH_LBL0 2572
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -38314,7 +38270,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_rts_2d_module_2d_name
 #undef ___PH_LBL0
-#define ___PH_LBL0 2576
+#define ___PH_LBL0 2574
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -38339,7 +38295,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_rts_2d_module_2d_name_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 2578
+#define ___PH_LBL0 2576
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -38364,7 +38320,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_ns_2d_prefix
 #undef ___PH_LBL0
-#define ___PH_LBL0 2580
+#define ___PH_LBL0 2578
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -38389,7 +38345,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_ns_2d_prefix_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 2582
+#define ___PH_LBL0 2580
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -38414,7 +38370,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_ns_2d_prefix_2d_class
 #undef ___PH_LBL0
-#define ___PH_LBL0 2584
+#define ___PH_LBL0 2582
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -38439,7 +38395,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_ns_2d_prefix_2d_class_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 2586
+#define ___PH_LBL0 2584
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -38464,7 +38420,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_ns
 #undef ___PH_LBL0
-#define ___PH_LBL0 2588
+#define ___PH_LBL0 2586
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -38489,7 +38445,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_ns_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 2590
+#define ___PH_LBL0 2588
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -38514,7 +38470,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_stack_2d_base_2d_offset
 #undef ___PH_LBL0
-#define ___PH_LBL0 2592
+#define ___PH_LBL0 2590
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -38539,7 +38495,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_stack_2d_base_2d_offset_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 2594
+#define ___PH_LBL0 2592
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -38564,7 +38520,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_serial_2d_num
 #undef ___PH_LBL0
-#define ___PH_LBL0 2596
+#define ___PH_LBL0 2594
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -38589,7 +38545,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_serial_2d_num_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 2598
+#define ___PH_LBL0 2596
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -38614,7 +38570,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_allow_2d_jump_2d_destination_2d_inlining_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 2600
+#define ___PH_LBL0 2598
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -38639,7 +38595,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_allow_2d_jump_2d_destination_2d_inlining_3f__2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 2602
+#define ___PH_LBL0 2600
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -38664,7 +38620,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_resources_2d_used_2d_rd
 #undef ___PH_LBL0
-#define ___PH_LBL0 2604
+#define ___PH_LBL0 2602
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -38689,7 +38645,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_resources_2d_used_2d_rd_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 2606
+#define ___PH_LBL0 2604
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -38714,7 +38670,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_resources_2d_used_2d_wr
 #undef ___PH_LBL0
-#define ___PH_LBL0 2608
+#define ___PH_LBL0 2606
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -38739,7 +38695,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_resources_2d_used_2d_wr_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 2610
+#define ___PH_LBL0 2608
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -38764,7 +38720,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_globals_2d_used
 #undef ___PH_LBL0
-#define ___PH_LBL0 2612
+#define ___PH_LBL0 2610
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -38789,7 +38745,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_globals_2d_used_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 2614
+#define ___PH_LBL0 2612
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -38814,7 +38770,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_objs_2d_used
 #undef ___PH_LBL0
-#define ___PH_LBL0 2616
+#define ___PH_LBL0 2614
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -38839,7 +38795,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_objs_2d_used_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 2618
+#define ___PH_LBL0 2616
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -38864,7 +38820,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_rtlib_2d_features_2d_used
 #undef ___PH_LBL0
-#define ___PH_LBL0 2620
+#define ___PH_LBL0 2618
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -38889,7 +38845,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_rtlib_2d_features_2d_used_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 2622
+#define ___PH_LBL0 2620
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -38914,7 +38870,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_glo_2d_used
 #undef ___PH_LBL0
-#define ___PH_LBL0 2624
+#define ___PH_LBL0 2622
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -38939,7 +38895,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_glo_2d_used_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 2626
+#define ___PH_LBL0 2624
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -38964,7 +38920,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_decls
 #undef ___PH_LBL0
-#define ___PH_LBL0 2628
+#define ___PH_LBL0 2626
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -38989,7 +38945,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_decls_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 2630
+#define ___PH_LBL0 2628
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -39014,7 +38970,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_inits
 #undef ___PH_LBL0
-#define ___PH_LBL0 2632
+#define ___PH_LBL0 2630
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -39039,7 +38995,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_inits_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 2634
+#define ___PH_LBL0 2632
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -39064,7 +39020,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_imports
 #undef ___PH_LBL0
-#define ___PH_LBL0 2636
+#define ___PH_LBL0 2634
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -39089,7 +39045,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_imports_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 2638
+#define ___PH_LBL0 2636
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -39114,7 +39070,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_label_2d_table
 #undef ___PH_LBL0
-#define ___PH_LBL0 2640
+#define ___PH_LBL0 2638
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -39139,7 +39095,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_label_2d_table_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 2642
+#define ___PH_LBL0 2640
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -39164,7 +39120,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_label_2d_ns
 #undef ___PH_LBL0
-#define ___PH_LBL0 2644
+#define ___PH_LBL0 2642
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -39189,7 +39145,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_ctx_2d_label_2d_ns_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 2646
+#define ___PH_LBL0 2644
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -39214,7 +39170,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_add_2d_module_2d_init
 #undef ___PH_LBL0
-#define ___PH_LBL0 2648
+#define ___PH_LBL0 2646
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R4
 #undef ___PR_ALL
@@ -39242,7 +39198,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_add_2d_module_2d_import
 #undef ___PH_LBL0
-#define ___PH_LBL0 2651
+#define ___PH_LBL0 2649
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -39298,7 +39254,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_with_2d_stack_2d_base_2d_offset
 #undef ___PH_LBL0
-#define ___PH_LBL0 2657
+#define ___PH_LBL0 2655
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -39337,7 +39293,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_with_2d_stack_2d_pointer_2d_adjust
 #undef ___PH_LBL0
-#define ___PH_LBL0 2661
+#define ___PH_LBL0 2659
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4 ___D_F64(___F64V1) ___D_F64( \
 ___F64V2) ___D_F64(___F64V3)
@@ -39458,20 +39414,20 @@ ___DEF_GLBL(___L14_c_23_with_2d_stack_2d_pointer_2d_adjust)
    ___POLL(7)
 ___DEF_SLBL(7,___L7_c_23_with_2d_stack_2d_pointer_2d_adjust)
    ___SET_R0(___LBL(8))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2774),___L_c_23_gvm_2d_state_2d_sp_2d_use)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2772),___L_c_23_gvm_2d_state_2d_sp_2d_use)
 ___DEF_SLBL(8,___L8_c_23_with_2d_stack_2d_pointer_2d_adjust)
    ___SET_R2(___STK(-9))
    ___SET_R3(___FAL)
    ___SET_R0(___LBL(1))
    ___ADJFP(-3)
-   ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(1051),___L0_c_23_univ_2d_emit_2d_inc_2d_by)
+   ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(1049),___L0_c_23_univ_2d_emit_2d_inc_2d_by)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_with_2d_allow_2d_jump_2d_destination_2d_inlining_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 2671
+#define ___PH_LBL0 2669
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -39510,7 +39466,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_with_2d_new_2d_resources_2d_used
 #undef ___PH_LBL0
-#define ___PH_LBL0 2675
+#define ___PH_LBL0 2673
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -39544,15 +39500,15 @@ ___DEF_GLBL(___L_c_23_with_2d_new_2d_resources_2d_used)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_with_2d_new_2d_resources_2d_used)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(0),___PRC(2682),___L_c_23_make_2d_resource_2d_set)
+   ___JUMPINT(___SET_NARGS(0),___PRC(2680),___L_c_23_make_2d_resource_2d_set)
 ___DEF_SLBL(2,___L2_c_23_with_2d_new_2d_resources_2d_used)
    ___VECTORSET(___STK(-9),___FIX(11L),___R1)
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(0),___PRC(2682),___L_c_23_make_2d_resource_2d_set)
+   ___JUMPINT(___SET_NARGS(0),___PRC(2680),___L_c_23_make_2d_resource_2d_set)
 ___DEF_SLBL(3,___L3_c_23_with_2d_new_2d_resources_2d_used)
    ___VECTORSET(___STK(-9),___FIX(12L),___R1)
    ___SET_R0(___LBL(4))
-   ___JUMPINT(___SET_NARGS(0),___PRC(2682),___L_c_23_make_2d_resource_2d_set)
+   ___JUMPINT(___SET_NARGS(0),___PRC(2680),___L_c_23_make_2d_resource_2d_set)
 ___DEF_SLBL(4,___L4_c_23_with_2d_new_2d_resources_2d_used)
    ___VECTORSET(___STK(-9),___FIX(13L),___R1)
    ___SET_R1(___STK(-9))
@@ -39570,7 +39526,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_make_2d_resource_2d_set
 #undef ___PH_LBL0
-#define ___PH_LBL0 2682
+#define ___PH_LBL0 2680
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R4
 #undef ___PR_ALL
@@ -39609,7 +39565,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_resource_2d_set_2d_add_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 2687
+#define ___PH_LBL0 2685
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -39670,7 +39626,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_resource_2d_set_2d_member_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 2693
+#define ___PH_LBL0 2691
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -39699,7 +39655,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_resource_2d_set_2d_stack
 #undef ___PH_LBL0
-#define ___PH_LBL0 2696
+#define ___PH_LBL0 2694
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -39724,7 +39680,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_resource_2d_set_2d_pop
 #undef ___PH_LBL0
-#define ___PH_LBL0 2698
+#define ___PH_LBL0 2696
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -39758,7 +39714,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_use_2d_resource_2d_rd
 #undef ___PH_LBL0
-#define ___PH_LBL0 2700
+#define ___PH_LBL0 2698
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1
 #undef ___PR_ALL
@@ -39779,14 +39735,14 @@ ___DEF_GLBL(___L_c_23_use_2d_resource_2d_rd)
    ___SET_R1(___VECTORREF(___R1,___FIX(11L)))
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_use_2d_resource_2d_rd)
-   ___JUMPINT(___SET_NARGS(2),___PRC(2687),___L_c_23_resource_2d_set_2d_add_21_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2685),___L_c_23_resource_2d_set_2d_add_21_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_use_2d_resource_2d_wr
 #undef ___PH_LBL0
-#define ___PH_LBL0 2703
+#define ___PH_LBL0 2701
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1
 #undef ___PR_ALL
@@ -39807,14 +39763,14 @@ ___DEF_GLBL(___L_c_23_use_2d_resource_2d_wr)
    ___SET_R1(___VECTORREF(___R1,___FIX(12L)))
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_use_2d_resource_2d_wr)
-   ___JUMPINT(___SET_NARGS(2),___PRC(2687),___L_c_23_resource_2d_set_2d_add_21_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2685),___L_c_23_resource_2d_set_2d_add_21_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_use_2d_global
 #undef ___PH_LBL0
-#define ___PH_LBL0 2706
+#define ___PH_LBL0 2704
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1
 #undef ___PR_ALL
@@ -39835,14 +39791,14 @@ ___DEF_GLBL(___L_c_23_use_2d_global)
    ___SET_R1(___VECTORREF(___R1,___FIX(13L)))
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_use_2d_global)
-   ___JUMPINT(___SET_NARGS(2),___PRC(2687),___L_c_23_resource_2d_set_2d_add_21_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2685),___L_c_23_resource_2d_set_2d_add_21_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_use_2d_rtlib
 #undef ___PH_LBL0
-#define ___PH_LBL0 2709
+#define ___PH_LBL0 2707
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -39869,7 +39825,7 @@ ___DEF_GLBL(___L_c_23_univ_2d_use_2d_rtlib)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_use_2d_rtlib)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2687),___L_c_23_resource_2d_set_2d_add_21_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2685),___L_c_23_resource_2d_set_2d_add_21_)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_use_2d_rtlib)
    ___IF(___SYMBOL2STRINGP_NOTFALSEP(___R1,___STK(-6)))
    ___GOTO(___L4_c_23_univ_2d_use_2d_rtlib)
@@ -39890,7 +39846,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_use_2d_resource
 #undef ___PH_LBL0
-#define ___PH_LBL0 2714
+#define ___PH_LBL0 2712
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -39926,7 +39882,7 @@ ___DEF_GLBL(___L4_c_23_use_2d_resource)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_use_2d_resource)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2700),___L_c_23_use_2d_resource_2d_rd)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2698),___L_c_23_use_2d_resource_2d_rd)
 ___DEF_SLBL(2,___L2_c_23_use_2d_resource)
    ___SET_R3(___STK(-4))
    ___SET_R2(___STK(-5))
@@ -39949,7 +39905,7 @@ ___DEF_GLBL(___L7_c_23_use_2d_resource)
    ___SET_R2(___R3)
    ___POLL(3)
 ___DEF_SLBL(3,___L3_c_23_use_2d_resource)
-   ___JUMPINT(___SET_NARGS(2),___PRC(2703),___L_c_23_use_2d_resource_2d_wr)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2701),___L_c_23_use_2d_resource_2d_wr)
 ___DEF_GLBL(___L8_c_23_use_2d_resource)
    ___SET_R1(___VOID)
    ___JUMPRET(___R0)
@@ -39959,7 +39915,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_gvm_2d_state_2d_pollcount
 #undef ___PH_LBL0
-#define ___PH_LBL0 2719
+#define ___PH_LBL0 2717
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -39981,14 +39937,14 @@ ___DEF_GLBL(___L_c_23_gvm_2d_state_2d_pollcount)
    ___SET_R2(___SYM_pollcount)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_gvm_2d_state_2d_pollcount)
-   ___JUMPINT(___SET_NARGS(3),___PRC(977),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(975),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_gvm_2d_state_2d_nargs
 #undef ___PH_LBL0
-#define ___PH_LBL0 2722
+#define ___PH_LBL0 2720
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -40010,14 +39966,14 @@ ___DEF_GLBL(___L_c_23_gvm_2d_state_2d_nargs)
    ___SET_R2(___SYM_nargs)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_gvm_2d_state_2d_nargs)
-   ___JUMPINT(___SET_NARGS(3),___PRC(977),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(975),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_gvm_2d_state_2d_reg
 #undef ___PH_LBL0
-#define ___PH_LBL0 2725
+#define ___PH_LBL0 2723
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -40060,14 +40016,14 @@ ___DEF_SLBL(3,___L3_c_23_gvm_2d_state_2d_reg)
    ___POLL(4)
 ___DEF_SLBL(4,___L4_c_23_gvm_2d_state_2d_reg)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(3),___PRC(977),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(975),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_gvm_2d_state_2d_stack
 #undef ___PH_LBL0
-#define ___PH_LBL0 2731
+#define ___PH_LBL0 2729
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -40089,14 +40045,14 @@ ___DEF_GLBL(___L_c_23_gvm_2d_state_2d_stack)
    ___SET_R2(___SYM_stack)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_gvm_2d_state_2d_stack)
-   ___JUMPINT(___SET_NARGS(3),___PRC(977),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(975),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_gvm_2d_state_2d_sp
 #undef ___PH_LBL0
-#define ___PH_LBL0 2734
+#define ___PH_LBL0 2732
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -40118,14 +40074,14 @@ ___DEF_GLBL(___L_c_23_gvm_2d_state_2d_sp)
    ___SET_R2(___SYM_sp)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_gvm_2d_state_2d_sp)
-   ___JUMPINT(___SET_NARGS(3),___PRC(977),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(975),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_gvm_2d_state_2d_peps
 #undef ___PH_LBL0
-#define ___PH_LBL0 2737
+#define ___PH_LBL0 2735
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -40147,14 +40103,14 @@ ___DEF_GLBL(___L_c_23_gvm_2d_state_2d_peps)
    ___SET_R2(___SYM_peps)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_gvm_2d_state_2d_peps)
-   ___JUMPINT(___SET_NARGS(3),___PRC(977),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(975),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_gvm_2d_state_2d_glo
 #undef ___PH_LBL0
-#define ___PH_LBL0 2740
+#define ___PH_LBL0 2738
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -40176,14 +40132,14 @@ ___DEF_GLBL(___L_c_23_gvm_2d_state_2d_glo)
    ___SET_R2(___SYM_glo)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_gvm_2d_state_2d_glo)
-   ___JUMPINT(___SET_NARGS(3),___PRC(977),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(975),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_gvm_2d_state_2d_current_2d_vm
 #undef ___PH_LBL0
-#define ___PH_LBL0 2743
+#define ___PH_LBL0 2741
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -40205,14 +40161,14 @@ ___DEF_GLBL(___L_c_23_gvm_2d_state_2d_current_2d_vm)
    ___SET_R2(___SYM_current__vm)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_gvm_2d_state_2d_current_2d_vm)
-   ___JUMPINT(___SET_NARGS(3),___PRC(977),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(975),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_gvm_2d_state_2d_current_2d_processor
 #undef ___PH_LBL0
-#define ___PH_LBL0 2746
+#define ___PH_LBL0 2744
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -40234,14 +40190,14 @@ ___DEF_GLBL(___L_c_23_gvm_2d_state_2d_current_2d_processor)
    ___SET_R2(___SYM_current__processor)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_gvm_2d_state_2d_current_2d_processor)
-   ___JUMPINT(___SET_NARGS(3),___PRC(977),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(975),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_gvm_2d_state_2d_current_2d_thread
 #undef ___PH_LBL0
-#define ___PH_LBL0 2749
+#define ___PH_LBL0 2747
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -40267,7 +40223,7 @@ ___DEF_GLBL(___L_c_23_gvm_2d_state_2d_current_2d_thread)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_gvm_2d_state_2d_current_2d_thread)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(1),___PRC(2746),___L_c_23_gvm_2d_state_2d_current_2d_processor)
+   ___JUMPINT(___SET_NARGS(1),___PRC(2744),___L_c_23_gvm_2d_state_2d_current_2d_processor)
 ___DEF_SLBL(2,___L2_c_23_gvm_2d_state_2d_current_2d_thread)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
@@ -40283,7 +40239,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_gvm_2d_state_2d_pollcount_2d_use
 #undef ___PH_LBL0
-#define ___PH_LBL0 2754
+#define ___PH_LBL0 2752
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R3
 #undef ___PR_ALL
@@ -40310,21 +40266,21 @@ ___DEF_GLBL(___L_c_23_gvm_2d_state_2d_pollcount_2d_use)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_gvm_2d_state_2d_pollcount_2d_use)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2714),___L_c_23_use_2d_resource)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2712),___L_c_23_use_2d_resource)
 ___DEF_SLBL(2,___L2_c_23_gvm_2d_state_2d_pollcount_2d_use)
    ___SET_R1(___STK(-6))
    ___SET_R0(___STK(-7))
    ___POLL(3)
 ___DEF_SLBL(3,___L3_c_23_gvm_2d_state_2d_pollcount_2d_use)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(1),___PRC(2719),___L_c_23_gvm_2d_state_2d_pollcount)
+   ___JUMPINT(___SET_NARGS(1),___PRC(2717),___L_c_23_gvm_2d_state_2d_pollcount)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_gvm_2d_state_2d_nargs_2d_use
 #undef ___PH_LBL0
-#define ___PH_LBL0 2759
+#define ___PH_LBL0 2757
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R3
 #undef ___PR_ALL
@@ -40351,21 +40307,21 @@ ___DEF_GLBL(___L_c_23_gvm_2d_state_2d_nargs_2d_use)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_gvm_2d_state_2d_nargs_2d_use)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2714),___L_c_23_use_2d_resource)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2712),___L_c_23_use_2d_resource)
 ___DEF_SLBL(2,___L2_c_23_gvm_2d_state_2d_nargs_2d_use)
    ___SET_R1(___STK(-6))
    ___SET_R0(___STK(-7))
    ___POLL(3)
 ___DEF_SLBL(3,___L3_c_23_gvm_2d_state_2d_nargs_2d_use)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(1),___PRC(2722),___L_c_23_gvm_2d_state_2d_nargs)
+   ___JUMPINT(___SET_NARGS(1),___PRC(2720),___L_c_23_gvm_2d_state_2d_nargs)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_gvm_2d_state_2d_reg_2d_use
 #undef ___PH_LBL0
-#define ___PH_LBL0 2764
+#define ___PH_LBL0 2762
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -40392,7 +40348,7 @@ ___DEF_GLBL(___L_c_23_gvm_2d_state_2d_reg_2d_use)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_gvm_2d_state_2d_reg_2d_use)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2714),___L_c_23_use_2d_resource)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2712),___L_c_23_use_2d_resource)
 ___DEF_SLBL(2,___L2_c_23_gvm_2d_state_2d_reg_2d_use)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-6))
@@ -40400,14 +40356,14 @@ ___DEF_SLBL(2,___L2_c_23_gvm_2d_state_2d_reg_2d_use)
    ___POLL(3)
 ___DEF_SLBL(3,___L3_c_23_gvm_2d_state_2d_reg_2d_use)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(2725),___L_c_23_gvm_2d_state_2d_reg)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2723),___L_c_23_gvm_2d_state_2d_reg)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_gvm_2d_state_2d_stack_2d_use
 #undef ___PH_LBL0
-#define ___PH_LBL0 2769
+#define ___PH_LBL0 2767
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R3
 #undef ___PR_ALL
@@ -40434,21 +40390,21 @@ ___DEF_GLBL(___L_c_23_gvm_2d_state_2d_stack_2d_use)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_gvm_2d_state_2d_stack_2d_use)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2714),___L_c_23_use_2d_resource)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2712),___L_c_23_use_2d_resource)
 ___DEF_SLBL(2,___L2_c_23_gvm_2d_state_2d_stack_2d_use)
    ___SET_R1(___STK(-6))
    ___SET_R0(___STK(-7))
    ___POLL(3)
 ___DEF_SLBL(3,___L3_c_23_gvm_2d_state_2d_stack_2d_use)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(1),___PRC(2731),___L_c_23_gvm_2d_state_2d_stack)
+   ___JUMPINT(___SET_NARGS(1),___PRC(2729),___L_c_23_gvm_2d_state_2d_stack)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_gvm_2d_state_2d_sp_2d_use
 #undef ___PH_LBL0
-#define ___PH_LBL0 2774
+#define ___PH_LBL0 2772
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R3
 #undef ___PR_ALL
@@ -40475,21 +40431,21 @@ ___DEF_GLBL(___L_c_23_gvm_2d_state_2d_sp_2d_use)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_gvm_2d_state_2d_sp_2d_use)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2714),___L_c_23_use_2d_resource)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2712),___L_c_23_use_2d_resource)
 ___DEF_SLBL(2,___L2_c_23_gvm_2d_state_2d_sp_2d_use)
    ___SET_R1(___STK(-6))
    ___SET_R0(___STK(-7))
    ___POLL(3)
 ___DEF_SLBL(3,___L3_c_23_gvm_2d_state_2d_sp_2d_use)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(1),___PRC(2734),___L_c_23_gvm_2d_state_2d_sp)
+   ___JUMPINT(___SET_NARGS(1),___PRC(2732),___L_c_23_gvm_2d_state_2d_sp)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_gvm_2d_state_2d_peps_2d_use
 #undef ___PH_LBL0
-#define ___PH_LBL0 2779
+#define ___PH_LBL0 2777
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R3
 #undef ___PR_ALL
@@ -40516,21 +40472,21 @@ ___DEF_GLBL(___L_c_23_gvm_2d_state_2d_peps_2d_use)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_gvm_2d_state_2d_peps_2d_use)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2714),___L_c_23_use_2d_resource)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2712),___L_c_23_use_2d_resource)
 ___DEF_SLBL(2,___L2_c_23_gvm_2d_state_2d_peps_2d_use)
    ___SET_R1(___STK(-6))
    ___SET_R0(___STK(-7))
    ___POLL(3)
 ___DEF_SLBL(3,___L3_c_23_gvm_2d_state_2d_peps_2d_use)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(1),___PRC(2737),___L_c_23_gvm_2d_state_2d_peps)
+   ___JUMPINT(___SET_NARGS(1),___PRC(2735),___L_c_23_gvm_2d_state_2d_peps)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_gvm_2d_state_2d_glo_2d_use
 #undef ___PH_LBL0
-#define ___PH_LBL0 2784
+#define ___PH_LBL0 2782
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R3
 #undef ___PR_ALL
@@ -40557,21 +40513,21 @@ ___DEF_GLBL(___L_c_23_gvm_2d_state_2d_glo_2d_use)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_gvm_2d_state_2d_glo_2d_use)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2714),___L_c_23_use_2d_resource)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2712),___L_c_23_use_2d_resource)
 ___DEF_SLBL(2,___L2_c_23_gvm_2d_state_2d_glo_2d_use)
    ___SET_R1(___STK(-6))
    ___SET_R0(___STK(-7))
    ___POLL(3)
 ___DEF_SLBL(3,___L3_c_23_gvm_2d_state_2d_glo_2d_use)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(1),___PRC(2740),___L_c_23_gvm_2d_state_2d_glo)
+   ___JUMPINT(___SET_NARGS(1),___PRC(2738),___L_c_23_gvm_2d_state_2d_glo)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_tos
 #undef ___PH_LBL0
-#define ___PH_LBL0 2789
+#define ___PH_LBL0 2787
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -40599,13 +40555,13 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_tos)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_tos)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2769),___L_c_23_gvm_2d_state_2d_stack_2d_use)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2767),___L_c_23_gvm_2d_state_2d_stack_2d_use)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_tos)
    ___SET_STK(-5,___R1)
    ___SET_R1(___STK(-6))
    ___SET_R2(___SYM_rd)
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2774),___L_c_23_gvm_2d_state_2d_sp_2d_use)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2772),___L_c_23_gvm_2d_state_2d_sp_2d_use)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_tos)
    ___BEGIN_ALLOC_LIST(4UL,___SUB(304))
    ___ADD_LIST_ELEM(1,___R1)
@@ -40624,7 +40580,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_pop
 #undef ___PH_LBL0
-#define ___PH_LBL0 2795
+#define ___PH_LBL0 2793
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -40654,7 +40610,7 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_pop)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_pop)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(1),___PRC(2789),___L_c_23_univ_2d_emit_2d_tos)
+   ___JUMPINT(___SET_NARGS(1),___PRC(2787),___L_c_23_univ_2d_emit_2d_tos)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_pop)
    ___SET_R0(___LBL(3))
    ___JUMPGENNOTSAFE(___SET_NARGS(1),___STK(-5))
@@ -40665,13 +40621,13 @@ ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_pop)
    ___SET_R2(___SYM_rdwr)
    ___SET_R0(___LBL(4))
    ___ADJFP(4)
-   ___JUMPINT(___SET_NARGS(2),___PRC(2774),___L_c_23_gvm_2d_state_2d_sp_2d_use)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2772),___L_c_23_gvm_2d_state_2d_sp_2d_use)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_pop)
    ___SET_R3(___FAL)
    ___SET_R2(___FIX(-1L))
    ___SET_R0(___LBL(5))
    ___ADJFP(-3)
-   ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(1051),___L0_c_23_univ_2d_emit_2d_inc_2d_by)
+   ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(1049),___L0_c_23_univ_2d_emit_2d_inc_2d_by)
 ___DEF_SLBL(5,___L5_c_23_univ_2d_emit_2d_pop)
    ___BEGIN_ALLOC_LIST(2UL,___R1)
    ___ADD_LIST_ELEM(1,___STK(-5))
@@ -40688,7 +40644,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_push
 #undef ___PH_LBL0
-#define ___PH_LBL0 2803
+#define ___PH_LBL0 2801
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -40723,7 +40679,7 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_push)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_push)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2774),___L_c_23_gvm_2d_state_2d_sp_2d_use)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2772),___L_c_23_gvm_2d_state_2d_sp_2d_use)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_push)
    ___SET_STK(-3,___R1)
    ___SET_STK(-2,___ALLOC_CLO(2UL))
@@ -40741,7 +40697,7 @@ ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_push)
    ___POLL(4)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_push)
    ___ADJFP(-5)
-   ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(1051),___L0_c_23_univ_2d_emit_2d_inc_2d_by)
+   ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(1049),___L0_c_23_univ_2d_emit_2d_inc_2d_by)
 ___DEF_SLBL(5,___L5_c_23_univ_2d_emit_2d_push)
    ___IF_NARGS_EQ(1,___NOTHING)
    ___WRONG_NARGS(5,1,0,0)
@@ -40754,7 +40710,7 @@ ___DEF_SLBL(5,___L5_c_23_univ_2d_emit_2d_push)
    ___POLL(6)
 ___DEF_SLBL(6,___L6_c_23_univ_2d_emit_2d_push)
    ___SET_R0(___LBL(7))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2769),___L_c_23_gvm_2d_state_2d_stack_2d_use)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2767),___L_c_23_gvm_2d_state_2d_stack_2d_use)
 ___DEF_SLBL(7,___L7_c_23_univ_2d_emit_2d_push)
    ___BEGIN_ALLOC_LIST(4UL,___SUB(304))
    ___ADD_LIST_ELEM(1,___STK(-6))
@@ -40775,14 +40731,14 @@ ___DEF_SLBL(8,___L8_c_23_univ_2d_emit_2d_push)
    ___POLL(9)
 ___DEF_SLBL(9,___L9_c_23_univ_2d_emit_2d_push)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(452),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
+   ___JUMPINT(___SET_NARGS(2),___PRC(450),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_getnargs
 #undef ___PH_LBL0
-#define ___PH_LBL0 2814
+#define ___PH_LBL0 2812
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -40803,14 +40759,14 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_getnargs)
    ___SET_R2(___SYM_rd)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_getnargs)
-   ___JUMPINT(___SET_NARGS(2),___PRC(2759),___L_c_23_gvm_2d_state_2d_nargs_2d_use)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2757),___L_c_23_gvm_2d_state_2d_nargs_2d_use)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_setnargs
 #undef ___PH_LBL0
-#define ___PH_LBL0 2817
+#define ___PH_LBL0 2815
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -40839,7 +40795,7 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_setnargs)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_setnargs)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2759),___L_c_23_gvm_2d_state_2d_nargs_2d_use)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2757),___L_c_23_gvm_2d_state_2d_nargs_2d_use)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_setnargs)
    ___BEGIN_ALLOC_LIST(3UL,___STK(-5))
    ___ADD_LIST_ELEM(1,___SUB(35))
@@ -40853,14 +40809,14 @@ ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_setnargs)
    ___POLL(4)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_setnargs)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(452),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
+   ___JUMPINT(___SET_NARGS(2),___PRC(450),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_getreg
 #undef ___PH_LBL0
-#define ___PH_LBL0 2823
+#define ___PH_LBL0 2821
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -40882,14 +40838,14 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_getreg)
    ___SET_R2(___SYM_rd)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_getreg)
-   ___JUMPINT(___SET_NARGS(3),___PRC(2764),___L_c_23_gvm_2d_state_2d_reg_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2762),___L_c_23_gvm_2d_state_2d_reg_2d_use)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_setreg
 #undef ___PH_LBL0
-#define ___PH_LBL0 2826
+#define ___PH_LBL0 2824
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -40919,7 +40875,7 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_setreg)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_setreg)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2764),___L_c_23_gvm_2d_state_2d_reg_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2762),___L_c_23_gvm_2d_state_2d_reg_2d_use)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_setreg)
    ___BEGIN_ALLOC_LIST(3UL,___STK(-5))
    ___ADD_LIST_ELEM(1,___SUB(35))
@@ -40933,14 +40889,14 @@ ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_setreg)
    ___POLL(4)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_setreg)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(452),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
+   ___JUMPINT(___SET_NARGS(2),___PRC(450),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_stk_2d_slot_2d_from_2d_tos
 #undef ___PH_LBL0
-#define ___PH_LBL0 2832
+#define ___PH_LBL0 2830
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -40972,23 +40928,23 @@ ___DEF_GLBL(___L_c_23_univ_2d_stk_2d_slot_2d_from_2d_tos)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_stk_2d_slot_2d_from_2d_tos)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2714),___L_c_23_use_2d_resource)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2712),___L_c_23_use_2d_resource)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_stk_2d_slot_2d_from_2d_tos)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(1),___PRC(2731),___L_c_23_gvm_2d_state_2d_stack)
+   ___JUMPINT(___SET_NARGS(1),___PRC(2729),___L_c_23_gvm_2d_state_2d_stack)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_stk_2d_slot_2d_from_2d_tos)
    ___SET_STK(-4,___R1)
    ___SET_R1(___STK(-6))
    ___SET_R2(___SYM_rd)
    ___SET_R0(___LBL(4))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2774),___L_c_23_gvm_2d_state_2d_sp_2d_use)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2772),___L_c_23_gvm_2d_state_2d_sp_2d_use)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_stk_2d_slot_2d_from_2d_tos)
    ___SET_R2(___R1)
    ___SET_R3(___STK(-5))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(5))
-   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(543),___L0_c_23_univ_2d_emit_2d__2d_)
+   ___SET_NARGS(3) ___JUMPINT(___NOTHING,___PRC(541),___L0_c_23_univ_2d_emit_2d__2d_)
 ___DEF_SLBL(5,___L5_c_23_univ_2d_stk_2d_slot_2d_from_2d_tos)
    ___BEGIN_ALLOC_LIST(4UL,___SUB(304))
    ___ADD_LIST_ELEM(1,___R1)
@@ -41007,7 +40963,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_stk_2d_location
 #undef ___PH_LBL0
-#define ___PH_LBL0 2840
+#define ___PH_LBL0 2838
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -41067,20 +41023,20 @@ ___DEF_GLBL(___L13_c_23_univ_2d_stk_2d_location)
    ___SET_R3(___TRU)
    ___SET_R2(___SYM_stack)
    ___SET_R0(___LBL(5))
-   ___JUMPINT(___SET_NARGS(3),___PRC(977),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(975),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
 ___DEF_SLBL(5,___L5_c_23_univ_2d_stk_2d_location)
    ___SET_STK(-4,___R1)
    ___SET_R1(___STK(-6))
    ___SET_R3(___SYM_sp)
    ___SET_R2(___SYM_rd)
    ___SET_R0(___LBL(6))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2714),___L_c_23_use_2d_resource)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2712),___L_c_23_use_2d_resource)
 ___DEF_SLBL(6,___L6_c_23_univ_2d_stk_2d_location)
    ___SET_R1(___STK(-6))
    ___SET_R3(___TRU)
    ___SET_R2(___SYM_sp)
    ___SET_R0(___LBL(7))
-   ___JUMPINT(___SET_NARGS(3),___PRC(977),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(975),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
 ___DEF_SLBL(7,___L7_c_23_univ_2d_stk_2d_location)
    ___IF(___NOT(___FIXNUMP(___STK(-5))))
    ___GOTO(___L23_c_23_univ_2d_stk_2d_location)
@@ -41171,7 +41127,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_getstk
 #undef ___PH_LBL0
-#define ___PH_LBL0 2854
+#define ___PH_LBL0 2852
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP
 #undef ___PR_ALL
@@ -41191,14 +41147,14 @@ ___DEF_SLBL(0,___L0_c_23_univ_2d_emit_2d_getstk)
 ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_getstk)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_getstk)
-   ___JUMPINT(___SET_NARGS(2),___PRC(2840),___L_c_23_univ_2d_stk_2d_location)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2838),___L_c_23_univ_2d_stk_2d_location)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_setstk
 #undef ___PH_LBL0
-#define ___PH_LBL0 2857
+#define ___PH_LBL0 2855
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -41226,7 +41182,7 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_setstk)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_setstk)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2840),___L_c_23_univ_2d_stk_2d_location)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2838),___L_c_23_univ_2d_stk_2d_location)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_setstk)
    ___BEGIN_ALLOC_LIST(3UL,___STK(-5))
    ___ADD_LIST_ELEM(1,___SUB(35))
@@ -41240,14 +41196,14 @@ ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_setstk)
    ___POLL(4)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_setstk)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(452),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
+   ___JUMPINT(___SET_NARGS(2),___PRC(450),___L_c_23_univ_2d_emit_2d_expr_2d_statement)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_clo_2d_slots
 #undef ___PH_LBL0
-#define ___PH_LBL0 2863
+#define ___PH_LBL0 2861
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -41338,14 +41294,14 @@ ___DEF_GLBL(___L13_c_23_univ_2d_clo_2d_slots)
    ___SET_R1(___STK(-6))
    ___SET_R2(___SYM_closure)
    ___SET_R0(___LBL(5))
-   ___JUMPINT(___SET_NARGS(3),___PRC(775),___L_c_23_univ_2d_emit_2d_cast_2a_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(773),___L_c_23_univ_2d_emit_2d_cast_2a_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_getclo
 #undef ___PH_LBL0
-#define ___PH_LBL0 2874
+#define ___PH_LBL0 2872
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R4
 #undef ___PR_ALL
@@ -41372,7 +41328,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_setclo
 #undef ___PH_LBL0
-#define ___PH_LBL0 2877
+#define ___PH_LBL0 2875
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R4
 #undef ___PR_ALL
@@ -41399,7 +41355,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_glo_2d_dependency
 #undef ___PH_LBL0
-#define ___PH_LBL0 2880
+#define ___PH_LBL0 2878
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -41433,12 +41389,12 @@ ___DEF_GLBL(___L_c_23_univ_2d_glo_2d_dependency)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_glo_2d_dependency)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2892),___L_c_23_univ_2d_glo_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2890),___L_c_23_univ_2d_glo_2d_use)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_glo_2d_dependency)
    ___SET_R1(___STK(-6))
    ___SET_R2(___SYM_rd)
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2784),___L_c_23_gvm_2d_state_2d_glo_2d_use)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2782),___L_c_23_gvm_2d_state_2d_glo_2d_use)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_glo_2d_dependency)
    ___SET_R1(___STK(-5))
    ___SET_R2(___CNS(274))
@@ -41452,7 +41408,7 @@ ___DEF_SLBL(4,___L4_c_23_univ_2d_glo_2d_dependency)
    ___SET_R1(___STK(-6))
    ___SET_R3(___SYM_wr)
    ___SET_R0(___LBL(5))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2892),___L_c_23_univ_2d_glo_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2890),___L_c_23_univ_2d_glo_2d_use)
 ___DEF_SLBL(5,___L5_c_23_univ_2d_glo_2d_dependency)
    ___IF(___SYMBOL2STRINGP_NOTFALSEP(___R1,___STK(-5)))
    ___GOTO(___L11_c_23_univ_2d_glo_2d_dependency)
@@ -41473,7 +41429,7 @@ ___DEF_SLBL(8,___L8_c_23_univ_2d_glo_2d_dependency)
    ___SET_R2(___R1)
    ___SET_R1(___VECTORREF(___STK(-6),___FIX(15L)))
    ___SET_R0(___LBL(9))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2687),___L_c_23_resource_2d_set_2d_add_21_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2685),___L_c_23_resource_2d_set_2d_add_21_)
 ___DEF_SLBL(9,___L9_c_23_univ_2d_glo_2d_dependency)
    ___IF(___SYMBOL2STRINGP_NOTFALSEP(___R1,___STK(-5)))
    ___GOTO(___L12_c_23_univ_2d_glo_2d_dependency)
@@ -41502,7 +41458,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_glo_2d_use
 #undef ___PH_LBL0
-#define ___PH_LBL0 2892
+#define ___PH_LBL0 2890
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -41559,7 +41515,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_get_2d_symbol_2d_name
 #undef ___PH_LBL0
-#define ___PH_LBL0 2897
+#define ___PH_LBL0 2895
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -41592,7 +41548,7 @@ ___DEF_GLBL(___L_c_23_univ_2d_get_2d_symbol_2d_name)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_get_2d_symbol_2d_name)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(3439),___L_c_23_univ_2d_compactness_3e__3d__3f_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(3421),___L_c_23_univ_2d_compactness_3e__3d__3f_)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_get_2d_symbol_2d_name)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L10_c_23_univ_2d_get_2d_symbol_2d_name)
@@ -41639,7 +41595,7 @@ ___DEF_GLBL(___L13_c_23_univ_2d_get_2d_symbol_2d_name)
    ___SET_R1(___STK(-6))
    ___SET_R3(___TRU)
    ___SET_R0(___LBL(7))
-   ___JUMPINT(___SET_NARGS(3),___PRC(3023),___L_c_23_univ_2d_emit_2d_obj_2a_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3021),___L_c_23_univ_2d_emit_2d_obj_2a_)
 ___DEF_SLBL(7,___L7_c_23_univ_2d_get_2d_symbol_2d_name)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
@@ -41662,7 +41618,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_getpeps
 #undef ___PH_LBL0
-#define ___PH_LBL0 2907
+#define ___PH_LBL0 2905
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -41693,14 +41649,14 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_getpeps)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_getpeps)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2779),___L_c_23_gvm_2d_state_2d_peps_2d_use)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2777),___L_c_23_gvm_2d_state_2d_peps_2d_use)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_getpeps)
    ___SET_STK(-2,___R1)
    ___SET_R2(___STK(-3))
    ___SET_R1(___STK(-4))
    ___SET_R0(___LBL(3))
    ___ADJFP(4)
-   ___JUMPINT(___SET_NARGS(2),___PRC(2897),___L_c_23_univ_2d_get_2d_symbol_2d_name)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2895),___L_c_23_univ_2d_get_2d_symbol_2d_name)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_getpeps)
    ___SET_R2(___R1)
    ___SET_R3(___FAL)
@@ -41716,7 +41672,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_setpeps
 #undef ___PH_LBL0
-#define ___PH_LBL0 2913
+#define ___PH_LBL0 2911
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -41748,13 +41704,13 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_setpeps)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_setpeps)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2779),___L_c_23_gvm_2d_state_2d_peps_2d_use)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2777),___L_c_23_gvm_2d_state_2d_peps_2d_use)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_setpeps)
    ___SET_STK(-5,___R1)
    ___SET_R2(___STK(-7))
    ___SET_R1(___STK(-8))
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2897),___L_c_23_univ_2d_get_2d_symbol_2d_name)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2895),___L_c_23_univ_2d_get_2d_symbol_2d_name)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_setpeps)
    ___SET_R2(___R1)
    ___SET_R3(___STK(-6))
@@ -41770,7 +41726,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_getglo
 #undef ___PH_LBL0
-#define ___PH_LBL0 2919
+#define ___PH_LBL0 2917
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -41800,7 +41756,7 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_getglo)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_getglo)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2880),___L_c_23_univ_2d_glo_2d_dependency)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2878),___L_c_23_univ_2d_glo_2d_dependency)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_getglo)
    ___SET_STK(-4,___STK(-7))
    ___SET_STK(-7,___STK(-6))
@@ -41809,14 +41765,14 @@ ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_getglo)
    ___SET_R1(___STK(-3))
    ___SET_R2(___SYM_rd)
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2784),___L_c_23_gvm_2d_state_2d_glo_2d_use)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2782),___L_c_23_gvm_2d_state_2d_glo_2d_use)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_getglo)
    ___SET_STK(-2,___R1)
    ___SET_R2(___STK(-5))
    ___SET_R1(___STK(-3))
    ___SET_R0(___LBL(4))
    ___ADJFP(4)
-   ___JUMPINT(___SET_NARGS(2),___PRC(2897),___L_c_23_univ_2d_get_2d_symbol_2d_name)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2895),___L_c_23_univ_2d_get_2d_symbol_2d_name)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_getglo)
    ___SET_R2(___R1)
    ___SET_R3(___FAL)
@@ -41832,7 +41788,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_setglo
 #undef ___PH_LBL0
-#define ___PH_LBL0 2926
+#define ___PH_LBL0 2924
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -41863,7 +41819,7 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_setglo)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_setglo)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2880),___L_c_23_univ_2d_glo_2d_dependency)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2878),___L_c_23_univ_2d_glo_2d_dependency)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_setglo)
    ___SET_STK(-3,___STK(-7))
    ___SET_STK(-7,___STK(-6))
@@ -41873,13 +41829,13 @@ ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_setglo)
    ___SET_R2(___SYM_rd)
    ___SET_R0(___LBL(3))
    ___ADJFP(4)
-   ___JUMPINT(___SET_NARGS(2),___PRC(2784),___L_c_23_gvm_2d_state_2d_glo_2d_use)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2782),___L_c_23_gvm_2d_state_2d_glo_2d_use)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_setglo)
    ___SET_STK(-5,___R1)
    ___SET_R2(___STK(-9))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(4))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2897),___L_c_23_univ_2d_get_2d_symbol_2d_name)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2895),___L_c_23_univ_2d_get_2d_symbol_2d_name)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_setglo)
    ___SET_R2(___R1)
    ___SET_R3(___STK(-8))
@@ -41895,7 +41851,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_glo_2d_var_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 2933
+#define ___PH_LBL0 2931
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -41924,7 +41880,7 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_glo_2d_var_3f_)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_glo_2d_var_3f_)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2784),___L_c_23_gvm_2d_state_2d_glo_2d_use)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2782),___L_c_23_gvm_2d_state_2d_glo_2d_use)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_glo_2d_var_3f_)
    ___SET_STK(-4,___R1)
    ___SET_R2(___STK(-5))
@@ -41939,14 +41895,14 @@ ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_glo_2d_var_3f_)
    ___POLL(4)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_glo_2d_var_3f_)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(3),___PRC(1224),___L_c_23_univ_2d_emit_2d_prop_2d_index_2d_exists_3f_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(1222),___L_c_23_univ_2d_emit_2d_prop_2d_index_2d_exists_3f_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_glo_2d_var_2d_ref
 #undef ___PH_LBL0
-#define ___PH_LBL0 2939
+#define ___PH_LBL0 2937
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -41977,7 +41933,7 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_glo_2d_var_2d_ref)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_glo_2d_var_2d_ref)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2784),___L_c_23_gvm_2d_state_2d_glo_2d_use)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2782),___L_c_23_gvm_2d_state_2d_glo_2d_use)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_glo_2d_var_2d_ref)
    ___SET_STK(-2,___R1)
    ___SET_R2(___STK(-3))
@@ -42000,7 +41956,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_glo_2d_var_2d_primitive_2d_ref
 #undef ___PH_LBL0
-#define ___PH_LBL0 2945
+#define ___PH_LBL0 2943
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -42031,7 +41987,7 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_glo_2d_var_2d_primitive_2d_ref)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_glo_2d_var_2d_primitive_2d_ref)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2779),___L_c_23_gvm_2d_state_2d_peps_2d_use)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2777),___L_c_23_gvm_2d_state_2d_peps_2d_use)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_glo_2d_var_2d_primitive_2d_ref)
    ___SET_STK(-2,___R1)
    ___SET_R2(___STK(-3))
@@ -42054,7 +42010,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_glo_2d_var_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 2951
+#define ___PH_LBL0 2949
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -42086,7 +42042,7 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_glo_2d_var_2d_set_21_)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_glo_2d_var_2d_set_21_)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2784),___L_c_23_gvm_2d_state_2d_glo_2d_use)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2782),___L_c_23_gvm_2d_state_2d_glo_2d_use)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_glo_2d_var_2d_set_21_)
    ___SET_STK(-5,___R1)
    ___SET_R2(___STK(-7))
@@ -42108,7 +42064,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_glo_2d_var_2d_primitive_2d_set_21_
 #undef ___PH_LBL0
-#define ___PH_LBL0 2957
+#define ___PH_LBL0 2955
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -42140,7 +42096,7 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_glo_2d_var_2d_primitive_2d_set_21_)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_glo_2d_var_2d_primitive_2d_set_21_)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2779),___L_c_23_gvm_2d_state_2d_peps_2d_use)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2777),___L_c_23_gvm_2d_state_2d_peps_2d_use)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_emit_2d_glo_2d_var_2d_primitive_2d_set_21_)
    ___SET_STK(-5,___R1)
    ___SET_R2(___STK(-7))
@@ -42162,7 +42118,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_getopnd
 #undef ___PH_LBL0
-#define ___PH_LBL0 2963
+#define ___PH_LBL0 2961
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4 ___D_F64(___F64V1) ___D_F64( \
 ___F64V2) ___D_F64(___F64V3)
@@ -42234,7 +42190,7 @@ ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_getopnd)
    ___POLL(5)
 ___DEF_SLBL(5,___L5_c_23_univ_2d_emit_2d_getopnd)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(3),___PRC(2764),___L_c_23_gvm_2d_state_2d_reg_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2762),___L_c_23_gvm_2d_state_2d_reg_2d_use)
 ___DEF_GLBL(___L26_c_23_univ_2d_emit_2d_getopnd)
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(6))
@@ -42265,7 +42221,7 @@ ___DEF_GLBL(___L28_c_23_univ_2d_emit_2d_getopnd)
    ___POLL(8)
 ___DEF_SLBL(8,___L8_c_23_univ_2d_emit_2d_getopnd)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(2840),___L_c_23_univ_2d_stk_2d_location)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2838),___L_c_23_univ_2d_stk_2d_location)
 ___DEF_GLBL(___L29_c_23_univ_2d_emit_2d_getopnd)
    ___SET_R0(___LBL(9))
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__2b_)
@@ -42313,7 +42269,7 @@ ___DEF_SLBL(13,___L13_c_23_univ_2d_emit_2d_getopnd)
    ___POLL(14)
 ___DEF_SLBL(14,___L14_c_23_univ_2d_emit_2d_getopnd)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(2919),___L_c_23_univ_2d_emit_2d_getglo)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2917),___L_c_23_univ_2d_emit_2d_getglo)
 ___DEF_GLBL(___L35_c_23_univ_2d_emit_2d_getopnd)
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(15))
@@ -42339,7 +42295,7 @@ ___DEF_SLBL(16,___L16_c_23_univ_2d_emit_2d_getopnd)
    ___POLL(17)
 ___DEF_SLBL(17,___L17_c_23_univ_2d_emit_2d_getopnd)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(2),___PRC(3445),___L_c_23_gvm_2d_lbl_2d_use)
+   ___JUMPINT(___SET_NARGS(2),___PRC(3427),___L_c_23_gvm_2d_lbl_2d_use)
 ___DEF_GLBL(___L37_c_23_univ_2d_emit_2d_getopnd)
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(18))
@@ -42367,7 +42323,7 @@ ___DEF_SLBL(20,___L20_c_23_univ_2d_emit_2d_getopnd)
    ___POLL(21)
 ___DEF_SLBL(21,___L21_c_23_univ_2d_emit_2d_getopnd)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(3),___PRC(3023),___L_c_23_univ_2d_emit_2d_obj_2a_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3021),___L_c_23_univ_2d_emit_2d_obj_2a_)
 ___DEF_SLBL(22,___L22_c_23_univ_2d_emit_2d_getopnd)
    ___SET_STK(-4,___R1)
    ___SET_R1(___STK(-5))
@@ -42388,7 +42344,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_getopnds
 #undef ___PH_LBL0
-#define ___PH_LBL0 2989
+#define ___PH_LBL0 2987
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -42434,7 +42390,7 @@ ___DEF_GLBL(___L6_c_23_univ_2d_emit_2d_getopnds)
    ___POLL(3)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_getopnds)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2963),___L_c_23_univ_2d_emit_2d_getopnd)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2961),___L_c_23_univ_2d_emit_2d_getopnd)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_getopnds)
    ___SET_R1(___CONS(___STK(-4),___R1))
    ___ADJFP(-7)
@@ -42451,7 +42407,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_setloc
 #undef ___PH_LBL0
-#define ___PH_LBL0 2996
+#define ___PH_LBL0 2994
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4 ___D_F64(___F64V1) ___D_F64( \
 ___F64V2) ___D_F64(___F64V3)
@@ -42519,7 +42475,7 @@ ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_setloc)
    ___POLL(4)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_setloc)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(3),___PRC(2826),___L_c_23_univ_2d_emit_2d_setreg)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2824),___L_c_23_univ_2d_emit_2d_setreg)
 ___DEF_GLBL(___L26_c_23_univ_2d_emit_2d_setloc)
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(5))
@@ -42535,7 +42491,7 @@ ___DEF_SLBL(6,___L6_c_23_univ_2d_emit_2d_setloc)
    ___SET_STK(-5,___R1)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(7))
-   ___JUMPINT(___SET_NARGS(1),___PRC(2592),___L_c_23_ctx_2d_stack_2d_base_2d_offset)
+   ___JUMPINT(___SET_NARGS(1),___PRC(2590),___L_c_23_ctx_2d_stack_2d_base_2d_offset)
 ___DEF_SLBL(7,___L7_c_23_univ_2d_emit_2d_setloc)
    ___IF(___NOT(___FIXNUMSP(___FIXNUMSP2(___FIXNUMSP1(___STK(-5)),___R1))))
    ___GOTO(___L32_c_23_univ_2d_emit_2d_setloc)
@@ -42551,7 +42507,7 @@ ___DEF_GLBL(___L27_c_23_univ_2d_emit_2d_setloc)
 ___DEF_GLBL(___L28_c_23_univ_2d_emit_2d_setloc)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(9))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2840),___L_c_23_univ_2d_stk_2d_location)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2838),___L_c_23_univ_2d_stk_2d_location)
 ___DEF_SLBL(9,___L9_c_23_univ_2d_emit_2d_setloc)
    ___BEGIN_ALLOC_LIST(3UL,___STK(-4))
    ___ADD_LIST_ELEM(1,___SUB(35))
@@ -42640,7 +42596,7 @@ ___DEF_SLBL(18,___L18_c_23_univ_2d_emit_2d_setloc)
    ___POLL(19)
 ___DEF_SLBL(19,___L19_c_23_univ_2d_emit_2d_setloc)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(3),___PRC(2926),___L_c_23_univ_2d_emit_2d_setglo)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2924),___L_c_23_univ_2d_emit_2d_setglo)
 ___DEF_GLBL(___L35_c_23_univ_2d_emit_2d_setloc)
    ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(20))
@@ -42664,7 +42620,7 @@ ___DEF_SLBL(22,___L22_c_23_univ_2d_emit_2d_setloc)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(23))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2963),___L_c_23_univ_2d_emit_2d_getopnd)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2961),___L_c_23_univ_2d_emit_2d_getopnd)
 ___DEF_SLBL(23,___L23_c_23_univ_2d_emit_2d_setloc)
    ___SET_STK(-3,___R1)
    ___SET_R1(___STK(-5))
@@ -42687,7 +42643,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_obj_2a_
 #undef ___PH_LBL0
-#define ___PH_LBL0 3023
+#define ___PH_LBL0 3021
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4 ___D_F64(___F64V1)
 #undef ___PR_ALL
@@ -42994,7 +42950,7 @@ ___DEF_SLBL(7,___L7_c_23_univ_2d_emit_2d_obj_2a_)
    ___POLL(8)
 ___DEF_SLBL(8,___L8_c_23_univ_2d_emit_2d_obj_2a_)
    ___ADJFP(-5)
-   ___JUMPINT(___SET_NARGS(4),___PRC(1576),___L_c_23_univ_2d_obj_2d_use)
+   ___JUMPINT(___SET_NARGS(4),___PRC(1574),___L_c_23_univ_2d_obj_2d_use)
 ___DEF_SLBL(9,___L9_c_23_univ_2d_emit_2d_obj_2a_)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(9,0,0,0)
@@ -43005,13 +42961,13 @@ ___DEF_SLBL(9,___L9_c_23_univ_2d_emit_2d_obj_2a_)
    ___POLL(10)
 ___DEF_SLBL(10,___L10_c_23_univ_2d_emit_2d_obj_2a_)
    ___SET_R0(___LBL(11))
-   ___JUMPINT(___SET_NARGS(1),___PRC(3266),___L_c_23_univ_2d_bignum_2d__3e_digits)
+   ___JUMPINT(___SET_NARGS(1),___PRC(3264),___L_c_23_univ_2d_bignum_2d__3e_digits)
 ___DEF_SLBL(11,___L11_c_23_univ_2d_emit_2d_obj_2a_)
    ___SET_R3(___R1)
    ___SET_R1(___CLO(___STK(-6),1))
    ___SET_R2(___SYM_bigdigit)
    ___SET_R0(___LBL(12))
-   ___JUMPINT(___SET_NARGS(3),___PRC(3404),___L_c_23_univ_2d_num_2d_array_2d_constant)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3386),___L_c_23_univ_2d_num_2d_array_2d_constant)
 ___DEF_SLBL(12,___L12_c_23_univ_2d_emit_2d_obj_2a_)
    ___SET_R3(___R1)
    ___SET_R1(___CLO(___STK(-6),1))
@@ -43096,7 +43052,7 @@ ___DEF_SLBL(19,___L19_c_23_univ_2d_emit_2d_obj_2a_)
    ___POLL(20)
 ___DEF_SLBL(20,___L20_c_23_univ_2d_emit_2d_obj_2a_)
    ___ADJFP(-5)
-   ___JUMPINT(___SET_NARGS(4),___PRC(1576),___L_c_23_univ_2d_obj_2d_use)
+   ___JUMPINT(___SET_NARGS(4),___PRC(1574),___L_c_23_univ_2d_obj_2d_use)
 ___DEF_SLBL(21,___L21_c_23_univ_2d_emit_2d_obj_2a_)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(21,0,0,0)
@@ -43200,7 +43156,7 @@ ___DEF_SLBL(31,___L31_c_23_univ_2d_emit_2d_obj_2a_)
    ___POLL(32)
 ___DEF_SLBL(32,___L32_c_23_univ_2d_emit_2d_obj_2a_)
    ___ADJFP(-5)
-   ___JUMPINT(___SET_NARGS(4),___PRC(1576),___L_c_23_univ_2d_obj_2d_use)
+   ___JUMPINT(___SET_NARGS(4),___PRC(1574),___L_c_23_univ_2d_obj_2d_use)
 ___DEF_SLBL(33,___L33_c_23_univ_2d_emit_2d_obj_2a_)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(33,0,0,0)
@@ -43485,7 +43441,7 @@ ___DEF_SLBL(65,___L65_c_23_univ_2d_emit_2d_obj_2a_)
    ___POLL(66)
 ___DEF_SLBL(66,___L66_c_23_univ_2d_emit_2d_obj_2a_)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(3),___PRC(3217),___L_c_23_univ_2d_emit_2d_obj_2d_proc_2d_as)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3215),___L_c_23_univ_2d_emit_2d_obj_2d_proc_2d_as)
 ___DEF_GLBL(___L237_c_23_univ_2d_emit_2d_obj_2a_)
    ___IF(___NOT(___PAIRP(___STK(-5))))
    ___GOTO(___L238_c_23_univ_2d_emit_2d_obj_2a_)
@@ -43507,7 +43463,7 @@ ___DEF_SLBL(67,___L67_c_23_univ_2d_emit_2d_obj_2a_)
    ___POLL(68)
 ___DEF_SLBL(68,___L68_c_23_univ_2d_emit_2d_obj_2a_)
    ___ADJFP(-5)
-   ___JUMPINT(___SET_NARGS(4),___PRC(1576),___L_c_23_univ_2d_obj_2d_use)
+   ___JUMPINT(___SET_NARGS(4),___PRC(1574),___L_c_23_univ_2d_obj_2d_use)
 ___DEF_SLBL(69,___L69_c_23_univ_2d_emit_2d_obj_2a_)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(69,0,0,0)
@@ -43564,7 +43520,7 @@ ___DEF_SLBL(75,___L75_c_23_univ_2d_emit_2d_obj_2a_)
    ___POLL(76)
 ___DEF_SLBL(76,___L76_c_23_univ_2d_emit_2d_obj_2a_)
    ___ADJFP(-5)
-   ___JUMPINT(___SET_NARGS(4),___PRC(1576),___L_c_23_univ_2d_obj_2d_use)
+   ___JUMPINT(___SET_NARGS(4),___PRC(1574),___L_c_23_univ_2d_obj_2d_use)
 ___DEF_SLBL(77,___L77_c_23_univ_2d_emit_2d_obj_2a_)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(77,0,0,0)
@@ -43619,7 +43575,7 @@ ___DEF_SLBL(84,___L84_c_23_univ_2d_emit_2d_obj_2a_)
    ___SET_R1(___CLO(___STK(-6),1))
    ___SET_R2(___SYM_scmobj)
    ___SET_R0(___LBL(85))
-   ___JUMPINT(___SET_NARGS(3),___PRC(3319),___L_c_23_univ_2d_emit_2d_array_2d_literal)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3301),___L_c_23_univ_2d_emit_2d_array_2d_literal)
 ___DEF_SLBL(85,___L85_c_23_univ_2d_emit_2d_obj_2a_)
    ___SET_R2(___R1)
    ___SET_R1(___CLO(___STK(-6),1))
@@ -43653,7 +43609,7 @@ ___DEF_SLBL(88,___L88_c_23_univ_2d_emit_2d_obj_2a_)
    ___POLL(89)
 ___DEF_SLBL(89,___L89_c_23_univ_2d_emit_2d_obj_2a_)
    ___ADJFP(-5)
-   ___JUMPINT(___SET_NARGS(4),___PRC(1576),___L_c_23_univ_2d_obj_2d_use)
+   ___JUMPINT(___SET_NARGS(4),___PRC(1574),___L_c_23_univ_2d_obj_2d_use)
 ___DEF_SLBL(90,___L90_c_23_univ_2d_emit_2d_obj_2a_)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(90,0,0,0)
@@ -43670,7 +43626,7 @@ ___DEF_SLBL(92,___L92_c_23_univ_2d_emit_2d_obj_2a_)
    ___SET_R1(___CLO(___STK(-6),1))
    ___SET_R2(___SYM_u8)
    ___SET_R0(___LBL(93))
-   ___JUMPINT(___SET_NARGS(3),___PRC(3404),___L_c_23_univ_2d_num_2d_array_2d_constant)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3386),___L_c_23_univ_2d_num_2d_array_2d_constant)
 ___DEF_SLBL(93,___L93_c_23_univ_2d_emit_2d_obj_2a_)
    ___SET_R2(___R1)
    ___SET_R1(___CLO(___STK(-6),1))
@@ -43704,7 +43660,7 @@ ___DEF_SLBL(96,___L96_c_23_univ_2d_emit_2d_obj_2a_)
    ___POLL(97)
 ___DEF_SLBL(97,___L97_c_23_univ_2d_emit_2d_obj_2a_)
    ___ADJFP(-5)
-   ___JUMPINT(___SET_NARGS(4),___PRC(1576),___L_c_23_univ_2d_obj_2d_use)
+   ___JUMPINT(___SET_NARGS(4),___PRC(1574),___L_c_23_univ_2d_obj_2d_use)
 ___DEF_SLBL(98,___L98_c_23_univ_2d_emit_2d_obj_2a_)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(98,0,0,0)
@@ -43721,7 +43677,7 @@ ___DEF_SLBL(100,___L100_c_23_univ_2d_emit_2d_obj_2a_)
    ___SET_R1(___CLO(___STK(-6),1))
    ___SET_R2(___SYM_u16)
    ___SET_R0(___LBL(101))
-   ___JUMPINT(___SET_NARGS(3),___PRC(3404),___L_c_23_univ_2d_num_2d_array_2d_constant)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3386),___L_c_23_univ_2d_num_2d_array_2d_constant)
 ___DEF_SLBL(101,___L101_c_23_univ_2d_emit_2d_obj_2a_)
    ___SET_R2(___R1)
    ___SET_R1(___CLO(___STK(-6),1))
@@ -43755,7 +43711,7 @@ ___DEF_SLBL(104,___L104_c_23_univ_2d_emit_2d_obj_2a_)
    ___POLL(105)
 ___DEF_SLBL(105,___L105_c_23_univ_2d_emit_2d_obj_2a_)
    ___ADJFP(-5)
-   ___JUMPINT(___SET_NARGS(4),___PRC(1576),___L_c_23_univ_2d_obj_2d_use)
+   ___JUMPINT(___SET_NARGS(4),___PRC(1574),___L_c_23_univ_2d_obj_2d_use)
 ___DEF_SLBL(106,___L106_c_23_univ_2d_emit_2d_obj_2a_)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(106,0,0,0)
@@ -43772,7 +43728,7 @@ ___DEF_SLBL(108,___L108_c_23_univ_2d_emit_2d_obj_2a_)
    ___SET_R1(___CLO(___STK(-6),1))
    ___SET_R2(___SYM_u32)
    ___SET_R0(___LBL(109))
-   ___JUMPINT(___SET_NARGS(3),___PRC(3404),___L_c_23_univ_2d_num_2d_array_2d_constant)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3386),___L_c_23_univ_2d_num_2d_array_2d_constant)
 ___DEF_SLBL(109,___L109_c_23_univ_2d_emit_2d_obj_2a_)
    ___SET_R2(___R1)
    ___SET_R1(___CLO(___STK(-6),1))
@@ -43806,7 +43762,7 @@ ___DEF_SLBL(112,___L112_c_23_univ_2d_emit_2d_obj_2a_)
    ___POLL(113)
 ___DEF_SLBL(113,___L113_c_23_univ_2d_emit_2d_obj_2a_)
    ___ADJFP(-5)
-   ___JUMPINT(___SET_NARGS(4),___PRC(1576),___L_c_23_univ_2d_obj_2d_use)
+   ___JUMPINT(___SET_NARGS(4),___PRC(1574),___L_c_23_univ_2d_obj_2d_use)
 ___DEF_SLBL(114,___L114_c_23_univ_2d_emit_2d_obj_2a_)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(114,0,0,0)
@@ -43823,7 +43779,7 @@ ___DEF_SLBL(116,___L116_c_23_univ_2d_emit_2d_obj_2a_)
    ___SET_R1(___CLO(___STK(-6),1))
    ___SET_R2(___SYM_u64)
    ___SET_R0(___LBL(117))
-   ___JUMPINT(___SET_NARGS(3),___PRC(3404),___L_c_23_univ_2d_num_2d_array_2d_constant)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3386),___L_c_23_univ_2d_num_2d_array_2d_constant)
 ___DEF_SLBL(117,___L117_c_23_univ_2d_emit_2d_obj_2a_)
    ___SET_R2(___R1)
    ___SET_R1(___CLO(___STK(-6),1))
@@ -43857,7 +43813,7 @@ ___DEF_SLBL(120,___L120_c_23_univ_2d_emit_2d_obj_2a_)
    ___POLL(121)
 ___DEF_SLBL(121,___L121_c_23_univ_2d_emit_2d_obj_2a_)
    ___ADJFP(-5)
-   ___JUMPINT(___SET_NARGS(4),___PRC(1576),___L_c_23_univ_2d_obj_2d_use)
+   ___JUMPINT(___SET_NARGS(4),___PRC(1574),___L_c_23_univ_2d_obj_2d_use)
 ___DEF_SLBL(122,___L122_c_23_univ_2d_emit_2d_obj_2a_)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(122,0,0,0)
@@ -43874,7 +43830,7 @@ ___DEF_SLBL(124,___L124_c_23_univ_2d_emit_2d_obj_2a_)
    ___SET_R1(___CLO(___STK(-6),1))
    ___SET_R2(___SYM_s8)
    ___SET_R0(___LBL(125))
-   ___JUMPINT(___SET_NARGS(3),___PRC(3404),___L_c_23_univ_2d_num_2d_array_2d_constant)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3386),___L_c_23_univ_2d_num_2d_array_2d_constant)
 ___DEF_SLBL(125,___L125_c_23_univ_2d_emit_2d_obj_2a_)
    ___SET_R2(___R1)
    ___SET_R1(___CLO(___STK(-6),1))
@@ -43908,7 +43864,7 @@ ___DEF_SLBL(128,___L128_c_23_univ_2d_emit_2d_obj_2a_)
    ___POLL(129)
 ___DEF_SLBL(129,___L129_c_23_univ_2d_emit_2d_obj_2a_)
    ___ADJFP(-5)
-   ___JUMPINT(___SET_NARGS(4),___PRC(1576),___L_c_23_univ_2d_obj_2d_use)
+   ___JUMPINT(___SET_NARGS(4),___PRC(1574),___L_c_23_univ_2d_obj_2d_use)
 ___DEF_SLBL(130,___L130_c_23_univ_2d_emit_2d_obj_2a_)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(130,0,0,0)
@@ -43925,7 +43881,7 @@ ___DEF_SLBL(132,___L132_c_23_univ_2d_emit_2d_obj_2a_)
    ___SET_R1(___CLO(___STK(-6),1))
    ___SET_R2(___SYM_s16)
    ___SET_R0(___LBL(133))
-   ___JUMPINT(___SET_NARGS(3),___PRC(3404),___L_c_23_univ_2d_num_2d_array_2d_constant)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3386),___L_c_23_univ_2d_num_2d_array_2d_constant)
 ___DEF_SLBL(133,___L133_c_23_univ_2d_emit_2d_obj_2a_)
    ___SET_R2(___R1)
    ___SET_R1(___CLO(___STK(-6),1))
@@ -43959,7 +43915,7 @@ ___DEF_SLBL(136,___L136_c_23_univ_2d_emit_2d_obj_2a_)
    ___POLL(137)
 ___DEF_SLBL(137,___L137_c_23_univ_2d_emit_2d_obj_2a_)
    ___ADJFP(-5)
-   ___JUMPINT(___SET_NARGS(4),___PRC(1576),___L_c_23_univ_2d_obj_2d_use)
+   ___JUMPINT(___SET_NARGS(4),___PRC(1574),___L_c_23_univ_2d_obj_2d_use)
 ___DEF_SLBL(138,___L138_c_23_univ_2d_emit_2d_obj_2a_)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(138,0,0,0)
@@ -43976,7 +43932,7 @@ ___DEF_SLBL(140,___L140_c_23_univ_2d_emit_2d_obj_2a_)
    ___SET_R1(___CLO(___STK(-6),1))
    ___SET_R2(___SYM_s32)
    ___SET_R0(___LBL(141))
-   ___JUMPINT(___SET_NARGS(3),___PRC(3404),___L_c_23_univ_2d_num_2d_array_2d_constant)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3386),___L_c_23_univ_2d_num_2d_array_2d_constant)
 ___DEF_SLBL(141,___L141_c_23_univ_2d_emit_2d_obj_2a_)
    ___SET_R2(___R1)
    ___SET_R1(___CLO(___STK(-6),1))
@@ -44010,7 +43966,7 @@ ___DEF_SLBL(144,___L144_c_23_univ_2d_emit_2d_obj_2a_)
    ___POLL(145)
 ___DEF_SLBL(145,___L145_c_23_univ_2d_emit_2d_obj_2a_)
    ___ADJFP(-5)
-   ___JUMPINT(___SET_NARGS(4),___PRC(1576),___L_c_23_univ_2d_obj_2d_use)
+   ___JUMPINT(___SET_NARGS(4),___PRC(1574),___L_c_23_univ_2d_obj_2d_use)
 ___DEF_SLBL(146,___L146_c_23_univ_2d_emit_2d_obj_2a_)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(146,0,0,0)
@@ -44027,7 +43983,7 @@ ___DEF_SLBL(148,___L148_c_23_univ_2d_emit_2d_obj_2a_)
    ___SET_R1(___CLO(___STK(-6),1))
    ___SET_R2(___SYM_s64)
    ___SET_R0(___LBL(149))
-   ___JUMPINT(___SET_NARGS(3),___PRC(3404),___L_c_23_univ_2d_num_2d_array_2d_constant)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3386),___L_c_23_univ_2d_num_2d_array_2d_constant)
 ___DEF_SLBL(149,___L149_c_23_univ_2d_emit_2d_obj_2a_)
    ___SET_R2(___R1)
    ___SET_R1(___CLO(___STK(-6),1))
@@ -44061,7 +44017,7 @@ ___DEF_SLBL(152,___L152_c_23_univ_2d_emit_2d_obj_2a_)
    ___POLL(153)
 ___DEF_SLBL(153,___L153_c_23_univ_2d_emit_2d_obj_2a_)
    ___ADJFP(-5)
-   ___JUMPINT(___SET_NARGS(4),___PRC(1576),___L_c_23_univ_2d_obj_2d_use)
+   ___JUMPINT(___SET_NARGS(4),___PRC(1574),___L_c_23_univ_2d_obj_2d_use)
 ___DEF_SLBL(154,___L154_c_23_univ_2d_emit_2d_obj_2a_)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(154,0,0,0)
@@ -44078,7 +44034,7 @@ ___DEF_SLBL(156,___L156_c_23_univ_2d_emit_2d_obj_2a_)
    ___SET_R1(___CLO(___STK(-6),1))
    ___SET_R2(___SYM_f32)
    ___SET_R0(___LBL(157))
-   ___JUMPINT(___SET_NARGS(3),___PRC(3404),___L_c_23_univ_2d_num_2d_array_2d_constant)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3386),___L_c_23_univ_2d_num_2d_array_2d_constant)
 ___DEF_SLBL(157,___L157_c_23_univ_2d_emit_2d_obj_2a_)
    ___SET_R2(___R1)
    ___SET_R1(___CLO(___STK(-6),1))
@@ -44112,7 +44068,7 @@ ___DEF_SLBL(160,___L160_c_23_univ_2d_emit_2d_obj_2a_)
    ___POLL(161)
 ___DEF_SLBL(161,___L161_c_23_univ_2d_emit_2d_obj_2a_)
    ___ADJFP(-5)
-   ___JUMPINT(___SET_NARGS(4),___PRC(1576),___L_c_23_univ_2d_obj_2d_use)
+   ___JUMPINT(___SET_NARGS(4),___PRC(1574),___L_c_23_univ_2d_obj_2d_use)
 ___DEF_SLBL(162,___L162_c_23_univ_2d_emit_2d_obj_2a_)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(162,0,0,0)
@@ -44129,7 +44085,7 @@ ___DEF_SLBL(164,___L164_c_23_univ_2d_emit_2d_obj_2a_)
    ___SET_R1(___CLO(___STK(-6),1))
    ___SET_R2(___SYM_f64)
    ___SET_R0(___LBL(165))
-   ___JUMPINT(___SET_NARGS(3),___PRC(3404),___L_c_23_univ_2d_num_2d_array_2d_constant)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3386),___L_c_23_univ_2d_num_2d_array_2d_constant)
 ___DEF_SLBL(165,___L165_c_23_univ_2d_emit_2d_obj_2a_)
    ___SET_R2(___R1)
    ___SET_R1(___CLO(___STK(-6),1))
@@ -44163,7 +44119,7 @@ ___DEF_SLBL(168,___L168_c_23_univ_2d_emit_2d_obj_2a_)
    ___POLL(169)
 ___DEF_SLBL(169,___L169_c_23_univ_2d_emit_2d_obj_2a_)
    ___ADJFP(-5)
-   ___JUMPINT(___SET_NARGS(4),___PRC(1576),___L_c_23_univ_2d_obj_2d_use)
+   ___JUMPINT(___SET_NARGS(4),___PRC(1574),___L_c_23_univ_2d_obj_2d_use)
 ___DEF_SLBL(170,___L170_c_23_univ_2d_emit_2d_obj_2a_)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(170,0,0,0)
@@ -44209,7 +44165,7 @@ ___DEF_SLBL(175,___L175_c_23_univ_2d_emit_2d_obj_2a_)
    ___SET_R0(___LBL(177))
    ___CHECK_HEAP(176,4096)
 ___DEF_SLBL(176,___L176_c_23_univ_2d_emit_2d_obj_2a_)
-   ___JUMPINT(___SET_NARGS(3),___PRC(3319),___L_c_23_univ_2d_emit_2d_array_2d_literal)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3301),___L_c_23_univ_2d_emit_2d_array_2d_literal)
 ___DEF_SLBL(177,___L177_c_23_univ_2d_emit_2d_obj_2a_)
    ___SET_R2(___R1)
    ___SET_R1(___CLO(___STK(-6),1))
@@ -44248,7 +44204,7 @@ ___DEF_SLBL(180,___L180_c_23_univ_2d_emit_2d_obj_2a_)
    ___POLL(181)
 ___DEF_SLBL(181,___L181_c_23_univ_2d_emit_2d_obj_2a_)
    ___ADJFP(-5)
-   ___JUMPINT(___SET_NARGS(4),___PRC(1576),___L_c_23_univ_2d_obj_2d_use)
+   ___JUMPINT(___SET_NARGS(4),___PRC(1574),___L_c_23_univ_2d_obj_2d_use)
 ___DEF_SLBL(182,___L182_c_23_univ_2d_emit_2d_obj_2a_)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(182,0,0,0)
@@ -44310,7 +44266,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_obj_2d_proc_2d_as
 #undef ___PH_LBL0
-#define ___PH_LBL0 3217
+#define ___PH_LBL0 3215
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -44358,7 +44314,7 @@ ___DEF_SLBL(3,___L3_c_23_univ_2d_emit_2d_obj_2d_proc_2d_as)
    ___SET_R2(___STK(-3))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(4))
-   ___JUMPINT(___SET_NARGS(2),___PRC(3456),___L_c_23_gvm_2d_proc_2d_use)
+   ___JUMPINT(___SET_NARGS(2),___PRC(3438),___L_c_23_gvm_2d_proc_2d_use)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_obj_2d_proc_2d_as)
    ___SET_STK(1,___STK(-6))
    ___SET_R2(___R1)
@@ -44366,7 +44322,7 @@ ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_obj_2d_proc_2d_as)
    ___SET_R3(___FAL)
    ___SET_R0(___LBL(5))
    ___ADJFP(1)
-   ___JUMPINT(___SET_NARGS(4),___PRC(899),___L_c_23_univ_2d_emit_2d_mod_2d_jumpable)
+   ___JUMPINT(___SET_NARGS(4),___PRC(897),___L_c_23_univ_2d_emit_2d_mod_2d_jumpable)
 ___DEF_SLBL(5,___L5_c_23_univ_2d_emit_2d_obj_2d_proc_2d_as)
    ___IF(___EQP(___STK(-5),___SYM_scmobj))
    ___GOTO(___L10_c_23_univ_2d_emit_2d_obj_2d_proc_2d_as)
@@ -44380,7 +44336,7 @@ ___DEF_SLBL(5,___L5_c_23_univ_2d_emit_2d_obj_2d_proc_2d_as)
    ___POLL(6)
 ___DEF_SLBL(6,___L6_c_23_univ_2d_emit_2d_obj_2d_proc_2d_as)
    ___ADJFP(-7)
-   ___JUMPINT(___SET_NARGS(4),___PRC(787),___L_c_23_univ_2d_emit_2d_upcast_2a_)
+   ___JUMPINT(___SET_NARGS(4),___PRC(785),___L_c_23_univ_2d_emit_2d_upcast_2a_)
 ___DEF_GLBL(___L10_c_23_univ_2d_emit_2d_obj_2d_proc_2d_as)
    ___SET_STK(1,___STK(-6))
    ___SET_R3(___R1)
@@ -44388,7 +44344,7 @@ ___DEF_GLBL(___L10_c_23_univ_2d_emit_2d_obj_2d_proc_2d_as)
    ___SET_R1(___SYM_parententrypt)
    ___SET_R0(___LBL(7))
    ___ADJFP(1)
-   ___JUMPINT(___SET_NARGS(4),___PRC(787),___L_c_23_univ_2d_emit_2d_upcast_2a_)
+   ___JUMPINT(___SET_NARGS(4),___PRC(785),___L_c_23_univ_2d_emit_2d_upcast_2a_)
 ___DEF_SLBL(7,___L7_c_23_univ_2d_emit_2d_obj_2d_proc_2d_as)
    ___SET_R3(___R1)
    ___SET_R1(___STK(-6))
@@ -44397,7 +44353,7 @@ ___DEF_SLBL(7,___L7_c_23_univ_2d_emit_2d_obj_2d_proc_2d_as)
    ___POLL(8)
 ___DEF_SLBL(8,___L8_c_23_univ_2d_emit_2d_obj_2d_proc_2d_as)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(3),___PRC(757),___L_c_23_univ_2d_emit_2d_conv_2a_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(755),___L_c_23_univ_2d_emit_2d_conv_2a_)
 ___DEF_GLBL(___L11_c_23_univ_2d_emit_2d_obj_2d_proc_2d_as)
    ___SET_R1(___STK(-3))
    ___SET_R0(___LBL(9))
@@ -44406,14 +44362,14 @@ ___DEF_SLBL(9,___L9_c_23_univ_2d_emit_2d_obj_2d_proc_2d_as)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(5))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2907),___L_c_23_univ_2d_emit_2d_getpeps)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2905),___L_c_23_univ_2d_emit_2d_getpeps)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_obj
 #undef ___PH_LBL0
-#define ___PH_LBL0 3228
+#define ___PH_LBL0 3226
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R3
 #undef ___PR_ALL
@@ -44434,14 +44390,14 @@ ___DEF_GLBL(___L_c_23_univ_2d_emit_2d_obj)
    ___SET_R3(___TRU)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_emit_2d_obj)
-   ___JUMPINT(___SET_NARGS(3),___PRC(3023),___L_c_23_univ_2d_emit_2d_obj_2a_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3021),___L_c_23_univ_2d_emit_2d_obj_2a_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_obj_2d_type
 #undef ___PH_LBL0
-#define ___PH_LBL0 3231
+#define ___PH_LBL0 3229
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4 ___D_F64(___F64V1)
 #undef ___PR_ALL
@@ -44951,7 +44907,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_bignum_2d__3e_digits
 #undef ___PH_LBL0
-#define ___PH_LBL0 3266
+#define ___PH_LBL0 3264
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4 ___D_F64(___F64V1) ___D_F64( \
 ___F64V2) ___D_F64(___F64V3)
@@ -44989,22 +44945,6 @@ ___DEF_P_HLBL(___L23_c_23_univ_2d_bignum_2d__3e_digits)
 ___DEF_P_HLBL(___L24_c_23_univ_2d_bignum_2d__3e_digits)
 ___DEF_P_HLBL(___L25_c_23_univ_2d_bignum_2d__3e_digits)
 ___DEF_P_HLBL(___L26_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_P_HLBL(___L27_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_P_HLBL(___L28_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_P_HLBL(___L29_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_P_HLBL(___L30_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_P_HLBL(___L31_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_P_HLBL(___L32_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_P_HLBL(___L33_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_P_HLBL(___L34_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_P_HLBL(___L35_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_P_HLBL(___L36_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_P_HLBL(___L37_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_P_HLBL(___L38_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_P_HLBL(___L39_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_P_HLBL(___L40_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_P_HLBL(___L41_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_P_HLBL(___L42_c_23_univ_2d_bignum_2d__3e_digits)
 ___END_P_HLBL
 ___BEGIN_P_SW
 ___DEF_SLBL(0,___L0_c_23_univ_2d_bignum_2d__3e_digits)
@@ -45018,259 +44958,192 @@ ___DEF_GLBL(___L_c_23_univ_2d_bignum_2d__3e_digits)
    ___JUMPPRM(___SET_NARGS(1),___PRM__23__23_integer_2d_length)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_bignum_2d__3e_digits)
    ___IF(___NOT(___FIXNUMP(___R1)))
-   ___GOTO(___L107_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L64_c_23_univ_2d_bignum_2d__3e_digits)
    ___END_IF
    ___SET_R1(___FIXQUOCONSTY(___R1,___FIX(14L)))
    ___IF(___FIXNUMP(___R1))
-   ___GOTO(___L43_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L27_c_23_univ_2d_bignum_2d__3e_digits)
    ___END_IF
-   ___GOTO(___L106_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L63_c_23_univ_2d_bignum_2d__3e_digits)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_bignum_2d__3e_digits)
    ___IF(___NOT(___FIXNUMP(___R1)))
-   ___GOTO(___L106_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L63_c_23_univ_2d_bignum_2d__3e_digits)
    ___END_IF
-___DEF_GLBL(___L43_c_23_univ_2d_bignum_2d__3e_digits)
-   ___IF(___NOT(___FIXADDP_NOTFALSEP(___R2,___R1,___FIX(1L))))
+___DEF_GLBL(___L27_c_23_univ_2d_bignum_2d__3e_digits)
+   ___IF(___NOT(___FIXADDPCONSTY_NOTFALSEP(___R2,___R1,___FIX(1L))))
    ___SET_R2(___FAL)
-   ___GOTO(___L106_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L63_c_23_univ_2d_bignum_2d__3e_digits)
    ___END_IF
    ___IF(___NOT(___FIXNUMP(___STK(-6))))
-   ___GOTO(___L105_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L62_c_23_univ_2d_bignum_2d__3e_digits)
    ___END_IF
-___DEF_GLBL(___L44_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L28_c_23_univ_2d_bignum_2d__3e_digits)
    ___IF(___NOT(___FIXLT(___STK(-6),___FIX(0L))))
-   ___GOTO(___L103_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L60_c_23_univ_2d_bignum_2d__3e_digits)
    ___END_IF
-___DEF_GLBL(___L45_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L29_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_STK(-5,___R2)
    ___IF(___NOT(___FIXNUMP(___R2)))
-   ___GOTO(___L102_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L59_c_23_univ_2d_bignum_2d__3e_digits)
    ___END_IF
-   ___IF(___NOT(___EQP(___R2,___FIX(0L))))
-   ___GOTO(___L100_c_23_univ_2d_bignum_2d__3e_digits)
+   ___IF(___NOT(___FIXMULPCONSTX_NOTFALSEP(___R1,___FIX(14L),___R2)))
+   ___SET_R1(___FAL)
+   ___GOTO(___L59_c_23_univ_2d_bignum_2d__3e_digits)
    ___END_IF
-   ___SET_R1(___FIX(0L))
-___DEF_GLBL(___L46_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L30_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_R2(___R1)
    ___SET_R1(___FIX(1L))
    ___SET_R0(___LBL(3))
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23_arithmetic_2d_shift)
 ___DEF_SLBL(3,___L3_c_23_univ_2d_bignum_2d__3e_digits)
    ___IF(___NOT(___FIXNUMSP(___FIXNUMSP2(___FIXNUMSP1(___R1),___STK(-6)))))
-   ___GOTO(___L98_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L57_c_23_univ_2d_bignum_2d__3e_digits)
    ___END_IF
-   ___IF(___NOT(___FIXADDP_NOTFALSEP(___R2,___R1,___STK(-6))))
+   ___IF(___FIXADDP_NOTFALSEP(___R2,___R1,___STK(-6)))
+   ___GOTO(___L32_c_23_univ_2d_bignum_2d__3e_digits)
+   ___END_IF
    ___SET_R2(___FAL)
-   ___GOTO(___L97_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
-   ___IF(___FIXNUMP(___STK(-5)))
-   ___GOTO(___L48_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
-   ___GOTO(___L96_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L56_c_23_univ_2d_bignum_2d__3e_digits)
 ___DEF_SLBL(4,___L4_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_GLBL(___L47_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L31_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_R2(___R1)
-   ___IF(___NOT(___FIXNUMP(___STK(-5))))
-   ___GOTO(___L96_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
-___DEF_GLBL(___L48_c_23_univ_2d_bignum_2d__3e_digits)
-   ___IF(___FIXEQ(___STK(-5),___FIX(1L)))
-   ___GOTO(___L95_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
-   ___IF(___NOT(___FIXNUMP(___STK(-5))))
-   ___GOTO(___L93_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
-___DEF_GLBL(___L49_c_23_univ_2d_bignum_2d__3e_digits)
-   ___SET_R1(___FIXQUOCONSTY(___STK(-5),___FIX(2L)))
-   ___IF(___NOT(___FIXNUMSP(___FIXNUMSP2(___FIXNUMSP1(___STK(-5)),___R1))))
-   ___GOTO(___L90_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
-___DEF_GLBL(___L50_c_23_univ_2d_bignum_2d__3e_digits)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R3,___STK(-5),___R1)))
-   ___SET_R3(___FAL)
-   ___GOTO(___L91_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
-   ___IF(___NOT(___FIXNUMP(___R3)))
-   ___GOTO(___L89_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
-___DEF_GLBL(___L51_c_23_univ_2d_bignum_2d__3e_digits)
-   ___IF(___NOT(___EQP(___R3,___FIX(0L))))
-   ___GOTO(___L87_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
-   ___SET_R4(___FIX(0L))
-___DEF_GLBL(___L52_c_23_univ_2d_bignum_2d__3e_digits)
-   ___SET_STK(-6,___R1)
-   ___SET_STK(-5,___R2)
-   ___SET_STK(-4,___R3)
-   ___SET_STK(-3,___R4)
-   ___IF(___NOT(___FIXNUMP(___R4)))
-   ___GOTO(___L85_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
-   ___IF(___NOT(___FIXNEGP_NOTFALSEP(___R1,___R4)))
-   ___SET_R1(___FAL)
-   ___GOTO(___L84_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
-   ___SET_STK(-3,___R4)
-   ___SET_STK(-4,___R3)
-___DEF_GLBL(___L53_c_23_univ_2d_bignum_2d__3e_digits)
-   ___SET_R2(___R1)
-   ___SET_R1(___STK(-5))
-   ___SET_R0(___LBL(5))
-   ___JUMPPRM(___SET_NARGS(2),___PRM__23__23_arithmetic_2d_shift)
+___DEF_GLBL(___L32_c_23_univ_2d_bignum_2d__3e_digits)
+   ___SET_R1(___R2)
+   ___SET_R2(___STK(-5))
+   ___SET_R3(___NUL)
+   ___SET_R0(___STK(-7))
+   ___ADJFP(-8)
+   ___POLL(5)
 ___DEF_SLBL(5,___L5_c_23_univ_2d_bignum_2d__3e_digits)
-   ___SET_STK(-2,___R1)
-   ___SET_R2(___STK(-3))
-   ___SET_R0(___LBL(6))
-   ___ADJFP(4)
-   ___JUMPPRM(___SET_NARGS(2),___PRM__23__23_arithmetic_2d_shift)
-___DEF_SLBL(6,___L6_c_23_univ_2d_bignum_2d__3e_digits)
-   ___IF(___NOT(___FIXNUMSP(___FIXNUMSP2(___FIXNUMSP1(___STK(-9)),___R1))))
-   ___GOTO(___L82_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
-   ___IF(___FIXSUBP_NOTFALSEP(___R2,___STK(-9),___R1))
+___DEF_GLBL(___L33_c_23_univ_2d_bignum_2d__3e_digits)
+   ___IF(___NOT(___FIXNUMP(___R2)))
    ___GOTO(___L55_c_23_univ_2d_bignum_2d__3e_digits)
    ___END_IF
-   ___SET_R2(___FAL)
-   ___GOTO(___L81_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_SLBL(7,___L7_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_GLBL(___L54_c_23_univ_2d_bignum_2d__3e_digits)
-   ___SET_R2(___R1)
-___DEF_GLBL(___L55_c_23_univ_2d_bignum_2d__3e_digits)
-   ___SET_STK(-9,___R2)
-   ___SET_R2(___STK(-10))
-   ___SET_R1(___STK(-6))
-   ___SET_R3(___NUL)
-   ___SET_R0(___LBL(26))
-   ___ADJFP(-4)
-   ___POLL(8)
-___DEF_SLBL(8,___L8_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_GLBL(___L56_c_23_univ_2d_bignum_2d__3e_digits)
-   ___IF(___NOT(___FIXNUMP(___R2)))
-   ___GOTO(___L80_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
    ___IF(___FIXEQ(___R2,___FIX(1L)))
-   ___GOTO(___L79_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L54_c_23_univ_2d_bignum_2d__3e_digits)
    ___END_IF
    ___IF(___NOT(___FIXNUMP(___R2)))
-   ___GOTO(___L77_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L52_c_23_univ_2d_bignum_2d__3e_digits)
    ___END_IF
-___DEF_GLBL(___L57_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L34_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_R4(___FIXQUOCONSTY(___R2,___FIX(2L)))
    ___IF(___NOT(___FIXNUMSP(___FIXNUMSP2(___FIXNUMSP1(___R2),___R4))))
-   ___GOTO(___L75_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L50_c_23_univ_2d_bignum_2d__3e_digits)
    ___END_IF
-___DEF_GLBL(___L58_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L35_c_23_univ_2d_bignum_2d__3e_digits)
    ___ADJFP(1)
    ___IF(___NOT(___FIXSUBP_NOTFALSEP(___STK(0),___R2,___R4)))
    ___SET_STK(0,___FAL)
-   ___GOTO(___L74_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L49_c_23_univ_2d_bignum_2d__3e_digits)
    ___END_IF
    ___SET_R2(___STK(0))
    ___ADJFP(-1)
    ___IF(___NOT(___FIXNUMP(___R2)))
-   ___GOTO(___L73_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L48_c_23_univ_2d_bignum_2d__3e_digits)
    ___END_IF
-___DEF_GLBL(___L59_c_23_univ_2d_bignum_2d__3e_digits)
-   ___IF(___NOT(___EQP(___R2,___FIX(0L))))
-   ___GOTO(___L70_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L36_c_23_univ_2d_bignum_2d__3e_digits)
+   ___ADJFP(1)
+   ___IF(___NOT(___FIXMULPCONSTX_NOTFALSEP(___STK(0),___FIX(14L),___R2)))
+   ___SET_STK(0,___FAL)
+   ___GOTO(___L47_c_23_univ_2d_bignum_2d__3e_digits)
    ___END_IF
    ___SET_STK(1,___R1)
-   ___SET_R1(___FIX(0L))
+   ___SET_R1(___STK(0))
    ___ADJFP(1)
-___DEF_GLBL(___L60_c_23_univ_2d_bignum_2d__3e_digits)
-   ___SET_STK(1,___R0)
-   ___SET_STK(2,___R1)
-   ___SET_STK(3,___R2)
-   ___SET_STK(4,___R3)
-   ___SET_STK(5,___R4)
-   ___ADJFP(5)
+___DEF_GLBL(___L37_c_23_univ_2d_bignum_2d__3e_digits)
+   ___SET_STK(-1,___R0)
+   ___SET_STK(1,___R1)
+   ___SET_STK(2,___R2)
+   ___SET_STK(3,___R3)
+   ___SET_STK(4,___R4)
+   ___ADJFP(4)
    ___IF(___NOT(___FIXNUMP(___R1)))
-   ___GOTO(___L68_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L45_c_23_univ_2d_bignum_2d__3e_digits)
    ___END_IF
    ___IF(___NOT(___FIXNEGP_NOTFALSEP(___R1,___R1)))
    ___SET_R1(___FAL)
-   ___GOTO(___L67_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L44_c_23_univ_2d_bignum_2d__3e_digits)
    ___END_IF
    ___SET_STK(0,___R4)
    ___SET_STK(-1,___R3)
    ___SET_STK(-2,___R2)
-___DEF_GLBL(___L61_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L38_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_R2(___R1)
-   ___SET_R1(___STK(-5))
-   ___SET_R0(___LBL(9))
+   ___SET_R1(___STK(-4))
+   ___SET_R0(___LBL(6))
    ___ADJFP(6)
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23_arithmetic_2d_shift)
-___DEF_SLBL(9,___L9_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_SLBL(6,___L6_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_STK(-5,___R1)
    ___SET_R2(___STK(-9))
-   ___SET_R0(___LBL(10))
+   ___SET_R0(___LBL(7))
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23_arithmetic_2d_shift)
-___DEF_SLBL(10,___L10_c_23_univ_2d_bignum_2d__3e_digits)
-   ___IF(___NOT(___FIXNUMSP(___FIXNUMSP2(___FIXNUMSP1(___STK(-11)),___R1))))
-   ___GOTO(___L65_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_SLBL(7,___L7_c_23_univ_2d_bignum_2d__3e_digits)
+   ___IF(___NOT(___FIXNUMSP(___FIXNUMSP2(___FIXNUMSP1(___STK(-10)),___R1))))
+   ___GOTO(___L42_c_23_univ_2d_bignum_2d__3e_digits)
    ___END_IF
-   ___IF(___FIXSUBP_NOTFALSEP(___R2,___STK(-11),___R1))
-   ___GOTO(___L63_c_23_univ_2d_bignum_2d__3e_digits)
+   ___IF(___FIXSUBP_NOTFALSEP(___R2,___STK(-10),___R1))
+   ___GOTO(___L40_c_23_univ_2d_bignum_2d__3e_digits)
    ___END_IF
    ___SET_R2(___FAL)
-   ___GOTO(___L64_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_SLBL(11,___L11_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_GLBL(___L62_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L41_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_SLBL(8,___L8_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L39_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_R2(___R1)
-___DEF_GLBL(___L63_c_23_univ_2d_bignum_2d__3e_digits)
-   ___SET_STK(-11,___R2)
+___DEF_GLBL(___L40_c_23_univ_2d_bignum_2d__3e_digits)
+   ___SET_STK(-10,___R2)
    ___SET_R3(___STK(-7))
    ___SET_R2(___STK(-6))
    ___SET_R1(___STK(-5))
-   ___SET_R0(___LBL(13))
+   ___SET_R0(___LBL(10))
    ___ADJFP(-4)
-   ___POLL(12)
-___DEF_SLBL(12,___L12_c_23_univ_2d_bignum_2d__3e_digits)
-   ___GOTO(___L56_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_SLBL(13,___L13_c_23_univ_2d_bignum_2d__3e_digits)
+   ___POLL(9)
+___DEF_SLBL(9,___L9_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L33_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_SLBL(10,___L10_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_R3(___R1)
    ___SET_R2(___STK(-4))
-   ___SET_R1(___STK(-7))
-   ___SET_R0(___STK(-6))
+   ___SET_R1(___STK(-6))
+   ___SET_R0(___STK(-7))
    ___ADJFP(-8)
-   ___POLL(14)
-___DEF_SLBL(14,___L14_c_23_univ_2d_bignum_2d__3e_digits)
-   ___GOTO(___L56_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_GLBL(___L64_c_23_univ_2d_bignum_2d__3e_digits)
+   ___POLL(11)
+___DEF_SLBL(11,___L11_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L33_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L41_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_R2(___R1)
-   ___SET_R1(___STK(-11))
-   ___SET_R0(___LBL(15))
+   ___SET_R1(___STK(-10))
+   ___SET_R0(___LBL(12))
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__2d_)
-___DEF_SLBL(15,___L15_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_SLBL(12,___L12_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_R2(___R1)
-   ___GOTO(___L63_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_GLBL(___L65_c_23_univ_2d_bignum_2d__3e_digits)
-   ___IF(___NOT(___IFLONUMSP(___IFLONUMSP2(___IFLONUMSP1(___STK(-11)),___R1))))
-   ___GOTO(___L66_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L40_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L42_c_23_univ_2d_bignum_2d__3e_digits)
+   ___IF(___NOT(___IFLONUMSP(___IFLONUMSP2(___IFLONUMSP1(___STK(-10)),___R1))))
+   ___GOTO(___L43_c_23_univ_2d_bignum_2d__3e_digits)
    ___END_IF
-   ___SET_F64(___F64V1,___F64UNBOXI(___STK(-11)))
+   ___SET_F64(___F64V1,___F64UNBOXI(___STK(-10)))
    ___SET_F64(___F64V2,___F64UNBOXI(___R1))
    ___SET_F64(___F64V3,___F64SUB(___F64V1,___F64V2))
    ___SET_R1(___F64BOX(___F64V3))
-   ___CHECK_HEAP_FLO(16,4096)
-___DEF_SLBL(16,___L16_c_23_univ_2d_bignum_2d__3e_digits)
-   ___GOTO(___L62_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_GLBL(___L66_c_23_univ_2d_bignum_2d__3e_digits)
+   ___CHECK_HEAP_FLO(13,4096)
+___DEF_SLBL(13,___L13_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L39_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L43_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_R2(___R1)
-   ___SET_R1(___STK(-11))
-   ___SET_R0(___LBL(11))
+   ___SET_R1(___STK(-10))
+   ___SET_R0(___LBL(8))
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__2d_)
-___DEF_GLBL(___L67_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L44_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_R1(___STK(-3))
-   ___SET_R0(___LBL(17))
+   ___SET_R0(___LBL(14))
    ___ADJFP(6)
    ___JUMPPRM(___SET_NARGS(1),___PRM__23__23__2d_)
-___DEF_SLBL(17,___L17_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_SLBL(14,___L14_c_23_univ_2d_bignum_2d__3e_digits)
    ___ADJFP(-6)
-   ___GOTO(___L61_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_GLBL(___L68_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L38_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L45_c_23_univ_2d_bignum_2d__3e_digits)
    ___IF(___NOT(___IFLONUMP(___R1)))
-   ___GOTO(___L69_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L46_c_23_univ_2d_bignum_2d__3e_digits)
    ___END_IF
    ___SET_F64(___F64V1,___F64UNBOXI(___R1))
    ___SET_F64(___F64V2,___F64NEG(___F64V1))
@@ -45278,50 +45151,31 @@ ___DEF_GLBL(___L68_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_STK(-1,___R3)
    ___SET_STK(-2,___R2)
    ___SET_R1(___F64BOX(___F64V2))
-   ___CHECK_HEAP_FLO(18,4096)
-___DEF_SLBL(18,___L18_c_23_univ_2d_bignum_2d__3e_digits)
-   ___GOTO(___L61_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_GLBL(___L69_c_23_univ_2d_bignum_2d__3e_digits)
-   ___SET_R0(___LBL(17))
+   ___CHECK_HEAP_FLO(15,4096)
+___DEF_SLBL(15,___L15_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L38_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L46_c_23_univ_2d_bignum_2d__3e_digits)
+   ___SET_R0(___LBL(14))
    ___ADJFP(6)
    ___JUMPPRM(___SET_NARGS(1),___PRM__23__23__2d_)
-___DEF_GLBL(___L70_c_23_univ_2d_bignum_2d__3e_digits)
-   ___IF(___NOT(___EQP(___R2,___FIX(-1L))))
-   ___GOTO(___L71_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
+___DEF_GLBL(___L47_c_23_univ_2d_bignum_2d__3e_digits)
+   ___SET_STK(0,___R0)
    ___SET_STK(1,___R1)
-   ___SET_R1(___FIX(-14L))
-   ___ADJFP(1)
-   ___IF(___NOTFALSEP(___R1))
-   ___GOTO(___L60_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
-   ___GOTO(___L72_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_GLBL(___L71_c_23_univ_2d_bignum_2d__3e_digits)
-   ___SET_STK(1,___FIXMULP(___FIX(14L),___R2))
-   ___SET_STK(2,___R1)
-   ___SET_R1(___STK(1))
-   ___SET_STK(1,___STK(2))
-   ___ADJFP(1)
-   ___IF(___NOTFALSEP(___R1))
-   ___GOTO(___L60_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
-___DEF_GLBL(___L72_c_23_univ_2d_bignum_2d__3e_digits)
-   ___SET_STK(1,___R0)
    ___SET_STK(2,___R2)
    ___SET_STK(3,___R3)
    ___SET_STK(4,___R4)
    ___SET_R1(___FIX(14L))
-   ___SET_R0(___LBL(19))
+   ___SET_R0(___LBL(16))
    ___ADJFP(7)
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__2a_)
-___DEF_SLBL(19,___L19_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_SLBL(16,___L16_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_R4(___STK(-3))
    ___SET_R3(___STK(-4))
    ___SET_R2(___STK(-5))
-   ___SET_R0(___STK(-6))
-   ___ADJFP(-7)
-   ___GOTO(___L60_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_SLBL(20,___L20_c_23_univ_2d_bignum_2d__3e_digits)
+   ___SET_R0(___STK(-7))
+   ___ADJFP(-6)
+   ___GOTO(___L37_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_SLBL(17,___L17_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_R2(___R1)
    ___SET_R4(___STK(-4))
    ___SET_R3(___STK(-5))
@@ -45329,27 +45183,19 @@ ___DEF_SLBL(20,___L20_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_R0(___STK(-7))
    ___ADJFP(-8)
    ___IF(___FIXNUMP(___R2))
-   ___GOTO(___L59_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L36_c_23_univ_2d_bignum_2d__3e_digits)
    ___END_IF
-___DEF_GLBL(___L73_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L48_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R2)
    ___SET_STK(4,___R3)
    ___SET_STK(5,___R4)
    ___SET_R1(___FIX(14L))
-   ___SET_R0(___LBL(21))
+   ___SET_R0(___LBL(16))
    ___ADJFP(8)
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__2a_)
-___DEF_SLBL(21,___L21_c_23_univ_2d_bignum_2d__3e_digits)
-   ___SET_R4(___STK(-3))
-   ___SET_R3(___STK(-4))
-   ___SET_R2(___STK(-5))
-   ___SET_R0(___STK(-7))
-   ___SET_STK(-7,___STK(-6))
-   ___ADJFP(-7)
-   ___GOTO(___L60_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_GLBL(___L74_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L49_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_STK(0,___R0)
    ___SET_STK(1,___R1)
    ___SET_STK(2,___R3)
@@ -45357,10 +45203,10 @@ ___DEF_GLBL(___L74_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_STK(4,___R2)
    ___SET_R2(___R4)
    ___SET_R1(___STK(4))
-   ___SET_R0(___LBL(20))
+   ___SET_R0(___LBL(17))
    ___ADJFP(7)
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__2d_)
-___DEF_SLBL(22,___L22_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_SLBL(18,___L18_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_R4(___R1)
    ___SET_R3(___STK(-4))
    ___SET_R2(___STK(-5))
@@ -45368,20 +45214,20 @@ ___DEF_SLBL(22,___L22_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_R0(___STK(-7))
    ___ADJFP(-8)
    ___IF(___FIXNUMSP(___FIXNUMSP2(___FIXNUMSP1(___R2),___R4)))
-   ___GOTO(___L58_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L35_c_23_univ_2d_bignum_2d__3e_digits)
    ___END_IF
-___DEF_GLBL(___L75_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L50_c_23_univ_2d_bignum_2d__3e_digits)
    ___IF(___NOT(___IFLONUMSP(___IFLONUMSP2(___IFLONUMSP1(___R2),___R4))))
-   ___GOTO(___L76_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L51_c_23_univ_2d_bignum_2d__3e_digits)
    ___END_IF
    ___SET_F64(___F64V1,___F64UNBOXI(___R2))
    ___SET_F64(___F64V2,___F64UNBOXI(___R4))
    ___SET_F64(___F64V3,___F64SUB(___F64V1,___F64V2))
    ___SET_R2(___F64BOX(___F64V3))
-   ___CHECK_HEAP_FLO(23,4096)
-___DEF_SLBL(23,___L23_c_23_univ_2d_bignum_2d__3e_digits)
-   ___GOTO(___L73_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_GLBL(___L76_c_23_univ_2d_bignum_2d__3e_digits)
+   ___CHECK_HEAP_FLO(19,4096)
+___DEF_SLBL(19,___L19_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L48_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L51_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R3)
@@ -45389,12 +45235,12 @@ ___DEF_GLBL(___L76_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_STK(5,___R2)
    ___SET_R2(___R4)
    ___SET_R1(___STK(5))
-   ___SET_R0(___LBL(20))
+   ___SET_R0(___LBL(17))
    ___ADJFP(8)
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__2d_)
-___DEF_SLBL(24,___L24_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_SLBL(20,___L20_c_23_univ_2d_bignum_2d__3e_digits)
    ___IF(___NOTFALSEP(___R1))
-   ___GOTO(___L78_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L53_c_23_univ_2d_bignum_2d__3e_digits)
    ___END_IF
    ___SET_R3(___STK(-4))
    ___SET_R2(___STK(-5))
@@ -45402,257 +45248,94 @@ ___DEF_SLBL(24,___L24_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_R0(___STK(-7))
    ___ADJFP(-8)
    ___IF(___FIXNUMP(___R2))
-   ___GOTO(___L57_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L34_c_23_univ_2d_bignum_2d__3e_digits)
    ___END_IF
-___DEF_GLBL(___L77_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L52_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R2)
    ___SET_STK(4,___R3)
    ___SET_R1(___R2)
    ___SET_R2(___FIX(2L))
-   ___SET_R0(___LBL(22))
+   ___SET_R0(___LBL(18))
    ___ADJFP(8)
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23_quotient)
-___DEF_GLBL(___L78_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L53_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_R3(___STK(-4))
    ___SET_R1(___STK(-6))
    ___SET_R0(___STK(-7))
    ___ADJFP(-8)
-___DEF_GLBL(___L79_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L54_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_R1(___CONS(___R1,___R3))
-   ___CHECK_HEAP(25,4096)
-___DEF_SLBL(25,___L25_c_23_univ_2d_bignum_2d__3e_digits)
+   ___CHECK_HEAP(21,4096)
+___DEF_SLBL(21,___L21_c_23_univ_2d_bignum_2d__3e_digits)
    ___JUMPRET(___R0)
-___DEF_GLBL(___L80_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L55_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R2)
    ___SET_STK(4,___R3)
    ___SET_R1(___R2)
    ___SET_R2(___FIX(1L))
-   ___SET_R0(___LBL(24))
+   ___SET_R0(___LBL(20))
    ___ADJFP(8)
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__3d_)
-___DEF_SLBL(26,___L26_c_23_univ_2d_bignum_2d__3e_digits)
-   ___SET_R3(___R1)
-   ___SET_R2(___STK(-4))
-   ___SET_R1(___STK(-5))
-   ___SET_R0(___STK(-7))
-   ___ADJFP(-8)
-   ___POLL(27)
-___DEF_SLBL(27,___L27_c_23_univ_2d_bignum_2d__3e_digits)
-   ___GOTO(___L56_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_GLBL(___L81_c_23_univ_2d_bignum_2d__3e_digits)
-   ___SET_R2(___R1)
-   ___SET_R1(___STK(-9))
-   ___SET_R0(___LBL(28))
-   ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__2d_)
-___DEF_SLBL(28,___L28_c_23_univ_2d_bignum_2d__3e_digits)
-   ___SET_R2(___R1)
-   ___GOTO(___L55_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_GLBL(___L82_c_23_univ_2d_bignum_2d__3e_digits)
-   ___IF(___NOT(___IFLONUMSP(___IFLONUMSP2(___IFLONUMSP1(___STK(-9)),___R1))))
-   ___GOTO(___L83_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
-   ___SET_F64(___F64V1,___F64UNBOXI(___STK(-9)))
-   ___SET_F64(___F64V2,___F64UNBOXI(___R1))
-   ___SET_F64(___F64V3,___F64SUB(___F64V1,___F64V2))
-   ___SET_R1(___F64BOX(___F64V3))
-   ___CHECK_HEAP_FLO(29,4096)
-___DEF_SLBL(29,___L29_c_23_univ_2d_bignum_2d__3e_digits)
-   ___GOTO(___L54_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_GLBL(___L83_c_23_univ_2d_bignum_2d__3e_digits)
-   ___SET_R2(___R1)
-   ___SET_R1(___STK(-9))
-   ___SET_R0(___LBL(7))
-   ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__2d_)
-___DEF_GLBL(___L84_c_23_univ_2d_bignum_2d__3e_digits)
-   ___SET_R1(___R4)
-   ___SET_R0(___LBL(30))
-   ___JUMPPRM(___SET_NARGS(1),___PRM__23__23__2d_)
-___DEF_SLBL(30,___L30_c_23_univ_2d_bignum_2d__3e_digits)
-   ___GOTO(___L53_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_GLBL(___L85_c_23_univ_2d_bignum_2d__3e_digits)
-   ___IF(___NOT(___IFLONUMP(___R4)))
-   ___GOTO(___L86_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
-   ___SET_F64(___F64V1,___F64UNBOXI(___R4))
-   ___SET_F64(___F64V2,___F64NEG(___F64V1))
-   ___SET_STK(-3,___R4)
-   ___SET_STK(-4,___R3)
-   ___SET_R1(___F64BOX(___F64V2))
-   ___CHECK_HEAP_FLO(31,4096)
-___DEF_SLBL(31,___L31_c_23_univ_2d_bignum_2d__3e_digits)
-   ___GOTO(___L53_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_GLBL(___L86_c_23_univ_2d_bignum_2d__3e_digits)
-   ___SET_R1(___R4)
-   ___SET_R0(___LBL(30))
-   ___JUMPPRM(___SET_NARGS(1),___PRM__23__23__2d_)
-___DEF_GLBL(___L87_c_23_univ_2d_bignum_2d__3e_digits)
-   ___IF(___NOT(___EQP(___R3,___FIX(-1L))))
-   ___GOTO(___L88_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
-   ___SET_R4(___FIX(-14L))
-   ___IF(___NOTFALSEP(___R4))
-   ___GOTO(___L52_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
-   ___GOTO(___L89_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_GLBL(___L88_c_23_univ_2d_bignum_2d__3e_digits)
-   ___IF(___FIXMULP_NOTFALSEP(___R4,___FIX(14L),___R3))
-   ___GOTO(___L52_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
-   ___SET_R4(___FAL)
-___DEF_GLBL(___L89_c_23_univ_2d_bignum_2d__3e_digits)
-   ___SET_STK(-6,___R1)
-   ___SET_STK(-5,___R2)
-   ___SET_STK(-4,___R3)
-   ___SET_R2(___R3)
-   ___SET_R1(___FIX(14L))
-   ___SET_R0(___LBL(32))
-   ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__2a_)
-___DEF_SLBL(32,___L32_c_23_univ_2d_bignum_2d__3e_digits)
-   ___SET_R4(___R1)
-   ___SET_R3(___STK(-4))
-   ___SET_R2(___STK(-5))
-   ___SET_R1(___STK(-6))
-   ___GOTO(___L52_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_SLBL(33,___L33_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L56_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_R2(___STK(-6))
-   ___IF(___FIXNUMSP(___FIXNUMSP2(___FIXNUMSP1(___STK(-5)),___R1)))
-   ___GOTO(___L50_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
-___DEF_GLBL(___L90_c_23_univ_2d_bignum_2d__3e_digits)
-   ___IF(___IFLONUMSP(___IFLONUMSP2(___IFLONUMSP1(___STK(-5)),___R1)))
-   ___GOTO(___L92_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
-___DEF_GLBL(___L91_c_23_univ_2d_bignum_2d__3e_digits)
-   ___SET_STK(-6,___R1)
-   ___SET_STK(-4,___R2)
-   ___SET_R2(___R1)
-   ___SET_R1(___STK(-5))
-   ___SET_R0(___LBL(34))
-   ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__2d_)
-___DEF_SLBL(34,___L34_c_23_univ_2d_bignum_2d__3e_digits)
-   ___SET_R3(___R1)
-   ___SET_R2(___STK(-4))
-   ___SET_R1(___STK(-6))
-   ___IF(___FIXNUMP(___R3))
-   ___GOTO(___L51_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
-   ___GOTO(___L89_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_GLBL(___L92_c_23_univ_2d_bignum_2d__3e_digits)
-   ___SET_F64(___F64V1,___F64UNBOXI(___STK(-5)))
-   ___SET_F64(___F64V2,___F64UNBOXI(___R1))
-   ___SET_F64(___F64V3,___F64SUB(___F64V1,___F64V2))
-   ___SET_R3(___F64BOX(___F64V3))
-   ___CHECK_HEAP_FLO(35,4096)
-___DEF_SLBL(35,___L35_c_23_univ_2d_bignum_2d__3e_digits)
-   ___GOTO(___L89_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_SLBL(36,___L36_c_23_univ_2d_bignum_2d__3e_digits)
-   ___IF(___NOTFALSEP(___R1))
-   ___GOTO(___L94_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
-   ___SET_R2(___STK(-6))
-   ___IF(___FIXNUMP(___STK(-5)))
-   ___GOTO(___L49_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
-___DEF_GLBL(___L93_c_23_univ_2d_bignum_2d__3e_digits)
-   ___SET_STK(-6,___R2)
-   ___SET_R1(___STK(-5))
-   ___SET_R2(___FIX(2L))
-   ___SET_R0(___LBL(33))
-   ___JUMPPRM(___SET_NARGS(2),___PRM__23__23_quotient)
-___DEF_GLBL(___L94_c_23_univ_2d_bignum_2d__3e_digits)
-   ___SET_R2(___STK(-6))
-___DEF_GLBL(___L95_c_23_univ_2d_bignum_2d__3e_digits)
-   ___SET_R1(___CONS(___R2,___NUL))
-   ___ADJFP(-7)
-   ___CHECK_HEAP(37,4096)
-___DEF_SLBL(37,___L37_c_23_univ_2d_bignum_2d__3e_digits)
-   ___ADJFP(-1)
-   ___JUMPRET(___STK(1))
-___DEF_SLBL(38,___L38_c_23_univ_2d_bignum_2d__3e_digits)
-   ___SET_R2(___R1)
-   ___IF(___FIXNUMP(___STK(-5)))
-   ___GOTO(___L48_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
-___DEF_GLBL(___L96_c_23_univ_2d_bignum_2d__3e_digits)
-   ___SET_STK(-6,___R2)
-   ___SET_R1(___STK(-5))
-   ___SET_R2(___FIX(1L))
-   ___SET_R0(___LBL(36))
-   ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__3d_)
-___DEF_GLBL(___L97_c_23_univ_2d_bignum_2d__3e_digits)
-   ___SET_R2(___STK(-6))
-   ___SET_R0(___LBL(38))
+   ___SET_R0(___LBL(22))
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__2b_)
-___DEF_GLBL(___L98_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_SLBL(22,___L22_c_23_univ_2d_bignum_2d__3e_digits)
+   ___SET_R2(___R1)
+   ___GOTO(___L32_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L57_c_23_univ_2d_bignum_2d__3e_digits)
    ___IF(___NOT(___IFLONUMSP(___IFLONUMSP2(___IFLONUMSP1(___R1),___STK(-6)))))
-   ___GOTO(___L99_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L58_c_23_univ_2d_bignum_2d__3e_digits)
    ___END_IF
    ___SET_F64(___F64V1,___F64UNBOXI(___R1))
    ___SET_F64(___F64V2,___F64UNBOXI(___STK(-6)))
    ___SET_F64(___F64V3,___F64ADD(___F64V1,___F64V2))
    ___SET_R1(___F64BOX(___F64V3))
-   ___CHECK_HEAP_FLO(39,4096)
-___DEF_SLBL(39,___L39_c_23_univ_2d_bignum_2d__3e_digits)
-   ___GOTO(___L47_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_GLBL(___L99_c_23_univ_2d_bignum_2d__3e_digits)
+   ___CHECK_HEAP_FLO(23,4096)
+___DEF_SLBL(23,___L23_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L31_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L58_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_R2(___STK(-6))
    ___SET_R0(___LBL(4))
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__2b_)
-___DEF_GLBL(___L100_c_23_univ_2d_bignum_2d__3e_digits)
-   ___IF(___NOT(___EQP(___R2,___FIX(-1L))))
-   ___GOTO(___L101_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
-   ___SET_R1(___FIX(-14L))
-   ___IF(___NOTFALSEP(___R1))
-   ___GOTO(___L46_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
-   ___GOTO(___L102_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_GLBL(___L101_c_23_univ_2d_bignum_2d__3e_digits)
-   ___IF(___FIXMULP_NOTFALSEP(___R1,___FIX(14L),___R2))
-   ___GOTO(___L46_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
-   ___SET_R1(___FAL)
-___DEF_GLBL(___L102_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L59_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_R1(___FIX(14L))
-   ___SET_R0(___LBL(40))
+   ___SET_R0(___LBL(24))
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__2a_)
-___DEF_SLBL(40,___L40_c_23_univ_2d_bignum_2d__3e_digits)
-   ___GOTO(___L46_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_SLBL(41,___L41_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_SLBL(24,___L24_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L30_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_SLBL(25,___L25_c_23_univ_2d_bignum_2d__3e_digits)
    ___IF(___NOTFALSEP(___R1))
-   ___GOTO(___L104_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L61_c_23_univ_2d_bignum_2d__3e_digits)
    ___END_IF
    ___SET_R2(___STK(-5))
-___DEF_GLBL(___L103_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L60_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_STK(-5,___R2)
    ___SET_R2(___STK(-6))
-   ___IF(___FIXNUMP(___STK(-5)))
-   ___GOTO(___L48_c_23_univ_2d_bignum_2d__3e_digits)
-   ___END_IF
-   ___GOTO(___L96_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_GLBL(___L104_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L32_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L61_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_R2(___STK(-5))
-   ___GOTO(___L45_c_23_univ_2d_bignum_2d__3e_digits)
-___DEF_SLBL(42,___L42_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L29_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_SLBL(26,___L26_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_R2(___R1)
    ___IF(___FIXNUMP(___STK(-6)))
-   ___GOTO(___L44_c_23_univ_2d_bignum_2d__3e_digits)
+   ___GOTO(___L28_c_23_univ_2d_bignum_2d__3e_digits)
    ___END_IF
-___DEF_GLBL(___L105_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L62_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_STK(-5,___R2)
    ___SET_R1(___STK(-6))
    ___SET_R2(___FIX(0L))
-   ___SET_R0(___LBL(41))
+   ___SET_R0(___LBL(25))
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__3c_)
-___DEF_GLBL(___L106_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L63_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_R2(___FIX(1L))
-   ___SET_R0(___LBL(42))
+   ___SET_R0(___LBL(26))
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23__2b_)
-___DEF_GLBL(___L107_c_23_univ_2d_bignum_2d__3e_digits)
+___DEF_GLBL(___L64_c_23_univ_2d_bignum_2d__3e_digits)
    ___SET_R2(___FIX(14L))
    ___SET_R0(___LBL(2))
    ___JUMPPRM(___SET_NARGS(2),___PRM__23__23_quotient)
@@ -45662,7 +45345,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_typed_2d_array_2d_constructor
 #undef ___PH_LBL0
-#define ___PH_LBL0 3310
+#define ___PH_LBL0 3292
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -45755,7 +45438,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_array_2d_constructor
 #undef ___PH_LBL0
-#define ___PH_LBL0 3314
+#define ___PH_LBL0 3296
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R4
 #undef ___PR_ALL
@@ -45781,7 +45464,7 @@ ___DEF_GLBL(___L_c_23_univ_2d_array_2d_constructor)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_array_2d_constructor)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(3310),___L_c_23_univ_2d_typed_2d_array_2d_constructor)
+   ___JUMPINT(___SET_NARGS(2),___PRC(3292),___L_c_23_univ_2d_typed_2d_array_2d_constructor)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_array_2d_constructor)
    ___IF(___NOTFALSEP(___R1))
    ___GOTO(___L6_c_23_univ_2d_array_2d_constructor)
@@ -45817,7 +45500,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_array_2d_literal
 #undef ___PH_LBL0
-#define ___PH_LBL0 3319
+#define ___PH_LBL0 3301
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -45883,7 +45566,7 @@ ___DEF_SLBL(4,___L4_c_23_univ_2d_emit_2d_array_2d_literal)
    ___SET_R2(___STK(-4))
    ___SET_R1(___SUB(388))
    ___SET_R0(___LBL(5))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2516),___L_c_23_univ_2d_separated_2d_list)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2514),___L_c_23_univ_2d_separated_2d_list)
 ___DEF_SLBL(5,___L5_c_23_univ_2d_emit_2d_array_2d_literal)
    ___BEGIN_ALLOC_LIST(5UL,___SUB(391))
    ___ADD_LIST_ELEM(1,___R1)
@@ -45912,7 +45595,7 @@ ___DEF_SLBL(8,___L8_c_23_univ_2d_emit_2d_array_2d_literal)
    ___SET_R2(___STK(-4))
    ___SET_R1(___SUB(392))
    ___SET_R0(___LBL(9))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2516),___L_c_23_univ_2d_separated_2d_list)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2514),___L_c_23_univ_2d_separated_2d_list)
 ___DEF_SLBL(9,___L9_c_23_univ_2d_emit_2d_array_2d_literal)
    ___BEGIN_ALLOC_LIST(5UL,___SUB(395))
    ___ADD_LIST_ELEM(1,___R1)
@@ -45939,7 +45622,7 @@ ___DEF_GLBL(___L20_c_23_univ_2d_emit_2d_array_2d_literal)
    ___SET_R2(___STK(-4))
    ___SET_R1(___SUB(397))
    ___SET_R0(___LBL(12))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2516),___L_c_23_univ_2d_separated_2d_list)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2514),___L_c_23_univ_2d_separated_2d_list)
 ___DEF_SLBL(12,___L12_c_23_univ_2d_emit_2d_array_2d_literal)
    ___BEGIN_ALLOC_LIST(3UL,___SUB(399))
    ___ADD_LIST_ELEM(1,___R1)
@@ -45952,7 +45635,7 @@ ___DEF_SLBL(12,___L12_c_23_univ_2d_emit_2d_array_2d_literal)
    ___SET_R0(___LBL(14))
    ___CHECK_HEAP(13,4096)
 ___DEF_SLBL(13,___L13_c_23_univ_2d_emit_2d_array_2d_literal)
-   ___JUMPINT(___SET_NARGS(2),___PRC(3310),___L_c_23_univ_2d_typed_2d_array_2d_constructor)
+   ___JUMPINT(___SET_NARGS(2),___PRC(3292),___L_c_23_univ_2d_typed_2d_array_2d_constructor)
 ___DEF_SLBL(14,___L14_c_23_univ_2d_emit_2d_array_2d_literal)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L21_c_23_univ_2d_emit_2d_array_2d_literal)
@@ -45977,7 +45660,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_extensible_2d_array_2d_literal
 #undef ___PH_LBL0
-#define ___PH_LBL0 3337
+#define ___PH_LBL0 3319
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -46059,7 +45742,7 @@ ___DEF_GLBL(___L15_c_23_univ_2d_emit_2d_extensible_2d_array_2d_literal)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L19_c_23_univ_2d_emit_2d_extensible_2d_array_2d_literal)
    ___END_IF
-   ___IF(___NOT(___FIXADDP_NOTFALSEP(___R4,___R1,___FIX(1L))))
+   ___IF(___NOT(___FIXADDPCONSTY_NOTFALSEP(___R4,___R1,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L19_c_23_univ_2d_emit_2d_extensible_2d_array_2d_literal)
    ___END_IF
@@ -46081,7 +45764,7 @@ ___DEF_SLBL(6,___L6_c_23_univ_2d_emit_2d_extensible_2d_array_2d_literal)
    ___IF(___NOT(___FIXNUMP(___R4)))
    ___GOTO(___L17_c_23_univ_2d_emit_2d_extensible_2d_array_2d_literal)
    ___END_IF
-   ___IF(___FIXADDP_NOTFALSEP(___R2,___R4,___FIX(1L)))
+   ___IF(___FIXADDPCONSTY_NOTFALSEP(___R2,___R4,___FIX(1L)))
    ___GOTO(___L14_c_23_univ_2d_emit_2d_extensible_2d_array_2d_literal)
    ___END_IF
    ___SET_R2(___FAL)
@@ -46125,7 +45808,7 @@ ___DEF_SLBL(10,___L10_c_23_univ_2d_emit_2d_extensible_2d_array_2d_literal)
    ___SET_R2(___R1)
    ___SET_R1(___SUB(401))
    ___SET_R0(___LBL(11))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2516),___L_c_23_univ_2d_separated_2d_list)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2514),___L_c_23_univ_2d_separated_2d_list)
 ___DEF_SLBL(11,___L11_c_23_univ_2d_emit_2d_extensible_2d_array_2d_literal)
    ___BEGIN_ALLOC_LIST(3UL,___SUB(403))
    ___ADD_LIST_ELEM(1,___R1)
@@ -46145,14 +45828,14 @@ ___DEF_GLBL(___L21_c_23_univ_2d_emit_2d_extensible_2d_array_2d_literal)
    ___POLL(13)
 ___DEF_SLBL(13,___L13_c_23_univ_2d_emit_2d_extensible_2d_array_2d_literal)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(3),___PRC(3319),___L_c_23_univ_2d_emit_2d_array_2d_literal)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3301),___L_c_23_univ_2d_emit_2d_array_2d_literal)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_new_2d_array
 #undef ___PH_LBL0
-#define ___PH_LBL0 3352
+#define ___PH_LBL0 3334
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -46289,7 +45972,7 @@ ___DEF_SLBL(12,___L12_c_23_univ_2d_emit_2d_new_2d_array)
    ___POLL(13)
 ___DEF_SLBL(13,___L13_c_23_univ_2d_emit_2d_new_2d_array)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(3),___PRC(550),___L_c_23_univ_2d_emit_2d__2a_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(548),___L_c_23_univ_2d_emit_2d__2a_)
 ___DEF_GLBL(___L27_c_23_univ_2d_emit_2d_new_2d_array)
    ___SET_STK(-3,___STK(-7))
    ___SET_STK(-7,___STK(-6))
@@ -46305,14 +45988,14 @@ ___DEF_SLBL(14,___L14_c_23_univ_2d_emit_2d_new_2d_array)
    ___SET_R2(___STK(-8))
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(15))
-   ___JUMPINT(___SET_NARGS(3),___PRC(676),___L_c_23_univ_2d_emit_2d__3d_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(674),___L_c_23_univ_2d_emit_2d__3d_)
 ___DEF_SLBL(15,___L15_c_23_univ_2d_emit_2d_new_2d_array)
    ___SET_STK(-5,___R1)
    ___SET_R2(___STK(-9))
    ___SET_R1(___STK(-6))
    ___SET_R3(___NUL)
    ___SET_R0(___LBL(16))
-   ___JUMPINT(___SET_NARGS(3),___PRC(3319),___L_c_23_univ_2d_emit_2d_array_2d_literal)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3301),___L_c_23_univ_2d_emit_2d_array_2d_literal)
 ___DEF_SLBL(16,___L16_c_23_univ_2d_emit_2d_new_2d_array)
    ___SET_STK(-9,___R1)
    ___SET_STK(1,___STK(-6))
@@ -46343,7 +46026,7 @@ ___DEF_SLBL(19,___L19_c_23_univ_2d_emit_2d_new_2d_array)
    ___POLL(20)
 ___DEF_SLBL(20,___L20_c_23_univ_2d_emit_2d_new_2d_array)
    ___ADJFP(-10)
-   ___JUMPINT(___SET_NARGS(5),___PRC(480),___L_c_23_univ_2d_emit_2d_if_2d_expr)
+   ___JUMPINT(___SET_NARGS(5),___PRC(478),___L_c_23_univ_2d_emit_2d_if_2d_expr)
 ___DEF_GLBL(___L28_c_23_univ_2d_emit_2d_new_2d_array)
    ___SET_R3(___STK(-4))
    ___BEGIN_ALLOC_LIST(2UL,___STK(-5))
@@ -46364,7 +46047,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_emit_2d_make_2d_array
 #undef ___PH_LBL0
-#define ___PH_LBL0 3376
+#define ___PH_LBL0 3358
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -46441,7 +46124,7 @@ ___DEF_GLBL(___L28_c_23_univ_2d_emit_2d_make_2d_array)
    ___SET_R1(___STK(-11))
    ___SET_R2(___SYM_elems)
    ___SET_R0(___LBL(5))
-   ___JUMPINT(___SET_NARGS(2),___PRC(831),___L_c_23_univ_2d_emit_2d_local_2d_var)
+   ___JUMPINT(___SET_NARGS(2),___PRC(829),___L_c_23_univ_2d_emit_2d_local_2d_var)
 ___DEF_SLBL(5,___L5_c_23_univ_2d_emit_2d_make_2d_array)
    ___SET_STK(-5,___R1)
    ___SET_STK(1,___STK(-11))
@@ -46456,14 +46139,14 @@ ___DEF_SLBL(5,___L5_c_23_univ_2d_emit_2d_make_2d_array)
    ___ADJFP(8)
    ___CHECK_HEAP(6,4096)
 ___DEF_SLBL(6,___L6_c_23_univ_2d_emit_2d_make_2d_array)
-   ___JUMPINT(___SET_NARGS(3),___PRC(3352),___L_c_23_univ_2d_emit_2d_new_2d_array)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3334),___L_c_23_univ_2d_emit_2d_new_2d_array)
 ___DEF_SLBL(7,___L7_c_23_univ_2d_emit_2d_make_2d_array)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-13))
    ___SET_R3(___FAL)
    ___SET_R0(___LBL(8))
    ___ADJFP(-6)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(434),___L0_c_23_univ_2d_emit_2d_var_2d_declaration)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(432),___L0_c_23_univ_2d_emit_2d_var_2d_declaration)
 ___DEF_SLBL(8,___L8_c_23_univ_2d_emit_2d_make_2d_array)
    ___SET_STK(-11,___R1)
    ___SET_R1(___STK(-5))
@@ -46513,13 +46196,13 @@ ___DEF_GLBL(___L30_c_23_univ_2d_emit_2d_make_2d_array)
    ___ADJFP(-4)
    ___CHECK_HEAP(14,4096)
 ___DEF_SLBL(14,___L14_c_23_univ_2d_emit_2d_make_2d_array)
-   ___JUMPINT(___SET_NARGS(3),___PRC(3319),___L_c_23_univ_2d_emit_2d_array_2d_literal)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3301),___L_c_23_univ_2d_emit_2d_array_2d_literal)
 ___DEF_SLBL(15,___L15_c_23_univ_2d_emit_2d_make_2d_array)
    ___SET_R2(___R1)
    ___SET_R3(___STK(-3))
    ___SET_R1(___STK(-7))
    ___SET_R0(___LBL(12))
-   ___JUMPINT(___SET_NARGS(3),___PRC(550),___L_c_23_univ_2d_emit_2d__2a_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(548),___L_c_23_univ_2d_emit_2d__2a_)
 ___DEF_GLBL(___L31_c_23_univ_2d_emit_2d_make_2d_array)
    ___SET_STK(-3,___STK(-11))
    ___SET_STK(-2,___SYM_scmobj)
@@ -46533,14 +46216,14 @@ ___DEF_SLBL(16,___L16_c_23_univ_2d_emit_2d_make_2d_array)
    ___SET_R2(___STK(-11))
    ___SET_R1(___STK(-15))
    ___SET_R0(___LBL(17))
-   ___JUMPINT(___SET_NARGS(3),___PRC(676),___L_c_23_univ_2d_emit_2d__3d_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(674),___L_c_23_univ_2d_emit_2d__3d_)
 ___DEF_SLBL(17,___L17_c_23_univ_2d_emit_2d_make_2d_array)
    ___SET_STK(-9,___R1)
    ___SET_R2(___STK(-14))
    ___SET_R1(___STK(-15))
    ___SET_R3(___NUL)
    ___SET_R0(___LBL(18))
-   ___JUMPINT(___SET_NARGS(3),___PRC(3319),___L_c_23_univ_2d_emit_2d_array_2d_literal)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3301),___L_c_23_univ_2d_emit_2d_array_2d_literal)
 ___DEF_SLBL(18,___L18_c_23_univ_2d_emit_2d_make_2d_array)
    ___SET_STK(-14,___R1)
    ___SET_STK(1,___STK(-15))
@@ -46562,12 +46245,12 @@ ___DEF_SLBL(20,___L20_c_23_univ_2d_emit_2d_make_2d_array)
    ___SET_R1(___STK(-9))
    ___SET_R0(___LBL(12))
    ___ADJFP(-6)
-   ___JUMPINT(___SET_NARGS(5),___PRC(480),___L_c_23_univ_2d_emit_2d_if_2d_expr)
+   ___JUMPINT(___SET_NARGS(5),___PRC(478),___L_c_23_univ_2d_emit_2d_if_2d_expr)
 ___DEF_GLBL(___L32_c_23_univ_2d_emit_2d_make_2d_array)
    ___SET_R1(___STK(-11))
    ___SET_R2(___SYM_elems)
    ___SET_R0(___LBL(21))
-   ___JUMPINT(___SET_NARGS(2),___PRC(831),___L_c_23_univ_2d_emit_2d_local_2d_var)
+   ___JUMPINT(___SET_NARGS(2),___PRC(829),___L_c_23_univ_2d_emit_2d_local_2d_var)
 ___DEF_SLBL(21,___L21_c_23_univ_2d_emit_2d_make_2d_array)
    ___SET_STK(-5,___R1)
    ___SET_STK(1,___STK(-11))
@@ -46582,14 +46265,14 @@ ___DEF_SLBL(21,___L21_c_23_univ_2d_emit_2d_make_2d_array)
    ___ADJFP(8)
    ___CHECK_HEAP(22,4096)
 ___DEF_SLBL(22,___L22_c_23_univ_2d_emit_2d_make_2d_array)
-   ___JUMPINT(___SET_NARGS(3),___PRC(3352),___L_c_23_univ_2d_emit_2d_new_2d_array)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3334),___L_c_23_univ_2d_emit_2d_new_2d_array)
 ___DEF_SLBL(23,___L23_c_23_univ_2d_emit_2d_make_2d_array)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-13))
    ___SET_R3(___FAL)
    ___SET_R0(___LBL(24))
    ___ADJFP(-6)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(434),___L0_c_23_univ_2d_emit_2d_var_2d_declaration)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(432),___L0_c_23_univ_2d_emit_2d_var_2d_declaration)
 ___DEF_SLBL(24,___L24_c_23_univ_2d_emit_2d_make_2d_array)
    ___SET_STK(-11,___R1)
    ___SET_R1(___STK(-5))
@@ -46618,7 +46301,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_num_2d_array_2d_constant
 #undef ___PH_LBL0
-#define ___PH_LBL0 3404
+#define ___PH_LBL0 3386
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -46760,7 +46443,7 @@ ___DEF_SLBL(11,___L11_c_23_univ_2d_num_2d_array_2d_constant)
    ___POLL(12)
 ___DEF_SLBL(12,___L12_c_23_univ_2d_num_2d_array_2d_constant)
    ___ADJFP(-8)
-   ___JUMPINT(___SET_NARGS(3),___PRC(3319),___L_c_23_univ_2d_emit_2d_array_2d_literal)
+   ___JUMPINT(___SET_NARGS(3),___PRC(3301),___L_c_23_univ_2d_emit_2d_array_2d_literal)
 ___DEF_GLBL(___L27_c_23_univ_2d_num_2d_array_2d_constant)
    ___SET_R1(___STK(-4))
    ___SET_R0(___LBL(13))
@@ -46774,7 +46457,7 @@ ___DEF_SLBL(14,___L14_c_23_univ_2d_num_2d_array_2d_constant)
    ___SET_R3(___TRU)
    ___SET_R2(___SYM_base92__decode)
    ___SET_R0(___LBL(15))
-   ___JUMPINT(___SET_NARGS(3),___PRC(944),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(942),___L_c_23_univ_2d_emit_2d_rts_2d_method_2d_use)
 ___DEF_SLBL(15,___L15_c_23_univ_2d_num_2d_array_2d_constant)
    ___SET_STK(-4,___R1)
    ___SET_R2(___STK(-5))
@@ -46797,14 +46480,14 @@ ___DEF_SLBL(18,___L18_c_23_univ_2d_num_2d_array_2d_constant)
    ___SET_R1(___STK(-6))
    ___SET_R2(___FIX(6L))
    ___SET_R0(___LBL(6))
-   ___JUMPINT(___SET_NARGS(2),___PRC(3439),___L_c_23_univ_2d_compactness_3e__3d__3f_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(3421),___L_c_23_univ_2d_compactness_3e__3d__3f_)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_field_2d_rename
 #undef ___PH_LBL0
-#define ___PH_LBL0 3424
+#define ___PH_LBL0 3406
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -46834,7 +46517,7 @@ ___DEF_GLBL(___L_c_23_univ_2d_field_2d_rename)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_field_2d_rename)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(3439),___L_c_23_univ_2d_compactness_3e__3d__3f_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(3421),___L_c_23_univ_2d_compactness_3e__3d__3f_)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_field_2d_rename)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L13_c_23_univ_2d_field_2d_rename)
@@ -46906,7 +46589,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_rts_2d_field_2d_low_2d_level_2d_name
 #undef ___PH_LBL0
-#define ___PH_LBL0 3431
+#define ___PH_LBL0 3413
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -46932,7 +46615,7 @@ ___DEF_GLBL(___L_c_23_univ_2d_rts_2d_field_2d_low_2d_level_2d_name)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_rts_2d_field_2d_low_2d_level_2d_name)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(3439),___L_c_23_univ_2d_compactness_3e__3d__3f_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(3421),___L_c_23_univ_2d_compactness_3e__3d__3f_)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_rts_2d_field_2d_low_2d_level_2d_name)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L3_c_23_univ_2d_rts_2d_field_2d_low_2d_level_2d_name)
@@ -47012,7 +46695,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_rts_2d_method_2d_low_2d_level_2d_name
 #undef ___PH_LBL0
-#define ___PH_LBL0 3435
+#define ___PH_LBL0 3417
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -47038,7 +46721,7 @@ ___DEF_GLBL(___L_c_23_univ_2d_rts_2d_method_2d_low_2d_level_2d_name)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_univ_2d_rts_2d_method_2d_low_2d_level_2d_name)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(3439),___L_c_23_univ_2d_compactness_3e__3d__3f_)
+   ___JUMPINT(___SET_NARGS(2),___PRC(3421),___L_c_23_univ_2d_compactness_3e__3d__3f_)
 ___DEF_SLBL(2,___L2_c_23_univ_2d_rts_2d_method_2d_low_2d_level_2d_name)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L3_c_23_univ_2d_rts_2d_method_2d_low_2d_level_2d_name)
@@ -47138,7 +46821,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_compactness_3e__3d__3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 3439
+#define ___PH_LBL0 3421
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R4 ___D_F64(___F64V1) ___D_F64(___F64V2)
 #undef ___PR_ALL
@@ -47210,7 +46893,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_gvm_2d_lbl_2d_use
 #undef ___PH_LBL0
-#define ___PH_LBL0 3445
+#define ___PH_LBL0 3427
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -47236,7 +46919,7 @@ ___DEF_GLBL(___L_c_23_gvm_2d_lbl_2d_use)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_gvm_2d_lbl_2d_use)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(2),___PRC(3450),___L_c_23_gvm_2d_lbl_2d_use_2d_aux)
+   ___JUMPINT(___SET_NARGS(2),___PRC(3432),___L_c_23_gvm_2d_lbl_2d_use_2d_aux)
 ___DEF_SLBL(2,___L2_c_23_gvm_2d_lbl_2d_use)
    ___SET_STK(-5,___STK(-7))
    ___SET_STK(-7,___STK(-6))
@@ -47247,14 +46930,14 @@ ___DEF_SLBL(2,___L2_c_23_gvm_2d_lbl_2d_use)
    ___POLL(3)
 ___DEF_SLBL(3,___L3_c_23_gvm_2d_lbl_2d_use)
    ___ADJFP(-7)
-   ___JUMPINT(___SET_NARGS(4),___PRC(899),___L_c_23_univ_2d_emit_2d_mod_2d_jumpable)
+   ___JUMPINT(___SET_NARGS(4),___PRC(897),___L_c_23_univ_2d_emit_2d_mod_2d_jumpable)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_gvm_2d_lbl_2d_use_2d_aux
 #undef ___PH_LBL0
-#define ___PH_LBL0 3450
+#define ___PH_LBL0 3432
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -47287,7 +46970,7 @@ ___DEF_SLBL(2,___L2_c_23_gvm_2d_lbl_2d_use_2d_aux)
    ___SET_STK(-5,___R1)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(1),___PRC(2588),___L_c_23_ctx_2d_ns)
+   ___JUMPINT(___SET_NARGS(1),___PRC(2586),___L_c_23_ctx_2d_ns)
 ___DEF_SLBL(3,___L3_c_23_gvm_2d_lbl_2d_use_2d_aux)
    ___SET_STK(-3,___STK(-6))
    ___SET_R3(___R1)
@@ -47295,7 +46978,7 @@ ___DEF_SLBL(3,___L3_c_23_gvm_2d_lbl_2d_use_2d_aux)
    ___SET_R1(___SUB(18))
    ___SET_R0(___LBL(4))
    ___ADJFP(-3)
-   ___JUMPINT(___SET_NARGS(4),___PRC(3468),___L_c_23_label_2d__3e_id)
+   ___JUMPINT(___SET_NARGS(4),___PRC(3450),___L_c_23_label_2d__3e_id)
 ___DEF_SLBL(4,___L4_c_23_gvm_2d_lbl_2d_use_2d_aux)
    ___ADJFP(-4)
    ___JUMPRET(___STK(1))
@@ -47305,7 +46988,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_gvm_2d_proc_2d_use
 #undef ___PH_LBL0
-#define ___PH_LBL0 3456
+#define ___PH_LBL0 3438
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -47340,7 +47023,7 @@ ___DEF_SLBL(2,___L2_c_23_gvm_2d_proc_2d_use)
    ___SET_R1(___SUB(18))
    ___SET_R0(___LBL(3))
    ___ADJFP(-3)
-   ___JUMPINT(___SET_NARGS(4),___PRC(3468),___L_c_23_label_2d__3e_id)
+   ___JUMPINT(___SET_NARGS(4),___PRC(3450),___L_c_23_label_2d__3e_id)
 ___DEF_SLBL(3,___L3_c_23_gvm_2d_proc_2d_use)
    ___ADJFP(-4)
    ___JUMPRET(___STK(1))
@@ -47350,7 +47033,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_gvm_2d_bb_2d_use
 #undef ___PH_LBL0
-#define ___PH_LBL0 3461
+#define ___PH_LBL0 3443
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -47376,7 +47059,7 @@ ___DEF_GLBL(___L_c_23_gvm_2d_bb_2d_use)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_gvm_2d_bb_2d_use)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(4),___PRC(3468),___L_c_23_label_2d__3e_id)
+   ___JUMPINT(___SET_NARGS(4),___PRC(3450),___L_c_23_label_2d__3e_id)
 ___DEF_SLBL(2,___L2_c_23_gvm_2d_bb_2d_use)
    ___ADJFP(-4)
    ___JUMPRET(___STK(1))
@@ -47386,7 +47069,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_lbl_2d__3e_id
 #undef ___PH_LBL0
-#define ___PH_LBL0 3465
+#define ___PH_LBL0 3447
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1
 #undef ___PR_ALL
@@ -47409,14 +47092,14 @@ ___DEF_GLBL(___L_c_23_lbl_2d__3e_id)
    ___ADJFP(1)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_c_23_lbl_2d__3e_id)
-   ___JUMPINT(___SET_NARGS(4),___PRC(3468),___L_c_23_label_2d__3e_id)
+   ___JUMPINT(___SET_NARGS(4),___PRC(3450),___L_c_23_label_2d__3e_id)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_label_2d__3e_id
 #undef ___PH_LBL0
-#define ___PH_LBL0 3468
+#define ___PH_LBL0 3450
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -47503,7 +47186,7 @@ ___DEF_SLBL(7,___L7_c_23_label_2d__3e_id)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L13_c_23_label_2d__3e_id)
    ___END_IF
-   ___IF(___FIXADDP_NOTFALSEP(___R2,___FIX(260L),___R1))
+   ___IF(___FIXADDPCONSTX_NOTFALSEP(___R2,___FIX(260L),___R1))
    ___GOTO(___L12_c_23_label_2d__3e_id)
    ___END_IF
    ___SET_R2(___FAL)
@@ -47532,7 +47215,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_foldr_2d_range
 #undef ___PH_LBL0
-#define ___PH_LBL0 3479
+#define ___PH_LBL0 3461
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4 ___D_F64(___F64V1) ___D_F64(___F64V2) \
 
@@ -47579,7 +47262,7 @@ ___DEF_GLBL(___L7_c_23_univ_2d_foldr_2d_range)
    ___GOTO(___L10_c_23_univ_2d_foldr_2d_range)
    ___END_IF
 ___DEF_GLBL(___L8_c_23_univ_2d_foldr_2d_range)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R4,___R1,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R4,___R1,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L10_c_23_univ_2d_foldr_2d_range)
    ___END_IF
@@ -47655,7 +47338,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_pop_2d_args_2d_to_2d_vars
 #undef ___PH_LBL0
-#define ___PH_LBL0 3486
+#define ___PH_LBL0 3468
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4 ___D_F64(___F64V1) ___D_F64( \
 ___F64V2) ___D_F64(___F64V3)
@@ -47754,7 +47437,7 @@ ___DEF_GLBL(___L37_c_23_univ_2d_pop_2d_args_2d_to_2d_vars)
    ___GOTO(___L47_c_23_univ_2d_pop_2d_args_2d_to_2d_vars)
    ___END_IF
 ___DEF_GLBL(___L38_c_23_univ_2d_pop_2d_args_2d_to_2d_vars)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R1,___STK(-1),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R1,___STK(-1),___FIX(1L))))
    ___SET_R1(___FAL)
    ___GOTO(___L47_c_23_univ_2d_pop_2d_args_2d_to_2d_vars)
    ___END_IF
@@ -47784,7 +47467,7 @@ ___DEF_GLBL(___L40_c_23_univ_2d_pop_2d_args_2d_to_2d_vars)
    ___IF(___NOT(___FIXNUMP(___STK(-6))))
    ___GOTO(___L42_c_23_univ_2d_pop_2d_args_2d_to_2d_vars)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___STK(-6),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___STK(-6),___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L42_c_23_univ_2d_pop_2d_args_2d_to_2d_vars)
    ___END_IF
@@ -47802,7 +47485,7 @@ ___DEF_SLBL(7,___L7_c_23_univ_2d_pop_2d_args_2d_to_2d_vars)
    ___POLL(8)
 ___DEF_SLBL(8,___L8_c_23_univ_2d_pop_2d_args_2d_to_2d_vars)
    ___ADJFP(-7)
-   ___JUMPINT(___SET_NARGS(4),___PRC(3479),___L_c_23_univ_2d_foldr_2d_range)
+   ___JUMPINT(___SET_NARGS(4),___PRC(3461),___L_c_23_univ_2d_foldr_2d_range)
 ___DEF_GLBL(___L42_c_23_univ_2d_pop_2d_args_2d_to_2d_vars)
    ___SET_STK(-3,___R1)
    ___SET_R1(___STK(-6))
@@ -47947,14 +47630,14 @@ ___DEF_GLBL(___L55_c_23_univ_2d_pop_2d_args_2d_to_2d_vars)
    ___SET_R1(___CLO(___STK(-11),1))
    ___SET_R2(___SYM_rd)
    ___SET_R0(___LBL(17))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2764),___L_c_23_gvm_2d_state_2d_reg_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2762),___L_c_23_gvm_2d_state_2d_reg_2d_use)
 ___DEF_SLBL(17,___L17_c_23_univ_2d_pop_2d_args_2d_to_2d_vars)
    ___SET_R2(___R1)
    ___SET_R3(___FAL)
    ___SET_R1(___STK(-13))
    ___SET_R0(___LBL(18))
    ___ADJFP(-6)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(434),___L0_c_23_univ_2d_emit_2d_var_2d_declaration)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(432),___L0_c_23_univ_2d_emit_2d_var_2d_declaration)
 ___DEF_SLBL(18,___L18_c_23_univ_2d_pop_2d_args_2d_to_2d_vars)
    ___BEGIN_ALLOC_LIST(2UL,___R1)
    ___ADD_LIST_ELEM(1,___STK(-6))
@@ -48007,7 +47690,7 @@ ___DEF_SLBL(23,___L23_c_23_univ_2d_pop_2d_args_2d_to_2d_vars)
    ___POLL(24)
 ___DEF_SLBL(24,___L24_c_23_univ_2d_pop_2d_args_2d_to_2d_vars)
    ___SET_R0(___LBL(18))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2795),___L_c_23_univ_2d_emit_2d_pop)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2793),___L_c_23_univ_2d_emit_2d_pop)
 ___DEF_SLBL(25,___L25_c_23_univ_2d_pop_2d_args_2d_to_2d_vars)
    ___IF_NARGS_EQ(1,___NOTHING)
    ___WRONG_NARGS(25,1,0,0)
@@ -48027,7 +47710,7 @@ ___DEF_SLBL(26,___L26_c_23_univ_2d_pop_2d_args_2d_to_2d_vars)
    ___POLL(27)
 ___DEF_SLBL(27,___L27_c_23_univ_2d_pop_2d_args_2d_to_2d_vars)
    ___SET_R0(___LBL(28))
-   ___JUMPINT(___SET_NARGS(2),___PRC(831),___L_c_23_univ_2d_emit_2d_local_2d_var)
+   ___JUMPINT(___SET_NARGS(2),___PRC(829),___L_c_23_univ_2d_emit_2d_local_2d_var)
 ___DEF_SLBL(28,___L28_c_23_univ_2d_pop_2d_args_2d_to_2d_vars)
    ___SET_R2(___STK(-4))
    ___SET_R3(___FAL)
@@ -48035,7 +47718,7 @@ ___DEF_SLBL(28,___L28_c_23_univ_2d_pop_2d_args_2d_to_2d_vars)
    ___POLL(29)
 ___DEF_SLBL(29,___L29_c_23_univ_2d_pop_2d_args_2d_to_2d_vars)
    ___ADJFP(-6)
-   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(434),___L0_c_23_univ_2d_emit_2d_var_2d_declaration)
+   ___SET_NARGS(5) ___JUMPINT(___NOTHING,___PRC(432),___L0_c_23_univ_2d_emit_2d_var_2d_declaration)
 ___DEF_GLBL(___L59_c_23_univ_2d_pop_2d_args_2d_to_2d_vars)
    ___SET_R4(___STK(-3))
    ___SET_R3(___STK(-4))
@@ -48114,7 +47797,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_push_2d_args
 #undef ___PH_LBL0
-#define ___PH_LBL0 3521
+#define ___PH_LBL0 3503
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4 ___D_F64(___F64V1)
 #undef ___PR_ALL
@@ -48164,7 +47847,7 @@ ___DEF_SLBL(2,___L2_c_23_univ_2d_push_2d_args)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L40_c_23_univ_2d_push_2d_args)
    ___END_IF
-   ___IF(___FIXSUBP_NOTFALSEP(___R2,___R1,___FIX(1L)))
+   ___IF(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R1,___FIX(1L)))
    ___GOTO(___L22_c_23_univ_2d_push_2d_args)
    ___END_IF
    ___SET_R2(___FAL)
@@ -48190,7 +47873,7 @@ ___DEF_GLBL(___L23_c_23_univ_2d_push_2d_args)
    ___GOTO(___L33_c_23_univ_2d_push_2d_args)
    ___END_IF
 ___DEF_GLBL(___L24_c_23_univ_2d_push_2d_args)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R1,___R2,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R1,___R2,___FIX(1L))))
    ___SET_R1(___FAL)
    ___GOTO(___L33_c_23_univ_2d_push_2d_args)
    ___END_IF
@@ -48220,7 +47903,7 @@ ___DEF_GLBL(___L26_c_23_univ_2d_push_2d_args)
    ___IF(___NOT(___FIXNUMP(___STK(-6))))
    ___GOTO(___L28_c_23_univ_2d_push_2d_args)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___STK(-6),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___STK(-6),___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L28_c_23_univ_2d_push_2d_args)
    ___END_IF
@@ -48238,7 +47921,7 @@ ___DEF_SLBL(7,___L7_c_23_univ_2d_push_2d_args)
    ___POLL(8)
 ___DEF_SLBL(8,___L8_c_23_univ_2d_push_2d_args)
    ___ADJFP(-7)
-   ___JUMPINT(___SET_NARGS(4),___PRC(3479),___L_c_23_univ_2d_foldr_2d_range)
+   ___JUMPINT(___SET_NARGS(4),___PRC(3461),___L_c_23_univ_2d_foldr_2d_range)
 ___DEF_GLBL(___L28_c_23_univ_2d_push_2d_args)
    ___SET_STK(-3,___R1)
    ___SET_R1(___STK(-6))
@@ -48326,13 +48009,13 @@ ___DEF_SLBL(12,___L12_c_23_univ_2d_push_2d_args)
    ___POLL(13)
 ___DEF_SLBL(13,___L13_c_23_univ_2d_push_2d_args)
    ___SET_R0(___LBL(14))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2714),___L_c_23_use_2d_resource)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2712),___L_c_23_use_2d_resource)
 ___DEF_SLBL(14,___L14_c_23_univ_2d_push_2d_args)
    ___SET_R1(___CLO(___STK(-3),1))
    ___SET_R3(___TRU)
    ___SET_R2(___SYM_nargs)
    ___SET_R0(___LBL(15))
-   ___JUMPINT(___SET_NARGS(3),___PRC(977),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(975),___L_c_23_univ_2d_emit_2d_rts_2d_field_2d_use)
 ___DEF_SLBL(15,___L15_c_23_univ_2d_push_2d_args)
    ___SET_STK(1,___CLO(___STK(-3),1))
    ___SET_R3(___STK(-5))
@@ -48340,13 +48023,13 @@ ___DEF_SLBL(15,___L15_c_23_univ_2d_push_2d_args)
    ___SET_R1(___SUB(176))
    ___SET_R0(___LBL(16))
    ___ADJFP(1)
-   ___JUMPINT(___SET_NARGS(4),___PRC(702),___L_c_23_univ_2d_emit_2d_comparison)
+   ___JUMPINT(___SET_NARGS(4),___PRC(700),___L_c_23_univ_2d_emit_2d_comparison)
 ___DEF_SLBL(16,___L16_c_23_univ_2d_push_2d_args)
    ___SET_STK(-2,___R1)
    ___IF(___NOT(___FIXNUMP(___STK(-5))))
    ___GOTO(___L39_c_23_univ_2d_push_2d_args)
    ___END_IF
-   ___IF(___FIXADDP_NOTFALSEP(___R1,___STK(-5),___FIX(1L)))
+   ___IF(___FIXADDPCONSTY_NOTFALSEP(___R1,___STK(-5),___FIX(1L)))
    ___GOTO(___L38_c_23_univ_2d_push_2d_args)
    ___END_IF
    ___SET_R1(___FAL)
@@ -48359,12 +48042,12 @@ ___DEF_GLBL(___L38_c_23_univ_2d_push_2d_args)
    ___SET_R2(___SYM_rd)
    ___SET_R0(___LBL(18))
    ___ADJFP(4)
-   ___JUMPINT(___SET_NARGS(3),___PRC(2764),___L_c_23_gvm_2d_state_2d_reg_2d_use)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2762),___L_c_23_gvm_2d_state_2d_reg_2d_use)
 ___DEF_SLBL(18,___L18_c_23_univ_2d_push_2d_args)
    ___SET_R2(___R1)
    ___SET_R1(___CLO(___STK(-7),1))
    ___SET_R0(___LBL(19))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2803),___L_c_23_univ_2d_emit_2d_push)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2801),___L_c_23_univ_2d_emit_2d_push)
 ___DEF_SLBL(19,___L19_c_23_univ_2d_push_2d_args)
    ___BEGIN_ALLOC_LIST(2UL,___STK(-8))
    ___ADD_LIST_ELEM(1,___R1)
@@ -48378,7 +48061,7 @@ ___DEF_SLBL(20,___L20_c_23_univ_2d_push_2d_args)
    ___POLL(21)
 ___DEF_SLBL(21,___L21_c_23_univ_2d_push_2d_args)
    ___ADJFP(-11)
-   ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(459),___L0_c_23_univ_2d_emit_2d_if)
+   ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(457),___L0_c_23_univ_2d_emit_2d_if)
 ___DEF_GLBL(___L39_c_23_univ_2d_push_2d_args)
    ___SET_R1(___STK(-5))
    ___SET_R2(___FIX(1L))
@@ -48395,7 +48078,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_pop_2d_args_2d_to_2d_regs
 #undef ___PH_LBL0
-#define ___PH_LBL0 3544
+#define ___PH_LBL0 3526
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4 ___D_F64(___F64V1) ___D_F64( \
 ___F64V2) ___D_F64(___F64V3)
@@ -48459,7 +48142,7 @@ ___DEF_SLBL(2,___L2_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L73_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___END_IF
-   ___IF(___FIXSUBP_NOTFALSEP(___R2,___R1,___FIX(1L)))
+   ___IF(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R1,___FIX(1L)))
    ___GOTO(___L34_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___END_IF
    ___SET_R2(___FAL)
@@ -48486,7 +48169,7 @@ ___DEF_GLBL(___L35_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___GOTO(___L66_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___END_IF
 ___DEF_GLBL(___L36_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R1,___R2,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R1,___R2,___FIX(1L))))
    ___SET_R1(___FAL)
    ___GOTO(___L66_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___END_IF
@@ -48518,7 +48201,7 @@ ___DEF_GLBL(___L39_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___GOTO(___L64_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___END_IF
 ___DEF_GLBL(___L40_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___STK(-6),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___STK(-6),___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L64_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___END_IF
@@ -48549,7 +48232,7 @@ ___DEF_GLBL(___L43_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___GOTO(___L61_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___END_IF
 ___DEF_GLBL(___L44_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___STK(-5),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___STK(-5),___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L61_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___END_IF
@@ -48578,7 +48261,7 @@ ___DEF_GLBL(___L46_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___IF(___NOT(___FIXNUMP(___STK(-6))))
    ___GOTO(___L48_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___STK(-6),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___STK(-6),___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L48_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___END_IF
@@ -48596,7 +48279,7 @@ ___DEF_SLBL(9,___L9_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___POLL(10)
 ___DEF_SLBL(10,___L10_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___ADJFP(-7)
-   ___JUMPINT(___SET_NARGS(4),___PRC(3479),___L_c_23_univ_2d_foldr_2d_range)
+   ___JUMPINT(___SET_NARGS(4),___PRC(3461),___L_c_23_univ_2d_foldr_2d_range)
 ___DEF_GLBL(___L48_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___SET_STK(-3,___R1)
    ___SET_R1(___STK(-6))
@@ -48649,7 +48332,7 @@ ___DEF_GLBL(___L51_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___SET_STK(-3,___R1)
    ___SET_R1(___CLO(___STK(-4),1))
    ___SET_R0(___LBL(15))
-   ___JUMPINT(___SET_NARGS(1),___PRC(2814),___L_c_23_univ_2d_emit_2d_getnargs)
+   ___JUMPINT(___SET_NARGS(1),___PRC(2812),___L_c_23_univ_2d_emit_2d_getnargs)
 ___DEF_SLBL(15,___L15_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___SET_STK(-2,___R1)
    ___SET_R0(___CLO(___STK(-4),2))
@@ -48689,7 +48372,7 @@ ___DEF_GLBL(___L55_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___SET_R1(___CLO(___STK(-4),1))
    ___SET_R2(___STK(-2))
    ___SET_R0(___LBL(18))
-   ___JUMPINT(___SET_NARGS(3),___PRC(696),___L_c_23_univ_2d_emit_2d__3e_)
+   ___JUMPINT(___SET_NARGS(3),___PRC(694),___L_c_23_univ_2d_emit_2d__3e_)
 ___DEF_SLBL(18,___L18_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___SET_R2(___STK(-3))
    ___SET_R3(___FAL)
@@ -48697,7 +48380,7 @@ ___DEF_SLBL(18,___L18_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___POLL(19)
 ___DEF_SLBL(19,___L19_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___ADJFP(-7)
-   ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(459),___L0_c_23_univ_2d_emit_2d_if)
+   ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(457),___L0_c_23_univ_2d_emit_2d_if)
 ___DEF_GLBL(___L56_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___SET_R0(___CLO(___STK(-4),2))
    ___IF(___FIXLT(___STK(-6),___R0))
@@ -48833,13 +48516,13 @@ ___DEF_SLBL(26,___L26_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___POLL(27)
 ___DEF_SLBL(27,___L27_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___SET_R0(___LBL(28))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2769),___L_c_23_gvm_2d_state_2d_stack_2d_use)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2767),___L_c_23_gvm_2d_state_2d_stack_2d_use)
 ___DEF_SLBL(28,___L28_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___SET_STK(-3,___R1)
    ___SET_R1(___CLO(___STK(-4),1))
    ___SET_R2(___SYM_rd)
    ___SET_R0(___LBL(29))
-   ___JUMPINT(___SET_NARGS(2),___PRC(2774),___L_c_23_gvm_2d_state_2d_sp_2d_use)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2772),___L_c_23_gvm_2d_state_2d_sp_2d_use)
 ___DEF_SLBL(29,___L29_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___BEGIN_ALLOC_LIST(4UL,___SUB(304))
    ___ADD_LIST_ELEM(1,___R1)
@@ -48852,7 +48535,7 @@ ___DEF_SLBL(30,___L30_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___IF(___NOT(___FIXNUMP(___STK(-6))))
    ___GOTO(___L72_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___END_IF
-   ___IF(___FIXADDP_NOTFALSEP(___R2,___STK(-6),___FIX(1L)))
+   ___IF(___FIXADDPCONSTY_NOTFALSEP(___R2,___STK(-6),___FIX(1L)))
    ___GOTO(___L71_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___END_IF
    ___SET_R2(___FAL)
@@ -48864,7 +48547,7 @@ ___DEF_GLBL(___L71_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___SET_R3(___R1)
    ___SET_R1(___CLO(___STK(-4),1))
    ___SET_R0(___LBL(32))
-   ___JUMPINT(___SET_NARGS(3),___PRC(2826),___L_c_23_univ_2d_emit_2d_setreg)
+   ___JUMPINT(___SET_NARGS(3),___PRC(2824),___L_c_23_univ_2d_emit_2d_setreg)
 ___DEF_SLBL(32,___L32_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___SET_STK(-3,___R1)
    ___SET_STK(1,___CLO(___STK(-4),1))
@@ -48872,13 +48555,13 @@ ___DEF_SLBL(32,___L32_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___SET_R2(___SYM_rdwr)
    ___SET_R0(___LBL(33))
    ___ADJFP(4)
-   ___JUMPINT(___SET_NARGS(2),___PRC(2774),___L_c_23_gvm_2d_state_2d_sp_2d_use)
+   ___JUMPINT(___SET_NARGS(2),___PRC(2772),___L_c_23_gvm_2d_state_2d_sp_2d_use)
 ___DEF_SLBL(33,___L33_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___SET_R3(___FAL)
    ___SET_R2(___FIX(-1L))
    ___SET_R0(___LBL(13))
    ___ADJFP(-3)
-   ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(1051),___L0_c_23_univ_2d_emit_2d_inc_2d_by)
+   ___SET_NARGS(4) ___JUMPINT(___NOTHING,___PRC(1049),___L0_c_23_univ_2d_emit_2d_inc_2d_by)
 ___DEF_GLBL(___L72_c_23_univ_2d_pop_2d_args_2d_to_2d_regs)
    ___SET_STK(-3,___R1)
    ___SET_R1(___STK(-6))
@@ -48895,7 +48578,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_min_2d_memoized_2d_fixnum
 #undef ___PH_LBL0
-#define ___PH_LBL0 3579
+#define ___PH_LBL0 3561
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -48920,7 +48603,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_c_23_univ_2d_max_2d_memoized_2d_fixnum
 #undef ___PH_LBL0
-#define ___PH_LBL0 3581
+#define ___PH_LBL0 3563
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0 ___D_R1 ___D_F64(___F64V1) ___D_F64(___F64V2) ___D_F64(___F64V3)
 #undef ___PR_ALL
@@ -49209,7 +48892,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_PROC(___H_c_23_univ_2d_display,2,-1)
 ,___DEF_LBL_RET(___H_c_23_univ_2d_display,___IFD(___RETI,1,4,0x3f1L))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_display,___IFD(___RETI,1,4,0x3f1L))
-,___DEF_LBL_RET(___H_c_23_univ_2d_display,___IFD(___RETN,5,1,0x1fL))
+,___DEF_LBL_RET(___H_c_23_univ_2d_display,___IFD(___RETN,5,1,0xfL))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_display,___IFD(___RETI,1,4,0x3f1L))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_display,___IFD(___RETI,2,4,0x3f3L))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_display,___IFD(___RETI,3,4,0x3f7L))
@@ -49217,7 +48900,6 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H_c_23_univ_2d_display,___OFD(___RETI,12,3,0x3f079L))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_display,___IFD(___RETI,2,0,0x3f3L))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_display,___IFD(___RETN,5,0,0x3L))
-,___DEF_LBL_RET(___H_c_23_univ_2d_display,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_display,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_display,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_display,___IFD(___RETN,9,3,0x79L))
@@ -49244,15 +48926,16 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H_c_23_univ_2d_display,___IFD(___RETI,1,4,0x3f1L))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_display,___IFD(___RETI,1,4,0x3f1L))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_display,___IFD(___RETI,1,4,0x3f1L))
+,___DEF_LBL_RET(___H_c_23_univ_2d_display,___OFD(___RETI,9,1,0x3f11fL))
+,___DEF_LBL_RET(___H_c_23_univ_2d_display,___IFD(___RETN,5,1,0x1fL))
+,___DEF_LBL_RET(___H_c_23_univ_2d_display,___IFD(___RETI,1,4,0x3f1L))
+,___DEF_LBL_RET(___H_c_23_univ_2d_display,___IFD(___RETI,1,4,0x3f1L))
+,___DEF_LBL_RET(___H_c_23_univ_2d_display,___IFD(___RETI,1,4,0x3f1L))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_display,___IFD(___RETN,5,1,0x1fL))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_display,___OFD(___RETI,9,1,0x3f106L))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_display,___IFD(___RETN,5,1,0x6L))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_display,___IFD(___RETN,5,1,0x6L))
-,___DEF_LBL_RET(___H_c_23_univ_2d_display,___IFD(___RETI,1,4,0x3f1L))
-,___DEF_LBL_RET(___H_c_23_univ_2d_display,___OFD(___RETI,9,1,0x3f11fL))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_display,___IFD(___RETI,8,1,0x3f07L))
-,___DEF_LBL_RET(___H_c_23_univ_2d_display,___IFD(___RETN,5,1,0xfL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_display,___IFD(___RETI,1,4,0x3f1L))
 ,___DEF_LBL_INTRO(___H_c_23_univ_2d_display_2d_to_2d_file,___REF_SYM(140,___S_c_23_univ_2d_display_2d_to_2d_file),___REF_FAL,5,0)
 ,___DEF_LBL_PROC(___H_c_23_univ_2d_display_2d_to_2d_file,2,-1)
 ,___DEF_LBL_RET(___H_c_23_univ_2d_display_2d_to_2d_file,___IFD(___RETI,8,0,0x3f03L))
@@ -49282,7 +48965,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H_c_23_univ_2d_object_2d_type,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_object_2d_type,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_object_2d_type,___IFD(___RETN,5,0,0x3L))
-,___DEF_LBL_INTRO(___H_c_23_univ_2d_emit_2d_popcount_21_,___REF_SYM(231,___S_c_23_univ_2d_emit_2d_popcount_21_),___REF_FAL,76,0)
+,___DEF_LBL_INTRO(___H_c_23_univ_2d_emit_2d_popcount_21_,___REF_SYM(231,___S_c_23_univ_2d_emit_2d_popcount_21_),___REF_FAL,74,0)
 ,___DEF_LBL_PROC(___H_c_23_univ_2d_emit_2d_popcount_21_,2,-1)
 ,___DEF_LBL_RET(___H_c_23_univ_2d_emit_2d_popcount_21_,___IFD(___RETI,8,1,0x3f0fL))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_emit_2d_popcount_21_,___IFD(___RETN,5,1,0xfL))
@@ -49337,8 +49020,6 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H_c_23_univ_2d_emit_2d_popcount_21_,___IFD(___RETN,9,1,0x3fL))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_emit_2d_popcount_21_,___IFD(___RETN,5,1,0x1fL))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_emit_2d_popcount_21_,___IFD(___RETN,5,1,0x1fL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_emit_2d_popcount_21_,___IFD(___RETN,5,1,0x1fL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_emit_2d_popcount_21_,___IFD(___RETI,8,1,0x3f1fL))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_emit_2d_popcount_21_,___IFD(___RETI,8,1,0x3f1fL))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_emit_2d_popcount_21_,___IFD(___RETN,5,1,0x1fL))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_emit_2d_popcount_21_,___IFD(___RETN,5,1,0x1fL))
@@ -52211,45 +51892,29 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H_c_23_univ_2d_obj_2d_type,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_obj_2d_type,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_obj_2d_type,___IFD(___RETN,1,0,0x1L))
-,___DEF_LBL_INTRO(___H_c_23_univ_2d_bignum_2d__3e_digits,___REF_SYM(127,___S_c_23_univ_2d_bignum_2d__3e_digits),___REF_FAL,43,0)
+,___DEF_LBL_INTRO(___H_c_23_univ_2d_bignum_2d__3e_digits,___REF_SYM(127,___S_c_23_univ_2d_bignum_2d__3e_digits),___REF_FAL,27,0)
 ,___DEF_LBL_PROC(___H_c_23_univ_2d_bignum_2d__3e_digits,1,-1)
 ,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,5,0,0x5L))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,5,0,0x1fL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,9,0,0x2fL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,9,0,0x2bL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETI,8,0,0x3f0dL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,9,1,0x3fL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,9,1,0x7bL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,9,1,0x7aL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETI,8,1,0x3f0bL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,5,1,0xbL))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,9,1,0x7aL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___OFD(___RETI,12,1,0x3f07aL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,9,1,0x3fL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETI,6,1,0x3f3fL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,5,1,0x1fL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,5,0,0xfL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,5,0,0x1fL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,5,0,0xfL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,5,0,0xfL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,5,0,0xdL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,9,0,0x2bL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___OFD(___RETI,12,0,0x3f02bL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,5,0,0x1fL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETI,8,0,0x3f1fL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,5,0,0xfL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,5,0,0x7L))
+,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,9,0,0x3fL))
+,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,9,0,0x7bL))
+,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,9,0,0x79L))
+,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETI,8,0,0x3f0bL))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,5,0,0xbL))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETI,8,0,0x3f01L))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,5,0,0x7L))
-,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETI,1,0,0x3f1L))
+,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETI,0,0,0x3fL))
+,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,9,0,0x79L))
+,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___OFD(___RETI,12,0,0x3f079L))
+,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,9,0,0x3fL))
+,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETI,6,0,0x3f3fL))
+,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,5,0,0x1fL))
+,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,5,0,0xfL))
+,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,5,0,0xfL))
+,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETI,0,0,0x3fL))
+,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,5,0,0xfL))
+,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,5,0,0x5L))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETI,8,0,0x3f05L))
 ,___DEF_LBL_RET(___H_c_23_univ_2d_bignum_2d__3e_digits,___IFD(___RETN,5,0,0x7L))
@@ -52538,9 +52203,9 @@ ___BEGIN_OFD
 ,___DEF_OFD(___RETI,12,3)
                ___GCMAP1(0x3f079L)
 ,___DEF_OFD(___RETI,9,1)
-               ___GCMAP1(0x3f106L)
-,___DEF_OFD(___RETI,9,1)
                ___GCMAP1(0x3f11fL)
+,___DEF_OFD(___RETI,9,1)
+               ___GCMAP1(0x3f106L)
 ,___DEF_OFD(___RETI,12,2)
                ___GCMAP1(0x3f03fL)
 ,___DEF_OFD(___RETI,12,12)
@@ -53299,10 +52964,8 @@ ___BEGIN_OFD
                ___GCMAP1(0x3f03fL)
 ,___DEF_OFD(___RETI,12,12)
                ___GCMAP1(0x3f043L)
-,___DEF_OFD(___RETI,12,1)
-               ___GCMAP1(0x3f07aL)
 ,___DEF_OFD(___RETI,12,0)
-               ___GCMAP1(0x3f02bL)
+               ___GCMAP1(0x3f079L)
 ,___DEF_OFD(___RETI,12,12)
                ___GCMAP1(0x3f047L)
 ,___DEF_OFD(___RETI,12,2)
@@ -53391,262 +53054,262 @@ ___DEF_MOD_PRM(322,___G_c_23_univ_2d_switch_2d_testable_3f_,327)
 ___DEF_MOD_PRM(247,___G_c_23_univ_2d_eq_2d_testable_3f_,329)
 ___DEF_MOD_PRM(295,___G_c_23_univ_2d_object_2d_type,331)
 ___DEF_MOD_PRM(207,___G_c_23_univ_2d_emit_2d_popcount_21_,337)
-___DEF_MOD_PRM(192,___G_c_23_univ_2d_emit_2d_map,414)
-___DEF_MOD_PRM(151,___G_c_23_univ_2d_emit_2d_call_2d_with_2d_arg_2d_array,424)
-___DEF_MOD_PRM(242,___G_c_23_univ_2d_emit_2d_var_2d_declaration,434)
-___DEF_MOD_PRM(164,___G_c_23_univ_2d_emit_2d_expr_2d_statement,452)
-___DEF_MOD_PRM(185,___G_c_23_univ_2d_emit_2d_if,459)
-___DEF_MOD_PRM(186,___G_c_23_univ_2d_emit_2d_if_2d_expr,480)
-___DEF_MOD_PRM(187,___G_c_23_univ_2d_emit_2d_if_2d_instanceof,494)
-___DEF_MOD_PRM(243,___G_c_23_univ_2d_emit_2d_while,504)
-___DEF_MOD_PRM(239,___G_c_23_univ_2d_emit_2d_try_2d_catch,517)
-___DEF_MOD_PRM(163,___G_c_23_univ_2d_emit_2d_eq_3f_,527)
-___DEF_MOD_PRM(124,___G_c_23_univ_2d_emit_2d__2b_,536)
-___DEF_MOD_PRM(125,___G_c_23_univ_2d_emit_2d__2d_,543)
-___DEF_MOD_PRM(123,___G_c_23_univ_2d_emit_2d__2a_,550)
-___DEF_MOD_PRM(126,___G_c_23_univ_2d_emit_2d__2f_,556)
-___DEF_MOD_PRM(340,___G_c_23_univ_2d_wrap,562)
-___DEF_MOD_PRM(342,___G_c_23_univ_2d_wrap_2b_,586)
-___DEF_MOD_PRM(343,___G_c_23_univ_2d_wrap_2d_,591)
-___DEF_MOD_PRM(341,___G_c_23_univ_2d_wrap_2a_,597)
-___DEF_MOD_PRM(344,___G_c_23_univ_2d_wrap_2f_,613)
-___DEF_MOD_PRM(128,___G_c_23_univ_2d_emit_2d__3c__3c_,623)
-___DEF_MOD_PRM(133,___G_c_23_univ_2d_emit_2d__3e__3e_,629)
-___DEF_MOD_PRM(134,___G_c_23_univ_2d_emit_2d__3e__3e__3e_,635)
-___DEF_MOD_PRM(149,___G_c_23_univ_2d_emit_2d_bitnot,651)
-___DEF_MOD_PRM(147,___G_c_23_univ_2d_emit_2d_bitand,658)
-___DEF_MOD_PRM(148,___G_c_23_univ_2d_emit_2d_bitior,664)
-___DEF_MOD_PRM(150,___G_c_23_univ_2d_emit_2d_bitxor,670)
-___DEF_MOD_PRM(130,___G_c_23_univ_2d_emit_2d__3d_,676)
-___DEF_MOD_PRM(121,___G_c_23_univ_2d_emit_2d__21__3d_,683)
-___DEF_MOD_PRM(127,___G_c_23_univ_2d_emit_2d__3c_,690)
-___DEF_MOD_PRM(129,___G_c_23_univ_2d_emit_2d__3c__3d_,693)
-___DEF_MOD_PRM(131,___G_c_23_univ_2d_emit_2d__3e_,696)
-___DEF_MOD_PRM(132,___G_c_23_univ_2d_emit_2d__3e__3d_,699)
-___DEF_MOD_PRM(157,___G_c_23_univ_2d_emit_2d_comparison,702)
-___DEF_MOD_PRM(199,___G_c_23_univ_2d_emit_2d_not,708)
-___DEF_MOD_PRM(122,___G_c_23_univ_2d_emit_2d__26__26_,715)
-___DEF_MOD_PRM(136,___G_c_23_univ_2d_emit_2d_and,722)
-___DEF_MOD_PRM(203,___G_c_23_univ_2d_emit_2d_or,730)
-___DEF_MOD_PRM(158,___G_c_23_univ_2d_emit_2d_concat,737)
-___DEF_MOD_PRM(238,___G_c_23_univ_2d_emit_2d_tostr,744)
-___DEF_MOD_PRM(159,___G_c_23_univ_2d_emit_2d_conv_2a_,757)
-___DEF_MOD_PRM(152,___G_c_23_univ_2d_emit_2d_cast,765)
-___DEF_MOD_PRM(153,___G_c_23_univ_2d_emit_2d_cast_2a_,775)
-___DEF_MOD_PRM(155,___G_c_23_univ_2d_emit_2d_cast_2a__2d_scmobj,781)
-___DEF_MOD_PRM(154,___G_c_23_univ_2d_emit_2d_cast_2a__2d_jumpable,784)
-___DEF_MOD_PRM(241,___G_c_23_univ_2d_emit_2d_upcast_2a_,787)
-___DEF_MOD_PRM(161,___G_c_23_univ_2d_emit_2d_downcast_2a_,797)
-___DEF_MOD_PRM(162,___G_c_23_univ_2d_emit_2d_downupcast_2a_,805)
-___DEF_MOD_PRM(224,___G_c_23_univ_2d_emit_2d_seq,810)
-___DEF_MOD_PRM(204,___G_c_23_univ_2d_emit_2d_parens,820)
-___DEF_MOD_PRM(205,___G_c_23_univ_2d_emit_2d_parens_2d_php,826)
-___DEF_MOD_PRM(190,___G_c_23_univ_2d_emit_2d_local_2d_var,831)
-___DEF_MOD_PRM(183,___G_c_23_univ_2d_emit_2d_global_2d_var,837)
-___DEF_MOD_PRM(182,___G_c_23_univ_2d_emit_2d_global_2d_function,843)
-___DEF_MOD_PRM(234,___G_c_23_univ_2d_emit_2d_this_2d_mod_2d_field,848)
-___DEF_MOD_PRM(236,___G_c_23_univ_2d_emit_2d_this_2d_mod_2d_method,851)
-___DEF_MOD_PRM(235,___G_c_23_univ_2d_emit_2d_this_2d_mod_2d_jumpable,854)
-___DEF_MOD_PRM(195,___G_c_23_univ_2d_emit_2d_mod_2d_member,857)
-___DEF_MOD_PRM(193,___G_c_23_univ_2d_emit_2d_mod_2d_field,871)
-___DEF_MOD_PRM(196,___G_c_23_univ_2d_emit_2d_mod_2d_method,883)
-___DEF_MOD_PRM(283,___G_c_23_univ_2d_mod_2d_jumpable_2d_is_2d_field_3f_,895)
-___DEF_MOD_PRM(194,___G_c_23_univ_2d_emit_2d_mod_2d_jumpable,899)
-___DEF_MOD_PRM(184,___G_c_23_univ_2d_emit_2d_id_2d_to_2d_jumpable,912)
-___DEF_MOD_PRM(221,___G_c_23_univ_2d_emit_2d_rts_2d_method,917)
-___DEF_MOD_PRM(222,___G_c_23_univ_2d_emit_2d_rts_2d_method_2d_ref,929)
-___DEF_MOD_PRM(223,___G_c_23_univ_2d_emit_2d_rts_2d_method_2d_use,944)
-___DEF_MOD_PRM(217,___G_c_23_univ_2d_emit_2d_rts_2d_field,950)
-___DEF_MOD_PRM(218,___G_c_23_univ_2d_emit_2d_rts_2d_field_2d_ref,962)
-___DEF_MOD_PRM(219,___G_c_23_univ_2d_emit_2d_rts_2d_field_2d_use,977)
-___DEF_MOD_PRM(220,___G_c_23_univ_2d_emit_2d_rts_2d_jumpable_2d_use,984)
-___DEF_MOD_PRM(214,___G_c_23_univ_2d_emit_2d_rts_2d_class,989)
-___DEF_MOD_PRM(215,___G_c_23_univ_2d_emit_2d_rts_2d_class_2d_ref,1001)
-___DEF_MOD_PRM(216,___G_c_23_univ_2d_emit_2d_rts_2d_class_2d_use,1013)
-___DEF_MOD_PRM(312,___G_c_23_univ_2d_rts_2d_module_2d_name,1018)
-___DEF_MOD_PRM(208,___G_c_23_univ_2d_emit_2d_prefix,1023)
-___DEF_MOD_PRM(209,___G_c_23_univ_2d_emit_2d_prefix_2d_class,1035)
-___DEF_MOD_PRM(145,___G_c_23_univ_2d_emit_2d_assign_2d_expr,1044)
-___DEF_MOD_PRM(144,___G_c_23_univ_2d_emit_2d_assign,1047)
-___DEF_MOD_PRM(188,___G_c_23_univ_2d_emit_2d_inc_2d_by,1051)
-___DEF_MOD_PRM(135,___G_c_23_univ_2d_emit_2d_alias,1085)
-___DEF_MOD_PRM(240,___G_c_23_univ_2d_emit_2d_unalias,1091)
-___DEF_MOD_PRM(143,___G_c_23_univ_2d_emit_2d_array_3f_,1098)
-___DEF_MOD_PRM(138,___G_c_23_univ_2d_emit_2d_array_2d_length,1108)
-___DEF_MOD_PRM(140,___G_c_23_univ_2d_emit_2d_array_2d_push_21_,1118)
-___DEF_MOD_PRM(141,___G_c_23_univ_2d_emit_2d_array_2d_shrink_21_,1126)
-___DEF_MOD_PRM(142,___G_c_23_univ_2d_emit_2d_array_2d_shrink_2d_possibly_2d_copy_21_,1142)
-___DEF_MOD_PRM(197,___G_c_23_univ_2d_emit_2d_move_2d_array_2d_to_2d_array,1159)
-___DEF_MOD_PRM(160,___G_c_23_univ_2d_emit_2d_copy_2d_array_2d_to_2d_extensible_2d_array,1168)
-___DEF_MOD_PRM(166,___G_c_23_univ_2d_emit_2d_extensible_2d_array_2d_to_2d_array_21_,1175)
-___DEF_MOD_PRM(167,___G_c_23_univ_2d_emit_2d_extensible_2d_subarray,1183)
-___DEF_MOD_PRM(233,___G_c_23_univ_2d_emit_2d_subarray,1193)
-___DEF_MOD_PRM(137,___G_c_23_univ_2d_emit_2d_array_2d_index,1207)
-___DEF_MOD_PRM(210,___G_c_23_univ_2d_emit_2d_prop_2d_index,1210)
-___DEF_MOD_PRM(212,___G_c_23_univ_2d_emit_2d_prop_2d_index_2d_or_2d_null,1217)
-___DEF_MOD_PRM(211,___G_c_23_univ_2d_emit_2d_prop_2d_index_2d_exists_3f_,1224)
-___DEF_MOD_PRM(168,___G_c_23_univ_2d_emit_2d_get,1234)
-___DEF_MOD_PRM(225,___G_c_23_univ_2d_emit_2d_set,1245)
-___DEF_MOD_PRM(146,___G_c_23_univ_2d_emit_2d_attribute_2d_exists_3f_,1257)
-___DEF_MOD_PRM(117,___G_c_23_univ_2d_dump,1269)
-___DEF_MOD_PRM(118,___G_c_23_univ_2d_dump_2d_code,1276)
-___DEF_MOD_PRM(284,___G_c_23_univ_2d_module_2d_register,1316)
-___DEF_MOD_PRM(105,___G_c_23_univ_2d_defs_2d__3e_code,1328)
-___DEF_MOD_PRM(274,___G_c_23_univ_2d_link_2d_info_2d_header,1344)
-___DEF_MOD_PRM(273,___G_c_23_univ_2d_link_2d_info_2d_footer,1370)
-___DEF_MOD_PRM(272,___G_c_23_univ_2d_link_2d_info,1375)
-___DEF_MOD_PRM(276,___G_c_23_univ_2d_link_2d_semantics_2d_changing_2d_options,1393)
-___DEF_MOD_PRM(275,___G_c_23_univ_2d_link_2d_mods_2d_and_2d_flags,1405)
-___DEF_MOD_PRM(271,___G_c_23_univ_2d_link_2d_features_2d_used,1437)
-___DEF_MOD_PRM(270,___G_c_23_univ_2d_link,1513)
-___DEF_MOD_PRM(296,___G_c_23_univ_2d_objs_2d_defs,1552)
-___DEF_MOD_PRM(294,___G_c_23_univ_2d_obj_2d_use,1576)
-___DEF_MOD_PRM(71,___G_c_23_make_2d_objs_2d_used,1595)
-___DEF_MOD_PRM(73,___G_c_23_objs_2d_used_2d_stack,1600)
-___DEF_MOD_PRM(74,___G_c_23_objs_2d_used_2d_stack_2d_set_21_,1602)
-___DEF_MOD_PRM(75,___G_c_23_objs_2d_used_2d_table,1604)
-___DEF_MOD_PRM(76,___G_c_23_objs_2d_used_2d_table_2d_set_21_,1606)
-___DEF_MOD_PRM(119,___G_c_23_univ_2d_dump_2d_procs,1608)
-___DEF_MOD_PRM(268,___G_c_23_univ_2d_label_2d_entry,2337)
-___DEF_MOD_PRM(313,___G_c_23_univ_2d_separated_2d_list,2516)
-___DEF_MOD_PRM(277,___G_c_23_univ_2d_map_2d_index,2521)
-___DEF_MOD_PRM(259,___G_c_23_univ_2d_gensym,2532)
-___DEF_MOD_PRM(97,___G_c_23_univ_2d_closure_2d_alloc,2539)
-___DEF_MOD_PRM(70,___G_c_23_make_2d_ctx,2553)
-___DEF_MOD_PRM(44,___G_c_23_ctx_2d_target,2560)
-___DEF_MOD_PRM(45,___G_c_23_ctx_2d_target_2d_set_21_,2562)
-___DEF_MOD_PRM(36,___G_c_23_ctx_2d_semantics_2d_changing_2d_options,2564)
-___DEF_MOD_PRM(37,___G_c_23_ctx_2d_semantics_2d_changing_2d_options_2d_set_21_,2566)
-___DEF_MOD_PRM(38,___G_c_23_ctx_2d_semantics_2d_preserving_2d_options,2568)
-___DEF_MOD_PRM(39,___G_c_23_ctx_2d_semantics_2d_preserving_2d_options_2d_set_21_,2570)
-___DEF_MOD_PRM(18,___G_c_23_ctx_2d_module_2d_name,2572)
-___DEF_MOD_PRM(19,___G_c_23_ctx_2d_module_2d_name_2d_set_21_,2574)
-___DEF_MOD_PRM(34,___G_c_23_ctx_2d_rts_2d_module_2d_name,2576)
-___DEF_MOD_PRM(35,___G_c_23_ctx_2d_rts_2d_module_2d_name_2d_set_21_,2578)
-___DEF_MOD_PRM(21,___G_c_23_ctx_2d_ns_2d_prefix,2580)
-___DEF_MOD_PRM(24,___G_c_23_ctx_2d_ns_2d_prefix_2d_set_21_,2582)
-___DEF_MOD_PRM(22,___G_c_23_ctx_2d_ns_2d_prefix_2d_class,2584)
-___DEF_MOD_PRM(23,___G_c_23_ctx_2d_ns_2d_prefix_2d_class_2d_set_21_,2586)
-___DEF_MOD_PRM(20,___G_c_23_ctx_2d_ns,2588)
-___DEF_MOD_PRM(25,___G_c_23_ctx_2d_ns_2d_set_21_,2590)
-___DEF_MOD_PRM(42,___G_c_23_ctx_2d_stack_2d_base_2d_offset,2592)
-___DEF_MOD_PRM(43,___G_c_23_ctx_2d_stack_2d_base_2d_offset_2d_set_21_,2594)
-___DEF_MOD_PRM(40,___G_c_23_ctx_2d_serial_2d_num,2596)
-___DEF_MOD_PRM(41,___G_c_23_ctx_2d_serial_2d_num_2d_set_21_,2598)
-___DEF_MOD_PRM(2,___G_c_23_ctx_2d_allow_2d_jump_2d_destination_2d_inlining_3f_,2600)
-___DEF_MOD_PRM(3,___G_c_23_ctx_2d_allow_2d_jump_2d_destination_2d_inlining_3f__2d_set_21_,2602)
-___DEF_MOD_PRM(28,___G_c_23_ctx_2d_resources_2d_used_2d_rd,2604)
-___DEF_MOD_PRM(29,___G_c_23_ctx_2d_resources_2d_used_2d_rd_2d_set_21_,2606)
-___DEF_MOD_PRM(30,___G_c_23_ctx_2d_resources_2d_used_2d_wr,2608)
-___DEF_MOD_PRM(31,___G_c_23_ctx_2d_resources_2d_used_2d_wr_2d_set_21_,2610)
-___DEF_MOD_PRM(8,___G_c_23_ctx_2d_globals_2d_used,2612)
-___DEF_MOD_PRM(9,___G_c_23_ctx_2d_globals_2d_used_2d_set_21_,2614)
-___DEF_MOD_PRM(26,___G_c_23_ctx_2d_objs_2d_used,2616)
-___DEF_MOD_PRM(27,___G_c_23_ctx_2d_objs_2d_used_2d_set_21_,2618)
-___DEF_MOD_PRM(32,___G_c_23_ctx_2d_rtlib_2d_features_2d_used,2620)
-___DEF_MOD_PRM(33,___G_c_23_ctx_2d_rtlib_2d_features_2d_used_2d_set_21_,2622)
-___DEF_MOD_PRM(6,___G_c_23_ctx_2d_glo_2d_used,2624)
-___DEF_MOD_PRM(7,___G_c_23_ctx_2d_glo_2d_used_2d_set_21_,2626)
-___DEF_MOD_PRM(4,___G_c_23_ctx_2d_decls,2628)
-___DEF_MOD_PRM(5,___G_c_23_ctx_2d_decls_2d_set_21_,2630)
-___DEF_MOD_PRM(12,___G_c_23_ctx_2d_inits,2632)
-___DEF_MOD_PRM(13,___G_c_23_ctx_2d_inits_2d_set_21_,2634)
-___DEF_MOD_PRM(10,___G_c_23_ctx_2d_imports,2636)
-___DEF_MOD_PRM(11,___G_c_23_ctx_2d_imports_2d_set_21_,2638)
-___DEF_MOD_PRM(16,___G_c_23_ctx_2d_label_2d_table,2640)
-___DEF_MOD_PRM(17,___G_c_23_ctx_2d_label_2d_table_2d_set_21_,2642)
-___DEF_MOD_PRM(14,___G_c_23_ctx_2d_label_2d_ns,2644)
-___DEF_MOD_PRM(15,___G_c_23_ctx_2d_label_2d_ns_2d_set_21_,2646)
-___DEF_MOD_PRM(84,___G_c_23_univ_2d_add_2d_module_2d_init,2648)
-___DEF_MOD_PRM(83,___G_c_23_univ_2d_add_2d_module_2d_import,2651)
-___DEF_MOD_PRM(351,___G_c_23_with_2d_stack_2d_base_2d_offset,2657)
-___DEF_MOD_PRM(352,___G_c_23_with_2d_stack_2d_pointer_2d_adjust,2661)
-___DEF_MOD_PRM(349,___G_c_23_with_2d_allow_2d_jump_2d_destination_2d_inlining_3f_,2671)
-___DEF_MOD_PRM(350,___G_c_23_with_2d_new_2d_resources_2d_used,2675)
-___DEF_MOD_PRM(72,___G_c_23_make_2d_resource_2d_set,2682)
-___DEF_MOD_PRM(77,___G_c_23_resource_2d_set_2d_add_21_,2687)
-___DEF_MOD_PRM(78,___G_c_23_resource_2d_set_2d_member_3f_,2693)
-___DEF_MOD_PRM(80,___G_c_23_resource_2d_set_2d_stack,2696)
-___DEF_MOD_PRM(79,___G_c_23_resource_2d_set_2d_pop,2698)
-___DEF_MOD_PRM(347,___G_c_23_use_2d_resource_2d_rd,2700)
-___DEF_MOD_PRM(348,___G_c_23_use_2d_resource_2d_wr,2703)
-___DEF_MOD_PRM(345,___G_c_23_use_2d_global,2706)
-___DEF_MOD_PRM(335,___G_c_23_univ_2d_use_2d_rtlib,2709)
-___DEF_MOD_PRM(346,___G_c_23_use_2d_resource,2714)
-___DEF_MOD_PRM(60,___G_c_23_gvm_2d_state_2d_pollcount,2719)
-___DEF_MOD_PRM(56,___G_c_23_gvm_2d_state_2d_nargs,2722)
-___DEF_MOD_PRM(62,___G_c_23_gvm_2d_state_2d_reg,2725)
-___DEF_MOD_PRM(66,___G_c_23_gvm_2d_state_2d_stack,2731)
-___DEF_MOD_PRM(64,___G_c_23_gvm_2d_state_2d_sp,2734)
-___DEF_MOD_PRM(58,___G_c_23_gvm_2d_state_2d_peps,2737)
-___DEF_MOD_PRM(54,___G_c_23_gvm_2d_state_2d_glo,2740)
-___DEF_MOD_PRM(53,___G_c_23_gvm_2d_state_2d_current_2d_vm,2743)
-___DEF_MOD_PRM(51,___G_c_23_gvm_2d_state_2d_current_2d_processor,2746)
-___DEF_MOD_PRM(52,___G_c_23_gvm_2d_state_2d_current_2d_thread,2749)
-___DEF_MOD_PRM(61,___G_c_23_gvm_2d_state_2d_pollcount_2d_use,2754)
-___DEF_MOD_PRM(57,___G_c_23_gvm_2d_state_2d_nargs_2d_use,2759)
-___DEF_MOD_PRM(63,___G_c_23_gvm_2d_state_2d_reg_2d_use,2764)
-___DEF_MOD_PRM(67,___G_c_23_gvm_2d_state_2d_stack_2d_use,2769)
-___DEF_MOD_PRM(65,___G_c_23_gvm_2d_state_2d_sp_2d_use,2774)
-___DEF_MOD_PRM(59,___G_c_23_gvm_2d_state_2d_peps_2d_use,2779)
-___DEF_MOD_PRM(55,___G_c_23_gvm_2d_state_2d_glo_2d_use,2784)
-___DEF_MOD_PRM(237,___G_c_23_univ_2d_emit_2d_tos,2789)
-___DEF_MOD_PRM(206,___G_c_23_univ_2d_emit_2d_pop,2795)
-___DEF_MOD_PRM(213,___G_c_23_univ_2d_emit_2d_push,2803)
-___DEF_MOD_PRM(171,___G_c_23_univ_2d_emit_2d_getnargs,2814)
-___DEF_MOD_PRM(229,___G_c_23_univ_2d_emit_2d_setnargs,2817)
-___DEF_MOD_PRM(175,___G_c_23_univ_2d_emit_2d_getreg,2823)
-___DEF_MOD_PRM(231,___G_c_23_univ_2d_emit_2d_setreg,2826)
-___DEF_MOD_PRM(319,___G_c_23_univ_2d_stk_2d_slot_2d_from_2d_tos,2832)
-___DEF_MOD_PRM(318,___G_c_23_univ_2d_stk_2d_location,2840)
-___DEF_MOD_PRM(176,___G_c_23_univ_2d_emit_2d_getstk,2854)
-___DEF_MOD_PRM(232,___G_c_23_univ_2d_emit_2d_setstk,2857)
-___DEF_MOD_PRM(96,___G_c_23_univ_2d_clo_2d_slots,2863)
-___DEF_MOD_PRM(169,___G_c_23_univ_2d_emit_2d_getclo,2874)
-___DEF_MOD_PRM(226,___G_c_23_univ_2d_emit_2d_setclo,2877)
-___DEF_MOD_PRM(262,___G_c_23_univ_2d_glo_2d_dependency,2880)
-___DEF_MOD_PRM(263,___G_c_23_univ_2d_glo_2d_use,2892)
-___DEF_MOD_PRM(261,___G_c_23_univ_2d_get_2d_symbol_2d_name,2897)
-___DEF_MOD_PRM(174,___G_c_23_univ_2d_emit_2d_getpeps,2907)
-___DEF_MOD_PRM(230,___G_c_23_univ_2d_emit_2d_setpeps,2913)
-___DEF_MOD_PRM(170,___G_c_23_univ_2d_emit_2d_getglo,2919)
-___DEF_MOD_PRM(227,___G_c_23_univ_2d_emit_2d_setglo,2926)
-___DEF_MOD_PRM(181,___G_c_23_univ_2d_emit_2d_glo_2d_var_3f_,2933)
-___DEF_MOD_PRM(179,___G_c_23_univ_2d_emit_2d_glo_2d_var_2d_ref,2939)
-___DEF_MOD_PRM(177,___G_c_23_univ_2d_emit_2d_glo_2d_var_2d_primitive_2d_ref,2945)
-___DEF_MOD_PRM(180,___G_c_23_univ_2d_emit_2d_glo_2d_var_2d_set_21_,2951)
-___DEF_MOD_PRM(178,___G_c_23_univ_2d_emit_2d_glo_2d_var_2d_primitive_2d_set_21_,2957)
-___DEF_MOD_PRM(172,___G_c_23_univ_2d_emit_2d_getopnd,2963)
-___DEF_MOD_PRM(173,___G_c_23_univ_2d_emit_2d_getopnds,2989)
-___DEF_MOD_PRM(228,___G_c_23_univ_2d_emit_2d_setloc,2996)
-___DEF_MOD_PRM(201,___G_c_23_univ_2d_emit_2d_obj_2a_,3023)
-___DEF_MOD_PRM(202,___G_c_23_univ_2d_emit_2d_obj_2d_proc_2d_as,3217)
-___DEF_MOD_PRM(200,___G_c_23_univ_2d_emit_2d_obj,3228)
-___DEF_MOD_PRM(293,___G_c_23_univ_2d_obj_2d_type,3231)
-___DEF_MOD_PRM(89,___G_c_23_univ_2d_bignum_2d__3e_digits,3266)
-___DEF_MOD_PRM(331,___G_c_23_univ_2d_typed_2d_array_2d_constructor,3310)
-___DEF_MOD_PRM(87,___G_c_23_univ_2d_array_2d_constructor,3314)
-___DEF_MOD_PRM(139,___G_c_23_univ_2d_emit_2d_array_2d_literal,3319)
-___DEF_MOD_PRM(165,___G_c_23_univ_2d_emit_2d_extensible_2d_array_2d_literal,3337)
-___DEF_MOD_PRM(198,___G_c_23_univ_2d_emit_2d_new_2d_array,3352)
-___DEF_MOD_PRM(191,___G_c_23_univ_2d_emit_2d_make_2d_array,3376)
-___DEF_MOD_PRM(292,___G_c_23_univ_2d_num_2d_array_2d_constant,3404)
-___DEF_MOD_PRM(248,___G_c_23_univ_2d_field_2d_rename,3424)
-___DEF_MOD_PRM(310,___G_c_23_univ_2d_rts_2d_field_2d_low_2d_level_2d_name,3431)
-___DEF_MOD_PRM(311,___G_c_23_univ_2d_rts_2d_method_2d_low_2d_level_2d_name,3435)
-___DEF_MOD_PRM(99,___G_c_23_univ_2d_compactness_3e__3d__3f_,3439)
-___DEF_MOD_PRM(48,___G_c_23_gvm_2d_lbl_2d_use,3445)
-___DEF_MOD_PRM(49,___G_c_23_gvm_2d_lbl_2d_use_2d_aux,3450)
-___DEF_MOD_PRM(50,___G_c_23_gvm_2d_proc_2d_use,3456)
-___DEF_MOD_PRM(47,___G_c_23_gvm_2d_bb_2d_use,3461)
-___DEF_MOD_PRM(69,___G_c_23_lbl_2d__3e_id,3465)
-___DEF_MOD_PRM(68,___G_c_23_label_2d__3e_id,3468)
-___DEF_MOD_PRM(255,___G_c_23_univ_2d_foldr_2d_range,3479)
-___DEF_MOD_PRM(300,___G_c_23_univ_2d_pop_2d_args_2d_to_2d_vars,3486)
-___DEF_MOD_PRM(306,___G_c_23_univ_2d_push_2d_args,3521)
-___DEF_MOD_PRM(299,___G_c_23_univ_2d_pop_2d_args_2d_to_2d_regs,3544)
-___DEF_MOD_PRM(282,___G_c_23_univ_2d_min_2d_memoized_2d_fixnum,3579)
-___DEF_MOD_PRM(278,___G_c_23_univ_2d_max_2d_memoized_2d_fixnum,3581)
+___DEF_MOD_PRM(192,___G_c_23_univ_2d_emit_2d_map,412)
+___DEF_MOD_PRM(151,___G_c_23_univ_2d_emit_2d_call_2d_with_2d_arg_2d_array,422)
+___DEF_MOD_PRM(242,___G_c_23_univ_2d_emit_2d_var_2d_declaration,432)
+___DEF_MOD_PRM(164,___G_c_23_univ_2d_emit_2d_expr_2d_statement,450)
+___DEF_MOD_PRM(185,___G_c_23_univ_2d_emit_2d_if,457)
+___DEF_MOD_PRM(186,___G_c_23_univ_2d_emit_2d_if_2d_expr,478)
+___DEF_MOD_PRM(187,___G_c_23_univ_2d_emit_2d_if_2d_instanceof,492)
+___DEF_MOD_PRM(243,___G_c_23_univ_2d_emit_2d_while,502)
+___DEF_MOD_PRM(239,___G_c_23_univ_2d_emit_2d_try_2d_catch,515)
+___DEF_MOD_PRM(163,___G_c_23_univ_2d_emit_2d_eq_3f_,525)
+___DEF_MOD_PRM(124,___G_c_23_univ_2d_emit_2d__2b_,534)
+___DEF_MOD_PRM(125,___G_c_23_univ_2d_emit_2d__2d_,541)
+___DEF_MOD_PRM(123,___G_c_23_univ_2d_emit_2d__2a_,548)
+___DEF_MOD_PRM(126,___G_c_23_univ_2d_emit_2d__2f_,554)
+___DEF_MOD_PRM(340,___G_c_23_univ_2d_wrap,560)
+___DEF_MOD_PRM(342,___G_c_23_univ_2d_wrap_2b_,584)
+___DEF_MOD_PRM(343,___G_c_23_univ_2d_wrap_2d_,589)
+___DEF_MOD_PRM(341,___G_c_23_univ_2d_wrap_2a_,595)
+___DEF_MOD_PRM(344,___G_c_23_univ_2d_wrap_2f_,611)
+___DEF_MOD_PRM(128,___G_c_23_univ_2d_emit_2d__3c__3c_,621)
+___DEF_MOD_PRM(133,___G_c_23_univ_2d_emit_2d__3e__3e_,627)
+___DEF_MOD_PRM(134,___G_c_23_univ_2d_emit_2d__3e__3e__3e_,633)
+___DEF_MOD_PRM(149,___G_c_23_univ_2d_emit_2d_bitnot,649)
+___DEF_MOD_PRM(147,___G_c_23_univ_2d_emit_2d_bitand,656)
+___DEF_MOD_PRM(148,___G_c_23_univ_2d_emit_2d_bitior,662)
+___DEF_MOD_PRM(150,___G_c_23_univ_2d_emit_2d_bitxor,668)
+___DEF_MOD_PRM(130,___G_c_23_univ_2d_emit_2d__3d_,674)
+___DEF_MOD_PRM(121,___G_c_23_univ_2d_emit_2d__21__3d_,681)
+___DEF_MOD_PRM(127,___G_c_23_univ_2d_emit_2d__3c_,688)
+___DEF_MOD_PRM(129,___G_c_23_univ_2d_emit_2d__3c__3d_,691)
+___DEF_MOD_PRM(131,___G_c_23_univ_2d_emit_2d__3e_,694)
+___DEF_MOD_PRM(132,___G_c_23_univ_2d_emit_2d__3e__3d_,697)
+___DEF_MOD_PRM(157,___G_c_23_univ_2d_emit_2d_comparison,700)
+___DEF_MOD_PRM(199,___G_c_23_univ_2d_emit_2d_not,706)
+___DEF_MOD_PRM(122,___G_c_23_univ_2d_emit_2d__26__26_,713)
+___DEF_MOD_PRM(136,___G_c_23_univ_2d_emit_2d_and,720)
+___DEF_MOD_PRM(203,___G_c_23_univ_2d_emit_2d_or,728)
+___DEF_MOD_PRM(158,___G_c_23_univ_2d_emit_2d_concat,735)
+___DEF_MOD_PRM(238,___G_c_23_univ_2d_emit_2d_tostr,742)
+___DEF_MOD_PRM(159,___G_c_23_univ_2d_emit_2d_conv_2a_,755)
+___DEF_MOD_PRM(152,___G_c_23_univ_2d_emit_2d_cast,763)
+___DEF_MOD_PRM(153,___G_c_23_univ_2d_emit_2d_cast_2a_,773)
+___DEF_MOD_PRM(155,___G_c_23_univ_2d_emit_2d_cast_2a__2d_scmobj,779)
+___DEF_MOD_PRM(154,___G_c_23_univ_2d_emit_2d_cast_2a__2d_jumpable,782)
+___DEF_MOD_PRM(241,___G_c_23_univ_2d_emit_2d_upcast_2a_,785)
+___DEF_MOD_PRM(161,___G_c_23_univ_2d_emit_2d_downcast_2a_,795)
+___DEF_MOD_PRM(162,___G_c_23_univ_2d_emit_2d_downupcast_2a_,803)
+___DEF_MOD_PRM(224,___G_c_23_univ_2d_emit_2d_seq,808)
+___DEF_MOD_PRM(204,___G_c_23_univ_2d_emit_2d_parens,818)
+___DEF_MOD_PRM(205,___G_c_23_univ_2d_emit_2d_parens_2d_php,824)
+___DEF_MOD_PRM(190,___G_c_23_univ_2d_emit_2d_local_2d_var,829)
+___DEF_MOD_PRM(183,___G_c_23_univ_2d_emit_2d_global_2d_var,835)
+___DEF_MOD_PRM(182,___G_c_23_univ_2d_emit_2d_global_2d_function,841)
+___DEF_MOD_PRM(234,___G_c_23_univ_2d_emit_2d_this_2d_mod_2d_field,846)
+___DEF_MOD_PRM(236,___G_c_23_univ_2d_emit_2d_this_2d_mod_2d_method,849)
+___DEF_MOD_PRM(235,___G_c_23_univ_2d_emit_2d_this_2d_mod_2d_jumpable,852)
+___DEF_MOD_PRM(195,___G_c_23_univ_2d_emit_2d_mod_2d_member,855)
+___DEF_MOD_PRM(193,___G_c_23_univ_2d_emit_2d_mod_2d_field,869)
+___DEF_MOD_PRM(196,___G_c_23_univ_2d_emit_2d_mod_2d_method,881)
+___DEF_MOD_PRM(283,___G_c_23_univ_2d_mod_2d_jumpable_2d_is_2d_field_3f_,893)
+___DEF_MOD_PRM(194,___G_c_23_univ_2d_emit_2d_mod_2d_jumpable,897)
+___DEF_MOD_PRM(184,___G_c_23_univ_2d_emit_2d_id_2d_to_2d_jumpable,910)
+___DEF_MOD_PRM(221,___G_c_23_univ_2d_emit_2d_rts_2d_method,915)
+___DEF_MOD_PRM(222,___G_c_23_univ_2d_emit_2d_rts_2d_method_2d_ref,927)
+___DEF_MOD_PRM(223,___G_c_23_univ_2d_emit_2d_rts_2d_method_2d_use,942)
+___DEF_MOD_PRM(217,___G_c_23_univ_2d_emit_2d_rts_2d_field,948)
+___DEF_MOD_PRM(218,___G_c_23_univ_2d_emit_2d_rts_2d_field_2d_ref,960)
+___DEF_MOD_PRM(219,___G_c_23_univ_2d_emit_2d_rts_2d_field_2d_use,975)
+___DEF_MOD_PRM(220,___G_c_23_univ_2d_emit_2d_rts_2d_jumpable_2d_use,982)
+___DEF_MOD_PRM(214,___G_c_23_univ_2d_emit_2d_rts_2d_class,987)
+___DEF_MOD_PRM(215,___G_c_23_univ_2d_emit_2d_rts_2d_class_2d_ref,999)
+___DEF_MOD_PRM(216,___G_c_23_univ_2d_emit_2d_rts_2d_class_2d_use,1011)
+___DEF_MOD_PRM(312,___G_c_23_univ_2d_rts_2d_module_2d_name,1016)
+___DEF_MOD_PRM(208,___G_c_23_univ_2d_emit_2d_prefix,1021)
+___DEF_MOD_PRM(209,___G_c_23_univ_2d_emit_2d_prefix_2d_class,1033)
+___DEF_MOD_PRM(145,___G_c_23_univ_2d_emit_2d_assign_2d_expr,1042)
+___DEF_MOD_PRM(144,___G_c_23_univ_2d_emit_2d_assign,1045)
+___DEF_MOD_PRM(188,___G_c_23_univ_2d_emit_2d_inc_2d_by,1049)
+___DEF_MOD_PRM(135,___G_c_23_univ_2d_emit_2d_alias,1083)
+___DEF_MOD_PRM(240,___G_c_23_univ_2d_emit_2d_unalias,1089)
+___DEF_MOD_PRM(143,___G_c_23_univ_2d_emit_2d_array_3f_,1096)
+___DEF_MOD_PRM(138,___G_c_23_univ_2d_emit_2d_array_2d_length,1106)
+___DEF_MOD_PRM(140,___G_c_23_univ_2d_emit_2d_array_2d_push_21_,1116)
+___DEF_MOD_PRM(141,___G_c_23_univ_2d_emit_2d_array_2d_shrink_21_,1124)
+___DEF_MOD_PRM(142,___G_c_23_univ_2d_emit_2d_array_2d_shrink_2d_possibly_2d_copy_21_,1140)
+___DEF_MOD_PRM(197,___G_c_23_univ_2d_emit_2d_move_2d_array_2d_to_2d_array,1157)
+___DEF_MOD_PRM(160,___G_c_23_univ_2d_emit_2d_copy_2d_array_2d_to_2d_extensible_2d_array,1166)
+___DEF_MOD_PRM(166,___G_c_23_univ_2d_emit_2d_extensible_2d_array_2d_to_2d_array_21_,1173)
+___DEF_MOD_PRM(167,___G_c_23_univ_2d_emit_2d_extensible_2d_subarray,1181)
+___DEF_MOD_PRM(233,___G_c_23_univ_2d_emit_2d_subarray,1191)
+___DEF_MOD_PRM(137,___G_c_23_univ_2d_emit_2d_array_2d_index,1205)
+___DEF_MOD_PRM(210,___G_c_23_univ_2d_emit_2d_prop_2d_index,1208)
+___DEF_MOD_PRM(212,___G_c_23_univ_2d_emit_2d_prop_2d_index_2d_or_2d_null,1215)
+___DEF_MOD_PRM(211,___G_c_23_univ_2d_emit_2d_prop_2d_index_2d_exists_3f_,1222)
+___DEF_MOD_PRM(168,___G_c_23_univ_2d_emit_2d_get,1232)
+___DEF_MOD_PRM(225,___G_c_23_univ_2d_emit_2d_set,1243)
+___DEF_MOD_PRM(146,___G_c_23_univ_2d_emit_2d_attribute_2d_exists_3f_,1255)
+___DEF_MOD_PRM(117,___G_c_23_univ_2d_dump,1267)
+___DEF_MOD_PRM(118,___G_c_23_univ_2d_dump_2d_code,1274)
+___DEF_MOD_PRM(284,___G_c_23_univ_2d_module_2d_register,1314)
+___DEF_MOD_PRM(105,___G_c_23_univ_2d_defs_2d__3e_code,1326)
+___DEF_MOD_PRM(274,___G_c_23_univ_2d_link_2d_info_2d_header,1342)
+___DEF_MOD_PRM(273,___G_c_23_univ_2d_link_2d_info_2d_footer,1368)
+___DEF_MOD_PRM(272,___G_c_23_univ_2d_link_2d_info,1373)
+___DEF_MOD_PRM(276,___G_c_23_univ_2d_link_2d_semantics_2d_changing_2d_options,1391)
+___DEF_MOD_PRM(275,___G_c_23_univ_2d_link_2d_mods_2d_and_2d_flags,1403)
+___DEF_MOD_PRM(271,___G_c_23_univ_2d_link_2d_features_2d_used,1435)
+___DEF_MOD_PRM(270,___G_c_23_univ_2d_link,1511)
+___DEF_MOD_PRM(296,___G_c_23_univ_2d_objs_2d_defs,1550)
+___DEF_MOD_PRM(294,___G_c_23_univ_2d_obj_2d_use,1574)
+___DEF_MOD_PRM(71,___G_c_23_make_2d_objs_2d_used,1593)
+___DEF_MOD_PRM(73,___G_c_23_objs_2d_used_2d_stack,1598)
+___DEF_MOD_PRM(74,___G_c_23_objs_2d_used_2d_stack_2d_set_21_,1600)
+___DEF_MOD_PRM(75,___G_c_23_objs_2d_used_2d_table,1602)
+___DEF_MOD_PRM(76,___G_c_23_objs_2d_used_2d_table_2d_set_21_,1604)
+___DEF_MOD_PRM(119,___G_c_23_univ_2d_dump_2d_procs,1606)
+___DEF_MOD_PRM(268,___G_c_23_univ_2d_label_2d_entry,2335)
+___DEF_MOD_PRM(313,___G_c_23_univ_2d_separated_2d_list,2514)
+___DEF_MOD_PRM(277,___G_c_23_univ_2d_map_2d_index,2519)
+___DEF_MOD_PRM(259,___G_c_23_univ_2d_gensym,2530)
+___DEF_MOD_PRM(97,___G_c_23_univ_2d_closure_2d_alloc,2537)
+___DEF_MOD_PRM(70,___G_c_23_make_2d_ctx,2551)
+___DEF_MOD_PRM(44,___G_c_23_ctx_2d_target,2558)
+___DEF_MOD_PRM(45,___G_c_23_ctx_2d_target_2d_set_21_,2560)
+___DEF_MOD_PRM(36,___G_c_23_ctx_2d_semantics_2d_changing_2d_options,2562)
+___DEF_MOD_PRM(37,___G_c_23_ctx_2d_semantics_2d_changing_2d_options_2d_set_21_,2564)
+___DEF_MOD_PRM(38,___G_c_23_ctx_2d_semantics_2d_preserving_2d_options,2566)
+___DEF_MOD_PRM(39,___G_c_23_ctx_2d_semantics_2d_preserving_2d_options_2d_set_21_,2568)
+___DEF_MOD_PRM(18,___G_c_23_ctx_2d_module_2d_name,2570)
+___DEF_MOD_PRM(19,___G_c_23_ctx_2d_module_2d_name_2d_set_21_,2572)
+___DEF_MOD_PRM(34,___G_c_23_ctx_2d_rts_2d_module_2d_name,2574)
+___DEF_MOD_PRM(35,___G_c_23_ctx_2d_rts_2d_module_2d_name_2d_set_21_,2576)
+___DEF_MOD_PRM(21,___G_c_23_ctx_2d_ns_2d_prefix,2578)
+___DEF_MOD_PRM(24,___G_c_23_ctx_2d_ns_2d_prefix_2d_set_21_,2580)
+___DEF_MOD_PRM(22,___G_c_23_ctx_2d_ns_2d_prefix_2d_class,2582)
+___DEF_MOD_PRM(23,___G_c_23_ctx_2d_ns_2d_prefix_2d_class_2d_set_21_,2584)
+___DEF_MOD_PRM(20,___G_c_23_ctx_2d_ns,2586)
+___DEF_MOD_PRM(25,___G_c_23_ctx_2d_ns_2d_set_21_,2588)
+___DEF_MOD_PRM(42,___G_c_23_ctx_2d_stack_2d_base_2d_offset,2590)
+___DEF_MOD_PRM(43,___G_c_23_ctx_2d_stack_2d_base_2d_offset_2d_set_21_,2592)
+___DEF_MOD_PRM(40,___G_c_23_ctx_2d_serial_2d_num,2594)
+___DEF_MOD_PRM(41,___G_c_23_ctx_2d_serial_2d_num_2d_set_21_,2596)
+___DEF_MOD_PRM(2,___G_c_23_ctx_2d_allow_2d_jump_2d_destination_2d_inlining_3f_,2598)
+___DEF_MOD_PRM(3,___G_c_23_ctx_2d_allow_2d_jump_2d_destination_2d_inlining_3f__2d_set_21_,2600)
+___DEF_MOD_PRM(28,___G_c_23_ctx_2d_resources_2d_used_2d_rd,2602)
+___DEF_MOD_PRM(29,___G_c_23_ctx_2d_resources_2d_used_2d_rd_2d_set_21_,2604)
+___DEF_MOD_PRM(30,___G_c_23_ctx_2d_resources_2d_used_2d_wr,2606)
+___DEF_MOD_PRM(31,___G_c_23_ctx_2d_resources_2d_used_2d_wr_2d_set_21_,2608)
+___DEF_MOD_PRM(8,___G_c_23_ctx_2d_globals_2d_used,2610)
+___DEF_MOD_PRM(9,___G_c_23_ctx_2d_globals_2d_used_2d_set_21_,2612)
+___DEF_MOD_PRM(26,___G_c_23_ctx_2d_objs_2d_used,2614)
+___DEF_MOD_PRM(27,___G_c_23_ctx_2d_objs_2d_used_2d_set_21_,2616)
+___DEF_MOD_PRM(32,___G_c_23_ctx_2d_rtlib_2d_features_2d_used,2618)
+___DEF_MOD_PRM(33,___G_c_23_ctx_2d_rtlib_2d_features_2d_used_2d_set_21_,2620)
+___DEF_MOD_PRM(6,___G_c_23_ctx_2d_glo_2d_used,2622)
+___DEF_MOD_PRM(7,___G_c_23_ctx_2d_glo_2d_used_2d_set_21_,2624)
+___DEF_MOD_PRM(4,___G_c_23_ctx_2d_decls,2626)
+___DEF_MOD_PRM(5,___G_c_23_ctx_2d_decls_2d_set_21_,2628)
+___DEF_MOD_PRM(12,___G_c_23_ctx_2d_inits,2630)
+___DEF_MOD_PRM(13,___G_c_23_ctx_2d_inits_2d_set_21_,2632)
+___DEF_MOD_PRM(10,___G_c_23_ctx_2d_imports,2634)
+___DEF_MOD_PRM(11,___G_c_23_ctx_2d_imports_2d_set_21_,2636)
+___DEF_MOD_PRM(16,___G_c_23_ctx_2d_label_2d_table,2638)
+___DEF_MOD_PRM(17,___G_c_23_ctx_2d_label_2d_table_2d_set_21_,2640)
+___DEF_MOD_PRM(14,___G_c_23_ctx_2d_label_2d_ns,2642)
+___DEF_MOD_PRM(15,___G_c_23_ctx_2d_label_2d_ns_2d_set_21_,2644)
+___DEF_MOD_PRM(84,___G_c_23_univ_2d_add_2d_module_2d_init,2646)
+___DEF_MOD_PRM(83,___G_c_23_univ_2d_add_2d_module_2d_import,2649)
+___DEF_MOD_PRM(351,___G_c_23_with_2d_stack_2d_base_2d_offset,2655)
+___DEF_MOD_PRM(352,___G_c_23_with_2d_stack_2d_pointer_2d_adjust,2659)
+___DEF_MOD_PRM(349,___G_c_23_with_2d_allow_2d_jump_2d_destination_2d_inlining_3f_,2669)
+___DEF_MOD_PRM(350,___G_c_23_with_2d_new_2d_resources_2d_used,2673)
+___DEF_MOD_PRM(72,___G_c_23_make_2d_resource_2d_set,2680)
+___DEF_MOD_PRM(77,___G_c_23_resource_2d_set_2d_add_21_,2685)
+___DEF_MOD_PRM(78,___G_c_23_resource_2d_set_2d_member_3f_,2691)
+___DEF_MOD_PRM(80,___G_c_23_resource_2d_set_2d_stack,2694)
+___DEF_MOD_PRM(79,___G_c_23_resource_2d_set_2d_pop,2696)
+___DEF_MOD_PRM(347,___G_c_23_use_2d_resource_2d_rd,2698)
+___DEF_MOD_PRM(348,___G_c_23_use_2d_resource_2d_wr,2701)
+___DEF_MOD_PRM(345,___G_c_23_use_2d_global,2704)
+___DEF_MOD_PRM(335,___G_c_23_univ_2d_use_2d_rtlib,2707)
+___DEF_MOD_PRM(346,___G_c_23_use_2d_resource,2712)
+___DEF_MOD_PRM(60,___G_c_23_gvm_2d_state_2d_pollcount,2717)
+___DEF_MOD_PRM(56,___G_c_23_gvm_2d_state_2d_nargs,2720)
+___DEF_MOD_PRM(62,___G_c_23_gvm_2d_state_2d_reg,2723)
+___DEF_MOD_PRM(66,___G_c_23_gvm_2d_state_2d_stack,2729)
+___DEF_MOD_PRM(64,___G_c_23_gvm_2d_state_2d_sp,2732)
+___DEF_MOD_PRM(58,___G_c_23_gvm_2d_state_2d_peps,2735)
+___DEF_MOD_PRM(54,___G_c_23_gvm_2d_state_2d_glo,2738)
+___DEF_MOD_PRM(53,___G_c_23_gvm_2d_state_2d_current_2d_vm,2741)
+___DEF_MOD_PRM(51,___G_c_23_gvm_2d_state_2d_current_2d_processor,2744)
+___DEF_MOD_PRM(52,___G_c_23_gvm_2d_state_2d_current_2d_thread,2747)
+___DEF_MOD_PRM(61,___G_c_23_gvm_2d_state_2d_pollcount_2d_use,2752)
+___DEF_MOD_PRM(57,___G_c_23_gvm_2d_state_2d_nargs_2d_use,2757)
+___DEF_MOD_PRM(63,___G_c_23_gvm_2d_state_2d_reg_2d_use,2762)
+___DEF_MOD_PRM(67,___G_c_23_gvm_2d_state_2d_stack_2d_use,2767)
+___DEF_MOD_PRM(65,___G_c_23_gvm_2d_state_2d_sp_2d_use,2772)
+___DEF_MOD_PRM(59,___G_c_23_gvm_2d_state_2d_peps_2d_use,2777)
+___DEF_MOD_PRM(55,___G_c_23_gvm_2d_state_2d_glo_2d_use,2782)
+___DEF_MOD_PRM(237,___G_c_23_univ_2d_emit_2d_tos,2787)
+___DEF_MOD_PRM(206,___G_c_23_univ_2d_emit_2d_pop,2793)
+___DEF_MOD_PRM(213,___G_c_23_univ_2d_emit_2d_push,2801)
+___DEF_MOD_PRM(171,___G_c_23_univ_2d_emit_2d_getnargs,2812)
+___DEF_MOD_PRM(229,___G_c_23_univ_2d_emit_2d_setnargs,2815)
+___DEF_MOD_PRM(175,___G_c_23_univ_2d_emit_2d_getreg,2821)
+___DEF_MOD_PRM(231,___G_c_23_univ_2d_emit_2d_setreg,2824)
+___DEF_MOD_PRM(319,___G_c_23_univ_2d_stk_2d_slot_2d_from_2d_tos,2830)
+___DEF_MOD_PRM(318,___G_c_23_univ_2d_stk_2d_location,2838)
+___DEF_MOD_PRM(176,___G_c_23_univ_2d_emit_2d_getstk,2852)
+___DEF_MOD_PRM(232,___G_c_23_univ_2d_emit_2d_setstk,2855)
+___DEF_MOD_PRM(96,___G_c_23_univ_2d_clo_2d_slots,2861)
+___DEF_MOD_PRM(169,___G_c_23_univ_2d_emit_2d_getclo,2872)
+___DEF_MOD_PRM(226,___G_c_23_univ_2d_emit_2d_setclo,2875)
+___DEF_MOD_PRM(262,___G_c_23_univ_2d_glo_2d_dependency,2878)
+___DEF_MOD_PRM(263,___G_c_23_univ_2d_glo_2d_use,2890)
+___DEF_MOD_PRM(261,___G_c_23_univ_2d_get_2d_symbol_2d_name,2895)
+___DEF_MOD_PRM(174,___G_c_23_univ_2d_emit_2d_getpeps,2905)
+___DEF_MOD_PRM(230,___G_c_23_univ_2d_emit_2d_setpeps,2911)
+___DEF_MOD_PRM(170,___G_c_23_univ_2d_emit_2d_getglo,2917)
+___DEF_MOD_PRM(227,___G_c_23_univ_2d_emit_2d_setglo,2924)
+___DEF_MOD_PRM(181,___G_c_23_univ_2d_emit_2d_glo_2d_var_3f_,2931)
+___DEF_MOD_PRM(179,___G_c_23_univ_2d_emit_2d_glo_2d_var_2d_ref,2937)
+___DEF_MOD_PRM(177,___G_c_23_univ_2d_emit_2d_glo_2d_var_2d_primitive_2d_ref,2943)
+___DEF_MOD_PRM(180,___G_c_23_univ_2d_emit_2d_glo_2d_var_2d_set_21_,2949)
+___DEF_MOD_PRM(178,___G_c_23_univ_2d_emit_2d_glo_2d_var_2d_primitive_2d_set_21_,2955)
+___DEF_MOD_PRM(172,___G_c_23_univ_2d_emit_2d_getopnd,2961)
+___DEF_MOD_PRM(173,___G_c_23_univ_2d_emit_2d_getopnds,2987)
+___DEF_MOD_PRM(228,___G_c_23_univ_2d_emit_2d_setloc,2994)
+___DEF_MOD_PRM(201,___G_c_23_univ_2d_emit_2d_obj_2a_,3021)
+___DEF_MOD_PRM(202,___G_c_23_univ_2d_emit_2d_obj_2d_proc_2d_as,3215)
+___DEF_MOD_PRM(200,___G_c_23_univ_2d_emit_2d_obj,3226)
+___DEF_MOD_PRM(293,___G_c_23_univ_2d_obj_2d_type,3229)
+___DEF_MOD_PRM(89,___G_c_23_univ_2d_bignum_2d__3e_digits,3264)
+___DEF_MOD_PRM(331,___G_c_23_univ_2d_typed_2d_array_2d_constructor,3292)
+___DEF_MOD_PRM(87,___G_c_23_univ_2d_array_2d_constructor,3296)
+___DEF_MOD_PRM(139,___G_c_23_univ_2d_emit_2d_array_2d_literal,3301)
+___DEF_MOD_PRM(165,___G_c_23_univ_2d_emit_2d_extensible_2d_array_2d_literal,3319)
+___DEF_MOD_PRM(198,___G_c_23_univ_2d_emit_2d_new_2d_array,3334)
+___DEF_MOD_PRM(191,___G_c_23_univ_2d_emit_2d_make_2d_array,3358)
+___DEF_MOD_PRM(292,___G_c_23_univ_2d_num_2d_array_2d_constant,3386)
+___DEF_MOD_PRM(248,___G_c_23_univ_2d_field_2d_rename,3406)
+___DEF_MOD_PRM(310,___G_c_23_univ_2d_rts_2d_field_2d_low_2d_level_2d_name,3413)
+___DEF_MOD_PRM(311,___G_c_23_univ_2d_rts_2d_method_2d_low_2d_level_2d_name,3417)
+___DEF_MOD_PRM(99,___G_c_23_univ_2d_compactness_3e__3d__3f_,3421)
+___DEF_MOD_PRM(48,___G_c_23_gvm_2d_lbl_2d_use,3427)
+___DEF_MOD_PRM(49,___G_c_23_gvm_2d_lbl_2d_use_2d_aux,3432)
+___DEF_MOD_PRM(50,___G_c_23_gvm_2d_proc_2d_use,3438)
+___DEF_MOD_PRM(47,___G_c_23_gvm_2d_bb_2d_use,3443)
+___DEF_MOD_PRM(69,___G_c_23_lbl_2d__3e_id,3447)
+___DEF_MOD_PRM(68,___G_c_23_label_2d__3e_id,3450)
+___DEF_MOD_PRM(255,___G_c_23_univ_2d_foldr_2d_range,3461)
+___DEF_MOD_PRM(300,___G_c_23_univ_2d_pop_2d_args_2d_to_2d_vars,3468)
+___DEF_MOD_PRM(306,___G_c_23_univ_2d_push_2d_args,3503)
+___DEF_MOD_PRM(299,___G_c_23_univ_2d_pop_2d_args_2d_to_2d_regs,3526)
+___DEF_MOD_PRM(282,___G_c_23_univ_2d_min_2d_memoized_2d_fixnum,3561)
+___DEF_MOD_PRM(278,___G_c_23_univ_2d_max_2d_memoized_2d_fixnum,3563)
 ___END_MOD_PRM
 
 ___BEGIN_MOD_C_INIT
@@ -53710,262 +53373,262 @@ ___DEF_MOD_GLO(322,___G_c_23_univ_2d_switch_2d_testable_3f_,327)
 ___DEF_MOD_GLO(247,___G_c_23_univ_2d_eq_2d_testable_3f_,329)
 ___DEF_MOD_GLO(295,___G_c_23_univ_2d_object_2d_type,331)
 ___DEF_MOD_GLO(207,___G_c_23_univ_2d_emit_2d_popcount_21_,337)
-___DEF_MOD_GLO(192,___G_c_23_univ_2d_emit_2d_map,414)
-___DEF_MOD_GLO(151,___G_c_23_univ_2d_emit_2d_call_2d_with_2d_arg_2d_array,424)
-___DEF_MOD_GLO(242,___G_c_23_univ_2d_emit_2d_var_2d_declaration,434)
-___DEF_MOD_GLO(164,___G_c_23_univ_2d_emit_2d_expr_2d_statement,452)
-___DEF_MOD_GLO(185,___G_c_23_univ_2d_emit_2d_if,459)
-___DEF_MOD_GLO(186,___G_c_23_univ_2d_emit_2d_if_2d_expr,480)
-___DEF_MOD_GLO(187,___G_c_23_univ_2d_emit_2d_if_2d_instanceof,494)
-___DEF_MOD_GLO(243,___G_c_23_univ_2d_emit_2d_while,504)
-___DEF_MOD_GLO(239,___G_c_23_univ_2d_emit_2d_try_2d_catch,517)
-___DEF_MOD_GLO(163,___G_c_23_univ_2d_emit_2d_eq_3f_,527)
-___DEF_MOD_GLO(124,___G_c_23_univ_2d_emit_2d__2b_,536)
-___DEF_MOD_GLO(125,___G_c_23_univ_2d_emit_2d__2d_,543)
-___DEF_MOD_GLO(123,___G_c_23_univ_2d_emit_2d__2a_,550)
-___DEF_MOD_GLO(126,___G_c_23_univ_2d_emit_2d__2f_,556)
-___DEF_MOD_GLO(340,___G_c_23_univ_2d_wrap,562)
-___DEF_MOD_GLO(342,___G_c_23_univ_2d_wrap_2b_,586)
-___DEF_MOD_GLO(343,___G_c_23_univ_2d_wrap_2d_,591)
-___DEF_MOD_GLO(341,___G_c_23_univ_2d_wrap_2a_,597)
-___DEF_MOD_GLO(344,___G_c_23_univ_2d_wrap_2f_,613)
-___DEF_MOD_GLO(128,___G_c_23_univ_2d_emit_2d__3c__3c_,623)
-___DEF_MOD_GLO(133,___G_c_23_univ_2d_emit_2d__3e__3e_,629)
-___DEF_MOD_GLO(134,___G_c_23_univ_2d_emit_2d__3e__3e__3e_,635)
-___DEF_MOD_GLO(149,___G_c_23_univ_2d_emit_2d_bitnot,651)
-___DEF_MOD_GLO(147,___G_c_23_univ_2d_emit_2d_bitand,658)
-___DEF_MOD_GLO(148,___G_c_23_univ_2d_emit_2d_bitior,664)
-___DEF_MOD_GLO(150,___G_c_23_univ_2d_emit_2d_bitxor,670)
-___DEF_MOD_GLO(130,___G_c_23_univ_2d_emit_2d__3d_,676)
-___DEF_MOD_GLO(121,___G_c_23_univ_2d_emit_2d__21__3d_,683)
-___DEF_MOD_GLO(127,___G_c_23_univ_2d_emit_2d__3c_,690)
-___DEF_MOD_GLO(129,___G_c_23_univ_2d_emit_2d__3c__3d_,693)
-___DEF_MOD_GLO(131,___G_c_23_univ_2d_emit_2d__3e_,696)
-___DEF_MOD_GLO(132,___G_c_23_univ_2d_emit_2d__3e__3d_,699)
-___DEF_MOD_GLO(157,___G_c_23_univ_2d_emit_2d_comparison,702)
-___DEF_MOD_GLO(199,___G_c_23_univ_2d_emit_2d_not,708)
-___DEF_MOD_GLO(122,___G_c_23_univ_2d_emit_2d__26__26_,715)
-___DEF_MOD_GLO(136,___G_c_23_univ_2d_emit_2d_and,722)
-___DEF_MOD_GLO(203,___G_c_23_univ_2d_emit_2d_or,730)
-___DEF_MOD_GLO(158,___G_c_23_univ_2d_emit_2d_concat,737)
-___DEF_MOD_GLO(238,___G_c_23_univ_2d_emit_2d_tostr,744)
-___DEF_MOD_GLO(159,___G_c_23_univ_2d_emit_2d_conv_2a_,757)
-___DEF_MOD_GLO(152,___G_c_23_univ_2d_emit_2d_cast,765)
-___DEF_MOD_GLO(153,___G_c_23_univ_2d_emit_2d_cast_2a_,775)
-___DEF_MOD_GLO(155,___G_c_23_univ_2d_emit_2d_cast_2a__2d_scmobj,781)
-___DEF_MOD_GLO(154,___G_c_23_univ_2d_emit_2d_cast_2a__2d_jumpable,784)
-___DEF_MOD_GLO(241,___G_c_23_univ_2d_emit_2d_upcast_2a_,787)
-___DEF_MOD_GLO(161,___G_c_23_univ_2d_emit_2d_downcast_2a_,797)
-___DEF_MOD_GLO(162,___G_c_23_univ_2d_emit_2d_downupcast_2a_,805)
-___DEF_MOD_GLO(224,___G_c_23_univ_2d_emit_2d_seq,810)
-___DEF_MOD_GLO(204,___G_c_23_univ_2d_emit_2d_parens,820)
-___DEF_MOD_GLO(205,___G_c_23_univ_2d_emit_2d_parens_2d_php,826)
-___DEF_MOD_GLO(190,___G_c_23_univ_2d_emit_2d_local_2d_var,831)
-___DEF_MOD_GLO(183,___G_c_23_univ_2d_emit_2d_global_2d_var,837)
-___DEF_MOD_GLO(182,___G_c_23_univ_2d_emit_2d_global_2d_function,843)
-___DEF_MOD_GLO(234,___G_c_23_univ_2d_emit_2d_this_2d_mod_2d_field,848)
-___DEF_MOD_GLO(236,___G_c_23_univ_2d_emit_2d_this_2d_mod_2d_method,851)
-___DEF_MOD_GLO(235,___G_c_23_univ_2d_emit_2d_this_2d_mod_2d_jumpable,854)
-___DEF_MOD_GLO(195,___G_c_23_univ_2d_emit_2d_mod_2d_member,857)
-___DEF_MOD_GLO(193,___G_c_23_univ_2d_emit_2d_mod_2d_field,871)
-___DEF_MOD_GLO(196,___G_c_23_univ_2d_emit_2d_mod_2d_method,883)
-___DEF_MOD_GLO(283,___G_c_23_univ_2d_mod_2d_jumpable_2d_is_2d_field_3f_,895)
-___DEF_MOD_GLO(194,___G_c_23_univ_2d_emit_2d_mod_2d_jumpable,899)
-___DEF_MOD_GLO(184,___G_c_23_univ_2d_emit_2d_id_2d_to_2d_jumpable,912)
-___DEF_MOD_GLO(221,___G_c_23_univ_2d_emit_2d_rts_2d_method,917)
-___DEF_MOD_GLO(222,___G_c_23_univ_2d_emit_2d_rts_2d_method_2d_ref,929)
-___DEF_MOD_GLO(223,___G_c_23_univ_2d_emit_2d_rts_2d_method_2d_use,944)
-___DEF_MOD_GLO(217,___G_c_23_univ_2d_emit_2d_rts_2d_field,950)
-___DEF_MOD_GLO(218,___G_c_23_univ_2d_emit_2d_rts_2d_field_2d_ref,962)
-___DEF_MOD_GLO(219,___G_c_23_univ_2d_emit_2d_rts_2d_field_2d_use,977)
-___DEF_MOD_GLO(220,___G_c_23_univ_2d_emit_2d_rts_2d_jumpable_2d_use,984)
-___DEF_MOD_GLO(214,___G_c_23_univ_2d_emit_2d_rts_2d_class,989)
-___DEF_MOD_GLO(215,___G_c_23_univ_2d_emit_2d_rts_2d_class_2d_ref,1001)
-___DEF_MOD_GLO(216,___G_c_23_univ_2d_emit_2d_rts_2d_class_2d_use,1013)
-___DEF_MOD_GLO(312,___G_c_23_univ_2d_rts_2d_module_2d_name,1018)
-___DEF_MOD_GLO(208,___G_c_23_univ_2d_emit_2d_prefix,1023)
-___DEF_MOD_GLO(209,___G_c_23_univ_2d_emit_2d_prefix_2d_class,1035)
-___DEF_MOD_GLO(145,___G_c_23_univ_2d_emit_2d_assign_2d_expr,1044)
-___DEF_MOD_GLO(144,___G_c_23_univ_2d_emit_2d_assign,1047)
-___DEF_MOD_GLO(188,___G_c_23_univ_2d_emit_2d_inc_2d_by,1051)
-___DEF_MOD_GLO(135,___G_c_23_univ_2d_emit_2d_alias,1085)
-___DEF_MOD_GLO(240,___G_c_23_univ_2d_emit_2d_unalias,1091)
-___DEF_MOD_GLO(143,___G_c_23_univ_2d_emit_2d_array_3f_,1098)
-___DEF_MOD_GLO(138,___G_c_23_univ_2d_emit_2d_array_2d_length,1108)
-___DEF_MOD_GLO(140,___G_c_23_univ_2d_emit_2d_array_2d_push_21_,1118)
-___DEF_MOD_GLO(141,___G_c_23_univ_2d_emit_2d_array_2d_shrink_21_,1126)
-___DEF_MOD_GLO(142,___G_c_23_univ_2d_emit_2d_array_2d_shrink_2d_possibly_2d_copy_21_,1142)
-___DEF_MOD_GLO(197,___G_c_23_univ_2d_emit_2d_move_2d_array_2d_to_2d_array,1159)
-___DEF_MOD_GLO(160,___G_c_23_univ_2d_emit_2d_copy_2d_array_2d_to_2d_extensible_2d_array,1168)
-___DEF_MOD_GLO(166,___G_c_23_univ_2d_emit_2d_extensible_2d_array_2d_to_2d_array_21_,1175)
-___DEF_MOD_GLO(167,___G_c_23_univ_2d_emit_2d_extensible_2d_subarray,1183)
-___DEF_MOD_GLO(233,___G_c_23_univ_2d_emit_2d_subarray,1193)
-___DEF_MOD_GLO(137,___G_c_23_univ_2d_emit_2d_array_2d_index,1207)
-___DEF_MOD_GLO(210,___G_c_23_univ_2d_emit_2d_prop_2d_index,1210)
-___DEF_MOD_GLO(212,___G_c_23_univ_2d_emit_2d_prop_2d_index_2d_or_2d_null,1217)
-___DEF_MOD_GLO(211,___G_c_23_univ_2d_emit_2d_prop_2d_index_2d_exists_3f_,1224)
-___DEF_MOD_GLO(168,___G_c_23_univ_2d_emit_2d_get,1234)
-___DEF_MOD_GLO(225,___G_c_23_univ_2d_emit_2d_set,1245)
-___DEF_MOD_GLO(146,___G_c_23_univ_2d_emit_2d_attribute_2d_exists_3f_,1257)
-___DEF_MOD_GLO(117,___G_c_23_univ_2d_dump,1269)
-___DEF_MOD_GLO(118,___G_c_23_univ_2d_dump_2d_code,1276)
-___DEF_MOD_GLO(284,___G_c_23_univ_2d_module_2d_register,1316)
-___DEF_MOD_GLO(105,___G_c_23_univ_2d_defs_2d__3e_code,1328)
-___DEF_MOD_GLO(274,___G_c_23_univ_2d_link_2d_info_2d_header,1344)
-___DEF_MOD_GLO(273,___G_c_23_univ_2d_link_2d_info_2d_footer,1370)
-___DEF_MOD_GLO(272,___G_c_23_univ_2d_link_2d_info,1375)
-___DEF_MOD_GLO(276,___G_c_23_univ_2d_link_2d_semantics_2d_changing_2d_options,1393)
-___DEF_MOD_GLO(275,___G_c_23_univ_2d_link_2d_mods_2d_and_2d_flags,1405)
-___DEF_MOD_GLO(271,___G_c_23_univ_2d_link_2d_features_2d_used,1437)
-___DEF_MOD_GLO(270,___G_c_23_univ_2d_link,1513)
-___DEF_MOD_GLO(296,___G_c_23_univ_2d_objs_2d_defs,1552)
-___DEF_MOD_GLO(294,___G_c_23_univ_2d_obj_2d_use,1576)
-___DEF_MOD_GLO(71,___G_c_23_make_2d_objs_2d_used,1595)
-___DEF_MOD_GLO(73,___G_c_23_objs_2d_used_2d_stack,1600)
-___DEF_MOD_GLO(74,___G_c_23_objs_2d_used_2d_stack_2d_set_21_,1602)
-___DEF_MOD_GLO(75,___G_c_23_objs_2d_used_2d_table,1604)
-___DEF_MOD_GLO(76,___G_c_23_objs_2d_used_2d_table_2d_set_21_,1606)
-___DEF_MOD_GLO(119,___G_c_23_univ_2d_dump_2d_procs,1608)
-___DEF_MOD_GLO(268,___G_c_23_univ_2d_label_2d_entry,2337)
-___DEF_MOD_GLO(313,___G_c_23_univ_2d_separated_2d_list,2516)
-___DEF_MOD_GLO(277,___G_c_23_univ_2d_map_2d_index,2521)
-___DEF_MOD_GLO(259,___G_c_23_univ_2d_gensym,2532)
-___DEF_MOD_GLO(97,___G_c_23_univ_2d_closure_2d_alloc,2539)
-___DEF_MOD_GLO(70,___G_c_23_make_2d_ctx,2553)
-___DEF_MOD_GLO(44,___G_c_23_ctx_2d_target,2560)
-___DEF_MOD_GLO(45,___G_c_23_ctx_2d_target_2d_set_21_,2562)
-___DEF_MOD_GLO(36,___G_c_23_ctx_2d_semantics_2d_changing_2d_options,2564)
-___DEF_MOD_GLO(37,___G_c_23_ctx_2d_semantics_2d_changing_2d_options_2d_set_21_,2566)
-___DEF_MOD_GLO(38,___G_c_23_ctx_2d_semantics_2d_preserving_2d_options,2568)
-___DEF_MOD_GLO(39,___G_c_23_ctx_2d_semantics_2d_preserving_2d_options_2d_set_21_,2570)
-___DEF_MOD_GLO(18,___G_c_23_ctx_2d_module_2d_name,2572)
-___DEF_MOD_GLO(19,___G_c_23_ctx_2d_module_2d_name_2d_set_21_,2574)
-___DEF_MOD_GLO(34,___G_c_23_ctx_2d_rts_2d_module_2d_name,2576)
-___DEF_MOD_GLO(35,___G_c_23_ctx_2d_rts_2d_module_2d_name_2d_set_21_,2578)
-___DEF_MOD_GLO(21,___G_c_23_ctx_2d_ns_2d_prefix,2580)
-___DEF_MOD_GLO(24,___G_c_23_ctx_2d_ns_2d_prefix_2d_set_21_,2582)
-___DEF_MOD_GLO(22,___G_c_23_ctx_2d_ns_2d_prefix_2d_class,2584)
-___DEF_MOD_GLO(23,___G_c_23_ctx_2d_ns_2d_prefix_2d_class_2d_set_21_,2586)
-___DEF_MOD_GLO(20,___G_c_23_ctx_2d_ns,2588)
-___DEF_MOD_GLO(25,___G_c_23_ctx_2d_ns_2d_set_21_,2590)
-___DEF_MOD_GLO(42,___G_c_23_ctx_2d_stack_2d_base_2d_offset,2592)
-___DEF_MOD_GLO(43,___G_c_23_ctx_2d_stack_2d_base_2d_offset_2d_set_21_,2594)
-___DEF_MOD_GLO(40,___G_c_23_ctx_2d_serial_2d_num,2596)
-___DEF_MOD_GLO(41,___G_c_23_ctx_2d_serial_2d_num_2d_set_21_,2598)
-___DEF_MOD_GLO(2,___G_c_23_ctx_2d_allow_2d_jump_2d_destination_2d_inlining_3f_,2600)
-___DEF_MOD_GLO(3,___G_c_23_ctx_2d_allow_2d_jump_2d_destination_2d_inlining_3f__2d_set_21_,2602)
-___DEF_MOD_GLO(28,___G_c_23_ctx_2d_resources_2d_used_2d_rd,2604)
-___DEF_MOD_GLO(29,___G_c_23_ctx_2d_resources_2d_used_2d_rd_2d_set_21_,2606)
-___DEF_MOD_GLO(30,___G_c_23_ctx_2d_resources_2d_used_2d_wr,2608)
-___DEF_MOD_GLO(31,___G_c_23_ctx_2d_resources_2d_used_2d_wr_2d_set_21_,2610)
-___DEF_MOD_GLO(8,___G_c_23_ctx_2d_globals_2d_used,2612)
-___DEF_MOD_GLO(9,___G_c_23_ctx_2d_globals_2d_used_2d_set_21_,2614)
-___DEF_MOD_GLO(26,___G_c_23_ctx_2d_objs_2d_used,2616)
-___DEF_MOD_GLO(27,___G_c_23_ctx_2d_objs_2d_used_2d_set_21_,2618)
-___DEF_MOD_GLO(32,___G_c_23_ctx_2d_rtlib_2d_features_2d_used,2620)
-___DEF_MOD_GLO(33,___G_c_23_ctx_2d_rtlib_2d_features_2d_used_2d_set_21_,2622)
-___DEF_MOD_GLO(6,___G_c_23_ctx_2d_glo_2d_used,2624)
-___DEF_MOD_GLO(7,___G_c_23_ctx_2d_glo_2d_used_2d_set_21_,2626)
-___DEF_MOD_GLO(4,___G_c_23_ctx_2d_decls,2628)
-___DEF_MOD_GLO(5,___G_c_23_ctx_2d_decls_2d_set_21_,2630)
-___DEF_MOD_GLO(12,___G_c_23_ctx_2d_inits,2632)
-___DEF_MOD_GLO(13,___G_c_23_ctx_2d_inits_2d_set_21_,2634)
-___DEF_MOD_GLO(10,___G_c_23_ctx_2d_imports,2636)
-___DEF_MOD_GLO(11,___G_c_23_ctx_2d_imports_2d_set_21_,2638)
-___DEF_MOD_GLO(16,___G_c_23_ctx_2d_label_2d_table,2640)
-___DEF_MOD_GLO(17,___G_c_23_ctx_2d_label_2d_table_2d_set_21_,2642)
-___DEF_MOD_GLO(14,___G_c_23_ctx_2d_label_2d_ns,2644)
-___DEF_MOD_GLO(15,___G_c_23_ctx_2d_label_2d_ns_2d_set_21_,2646)
-___DEF_MOD_GLO(84,___G_c_23_univ_2d_add_2d_module_2d_init,2648)
-___DEF_MOD_GLO(83,___G_c_23_univ_2d_add_2d_module_2d_import,2651)
-___DEF_MOD_GLO(351,___G_c_23_with_2d_stack_2d_base_2d_offset,2657)
-___DEF_MOD_GLO(352,___G_c_23_with_2d_stack_2d_pointer_2d_adjust,2661)
-___DEF_MOD_GLO(349,___G_c_23_with_2d_allow_2d_jump_2d_destination_2d_inlining_3f_,2671)
-___DEF_MOD_GLO(350,___G_c_23_with_2d_new_2d_resources_2d_used,2675)
-___DEF_MOD_GLO(72,___G_c_23_make_2d_resource_2d_set,2682)
-___DEF_MOD_GLO(77,___G_c_23_resource_2d_set_2d_add_21_,2687)
-___DEF_MOD_GLO(78,___G_c_23_resource_2d_set_2d_member_3f_,2693)
-___DEF_MOD_GLO(80,___G_c_23_resource_2d_set_2d_stack,2696)
-___DEF_MOD_GLO(79,___G_c_23_resource_2d_set_2d_pop,2698)
-___DEF_MOD_GLO(347,___G_c_23_use_2d_resource_2d_rd,2700)
-___DEF_MOD_GLO(348,___G_c_23_use_2d_resource_2d_wr,2703)
-___DEF_MOD_GLO(345,___G_c_23_use_2d_global,2706)
-___DEF_MOD_GLO(335,___G_c_23_univ_2d_use_2d_rtlib,2709)
-___DEF_MOD_GLO(346,___G_c_23_use_2d_resource,2714)
-___DEF_MOD_GLO(60,___G_c_23_gvm_2d_state_2d_pollcount,2719)
-___DEF_MOD_GLO(56,___G_c_23_gvm_2d_state_2d_nargs,2722)
-___DEF_MOD_GLO(62,___G_c_23_gvm_2d_state_2d_reg,2725)
-___DEF_MOD_GLO(66,___G_c_23_gvm_2d_state_2d_stack,2731)
-___DEF_MOD_GLO(64,___G_c_23_gvm_2d_state_2d_sp,2734)
-___DEF_MOD_GLO(58,___G_c_23_gvm_2d_state_2d_peps,2737)
-___DEF_MOD_GLO(54,___G_c_23_gvm_2d_state_2d_glo,2740)
-___DEF_MOD_GLO(53,___G_c_23_gvm_2d_state_2d_current_2d_vm,2743)
-___DEF_MOD_GLO(51,___G_c_23_gvm_2d_state_2d_current_2d_processor,2746)
-___DEF_MOD_GLO(52,___G_c_23_gvm_2d_state_2d_current_2d_thread,2749)
-___DEF_MOD_GLO(61,___G_c_23_gvm_2d_state_2d_pollcount_2d_use,2754)
-___DEF_MOD_GLO(57,___G_c_23_gvm_2d_state_2d_nargs_2d_use,2759)
-___DEF_MOD_GLO(63,___G_c_23_gvm_2d_state_2d_reg_2d_use,2764)
-___DEF_MOD_GLO(67,___G_c_23_gvm_2d_state_2d_stack_2d_use,2769)
-___DEF_MOD_GLO(65,___G_c_23_gvm_2d_state_2d_sp_2d_use,2774)
-___DEF_MOD_GLO(59,___G_c_23_gvm_2d_state_2d_peps_2d_use,2779)
-___DEF_MOD_GLO(55,___G_c_23_gvm_2d_state_2d_glo_2d_use,2784)
-___DEF_MOD_GLO(237,___G_c_23_univ_2d_emit_2d_tos,2789)
-___DEF_MOD_GLO(206,___G_c_23_univ_2d_emit_2d_pop,2795)
-___DEF_MOD_GLO(213,___G_c_23_univ_2d_emit_2d_push,2803)
-___DEF_MOD_GLO(171,___G_c_23_univ_2d_emit_2d_getnargs,2814)
-___DEF_MOD_GLO(229,___G_c_23_univ_2d_emit_2d_setnargs,2817)
-___DEF_MOD_GLO(175,___G_c_23_univ_2d_emit_2d_getreg,2823)
-___DEF_MOD_GLO(231,___G_c_23_univ_2d_emit_2d_setreg,2826)
-___DEF_MOD_GLO(319,___G_c_23_univ_2d_stk_2d_slot_2d_from_2d_tos,2832)
-___DEF_MOD_GLO(318,___G_c_23_univ_2d_stk_2d_location,2840)
-___DEF_MOD_GLO(176,___G_c_23_univ_2d_emit_2d_getstk,2854)
-___DEF_MOD_GLO(232,___G_c_23_univ_2d_emit_2d_setstk,2857)
-___DEF_MOD_GLO(96,___G_c_23_univ_2d_clo_2d_slots,2863)
-___DEF_MOD_GLO(169,___G_c_23_univ_2d_emit_2d_getclo,2874)
-___DEF_MOD_GLO(226,___G_c_23_univ_2d_emit_2d_setclo,2877)
-___DEF_MOD_GLO(262,___G_c_23_univ_2d_glo_2d_dependency,2880)
-___DEF_MOD_GLO(263,___G_c_23_univ_2d_glo_2d_use,2892)
-___DEF_MOD_GLO(261,___G_c_23_univ_2d_get_2d_symbol_2d_name,2897)
-___DEF_MOD_GLO(174,___G_c_23_univ_2d_emit_2d_getpeps,2907)
-___DEF_MOD_GLO(230,___G_c_23_univ_2d_emit_2d_setpeps,2913)
-___DEF_MOD_GLO(170,___G_c_23_univ_2d_emit_2d_getglo,2919)
-___DEF_MOD_GLO(227,___G_c_23_univ_2d_emit_2d_setglo,2926)
-___DEF_MOD_GLO(181,___G_c_23_univ_2d_emit_2d_glo_2d_var_3f_,2933)
-___DEF_MOD_GLO(179,___G_c_23_univ_2d_emit_2d_glo_2d_var_2d_ref,2939)
-___DEF_MOD_GLO(177,___G_c_23_univ_2d_emit_2d_glo_2d_var_2d_primitive_2d_ref,2945)
-___DEF_MOD_GLO(180,___G_c_23_univ_2d_emit_2d_glo_2d_var_2d_set_21_,2951)
-___DEF_MOD_GLO(178,___G_c_23_univ_2d_emit_2d_glo_2d_var_2d_primitive_2d_set_21_,2957)
-___DEF_MOD_GLO(172,___G_c_23_univ_2d_emit_2d_getopnd,2963)
-___DEF_MOD_GLO(173,___G_c_23_univ_2d_emit_2d_getopnds,2989)
-___DEF_MOD_GLO(228,___G_c_23_univ_2d_emit_2d_setloc,2996)
-___DEF_MOD_GLO(201,___G_c_23_univ_2d_emit_2d_obj_2a_,3023)
-___DEF_MOD_GLO(202,___G_c_23_univ_2d_emit_2d_obj_2d_proc_2d_as,3217)
-___DEF_MOD_GLO(200,___G_c_23_univ_2d_emit_2d_obj,3228)
-___DEF_MOD_GLO(293,___G_c_23_univ_2d_obj_2d_type,3231)
-___DEF_MOD_GLO(89,___G_c_23_univ_2d_bignum_2d__3e_digits,3266)
-___DEF_MOD_GLO(331,___G_c_23_univ_2d_typed_2d_array_2d_constructor,3310)
-___DEF_MOD_GLO(87,___G_c_23_univ_2d_array_2d_constructor,3314)
-___DEF_MOD_GLO(139,___G_c_23_univ_2d_emit_2d_array_2d_literal,3319)
-___DEF_MOD_GLO(165,___G_c_23_univ_2d_emit_2d_extensible_2d_array_2d_literal,3337)
-___DEF_MOD_GLO(198,___G_c_23_univ_2d_emit_2d_new_2d_array,3352)
-___DEF_MOD_GLO(191,___G_c_23_univ_2d_emit_2d_make_2d_array,3376)
-___DEF_MOD_GLO(292,___G_c_23_univ_2d_num_2d_array_2d_constant,3404)
-___DEF_MOD_GLO(248,___G_c_23_univ_2d_field_2d_rename,3424)
-___DEF_MOD_GLO(310,___G_c_23_univ_2d_rts_2d_field_2d_low_2d_level_2d_name,3431)
-___DEF_MOD_GLO(311,___G_c_23_univ_2d_rts_2d_method_2d_low_2d_level_2d_name,3435)
-___DEF_MOD_GLO(99,___G_c_23_univ_2d_compactness_3e__3d__3f_,3439)
-___DEF_MOD_GLO(48,___G_c_23_gvm_2d_lbl_2d_use,3445)
-___DEF_MOD_GLO(49,___G_c_23_gvm_2d_lbl_2d_use_2d_aux,3450)
-___DEF_MOD_GLO(50,___G_c_23_gvm_2d_proc_2d_use,3456)
-___DEF_MOD_GLO(47,___G_c_23_gvm_2d_bb_2d_use,3461)
-___DEF_MOD_GLO(69,___G_c_23_lbl_2d__3e_id,3465)
-___DEF_MOD_GLO(68,___G_c_23_label_2d__3e_id,3468)
-___DEF_MOD_GLO(255,___G_c_23_univ_2d_foldr_2d_range,3479)
-___DEF_MOD_GLO(300,___G_c_23_univ_2d_pop_2d_args_2d_to_2d_vars,3486)
-___DEF_MOD_GLO(306,___G_c_23_univ_2d_push_2d_args,3521)
-___DEF_MOD_GLO(299,___G_c_23_univ_2d_pop_2d_args_2d_to_2d_regs,3544)
-___DEF_MOD_GLO(282,___G_c_23_univ_2d_min_2d_memoized_2d_fixnum,3579)
-___DEF_MOD_GLO(278,___G_c_23_univ_2d_max_2d_memoized_2d_fixnum,3581)
+___DEF_MOD_GLO(192,___G_c_23_univ_2d_emit_2d_map,412)
+___DEF_MOD_GLO(151,___G_c_23_univ_2d_emit_2d_call_2d_with_2d_arg_2d_array,422)
+___DEF_MOD_GLO(242,___G_c_23_univ_2d_emit_2d_var_2d_declaration,432)
+___DEF_MOD_GLO(164,___G_c_23_univ_2d_emit_2d_expr_2d_statement,450)
+___DEF_MOD_GLO(185,___G_c_23_univ_2d_emit_2d_if,457)
+___DEF_MOD_GLO(186,___G_c_23_univ_2d_emit_2d_if_2d_expr,478)
+___DEF_MOD_GLO(187,___G_c_23_univ_2d_emit_2d_if_2d_instanceof,492)
+___DEF_MOD_GLO(243,___G_c_23_univ_2d_emit_2d_while,502)
+___DEF_MOD_GLO(239,___G_c_23_univ_2d_emit_2d_try_2d_catch,515)
+___DEF_MOD_GLO(163,___G_c_23_univ_2d_emit_2d_eq_3f_,525)
+___DEF_MOD_GLO(124,___G_c_23_univ_2d_emit_2d__2b_,534)
+___DEF_MOD_GLO(125,___G_c_23_univ_2d_emit_2d__2d_,541)
+___DEF_MOD_GLO(123,___G_c_23_univ_2d_emit_2d__2a_,548)
+___DEF_MOD_GLO(126,___G_c_23_univ_2d_emit_2d__2f_,554)
+___DEF_MOD_GLO(340,___G_c_23_univ_2d_wrap,560)
+___DEF_MOD_GLO(342,___G_c_23_univ_2d_wrap_2b_,584)
+___DEF_MOD_GLO(343,___G_c_23_univ_2d_wrap_2d_,589)
+___DEF_MOD_GLO(341,___G_c_23_univ_2d_wrap_2a_,595)
+___DEF_MOD_GLO(344,___G_c_23_univ_2d_wrap_2f_,611)
+___DEF_MOD_GLO(128,___G_c_23_univ_2d_emit_2d__3c__3c_,621)
+___DEF_MOD_GLO(133,___G_c_23_univ_2d_emit_2d__3e__3e_,627)
+___DEF_MOD_GLO(134,___G_c_23_univ_2d_emit_2d__3e__3e__3e_,633)
+___DEF_MOD_GLO(149,___G_c_23_univ_2d_emit_2d_bitnot,649)
+___DEF_MOD_GLO(147,___G_c_23_univ_2d_emit_2d_bitand,656)
+___DEF_MOD_GLO(148,___G_c_23_univ_2d_emit_2d_bitior,662)
+___DEF_MOD_GLO(150,___G_c_23_univ_2d_emit_2d_bitxor,668)
+___DEF_MOD_GLO(130,___G_c_23_univ_2d_emit_2d__3d_,674)
+___DEF_MOD_GLO(121,___G_c_23_univ_2d_emit_2d__21__3d_,681)
+___DEF_MOD_GLO(127,___G_c_23_univ_2d_emit_2d__3c_,688)
+___DEF_MOD_GLO(129,___G_c_23_univ_2d_emit_2d__3c__3d_,691)
+___DEF_MOD_GLO(131,___G_c_23_univ_2d_emit_2d__3e_,694)
+___DEF_MOD_GLO(132,___G_c_23_univ_2d_emit_2d__3e__3d_,697)
+___DEF_MOD_GLO(157,___G_c_23_univ_2d_emit_2d_comparison,700)
+___DEF_MOD_GLO(199,___G_c_23_univ_2d_emit_2d_not,706)
+___DEF_MOD_GLO(122,___G_c_23_univ_2d_emit_2d__26__26_,713)
+___DEF_MOD_GLO(136,___G_c_23_univ_2d_emit_2d_and,720)
+___DEF_MOD_GLO(203,___G_c_23_univ_2d_emit_2d_or,728)
+___DEF_MOD_GLO(158,___G_c_23_univ_2d_emit_2d_concat,735)
+___DEF_MOD_GLO(238,___G_c_23_univ_2d_emit_2d_tostr,742)
+___DEF_MOD_GLO(159,___G_c_23_univ_2d_emit_2d_conv_2a_,755)
+___DEF_MOD_GLO(152,___G_c_23_univ_2d_emit_2d_cast,763)
+___DEF_MOD_GLO(153,___G_c_23_univ_2d_emit_2d_cast_2a_,773)
+___DEF_MOD_GLO(155,___G_c_23_univ_2d_emit_2d_cast_2a__2d_scmobj,779)
+___DEF_MOD_GLO(154,___G_c_23_univ_2d_emit_2d_cast_2a__2d_jumpable,782)
+___DEF_MOD_GLO(241,___G_c_23_univ_2d_emit_2d_upcast_2a_,785)
+___DEF_MOD_GLO(161,___G_c_23_univ_2d_emit_2d_downcast_2a_,795)
+___DEF_MOD_GLO(162,___G_c_23_univ_2d_emit_2d_downupcast_2a_,803)
+___DEF_MOD_GLO(224,___G_c_23_univ_2d_emit_2d_seq,808)
+___DEF_MOD_GLO(204,___G_c_23_univ_2d_emit_2d_parens,818)
+___DEF_MOD_GLO(205,___G_c_23_univ_2d_emit_2d_parens_2d_php,824)
+___DEF_MOD_GLO(190,___G_c_23_univ_2d_emit_2d_local_2d_var,829)
+___DEF_MOD_GLO(183,___G_c_23_univ_2d_emit_2d_global_2d_var,835)
+___DEF_MOD_GLO(182,___G_c_23_univ_2d_emit_2d_global_2d_function,841)
+___DEF_MOD_GLO(234,___G_c_23_univ_2d_emit_2d_this_2d_mod_2d_field,846)
+___DEF_MOD_GLO(236,___G_c_23_univ_2d_emit_2d_this_2d_mod_2d_method,849)
+___DEF_MOD_GLO(235,___G_c_23_univ_2d_emit_2d_this_2d_mod_2d_jumpable,852)
+___DEF_MOD_GLO(195,___G_c_23_univ_2d_emit_2d_mod_2d_member,855)
+___DEF_MOD_GLO(193,___G_c_23_univ_2d_emit_2d_mod_2d_field,869)
+___DEF_MOD_GLO(196,___G_c_23_univ_2d_emit_2d_mod_2d_method,881)
+___DEF_MOD_GLO(283,___G_c_23_univ_2d_mod_2d_jumpable_2d_is_2d_field_3f_,893)
+___DEF_MOD_GLO(194,___G_c_23_univ_2d_emit_2d_mod_2d_jumpable,897)
+___DEF_MOD_GLO(184,___G_c_23_univ_2d_emit_2d_id_2d_to_2d_jumpable,910)
+___DEF_MOD_GLO(221,___G_c_23_univ_2d_emit_2d_rts_2d_method,915)
+___DEF_MOD_GLO(222,___G_c_23_univ_2d_emit_2d_rts_2d_method_2d_ref,927)
+___DEF_MOD_GLO(223,___G_c_23_univ_2d_emit_2d_rts_2d_method_2d_use,942)
+___DEF_MOD_GLO(217,___G_c_23_univ_2d_emit_2d_rts_2d_field,948)
+___DEF_MOD_GLO(218,___G_c_23_univ_2d_emit_2d_rts_2d_field_2d_ref,960)
+___DEF_MOD_GLO(219,___G_c_23_univ_2d_emit_2d_rts_2d_field_2d_use,975)
+___DEF_MOD_GLO(220,___G_c_23_univ_2d_emit_2d_rts_2d_jumpable_2d_use,982)
+___DEF_MOD_GLO(214,___G_c_23_univ_2d_emit_2d_rts_2d_class,987)
+___DEF_MOD_GLO(215,___G_c_23_univ_2d_emit_2d_rts_2d_class_2d_ref,999)
+___DEF_MOD_GLO(216,___G_c_23_univ_2d_emit_2d_rts_2d_class_2d_use,1011)
+___DEF_MOD_GLO(312,___G_c_23_univ_2d_rts_2d_module_2d_name,1016)
+___DEF_MOD_GLO(208,___G_c_23_univ_2d_emit_2d_prefix,1021)
+___DEF_MOD_GLO(209,___G_c_23_univ_2d_emit_2d_prefix_2d_class,1033)
+___DEF_MOD_GLO(145,___G_c_23_univ_2d_emit_2d_assign_2d_expr,1042)
+___DEF_MOD_GLO(144,___G_c_23_univ_2d_emit_2d_assign,1045)
+___DEF_MOD_GLO(188,___G_c_23_univ_2d_emit_2d_inc_2d_by,1049)
+___DEF_MOD_GLO(135,___G_c_23_univ_2d_emit_2d_alias,1083)
+___DEF_MOD_GLO(240,___G_c_23_univ_2d_emit_2d_unalias,1089)
+___DEF_MOD_GLO(143,___G_c_23_univ_2d_emit_2d_array_3f_,1096)
+___DEF_MOD_GLO(138,___G_c_23_univ_2d_emit_2d_array_2d_length,1106)
+___DEF_MOD_GLO(140,___G_c_23_univ_2d_emit_2d_array_2d_push_21_,1116)
+___DEF_MOD_GLO(141,___G_c_23_univ_2d_emit_2d_array_2d_shrink_21_,1124)
+___DEF_MOD_GLO(142,___G_c_23_univ_2d_emit_2d_array_2d_shrink_2d_possibly_2d_copy_21_,1140)
+___DEF_MOD_GLO(197,___G_c_23_univ_2d_emit_2d_move_2d_array_2d_to_2d_array,1157)
+___DEF_MOD_GLO(160,___G_c_23_univ_2d_emit_2d_copy_2d_array_2d_to_2d_extensible_2d_array,1166)
+___DEF_MOD_GLO(166,___G_c_23_univ_2d_emit_2d_extensible_2d_array_2d_to_2d_array_21_,1173)
+___DEF_MOD_GLO(167,___G_c_23_univ_2d_emit_2d_extensible_2d_subarray,1181)
+___DEF_MOD_GLO(233,___G_c_23_univ_2d_emit_2d_subarray,1191)
+___DEF_MOD_GLO(137,___G_c_23_univ_2d_emit_2d_array_2d_index,1205)
+___DEF_MOD_GLO(210,___G_c_23_univ_2d_emit_2d_prop_2d_index,1208)
+___DEF_MOD_GLO(212,___G_c_23_univ_2d_emit_2d_prop_2d_index_2d_or_2d_null,1215)
+___DEF_MOD_GLO(211,___G_c_23_univ_2d_emit_2d_prop_2d_index_2d_exists_3f_,1222)
+___DEF_MOD_GLO(168,___G_c_23_univ_2d_emit_2d_get,1232)
+___DEF_MOD_GLO(225,___G_c_23_univ_2d_emit_2d_set,1243)
+___DEF_MOD_GLO(146,___G_c_23_univ_2d_emit_2d_attribute_2d_exists_3f_,1255)
+___DEF_MOD_GLO(117,___G_c_23_univ_2d_dump,1267)
+___DEF_MOD_GLO(118,___G_c_23_univ_2d_dump_2d_code,1274)
+___DEF_MOD_GLO(284,___G_c_23_univ_2d_module_2d_register,1314)
+___DEF_MOD_GLO(105,___G_c_23_univ_2d_defs_2d__3e_code,1326)
+___DEF_MOD_GLO(274,___G_c_23_univ_2d_link_2d_info_2d_header,1342)
+___DEF_MOD_GLO(273,___G_c_23_univ_2d_link_2d_info_2d_footer,1368)
+___DEF_MOD_GLO(272,___G_c_23_univ_2d_link_2d_info,1373)
+___DEF_MOD_GLO(276,___G_c_23_univ_2d_link_2d_semantics_2d_changing_2d_options,1391)
+___DEF_MOD_GLO(275,___G_c_23_univ_2d_link_2d_mods_2d_and_2d_flags,1403)
+___DEF_MOD_GLO(271,___G_c_23_univ_2d_link_2d_features_2d_used,1435)
+___DEF_MOD_GLO(270,___G_c_23_univ_2d_link,1511)
+___DEF_MOD_GLO(296,___G_c_23_univ_2d_objs_2d_defs,1550)
+___DEF_MOD_GLO(294,___G_c_23_univ_2d_obj_2d_use,1574)
+___DEF_MOD_GLO(71,___G_c_23_make_2d_objs_2d_used,1593)
+___DEF_MOD_GLO(73,___G_c_23_objs_2d_used_2d_stack,1598)
+___DEF_MOD_GLO(74,___G_c_23_objs_2d_used_2d_stack_2d_set_21_,1600)
+___DEF_MOD_GLO(75,___G_c_23_objs_2d_used_2d_table,1602)
+___DEF_MOD_GLO(76,___G_c_23_objs_2d_used_2d_table_2d_set_21_,1604)
+___DEF_MOD_GLO(119,___G_c_23_univ_2d_dump_2d_procs,1606)
+___DEF_MOD_GLO(268,___G_c_23_univ_2d_label_2d_entry,2335)
+___DEF_MOD_GLO(313,___G_c_23_univ_2d_separated_2d_list,2514)
+___DEF_MOD_GLO(277,___G_c_23_univ_2d_map_2d_index,2519)
+___DEF_MOD_GLO(259,___G_c_23_univ_2d_gensym,2530)
+___DEF_MOD_GLO(97,___G_c_23_univ_2d_closure_2d_alloc,2537)
+___DEF_MOD_GLO(70,___G_c_23_make_2d_ctx,2551)
+___DEF_MOD_GLO(44,___G_c_23_ctx_2d_target,2558)
+___DEF_MOD_GLO(45,___G_c_23_ctx_2d_target_2d_set_21_,2560)
+___DEF_MOD_GLO(36,___G_c_23_ctx_2d_semantics_2d_changing_2d_options,2562)
+___DEF_MOD_GLO(37,___G_c_23_ctx_2d_semantics_2d_changing_2d_options_2d_set_21_,2564)
+___DEF_MOD_GLO(38,___G_c_23_ctx_2d_semantics_2d_preserving_2d_options,2566)
+___DEF_MOD_GLO(39,___G_c_23_ctx_2d_semantics_2d_preserving_2d_options_2d_set_21_,2568)
+___DEF_MOD_GLO(18,___G_c_23_ctx_2d_module_2d_name,2570)
+___DEF_MOD_GLO(19,___G_c_23_ctx_2d_module_2d_name_2d_set_21_,2572)
+___DEF_MOD_GLO(34,___G_c_23_ctx_2d_rts_2d_module_2d_name,2574)
+___DEF_MOD_GLO(35,___G_c_23_ctx_2d_rts_2d_module_2d_name_2d_set_21_,2576)
+___DEF_MOD_GLO(21,___G_c_23_ctx_2d_ns_2d_prefix,2578)
+___DEF_MOD_GLO(24,___G_c_23_ctx_2d_ns_2d_prefix_2d_set_21_,2580)
+___DEF_MOD_GLO(22,___G_c_23_ctx_2d_ns_2d_prefix_2d_class,2582)
+___DEF_MOD_GLO(23,___G_c_23_ctx_2d_ns_2d_prefix_2d_class_2d_set_21_,2584)
+___DEF_MOD_GLO(20,___G_c_23_ctx_2d_ns,2586)
+___DEF_MOD_GLO(25,___G_c_23_ctx_2d_ns_2d_set_21_,2588)
+___DEF_MOD_GLO(42,___G_c_23_ctx_2d_stack_2d_base_2d_offset,2590)
+___DEF_MOD_GLO(43,___G_c_23_ctx_2d_stack_2d_base_2d_offset_2d_set_21_,2592)
+___DEF_MOD_GLO(40,___G_c_23_ctx_2d_serial_2d_num,2594)
+___DEF_MOD_GLO(41,___G_c_23_ctx_2d_serial_2d_num_2d_set_21_,2596)
+___DEF_MOD_GLO(2,___G_c_23_ctx_2d_allow_2d_jump_2d_destination_2d_inlining_3f_,2598)
+___DEF_MOD_GLO(3,___G_c_23_ctx_2d_allow_2d_jump_2d_destination_2d_inlining_3f__2d_set_21_,2600)
+___DEF_MOD_GLO(28,___G_c_23_ctx_2d_resources_2d_used_2d_rd,2602)
+___DEF_MOD_GLO(29,___G_c_23_ctx_2d_resources_2d_used_2d_rd_2d_set_21_,2604)
+___DEF_MOD_GLO(30,___G_c_23_ctx_2d_resources_2d_used_2d_wr,2606)
+___DEF_MOD_GLO(31,___G_c_23_ctx_2d_resources_2d_used_2d_wr_2d_set_21_,2608)
+___DEF_MOD_GLO(8,___G_c_23_ctx_2d_globals_2d_used,2610)
+___DEF_MOD_GLO(9,___G_c_23_ctx_2d_globals_2d_used_2d_set_21_,2612)
+___DEF_MOD_GLO(26,___G_c_23_ctx_2d_objs_2d_used,2614)
+___DEF_MOD_GLO(27,___G_c_23_ctx_2d_objs_2d_used_2d_set_21_,2616)
+___DEF_MOD_GLO(32,___G_c_23_ctx_2d_rtlib_2d_features_2d_used,2618)
+___DEF_MOD_GLO(33,___G_c_23_ctx_2d_rtlib_2d_features_2d_used_2d_set_21_,2620)
+___DEF_MOD_GLO(6,___G_c_23_ctx_2d_glo_2d_used,2622)
+___DEF_MOD_GLO(7,___G_c_23_ctx_2d_glo_2d_used_2d_set_21_,2624)
+___DEF_MOD_GLO(4,___G_c_23_ctx_2d_decls,2626)
+___DEF_MOD_GLO(5,___G_c_23_ctx_2d_decls_2d_set_21_,2628)
+___DEF_MOD_GLO(12,___G_c_23_ctx_2d_inits,2630)
+___DEF_MOD_GLO(13,___G_c_23_ctx_2d_inits_2d_set_21_,2632)
+___DEF_MOD_GLO(10,___G_c_23_ctx_2d_imports,2634)
+___DEF_MOD_GLO(11,___G_c_23_ctx_2d_imports_2d_set_21_,2636)
+___DEF_MOD_GLO(16,___G_c_23_ctx_2d_label_2d_table,2638)
+___DEF_MOD_GLO(17,___G_c_23_ctx_2d_label_2d_table_2d_set_21_,2640)
+___DEF_MOD_GLO(14,___G_c_23_ctx_2d_label_2d_ns,2642)
+___DEF_MOD_GLO(15,___G_c_23_ctx_2d_label_2d_ns_2d_set_21_,2644)
+___DEF_MOD_GLO(84,___G_c_23_univ_2d_add_2d_module_2d_init,2646)
+___DEF_MOD_GLO(83,___G_c_23_univ_2d_add_2d_module_2d_import,2649)
+___DEF_MOD_GLO(351,___G_c_23_with_2d_stack_2d_base_2d_offset,2655)
+___DEF_MOD_GLO(352,___G_c_23_with_2d_stack_2d_pointer_2d_adjust,2659)
+___DEF_MOD_GLO(349,___G_c_23_with_2d_allow_2d_jump_2d_destination_2d_inlining_3f_,2669)
+___DEF_MOD_GLO(350,___G_c_23_with_2d_new_2d_resources_2d_used,2673)
+___DEF_MOD_GLO(72,___G_c_23_make_2d_resource_2d_set,2680)
+___DEF_MOD_GLO(77,___G_c_23_resource_2d_set_2d_add_21_,2685)
+___DEF_MOD_GLO(78,___G_c_23_resource_2d_set_2d_member_3f_,2691)
+___DEF_MOD_GLO(80,___G_c_23_resource_2d_set_2d_stack,2694)
+___DEF_MOD_GLO(79,___G_c_23_resource_2d_set_2d_pop,2696)
+___DEF_MOD_GLO(347,___G_c_23_use_2d_resource_2d_rd,2698)
+___DEF_MOD_GLO(348,___G_c_23_use_2d_resource_2d_wr,2701)
+___DEF_MOD_GLO(345,___G_c_23_use_2d_global,2704)
+___DEF_MOD_GLO(335,___G_c_23_univ_2d_use_2d_rtlib,2707)
+___DEF_MOD_GLO(346,___G_c_23_use_2d_resource,2712)
+___DEF_MOD_GLO(60,___G_c_23_gvm_2d_state_2d_pollcount,2717)
+___DEF_MOD_GLO(56,___G_c_23_gvm_2d_state_2d_nargs,2720)
+___DEF_MOD_GLO(62,___G_c_23_gvm_2d_state_2d_reg,2723)
+___DEF_MOD_GLO(66,___G_c_23_gvm_2d_state_2d_stack,2729)
+___DEF_MOD_GLO(64,___G_c_23_gvm_2d_state_2d_sp,2732)
+___DEF_MOD_GLO(58,___G_c_23_gvm_2d_state_2d_peps,2735)
+___DEF_MOD_GLO(54,___G_c_23_gvm_2d_state_2d_glo,2738)
+___DEF_MOD_GLO(53,___G_c_23_gvm_2d_state_2d_current_2d_vm,2741)
+___DEF_MOD_GLO(51,___G_c_23_gvm_2d_state_2d_current_2d_processor,2744)
+___DEF_MOD_GLO(52,___G_c_23_gvm_2d_state_2d_current_2d_thread,2747)
+___DEF_MOD_GLO(61,___G_c_23_gvm_2d_state_2d_pollcount_2d_use,2752)
+___DEF_MOD_GLO(57,___G_c_23_gvm_2d_state_2d_nargs_2d_use,2757)
+___DEF_MOD_GLO(63,___G_c_23_gvm_2d_state_2d_reg_2d_use,2762)
+___DEF_MOD_GLO(67,___G_c_23_gvm_2d_state_2d_stack_2d_use,2767)
+___DEF_MOD_GLO(65,___G_c_23_gvm_2d_state_2d_sp_2d_use,2772)
+___DEF_MOD_GLO(59,___G_c_23_gvm_2d_state_2d_peps_2d_use,2777)
+___DEF_MOD_GLO(55,___G_c_23_gvm_2d_state_2d_glo_2d_use,2782)
+___DEF_MOD_GLO(237,___G_c_23_univ_2d_emit_2d_tos,2787)
+___DEF_MOD_GLO(206,___G_c_23_univ_2d_emit_2d_pop,2793)
+___DEF_MOD_GLO(213,___G_c_23_univ_2d_emit_2d_push,2801)
+___DEF_MOD_GLO(171,___G_c_23_univ_2d_emit_2d_getnargs,2812)
+___DEF_MOD_GLO(229,___G_c_23_univ_2d_emit_2d_setnargs,2815)
+___DEF_MOD_GLO(175,___G_c_23_univ_2d_emit_2d_getreg,2821)
+___DEF_MOD_GLO(231,___G_c_23_univ_2d_emit_2d_setreg,2824)
+___DEF_MOD_GLO(319,___G_c_23_univ_2d_stk_2d_slot_2d_from_2d_tos,2830)
+___DEF_MOD_GLO(318,___G_c_23_univ_2d_stk_2d_location,2838)
+___DEF_MOD_GLO(176,___G_c_23_univ_2d_emit_2d_getstk,2852)
+___DEF_MOD_GLO(232,___G_c_23_univ_2d_emit_2d_setstk,2855)
+___DEF_MOD_GLO(96,___G_c_23_univ_2d_clo_2d_slots,2861)
+___DEF_MOD_GLO(169,___G_c_23_univ_2d_emit_2d_getclo,2872)
+___DEF_MOD_GLO(226,___G_c_23_univ_2d_emit_2d_setclo,2875)
+___DEF_MOD_GLO(262,___G_c_23_univ_2d_glo_2d_dependency,2878)
+___DEF_MOD_GLO(263,___G_c_23_univ_2d_glo_2d_use,2890)
+___DEF_MOD_GLO(261,___G_c_23_univ_2d_get_2d_symbol_2d_name,2895)
+___DEF_MOD_GLO(174,___G_c_23_univ_2d_emit_2d_getpeps,2905)
+___DEF_MOD_GLO(230,___G_c_23_univ_2d_emit_2d_setpeps,2911)
+___DEF_MOD_GLO(170,___G_c_23_univ_2d_emit_2d_getglo,2917)
+___DEF_MOD_GLO(227,___G_c_23_univ_2d_emit_2d_setglo,2924)
+___DEF_MOD_GLO(181,___G_c_23_univ_2d_emit_2d_glo_2d_var_3f_,2931)
+___DEF_MOD_GLO(179,___G_c_23_univ_2d_emit_2d_glo_2d_var_2d_ref,2937)
+___DEF_MOD_GLO(177,___G_c_23_univ_2d_emit_2d_glo_2d_var_2d_primitive_2d_ref,2943)
+___DEF_MOD_GLO(180,___G_c_23_univ_2d_emit_2d_glo_2d_var_2d_set_21_,2949)
+___DEF_MOD_GLO(178,___G_c_23_univ_2d_emit_2d_glo_2d_var_2d_primitive_2d_set_21_,2955)
+___DEF_MOD_GLO(172,___G_c_23_univ_2d_emit_2d_getopnd,2961)
+___DEF_MOD_GLO(173,___G_c_23_univ_2d_emit_2d_getopnds,2987)
+___DEF_MOD_GLO(228,___G_c_23_univ_2d_emit_2d_setloc,2994)
+___DEF_MOD_GLO(201,___G_c_23_univ_2d_emit_2d_obj_2a_,3021)
+___DEF_MOD_GLO(202,___G_c_23_univ_2d_emit_2d_obj_2d_proc_2d_as,3215)
+___DEF_MOD_GLO(200,___G_c_23_univ_2d_emit_2d_obj,3226)
+___DEF_MOD_GLO(293,___G_c_23_univ_2d_obj_2d_type,3229)
+___DEF_MOD_GLO(89,___G_c_23_univ_2d_bignum_2d__3e_digits,3264)
+___DEF_MOD_GLO(331,___G_c_23_univ_2d_typed_2d_array_2d_constructor,3292)
+___DEF_MOD_GLO(87,___G_c_23_univ_2d_array_2d_constructor,3296)
+___DEF_MOD_GLO(139,___G_c_23_univ_2d_emit_2d_array_2d_literal,3301)
+___DEF_MOD_GLO(165,___G_c_23_univ_2d_emit_2d_extensible_2d_array_2d_literal,3319)
+___DEF_MOD_GLO(198,___G_c_23_univ_2d_emit_2d_new_2d_array,3334)
+___DEF_MOD_GLO(191,___G_c_23_univ_2d_emit_2d_make_2d_array,3358)
+___DEF_MOD_GLO(292,___G_c_23_univ_2d_num_2d_array_2d_constant,3386)
+___DEF_MOD_GLO(248,___G_c_23_univ_2d_field_2d_rename,3406)
+___DEF_MOD_GLO(310,___G_c_23_univ_2d_rts_2d_field_2d_low_2d_level_2d_name,3413)
+___DEF_MOD_GLO(311,___G_c_23_univ_2d_rts_2d_method_2d_low_2d_level_2d_name,3417)
+___DEF_MOD_GLO(99,___G_c_23_univ_2d_compactness_3e__3d__3f_,3421)
+___DEF_MOD_GLO(48,___G_c_23_gvm_2d_lbl_2d_use,3427)
+___DEF_MOD_GLO(49,___G_c_23_gvm_2d_lbl_2d_use_2d_aux,3432)
+___DEF_MOD_GLO(50,___G_c_23_gvm_2d_proc_2d_use,3438)
+___DEF_MOD_GLO(47,___G_c_23_gvm_2d_bb_2d_use,3443)
+___DEF_MOD_GLO(69,___G_c_23_lbl_2d__3e_id,3447)
+___DEF_MOD_GLO(68,___G_c_23_label_2d__3e_id,3450)
+___DEF_MOD_GLO(255,___G_c_23_univ_2d_foldr_2d_range,3461)
+___DEF_MOD_GLO(300,___G_c_23_univ_2d_pop_2d_args_2d_to_2d_vars,3468)
+___DEF_MOD_GLO(306,___G_c_23_univ_2d_push_2d_args,3503)
+___DEF_MOD_GLO(299,___G_c_23_univ_2d_pop_2d_args_2d_to_2d_regs,3526)
+___DEF_MOD_GLO(282,___G_c_23_univ_2d_min_2d_memoized_2d_fixnum,3561)
+___DEF_MOD_GLO(278,___G_c_23_univ_2d_max_2d_memoized_2d_fixnum,3563)
 ___END_MOD_GLO
 
 ___BEGIN_MOD_SYM_KEY
@@ -54362,226 +54025,228 @@ ___DEF_MOD_SYM(353,___S_c_23_with_2d_stack_2d_base_2d_offset,"c#with-stack-base-
 ___DEF_MOD_SYM(354,___S_c_23_with_2d_stack_2d_pointer_2d_adjust,"c#with-stack-pointer-adjust")
 ___DEF_MOD_SYM(355,___S_car,"car")
 ___DEF_MOD_SYM(356,___S_cdr,"cdr")
-___DEF_MOD_SYM(357,___S_char,"char")
-___DEF_MOD_SYM(358,___S_check__procedure,"check_procedure")
-___DEF_MOD_SYM(359,___S_check__procedure__glo,"check_procedure_glo")
-___DEF_MOD_SYM(360,___S_class,"class")
-___DEF_MOD_SYM(361,___S_close,"close")
-___DEF_MOD_SYM(362,___S_closure,"closure")
-___DEF_MOD_SYM(363,___S_closure__alloc,"closure_alloc")
-___DEF_MOD_SYM(364,___S_code,"code")
-___DEF_MOD_SYM(365,___S_codes,"codes")
-___DEF_MOD_SYM(366,___S_compactness,"compactness")
-___DEF_MOD_SYM(367,___S_cons,"cons")
-___DEF_MOD_SYM(368,___S_copy,"copy")
-___DEF_MOD_SYM(369,___S_copyOfRange,"copyOfRange")
-___DEF_MOD_SYM(370,___S_cpxnum,"cpxnum")
-___DEF_MOD_SYM(371,___S_ctrlpt,"ctrlpt")
-___DEF_MOD_SYM(372,___S_ctrlpt__init,"ctrlpt_init")
-___DEF_MOD_SYM(373,___S_ctrlpts,"ctrlpts")
-___DEF_MOD_SYM(374,___S_current__processor,"current_processor")
-___DEF_MOD_SYM(375,___S_current__vm,"current_vm")
-___DEF_MOD_SYM(376,___S_d,"d")
-___DEF_MOD_SYM(377,___S_deleted,"deleted")
-___DEF_MOD_SYM(378,___S_den,"den")
-___DEF_MOD_SYM(379,___S_denv,"denv")
-___DEF_MOD_SYM(380,___S_digits,"digits")
-___DEF_MOD_SYM(381,___S_e,"e")
-___DEF_MOD_SYM(382,___S_elems,"elems")
-___DEF_MOD_SYM(383,___S_entry,"entry")
-___DEF_MOD_SYM(384,___S_entrypt,"entrypt")
-___DEF_MOD_SYM(385,___S_entrypt__init,"entrypt_init")
-___DEF_MOD_SYM(386,___S_eof,"eof")
-___DEF_MOD_SYM(387,___S_error,"error")
-___DEF_MOD_SYM(388,___S_extended,"extended")
-___DEF_MOD_SYM(389,___S_f,"f")
-___DEF_MOD_SYM(390,___S_f32,"f32")
-___DEF_MOD_SYM(391,___S_f32vector,"f32vector")
-___DEF_MOD_SYM(392,___S_f64,"f64")
-___DEF_MOD_SYM(393,___S_f64vector,"f64vector")
-___DEF_MOD_SYM(394,___S_fixnum,"fixnum")
-___DEF_MOD_SYM(395,___S_flonum,"flonum")
-___DEF_MOD_SYM(396,___S_flonumbox,"flonumbox")
-___DEF_MOD_SYM(397,___S_flonump,"flonump")
-___DEF_MOD_SYM(398,___S_fmt,"fmt")
-___DEF_MOD_SYM(399,___S_frame,"frame")
-___DEF_MOD_SYM(400,___S_fs,"fs")
-___DEF_MOD_SYM(401,___S_g,"g")
-___DEF_MOD_SYM(402,___S_get,"get")
-___DEF_MOD_SYM(403,___S_glo,"glo")
-___DEF_MOD_SYM(404,___S_global,"global")
-___DEF_MOD_SYM(405,___S_go,"go")
-___DEF_MOD_SYM(406,___S_h,"h")
-___DEF_MOD_SYM(407,___S_hasattr,"hasattr")
-___DEF_MOD_SYM(408,___S_hash,"hash")
-___DEF_MOD_SYM(409,___S_hname,"hname")
-___DEF_MOD_SYM(410,___S_host,"host")
-___DEF_MOD_SYM(411,___S_i,"i")
-___DEF_MOD_SYM(412,___S_id,"id")
-___DEF_MOD_SYM(413,___S_ifjump,"ifjump")
-___DEF_MOD_SYM(414,___S_imag,"imag")
-___DEF_MOD_SYM(415,___S_index,"index")
-___DEF_MOD_SYM(416,___S_info,"info")
-___DEF_MOD_SYM(417,___S_inherited,"inherited")
-___DEF_MOD_SYM(418,___S_instance__variable__defined_3f_,"instance_variable_defined?")
-___DEF_MOD_SYM(419,___S_int,"int")
-___DEF_MOD_SYM(420,___S_interned,"interned")
-___DEF_MOD_SYM(421,___S_inttemp1,"inttemp1")
-___DEF_MOD_SYM(422,___S_inttemp2,"inttemp2")
-___DEF_MOD_SYM(423,___S_j,"j")
-___DEF_MOD_SYM(424,___S_java,"java")
-___DEF_MOD_SYM(425,___S_js,"js")
-___DEF_MOD_SYM(426,___S_jsnumberp,"jsnumberp")
-___DEF_MOD_SYM(427,___S_jump,"jump")
-___DEF_MOD_SYM(428,___S_jumpable,"jumpable")
-___DEF_MOD_SYM(429,___S_k,"k")
-___DEF_MOD_SYM(430,___S_key,"key")
-___DEF_MOD_SYM(431,___S_keyword,"keyword")
-___DEF_MOD_SYM(432,___S_l,"l")
-___DEF_MOD_SYM(433,___S_label_2d_namespace,"label-namespace")
-___DEF_MOD_SYM(434,___S_length,"length")
-___DEF_MOD_SYM(435,___S_link,"link")
-___DEF_MOD_SYM(436,___S_m,"m")
-___DEF_MOD_SYM(437,___S_make__interned__symbol,"make_interned_symbol")
-___DEF_MOD_SYM(438,___S_module__register,"module_register")
-___DEF_MOD_SYM(439,___S_n,"n")
-___DEF_MOD_SYM(440,___S_name,"name")
-___DEF_MOD_SYM(441,___S_namespace,"namespace")
-___DEF_MOD_SYM(442,___S_nargs,"nargs")
-___DEF_MOD_SYM(443,___S_nb_2d_arg_2d_regs,"nb-arg-regs")
-___DEF_MOD_SYM(444,___S_nb_2d_gvm_2d_regs,"nb-gvm-regs")
-___DEF_MOD_SYM(445,___S_never_2d_return_2d_jump,"never-return-jump")
-___DEF_MOD_SYM(446,___S_new,"new")
-___DEF_MOD_SYM(447,___S_nfree,"nfree")
-___DEF_MOD_SYM(448,___S_node,"node")
-___DEF_MOD_SYM(449,___S_nopreload,"nopreload")
-___DEF_MOD_SYM(450,___S_null,"null")
-___DEF_MOD_SYM(451,___S_num,"num")
-___DEF_MOD_SYM(452,___S_number,"number")
-___DEF_MOD_SYM(453,___S_o,"o")
-___DEF_MOD_SYM(454,___S_optional,"optional")
-___DEF_MOD_SYM(455,___S_other,"other")
-___DEF_MOD_SYM(456,___S_p,"p")
-___DEF_MOD_SYM(457,___S_package,"package")
-___DEF_MOD_SYM(458,___S_pair,"pair")
-___DEF_MOD_SYM(459,___S_pairp,"pairp")
-___DEF_MOD_SYM(460,___S_parent,"parent")
-___DEF_MOD_SYM(461,___S_parententrypoint,"parententrypoint")
-___DEF_MOD_SYM(462,___S_parententrypt,"parententrypt")
-___DEF_MOD_SYM(463,___S_parententrypt__init,"parententrypt_init")
-___DEF_MOD_SYM(464,___S_peps,"peps")
-___DEF_MOD_SYM(465,___S_php,"php")
-___DEF_MOD_SYM(466,___S_poll,"poll")
-___DEF_MOD_SYM(467,___S_pollcount,"pollcount")
-___DEF_MOD_SYM(468,___S_pre3,"pre3")
-___DEF_MOD_SYM(469,___S_pre53,"pre53")
-___DEF_MOD_SYM(470,___S_pre7,"pre7")
-___DEF_MOD_SYM(471,___S_preload,"preload")
-___DEF_MOD_SYM(472,___S_prim,"prim")
-___DEF_MOD_SYM(473,___S_println,"println")
-___DEF_MOD_SYM(474,___S_property__exists,"property_exists")
-___DEF_MOD_SYM(475,___S_push,"push")
-___DEF_MOD_SYM(476,___S_python,"python")
-___DEF_MOD_SYM(477,___S_q,"q")
-___DEF_MOD_SYM(478,___S_r,"r")
-___DEF_MOD_SYM(479,___S_r0,"r0")
-___DEF_MOD_SYM(480,___S_r1,"r1")
-___DEF_MOD_SYM(481,___S_r2,"r2")
-___DEF_MOD_SYM(482,___S_r3,"r3")
-___DEF_MOD_SYM(483,___S_r4,"r4")
-___DEF_MOD_SYM(484,___S_ratnum,"ratnum")
-___DEF_MOD_SYM(485,___S_rd,"rd")
-___DEF_MOD_SYM(486,___S_rdwr,"rdwr")
-___DEF_MOD_SYM(487,___S_real,"real")
-___DEF_MOD_SYM(488,___S_real_2d_time_2d_milliseconds,"real-time-milliseconds")
-___DEF_MOD_SYM(489,___S_repr_2d_boolean,"repr-boolean")
-___DEF_MOD_SYM(490,___S_repr_2d_f32vector,"repr-f32vector")
-___DEF_MOD_SYM(491,___S_repr_2d_f64vector,"repr-f64vector")
-___DEF_MOD_SYM(492,___S_repr_2d_fixnum,"repr-fixnum")
-___DEF_MOD_SYM(493,___S_repr_2d_flonum,"repr-flonum")
-___DEF_MOD_SYM(494,___S_repr_2d_frame,"repr-frame")
-___DEF_MOD_SYM(495,___S_repr_2d_module,"repr-module")
-___DEF_MOD_SYM(496,___S_repr_2d_null,"repr-null")
-___DEF_MOD_SYM(497,___S_repr_2d_procedure,"repr-procedure")
-___DEF_MOD_SYM(498,___S_repr_2d_s16vector,"repr-s16vector")
-___DEF_MOD_SYM(499,___S_repr_2d_s32vector,"repr-s32vector")
-___DEF_MOD_SYM(500,___S_repr_2d_s64vector,"repr-s64vector")
-___DEF_MOD_SYM(501,___S_repr_2d_s8vector,"repr-s8vector")
-___DEF_MOD_SYM(502,___S_repr_2d_string,"repr-string")
-___DEF_MOD_SYM(503,___S_repr_2d_symbol,"repr-symbol")
-___DEF_MOD_SYM(504,___S_repr_2d_u16vector,"repr-u16vector")
-___DEF_MOD_SYM(505,___S_repr_2d_u32vector,"repr-u32vector")
-___DEF_MOD_SYM(506,___S_repr_2d_u64vector,"repr-u64vector")
-___DEF_MOD_SYM(507,___S_repr_2d_u8vector,"repr-u8vector")
-___DEF_MOD_SYM(508,___S_repr_2d_values,"repr-values")
-___DEF_MOD_SYM(509,___S_repr_2d_vector,"repr-vector")
-___DEF_MOD_SYM(510,___S_repr_2d_void,"repr-void")
-___DEF_MOD_SYM(511,___S_rest,"rest")
-___DEF_MOD_SYM(512,___S_return,"return")
-___DEF_MOD_SYM(513,___S_returnpt,"returnpt")
-___DEF_MOD_SYM(514,___S_returnpt__init,"returnpt_init")
-___DEF_MOD_SYM(515,___S_ruby,"ruby")
-___DEF_MOD_SYM(516,___S_s,"s")
-___DEF_MOD_SYM(517,___S_s16,"s16")
-___DEF_MOD_SYM(518,___S_s16vector,"s16vector")
-___DEF_MOD_SYM(519,___S_s32,"s32")
-___DEF_MOD_SYM(520,___S_s32vector,"s32vector")
-___DEF_MOD_SYM(521,___S_s64,"s64")
-___DEF_MOD_SYM(522,___S_s64vector,"s64vector")
-___DEF_MOD_SYM(523,___S_s8,"s8")
-___DEF_MOD_SYM(524,___S_s8vector,"s8vector")
-___DEF_MOD_SYM(525,___S_scmobj,"scmobj")
-___DEF_MOD_SYM(526,___S_sequence_2d_number,"sequence-number")
-___DEF_MOD_SYM(527,___S_set,"set")
-___DEF_MOD_SYM(528,___S_simple,"simple")
-___DEF_MOD_SYM(529,___S_slice,"slice")
-___DEF_MOD_SYM(530,___S_slice_21_,"slice!")
-___DEF_MOD_SYM(531,___S_slots,"slots")
-___DEF_MOD_SYM(532,___S_sp,"sp")
-___DEF_MOD_SYM(533,___S_stack,"stack")
-___DEF_MOD_SYM(534,___S_state,"state")
-___DEF_MOD_SYM(535,___S_str,"str")
-___DEF_MOD_SYM(536,___S_string,"string")
-___DEF_MOD_SYM(537,___S_stringbox,"stringbox")
-___DEF_MOD_SYM(538,___S_struct,"struct")
-___DEF_MOD_SYM(539,___S_structure,"structure")
-___DEF_MOD_SYM(540,___S_switch,"switch")
-___DEF_MOD_SYM(541,___S_symbol,"symbol")
-___DEF_MOD_SYM(542,___S_t,"t")
-___DEF_MOD_SYM(543,___S_tags,"tags")
-___DEF_MOD_SYM(544,___S_task_2d_entry,"task-entry")
-___DEF_MOD_SYM(545,___S_task_2d_return,"task-return")
-___DEF_MOD_SYM(546,___S_testator,"testator")
-___DEF_MOD_SYM(547,___S_toString,"toString")
-___DEF_MOD_SYM(548,___S_to__s,"to_s")
-___DEF_MOD_SYM(549,___S_u,"u")
-___DEF_MOD_SYM(550,___S_u16,"u16")
-___DEF_MOD_SYM(551,___S_u16vector,"u16vector")
-___DEF_MOD_SYM(552,___S_u32,"u32")
-___DEF_MOD_SYM(553,___S_u32vector,"u32vector")
-___DEF_MOD_SYM(554,___S_u64,"u64")
-___DEF_MOD_SYM(555,___S_u64vector,"u64vector")
-___DEF_MOD_SYM(556,___S_u8,"u8")
-___DEF_MOD_SYM(557,___S_u8vector,"u8vector")
-___DEF_MOD_SYM(558,___S_unbound,"unbound")
-___DEF_MOD_SYM(559,___S_unicode,"unicode")
-___DEF_MOD_SYM(560,___S_unused,"unused")
-___DEF_MOD_SYM(561,___S_unwind,"unwind")
-___DEF_MOD_SYM(562,___S_v,"v")
-___DEF_MOD_SYM(563,___S_val,"val")
-___DEF_MOD_SYM(564,___S_vals,"vals")
-___DEF_MOD_SYM(565,___S_value,"value")
-___DEF_MOD_SYM(566,___S_vector,"vector")
-___DEF_MOD_SYM(567,___S_vectorbox,"vectorbox")
-___DEF_MOD_SYM(568,___S_vectorp,"vectorp")
-___DEF_MOD_SYM(569,___S_void,"void")
-___DEF_MOD_SYM(570,___S_w,"w")
-___DEF_MOD_SYM(571,___S_wr,"wr")
-___DEF_MOD_SYM(572,___S_wrong__key__args,"wrong_key_args")
-___DEF_MOD_SYM(573,___S_wrong__nargs,"wrong_nargs")
-___DEF_MOD_SYM(574,___S_x,"x")
-___DEF_MOD_SYM(575,___S_y,"y")
-___DEF_MOD_SYM(576,___S_z,"z")
+___DEF_MOD_SYM(357,___S_cdr_2d_x,"cdr-x")
+___DEF_MOD_SYM(358,___S_char,"char")
+___DEF_MOD_SYM(359,___S_check__procedure,"check_procedure")
+___DEF_MOD_SYM(360,___S_check__procedure__glo,"check_procedure_glo")
+___DEF_MOD_SYM(361,___S_class,"class")
+___DEF_MOD_SYM(362,___S_close,"close")
+___DEF_MOD_SYM(363,___S_closure,"closure")
+___DEF_MOD_SYM(364,___S_closure__alloc,"closure_alloc")
+___DEF_MOD_SYM(365,___S_code,"code")
+___DEF_MOD_SYM(366,___S_codes,"codes")
+___DEF_MOD_SYM(367,___S_compactness,"compactness")
+___DEF_MOD_SYM(368,___S_cons,"cons")
+___DEF_MOD_SYM(369,___S_copy,"copy")
+___DEF_MOD_SYM(370,___S_copyOfRange,"copyOfRange")
+___DEF_MOD_SYM(371,___S_cpxnum,"cpxnum")
+___DEF_MOD_SYM(372,___S_ctrlpt,"ctrlpt")
+___DEF_MOD_SYM(373,___S_ctrlpt__init,"ctrlpt_init")
+___DEF_MOD_SYM(374,___S_ctrlpts,"ctrlpts")
+___DEF_MOD_SYM(375,___S_current__processor,"current_processor")
+___DEF_MOD_SYM(376,___S_current__vm,"current_vm")
+___DEF_MOD_SYM(377,___S_d,"d")
+___DEF_MOD_SYM(378,___S_deleted,"deleted")
+___DEF_MOD_SYM(379,___S_den,"den")
+___DEF_MOD_SYM(380,___S_denv,"denv")
+___DEF_MOD_SYM(381,___S_digits,"digits")
+___DEF_MOD_SYM(382,___S_e,"e")
+___DEF_MOD_SYM(383,___S_elems,"elems")
+___DEF_MOD_SYM(384,___S_entry,"entry")
+___DEF_MOD_SYM(385,___S_entrypt,"entrypt")
+___DEF_MOD_SYM(386,___S_entrypt__init,"entrypt_init")
+___DEF_MOD_SYM(387,___S_eof,"eof")
+___DEF_MOD_SYM(388,___S_error,"error")
+___DEF_MOD_SYM(389,___S_extended,"extended")
+___DEF_MOD_SYM(390,___S_f,"f")
+___DEF_MOD_SYM(391,___S_f32,"f32")
+___DEF_MOD_SYM(392,___S_f32vector,"f32vector")
+___DEF_MOD_SYM(393,___S_f64,"f64")
+___DEF_MOD_SYM(394,___S_f64vector,"f64vector")
+___DEF_MOD_SYM(395,___S_fixnum,"fixnum")
+___DEF_MOD_SYM(396,___S_flonum,"flonum")
+___DEF_MOD_SYM(397,___S_flonumbox,"flonumbox")
+___DEF_MOD_SYM(398,___S_flonump,"flonump")
+___DEF_MOD_SYM(399,___S_fmt,"fmt")
+___DEF_MOD_SYM(400,___S_frame,"frame")
+___DEF_MOD_SYM(401,___S_fs,"fs")
+___DEF_MOD_SYM(402,___S_g,"g")
+___DEF_MOD_SYM(403,___S_get,"get")
+___DEF_MOD_SYM(404,___S_glo,"glo")
+___DEF_MOD_SYM(405,___S_global,"global")
+___DEF_MOD_SYM(406,___S_go,"go")
+___DEF_MOD_SYM(407,___S_h,"h")
+___DEF_MOD_SYM(408,___S_hasattr,"hasattr")
+___DEF_MOD_SYM(409,___S_hash,"hash")
+___DEF_MOD_SYM(410,___S_hname,"hname")
+___DEF_MOD_SYM(411,___S_host,"host")
+___DEF_MOD_SYM(412,___S_i,"i")
+___DEF_MOD_SYM(413,___S_id,"id")
+___DEF_MOD_SYM(414,___S_ifjump,"ifjump")
+___DEF_MOD_SYM(415,___S_imag,"imag")
+___DEF_MOD_SYM(416,___S_index,"index")
+___DEF_MOD_SYM(417,___S_info,"info")
+___DEF_MOD_SYM(418,___S_inherited,"inherited")
+___DEF_MOD_SYM(419,___S_instance__variable__defined_3f_,"instance_variable_defined?")
+___DEF_MOD_SYM(420,___S_int,"int")
+___DEF_MOD_SYM(421,___S_interned,"interned")
+___DEF_MOD_SYM(422,___S_inttemp1,"inttemp1")
+___DEF_MOD_SYM(423,___S_inttemp2,"inttemp2")
+___DEF_MOD_SYM(424,___S_j,"j")
+___DEF_MOD_SYM(425,___S_java,"java")
+___DEF_MOD_SYM(426,___S_js,"js")
+___DEF_MOD_SYM(427,___S_jsnumberp,"jsnumberp")
+___DEF_MOD_SYM(428,___S_jump,"jump")
+___DEF_MOD_SYM(429,___S_jumpable,"jumpable")
+___DEF_MOD_SYM(430,___S_k,"k")
+___DEF_MOD_SYM(431,___S_key,"key")
+___DEF_MOD_SYM(432,___S_keyword,"keyword")
+___DEF_MOD_SYM(433,___S_l,"l")
+___DEF_MOD_SYM(434,___S_label_2d_namespace,"label-namespace")
+___DEF_MOD_SYM(435,___S_length,"length")
+___DEF_MOD_SYM(436,___S_link,"link")
+___DEF_MOD_SYM(437,___S_m,"m")
+___DEF_MOD_SYM(438,___S_make__interned__symbol,"make_interned_symbol")
+___DEF_MOD_SYM(439,___S_module__register,"module_register")
+___DEF_MOD_SYM(440,___S_n,"n")
+___DEF_MOD_SYM(441,___S_name,"name")
+___DEF_MOD_SYM(442,___S_namespace,"namespace")
+___DEF_MOD_SYM(443,___S_nargs,"nargs")
+___DEF_MOD_SYM(444,___S_nb_2d_arg_2d_regs,"nb-arg-regs")
+___DEF_MOD_SYM(445,___S_nb_2d_gvm_2d_regs,"nb-gvm-regs")
+___DEF_MOD_SYM(446,___S_never_2d_return_2d_jump,"never-return-jump")
+___DEF_MOD_SYM(447,___S_new,"new")
+___DEF_MOD_SYM(448,___S_nfree,"nfree")
+___DEF_MOD_SYM(449,___S_node,"node")
+___DEF_MOD_SYM(450,___S_nopreload,"nopreload")
+___DEF_MOD_SYM(451,___S_null,"null")
+___DEF_MOD_SYM(452,___S_null_3f_,"null?")
+___DEF_MOD_SYM(453,___S_num,"num")
+___DEF_MOD_SYM(454,___S_number,"number")
+___DEF_MOD_SYM(455,___S_o,"o")
+___DEF_MOD_SYM(456,___S_optional,"optional")
+___DEF_MOD_SYM(457,___S_other,"other")
+___DEF_MOD_SYM(458,___S_p,"p")
+___DEF_MOD_SYM(459,___S_package,"package")
+___DEF_MOD_SYM(460,___S_pair,"pair")
+___DEF_MOD_SYM(461,___S_pairp,"pairp")
+___DEF_MOD_SYM(462,___S_parent,"parent")
+___DEF_MOD_SYM(463,___S_parententrypoint,"parententrypoint")
+___DEF_MOD_SYM(464,___S_parententrypt,"parententrypt")
+___DEF_MOD_SYM(465,___S_parententrypt__init,"parententrypt_init")
+___DEF_MOD_SYM(466,___S_peps,"peps")
+___DEF_MOD_SYM(467,___S_php,"php")
+___DEF_MOD_SYM(468,___S_poll,"poll")
+___DEF_MOD_SYM(469,___S_pollcount,"pollcount")
+___DEF_MOD_SYM(470,___S_pre3,"pre3")
+___DEF_MOD_SYM(471,___S_pre53,"pre53")
+___DEF_MOD_SYM(472,___S_pre7,"pre7")
+___DEF_MOD_SYM(473,___S_preload,"preload")
+___DEF_MOD_SYM(474,___S_prim,"prim")
+___DEF_MOD_SYM(475,___S_println,"println")
+___DEF_MOD_SYM(476,___S_property__exists,"property_exists")
+___DEF_MOD_SYM(477,___S_push,"push")
+___DEF_MOD_SYM(478,___S_python,"python")
+___DEF_MOD_SYM(479,___S_q,"q")
+___DEF_MOD_SYM(480,___S_r,"r")
+___DEF_MOD_SYM(481,___S_r0,"r0")
+___DEF_MOD_SYM(482,___S_r1,"r1")
+___DEF_MOD_SYM(483,___S_r2,"r2")
+___DEF_MOD_SYM(484,___S_r3,"r3")
+___DEF_MOD_SYM(485,___S_r4,"r4")
+___DEF_MOD_SYM(486,___S_ratnum,"ratnum")
+___DEF_MOD_SYM(487,___S_rd,"rd")
+___DEF_MOD_SYM(488,___S_rdwr,"rdwr")
+___DEF_MOD_SYM(489,___S_real,"real")
+___DEF_MOD_SYM(490,___S_real_2d_time_2d_milliseconds,"real-time-milliseconds")
+___DEF_MOD_SYM(491,___S_repr_2d_boolean,"repr-boolean")
+___DEF_MOD_SYM(492,___S_repr_2d_f32vector,"repr-f32vector")
+___DEF_MOD_SYM(493,___S_repr_2d_f64vector,"repr-f64vector")
+___DEF_MOD_SYM(494,___S_repr_2d_fixnum,"repr-fixnum")
+___DEF_MOD_SYM(495,___S_repr_2d_flonum,"repr-flonum")
+___DEF_MOD_SYM(496,___S_repr_2d_frame,"repr-frame")
+___DEF_MOD_SYM(497,___S_repr_2d_module,"repr-module")
+___DEF_MOD_SYM(498,___S_repr_2d_null,"repr-null")
+___DEF_MOD_SYM(499,___S_repr_2d_procedure,"repr-procedure")
+___DEF_MOD_SYM(500,___S_repr_2d_s16vector,"repr-s16vector")
+___DEF_MOD_SYM(501,___S_repr_2d_s32vector,"repr-s32vector")
+___DEF_MOD_SYM(502,___S_repr_2d_s64vector,"repr-s64vector")
+___DEF_MOD_SYM(503,___S_repr_2d_s8vector,"repr-s8vector")
+___DEF_MOD_SYM(504,___S_repr_2d_string,"repr-string")
+___DEF_MOD_SYM(505,___S_repr_2d_symbol,"repr-symbol")
+___DEF_MOD_SYM(506,___S_repr_2d_u16vector,"repr-u16vector")
+___DEF_MOD_SYM(507,___S_repr_2d_u32vector,"repr-u32vector")
+___DEF_MOD_SYM(508,___S_repr_2d_u64vector,"repr-u64vector")
+___DEF_MOD_SYM(509,___S_repr_2d_u8vector,"repr-u8vector")
+___DEF_MOD_SYM(510,___S_repr_2d_values,"repr-values")
+___DEF_MOD_SYM(511,___S_repr_2d_vector,"repr-vector")
+___DEF_MOD_SYM(512,___S_repr_2d_void,"repr-void")
+___DEF_MOD_SYM(513,___S_rest,"rest")
+___DEF_MOD_SYM(514,___S_return,"return")
+___DEF_MOD_SYM(515,___S_returnpt,"returnpt")
+___DEF_MOD_SYM(516,___S_returnpt__init,"returnpt_init")
+___DEF_MOD_SYM(517,___S_ruby,"ruby")
+___DEF_MOD_SYM(518,___S_s,"s")
+___DEF_MOD_SYM(519,___S_s16,"s16")
+___DEF_MOD_SYM(520,___S_s16vector,"s16vector")
+___DEF_MOD_SYM(521,___S_s32,"s32")
+___DEF_MOD_SYM(522,___S_s32vector,"s32vector")
+___DEF_MOD_SYM(523,___S_s64,"s64")
+___DEF_MOD_SYM(524,___S_s64vector,"s64vector")
+___DEF_MOD_SYM(525,___S_s8,"s8")
+___DEF_MOD_SYM(526,___S_s8vector,"s8vector")
+___DEF_MOD_SYM(527,___S_scmobj,"scmobj")
+___DEF_MOD_SYM(528,___S_sequence_2d_number,"sequence-number")
+___DEF_MOD_SYM(529,___S_set,"set")
+___DEF_MOD_SYM(530,___S_simple,"simple")
+___DEF_MOD_SYM(531,___S_slice,"slice")
+___DEF_MOD_SYM(532,___S_slice_21_,"slice!")
+___DEF_MOD_SYM(533,___S_slots,"slots")
+___DEF_MOD_SYM(534,___S_sp,"sp")
+___DEF_MOD_SYM(535,___S_stack,"stack")
+___DEF_MOD_SYM(536,___S_state,"state")
+___DEF_MOD_SYM(537,___S_str,"str")
+___DEF_MOD_SYM(538,___S_string,"string")
+___DEF_MOD_SYM(539,___S_stringbox,"stringbox")
+___DEF_MOD_SYM(540,___S_struct,"struct")
+___DEF_MOD_SYM(541,___S_structure,"structure")
+___DEF_MOD_SYM(542,___S_switch,"switch")
+___DEF_MOD_SYM(543,___S_symbol,"symbol")
+___DEF_MOD_SYM(544,___S_t,"t")
+___DEF_MOD_SYM(545,___S_tags,"tags")
+___DEF_MOD_SYM(546,___S_task_2d_entry,"task-entry")
+___DEF_MOD_SYM(547,___S_task_2d_return,"task-return")
+___DEF_MOD_SYM(548,___S_testator,"testator")
+___DEF_MOD_SYM(549,___S_toString,"toString")
+___DEF_MOD_SYM(550,___S_to__s,"to_s")
+___DEF_MOD_SYM(551,___S_u,"u")
+___DEF_MOD_SYM(552,___S_u16,"u16")
+___DEF_MOD_SYM(553,___S_u16vector,"u16vector")
+___DEF_MOD_SYM(554,___S_u32,"u32")
+___DEF_MOD_SYM(555,___S_u32vector,"u32vector")
+___DEF_MOD_SYM(556,___S_u64,"u64")
+___DEF_MOD_SYM(557,___S_u64vector,"u64vector")
+___DEF_MOD_SYM(558,___S_u8,"u8")
+___DEF_MOD_SYM(559,___S_u8vector,"u8vector")
+___DEF_MOD_SYM(560,___S_unbound,"unbound")
+___DEF_MOD_SYM(561,___S_unicode,"unicode")
+___DEF_MOD_SYM(562,___S_unused,"unused")
+___DEF_MOD_SYM(563,___S_unwind,"unwind")
+___DEF_MOD_SYM(564,___S_v,"v")
+___DEF_MOD_SYM(565,___S_val,"val")
+___DEF_MOD_SYM(566,___S_vals,"vals")
+___DEF_MOD_SYM(567,___S_value,"value")
+___DEF_MOD_SYM(568,___S_vector,"vector")
+___DEF_MOD_SYM(569,___S_vectorbox,"vectorbox")
+___DEF_MOD_SYM(570,___S_vectorp,"vectorp")
+___DEF_MOD_SYM(571,___S_void,"void")
+___DEF_MOD_SYM(572,___S_w,"w")
+___DEF_MOD_SYM(573,___S_wr,"wr")
+___DEF_MOD_SYM(574,___S_wrong__key__args,"wrong_key_args")
+___DEF_MOD_SYM(575,___S_wrong__nargs,"wrong_nargs")
+___DEF_MOD_SYM(576,___S_x,"x")
+___DEF_MOD_SYM(577,___S_y,"y")
+___DEF_MOD_SYM(578,___S_z,"z")
 ___DEF_MOD_KEY(0,___K_test,"test")
 ___END_MOD_SYM_KEY
 
