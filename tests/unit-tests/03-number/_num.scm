@@ -2,6 +2,44 @@
 
 ;;; These tests come from coverage statistics for part of _num.scm
 
+;;; Large exact integer multiplication and squaring.
+
+(let* ((a (arithmetic-shift 1 21000))
+       (a^2 (arithmetic-shift 1 42000))
+       (a+1 (+ a 1))
+       (1-a (- 1 a)))
+  (check-eqv? (* a+1 a+1)
+              (+ a^2 (arithmetic-shift 1 21001) 1))
+  (check-eqv? (square a+1)
+              (+ a^2 (arithmetic-shift 1 21001) 1))
+  (check-eqv? (* 1-a a+1)
+              (- 1 a^2))
+  (check-eqv? (* (- a) (- a))
+              a^2)
+  (check-eqv? (square (- a))
+              a^2))
+
+(cond-expand
+  (enable-gmp-bignum
+   (let* ((a (+ (arithmetic-shift 1 1600) 1))
+          (b (- (arithmetic-shift 1 1700) 3))
+          (c (- (arithmetic-shift 1 2048) 1))
+          (old-gmp-mul-min-width ##bignum.gmp-mul-min-width))
+     (check-eqv? (##bignum.gmp-mul a b #f)
+                 (* a b))
+     (check-eqv? (##bignum.gmp-mul (- a) b #f)
+                 (- (* a b)))
+     (check-eqv? (##bignum.gmp-mul (- c) c #t)
+                 (* c c))
+     (##bignum.gmp-mul-min-width-set! 1500)
+     (check-eqv? (* a b)
+                 (##bignum.gmp-mul a b #f))
+     (check-eqv? (square (- c))
+                 (##bignum.gmp-mul (- c) c #t))
+     (##bignum.gmp-mul-min-width-set! old-gmp-mul-min-width)))
+  (else
+   #f))
+
 (check-tail-exn type-exception? (lambda () (finite? 'a)))
 (check-eqv? (finite? 0) #t)
 (check-eqv? (finite? 1) #t)

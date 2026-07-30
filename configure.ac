@@ -1028,6 +1028,28 @@ else
   RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|disable-bignum|)"
 fi
 
+AC_ARG_ENABLE(gmp-bignum,
+              AS_HELP_STRING([--enable-gmp-bignum],
+                             [use LibGMP for large bignum multiplication and squaring (default is NO)]),
+              ENABLE_GMP_BIGNUM=$enableval,
+              ENABLE_GMP_BIGNUM=no)
+
+if test "$ENABLE_GMP_BIGNUM" = yes; then
+  if test "$ENABLE_BIGNUM" != yes; then
+    AC_MSG_ERROR([--enable-gmp-bignum requires --enable-bignum])
+  fi
+  AC_CHECK_HEADERS([gmp.h], [], [
+    AC_MSG_ERROR([--enable-gmp-bignum requires gmp.h])
+  ])
+  AC_SEARCH_LIBS([__gmpz_mul], [gmp], [], [
+    AC_MSG_ERROR([--enable-gmp-bignum requires libgmp])
+  ])
+  GAMBITLIB_DEFS="$GAMBITLIB_DEFS -D___USE_GMP_BIGNUM"
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|enable-gmp-bignum|)"
+else
+  RTLIB_COND_EXPAND_FEATURES="$RTLIB_COND_EXPAND_FEATURES(define-cond-expand-feature|disable-gmp-bignum|)"
+fi
+
 AC_ARG_ENABLE(ratnum,
               AS_HELP_STRING([--enable-ratnum],
                              [support exact rational numbers (default is YES)]),
