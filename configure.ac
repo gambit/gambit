@@ -1724,6 +1724,11 @@ else
   AC_CHECK_HEADERS(poll.h)
   AC_CHECK_HEADERS(sched.h)
 
+  AC_CHECK_HEADERS([lm.h], [], [],
+  [
+    #include <windows.h>
+  ])
+
   AC_CHECK_COMMON
 
   if test "$C_COMP_VISUALC" != yes; then
@@ -1778,7 +1783,13 @@ else
 
     PATH_SEP="\\\\\\\\\\\\\\\\"
 
-    LIBS="$LIBS Kernel32.Lib User32.Lib Gdi32.Lib WS2_32.Lib"
+    LIBS="$LIBS Kernel32.Lib User32.Lib Gdi32.Lib"
+
+    LIBS="$LIBS WS2_32.Lib"
+
+    if test "$ac_cv_header_lm_h" = "yes"; then
+      LIBS="$LIBS Netapi32.lib"
+    fi
 
     if test "$ENABLE_HIGH_RES_TIMING" = yes; then
       LIBS="$LIBS WinMM.Lib"
@@ -1802,6 +1813,10 @@ else
                # add Windows libraries needed by MinGW
 
                LIBS="$LIBS -lws2_32"
+
+               if test "$ac_cv_header_lm_h" = "yes"; then
+                 LIBS="$LIBS -lnetapi32"
+               fi
 
                if test "$ENABLE_HIGH_RES_TIMING" = yes; then
                  LIBS="$LIBS -lwinmm"

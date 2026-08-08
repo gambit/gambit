@@ -4691,9 +4691,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 fi
 
-# Don't search for pkg-config, just assume it is in the path
-#AC_PATH_PROG(PKG_CONFIG, pkg-config, , $PATH:/usr/bin:/usr/bin/X11:/usr/local/bin)
-PKG_CONFIG="pkg-config"
+PKG_PROG_PKG_CONFIG
 
 
 
@@ -7899,6 +7897,22 @@ fi
 done
 
 
+  for ac_header in lm.h
+do :
+  ac_fn_c_check_header_compile "$LINENO" "lm.h" "ac_cv_header_lm_h" "
+    #include <windows.h>
+
+"
+if test "x$ac_cv_header_lm_h" = xyes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LM_H 1
+_ACEOF
+
+fi
+
+done
+
+
 
   { $as_echo "$as_me:${as_lineno-$LINENO}: checking for environ" >&5
 $as_echo_n "checking for environ... " >&6; }
@@ -8306,7 +8320,13 @@ $as_echo "#define socklen_t int" >>confdefs.h
 
     PATH_SEP="\\\\\\\\\\\\\\\\"
 
-    LIBS="$LIBS Kernel32.Lib User32.Lib Gdi32.Lib WS2_32.Lib"
+    LIBS="$LIBS Kernel32.Lib User32.Lib Gdi32.Lib"
+
+    LIBS="$LIBS WS2_32.Lib"
+
+    if test "$ac_cv_header_lm_h" = "yes"; then
+      LIBS="$LIBS Netapi32.lib"
+    fi
 
     if test "$ENABLE_HIGH_RES_TIMING" = yes; then
       LIBS="$LIBS WinMM.Lib"
@@ -8330,6 +8350,10 @@ $as_echo "#define socklen_t int" >>confdefs.h
                # add Windows libraries needed by MinGW
 
                LIBS="$LIBS -lws2_32"
+
+               if test "$ac_cv_header_lm_h" = "yes"; then
+                 LIBS="$LIBS -lnetapi32"
+               fi
 
                if test "$ENABLE_HIGH_RES_TIMING" = yes; then
                  LIBS="$LIBS -lwinmm"

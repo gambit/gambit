@@ -1358,8 +1358,6 @@ ___SCMOBJ host;)
 
   ___ps->saved[0] = hi;
 
-#ifdef USE_POSIX
-
   errno = 0; /* in case the h_errno ends up being NETDB_SUCCESS
               * incorrectly which will be treated as NETDB_INTERNAL
               * (see err_code_from_h_errno)
@@ -1460,8 +1458,6 @@ ___SCMOBJ host;)
 
   ___FIELD(STRUCTURE,___ps->saved[0],___HOST_INFO_NAME) =
     ___release_scmobj (x);
-
-#endif
 
   /* convert h_aliases to strings */
 
@@ -2419,13 +2415,116 @@ ___SCMOBJ ___os_user_info
 ___SCMOBJ ui;
 ___SCMOBJ user;)
 {
+#ifdef USE_WIN32
+
+#ifndef USE_NetUserGetInfo
+
+  return ___FIX(___UNIMPL_ERR);
+
+#else
+
+  ___processor_state ___ps = ___PSTATE;
+  ___SCMOBJ result = ___FIX(___NO_ERR);
+  ___SCMOBJ x;
+  LPUSER_INFO_3 pui = NULL;
+  DWORD nerr = NERR_Success;
+  WCHAR *empty = L"";
+  WCHAR *chome = empty;
+  WCHAR *cshell = empty;
+
+  ___ps->saved[0] = ui;
+
+#define ___USER_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
+
+  if (___FIXNUMP(user))
+    {
+      /*
+       * Windows has no stable UNIX uid lookup in NetUser API.
+       */
+      result = ___FIX(___UNIMPL_ERR);
+      goto done;
+    }
+  else
+    {
+      ___UCS_2STRING cuser = 0;
+      if ((result = ___SCMOBJ_to_NONNULLUCS_2STRING (___PSA(___ps)
+                                                     user,
+                                                     &cuser,
+                                                     1))
+          != ___FIX(___NO_ERR))
+        goto done;
+
+      if ((nerr = NetUserGetInfo (NULL,
+                                  ___CAST(WCHAR*, cuser),
+                                  3,
+                                  ___CAST(LPBYTE*, &pui)))
+          || pui == NULL)
+        {
+          result = err_code_from_GetLastError ();
+          ___release_string (cuser);
+          goto done;
+        }
+
+      ___release_string (cuser);
+
+      if ((result = ___NONNULLUCS_2STRING_to_SCMOBJ (___ps,
+                                                     ___CAST(___UCS_2STRING,pui->usri3_name),
+                                                     &x,
+                                                     ___RETURN_POS))
+          != ___FIX(___NO_ERR))
+        goto done;
+
+      ___FIELD(STRUCTURE,___ps->saved[0],___USER_INFO_NAME) = ___release_scmobj (x);
+
+      ___FIELD(STRUCTURE,___ps->saved[0],___USER_INFO_UID) = ___FIX(0);
+
+      ___FIELD(STRUCTURE,___ps->saved[0],___USER_INFO_GID) = ___FIX(0);
+
+      if (pui->usri3_profile && pui->usri3_profile[0] != 0)
+        chome = pui->usri3_profile;
+      else if (pui->usri3_home_dir && pui->usri3_home_dir[0] != 0)
+        chome = pui->usri3_home_dir;
+
+      if ((result = ___NONNULLUCS_2STRING_to_SCMOBJ (___ps,
+                                                     ___CAST(___UCS_2STRING,chome),
+                                                     &x,
+                                                     ___RETURN_POS))
+          != ___FIX(___NO_ERR))
+        goto done;
+
+      ___FIELD(STRUCTURE,___ps->saved[0],___USER_INFO_HOME) = ___release_scmobj (x);
+
+      cshell = L"cmd.exe";
+
+      if ((result = ___NONNULLUCS_2STRING_to_SCMOBJ (___ps,
+                                                     ___CAST(___UCS_2STRING,cshell),
+                                                     &x,
+                                                     ___RETURN_POS))
+          != ___FIX(___NO_ERR))
+        goto done;
+
+      ___FIELD(STRUCTURE,___ps->saved[0],___USER_INFO_SHELL) = ___release_scmobj (x);
+
+      result = ___ps->saved[0];
+    }
+
+ done:
+  ___ps->saved[0] = ___VOID; /* prevent space leak */
+
+  if (pui != NULL)
+    NetApiBufferFree (pui);
+
+  return result;
+
+#endif
+
+#else
+
 #ifndef USE_getpwnam
 
   return ___FIX(___UNIMPL_ERR);
 
-#endif
-
-#ifdef USE_getpwnam
+#else
 
   ___processor_state ___ps = ___PSTATE;
   ___SCMOBJ result;
@@ -2514,6 +2613,8 @@ ___SCMOBJ user;)
   return result;
 
 #endif
+
+#endif
 }
 
 
@@ -2572,13 +2673,149 @@ ___SCMOBJ ___os_group_info
 ___SCMOBJ gi;
 ___SCMOBJ group;)
 {
+#ifdef USE_WIN32
+
+#ifndef USE_NetLocalGroupGetInfo
+
+  return ___FIX(___UNIMPL_ERR);
+
+#else
+
+  ___processor_state ___ps = ___PSTATE;
+  ___SCMOBJ result = ___FIX(___NO_ERR);
+  ___SCMOBJ x;
+  LPGROUP_INFO_1 pgi = NULL;
+  DWORD nerr = NERR_Success;
+  DWORD entriesread = 0;
+  DWORD totalentries = 0;
+  DWORD_PTR resumeh = 0;
+  LOCALGROUP_MEMBERS_INFO_3 *members = NULL;
+  ___SCMOBJ lst = ___NUL;
+  DWORD i;
+
+  ___ps->saved[0] = gi;
+
+#define ___GROUP_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) ucs2
+
+  if (___FIXNUMP(group))
+    {
+      /*
+       * Windows has no stable UNIX gid lookup in NetLocalGroup API.
+       */
+      result = ___FIX(___UNIMPL_ERR);
+      goto done;
+    }
+  else
+    {
+      ___UCS_2STRING cgroup = 0;
+      if ((result = ___SCMOBJ_to_NONNULLUCS_2STRING (___PSA(___ps)
+                                                     group,
+                                                     &cgroup,
+                                                     1))
+          != ___FIX(___NO_ERR))
+        goto done;
+
+      if ((nerr = NetLocalGroupGetInfo (NULL,
+                                        ___CAST(WCHAR*, cgroup),
+                                        1,
+                                        ___CAST(LPBYTE*, &pgi)))
+          || pgi == NULL)
+        {
+          result = err_code_from_GetLastError ();
+          ___release_string (cgroup);
+          goto done;
+        }
+
+      ___release_string (cgroup);
+
+      if ((result = ___NONNULLUCS_2STRING_to_SCMOBJ (___ps,
+                                                     ___CAST(___UCS_2STRING,pgi->grpi1_name),
+                                                     &x,
+                                                     ___RETURN_POS))
+          != ___FIX(___NO_ERR))
+        goto done;
+
+      ___FIELD(STRUCTURE,___ps->saved[0],___GROUP_INFO_NAME) = ___release_scmobj (x);
+
+      ___FIELD(STRUCTURE,___ps->saved[0],___GROUP_INFO_GID) = ___FIX(0);
+
+      do
+        {
+          nerr = NetLocalGroupGetMembers (NULL,
+                                          cgroup,
+                                          3,
+                                          ___CAST(LPBYTE*,&members),
+                                          MAX_PREFERRED_LENGTH,
+                                          &entriesread,
+                                          &totalentries,
+                                          &resumeh);
+
+          if (nerr != NERR_Success && nerr != ERROR_MORE_DATA)
+            {
+              result = err_code_from_GetLastError ();
+              goto done;
+            }
+
+          if (members != NULL)
+            {
+              for (i = entriesread; i > 0; i--)
+                {
+                  LOCALGROUP_MEMBERS_INFO_3 *m = &members[i-1];
+
+                  if ((result = ___UCS_2STRING_to_SCMOBJ (___ps,
+                                                          ___CAST(___UCS_2STRING,m->lgrmi3_domainandname),
+                                                          &x,
+                                                          ___RETURN_POS))
+                      != ___FIX(___NO_ERR))
+                    {
+                      ___release_scmobj (lst);
+                      NetApiBufferFree (members);
+                      goto done;
+                    }
+
+                  result = ___make_pair (___ps, x, lst);
+
+                  ___release_scmobj (x);
+                  ___release_scmobj (lst);
+
+                  if (___FIXNUMP(result))
+                    {
+                      result = ___FIX(___CTOS_HEAP_OVERFLOW_ERR+___RETURN_POS);
+                      NetApiBufferFree (members);
+                      goto done;
+                    }
+
+                  lst = result;
+                }
+
+              NetApiBufferFree (members);
+            }
+
+        } while (nerr == ERROR_MORE_DATA);
+
+      ___FIELD(STRUCTURE,___ps->saved[0],___GROUP_INFO_MEMBERS) =
+        ___release_scmobj (lst);
+    }
+
+  result = ___ps->saved[0];
+
+ done:
+  ___ps->saved[0] = ___VOID; /* prevent space leak */
+
+  if (pgi != NULL)
+    NetApiBufferFree (pgi);
+
+  return result;
+
+#endif
+
+#else
+
 #ifndef USE_getgrnam
 
   return ___FIX(___UNIMPL_ERR);
 
-#endif
-
-#ifdef USE_getgrnam
+#else
 
   ___processor_state ___ps = ___PSTATE;
   ___SCMOBJ result = ___FIX(___NO_ERR);
@@ -2649,6 +2886,8 @@ ___SCMOBJ group;)
   ___ps->saved[0] = ___VOID; /* prevent space leak */
 
   return result;
+
+#endif
 
 #endif
 }
