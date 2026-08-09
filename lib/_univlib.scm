@@ -417,16 +417,18 @@ if (@os_fs@) {
     return @os_device_from_fd@(2);
   };
 
-  @os_console@ = null;
-
   @os_device_from_basic_console@ = function () {
-    if (@os_console@ === null) @os_console@ = @os_device_from_fd@(-1);
+    if (typeof @os_console@ === 'undefined') {
+      @os_console@ = @os_device_from_fd@(-1);
+    }
     return @os_console@;
   };
 
 }
 
 if (@os_web@) {
+
+  // Implementation of basic console on top of JS prompt function.
 
   @Device_basic_console@ = function () {
 
@@ -593,10 +595,10 @@ if (@os_web@) {
     return 0; // no error
   };
 
-  @os_console@ = null;
-
   @os_device_from_basic_console@ = function () {
-    if (@os_console@ === null) @os_console@ = new @Device_basic_console@();
+    if (typeof @os_console@ === 'undefined') {
+      @os_console@ = new @Device_basic_console@();
+    }
     return @os_console@;
   };
 
@@ -2494,8 +2496,8 @@ def @os_create_directory@(path, permissions):
 @PORT_BYTE_OTHER1@          = 46;
 @PORT_BYTE_OTHER2@          = 47;
 
-@PORT_RDEVICE_COND@         = 46;
-@PORT_WDEVICE_COND@         = 47;
+@PORT_RDEVICE_CONDVAR@      = 46;
+@PORT_WDEVICE_CONDVAR@      = 47;
 
 @PORT_DEVICE_OTHER1@        = 48;
 @PORT_DEVICE_OTHER2@        = 49;

@@ -4871,10 +4871,10 @@ ___SCMOBJ ___setup_mem ___PVOID
       /*
        * Choose a reasonable minimum heap size.
        *
-       * A fraction of the last data cache size is probably good.
+       * A fraction of the last level data cache size is probably good.
        */
 
-      ___GSTATE->setup_params.min_heap = ___cpu_cache_size (0, 0) * 3 / 4;
+      ___GSTATE->setup_params.min_heap = ___cpu_cache_size (0, 0) / 2;
     }
 
   SET_MAX(___GSTATE->setup_params.min_heap, ___DEFAULT_MIN_HEAP);

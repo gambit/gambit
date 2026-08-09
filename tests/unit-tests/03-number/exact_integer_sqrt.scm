@@ -9,6 +9,11 @@
          (test-eqv 31622776601 a)
          (test-eqv 43246886799 b))
 
+(receive (a b) (exact-integer-sqrt (##greatest-fixnum))
+  (check-eqv? (##greatest-fixnum) (+ (* a a) b))
+  (check-false (negative? a))
+  (check-false (negative? b)))
+
 ;;; Test exceptions
 
 (test-error-tail type-exception? (exact-integer-sqrt #f))

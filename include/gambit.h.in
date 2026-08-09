@@ -2579,7 +2579,7 @@ ___STORE_U32(base,i,val))
 #if ___SCMOBJ_WIDTH == 32
 #define ___FLONUM_SELF_TAGGING_TAGS 0
 #else
-#define ___FLONUM_SELF_TAGGING_TAGS 4
+#define ___FLONUM_SELF_TAGGING_TAGS 0
 #endif
 #endif
 

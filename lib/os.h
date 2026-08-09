@@ -421,6 +421,11 @@
 #define USE_VirtualAlloc
 #define USE_GetSystemInfo
 
+#ifdef HAVE_LM_H
+#define USE_NetUserGetInfo
+#define USE_NetLocalGroupGetInfo
+#endif
+
 #define HAVE_CLOCK 1
 #define HAVE_CREATETHREAD 1
 #define HAVE_GETPROCESSTIMES 1
@@ -974,6 +979,16 @@ ___END_C_LINKAGE
 #define INCLUDE_sys_types_h
 #undef INCLUDE_grp_h
 #define INCLUDE_grp_h
+#endif
+
+#ifdef USE_NetUserGetInfo
+#undef INCLUDE_lm_h
+#define INCLUDE_lm_h
+#endif
+
+#ifdef USE_NetLocalGroupGetInfo
+#undef INCLUDE_lm_h
+#define INCLUDE_lm_h
 #endif
 
 #ifdef USE_errno
@@ -1631,6 +1646,12 @@ extern int h_errno;
 #ifdef INCLUDE_ws2tcpip_h
 #ifdef HAVE_WS2TCPIP_H
 #include <ws2tcpip.h>
+#endif
+#endif
+
+#ifdef INCLUDE_lm_h
+#ifdef HAVE_LM_H
+#include <lm.h>
 #endif
 #endif
 

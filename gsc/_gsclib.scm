@@ -2,7 +2,7 @@
 
 ;;; File: "_gsclib.scm"
 
-;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved.
 
 (include "generic.scm")
 
@@ -729,8 +729,10 @@
                   linker-name
                   warnings?))
 
-(set! ##c-code ;; avoid errors when using -expansion
-  (lambda args
-    (error "##c-code is not callable dynamically")))
+;; avoid errors when using -expansion
+(let ((proc (lambda args (error "##c-code is not callable dynamically")))
+      (c-code-var (##make-global-var '##c-code)))
+  (##global-var-set! c-code-var proc)
+  (##global-var-primitive-set! c-code-var proc))
 
 ;;;============================================================================

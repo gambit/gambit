@@ -5,7 +5,7 @@
 
 ;;; File: "igsc.scm"
 
-;;; Copyright (c) 1994-2017 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved.
 
 ;;;----------------------------------------------------------------------------
 
@@ -28,10 +28,6 @@
 (define-macro (at-expansion-time expr) (eval expr) '(begin))
 
 (at-expansion-time (define ##compilation-options '()))
-
-;; use custom absent object otherwise the interpreter gets confused
-
-(define c#absent-object (string->symbol "#<absent>")) ;; (##type-cast -6 2)
 
 ;; remove runtime options if any
 
@@ -107,9 +103,9 @@
 
 ((load-from-root "gsc/") "_host")
 
-(set! c#**main-readtable
-  (and c#**main-readtable
-       (##list->vector (##vector->list c#**main-readtable))))
+;; use custom absent object otherwise the interpreter gets confused
+
+(define c#absent-object (string->symbol "#<absent>")) ;; (##type-cast -6 2)
 
 (for-each (load-from-root "gsc/") gsc-modules)
 

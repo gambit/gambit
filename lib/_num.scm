@@ -2920,7 +2920,6 @@ for a discussion of branch cuts.
         (if (##negative? x) -1 1)))
 
   (let* ((theta (##fl/ (##flsqrt (macro-flonum-max-normal)) (macro-inexact-+4)))
-         (rho (##fl/ theta))
          (beta (##->exact-sign (##real-part x+iy))) ;; beta is exact
          (x+iy (##* beta (##conjugate x+iy)))
          (x (##real-part x+iy))
@@ -2946,7 +2945,7 @@ for a discussion of branch cuts.
                      (else
                       (macro-cpxnum-make
                        (if (##eqv? x 0)
-                           ;; if rho and abs-y were exact in the next expression (no matter their values)
+                           ;; if abs-y were exact in the next expression (no matter its value)
                            ;; then the argument to fllog1p would be exact 0, so the result would be exact 0.
                            0
                            (##fl/ (##fllog1p (##fl/ (##fl* (macro-inexact-+4) inexact-x)   ;; was (##* 4 x) originally
@@ -3580,7 +3579,7 @@ for a discussion of branch cuts.
   (define (real-case x)
     (if (##< x 1)
         (macro-if-cpxnum
-         (##cacosh (macro-cpxnum-make x 0))
+         (##cacosh x)
          (range-error))
         (##flacosh (##exact->inexact x))))
 
@@ -12118,12 +12117,18 @@ end-of-code
     ;; And that is all fixnums.  So we ran a code to check this.
 
     (let* ((s (##flonum->fixnum (##flsqrt (##fixnum->flonum x))))
-           (r (##fx- x (##fx* s s))))
-      ;; s can be too big, so we check for that here.
-      (if (##fxnegative? r)
-          (macro-make-sr (##fx- s 1)
-                         (##fx+ r (##fx* s 2) -1))
-          (macro-make-sr s r)))
+           (s^2? (##fxsquare? s)))
+      ;; if ##fixnum->flonum rounded up, then s^2 may not be a
+      ;; fixnum, so we need to check for that here
+      (if s^2?
+          (let ((r (##fx- x s^2?)))
+            (if (##fxnegative? r)
+                (macro-make-sr (##fx- s 1)
+                               (##fx+ r (##fx* s 2) -1))
+                (macro-make-sr s r)))
+          (let* ((s (##fx- s 1))
+                 (r (##fx- x (##fxsquare s))))
+            (macro-make-sr s r))))
 
     (let ((length/4
            (##fxarithmetic-shift-right
