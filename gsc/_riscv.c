@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_riscv.c", produced by Gambit v4.9.7
+; File: "_riscv.c", produced by Gambit v4.9.8
 (
-409007
+409008
 (C)
 "_riscv"
 ("_riscv")
@@ -312,7 +312,7 @@
 ) #|*/"*/"meta-info|#
 )
 #else
-#define ___VERSION 409007
+#define ___VERSION 409008
 #define ___MODULE_NAME "_riscv"
 #define ___LINKER_ID ___LNK___riscv
 #define ___MH_PROC ___H___riscv

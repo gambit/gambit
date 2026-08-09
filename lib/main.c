@@ -5,7 +5,7 @@
 /* This is the driver of the Gambit system */
 
 #define ___INCLUDED_FROM_MAIN
-#define ___VERSION 409007
+#define ___VERSION 409008
 #include "gambit.h"
 
 #include "os_setup.h"

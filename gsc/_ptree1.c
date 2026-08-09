@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_ptree1.c", produced by Gambit v4.9.7
+; File: "_ptree1.c", produced by Gambit v4.9.8
 (
-409007
+409008
 (C)
 "_ptree1"
 ("_ptree1")
@@ -787,7 +787,7 @@
 ) #|*/"*/"meta-info|#
 )
 #else
-#define ___VERSION 409007
+#define ___VERSION 409008
 #define ___MODULE_NAME "_ptree1"
 #define ___LINKER_ID ___LNK___ptree1
 #define ___MH_PROC ___H___ptree1

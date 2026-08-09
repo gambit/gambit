@@ -7,13 +7,13 @@
  */
 
 #ifndef ___STAMP_RELEASE_VERSION
-#define ___STAMP_RELEASE_VERSION "v4.9.7"
+#define ___STAMP_RELEASE_VERSION "v4.9.8"
 #endif
 
 #ifndef ___STAMP_RELEASE_YMD
-#define ___STAMP_RELEASE_YMD 20250713
+#define ___STAMP_RELEASE_YMD 20260809
 #endif
 
 #ifndef ___STAMP_RELEASE_HMS
-#define ___STAMP_RELEASE_HMS 105902
+#define ___STAMP_RELEASE_HMS 131432
 #endif

@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_back.c", produced by Gambit v4.9.7
+; File: "_back.c", produced by Gambit v4.9.8
 (
-409007
+409008
 (C)
 "_back"
 ("_back")
@@ -245,7 +245,7 @@
 ) #|*/"*/"meta-info|#
 )
 #else
-#define ___VERSION 409007
+#define ___VERSION 409008
 #define ___MODULE_NAME "_back"
 #define ___LINKER_ID ___LNK___back
 #define ___MH_PROC ___H___back

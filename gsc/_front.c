@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_front.c", produced by Gambit v4.9.7
+; File: "_front.c", produced by Gambit v4.9.8
 (
-409007
+409008
 (C)
 "_front"
 ("_front")
@@ -714,7 +714,7 @@
 ) #|*/"*/"meta-info|#
 )
 #else
-#define ___VERSION 409007
+#define ___VERSION 409008
 #define ___MODULE_NAME "_front"
 #define ___LINKER_ID ___LNK___front
 #define ___MH_PROC ___H___front
@@ -28381,8 +28381,8 @@ ___DEF_GLBL(___L72_c_23_free_2d_vars_2d_order)
    ___SET_STK(1,___ALLOC_CLO(4UL))
    ___BEGIN_SETUP_CLO(4,___STK(1),50)
    ___ADD_CLO_ELEM(0,___R1)
-   ___ADD_CLO_ELEM(1,___R4)
-   ___ADD_CLO_ELEM(2,___R2)
+   ___ADD_CLO_ELEM(1,___R2)
+   ___ADD_CLO_ELEM(2,___R4)
    ___ADD_CLO_ELEM(3,___R3)
    ___END_SETUP_CLO(4)
    ___SET_R3(___STK(1))
@@ -28417,7 +28417,7 @@ ___DEF_SLBL(36,___L36_c_23_free_2d_vars_2d_order)
    ___SET_STK(-3,___STK(-7))
    ___SET_STK(-7,___CLO(___STK(-4),1))
    ___SET_STK(-2,___STK(-6))
-   ___SET_STK(-6,___CLO(___STK(-4),3))
+   ___SET_STK(-6,___CLO(___STK(-4),2))
    ___SET_R3(___STK(-5))
    ___SET_R2(___STK(-2))
    ___SET_R1(___CLO(___STK(-4),4))
@@ -28509,9 +28509,9 @@ ___DEF_GLBL(___L80_c_23_free_2d_vars_2d_order)
    ___SET_STK(-6,___STK(-7))
    ___SET_STK(-7,___CLO(___STK(-4),1))
    ___SET_STK(-5,___STK(-6))
-   ___SET_STK(-6,___CLO(___STK(-4),3))
+   ___SET_STK(-6,___CLO(___STK(-4),2))
    ___SET_R3(___R1)
-   ___SET_R0(___CLO(___STK(-4),2))
+   ___SET_R0(___CLO(___STK(-4),3))
    ___SET_R2(___CAR(___R0))
    ___SET_R1(___CLO(___STK(-4),4))
    ___SET_R0(___STK(-5))
@@ -28526,7 +28526,7 @@ ___DEF_SLBL(50,___L50_c_23_free_2d_vars_2d_order)
    ___SET_STK(2,___R1)
    ___SET_STK(3,___R2)
    ___SET_STK(4,___R4)
-   ___SET_R0(___CLO(___R4,2))
+   ___SET_R0(___CLO(___R4,3))
    ___SET_R1(___CAR(___R0))
    ___SET_R2(___CAR(___R1))
    ___SET_R1(___CLO(___R4,1))

@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_module.c", produced by Gambit v4.9.7
+; File: "_module.c", produced by Gambit v4.9.8
 (
-409007
+409008
 (C)
 "_module"
 ("_module")
@@ -452,7 +452,7 @@
 ) #|*/"*/"meta-info|#
 )
 #else
-#define ___VERSION 409007
+#define ___VERSION 409008
 #define ___MODULE_NAME "_module"
 #define ___LINKER_ID ___LNK___module
 #define ___MH_PROC ___H___module
@@ -463,7 +463,7 @@
 #define ___SUPCOUNT 84
 #define ___CNSCOUNT 29
 #define ___SUBCOUNT 391
-#define ___LBLCOUNT 2118
+#define ___LBLCOUNT 2120
 #define ___OFDCOUNT 169
 #define ___MODDESCR ___REF_SUB(388)
 #include "gambit.h"
@@ -2373,14 +2373,14 @@ ___DEF_SUB_VEC(___X53,3UL)
                ___VEC1(___REF_FIX(1245241))
                ___VEC1(___REF_FIX(4653113))
                ___VEC0
-___DEF_SUB_STR(___X54,53UL)
-               ___STR8(47,85,115,101,114,115,47,102)
-               ___STR8(101,101,108,101,121,47,68,101)
-               ___STR8(118,47,103,97,109,98,105,116)
-               ___STR8(47,108,105,98,47,46,46,47)
-               ___STR8(108,105,98,47,95,115,121,110)
-               ___STR8(116,97,120,45,120,102,111,114)
-               ___STR5(109,46,115,99,109)
+___DEF_SUB_STR(___X54,54UL)
+               ___STR8(47,104,111,109,101,47,102,101)
+               ___STR8(101,108,101,121,47,52,46,57)
+               ___STR8(46,56,47,103,97,109,98,105)
+               ___STR8(116,47,108,105,98,47,46,46)
+               ___STR8(47,108,105,98,47,95,115,121)
+               ___STR8(110,116,97,120,45,120,102,111)
+               ___STR6(114,109,46,115,99,109)
 ___DEF_SUB_VEC(___X55,3UL)
                ___VEC1(___REF_FIX(-4))
                ___VEC1(___REF_SUB(56))
@@ -2735,15 +2735,15 @@ ___DEF_SUB_VEC(___X129,3UL)
                ___VEC1(___REF_FIX(1966103))
                ___VEC1(___REF_FIX(2818071))
                ___VEC0
-___DEF_SUB_STR(___X130,58UL)
-               ___STR8(47,85,115,101,114,115,47,102)
-               ___STR8(101,101,108,101,121,47,68,101)
-               ___STR8(118,47,103,97,109,98,105,116)
-               ___STR8(47,108,105,98,47,46,46,47)
-               ___STR8(108,105,98,47,95,115,121,110)
-               ___STR8(116,97,120,45,99,97,115,101)
-               ___STR8(45,120,102,111,114,109,46,115)
-               ___STR2(99,109)
+___DEF_SUB_STR(___X130,59UL)
+               ___STR8(47,104,111,109,101,47,102,101)
+               ___STR8(101,108,101,121,47,52,46,57)
+               ___STR8(46,56,47,103,97,109,98,105)
+               ___STR8(116,47,108,105,98,47,46,46)
+               ___STR8(47,108,105,98,47,95,115,121)
+               ___STR8(110,116,97,120,45,99,97,115)
+               ___STR8(101,45,120,102,111,114,109,46)
+               ___STR3(115,99,109)
 ___DEF_SUB_VEC(___X131,4UL)
                ___VEC1(___REF_FIX(-5))
                ___VEC1(___REF_SUB(132))
@@ -3562,15 +3562,15 @@ ___DEF_SUB_VEC(___X295,3UL)
                ___VEC1(___REF_FIX(1966102))
                ___VEC1(___REF_FIX(2818070))
                ___VEC0
-___DEF_SUB_STR(___X296,59UL)
-               ___STR8(47,85,115,101,114,115,47,102)
-               ___STR8(101,101,108,101,121,47,68,101)
-               ___STR8(118,47,103,97,109,98,105,116)
-               ___STR8(47,108,105,98,47,46,46,47)
-               ___STR8(108,105,98,47,95,115,121,110)
-               ___STR8(116,97,120,45,114,117,108,101)
-               ___STR8(115,45,120,102,111,114,109,46)
-               ___STR3(115,99,109)
+___DEF_SUB_STR(___X296,60UL)
+               ___STR8(47,104,111,109,101,47,102,101)
+               ___STR8(101,108,101,121,47,52,46,57)
+               ___STR8(46,56,47,103,97,109,98,105)
+               ___STR8(116,47,108,105,98,47,46,46)
+               ___STR8(47,108,105,98,47,95,115,121)
+               ___STR8(110,116,97,120,45,114,117,108)
+               ___STR8(101,115,45,120,102,111,114,109)
+               ___STR4(46,115,99,109)
 ___DEF_SUB_VEC(___X297,4UL)
                ___VEC1(___REF_FIX(-5))
                ___VEC1(___REF_SUB(298))
@@ -3888,13 +3888,13 @@ ___DEF_SUB_VEC(___X364,3UL)
                ___VEC1(___REF_FIX(459903))
                ___VEC1(___REF_FIX(1508482))
                ___VEC0
-___DEF_SUB_STR(___X365,40UL)
-               ___STR8(47,85,115,101,114,115,47,102)
-               ___STR8(101,101,108,101,121,47,68,101)
-               ___STR8(118,47,103,97,109,98,105,116)
-               ___STR8(47,108,105,98,47,95,109,111)
-               ___STR8(100,117,108,101,46,115,99,109)
-               ___STR0
+___DEF_SUB_STR(___X365,41UL)
+               ___STR8(47,104,111,109,101,47,102,101)
+               ___STR8(101,108,101,121,47,52,46,57)
+               ___STR8(46,56,47,103,97,109,98,105)
+               ___STR8(116,47,108,105,98,47,95,109)
+               ___STR8(111,100,117,108,101,46,115,99)
+               ___STR1(109)
 ___DEF_SUB_VEC(___X366,3UL)
                ___VEC1(___REF_FIX(-4))
                ___VEC1(___REF_SUB(367))
@@ -6619,6 +6619,8 @@ ___DEF_M_HLBL(___L4_syn_23_apply_2d_rules)
 ___DEF_M_HLBL(___L5_syn_23_apply_2d_rules)
 ___DEF_M_HLBL(___L6_syn_23_apply_2d_rules)
 ___DEF_M_HLBL(___L7_syn_23_apply_2d_rules)
+___DEF_M_HLBL(___L8_syn_23_apply_2d_rules)
+___DEF_M_HLBL(___L9_syn_23_apply_2d_rules)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0_syn_23_define_2d_syntax_2d_form_2d_transformer)
 ___DEF_M_HLBL(___L1_syn_23_define_2d_syntax_2d_form_2d_transformer)
@@ -6731,7 +6733,7 @@ ___DEF_GLBL(___L___module_23_)
    ___SET_GLO(28,___G__23__23_module_2d_path_2d_sep,___CHR(47))
    ___SET_GLO(44,___G__23__23_search_2d_module_2d_in_2d_search_2d_order,___PRC(272))
    ___SET_GLO(2,___G__23__23_build_2d_module_2d_subprocess_2d_default_2d_options,___NUL)
-   ___SET_GLO(16,___G__23__23_install_2d_module,___PRC(2105))
+   ___SET_GLO(16,___G__23__23_install_2d_module,___PRC(2107))
    ___SET_STK(1,___R0)
    ___SET_R1(___LBL(55))
    ___ADJFP(4)
@@ -12616,7 +12618,7 @@ ___DEF_GLBL(___L306_syn_23_syntax_2d_form_2d_transformer)
    ___GOTO(___L364_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
    ___ADJFP(1)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___STK(0),___R4,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___STK(0),___R4,___FIX(1L))))
    ___SET_STK(0,___FAL)
    ___GOTO(___L363_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
@@ -12663,7 +12665,7 @@ ___DEF_SLBL(20,___L20_syn_23_syntax_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___STK(-4))))
    ___GOTO(___L312_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___FIXADDP_NOTFALSEP(___R2,___STK(-4),___FIX(1L)))
+   ___IF(___FIXADDPCONSTY_NOTFALSEP(___R2,___STK(-4),___FIX(1L)))
    ___GOTO(___L310_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
    ___SET_R2(___FAL)
@@ -12849,7 +12851,7 @@ ___DEF_GLBL(___L329_syn_23_syntax_2d_form_2d_transformer)
    ___GOTO(___L333_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
 ___DEF_GLBL(___L330_syn_23_syntax_2d_form_2d_transformer)
-   ___IF(___NOT(___FIXADDP_NOTFALSEP(___R4,___R2,___FIX(1L))))
+   ___IF(___NOT(___FIXADDPCONSTY_NOTFALSEP(___R4,___R2,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L332_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
@@ -13457,7 +13459,7 @@ ___DEF_GLBL(___L384_syn_23_syntax_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___STK(-2))))
    ___GOTO(___L411_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R3,___STK(-2),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R3,___STK(-2),___FIX(1L))))
    ___SET_R3(___FAL)
    ___GOTO(___L410_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
@@ -13499,7 +13501,7 @@ ___DEF_GLBL(___L388_syn_23_syntax_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___R3)))
    ___GOTO(___L407_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R4,___R3,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R4,___R3,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L406_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
@@ -13542,7 +13544,7 @@ ___DEF_GLBL(___L390_syn_23_syntax_2d_form_2d_transformer)
    ___GOTO(___L394_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
 ___DEF_GLBL(___L391_syn_23_syntax_2d_form_2d_transformer)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R4,___R2,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R4,___R2,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L393_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
@@ -13668,7 +13670,7 @@ ___DEF_GLBL(___L400_syn_23_syntax_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___STK(-5))))
    ___GOTO(___L403_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___STK(-5),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___STK(-5),___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L402_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
@@ -13823,7 +13825,7 @@ ___DEF_GLBL(___L414_syn_23_syntax_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___STK(-2))))
    ___GOTO(___L425_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R3,___STK(-2),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R3,___STK(-2),___FIX(1L))))
    ___SET_R3(___FAL)
    ___GOTO(___L424_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
@@ -13868,7 +13870,7 @@ ___DEF_GLBL(___L418_syn_23_syntax_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___R3)))
    ___GOTO(___L421_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R4,___R3,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R4,___R3,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L420_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
@@ -14001,7 +14003,7 @@ ___DEF_GLBL(___L428_syn_23_syntax_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___STK(-2))))
    ___GOTO(___L450_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R3,___STK(-2),___FIX(2L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R3,___STK(-2),___FIX(2L))))
    ___SET_R3(___FAL)
    ___GOTO(___L449_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
@@ -14013,7 +14015,7 @@ ___DEF_GLBL(___L429_syn_23_syntax_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___STK(-5))))
    ___GOTO(___L448_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R1,___STK(-5),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R1,___STK(-5),___FIX(1L))))
    ___SET_R1(___FAL)
    ___GOTO(___L447_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
@@ -14067,7 +14069,7 @@ ___DEF_SLBL(123,___L123_syn_23_syntax_2d_form_2d_transformer)
    ___GOTO(___L444_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
 ___DEF_GLBL(___L433_syn_23_syntax_2d_form_2d_transformer)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___STK(-5),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___STK(-5),___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L442_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
@@ -14103,7 +14105,7 @@ ___DEF_SLBL(125,___L125_syn_23_syntax_2d_form_2d_transformer)
    ___GOTO(___L440_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
 ___DEF_GLBL(___L436_syn_23_syntax_2d_form_2d_transformer)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___STK(-10),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___STK(-10),___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L438_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
@@ -14302,7 +14304,7 @@ ___DEF_GLBL(___L457_syn_23_syntax_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___R3)))
    ___GOTO(___L485_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R4,___R3,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R4,___R3,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L484_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
@@ -14312,7 +14314,7 @@ ___DEF_GLBL(___L458_syn_23_syntax_2d_form_2d_transformer)
    ___GOTO(___L483_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
    ___ADJFP(1)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___STK(0),___R3,___FIX(2L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___STK(0),___R3,___FIX(2L))))
    ___SET_STK(0,___FAL)
    ___GOTO(___L482_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
@@ -14330,7 +14332,7 @@ ___DEF_GLBL(___L459_syn_23_syntax_2d_form_2d_transformer)
    ___GOTO(___L479_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
 ___DEF_GLBL(___L460_syn_23_syntax_2d_form_2d_transformer)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R3,___R4,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R3,___R4,___FIX(1L))))
    ___SET_R3(___FAL)
    ___GOTO(___L478_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
@@ -14367,7 +14369,7 @@ ___DEF_GLBL(___L464_syn_23_syntax_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___R3)))
    ___GOTO(___L475_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___R3,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R3,___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L474_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
@@ -14395,7 +14397,7 @@ ___DEF_GLBL(___L467_syn_23_syntax_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L470_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___R1,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R1,___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L469_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
@@ -14647,7 +14649,7 @@ ___DEF_SLBL(157,___L157_syn_23_syntax_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___STK(-5))))
    ___GOTO(___L518_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___FIXSUBP_NOTFALSEP(___R2,___STK(-5),___FIX(2L)))
+   ___IF(___FIXSUBPCONSTY_NOTFALSEP(___R2,___STK(-5),___FIX(2L)))
    ___GOTO(___L486_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
    ___SET_R2(___FAL)
@@ -14674,7 +14676,7 @@ ___DEF_GLBL(___L487_syn_23_syntax_2d_form_2d_transformer)
    ___GOTO(___L506_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
 ___DEF_GLBL(___L488_syn_23_syntax_2d_form_2d_transformer)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R3,___R2,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R3,___R2,___FIX(1L))))
    ___SET_R3(___FAL)
    ___GOTO(___L505_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
@@ -14689,7 +14691,7 @@ ___DEF_GLBL(___L489_syn_23_syntax_2d_form_2d_transformer)
    ___GOTO(___L501_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
 ___DEF_GLBL(___L490_syn_23_syntax_2d_form_2d_transformer)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___R3,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R3,___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L500_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
@@ -14735,7 +14737,7 @@ ___DEF_GLBL(___L492_syn_23_syntax_2d_form_2d_transformer)
    ___GOTO(___L496_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
 ___DEF_GLBL(___L493_syn_23_syntax_2d_form_2d_transformer)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R4,___R2,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R4,___R2,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L495_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
@@ -14958,7 +14960,7 @@ ___DEF_GLBL(___L509_syn_23_syntax_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___STK(-5))))
    ___GOTO(___L512_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R1,___STK(-5),___FIX(2L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R1,___STK(-5),___FIX(2L))))
    ___SET_R1(___FAL)
    ___GOTO(___L511_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
@@ -15533,7 +15535,7 @@ ___DEF_GLBL(___L551_syn_23_syntax_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___R2)))
    ___GOTO(___L555_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R1,___R2,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R1,___R2,___FIX(1L))))
    ___SET_R1(___FAL)
    ___GOTO(___L554_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
@@ -15549,7 +15551,7 @@ ___DEF_SLBL(231,___L231_syn_23_syntax_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___R2)))
    ___GOTO(___L553_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___FIXSUBP_NOTFALSEP(___R1,___R2,___FIX(1L)))
+   ___IF(___FIXSUBPCONSTY_NOTFALSEP(___R1,___R2,___FIX(1L)))
    ___GOTO(___L549_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
    ___SET_R1(___FAL)
@@ -15812,7 +15814,7 @@ ___DEF_GLBL(___L570_syn_23_syntax_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L573_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___FIXADDP_NOTFALSEP(___R2,___FIX(-1L),___R1))
+   ___IF(___FIXADDPCONSTX_NOTFALSEP(___R2,___FIX(-1L),___R1))
    ___GOTO(___L571_syn_23_syntax_2d_form_2d_transformer)
    ___END_IF
    ___SET_R2(___FAL)
@@ -16627,7 +16629,7 @@ ___DEF_GLBL(___L379_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___GOTO(___L436_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
    ___ADJFP(1)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___STK(0),___R4,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___STK(0),___R4,___FIX(1L))))
    ___SET_STK(0,___FAL)
    ___GOTO(___L435_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
@@ -16674,7 +16676,7 @@ ___DEF_SLBL(20,___L20_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___STK(-4))))
    ___GOTO(___L385_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___FIXADDP_NOTFALSEP(___R2,___STK(-4),___FIX(1L)))
+   ___IF(___FIXADDPCONSTY_NOTFALSEP(___R2,___STK(-4),___FIX(1L)))
    ___GOTO(___L383_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
    ___SET_R2(___FAL)
@@ -16860,7 +16862,7 @@ ___DEF_GLBL(___L402_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___GOTO(___L406_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
 ___DEF_GLBL(___L403_syn_23_syntax_2d_case_2d_form_2d_transformer)
-   ___IF(___NOT(___FIXADDP_NOTFALSEP(___R4,___R2,___FIX(1L))))
+   ___IF(___NOT(___FIXADDPCONSTY_NOTFALSEP(___R4,___R2,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L405_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
@@ -17449,7 +17451,7 @@ ___DEF_GLBL(___L456_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___STK(-2))))
    ___GOTO(___L483_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R3,___STK(-2),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R3,___STK(-2),___FIX(1L))))
    ___SET_R3(___FAL)
    ___GOTO(___L482_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
@@ -17491,7 +17493,7 @@ ___DEF_GLBL(___L460_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___R3)))
    ___GOTO(___L479_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R4,___R3,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R4,___R3,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L478_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
@@ -17534,7 +17536,7 @@ ___DEF_GLBL(___L462_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___GOTO(___L466_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
 ___DEF_GLBL(___L463_syn_23_syntax_2d_case_2d_form_2d_transformer)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R4,___R2,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R4,___R2,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L465_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
@@ -17660,7 +17662,7 @@ ___DEF_GLBL(___L472_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___STK(-5))))
    ___GOTO(___L475_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___STK(-5),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___STK(-5),___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L474_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
@@ -17815,7 +17817,7 @@ ___DEF_GLBL(___L486_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___STK(-2))))
    ___GOTO(___L497_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R3,___STK(-2),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R3,___STK(-2),___FIX(1L))))
    ___SET_R3(___FAL)
    ___GOTO(___L496_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
@@ -17860,7 +17862,7 @@ ___DEF_GLBL(___L490_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___R3)))
    ___GOTO(___L493_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R4,___R3,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R4,___R3,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L492_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
@@ -17993,7 +17995,7 @@ ___DEF_GLBL(___L500_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___STK(-2))))
    ___GOTO(___L522_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R3,___STK(-2),___FIX(2L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R3,___STK(-2),___FIX(2L))))
    ___SET_R3(___FAL)
    ___GOTO(___L521_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
@@ -18005,7 +18007,7 @@ ___DEF_GLBL(___L501_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___STK(-5))))
    ___GOTO(___L520_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R1,___STK(-5),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R1,___STK(-5),___FIX(1L))))
    ___SET_R1(___FAL)
    ___GOTO(___L519_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
@@ -18059,7 +18061,7 @@ ___DEF_SLBL(117,___L117_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___GOTO(___L516_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
 ___DEF_GLBL(___L505_syn_23_syntax_2d_case_2d_form_2d_transformer)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___STK(-5),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___STK(-5),___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L514_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
@@ -18095,7 +18097,7 @@ ___DEF_SLBL(119,___L119_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___GOTO(___L512_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
 ___DEF_GLBL(___L508_syn_23_syntax_2d_case_2d_form_2d_transformer)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___STK(-10),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___STK(-10),___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L510_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
@@ -18294,7 +18296,7 @@ ___DEF_GLBL(___L529_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___R3)))
    ___GOTO(___L557_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R4,___R3,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R4,___R3,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L556_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
@@ -18304,7 +18306,7 @@ ___DEF_GLBL(___L530_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___GOTO(___L555_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
    ___ADJFP(1)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___STK(0),___R3,___FIX(2L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___STK(0),___R3,___FIX(2L))))
    ___SET_STK(0,___FAL)
    ___GOTO(___L554_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
@@ -18322,7 +18324,7 @@ ___DEF_GLBL(___L531_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___GOTO(___L551_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
 ___DEF_GLBL(___L532_syn_23_syntax_2d_case_2d_form_2d_transformer)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R3,___R4,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R3,___R4,___FIX(1L))))
    ___SET_R3(___FAL)
    ___GOTO(___L550_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
@@ -18359,7 +18361,7 @@ ___DEF_GLBL(___L536_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___R3)))
    ___GOTO(___L547_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___R3,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R3,___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L546_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
@@ -18387,7 +18389,7 @@ ___DEF_GLBL(___L539_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L542_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___R1,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R1,___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L541_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
@@ -18639,7 +18641,7 @@ ___DEF_SLBL(151,___L151_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___STK(-5))))
    ___GOTO(___L590_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___FIXSUBP_NOTFALSEP(___R2,___STK(-5),___FIX(2L)))
+   ___IF(___FIXSUBPCONSTY_NOTFALSEP(___R2,___STK(-5),___FIX(2L)))
    ___GOTO(___L558_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
    ___SET_R2(___FAL)
@@ -18666,7 +18668,7 @@ ___DEF_GLBL(___L559_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___GOTO(___L578_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
 ___DEF_GLBL(___L560_syn_23_syntax_2d_case_2d_form_2d_transformer)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R3,___R2,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R3,___R2,___FIX(1L))))
    ___SET_R3(___FAL)
    ___GOTO(___L577_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
@@ -18681,7 +18683,7 @@ ___DEF_GLBL(___L561_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___GOTO(___L573_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
 ___DEF_GLBL(___L562_syn_23_syntax_2d_case_2d_form_2d_transformer)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___R3,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R3,___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L572_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
@@ -18727,7 +18729,7 @@ ___DEF_GLBL(___L564_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___GOTO(___L568_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
 ___DEF_GLBL(___L565_syn_23_syntax_2d_case_2d_form_2d_transformer)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R4,___R2,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R4,___R2,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L567_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
@@ -18950,7 +18952,7 @@ ___DEF_GLBL(___L581_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___STK(-5))))
    ___GOTO(___L584_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R1,___STK(-5),___FIX(2L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R1,___STK(-5),___FIX(2L))))
    ___SET_R1(___FAL)
    ___GOTO(___L583_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
@@ -19347,7 +19349,7 @@ ___DEF_SLBL(213,___L213_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___R2)))
    ___GOTO(___L721_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___FIXSUBP_NOTFALSEP(___R3,___R2,___FIX(1L)))
+   ___IF(___FIXSUBPCONSTY_NOTFALSEP(___R3,___R2,___FIX(1L)))
    ___GOTO(___L610_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
    ___SET_R3(___FAL)
@@ -20199,7 +20201,7 @@ ___DEF_GLBL(___L675_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___STK(-13))))
    ___GOTO(___L681_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXADDP_NOTFALSEP(___R1,___STK(-13),___FIX(1L))))
+   ___IF(___NOT(___FIXADDPCONSTY_NOTFALSEP(___R1,___STK(-13),___FIX(1L))))
    ___SET_R1(___FAL)
    ___GOTO(___L680_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
@@ -20236,7 +20238,7 @@ ___DEF_SLBL(290,___L290_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___GOTO(___L679_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
    ___SET_R0(___CLO(___R4,3))
-   ___IF(___NOT(___FIXADDP_NOTFALSEP(___R2,___FIX(-4L),___R0)))
+   ___IF(___NOT(___FIXADDPCONSTX_NOTFALSEP(___R2,___FIX(-4L),___R0)))
    ___SET_R2(___FAL)
    ___GOTO(___L678_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
@@ -20321,7 +20323,7 @@ ___DEF_GLBL(___L683_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___STK(-1))))
    ___GOTO(___L686_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___FIXADDP_NOTFALSEP(___R1,___FIX(-2L),___STK(-1)))
+   ___IF(___FIXADDPCONSTX_NOTFALSEP(___R1,___FIX(-2L),___STK(-1)))
    ___GOTO(___L684_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
    ___SET_R1(___FAL)
@@ -20498,7 +20500,7 @@ ___DEF_SLBL(322,___L322_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___GOTO(___L717_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
    ___SET_R0(___CLO(___STK(0),10))
-   ___IF(___FIXSUBP_NOTFALSEP(___R2,___R0,___FIX(1L)))
+   ___IF(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R0,___FIX(1L)))
    ___GOTO(___L692_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
    ___SET_R2(___FAL)
@@ -20525,7 +20527,7 @@ ___DEF_SLBL(325,___L325_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___GOTO(___L715_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
    ___SET_R0(___CLO(___STK(-8),10))
-   ___IF(___FIXADDP_NOTFALSEP(___R2,___R0,___FIX(1L)))
+   ___IF(___FIXADDPCONSTY_NOTFALSEP(___R2,___R0,___FIX(1L)))
    ___GOTO(___L693_syn_23_syntax_2d_case_2d_form_2d_transformer)
    ___END_IF
    ___SET_R2(___FAL)
@@ -21500,7 +21502,7 @@ ___DEF_GLBL(___L352_syn_23_syntax_2d_rules_2d__3e_crules)
    ___GOTO(___L409_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
    ___ADJFP(1)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___STK(0),___R4,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___STK(0),___R4,___FIX(1L))))
    ___SET_STK(0,___FAL)
    ___GOTO(___L408_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
@@ -21547,7 +21549,7 @@ ___DEF_SLBL(20,___L20_syn_23_syntax_2d_rules_2d__3e_crules)
    ___IF(___NOT(___FIXNUMP(___STK(-4))))
    ___GOTO(___L358_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
-   ___IF(___FIXADDP_NOTFALSEP(___R2,___STK(-4),___FIX(1L)))
+   ___IF(___FIXADDPCONSTY_NOTFALSEP(___R2,___STK(-4),___FIX(1L)))
    ___GOTO(___L356_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
    ___SET_R2(___FAL)
@@ -21733,7 +21735,7 @@ ___DEF_GLBL(___L375_syn_23_syntax_2d_rules_2d__3e_crules)
    ___GOTO(___L379_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
 ___DEF_GLBL(___L376_syn_23_syntax_2d_rules_2d__3e_crules)
-   ___IF(___NOT(___FIXADDP_NOTFALSEP(___R4,___R2,___FIX(1L))))
+   ___IF(___NOT(___FIXADDPCONSTY_NOTFALSEP(___R4,___R2,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L378_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
@@ -22316,7 +22318,7 @@ ___DEF_GLBL(___L429_syn_23_syntax_2d_rules_2d__3e_crules)
    ___IF(___NOT(___FIXNUMP(___STK(-2))))
    ___GOTO(___L456_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R3,___STK(-2),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R3,___STK(-2),___FIX(1L))))
    ___SET_R3(___FAL)
    ___GOTO(___L455_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
@@ -22358,7 +22360,7 @@ ___DEF_GLBL(___L433_syn_23_syntax_2d_rules_2d__3e_crules)
    ___IF(___NOT(___FIXNUMP(___R3)))
    ___GOTO(___L452_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R4,___R3,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R4,___R3,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L451_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
@@ -22401,7 +22403,7 @@ ___DEF_GLBL(___L435_syn_23_syntax_2d_rules_2d__3e_crules)
    ___GOTO(___L439_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
 ___DEF_GLBL(___L436_syn_23_syntax_2d_rules_2d__3e_crules)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R4,___R2,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R4,___R2,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L438_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
@@ -22527,7 +22529,7 @@ ___DEF_GLBL(___L445_syn_23_syntax_2d_rules_2d__3e_crules)
    ___IF(___NOT(___FIXNUMP(___STK(-5))))
    ___GOTO(___L448_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___STK(-5),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___STK(-5),___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L447_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
@@ -22682,7 +22684,7 @@ ___DEF_GLBL(___L459_syn_23_syntax_2d_rules_2d__3e_crules)
    ___IF(___NOT(___FIXNUMP(___STK(-2))))
    ___GOTO(___L470_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R3,___STK(-2),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R3,___STK(-2),___FIX(1L))))
    ___SET_R3(___FAL)
    ___GOTO(___L469_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
@@ -22727,7 +22729,7 @@ ___DEF_GLBL(___L463_syn_23_syntax_2d_rules_2d__3e_crules)
    ___IF(___NOT(___FIXNUMP(___R3)))
    ___GOTO(___L466_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R4,___R3,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R4,___R3,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L465_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
@@ -22860,7 +22862,7 @@ ___DEF_GLBL(___L473_syn_23_syntax_2d_rules_2d__3e_crules)
    ___IF(___NOT(___FIXNUMP(___STK(-2))))
    ___GOTO(___L495_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R3,___STK(-2),___FIX(2L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R3,___STK(-2),___FIX(2L))))
    ___SET_R3(___FAL)
    ___GOTO(___L494_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
@@ -22872,7 +22874,7 @@ ___DEF_GLBL(___L474_syn_23_syntax_2d_rules_2d__3e_crules)
    ___IF(___NOT(___FIXNUMP(___STK(-5))))
    ___GOTO(___L493_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R1,___STK(-5),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R1,___STK(-5),___FIX(1L))))
    ___SET_R1(___FAL)
    ___GOTO(___L492_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
@@ -22926,7 +22928,7 @@ ___DEF_SLBL(117,___L117_syn_23_syntax_2d_rules_2d__3e_crules)
    ___GOTO(___L489_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
 ___DEF_GLBL(___L478_syn_23_syntax_2d_rules_2d__3e_crules)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___STK(-5),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___STK(-5),___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L487_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
@@ -22962,7 +22964,7 @@ ___DEF_SLBL(119,___L119_syn_23_syntax_2d_rules_2d__3e_crules)
    ___GOTO(___L485_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
 ___DEF_GLBL(___L481_syn_23_syntax_2d_rules_2d__3e_crules)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___STK(-10),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___STK(-10),___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L483_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
@@ -23161,7 +23163,7 @@ ___DEF_GLBL(___L502_syn_23_syntax_2d_rules_2d__3e_crules)
    ___IF(___NOT(___FIXNUMP(___R3)))
    ___GOTO(___L530_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R4,___R3,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R4,___R3,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L529_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
@@ -23171,7 +23173,7 @@ ___DEF_GLBL(___L503_syn_23_syntax_2d_rules_2d__3e_crules)
    ___GOTO(___L528_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
    ___ADJFP(1)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___STK(0),___R3,___FIX(2L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___STK(0),___R3,___FIX(2L))))
    ___SET_STK(0,___FAL)
    ___GOTO(___L527_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
@@ -23189,7 +23191,7 @@ ___DEF_GLBL(___L504_syn_23_syntax_2d_rules_2d__3e_crules)
    ___GOTO(___L524_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
 ___DEF_GLBL(___L505_syn_23_syntax_2d_rules_2d__3e_crules)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R3,___R4,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R3,___R4,___FIX(1L))))
    ___SET_R3(___FAL)
    ___GOTO(___L523_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
@@ -23226,7 +23228,7 @@ ___DEF_GLBL(___L509_syn_23_syntax_2d_rules_2d__3e_crules)
    ___IF(___NOT(___FIXNUMP(___R3)))
    ___GOTO(___L520_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___R3,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R3,___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L519_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
@@ -23254,7 +23256,7 @@ ___DEF_GLBL(___L512_syn_23_syntax_2d_rules_2d__3e_crules)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L515_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___R1,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R1,___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L514_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
@@ -23506,7 +23508,7 @@ ___DEF_SLBL(151,___L151_syn_23_syntax_2d_rules_2d__3e_crules)
    ___IF(___NOT(___FIXNUMP(___STK(-5))))
    ___GOTO(___L563_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
-   ___IF(___FIXSUBP_NOTFALSEP(___R2,___STK(-5),___FIX(2L)))
+   ___IF(___FIXSUBPCONSTY_NOTFALSEP(___R2,___STK(-5),___FIX(2L)))
    ___GOTO(___L531_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
    ___SET_R2(___FAL)
@@ -23533,7 +23535,7 @@ ___DEF_GLBL(___L532_syn_23_syntax_2d_rules_2d__3e_crules)
    ___GOTO(___L551_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
 ___DEF_GLBL(___L533_syn_23_syntax_2d_rules_2d__3e_crules)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R3,___R2,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R3,___R2,___FIX(1L))))
    ___SET_R3(___FAL)
    ___GOTO(___L550_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
@@ -23548,7 +23550,7 @@ ___DEF_GLBL(___L534_syn_23_syntax_2d_rules_2d__3e_crules)
    ___GOTO(___L546_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
 ___DEF_GLBL(___L535_syn_23_syntax_2d_rules_2d__3e_crules)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___R3,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R3,___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L545_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
@@ -23594,7 +23596,7 @@ ___DEF_GLBL(___L537_syn_23_syntax_2d_rules_2d__3e_crules)
    ___GOTO(___L541_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
 ___DEF_GLBL(___L538_syn_23_syntax_2d_rules_2d__3e_crules)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R4,___R2,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R4,___R2,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L540_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
@@ -23817,7 +23819,7 @@ ___DEF_GLBL(___L554_syn_23_syntax_2d_rules_2d__3e_crules)
    ___IF(___NOT(___FIXNUMP(___STK(-5))))
    ___GOTO(___L557_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R1,___STK(-5),___FIX(2L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R1,___STK(-5),___FIX(2L))))
    ___SET_R1(___FAL)
    ___GOTO(___L556_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
@@ -24472,7 +24474,7 @@ ___DEF_GLBL(___L600_syn_23_syntax_2d_rules_2d__3e_crules)
    ___IF(___NOT(___FIXNUMP(___STK(-13))))
    ___GOTO(___L606_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
-   ___IF(___NOT(___FIXADDP_NOTFALSEP(___R1,___STK(-13),___FIX(1L))))
+   ___IF(___NOT(___FIXADDPCONSTY_NOTFALSEP(___R1,___STK(-13),___FIX(1L))))
    ___SET_R1(___FAL)
    ___GOTO(___L605_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
@@ -24509,7 +24511,7 @@ ___DEF_SLBL(241,___L241_syn_23_syntax_2d_rules_2d__3e_crules)
    ___GOTO(___L604_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
    ___SET_R0(___CLO(___R4,3))
-   ___IF(___NOT(___FIXADDP_NOTFALSEP(___R2,___FIX(-4L),___R0)))
+   ___IF(___NOT(___FIXADDPCONSTX_NOTFALSEP(___R2,___FIX(-4L),___R0)))
    ___SET_R2(___FAL)
    ___GOTO(___L603_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
@@ -24594,7 +24596,7 @@ ___DEF_GLBL(___L608_syn_23_syntax_2d_rules_2d__3e_crules)
    ___IF(___NOT(___FIXNUMP(___STK(-1))))
    ___GOTO(___L611_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
-   ___IF(___FIXADDP_NOTFALSEP(___R1,___FIX(-2L),___STK(-1)))
+   ___IF(___FIXADDPCONSTX_NOTFALSEP(___R1,___FIX(-2L),___STK(-1)))
    ___GOTO(___L609_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
    ___SET_R1(___FAL)
@@ -24886,7 +24888,7 @@ ___DEF_GLBL(___L625_syn_23_syntax_2d_rules_2d__3e_crules)
    ___IF(___NOT(___FIXNUMP(___R2)))
    ___GOTO(___L629_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R1,___R2,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R1,___R2,___FIX(1L))))
    ___SET_R1(___FAL)
    ___GOTO(___L628_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
@@ -24902,7 +24904,7 @@ ___DEF_SLBL(287,___L287_syn_23_syntax_2d_rules_2d__3e_crules)
    ___IF(___NOT(___FIXNUMP(___R2)))
    ___GOTO(___L627_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
-   ___IF(___FIXSUBP_NOTFALSEP(___R1,___R2,___FIX(1L)))
+   ___IF(___FIXSUBPCONSTY_NOTFALSEP(___R1,___R2,___FIX(1L)))
    ___GOTO(___L623_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
    ___SET_R1(___FAL)
@@ -25165,7 +25167,7 @@ ___DEF_GLBL(___L644_syn_23_syntax_2d_rules_2d__3e_crules)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L647_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
-   ___IF(___FIXADDP_NOTFALSEP(___R2,___FIX(-1L),___R1))
+   ___IF(___FIXADDPCONSTX_NOTFALSEP(___R2,___FIX(-1L),___R1))
    ___GOTO(___L645_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
    ___SET_R2(___FAL)
@@ -25299,7 +25301,7 @@ ___DEF_SLBL(335,___L335_syn_23_syntax_2d_rules_2d__3e_crules)
    ___GOTO(___L652_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
    ___SET_R0(___CLO(___STK(-5),2))
-   ___IF(___FIXADDP_NOTFALSEP(___R2,___R0,___FIX(1L)))
+   ___IF(___FIXADDPCONSTY_NOTFALSEP(___R2,___R0,___FIX(1L)))
    ___GOTO(___L581_syn_23_syntax_2d_rules_2d__3e_crules)
    ___END_IF
    ___SET_R2(___FAL)
@@ -25591,7 +25593,7 @@ ___DEF_GLBL(___L119_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___STK(-2))))
    ___GOTO(___L146_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R3,___STK(-2),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R3,___STK(-2),___FIX(1L))))
    ___SET_R3(___FAL)
    ___GOTO(___L145_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
@@ -25633,7 +25635,7 @@ ___DEF_GLBL(___L123_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___R3)))
    ___GOTO(___L142_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R4,___R3,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R4,___R3,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L141_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
@@ -25676,7 +25678,7 @@ ___DEF_GLBL(___L125_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___GOTO(___L129_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
 ___DEF_GLBL(___L126_syn_23_syntax_2d_rules_2d_form_2d_transformer)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R4,___R2,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R4,___R2,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L128_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
@@ -25802,7 +25804,7 @@ ___DEF_GLBL(___L135_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___STK(-5))))
    ___GOTO(___L138_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___STK(-5),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___STK(-5),___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L137_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
@@ -25957,7 +25959,7 @@ ___DEF_GLBL(___L149_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___STK(-2))))
    ___GOTO(___L160_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R3,___STK(-2),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R3,___STK(-2),___FIX(1L))))
    ___SET_R3(___FAL)
    ___GOTO(___L159_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
@@ -26002,7 +26004,7 @@ ___DEF_GLBL(___L153_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___R3)))
    ___GOTO(___L156_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R4,___R3,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R4,___R3,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L155_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
@@ -26135,7 +26137,7 @@ ___DEF_GLBL(___L163_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___STK(-2))))
    ___GOTO(___L185_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R3,___STK(-2),___FIX(2L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R3,___STK(-2),___FIX(2L))))
    ___SET_R3(___FAL)
    ___GOTO(___L184_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
@@ -26147,7 +26149,7 @@ ___DEF_GLBL(___L164_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___STK(-5))))
    ___GOTO(___L183_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R1,___STK(-5),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R1,___STK(-5),___FIX(1L))))
    ___SET_R1(___FAL)
    ___GOTO(___L182_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
@@ -26201,7 +26203,7 @@ ___DEF_SLBL(50,___L50_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___GOTO(___L179_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
 ___DEF_GLBL(___L168_syn_23_syntax_2d_rules_2d_form_2d_transformer)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___STK(-5),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___STK(-5),___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L177_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
@@ -26237,7 +26239,7 @@ ___DEF_SLBL(52,___L52_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___GOTO(___L175_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
 ___DEF_GLBL(___L171_syn_23_syntax_2d_rules_2d_form_2d_transformer)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___STK(-10),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___STK(-10),___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L173_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
@@ -26436,7 +26438,7 @@ ___DEF_GLBL(___L192_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___R3)))
    ___GOTO(___L220_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R4,___R3,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R4,___R3,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L219_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
@@ -26446,7 +26448,7 @@ ___DEF_GLBL(___L193_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___GOTO(___L218_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
    ___ADJFP(1)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___STK(0),___R3,___FIX(2L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___STK(0),___R3,___FIX(2L))))
    ___SET_STK(0,___FAL)
    ___GOTO(___L217_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
@@ -26464,7 +26466,7 @@ ___DEF_GLBL(___L194_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___GOTO(___L214_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
 ___DEF_GLBL(___L195_syn_23_syntax_2d_rules_2d_form_2d_transformer)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R3,___R4,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R3,___R4,___FIX(1L))))
    ___SET_R3(___FAL)
    ___GOTO(___L213_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
@@ -26501,7 +26503,7 @@ ___DEF_GLBL(___L199_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___R3)))
    ___GOTO(___L210_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___R3,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R3,___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L209_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
@@ -26529,7 +26531,7 @@ ___DEF_GLBL(___L202_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L205_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___R1,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R1,___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L204_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
@@ -26781,7 +26783,7 @@ ___DEF_SLBL(84,___L84_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___STK(-5))))
    ___GOTO(___L253_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___FIXSUBP_NOTFALSEP(___R2,___STK(-5),___FIX(2L)))
+   ___IF(___FIXSUBPCONSTY_NOTFALSEP(___R2,___STK(-5),___FIX(2L)))
    ___GOTO(___L221_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
    ___SET_R2(___FAL)
@@ -26808,7 +26810,7 @@ ___DEF_GLBL(___L222_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___GOTO(___L241_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
 ___DEF_GLBL(___L223_syn_23_syntax_2d_rules_2d_form_2d_transformer)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R3,___R2,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R3,___R2,___FIX(1L))))
    ___SET_R3(___FAL)
    ___GOTO(___L240_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
@@ -26823,7 +26825,7 @@ ___DEF_GLBL(___L224_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___GOTO(___L236_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
 ___DEF_GLBL(___L225_syn_23_syntax_2d_rules_2d_form_2d_transformer)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___R3,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R3,___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L235_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
@@ -26869,7 +26871,7 @@ ___DEF_GLBL(___L227_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___GOTO(___L231_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
 ___DEF_GLBL(___L228_syn_23_syntax_2d_rules_2d_form_2d_transformer)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R4,___R2,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R4,___R2,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L230_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
@@ -27092,7 +27094,7 @@ ___DEF_GLBL(___L244_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___IF(___NOT(___FIXNUMP(___STK(-5))))
    ___GOTO(___L247_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R1,___STK(-5),___FIX(2L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R1,___STK(-5),___FIX(2L))))
    ___SET_R1(___FAL)
    ___GOTO(___L246_syn_23_syntax_2d_rules_2d_form_2d_transformer)
    ___END_IF
@@ -27517,7 +27519,7 @@ ___DEF_GLBL(___L36_syn_23_cp_2d_list)
    ___IF(___NOT(___FIXNUMP(___STK(-13))))
    ___GOTO(___L41_syn_23_cp_2d_list)
    ___END_IF
-   ___IF(___NOT(___FIXADDP_NOTFALSEP(___R1,___STK(-13),___FIX(1L))))
+   ___IF(___NOT(___FIXADDPCONSTY_NOTFALSEP(___R1,___STK(-13),___FIX(1L))))
    ___SET_R1(___FAL)
    ___GOTO(___L41_syn_23_cp_2d_list)
    ___END_IF
@@ -27555,7 +27557,7 @@ ___DEF_SLBL(13,___L13_syn_23_cp_2d_list)
    ___GOTO(___L40_syn_23_cp_2d_list)
    ___END_IF
    ___SET_R0(___CLO(___R4,3))
-   ___IF(___NOT(___FIXADDP_NOTFALSEP(___R2,___FIX(-4L),___R0)))
+   ___IF(___NOT(___FIXADDPCONSTX_NOTFALSEP(___R2,___FIX(-4L),___R0)))
    ___SET_R2(___FAL)
    ___GOTO(___L39_syn_23_cp_2d_list)
    ___END_IF
@@ -27627,7 +27629,7 @@ ___DEF_GLBL(___L43_syn_23_cp_2d_list)
    ___IF(___NOT(___FIXNUMP(___STK(-1))))
    ___GOTO(___L45_syn_23_cp_2d_list)
    ___END_IF
-   ___IF(___FIXADDP_NOTFALSEP(___R1,___FIX(-2L),___STK(-1)))
+   ___IF(___FIXADDPCONSTX_NOTFALSEP(___R1,___FIX(-2L),___STK(-1)))
    ___GOTO(___L44_syn_23_cp_2d_list)
    ___END_IF
    ___SET_R1(___FAL)
@@ -28222,7 +28224,7 @@ ___DEF_GLBL(___L48_syn_23_mp_2d_list)
    ___GOTO(___L101_syn_23_mp_2d_list)
    ___END_IF
    ___ADJFP(1)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___STK(0),___R4,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___STK(0),___R4,___FIX(1L))))
    ___SET_STK(0,___FAL)
    ___GOTO(___L100_syn_23_mp_2d_list)
    ___END_IF
@@ -28269,7 +28271,7 @@ ___DEF_SLBL(7,___L7_syn_23_mp_2d_list)
    ___IF(___NOT(___FIXNUMP(___STK(-4))))
    ___GOTO(___L52_syn_23_mp_2d_list)
    ___END_IF
-   ___IF(___FIXADDP_NOTFALSEP(___R2,___STK(-4),___FIX(1L)))
+   ___IF(___FIXADDPCONSTY_NOTFALSEP(___R2,___STK(-4),___FIX(1L)))
    ___GOTO(___L47_syn_23_mp_2d_list)
    ___END_IF
    ___SET_R2(___FAL)
@@ -28424,7 +28426,7 @@ ___DEF_GLBL(___L68_syn_23_mp_2d_list)
    ___GOTO(___L71_syn_23_mp_2d_list)
    ___END_IF
 ___DEF_GLBL(___L69_syn_23_mp_2d_list)
-   ___IF(___NOT(___FIXADDP_NOTFALSEP(___R4,___R2,___FIX(1L))))
+   ___IF(___NOT(___FIXADDPCONSTY_NOTFALSEP(___R4,___R2,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L71_syn_23_mp_2d_list)
    ___END_IF
@@ -29346,7 +29348,7 @@ ___DEF_GLBL(___L34_syn_23_ct_2d_list)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L37_syn_23_ct_2d_list)
    ___END_IF
-   ___IF(___FIXADDP_NOTFALSEP(___R2,___FIX(-1L),___R1))
+   ___IF(___FIXADDPCONSTX_NOTFALSEP(___R2,___FIX(-1L),___R1))
    ___GOTO(___L35_syn_23_ct_2d_list)
    ___END_IF
    ___SET_R2(___FAL)
@@ -29608,7 +29610,7 @@ ___DEF_GLBL(___L36_syn_23_ct)
    ___IF(___NOT(___FIXNUMP(___R2)))
    ___GOTO(___L39_syn_23_ct)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R1,___R2,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R1,___R2,___FIX(1L))))
    ___SET_R1(___FAL)
    ___GOTO(___L39_syn_23_ct)
    ___END_IF
@@ -29624,7 +29626,7 @@ ___DEF_SLBL(12,___L12_syn_23_ct)
    ___IF(___NOT(___FIXNUMP(___R2)))
    ___GOTO(___L38_syn_23_ct)
    ___END_IF
-   ___IF(___FIXSUBP_NOTFALSEP(___R1,___R2,___FIX(1L)))
+   ___IF(___FIXSUBPCONSTY_NOTFALSEP(___R1,___R2,___FIX(1L)))
    ___GOTO(___L34_syn_23_ct)
    ___END_IF
    ___SET_R1(___FAL)
@@ -29980,7 +29982,7 @@ ___DEF_GLBL(___L112_syn_23_et)
    ___IF(___NOT(___FIXNUMP(___STK(-2))))
    ___GOTO(___L139_syn_23_et)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R3,___STK(-2),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R3,___STK(-2),___FIX(1L))))
    ___SET_R3(___FAL)
    ___GOTO(___L138_syn_23_et)
    ___END_IF
@@ -30022,7 +30024,7 @@ ___DEF_GLBL(___L116_syn_23_et)
    ___IF(___NOT(___FIXNUMP(___R3)))
    ___GOTO(___L135_syn_23_et)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R4,___R3,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R4,___R3,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L134_syn_23_et)
    ___END_IF
@@ -30065,7 +30067,7 @@ ___DEF_GLBL(___L118_syn_23_et)
    ___GOTO(___L122_syn_23_et)
    ___END_IF
 ___DEF_GLBL(___L119_syn_23_et)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R4,___R2,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R4,___R2,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L121_syn_23_et)
    ___END_IF
@@ -30191,7 +30193,7 @@ ___DEF_GLBL(___L128_syn_23_et)
    ___IF(___NOT(___FIXNUMP(___STK(-5))))
    ___GOTO(___L131_syn_23_et)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___STK(-5),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___STK(-5),___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L130_syn_23_et)
    ___END_IF
@@ -30346,7 +30348,7 @@ ___DEF_GLBL(___L142_syn_23_et)
    ___IF(___NOT(___FIXNUMP(___STK(-2))))
    ___GOTO(___L153_syn_23_et)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R3,___STK(-2),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R3,___STK(-2),___FIX(1L))))
    ___SET_R3(___FAL)
    ___GOTO(___L152_syn_23_et)
    ___END_IF
@@ -30391,7 +30393,7 @@ ___DEF_GLBL(___L146_syn_23_et)
    ___IF(___NOT(___FIXNUMP(___R3)))
    ___GOTO(___L149_syn_23_et)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R4,___R3,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R4,___R3,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L148_syn_23_et)
    ___END_IF
@@ -30524,7 +30526,7 @@ ___DEF_GLBL(___L156_syn_23_et)
    ___IF(___NOT(___FIXNUMP(___STK(-2))))
    ___GOTO(___L178_syn_23_et)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R3,___STK(-2),___FIX(2L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R3,___STK(-2),___FIX(2L))))
    ___SET_R3(___FAL)
    ___GOTO(___L177_syn_23_et)
    ___END_IF
@@ -30536,7 +30538,7 @@ ___DEF_GLBL(___L157_syn_23_et)
    ___IF(___NOT(___FIXNUMP(___STK(-5))))
    ___GOTO(___L176_syn_23_et)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R1,___STK(-5),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R1,___STK(-5),___FIX(1L))))
    ___SET_R1(___FAL)
    ___GOTO(___L175_syn_23_et)
    ___END_IF
@@ -30590,7 +30592,7 @@ ___DEF_SLBL(47,___L47_syn_23_et)
    ___GOTO(___L172_syn_23_et)
    ___END_IF
 ___DEF_GLBL(___L161_syn_23_et)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___STK(-5),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___STK(-5),___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L170_syn_23_et)
    ___END_IF
@@ -30626,7 +30628,7 @@ ___DEF_SLBL(49,___L49_syn_23_et)
    ___GOTO(___L168_syn_23_et)
    ___END_IF
 ___DEF_GLBL(___L164_syn_23_et)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___STK(-10),___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___STK(-10),___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L166_syn_23_et)
    ___END_IF
@@ -30825,7 +30827,7 @@ ___DEF_GLBL(___L185_syn_23_et)
    ___IF(___NOT(___FIXNUMP(___R3)))
    ___GOTO(___L213_syn_23_et)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R4,___R3,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R4,___R3,___FIX(1L))))
    ___SET_R4(___FAL)
    ___GOTO(___L212_syn_23_et)
    ___END_IF
@@ -30835,7 +30837,7 @@ ___DEF_GLBL(___L186_syn_23_et)
    ___GOTO(___L211_syn_23_et)
    ___END_IF
    ___ADJFP(1)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___STK(0),___R3,___FIX(2L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___STK(0),___R3,___FIX(2L))))
    ___SET_STK(0,___FAL)
    ___GOTO(___L210_syn_23_et)
    ___END_IF
@@ -30853,7 +30855,7 @@ ___DEF_GLBL(___L187_syn_23_et)
    ___GOTO(___L207_syn_23_et)
    ___END_IF
 ___DEF_GLBL(___L188_syn_23_et)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R3,___R4,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R3,___R4,___FIX(1L))))
    ___SET_R3(___FAL)
    ___GOTO(___L206_syn_23_et)
    ___END_IF
@@ -30890,7 +30892,7 @@ ___DEF_GLBL(___L192_syn_23_et)
    ___IF(___NOT(___FIXNUMP(___R3)))
    ___GOTO(___L203_syn_23_et)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___R3,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R3,___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L202_syn_23_et)
    ___END_IF
@@ -30918,7 +30920,7 @@ ___DEF_GLBL(___L195_syn_23_et)
    ___IF(___NOT(___FIXNUMP(___R1)))
    ___GOTO(___L198_syn_23_et)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___R1,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R1,___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L197_syn_23_et)
    ___END_IF
@@ -31170,7 +31172,7 @@ ___DEF_SLBL(81,___L81_syn_23_et)
    ___IF(___NOT(___FIXNUMP(___STK(-5))))
    ___GOTO(___L244_syn_23_et)
    ___END_IF
-   ___IF(___FIXSUBP_NOTFALSEP(___R2,___STK(-5),___FIX(2L)))
+   ___IF(___FIXSUBPCONSTY_NOTFALSEP(___R2,___STK(-5),___FIX(2L)))
    ___GOTO(___L214_syn_23_et)
    ___END_IF
    ___SET_R2(___FAL)
@@ -31197,7 +31199,7 @@ ___DEF_GLBL(___L215_syn_23_et)
    ___GOTO(___L232_syn_23_et)
    ___END_IF
 ___DEF_GLBL(___L216_syn_23_et)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R3,___R2,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R3,___R2,___FIX(1L))))
    ___SET_R3(___FAL)
    ___GOTO(___L231_syn_23_et)
    ___END_IF
@@ -31212,7 +31214,7 @@ ___DEF_GLBL(___L217_syn_23_et)
    ___GOTO(___L227_syn_23_et)
    ___END_IF
 ___DEF_GLBL(___L218_syn_23_et)
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R2,___R3,___FIX(1L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R2,___R3,___FIX(1L))))
    ___SET_R2(___FAL)
    ___GOTO(___L226_syn_23_et)
    ___END_IF
@@ -31258,7 +31260,7 @@ ___DEF_GLBL(___L220_syn_23_et)
    ___GOTO(___L222_syn_23_et)
    ___END_IF
 ___DEF_GLBL(___L221_syn_23_et)
-   ___IF(___FIXSUBP_NOTFALSEP(___R4,___R2,___FIX(1L)))
+   ___IF(___FIXSUBPCONSTY_NOTFALSEP(___R4,___R2,___FIX(1L)))
    ___GOTO(___L110_syn_23_et)
    ___END_IF
    ___SET_R4(___FAL)
@@ -31458,7 +31460,7 @@ ___DEF_GLBL(___L235_syn_23_et)
    ___IF(___NOT(___FIXNUMP(___STK(-5))))
    ___GOTO(___L238_syn_23_et)
    ___END_IF
-   ___IF(___NOT(___FIXSUBP_NOTFALSEP(___R1,___STK(-5),___FIX(2L))))
+   ___IF(___NOT(___FIXSUBPCONSTY_NOTFALSEP(___R1,___STK(-5),___FIX(2L))))
    ___SET_R1(___FAL)
    ___GOTO(___L237_syn_23_et)
    ___END_IF
@@ -32089,6 +32091,8 @@ ___DEF_P_HLBL(___L4_syn_23_apply_2d_rules)
 ___DEF_P_HLBL(___L5_syn_23_apply_2d_rules)
 ___DEF_P_HLBL(___L6_syn_23_apply_2d_rules)
 ___DEF_P_HLBL(___L7_syn_23_apply_2d_rules)
+___DEF_P_HLBL(___L8_syn_23_apply_2d_rules)
+___DEF_P_HLBL(___L9_syn_23_apply_2d_rules)
 ___END_P_HLBL
 ___BEGIN_P_SW
 ___DEF_SLBL(0,___L0_syn_23_apply_2d_rules)
@@ -32101,10 +32105,10 @@ ___DEF_GLBL(___L_syn_23_apply_2d_rules)
    ___SET_R3(___NUL)
    ___POLL(1)
 ___DEF_SLBL(1,___L1_syn_23_apply_2d_rules)
-   ___GOTO(___L8_syn_23_apply_2d_rules)
+   ___GOTO(___L10_syn_23_apply_2d_rules)
 ___DEF_SLBL(2,___L2_syn_23_apply_2d_rules)
    ___IF(___VECTORP(___R1))
-   ___GOTO(___L10_syn_23_apply_2d_rules)
+   ___GOTO(___L14_syn_23_apply_2d_rules)
    ___END_IF
    ___SET_R3(___CONS(___R1,___STK(-7)))
    ___SET_R2(___CDR(___STK(-8)))
@@ -32115,9 +32119,9 @@ ___DEF_SLBL(2,___L2_syn_23_apply_2d_rules)
 ___DEF_SLBL(3,___L3_syn_23_apply_2d_rules)
    ___POLL(4)
 ___DEF_SLBL(4,___L4_syn_23_apply_2d_rules)
-___DEF_GLBL(___L8_syn_23_apply_2d_rules)
+___DEF_GLBL(___L10_syn_23_apply_2d_rules)
    ___IF(___NOT(___PAIRP(___R2)))
-   ___GOTO(___L9_syn_23_apply_2d_rules)
+   ___GOTO(___L13_syn_23_apply_2d_rules)
    ___END_IF
    ___SET_R4(___CAR(___R2))
    ___SET_STK(1,___VECTORREF(___R4,___FIX(0L)))
@@ -32127,25 +32131,40 @@ ___DEF_GLBL(___L8_syn_23_apply_2d_rules)
    ___SET_STK(4,___R2)
    ___SET_STK(5,___R3)
    ___SET_STK(6,___R4)
-   ___SET_R2(___R1)
-   ___SET_R1(___STK(1))
    ___ADJFP(12)
    ___POLL(5)
 ___DEF_SLBL(5,___L5_syn_23_apply_2d_rules)
+   ___SET_R0(___LBL(6))
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),173,___G__23__23_source_3f_)
+___DEF_SLBL(6,___L6_syn_23_apply_2d_rules)
+   ___IF(___NOT(___NOTFALSEP(___R1)))
+   ___GOTO(___L12_syn_23_apply_2d_rules)
+   ___END_IF
+   ___SET_R1(___STK(-9))
+   ___GOTO(___L11_syn_23_apply_2d_rules)
+___DEF_SLBL(7,___L7_syn_23_apply_2d_rules)
+___DEF_GLBL(___L11_syn_23_apply_2d_rules)
+   ___SET_R2(___R1)
+   ___SET_R1(___STK(-11))
    ___SET_R0(___LBL(2))
    ___JUMPINT(___SET_NARGS(2),___PRC(1852),___L_syn_23_match_2d_pattern)
-___DEF_GLBL(___L9_syn_23_apply_2d_rules)
+___DEF_GLBL(___L12_syn_23_apply_2d_rules)
+   ___SET_R1(___STK(-9))
+   ___SET_R2(___FAL)
+   ___SET_R0(___LBL(7))
+   ___JUMPGLONOTSAFE(___SET_NARGS(2),132,___G__23__23_make_2d_source)
+___DEF_GLBL(___L13_syn_23_apply_2d_rules)
    ___SET_R2(___R3)
    ___SET_R1(___SUB(357))
-   ___POLL(6)
-___DEF_SLBL(6,___L6_syn_23_apply_2d_rules)
+   ___POLL(8)
+___DEF_SLBL(8,___L8_syn_23_apply_2d_rules)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),105,___G__23__23_error)
-___DEF_GLBL(___L10_syn_23_apply_2d_rules)
+___DEF_GLBL(___L14_syn_23_apply_2d_rules)
    ___SET_R2(___R1)
    ___SET_R1(___STK(-6))
    ___SET_R0(___STK(-10))
-   ___POLL(7)
-___DEF_SLBL(7,___L7_syn_23_apply_2d_rules)
+   ___POLL(9)
+___DEF_SLBL(9,___L9_syn_23_apply_2d_rules)
    ___ADJFP(-12)
    ___JUMPINT(___SET_NARGS(2),___PRC(2041),___L_syn_23_expand_2d_template)
 ___END_P_SW
@@ -32154,7 +32173,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_syn_23_define_2d_syntax_2d_form_2d_transformer
 #undef ___PH_LBL0
-#define ___PH_LBL0 2097
+#define ___PH_LBL0 2099
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -32225,7 +32244,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_install_2d_module
 #undef ___PH_LBL0
-#define ___PH_LBL0 2105
+#define ___PH_LBL0 2107
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4 ___D_F64(___F64V1) ___D_F64(___F64V2) \
  ___D_F64(___F64V3)
@@ -34462,13 +34481,15 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H_syntax_2d__3e_vector,___IFD(___RETI,1,0,0x3f1L))
 ,___DEF_LBL_RET(___H_syntax_2d__3e_vector,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H_syntax_2d__3e_vector,___IFD(___RETI,4,4,0x3f0L))
-,___DEF_LBL_INTRO(___H_syn_23_apply_2d_rules,___REF_SYM(183,___S_syn_23_apply_2d_rules),___REF_FAL,8,0)
+,___DEF_LBL_INTRO(___H_syn_23_apply_2d_rules,___REF_SYM(183,___S_syn_23_apply_2d_rules),___REF_FAL,10,0)
 ,___DEF_LBL_PROC(___H_syn_23_apply_2d_rules,2,-1)
 ,___DEF_LBL_RET(___H_syn_23_apply_2d_rules,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_RET(___H_syn_23_apply_2d_rules,___IFD(___RETN,9,1,0x3eL))
 ,___DEF_LBL_RET(___H_syn_23_apply_2d_rules,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_RET(___H_syn_23_apply_2d_rules,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_RET(___H_syn_23_apply_2d_rules,___OFD(___RETI,12,1,0x3f03eL))
+,___DEF_LBL_RET(___H_syn_23_apply_2d_rules,___OFD(___RETI,12,1,0x3f03fL))
+,___DEF_LBL_RET(___H_syn_23_apply_2d_rules,___IFD(___RETN,9,1,0x3fL))
+,___DEF_LBL_RET(___H_syn_23_apply_2d_rules,___IFD(___RETN,9,1,0x3fL))
 ,___DEF_LBL_RET(___H_syn_23_apply_2d_rules,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_RET(___H_syn_23_apply_2d_rules,___OFD(___RETI,12,12,0x3f000L))
 ,___DEF_LBL_INTRO(___H_syn_23_define_2d_syntax_2d_form_2d_transformer,___REF_SYM(190,___S_syn_23_define_2d_syntax_2d_form_2d_transformer),___REF_FAL,7,0)
@@ -34832,7 +34853,7 @@ ___BEGIN_OFD
 ,___DEF_OFD(___RETI,12,12)
                ___GCMAP1(0x3f000L)
 ,___DEF_OFD(___RETI,12,1)
-               ___GCMAP1(0x3f03eL)
+               ___GCMAP1(0x3f03fL)
 ,___DEF_OFD(___RETI,12,12)
                ___GCMAP1(0x3f000L)
 ___END_OFD
@@ -34915,7 +34936,7 @@ ___DEF_MOD_PRM(81,___G_syntax_2d__3e_datum,2056)
 ___DEF_MOD_PRM(82,___G_syntax_2d__3e_list,2062)
 ___DEF_MOD_PRM(83,___G_syntax_2d__3e_vector,2074)
 ___DEF_MOD_PRM(56,___G_syn_23_apply_2d_rules,2088)
-___DEF_MOD_PRM(63,___G_syn_23_define_2d_syntax_2d_form_2d_transformer,2097)
+___DEF_MOD_PRM(63,___G_syn_23_define_2d_syntax_2d_form_2d_transformer,2099)
 ___END_MOD_PRM
 
 ___BEGIN_MOD_C_INIT
@@ -34999,7 +35020,7 @@ ___DEF_MOD_GLO(81,___G_syntax_2d__3e_datum,2056)
 ___DEF_MOD_GLO(82,___G_syntax_2d__3e_list,2062)
 ___DEF_MOD_GLO(83,___G_syntax_2d__3e_vector,2074)
 ___DEF_MOD_GLO(56,___G_syn_23_apply_2d_rules,2088)
-___DEF_MOD_GLO(63,___G_syn_23_define_2d_syntax_2d_form_2d_transformer,2097)
+___DEF_MOD_GLO(63,___G_syn_23_define_2d_syntax_2d_form_2d_transformer,2099)
 ___END_MOD_GLO
 
 ___BEGIN_MOD_SYM_KEY

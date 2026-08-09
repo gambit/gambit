@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_t-univ-4.c", produced by Gambit v4.9.7
+; File: "_t-univ-4.c", produced by Gambit v4.9.8
 (
-409007
+409008
 (C)
 "_t-univ-4"
 ("_t-univ-4")
@@ -497,7 +497,7 @@
 ) #|*/"*/"meta-info|#
 )
 #else
-#define ___VERSION 409007
+#define ___VERSION 409008
 #define ___MODULE_NAME "_t-univ-4"
 #define ___LINKER_ID ___LNK___t_2d_univ_2d_4
 #define ___MH_PROC ___H___t_2d_univ_2d_4
@@ -31736,7 +31736,7 @@ ___DEF_SLBL(3343,___L3343___t_2d_univ_2d_4_23_)
    ___SET_R1(___FAL)
    ___GOTO(___L4147___t_2d_univ_2d_4_23_)
    ___END_IF
-   ___IF(___FIXSUBP_NOTFALSEP(___R1,___R1,___FIX(1L)))
+   ___IF(___FIXSUBPCONSTY_NOTFALSEP(___R1,___R1,___FIX(1L)))
    ___GOTO(___L4145___t_2d_univ_2d_4_23_)
    ___END_IF
    ___SET_R1(___FAL)
@@ -31879,7 +31879,7 @@ ___DEF_SLBL(3362,___L3362___t_2d_univ_2d_4_23_)
    ___SET_R1(___FAL)
    ___GOTO(___L4154___t_2d_univ_2d_4_23_)
    ___END_IF
-   ___IF(___FIXSUBP_NOTFALSEP(___R1,___R1,___FIX(1L)))
+   ___IF(___FIXSUBPCONSTY_NOTFALSEP(___R1,___R1,___FIX(1L)))
    ___GOTO(___L4152___t_2d_univ_2d_4_23_)
    ___END_IF
    ___SET_R1(___FAL)
@@ -36243,7 +36243,7 @@ ___DEF_SLBL(16,___L16_c_23_univ_2d_cxxxxr_2d_init)
    ___IF(___NOT(___FIXNUMP(___STK(-6))))
    ___GOTO(___L47_c_23_univ_2d_cxxxxr_2d_init)
    ___END_IF
-   ___IF(___NOT(___FIXADDP_NOTFALSEP(___R1,___STK(-6),___FIX(1L))))
+   ___IF(___NOT(___FIXADDPCONSTY_NOTFALSEP(___R1,___STK(-6),___FIX(1L))))
    ___SET_R1(___FAL)
    ___GOTO(___L47_c_23_univ_2d_cxxxxr_2d_init)
    ___END_IF
@@ -37775,7 +37775,7 @@ ___DEF_SLBL(22,___L22_c_23_univ_2d_expand_2d_inline_2d_host_2d_code)
    ___IF(___NOT(___FIXNUMP(___R2)))
    ___GOTO(___L40_c_23_univ_2d_expand_2d_inline_2d_host_2d_code)
    ___END_IF
-   ___IF(___NOT(___FIXADDP_NOTFALSEP(___R1,___R2,___FIX(1L))))
+   ___IF(___NOT(___FIXADDPCONSTY_NOTFALSEP(___R1,___R2,___FIX(1L))))
    ___SET_R1(___FAL)
    ___GOTO(___L39_c_23_univ_2d_expand_2d_inline_2d_host_2d_code)
    ___END_IF

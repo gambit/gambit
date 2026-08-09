@@ -3,7 +3,7 @@
 /* Copyright (c) 1994-2026 by Marc Feeley, All Rights Reserved.  */
 
 #define ___INCLUDED_FROM_MEM
-#define ___VERSION 409007
+#define ___VERSION 409008
 #include "gambit.h"
 
 #include "os_setup.h"

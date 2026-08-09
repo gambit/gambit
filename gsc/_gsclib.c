@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gsclib.c", produced by Gambit v4.9.7
+; File: "_gsclib.c", produced by Gambit v4.9.8
 (
-409007
+409008
 (C)
 "_gsclib"
 ("_gsclib")
@@ -12,6 +12,7 @@
 "##base-library-from-base"
 "##build-executable"
 "##build-module"
+"##c-code"
 "##compile-file"
 "##compile-file-to-target"
 "##compile-options-normalize"
@@ -83,7 +84,6 @@
 "##base-library-from-base"
 "##build-executable"
 "##build-module"
-"##c-code"
 "##multiple-args-join"
 "c#make-global-environment"
 "compile-file"
@@ -111,6 +111,7 @@
 "##file-exists?"
 "##fold-right"
 "##interaction-cte"
+"##make-global-var"
 "##make-source"
 "##module-build-subdir-path"
 "##number->string"
@@ -157,18 +158,18 @@
 ) #|*/"*/"meta-info|#
 )
 #else
-#define ___VERSION 409007
+#define ___VERSION 409008
 #define ___MODULE_NAME "_gsclib"
 #define ___LINKER_ID ___LNK___gsclib
 #define ___MH_PROC ___H___gsclib
 #define ___SCRIPT_LINE 0
-#define ___SYMCOUNT 39
+#define ___SYMCOUNT 40
 #define ___KEYCOUNT 12
 #define ___GLOCOUNT 85
-#define ___SUPCOUNT 25
+#define ___SUPCOUNT 24
 #define ___CNSCOUNT 2
 #define ___SUBCOUNT 61
-#define ___LBLCOUNT 346
+#define ___LBLCOUNT 347
 #define ___OFDCOUNT 66
 #define ___MODDESCR ___REF_SUB(58)
 #include "gambit.h"
@@ -177,6 +178,7 @@ ___NEED_SYM(___S__23__23_add_2d_default_2d_compile_2d_options)
 ___NEED_SYM(___S__23__23_base_2d_library_2d_from_2d_base)
 ___NEED_SYM(___S__23__23_build_2d_executable)
 ___NEED_SYM(___S__23__23_build_2d_module)
+___NEED_SYM(___S__23__23_c_2d_code)
 ___NEED_SYM(___S__23__23_compile_2d_file)
 ___NEED_SYM(___S__23__23_compile_2d_file_2d_to_2d_target)
 ___NEED_SYM(___S__23__23_compile_2d_options_2d_normalize)
@@ -232,7 +234,6 @@ ___NEED_GLO(___G__23__23_assoc)
 ___NEED_GLO(___G__23__23_base_2d_library_2d_from_2d_base)
 ___NEED_GLO(___G__23__23_build_2d_executable)
 ___NEED_GLO(___G__23__23_build_2d_module)
-___NEED_GLO(___G__23__23_c_2d_code)
 ___NEED_GLO(___G__23__23_call_2d_with_2d_input_2d_string)
 ___NEED_GLO(___G__23__23_compile_2d_file)
 ___NEED_GLO(___G__23__23_compile_2d_file_2d_to_2d_target)
@@ -260,6 +261,7 @@ ___NEED_GLO(___G__23__23_gambuild_2d_params)
 ___NEED_GLO(___G__23__23_interaction_2d_cte)
 ___NEED_GLO(___G__23__23_link_2d_flat)
 ___NEED_GLO(___G__23__23_link_2d_incremental)
+___NEED_GLO(___G__23__23_make_2d_global_2d_var)
 ___NEED_GLO(___G__23__23_make_2d_source)
 ___NEED_GLO(___G__23__23_module_2d_build_2d_subdir_2d_path)
 ___NEED_GLO(___G__23__23_multiple_2d_args_2d_join)
@@ -318,82 +320,84 @@ ___DEF_SYM(0,___S__23__23_add_2d_default_2d_compile_2d_options,"##add-default-co
 ___DEF_SYM(1,___S__23__23_base_2d_library_2d_from_2d_base,"##base-library-from-base")
 ___DEF_SYM(2,___S__23__23_build_2d_executable,"##build-executable")
 ___DEF_SYM(3,___S__23__23_build_2d_module,"##build-module")
-___DEF_SYM(4,___S__23__23_compile_2d_file,"##compile-file")
-___DEF_SYM(5,___S__23__23_compile_2d_file_2d_to_2d_target,"##compile-file-to-target")
-___DEF_SYM(6,___S__23__23_compile_2d_options_2d_normalize,"##compile-options-normalize")
-___DEF_SYM(7,___S__23__23_default_2d_base_2d_linkfile,"##default-base-linkfile")
-___DEF_SYM(8,___S__23__23_default_2d_compile_2d_options,"##default-compile-options")
-___DEF_SYM(9,___S__23__23_extract_2d_target,"##extract-target")
-___DEF_SYM(10,___S__23__23_gambuild,"##gambuild")
-___DEF_SYM(11,___S__23__23_gambuild_2d_params,"##gambuild-params")
-___DEF_SYM(12,___S__23__23_link_2d_flat,"##link-flat")
-___DEF_SYM(13,___S__23__23_link_2d_incremental,"##link-incremental")
-___DEF_SYM(14,___S__23__23_multiple_2d_args_2d_join,"##multiple-args-join")
-___DEF_SYM(15,___S__23__23_path_2d_relative_2d_to_2d_dir,"##path-relative-to-dir")
-___DEF_SYM(16,___S__23__23_string_2d_or_2d_string_2d_list_2d_join,"##string-or-string-list-join")
-___DEF_SYM(17,___S__23__23_string_2d_or_2d_string_2d_list_3f_,"##string-or-string-list?")
-___DEF_SYM(18,___S___gsclib,"_gsclib")
-___DEF_SYM(19,___S___gsclib_23_,"_gsclib#")
-___DEF_SYM(20,___S_cc,"cc")
-___DEF_SYM(21,___S_cc_2d_options,"cc-options")
-___DEF_SYM(22,___S_compile_2d_file,"compile-file")
-___DEF_SYM(23,___S_compile_2d_file_2d_to_2d_target,"compile-file-to-target")
-___DEF_SYM(24,___S_dyn,"dyn")
-___DEF_SYM(25,___S_exe,"exe")
-___DEF_SYM(26,___S_keep_2d_temp,"keep-temp")
-___DEF_SYM(27,___S_ld_2d_options,"ld-options")
-___DEF_SYM(28,___S_ld_2d_options_2d_prelude,"ld-options-prelude")
-___DEF_SYM(29,___S_lib,"lib")
-___DEF_SYM(30,___S_link_2d_flat,"link-flat")
-___DEF_SYM(31,___S_link_2d_incremental,"link-incremental")
-___DEF_SYM(32,___S_linker_2d_name,"linker-name")
-___DEF_SYM(33,___S_module_2d_ref,"module-ref")
-___DEF_SYM(34,___S_obj,"obj")
-___DEF_SYM(35,___S_pkg_2d_config,"pkg-config")
-___DEF_SYM(36,___S_pkg_2d_config_2d_path,"pkg-config-path")
-___DEF_SYM(37,___S_target,"target")
-___DEF_SYM(38,___S_verbose,"verbose")
+___DEF_SYM(4,___S__23__23_c_2d_code,"##c-code")
+___DEF_SYM(5,___S__23__23_compile_2d_file,"##compile-file")
+___DEF_SYM(6,___S__23__23_compile_2d_file_2d_to_2d_target,"##compile-file-to-target")
+___DEF_SYM(7,___S__23__23_compile_2d_options_2d_normalize,"##compile-options-normalize")
+___DEF_SYM(8,___S__23__23_default_2d_base_2d_linkfile,"##default-base-linkfile")
+___DEF_SYM(9,___S__23__23_default_2d_compile_2d_options,"##default-compile-options")
+___DEF_SYM(10,___S__23__23_extract_2d_target,"##extract-target")
+___DEF_SYM(11,___S__23__23_gambuild,"##gambuild")
+___DEF_SYM(12,___S__23__23_gambuild_2d_params,"##gambuild-params")
+___DEF_SYM(13,___S__23__23_link_2d_flat,"##link-flat")
+___DEF_SYM(14,___S__23__23_link_2d_incremental,"##link-incremental")
+___DEF_SYM(15,___S__23__23_multiple_2d_args_2d_join,"##multiple-args-join")
+___DEF_SYM(16,___S__23__23_path_2d_relative_2d_to_2d_dir,"##path-relative-to-dir")
+___DEF_SYM(17,___S__23__23_string_2d_or_2d_string_2d_list_2d_join,"##string-or-string-list-join")
+___DEF_SYM(18,___S__23__23_string_2d_or_2d_string_2d_list_3f_,"##string-or-string-list?")
+___DEF_SYM(19,___S___gsclib,"_gsclib")
+___DEF_SYM(20,___S___gsclib_23_,"_gsclib#")
+___DEF_SYM(21,___S_cc,"cc")
+___DEF_SYM(22,___S_cc_2d_options,"cc-options")
+___DEF_SYM(23,___S_compile_2d_file,"compile-file")
+___DEF_SYM(24,___S_compile_2d_file_2d_to_2d_target,"compile-file-to-target")
+___DEF_SYM(25,___S_dyn,"dyn")
+___DEF_SYM(26,___S_exe,"exe")
+___DEF_SYM(27,___S_keep_2d_temp,"keep-temp")
+___DEF_SYM(28,___S_ld_2d_options,"ld-options")
+___DEF_SYM(29,___S_ld_2d_options_2d_prelude,"ld-options-prelude")
+___DEF_SYM(30,___S_lib,"lib")
+___DEF_SYM(31,___S_link_2d_flat,"link-flat")
+___DEF_SYM(32,___S_link_2d_incremental,"link-incremental")
+___DEF_SYM(33,___S_linker_2d_name,"linker-name")
+___DEF_SYM(34,___S_module_2d_ref,"module-ref")
+___DEF_SYM(35,___S_obj,"obj")
+___DEF_SYM(36,___S_pkg_2d_config,"pkg-config")
+___DEF_SYM(37,___S_pkg_2d_config_2d_path,"pkg-config-path")
+___DEF_SYM(38,___S_target,"target")
+___DEF_SYM(39,___S_verbose,"verbose")
 ___END_SYM
 
 #define ___SYM__23__23_add_2d_default_2d_compile_2d_options ___SYM(0,___S__23__23_add_2d_default_2d_compile_2d_options)
 #define ___SYM__23__23_base_2d_library_2d_from_2d_base ___SYM(1,___S__23__23_base_2d_library_2d_from_2d_base)
 #define ___SYM__23__23_build_2d_executable ___SYM(2,___S__23__23_build_2d_executable)
 #define ___SYM__23__23_build_2d_module ___SYM(3,___S__23__23_build_2d_module)
-#define ___SYM__23__23_compile_2d_file ___SYM(4,___S__23__23_compile_2d_file)
-#define ___SYM__23__23_compile_2d_file_2d_to_2d_target ___SYM(5,___S__23__23_compile_2d_file_2d_to_2d_target)
-#define ___SYM__23__23_compile_2d_options_2d_normalize ___SYM(6,___S__23__23_compile_2d_options_2d_normalize)
-#define ___SYM__23__23_default_2d_base_2d_linkfile ___SYM(7,___S__23__23_default_2d_base_2d_linkfile)
-#define ___SYM__23__23_default_2d_compile_2d_options ___SYM(8,___S__23__23_default_2d_compile_2d_options)
-#define ___SYM__23__23_extract_2d_target ___SYM(9,___S__23__23_extract_2d_target)
-#define ___SYM__23__23_gambuild ___SYM(10,___S__23__23_gambuild)
-#define ___SYM__23__23_gambuild_2d_params ___SYM(11,___S__23__23_gambuild_2d_params)
-#define ___SYM__23__23_link_2d_flat ___SYM(12,___S__23__23_link_2d_flat)
-#define ___SYM__23__23_link_2d_incremental ___SYM(13,___S__23__23_link_2d_incremental)
-#define ___SYM__23__23_multiple_2d_args_2d_join ___SYM(14,___S__23__23_multiple_2d_args_2d_join)
-#define ___SYM__23__23_path_2d_relative_2d_to_2d_dir ___SYM(15,___S__23__23_path_2d_relative_2d_to_2d_dir)
-#define ___SYM__23__23_string_2d_or_2d_string_2d_list_2d_join ___SYM(16,___S__23__23_string_2d_or_2d_string_2d_list_2d_join)
-#define ___SYM__23__23_string_2d_or_2d_string_2d_list_3f_ ___SYM(17,___S__23__23_string_2d_or_2d_string_2d_list_3f_)
-#define ___SYM___gsclib ___SYM(18,___S___gsclib)
-#define ___SYM___gsclib_23_ ___SYM(19,___S___gsclib_23_)
-#define ___SYM_cc ___SYM(20,___S_cc)
-#define ___SYM_cc_2d_options ___SYM(21,___S_cc_2d_options)
-#define ___SYM_compile_2d_file ___SYM(22,___S_compile_2d_file)
-#define ___SYM_compile_2d_file_2d_to_2d_target ___SYM(23,___S_compile_2d_file_2d_to_2d_target)
-#define ___SYM_dyn ___SYM(24,___S_dyn)
-#define ___SYM_exe ___SYM(25,___S_exe)
-#define ___SYM_keep_2d_temp ___SYM(26,___S_keep_2d_temp)
-#define ___SYM_ld_2d_options ___SYM(27,___S_ld_2d_options)
-#define ___SYM_ld_2d_options_2d_prelude ___SYM(28,___S_ld_2d_options_2d_prelude)
-#define ___SYM_lib ___SYM(29,___S_lib)
-#define ___SYM_link_2d_flat ___SYM(30,___S_link_2d_flat)
-#define ___SYM_link_2d_incremental ___SYM(31,___S_link_2d_incremental)
-#define ___SYM_linker_2d_name ___SYM(32,___S_linker_2d_name)
-#define ___SYM_module_2d_ref ___SYM(33,___S_module_2d_ref)
-#define ___SYM_obj ___SYM(34,___S_obj)
-#define ___SYM_pkg_2d_config ___SYM(35,___S_pkg_2d_config)
-#define ___SYM_pkg_2d_config_2d_path ___SYM(36,___S_pkg_2d_config_2d_path)
-#define ___SYM_target ___SYM(37,___S_target)
-#define ___SYM_verbose ___SYM(38,___S_verbose)
+#define ___SYM__23__23_c_2d_code ___SYM(4,___S__23__23_c_2d_code)
+#define ___SYM__23__23_compile_2d_file ___SYM(5,___S__23__23_compile_2d_file)
+#define ___SYM__23__23_compile_2d_file_2d_to_2d_target ___SYM(6,___S__23__23_compile_2d_file_2d_to_2d_target)
+#define ___SYM__23__23_compile_2d_options_2d_normalize ___SYM(7,___S__23__23_compile_2d_options_2d_normalize)
+#define ___SYM__23__23_default_2d_base_2d_linkfile ___SYM(8,___S__23__23_default_2d_base_2d_linkfile)
+#define ___SYM__23__23_default_2d_compile_2d_options ___SYM(9,___S__23__23_default_2d_compile_2d_options)
+#define ___SYM__23__23_extract_2d_target ___SYM(10,___S__23__23_extract_2d_target)
+#define ___SYM__23__23_gambuild ___SYM(11,___S__23__23_gambuild)
+#define ___SYM__23__23_gambuild_2d_params ___SYM(12,___S__23__23_gambuild_2d_params)
+#define ___SYM__23__23_link_2d_flat ___SYM(13,___S__23__23_link_2d_flat)
+#define ___SYM__23__23_link_2d_incremental ___SYM(14,___S__23__23_link_2d_incremental)
+#define ___SYM__23__23_multiple_2d_args_2d_join ___SYM(15,___S__23__23_multiple_2d_args_2d_join)
+#define ___SYM__23__23_path_2d_relative_2d_to_2d_dir ___SYM(16,___S__23__23_path_2d_relative_2d_to_2d_dir)
+#define ___SYM__23__23_string_2d_or_2d_string_2d_list_2d_join ___SYM(17,___S__23__23_string_2d_or_2d_string_2d_list_2d_join)
+#define ___SYM__23__23_string_2d_or_2d_string_2d_list_3f_ ___SYM(18,___S__23__23_string_2d_or_2d_string_2d_list_3f_)
+#define ___SYM___gsclib ___SYM(19,___S___gsclib)
+#define ___SYM___gsclib_23_ ___SYM(20,___S___gsclib_23_)
+#define ___SYM_cc ___SYM(21,___S_cc)
+#define ___SYM_cc_2d_options ___SYM(22,___S_cc_2d_options)
+#define ___SYM_compile_2d_file ___SYM(23,___S_compile_2d_file)
+#define ___SYM_compile_2d_file_2d_to_2d_target ___SYM(24,___S_compile_2d_file_2d_to_2d_target)
+#define ___SYM_dyn ___SYM(25,___S_dyn)
+#define ___SYM_exe ___SYM(26,___S_exe)
+#define ___SYM_keep_2d_temp ___SYM(27,___S_keep_2d_temp)
+#define ___SYM_ld_2d_options ___SYM(28,___S_ld_2d_options)
+#define ___SYM_ld_2d_options_2d_prelude ___SYM(29,___S_ld_2d_options_2d_prelude)
+#define ___SYM_lib ___SYM(30,___S_lib)
+#define ___SYM_link_2d_flat ___SYM(31,___S_link_2d_flat)
+#define ___SYM_link_2d_incremental ___SYM(32,___S_link_2d_incremental)
+#define ___SYM_linker_2d_name ___SYM(33,___S_linker_2d_name)
+#define ___SYM_module_2d_ref ___SYM(34,___S_module_2d_ref)
+#define ___SYM_obj ___SYM(35,___S_obj)
+#define ___SYM_pkg_2d_config ___SYM(36,___S_pkg_2d_config)
+#define ___SYM_pkg_2d_config_2d_path ___SYM(37,___S_pkg_2d_config_2d_path)
+#define ___SYM_target ___SYM(38,___S_target)
+#define ___SYM_verbose ___SYM(39,___S_verbose)
 
 ___BEGIN_KEY
 ___DEF_KEY(0,___K_base,"base")
@@ -428,46 +432,46 @@ ___DEF_GLO(0,"##add-default-compile-options")
 ___DEF_GLO(1,"##base-library-from-base")
 ___DEF_GLO(2,"##build-executable")
 ___DEF_GLO(3,"##build-module")
-___DEF_GLO(4,"##c-code")
-___DEF_GLO(5,"##compile-file")
-___DEF_GLO(6,"##compile-file-to-target")
-___DEF_GLO(7,"##compile-options-normalize")
-___DEF_GLO(8,"##default-base-linkfile")
-___DEF_GLO(9,"##default-compile-options")
-___DEF_GLO(10,"##extract-target")
-___DEF_GLO(11,"##gambuild")
-___DEF_GLO(12,"##gambuild-params")
-___DEF_GLO(13,"##link-flat")
-___DEF_GLO(14,"##link-incremental")
-___DEF_GLO(15,"##multiple-args-join")
-___DEF_GLO(16,"##path-relative-to-dir")
-___DEF_GLO(17,"##string-or-string-list-join")
-___DEF_GLO(18,"##string-or-string-list?")
-___DEF_GLO(19,"_gsclib#")
-___DEF_GLO(20,"c#make-global-environment")
-___DEF_GLO(21,"compile-file")
-___DEF_GLO(22,"compile-file-to-target")
-___DEF_GLO(23,"link-flat")
-___DEF_GLO(24,"link-incremental")
-___DEF_GLO(25,"##append")
-___DEF_GLO(26,"##assoc")
-___DEF_GLO(27,"##call-with-input-string")
-___DEF_GLO(28,"##create-directory")
-___DEF_GLO(29,"##cte-macro-descr")
-___DEF_GLO(30,"##cte-macro-name")
-___DEF_GLO(31,"##cte-macro?")
-___DEF_GLO(32,"##cte-parent-cte")
-___DEF_GLO(33,"##cte-top-cte")
-___DEF_GLO(34,"##cte-top?")
-___DEF_GLO(35,"##current-directory")
-___DEF_GLO(36,"##default-compile-options-string")
-___DEF_GLO(37,"##delete-file")
-___DEF_GLO(38,"##delete-file-or-directory")
-___DEF_GLO(39,"##equal?")
-___DEF_GLO(40,"##fail-check-string")
-___DEF_GLO(41,"##file-exists?")
-___DEF_GLO(42,"##fold-right")
-___DEF_GLO(43,"##interaction-cte")
+___DEF_GLO(4,"##compile-file")
+___DEF_GLO(5,"##compile-file-to-target")
+___DEF_GLO(6,"##compile-options-normalize")
+___DEF_GLO(7,"##default-base-linkfile")
+___DEF_GLO(8,"##default-compile-options")
+___DEF_GLO(9,"##extract-target")
+___DEF_GLO(10,"##gambuild")
+___DEF_GLO(11,"##gambuild-params")
+___DEF_GLO(12,"##link-flat")
+___DEF_GLO(13,"##link-incremental")
+___DEF_GLO(14,"##multiple-args-join")
+___DEF_GLO(15,"##path-relative-to-dir")
+___DEF_GLO(16,"##string-or-string-list-join")
+___DEF_GLO(17,"##string-or-string-list?")
+___DEF_GLO(18,"_gsclib#")
+___DEF_GLO(19,"c#make-global-environment")
+___DEF_GLO(20,"compile-file")
+___DEF_GLO(21,"compile-file-to-target")
+___DEF_GLO(22,"link-flat")
+___DEF_GLO(23,"link-incremental")
+___DEF_GLO(24,"##append")
+___DEF_GLO(25,"##assoc")
+___DEF_GLO(26,"##call-with-input-string")
+___DEF_GLO(27,"##create-directory")
+___DEF_GLO(28,"##cte-macro-descr")
+___DEF_GLO(29,"##cte-macro-name")
+___DEF_GLO(30,"##cte-macro?")
+___DEF_GLO(31,"##cte-parent-cte")
+___DEF_GLO(32,"##cte-top-cte")
+___DEF_GLO(33,"##cte-top?")
+___DEF_GLO(34,"##current-directory")
+___DEF_GLO(35,"##default-compile-options-string")
+___DEF_GLO(36,"##delete-file")
+___DEF_GLO(37,"##delete-file-or-directory")
+___DEF_GLO(38,"##equal?")
+___DEF_GLO(39,"##fail-check-string")
+___DEF_GLO(40,"##file-exists?")
+___DEF_GLO(41,"##fold-right")
+___DEF_GLO(42,"##interaction-cte")
+___DEF_GLO(43,"##make-global-var")
 ___DEF_GLO(44,"##make-source")
 ___DEF_GLO(45,"##module-build-subdir-path")
 ___DEF_GLO(46,"##number->string")
@@ -521,86 +525,86 @@ ___END_GLO
 #define ___PRM__23__23_build_2d_executable ___PRM(2,___G__23__23_build_2d_executable)
 #define ___GLO__23__23_build_2d_module ___GLO(3,___G__23__23_build_2d_module)
 #define ___PRM__23__23_build_2d_module ___PRM(3,___G__23__23_build_2d_module)
-#define ___GLO__23__23_c_2d_code ___GLO(4,___G__23__23_c_2d_code)
-#define ___PRM__23__23_c_2d_code ___PRM(4,___G__23__23_c_2d_code)
-#define ___GLO__23__23_compile_2d_file ___GLO(5,___G__23__23_compile_2d_file)
-#define ___PRM__23__23_compile_2d_file ___PRM(5,___G__23__23_compile_2d_file)
-#define ___GLO__23__23_compile_2d_file_2d_to_2d_target ___GLO(6,___G__23__23_compile_2d_file_2d_to_2d_target)
-#define ___PRM__23__23_compile_2d_file_2d_to_2d_target ___PRM(6,___G__23__23_compile_2d_file_2d_to_2d_target)
-#define ___GLO__23__23_compile_2d_options_2d_normalize ___GLO(7,___G__23__23_compile_2d_options_2d_normalize)
-#define ___PRM__23__23_compile_2d_options_2d_normalize ___PRM(7,___G__23__23_compile_2d_options_2d_normalize)
-#define ___GLO__23__23_default_2d_base_2d_linkfile ___GLO(8,___G__23__23_default_2d_base_2d_linkfile)
-#define ___PRM__23__23_default_2d_base_2d_linkfile ___PRM(8,___G__23__23_default_2d_base_2d_linkfile)
-#define ___GLO__23__23_default_2d_compile_2d_options ___GLO(9,___G__23__23_default_2d_compile_2d_options)
-#define ___PRM__23__23_default_2d_compile_2d_options ___PRM(9,___G__23__23_default_2d_compile_2d_options)
-#define ___GLO__23__23_extract_2d_target ___GLO(10,___G__23__23_extract_2d_target)
-#define ___PRM__23__23_extract_2d_target ___PRM(10,___G__23__23_extract_2d_target)
-#define ___GLO__23__23_gambuild ___GLO(11,___G__23__23_gambuild)
-#define ___PRM__23__23_gambuild ___PRM(11,___G__23__23_gambuild)
-#define ___GLO__23__23_gambuild_2d_params ___GLO(12,___G__23__23_gambuild_2d_params)
-#define ___PRM__23__23_gambuild_2d_params ___PRM(12,___G__23__23_gambuild_2d_params)
-#define ___GLO__23__23_link_2d_flat ___GLO(13,___G__23__23_link_2d_flat)
-#define ___PRM__23__23_link_2d_flat ___PRM(13,___G__23__23_link_2d_flat)
-#define ___GLO__23__23_link_2d_incremental ___GLO(14,___G__23__23_link_2d_incremental)
-#define ___PRM__23__23_link_2d_incremental ___PRM(14,___G__23__23_link_2d_incremental)
-#define ___GLO__23__23_multiple_2d_args_2d_join ___GLO(15,___G__23__23_multiple_2d_args_2d_join)
-#define ___PRM__23__23_multiple_2d_args_2d_join ___PRM(15,___G__23__23_multiple_2d_args_2d_join)
-#define ___GLO__23__23_path_2d_relative_2d_to_2d_dir ___GLO(16,___G__23__23_path_2d_relative_2d_to_2d_dir)
-#define ___PRM__23__23_path_2d_relative_2d_to_2d_dir ___PRM(16,___G__23__23_path_2d_relative_2d_to_2d_dir)
-#define ___GLO__23__23_string_2d_or_2d_string_2d_list_2d_join ___GLO(17,___G__23__23_string_2d_or_2d_string_2d_list_2d_join)
-#define ___PRM__23__23_string_2d_or_2d_string_2d_list_2d_join ___PRM(17,___G__23__23_string_2d_or_2d_string_2d_list_2d_join)
-#define ___GLO__23__23_string_2d_or_2d_string_2d_list_3f_ ___GLO(18,___G__23__23_string_2d_or_2d_string_2d_list_3f_)
-#define ___PRM__23__23_string_2d_or_2d_string_2d_list_3f_ ___PRM(18,___G__23__23_string_2d_or_2d_string_2d_list_3f_)
-#define ___GLO___gsclib_23_ ___GLO(19,___G___gsclib_23_)
-#define ___PRM___gsclib_23_ ___PRM(19,___G___gsclib_23_)
-#define ___GLO_c_23_make_2d_global_2d_environment ___GLO(20,___G_c_23_make_2d_global_2d_environment)
-#define ___PRM_c_23_make_2d_global_2d_environment ___PRM(20,___G_c_23_make_2d_global_2d_environment)
-#define ___GLO_compile_2d_file ___GLO(21,___G_compile_2d_file)
-#define ___PRM_compile_2d_file ___PRM(21,___G_compile_2d_file)
-#define ___GLO_compile_2d_file_2d_to_2d_target ___GLO(22,___G_compile_2d_file_2d_to_2d_target)
-#define ___PRM_compile_2d_file_2d_to_2d_target ___PRM(22,___G_compile_2d_file_2d_to_2d_target)
-#define ___GLO_link_2d_flat ___GLO(23,___G_link_2d_flat)
-#define ___PRM_link_2d_flat ___PRM(23,___G_link_2d_flat)
-#define ___GLO_link_2d_incremental ___GLO(24,___G_link_2d_incremental)
-#define ___PRM_link_2d_incremental ___PRM(24,___G_link_2d_incremental)
-#define ___GLO__23__23_append ___GLO(25,___G__23__23_append)
-#define ___PRM__23__23_append ___PRM(25,___G__23__23_append)
-#define ___GLO__23__23_assoc ___GLO(26,___G__23__23_assoc)
-#define ___PRM__23__23_assoc ___PRM(26,___G__23__23_assoc)
-#define ___GLO__23__23_call_2d_with_2d_input_2d_string ___GLO(27,___G__23__23_call_2d_with_2d_input_2d_string)
-#define ___PRM__23__23_call_2d_with_2d_input_2d_string ___PRM(27,___G__23__23_call_2d_with_2d_input_2d_string)
-#define ___GLO__23__23_create_2d_directory ___GLO(28,___G__23__23_create_2d_directory)
-#define ___PRM__23__23_create_2d_directory ___PRM(28,___G__23__23_create_2d_directory)
-#define ___GLO__23__23_cte_2d_macro_2d_descr ___GLO(29,___G__23__23_cte_2d_macro_2d_descr)
-#define ___PRM__23__23_cte_2d_macro_2d_descr ___PRM(29,___G__23__23_cte_2d_macro_2d_descr)
-#define ___GLO__23__23_cte_2d_macro_2d_name ___GLO(30,___G__23__23_cte_2d_macro_2d_name)
-#define ___PRM__23__23_cte_2d_macro_2d_name ___PRM(30,___G__23__23_cte_2d_macro_2d_name)
-#define ___GLO__23__23_cte_2d_macro_3f_ ___GLO(31,___G__23__23_cte_2d_macro_3f_)
-#define ___PRM__23__23_cte_2d_macro_3f_ ___PRM(31,___G__23__23_cte_2d_macro_3f_)
-#define ___GLO__23__23_cte_2d_parent_2d_cte ___GLO(32,___G__23__23_cte_2d_parent_2d_cte)
-#define ___PRM__23__23_cte_2d_parent_2d_cte ___PRM(32,___G__23__23_cte_2d_parent_2d_cte)
-#define ___GLO__23__23_cte_2d_top_2d_cte ___GLO(33,___G__23__23_cte_2d_top_2d_cte)
-#define ___PRM__23__23_cte_2d_top_2d_cte ___PRM(33,___G__23__23_cte_2d_top_2d_cte)
-#define ___GLO__23__23_cte_2d_top_3f_ ___GLO(34,___G__23__23_cte_2d_top_3f_)
-#define ___PRM__23__23_cte_2d_top_3f_ ___PRM(34,___G__23__23_cte_2d_top_3f_)
-#define ___GLO__23__23_current_2d_directory ___GLO(35,___G__23__23_current_2d_directory)
-#define ___PRM__23__23_current_2d_directory ___PRM(35,___G__23__23_current_2d_directory)
-#define ___GLO__23__23_default_2d_compile_2d_options_2d_string ___GLO(36,___G__23__23_default_2d_compile_2d_options_2d_string)
-#define ___PRM__23__23_default_2d_compile_2d_options_2d_string ___PRM(36,___G__23__23_default_2d_compile_2d_options_2d_string)
-#define ___GLO__23__23_delete_2d_file ___GLO(37,___G__23__23_delete_2d_file)
-#define ___PRM__23__23_delete_2d_file ___PRM(37,___G__23__23_delete_2d_file)
-#define ___GLO__23__23_delete_2d_file_2d_or_2d_directory ___GLO(38,___G__23__23_delete_2d_file_2d_or_2d_directory)
-#define ___PRM__23__23_delete_2d_file_2d_or_2d_directory ___PRM(38,___G__23__23_delete_2d_file_2d_or_2d_directory)
-#define ___GLO__23__23_equal_3f_ ___GLO(39,___G__23__23_equal_3f_)
-#define ___PRM__23__23_equal_3f_ ___PRM(39,___G__23__23_equal_3f_)
-#define ___GLO__23__23_fail_2d_check_2d_string ___GLO(40,___G__23__23_fail_2d_check_2d_string)
-#define ___PRM__23__23_fail_2d_check_2d_string ___PRM(40,___G__23__23_fail_2d_check_2d_string)
-#define ___GLO__23__23_file_2d_exists_3f_ ___GLO(41,___G__23__23_file_2d_exists_3f_)
-#define ___PRM__23__23_file_2d_exists_3f_ ___PRM(41,___G__23__23_file_2d_exists_3f_)
-#define ___GLO__23__23_fold_2d_right ___GLO(42,___G__23__23_fold_2d_right)
-#define ___PRM__23__23_fold_2d_right ___PRM(42,___G__23__23_fold_2d_right)
-#define ___GLO__23__23_interaction_2d_cte ___GLO(43,___G__23__23_interaction_2d_cte)
-#define ___PRM__23__23_interaction_2d_cte ___PRM(43,___G__23__23_interaction_2d_cte)
+#define ___GLO__23__23_compile_2d_file ___GLO(4,___G__23__23_compile_2d_file)
+#define ___PRM__23__23_compile_2d_file ___PRM(4,___G__23__23_compile_2d_file)
+#define ___GLO__23__23_compile_2d_file_2d_to_2d_target ___GLO(5,___G__23__23_compile_2d_file_2d_to_2d_target)
+#define ___PRM__23__23_compile_2d_file_2d_to_2d_target ___PRM(5,___G__23__23_compile_2d_file_2d_to_2d_target)
+#define ___GLO__23__23_compile_2d_options_2d_normalize ___GLO(6,___G__23__23_compile_2d_options_2d_normalize)
+#define ___PRM__23__23_compile_2d_options_2d_normalize ___PRM(6,___G__23__23_compile_2d_options_2d_normalize)
+#define ___GLO__23__23_default_2d_base_2d_linkfile ___GLO(7,___G__23__23_default_2d_base_2d_linkfile)
+#define ___PRM__23__23_default_2d_base_2d_linkfile ___PRM(7,___G__23__23_default_2d_base_2d_linkfile)
+#define ___GLO__23__23_default_2d_compile_2d_options ___GLO(8,___G__23__23_default_2d_compile_2d_options)
+#define ___PRM__23__23_default_2d_compile_2d_options ___PRM(8,___G__23__23_default_2d_compile_2d_options)
+#define ___GLO__23__23_extract_2d_target ___GLO(9,___G__23__23_extract_2d_target)
+#define ___PRM__23__23_extract_2d_target ___PRM(9,___G__23__23_extract_2d_target)
+#define ___GLO__23__23_gambuild ___GLO(10,___G__23__23_gambuild)
+#define ___PRM__23__23_gambuild ___PRM(10,___G__23__23_gambuild)
+#define ___GLO__23__23_gambuild_2d_params ___GLO(11,___G__23__23_gambuild_2d_params)
+#define ___PRM__23__23_gambuild_2d_params ___PRM(11,___G__23__23_gambuild_2d_params)
+#define ___GLO__23__23_link_2d_flat ___GLO(12,___G__23__23_link_2d_flat)
+#define ___PRM__23__23_link_2d_flat ___PRM(12,___G__23__23_link_2d_flat)
+#define ___GLO__23__23_link_2d_incremental ___GLO(13,___G__23__23_link_2d_incremental)
+#define ___PRM__23__23_link_2d_incremental ___PRM(13,___G__23__23_link_2d_incremental)
+#define ___GLO__23__23_multiple_2d_args_2d_join ___GLO(14,___G__23__23_multiple_2d_args_2d_join)
+#define ___PRM__23__23_multiple_2d_args_2d_join ___PRM(14,___G__23__23_multiple_2d_args_2d_join)
+#define ___GLO__23__23_path_2d_relative_2d_to_2d_dir ___GLO(15,___G__23__23_path_2d_relative_2d_to_2d_dir)
+#define ___PRM__23__23_path_2d_relative_2d_to_2d_dir ___PRM(15,___G__23__23_path_2d_relative_2d_to_2d_dir)
+#define ___GLO__23__23_string_2d_or_2d_string_2d_list_2d_join ___GLO(16,___G__23__23_string_2d_or_2d_string_2d_list_2d_join)
+#define ___PRM__23__23_string_2d_or_2d_string_2d_list_2d_join ___PRM(16,___G__23__23_string_2d_or_2d_string_2d_list_2d_join)
+#define ___GLO__23__23_string_2d_or_2d_string_2d_list_3f_ ___GLO(17,___G__23__23_string_2d_or_2d_string_2d_list_3f_)
+#define ___PRM__23__23_string_2d_or_2d_string_2d_list_3f_ ___PRM(17,___G__23__23_string_2d_or_2d_string_2d_list_3f_)
+#define ___GLO___gsclib_23_ ___GLO(18,___G___gsclib_23_)
+#define ___PRM___gsclib_23_ ___PRM(18,___G___gsclib_23_)
+#define ___GLO_c_23_make_2d_global_2d_environment ___GLO(19,___G_c_23_make_2d_global_2d_environment)
+#define ___PRM_c_23_make_2d_global_2d_environment ___PRM(19,___G_c_23_make_2d_global_2d_environment)
+#define ___GLO_compile_2d_file ___GLO(20,___G_compile_2d_file)
+#define ___PRM_compile_2d_file ___PRM(20,___G_compile_2d_file)
+#define ___GLO_compile_2d_file_2d_to_2d_target ___GLO(21,___G_compile_2d_file_2d_to_2d_target)
+#define ___PRM_compile_2d_file_2d_to_2d_target ___PRM(21,___G_compile_2d_file_2d_to_2d_target)
+#define ___GLO_link_2d_flat ___GLO(22,___G_link_2d_flat)
+#define ___PRM_link_2d_flat ___PRM(22,___G_link_2d_flat)
+#define ___GLO_link_2d_incremental ___GLO(23,___G_link_2d_incremental)
+#define ___PRM_link_2d_incremental ___PRM(23,___G_link_2d_incremental)
+#define ___GLO__23__23_append ___GLO(24,___G__23__23_append)
+#define ___PRM__23__23_append ___PRM(24,___G__23__23_append)
+#define ___GLO__23__23_assoc ___GLO(25,___G__23__23_assoc)
+#define ___PRM__23__23_assoc ___PRM(25,___G__23__23_assoc)
+#define ___GLO__23__23_call_2d_with_2d_input_2d_string ___GLO(26,___G__23__23_call_2d_with_2d_input_2d_string)
+#define ___PRM__23__23_call_2d_with_2d_input_2d_string ___PRM(26,___G__23__23_call_2d_with_2d_input_2d_string)
+#define ___GLO__23__23_create_2d_directory ___GLO(27,___G__23__23_create_2d_directory)
+#define ___PRM__23__23_create_2d_directory ___PRM(27,___G__23__23_create_2d_directory)
+#define ___GLO__23__23_cte_2d_macro_2d_descr ___GLO(28,___G__23__23_cte_2d_macro_2d_descr)
+#define ___PRM__23__23_cte_2d_macro_2d_descr ___PRM(28,___G__23__23_cte_2d_macro_2d_descr)
+#define ___GLO__23__23_cte_2d_macro_2d_name ___GLO(29,___G__23__23_cte_2d_macro_2d_name)
+#define ___PRM__23__23_cte_2d_macro_2d_name ___PRM(29,___G__23__23_cte_2d_macro_2d_name)
+#define ___GLO__23__23_cte_2d_macro_3f_ ___GLO(30,___G__23__23_cte_2d_macro_3f_)
+#define ___PRM__23__23_cte_2d_macro_3f_ ___PRM(30,___G__23__23_cte_2d_macro_3f_)
+#define ___GLO__23__23_cte_2d_parent_2d_cte ___GLO(31,___G__23__23_cte_2d_parent_2d_cte)
+#define ___PRM__23__23_cte_2d_parent_2d_cte ___PRM(31,___G__23__23_cte_2d_parent_2d_cte)
+#define ___GLO__23__23_cte_2d_top_2d_cte ___GLO(32,___G__23__23_cte_2d_top_2d_cte)
+#define ___PRM__23__23_cte_2d_top_2d_cte ___PRM(32,___G__23__23_cte_2d_top_2d_cte)
+#define ___GLO__23__23_cte_2d_top_3f_ ___GLO(33,___G__23__23_cte_2d_top_3f_)
+#define ___PRM__23__23_cte_2d_top_3f_ ___PRM(33,___G__23__23_cte_2d_top_3f_)
+#define ___GLO__23__23_current_2d_directory ___GLO(34,___G__23__23_current_2d_directory)
+#define ___PRM__23__23_current_2d_directory ___PRM(34,___G__23__23_current_2d_directory)
+#define ___GLO__23__23_default_2d_compile_2d_options_2d_string ___GLO(35,___G__23__23_default_2d_compile_2d_options_2d_string)
+#define ___PRM__23__23_default_2d_compile_2d_options_2d_string ___PRM(35,___G__23__23_default_2d_compile_2d_options_2d_string)
+#define ___GLO__23__23_delete_2d_file ___GLO(36,___G__23__23_delete_2d_file)
+#define ___PRM__23__23_delete_2d_file ___PRM(36,___G__23__23_delete_2d_file)
+#define ___GLO__23__23_delete_2d_file_2d_or_2d_directory ___GLO(37,___G__23__23_delete_2d_file_2d_or_2d_directory)
+#define ___PRM__23__23_delete_2d_file_2d_or_2d_directory ___PRM(37,___G__23__23_delete_2d_file_2d_or_2d_directory)
+#define ___GLO__23__23_equal_3f_ ___GLO(38,___G__23__23_equal_3f_)
+#define ___PRM__23__23_equal_3f_ ___PRM(38,___G__23__23_equal_3f_)
+#define ___GLO__23__23_fail_2d_check_2d_string ___GLO(39,___G__23__23_fail_2d_check_2d_string)
+#define ___PRM__23__23_fail_2d_check_2d_string ___PRM(39,___G__23__23_fail_2d_check_2d_string)
+#define ___GLO__23__23_file_2d_exists_3f_ ___GLO(40,___G__23__23_file_2d_exists_3f_)
+#define ___PRM__23__23_file_2d_exists_3f_ ___PRM(40,___G__23__23_file_2d_exists_3f_)
+#define ___GLO__23__23_fold_2d_right ___GLO(41,___G__23__23_fold_2d_right)
+#define ___PRM__23__23_fold_2d_right ___PRM(41,___G__23__23_fold_2d_right)
+#define ___GLO__23__23_interaction_2d_cte ___GLO(42,___G__23__23_interaction_2d_cte)
+#define ___PRM__23__23_interaction_2d_cte ___PRM(42,___G__23__23_interaction_2d_cte)
+#define ___GLO__23__23_make_2d_global_2d_var ___GLO(43,___G__23__23_make_2d_global_2d_var)
+#define ___PRM__23__23_make_2d_global_2d_var ___PRM(43,___G__23__23_make_2d_global_2d_var)
 #define ___GLO__23__23_make_2d_source ___GLO(44,___G__23__23_make_2d_source)
 #define ___PRM__23__23_make_2d_source ___PRM(44,___G__23__23_make_2d_source)
 #define ___GLO__23__23_module_2d_build_2d_subdir_2d_path ___GLO(45,___G__23__23_module_2d_build_2d_subdir_2d_path)
@@ -985,7 +989,7 @@ ___DEF_SUB_VEC(___X58,6UL)
                ___VEC1(___REF_FAL)
                ___VEC0
 ___DEF_SUB_VEC(___X59,1UL)
-               ___VEC1(___REF_SYM(18,___S___gsclib))
+               ___VEC1(___REF_SYM(19,___S___gsclib))
                ___VEC0
 ___DEF_SUB_VEC(___X60,0UL)
                ___VEC0
@@ -1082,6 +1086,7 @@ ___DEF_M_HLBL(___L13___gsclib_23_)
 ___DEF_M_HLBL(___L14___gsclib_23_)
 ___DEF_M_HLBL(___L15___gsclib_23_)
 ___DEF_M_HLBL(___L16___gsclib_23_)
+___DEF_M_HLBL(___L17___gsclib_23_)
 ___DEF_M_HLBL_INTRO
 ___DEF_M_HLBL(___L0__23__23_compile_2d_options_2d_normalize)
 ___DEF_M_HLBL(___L1__23__23_compile_2d_options_2d_normalize)
@@ -1444,97 +1449,105 @@ ___DEF_P_HLBL(___L13___gsclib_23_)
 ___DEF_P_HLBL(___L14___gsclib_23_)
 ___DEF_P_HLBL(___L15___gsclib_23_)
 ___DEF_P_HLBL(___L16___gsclib_23_)
+___DEF_P_HLBL(___L17___gsclib_23_)
 ___END_P_HLBL
 ___BEGIN_P_SW
 ___DEF_SLBL(0,___L0___gsclib_23_)
    ___IF_NARGS_EQ(0,___NOTHING)
    ___WRONG_NARGS(0,0,0,0)
 ___DEF_GLBL(___L___gsclib_23_)
-   ___SET_GLO(20,___G_c_23_make_2d_global_2d_environment,___LBL(3))
-   ___SET_GLO(4,___G__23__23_c_2d_code,___LBL(1))
-   ___SET_R1(___VOID)
-   ___JUMPRET(___R0)
+   ___SET_GLO(19,___G_c_23_make_2d_global_2d_environment,___LBL(4))
+   ___SET_STK(1,___R0)
+   ___SET_R1(___SYM__23__23_c_2d_code)
+   ___SET_R0(___LBL(1))
+   ___ADJFP(4)
+   ___JUMPPRM(___SET_NARGS(1),___PRM__23__23_make_2d_global_2d_var)
 ___DEF_SLBL(1,___L1___gsclib_23_)
-   ___IF_NARGS_EQ(0,___SET_R1(___NUL))
-   ___GET_REST(1,0,0,0)
-   ___SET_R1(___SUB(0))
-   ___POLL(2)
+   ___GLOBALVARSET(___R1,___LBL(2))
+   ___GLOBALVARPRIMSET(___R1,___LBL(2))
+   ___ADJFP(-4)
+   ___JUMPRET(___STK(1))
 ___DEF_SLBL(2,___L2___gsclib_23_)
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),84,___G_error)
+   ___IF_NARGS_EQ(0,___SET_R1(___NUL))
+   ___GET_REST(2,0,0,0)
+   ___SET_R1(___SUB(0))
+   ___POLL(3)
 ___DEF_SLBL(3,___L3___gsclib_23_)
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),84,___G_error)
+___DEF_SLBL(4,___L4___gsclib_23_)
    ___IF_NARGS_EQ(0,___NOTHING)
-   ___WRONG_NARGS(3,0,0,0)
+   ___WRONG_NARGS(4,0,0,0)
    ___SET_STK(1,___R0)
    ___SET_R1(___GLO__23__23_interaction_2d_cte)
    ___ADJFP(4)
-   ___POLL(4)
-___DEF_SLBL(4,___L4___gsclib_23_)
-   ___SET_R0(___LBL(5))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),33,___G__23__23_cte_2d_top_2d_cte)
+   ___POLL(5)
 ___DEF_SLBL(5,___L5___gsclib_23_)
+   ___SET_R0(___LBL(6))
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),32,___G__23__23_cte_2d_top_2d_cte)
+___DEF_SLBL(6,___L6___gsclib_23_)
    ___SET_R0(___STK(-3))
    ___ADJFP(-4)
-   ___POLL(6)
-___DEF_SLBL(6,___L6___gsclib_23_)
-   ___GOTO(___L17___gsclib_23_)
+   ___POLL(7)
 ___DEF_SLBL(7,___L7___gsclib_23_)
+   ___GOTO(___L18___gsclib_23_)
+___DEF_SLBL(8,___L8___gsclib_23_)
    ___IF(___NOTFALSEP(___R1))
-   ___GOTO(___L19___gsclib_23_)
+   ___GOTO(___L20___gsclib_23_)
    ___END_IF
    ___SET_R1(___STK(-5))
    ___SET_R0(___STK(-7))
    ___ADJFP(-8)
-   ___POLL(8)
-___DEF_SLBL(8,___L8___gsclib_23_)
-___DEF_GLBL(___L17___gsclib_23_)
+   ___POLL(9)
+___DEF_SLBL(9,___L9___gsclib_23_)
+___DEF_GLBL(___L18___gsclib_23_)
    ___SET_STK(1,___R0)
    ___SET_STK(2,___R1)
    ___ADJFP(8)
-   ___POLL(9)
-___DEF_SLBL(9,___L9___gsclib_23_)
-   ___SET_R0(___LBL(10))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),34,___G__23__23_cte_2d_top_3f_)
+   ___POLL(10)
 ___DEF_SLBL(10,___L10___gsclib_23_)
+   ___SET_R0(___LBL(11))
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),33,___G__23__23_cte_2d_top_3f_)
+___DEF_SLBL(11,___L11___gsclib_23_)
    ___IF(___NOT(___NOTFALSEP(___R1)))
-   ___GOTO(___L18___gsclib_23_)
+   ___GOTO(___L19___gsclib_23_)
    ___END_IF
    ___SET_R2(___NUL)
    ___SET_R1(___FAL)
    ___SET_R0(___STK(-7))
-   ___POLL(11)
-___DEF_SLBL(11,___L11___gsclib_23_)
+   ___POLL(12)
+___DEF_SLBL(12,___L12___gsclib_23_)
    ___ADJFP(-8)
    ___JUMPGLONOTSAFE(___SET_NARGS(2),76,___G_c_23_env_2d_frame)
-___DEF_GLBL(___L18___gsclib_23_)
-   ___SET_R1(___STK(-6))
-   ___SET_R0(___LBL(12))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),32,___G__23__23_cte_2d_parent_2d_cte)
-___DEF_SLBL(12,___L12___gsclib_23_)
-   ___SET_STK(-5,___R1)
-   ___SET_R1(___STK(-6))
-   ___SET_R0(___LBL(7))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),31,___G__23__23_cte_2d_macro_3f_)
 ___DEF_GLBL(___L19___gsclib_23_)
-   ___SET_R1(___STK(-5))
+   ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(13))
-   ___GOTO(___L17___gsclib_23_)
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),31,___G__23__23_cte_2d_parent_2d_cte)
 ___DEF_SLBL(13,___L13___gsclib_23_)
    ___SET_STK(-5,___R1)
    ___SET_R1(___STK(-6))
+   ___SET_R0(___LBL(8))
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),30,___G__23__23_cte_2d_macro_3f_)
+___DEF_GLBL(___L20___gsclib_23_)
+   ___SET_R1(___STK(-5))
    ___SET_R0(___LBL(14))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),30,___G__23__23_cte_2d_macro_2d_name)
+   ___GOTO(___L18___gsclib_23_)
 ___DEF_SLBL(14,___L14___gsclib_23_)
-   ___SET_STK(-4,___R1)
+   ___SET_STK(-5,___R1)
    ___SET_R1(___STK(-6))
    ___SET_R0(___LBL(15))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),29,___G__23__23_cte_2d_macro_2d_descr)
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),29,___G__23__23_cte_2d_macro_2d_name)
 ___DEF_SLBL(15,___L15___gsclib_23_)
+   ___SET_STK(-4,___R1)
+   ___SET_R1(___STK(-6))
+   ___SET_R0(___LBL(16))
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),28,___G__23__23_cte_2d_macro_2d_descr)
+___DEF_SLBL(16,___L16___gsclib_23_)
    ___SET_R3(___R1)
    ___SET_R0(___STK(-7))
    ___SET_R2(___STK(-4))
    ___SET_R1(___STK(-5))
-   ___POLL(16)
-___DEF_SLBL(16,___L16___gsclib_23_)
+   ___POLL(17)
+___DEF_SLBL(17,___L17___gsclib_23_)
    ___ADJFP(-8)
    ___JUMPGLONOTSAFE(___SET_NARGS(3),77,___G_c_23_env_2d_macro)
 ___END_P_SW
@@ -1543,7 +1556,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_compile_2d_options_2d_normalize
 #undef ___PH_LBL0
-#define ___PH_LBL0 19
+#define ___PH_LBL0 20
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -1607,14 +1620,14 @@ ___DEF_SLBL(6,___L6__23__23_compile_2d_options_2d_normalize)
    ___POLL(7)
 ___DEF_SLBL(7,___L7__23__23_compile_2d_options_2d_normalize)
    ___ADJFP(-4)
-   ___JUMPINT(___SET_NARGS(1),___PRC(28),___L__23__23_add_2d_default_2d_compile_2d_options)
+   ___JUMPINT(___SET_NARGS(1),___PRC(29),___L__23__23_add_2d_default_2d_compile_2d_options)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_add_2d_default_2d_compile_2d_options
 #undef ___PH_LBL0
-#define ___PH_LBL0 28
+#define ___PH_LBL0 29
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -1646,7 +1659,7 @@ ___DEF_GLBL(___L__23__23_add_2d_default_2d_compile_2d_options)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_add_2d_default_2d_compile_2d_options)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(0),___PRC(39),___L__23__23_default_2d_compile_2d_options)
+   ___JUMPINT(___SET_NARGS(0),___PRC(40),___L__23__23_default_2d_compile_2d_options)
 ___DEF_SLBL(2,___L2__23__23_add_2d_default_2d_compile_2d_options)
    ___SET_R2(___STK(-6))
    ___SET_R0(___STK(-7))
@@ -1734,7 +1747,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_default_2d_compile_2d_options
 #undef ___PH_LBL0
-#define ___PH_LBL0 39
+#define ___PH_LBL0 40
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R1 ___D_R2 ___D_R4
 #undef ___PR_ALL
@@ -1756,14 +1769,14 @@ ___DEF_GLBL(___L__23__23_default_2d_compile_2d_options)
    ___SET_R1(___GLO__23__23_default_2d_compile_2d_options_2d_string)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_default_2d_compile_2d_options)
-   ___JUMPGLONOTSAFE(___SET_NARGS(2),27,___G__23__23_call_2d_with_2d_input_2d_string)
+   ___JUMPGLONOTSAFE(___SET_NARGS(2),26,___G__23__23_call_2d_with_2d_input_2d_string)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_compile_2d_file_2d_to_2d_target
 #undef ___PH_LBL0
-#define ___PH_LBL0 42
+#define ___PH_LBL0 43
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -1852,7 +1865,7 @@ ___DEF_GLBL(___L17_compile_2d_file_2d_to_2d_target)
    ___POLL(4)
 ___DEF_SLBL(4,___L4_compile_2d_file_2d_to_2d_target)
    ___ADJFP(-2)
-   ___JUMPINT(___SET_NARGS(3),___PRC(56),___L__23__23_compile_2d_file_2d_to_2d_target)
+   ___JUMPINT(___SET_NARGS(3),___PRC(57),___L__23__23_compile_2d_file_2d_to_2d_target)
 ___DEF_GLBL(___L18_compile_2d_file_2d_to_2d_target)
    ___SET_R1(___SUB(2))
    ___POLL(5)
@@ -1920,14 +1933,14 @@ ___DEF_GLBL(___L24_compile_2d_file_2d_to_2d_target)
    ___POLL(12)
 ___DEF_SLBL(12,___L12_compile_2d_file_2d_to_2d_target)
    ___ADJFP(-1)
-   ___JUMPGLONOTSAFE(___SET_NARGS(5),40,___G__23__23_fail_2d_check_2d_string)
+   ___JUMPGLONOTSAFE(___SET_NARGS(5),39,___G__23__23_fail_2d_check_2d_string)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_compile_2d_file_2d_to_2d_target
 #undef ___PH_LBL0
-#define ___PH_LBL0 56
+#define ___PH_LBL0 57
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -1979,7 +1992,7 @@ ___DEF_GLBL(___L__23__23_compile_2d_file_2d_to_2d_target)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_compile_2d_file_2d_to_2d_target)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(1),___PRC(19),___L__23__23_compile_2d_options_2d_normalize)
+   ___JUMPINT(___SET_NARGS(1),___PRC(20),___L__23__23_compile_2d_options_2d_normalize)
 ___DEF_SLBL(2,___L2__23__23_compile_2d_file_2d_to_2d_target)
    ___SET_STK(-4,___R1)
    ___SET_R0(___LBL(4))
@@ -2232,7 +2245,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_string_2d_or_2d_string_2d_list_3f_
 #undef ___PH_LBL0
-#define ___PH_LBL0 85
+#define ___PH_LBL0 86
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2
 #undef ___PR_ALL
@@ -2284,7 +2297,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_string_2d_or_2d_string_2d_list_2d_join
 #undef ___PH_LBL0
-#define ___PH_LBL0 89
+#define ___PH_LBL0 90
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1
 #undef ___PR_ALL
@@ -2316,7 +2329,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_multiple_2d_args_2d_join
 #undef ___PH_LBL0
-#define ___PH_LBL0 92
+#define ___PH_LBL0 93
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R2
 #undef ___PR_ALL
@@ -2337,14 +2350,14 @@ ___DEF_GLBL(___L__23__23_multiple_2d_args_2d_join)
    ___SET_R2(___SUB(6))
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_multiple_2d_args_2d_join)
-   ___JUMPINT(___SET_NARGS(2),___PRC(89),___L__23__23_string_2d_or_2d_string_2d_list_2d_join)
+   ___JUMPINT(___SET_NARGS(2),___PRC(90),___L__23__23_string_2d_or_2d_string_2d_list_2d_join)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H_compile_2d_file
 #undef ___PH_LBL0
-#define ___PH_LBL0 95
+#define ___PH_LBL0 96
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -2502,7 +2515,7 @@ ___DEF_GLBL(___L39_compile_2d_file)
    ___POLL(4)
 ___DEF_SLBL(4,___L4_compile_2d_file)
    ___SET_R0(___LBL(5))
-   ___JUMPINT(___SET_NARGS(1),___PRC(85),___L__23__23_string_2d_or_2d_string_2d_list_3f_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(86),___L__23__23_string_2d_or_2d_string_2d_list_3f_)
 ___DEF_SLBL(5,___L5_compile_2d_file)
    ___IF(___NOTFALSEP(___R1))
    ___GOTO(___L42_compile_2d_file)
@@ -2543,11 +2556,11 @@ ___DEF_GLBL(___L41_compile_2d_file)
    ___POLL(9)
 ___DEF_SLBL(9,___L9_compile_2d_file)
    ___ADJFP(-9)
-   ___JUMPINT(___SET_NARGS(10),___PRC(122),___L__23__23_compile_2d_file)
+   ___JUMPINT(___SET_NARGS(10),___PRC(123),___L__23__23_compile_2d_file)
 ___DEF_GLBL(___L42_compile_2d_file)
    ___SET_R1(___STK(-10))
    ___SET_R0(___LBL(10))
-   ___JUMPINT(___SET_NARGS(1),___PRC(85),___L__23__23_string_2d_or_2d_string_2d_list_3f_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(86),___L__23__23_string_2d_or_2d_string_2d_list_3f_)
 ___DEF_SLBL(10,___L10_compile_2d_file)
    ___IF(___NOTFALSEP(___R1))
    ___GOTO(___L43_compile_2d_file)
@@ -2560,7 +2573,7 @@ ___DEF_SLBL(11,___L11_compile_2d_file)
 ___DEF_GLBL(___L43_compile_2d_file)
    ___SET_R1(___STK(-9))
    ___SET_R0(___LBL(12))
-   ___JUMPINT(___SET_NARGS(1),___PRC(85),___L__23__23_string_2d_or_2d_string_2d_list_3f_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(86),___L__23__23_string_2d_or_2d_string_2d_list_3f_)
 ___DEF_SLBL(12,___L12_compile_2d_file)
    ___IF(___NOTFALSEP(___R1))
    ___GOTO(___L44_compile_2d_file)
@@ -2573,7 +2586,7 @@ ___DEF_SLBL(13,___L13_compile_2d_file)
 ___DEF_GLBL(___L44_compile_2d_file)
    ___SET_R1(___STK(-14))
    ___SET_R0(___LBL(14))
-   ___JUMPINT(___SET_NARGS(1),___PRC(85),___L__23__23_string_2d_or_2d_string_2d_list_3f_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(86),___L__23__23_string_2d_or_2d_string_2d_list_3f_)
 ___DEF_SLBL(14,___L14_compile_2d_file)
    ___IF(___NOTFALSEP(___R1))
    ___GOTO(___L45_compile_2d_file)
@@ -2586,7 +2599,7 @@ ___DEF_SLBL(15,___L15_compile_2d_file)
 ___DEF_GLBL(___L45_compile_2d_file)
    ___SET_R1(___STK(-8))
    ___SET_R0(___LBL(7))
-   ___JUMPINT(___SET_NARGS(1),___PRC(85),___L__23__23_string_2d_or_2d_string_2d_list_3f_)
+   ___JUMPINT(___SET_NARGS(1),___PRC(86),___L__23__23_string_2d_or_2d_string_2d_list_3f_)
 ___DEF_GLBL(___L46_compile_2d_file)
    ___IF(___EQP(___STK(-5),___FAL))
    ___GOTO(___L39_compile_2d_file)
@@ -2713,14 +2726,14 @@ ___DEF_GLBL(___L61_compile_2d_file)
    ___POLL(25)
 ___DEF_SLBL(25,___L25_compile_2d_file)
    ___ADJFP(-7)
-   ___JUMPGLONOTSAFE(___SET_NARGS(5),40,___G__23__23_fail_2d_check_2d_string)
+   ___JUMPGLONOTSAFE(___SET_NARGS(5),39,___G__23__23_fail_2d_check_2d_string)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_compile_2d_file
 #undef ___PH_LBL0
-#define ___PH_LBL0 122
+#define ___PH_LBL0 123
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -2800,11 +2813,11 @@ ___DEF_GLBL(___L__23__23_compile_2d_file)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_compile_2d_file)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(1),___PRC(19),___L__23__23_compile_2d_options_2d_normalize)
+   ___JUMPINT(___SET_NARGS(1),___PRC(20),___L__23__23_compile_2d_options_2d_normalize)
 ___DEF_SLBL(2,___L2__23__23_compile_2d_file)
    ___SET_STK(-14,___R1)
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(1),___PRC(284),___L__23__23_extract_2d_target)
+   ___JUMPINT(___SET_NARGS(1),___PRC(285),___L__23__23_extract_2d_target)
 ___DEF_SLBL(3,___L3__23__23_compile_2d_file)
    ___SET_STK(-4,___R1)
    ___SET_R1(___STK(-14))
@@ -2885,7 +2898,7 @@ ___DEF_GLBL(___L62__23__23_compile_2d_file)
 ___DEF_GLBL(___L63__23__23_compile_2d_file)
    ___SET_R1(___STK(-4))
    ___SET_R0(___LBL(11))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),37,___G__23__23_delete_2d_file)
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),36,___G__23__23_delete_2d_file)
 ___DEF_GLBL(___L64__23__23_compile_2d_file)
    ___SET_R2(___STK(-4))
    ___SET_R1(___STK(-6))
@@ -3061,7 +3074,7 @@ ___DEF_GLBL(___L80__23__23_compile_2d_file)
    ___SET_R2(___STK(-7))
    ___SET_R1(___STK(-8))
    ___SET_R0(___LBL(30))
-   ___JUMPINT(___SET_NARGS(2),___PRC(234),___L__23__23_path_2d_relative_2d_to_2d_dir)
+   ___JUMPINT(___SET_NARGS(2),___PRC(235),___L__23__23_path_2d_relative_2d_to_2d_dir)
 ___DEF_SLBL(30,___L30__23__23_compile_2d_file)
    ___SET_STK(-22,___R1)
    ___SET_R1(___STK(-12))
@@ -3107,14 +3120,14 @@ ___DEF_SLBL(33,___L33__23__23_compile_2d_file)
    ___ADJFP(7)
    ___CHECK_HEAP(34,4096)
 ___DEF_SLBL(34,___L34__23__23_compile_2d_file)
-   ___JUMPINT(___SET_NARGS(10),___PRC(239),___L__23__23_gambuild_2d_params)
+   ___JUMPINT(___SET_NARGS(10),___PRC(240),___L__23__23_gambuild_2d_params)
 ___DEF_SLBL(35,___L35__23__23_compile_2d_file)
    ___SET_R3(___R1)
    ___SET_R1(___STK(-11))
    ___SET_R2(___STK(-16))
    ___SET_R0(___LBL(5))
    ___ADJFP(-6)
-   ___JUMPINT(___SET_NARGS(5),___PRC(267),___L__23__23_gambuild)
+   ___JUMPINT(___SET_NARGS(5),___PRC(268),___L__23__23_gambuild)
 ___DEF_SLBL(36,___L36__23__23_compile_2d_file)
    ___SET_R2(___STK(-22))
    ___IF(___NOTFALSEP(___R1))
@@ -3242,7 +3255,7 @@ ___DEF_SLBL(50,___L50__23__23_compile_2d_file)
    ___POLL(51)
 ___DEF_SLBL(51,___L51__23__23_compile_2d_file)
    ___SET_R0(___LBL(47))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),41,___G__23__23_file_2d_exists_3f_)
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),40,___G__23__23_file_2d_exists_3f_)
 ___DEF_GLBL(___L92__23__23_compile_2d_file)
    ___SET_R1(___STK(-4))
    ___ADJFP(-8)
@@ -3300,7 +3313,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_build_2d_module
 #undef ___PH_LBL0
-#define ___PH_LBL0 178
+#define ___PH_LBL0 179
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -3348,7 +3361,7 @@ ___DEF_GLBL(___L__23__23_build_2d_module)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_build_2d_module)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(1),___PRC(19),___L__23__23_compile_2d_options_2d_normalize)
+   ___JUMPINT(___SET_NARGS(1),___PRC(20),___L__23__23_compile_2d_options_2d_normalize)
 ___DEF_SLBL(2,___L2__23__23_build_2d_module)
    ___SET_STK(-4,___R1)
    ___SET_R1(___STK(-6))
@@ -3452,11 +3465,11 @@ ___DEF_SLBL(15,___L15__23__23_build_2d_module)
    ___SET_R3(___FAL)
    ___SET_R2(___TRU)
    ___SET_R0(___LBL(16))
-   ___JUMPGLONOTSAFE(___SET_NARGS(3),38,___G__23__23_delete_2d_file_2d_or_2d_directory)
+   ___JUMPGLONOTSAFE(___SET_NARGS(3),37,___G__23__23_delete_2d_file_2d_or_2d_directory)
 ___DEF_SLBL(16,___L16__23__23_build_2d_module)
    ___SET_R1(___STK(-11))
    ___SET_R0(___LBL(17))
-   ___JUMPGLONOTSAFE(___SET_NARGS(1),28,___G__23__23_create_2d_directory)
+   ___JUMPGLONOTSAFE(___SET_NARGS(1),27,___G__23__23_create_2d_directory)
 ___DEF_SLBL(17,___L17__23__23_build_2d_module)
    ___BEGIN_ALLOC_LIST(2UL,___STK(-9))
    ___ADD_LIST_ELEM(1,___SYM_linker_2d_name)
@@ -3475,7 +3488,7 @@ ___DEF_SLBL(17,___L17__23__23_build_2d_module)
    ___SET_R0(___LBL(19))
    ___CHECK_HEAP(18,4096)
 ___DEF_SLBL(18,___L18__23__23_build_2d_module)
-   ___JUMPINT(___SET_NARGS(3),___PRC(56),___L__23__23_compile_2d_file_2d_to_2d_target)
+   ___JUMPINT(___SET_NARGS(3),___PRC(57),___L__23__23_compile_2d_file_2d_to_2d_target)
 ___DEF_SLBL(19,___L19__23__23_build_2d_module)
    ___SET_STK(-14,___R1)
    ___IF(___NOT(___NOTFALSEP(___R1)))
@@ -3502,7 +3515,7 @@ ___DEF_SLBL(20,___L20__23__23_build_2d_module)
    ___SET_R1(___STK(-14))
    ___SET_R0(___LBL(21))
    ___ADJFP(-1)
-   ___JUMPINT(___SET_NARGS(10),___PRC(122),___L__23__23_compile_2d_file)
+   ___JUMPINT(___SET_NARGS(10),___PRC(123),___L__23__23_compile_2d_file)
 ___DEF_SLBL(21,___L21__23__23_build_2d_module)
    ___IF(___NOT(___NOTFALSEP(___R1)))
    ___GOTO(___L29__23__23_build_2d_module)
@@ -3536,7 +3549,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_build_2d_executable
 #undef ___PH_LBL0
-#define ___PH_LBL0 203
+#define ___PH_LBL0 204
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -3591,11 +3604,11 @@ ___DEF_GLBL(___L__23__23_build_2d_executable)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_build_2d_executable)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(1),___PRC(19),___L__23__23_compile_2d_options_2d_normalize)
+   ___JUMPINT(___SET_NARGS(1),___PRC(20),___L__23__23_compile_2d_options_2d_normalize)
 ___DEF_SLBL(2,___L2__23__23_build_2d_executable)
    ___SET_STK(-13,___R1)
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(1),___PRC(284),___L__23__23_extract_2d_target)
+   ___JUMPINT(___SET_NARGS(1),___PRC(285),___L__23__23_extract_2d_target)
 ___DEF_SLBL(3,___L3__23__23_build_2d_executable)
    ___SET_STK(-3,___R1)
    ___SET_R1(___STK(-12))
@@ -3695,7 +3708,7 @@ ___DEF_SLBL(14,___L14__23__23_build_2d_executable)
    ___SET_R1(___STK(-14))
    ___SET_R0(___LBL(15))
    ___ADJFP(3)
-   ___JUMPINT(___SET_NARGS(10),___PRC(239),___L__23__23_gambuild_2d_params)
+   ___JUMPINT(___SET_NARGS(10),___PRC(240),___L__23__23_gambuild_2d_params)
 ___DEF_SLBL(15,___L15__23__23_build_2d_executable)
    ___SET_STK(-19,___R1)
    ___IF(___SYMBOL2STRINGP_NOTFALSEP(___R1,___STK(-7)))
@@ -3808,7 +3821,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_path_2d_relative_2d_to_2d_dir
 #undef ___PH_LBL0
-#define ___PH_LBL0 234
+#define ___PH_LBL0 235
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -3849,7 +3862,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_gambuild_2d_params
 #undef ___PH_LBL0
-#define ___PH_LBL0 239
+#define ___PH_LBL0 240
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3
 #undef ___PR_ALL
@@ -3917,7 +3930,7 @@ ___DEF_GLBL(___L27__23__23_gambuild_2d_params)
    ___POLL(2)
 ___DEF_SLBL(2,___L2__23__23_gambuild_2d_params)
    ___SET_R0(___LBL(3))
-   ___JUMPINT(___SET_NARGS(2),___PRC(89),___L__23__23_string_2d_or_2d_string_2d_list_2d_join)
+   ___JUMPINT(___SET_NARGS(2),___PRC(90),___L__23__23_string_2d_or_2d_string_2d_list_2d_join)
 ___DEF_SLBL(3,___L3__23__23_gambuild_2d_params)
    ___SET_R1(___CONS(___SUB(34),___R1))
    ___SET_R3(___STK(-4))
@@ -3959,7 +3972,7 @@ ___DEF_GLBL(___L30__23__23_gambuild_2d_params)
    ___POLL(7)
 ___DEF_SLBL(7,___L7__23__23_gambuild_2d_params)
    ___SET_R0(___LBL(8))
-   ___JUMPINT(___SET_NARGS(2),___PRC(89),___L__23__23_string_2d_or_2d_string_2d_list_2d_join)
+   ___JUMPINT(___SET_NARGS(2),___PRC(90),___L__23__23_string_2d_or_2d_string_2d_list_2d_join)
 ___DEF_SLBL(8,___L8__23__23_gambuild_2d_params)
    ___SET_R1(___CONS(___SUB(37),___R1))
    ___SET_R3(___STK(-4))
@@ -3983,7 +3996,7 @@ ___DEF_GLBL(___L31__23__23_gambuild_2d_params)
    ___POLL(10)
 ___DEF_SLBL(10,___L10__23__23_gambuild_2d_params)
    ___SET_R0(___LBL(11))
-   ___JUMPINT(___SET_NARGS(2),___PRC(89),___L__23__23_string_2d_or_2d_string_2d_list_2d_join)
+   ___JUMPINT(___SET_NARGS(2),___PRC(90),___L__23__23_string_2d_or_2d_string_2d_list_2d_join)
 ___DEF_SLBL(11,___L11__23__23_gambuild_2d_params)
    ___SET_R1(___CONS(___SUB(38),___R1))
    ___SET_R3(___STK(-4))
@@ -4007,7 +4020,7 @@ ___DEF_GLBL(___L32__23__23_gambuild_2d_params)
    ___POLL(13)
 ___DEF_SLBL(13,___L13__23__23_gambuild_2d_params)
    ___SET_R0(___LBL(14))
-   ___JUMPINT(___SET_NARGS(2),___PRC(89),___L__23__23_string_2d_or_2d_string_2d_list_2d_join)
+   ___JUMPINT(___SET_NARGS(2),___PRC(90),___L__23__23_string_2d_or_2d_string_2d_list_2d_join)
 ___DEF_SLBL(14,___L14__23__23_gambuild_2d_params)
    ___SET_R1(___CONS(___SUB(39),___R1))
    ___SET_R3(___STK(-4))
@@ -4031,7 +4044,7 @@ ___DEF_GLBL(___L33__23__23_gambuild_2d_params)
    ___POLL(16)
 ___DEF_SLBL(16,___L16__23__23_gambuild_2d_params)
    ___SET_R0(___LBL(17))
-   ___JUMPINT(___SET_NARGS(2),___PRC(89),___L__23__23_string_2d_or_2d_string_2d_list_2d_join)
+   ___JUMPINT(___SET_NARGS(2),___PRC(90),___L__23__23_string_2d_or_2d_string_2d_list_2d_join)
 ___DEF_SLBL(17,___L17__23__23_gambuild_2d_params)
    ___SET_R1(___CONS(___SUB(40),___R1))
    ___SET_R3(___STK(-4))
@@ -4054,7 +4067,7 @@ ___DEF_GLBL(___L34__23__23_gambuild_2d_params)
    ___POLL(19)
 ___DEF_SLBL(19,___L19__23__23_gambuild_2d_params)
    ___SET_R0(___LBL(20))
-   ___JUMPINT(___SET_NARGS(2),___PRC(89),___L__23__23_string_2d_or_2d_string_2d_list_2d_join)
+   ___JUMPINT(___SET_NARGS(2),___PRC(90),___L__23__23_string_2d_or_2d_string_2d_list_2d_join)
 ___DEF_SLBL(20,___L20__23__23_gambuild_2d_params)
    ___SET_R1(___CONS(___SUB(41),___R1))
    ___SET_R3(___STK(-5))
@@ -4112,7 +4125,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_gambuild
 #undef ___PH_LBL0
-#define ___PH_LBL0 267
+#define ___PH_LBL0 268
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -4287,7 +4300,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_extract_2d_target
 #undef ___PH_LBL0
-#define ___PH_LBL0 284
+#define ___PH_LBL0 285
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -4389,7 +4402,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_link_2d_incremental
 #undef ___PH_LBL0
-#define ___PH_LBL0 296
+#define ___PH_LBL0 297
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -4526,7 +4539,7 @@ ___DEF_GLBL(___L22_link_2d_incremental)
    ___POLL(7)
 ___DEF_SLBL(7,___L7_link_2d_incremental)
    ___ADJFP(-2)
-   ___JUMPINT(___SET_NARGS(5),___PRC(311),___L__23__23_link_2d_incremental)
+   ___JUMPINT(___SET_NARGS(5),___PRC(312),___L__23__23_link_2d_incremental)
 ___DEF_GLBL(___L23_link_2d_incremental)
    ___SET_R1(___SUB(48))
    ___POLL(8)
@@ -4583,7 +4596,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_link_2d_incremental
 #undef ___PH_LBL0
-#define ___PH_LBL0 311
+#define ___PH_LBL0 312
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -4620,7 +4633,7 @@ ___DEF_GLBL(___L__23__23_link_2d_incremental)
    ___POLL(1)
 ___DEF_SLBL(1,___L1__23__23_link_2d_incremental)
    ___SET_R0(___LBL(2))
-   ___JUMPINT(___SET_NARGS(0),___PRC(319),___L__23__23_default_2d_base_2d_linkfile)
+   ___JUMPINT(___SET_NARGS(0),___PRC(320),___L__23__23_default_2d_base_2d_linkfile)
 ___DEF_SLBL(2,___L2__23__23_link_2d_incremental)
    ___SET_R3(___STK(-6))
    ___SET_R0(___STK(-7))
@@ -4656,7 +4669,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_default_2d_base_2d_linkfile
 #undef ___PH_LBL0
-#define ___PH_LBL0 319
+#define ___PH_LBL0 320
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -4705,14 +4718,14 @@ ___DEF_SLBL(5,___L5__23__23_default_2d_base_2d_linkfile)
    ___WRONG_NARGS(5,0,0,0)
    ___POLL(6)
 ___DEF_SLBL(6,___L6__23__23_default_2d_base_2d_linkfile)
-   ___JUMPGLONOTSAFE(___SET_NARGS(0),35,___G__23__23_current_2d_directory)
+   ___JUMPGLONOTSAFE(___SET_NARGS(0),34,___G__23__23_current_2d_directory)
 ___END_P_SW
 ___END_P_COD
 
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_base_2d_library_2d_from_2d_base
 #undef ___PH_LBL0
-#define ___PH_LBL0 327
+#define ___PH_LBL0 328
 #undef ___PD_ALL
 #define ___PD_ALL ___D_R0
 #undef ___PR_ALL
@@ -4736,7 +4749,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H_link_2d_flat
 #undef ___PH_LBL0
-#define ___PH_LBL0 329
+#define ___PH_LBL0 330
 #undef ___PD_ALL
 #define ___PD_ALL ___D_HEAP ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -4854,7 +4867,7 @@ ___DEF_GLBL(___L19_link_2d_flat)
    ___POLL(7)
 ___DEF_SLBL(7,___L7_link_2d_flat)
    ___ADJFP(-2)
-   ___JUMPINT(___SET_NARGS(4),___PRC(343),___L__23__23_link_2d_flat)
+   ___JUMPINT(___SET_NARGS(4),___PRC(344),___L__23__23_link_2d_flat)
 ___DEF_GLBL(___L20_link_2d_flat)
    ___SET_R1(___SUB(55))
    ___POLL(8)
@@ -4900,7 +4913,7 @@ ___END_P_COD
 #undef ___PH_PROC
 #define ___PH_PROC ___H__23__23_link_2d_flat
 #undef ___PH_LBL0
-#define ___PH_LBL0 343
+#define ___PH_LBL0 344
 #undef ___PD_ALL
 #define ___PD_ALL ___D_FP ___D_R0 ___D_R1 ___D_R2 ___D_R3 ___D_R4
 #undef ___PR_ALL
@@ -4946,8 +4959,9 @@ ___END_M_SW
 ___END_M_COD
 
 ___BEGIN_LBL
- ___DEF_LBL_INTRO(___H___gsclib_23_,___REF_SYM(19,___S___gsclib_23_),___REF_FAL,17,0)
+ ___DEF_LBL_INTRO(___H___gsclib_23_,___REF_SYM(20,___S___gsclib_23_),___REF_FAL,18,0)
 ,___DEF_LBL_PROC(___H___gsclib_23_,0,-1)
+,___DEF_LBL_RET(___H___gsclib_23_,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_PROC(___H___gsclib_23_,1,-1)
 ,___DEF_LBL_RET(___H___gsclib_23_,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_PROC(___H___gsclib_23_,0,-1)
@@ -4964,7 +4978,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H___gsclib_23_,___IFD(___RETN,5,0,0x7L))
 ,___DEF_LBL_RET(___H___gsclib_23_,___IFD(___RETN,5,0,0xdL))
 ,___DEF_LBL_RET(___H___gsclib_23_,___IFD(___RETI,8,8,0x3f0cL))
-,___DEF_LBL_INTRO(___H__23__23_compile_2d_options_2d_normalize,___REF_SYM(6,___S__23__23_compile_2d_options_2d_normalize),___REF_FAL,8,0)
+,___DEF_LBL_INTRO(___H__23__23_compile_2d_options_2d_normalize,___REF_SYM(7,___S__23__23_compile_2d_options_2d_normalize),___REF_FAL,8,0)
 ,___DEF_LBL_PROC(___H__23__23_compile_2d_options_2d_normalize,1,-1)
 ,___DEF_LBL_RET(___H__23__23_compile_2d_options_2d_normalize,___IFD(___RETI,4,0,0x3f1L))
 ,___DEF_LBL_RET(___H__23__23_compile_2d_options_2d_normalize,___IFD(___RETI,0,0,0x3fL))
@@ -4984,10 +4998,10 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H__23__23_add_2d_default_2d_compile_2d_options,___IFD(___RETI,8,0,0x3f0fL))
 ,___DEF_LBL_RET(___H__23__23_add_2d_default_2d_compile_2d_options,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_RET(___H__23__23_add_2d_default_2d_compile_2d_options,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_INTRO(___H__23__23_default_2d_compile_2d_options,___REF_SYM(8,___S__23__23_default_2d_compile_2d_options),___REF_FAL,2,0)
+,___DEF_LBL_INTRO(___H__23__23_default_2d_compile_2d_options,___REF_SYM(9,___S__23__23_default_2d_compile_2d_options),___REF_FAL,2,0)
 ,___DEF_LBL_PROC(___H__23__23_default_2d_compile_2d_options,0,-1)
 ,___DEF_LBL_RET(___H__23__23_default_2d_compile_2d_options,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_INTRO(___H_compile_2d_file_2d_to_2d_target,___REF_SYM(23,___S_compile_2d_file_2d_to_2d_target),___REF_FAL,13,0)
+,___DEF_LBL_INTRO(___H_compile_2d_file_2d_to_2d_target,___REF_SYM(24,___S_compile_2d_file_2d_to_2d_target),___REF_FAL,13,0)
 ,___DEF_LBL_PROC(___H_compile_2d_file_2d_to_2d_target,5,-1)
 ,___DEF_LBL_RET(___H_compile_2d_file_2d_to_2d_target,___IFD(___RETI,8,1,0x3f0fL))
 ,___DEF_LBL_RET(___H_compile_2d_file_2d_to_2d_target,___IFD(___RETN,5,1,0xfL))
@@ -5001,7 +5015,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H_compile_2d_file_2d_to_2d_target,___IFD(___RETN,5,1,0x1eL))
 ,___DEF_LBL_RET(___H_compile_2d_file_2d_to_2d_target,___IFD(___RETN,5,1,0x1eL))
 ,___DEF_LBL_RET(___H_compile_2d_file_2d_to_2d_target,___IFD(___RETI,3,4,0x3f3L))
-,___DEF_LBL_INTRO(___H__23__23_compile_2d_file_2d_to_2d_target,___REF_SYM(5,___S__23__23_compile_2d_file_2d_to_2d_target),___REF_FAL,28,0)
+,___DEF_LBL_INTRO(___H__23__23_compile_2d_file_2d_to_2d_target,___REF_SYM(6,___S__23__23_compile_2d_file_2d_to_2d_target),___REF_FAL,28,0)
 ,___DEF_LBL_PROC(___H__23__23_compile_2d_file_2d_to_2d_target,3,-1)
 ,___DEF_LBL_RET(___H__23__23_compile_2d_file_2d_to_2d_target,___IFD(___RETI,8,0,0x3f07L))
 ,___DEF_LBL_RET(___H__23__23_compile_2d_file_2d_to_2d_target,___IFD(___RETN,5,0,0x7L))
@@ -5030,17 +5044,17 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H__23__23_compile_2d_file_2d_to_2d_target,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H__23__23_compile_2d_file_2d_to_2d_target,___IFD(___RETI,4,4,0x3f0L))
 ,___DEF_LBL_RET(___H__23__23_compile_2d_file_2d_to_2d_target,___IFD(___RETI,8,8,0x3f00L))
-,___DEF_LBL_INTRO(___H__23__23_string_2d_or_2d_string_2d_list_3f_,___REF_SYM(17,___S__23__23_string_2d_or_2d_string_2d_list_3f_),___REF_FAL,3,0)
+,___DEF_LBL_INTRO(___H__23__23_string_2d_or_2d_string_2d_list_3f_,___REF_SYM(18,___S__23__23_string_2d_or_2d_string_2d_list_3f_),___REF_FAL,3,0)
 ,___DEF_LBL_PROC(___H__23__23_string_2d_or_2d_string_2d_list_3f_,1,-1)
 ,___DEF_LBL_RET(___H__23__23_string_2d_or_2d_string_2d_list_3f_,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_RET(___H__23__23_string_2d_or_2d_string_2d_list_3f_,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_INTRO(___H__23__23_string_2d_or_2d_string_2d_list_2d_join,___REF_SYM(16,___S__23__23_string_2d_or_2d_string_2d_list_2d_join),___REF_FAL,2,0)
+,___DEF_LBL_INTRO(___H__23__23_string_2d_or_2d_string_2d_list_2d_join,___REF_SYM(17,___S__23__23_string_2d_or_2d_string_2d_list_2d_join),___REF_FAL,2,0)
 ,___DEF_LBL_PROC(___H__23__23_string_2d_or_2d_string_2d_list_2d_join,2,-1)
 ,___DEF_LBL_RET(___H__23__23_string_2d_or_2d_string_2d_list_2d_join,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_INTRO(___H__23__23_multiple_2d_args_2d_join,___REF_SYM(14,___S__23__23_multiple_2d_args_2d_join),___REF_FAL,2,0)
+,___DEF_LBL_INTRO(___H__23__23_multiple_2d_args_2d_join,___REF_SYM(15,___S__23__23_multiple_2d_args_2d_join),___REF_FAL,2,0)
 ,___DEF_LBL_PROC(___H__23__23_multiple_2d_args_2d_join,1,-1)
 ,___DEF_LBL_RET(___H__23__23_multiple_2d_args_2d_join,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_INTRO(___H_compile_2d_file,___REF_SYM(22,___S_compile_2d_file),___REF_FAL,26,0)
+,___DEF_LBL_INTRO(___H_compile_2d_file,___REF_SYM(23,___S_compile_2d_file),___REF_FAL,26,0)
 ,___DEF_LBL_PROC(___H_compile_2d_file,12,-1)
 ,___DEF_LBL_RET(___H_compile_2d_file,___OFD(___RETI,16,1,0x3f07ffL))
 ,___DEF_LBL_RET(___H_compile_2d_file,___IFD(___RETN,13,1,0x7ffL))
@@ -5067,7 +5081,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H_compile_2d_file,___IFD(___RETN,13,7,0xffeL))
 ,___DEF_LBL_RET(___H_compile_2d_file,___IFD(___RETN,13,7,0xffeL))
 ,___DEF_LBL_RET(___H_compile_2d_file,___OFD(___RETI,9,12,0x3f003L))
-,___DEF_LBL_INTRO(___H__23__23_compile_2d_file,___REF_SYM(4,___S__23__23_compile_2d_file),___REF_FAL,55,0)
+,___DEF_LBL_INTRO(___H__23__23_compile_2d_file,___REF_SYM(5,___S__23__23_compile_2d_file),___REF_FAL,55,0)
 ,___DEF_LBL_PROC(___H__23__23_compile_2d_file,10,-1)
 ,___DEF_LBL_RET(___H__23__23_compile_2d_file,___OFD(___RETI,16,7,0x3f07fdL))
 ,___DEF_LBL_RET(___H__23__23_compile_2d_file,___IFD(___RETN,13,7,0x7fdL))
@@ -5179,12 +5193,12 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H__23__23_build_2d_executable,___IFD(___RETN,9,8,0x10aL))
 ,___DEF_LBL_RET(___H__23__23_build_2d_executable,___OFD(___RETI,12,12,0x3f000L))
 ,___DEF_LBL_RET(___H__23__23_build_2d_executable,___OFD(___RETI,20,8,0x3f0211bL))
-,___DEF_LBL_INTRO(___H__23__23_path_2d_relative_2d_to_2d_dir,___REF_SYM(15,___S__23__23_path_2d_relative_2d_to_2d_dir),___REF_FAL,4,0)
+,___DEF_LBL_INTRO(___H__23__23_path_2d_relative_2d_to_2d_dir,___REF_SYM(16,___S__23__23_path_2d_relative_2d_to_2d_dir),___REF_FAL,4,0)
 ,___DEF_LBL_PROC(___H__23__23_path_2d_relative_2d_to_2d_dir,2,-1)
 ,___DEF_LBL_RET(___H__23__23_path_2d_relative_2d_to_2d_dir,___IFD(___RETI,8,0,0x3f03L))
 ,___DEF_LBL_RET(___H__23__23_path_2d_relative_2d_to_2d_dir,___IFD(___RETN,5,0,0x3L))
 ,___DEF_LBL_RET(___H__23__23_path_2d_relative_2d_to_2d_dir,___IFD(___RETI,8,8,0x3f00L))
-,___DEF_LBL_INTRO(___H__23__23_gambuild_2d_params,___REF_SYM(11,___S__23__23_gambuild_2d_params),___REF_FAL,27,0)
+,___DEF_LBL_INTRO(___H__23__23_gambuild_2d_params,___REF_SYM(12,___S__23__23_gambuild_2d_params),___REF_FAL,27,0)
 ,___DEF_LBL_PROC(___H__23__23_gambuild_2d_params,10,-1)
 ,___DEF_LBL_RET(___H__23__23_gambuild_2d_params,___OFD(___RETI,9,12,0x3f1feL))
 ,___DEF_LBL_RET(___H__23__23_gambuild_2d_params,___OFD(___RETI,16,9,0x3f0ffdL))
@@ -5212,7 +5226,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H__23__23_gambuild_2d_params,___OFD(___RETI,10,12,0x3f080L))
 ,___DEF_LBL_PROC(___H__23__23_gambuild_2d_params,2,-1)
 ,___DEF_LBL_RET(___H__23__23_gambuild_2d_params,___IFD(___RETI,0,0,0x3fL))
-,___DEF_LBL_INTRO(___H__23__23_gambuild,___REF_SYM(10,___S__23__23_gambuild),___REF_FAL,16,0)
+,___DEF_LBL_INTRO(___H__23__23_gambuild,___REF_SYM(11,___S__23__23_gambuild),___REF_FAL,16,0)
 ,___DEF_LBL_PROC(___H__23__23_gambuild,5,-1)
 ,___DEF_LBL_RET(___H__23__23_gambuild,___IFD(___RETN,9,2,0x7eL))
 ,___DEF_LBL_RET(___H__23__23_gambuild,___OFD(___RETI,12,2,0x3f07fL))
@@ -5229,7 +5243,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H__23__23_gambuild,___IFD(___RETI,8,8,0x3f07L))
 ,___DEF_LBL_RET(___H__23__23_gambuild,___OFD(___RETI,12,2,0x3f06fL))
 ,___DEF_LBL_RET(___H__23__23_gambuild,___IFD(___RETN,9,2,0x7eL))
-,___DEF_LBL_INTRO(___H__23__23_extract_2d_target,___REF_SYM(9,___S__23__23_extract_2d_target),___REF_FAL,11,0)
+,___DEF_LBL_INTRO(___H__23__23_extract_2d_target,___REF_SYM(10,___S__23__23_extract_2d_target),___REF_FAL,11,0)
 ,___DEF_LBL_PROC(___H__23__23_extract_2d_target,1,-1)
 ,___DEF_LBL_RET(___H__23__23_extract_2d_target,___IFD(___RETI,4,0,0x3f1L))
 ,___DEF_LBL_RET(___H__23__23_extract_2d_target,___IFD(___RETI,0,0,0x3fL))
@@ -5241,7 +5255,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H__23__23_extract_2d_target,___IFD(___RETN,1,0,0x1L))
 ,___DEF_LBL_RET(___H__23__23_extract_2d_target,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_RET(___H__23__23_extract_2d_target,___IFD(___RETI,4,0,0x3f1L))
-,___DEF_LBL_INTRO(___H_link_2d_incremental,___REF_SYM(31,___S_link_2d_incremental),___REF_FAL,14,0)
+,___DEF_LBL_INTRO(___H_link_2d_incremental,___REF_SYM(32,___S_link_2d_incremental),___REF_FAL,14,0)
 ,___DEF_LBL_PROC(___H_link_2d_incremental,6,-1)
 ,___DEF_LBL_RET(___H_link_2d_incremental,___IFD(___RETI,3,4,0x3f7L))
 ,___DEF_LBL_RET(___H_link_2d_incremental,___IFD(___RETI,3,4,0x3f7L))
@@ -5256,7 +5270,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H_link_2d_incremental,___IFD(___RETI,3,4,0x3f7L))
 ,___DEF_LBL_RET(___H_link_2d_incremental,___IFD(___RETI,3,4,0x3f7L))
 ,___DEF_LBL_RET(___H_link_2d_incremental,___IFD(___RETI,3,4,0x3f0L))
-,___DEF_LBL_INTRO(___H__23__23_link_2d_incremental,___REF_SYM(13,___S__23__23_link_2d_incremental),___REF_FAL,7,0)
+,___DEF_LBL_INTRO(___H__23__23_link_2d_incremental,___REF_SYM(14,___S__23__23_link_2d_incremental),___REF_FAL,7,0)
 ,___DEF_LBL_PROC(___H__23__23_link_2d_incremental,5,-1)
 ,___DEF_LBL_RET(___H__23__23_link_2d_incremental,___OFD(___RETI,12,4,0x3f03fL))
 ,___DEF_LBL_RET(___H__23__23_link_2d_incremental,___IFD(___RETN,9,4,0x3fL))
@@ -5264,7 +5278,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H__23__23_link_2d_incremental,___IFD(___RETN,9,4,0x7bL))
 ,___DEF_LBL_RET(___H__23__23_link_2d_incremental,___OFD(___RETI,12,12,0x3f003L))
 ,___DEF_LBL_RET(___H__23__23_link_2d_incremental,___OFD(___RETI,12,12,0x3f003L))
-,___DEF_LBL_INTRO(___H__23__23_default_2d_base_2d_linkfile,___REF_SYM(7,___S__23__23_default_2d_base_2d_linkfile),___REF_FAL,7,0)
+,___DEF_LBL_INTRO(___H__23__23_default_2d_base_2d_linkfile,___REF_SYM(8,___S__23__23_default_2d_base_2d_linkfile),___REF_FAL,7,0)
 ,___DEF_LBL_PROC(___H__23__23_default_2d_base_2d_linkfile,0,-1)
 ,___DEF_LBL_RET(___H__23__23_default_2d_base_2d_linkfile,___IFD(___RETI,8,1,0x3f03L))
 ,___DEF_LBL_RET(___H__23__23_default_2d_base_2d_linkfile,___IFD(___RETN,5,1,0x3L))
@@ -5274,7 +5288,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H__23__23_default_2d_base_2d_linkfile,___IFD(___RETI,0,0,0x3fL))
 ,___DEF_LBL_INTRO(___H__23__23_base_2d_library_2d_from_2d_base,___REF_SYM(1,___S__23__23_base_2d_library_2d_from_2d_base),___REF_FAL,1,0)
 ,___DEF_LBL_PROC(___H__23__23_base_2d_library_2d_from_2d_base,1,-1)
-,___DEF_LBL_INTRO(___H_link_2d_flat,___REF_SYM(30,___S_link_2d_flat),___REF_FAL,13,0)
+,___DEF_LBL_INTRO(___H_link_2d_flat,___REF_SYM(31,___S_link_2d_flat),___REF_FAL,13,0)
 ,___DEF_LBL_PROC(___H_link_2d_flat,5,-1)
 ,___DEF_LBL_RET(___H_link_2d_flat,___IFD(___RETI,2,4,0x3f3L))
 ,___DEF_LBL_RET(___H_link_2d_flat,___IFD(___RETI,2,4,0x3f3L))
@@ -5288,7 +5302,7 @@ ___BEGIN_LBL
 ,___DEF_LBL_RET(___H_link_2d_flat,___IFD(___RETI,2,4,0x3f3L))
 ,___DEF_LBL_RET(___H_link_2d_flat,___IFD(___RETI,2,4,0x3f3L))
 ,___DEF_LBL_RET(___H_link_2d_flat,___IFD(___RETI,2,4,0x3f0L))
-,___DEF_LBL_INTRO(___H__23__23_link_2d_flat,___REF_SYM(12,___S__23__23_link_2d_flat),___REF_FAL,3,0)
+,___DEF_LBL_INTRO(___H__23__23_link_2d_flat,___REF_SYM(13,___S__23__23_link_2d_flat),___REF_FAL,3,0)
 ,___DEF_LBL_PROC(___H__23__23_link_2d_flat,4,-1)
 ,___DEF_LBL_RET(___H__23__23_link_2d_flat,___IFD(___RETN,9,2,0x3dL))
 ,___DEF_LBL_RET(___H__23__23_link_2d_flat,___OFD(___RETI,12,12,0x3f003L))
@@ -5434,58 +5448,58 @@ ___BEGIN_OFD
 ___END_OFD
 
 ___BEGIN_MOD_PRM
-___DEF_MOD_PRM(19,___G___gsclib_23_,1)
-___DEF_MOD_PRM(7,___G__23__23_compile_2d_options_2d_normalize,19)
-___DEF_MOD_PRM(0,___G__23__23_add_2d_default_2d_compile_2d_options,28)
-___DEF_MOD_PRM(9,___G__23__23_default_2d_compile_2d_options,39)
-___DEF_MOD_PRM(22,___G_compile_2d_file_2d_to_2d_target,42)
-___DEF_MOD_PRM(6,___G__23__23_compile_2d_file_2d_to_2d_target,56)
-___DEF_MOD_PRM(18,___G__23__23_string_2d_or_2d_string_2d_list_3f_,85)
-___DEF_MOD_PRM(17,___G__23__23_string_2d_or_2d_string_2d_list_2d_join,89)
-___DEF_MOD_PRM(15,___G__23__23_multiple_2d_args_2d_join,92)
-___DEF_MOD_PRM(21,___G_compile_2d_file,95)
-___DEF_MOD_PRM(5,___G__23__23_compile_2d_file,122)
-___DEF_MOD_PRM(3,___G__23__23_build_2d_module,178)
-___DEF_MOD_PRM(2,___G__23__23_build_2d_executable,203)
-___DEF_MOD_PRM(16,___G__23__23_path_2d_relative_2d_to_2d_dir,234)
-___DEF_MOD_PRM(12,___G__23__23_gambuild_2d_params,239)
-___DEF_MOD_PRM(11,___G__23__23_gambuild,267)
-___DEF_MOD_PRM(10,___G__23__23_extract_2d_target,284)
-___DEF_MOD_PRM(24,___G_link_2d_incremental,296)
-___DEF_MOD_PRM(14,___G__23__23_link_2d_incremental,311)
-___DEF_MOD_PRM(8,___G__23__23_default_2d_base_2d_linkfile,319)
-___DEF_MOD_PRM(1,___G__23__23_base_2d_library_2d_from_2d_base,327)
-___DEF_MOD_PRM(23,___G_link_2d_flat,329)
-___DEF_MOD_PRM(13,___G__23__23_link_2d_flat,343)
+___DEF_MOD_PRM(18,___G___gsclib_23_,1)
+___DEF_MOD_PRM(6,___G__23__23_compile_2d_options_2d_normalize,20)
+___DEF_MOD_PRM(0,___G__23__23_add_2d_default_2d_compile_2d_options,29)
+___DEF_MOD_PRM(8,___G__23__23_default_2d_compile_2d_options,40)
+___DEF_MOD_PRM(21,___G_compile_2d_file_2d_to_2d_target,43)
+___DEF_MOD_PRM(5,___G__23__23_compile_2d_file_2d_to_2d_target,57)
+___DEF_MOD_PRM(17,___G__23__23_string_2d_or_2d_string_2d_list_3f_,86)
+___DEF_MOD_PRM(16,___G__23__23_string_2d_or_2d_string_2d_list_2d_join,90)
+___DEF_MOD_PRM(14,___G__23__23_multiple_2d_args_2d_join,93)
+___DEF_MOD_PRM(20,___G_compile_2d_file,96)
+___DEF_MOD_PRM(4,___G__23__23_compile_2d_file,123)
+___DEF_MOD_PRM(3,___G__23__23_build_2d_module,179)
+___DEF_MOD_PRM(2,___G__23__23_build_2d_executable,204)
+___DEF_MOD_PRM(15,___G__23__23_path_2d_relative_2d_to_2d_dir,235)
+___DEF_MOD_PRM(11,___G__23__23_gambuild_2d_params,240)
+___DEF_MOD_PRM(10,___G__23__23_gambuild,268)
+___DEF_MOD_PRM(9,___G__23__23_extract_2d_target,285)
+___DEF_MOD_PRM(23,___G_link_2d_incremental,297)
+___DEF_MOD_PRM(13,___G__23__23_link_2d_incremental,312)
+___DEF_MOD_PRM(7,___G__23__23_default_2d_base_2d_linkfile,320)
+___DEF_MOD_PRM(1,___G__23__23_base_2d_library_2d_from_2d_base,328)
+___DEF_MOD_PRM(22,___G_link_2d_flat,330)
+___DEF_MOD_PRM(12,___G__23__23_link_2d_flat,344)
 ___END_MOD_PRM
 
 ___BEGIN_MOD_C_INIT
 ___END_MOD_C_INIT
 
 ___BEGIN_MOD_GLO
-___DEF_MOD_GLO(19,___G___gsclib_23_,1)
-___DEF_MOD_GLO(7,___G__23__23_compile_2d_options_2d_normalize,19)
-___DEF_MOD_GLO(0,___G__23__23_add_2d_default_2d_compile_2d_options,28)
-___DEF_MOD_GLO(9,___G__23__23_default_2d_compile_2d_options,39)
-___DEF_MOD_GLO(22,___G_compile_2d_file_2d_to_2d_target,42)
-___DEF_MOD_GLO(6,___G__23__23_compile_2d_file_2d_to_2d_target,56)
-___DEF_MOD_GLO(18,___G__23__23_string_2d_or_2d_string_2d_list_3f_,85)
-___DEF_MOD_GLO(17,___G__23__23_string_2d_or_2d_string_2d_list_2d_join,89)
-___DEF_MOD_GLO(15,___G__23__23_multiple_2d_args_2d_join,92)
-___DEF_MOD_GLO(21,___G_compile_2d_file,95)
-___DEF_MOD_GLO(5,___G__23__23_compile_2d_file,122)
-___DEF_MOD_GLO(3,___G__23__23_build_2d_module,178)
-___DEF_MOD_GLO(2,___G__23__23_build_2d_executable,203)
-___DEF_MOD_GLO(16,___G__23__23_path_2d_relative_2d_to_2d_dir,234)
-___DEF_MOD_GLO(12,___G__23__23_gambuild_2d_params,239)
-___DEF_MOD_GLO(11,___G__23__23_gambuild,267)
-___DEF_MOD_GLO(10,___G__23__23_extract_2d_target,284)
-___DEF_MOD_GLO(24,___G_link_2d_incremental,296)
-___DEF_MOD_GLO(14,___G__23__23_link_2d_incremental,311)
-___DEF_MOD_GLO(8,___G__23__23_default_2d_base_2d_linkfile,319)
-___DEF_MOD_GLO(1,___G__23__23_base_2d_library_2d_from_2d_base,327)
-___DEF_MOD_GLO(23,___G_link_2d_flat,329)
-___DEF_MOD_GLO(13,___G__23__23_link_2d_flat,343)
+___DEF_MOD_GLO(18,___G___gsclib_23_,1)
+___DEF_MOD_GLO(6,___G__23__23_compile_2d_options_2d_normalize,20)
+___DEF_MOD_GLO(0,___G__23__23_add_2d_default_2d_compile_2d_options,29)
+___DEF_MOD_GLO(8,___G__23__23_default_2d_compile_2d_options,40)
+___DEF_MOD_GLO(21,___G_compile_2d_file_2d_to_2d_target,43)
+___DEF_MOD_GLO(5,___G__23__23_compile_2d_file_2d_to_2d_target,57)
+___DEF_MOD_GLO(17,___G__23__23_string_2d_or_2d_string_2d_list_3f_,86)
+___DEF_MOD_GLO(16,___G__23__23_string_2d_or_2d_string_2d_list_2d_join,90)
+___DEF_MOD_GLO(14,___G__23__23_multiple_2d_args_2d_join,93)
+___DEF_MOD_GLO(20,___G_compile_2d_file,96)
+___DEF_MOD_GLO(4,___G__23__23_compile_2d_file,123)
+___DEF_MOD_GLO(3,___G__23__23_build_2d_module,179)
+___DEF_MOD_GLO(2,___G__23__23_build_2d_executable,204)
+___DEF_MOD_GLO(15,___G__23__23_path_2d_relative_2d_to_2d_dir,235)
+___DEF_MOD_GLO(11,___G__23__23_gambuild_2d_params,240)
+___DEF_MOD_GLO(10,___G__23__23_gambuild,268)
+___DEF_MOD_GLO(9,___G__23__23_extract_2d_target,285)
+___DEF_MOD_GLO(23,___G_link_2d_incremental,297)
+___DEF_MOD_GLO(13,___G__23__23_link_2d_incremental,312)
+___DEF_MOD_GLO(7,___G__23__23_default_2d_base_2d_linkfile,320)
+___DEF_MOD_GLO(1,___G__23__23_base_2d_library_2d_from_2d_base,328)
+___DEF_MOD_GLO(22,___G_link_2d_flat,330)
+___DEF_MOD_GLO(12,___G__23__23_link_2d_flat,344)
 ___END_MOD_GLO
 
 ___BEGIN_MOD_SYM_KEY
@@ -5494,41 +5508,42 @@ ___DEF_MOD_SYM(0,___S__23__23_add_2d_default_2d_compile_2d_options,"##add-defaul
 ___DEF_MOD_SYM(1,___S__23__23_base_2d_library_2d_from_2d_base,"##base-library-from-base")
 ___DEF_MOD_SYM(2,___S__23__23_build_2d_executable,"##build-executable")
 ___DEF_MOD_SYM(3,___S__23__23_build_2d_module,"##build-module")
-___DEF_MOD_SYM(4,___S__23__23_compile_2d_file,"##compile-file")
-___DEF_MOD_SYM(5,___S__23__23_compile_2d_file_2d_to_2d_target,"##compile-file-to-target")
-___DEF_MOD_SYM(6,___S__23__23_compile_2d_options_2d_normalize,"##compile-options-normalize")
-___DEF_MOD_SYM(7,___S__23__23_default_2d_base_2d_linkfile,"##default-base-linkfile")
-___DEF_MOD_SYM(8,___S__23__23_default_2d_compile_2d_options,"##default-compile-options")
-___DEF_MOD_SYM(9,___S__23__23_extract_2d_target,"##extract-target")
-___DEF_MOD_SYM(10,___S__23__23_gambuild,"##gambuild")
-___DEF_MOD_SYM(11,___S__23__23_gambuild_2d_params,"##gambuild-params")
-___DEF_MOD_SYM(12,___S__23__23_link_2d_flat,"##link-flat")
-___DEF_MOD_SYM(13,___S__23__23_link_2d_incremental,"##link-incremental")
-___DEF_MOD_SYM(14,___S__23__23_multiple_2d_args_2d_join,"##multiple-args-join")
-___DEF_MOD_SYM(15,___S__23__23_path_2d_relative_2d_to_2d_dir,"##path-relative-to-dir")
-___DEF_MOD_SYM(16,___S__23__23_string_2d_or_2d_string_2d_list_2d_join,"##string-or-string-list-join")
-___DEF_MOD_SYM(17,___S__23__23_string_2d_or_2d_string_2d_list_3f_,"##string-or-string-list?")
-___DEF_MOD_SYM(18,___S___gsclib,"_gsclib")
-___DEF_MOD_SYM(19,___S___gsclib_23_,"_gsclib#")
-___DEF_MOD_SYM(20,___S_cc,"cc")
-___DEF_MOD_SYM(21,___S_cc_2d_options,"cc-options")
-___DEF_MOD_SYM(22,___S_compile_2d_file,"compile-file")
-___DEF_MOD_SYM(23,___S_compile_2d_file_2d_to_2d_target,"compile-file-to-target")
-___DEF_MOD_SYM(24,___S_dyn,"dyn")
-___DEF_MOD_SYM(25,___S_exe,"exe")
-___DEF_MOD_SYM(26,___S_keep_2d_temp,"keep-temp")
-___DEF_MOD_SYM(27,___S_ld_2d_options,"ld-options")
-___DEF_MOD_SYM(28,___S_ld_2d_options_2d_prelude,"ld-options-prelude")
-___DEF_MOD_SYM(29,___S_lib,"lib")
-___DEF_MOD_SYM(30,___S_link_2d_flat,"link-flat")
-___DEF_MOD_SYM(31,___S_link_2d_incremental,"link-incremental")
-___DEF_MOD_SYM(32,___S_linker_2d_name,"linker-name")
-___DEF_MOD_SYM(33,___S_module_2d_ref,"module-ref")
-___DEF_MOD_SYM(34,___S_obj,"obj")
-___DEF_MOD_SYM(35,___S_pkg_2d_config,"pkg-config")
-___DEF_MOD_SYM(36,___S_pkg_2d_config_2d_path,"pkg-config-path")
-___DEF_MOD_SYM(37,___S_target,"target")
-___DEF_MOD_SYM(38,___S_verbose,"verbose")
+___DEF_MOD_SYM(4,___S__23__23_c_2d_code,"##c-code")
+___DEF_MOD_SYM(5,___S__23__23_compile_2d_file,"##compile-file")
+___DEF_MOD_SYM(6,___S__23__23_compile_2d_file_2d_to_2d_target,"##compile-file-to-target")
+___DEF_MOD_SYM(7,___S__23__23_compile_2d_options_2d_normalize,"##compile-options-normalize")
+___DEF_MOD_SYM(8,___S__23__23_default_2d_base_2d_linkfile,"##default-base-linkfile")
+___DEF_MOD_SYM(9,___S__23__23_default_2d_compile_2d_options,"##default-compile-options")
+___DEF_MOD_SYM(10,___S__23__23_extract_2d_target,"##extract-target")
+___DEF_MOD_SYM(11,___S__23__23_gambuild,"##gambuild")
+___DEF_MOD_SYM(12,___S__23__23_gambuild_2d_params,"##gambuild-params")
+___DEF_MOD_SYM(13,___S__23__23_link_2d_flat,"##link-flat")
+___DEF_MOD_SYM(14,___S__23__23_link_2d_incremental,"##link-incremental")
+___DEF_MOD_SYM(15,___S__23__23_multiple_2d_args_2d_join,"##multiple-args-join")
+___DEF_MOD_SYM(16,___S__23__23_path_2d_relative_2d_to_2d_dir,"##path-relative-to-dir")
+___DEF_MOD_SYM(17,___S__23__23_string_2d_or_2d_string_2d_list_2d_join,"##string-or-string-list-join")
+___DEF_MOD_SYM(18,___S__23__23_string_2d_or_2d_string_2d_list_3f_,"##string-or-string-list?")
+___DEF_MOD_SYM(19,___S___gsclib,"_gsclib")
+___DEF_MOD_SYM(20,___S___gsclib_23_,"_gsclib#")
+___DEF_MOD_SYM(21,___S_cc,"cc")
+___DEF_MOD_SYM(22,___S_cc_2d_options,"cc-options")
+___DEF_MOD_SYM(23,___S_compile_2d_file,"compile-file")
+___DEF_MOD_SYM(24,___S_compile_2d_file_2d_to_2d_target,"compile-file-to-target")
+___DEF_MOD_SYM(25,___S_dyn,"dyn")
+___DEF_MOD_SYM(26,___S_exe,"exe")
+___DEF_MOD_SYM(27,___S_keep_2d_temp,"keep-temp")
+___DEF_MOD_SYM(28,___S_ld_2d_options,"ld-options")
+___DEF_MOD_SYM(29,___S_ld_2d_options_2d_prelude,"ld-options-prelude")
+___DEF_MOD_SYM(30,___S_lib,"lib")
+___DEF_MOD_SYM(31,___S_link_2d_flat,"link-flat")
+___DEF_MOD_SYM(32,___S_link_2d_incremental,"link-incremental")
+___DEF_MOD_SYM(33,___S_linker_2d_name,"linker-name")
+___DEF_MOD_SYM(34,___S_module_2d_ref,"module-ref")
+___DEF_MOD_SYM(35,___S_obj,"obj")
+___DEF_MOD_SYM(36,___S_pkg_2d_config,"pkg-config")
+___DEF_MOD_SYM(37,___S_pkg_2d_config_2d_path,"pkg-config-path")
+___DEF_MOD_SYM(38,___S_target,"target")
+___DEF_MOD_SYM(39,___S_verbose,"verbose")
 ___DEF_MOD_KEY(0,___K_base,"base")
 ___DEF_MOD_KEY(1,___K_cc,"cc")
 ___DEF_MOD_KEY(2,___K_cc_2d_options,"cc-options")

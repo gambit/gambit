@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_eval.c", produced by Gambit v4.9.7
+; File: "_eval.c", produced by Gambit v4.9.8
 (
-409007
+409008
 (C)
 "_eval"
 ("_eval")
@@ -1428,7 +1428,7 @@
 ) #|*/"*/"meta-info|#
 )
 #else
-#define ___VERSION 409007
+#define ___VERSION 409008
 #define ___MODULE_NAME "_eval"
 #define ___LINKER_ID ___LNK___eval
 #define ___MH_PROC ___H___eval

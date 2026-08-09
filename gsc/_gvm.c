@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_gvm.c", produced by Gambit v4.9.7
+; File: "_gvm.c", produced by Gambit v4.9.8
 (
-409007
+409008
 (C)
 "_gvm"
 ("_gvm")
@@ -608,7 +608,7 @@
 ) #|*/"*/"meta-info|#
 )
 #else
-#define ___VERSION 409007
+#define ___VERSION 409008
 #define ___MODULE_NAME "_gvm"
 #define ___LINKER_ID ___LNK___gvm
 #define ___MH_PROC ___H___gvm

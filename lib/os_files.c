@@ -8,7 +8,7 @@
  */
 
 #define ___INCLUDED_FROM_OS_FILES
-#define ___VERSION 409007
+#define ___VERSION 409008
 #include "gambit.h"
 
 #include "os_setup.h"

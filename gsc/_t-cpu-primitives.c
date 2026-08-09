@@ -1,7 +1,7 @@
 #ifdef ___LINKER_INFO
-; File: "_t-cpu-primitives.c", produced by Gambit v4.9.7
+; File: "_t-cpu-primitives.c", produced by Gambit v4.9.8
 (
-409007
+409008
 (C)
 "_t-cpu-primitives"
 ("_t-cpu-primitives")
@@ -164,7 +164,7 @@
 ) #|*/"*/"meta-info|#
 )
 #else
-#define ___VERSION 409007
+#define ___VERSION 409008
 #define ___MODULE_NAME "_t-cpu-primitives"
 #define ___LINKER_ID ___LNK___t_2d_cpu_2d_primitives
 #define ___MH_PROC ___H___t_2d_cpu_2d_primitives
