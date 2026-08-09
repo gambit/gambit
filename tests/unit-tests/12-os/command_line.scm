@@ -1,5 +1,5 @@
 (include "#.scm")
 
-(check-equal? (command-line) '(""))
+(test-equal '("") (command-line))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (command-line #f)))
+(test-error-tail wrong-number-of-arguments-exception? (command-line #f))

@@ -1,9 +1,11 @@
 (include "#.scm")
 
-(check-eqv? (##fxarithmetic-shift-left? 1 3) 8)
-(check-eqv? (##fxarithmetic-shift-left? 1 6) 64)
-(check-eqv? (##fxarithmetic-shift-left? 1 9) 512)
-(check-eqv? (##fxarithmetic-shift-left? (##greatest-fixnum) 0) (##greatest-fixnum))
-(check-eqv? (##fxarithmetic-shift-left? (##greatest-fixnum) 1) #f)
-(check-eqv? (##fxarithmetic-shift-left? 1 100) #f)
-(check-eqv? (##fxarithmetic-shift-left? 1 -9) #f)
+(test-eqv 8 (##fxarithmetic-shift-left? 1 3))
+(test-eqv 64 (##fxarithmetic-shift-left? 1 6))
+(test-eqv 512 (##fxarithmetic-shift-left? 1 9))
+(test-eqv
+ (##greatest-fixnum)
+ (##fxarithmetic-shift-left? (##greatest-fixnum) 0))
+(test-eqv #f (##fxarithmetic-shift-left? (##greatest-fixnum) 1))
+(test-eqv #f (##fxarithmetic-shift-left? 1 100))
+(test-eqv #f (##fxarithmetic-shift-left? 1 -9))

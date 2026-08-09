@@ -1,14 +1,14 @@
 (include "#.scm")
 
-(check-eqv? (##fxeven? 0) #t)
-(check-eqv? (##fxeven? 1) #f)
+(test-eqv #t (##fxeven? 0))
+(test-eqv #f (##fxeven? 1))
 
-(check-eqv? (fxeven? 0) #t)
-(check-eqv? (fxeven? 1) #f)
+(test-eqv #t (fxeven? 0))
+(test-eqv #f (fxeven? 1))
 
-(check-tail-exn type-exception? (lambda () (fxeven? 0.0)))
-(check-tail-exn type-exception? (lambda () (fxeven? 0.5)))
-(check-tail-exn type-exception? (lambda () (fxeven? 1/2)))
+(test-error-tail type-exception? (fxeven? 0.))
+(test-error-tail type-exception? (fxeven? .5))
+(test-error-tail type-exception? (fxeven? 1/2))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxeven?)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxeven? 1 5)))
+(test-error-tail wrong-number-of-arguments-exception? (fxeven?))
+(test-error-tail wrong-number-of-arguments-exception? (fxeven? 1 5))

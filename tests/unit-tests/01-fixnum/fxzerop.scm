@@ -1,11 +1,11 @@
 (include "#.scm")
 
-(check-eqv? (##fxzero? 0)   #t)
-(check-eqv? (##fxzero? 1)   #f)
+(test-eqv #t (##fxzero? 0))
+(test-eqv #f (##fxzero? 1))
 
-(check-eqv? (fxzero? 0)   #t)
-(check-eqv? (fxzero? 1)   #f)
+(test-eqv #t (fxzero? 0))
+(test-eqv #f (fxzero? 1))
 
-(check-tail-exn type-exception? (lambda () (fxzero? 0.0)))
-(check-tail-exn type-exception? (lambda () (fxzero? 0.5)))
-(check-tail-exn type-exception? (lambda () (fxzero? 1/3)))
+(test-error-tail type-exception? (fxzero? 0.))
+(test-error-tail type-exception? (fxzero? .5))
+(test-error-tail type-exception? (fxzero? 1/3))

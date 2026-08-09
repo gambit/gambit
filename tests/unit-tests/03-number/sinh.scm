@@ -2,14 +2,14 @@
 
 ;;; Test special values
 
-(check-eqv? (sinh 0) 0)
-(check-eqv? (sinh 1) (imag-part (sin +i)))
+(test-eqv 0 (sinh 0))
+(test-eqv (imag-part (sin +i)) (sinh 1))
 
 ;;; Test for accuracy near 0
 
-(check-eqv? (sinh 1e-30+1e-40i) 1e-30+1e-40i)
+(test-eqv 1e-30+1e-40i (sinh 1e-30+1e-40i))
 
 ;;; Test exceptions
 
-(check-tail-exn type-exception? (lambda () (asinh 'a)))
+(test-error-tail type-exception? (asinh 'a))
 

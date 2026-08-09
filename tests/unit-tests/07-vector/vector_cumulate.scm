@@ -1,11 +1,14 @@
 (include "#.scm")
 
-(check-equal? '#(3 4 8 9 14 23 25 30 36)
-              (vector-cumulate + 0 '#(3 1 4 1 5 9 2 5 6)))
+(test-equal
+ (vector-cumulate + 0 '#(3 1 4 1 5 9 2 5 6))
+ '#(3 4 8 9 14 23 25 30 36))
 
-(check-tail-exn type-exception? (lambda () (vector-cumulate 4 4 'a)))
-(check-tail-exn type-exception? (lambda () (vector-cumulate values 'a 'a)))
+(test-error-tail type-exception? (vector-cumulate 4 4 'a))
+(test-error-tail type-exception? (vector-cumulate values 'a 'a))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector-cumulate)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector-cumulate values)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (vector-cumulate values 'a '#(1 2 3) 3)))
+(test-error-tail wrong-number-of-arguments-exception? (vector-cumulate))
+(test-error-tail wrong-number-of-arguments-exception? (vector-cumulate values))
+(test-error-tail
+ wrong-number-of-arguments-exception?
+ (vector-cumulate values 'a '#(1 2 3) 3))

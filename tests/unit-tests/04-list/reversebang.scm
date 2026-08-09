@@ -3,13 +3,13 @@
 (define lst1 (list 1 2 3 4))
 (define lst2 (reverse! lst1))
 
-(check-equal? lst1 '(1))
-(check-equal? lst2 '(4 3 2 1))
+(test-equal '(1) lst1)
+(test-equal '(4 3 2 1) lst2)
 
-(check-equal? (reverse! '()) '())
+(test-equal '() (reverse! '()))
 
-(check-tail-exn type-exception? (lambda () (reverse! #f)))
+(test-error-tail type-exception? (reverse! #f))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (reverse!)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (reverse! lst1 #f)))
+(test-error-tail wrong-number-of-arguments-exception? (reverse!))
+(test-error-tail wrong-number-of-arguments-exception? (reverse! lst1 #f))
 

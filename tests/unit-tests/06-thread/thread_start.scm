@@ -7,33 +7,29 @@
 (define (waste-time n)
   (if (> n 0)
       (begin
-        (integer-sqrt num) ;; waste some time
+        (integer-sqrt num)
+        ;; waste some time
         (waste-time (- n 1)))))
 
 (define var 0)
 
-(define t1
-  (make-mythread))
+(define t1 (make-mythread))
 
-(define t2
-  (make-thread
-   (lambda ()
-     (waste-time 200)
-     (set! var 1))))
+(define t2 (make-thread (lambda () (waste-time 200) (set! var 1))))
 
-(check-tail-exn uninitialized-thread-exception? (lambda () (thread-start! t1)))
+(test-error-tail uninitialized-thread-exception? (thread-start! t1))
 
 (thread-start! t2)
 
-(check-tail-exn started-thread-exception? (lambda () (thread-start! t2)))
+(test-error-tail started-thread-exception? (thread-start! t2))
 
 (waste-time 400)
 
-(check-equal? var 1)
+(test-equal 1 var)
 
-(check-tail-exn started-thread-exception? (lambda () (thread-start! t2)))
+(test-error-tail started-thread-exception? (thread-start! t2))
 
-(check-tail-exn type-exception? (lambda () (thread-start! #f)))
+(test-error-tail type-exception? (thread-start! #f))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (thread-start!)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (thread-start! #f #f)))
+(test-error-tail wrong-number-of-arguments-exception? (thread-start!))
+(test-error-tail wrong-number-of-arguments-exception? (thread-start! #f #f))

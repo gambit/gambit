@@ -1,49 +1,50 @@
 (include "#.scm")
 
 (define p
-  (exit0-when-unimplemented-operation-os-exception
-   (lambda ()
-     (open-udp))))
+  (exit0-when-unimplemented-operation-os-exception (lambda () (open-udp))))
 
 (define ssi1 #f)
 (define ssi2 #f)
 
 (set! ssi1 (udp-local-socket-info p))
+(parameterize ((current-input-port p)) (set! ssi2 (udp-local-socket-info)))
+
+(test-assert (eq? #t (socket-info? ssi1)))
+(test-assert (eq? #t (socket-info? ssi2)))
+
+(test-equal ssi2 ssi1)
+
+(test-equal #f (udp-source-socket-info p))
 (parameterize ((current-input-port p))
-  (set! ssi2 (udp-local-socket-info)))
-
-(check-true (socket-info? ssi1))
-(check-true (socket-info? ssi2))
-
-(check-equal? ssi1 ssi2)
-
-(check-equal? (udp-source-socket-info p) #f)
-(parameterize ((current-input-port p))
-  (check-equal? (udp-source-socket-info) #f))
+  (test-equal #f (udp-source-socket-info)))
 
 (write '#u8(11 22 33) p)
 
-(check-equal? (udp-source-socket-info p) #f)
+(test-equal #f (udp-source-socket-info p))
 (parameterize ((current-input-port p))
-  (check-equal? (udp-source-socket-info) #f))
+  (test-equal #f (udp-source-socket-info)))
 
-(check-equal? (read p) '#u8(11 22 33))
+(test-equal '#u8(11 22 33) (read p))
 
 (define ssi3 (udp-source-socket-info p))
 
-(check-equal? ssi3 ssi1)
+(test-equal ssi1 ssi3)
 
 (write '#u8(44 55 66 77) p)
-(check-equal? (read p) '#u8(44 55 66 77))
+(test-equal '#u8(44 55 66 77) (read p))
 
 (define ssi4 (udp-source-socket-info p))
 
-(check-eq? ssi4 ssi3)
+(test-eq ssi3 ssi4)
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (udp-local-socket-info 1 2)))
+(test-error-tail
+ wrong-number-of-arguments-exception?
+ (udp-local-socket-info 1 2))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (udp-source-socket-info 1 2)))
+(test-error-tail
+ wrong-number-of-arguments-exception?
+ (udp-source-socket-info 1 2))
 
-(check-tail-exn type-exception? (lambda () (udp-local-socket-info #f)))
+(test-error-tail type-exception? (udp-local-socket-info #f))
 
-(check-tail-exn type-exception? (lambda () (udp-source-socket-info #f)))
+(test-error-tail type-exception? (udp-source-socket-info #f))

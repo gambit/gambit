@@ -1,15 +1,15 @@
 (include "#.scm")
 
-(check-eqv? (##fxmax 1) 1)
-(check-eqv? (##fxmax 1 11 22) 22)
-(check-eqv? (##fxmax 1 11 -22) 11)
+(test-eqv 1 (##fxmax 1))
+(test-eqv 22 (##fxmax 1 11 22))
+(test-eqv 11 (##fxmax 1 11 -22))
 
-(check-eqv? (fxmax 1) 1)
-(check-eqv? (fxmax 1 11 22) 22)
-(check-eqv? (fxmax 1 11 -22) 11)
+(test-eqv 1 (fxmax 1))
+(test-eqv 22 (fxmax 1 11 22))
+(test-eqv 11 (fxmax 1 11 -22))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxmax)))
+(test-error-tail wrong-number-of-arguments-exception? (fxmax))
 
-(check-tail-exn type-exception? (lambda () (fxmax 1/2)))
-(check-tail-exn type-exception? (lambda () (fxmax 0.0)))
-(check-tail-exn type-exception? (lambda () (fxmax 0.5)))
+(test-error-tail type-exception? (fxmax 1/2))
+(test-error-tail type-exception? (fxmax 0.))
+(test-error-tail type-exception? (fxmax .5))

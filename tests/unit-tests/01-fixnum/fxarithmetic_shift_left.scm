@@ -1,21 +1,25 @@
 (include "#.scm")
 
-(check-eqv? (##fxarithmetic-shift-left 1 3) 8)
-(check-eqv? (##fxarithmetic-shift-left 1 6) 64)
-(check-eqv? (##fxarithmetic-shift-left 1 9) 512)
-(check-eqv? (##fxarithmetic-shift-left (##greatest-fixnum) 0) (##greatest-fixnum))
+(test-eqv 8 (##fxarithmetic-shift-left 1 3))
+(test-eqv 64 (##fxarithmetic-shift-left 1 6))
+(test-eqv 512 (##fxarithmetic-shift-left 1 9))
+(test-eqv
+ (##greatest-fixnum)
+ (##fxarithmetic-shift-left (##greatest-fixnum) 0))
 
-(check-eqv? (fxarithmetic-shift-left 1 3) 8)
-(check-eqv? (fxarithmetic-shift-left 1 6) 64)
-(check-eqv? (fxarithmetic-shift-left 1 9) 512)
-(check-eqv? (fxarithmetic-shift-left (##greatest-fixnum) 0) (##greatest-fixnum))
+(test-eqv 8 (fxarithmetic-shift-left 1 3))
+(test-eqv 64 (fxarithmetic-shift-left 1 6))
+(test-eqv 512 (fxarithmetic-shift-left 1 9))
+(test-eqv (##greatest-fixnum) (fxarithmetic-shift-left (##greatest-fixnum) 0))
 
-(check-tail-exn fixnum-overflow-exception? (lambda () (fxarithmetic-shift-left 1 100)))
-(check-tail-exn fixnum-overflow-exception? (lambda () (fxarithmetic-shift-left (##greatest-fixnum) 1)))
+(test-error-tail fixnum-overflow-exception? (fxarithmetic-shift-left 1 100))
+(test-error-tail
+ fixnum-overflow-exception?
+ (fxarithmetic-shift-left (##greatest-fixnum) 1))
 
-(check-tail-exn range-exception? (lambda () (fxarithmetic-shift-left 1 -9)))
+(test-error-tail range-exception? (fxarithmetic-shift-left 1 -9))
 
-(check-tail-exn type-exception? (lambda () (fxarithmetic-shift-left 0.0 1)))
-(check-tail-exn type-exception? (lambda () (fxarithmetic-shift-left 0.5 1)))
-(check-tail-exn type-exception? (lambda () (fxarithmetic-shift-left 1 0.5)))
-(check-tail-exn type-exception? (lambda () (fxarithmetic-shift-left 1 1/2)))
+(test-error-tail type-exception? (fxarithmetic-shift-left 0. 1))
+(test-error-tail type-exception? (fxarithmetic-shift-left .5 1))
+(test-error-tail type-exception? (fxarithmetic-shift-left 1 .5))
+(test-error-tail type-exception? (fxarithmetic-shift-left 1 1/2))

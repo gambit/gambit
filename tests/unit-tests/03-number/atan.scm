@@ -2,127 +2,110 @@
 
 ;;; Test special values
 
-(check-eqv? (atan 0) 0)
+(test-eqv 0 (atan 0))
 
 ;;; Test branch cuts
 
-(check-= (atan -2i)    (test-atan -2i))
-(check-= (atan +0.-2i) (test-atan 0.-2i))
-(check-= (atan -0.-2i) (test-atan -0.-2i))
-(check-= (atan +2i)    (test-atan +2i))
-(check-= (atan +0.+2i) (test-atan 0.+2i))
-(check-= (atan -0.+2i) (test-atan -0.+2i))
+(test-approximate (test-atan -2i) (atan -2i) 1e-12)
+(test-approximate (test-atan 0.-2i) (atan 0.-2i) 1e-12)
+(test-approximate (test-atan -0.-2i) (atan -0.-2i) 1e-12)
+(test-approximate (test-atan +2i) (atan +2i) 1e-12)
+(test-approximate (test-atan 0.+2i) (atan 0.+2i) 1e-12)
+(test-approximate (test-atan -0.+2i) (atan -0.+2i) 1e-12)
 
 ;;; Test for a previous bug
 
-(check-eqv? (atan +inf.0 (expt 3 100000)) (macro-inexact-+pi/2))
+(test-eqv (macro-inexact-+pi/2) (atan +inf.0 (expt 3 100000)))
 
 ;;; Test for accuracy near 0
 
-(check-eqv? (atan 1e-30+1e-40i) 1e-30+1e-40i)
+(test-eqv 1e-30+1e-40i (atan 1e-30+1e-40i))
 
 ;;; Test two-arg atan
 
-#|
-
-If the implementation supports IEEE floating-point arithmetic (IEC 60559), 
-
-If y is +/-0 and x is negative or -0, +/-pi is returned
-If y is +/-0 and x is positive or +0, +/-0 is returned
-If y is +/-inf and x is finite, +/-pi/2 is returned
-If y is +/-inf and x is -inf, +/-3pi/4 is returned
-If y is +/-inf and x is +inf, +/-pi/4 is returned
-If x is +/-0 and y is negative, -pi/2 is returned
-If x is +/-0 and y is positive, +pi/2 is returned
-If x is -inf and y is finite and positive, +pi is returned
-If x is -inf and y is finite and negative, -pi is returned
-If x is +inf and y is finite and positive, +0 is returned
-If x is +inf and y is finite and negative, -0 is returned
-If either x is NaN or y is NaN, NaN is returned
-
-|#
 
 ;; If y is +/-0 and x is negative or -0, +/-pi is returned
 
-(check-= (atan +0. -1.) (macro-inexact-+pi))
-(check-= (atan +0. -0.) (macro-inexact-+pi))
-(check-= (atan -0. -1.) (macro-inexact--pi))
-(check-= (atan -0. -0.) (macro-inexact--pi))
+(test-approximate (macro-inexact-+pi) (atan 0. -1.) 1e-12)
+(test-approximate (macro-inexact-+pi) (atan 0. -0.) 1e-12)
+(test-approximate (macro-inexact--pi) (atan -0. -1.) 1e-12)
+(test-approximate (macro-inexact--pi) (atan -0. -0.) 1e-12)
 
 ;; If y is +/-0 and x is positive or +0, +/-0 is returned
 
-(check-eqv? (atan +0. +1.) +0.)
-(check-eqv? (atan +0. +0.) +0.)
-(check-eqv? (atan -0. +1.) -0.)
-(check-eqv? (atan -0. +0.) -0.)
+(test-eqv 0. (atan 0. 1.))
+(test-eqv 0. (atan 0. 0.))
+(test-eqv -0. (atan -0. 1.))
+(test-eqv -0. (atan -0. 0.))
 
 ;; If y is +/-inf and x is finite, +/-pi/2 is returned
 
-(check-= (atan +inf.0 1.) (macro-inexact-+pi/2))
-(check-= (atan -inf.0 1.) (macro-inexact--pi/2))
+(test-approximate (macro-inexact-+pi/2) (atan +inf.0 1.) 1e-12)
+(test-approximate (macro-inexact--pi/2) (atan -inf.0 1.) 1e-12)
 
 ;; If y is +/-inf and x is -inf, +/-3pi/4 is returned
 
-(check-= (atan +inf.0 -inf.0) (macro-inexact-+3pi/4))
-(check-= (atan -inf.0 -inf.0) (macro-inexact--3pi/4))
+(test-approximate (macro-inexact-+3pi/4) (atan +inf.0 -inf.0) 1e-12)
+(test-approximate (macro-inexact--3pi/4) (atan -inf.0 -inf.0) 1e-12)
 
 ;; If y is +/-inf and x is +inf, +/-pi/4 is returned
 
-(check-= (atan +inf.0 +inf.0) (macro-inexact-+pi/4))
-(check-= (atan -inf.0 +inf.0) (macro-inexact--pi/4))
+(test-approximate (macro-inexact-+pi/4) (atan +inf.0 +inf.0) 1e-12)
+(test-approximate (macro-inexact--pi/4) (atan -inf.0 +inf.0) 1e-12)
 
 ;; If x is -inf and y is finite and positive, +pi is returned
 
-(check-= (atan 1.0 -inf.0) (macro-inexact-+pi))
+(test-approximate (macro-inexact-+pi) (atan 1. -inf.0) 1e-12)
 
 ;; If x is -inf and y is finite and negative, -pi is returned
 
-(check-= (atan -1. -inf.0) (macro-inexact--pi))
+(test-approximate (macro-inexact--pi) (atan -1. -inf.0) 1e-12)
 
 ;; If x is +inf and y is finite and positive, +0 is returned
 
-(check-eqv? (atan +1. +inf.0) +0.)
+(test-eqv 0. (atan 1. +inf.0))
 
 ;; If x is +inf and y is finite and negative, -0 is returned
 
-(check-eqv? (atan -1. +inf.0) -0.)
+(test-eqv -0. (atan -1. +inf.0))
 
 ;; If either x is NaN or y is NaN, NaN is returned
 
-(check-eq? (isnan? (atan +nan.0 1.)) #t)
-(check-eq? (isnan? (atan 1. +nan.0)) #t)
+(test-eq #t (isnan? (atan +nan.0 1.)))
+(test-eq #t (isnan? (atan 1. +nan.0)))
 
 ;;; R7RS tests
 
-(check-eqv? (atan  0   1 )  0)
-(check-eqv? (atan +0.  1 ) +0.)
-(check-eqv? (atan -0.  1 ) -0.)
-(check-=    (atan  1   1 ) (macro-inexact-+pi/4))
-(check-=    (atan  1   0 ) (macro-inexact-+pi/2))
-(check-=    (atan  1  -1 ) (macro-inexact-+3pi/4))
-(check-=    (atan  0  -1 ) (macro-inexact-+pi))
-(check-=    (atan +0. -1 ) (macro-inexact-+pi))
-(check-=    (atan -0. -1 ) (macro-inexact--pi))
-(check-=    (atan -1  -1 ) (macro-inexact--3pi/4))
-(check-=    (atan -1   0 ) (macro-inexact--pi/2))
-(check-=    (atan -1   1 ) (macro-inexact--pi/4))
-(check-eqv? (atan  0   0 )  0) ;; undefined in R7RS
-(check-eqv? (atan +0. +0.) +0.)
-(check-eqv? (atan -0. +0.) -0.)
-(check-=    (atan +0. -0.) (macro-inexact-+pi))
-(check-=    (atan -0. -0.) (macro-inexact--pi))
-(check-=    (atan +0.  0 ) (macro-inexact-+pi/2))
-(check-=    (atan -0.  0 ) (macro-inexact--pi/2))
+(test-eqv 0 (atan 0 1))
+(test-eqv 0. (atan 0. 1))
+(test-eqv -0. (atan -0. 1))
+(test-approximate (macro-inexact-+pi/4) (atan 1 1) 1e-12)
+(test-approximate (macro-inexact-+pi/2) (atan 1 0) 1e-12)
+(test-approximate (macro-inexact-+3pi/4) (atan 1 -1) 1e-12)
+(test-approximate (macro-inexact-+pi) (atan 0 -1) 1e-12)
+(test-approximate (macro-inexact-+pi) (atan 0. -1) 1e-12)
+(test-approximate (macro-inexact--pi) (atan -0. -1) 1e-12)
+(test-approximate (macro-inexact--3pi/4) (atan -1 -1) 1e-12)
+(test-approximate (macro-inexact--pi/2) (atan -1 0) 1e-12)
+(test-approximate (macro-inexact--pi/4) (atan -1 1) 1e-12)
+(test-eqv 0 (atan 0 0))
+;; undefined in R7RS
+(test-eqv 0. (atan 0. 0.))
+(test-eqv -0. (atan -0. 0.))
+(test-approximate (macro-inexact-+pi) (atan 0. -0.) 1e-12)
+(test-approximate (macro-inexact--pi) (atan -0. -0.) 1e-12)
+(test-approximate (macro-inexact-+pi/2) (atan 0. 0) 1e-12)
+(test-approximate (macro-inexact--pi/2) (atan -0. 0) 1e-12)
 
 ;;; Test exceptions
 
-(check-tail-exn type-exception? (lambda () (atan 'a)))
+(test-error-tail type-exception? (atan 'a))
 
-(check-tail-exn range-exception? (lambda () (atan -i)))
-(check-tail-exn range-exception? (lambda () (atan +i)))
+(test-error-tail range-exception? (atan -i))
+(test-error-tail range-exception? (atan +i))
 
-(check-tail-exn type-exception? (lambda () (atan 'a 2)))
-(check-tail-exn type-exception? (lambda () (atan 2 'a)))
-(check-tail-exn type-exception? (lambda () (atan 2 +i)))
-(check-tail-exn type-exception? (lambda () (atan +i 2)))
+(test-error-tail type-exception? (atan 'a 2))
+(test-error-tail type-exception? (atan 2 'a))
+(test-error-tail type-exception? (atan 2 +i))
+(test-error-tail type-exception? (atan +i 2))
 

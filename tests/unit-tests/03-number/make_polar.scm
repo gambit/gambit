@@ -2,8 +2,8 @@
 
 ;;; Test exceptions
 
-(check-tail-exn type-exception? (lambda () (make-polar 'a 2)))
-(check-tail-exn type-exception? (lambda () (make-polar 2 'a)))
-(check-tail-exn type-exception? (lambda () (make-polar 2 +i)))
-(check-tail-exn type-exception? (lambda () (make-polar +i 2)))
+(test-error-tail type-exception? (make-polar 'a 2))
+(test-error-tail type-exception? (make-polar 2 'a))
+(test-error-tail type-exception? (make-polar 2 +i))
+(test-error-tail type-exception? (make-polar +i 2))
 

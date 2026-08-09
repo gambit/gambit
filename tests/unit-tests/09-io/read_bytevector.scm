@@ -26,20 +26,21 @@
 
 (test-equal
  '#u8(97 98 99 100)
- (call-with-input-u8vector '#u8(97 98 99 100) (lambda (port) (read-bytevector 4 port))))
+ (call-with-input-u8vector
+  '#u8(97 98 99 100)
+  (lambda (port) (read-bytevector 4 port))))
 
 (test-equal
  '#u8(97 98 99 100)
- (call-with-input-u8vector '#u8(97 98 99 100) (lambda (port ) (read-bytevector 9 port))))
+ (call-with-input-u8vector
+  '#u8(97 98 99 100)
+  (lambda (port) (read-bytevector 9 port))))
 
-(test-error-tail wrong-number-of-arguments-exception?
-                 (read-bytevector))
-(test-error-tail wrong-number-of-arguments-exception?
-                 (read-bytevector 4 (current-input-port) #f))
+(test-error-tail wrong-number-of-arguments-exception? (read-bytevector))
+(test-error-tail
+ wrong-number-of-arguments-exception?
+ (read-bytevector 4 (current-input-port) #f))
 
-(test-error-tail type-exception?
-                 (read-bytevector #f))
-(test-error-tail type-exception?
-                 (read-bytevector #f (current-input-port)))
-(test-error-tail type-exception?
-                 (read-bytevector 4 #f))
+(test-error-tail type-exception? (read-bytevector #f))
+(test-error-tail type-exception? (read-bytevector #f (current-input-port)))
+(test-error-tail type-exception? (read-bytevector 4 #f))

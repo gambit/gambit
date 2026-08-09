@@ -1,12 +1,12 @@
 (include "#.scm")
 
-(check-equal? (exact 123) 123)
-(check-equal? (exact 1/2) 1/2)
-(check-equal? (exact 123.0) 123)
-(check-equal? (exact 0.5) 1/2)
-(check-equal? (exact 0.5+0.75i) 1/2+3/4i)
+(test-equal 123 (exact 123))
+(test-equal 1/2 (exact 1/2))
+(test-equal 123 (exact 123.))
+(test-equal 1/2 (exact .5))
+(test-equal 1/2+3/4i (exact .5+.75i))
 
 ;;; Test exceptions
 
-(check-tail-exn type-exception? (lambda () (exact 'a)))
+(test-error-tail type-exception? (exact 'a))
 

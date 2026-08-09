@@ -5,25 +5,29 @@
 (define lst1 '(11 22 33))
 (define lst2 (list 11 22 33 44))
 
-(check-equal? (take! (append lst1 '()) 0) '())
-(check-equal? (take! (append lst1 '()) 1) '(11))
-(check-equal? (take! (append lst1 '()) 2) '(11 22))
-(check-equal? (take! (append lst1 '()) 3) '(11 22 33))
+(test-equal '() (take! (append lst1 '()) 0))
+(test-equal '(11) (take! (append lst1 '()) 1))
+(test-equal '(11 22) (take! (append lst1 '()) 2))
+(test-equal '(11 22 33) (take! (append lst1 '()) 3))
 
-(check-equal? (take! (append lst2 '()) 0) '())
-(check-equal? (take! (append lst2 '()) 1) '(11))
-(check-equal? (take! (append lst2 '()) 2) '(11 22))
-(check-equal? (take! (append lst2 '()) 3) '(11 22 33))
-(check-equal? (take! (append lst2 '()) 4) '(11 22 33 44))
+(test-equal '() (take! (append lst2 '()) 0))
+(test-equal '(11) (take! (append lst2 '()) 1))
+(test-equal '(11 22) (take! (append lst2 '()) 2))
+(test-equal '(11 22 33) (take! (append lst2 '()) 3))
+(test-equal '(11 22 33 44) (take! (append lst2 '()) 4))
 
-(check-equal? (take! bool 0) '())
-(check-equal? (take! (cons 1 (cons 2 3)) 0) '())
-(check-equal? (take! (cons 1 (cons 2 3)) 1) '(1))
-(check-equal? (take! (cons 1 (cons 2 3)) 2) '(1 2))
+(test-equal '() (take! bool 0))
+(test-equal '() (take! (cons 1 (cons 2 3)) 0))
+(test-equal '(1) (take! (cons 1 (cons 2 3)) 1))
+(test-equal '(1 2) (take! (cons 1 (cons 2 3)) 2))
 
-(check-tail-exn range-exception? (lambda () (take! (append lst1 '()) 4)))
-(check-tail-exn range-exception? (lambda () (take! (append lst1 '()) -1)))
+(test-error-tail range-exception? (take! (append lst1 '()) 4))
+(test-error-tail range-exception? (take! (append lst1 '()) -1))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (take!)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (take! (append lst1 '()))))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (take! (append lst1 '()) 0 0)))
+(test-error-tail wrong-number-of-arguments-exception? (take!))
+(test-error-tail
+ wrong-number-of-arguments-exception?
+ (take! (append lst1 '())))
+(test-error-tail
+ wrong-number-of-arguments-exception?
+ (take! (append lst1 '()) 0 0))

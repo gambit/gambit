@@ -2,6 +2,6 @@
 
 ;;; Test exceptions
 
-(check-tail-exn type-exception? (lambda () (abs #\c)))
-(check-tail-exn type-exception? (lambda () (abs +i)))
+(test-error-tail type-exception? (abs #\c))
+(test-error-tail type-exception? (abs +i))
 

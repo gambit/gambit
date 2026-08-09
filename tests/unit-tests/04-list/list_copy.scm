@@ -2,11 +2,11 @@
 
 (define lst1 (cons 1 (cons 2 3)))
 
-(check-equal? (list-copy lst1) '(1 2 . 3))
-(check-false (eq? (list-copy lst1) lst1))
+(test-equal '(1 2 . 3) (list-copy lst1))
+(test-assert (eq? #f (eq? (list-copy lst1) lst1)))
 
-(check-equal? (list-copy #f) #f)
-(check-equal? (list-copy 'foo) 'foo)
+(test-equal #f (list-copy #f))
+(test-equal 'foo (list-copy 'foo))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (list-copy)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (list-copy lst1 #f)))
+(test-error-tail wrong-number-of-arguments-exception? (list-copy))
+(test-error-tail wrong-number-of-arguments-exception? (list-copy lst1 #f))

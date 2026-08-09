@@ -1,4 +1,4 @@
 (include "#.scm")
 
-(check-false #f)
-(check-false (odd? 0))
+(test-assert (eq? #f #f))
+(test-assert (eq? #f (odd? 0)))

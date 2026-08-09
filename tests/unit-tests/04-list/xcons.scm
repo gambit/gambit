@@ -1,7 +1,7 @@
 (include "#.scm")
 
-(check-equal? (xcons 1 2) '(2 . 1))
+(test-equal '(2 . 1) (xcons 1 2))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (xcons)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (xcons 1)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (xcons 1 2 3)))
+(test-error-tail wrong-number-of-arguments-exception? (xcons))
+(test-error-tail wrong-number-of-arguments-exception? (xcons 1))
+(test-error-tail wrong-number-of-arguments-exception? (xcons 1 2 3))

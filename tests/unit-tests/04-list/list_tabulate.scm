@@ -8,21 +8,21 @@
 
 (define (f x) (+ x 100))
 
-(check-equal? (list-tabulate 0 f) '())
-(check-equal? (list-tabulate 1 f) '(100))
-(check-equal? (list-tabulate 2 f) '(100 101))
-(check-equal? (list-tabulate 3 f) '(100 101 102))
+(test-equal '() (list-tabulate 0 f))
+(test-equal '(100) (list-tabulate 1 f))
+(test-equal '(100 101) (list-tabulate 2 f))
+(test-equal '(100 101 102) (list-tabulate 3 f))
 
-(check-equal? (list-tabulate 0 list) '())
-(check-equal? (list-tabulate 1 list) '((0)))
-(check-equal? (list-tabulate 2 list) '((0) (1)))
-(check-equal? (list-tabulate 3 list) '((0) (1) (2)))
+(test-equal '() (list-tabulate 0 list))
+(test-equal '((0)) (list-tabulate 1 list))
+(test-equal '((0) (1)) (list-tabulate 2 list))
+(test-equal '((0) (1) (2)) (list-tabulate 3 list))
 
-(check-tail-exn type-exception? (lambda () (list-tabulate bool f)))
-(check-tail-exn type-exception? (lambda () (list-tabulate 0 bool)))
+(test-error-tail type-exception? (list-tabulate bool f))
+(test-error-tail type-exception? (list-tabulate 0 bool))
 
-(check-tail-exn range-exception? (lambda () (list-tabulate -1 f)))
+(test-error-tail range-exception? (list-tabulate -1 f))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (list-tabulate)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (list-tabulate 0)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (list-tabulate 0 f 0)))
+(test-error-tail wrong-number-of-arguments-exception? (list-tabulate))
+(test-error-tail wrong-number-of-arguments-exception? (list-tabulate 0))
+(test-error-tail wrong-number-of-arguments-exception? (list-tabulate 0 f 0))

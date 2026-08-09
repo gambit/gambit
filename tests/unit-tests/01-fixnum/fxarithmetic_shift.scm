@@ -1,22 +1,28 @@
 (include "#.scm")
 
-(check-eqv? (##fxarithmetic-shift 1 0) 1)
-(check-eqv? (##fxarithmetic-shift 1 1) 2)
-(check-eqv? (##fxarithmetic-shift 1 3) 8)
-(check-eqv? (##fxarithmetic-shift 1 4) 16)
+(test-eqv 1 (##fxarithmetic-shift 1 0))
+(test-eqv 2 (##fxarithmetic-shift 1 1))
+(test-eqv 8 (##fxarithmetic-shift 1 3))
+(test-eqv 16 (##fxarithmetic-shift 1 4))
 
-(check-eqv? (fxarithmetic-shift 1 0) 1)
-(check-eqv? (fxarithmetic-shift 1 1) 2)
-(check-eqv? (fxarithmetic-shift 1 3) 8)
-(check-eqv? (fxarithmetic-shift 1 4) 16)
+(test-eqv 1 (fxarithmetic-shift 1 0))
+(test-eqv 2 (fxarithmetic-shift 1 1))
+(test-eqv 8 (fxarithmetic-shift 1 3))
+(test-eqv 16 (fxarithmetic-shift 1 4))
 
-(check-tail-exn type-exception? (lambda () (fxarithmetic-shift 0.0 1)))
-(check-tail-exn type-exception? (lambda () (fxarithmetic-shift 0.5 1)))
-(check-tail-exn type-exception? (lambda () (fxarithmetic-shift 1 0.5)))
-(check-tail-exn type-exception? (lambda () (fxarithmetic-shift 1 1/2)))
+(test-error-tail type-exception? (fxarithmetic-shift 0. 1))
+(test-error-tail type-exception? (fxarithmetic-shift .5 1))
+(test-error-tail type-exception? (fxarithmetic-shift 1 .5))
+(test-error-tail type-exception? (fxarithmetic-shift 1 1/2))
 
-(check-tail-exn fixnum-overflow-exception? (lambda () (fxarithmetic-shift (##least-fixnum) 1)))
-(check-tail-exn fixnum-overflow-exception? (lambda () (fxarithmetic-shift (##greatest-fixnum) 1)))
+(test-error-tail
+ fixnum-overflow-exception?
+ (fxarithmetic-shift (##least-fixnum) 1))
+(test-error-tail
+ fixnum-overflow-exception?
+ (fxarithmetic-shift (##greatest-fixnum) 1))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxarithmetic-shift)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (fxarithmetic-shift 1 1 1)))
+(test-error-tail wrong-number-of-arguments-exception? (fxarithmetic-shift))
+(test-error-tail
+ wrong-number-of-arguments-exception?
+ (fxarithmetic-shift 1 1 1))

@@ -1,7 +1,7 @@
 (include "#.scm")
 
-(check-eqv? (##fxwraplogical-shift-right? 0 0) 0)
-(check-eqv? (##fxwraplogical-shift-right? -1 1) (##greatest-fixnum))
-(check-eqv? (##fxwraplogical-shift-right? 22 2) 5)
-(check-eqv? (##fxwraplogical-shift-right? 33 4) 2)
-(check-eqv? (##fxwraplogical-shift-right? 1 (##least-fixnum)) #f)
+(test-eqv 0 (##fxwraplogical-shift-right? 0 0))
+(test-eqv (##greatest-fixnum) (##fxwraplogical-shift-right? -1 1))
+(test-eqv 5 (##fxwraplogical-shift-right? 22 2))
+(test-eqv 2 (##fxwraplogical-shift-right? 33 4))
+(test-eqv #f (##fxwraplogical-shift-right? 1 (##least-fixnum)))

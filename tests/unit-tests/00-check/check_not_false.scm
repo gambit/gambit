@@ -1,4 +1,4 @@
 (include "#.scm")
 
-(check-not-false #t)
-(check-not-false (+ 3 -3))
+(test-assert (not (eq? #f #t)))
+(test-assert (not (eq? #f (+ 3 -3))))

@@ -1,16 +1,14 @@
 (include "#.scm")
 
-(check-equal? (filter even? '()) '())
+(test-equal '() (filter even? '()))
 
 (let ((nums (iota 20)))
-  (check-equal? (filter even? nums)
-                '(0 2 4 6 8 10 12 14 16 18))
-  (check-equal? nums (iota 20)))
+  (test-equal '(0 2 4 6 8 10 12 14 16 18) (filter even? nums))
+  (test-equal (iota 20) nums))
 
-(check-equal? (filter odd? (iota 20))
-              '(1 3 5 7 9 11 13 15 17 19))
+(test-equal '(1 3 5 7 9 11 13 15 17 19) (filter odd? (iota 20)))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (filter)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (filter 1)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (filter 1 2 3)))
-(check-tail-exn type-exception? (lambda () (filter odd? '(1 . 2))))
+(test-error-tail wrong-number-of-arguments-exception? (filter))
+(test-error-tail wrong-number-of-arguments-exception? (filter 1))
+(test-error-tail wrong-number-of-arguments-exception? (filter 1 2 3))
+(test-error-tail type-exception? (filter odd? '(1 . 2)))

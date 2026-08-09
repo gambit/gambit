@@ -22,20 +22,20 @@
 (define lst7 (list 11 22 33))
 (set-cdr! (cddr lst7) (cdr lst7))
 
-(check-false (proper-list? str))
-(check-false (proper-list? int))
-(check-false (proper-list? bool))
+(test-assert (eq? #f (proper-list? str)))
+(test-assert (eq? #f (proper-list? int)))
+(test-assert (eq? #f (proper-list? bool)))
 
-(check-true  (proper-list? lst0))
-(check-true  (proper-list? lst1))
-(check-true  (proper-list? lst2))
+(test-assert (eq? #t (proper-list? lst0)))
+(test-assert (eq? #t (proper-list? lst1)))
+(test-assert (eq? #t (proper-list? lst2)))
 
-(check-false (proper-list? lst3))
+(test-assert (eq? #f (proper-list? lst3)))
 
-(check-false (proper-list? lst4))
-(check-false (proper-list? lst5))
-(check-false (proper-list? lst6))
-(check-false (proper-list? lst7))
+(test-assert (eq? #f (proper-list? lst4)))
+(test-assert (eq? #f (proper-list? lst5)))
+(test-assert (eq? #f (proper-list? lst6)))
+(test-assert (eq? #f (proper-list? lst7)))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (proper-list?)))
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (proper-list? bool bool)))
+(test-error-tail wrong-number-of-arguments-exception? (proper-list?))
+(test-error-tail wrong-number-of-arguments-exception? (proper-list? bool bool))

@@ -1,7 +1,7 @@
 (include "#.scm")
 
-(check-true (thread? (current-thread)))
+(test-assert (eq? #t (thread? (current-thread))))
 
-(check-eq? (current-thread) (current-thread))
+(test-eq (current-thread) (current-thread))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (current-thread #f)))
+(test-error-tail wrong-number-of-arguments-exception? (current-thread #f))

@@ -4,10 +4,10 @@
 
 (define m2 (make-mutex 'm2))
 
-(check-equal? (mutex-state m1) 'not-abandoned)
-(check-equal? (mutex-state m2) 'not-abandoned)
+(test-equal 'not-abandoned (mutex-state m1))
+(test-equal 'not-abandoned (mutex-state m2))
 
-(check-equal? (mutex-name m1) (void))
-(check-equal? (mutex-name m2) 'm2)
+(test-equal (void) (mutex-name m1))
+(test-equal 'm2 (mutex-name m2))
 
-(check-tail-exn wrong-number-of-arguments-exception? (lambda () (make-mutex #f #f)))
+(test-error-tail wrong-number-of-arguments-exception? (make-mutex #f #f))
