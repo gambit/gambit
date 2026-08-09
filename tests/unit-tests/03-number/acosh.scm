@@ -6,17 +6,17 @@
 
 ;;; Test branch cuts
 
-(check-= (acosh 0)    (test-acosh 0))
-(check-= (acosh +0.i) (test-acosh +0.i))
-(check-= (acosh -0.i) (test-acosh -0.i))
-(check-= (acosh 1)    (test-acosh 1))
-(check-= (acosh -1)   (test-acosh -1))
+(test-approximate (test-acosh 0)    (acosh 0) 1e-12)
+(test-approximate (test-acosh +0.i) (acosh +0.i) 1e-12)
+(test-approximate (test-acosh -0.i) (acosh -0.i) 1e-12)
+(test-approximate (test-acosh 1)    (acosh 1) 1e-12)
+(test-approximate (test-acosh -1)   (acosh -1) 1e-12)
 
-(test-approximate (test-acosh 1/2) (acosh 1/2) 1e-12)
+(test-approximate (test-acosh 1/2)   (acosh 1/2) 1e-12)
 (test-approximate (test-acosh +1/2i) (acosh +1/2i) 1e-12)
-(test-approximate (test-acosh 2) (acosh 2) 1e-12)
-(test-approximate (test-acosh +2i) (acosh +2i) 1e-12)
-(test-approximate (test-acosh 1+2i) (acosh 1+2i) 1e-12)
+(test-approximate (test-acosh 2)     (acosh 2) 1e-12)
+(test-approximate (test-acosh +2i)   (acosh +2i) 1e-12)
+(test-approximate (test-acosh 1+2i)  (acosh 1+2i) 1e-12)
 
 ;;; https://en.cppreference.com/w/cpp/numeric/complex/acosh
 

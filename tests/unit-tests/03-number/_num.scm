@@ -1543,7 +1543,7 @@
 (test-eqv `,(+ (##greatest-fixnum) 1) (- (##least-fixnum)))
 
 ;;; I should include the programs to generate the arguments to the
-;;; next tests
+;;; next tests. This is DEPRECATED code.
 #;
 (let ()
 
