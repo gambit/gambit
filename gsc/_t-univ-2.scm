@@ -3513,12 +3513,12 @@
 
                  (^return (^call-prim (^rts-method-use 'hostarray2list) keys)))))))))
        '()
-      (case (target-name (ctx-target ctx)) ;; constructor
-        ((python)
-         (lambda (ctx)
-           (^ "self.primdict = " (^new* (^rts-class-use 'hashtable) '()))))
-        (else
-         #f))))
+       (case (target-name (ctx-target ctx)) ;; constructor
+         ((python)
+          (lambda (ctx)
+            (^ "self.primdict = " (^new* (^rts-class-use 'hashtable) '()))))
+         (else
+          #f))))
 
     ((hashtable_weak_keys)
      (rts-class
@@ -5703,198 +5703,6 @@ EOF
                      (^glo-var-primitive-set! sym (^null))))
              (^return sym))))))
 
-    ;;deprecated:
-    #;
-    ((js2scm)
-     (rts-method
-      'js2scm
-      '(public)
-      'scmobj
-      (list (univ-field 'obj 'object))
-      "\n"
-      '()
-      (lambda (ctx)
-        (let ((obj (^local-var 'obj))
-              (alist (^local-var 'alist))
-              (key (^local-var 'key)))
-          (^
-           "  if (" obj " === void 0) {
-    return " (^void-obj) ";
-  } else if (typeof " obj " === 'boolean') {
-    return " (^boolean-box obj) ";
-  } else if (" obj " === null) {
-    return " (^null-obj) ";
-  } else if (typeof " obj " === 'number') {
-    if ((" obj "|0) === " obj " && " obj ">=-536870912 && " obj "<=536870911)
-      return " (^fixnum-box obj) ";
-    else
-      return " (^flonum-box obj) ";
-  } else if (typeof " obj " === 'function') {
-    return function () { return " (^call-prim
-                                   (^rts-method-use 'scm2js_call)
-                                   obj) "; };
-  } else if (typeof " obj " === 'string') {
-    return " (^string-box (^str-to-codes obj)) ";
-  } else if (typeof " obj " === 'object') {
-    if (" obj " instanceof Array) {
-      return " obj ".map(" (^rts-method-use 'js2scm) ");
-    } else {
-      var " alist " = " (^null-obj) ";
-      for (var " key " in " obj ") {
-        " alist " = " (^cons (^cons (^call-prim
-                                     (^rts-method-use 'js2scm)
-                                     key)
-                                    (^call-prim
-                                     (^rts-method-use 'js2scm)
-                                     (^array-index obj key)))
-                                   alist) ";
-      }
-      return " alist ";
-    }
-  } else {
-    throw 'js2scm error ' + " obj ";
-  }
-")))))
-
-    ;;deprecated:
-    #;
-    ((scm2js)
-     (rts-method
-      'scm2js
-      '(public)
-      'object
-      (list (univ-field 'obj 'scmobj))
-      "\n"
-      '()
-      (lambda (ctx)
-        #<<EOF
-  if (obj === void 0) {
-    return obj;
-  } else if (typeof obj === 'boolean') {
-    return obj;
-  } else if (obj === null) {
-    return obj;
-  } else if (typeof obj === 'number') {
-    return obj
-  } else if (typeof obj === 'function') {
-    return function () { return Gambit.js2scm_call(obj, Array.prototype.slice.call(arguments)); };
-  } else if (typeof obj === 'object') {
-    if (obj instanceof Array) {
-      return obj.map(Gambit.scm2js);
-    } else if (obj instanceof Gambit.String) {
-      return obj.toString();
-    } else if (obj instanceof Gambit.Flonum) {
-      return obj.val;
-    } else if (obj instanceof Gambit.Pair) {
-      var jsobj = {};
-      var i = 0;
-      while (obj instanceof Gambit.Pair) {
-        var elem = obj.car;
-        if (elem instanceof Gambit.Pair) {
-          jsobj[Gambit.scm2js(elem.car)] = Gambit.scm2js(elem.cdr);
-        } else {
-          jsobj[i] = Gambit.scm2js(elem);
-        }
-        ++i;
-        obj = obj.cdr;
-      }
-      return jsobj;
-    } else if (obj instanceof Gambit.Structure) {
-      throw 'Gambit.scm2js error (cannot convert Structure)';
-    } else {
-      throw 'Gambit.scm2js error ' + obj;
-    }
-  } else {
-    throw 'Gambit.scm2js error ' + obj;
-  }
-EOF
-)))
-
-    ;;deprecated:
-    #;
-    ((scm2js_call)
-     (rts-method
-      'scm2js_call
-      '(public)
-      'jumpable
-      (list (univ-field 'fn 'object))
-      "\n"
-      '()
-      (lambda (ctx)
-        #<<EOF
-
-  if (Gambit.nargs > 0) {
-    Gambit.stack[++Gambit.sp] = Gambit.r1;
-    if (Gambit.nargs > 1) {
-      Gambit.stack[++Gambit.sp] = Gambit.r2;
-      if (Gambit.nargs > 2) {
-        Gambit.stack[++Gambit.sp] = Gambit.r3;
-      }
-    }
-  }
-
-  var args = Gambit.stack.slice(Gambit.sp+1-Gambit.nargs, Gambit.sp+1);
-
-  Gambit.sp -= Gambit.nargs;
-
-  var ra = Gambit.heapify_cont(Gambit.r0);
-  var frame = Gambit.stack[0];
-
-  Gambit.r1 = Gambit.js2scm(fn.apply(null, args.map(Gambit.scm2js)));
-
-  Gambit.sp = -1;
-  Gambit.stack[++Gambit.sp] = frame;
-
-  return ra;
-
-EOF
-)))
-
-    ;;deprecated:
-    #;
-    ((js2scm_call)
-     (rts-method
-      'js2scm_call
-      '(public)
-      'object
-      (list (univ-field 'proc 'scmobj)
-            (univ-field 'args 'scmobj))
-      "\n"
-      '()
-      (lambda (ctx)
-        #<<EOF
-
-  Gambit.sp = -1;
-  Gambit.stack[++Gambit.sp] = Gambit.void_obj; // end of continuation marker
-
-  Gambit.nargs = args.length;
-
-  for (var i=0; i<Gambit.nargs; i++) {
-    Gambit.stack[++Gambit.sp] = Gambit.js2scm(args[i]);
-  }
-
-  if (Gambit.nargs > 0) {
-    if (Gambit.nargs > 1) {
-      if (Gambit.nargs > 2) {
-        Gambit.r3 = Gambit.stack[Gambit.sp];
-        --Gambit.sp;
-      }
-      Gambit.r2 = Gambit.stack[Gambit.sp];
-      --Gambit.sp;
-    }
-    Gambit.r1 = Gambit.stack[Gambit.sp];
-    --Gambit.sp;
-  }
-
-  Gambit.r0 = Gambit.underflow;
-
-  Gambit.trampoline(proc);
-
-  return Gambit.scm2js(Gambit.r1);
-
-EOF
-)))
-
      ((ffi)
       (case (target-name (ctx-target ctx))
        ((js)
@@ -5904,11 +5712,6 @@ EOF
         (univ-use-rtlib ctx 'scm2host)
         (univ-use-rtlib ctx 'procedure2host)
         (univ-use-rtlib ctx 'scm2host_call)
-        ;;deprecated:
-        ;;(univ-use-rtlib ctx 'js2scm)
-        ;;(univ-use-rtlib ctx 'scm2js)
-        ;;(univ-use-rtlib ctx 'js2scm_call)
-        ;;(univ-use-rtlib ctx 'scm2js_call)
         )
        ((python ruby php)
         (univ-use-rtlib ctx 'function2scm)
