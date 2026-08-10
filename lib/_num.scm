@@ -12695,14 +12695,29 @@ end-of-code
 (define-prim&proc (fl+* (x flonum)
                         (y flonum)
                         (z flonum))
-  (if (and (flfinite? x) (flfinite? y))
-      (if (flfinite? z)
+  (cond ((or (not (flfinite? x))
+             (not (flfinite? y))
+             (flzero? x)
+             (flzero? y))
+         ;; If one of x or y is not finite, then the answer is
+         ;; infinite or NaN, as determined by the floating-point
+         ;; operations.
+         ;; If x or y is a signed zero, and the other is finite,
+         ;; then the product will be a zero with the correct sign,
+         ;; and the sum will be correct, even if z is a signed zero.
+         (fl+ (fl* x y) z))
+        ((flfinite? z)
+         ;; everything is finite and x and y are nonzero.
           (let ((x (exact x))
                 (y (exact y))
                 (z (exact z)))
-            (inexact (+ (* x y) z)))
-          z)
-      (fl+ (fl* x y) z)))
+            ;; if (+ (* x y) z) is zero, i.e., z = -(x*y), then
+            ;; the result will be +0., which is correct.
+            (inexact (+ (* x y) z))))
+        (else
+         ;; x and y are finite, so adding (* x y) to the
+         ;; non-finite z is just z.
+         z)))
 
 (define-prim (##flabs x))
 (define-prim (##iflabs x)
