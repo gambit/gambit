@@ -12706,13 +12706,19 @@ end-of-code
          ;; then the product will be a zero with the correct sign,
          ;; and the sum will be correct, even if z is a signed zero.
          (fl+ (fl* x y) z))
+        ;; x and y are both finite and both nonzero
+        ((flzero? z)
+         ;; It doesn't matter whether z is +0. or -0.
+         ;; this expression gives the same result as the
+         ;; computation in the next cond clause.
+         (fl* x y))
+        ;; z is nonzero
         ((flfinite? z)
-         ;; everything is finite and x and y are nonzero.
           (let ((x (exact x))
                 (y (exact y))
                 (z (exact z)))
             ;; if (+ (* x y) z) is zero, i.e., z = -(x*y), then
-            ;; the result will be +0., which is correct.
+            ;; the result calculated here will be +0., which is correct.
             (inexact (+ (* x y) z))))
         (else
          ;; x and y are finite, so adding (* x y) to the
