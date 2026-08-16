@@ -1,0 +1,104 @@
+@c Copyright (c) 2024 by Macon Gambill, All Rights Reserved.
+@node Overview of pairs and lists
+@chapter Overview of pairs and lists
+This section may eventually provide introductory/high-level information
+about pairs and lists.
+
+@node Pair and list jargon
+@chapter Pair and list jargon
+
+@cindex the empty list @sortas{empty list} @seeentry{lists}
+@cindex lists @subentry the empty list @sortas{empty list, the}
+@deftp {@value{R7RS} type} {empty list}
+The empty list is a unique object whose external representation is
+@samp{()}.  Because the empty list is a unique object, it can never be
+newly allocated (@todo{reference goes here}).  The predicate
+@code{null?}  may be used to determine whether an object is the empty
+list (@pxref{Pair and list procedures}).
+
+The empty list is a @slanted{list}.
+@end deftp
+
+@cindex cons
+@cindex car
+@cindex cdr
+@cindex pairs @subentry @slanted{pair} type
+@deftp {@value{R7RS} type} pair
+A pair is an object with two fields.  It is constructed by the
+@code{cons} procedure; the content of its first field is selected by the
+@code{car} procedure; the content of its second field is selected by the
+@code{cdr} procedure.  The predicate @code{pair?} may be used to
+determine whether an object is a pair (@pxref{Pair and list
+procedures}).
+
+@cindex car @subentry car field
+@cindex cdr @subentry cdr field
+The first field of a pair is often referred to as its @quotedbl{car
+field} or just its @quotedbl{car}.  The second field of a pair is often
+referred to as its @quotedbl{cdr field} or just its @quotedbl{cdr}.
+
+@cindex car @subentry take the car
+@cindex cdr @subentry take the cdr
+@quotedbl{Take the car of @i{p}} means @quotedbl{use @code{car} to
+select the first field of @i{p}}.  @quotedbl{Take the cdr of @i{p}}
+means @quotedbl{use @code{cdr} to select the second field of @i{p}}.
+
+@cindex cons @subentry cons onto
+@quotedbl{Cons @i{a} onto @i{b}} means @quotedbl{use @code{cons} to
+construct a pair whose first field contains @i{a} and whose second field
+contains @i{b}}.
+
+@slanted{The empty list} is not a pair.  A pair is a @slanted{list} if
+and only if its cdr is a @slanted{list}.
+@end deftp
+
+@cindex lists @subentry @i{list} type
+@deftp {@value{R7RS} type} list
+@cindex lists @subentry termination of lists
+A list is either @slanted{the empty list} or a @slanted{pair} whose cdr
+is a list.  This implies a list must have finite length and be
+terminated by @slanted{the empty list}.  The predicate @code{list?} may
+be used to determine whether an object is a list (@pxref{Pair and list
+procedures}).
+
+With the exception of @slanted{the empty list}, every list is a
+@slanted{pair}.
+@end deftp
+
+@cindex lists @subentry proper lists
+@deftypevr colloquialism @/ {proper list}
+@quotedbl{Proper list} is a widely-used synonym for @slanted{list} (see
+above).  Because it's a synonym, there's technically no need for the
+qualifier.  But in practice, people often refer to list-like objects
+that are not @slanted{lists} as @quotedbl{improper lists}.  The qualifier
+@quotedbl{proper} is therefore used to emphasize that an object is a
+Scheme @slanted{list} that satisfies @code{list?}.
+@end deftypevr
+
+@cindex pairs @subentry improper lists
+@deftypevr colloquialism @/ {improper list}
+@quotedbl{Improper list} is sometimes used to describe a @slanted{pair}
+whose cdr is not a @slanted{list}.  This means that, despite its name,
+an @quotedbl{improper list} is not a @slanted{list} under Scheme's
+formal definition.  In contexts where the term @quotedbl{improper list}
+appears, @slanted{lists} are often referred to as @quotedbl{proper
+lists} to emphasize the distinction.
+@end deftypevr
+
+@cindex pairs @subentry dotted pairs
+@deftypevr colloquialism @/ {dotted pair}
+@quotedbl{Dotted pair} is sometimes used as a synonym for
+@slanted{pair}.  @quotedbl{Dotted} refers to the common external
+representation of a @slanted{pair} in which the last element is preceded
+by a period (@samp{.}, which resembles a dot).  This @quotedbl{dotted
+notation} may technically be used to represent any @slanted{pair}, but
+is typically used only to represent @slanted{pairs} that are not
+@slanted{lists}.
+@end deftypevr
+
+@cindex lists @subentry association lists
+@vindex alist @seeentry {association list}
+@deftypevr colloquialism @/ {association list}
+An @quotedbl{association list} (or @quotedbl{alist}, for short) is a
+@slanted{list} of @slanted{pairs}.
+@end deftypevr
