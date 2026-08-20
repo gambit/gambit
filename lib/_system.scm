@@ -73,8 +73,7 @@ c-declare-end
                     (loop (##cdr others)))
                #t)))))
 
-(define-prim (##iflonum? obj)
-  (##flonum? obj)) ;; TODO: remove after bootstrap
+(define-prim (##iflonum? obj))
 
 (define-prim (##iflonums?
               #!optional

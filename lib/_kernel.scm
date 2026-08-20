@@ -4977,13 +4977,7 @@ end-of-code
           (##make-structure type len))
         result)))
 
-(define-prim (##structure-length obj)
-  ;; TODO: remove after bootstrap
-  (##declare (not interrupts-enabled))
-  (##c-code #<<end-of-code
-___RESULT = ___FIX(___HD_FIELDS(___SUBTYPED_HEADER(___ARG1)));
-end-of-code
-   obj))
+(define-prim (##structure-length obj))
 
 (define-prim (##structure type . fields)
 
