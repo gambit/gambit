@@ -12383,8 +12383,7 @@ end-of-code
     (##flonum? obj)))
 
 (define-prim (##fleqv? x y))
-(define-prim (##ifleqv? x y)
-  (##fleqv? x y)) ;; TODO: remove after bootstrap
+(define-prim (##ifleqv? x y))
 
 (define-prim-nary-bool (##fl= x y)
   #t
@@ -12396,7 +12395,7 @@ end-of-code
 (define-prim-nary-bool (##ifl= x y)
   #t
   #t
-  (##fl= x y) ;; TODO: change to ##ifl... after bootstrap
+  (##ifl= x y)
   macro-no-force
   macro-no-check)
 
@@ -12417,7 +12416,7 @@ end-of-code
 (define-prim-nary-bool (##ifl< x y)
   #t
   #t
-  (##fl< x y) ;; TODO: change to ##ifl... after bootstrap
+  (##ifl< x y)
   macro-no-force
   macro-no-check)
 
@@ -12438,7 +12437,7 @@ end-of-code
 (define-prim-nary-bool (##ifl> x y)
   #t
   #t
-  (##fl> x y) ;; TODO: change to ##ifl... after bootstrap
+  (##ifl> x y)
   macro-no-force
   macro-no-check)
 
@@ -12459,7 +12458,7 @@ end-of-code
 (define-prim-nary-bool (##ifl<= x y)
   #t
   #t
-  (##fl<= x y) ;; TODO: change to ##ifl... after bootstrap
+  (##ifl<= x y)
   macro-no-force
   macro-no-check)
 
@@ -12480,7 +12479,7 @@ end-of-code
 (define-prim-nary-bool (##ifl>= x y)
   #t
   #t
-  (##fl>= x y) ;; TODO: change to ##ifl... after bootstrap
+  (##ifl>= x y)
   macro-no-force
   macro-no-check)
 
@@ -12492,36 +12491,31 @@ end-of-code
   macro-check-flonum)
 
 (define-prim (##flinteger? x))
-(define-prim (##iflinteger? x)
-  (##flinteger? x)) ;; TODO: remove after bootstrap
+(define-prim (##iflinteger? x))
 
 (define-prim-flonum (flinteger? x)
   (##flinteger? x))
 
 (define-prim (##flzero? x))
-(define-prim (##iflzero? x)
-  (##flzero? x)) ;; TODO: remove after bootstrap
+(define-prim (##iflzero? x))
 
 (define-prim-flonum (flzero? x)
   (##flzero? x))
 
 (define-prim (##flpositive? x))
-(define-prim (##iflpositive? x)
-  (##flpositive? x)) ;; TODO: remove after bootstrap
+(define-prim (##iflpositive? x))
 
 (define-prim-flonum (flpositive? x)
   (##flpositive? x))
 
 (define-prim (##flnegative? x))
-(define-prim (##iflnegative? x)
-  (##flnegative? x)) ;; TODO: remove after bootstrap
+(define-prim (##iflnegative? x))
 
 (define-prim-flonum (flnegative? x)
   (##flnegative? x))
 
 (define-prim (##flodd? x))
-(define-prim (##iflodd? x)
-  (##flodd? x)) ;; TODO: remove after bootstrap
+(define-prim (##iflodd? x))
 
 (define-prim-flonum (flodd? x)
 
@@ -12533,8 +12527,7 @@ end-of-code
       (type-error)))
 
 (define-prim (##fleven? x))
-(define-prim (##ifleven? x)
-  (##fleven? x)) ;; TODO: remove after bootstrap
+(define-prim (##ifleven? x))
 
 (define-prim-flonum (fleven? x)
 
@@ -12546,22 +12539,19 @@ end-of-code
       (type-error)))
 
 (define-prim (##flfinite? x))
-(define-prim (##iflfinite? x)
-  (##flfinite? x)) ;; TODO: remove after bootstrap
+(define-prim (##iflfinite? x))
 
 (define-prim-flonum (flfinite? x)
   (##flfinite? x))
 
 (define-prim (##flinfinite? x))
-(define-prim (##iflinfinite? x)
-  (##flinfinite? x)) ;; TODO: remove after bootstrap
+(define-prim (##iflinfinite? x))
 
 (define-prim-flonum (flinfinite? x)
   (##flinfinite? x))
 
 (define-prim (##flnan? x))
-(define-prim (##iflnan? x)
-  (##flnan? x)) ;; TODO: remove after bootstrap
+(define-prim (##iflnan? x))
 
 (define-prim-flonum (flnan? x)
   (##flnan? x))
@@ -12576,7 +12566,7 @@ end-of-code
 (define-prim-nary (##iflmax x y)
   ()
   x
-  (##flmax x y) ;; TODO: change to ##ifl... after bootstrap
+  (##iflmax x y)
   macro-no-force
   macro-no-check)
 
@@ -12597,7 +12587,7 @@ end-of-code
 (define-prim-nary (##iflmin x y)
   ()
   x
-  (##flmin x y) ;; TODO: change to ##ifl... after bootstrap
+  (##iflmin x y)
   macro-no-force
   macro-no-check)
 
@@ -12618,7 +12608,7 @@ end-of-code
 (define-prim-nary (##ifl+ x y)
   (macro-inexact-+0)
   x
-  (##fl+ x y) ;; TODO: change to ##ifl... after bootstrap
+  (##ifl+ x y)
   macro-no-force
   macro-no-check)
 
@@ -12639,7 +12629,7 @@ end-of-code
 (define-prim-nary (##ifl* x y)
   (macro-inexact-+1)
   x
-  (##fl* x y) ;; TODO: change to ##ifl... after bootstrap
+  (##ifl* x y)
   macro-no-force
   macro-no-check)
 
@@ -12659,8 +12649,8 @@ end-of-code
 
 (define-prim-nary (##ifl- x y)
   ()
-  (##fl- x) ;; TODO: change to ##ifl... after bootstrap
-  (##fl- x y) ;; TODO: change to ##ifl... after bootstrap
+  (##ifl- x)
+  (##ifl- x y)
   macro-no-force
   macro-no-check)
 
@@ -12680,8 +12670,8 @@ end-of-code
 
 (define-prim-nary (##ifl/ x y)
   ()
-  (##fl/ x) ;; TODO: change to ##ifl... after bootstrap
-  (##fl/ x y) ;; TODO: change to ##ifl... after bootstrap
+  (##ifl/ x)
+  (##ifl/ x y)
   macro-no-force
   macro-no-check)
 
@@ -12726,8 +12716,7 @@ end-of-code
          z)))
 
 (define-prim (##flabs x))
-(define-prim (##iflabs x)
-  (##flabs x)) ;; TODO: remove after bootstrap
+(define-prim (##iflabs x))
 
 (define-prim-flonum (flabs x)
   (##flabs x))
@@ -12757,36 +12746,31 @@ end-of-code
       (##fail-check-rational 1 fldenominator x)))
 
 (define-prim (##flfloor x))
-(define-prim (##iflfloor x)
-  (##flfloor x)) ;; TODO: remove after bootstrap
+(define-prim (##iflfloor x))
 
 (define-prim-flonum (flfloor x)
   (##flfloor x))
 
 (define-prim (##flceiling x))
-(define-prim (##iflceiling x)
-  (##flceiling x)) ;; TODO: remove after bootstrap
+(define-prim (##iflceiling x))
 
 (define-prim-flonum (flceiling x)
   (##flceiling x))
 
 (define-prim (##fltruncate x))
-(define-prim (##ifltruncate x)
-  (##fltruncate x)) ;; TODO: remove after bootstrap
+(define-prim (##ifltruncate x))
 
 (define-prim-flonum (fltruncate x)
   (##fltruncate x))
 
 (define-prim (##flround x))
-(define-prim (##iflround x)
-  (##flround x)) ;; TODO: remove after bootstrap
+(define-prim (##iflround x))
 
 (define-prim-flonum (flround x)
   (##flround x))
 
 (define-prim (##flscalbn x n))
-(define-prim (##iflscalbn x n)
-  (##flscalbn x n)) ;; TODO: remove after bootstrap
+(define-prim (##iflscalbn x n))
 
 (define-prim (flscalbn x n)
   (macro-force-vars (x n)
@@ -12795,22 +12779,19 @@ end-of-code
         (##flscalbn x n)))))
 
 (define-prim (##flilogb x))
-(define-prim (##iflilogb x)
-  (##flilogb x)) ;; TODO: remove after bootstrap
+(define-prim (##iflilogb x))
 
 (define-prim-flonum (flilogb x)
   (##flilogb x))
 
 (define-prim (##flexp x))
-(define-prim (##iflexp x)
-  (##flexp x)) ;; TODO: remove after bootstrap
+(define-prim (##iflexp x))
 
 (define-prim-flonum (flexp x)
   (##flexp x))
 
 (define-prim (##flexpm1 x))
-(define-prim (##iflexpm1 x)
-  (##flexpm1 x)) ;; TODO: remove after bootstrap
+(define-prim (##iflexpm1 x))
 
 (define-prim-flonum (flexpm1 x)
   (##flexpm1 x))
@@ -12822,8 +12803,8 @@ end-of-code
 
 (define-prim (##ifllog x #!optional (y (macro-absent-obj)))
   (if (##eq? y (macro-absent-obj))
-      (##fllog x) ;; TODO: change to ##ifl... after bootstrap
-      (##fllog x y))) ;; TODO: change to ##ifl... after bootstrap
+      (##ifllog x)
+      (##ifllog x y)))
 
 (define-prim (fllog x #!optional (y (macro-absent-obj)))
   (macro-force-vars (x y)
@@ -12834,8 +12815,7 @@ end-of-code
             (##fllog x y))))))
 
 (define-prim (##fllog1p x))
-(define-prim (##ifllog1p x)
-  (##fllog1p x)) ;; TODO: remove after bootstrap
+(define-prim (##ifllog1p x))
 
 (define-prim-flonum (fllog1p x)
   (##fllog1p x))
@@ -12848,29 +12828,25 @@ end-of-code
   (##flsin x))
 
 (define-prim (##flcos x))
-(define-prim (##iflcos x)
-  (##flcos x)) ;; TODO: remove after bootstrap
+(define-prim (##iflcos x))
 
 (define-prim-flonum (flcos x)
   (##flcos x))
 
 (define-prim (##fltan x))
-(define-prim (##ifltan x)
-  (##fltan x)) ;; TODO: remove after bootstrap
+(define-prim (##ifltan x))
 
 (define-prim-flonum (fltan x)
   (##fltan x))
 
 (define-prim (##flasin x))
-(define-prim (##iflasin x)
-  (##flasin x)) ;; TODO: remove after bootstrap
+(define-prim (##iflasin x))
 
 (define-prim-flonum (flasin x)
   (##flasin x))
 
 (define-prim (##flacos x))
-(define-prim (##iflacos x)
-  (##flacos x)) ;; TODO: remove after bootstrap
+(define-prim (##iflacos x))
 
 (define-prim-flonum (flacos x)
   (##flacos x))
@@ -12882,8 +12858,8 @@ end-of-code
 
 (define-prim (##iflatan x #!optional (y (macro-absent-obj)))
   (if (##eq? y (macro-absent-obj))
-      (##flatan x) ;; TODO: change to ##ifl... after bootstrap
-      (##flatan x y))) ;; TODO: change to ##ifl... after bootstrap
+      (##iflatan x)
+      (##iflatan x y)))
 
 (define-prim (flatan x #!optional (y (macro-absent-obj)))
   (macro-force-vars (x y)
@@ -12894,64 +12870,55 @@ end-of-code
             (##flatan x y))))))
 
 (define-prim (##flsinh x))
-(define-prim (##iflsinh x)
-  (##flsinh x)) ;; TODO: remove after bootstrap
+(define-prim (##iflsinh x))
 
 (define-prim-flonum (flsinh x)
   (##flsinh x))
 
 (define-prim (##flcosh x))
-(define-prim (##iflcosh x)
-  (##flcosh x)) ;; TODO: remove after bootstrap
+(define-prim (##iflcosh x))
 
 (define-prim-flonum (flcosh x)
   (##flcosh x))
 
 (define-prim (##fltanh x))
-(define-prim (##ifltanh x)
-  (##fltanh x)) ;; TODO: remove after bootstrap
+(define-prim (##ifltanh x))
 
 (define-prim-flonum (fltanh x)
   (##fltanh x))
 
 (define-prim (##flasinh x))
-(define-prim (##iflasinh x)
-  (##flasinh x)) ;; TODO: remove after bootstrap
+(define-prim (##iflasinh x))
 
 (define-prim-flonum (flasinh x)
   (##flasinh x))
 
 (define-prim (##flacosh x))
-(define-prim (##iflacosh x)
-  (##flacosh x)) ;; TODO: remove after bootstrap
+(define-prim (##iflacosh x))
 
 (define-prim-flonum (flacosh x)
   (##flacosh x))
 
 (define-prim (##flatanh x))
-(define-prim (##iflatanh x)
-  (##flatanh x)) ;; TODO: remove after bootstrap
+(define-prim (##iflatanh x))
 
 (define-prim-flonum (flatanh x)
   (##flatanh x))
 
 (define-prim (##flexpt x y))
-(define-prim (##iflexpt x y)
-  (##flexpt x)) ;; TODO: remove after bootstrap
+(define-prim (##iflexpt x y))
 
 (define-prim-flonum (flexpt x y)
   (##flexpt x y))
 
 (define-prim (##flsqrt x))
-(define-prim (##iflsqrt x)
-  (##flsqrt x)) ;; TODO: remove after bootstrap
+(define-prim (##iflsqrt x))
 
 (define-prim-flonum (flsqrt x)
   (##flsqrt x))
 
 (define-prim (##flsquare x))
-(define-prim (##iflsquare x)
-  (##flsquare x)) ;; TODO: remove after bootstrap
+(define-prim (##iflsquare x))
 
 (define-prim-flonum (flsquare x)
   (##flsquare x))
@@ -12960,8 +12927,7 @@ end-of-code
   (##fixnum->flonum x))
 
 (define-prim (##flcopysign x y))
-(define-prim (##iflcopysign x y)
-  (##flcopysign x y)) ;; TODO: remove after bootstrap
+(define-prim (##iflcopysign x y))
 
 (define-prim (##flhypot x y)
 
@@ -13036,8 +13002,7 @@ end-of-code
   (##flhypot x y))
 
 (define-prim (##flonum->fixnum x))
-(define-prim (##iflonum->fixnum x)
-  (##flonum->fixnum x)) ;; TODO: remove after bootstrap
+(define-prim (##iflonum->fixnum x))
 
 (define-prim (##fixnum->flonum x))
 (define-prim (##fixnum->flonum-exact? x))
