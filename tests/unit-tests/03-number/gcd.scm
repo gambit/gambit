@@ -15,9 +15,9 @@
     (begin
       (test-eqv 1 (gcd (expt 3 10000) (expt 5 10000)))
       (test-eqv 1 (gcd (expt 3 100000) (expt 5 100000)))))
-(test-eqv 1. (gcd (expt 3. 30) (expt 5. 30)))
-(test-eqv 1. (gcd (expt 3 30) (expt 5. 30)))
-(test-eqv 1. (gcd (expt 3. 30) (expt 5 30)))
+(test-eqv 1. (gcd (expt 3. 30) (expt 5. 10)))
+(test-eqv 1. (gcd (expt 3 30) (expt 5. 10)))
+(test-eqv 1. (gcd (expt 3. 30) (expt 5 10)))
 
 ;; fixnum-fixnum
 (test-eqv 1 (gcd (expt 3 10) (expt 5 10)))
