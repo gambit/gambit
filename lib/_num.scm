@@ -2496,10 +2496,8 @@
   (##define-macro (type-error-on-y) `'(2))
 
   (define (exact-lcm x y)
-    (if (or (##eqv? x 0) (##eqv? y 0))
-        0
-        (##abs (##* (##quotient x (##gcd x y))
-                    y))))
+    (##abs (##* (##quotient x (##gcd x y))
+                y)))
 
   (define (inexact-lcm x y)
     (##exact->inexact
@@ -2510,6 +2508,13 @@
          (type-error-on-x))
         ((##not (##integer? y))
          (type-error-on-y))
+        ((or (##eqv? x 0)
+             (##eqv? y 0))
+         0)
+        ((or (and (##flonum? x) (##flzero? x))
+             (and (##flonum? y) (##flzero? y)))
+         ;; one is an inexact zero
+         0.)
         (else
          (if (and (##exact? x) (##exact? y))
              (exact-lcm x y)
