@@ -186,6 +186,9 @@ test11:
 ut-coverage:
 	@SETDLPATH@ $(rootfromhere)/gsi/gsi@exe@ -:tl,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f ./run-unit-tests.scm -coverage
 
+ut-untested:
+	@$(MAKE) ut-coverage | sed -n '/;;START-OF-GAMBIT-PROCEDURES-NOT-COVERED-BY-UNIT-TESTS/,/;;END-OF-GAMBIT-PROCEDURES-NOT-COVERED-BY-UNIT-TESTS/ { /;;START-OF-GAMBIT-PROCEDURES-NOT-COVERED-BY-UNIT-TESTS/d; /;;END-OF-GAMBIT-PROCEDURES-NOT-COVERED-BY-UNIT-TESTS/d; p; }'
+
 ut ut-C:
 	@SETDLPATH@ $(rootfromhere)/gsi/gsi@exe@ -:tl,~~bin=$(srcdirpfx)$(rootfromhere)/bin,~~lib=$(srcdirpfx)$(rootfromhere)/lib,~~include=$(srcdirpfx)$(rootfromhere)/include -f ./run-unit-tests.scm
 

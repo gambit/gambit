@@ -414,12 +414,14 @@ default-random-source
     (if (pair? not-tested)
         (begin
           (println "*** Tests are missing for these runtime library procedures:")
+          (println ";;START-OF-GAMBIT-PROCEDURES-NOT-COVERED-BY-UNIT-TESTS")
           (for-each
            (lambda (name)
              (println "  " name))
            (list-sort (lambda (x y) (string<=? (symbol->string x)
                                                (symbol->string y)))
-                      not-tested))))))
+                      not-tested))
+          (println ";;END-OF-GAMBIT-PROCEDURES-NOT-COVERED-BY-UNIT-TESTS")))))
 
 (define (run-tests files target)
 
