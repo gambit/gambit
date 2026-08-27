@@ -1,0 +1,30 @@
+(include "#.scm")
+
+(test-assert #t)
+(test-assert 0)
+
+(test-assert (eq? #f #f))
+(test-assert (eq? #f (odd? 0)))
+
+(test-assert (not (eq? #f #t)))
+(test-assert (not (eq? #f (+ 3 -3))))
+
+(test-assert (not (eqv? 123 42)))
+(test-assert (not (eqv? 0. 0)))
+(test-assert (not (eqv? -0. 0.)))
+(test-assert (not (eqv? #f #t)))
+(test-assert (not (eqv? #t #f)))
+(test-assert (not (eqv? #\a #\x)))
+(test-assert (not (eqv? 'HELLO 'hello)))
+(test-assert (not (eqv? '#() '())))
+
+(test-assert (not (equal? 123 42)))
+(test-assert (not (equal? 0. 0)))
+(test-assert (not (equal? -0. 0.)))
+(test-assert (not (equal? #f #t)))
+(test-assert (not (equal? #t #f)))
+(test-assert (not (equal? #\a #\x)))
+(test-assert (not (equal? 'HELLO 'hello)))
+(test-assert (not (equal? '#() '())))
+(test-assert (not (equal? '(1 2 3.) '(1 2 3))))
+(test-assert (not (equal? '#(1 2 3.) '#(1 2 3))))
