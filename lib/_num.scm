@@ -5941,14 +5941,14 @@ for a discussion of branch cuts.
       (bignum-case x y))))
 
 (define-prim-nary (##bitwise-eqv x y)
-  0
+  -1
   x
   (##bitwise-eqv2 x y)
   macro-no-force
   macro-no-check)
 
 (define-prim-nary (bitwise-eqv x y)
-  0
+  -1
   (if (macro-exact-int? x) x '(1))
   (##bitwise-eqv2 x y)
   macro-force-vars
