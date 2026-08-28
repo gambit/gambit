@@ -2,11 +2,16 @@
 
 # Script parameters are passed in the following environment variables:
 #   GAMBITDIR_DOC
-#   GAMBDOC_ARG1_PARAM
-#   GAMBDOC_ARG2_PARAM
-#   GAMBDOC_ARG3_PARAM
-#   GAMBDOC_ARG4_PARAM
+#   GAMBDOC_ARG1_PARAM -- must be "help"
+#   GAMBDOC_ARG2_PARAM -- entry
+#   GAMBDOC_ARG3_PARAM -- index
+#   GAMBDOC_ARG4_PARAM -- prefer this web browser over the default choices
 #   ...
+
+# Exit code:
+#   0  - entry found and displayed
+#   1  - entry not found in index
+#   >1 - error
 
 # echo GAMBITDIR_DOC = "${GAMBITDIR_DOC}"
 # echo GAMBDOC_ARG1_PARAM = "${GAMBDOC_ARG1_PARAM}"
@@ -33,10 +38,10 @@ find_browser() # sets `$exe'
     browser_list="lynx firefox mozilla netscape osascript chrome chromium chromium-browser"
   fi
 
-  browser_list="${GAMBDOC_ARG3_PARAM} $browser_list"
+  browser_list="${GAMBDOC_ARG4_PARAM} $browser_list"
 
   for b in $browser_list; do
-    if find_in_path $b; then
+    if find_in_path "$b"; then
       browser=$b
       return 0
     fi
@@ -44,28 +49,45 @@ find_browser() # sets `$exe'
   return 1
 }
 
-operation_help() # sets `$exe'
+open_url_osascript()
 {
-  if find_browser; then
-    url="file://${GAMBITDIR_DOC}/gambit.html#${GAMBDOC_ARG4_PARAM}"
-    case "$browser" in
-      osascript ) $exe <<EOF ;;
+  $exe <<EOF
 tell application "Safari"
     open location "$url"
 end tell
 EOF
-              * ) $exe $url ;;
-    esac
-  else
+}
+
+open_url()
+{
+  url="$1"
+  if ! find_browser; then
     echo "*** WARNING -- none of these browsers can be found to view the documentation:"
     echo "***            $browser_list"
+    exit 2
+  fi
+  case "$browser" in
+    osascript) open_url_osascript "$url";;
+    *) $exe "$url";;
+  esac
+}
+
+operation_help() # sets `$exe'
+{
+  entry="$GAMBDOC_ARG2_PARAM"
+  index="$GAMBDOC_ARG3_PARAM"
+  pattern="$(echo ";$index;$entry" | tr ';' '\t' | tr -d '\n')"
+  tsv_file="${GAMBITDIR_DOC}/gambit.tsv"
+  where="$(grep -F -- "$pattern" <"$tsv_file" | head -n 1 | cut -f 1)"
+  if test -z "$where"; then
     exit 1
   fi
+  open_url "file://${GAMBITDIR_DOC}/${where}"
 }
 
 if [ "${GAMBDOC_ARG1_PARAM}" = "help" ]; then
   operation_help
 else
-  echo "*** WARNING -- unsupported operation: ${GAMBDOC_ARG1_PARAM}"
-  exit 1
+  echo "*** WARNING -- unsupported operation: \"${GAMBDOC_ARG1_PARAM}\""
+  exit 2
 fi
