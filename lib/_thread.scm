@@ -1587,13 +1587,18 @@
 
   (##declare (not interrupts-enabled))
 
-  ;; acquire low-level lock of thread
-  (macro-lock-current-thread!)
+  (macro-thread-save!
+   (lambda (current-thread exception? result)
 
-  (##thread-end-locked! (macro-current-thread) exception? result)
+     ;; acquire low-level lock of thread
+     (macro-lock-thread! current-thread)
 
-  (macro-processor-current-thread-set! (macro-current-processor) #f)
-  (##thread-schedule!))
+     (##thread-end-locked! current-thread exception? result)
+
+     (macro-processor-current-thread-set! (macro-current-processor) #f)
+     (##thread-schedule!))
+   exception?
+   result))
 
 (define-prim (##thread-end-locked! thread exception? result)
 
