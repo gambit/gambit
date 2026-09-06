@@ -2259,6 +2259,9 @@
 
     (##thread-boosted-priority-changed! thread) ;;TOO:integrate rescheduling
 
+    ;; release low-level lock of the thread
+    (macro-unlock-thread! thread)
+
     ;; the change of priority may have made a higher priority
     ;; thread runnable, check for this
 
@@ -2332,7 +2335,9 @@
     (if (##fl= (macro-base-priority floats)
                (macro-boosted-priority floats))
 
-      (##void)
+      (begin
+        (macro-unlock-thread! thread)
+        (##void))
 
       (begin
 
@@ -2348,6 +2353,9 @@
                 priority-boost))
 
         (##thread-boosted-priority-changed! thread)
+
+        ;; release low-level lock of the thread
+        (macro-unlock-thread! thread)
 
         ;; the change of priority may have made a higher priority
         ;; thread runnable, check for this
@@ -2419,16 +2427,17 @@
 
     (let loop ((btq (macro-btq-deq-next thread)))
       (if (##not (##eq? btq thread))
-          (macro-if-btq-next
-           btq
-           next
-           (let ((next-floats (macro-thread-floats next)))
-             (if (##fl< (macro-effective-priority floats)
-                        (macro-effective-priority next-floats))
-                 (macro-effective-priority-set!
-                  floats
-                  (macro-effective-priority next-floats)))))
-          (loop (macro-btq-deq-next btq))))
+          (begin
+            (macro-if-btq-next
+             btq
+             next
+             (let ((next-floats (macro-thread-floats next)))
+               (if (##fl< (macro-effective-priority floats)
+                          (macro-effective-priority next-floats))
+                   (macro-effective-priority-set!
+                    floats
+                    (macro-effective-priority next-floats)))))
+            (loop (macro-btq-deq-next btq)))))
 
     (if (##not (##fl=
                 (macro-temp (macro-thread-floats (macro-current-processor)))
