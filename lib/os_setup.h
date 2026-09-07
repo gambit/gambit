@@ -208,10 +208,20 @@ extern ___SCMOBJ ___in6_addr_to_SCMOBJ
 
 #endif
 
+/*
+ * ___SCMOBJ_to_sockaddr converts a Scheme network address (#f, a
+ * u8vector for IPv4 or a u16vector for IPv6) and a port number to a
+ * socket address.  Up to sizeof (struct sockaddr_in6) bytes are
+ * written, which is more than a bare struct sockaddr can hold, so the
+ * destination is a struct sockaddr_storage (large enough for every
+ * address family).  Callers cast to struct sockaddr* at the socket
+ * API boundary.
+ */
+
 extern ___SCMOBJ ___SCMOBJ_to_sockaddr
    ___P((___SCMOBJ addr,
          ___SCMOBJ port_num,
-         struct sockaddr *sa,
+         struct sockaddr_storage *sa,
          SOCKET_LEN_TYPE *salen,
          int arg_num),
         ());
