@@ -85,6 +85,32 @@
                                          opts
                                          out)))))))
 
+(define ##compile-output-dir
+  ;; fixme: path separator is platform specific (should be a library constant?)
+  (let* ((path-separator "/")
+         (path-reader (lambda (p) (##read-all p (lambda (p) (##read-line p #\/)))))
+         ;; fixme: this parameter probably should come from `options`
+         ;; we could benefit from having this as a cli argument
+         (output-prefix (##get-environment-variable "GAMBIT_OUTPUT_PREFIX"))
+         (output-prefix (and output-prefix (##path-normalize output-prefix))))
+    (lambda (path)
+      (let* ((output-path (if (and output-prefix (##string-prefix? path-separator path))
+                            (##string-append "." path) path))
+             (output-path (if (and output-prefix (##not (##string-prefix? output-prefix path)))
+                            (##path-expand output-path output-prefix) path)))
+	    (when output-prefix
+          ;; fixme: no platform independent path-split procedure in Gambit? huh
+          ;; or better, do as Gerbil does - create-directory* with `mkdir -p` semantics
+          (let loop ((acc "")
+				     (next (##call-with-input-string (##path-directory output-path) path-reader)))
+		    (when (and (##> (##string-length acc) 0)
+                       (##not (##file-exists? acc)))
+		      (##create-directory acc))
+	        (when (##pair? next)
+		      (loop (##string-append acc path-separator (car next))
+                    (cdr next)))))
+        output-path))))
+
 (define (##compile-file-to-target filename-or-source options output)
   (let* ((options
           (##compile-options-normalize options))
@@ -104,7 +130,7 @@
                        (##source-path filename-or-source)
                        filename-or-source))
                   (expanded-output
-                   (##path-normalize output))
+                   (##compile-output-dir (##path-normalize output)))
                   (output-directory?
                    (##not (##equal? expanded-output
                                     (##path-strip-trailing-directory-separator
@@ -319,7 +345,7 @@
                  (##path-strip-extension filename)
                  (##caar (c#target-file-extensions target)))))
            (expanded-output
-            (##path-normalize output))
+            (##compile-output-dir (##path-normalize output)))
            (output-directory?
             (##not (##equal? expanded-output
                              (##path-strip-trailing-directory-separator
