@@ -14,13 +14,10 @@
 
 list-sorted?
 vector-sorted?
-list-sort
 list-stable-sort
-list-sort!
 list-stable-sort!
 vector-sort
 vector-stable-sort
-vector-sort!
 vector-stable-sort!
 list-merge
 list-merge!
