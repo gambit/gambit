@@ -166,7 +166,10 @@
   `(##not (##eq? 'not-started (macro-thread-exception? ,thread))))
 
 (##define-macro (macro-terminated-thread-given-initialized? thread)
-  `(##not (macro-thread-end-condvar ,thread)))
+  ;; The continuation is set to #t before abandoning the thread's mutexes.
+  ;; Keep end-condvar until that cleanup is complete so thread-join! waits
+  ;; for it, while a terminating thread cannot acquire more mutexes or run.
+  `(##eq? (macro-thread-cont ,thread) #t))
 
 (##define-macro (macro-check-initialized-thread thread form expr)
   `(if (##not (macro-initialized-thread? ,thread))
