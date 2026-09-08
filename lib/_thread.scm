@@ -1495,11 +1495,10 @@
         (macro-add-thread-to-run-queue-of-some-processor! thread)
         #;(macro-add-thread-to-run-queue-of-current-processor-preferably! thread)
 
-        ;;TODO: rethink use of reschedule-if-needed!
-        ;;(macro-thread-reschedule-if-needed!)
-
         ;; release low-level lock of thread
         (macro-unlock-thread! thread)
+
+        (macro-thread-reschedule-if-needed!)
 
         thread))))
 
@@ -2704,12 +2703,45 @@
 
   (##declare (not interrupts-enabled))
 
-  (macro-thread-save!
-   (lambda (current-thread)
-     (macro-thread-resume-thunk-set! current-thread ##thread-void-action!)
-     (macro-processor-current-thread-set! (macro-current-processor) #f)
-     ;; schedule next runnable thread
-     (##thread-schedule!))))
+  ;; acquire low-level lock of the thread
+  (macro-lock-current-thread!)
+
+  ;; acquire low-level lock of the processor
+  (macro-lock-current-processor!)
+
+  (macro-if-btq-next
+   (macro-current-processor)
+   next-thread
+
+   (if (macro-thread-higher-prio? next-thread (macro-current-thread))
+       (macro-thread-save!
+        (lambda (current-thread)
+          (macro-thread-resume-thunk-set!
+           current-thread
+           ##thread-void-action!)
+
+          (macro-add-thread-to-run-queue-of-current-processor-without-locking!
+           current-thread)
+
+          ;; thread is no longer the current thread
+          (macro-processor-current-thread-set!
+           (macro-current-processor)
+           #f)
+
+          ;; release low-level lock of the thread
+          (macro-unlock-thread! current-thread)
+
+          ;; schedule next runnable thread
+          (##thread-schedule-with-acquired-processor!)))
+       (begin
+         (macro-unlock-current-processor!)
+         (macro-unlock-current-thread!)
+         (##void)))
+
+   (begin
+     (macro-unlock-current-processor!)
+     (macro-unlock-current-thread!)
+     (##void))))
 
 (define-prim (##service-interrupts!)
 
@@ -4095,8 +4127,7 @@
         ;; unlock mutex
         (macro-mutex-unlock-no-reschedule! mutex)
 
-        ;;TODO:reenable
-        ;;(macro-thread-reschedule-if-needed!)
+        (macro-thread-reschedule-if-needed!)
 
         #f)))
 

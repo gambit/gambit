@@ -1403,12 +1403,7 @@
 
      (##declare (not interrupts-enabled))
 
-     ;;TODO: update this (running threads are no longer in the current-processor)
-     (##void)#;
-     (let ((leftmost (macro-btq-leftmost (macro-current-processor))))
-       (if (##not (##eq? leftmost (macro-current-thread)))
-         (##thread-reschedule!)
-         (##void)))))
+     (##thread-reschedule!)))
 
 (macro-define-syntax macro-thread-save!
   (lambda (stx)
@@ -1728,7 +1723,7 @@
              ;; handle this case out of line
              (##mutex-lock-anonymously-out-of-line! mutex absrel-timeout))))))
 
-(##define-macro (macro-mutex-unlock! mutex)
+(##define-macro (macro-mutex-unlock-aux! mutex reschedule?)
   `(let ((mutex ,mutex))
 
      (##declare (not interrupts-enabled))
@@ -1748,7 +1743,12 @@
         ;; Slow path... at least one thread is waiting on the mutex.
 
         ;; handle this case out of line
-        (##mutex-unlock-out-of-line! mutex first-thread))
+        (##mutex-unlock-out-of-line! mutex first-thread)
+
+        ;; unlocking made a waiting thread runnable
+        (if ,reschedule?
+            (macro-thread-reschedule-if-needed!)
+            (##void)))
 
       (begin
 
@@ -1795,8 +1795,11 @@
 
                 (##void))))))))
 
+(##define-macro (macro-mutex-unlock! mutex)
+  `(macro-mutex-unlock-aux! ,mutex #t))
+
 (##define-macro (macro-mutex-unlock-no-reschedule! mutex)
-  `(macro-mutex-unlock! ,mutex));;TODO: update
+  `(macro-mutex-unlock-aux! ,mutex #f))
 
 ;;; Representation of condition variables.
 
