@@ -1,0 +1,375 @@
+@node String procedures
+@chapter String procedures
+@nodedescription Procedures that deal with strings.
+
+@deftypefn scheme/base @/ string? obj
+Returns @code{#t} if @var{obj} is a string.
+
+@lisp
+(string? "")            @ok{#t}
+(string? "es\"cape")    @ok{#t}
+(string? "\"escapes\"") @ok{#t}
+(string? "\x0061;")     @ok{#t}
+(string? (string))      @ok{#t}
+@end lisp
+
+@lisp
+(string? #\a)                    @ok{#f}
+(string? 'string)                @ok{#f}
+(string? '(#\c #\h #\a #\r #\s)) @ok{#f}
+(string? #(#\c #\h #\a #\r #\s)) @ok{#f}
+@end lisp
+@end deftypefn
+
+@deftypefn scheme/base @/ make-string k @opt{char}
+Returns a newly allocated string of length @var{k}.  In the one-argument
+form, each character is initialized to a default value.  In the
+two-argument form, each character is initialized to @var{char}.
+
+The default value used by the one-argument form may change in a future
+version.  Programs that require a specific initialization value should
+use the two-argument form.
+
+If @var{k} is not an exact integer, an exception that satisfies
+@code{type-exception?} is raised.  If @var{k} is a negative exact
+integer, an exception that satisfies @code{range-exception?} is raised.
+
+@lisp
+(make-string 0)     @ok{""}
+(make-string 1 #\@{) @ok{"@lbracechar{}"}
+(make-string 2 #\@}) @ok{"@rbracechar{}@rbracechar{}"}
+(make-string 3 #\@@) @ok{"@@@@@atchar{}"}
+(make-string 4 #\ ) @ok{"    "}
+@end lisp
+
+@lisp
+(eqv?     (make-string 0) (make-string 0)) @ok{#f}
+(string=? (make-string 0) (make-string 0)) @ok{#t}
+@end lisp
+
+@lisp
+(make-string 4 "g") @exception{type}
+(make-string 4.5)   @exception{type}
+(make-string -1)    @exception{range}
+@end lisp
+@end deftypefn
+
+@deftypefn scheme/base @/ string char@defdots{}
+Returns a newly allocated string whose elements are @var{char}@enddots{}
+The order of the arguments is preserved.  Analogous to @code{list}
+(@pxref{Pair and list procedures}).
+
+@lisp
+(string)                               @ok{""}
+(string #\G #\a #\m #\b #\i #\t)       @ok{"Gambit"}
+(apply string (string->list "Gambit")) @ok{"Gambit"}
+@end lisp
+@end deftypefn
+
+@deftypefn scheme/base @/ string-length string
+Returns the number of characters in @var{string}.
+
+@lisp
+(string-length (make-string 5)) @ok{5}
+(string-length "")              @ok{0}
+(string-length "lambda")        @ok{6}
+@end lisp
+@end deftypefn
+
+@deftypefn scheme/base @/ string-ref string k
+Returns the character at index @var{k} of @var{string}.  If @var{k} is
+not a valid index of @var{string}, an exception that satisfies
+@code{range-exception?} is raised.
+
+@lisp
+(string-ref "zero-origin indexing" 0) @ok{#\z}
+@end lisp
+
+@lisp
+(define s "off by one")
+(string-ref s (- (string-length s) 1)) @ok{#\e}
+(string-ref s (string-length s))       @exception{range}
+@end lisp
+@end deftypefn
+
+@deftypefn scheme/base @/ string=? string@defdots{}
+Returns @code{#t} if all @var{string} arguments are the same length and
+contain exactly the same characters in the same positions.
+
+Gambit extends the @value{R7RS} description of @code{string=?} to accept
+any number of arguments.
+
+@lisp
+(string=? "abc" (string #\a #\b #\c)) @ok{#t}
+(string=? "abcd" "Abcd")              @ok{#f}
+(string=?)                            @ok{#t}
+(string=? (string))                   @ok{#t}
+(string=? "a" "a" (string #\a))       @ok{#t}
+(string=? "a" #\a)                    @exception{type}
+@end lisp
+@end deftypefn
+
+@deftypefn  scheme/base @/ string<? string@defdots{}
+@deftypefnx scheme/base @/ string>? string@defdots{}
+@deftypefnx scheme/base @/ string<=? string@defdots{}
+@deftypefnx scheme/base @/ string>=? string@defdots{}
+These predicates return @code{#t} if their @var{string} arguments are
+(respectively): monotonically increasing, monotonically decreasing,
+monotonically non-decreasing, or monotonically non-increasing.  They are
+transitive.
+
+A pair of strings satisfies exactly one of @code{string<?},
+@code{string=?}, and @code{string>?}.  They may satisfy @code{string<=?}
+if and only if they do not satisfy @code{string>?}.  They may satisfy
+@code{string>=?} if and only if they do not satisfy @code{string<?}.
+
+Gambit extends the @value{R7RS} descriptions of these procedures to
+accept any number of arguments.
+
+@lisp
+(string<=? "g" "g") @ok{#f}
+(string>=? "g" "g") @ok{#f}
+(string<?  "g" "g") @ok{#f}
+(string>?  "g" "g") @ok{#f}
+
+(string<? "G" "g")  @ok{#t}
+(string>? "G" "g")  @ok{#f}
+
+(string<? "gg" "g") @ok{#f}
+(string>? "gg" "g") @ok{#t}
+@end lisp
+@end deftypefn
+
+@deftypefn  scheme/char @/ string-ci=? string@defdots{}
+@deftypefnx scheme/char @/ string-ci<? string@defdots{}
+@deftypefnx scheme/char @/ string-ci>? string@defdots{}
+@deftypefnx scheme/char @/ string-ci<=? string@defdots{}
+@deftypefnx scheme/char @/ string-ci>=? string@defdots{}
+Each of these predicates behaves as if @code{string-foldcase} were
+applied to each @var{string} and then that predicate's non-@samp{-ci}
+counterpart were applied to those case-folded arguments.
+
+@lisp
+(string-ci=?  "G" "g")                             @ok{#t}
+(apply string=? (map string-foldcase '("G" "g")))  @ok{#t}
+@end lisp
+
+@lisp
+(string-ci>=? "G" "g")                             @ok{#t}
+(apply string<=? (map string-foldcase '("G" "g"))) @ok{#t}
+@end lisp
+
+@lisp
+(string-ci<=? "g" "G")                             @ok{#t}
+(apply string<=? (map string-foldcase '("g" "G"))) @ok{#t}
+@end lisp
+
+@lisp
+(string-ci<?  "G" "g")                             @ok{#f}
+(apply string<? (map string-foldcase '("G" "g")))  @ok{#f}
+@end lisp
+
+@lisp
+(string-ci>?  "g" "G")                             @ok{#f}
+(apply string>? (map string-foldcase '("g" "G")))  @ok{#f}
+@end lisp
+@end deftypefn
+
+@deftypefn scheme/char @/ string-upcase string
+@deftypefnx scheme/char @/ string-downcase string
+@deftypefnx scheme/char @/ string-foldcase string
+These procedures apply the Unicode full string uppercasing, lowercasing,
+and case-folding algorithms to their arguments and return the result.
+In certain cases, the result differs in length from @var{string}.  Note
+that language-sensitive mappings and foldings are not used.
+
+@lisp
+(string-downcase "@U{0388}@U{03C4}@U{03BF}@U{03C2}") @ok{"@U{03AD}@U{03C4}@U{03BF}@U{03C2}"}
+(string-foldcase "@U{0388}@U{03C4}@U{03BF}@U{03C2}") @ok{"@U{03AD}@U{03C4}@U{03BF}@U{03C3}"}
+(string-upcase   "@U{0388}@U{03C4}@U{03BF}@U{03C2}") @ok{"@U{0388}@U{03A4}@U{039F}@U{03A3}"}
+(string-downcase "@U{0388}@U{03A4}@U{039F}@U{03A3}") @ok{"@U{03AD}@U{03C4}@U{03BF}@U{03C3}"}
+(string-foldcase "@U{0388}@U{03A4}@U{039F}@U{03A3}") @ok{"@U{03AD}@U{03C4}@U{03BF}@U{03C3}"}
+@end lisp
+
+@lisp
+(string-downcase "Wei@U{00DF}")  @ok{"wei@U{00DF}"}
+(string-foldcase "Wei@U{00DF}")  @ok{"weiss"}
+(string-upcase   "Wei@U{00DF}")  @ok{"WEISS"}
+(string-downcase "WEI@U{1E9E}")  @ok{"wei@U{00DF}"}
+(string-foldcase "WEI@U{1E9E}")  @ok{"weiss"}
+@end lisp
+@end deftypefn
+
+@deftypefn scheme/base @/ string-append string@defdots{}
+
+Returns a newly allocated string whose characters are the concatenation
+of the characters in the given @var{strings}.
+
+@lisp
+(string-append)                     @ok{""}
+(string-append "")                  @ok{""}
+(string-append "hello" "world")     @ok{"helloworld"}
+(string-append "hello" "" "world")  @ok{"helloworld"}
+(string-append "hello " " world")   @ok{"hello  world"}
+(string-append "hello" " " "world") @ok{"hello world"}
+@end lisp
+@end deftypefn
+
+@deftypefn scheme/base @/ string->list string @opt{start @opt{end}}
+Returns a newly allocated list of characters in @var{string}.  In the
+one-argument form, the returned list comprises all characters of
+@var{string}.  In the two-argument form, the returned list comprises
+characters from index @var{start} (inclusive) through the end of
+@var{string}.  In the three-argument form, the returned list comprises
+characters from index @var{start} (inclusive) through index @var{end}
+(exclusive).
+
+Order is preserved.  @code{string->list} and @code{list->string} are
+inverses so far as @code{equal?} is concerned.  If either @var{start} or
+@var{end} is not a valid index of @var{string}, an exception that
+satisfies @code{range-exception?} is raised.
+
+@lisp
+(string->list "scheme")     @ok{(#\s #\c #\h #\e #\m #\e)}
+(string->list "scheme" 1)   @ok{(#\c #\h #\e #\m #\e)}
+(string->list "scheme" 2 6) @ok{(#\h #\e #\m #\e)}
+(string->list "scheme" 6)   @ok{()}
+(string->list "scheme" 6 6) @ok{()}
+@end lisp
+
+@lisp
+(string->list "scheme" 7)   @exception{range}
+(string->list "scheme" 3 7) @exception{range}
+@end lisp
+@end deftypefn
+
+@deftypefn scheme/base @/ list->string list
+Returns a newly allocated string formed from the elements in @var{list}.
+
+Order is preserved.  @code{list->string} and @code{string->list} and are
+inverses so far as @code{equal?} is concerned.  If any element of
+@var{list} is not a character, an exception that satisfies @code{type?}
+is raised.
+
+@lisp
+(list->string (list))                       @ok{""}
+(list->string '(#\s #\c #\h #\e #\m #\e))   @ok{"scheme"}
+(list->string '(#\s #\c #\h #\e #\m #\e 2)) @exception{type}
+@end lisp
+@end deftypefn
+
+@deftypefn scheme/base @/ string-copy string @opt{start @opt{end}}
+Returns a newly allocated string whose value is a portion of
+@var{string}.  In the one-argument form, the returned portion is all of
+@var{string}.  In the two-argument form, the returned string is a copy
+of @var{string} from index @var{start} (inclusive) through the end of
+@var{string}.  In the three-argument form, the returned string is a copy
+of @var{string} from index @var{start} (inclusive) to index @var{end}
+(exclusive).
+
+Order is preserved.  @code{string->list} and @code{list->string} and are
+inverses so far as @code{equal?} is concerned.  If either @var{start} or
+@var{end} is not an exact integer, an exception that satisfies
+@code{type-exception?} is raised.  If either @var{start} or @var{end} is
+not a valid index of @var{string}, an exception that satisfies
+@code{range-exception?} is raised.
+
+@lisp
+(string-copy "dwim")                          @ok{"dwim"}
+(string-copy "dwim" 0)                        @ok{"dwim"}
+(string-copy "dwim" 1)                        @ok{"wim"}
+(string-copy "dwim" 1 1)                      @ok{""}
+(string-copy "dwim" 0 (string-length "dwim")) @ok{"dwim"}
+@end lisp
+
+@lisp
+(eqv?     "dwim" (string-copy "dwim")) @ok{#f}
+(string=? "dwim" (string-copy "dwim")) @ok{#t}
+@end lisp
+
+@lisp
+(string-copy "dwim" 5)    @exception{range}
+(string-copy "dwim" -1 3) @exception{range}
+(string-copy "dwim" 2 5)  @exception{range}
+(string-copy "dwim" 2.5)  @exception{type}
+@end lisp
+@end deftypefn
+
+@deftypefn scheme/base @/ string-copy! to-string at from-string @opt{start @opt{end}}
+Mutates @var{to-string} by copying a substring of @var{from-string} into
+@var{to-string}, beginning with index @var{at} of @var{to-string}.  In
+the three-argument form, all of @var{from-string} is copied.  In the
+four-argument form, the value of @samp{(string-copy
+@slanted{@var{from-string}} @slanted{@var{start}})} is copied.  In the
+five-argument form, the value of @samp{(string-copy
+@slanted{@var{from-string}} @slanted{@var{start}} @slanted{@var{end}})}
+is copied.
+
+If @var{at} is not a valid index of @var{to-string}, an exception that
+satisfies @code{range-exception?} is raised.  If @samp{(- (string-length
+@slanted{@var{to-string}}) @slanted{@var{at}})} is less than @samp{(-
+@slanted{@var{end}} @slanted{@var{start}})}, an exception that satisfies
+@code{range-exception?}  is raised (in other words, the copied substring
+must not overflow beyond the end of @var{to-string}).
+
+@lisp
+(define a "12345")
+(define b (string-copy "abcde"))
+(string-copy! b 1 a 0 2)
+b @ok{"a12de"}
+@end lisp
+@end deftypefn
+
+@deftypefn scheme/base @/ string-fill! string char @opt{start @opt{end}}
+Mutates @var{string} by overwriting some or all of its elements with
+@var{char}.  In the two-argument form, each element is overwritten.  In
+the three-argument form, the elements from index @var{start} (inclusive)
+through the end of @var{string} are overwritten.  In the four-argument
+form, the elements from index @var{start} (inclusive) to index @var{end}
+(exclusive) are overwritten.
+
+If either @var{start} or @var{end} is not a valid index of @var{string},
+an exception that satisfies @code{range-exception?} is raised.
+
+@lisp
+(define a (string-copy "abcde"))
+(define b (string-copy a))
+(define c (string-copy b))
+
+(string-fill! a #\0)
+(string-fill! b #\0 3)
+(string-fill! c #\0 3 4)
+
+a @ok{"00000"}
+b @ok{"abc00"}
+c @ok{"abc0e"}
+@end lisp
+@end deftypefn
+
+@deftypefn scheme/base @/ string-set! string k char
+Mutates @var{string} by storing @var{char} in element @var{k} of
+@var{string}.
+
+If @var{string} is not a mutable string, an exception that satisfies
+@code{type-exception?} is raised.  If @var{k} is not an exact integer,
+an exception that satisfies @code{type-exception?} is raised.  If
+@var{k} is not a valid index of @var{string}, an exception that
+satisfies @code{range-exception?} is raised.
+
+@lisp
+(define (f) (make-string 3 #\*))
+(string-set! (f) 0 #\?) ;; ok
+(string-set! (f) 5 #\?)   @exception{range}
+(string-set! (f) 1.1 #\?) @exception{type}
+@end lisp
+
+@lisp
+(string-set! (symbol->string 'immutable) 0 #\?) @exception{type}
+@end lisp
+
+@lisp
+(define (g) "***")
+(string-set! (g) 0 #\?) ;; R7RS says this is an error
+(g) @ok{"?**"}             ;; current Gambit behavior 
+@end lisp
+@end deftypefn
