@@ -1495,11 +1495,10 @@
         (macro-add-thread-to-run-queue-of-some-processor! thread)
         #;(macro-add-thread-to-run-queue-of-current-processor-preferably! thread)
 
-        ;;TODO: rethink use of reschedule-if-needed!
-        ;;(macro-thread-reschedule-if-needed!)
-
         ;; release low-level lock of thread
         (macro-unlock-thread! thread)
+
+        (macro-thread-reschedule-if-needed!)
 
         thread))))
 
@@ -2259,6 +2258,9 @@
 
     (##thread-boosted-priority-changed! thread) ;;TOO:integrate rescheduling
 
+    ;; release low-level lock of the thread
+    (macro-unlock-thread! thread)
+
     ;; the change of priority may have made a higher priority
     ;; thread runnable, check for this
 
@@ -2332,7 +2334,9 @@
     (if (##fl= (macro-base-priority floats)
                (macro-boosted-priority floats))
 
-      (##void)
+      (begin
+        (macro-unlock-thread! thread)
+        (##void))
 
       (begin
 
@@ -2348,6 +2352,9 @@
                 priority-boost))
 
         (##thread-boosted-priority-changed! thread)
+
+        ;; release low-level lock of the thread
+        (macro-unlock-thread! thread)
 
         ;; the change of priority may have made a higher priority
         ;; thread runnable, check for this
@@ -2419,16 +2426,17 @@
 
     (let loop ((btq (macro-btq-deq-next thread)))
       (if (##not (##eq? btq thread))
-          (macro-if-btq-next
-           btq
-           next
-           (let ((next-floats (macro-thread-floats next)))
-             (if (##fl< (macro-effective-priority floats)
-                        (macro-effective-priority next-floats))
-                 (macro-effective-priority-set!
-                  floats
-                  (macro-effective-priority next-floats)))))
-          (loop (macro-btq-deq-next btq))))
+          (begin
+            (macro-if-btq-next
+             btq
+             next
+             (let ((next-floats (macro-thread-floats next)))
+               (if (##fl< (macro-effective-priority floats)
+                          (macro-effective-priority next-floats))
+                   (macro-effective-priority-set!
+                    floats
+                    (macro-effective-priority next-floats)))))
+            (loop (macro-btq-deq-next btq)))))
 
     (if (##not (##fl=
                 (macro-temp (macro-thread-floats (macro-current-processor)))
@@ -2695,12 +2703,45 @@
 
   (##declare (not interrupts-enabled))
 
-  (macro-thread-save!
-   (lambda (current-thread)
-     (macro-thread-resume-thunk-set! current-thread ##thread-void-action!)
-     (macro-processor-current-thread-set! (macro-current-processor) #f)
-     ;; schedule next runnable thread
-     (##thread-schedule!))))
+  ;; acquire low-level lock of the thread
+  (macro-lock-current-thread!)
+
+  ;; acquire low-level lock of the processor
+  (macro-lock-current-processor!)
+
+  (macro-if-btq-next
+   (macro-current-processor)
+   next-thread
+
+   (if (macro-thread-higher-prio? next-thread (macro-current-thread))
+       (macro-thread-save!
+        (lambda (current-thread)
+          (macro-thread-resume-thunk-set!
+           current-thread
+           ##thread-void-action!)
+
+          (macro-add-thread-to-run-queue-of-current-processor-without-locking!
+           current-thread)
+
+          ;; thread is no longer the current thread
+          (macro-processor-current-thread-set!
+           (macro-current-processor)
+           #f)
+
+          ;; release low-level lock of the thread
+          (macro-unlock-thread! current-thread)
+
+          ;; schedule next runnable thread
+          (##thread-schedule-with-acquired-processor!)))
+       (begin
+         (macro-unlock-current-processor!)
+         (macro-unlock-current-thread!)
+         (##void)))
+
+   (begin
+     (macro-unlock-current-processor!)
+     (macro-unlock-current-thread!)
+     (##void))))
 
 (define-prim (##service-interrupts!)
 
@@ -4086,8 +4127,7 @@
         ;; unlock mutex
         (macro-mutex-unlock-no-reschedule! mutex)
 
-        ;;TODO:reenable
-        ;;(macro-thread-reschedule-if-needed!)
+        (macro-thread-reschedule-if-needed!)
 
         #f)))
 
