@@ -765,7 +765,7 @@
                                                        '())))
                                                    opt-params)
                                             rest-param))
-                                   '()))
+                                   rest-param))
                              ,(if (##pair? rev-defs)
                                   `(##let ,(##reverse rev-defs)
                                           ,dispatch)
