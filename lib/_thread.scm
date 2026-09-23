@@ -756,7 +756,7 @@
 
   (let try-again ()
 
-    (define (continue)
+    (define (continue owner)
 
       ;; Remove thread from any timeout queue.
 
@@ -767,7 +767,14 @@
               (##toq-remove! thread) ;; remove thread from toq
               (macro-unlock-toq! toq))))
 
-      (proc arg1))
+      (let ((result (proc arg1)))
+        ;; Interrupting a thread can remove it from a mutex wait queue.
+        ;; Once PROC has released the interrupted thread's low-level lock,
+        ;; drop any priority that the former owner inherited from it.
+        (if (and (macro-thread? owner)
+                 (##not (##eq? owner thread)))
+            (##thread-recompute-effective-priority! owner #f))
+        result))
 
     ;; acquire low-level lock of thread
     (macro-lock-thread! thread)
@@ -778,7 +785,7 @@
     (let ((btq (macro-thread-btq-container thread)))
       (if (##not btq)
 
-          (continue)
+          (continue #f)
 
           (if (macro-processor? btq)
 
@@ -790,7 +797,7 @@
                 (##btq-remove! thread) ;; remove thread from btq
                 (macro-unlock-processor! btq)
 
-                (continue))
+                (continue #f))
 
               (begin
 
@@ -810,12 +817,13 @@
 
                     (begin
 
-                      (##btq-remove! thread) ;; remove thread from btq
+                      (let ((owner (macro-btq-owner btq)))
+                        (##btq-remove! thread) ;; remove thread from btq
 
-                      ;; release low-level lock of mutex or condition variable
-                      (macro-unlock-btq! btq)
+                        ;; release low-level lock of mutex or condition variable
+                        (macro-unlock-btq! btq)
 
-                      (continue)))))))))
+                        (continue owner))))))))))
 
 ;;;----------------------------------------------------------------------------
 
@@ -1957,6 +1965,132 @@
             (macro-unlock-thread! thread)
             (try-again))))))
 
+(define-prim (##thread-recompute-effective-priority! thread locked-processor)
+
+  (##declare (not interrupts-enabled))
+
+  ;; Recompute THREAD's inherited effective priority from its own boosted
+  ;; priority and the highest-priority waiter of every blocked-thread queue
+  ;; it owns.  This is the SMP-safe counterpart of
+  ;; ##thread-effective-priority-downgrade!: it snapshots owned queues with
+  ;; try-locks, then repositions THREAD in the queue containing it while its
+  ;; low-level lock is still held.  If THREAD is itself blocked on a
+  ;; thread-owned queue, propagate the downgrade through that owner chain.
+  ;; LOCKED-PROCESSOR is #f or a processor lock already held by the caller.
+
+  (let try-again ()
+    (macro-lock-thread! thread)
+    (let ((floats (macro-thread-floats thread))
+          (processor-floats
+           (macro-thread-floats (macro-current-processor))))
+      (macro-temp-set! processor-floats (macro-boosted-priority floats))
+      (let scan ((btq (macro-btq-deq-next thread)))
+        (cond
+         ((##eq? btq thread)
+          (##thread-unlock-owned-btqs! thread thread)
+          (let ((priority (macro-temp processor-floats)))
+            (if (##fl= (macro-effective-priority floats) priority)
+                (macro-unlock-thread! thread)
+                (let ((container (macro-thread-btq-container thread)))
+                  (cond
+                   ((##not container)
+                    (macro-effective-priority-set! floats priority)
+                    (macro-unlock-thread! thread))
+                   ((macro-processor? container)
+                    (if (##eq? container locked-processor)
+                        (begin
+                          (macro-effective-priority-set! floats priority)
+                          (##btq-reposition! thread)
+                          (macro-unlock-thread! thread))
+                        (begin
+                          (macro-lock-processor! container)
+                          (macro-effective-priority-set! floats priority)
+                          (##btq-reposition! thread)
+                          (macro-unlock-processor! container)
+                          (macro-unlock-thread! thread))))
+                   ((##not (macro-trylock-btq! container))
+                    (macro-unlock-thread! thread)
+                    (try-again))
+                   (else
+                    (let ((owner (macro-btq-owner container)))
+                      (macro-effective-priority-set! floats priority)
+                      (##btq-reposition! thread)
+                      (macro-unlock-btq! container)
+                      (macro-unlock-thread! thread)
+                      (if (macro-thread? owner)
+                          (##thread-recompute-effective-priority!
+                           owner
+                           locked-processor)))))))))
+         ((##not (macro-trylock-btq! btq))
+          (##thread-unlock-owned-btqs! thread btq)
+          (macro-unlock-thread! thread)
+          (try-again))
+         (else
+          (macro-if-btq-next
+           btq
+           waiter
+           (if (macro-trylock-thread! waiter)
+               (begin
+                 (if (##fl< (macro-temp processor-floats)
+                            (macro-thread-effective-priority waiter))
+                     (macro-temp-set!
+                      processor-floats
+                      (macro-thread-effective-priority waiter)))
+                 (scan (macro-btq-deq-next btq)))
+               (begin
+                 (macro-unlock-btq! btq)
+                 (##thread-unlock-owned-btqs! thread btq)
+                 (macro-unlock-thread! thread)
+                 (try-again)))
+           (scan (macro-btq-deq-next btq)))))))))
+
+(define-prim (##thread-inherit-effective-priority! thread priority locked-processor)
+
+  (##declare (not interrupts-enabled))
+
+  ;; Raise THREAD's effective priority and keep any queue containing it
+  ;; ordered.  A blocked thread can itself own a mutex, so propagate the
+  ;; inherited priority through that wait chain.  THREAD is acquired before
+  ;; its queue.  Mutex/condition queues are only try-locked because their
+  ;; normal wakeup path acquires those locks in the opposite order.
+  ;; LOCKED-PROCESSOR is #f or a processor lock already held by the caller.
+
+  (let try-again ()
+    (macro-lock-thread! thread)
+    (let ((floats (macro-thread-floats thread)))
+      (if (##not (##fl< (macro-effective-priority floats) priority))
+          (macro-unlock-thread! thread)
+          (let ((btq (macro-thread-btq-container thread)))
+            (cond ((##not btq)
+                   (macro-effective-priority-set! floats priority)
+                   (macro-unlock-thread! thread))
+                  ((macro-processor? btq)
+                   (if (##eq? btq locked-processor)
+                       (begin
+                         (macro-effective-priority-set! floats priority)
+                         (##btq-reposition! thread)
+                         (macro-unlock-thread! thread))
+                       (begin
+                         (macro-lock-processor! btq)
+                         (macro-effective-priority-set! floats priority)
+                         (##btq-reposition! thread)
+                         (macro-unlock-processor! btq)
+                         (macro-unlock-thread! thread))))
+                  ((##not (macro-trylock-btq! btq))
+                   (macro-unlock-thread! thread)
+                   (try-again))
+                  (else
+                   (let ((owner (macro-btq-owner btq)))
+                     (macro-effective-priority-set! floats priority)
+                     (##btq-reposition! thread)
+                     (macro-unlock-btq! btq)
+                     (macro-unlock-thread! thread)
+                     (if (macro-thread? owner)
+                         (##thread-inherit-effective-priority!
+                          owner
+                          priority
+                          locked-processor))))))))))
+
 ;; The procedure thread-yield! is called by a running thread when it
 ;; wants to allow other runnable threads of equal or higher priority,
 ;; on the same processor, to run.  thread-yield! is called when the
@@ -2599,7 +2733,7 @@
               ;; earlier than the current time. Consequently, that
               ;; thread must wake up.
 
-              (define (done)
+              (define (done owner)
 
                 (##thread-toq-remove! next-thread)
 
@@ -2611,18 +2745,27 @@
 
                 (macro-unlock-thread! next-thread)
 
+                ;; A timed-out waiter may have been the source of a mutex
+                ;; owner's inherited priority.  Recompute after removing the
+                ;; waiter, while the current processor remains locked.
+                (if (macro-thread? owner)
+                    (##thread-recompute-effective-priority!
+                     owner
+                     (macro-current-processor)))
+
                 (loop))
 
               ;;TODO: shouldn't be a trylock!
               (if (macro-trylock-thread! next-thread)
                   (let ((btq (macro-thread->btq next-thread)))
                     (cond ((##not btq)
-                           (done))
+                           (done #f))
 
                           ((macro-trylock-btq! btq)
-                           (##thread-btq-remove! next-thread)
-                           (macro-unlock-btq! btq)
-                           (done))
+                           (let ((owner (macro-btq-owner btq)))
+                             (##thread-btq-remove! next-thread)
+                             (macro-unlock-btq! btq)
+                             (done owner)))
 
                           (else
                            (macro-unlock-thread! next-thread))))))))))))
@@ -3881,14 +4024,28 @@
                                                 current-thread)))
                              (macro-unlock-thread! new-owner))
 
-                         ;; release low-level lock of current thread
-                         (macro-unlock-thread! current-thread)
+                         ;; capture the blocked thread's effective priority
+                         ;; while its low-level lock is still held
+                         (let ((inherit-priority
+                                (macro-thread-effective-priority current-thread)))
 
-                         ;; release low-level lock of mutex
-                         (macro-unlock-mutex! mutex)
+                           ;; release low-level lock of current thread
+                           (macro-unlock-thread! current-thread)
 
-                         ;; schedule next runnable thread
-                         (##thread-schedule-with-acquired-processor!)))))
+                           ;; release low-level lock of mutex
+                           (macro-unlock-mutex! mutex)
+
+                           ;; A thread-owned mutex transfers the blocked
+                           ;; thread's effective priority to its owner.
+                           ;; The current processor is already locked here.
+                           (if (macro-thread? owner)
+                               (##thread-inherit-effective-priority!
+                                owner
+                                inherit-priority
+                                (macro-current-processor)))
+
+                           ;; schedule next runnable thread
+                           (##thread-schedule-with-acquired-processor!))))))
 
                         mutex
                         timeout
@@ -4001,6 +4158,16 @@
 
     ;; release low-level lock of mutex
     (macro-unlock-mutex! mutex)
+
+    ;; Removing the mutex from CURRENT-OWNER's owned set can lower its
+    ;; inherited priority.  Recompute after all locks used by the transfer
+    ;; are released.  The new owner may also need to inherit from the next
+    ;; waiter still queued on this mutex.
+    (if current-owner
+        (##thread-recompute-effective-priority! current-owner #f))
+    (if (and new-owner
+             (##not (##eq? new-owner current-owner)))
+        (##thread-recompute-effective-priority! new-owner #f))
 
     (##void)))
 
