@@ -2622,6 +2622,31 @@ ___SCMOBJ ___os_user_name ___PVOID
 {
   ___SCMOBJ e;
   ___SCMOBJ result;
+
+#ifdef USE_getpwnam
+
+  struct passwd *p;
+
+#define ___USER_NAME_CE_SELECT(latin1,utf8,ucs2,ucs4,wchar,native) utf8
+
+  if ((p = getpwuid (geteuid ())) == 0)
+    result = err_code_from_errno ();
+  else
+    {
+      if ((e = ___NONNULLSTRING_to_SCMOBJ
+                 (___PSTATE,
+                  p->pw_name,
+                  &result,
+                  ___RETURN_POS,
+                  ___CE(___USER_NAME_CE_SELECT)))
+          != ___FIX(___NO_ERR))
+        result = e;
+      else
+        ___release_scmobj (result);
+    }
+
+#else
+
   ___UCS_2STRING cstr;
 
 #ifdef USE_WIN32
@@ -2652,6 +2677,8 @@ ___SCMOBJ ___os_user_name ___PVOID
       if (cstr != 0)
         ___FREE_MEM(cstr);
     }
+
+#endif
 
   return result;
 }
