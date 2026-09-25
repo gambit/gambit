@@ -1,0 +1,21 @@
+(include "#.scm")
+
+(define s (service-info "http" "tcp"))
+
+(test-assert (service-info? s))
+(test-equal "http" (service-info-name s))
+(test-eqv 80 (service-info-port-number s))
+(test-equal "tcp" (service-info-protocol s))
+(test-assert (list? (service-info-aliases s)))
+(test-assert (service-info? (service-info 80)))
+
+(test-error-tail wrong-number-of-arguments-exception? (service-info))
+(test-error-tail type-exception? (service-info #f))
+(test-error-tail type-exception? (service-info-name #f))
+(test-error-tail type-exception? (service-info-port-number #f))
+(test-error-tail type-exception? (service-info-protocol #f))
+(test-error-tail type-exception? (service-info-aliases #f))
+(test-error-tail wrong-number-of-arguments-exception? (service-info-name))
+(test-error-tail wrong-number-of-arguments-exception? (service-info-port-number))
+(test-error-tail wrong-number-of-arguments-exception? (service-info-protocol))
+(test-error-tail wrong-number-of-arguments-exception? (service-info-aliases))

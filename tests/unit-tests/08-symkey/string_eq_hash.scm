@@ -1,0 +1,16 @@
+(include "#.scm")
+
+(test-assert (fixnum? (string=?-hash "abcde")))
+(test-equal (string=?-hash "abcde") (string=?-hash "abcde"))
+(test-assert (fixnum? (string-ci=?-hash "AbCdE")))
+(test-equal (string-ci=?-hash "AbCdE") (string-ci=?-hash "abcde"))
+(test-assert (fixnum? (symbol-hash 'abc)))
+(test-equal (symbol-hash 'abc) (symbol-hash 'abc))
+(test-assert (fixnum? (keyword-hash a:)))
+(test-equal (keyword-hash a:) (keyword-hash a:))
+
+(test-error-tail wrong-number-of-arguments-exception? (string=?-hash))
+(test-error-tail wrong-number-of-arguments-exception? (string=?-hash "a" "b"))
+(test-error-tail type-exception? (string=?-hash 1))
+(test-error-tail type-exception? (symbol-hash 1))
+(test-error-tail type-exception? (keyword-hash 1))

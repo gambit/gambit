@@ -1,0 +1,16 @@
+(include "#.scm")
+
+(define p (console-port))
+
+(test-assert (string? (tty-history p)))
+(test-error-tail wrong-number-of-arguments-exception? (tty-history))
+(test-error-tail wrong-number-of-arguments-exception? (tty-history p 1))
+(test-error-tail type-exception? (tty-history 1))
+(test-error-tail wrong-number-of-arguments-exception? (tty-history-set!))
+(test-error-tail wrong-number-of-arguments-exception? (tty-history-set! p))
+(test-error-tail wrong-number-of-arguments-exception? (tty-history-max-length-set!))
+(test-error-tail wrong-number-of-arguments-exception? (tty-history-max-length-set! p))
+(test-error-tail wrong-number-of-arguments-exception? (tty-paren-balance-duration-set!))
+(test-error-tail wrong-number-of-arguments-exception? (tty-mode-set!))
+(test-error-tail wrong-number-of-arguments-exception? (tty-type-set!))
+(test-error-tail wrong-number-of-arguments-exception? (tty-text-attributes-set!))

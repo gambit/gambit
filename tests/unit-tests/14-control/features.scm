@@ -1,0 +1,10 @@
+(include "#.scm")
+
+(test-assert (list? (features)))
+(test-assert (pair? (features)))
+(test-assert (symbol? (car (features))))
+(test-eq call/cc call-with-current-continuation)
+(test-equal 123 (call/cc (lambda (k) (k 123))))
+(test-equal 123 (call/cc (lambda (k) 123)))
+(test-equal '(1 2) (call/cc (lambda (k a b) (list a b)) 1 2))
+(test-error-tail wrong-number-of-arguments-exception? (call/cc))

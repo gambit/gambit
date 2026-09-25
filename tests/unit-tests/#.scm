@@ -89,40 +89,111 @@
 
            (define (##determine-tested-procedures src)
 
+             (define (walk-cond-clauses clauses)
+               (for-each
+                (lambda (clause)
+                  (if (pair? clause)
+                      (begin
+                        (if (not (eq? (car clause) 'else))
+                            (walk (car clause)))
+                        (if (pair? (cdr clause))
+                            (begin
+                              (if (not (eq? (cadr clause) '=>))
+                                  (walk (cadr clause)))
+                              (for-each walk (cddr clause)))))))
+                clauses))
+
+             (define (walk-let-bindings bindings)
+               (if (list? bindings)
+                   (for-each
+                    (lambda (b)
+                      (if (and (pair? b) (pair? (cdr b)))
+                          (walk (cadr b))))
+                    bindings)))
+
              (define (walk expr)
                ;; This parses a subset of Scheme expressions that
                ;; probably covers all the forms of expressions that might
                ;; occur in test expressions. Extend as needed.
                (if (pair? expr)
                    (case (car expr)
-                     ((quote)
+                     ((quote quasiquote)
                       #f)
                      ((lambda set!)
                       (for-each walk (cddr expr)))
-                     ((if and or begin)
+                     ((if and or begin when unless delay delay-force)
                       (for-each walk (cdr expr)))
                      ((let)
-                      (if (symbol? (cadr expr)) (set! expr (cdr expr)))
-                      (for-each walk (map cadr (cadr expr)))
-                      (for-each walk (cddr expr)))
+                      (if (and (pair? (cdr expr)) (symbol? (cadr expr)))
+                          (set! expr (cdr expr)))
+                      (if (pair? (cdr expr))
+                          (begin
+                            (walk-let-bindings (cadr expr))
+                            (for-each walk (cddr expr)))))
                      ((let* letrec letrec*)
-                      (for-each walk (map cadr (cadr expr)))
-                      (for-each walk (cddr expr)))
+                      (if (pair? (cdr expr))
+                          (begin
+                            (walk-let-bindings (cadr expr))
+                            (for-each walk (cddr expr)))))
+                     ((let-values let*-values)
+                      (if (pair? (cdr expr))
+                          (begin
+                            (walk-let-bindings (cadr expr))
+                            (for-each walk (cddr expr)))))
                      ((cond)
-                      (for-each
-                       (lambda (clause)
-                         (if (not (eq? (car clause)) 'else)
-                             (walk (car clause)))
-                         (if (pair? (cdr clause))
-                             (begin
-                               (if (not (eq? (cadr clause)) '=>)
-                                   (walk (cadr clause)))
-                               (for-each walk (cddr clause)))))
-                       (cdr expr)))
+                      (walk-cond-clauses (cdr expr)))
                      ((case)
+                      (if (pair? (cdr expr))
+                          (begin
+                            (walk (cadr expr))
+                            (for-each
+                             (lambda (clause)
+                               (if (pair? clause)
+                                   (for-each walk (cdr clause))))
+                             (cddr expr)))))
+                     ((do)
+                      (if (pair? (cdr expr))
+                          (begin
+                            (if (list? (cadr expr))
+                                (for-each
+                                 (lambda (b)
+                                   (if (pair? b)
+                                       (begin
+                                         (if (pair? (cdr b)) (walk (cadr b)))
+                                         (if (and (pair? (cdr b))
+                                                  (pair? (cddr b)))
+                                             (walk (caddr b))))))
+                                 (cadr expr)))
+                            (if (pair? (cddr expr))
+                                (begin
+                                  (if (list? (caddr expr))
+                                      (for-each walk (caddr expr)))
+                                  (for-each walk (cdddr expr)))))))
+                     ((parameterize)
+                      (if (pair? (cdr expr))
+                          (begin
+                            (if (list? (cadr expr))
+                                (for-each
+                                 (lambda (b)
+                                   (if (pair? b)
+                                       (begin
+                                         (walk (car b))
+                                         (if (pair? (cdr b))
+                                             (walk (cadr b))))))
+                                 (cadr expr)))
+                            (for-each walk (cddr expr)))))
+                     ((guard)
+                      (if (and (pair? (cdr expr)) (pair? (cadr expr)))
+                          (walk-cond-clauses (cdr (cadr expr))))
+                      (if (pair? (cdr expr))
+                          (for-each walk (cddr expr))))
+                     ((receive)
+                      (for-each walk (cddr expr)))
+                     ((case-lambda)
                       (for-each
                        (lambda (clause)
-                         (walk (cdr clause)))
+                         (if (pair? clause)
+                             (for-each walk (cdr clause))))
                        (cdr expr)))
                      (else
                       (let ((first (car expr)))
